@@ -1,8 +1,8 @@
 {
   "name": "bumblebee",
   "version": "1.0.0",
-  "description": "My first-rate Nuxt.js project",
-  "author": "JorgeParra",
+  "description": "A GUI that works with Optimus to make data profiling easier",
+  "author": "Iron",
   "private": true,
   "scripts": {
     "dev": "cross-env NODE_ENV=development nodemon server/index.js --watch server",
