@@ -9,7 +9,7 @@ A GUI that wants to make data profiling beautiful. You can read any json with th
 ## Blublebee is Agnostic 
 You can output this json from whatever software or library you want, for example R or Pandas(Python) and use it with Bumblebee.
 
-For now Optimus https://github.com/ironmussa/Optimus can output json compatible with Optimus when you run the profiler().
+For now Optimus https://github.com/ironmussa/Optimus can output json compatible with Bumblebee when you run the profiler().
 
 If you write a fucntion to output a json formatted to bumblebee please be sure to contribute with the repo.
 
