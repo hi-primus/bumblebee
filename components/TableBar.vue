@@ -11,14 +11,16 @@
     </v-layout>
 
 
-    <table class="table is-fullwidth">
+    <table class="table">
 
       <tbody v-for="(data, index) in filteredTable" :key="index">
+        
 
       <nuxt-link tag="tr" :to="'/details/'+ arrDataset[index].name" class="hoverable">
-        <td>{{arrDataset[index].column_type}}</td>
-        <td>{{arrDataset[index].name}}</td>
-        <td>
+        <td style="width:25%;" class="column text-xs-left">{{dataType(arrDataset[index].column_dtype)}}</td>
+        <td style="width:25%;" class="column text-xs-left">{{arrDataset[index].column_type}}</td>
+        <td style="width:25%;" class="column text-xs-left">{{arrDataset[index].name}}</td>
+        <td style="width:25%;" class="column text-xs-left">
           <DataBar :data1="data.stats.missing_count" :total="total"/>
         </td>
       </nuxt-link>
@@ -57,6 +59,26 @@
         })
       },
 
+    },
+    methods:{
+      dataType(data){
+        if(data == 'string'){
+          return 'ABC';
+        }
+        else if(data == 'int'){
+          return '#';
+        }
+        else if(data == 'float'){
+          return '##.#';
+        }
+        else if(data == 'boolean'){
+          return '0/1';
+        }
+        else if(data == 'date'){
+          return '##/##/####';
+        }
+
+      }
     },
     created() {
       this.arrDataset = Object.keys(this.dataset).map(i => this.dataset[i]);
