@@ -5,68 +5,88 @@ export default function( { params, store} ){
   let dataset = {
     "columns": {
       "GeoLocation": {
+        "column_dtype": "string",
         "column_type": "categorical",
+        "dtypes_stats": {
+          "bool": 0,
+          "date": 0,
+          "float": 0,
+          "int": 0,
+          "missing": 0,
+          "null": 7315,
+          "string": 38401
+        },
         "frequency": [{
-            "count": 1,
-            "percentage": 0.00219,
-            "value": "(-31.416670, -60.666670)"
+            "count": 6214,
+            "percentage": 13.59262,
+            "value": "(0.000000, 0.000000)"
           },
           {
-            "count": 1,
-            "percentage": 0.00219,
-            "value": "(39.800000, 16.200000)"
+            "count": 4761,
+            "percentage": 10.4143,
+            "value": "(-71.500000, 35.666670)"
           },
           {
-            "count": 1,
-            "percentage": 0.00219,
-            "value": "(38.400000, -84.250000)"
+            "count": 3040,
+            "percentage": 6.64975,
+            "value": "(-84.000000, 168.000000)"
           },
           {
-            "count": 1,
-            "percentage": 0.00219,
-            "value": "(14.883330, 75.600000)"
+            "count": 1505,
+            "percentage": 3.29206,
+            "value": "(-72.000000, 26.000000)"
           },
           {
-            "count": 1,
-            "percentage": 0.00219,
-            "value": "(45.816670, 44.633330)"
+            "count": 657,
+            "percentage": 1.43713,
+            "value": "(-79.683330, 159.750000)"
           },
           {
-            "count": 1,
-            "percentage": 0.00219,
-            "value": "(49.983330, 7.533330)"
+            "count": 637,
+            "percentage": 1.39339,
+            "value": "(-76.716670, 159.666670)"
           },
           {
-            "count": 1,
-            "percentage": 0.00219,
-            "value": "(50.383330, -3.950000)"
+            "count": 539,
+            "percentage": 1.17902,
+            "value": "(-76.183330, 157.166670)"
           },
           {
-            "count": 1,
-            "percentage": 0.00219,
-            "value": "(27.524170, 3.796940)"
+            "count": 473,
+            "percentage": 1.03465,
+            "value": "(-79.683330, 155.750000)"
           },
           {
-            "count": 1,
-            "percentage": 0.00219,
-            "value": "(-76.687870, 159.358460)"
+            "count": 263,
+            "percentage": 0.57529,
+            "value": "(-84.216670, 160.500000)"
           },
           {
-            "count": 1,
-            "percentage": 0.00219,
-            "value": "(-76.843570, 156.240420)"
+            "count": 226,
+            "percentage": 0.49436,
+            "value": "(-86.366670, -70.000000)"
           }
         ],
         "name": "GeoLocation",
         "stats": {
-          "missing_count": 45716,
-          "p_missing": 100.0,
-          "p_uniques": 0.0,
-          "uniques_count": 0
+          "missing_count": 7315,
+          "p_missing": 16.0,
+          "p_uniques": 36.499,
+          "uniques_count": 16686
         }
       },
       "fall": {
+        "column_dtype": "string",
         "column_type": "categorical",
+        "dtypes_stats": {
+          "bool": 0,
+          "date": 0,
+          "float": 0,
+          "int": 0,
+          "missing": 0,
+          "null": 0,
+          "string": 45716
+        },
         "frequency": [{
             "count": 44609,
             "percentage": 97.57853,
@@ -80,13 +100,14 @@ export default function( { params, store} ){
         ],
         "name": "fall",
         "stats": {
-          "missing_count": 45716,
-          "p_missing": 100.0,
-          "p_uniques": 0.0,
-          "uniques_count": 0
+          "missing_count": 0,
+          "p_missing": 0.0,
+          "p_uniques": 0.004,
+          "uniques_count": 2
         }
       },
       "id": {
+        "column_dtype": "int",
         "column_type": "numeric",
         "dtypes_stats": {
           "bool": 0,
@@ -100,52 +121,52 @@ export default function( { params, store} ){
         "frequency": [{
             "count": 1,
             "percentage": 0.00219,
-            "value": "2294"
+            "value": 463
           },
           {
             "count": 1,
             "percentage": 0.00219,
-            "value": "4937"
+            "value": 4900
           },
           {
             "count": 1,
             "percentage": 0.00219,
-            "value": "5325"
+            "value": 4935
           },
           {
             "count": 1,
             "percentage": 0.00219,
-            "value": "12394"
+            "value": 5156
           },
           {
             "count": 1,
             "percentage": 0.00219,
-            "value": "16974"
+            "value": 7754
           },
           {
             "count": 1,
             "percentage": 0.00219,
-            "value": "23097"
+            "value": 12027
           },
           {
             "count": 1,
             "percentage": 0.00219,
-            "value": "296"
+            "value": 15447
           },
           {
             "count": 1,
             "percentage": 0.00219,
-            "value": "467"
+            "value": 18800
           },
           {
             "count": 1,
             "percentage": 0.00219,
-            "value": "675"
+            "value": 148
           },
           {
             "count": 1,
             "percentage": 0.00219,
-            "value": "691"
+            "value": 471
           }
         ],
         "hist": [{
@@ -255,14 +276,14 @@ export default function( { params, store} ){
           "interquartile_range": 27968.0,
           "kurtosis": -1.1602608393254032,
           "mad": 13263.0,
-          "max": 57458.0,
+          "max": 57458,
           "mean": 26889.73510368361,
           "median": 24261.0,
-          "min": 1.0,
+          "min": 1,
           "missing_count": 0,
           "na": 0,
           "p_missing": 0.0,
-          "p_uniques": 97.8,
+          "p_uniques": 92.67,
           "quantile": {
             "0.05": 2434.0,
             "0.25": 12688.0,
@@ -273,13 +294,14 @@ export default function( { params, store} ){
           "range": 57457.0,
           "skewness": 0.26653721939302294,
           "stddev": 16860.68303027627,
-          "sum": 1229291130.0,
-          "uniques_count": 44709,
+          "sum": 1229291130,
+          "uniques_count": 42365,
           "variance": 284282632.2474462,
           "zeros": 0
         }
       },
       "mass (g)": {
+        "column_dtype": "float",
         "column_type": "numeric",
         "dtypes_stats": {
           "bool": 0,
@@ -291,54 +313,54 @@ export default function( { params, store} ){
           "string": 0
         },
         "frequency": [{
-            "count": 51,
-            "percentage": 0.11156,
-            "value": "8.5"
+            "count": 171,
+            "percentage": 0.37405,
+            "value": 1.2999999523162842
           },
           {
-            "count": 38,
-            "percentage": 0.08312,
-            "value": "10.7"
+            "count": 140,
+            "percentage": 0.30624,
+            "value": 1.2000000476837158
           },
           {
-            "count": 4,
-            "percentage": 0.00875,
-            "value": "691"
+            "count": 138,
+            "percentage": 0.30186,
+            "value": 1.399999976158142
           },
           {
-            "count": 4,
-            "percentage": 0.00875,
-            "value": "110.9"
+            "count": 130,
+            "percentage": 0.28436,
+            "value": 2.0999999046325684
           },
           {
-            "count": 3,
-            "percentage": 0.00656,
-            "value": "467"
+            "count": 126,
+            "percentage": 0.27561,
+            "value": 2.4000000953674316
           },
           {
-            "count": 3,
-            "percentage": 0.00656,
-            "value": "119.8"
+            "count": 120,
+            "percentage": 0.26249,
+            "value": 1.600000023841858
           },
           {
-            "count": 2,
-            "percentage": 0.00437,
-            "value": "45300"
+            "count": 119,
+            "percentage": 0.2603,
+            "value": 0.5
           },
           {
-            "count": 1,
-            "percentage": 0.00219,
-            "value": "483.7"
+            "count": 116,
+            "percentage": 0.25374,
+            "value": 1.100000023841858
           },
           {
-            "count": 1,
-            "percentage": 0.00219,
-            "value": "16250"
+            "count": 114,
+            "percentage": 0.24937,
+            "value": 3.799999952316284
           },
           {
-            "count": 1,
-            "percentage": 0.00219,
-            "value": "150200"
+            "count": 111,
+            "percentage": 0.2428,
+            "value": 1.5
           }
         ],
         "hist": [{
@@ -400,22 +422,22 @@ export default function( { params, store} ){
         "name": "mass (g)",
         "stats": {
           "coef_variation": 43.30362,
-          "interquartile_range": 195.4,
+          "interquartile_range": 195.4000062942505,
           "kurtosis": 6796.17060791067,
           "mad": 30.5,
           "max": 60000000.0,
           "mean": 13278.078548580497,
-          "median": 32.6,
+          "median": 32.599998474121094,
           "min": 0.0,
           "missing_count": 131,
           "na": 131,
           "p_missing": 0.29,
-          "p_uniques": 27.38,
+          "p_uniques": 27.376,
           "quantile": {
-            "0.05": 1.1,
-            "0.25": 7.2,
-            "0.5": 32.6,
-            "0.75": 202.6,
+            "0.05": 1.100000023841858,
+            "0.25": 7.199999809265137,
+            "0.5": 32.599998474121094,
+            "0.75": 202.60000610351562,
             "0.95": 4000.0
           },
           "range": 60000000.0,
@@ -428,7 +450,17 @@ export default function( { params, store} ){
         }
       },
       "name": {
+        "column_dtype": "string",
         "column_type": "categorical",
+        "dtypes_stats": {
+          "bool": 0,
+          "date": 0,
+          "float": 0,
+          "int": 0,
+          "missing": 0,
+          "null": 0,
+          "string": 45716
+        },
         "frequency": [{
             "count": 1,
             "percentage": 0.00219,
@@ -482,14 +514,24 @@ export default function( { params, store} ){
         ],
         "name": "name",
         "stats": {
-          "missing_count": 45716,
-          "p_missing": 100.0,
-          "p_uniques": 0.0,
-          "uniques_count": 0
+          "missing_count": 0,
+          "p_missing": 0.0,
+          "p_uniques": 99.56,
+          "uniques_count": 45515
         }
       },
       "nametype": {
+        "column_dtype": "string",
         "column_type": "categorical",
+        "dtypes_stats": {
+          "bool": 0,
+          "date": 0,
+          "float": 0,
+          "int": 0,
+          "missing": 0,
+          "null": 0,
+          "string": 45716
+        },
         "frequency": [{
             "count": 45641,
             "percentage": 99.83594,
@@ -503,74 +545,85 @@ export default function( { params, store} ){
         ],
         "name": "nametype",
         "stats": {
-          "missing_count": 45716,
-          "p_missing": 100.0,
-          "p_uniques": 0.0,
-          "uniques_count": 0
+          "missing_count": 0,
+          "p_missing": 0.0,
+          "p_uniques": 0.004,
+          "uniques_count": 2
         }
       },
       "recclass": {
+        "column_dtype": "string",
         "column_type": "categorical",
+        "dtypes_stats": {
+          "bool": 0,
+          "date": 0,
+          "float": 0,
+          "int": 0,
+          "missing": 0,
+          "null": 0,
+          "string": 45716
+        },
         "frequency": [{
+            "count": 8285,
+            "percentage": 18.12276,
+            "value": "L6"
+          },
+          {
+            "count": 7142,
+            "percentage": 15.62254,
+            "value": "H5"
+          },
+          {
+            "count": 4796,
+            "percentage": 10.49086,
+            "value": "L5"
+          },
+          {
+            "count": 4528,
+            "percentage": 9.90463,
+            "value": "H6"
+          },
+          {
+            "count": 4211,
+            "percentage": 9.21122,
+            "value": "H4"
+          },
+          {
+            "count": 2766,
+            "percentage": 6.0504,
+            "value": "LL5"
+          },
+          {
+            "count": 2043,
+            "percentage": 4.46889,
+            "value": "LL6"
+          },
+          {
+            "count": 1253,
+            "percentage": 2.74083,
+            "value": "L4"
+          },
+          {
+            "count": 428,
+            "percentage": 0.93621,
+            "value": "H4/5"
+          },
+          {
             "count": 416,
             "percentage": 0.90997,
             "value": "CM2"
-          },
-          {
-            "count": 240,
-            "percentage": 0.52498,
-            "value": "Howardite"
-          },
-          {
-            "count": 8,
-            "percentage": 0.0175,
-            "value": "OC3"
-          },
-          {
-            "count": 3,
-            "percentage": 0.00656,
-            "value": "Enst achon-ung"
-          },
-          {
-            "count": 2,
-            "percentage": 0.00437,
-            "value": "H5-an"
-          },
-          {
-            "count": 2,
-            "percentage": 0.00437,
-            "value": "H3.7-5"
-          },
-          {
-            "count": 2,
-            "percentage": 0.00437,
-            "value": "C6"
-          },
-          {
-            "count": 1,
-            "percentage": 0.00219,
-            "value": "K"
-          },
-          {
-            "count": 1,
-            "percentage": 0.00219,
-            "value": "CK3.8"
-          },
-          {
-            "count": 1,
-            "percentage": 0.00219,
-            "value": "EL6 "
           }
         ],
         "name": "recclass",
         "stats": {
-          "missing_count": 45716,
-          "p_missing": 100.0,
-          "p_uniques": 0.0,
-          "uniques_count": 0
+          "missing_count": 0,
+          "p_missing": 0.0,
+          "p_uniques": 0.971,
+          "uniques_count": 444
         }
       },
       "reclat": {
+        "column_dtype": "float",
         "column_type": "numeric",
         "dtypes_stats": {
           "bool": 0,
@@ -582,54 +635,54 @@ export default function( { params, store} ){
           "string": 0
         },
         "frequency": [{
-            "count": 2,
-            "percentage": 0.00437,
-            "value": "52.550000"
+            "count": 6438,
+            "percentage": 14.0826,
+            "value": 0.0
           },
           {
-            "count": 2,
-            "percentage": 0.00437,
-            "value": "50.200000"
+            "count": 4761,
+            "percentage": 10.4143,
+            "value": -71.5
           },
           {
-            "count": 2,
-            "percentage": 0.00437,
-            "value": "53.350000"
+            "count": 3040,
+            "percentage": 6.64975,
+            "value": -84.0
           },
           {
-            "count": 2,
-            "percentage": 0.00437,
-            "value": "-30.133330"
+            "count": 1506,
+            "percentage": 3.29425,
+            "value": -72.0
           },
           {
-            "count": 1,
-            "percentage": 0.00219,
-            "value": "-76.830270"
+            "count": 1130,
+            "percentage": 2.47178,
+            "value": -79.6833267211914
           },
           {
-            "count": 1,
-            "percentage": 0.00219,
-            "value": "-76.705920"
+            "count": 680,
+            "percentage": 1.48744,
+            "value": -76.71666717529297
           },
           {
-            "count": 1,
-            "percentage": 0.00219,
-            "value": "-76.721460"
+            "count": 539,
+            "percentage": 1.17902,
+            "value": -76.1833267211914
           },
           {
-            "count": 1,
-            "percentage": 0.00219,
-            "value": "36.266670"
+            "count": 263,
+            "percentage": 0.57529,
+            "value": -84.21666717529297
           },
           {
-            "count": 1,
-            "percentage": 0.00219,
-            "value": "34.346670"
+            "count": 226,
+            "percentage": 0.49436,
+            "value": -86.36666870117188
           },
           {
-            "count": 1,
-            "percentage": 0.00219,
-            "value": "35.047530"
+            "count": 217,
+            "percentage": 0.47467,
+            "value": -86.71666717529297
           }
         ],
         "hist": [{
@@ -640,7 +693,7 @@ export default function( { params, store} ){
           {
             "lower": -78.9400016784668,
             "upper": -70.51333465576172,
-            "value": 8304
+            "value": 8308
           },
           {
             "lower": -70.51333465576172,
@@ -736,7 +789,7 @@ export default function( { params, store} ){
         "name": "reclat",
         "stats": {
           "coef_variation": -1.18547,
-          "interquartile_range": 76.71424,
+          "interquartile_range": 76.71424102783203,
           "kurtosis": -1.4768000616006505,
           "mad": 12.76421,
           "max": 81.16667175292969,
@@ -746,13 +799,13 @@ export default function( { params, store} ){
           "missing_count": 7315,
           "na": 7315,
           "p_missing": 16.0,
-          "p_uniques": 28.17,
+          "p_uniques": 28.165,
           "quantile": {
-            "0.05": -84.35516,
-            "0.25": -76.71424,
+            "0.05": -84.35516357421875,
+            "0.25": -76.71424102783203,
             "0.5": -71.5,
             "0.75": 0.0,
-            "0.95": 34.49058
+            "0.95": 34.49058151245117
           },
           "range": 168.53334045410156,
           "skewness": 0.4915911839652446,
@@ -764,6 +817,7 @@ export default function( { params, store} ){
         }
       },
       "reclong": {
+        "column_dtype": "float",
         "column_type": "numeric",
         "dtypes_stats": {
           "bool": 0,
@@ -775,54 +829,54 @@ export default function( { params, store} ){
           "string": 0
         },
         "frequency": [{
-            "count": 2,
-            "percentage": 0.00437,
-            "value": "-64.550000"
+            "count": 6214,
+            "percentage": 13.59262,
+            "value": 0.0
           },
           {
-            "count": 2,
-            "percentage": 0.00437,
-            "value": "-5.866670"
+            "count": 4985,
+            "percentage": 10.90428,
+            "value": 35.66667175292969
           },
           {
-            "count": 1,
-            "percentage": 0.00219,
-            "value": "-100.866670"
+            "count": 3040,
+            "percentage": 6.64975,
+            "value": 168.0
           },
           {
-            "count": 1,
-            "percentage": 0.00219,
-            "value": "-99.383330"
+            "count": 1506,
+            "percentage": 3.29425,
+            "value": 26.0
           },
           {
-            "count": 1,
-            "percentage": 0.00219,
-            "value": "150.516670"
+            "count": 657,
+            "percentage": 1.43713,
+            "value": 159.75
           },
           {
-            "count": 1,
-            "percentage": 0.00219,
-            "value": "3.860830"
+            "count": 637,
+            "percentage": 1.39339,
+            "value": 159.6666717529297
           },
           {
-            "count": 1,
-            "percentage": 0.00219,
-            "value": "157.071740"
+            "count": 542,
+            "percentage": 1.18558,
+            "value": 157.1666717529297
           },
           {
-            "count": 1,
-            "percentage": 0.00219,
-            "value": "156.964540"
+            "count": 473,
+            "percentage": 1.03465,
+            "value": 155.75
           },
           {
-            "count": 1,
-            "percentage": 0.00219,
-            "value": "156.923220"
+            "count": 263,
+            "percentage": 0.57529,
+            "value": 160.5
           },
           {
-            "count": 1,
-            "percentage": 0.00219,
-            "value": "156.434180"
+            "count": 228,
+            "percentage": 0.49873,
+            "value": -70.0
           }
         ],
         "hist": [{
@@ -904,22 +958,22 @@ export default function( { params, store} ){
         "name": "reclong",
         "stats": {
           "coef_variation": 1.32048,
-          "interquartile_range": 157.16667,
+          "interquartile_range": 157.1666717529297,
           "kurtosis": -0.7312421309648038,
           "mad": 39.53972,
           "max": 354.47332763671875,
           "mean": 61.07431878848027,
-          "median": 35.66667,
+          "median": 35.66667175292969,
           "min": -165.43333435058594,
           "missing_count": 7315,
           "na": 7315,
           "p_missing": 16.0,
-          "p_uniques": 32.17,
+          "p_uniques": 32.175,
           "quantile": {
-            "0.05": -90.36556,
+            "0.05": -90.36556243896484,
             "0.25": 0.0,
-            "0.5": 35.66667,
-            "0.75": 157.16667,
+            "0.5": 35.66667175292969,
+            "0.75": 157.1666717529297,
             "0.95": 168.0
           },
           "range": 519.9066619873047,
@@ -932,72 +986,82 @@ export default function( { params, store} ){
         }
       },
       "year": {
+        "column_dtype": "date",
         "column_type": "date",
+        "dtypes_stats": {
+          "bool": 0,
+          "date": 45428,
+          "float": 0,
+          "int": 0,
+          "missing": 0,
+          "null": 288,
+          "string": 0
+        },
         "frequency": [{
-            "count": 45,
-            "percentage": 0.09843,
-            "value": "01/01/1938 12:00:00 AM"
+            "count": 3323,
+            "percentage": 7.26879,
+            "value": "01/01/2003 12:00:00 AM"
           },
           {
-            "count": 18,
-            "percentage": 0.03937,
-            "value": "01/01/1924 12:00:00 AM"
+            "count": 3046,
+            "percentage": 6.66288,
+            "value": "01/01/1979 12:00:00 AM"
           },
           {
-            "count": 14,
-            "percentage": 0.03062,
-            "value": "01/01/1899 12:00:00 AM"
+            "count": 2697,
+            "percentage": 5.89947,
+            "value": "01/01/1998 12:00:00 AM"
           },
           {
-            "count": 12,
-            "percentage": 0.02625,
-            "value": "01/01/1866 12:00:00 AM"
+            "count": 2456,
+            "percentage": 5.3723,
+            "value": "01/01/2006 12:00:00 AM"
           },
           {
-            "count": 12,
-            "percentage": 0.02625,
-            "value": "01/01/1893 12:00:00 AM"
+            "count": 2296,
+            "percentage": 5.02231,
+            "value": "01/01/1988 12:00:00 AM"
           },
           {
-            "count": 8,
-            "percentage": 0.0175,
-            "value": "01/01/1822 12:00:00 AM"
+            "count": 2078,
+            "percentage": 4.54545,
+            "value": "01/01/2002 12:00:00 AM"
           },
           {
-            "count": 5,
-            "percentage": 0.01094,
-            "value": "01/01/1859 12:00:00 AM"
+            "count": 1940,
+            "percentage": 4.24359,
+            "value": "01/01/2004 12:00:00 AM"
           },
           {
-            "count": 1,
-            "percentage": 0.00219,
-            "value": "01/01/1817 12:00:00 AM"
+            "count": 1792,
+            "percentage": 3.91985,
+            "value": "01/01/2000 12:00:00 AM"
           },
           {
-            "count": 1,
-            "percentage": 0.00219,
-            "value": "01/01/1636 12:00:00 AM"
+            "count": 1696,
+            "percentage": 3.70986,
+            "value": "01/01/1997 12:00:00 AM"
           },
           {
-            "count": 1,
-            "percentage": 0.00219,
-            "value": "01/08/0601 12:00:00 AM"
+            "count": 1691,
+            "percentage": 3.69892,
+            "value": "01/01/1999 12:00:00 AM"
           }
         ],
         "name": "year",
         "stats": {
           "kurtosis": null,
-          "max": null,
+          "max": "12/28/0860 12:00:00 AM",
           "mean": null,
-          "min": null,
-          "missing_count": 45716,
-          "na": 45716,
-          "p_missing": 100.0,
-          "p_uniques": 0.0,
+          "min": "01/01/1583 12:00:00 AM",
+          "missing_count": 288,
+          "na": 288,
+          "p_missing": 0.63,
+          "p_uniques": 0.58,
           "skewness": null,
           "stddev": null,
           "sum": null,
-          "uniques_count": 0,
+          "uniques_count": 265,
           "variance": null,
           "zeros": 0
         }
@@ -1010,157 +1074,15 @@ export default function( { params, store} ){
       "numeric": 4
     },
     "rows_count": 45716,
-    "size": "47.3MiB",
+    "size": "88.0MiB",
     "summary": {
       "cols_count": 10,
       "missing_count": "0.4891941552191793%",
       "rows_count": 45716,
-      "size": "36.5MiB"
+      "size": "85.1MiB"
     }
   };
 
-  // let dataset = {
-  //   "columns": {
-  //     "escuelas_cercanas": {
-  //       "column_type": "bool",
-  //       "dtypes_stats": {
-  //         "bool": 21,
-  //         "date": 0,
-  //         "float": 0,
-  //         "int": 0,
-  //         "missing": 0,
-  //         "null": 76,
-  //         "string": 3
-  //       },
-  //       "frequency": [
-  //         {
-  //           "count": 76,
-  //           "percentage": 76.0,
-  //           "value": null
-  //         },
-  //         {
-  //           "count": 21,
-  //           "percentage": 21.0,
-  //           "value": "true"
-  //         },
-  //         {
-  //           "count": 3,
-  //           "percentage": 3.0,
-  //           "value": "si"
-  //         }
-  //       ],
-  //       "name": "escuelas_cercanas",
-  //       "stats": {
-  //         "missing_count": 76,
-  //         "p_missing": 76.0,
-  //         "p_uniques": 3.0,
-  //         "uniques_count": 3
-  //       }
-  //     },
-  //     "preciorenta": {
-  //       "column_type": "numeric",
-  //       "dtypes_stats": {
-  //         "bool": 0,
-  //         "date": 0,
-  //         "float": 100,
-  //         "int": 0,
-  //         "missing": 0,
-  //         "null": 0,
-  //         "string": 0
-  //       },
-  //       "frequency": [
-  //         {
-  //           "count": 98,
-  //           "percentage": 98.0,
-  //           "value": null
-  //         },
-  //         {
-  //           "count": 1,
-  //           "percentage": 1.0,
-  //           "value": 810
-  //         },
-  //         {
-  //           "count": 1,
-  //           "percentage": 1.0,
-  //           "value": 300
-  //         }
-  //       ],
-  //       "hist": [
-  //         {
-  //           "bin": null,
-  //           "count": 2,
-  //           "max": 100,
-  //           "min": 0
-  //         },
-  //         {
-  //           "bin": 1.0,
-  //           "count": 1,
-  //           "max": 200,
-  //           "min": 100
-  //         },
-  //         {
-  //           "bin": 2.0,
-  //           "count": 4,
-  //           "max": 300,
-  //           "min": 200
-  //         }
-  //       ],
-  //       "name": "preciorenta",
-  //       "stats": {
-  //         "coef_variation": 0.64977,
-  //         "interquartile_range": 510.0,
-  //         "kurt": -2.0,
-  //         "mad": 0.0,
-  //         "max": 810,
-  //         "mean": 555.0,
-  //         "median": 300.0,
-  //         "min": 300,
-  //         "missing_count": 98,
-  //         "p_missing": 98.0,
-  //         "p_uniques": 3.0,
-  //         "p_zeros": 0.0,
-  //         "quantile": {
-  //           "0.05": 300.0,
-  //           "0.25": 300.0,
-  //           "0.5": 300.0,
-  //           "0.75": 810.0,
-  //           "0.95": 810.0
-  //         },
-  //         "range": 510,
-  //         "skewness": 0.0,
-  //         "stdev": 360.62446,
-  //         "sum": 1110,
-  //         "uniques_count": 3,
-  //         "variance": 130050.0,
-  //         "zeros": 0
-  //       }
-  //     }
-  //   },
-  //   "count_types": {
-  //     "bool": 1,
-  //     "categorical": 0,
-  //     "date": 0,
-  //     "null": 0,
-  //     "numeric": 1
-  //   },
-  //   "rows_count": 100,
-  //   "size": "18.5MiB",
-  //   "summary": {
-  //     "cols_count": 89,
-  //     "missing_count": "66.51%",
-  //     "rows_count": 100,
-  //     "size": "17.6MiB"
-  //   }
-  // };
-
     store.commit('add', dataset);
-
-    // console.log('params.id = ', params.id);
-
-    // return axios.get(`https://itunes.apple.com/search?term=${params.id}&entity=album`)
-    //     .then((response) => {
-    //         store.commit('add', response.data.results);
-    //     });
-
 
 }

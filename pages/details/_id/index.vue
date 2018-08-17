@@ -27,8 +27,6 @@ import TableBar from '@/components/TableBar';
 import TopValues from '@/components/TopValues';
 import Frequent from '@/components/Frequent';
 import Stats from '@/components/Stats';
-import Logo from '~/components/Logo.vue'
-import VuetifyLogo from '~/components/VuetifyLogo.vue'
 
 export default {
 

@@ -13,12 +13,6 @@
             </span>
       <span>{{data1}}, {{ num1 }}%</span>
     </v-tooltip>
-    <!-- <v-tooltip bottom>
-        <span slot="activator">
-            <div class="pb3" :style="{'width': num3+'%'}"></div>
-        </span>
-        <span>Dato 3: {{ num3 }}%</span>
-    </v-tooltip> -->
   </div>
 
 </template>
