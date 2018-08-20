@@ -1,15 +1,16 @@
 <template>
   <div>
-    <h3>Frequent values</h3>
+    <h3>Histogram</h3>
+
     <div class="scroll-container">
       <div class="freq-container">
         <div class="freq-bar" v-for="(item, index) in values" :key="index"
-             @mouseover="changeValue(`Count: ${item.count}, ${item.percentage}%`)">
-          <div class="freq-value" :style="{'height': item.percentage+'%'}"></div>
+             @mouseover="changeValue(`Lower: ${item.lower}, Upper: ${item.upper}, Value: ${item.value}`)">
+          <div class="freq-value" :style="{'height': normVal(item.value)+'%'}"></div>
         </div>
       </div>
     </div>
-    <div>Valor: {{ currentVal }}</div>
+    <div>{{ currentVal }}</div>
 
   </div>
 </template>
@@ -20,21 +21,33 @@
     props: ['values', 'total'],
 
     data() {
-      return {
-        sortedData: [],
-        currentVal: '',
-      }
+        return {
+            sortedData: [],
+            currentVal: '',
+            maxVal:0,
+        }
     },
 
     methods: {
-      changeValue(newVal) {
-        this.currentVal = newVal;
-      },
+
+        changeValue(newVal) {
+            this.currentVal = newVal;
+        },
+
+        getMaxVal(arr) {
+            return arr.reduce((max, p) => p.value > max ? p.value : max, arr[0].value);
+        },
+
+        normVal(val) {
+            return ((val * 100) / this.maxVal);
+        }
+
     },
 
     beforeMount() {
 
-      this.changeValue(`Count: ${this.values[0].count}, ${this.values[0].percentage}%`)
+        this.maxVal = this.getMaxVal(this.values);
+        this.changeValue(`Lower: ${this.values[0].lower}, Upper: ${this.values[0].upper}, Value: ${this.values[0].value}`);
 
     }
 
