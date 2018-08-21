@@ -37,3 +37,7 @@ tr td:first-child {
 table.table {
   text-align: left;
 }
+
+.content {
+  background-color: #fff;
+}

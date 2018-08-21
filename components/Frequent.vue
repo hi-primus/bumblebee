@@ -64,7 +64,7 @@
     overflow-x: scroll;
 
     .freq-container {
-      height: 100px;
+      height: 120px;
       width: max-content;
 
       .freq-bar {

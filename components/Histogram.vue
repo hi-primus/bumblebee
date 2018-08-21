@@ -5,12 +5,12 @@
     <div class="scroll-container">
       <div class="freq-container">
         <div class="freq-bar" v-for="(item, index) in values" :key="index"
-             @mouseover="changeValue(`Lower: ${item.lower}, Upper: ${item.upper}, Value: ${item.value}`)">
+             @mouseover="changeValue(item.lower.toFixed(2),item.upper.toFixed(2), item.value)">
           <div class="freq-value" :style="{'height': normVal(item.value)+'%'}"></div>
         </div>
       </div>
     </div>
-    <div>{{ currentVal }}</div>
+    <div>{{ topVal | formatNumber }} - {{ minVal | formatNumber }}, {{ nowCount }}</div>
 
   </div>
 </template>
@@ -25,13 +25,18 @@
             sortedData: [],
             currentVal: '',
             maxVal:0,
+            topVal: 0,
+            minVal: 0,
+            nowCount:0,
         }
     },
 
     methods: {
 
-        changeValue(newVal) {
-            this.currentVal = newVal;
+        changeValue( minVal, maxVal, count ) {
+            this.topVal = minVal;
+            this.minVal = maxVal;
+            this.nowCount = count;
         },
 
         getMaxVal(arr) {
@@ -47,7 +52,7 @@
     beforeMount() {
 
         this.maxVal = this.getMaxVal(this.values);
-        this.changeValue(`Lower: ${this.values[0].lower}, Upper: ${this.values[0].upper}, Value: ${this.values[0].value}`);
+        this.changeValue(this.values[0].lower.toFixed(2),this.values[0].upper.toFixed(2), this.values[0].value);
 
     }
 

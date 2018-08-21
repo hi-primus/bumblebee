@@ -16,6 +16,7 @@
     "@nuxtjs/axios": "^5.0.0",
     "@nuxtjs/font-awesome": "^1.0.3",
     "express": "^4.15.3",
+    "numeral": "^2.0.6",
     "nuxt": "^1.0.0",
     "vuetify": "^0.17.3"
   },

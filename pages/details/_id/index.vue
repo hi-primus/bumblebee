@@ -8,8 +8,12 @@
       <v-flex xs12 sm6 md6>
         <TopValues :values="$store.state.dataset.columns[this.$route.params.id].frequency" :total="$store.state.dataset.rows_count"/>
       </v-flex>
+      
+      <v-flex xs12 sm3 md3 v-if="$store.state.dataset.columns[this.$route.params.id].hist">
+        <Histogram :values="$store.state.dataset.columns[this.$route.params.id].hist" :total="$store.state.dataset.rows_count"/>
+      </v-flex>
 
-      <v-flex xs12 sm6 md6>
+      <v-flex xs12 sm3 md3>
         <Frequent :values="$store.state.dataset.columns[this.$route.params.id].frequency" :total="$store.state.dataset.columns[this.$route.params.id].frequency[0].count"/>
       </v-flex>
 
@@ -17,9 +21,7 @@
         <Stats :values="$store.state.dataset.columns[this.$route.params.id].stats"/>
       </v-flex>
 
-      <v-flex xs12 sm12 md12 v-if="$store.state.dataset.columns[this.$route.params.id].hist">
-        <Histogram :values="$store.state.dataset.columns[this.$route.params.id].hist" :total="$store.state.dataset.rows_count"/>
-      </v-flex>
+
 
 
   </v-layout>
