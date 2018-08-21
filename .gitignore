@@ -115,3 +115,9 @@ npm-debug.log
 # Nuxt generate
 dist
 
+.idea/workspace.xml
+.idea/modules.xml
+.idea/inspectionProfiles/Project_Default.xml
+.idea/vcs.xml
+.idea/Bumblebee.iml
+.idea/misc.xml
