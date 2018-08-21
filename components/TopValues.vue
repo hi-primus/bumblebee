@@ -20,14 +20,6 @@
       </tbody>
     </table>
 
-    <!-- <div class="sidechart" v-for="(item, index) in values" :key="index">
-      <div class="bar">
-        <p class="bartext" :style="{'width': item.percentage+'%'}" >{{item.value}}</p>
-        <p class="counttext">{{item.count}}</p>
-        <p class="totaltext">{{item.percentage}}%</p>
-      </div>
-    </div> -->
-
   </div>
 </template>
 
