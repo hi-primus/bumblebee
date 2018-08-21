@@ -12,6 +12,14 @@ const createStore = () => {
 
       add(state, payload) {
         state.dataset = payload;
+      },
+
+      add2(state, payload) {
+        state.dataset2 = payload;
+      },
+
+      error(state, payload){
+        state.error = payload;
       }
 
     }

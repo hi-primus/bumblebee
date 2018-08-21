@@ -26,6 +26,7 @@
 </template>
 
 <script>
+
 import TableBar from '@/components/TableBar';
 import TopValues from '@/components/TopValues';
 import Frequent from '@/components/Frequent';
@@ -38,9 +39,10 @@ export default {
 
   data(){
     return{
-        
+
     }
   },
+
   components: {
     TableBar,
     TopValues,
@@ -48,5 +50,6 @@ export default {
     Frequent,
     Histogram
   }
+
 }
 </script>
