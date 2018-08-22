@@ -2,7 +2,8 @@
   <v-layout row wrap>
 
       <v-flex xs12 sm12 md12 class="component-container" >
-        <h1>{{this.$route.params.id}} detailed view</h1>
+        <h1>{{this.$route.params.id}}</h1>
+        <p>{{$store.state.dataset.columns[this.$route.params.id].column_type}}</p>
       </v-flex>
 
       <v-flex xs12 sm6 md6 class="component-container" >

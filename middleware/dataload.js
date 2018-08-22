@@ -4,7 +4,7 @@ import axios from 'axios';
 	let dataset = [];
 
 	try {
-		dataset = require('.././static/data.json');
+		dataset = require('.././datasource/data.json');
 	} catch (e) {
 		console.log(e);
 	}
