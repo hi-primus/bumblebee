@@ -1,49 +1,54 @@
 *{
-  font-family: 'Roboto', sans-serif;
+	font-family: 'Roboto', sans-serif;
 }
 
 /* width */
 ::-webkit-scrollbar {
-  width: 5px;
+	width: 5px;
 }
 
 /* Track */
 ::-webkit-scrollbar-track {
-  background: #f1f1f1;
+	background: #f1f1f1;
 }
 
 
 /* Handle */
 ::-webkit-scrollbar-thumb {
-  background: #888;
+	background: #888;
 }
 
 
 /* Handle on hover */
 ::-webkit-scrollbar-thumb:hover {
-  background: #555;
+	background: #555;
 }
 
 
 
 body{
-  background-color: inherit;
+	background-color: inherit;
 }
 
 .hoverable{
-  cursor: pointer;
+	cursor: pointer;
 }
 
 tr{
-  td:first-child{
-    width: 40px;
-  }
+	td:first-child{
+		width: 40px;
+	}
 }
 
 table.table {
-  text-align: left;
+	text-align: left;
 }
 
 .content{
-  background-color: #fff;
+	background-color: #fff;
+}
+
+.component-container{
+	padding: 0 15px;
+	margin: 20px 0;
 }

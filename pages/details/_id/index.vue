@@ -1,23 +1,23 @@
 <template>
   <v-layout row wrap>
 
-      <v-flex xs12 sm12 md12>
+      <v-flex xs12 sm12 md12 class="component-container" >
         <h1>{{this.$route.params.id}} detailed view</h1>
       </v-flex>
 
-      <v-flex xs12 sm6 md6>
+      <v-flex xs12 sm6 md6 class="component-container" >
         <TopValues :values="$store.state.dataset.columns[this.$route.params.id].frequency" :total="$store.state.dataset.rows_count"/>
       </v-flex>
       
-      <v-flex xs12 sm3 md3 v-if="$store.state.dataset.columns[this.$route.params.id].hist">
+      <v-flex xs12 sm3 md3 class="component-container"  v-if="$store.state.dataset.columns[this.$route.params.id].hist">
         <Histogram :values="$store.state.dataset.columns[this.$route.params.id].hist" :total="$store.state.dataset.rows_count"/>
       </v-flex>
 
-      <v-flex xs12 sm3 md3>
+      <v-flex xs12 sm3 md3 class="component-container" >
         <Frequent :values="$store.state.dataset.columns[this.$route.params.id].frequency" :total="$store.state.dataset.columns[this.$route.params.id].frequency[0].count"/>
       </v-flex>
 
-      <v-flex xs12 sm12 md12>
+      <v-flex xs12 sm12 md12 class="component-container" >
         <Stats :values="$store.state.dataset.columns[this.$route.params.id].stats"/>
       </v-flex>
 

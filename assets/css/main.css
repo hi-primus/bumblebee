@@ -41,3 +41,8 @@ table.table {
 .content {
   background-color: #fff;
 }
+
+.component-container {
+  padding: 0 15px;
+  margin: 20px 0;
+}
