@@ -11,7 +11,7 @@ You can output this json from whatever software or library you want, for example
 
 For now Optimus https://github.com/ironmussa/Optimus can output json compatible with Bumblebee when you run the profiler().
 
-If you write a fucntion to output a json formatted to bumblebee please be sure to contribute with the repo.
+If you write a function to output a json formatted to bumblebee please be sure to contribute with the repo.
 
 ## Install
 
