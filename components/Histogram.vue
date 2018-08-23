@@ -5,8 +5,8 @@
     <div class="scroll-container">
       <div class="freq-container">
         <div class="freq-bar" v-for="(item, index) in values" :key="index"
-             @mouseover="changeValue(item.lower.toFixed(2),item.upper.toFixed(2), item.value)">
-          <div class="freq-value" :style="{'height': normVal(item.value)+'%'}"></div>
+             @mouseover="changeValue(item.lower.toFixed(2),item.upper.toFixed(2), item.count)">
+          <div class="freq-value" :style="{'height': normVal(item.count)+'%'}"></div>
         </div>
       </div>
     </div>
@@ -40,7 +40,7 @@
         },
 
         getMaxVal(arr) {
-            return arr.reduce((max, p) => p.value > max ? p.value : max, arr[0].value);
+            return arr.reduce((max, p) => p.count > max ? p.count : max, arr[0].count);
         },
 
         normVal(val) {
@@ -52,7 +52,7 @@
     beforeMount() {
 
         this.maxVal = this.getMaxVal(this.values);
-        this.changeValue(this.values[0].lower.toFixed(2),this.values[0].upper.toFixed(2), this.values[0].value);
+        this.changeValue(this.values[0].lower.toFixed(2),this.values[0].upper.toFixed(2), this.values[0].count);
 
     }
 

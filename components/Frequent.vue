@@ -37,7 +37,7 @@
 
     beforeMount() {
 
-      this.changeValue(`${this.values[0].value}, ${this.values[0].percentage}%`)
+      this.changeValue(`${this.values[0].count}, ${this.values[0].percentage}%`)
 
     }
 
