@@ -40,7 +40,8 @@ module.exports = {
   */
   plugins: [
     '@/plugins/vuetify',
-    '@/plugins/numeral'
+    '@/plugins/numeral',
+    '@/plugins/varCheck'
   ],
 
   /*

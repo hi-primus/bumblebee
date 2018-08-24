@@ -165,6 +165,13 @@
 
 <style lang="scss" scoped>
 
+  tr{
+    border: none !important;
+    td{
+      height: 25px !important;
+    }
+  }
+
   .no-line {
     td {
       border: none !important;

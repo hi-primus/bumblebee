@@ -13,9 +13,9 @@
       </thead>
       <tbody>
       <tr v-for="(item, index) in values" :key="index">
-        <td style="width:40%;" >{{item.value}}</td>
-        <td style="width:20%;" >{{item.count}}</td>
-        <td style="width:20%;" >{{item.percentage}}%</td>
+        <td style="width:40%;" >{{ item.value | varCheck}}</td>
+        <td style="width:20%;" >{{ item.count | varCheck }}</td>
+        <td style="width:20%;" >{{ item.percentage | varCheck }}%</td>
       </tr>
       </tbody>
     </table>
@@ -66,5 +66,13 @@
     }
 
   }
+
+  tr{
+    border: none !important;
+    td{
+      height: 25px !important;
+    }
+  }
+
 
 </style>
