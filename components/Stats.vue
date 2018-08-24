@@ -28,11 +28,11 @@
             </tr>
 
             <tr v-if="values.min!=undefined">
-              <td style="width:50%;">Minimum</td><td style="width:50%;">{{values.min.toFixed(2)}}</td>
+              <td style="width:50%;">Minimum</td><td style="width:50%;">{{values.min}}</td>
             </tr>
 
             <tr v-if="values.max!=undefined">
-              <td style="width:50%;">Maximum</td><td style="width:50%;">{{values.max.toFixed(2)}}</td>
+              <td style="width:50%;">Maximum</td><td style="width:50%;">{{values.max}}</td>
             </tr>
 
             <tr v-if="values.zeros!=undefined">
