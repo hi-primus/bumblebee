@@ -1,10 +1,9 @@
 <template>
   <div>
     <h3>Histogram</h3>
-
     <div class="scroll-container">
       <div class="freq-container">
-        <div class="freq-bar" v-for="(item, index) in values" :key="index"
+        <div class="freq-bar" v-for="(item, index) in values" :key="index" :style="{ 'width' : 'calc('+(100/barNum)+'% - 2px)'}"
              @mouseover="changeValue(item.lower.toFixed(2),item.upper.toFixed(2), item.count)">
           <div class="freq-value" :style="{'height': normVal(item.count)+'%'}"></div>
         </div>
@@ -28,6 +27,7 @@
             topVal: 0,
             minVal: 0,
             nowCount:0,
+            barNum: 0,
         }
     },
 
@@ -53,6 +53,8 @@
 
         this.maxVal = this.getMaxVal(this.values);
         this.changeValue(this.values[0].lower.toFixed(2),this.values[0].upper.toFixed(2), this.values[0].count);
+
+        this.barNum = this.values.length;
 
     }
 
@@ -80,7 +82,7 @@
 
     .freq-container {
       height: 120px;
-      width: max-content;
+      //width: max-content;
 
       .freq-bar {
         height: 100%;

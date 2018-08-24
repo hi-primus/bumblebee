@@ -3,7 +3,7 @@
     <h3>Frequent values</h3>
     <div class="scroll-container">
       <div class="freq-container">
-        <div class="freq-bar" v-for="(item, index) in values" :key="index"
+        <div class="freq-bar" v-for="(item, index) in values" :key="index" :style="{ 'width' : 'calc('+(100/barNum)+'% - 2px)'}"
              @mouseover="changeValue(`${item.value}, ${item.percentage}%`)">
           <div class="freq-value" :style="{'height': normVal(item.count)+'%'}"></div>
         </div>
@@ -23,6 +23,7 @@
       return {
         sortedData: [],
         currentVal: '',
+        barNum:0,
       }
     },
 
@@ -37,7 +38,9 @@
 
     beforeMount() {
 
-      this.changeValue(`${this.values[0].count}, ${this.values[0].percentage}%`)
+      this.changeValue(`${this.values[0].count}, ${this.values[0].percentage}%`);
+
+      this.barNum = this.values.length;
 
     }
 
@@ -65,7 +68,7 @@
 
     .freq-container {
       height: 120px;
-      width: max-content;
+      //width: max-content;
 
       .freq-bar {
         height: 100%;

@@ -2,6 +2,7 @@
 
   <div>
     <v-layout row wrap v-if="!$store.state.error">
+      
         <v-flex xs12 sm12 md12>
           <TableBar :dataset="$store.state.dataset.columns" :total="$store.state.dataset.rows_count"/>
         </v-flex>

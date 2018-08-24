@@ -52,3 +52,10 @@ table.table {
 	padding: 0 15px;
 	margin: 20px 0;
 }
+
+.bar-adjust{
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	justify-content: center;
+}
