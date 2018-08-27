@@ -92,7 +92,6 @@
         float: left;
         &:hover {
           background-color: rgba(235, 235, 235, 0.527);
-          cursor: crosshair;
           .freq-value{
             background-color: #3c948b;
           }

@@ -27,21 +27,27 @@
 
       <v-layout row wrap>
 
-            <v-flex xs12 sm4 md4 class="component-container" >
+            <v-flex xs12 sm3 md3 class="component-container" >
               <Stats :values="$store.state.dataset.columns[this.$route.params.id].stats"/>
             </v-flex>
 
-            <v-flex xs12 sm4 md4 class="component-container" v-if="$store.state.dataset.columns[this.$route.params.id].stats.quantile!=undefined">
+            <v-flex xs12 sm3 md3 class="component-container" v-if="$store.state.dataset.columns[this.$route.params.id].stats.quantile!=undefined">
               <Quantile :values="$store.state.dataset.columns[this.$route.params.id].stats"/>
             </v-flex>
 
-            <v-flex xs12 sm4 md4 class="component-container" v-if="$store.state.dataset.columns[this.$route.params.id].stats.quantile!=undefined">
+            <v-flex xs12 sm3 md3 class="component-container" v-if="$store.state.dataset.columns[this.$route.params.id].stats.quantile!=undefined">
               <Descriptive :values="$store.state.dataset.columns[this.$route.params.id].stats"/>
             </v-flex>
 
-            <v-flex xs12 sm8 md8 class="component-container" v-if="$store.state.dataset.columns[this.$route.params.id].stats.quantile==undefined">
+            <v-flex xs12 sm6 md6 class="component-container" v-if="$store.state.dataset.columns[this.$route.params.id].stats.quantile==undefined">
               <TopValues :values="$store.state.dataset.columns[this.$route.params.id].frequency" :total="$store.state.dataset.columns[this.$route.params.id].frequency[0].count"/>
             </v-flex>
+
+            <v-flex xs12 sm3 md3 class="component-container">
+              <DataTypes :values="$store.state.dataset.columns[this.$route.params.id].dtypes_stats" />
+            </v-flex>
+
+
 
       </v-layout>
 
@@ -74,6 +80,7 @@ import Quantile from '@/components/QuantileStats';
 import Descriptive from '@/components/DescriptiveStats';
 import Histogram from '@/components/Histogram';
 import DataBar from '@/components/DataBar';
+import DataTypes from '@/components/DataTypes';
 import myMixin from '~/plugins/mixins';
 
 export default {
@@ -96,7 +103,8 @@ export default {
     Descriptive,
     Frequent,
     Histogram,
-    DataBar
+    DataBar,
+    DataTypes
   }
 
 }

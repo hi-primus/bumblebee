@@ -11,7 +11,7 @@
       </thead> -->
       <tbody>
       <tr v-for="(item, index) in values" :key="index">
-        <td style="width:80%;" > <div class="top-bar" :style="{'width': normVal(item.count)+'%'  }">{{ item.value | varCheck}}</div> </td>
+        <td style="width:80%;" > <div class="top-bar" :style="{'width': normVal(item.count)+'%'  }"> <p>{{ item.value | varCheck}}</p> </div> </td>
         <td style="width:20%;" >{{ item.count | varCheck }}</td>
       </tr>
       </tbody>
@@ -43,6 +43,14 @@
 
   .top-bar{
     background-color: #4db6ac;
+    position: relative;
+    height: 100%;
+    p{
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: max-content;
+    }
   }
 
   // sidechart
