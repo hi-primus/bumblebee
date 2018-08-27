@@ -1,15 +1,5 @@
 <template>
   <v-app>
-    
-    <v-toolbar fixed app :clipped-left="clipped">
-
-      <nuxt-link tag="span" to="/">
-        <v-toolbar-title v-text="title" class="hoverable"></v-toolbar-title>
-      </nuxt-link>
-
-      <v-spacer></v-spacer>
-
-    </v-toolbar>
 
     <v-content>
       <v-container>

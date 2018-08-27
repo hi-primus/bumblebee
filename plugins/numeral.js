@@ -2,5 +2,9 @@
   var numeral = require("numeral");
 
   Vue.filter("formatNumber", function (value) {
-    return numeral(value).format("0 a");
+    if(value < 0){
+      return "(" + numeral(value).format("0 a") + ")";
+    }else{
+      return numeral(value).format("0 a");
+    }
   });

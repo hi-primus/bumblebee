@@ -7,3 +7,4 @@ Vue.filter("varCheck", function (value) {
         return 'Null';
     }
 });
+

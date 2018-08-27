@@ -14,7 +14,7 @@
 
     <table class="table">
 
-      <thead>
+      <thead v-if="false">
         <tr>
           <th class="">Data Type</th>
           <th class="">Type</th>
@@ -46,10 +46,13 @@
 <script>
 
   import DataBar from '.././components/DataBar';
+  import myMixin from '@/plugins/mixins';
 
   export default {
 
     props: ['dataset', 'total'],
+
+    mixins:[myMixin],
 
     components: {
       DataBar
@@ -84,24 +87,7 @@
 
     },
     methods:{
-      dataType(data){
-        if(data == 'string'){
-          return 'ABC';
-        }
-        else if(data == 'int'){
-          return '#';
-        }
-        else if(data == 'float'){
-          return '##.#';
-        }
-        else if(data == 'boolean'){
-          return '0/1';
-        }
-        else if(data == 'date'){
-          return '##/##/####';
-        }
 
-      },
 
     },
     created() {
@@ -111,5 +97,15 @@
 </script>
 
 <style lang="scss" scoped>
+  table{
+    color:#000 !important;
+  }
 
+  tbody{
+    tr{
+      td{
+        height: 30px;;
+      }
+    }
+  }
 </style>

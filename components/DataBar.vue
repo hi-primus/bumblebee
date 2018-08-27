@@ -46,10 +46,14 @@
 
 <style lang="scss" scoped>
 
+  *{
+    color: #fff !important;
+  }
+
   // status bar
   .pbar {
     background-color: lightgray;
-    height: 8px;
+    height: 5px;
     border-radius: 50px;
     width: 100%;
     overflow: overlay;
@@ -59,16 +63,16 @@
   }
 
   .pb1 {
-    background-color: green;
-    height: 8px;
+    background-color: #4db6ac;
+    height: 5px;
     /*border-radius: 50px 0 0 50px;*/
     width: 50%;
     float: left;
   }
 
   .pb2 {
-    background-color: red;
-    height: 8px;
+    background-color: #e57373;
+    height: 5px;
     width: 25%;
     float: left;
     /*border-radius: 0 50px 50px 0;*/

@@ -1,5 +1,6 @@
 *{
 	font-family: 'Roboto', sans-serif;
+	color: #000;
 }
 
 /* width */
@@ -24,7 +25,10 @@
 	background: #555;
 }
 
-
+h3{
+	text-transform: uppercase;
+	font-size: 13px;
+}
 
 body{
 	background-color: inherit;
@@ -49,8 +53,11 @@ table.table {
 }
 
 .component-container{
-	padding: 0 15px;
-	margin: 20px 0;
+	padding: 0 15px 0 0;
+	margin: 0 0 20px;
+	p{
+		margin: 0;
+	}
 }
 
 .bar-adjust{
@@ -58,4 +65,24 @@ table.table {
 	flex-direction: column;
 	align-items: flex-start;
 	justify-content: center;
+}
+
+.input-group label {
+  font-size: 12px;
+  line-height: 30px;
+  height: 20px;
+
+}
+
+.back-btn{
+	height: 50px;
+}
+
+.input-group--text-field input,
+.input-group--text-field textarea {
+  font-size: 14px;
+}
+
+table.table thead td:not(:nth-child(1)), table.table tbody td:not(:nth-child(1)), table.table thead th:not(:nth-child(1)), table.table tbody th:not(:nth-child(1)), table.table thead td:first-child, table.table tbody td:first-child, table.table thead th:first-child, table.table tbody th:first-child{
+	padding: 0;
 }

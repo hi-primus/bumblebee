@@ -81,7 +81,7 @@
     overflow-x: scroll;
 
     .freq-container {
-      height: 120px;
+      height: 90px;
       //width: max-content;
 
       .freq-bar {
@@ -93,11 +93,14 @@
         &:hover {
           background-color: rgba(235, 235, 235, 0.527);
           cursor: crosshair;
+          .freq-value{
+            background-color: #3c948b;
+          }
         }
 
         .freq-value {
           width: 100%;
-          background-color: #aeccde;
+          background-color: #4db6ac;
           height: 50%;
           position: absolute;
           bottom: 0;

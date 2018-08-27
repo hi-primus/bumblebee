@@ -2,20 +2,17 @@
   <div>
 
     <h3>Top values</h3>
-
     <table class="table">
-      <thead>
+      <!-- <thead>
       <tr>
         <th>Value</th>
         <th>Count</th>
-        <th>Frequency(%)</th>
       </tr>
-      </thead>
+      </thead> -->
       <tbody>
       <tr v-for="(item, index) in values" :key="index">
-        <td style="width:40%;" >{{ item.value | varCheck}}</td>
+        <td style="width:80%;" > <div class="top-bar" :style="{'width': normVal(item.count)+'%'  }">{{ item.value | varCheck}}</div> </td>
         <td style="width:20%;" >{{ item.count | varCheck }}</td>
-        <td style="width:20%;" >{{ item.percentage | varCheck }}%</td>
       </tr>
       </tbody>
     </table>
@@ -32,11 +29,21 @@
       return {}
     },
 
+    methods:{
+      normVal(val) {
+        return ((val * 100) / this.total);
+      }
+    }
+
   }
 
 </script>
 
 <style lang="scss" scoped>
+
+  .top-bar{
+    background-color: #4db6ac;
+  }
 
   // sidechart
   .sidechart {
@@ -67,10 +74,27 @@
 
   }
 
+  thead{
+		tr{
+			height: 25px !important;
+		}
+  }
+
   tr{
-    border: none !important;
+    border-bottom: 2px solid transparent !important;
+    th{
+      color: rgba(0, 0, 0, 1) !important;
+      border-bottom: 2px solid transparent !important;
+    }
     td{
-      height: 25px !important;
+      height: 15px !important;
+      font-size: 11px !important;
+    }
+
+    &:hover{
+      .top-bar{
+        background-color: #3c948b;
+      }
     }
   }
 
