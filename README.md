@@ -4,7 +4,7 @@
 
 >> This is an alpha release
 
-A GUI that wants to make data profiling beautiful. You can read any json with this schema https://gist.github.com/argenisleon/f3989cc61da28a6cedcf5c77e5942888/edit and bumblebee with plot frecuency and histogram to better help you meke sense of your data.
+A GUI that wants to make data profiling beautiful. You can read any json with this schema https://gist.github.com/argenisleon/f3989cc61da28a6cedcf5c77e5942888/edit and bumblebee with plot frecuency and histogram to better help you make sense of your data.
 
 ## Blublebee is Agnostic 
 You can output this json from whatever software or library you want, for example R or Pandas(Python) and use it with Bumblebee.
