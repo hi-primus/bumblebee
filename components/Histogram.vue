@@ -1,6 +1,6 @@
 <template>
   <div>
-    <h3>Histogram</h3>
+    <h3>{{title}}</h3>
     <div class="scroll-container">
       <div class="freq-container">
         <div class="freq-bar" v-for="(item, index) in values" :key="index" :style="{ 'width' : 'calc('+(100/barNum)+'% - 2px)'}"
@@ -17,7 +17,7 @@
 <script>
   export default {
 
-    props: ['values', 'total'],
+    props: ['values', 'total','title'],
 
     data() {
         return {

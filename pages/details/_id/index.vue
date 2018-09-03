@@ -52,10 +52,34 @@
       </v-layout>
 
       <v-layout row wrap>
-          
+
           <v-flex xs12 sm12 md12 class="component-container"  v-if="$store.state.dataset.columns[this.$route.params.id].hist">
-            <Histogram :values="$store.state.dataset.columns[this.$route.params.id].hist" :total="$store.state.dataset.rows_count"/>
+            <Histogram :values="$store.state.dataset.columns[this.$route.params.id].hist" :total="$store.state.dataset.rows_count" title="Histogram"/>
           </v-flex>
+
+          <v-flex xs12 sm12 md12 class="component-container"  v-if="$store.state.dataset.columns[this.$route.params.id].hist_year_years">
+            <Histogram :values="$store.state.dataset.columns[this.$route.params.id].hist_year_years" :total="$store.state.dataset.rows_count" title="Years Histogram"/>
+          </v-flex>
+          
+          <v-flex xs12 sm6 md6 class="component-container"  v-if="$store.state.dataset.columns[this.$route.params.id].hist_year_months">
+            <Histogram :values="$store.state.dataset.columns[this.$route.params.id].hist_year_months" :total="$store.state.dataset.rows_count" title="Months Histogram"/>
+          </v-flex>
+
+          <v-flex xs12 sm6 md6 class="component-container"  v-if="$store.state.dataset.columns[this.$route.params.id].hist_year_weekdays">
+            <Histogram :values="$store.state.dataset.columns[this.$route.params.id].hist_year_weekdays" :total="$store.state.dataset.rows_count" title="Week days Histogram"/>
+          </v-flex>
+
+          <v-flex xs12 sm6 md6 class="component-container"  v-if="$store.state.dataset.columns[this.$route.params.id].hist_year_hours">
+            <Histogram :values="$store.state.dataset.columns[this.$route.params.id].hist_year_hours" :total="$store.state.dataset.rows_count" title="Hours Histogram"/>
+          </v-flex>
+
+          <v-flex xs12 sm6 md6 class="component-container"  v-if="$store.state.dataset.columns[this.$route.params.id].hist_year_minutes">
+            <Histogram :values="$store.state.dataset.columns[this.$route.params.id].hist_year_minutes" :total="$store.state.dataset.rows_count" title="Minutes Histogram"/>
+          </v-flex>
+
+
+
+
 
           <v-flex xs12 sm12 md12 class="component-container" >
             <Frequent :values="$store.state.dataset.columns[this.$route.params.id].frequency" :total="$store.state.dataset.columns[this.$route.params.id].frequency[0].count"/>
