@@ -18,7 +18,6 @@
           <p>{{$store.state.dataset.columns[this.$route.params.id].column_type}}</p>
         </v-flex>
 
-
         <v-flex xs12 sm8 md8 class="component-container bar-adjust" >
           <DataBar :data1="$store.state.dataset.columns[this.$route.params.id].stats.missing_count" :total="$store.state.dataset.rows_count"/>
         </v-flex>
