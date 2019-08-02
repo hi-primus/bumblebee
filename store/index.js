@@ -1,31 +1,21 @@
-import Vuex from 'vuex';
+export const state = () => ({
+	dataset: {},
+	dataset2: {},
+	error: {}
+})
 
-const createStore = () => {
+export const mutations = {
 
-  return new Vuex.Store({
+	add (state, payload) {
+		state.dataset = payload
+	},
 
-    state: {
-      dataset: {}
-    },
+	add2 (state, payload) {
+		state.dataset2 = payload
+	},
 
-    mutations: {
-
-      add(state, payload) {
-        state.dataset = payload;
-      },
-
-      add2(state, payload) {
-        state.dataset2 = payload;
-      },
-
-      error(state, payload){
-        state.error = payload;
-      }
-
-    }
-
-  })
+	error (state, payload) {
+		state.error = payload
+	}
 
 }
-
-export default createStore

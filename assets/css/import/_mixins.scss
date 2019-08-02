@@ -1,0 +1,8 @@
+@mixin sibling-of($n) {
+	$selectors: str-split(#{&}, " ");
+	$child: nth($selectors,length($selectors));
+	&:first-child:nth-last-child(#{$n}),
+	&:first-child:nth-last-child(#{$n}) ~ #{$child} {
+		@content;
+	}
+}

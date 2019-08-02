@@ -1,0 +1,149 @@
+/// fluid-value
+/// Returns a fluid behavior value
+/// @group Fluid
+/// @param $w1 - Starting width
+/// @param $w2 - Ending width
+/// @param $s1 - Starting value
+/// @param $s2 - Ending value
+/// @returns A single calc
+/// @example scss - Set a fluid font-size to `.foo`
+///   .foo {
+///     font-size: fluid-value(300px,900px,12px,18px);
+///   }
+/// @author Luis Aguirre <luisaguirre027@gmail.com>
+@function fluid-value($w1, $w2, $s1, $s2) {
+	$_a: $s2 - ($s2 - $s1)*($w2/($w2 - $w1));
+	$_b: 100*($s2 - $s1)/($w2 - $w1);
+	@return calc(#{$_a} + #{$_b}vw);
+}
+
+/// fluid-prop
+/// Sets a fluid behavior for a CSS property
+/// @group Fluid
+/// @param $property - A CSS property
+/// @param $map - A size map
+/// @output A group of media queries with properties declarations
+/// @requires function map-sort
+/// @requires function fluid-value
+/// @example scss - Set a fluid font-size to `.foo`
+///   .foo {
+///       @include fluid-prop(font-size, (300px: 10px, 900px: 12px, 1920px: 20px), true);
+///   }
+/// @author Luis Aguirre <luisaguirre027@gmail.com>
+@mixin fluid-prop($property, $map, $important: false) {
+	$length: length(map-keys($map));
+	@if ($length < 2) {
+		@error "fluid-prop() $map requires at least 2 values";
+	}
+	$map: map-sort($map);
+	$keys: map-keys($map);
+
+  @if $important {
+    #{$property}: map-get($map, nth($keys, 1)) !important;
+  }
+  @else {
+    #{$property}: map-get($map, nth($keys, 1));
+  }
+	@for $i from 1 through ($length - 1) {
+		@media (min-width: nth($keys, $i)) {
+			@if $important {
+				#{$property}: fluid-value(nth($keys, $i), nth($keys, ($i+1)), map-get($map, nth($keys, $i)), map-get($map, nth($keys, ($i + 1)))) !important;
+			}
+			@else {
+				#{$property}: fluid-value(nth($keys, $i), nth($keys, ($i+1)), map-get($map, nth($keys, $i)), map-get($map, nth($keys, ($i + 1))));
+			}
+		}
+	}
+	@media (min-width:nth($keys, $length)) {
+		@if $important {
+			#{$property}: map-get($map, nth($keys, $length)) !important;
+		}
+		@else {
+			#{$property}: map-get($map, nth($keys, $length));
+		}
+	}
+}
+
+/// fluid-prop-no-max
+/// Sets a fluid behavior for a CSS property, does not limit the last value
+/// @group Fluid
+/// @param $property - A CSS property
+/// @param $map - A size map
+/// @output A group of media queries with properties declarations
+/// @requires function map-sort
+/// @requires function fluid-value
+/// @example scss - Set a fluid font-size to `.foo`
+///   .foo {
+///       @include fluid-prop-no-max(font-size, (300px: 10px, 900px: 12px, 1920px: 20px), true);
+///   }
+/// @author Luis Aguirre <luisaguirre027@gmail.com>
+@mixin fluid-prop-no-max($property, $map, $important: false) {
+	$map: map-sort($map);
+	$keys: map-keys($map);
+	#{$property}: map-get($map, nth($keys, 1));
+	$length: length($keys);
+	@for $ind from 1 through ($length - 1) {
+		@media (min-width: nth($keys, $ind)) {
+			@if $important {
+				#{$property}: fluid-value(nth($keys, $ind), nth($keys, ($ind + 1)), map-get($map, nth($keys, $ind)), map-get($map, nth($keys, ($ind + 1)))) !important;
+			}
+			@else {
+				#{$property}: fluid-value(nth($keys, $ind), nth($keys, ($ind + 1)), map-get($map, nth($keys, $ind)), map-get($map, nth($keys, ($ind + 1))));
+			}
+		}
+	}
+}
+
+/// list-sort
+/// Sort a SASS list
+/// @param $list - A SASS list
+/// @returns A sorted SASS list
+/// @requires function list-remove
+/// @author Jake Wilson <jake.e.wilson@gmail.com>
+@function list-sort($list) {
+	$sortedlist: ();
+	@while length($list)>0 {
+		$value: nth($list, 1);
+		@each $item in $list {
+			@if $item < $value {
+				$value: $item;
+			}
+		}
+		$sortedlist: append($sortedlist, $value, 'space');
+		$list: list-remove($list, index($list, $value));
+	}
+	@return $sortedlist;
+}
+
+/// map-sort
+/// Sort map by keys
+/// @param $map - A SASS map
+/// @returns A SASS map sorted by keys
+/// @requires function list-sort
+/// @author Jake Wilson <jake.e.wilson@gmail.com>
+@function map-sort($map) {
+	$keys: list-sort(map-keys($map));
+	$sortedMap: ();
+	@each $key in $keys {
+		$sortedMap: map-merge($sortedMap, ($key: map-get($map, $key)));
+	}
+	@return $sortedMap;
+}
+
+/// list-remove
+/// Remove an item from a list
+/// @param $list - A SASS list
+/// @param $index - The list index to remove
+/// @returns A SASS list
+/// @author Jake Wilson <jake.e.wilson@gmail.com>
+@function list-remove($list, $index) {
+	$newList: ();
+
+	@for $i from 1 through length($list) {
+		@if $i !=$index {
+			$newList: append($newList, nth($list, $i), 'space');
+		}
+	}
+
+	@return $newList;
+}
