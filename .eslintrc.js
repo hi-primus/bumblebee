@@ -16,6 +16,7 @@ module.exports = {
     'indent': [2, 'tab'],
     'no-tabs': 0,
     'nuxt/no-cjs-in-config': 0,
-    'vue/require-valid-default-prop': 0
+    'vue/require-valid-default-prop': 0,
+    'prefer-const': 0
   }
 }

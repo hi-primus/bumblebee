@@ -3,6 +3,11 @@ const colors = require('vuetify/es5/util/colors').default
 module.exports = {
 	mode: 'universal',
 
+	env: {
+		WS_BROKER: process.env.WS_BROKER || '165.22.149.93',
+		WS_PORT: process.env.WS_PORT || 15675
+	},
+
 	head: {
 		titleTemplate: '%s - ' + process.env.npm_package_name,
 		title: process.env.npm_package_name || '',
@@ -19,13 +24,17 @@ module.exports = {
 			content: process.env.npm_package_description || ''
 		}
 		],
-		link: [{
-			rel: 'icon',
-			type: 'image/x-icon',
-			href: '/favicon.ico'
-		},
-		{ rel: 'stylesheet', href: 'https://fonts.googleapis.com/css?family=Material+Icons' }
-		]
+		link: [
+      {
+        rel: 'icon',
+        type: 'image/x-icon',
+        href: '/favicon.ico'
+      },
+      { rel: 'stylesheet', href: 'https://fonts.googleapis.com/css?family=Material+Icons' },
+    ],
+    script: [
+      { src: 'https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js' },
+    ]
 	},
 
 	loading: {
@@ -45,8 +54,8 @@ module.exports = {
 	devModules: [
 		// Doc: https://github.com/nuxt-community/eslint-module
 		// '@nuxtjs/eslint-module',
-    '@nuxtjs/vuetify',
-    '@nuxtjs/style-resources'
+		'@nuxtjs/vuetify',
+		'@nuxtjs/style-resources'
 	],
 
 	plugins: [
@@ -57,7 +66,7 @@ module.exports = {
 
 	modules: [
 		// Doc: https://github.com/nuxt-community/axios-module#usage
-		'@nuxtjs/axios'
+		'@nuxtjs/axios',
 	],
 
 	axios: {
@@ -80,20 +89,20 @@ module.exports = {
 				}
 			}
 		}
-	}
+	},
 
-	// build: {
-	// 	extend (config, {
-	// 		isDev
-	// 	}) {
-	// 		if (isDev && process.client) {
-	// 			config.module.rules.push({
-	// 				enforce: 'pre',
-	// 				test: /\.(js|vue)$/,
-	// 				loader: 'eslint-loader',
-	// 				exclude: /(node_modules)/
-	// 			})
-	// 		}
-	// 	}
-	// }
+	build: {
+		extend (config, {
+			isDev
+		}) {
+			if (isDev && process.client) {
+				config.module.rules.push({
+					enforce: 'pre',
+					test: /\.(js|vue)$/,
+					loader: 'eslint-loader',
+					exclude: /(node_modules)/
+				})
+			}
+		}
+	}
 }
