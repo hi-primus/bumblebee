@@ -18,7 +18,7 @@ export default {
 					this.$store.commit('add', require('@/static/datasource/data.json'))
 				} catch (error) {
 					console.error(error)
-					this.$store.commit('error', error)
+					this.$store.commit('status', error)
 				}
 
 				//
@@ -32,14 +32,16 @@ export default {
 				keepAliveInterval: 30,
 				onSuccess: () => {
 					console.log('CONNECTION SUCCESS')
-					client.subscribe(`/${uuid}`, {
+					client.subscribe(`${uuid}`, {
 						qos: 1
 					})
+
+					this.$store.commit('status', 'success')
 
 					/* TEST */
 					// TODO: testing is not neccessary //
 					let message = new Paho.MQTT.Message('Testing')
-					message.destinationName = `/${uuid}`
+					message.destinationName = `${uuid}`
 					client.send(message)
 					/* ---- */
 				},

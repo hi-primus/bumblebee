@@ -1,17 +1,17 @@
 export const state = () => ({
 	dataset: false,
-	error: false
+	status: 'starting'
 })
 
 export const mutations = {
 
 	add (state, payload) {
 		state.dataset = payload
-		state.error = false
+		state.status = 'received'
 	},
 
-	error (state, payload) {
-		state.error = payload
+	status (state, payload) {
+		state.status = payload
 	}
 
 }

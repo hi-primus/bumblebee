@@ -1,6 +1,6 @@
 <template>
   <v-layout row wrap>
-    <template v-if="$store.state.error===false">
+    <template v-if="!statusError">
       <div v-if="$store.state.dataset===false" class="center-screen-inside">
         <v-progress-circular
           indeterminate
@@ -65,8 +65,18 @@ export default {
 
 	mixins: [clientMixin],
 
+	computed: {
+		statusError () {
+			try {
+				return (typeof this.$store.state.status === Object && this.$store.state.status instanceof Error)
+			} catch {
+				return false
+			}
+		}
+	},
+
 	mounted () {
-		this.startClient('topic/test')
+		this.startClient('e68a9789-8a04-4bc1-9467-1b8f9517f401')
 	}
 }
 </script>
