@@ -1,19 +1,19 @@
 <template>
-	<div>
-		<h3>Top values</h3>
-		<v-simple-table class="table">
-			<tbody>
-				<tr v-for="(item, index) in values" :key="index">
-					<td style="width:80%;">
-						<div :style="{'width': normVal(item.count)+'%' }" class="top-bar">
-							<p>{{ item.value | varCheck }}</p>
-						</div>
-					</td>
-					<td style="width:20%;">{{ item.count | varCheck }}</td>
-				</tr>
-			</tbody>
-		</v-simple-table>
-	</div>
+  <div>
+    <h3>Top values</h3>
+    <v-simple-table class="table">
+      <tbody>
+        <tr v-for="(item, index) in values" :key="index">
+          <td style="width:80%;">
+            <div :style="{'width': normVal(item.count)+'%' }" class="top-bar">
+              <p>{{ item.value | varCheck }}</p>
+            </div>
+          </td>
+          <td style="width:20%;">{{ item.count | varCheck }}</td>
+        </tr>
+      </tbody>
+    </v-simple-table>
+  </div>
 </template>
 
 <script>
@@ -29,16 +29,16 @@ export default {
 		}
 	},
 
-	data() {
-		return {};
+	data () {
+		return {}
 	},
 
 	methods: {
-		normVal(val) {
-			return (val * 100) / this.total;
+		normVal (val) {
+			return (val * 100) / this.total
 		}
 	}
-};
+}
 </script>
 
 <style lang="scss" scoped>

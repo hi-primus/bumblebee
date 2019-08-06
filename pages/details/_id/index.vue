@@ -126,10 +126,10 @@ export default {
 		return {
 
 		}
-  },
+	},
 
-  mounted () {
-  }
+	mounted () {
+	}
 
 }
 </script>

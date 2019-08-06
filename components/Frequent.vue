@@ -1,21 +1,21 @@
 <template>
-	<div>
-		<h3>Frequent values</h3>
-		<div class="scroll-container">
-			<div class="freq-container">
-				<div
-					v-for="(item, index) in values"
-					:key="index"
-					:style="{ 'width' : 'calc('+(100/barNum)+'% - 2px)'}"
-					class="freq-bar"
-					@mouseover="changeValue(`${item.value}, ${item.percentage}%`)"
-				>
-					<div :style="{'height': normVal(item.count)+'%'}" class="freq-value" />
-				</div>
-			</div>
-		</div>
-		<div>{{ currentVal }}</div>
-	</div>
+  <div>
+    <h3>Frequent values</h3>
+    <div class="scroll-container">
+      <div class="freq-container">
+        <div
+          v-for="(item, index) in values"
+          :key="index"
+          :style="{ 'width' : 'calc('+(100/barNum)+'% - 2px)'}"
+          class="freq-bar"
+          @mouseover="changeValue(`${item.value}, ${item.percentage}%`)"
+        >
+          <div :style="{'height': normVal(item.count)+'%'}" class="freq-value" />
+        </div>
+      </div>
+    </div>
+    <div>{{ currentVal }}</div>
+  </div>
 </template>
 
 <script>
@@ -31,29 +31,29 @@ export default {
 		}
 	},
 
-	data() {
+	data () {
 		return {
 			sortedData: [],
-			currentVal: "",
+			currentVal: '',
 			barNum: 0
-		};
+		}
 	},
 
-	beforeMount() {
-		this.changeValue(`${this.values[0].count}, ${this.values[0].percentage}%`);
+	beforeMount () {
+		this.changeValue(`${this.values[0].count}, ${this.values[0].percentage}%`)
 
-		this.barNum = this.values.length;
+		this.barNum = this.values.length
 	},
 
 	methods: {
-		changeValue(newVal) {
-			this.currentVal = newVal;
+		changeValue (newVal) {
+			this.currentVal = newVal
 		},
-		normVal(val) {
-			return (val * 100) / this.total;
+		normVal (val) {
+			return (val * 100) / this.total
 		}
 	}
-};
+}
 </script>
 
 <style lang="scss" scoped>

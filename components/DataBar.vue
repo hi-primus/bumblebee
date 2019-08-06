@@ -1,22 +1,22 @@
 <template>
-	<div class="pbar">
-		<v-tooltip bottom>
-			<template v-slot:activator="{ on }">
-				<span v-on="on">
-					<div :style="{'width': num2+'%'}" class="pb1" />
-				</span>
-			</template>
-			<span>{{ goodVal }}, {{ num2 }}%</span>
-		</v-tooltip>
-		<v-tooltip bottom>
-			<template v-slot:activator="{ on }">
-				<span v-on="on">
-					<div :style="{'width': num1+'%'}" class="pb2" />
-				</span>
-			</template>
-			<span>{{ data1 }}, {{ num1 }}%</span>
-		</v-tooltip>
-	</div>
+  <div class="pbar">
+    <v-tooltip bottom>
+      <template v-slot:activator="{ on }">
+        <span v-on="on">
+          <div :style="{'width': num2+'%'}" class="pb1" />
+        </span>
+      </template>
+      <span>{{ goodVal }}, {{ num2 }}%</span>
+    </v-tooltip>
+    <v-tooltip bottom>
+      <template v-slot:activator="{ on }">
+        <span v-on="on">
+          <div :style="{'width': num1+'%'}" class="pb2" />
+        </span>
+      </template>
+      <span>{{ data1 }}, {{ num1 }}%</span>
+    </v-tooltip>
+  </div>
 </template>
 
 <script>
@@ -32,20 +32,20 @@ export default {
 		}
 	},
 
-	data() {
+	data () {
 		return {
 			num1: 0,
 			num2: 0,
 			goodVal: 0
-		};
+		}
 	},
 
-	beforeMount() {
-		this.goodVal = this.total - this.data1;
-		this.num1 = ((this.data1 * 100) / this.total).toFixed(2);
-		this.num2 = ((this.goodVal * 100) / this.total).toFixed(2);
+	beforeMount () {
+		this.goodVal = this.total - this.data1
+		this.num1 = ((this.data1 * 100) / this.total).toFixed(2)
+		this.num2 = ((this.goodVal * 100) / this.total).toFixed(2)
 	}
-};
+}
 </script>
 
 <style lang="scss" scoped>

@@ -1,21 +1,21 @@
 <template>
-	<div>
-		<h3>{{ title }}</h3>
-		<div class="scroll-container">
-			<div class="freq-container">
-				<div
-					v-for="(item, index) in values"
-					:key="index"
-					:style="{ 'width' : 'calc('+(100/barNum)+'% - 2px)'}"
-					class="freq-bar"
-					@mouseover="changeValue(item.lower.toFixed(2),item.upper.toFixed(2), item.count)"
-				>
-					<div :style="{'height': normVal(item.count)+'%'}" class="freq-value" />
-				</div>
-			</div>
-		</div>
-		<div>{{ topVal | formatNumber }} - {{ minVal | formatNumber }}, {{ nowCount }}</div>
-	</div>
+  <div>
+    <h3>{{ title }}</h3>
+    <div class="scroll-container">
+      <div class="freq-container">
+        <div
+          v-for="(item, index) in values"
+          :key="index"
+          :style="{ 'width' : 'calc('+(100/barNum)+'% - 2px)'}"
+          class="freq-bar"
+          @mouseover="changeValue(item.lower.toFixed(2),item.upper.toFixed(2), item.count)"
+        >
+          <div :style="{'height': normVal(item.count)+'%'}" class="freq-value" />
+        </div>
+      </div>
+    </div>
+    <div>{{ topVal | formatNumber }} - {{ minVal | formatNumber }}, {{ nowCount }}</div>
+  </div>
 </template>
 
 <script>
@@ -30,53 +30,53 @@ export default {
 			type: Number
 		},
 		title: {
-			default: "",
+			default: '',
 			type: String
 		}
 	},
 
-	data() {
+	data () {
 		return {
 			sortedData: [],
-			currentVal: "",
+			currentVal: '',
 			maxVal: 0,
 			topVal: 0,
 			minVal: 0,
 			nowCount: 0,
 			barNum: 0
-		};
+		}
 	},
 
-	beforeMount() {
-		this.maxVal = this.getMaxVal(this.values);
+	beforeMount () {
+		this.maxVal = this.getMaxVal(this.values)
 		this.changeValue(
 			this.values[0].lower.toFixed(2),
 			this.values[0].upper.toFixed(2),
 			this.values[0].count
-		);
+		)
 
-		this.barNum = this.values.length;
+		this.barNum = this.values.length
 	},
 
 	methods: {
-		changeValue(minVal, maxVal, count) {
-			this.topVal = minVal;
-			this.minVal = maxVal;
-			this.nowCount = count;
+		changeValue (minVal, maxVal, count) {
+			this.topVal = minVal
+			this.minVal = maxVal
+			this.nowCount = count
 		},
 
-		getMaxVal(arr) {
+		getMaxVal (arr) {
 			return arr.reduce(
 				(max, p) => (p.count > max ? p.count : max),
 				arr[0].count
-			);
+			)
 		},
 
-		normVal(val) {
-			return (val * 100) / this.maxVal;
+		normVal (val) {
+			return (val * 100) / this.maxVal
 		}
 	}
-};
+}
 </script>
 
 <style lang="scss" scoped>
