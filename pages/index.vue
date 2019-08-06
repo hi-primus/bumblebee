@@ -21,7 +21,7 @@
 					<v-flex>
 						<h3 class="display-3">Oops!</h3>
 
-						<span class="subheading">The data.json file wasn't found or the file is not named properly.</span>
+						<span class="subheading">There was an error loading your data.</span>
 
 						<v-divider class="my-8" />
 
@@ -46,21 +46,26 @@ import TableBar from "@/components/TableBar";
 import TopValues from "@/components/TopValues";
 import Frequent from "@/components/Frequent";
 import Stats from "@/components/Stats";
+import clientMixin from '@/plugins/mixins/client'
 
 export default {
-	middleware: "dataload",
-
 	components: {
 		TableBar,
 		TopValues,
 		Stats,
-		Frequent
-	},
+		Frequent,
+  },
+
+  mixins: [clientMixin],
 
 	data() {
 		return {
 			dataset: []
 		};
-	}
+  },
+
+  mounted () {
+    this.startClient('topic/test')
+  }
 };
 </script>

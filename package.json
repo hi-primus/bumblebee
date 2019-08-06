@@ -16,7 +16,6 @@
   },
   "dependencies": {
     "@nuxtjs/axios": "^5.3.6",
-    "amqplib": "^0.5.5",
     "cross-env": "^5.2.0",
     "express": "^4.16.4",
     "numeral": "^2.0.6",

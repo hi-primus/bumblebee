@@ -104,11 +104,9 @@ import Descriptive from '@/components/DescriptiveStats'
 import Histogram from '@/components/Histogram'
 import DataBar from '@/components/DataBar'
 import DataTypes from '@/components/DataTypes'
-import myMixin from '~/plugins/mixins'
+import dataTypesMixin from '~/plugins/mixins/data-types'
 
 export default {
-
-	middleware: 'dataload',
 
 	components: {
 		TableBar,
@@ -122,13 +120,16 @@ export default {
 		DataTypes
 	},
 
-	mixins: [myMixin],
+	mixins: [dataTypesMixin],
 
 	data () {
 		return {
 
 		}
-	}
+  },
+
+  mounted () {
+  }
 
 }
 </script>

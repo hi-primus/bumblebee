@@ -42,7 +42,7 @@
 <script>
 
 import DataBar from '.././components/DataBar'
-import myMixin from '@/plugins/mixins'
+import dataTypesMixin from '@/plugins/mixins/data-types'
 
 export default {
 
@@ -50,7 +50,7 @@ export default {
 		DataBar
 	},
 
-	mixins: [myMixin],
+	mixins: [dataTypesMixin],
 
 	props: {
 		dataset: {
