@@ -18,8 +18,10 @@
     "@nuxtjs/axios": "^5.3.6",
     "cross-env": "^5.2.0",
     "express": "^4.16.4",
+    "fernet": "^0.3.1",
     "numeral": "^2.0.6",
-    "nuxt": "^2.0.0"
+    "nuxt": "^2.0.0",
+    "pako": "^1.0.10"
   },
   "devDependencies": {
     "@nuxtjs/eslint-config": "^1.0.1",

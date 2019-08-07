@@ -92,7 +92,7 @@ export default {
 
 			.freq-value {
 				width: 100%;
-				background-color: #4db6ac;
+				background-color: $data-green;
 				height: 50%;
 				position: absolute;
 				bottom: 0;

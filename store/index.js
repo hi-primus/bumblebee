@@ -1,6 +1,6 @@
 export const state = () => ({
 	dataset: false,
-	status: 'starting'
+	status: 'waiting'
 })
 
 export const mutations = {

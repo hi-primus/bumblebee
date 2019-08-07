@@ -1,11 +1,52 @@
 <template>
   <v-layout row wrap>
-    <template v-if="!statusError">
-      <div v-if="$store.state.dataset===false" class="center-screen-inside">
+    <template v-if="status=='waiting' || status=='loading'">
+      <v-card
+        width="100%"
+        style="max-width: 700px; margin: auto"
+        :loading="(status=='loading') ? 'success' : false"
+      >
+        <v-form @submit="subscribe" class="py-10 px-8">
+          <v-card-title>
+            <h1 class="display-3 mb-4">Bumblebee</h1>
+          </v-card-title>
+          <v-card-text>
+              <v-text-field
+                v-model="inputSession"
+                label="Session"
+                required
+                outlined
+                rounded
+                clearable
+              ></v-text-field>
+
+              <v-text-field
+                v-model="inputKey"
+                :append-icon="showKey ? 'visibility' : 'visibility_off'"
+                :type="(showKey) ? 'text' : 'password'"
+                label="Key"
+                required
+                outlined
+                rounded
+                clearable
+              ></v-text-field>
+          </v-card-text>
+          <v-card-actions>
+            <v-spacer></v-spacer>
+            <v-btn color="primary" large rounded depressed @click="subscribe">Subscribe</v-btn>
+            <v-spacer></v-spacer>
+          </v-card-actions>
+        </v-form>
+      </v-card>
+    </template>
+    <template v-else-if="!statusError">
+      <div v-if="$store.state.dataset===false" class="center-screen-inside success--text">
         <v-progress-circular
           indeterminate
-          color="primary"
+          color="success"
+          class="mr-4"
         />
+        <span class="title">Waiting for data</span>
       </div>
       <template v-else>
         <v-flex xs12 sm12 md12>
@@ -56,6 +97,15 @@ import Stats from '@/components/Stats'
 import clientMixin from '@/plugins/mixins/client'
 
 export default {
+
+  data() {
+    return {
+      showKey: false,
+      inputKey: '',
+      inputSession: ''
+    }
+  },
+
 	components: {
 		TableBar,
 		TopValues,
@@ -72,11 +122,17 @@ export default {
 			} catch {
 				return false
 			}
+		},
+		status () {
+      return this.$store.state.status
 		}
 	},
 
-	mounted () {
-		this.startClient('e68a9789-8a04-4bc1-9467-1b8f9517f401')
-	}
+  methods: {
+    subscribe() {
+      this.startClient(this.inputSession,this.inputKey)
+      // this.startClient('b772aa34-09e2-4eb8-a57e-b147356a96b7','5Jrn-biCd06mFKFUgrLMcxSWnzv8EbsKO9zpgWbcSOY=')
+    }
+  }
 }
 </script>

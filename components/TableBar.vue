@@ -5,11 +5,15 @@
         <v-text-field
           v-model="searchText"
           append-icon="search"
-          label="Search Column"
+          label="Search column"
+          :color="(filteredTable.length) ? 'success' : 'error'"
+          clearable
+          solo
         />
       </v-flex>
     </v-layout>
 
+    <v-sheet elevation="4" class="pa-4">
     <v-simple-table>
 
       <thead v-if="false">
@@ -35,6 +39,7 @@
       </tbody>
 
     </v-simple-table>
+    </v-sheet>
 
   </div>
 </template>
@@ -72,6 +77,9 @@ export default {
 	computed: {
 
 		filteredTable () {
+      if (!this.searchText)
+        return this.arrDataset;
+
 			const format = new RegExp('[ !@#$%^&*()_+-=[]{ };\':"\\|,.<>/?]')
 
 			if (!format.test(this.searchText)) {

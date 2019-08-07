@@ -56,8 +56,8 @@ export default {
 // status bar
 .pbar {
 	background-color: lightgray;
-	height: 5px;
-	border-radius: 50px;
+	height: 8px;
+	border-radius: 4px;
 	width: 100%;
 	overflow: overlay;
 	&:hover {
@@ -66,19 +66,17 @@ export default {
 }
 
 .pb1 {
-	background-color: #4db6ac;
-	height: 5px;
-	/*border-radius: 50px 0 0 50px;*/
+	background-color: $data-green;
+	height: 100%;
 	width: 50%;
 	float: left;
 }
 
 .pb2 {
-	background-color: #e57373;
-	height: 5px;
+	background-color: $data-red;
+	height: 100%;
 	width: 25%;
 	float: left;
-	/*border-radius: 0 50px 50px 0;*/
 }
 
 .pb3 {

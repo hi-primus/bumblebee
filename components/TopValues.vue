@@ -43,7 +43,7 @@ export default {
 
 <style lang="scss" scoped>
 .top-bar {
-	background-color: #4db6ac;
+	background-color: $data-green;
 	position: relative;
 	height: 100%;
 	p {
