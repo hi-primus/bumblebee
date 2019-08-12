@@ -19,9 +19,12 @@
     "cross-env": "^5.2.0",
     "express": "^4.16.4",
     "fernet": "^0.3.1",
+    "less": "^3.9.0",
+    "less-loader": "^5.0.0",
     "numeral": "^2.0.6",
     "nuxt": "^2.0.0",
-    "pako": "^1.0.10"
+    "pako": "^1.0.10",
+    "vue-bigdata-table": "git+https://github.com/lison16/vue-bigdata-table.git"
   },
   "devDependencies": {
     "@nuxtjs/eslint-config": "^1.0.1",

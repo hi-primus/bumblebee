@@ -82,3 +82,76 @@ table.table {
 table.table thead td:not(:nth-child(1)), table.table tbody td:not(:nth-child(1)), table.table thead th:not(:nth-child(1)), table.table tbody th:not(:nth-child(1)), table.table thead td:first-child, table.table tbody td:first-child, table.table thead th:first-child, table.table tbody th:first-child{
 	padding: 0;
 }
+
+.center-screen-inside {
+  min-height: 100vh;
+  min-width: 100vw;
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  align-content: center;
+}
+
+/* vue-bigdata-table fixes */
+
+.vue-bigdata-table {
+  width: 100% !important;
+  .vue-bigdata-table-content {
+    &>div:nth-child(2) {
+      width: 100% !important;
+    }
+  }
+  .sort-button-wrapper {
+    transform: translate(3px,1.25px) scale(1.25) !important;
+  }
+  * {
+    color: rgba(0, 0, 0, 0.87) !important;
+  }
+  .vue-bigdata-table-header-wrapper * {
+    font-size: 14px;
+    font-family: "Roboto", sans-serif !important;
+    font-weight: 700;
+  }
+  .vue-bigdata-table-content * {
+    font-family: "Roboto Mono", monospace !important;
+  }
+  .vue-bigdata-table-wrapper .vue-bigdata-table-data-table tr td .vue-bigdata-table-cell {
+    padding: 0 8px !important;
+  }
+}
+
+.vue-bigdata-table-outer {
+  border-radius: 2px;
+}
+
+/* component vuetify table */
+
+.component-container {
+  .v-data-table td, .v-data-table th {
+    &:first-child {
+      padding-left: 0;
+    }
+    // &:last-child {
+    //   padding-right: 0;
+    // }
+  }
+}
+
+/* table graphics */
+
+.table-graphic {
+  h3 {
+    display: none;
+  }
+  .current-value {
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    line-height: 1.25;
+    min-height: 2.5em;
+    font-family: "Roboto Mono", monospace !important;
+  }
+}

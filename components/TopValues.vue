@@ -6,7 +6,7 @@
         <tr v-for="(item, index) in values" :key="index">
           <td style="width:80%;">
             <div :style="{'width': normVal(item.count)+'%' }" class="top-bar">
-              <p>{{ item.value | varCheck }}</p>
+              <div>{{ item.value | varCheck }}</div>
             </div>
           </td>
           <td style="width:20%;">{{ item.count | varCheck }}</td>
@@ -46,7 +46,9 @@ export default {
 	background-color: $data-green;
 	position: relative;
 	height: 100%;
-	p {
+	&>div {
+    padding-left: 4px;
+    line-height: 18px;
 		position: absolute;
 		top: 0;
 		left: 0;

@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div :class="{'table-graphic': table}">
     <h3>{{ title }}</h3>
     <div class="scroll-container">
       <div class="freq-container">
@@ -14,7 +14,7 @@
         </div>
       </div>
     </div>
-    <div>{{ topVal | formatNumber }} - {{ minVal | formatNumber }}, {{ nowCount }}</div>
+    <div class="current-value">{{ topVal | formatNumber }} - {{ minVal | formatNumber }}, {{ nowCount }}</div>
   </div>
 </template>
 
@@ -32,7 +32,11 @@ export default {
 		title: {
 			default: '',
 			type: String
-		}
+    },
+    table: {
+      default: false,
+      type: Boolean
+    }
 	},
 
 	data () {

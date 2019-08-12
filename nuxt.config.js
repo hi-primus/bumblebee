@@ -59,7 +59,6 @@ module.exports = {
 	],
 
 	plugins: [
-		'@/plugins/vuetify',
 		'@/plugins/numeral',
 		'@/plugins/varCheck'
 	],

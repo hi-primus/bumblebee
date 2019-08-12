@@ -10,17 +10,17 @@
             <h2 class="headline">{{ this.$route.params.id }}</h2>
           </v-flex>
           <v-flex>
-            {{ dataType($store.state.dataset.columns[this.$route.params.id].column_dtype) }}
+            {{ dataType($store.state.datasets[0].columns[this.$route.params.id].column_dtype) }}
           </v-flex>
           <v-flex>
-            {{ $store.state.dataset.columns[this.$route.params.id].column_type }}
+            {{ $store.state.datasets[0].columns[this.$route.params.id].column_type }}
           </v-flex>
 
           <v-flex xs12>
             <DataBar
               class="main-data-bar"
-              :data1="$store.state.dataset.columns[this.$route.params.id].stats.missing_count"
-              :total="+$store.state.dataset.rows_count"
+              :data1="$store.state.datasets[0].columns[this.$route.params.id].stats.missing_count"
+              :total="+$store.state.datasets[0].rows_count"
             />
           </v-flex>
         </v-layout>
@@ -30,149 +30,149 @@
       <v-container class="px-12 pt-8">
 			<v-layout row wrap>
 				<v-flex xs12 sm3 md3 class="component-container">
-					<Stats :values="$store.state.dataset.columns[this.$route.params.id].stats" />
+					<Stats :values="$store.state.datasets[0].columns[this.$route.params.id].stats" />
 				</v-flex>
 
 				<v-flex
-					v-if="$store.state.dataset.columns[this.$route.params.id].stats.quantile!=undefined"
+					v-if="$store.state.datasets[0].columns[this.$route.params.id].stats.quantile!=undefined"
 					xs12
 					sm3
 					md3
 					class="component-container"
 				>
-					<Quantile :values="$store.state.dataset.columns[this.$route.params.id].stats" />
+					<Quantile :values="$store.state.datasets[0].columns[this.$route.params.id].stats" />
 				</v-flex>
 
 				<v-flex
-					v-if="$store.state.dataset.columns[this.$route.params.id].stats.quantile!=undefined"
+					v-if="$store.state.datasets[0].columns[this.$route.params.id].stats.quantile!=undefined"
 					xs12
 					sm3
 					md3
 					class="component-container"
 				>
-					<Descriptive :values="$store.state.dataset.columns[this.$route.params.id].stats" />
+					<Descriptive :values="$store.state.datasets[0].columns[this.$route.params.id].stats" />
 				</v-flex>
 
 				<v-flex
-					v-if="$store.state.dataset.columns[this.$route.params.id].stats.quantile==undefined"
+					v-if="$store.state.datasets[0].columns[this.$route.params.id].stats.quantile==undefined"
 					xs12
 					sm6
 					md6
 					class="component-container"
 				>
 					<TopValues
-						:values="$store.state.dataset.columns[this.$route.params.id].frequency"
-						:total="+$store.state.dataset.columns[this.$route.params.id].frequency[0].count"
+						:values="$store.state.datasets[0].columns[this.$route.params.id].frequency"
+						:total="+$store.state.datasets[0].columns[this.$route.params.id].frequency[0].count"
 					/>
 				</v-flex>
 
 				<v-flex xs12 sm3 md3 class="component-container">
-					<DataTypes :values="$store.state.dataset.columns[this.$route.params.id].dtypes_stats" />
+					<DataTypes :values="$store.state.datasets[0].columns[this.$route.params.id].dtypes_stats" />
 				</v-flex>
 			</v-layout>
 
 			<v-layout row wrap>
 				<v-flex
-					v-if="$store.state.dataset.columns[this.$route.params.id].hist"
+					v-if="$store.state.datasets[0].columns[this.$route.params.id].hist"
 					xs12
 					sm12
 					md12
 					class="component-container"
 				>
 					<Histogram
-						:values="$store.state.dataset.columns[this.$route.params.id].hist"
-						:total="+$store.state.dataset.rows_count"
+						:values="$store.state.datasets[0].columns[this.$route.params.id].hist"
+						:total="+$store.state.datasets[0].rows_count"
 						title="Histogram"
 					/>
 				</v-flex>
 
 				<v-flex
-					v-if="$store.state.dataset.columns[this.$route.params.id].hist_year_years"
+					v-if="$store.state.datasets[0].columns[this.$route.params.id].hist_year_years"
 					xs12
 					sm12
 					md12
 					class="component-container"
 				>
 					<Histogram
-						:values="$store.state.dataset.columns[this.$route.params.id].hist_year_years"
-						:total="+$store.state.dataset.rows_count"
+						:values="$store.state.datasets[0].columns[this.$route.params.id].hist_year_years"
+						:total="+$store.state.datasets[0].rows_count"
 						title="Years Histogram"
 					/>
 				</v-flex>
 
 				<v-flex
-					v-if="$store.state.dataset.columns[this.$route.params.id].hist_year_months"
+					v-if="$store.state.datasets[0].columns[this.$route.params.id].hist_year_months"
 					xs12
 					sm6
 					md6
 					class="component-container"
 				>
 					<Histogram
-						:values="$store.state.dataset.columns[this.$route.params.id].hist_year_months"
-						:total="+$store.state.dataset.rows_count"
+						:values="$store.state.datasets[0].columns[this.$route.params.id].hist_year_months"
+						:total="+$store.state.datasets[0].rows_count"
 						title="Months Histogram"
 					/>
 				</v-flex>
 
 				<v-flex
-					v-if="$store.state.dataset.columns[this.$route.params.id].hist_year_weekdays"
+					v-if="$store.state.datasets[0].columns[this.$route.params.id].hist_year_weekdays"
 					xs12
 					sm6
 					md6
 					class="component-container"
 				>
 					<Histogram
-						:values="$store.state.dataset.columns[this.$route.params.id].hist_year_weekdays"
-						:total="+$store.state.dataset.rows_count"
+						:values="$store.state.datasets[0].columns[this.$route.params.id].hist_year_weekdays"
+						:total="+$store.state.datasets[0].rows_count"
 						title="Week days Histogram"
 					/>
 				</v-flex>
 
 				<v-flex
-					v-if="$store.state.dataset.columns[this.$route.params.id].hist_year_hours"
+					v-if="$store.state.datasets[0].columns[this.$route.params.id].hist_year_hours"
 					xs12
 					sm6
 					md6
 					class="component-container"
 				>
 					<Histogram
-						:values="$store.state.dataset.columns[this.$route.params.id].hist_year_hours"
-						:total="+$store.state.dataset.rows_count"
+						:values="$store.state.datasets[0].columns[this.$route.params.id].hist_year_hours"
+						:total="+$store.state.datasets[0].rows_count"
 						title="Hours Histogram"
 					/>
 				</v-flex>
 
 				<v-flex
-					v-if="$store.state.dataset.columns[this.$route.params.id].hist_year_minutes"
+					v-if="$store.state.datasets[0].columns[this.$route.params.id].hist_year_minutes"
 					xs12
 					sm6
 					md6
 					class="component-container"
 				>
 					<Histogram
-						:values="$store.state.dataset.columns[this.$route.params.id].hist_year_minutes"
-						:total="+$store.state.dataset.rows_count"
+						:values="$store.state.datasets[0].columns[this.$route.params.id].hist_year_minutes"
+						:total="+$store.state.datasets[0].rows_count"
 						title="Minutes Histogram"
 					/>
 				</v-flex>
 
 				<v-flex xs12 sm12 md12 class="component-container">
 					<Frequent
-						:values="$store.state.dataset.columns[this.$route.params.id].frequency"
-						:total="+$store.state.dataset.columns[this.$route.params.id].frequency[0].count"
+						:values="$store.state.datasets[0].columns[this.$route.params.id].frequency"
+						:total="+$store.state.datasets[0].columns[this.$route.params.id].frequency[0].count"
 					/>
 				</v-flex>
 
 				<v-flex
-					v-if="$store.state.dataset.columns[this.$route.params.id].stats.quantile!=undefined"
+					v-if="$store.state.datasets[0].columns[this.$route.params.id].stats.quantile!=undefined"
 					xs12
 					sm12
 					md12
 					class="component-container"
 				>
 					<TopValues
-						:values="$store.state.dataset.columns[this.$route.params.id].frequency"
-						:total="+$store.state.dataset.rows_count"
+						:values="$store.state.datasets[0].columns[this.$route.params.id].frequency"
+						:total="+$store.state.datasets[0].rows_count"
 					/>
 				</v-flex>
 			</v-layout>
@@ -210,7 +210,11 @@ export default {
 
 	data() {
 		return {};
-	},
+  },
+
+  validate({store}) {
+    return !!(store.state.datasets[0])
+  },
 
 	mounted() {}
 };

@@ -24,6 +24,7 @@
                 v-model="inputKey"
                 :append-icon="showKey ? 'visibility' : 'visibility_off'"
                 :type="(showKey) ? 'text' : 'password'"
+                @click:append="showKey = !showKey"
                 label="Key"
                 required
                 outlined
@@ -40,25 +41,31 @@
       </v-card>
     </template>
     <template v-else-if="!statusError">
-      <div v-if="$store.state.dataset===false" class="center-screen-inside success--text">
+      <div v-if="$store.state.datasets.length==0" class="center-screen-inside success--text">
         <v-progress-circular
           indeterminate
           color="success"
           class="mr-4"
         />
         <span class="title">Waiting for data</span>
+        <span class="subtitle text-center pt-6" style="width: 100%;">
+          <span class="hoverable" @click="stopClient">
+            <v-icon color="success">arrow_back</v-icon>
+            Disconnect
+          </span>
+        </span>
       </div>
       <template v-else>
         <v-flex xs12 sm12 md12>
-          <TableBar :dataset="$store.state.dataset.columns" :total="+$store.state.dataset.rows_count" />
+          <TableBar :dataset="$store.state.datasets[0].columns" :total="+$store.state.datasets[0].rows_count" />
         </v-flex>
 
         <v-footer fixed="fixed" app>
           <v-layout class="px-4" row justify-space-between>
             <span>Iron &copy; 2018</span>
             <span
-              v-if="$store.state.dataset && $store.state.dataset.summary"
-            >Rows: {{ $store.state.dataset.rows_count }}, Columns: {{ $store.state.dataset.summary.cols_count }}, Size: {{ $store.state.dataset.summary.size }}</span>
+              v-if="$store.state.datasets[0] && $store.state.datasets[0].summary"
+            >Rows: {{ $store.state.datasets[0].rows_count }}, Columns: {{ $store.state.datasets[0].summary.cols_count }}, Size: {{ $store.state.datasets[0].summary.size }}</span>
           </v-layout>
         </v-footer>
       </template>
@@ -102,7 +109,7 @@ export default {
     return {
       showKey: false,
       inputKey: '',
-      inputSession: ''
+      inputSession: '',
     }
   },
 
@@ -110,7 +117,7 @@ export default {
 		TableBar,
 		TopValues,
 		Stats,
-		Frequent
+    Frequent
 	},
 
 	mixins: [clientMixin],
@@ -131,7 +138,6 @@ export default {
   methods: {
     subscribe() {
       this.startClient(this.inputSession,this.inputKey)
-      // this.startClient('b772aa34-09e2-4eb8-a57e-b147356a96b7','5Jrn-biCd06mFKFUgrLMcxSWnzv8EbsKO9zpgWbcSOY=')
     }
   }
 }

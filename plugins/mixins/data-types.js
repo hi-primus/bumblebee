@@ -7,17 +7,21 @@ export default {
 
 	methods: {
 		dataType (data) {
-			if (data === 'string') {
-				return 'ABC'
-			} else if (data === 'int') {
-				return '#'
-			} else if (data === 'float') {
-				return '##.#'
-			} else if (data === 'boolean') {
-				return '0/1'
-			} else if (data === 'date') {
-				return '##/##/####'
-			}
+      switch (data) {
+        case 'string':
+          return 'ABC'
+        case 'int':
+          return '#'
+        case 'float':
+        case 'double':
+          return '##.#'
+        case 'boolean':
+          return '0/1'
+        case 'date':
+          return '##/##/####'
+        default:
+          return ''
+      }
 		}
 	}
 

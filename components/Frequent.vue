@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div :class="{'table-graphic': table}">
     <h3>Frequent values</h3>
     <div class="scroll-container">
       <div class="freq-container">
@@ -14,7 +14,7 @@
         </div>
       </div>
     </div>
-    <div>{{ currentVal }}</div>
+    <div class="current-value">{{ currentVal }}</div>
   </div>
 </template>
 
@@ -28,7 +28,11 @@ export default {
 		total: {
 			default: 1,
 			type: Number
-		}
+    },
+    table: {
+      default: false,
+      type: Boolean
+    }
 	},
 
 	data () {

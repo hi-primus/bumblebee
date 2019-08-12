@@ -14,31 +14,55 @@
     </v-layout>
 
     <v-sheet elevation="4" class="pa-4">
-    <v-simple-table>
 
-      <thead v-if="false">
-        <tr>
-          <th class="">Data Type</th>
-          <th class="">Type</th>
-          <th class="">Name</th>
-          <th class="">Values</th>
-        </tr>
-      </thead>
+      <v-btn-toggle mandatory v-model="viewMode" class="mb-4">
+        <v-btn text>
+          <v-icon>view_headline</v-icon>
+        </v-btn>
+        <v-btn text>
+          <v-icon>view_module</v-icon>
+        </v-btn>
+      </v-btn-toggle>
 
-      <tbody v-for="(data, index) in filteredTable" :key="index">
+      <v-simple-table class="table-bar" v-show="viewMode==0">
 
-        <nuxt-link :to="'/details/'+ data.name" tag="tr" class="hoverable">
-          <td style="width:25%;" class="column text-xs-left">{{ dataType(data.column_dtype) }}</td>
-          <td style="width:25%;" class="column text-xs-left">{{ data.column_type }}</td>
-          <td style="width:25%;" class="column text-xs-left">{{ data.name }}</td>
-          <td style="width:25%;" class="column text-xs-left">
-            <DataBar :data1="data.stats.missing_count" :total="+total"/>
-          </td>
-        </nuxt-link>
+        <thead v-if="false">
+          <tr>
+            <th class="">Data Type</th>
+            <th class="">Type</th>
+            <th class="">Name</th>
+            <th class="">Values</th>
+          </tr>
+        </thead>
 
-      </tbody>
+        <tbody v-for="(data, index) in filteredTable" :key="index">
 
-    </v-simple-table>
+          <nuxt-link :to="'/details/'+ data.name" tag="tr" class="hoverable">
+            <td style="width: 42px;" class="column text-xs-left data-type" :class="`type-${data.column_dtype}`">{{ dataType(data.column_dtype) }}</td>
+            <td style="width: calc(15% - 42px);" class="column text-xs-left data-type-name">{{ data.column_type }}</td>
+            <td style="width:35%;" class="column text-xs-left data-name">{{ data.name }}</td>
+            <td style="width:50%;" class="column text-xs-left">
+              <DataBar :data1="data.stats.missing_count" :total="+total"/>
+            </td>
+          </nuxt-link>
+
+        </tbody>
+
+      </v-simple-table>
+      <BigdataTable
+        v-show="viewMode==1"
+        sortable
+        disabledHover
+        titleLinks
+        :rowHeight="28"
+        :sortIndex="0"
+        :colWidth="120"
+        :columns="$store.state.datasets[0].sample.columns"
+        :value="$store.state.datasets[0].sample.parsedValue"
+        :dataColumns="$store.state.datasets[0].columns"
+        :filterColumns="searchText"
+        @on-click-title="clickedTitle"
+      />
     </v-sheet>
 
   </div>
@@ -46,13 +70,15 @@
 
 <script>
 
-import DataBar from '.././components/DataBar'
+import DataBar from '@/components/DataBar'
 import dataTypesMixin from '@/plugins/mixins/data-types'
+import BigdataTable from '@/components/BigdataTable'
 
 export default {
 
 	components: {
-		DataBar
+    DataBar,
+    BigdataTable
 	},
 
 	mixins: [dataTypesMixin],
@@ -71,7 +97,8 @@ export default {
 	data () {
 		return {
 			searchText: '',
-			arrDataset: []
+      arrDataset: [],
+      viewMode: 0
 		}
 	},
 	computed: {
@@ -93,23 +120,42 @@ export default {
 	created () {
 		this.arrDataset = Object.keys(this.dataset).map(i => this.dataset[i])
 	},
-
-	methods: {
-
-	}
 }
 </script>
 
 <style lang="scss" scoped>
-  table{
-    color:#000 !important;
-  }
-
   tbody{
     tr{
       td{
-        height: 30px;;
+        height: 30px;
       }
+    }
+  }
+
+  .data-type {
+    font-family: "Roboto Mono", monospace;
+    transform-origin: 16px center;
+    font-weight: 700;
+    &.type-float, &.type-double {
+      transform: scaleX(0.75);
+    }
+    &.type-int {
+      font-weight: 400;
+      transform: scaleX(1.5);
+    }
+  }
+  .data-type-name {
+    text-transform: uppercase;
+    font-size: 0.66em;
+  }
+  .data-name {
+    font-weight: 700;
+  }
+</style>
+<style lang="scss">
+  .table-bar {
+    &.theme--light.v-data-table tbody tr:hover:not(.v-data-table__expand-row) {
+      background: $data-highlight;
     }
   }
 </style>

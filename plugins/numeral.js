@@ -3,8 +3,8 @@ const numeral = require('numeral')
 
 Vue.filter('formatNumber', function (value) {
 	if (value < 0) {
-		return '(' + numeral(value).format('0 a') + ')'
+		return '(' + numeral(value).format('0a') + ')'
 	} else {
-		return numeral(value).format('0 a')
+		return numeral(value).format('0a')
 	}
 })
