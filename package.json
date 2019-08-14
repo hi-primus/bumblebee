@@ -24,7 +24,8 @@
     "numeral": "^2.0.6",
     "nuxt": "^2.0.0",
     "pako": "^1.0.10",
-    "vue-bigdata-table": "git+https://github.com/lison16/vue-bigdata-table.git"
+    "vue-bigdata-table": "git+https://github.com/lison16/vue-bigdata-table.git",
+    "vue-fuse": "^2.1.0"
   },
   "devDependencies": {
     "@nuxtjs/eslint-config": "^1.0.1",
@@ -40,15 +41,13 @@
     "eslint-plugin-nuxt": ">=0.4.2",
     "eslint-plugin-vue": "^4.0.0",
     "json-loader": "^0.5.7",
-    "node-sass": "^4.9.2",
     "nodemon": "^1.18.9",
     "nuxt-material-design-icons": "^1.0.4",
     "require-extension-hooks": "^0.3.3",
     "require-extension-hooks-babel": "^1.0.0",
     "require-extension-hooks-vue": "^2.0.0",
-    "sass-loader": "^7.1.0",
+    "sass-loader": "^7.2.0",
     "stylus": "^0.54.5",
-    "stylus-loader": "^3.0.1",
-    "vuetify": "^2.0.3"
+    "stylus-loader": "^3.0.1"
   }
 }

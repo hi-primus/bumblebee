@@ -1,20 +1,16 @@
 <template>
   <div class="pbar">
-    <v-tooltip bottom>
+    <v-tooltip content-class="bar-tooltip" color="success darken-2" :left="!bottom" :bottom="bottom">
       <template v-slot:activator="{ on }">
-        <span v-on="on">
-          <div :style="{'width': num2+'%'}" class="pb1" />
-        </span>
+        <div v-on="on" :style="{'width': mismatchesP+'%'}" class="pb1" />
       </template>
-      <span>{{ goodVal }}, {{ num2 }}%</span>
+      <span>{{ okValues }} valid values <span>{{ mismatchesP }}%</span></span>
     </v-tooltip>
-    <v-tooltip bottom>
+    <v-tooltip content-class="bar-tooltip" color="error darken-2" :left="!bottom" :bottom="bottom">
       <template v-slot:activator="{ on }">
-        <span v-on="on">
-          <div :style="{'width': num1+'%'}" class="pb2" />
-        </span>
+        <div v-on="on" :style="{'width': okP+'%'}" class="pb2" />
       </template>
-      <span>{{ data1 }}, {{ num1 }}%</span>
+      <span>{{ mismatches }} mismatched values <span>{{ okP }}%</span></span>
     </v-tooltip>
   </div>
 </template>
@@ -22,28 +18,32 @@
 <script>
 export default {
 	props: {
-		data1: {
+		mismatches: {
 			default: 0,
 			type: Number
 		},
 		total: {
 			default: 0,
 			type: Number
-		}
+    },
+    bottom: {
+      default: false,
+      type: Boolean
+    }
 	},
 
 	data () {
 		return {
-			num1: 0,
-			num2: 0,
-			goodVal: 0
+			okP: 0,
+			mismatchesP: 0,
+			okValues: 0
 		}
 	},
 
 	beforeMount () {
-		this.goodVal = this.total - this.data1
-		this.num1 = ((this.data1 * 100) / this.total).toFixed(2)
-		this.num2 = ((this.goodVal * 100) / this.total).toFixed(2)
+		this.okValues = this.total - this.mismatches
+		this.okP = ((this.mismatches * 100) / this.total).toFixed(2)
+		this.mismatchesP = ((this.okValues * 100) / this.total).toFixed(2)
 	}
 }
 </script>
@@ -85,5 +85,12 @@ export default {
 	border-radius: 0 50px 50px 0;
 	width: 25%;
 	float: left;
+}
+
+.bar-tooltip {
+  opacity: 1 !important;
+  &>span>span {
+    opacity: 0.8;
+  }
 }
 </style>

@@ -1,16 +1,17 @@
 <template>
-  <v-layout row wrap>
-    <template v-if="status=='waiting' || status=='loading'">
-      <v-card
-        width="100%"
-        style="max-width: 700px; margin: auto"
-        :loading="(status=='loading') ? 'success' : false"
-      >
-        <v-form @submit="subscribe" class="py-10 px-8">
-          <v-card-title>
-            <h1 class="display-3 mb-4">Bumblebee</h1>
-          </v-card-title>
-          <v-card-text>
+  <Layout :wide="view==1">
+    <v-layout row wrap>
+      <template v-if="status=='waiting' || status=='loading' || statusError">
+        <v-card
+          width="100%"
+          style="max-width: 700px; margin: auto"
+          :loading="(status=='loading') ? 'success' : false"
+        >
+          <v-form @submit="subscribe" class="py-10 px-8">
+            <v-card-title>
+              <h1 class="display-3 mb-4">Bumblebee</h1>
+            </v-card-title>
+            <v-card-text>
               <v-text-field
                 v-model="inputSession"
                 label="Session"
@@ -31,72 +32,87 @@
                 rounded
                 clearable
               ></v-text-field>
-          </v-card-text>
-          <v-card-actions>
-            <v-spacer></v-spacer>
-            <v-btn color="primary" large rounded depressed @click="subscribe">Subscribe</v-btn>
-            <v-spacer></v-spacer>
-          </v-card-actions>
-        </v-form>
-      </v-card>
-    </template>
-    <template v-else-if="!statusError">
-      <div v-if="$store.state.datasets.length==0" class="center-screen-inside success--text">
-        <v-progress-circular
-          indeterminate
-          color="success"
-          class="mr-4"
-        />
-        <span class="title">Waiting for data</span>
-        <span class="subtitle text-center pt-6" style="width: 100%;">
-          <span class="hoverable" @click="stopClient">
-            <v-icon color="success">arrow_back</v-icon>
-            Disconnect
-          </span>
-        </span>
-      </div>
-      <template v-else>
-        <v-flex xs12 sm12 md12>
-          <TableBar :dataset="$store.state.datasets[0].columns" :total="+$store.state.datasets[0].rows_count" />
-        </v-flex>
-
-        <v-footer fixed="fixed" app>
-          <v-layout class="px-4" row justify-space-between>
-            <span>Iron &copy; 2018</span>
-            <span
-              v-if="$store.state.datasets[0] && $store.state.datasets[0].summary"
-            >Rows: {{ $store.state.datasets[0].rows_count }}, Columns: {{ $store.state.datasets[0].summary.cols_count }}, Size: {{ $store.state.datasets[0].summary.size }}</span>
-          </v-layout>
-        </v-footer>
+            </v-card-text>
+            <v-card-actions>
+              <v-spacer></v-spacer>
+              <v-btn color="primary" large rounded depressed @click="subscribe">Subscribe</v-btn>
+              <v-spacer></v-spacer>
+            </v-card-actions>
+            <v-card-text class="pb-0" v-if="statusError" >
+              <v-alert type="error" class="mb-2" dismissible @input="resetStatus($event)">
+                {{status.message}}
+              </v-alert>
+            </v-card-text>
+          </v-form>
+        </v-card>
       </template>
-    </template>
-    <template v-else style="min-height: 400px;">
-      <v-container fluid fill-height>
-        <v-layout align-center>
-          <v-flex>
-            <h3 class="display-3">Oops!</h3>
-
-            <span class="subheading">There was an error loading your data.</span>
-
-            <v-divider class="my-8" />
-
-            <div class="title mb-8">For additional help, please visit the repository</div>
-
-            <v-btn
-              class="mx-0"
-              color="primary"
-              large
-              href="https://github.com/ironmussa/Bumblebee"
-              target="_blank"
-            >Go to repository</v-btn>
+      <template v-else-if="!statusError">
+        <div v-if="cDatasets.length==0" class="center-screen-inside success--text">
+          <v-progress-circular
+            indeterminate
+            color="success"
+            class="mr-4"
+          />
+          <span class="title">Waiting for data</span>
+          <span class="subtitle text-center pt-6" style="width: 100%;">
+            <span class="hoverable" @click="stopClient">
+              <v-icon color="success">arrow_back</v-icon>
+              Disconnect
+            </span>
+          </span>
+        </div>
+        <template v-else>
+          <v-flex xs12 sm12 md12>
+            <v-card class="d-flex flex-column">
+              <v-tabs
+                background-color="#def1ef"
+                color="success darken-2"
+                v-model="tab"
+                show-arrows
+                center-active
+              >
+                <v-tab v-for="(_tab, key) in cDatasets" :key="key" >
+                  <span class="pr-8">{{ _tab.name || key+1 }}</span>
+                  <v-hover v-slot:default="{ hover }">
+                    <v-icon
+                      :color="hover ? 'success darken-1' : ''"
+                      @click.stop="deleteTab(key)"
+                      small
+                      class="pr-4"
+                      style="position: absolute; right: 0"
+                    >
+                      close
+                    </v-icon>
+                  </v-hover>
+                </v-tab>
+              </v-tabs>
+              <v-card-text>
+                <TableBar
+                  :currentTab="tab"
+                  :view.sync="view"
+                  :dataset="cDatasets[tab]"
+                  :total="+cDatasets[tab].rows_count"
+                />
+              </v-card-text>
+            </v-card>
           </v-flex>
-        </v-layout>
-      </v-container>
-    </template>
-  </v-layout>
+
+          <v-footer fixed="fixed" app>
+            <v-layout class="px-4" row justify-space-between>
+              <span>Iron &copy; 2019</span>
+              <span
+                v-if="cDatasets[tab] && cDatasets[tab].summary"
+              >Rows: {{ cDatasets[tab].rows_count }}, Columns: {{ cDatasets[tab].summary.cols_count }}, Size: {{ cDatasets[tab].summary.size }}</span>
+            </v-layout>
+          </v-footer>
+        </template>
+      </template>
+    </v-layout>
+  </Layout>
 </template>
 
 <script>
+import Layout from '@/components/Layout'
 import TableBar from '@/components/TableBar'
 import TopValues from '@/components/TopValues'
 import Frequent from '@/components/Frequent'
@@ -110,10 +126,13 @@ export default {
       showKey: false,
       inputKey: '',
       inputSession: '',
+      tab: 0,
+      view: 0
     }
   },
 
 	components: {
+    Layout,
 		TableBar,
 		TopValues,
 		Stats,
@@ -124,21 +143,41 @@ export default {
 
 	computed: {
 		statusError () {
-			try {
-				return (typeof this.$store.state.status === Object && this.$store.state.status instanceof Error)
-			} catch {
-				return false
-			}
+      return (!!this.$store.state.status.message)
 		},
 		status () {
       return this.$store.state.status
-		}
+    },
+    cDatasets () {
+      return this.$store.state.datasets;
+    }
 	},
 
   methods: {
     subscribe() {
       this.startClient(this.inputSession,this.inputKey)
+    },
+    resetStatus(closing) {
+      if (!closing)
+        this.$store.commit('status')
+    },
+    deleteTab(i) {
+      const deleted = this.$store.commit('delete',{index: i})
+      if (this.cDatasets.length==0) {
+        this.tab = 0;
+      }
+      else if (this.tab>=this.cDatasets.length) {
+        this.tab = this.cDatasets.length - 1
+      }
+      this.$forceUpdate()
     }
-  }
+  },
 }
 </script>
+
+<style lang="scss">
+  .datasets-tabs {
+    border-radius: 4px;
+    overflow: hidden;
+  }
+</style>

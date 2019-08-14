@@ -55,12 +55,6 @@ export default {
 			type: Object
 		}
 	},
-
-	data () {
-		return {
-			arrDataset: []
-		}
-	}
 }
 </script>
 

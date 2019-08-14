@@ -60,6 +60,7 @@ module.exports = {
 
 	plugins: [
 		'@/plugins/numeral',
+		'@/plugins/fuse',
 		'@/plugins/varCheck'
 	],
 
@@ -81,7 +82,7 @@ module.exports = {
 					primary: '#121212',
 					accent: colors.grey.darken3,
 					secondary: colors.amber.darken3,
-					info: colors.teal.lighten1,
+					info: '#81caf9',
 					warning: colors.amber,
 					error: '#e57373',
 					success: '#4db6ac'

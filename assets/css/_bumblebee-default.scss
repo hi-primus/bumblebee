@@ -96,6 +96,12 @@ table.table thead td:not(:nth-child(1)), table.table tbody td:not(:nth-child(1))
   align-content: center;
 }
 
+/* vuetify fixes */
+
+.v-alert__icon.v-icon {
+  align-self: center;
+}
+
 /* vue-bigdata-table fixes */
 
 .vue-bigdata-table {
@@ -113,7 +119,7 @@ table.table thead td:not(:nth-child(1)), table.table tbody td:not(:nth-child(1))
   }
   .vue-bigdata-table-header-wrapper * {
     font-size: 14px;
-    font-family: "Roboto", sans-serif !important;
+    font-family: "Roboto", sans-serif;
     font-weight: 700;
   }
   .vue-bigdata-table-content * {
@@ -126,6 +132,11 @@ table.table thead td:not(:nth-child(1)), table.table tbody td:not(:nth-child(1))
 
 .vue-bigdata-table-outer {
   border-radius: 2px;
+}
+
+.vue-bigdata-table-cell:empty:before {
+  content: 'None';
+  opacity: 0.5;
 }
 
 /* component vuetify table */
@@ -154,4 +165,26 @@ table.table thead td:not(:nth-child(1)), table.table tbody td:not(:nth-child(1))
     min-height: 2.5em;
     font-family: "Roboto Mono", monospace !important;
   }
+}
+
+/* data types */
+
+.data-type {
+  font-family: "Roboto Mono", monospace !important;
+  transform-origin: 16px center;
+  font-weight: 700 !important;
+  &.type-float, &.type-double {
+    transform: scaleX(0.75);
+  }
+  &.type-int {
+    font-weight: 400;
+    transform: scaleX(1.5);
+  }
+}
+.data-type-name {
+  text-transform: uppercase;
+  font-size: 0.66em;
+}
+.data-name {
+  font-weight: 700;
 }

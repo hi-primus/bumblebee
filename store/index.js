@@ -5,16 +5,32 @@ export const state = () => ({
 
 export const mutations = {
 
-	add (state, newDataset) {
-    state.datasets[0] = {...(state.datasets[0] || {}), ...newDataset}
+	add (state, {dataset}) {
+    let found = state.datasets.findIndex((e)=>{
+      return (e.name == dataset.name)
+    })
 
-    state.datasets[0].sample.parsedValue = JSON.parse(state.datasets[0].sample.value)
+    if (found==-1) {
+      found = state.datasets.length
+    }
 
-		state.status = 'received'
-	},
+    state.datasets[found] = {...(state.datasets[found] || {}), ...dataset}
+
+    state.status = 'received'
+
+    console.log("DEBUG: state.datasets[found]",state.datasets[found])
+  },
+
+  delete (state, {index}) {
+    state.datasets.splice(index,1)
+    if (state.datasets.length==0) {
+      state.status = 'receiving'
+    }
+    return index;
+  },
 
 	status (state, payload) {
-		state.status = payload
+		state.status = payload || 'waiting'
 	}
 
 }

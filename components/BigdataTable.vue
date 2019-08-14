@@ -41,8 +41,11 @@
 							@mouseleave="canNotMove">
               <th v-for="(col, i) in columnsHandled" :data-index="i" :key="`table-title-${i}`" class="header-title-cell">
 								<span v-if="!col.render && (i > fixedCol)">
-                  <nuxt-link v-if="titleLinks" :to="'/details/'+ col.title" class="hoverable header-title-link">
+                  <nuxt-link v-if="titleLinks" :to="`/${currentTab}/${col.title}`" class="hoverable header-title-link">
                   </nuxt-link>
+                  <span class="data-type-in-table data-type" :class="`type-${$store.state.datasets[currentTab].columns[col.title].column_dtype}`">
+                    {{ dataType($store.state.datasets[currentTab].columns[col.title].column_dtype) }}
+                  </span>
                   <template>
                     {{ col.title }}
                   </template>
@@ -62,13 +65,18 @@
 						</tr>
             <tr v-if="showGraphic" class="table-graphics">
 							<td v-for="(column, key) in dataColumns" :key="`table-g-${key}`" style="border-right: 1px solid #e9eaec; border-bottom: 1px solid #e9eaec">
-                <!-- TODO: hist_agg -> hist -->
+                <DataBar
+                  class="table-data-bar"
+                  bottom
+                  :mismatches="$store.state.datasets[currentTab].columns[key].stats.missing_count"
+                  :total="+$store.state.datasets[currentTab].rows_count"
+                />
                 <template
-                  v-if="column.stats.hist_agg"
+                  v-if="column.stats.hist"
                 >
                   <Histogram
                     table
-                    :values="column.stats.hist_agg"
+                    :values="column.stats.hist"
                     :total="10"
                   />
                 </template>
@@ -99,7 +107,10 @@
 
 import Histogram from "@/components/Histogram";
 import Frequent from "@/components/Frequent";
+import DataBar from "@/components/DataBar";
 import VueBigdataTable from 'vue-bigdata-table/src/vue-bigdata-table/vue-bigdata-table.vue'
+
+import dataTypesMixin from '@/plugins/mixins/data-types'
 
 export default {
 
@@ -112,8 +123,11 @@ export default {
 
   components: {
     Histogram,
-    Frequent
+    Frequent,
+    DataBar
   },
+
+  mixins: [dataTypesMixin],
 
   props: {
     graphicsHeight: {
@@ -131,6 +145,9 @@ export default {
     titleLinks: {
       type: Boolean,
       default: false
+    },
+    currentTab: {
+      default: ''
     }
   },
 
@@ -141,25 +158,37 @@ export default {
   },
 
   watch: {
-    filterColumns(str) {
+    async filterColumns (filterColumns) {
+      try {
 
-      let exclude = []
+        let filteredColumns;
 
-      this.columns.forEach((column, i) => {
-        if (!(column.title).includes(this.filterColumns))
-          exclude.push(i)
-      })
-
-      let trs = this.$refs.outWrapper.getElementsByTagName("tr");
-
-      for (let i = 0; i < trs.length; i++) {
-        const tr = trs[i]
-        for (let j = 0; j < tr.children.length; j++) {
-          tr.children[j].hidden = (exclude.includes(j))
+        if (!filterColumns) {
+          filteredColumns = this.columns;
         }
+        else {
+          filteredColumns = await this.$search(filterColumns, this.columns, {
+            shouldSort: true,
+            tokenize: true,
+            keys: [
+              "title"
+            ]
+          })
+        }
+
+        let trs = this.$refs.outWrapper.getElementsByTagName('tr');
+
+        for (let i = 0; i < trs.length; i++) {
+          const tr = trs[i]
+          for (let j = 0; j < tr.children.length; j++) {
+            tr.children[j].hidden = (!filteredColumns.includes(this.columns[j]))
+          }
+        }
+      } catch (err) {
+        console.error(err)
       }
     }
-  }
+  },
 
 }
 </script>
@@ -170,6 +199,7 @@ export default {
   }
   .table-graphics {
     &>td {
+      vertical-align: top;
       height: var(--graphics-height,145px);
       &>div {
         max-height: var(--graphics-height,145px)
@@ -188,5 +218,17 @@ export default {
       width: 100%;
       height: 100%;
     }
+  }
+
+  .data-type-in-table {
+    position: absolute;
+    left: -8px;
+    padding-left: 16px;
+    color: rgba(0,0,0,0.71) !important;
+  }
+  .table-data-bar {
+    border-radius: 0;
+    margin-bottom: 2px;
+
   }
 </style>
