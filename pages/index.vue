@@ -62,14 +62,14 @@
           </span>
         </div>
         <template v-else>
-          <v-flex xs12 sm12 md12>
-            <v-card class="d-flex flex-column">
+            <v-card class="d-flex flex-column align-top justify-start" style="width: 100%;">
               <v-tabs
                 background-color="#def1ef"
                 color="success darken-2"
                 v-model="tab"
                 show-arrows
                 center-active
+                style="flex: 0;"
               >
                 <v-tab v-for="(_tab, key) in cDatasets" :key="key" >
                   <span class="pr-8">{{ _tab.name || key+1 }}</span>
@@ -87,15 +87,35 @@
                 </v-tab>
               </v-tabs>
               <v-card-text>
+                <v-flex xs12 class="controls-container text-xs-center d-flex">
+                  <v-btn-toggle mandatory v-model="view">
+                    <v-btn text>
+                      <v-icon>view_headline</v-icon>
+                    </v-btn>
+                    <v-btn text>
+                      <v-icon>view_module</v-icon>
+                    </v-btn>
+                  </v-btn-toggle>
+                  <v-spacer></v-spacer>
+                  <v-text-field
+                    style="max-width: 500px"
+                    v-model="searchText"
+                    append-icon="search"
+                    label="Search column"
+                    :color="'info darken-1'"
+                    clearable
+                  />
+                </v-flex>
                 <TableBar
+                  :key="tab"
                   :currentTab="tab"
-                  :view.sync="view"
+                  :view="view"
                   :dataset="cDatasets[tab]"
                   :total="+cDatasets[tab].rows_count"
+                  :searchText="searchText"
                 />
               </v-card-text>
             </v-card>
-          </v-flex>
 
           <v-footer fixed="fixed" app>
             <v-layout class="px-4" row justify-space-between>
@@ -126,6 +146,7 @@ export default {
       showKey: false,
       inputKey: '',
       inputSession: '',
+      searchText: '',
       tab: 0,
       view: 0
     }

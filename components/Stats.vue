@@ -12,7 +12,7 @@
         <tr v-if="values.p_missing!=undefined">
           <td style="width:50%;">Missing</td>
           <td style="width:50%;">{{ values.p_missing.toFixed(2) }}</td>
-          <td>{{ values.missing_count.toFixed(2) }}%</td>
+          <td>{{ values.p_count_na.toFixed(2) }}%</td>
         </tr>
 
         <tr v-if="values.mean!=undefined">

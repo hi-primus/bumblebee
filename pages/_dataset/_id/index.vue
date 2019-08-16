@@ -20,7 +20,7 @@
             <DataBar
               class="main-data-bar"
               bottom
-              :mismatches="$store.state.datasets[this.$route.params.dataset].columns[this.$route.params.id].stats.missing_count"
+              :mismatches="$store.state.datasets[this.$route.params.dataset].columns[this.$route.params.id].stats.p_count_na"
               :total="+$store.state.datasets[this.$route.params.dataset].rows_count"
             />
           </v-flex>
@@ -222,7 +222,7 @@ export default {
 </script>
 
 <style lang="scss">
-  .pbar.main-data-bar {
+  .data-bar.main-data-bar {
     height: 8px;
     border-top-left-radius: 0;
     border-top-right-radius: 0;

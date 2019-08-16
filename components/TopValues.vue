@@ -56,34 +56,6 @@ export default {
 	}
 }
 
-// sidechart
-.sidechart {
-	margin-bottom: 5px;
-	position: relative;
-	font-size: 10px;
-
-	&:hover {
-		background-color: rgba(235, 235, 235, 0.527);
-	}
-
-	.bartext {
-		background-color: #aeccde;
-		width: 50%;
-	}
-
-	.totaltext {
-		position: absolute;
-		top: 0;
-		left: 50%;
-	}
-
-	.counttext {
-		position: absolute;
-		top: 0;
-		left: 30%;
-	}
-}
-
 thead {
 	tr {
 		height: 25px !important;

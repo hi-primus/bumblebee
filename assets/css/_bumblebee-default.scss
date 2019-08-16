@@ -84,7 +84,7 @@ table.table thead td:not(:nth-child(1)), table.table tbody td:not(:nth-child(1))
 }
 
 .center-screen-inside {
-  min-height: 100vh;
+  min-height: calc(100vh - 36px);
   min-width: 100vw;
   position: absolute;
   top: 0;
@@ -126,7 +126,8 @@ table.table thead td:not(:nth-child(1)), table.table tbody td:not(:nth-child(1))
     font-family: "Roboto Mono", monospace !important;
   }
   .vue-bigdata-table-wrapper .vue-bigdata-table-data-table tr td .vue-bigdata-table-cell {
-    padding: 0 8px !important;
+    padding: 0 4px !important;
+    line-height: 1;
   }
 }
 
@@ -152,9 +153,99 @@ table.table thead td:not(:nth-child(1)), table.table tbody td:not(:nth-child(1))
   }
 }
 
+/* graphics */
+
+.bb-graphic {
+  .scroll-container::-webkit-scrollbar {
+    width: 2px;
+    height: 4px;
+  }
+
+  .scroll-container::-webkit-scrollbar-track {
+    background: #f1f1f1;
+  }
+
+  .scroll-container::-webkit-scrollbar-thumb {
+    background: #888;
+  }
+
+  .scroll-container {
+    overflow-x: scroll;
+
+    .freq-container {
+      cursor: crosshair;
+      height: 90px;
+      display: flex;
+
+      .freq-bar {
+        height: 100%;
+        width: 100%;
+        min-width: 12px;
+        &:not(:first-child) {
+          margin-left: 2px;
+        }
+        position: relative;
+        float: left;
+        &:hover {
+          background-color: rgba(235, 235, 235, 0.527);
+          .freq-value {
+            background-color: #3c948b;
+          }
+        }
+
+        .freq-value {
+          width: 100%;
+          background-color: $data-green;
+          height: 50%;
+          position: absolute;
+          bottom: 0;
+        }
+      }
+    }
+  }
+
+  .sidechart {
+    margin-bottom: 5px;
+    position: relative;
+    font-size: 10px;
+    &:hover {
+      background-color: rgba(235, 235, 235, 0.527);
+    }
+    .bartext {
+      background-color: #aeccde;
+      width: 50%;
+    }
+    .totaltext {
+      position: absolute;
+      top: 0;
+      left: 50%;
+    }
+    .counttext {
+      position: absolute;
+      top: 0;
+      left: 30%;
+    }
+  }
+}
+
 /* table graphics */
 
 .table-graphic {
+  height: 100%;
+  padding-left: 4px;
+  padding-right: 4px;
+  .scroll-container {
+    height: calc(100% - 10px);
+  }
+  .freq-container {
+    height: 100% !important;
+    .freq-bar {
+      min-width: 4px !important;
+      &:not(:first-child) {
+        margin-left: 1px !important;
+      }
+    }
+  }
   h3 {
     display: none;
   }
@@ -162,8 +253,12 @@ table.table thead td:not(:nth-child(1)), table.table tbody td:not(:nth-child(1))
     font-size: 12px !important;
     font-weight: 700 !important;
     line-height: 1.25;
-    min-height: 2.5em;
+    height: 1em;
     font-family: "Roboto Mono", monospace !important;
+    max-width: 100%;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
   }
 }
 

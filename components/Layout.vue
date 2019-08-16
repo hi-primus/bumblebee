@@ -1,6 +1,6 @@
 <template>
   <v-content app>
-      <v-container fluid :class="[wide ? 'lc--wide' : 'lc--narrow', 'layout-container', 'pt-6']">
+      <v-container fluid :class="[wide ? 'lc--wide' : 'lc--narrow', 'layout-container']">
         <slot/>
       </v-container>
   </v-content>
@@ -17,9 +17,15 @@ export default {
 }
 </script>
 
-<style lang="scss" scoped>
+<style lang="scss">
 .layout-container {
   // transition: all ease-in-out .1s;
+  padding-top: 24px;
+  padding-bottom: 24px;
+  min-height: calc(100vh - 36px);
+  &>.layout {
+    min-height: calc(100vh - 84px);
+  }
   &.lc--wide {
     padding-left: 2rem;
     padding-right: 2rem;

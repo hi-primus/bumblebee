@@ -1,18 +1,33 @@
 <template>
 	<div
-    class="vue-bigdata-table-outer"
-    ref="outer"
-    @DOMMouseScroll="handleScroll"
-    @scroll="handleScroll"
-    :style="{'--graphics-height': (showGraphic) ? graphicsHeight+'px' : '0', '--header-height': headerHeight+'px' }"
-  >
+		class="vue-bigdata-table-outer"
+		ref="outer"
+		@DOMMouseScroll="handleScroll"
+		@scroll="handleScroll"
+		:style="{'--graphics-height': (showGraphic) ? graphicsHeight+'px' : '0', '--header-height': headerHeight+'px' }"
+	>
+		<style type="text/css" v-html="filterStyle"></style>
 		<div :class="wrapperClasses" :style="tableWidthStyles">
 			<div class="vue-bigdata-table-wrapper" ref="outWrapper">
-				<div :class="['vue-bigdata-table-header-wrapper', fixed ? 'header-wrapper-fixed' : '']" :style="{transform: 'translateX(0)'}">
+				<div
+					:class="['vue-bigdata-table-header-wrapper', fixed ? 'header-wrapper-fixed' : '']"
+					:style="{transform: 'translateX(0)'}"
+				>
 					<slot name="top" :colWidthArr="widthArr"></slot>
-					<table v-if="fixedCol >= 0" :class="['vue-bigdata-table-fixed-header', showFixedBoxShadow ? 'box-shadow' : '']" cellspacing="0" cellpadding="0" border="0">
+					<table
+						v-if="fixedCol >= 0"
+						:class="['vue-bigdata-table-fixed-header', showFixedBoxShadow ? 'box-shadow' : '']"
+						cellspacing="0"
+						cellpadding="0"
+						border="0"
+					>
 						<colgroup>
-							<col v-if="(i <= fixedCol)" :width="width" v-for="(width, i) in widthArr" :key="'header-key-fixed-' + i" />
+							<col
+								v-if="(i <= fixedCol)"
+								:width="width"
+								v-for="(width, i) in widthArr"
+								:key="'header-key-fixed-' + i"
+							/>
 						</colgroup>
 						<tr
 							:style="{cursor: cursorOnHeader}"
@@ -20,75 +35,102 @@
 							@mousemove.capture.prevent="handleMousemove"
 							@mousedown="handleMousedown"
 							@mouseup="canNotMove"
-							@mouseleave="canNotMove">
-							<th v-if="(i <= fixedCol)" v-for="(col, i) in columnsHandled" :data-index="i" :key="`table-title-${i}`" style="border-right: 1px solid #e9eaec;">
-								<span v-if="!col.render">{{ col.title }}<sort-button v-if="showSortBtn(i)" :col-index="i" @on-sort="handleSort" @on-cancel-sort="handleCancelSort" :current-sort-col-index="sortedByColIndex" :current-sort-type="sortedType"></sort-button></span>
+							@mouseleave="canNotMove"
+						>
+							<th
+								v-if="(i <= fixedCol)"
+								v-for="(col, i) in columnsHandled"
+								:data-index="i"
+								:key="`table-title-${i}`"
+								style="border-right: 1px solid #e9eaec;"
+							>
+								<span v-if="!col.render">
+									{{ col.title }}
+									<sort-button
+										v-if="showSortBtn(i)"
+										:col-index="i"
+										@on-sort="handleSort"
+										@on-cancel-sort="handleCancelSort"
+										:current-sort-col-index="sortedByColIndex"
+										:current-sort-type="sortedType"
+									></sort-button>
+								</span>
 								<render-dom v-else :render="col.render" :back-value="getComputedTableDataIndex(i)"></render-dom>
 							</th>
 						</tr>
 					</table>
-					<table ref="headerTable" style="position: absolute;left: 0;top: 0;" cellspacing="0" cellpadding="0" border="0" width="100%">
+					<table
+						ref="headerTable"
+						style="position: absolute;left: 0;top: 0;"
+						cellspacing="0"
+						cellpadding="0"
+						border="0"
+						width="100%"
+					>
 						<colgroup>
 							<col :width="width" v-for="(width, i) in widthArr" :key="'header-key-' + i" />
 						</colgroup>
 						<tr
-              class="table-header-titles"
+							class="table-header-titles"
 							:style="{cursor: cursorOnHeader}"
 							:data-update="updateID"
 							@mousemove.capture.prevent="handleMousemove"
 							@mousedown="handleMousedown"
 							@mouseup="canNotMove"
-							@mouseleave="canNotMove">
-              <th v-for="(col, i) in columnsHandled" :data-index="i" :key="`table-title-${i}`" class="header-title-cell">
+							@mouseleave="canNotMove"
+						>
+							<th
+								v-for="(col, i) in columnsHandled"
+								:data-index="i"
+								:key="`table-title-${i}`"
+								class="header-title-cell"
+							>
 								<span v-if="!col.render && (i > fixedCol)">
-                  <nuxt-link v-if="titleLinks" :to="`/${currentTab}/${col.title}`" class="hoverable header-title-link">
-                  </nuxt-link>
-                  <span class="data-type-in-table data-type" :class="`type-${$store.state.datasets[currentTab].columns[col.title].column_dtype}`">
-                    {{ dataType($store.state.datasets[currentTab].columns[col.title].column_dtype) }}
-                  </span>
-                  <template>
-                    {{ col.title }}
-                  </template>
-                  <sort-button
-                    v-if="showSortBtn(i)"
-                    :col-index="i"
-                    @on-sort="handleSort"
-                    @on-cancel-sort="handleCancelSort"
-                    @click.stop.prevent.capture="e=>e"
-                    :current-sort-col-index="sortedByColIndex"
-                    :current-sort-type="sortedType"
-                  >
-                  </sort-button>
-                </span>
-								<render-dom v-else-if="(i > fixedCol)" :render="col.render" :back-value="getComputedTableDataIndex(i)"></render-dom>
-              </th>
+									<nuxt-link
+										v-if="titleLinks"
+										:to="`/${currentTab}/${col.title}`"
+										class="hoverable header-title-link"
+									></nuxt-link>
+									<span
+										class="data-type-in-table data-type"
+										:class="`type-${$store.state.datasets[currentTab].columns[i].column_dtype}`"
+									>{{ dataType($store.state.datasets[currentTab].columns[i].column_dtype) }}</span>
+									<span class="table-header-text">{{ col.title }}</span>
+									<sort-button
+										v-if="showSortBtn(i)"
+										:col-index="i"
+										@on-sort="handleSort"
+										@on-cancel-sort="handleCancelSort"
+										@click.stop.prevent.capture="e=>e"
+										:current-sort-col-index="sortedByColIndex"
+										:current-sort-type="sortedType"
+									></sort-button>
+								</span>
+								<render-dom
+									v-else-if="(i > fixedCol)"
+									:render="col.render"
+									:back-value="getComputedTableDataIndex(i)"
+								></render-dom>
+							</th>
 						</tr>
-            <tr v-if="showGraphic" class="table-graphics">
-							<td v-for="(column, key) in dataColumns" :key="`table-g-${key}`" style="border-right: 1px solid #e9eaec; border-bottom: 1px solid #e9eaec">
-                <DataBar
-                  class="table-data-bar"
-                  bottom
-                  :mismatches="$store.state.datasets[currentTab].columns[key].stats.missing_count"
-                  :total="+$store.state.datasets[currentTab].rows_count"
-                />
-                <template
-                  v-if="column.stats.hist"
-                >
-                  <Histogram
-                    table
-                    :values="column.stats.hist"
-                    :total="10"
-                  />
-                </template>
-                <template
-                  v-else-if="column.frequency"
-                >
-                  <Frequent
-                    table
-                    :values="column.frequency"
-                    :total="column.frequency[0].count"
-                  />
-                </template>
+						<tr v-if="showGraphic" class="table-graphics">
+							<td
+								v-for="(column, key) in dataColumns"
+								:key="`table-g-${key}`"
+								style="border-right: 1px solid #e9eaec; border-bottom: 1px solid #e9eaec"
+							>
+								<DataBar
+									class="table-data-bar"
+									bottom
+									:mismatches="$store.state.datasets[currentTab].columns[key].stats.p_count_na"
+									:total="+$store.state.datasets[currentTab].rows_count"
+								/>
+								<template v-if="column.stats.hist">
+									<Histogram table :values="column.stats.hist" :total="10" />
+								</template>
+								<template v-else-if="column.frequency">
+									<Frequent table :values="column.frequency" :total="column.frequency[0].count" />
+								</template>
 							</td>
 						</tr>
 					</table>
@@ -104,131 +146,151 @@
 </template>
 
 <script>
-
 import Histogram from "@/components/Histogram";
 import Frequent from "@/components/Frequent";
 import DataBar from "@/components/DataBar";
-import VueBigdataTable from 'vue-bigdata-table/src/vue-bigdata-table/vue-bigdata-table.vue'
+import VueBigdataTable from "vue-bigdata-table/src/vue-bigdata-table/vue-bigdata-table.vue";
 
-import dataTypesMixin from '@/plugins/mixins/data-types'
+import dataTypesMixin from "@/plugins/mixins/data-types";
 
 export default {
+	extends: VueBigdataTable,
 
-  extends: VueBigdataTable,
+	data() {
+		return {
+			filterStyle: ""
+		};
+	},
 
-  data() {
-    return {
-    }
-  },
+	components: {
+		Histogram,
+		Frequent,
+		DataBar
+	},
 
-  components: {
-    Histogram,
-    Frequent,
-    DataBar
-  },
+	mixins: [dataTypesMixin],
 
-  mixins: [dataTypesMixin],
+	props: {
+		graphicsHeight: {
+			type: Number,
+			default: 80
+		},
+		dataColumns: {
+			type: Array,
+			default: []
+		},
+		visibleColumns: {
+			type: Array,
+			default: []
+		},
+		titleLinks: {
+			type: Boolean,
+			default: false
+		},
+		currentTab: {
+			default: ""
+		}
+	},
 
-  props: {
-    graphicsHeight: {
-      type: Number,
-      default: 145
-    },
-    dataColumns: {
-      type: Object,
-      default: {}
-    },
-    filterColumns: {
-      type: String,
-      default: ''
-    },
-    titleLinks: {
-      type: Boolean,
-      default: false
-    },
-    currentTab: {
-      default: ''
-    }
-  },
+	computed: {
+		showGraphic() {
+			return this.dataColumns != {};
+		}
+	},
 
-  computed: {
-    showGraphic() {
-      return (this.dataColumns!={})
-    },
-  },
+	watch: {
+		visibleColumns: {
+			handler: "filterColumns",
+			deep: true
+		}
+	},
 
-  watch: {
-    async filterColumns (filterColumns) {
-      try {
+	methods: {
+		filterColumns() {
+			try {
+				let filterStyleArray = [];
 
-        let filteredColumns;
+				for (let i = 0; i < this.columns.length; i++) {
+					if (!this.visibleColumns.includes(this.columns[i].title))
+						filterStyleArray.push(
+							`.vue-bigdata-table-wrapper tr>*:nth-child(${i + 1})`
+						);
+				}
 
-        if (!filterColumns) {
-          filteredColumns = this.columns;
-        }
-        else {
-          filteredColumns = await this.$search(filterColumns, this.columns, {
-            shouldSort: true,
-            tokenize: true,
-            keys: [
-              "title"
-            ]
-          })
-        }
-
-        let trs = this.$refs.outWrapper.getElementsByTagName('tr');
-
-        for (let i = 0; i < trs.length; i++) {
-          const tr = trs[i]
-          for (let j = 0; j < tr.children.length; j++) {
-            tr.children[j].hidden = (!filteredColumns.includes(this.columns[j]))
-          }
-        }
-      } catch (err) {
-        console.error(err)
-      }
-    }
-  },
-
-}
+				this.filterStyle =
+					filterStyleArray.join(", ") +
+					` {
+          display: none;
+        }`;
+			} catch (err) {
+				console.error(err);
+			}
+		}
+	}
+};
 </script>
 
 <style lang="scss" scoped>
-  .vue-bigdata-table-header-wrapper {
-    height: calc( var(--graphics-height,145px) + var(--header-height, 100px) );
-  }
-  .table-graphics {
-    &>td {
-      vertical-align: top;
-      height: var(--graphics-height,145px);
-      &>div {
-        max-height: var(--graphics-height,145px)
-      }
-    }
-  }
-  .header-title-cell {
-    position: relative;
-    &:hover {
-      background-color: $data-highlight;
-    }
-    .header-title-link {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-    }
-  }
+.vue-bigdata-table-header-wrapper {
+	height: calc(
+		calc(var(--graphics-height, 80px) + var(--header-height, 24px)) + 32px
+	);
+}
+.table-graphics {
+	& > td {
+		vertical-align: top;
+		height: calc(var(--graphics-height, 80px) + 16px);
+		& > div {
+			max-height: var(--graphics-height, 80px);
+		}
+	}
+}
+.header-title-cell {
+	position: relative;
+	padding-top: 2px;
+	.header-title-link {
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+	}
+	& > span {
+		display: flex;
+		align-items: center;
+		padding-left: 8px;
+		padding-right: 8px;
+		.data-type-in-table {
+			position: relative;
+			color: rgba(0, 0, 0, 0.6) !important;
+			transform-origin: left center;
+			width: 28px;
+			text-align: left;
+			margin-right: 2px;
+			pointer-events: none;
+		}
+		.table-header-text {
+			white-space: nowrap;
+			overflow: hidden;
+			text-overflow: ellipsis;
+			width: 100%;
+		}
+		.sort-button-wrapper {
+			position: relative;
+			width: 16px;
+			top: -2px;
+			right: 2px;
+			margin-left: auto;
+			justify-self: flex-end;
+		}
+	}
+	&:hover {
+		background-color: $data-highlight;
+	}
+}
 
-  .data-type-in-table {
-    position: absolute;
-    left: -8px;
-    padding-left: 16px;
-    color: rgba(0,0,0,0.71) !important;
-  }
-  .table-data-bar {
-    border-radius: 0;
-    margin-bottom: 2px;
-
-  }
+.table-data-bar {
+	border-radius: 0;
+	margin-bottom: 2px;
+}
 </style>
