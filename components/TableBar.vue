@@ -14,7 +14,7 @@
 				<tbody>
 					<nuxt-link
 						v-for="(col, index) in (filteredColumns)"
-						:to="`/${currentTab}/${col.name}`"
+						:to="`/${currentTab}/${index}`"
 						:key="index"
 						tag="tr"
 						class="hoverable"

@@ -7,7 +7,7 @@
           v-for="(item, index) in values"
           :key="index"
           class="freq-bar"
-          @mouseover="changeValue(item.lower.toFixed(2),item.upper.toFixed(2), item.count)"
+          @mouseover="changeValue((+item.lower).toFixed(2),(+item.upper).toFixed(2), item.count)"
         >
           <div :style="{'height': normVal(item.count)+'%'}" class="freq-value" />
         </div>
@@ -53,8 +53,8 @@ export default {
 	beforeMount () {
 		this.maxVal = this.getMaxVal(this.values)
 		this.changeValue(
-			this.values[0].lower.toFixed(2),
-			this.values[0].upper.toFixed(2),
+			(+this.values[0].lower).toFixed(2), //nh
+			(+this.values[0].upper).toFixed(2),
 			this.values[0].count
 		)
 

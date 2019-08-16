@@ -7,7 +7,7 @@
           v-for="(item, index) in values"
           :key="index"
           class="freq-bar"
-          @mouseover="changeValue(`${item.value}, ${item.percentage}%`)"
+          @mouseover="currentVal = `${item.value}, ${item.percentage}%`"
         >
           <div :style="{'height': normVal(item.count)+'%'}" class="freq-value" />
         </div>
@@ -43,8 +43,7 @@ export default {
 	},
 
 	beforeMount () {
-		this.changeValue(`${this.values[0].count}, ${this.values[0].percentage}%`)
-
+		this.currentVal = `${this.values[0].count}, ${this.values[0].percentage}%`
 		this.barNum = this.values.length
 	},
 

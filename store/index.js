@@ -16,7 +16,8 @@ export const mutations = {
 
     state.datasets[found] = {...(state.datasets[found] || {}), ...dataset}
 
-    state.datasets[found].columns = Object.values(state.datasets[found].columns)
+    if (state.datasets[found].columns instanceof Object)
+      state.datasets[found].columns = Object.values(state.datasets[found].columns)
 
     delete state.datasets[found].sample.columns;
 

@@ -23,7 +23,7 @@ export default {
 			type: Number
 		},
 		total: {
-			default: 0,
+			default: 1,
 			type: Number
     },
     bottom: {
@@ -42,7 +42,7 @@ export default {
 
 	beforeMount () {
 		this.okValues = this.total - this.mismatches
-		this.mismatchesP = ((this.mismatches * 100) / this.total).toFixed(2)
+		this.mismatchesP = (+((this.mismatches * 100) / this.total)).toFixed(2) //nh
 		this.okP = 100 - this.mismatchesP;
 	}
 }

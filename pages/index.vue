@@ -134,9 +134,6 @@
 <script>
 import Layout from '@/components/Layout'
 import TableBar from '@/components/TableBar'
-import TopValues from '@/components/TopValues'
-import Frequent from '@/components/Frequent'
-import Stats from '@/components/Stats'
 import clientMixin from '@/plugins/mixins/client'
 
 export default {
@@ -155,9 +152,6 @@ export default {
 	components: {
     Layout,
 		TableBar,
-		TopValues,
-		Stats,
-    Frequent
 	},
 
 	mixins: [clientMixin],

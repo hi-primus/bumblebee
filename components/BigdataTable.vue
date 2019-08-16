@@ -22,12 +22,13 @@
 						border="0"
 					>
 						<colgroup>
-							<col
-								v-if="(i <= fixedCol)"
-								:width="width"
-								v-for="(width, i) in widthArr"
-								:key="'header-key-fixed-' + i"
-							/>
+              <template v-for="(width, i) in widthArr">
+                <col
+                  v-if="(i <= fixedCol)"
+                  :width="width"
+                  :key="'header-key-fixed-' + i"
+                />
+              </template>
 						</colgroup>
 						<tr
 							:style="{cursor: cursorOnHeader}"
@@ -37,26 +38,27 @@
 							@mouseup="canNotMove"
 							@mouseleave="canNotMove"
 						>
-							<th
-								v-if="(i <= fixedCol)"
-								v-for="(col, i) in columnsHandled"
-								:data-index="i"
-								:key="`table-title-${i}`"
-								style="border-right: 1px solid #e9eaec;"
-							>
-								<span v-if="!col.render">
-									{{ col.title }}
-									<sort-button
-										v-if="showSortBtn(i)"
-										:col-index="i"
-										@on-sort="handleSort"
-										@on-cancel-sort="handleCancelSort"
-										:current-sort-col-index="sortedByColIndex"
-										:current-sort-type="sortedType"
-									></sort-button>
-								</span>
-								<render-dom v-else :render="col.render" :back-value="getComputedTableDataIndex(i)"></render-dom>
-							</th>
+              <template v-for="(col, i) in columnsHandled">
+                <th
+                  v-if="(i <= fixedCol)"
+                  :data-index="i"
+                  :key="`table-title-${i}`"
+                  style="border-right: 1px solid #e9eaec;"
+                >
+                  <span v-if="!col.render">
+                    {{ col.title }}
+                    <sort-button
+                      v-if="showSortBtn(i)"
+                      :col-index="i"
+                      @on-sort="handleSort"
+                      @on-cancel-sort="handleCancelSort"
+                      :current-sort-col-index="sortedByColIndex"
+                      :current-sort-type="sortedType"
+                    ></sort-button>
+                  </span>
+                  <render-dom v-else :render="col.render" :back-value="getComputedTableDataIndex(i)"></render-dom>
+                </th>
+              </template>
 						</tr>
 					</table>
 					<table
@@ -88,7 +90,7 @@
 								<span v-if="!col.render && (i > fixedCol)">
 									<nuxt-link
 										v-if="titleLinks"
-										:to="`/${currentTab}/${col.title}`"
+										:to="`/${currentTab}/${i}`"
 										class="hoverable header-title-link"
 									></nuxt-link>
 									<span
