@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "@nuxtjs/axios": "^5.3.6",
+    "canvas-datagrid": "^0.22.12",
     "cross-env": "^5.2.0",
     "express": "^4.16.4",
     "fernet": "^0.3.1",
@@ -28,6 +29,7 @@
     "vue-fuse": "^2.1.0"
   },
   "devDependencies": {
+    "@fortawesome/fontawesome-free": "^5.10.1",
     "@nuxtjs/eslint-config": "^1.0.1",
     "@nuxtjs/eslint-module": "^0.2.1",
     "@nuxtjs/style-resources": "^0.1.2",

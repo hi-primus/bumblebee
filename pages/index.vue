@@ -87,25 +87,20 @@
                 </v-tab>
               </v-tabs>
               <v-card-text>
-                <v-flex xs12 class="controls-container text-xs-center d-flex">
-                  <v-btn-toggle mandatory v-model="view">
-                    <v-btn text>
-                      <v-icon>view_headline</v-icon>
+                <div class="controls-container text-xs-center d-flex mb-4" :class="{'inside-bar': view==1}">
+                  <div class="pseudo-select mr-4" style="z-index: 2">
+                    <v-btn depressed :dark="view!=1" :color="view==0 ? 'success' : 'grey'" fab :text="view!=0" small @click="view=0">
+                      <v-icon>
+                        view_headline
+                      </v-icon>
                     </v-btn>
-                    <v-btn text>
-                      <v-icon>view_module</v-icon>
+                    <v-btn depressed :dark="view!=0" :color="view==1 ? 'success' : 'grey'" fab :text="view!=1" small @click="view=1">
+                      <v-icon>
+                        view_module
+                      </v-icon>
                     </v-btn>
-                  </v-btn-toggle>
-                  <v-spacer></v-spacer>
-                  <v-text-field
-                    style="max-width: 500px"
-                    v-model="searchText"
-                    append-icon="search"
-                    label="Search column"
-                    :color="'info darken-1'"
-                    clearable
-                  />
-                </v-flex>
+                  </div>
+                </div>
                 <TableBar
                   :key="tab"
                   :currentTab="tab"

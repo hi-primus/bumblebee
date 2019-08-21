@@ -14,11 +14,16 @@ export default {
           return '#'
         case 'float':
         case 'double':
-          return '##.#'
+        case 'decimal':
+          return '#.##'
+        case 'binary':
+          return '0101'
         case 'boolean':
           return '0/1'
+        case 'array':
+          return '[ ]'
         case 'date':
-          return '##/##/####'
+          return '🕓'
         default:
           return ''
       }

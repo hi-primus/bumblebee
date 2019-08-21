@@ -127,8 +127,11 @@
 									:mismatches="$store.state.datasets[currentTab].columns[key].stats.p_count_na"
 									:total="+$store.state.datasets[currentTab].rows_count"
 								/>
-								<template v-if="column.stats.hist">
+								<template v-if="column.stats.hist && column.stats.hist[0]">
 									<Histogram table :values="column.stats.hist" :total="10" />
+								</template>
+								<template v-else-if="column.stats.hist && column.stats.hist.years">
+									<Histogram table :values="column.stats.hist.years" :total="10" />
 								</template>
 								<template v-else-if="column.frequency">
 									<Frequent table :values="column.frequency" :total="column.frequency[0].count" />

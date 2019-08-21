@@ -73,89 +73,92 @@
         </v-layout>
 
         <v-layout row wrap>
-          <v-flex
-            v-if="column.hist"
-            xs12
-            sm12
-            md12
-            class="component-container"
-          >
-            <Histogram
-              :values="column.hist"
-              :total="+$store.state.datasets[this.$route.params.dataset].rows_count"
-              title="Histogram"
-            />
-          </v-flex>
+          <template v-if="column.stats.hist">
+            <v-flex
+              v-if="column.stats.hist[0]"
+              xs12
+              sm12
+              md12
+              class="component-container"
+            >
+              <Histogram
+                :values="column.stats.hist"
+                :total="+$store.state.datasets[this.$route.params.dataset].rows_count"
+                title="Histogram"
+              />
+            </v-flex>
 
-          <v-flex
-            v-if="column.hist_year_years"
-            xs12
-            sm12
-            md12
-            class="component-container"
-          >
-            <Histogram
-              :values="column.hist_year_years"
-              :total="+$store.state.datasets[this.$route.params.dataset].rows_count"
-              title="Years Histogram"
-            />
-          </v-flex>
+            <v-flex
+              v-if="column.stats.hist.years"
+              xs12
+              sm12
+              md12
+              class="component-container"
+            >
+              <Histogram
+                :values="column.stats.hist.years"
+                :total="+$store.state.datasets[this.$route.params.dataset].rows_count"
+                title="Years Histogram"
+              />
+            </v-flex>
 
-          <v-flex
-            v-if="column.hist_year_months"
-            xs12
-            sm6
-            md6
-            class="component-container"
-          >
-            <Histogram
-              :values="column.hist_year_months"
-              :total="+$store.state.datasets[this.$route.params.dataset].rows_count"
-              title="Months Histogram"
-            />
-          </v-flex>
+            <v-flex
+              v-if="column.stats.hist.months"
+              xs12
+              sm6
+              md6
+              class="component-container"
+            >
+              <Histogram
+                :values="column.stats.hist.months"
+                :total="+$store.state.datasets[this.$route.params.dataset].rows_count"
+                title="Months Histogram"
+              />
+            </v-flex>
 
-          <v-flex
-            v-if="column.hist_year_weekdays"
-            xs12
-            sm6
-            md6
-            class="component-container"
-          >
-            <Histogram
-              :values="column.hist_year_weekdays"
-              :total="+$store.state.datasets[this.$route.params.dataset].rows_count"
-              title="Week days Histogram"
-            />
-          </v-flex>
+            <v-flex
+              v-if="column.stats.hist.weekdays"
+              xs12
+              sm6
+              md6
+              class="component-container"
+            >
+              <Histogram
+                :values="column.stats.hist.weekdays"
+                :total="+$store.state.datasets[this.$route.params.dataset].rows_count"
+                title="Week days Histogram"
+              />
+            </v-flex>
 
-          <v-flex
-            v-if="column.hist_year_hours"
-            xs12
-            sm6
-            md6
-            class="component-container"
-          >
-            <Histogram
-              :values="column.hist_year_hours"
-              :total="+$store.state.datasets[this.$route.params.dataset].rows_count"
-              title="Hours Histogram"
-            />
-          </v-flex>
+            <v-flex
+              v-if="column.stats.hist.hours"
+              xs12
+              sm6
+              md6
+              class="component-container"
+            >
+              <Histogram
+                :values="column.stats.hist.hours"
+                :total="+$store.state.datasets[this.$route.params.dataset].rows_count"
+                title="Hours Histogram"
+              />
+            </v-flex>
 
-          <v-flex
-            v-if="column.hist_year_minutes"
-            xs12
-            sm6
-            md6
-            class="component-container"
-          >
-            <Histogram
-              :values="column.hist_year_minutes"
-              :total="+$store.state.datasets[this.$route.params.dataset].rows_count"
-              title="Minutes Histogram"
-            />
-          </v-flex>
+            <v-flex
+              v-if="column.stats.hist.minutes"
+              xs12
+              sm6
+              md6
+              class="component-container"
+            >
+              <Histogram
+                :values="column.stats.hist.minutes"
+                :total="+$store.state.datasets[this.$route.params.dataset].rows_count"
+                title="Minutes Histogram"
+              />
+            </v-flex>
+
+          </template>
 
           <v-flex xs12 sm12 md12 class="component-container">
             <Frequent
@@ -210,12 +213,14 @@ export default {
 	mixins: [dataTypesMixin],
 
   validate({store,params}) {
-    return !!(store.state.datasets[params.dataset] && store.state.datasets[params.dataset].columns[params.id] )
+    return true;
+    return ( !!store.state.datasets[params.dataset] && store.state.datasets[params.dataset].columns.findIndex((e)=>{return e.name==params.id})!=-1 )
   },
 
   computed: {
     column() {
-      return this.$store.state.datasets[this.$route.params.dataset].columns[this.$route.params.id]
+      // return this.$store.state.datasets[this.$route.params.dataset].columns[this.$route.params.id]
+      return this.$store.state.datasets[this.$route.params.dataset].columns.find((e)=>{return e.name==this.$route.params.id})
     }
   }
 };

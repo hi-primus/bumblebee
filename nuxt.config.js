@@ -42,7 +42,8 @@ module.exports = {
 	},
 
 	css: [
-		'@/assets/css/main.scss'
+    '@/assets/css/main.scss',
+    '@fortawesome/fontawesome-free/css/all.css'
 	],
 
 	styleResources: {
@@ -59,14 +60,10 @@ module.exports = {
 	],
 
 	plugins: [
+    '@/plugins/components.js',
 		'@/plugins/numeral',
 		'@/plugins/fuse',
 		'@/plugins/varCheck'
-	],
-
-	modules: [
-		// Doc: https://github.com/nuxt-community/axios-module#usage
-		'@nuxtjs/axios'
 	],
 
 	axios: {
@@ -88,7 +85,20 @@ module.exports = {
 					success: '#4db6ac'
 				}
 			}
-		}
+    },
+    icons: {
+    },
+    icons: {
+      values: {
+        'check-box-invert': {
+          component: 'CheckBoxInvert',
+          props: {
+            name: 'check-box-invert'
+          }
+        }
+      },
+      iconfont: 'fa',
+    },
 	},
 
 	build: {
