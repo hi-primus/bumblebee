@@ -1,132 +1,133 @@
 <template>
 	<div class="table-container">
+    <div class="px-4 filter-container">
+      <v-autocomplete
+        dense
+        v-model="typesSelected"
+        :items="typesAvailable"
+        :append-icon="''"
+        chips
+        deletable-chips
+        color="grey darken-3"
+        label="Filter by data type"
+        full-width
+        hide-details
+        hide-no-data
+        hide-selected
+        multiple
+        single-line
+      >
+        <template v-slot:item="{ item }">
+          <div class="data-type in-autocomplete">{{dataType(item.value)}}</div> {{item.text}}
+        </template>
+      </v-autocomplete>
+    </div>
     <div class="controls-in-container">
-      <div class="table-controls mb-2 narrow-buttons d-flex" :class="{'controls-list': view==0}">
-        <span class="controls-container">
-        <v-btn class="first-button hideable" :class="{'active': view==0}" text icon small @click="toggleColumnsSelection">
-          <v-icon>
-            <template v-if="selectionStatus==-1">indeterminate_check_box</template>
-            <template v-else-if="selectionStatus==1">check_box</template>
-            <template v-else>check_box_outline_blank</template>
-          </v-icon>
-        </v-btn>
-        <v-tooltip bottom>
-          <template v-slot:activator="{ on }">
-            <v-btn text icon small class="hideable tr-o" v-on="on" :class="{'active': view==0 && selectionStatus!=0}" @click="toggleColumnsVisibility(!visibilityStatus)">
-              <v-icon>
-                <template v-if="!visibilityStatus">visibility</template>
-                <template v-else>visibility_off</template>
-              </v-icon>
-            </v-btn>
-          </template>
-          <span v-if="!visibilityStatus">Show selected columns on table</span>
-          <span v-else>Hide selected columns on table</span>
-        </v-tooltip>
-        <v-tooltip bottom>
-          <template v-slot:activator="{ on }">
-            <v-btn text icon small class="hideable tr-o mr-4" v-on="on" :class="{'active': view==0 && selectionStatus==-1}" @click="invertSelection">
-              <v-icon>
-                $vuetify.icons.check-box-invert
-              </v-icon>
-            </v-btn>
-          </template>
-          <span>Invert selection</span>
-        </v-tooltip>
-
-        <v-chip-group
-          multiple
-          v-model="typesSelected"
-          style="margin-top: -4px"
-          class="filter-chip-group"
-          active-class="active-chip"
-          color="white"
-        >
-          <v-chip :value="key" v-for="(type, key) in types" :key="key">
-            {{ type.label }}
-          </v-chip>
-        </v-chip-group>
-        <v-spacer></v-spacer>
-        <v-btn text icon small class="hideable tr-o mr-4" :class="{'active': view==0}" @click="toggleSortType">
-          <v-icon>
-            <template v-if="sortType==1">
-              fas fa-sort-alpha-down
+      <div class="table-controls mb-2 d-flex">
+          <v-btn class="hideable" :class="{'active': view==0}" text icon small @click="toggleColumnsSelection">
+            <v-icon>
+              <template v-if="selectionStatus==-1">indeterminate_check_box</template>
+              <template v-else-if="selectionStatus==1">check_box</template>
+              <template v-else>check_box_outline_blank</template>
+            </v-icon>
+          </v-btn>
+          <v-tooltip bottom>
+            <template v-slot:activator="{ on }">
+              <v-btn text icon small class="hideable tr-o" v-on="on" :class="{'active': view==0 && selectionStatus!=0}" @click="toggleColumnsVisibility(!visibilityStatus)">
+                <v-icon>
+                  <template v-if="!visibilityStatus">visibility</template>
+                  <template v-else>visibility_off</template>
+                </v-icon>
+              </v-btn>
             </template>
-            <template v-else-if="sortType==-1">
-              fas fa-sort-alpha-down-alt
+            <span v-if="!visibilityStatus">Show selected columns on table</span>
+            <span v-else>Hide selected columns on table</span>
+          </v-tooltip>
+          <v-tooltip bottom>
+            <template v-slot:activator="{ on }">
+              <v-btn text icon small class="hideable tr-o" v-on="on" :class="{'active': view==0 && selectionStatus==-1}" @click="invertSelection">
+                <v-icon>
+                  $vuetify.icons.check-box-invert
+                </v-icon>
+              </v-btn>
             </template>
-            <template v-else>
-              fas fa-sort
-            </template>
-          </v-icon>
-        </v-btn>
-        <v-text-field
-          small
-          class="search-filter mr-3"
-          style="max-width: 500px"
-          v-model="searchText"
-          append-icon="search"
-          label="Search column"
-          :color="'info darken-1'"
-          clearable
-        />
-        </span>
+            <span>Invert selection</span>
+          </v-tooltip>
       </div>
-			<v-simple-table v-show="view==0" class="columns-table">
-				<tbody>
-					<nuxt-link
-						v-for="col in filteredColumns"
-						:to="`/${currentTab}/${col.name}`"
-						:key="col.name"
-						tag="tr"
-						class="hoverable table-column"
-					>
-						<td class="cell-controls">
-              <v-icon @click.stop="toggleColumnSelection(col.name)" class="control-button control-check">
-                <template v-if="selectedColumns[col.name]">check_box</template>
-                <template v-else>check_box_outline_blank</template>
-              </v-icon>
-							<v-tooltip bottom>
-								<template v-slot:activator="{ on }">
-                  <v-icon
-                    class="control-button control-hide" :class="{'control-hide-hidden': hiddenColumns[col.name]}"
-                    @click.stop="toggleColumnVisibility(col.name)"
-                    v-on="on"
-                  >
-                    <template v-if="!!hiddenColumns[col.name]">
-                      visibility_off
-                    </template>
-                    <template v-else>
-                      visibility
-                    </template>
-                  </v-icon>
-								</template>
-								<span v-if="!hiddenColumns[col.name]">Hide column on table</span>
-								<span v-else>Show column on table</span>
-							</v-tooltip>
-						</td>
-						<td
-							style="width: 64px;"
-							class="column-cell text-xs-left data-type"
-							:class="`type-${col.column_dtype}`"
-						>{{ dataType(col.column_dtype) }}</td>
-						<td
-							style="width: calc(15% - 84px);"
-							class="column-cell text-xs-left data-type-name"
-						>{{ col.column_type }}</td>
-						<td style="width:35%;" class="column-cell text-xs-left data-name">{{ col.name }}</td>
-						<td style="width:50%;" class="column-cell text-xs-left pr-6">
-							<DataBar :mismatches="col.stats.p_count_na" :total="+total" />
-						</td>
-					</nuxt-link>
-				</tbody>
-			</v-simple-table>
+          <!-- {text: 'Type',width: 'calc(20% - 100px)', value:'type'}, -->
+			<v-data-table
+				@click:row="rowClicked"
+        v-show="view==0"
+        class="columns-table"
+        :headers="[
+          {text: '', sortable:false, width: '1%', value:'controls'},
+          {text: 'Type', value:'dtype', width: '1%'},
+          {text: 'Name', value:'name', width: '3%'},
+          {text: '', sortable:false, width: '2%', value:'mismatches'},
+          {text: '', sortable:false, width: '50%', value:''}
+        ]"
+        :items="tableItems"
+				disable-pagination
+        hide-default-footer
+        fixed-header
+        :mobile-breakpoint="0"
+        :height="600"
+      >
+
+        <template v-slot:item.controls="{ item }">
+          <div class="cell-controls">
+            <v-icon @click.stop="toggleColumnSelection(item.name)" class="control-button control-check">
+              <template v-if="selectedColumns[item.name]">check_box</template>
+              <template v-else>check_box_outline_blank</template>
+            </v-icon>
+            <v-tooltip bottom>
+              <template v-slot:activator="{ on }">
+                <v-icon
+                  class="control-button control-hide" :class="{'control-hide-hidden': hiddenColumns[item.name]}"
+                  @click.stop="toggleColumnVisibility(item.name)"
+                  v-on="on"
+                >
+                  <template v-if="!!hiddenColumns[item.name]">
+                    visibility_off
+                  </template>
+                  <template v-else>
+                    visibility
+                  </template>
+                </v-icon>
+              </template>
+              <span v-if="!hiddenColumns[item.name]">Hide column on table</span>
+              <span v-else>Show column on table</span>
+            </v-tooltip>
+          </div>
+        </template>
+        <template v-slot:item.dtype="{ item }">
+          <v-tooltip bottom>
+              <template v-slot:activator="{ on }">
+          <div v-on="on" class="data-type ">
+            {{dataType(item.dtype)}}
+          </div>
+          </template>
+            <span class="capitalize">{{item.dtype}}</span>
+          </v-tooltip>
+        </template>
+        <template
+          v-slot:item.type="{item}"
+        >
+          <div class="data-type-name">
+            {{ item.type }}
+          </div>
+        </template>
+        <template v-slot:item.mismatches="{ item }">
+          <DataBar style="min-width: calc(20vw + 50px); max-width: 100%;" :mismatches="item.mismatches" :total="+total" />
+        </template>
+			</v-data-table>
     </div>
 			<BigdataTable
 				v-show="view==1"
 				v-if="dataset && dataset.sample"
 				:headerHeight="14"
 				:rowHeight="22"
-				:colWidth="120"
+				:colWidth="170"
 				sortable
 				disabledHover
 				titleLinks
@@ -171,13 +172,16 @@ export default {
 		},
 		currentTab: {
 			default: ""
+		},
+		searchText: {
+			default: ""
 		}
 	},
 
 	data() {
 		return {
 
-      searchText: '',
+      // searchText: '',
       sortType: 0,
 
       resultsColumns: [], // search
@@ -195,7 +199,17 @@ export default {
       selectionStatus: false,
       visibilityStatus: 1, // visible
 
-      typesSelected: ['string','int','date','decimal','boolean','binary','array'],
+      typesAvailable: [
+        {text: 'String', value: 'string' },
+        {text: 'Integer', value: 'int' },
+        {text: 'Decimal', value: 'decimal' },
+        {text: 'Date', value: 'date' },
+        {text: 'Boolean', value: 'boolean' },
+        {text: 'Binary', value: 'binary' },
+        {text: 'Array', value: 'array' },
+        {text: 'Null', value: 'null' }
+      ],
+      typesSelected: [],
       types: {
         string: { label: 'String' },
         int: { label: 'Integer' },
@@ -209,6 +223,18 @@ export default {
 	},
 
 	computed: {
+    tableItems() {
+      return this.filteredColumns.map((e,i)=>{
+        return {
+          controls: true,
+          name: e.name,
+          type: e.column_type,
+          dtype: e.column_dtype,
+          mismatches: e.stats.p_count_na
+        }
+      })
+    },
+
 		sortIndex() {
 			return this.dataset.columns.map((e, i) => i);
 		},
@@ -259,6 +285,10 @@ export default {
 
 	methods: {
 
+		rowClicked (e) {
+			this.$router.push(`${this.currentTab}/${e.name}`)
+		},
+
     toggleSortType () {
       this.sortType = (this.sortType + 2) % 3 -1
       this.getFilteredColumns();
@@ -271,9 +301,14 @@ export default {
     },
 
     getFilteredColumns () {
-      this.filteredColumns = this.resultsColumns.filter(column => {
-        return this.typesSelected.includes(column.column_dtype)
-      })
+      if (this.typesSelected.length>0){
+        this.filteredColumns = this.resultsColumns.filter(column => {
+          return this.typesSelected.includes(column.column_dtype)
+        })
+      }
+      else {
+        this.filteredColumns = this.resultsColumns
+      }
 
       if (this.sortType!=0) {
         this.filteredColumns.sort((a,b)=>{
@@ -295,7 +330,6 @@ export default {
     },
 
     toggleColumnSelection(value) {
-      console.log("TCL: toggleColumnSelection -> value", value)
       if (this.selectedColumns[value]){
         this.selectedColumns[value] = false;
         delete this.selectedColumns[value];
@@ -324,7 +358,6 @@ export default {
     },
 
     invertSelection() {
-      console.log("TCL: invertSelection")
       for (let i = 0; i < this.filteredColumns.length; i++) {
         const column = this.filteredColumns[i];
         if (this.selectedColumns[column.name])
@@ -337,7 +370,6 @@ export default {
     },
 
     toggleColumnsVisibility(value) {
-      console.log("TCL: toggleColumnsVisibility -> value", value)
       for (let i = 0; i < this.filteredColumns.length; i++) {
         const column = this.filteredColumns[i];
         if (this.selectedColumns[column.name])
@@ -360,7 +392,6 @@ export default {
 
       for (let i = 0; i < this.filteredColumns.length; i++) {
         const column = this.filteredColumns[i];
-        console.log("TCL: setSelectionStatus -> +!!this.selectedColumns["+column.name+"]", +!!this.selectedColumns[column.name])
         if (status!==undefined && status===+!this.selectedColumns[column.name]) { // different from previous value
           this.selectionStatus = -1 // indeterminate
           return -1
@@ -389,78 +420,6 @@ export default {
 </script>
 
 <style lang="scss">
-.table-container {
-  .controls-in-container {
-    margin-left: -16px;
-    margin-right: -16px;
-
-    .table-controls {
-      height: 54px;
-      padding: 6px 16px;
-      width: 100%;
-      &.controls-list {
-        border-top: 1px solid #eee;
-        border-bottom: 1px solid #eee;
-      }
-      &:not(.controls-list) {
-        margin-top: -63px;
-      }
-      // border-radius: 4px;
-      &>span {
-        transition: opacity ease-in-out .3s;
-        .inactive-controls {
-          pointer-events: none;
-          opacity: 0;
-        }
-      }
-      .search-filter {
-        position: relative;
-        top: -12px;
-        height: 16px;
-      }
-    }
-
-    .columns-table {
-
-      td {
-        padding: 0 8px;
-        &.cell-controls {
-          padding-left: 24px;
-
-          .control-check{
-            opacity: 0.75;
-            padding-right: 8px;
-          }
-          .control-hide{
-            opacity: 0;
-            &.control-hide-hidden {
-              opacity: 0.5;
-            }
-          }
-        }
-      }
-
-      &.v-data-table tbody {
-        tr:not(:last-child) {
-          border-bottom: 0;
-        }
-        tr.table-column{
-          white-space: nowrap;
-          &>td {
-            height: 30px;
-          }
-          &:hover:not(.v-data-table__expand-row) {
-            background: $data-highlight;
-            .v-icon {
-              opacity: 1;
-            }
-          }
-        }
-      }
-    }
-
-  }
-}
 
 
 .v-icon.control-button {

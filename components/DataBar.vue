@@ -53,39 +53,6 @@ export default {
 	color: #fff !important;
 }
 
-// status bar
-.data-bar {
-	background-color: lightgray;
-	height: 8px;
-	border-radius: 4px;
-	width: 100%;
-  overflow: overlay;
-  display: flex;
-
-  &:hover {
-		cursor: crosshair;
-  }
-
-  .data-bar-green {
-    background-color: $data-green;
-    height: 100%;
-    width: 0;
-    float: left;
-  }
-
-  .data-bar-red {
-    background-color: $data-red;
-    height: 100%;
-    width: 0;
-    float: left;
-  }
-
-  .data-bar-min {
-    min-width: 4px;
-  }
-}
-
-
 .bar-tooltip {
   opacity: 1 !important;
   &>span>span {

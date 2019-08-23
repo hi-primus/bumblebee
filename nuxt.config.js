@@ -48,11 +48,11 @@ module.exports = {
 
 	styleResources: {
 		scss: [
-			'assets/css/import/_index.scss'
+			// '~assets/css/import/_index.scss'
 		]
 	},
 
-	devModules: [
+	buildModules: [
 		// Doc: https://github.com/nuxt-community/eslint-module
 		// '@nuxtjs/eslint-module',
 		'@nuxtjs/vuetify',
@@ -72,13 +72,13 @@ module.exports = {
 
 	vuetify: {
 		materialIcons: false,
-		customVariables: ['~/assets/variables.scss'],
+		// customVariables: ['~/assets/variables.scss'],
 		theme: {
 			themes: {
 				light: {
-					primary: '#121212',
-					accent: colors.grey.darken3,
-					secondary: colors.amber.darken3,
+					// primary: '#121212',
+					// accent: colors.grey.darken3,
+					// secondary: colors.amber.darken3,
 					info: '#81caf9',
 					warning: colors.amber,
 					error: '#e57373',

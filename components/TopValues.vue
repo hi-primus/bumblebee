@@ -42,19 +42,6 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.top-bar {
-	background-color: $data-green;
-	position: relative;
-	height: 100%;
-	&>div {
-    padding-left: 4px;
-    line-height: 18px;
-		position: absolute;
-		top: 0;
-		left: 0;
-		width: max-content;
-	}
-}
 
 thead {
 	tr {

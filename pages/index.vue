@@ -5,9 +5,9 @@
         <v-card
           width="100%"
           style="max-width: 700px; margin: auto"
-          :loading="(status=='loading') ? 'success' : false"
+          :loading="(status=='loading') ? 'primary' : false"
         >
-          <v-form @submit="subscribe" class="py-10 px-8">
+          <v-form @submit="subscribe" class="py-8 px-6">
             <v-card-title>
               <h1 class="display-3 mb-4">Bumblebee</h1>
             </v-card-title>
@@ -47,25 +47,25 @@
         </v-card>
       </template>
       <template v-else-if="!statusError">
-        <div v-if="cDatasets.length==0" class="center-screen-inside success--text">
+        <div v-if="cDatasets.length==0" class="center-screen-inside primary--text">
           <v-progress-circular
             indeterminate
-            color="success"
+            color="primary"
             class="mr-4"
           />
           <span class="title">Waiting for data</span>
           <span class="subtitle text-center pt-6" style="width: 100%;">
             <span class="hoverable" @click="stopClient">
-              <v-icon color="success">arrow_back</v-icon>
+              <v-icon color="primary">arrow_back</v-icon>
               Disconnect
             </span>
           </span>
         </div>
         <template v-else>
             <v-card class="d-flex flex-column align-top justify-start" style="width: 100%;">
+                <!-- color="primary darken-2" -->
               <v-tabs
-                background-color="#def1ef"
-                color="success darken-2"
+                background-color="#fff"
                 v-model="tab"
                 show-arrows
                 center-active
@@ -75,7 +75,7 @@
                   <span class="pr-8">{{ _tab.name || key+1 }}</span>
                   <v-hover v-slot:default="{ hover }">
                     <v-icon
-                      :color="hover ? 'success darken-1' : ''"
+                      :color="hover ? 'primary darken-1' : ''"
                       @click.stop="deleteTab(key)"
                       small
                       class="pr-4"
@@ -86,19 +86,43 @@
                   </v-hover>
                 </v-tab>
               </v-tabs>
-              <v-card-text>
-                <div class="controls-container text-xs-center d-flex mb-4" :class="{'inside-bar': view==1}">
-                  <div class="pseudo-select mr-4" style="z-index: 2">
-                    <v-btn depressed :dark="view!=1" :color="view==0 ? 'success' : 'grey'" fab :text="view!=0" small @click="view=0">
-                      <v-icon>
-                        view_headline
-                      </v-icon>
-                    </v-btn>
-                    <v-btn depressed :dark="view!=0" :color="view==1 ? 'success' : 'grey'" fab :text="view!=1" small @click="view=1">
-                      <v-icon>
-                        view_module
-                      </v-icon>
-                    </v-btn>
+              <v-card-text class="pa-0">
+                <div class="controls-section px-4 grey-bg">
+                  <div class="controls-container text-xs-center mb-1" :class="{'inside-bar': view==1}">
+                    <v-text-field
+                      clearable
+                      solo
+                      class="search-filter mr-3 mt-2 elevation-0"
+                      style="max-width: 500px"
+                      v-model="searchText"
+                      prepend-inner-icon="search"
+                      label="Search column"
+                      :color="'grey darken-3'"
+                    />
+                    <v-spacer></v-spacer>
+                    <v-btn-toggle
+                      mandatory v-model="view"
+                      class=""
+                    >
+                      <v-btn text>
+                        <v-icon>view_headline</v-icon>
+                      </v-btn>
+                      <v-btn text>
+                        <v-icon>view_module</v-icon>
+                      </v-btn>
+                    </v-btn-toggle>
+                    <!-- <div class="pseudo-select mr-4" style="z-index: 2">
+                      <v-btn depressed :dark="view!=1" :color="view==0 ? 'primary' : 'grey'" fab :text="view!=0" small @click="view=0">
+                        <v-icon>
+                          view_headline
+                        </v-icon>
+                      </v-btn>
+                      <v-btn depressed :dark="view!=0" :color="view==1 ? 'primary' : 'grey'" fab :text="view!=1" small @click="view=1">
+                        <v-icon>
+                          view_module
+                        </v-icon>
+                      </v-btn>
+                    </div> -->
                   </div>
                 </div>
                 <TableBar

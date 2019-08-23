@@ -2,8 +2,8 @@
 	<Layout>
     <v-sheet elevation="4" class="mb-6">
       <v-container fluid class="py-0">
-        <v-layout row wrap align-center>
-          <v-btn icon color="primary" to="/" tag="a" class="mr-2">
+        <v-layout row wrap align-center height="48px">
+          <v-btn icon color="grey darken-3" to="/" tag="a" class="mr-2">
             <v-icon>arrow_back</v-icon>
           </v-btn>
           <v-flex grow>

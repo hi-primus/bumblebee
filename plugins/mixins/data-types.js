@@ -10,6 +10,8 @@ export default {
       switch (data) {
         case 'string':
           return 'ABC'
+        case 'null':
+          return 'null'
         case 'int':
           return '#'
         case 'float':
@@ -25,7 +27,7 @@ export default {
         case 'date':
           return '🕓'
         default:
-          return ''
+          return data
       }
 		}
 	}

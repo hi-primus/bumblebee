@@ -250,49 +250,6 @@ export default {
 		}
 	}
 }
-.header-title-cell {
-	position: relative;
-	padding-top: 2px;
-	.header-title-link {
-		position: absolute;
-		top: 0;
-		left: 0;
-		width: 100%;
-		height: 100%;
-	}
-	& > span {
-		display: flex;
-		align-items: center;
-		padding-left: 8px;
-		padding-right: 8px;
-		.data-type-in-table {
-			position: relative;
-			color: rgba(0, 0, 0, 0.6) !important;
-			transform-origin: left center;
-			width: 28px;
-			text-align: left;
-			margin-right: 2px;
-			pointer-events: none;
-		}
-		.table-header-text {
-			white-space: nowrap;
-			overflow: hidden;
-			text-overflow: ellipsis;
-			width: 100%;
-		}
-		.sort-button-wrapper {
-			position: relative;
-			width: 16px;
-			top: -2px;
-			right: 2px;
-			margin-left: auto;
-			justify-self: flex-end;
-		}
-	}
-	&:hover {
-		background-color: $data-highlight;
-	}
-}
 
 .table-data-bar {
 	border-radius: 0;
