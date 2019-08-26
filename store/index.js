@@ -23,7 +23,7 @@ export const mutations = {
 
     state.status = 'received'
 
-    console.log("DEBUG: state.datasets[found]",state.datasets[found])
+    // console.log("DEBUG: state.datasets[found]",state.datasets[found])
   },
 
   delete (state, {index}) {

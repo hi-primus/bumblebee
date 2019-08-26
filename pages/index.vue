@@ -203,7 +203,6 @@ export default {
       if (value===undefined)
         return;
       this.$router.replace({path: this.$route.fullPath, query: { tab: value }},()=>{
-        // console.log("TCL: tab -> this.$route.fullPath", this.$route.fullPath)
         history.replaceState("Dashboard","Bumblebee",this.$route.fullPath);
       })
     },
@@ -211,7 +210,6 @@ export default {
       if (value===undefined)
         return;
       this.$router.replace({path: this.$route.fullPath, query: { view: value }},()=>{
-        // console.log("TCL: tab -> this.$route.fullPath", this.$route.fullPath)
         history.replaceState("Dashboard","Bumblebee",this.$route.fullPath);
       })
     },

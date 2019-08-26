@@ -224,13 +224,15 @@ export default {
 
   validate({store,params}) {
     return true;
-    return ( !!store.state.datasets[params.dataset] && store.state.datasets[params.dataset].columns.findIndex((e)=>{return e.name==params.id})!=-1 )
   },
 
   computed: {
     column() {
-      // return this.$store.state.datasets[this.$route.params.dataset].columns[this.$route.params.id]
-      return this.$store.state.datasets[this.$route.params.dataset].columns.find((e)=>{return e.name==this.$route.params.id})
+      try {
+        return this.$store.state.datasets[this.$route.params.dataset].columns.find((e)=>{return e.name==this.$route.params.id})
+      } catch (error) {
+        this.$router.push('/');
+      }
     }
   }
 };

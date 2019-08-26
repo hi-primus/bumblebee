@@ -80,6 +80,7 @@
 							@mousedown="handleMousedown"
 							@mouseup="canNotMove"
 							@mouseleave="canNotMove"
+              v-if="$store.state.datasets[currentTab]"
 						>
 							<th
 								v-for="(col, i) in columnsHandled"
