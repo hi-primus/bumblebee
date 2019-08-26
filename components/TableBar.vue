@@ -9,7 +9,8 @@
         chips
         deletable-chips
         color="grey darken-3"
-        label="Filter by data type"
+        class="placeholder-chip"
+        label="Data type"
         full-width
         hide-details
         hide-no-data
@@ -63,7 +64,7 @@
           {text: '', sortable:false, width: '1%', value:'controls'},
           {text: 'Type', value:'dtype', width: '1%'},
           {text: 'Name', value:'name', width: '3%'},
-          {text: '', sortable:false, width: '2%', value:'mismatches'},
+          {text: 'Missing values', width: '2%', value:'mismatches'},
           {text: '', sortable:false, width: '50%', value:''}
         ]"
         :items="tableItems"
@@ -73,7 +74,6 @@
         :mobile-breakpoint="0"
         :height="600"
       >
-
         <template v-slot:item.controls="{ item }">
           <div class="cell-controls">
             <v-icon @click.stop="toggleColumnSelection(item.name)" class="control-button control-check">
@@ -102,11 +102,11 @@
         </template>
         <template v-slot:item.dtype="{ item }">
           <v-tooltip bottom>
-              <template v-slot:activator="{ on }">
-          <div v-on="on" class="data-type ">
-            {{dataType(item.dtype)}}
-          </div>
-          </template>
+            <template v-slot:activator="{ on }">
+              <div v-on="on" class="data-type pr-4">
+                {{dataType(item.dtype)}}
+              </div>
+            </template>
             <span class="capitalize">{{item.dtype}}</span>
           </v-tooltip>
         </template>
@@ -115,6 +115,11 @@
         >
           <div class="data-type-name">
             {{ item.type }}
+          </div>
+        </template>
+        <template v-slot:item.name="{ item }">
+          <div class="pr-4">
+            {{item.name}}
           </div>
         </template>
         <template v-slot:item.mismatches="{ item }">
