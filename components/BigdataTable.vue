@@ -122,10 +122,11 @@
 								:key="`table-g-${key}`"
 								style="border-right: 1px solid #e9eaec; border-bottom: 1px solid #e9eaec"
 							>
+                {{}}
 								<DataBar
 									class="table-data-bar"
 									bottom
-									:mismatches="$store.state.datasets[currentTab].columns[key].stats.p_count_na"
+									:missing="$store.state.datasets[currentTab].columns[key].stats.count_na"
 									:total="+$store.state.datasets[currentTab].rows_count"
 								/>
 								<template v-if="column.stats.hist && column.stats.hist[0]">

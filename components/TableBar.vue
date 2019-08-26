@@ -64,7 +64,7 @@
           {text: '', sortable:false, width: '1%', value:'controls'},
           {text: 'Type', value:'dtype', width: '1%'},
           {text: 'Name', value:'name', width: '3%'},
-          {text: 'Missing values', width: '2%', value:'mismatches'},
+          {text: 'Missing values', width: '2%', value:'missing'},
           {text: '', sortable:false, width: '50%', value:''}
         ]"
         :items="tableItems"
@@ -122,8 +122,8 @@
             {{item.name}}
           </div>
         </template>
-        <template v-slot:item.mismatches="{ item }">
-          <DataBar style="min-width: calc(20vw + 50px); max-width: 100%;" :mismatches="item.mismatches" :total="+total" />
+        <template v-slot:item.missing="{ item }">
+          <DataBar :key="item.name+'missing'" style="min-width: calc(20vw + 50px); max-width: 100%;" :missing="+item.missing" :total="+total" />
         </template>
 			</v-data-table>
     </div>
@@ -235,7 +235,7 @@ export default {
           name: e.name,
           type: e.column_type,
           dtype: e.column_dtype,
-          mismatches: e.stats.p_count_na
+          missing: e.stats.count_na + " "
         }
       })
     },

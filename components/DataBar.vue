@@ -8,9 +8,15 @@
     </v-tooltip>
     <v-tooltip content-class="bar-tooltip" color="error darken-2" :left="!bottom" :bottom="bottom">
       <template v-slot:activator="{ on }">
-        <div v-on="on" :class="{'data-bar-min': mismatchesP!=0}" class="data-bar-red" />
+        <div v-on="on" :class="{'data-bar-min': mismatchedP!=0}" :style="{'width': mismatchedP+'%'}" class="data-bar-red" />
       </template>
-      <span>{{ mismatches }} mismatched values <span>{{ mismatchesP }}%</span></span>
+      <span>{{ mismatched }} mismatched values <span>{{ mismatchedP }}%</span></span>
+    </v-tooltip>
+    <v-tooltip content-class="bar-tooltip" color="grey" :left="!bottom" :bottom="bottom">
+      <template v-slot:activator="{ on }">
+        <div v-on="on" :class="{'data-bar-min': missingP!=0}" class="data-bar-grey" />
+      </template>
+      <span>{{ missing }} missing values <span>{{ missingP }}%</span></span>
     </v-tooltip>
   </div>
 </template>
@@ -18,7 +24,11 @@
 <script>
 export default {
 	props: {
-		mismatches: {
+		missing: {
+			default: 0,
+			type: Number
+		},
+		mismatched: {
 			default: 0,
 			type: Number
 		},
@@ -35,15 +45,17 @@ export default {
 	data () {
 		return {
 			okP: 0,
-			mismatchesP: 0,
-			okValues: 0
+			missingP: 0,
+      okValues: 0,
+      mismatchedP: 0,
 		}
 	},
 
 	beforeMount () {
-		this.okValues = this.total - this.mismatches
-		this.mismatchesP = (+((this.mismatches * 100) / this.total)).toFixed(2) //nh
-		this.okP = 100 - this.mismatchesP;
+		this.okValues = this.total - (this.missing + this.mismatched)
+		this.missingP = (+((this.missing * 100) / this.total)).toFixed(2) //nh
+		this.mismatchedP = (+((this.mismatched * 100) / this.total)).toFixed(2) //nh
+		this.okP = (+((this.okValues * 100) / this.total)).toFixed(2) //nh
 	}
 }
 </script>

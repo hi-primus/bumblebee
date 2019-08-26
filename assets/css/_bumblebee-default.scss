@@ -185,14 +185,18 @@ table.table thead td:not(:nth-child(1)), table.table tbody td:not(:nth-child(1))
     background-color: $data-green;
     height: 100%;
     width: 0;
-    float: left;
   }
 
   .data-bar-red {
     background-color: $data-red;
     height: 100%;
     width: 0;
-    float: left;
+  }
+
+  .data-bar-grey {
+    background-color: lightgrey;
+    height: 100%;
+    flex: 1;
   }
 
   .data-bar-min {
@@ -203,6 +207,10 @@ table.table thead td:not(:nth-child(1)), table.table tbody td:not(:nth-child(1))
 /* columns list */
 
 .columns-table {
+
+  table {
+    padding-bottom: 30px;
+  }
 
   th, td {
     padding-right: 0 !important;
