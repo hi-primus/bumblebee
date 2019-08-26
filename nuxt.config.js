@@ -5,8 +5,13 @@ module.exports = {
 
 	env: {
 		WS_BROKER: process.env.WS_BROKER || '165.22.149.93',
-		WS_PORT: process.env.WS_PORT || 15675
-	},
+    WS_PORT: process.env.WS_PORT || 15675
+  },
+
+  server: {
+    port: process.env.PORT || 3000,
+    host: process.env.HOST || '127.0.0.1'
+  },
 
 	head: {
 		titleTemplate: '%s - ' + process.env.npm_package_name,
