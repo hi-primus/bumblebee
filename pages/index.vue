@@ -89,17 +89,6 @@
               <v-card-text class="pa-0">
                 <div class="controls-section px-4 grey-bg">
                   <div class="controls-container text-xs-center mb-1" :class="{'inside-bar': view==1}">
-                    <v-text-field
-                      clearable
-                      solo
-                      class="search-filter mr-3 mt-2 elevation-0"
-                      style="max-width: 500px"
-                      v-model="searchText"
-                      prepend-inner-icon="search"
-                      label="Search column"
-                      :color="'grey darken-3'"
-                    />
-                    <v-spacer></v-spacer>
                     <v-btn-toggle
                       mandatory v-model="view"
                       class=""
@@ -111,6 +100,16 @@
                         <v-icon>view_module</v-icon>
                       </v-btn>
                     </v-btn-toggle>
+                    <v-spacer></v-spacer>
+                    <v-text-field
+                      clearable
+                      solo
+                      class="search-filter absolute-centered mt-2 elevation-0"
+                      v-model="searchText"
+                      prepend-inner-icon="search"
+                      label="Search column"
+                      :color="'grey darken-3'"
+                    />
                     <!-- <div class="pseudo-select mr-4" style="z-index: 2">
                       <v-btn depressed :dark="view!=1" :color="view==0 ? 'primary' : 'grey'" fab :text="view!=0" small @click="view=0">
                         <v-icon>

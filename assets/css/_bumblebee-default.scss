@@ -337,6 +337,42 @@ table.table thead td:not(:nth-child(1)), table.table tbody td:not(:nth-child(1))
 
 /* layouts */
 
+.placeholder-chip {
+  label {
+    // border-style: dashed;
+    // border-width: 1px;
+    border-style: dashed;
+    border-width: 1px;
+    border-color: lightgrey;
+    border-radius: 16px;
+    padding: 0 30px 0 12px;
+    font-size: 14px;
+    height: 32px !important;
+    line-height: 30px !important;
+    position: relative;
+    top: 12px !important;
+    &::after {
+      position: absolute;
+      height: 16px;
+      width: 16px;
+      content: '+';
+      font-weight: bold;
+      border-radius: 9px;
+      background-color: lightgrey;
+      padding: 0 1px 0 0;
+      color: white;
+      top: 6px;
+      right: 7px;
+      font-size: 16px;
+      line-height: 1;
+      text-align: center;
+    }
+  }
+  input {
+    cursor: pointer;
+  }
+}
+
 .grey-bg {
   background-color: $grey-background;
 }
@@ -356,8 +392,24 @@ table.table thead td:not(:nth-child(1)), table.table tbody td:not(:nth-child(1))
   display: flex;
   align-items: center;
   z-index: 1;
+  min-height: 64px;
+  position: relative;
+
   .search-filter {
     max-height: 56px;
+    margin-right: 0 !important;
+  }
+
+  .absolute-centered {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: calc(10vw + 100px);
+    @media (min-width: 620px) {
+      width: calc(30vw + 100px);
+      left: 50%;
+      transform: translateX(-50%);
+    }
   }
 }
 .search-filter .v-input__slot {
