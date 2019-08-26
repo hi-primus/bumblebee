@@ -3,6 +3,7 @@
     <v-layout row wrap>
       <template v-if="status=='waiting' || status=='loading' || statusError">
         <v-card
+          class="elevation-0"
           width="100%"
           style="max-width: 700px; margin: auto"
           :loading="(status=='loading') ? 'primary' : false"
@@ -62,7 +63,7 @@
           </span>
         </div>
         <template v-else>
-            <v-card class="d-flex flex-column align-top justify-start" style="width: 100%;">
+            <v-card class="elevation-0 d-flex flex-column align-top justify-start" style="width: 100%;">
                 <!-- color="primary darken-2" -->
               <v-tabs
                 background-color="#fff"
@@ -90,14 +91,15 @@
                 <div class="controls-section px-4 grey-bg">
                   <div class="controls-container text-xs-center mb-1" :class="{'inside-bar': view==1}">
                     <v-btn-toggle
+                      color="primary"
                       mandatory v-model="view"
                       class=""
                     >
                       <v-btn text>
-                        <v-icon>view_headline</v-icon>
+                        <v-icon :color="(view==0) ? 'primary' : undefined">view_headline</v-icon>
                       </v-btn>
                       <v-btn text>
-                        <v-icon>view_module</v-icon>
+                        <v-icon :color="(view==1) ? 'primary' : undefined">view_module</v-icon>
                       </v-btn>
                     </v-btn-toggle>
                     <v-spacer></v-spacer>
@@ -140,7 +142,9 @@
               <span>Iron &copy; 2019</span>
               <span
                 v-if="currentDataset && currentDataset.summary"
-              >Rows: {{ currentDataset.rows_count }}, Columns: {{ currentDataset.summary.cols_count }}, Size: {{ currentDataset.summary.size }}</span>
+              >
+                {{ currentDataset.rows_count }} Rows &emsp; {{ currentDataset.summary.cols_count }} Columns &emsp; Size: {{ currentDataset.summary.size }}
+              </span>
             </v-layout>
           </v-footer>
         </template>

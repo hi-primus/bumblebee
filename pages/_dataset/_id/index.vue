@@ -1,8 +1,8 @@
 <template>
 	<Layout>
-    <v-sheet elevation="4" class="mb-6">
+    <v-sheet elevation="0" class="mb-6">
       <v-container fluid class="py-0">
-        <v-layout row wrap align-center height="48px">
+        <v-layout row wrap align-center style="height: 48px">
           <v-btn icon color="grey darken-3" @click="back" tag="a" class="mr-2">
             <v-icon>arrow_back</v-icon>
           </v-btn>
@@ -20,14 +20,14 @@
             <DataBar
               class="main-data-bar"
               bottom
-              :mismatches="column.stats.p_count_na"
+              :missing="column.stats.count_na"
               :total="+$store.state.datasets[this.$route.params.dataset].rows_count"
             />
           </v-flex>
         </v-layout>
       </v-container>
     </v-sheet>
-    <v-sheet elevation="4">
+    <v-sheet elevation="0">
       <v-container class="px-12 pt-8">
         <v-layout row wrap>
           <v-flex xs12 sm3 md3 class="component-container">
