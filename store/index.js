@@ -10,7 +10,7 @@ export const mutations = {
       return (e.name == dataset.name)
     })
 
-    if (found==-1) {
+    if (found==-1 || dataset.name===null) {
       found = state.datasets.length
     }
 

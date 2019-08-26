@@ -100,7 +100,7 @@ table.table thead td:not(:nth-child(1)), table.table tbody td:not(:nth-child(1))
   }
   &:not(.active) {
     opacity: 0;
-    pointer-events: none;
+    pointer-events: none !important;
   }
 }
 
@@ -208,7 +208,7 @@ table.table thead td:not(:nth-child(1)), table.table tbody td:not(:nth-child(1))
 
   .v-data-table__wrapper {
     min-height: 600px;
-    max-height: calc(100vh - 234px);
+    max-height: calc(100vh - 263px);
     height: 100% !important;
   }
 

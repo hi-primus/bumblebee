@@ -90,7 +90,7 @@
 								<span v-if="!col.render && (i > fixedCol)">
 									<nuxt-link
 										v-if="titleLinks"
-										:to="`/${currentTab}/${i}`"
+										:to="`/${currentTab}/${col.title}`"
 										class="hoverable header-title-link"
 									></nuxt-link>
 									<span
@@ -193,7 +193,7 @@ export default {
 			default: false
 		},
 		currentTab: {
-			default: ""
+			default: 0
 		}
 	},
 

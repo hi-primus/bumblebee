@@ -47,7 +47,7 @@
         </v-card>
       </template>
       <template v-else-if="!statusError">
-        <div v-if="cDatasets.length==0" class="center-screen-inside primary--text">
+        <div v-if="allDatasets.length==0" class="center-screen-inside primary--text">
           <v-progress-circular
             indeterminate
             color="primary"
@@ -71,7 +71,7 @@
                 center-active
                 style="flex: 0;"
               >
-                <v-tab v-for="(_tab, key) in cDatasets" :key="key" >
+                <v-tab v-for="(_tab, key) in allDatasets" :key="key" >
                   <span class="pr-8">{{ _tab.name || key+1 }}</span>
                   <v-hover v-slot:default="{ hover }">
                     <v-icon
@@ -129,8 +129,8 @@
                   :key="tab"
                   :currentTab="tab"
                   :view="view"
-                  :dataset="cDatasets[tab]"
-                  :total="+cDatasets[tab].rows_count"
+                  :dataset="currentDataset"
+                  :total="+currentDataset.rows_count"
                   :searchText="searchText"
                 />
               </v-card-text>
@@ -140,8 +140,8 @@
             <v-layout class="px-4" row justify-space-between>
               <span>Iron &copy; 2019</span>
               <span
-                v-if="cDatasets[tab] && cDatasets[tab].summary"
-              >Rows: {{ cDatasets[tab].rows_count }}, Columns: {{ cDatasets[tab].summary.cols_count }}, Size: {{ cDatasets[tab].summary.size }}</span>
+                v-if="currentDataset && currentDataset.summary"
+              >Rows: {{ currentDataset.rows_count }}, Columns: {{ currentDataset.summary.cols_count }}, Size: {{ currentDataset.summary.size }}</span>
             </v-layout>
           </v-footer>
         </template>
@@ -157,15 +157,20 @@ import clientMixin from '@/plugins/mixins/client'
 
 export default {
 
-  data() {
+  data () {
     return {
       showKey: false,
       inputKey: '',
       inputSession: '',
       searchText: '',
-      tab: 0,
-      view: 0
+      tab: undefined,
+      view: undefined
     }
+  },
+
+  created () {
+    this.tab = +(this.$route.query.tab || 0)
+    this.view = +(this.$route.query.view || 0)
   },
 
 	components: {
@@ -182,10 +187,35 @@ export default {
 		status () {
       return this.$store.state.status
     },
-    cDatasets () {
+    currentDataset () {
+      if (this.$store.state.datasets[this.tab]===undefined){
+        this.tab = 0;
+      }
+      return this.$store.state.datasets[this.tab];
+    },
+    allDatasets () {
       return this.$store.state.datasets;
     }
-	},
+  },
+
+  watch: {
+    tab (value) {
+      if (value===undefined)
+        return;
+      this.$router.replace({path: this.$route.fullPath, query: { tab: value }},()=>{
+        // console.log("TCL: tab -> this.$route.fullPath", this.$route.fullPath)
+        history.replaceState("Dashboard","Bumblebee",this.$route.fullPath);
+      })
+    },
+    view (value) {
+      if (value===undefined)
+        return;
+      this.$router.replace({path: this.$route.fullPath, query: { view: value }},()=>{
+        // console.log("TCL: tab -> this.$route.fullPath", this.$route.fullPath)
+        history.replaceState("Dashboard","Bumblebee",this.$route.fullPath);
+      })
+    },
+  },
 
   methods: {
     subscribe() {
@@ -197,11 +227,11 @@ export default {
     },
     deleteTab(i) {
       const deleted = this.$store.commit('delete',{index: i})
-      if (this.cDatasets.length==0) {
+      if (this.allDatasets.length==0) {
         this.tab = 0;
       }
-      else if (this.tab>=this.cDatasets.length) {
-        this.tab = this.cDatasets.length - 1
+      else if (this.tab>=this.allDatasets.length) {
+        this.tab = this.allDatasets.length - 1
       }
       this.$forceUpdate()
     }

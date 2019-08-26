@@ -22,9 +22,9 @@
         </template>
       </v-autocomplete>
     </div>
-    <div class="controls-in-container">
+    <div class="controls-in-container" v-if="view==0">
       <div class="table-controls mb-2 d-flex">
-          <v-btn class="hideable" :class="{'active': view==0}" text icon small @click="toggleColumnsSelection">
+          <v-btn text icon small @click="toggleColumnsSelection">
             <v-icon>
               <template v-if="selectionStatus==-1">indeterminate_check_box</template>
               <template v-else-if="selectionStatus==1">check_box</template>
@@ -33,7 +33,7 @@
           </v-btn>
           <v-tooltip bottom>
             <template v-slot:activator="{ on }">
-              <v-btn text icon small class="hideable tr-o" v-on="on" :class="{'active': view==0 && selectionStatus!=0}" @click="toggleColumnsVisibility(!visibilityStatus)">
+              <v-btn text icon small class="hideable tr-o" v-on="on" :class="{'active': selectionStatus!=0}" @click="toggleColumnsVisibility(!visibilityStatus)">
                 <v-icon>
                   <template v-if="!visibilityStatus">visibility</template>
                   <template v-else>visibility_off</template>

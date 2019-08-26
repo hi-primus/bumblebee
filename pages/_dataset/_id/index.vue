@@ -3,7 +3,7 @@
     <v-sheet elevation="4" class="mb-6">
       <v-container fluid class="py-0">
         <v-layout row wrap align-center height="48px">
-          <v-btn icon color="grey darken-3" to="/" tag="a" class="mr-2">
+          <v-btn icon color="grey darken-3" @click="back" tag="a" class="mr-2">
             <v-icon>arrow_back</v-icon>
           </v-btn>
           <v-flex grow>
@@ -210,7 +210,17 @@ export default {
 		DataTypes
 	},
 
-	mixins: [dataTypesMixin],
+  mixins: [dataTypesMixin],
+
+  methods: {
+    back() {
+      if (process.client && history.length > 2) {
+        history.back();
+      } else {
+        this.$router.push('/');
+      }
+    },
+  },
 
   validate({store,params}) {
     return true;
