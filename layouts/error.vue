@@ -1,6 +1,6 @@
 <template>
   <v-app>
-    <nuxt/>
+    Error
   </v-app>
 </template>
 
@@ -8,9 +8,8 @@
 export default {
 	data () {
 		return {
+
 		}
 	}
 }
 </script>
-
-

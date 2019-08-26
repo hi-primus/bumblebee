@@ -121,3 +121,6 @@ dist
 .idea/vcs.xml
 .idea/Bumblebee.iml
 .idea/misc.xml
+
+# vscode config
+.vscode

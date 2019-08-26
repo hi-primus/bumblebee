@@ -1,80 +1,245 @@
 <template>
+  <Layout :wide="view==1">
+    <v-layout row wrap>
+      <template v-if="status=='waiting' || status=='loading' || statusError">
+        <v-card
+          width="100%"
+          style="max-width: 700px; margin: auto"
+          :loading="(status=='loading') ? 'primary' : false"
+        >
+          <v-form @submit="subscribe" class="py-8 px-6">
+            <v-card-title>
+              <h1 class="display-3 mb-4">Bumblebee</h1>
+            </v-card-title>
+            <v-card-text>
+              <v-text-field
+                v-model="inputSession"
+                label="Session"
+                required
+                outlined
+                rounded
+                clearable
+              ></v-text-field>
 
-  <div>
-    <v-layout row wrap v-if="!$store.state.error">
-      
-        <v-flex xs12 sm12 md12>
-          <TableBar :dataset="$store.state.dataset.columns" :total="$store.state.dataset.rows_count"/>
-        </v-flex>
+              <v-text-field
+                v-model="inputKey"
+                :append-icon="showKey ? 'visibility' : 'visibility_off'"
+                :type="(showKey) ? 'text' : 'password'"
+                @click:append="showKey = !showKey"
+                label="Key"
+                required
+                outlined
+                rounded
+                clearable
+              ></v-text-field>
+            </v-card-text>
+            <v-card-actions>
+              <v-spacer></v-spacer>
+              <v-btn color="primary" large rounded depressed @click="subscribe">Subscribe</v-btn>
+              <v-spacer></v-spacer>
+            </v-card-actions>
+            <v-card-text class="pb-0" v-if="statusError" >
+              <v-alert type="error" class="mb-2" dismissible @input="resetStatus($event)">
+                {{status.message}}
+              </v-alert>
+            </v-card-text>
+          </v-form>
+        </v-card>
+      </template>
+      <template v-else-if="!statusError">
+        <div v-if="allDatasets.length==0" class="center-screen-inside primary--text">
+          <v-progress-circular
+            indeterminate
+            color="primary"
+            class="mr-4"
+          />
+          <span class="title">Waiting for data</span>
+          <span class="subtitle text-center pt-6" style="width: 100%;">
+            <span class="hoverable" @click="stopClient">
+              <v-icon color="primary">arrow_back</v-icon>
+              Disconnect
+            </span>
+          </span>
+        </div>
+        <template v-else>
+            <v-card class="d-flex flex-column align-top justify-start" style="width: 100%;">
+                <!-- color="primary darken-2" -->
+              <v-tabs
+                background-color="#fff"
+                v-model="tab"
+                show-arrows
+                center-active
+                style="flex: 0;"
+              >
+                <v-tab v-for="(_tab, key) in allDatasets" :key="key" >
+                  <span class="pr-8">{{ _tab.name || key+1 }}</span>
+                  <v-hover v-slot:default="{ hover }">
+                    <v-icon
+                      :color="hover ? 'primary darken-1' : ''"
+                      @click.stop="deleteTab(key)"
+                      small
+                      class="pr-4"
+                      style="position: absolute; right: 0"
+                    >
+                      close
+                    </v-icon>
+                  </v-hover>
+                </v-tab>
+              </v-tabs>
+              <v-card-text class="pa-0">
+                <div class="controls-section px-4 grey-bg">
+                  <div class="controls-container text-xs-center mb-1" :class="{'inside-bar': view==1}">
+                    <v-text-field
+                      clearable
+                      solo
+                      class="search-filter mr-3 mt-2 elevation-0"
+                      style="max-width: 500px"
+                      v-model="searchText"
+                      prepend-inner-icon="search"
+                      label="Search column"
+                      :color="'grey darken-3'"
+                    />
+                    <v-spacer></v-spacer>
+                    <v-btn-toggle
+                      mandatory v-model="view"
+                      class=""
+                    >
+                      <v-btn text>
+                        <v-icon>view_headline</v-icon>
+                      </v-btn>
+                      <v-btn text>
+                        <v-icon>view_module</v-icon>
+                      </v-btn>
+                    </v-btn-toggle>
+                    <!-- <div class="pseudo-select mr-4" style="z-index: 2">
+                      <v-btn depressed :dark="view!=1" :color="view==0 ? 'primary' : 'grey'" fab :text="view!=0" small @click="view=0">
+                        <v-icon>
+                          view_headline
+                        </v-icon>
+                      </v-btn>
+                      <v-btn depressed :dark="view!=0" :color="view==1 ? 'primary' : 'grey'" fab :text="view!=1" small @click="view=1">
+                        <v-icon>
+                          view_module
+                        </v-icon>
+                      </v-btn>
+                    </div> -->
+                  </div>
+                </div>
+                <TableBar
+                  :key="tab"
+                  :currentTab="tab"
+                  :view="view"
+                  :dataset="currentDataset"
+                  :total="+currentDataset.rows_count"
+                  :searchText="searchText"
+                />
+              </v-card-text>
+            </v-card>
 
-      <v-footer fixed="fixed" app>
-        <v-layout row justify-space-between>
-          <span>Iron &copy; 2018</span>
-          <span>Rows: {{$store.state.dataset.rows_count}},  Columns: {{$store.state.dataset.summary.cols_count}}, Size: {{$store.state.dataset.summary.size}} </span>
-        </v-layout>
-      </v-footer>
-    </v-layout>
-
-    <v-layout row wrap v-if="$store.state.error">
-
-      <v-jumbotron>
-          <v-container fill-height>
-            <v-layout align-center>
-              <v-flex>
-                <h3 class="display-3">Oops!</h3>
-
-                <span class="subheading">The data.json file wasn't found or the file is not named properly.</span>
-
-                <v-divider class="my-3"></v-divider>
-
-                <div class="title mb-3">For additional help, please visit the repository</div>
-
-                  <v-btn
-                    class="mx-0"
-                    color="primary"
-                    large
-                    href="https://github.com/ironmussa/Bumblebee"
-                    target="_blank"
-                  >
-                    Go to repository
-                  </v-btn>
-
-              </v-flex>
+          <v-footer fixed="fixed" app>
+            <v-layout class="px-4" row justify-space-between>
+              <span>Iron &copy; 2019</span>
+              <span
+                v-if="currentDataset && currentDataset.summary"
+              >Rows: {{ currentDataset.rows_count }}, Columns: {{ currentDataset.summary.cols_count }}, Size: {{ currentDataset.summary.size }}</span>
             </v-layout>
-          </v-container>
-        </v-jumbotron>
-
+          </v-footer>
+        </template>
+      </template>
     </v-layout>
-
-
-  </div>
-
-  
-
+  </Layout>
 </template>
 
 <script>
-import TableBar from '@/components/TableBar';
-import TopValues from '@/components/TopValues';
-import Frequent from '@/components/Frequent';
-import Stats from '@/components/Stats';
+import Layout from '@/components/Layout'
+import TableBar from '@/components/TableBar'
+import clientMixin from '@/plugins/mixins/client'
 
 export default {
 
-  middleware:'dataload',
-
-  data(){
-    return{
-        dataset: [],
+  data () {
+    return {
+      showKey: false,
+      inputKey: '',
+      inputSession: '',
+      searchText: '',
+      tab: undefined,
+      view: undefined
     }
   },
 
-  components: {
-    TableBar,
-    TopValues,
-    Stats,
-    Frequent
-  }
+  created () {
+    this.tab = +(this.$route.query.tab || 0)
+    this.view = +(this.$route.query.view || 0)
+  },
 
+	components: {
+    Layout,
+		TableBar,
+	},
+
+	mixins: [clientMixin],
+
+	computed: {
+		statusError () {
+      return (!!this.$store.state.status.message)
+		},
+		status () {
+      return this.$store.state.status
+    },
+    currentDataset () {
+      if (this.$store.state.datasets[this.tab]===undefined){
+        this.tab = 0;
+      }
+      return this.$store.state.datasets[this.tab];
+    },
+    allDatasets () {
+      return this.$store.state.datasets;
+    }
+  },
+
+  watch: {
+    tab (value) {
+      if (value===undefined)
+        return;
+      this.$router.replace({path: this.$route.fullPath, query: { tab: value }},()=>{
+        history.replaceState("Dashboard","Bumblebee",this.$route.fullPath);
+      })
+    },
+    view (value) {
+      if (value===undefined)
+        return;
+      this.$router.replace({path: this.$route.fullPath, query: { view: value }},()=>{
+        history.replaceState("Dashboard","Bumblebee",this.$route.fullPath);
+      })
+    },
+  },
+
+  methods: {
+    subscribe() {
+      this.startClient(this.inputSession,this.inputKey)
+    },
+    resetStatus(closing) {
+      if (!closing)
+        this.$store.commit('status')
+    },
+    deleteTab(i) {
+      const deleted = this.$store.commit('delete',{index: i})
+      if (this.allDatasets.length==0) {
+        this.tab = 0;
+      }
+      else if (this.tab>=this.allDatasets.length) {
+        this.tab = this.allDatasets.length - 1
+      }
+      this.$forceUpdate()
+    }
+  },
 }
 </script>
+
+<style lang="scss">
+  .datasets-tabs {
+    border-radius: 4px;
+    overflow: hidden;
+  }
+</style>

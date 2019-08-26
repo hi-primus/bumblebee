@@ -1,90 +1,62 @@
 <template>
-
-  <div class="pbar">
-    <v-tooltip bottom>
-            <span slot="activator">
-                <div class="pb1" :style="{'width': num2+'%'}"></div>
-            </span>
-      <span>{{goodVal}}, {{ num2 }}%</span>
+  <div class="data-bar">
+    <v-tooltip content-class="bar-tooltip" color="success darken-2" :left="!bottom" :bottom="bottom">
+      <template v-slot:activator="{ on }">
+        <div v-on="on" :class="{'data-bar-min': okP!=0}" :style="{'width': okP+'%'}" class="data-bar-green" />
+      </template>
+      <span>{{ okValues }} valid values <span>{{ okP }}%</span></span>
     </v-tooltip>
-    <v-tooltip bottom>
-            <span slot="activator">
-                <div class="pb2" :style="{'width': num1+'%'}"></div>
-            </span>
-      <span>{{data1}}, {{ num1 }}%</span>
+    <v-tooltip content-class="bar-tooltip" color="error darken-2" :left="!bottom" :bottom="bottom">
+      <template v-slot:activator="{ on }">
+        <div v-on="on" :class="{'data-bar-min': mismatchesP!=0}" class="data-bar-red" />
+      </template>
+      <span>{{ mismatches }} mismatched values <span>{{ mismatchesP }}%</span></span>
     </v-tooltip>
   </div>
-
 </template>
 
 <script>
-
-  export default {
-
-    props: {
-      data1: {},
-      total: {}
+export default {
+	props: {
+		mismatches: {
+			default: 0,
+			type: Number
+		},
+		total: {
+			default: 1,
+			type: Number
     },
-
-    data() {
-      return {
-        num1: 0,
-        num2: 0,
-        goodVal: 0,
-      }
-    },
-
-    beforeMount() {
-      this.goodVal = this.total - this.data1;
-      this.num1 = ((this.data1 * 100) / this.total).toFixed(2);
-      this.num2 = ((this.goodVal * 100) / this.total).toFixed(2);
+    bottom: {
+      default: false,
+      type: Boolean
     }
+	},
 
+	data () {
+		return {
+			okP: 0,
+			mismatchesP: 0,
+			okValues: 0
+		}
+	},
 
-  }
+	beforeMount () {
+		this.okValues = this.total - this.mismatches
+		this.mismatchesP = (+((this.mismatches * 100) / this.total)).toFixed(2) //nh
+		this.okP = 100 - this.mismatchesP;
+	}
+}
 </script>
 
 <style lang="scss" scoped>
+* {
+	color: #fff !important;
+}
 
-  *{
-    color: #fff !important;
+.bar-tooltip {
+  opacity: 1 !important;
+  &>span>span {
+    opacity: 0.8;
   }
-
-  // status bar
-  .pbar {
-    background-color: lightgray;
-    height: 5px;
-    border-radius: 50px;
-    width: 100%;
-    overflow: overlay;
-    &:hover {
-      cursor: crosshair;
-    }
-  }
-
-  .pb1 {
-    background-color: #4db6ac;
-    height: 5px;
-    /*border-radius: 50px 0 0 50px;*/
-    width: 50%;
-    float: left;
-  }
-
-  .pb2 {
-    background-color: #e57373;
-    height: 5px;
-    width: 25%;
-    float: left;
-    /*border-radius: 0 50px 50px 0;*/
-
-  }
-
-  .pb3 {
-    background-color: lightgray;
-    height: 8px;
-    border-radius: 0 50px 50px 0;
-    width: 25%;
-    float: left;
-  }
-
+}
 </style>
