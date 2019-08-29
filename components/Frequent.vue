@@ -1,20 +1,22 @@
 <template>
-  <div class="bb-graphic" :class="{'table-graphic': table}">
-    <h3>Frequent values</h3>
-    <div class="scroll-container">
-      <div class="freq-container">
-        <div
-          v-for="(item, index) in values"
-          :key="index"
-          class="freq-bar"
-          @mouseover="currentVal = `${item.value}, ${item.percentage}%`"
-        >
-          <div :style="{'height': normVal(item.count)+'%'}" class="freq-value" />
+  <v-hover>
+    <div class="bb-graphic" :class="{'table-graphic': table}">
+      <h3>Frequent values</h3>
+      <div class="scroll-container" @mouseout="currentVal = false">
+        <div class="freq-container">
+          <div
+            v-for="(item, index) in values"
+            :key="index"
+            class="freq-bar"
+            @mouseover="currentVal = `${item.value}, ${item.percentage}%`"
+          >
+            <div :style="{'height': normVal(item.count)+'%'}" class="freq-value" />
+          </div>
         </div>
       </div>
+      <div class="current-value">{{ (currentVal!==false) ?  currentVal : `${total} categories` }}</div>
     </div>
-    <div class="current-value">{{ currentVal }}</div>
-  </div>
+  </v-hover>
 </template>
 
 <script>
@@ -36,15 +38,12 @@ export default {
 
 	data () {
 		return {
-			sortedData: [],
-			currentVal: '',
-			barNum: 0
+			currentVal: false,
 		}
 	},
 
 	beforeMount () {
-		this.currentVal = `${this.values[0].count}, ${this.values[0].percentage}%`
-		this.barNum = this.values.length
+		// this.currentVal = `${this.values[0].count}, ${this.values[0].percentage}%`
 	},
 
 	methods: {

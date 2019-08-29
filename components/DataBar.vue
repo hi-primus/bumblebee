@@ -12,7 +12,7 @@
       </template>
       <span>{{ mismatched }} mismatched values <span>{{ mismatchedP }}%</span></span>
     </v-tooltip>
-    <v-tooltip content-class="bar-tooltip" color="grey" :left="!bottom" :bottom="bottom">
+    <v-tooltip content-class="bar-tooltip" background-color="#6c7680" color="#6c7680" :left="!bottom" :bottom="bottom">
       <template v-slot:activator="{ on }">
         <div v-on="on" :class="{'data-bar-min': missingP!=0}" class="data-bar-grey" />
       </template>

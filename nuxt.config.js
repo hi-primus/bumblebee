@@ -65,6 +65,7 @@ module.exports = {
 	],
 
 	plugins: [
+		{ src: '@/plugins/handsontable', mode: 'client' },
     '@/plugins/components.js',
 		'@/plugins/numeral',
 		'@/plugins/fuse',
@@ -77,7 +78,7 @@ module.exports = {
 
 	vuetify: {
 		materialIcons: false,
-		// customVariables: ['~/assets/variables.scss'],
+		customVariables: ['~/assets/variables.scss'],
 		theme: {
 			themes: {
 				light: {
