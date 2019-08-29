@@ -78,7 +78,7 @@ module.exports = {
 
 	vuetify: {
 		materialIcons: false,
-		customVariables: ['~/assets/variables.scss'],
+		// customVariables: ['~/assets/variables.scss'],
 		theme: {
 			themes: {
 				light: {
