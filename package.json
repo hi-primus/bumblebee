@@ -15,11 +15,13 @@
     "precommit": "npm run lint"
   },
   "dependencies": {
+    "@handsontable/vue": "^4.1.0",
     "@nuxtjs/axios": "^5.6.0",
     "canvas-datagrid": "^0.22.12",
     "cross-env": "^5.2.0",
     "express": "^4.16.4",
     "fernet": "^0.3.1",
+    "handsontable": "^7.1.1",
     "less": "^3.10.3",
     "less-loader": "^5.0.0",
     "numeral": "^2.0.6",

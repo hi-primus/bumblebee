@@ -122,7 +122,6 @@
 								:key="`table-g-${key}`"
 								style="border-right: 1px solid #e9eaec; border-bottom: 1px solid #e9eaec"
 							>
-                {{}}
 								<DataBar
 									class="table-data-bar"
 									bottom

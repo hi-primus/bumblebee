@@ -127,36 +127,35 @@
         </template>
 			</v-data-table>
     </div>
-			<BigdataTable
+    <client-only>
+			<HotTable
 				v-show="view==1"
 				v-if="dataset && dataset.sample"
-				:headerHeight="14"
-				:rowHeight="22"
-				:colWidth="170"
-				sortable
-				disabledHover
-				titleLinks
-				:currentTab="currentTab"
-				:sortIndex="sortIndex"
-				:columns="columnsTitles"
-				:value="dataset.sample.value"
-				:dataColumns="dataset.columns"
-				:visibleColumns="visibleColumns"
-				style="max-height: calc(100vh - 234px); min-height: 600px;"
-			/>
+        :settings="hotSettings"
+        width="100%"
+        height="100%"
+				style="max-height: calc(100vh - 255px); min-height: 600px; height: 100% !important; width: 100% !important"
+			>
+        <HotColumn v-for="(column, i) in hotColumns" :key="i" :settings="column">
+          <GraphicsRenderer hot-renderer>
+          </GraphicsRenderer>
+        </HotColumn>
+      </HotTable>
+    </client-only>
 	</div>
 </template>
 
 <script>
 import DataBar from "@/components/DataBar";
+import GraphicsRenderer from "@/components/GraphicsRenderer";
 import dataTypesMixin from "@/plugins/mixins/data-types";
-import BigdataTable from "@/components/BigdataTable";
+
 
 export default {
 	components: {
-		DataBar,
-		BigdataTable
-	},
+    DataBar,
+    GraphicsRenderer
+  },
 
 	mixins: [dataTypesMixin],
 
@@ -194,7 +193,7 @@ export default {
       orderedColumns: [], // order
 
       // affects table view only
-			visibleColumns: [],
+			hiddenColumnsIndices: [],
 
       // controls
       hiddenColumns: {},
@@ -215,15 +214,9 @@ export default {
         {text: 'Null', value: 'null' }
       ],
       typesSelected: [],
-      types: {
-        string: { label: 'String' },
-        int: { label: 'Integer' },
-        date: { label: 'Date' },
-        decimal: { label: 'Decimal' },
-        boolean: { label: 'Boolean' },
-        binary: { label: 'Binary' },
-        array: { label: 'Array' }
-      }
+
+      HotTable: undefined,
+      HotColumn: undefined,
 		};
 	},
 
@@ -240,16 +233,53 @@ export default {
       })
     },
 
-		sortIndex() {
-			return this.dataset.columns.map((e, i) => i);
-		},
-
-		columnsTitles() {
+		colHeaders() {
 			return this.dataset.columns.map(e => {
-				return { title: e.name };
+				return e.name;
 			});
     },
-	},
+
+    hotSettings() {
+      return {
+        data: this.hotColumns,
+        fixedRowsTop: 1,
+        columnSorting: true,
+        colWidths: 200,
+        rowHeaders: false,
+        rowHeight: '30px',
+        copyPaste: true,
+        manualColumnResize: true,
+        colHeaders: this.colHeaders,
+        hiddenColumns: {columns: this.hiddenColumnsIndices, indicators: false},
+        filters: true,
+        dropdownMenu: ['filter_by_condition', 'filter_operators', 'filter_by_condition2', 'filter_by_value', 'filter_action_bar'],
+				disabledHover: true,
+				titleLinks: true,
+				currentTab: this.currentTab,
+				data: [this.graphicsData,...this.dataset.sample.value],
+				dataColumns: this.dataset.columns,
+        licenseKey: 'non-commercial-and-evaluation'
+      }
+    },
+
+    graphicsData() {
+      return this.dataset.columns.map( (column, i) => {
+				return {
+          missing: column.stats.count_na,
+          total: this.dataset.rows_count,
+          hist: (column.stats.hist && column.stats.hist[0]) ? column.stats.hist : undefined,
+          hist_years: (column.stats.hist && column.stats.hist.years) ? column.stats.hist.years : undefined,
+          frequency: (column.frequency) ? column.frequency : undefined,
+        };
+			});
+    },
+
+		hotColumns() {
+			return this.dataset.columns.map( (e, i) => {
+				return {data: i, editor: false, readOnly: true};
+			});
+    },
+  },
 
 	watch: {
 		searchText: {
@@ -275,7 +305,7 @@ export default {
 
 		hiddenColumns: {
 			handler() {
-        this.getVisibleColumns()
+        this.getHiddenColumnsIndices()
       },
 			deep: true
     },
@@ -294,15 +324,13 @@ export default {
 			this.$router.push(`${this.currentTab}/${e.name}`)
 		},
 
-    toggleSortType () {
-      this.sortType = (this.sortType + 2) % 3 -1
-      this.getFilteredColumns();
-    },
-
-    getVisibleColumns () {
-      this.visibleColumns = this.filteredColumns.map( (e, index) => e.name ).filter(colName => {
-			  return !this.hiddenColumns[colName];
-			});
+    getHiddenColumnsIndices () {
+      let hiddenColumnsIndices = []
+      for (let i = 0; i <  this.dataset.columns.length; i++) {
+        if (this.hiddenColumns[this.dataset.columns[i].name]) // TODO: hide filtered out
+          hiddenColumnsIndices.push(i)
+      }
+      this.hiddenColumnsIndices = hiddenColumnsIndices
     },
 
     getFilteredColumns () {
@@ -329,7 +357,7 @@ export default {
         })
       }
 
-      this.getVisibleColumns();
+      this.getHiddenColumnsIndices();
       this.setSelectionStatus();
       this.setVisibilityStatus();
     },
@@ -382,13 +410,13 @@ export default {
       }
 
       this.setVisibilityStatus()
-      this.getVisibleColumns()
+      this.getHiddenColumnsIndices()
     },
 
     toggleColumnVisibility(colName) {
       this.hiddenColumns[colName]=!this.hiddenColumns[colName]
       this.setVisibilityStatus()
-      this.getVisibleColumns()
+      this.getHiddenColumnsIndices()
     },
 
     setSelectionStatus() {
@@ -430,4 +458,15 @@ export default {
 .v-icon.control-button {
   user-select: none;
 }
+
+.handsontable {
+  &, &>*{
+    height: 100% !important;
+  }
+}
+
+
 </style>
+
+<style src="../node_modules/handsontable/dist/handsontable.full.css"></style>
+

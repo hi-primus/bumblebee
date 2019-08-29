@@ -139,7 +139,7 @@
 
           <v-footer fixed="fixed" app>
             <v-layout class="px-4" row justify-space-between>
-              <span>Iron &copy; 2019</span>
+              <span></span>
               <span
                 v-if="currentDataset && currentDataset.summary"
               >

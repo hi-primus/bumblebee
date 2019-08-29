@@ -1,7 +1,7 @@
 <template>
   <div class="bb-graphic" :class="{'table-graphic': table}">
     <h3>{{ title }}</h3>
-    <div class="scroll-container">
+    <div class="scroll-container" @mouseleave="nowCount = false">
       <div class="freq-container">
         <div
           v-for="(item, index) in values"
@@ -13,7 +13,8 @@
         </div>
       </div>
     </div>
-    <div class="current-value">{{ topVal | formatNumber }} - {{ minVal | formatNumber }}, {{ nowCount }}</div>
+    <div v-if="nowCount!==false" class="current-value">{{ bottomVal | formatNumber }} - {{ topVal | formatNumber }}, {{ nowCount }}</div>
+    <div v-else class="current-value">{{defaultBottom | formatNumber}} - {{defaultTop | formatNumber}}</div>
   </div>
 </template>
 
@@ -40,31 +41,30 @@ export default {
 
 	data () {
 		return {
-			sortedData: [],
-			currentVal: '',
 			maxVal: 0,
+			bottomVal: 0,
 			topVal: 0,
-			minVal: 0,
-			nowCount: 0,
-			barNum: 0
+			nowCount: false,
+      defaultBottom: '',
+      defaultTop: ''
 		}
 	},
 
 	beforeMount () {
-		this.maxVal = this.getMaxVal(this.values)
+    this.maxVal = this.getMaxVal(this.values)
+    this.defaultBottom = `${(+this.values[0].lower).toFixed(2)}`
+    this.defaultTop = `${(+this.values[this.values.length - 1].upper).toFixed(2)}`
 		this.changeValue(
 			(+this.values[0].lower).toFixed(2), //nh
 			(+this.values[0].upper).toFixed(2),
 			this.values[0].count
 		)
-
-		this.barNum = this.values.length
 	},
 
 	methods: {
-		changeValue (minVal, maxVal, count) {
-			this.topVal = minVal
-			this.minVal = maxVal
+		changeValue (minVal, topVal, count) {
+			this.bottomVal = minVal
+			this.topVal = topVal
 			this.nowCount = count
 		},
 
