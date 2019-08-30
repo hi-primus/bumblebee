@@ -126,7 +126,7 @@
 									class="table-data-bar"
 									bottom
 									:missing="$store.state.datasets[currentTab].columns[key].stats.count_na"
-									:total="+$store.state.datasets[currentTab].rows_count"
+									:total="+$store.state.datasets[currentTab].summary.rows_count"
 								/>
 								<template v-if="column.stats.hist && column.stats.hist[0]">
 									<Histogram table :values="column.stats.hist" :total="10" />

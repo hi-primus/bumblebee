@@ -245,7 +245,7 @@ table.table thead td:not(:nth-child(1)), table.table tbody td:not(:nth-child(1))
     &:hover {
       .cell-controls {
         .control-hide{
-          opacity: 0.75 !important;
+          opacity: 1 !important;
         }
       }
     }
@@ -257,7 +257,7 @@ table.table thead td:not(:nth-child(1)), table.table tbody td:not(:nth-child(1))
       min-width: 65px;
 
       .control-check{
-        opacity: 0.75;
+        // opacity: 0.75;
         padding-right: 4px;
       }
       .control-hide{
@@ -515,6 +515,10 @@ table.table thead td:not(:nth-child(1)), table.table tbody td:not(:nth-child(1))
   font-family: "Roboto Mono", monospace !important;
   color: $text-color;
 
+  .wtBorder.current {
+    z-index: 102;
+  }
+
   * {
     border-color: #f5f5f5 !important;
   }
@@ -528,7 +532,8 @@ table.table thead td:not(:nth-child(1)), table.table tbody td:not(:nth-child(1))
   }
 
   tr:first-child td {
-    height: 96px;
+    height: 100px;
+    overflow: initial;
   }
 
   tr td{
@@ -584,6 +589,8 @@ table.table thead td:not(:nth-child(1)), table.table tbody td:not(:nth-child(1))
       height: 90px;
       display: flex;
 
+      justify-content: center;
+
       .freq-bar {
         height: 100%;
         width: 100%;
@@ -600,6 +607,7 @@ table.table thead td:not(:nth-child(1)), table.table tbody td:not(:nth-child(1))
           }
         }
 
+        max-width: 20px;
         .freq-value {
           width: 100%;
           background-color: $data-green;

@@ -4,8 +4,8 @@
     <v-simple-table class="table">
       <tbody>
         <tr>
-          <td style="width:50%;">Bool</td>
-          <td style="width:50%;">{{ values.bool }}</td>
+          <td style="width:50%;">Boolean</td>
+          <td style="width:50%;">{{ values.boolean }}</td>
         </tr>
 
         <tr>
@@ -19,8 +19,8 @@
         </tr>
 
         <tr>
-          <td style="width:50%;">Float</td>
-          <td style="width:50%;">{{ values.float }}</td>
+          <td style="width:50%;">Decimal</td>
+          <td style="width:50%;">{{ values.decimal }}</td>
         </tr>
 
         <tr>

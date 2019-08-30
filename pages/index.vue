@@ -131,7 +131,7 @@
                   :currentTab="tab"
                   :view="view"
                   :dataset="currentDataset"
-                  :total="+currentDataset.rows_count"
+                  :total="+currentDataset.summary.rows_count"
                   :searchText="searchText"
                 />
               </v-card-text>
@@ -143,7 +143,7 @@
               <span
                 v-if="currentDataset && currentDataset.summary"
               >
-                {{ currentDataset.rows_count }} Rows &emsp; {{ currentDataset.summary.cols_count }} Columns &emsp; Size: {{ currentDataset.summary.size }}
+                {{ currentDataset.summary.rows_count }} Rows &emsp; {{ currentDataset.summary.cols_count }} Columns &emsp; Size: {{ currentDataset.summary.size }}
               </span>
             </v-layout>
           </v-footer>
