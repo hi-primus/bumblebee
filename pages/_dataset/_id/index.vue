@@ -21,7 +21,7 @@
               class="main-data-bar"
               bottom
               :missing="column.stats.count_na"
-              :total="+$store.state.datasets[this.$route.params.dataset].rows_count"
+              :total="+$store.state.datasets[this.$route.params.dataset].summary.rows_count"
             />
           </v-flex>
         </v-layout>
@@ -83,7 +83,7 @@
             >
               <Histogram
                 :values="column.stats.hist"
-                :total="+$store.state.datasets[this.$route.params.dataset].rows_count"
+                :total="+$store.state.datasets[this.$route.params.dataset].summary.rows_count"
                 title="Histogram"
               />
             </v-flex>
@@ -97,7 +97,7 @@
             >
               <Histogram
                 :values="column.stats.hist.years"
-                :total="+$store.state.datasets[this.$route.params.dataset].rows_count"
+                :total="+$store.state.datasets[this.$route.params.dataset].summary.rows_count"
                 title="Years Histogram"
               />
             </v-flex>
@@ -111,7 +111,7 @@
             >
               <Histogram
                 :values="column.stats.hist.months"
-                :total="+$store.state.datasets[this.$route.params.dataset].rows_count"
+                :total="+$store.state.datasets[this.$route.params.dataset].summary.rows_count"
                 title="Months Histogram"
               />
             </v-flex>
@@ -125,7 +125,7 @@
             >
               <Histogram
                 :values="column.stats.hist.weekdays"
-                :total="+$store.state.datasets[this.$route.params.dataset].rows_count"
+                :total="+$store.state.datasets[this.$route.params.dataset].summary.rows_count"
                 title="Week days Histogram"
               />
             </v-flex>
@@ -139,7 +139,7 @@
             >
               <Histogram
                 :values="column.stats.hist.hours"
-                :total="+$store.state.datasets[this.$route.params.dataset].rows_count"
+                :total="+$store.state.datasets[this.$route.params.dataset].summary.rows_count"
                 title="Hours Histogram"
               />
             </v-flex>
@@ -153,7 +153,7 @@
             >
               <Histogram
                 :values="column.stats.hist.minutes"
-                :total="+$store.state.datasets[this.$route.params.dataset].rows_count"
+                :total="+$store.state.datasets[this.$route.params.dataset].summary.rows_count"
                 title="Minutes Histogram"
               />
             </v-flex>
@@ -176,7 +176,7 @@
           >
             <TopValues
               :values="column.frequency"
-              :total="+$store.state.datasets[this.$route.params.dataset].rows_count"
+              :total="+$store.state.datasets[this.$route.params.dataset].summary.rows_count"
             />
           </v-flex>
         </v-layout>

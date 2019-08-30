@@ -7,9 +7,30 @@
       :missing="value.missing"
       :total="+value.total"
     />
-    <Frequent   class="histfreq" v-if="value.frequency" table :values="value.frequency" :total="+value.frequency[0].count" />
-    <Histogram  class="histfreq" v-else-if="value.hist" table :values="value.hist" :total="10" />
-    <Histogram  class="histfreq" v-else-if="value.hist_years" table :values="value.hist_years" :total="10" />
+    <Frequent
+      v-if="value.frequency"
+      :uniques="value.count_uniques"
+      class="histfreq"
+      table
+      :values="value.frequency"
+      :total="+value.frequency[0].count"
+    />
+    <Histogram
+      v-else-if="value.hist"
+      :uniques="value.count_uniques"
+      class="histfreq"
+      table
+      :values="value.hist"
+      :total="10"
+    />
+    <Histogram
+      v-else-if="value.hist_years"
+      :uniques="value.count_uniques"
+      class="histfreq"
+      table
+      :values="value.hist_years"
+      :total="10"
+    />
   </div>
 </template>
 
@@ -42,8 +63,10 @@ export default {
     height: 90px;
     display: flex;
     flex-direction: column;
-
     margin: 0 -4px 2px -4px;
+
+    position: relative;
+
     .table-data-bar {
       margin-bottom: 2px;
       position: relative;
@@ -54,5 +77,12 @@ export default {
     .histfreq {
       flex: 1;
     }
+    // .data-type-header {
+    //   pointer-events: none;
+    //   position: absolute;
+    //   top: -25px;
+    //   left: 4px;
+    //   z-index: 103;
+    // }
   }
 </style>

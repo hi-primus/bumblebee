@@ -137,7 +137,7 @@
 				style="max-height: calc(100vh - 255px); min-height: 600px; height: 100% !important; width: 100% !important"
 			>
         <HotColumn v-for="(column, i) in hotColumns" :key="i" :settings="column">
-          <GraphicsRenderer hot-renderer>
+          <GraphicsRenderer :graphicsData="{a: 1}" hot-renderer>
           </GraphicsRenderer>
         </HotColumn>
       </HotTable>
@@ -242,17 +242,22 @@ export default {
     hotSettings() {
       return {
         data: this.hotColumns,
-        fixedRowsTop: 1,
-        columnSorting: true,
+				fixedRowsTop: 1,
+				autoColumnSize: false,
+				autoRowSize: false,
         colWidths: 200,
         rowHeaders: false,
         rowHeight: '30px',
         copyPaste: true,
         manualColumnResize: true,
         colHeaders: this.colHeaders,
+        // columnSorting: {
+        //   sortEmptyCells: true,
+        // },
+        columnSorting: false,
         hiddenColumns: {columns: this.hiddenColumnsIndices, indicators: false},
         filters: true,
-        dropdownMenu: ['filter_by_condition', 'filter_operators', 'filter_by_condition2', 'filter_by_value', 'filter_action_bar'],
+        // dropdownMenu: ['filter_by_condition', 'filter_operators', 'filter_by_condition2', 'filter_action_bar'],
 				disabledHover: true,
 				titleLinks: true,
 				currentTab: this.currentTab,
@@ -265,8 +270,12 @@ export default {
     graphicsData() {
       return this.dataset.columns.map( (column, i) => {
 				return {
+          toString() {
+            return ''
+          },
           missing: column.stats.count_na,
-          total: this.dataset.rows_count,
+          total: this.dataset.summary.rows_count,
+          count_uniques: column.stats.count_uniques,
           hist: (column.stats.hist && column.stats.hist[0]) ? column.stats.hist : undefined,
           hist_years: (column.stats.hist && column.stats.hist.years) ? column.stats.hist.years : undefined,
           frequency: (column.frequency) ? column.frequency : undefined,
@@ -276,7 +285,18 @@ export default {
 
 		hotColumns() {
 			return this.dataset.columns.map( (e, i) => {
-				return {data: i, editor: false, readOnly: true};
+        return {
+          data: i,
+          editor: false,
+          readOnly: true,
+          title: `
+            <span class="data-type-in-table abs data-type type-${e.column_dtype}">
+              ${this.dataType(e.column_dtype)}
+            </span>
+            <span class="data-title">
+              ${e.name}
+            </span>`
+        };
 			});
     },
   },
@@ -460,12 +480,39 @@ export default {
 }
 
 .handsontable {
-  &, &>*{
+  &:not(.ht_clone_top), &>*:not(.ht_clone_top){
     height: 100% !important;
   }
 }
 
+</style>
 
+<style lang="scss">
+  .handsontable span.colHeader {
+    width: 100%;
+  }
+  .data-type-in-table.abs {
+    position: absolute;
+    left: 4px;
+    pointer-events: none;
+    top: 6px;
+  }
+  .columnSorting {
+    position: initial !important;
+    &::before {
+      right: 22px !important;
+    }
+  }
+  .data-title {
+    max-width: calc(100% - 46px);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: block;
+    top: 4px;
+    left: 32px;
+    position: relative;
+  }
 </style>
 
 <style src="../node_modules/handsontable/dist/handsontable.full.css"></style>
