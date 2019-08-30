@@ -275,7 +275,8 @@ export default {
 				currentTab: this.currentTab,
 				data: [this.graphicsData,...this.dataset.sample.value],
 				dataColumns: this.dataset.columns,
-        licenseKey: 'non-commercial-and-evaluation'
+        licenseKey: 'non-commercial-and-evaluation',
+        beforeOnCellMouseUp: this.columnHeaderClicked
       }
     },
 
@@ -354,6 +355,16 @@ export default {
 
 		rowClicked (e) {
 			this.$router.push(`${this.currentTab}/${e.name}`)
+		},
+
+    columnHeaderClicked (event,coords) {
+      if (coords.row<0 && event.which==1){
+			  this.$router.push(`${this.currentTab}/${this.dataset.columns[coords.col].name}`)
+        // TODO: Si está ordenado distinto no va a funcionar correctamente
+        event.preventDefault();
+      }
+      console.log("TCL: columnHeaderClicked -> coords", coords)
+			// this.$router.push(`${this.currentTab}/${e.name}`)
 		},
 
     getHiddenColumnsIndices () {
