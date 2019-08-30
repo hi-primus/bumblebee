@@ -14,7 +14,7 @@
           </div>
         </div>
       </div>
-      <div class="current-value">{{ (currentVal!==false) ?  currentVal : `${count_uniques} categories` }}</div>
+      <div class="current-value">{{ (currentVal!==false) ?  currentVal : `${uniques} categories` }}</div>
     </div>
   </v-hover>
 </template>
@@ -30,7 +30,7 @@ export default {
 			default: 1,
 			type: Number
     },
-		count_uniques: {
+		uniques: {
 			default: 1,
 			type: Number
     },

@@ -1,6 +1,6 @@
 <template>
   <Layout :wide="view==1">
-    <v-layout row wrap>
+    <v-layout row wrap class="elevation-0 d-flex flex-column align-top justify-start">
       <template v-if="status=='waiting' || status=='loading' || statusError">
         <v-card
           class="elevation-0"
@@ -63,7 +63,7 @@
           </span>
         </div>
         <template v-else>
-            <v-card class="elevation-0 d-flex flex-column align-top justify-start" style="width: 100%;">
+            <!-- <v-card class="b-view-card elevation-0 d-flex flex-column align-top justify-start" style="width: 100%;"> -->
                 <!-- color="primary darken-2" -->
               <v-tabs
                 background-color="#fff"
@@ -135,7 +135,7 @@
                   :searchText="searchText"
                 />
               </v-card-text>
-            </v-card>
+            <!-- </v-card> -->
 
           <v-footer fixed="fixed" app>
             <v-layout class="px-4" row justify-space-between>
@@ -244,5 +244,9 @@ export default {
   .datasets-tabs {
     border-radius: 4px;
     overflow: hidden;
+  }
+  .controls-section {
+    margin-left: -20px;
+    margin-right: -20px;
   }
 </style>

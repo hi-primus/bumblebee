@@ -65,6 +65,7 @@
           {text: 'Type', value:'dtype', width: '1%'},
           {text: 'Name', value:'name', width: '3%'},
           {text: 'Missing values', width: '2%', value:'missing'},
+          {text: 'Valid values', width: '2%', value:'valid'},
           {text: '', sortable:false, width: '50%', value:''}
         ]"
         :items="tableItems"
@@ -123,8 +124,18 @@
           </div>
         </template>
         <template v-slot:item.missing="{ item }">
-          <DataBar :key="item.name+'missing'" style="min-width: calc(20vw + 50px); max-width: 100%;" :missing="+item.missing" :total="+total" />
+          <div class="pr-4">
+            {{item.missing}}
+          </div>
         </template>
+        <template v-slot:item.valid="{ item }">
+          <div class="pr-4">
+            {{item.valid}}
+          </div>
+        </template>
+        <!-- <template v-slot:item.missing="{ item }">
+          <DataBar :key="item.name+'missing'" style="min-width: calc(20vw + 50px); max-width: 100%;" :missing="+item.missing" :total="+total" />
+        </template> -->
 			</v-data-table>
     </div>
     <client-only>
@@ -132,9 +143,7 @@
 				v-show="view==1"
 				v-if="dataset && dataset.sample"
         :settings="hotSettings"
-        width="100%"
-        height="100%"
-				style="max-height: calc(100vh - 255px); min-height: 600px; height: 100% !important; width: 100% !important"
+				class="hot-table"
 			>
         <HotColumn v-for="(column, i) in hotColumns" :key="i" :settings="column">
           <GraphicsRenderer :graphicsData="{a: 1}" hot-renderer>
@@ -228,7 +237,8 @@ export default {
           name: e.name,
           type: e.column_type,
           dtype: e.column_dtype,
-          missing: e.stats.count_na + " "
+          missing: e.stats.count_na + " ",
+          valid: (this.dataset.summary.rows_count - e.stats.count_na) + " "
         }
       })
     },
@@ -251,9 +261,11 @@ export default {
         copyPaste: true,
         manualColumnResize: true,
         colHeaders: this.colHeaders,
+        renderAllRows: false,
         // columnSorting: {
         //   sortEmptyCells: true,
         // },
+        height: 'calc(100vh - 255px)',
         columnSorting: false,
         hiddenColumns: {columns: this.hiddenColumnsIndices, indicators: false},
         filters: true,
@@ -479,10 +491,16 @@ export default {
   user-select: none;
 }
 
-.handsontable {
-  &:not(.ht_clone_top), &>*:not(.ht_clone_top){
-    height: 100% !important;
+.hot-table {
+  .wtHolder, .ht_master {
+    height: inherit !important;
   }
+  .wtHolder {
+    overflow: scroll;
+  }
+  // &>*:not(.ht_clone_top){
+  //   height: inherit !important;
+  // }
 }
 
 </style>
@@ -512,6 +530,14 @@ export default {
     top: 4px;
     left: 32px;
     position: relative;
+  }
+
+  .hot-table {
+    height: calc(100vh - 210px) !important;
+    max-height: calc(100vh - 210px) !important;
+    min-height: 600px;
+    width: 100% !important;
+    overflow: hidden;
   }
 </style>
 
