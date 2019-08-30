@@ -1,6 +1,6 @@
 <template>
   <v-content app>
-    <v-container fluid :class="[wide ? 'lc--wide' : 'lc--narrow', 'layout-container']">
+    <v-container fluid class="py-0" :class="[wide ? 'lc--wide' : 'lc--narrow', 'layout-container']">
       <slot/>
     </v-container>
   </v-content>
