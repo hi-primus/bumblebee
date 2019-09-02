@@ -14,7 +14,7 @@
           </div>
         </div>
       </div>
-      <div class="current-value">{{ (currentVal!==false) ?  currentVal : `${uniques} categories` }}</div>
+      <div class="current-value">{{ (currentVal!==false) ?  currentVal : `${(values.length!=uniques) ? values.length+' of ' : '' }${uniques} categories` }}</div>
     </div>
   </v-hover>
 </template>
