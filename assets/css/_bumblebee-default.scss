@@ -1,3 +1,7 @@
+html:root {
+	overflow-y: auto;
+}
+
 .v-application, .v-data-table, .v-card > .v-card__text, .v-card, .v-sheet {
   color: $text-color !important;
 }
