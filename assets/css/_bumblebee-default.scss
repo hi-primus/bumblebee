@@ -570,10 +570,10 @@ table {
     text-overflow: ellipsis;
     color: inherit !important;
 
-	  &:empty:after{
-      content: 'None';
-      opacity: 0.5;
-    }
+	  // &:empty:after{
+    //   content: 'None';
+    //   opacity: 0.5;
+    // }
 	  &>span:empty:after{
       content: 'None';
       opacity: 0.5;
