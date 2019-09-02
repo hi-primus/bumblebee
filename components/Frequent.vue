@@ -46,10 +46,6 @@ export default {
 		}
 	},
 
-	beforeMount () {
-		// this.currentVal = `${this.values[0].count}, ${this.values[0].percentage}%`
-	},
-
 	methods: {
 		changeValue (newVal) {
 			this.currentVal = newVal

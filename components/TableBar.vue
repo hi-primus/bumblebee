@@ -159,6 +159,7 @@ import DataBar from "@/components/DataBar";
 import GraphicsRenderer from "@/components/GraphicsRenderer";
 import dataTypesMixin from "@/plugins/mixins/data-types";
 
+import { throttle } from "@/utils/functions.js"
 
 export default {
 	components: {
@@ -193,6 +194,8 @@ export default {
 
 	data() {
 		return {
+
+      mustHandleSearchText: false,
 
       // searchText: '',
       sortType: 0,
@@ -252,7 +255,7 @@ export default {
     hotSettings() {
       return {
         data: this.hotColumns,
-				fixedRowsTop: 1,
+        fixedRowsTop: 1,
 				autoColumnSize: false,
 				autoRowSize: false,
         colWidths: 200,
@@ -316,24 +319,17 @@ export default {
 
 	watch: {
 		searchText: {
-			immediate: true,
-			async handler() {
-        try {
+      immediate: true,
 
-          this.resultsColumns = this.searchText
-            ? await this.$search(this.searchText, this.dataset.columns, {
-                shouldSort: true,
-                threshold: 0.1,
-                keys: ["name"]
-              })
-            : this.dataset.columns
+      handler() {
 
-            this.getFilteredColumns();
+        this.mustHandleSearchText = true;
 
-        } catch (err) {
-          console.error(err);
-        }
+        this.searchTextWatch();
+
       },
+
+
 		},
 
 		hiddenColumns: {
@@ -353,24 +349,54 @@ export default {
 
 	methods: {
 
+    searchTextWatch: throttle( async function(){
+      try {
+
+        this.resultsColumns = this.searchText
+          ? await this.$search(this.searchText, this.dataset.columns, {
+              shouldSort: true,
+              threshold: 0.1,
+              keys: ["name"]
+            })
+          : this.dataset.columns
+
+          this.getFilteredColumns();
+
+
+      } catch (err) {
+        console.error(err);
+      }
+      this.mustHandleSearchText = false;
+    },1000),
+
 		rowClicked (e) {
 			this.$router.push(`${this.currentTab}/${e.name}`)
 		},
 
     columnHeaderClicked (event,coords) {
       if (coords.row<0 && event.which==1){
-			  this.$router.push(`${this.currentTab}/${this.dataset.columns[coords.col].name}`)
-        // TODO: Si está ordenado distinto no va a funcionar correctamente
+        let dataName;
+        try {
+          dataName = event.target.getElementsByClassName('data-title')[0].innerText;
+        } catch {
+          dataName = event.target.innerText;
+        }
+        console.log("TCL: columnHeaderClicked -> dataName", dataName)
         event.preventDefault();
+        this.$router.push(`${this.currentTab}/${dataName || this.dataset.columns[coords.col].name}`)
       }
-      console.log("TCL: columnHeaderClicked -> coords", coords)
-			// this.$router.push(`${this.currentTab}/${e.name}`)
 		},
 
     getHiddenColumnsIndices () {
       let hiddenColumnsIndices = []
+
+
+
       for (let i = 0; i <  this.dataset.columns.length; i++) {
-        if (this.hiddenColumns[this.dataset.columns[i].name]) // TODO: hide filtered out
+
+        const column = this.dataset.columns[i]
+
+        if (this.hiddenColumns[column.name] || this.filteredColumns.indexOf(column)==-1)
           hiddenColumnsIndices.push(i)
       }
       this.hiddenColumnsIndices = hiddenColumnsIndices
@@ -509,9 +535,6 @@ export default {
   .wtHolder {
     overflow: scroll;
   }
-  // &>*:not(.ht_clone_top){
-  //   height: inherit !important;
-  // }
 }
 
 </style>
