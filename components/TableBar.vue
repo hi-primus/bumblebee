@@ -141,8 +141,9 @@
     <client-only>
 			<HotTable
 				v-show="view==1"
-				v-if="dataset && dataset.sample"
+				v-if="dataset && dataset.sample && hotColumns.length>0"
         :settings="hotSettings"
+        :key="tableKey"
 				class="hot-table"
 			>
         <HotColumn v-for="(column, i) in hotColumns" :key="i" :settings="column">
@@ -202,10 +203,10 @@ export default {
 
       resultsColumns: [], // search
       filteredColumns: [], // filter
-      orderedColumns: [], // order
 
       // affects table view only
-			hiddenColumnsIndices: [],
+      hotColumns: [],
+      tableKey: 0,
 
       // controls
       hiddenColumns: {},
@@ -254,7 +255,8 @@ export default {
 
     hotSettings() {
       return {
-        data: this.hotColumns,
+        // dropdownMenu: ['filter_by_condition', 'filter_operators', 'filter_by_condition2', 'filter_action_bar'],
+				data: [this.graphicsData,...this.dataset.sample.value],
         fixedRowsTop: 1,
 				autoColumnSize: false,
 				autoRowSize: false,
@@ -265,21 +267,14 @@ export default {
         manualColumnResize: true,
         colHeaders: this.colHeaders,
         renderAllRows: false,
-        // columnSorting: {
-        //   sortEmptyCells: true,
-        // },
         height: 'calc(100vh - 255px)',
         columnSorting: false,
-        hiddenColumns: {columns: this.hiddenColumnsIndices, indicators: false},
+        // hiddenColumns: {columns: this.hotColumns, indicators: false},
+        // columns: this.hotColumns,
         filters: true,
-        // dropdownMenu: ['filter_by_condition', 'filter_operators', 'filter_by_condition2', 'filter_action_bar'],
 				disabledHover: true,
-				titleLinks: true,
-				currentTab: this.currentTab,
-				data: [this.graphicsData,...this.dataset.sample.value],
-				dataColumns: this.dataset.columns,
-        licenseKey: 'non-commercial-and-evaluation',
-        beforeOnCellMouseUp: this.columnHeaderClicked
+        beforeOnCellMouseUp: this.columnHeaderClicked,
+        licenseKey: 'non-commercial-and-evaluation'
       }
     },
 
@@ -299,22 +294,6 @@ export default {
 			});
     },
 
-		hotColumns() {
-			return this.dataset.columns.map( (e, i) => {
-        return {
-          data: i,
-          editor: false,
-          readOnly: true,
-          title: `
-            <span class="data-type-in-table abs data-type type-${e.column_dtype}">
-              ${this.dataType(e.column_dtype)}
-            </span>
-            <span class="data-title">
-              ${e.name}
-            </span>`
-        };
-			});
-    },
   },
 
 	watch: {
@@ -334,7 +313,7 @@ export default {
 
 		hiddenColumns: {
 			handler() {
-        this.getHiddenColumnsIndices()
+        this.getHotColumns()
       },
 			deep: true
     },
@@ -387,19 +366,27 @@ export default {
       }
 		},
 
-    getHiddenColumnsIndices () {
-      let hiddenColumnsIndices = []
+    getHotColumns () {
 
+      this.hotColumns = this.filteredColumns.filter((column)=>{
+        return !this.hiddenColumns[column.name]
+      }).map( (e, i) => {
+        return {
+          data: this.dataset.columns.indexOf(e),
+          editor: false,
+          readOnly: true,
+          title: `
+            <span class="data-type-in-table abs data-type type-${e.column_dtype}">
+              ${this.dataType(e.column_dtype)}
+            </span>
+            <span class="data-title">
+              ${e.name}
+            </span>`
+        };
+      })
 
-
-      for (let i = 0; i <  this.dataset.columns.length; i++) {
-
-        const column = this.dataset.columns[i]
-
-        if (this.hiddenColumns[column.name] || this.filteredColumns.indexOf(column)==-1)
-          hiddenColumnsIndices.push(i)
-      }
-      this.hiddenColumnsIndices = hiddenColumnsIndices
+      this.tableKey = this.tableKey + 1;
+      console.log("TCL: getHotColumns -> this.hotColumns", this.hotColumns)
     },
 
     getFilteredColumns () {
@@ -426,7 +413,7 @@ export default {
         })
       }
 
-      this.getHiddenColumnsIndices();
+      this.getHotColumns();
       this.setSelectionStatus();
       this.setVisibilityStatus();
     },
@@ -479,13 +466,13 @@ export default {
       }
 
       this.setVisibilityStatus()
-      this.getHiddenColumnsIndices()
+      this.getHotColumns()
     },
 
     toggleColumnVisibility(colName) {
       this.hiddenColumns[colName]=!this.hiddenColumns[colName]
       this.setVisibilityStatus()
-      this.getHiddenColumnsIndices()
+      this.getHotColumns()
     },
 
     setSelectionStatus() {
