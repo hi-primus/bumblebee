@@ -176,6 +176,14 @@ export default {
     this.view = +(this.$route.query.view || 0)
   },
 
+  mounted () {
+    this.inputSession = this.$route.query.session || ''
+    this.inputKey = this.$route.query.key || ''
+    if (this.inputSession && this.inputSession) {
+      this.subscribe()
+    }
+  },
+
 	components: {
     Layout,
 		TableBar,
