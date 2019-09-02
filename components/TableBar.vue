@@ -34,7 +34,7 @@
           </v-btn>
           <v-tooltip bottom>
             <template v-slot:activator="{ on }">
-              <v-btn text icon small class="hideable tr-o" v-on="on" :class="{'active': selectionStatus!=0}" @click="toggleColumnsVisibility(!visibilityStatus)">
+              <v-btn text icon small class="visibility-btn hideable tr-o" v-on="on" :class="{'active': selectionStatus!=0}" @click="toggleColumnsVisibility(!visibilityStatus)">
                 <v-icon>
                   <template v-if="!visibilityStatus">visibility</template>
                   <template v-else>visibility_off</template>
@@ -260,7 +260,7 @@ export default {
         fixedRowsTop: 1,
 				autoColumnSize: false,
 				autoRowSize: false,
-        colWidths: 200,
+        colWidths: 170,
         rowHeaders: false,
         rowHeight: '30px',
         copyPaste: true,
@@ -360,7 +360,6 @@ export default {
         } catch {
           dataName = event.target.innerText;
         }
-        console.log("TCL: columnHeaderClicked -> dataName", dataName)
         event.preventDefault();
         this.$router.push(`${this.currentTab}/${dataName || this.dataset.columns[coords.col].name}`)
       }
@@ -386,7 +385,6 @@ export default {
       })
 
       this.tableKey = this.tableKey + 1;
-      console.log("TCL: getHotColumns -> this.hotColumns", this.hotColumns)
     },
 
     getFilteredColumns () {
@@ -556,7 +554,6 @@ export default {
   .hot-table {
     height: calc(100vh - 210px) !important;
     max-height: calc(100vh - 210px) !important;
-    min-height: 600px;
     width: 100% !important;
     overflow: hidden;
   }
