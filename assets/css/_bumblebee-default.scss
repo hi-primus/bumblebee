@@ -1,3 +1,7 @@
+html:root {
+	overflow-y: auto;
+}
+
 .v-application, .v-data-table, .v-card > .v-card__text, .v-card, .v-sheet {
   color: $text-color !important;
 }
@@ -542,7 +546,11 @@ table {
   }
 
   th {
+    cursor: pointer;
     background-color: #fefefe !important;
+    &:hover {
+      background-color: $data-highlight !important;
+    }
     .changeType {
       opacity: 0.71;
       color: $text-color !important;
