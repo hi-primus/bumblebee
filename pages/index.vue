@@ -18,7 +18,6 @@
                 label="Session"
                 required
                 outlined
-                rounded
                 clearable
               ></v-text-field>
 
@@ -30,7 +29,6 @@
                 label="Key"
                 required
                 outlined
-                rounded
                 clearable
               ></v-text-field>
             </v-card-text>
