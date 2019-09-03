@@ -129,61 +129,12 @@ table.table thead td:not(:nth-child(1)), table.table tbody td:not(:nth-child(1))
 }
 
 .layout-container {
-  // transition: all ease-in-out .1s;
-  // padding-top: 24px !important;
-  // padding-bottom: 24px !important;
   padding-left: 2rem !important;
   padding-right: 2rem !important;
   min-height: calc(100vh - 48px);
   &>.layout {
     min-height: calc(100vh - 96px);
   }
-}
-
-/* grid */
-
-.header-title-cell {
-	position: relative;
-	padding-top: 2px;
-	.header-title-link {
-		position: absolute;
-		top: 0;
-		left: 0;
-		width: 100%;
-		height: 100%;
-	}
-	& > span {
-		display: flex;
-		align-items: center;
-		padding-left: 8px;
-		padding-right: 8px;
-		.data-type-in-table {
-			position: relative;
-			color: rgba(0, 0, 0, 0.6) !important;
-			transform-origin: left center;
-			width: 28px;
-			text-align: left;
-			margin-right: 2px;
-			pointer-events: none;
-		}
-		.table-header-text {
-			white-space: nowrap;
-			overflow: hidden;
-			text-overflow: ellipsis;
-			width: 100%;
-		}
-		.sort-button-wrapper {
-			position: relative;
-			width: 16px;
-			top: -2px;
-			right: 2px;
-			margin-left: auto;
-			justify-self: flex-end;
-		}
-	}
-	&:hover {
-		background-color: $data-highlight;
-	}
 }
 
 /* data bar */
@@ -306,25 +257,45 @@ table {
 
 .table-container {
   height: 100%;
+  margin-right: -20px;
+  // display: flex;
+  // flex-wrap: wrap;
   .lc--narrow &{
     @include fluid-prop(width, (300px: 268px, 980px: 948px, 1920px: 1333px, 3840px: 2880px ));
     max-width: 100%;
-    // @include fluid-prop(margin-right, (300px: 16px, 980px: 16px, 1920px: 293.5px, 3840px: 480px ));
-    margin: 0 auto 0 auto;
+    margin: 0 auto !important;
+    position: relative;
+    &::before {
+      content: '';
+      background: linear-gradient(90deg,white 0%,rgba(255,255,255,0) 8px);
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 5;
+      pointer-events: none;
+    }
+    // margin: 0 -20px;
+    // @include fluid-prop(padding-left, (300px: 16px, 980px: 16px, 1920px: 293.5px, 3840px: 480px ));
   }
 
   .filter-container {
+    width: 100%;
     /* quick fix width filter */
-    .v-input {
-      @include fluid-prop(width, (300px: 268px - 32px, 980px: 948px - 32px, 1920px: 1333px - 32px, 3840px: 2880px - 32px), true );
-      margin: auto;
-    }
+    // .v-input {
+    //   @include fluid-prop(width, (300px: 268px - 32px, 980px: 948px - 32px, 1920px: 1333px - 32px, 3840px: 2880px - 32px), true );
+    //   margin: auto;
+    // }
     border-bottom: solid 1px $table-cell-border-color;
   }
   .controls-in-container {
 
     // border-left: solid 1px $table-cell-border-color;
     // border-right: solid 1px $table-cell-border-color;
+
+    // width: 525px;
+    // margin-left: -20px;
 
     .table-controls {
       border-bottom: solid 1px $table-cell-border-color;
@@ -355,6 +326,10 @@ table {
     }
 
   }
+  // .hot-table {
+  //   flex: 1;
+  //   min-width: 50%;
+  // }
 }
 
 /* top values */
@@ -390,6 +365,38 @@ table {
   }
 }
 
+/* icon select */
+
+.v-input.icon-select {
+  min-width: 320px;
+  min-height: 32px;
+  position: relative;
+  .v-input__slot::before {
+    // content: none !important;
+  }
+  .v-input__slot::after {
+    // content: none !important;
+  }
+  // i {
+  //   position: absolute;
+  //   height: 100%;
+  //   width: 100%;
+  //   top: 0;
+  //   left: 0;
+  // }
+  // input {
+  //   // display: none;
+  // }
+  // .v-input__append-inner {
+  //   // opacity: 0;
+  //   position: absolute;
+  //   height: 100%;
+  //   width: 100%;
+  //   top: 0;
+  //   left: 0;
+  // }
+}
+
 /* layouts */
 
 .placeholder-chip {
@@ -399,6 +406,7 @@ table {
     border-style: dashed;
     border-width: 1px;
     border-color: lightgrey;
+    background-color: #fdfdfd;
     border-radius: 16px;
     padding: 0 30px 0 12px;
     font-size: 14px;
@@ -433,16 +441,17 @@ table {
 }
 
 .controls-container {
-	@include fluid-prop(
-		max-width,
-		(
-      300px: 300px,
-			900px: 900px,
-			1920px: 1300px
-		)
-	);
+	// @include fluid-prop(
+	// 	max-width,
+	// 	(
+  //     300px: 300px,
+	// 		900px: 900px,
+	// 		1920px: 1300px
+	// 	)
+	// );
 	margin-left: auto;
   margin-right: auto;
+  // padding-left: 30px;
   width: 100%;
   display: flex;
   align-items: center;
@@ -451,6 +460,8 @@ table {
   position: relative;
 
   .search-filter {
+    width: 33%;
+    max-width: 300px;
     max-height: 56px;
     margin-right: 0 !important;
   }
@@ -471,33 +482,6 @@ table {
   box-shadow: none !important;
 }
 
-/* buttons layouts */
-
-.narrow-buttons {
-  .v-btn:not(.first-button) {
-    margin-left: -8px;
-  }
-}
-
-.pseudo-select {
-  overflow: hidden;
-  border-radius: 28px;
-  background: #eee;
-  max-width: 76px;
-  max-height: 40px;
-  .v-btn {
-    margin-left: -8px;
-    &:first-child {
-      margin-left: 0;
-    }
-    &:focus::before {
-      opacity: 0 !important;
-    }
-  }
-}
-
-
-
 /* vuetify fixes */
 
 .v-menu__content {
@@ -508,42 +492,9 @@ table {
   align-self: center;
 }
 
-/* vue-bigdata-table fixes */
-
-.vue-bigdata-table {
-  width: 100% !important;
-  .vue-bigdata-table-content {
-    &>div:nth-child(2) {
-      width: 100% !important;
-    }
-  }
-  .sort-button-wrapper {
-    transform: translate(3px,1.25px) scale(1.25) !important;
-  }
-  * {
-    color: rgba(0, 0, 0, 0.87) !important;
-  }
-  .vue-bigdata-table-header-wrapper * {
-    font-size: 14px;
-    font-family: "Roboto", sans-serif;
-    font-weight: 700;
-  }
-  .vue-bigdata-table-content * {
-    font-family: "Roboto Mono", monospace !important;
-  }
-  .vue-bigdata-table-wrapper .vue-bigdata-table-data-table tr td .vue-bigdata-table-cell {
-    padding: 0 4px !important;
-    line-height: 1;
-  }
-}
-
-.vue-bigdata-table-outer {
-  border-radius: 2px;
-}
-
 
 .handsontable{
-  font-family: "Roboto Mono", monospace !important;
+  font-family: $font-mono;
   color: $text-color;
 
   .wtBorder {
@@ -558,6 +509,9 @@ table {
   }
 
   th {
+    &>span {
+      width: 100%;
+    }
     cursor: pointer;
     background-color: #fefefe !important;
     &:hover {
@@ -583,11 +537,7 @@ table {
     text-overflow: ellipsis;
     color: inherit !important;
 
-	  // &:empty:after{
-    //   content: 'None';
-    //   opacity: 0.5;
-    // }
-	  &>span:empty:after{
+	  &>span:empty:after/*, &:empty:after */{
       content: 'None';
       opacity: 0.5;
     }
@@ -710,7 +660,7 @@ table {
     // font-weight: 700 !important;
     // line-height: 1.25;
     height: 1.5em;
-    font-family: "Roboto Mono", monospace !important;
+    font-family: $font-mono;
     max-width: 100%;
     text-overflow: ellipsis;
     overflow: hidden;
@@ -721,7 +671,7 @@ table {
 /* data types */
 
 .data-type {
-  font-family: "Roboto Mono", monospace !important;
+  font-family: $font-mono;
   transform-origin: 8px center;
   font-weight: 700 !important;
   display: inline;

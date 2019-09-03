@@ -87,11 +87,11 @@
               </v-tabs>
               <v-card-text class="pa-0">
                 <div class="controls-section px-4 grey-bg">
-                  <div class="controls-container text-xs-center mb-1" :class="{'inside-bar': view==1}">
+                  <div class="controls-container mb-1 text-xs-center" :class="{'inside-bar': view==1}">
                     <v-btn-toggle
                       color="primary"
                       mandatory v-model="view"
-                      class=""
+                      class="mr-4"
                     >
                       <v-btn text>
                         <v-icon :color="(view==0) ? 'primary' : undefined">view_headline</v-icon>
@@ -100,28 +100,38 @@
                         <v-icon :color="(view==1) ? 'primary' : undefined">view_module</v-icon>
                       </v-btn>
                     </v-btn-toggle>
-                    <v-spacer></v-spacer>
                     <v-text-field
                       clearable
                       solo
-                      class="search-filter absolute-centered mt-2 elevation-0"
+                      class="search-filter mt-2 elevation-0"
                       v-model="searchText"
                       prepend-inner-icon="search"
                       label="Search column"
                       :color="'grey darken-3'"
                     />
-                    <!-- <div class="pseudo-select mr-4" style="z-index: 2">
-                      <v-btn depressed :dark="view!=1" :color="view==0 ? 'primary' : 'grey'" fab :text="view!=0" small @click="view=0">
-                        <v-icon>
-                          view_headline
-                        </v-icon>
-                      </v-btn>
-                      <v-btn depressed :dark="view!=0" :color="view==1 ? 'primary' : 'grey'" fab :text="view!=1" small @click="view=1">
-                        <v-icon>
-                          view_module
-                        </v-icon>
-                      </v-btn>
-                    </div> -->
+                    <div class="px-4 filter-container">
+                    <v-autocomplete
+                      dense
+                      v-model="typesSelected"
+                      :items="typesAvailable"
+                      :append-icon="''"
+                      chips
+                      deletable-chips
+                      color="grey darken-3"
+                      class="placeholder-chip"
+                      label="Data type"
+                      full-width
+                      hide-details
+                      hide-no-data
+                      hide-selected
+                      multiple
+                      single-line
+                    >
+                      <template v-slot:item="{ item }">
+                        <div class="data-type in-autocomplete">{{dataType(item.value)}}</div> {{item.text}}
+                      </template>
+                    </v-autocomplete>
+                    </div>
                   </div>
                 </div>
                 <TableBar
@@ -131,6 +141,7 @@
                   :dataset="currentDataset"
                   :total="+currentDataset.summary.rows_count"
                   :searchText="searchText"
+                  :typesSelected="typesSelected"
                 />
               </v-card-text>
             <!-- </v-card> -->
@@ -141,7 +152,10 @@
               <span
                 v-if="currentDataset && currentDataset.summary"
               >
-                {{ currentDataset.summary.rows_count }} Rows &emsp; {{ currentDataset.summary.cols_count }} Columns &emsp; Size: {{ currentDataset.summary.size }}
+                <template v-if="currentDataset.total_count_dtypes">
+                  {{currentDataset.total_count_dtypes | formatNumberInt}} Data types &emsp;
+                </template>
+                {{ currentDataset.summary.rows_count | formatNumberInt }} Rows &emsp; {{ currentDataset.summary.cols_count | formatNumberInt }} Columns &emsp; Size: {{ currentDataset.summary.size }}
               </span>
             </v-layout>
           </v-footer>
@@ -155,8 +169,11 @@
 import Layout from '@/components/Layout'
 import TableBar from '@/components/TableBar'
 import clientMixin from '@/plugins/mixins/client'
+import dataTypesMixin from "@/plugins/mixins/data-types";
 
 export default {
+
+  mixins: [clientMixin,dataTypesMixin],
 
   data () {
     return {
@@ -165,7 +182,18 @@ export default {
       inputSession: '',
       searchText: '',
       tab: undefined,
-      view: undefined
+      view: undefined,
+      typesAvailable: [
+        {text: 'String', value: 'string' },
+        {text: 'Integer', value: 'int' },
+        {text: 'Decimal', value: 'decimal' },
+        {text: 'Date', value: 'date' },
+        {text: 'Boolean', value: 'boolean' },
+        {text: 'Binary', value: 'binary' },
+        {text: 'Array', value: 'array' },
+        {text: 'Null', value: 'null' }
+      ],
+      typesSelected: [],
     }
   },
 
@@ -187,7 +215,6 @@ export default {
 		TableBar,
 	},
 
-	mixins: [clientMixin],
 
 	computed: {
 		statusError () {
