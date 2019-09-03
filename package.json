@@ -27,7 +27,6 @@
     "numeral": "^2.0.6",
     "nuxt": "^2.9.1",
     "pako": "^1.0.10",
-    "vue-bigdata-table": "git+https://github.com/lison16/vue-bigdata-table.git",
     "vue-fuse": "^2.1.0"
   },
   "devDependencies": {

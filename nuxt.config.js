@@ -35,7 +35,8 @@ module.exports = {
 				type: 'image/x-icon',
 				href: '/favicon.ico'
 			},
-			{ rel: 'stylesheet', href: 'https://fonts.googleapis.com/css?family=Material+Icons' }
+			// { rel: 'stylesheet', href: 'https://fonts.googleapis.com/css?family=Material+Icons|Ubuntu+Mono|Roboto+Mono' }
+			{ rel: 'stylesheet', href: 'https://fonts.googleapis.com/css?family=Material+Icons|Ubuntu+Mono' }
 		],
 		script: [
 			{ src: 'https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js' }

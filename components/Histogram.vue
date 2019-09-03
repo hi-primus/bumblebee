@@ -13,8 +13,8 @@
         </div>
       </div>
     </div>
-    <div v-if="nowCount!==false" class="current-value">{{ bottomVal | formatNumber }} - {{ topVal | formatNumber }}, {{ nowCount }}</div>
-    <div v-else class="current-value">{{defaultBottom | formatNumber}} - {{defaultTop | formatNumber}}</div>
+    <div v-if="nowCount!==false" class="current-value">{{ bottomVal | humanNumber }} - {{ topVal | humanNumber }}, {{ nowCount }}</div>
+    <div v-else class="current-value">{{defaultBottom | humanNumber}} - {{defaultTop | humanNumber}}</div>
   </div>
 </template>
 

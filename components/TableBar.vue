@@ -1,30 +1,7 @@
 <template>
 	<div class="table-container">
-    <div class="px-4 filter-container">
-      <v-autocomplete
-        dense
-        v-model="typesSelected"
-        :items="typesAvailable"
-        :append-icon="''"
-        chips
-        deletable-chips
-        color="grey darken-3"
-        class="placeholder-chip"
-        label="Data type"
-        full-width
-        hide-details
-        hide-no-data
-        hide-selected
-        multiple
-        single-line
-      >
-        <template v-slot:item="{ item }">
-          <div class="data-type in-autocomplete">{{dataType(item.value)}}</div> {{item.text}}
-        </template>
-      </v-autocomplete>
-    </div>
     <div class="controls-in-container" v-if="view==0">
-      <div class="table-controls mb-2 d-flex">
+      <div class="table-controls mb-2 pb-1 mt-8 d-flex">
           <v-btn text icon small @click="toggleColumnsSelection">
             <v-icon>
               <template v-if="selectionStatus==-1">indeterminate_check_box</template>
@@ -55,23 +32,17 @@
             <span>Invert selection</span>
           </v-tooltip>
       </div>
-          <!-- {text: 'Type',width: 'calc(20% - 100px)', value:'type'}, -->
 			<v-data-table
 				@click:row="rowClicked"
         v-show="view==0"
         class="columns-table"
-        :headers="[
-          {text: '', sortable:false, width: '1%', value:'controls'},
-          {text: 'Type', value:'dtype', width: '1%'},
-          {text: 'Name', value:'name', width: '3%'},
-          {text: 'Missing values', width: '2%', value:'missing'},
-          {text: 'Valid values', width: '2%', value:'valid'},
-          {text: '', sortable:false, width: '50%', value:''}
-        ]"
-        :items="tableItems"
+        :headers="columnsTableHeaders"
+        :items="filteredColumns"
 				disable-pagination
         hide-default-footer
         fixed-header
+        :sort-by.sync="sortBy"
+        :sort-desc.sync="sortDesc"
         :mobile-breakpoint="0"
         :height="600"
       >
@@ -101,14 +72,14 @@
             </v-tooltip>
           </div>
         </template>
-        <template v-slot:item.dtype="{ item }">
+        <template v-slot:item.column_dtype="{ item }">
           <v-tooltip bottom>
             <template v-slot:activator="{ on }">
               <div v-on="on" class="data-type pr-4">
-                {{dataType(item.dtype)}}
+                {{dataType(item.column_dtype)}}
               </div>
             </template>
-            <span class="capitalize">{{item.dtype}}</span>
+            <span class="capitalize">{{item.column_dtype}}</span>
           </v-tooltip>
         </template>
         <template
@@ -123,35 +94,78 @@
             {{item.name}}
           </div>
         </template>
-        <template v-slot:item.missing="{ item }">
+        <template v-slot:item.stats.missing_count="{ item }">
           <div class="pr-4">
-            {{item.missing}}
+            {{item.stats.missing_count | formatNumberInt}}
           </div>
         </template>
-        <template v-slot:item.valid="{ item }">
+        <template v-slot:item.stats.count_na="{ item }">
           <div class="pr-4">
-            {{item.valid}}
+            {{item.stats.count_na | formatNumberInt}}
           </div>
         </template>
-        <!-- <template v-slot:item.missing="{ item }">
-          <DataBar :key="item.name+'missing'" style="min-width: calc(20vw + 50px); max-width: 100%;" :missing="+item.missing" :total="+total" />
-        </template> -->
 			</v-data-table>
     </div>
-    <client-only>
-			<HotTable
-				v-show="view==1"
-				v-if="dataset && dataset.sample && hotColumns.length>0"
-        :settings="hotSettings"
-        :key="tableKey"
-				class="hot-table"
-			>
-        <HotColumn v-for="(column, i) in hotColumns" :key="i" :settings="column">
-          <GraphicsRenderer :graphicsData="{a: 1}" hot-renderer>
-          </GraphicsRenderer>
-        </HotColumn>
-      </HotTable>
-    </client-only>
+    <template>
+      <div v-show="view==1" class="toolbar mb-1">
+        <v-menu offset-y>
+          <template v-slot:activator="{ on: onSortBy }">
+            <v-btn
+              v-on="onSortBy"
+              :color="(sortBy) ? 'primary' : undefined"
+              icon
+            >
+              <v-icon>sort</v-icon>
+            </v-btn>
+          </template>
+            <v-list>
+              <v-list-item-group color="primary" v-model="sortBy">
+                <v-list-item
+                  v-for="(item, i) in sortableColumnsTableHeaders"
+                  :key="i"
+                  :value="item.value"
+                >
+                  <v-list-item-content>
+                    <v-list-item-title v-text="item.text"></v-list-item-title>
+                  </v-list-item-content>
+                </v-list-item>
+              </v-list-item-group>
+            </v-list>
+        </v-menu>
+
+        <v-btn
+          :color="'black'"
+          :disabled="!sortBy"
+          icon
+          @click="sortDesc=!sortDesc"
+        >
+          <v-icon v-if="sortDesc==true">arrow_downward</v-icon>
+          <v-icon v-else>arrow_upward</v-icon>
+        </v-btn>
+        <v-btn
+          :color="'black'"
+          v-if="sortBy"
+          icon
+          @click="sortDesc=false; sortBy=null"
+        >
+          <v-icon>close</v-icon>
+        </v-btn>
+      </div>
+      <client-only>
+        <HotTable
+          v-show="view==1"
+          v-if="dataset && dataset.sample && hotColumns.length>0"
+          :settings="hotSettings"
+          :key="tableKey"
+          class="hot-table"
+        >
+          <HotColumn v-for="(column, i) in hotColumns" :key="i" :settings="column">
+            <GraphicsRenderer :graphicsData="{a: 1}" hot-renderer>
+            </GraphicsRenderer>
+          </HotColumn>
+        </HotTable>
+      </client-only>
+    </template>
 	</div>
 </template>
 
@@ -190,7 +204,11 @@ export default {
 		},
 		searchText: {
 			default: ""
-		}
+    },
+    typesSelected: {
+      default: ()=>([]),
+      type: Array
+    }
 	},
 
 	data() {
@@ -199,10 +217,12 @@ export default {
       mustHandleSearchText: false,
 
       // searchText: '',
-      sortType: 0,
 
       resultsColumns: [], // search
       filteredColumns: [], // filter
+
+      sortBy: null,
+      sortDesc: false,
 
       // affects table view only
       hotColumns: [],
@@ -216,38 +236,27 @@ export default {
       selectionStatus: false,
       visibilityStatus: 1, // visible
 
-      typesAvailable: [
-        {text: 'String', value: 'string' },
-        {text: 'Integer', value: 'int' },
-        {text: 'Decimal', value: 'decimal' },
-        {text: 'Date', value: 'date' },
-        {text: 'Boolean', value: 'boolean' },
-        {text: 'Binary', value: 'binary' },
-        {text: 'Array', value: 'array' },
-        {text: 'Null', value: 'null' }
-      ],
-      typesSelected: [],
-
       HotTable: undefined,
       HotColumn: undefined,
+
+      columnsTableHeaders: [
+          {text: '', sortable:false, width: '1%', value:'controls'},
+          {text: 'Type', value:'column_dtype', width: '1%'},
+          {text: 'Name', value:'name', width: '3%'},
+          {text: 'Missing values', width: '2%', value:'__missing'},
+          {text: 'Null values', width: '2%', value:'__na'},
+          {text: '', sortable:false, width: '50%', value:''}
+        ]
 		};
 	},
 
 	computed: {
-    tableItems() {
-      return this.filteredColumns.map((e,i)=>{
-        return {
-          controls: true,
-          name: e.name,
-          type: e.column_type,
-          dtype: e.column_dtype,
-          missing: e.stats.count_na + " ",
-          valid: (this.dataset.summary.rows_count - e.stats.count_na) + " "
-        }
-      })
+
+    sortableColumnsTableHeaders () {
+      return this.columnsTableHeaders.filter(e=>e.sortable!==false)
     },
 
-		colHeaders() {
+		colHeaders () {
 			return this.dataset.columns.map(e => {
 				return e.name;
 			});
@@ -309,7 +318,14 @@ export default {
       },
 
 
-		},
+    },
+
+    sortBy: {
+      handler: 'getHotColumns'
+    },
+    sortDesc: {
+      handler: 'getHotColumns'
+    },
 
 		hiddenColumns: {
 			handler() {
@@ -369,9 +385,28 @@ export default {
 
       this.hotColumns = this.filteredColumns.filter((column)=>{
         return !this.hiddenColumns[column.name]
-      }).map( (e, i) => {
+      })
+
+      if (this.sortBy!==null){
+        if (typeof this.hotColumns[0][this.sortBy] === 'string')
+          this.hotColumns.sort((a,b)=>{
+            let _a = a[this.sortBy].toLowerCase();
+            let _b = b[this.sortBy].toLowerCase();
+            return (_a < _b) ? -1 : (_a > _b) ? 1 : 0;
+          })
+        else
+          this.hotColumns.sort((a,b)=>{
+            let _a = a[this.sortBy];
+            let _b = b[this.sortBy];
+            return (_a < _b) ? -1 : (_a > _b) ? 1 : 0;
+          })
+        if (this.sortDesc)
+        this.hotColumns.reverse();
+      }
+
+      this.hotColumns = this.hotColumns.map( (e, i) => {
         return {
-          data: this.dataset.columns.indexOf(e),
+          data: this.dataset.columns.findIndex((de)=>de.name==e.name),
           editor: false,
           readOnly: true,
           title: `
@@ -397,19 +432,13 @@ export default {
         this.filteredColumns = this.resultsColumns
       }
 
-      if (this.sortType!=0) {
-        this.filteredColumns.sort((a,b)=>{
-          const _a = a.name.toLowerCase()
-          const _b = b.name.toLowerCase()
-          if ( _a < _b ){
-            return -1 * (this.sortType);
-          }
-          if ( _a > _b ){
-            return 1 * (this.sortType);
-          }
-          return 0;
-        })
-      }
+      this.filteredColumns = this.filteredColumns.map(column => {
+        return {
+          __missing: column.stats.missing_count,
+          __na: column.stats.count_na,
+          ...column,
+        }
+      })
 
       this.getHotColumns();
       this.setSelectionStatus();
@@ -525,7 +554,7 @@ export default {
 </style>
 
 <style lang="scss">
-  .handsontable span.colHeader {
+  .handsontable .colHeader {
     width: 100%;
   }
   .data-type-in-table.abs {
@@ -542,6 +571,7 @@ export default {
   }
   .data-title {
     max-width: calc(100% - 46px);
+    width: 100%;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -554,8 +584,11 @@ export default {
   .hot-table {
     height: calc(100vh - 210px) !important;
     max-height: calc(100vh - 210px) !important;
-    width: 100% !important;
     overflow: hidden;
+  }
+
+  .toolbar {
+    display: flex;
   }
 </style>
 
