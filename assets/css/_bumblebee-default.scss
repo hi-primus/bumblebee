@@ -129,8 +129,6 @@ table.table thead td:not(:nth-child(1)), table.table tbody td:not(:nth-child(1))
 }
 
 .layout-container {
-  padding-left: 2rem !important;
-  padding-right: 2rem !important;
   min-height: calc(100vh - 48px);
   &>.layout {
     min-height: calc(100vh - 96px);
@@ -187,7 +185,7 @@ table {
   }
 
   th, td {
-    font-size: 13px !important;
+    font-size: 14px !important;
     padding-right: 0 !important;
     &:not(:first-child) {
       padding-left: 0 !important;
@@ -196,7 +194,7 @@ table {
 
   .v-data-table__wrapper {
     min-height: 300px;
-    max-height: calc(100vh - 232px);
+    max-height: calc(100vh - 237px);
     height: 100% !important;
   }
 
@@ -208,8 +206,8 @@ table {
 
   tr {
     td {
-      height: $table-cell-height;
-      max-height: $table-cell-height;
+      // height: $table-cell-height;
+      // max-height: $table-cell-height;
       border-color: $table-cell-border-color !important;
     }
     i.control-hide {
@@ -256,28 +254,13 @@ table {
 /* table container */
 
 .table-container {
+  // padding-top: 9px;
+  border-top: solid 1px $table-cell-border-color;
   height: 100%;
-  margin-right: -20px;
-  // display: flex;
-  // flex-wrap: wrap;
   .lc--narrow &{
-    @include fluid-prop(width, (300px: 268px, 980px: 948px, 1920px: 1333px, 3840px: 2880px ));
     max-width: 100%;
-    margin: 0 auto !important;
+    margin: 0 !important;
     position: relative;
-    &::before {
-      content: '';
-      background: linear-gradient(90deg,white 0%,rgba(255,255,255,0) 8px);
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 5;
-      pointer-events: none;
-    }
-    // margin: 0 -20px;
-    // @include fluid-prop(padding-left, (300px: 16px, 980px: 16px, 1920px: 293.5px, 3840px: 480px ));
   }
 
   .filter-container {
@@ -294,23 +277,19 @@ table {
     // border-left: solid 1px $table-cell-border-color;
     // border-right: solid 1px $table-cell-border-color;
 
-    // width: 525px;
-    // margin-left: -20px;
-
     .table-controls {
       border-bottom: solid 1px $table-cell-border-color;
       pointer-events: none;
       &>* {
         pointer-events: auto;
       }
-      height: $table-cell-height;
       display: flex;
       align-items: center;
       padding-left: 22px;
       width: 100%;
 
-      margin-bottom: 0px !important;
       z-index: 3;
+      min-height: 48px;
       padding-bottom: 1px;
       // &>* {
       //   position: relative;
@@ -346,6 +325,28 @@ table {
 		left: 0;
 		width: max-content;
 	}
+}
+
+/* icon buttons toolbar */
+
+.toolbar {
+  display: flex;
+  padding: 4px 18px;
+}
+
+.icon-btn {
+  min-width: 36px !important;
+  padding: 0 6px !important;
+  // border: 1px #e1e1e1 solid;
+  &:not(:last-child) {
+    margin-right: -1px;
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+  &:not(:first-child) {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+  }
 }
 
 /* sort hints */
@@ -430,31 +431,73 @@ table {
   background-color: $grey-background;
 }
 
+.bb-tabs {
+  position: relative;
+  .v-tab {
+    display: flex;
+    flex-direction: column;
+    padding-right: 40px;
+    .close-icon {
+      position: absolute;
+      right: 0;
+      padding-right: 12px;
+    }
+    .tab-title {
+      width: 100%;
+    }
+    .tab-subtitle {
+      width: 100%;
+      text-transform: none;
+      color: #555;
+      font-size: 0.75em;
+    }
+  }
+	.v-tabs-bar {
+		background: none !important;
+	}
+	.v-tabs-slider-wrapper {
+		padding: 0 4px;
+		.v-tabs-slider {
+			overflow: hidden;
+			border-top-left-radius: 2px;
+			border-top-right-radius: 2px;
+		}
+	}
+  &:before {
+		content: '';
+    position: absolute;
+    bottom: 0;
+		height: 0;
+		width: 100%;
+		left: 0;
+
+    border-bottom: 1px solid #e5e5e5;
+	}
+}
+
 .controls-container {
-	// @include fluid-prop(
-	// 	max-width,
-	// 	(
-  //     300px: 300px,
-	// 		900px: 900px,
-	// 		1920px: 1300px
-	// 	)
-	// );
-	margin-left: auto;
-  margin-right: auto;
-  // padding-left: 30px;
+  padding: 0 12px;
   width: 100%;
   display: flex;
   align-items: center;
   z-index: 1;
   min-height: 64px;
   position: relative;
+  border-bottom: 1px solid $table-cell-border-color;
 
   .search-filter {
+    position: relative;
+    bottom: 2px;
     width: 33%;
     max-width: 300px;
     max-height: 56px;
     margin-right: 0 !important;
+    .v-input__prepend-inner {
+      margin-right: auto;
+      padding-right: 14px;
+    }
   }
+
 
   .absolute-centered {
     position: absolute;
@@ -473,6 +516,10 @@ table {
 }
 
 /* vuetify fixes */
+
+.v-text-field--full-width {
+  overflow: hidden;
+}
 
 .v-menu__content {
 	z-index: 102 !important;

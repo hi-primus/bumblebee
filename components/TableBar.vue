@@ -1,7 +1,61 @@
 <template>
+  <div>
+  <div class="toolbar">
+    <v-btn @click="$emit('update:view',0)" text class="icon-btn">
+      <v-icon :color="(view==0) ? 'black' : '#888'">view_headline</v-icon>
+    </v-btn>
+    <v-btn @click="$emit('update:view',1)" text class="icon-btn">
+      <v-icon :color="(view==1) ? 'black' : '#888'">view_module</v-icon>
+    </v-btn>
+    <v-menu offset-y :close-on-content-click="false">
+      <template v-slot:activator="{ on: onSortBy }">
+        <v-btn
+          class="icon-btn"
+          v-on="onSortBy"
+          :color="sortBy ? 'black' : '#555'"
+          text
+        >
+          <!-- class="v-btn-icon-text" -->
+          <v-icon>sort</v-icon>
+          <span style="min-width: 2em;">
+            {{sortByLabel}}
+          </span>
+          <v-icon color="black" small v-show="sortBy">
+            <template v-if="sortDesc">arrow_downward</template>
+            <template v-else>arrow_upward</template>
+          </v-icon>
+        </v-btn>
+      </template>
+        <v-list flat dense>
+          <v-list-item-group color="black" :value="sortBy">
+            <v-list-item
+              v-for="(item, i) in sortableColumnsTableHeaders"
+              :key="i"
+              :value="item.value"
+              @click="clickSort(item.value)"
+            >
+              <v-list-item-content>
+                <v-list-item-title>
+                  <span class="sort-hint">
+                    {{item.hint}}
+                  </span>
+                  {{item.text}}
+                </v-list-item-title>
+              </v-list-item-content>
+              <v-list-item-icon>
+                <v-icon color="black" v-show="item.value===sortBy">
+                  <template v-if="sortDesc">arrow_downward</template>
+                  <template v-else>arrow_upward</template>
+                </v-icon>
+              </v-list-item-icon>
+            </v-list-item>
+          </v-list-item-group>
+        </v-list>
+    </v-menu>
+  </div>
 	<div class="table-container">
     <div class="controls-in-container" v-if="view==0">
-      <div class="table-controls mb-2 pb-1 mt-8 d-flex">
+      <div class="table-controls d-flex">
           <v-btn text icon small @click="toggleColumnsSelection">
             <v-icon>
               <template v-if="selectionStatus==-1">indeterminate_check_box</template>
@@ -106,55 +160,10 @@
         </template>
 			</v-data-table>
     </div>
-    <template>
-      <div v-show="view==1" class="toolbar mb-1">
-        <v-menu offset-y :close-on-content-click="false">
-          <template v-slot:activator="{ on: onSortBy }">
-            <v-btn
-              v-on="onSortBy"
-              :color="sortBy ? 'black' : '#555'"
-              text
-              rounded
-            >
-              <!-- class="v-btn-icon-text" -->
-              <v-icon>sort</v-icon>
-              <span style="min-width: 2em;">
-                {{sortByLabel}}
-              </span>
-              <v-icon color="black" small v-show="sortBy">
-                <template v-if="sortDesc">arrow_downward</template>
-                <template v-else>arrow_upward</template>
-              </v-icon>
-            </v-btn>
-          </template>
-            <v-list flat dense>
-              <v-list-item-group color="black" :value="sortBy">
-                <v-list-item
-                  v-for="(item, i) in sortableColumnsTableHeaders"
-                  :key="i"
-                  :value="item.value"
-                  @click="clickSort(item.value)"
-                >
-                  <v-list-item-content>
-                    <v-list-item-title>
-                      <span class="sort-hint">
-                        {{item.hint}}
-                      </span>
-                      {{item.text}}
-                    </v-list-item-title>
-                  </v-list-item-content>
-                  <v-list-item-icon>
-                    <v-icon color="black" v-show="item.value===sortBy">
-                      <template v-if="sortDesc">arrow_downward</template>
-                      <template v-else>arrow_upward</template>
-                    </v-icon>
-                  </v-list-item-icon>
-                </v-list-item>
-              </v-list-item-group>
-            </v-list>
-        </v-menu>
-      </div>
-      <client-only>
+    <client-only>
+      <div
+        class="hot-table-container"
+      >
         <HotTable
           v-show="view==1"
           v-if="dataset && dataset.sample && hotColumns.length>0"
@@ -167,9 +176,10 @@
             </GraphicsRenderer>
           </HotColumn>
         </HotTable>
-      </client-only>
-    </template>
+      </div>
+    </client-only>
 	</div>
+  </div>
 </template>
 
 <script>
@@ -287,7 +297,7 @@ export default {
         manualColumnResize: true,
         colHeaders: this.colHeaders,
         renderAllRows: false,
-        height: 'calc(100vh - 255px)',
+        height: 'calc(100vh - 189px)',
         columnSorting: false,
         filters: true,
 				disabledHover: true,
@@ -566,7 +576,10 @@ export default {
   user-select: none;
 }
 
-.hot-table {
+.hot-table-container {
+  padding-left: 9px;
+  padding-top: 9px;
+
   .wtHolder, .ht_master {
     height: inherit !important;
   }
@@ -609,10 +622,6 @@ export default {
     height: calc(100vh - 210px) !important;
     max-height: calc(100vh - 210px) !important;
     overflow: hidden;
-  }
-
-  .toolbar {
-    display: flex;
   }
 </style>
 
