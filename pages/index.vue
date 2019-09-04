@@ -64,6 +64,7 @@
             <!-- <v-card class="b-view-card elevation-0 d-flex flex-column align-top justify-start" style="width: 100%;"> -->
                 <!-- color="primary darken-2" -->
               <v-tabs
+                class="bb-tabs px-6"
                 background-color="#fff"
                 v-model="tab"
                 show-arrows
@@ -71,14 +72,18 @@
                 style="flex: 0;"
               >
                 <v-tab v-for="(_tab, key) in allDatasets" :key="key" >
-                  <span class="pr-8">{{ _tab.name || key+1 }}</span>
+                  <span class="tab-title">
+                    {{ _tab.name || key+1 }}
+                  </span>
+                  <span class="tab-subtitle">
+                    {{ _tab.file_name }}
+                  </span>
                   <v-hover v-slot:default="{ hover }">
                     <v-icon
                       :color="hover ? 'primary darken-1' : ''"
                       @click.stop="deleteTab(key)"
                       small
-                      class="pr-4"
-                      style="position: absolute; right: 0"
+                      class="close-icon"
                     >
                       close
                     </v-icon>
@@ -86,58 +91,47 @@
                 </v-tab>
               </v-tabs>
               <v-card-text class="pa-0">
-                <div class="controls-section px-4 grey-bg">
-                  <div class="controls-container mb-1 text-xs-center" :class="{'inside-bar': view==1}">
-                    <v-btn-toggle
-                      color="primary"
-                      mandatory v-model="view"
-                      class="mr-4"
-                    >
-                      <v-btn text>
-                        <v-icon :color="(view==0) ? 'primary' : undefined">view_headline</v-icon>
-                      </v-btn>
-                      <v-btn text>
-                        <v-icon :color="(view==1) ? 'primary' : undefined">view_module</v-icon>
-                      </v-btn>
-                    </v-btn-toggle>
+                <div class="controls-section grey--bg">
+                  <div class="controls-container text-xs-center" :class="{'inside-bar': view==1}">
                     <v-text-field
                       clearable
-                      solo
-                      class="search-filter mt-2 elevation-0"
+                      dense
+                      full-width
+                      class="search-filter mt-2 mr-4 elevation-0"
                       v-model="searchText"
                       prepend-inner-icon="search"
                       label="Search column"
                       :color="'grey darken-3'"
                     />
-                    <div class="px-4 filter-container">
-                    <v-autocomplete
-                      dense
-                      v-model="typesSelected"
-                      :items="typesAvailable"
-                      :append-icon="''"
-                      chips
-                      deletable-chips
-                      color="grey darken-3"
-                      class="placeholder-chip"
-                      label="Data type"
-                      full-width
-                      hide-details
-                      hide-no-data
-                      hide-selected
-                      multiple
-                      single-line
-                    >
-                      <template v-slot:item="{ item }">
-                        <div class="data-type in-autocomplete">{{dataType(item.value)}}</div> {{item.text}}
-                      </template>
-                    </v-autocomplete>
+                    <div class="filter-container">
+                      <v-autocomplete
+                        dense
+                        full-width
+                        v-model="typesSelected"
+                        :items="typesAvailable"
+                        :append-icon="''"
+                        chips
+                        deletable-chips
+                        color="grey darken-3"
+                        class="placeholder-chip"
+                        label="Data type"
+                        hide-details
+                        hide-no-data
+                        hide-selected
+                        multiple
+                        single-line
+                      >
+                        <template v-slot:item="{ item }">
+                          <div class="data-type in-autocomplete">{{dataType(item.value)}}</div> {{item.text}}
+                        </template>
+                      </v-autocomplete>
                     </div>
                   </div>
                 </div>
                 <TableBar
                   :key="tab"
                   :currentTab="tab"
-                  :view="view"
+                  :view.sync="view"
                   :dataset="currentDataset"
                   :total="+currentDataset.summary.rows_count"
                   :searchText="searchText"
@@ -151,6 +145,7 @@
               <span></span>
               <span
                 v-if="currentDataset && currentDataset.summary"
+                class="caption-2"
               >
                 <template v-if="currentDataset.total_count_dtypes">
                   {{currentDataset.total_count_dtypes | formatNumberInt}} Data types &emsp;
@@ -277,9 +272,5 @@ export default {
   .datasets-tabs {
     border-radius: 4px;
     overflow: hidden;
-  }
-  .controls-section {
-    margin-left: -20px;
-    margin-right: -20px;
   }
 </style>

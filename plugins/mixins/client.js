@@ -32,8 +32,14 @@ export default {
       client.onConnectionLost = (responseObject) => {
 				// TODO: warn //
         console.log('CONNECTION LOST - ' + responseObject.errorMessage)
-        if (responseObject.errorMessage.includes('OK')){
-          this.$store.commit('status')
+        if (
+          responseObject.errorMessage.includes('OK')
+          || (
+            responseObject.errorMessage.includes('Socket closed')
+            && (this.$store.state.datasets.length>0)
+          )
+        ){
+          this.$store.commit('status') // TODO: Warn user
         }
         else {
           this.$store.commit('status', new Error(responseObject.errorMessage) )
@@ -84,7 +90,13 @@ export default {
 				},
 				onFailure: (message) => {
 					console.log('CONNECTION FAILURE - ' + message.errorMessage)
-					if (message.errorMessage.includes('OK'))
+					if (
+              message.errorMessage.includes('OK')
+              || (
+                message.errorMessage.includes('Socket closed')
+                && (this.$store.state.datasets.length>0)
+              )
+            )
             this.$store.commit('status')
           else
             this.$store.commit('status', new Error(message.errorMessage) )
