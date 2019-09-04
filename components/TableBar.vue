@@ -162,10 +162,10 @@
     </div>
     <client-only>
       <div
+        v-show="view==1"
         class="hot-table-container"
       >
         <HotTable
-          v-show="view==1"
           v-if="dataset && dataset.sample && hotColumns.length>0"
           :settings="hotSettings"
           :key="tableKey"

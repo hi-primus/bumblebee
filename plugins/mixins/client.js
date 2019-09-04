@@ -104,11 +104,7 @@ export default {
 				}
 			}
 
-			// TODO: check //
-			options.useSSL = false
-			// if (location.protocol == "https:") {
-			//   options.useSSL = false;
-			// }
+      options.useSSL = (location.protocol == "https:");
 
 			client.connect(options)
 		}
