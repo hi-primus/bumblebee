@@ -108,48 +108,51 @@
     </div>
     <template>
       <div v-show="view==1" class="toolbar mb-1">
-        <v-menu offset-y>
+        <v-menu offset-y :close-on-content-click="false">
           <template v-slot:activator="{ on: onSortBy }">
             <v-btn
               v-on="onSortBy"
-              :color="(sortBy) ? 'primary' : undefined"
-              icon
+              :color="sortBy ? 'black' : '#555'"
+              text
+              rounded
             >
+              <!-- class="v-btn-icon-text" -->
               <v-icon>sort</v-icon>
+              <span style="min-width: 2em;">
+                {{sortByLabel}}
+              </span>
+              <v-icon color="black" small v-show="sortBy">
+                <template v-if="sortDesc">arrow_downward</template>
+                <template v-else>arrow_upward</template>
+              </v-icon>
             </v-btn>
           </template>
-            <v-list>
-              <v-list-item-group color="primary" v-model="sortBy">
+            <v-list flat dense>
+              <v-list-item-group color="black" :value="sortBy">
                 <v-list-item
                   v-for="(item, i) in sortableColumnsTableHeaders"
                   :key="i"
                   :value="item.value"
+                  @click="clickSort(item.value)"
                 >
                   <v-list-item-content>
-                    <v-list-item-title v-text="item.text"></v-list-item-title>
+                    <v-list-item-title>
+                      <span class="sort-hint">
+                        {{item.hint}}
+                      </span>
+                      {{item.text}}
+                    </v-list-item-title>
                   </v-list-item-content>
+                  <v-list-item-icon>
+                    <v-icon color="black" v-show="item.value===sortBy">
+                      <template v-if="sortDesc">arrow_downward</template>
+                      <template v-else>arrow_upward</template>
+                    </v-icon>
+                  </v-list-item-icon>
                 </v-list-item>
               </v-list-item-group>
             </v-list>
         </v-menu>
-
-        <v-btn
-          :color="'black'"
-          :disabled="!sortBy"
-          icon
-          @click="sortDesc=!sortDesc"
-        >
-          <v-icon v-if="sortDesc==true">arrow_downward</v-icon>
-          <v-icon v-else>arrow_upward</v-icon>
-        </v-btn>
-        <v-btn
-          :color="'black'"
-          v-if="sortBy"
-          icon
-          @click="sortDesc=false; sortBy=null"
-        >
-          <v-icon>close</v-icon>
-        </v-btn>
       </div>
       <client-only>
         <HotTable
@@ -240,17 +243,25 @@ export default {
       HotColumn: undefined,
 
       columnsTableHeaders: [
-          {text: '', sortable:false, width: '1%', value:'controls'},
-          {text: 'Type', value:'column_dtype', width: '1%'},
-          {text: 'Name', value:'name', width: '3%'},
-          {text: 'Missing values', width: '2%', value:'__missing'},
-          {text: 'Null values', width: '2%', value:'__na'},
-          {text: '', sortable:false, width: '50%', value:''}
-        ]
+        {text: '', sortable:false, width: '1%', value:'controls'},
+        {hint: '#/A', text: 'Type', value:'column_dtype', width: '1%'},
+        {hint: 'ABC', text: 'Name', value:'name', width: '3%'},
+        {hint: '""', text: 'Missing values', width: '2%', value:'__missing'},
+        {hint: 'null', text: 'Null values', width: '2%', value:'__na'},
+        {text: '', sortable:false, width: '50%', value:''}
+      ]
 		};
 	},
 
 	computed: {
+
+    sortByLabel () {
+      if (this.sortBy)
+        try {
+          return this.sortableColumnsTableHeaders.find((e)=>e.value==this.sortBy).text.split(' ')[0]
+        } catch {}
+      return 'Sort'
+    },
 
     sortableColumnsTableHeaders () {
       return this.columnsTableHeaders.filter(e=>e.sortable!==false)
@@ -278,8 +289,6 @@ export default {
         renderAllRows: false,
         height: 'calc(100vh - 255px)',
         columnSorting: false,
-        // hiddenColumns: {columns: this.hotColumns, indicators: false},
-        // columns: this.hotColumns,
         filters: true,
 				disabledHover: true,
         beforeOnCellMouseUp: this.columnHeaderClicked,
@@ -306,6 +315,8 @@ export default {
   },
 
 	watch: {
+
+
 		searchText: {
       immediate: true,
 
@@ -316,7 +327,6 @@ export default {
         this.searchTextWatch();
 
       },
-
 
     },
 
@@ -343,6 +353,20 @@ export default {
 	},
 
 	methods: {
+
+    clickSort(by) {
+      if (this.sortBy !== by) {
+        this.sortBy = by
+        this.sortDesc = false
+      }
+      else if (this.sortDesc===false) {
+        this.sortDesc = true
+      }
+      else if (this.sortDesc===true) {
+        this.sortDesc = false
+        this.sortBy = null
+      }
+    },
 
     searchTextWatch: throttle( async function(){
       try {

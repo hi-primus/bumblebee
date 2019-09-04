@@ -151,6 +151,7 @@
               <span></span>
               <span
                 v-if="currentDataset && currentDataset.summary"
+                class="caption-2"
               >
                 <template v-if="currentDataset.total_count_dtypes">
                   {{currentDataset.total_count_dtypes | formatNumberInt}} Data types &emsp;

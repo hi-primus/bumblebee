@@ -348,6 +348,16 @@ table {
 	}
 }
 
+/* sort hints */
+
+.sort-hint {
+  font-family: $font-mono;
+  font-size: 0.75rem;
+  font-weight: 700;
+  min-width: 3em;
+  display: inline-block;
+}
+
 /* chips */
 
 .filter-chip-group {
@@ -365,36 +375,16 @@ table {
   }
 }
 
-/* icon select */
+/* text */
 
-.v-input.icon-select {
-  min-width: 320px;
-  min-height: 32px;
-  position: relative;
-  .v-input__slot::before {
-    // content: none !important;
-  }
-  .v-input__slot::after {
-    // content: none !important;
-  }
-  // i {
-  //   position: absolute;
-  //   height: 100%;
-  //   width: 100%;
-  //   top: 0;
-  //   left: 0;
-  // }
-  // input {
-  //   // display: none;
-  // }
-  // .v-input__append-inner {
-  //   // opacity: 0;
-  //   position: absolute;
-  //   height: 100%;
-  //   width: 100%;
-  //   top: 0;
-  //   left: 0;
-  // }
+.caption-2 {
+  font-size: 0.8125rem;
+}
+
+/* buttons */
+.v-btn-icon-text {
+  min-width: 36px !important;
+  padding: 0 6px;
 }
 
 /* layouts */
