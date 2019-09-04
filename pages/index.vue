@@ -1,5 +1,30 @@
 <template>
   <Layout :wide="view==1">
+    <v-dialog max-width="290" v-if="$store.state.datasets[confirmDelete]" :value="confirmDelete>=0" @change="confirmDelete=$event?-1:$event">
+      <v-card>
+        <v-card-title class="title">Close tab</v-card-title>
+        <v-card-text>
+          Close <span class="text-uppercase">"{{$store.state.datasets[confirmDelete].name}}"</span>?
+        </v-card-text>
+        <v-card-actions>
+          <div class="flex-grow-1"></div>
+          <v-btn
+            color="primary"
+            text
+            @click="confirmDelete=-1"
+          >
+            Cancel
+          </v-btn>
+          <v-btn
+            color="primary"
+            text
+            @click="deleteTab(confirmDelete)"
+          >
+            Accept
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
     <v-layout row wrap class="elevation-0 d-flex flex-column align-top justify-start">
       <template v-if="status=='waiting' || status=='loading' || statusError">
         <v-card
@@ -46,7 +71,7 @@
         </v-card>
       </template>
       <template v-else-if="!statusError">
-        <div v-if="allDatasets.length==0" class="center-screen-inside primary--text">
+        <div v-if="$store.state.datasets.length==0" class="center-screen-inside primary--text">
           <v-progress-circular
             indeterminate
             color="primary"
@@ -71,7 +96,7 @@
                 center-active
                 style="flex: 0;"
               >
-                <v-tab v-for="(_tab, key) in allDatasets" :key="key" >
+                <v-tab v-for="(_tab, key) in $store.state.datasets" :key="key" >
                   <span class="tab-title">
                     {{ _tab.name || key+1 }}
                   </span>
@@ -81,7 +106,7 @@
                   <v-hover v-slot:default="{ hover }">
                     <v-icon
                       :color="hover ? 'primary darken-1' : ''"
-                      @click.stop="deleteTab(key)"
+                      @click.stop="confirmDelete=key;"
                       small
                       class="close-icon"
                     >
@@ -178,6 +203,7 @@ export default {
       searchText: '',
       tab: undefined,
       view: undefined,
+      confirmDelete: -1,
       typesAvailable: [
         {text: 'String', value: 'string' },
         {text: 'Integer', value: 'int' },
@@ -223,9 +249,6 @@ export default {
         this.tab = 0;
       }
       return this.$store.state.datasets[this.tab];
-    },
-    allDatasets () {
-      return this.$store.state.datasets;
     }
   },
 
@@ -256,11 +279,11 @@ export default {
     },
     deleteTab(i) {
       const deleted = this.$store.commit('delete',{index: i})
-      if (this.allDatasets.length==0) {
+      if (this.$store.state.datasets.length==0) {
         this.tab = 0;
       }
-      else if (this.tab>=this.allDatasets.length) {
-        this.tab = this.allDatasets.length - 1
+      else if (this.tab>=this.$store.state.datasets.length) {
+        this.tab = this.$store.state.datasets.length - 1
       }
       this.$forceUpdate()
     }
