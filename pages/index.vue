@@ -1,6 +1,6 @@
 <template>
   <Layout :wide="view==1">
-    <v-dialog max-width="290" v-if="$store.state.datasets[confirmDelete]" :value="confirmDelete>=0" @change="confirmDelete=$event?-1:$event">
+    <v-dialog max-width="290" v-if="$store.state.datasets[confirmDelete]" :value="confirmDelete>=0" @click:outside="confirmDelete=-1">
       <v-card>
         <v-card-title class="title">Close tab</v-card-title>
         <v-card-text>
@@ -279,6 +279,7 @@ export default {
     },
     deleteTab(i) {
       const deleted = this.$store.commit('delete',{index: i})
+      this.confirmDelete = -1
       if (this.$store.state.datasets.length==0) {
         this.tab = 0;
       }
