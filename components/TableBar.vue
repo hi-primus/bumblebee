@@ -7,6 +7,7 @@
     <v-btn @click="$emit('update:view',1)" text class="icon-btn">
       <v-icon :color="(view==1) ? 'black' : '#888'">view_module</v-icon>
     </v-btn>
+    <div class="divider"></div>
     <v-menu offset-y :close-on-content-click="false">
       <template v-slot:activator="{ on: onSortBy }">
         <v-btn
@@ -528,6 +529,7 @@ export default {
 
       this.setVisibilityStatus()
       this.getHotColumns()
+      this.getFilteredColumns()
     },
 
     toggleColumnVisibility(colName) {

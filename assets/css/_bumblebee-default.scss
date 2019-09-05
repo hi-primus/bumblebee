@@ -173,7 +173,7 @@ table.table thead td:not(:nth-child(1)), table.table tbody td:not(:nth-child(1))
 }
 
 table {
-  border-color: $table-cell-border-color;
+  border-color: $line-color-1;
 }
 
 /* columns list */
@@ -200,7 +200,6 @@ table {
 
   thead tr th {
     white-space: nowrap;
-    background-color: $grey-background;
     border: none !important;
   }
 
@@ -208,7 +207,7 @@ table {
     td {
       // height: $table-cell-height;
       // max-height: $table-cell-height;
-      border-color: $table-cell-border-color !important;
+      border-color: $line-color-1 !important;
     }
     i.control-hide {
       transform: rotate(-0.03deg);
@@ -255,7 +254,7 @@ table {
 
 .table-container {
   // padding-top: 9px;
-  border-top: solid 1px $table-cell-border-color;
+  border-top: solid 1px $line-color-1;
   height: 100%;
   .lc--narrow &{
     max-width: 100%;
@@ -270,15 +269,15 @@ table {
     //   @include fluid-prop(width, (300px: 268px - 32px, 980px: 948px - 32px, 1920px: 1333px - 32px, 3840px: 2880px - 32px), true );
     //   margin: auto;
     // }
-    border-bottom: solid 1px $table-cell-border-color;
+    border-bottom: solid 1px $line-color-1;
   }
   .controls-in-container {
 
-    // border-left: solid 1px $table-cell-border-color;
-    // border-right: solid 1px $table-cell-border-color;
+    // border-left: solid 1px $line-color-1;
+    // border-right: solid 1px $line-color-1;
 
     .table-controls {
-      border-bottom: solid 1px $table-cell-border-color;
+      border-bottom: solid 1px $line-color-1;
       pointer-events: none;
       &>* {
         pointer-events: auto;
@@ -331,22 +330,30 @@ table {
 
 .toolbar {
   display: flex;
-  padding: 4px 18px;
+  align-items: center;
+  padding: 0 18px;
+  height: 48px;
+  .divider {
+    width: 1px;
+    height: calc(100% - 16px);
+    background-color: $line-color-2;
+    margin: 0 4px;
+  }
 }
 
 .icon-btn {
   min-width: 36px !important;
   padding: 0 6px !important;
   // border: 1px #e1e1e1 solid;
-  &:not(:last-child) {
-    margin-right: -1px;
-    border-top-right-radius: 0;
-    border-bottom-right-radius: 0;
-  }
-  &:not(:first-child) {
-    border-top-left-radius: 0;
-    border-bottom-left-radius: 0;
-  }
+  // &:not(:last-child) {
+  //   margin-right: -1px;
+  //   border-top-right-radius: 0;
+  //   border-bottom-right-radius: 0;
+  // }
+  // &:not(:first-child) {
+  //   border-top-left-radius: 0;
+  //   border-bottom-left-radius: 0;
+  // }
 }
 
 /* sort hints */
@@ -427,10 +434,6 @@ table {
   }
 }
 
-.grey-bg {
-  background-color: $grey-background;
-}
-
 .bb-tabs {
   position: relative;
   .v-tab {
@@ -471,7 +474,7 @@ table {
 		width: 100%;
 		left: 0;
 
-    border-bottom: 1px solid #e5e5e5;
+    border-bottom: 1px solid $line-color-2;
 	}
 }
 
@@ -483,7 +486,7 @@ table {
   z-index: 1;
   min-height: 64px;
   position: relative;
-  border-bottom: 1px solid $table-cell-border-color;
+  border-bottom: 1px solid $line-color-1;
 
   .search-filter {
     position: relative;
@@ -542,7 +545,7 @@ table {
   }
 
   * {
-    border-color: $table-cell-border-color !important;
+    border-color: $line-color-1 !important;
   }
 
   th {
