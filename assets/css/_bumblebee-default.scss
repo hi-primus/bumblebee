@@ -194,7 +194,7 @@ table {
 
   .v-data-table__wrapper {
     min-height: 300px;
-    max-height: calc(100vh - 237px);
+    max-height: calc(100vh - 240px);
     height: 100% !important;
   }
 
@@ -253,8 +253,6 @@ table {
 /* table container */
 
 .table-container {
-  // padding-top: 9px;
-  border-top: solid 1px $line-color-1;
   height: 100%;
   .lc--narrow &{
     max-width: 100%;
@@ -277,6 +275,7 @@ table {
     // border-right: solid 1px $line-color-1;
 
     .table-controls {
+      border-top: solid 1px $line-color-1;
       border-bottom: solid 1px $line-color-1;
       pointer-events: none;
       &>* {
@@ -288,7 +287,7 @@ table {
       width: 100%;
 
       z-index: 3;
-      min-height: 48px;
+      height: 49px;
       padding-bottom: 1px;
       // &>* {
       //   position: relative;
@@ -332,7 +331,7 @@ table {
   display: flex;
   align-items: center;
   padding: 0 18px;
-  height: 48px;
+  height: 48px - 1px;
   .divider {
     width: 1px;
     height: calc(100% - 16px);

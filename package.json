@@ -17,6 +17,7 @@
   "dependencies": {
     "@handsontable/vue": "^4.1.0",
     "@nuxtjs/axios": "^5.6.0",
+    "@nuxtjs/google-tag-manager": "^2.2.1",
     "canvas-datagrid": "^0.22.12",
     "cross-env": "^5.2.0",
     "express": "^4.16.4",
