@@ -73,11 +73,14 @@ export default {
         }
 			}
 
+      console.log("SECURE CONNECTION: ",(location.protocol == "https:"))
+
 			let options = {
 				timeout: 3,
 				userName: 'mqtt-test',
 				password: 'mqtt-test',
-				keepAliveInterval: 30,
+        keepAliveInterval: 30,
+        useSSL: (location.protocol == "https:"),
 				onSuccess: () => {
 					console.log('CONNECTION SUCCESS')
 					client.subscribe(`${uuid}`, {
@@ -103,8 +106,6 @@ export default {
           this.stopClient()
 				}
 			}
-
-      options.useSSL = (location.protocol == "https:");
 
 			client.connect(options)
 		}
