@@ -59,18 +59,18 @@ module.exports = {
 	},
 
 	buildModules: [
-		// Doc: https://github.com/nuxt-community/eslint-module
 		// '@nuxtjs/eslint-module',
 		'@nuxtjs/vuetify',
-		'@nuxtjs/style-resources'
+    ['@nuxtjs/google-tag-manager', { id: 'GTM-K8DTWMW' }],
+    '@nuxtjs/style-resources'
 	],
 
 	plugins: [
 		{ src: '@/plugins/handsontable', mode: 'client' },
     '@/plugins/components.js',
-		'@/plugins/numeral',
-		'@/plugins/fuse',
-		'@/plugins/varCheck'
+		'@/plugins/numeral.js',
+		'@/plugins/fuse.js',
+		'@/plugins/varCheck.js'
 	],
 
 	axios: {
@@ -83,10 +83,10 @@ module.exports = {
 		theme: {
 			themes: {
 				light: {
-					// primary: '#121212',
+					primary: '#1972d1',
 					// accent: colors.grey.darken3,
 					// secondary: colors.amber.darken3,
-					info: '#81caf9',
+					info: '#82bcfa',
 					warning: colors.amber,
 					error: '#e57373',
 					success: '#4db6ac'

@@ -13,7 +13,7 @@
         <v-btn
           class="icon-btn"
           v-on="onSortBy"
-          :color="sortBy ? 'black' : '#555'"
+          :color="sortBy[0] ? 'black' : '#555'"
           text
         >
           <!-- class="v-btn-icon-text" -->
@@ -21,14 +21,14 @@
           <span style="min-width: 2em;">
             {{sortByLabel}}
           </span>
-          <v-icon color="black" small v-show="sortBy">
-            <template v-if="sortDesc">arrow_downward</template>
+          <v-icon color="black" small v-show="sortBy[0]">
+            <template v-if="sortDesc[0]">arrow_downward</template>
             <template v-else>arrow_upward</template>
           </v-icon>
         </v-btn>
       </template>
         <v-list flat dense>
-          <v-list-item-group color="black" :value="sortBy">
+          <v-list-item-group color="black" :value="sortBy[0]">
             <v-list-item
               v-for="(item, i) in sortableColumnsTableHeaders"
               :key="i"
@@ -44,8 +44,8 @@
                 </v-list-item-title>
               </v-list-item-content>
               <v-list-item-icon>
-                <v-icon color="black" v-show="item.value===sortBy">
-                  <template v-if="sortDesc">arrow_downward</template>
+                <v-icon color="black" v-show="item.value===sortBy[0]">
+                  <template v-if="sortDesc[0]">arrow_downward</template>
                   <template v-else>arrow_upward</template>
                 </v-icon>
               </v-list-item-icon>
@@ -235,8 +235,8 @@ export default {
       resultsColumns: [], // search
       filteredColumns: [], // filter
 
-      sortBy: null,
-      sortDesc: false,
+      sortBy: [],
+      sortDesc: [false],
 
       // affects table view only
       hotColumns: [],
@@ -267,9 +267,9 @@ export default {
 	computed: {
 
     sortByLabel () {
-      if (this.sortBy)
+      if (this.sortBy[0])
         try {
-          return this.sortableColumnsTableHeaders.find((e)=>e.value==this.sortBy).text.split(' ')[0]
+          return this.sortableColumnsTableHeaders.find((e)=>e.value==this.sortBy[0]).text.split(' ')[0]
         } catch {}
       return 'Sort'
     },
@@ -298,7 +298,7 @@ export default {
         manualColumnResize: true,
         colHeaders: this.colHeaders,
         renderAllRows: false,
-        height: 'calc(100vh - 189px)',
+        height: '100vh',
         columnSorting: false,
         filters: true,
 				disabledHover: true,
@@ -342,10 +342,12 @@ export default {
     },
 
     sortBy: {
-      handler: 'getHotColumns'
+      handler: 'getHotColumns',
+      deep: true
     },
     sortDesc: {
-      handler: 'getHotColumns'
+      handler: 'getHotColumns',
+      deep: true
     },
 
 		hiddenColumns: {
@@ -366,16 +368,16 @@ export default {
 	methods: {
 
     clickSort(by) {
-      if (this.sortBy !== by) {
-        this.sortBy = by
-        this.sortDesc = false
+      if (this.sortBy[0] !== by) {
+        this.sortBy = [by]
+        this.sortDesc = [false]
       }
-      else if (this.sortDesc===false) {
-        this.sortDesc = true
+      else if (this.sortDesc[0]===false) {
+        this.sortDesc = [true]
       }
-      else if (this.sortDesc===true) {
-        this.sortDesc = false
-        this.sortBy = null
+      else if (this.sortDesc[0]===true) {
+        this.sortDesc = [false]
+        this.sortBy = []
       }
     },
 
@@ -422,20 +424,20 @@ export default {
         return !this.hiddenColumns[column.name]
       })
 
-      if (this.sortBy!==null){
-        if (typeof this.hotColumns[0][this.sortBy] === 'string')
+      if (this.sortBy[0]){
+        if (typeof this.hotColumns[0][this.sortBy[0]] === 'string')
           this.hotColumns.sort((a,b)=>{
-            let _a = a[this.sortBy].toLowerCase();
-            let _b = b[this.sortBy].toLowerCase();
+            let _a = a[this.sortBy[0]].toLowerCase();
+            let _b = b[this.sortBy[0]].toLowerCase();
             return (_a < _b) ? -1 : (_a > _b) ? 1 : 0;
           })
         else
           this.hotColumns.sort((a,b)=>{
-            let _a = a[this.sortBy];
-            let _b = b[this.sortBy];
+            let _a = a[this.sortBy[0]];
+            let _b = b[this.sortBy[0]];
             return (_a < _b) ? -1 : (_a > _b) ? 1 : 0;
           })
-        if (this.sortDesc)
+        if (this.sortDesc[0])
         this.hotColumns.reverse();
       }
 
@@ -580,7 +582,6 @@ export default {
 
 .hot-table-container {
   padding-left: 9px;
-  padding-top: 9px;
 
   .wtHolder, .ht_master {
     height: inherit !important;
@@ -621,8 +622,8 @@ export default {
   }
 
   .hot-table {
-    height: calc(100vh - 210px) !important;
-    max-height: calc(100vh - 210px) !important;
+    height: calc(100vh - 191px) !important;
+    max-height: calc(100vh - 191px) !important;
     overflow: hidden;
   }
 </style>

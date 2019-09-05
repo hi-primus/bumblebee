@@ -1,5 +1,6 @@
 export const state = () => ({
-	datasets: [],
+  datasets: [],
+  datasetUpdates: 0,
 	status: 'waiting'
 })
 
@@ -14,14 +15,14 @@ export const mutations = {
       found = state.datasets.length
     }
 
-    state.datasets[found] = {...(state.datasets[found] || {}), ...dataset}
+    state.datasets[found] = dataset
 
     if (state.datasets[found].columns instanceof Object)
       state.datasets[found].columns = Object.values(state.datasets[found].columns)
 
-    delete state.datasets[found].sample.columns;
-
     state.status = 'received'
+
+    state.datasetUpdates = state.datasetUpdates + 1
 
     console.log("DEBUG: state.datasets[found]",state.datasets[found])
   },

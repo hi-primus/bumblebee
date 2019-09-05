@@ -154,11 +154,11 @@
                   </div>
                 </div>
                 <TableBar
-                  :key="tab"
+                  :key="tableKey"
                   :currentTab="tab"
                   :view.sync="view"
-                  :dataset="currentDataset"
-                  :total="+currentDataset.summary.rows_count"
+                  :dataset="$store.state.datasets[tab]"
+                  :total="+$store.state.datasets[tab].summary.rows_count"
                   :searchText="searchText"
                   :typesSelected="typesSelected"
                 />
@@ -169,13 +169,13 @@
             <v-layout class="px-4" row justify-space-between>
               <span></span>
               <span
-                v-if="currentDataset && currentDataset.summary"
+                v-if="$store.state.datasets[tab] && $store.state.datasets[tab].summary"
                 class="caption-2"
               >
-                <template v-if="currentDataset.total_count_dtypes">
-                  {{currentDataset.total_count_dtypes | formatNumberInt}} Data types &emsp;
+                <template v-if="$store.state.datasets[tab].total_count_dtypes">
+                  {{$store.state.datasets[tab].total_count_dtypes | formatNumberInt}} Data types &emsp;
                 </template>
-                {{ currentDataset.summary.rows_count | formatNumberInt }} Rows &emsp; {{ currentDataset.summary.cols_count | formatNumberInt }} Columns &emsp; Size: {{ currentDataset.summary.size }}
+                {{ $store.state.datasets[tab].summary.rows_count | formatNumberInt }} Rows &emsp; {{ $store.state.datasets[tab].summary.cols_count | formatNumberInt }} Columns &emsp; Size: {{ $store.state.datasets[tab].summary.size }}
               </span>
             </v-layout>
           </v-footer>
@@ -238,24 +238,29 @@ export default {
 
 
 	computed: {
+    tableKey () {
+      return this.$store.state.datasetUpdates*100 + this.tab
+    },
 		statusError () {
       return (!!this.$store.state.status.message)
 		},
 		status () {
       return this.$store.state.status
     },
-    currentDataset () {
-      if (this.$store.state.datasets[this.tab]===undefined){
-        this.tab = 0;
-      }
-      return this.$store.state.datasets[this.tab];
-    }
   },
 
   watch: {
     tab (value) {
-      if (value===undefined)
+
+      if (value===undefined) {
         return;
+      }
+
+      if (value!==0 && !this.$store.state.datasets[value]) {
+        this.tab=0;
+        return;
+      }
+
       this.$router.replace({path: this.$route.fullPath, query: { tab: value }},()=>{
         history.replaceState("Dashboard","Bumblebee",this.$route.fullPath);
       })
