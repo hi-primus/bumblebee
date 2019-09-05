@@ -469,8 +469,8 @@ export default {
 
       this.filteredColumns = this.filteredColumns.map(column => {
         return {
-          __missing: column.stats.missing_count,
-          __na: column.stats.count_na,
+          __missing: +column.dtypes_stats.missing,
+          __na: +column.stats.count_na,
           ...column,
         }
       })
