@@ -21,12 +21,15 @@ export default {
 			let wsbroker = process.env.WS_BROKER
 			let wsport = process.env.WS_PORT
 
-      // TODO: unique id //
+      const uuidv4 = require('uuid/v4')
+      const clientId = uuidv4()
+      console.log("TCL: startClient -> clientId", clientId)
+
 			client = new Paho.MQTT.Client(
         wsbroker,
         wsport,
         '/ws',
-        'myclientid_' + parseInt(Math.random() * 100, 10)
+        clientId
       )
 
       client.onConnectionLost = (responseObject) => {

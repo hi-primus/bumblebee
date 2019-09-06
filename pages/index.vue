@@ -135,6 +135,7 @@
                         v-model="typesSelected"
                         :items="typesAvailable"
                         :append-icon="''"
+                        :search-input.sync="typesInput"
                         chips
                         deletable-chips
                         color="grey darken-3"
@@ -145,6 +146,7 @@
                         hide-selected
                         multiple
                         single-line
+												@change="typesUpdated"
                       >
                         <template v-slot:item="{ item }">
                           <div class="data-type in-autocomplete">{{dataType(item.value)}}</div> {{item.text}}
@@ -215,6 +217,7 @@ export default {
         {text: 'Null', value: 'null' }
       ],
       typesSelected: [],
+      typesInput: ''
     }
   },
 
@@ -275,6 +278,9 @@ export default {
   },
 
   methods: {
+    typesUpdated() {
+      this.typesInput = ''
+    },
     subscribe() {
       this.startClient(this.inputSession,this.inputKey)
     },
