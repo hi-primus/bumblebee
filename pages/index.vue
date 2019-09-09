@@ -59,7 +59,7 @@
             </v-card-text>
             <v-card-actions>
               <v-spacer></v-spacer>
-              <v-btn color="primary" large rounded depressed @click="subscribe">Subscribe</v-btn>
+              <v-btn color="primary" large depressed @click="subscribe">Subscribe</v-btn>
               <v-spacer></v-spacer>
             </v-card-actions>
             <v-card-text class="pb-0" v-if="statusError" >
@@ -71,101 +71,117 @@
         </v-card>
       </template>
       <template v-else-if="!statusError">
-        <div v-if="$store.state.datasets.length==0" class="center-screen-inside primary--text">
-          <v-progress-circular
-            indeterminate
-            color="primary"
-            class="mr-4"
-          />
-          <span class="title">Waiting for data</span>
-          <span class="subtitle text-center pt-6" style="width: 100%;">
-            <span class="hoverable" @click="stopClient">
-              <v-icon color="primary">arrow_back</v-icon>
-              Disconnect
-            </span>
-          </span>
-        </div>
-        <template v-else>
-            <!-- <v-card class="b-view-card elevation-0 d-flex flex-column align-top justify-start" style="width: 100%;"> -->
-                <!-- color="primary darken-2" -->
-              <v-tabs
-                class="bb-tabs px-6"
-                background-color="#fff"
-                v-model="tab"
-                show-arrows
-                center-active
-                style="flex: 0;"
-              >
-                <v-tab v-for="(_tab, key) in $store.state.datasets" :key="key" >
-                  <span class="tab-title">
-                    {{ _tab.name || key+1 }}
-                  </span>
-                  <span class="tab-subtitle">
-                    {{ _tab.file_name }}
-                  </span>
-                  <v-hover v-slot:default="{ hover }">
-                    <v-icon
-                      :color="hover ? 'primary darken-1' : ''"
-                      @click.stop="confirmDelete=key;"
-                      small
-                      class="close-icon"
-                    >
-                      close
-                    </v-icon>
-                  </v-hover>
-                </v-tab>
-              </v-tabs>
-              <v-card-text class="pa-0">
-                <div class="controls-section grey--bg">
-                  <div class="controls-container text-xs-center" :class="{'inside-bar': view==1}">
-                    <v-text-field
-                      clearable
-                      dense
-                      full-width
-                      class="search-filter mt-2 mr-4 elevation-0"
-                      v-model="searchText"
-                      prepend-inner-icon="search"
-                      label="Search column"
-                      :color="'grey darken-3'"
-                    />
-                    <div class="filter-container">
-                      <v-autocomplete
-                        dense
-                        full-width
-                        v-model="typesSelected"
-                        :items="typesAvailable"
-                        :append-icon="''"
-                        :search-input.sync="typesInput"
-                        chips
-                        deletable-chips
-                        color="grey darken-3"
-                        class="placeholder-chip"
-                        label="Data type"
-                        hide-details
-                        hide-no-data
-                        hide-selected
-                        multiple
-                        single-line
-												@change="typesUpdated"
-                      >
-                        <template v-slot:item="{ item }">
-                          <div class="data-type in-autocomplete">{{dataType(item.value)}}</div> {{item.text}}
-                        </template>
-                      </v-autocomplete>
-                    </div>
-                  </div>
-                </div>
-                <TableBar
-                  :key="tableKey"
-                  :currentTab="tab"
-                  :view.sync="view"
-                  :dataset="$store.state.datasets[tab]"
-                  :total="+$store.state.datasets[tab].summary.rows_count"
-                  :searchText="searchText"
-                  :typesSelected="typesSelected"
-                />
+        <template v-if="$store.state.datasets.length==0">
+          <div class="center-screen-inside black--text">
+            <v-progress-circular
+              indeterminate
+              color="black"
+              class="mr-4"
+            />
+            <span class="title">Waiting for data</span>
+            <div class="mb-8" style="width: 100%">
+            </div>
+            <v-card class="elevation-0">
+              <v-card-text class="title mb-2">Now send info from your notebook. Try something like:</v-card-text>
+              <v-card-text class="subtitle text-code">
+                <span class="comment"># Install Optimus</span><br/>
+                !pip install optimuspyspark<br/>
+                <br/>
+                <span class="comment"># Load Optimus</span><br/>
+                <span class="keyword">from</span> optimus <span class="keyword">import</span> Optimus<br/>
+                <br/>
+                <span class="comment"># Let's Optimus call Bumblebee</span><br/>
+                op = Optimus(comm=<span class="keyword">True</span>)<br/>
+                <br/>
+                <span class="comment"># Load some data</span><br/>
+                df = op.load.csv(<span class="string">"https://raw.githubusercontent.com/ironmussa/Optimus/master/examples/data/Meteorite_Landings.csv"</span>)<br/>
+                <br/>
+                <span class="comment"># Visualize</span><br/>
+                df.send(<span class="string">"Meteorite"</span>)
               </v-card-text>
-            <!-- </v-card> -->
+            </v-card>
+
+          </div>
+          <v-icon class="back-btn" @click="stopClient" large color="black">arrow_back</v-icon>
+        </template>
+        <div class="bb-container" v-else>
+          <v-tabs
+            class="bb-tabs px-6"
+            background-color="#fff"
+            v-model="tab"
+            show-arrows
+            center-active
+            style="flex: 0;"
+          >
+            <v-tab v-for="(_tab, key) in $store.state.datasets" :key="key" >
+              <span class="tab-title">
+                {{ _tab.name || key+1 }}
+              </span>
+              <span class="tab-subtitle">
+                {{ _tab.file_name }}
+              </span>
+              <v-hover v-slot:default="{ hover }">
+                <v-icon
+                  :color="hover ? 'primary darken-1' : ''"
+                  @click.stop="confirmDelete=key;"
+                  small
+                  class="close-icon"
+                >
+                  close
+                </v-icon>
+              </v-hover>
+            </v-tab>
+          </v-tabs>
+          <v-card-text class="pa-0">
+            <div class="controls-section grey--bg">
+              <div class="controls-container text-xs-center" :class="{'inside-bar': view==1}">
+                <v-text-field
+                  clearable
+                  dense
+                  full-width
+                  class="search-filter mt-2 mr-4 elevation-0"
+                  v-model="searchText"
+                  prepend-inner-icon="search"
+                  label="Search column"
+                  :color="'grey darken-3'"
+                />
+                <div class="filter-container">
+                  <v-autocomplete
+                    dense
+                    full-width
+                    v-model="typesSelected"
+                    :items="typesAvailable"
+                    :append-icon="''"
+                    :search-input.sync="typesInput"
+                    chips
+                    deletable-chips
+                    color="grey darken-3"
+                    class="placeholder-chip"
+                    label="Data type"
+                    hide-details
+                    hide-no-data
+                    hide-selected
+                    multiple
+                    single-line
+                    @change="typesUpdated"
+                  >
+                    <template v-slot:item="{ item }">
+                      <div class="data-type in-autocomplete">{{dataType(item.value)}}</div> {{item.text}}
+                    </template>
+                  </v-autocomplete>
+                </div>
+              </div>
+            </div>
+            <TableBar
+              :key="tableKey"
+              :currentTab="tab"
+              :view.sync="view"
+              :dataset="$store.state.datasets[tab]"
+              :total="+$store.state.datasets[tab].summary.rows_count"
+              :searchText="searchText"
+              :typesSelected="typesSelected"
+            />
+          </v-card-text>
 
           <v-footer fixed="fixed" app>
             <v-layout class="px-4" row justify-space-between>
@@ -181,7 +197,7 @@
               </span>
             </v-layout>
           </v-footer>
-        </template>
+        </div>
       </template>
     </v-layout>
   </Layout>

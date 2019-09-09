@@ -14,8 +14,8 @@ module.exports = {
   },
 
 	head: {
-		titleTemplate: '%s - ' + process.env.npm_package_name,
-		title: process.env.npm_package_name || '',
+		titleTemplate: '%s - ' + 'Bumblebee',
+		title: 'Bumblebee',
 		meta: [{
 			charset: 'utf-8'
 		},

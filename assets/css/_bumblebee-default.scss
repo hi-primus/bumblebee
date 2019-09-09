@@ -6,10 +6,10 @@ html:root {
   color: $text-color !important;
 }
 
-.v-application {
-  background: white !important;
+.bb-container {
+  background-color: white;
+  height: calc(100vh - 31px);
 }
-
 
 /* width */
 ::-webkit-scrollbar {
@@ -42,8 +42,36 @@ body{
 	background-color: inherit;
 }
 
-.hoverable{
+.hoverable {
 	cursor: pointer;
+}
+
+.back-btn {
+  cursor: pointer;
+  width: auto;
+  margin-right: auto;
+  padding-left: 8px;
+}
+
+.text-mono {
+  font-family: $font-mono;
+}
+
+.text-code {
+  font-family: $font-mono;
+  font-size: 14px;
+  text-align: left;
+  max-width: 600px;
+  word-break: break-all;
+  .comment {
+    color: desaturate(#a50,10%);
+  }
+  .string {
+    color: desaturate(#a11,10%);
+  }
+  .keyword {
+    color: desaturate(#708,10%);
+  }
 }
 
 .b-view-card {
@@ -107,7 +135,7 @@ table.table thead td:not(:nth-child(1)), table.table tbody td:not(:nth-child(1))
 
 .center-screen-inside {
   min-height: calc(100vh - 48px);
-  min-width: 100vw;
+  width: 100vw;
   position: absolute;
   top: 0;
   left: 0;
@@ -116,6 +144,10 @@ table.table thead td:not(:nth-child(1)), table.table tbody td:not(:nth-child(1))
   justify-content: center;
   flex-wrap: wrap;
   align-content: center;
+  pointer-events: none;
+  &>* {
+    pointer-events: auto;
+  }
 }
 
 .hideable {
@@ -205,8 +237,6 @@ table {
 
   tr {
     td {
-      // height: $table-cell-height;
-      // max-height: $table-cell-height;
       border-color: $line-color-1 !important;
     }
     i.control-hide {
@@ -228,7 +258,6 @@ table {
       min-width: 65px;
 
       .control-check{
-        // opacity: 0.75;
         padding-right: 4px;
       }
       .control-hide{
@@ -262,17 +291,9 @@ table {
 
   .filter-container {
     width: 100%;
-    /* quick fix width filter */
-    // .v-input {
-    //   @include fluid-prop(width, (300px: 268px - 32px, 980px: 948px - 32px, 1920px: 1333px - 32px, 3840px: 2880px - 32px), true );
-    //   margin: auto;
-    // }
     border-bottom: solid 1px $line-color-1;
   }
   .controls-in-container {
-
-    // border-left: solid 1px $line-color-1;
-    // border-right: solid 1px $line-color-1;
 
     .table-controls {
       border-top: solid 1px $line-color-1;
@@ -289,10 +310,6 @@ table {
       z-index: 3;
       height: 49px;
       padding-bottom: 1px;
-      // &>* {
-      //   position: relative;
-      //   top: -1px;
-      // }
 
       .visibility-btn {
         i {
@@ -303,10 +320,6 @@ table {
     }
 
   }
-  // .hot-table {
-  //   flex: 1;
-  //   min-width: 50%;
-  // }
 }
 
 /* top values */
@@ -343,16 +356,6 @@ table {
 .icon-btn {
   min-width: 36px !important;
   padding: 0 6px !important;
-  // border: 1px #e1e1e1 solid;
-  // &:not(:last-child) {
-  //   margin-right: -1px;
-  //   border-top-right-radius: 0;
-  //   border-bottom-right-radius: 0;
-  // }
-  // &:not(:first-child) {
-  //   border-top-left-radius: 0;
-  //   border-bottom-left-radius: 0;
-  // }
 }
 
 /* sort hints */
@@ -398,8 +401,6 @@ table {
 
 .placeholder-chip {
   label {
-    // border-style: dashed;
-    // border-width: 1px;
     border-style: dashed;
     border-width: 1px;
     border-color: lightgrey;
