@@ -23,7 +23,6 @@ export default {
 
       const uuidv4 = require('uuid/v4')
       const clientId = uuidv4()
-      console.log("TCL: startClient -> clientId", clientId)
 
 			client = new Paho.MQTT.Client(
         wsbroker,
@@ -74,7 +73,7 @@ export default {
 					console.error(error)
 					this.$store.commit('status', error)
         }
-			}
+      }
 
       console.log("SECURE CONNECTION: ",(location.protocol == "https:"))
 
