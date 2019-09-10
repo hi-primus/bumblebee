@@ -1,3 +1,4 @@
+require('dotenv').config()
 const colors = require('vuetify/es5/util/colors').default
 
 module.exports = {
@@ -59,7 +60,8 @@ module.exports = {
 	},
 
 	buildModules: [
-		// '@nuxtjs/eslint-module',
+    // '@nuxtjs/eslint-module',
+    '@nuxtjs/dotenv',
 		'@nuxtjs/vuetify',
     ['@nuxtjs/google-tag-manager', { id: 'GTM-K8DTWMW' }],
     '@nuxtjs/style-resources'
