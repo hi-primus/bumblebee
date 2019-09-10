@@ -1,56 +1,51 @@
-var client;
+import io from 'socket.io-client'
+
+var socket
 
 export default {
 
 	methods: {
 
+    handleError (reason) {
+      if (reason)
+        if ( reason.includes('OK')
+          || (
+            reason.includes('Socket closed')
+            && (this.$store.state.datasets.length>0)
+          )
+        ){
+          this.$store.commit('status')
+        }
+        else {
+          this.$store.commit('status', new Error(reason) )
+        }
+      this.stopClient()
+    },
+
     stopClient (waiting) {
       if (waiting)
         this.$store.commit('status', 'waiting')
 
-      if (client)
+      if (socket)
         try {
-          client.disconnect()
+          socket.disconnect()
         } catch (error) {
           console.error(error)
         }
     },
 
-		startClient (uuid,key) {
+		startClient (queue,key) {
+
+      socket = io(process.env.API_URL, {query: `queue=${queue}`})
+
       this.$store.commit('status', 'loading')
-			let wsbroker = process.env.WS_BROKER
-			let wsport = process.env.WS_PORT
 
-      const uuidv4 = require('uuid/v4')
-      const clientId = uuidv4()
+      socket.on('new-error', (reason) => {
+        console.log('ERROR - ' + reason)
+        this.handleError(reason)
+      })
 
-			client = new Paho.MQTT.Client(
-        wsbroker,
-        wsport,
-        '/ws',
-        clientId
-      )
-
-      client.onConnectionLost = (responseObject) => {
-				// TODO: warn //
-        console.log('CONNECTION LOST - ' + responseObject.errorMessage)
-        if (
-          responseObject.errorMessage.includes('OK')
-          || (
-            responseObject.errorMessage.includes('Socket closed')
-            && (this.$store.state.datasets.length>0)
-          )
-        ){
-          this.$store.commit('status') // TODO: Warn user
-        }
-        else {
-          this.$store.commit('status', new Error(responseObject.errorMessage) )
-        }
-        this.stopClient()
-			}
-			client.onMessageArrived = (message) => {
-
-        console.log('RECEIVE ON ' + message.destinationName)
+      socket.on('message', (message) => {
 
         const fernet = require('fernet');
 
@@ -58,7 +53,7 @@ export default {
 
         var token = new fernet.Token({
           secret: secret,
-          token: message.payloadString,
+          token: message,
           ttl: 0
         })
 
@@ -73,43 +68,22 @@ export default {
 					console.error(error)
 					this.$store.commit('status', error)
         }
-      }
+      })
 
-      console.log("SECURE CONNECTION: ",(location.protocol == "https:"))
+      socket.on('connect', () => {
+        console.log('CONNECTION SUCCESS')
+        this.$store.commit('status', 'receiving')
+      })
 
-			let options = {
-				timeout: 3,
-				userName: 'mqtt-test',
-				password: 'mqtt-test',
-        keepAliveInterval: 30,
-        useSSL: (location.protocol == "https:"),
-				onSuccess: () => {
-					console.log('CONNECTION SUCCESS')
-					client.subscribe(`${uuid}`, {
-						qos: 1
-					})
+      socket.on('connection-error', (reason) => {
+        console.log('CONNECTION FAILURE - ' + reason)
+        this.handleError()
+      })
 
-          this.$store.commit('status', 'receiving')
-
-					/* ---- */
-				},
-				onFailure: (message) => {
-					console.log('CONNECTION FAILURE - ' + message.errorMessage)
-					if (
-              message.errorMessage.includes('OK')
-              || (
-                message.errorMessage.includes('Socket closed')
-                && (this.$store.state.datasets.length>0)
-              )
-            )
-            this.$store.commit('status')
-          else
-            this.$store.commit('status', new Error(message.errorMessage) )
-          this.stopClient()
-				}
-			}
-
-			client.connect(options)
+      socket.on('disconnect', (reason) => {
+        console.log('CONNECTION LOST - ' + reason)
+        this.handleError()
+			})
 		}
 	}
 }
