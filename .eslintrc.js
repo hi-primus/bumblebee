@@ -13,10 +13,21 @@ module.exports = {
     'plugin:nuxt/recommended'
   ],
   rules: {
-    'indent': [2, 'tab'],
+    'indent': [
+			'error',
+			'tab'
+    ],
+    'quotes': [
+			'error',
+			'single'
+		],
     'no-tabs': 0,
     'nuxt/no-cjs-in-config': 0,
     'vue/require-valid-default-prop': 0,
-    'prefer-const': 0
+    'prefer-const': 0,
+    'semi': [
+			'error',
+			'never'
+		]
   }
 }

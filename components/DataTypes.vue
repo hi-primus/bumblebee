@@ -3,39 +3,9 @@
     <h3>Data types</h3>
     <v-simple-table class="table">
       <tbody>
-        <tr>
-          <td style="width:50%;">Boolean</td>
-          <td style="width:50%;">{{ values.boolean }}</td>
-        </tr>
-
-        <tr>
-          <td style="width:50%;">String</td>
-          <td style="width:50%;">{{ values.string }}</td>
-        </tr>
-
-        <tr>
-          <td style="width:50%;">Int</td>
-          <td style="width:50%;">{{ values.int }}</td>
-        </tr>
-
-        <tr>
-          <td style="width:50%;">Decimal</td>
-          <td style="width:50%;">{{ values.decimal }}</td>
-        </tr>
-
-        <tr>
-          <td style="width:50%;">Date</td>
-          <td style="width:50%;">{{ values.date }}</td>
-        </tr>
-
-        <tr>
-          <td style="width:50%;">Missing</td>
-          <td style="width:50%;">{{ values.missing }}</td>
-        </tr>
-
-        <tr>
-          <td style="width:50%;">Null</td>
-          <td style="width:50%;">{{ values.null }}</td>
+        <tr v-for="(value, key) in values" :key="key">
+          <td style="width:50%;" class="capitalize">{{key}}</td>
+          <td style="width:50%;">{{ value }}</td>
         </tr>
       </tbody>
     </v-simple-table>
@@ -49,7 +19,7 @@ export default {
 			default: {},
 			type: Object
 		}
-	},
+	}
 }
 </script>
 

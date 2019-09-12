@@ -1,6 +1,6 @@
 <template>
   <v-content app>
-    <v-container fluid class="py-0" :class="[wide ? 'lc--wide' : 'lc--narrow', 'layout-container']">
+    <v-container :class="[wide ? 'lc--wide' : 'lc--narrow', 'layout-container']" fluid class="py-0">
       <slot/>
     </v-container>
   </v-content>
@@ -8,12 +8,12 @@
 
 <script>
 export default {
-  props: {
-    wide: {
-      type: Boolean,
-      default: false
-    }
-  }
+	props: {
+		wide: {
+			type: Boolean,
+			default: false
+		}
+	}
 }
 </script>
 

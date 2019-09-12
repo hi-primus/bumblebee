@@ -4,13 +4,13 @@ const colors = require('vuetify/es5/util/colors').default
 module.exports = {
 	mode: 'universal',
 
-  server: {
-    port: process.env.PORT || 3000,
-    host: process.env.HOST || '127.0.0.1'
-  },
+	server: {
+		port: process.env.PORT || 3000,
+		host: process.env.HOST || '127.0.0.1'
+	},
 
 	head: {
-		titleTemplate: '%s - ' + 'Bumblebee',
+		titleTemplate: '%s - Bumblebee',
 		title: 'Bumblebee',
 		meta: [{
 			charset: 'utf-8'
@@ -33,16 +33,16 @@ module.exports = {
 			},
 			// { rel: 'stylesheet', href: 'https://fonts.googleapis.com/css?family=Material+Icons|Ubuntu+Mono|Roboto+Mono' }
 			{ rel: 'stylesheet', href: 'https://fonts.googleapis.com/css?family=Material+Icons|Ubuntu+Mono|Ubuntu' }
-		],
-	},
+		]
+  },
 
 	loading: {
 		color: '#3B8070'
 	},
 
 	css: [
-    '@/assets/css/main.scss',
-    '@fortawesome/fontawesome-free/css/all.css'
+		'@/assets/css/main.scss',
+		'@fortawesome/fontawesome-free/css/all.css'
 	],
 
 	styleResources: {
@@ -52,15 +52,15 @@ module.exports = {
 	},
 
 	buildModules: [
-    // '@nuxtjs/eslint-module',
-    '@nuxtjs/dotenv',
+		// '@nuxtjs/eslint-module',
+		['@nuxtjs/google-tag-manager', { id: 'GTM-K8DTWMW' }],
+		'@nuxtjs/dotenv',
 		'@nuxtjs/vuetify',
-    ['@nuxtjs/google-tag-manager', { id: 'GTM-K8DTWMW' }],
     '@nuxtjs/style-resources'
 	],
 
 	plugins: [
-		{ src: '@/plugins/handsontable', mode: 'client' },
+		{ src: '@/plugins/handsontable.js', mode: 'client' },
     '@/plugins/components.js',
 		'@/plugins/numeral.js',
 		'@/plugins/fuse.js',
@@ -86,20 +86,18 @@ module.exports = {
 					success: '#4db6ac'
 				}
 			}
-    },
-    icons: {
-    },
-    icons: {
-      values: {
-        'check-box-invert': {
-          component: 'CheckBoxInvert',
-          props: {
-            name: 'check-box-invert'
-          }
-        }
-      },
-      iconfont: 'fa',
-    },
+		},
+		icons: {
+			values: {
+				'check-box-invert': {
+					component: 'CheckBoxInvert',
+					props: {
+						name: 'check-box-invert'
+					}
+				}
+			},
+			iconfont: 'fa'
+		}
 	},
 
 	build: {

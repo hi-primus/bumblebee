@@ -731,3 +731,10 @@ table {
 .capitalize {
   text-transform: capitalize;
 }
+
+.column-type {
+  .subtype {
+    opacity: 0.71;
+    font-size: 0.9em;
+  }
+}
