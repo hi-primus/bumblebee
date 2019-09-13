@@ -62,6 +62,7 @@
             class="component-container"
           >
             <TopValues
+              v-if="column.frequency"
               :values="column.frequency"
               :total="+column.frequency[0].count"
             />
@@ -162,6 +163,7 @@
 
           <v-flex xs12 sm12 md12 class="component-container">
             <Frequent
+              v-if="column.frequency"
               :uniques="column.stats.count_uniques"
               :values="column.frequency"
               :total="+column.frequency[0].count"
@@ -176,6 +178,7 @@
             class="component-container"
           >
             <TopValues
+              v-if="column.frequency"
               :values="column.frequency"
               :total="column.frequency[0].count"
             />
