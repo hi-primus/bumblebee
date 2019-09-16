@@ -1,21 +1,17 @@
+require('dotenv').config()
 const colors = require('vuetify/es5/util/colors').default
 
 module.exports = {
 	mode: 'universal',
 
-	env: {
-		WS_BROKER: process.env.WS_BROKER || '165.22.149.93',
-    WS_PORT: process.env.WS_PORT || 15675
-  },
-
-  server: {
-    port: process.env.PORT || 3000,
-    host: process.env.HOST || '127.0.0.1'
-  },
+	server: {
+		port: process.env.PORT || 3000,
+		host: process.env.HOST || '127.0.0.1'
+	},
 
 	head: {
-		titleTemplate: '%s - ' + process.env.npm_package_name,
-		title: process.env.npm_package_name || '',
+		titleTemplate: '%s - Bumblebee',
+		title: 'Bumblebee',
 		meta: [{
 			charset: 'utf-8'
 		},
@@ -35,10 +31,8 @@ module.exports = {
 				type: 'image/x-icon',
 				href: '/favicon.ico'
 			},
-			{ rel: 'stylesheet', href: 'https://fonts.googleapis.com/css?family=Material+Icons' }
-		],
-		script: [
-			{ src: 'https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js' }
+			// { rel: 'stylesheet', href: 'https://fonts.googleapis.com/css?family=Material+Icons|Ubuntu+Mono|Roboto+Mono' }
+			{ rel: 'stylesheet', href: 'https://fonts.googleapis.com/css?family=Material+Icons|Ubuntu+Mono|Ubuntu' }
 		]
 	},
 
@@ -47,8 +41,8 @@ module.exports = {
 	},
 
 	css: [
-    '@/assets/css/main.scss',
-    '@fortawesome/fontawesome-free/css/all.css'
+		'@/assets/css/main.scss',
+		'@fortawesome/fontawesome-free/css/all.css'
 	],
 
 	styleResources: {
@@ -58,17 +52,19 @@ module.exports = {
 	},
 
 	buildModules: [
-		// Doc: https://github.com/nuxt-community/eslint-module
 		// '@nuxtjs/eslint-module',
+		['@nuxtjs/google-tag-manager', { id: 'GTM-K8DTWMW' }],
+		'@nuxtjs/dotenv',
 		'@nuxtjs/vuetify',
 		'@nuxtjs/style-resources'
 	],
 
 	plugins: [
-    '@/plugins/components.js',
-		'@/plugins/numeral',
-		'@/plugins/fuse',
-		'@/plugins/varCheck'
+		{ src: '@/plugins/handsontable.js', mode: 'client' },
+		'@/plugins/components.js',
+		'@/plugins/numeral.js',
+		'@/plugins/fuse.js',
+		'@/plugins/varCheck.js'
 	],
 
 	axios: {
@@ -81,29 +77,27 @@ module.exports = {
 		theme: {
 			themes: {
 				light: {
-					// primary: '#121212',
+					primary: '#1972d1',
 					// accent: colors.grey.darken3,
 					// secondary: colors.amber.darken3,
-					info: '#81caf9',
+					info: '#82bcfa',
 					warning: colors.amber,
 					error: '#e57373',
 					success: '#4db6ac'
 				}
 			}
-    },
-    icons: {
-    },
-    icons: {
-      values: {
-        'check-box-invert': {
-          component: 'CheckBoxInvert',
-          props: {
-            name: 'check-box-invert'
-          }
-        }
-      },
-      iconfont: 'fa',
-    },
+		},
+		icons: {
+			values: {
+				'check-box-invert': {
+					component: 'CheckBoxInvert',
+					props: {
+						name: 'check-box-invert'
+					}
+				}
+			},
+			iconfont: 'fa'
+		}
 	},
 
 	build: {

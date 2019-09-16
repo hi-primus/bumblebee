@@ -1,104 +1,110 @@
-var client;
+import io from 'socket.io-client'
+// import axios from 'axios'
+
+let socket
 
 export default {
 
 	methods: {
 
-    stopClient (waiting) {
-      if (waiting)
-        this.$store.commit('status', 'waiting')
-
-      if (client)
-        try {
-          client.disconnect()
-        } catch (error) {
-          console.error(error)
-        }
-    },
-
-		startClient (uuid,key) {
-      this.$store.commit('status', 'loading')
-			let wsbroker = process.env.WS_BROKER
-			let wsport = process.env.WS_PORT
-
-      // TODO: unique id //
-			client = new Paho.MQTT.Client(
-        wsbroker,
-        wsport,
-        '/ws',
-        'myclientid_' + parseInt(Math.random() * 100, 10)
-      )
-
-      client.onConnectionLost = (responseObject) => {
-				// TODO: warn //
-        console.log('CONNECTION LOST - ' + responseObject.errorMessage)
-        if (responseObject.errorMessage.includes('OK')){
-          this.$store.commit('status')
-        }
-        else {
-          this.$store.commit('status', new Error(responseObject.errorMessage) )
-        }
-        this.stopClient()
+		handleError (reason) {
+			if (reason) {
+				if (reason.includes('OK') ||
+          (
+          	reason.includes('Socket closed') &&
+            (this.$store.state.datasets.length > 0)
+          )
+				) {
+					this.$store.commit('status')
+				} else {
+					this.$store.commit('status', new Error(reason))
+				}
 			}
-			client.onMessageArrived = (message) => {
+			this.stopClient()
+		},
 
-        console.log('RECEIVE ON ' + message.destinationName)
+		stopClient (waiting) {
+			if (waiting) {
+				this.$store.commit('status', 'waiting')
+			}
 
-        const fernet = require('fernet');
+			if (socket) {
+				try {
+					socket.disconnect()
+				} catch (error) {
+					console.error(error)
+				}
+			}
+		},
 
-        let secret = new fernet.Secret(key)
+		startClient (username, key) {
+			this.$store.commit('status', 'loading')
 
-        var token = new fernet.Token({
-          secret: secret,
-          token: message.payloadString,
-          ttl: 0
-        })
+			// const auth = await axios({
+			//   method: 'post',
+			//   url: `${process.env.API_URL}/authorize`,
+			//   data: {
+			//     client_id: process.env.CLIENT_ID
+			//   }
+			// })
 
-        const pako = require('pako');
+			// socket = io(process.env.API_URL, { query: `username=${username}&access_token=${auth.data.access_token}` })
 
-        var originalInput = pako.inflate(atob(token.decode()),{ to: 'string' });
+			socket = io(process.env.API_URL, {
+				query: `username=${username}`
+			})
+
+			socket.on('new-error', (reason) => {
+				console.log('ERROR - ' + reason)
+				this.handleError(reason)
+			})
+
+			// socket.on('api_key', (payload) => {
+			// 	console.log('api_key - ' + payload)
+			// })
+
+			socket.on('dataset', (dataset) => {
+				const fernet = require('fernet')
+
+				let secret = new fernet.Secret(key)
+
+				let token = new fernet.Token({
+					secret,
+					token: dataset,
+					ttl: 0
+				})
+
+				const pako = require('pako')
+
+				let originalInput = pako.inflate(atob(token.decode()), {
+					to: 'string'
+				})
 
 				try {
-					this.$store.commit('add', {dataset: JSON.parse(originalInput)} )
+					this.$store.commit('add', {
+						dataset: JSON.parse(originalInput)
+					})
 					this.$forceUpdate()
 				} catch (error) {
 					console.error(error)
 					this.$store.commit('status', error)
-        }
-			}
-
-			let options = {
-				timeout: 3,
-				userName: 'mqtt-test',
-				password: 'mqtt-test',
-				keepAliveInterval: 30,
-				onSuccess: () => {
-					console.log('CONNECTION SUCCESS')
-					client.subscribe(`${uuid}`, {
-						qos: 1
-					})
-
-          this.$store.commit('status', 'receiving')
-
-					/* ---- */
-				},
-				onFailure: (message) => {
-					console.log('CONNECTION FAILURE - ' + message.errorMessage)
-					if (message.errorMessage.includes('OK'))
-            this.$store.commit('status')
-          else
-            this.$store.commit('status', new Error(message.errorMessage) )
-          this.stopClient()
 				}
-			}
+			})
 
-			// TODO: check //
-			options.useSSL = false
-			// if (location.protocol == "https:") {
-			//   options.useSSL = false;
-			// }
+			socket.on('connect', () => {
+				console.log('CONNECTION SUCCESS')
+				this.$store.commit('status', 'receiving')
+			})
 
-			client.connect(options)
+			socket.on('connection-error', (reason) => {
+				console.log('CONNECTION FAILURE - ' + reason)
+				this.handleError()
+			})
+
+			socket.on('disconnect', (reason) => {
+				console.log('CONNECTION LOST - ' + reason)
+				this.handleError()
+			})
 		}
 	}
 }
