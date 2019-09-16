@@ -1,5 +1,5 @@
 <template>
-  <div class="bb-graphic" :class="{'table-graphic': table}">
+  <div :class="{'table-graphic': table}" class="bb-graphic">
     <h3>{{ title }}</h3>
     <div class="scroll-container" @mouseleave="nowCount = false">
       <div class="freq-container">
@@ -14,7 +14,7 @@
       </div>
     </div>
     <div v-if="nowCount!==false" class="current-value">{{ bottomVal | humanNumber }} - {{ topVal | humanNumber }}, {{ nowCount }}</div>
-    <div v-else class="current-value">{{defaultBottom | humanNumber}} - {{defaultTop | humanNumber}}</div>
+    <div v-else class="current-value">{{ defaultBottom | humanNumber }} - {{ defaultTop | humanNumber }}</div>
   </div>
 </template>
 
@@ -22,7 +22,7 @@
 export default {
 	props: {
 		values: {
-			default: [],
+			default: () => ([]),
 			type: Array
 		},
 		total: {
@@ -32,11 +32,11 @@ export default {
 		title: {
 			default: '',
 			type: String
-    },
-    table: {
-      default: false,
-      type: Boolean
-    }
+		},
+		table: {
+			default: false,
+			type: Boolean
+		}
 	},
 
 	data () {
@@ -45,17 +45,17 @@ export default {
 			bottomVal: 0,
 			topVal: 0,
 			nowCount: false,
-      defaultBottom: '',
-      defaultTop: ''
+			defaultBottom: '',
+			defaultTop: ''
 		}
 	},
 
 	beforeMount () {
-    this.maxVal = this.getMaxVal(this.values)
-    this.defaultBottom = `${(+this.values[0].lower).toFixed(2)}`
-    this.defaultTop = `${(+this.values[this.values.length - 1].upper).toFixed(2)}`
+		this.maxVal = this.getMaxVal(this.values)
+		this.defaultBottom = `${(+this.values[0].lower).toFixed(2)}`
+		this.defaultTop = `${(+this.values[this.values.length - 1].upper).toFixed(2)}`
 		this.changeValue(
-			(+this.values[0].lower).toFixed(2), //nh
+			(+this.values[0].lower).toFixed(2), // nh
 			(+this.values[0].upper).toFixed(2),
 			this.values[0].count
 		)

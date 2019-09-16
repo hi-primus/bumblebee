@@ -10,9 +10,9 @@ Vue.filter('humanNumber', function (value) {
 })
 
 Vue.filter('formatNumber', function (value) {
-  return numeral(value).format('0,0.00')
+	return numeral(value).format('0,0.00')
 })
 
 Vue.filter('formatNumberInt', function (value) {
-  return numeral(value).format('0,0')
+	return numeral(value).format('0,0')
 })

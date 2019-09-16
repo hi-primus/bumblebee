@@ -1,6 +1,6 @@
 {
   "name": "bumblebee",
-  "version": "1.0.0",
+  "version": "0.3.1",
   "description": "A GUI that works with Optimus to make data profiling easier",
   "author": "Iron",
   "private": true,
@@ -11,7 +11,7 @@
     "start": "cross-env NODE_ENV=production HOST=0.0.0.0 PORT=3000 node server/index.js",
     "generate": "nuxt generate",
     "lint": "eslint --ext .js,.vue --ignore-path .gitignore .",
-    "lint-fix": "eslint --ext .js,.vue --ignore-path .gitignore --fix .",
+    "lint:fix": "eslint --ext .js,.vue --ignore-path .gitignore --fix .",
     "precommit": "npm run lint"
   },
   "dependencies": {

@@ -1,4 +1,4 @@
 import Vue from 'vue'
-import check_box_invert from '~/components/icons/check_box_invert.vue'
+import CheckBoxInvert from '~/components/icons/check_box_invert.vue'
 
-Vue.component('CheckBoxInvert', check_box_invert)
+Vue.component('CheckBoxInvert', CheckBoxInvert)

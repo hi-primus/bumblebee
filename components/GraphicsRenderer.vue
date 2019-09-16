@@ -1,44 +1,44 @@
 <template>
-  <span v-if="typeof value !== 'object' || value === null">{{value}}</span>
+  <span v-if="typeof value !== 'object' || value === null">{{ value }}</span>
   <div v-else class="graphic-ht-container">
     <DataBar
-      class="table-data-bar"
-      bottom
       :missing="value.missing"
       :total="+value.total"
+      class="table-data-bar"
+      bottom
     />
     <Frequent
       v-if="value.frequency"
       :uniques="value.count_uniques"
-      class="histfreq"
-      table
       :values="value.frequency"
       :total="+value.frequency[0].count"
+      class="histfreq"
+      table
     />
     <Histogram
       v-else-if="value.hist"
       :uniques="value.count_uniques"
-      class="histfreq"
-      table
       :values="value.hist"
       :total="10"
+      class="histfreq"
+      table
     />
     <Histogram
       v-else-if="value.hist_years"
       :uniques="value.count_uniques"
-      class="histfreq"
-      table
       :values="value.hist_years"
       :total="10"
+      class="histfreq"
+      table
     />
   </div>
 </template>
 
 <script>
 
-import Histogram from "@/components/Histogram";
-import Frequent from "@/components/Frequent";
-import DataBar from "@/components/DataBar";
+import Histogram from '@/components/Histogram'
+import Frequent from '@/components/Frequent'
+import DataBar from '@/components/DataBar'
 
 export default {
 
@@ -46,14 +46,14 @@ export default {
 		Histogram,
 		Frequent,
 		DataBar
-  },
+	},
 
 	props: {
 		// hotInstance: null,
 		// row: null,
 		// col: null,
 		// value: 0
-	},
+	}
 }
 
 </script>

@@ -1,6 +1,6 @@
 <template>
   <v-hover>
-    <div class="bb-graphic" :class="{'table-graphic': table}">
+    <div :class="{'table-graphic': table}" class="bb-graphic">
       <h3>Frequent values</h3>
       <div class="scroll-container" @mouseout="currentVal = false">
         <div class="freq-container">
@@ -14,7 +14,7 @@
           </div>
         </div>
       </div>
-      <div class="current-value">{{ (currentVal!==false) ?  currentVal : `${(values.length!=uniques) ? values.length+' of ' : '' }${uniques} categories` }}</div>
+      <div class="current-value">{{ (currentVal!==false) ? currentVal : `${(values.length!=uniques) ? values.length+' of ' : '' }${uniques} categories` }}</div>
     </div>
   </v-hover>
 </template>
@@ -29,20 +29,20 @@ export default {
 		total: {
 			default: 1,
 			type: Number
-    },
+		},
 		uniques: {
 			default: 1,
 			type: Number
-    },
-    table: {
-      default: false,
-      type: Boolean
-    }
+		},
+		table: {
+			default: false,
+			type: Boolean
+		}
 	},
 
 	data () {
 		return {
-			currentVal: false,
+			currentVal: false
 		}
 	},
 

@@ -3,7 +3,7 @@
     <h3>Top values</h3>
     <v-simple-table class="table">
       <tbody>
-        <tr v-for="(item, index) in values" :key="index">
+        <tr v-for="(item, index) in values.slice(0,10)" :key="index">
           <td style="width:80%;">
             <div :style="{'width': normVal(item.count)+'%' }" class="top-bar">
               <div>{{ item.value | varCheck }}</div>

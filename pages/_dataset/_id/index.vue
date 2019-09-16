@@ -1,9 +1,9 @@
 <template>
-	<Layout>
-    <v-sheet elevation="0" class="mb-6">
+  <Layout>
+    <v-sheet elevation="0" class="mb-6 mt-4">
       <v-container fluid class="py-0">
         <v-layout row wrap align-center style="height: 48px">
-          <v-btn icon color="grey darken-3" @click="back" tag="a" class="mr-2">
+          <v-btn icon color="grey darken-3" tag="a" class="mr-2" @click="back">
             <v-icon>arrow_back</v-icon>
           </v-btn>
           <v-flex grow>
@@ -12,16 +12,16 @@
           <v-flex shrink class="data-type-name pr-4">
             {{ column.column_type }}
           </v-flex>
-          <v-flex shrink class="data-type pr-7" :class="`type-${column.column_dtype}`">
+          <v-flex :class="`type-${column.column_dtype}`" shrink class="data-type pr-7">
             {{ dataType(column.column_dtype) }}
           </v-flex>
 
           <v-flex xs12>
             <DataBar
-              class="main-data-bar"
-              bottom
               :missing="column.stats.count_na"
               :total="+$store.state.datasets[this.$route.params.dataset].summary.rows_count"
+              class="main-data-bar"
+              bottom
             />
           </v-flex>
         </v-layout>
@@ -62,6 +62,7 @@
             class="component-container"
           >
             <TopValues
+              v-if="column.frequency"
               :values="column.frequency"
               :total="+column.frequency[0].count"
             />
@@ -162,6 +163,8 @@
 
           <v-flex xs12 sm12 md12 class="component-container">
             <Frequent
+              v-if="column.frequency"
+              :uniques="column.stats.count_uniques"
               :values="column.frequency"
               :total="+column.frequency[0].count"
             />
@@ -175,31 +178,32 @@
             class="component-container"
           >
             <TopValues
+              v-if="column.frequency"
               :values="column.frequency"
-              :total="+$store.state.datasets[this.$route.params.dataset].summary.rows_count"
+              :total="column.frequency[0].count"
             />
           </v-flex>
         </v-layout>
-	  	</v-container>
+      </v-container>
     </v-sheet>
-	</Layout>
+  </Layout>
 </template>
 
 <script>
 import Layout from '@/components/Layout'
-import TopValues from "@/components/TopValues";
-import Frequent from "@/components/Frequent";
-import Stats from "@/components/Stats";
-import Quantile from "@/components/QuantileStats";
-import Descriptive from "@/components/DescriptiveStats";
-import Histogram from "@/components/Histogram";
-import DataBar from "@/components/DataBar";
-import DataTypes from "@/components/DataTypes";
-import dataTypesMixin from "~/plugins/mixins/data-types";
+import TopValues from '@/components/TopValues'
+import Frequent from '@/components/Frequent'
+import Stats from '@/components/Stats'
+import Quantile from '@/components/QuantileStats'
+import Descriptive from '@/components/DescriptiveStats'
+import Histogram from '@/components/Histogram'
+import DataBar from '@/components/DataBar'
+import DataTypes from '@/components/DataTypes'
+import dataTypesMixin from '~/plugins/mixins/data-types'
 
 export default {
 	components: {
-    Layout,
+		Layout,
 		TopValues,
 		Stats,
 		Quantile,
@@ -210,32 +214,32 @@ export default {
 		DataTypes
 	},
 
-  mixins: [dataTypesMixin],
+	mixins: [dataTypesMixin],
 
-  methods: {
-    back() {
-      if (process.client && history.length > 2) {
-        history.back();
-      } else {
-        this.$router.push('/');
-      }
-    },
-  },
+	computed: {
+		column () {
+			try {
+				return this.$store.state.datasets[this.$route.params.dataset].columns.find((e) => { return e.name === this.$route.params.id })
+			} catch (error) {
+				this.$router.push('/')
+			}
+		}
+	},
 
-  validate({store,params}) {
-    return true;
-  },
+	methods: {
+		back () {
+			if (process.client && history.length > 2) {
+				history.back()
+			} else {
+				this.$router.push('/')
+			}
+		}
+	},
 
-  computed: {
-    column() {
-      try {
-        return this.$store.state.datasets[this.$route.params.dataset].columns.find((e)=>{return e.name==this.$route.params.id})
-      } catch (error) {
-        this.$router.push('/');
-      }
-    }
-  }
-};
+	validate ({ store, params }) {
+		return true
+	}
+}
 </script>
 
 <style lang="scss">
