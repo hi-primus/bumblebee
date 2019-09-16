@@ -434,6 +434,15 @@ table {
   }
 }
 
+.primary--chips {
+  .v-chip {
+    background-color: $primary-color !important;
+    &, .v-chip__close {
+      color: white !important;
+    }
+  }
+}
+
 .bb-tabs {
   position: relative;
   .v-tab {

@@ -441,16 +441,16 @@ export default {
 		},
 
 		columnHeaderClicked (event, coords) {
-			if (coords.row < 0 && event.which === 1) {
-				let dataName
-				try {
-					dataName = event.target.getElementsByClassName('data-title')[0].textContent
-				} catch {
-					dataName = event.target.textContent
-				}
-				event.preventDefault()
-				this.$router.push(`${this.currentTab}/${dataName || this.dataset.columns[coords.col].name}`)
-			}
+			// if (coords.row < 0 && event.which === 1) {
+			// 	let dataName
+			// 	try {
+			// 		dataName = event.target.getElementsByClassName('data-title')[0].textContent
+			// 	} catch {
+			// 		dataName = event.target.textContent
+			// 	}
+			// 	event.preventDefault()
+			// 	this.$router.push(`${this.currentTab}/${dataName.trim() || this.dataset.columns[coords.col].name}`)
+			// }
 		},
 
 		getHotColumns () {

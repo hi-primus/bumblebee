@@ -155,7 +155,7 @@
                     chips
                     deletable-chips
                     color="grey darken-3"
-                    class="placeholder-chip"
+                    class="placeholder-chip primary--chips"
                     label="Data type"
                     hide-details
                     hide-no-data
