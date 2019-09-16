@@ -14,7 +14,7 @@
           </div>
         </div>
       </div>
-      <div class="current-value">{{ (currentVal!==false) ? currentVal : `${(values.length!=uniques) ? values.length+' of ' : '' }${uniques} categories` }}</div>
+      <div class="current-value">{{ (currentVal!==false) ? currentVal : `${(values.length!=uniqueElements) ? values.length+' of ' : '' }${uniqueElements} ${(uniqueElements===1) ? 'category' : 'categories'}` }}</div>
     </div>
   </v-hover>
 </template>
@@ -53,6 +53,12 @@ export default {
 		normVal (val) {
 			return (val * 100) / this.total
 		}
-	}
+  },
+
+  computed: {
+    uniqueElements () {
+      return Math.max(this.values.length, this.uniques)
+    }
+  }
 }
 </script>
