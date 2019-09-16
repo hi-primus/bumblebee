@@ -4,7 +4,7 @@
     <v-simple-table class="table">
       <tbody>
         <tr v-for="(value, key) in values" :key="key">
-          <td style="width:50%;" class="capitalize">{{key}}</td>
+          <td style="width:50%;" class="capitalize">{{ key }}</td>
           <td style="width:50%;">{{ value }}</td>
         </tr>
       </tbody>

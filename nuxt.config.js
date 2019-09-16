@@ -34,7 +34,7 @@ module.exports = {
 			// { rel: 'stylesheet', href: 'https://fonts.googleapis.com/css?family=Material+Icons|Ubuntu+Mono|Roboto+Mono' }
 			{ rel: 'stylesheet', href: 'https://fonts.googleapis.com/css?family=Material+Icons|Ubuntu+Mono|Ubuntu' }
 		]
-  },
+	},
 
 	loading: {
 		color: '#3B8070'
@@ -56,12 +56,12 @@ module.exports = {
 		['@nuxtjs/google-tag-manager', { id: 'GTM-K8DTWMW' }],
 		'@nuxtjs/dotenv',
 		'@nuxtjs/vuetify',
-    '@nuxtjs/style-resources'
+		'@nuxtjs/style-resources'
 	],
 
 	plugins: [
 		{ src: '@/plugins/handsontable.js', mode: 'client' },
-    '@/plugins/components.js',
+		'@/plugins/components.js',
 		'@/plugins/numeral.js',
 		'@/plugins/fuse.js',
 		'@/plugins/varCheck.js'

@@ -284,7 +284,7 @@ export default {
 		this.view = +(this.$route.query.view || 0)
 	},
 
-	async mounted () {
+	mounted () {
 		console.log(`bumblebee v${version}`)
 
 		this.inputUsername = this.$route.query.session || ''
@@ -305,9 +305,9 @@ export default {
 			if (!closing) { this.$store.commit('status') }
 		},
 		deleteTab (i) {
-			const deleted = this.$store.commit('delete', { index: i })
+			this.$store.commit('delete', { index: i })
 			this.confirmDelete = -1
-			if (this.$store.state.datasets.length == 0) {
+			if (!this.$store.state.datasets.length) {
 				this.tab = 0
 			} else if (this.tab >= this.$store.state.datasets.length) {
 				this.tab = this.$store.state.datasets.length - 1

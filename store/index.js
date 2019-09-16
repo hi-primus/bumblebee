@@ -8,10 +8,10 @@ export const mutations = {
 
 	add (state, { dataset }) {
 		let found = state.datasets.findIndex((e) => {
-			return (e.name == dataset.name)
+			return (e.name === dataset.name)
 		})
 
-		if (found == -1 || dataset.name === null) {
+		if (found === -1 || dataset.name === null) {
 			found = state.datasets.length
 		}
 
@@ -28,7 +28,7 @@ export const mutations = {
 
 	delete (state, { index }) {
 		state.datasets.splice(index, 1)
-		if (state.datasets.length == 0) {
+		if (!state.datasets.length) {
 			state.status = 'receiving'
 		}
 		return index

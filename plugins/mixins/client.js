@@ -1,5 +1,5 @@
 import io from 'socket.io-client'
-import axios from 'axios'
+// import axios from 'axios'
 
 let socket
 
@@ -24,7 +24,9 @@ export default {
 		},
 
 		stopClient (waiting) {
-			if (waiting) { this.$store.commit('status', 'waiting') }
+			if (waiting) {
+				this.$store.commit('status', 'waiting')
+			}
 
 			if (socket) {
 				try {
@@ -35,29 +37,29 @@ export default {
 			}
 		},
 
-		async startClient (username, key) {
+		startClient (username, key) {
+			this.$store.commit('status', 'loading')
 
+			// const auth = await axios({
+			//   method: 'post',
+			//   url: `${process.env.API_URL}/authorize`,
+			//   data: {
+			//     client_id: process.env.CLIENT_ID
+			//   }
+			// })
 
-      this.$store.commit('status', 'loading')
+			// socket = io(process.env.API_URL, { query: `username=${username}&access_token=${auth.data.access_token}` })
 
-      // const auth = await axios({
-      //   method: 'post',
-      //   url: `${process.env.API_URL}/authorize`,
-      //   data: {
-      //     client_id: process.env.CLIENT_ID
-      //   }
-      // })
-
-      // socket = io(process.env.API_URL, { query: `username=${username}&access_token=${auth.data.access_token}` })
-
-      socket = io(process.env.API_URL, { query: `username=${username}` })
+			socket = io(process.env.API_URL, {
+				query: `username=${username}`
+			})
 
 			socket.on('new-error', (reason) => {
 				console.log('ERROR - ' + reason)
 				this.handleError(reason)
 			})
 
-      // socket.on('api_key', (payload) => {
+			// socket.on('api_key', (payload) => {
 			// 	console.log('api_key - ' + payload)
 			// })
 
@@ -74,10 +76,14 @@ export default {
 
 				const pako = require('pako')
 
-				let originalInput = pako.inflate(atob(token.decode()), { to: 'string' })
+				let originalInput = pako.inflate(atob(token.decode()), {
+					to: 'string'
+				})
 
 				try {
-					this.$store.commit('add', { dataset: JSON.parse(originalInput) })
+					this.$store.commit('add', {
+						dataset: JSON.parse(originalInput)
+					})
 					this.$forceUpdate()
 				} catch (error) {
 					console.error(error)

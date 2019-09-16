@@ -149,12 +149,12 @@
                   {{ dataType(item.column_dtype) }}
                 </div>
               </template>
-              <span class="capitalize column-type" :key="'column-type-hint'">
+              <span :key="'column-type-hint'" class="capitalize column-type">
                 {{ item.column_dtype }}
                 <template v-if="item.column_dtype==='string*'">
                   <br>
-                  <span class="subtype" v-for="(subtype) in getSubTypes(item)" :key="subtype">
-                    {{subtype}}
+                  <span v-for="(subtype) in getSubTypes(item)" :key="subtype" class="subtype">
+                    {{ subtype }}
                   </span>
                 </template>
               </span>
@@ -396,16 +396,17 @@ export default {
 
 	methods: {
 
-    getSubTypes (item) {
-      if (item.dtypes_stats)
-        return Object.keys(item.dtypes_stats)
-        .filter((k)=>{
-          return (!!item.dtypes_stats[k] && k!=='string' && k!=='missing' && k!=='null')
-        })
-        .map((k)=>{
-          return item.dtypes_stats[k] + ' ' + k
-        })
-    },
+		getSubTypes (item) {
+			if (item.dtypes_stats) {
+				return Object.keys(item.dtypes_stats)
+					.filter((k) => {
+						return (!!item.dtypes_stats[k] && k !== 'string' && k !== 'missing' && k !== 'null')
+					})
+					.map((k) => {
+						return item.dtypes_stats[k] + ' ' + k
+					})
+			}
+		},
 
 		clickSort (by) {
 			if (this.sortBy[0] !== by) {
