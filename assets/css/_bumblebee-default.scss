@@ -563,14 +563,19 @@ table {
     }
     cursor: pointer;
     background-color: #fefefe !important;
-    &:hover {
-      background-color: $data-highlight !important;
+    &.ht__active_highlight, &.ht__active_highlight {
+      background-color: darken(saturate($data-highlight,5%),1%) !important;
+      // color: #000;
     }
     .changeType {
       opacity: 0.71;
       color: $text-color !important;
     }
   }
+
+ td.area:before, td.area-1:before, td.area-2:before, td.area-3:before, td.area-4:before, td.area-5:before, td.area-6:before, td.area-7:before {
+   background-color: $primary-color !important;
+ }
 
   tr:first-child td {
     height: 100px;
