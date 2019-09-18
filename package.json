@@ -31,7 +31,8 @@
     "pako": "^1.0.10",
     "socket.io": "^2.2.0",
     "uuid": "^3.3.3",
-    "vue-fuse": "^2.1.0"
+    "vue-fuse": "^2.1.0",
+    "vue-vega": "^1.0.0-alpha.13"
   },
   "devDependencies": {
     "@fortawesome/fontawesome-free": "^5.10.2",

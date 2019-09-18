@@ -203,6 +203,7 @@
 </template>
 
 <script>
+import VueVega from 'vue-vega'
 import Layout from '@/components/Layout'
 import TableBar from '@/components/TableBar'
 import clientMixin from '@/plugins/mixins/client'

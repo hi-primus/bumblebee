@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="dashboard-container">
     <div class="toolbar">
       <v-btn text class="icon-btn" @click="$emit('update:view',0)">
         <v-icon :color="(view==0) ? 'black' : '#888'">view_headline</v-icon>
@@ -54,6 +54,44 @@
         </v-list>
       </v-menu>
     </div>
+
+    <div class="sidebar-container" v-if="detailsActive!==false && detailsActive['scatter-plot']">
+      <v-icon color="black" @click="detailsActive=false">close</v-icon>
+      <div class="scatter-plot">
+        <div class="scatter-plot-y"> {{detailsActive['scatter-plot'][1].name}} </div>
+        <vega-lite
+          class="scatter-plot-grid"
+          v-if="detailsActive['scatter-plot']"
+          :width="300"
+          :height="275"
+          :data="dataset.sample.value"
+          :mark="{
+            type: 'point',
+            shape: 'circle',
+            filled: true,
+          }"
+          :encoding="{
+            x: {field: detailsActive['scatter-plot'][0].index, type: 'quantitative', scale: {zero: false}},
+            y: {field: detailsActive['scatter-plot'][1].index, type: 'quantitative'}
+          }"
+          :config="{
+            axis: {
+              domainColor: '#fff',
+              title: null,
+              gridColor: '#fff',
+              ticks: false,
+              domainOpacity: 0,
+              gridOpacity: 0,
+              tickOpacity: 0,
+              labelPadding: 4
+            }
+          }"
+          >
+        </vega-lite>
+        <div class="scatter-plot-x"> {{detailsActive['scatter-plot'][0].name}} </div>
+      </div>
+    </div>
+
     <div class="table-container">
       <div v-if="view==0" class="controls-in-container">
         <div class="table-controls d-flex">
@@ -199,9 +237,10 @@
             :settings="hotSettings"
             :key="tableKey"
             class="hot-table"
+            ref="hot-table"
           >
             <HotColumn v-for="(column, i) in hotColumns" :key="i" :settings="column">
-              <GraphicsRenderer :graphics-data="{a: 1}" hot-renderer/>
+              <GraphicsRenderer hot-renderer/>
             </HotColumn>
           </HotTable>
         </div>
@@ -256,6 +295,8 @@ export default {
 
 	data () {
 		return {
+
+      detailsActive: false,
 
 			mustHandleSearchText: false,
 
@@ -333,7 +374,7 @@ export default {
 				columnSorting: false,
 				filters: true,
 				disabledHover: true,
-				beforeOnCellMouseUp: this.columnHeaderClicked,
+				afterSelectionEndByProp: this.selectionEvent,
 				licenseKey: 'non-commercial-and-evaluation'
 			}
 		},
@@ -343,7 +384,10 @@ export default {
 				return {
 					toString () {
 						return ''
-					},
+          },
+          index: i,
+          name: column.name,
+          plotable: ['int','decimal','float','double','integer'].includes(column.column_dtype),
 					missing: column.stats.count_na,
 					zeros: column.stats.zeros,
 					total: this.dataset.summary.rows_count,
@@ -441,17 +485,55 @@ export default {
 			this.$router.push(`${this.currentTab}/${e.name}`)
 		},
 
-		columnHeaderClicked (event, coords) {
-			// if (coords.row < 0 && event.which === 1) {
-			// 	let dataName
-			// 	try {
-			// 		dataName = event.target.getElementsByClassName('data-title')[0].textContent
-			// 	} catch {
-			// 		dataName = event.target.textContent
-			// 	}
-			// 	event.preventDefault()
-			// 	this.$router.push(`${this.currentTab}/${dataName.trim() || this.dataset.columns[coords.col].name}`)
-			// }
+		selectionEvent (row, prop, row2, prop2) {
+      console.log('row',row)
+			if (row <= 0) {
+
+        var selected = this.$refs['hot-table'].hotInstance.getSelected()
+
+        if (!selected.length) {
+          this.detailsActive = false
+          return;
+        }
+
+        this.detailsActive = {}
+
+        console.log('this.detailsActive',this.detailsActive)
+
+        let plotableIndices = [];
+
+        selected.forEach(selection => {
+          if (selection[1] === selection[3]) { // a single column is selected
+            const columnData = this.$refs['hot-table'].hotInstance.getDataAtCell(0,selection[3])
+            console.log('column name is', columnData.name)
+            console.log('column is plotable', columnData.plotable)
+            if (columnData.plotable)
+              plotableIndices.push({index: columnData.index.toString(), name: columnData.name })
+          }
+          else if (selection[1] === selection[3]-1) { // two columns are selected
+            [selection[1],selection[3]].forEach(element => {
+              const columnData = this.$refs['hot-table'].hotInstance.getDataAtCell(0,element)
+              console.log('column name is', columnData.name)
+              console.log('column is plotable', columnData.plotable)
+              if (columnData.plotable)
+                plotableIndices.push({index: columnData.index.toString(), name: columnData.name })
+            });
+          }
+        });
+
+        if (plotableIndices.length==2) {
+          this.detailsActive['scatter-plot']=plotableIndices;
+        }
+
+        // 	let dataName
+        // 	try {
+        // 		dataName = event.target.getElementsByClassName('data-title')[0].textContent
+        // 	} catch {
+        // 		dataName = event.target.textContent
+        // 	}
+        // 	event.preventDefault()
+        // 	this.$router.push(`${this.currentTab}/${dataName.trim() || this.dataset.columns[coords.col].name}`)
+			}
 		},
 
 		getHotColumns () {
@@ -607,6 +689,7 @@ export default {
 }
 
 .hot-table-container {
+  margin-top: -1px;
   padding-left: 9px;
 
   .wtHolder, .ht_master {

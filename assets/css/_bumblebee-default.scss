@@ -281,8 +281,83 @@ table {
 
 /* table container */
 
+
+.v-icon.control-button {
+  user-select: none;
+}
+
+
+.dashboard-container {
+  display: flex;
+  flex-wrap: wrap;
+  &>.toolbar {
+    order: 1;
+    width: 100%;
+  }
+  &>.table-container {
+    order: 1;
+    flex: 1;
+    width: 100%;
+    border-top: solid 1px $line-color-1;
+  }
+  &>.sidebar-container {
+    padding: 4px 16px 4px 8px;
+    text-align: right;
+    border-left: solid 1px $line-color-1;
+    border-top: solid 1px $line-color-1;
+    order: 9;
+    width: 400px;
+  }
+  .sidebar-container + .table-container {
+    width: calc(100% - 400px)
+  }
+}
+
+.scatter-plot {
+  display: flex;
+  flex-wrap: wrap;
+  $label-space: 20px;
+  .scatter-plot-x, .scatter-plot-y {
+    text-align: center;
+    font-weight: 700;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+  }
+  .scatter-plot-x {
+    padding-left: $label-space;
+    width: 100%;
+  }
+  .scatter-plot-y {
+    padding-top: $label-space*2;
+    width: $label-space;
+    writing-mode: vertical-lr;
+    transform: rotate(180deg)
+  }
+  .scatter-plot-grid {
+    margin-left: -0px;
+    svg {
+      overflow: visible;
+    }
+    g.mark-symbol.role-mark.marks * {
+      fill: rgba($data-green, 60%) !important;
+    }
+    g .background {
+      display: none;
+    }
+    g .role-axis-domain {
+      display: none;
+    }
+  }
+}
+
+/* plots */
+
+
+
 .table-container {
   height: 100%;
+
+
   .lc--narrow &{
     max-width: 100%;
     margin: 0 !important;
@@ -293,7 +368,7 @@ table {
     width: 100%;
     border-bottom: solid 1px $line-color-1;
   }
-  .controls-in-container {
+  .table-view-container {
 
     .table-controls {
       border-top: solid 1px $line-color-1;
