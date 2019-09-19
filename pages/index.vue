@@ -135,6 +135,9 @@
             <div class="controls-section grey--bg">
               <div :class="{'inside-bar': view==1}" class="controls-container text-xs-center">
                 <v-text-field
+                  browserAutocomplete="off"
+                  browser-autocomplete="off"
+                  autocomplete="off"
                   v-model="searchText"
                   :color="'grey darken-3'"
                   clearable
@@ -146,6 +149,9 @@
                 />
                 <div class="filter-container">
                   <v-autocomplete
+                    browserAutocomplete="off"
+                    browser-autocomplete="off"
+                    autocomplete="off"
                     v-model="typesSelected"
                     :items="typesAvailable"
                     :append-icon="''"
@@ -290,7 +296,8 @@ export default {
 		this.inputUsername = this.$route.query.session || ''
 		this.inputKey = this.$route.query.key || ''
 		if (this.inputUsername && this.inputUsername) {
-			this.subscribe()
+      this.subscribe()
+      this.$store.commit('status', 'receiving')
 		}
 	},
 
