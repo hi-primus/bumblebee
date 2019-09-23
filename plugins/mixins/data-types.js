@@ -14,6 +14,7 @@ export default {
 				return 'ABC'
 			case 'null':
 				return 'null'
+			case 'integer':
 			case 'int':
 				return '#'
 			case 'float':

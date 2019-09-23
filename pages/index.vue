@@ -198,7 +198,7 @@
                 <template v-if="$store.state.datasets[tab].total_count_dtypes">
                   {{ $store.state.datasets[tab].total_count_dtypes | formatNumberInt }} Data types &emsp;
                 </template>
-                {{ $store.state.datasets[tab].summary.rows_count | formatNumberInt }} Rows &emsp; {{ $store.state.datasets[tab].summary.cols_count | formatNumberInt }} Columns &emsp; Size: {{ $store.state.datasets[tab].summary.size }}
+                {{ $store.state.datasets[tab].summary.rows_count | formatNumberInt }} Rows &emsp; {{ $store.state.datasets[tab].summary.cols_count | formatNumberInt }} Columns
               </span>
             </v-layout>
           </v-footer>

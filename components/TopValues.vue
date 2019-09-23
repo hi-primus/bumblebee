@@ -45,7 +45,7 @@ export default {
 
 thead {
 	tr {
-		height: 25px !important;
+		height: 26px !important;
 	}
 }
 
