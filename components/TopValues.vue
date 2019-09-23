@@ -43,27 +43,40 @@ export default {
 
 <style lang="scss" scoped>
 
-thead {
-	tr {
-		height: 26px !important;
-	}
-}
-
 tr {
-	border-bottom: 2px solid transparent !important;
+	border-bottom: 0 solid transparent !important;
 	th {
 		color: rgba(0, 0, 0, 1) !important;
-		border-bottom: 2px solid transparent !important;
+		border-bottom: 0 solid transparent !important;
 	}
 	td {
 		height: 15px !important;
-		font-size: 11px !important;
+    font-size: 11px !important;
+    &:first-child {
+      padding-left: 0 !important;
+    }
 	}
 
 	&:hover {
-		.top-bar {
-			background-color: #3c948b;
+    .top-bar {
+      background-color: #3c948b;
 		}
+	}
+}
+
+/* top values */
+
+.top-bar {
+  position: relative;
+	height: 100%;
+	&>div {
+    padding-left: 12px;
+    height: 100%;
+    line-height: 26px;
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: max-content;
 	}
 }
 </style>
