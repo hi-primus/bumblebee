@@ -135,8 +135,6 @@
             <div class="controls-section grey--bg">
               <div :class="{'inside-bar': view==1}" class="controls-container text-xs-center">
                 <v-text-field
-                  browserAutocomplete="off"
-                  browser-autocomplete="off"
                   autocomplete="off"
                   v-model="searchText"
                   :color="'grey darken-3'"
@@ -149,8 +147,6 @@
                 />
                 <div class="filter-container">
                   <v-autocomplete
-                    browserAutocomplete="off"
-                    browser-autocomplete="off"
                     autocomplete="off"
                     v-model="typesSelected"
                     :items="typesAvailable"
