@@ -15,21 +15,27 @@ html:root {
 ::-webkit-scrollbar {
   width: 10px;
   height: 10px;
+  padding: 4px;
+  transition: all .2s;
 }
 
 /* Track */
 ::-webkit-scrollbar-track {
-	background: #f1f1f1;
+  // background: #f1f1f1;
+  background: transparent
 }
 
 /* Handle */
 ::-webkit-scrollbar-thumb {
-	background: #888;
+  width: 6px;
+  border-radius: 20px;
+  transition: all ease-in-out .4s;
+  background-color: #d0d0d0;
 }
 
 /* Handle on hover */
 ::-webkit-scrollbar-thumb:hover {
-  background: #555;
+  background-color: #b3b3b3;
 }
 
 h3{
@@ -256,6 +262,7 @@ table {
       padding-left: 8px;
       display: flex;
       min-width: 65px;
+      transform: rotate(0deg);
 
       .control-check{
         padding-right: 4px;
@@ -281,8 +288,153 @@ table {
 
 /* table container */
 
+
+.v-icon.control-button {
+  user-select: none;
+}
+
+
+.dashboard-container {
+  display: flex;
+  flex-wrap: wrap;
+  &>.toolbar {
+    order: 1;
+    width: 100%;
+  }
+  &>.table-container {
+    order: 1;
+    flex: 1;
+    width: 100%;
+    border-top: solid 1px $line-color-1;
+  }
+  $sidebar-width: 420px;
+  &>.sidebar-container {
+    // text-align: right;
+    padding: 4px;
+    border-left: solid 1px $line-color-1;
+    border-top: solid 1px $line-color-1;
+    order: 9;
+    width: $sidebar-width;
+    .sidebar-header, .sidebar-subheader {
+      margin-left: -4px;
+      margin-right: -4px;
+      padding: 4px 12px;
+      height: 34px;
+      position: relative;
+      .right-button {
+        position: absolute;
+        right: 8px;
+        top: 6px;
+      }
+      .left-hint {
+        position: absolute;
+        left: 8px;
+        top: 6px;
+      }
+    }
+    .sidebar-header {
+      text-align: center;
+      margin-top: -4px;
+      line-height: 28px;
+      background-color: $data-highlight;
+    }
+    .sidebar-subheader {
+      font-family: $font-mono;
+      line-height: 26px;
+      border-bottom: $line-color-1 1px solid;
+      &:first-child {
+        border-top: $line-color-1 1px solid;
+      }
+    }
+    .sidebar-section {
+      border-bottom: $line-color-1 1px solid;
+      padding: 8px;
+      font-family: $font-mono;
+      line-height: 26px;
+    }
+    .columns-selected {
+      .column-selected {
+        &:not(:last-child)::after {
+          content: ', ';
+        }
+      }
+    }
+    .plot {
+      border-bottom: #f5f5f5 1px solid;
+      padding: 8px 0;
+      .plot-title {
+        padding-left: 8px;
+        text-transform: uppercase;
+        // font-family: $font-mono;
+        font-weight: 700;
+        font-size: 11px;
+      }
+    }
+  }
+  .sidebar-container + .table-container {
+    width: calc(100% - #{$sidebar-width})
+  }
+}
+
+.scatter-plot {
+  display: flex;
+  flex-wrap: wrap;
+  $label-space: 20px;
+  .scatter-plot-x, .scatter-plot-y {
+    text-align: center;
+    font-weight: 700;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+  }
+  .scatter-plot-x {
+    padding-left: $label-space;
+    width: 100%;
+  }
+  .scatter-plot-y {
+    padding-top: $label-space*2;
+    width: $label-space;
+    writing-mode: vertical-lr;
+    transform: rotate(180deg)
+  }
+  .scatter-plot-grid {
+    margin-left: -24px;
+    svg {
+      overflow: visible;
+    }
+    g.mark-symbol.role-mark.marks * {
+      fill: rgba($data-green, 60%) !important;
+      stroke: rgba($data-green, 30%) !important;
+    }
+    g .background {
+      display: none;
+    }
+    g .role-axis-domain {
+      display: none;
+    }
+  }
+}
+
+.plot-display {
+  width: 100%;
+  text-align: left;
+  padding-left: 8px;
+  font-family: $font-mono;
+  display: flex;
+  flex-wrap: wrap;
+  .value {
+    min-width: 50%;
+    padding-right: 1.5rem;
+  }
+}
+
+/* plots */
+
+
+
 .table-container {
   height: 100%;
+
+
   .lc--narrow &{
     max-width: 100%;
     margin: 0 !important;
@@ -293,10 +445,9 @@ table {
     width: 100%;
     border-bottom: solid 1px $line-color-1;
   }
-  .controls-in-container {
+  .table-view-container {
 
     .table-controls {
-      border-top: solid 1px $line-color-1;
       border-bottom: solid 1px $line-color-1;
       pointer-events: none;
       &>* {
@@ -574,7 +725,15 @@ table {
   }
 
  td.area:before, td.area-1:before, td.area-2:before, td.area-3:before, td.area-4:before, td.area-5:before, td.area-6:before, td.area-7:before {
-   background-color: $primary-color !important;
+   background-color: $data-highlight !important;
+   opacity: 1 !important;
+   z-index: -1;
+ }
+
+ td.area, td.area-1, td.area-2, td.area-3, td.area-4, td.area-5, td.area-6, td.area-7 {
+   z-index: 0;
+  //  background-color: $data-highlight !important;
+  //  opacity: 1 !important;
  }
 
   tr:first-child td {

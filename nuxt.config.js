@@ -60,6 +60,7 @@ module.exports = {
 	],
 
 	plugins: [
+		{ src: '@/plugins/vega.js', mode: 'client', ssr: false },
 		{ src: '@/plugins/handsontable.js', mode: 'client' },
 		'@/plugins/components.js',
 		'@/plugins/numeral.js',
@@ -100,10 +101,11 @@ module.exports = {
 		}
 	},
 
-	build: {
+	build   : {
 		extend (config, {
 			isDev
 		}) {
+      config.resolve.alias['vue'] = 'vue/dist/vue.common'
 			if (isDev && process.client) {
 				config.module.rules.push({
 					enforce: 'pre',
