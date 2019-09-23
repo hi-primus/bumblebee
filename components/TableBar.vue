@@ -56,23 +56,50 @@
     </div>
 
     <div class="sidebar-container" v-if="detailsActive!==false && detailsActive['scatter-plot']">
-      <v-icon color="black" @click="detailsActive=false">close</v-icon>
-      <div class="scatter-plot">
-        <div class="scatter-plot-y"> {{detailsActive['scatter-plot'][1].name}} </div>
-        <vega-lite
-          class="scatter-plot-grid"
-          v-if="detailsActive['scatter-plot']"
-          :width="300"
+      <div class="sidebar-header">
+        Details
+        <v-icon class="right-button" color="black" @click="detailsActive=false">close</v-icon>
+      </div>
+      <div class="sidebar-section columns-selected">
+        <nuxt-link tag="span" :to="`${currentTab}/${column.name}`" class="column-selected hoverable" v-for="column in detailedColumns" :key="column.name">
+          <span class="data-type" :class="`type-${dataset.columns[column.index].column_dtype}`">{{ dataType(dataset.columns[column.index].column_dtype) }}</span>
+          <span class="data-type-name">{{ column.name }}</span>
+        </nuxt-link>
+      </div>
+      <div v-if="detailsActive['scatter-plot']" class="scatter-plot plot">
+        <div class="plot-title">
+          Scatter plot:
+        </div>
+        <!-- <div class="scatter-plot-y"> {{detailedColumns[1].name}} </div> -->
+        <Interactive
+          @signal:pts_tuple="displaySelection"
+          ref="scatter-plot"
+          class="scatter-plot-grid mb-2"
+          v-if="detailedColumns.length>=2"
+          :selection="{
+            pts: {
+              type: 'single',
+              on: 'mouseover',
+              'fields': [
+                detailedColumns[0].index,
+                detailedColumns[1].index
+              ]
+            }
+          }"
+          :width="385"
           :height="275"
           :data="dataset.sample.value"
-          :mark="{
-            type: 'point',
-            shape: 'circle',
-            filled: true,
-          }"
+          mark="point"
           :encoding="{
-            x: {field: detailsActive['scatter-plot'][0].index, type: 'quantitative', scale: {zero: false}},
-            y: {field: detailsActive['scatter-plot'][1].index, type: 'quantitative'}
+            x: {field: detailedColumns[0].index, type: 'quantitative', scale: {zero: false}},
+            y: {field: detailedColumns[1].index, type: 'quantitative'},
+            opacity: {
+              condition: {selection: 'pts', value: 1},
+              value: 0.5
+            },
+            size: {
+              value: 75
+            }
           }"
           :config="{
             axis: {
@@ -83,17 +110,27 @@
               domainOpacity: 0,
               gridOpacity: 0,
               tickOpacity: 0,
-              labelPadding: 4
+              labelPadding: 0,
+              labels: false,
             }
           }"
           >
-        </vega-lite>
-        <div class="scatter-plot-x"> {{detailsActive['scatter-plot'][0].name}} </div>
+        </Interactive>
+        <!-- <div class="scatter-plot-x"> {{detailedColumns[0].name}} </div> -->
+        <div class="plot-display" v-if="scatterPlotDisplay && scatterPlotDisplay[0]">
+          <div class="value">
+            {{ detailedColumns[0].name }}(x): {{ scatterPlotDisplay[0] }}
+          </div>
+          <div class="value">
+            {{ detailedColumns[1].name }}(y): {{ scatterPlotDisplay[1] }}
+          </div>
+        </div>
       </div>
+      <!-- Secciones de detalles regulares -->
     </div>
 
     <div class="table-container">
-      <div v-if="view==0" class="controls-in-container">
+      <div v-if="view==0" class="table-view-container">
         <div class="table-controls d-flex">
           <v-btn text icon small @click="toggleColumnsSelection">
             <v-icon>
@@ -254,12 +291,16 @@ import DataBar from '@/components/DataBar'
 import GraphicsRenderer from '@/components/GraphicsRenderer'
 import dataTypesMixin from '@/plugins/mixins/data-types'
 
+import VueVega from 'vue-vega'
+import Interactive from 'vue-vega/spec/vega-lite/interactive.vl.json'
+
 import { throttle } from '@/utils/functions.js'
 
 export default {
 	components: {
 		DataBar,
-		GraphicsRenderer
+    GraphicsRenderer,
+    Interactive: VueVega.mapVegaLiteSpec(Interactive)
 	},
 
 	mixins: [dataTypesMixin],
@@ -298,6 +339,10 @@ export default {
 
       detailsActive: false,
 
+      scatterPlotDisplay: [],
+
+      detailedColumns: [],
+
 			mustHandleSearchText: false,
 
 			// searchText: '',
@@ -333,7 +378,7 @@ export default {
 				{ text: '', sortable: false, width: '50%', value: '' }
 			]
 		}
-	},
+  },
 
 	computed: {
 
@@ -403,6 +448,21 @@ export default {
 
 	watch: {
 
+    view () {
+      this.detailsActive = false
+    },
+
+		detailsActive: {
+			deep: true,
+			handler () {
+				this.$nextTick(() => {
+
+          this.$refs['hot-table'].hotInstance.render()
+
+				})
+			}
+		},
+
 		searchText: {
 			immediate: true,
 
@@ -439,6 +499,15 @@ export default {
 	},
 
 	methods: {
+
+    displaySelection: throttle ( async function (item) {
+			if (item) {
+				this.scatterPlotDisplay = item.values
+      }
+      else {
+        // this.scatterPlotDisplay = ''
+      }
+    },100),
 
 		getSubTypes (item) {
 			if (item.dtypes_stats) {
@@ -486,44 +555,44 @@ export default {
 		},
 
 		selectionEvent (row, prop, row2, prop2) {
-      console.log('row',row)
 			if (row <= 0) {
 
-        var selected = this.$refs['hot-table'].hotInstance.getSelected()
+				const tableInstance = this.$refs['hot-table'].hotInstance;
+
+        var selected = tableInstance.getSelected()
 
         if (!selected.length) {
-          this.detailsActive = false
+					this.detailsActive = false
           return;
         }
-
-        this.detailsActive = {}
-
-        console.log('this.detailsActive',this.detailsActive)
 
         let plotableIndices = [];
 
         selected.forEach(selection => {
-          if (selection[1] === selection[3]) { // a single column is selected
-            const columnData = this.$refs['hot-table'].hotInstance.getDataAtCell(0,selection[3])
-            console.log('column name is', columnData.name)
-            console.log('column is plotable', columnData.plotable)
-            if (columnData.plotable)
-              plotableIndices.push({index: columnData.index.toString(), name: columnData.name })
-          }
-          else if (selection[1] === selection[3]-1) { // two columns are selected
-            [selection[1],selection[3]].forEach(element => {
-              const columnData = this.$refs['hot-table'].hotInstance.getDataAtCell(0,element)
-              console.log('column name is', columnData.name)
-              console.log('column is plotable', columnData.plotable)
-              if (columnData.plotable)
+
+          for (let index = selection[1]; index <= selection[3]; index++) {
+
+            const columnData = tableInstance.getDataAtCell(0,index)
+
+            if (columnData.plotable) { // TODO: remove 'plotable'
+              let found = plotableIndices.find( (e) => (e.index === columnData.index.toString()) )
+              if (found!==-1)
                 plotableIndices.push({index: columnData.index.toString(), name: columnData.name })
-            });
+            }
           }
+
         });
 
-        if (plotableIndices.length==2) {
-          this.detailsActive['scatter-plot']=plotableIndices;
+        if (plotableIndices.length) {
+          this.detailsActive = {}
+          this.detailsActive['scatter-plot']=(plotableIndices.length==2 /* || plotableIndices.length==3 */);
         }
+        else {
+          this.detailsActive = false
+        }
+
+        this.detailedColumns = plotableIndices;
+
 
         // 	let dataName
         // 	try {
