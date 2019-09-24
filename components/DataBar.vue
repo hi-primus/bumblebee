@@ -16,7 +16,7 @@
       <template v-slot:activator="{ on }">
         <div :class="{'data-bar-min': missingP!=0}" class="data-bar-grey" v-on="on" />
       </template>
-      <span>{{ missing }} missing values <span>{{ missingP }}%</span></span>
+      <span>{{ missing | humanNumber}} missing values <span>{{ missingP }}%</span></span>
     </v-tooltip>
   </div>
 </template>

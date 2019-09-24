@@ -38,10 +38,10 @@ html:root {
   background-color: #b3b3b3;
 }
 
-h3{
-	text-transform: uppercase;
-	font-size: 13px;
-	margin-bottom: 5px;
+h3 {
+  text-transform: uppercase;
+  font-weight: 700;
+  font-size: 11px;
 }
 
 body{
@@ -92,15 +92,37 @@ tr{
 }
 
 table.table {
-	text-align: left;
+  text-align: left;
+  width: 100%;
+}
+
+table.details-table {
+  text-align: left;
+  width: calc(100% + 24px);
+  margin-left: -12px;
+  margin-right: -12px;
+  border-spacing: 0;
+  td, th {
+    padding: 0 4px;
+    &:first-child {
+      padding-left: 12px !important;
+    }
+    &:last-child {
+      padding-right: 12px !important;
+    }
+  }
+  tr {
+    &:hover {
+      background-color: $data-highlight-grey;
+    }
+  }
 }
 
 .content{
 	background-color: #fff;
 }
 
-.component-container{
-	padding: 0 15px 0 0;
+.component-container {
 	margin: 0 0 20px;
 	p{
 		margin: 0;
@@ -310,17 +332,35 @@ table {
   $sidebar-width: 420px;
   &>.sidebar-container {
     // text-align: right;
-    padding: 4px;
     border-left: solid 1px $line-color-1;
     border-top: solid 1px $line-color-1;
     order: 9;
     width: $sidebar-width;
+    max-height: calc(100vh - 191px);
+    display: flex;
+    flex-direction: column;
+    padding: 4px;
+    .sidebar-content {
+      margin-left: -4px;
+      margin-right: -4px;
+      padding-left: 4px;
+      padding-right: 4px;
+      flex: 1;
+      height: 100%;
+      overflow-y: scroll;
+      overflow-x: hidden;
+    }
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
     .sidebar-header, .sidebar-subheader {
       margin-left: -4px;
       margin-right: -4px;
       padding: 4px 12px;
       height: 34px;
       position: relative;
+      display: block;
       .right-button {
         position: absolute;
         right: 8px;
@@ -346,13 +386,18 @@ table {
         border-top: $line-color-1 1px solid;
       }
     }
+    .column-title {
+      font-family: $font-mono;
+      font-weight: 700;
+    }
     .sidebar-section {
       border-bottom: $line-color-1 1px solid;
-      padding: 8px;
-      font-family: $font-mono;
+      padding: 3px 8px 4px 8px;
+      // font-family: $font-mono;
       line-height: 26px;
     }
     .columns-selected {
+      font-family: $font-mono;
       .column-selected {
         &:not(:last-child)::after {
           content: ', ';
@@ -476,17 +521,19 @@ table {
 /* top values */
 
 .top-bar {
-	background-color: $data-green;
-	position: relative;
-	height: 100%;
-	&>div {
-    padding-left: 4px;
-    line-height: 18px;
-		position: absolute;
-		top: 0;
-		left: 0;
-		width: max-content;
-	}
+  background-color: $data-green;
+  position: relative;
+  height: calc(100% - 1px);
+  &>div {
+    @include ellipsis;
+    padding-left: 12px;
+    padding-right: 12px;
+    line-height: 26px;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+  }
 }
 
 /* icon buttons toolbar */
@@ -760,11 +807,24 @@ table {
 /* component vuetify table */
 
 .component-container {
+  .v-data-table {
+    margin-left: -12px;
+    margin-right: -12px;
+  }
   .v-data-table td, .v-data-table th {
     &:first-child {
-      padding-left: 0;
+      padding-left: 12px;
     }
   }
+}
+
+.flippable {
+  transform: rotate(0deg);
+  transition: all ease-in-out 0.1s
+}
+
+.flipped {
+  transform: rotate(-180deg);
 }
 
 /* graphics */
@@ -784,26 +844,26 @@ table {
   }
 
   .scroll-container {
-    overflow-x: scroll;
+    overflow-x: hidden;
 
     .freq-container {
       cursor: crosshair;
       height: 90px;
       display: flex;
 
-      justify-content: center;
+      // justify-content: center;
 
       .freq-bar {
         height: 100%;
         width: 100%;
-        min-width: 12px;
+        min-width: 2px;
         &:not(:first-child) {
           margin-left: 2px;
         }
         position: relative;
         float: left;
         &:hover {
-          background-color: rgba(235, 235, 235, 0.527);
+          background-color: $data-highlight-grey;
           .freq-value {
             background-color: #3c948b;
           }
@@ -826,7 +886,7 @@ table {
     position: relative;
     font-size: 10px;
     &:hover {
-      background-color: rgba(235, 235, 235, 0.527);
+      background-color: $data-highlight-grey;
     }
     .bartext {
       background-color: #aeccde;
@@ -857,6 +917,7 @@ table {
     overflow: hidden;
   }
   .freq-container {
+    justify-content: center;
     height: 100% !important;
     .freq-bar {
       min-width: 1px !important;

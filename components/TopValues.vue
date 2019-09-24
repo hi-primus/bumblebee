@@ -1,18 +1,18 @@
 <template>
   <div>
     <h3>Top values</h3>
-    <v-simple-table class="table">
+    <table class="details-table">
       <tbody>
         <tr v-for="(item, index) in values.slice(0,10)" :key="index">
           <td style="width:80%;">
-            <div :style="{'width': normVal(item.count)+'%' }" class="top-bar">
+            <div :style="{'width': normVal(item.count)+'%' }" :title="item.value" class="top-bar">
               <div>{{ item.value | varCheck }}</div>
             </div>
           </td>
           <td style="width:20%;">{{ item.count | varCheck }}</td>
         </tr>
       </tbody>
-    </v-simple-table>
+    </table>
   </div>
 </template>
 
@@ -43,26 +43,23 @@ export default {
 
 <style lang="scss" scoped>
 
-thead {
-	tr {
-		height: 26px !important;
-	}
-}
-
 tr {
-	border-bottom: 2px solid transparent !important;
+	border-bottom: 0 solid transparent !important;
 	th {
 		color: rgba(0, 0, 0, 1) !important;
-		border-bottom: 2px solid transparent !important;
+		border-bottom: 0 solid transparent !important;
 	}
 	td {
 		height: 15px !important;
-		font-size: 11px !important;
+    font-size: 11px !important;
+    &:first-child {
+      padding-left: 0 !important;
+    }
 	}
 
 	&:hover {
-		.top-bar {
-			background-color: #3c948b;
+    .top-bar {
+      background-color: #3c948b;
 		}
 	}
 }
