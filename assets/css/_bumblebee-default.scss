@@ -92,7 +92,30 @@ tr{
 }
 
 table.table {
-	text-align: left;
+  text-align: left;
+  width: 100%;
+}
+
+table.details-table {
+  text-align: left;
+  width: calc(100% + 24px);
+  margin-left: -12px;
+  margin-right: -12px;
+  border-spacing: 0;
+  td, th {
+    padding: 0 4px;
+    &:first-child {
+      padding-left: 12px !important;
+    }
+    &:last-child {
+      padding-right: 12px !important;
+    }
+  }
+  tr {
+    &:hover {
+      background-color: $data-highlight-grey;
+    }
+  }
 }
 
 .content{
@@ -498,7 +521,19 @@ table {
 /* top values */
 
 .top-bar {
-	background-color: $data-green;
+  background-color: $data-green;
+  position: relative;
+  height: calc(100% - 1px);
+  &>div {
+    @include ellipsis;
+    padding-left: 12px;
+    padding-right: 12px;
+    line-height: 26px;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+  }
 }
 
 /* icon buttons toolbar */
@@ -809,7 +844,7 @@ table {
   }
 
   .scroll-container {
-    overflow-x: scroll;
+    overflow-x: hidden;
 
     .freq-container {
       cursor: crosshair;
@@ -821,14 +856,14 @@ table {
       .freq-bar {
         height: 100%;
         width: 100%;
-        min-width: 12px;
+        min-width: 2px;
         &:not(:first-child) {
           margin-left: 2px;
         }
         position: relative;
         float: left;
         &:hover {
-          background-color: rgba(235, 235, 235, 0.527);
+          background-color: $data-highlight-grey;
           .freq-value {
             background-color: #3c948b;
           }
@@ -851,7 +886,7 @@ table {
     position: relative;
     font-size: 10px;
     &:hover {
-      background-color: rgba(235, 235, 235, 0.527);
+      background-color: $data-highlight-grey;
     }
     .bartext {
       background-color: #aeccde;

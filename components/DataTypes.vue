@@ -1,14 +1,14 @@
 <template>
   <div class="component-container">
     <h3>Data types</h3>
-    <v-simple-table class="table">
+    <table class="details-table">
       <tbody>
         <tr v-for="(value, key) in values" :key="key">
           <td style="width:50%;" class="capitalize">{{ key }}</td>
           <td style="width:50%;">{{ value }}</td>
         </tr>
       </tbody>
-    </v-simple-table>
+    </table>
   </div>
 </template>
 

@@ -1,7 +1,7 @@
 <template>
   <div v-if="values.stddev!=undefined" class="component-container">
     <h3>Descriptive statistics</h3>
-    <v-simple-table class="table">
+    <table class="details-table">
       <tbody>
         <tr>
           <td style="width:50%;">Standard deviation</td>
@@ -43,7 +43,7 @@
           <td style="width:50%;">{{ (+values.range).toFixed(2) }}</td>
         </tr>
       </tbody>
-    </v-simple-table>
+    </table>
   </div>
 </template>
 
