@@ -3,7 +3,7 @@
   <div v-if="values.quantile!=undefined" class="component-container">
 
     <h3>Quantile statistics</h3>
-    <v-simple-table class="table">
+    <table class="details-table">
       <tbody>
 
         <tr>
@@ -42,7 +42,7 @@
         </tr>
 
       </tbody>
-    </v-simple-table>
+    </table>
   </div>
 
 </template>

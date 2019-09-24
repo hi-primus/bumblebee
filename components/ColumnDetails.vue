@@ -170,8 +170,18 @@ export default {
     },
     rowsCount: {
       type: Number
+    },
+    startExpanded: {
+      type: Boolean,
+      default: false
     }
   },
+
+  mounted() {
+    if (this.startExpanded) {
+      this.expanded = true;
+    }
+  }
 }
 </script>
 

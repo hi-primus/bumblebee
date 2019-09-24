@@ -129,8 +129,8 @@
             </div>
           </div>
         </div>
-        <template v-for="column in detailedColumns">
-          <ColumnDetails :key="column" :rowsCount="+dataset.summary.rows_count" :column="dataset.columns[column]"></ColumnDetails>
+        <template v-for="(column, i) in detailedColumns">
+          <ColumnDetails :key="column" :startExpanded="i==0" :rowsCount="+dataset.summary.rows_count" :column="dataset.columns[column]"></ColumnDetails>
         </template>
       </div>
     </div>

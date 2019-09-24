@@ -1,7 +1,7 @@
 <template>
   <div class="component-container">
     <h3>STATISTICS</h3>
-    <v-simple-table>
+    <table class="details-table">
       <tbody>
         <tr v-if="values.p_uniques!==null && values.p_uniques!==undefined">
           <td style="width:50%;">Unique</td>
@@ -35,7 +35,7 @@
           <td colspan="2" style="width:50%;">{{ (+values.zeros).toFixed(2) }}</td>
         </tr>
       </tbody>
-    </v-simple-table>
+    </table>
   </div>
 </template>
 

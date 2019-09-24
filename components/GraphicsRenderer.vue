@@ -1,5 +1,5 @@
 <template>
-  <span v-if="typeof value !== 'object' || value === null">{{ value }}</span>
+  <span v-if="typeof value !== 'object' || value === null" :title="value">{{ value }}</span>
   <div v-else class="graphic-ht-container">
     <DataBar
       :missing="value.missing"
