@@ -4,8 +4,8 @@
     <table class="details-table">
       <tbody>
         <tr v-for="(value, key) in values" :key="key">
-          <td style="width:50%;" class="capitalize">{{ key }}</td>
-          <td style="width:50%;">{{ value }}</td>
+          <td style="width:50%;" class="capitalize" :title="key">{{ key }}</td>
+          <td style="width:50%;" :title="value">{{ value }}</td>
         </tr>
       </tbody>
     </table>
@@ -27,14 +27,7 @@ export default {
 tr {
 	border: none !important;
 	td {
-		height: 15px !important;
-		font-size: 11px !important;
-	}
-}
-
-.no-line {
-	td {
-		border: none !important;
+		font-size: 13px !important;
 	}
 }
 </style>

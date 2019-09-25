@@ -582,9 +582,9 @@ export default {
 
             const columnData = tableInstance.getDataAtCell(0,i)
 
-            let found = selectedIndices.find( (e) => (e === columnData.index.toString()) )
+            let found = selectedIndices.findIndex( (e) => { return (e === columnData.index.toString()) } )
 
-            if (found!==-1) {
+            if (found===-1) {
               selectedIndices.push(columnData.index.toString())
               if (columnData.plotable) { // TODO: remove 'plotable'
                 plotableIndices.push(columnData.index.toString())

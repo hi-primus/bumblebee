@@ -9,7 +9,7 @@
               <div>{{ item.value | varCheck }}</div>
             </div>
           </td>
-          <td style="width:20%;">{{ item.count | varCheck }}</td>
+          <td style="width:20%;" :title="item.count | varCheck">{{ item.count | varCheck }}</td>
         </tr>
       </tbody>
     </table>
@@ -51,7 +51,7 @@ tr {
 	}
 	td {
 		height: 15px !important;
-    font-size: 11px !important;
+    font-size: 13px !important;
     &:first-child {
       padding-left: 0 !important;
     }

@@ -9,25 +9,29 @@
 
     <div class="sidebar-section pt-1" v-if="expanded">
       <div class="component-container">
-        <Stats :values="column.stats" />
+        <General :rowsCount="rowsCount" :dtypes="column.dtypes_stats" :values="column.stats" />
       </div>
 
       <div
-        v-if="column.stats.quantile!=undefined"
+        v-if="column.stats.percentile || column.stats.percentile===0"
         class="component-container"
       >
-        <Quantile :values="column.stats" />
+        <Percentile :values="column.stats" />
       </div>
 
       <div
-        v-if="column.stats.quantile!=undefined"
+        v-if="column.stats"
         class="component-container"
       >
         <Descriptive :values="column.stats" />
       </div>
 
+      <div class="component-container">
+        <DataTypes :values="column.dtypes_stats" />
+      </div>
+
       <div
-        v-if="column.stats.quantile==undefined"
+        v-if="column.stats.percentile==undefined"
         class="component-container"
       >
         <TopValues
@@ -35,10 +39,6 @@
           :values="column.frequency"
           :total="+column.frequency[0].count"
         />
-      </div>
-
-      <div class="component-container">
-        <DataTypes :values="column.dtypes_stats" />
       </div>
 
       <template v-if="column.stats.hist">
@@ -120,7 +120,7 @@
       </div>
 
       <div
-        v-if="column.stats.quantile!=undefined"
+        v-if="column.stats.percentile || column.stats.percentile===0"
         class="component-container"
       >
         <TopValues
@@ -136,9 +136,9 @@
 <script>
 import TopValues from '@/components/TopValues'
 import Frequent from '@/components/Frequent'
-import Stats from '@/components/Stats'
-import Quantile from '@/components/QuantileStats'
-import Descriptive from '@/components/DescriptiveStats'
+import General from '@/components/General'
+import Percentile from '@/components/PercentileStats'
+import Descriptive from '@/components/Stats'
 import Histogram from '@/components/Histogram'
 import DataBar from '@/components/DataBar'
 import DataTypes from '@/components/DataTypes'
@@ -147,8 +147,8 @@ import dataTypesMixin from '~/plugins/mixins/data-types'
 export default {
 	components: {
 		TopValues,
-		Stats,
-		Quantile,
+		General,
+		Percentile,
 		Descriptive,
 		Frequent,
 		Histogram,
