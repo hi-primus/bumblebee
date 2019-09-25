@@ -1,38 +1,47 @@
 <template>
-  <div class="component-container">
-    <h3>STATISTICS</h3>
+  <div v-if="values.stddev!=undefined" class="component-container">
+    <h3>Statistics</h3>
     <table class="details-table">
       <tbody>
-        <tr v-if="values.p_uniques!==null && values.p_uniques!==undefined">
-          <td style="width:50%;">Unique</td>
-          <td style="width:50%;">{{ (+values.uniques_count).toFixed(2) }}</td>
-          <td>{{ (+values.p_uniques).toFixed(2) }}%</td>
+
+        <tr>
+          <td style="width:50%;">Standard deviation</td>
+          <td style="width:50%;" :value="(+values.stddev).toFixed(2)">{{ (+values.stddev).toFixed(2) }}</td>
         </tr>
 
-        <tr v-if="values.p_count_na!==null && values.p_count_na!==undefined">
-          <td style="width:50%;">Missing</td>
-          <td style="width:50%;">{{ (+values.p_count_na).toFixed(2) }}</td>
-          <td>{{ (+values.p_count_na).toFixed(2) }}%</td>
+        <tr>
+          <td style="width:50%;">Coef of variation</td>
+          <td style="width:50%;" :value="(+values.coef_variation).toFixed(2)">{{ (+values.coef_variation).toFixed(2) }}</td>
         </tr>
 
-        <tr v-if="values.mean!==null && values.mean!==undefined">
+        <tr>
+          <td style="width:50%;">Kurtosis</td>
+          <td style="width:50%;" :value="(+values.kurtosis).toFixed(2)">{{ (+values.kurtosis).toFixed(2) }}</td>
+        </tr>
+
+        <tr>
           <td style="width:50%;">Mean</td>
-          <td colspan="2" style="width:50%;">{{ (+values.mean).toFixed(2) }}</td>
+          <td style="width:50%;" :value="(+values.mean).toFixed(2)">{{ (+values.mean).toFixed(2) }}</td>
         </tr>
 
-        <tr v-if="values.min!==null && values.min!==undefined">
-          <td style="width:50%;">Minimum</td>
-          <td colspan="2" style="width:50%;">{{ values.min }}</td>
+        <tr>
+          <td style="width:50%;">MAD</td>
+          <td style="width:50%;" :value="(+values.mad).toFixed(2)">{{ (+values.mad).toFixed(2) }}</td>
         </tr>
 
-        <tr v-if="values.max!==null && values.max!==undefined">
-          <td style="width:50%;">Maximum</td>
-          <td colspan="2" style="width:50%;">{{ values.max }}</td>
+        <tr>
+          <td style="width:50%;">Skewness</td>
+          <td style="width:50%;" :value="(+values.skewness).toFixed(2)">{{ (+values.skewness).toFixed(2) }}</td>
         </tr>
 
-        <tr v-if="values.zeros!==null && values.zeros!==undefined">
-          <td style="width:50%;">Zeros</td>
-          <td colspan="2" style="width:50%;">{{ (+values.zeros).toFixed(2) }}</td>
+        <tr>
+          <td style="width:50%;">Sum</td>
+          <td style="width:50%;" :value="(+values.variance).toFixed(2)">{{ (+values.variance).toFixed(2) }}</td>
+        </tr>
+
+        <tr>
+          <td style="width:50%;">Variance</td>
+          <td style="width:50%;" :value="(+values.range).toFixed(2)">{{ (+values.range).toFixed(2) }}</td>
         </tr>
       </tbody>
     </table>
@@ -54,14 +63,7 @@ export default {
 tr {
 	border: none !important;
 	td {
-		height: 15px !important;
-		font-size: 11px !important;
-	}
-}
-
-.no-line {
-	td {
-		border: none !important;
+		font-size: 13px !important;
 	}
 }
 </style>

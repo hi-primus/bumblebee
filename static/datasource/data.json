@@ -957,7 +957,7 @@
                 "na": 0,
                 "p_missing": 0.0,
                 "p_uniques": 92.67,
-                "quantile": {
+                "percentile": {
                     "0.05": 1.0,
                     "0.25": 1.0,
                     "0.5": 1.0,

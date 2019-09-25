@@ -41,7 +41,7 @@ html:root {
 h3 {
   text-transform: uppercase;
   font-weight: 700;
-  font-size: 11px;
+  font-size: 13px;
 }
 
 body{
@@ -109,6 +109,7 @@ table.details-table {
     }
     &:last-child {
       padding-right: 12px !important;
+      text-align: right;
     }
   }
   tr {
@@ -412,7 +413,7 @@ table {
         text-transform: uppercase;
         // font-family: $font-mono;
         font-weight: 700;
-        font-size: 11px;
+        font-size: 13px;
       }
     }
   }
@@ -881,6 +882,11 @@ table {
     }
   }
 
+  .current-value {
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
   .sidechart {
     margin-bottom: 5px;
     position: relative;
@@ -930,7 +936,7 @@ table {
     display: none;
   }
   .current-value {
-    // font-size: 12px !important;
+    // font-size: 12px;
     // font-weight: 700 !important;
     // line-height: 1.25;
     height: 1.5em;
