@@ -31,21 +31,11 @@
       <v-container class="px-12 pt-8">
         <v-layout row wrap>
           <v-flex xs12 sm3 md3 class="component-container">
-            <Stats :values="column.stats" />
+            <General :dtypes="column.dtypes_stats" :values="column.stats" />
           </v-flex>
 
           <v-flex
-            v-if="column.stats.quantile!=undefined"
-            xs12
-            sm3
-            md3
-            class="component-container"
-          >
-            <Quantile :values="column.stats" />
-          </v-flex>
-
-          <v-flex
-            v-if="column.stats.quantile!=undefined"
+            v-if="column.stats.percentile!=undefined"
             xs12
             sm3
             md3
@@ -55,7 +45,17 @@
           </v-flex>
 
           <v-flex
-            v-if="column.stats.quantile==undefined"
+            v-if="column.stats.percentile!=undefined"
+            xs12
+            sm3
+            md3
+            class="component-container"
+          >
+            <Percentile :values="column.stats" />
+          </v-flex>
+
+          <v-flex
+            v-if="column.stats.percentile==undefined"
             xs12
             sm6
             md6
@@ -171,7 +171,7 @@
           </v-flex>
 
           <v-flex
-            v-if="column.stats.quantile!=undefined"
+            v-if="column.stats.percentile!=undefined"
             xs12
             sm12
             md12
@@ -193,9 +193,9 @@
 import Layout from '@/components/Layout'
 import TopValues from '@/components/TopValues'
 import Frequent from '@/components/Frequent'
-import Stats from '@/components/Stats'
-import Quantile from '@/components/QuantileStats'
-import Descriptive from '@/components/DescriptiveStats'
+import General from '@/components/General'
+import Percentile from '@/components/PercentileStats'
+import Descriptive from '@/components/Stats'
 import Histogram from '@/components/Histogram'
 import DataBar from '@/components/DataBar'
 import DataTypes from '@/components/DataTypes'
@@ -205,8 +205,8 @@ export default {
 	components: {
 		Layout,
 		TopValues,
-		Stats,
-		Quantile,
+		General,
+		Percentile,
 		Descriptive,
 		Frequent,
 		Histogram,

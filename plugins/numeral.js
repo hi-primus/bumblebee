@@ -3,6 +3,14 @@ const numeral = require('numeral')
 
 Vue.filter('humanNumber', function (value) {
 	if (value < 0) {
+		return '(' + numeral(value).format('0.0a') + ')'
+	} else {
+		return numeral(value).format('0.0a')
+	}
+})
+
+Vue.filter('humanNumberInt', function (value) {
+	if (value < 0) {
 		return '(' + numeral(value).format('0a') + ')'
 	} else {
 		return numeral(value).format('0a')
