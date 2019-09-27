@@ -74,139 +74,36 @@
             Heat Map
           </div>
           <!-- <div class="heat-map-y"> {{dataset.columns[detailedColumns[1]].name}} </div> -->
-          <vega-lite
-            autosize
-            :transform="[{
-              'filter': {
-                'field': 'z', 'gt': '0',
-              }
-            }]"
-            ref="heat-map"
-            class="heat-map-grid mb-3"
-            v-if="heatMap"
-            :data="heatMap"
-            mark="rect"
-            :encoding="{
-              'x': {'field': 'x', 'type': 'ordinal'},
-              'y': {'field': 'y', 'type': 'ordinal'},
-              'color': {
-                'field': 'z',
-                'type': 'quantitative',
-                'scale': {'range': ['#82bcfa', '#4db6ac', '#eedc3e', '#e57373']}
-              }
-            }"
-            :config="{
-              view: {
-                stroke: 'transparent'
-              },
-              axis: {
-                domainColor: '#fff',
-                title: null,
-                gridColor: '#fff',
-                ticks: false,
-                domainOpacity: 0,
-                gridOpacity: 0,
-                tickOpacity: 0,
-              },
-              color: {
-                domainColor: '#fff',
-                title: null,
-                gridColor: '#fff',
-                ticks: false,
-                domainOpacity: 0,
-                gridOpacity: 0,
-                tickOpacity: 0,
-                labels: false,
-                strokeWidth: 0
-              }
-            }"
-            >
-          </vega-lite>
-          <vega-lite
+          <vegaEmbed
+            :name="'heatmap'"
             autosize
             ref="heat-map"
             class="heat-map-grid mb-3"
-            v-if="heatMap && false"
-            :data="dataset.sample.value"
-            mark="rect"
-            :encoding="{
-              'x': {'bin': { maxbins: 20 }, 'field': +detailedColumns[0], 'type': 'quantitative'},
-              'y': {'bin': { maxbins: 20 }, 'field': +detailedColumns[1], 'type': 'quantitative'}
-            }"
-            :transform="[{
-              'filter': {'and': [
-                {'field': +detailedColumns[0], 'valid': true},
-                {'field': +detailedColumns[1], 'valid': true}
-              ]}
-            }]"
-            :config="{
-              view: {
-                stroke: 'transparent'
-              },
-              axis: {
-                domainColor: '#fff',
-                title: null,
-                gridColor: '#fff',
-                ticks: false,
-                domainOpacity: 0,
-                gridOpacity: 0,
-                tickOpacity: 0,
-              },
-              color: {
-                domainColor: '#fff',
-                title: null,
-                gridColor: '#fff',
-                ticks: false,
-                domainOpacity: 0,
-                gridOpacity: 0,
-                tickOpacity: 0,
-                labels: false,
-                strokeWidth: 0
-              }
-            }"
-            >
-          </vega-lite>
-          <!-- <div class="heat-map-x"> {{dataset.columns[detailedColumns[0]].name}} </div> -->
-        </div>
-        <div v-if="detailsActive['scatter-plot']" class="scatter-plot plot">
-          <div class="plot-title">
-            Scatter plot
-          </div>
-          <!-- <div class="scatter-plot-y"> {{dataset.columns[detailedColumns[1]].name}} </div> -->
-          <Interactive
-            @signal:pts_tuple="displaySelection"
-            ref="scatter-plot"
-            class="scatter-plot-grid mb-2"
             v-if="detailedColumns.length>=2"
-            :selection="{
-              pts: {
-                type: 'single',
-                on: 'mouseover',
-                'fields': [
-                  detailedColumns[0].toString(),
-                  detailedColumns[1].toString()
-                ]
-              }
+            :data="{values: dataset.sample.value}"
+            :mark="{
+              type: 'rect',
+              tooltip: true
             }"
-            :width="385"
-            :height="275"
-            :data="dataset.sample.value"
-            mark="point"
+            width="390"
             :encoding="{
-              x: {field: detailedColumns[0].toString(), type: 'quantitative', scale: {zero: false}},
-              y: {field: detailedColumns[1].toString(), type: 'quantitative'},
-              opacity: {
-                condition: {selection: 'pts', value: 1},
-                value: 0.5
+              x: {bin: { maxbins: 80 }, title: dataset.columns[detailedColumns[0]].name, field: detailedColumns[0].toString(), type: 'ordinal'},
+              y: {bin: { maxbins: 80 }, title: dataset.columns[detailedColumns[1]].name, field: detailedColumns[1].toString(), type: 'ordinal'},
+              color: {
+                type: 'quantitative',
+                aggregate: 'count',
+                scale: {range: ['#82bcfa', '#e57373']},
+                legend: { direction: 'vertical', type: 'gradient', gradientLength: 120 }
               },
-              size: {
-                value: 75
-              }
             }"
             :config="{
+              view: {
+                stroke: 'transparent'
+              },
               axis: {
+                titleOpacity: 0,
                 domainColor: '#fff',
-                title: null,
+                title: 0,
                 gridColor: '#fff',
                 ticks: false,
                 domainOpacity: 0,
@@ -214,19 +111,66 @@
                 tickOpacity: 0,
                 labelPadding: 0,
                 labels: false,
+              },
+            }"
+            >
+          </vegaEmbed>
+        </div>
+        <div v-if="detailsActive['scatter-plot']" class="scatter-plot plot">
+          <div class="plot-title">
+            Scatter plot
+          </div>
+          <vegaEmbed
+            :name="'scatterplot'"
+            @signal:pts_tuple="displaySelection"
+            ref="scatter-plot"
+            class="scatter-plot-grid mb-2"
+            v-if="detailedColumns.length>=2"
+            :data="{values: dataset.sample.value}"
+            :mark="{
+              type: 'point',
+              filled: true,
+              tooltip: true
+            }"
+            width="400"
+            :selection="{
+              'highlight': {'type': 'single', 'empty': 'none', 'on': 'mouseover', 'fields': [detailedColumns[0].toString(),detailedColumns[1].toString()]},
+              'select': {'type': 'multi'}
+            }"
+            :encoding="{
+              x: {field: detailedColumns[0].toString(), title: dataset.columns[detailedColumns[0]].name, titleOpacity: 0, type: 'quantitative', scale: {zero: false}},
+              y: {field: detailedColumns[1].toString(), title: dataset.columns[detailedColumns[1]].name, titleOpacity: 0, type: 'quantitative'},
+              opacity: {
+                condition: {selection: 'highlight', value: 1},
+                value: 0.5
+              },
+              size: {
+                value: 75
+              },
+              color: {
+                condition: {selection: 'highlight', value: '#82bcfa'},
+                value: '#4db6ac'
+              }
+            }"
+            :config="{
+              axis: {
+                titleOpacity: 0,
+                domainColor: '#fff',
+                title: 0,
+                gridColor: '#fff',
+                ticks: false,
+                domainOpacity: 0,
+                gridOpacity: 0,
+                tickOpacity: 0,
+                labelPadding: 0,
+                labels: false,
+              },
+              view: {
+                stroke: 'transparent'
               }
             }"
             >
-          </Interactive>
-          <!-- <div class="scatter-plot-x"> {{dataset.columns[detailedColumns[0]].name}} </div> -->
-          <div class="plot-display" v-if="scatterPlotDisplay && scatterPlotDisplay[0]">
-            <div class="value">
-              {{ dataset.columns[detailedColumns[0]].name }}(x): {{ scatterPlotDisplay[0] }}
-            </div>
-            <div class="value">
-              {{ dataset.columns[detailedColumns[1]].name }}(y): {{ scatterPlotDisplay[1] }}
-            </div>
-          </div>
+          </vegaEmbed>
         </div>
 
         <template v-for="(column, i) in detailedColumns">
@@ -396,10 +340,8 @@
 import DataBar from '@/components/DataBar'
 import GraphicsRenderer from '@/components/GraphicsRenderer'
 import ColumnDetails from '@/components/ColumnDetails'
+import VegaEmbed from '@/components/VegaEmbed'
 import dataTypesMixin from '@/plugins/mixins/data-types'
-
-import VueVega from 'vue-vega'
-import Interactive from 'vue-vega/spec/vega-lite/interactive.vl.json'
 
 import { throttle } from '@/utils/functions.js'
 
@@ -407,8 +349,8 @@ export default {
 	components: {
 		DataBar,
     GraphicsRenderer,
-    Interactive: VueVega.mapVegaLiteSpec(Interactive),
-    ColumnDetails
+    ColumnDetails,
+    VegaEmbed
 	},
 
 	mixins: [dataTypesMixin],
@@ -448,8 +390,6 @@ export default {
       detailsActive: false,
 
       scatterPlotDisplay: [],
-
-      heatMap: [],
 
       detailedColumns: [],
 
@@ -705,9 +645,8 @@ export default {
       if (selected.length) {
         this.detailsActive = {}
         if (plotable.length==2 && selected.length==2) {
-          this.detailsActive['scatter-plot'] = true
+          // this.detailsActive['scatter-plot'] = true
           this.detailsActive['heat-map'] = true
-          this.heatMap = this.calculateHeatMap(plotable[0],plotable[1],12,12)
         }
       }
       else {
@@ -715,69 +654,6 @@ export default {
       }
 
       this.detailedColumns = selected;
-    },
-
-    calculateHeatMap (xindex,yindex,xbinsize,ybinsize) {
-
-      let minX = this.dataset.columns[xindex].stats.min;
-      let minY = this.dataset.columns[yindex].stats.min;
-
-      let maxX = this.dataset.columns[xindex].stats.max;
-      let maxY = this.dataset.columns[yindex].stats.max;
-
-      let jumpX = minX + (maxX - minX) / xbinsize;
-      let jumpY = minY + (maxY - minY) / ybinsize;
-
-      let bin = {}
-      let _binElement = {}
-
-      for (let i = 0; i < ybinsize; i++) {
-        let binYIndex = (minY + jumpY*i).toFixed(4)
-        _binElement[binYIndex] = 0
-      }
-
-      for (let i = 0; i < xbinsize; i++) {
-        let binXIndex = (minX + jumpX*i).toFixed(4)
-        bin[binXIndex] = {..._binElement}
-      }
-
-      console.log("this.dataset.sample.value",this.dataset.sample.value)
-
-      for (let i = 0; i < this.dataset.sample.value.length; i++) {
-
-        let _xv = this.dataset.sample.value[i][xindex]
-        let _yv = this.dataset.sample.value[i][yindex]
-
-        if (_xv == maxX)
-          (_xv-=jumpX/2)
-        if (_yv == maxY)
-          (_yv-=jumpY/2)
-
-        let _x = (Math.floor( ( this.dataset.sample.value[i][xindex] - minX ) / jumpX ) * jumpX + minX ).toFixed(4)
-        let _y = (Math.floor( ( this.dataset.sample.value[i][yindex] - minY ) / jumpY ) * jumpY + minY ).toFixed(4)
-
-        bin[_x][_y] = bin[_x][_y]+1
-      }
-
-      let data = []
-
-      for (var x in bin) {
-        for (var y in bin[x]) {
-          // if (+(bin[x][y]) != 0)
-          data.push({x: +x, y: +y, z: +(bin[x][y])})
-        }
-      }
-
-      console.log("data",data)
-
-      // bin.forEach((_binE,x) => {
-      //   _binE.forEach((z,y) => {
-      //     data.push({x, y, z})
-      //   })
-      // })
-
-      return data
-
     },
 
 		getHotColumns () {

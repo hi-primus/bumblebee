@@ -422,8 +422,14 @@ table {
   }
 }
 
+.vega-component {
+  summary {
+    display: none;
+  }
+}
+
 .heat-map {
-  min-height: 170px;
+  // min-height: 170px;
 	.role-legend-entry {
     transform: rotate(-90deg) translate(-118px, -22px) scale(1);
     text {
