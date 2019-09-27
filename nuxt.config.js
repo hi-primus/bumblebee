@@ -28,8 +28,8 @@ module.exports = {
 		link: [
 			{
 				rel: 'icon',
-				type: 'image/x-icon',
-				href: '/favicon.ico'
+				type: 'image/png',
+				href: '/favicon.png'
 			},
 			// { rel: 'stylesheet', href: 'https://fonts.googleapis.com/css?family=Material+Icons|Ubuntu+Mono|Roboto+Mono' }
 			{ rel: 'stylesheet', href: 'https://fonts.googleapis.com/css?family=Material+Icons|Ubuntu+Mono|Ubuntu' }

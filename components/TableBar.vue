@@ -69,45 +69,41 @@
           </span>
         </div>
 
-        <div v-if="detailsActive['scatter-plot']" class="scatter-plot plot">
+        <div v-if="detailsActive['heat-map']" class="heat-map plot">
           <div class="plot-title">
-            Scatter plot
+            Heat Map
           </div>
-          <!-- <div class="scatter-plot-y"> {{dataset.columns[detailedColumns[1]].name}} </div> -->
-          <Interactive
-            @signal:pts_tuple="displaySelection"
-            ref="scatter-plot"
-            class="scatter-plot-grid mb-2"
+          <!-- <div class="heat-map-y"> {{dataset.columns[detailedColumns[1]].name}} </div> -->
+          <vegaEmbed
+            :name="'heatmap'"
+            autosize
+            ref="heat-map"
+            class="heat-map-grid mb-3"
             v-if="detailedColumns.length>=2"
-            :selection="{
-              pts: {
-                type: 'single',
-                on: 'mouseover',
-                'fields': [
-                  detailedColumns[0].toString(),
-                  detailedColumns[1].toString()
-                ]
-              }
+            :data="{values: dataset.sample.value}"
+            :mark="{
+              type: 'rect',
+              tooltip: true
             }"
-            :width="385"
-            :height="275"
-            :data="dataset.sample.value"
-            mark="point"
+            width="390"
             :encoding="{
-              x: {field: detailedColumns[0].toString(), type: 'quantitative', scale: {zero: false}},
-              y: {field: detailedColumns[1].toString(), type: 'quantitative'},
-              opacity: {
-                condition: {selection: 'pts', value: 1},
-                value: 0.5
+              x: {bin: { maxbins: 80 }, title: dataset.columns[detailedColumns[0]].name, field: detailedColumns[0].toString(), type: 'ordinal'},
+              y: {bin: { maxbins: 80 }, title: dataset.columns[detailedColumns[1]].name, field: detailedColumns[1].toString(), type: 'ordinal'},
+              color: {
+                type: 'quantitative',
+                aggregate: 'count',
+                scale: {range: ['#82bcfa', '#e57373']},
+                legend: { direction: 'vertical', type: 'gradient', gradientLength: 120 }
               },
-              size: {
-                value: 75
-              }
             }"
             :config="{
+              view: {
+                stroke: 'transparent'
+              },
               axis: {
+                titleOpacity: 0,
                 domainColor: '#fff',
-                title: null,
+                title: 0,
                 gridColor: '#fff',
                 ticks: false,
                 domainOpacity: 0,
@@ -115,20 +111,68 @@
                 tickOpacity: 0,
                 labelPadding: 0,
                 labels: false,
+              },
+            }"
+            >
+          </vegaEmbed>
+        </div>
+        <div v-if="detailsActive['scatter-plot']" class="scatter-plot plot">
+          <div class="plot-title">
+            Scatter plot
+          </div>
+          <vegaEmbed
+            :name="'scatterplot'"
+            @signal:pts_tuple="displaySelection"
+            ref="scatter-plot"
+            class="scatter-plot-grid mb-2"
+            v-if="detailedColumns.length>=2"
+            :data="{values: dataset.sample.value}"
+            :mark="{
+              type: 'point',
+              filled: true,
+              tooltip: true
+            }"
+            width="400"
+            :selection="{
+              'highlight': {'type': 'single', 'empty': 'none', 'on': 'mouseover', 'fields': [detailedColumns[0].toString(),detailedColumns[1].toString()]},
+              'select': {'type': 'multi'}
+            }"
+            :encoding="{
+              x: {field: detailedColumns[0].toString(), title: dataset.columns[detailedColumns[0]].name, titleOpacity: 0, type: 'quantitative', scale: {zero: false}},
+              y: {field: detailedColumns[1].toString(), title: dataset.columns[detailedColumns[1]].name, titleOpacity: 0, type: 'quantitative'},
+              opacity: {
+                condition: {selection: 'highlight', value: 1},
+                value: 0.5
+              },
+              size: {
+                value: 75
+              },
+              color: {
+                condition: {selection: 'highlight', value: '#82bcfa'},
+                value: '#4db6ac'
+              }
+            }"
+            :config="{
+              axis: {
+                titleOpacity: 0,
+                domainColor: '#fff',
+                title: 0,
+                gridColor: '#fff',
+                ticks: false,
+                domainOpacity: 0,
+                gridOpacity: 0,
+                tickOpacity: 0,
+                labelPadding: 0,
+                labels: false,
+              },
+              view: {
+                stroke: 'transparent'
               }
             }"
             >
-          </Interactive>
-          <!-- <div class="scatter-plot-x"> {{dataset.columns[detailedColumns[0]].name}} </div> -->
-          <div class="plot-display" v-if="scatterPlotDisplay && scatterPlotDisplay[0]">
-            <div class="value">
-              {{ dataset.columns[detailedColumns[0]].name }}(x): {{ scatterPlotDisplay[0] }}
-            </div>
-            <div class="value">
-              {{ dataset.columns[detailedColumns[1]].name }}(y): {{ scatterPlotDisplay[1] }}
-            </div>
-          </div>
+          </vegaEmbed>
         </div>
+
         <template v-for="(column, i) in detailedColumns">
           <ColumnDetails :key="column" :startExpanded="i==0" :rowsCount="+dataset.summary.rows_count" :column="dataset.columns[column]"></ColumnDetails>
         </template>
@@ -296,10 +340,8 @@
 import DataBar from '@/components/DataBar'
 import GraphicsRenderer from '@/components/GraphicsRenderer'
 import ColumnDetails from '@/components/ColumnDetails'
+import VegaEmbed from '@/components/VegaEmbed'
 import dataTypesMixin from '@/plugins/mixins/data-types'
-
-import VueVega from 'vue-vega'
-import Interactive from 'vue-vega/spec/vega-lite/interactive.vl.json'
 
 import { throttle } from '@/utils/functions.js'
 
@@ -307,8 +349,8 @@ export default {
 	components: {
 		DataBar,
     GraphicsRenderer,
-    Interactive: VueVega.mapVegaLiteSpec(Interactive),
-    ColumnDetails
+    ColumnDetails,
+    VegaEmbed
 	},
 
 	mixins: [dataTypesMixin],
@@ -602,7 +644,10 @@ export default {
     handleSelection (selected, plotable = []) {
       if (selected.length) {
         this.detailsActive = {}
-        this.detailsActive['scatter-plot']=(plotable.length==2 && selected.length==2);
+        if (plotable.length==2 && selected.length==2) {
+          // this.detailsActive['scatter-plot'] = true
+          this.detailsActive['heat-map'] = true
+        }
       }
       else {
         this.detailsActive = false
