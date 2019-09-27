@@ -4,10 +4,10 @@
     <table class="details-table">
       <tbody>
         <tr v-for="(item, index) in values.slice(0,10)" :key="index">
-          <td style="width:80%;">
-            <div :style="{'width': normVal(item.count)+'%' }" :title="item.value" class="top-bar">
-              <div>{{ item.value | varCheck }}</div>
+          <td class="top-bar" style="width:80%;">
+            <div :style="{'width': normVal(item.count)+'%' }" :title="item.value" class="bar">
             </div>
+            <div class="value">{{ item.value | varCheck }}</div>
           </td>
           <td style="width:20%;" :title="item.count | varCheck">{{ item.count | varCheck }}</td>
         </tr>
@@ -55,12 +55,6 @@ tr {
     &:first-child {
       padding-left: 0 !important;
     }
-	}
-
-	&:hover {
-    .top-bar {
-      background-color: #3c948b;
-		}
 	}
 }
 </style>

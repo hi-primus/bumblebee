@@ -69,6 +69,105 @@
           </span>
         </div>
 
+        <div v-if="detailsActive['heat-map']" class="heat-map plot">
+          <div class="plot-title">
+            Heat Map
+          </div>
+          <!-- <div class="heat-map-y"> {{dataset.columns[detailedColumns[1]].name}} </div> -->
+          <vega-lite
+            autosize
+            :transform="[{
+              'filter': {
+                'field': 'z', 'gt': '0',
+              }
+            }]"
+            ref="heat-map"
+            class="heat-map-grid mb-3"
+            v-if="heatMap"
+            :data="heatMap"
+            mark="rect"
+            :encoding="{
+              'x': {'field': 'x', 'type': 'ordinal'},
+              'y': {'field': 'y', 'type': 'ordinal'},
+              'color': {
+                'field': 'z',
+                'type': 'quantitative',
+                'scale': {'range': ['#82bcfa', '#4db6ac', '#eedc3e', '#e57373']}
+              }
+            }"
+            :config="{
+              view: {
+                stroke: 'transparent'
+              },
+              axis: {
+                domainColor: '#fff',
+                title: null,
+                gridColor: '#fff',
+                ticks: false,
+                domainOpacity: 0,
+                gridOpacity: 0,
+                tickOpacity: 0,
+              },
+              color: {
+                domainColor: '#fff',
+                title: null,
+                gridColor: '#fff',
+                ticks: false,
+                domainOpacity: 0,
+                gridOpacity: 0,
+                tickOpacity: 0,
+                labels: false,
+                strokeWidth: 0
+              }
+            }"
+            >
+          </vega-lite>
+          <vega-lite
+            autosize
+            ref="heat-map"
+            class="heat-map-grid mb-3"
+            v-if="heatMap && false"
+            :data="dataset.sample.value"
+            mark="rect"
+            :encoding="{
+              'x': {'bin': { maxbins: 20 }, 'field': +detailedColumns[0], 'type': 'quantitative'},
+              'y': {'bin': { maxbins: 20 }, 'field': +detailedColumns[1], 'type': 'quantitative'}
+            }"
+            :transform="[{
+              'filter': {'and': [
+                {'field': +detailedColumns[0], 'valid': true},
+                {'field': +detailedColumns[1], 'valid': true}
+              ]}
+            }]"
+            :config="{
+              view: {
+                stroke: 'transparent'
+              },
+              axis: {
+                domainColor: '#fff',
+                title: null,
+                gridColor: '#fff',
+                ticks: false,
+                domainOpacity: 0,
+                gridOpacity: 0,
+                tickOpacity: 0,
+              },
+              color: {
+                domainColor: '#fff',
+                title: null,
+                gridColor: '#fff',
+                ticks: false,
+                domainOpacity: 0,
+                gridOpacity: 0,
+                tickOpacity: 0,
+                labels: false,
+                strokeWidth: 0
+              }
+            }"
+            >
+          </vega-lite>
+          <!-- <div class="heat-map-x"> {{dataset.columns[detailedColumns[0]].name}} </div> -->
+        </div>
         <div v-if="detailsActive['scatter-plot']" class="scatter-plot plot">
           <div class="plot-title">
             Scatter plot
@@ -129,6 +228,7 @@
             </div>
           </div>
         </div>
+
         <template v-for="(column, i) in detailedColumns">
           <ColumnDetails :key="column" :startExpanded="i==0" :rowsCount="+dataset.summary.rows_count" :column="dataset.columns[column]"></ColumnDetails>
         </template>
@@ -348,6 +448,8 @@ export default {
       detailsActive: false,
 
       scatterPlotDisplay: [],
+
+      heatMap: [],
 
       detailedColumns: [],
 
@@ -602,13 +704,80 @@ export default {
     handleSelection (selected, plotable = []) {
       if (selected.length) {
         this.detailsActive = {}
-        this.detailsActive['scatter-plot']=(plotable.length==2 && selected.length==2);
+        if (plotable.length==2 && selected.length==2) {
+          this.detailsActive['scatter-plot'] = true
+          this.detailsActive['heat-map'] = true
+          this.heatMap = this.calculateHeatMap(plotable[0],plotable[1],12,12)
+        }
       }
       else {
         this.detailsActive = false
       }
 
       this.detailedColumns = selected;
+    },
+
+    calculateHeatMap (xindex,yindex,xbinsize,ybinsize) {
+
+      let minX = this.dataset.columns[xindex].stats.min;
+      let minY = this.dataset.columns[yindex].stats.min;
+
+      let maxX = this.dataset.columns[xindex].stats.max;
+      let maxY = this.dataset.columns[yindex].stats.max;
+
+      let jumpX = minX + (maxX - minX) / xbinsize;
+      let jumpY = minY + (maxY - minY) / ybinsize;
+
+      let bin = {}
+      let _binElement = {}
+
+      for (let i = 0; i < ybinsize; i++) {
+        let binYIndex = (minY + jumpY*i).toFixed(4)
+        _binElement[binYIndex] = 0
+      }
+
+      for (let i = 0; i < xbinsize; i++) {
+        let binXIndex = (minX + jumpX*i).toFixed(4)
+        bin[binXIndex] = {..._binElement}
+      }
+
+      console.log("this.dataset.sample.value",this.dataset.sample.value)
+
+      for (let i = 0; i < this.dataset.sample.value.length; i++) {
+
+        let _xv = this.dataset.sample.value[i][xindex]
+        let _yv = this.dataset.sample.value[i][yindex]
+
+        if (_xv == maxX)
+          (_xv-=jumpX/2)
+        if (_yv == maxY)
+          (_yv-=jumpY/2)
+
+        let _x = (Math.floor( ( this.dataset.sample.value[i][xindex] - minX ) / jumpX ) * jumpX + minX ).toFixed(4)
+        let _y = (Math.floor( ( this.dataset.sample.value[i][yindex] - minY ) / jumpY ) * jumpY + minY ).toFixed(4)
+
+        bin[_x][_y] = bin[_x][_y]+1
+      }
+
+      let data = []
+
+      for (var x in bin) {
+        for (var y in bin[x]) {
+          // if (+(bin[x][y]) != 0)
+          data.push({x: +x, y: +y, z: +(bin[x][y])})
+        }
+      }
+
+      console.log("data",data)
+
+      // bin.forEach((_binE,x) => {
+      //   _binE.forEach((z,y) => {
+      //     data.push({x, y, z})
+      //   })
+      // })
+
+      return data
+
     },
 
 		getHotColumns () {

@@ -211,7 +211,7 @@ table.table thead td:not(:nth-child(1)), table.table tbody td:not(:nth-child(1))
   }
 
   .data-bar-green {
-    background-color: $data-green;
+    background-color: $data-teal;
     height: 100%;
     width: 0;
   }
@@ -422,6 +422,22 @@ table {
   }
 }
 
+.heat-map {
+  min-height: 170px;
+	.role-legend-entry {
+    transform: rotate(-90deg) translate(-118px, -22px) scale(1);
+    text {
+      text-anchor: start;
+      &:last-child {
+        transform: rotate(90deg) translate(29px, -90px)
+      }
+      &:first-child {
+        transform: rotate(90deg) translate(23px, -2px)
+      }
+    }
+	}
+}
+
 .scatter-plot {
   display: flex;
   flex-wrap: wrap;
@@ -444,12 +460,9 @@ table {
   }
   .scatter-plot-grid {
     margin-left: -24px;
-    svg {
-      overflow: visible;
-    }
     g.mark-symbol.role-mark.marks * {
-      fill: rgba($data-green, 60%) !important;
-      stroke: rgba($data-green, 30%) !important;
+      fill: rgba($data-teal, 60%) !important;
+      stroke: rgba($data-teal, 30%) !important;
     }
     g .background {
       display: none;
@@ -460,6 +473,9 @@ table {
   }
 }
 
+.plot svg {
+  overflow: visible !important;
+}
 .plot-display {
   width: 100%;
   text-align: left;
@@ -522,10 +538,16 @@ table {
 /* top values */
 
 .top-bar {
-  background-color: $data-green;
   position: relative;
-  height: calc(100% - 1px);
-  &>div {
+  .bar {
+    background-color: $data-teal;
+    position: relative;
+    height: calc(100% - 1px);
+  }
+  &:hover .bar {
+    background-color: #3c948b;
+  }
+  .value {
     @include ellipsis;
     padding-left: 12px;
     padding-right: 12px;
@@ -873,7 +895,7 @@ table {
         max-width: 20px;
         .freq-value {
           width: 100%;
-          background-color: $data-green;
+          background-color: $data-teal;
           height: 50%;
           position: absolute;
           bottom: 0;
