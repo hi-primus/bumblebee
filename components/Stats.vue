@@ -6,42 +6,42 @@
 
         <tr>
           <td style="width:50%;">Standard deviation</td>
-          <td style="width:50%;" :value="(+values.stddev).toFixed(2)">{{ (+values.stddev).toFixed(2) }}</td>
+          <td style="width:50%;" :title="(+values.stddev)">{{ +(+values.stddev).toFixed(2) }}</td>
         </tr>
 
         <tr>
           <td style="width:50%;">Coef of variation</td>
-          <td style="width:50%;" :value="(+values.coef_variation).toFixed(2)">{{ (+values.coef_variation).toFixed(2) }}</td>
+          <td style="width:50%;" :title="(+values.coef_variation)">{{ +(+values.coef_variation).toFixed(2) }}</td>
         </tr>
 
         <tr>
           <td style="width:50%;">Kurtosis</td>
-          <td style="width:50%;" :value="(+values.kurtosis).toFixed(2)">{{ (+values.kurtosis).toFixed(2) }}</td>
+          <td style="width:50%;" :title="(+values.kurtosis)">{{ +(+values.kurtosis).toFixed(2) }}</td>
         </tr>
 
         <tr>
           <td style="width:50%;">Mean</td>
-          <td style="width:50%;" :value="(+values.mean).toFixed(2)">{{ (+values.mean).toFixed(2) }}</td>
+          <td style="width:50%;" :title="(+values.mean)">{{ +(+values.mean).toFixed(2) }}</td>
         </tr>
 
         <tr>
           <td style="width:50%;">MAD</td>
-          <td style="width:50%;" :value="(+values.mad).toFixed(2)">{{ (+values.mad).toFixed(2) }}</td>
+          <td style="width:50%;" :title="(+values.mad)">{{ +(+values.mad).toFixed(2) }}</td>
         </tr>
 
         <tr>
           <td style="width:50%;">Skewness</td>
-          <td style="width:50%;" :value="(+values.skewness).toFixed(2)">{{ (+values.skewness).toFixed(2) }}</td>
+          <td style="width:50%;" :title="(+values.skewness)">{{ +(+values.skewness).toFixed(2) }}</td>
         </tr>
 
         <tr>
           <td style="width:50%;">Sum</td>
-          <td style="width:50%;" :value="(+values.variance).toFixed(2)">{{ (+values.variance).toFixed(2) }}</td>
+          <td style="width:50%;" :title="(+values.variance)">{{ +(+values.variance).toFixed(2) }}</td>
         </tr>
 
         <tr>
           <td style="width:50%;">Variance</td>
-          <td style="width:50%;" :value="(+values.range).toFixed(2)">{{ (+values.range).toFixed(2) }}</td>
+          <td style="width:50%;" :title="(+values.range)">{{ +(+values.range).toFixed(2) }}</td>
         </tr>
       </tbody>
     </table>
