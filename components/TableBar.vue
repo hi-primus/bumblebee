@@ -63,9 +63,10 @@
       <div class="sidebar-content">
 
         <div v-if="detailedColumns.length>1" class="sidebar-section columns-selected">
-          <span class="column-selected" v-for="column in detailedColumns" :key="column">
-            <span class="data-type" :class="`type-${dataset.columns[column].column_dtype}`">{{ dataType(dataset.columns[column].column_dtype) }}</span>
-            <span class="data-type-name">{{ dataset.columns[column].name }}</span>
+          <!-- TODO: Navigate using .column-selected -->
+          <span class="column-selected" v-for="column in detailedColumns" :key="column.index">
+            <span class="data-type" :class="`type-${dataset.columns[column.index].column_dtype}`">{{ dataType(dataset.columns[column.index].column_dtype) }}</span>
+            <span class="data-type-name">{{ dataset.columns[column.index].name }}</span>
           </span>
         </div>
 
@@ -73,28 +74,32 @@
           <div class="plot-title">
             Heat Map
           </div>
-          <!-- <div class="heat-map-y"> {{dataset.columns[detailedColumns[1]].name}} </div> -->
+          <!-- <div class="heat-map-y"> {{dataset.columns[detailedColumns[1].index].name}} </div> -->
           <vegaEmbed
             :name="'heatmap'"
-            autosize
+            :autosize="{
+              type: 'fit'
+            }"
             ref="heat-map"
-            class="heat-map-grid mb-3"
-            v-if="detailedColumns.length>=2"
-            :data="{values: dataset.sample.value}"
+            class="heat-map-grid mb-0 pl-6"
+            v-if="heatMap"
+            :data="{values: heatMap}"
             :mark="{
               type: 'rect',
               tooltip: true
             }"
-            width="390"
+            :width="340"
+            :height="300"
             :encoding="{
-              x: {bin: { maxbins: 80 }, title: dataset.columns[detailedColumns[0]].name, field: detailedColumns[0].toString(), type: 'ordinal'},
-              y: {bin: { maxbins: 80 }, title: dataset.columns[detailedColumns[1]].name, field: detailedColumns[1].toString(), type: 'ordinal'},
-              color: {
-                type: 'quantitative',
-                aggregate: 'count',
-                scale: {range: ['#82bcfa', '#e57373']},
-                legend: { direction: 'vertical', type: 'gradient', gradientLength: 120 }
-              },
+              ...heatMapEncoding,
+              'color': {
+                'field': 'z',
+                title: 'n',
+                'type': 'quantitative',
+                scale: {range: ['#e6fffd', '#8cd7d0', '#4db6ac']},
+                legend: { direction: 'vertical', type: 'gradient', gradientLength: 120, titleAlign: 'left', title: ' n' },
+                condition: { test: 'datum.z<=0', value: 'white'}
+              }
             }"
             :config="{
               view: {
@@ -134,12 +139,12 @@
             }"
             width="400"
             :selection="{
-              'highlight': {'type': 'single', 'empty': 'none', 'on': 'mouseover', 'fields': [detailedColumns[0].toString(),detailedColumns[1].toString()]},
+              'highlight': {'type': 'single', 'empty': 'none', 'on': 'mouseover', 'fields': [detailedColumns[0].index.toString(),detailedColumns[1].index.toString()]},
               'select': {'type': 'multi'}
             }"
             :encoding="{
-              x: {field: detailedColumns[0].toString(), title: dataset.columns[detailedColumns[0]].name, titleOpacity: 0, type: 'quantitative', scale: {zero: false}},
-              y: {field: detailedColumns[1].toString(), title: dataset.columns[detailedColumns[1]].name, titleOpacity: 0, type: 'quantitative'},
+              x: {field: detailedColumns[0].index.toString(), title: dataset.columns[detailedColumns[0].index].name, titleOpacity: 0, type: 'quantitative', scale: {zero: false}},
+              y: {field: detailedColumns[1].index.toString(), title: dataset.columns[detailedColumns[1].index].name, titleOpacity: 0, type: 'quantitative'},
               opacity: {
                 condition: {selection: 'highlight', value: 1},
                 value: 0.5
@@ -174,7 +179,7 @@
         </div>
 
         <template v-for="(column, i) in detailedColumns">
-          <ColumnDetails :key="column" :startExpanded="i==0" :rowsCount="+dataset.summary.rows_count" :column="dataset.columns[column]"></ColumnDetails>
+          <ColumnDetails :key="column.index" :startExpanded="i==0" :rowsCount="+dataset.summary.rows_count" :column="dataset.columns[column.index]"></ColumnDetails>
         </template>
       </div>
     </div>
@@ -389,6 +394,9 @@ export default {
 
       detailsActive: false,
 
+      heatMap: [],
+      heatMapEncoding: {},
+
       scatterPlotDisplay: [],
 
       detailedColumns: [],
@@ -482,7 +490,11 @@ export default {
           },
           index: i,
           name: column.name,
-          plotable: ['int','decimal','float','double','integer'].includes(column.column_dtype),
+          plotable: (
+              ['int','decimal','float','double','integer'].includes(column.column_dtype) ? 'quantitative'
+              : (column.stats.count_uniques<=20) ? false // 'ordinal'
+              : false
+            ),
 					missing: column.stats.count_na,
 					zeros: column.stats.zeros,
 					total: this.dataset.summary.rows_count,
@@ -557,6 +569,87 @@ export default {
       }
     },100),
 
+    calculateHeatMap (xindex,yindex,xbinsize,ybinsize) {
+
+      let minX = /*Math.floor*/ (this.dataset.columns[xindex].stats.min)
+      let minY = /*Math.floor*/ (this.dataset.columns[yindex].stats.min)
+
+      let maxX = /*Math.ceil*/ (this.dataset.columns[xindex].stats.max)
+      let maxY = /*Math.ceil*/ (this.dataset.columns[yindex].stats.max)
+
+      let jumpX = (maxX - minX) / xbinsize
+      let jumpY = (maxY - minY) / ybinsize
+
+
+      if (jumpX===0) {
+        jumpX = 0.1
+        maxX = minX + jumpX*xbinsize
+      }
+
+      if (jumpY===0) {
+        jumpY = 0.1
+        maxY = minY + jumpY*xbinsize
+      }
+
+      let bin = {}
+      let _binElement = {}
+
+      for (let i = 0; i < ybinsize; i++) {
+        let binYIndex = (minY + jumpY*i)
+        _binElement[binYIndex] = 0
+      }
+
+      for (let i = 0; i < xbinsize; i++) {
+        let binXIndex = (minX + jumpX*i)
+        bin[binXIndex] = {..._binElement}
+      }
+
+      for (let i = 0; i < this.dataset.sample.value.length; i++) {
+
+        let _xv = this.dataset.sample.value[i][xindex]
+        let _yv = this.dataset.sample.value[i][yindex]
+
+        let _x = undefined
+        let _y = undefined
+
+        for (var x in bin) {
+          if (_xv<=+x+jumpX) {
+            _x = x
+            break
+          }
+        }
+
+        for (var y in bin[_x]) {
+          if (_yv<=+y+jumpY) {
+            _y = y
+            break
+          }
+        }
+
+        if (_x===undefined) {
+          _x = minX + jumpX*(xbinsize-1)
+        }
+
+        if (_y===undefined) {
+          _y = minY + jumpY*(ybinsize-1)
+        }
+
+        bin[_x][_y] = bin[_x][_y]+1
+      }
+
+      let data = []
+
+      for (var x in bin) {
+        for (var y in bin[x]) {
+          // if (+(bin[x][y]) != 0)
+          data.push({x: +x, x2: +x+jumpX, y: +y, y2: +y+jumpY, z: +(bin[x][y])})
+        }
+      }
+
+      return data
+
+    },
+
 		getSubTypes (item) {
 			if (item.dtypes_stats) {
 				return Object.keys(item.dtypes_stats)
@@ -627,9 +720,9 @@ export default {
             let found = selectedIndices.findIndex( (e) => { return (e === columnData.index.toString()) } )
 
             if (found===-1) {
-              selectedIndices.push(columnData.index.toString())
+              selectedIndices.push({index: columnData.index.toString(), type: columnData.plotable})
               if (columnData.plotable) { // TODO: remove 'plotable'
-                plotableIndices.push(columnData.index.toString())
+                plotableIndices.push({index: columnData.index.toString(), type: columnData.plotable})
               }
             }
 
@@ -647,6 +740,57 @@ export default {
         if (plotable.length==2 && selected.length==2) {
           // this.detailsActive['scatter-plot'] = true
           this.detailsActive['heat-map'] = true
+          this.heatMap = this.calculateHeatMap(plotable[0].index,plotable[1].index,20,20)
+
+
+          let _x =
+          (plotable[0].type==='quantitative') ? {
+            x: {
+              field: 'x',
+              title: this.dataset.columns[plotable[0].index].name,
+              type: plotable[0].type,
+              bin: {
+                binned: true
+              }
+            },
+            x2: {
+              field: 'x2',
+            },
+          }
+          : {
+            x: {
+              field: 'x',
+              title: this.dataset.columns[plotable[0].index].name,
+              type: plotable[0].type
+            }
+          }
+
+          let _y =
+          (plotable[1].type==='quantitative') ? {
+            y: {
+              field: 'y',
+              title: this.dataset.columns[plotable[1].index].name,
+              type: plotable[1].type,
+              bin: {
+                binned: true
+              }
+            },
+            y2: {
+              field: 'y2',
+            },
+          }
+          : {
+            y: {
+              field: 'y',
+              title: this.dataset.columns[plotable[1].index].name,
+              type: plotable[1].type
+            }
+          }
+
+          this.heatMapEncoding ={
+            ..._x,
+            ..._y
+          }
         }
       }
       else {
@@ -721,8 +865,8 @@ export default {
         const column = this.dataset.columns[i];
         if (this.selectedColumns[column.name]){
           if (this.graphicsData[i].plotable)
-            _plotable.push(i)
-          _selected.push(i)
+            _plotable.push({index: i, type: this.graphicsData[i].plotable})
+          _selected.push({index: i, type: this.graphicsData[i].plotable})
         }
       }
 
@@ -845,6 +989,9 @@ export default {
     left: 4px;
     pointer-events: none;
     top: 6px;
+		max-width: 32px;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
   .columnSorting {
     position: initial !important;

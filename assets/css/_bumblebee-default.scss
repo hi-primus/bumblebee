@@ -97,23 +97,24 @@ table.table {
 }
 
 table.details-table {
+  $_padding: 6px;
   text-align: left;
-  width: calc(100% + 24px);
-  margin-left: -12px;
-  margin-right: -12px;
+  width: calc(100% + #{$_padding*2});
+  margin-left: -$_padding;
+  margin-right: -$_padding;
   border-spacing: 0;
   td, th {
     padding: 0 4px;
     &:first-child {
-      padding-left: 12px !important;
+      padding-left: $_padding !important;
     }
     &:last-child {
-      padding-right: 12px !important;
+      padding-right: $_padding !important;
       text-align: right;
     }
   }
   tr {
-    &:hover {
+    &:not(.nohighlight):hover {
       background-color: $data-highlight-grey;
     }
   }
@@ -383,21 +384,24 @@ table {
       font-family: $font-mono;
       line-height: 26px;
       border-bottom: $line-color-1 1px solid;
-      &:first-child {
-        border-top: $line-color-1 1px solid;
-      }
+      // &:first-child {
+      //   border-top: $line-color-1 1px solid;
+      // }
     }
     .column-title {
       font-family: $font-mono;
-      font-weight: 700;
+      // font-weight: 700;
     }
     .sidebar-section {
       border-bottom: $line-color-1 1px solid;
-      padding: 3px 8px 4px 8px;
+      margin-left: -4px;
+      margin-right: -4px;
+      padding: 3px 12px 4px 12px;
       // font-family: $font-mono;
       line-height: 26px;
     }
     .columns-selected {
+      color: #444;
       font-family: $font-mono;
       .column-selected {
         &:not(:last-child)::after {
@@ -430,18 +434,18 @@ table {
 
 .heat-map {
   // min-height: 170px;
-	.role-legend-entry {
-    transform: rotate(-90deg) translate(-118px, -22px) scale(1);
-    text {
-      text-anchor: start;
-      &:last-child {
-        transform: rotate(90deg) translate(29px, -90px)
-      }
-      &:first-child {
-        transform: rotate(90deg) translate(23px, -2px)
-      }
-    }
-	}
+	// .role-legend-entry {
+  //   transform: rotate(-90deg) translate(-118px, -22px) scale(1);
+  //   text {
+  //     text-anchor: start;
+  //     &:last-child {
+  //       transform: rotate(90deg) translate(29px, -90px)
+  //     }
+  //     &:first-child {
+  //       transform: rotate(90deg) translate(23px, -2px)
+  //     }
+  //   }
+	// }
 }
 
 .scatter-plot {
@@ -479,9 +483,9 @@ table {
   }
 }
 
-.plot svg {
-  overflow: visible !important;
-}
+// .plot svg {
+//   overflow: visible !important;
+// }
 .plot-display {
   width: 100%;
   text-align: left;

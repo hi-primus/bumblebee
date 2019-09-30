@@ -28,6 +28,8 @@ export default {
 			case 'array':
 				return '[ ]'
 			case 'date':
+			case 'timestamp':
+			case 'time':
 				return '🕓'
 			default:
 				return data

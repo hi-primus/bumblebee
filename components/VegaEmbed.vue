@@ -70,10 +70,6 @@ export default {
     const vegaLite = require('vega-lite')
     const vegaEmbed = require('vega-embed').default
 
-    console.log('vegaEmbed',vegaEmbed)
-
-    console.log('vegaLite',vegaLite)
-
     let vlSpec = {
       spec: this.spec,
       $schema: this.$schema,
@@ -96,11 +92,11 @@ export default {
     };
 
     let options = {
-      renderType: 'svg',
-      renderer: 'svg'
+      // renderType: 'svg',
+      // renderer: 'svg'
     }
 
-    vegaEmbed(this.$el, vlSpec), options;
+    vegaEmbed(this.$el, vlSpec, options);
   },
 
   methods: {
