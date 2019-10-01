@@ -140,7 +140,6 @@ import General from '@/components/General'
 import Percentile from '@/components/PercentileStats'
 import Descriptive from '@/components/Stats'
 import Histogram from '@/components/Histogram'
-import DataBar from '@/components/DataBar'
 import DataTypes from '@/components/DataTypes'
 import dataTypesMixin from '~/plugins/mixins/data-types'
 
@@ -152,7 +151,6 @@ export default {
 		Descriptive,
 		Frequent,
 		Histogram,
-		DataBar,
 		DataTypes
 	},
 

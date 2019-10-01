@@ -167,13 +167,14 @@
                     @change="typesUpdated"
                   >
                     <template v-slot:item="{ item }">
-                      <div class="data-type in-autocomplete">{{ dataType(item.value) }}</div> {{ item.text }}
+                      <div class="data-type in-autocomplete">{{ dataType(item) }}</div> <span class="capitalize">{{ item }}</span>
                     </template>
                   </v-autocomplete>
                 </div>
               </div>
             </div>
             <TableBar
+              v-if="$store.state.datasets[tab]"
               :key="tableKey"
               :current-tab="tab"
               :view.sync="view"
@@ -231,14 +232,14 @@ export default {
 			view: undefined,
 			confirmDelete: -1,
 			typesAvailable: [
-				{ text: 'String', value: 'string' },
-				{ text: 'Integer', value: 'int' },
-				{ text: 'Decimal', value: 'decimal' },
-				{ text: 'Date', value: 'date' },
-				{ text: 'Boolean', value: 'boolean' },
-				{ text: 'Binary', value: 'binary' },
-				{ text: 'Array', value: 'array' },
-				{ text: 'Null', value: 'null' }
+				'string',
+				'int',
+				'decimal',
+				'date',
+				'boolean',
+				'binary',
+				'array',
+				'null'
 			],
 			typesSelected: [],
 			typesInput: '',
@@ -259,19 +260,35 @@ export default {
 	},
 
 	watch: {
+
+    status (value) {
+      if (value!='received')
+        return
+
+      let dataset = this.$store.state.datasets[this.tab]
+
+      if (dataset && dataset.dtypes_list)
+        this.typesAvailable = dataset.dtypes_list
+    },
+
 		tab (value) {
 			if (value === undefined) {
 				return
-			}
+      }
 
-			if (value !== 0 && !this.$store.state.datasets[value]) {
-				this.tab = 0
+      let dataset = this.$store.state.datasets[value]
+
+			if (value !== undefined && !dataset) {
+				this.tab = (this.$store.state.datasets[0]) ? 0 : undefined
 				return
 			}
 
 			this.$router.replace({ path: this.$route.fullPath, query: { tab: value } }, () => {
 				history.replaceState('Dashboard', 'Bumblebee', this.$route.fullPath)
-			})
+      })
+
+      if (dataset && dataset.dtypes_list)
+        this.typesAvailable = dataset.dtypes_list
 		},
 		view (value) {
 			if (value === undefined) { return }
@@ -282,7 +299,7 @@ export default {
 	},
 
 	created () {
-		this.tab = +(this.$route.query.tab || 0)
+		this.tab = this.$route.query.tab
 		this.view = +(this.$route.query.view || 0)
 	},
 

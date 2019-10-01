@@ -4,6 +4,8 @@
     <DataBar
       :missing="value.missing"
       :total="+value.total"
+      :mismatch="+value.mismatch"
+      :nullV="+value.null"
       class="table-data-bar"
       bottom
     />
