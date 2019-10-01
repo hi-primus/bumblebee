@@ -155,6 +155,7 @@ table.details-table {
 }
 
 .v-tooltip__content {
+  z-index: 103 !important;
   opacity: 1 !important;
   background-color: rgba(97,97,97) !important;
 }

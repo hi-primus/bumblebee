@@ -26,13 +26,15 @@ export default {
 			case 'boolean':
 				return '0/1'
 			case 'array':
-				return '[ ]'
+        return '[ ]'
+      case 'categorical':
+        return 'cat'
 			case 'date':
 			case 'timestamp':
 			case 'time':
 				return '🕓'
 			default:
-				return data
+				return data.substring(0,3)
 			}
 		}
 	}
