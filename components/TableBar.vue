@@ -88,8 +88,8 @@
               type: 'rect',
               tooltip: true
             }"
-            :width="340"
-            :height="300"
+            :height="(heatMapEncoding.y2) ? 300 : undefined"
+            :width="(heatMapEncoding.x2) ? 336 : undefined"
             :encoding="{
               ...heatMapEncoding,
               'color': {
@@ -98,12 +98,14 @@
                 'type': 'quantitative',
                 scale: {range: ['#e6fffd', '#8cd7d0', '#4db6ac']},
                 legend: { direction: 'vertical', type: 'gradient', gradientLength: 120, titleAlign: 'left', title: ' n' },
-                condition: { test: 'datum.z<=0', value: 'white'}
+                // condition: { test: 'datum.z<=0', value: 'white'}
               }
             }"
             :config="{
               view: {
-                stroke: 'transparent'
+                strokeWidth: 0,
+                stroke: 'transparent',
+                step: 15
               },
               axis: {
                 titleOpacity: 0,
@@ -489,8 +491,9 @@ export default {
           index: i,
           name: column.name,
           plotable: (
-              ['int','decimal','float','double','integer'].includes(column.column_dtype) ? 'quantitative'
-              : (column.stats.count_uniques<=20) ? false // 'ordinal'
+              ['decimal','float','double'].includes(column.column_dtype) ? 'quantitative'
+              : (['int','integer'].includes(column.column_dtype) && column.stats.count_uniques>20) ? 'quantitative'
+              : (column.stats.count_uniques<=20) ? column.stats.count_uniques
               : false
             ),
           mismatch: (column.dtypes_stats.mismatch) ? +column.dtypes_stats.mismatch : 0,
@@ -569,13 +572,19 @@ export default {
       }
     },100),
 
-    calculateHeatMap (xindex,yindex,xbinsize,ybinsize) {
+    calculateHeatMap (xindex,yindex,xsize,ysize) {
 
-      let minX = /*Math.floor*/ (this.dataset.columns[xindex].stats.min)
-      let minY = /*Math.floor*/ (this.dataset.columns[yindex].stats.min)
+      let xint = (xsize===+xsize)
+      let yint = (ysize===+ysize)
 
-      let maxX = /*Math.ceil*/ (this.dataset.columns[xindex].stats.max)
-      let maxY = /*Math.ceil*/ (this.dataset.columns[yindex].stats.max)
+      let xbinsize = (!xint) ? 20 : xsize
+      let ybinsize = (!yint) ? 20 : ysize
+
+      let minX = this.dataset.columns[xindex].stats.min
+      let minY = this.dataset.columns[yindex].stats.min
+
+      let maxX = this.dataset.columns[xindex].stats.max
+      let maxY = this.dataset.columns[yindex].stats.max
 
       let jumpX = (maxX - minX) / xbinsize
       let jumpY = (maxY - minY) / ybinsize
@@ -594,15 +603,17 @@ export default {
       let bin = {}
       let _binElement = {}
 
-      for (let i = 0; i < ybinsize; i++) {
-        let binYIndex = (minY + jumpY*i)
-        _binElement[binYIndex] = 0
-      }
+      if (!yint)
+        for (let i = 0; i < ybinsize; i++) {
+          let binYIndex = (minY + jumpY*i)
+          _binElement[binYIndex] = 0
+        }
 
-      for (let i = 0; i < xbinsize; i++) {
-        let binXIndex = (minX + jumpX*i)
-        bin[binXIndex] = {..._binElement}
-      }
+      if (!xint)
+        for (let i = 0; i < xbinsize; i++) {
+          let binXIndex = (minX + jumpX*i)
+          bin[binXIndex] = {..._binElement}
+        }
 
       for (let i = 0; i < this.dataset.sample.value.length; i++) {
 
@@ -612,37 +623,52 @@ export default {
         let _x = undefined
         let _y = undefined
 
-        for (var x in bin) {
-          if (_xv<=+x+jumpX) {
-            _x = x
-            break
+        if (xint)
+          _x = _xv
+        else
+          for (var x in bin) {
+            if (_xv<=+x+jumpX) {
+              _x = x
+              break
+            }
           }
-        }
 
-        for (var y in bin[_x]) {
-          if (_yv<=+y+jumpY) {
-            _y = y
-            break
+        if (yint)
+          _y = _yv
+        else
+          for (var y in bin[_x]) {
+            if (_yv<=+y+jumpY) {
+              _y = y
+              break
+            }
           }
-        }
 
-        if (_x===undefined) {
+        if (_x===undefined && !xint) {
           _x = minX + jumpX*(xbinsize-1)
         }
 
-        if (_y===undefined) {
+        if (_y===undefined && !yint) {
           _y = minY + jumpY*(ybinsize-1)
+        }
+
+        if (bin[_x] === undefined) {
+          bin[_x] = {}
+        }
+
+        if (bin[_x][_y] === undefined) {
+          bin[_x][_y] = 0
         }
 
         bin[_x][_y] = bin[_x][_y]+1
       }
 
+
       let data = []
 
       for (var x in bin) {
         for (var y in bin[x]) {
-          // if (+(bin[x][y]) != 0)
-          data.push({x: +x, x2: +x+jumpX, y: +y, y2: +y+jumpY, z: +(bin[x][y])})
+          if (+(bin[x][y]) != 0)
+            data.push({x: x, x2: +x+jumpX, y: y, y2: +y+jumpY, z: +(bin[x][y])})
         }
       }
 
@@ -740,7 +766,7 @@ export default {
         if (plotable.length==2 && selected.length==2) {
           // this.detailsActive['scatter-plot'] = true
           this.detailsActive['heat-map'] = true
-          this.heatMap = this.calculateHeatMap(plotable[0].index,plotable[1].index,20,20)
+          this.heatMap = this.calculateHeatMap(plotable[0].index,plotable[1].index,plotable[0].type,plotable[1].type)
 
 
           let _x =
@@ -761,7 +787,7 @@ export default {
             x: {
               field: 'x',
               title: this.dataset.columns[plotable[0].index].name,
-              type: plotable[0].type
+              type: 'ordinal'
             }
           }
 
@@ -783,7 +809,7 @@ export default {
             y: {
               field: 'y',
               title: this.dataset.columns[plotable[1].index].name,
-              type: plotable[1].type
+              type: 'ordinal'
             }
           }
 
