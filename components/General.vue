@@ -8,6 +8,8 @@
             <DataBar
               :missing="+values.count_na"
               :total="rowsCount"
+              :mismatch="vMismatch"
+              :nullV="vNull"
               bottom
             />
           </td>
@@ -30,10 +32,16 @@
           <td style="width:10%; opacity: 0.71;" :title="+pZeros"> {{ +pZeros.toFixed(2) }}% </td>
         </tr>
 
-        <tr v-if="dtypes.null!==null && dtypes.null!==undefined">
+        <tr>
           <td style="width:45%;">Null values</td>
-          <td style="width:100%; text-align: right;" :title="(+dtypes.null)">{{ (+dtypes.null) }}</td>
+          <td style="width:100%; text-align: right;" :title="(+vNull)">{{ (+vNull) }}</td>
           <td style="width:10%; opacity: 0.71;" :title="+pNull"> {{ +pNull.toFixed(2) }}% </td>
+        </tr>
+
+        <tr>
+          <td style="width:45%;">Mismatches</td>
+          <td style="width:100%; text-align: right;" :title="(+vMismatch)">{{ (+vMismatch) }}</td>
+          <td style="width:10%; opacity: 0.71;" :title="+pMismatch"> {{ +pMismatch.toFixed(2) }}% </td>
         </tr>
       </tbody>
     </table>
@@ -74,9 +82,18 @@ export default {
     pZeros () {
       return (this.values.zeros / this.rowsCount)*100
     },
-    pNull () {
-      return (this.dtypes.null / this.rowsCount)*100
+    vNull () {
+      return (this.dtypes.null) ? this.dtypes.null : 0
     },
+    pNull () {
+      return (this.vNull / this.rowsCount)*100
+    },
+    vMismatch () {
+      return (this.dtypes.mismatch) ? this.dtypes.mismatch : 0
+    },
+    pMismatch () {
+      return (this.vMismatch / this.rowsCount)*100
+    }
   }
 }
 </script>

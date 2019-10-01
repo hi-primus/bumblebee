@@ -342,7 +342,6 @@
 </template>
 
 <script>
-import DataBar from '@/components/DataBar'
 import GraphicsRenderer from '@/components/GraphicsRenderer'
 import ColumnDetails from '@/components/ColumnDetails'
 import VegaEmbed from '@/components/VegaEmbed'
@@ -352,7 +351,6 @@ import { throttle } from '@/utils/functions.js'
 
 export default {
 	components: {
-		DataBar,
     GraphicsRenderer,
     ColumnDetails,
     VegaEmbed
@@ -495,6 +493,8 @@ export default {
               : (column.stats.count_uniques<=20) ? false // 'ordinal'
               : false
             ),
+          mismatch: (column.dtypes_stats.mismatch) ? +column.dtypes_stats.mismatch : 0,
+          null: (column.dtypes_stats.null) ? +column.dtypes_stats.null : 0,
 					missing: column.stats.count_na,
 					zeros: column.stats.zeros,
 					total: this.dataset.summary.rows_count,
