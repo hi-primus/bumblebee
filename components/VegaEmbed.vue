@@ -37,7 +37,7 @@ export default {
       type: Object
     },
     height: {
-      type: Number
+      type: [Object, Number, String]
     },
     mark: {
       type: [Object, String]
@@ -55,7 +55,7 @@ export default {
       type: Array
     },
     width: {
-      type: Number
+      type: [Object, Number, String]
     },
     layer: {
       type: Array
