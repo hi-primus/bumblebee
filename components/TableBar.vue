@@ -1,6 +1,6 @@
 <template>
   <div class="dashboard-container">
-    <div class="toolbar">
+    <div class="toolbar" :class="{'disabled': commandsDisabled}">
       <v-btn text class="icon-btn" @click="$emit('update:view',0)">
         <v-icon :color="(view==0) ? 'black' : '#888'">view_headline</v-icon>
       </v-btn>
@@ -11,7 +11,7 @@
       <v-menu :close-on-content-click="false" offset-y>
         <template v-slot:activator="{ on: onSortBy }">
           <v-btn
-            :color="sortBy[0] ? 'black' : '#555'"
+            :color="sortBy[0] ? 'black' : '#888'"
             class="icon-btn"
             text
             v-on="onSortBy"
@@ -53,137 +53,125 @@
           </v-list-item-group>
         </v-list>
       </v-menu>
+      <transition name="fade">
+        <div class="divider" v-if="detailedColumns.length>=1" />
+      </transition>
+      <transition name="fade">
+        <span class="columns-operations" v-if="detailedColumns.length>=1" >
+          <v-btn color="#888" text class="icon-btn" @click="deleteColumns" :loading="operation=='delete'">
+            <v-icon>delete</v-icon>
+          </v-btn>
+        </span>
+      </transition>
+      <!-- <v-btn :color="(optionsActive) ? 'black' : '#888'" text class="icon-btn" @click="optionsActive = !optionsActive">
+        <v-icon>code</v-icon>
+      </v-btn> -->
     </div>
 
-    <div class="sidebar-container" v-if="detailsActive!==false">
-      <div class="sidebar-header">
-        Details
-        <v-icon class="right-button" color="black" @click="detailsActive=false">close</v-icon>
-      </div>
-      <div class="sidebar-content">
-
-        <div v-if="detailedColumns.length>1" class="sidebar-section columns-selected">
-          <!-- TODO: Navigate using .column-selected -->
-          <span class="column-selected" v-for="column in detailedColumns" :key="column.index">
-            <span class="data-type" :class="`type-${dataset.columns[column.index].column_dtype}`">{{ dataType(dataset.columns[column.index].column_dtype) }}</span>
-            <span class="data-type-name">{{ dataset.columns[column.index].name }}</span>
-          </span>
+    <div class="sidebar-container" v-if="detailsActive || optionsActive">
+      <template v-if="optionsActive && false">
+        <div class="sidebar-header">
+          Operations
+          <v-icon class="right-button" color="black" @click="optionsActive = false">close</v-icon>
         </div>
+        <div class="sidebar-content">
+          <table class="sidebar-content option">
+            <tbody>
+              <tr class="input">
+                <td>Input</td>
+                <td style="width: 100%">
+                  <textarea>2+2</textarea>
+                </td>
+              </tr>
+              <tr class="output">
+                <td>Output</td>
+                <td style="width: 100%">
+                  4
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </template>
+      <template v-else-if="detailsActive!==false">
+        <div class="sidebar-header">
+          Details
+          <v-icon class="right-button" color="black" @click="detailsActive = false">close</v-icon>
+        </div>
+        <div class="sidebar-content">
 
-        <div v-if="detailsActive['heat-map']" class="heat-map plot">
-          <div class="plot-title">
-            Heat Map
+          <div v-if="detailedColumns.length>1" class="sidebar-section pr-10 columns-selected">
+            <!-- TODO: Navigate using .column-selected -->
+            <CommandMenu activatorClass="right-button-center" :disabled="commandsDisabled" @command="commandHandle($event)"></CommandMenu>
+            <div class="column-selected" v-for="column in detailedColumns" :key="column.index">
+              <span class="data-type" :class="`type-${dataset.columns[column.index].column_dtype}`">{{ dataType(dataset.columns[column.index].column_dtype) }}</span>
+              <span class="data-type-name">{{ dataset.columns[column.index].name }}</span>
+            </div>
           </div>
-          <!-- <div class="heat-map-y"> {{dataset.columns[detailedColumns[1].index].name}} </div> -->
-          <vegaEmbed
-            :name="'heatmap'"
-            :autosize="{
-              type: 'fit'
-            }"
-            ref="heat-map"
-            class="heat-map-grid mb-0 pl-6"
-            v-if="heatMap"
-            :data="{values: heatMap}"
-            :mark="{
-              type: 'rect',
-              tooltip: true
-            }"
-            :height="(heatMapEncoding.y2) ? 300 : undefined"
-            :width="(heatMapEncoding.x2) ? 336 : undefined"
-            :encoding="{
-              ...heatMapEncoding,
-              'color': {
-                'field': 'z',
-                title: 'n',
-                'type': 'quantitative',
-                scale: {range: ['#e6fffd', '#8cd7d0', '#4db6ac']},
-                legend: { direction: 'vertical', type: 'gradient', gradientLength: 120, titleAlign: 'left', title: ' n' },
-                // condition: { test: 'datum.z<=0', value: 'white'}
-              }
-            }"
-            :config="{
-              view: {
-                strokeWidth: 0,
-                stroke: 'transparent',
-                step: 15
-              },
-              axis: {
-                titleOpacity: 0,
-                domainColor: '#fff',
-                title: 0,
-                gridColor: '#fff',
-                ticks: false,
-                domainOpacity: 0,
-                gridOpacity: 0,
-                tickOpacity: 0,
-                labelPadding: 0,
-                labels: false,
-              },
-            }"
-            >
-          </vegaEmbed>
-        </div>
-        <div v-if="detailsActive['scatter-plot']" class="scatter-plot plot">
-          <div class="plot-title">
-            Scatter plot
+          <div v-if="detailsActive['heat-map']" class="heat-map plot">
+            <div class="plot-title">
+              Heat Map
+            </div>
+            <vegaEmbed
+              :name="'heatmap'"
+              :autosize="{
+                type: 'fit'
+              }"
+              ref="heat-map"
+              class="heat-map-grid mb-0 pl-6"
+              v-if="heatMap"
+              :data="{values: heatMap}"
+              :mark="{
+                type: 'rect',
+                tooltip: true
+              }"
+              :height="(heatMapEncoding.y2) ? 300 : undefined"
+              :width="(heatMapEncoding.x2) ? 336 : undefined"
+              :encoding="{
+                ...heatMapEncoding,
+                'color': {
+                  'field': 'z',
+                  title: 'n',
+                  'type': 'quantitative',
+                  scale: {range: ['#e6fffd', '#8cd7d0', '#4db6ac']},
+                  legend: { direction: 'vertical', type: 'gradient', gradientLength: 120, titleAlign: 'left', title: ' n' },
+                  // condition: { test: 'datum.z<=0', value: 'white'}
+                }
+              }"
+              :config="{
+                view: {
+                  strokeWidth: 0,
+                  stroke: 'transparent',
+                  step: 15
+                },
+                axis: {
+                  titleOpacity: 0,
+                  domainColor: '#fff',
+                  title: 0,
+                  gridColor: '#fff',
+                  ticks: false,
+                  domainOpacity: 0,
+                  gridOpacity: 0,
+                  tickOpacity: 0,
+                  labelPadding: 0,
+                  labels: false,
+                },
+              }"
+              >
+            </vegaEmbed>
           </div>
-          <vegaEmbed
-            :name="'scatterplot'"
-            @signal:pts_tuple="displaySelection"
-            ref="scatter-plot"
-            class="scatter-plot-grid mb-2"
-            v-if="detailedColumns.length>=2"
-            :data="{values: dataset.sample.value}"
-            :mark="{
-              type: 'point',
-              filled: true,
-              tooltip: true
-            }"
-            width="400"
-            :selection="{
-              'highlight': {'type': 'single', 'empty': 'none', 'on': 'mouseover', 'fields': [detailedColumns[0].index.toString(),detailedColumns[1].index.toString()]},
-              'select': {'type': 'multi'}
-            }"
-            :encoding="{
-              x: {field: detailedColumns[0].index.toString(), title: dataset.columns[detailedColumns[0].index].name, titleOpacity: 0, type: 'quantitative', scale: {zero: false}},
-              y: {field: detailedColumns[1].index.toString(), title: dataset.columns[detailedColumns[1].index].name, titleOpacity: 0, type: 'quantitative'},
-              opacity: {
-                condition: {selection: 'highlight', value: 1},
-                value: 0.5
-              },
-              size: {
-                value: 75
-              },
-              color: {
-                condition: {selection: 'highlight', value: '#82bcfa'},
-                value: '#4db6ac'
-              }
-            }"
-            :config="{
-              axis: {
-                titleOpacity: 0,
-                domainColor: '#fff',
-                title: 0,
-                gridColor: '#fff',
-                ticks: false,
-                domainOpacity: 0,
-                gridOpacity: 0,
-                tickOpacity: 0,
-                labelPadding: 0,
-                labels: false,
-              },
-              view: {
-                stroke: 'transparent'
-              }
-            }"
-            >
-          </vegaEmbed>
+          <template v-for="(column, i) in detailedColumns">
+            <ColumnDetails
+              :key="column.index"
+              :startExpanded="i==0"
+              :rowsCount="+dataset.summary.rows_count"
+              :column="dataset.columns[column.index]"
+              :commandsDisabled="commandsDisabled"
+              @command="commandHandle($event)"
+            ></ColumnDetails>
+          </template>
         </div>
-
-        <template v-for="(column, i) in detailedColumns">
-          <ColumnDetails :key="column.index" :startExpanded="i==0" :rowsCount="+dataset.summary.rows_count" :column="dataset.columns[column.index]"></ColumnDetails>
-        </template>
-      </div>
+      </template>
     </div>
 
     <div class="table-container">
@@ -345,6 +333,7 @@
 
 <script>
 import GraphicsRenderer from '@/components/GraphicsRenderer'
+import CommandMenu from '@/components/CommandMenu'
 import ColumnDetails from '@/components/ColumnDetails'
 import VegaEmbed from '@/components/VegaEmbed'
 import dataTypesMixin from '@/plugins/mixins/data-types'
@@ -354,6 +343,7 @@ import { throttle } from '@/utils/functions.js'
 export default {
 	components: {
     GraphicsRenderer,
+    CommandMenu,
     ColumnDetails,
     VegaEmbed
 	},
@@ -393,6 +383,12 @@ export default {
 		return {
 
       detailsActive: false,
+
+      optionsActive: false,
+
+      commandsDisabled: false,
+
+      operation: undefined,
 
       heatMap: [],
       heatMapEncoding: {},
@@ -562,6 +558,34 @@ export default {
 	},
 
 	methods: {
+
+    commandHandle ( event ) {
+      switch (event.command) {
+        case 'delete':
+          this.deleteColumns(event.columns)
+          break;
+
+        default:
+          break;
+      }
+    },
+
+    deleteColumns (selected = []) {
+      this.commandsDisabled = true
+      this.operation = 'delete'
+      setTimeout(() => {
+        this.commandsDisabled = false
+        this.operation = undefined
+      }, 500);
+      let toDelete = (selected.length) ? selected : this.detailedColumns.map(e=>this.dataset.columns[e.index].name)
+
+      for (let i = toDelete.length - 1; i >= 0 ; i--) {
+        const foundIndex = this.dataset.columns.findIndex((e)=>{ return e.name==toDelete[i] })
+        this.$store.commit('deleteColumn', { dataset: this.currentTab, column: foundIndex })
+      }
+
+      console.log('toDelete',toDelete)
+    },
 
     displaySelection: throttle ( async function (item) {
 			if (item) {
@@ -877,8 +901,8 @@ export default {
 
 			this.filteredColumns = this.filteredColumns.map((column) => {
 				return {
-					__missing: +column.dtypes_stats.missing,
-					__na: +column.stats.count_na,
+					__missing: +column.dtypes_stats.missing || 0,
+					__na: +column.stats.count_na || 0,
 					__zeros: +column.stats.zeros || 0,
 					...column
 				}
