@@ -64,10 +64,10 @@
 
         <div v-if="detailedColumns.length>1" class="sidebar-section columns-selected">
           <!-- TODO: Navigate using .column-selected -->
-          <span class="column-selected" v-for="column in detailedColumns" :key="column.index">
+          <div class="column-selected" v-for="column in detailedColumns" :key="column.index">
             <span class="data-type" :class="`type-${dataset.columns[column.index].column_dtype}`">{{ dataType(dataset.columns[column.index].column_dtype) }}</span>
             <span class="data-type-name">{{ dataset.columns[column.index].name }}</span>
-          </span>
+          </div>
         </div>
 
         <div v-if="detailsActive['heat-map']" class="heat-map plot">
@@ -105,7 +105,7 @@
               view: {
                 strokeWidth: 0,
                 stroke: 'transparent',
-                step: 15
+                step: 13
               },
               axis: {
                 titleOpacity: 0,
@@ -492,8 +492,8 @@ export default {
           name: column.name,
           plotable: (
               ['decimal','float','double'].includes(column.column_dtype) ? 'quantitative'
-              : (['int','integer'].includes(column.column_dtype) && column.stats.count_uniques>20) ? 'quantitative'
-              : (column.stats.count_uniques<=20) ? column.stats.count_uniques
+              : (['int','integer'].includes(column.column_dtype) && column.stats.count_uniques>24) ? 'quantitative'
+              : (column.stats.count_uniques<=24) ? column.stats.count_uniques
               : false
             ),
           mismatch: (column.dtypes_stats.mismatch) ? +column.dtypes_stats.mismatch : 0,
@@ -577,8 +577,8 @@ export default {
       let xint = (xsize===+xsize)
       let yint = (ysize===+ysize)
 
-      let xbinsize = (!xint) ? 20 : xsize
-      let ybinsize = (!yint) ? 20 : ysize
+      let xbinsize = (!xint) ? 24 : xsize
+      let ybinsize = (!yint) ? 24 : ysize
 
       let minX = this.dataset.columns[xindex].stats.min
       let minY = this.dataset.columns[yindex].stats.min
