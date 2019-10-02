@@ -8,7 +8,7 @@
             v-for="(item, index) in values"
             :key="index"
             class="freq-bar"
-            @mouseover="currentVal = `${item.value}, ${item.percentage}%`"
+            @mouseover="currentVal = `${item.value}, ${item.count}, ${item.percentage}%`"
           >
             <div :style="{'height': normVal(item.count)+'%'}" class="freq-value" />
           </div>
