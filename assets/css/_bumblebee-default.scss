@@ -402,11 +402,14 @@ table {
       line-height: 26px;
     }
     .columns-selected {
+      display: flex;
+      flex-wrap: wrap;
       color: #444;
       font-family: $font-mono;
       .column-selected {
         &:not(:last-child)::after {
           content: ', ';
+          margin-right: 1em;
         }
       }
     }
