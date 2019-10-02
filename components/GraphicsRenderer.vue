@@ -21,7 +21,7 @@
       v-else-if="value.hist"
       :uniques="value.count_uniques"
       :values="value.hist"
-      :total="10"
+      :total="+value.total"
       class="histfreq"
       table
     />
@@ -29,7 +29,7 @@
       v-else-if="value.hist_years"
       :uniques="value.count_uniques"
       :values="value.hist_years"
-      :total="10"
+      :total="+value.total"
       class="histfreq"
       table
     />
