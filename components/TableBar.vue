@@ -877,8 +877,8 @@ export default {
 
 			this.filteredColumns = this.filteredColumns.map((column) => {
 				return {
-					__missing: +column.dtypes_stats.missing,
-					__na: +column.stats.count_na,
+					__missing: +column.dtypes_stats.missing || 0,
+					__na: +column.stats.count_na || 0,
 					__zeros: +column.stats.zeros || 0,
 					...column
 				}
