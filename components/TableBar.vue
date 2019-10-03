@@ -521,7 +521,10 @@ export default {
 			deep: true,
 			handler (value) {
 				this.$nextTick(() => {
-          this.$refs['hot-table'].hotInstance.render()
+          try {
+            this.$refs['hot-table'].hotInstance.render()
+          }
+          catch {}
 				})
 			}
 		},
