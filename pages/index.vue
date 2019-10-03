@@ -148,6 +148,7 @@
                 <div class="filter-container">
                   <v-autocomplete
                     autocomplete="off"
+                    ref="autocomplete"
                     v-model="typesSelected"
                     :items="typesAvailable"
                     :append-icon="''"
@@ -164,6 +165,9 @@
                     hide-selected
                     multiple
                     single-line
+                    :menu-props="{
+                      closeOnContentClick: true
+                    }"
                     @change="typesUpdated"
                   >
                     <template v-slot:item="{ item }">
@@ -316,7 +320,8 @@ export default {
 
 	methods: {
 		typesUpdated () {
-			this.typesInput = ''
+      this.typesInput = ''
+      this.$refs.autocomplete.loseFocus
 		},
 		subscribe () {
 			this.startClient(this.inputUsername, this.inputKey)

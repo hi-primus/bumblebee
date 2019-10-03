@@ -3,10 +3,12 @@
     <h3>Data types</h3>
     <table class="details-table">
       <tbody>
-        <tr v-for="(value, key) in values" :key="key">
-          <td style="width:50%;" class="capitalize" :title="key">{{ key }}</td>
-          <td style="width:50%;" :title="value">{{ value }}</td>
-        </tr>
+        <template v-for="(value, key) in values">
+          <tr v-if="key!=='null' && key!=='missing'" :key="key">
+            <td style="width:50%;" class="capitalize" :title="key">{{ key }}</td>
+            <td style="width:50%;" :title="value">{{ value }}</td>
+          </tr>
+        </template>
       </tbody>
     </table>
   </div>
