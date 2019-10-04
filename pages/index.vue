@@ -199,13 +199,13 @@
                 <template v-if="$store.state.datasets[tab].total_count_dtypes">
                   {{ $store.state.datasets[tab].total_count_dtypes | formatNumberInt }} Data types &emsp;
                 </template>
-                <template v-if="$store.state.datasets[tab].summary.rows_count">
-                  {{ $store.state.datasets[tab].summary.rows_count | formatNumberInt }} Rows &emsp;
-                </template>
                 <template v-if="$store.state.datasets[tab].summary.sample_size">
                   {{ $store.state.datasets[tab].summary.sample_size | formatNumberInt }} of
                 </template>
                 <template v-if="$store.state.datasets[tab].summary.rows_count">
+                  {{ $store.state.datasets[tab].summary.rows_count | formatNumberInt }} Rows &emsp;
+                </template>
+                <template v-if="$store.state.datasets[tab].summary.cols_count">
                   {{ $store.state.datasets[tab].summary.cols_count | formatNumberInt }} Columns
                 </template>
               </span>
