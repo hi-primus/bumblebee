@@ -102,7 +102,7 @@
 
           <div v-if="detailedColumns.length>1" class="sidebar-section pr-10 columns-selected">
             <!-- TODO: Navigate using .column-selected -->
-            <CommandMenu activatorClass="right-button-center" :disabled="commandsDisabled" @command="commandHandle($event)"></CommandMenu>
+            <CommandMenu button.class="right-button-center" :disabled="commandsDisabled" @command="commandHandle($event)"></CommandMenu>
             <div class="column-selected" v-for="column in detailedColumns" :key="column.index">
               <span class="data-type" :class="`type-${dataset.columns[column.index].column_dtype}`">{{ dataType(dataset.columns[column.index].column_dtype) }}</span>
               <span class="data-type-name">{{ dataset.columns[column.index].name }}</span>
@@ -112,13 +112,13 @@
             <div class="plot-title">
               Heat Map
             </div>
-            <vegaEmbed
+            <VegaEmbed
               :name="'heatmap'"
               :autosize="{
                 type: 'fit'
               }"
               ref="heat-map"
-              class="heat-map-grid mb-0 pl-6"
+              class="heat-map-grid"
               v-if="heatMap"
               :data="{values: heatMap}"
               :mark="{
@@ -142,7 +142,7 @@
                 view: {
                   strokeWidth: 0,
                   stroke: 'transparent',
-                  step: 15
+                  step: 13
                 },
                 axis: {
                   titleOpacity: 0,
@@ -158,7 +158,7 @@
                 },
               }"
               >
-            </vegaEmbed>
+            </VegaEmbed>
           </div>
           <template v-for="(column, i) in detailedColumns">
             <ColumnDetails
