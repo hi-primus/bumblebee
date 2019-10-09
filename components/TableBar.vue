@@ -74,14 +74,13 @@
           <div class="plot-title">
             Heat Map
           </div>
-          <!-- <div class="heat-map-y"> {{dataset.columns[detailedColumns[1].index].name}} </div> -->
           <vegaEmbed
             :name="'heatmap'"
             :autosize="{
               type: 'fit'
             }"
             ref="heat-map"
-            class="heat-map-grid"
+            class="heat-map-vega"
             v-if="heatMap"
             :data="{values: heatMap}"
             :mark="{
@@ -98,7 +97,6 @@
                 'type': 'quantitative',
                 scale: {range: ['#e6fffd', '#8cd7d0', '#4db6ac']},
                 legend: { direction: 'vertical', type: 'gradient', gradientLength: 120, titleAlign: 'left', title: ' n' },
-                // condition: { test: 'datum.z<=0', value: 'white'}
               }
             }"
             :config="{
@@ -118,6 +116,77 @@
                 tickOpacity: 0,
                 labelPadding: 0,
                 labels: false,
+              },
+            }"
+            >
+          </vegaEmbed>
+        </div>
+        <div v-if="detailsActive['correlation-matrix']" class="correlation-matrix plot">
+          <div class="plot-title">
+            Correlation Matrix
+          </div>
+          <vegaEmbed
+            :name="'correlation-matrix'"
+            :autosize="{
+              type: 'fit'
+            }"
+            ref="correlation-matrix"
+            class="correlation-matrix-vega"
+            v-if="correlation"
+            :data="{values: correlationMatrix}"
+            :height="300"
+            :width="365"
+            :encoding="{
+              x: {
+                field: 'column_a',
+                title: 'Column',
+                type: 'ordinal'
+              },
+              y: {
+                field: 'column_b',
+                title: 'Column',
+                type: 'ordinal'
+              },
+            }"
+            :layer="[
+              {
+              mark: 'rect',
+                encoding: {
+                  color: {
+                    field: 'correlation',
+                    type: 'quantitative',
+                    scale: {domain:[-1.0,0.0,1.0],range: ['#82bcfa', '#e5e5e5', '#e57373']},
+                    legend: { direction: 'vertical', type: 'gradient', gradientLength: 120, titleAlign: 'left', values: [-1.0,0.0,1.0]},
+                  }
+                }
+              },
+              {
+                mark: 'text',
+                encoding: {
+                  text: {field: 'correlation', type: 'quantitative'},
+                  color: {
+                    value: 'black'
+                  }
+                }
+              }
+            ]"
+            :config="{
+              scale: {bandPaddingInner: 0, bandPaddingOuter: 0},
+              text: {baseline: 'middle'},
+              view: {
+                strokeWidth: 0,
+                stroke: 'transparent',
+                step: 13
+              },
+              axis: {
+                titleOpacity: 0,
+                domainColor: '#fff',
+                title: 0,
+                gridColor: '#fff',
+                ticks: false,
+                domainOpacity: 0,
+                gridOpacity: 0,
+                tickOpacity: 0,
               },
             }"
             >
@@ -392,6 +461,33 @@ export default {
 	data () {
 		return {
 
+      correlation: {
+        people: {
+          people: 1,
+          dogs: 0.56,
+          cats: 0.31,
+          kids: 0.67
+        },
+        dogs: {
+          people: 0.56,
+          dogs: 1,
+          cats: 0.1,
+          kids: 0.24
+        },
+        cats: {
+          people: 0.31,
+          dogs: 0.1,
+          cats: 1,
+          kids: 0.12
+        },
+        kids: {
+          people: 0.67,
+          dogs: 0.24,
+          cats: 0.12,
+          kids: 1
+        }
+      },
+
       detailsActive: false,
 
       heatMap: [],
@@ -439,6 +535,16 @@ export default {
   },
 
 	computed: {
+
+    correlationMatrix () {
+      let _correlationMatrix = []
+      for (var _column in this.correlation) {
+        for (var column in this.correlation[_column]) {
+          _correlationMatrix.push({ column_a: _column, column_b: column, correlation: this.correlation[_column][column] })
+        }
+      }
+      return _correlationMatrix
+    },
 
 		sortByLabel () {
 			if (this.sortBy[0]) {
@@ -766,6 +872,7 @@ export default {
     handleSelection (selected, plotable = []) {
       if (selected.length) {
         this.detailsActive = {}
+        this.detailsActive['correlation-matrix'] = true
         if (plotable.length==2 && selected.length==2) {
           // this.detailsActive['scatter-plot'] = true
           this.detailsActive['heat-map'] = true
