@@ -75,7 +75,7 @@
             Heat Map
           </div>
           <!-- <div class="heat-map-y"> {{dataset.columns[detailedColumns[1].index].name}} </div> -->
-          <vegaEmbed
+          <VegaEmbed
             :name="'heatmap'"
             :autosize="{
               type: 'fit'
@@ -121,13 +121,13 @@
               },
             }"
             >
-          </vegaEmbed>
+          </VegaEmbed>
         </div>
         <div v-if="detailsActive['scatter-plot']" class="scatter-plot plot">
           <div class="plot-title">
             Scatter plot
           </div>
-          <vegaEmbed
+          <VegaEmbed
             :name="'scatterplot'"
             @signal:pts_tuple="displaySelection"
             ref="scatter-plot"
@@ -177,11 +177,11 @@
               }
             }"
             >
-          </vegaEmbed>
+          </VegaEmbed>
         </div>
 
         <template v-for="(column, i) in detailedColumns">
-          <ColumnDetails :key="column.index" :startExpanded="i==0" :rowsCount="+dataset.summary.rows_count" :column="dataset.columns[column.index]"></ColumnDetails>
+          <ColumnDetails :key="column.index" :index="column.index" :startExpanded="i==0" :rowsCount="+dataset.summary.rows_count" :column="dataset.columns[column.index]" :dataset="dataset"></ColumnDetails>
         </template>
       </div>
     </div>
