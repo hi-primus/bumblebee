@@ -68,7 +68,7 @@ export default {
   mounted () {
     const vega = require('vega')
     const vegaLite = require('vega-lite')
-    const vegaEmbed = require('vega-embed').default
+    const VegaEmbed = require('vega-embed').default
 
     let vlSpec = {
       spec: this.spec,
@@ -96,7 +96,7 @@ export default {
       // renderer: 'svg'
     }
 
-    vegaEmbed(this.$el, vlSpec, options);
+    VegaEmbed(this.$el, vlSpec, options);
   },
 
   methods: {
@@ -114,28 +114,7 @@ export default {
 
   },
 
-  beforeDestroy () {
-    // this.destroyVegaView(this.$vg)
-  },
-
   computed: {
-    vegaSpec () {
-      // const compileOutput = this.compileVegaLite(this.vegaLiteSpec)
-      // return compileOutput.spec
-      return {}
-    },
-    vegaLiteSpec () {
-      // let vegaLiteSpec = assemblePropsToSpec.call(this, vegaLiteProps)
-
-      // const fullSpec = this.spec
-      // if (fullSpec) {
-      //   Object.assign(vegaLiteSpec, fullSpec)
-      //   delete vegaLiteSpec.spec
-      // }
-
-      // return vegaLiteSpec
-      return {}
-    },
     dataUrl () {
       let url
       if (this.data && this.data.url) {
