@@ -58,7 +58,7 @@
       </transition>
       <transition name="fade">
         <span class="columns-operations" v-if="detailedColumns.length>=1" >
-          <v-btn color="#888" text class="icon-btn" @click="deleteColumns" :loading="operation=='delete'">
+          <v-btn color="#888" text class="icon-btn" @click="addCell('delete')" :loading="operation=='delete'">
             <v-icon>delete</v-icon>
           </v-btn>
         </span>
@@ -564,23 +564,32 @@ export default {
 
     commandHandle ( event ) {
       switch (event.command) {
-        case 'delete':
-          this.deleteColumns(event.columns)
-          break;
-
+        // case 'delete':
+          // this.deleteColumns(event.columns)
+          // break;
         default:
+          this.addCell( event.command, event.columns )
           break;
       }
     },
 
-    deleteColumns (selected = []) {
+    addCell (command = '', columns = []) {
+
+      if (!columns.length)
+        columns = this.detailedColumns.map(e=>this.dataset.columns[e.index].name)
+      console.log('command',command)
+      console.log('columns',columns)
+
+    },
+
+    deleteColumns (columns = []) {
       this.commandsDisabled = true
       this.operation = 'delete'
       setTimeout(() => {
         this.commandsDisabled = false
         this.operation = undefined
       }, 500);
-      let toDelete = (selected.length) ? selected : this.detailedColumns.map(e=>this.dataset.columns[e.index].name)
+      let toDelete = (columns.length) ? columns : this.detailedColumns.map(e=>this.dataset.columns[e.index].name)
 
       for (let i = toDelete.length - 1; i >= 0 ; i--) {
         const foundIndex = this.dataset.columns.findIndex((e)=>{ return e.name==toDelete[i] })
