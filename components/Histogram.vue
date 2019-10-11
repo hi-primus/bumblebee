@@ -1,7 +1,7 @@
 <template>
   <div :class="{'table-graphic': table}" class="bb-graphic">
     <h3>{{ title }}</h3>
-    <div class="scroll-container" @mouseleave="nowCount = false">
+    <div class="scroll-container" @mouseleave="nowValues = false">
       <div class="freq-container">
         <div
           v-for="(item, index) in values"
@@ -13,7 +13,7 @@
         </div>
       </div>
     </div>
-    <div v-if="nowCount!==false" class="current-value">{{ bottomVal | humanNumber }} - {{ topVal | humanNumber }}, {{ nowCount }}</div>
+    <div v-if="nowValues!==false" class="current-value">{{ bottomVal | humanNumber }} - {{ topVal | humanNumber }}, {{ nowValues }}</div>
     <div v-else class="current-value">{{ defaultBottom | humanNumber }} - {{ defaultTop | humanNumber }}</div>
   </div>
 </template>
@@ -44,7 +44,7 @@ export default {
 			maxVal: 0,
 			bottomVal: 0,
 			topVal: 0,
-			nowCount: false,
+			nowValues: false,
 			defaultBottom: '',
 			defaultTop: ''
 		}
@@ -65,7 +65,7 @@ export default {
 		changeValue (minVal, topVal, count) {
 			this.bottomVal = minVal
 			this.topVal = topVal
-			this.nowCount = count
+			this.nowValues = `${count}, ${+(count/this.total).toFixed(2)}%`
 		},
 
 		getMaxVal (arr) {

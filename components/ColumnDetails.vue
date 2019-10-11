@@ -18,6 +18,82 @@
         class="component-container"
       >
         <Percentile :values="column.stats" />
+        <div
+          v-if="column.stats.range!=0"
+          class="component-container"
+          style="margin-top: -16px; margin-bottom: -12px; z-index:-1"
+        >
+          <VegaEmbed
+            :name="'box-plot'"
+            ref="box-plot"
+            class="box-plot-grid mb-2"
+            v-if="dataset"
+            :data="{values: dataset.sample.value}"
+            :mark="{
+              type: 'boxplot',
+              whisker: {
+                title: 'fff',
+                size: 10
+              },
+              box: {
+                title: 'fff',
+              },
+              outliers: {
+                type: 'point',
+                filled: true,
+                color: '#4db6ac'
+              },
+              tooltip: [
+              {
+                field: index.toString(),
+                type: 'quantitative'
+              },
+              {
+                field: (index+1).toString()
+              },
+              ],
+            }"
+            width="366"
+            :encoding="{
+              tooltip: [
+                {
+                  field: index.toString(),
+                  type: 'quantitative',
+                },
+                {
+                  field: index.toString(),
+                  type: 'quantitative',
+                  aggregate: 'median',
+                  title: 'Median'
+                },
+              ],
+              x: {
+                field: index.toString(),
+                axis: {
+                  title: null
+                },
+                type: 'quantitative',
+              },
+              color: {
+                value: '#4db6ac'
+              }
+            }"
+            :config="{
+              axis: {
+                domainColor: '#fff',
+                gridColor: '#fff',
+                ticks: false,
+                domainOpacity: 0,
+                gridOpacity: 0,
+                tickOpacity: 0,
+                title: null
+              },
+              view: {
+                stroke: 'transparent'
+              }
+            }"
+          />
+        </div>
       </div>
 
       <div
@@ -144,6 +220,7 @@ import Descriptive from '@/components/Stats'
 import Histogram from '@/components/Histogram'
 import DataTypes from '@/components/DataTypes'
 import dataTypesMixin from '~/plugins/mixins/data-types'
+import VegaEmbed from '@/components/VegaEmbed'
 
 export default {
 	components: {
@@ -154,7 +231,8 @@ export default {
 		Descriptive,
 		Frequent,
 		Histogram,
-		DataTypes
+		DataTypes,
+    VegaEmbed
 	},
 
   mixins: [dataTypesMixin],
@@ -173,7 +251,13 @@ export default {
     column: {
       type: Object
     },
+    dataset: {
+      type: Object
+    },
     rowsCount: {
+      type: Number
+    },
+    index: {
       type: Number
     },
     startExpanded: {
@@ -182,9 +266,13 @@ export default {
     }
   },
 
-  mounted() {
-    if (this.startExpanded) {
-      this.expanded = true;
+  watch: {
+    startExpanded: {
+      immediate: true,
+      handler (value) {
+        if (value)
+          this.expanded = true
+      }
     }
   }
 }

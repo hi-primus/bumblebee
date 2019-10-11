@@ -148,6 +148,7 @@
                 <div class="filter-container">
                   <v-autocomplete
                     autocomplete="off"
+                    ref="autocomplete"
                     v-model="typesSelected"
                     :items="typesAvailable"
                     :append-icon="''"
@@ -164,6 +165,9 @@
                     hide-selected
                     multiple
                     single-line
+                    :menu-props="{
+                      closeOnContentClick: true
+                    }"
                     @change="typesUpdated"
                   >
                     <template v-slot:item="{ item }">
@@ -195,7 +199,15 @@
                 <template v-if="$store.state.datasets[tab].total_count_dtypes">
                   {{ $store.state.datasets[tab].total_count_dtypes | formatNumberInt }} Data types &emsp;
                 </template>
-                {{ $store.state.datasets[tab].summary.rows_count | formatNumberInt }} Rows &emsp; {{ $store.state.datasets[tab].summary.cols_count | formatNumberInt }} Columns
+                <template v-if="$store.state.datasets[tab].summary.sample_size">
+                  {{ $store.state.datasets[tab].summary.sample_size | formatNumberInt }} of
+                </template>
+                <template v-if="$store.state.datasets[tab].summary.rows_count">
+                  {{ $store.state.datasets[tab].summary.rows_count | formatNumberInt }} Rows &emsp;
+                </template>
+                <template v-if="$store.state.datasets[tab].summary.cols_count">
+                  {{ $store.state.datasets[tab].summary.cols_count | formatNumberInt }} Columns
+                </template>
               </span>
             </v-layout>
           </v-footer>
@@ -316,7 +328,8 @@ export default {
 
 	methods: {
 		typesUpdated () {
-			this.typesInput = ''
+      this.typesInput = ''
+      this.$refs.autocomplete.loseFocus
 		},
 		subscribe () {
 			this.startClient(this.inputUsername, this.inputKey)

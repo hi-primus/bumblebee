@@ -488,8 +488,8 @@ export default {
           name: column.name,
           plotable: (
               ['decimal','float','double'].includes(column.column_dtype) ? 'quantitative'
-              : (['int','integer'].includes(column.column_dtype) && column.stats.count_uniques>24) ? 'quantitative'
-              : (column.stats.count_uniques<=24) ? column.stats.count_uniques
+              : (['int','integer'].includes(column.column_dtype) && column.stats.count_uniques>25) ? 'quantitative'
+              : (column.stats.count_uniques<=25) ? column.stats.count_uniques
               : false
             ),
           mismatch: (column.dtypes_stats.mismatch) ? +column.dtypes_stats.mismatch : 0,
@@ -517,7 +517,10 @@ export default {
 			deep: true,
 			handler (value) {
 				this.$nextTick(() => {
-          this.$refs['hot-table'].hotInstance.render()
+          try {
+            this.$refs['hot-table'].hotInstance.render()
+          }
+          catch {}
 				})
 			}
 		},
@@ -601,8 +604,8 @@ export default {
       let xint = (xsize===+xsize)
       let yint = (ysize===+ysize)
 
-      let xbinsize = (!xint) ? 24 : xsize
-      let ybinsize = (!yint) ? 24 : ysize
+      let xbinsize = (!xint) ? 25 : xsize
+      let ybinsize = (!yint) ? 25 : ysize
 
       let minX = this.dataset.columns[xindex].stats.min
       let minY = this.dataset.columns[yindex].stats.min
