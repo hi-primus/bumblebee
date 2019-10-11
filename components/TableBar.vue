@@ -63,30 +63,32 @@
           </v-btn>
         </span>
       </transition>
-      <!-- <v-btn :color="(optionsActive) ? 'black' : '#888'" text class="icon-btn" @click="optionsActive = !optionsActive">
+      <v-spacer></v-spacer>
+      <v-btn :color="(optionsActive) ? 'black' : '#888'" text class="icon-btn" @click="optionsActive = !optionsActive">
         <v-icon>code</v-icon>
-      </v-btn> -->
+      </v-btn>
     </div>
 
     <div class="sidebar-container" v-if="detailsActive || optionsActive">
-      <template v-if="optionsActive && false">
+      <template v-if="optionsActive">
         <div class="sidebar-header">
           Operations
           <v-icon class="right-button" color="black" @click="optionsActive = false">close</v-icon>
         </div>
         <div class="sidebar-content">
-          <table class="sidebar-content option">
+          <table class="sidebar-content options-fields">
             <tbody>
-              <tr class="input">
-                <td>Input</td>
-                <td style="width: 100%">
-                  <textarea>2+2</textarea>
+              <tr class="cell" v-for="(cell, index) in cells" :key="index">
+                <td style="width: 32px">{{cell.type}}</td>
+                <td style="width: calc(100% - 32px)">
+                  <code-editor v-model="cell.content"/>
                 </td>
               </tr>
-              <tr class="output">
-                <td>Output</td>
-                <td style="width: 100%">
-                  4
+              <tr>
+                <td colspan="2">
+                  <v-btn color="black" icon @click="cells.push({type:'code',content:''})">
+                    <v-icon>add</v-icon>
+                  </v-btn>
                 </td>
               </tr>
             </tbody>
@@ -333,6 +335,7 @@
 
 <script>
 import GraphicsRenderer from '@/components/GraphicsRenderer'
+import CodeEditor from '@/components/CodeEditor'
 import CommandMenu from '@/components/CommandMenu'
 import ColumnDetails from '@/components/ColumnDetails'
 import VegaEmbed from '@/components/VegaEmbed'
@@ -345,7 +348,8 @@ export default {
     GraphicsRenderer,
     CommandMenu,
     ColumnDetails,
-    VegaEmbed
+    VegaEmbed,
+    CodeEditor
 	},
 
 	mixins: [dataTypesMixin],
@@ -385,6 +389,8 @@ export default {
       detailsActive: false,
 
       optionsActive: false,
+
+      cells: [],
 
       commandsDisabled: false,
 

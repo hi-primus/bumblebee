@@ -801,7 +801,7 @@ table {
 
 
 .handsontable{
-  font-family: $font-mono;
+  font-family: $font-mono-table;
   color: $text-color;
 
   .wtBorder {
@@ -859,7 +859,11 @@ table {
 
 	  &>span:empty:after/*, &:empty:after */{
       content: 'None';
+      margin-left: 0.5em;
       opacity: 0.5;
+    }
+	  &>span{
+      margin-left: -0.5em;
     }
 	}
 }
@@ -1043,4 +1047,17 @@ table {
 }
 .fade-enter, .fade-leave-to {
   opacity: 0;
+}
+
+/* pseudo notebooks */
+
+.options-fields {
+  height: auto !important;
+  min-width: 100%;
+  tr td{
+    border-bottom: 1px solid $line-color-1;
+  }
+  .cell textarea {
+    font-size: 14px;
+  }
 }

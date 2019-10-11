@@ -32,8 +32,12 @@ module.exports = {
 				href: '/favicon.png'
 			},
 			// { rel: 'stylesheet', href: 'https://fonts.googleapis.com/css?family=Material+Icons|Ubuntu+Mono|Roboto+Mono' }
-			{ rel: 'stylesheet', href: 'https://fonts.googleapis.com/css?family=Material+Icons|Ubuntu+Mono|Ubuntu' }
-		]
+			{ rel: 'stylesheet', href: 'https://fonts.googleapis.com/css?family=Material+Icons|Ubuntu+Mono|Ubuntu' },
+			{ rel: 'stylesheet', href: '/highlight/styles/default.css' }
+    ],
+    script: [
+      { src: '/highlight/highlight.pack.js' }
+    ],
 	},
 
 	loading: {
