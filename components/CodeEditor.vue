@@ -1,11 +1,14 @@
 <template>
   <div id="editor" class="editor-holder">
-    <textarea
-      ref="editor"
-      auto-grow full-width hide-details no-resize
-      v-model="query"
-      class="editor" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
-    ></textarea>
+    <div class="textarea-container">
+      <textarea
+        wrap="soft"
+        ref="editor"
+        auto-grow full-width hide-details no-resize
+        v-model="query"
+        class="editor" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+      ></textarea>
+    </div>
 		<pre><div ref="code" class="syntax-highlight py python code"></div></pre>
   </div>
 </template>
@@ -105,15 +108,30 @@ export default {
       transition: all 0.5s ease-in-out;
     }
 
-    textarea {
-      background: transparent !important;
+    .textarea-container {
       position: absolute;
       top: 12px;
       left: 12px;
       height: calc(100% - 12px);
-      width: calc(100% - 12px);
-      background-color: rgba(green,0.25);
-      // width: 1000vw;
+      width: 780px;
+      background: transparent !important;
+      // background-color: rgba(green,0.25);
+      white-space: nowrap;
+      overflow: hidden;
+
+      textarea {
+        position: relative;
+        min-width: 100%;
+        resize: both;
+        height: calc(100% + 24px) !important;
+        overflow: hidden;
+        border: none;
+        outline: none;
+      }
+
+      text-shadow: 0px 0px 0px rgba(0, 0, 0, 0);
+      -webkit-text-fill-color: transparent;
+      text-fill-color: transparent;
     }
 
     .v-textarea{
@@ -123,7 +141,6 @@ export default {
       resize: none;
       color: #000;
       text-shadow: 0px 0px 0px rgba(0, 0, 0, 0);
-      width: 780px;
       text-fill-color: transparent;
       -webkit-text-fill-color: transparent;
 
@@ -141,22 +158,22 @@ export default {
       textarea {
         white-space: nowrap;
         overflow: show;
-        background-color: rgba(blue,0.25);
+        // background-color: rgba(blue,0.25);
         width: 780px;
       }
     }
 
     pre {
-      // position: absolute;
-      // top: 12px;
-      // left: 12px;
-      background-color: rgba(red,0.12);
+      // background-color: rgba(red,0.12);
+      width: 780px;
     }
     .code{
       z-index: 1;
-      background-color: rgba(red,0.13);
+      // background-color: rgba(red,0.13);
       pointer-events: none;
-      white-space: nowrap;
+      width: 780px;
+      display: block;
+      white-space: pre-wrap;
     }
   }
 </style>
