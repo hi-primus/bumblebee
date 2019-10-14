@@ -912,6 +912,7 @@ table {
 
         max-width: 20px;
         .freq-value {
+          min-height: 2px;
           width: 100%;
           background-color: $data-teal;
           height: 50%;
