@@ -1,7 +1,7 @@
 <template>
-  <div :class="{'table-graphic': table}" class="bb-graphic">
+  <div :class="{'table-graphic': table}" class="bb-graphic" @mouseleave="nowValues = false">
     <h3>{{ title }}</h3>
-    <div class="scroll-container" @mouseleave="nowValues = false">
+    <div class="scroll-container">
       <div class="freq-container">
         <div
           v-for="(item, index) in values"
@@ -9,12 +9,11 @@
           class="freq-bar"
           @mouseover="changeValue((+item.lower).toFixed(2),(+item.upper).toFixed(2), item.count)"
         >
-          <div :style="{'height': normVal(item.count)+'%'}" class="freq-value" />
+          <div v-if="item.count>0" :style="{'height': normVal(item.count)+'%'}" class="freq-value" />
         </div>
       </div>
     </div>
-    <div v-if="nowValues!==false" class="current-value">{{ bottomVal | humanNumber }} - {{ topVal | humanNumber }}, {{ nowValues }}</div>
-    <div v-else class="current-value">{{ defaultBottom | humanNumber }} - {{ defaultTop | humanNumber }}</div>
+    <div v-if="currentValueString" :title="currentValueString" class="current-value">{{ currentValueString }}</div>
   </div>
 </template>
 
@@ -48,7 +47,16 @@ export default {
 			defaultBottom: '',
 			defaultTop: ''
 		}
-	},
+  },
+
+  computed: {
+    currentValueString () {
+      if (this.nowValues)
+        return this.$options.filters.humanNumber(this.bottomVal) + ' - ' + this.$options.filters.humanNumber(this.topVal) + ', ' + this.nowValues
+      else
+        return this.$options.filters.humanNumber(this.defaultBottom) + ' - ' + this.$options.filters.humanNumber(this.defaultTop)
+    }
+  },
 
 	beforeMount () {
 		this.maxVal = this.getMaxVal(this.values)
