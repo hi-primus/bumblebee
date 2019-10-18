@@ -15,13 +15,11 @@ html:root {
 ::-webkit-scrollbar {
   width: 10px;
   height: 10px;
-  padding: 4px;
   transition: all .2s;
 }
 
 /* Track */
 ::-webkit-scrollbar-track {
-  // background: #f1f1f1;
   background: transparent
 }
 
@@ -50,6 +48,10 @@ body{
 
 .hoverable {
 	cursor: pointer;
+}
+
+.drag {
+  cursor: move !important;
 }
 
 .back-btn {
@@ -183,7 +185,7 @@ table.table thead td:not(:nth-child(1)), table.table tbody td:not(:nth-child(1))
 
 .hideable {
   &.tr-o {
-    transition: opacity .2s ease-in-out;
+    transition: opacity .21s ease-in-out;
   }
   &:not(.active) {
     opacity: 0;
@@ -323,6 +325,8 @@ table {
   display: flex;
   flex-wrap: wrap;
   &>.toolbar {
+
+    padding: 0 18px;
     order: 1;
     width: 100%;
   }
@@ -357,23 +361,36 @@ table {
       color: inherit;
       text-decoration: none;
     }
-    .sidebar-header, .sidebar-subheader {
-      margin-left: -4px;
-      margin-right: -4px;
-      padding: 4px 12px;
-      height: 34px;
+    .sidebar-section, .sidebar-header, .sidebar-subheader{
       position: relative;
-      display: block;
       .right-button {
         position: absolute;
         right: 8px;
         top: 6px;
+      }
+      .right-button-2 {
+        position: absolute;
+        right: 36px;
+        top: 6px;
+      }
+      .right-button-center {
+        position: absolute;
+        right: 8px;
+        top: 50%;
+        transform: translateY(-50%);
       }
       .left-hint {
         position: absolute;
         left: 8px;
         top: 6px;
       }
+    }
+    .sidebar-header, .sidebar-subheader {
+      margin-left: -4px;
+      margin-right: -4px;
+      padding: 4px 12px;
+      height: 34px;
+      display: block;
     }
     .sidebar-header {
       text-align: center;
@@ -580,9 +597,14 @@ table {
 /* icon buttons toolbar */
 
 .toolbar {
+  &.disabled{
+    opacity: 0.5;
+    &>* {
+      pointer-events: none;
+    }
+  }
   display: flex;
   align-items: center;
-  padding: 0 18px;
   height: 48px - 1px;
   .divider {
     width: 1px;
@@ -782,7 +804,7 @@ table {
 
 
 .handsontable{
-  font-family: $font-mono;
+  font-family: $font-mono-table;
   color: $text-color;
 
   .wtBorder {
@@ -840,7 +862,11 @@ table {
 
 	  &>span:empty:after/*, &:empty:after */{
       content: 'None';
+      margin-left: 0.5em;
       opacity: 0.5;
+    }
+	  &>span{
+      margin-left: -0.5em;
     }
 	}
 }
@@ -1017,5 +1043,49 @@ table {
   .subtype {
     opacity: 0.71;
     font-size: 0.9em;
+  }
+}
+
+.fade-enter-active, .fade-leave-active {
+  transition: opacity .21s ease-in-out;
+}
+.fade-enter, .fade-leave-to {
+  opacity: 0;
+}
+
+/* pseudo notebooks */
+
+.options-fields {
+  height: auto !important;
+  min-width: 100%;
+  flex: none !important;
+  .cell {
+    &.active {
+      box-shadow: #777 0 0 5px -2px;
+    }
+    display: flex;
+    border-radius: 4px;
+    position: relative;
+    // padding: 0 0 0 8px;
+    margin: 3px 0 6px 8px;
+    max-width: calc(100% - 36px);
+    .cell-top {
+      // width: 100%;
+      .drag {
+        margin: auto;
+        display: flex;
+      }
+      .delete {
+        position: absolute;
+        top: 0;
+        right: 0;
+      }
+    }
+    .editor {
+      width: 100%;
+    }
+    textarea {
+      font-size: 14px;
+    }
   }
 }

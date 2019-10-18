@@ -1,6 +1,6 @@
 <template>
   <div class="dashboard-container">
-    <div class="toolbar">
+    <div class="toolbar" :class="{'disabled': commandsDisabled}">
       <v-btn text class="icon-btn" @click="$emit('update:view',0)">
         <v-icon :color="(view==0) ? 'black' : '#888'">view_headline</v-icon>
       </v-btn>
@@ -11,7 +11,7 @@
       <v-menu :close-on-content-click="false" offset-y>
         <template v-slot:activator="{ on: onSortBy }">
           <v-btn
-            :color="sortBy[0] ? 'black' : '#555'"
+            :color="sortBy[0] ? 'black' : '#888'"
             class="icon-btn"
             text
             v-on="onSortBy"
@@ -53,137 +53,168 @@
           </v-list-item-group>
         </v-list>
       </v-menu>
+      <transition v-if="$route.query.obeta=='42'" name="fade">
+        <div class="divider" v-if="detailedColumns.length>=1" />
+      </transition>
+      <transition v-if="$route.query.obeta=='42'" name="fade">
+        <span class="columns-operations" v-if="detailedColumns.length>=1" >
+          <v-btn v-if="detailedColumns.length==1" color="#888" text class="icon-btn" @click="commandHandle({command: 'rename'})">
+            <v-icon>edit</v-icon>
+          </v-btn>
+          <v-btn color="#888" text class="icon-btn" @click="commandHandle({command: 'keep'})">
+            <v-icon>all_out</v-icon>
+          </v-btn>
+          <v-btn color="#888" text class="icon-btn" @click="commandHandle({command: 'drop'})">
+            <v-icon>delete</v-icon>
+          </v-btn>
+          <transition name="fade">
+            <v-btn v-if="detailedColumns.length>=2" color="#888" text class="icon-btn" @click="commandHandle({command: 'nest'})">
+              <v-icon>link</v-icon>
+            </v-btn>
+          </transition>
+          <v-btn v-if="detailedColumns.length==1" color="#888" text class="icon-btn" @click="commandHandle({command: 'unnest'})">
+            <v-icon>link_off</v-icon>
+          </v-btn>
+          <v-btn v-if="detailedColumns.length==1" color="#888" text class="icon-btn" @click="commandHandle({command: 'replace'})">
+            <v-icon>find_replace</v-icon>
+          </v-btn>
+          <v-btn v-if="detailedColumns.length==1" color="#888" text class="icon-btn" @click="commandHandle({command: 'fill'})">
+            <v-icon>brush</v-icon>
+          </v-btn>
+        </span>
+      </transition>
+      <v-spacer></v-spacer>
+      <v-btn v-if="$route.query.obeta=='42'" :color="(optionsActive) ? 'black' : '#888'" text class="icon-btn" @click="optionsActive = !optionsActive">
+        <v-icon>code</v-icon>
+      </v-btn>
     </div>
 
-    <div class="sidebar-container" v-if="detailsActive!==false">
-      <div class="sidebar-header">
-        Details
-        <v-icon class="right-button" color="black" @click="detailsActive=false">close</v-icon>
-      </div>
-      <div class="sidebar-content">
-
-        <div v-if="detailedColumns.length>1" class="sidebar-section columns-selected">
-          <!-- TODO: Navigate using .column-selected -->
-          <div class="column-selected" v-for="column in detailedColumns" :key="column.index">
-            <span class="data-type" :class="`type-${dataset.columns[column.index].column_dtype}`">{{ dataType(dataset.columns[column.index].column_dtype) }}</span>
-            <span class="data-type-name">{{ dataset.columns[column.index].name }}</span>
-          </div>
+    <div class="sidebar-container" v-if="detailsActive || (optionsActive && $route.query.obeta=='42')">
+      <template v-if="optionsActive && $route.query.obeta=='42'">
+        <div class="sidebar-header">
+          Operations
+          <v-icon class="right-button" color="black" @click="optionsActive = false">close</v-icon>
         </div>
-
-        <div v-if="detailsActive['heat-map']" class="heat-map plot">
-          <div class="plot-title">
-            Heat Map
-          </div>
-          <!-- <div class="heat-map-y"> {{dataset.columns[detailedColumns[1].index].name}} </div> -->
-          <VegaEmbed
-            :name="'heatmap'"
-            :autosize="{
-              type: 'fit'
-            }"
-            ref="heat-map"
-            class="heat-map-grid"
-            v-if="heatMap"
-            :data="{values: heatMap}"
-            :mark="{
-              type: 'rect',
-              tooltip: true
-            }"
-            :height="(heatMapEncoding.y2) ? 300 : undefined"
-            :width="(heatMapEncoding.x2) ? 365 : undefined"
-            :encoding="{
-              ...heatMapEncoding,
-              'color': {
-                'field': 'z',
-                title: 'n',
-                'type': 'quantitative',
-                scale: {range: ['#e6fffd', '#8cd7d0', '#4db6ac']},
-                legend: { direction: 'vertical', type: 'gradient', gradientLength: 120, titleAlign: 'left', title: ' n' },
-                // condition: { test: 'datum.z<=0', value: 'white'}
-              }
-            }"
-            :config="{
-              view: {
-                strokeWidth: 0,
-                stroke: 'transparent',
-                step: 13
-              },
-              axis: {
-                titleOpacity: 0,
-                domainColor: '#fff',
-                title: 0,
-                gridColor: '#fff',
-                ticks: false,
-                domainOpacity: 0,
-                gridOpacity: 0,
-                tickOpacity: 0,
-                labelPadding: 0,
-                labels: false,
-              },
-            }"
-            >
-          </VegaEmbed>
+        <div class="toolbar">
+          <v-btn text class="icon-btn" @click="addCell()">
+            <v-icon color="black">add</v-icon>Add a cell
+          </v-btn>
+          <v-btn text class="icon-btn" v-if="cellsAreValid" color="success" @click="runCode()">
+            <v-icon>play_arrow</v-icon>Run
+          </v-btn>
+          <v-spacer></v-spacer>
+          <v-btn text class="icon-btn" v-if="cells.length" color="error" @click="cells = [{content: '', id: 0, active: false}]">
+            <v-icon>close</v-icon>Clear all
+          </v-btn>
         </div>
-        <div v-if="detailsActive['scatter-plot']" class="scatter-plot plot">
-          <div class="plot-title">
-            Scatter plot
-          </div>
-          <VegaEmbed
-            :name="'scatterplot'"
-            @signal:pts_tuple="displaySelection"
-            ref="scatter-plot"
-            class="scatter-plot-grid mb-2"
-            v-if="detailedColumns.length>=2"
-            :data="{values: dataset.sample.value}"
-            :mark="{
-              type: 'point',
-              filled: true,
-              tooltip: true
-            }"
-            width="400"
-            :selection="{
-              'highlight': {'type': 'single', 'empty': 'none', 'on': 'mouseover', 'fields': [detailedColumns[0].index.toString(),detailedColumns[1].index.toString()]},
-              'select': {'type': 'multi'}
-            }"
-            :encoding="{
-              x: {field: detailedColumns[0].index.toString(), title: dataset.columns[detailedColumns[0].index].name, titleOpacity: 0, type: 'quantitative', scale: {zero: false}},
-              y: {field: detailedColumns[1].index.toString(), title: dataset.columns[detailedColumns[1].index].name, titleOpacity: 0, type: 'quantitative'},
-              opacity: {
-                condition: {selection: 'highlight', value: 1},
-                value: 0.5
-              },
-              size: {
-                value: 75
-              },
-              color: {
-                condition: {selection: 'highlight', value: '#82bcfa'},
-                value: '#4db6ac'
-              }
-            }"
-            :config="{
-              axis: {
-                titleOpacity: 0,
-                domainColor: '#fff',
-                title: 0,
-                gridColor: '#fff',
-                ticks: false,
-                domainOpacity: 0,
-                gridOpacity: 0,
-                tickOpacity: 0,
-                labelPadding: 0,
-                labels: false,
-              },
-              view: {
-                stroke: 'transparent'
-              }
-            }"
-            >
-          </VegaEmbed>
-        </div>
+        <draggable
+          tag="div"
+          class="sidebar-content options-fields"
+          v-model="cells"
+          v-bind="dragOptions"
+          handle=".handle"
+          @start="drag = true"
+          @end="drag = false"
+        >
+          <transition-group type="transition" :name="!drag ? 'flip-list' : null">
+            <div class="cell-container" v-for="(cell, index) in cells" :key="cell.id">
 
-        <template v-for="(column, i) in detailedColumns">
-          <ColumnDetails :key="column.index" :index="column.index" :startExpanded="i==0" :rowsCount="+dataset.summary.rows_count" :column="dataset.columns[column.index]" :dataset="dataset"></ColumnDetails>
-        </template>
-      </div>
+              <div class="cell" :class="{'active': cell.active}">
+                <div class="cell-top">
+                  <v-icon class="drag handle">drag_handle</v-icon>
+                  <v-icon class="delete" @click="cells.splice(index,1)">delete</v-icon>
+                </div>
+                <CodeEditor
+                  :active.sync="cell.active"
+                  class="editor"
+                  v-model="cell.content"
+                />
+              </div>
+            </div>
+          </transition-group>
+        </draggable>
+        <v-btn style="display: flex; margin: 6px auto 0;" key="button" color="primary" fab dark x-small depressed @click="addCell()">
+          <v-icon>add</v-icon>
+        </v-btn>
+      </template>
+      <template v-else-if="detailsActive!==false">
+        <div class="sidebar-header">
+          Details
+          <v-icon class="right-button" color="black" @click="detailsActive = false">close</v-icon>
+        </div>
+        <div class="sidebar-content">
+
+          <div v-if="detailedColumns.length>1" class="sidebar-section pr-10 columns-selected">
+            <CommandMenu v-if="$route.query.obeta=='42'" :columnsNumber="detailedColumns.length" button.class="right-button-center" :disabled="commandsDisabled" @command="commandHandle($event)"></CommandMenu>
+            <div class="column-selected" v-for="column in detailedColumns" :key="column.index">
+              <span class="data-type" :class="`type-${dataset.columns[column.index].column_dtype}`">{{ dataType(dataset.columns[column.index].column_dtype) }}</span>
+              <span class="data-type-name">{{ dataset.columns[column.index].name }}</span>
+            </div>
+          </div>
+          <div v-if="detailsActive['heat-map']" class="heat-map plot">
+            <div class="plot-title">
+              Heat Map
+            </div>
+            <VegaEmbed
+              :name="'heatmap'"
+              :autosize="{
+                type: 'fit'
+              }"
+              ref="heat-map"
+              class="heat-map-grid"
+              v-if="heatMap"
+              :data="{values: heatMap}"
+              :mark="{
+                type: 'rect',
+                tooltip: true
+              }"
+              :height="(heatMapEncoding.y2) ? 300 : undefined"
+              :width="(heatMapEncoding.x2) ? 336 : undefined"
+              :encoding="{
+                ...heatMapEncoding,
+                'color': {
+                  'field': 'z',
+                  title: 'n',
+                  'type': 'quantitative',
+                  scale: {range: ['#e6fffd', '#8cd7d0', '#4db6ac']},
+                  legend: { direction: 'vertical', type: 'gradient', gradientLength: 120, titleAlign: 'left', title: ' n' },
+                  // condition: { test: 'datum.z<=0', value: 'white'}
+                }
+              }"
+              :config="{
+                view: {
+                  strokeWidth: 0,
+                  stroke: 'transparent',
+                  step: 13
+                },
+                axis: {
+                  titleOpacity: 0,
+                  domainColor: '#fff',
+                  title: 0,
+                  gridColor: '#fff',
+                  ticks: false,
+                  domainOpacity: 0,
+                  gridOpacity: 0,
+                  tickOpacity: 0,
+                  labelPadding: 0,
+                  labels: false,
+                },
+              }"
+              >
+            </VegaEmbed>
+          </div>
+          <template v-for="(column, i) in detailedColumns">
+            <ColumnDetails
+              :key="column.index"
+              :startExpanded="i==0"
+              :rowsCount="+dataset.summary.rows_count"
+              :column="dataset.columns[column.index]"
+              :commandsDisabled="commandsDisabled"
+              @command="commandHandle($event)"
+            ></ColumnDetails>
+          </template>
+        </div>
+      </template>
     </div>
 
     <div class="table-container">
@@ -345,17 +376,22 @@
 
 <script>
 import GraphicsRenderer from '@/components/GraphicsRenderer'
+import CodeEditor from '@/components/CodeEditor'
+import CommandMenu from '@/components/CommandMenu'
 import ColumnDetails from '@/components/ColumnDetails'
 import VegaEmbed from '@/components/VegaEmbed'
 import dataTypesMixin from '@/plugins/mixins/data-types'
+import axios from 'axios'
 
 import { throttle } from '@/utils/functions.js'
 
 export default {
 	components: {
     GraphicsRenderer,
+    CommandMenu,
     ColumnDetails,
-    VegaEmbed
+    VegaEmbed,
+    CodeEditor
 	},
 
 	mixins: [dataTypesMixin],
@@ -392,7 +428,17 @@ export default {
 	data () {
 		return {
 
+      drag: false,
+
       detailsActive: false,
+
+      optionsActive: false,
+
+      cells: [],
+
+      commandsDisabled: false,
+
+      operation: undefined,
 
       heatMap: [],
       heatMapEncoding: {},
@@ -440,6 +486,15 @@ export default {
 
 	computed: {
 
+    dragOptions () {
+      return {
+                  animation: 200,
+                  group: "description",
+                  disabled: false,
+                  ghostClass: "ghost"
+                }
+    },
+
 		sortByLabel () {
 			if (this.sortBy[0]) {
 				try {
@@ -457,7 +512,11 @@ export default {
 			return this.dataset.columns.map((e) => {
 				return e.name
 			})
-		},
+    },
+
+    cellsAreValid() {
+      return this.cells.map(e=>e.content).join('').trim().length>0
+    },
 
 		hotSettings () {
 			return {
@@ -565,6 +624,107 @@ export default {
 	},
 
 	methods: {
+
+    commandHandle ( event ) {
+
+      var payload = undefined
+
+      switch (event.command) {
+        case 'rename':
+          payload = `newname`
+          break;
+        case 'unnest':
+          payload = {shape: 'string', separator: ', '}
+          break;
+        case 'replace':
+          payload = {search: 'string', replace: 'new_string'}
+          break;
+        case 'fill':
+          payload = 0
+          break;
+        default:
+        case 'drop':
+        case 'keep':
+        case 'nest':
+          payload = undefined
+          break;
+      }
+      this.addCell( event.command, event.columns, payload )
+    },
+
+    addCell (type = 'code', columns = [], payload) {
+
+      this.optionsActive = true
+
+      var content = ''
+
+      if (!columns.length)
+        columns = this.detailedColumns.map(e=>this.dataset.columns[e.index].name)
+
+      switch (type) {
+        case 'drop':
+          content = `df = df.cols.drop(["${columns.join('", "')}"])`
+          break;
+        case 'rename':
+          content = `df = df.cols.rename("${columns[0]}", "${payload}")`
+          break;
+        case 'keep':
+          content = `df = df.cols.keep(["${columns.join('", "')}"])`
+          break;
+        case 'nest':
+          content = `df = df.cols.nest(["${columns.join('", "')}"])`
+          break;
+        case 'unnest':
+          content = `df = df.cols.unnest("${columns[0]}", shape="${payload.shape}", separator="${payload.separator}")`
+          break;
+        case 'replace':
+          content = `df = df.cols.replace("${columns[0]}", search="${payload.search}", replace_by="${payload.replace}")`
+          break;
+        case 'fill':
+          content = `df = df.cols.fill_na("${columns[0]}", "${payload}")`
+          break;
+        default:
+
+          break;
+      }
+
+      this.cells.push({ type, content, id: this.cells.length, active: false })
+    },
+
+    async runCode() {
+
+      var code = this.cells.map(e=>e.content).join('\n')
+
+      try {
+        var response = await axios.post(process.env.API_URL+'/run',
+        {
+          code,
+          name: this.dataset.name
+        })
+        console.log('response',response)
+      } catch (error) {
+        console.error(error)
+      }
+
+
+    },
+
+    deleteColumns (columns = []) {
+      this.commandsDisabled = true
+      this.operation = 'delete'
+      setTimeout(() => {
+        this.commandsDisabled = false
+        this.operation = undefined
+      }, 500);
+      let toDelete = (columns.length) ? columns : this.detailedColumns.map(e=>this.dataset.columns[e.index].name)
+
+      for (let i = toDelete.length - 1; i >= 0 ; i--) {
+        const foundIndex = this.dataset.columns.findIndex((e)=>{ return e.name==toDelete[i] })
+        this.$store.commit('deleteColumn', { dataset: this.currentTab, column: foundIndex })
+      }
+
+      console.log('toDelete',toDelete)
+    },
 
     displaySelection: throttle ( async function (item) {
 			if (item) {
@@ -1044,6 +1204,24 @@ export default {
     height: calc(100vh - 191px) !important;
     max-height: calc(100vh - 191px) !important;
     overflow: hidden;
+  }
+
+  // drag
+
+  .button {
+    margin-top: 35px;
+  }
+  .flip-list-move {
+    transition: transform 0.5s;
+  }
+  .no-move {
+    transition: transform 0s;
+  }
+  .ghost {
+    opacity: 0.5;
+  }
+  .options-fields {
+    min-height: 20px;
   }
 </style>
 

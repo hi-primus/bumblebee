@@ -22,4 +22,11 @@ $line-color-2: #e5e5e5;
 
 $table-cell-height: 23px;
 
+@font-face {
+  font-family: 'Ubuntu Mono Table';
+  src: url('/font/Ubuntu Mono Table.ttf');
+}
+
 $font-mono: "Ubuntu Mono", monospace !important;
+
+$font-mono-table: "Ubuntu Mono Table", monospace !important;

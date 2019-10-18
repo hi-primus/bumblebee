@@ -7,6 +7,10 @@ export const state = () => ({
 export const mutations = {
 
 	add (state, { dataset }) {
+
+    if (dataset.name===null)
+      dataset.name = dataset.file_name.split('.')[0]
+0
 		let found = state.datasets.findIndex((e) => {
 			return (e.name === dataset.name)
 		})
@@ -24,7 +28,12 @@ export const mutations = {
 		state.datasetUpdates = state.datasetUpdates + 1
 
 		console.log('DEBUG: state.datasets[found]', state.datasets[found])
-	},
+  },
+
+  deleteColumn(state,{dataset, column}) {
+    state.datasets[dataset].columns.splice(column, 1)
+    state.datasetUpdates = state.datasetUpdates + 1
+  },
 
 	delete (state, { index }) {
 		state.datasets.splice(index, 1)
