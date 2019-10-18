@@ -53,47 +53,89 @@
           </v-list-item-group>
         </v-list>
       </v-menu>
-      <transition name="fade">
+      <transition v-if="$route.query.obeta=='42'" name="fade">
         <div class="divider" v-if="detailedColumns.length>=1" />
       </transition>
-      <transition name="fade">
+      <transition v-if="$route.query.obeta=='42'" name="fade">
         <span class="columns-operations" v-if="detailedColumns.length>=1" >
-          <v-btn color="#888" text class="icon-btn" @click="addCell('delete')" :loading="operation=='delete'">
+          <v-btn v-if="detailedColumns.length==1" color="#888" text class="icon-btn" @click="commandHandle({command: 'rename'})">
+            <v-icon>edit</v-icon>
+          </v-btn>
+          <v-btn color="#888" text class="icon-btn" @click="commandHandle({command: 'keep'})">
+            <v-icon>all_out</v-icon>
+          </v-btn>
+          <v-btn color="#888" text class="icon-btn" @click="commandHandle({command: 'drop'})">
             <v-icon>delete</v-icon>
+          </v-btn>
+          <transition name="fade">
+            <v-btn v-if="detailedColumns.length>=2" color="#888" text class="icon-btn" @click="commandHandle({command: 'nest'})">
+              <v-icon>link</v-icon>
+            </v-btn>
+          </transition>
+          <v-btn v-if="detailedColumns.length==1" color="#888" text class="icon-btn" @click="commandHandle({command: 'unnest'})">
+            <v-icon>link_off</v-icon>
+          </v-btn>
+          <v-btn v-if="detailedColumns.length==1" color="#888" text class="icon-btn" @click="commandHandle({command: 'replace'})">
+            <v-icon>find_replace</v-icon>
+          </v-btn>
+          <v-btn v-if="detailedColumns.length==1" color="#888" text class="icon-btn" @click="commandHandle({command: 'fill'})">
+            <v-icon>brush</v-icon>
           </v-btn>
         </span>
       </transition>
       <v-spacer></v-spacer>
-      <v-btn :color="(optionsActive) ? 'black' : '#888'" text class="icon-btn" @click="optionsActive = !optionsActive">
+      <v-btn v-if="$route.query.obeta=='42'" :color="(optionsActive) ? 'black' : '#888'" text class="icon-btn" @click="optionsActive = !optionsActive">
         <v-icon>code</v-icon>
       </v-btn>
     </div>
 
-    <div class="sidebar-container" v-if="detailsActive || optionsActive">
-      <template v-if="optionsActive">
+    <div class="sidebar-container" v-if="detailsActive || (optionsActive && $route.query.obeta=='42')">
+      <template v-if="optionsActive && $route.query.obeta=='42'">
         <div class="sidebar-header">
           Operations
           <v-icon class="right-button" color="black" @click="optionsActive = false">close</v-icon>
         </div>
-        <div class="sidebar-content">
-          <table class="sidebar-content options-fields">
-            <tbody>
-              <tr class="cell" v-for="(cell, index) in cells" :key="index">
-                <td style="width: 32px">{{cell.type}}</td>
-                <td style="width: calc(100% - 32px)">
-                  <code-editor v-model="cell.content"/>
-                </td>
-              </tr>
-              <tr>
-                <td colspan="2">
-                  <v-btn color="black" icon @click="cells.push({type:'code',content:''})">
-                    <v-icon>add</v-icon>
-                  </v-btn>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+        <div class="toolbar">
+          <v-btn text class="icon-btn" @click="addCell()">
+            <v-icon color="black">add</v-icon>Add a cell
+          </v-btn>
+          <v-btn text class="icon-btn" v-if="cellsAreValid" color="success" @click="runCode()">
+            <v-icon>play_arrow</v-icon>Run
+          </v-btn>
+          <v-spacer></v-spacer>
+          <v-btn text class="icon-btn" v-if="cells.length" color="error" @click="cells = [{content: '', id: 0, active: false}]">
+            <v-icon>close</v-icon>Clear all
+          </v-btn>
         </div>
+        <draggable
+          tag="div"
+          class="sidebar-content options-fields"
+          v-model="cells"
+          v-bind="dragOptions"
+          handle=".handle"
+          @start="drag = true"
+          @end="drag = false"
+        >
+          <transition-group type="transition" :name="!drag ? 'flip-list' : null">
+            <div class="cell-container" v-for="(cell, index) in cells" :key="cell.id">
+
+              <div class="cell" :class="{'active': cell.active}">
+                <div class="cell-top">
+                  <v-icon class="drag handle">drag_handle</v-icon>
+                  <v-icon class="delete" @click="cells.splice(index,1)">delete</v-icon>
+                </div>
+                <CodeEditor
+                  :active.sync="cell.active"
+                  class="editor"
+                  v-model="cell.content"
+                />
+              </div>
+            </div>
+          </transition-group>
+        </draggable>
+        <v-btn style="display: flex; margin: 6px auto 0;" key="button" color="primary" fab dark x-small depressed @click="addCell()">
+          <v-icon>add</v-icon>
+        </v-btn>
       </template>
       <template v-else-if="detailsActive!==false">
         <div class="sidebar-header">
@@ -103,8 +145,7 @@
         <div class="sidebar-content">
 
           <div v-if="detailedColumns.length>1" class="sidebar-section pr-10 columns-selected">
-            <!-- TODO: Navigate using .column-selected -->
-            <CommandMenu button.class="right-button-center" :disabled="commandsDisabled" @command="commandHandle($event)"></CommandMenu>
+            <CommandMenu v-if="$route.query.obeta=='42'" :columnsNumber="detailedColumns.length" button.class="right-button-center" :disabled="commandsDisabled" @command="commandHandle($event)"></CommandMenu>
             <div class="column-selected" v-for="column in detailedColumns" :key="column.index">
               <span class="data-type" :class="`type-${dataset.columns[column.index].column_dtype}`">{{ dataType(dataset.columns[column.index].column_dtype) }}</span>
               <span class="data-type-name">{{ dataset.columns[column.index].name }}</span>
@@ -340,6 +381,7 @@ import CommandMenu from '@/components/CommandMenu'
 import ColumnDetails from '@/components/ColumnDetails'
 import VegaEmbed from '@/components/VegaEmbed'
 import dataTypesMixin from '@/plugins/mixins/data-types'
+import axios from 'axios'
 
 import { throttle } from '@/utils/functions.js'
 
@@ -385,6 +427,8 @@ export default {
 
 	data () {
 		return {
+
+      drag: false,
 
       detailsActive: false,
 
@@ -442,6 +486,15 @@ export default {
 
 	computed: {
 
+    dragOptions () {
+      return {
+                  animation: 200,
+                  group: "description",
+                  disabled: false,
+                  ghostClass: "ghost"
+                }
+    },
+
 		sortByLabel () {
 			if (this.sortBy[0]) {
 				try {
@@ -459,7 +512,11 @@ export default {
 			return this.dataset.columns.map((e) => {
 				return e.name
 			})
-		},
+    },
+
+    cellsAreValid() {
+      return this.cells.map(e=>e.content).join('').trim().length>0
+    },
 
 		hotSettings () {
 			return {
@@ -569,22 +626,86 @@ export default {
 	methods: {
 
     commandHandle ( event ) {
+
+      var payload = undefined
+
       switch (event.command) {
-        // case 'delete':
-          // this.deleteColumns(event.columns)
-          // break;
+        case 'rename':
+          payload = `newname`
+          break;
+        case 'unnest':
+          payload = {shape: 'string', separator: ', '}
+          break;
+        case 'replace':
+          payload = {search: 'string', replace: 'new_string'}
+          break;
+        case 'fill':
+          payload = 0
+          break;
         default:
-          this.addCell( event.command, event.columns )
+        case 'drop':
+        case 'keep':
+        case 'nest':
+          payload = undefined
           break;
       }
+      this.addCell( event.command, event.columns, payload )
     },
 
-    addCell (command = '', columns = []) {
+    addCell (type = 'code', columns = [], payload) {
+
+      this.optionsActive = true
+
+      var content = ''
 
       if (!columns.length)
         columns = this.detailedColumns.map(e=>this.dataset.columns[e.index].name)
-      console.log('command',command)
-      console.log('columns',columns)
+
+      switch (type) {
+        case 'drop':
+          content = `df = df.cols.drop(["${columns.join('", "')}"])`
+          break;
+        case 'rename':
+          content = `df = df.cols.rename("${columns[0]}", "${payload}")`
+          break;
+        case 'keep':
+          content = `df = df.cols.keep(["${columns.join('", "')}"])`
+          break;
+        case 'nest':
+          content = `df = df.cols.nest(["${columns.join('", "')}"])`
+          break;
+        case 'unnest':
+          content = `df = df.cols.unnest("${columns[0]}", shape="${payload.shape}", separator="${payload.separator}")`
+          break;
+        case 'replace':
+          content = `df = df.cols.replace("${columns[0]}", search="${payload.search}", replace_by="${payload.replace}")`
+          break;
+        case 'fill':
+          content = `df = df.cols.fill_na("${columns[0]}", "${payload}")`
+          break;
+        default:
+
+          break;
+      }
+
+      this.cells.push({ type, content, id: this.cells.length, active: false })
+    },
+
+    async runCode() {
+
+      var code = this.cells.map(e=>e.content).join('\n')
+
+      try {
+        var response = await axios.post(process.env.API_URL+'/run',
+        {
+          code,
+          name: this.dataset.name
+        })
+        console.log('response',response)
+      } catch (error) {
+        console.error(error)
+      }
+
 
     },
 
@@ -1083,6 +1204,24 @@ export default {
     height: calc(100vh - 191px) !important;
     max-height: calc(100vh - 191px) !important;
     overflow: hidden;
+  }
+
+  // drag
+
+  .button {
+    margin-top: 35px;
+  }
+  .flip-list-move {
+    transition: transform 0.5s;
+  }
+  .no-move {
+    transition: transform 0s;
+  }
+  .ghost {
+    opacity: 0.5;
+  }
+  .options-fields {
+    min-height: 20px;
   }
 </style>
 

@@ -2,6 +2,8 @@
   <div id="editor" class="editor-holder">
     <div class="textarea-container">
       <textarea
+        @focus="_active = true"
+        @blur="_active = false"
         wrap="soft"
         ref="editor"
         auto-grow full-width hide-details no-resize
@@ -20,6 +22,10 @@ export default {
     value: {
       type: String,
       default: ''
+    },
+    active: {
+      type: Boolean,
+      default: false
     }
   },
 
@@ -67,6 +73,14 @@ export default {
            .replace(/"/g, "&quot;")
            .replace(/'/g, "&#039;");
     },
+    _active: {
+      get () {
+        return this.active
+      },
+      set (v) {
+        this.$emit('update:active',v)
+      }
+    },
     query: {
       get () {
         return this.value
@@ -85,12 +99,23 @@ export default {
     top: 0;
     overflow: auto;
     padding: 12px;
-    border: 2px solid lightgray;
+    border: none;
     border-radius: 4px;
-    background-color: #F0F0F0;
+    background-color: #f0f0f0;
 
-    max-width: 365px;
-    min-height: 135px;
+    max-width: 100%;
+    min-height: 80px;
+
+    &::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+      padding: 4px;
+      transition: all .2s;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      border-radius: 4px;
+    }
 
     * {
       padding: 0 !important;

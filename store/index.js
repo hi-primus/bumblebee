@@ -7,6 +7,10 @@ export const state = () => ({
 export const mutations = {
 
 	add (state, { dataset }) {
+
+    if (dataset.name===null)
+      dataset.name = dataset.file_name.split('.')[0]
+0
 		let found = state.datasets.findIndex((e) => {
 			return (e.name === dataset.name)
 		})

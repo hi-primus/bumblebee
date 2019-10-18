@@ -15,13 +15,11 @@ html:root {
 ::-webkit-scrollbar {
   width: 10px;
   height: 10px;
-  padding: 4px;
   transition: all .2s;
 }
 
 /* Track */
 ::-webkit-scrollbar-track {
-  // background: #f1f1f1;
   background: transparent
 }
 
@@ -50,6 +48,10 @@ body{
 
 .hoverable {
 	cursor: pointer;
+}
+
+.drag {
+  cursor: move !important;
 }
 
 .back-btn {
@@ -323,6 +325,8 @@ table {
   display: flex;
   flex-wrap: wrap;
   &>.toolbar {
+
+    padding: 0 18px;
     order: 1;
     width: 100%;
   }
@@ -601,7 +605,6 @@ table {
   }
   display: flex;
   align-items: center;
-  padding: 0 18px;
   height: 48px - 1px;
   .divider {
     width: 1px;
@@ -1055,10 +1058,34 @@ table {
 .options-fields {
   height: auto !important;
   min-width: 100%;
-  tr td{
-    border-bottom: 1px solid $line-color-1;
-  }
-  .cell textarea {
-    font-size: 14px;
+  flex: none !important;
+  .cell {
+    &.active {
+      box-shadow: #777 0 0 5px -2px;
+    }
+    display: flex;
+    border-radius: 4px;
+    position: relative;
+    // padding: 0 0 0 8px;
+    margin: 3px 0 6px 8px;
+    max-width: calc(100% - 36px);
+    .cell-top {
+      // width: 100%;
+      .drag {
+        margin: auto;
+        display: flex;
+      }
+      .delete {
+        position: absolute;
+        top: 0;
+        right: 0;
+      }
+    }
+    .editor {
+      width: 100%;
+    }
+    textarea {
+      font-size: 14px;
+    }
   }
 }
