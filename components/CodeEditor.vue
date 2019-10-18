@@ -1,0 +1,204 @@
+<template>
+  <div id="editor" class="editor-holder">
+    <div class="textarea-container">
+      <textarea
+        @focus="_active = true"
+        @blur="_active = false"
+        wrap="soft"
+        ref="editor"
+        auto-grow full-width hide-details no-resize
+        v-model="query"
+        class="editor" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+      ></textarea>
+    </div>
+		<pre><div ref="code" class="syntax-highlight py python code"></div></pre>
+  </div>
+</template>
+
+<script>
+export default {
+
+  props: {
+    value: {
+      type: String,
+      default: ''
+    },
+    active: {
+      type: Boolean,
+      default: false
+    }
+  },
+
+  watch: {
+    query: {
+      handler: 'highlightSyntax',
+      immediate: true,
+    }
+  },
+
+  mounted () {
+    this.$nextTick(()=>{
+      if (this.$refs.editor) {
+        console.log(this.$refs.editor)
+        this.$refs.editor.onkeydown = function(e){
+          if(e.keyCode==9 || e.which==9){
+            e.preventDefault();
+              var s = this.selectionStart;
+              this.value = this.value.substring(0,this.selectionStart) + "\t" + this.value.substring(this.selectionEnd);
+              this.selectionEnd = s+1;
+          }
+        }
+      }
+    })
+  },
+
+  methods: {
+    highlightSyntax () {
+      this.$nextTick(()=>{
+        if (this.$refs.code) {
+          console.log(this.$refs.code)
+          this.$refs.code.innerHTML = this.escapedQuery;
+          hljs.highlightBlock(this.$refs.code);
+        }
+      })
+    }
+  },
+
+  computed: {
+    escapedQuery(){
+      return this.query
+           .replace(/&/g, "&amp;")
+           .replace(/</g, "&lt;")
+           .replace(/>/g, "&gt;")
+           .replace(/"/g, "&quot;")
+           .replace(/'/g, "&#039;");
+    },
+    _active: {
+      get () {
+        return this.active
+      },
+      set (v) {
+        this.$emit('update:active',v)
+      }
+    },
+    query: {
+      get () {
+        return this.value
+      },
+      set (v) {
+        this.$emit('input',v)
+      }
+    }
+  },
+}
+</script>
+
+<style lang="scss">
+  .editor-holder{
+    position: relative;
+    top: 0;
+    overflow: auto;
+    padding: 12px;
+    border: none;
+    border-radius: 4px;
+    background-color: #f0f0f0;
+
+    max-width: 100%;
+    min-height: 80px;
+
+    &::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+      padding: 4px;
+      transition: all .2s;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      border-radius: 4px;
+    }
+
+    * {
+      padding: 0 !important;
+      margin: 0 !important;
+      transition: none !important;
+    }
+
+    textarea, .code {
+      font-size: 14px !important;
+      font-family: "Ubuntu Mono" !important;
+      line-height: 21px !important;
+      overflow: visible;
+      letter-spacing: initial !important;
+
+      transition: all 0.5s ease-in-out;
+    }
+
+    .textarea-container {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      height: calc(100% - 12px);
+      width: 780px;
+      background: transparent !important;
+      // background-color: rgba(green,0.25);
+      white-space: nowrap;
+      overflow: hidden;
+
+      textarea {
+        position: relative;
+        min-width: 100%;
+        resize: both;
+        height: calc(100% + 24px) !important;
+        overflow: hidden;
+        border: none;
+        outline: none;
+      }
+
+      text-shadow: 0px 0px 0px rgba(0, 0, 0, 0);
+      -webkit-text-fill-color: transparent;
+      text-fill-color: transparent;
+    }
+
+    .v-textarea{
+      background: transparent !important;
+      z-index: 2;
+      height: auto;
+      resize: none;
+      color: #000;
+      text-shadow: 0px 0px 0px rgba(0, 0, 0, 0);
+      text-fill-color: transparent;
+      -webkit-text-fill-color: transparent;
+
+      &::-webkit-input-placeholder{
+        color: black;
+      }
+
+      &:focus{
+        outline: 0;
+        border: 0;
+        -webkit-box-shadow: none;
+        -moz-box-shadow: none;
+        box-shadow: none;
+      }
+      textarea {
+        white-space: nowrap;
+        overflow: show;
+        // background-color: rgba(blue,0.25);
+        width: 780px;
+      }
+    }
+
+    pre {
+      // background-color: rgba(red,0.12);
+      width: 780px;
+    }
+    .code{
+      z-index: 1;
+      // background-color: rgba(red,0.13);
+      pointer-events: none;
+      width: 780px;
+      display: block;
+      white-space: pre-wrap;
+    }
+  }
+</style>

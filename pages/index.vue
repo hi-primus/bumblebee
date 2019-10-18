@@ -222,6 +222,7 @@ import Layout from '@/components/Layout'
 import TableBar from '@/components/TableBar'
 import clientMixin from '@/plugins/mixins/client'
 import dataTypesMixin from '@/plugins/mixins/data-types'
+import axios from 'axios'
 
 const { version } = require('@/package.json')
 
@@ -273,7 +274,25 @@ export default {
 
 	watch: {
 
-    status (value) {
+    async status (value) {
+      switch (value) {
+        case 'receiving':
+          if (this.$route.query.obeta=='42') {
+            var response = await axios.post(process.env.API_URL+'/initialize')
+            console.log('response',response)
+
+            setTimeout(async () => {
+              var response = await axios.post(process.env.API_URL+'/dataset-file',{file: {url: 'https://raw.githubusercontent.com/ironmussa/Optimus/master/examples/data/foo.csv'}})
+              console.log('response',response)
+            }, 5000);
+          }
+
+          break;
+
+        default:
+          break;
+      }
+
       if (value!='received')
         return
 
