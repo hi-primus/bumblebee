@@ -1,5 +1,179 @@
 <template>
   <div class="dashboard-container">
+    <template name="command-dialogs">
+      <v-dialog v-if="currentCommand.command == 'rename'" :value="currentCommand.command == 'rename'" max-width="410" @click:outside="cancelCommand">
+        <v-card>
+          <v-card-title class="title mb-4">Rename {{ currentCommand.name }}</v-card-title>
+          <v-card-text class="pb-0 command-card-text">
+            <template v-for="column in currentCommand.renames">
+                <v-text-field
+                  :key="column.name"
+                  v-model="column.newName"
+                  :label="column.name"
+                  dense
+                  required
+                  outlined
+                ></v-text-field>
+            </template>
+          </v-card-text>
+          <v-card-actions>
+            <div class="flex-grow-1"/>
+            <v-btn
+              color="primary"
+              text
+              @click="cancelCommand"
+            >
+              Cancel
+            </v-btn>
+            <v-btn
+              color="primary"
+              text
+              :disabled="(!currentCommand.renames.every( (e)=>{ return (e.newName.trim().length>0) } ))"
+              @click="confirmCommand()"
+            >
+              Accept
+            </v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
+      <v-dialog v-if="currentCommand.command == 'unnest'" :value="currentCommand.command == 'unnest'" max-width="410" @click:outside="cancelCommand">
+        <v-card>
+          <v-card-title class="title">Unnest column</v-card-title>
+          <v-card-text class="pb-0 command-card-text">
+            Unnest <span class="text-uppercase">"{{ currentCommand.columns[0] }}"</span>
+            <v-select
+              v-model="currentCommand.shape"
+              class="mt-4"
+              label="Shape"
+              dense
+              required
+              outlined
+              :items="[
+                {text: 'None', value: ''},
+                {text: 'String', value: 'string'},
+                {text: 'Array', value: 'array'},
+                {text: 'Vector', value: 'vector'}
+              ]"
+            ></v-select>
+            <v-text-field
+              v-model="currentCommand.separator"
+              label="Separator"
+              dense
+              required
+              outlined
+            ></v-text-field>
+          </v-card-text>
+          <v-card-actions>
+            <div class="flex-grow-1"/>
+            <v-btn
+              color="primary"
+              text
+              @click="cancelCommand"
+            >
+              Cancel
+            </v-btn>
+            <v-btn
+              color="primary"
+              text
+              @click="confirmCommand()"
+            >
+              Accept
+            </v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
+      <v-dialog v-if="currentCommand.command == 'replace'" :value="currentCommand.command == 'replace'" max-width="410" @click:outside="cancelCommand">
+        <v-card>
+          <v-card-title class="title" v-if="currentCommand.columns.length==1">
+            Replace in column
+          </v-card-title>
+          <v-card-title class="title" v-else>
+            Replace in columns
+          </v-card-title>
+          <v-card-text class="pb-0 command-card-text">
+            Replace from "{{currentCommand.search}}" to "{{currentCommand.replace}}"
+            <template v-if="currentCommand.columns.length==1">
+              in <span class="text-uppercase">"{{currentCommand.columns[0]}}"</span>
+            </template>
+            <v-text-field
+              v-model="currentCommand.search"
+              class="mt-4"
+              label="Find"
+              dense
+              required
+              outlined
+            ></v-text-field>
+            <v-text-field
+              v-model="currentCommand.replace"
+              label="Replace"
+              dense
+              required
+              outlined
+            ></v-text-field>
+          </v-card-text>
+          <v-card-actions>
+            <div class="flex-grow-1"/>
+            <v-btn
+              color="primary"
+              text
+              @click="cancelCommand"
+            >
+              Cancel
+            </v-btn>
+            <v-btn
+              color="primary"
+              text
+              :disabled="(currentCommand.search.length<=0)"
+              @click="confirmCommand()"
+            >
+              Accept
+            </v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
+      <v-dialog v-if="currentCommand.command == 'fill'" :value="currentCommand.command == 'fill'" max-width="410" @click:outside="cancelCommand">
+        <v-card>
+          <v-card-title class="title" v-if="currentCommand.columns.length==1">
+            Fill in column
+          </v-card-title>
+          <v-card-title class="title" v-else>
+            Fill in columns
+          </v-card-title>
+          <v-card-text class="pb-0 command-card-text">
+            Fill "{{currentCommand.search}}"
+            <template v-if="currentCommand.columns.length==1">
+              in <span class="text-uppercase">"{{currentCommand.columns[0]}}"</span>
+            </template>
+            <v-text-field
+              v-model="currentCommand.fill"
+              class="mt-2"
+              label="Fill"
+              dense
+              required
+              outlined
+            ></v-text-field>
+          </v-card-text>
+          <v-card-actions>
+            <div class="flex-grow-1"/>
+            <v-btn
+              color="primary"
+              text
+              @click="cancelCommand"
+            >
+              Cancel
+            </v-btn>
+            <v-btn
+              color="primary"
+              text
+              @click="confirmCommand()"
+            >
+              Accept
+            </v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
+
+    </template>
     <div class="toolbar" :class="{'disabled': commandsDisabled}">
       <v-btn text class="icon-btn" @click="$emit('update:view',0)">
         <v-icon :color="(view==0) ? 'black' : '#888'">view_headline</v-icon>
@@ -58,7 +232,7 @@
       </transition>
       <transition v-if="$route.query.obeta=='42'" name="fade">
         <span class="columns-operations" v-if="detailedColumns.length>=1" >
-          <v-btn v-if="detailedColumns.length==1" color="#888" text class="icon-btn" @click="commandHandle({command: 'rename'})">
+          <v-btn color="#888" text class="icon-btn" @click="commandHandle({command: 'rename'})">
             <v-icon>edit</v-icon>
           </v-btn>
           <v-btn color="#888" text class="icon-btn" @click="commandHandle({command: 'keep'})">
@@ -72,13 +246,13 @@
               <v-icon>link</v-icon>
             </v-btn>
           </transition>
-          <v-btn v-if="detailedColumns.length==1" color="#888" text class="icon-btn" @click="commandHandle({command: 'unnest'})">
+          <v-btn color="#888" text class="icon-btn" @click="commandHandle({command: 'unnest'})">
             <v-icon>link_off</v-icon>
           </v-btn>
-          <v-btn v-if="detailedColumns.length==1" color="#888" text class="icon-btn" @click="commandHandle({command: 'replace'})">
+          <v-btn color="#888" text class="icon-btn" @click="commandHandle({command: 'replace'})">
             <v-icon>find_replace</v-icon>
           </v-btn>
-          <v-btn v-if="detailedColumns.length==1" color="#888" text class="icon-btn" @click="commandHandle({command: 'fill'})">
+          <v-btn color="#888" text class="icon-btn" @click="commandHandle({command: 'fill'})">
             <v-icon>brush</v-icon>
           </v-btn>
         </span>
@@ -89,53 +263,69 @@
       </v-btn>
     </div>
 
-    <div class="sidebar-container" v-if="detailsActive || (optionsActive && $route.query.obeta=='42')">
+    <div class="sidebar-container" :class="{'bigger': optionsActive}" v-if="detailsActive || (optionsActive && $route.query.obeta=='42')">
+
       <template v-if="optionsActive && $route.query.obeta=='42'">
         <div class="sidebar-header">
           Operations
           <v-icon class="right-button" color="black" @click="optionsActive = false">close</v-icon>
         </div>
-        <div class="toolbar">
+				<v-progress-circular
+          indeterminate
+          v-if="commandsDisabled"
+          class="progress-middle"
+          color="#888"
+          size="64"
+        />
+        <!-- <div class="toolbar pl-2 pr-12">
           <v-btn text class="icon-btn" @click="addCell()">
             <v-icon color="black">add</v-icon>Add a cell
           </v-btn>
-          <v-btn text class="icon-btn" v-if="cellsAreValid" color="success" @click="runCode()">
+          <v-spacer></v-spacer>
+          <v-btn text class="icon-btn" color="#888" v-if="cellsAreValid" @click="runCode()">
             <v-icon>play_arrow</v-icon>Run
           </v-btn>
           <v-spacer></v-spacer>
           <v-btn text class="icon-btn" v-if="cells.length" color="error" @click="cells = [{content: '', id: 0, active: false}]">
             <v-icon>close</v-icon>Clear all
           </v-btn>
-        </div>
+        </div> -->
         <draggable
           tag="div"
           class="sidebar-content options-fields"
+          :class="{'no-pe disabled': commandsDisabled,'dragging': drag}"
           v-model="cells"
           v-bind="dragOptions"
           handle=".handle"
+          ref="cells"
           @start="drag = true"
           @end="drag = false"
         >
           <transition-group type="transition" :name="!drag ? 'flip-list' : null">
-            <div class="cell-container" v-for="(cell, index) in cells" :key="cell.id">
+            <div class="cell-container" v-for="(cell, index) in cells" :key="cell.id" :class="{'cell-error': cell.error,'done': cell.done,'active': cell.active}" @click="setActive(index)">
 
-              <div class="cell" :class="{'active': cell.active}">
-                <div class="cell-top">
-                  <v-icon class="drag handle">drag_handle</v-icon>
-                  <v-icon class="delete" @click="cells.splice(index,1)">delete</v-icon>
-                </div>
+              <div class="cell">
+                <div class="handle left-handle"></div>
+                <!-- <div class="handle cell-title cell-type">{{index+1}}. {{cell.type}}</div> -->
                 <CodeEditor
-                  :active.sync="cell.active"
-                  class="editor"
+                  :active="cell.active"
+                  @blur="runCodeLater()"
+                  @update:active="setActive(index)"
                   v-model="cell.content"
                 />
+                <div class="cell-type cell-type-label" v-if="cell.type && cell.type!='code'">{{cell.type}}</div>
               </div>
+            </div>
+            <div key="controls" ref="cell-controls" class="cell-controls toolbar vertical">
+              <v-btn v-if="activeCell>=0" text class="icon-btn" color="#888" @click.stop="removeCell(activeCell)">
+                <v-icon>delete</v-icon>
+              </v-btn>
+              <v-btn text class="icon-btn" color="primary" @click="addCell(activeCell+1)">
+                <v-icon>add</v-icon>
+              </v-btn>
             </div>
           </transition-group>
         </draggable>
-        <v-btn style="display: flex; margin: 6px auto 0;" key="button" color="primary" fab dark x-small depressed @click="addCell()">
-          <v-icon>add</v-icon>
-        </v-btn>
       </template>
       <template v-else-if="detailsActive!==false">
         <div class="sidebar-header">
@@ -434,9 +624,17 @@ export default {
 
       optionsActive: false,
 
+      activeCell: -1,
+
       cells: [],
 
+      codeDone: '',
+
+      lastCodeTry: false,
+
       commandsDisabled: false,
+
+      currentCommand: false,
 
       operation: undefined,
 
@@ -488,11 +686,11 @@ export default {
 
     dragOptions () {
       return {
-                  animation: 200,
-                  group: "description",
-                  disabled: false,
-                  ghostClass: "ghost"
-                }
+        animation: 200,
+        group: "description",
+        disabled: false,
+        ghostClass: "ghost"
+      }
     },
 
 		sortByLabel () {
@@ -515,7 +713,7 @@ export default {
     },
 
     cellsAreValid() {
-      return this.cells.map(e=>e.content).join('').trim().length>0
+      return this.cells.map(e=>e.content).join('\n').trim().length>0
     },
 
 		hotSettings () {
@@ -629,30 +827,104 @@ export default {
 
       var payload = undefined
 
+      if (!event.columns || !event.columns.length)
+        event.columns = this.detailedColumns.map(e=>this.dataset.columns[e.index].name)
+
       switch (event.command) {
         case 'rename':
-          payload = `newname`
+          this.currentCommand = {
+            command: 'rename',
+            columns: event.columns,
+            name: (event.columns.length==1) ? `"${event.columns[0].toUpperCase()}"` : 'columns',
+            renames: event.columns.map((e)=>{
+              return{
+                name: e,
+                newName: ''
+              }
+            })
+          }
           break;
         case 'unnest':
+          this.currentCommand = {command: 'unnest', columns: event.columns, shape: 'string', separator: ', '}
           payload = {shape: 'string', separator: ', '}
           break;
         case 'replace':
-          payload = {search: 'string', replace: 'new_string'}
+          this.currentCommand = {command: 'replace', columns: event.columns, search: '', replace: ''}
           break;
         case 'fill':
-          payload = 0
+          this.currentCommand = {command: 'fill', columns: event.columns, fill: ''}
           break;
         default:
         case 'drop':
         case 'keep':
         case 'nest':
           payload = undefined
+          this.addCell(-1, event.command, event.columns, payload )
           break;
       }
-      this.addCell( event.command, event.columns, payload )
     },
 
-    addCell (type = 'code', columns = [], payload) {
+    confirmCommand() {
+      this.addCell(-1, this.currentCommand.command, this.currentCommand.columns, this.currentCommand )
+      this.currentCommand = false
+    },
+
+    cancelCommand() {
+      this.currentCommand = false
+    },
+
+    setActive (index) {
+      for (let i = 0; i < this.cells.length; i++) {
+        this.cells[i].active = false
+      }
+      if (this.cells[index]) {
+        this.cells[index].active = true
+        this.activeCell = index
+        if (this.$refs.cells && this.$refs['cell-controls']) {
+          this.$refs['cell-controls'].style.top = (this.$refs.cells.$el.getElementsByClassName('cell-container')[index].offsetTop) + 'px'
+        }
+      }
+      else {
+        this.activeCell = -1
+        if (this.$refs['cell-controls']) {
+          this.$refs['cell-controls'].style.top = '18px'
+        }
+      }
+    },
+
+    removeCell (index) {
+      if (index<0)
+        return
+
+      this.cells.splice(index,1)
+      if (this.cells.length==index) {
+        index--
+      }
+      this.setActive(index)
+    },
+
+    markCells(mark = true) {
+      for (let i = 0; i < this.cells.length; i++) {
+        if (this.cells[i].content) {
+          this.cells[i].done = mark
+        }
+        this.cells[i].error = false
+      }
+
+      if (mark)
+        this.codeDone = this.cells.map(e=>(e.content!=='') ? e.content+'\n' : '').join('').trim()
+      else
+        this.codeDone = ''
+
+    },
+    markCellsError() {
+      for (let i = 0; i < this.cells.length; i++) {
+        if (!this.cells[i].done && this.cells[i].content)
+          this.cells[i].error = true // TODO: trying
+      }
+    },
+
+    addCell (at = -1,type = 'code', columns = [], payload) {
 
       this.optionsActive = true
 
@@ -666,7 +938,12 @@ export default {
           content = `df = df.cols.drop(["${columns.join('", "')}"])`
           break;
         case 'rename':
-          content = `df = df.cols.rename("${columns[0]}", "${payload}")`
+          if (payload.renames.length==1) {
+            content = `df = df.cols.rename("${payload.renames[0].name}", "${payload.renames[0].newName}")`
+          }
+          else {
+            content = `df = df.cols.rename([${payload.renames.map(e=>`("${e.name}", "${e.newName}")`)}])`
+          }
           break;
         case 'keep':
           content = `df = df.cols.keep(["${columns.join('", "')}"])`
@@ -675,55 +952,93 @@ export default {
           content = `df = df.cols.nest(["${columns.join('", "')}"])`
           break;
         case 'unnest':
-          content = `df = df.cols.unnest("${columns[0]}", shape="${payload.shape}", separator="${payload.separator}")`
+          var _argument = (columns.length==1) ? `"${columns[0]}"` : `["${columns.join('", "')}"]`
+          content = `df = df.cols.unnest(${_argument}${ (payload.shape) ? `, shape="${payload.shape}"` : ''}${ (payload.separator) ? `, separator="${payload.separator}"` : ''})`
           break;
         case 'replace':
-          content = `df = df.cols.replace("${columns[0]}", search="${payload.search}", replace_by="${payload.replace}")`
+          var _argument = (columns.length==1) ? `"${columns[0]}"` : `["${columns.join('", "')}"]`
+          content = `df = df.cols.replace(${_argument}, search="${payload.search}", replace_by="${payload.replace}")`
           break;
         case 'fill':
-          content = `df = df.cols.fill_na("${columns[0]}", "${payload}")`
+          var _argument = (columns.length==1) ? `"${columns[0]}"` : `["${columns.join('", "')}"]`
+          content = `df = df.cols.fill_na(${_argument}, "${payload.fill}")`
+          // todo: ...fill_na(input_cols, value=None, output_cols=None):
           break;
         default:
 
           break;
       }
 
-      this.cells.push({ type, content, id: this.cells.length, active: false })
+      if (at==-1)
+        at = this.cells.length
+
+      this.cells.splice(at,0,{ type, content, id: Number(new Date()), active: false })
+
+      this.$nextTick(()=>{
+        if (this.activeCell<0)
+          this.setActive(0)
+        if (content.length)
+          this.runCode()
+      })
+
+    },
+
+    runCodeLater() {
+      setTimeout(() => {
+        this.runCode()
+      }, 400);
     },
 
     async runCode() {
 
-      var code = this.cells.map(e=>e.content).join('\n')
+      var code = this.cells.map(e=>(e.content!=='') ? e.content+'\n' : '').join('').trim()
+      var codeDone = this.codeDone.trim()
+      var rerun
+
+      if (code == codeDone){
+        console.log('no run')
+        return;
+      }
+      else if (code.indexOf(codeDone)!=0 || codeDone=='') {
+        console.log('re-run')
+        rerun = true
+      }
+      else {
+        console.log('no re-run')
+        code = this.cells.filter(e=>!e.done).map(e=>e.content).join('\n')
+      }
+
+      if (code===this.lastCodeTry) {
+        console.log('no retry')
+        return;
+      }
+
+      if (rerun)
+        this.markCells(false)
+
+      this.commandsDisabled = true;
 
       try {
-        var response = await axios.post(process.env.API_URL+'/run',
+        var response = await axios.post(process.env.API_URL+(rerun ? '/run-load' : '/run'),
         {
           code,
           name: this.dataset.name
         })
         console.log('response',response)
+        this.commandsDisabled = false;
+        if (response.data.content === '\'run ok\'') {
+          this.markCells()
+          this.lastCodeTry = false
+        }
+        else {
+          this.markCellsError()
+          this.lastCodeTry = code
+        }
       } catch (error) {
         console.error(error)
       }
 
 
-    },
-
-    deleteColumns (columns = []) {
-      this.commandsDisabled = true
-      this.operation = 'delete'
-      setTimeout(() => {
-        this.commandsDisabled = false
-        this.operation = undefined
-      }, 500);
-      let toDelete = (columns.length) ? columns : this.detailedColumns.map(e=>this.dataset.columns[e.index].name)
-
-      for (let i = toDelete.length - 1; i >= 0 ; i--) {
-        const foundIndex = this.dataset.columns.findIndex((e)=>{ return e.name==toDelete[i] })
-        this.$store.commit('deleteColumn', { dataset: this.currentTab, column: foundIndex })
-      }
-
-      console.log('toDelete',toDelete)
     },
 
     displaySelection: throttle ( async function (item) {
@@ -1221,7 +1536,9 @@ export default {
     opacity: 0.5;
   }
   .options-fields {
-    min-height: 20px;
+    min-height: 81px;
+    padding-bottom: 81px;
+    max-height: calc(100vh - 320px);
   }
 </style>
 

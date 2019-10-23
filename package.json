@@ -1,6 +1,6 @@
 {
   "name": "bumblebee",
-  "version": "0.3.20",
+  "version": "0.3.21",
   "description": "A GUI that works with Optimus to make data profiling easier",
   "author": "Iron",
   "private": true,
@@ -43,7 +43,7 @@
     "@nuxtjs/eslint-config": "^1.1.2",
     "@nuxtjs/eslint-module": "^0.2.1",
     "@nuxtjs/style-resources": "^1.0.0",
-    "@nuxtjs/vuetify": "^1.3.3",
+    "@nuxtjs/vuetify": "^1.9.0",
     "@vue/test-utils": "^1.0.0-beta.27",
     "ava": "^2.2.0",
     "babel-eslint": "^10.0.1",

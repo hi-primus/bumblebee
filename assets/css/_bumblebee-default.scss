@@ -336,17 +336,16 @@ table {
     width: 100%;
     border-top: solid 1px $line-color-1;
   }
-  $sidebar-width: 420px;
   &>.sidebar-container {
     // text-align: right;
     border-left: solid 1px $line-color-1;
     border-top: solid 1px $line-color-1;
     order: 9;
-    width: $sidebar-width;
     max-height: calc(100vh - 191px);
     display: flex;
     flex-direction: column;
     padding: 4px;
+    position: relative;
     .sidebar-content {
       margin-left: -4px;
       margin-right: -4px;
@@ -442,8 +441,27 @@ table {
       }
     }
   }
+
+  $sidebar-width: 420px;
+  $sidebar-width-bigger: 780px;
+  $sidebar-max-width: 65vw;
+
+  .sidebar-container {
+    width: $sidebar-width;
+  }
   .sidebar-container + .table-container {
-    width: calc(100% - #{$sidebar-width})
+    width: calc(100% - #{$sidebar-width});
+  }
+
+  .sidebar-container.bigger {
+    width: $sidebar-width-bigger;
+    min-width: $sidebar-width;
+    max-width: $sidebar-max-width;
+  }
+  .sidebar-container.bigger + .table-container {
+    width: calc(100% - #{$sidebar-width-bigger});
+    min-width: calc(100% - #{$sidebar-max-width});
+    width: calc(100% - #{$sidebar-width});
   }
 }
 
@@ -597,7 +615,18 @@ table {
 /* icon buttons toolbar */
 
 .toolbar {
-  &.disabled{
+  $toolbar-height: 48px - 1px;
+  &.vertical {
+    flex-direction: column;
+    &>*:not(:first-child) {
+      margin-top: 2px;
+    }
+    // width: $toolbar-height;
+  }
+  &:not(.vertical){
+    height: $toolbar-height;
+  }
+  &.disabled {
     opacity: 0.5;
     &>* {
       pointer-events: none;
@@ -605,7 +634,6 @@ table {
   }
   display: flex;
   align-items: center;
-  height: 48px - 1px;
   .divider {
     width: 1px;
     height: calc(100% - 16px);
@@ -695,6 +723,14 @@ table {
   }
 }
 
+.progress-middle {
+  position: absolute !important;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%,-50%);
+  height: 0;
+}
+
 .primary--chips {
   .v-chip {
     background-color: $primary-color !important;
@@ -703,6 +739,7 @@ table {
     }
   }
 }
+
 
 .bb-tabs {
   position: relative;
@@ -795,7 +832,7 @@ table {
 }
 
 .v-menu__content {
-	z-index: 102 !important;
+	z-index: 500 !important;
 }
 
 .v-alert__icon.v-icon {
@@ -1055,37 +1092,258 @@ table {
 
 /* pseudo notebooks */
 
+.options-fields:not(.dragging) {
+  .cell-container:hover {
+    .left-handle {
+      background-color: lighten($primary-color,35%);
+    }
+  }
+}
+
 .options-fields {
+
+  $side-controls-width: 54px;
+
   height: auto !important;
-  min-width: 100%;
   flex: none !important;
-  .cell {
-    &.active {
-      box-shadow: #777 0 0 5px -2px;
-    }
-    display: flex;
+  padding-bottom: 28px;
+  padding-top: 12px;
+  padding-left: 12px !important;
+  padding-right: $side-controls-width !important;
+  overflow-x: visible;
+  position: relative;
+
+
+  &, &>span{
+    display: block;
+    width: 100%;
+  }
+
+  &>span {
+    overflow: hidden;
     border-radius: 4px;
+    border: solid $line-color-1 1px;
+  }
+
+  &.disabled {
+    opacity: 0.71;
+  }
+
+  .cell-controls {
+    // opacity: 0;
+    // pointer-events: none;
+    position: absolute;
+    right: 4px;
+    top: 18px;
+    transition: all ease-in-out 0.39s;
+    opacity: 1;
+    pointer-events: auto;
+    margin-left: auto;
+    background: white;
+    box-shadow: rgba(0,0,0,0.33) 0 0 8px -2px;
+    border-radius: 4px;
+    margin-left: 6px;
+  }
+
+  .cell-container {
+    overflow: hidden;
+    display: flex;
     position: relative;
-    // padding: 0 0 0 8px;
-    margin: 3px 0 6px 8px;
-    max-width: calc(100% - 36px);
-    .cell-top {
-      // width: 100%;
-      .drag {
-        margin: auto;
-        display: flex;
-      }
-      .delete {
-        position: absolute;
-        top: 0;
-        right: 0;
+    width: 100%;
+
+    &:hover {
+      .editor-holder {
+        border-bottom-color: rgba(0,0,0,0.19) !important;
       }
     }
-    .editor {
+
+    &.active, &.ghost {
+      .cell {
+        z-index: 10;
+      }
+      .editor-holder {
+        border-bottom-color: rgba(0,0,0,0.33);
+      }
+      .left-handle {
+        background-color: lighten($primary-color,20%) !important;
+        // border-bottom-color: lighten($primary-color,15%);
+      }
+      .cell-type {
+        color: $primary-color;
+      }
+      .cell-type-label {
+        opacity: 0.71;
+      }
+    }
+    // &.done {
+    //   .left-handle {
+    //     background-color: lighten($data-teal,20%) !important;
+    //   }
+    // }
+    // &.done.active {
+    //   .left-handle {
+    //     background-color: lighten($data-teal,2%) !important;
+    //   }
+    // }
+    &.cell-error {
+      .left-handle {
+        background-color: lighten($data-red,20%) !important;
+      }
+    }
+    &.cell-error.active {
+      .left-handle {
+        background-color: lighten($data-red,2%) !important;
+        // border-bottom-color: $data-red;
+      }
+    }
+    .cell {
       width: 100%;
+      overflow: hidden;
+      display: flex;
+      // border-top-right-radius: 4px;
+      // border-bottom-right-radius: 4px;
+      // border-top-left-radius: 2px;
+      // border-bottom-left-radius: 2px;
+      position: relative;
+      padding: 0 0 0 12px;
+      // max-width: calc(100% - #{$side-controls-width});
     }
-    textarea {
+    .left-handle {
+      width: 12px;
+      height: 100%;
+      top: 0;
+      left: 0;
+      background-color: $line-color-2;
+      position: absolute;
+      border-bottom-style: solid;
+      border-bottom-width: 1px;
+      border-bottom-color: transparent;
+    }
+    .cell-type {
+      color: lighten($text-color, 18%);
+      font-family: $font-mono;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+    .cell-title {
+      text-transform: capitalize;
+      position: absolute;
+      top: 0;
+      left: 24px;
       font-size: 14px;
     }
+    .cell-type-label {
+      position: absolute;
+      bottom: -2px;
+      right: 5px;
+      font-size: 10px;
+      opacity: 0.5;
+      pointer-events: none;
+    }
+  }
+
+}
+
+
+// editor
+
+$editor-top-padding: 6px;
+
+.editor-holder{
+  border-bottom-width: 1px;
+  border-bottom-style: dashed;
+  border-bottom-color: transparent;
+  position: relative;
+  top: 0;
+  overflow: auto;
+  padding: $editor-top-padding 12px;
+  overflow-y: hidden;
+  overflow-x: auto;
+  // border-radius: 4px;
+  background-color: #fbfbfb;
+
+  width: 100%;
+  max-width: 100%;
+  min-height: calc(23px + #{$editor-top-padding*2});
+
+  &::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+    padding: 4px;
+    transition: all .2s;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    border-radius: 4px;
+  }
+
+  * {
+    padding: 0 !important;
+    margin: 0 !important;
+    transition: none !important;
+  }
+
+  textarea, .code {
+    font-size: 14px !important;
+    font-family: $font-mono;
+    line-height: 23px !important;
+    overflow: visible;
+    letter-spacing: initial !important;
+
+    transition: all 0.5s ease-in-out;
+  }
+
+  .code-container {
+    white-space: nowrap;
+  }
+
+  textarea {
+    position: absolute;
+    top: $editor-top-padding;
+    left: 12px;
+    min-width: calc(100% - 12px);
+    height: calc(100% - #{$editor-top-padding}) !important;
+    resize: none;
+    overflow: hidden;
+    border: none;
+    outline: none;
+    text-shadow: 0px 0px 0px rgba(0, 0, 0, 0);
+    -webkit-text-fill-color: transparent;
+    text-fill-color: transparent;
+  }
+
+  pre {
+    // background-color: rgba(red,0.12);
+  }
+  .code{
+    z-index: 1;
+    // background-color: rgba(red,0.13);
+    pointer-events: none;
+    display: inline;
+  }
+
+  .syntax-highlight {
+    background-color: transparent;
+  }
+}
+
+.command-card-text {
+  padding-top: 10px !important;
+  margin-top: -10px !important;
+  max-height: calc(100vh - 350px);
+  overflow: auto;
+  .v-text-field {
+    &:not(:last-child) {
+      padding-bottom: 16px !important;
+    }
+  }
+  .v-text-field__details {
+    display: none !important;
+  }
+}
+
+.no-pe {
+  &, & *{
+    pointer-events: none !important;
   }
 }
