@@ -30,11 +30,6 @@ export const mutations = {
 		console.log('DEBUG: state.datasets[found]', state.datasets[found])
   },
 
-  deleteColumn(state,{dataset, column}) {
-    state.datasets[dataset].columns.splice(column, 1)
-    state.datasetUpdates = state.datasetUpdates + 1
-  },
-
 	delete (state, { index }) {
 		state.datasets.splice(index, 1)
 		if (!state.datasets.length) {
