@@ -64,7 +64,6 @@ module.exports = {
 	],
 
 	plugins: [
-		{ src: '@/plugins/vega.js', mode: 'client', ssr: false },
 		{ src: '@/plugins/handsontable.js', mode: 'client' },
 		'@/plugins/draggable.js',
 		'@/plugins/components.js',
