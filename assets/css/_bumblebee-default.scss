@@ -341,6 +341,7 @@ table {
     border-left: solid 1px $line-color-1;
     border-top: solid 1px $line-color-1;
     order: 9;
+    height: calc(100vh - 191px);
     max-height: calc(100vh - 191px);
     display: flex;
     flex-direction: column;
