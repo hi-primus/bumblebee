@@ -701,7 +701,7 @@ table {
     height: 32px !important;
     line-height: 30px !important;
     position: relative;
-    top: 12px !important;
+    top: 3px !important;
     &::after {
       position: absolute;
       height: 16px;
@@ -801,7 +801,7 @@ table {
     bottom: 2px;
     width: 33%;
     max-width: 300px;
-    max-height: 56px;
+    max-height: 45px;
     margin-right: 0 !important;
     .v-input__prepend-inner {
       margin-right: auto;
