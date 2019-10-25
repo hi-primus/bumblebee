@@ -177,9 +177,9 @@
                 </div>
               </div>
             </div>
+              <!-- :key="tableKey" -->
             <TableBar
               v-if="$store.state.datasets[tab]"
-              :key="tableKey"
               :current-tab="tab"
               :view.sync="view"
               :dataset="$store.state.datasets[tab]"
@@ -261,9 +261,6 @@ export default {
 	},
 
 	computed: {
-		tableKey () {
-			return this.$store.state.datasetUpdates * 100 + this.tab
-		},
 		statusError () {
 			return (!!this.$store.state.status.message)
 		},
