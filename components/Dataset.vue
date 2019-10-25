@@ -2,7 +2,8 @@
 	<div class="table-container">
 		<div v-if="view==0" class="table-view-container">
 			<div class="table-controls d-flex">
-				<v-btn text icon small @click="toggleColumnsSelection">
+				<v-btn
+          color="#888" text icon small @click="toggleColumnsSelection">
 					<v-icon>
 						<template v-if="selectionStatus==-1">indeterminate_check_box</template>
 						<template v-else-if="selectionStatus==1">check_box</template>
@@ -12,6 +13,7 @@
 				<v-tooltip bottom>
 					<template v-slot:activator="{ on }">
 						<v-btn
+              color="#888"
 							:class="{'active': selectionStatus!=0}"
 							text
 							icon
@@ -31,6 +33,7 @@
 				<v-tooltip bottom>
 					<template v-slot:activator="{ on }">
 						<v-btn
+              color="#888"
 							:class="{'active': view==0 && selectionStatus==-1}"
 							text
 							icon
