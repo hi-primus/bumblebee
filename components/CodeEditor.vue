@@ -70,7 +70,7 @@ export default {
     highlightSyntax () {
       this.$nextTick(()=>{
         if (this.$refs.code) {
-          this.$refs.code.innerHTML = this.escapedQuery;
+          this.$refs.code.innerHTML = this.escapedQuery+"&nbsp;";
           hljs.highlightBlock(this.$refs.code);
         }
       })
