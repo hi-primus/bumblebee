@@ -176,7 +176,7 @@
     <draggable
       tag="div"
       class="sidebar-content options-fields"
-      :class="{'no-pe disabled': commandsDisabled,'dragging': drag}"
+      :class="{'no-pe disabled': commandsDisabled,'dragging': drag, 'empty': !cells.length}"
       v-model="cells"
       v-bind="dragOptions"
       handle=".handle"
@@ -343,7 +343,7 @@ export default {
       else {
         this.activeCell = -1
         if (this.$refs['cell-controls']) {
-          this.$refs['cell-controls'].style.top = '18px'
+          this.$refs['cell-controls'].style.top = '13px'
         }
       }
     },

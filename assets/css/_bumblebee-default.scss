@@ -1123,6 +1123,8 @@ table {
   &>span {
     overflow: hidden;
     border-radius: 4px;
+  }
+  &:not(.empty)>span {
     border: solid $line-color-1 1px;
   }
 
@@ -1130,19 +1132,31 @@ table {
     opacity: 0.71;
   }
 
+  &.empty .cell-controls{
+    right: 50%;
+    margin-left: initial;
+    transform: translateX(50%);
+    border: 1px solid lighten($primary-color,35%);
+    border-radius: 64px;
+    overflow: hidden;
+    transition: all ease-in-out 0.39s;
+  }
+
+  &:not(.empty) .cell-controls {
+    border-radius: 4px;
+    transition: top ease-in-out 0.39s;
+    z-index: 99;
+  }
+
   .cell-controls {
-    // opacity: 0;
-    // pointer-events: none;
+    box-shadow: rgba(0,0,0,0.33) 0 0 8px -2px;
     position: absolute;
     right: 4px;
-    top: 18px;
-    transition: all ease-in-out 0.39s;
+    top: 13px;
     opacity: 1;
     pointer-events: auto;
     margin-left: auto;
     background: white;
-    box-shadow: rgba(0,0,0,0.33) 0 0 8px -2px;
-    border-radius: 4px;
     margin-left: 6px;
   }
 
@@ -1154,7 +1168,7 @@ table {
 
     &:hover {
       .editor-holder {
-        border-bottom-color: rgba(0,0,0,0.19) !important;
+        border-bottom-color: rgba(0,0,0,0.19);
       }
     }
 
