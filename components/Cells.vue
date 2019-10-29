@@ -36,6 +36,41 @@
           </v-card-actions>
         </v-card>
       </v-dialog>
+      <v-dialog v-if="currentCommand.command == 'duplicate'" :value="currentCommand.command == 'duplicate'" max-width="410" @click:outside="cancelCommand">
+        <v-card>
+          <v-card-title class="title mb-4">Duplicate {{ currentCommand.name }}</v-card-title>
+          <v-card-text class="pb-0 command-card-text">
+            <template v-for="column in currentCommand.duplicates">
+              <v-text-field
+                :key="column.name"
+                v-model="column.newName"
+                :label="column.name"
+                dense
+                required
+                outlined
+              ></v-text-field>
+            </template>
+          </v-card-text>
+          <v-card-actions>
+            <div class="flex-grow-1"/>
+            <v-btn
+              color="primary"
+              text
+              @click="cancelCommand"
+            >
+              Cancel
+            </v-btn>
+            <v-btn
+              color="primary"
+              text
+              :disabled="(!currentCommand.duplicates.every( (e)=>{ return (e.newName.trim().length>0) } ))"
+              @click="confirmCommand()"
+            >
+              Accept
+            </v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
       <v-dialog v-if="currentCommand.command == 'unnest'" :value="currentCommand.command == 'unnest'" max-width="410" @click:outside="cancelCommand">
         <v-card>
           <v-card-title class="title">Unnest column</v-card-title>
@@ -110,6 +145,29 @@
               required
               outlined
             ></v-text-field>
+            <v-select
+              v-model="currentCommand.search_by"
+              class="mb-4"
+              label="Search by"
+              dense
+              required
+              outlined
+              :items="[
+                {text: 'Characters', value: 'chars'},
+                {text: 'Words', value: 'words'}
+              ]"
+            ></v-select>
+            <template v-for="(col, i) in currentCommand.output_cols">
+              <v-text-field
+                v-model="currentCommand.output_cols[i]"
+                :label="`Output column name (${currentCommand.columns[i]})`"
+                :placeholder="`(overwrites ${currentCommand.columns[i]})`"
+                dense
+                required
+                outlined
+                :key="i"
+              ></v-text-field>
+            </template>
           </v-card-text>
           <v-card-actions>
             <div class="flex-grow-1"/>
@@ -123,7 +181,7 @@
             <v-btn
               color="primary"
               text
-              :disabled="(currentCommand.search.length<=0)"
+              :disabled="(currentCommand.search.length<=0 || currentCommand.output_cols.filter(e=>e!=='').length%currentCommand.columns.length!==0)"
               @click="confirmCommand()"
             >
               Accept
@@ -140,7 +198,7 @@
             Fill in columns
           </v-card-title>
           <v-card-text class="pb-0 command-card-text">
-            Fill "{{currentCommand.search}}"
+            Fill "{{currentCommand.fill}}"
             <template v-if="currentCommand.columns.length==1">
               in <span class="text-uppercase">"{{currentCommand.columns[0]}}"</span>
             </template>
@@ -216,7 +274,7 @@
 
 import axios from 'axios'
 import CodeEditor from '@/components/CodeEditor'
-import { throttle } from '@/utils/functions.js'
+import { throttle, newName } from '@/utils/functions.js'
 
 export default {
 
@@ -251,6 +309,13 @@ export default {
   },
 
   computed: {
+
+    cellsOrder () {
+      return this.cells.map(e=>{
+        return e.id
+      }).join()
+    },
+
     dragOptions () {
       return {
         animation: 200,
@@ -272,8 +337,7 @@ export default {
   },
 
   watch: {
-    cells: {
-      deep: true,
+    cellsOrder: {
       handler: 'runCode'
     }
   },
@@ -300,12 +364,25 @@ export default {
             })
           }
           break;
+        case 'duplicate':
+          this.currentCommand = {
+            command: 'duplicate',
+            columns: event.columns,
+            name: (event.columns.length==1) ? `"${event.columns[0].toUpperCase()}"` : 'columns',
+            duplicates: event.columns.map((e)=>{
+              return{
+                name: e,
+                newName: newName(e)
+              }
+            })
+          }
+          break;
         case 'unnest':
           this.currentCommand = {command: 'unnest', columns: event.columns, shape: 'string', separator: ', '}
           payload = {shape: 'string', separator: ', '}
           break;
         case 'replace':
-          this.currentCommand = {command: 'replace', columns: event.columns, search: '', replace: ''}
+          this.currentCommand = {command: 'replace', columns: event.columns, search: '', replace: '', search_by: 'chars', output_cols: event.columns.map(e=>'')}
           break;
         case 'fill':
           this.currentCommand = {command: 'fill', columns: event.columns, fill: ''}
@@ -400,6 +477,14 @@ export default {
             content = `df = df.cols.rename([${payload.renames.map(e=>`("${e.name}", "${e.newName}")`)}])`
           }
           break;
+        case 'duplicate':
+          if (payload.duplicates.length==1) {
+            content = `df = df.cols.copy("${payload.duplicates[0].name}", "${payload.duplicates[0].newName}")`
+          }
+          else {
+            content = `df = df.cols.copy([${payload.duplicates.map(e=>`("${e.name}", "${e.newName}")`)}])`
+          }
+          break;
         case 'keep':
           content = `df = df.cols.keep(["${columns.join('", "')}"])`
           break;
@@ -412,7 +497,13 @@ export default {
           break;
         case 'replace':
           var _argument = (columns.length==1) ? `"${columns[0]}"` : `["${columns.join('", "')}"]`
-          content = `df = df.cols.replace(${_argument}, search="${payload.search}", replace_by="${payload.replace}")`
+          if (payload.output_cols.join('').trim().length) {
+            var output_cols_argument = (payload.output_cols.length==1) ? `"${payload.output_cols[0]}"` : `[${payload.output_cols.map((e)=>((e!==null) ? `"${e}"` : 'None')).join(', ')}]`
+            content = `df = df.cols.replace(${_argument}, search="${payload.search}", replace_by="${payload.replace}", search_by="${payload.search_by}", output_cols=${output_cols_argument})`
+          }
+          else {
+            content = `df = df.cols.replace(${_argument}, search="${payload.search}", replace_by="${payload.replace}", search_by="${payload.search_by}")`
+          }
           break;
         case 'fill':
           var _argument = (columns.length==1) ? `"${columns[0]}"` : `["${columns.join('", "')}"]`

@@ -828,6 +828,11 @@ table {
 
 /* vuetify fixes */
 
+.v-input.v-text-field--outlined .v-label {
+  background: white;
+  padding-right: 0px;
+}
+
 .v-text-field--full-width {
   overflow: hidden;
 }
@@ -1135,7 +1140,7 @@ table {
   &.empty .cell-controls{
     right: 50%;
     margin-left: initial;
-    transform: translateX(50%);
+    transform: translateX(75%);
     border: 1px solid lighten($primary-color,35%);
     border-radius: 64px;
     overflow: hidden;
