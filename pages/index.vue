@@ -4,7 +4,7 @@
       <v-card>
         <v-card-title class="title">Close tab</v-card-title>
         <v-card-text>
-          Close <span class="text-uppercase">"{{ $store.state.datasets[confirmDelete].name }}"</span>?
+          Close "{{ $store.state.datasets[confirmDelete].name }}"?
         </v-card-text>
         <v-card-actions>
           <div class="flex-grow-1"/>
@@ -50,6 +50,7 @@
                 v-model="inputKey"
                 :append-icon="showKey ? 'visibility' : 'visibility_off'"
                 :type="(showKey) ? 'text' : 'password'"
+                autocomplete="current-password"
                 label="Key"
                 required
                 outlined
