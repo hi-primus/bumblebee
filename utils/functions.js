@@ -18,3 +18,16 @@ export const throttle = (func, limit) => {
 		}
 	}
 }
+
+export const newName = (name) => {
+	name = name.toString()
+  let matches = name.match(/\d+$/);
+  if (matches) {
+    let number = matches[0]
+    let prefix = name.substr(0,matches.index)
+    return prefix + (+number+1)
+  }
+  else {
+    return name+'2'
+  }
+}
