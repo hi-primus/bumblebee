@@ -130,23 +130,29 @@
       </v-btn>
     </div>
 
-    <div class="sidebar-container" :class="{'bigger': optionsActive}" v-if="detailsActive || (optionsActive && $route.query.obeta=='42')">
+    <div class="sidebar-container" :class="{'bigger': optionsActive}" v-show="detailsActive || (optionsActive && $route.query.obeta=='42')">
 
-      <template v-if="optionsActive && $route.query.obeta=='42'">
-        <div class="sidebar-header">
+      <template>
+        <div class="sidebar-header" v-show="optionsActive && $route.query.obeta=='42'">
           Operations
           <v-icon class="right-button" color="black" @click="optionsActive = false">close</v-icon>
         </div>
 				<v-progress-circular
           indeterminate
-          v-if="commandsDisabled"
+          v-if="commandsDisabled && optionsActive && $route.query.obeta=='42'"
           class="progress-middle"
           color="#888"
           size="64"
         />
-        <Cells ref="cells" :columns="detailedColumns" :commandsDisabled.sync="commandsDisabled" :dataset="dataset"/>
+        <Cells
+          v-show="optionsActive && $route.query.obeta=='42'"
+          ref="cells"
+          :columns="detailedColumns"
+          :commandsDisabled.sync="commandsDisabled"
+          :dataset="dataset"
+        />
       </template>
-      <template v-else-if="detailsActive!==false">
+      <template v-if="detailsActive!==false && !optionsActive">
         <div class="sidebar-header">
           Details
           <v-icon class="right-button" color="black" @click="detailsActive = false">close</v-icon>
@@ -231,6 +237,7 @@
       :dataset="dataset"
       :sortBy.sync="sortBy"
       :sortDesc.sync="sortDesc"
+      :optionsActive="optionsActive"
       :detailsActive.sync="detailsActive"
       @selection="selectionEvent($event)"
       :typesSelected="typesSelected"
@@ -476,6 +483,7 @@ export default {
      handleSelection (selected, plotable = []) {
       if (selected.length) {
         this.detailsActive = {}
+        this.optionsActive = false
         if (plotable.length==2 && selected.length==2) {
           // this.detailsActive['scatter-plot'] = true
           this.detailsActive['heat-map'] = true

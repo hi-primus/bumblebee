@@ -188,6 +188,9 @@ export default {
     detailsActive: {
       default: false
     },
+    optionsActive: {
+      default: false
+    },
     sortBy: {
       type: Array,
       default: ()=>{return []}
@@ -559,6 +562,7 @@ export default {
 		detailsActive: {
 			deep: true,
 			handler (value) {
+        console.log('detailsActive')
 				this.$nextTick(() => {
           try {
             this.$refs['hot-table'].hotInstance.render()
@@ -566,7 +570,19 @@ export default {
           catch {}
 				})
 			}
-		},
+    },
+
+    optionsActive: {
+      handler (value) {
+        console.log('optionsActive')
+				this.$nextTick(() => {
+          try {
+            this.$refs['hot-table'].hotInstance.render()
+          }
+          catch {}
+				})
+			}
+    },
 
 		sortBy: {
 			handler: 'getHotColumns',

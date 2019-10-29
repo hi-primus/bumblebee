@@ -550,6 +550,8 @@ table {
 .table-container {
   height: 100%;
 
+  z-index: 101;
+
 
   .lc--narrow &{
     max-width: 100%;
@@ -562,6 +564,8 @@ table {
     border-bottom: solid 1px $line-color-1;
   }
   .table-view-container {
+
+    z-index: 102;
 
     .table-controls {
       border-bottom: solid 1px $line-color-1;
@@ -690,18 +694,33 @@ table {
 /* layouts */
 
 .placeholder-chip {
+  &::after {
+    content: ' ';
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 14px;
+    background: white;
+  }
+  .v-input__slot {
+    cursor: text;
+  }
   label {
     border-style: dashed;
     border-width: 1px;
     border-color: lightgrey;
     background-color: #fdfdfd;
     border-radius: 16px;
-    padding: 0 30px 0 12px;
+    padding: 0 30px 0 14px;
     font-size: 14px;
     height: 32px !important;
     line-height: 30px !important;
     position: relative;
-    top: 3px !important;
+    top: 4px !important;
+    left: 4px !important;
+    pointer-events: all !important;
+    cursor: pointer;
     &::after {
       position: absolute;
       height: 16px;
@@ -720,7 +739,8 @@ table {
     }
   }
   input {
-    cursor: pointer;
+    max-width: 155px;
+    z-index: -1;
   }
 }
 
@@ -738,6 +758,9 @@ table {
     &, .v-chip__close {
       color: white !important;
     }
+  }
+  .v-chip__content {
+    text-transform: capitalize;
   }
 }
 
@@ -800,6 +823,7 @@ table {
     position: relative;
     bottom: 2px;
     width: 33%;
+    min-width: 208px;
     max-width: 300px;
     max-height: 45px;
     margin-right: 0 !important;
@@ -843,6 +867,10 @@ table {
 
 .v-alert__icon.v-icon {
   align-self: center;
+}
+
+.v-alert.error {
+  color: white !important;
 }
 
 
@@ -1101,7 +1129,8 @@ table {
 .options-fields:not(.dragging) {
   .cell-container:hover {
     .left-handle {
-      background-color: lighten($primary-color,35%);
+      // background-color: lighten($primary-color,35%);
+      background-color: darken($line-color-2,5%);
     }
   }
 }
@@ -1185,8 +1214,8 @@ table {
         border-bottom-color: rgba(0,0,0,0.33);
       }
       .left-handle {
-        background-color: lighten($primary-color,20%) !important;
-        // border-bottom-color: lighten($primary-color,15%);
+        background-color: darken($line-color-2,10%) !important;
+        // border-bottom-color: rgba(0,0,0,0.33);
       }
       .cell-type {
         color: $primary-color;
@@ -1205,17 +1234,17 @@ table {
     //     background-color: lighten($data-teal,2%) !important;
     //   }
     // }
-    &.cell-error {
-      .left-handle {
-        background-color: lighten($data-red,20%) !important;
-      }
-    }
-    &.cell-error.active {
-      .left-handle {
-        background-color: lighten($data-red,2%) !important;
-        // border-bottom-color: $data-red;
-      }
-    }
+    // &.cell-error {
+    //   .left-handle {
+    //     background-color: lighten($data-red,2%) !important;
+    //   }
+    // }
+    // &.cell-error.active {
+    //   .left-handle {
+    //     background-color: lighten($data-red,2%) !important;
+    //     // border-bottom-color: $data-red;
+    //   }
+    // }
     .cell {
       width: 100%;
       overflow: hidden;
@@ -1235,7 +1264,7 @@ table {
       left: 0;
       background-color: $line-color-2;
       position: absolute;
-      border-bottom-style: solid;
+      border-bottom-style: dashed;
       border-bottom-width: 1px;
       border-bottom-color: transparent;
     }

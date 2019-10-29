@@ -44,7 +44,7 @@
               <v-text-field
                 :key="column.name"
                 v-model="column.newName"
-                :label="column.name"
+                label="New column"
                 dense
                 required
                 outlined
@@ -75,7 +75,7 @@
         <v-card>
           <v-card-title class="title">Unnest column</v-card-title>
           <v-card-text class="pb-0 command-card-text">
-            Unnest <span class="text-uppercase">"{{ currentCommand.columns[0] }}"</span>
+            Unnest "{{ currentCommand.columns[0] }}"
             <v-select
               v-model="currentCommand.shape"
               class="mt-4"
@@ -128,7 +128,7 @@
           <v-card-text class="pb-0 command-card-text">
             Replace from "{{currentCommand.search}}" to "{{currentCommand.replace}}"
             <template v-if="currentCommand.columns.length==1">
-              in <span class="text-uppercase">"{{currentCommand.columns[0]}}"</span>
+              in "{{currentCommand.columns[0]}}"
             </template>
             <v-text-field
               v-model="currentCommand.search"
@@ -160,8 +160,7 @@
             <template v-for="(col, i) in currentCommand.output_cols">
               <v-text-field
                 v-model="currentCommand.output_cols[i]"
-                :label="`Output column name (${currentCommand.columns[i]})`"
-                :placeholder="`(overwrites ${currentCommand.columns[i]})`"
+                :label="`New column`"
                 dense
                 required
                 outlined
@@ -200,7 +199,7 @@
           <v-card-text class="pb-0 command-card-text">
             Fill "{{currentCommand.fill}}"
             <template v-if="currentCommand.columns.length==1">
-              in <span class="text-uppercase">"{{currentCommand.columns[0]}}"</span>
+              in "{{currentCommand.columns[0]}}"
             </template>
             <v-text-field
               v-model="currentCommand.fill"
@@ -266,6 +265,9 @@
           </v-btn>
         </div>
       </transition-group>
+      <v-alert key="error" type="error" class="mt-2" dismissible v-if="codeError!='' && cells.length"  @input="codeError=''">
+        {{codeError}}
+      </v-alert>
     </draggable>
   </div>
 </template>
@@ -305,6 +307,7 @@ export default {
       lastCodeTry: false,
       drag: false,
       currentCommand: false,
+      codeError: ''
     }
   },
 
@@ -338,7 +341,11 @@ export default {
 
   watch: {
     cellsOrder: {
-      handler: 'runCode'
+      handler () {
+        this.runCode
+        if (!this.cells.length)
+          this.codeError = ''
+      }
     }
   },
 
@@ -355,7 +362,7 @@ export default {
           this.currentCommand = {
             command: 'rename',
             columns: event.columns,
-            name: (event.columns.length==1) ? `"${event.columns[0].toUpperCase()}"` : 'columns',
+            name: (event.columns.length==1) ? `"${event.columns[0]}"` : 'columns',
             renames: event.columns.map((e)=>{
               return{
                 name: e,
@@ -368,7 +375,7 @@ export default {
           this.currentCommand = {
             command: 'duplicate',
             columns: event.columns,
-            name: (event.columns.length==1) ? `"${event.columns[0].toUpperCase()}"` : 'columns',
+            name: (event.columns.length==1) ? `"${event.columns[0]}"` : 'columns',
             duplicates: event.columns.map((e)=>{
               return{
                 name: e,
@@ -573,6 +580,7 @@ export default {
           this.lastCodeTry = false
         }
         else {
+          this.codeError = response.data.error.ename + ': ' + response.data.error.evalue
           this.markCellsError()
           this.lastCodeTry = code
         }
