@@ -57,30 +57,71 @@
         <div class="divider" v-if="detailedColumns.length>=1" />
       </transition>
       <transition v-if="$route.query.obeta=='42'" name="fade">
-        <span class="columns-operations" v-if="detailedColumns.length>=1" >
-          <v-btn color="#888" text class="icon-btn" @click="commandHandle({command: 'rename'})">
-            <v-icon>edit</v-icon>
-          </v-btn>
-          <v-btn color="#888" text class="icon-btn" @click="commandHandle({command: 'keep'})">
-            <v-icon>all_out</v-icon>
-          </v-btn>
-          <v-btn color="#888" text class="icon-btn" @click="commandHandle({command: 'drop'})">
-            <v-icon>delete</v-icon>
-          </v-btn>
-          <transition name="fade">
-            <v-btn v-if="detailedColumns.length>=2" color="#888" text class="icon-btn" @click="commandHandle({command: 'nest'})">
-              <v-icon>link</v-icon>
-            </v-btn>
-          </transition>
-          <v-btn color="#888" text class="icon-btn" @click="commandHandle({command: 'unnest'})">
-            <v-icon>link_off</v-icon>
-          </v-btn>
-          <v-btn color="#888" text class="icon-btn" @click="commandHandle({command: 'replace'})">
-            <v-icon>find_replace</v-icon>
-          </v-btn>
-          <v-btn color="#888" text class="icon-btn" @click="commandHandle({command: 'fill'})">
-            <v-icon>brush</v-icon>
-          </v-btn>
+        <span class="columns-operations" v-if="detailedColumns.length>0" >
+          <v-tooltip bottom>
+            <template v-slot:activator="{ on }">
+              <v-btn v-on="on" color="#888" text class="icon-btn" @click="commandHandle({command: 'rename'})">
+                <v-icon>edit</v-icon>
+              </v-btn>
+            </template>
+            <span>Rename column<span v-show="detailedColumns.length>1">s</span></span>
+          </v-tooltip>
+           <v-tooltip bottom>
+            <template v-slot:activator="{ on }">
+              <v-btn v-on="on" color="#888" text class="icon-btn" @click="commandHandle({command: 'duplicate'})">
+                <v-icon>file_copy</v-icon>
+              </v-btn>
+            </template>
+            <span>Duplicate column<span v-show="detailedColumns.length>1">s</span></span>
+          </v-tooltip>
+          <v-tooltip bottom>
+            <template v-slot:activator="{ on }">
+              <v-btn v-on="on" color="#888" text class="icon-btn" @click="commandHandle({command: 'keep'})">
+                <v-icon>all_out</v-icon>
+              </v-btn>
+            </template>
+            <span>Keep column<span v-show="detailedColumns.length>1">s</span></span>
+          </v-tooltip>
+          <v-tooltip bottom>
+            <template v-slot:activator="{ on }">
+              <v-btn v-on="on" color="#888" text class="icon-btn" @click="commandHandle({command: 'drop'})">
+                <v-icon>delete</v-icon>
+              </v-btn>
+            </template>
+            <span>Drop column<span v-show="detailedColumns.length>1">s</span></span>
+          </v-tooltip>
+          <v-tooltip bottom v-if="detailedColumns.length>1" >
+            <template v-slot:activator="{ on }">
+              <v-btn v-on="on" color="#888" text class="icon-btn" @click="commandHandle({command: 'nest'})">
+                <v-icon>link</v-icon>
+              </v-btn>
+            </template>
+            <span>Nest columns</span>
+          </v-tooltip>
+          <v-tooltip bottom>
+            <template v-slot:activator="{ on }">
+              <v-btn v-on="on" color="#888" text class="icon-btn" @click="commandHandle({command: 'unnest'})">
+                <v-icon>link_off</v-icon>
+              </v-btn>
+            </template>
+            <span>Unnest column<span v-show="detailedColumns.length>1">s</span></span>
+          </v-tooltip>
+          <v-tooltip bottom>
+            <template v-slot:activator="{ on }">
+              <v-btn v-on="on" color="#888" text class="icon-btn" @click="commandHandle({command: 'replace'})">
+                <v-icon>find_replace</v-icon>
+              </v-btn>
+            </template>
+            <span>Replace in column<span v-show="detailedColumns.length>1">s</span></span>
+          </v-tooltip>
+          <v-tooltip bottom>
+            <template v-slot:activator="{ on }">
+              <v-btn v-on="on" color="#888" text class="icon-btn" @click="commandHandle({command: 'fill'})">
+                <v-icon>brush</v-icon>
+              </v-btn>
+            </template>
+            <span>Fill column<span v-show="detailedColumns.length>1">s</span></span>
+          </v-tooltip>
         </span>
       </transition>
       <v-spacer></v-spacer>
