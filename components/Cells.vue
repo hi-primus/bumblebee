@@ -1,7 +1,7 @@
 <template>
   <div>
     <template name="command-dialogs">
-      <v-dialog v-if="currentCommand.command == 'rename'" :value="currentCommand.command == 'rename'" max-width="410" @click:outside="cancelCommand">
+      <v-dialog persistent v-if="currentCommand.command == 'rename'" :value="currentCommand.command == 'rename'" max-width="410" @click:outside="cancelCommand">
         <v-card>
           <v-card-title class="title mb-4">Rename {{ currentCommand.name }}</v-card-title>
           <v-card-text class="pb-0 command-card-text">
@@ -36,7 +36,7 @@
           </v-card-actions>
         </v-card>
       </v-dialog>
-      <v-dialog v-if="currentCommand.command == 'duplicate'" :value="currentCommand.command == 'duplicate'" max-width="410" @click:outside="cancelCommand">
+      <v-dialog persistent v-if="currentCommand.command == 'duplicate'" :value="currentCommand.command == 'duplicate'" max-width="410" @click:outside="cancelCommand">
         <v-card>
           <v-card-title class="title mb-4">Duplicate {{ currentCommand.name }}</v-card-title>
           <v-card-text class="pb-0 command-card-text">
@@ -71,14 +71,18 @@
           </v-card-actions>
         </v-card>
       </v-dialog>
-      <v-dialog v-if="currentCommand.command == 'unnest'" :value="currentCommand.command == 'unnest'" max-width="410" @click:outside="cancelCommand">
+      <v-dialog persistent v-if="currentCommand.command == 'unnest'" :value="currentCommand.command == 'unnest'" max-width="410" @click:outside="cancelCommand">
         <v-card>
-          <v-card-title class="title">Unnest column</v-card-title>
+					<v-card-title class="title" v-if="currentCommand.columns.length==1">
+            Unnest column
+          </v-card-title>
+          <v-card-title class="title" v-else>
+            Unnest columns
+          </v-card-title>
           <v-card-text class="pb-0 command-card-text">
             Unnest "{{ currentCommand.columns[0] }}"
-            <v-select
+            <!-- <v-select
               v-model="currentCommand.shape"
-              class="mt-4"
               label="Shape"
               dense
               required
@@ -89,14 +93,38 @@
                 {text: 'Array', value: 'array'},
                 {text: 'Vector', value: 'vector'}
               ]"
-            ></v-select>
+            ></v-select> -->
             <v-text-field
+              class="mt-4"
               v-model="currentCommand.separator"
               label="Separator"
               dense
               required
               outlined
             ></v-text-field>
+						<v-text-field
+              v-model="currentCommand.splits"
+              label="Splits"
+							type="number"
+							min="2"
+              dense
+              required
+              outlined
+            ></v-text-field>
+						<v-text-field
+              :value="(currentCommand.index>=0) ? currentCommand.index : ''"
+              @input="currentCommand.index = ($event>=0) ? $event : ''"
+              label="Index"
+							type="number"
+							class="mb-4"
+							min="0"
+              clearable
+							:max="currentCommand.splits-1"
+              dense
+              required
+              outlined
+            ></v-text-field>
+            <OutputColumnInputs :currentCommand.sync="currentCommand"></OutputColumnInputs>
           </v-card-text>
           <v-card-actions>
             <div class="flex-grow-1"/>
@@ -109,6 +137,7 @@
             </v-btn>
             <v-btn
               color="primary"
+							:disabled="currentCommand.index>=currentCommand.splits || currentCommand.separator==''"
               text
               @click="confirmCommand()"
             >
@@ -117,7 +146,7 @@
           </v-card-actions>
         </v-card>
       </v-dialog>
-      <v-dialog v-if="currentCommand.command == 'replace'" :value="currentCommand.command == 'replace'" max-width="410" @click:outside="cancelCommand">
+      <v-dialog persistent v-if="currentCommand.command == 'replace'" :value="currentCommand.command == 'replace'" max-width="410" @click:outside="cancelCommand">
         <v-card>
           <v-card-title class="title" v-if="currentCommand.columns.length==1">
             Replace in column
@@ -157,16 +186,7 @@
                 {text: 'Words', value: 'words'}
               ]"
             ></v-select>
-            <template v-for="(col, i) in currentCommand.output_cols">
-              <v-text-field
-                v-model="currentCommand.output_cols[i]"
-                :label="`New column`"
-                dense
-                required
-                outlined
-                :key="i"
-              ></v-text-field>
-            </template>
+            <OutputColumnInputs :currentCommand.sync="currentCommand"></OutputColumnInputs>
           </v-card-text>
           <v-card-actions>
             <div class="flex-grow-1"/>
@@ -188,7 +208,7 @@
           </v-card-actions>
         </v-card>
       </v-dialog>
-      <v-dialog v-if="currentCommand.command == 'fill'" :value="currentCommand.command == 'fill'" max-width="410" @click:outside="cancelCommand">
+      <v-dialog persistent v-if="currentCommand.command == 'fill'" :value="currentCommand.command == 'fill'" max-width="410" @click:outside="cancelCommand">
         <v-card>
           <v-card-title class="title" v-if="currentCommand.columns.length==1">
             Fill in column
@@ -209,6 +229,7 @@
               required
               outlined
             ></v-text-field>
+            <!-- <OutputColumnInputs :currentCommand.sync="currentCommand"></OutputColumnInputs> -->
           </v-card-text>
           <v-card-actions>
             <div class="flex-grow-1"/>
@@ -276,12 +297,14 @@
 
 import axios from 'axios'
 import CodeEditor from '@/components/CodeEditor'
+import OutputColumnInputs from '@/components/OutputColumnInputs'
 import { throttle, newName } from '@/utils/functions.js'
 
 export default {
 
   components: {
-    CodeEditor
+    CodeEditor,
+    OutputColumnInputs
   },
 
   props: {
@@ -385,14 +408,32 @@ export default {
           }
           break;
         case 'unnest':
-          this.currentCommand = {command: 'unnest', columns: event.columns, shape: 'string', separator: ', '}
-          payload = {shape: 'string', separator: ', '}
+          this.currentCommand = {
+						command: 'unnest',
+						columns: event.columns,
+						// shape: 'string',
+						separator: ', ',
+						splits: 2,
+						index: '',
+						output_cols: event.columns.map(e=>'')
+					}
           break;
         case 'replace':
-          this.currentCommand = {command: 'replace', columns: event.columns, search: '', replace: '', search_by: 'chars', output_cols: event.columns.map(e=>'')}
+          this.currentCommand = {
+						command: 'replace',
+						columns: event.columns,
+						search: '', replace: '',
+						search_by: 'chars',
+						output_cols: event.columns.map(e=>'')
+					}
           break;
         case 'fill':
-          this.currentCommand = {command: 'fill', columns: event.columns, fill: ''}
+          this.currentCommand = {
+            command: 'fill',
+            columns: event.columns,
+            fill: '',
+            output_cols: event.columns.map(e=>'')
+          }
           break;
         default:
         case 'drop':
@@ -499,23 +540,45 @@ export default {
           content = `df = df.cols.nest(["${columns.join('", "')}"])`
           break;
         case 'unnest':
-          var _argument = (columns.length==1) ? `"${columns[0]}"` : `["${columns.join('", "')}"]`
-          content = `df = df.cols.unnest(${_argument}${ (payload.shape) ? `, shape="${payload.shape}"` : ''}${ (payload.separator) ? `, separator="${payload.separator}"` : ''})`
+					var _argument = (columns.length==1) ? `"${columns[0]}"` : `["${columns.join('", "')}"]`
+					var output_cols_argument =
+						(!payload.output_cols.join('').trim().length) ? false :
+						(payload.output_cols.length==1) ? `"${payload.output_cols[0]}"` :
+						`[${payload.output_cols.map((e)=>((e!==null) ? `"${e}"` : 'None')).join(', ')}]`
+          content = 'df = df.cols.unnest('
+						+_argument
+						+( (payload.separator) ? `, separator="${payload.separator}"` : '')
+						+( (payload.splits) ? `, splits="${payload.splits}"` : '')
+						+( (payload.index) ? `, index="${payload.index}"` : '')
+						+( (output_cols_argument) ? `, output_cols="${output_cols_argument}"` : '')
+						+')'
           break;
         case 'replace':
           var _argument = (columns.length==1) ? `"${columns[0]}"` : `["${columns.join('", "')}"]`
-          if (payload.output_cols.join('').trim().length) {
-            var output_cols_argument = (payload.output_cols.length==1) ? `"${payload.output_cols[0]}"` : `[${payload.output_cols.map((e)=>((e!==null) ? `"${e}"` : 'None')).join(', ')}]`
-            content = `df = df.cols.replace(${_argument}, search="${payload.search}", replace_by="${payload.replace}", search_by="${payload.search_by}", output_cols=${output_cols_argument})`
-          }
-          else {
-            content = `df = df.cols.replace(${_argument}, search="${payload.search}", replace_by="${payload.replace}", search_by="${payload.search_by}")`
-          }
+					var output_cols_argument =
+						(!payload.output_cols.join('').trim().length) ? false :
+						(payload.output_cols.length==1) ? `"${payload.output_cols[0]}"` :
+						`[${payload.output_cols.map((e)=>((e!==null) ? `"${e}"` : 'None')).join(', ')}]`
+					content = 'df = df.cols.replace('
+						+_argument
+						+`, search="${payload.search}"`
+						+`, replace_by="${payload.replace}"`
+						+`, search_by="${payload.search_by}"`
+						+( (output_cols_argument) ? `, output_cols="${output_cols_argument}"` : '')
+						+')'
           break;
         case 'fill':
           var _argument = (columns.length==1) ? `"${columns[0]}"` : `["${columns.join('", "')}"]`
+          var output_cols_argument =
+						(!payload.output_cols.join('').trim().length) ? false :
+						(payload.output_cols.length==1) ? `"${payload.output_cols[0]}"` :
+						`[${payload.output_cols.map((e)=>((e!==null) ? `"${e}"` : 'None')).join(', ')}]`
           content = `df = df.cols.fill_na(${_argument}, "${payload.fill}")`
-          // todo: ...fill_na(input_cols, value=None, output_cols=None):
+          content = 'df = df.cols.fill_na('
+						+_argument
+						+`, "${payload.fill}"`
+						+( (output_cols_argument) ? `, output_cols="${output_cols_argument}"` : '')
+						+')'
           break;
         default:
 
@@ -577,6 +640,7 @@ export default {
         this._commandsDisabled = false;
         if (response.data.content === '\'run ok\'') {
           this.markCells()
+          this.codeError = ''
           this.lastCodeTry = false
         }
         else {
