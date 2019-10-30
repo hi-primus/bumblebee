@@ -593,6 +593,10 @@ table {
   }
 }
 
+.text-ellipsis {
+  @include ellipsis;
+}
+
 /* top values */
 
 .top-bar {

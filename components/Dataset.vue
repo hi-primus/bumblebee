@@ -562,7 +562,6 @@ export default {
 		detailsActive: {
 			deep: true,
 			handler (value) {
-        console.log('detailsActive')
 				this.$nextTick(() => {
           try {
             this.$refs['hot-table'].hotInstance.render()
@@ -574,7 +573,6 @@ export default {
 
     optionsActive: {
       handler (value) {
-        console.log('optionsActive')
 				this.$nextTick(() => {
           try {
             this.$refs['hot-table'].hotInstance.render()
