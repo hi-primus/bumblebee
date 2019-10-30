@@ -550,8 +550,8 @@ export default {
           content = 'df = df.cols.unnest('
 						+_argument
 						+( (payload.separator) ? `, separator="${payload.separator}"` : '')
-						+( (payload.splits) ? `, splits="${payload.splits}"` : '')
-						+( (payload.index) ? `, index="${payload.index}"` : '')
+						+( (payload.splits) ? `, splits=${payload.splits}` : '')
+						+( (payload.index) ? `, index=${payload.index}` : '')
 						+( (output_cols_argument) ? `, output_cols="${output_cols_argument}"` : '')
 						+')'
           break;
