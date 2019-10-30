@@ -552,7 +552,7 @@ export default {
 						+( (payload.separator) ? `, separator="${payload.separator}"` : '')
 						+( (payload.splits) ? `, splits=${payload.splits}` : '')
 						+( (payload.index) ? `, index=${payload.index}` : '')
-						+( (output_cols_argument) ? `, output_cols="${output_cols_argument}"` : '')
+						+( (output_cols_argument) ? `, output_cols=${output_cols_argument}` : '')
 						+')'
           break;
         case 'replace':
@@ -566,7 +566,7 @@ export default {
 						+`, search="${payload.search}"`
 						+`, replace_by="${payload.replace}"`
 						+`, search_by="${payload.search_by}"`
-						+( (output_cols_argument) ? `, output_cols="${output_cols_argument}"` : '')
+						+( (output_cols_argument) ? `, output_cols=${output_cols_argument}` : '')
 						+')'
           break;
         case 'fill':
@@ -579,7 +579,7 @@ export default {
           content = 'df = df.cols.fill_na('
 						+_argument
 						+`, "${payload.fill}"`
-						+( (output_cols_argument) ? `, output_cols="${output_cols_argument}"` : '')
+						+( (output_cols_argument) ? `, output_cols=${output_cols_argument}` : '')
 						+')'
           break;
         default:
