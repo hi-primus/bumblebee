@@ -226,6 +226,7 @@ import dataTypesMixin from '@/plugins/mixins/data-types'
 import axios from 'axios'
 
 const { version } = require('@/package.json')
+const api_url = process.env.API_URL || 'http://localhost:5000'
 
 export default {
 
@@ -276,11 +277,11 @@ export default {
       switch (value) {
         case 'receiving':
           if (this.$route.query.obeta=='42') {
-            var response = await axios.post(process.env.API_URL+'/initialize')
+            var response = await axios.post(api_url+'/initialize')
             console.log('response',response)
 
             setTimeout(async () => {
-              var response = await axios.post(process.env.API_URL+'/dataset-file',{file: {url: 'https://raw.githubusercontent.com/ironmussa/Optimus/master/examples/data/foo.csv'}})
+              var response = await axios.post(api_url+'/dataset-file',{file: {url: 'https://raw.githubusercontent.com/ironmussa/Optimus/master/examples/data/foo.csv'}})
               console.log('response',response)
             }, 5000);
           }

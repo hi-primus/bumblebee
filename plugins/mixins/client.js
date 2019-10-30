@@ -3,6 +3,8 @@ import io from 'socket.io-client'
 
 let socket
 
+const api_url = process.env.API_URL || 'http://localhost:5000'
+
 export default {
 
 	methods: {
@@ -40,17 +42,7 @@ export default {
 		startClient (username, key) {
 			this.$store.commit('status', 'loading')
 
-			// const auth = await axios({
-			//   method: 'post',
-			//   url: `${process.env.API_URL}/authorize`,
-			//   data: {
-			//     client_id: process.env.CLIENT_ID
-			//   }
-			// })
-
-			// socket = io(process.env.API_URL, { query: `username=${username}&access_token=${auth.data.access_token}` })
-
-			socket = io(process.env.API_URL, {
+			socket = io(api_url, {
 				query: `username=${username}`
 			})
 
@@ -58,10 +50,6 @@ export default {
 				console.log('ERROR - ' + reason)
 				this.handleError(reason)
 			})
-
-			// socket.on('api_key', (payload) => {
-			// 	console.log('api_key - ' + payload)
-			// })
 
 			socket.on('dataset', (dataset) => {
 				const fernet = require('fernet')
