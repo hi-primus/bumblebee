@@ -300,6 +300,8 @@ import CodeEditor from '@/components/CodeEditor'
 import OutputColumnInputs from '@/components/OutputColumnInputs'
 import { throttle, newName } from '@/utils/functions.js'
 
+const api_url = process.env.API_URL || 'http://localhost:5000'
+
 export default {
 
   components: {
@@ -631,7 +633,7 @@ export default {
       this._commandsDisabled = true;
 
       try {
-        var response = await axios.post(process.env.API_URL+(rerun ? '/run-load' : '/run'),
+        var response = await axios.post(api_url+(rerun ? '/run-load' : '/run'),
         {
           code,
           name: this.dataset.name
