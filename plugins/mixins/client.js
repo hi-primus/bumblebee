@@ -81,7 +81,7 @@ export default {
 
 			socket.on('connect', () => {
 				console.log('CONNECTION SUCCESS')
-				this.$store.commit('status', 'receiving')
+        this.$store.commit('status', 'receiving')
 			})
 
 			socket.on('connection-error', (reason) => {

@@ -1,7 +1,8 @@
 export const state = () => ({
 	datasets: [],
 	datasetUpdates: 0,
-	status: 'waiting'
+  status: 'waiting',
+  kernel: false
 })
 
 export const mutations = {
@@ -13,9 +14,15 @@ export const mutations = {
 
 		let found = state.datasets.findIndex((e) => {
 			return (e.name === dataset.name)
-		})
+    })
 
-		if (found === -1 || dataset.name === null) {
+    if (found === -1) {
+      found = state.datasets.findIndex((e) => {
+        return (!e.summary)
+      })
+    }
+
+		if (found === -1) {
 			found = state.datasets.length
 		}
 
@@ -30,16 +37,38 @@ export const mutations = {
 		console.log('DEBUG: state.datasets[found]', state.datasets[found])
   },
 
+  addNew (state) {
+
+    let found = state.datasets.length
+
+    let dataset = {
+      name: '(new dataset)',
+      blank: true
+    }
+
+    state.status = 'received'
+
+		state.datasets[found] = dataset
+
+		state.datasetUpdates = state.datasetUpdates + 1
+
+  },
+
 	delete (state, { index }) {
 		state.datasets.splice(index, 1)
 		if (!state.datasets.length) {
-			state.status = 'receiving'
+			state.status = 'receiving back'
 		}
 		return index
 	},
 
 	status (state, payload) {
-		state.status = payload || 'waiting'
-	}
+    state.status = payload || 'waiting'
+    console.log(state.status)
+  },
+
+  kernel (state, payload) {
+    state.kernel = payload || true
+  }
 
 }

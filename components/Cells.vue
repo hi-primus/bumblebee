@@ -38,18 +38,9 @@
       </v-dialog>
       <v-dialog persistent v-if="currentCommand.command == 'duplicate'" :value="currentCommand.command == 'duplicate'" max-width="410" @click:outside="cancelCommand">
         <v-card>
-          <v-card-title class="title mb-4">Duplicate {{ currentCommand.name }}</v-card-title>
+					<v-card-title class="title mb-4">Duplicate {{ currentCommand.name }}</v-card-title>
           <v-card-text class="pb-0 command-card-text">
-            <template v-for="column in currentCommand.duplicates">
-              <v-text-field
-                :key="column.name"
-                v-model="column.newName"
-                label="New column"
-                dense
-                required
-                outlined
-              ></v-text-field>
-            </template>
+            <OutputColumnInputs :currentCommand.sync="currentCommand"></OutputColumnInputs>
           </v-card-text>
           <v-card-actions>
             <div class="flex-grow-1"/>
@@ -62,8 +53,8 @@
             </v-btn>
             <v-btn
               color="primary"
+							:disabled="currentCommand.index>=currentCommand.splits || currentCommand.separator==''"
               text
-              :disabled="(!currentCommand.duplicates.every( (e)=>{ return (e.newName.trim().length>0) } ))"
               @click="confirmCommand()"
             >
               Accept
@@ -251,45 +242,47 @@
         </v-card>
       </v-dialog>
     </template>
-    <draggable
-      tag="div"
-      class="sidebar-content options-fields"
-      :class="{'no-pe disabled': commandsDisabled,'dragging': drag, 'empty': !cells.length}"
-      v-model="cells"
-      v-bind="dragOptions"
-      handle=".handle"
-      ref="cells"
-      @start="drag = true"
-      @end="drag = false"
-    >
-      <transition-group type="transition" :name="!drag ? 'flip-list' : null">
-        <div class="cell-container" v-for="(cell, index) in cells" :key="cell.id" :class="{'cell-error': cell.error,'done': cell.done,'active': cell.active}" @click="setActiveCell(index)">
+    <div class="sidebar-content options-fields-container" :class="{'empty': !cells.length}">
+      <draggable
+        tag="div"
+        class="options-fields"
+        :class="{'no-pe disabled': commandsDisabled,'dragging': drag}"
+        v-model="cells"
+        v-bind="dragOptions"
+        handle=".handle"
+        ref="cells"
+        @start="drag = true"
+        @end="drag = false"
+      >
+        <transition-group type="transition" :name="!drag ? 'flip-list' : null">
+          <div class="cell-container" v-for="(cell, index) in cells" :key="cell.id" :class="{'cell-error': cell.error,'done': cell.done,'active': cell.active}" @click="setActiveCell(index)">
 
-          <div class="cell">
-            <div class="handle left-handle"></div>
-            <!-- <div class="handle cell-title cell-type">{{index+1}}. {{cell.type}}</div> -->
-            <CodeEditor
-              :active="cell.active"
-              @blur="runCodeLater()"
-              @update:active="setActiveCell(index)"
-              v-model="cell.content"
-            />
-            <div class="cell-type cell-type-label" v-if="cell.type && cell.type!='code'">{{cell.type}}</div>
+            <div class="cell">
+              <div class="handle left-handle"></div>
+              <!-- <div class="handle cell-title cell-type">{{index+1}}. {{cell.type}}</div> -->
+              <CodeEditor
+                :active="cell.active"
+                @blur="runCodeLater()"
+                @update:active="setActiveCell(index)"
+                v-model="cell.content"
+              />
+              <div class="cell-type cell-type-label" v-if="cell.type && cell.type!='code'">{{cell.type}}</div>
+            </div>
           </div>
-        </div>
-        <div key="controls" ref="cell-controls" class="cell-controls toolbar vertical">
-          <v-btn v-if="activeCell>=0" text class="icon-btn" color="#888" @click.stop="removeCell(activeCell)">
-            <v-icon>delete</v-icon>
-          </v-btn>
-          <v-btn text class="icon-btn" color="primary" @click="addCell(activeCell+1)">
-            <v-icon>add</v-icon>
-          </v-btn>
-        </div>
-      </transition-group>
+        </transition-group>
+      </draggable>
       <v-alert key="error" type="error" class="mt-2" dismissible v-if="codeError!='' && cells.length"  @input="codeError=''">
         {{codeError}}
       </v-alert>
-    </draggable>
+      <div key="controls" ref="cell-controls" class="cell-controls toolbar vertical">
+        <v-btn v-if="activeCell>=0" text class="icon-btn" color="#888" @click.stop="removeCell(activeCell)">
+          <v-icon>delete</v-icon>
+        </v-btn>
+        <v-btn text class="icon-btn" color="primary" @click="addCell(activeCell+1)">
+          <v-icon>add</v-icon>
+        </v-btn>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -401,12 +394,7 @@ export default {
             command: 'duplicate',
             columns: event.columns,
             name: (event.columns.length==1) ? `"${event.columns[0]}"` : 'columns',
-            duplicates: event.columns.map((e)=>{
-              return{
-                name: e,
-                newName: newName(e)
-              }
-            })
+            output_cols: event.columns.map(e=>newName(e))
           }
           break;
         case 'unnest':
@@ -464,7 +452,7 @@ export default {
         this.cells[index].active = true
         this.activeCell = index
         if (this.$refs.cells && this.$refs['cell-controls']) {
-          this.$refs['cell-controls'].style.top = (this.$refs.cells.$el.getElementsByClassName('cell-container')[index].offsetTop) + 'px'
+          this.$refs['cell-controls'].style.top = (this.$refs.cells.$el.getElementsByClassName('cell-container')[index].offsetTop+11) + 'px'
         }
       }
       else {
@@ -494,7 +482,7 @@ export default {
         this.cells[i].error = false
       }
 
-      if (mark)
+      if (mark && this.cells)
         this.codeDone = this.cells.map(e=>(e.content!=='') ? e.content+'\n' : '').join('').trim()
       else
         this.codeDone = ''
@@ -528,12 +516,15 @@ export default {
           }
           break;
         case 'duplicate':
-          if (payload.duplicates.length==1) {
-            content = `df = df.cols.copy("${payload.duplicates[0].name}", "${payload.duplicates[0].newName}")`
-          }
-          else {
-            content = `df = df.cols.copy([${payload.duplicates.map(e=>`("${e.name}", "${e.newName}")`)}])`
-          }
+          var _argument = (columns.length==1) ? `"${columns[0]}"` : `["${columns.join('", "')}"]`
+					var output_cols_argument =
+						(!payload.output_cols.join('').trim().length) ? false :
+						(payload.output_cols.length==1) ? `"${payload.output_cols[0]}"` :
+						`[${payload.output_cols.map((e)=>((e!==null) ? `"${e}"` : 'None')).join(', ')}]`
+          content = 'df = df.cols.copy('
+						+_argument
+						+( (output_cols_argument) ? `, output_cols=${output_cols_argument}` : '')
+						+')'
           break;
         case 'keep':
           content = `df = df.cols.keep(["${columns.join('", "')}"])`
