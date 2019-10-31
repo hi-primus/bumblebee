@@ -1,6 +1,18 @@
 <template>
 	<div class="table-container">
-		<div v-if="view==0" class="table-view-container">
+    <div v-if="!(dataset && dataset.summary)" class="no-data">
+      <v-progress-circular
+        indeterminate
+        v-if="commandsDisabled"
+        class="progress-middle"
+        color="#888"
+        size="64"
+      />
+      <div v-else class="title grey--text text-center">
+        No data to display
+      </div>
+    </div>
+		<div v-else-if="view==0" class="table-view-container">
 			<div class="table-controls d-flex">
 				<v-btn
           color="#888" text icon small @click="toggleColumnsSelection">
@@ -139,7 +151,7 @@
 		</div>
 		<client-only>
 			<div
-				v-show="view==1"
+				v-show="view==1 && dataset && dataset.summary"
 				class="hot-table-container"
 			>
 				<HotTable
@@ -175,6 +187,10 @@ export default {
   },
 
   props: {
+    commandsDisabled: {
+      type: Boolean,
+      default: false
+    },
     view: {
       default: 0,
       type: Number
@@ -455,7 +471,10 @@ export default {
 				})
 			} else {
 				this.filteredColumns = this.resultsColumns
-			}
+      }
+
+      if (!this.filteredColumns)
+        return
 
 			this.filteredColumns = this.filteredColumns.map((column) => {
 				return {

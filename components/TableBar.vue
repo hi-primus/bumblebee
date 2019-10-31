@@ -1,17 +1,75 @@
 <template>
   <div class="dashboard-container">
-    <div class="toolbar" :class="{'disabled': commandsDisabled}">
-      <v-btn text class="icon-btn" @click="$emit('update:view',0)">
-        <v-icon :color="(view==0) ? 'black' : '#888'">view_headline</v-icon>
+    <v-dialog persistent :value="loadFileDialog" max-width="410" @click:outside="loadFileDialog = false">
+      <v-form @submit="loadFile(loadFileUrl); loadFileDialog = false">
+        <v-card>
+          <v-card-title class="title px-6">Load file</v-card-title>
+          <v-card-text class="pb-0 command-card-text px-6">
+            <v-text-field
+              v-model="loadFileUrl"
+              label="Comma separated values file url"
+              dense
+              required
+              outlined
+            ></v-text-field>
+          </v-card-text>
+          <v-card-actions>
+            <div class="flex-grow-1"/>
+            <v-btn
+              color="primary"
+              text
+              @click="loadFileDialog = false"
+            >
+              Cancel
+            </v-btn>
+            <v-btn
+              color="primary"
+              text
+              :disabled="loadFileUrl==''"
+              @click="loadFile(loadFileUrl); loadFileDialog = false"
+            >
+              Load
+            </v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-form>
+    </v-dialog>
+    <div class="toolbar bb-toolbar" :class="{'disabled': commandsDisabled}">
+      <template v-if="$route.query.obeta=='42'">
+        <v-btn
+          text
+          class="icon-btn"
+          @click="loadFileDialog = true;
+          loadFileUrl = ''"
+          :disabled="!$store.state.kernel"
+        >
+          <v-icon color="#888">
+            cloud_upload
+          </v-icon>
+        </v-btn>
+        <!-- <v-btn text class="icon-btn" @click="$emit('save')" :disabled="!(dataset && dataset.summary)">
+          <v-icon color="#888">
+            save
+          </v-icon>
+        </v-btn> -->
+        <div class="divider"/>
+      </template>
+      <v-btn text class="icon-btn" @click="$emit('update:view',0)" :disabled="!(dataset && dataset.summary)">
+        <v-icon :color="(view==0) ? 'black' : '#888'">
+          view_headline
+        </v-icon>
       </v-btn>
-      <v-btn text class="icon-btn" @click="$emit('update:view',1)">
-        <v-icon :color="(view==1) ? 'black' : '#888'">view_module</v-icon>
+      <v-btn text class="icon-btn" @click="$emit('update:view',1)" :disabled="!(dataset && dataset.summary)">
+        <v-icon :color="(view==1) ? 'black' : '#888'">
+          view_module
+        </v-icon>
       </v-btn>
       <div class="divider"/>
       <v-menu :close-on-content-click="false" offset-y>
         <template v-slot:activator="{ on: onSortBy }">
           <v-btn
             :color="sortBy[0] ? 'black' : '#888'"
+            :disabled="!(dataset && dataset.summary)"
             class="icon-btn"
             text
             v-on="onSortBy"
@@ -130,7 +188,21 @@
       </v-btn>
     </div>
 
-    <div class="sidebar-container" :class="{'bigger': optionsActive}" v-show="detailsActive || (optionsActive && $route.query.obeta=='42')">
+
+    <Dataset
+      :commandsDisabled="commandsDisabled"
+      :key="tableKey"
+      :view="view"
+      :dataset="dataset"
+      :sortBy.sync="sortBy"
+      :sortDesc.sync="sortDesc"
+      :optionsActive="optionsActive"
+      :detailsActive.sync="detailsActive"
+      @selection="selectionEvent($event)"
+      :typesSelected="typesSelected"
+      :columnsTableHeaders="columnsTableHeaders"
+    />
+        <div class="sidebar-container" :class="{'bigger': optionsActive}" v-show="detailsActive || (optionsActive && $route.query.obeta=='42')">
 
       <template>
         <div class="sidebar-header" v-show="optionsActive && $route.query.obeta=='42'">
@@ -231,18 +303,6 @@
         </div>
       </template>
     </div>
-    <Dataset
-      :key="tableKey"
-      :view="view"
-      :dataset="dataset"
-      :sortBy.sync="sortBy"
-      :sortDesc.sync="sortDesc"
-      :optionsActive="optionsActive"
-      :detailsActive.sync="detailsActive"
-      @selection="selectionEvent($event)"
-      :typesSelected="typesSelected"
-      :columnsTableHeaders="columnsTableHeaders"
-    />
   </div>
 </template>
 
@@ -253,6 +313,10 @@ import Cells from '@/components/Cells'
 import Dataset from '@/components/Dataset'
 import VegaEmbed from '@/components/VegaEmbed'
 import dataTypesMixin from '@/plugins/mixins/data-types'
+
+import axios from 'axios'
+
+const api_url = process.env.API_URL || 'http://localhost:5000'
 
 export default {
 	components: {
@@ -296,6 +360,10 @@ export default {
 
 	data () {
 		return {
+
+      loadFileDialog: false,
+      loadFileUrl: '',
+
       scatterPlotDisplay: [],
 
       detailsActive: false,
@@ -348,6 +416,17 @@ export default {
   },
 
   methods: {
+
+    async loadFile ( file_url ) {
+      this.commandsDisabled = true
+      var response = await axios.post(api_url+'/dataset-file',{file: {url: file_url}})
+      console.log('response',response)
+      if (response.data.content=='\'load csv ok\''){
+        this.commandsDisabled = false
+        console.log('received')
+      }
+
+    },
 
     commandHandle (event) {
       this.optionsActive = true
@@ -621,11 +700,6 @@ export default {
   }
   .ghost {
     opacity: 0.5;
-  }
-  .options-fields {
-    min-height: 81px;
-    padding-bottom: 81px;
-    max-height: calc(100vh - 320px);
   }
 </style>
 

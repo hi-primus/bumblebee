@@ -106,6 +106,7 @@
         </template>
         <div v-else class="bb-container">
           <v-tabs
+            :key="$store.state.datasetUpdates"
             v-model="tab"
             class="bb-tabs px-6"
             background-color="#fff"
@@ -132,50 +133,50 @@
               </v-hover>
             </v-tab>
           </v-tabs>
-          <v-card-text class="pa-0">
-            <div class="controls-section grey--bg">
-              <div :class="{'inside-bar': view==1}" class="controls-container text-xs-center">
-                <v-text-field
+          <div class="bb-content">
+            <div :class="{'inside-bar': view==1}" class="controls-container text-xs-center">
+              <v-text-field
+                autocomplete="off"
+                v-model="searchText"
+                :color="'grey darken-3'"
+                clearable
+                dense
+                full-width
+                class="search-filter mt-2 mr-4 elevation-0"
+                prepend-inner-icon="search"
+                label="Search column"
+                :disabled="!($store.state.datasets[tab] && $store.state.datasets[tab].summary)"
+              />
+              <div class="filter-container">
+                <v-autocomplete
                   autocomplete="off"
-                  v-model="searchText"
-                  :color="'grey darken-3'"
-                  clearable
+                  ref="autocomplete"
+                  v-model="typesSelected"
+                  :items="typesAvailable"
+                  :append-icon="''"
+                  :search-input.sync="typesInput"
                   dense
                   full-width
-                  class="search-filter mt-2 mr-4 elevation-0"
-                  prepend-inner-icon="search"
-                  label="Search column"
-                />
-                <div class="filter-container">
-                  <v-autocomplete
-                    autocomplete="off"
-                    ref="autocomplete"
-                    v-model="typesSelected"
-                    :items="typesAvailable"
-                    :append-icon="''"
-                    :search-input.sync="typesInput"
-                    dense
-                    full-width
-                    chips
-                    deletable-chips
-                    color="grey darken-3"
-                    class="placeholder-chip primary--chips"
-                    label="Data type"
-                    hide-details
-                    hide-no-data
-                    hide-selected
-                    multiple
-                    single-line
-                    :menu-props="{
-                      closeOnContentClick: true
-                    }"
-                    @change="typesUpdated"
-                  >
-                    <template v-slot:item="{ item }">
-                      <div class="data-type in-autocomplete">{{ dataType(item) }}</div> <span class="capitalize">{{ item }}</span>
-                    </template>
-                  </v-autocomplete>
-                </div>
+                  chips
+                  deletable-chips
+                  color="grey darken-3"
+                  class="placeholder-chip primary--chips"
+                  label="Data type"
+                  hide-details
+                  hide-no-data
+                  hide-selected
+                  multiple
+                  single-line
+                  :menu-props="{
+                    closeOnContentClick: true
+                  }"
+                  @change="typesUpdated"
+                  :disabled="!($store.state.datasets[tab] && $store.state.datasets[tab].summary)"
+                >
+                  <template v-slot:item="{ item }">
+                    <div class="data-type in-autocomplete">{{ dataType(item) }}</div> <span class="capitalize">{{ item }}</span>
+                  </template>
+                </v-autocomplete>
               </div>
             </div>
               <!-- :key="tableKey" -->
@@ -184,11 +185,11 @@
               :current-tab="tab"
               :view.sync="view"
               :dataset="$store.state.datasets[tab]"
-              :total="+$store.state.datasets[tab].summary.rows_count"
+              :total="($store.state.datasets[tab].summary) ? +$store.state.datasets[tab].summary.rows_count : 1"
               :search-text="searchText"
               :types-selected="typesSelected"
             />
-          </v-card-text>
+          </div>
 
           <v-footer fixed="fixed" app>
             <v-layout class="px-4" row justify-space-between>
@@ -274,22 +275,23 @@ export default {
 	watch: {
 
     async status (value) {
-      switch (value) {
-        case 'receiving':
-          if (this.$route.query.obeta=='42') {
-            var response = await axios.post(api_url+'/initialize')
-            console.log('response',response)
+      if (this.$route.query.obeta=='42') {
+        switch (value) {
+          case 'receiving back':
+            this.$store.commit('status','waiting')
+            break;
+          case 'receiving':
+              if (!this.$store.state.datasets.length)
+                this.$store.commit('addNew')
+              var response = await axios.post(api_url+'/initialize')
+              console.log('intialization response', response)
+              if (response.data.content == '\'initialization ok\'')
+                this.$store.commit('kernel')
+            break;
 
-            setTimeout(async () => {
-              var response = await axios.post(api_url+'/dataset-file',{file: {url: 'https://raw.githubusercontent.com/ironmussa/Optimus/master/examples/data/foo.csv'}})
-              console.log('response',response)
-            }, 5000);
-          }
-
-          break;
-
-        default:
-          break;
+          default:
+            break;
+        }
       }
 
       if (value!='received')
@@ -345,6 +347,7 @@ export default {
 	},
 
 	methods: {
+
 		typesUpdated () {
       this.typesInput = ''
       this.$refs.autocomplete.loseFocus

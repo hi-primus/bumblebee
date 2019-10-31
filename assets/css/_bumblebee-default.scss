@@ -9,6 +9,29 @@ html:root {
 .bb-container {
   background-color: white;
   height: calc(100vh - 31px);
+  display: flex;
+  flex-direction: column;
+  .bb-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    .controls-container {
+      width: 100%;
+      flex-shrink: 1;
+    }
+    .dashboard-container {
+      width: 100%;
+      display: flex;
+      flex-wrap: wrap;
+      flex: 1;
+      .bb-toolbar {
+        width: 100%;
+      }
+      .sidebar-container, .table-container {
+        max-height: calc(100% - 47px)
+      }
+    }
+  }
 }
 
 /* width */
@@ -333,16 +356,22 @@ table {
   &>.table-container {
     order: 1;
     flex: 1;
+    min-width: 1px;
     width: 100%;
     border-top: solid 1px $line-color-1;
+  }
+  &>.table-view-empty {
+    width: 100%;
+    height: calc(100vh - 191px);
+    max-height: calc(100vh - 191px);
   }
   &>.sidebar-container {
     // text-align: right;
     border-left: solid 1px $line-color-1;
     border-top: solid 1px $line-color-1;
     order: 9;
-    height: calc(100vh - 191px);
-    max-height: calc(100vh - 191px);
+    // height: calc(100vh - 191px);
+    // max-height: calc(100vh - 191px);
     display: flex;
     flex-direction: column;
     padding: 4px;
@@ -450,20 +479,20 @@ table {
   .sidebar-container {
     width: $sidebar-width;
   }
-  .sidebar-container + .table-container {
-    width: calc(100% - #{$sidebar-width});
-  }
+  // .sidebar-container + .table-container {
+  //   width: calc(100% - #{$sidebar-width});
+  // }
 
   .sidebar-container.bigger {
     width: $sidebar-width-bigger;
     min-width: $sidebar-width;
     max-width: $sidebar-max-width;
   }
-  .sidebar-container.bigger + .table-container {
-    width: calc(100% - #{$sidebar-width-bigger});
-    min-width: calc(100% - #{$sidebar-max-width});
-    width: calc(100% - #{$sidebar-width});
-  }
+  // .sidebar-container.bigger + .table-container {
+  //   width: calc(100% - #{$sidebar-width-bigger});
+  //   min-width: calc(100% - #{$sidebar-max-width});
+  //   width: calc(100% - #{$sidebar-width});
+  // }
 }
 
 .vega-component {
@@ -782,6 +811,7 @@ table {
     }
     .tab-title {
       width: 100%;
+			text-transform: initial;
     }
     .tab-subtitle {
       width: 100%;
@@ -852,6 +882,23 @@ table {
 }
 .search-filter .v-input__slot {
   box-shadow: none !important;
+}
+
+.full-wh {
+  width: 100%;
+  height: 100%;
+}
+
+.vertical-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.no-data {
+  width: 100%;
+  height: calc(100% - 50px);
+  @extend .vertical-center;
 }
 
 /* vuetify fixes */
@@ -1139,37 +1186,15 @@ table {
   }
 }
 
-.options-fields {
+$side-controls-width: 54px;
 
-  $side-controls-width: 54px;
-
-  height: auto !important;
-  flex: none !important;
+.options-fields-container {
+  padding-left: 12px !important;
+  padding-right: $side-controls-width + 4px !important;
   padding-bottom: 28px;
   padding-top: 12px;
-  padding-left: 12px !important;
-  padding-right: $side-controls-width !important;
-  overflow-x: visible;
   position: relative;
-
-
-  &, &>span{
-    display: block;
-    width: 100%;
-  }
-
-  &>span {
-    overflow: hidden;
-    border-radius: 4px;
-  }
-  &:not(.empty)>span {
-    border: solid $line-color-1 1px;
-  }
-
-  &.disabled {
-    opacity: 0.71;
-  }
-
+  min-height: 300px;
   &.empty .cell-controls{
     right: 50%;
     margin-left: initial;
@@ -1197,6 +1222,33 @@ table {
     background: white;
     margin-left: 6px;
   }
+}
+
+.options-fields {
+  height: auto !important;
+  flex: none !important;
+  overflow-x: visible;
+  position: relative;
+  max-height: calc(100vh - 320px);
+
+
+  &, &>span{
+    display: block;
+    width: 100%;
+  }
+
+  &>span {
+    overflow: hidden;
+    border-radius: 4px;
+  }
+  :not(.empty)>&>span {
+    border: solid $line-color-1 1px;
+  }
+
+  &.disabled {
+    opacity: 0.71;
+  }
+
 
   .cell-container {
     overflow: hidden;
