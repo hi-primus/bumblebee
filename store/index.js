@@ -64,7 +64,6 @@ export const mutations = {
 
 	status (state, payload) {
     state.status = payload || 'waiting'
-    console.log(state.status)
   },
 
   kernel (state, payload) {
