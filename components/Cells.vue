@@ -53,7 +53,7 @@
             </v-btn>
             <v-btn
               color="primary"
-							:disabled="currentCommand.index>=currentCommand.splits || currentCommand.separator==''"
+							:disabled="currentCommand.index>=currentCommand.splits || currentCommand.separator=='' || currentCommand.output_cols.filter(e=>e!=='').length%currentCommand.columns.length!==0"
               text
               @click="confirmCommand()"
             >
@@ -110,7 +110,7 @@
 							class="mb-4"
 							min="0"
               clearable
-							:max="currentCommand.splits-1"
+							:max="(currentCommand.splits!=='') ? currentCommand.splits-1 : undefined"
               dense
               required
               outlined
@@ -128,7 +128,7 @@
             </v-btn>
             <v-btn
               color="primary"
-							:disabled="currentCommand.index>=currentCommand.splits || currentCommand.separator==''"
+							:disabled="currentCommand.output_cols.filter(e=>e!=='').length%currentCommand.columns.length!==0 || !((!!currentCommand.splits==currentCommand.index<currentCommand.splits) && currentCommand.separator!='')"
               text
               @click="confirmCommand()"
             >
@@ -530,7 +530,7 @@ export default {
           content = `df = df.cols.keep(["${columns.join('", "')}"])`
           break;
         case 'nest':
-          content = `df = df.cols.nest(["${columns.join('", "')}"])`
+          content = `df = df.cols.nest(["${columns.join('", "')}"], output_col="${columns.join('+')}")`
           break;
         case 'unnest':
 					var _argument = (columns.length==1) ? `"${columns[0]}"` : `["${columns.join('", "')}"]`

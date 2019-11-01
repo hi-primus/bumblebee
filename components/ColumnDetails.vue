@@ -3,7 +3,7 @@
 
     <div class="sidebar-subheader hoverable column-title" @click="expanded = !expanded">
       <span class="data-type" :class="`type-${column.column_dtype}`">{{ dataType(column.column_dtype) }}</span>
-      <span class="data-type-name">{{ column.name }}</span>
+      <span class="data-column-name">{{ column.name }}</span>
       <CommandMenu v-if="$route.query.obeta=='42'" button.class="right-button-2" :disabled="commandsDisabled" @command="$emit('command',{command: $event.command, columns: [column.name]})"></CommandMenu>
       <v-icon class="right-button flippable" :class="{'flipped': expanded}" color="black">expand_more</v-icon>
     </div>
