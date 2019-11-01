@@ -183,7 +183,14 @@
         </span>
       </transition>
       <v-spacer></v-spacer>
-      <v-btn v-if="$route.query.obeta=='42'" :color="(optionsActive) ? 'black' : '#888'" text class="icon-btn" @click="optionsActive = !optionsActive">
+      <v-btn
+        v-if="$route.query.obeta=='42'"
+        :disabled="!dataset.summary"
+        :color="(optionsActive) ? 'black' : '#888'"
+        text
+        class="icon-btn"
+        @click="optionsActive = !optionsActive"
+      >
         <v-icon>code</v-icon>
       </v-btn>
     </div>
