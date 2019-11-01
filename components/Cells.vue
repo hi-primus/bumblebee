@@ -1,6 +1,51 @@
 <template>
   <div>
     <template name="command-dialogs">
+      <v-dialog persistent v-if="currentCommand.command == 'create'" :value="currentCommand.command == 'create'" max-width="410" @click:outside="cancelCommand">
+        <v-card>
+          <v-card-title class="title mb-4">New column
+            <template v-if="currentCommand.name">
+              from {{ currentCommand.name }}
+            </template>
+          </v-card-title>
+          <v-card-text class="command-card-text">
+            <v-text-field
+              v-model="currentCommand.newName"
+              label="New column name"
+              dense
+              required
+              outlined
+            ></v-text-field>
+          </v-card-text>
+          <v-card-text v-if="currentCommand.expression!==false" class="pb-0 command-card-text">
+            <v-text-field
+              v-model="currentCommand.expression"
+              label="Expression"
+              dense
+              required
+              outlined
+            ></v-text-field>
+          </v-card-text>
+          <v-card-actions>
+            <div class="flex-grow-1"/>
+            <v-btn
+              color="primary"
+              text
+              @click="cancelCommand"
+            >
+              Cancel
+            </v-btn>
+            <v-btn
+              color="primary"
+              text
+              :disabled="currentCommand.newName===''"
+              @click="confirmCommand()"
+            >
+              Accept
+            </v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
       <v-dialog persistent v-if="currentCommand.command == 'rename'" :value="currentCommand.command == 'rename'" max-width="410" @click:outside="cancelCommand">
         <v-card>
           <v-card-title class="title mb-4">Rename {{ currentCommand.name }}</v-card-title>
@@ -62,6 +107,48 @@
           </v-card-actions>
         </v-card>
       </v-dialog>
+      <v-dialog persistent v-if="currentCommand.command == 'nest'" :value="currentCommand.command == 'nest'" max-width="410" @click:outside="cancelCommand">
+        <v-card>
+          <v-card-title class="title">
+            Nest columns
+          </v-card-title>
+          <v-card-text class="pb-0 command-card-text">
+            <v-text-field
+              class="mt-4"
+              v-model="currentCommand.separator"
+              label="Separator"
+              dense
+              required
+              outlined
+            ></v-text-field>
+            <v-text-field
+              v-model="currentCommand.newName"
+              label="New column name"
+              dense
+              required
+              outlined
+            ></v-text-field>
+          </v-card-text>
+          <v-card-actions>
+            <div class="flex-grow-1"/>
+            <v-btn
+              color="primary"
+              text
+              @click="cancelCommand"
+            >
+              Cancel
+            </v-btn>
+            <v-btn
+              color="primary"
+							:disabled="currentCommand.separator==='' || currentCommand.newName===''"
+              text
+              @click="confirmCommand()"
+            >
+              Accept
+            </v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
       <v-dialog persistent v-if="currentCommand.command == 'unnest'" :value="currentCommand.command == 'unnest'" max-width="410" @click:outside="cancelCommand">
         <v-card>
 					<v-card-title class="title" v-if="currentCommand.columns.length==1">
@@ -98,6 +185,7 @@
               label="Splits"
 							type="number"
 							min="2"
+              clearable
               dense
               required
               outlined
@@ -291,7 +379,7 @@
 import axios from 'axios'
 import CodeEditor from '@/components/CodeEditor'
 import OutputColumnInputs from '@/components/OutputColumnInputs'
-import { throttle, newName } from '@/utils/functions.js'
+import { debounce, newName } from '@/utils/functions.js'
 
 const api_url = process.env.API_URL || 'http://localhost:5000'
 
@@ -322,7 +410,7 @@ export default {
       cells: [],
       activeCell: -1,
       codeDone: '',
-      lastCodeTry: false,
+      lastWrongCode: false,
       drag: false,
       currentCommand: false,
       codeError: ''
@@ -360,7 +448,7 @@ export default {
   watch: {
     cellsOrder: {
       handler () {
-        this.runCode
+        this.runCode()
         if (!this.cells.length)
           this.codeError = ''
       }
@@ -374,8 +462,25 @@ export default {
 
       if (!event.columns || !event.columns.length)
         event.columns = this.columns.map(e=>this.dataset.columns[e.index].name)
+      else
+        event.columns = []
 
       switch (event.command) {
+        case 'create':
+          this.currentCommand = {
+            command: 'create',
+            fromColumns: event.columns,
+            expression: (event.columns.length!=0) ? event.columns.map(e=>`df["${e}"]`).join(' + ') : '',
+            name:
+              (event.columns.length==0) ?
+                false
+              : (event.columns.length==1) ?
+                  `"${event.columns[0]}"`
+                :
+                  'columns',
+            newName: ''
+          }
+          break;
         case 'rename':
           this.currentCommand = {
             command: 'rename',
@@ -396,6 +501,14 @@ export default {
             name: (event.columns.length==1) ? `"${event.columns[0]}"` : 'columns',
             output_cols: event.columns.map(e=>newName(e))
           }
+          break;
+        case 'nest':
+          this.currentCommand = {
+						command: 'nest',
+						columns: event.columns,
+						separator: ', ',
+						newName: ''
+					}
           break;
         case 'unnest':
           this.currentCommand = {
@@ -428,7 +541,6 @@ export default {
         default:
         case 'drop':
         case 'keep':
-        case 'nest':
           payload = undefined
           this.addCell(-1, event.command, event.columns, payload )
           break;
@@ -504,6 +616,11 @@ export default {
         columns = this.columns.map(e=>this.dataset.columns[e.index].name)
 
       switch (type) {
+        case 'create':
+          content = `df = df.cols.create("${payload.newName}"`
+            +( (payload.expression) ? `, ${payload.expression}` : '')
+            +`)`
+          break;
         case 'drop':
           content = `df = df.cols.drop(["${columns.join('", "')}"])`
           break;
@@ -530,7 +647,9 @@ export default {
           content = `df = df.cols.keep(["${columns.join('", "')}"])`
           break;
         case 'nest':
-          content = `df = df.cols.nest(["${columns.join('", "')}"], output_col="${columns.join('+')}")`
+          content = `df = df.cols.nest(["${columns.join('", "')}"]`
+						+( (payload.separator) ? `, separator="${payload.separator}"` : '')
+						+`, output_col="${payload.newName}")`
           break;
         case 'unnest':
 					var _argument = (columns.length==1) ? `"${columns[0]}"` : `["${columns.join('", "')}"]`
@@ -598,23 +717,23 @@ export default {
       }, 400);
     },
 
-    runCode: throttle(async function() {
+    runCode: debounce(async function() {
 
       var code = this.cells.map(e=>(e.content!=='') ? e.content+'\n' : '').join('').trim()
       var codeDone = this.codeDone.trim()
       var rerun
 
-      if (code == codeDone){
+      if (code == codeDone && code!==''){
         return;
       }
       else if (code.indexOf(codeDone)!=0 || codeDone=='') {
         rerun = true
       }
       else {
-        code = this.cells.filter(e=>!e.done).map(e=>e.content).join('\n')
+        code = this.cells.filter(e=>!e.done).map(e=>(e.content!=='') ? e.content+'\n' : '').join('').trim()
       }
 
-      if (code===this.lastCodeTry) {
+      if (code===this.lastWrongCode) {
         return;
       }
 
@@ -634,20 +753,18 @@ export default {
         if (response.data.content === '\'run ok\'') {
           this.markCells()
           this.codeError = ''
-          this.lastCodeTry = false
+          this.lastWrongCode = false
         }
         else {
           this.codeError = response.data.error.ename + ': ' + response.data.error.evalue
           this.markCellsError()
-          this.lastCodeTry = code
+          this.lastWrongCode = code
         }
       } catch (error) {
         console.error(error)
       }
 
-    },1000),
-
-
+    },1000)
   }
 }
 </script>

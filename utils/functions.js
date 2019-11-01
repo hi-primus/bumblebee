@@ -31,3 +31,14 @@ export const newName = (name) => {
     return name+'2'
   }
 }
+
+export const debounce = (func, delay) => {
+  let inDebounce
+  return function() {
+    const context = this
+    const args = arguments
+    clearTimeout(inDebounce)
+    inDebounce = setTimeout(() => func.apply(context, args), delay)
+  }
+}
+
