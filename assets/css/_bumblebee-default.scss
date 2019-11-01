@@ -726,6 +726,10 @@ table {
 
 /* layouts */
 
+.placeholder-chip:not(.v-input--is-disabled) label{
+  cursor: pointer;
+}
+
 .placeholder-chip {
   &::after {
     content: ' ';
@@ -753,7 +757,6 @@ table {
     top: 4px !important;
     left: 4px !important;
     pointer-events: all !important;
-    cursor: pointer;
     &::after {
       position: absolute;
       height: 16px;
