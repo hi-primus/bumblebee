@@ -242,7 +242,7 @@
             <CommandMenu v-if="$route.query.obeta=='42'" :columnsNumber="detailedColumns.length" button.class="right-button-center" :disabled="commandsDisabled" @command="commandHandle($event)"></CommandMenu>
             <div class="column-selected" v-for="column in detailedColumns" :key="column.index">
               <span class="data-type" :class="`type-${dataset.columns[column.index].column_dtype}`">{{ dataType(dataset.columns[column.index].column_dtype) }}</span>
-              <span class="data-type-name">{{ dataset.columns[column.index].name }}</span>
+              <span class="data-column-name">{{ dataset.columns[column.index].name }}</span>
             </div>
           </div>
           <div v-if="detailsActive['heat-map']" class="heat-map plot">

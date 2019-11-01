@@ -28,7 +28,8 @@ html:root {
         width: 100%;
       }
       .sidebar-container, .table-container {
-        max-height: calc(100% - 47px)
+        // max-height: calc(100% - 47px)
+        max-height: calc(100vh - 191px);
       }
     }
   }
