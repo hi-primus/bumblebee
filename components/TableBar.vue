@@ -36,34 +36,57 @@
     </v-dialog>
     <div class="toolbar bb-toolbar" :class="{'disabled': commandsDisabled}">
       <template v-if="$route.query.obeta=='42'">
-        <v-btn
-          text
-          class="icon-btn"
-          @click="loadFileDialog = true;
-          loadFileUrl = ''"
-          :disabled="!$store.state.kernel"
-        >
-          <v-icon color="#888">
-            cloud_upload
-          </v-icon>
-        </v-btn>
-        <!-- <v-btn text class="icon-btn" @click="$emit('save')" :disabled="!(dataset && dataset.summary)">
-          <v-icon color="#888">
-            save
-          </v-icon>
-        </v-btn> -->
-        <div class="divider"/>
+        <v-tooltip bottom>
+          <template v-slot:activator="{ on }">
+            <v-btn v-on="on"
+              text
+              class="icon-btn"
+              @click="loadFileDialog = true; loadFileUrl = ''"
+              :disabled="!$store.state.kernel"
+            >
+            <v-icon color="#888">
+              cloud_upload
+            </v-icon>
+          </v-btn>
+        </template>
+        <span>Load file</span>
+      </v-tooltip>
+      <!-- <v-tooltip bottom>
+        <template v-slot:activator="{ on }">
+          <v-btn v-on="on"
+            text
+            class="icon-btn"
+            :disabled="!(dataset && dataset.summary)"
+          >
+            <v-icon color="#888">
+              save
+            </v-icon>
+          </v-btn>
+        </template>
+        <span>Save file</span>
+      </v-tooltip> -->
+      <div class="divider"/>
       </template>
-      <v-btn text class="icon-btn" @click="$emit('update:view',0)" :disabled="!(dataset && dataset.summary)">
-        <v-icon :color="(view==0) ? 'black' : '#888'">
-          view_headline
-        </v-icon>
-      </v-btn>
-      <v-btn text class="icon-btn" @click="$emit('update:view',1)" :disabled="!(dataset && dataset.summary)">
-        <v-icon :color="(view==1) ? 'black' : '#888'">
-          view_module
-        </v-icon>
-      </v-btn>
+      <v-tooltip bottom>
+        <template v-slot:activator="{ on }">
+          <v-btn v-on="on" text class="icon-btn" @click="$emit('update:view',0)" :disabled="!(dataset && dataset.summary)">
+            <v-icon :color="(view==0) ? 'black' : '#888'">
+              view_headline
+            </v-icon>
+          </v-btn>
+        </template>
+        <span>Columns list view</span>
+      </v-tooltip>
+      <v-tooltip bottom>
+        <template v-slot:activator="{ on }">
+          <v-btn v-on="on" text class="icon-btn" @click="$emit('update:view',1)" :disabled="!(dataset && dataset.summary)">
+            <v-icon :color="(view==1) ? 'black' : '#888'">
+              view_module
+            </v-icon>
+          </v-btn>
+        </template>
+        <span>Table view</span>
+      </v-tooltip>
       <div class="divider"/>
       <v-menu :close-on-content-click="false" offset-y>
         <template v-slot:activator="{ on: onSortBy }">
@@ -111,9 +134,19 @@
           </v-list-item-group>
         </v-list>
       </v-menu>
-      <transition v-if="$route.query.obeta=='42'" name="fade">
-        <div class="divider" v-if="detailedColumns.length>=1" />
-      </transition>
+      <div class="divider" v-if="$route.query.obeta=='42'" />
+      <v-tooltip bottom>
+        <template v-slot:activator="{ on }">
+          <v-btn v-on="on" color="#888" text class="icon-btn" @click="commandHandle({command: 'create'})" :disabled="!(dataset && dataset.summary)">
+            <v-icon>add_box</v-icon>
+          </v-btn>
+        </template>
+        <span>New column
+          <template v-if="detailedColumns.length">
+            from column<span v-show="detailedColumns.length>1">s</span>
+          </template>
+        </span>
+      </v-tooltip>
       <transition v-if="$route.query.obeta=='42'" name="fade">
         <span class="columns-operations" v-if="detailedColumns.length>0" >
           <v-tooltip bottom>
