@@ -555,6 +555,7 @@ export default {
       if (file.type=='csv'){
         code += `, sep="${file.sep}"`
         code += `, header=${file.header}`
+        code += `, infer_schema='true'`
         code += `, charset="${file.charset}"`
       }
       else if (file.type=='json'){
@@ -566,8 +567,9 @@ export default {
 
       code += `)`
 
+      this.file.dialog = false
+        
       var response = await axios.post(api_url+'/dataset-file',{code})
-
       console.log('response',response)
       if (response.data.content=='\'load file ok\''){
         this.commandsDisabled = false
