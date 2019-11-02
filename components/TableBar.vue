@@ -42,6 +42,7 @@
                 outlined
               ></v-text-field>
               <v-select
+                v-if="false"
                 v-model="file.charset"
                 label="File encoding"
                 dense
@@ -556,7 +557,7 @@ export default {
         code += `, sep="${file.sep}"`
         code += `, header=${file.header}`
         code += `, infer_schema='true'`
-        code += `, charset="${file.charset}"`
+        // code += `, charset="${file.charset}"`
       }
       else if (file.type=='json'){
         code += `, multiline=${file.multiline}`
