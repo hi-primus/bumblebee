@@ -27,6 +27,15 @@
               required
               outlined
             ></v-text-field>
+            <v-text-field
+              v-model="file.limit"
+              label="Limit"
+							type="number"
+							min="1"
+              clearable
+              dense
+              outlined
+            ></v-text-field>
             <template v-if="file.type==='csv'">
               <v-switch
                 v-model="file.header"
@@ -42,7 +51,6 @@
                 outlined
               ></v-text-field>
               <v-select
-                v-if="false"
                 v-model="file.charset"
                 label="File encoding"
                 dense
@@ -444,6 +452,7 @@ import VegaEmbed from '@/components/VegaEmbed'
 import dataTypesMixin from '@/plugins/mixins/data-types'
 
 import axios from 'axios'
+axios.defaults.headers.post['Access-Control-Allow-Origin'] = '*'
 
 const api_url = process.env.API_URL || 'http://localhost:5000'
 
@@ -557,7 +566,7 @@ export default {
         code += `, sep="${file.sep}"`
         code += `, header=${file.header}`
         code += `, infer_schema='true'`
-        // code += `, charset="${file.charset}"`
+        code += `, charset="${file.charset}"`
       }
       else if (file.type=='json'){
         code += `, multiline=${file.multiline}`
@@ -569,8 +578,15 @@ export default {
       code += `)`
 
       this.file.dialog = false
-        
+
+      if (file.limit>0) {
+        code +=`.limit(${file.limit})`
+      }
+
+      console.log('code',code)
+
       var response = await axios.post(api_url+'/dataset-file',{code})
+
       console.log('response',response)
       if (response.data.content=='\'load file ok\''){
         this.commandsDisabled = false
@@ -587,6 +603,7 @@ export default {
         sep: ',',
         sheet_name: '0',
         header: true,
+        limit: '',
         multiline: true,
         charset: 'UTF-8'
       }

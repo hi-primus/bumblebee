@@ -224,7 +224,9 @@ import Layout from '@/components/Layout'
 import TableBar from '@/components/TableBar'
 import clientMixin from '@/plugins/mixins/client'
 import dataTypesMixin from '@/plugins/mixins/data-types'
+
 import axios from 'axios'
+axios.defaults.headers.post['Access-Control-Allow-Origin'] = '*'
 
 const { version } = require('@/package.json')
 const api_url = process.env.API_URL || 'http://localhost:5000'
