@@ -377,6 +377,7 @@
 <script>
 
 import axios from 'axios'
+axios.defaults.headers.post['Access-Control-Allow-Origin'] = '*'
 import CodeEditor from '@/components/CodeEditor'
 import OutputColumnInputs from '@/components/OutputColumnInputs'
 import { debounce, newName } from '@/utils/functions.js'
