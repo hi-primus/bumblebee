@@ -222,7 +222,11 @@ export default {
 		typesSelected: {
 			default: () => ([]),
 			type: Array
-		}
+    },
+    searchText: {
+      default: '',
+      type: String
+    }
   },
 
   data () {
@@ -427,7 +431,9 @@ export default {
 		getHotColumns () {
 			this.hotColumns = this.filteredColumns.filter((column) => {
 				return !this.hiddenColumns[column.name]
-			})
+      })
+
+      let selectColumns = this.dataset.columns
 
 			if (this.sortBy[0]) {
 				if (typeof this.hotColumns[0][this.sortBy[0]] === 'string') {
@@ -435,16 +441,31 @@ export default {
 						let _a = a[this.sortBy[0]].toLowerCase()
 						let _b = b[this.sortBy[0]].toLowerCase()
 						return (_a < _b) ? -1 : (_a > _b) ? 1 : 0
-					})
+          })
+          selectColumns.sort((a, b) => {
+						let _a = a[this.sortBy[0]].toLowerCase()
+						let _b = b[this.sortBy[0]].toLowerCase()
+						return (_a < _b) ? -1 : (_a > _b) ? 1 : 0
+          })
 				} else {
 					this.hotColumns.sort((a, b) => {
 						let _a = a[this.sortBy[0]]
 						let _b = b[this.sortBy[0]]
 						return (_a < _b) ? -1 : (_a > _b) ? 1 : 0
-					})
+          })
+          selectColumns.sort((a, b) => {
+						let _a = a[this.sortBy[0]]
+						let _b = b[this.sortBy[0]]
+						return (_a < _b) ? -1 : (_a > _b) ? 1 : 0
+          })
 				}
-				if (this.sortDesc[0]) { this.hotColumns.reverse() }
-			}
+				if (this.sortDesc[0]) {
+          this.hotColumns.reverse()
+          selectColumns.reverse()
+        }
+      }
+
+      this.$emit('sort',selectColumns.map(e=>e.name))
 
 			this.hotColumns = this.hotColumns.map((e, i) => {
 				return {

@@ -231,6 +231,24 @@
           </v-list-item-group>
         </v-list>
       </v-menu>
+
+      <v-tooltip bottom v-if="sortBy[0]">
+        <template v-slot:activator="{ on }">
+          <v-btn
+            :color="'#888'"
+            class="icon-btn"
+            text
+            v-on="on"
+            @click="commandHandle({command: 'apply sort', columns: lastSort})"
+          >
+            <v-icon>sort</v-icon>
+            <v-icon style="margin-left: -8px;">check</v-icon>
+          </v-btn>
+        </template>
+        <span>
+          Apply sorting
+        </span>
+      </v-tooltip>
       <div class="divider" v-if="$route.query.obeta=='42'" />
       <transition v-if="$route.query.obeta=='42'" name="fade">
         <span class="columns-operations">
@@ -451,7 +469,9 @@
       :sortDesc.sync="sortDesc"
       :optionsActive="optionsActive"
       :detailsActive.sync="detailsActive"
+      :searchText="searchText"
       @selection="selectionEvent($event)"
+      @sort="lastSort=$event"
       :typesSelected="typesSelected"
       :columnsTableHeaders="columnsTableHeaders"
     />
@@ -631,6 +651,8 @@ export default {
 			textMenu: false,
       prepareMenu: false,
       castMenu: false,
+
+      lastSort: [],
 
       commandItems: [
 				{command: 'lower', text: 'To lower case', type: 'text'},
