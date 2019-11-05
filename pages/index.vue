@@ -39,7 +39,7 @@
             </v-card-title>
             <v-card-text>
               <v-text-field
-                v-model="inputUsername"
+                v-model="inputSession"
                 label="Session"
                 required
                 outlined
@@ -244,7 +244,7 @@ export default {
 		return {
 			showKey: false,
 			inputKey: '',
-			inputUsername: '',
+			inputSession: '',
 			searchText: '',
 			tab: undefined,
 			view: undefined,
@@ -285,7 +285,10 @@ export default {
           case 'receiving':
               if (!this.$store.state.datasets.length)
                 this.$store.commit('addNew')
-              var response = await axios.post(api_url+'/initialize')
+              var response = await axios.post(api_url+'/initialize',
+              {
+                session: this.$store.state.session
+              })
               console.log('intialization response', response)
               if (response.data.content == '\'initialization ok\'')
                 this.$store.commit('kernel')
@@ -340,9 +343,9 @@ export default {
 	mounted () {
 		console.log(`bumblebee v${version}`)
 
-		this.inputUsername = this.$route.query.session || ''
+		this.inputSession = this.$route.query.session || ''
 		this.inputKey = this.$route.query.key || ''
-		if (this.inputUsername && this.inputUsername) {
+		if (this.inputSession && this.inputSession) {
       this.subscribe()
       this.$store.commit('status', 'receiving')
 		}
@@ -355,7 +358,7 @@ export default {
       this.$refs.autocomplete.loseFocus
 		},
 		subscribe () {
-			this.startClient(this.inputUsername, this.inputKey)
+			this.startClient(this.inputSession, this.inputKey)
 		},
 		resetStatus (closing) {
 			if (!closing) { this.$store.commit('status') }

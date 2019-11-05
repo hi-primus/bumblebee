@@ -39,11 +39,13 @@ export default {
 			}
 		},
 
-		startClient (username, key) {
-			this.$store.commit('status', 'loading')
+		startClient (session, key) {
+      this.$store.commit('status', 'loading')
+
+      this.$store.commit('session', session)
 
 			socket = io(api_url, {
-				query: `username=${username}`
+				query: `session=${session}`
 			})
 
 			socket.on('new-error', (reason) => {
