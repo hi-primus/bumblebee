@@ -278,7 +278,7 @@
                 >
                   <!-- class="v-btn-icon-text" -->
                   <v-icon>text_format</v-icon>
-                  <v-icon :color="textMenu ? 'black' : '#888'">
+                  <v-icon style="margin-right: -8px;" :color="textMenu ? 'black' : '#888'">
                     <template>arrow_drop_down</template>
                   </v-icon>
                 </v-btn>
@@ -316,7 +316,7 @@
                   >
                     <!-- class="v-btn-icon-text" -->
                     <v-icon>category</v-icon>
-                    <v-icon :color="castMenu ? 'black' : '#888'">
+                    <v-icon style="margin-right: -8px;" :color="castMenu ? 'black' : '#888'">
                       <template>arrow_drop_down</template>
                     </v-icon>
                   </v-btn>
@@ -353,7 +353,7 @@
                   >
                     <!-- class="v-btn-icon-text" -->
                     <v-icon>hdr_strong</v-icon>
-                    <v-icon :color="prepareMenu ? 'black' : '#888'">
+                    <v-icon style="margin-right: -8px;" :color="prepareMenu ? 'black' : '#888'">
                       <template>arrow_drop_down</template>
                     </v-icon>
                   </v-btn>
@@ -366,6 +366,45 @@
 							<v-list-item-group color="black">
 								<v-list-item
 									v-for="(item, i) in prepareMenuItems"
+									:key="i"
+									@click="commandHandle(item)"
+                  :disabled="item.max && detailedColumns.length>item.max"
+								>
+									<v-list-item-content>
+										<v-list-item-title>
+											{{ item.text }}
+										</v-list-item-title>
+									</v-list-item-content>
+								</v-list-item>
+							</v-list-item-group>
+						</v-list>
+					</v-menu>
+					<v-menu v-model="encodingMenu" :close-on-content-click="false" offset-y>
+						<template v-slot:activator="{ on: menu }">
+              <v-tooltip bottom>
+                <template v-slot:activator="{ on: tooltip }">
+                  <v-btn
+                    :color="'#888'"
+                    :disabled="!(dataset && dataset.summary)"
+                    class="icon-btn"
+                    text
+                    v-on="{...tooltip, ...menu}"
+                  >
+                    <!-- class="v-btn-icon-text" -->
+                    <span>Encoding</span>
+                    <v-icon style="margin-right: -8px;" :color="encodingMenu ? 'black' : '#888'">
+                      <template>arrow_drop_down</template>
+                    </v-icon>
+                  </v-btn>
+                </template>
+                <span>Encoding operations</span>
+              </v-tooltip>
+
+						</template>
+						<v-list flat dense style="max-height: 400px; min-width: 160px;" class="scroll-y">
+							<v-list-item-group color="black">
+								<v-list-item
+									v-for="(item, i) in encodingMenuItems"
 									:key="i"
 									@click="commandHandle(item)"
                   :disabled="item.max && detailedColumns.length>item.max"
@@ -650,6 +689,7 @@ export default {
 
 			textMenu: false,
       prepareMenu: false,
+      encodingMenu: false,
       castMenu: false,
 
       lastSort: [],
@@ -662,10 +702,11 @@ export default {
         {command: 'trim', text: 'Trim white space', type: 'text'},
 
 				{command: 'bucketizer',       text: 'Create Bins',          type: 'prepare'},
-				{command: 'values_to_cols',   text: 'Values to Columns',    type: 'prepare', max: 1},
-				{command: 'string_to_index',  text: 'Strings to Index',     type: 'prepare'},
 				{command: 'impute',           text: 'Impute rows',          type: 'prepare'},
-				{command: 'z_score',          text: 'Calculate Z-score',               type: 'prepare'},
+        {command: 'z_score',          text: 'Calculate Z-score',               type: 'prepare'},
+
+				{command: 'values_to_cols',   text: 'Values to Columns',    type: 'encoding', max: 1},
+				{command: 'string_to_index',  text: 'Strings to Index',     type: 'encoding'},
 				// {command: 'random_split',     teaxt: 'Split train and test', type: 'prepare'},
 
         {command: 'cast', cast_type: 'int',     text: 'Int', type: 'cast'},
@@ -705,11 +746,13 @@ export default {
       return this.commandItems.filter(e => e.type=='text')
     },
 
-
     prepareMenuItems () {
       return this.commandItems.filter(e => e.type=='prepare')
     },
 
+    encodingMenuItems () {
+      return this.commandItems.filter(e => e.type=='encoding')
+    },
 
     castMenuItems () {
       return this.commandItems.filter(e => e.type=='cast')
