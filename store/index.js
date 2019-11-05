@@ -2,6 +2,7 @@ export const state = () => ({
 	datasets: [],
 	datasetUpdates: 0,
   status: 'waiting',
+  datasetCounter: 1,
   kernel: false
 })
 
@@ -9,8 +10,16 @@ export const mutations = {
 
 	add (state, { dataset }) {
 
-    if (dataset.name===null)
-      dataset.name = dataset.file_name.split('.')[0]
+    if (dataset.name===null){
+      if (dataset.file_name){
+        dataset.name = dataset.file_name.split('.')[0]
+      }
+      else {
+        dataset.name = `Dataset-${state.datasetCounter}`
+        state.datasetCounter = state.datasetCounter + 1
+      }
+
+    }
 
 		let found = state.datasets.findIndex((e) => {
 			return (e.name === dataset.name)
