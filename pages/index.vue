@@ -186,7 +186,7 @@
               :view.sync="view"
               :dataset="$store.state.datasets[tab]"
               :total="($store.state.datasets[tab].summary) ? +$store.state.datasets[tab].summary.rows_count : 1"
-              :search-text="searchText"
+              :searchText="searchText"
               :types-selected="typesSelected"
             />
           </div>

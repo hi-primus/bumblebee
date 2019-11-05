@@ -436,7 +436,7 @@ export default {
   props: {
     columns: {
       type: Array,
-      default: ()=>{return[]}
+      default: ()=>{return []}
     },
     commandsDisabled: {
       type: Boolean,
@@ -459,6 +459,11 @@ export default {
       codeError: '',
 
       commandsPallete: {
+        'apply sort': {
+          code: (columns, payload) => {
+            return `df = df.select(["${columns.join('", "')}"])`
+          }
+        },
         bucketizer: {
           dialog: {
             title: ()=>'Create Bins',
