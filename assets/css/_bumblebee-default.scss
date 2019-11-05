@@ -907,6 +907,10 @@ table {
 
 /* vuetify fixes */
 
+.v-menu__content {
+	background: white;
+}
+
 .v-input.v-text-field--outlined .v-label {
   background: white;
   padding-right: 0px;

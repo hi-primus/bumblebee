@@ -69,7 +69,7 @@ export default {
 				})
 
 				try {
-          console.log('[DEBUG] dataset JSON received', originalInput)
+          // console.log('[DEBUG] dataset JSON received', originalInput)
 					this.$store.commit('add', {
 						dataset: JSON.parse(originalInput)
 					})

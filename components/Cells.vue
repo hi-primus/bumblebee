@@ -1,6 +1,61 @@
 <template>
   <div>
     <template name="command-dialogs">
+      <template v-for="(command, key) in commandsPallete">
+        <v-dialog :key="key" persistent v-if="command.dialog && currentCommand.command == key" :value="currentCommand.command == key" max-width="410" @click:outside="cancelCommand">
+          <v-card>
+            <v-card-title class="title mb-4">{{command.dialog.title()}}</v-card-title>
+            <v-card-text class="command-card-text pb-0">
+              <template v-for="field in command.dialog.fields">
+                <template v-if="field.type=='number'">
+                  <v-text-field
+                    type="number"
+                    v-model="currentCommand[field.key]"
+                    :key="field.key"
+                    :label="field.label"
+                    :placeholder="field.placeholder"
+                    :min="field.min"
+                    dense
+                    required
+                    outlined
+                  ></v-text-field>
+                </template>
+                <template v-else-if="field.type=='select'">
+                  <v-select
+                    :key="field.key"
+                    v-model="currentCommand[field.key]"
+                    :label="field.label"
+                    :placeholder="field.placeholder"
+                    :items="field.items"
+                    dense
+                    required
+                    outlined
+                  ></v-select>
+                </template>
+              </template>
+              <OutputColumnInputs v-if="command.dialog.output_cols" :currentCommand.sync="currentCommand"></OutputColumnInputs>
+            </v-card-text>
+            <v-card-actions>
+              <div class="flex-grow-1"/>
+              <v-btn
+                color="primary"
+                text
+                @click="cancelCommand"
+              >
+                Cancel
+              </v-btn>
+              <v-btn
+                color="primary"
+                text
+                :disabled="!command.dialog.validate(currentCommand)"
+                @click="confirmCommand()"
+              >
+                Accept
+              </v-btn>
+            </v-card-actions>
+          </v-card>
+        </v-dialog>
+      </template>
       <v-dialog persistent v-if="currentCommand.command == 'create'" :value="currentCommand.command == 'create'" max-width="410" @click:outside="cancelCommand">
         <v-card>
           <v-card-title class="title mb-4">New column
@@ -159,19 +214,6 @@
           </v-card-title>
           <v-card-text class="pb-0 command-card-text">
             Unnest "{{ currentCommand.columns[0] }}"
-            <!-- <v-select
-              v-model="currentCommand.shape"
-              label="Shape"
-              dense
-              required
-              outlined
-              :items="[
-                {text: 'None', value: ''},
-                {text: 'String', value: 'string'},
-                {text: 'Array', value: 'array'},
-                {text: 'Vector', value: 'vector'}
-              ]"
-            ></v-select> -->
             <v-text-field
               class="mt-4"
               v-model="currentCommand.separator"
@@ -414,7 +456,257 @@ export default {
       lastWrongCode: false,
       drag: false,
       currentCommand: false,
-      codeError: ''
+      codeError: '',
+
+      commandsPallete: {
+        bucketizer: {
+          dialog: {
+            title: ()=>'Create Bins',
+            output_cols: true,
+            fields: [
+              {
+                type: 'number',
+                key: 'splits',
+                label: 'Splits',
+                placeholder: 2,
+                min: 0
+              },
+            ],
+            validate: (command) => {
+              return (command.output_cols.filter(e=>e!=='').length%command.columns.length==0) && (command.splits>0)
+            }
+          },
+          payload: (columns) => {
+            return {
+              command: 'bucketizer',
+              columns: columns,
+              splits: 2,
+              output_cols: columns.map(e=>'')
+            }
+          },
+          code: (columns, payload) => {
+            // df.cols.bucketizer("id",2,"buckets_output")
+            var _argument = (columns.length==1) ? `"${columns[0]}"` : `["${columns.join('", "')}"]`
+
+            var output_cols_argument =
+              (!payload.output_cols.join('').trim().length) ?
+                false
+              :
+                (payload.output_cols.length==1) ?
+                  `"${payload.output_cols[0]}"`
+                :
+                  `[${payload.output_cols.map((e)=>((e!==null) ? `"${e}"` : 'None')).join(', ')}]`
+
+            return 'df = df.cols.bucketizer('
+              + _argument
+              + ( (payload.splits) ? `, ${payload.splits}` : '')
+              + ( (output_cols_argument) ? `, output_cols=${output_cols_argument}` : '')
+              + ')'
+          },
+        },
+        values_to_cols: {
+          payload: (columns) => {
+            return {
+              command: 'values_to_cols',
+              columns: columns
+            }
+          },
+          code: (columns, payload) => {
+            return `df = df.cols.values_to_cols("${columns[0]}")`
+          }
+        },
+        string_to_index: {
+          dialog: {
+            title: ()=>'Strings to Index',
+            output_cols: true,
+            validate: (command) => {
+              if (command.output_cols.filter(e=>e!=='').length%command.columns.length==0)
+                return true
+              return false
+            }
+          },
+          payload: (columns) => {
+            return {
+              command: 'string_to_index',
+              columns: columns,
+              output_cols: columns.map(e=>'')
+            }
+          },
+          code: (columns, payload) => {
+            // cols.string_to_index(input_cols, output_cols=None)
+            var _argument = (columns.length==1) ? `"${columns[0]}"` : `["${columns.join('", "')}"]`
+
+            var output_cols_argument =
+              (!payload.output_cols.join('').trim().length) ?
+                false
+              :
+                (payload.output_cols.length==1) ?
+                  `"${payload.output_cols[0]}"`
+                :
+                  `[${payload.output_cols.map((e)=>((e!==null) ? `"${e}"` : 'None')).join(', ')}]`
+
+            return 'df = df.cols.string_to_index('
+              + _argument
+              + ( (output_cols_argument) ? `, output_cols=${output_cols_argument}` : '')
+              + ')'
+          },
+        },
+        z_score: {
+          dialog: {
+            title: ()=>'Calculate Z-score',
+            output_cols: true,
+            validate: (command) => {
+              if (command.output_cols.filter(e=>e!=='').length%command.columns.length==0)
+                return true
+              return false
+            }
+          },
+          payload: (columns) => {
+            return {
+              command: 'z_score',
+              columns: columns,
+              output_cols: columns.map(e=>'')
+            }
+          },
+          code: (columns, payload) => {
+            // cols.z_score(input_cols, output_cols=None)
+            var _argument = (columns.length==1) ? `"${columns[0]}"` : `["${columns.join('", "')}"]`
+
+            var output_cols_argument =
+              (!payload.output_cols.join('').trim().length) ?
+                false
+              :
+                (payload.output_cols.length==1) ?
+                  `"${payload.output_cols[0]}"`
+                :
+                  `[${payload.output_cols.map((e)=>((e!==null) ? `"${e}"` : 'None')).join(', ')}]`
+
+            return 'df = df.cols.z_score('
+              + _argument
+              + ( (output_cols_argument) ? `, output_cols=${output_cols_argument}` : '')
+              + ')'
+          },
+        },
+        impute: {
+          dialog: {
+            title: ()=>'Impute rows',
+            output_cols: true,
+            fields: [
+              {
+                type: 'select',
+                key: 'data_type',
+                label: 'Data type',
+                placeholder: 'Data type',
+                items: [
+                  {text: 'Continuous', value: 'continuous'},
+                  {text: 'Categorical', value: 'categorical'}
+                ]
+              },
+              {
+                type: 'select',
+                key: 'strategy',
+                label: 'Strategy',
+                placeholder: 'Strategy',
+                items: [
+                  {text: 'Mean', value: 'mean'},
+                  {text: 'Median', value: 'median'}
+                ]
+              },
+            ],
+            validate: (command) => {
+              if (command.output_cols.filter(e=>e!=='').length%command.columns.length==0)
+                return true
+              return false
+            }
+          },
+          payload: (columns) => {
+            return {
+              command: 'impute',
+              data_type: 'continuous',
+              strategy: 'mean',
+              columns: columns,
+              output_cols: columns.map(e=>'')
+            }
+          },
+          code: (columns, payload) => {
+            // df.cols.impute(input_cols, data_type="continuous", strategy="mean", output_cols=None)
+            var _argument = (columns.length==1) ? `"${columns[0]}"` : `["${columns.join('", "')}"]`
+
+            var output_cols_argument =
+              (!payload.output_cols.join('').trim().length) ?
+                false
+              :
+                (payload.output_cols.length==1) ?
+                  `"${payload.output_cols[0]}"`
+                :
+                  `[${payload.output_cols.map((e)=>((e!==null) ? `"${e}"` : 'None')).join(', ')}]`
+
+            return 'df = df.cols.impute('
+              + _argument
+              + `, "${payload.data_type}"`
+              + `, "${payload.strategy}"`
+              + ( (output_cols_argument) ? `, output_cols=${output_cols_argument}` : '')
+              + ')'
+          },
+        },
+        /*
+        random_split: {
+          dialog: {
+            title: ()=>'Split train and test',
+            inputs: [
+              {
+                type: 'number',
+                key: 'weight1',
+                label: 'Weight 1',
+                placeholder: 0.2,
+                value: 0.2
+              },
+              {
+                type: 'number',
+                key: 'weight2',
+                label: 'Weight 2',
+                placeholder: 0.8,
+                value: 0.8
+              },
+              {
+                type: 'text',
+                key: 'seed',
+                label: 'Seed',
+                placeholder: 1,
+                value: ''
+              },
+              {
+                type: 'text',
+                key: 'new_df',
+                label: 'Seed',
+                placeholder: 1,
+                value: ''
+              }
+            ],
+            validate: (command) => {
+              if (command.weight1 && command.weight2)
+                return true
+              return false
+            }
+          },
+          payload: (columns) => {
+            return {
+              command: 'random_split',
+              columns: [],
+              self: 'df',
+              weight1: 0.2,
+              weight2: 0.8,
+              seed: 1,
+              new_df: 'splitted'
+            }
+          },
+          code: (columns, payload) => {
+            return `dfs['${payload.new_df}'] = df.random_split(${payload.self}, weights=[${payload.weight1},${payload.weight2}], seed=${payload.seed})`
+          }
+        }
+        */
+      },
+
     }
   },
 
@@ -459,24 +751,25 @@ export default {
   methods: {
     commandHandle ( event ) {
 
-      var payload = undefined
+			var payload = undefined
+			var _columns = undefined
 
       if (!event.columns || !event.columns.length)
-        event.columns = this.columns.map(e=>this.dataset.columns[e.index].name)
+        _columns = this.columns.map(e=>this.dataset.columns[e.index].name)
       else
-        event.columns = []
+        _columns = event.columns
 
       switch (event.command) {
         case 'create':
           this.currentCommand = {
             command: 'create',
-            fromColumns: event.columns,
-            expression: (event.columns.length!=0) ? event.columns.map(e=>`df["${e}"]`).join(' + ') : '',
+            fromColumns: _columns,
+            expression: (_columns.length!=0) ? _columns.map(e=>`df["${e}"]`).join(' + ') : '',
             name:
-              (event.columns.length==0) ?
+              (_columns.length==0) ?
                 false
-              : (event.columns.length==1) ?
-                  `"${event.columns[0]}"`
+              : (_columns.length==1) ?
+                  `"${_columns[0]}"`
                 :
                   'columns',
             newName: ''
@@ -485,9 +778,9 @@ export default {
         case 'rename':
           this.currentCommand = {
             command: 'rename',
-            columns: event.columns,
-            name: (event.columns.length==1) ? `"${event.columns[0]}"` : 'columns',
-            renames: event.columns.map((e)=>{
+            columns: _columns,
+            name: (_columns.length==1) ? `"${_columns[0]}"` : 'columns',
+            renames: _columns.map((e)=>{
               return{
                 name: e,
                 newName: ''
@@ -498,15 +791,15 @@ export default {
         case 'duplicate':
           this.currentCommand = {
             command: 'duplicate',
-            columns: event.columns,
-            name: (event.columns.length==1) ? `"${event.columns[0]}"` : 'columns',
-            output_cols: event.columns.map(e=>newName(e))
+            columns: _columns,
+            name: (_columns.length==1) ? `"${_columns[0]}"` : 'columns',
+            output_cols: _columns.map(e=>newName(e))
           }
           break;
         case 'nest':
           this.currentCommand = {
 						command: 'nest',
-						columns: event.columns,
+						columns: _columns,
 						separator: ', ',
 						newName: ''
 					}
@@ -514,37 +807,63 @@ export default {
         case 'unnest':
           this.currentCommand = {
 						command: 'unnest',
-						columns: event.columns,
+						columns: _columns,
 						// shape: 'string',
 						separator: ', ',
 						splits: 2,
 						index: '',
-						output_cols: event.columns.map(e=>'')
+						output_cols: _columns.map(e=>'')
 					}
           break;
         case 'replace':
           this.currentCommand = {
 						command: 'replace',
-						columns: event.columns,
+						columns: _columns,
 						search: '', replace: '',
 						search_by: 'chars',
-						output_cols: event.columns.map(e=>'')
+						output_cols: _columns.map(e=>'')
 					}
           break;
         case 'fill':
           this.currentCommand = {
             command: 'fill',
-            columns: event.columns,
+            columns: _columns,
             fill: '',
-            output_cols: event.columns.map(e=>'')
+            output_cols: _columns.map(e=>'')
           }
+					break;
+				case 'cast':
+					payload = { cast_type: event.cast_type }
+          this.addCell(-1, event.command, _columns, payload )
+					break;
+				case 'lower':
+				case 'upper':
+				case 'remove_accents':
+				case 'remove_special_chars':
+				case 'trim':
+					payload = undefined
+					if (!_columns.length)
+						_columns = ["*"]
+          this.addCell(-1, event.command, _columns, payload )
           break;
-        default:
         case 'drop':
         case 'keep':
-          payload = undefined
-          this.addCell(-1, event.command, event.columns, payload )
-          break;
+        default:
+          if (this.commandsPallete[event.command]) {
+            var _command = this.commandsPallete[event.command]
+            if (_command.dialog) {
+              this.currentCommand = _command.payload ? _command.payload(_columns) : undefined
+            }
+            else {
+              payload = _command.payload ? _command.payload(_columns) : undefined
+              this.addCell(-1, event.command, _columns, payload )
+            }
+          }
+          else {
+            payload = undefined
+            this.addCell(-1, event.command, _columns, payload )
+            break;
+          }
       }
     },
 
@@ -609,7 +928,7 @@ export default {
       }
     },
 
-    addCell (at = -1,type = 'code', columns = [], payload) {
+    addCell (at = -1, type = 'code', columns = [], payload) {
 
       var content = ''
 
@@ -686,15 +1005,32 @@ export default {
 						(!payload.output_cols.join('').trim().length) ? false :
 						(payload.output_cols.length==1) ? `"${payload.output_cols[0]}"` :
 						`[${payload.output_cols.map((e)=>((e!==null) ? `"${e}"` : 'None')).join(', ')}]`
-          content = `df = df.cols.fill_na(${_argument}, "${payload.fill}")`
           content = 'df = df.cols.fill_na('
 						+_argument
 						+`, "${payload.fill}"`
 						+( (output_cols_argument) ? `, output_cols=${output_cols_argument}` : '')
 						+')'
+					break;
+				case 'cast':
+					var _argument = columns.map(e=>`("${e}","${payload.cast_type}")`)
+          content = `df = df.cols.cast([${_argument}])`
+					break;
+				case 'lower':
+				case 'upper':
+				case 'remove_accents':
+				case 'remove_special_chars':
+				case 'trim':
+					var _argument = (columns.length==1) ? `"${columns[0]}"` : `input_cols=["${columns.join('", "')}"]`
+          content = `df = df.cols.${type}(${_argument})`
           break;
-        default:
+				default:
+          if (this.commandsPallete[type]) {
+            var _command = this.commandsPallete[type]
+            content = _command.code ? _command.code(columns, payload) : ''
+          }
+          else {
 
+          }
           break;
       }
 

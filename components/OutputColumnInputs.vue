@@ -23,7 +23,7 @@ export default {
     currentCommand: {
       type: Object,
       required: true
-    }
+    },
   },
   computed: {
     _currentCommand: {
