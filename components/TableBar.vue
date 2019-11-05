@@ -816,7 +816,11 @@ export default {
 
       console.log('code',code)
 
-      var response = await axios.post(api_url+'/dataset-file',{code})
+      var response = await axios.post(api_url+'/dataset-file',
+      {
+        code,
+        session: this.$store.state.session
+      })
 
       console.log('response',response)
       if (response.data.content=='\'load file ok\''){

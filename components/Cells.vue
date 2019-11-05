@@ -1088,7 +1088,8 @@ export default {
         var response = await axios.post(api_url+(rerun ? '/run-load' : '/run'),
         {
           code,
-          name: this.dataset.name
+          name: this.dataset.name,
+          session: this.$store.state.session
         })
         console.log('response',response)
         this._commandsDisabled = false;
