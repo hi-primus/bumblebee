@@ -288,7 +288,7 @@
 						<span>Drop column<span v-show="detailedColumns.length>1">s</span></span>
 					</v-tooltip>
 				</span>
-				<v-menu v-model="textMenu" v-if="detailedColumns.length>=0" :close-on-content-click="false" offset-y key="string">  <!-- string -->
+				<v-menu v-model="textMenu" v-if="detailedColumns.length>=0" offset-y key="string">  <!-- string -->
 					<template v-slot:activator="{ on: menuText }">
 						<v-tooltip bottom>
 							<template v-slot:activator="{ on: tooltipText }">
@@ -349,10 +349,9 @@
 						</template>
 						<span>Fill column<span v-show="detailedColumns.length>1">s</span></span>
 					</v-tooltip>
-					<v-menu 
+					<v-menu
 						v-model="castMenu"
 						v-if="detailedColumns.length>0"
-						:close-on-content-click="false"
 						offset-y
 						key="cast"
 					> <!-- cast -->
@@ -392,10 +391,9 @@
 							</v-list-item-group>
 						</v-list>
 					</v-menu>
-					<v-menu 
+					<v-menu
 						v-model="prepareMenu"
 						v-if="detailedColumns.length>0"
-						:close-on-content-click="false"
 						offset-y
 						key="prepare"
 					> <!-- prepare -->
@@ -437,10 +435,9 @@
 							</v-list-item-group>
 						</v-list>
 					</v-menu>
-					<v-menu 
+					<v-menu
 						v-model="encodingMenu"
 						v-if="detailedColumns.length==1"
-						:close-on-content-click="false"
 						offset-y
 						key="encoding"
 					> <!-- encoding, TODO: remove limit (==) -->
@@ -536,19 +533,19 @@
           Operations
           <v-icon class="right-button" color="black" @click="optionsActive = false">close</v-icon>
         </div>
-				<v-progress-circular
-          indeterminate
-          v-if="commandsDisabled && optionsActive && $route.query.kernel=='1'"
-          class="progress-middle"
-          color="#888"
-          size="64"
-        />
         <Cells
           v-show="optionsActive && $route.query.kernel=='1'"
           ref="cells"
           :columns="detailedColumns"
           :commandsDisabled.sync="commandsDisabled"
           :dataset="dataset"
+        />
+				<v-progress-circular
+          indeterminate
+          v-if="commandsDisabled && optionsActive && $route.query.kernel=='1'"
+          class="mx-a"
+          color="#888"
+          size="64"
         />
       </template>
       <template v-if="detailsActive!==false && !optionsActive">
