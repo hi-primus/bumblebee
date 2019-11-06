@@ -141,28 +141,28 @@
               @click="openFile()"
               :disabled="!$store.state.kernel"
             >
-            <v-icon color="#888">
-              cloud_upload
-            </v-icon>
-          </v-btn>
-        </template>
-        <span>Load file</span>
-      </v-tooltip>
-      <!-- <v-tooltip bottom>
-        <template v-slot:activator="{ on }">
-          <v-btn v-on="on"
-            text
-            class="icon-btn"
-            :disabled="!(dataset && dataset.summary)"
-          >
-            <v-icon color="#888">
-              save
-            </v-icon>
-          </v-btn>
-        </template>
-        <span>Save file</span>
-      </v-tooltip> -->
-      <div class="divider"/>
+              <v-icon color="#888">
+                cloud_upload
+              </v-icon>
+            </v-btn>
+          </template>
+          <span>Load file</span>
+        </v-tooltip>
+        <!-- <v-tooltip bottom>
+          <template v-slot:activator="{ on }">
+            <v-btn v-on="on"
+              text
+              class="icon-btn"
+              :disabled="!(dataset && dataset.summary)"
+            >
+              <v-icon color="#888">
+                save
+              </v-icon>
+            </v-btn>
+          </template>
+          <span>Save file</span>
+        </v-tooltip> -->
+        <div class="divider"/>
       </template>
       <v-tooltip bottom>
         <template v-slot:activator="{ on }">
@@ -251,6 +251,16 @@
       <div class="divider" v-if="$route.query.kernel=='1'" />
       <template v-if="$route.query.kernel=='1'" name="fade">
 				<span>
+          <v-tooltip bottom key="sample_n"> <!-- sample_n -->
+						<template v-slot:activator="{ on }">
+							<v-btn v-on="on" color="#888" text class="icon-btn" @click="commandHandle({command: 'sample_n'})" :disabled="!(dataset && dataset.summary)">
+								<v-icon>blur_linear</v-icon>
+							</v-btn>
+						</template>
+						<span>
+              Sampling
+						</span>
+					</v-tooltip>
 					<v-tooltip bottom key="create"> <!-- create -->
 						<template v-slot:activator="{ on }">
 							<v-btn v-on="on" color="#888" text class="icon-btn" @click="commandHandle({command: 'create'})" :disabled="!(dataset && dataset.summary)">
