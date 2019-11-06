@@ -1,6 +1,6 @@
 <template>
   <span v-if="typeof value !== 'object' || value === null" :title="value">
-    <template v-if="value">
+    <template v-if="value!==null && value!==undefined">
       &nbsp;{{ value }}&nbsp;
     </template>
   </span>

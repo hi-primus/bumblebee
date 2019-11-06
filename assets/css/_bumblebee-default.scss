@@ -789,6 +789,11 @@ table {
   height: 0;
 }
 
+.mx-a {
+  margin-left: auto;
+  margin-right: auto;
+}
+
 .primary--chips {
   .v-chip {
     background-color: $primary-color !important;
