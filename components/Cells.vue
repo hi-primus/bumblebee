@@ -401,7 +401,7 @@
           </div>
         </transition-group>
       </draggable>
-      <v-alert key="error" type="error" class="mt-2" dismissible v-if="codeError!='' && cells.length"  @input="codeError=''">
+      <v-alert key="error" type="error" class="mt-2" dismissible v-if="codeError!=''"  @input="codeError=''">
         {{codeError}}
       </v-alert>
       <div key="controls" ref="cell-controls" class="cell-controls toolbar vertical">
