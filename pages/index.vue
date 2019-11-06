@@ -226,7 +226,6 @@ import clientMixin from '@/plugins/mixins/client'
 import dataTypesMixin from '@/plugins/mixins/data-types'
 
 import axios from 'axios'
-axios.defaults.headers.post['Access-Control-Allow-Origin'] = '*'
 
 const { version } = require('@/package.json')
 const api_url = process.env.API_URL || 'http://localhost:5000'
@@ -277,21 +276,29 @@ export default {
 	watch: {
 
     async status (value) {
-      if (this.$route.query.obeta=='42') {
+      if (this.$route.query.kernel=='1') {
         switch (value) {
           case 'receiving back':
-            this.$store.commit('status','waiting')
+						this.$store.commit('status','waiting')
             break;
           case 'receiving':
-              if (!this.$store.state.datasets.length)
-                this.$store.commit('addNew')
+							this.$store.commit('kernel',false)
+              if (!this.$store.state.datasets.length) {
+								this.$store.commit('addNew')
+							}
               var response = await axios.post(api_url+'/initialize',
               {
                 session: this.$store.state.session
               })
               console.log('intialization response', response)
-              if (response.data.content == '\'initialization ok\'')
-                this.$store.commit('kernel')
+              if (response.data.content == '\'initialization ok\'') {
+								this.$store.commit('kernel')
+							}
+							else {
+								console.error(response.data)
+								this.$store.commit('status','waiting')
+								this.$store.commit('status','receiving')
+							}
             break;
 
           default:
@@ -320,24 +327,24 @@ export default {
 				return
 			}
 
-			this.$router.replace({ path: this.$route.fullPath, query: { tab: value } }, () => {
-				history.replaceState('Dashboard', 'Bumblebee', this.$route.fullPath)
-      })
+			// this.$router.replace({ path: this.$route.fullPath, query: { tab: value } }, () => {
+			// 	history.replaceState('Dashboard', 'Bumblebee', this.$route.fullPath)
+      // })
 
       if (dataset && dataset.dtypes_list)
         this.typesAvailable = dataset.dtypes_list
 		},
 		view (value) {
 			if (value === undefined) { return }
-			this.$router.replace({ path: this.$route.fullPath, query: { view: value } }, () => {
-				history.replaceState('Dashboard', 'Bumblebee', this.$route.fullPath)
-			})
+			// this.$router.replace({ path: this.$route.fullPath, query: { view: value } }, () => {
+			// 	history.replaceState('Dashboard', 'Bumblebee', this.$route.fullPath)
+			// })
 		}
 	},
 
 	created () {
-		this.tab = this.$route.query.tab
-		this.view = +(this.$route.query.view || 0)
+		// this.tab = this.$route.query.tab
+		// this.view = +(this.$route.query.view || 0)
 	},
 
 	mounted () {

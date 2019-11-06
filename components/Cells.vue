@@ -419,7 +419,6 @@
 <script>
 
 import axios from 'axios'
-axios.defaults.headers.post['Access-Control-Allow-Origin'] = '*'
 import CodeEditor from '@/components/CodeEditor'
 import OutputColumnInputs from '@/components/OutputColumnInputs'
 import { debounce, newName } from '@/utils/functions.js'
@@ -461,7 +460,7 @@ export default {
       commandsPallete: {
         'apply sort': {
           code: (columns, payload) => {
-            return `df = df.select(["${columns.join('", "')}"])`
+            return `df = df.cols.keep(["${columns.join('", "')}"])`
           }
         },
         bucketizer: {
@@ -838,7 +837,7 @@ export default {
           }
 					break;
 				case 'cast':
-					payload = { cast_type: event.cast_type }
+					payload = { dtype: event.dtype }
           this.addCell(-1, event.command, _columns, payload )
 					break;
 				case 'lower':
@@ -1017,8 +1016,11 @@ export default {
 						+')'
 					break;
 				case 'cast':
-					var _argument = columns.map(e=>`("${e}","${payload.cast_type}")`)
-          content = `df = df.cols.cast([${_argument}])`
+					var _argument = (columns.length==1) ? `"${columns[0]}"` : `["${columns.join('", "')}"]`
+					content = 'df = df.cols.cast('
+					+_argument
+					+`, dtype="${payload.dtype}"`
+					+')'
 					break;
 				case 'lower':
 				case 'upper':

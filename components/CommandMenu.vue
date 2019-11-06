@@ -48,9 +48,9 @@ export default {
         {command: 'remove_accents', name: 'Remove accents'},
         {command: 'remove_special_chars', name: 'Remove special chars'},
         {command: 'trim',             name: 'Trim white space'},
-        {command: 'bucketizer',       name: 'Create Bins'},
+        {command: 'bucketizer',       name: 'Create Bins', max: 1}, // TODO: remove limit
         {command: 'values_to_cols',   name: 'Values to Columns', max: 1},
-        {command: 'string_to_index',  name: 'Strings to Index'},
+        {command: 'string_to_index',  name: 'Strings to Index', max: 1}, // TODO: remove limit
         {command: 'impute',           name: 'Impute rows'},
         {command: 'z_score',          name: 'Calculate Z-score'}
 
