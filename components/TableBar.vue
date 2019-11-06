@@ -132,7 +132,7 @@
       </v-form>
     </v-dialog>
     <div class="toolbar bb-toolbar" :class="{'disabled': commandsDisabled}">
-      <template v-if="$route.query.obeta=='42'">
+      <template v-if="$route.query.kernel=='1'">
         <v-tooltip bottom>
           <template v-slot:activator="{ on }">
             <v-btn v-on="on"
@@ -194,7 +194,6 @@
             text
             v-on="onSortBy"
           >
-            <!-- class="v-btn-icon-text" -->
             <v-icon>sort</v-icon>
             <span style="min-width: 2em;">
               {{ sortByLabel }}
@@ -249,10 +248,10 @@
           Apply sorting
         </span>
       </v-tooltip>
-      <div class="divider" v-if="$route.query.obeta=='42'" />
-      <transition v-if="$route.query.obeta=='42'" name="fade">
-        <span class="columns-operations">
-					<v-tooltip bottom>
+      <div class="divider" v-if="$route.query.kernel=='1'" />
+      <template v-if="$route.query.kernel=='1'" name="fade">
+				<span>
+					<v-tooltip bottom key="create"> <!-- create -->
 						<template v-slot:activator="{ on }">
 							<v-btn v-on="on" color="#888" text class="icon-btn" @click="commandHandle({command: 'create'})" :disabled="!(dataset && dataset.summary)">
 								<v-icon>add_box</v-icon>
@@ -264,32 +263,123 @@
 							</template>
 						</span>
 					</v-tooltip>
-					<v-menu v-model="textMenu" :close-on-content-click="false" offset-y>
-						<template v-slot:activator="{ on: menu }">
-              <v-tooltip bottom>
-                <template v-slot:activator="{ on: tooltip }">
-
-                <v-btn
-                  :color="'#888'"
-                  :disabled="!(dataset && dataset.summary)"
-                  class="icon-btn"
-                  text
-                  v-on="{...tooltip, ...menu}"
-                >
-                  <!-- class="v-btn-icon-text" -->
-                  <v-icon>text_format</v-icon>
-                  <v-icon style="margin-right: -8px;" :color="textMenu ? 'black' : '#888'">
-                    <template>arrow_drop_down</template>
-                  </v-icon>
-                </v-btn>
-              </template>
-              <span>String operations</span>
-            </v-tooltip>
+					<v-tooltip bottom v-if="detailedColumns.length>0" key="duplicate"> <!-- duplicate -->
+						<template v-slot:activator="{ on }">
+							<v-btn v-on="on" color="#888" text class="icon-btn" @click="commandHandle({command: 'duplicate'})">
+								<v-icon>file_copy</v-icon>
+							</v-btn>
 						</template>
-						<v-list flat dense style="max-height: 400px; min-width: 160px;">
+						<span>Duplicate column<span v-show="detailedColumns.length>1">s</span></span>
+					</v-tooltip>
+					<v-tooltip bottom v-if="detailedColumns.length>0" key="keep"> <!-- keep -->
+						<template v-slot:activator="{ on }">
+							<v-btn v-on="on" color="#888" text class="icon-btn" @click="commandHandle({command: 'keep'})">
+								<v-icon>all_out</v-icon>
+							</v-btn>
+						</template>
+						<span>Keep column<span v-show="detailedColumns.length>1">s</span></span>
+					</v-tooltip>
+					<v-tooltip bottom v-if="detailedColumns.length>0" key="delete"> <!-- delete -->
+						<template v-slot:activator="{ on }">
+							<v-btn v-on="on" color="#888" text class="icon-btn" @click="commandHandle({command: 'drop'})">
+								<v-icon>delete</v-icon>
+							</v-btn>
+						</template>
+						<span>Drop column<span v-show="detailedColumns.length>1">s</span></span>
+					</v-tooltip>
+				</span>
+				<v-menu v-model="textMenu" v-if="detailedColumns.length>=0" :close-on-content-click="false" offset-y key="string">  <!-- string -->
+					<template v-slot:activator="{ on: menuText }">
+						<v-tooltip bottom>
+							<template v-slot:activator="{ on: tooltipText }">
+								<v-btn
+									:color="'#888'"
+									:disabled="!(dataset && dataset.summary)"
+									class="icon-btn"
+									text
+									v-on="{...tooltipText, ...menuText}"
+								>
+									<v-icon>text_format</v-icon>
+									<v-icon style="margin-right: -8px;" :color="textMenu ? 'black' : '#888'">
+										<template>arrow_drop_down</template>
+									</v-icon>
+								</v-btn>
+							</template>
+							<span>String operations</span>
+						</v-tooltip>
+					</template>
+					<v-list flat dense style="max-height: 400px; min-width: 160px;">
+						<v-list-item-group color="black">
+							<v-list-item
+								v-for="(item, i) in textMenuItems"
+								:key="i"
+								@click="commandHandle(item)"
+							>
+								<v-list-item-content>
+									<v-list-item-title>
+										{{ item.text }}
+									</v-list-item-title>
+								</v-list-item-content>
+							</v-list-item>
+						</v-list-item-group>
+					</v-list>
+				</v-menu>
+				<span>
+					<v-tooltip bottom v-if="detailedColumns.length>0" key="rename"> <!-- rename -->
+						<template v-slot:activator="{ on }">
+							<v-btn v-on="on" color="#888" text class="icon-btn" @click="commandHandle({command: 'rename'})">
+								<v-icon>edit</v-icon>
+							</v-btn>
+						</template>
+						<span>Rename column<span v-show="detailedColumns.length>1">s</span></span>
+					</v-tooltip>
+					<v-tooltip bottom v-if="detailedColumns.length>0" key="replace"> <!-- replace -->
+						<template v-slot:activator="{ on }">
+							<v-btn v-on="on" color="#888" text class="icon-btn" @click="commandHandle({command: 'replace'})">
+								<v-icon>find_replace</v-icon>
+							</v-btn>
+						</template>
+						<span>Replace in column<span v-show="detailedColumns.length>1">s</span></span>
+					</v-tooltip>
+					<v-tooltip bottom v-if="detailedColumns.length>0" key="fill"> <!-- fill -->
+						<template v-slot:activator="{ on }">
+							<v-btn v-on="on" color="#888" text class="icon-btn" @click="commandHandle({command: 'fill'})">
+								<v-icon>brush</v-icon>
+							</v-btn>
+						</template>
+						<span>Fill column<span v-show="detailedColumns.length>1">s</span></span>
+					</v-tooltip>
+					<v-menu 
+						v-model="castMenu"
+						v-if="detailedColumns.length>0"
+						:close-on-content-click="false"
+						offset-y
+						key="cast"
+					> <!-- cast -->
+						<template v-slot:activator="{ on: menu }">
+							<v-tooltip bottom>
+								<template v-slot:activator="{ on: tooltip }">
+									<v-btn
+										:color="'#888'"
+										:disabled="!(dataset && dataset.summary)"
+										class="icon-btn"
+										text
+										v-on="{...tooltip, ...menu}"
+									>
+										<!-- class="v-btn-icon-text" -->
+										<v-icon>category</v-icon>
+										<v-icon style="margin-right: -8px;" :color="castMenu ? 'black' : '#888'">
+											<template>arrow_drop_down</template>
+										</v-icon>
+									</v-btn>
+								</template>
+								<span>Cast</span>
+							</v-tooltip>
+						</template>
+						<v-list flat dense style="max-height: 400px; min-width: 160px;" class="scroll-y">
 							<v-list-item-group color="black">
 								<v-list-item
-									v-for="(item, i) in textMenuItems"
+									v-for="(item, i) in castMenuItems"
 									:key="i"
 									@click="commandHandle(item)"
 								>
@@ -302,192 +392,117 @@
 							</v-list-item-group>
 						</v-list>
 					</v-menu>
-					<span class="columns-operations-s" v-if="detailedColumns.length>0">
-            <v-menu v-model="castMenu" :close-on-content-click="false" offset-y>
-              <template v-slot:activator="{ on: menu }">
-                <v-tooltip bottom>
-                  <template v-slot:activator="{ on: tooltip }">
-                    <v-btn
-                      :color="'#888'"
-                      :disabled="!(dataset && dataset.summary)"
-                      class="icon-btn"
-                      text
-                      v-on="{...tooltip, ...menu}"
-                    >
-                      <!-- class="v-btn-icon-text" -->
-                      <v-icon>category</v-icon>
-                      <v-icon style="margin-right: -8px;" :color="castMenu ? 'black' : '#888'">
-                        <template>arrow_drop_down</template>
-                      </v-icon>
-                    </v-btn>
-                  </template>
-                  <span>Cast</span>
-                </v-tooltip>
-              </template>
-              <v-list flat dense style="max-height: 400px; min-width: 160px;" class="scroll-y">
-                <v-list-item-group color="black">
-                  <v-list-item
-                    v-for="(item, i) in castMenuItems"
-                    :key="i"
-                    @click="commandHandle(item)"
-                  >
-                    <v-list-item-content>
-                      <v-list-item-title>
-                        {{ item.text }}
-                      </v-list-item-title>
-                    </v-list-item-content>
-                  </v-list-item>
-                </v-list-item-group>
-              </v-list>
-            </v-menu>
-            <v-menu v-model="prepareMenu" :close-on-content-click="false" offset-y>
-              <template v-slot:activator="{ on: menu }">
-                <v-tooltip bottom>
-                  <template v-slot:activator="{ on: tooltip }">
-                    <v-btn
-                      :color="'#888'"
-                      :disabled="!(dataset && dataset.summary)"
-                      class="icon-btn"
-                      text
-                      v-on="{...tooltip, ...menu}"
-                    >
-                      <!-- class="v-btn-icon-text" -->
-                      <v-icon>hdr_strong</v-icon>
-                      <v-icon style="margin-right: -8px;" :color="prepareMenu ? 'black' : '#888'">
-                        <template>arrow_drop_down</template>
-                      </v-icon>
-                    </v-btn>
-                  </template>
-                  <span>Prepare</span>
-                </v-tooltip>
+					<v-menu 
+						v-model="prepareMenu"
+						v-if="detailedColumns.length>0"
+						:close-on-content-click="false"
+						offset-y
+						key="prepare"
+					> <!-- prepare -->
+						<template v-slot:activator="{ on: menu }">
+							<v-tooltip bottom>
+								<template v-slot:activator="{ on: tooltip }">
+									<v-btn
+										:color="'#888'"
+										:disabled="!(dataset && dataset.summary)"
+										class="icon-btn"
+										text
+										v-on="{...tooltip, ...menu}"
+									>
+										<!-- class="v-btn-icon-text" -->
+										<v-icon>hdr_strong</v-icon>
+										<v-icon style="margin-right: -8px;" :color="prepareMenu ? 'black' : '#888'">
+											<template>arrow_drop_down</template>
+										</v-icon>
+									</v-btn>
+								</template>
+								<span>Prepare</span>
+							</v-tooltip>
 
-              </template>
-              <v-list flat dense style="max-height: 400px; min-width: 160px;" class="scroll-y">
-                <v-list-item-group color="black">
-                  <v-list-item
-                    v-for="(item, i) in prepareMenuItems"
-                    :key="i"
-                    @click="commandHandle(item)"
-                    :disabled="item.max && detailedColumns.length>item.max"
-                  >
-                    <v-list-item-content>
-                      <v-list-item-title>
-                        {{ item.text }}
-                      </v-list-item-title>
-                    </v-list-item-content>
-                  </v-list-item>
-                </v-list-item-group>
-              </v-list>
-            </v-menu>
-            <v-menu v-model="encodingMenu" :close-on-content-click="false" offset-y>
-              <template v-slot:activator="{ on: menu }">
-                <v-tooltip bottom>
-                  <template v-slot:activator="{ on: tooltip }">
-                    <v-btn
-                      :color="'#888'"
-                      :disabled="!(dataset && dataset.summary)"
-                      class="icon-btn"
-                      text
-                      v-on="{...tooltip, ...menu}"
-                    >
-                      <!-- class="v-btn-icon-text" -->
-                      <v-icon>exposure_zero</v-icon>
-                      <v-icon style="margin-right: -8px;" :color="encodingMenu ? 'black' : '#888'">
-                        <template>arrow_drop_down</template>
-                      </v-icon>
-                    </v-btn>
-                  </template>
-                  <span>Encoding operations</span>
-                </v-tooltip>
+						</template>
+						<v-list flat dense style="max-height: 400px; min-width: 160px;" class="scroll-y">
+							<v-list-item-group color="black">
+								<v-list-item
+									v-for="(item, i) in prepareMenuItems"
+									:key="i"
+									@click="commandHandle(item)"
+									:disabled="item.max && detailedColumns.length>item.max"
+								>
+									<v-list-item-content>
+										<v-list-item-title>
+											{{ item.text }}
+										</v-list-item-title>
+									</v-list-item-content>
+								</v-list-item>
+							</v-list-item-group>
+						</v-list>
+					</v-menu>
+					<v-menu 
+						v-model="encodingMenu"
+						v-if="detailedColumns.length==1"
+						:close-on-content-click="false"
+						offset-y
+						key="encoding"
+					> <!-- encoding, TODO: remove limit (==) -->
+						<template v-slot:activator="{ on: menu }">
+							<v-tooltip bottom>
+								<template v-slot:activator="{ on: tooltip }">
+									<v-btn
+										:color="'#888'"
+										:disabled="!(dataset && dataset.summary)"
+										class="icon-btn"
+										text
+										v-on="{...tooltip, ...menu}"
+									>
+										<!-- class="v-btn-icon-text" -->
+										<v-icon>exposure_zero</v-icon>
+										<v-icon style="margin-right: -8px;" :color="encodingMenu ? 'black' : '#888'">
+											<template>arrow_drop_down</template>
+										</v-icon>
+									</v-btn>
+								</template>
+								<span>Encoding</span>
+							</v-tooltip>
 
-              </template>
-              <v-list flat dense style="max-height: 400px; min-width: 160px;" class="scroll-y">
-                <v-list-item-group color="black">
-                  <v-list-item
-                    v-for="(item, i) in encodingMenuItems"
-                    :key="i"
-                    @click="commandHandle(item)"
-                    :disabled="item.max && detailedColumns.length>item.max"
-                  >
-                    <v-list-item-content>
-                      <v-list-item-title>
-                        {{ item.text }}
-                      </v-list-item-title>
-                    </v-list-item-content>
-                  </v-list-item>
-                </v-list-item-group>
-              </v-list>
-            </v-menu>
-            <v-tooltip bottom>
-              <template v-slot:activator="{ on }">
-                <v-btn v-on="on" color="#888" text class="icon-btn" @click="commandHandle({command: 'rename'})">
-                  <v-icon>edit</v-icon>
-                </v-btn>
-              </template>
-              <span>Rename column<span v-show="detailedColumns.length>1">s</span></span>
-            </v-tooltip>
-            <v-tooltip bottom>
-              <template v-slot:activator="{ on }">
-                <v-btn v-on="on" color="#888" text class="icon-btn" @click="commandHandle({command: 'duplicate'})">
-                  <v-icon>file_copy</v-icon>
-                </v-btn>
-              </template>
-              <span>Duplicate column<span v-show="detailedColumns.length>1">s</span></span>
-            </v-tooltip>
-            <v-tooltip bottom>
-              <template v-slot:activator="{ on }">
-                <v-btn v-on="on" color="#888" text class="icon-btn" @click="commandHandle({command: 'keep'})">
-                  <v-icon>all_out</v-icon>
-                </v-btn>
-              </template>
-              <span>Keep column<span v-show="detailedColumns.length>1">s</span></span>
-            </v-tooltip>
-            <v-tooltip bottom>
-              <template v-slot:activator="{ on }">
-                <v-btn v-on="on" color="#888" text class="icon-btn" @click="commandHandle({command: 'drop'})">
-                  <v-icon>delete</v-icon>
-                </v-btn>
-              </template>
-              <span>Drop column<span v-show="detailedColumns.length>1">s</span></span>
-            </v-tooltip>
-            <v-tooltip bottom v-if="detailedColumns.length>1" >
-              <template v-slot:activator="{ on }">
-                <v-btn v-on="on" color="#888" text class="icon-btn" @click="commandHandle({command: 'nest'})">
-                  <v-icon>link</v-icon>
-                </v-btn>
-              </template>
-              <span>Nest columns</span>
-            </v-tooltip>
-            <v-tooltip bottom>
-              <template v-slot:activator="{ on }">
-                <v-btn v-on="on" color="#888" text class="icon-btn" @click="commandHandle({command: 'unnest'})">
-                  <v-icon>link_off</v-icon>
-                </v-btn>
-              </template>
-              <span>Unnest column<span v-show="detailedColumns.length>1">s</span></span>
-            </v-tooltip>
-            <v-tooltip bottom>
-              <template v-slot:activator="{ on }">
-                <v-btn v-on="on" color="#888" text class="icon-btn" @click="commandHandle({command: 'replace'})">
-                  <v-icon>find_replace</v-icon>
-                </v-btn>
-              </template>
-              <span>Replace in column<span v-show="detailedColumns.length>1">s</span></span>
-            </v-tooltip>
-            <v-tooltip bottom>
-              <template v-slot:activator="{ on }">
-                <v-btn v-on="on" color="#888" text class="icon-btn" @click="commandHandle({command: 'fill'})">
-                  <v-icon>brush</v-icon>
-                </v-btn>
-              </template>
-              <span>Fill column<span v-show="detailedColumns.length>1">s</span></span>
-            </v-tooltip>
-        	</span>
-        </span>
-      </transition>
+						</template>
+						<v-list flat dense style="max-height: 400px; min-width: 160px;" class="scroll-y">
+							<v-list-item-group color="black">
+								<v-list-item
+									v-for="(item, i) in encodingMenuItems"
+									:key="i"
+									@click="commandHandle(item)"
+									:disabled="item.max && detailedColumns.length>item.max"
+								>
+									<v-list-item-content>
+										<v-list-item-title>
+											{{ item.text }}
+										</v-list-item-title>
+									</v-list-item-content>
+								</v-list-item>
+							</v-list-item-group>
+						</v-list>
+					</v-menu>
+					<v-tooltip bottom v-if="detailedColumns.length>1" key="nest"> <!-- nest -->
+						<template v-slot:activator="{ on }">
+							<v-btn v-on="on" color="#888" text class="icon-btn" @click="commandHandle({command: 'nest'})">
+								<v-icon>link</v-icon>
+							</v-btn>
+						</template>
+						<span>Nest columns</span>
+					</v-tooltip>
+					<v-tooltip bottom v-if="detailedColumns.length>0" key="unnest"> <!-- unnest -->
+						<template v-slot:activator="{ on }">
+							<v-btn v-on="on" color="#888" text class="icon-btn" @click="commandHandle({command: 'unnest'})">
+								<v-icon>link_off</v-icon>
+							</v-btn>
+						</template>
+						<span>Unnest column<span v-show="detailedColumns.length>1">s</span></span>
+					</v-tooltip>
+				</span>
+      </template>
       <v-spacer></v-spacer>
       <v-btn
-        v-if="$route.query.obeta=='42'"
+        v-if="$route.query.kernel=='1'"
         :disabled="!dataset.summary"
         :color="(optionsActive) ? 'black' : '#888'"
         text
@@ -514,22 +529,22 @@
       :typesSelected="typesSelected"
       :columnsTableHeaders="columnsTableHeaders"
     />
-        <div class="sidebar-container" :class="{'bigger': optionsActive}" v-show="detailsActive || (optionsActive && $route.query.obeta=='42')">
+        <div class="sidebar-container" :class="{'bigger': optionsActive}" v-show="detailsActive || (optionsActive && $route.query.kernel=='1')">
 
       <template>
-        <div class="sidebar-header" v-show="optionsActive && $route.query.obeta=='42'">
+        <div class="sidebar-header" v-show="optionsActive && $route.query.kernel=='1'">
           Operations
           <v-icon class="right-button" color="black" @click="optionsActive = false">close</v-icon>
         </div>
 				<v-progress-circular
           indeterminate
-          v-if="commandsDisabled && optionsActive && $route.query.obeta=='42'"
+          v-if="commandsDisabled && optionsActive && $route.query.kernel=='1'"
           class="progress-middle"
           color="#888"
           size="64"
         />
         <Cells
-          v-show="optionsActive && $route.query.obeta=='42'"
+          v-show="optionsActive && $route.query.kernel=='1'"
           ref="cells"
           :columns="detailedColumns"
           :commandsDisabled.sync="commandsDisabled"
@@ -544,7 +559,7 @@
         <div class="sidebar-content">
 
           <div v-if="detailedColumns.length>1" class="sidebar-section pr-10 columns-selected">
-            <CommandMenu v-if="$route.query.obeta=='42'" :columnsNumber="detailedColumns.length" button.class="right-button-center" :disabled="commandsDisabled" @command="commandHandle($event)"></CommandMenu>
+            <CommandMenu v-if="$route.query.kernel=='1'" :columnsNumber="detailedColumns.length" button.class="right-button-center" :disabled="commandsDisabled" @command="commandHandle($event)"></CommandMenu>
             <div class="column-selected" v-for="column in detailedColumns" :key="column.index">
               <span class="data-type" :class="`type-${dataset.columns[column.index].column_dtype}`">{{ dataType(dataset.columns[column.index].column_dtype) }}</span>
               <span class="data-column-name">{{ dataset.columns[column.index].name }}</span>
@@ -627,7 +642,6 @@ import VegaEmbed from '@/components/VegaEmbed'
 import dataTypesMixin from '@/plugins/mixins/data-types'
 
 import axios from 'axios'
-axios.defaults.headers.post['Access-Control-Allow-Origin'] = '*'
 
 const api_url = process.env.API_URL || 'http://localhost:5000'
 
@@ -701,28 +715,28 @@ export default {
 				{command: 'remove_special_chars', text: 'Remove special chars', type: 'text'},
         {command: 'trim', text: 'Trim white space', type: 'text'},
 
-				{command: 'bucketizer',       text: 'Create Bins',          type: 'prepare'},
+				{command: 'bucketizer',       text: 'Create Bins',          type: 'prepare', max: 1},
 				{command: 'impute',           text: 'Impute rows',          type: 'prepare'},
         {command: 'z_score',          text: 'Calculate Z-score',               type: 'prepare'},
 
 				{command: 'values_to_cols',   text: 'Values to Columns',    type: 'encoding', max: 1},
-				{command: 'string_to_index',  text: 'Strings to Index',     type: 'encoding'},
+				{command: 'string_to_index',  text: 'Strings to Index',     type: 'encoding', max: 1},
 				// {command: 'random_split',     teaxt: 'Split train and test', type: 'prepare'},
 
-        {command: 'cast', cast_type: 'int',     text: 'Int', type: 'cast'},
-				{command: 'cast', cast_type: 'float',   text: 'Float', type: 'cast'},
-				{command: 'cast', cast_type: 'double',  text: 'Double', type: 'cast'},
-				{command: 'cast', cast_type: 'boolean', text: 'Boolean', type: 'cast'},
-				{command: 'cast', cast_type: 'struct',  text: 'Struct', type: 'cast'},
-				{command: 'cast', cast_type: 'array',   text: 'Array', type: 'cast'},
-				{command: 'cast', cast_type: 'bigint',  text: 'Big Int', type: 'cast'},
-				{command: 'cast', cast_type: 'date',    text: 'Date', type: 'cast'},
-				{command: 'cast', cast_type: 'byte',    text: 'Byte', type: 'cast'},
-				{command: 'cast', cast_type: 'short',   text: 'Short', type: 'cast'},
-				{command: 'cast', cast_type: 'datetime', text: 'Datetime', type: 'cast'},
-				{command: 'cast', cast_type: 'binary',  text: 'Binary', type: 'cast'},
-				{command: 'cast', cast_type: 'null',    text: 'Null', type: 'cast'},
-				{command: 'cast', cast_type: 'vector',  text: 'Vector', type: 'cast'}
+        {command: 'cast', dtype: 'int',     text: 'Int', type: 'cast'},
+				{command: 'cast', dtype: 'float',   text: 'Float', type: 'cast'},
+				{command: 'cast', dtype: 'double',  text: 'Double', type: 'cast'},
+				{command: 'cast', dtype: 'boolean', text: 'Boolean', type: 'cast'},
+				{command: 'cast', dtype: 'struct',  text: 'Struct', type: 'cast'},
+				{command: 'cast', dtype: 'array',   text: 'Array', type: 'cast'},
+				{command: 'cast', dtype: 'bigint',  text: 'Big Int', type: 'cast'},
+				{command: 'cast', dtype: 'date',    text: 'Date', type: 'cast'},
+				{command: 'cast', dtype: 'byte',    text: 'Byte', type: 'cast'},
+				{command: 'cast', dtype: 'short',   text: 'Short', type: 'cast'},
+				{command: 'cast', dtype: 'datetime', text: 'Datetime', type: 'cast'},
+				{command: 'cast', dtype: 'binary',  text: 'Binary', type: 'cast'},
+				{command: 'cast', dtype: 'null',    text: 'Null', type: 'cast'},
+				{command: 'cast', dtype: 'vector',  text: 'Vector', type: 'cast'}
       ],
 
 
@@ -823,10 +837,13 @@ export default {
       })
 
       console.log('response',response)
-      if (response.data.content=='\'load file ok\''){
-        this.commandsDisabled = false
-        console.log('received')
-      }
+      if (response.data.content=='\'load file ok\'') {
+				console.log('received')
+			}
+			else {
+				console.error(response.data)
+			}
+			this.commandsDisabled = false
 
     },
 

@@ -81,7 +81,7 @@ export const mutations = {
   },
 
   kernel (state, payload) {
-    state.kernel = payload || true
+    state.kernel = (payload==undefined) ? true : payload
   }
 
 }
