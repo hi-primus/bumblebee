@@ -652,6 +652,34 @@ export default {
               + ')'
           },
         },
+        sample_n: {
+          dialog: {
+            title: ()=>'Sampling',
+            fields: [
+              {
+                type: 'number',
+                key: 'n',
+                label: 'Number of samples',
+                placeholder: 'Number of samples',
+              },
+            ],
+            validate: (command) => {
+              if (command.n)
+                return true
+              return false
+            }
+          },
+          payload: (columns) => {
+            return {
+              command: 'sample_n',
+              n: 10,
+              columns: columns,
+            }
+          },
+          code: (columns, payload) => {
+            return 'df = df.sample_n('+ payload.n+')'
+          },
+        },
         /*
         random_split: {
           dialog: {
