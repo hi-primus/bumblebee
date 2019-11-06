@@ -438,7 +438,6 @@ export default {
       default: ()=>{return []}
     },
     commandsDisabled: {
-      type: Boolean,
       default: false
     },
     dataset: {
@@ -748,6 +747,17 @@ export default {
         this.runCode()
         if (!this.cells.length)
           this.codeError = ''
+      }
+    },
+    dataset: {
+      deep: true,
+      handler () {
+        if (this._commandsDisabled===undefined){
+          this._commandsDisabled = false
+          this.markCells()
+          this.codeError = ''
+          this.lastWrongCode = false
+        }
       }
     }
   },
@@ -1092,7 +1102,11 @@ export default {
           code,
           name: this.dataset.name,
           session: this.$store.state.session
-        })
+        },
+        {
+          timeout: 0
+        }
+        )
         console.log('response',response)
         this._commandsDisabled = false;
         if (response.data.content === '\'run ok\'') {
@@ -1107,6 +1121,7 @@ export default {
         }
       } catch (error) {
         console.error(error)
+        this._commandsDisabled = undefined;
       }
 
     },1000)
