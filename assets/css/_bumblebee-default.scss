@@ -182,7 +182,10 @@ table.details-table {
 
 .v-tooltip__content {
   z-index: 103 !important;
-  opacity: 1 !important;
+  &.menuable__content__active{
+    opacity: 1 !important;
+    transition: all ease-in-out .3s
+  }
   background-color: rgba(97,97,97) !important;
 }
 
@@ -1204,10 +1207,11 @@ $side-controls-width: 54px;
 .options-fields-container {
   padding-left: 12px !important;
   padding-right: $side-controls-width + 4px !important;
-  padding-bottom: 44px;
+  padding-bottom: 68px;
   padding-top: 12px;
   position: relative;
   min-height: 300px;
+  max-height: calc(100vh - 226px);
   &.empty .cell-controls{
     right: 50%;
     margin-left: initial;
@@ -1242,7 +1246,7 @@ $side-controls-width: 54px;
   flex: none !important;
   overflow-x: visible;
   position: relative;
-  max-height: calc(100vh - 320px);
+  transition: all ease 0.6s 0.305s;
 
 
   &, &>span{

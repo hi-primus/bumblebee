@@ -3,60 +3,73 @@
     <template name="command-dialogs">
       <template v-for="(command, key) in commandsPallete">
         <v-dialog :key="key" persistent v-if="command.dialog && currentCommand.command == key" :value="currentCommand.command == key" max-width="410" @click:outside="cancelCommand">
-          <v-card>
-            <v-card-title class="title mb-4">{{command.dialog.title()}}</v-card-title>
-            <v-card-text class="command-card-text pb-0">
-              <template v-for="field in command.dialog.fields">
-                <template v-if="field.type=='number'">
-                  <v-text-field
-                    type="number"
-                    v-model="currentCommand[field.key]"
-                    :key="field.key"
-                    :label="field.label"
-                    :placeholder="field.placeholder"
-                    :min="field.min"
-                    dense
-                    required
-                    outlined
-                  ></v-text-field>
+          <v-form @submit="confirmCommand()">
+            <v-card ref="command-dialog">
+              <v-card-title class="title px-6">{{command.dialog.title(currentCommand)}}</v-card-title>
+              <v-card-text class="command-card-text pb-0 px-6">
+                <template v-for="field in command.dialog.fields">
+                  <template v-if="field.type=='field'">
+                    <v-text-field
+                      v-model="currentCommand[field.key]"
+                      :key="field.key"
+                      :label="field.label"
+                      :placeholder="field.placeholder"
+                      dense
+                      required
+                      outlined
+                    ></v-text-field>
+                  </template>
+                  <template v-if="field.type=='number'">
+                    <v-text-field
+                      type="number"
+                      v-model="currentCommand[field.key]"
+                      :key="field.key"
+                      :label="field.label"
+                      :placeholder="field.placeholder"
+                      :min="field.min"
+                      dense
+                      required
+                      outlined
+                    ></v-text-field>
+                  </template>
+                  <template v-else-if="field.type=='select'">
+                    <v-select
+                      :key="field.key"
+                      v-model="currentCommand[field.key]"
+                      :label="field.label"
+                      :placeholder="field.placeholder"
+                      :items="field.items"
+                      dense
+                      required
+                      outlined
+                    ></v-select>
+                  </template>
                 </template>
-                <template v-else-if="field.type=='select'">
-                  <v-select
-                    :key="field.key"
-                    v-model="currentCommand[field.key]"
-                    :label="field.label"
-                    :placeholder="field.placeholder"
-                    :items="field.items"
-                    dense
-                    required
-                    outlined
-                  ></v-select>
-                </template>
-              </template>
-              <OutputColumnInputs v-if="command.dialog.output_cols" :currentCommand.sync="currentCommand"></OutputColumnInputs>
-            </v-card-text>
-            <v-card-actions>
-              <div class="flex-grow-1"/>
-              <v-btn
-                color="primary"
-                text
-                @click="cancelCommand"
-              >
-                Cancel
-              </v-btn>
-              <v-btn
-                color="primary"
-                text
-                :disabled="!command.dialog.validate(currentCommand)"
-                @click="confirmCommand()"
-              >
-                Accept
-              </v-btn>
-            </v-card-actions>
-          </v-card>
+                <OutputColumnInputs v-if="command.dialog.output_cols" :fieldLabel="command.dialog.output_cols_label" :noLabel="command.dialog.no_label" :currentCommand.sync="currentCommand"></OutputColumnInputs>
+              </v-card-text>
+              <v-card-actions>
+                <div class="flex-grow-1"/>
+                <v-btn
+                  color="primary"
+                  text
+                  @click="cancelCommand"
+                >
+                  Cancel
+                </v-btn>
+                <v-btn
+                  color="primary"
+                  text
+                  :disabled="!command.dialog.validate(currentCommand)"
+                  @click="confirmCommand()"
+                >
+                  Accept
+                </v-btn>
+              </v-card-actions>
+            </v-card>
+            </v-form>
         </v-dialog>
       </template>
-      <v-dialog persistent v-if="currentCommand.command == 'create'" :value="currentCommand.command == 'create'" max-width="410" @click:outside="cancelCommand">
+      <v-dialog persistent v-if="currentCommand.command == 'createERASE'" :value="currentCommand.command == 'createERASE'" max-width="410" @click:outside="cancelCommand">
         <v-card>
           <v-card-title class="title mb-4">New column
             <template v-if="currentCommand.name">
@@ -94,67 +107,6 @@
               color="primary"
               text
               :disabled="currentCommand.newName===''"
-              @click="confirmCommand()"
-            >
-              Accept
-            </v-btn>
-          </v-card-actions>
-        </v-card>
-      </v-dialog>
-      <v-dialog persistent v-if="currentCommand.command == 'rename'" :value="currentCommand.command == 'rename'" max-width="410" @click:outside="cancelCommand">
-        <v-card>
-          <v-card-title class="title mb-4">Rename {{ currentCommand.name }}</v-card-title>
-          <v-card-text class="pb-0 command-card-text">
-            <template v-for="column in currentCommand.renames">
-              <v-text-field
-                :key="column.name"
-                v-model="column.newName"
-                :label="column.name"
-                dense
-                required
-                outlined
-              ></v-text-field>
-            </template>
-          </v-card-text>
-          <v-card-actions>
-            <div class="flex-grow-1"/>
-            <v-btn
-              color="primary"
-              text
-              @click="cancelCommand"
-            >
-              Cancel
-            </v-btn>
-            <v-btn
-              color="primary"
-              text
-              :disabled="(!currentCommand.renames.every( (e)=>{ return (e.newName.trim().length>0) } ))"
-              @click="confirmCommand()"
-            >
-              Accept
-            </v-btn>
-          </v-card-actions>
-        </v-card>
-      </v-dialog>
-      <v-dialog persistent v-if="currentCommand.command == 'duplicate'" :value="currentCommand.command == 'duplicate'" max-width="410" @click:outside="cancelCommand">
-        <v-card>
-					<v-card-title class="title mb-4">Duplicate {{ currentCommand.name }}</v-card-title>
-          <v-card-text class="pb-0 command-card-text">
-            <OutputColumnInputs :currentCommand.sync="currentCommand"></OutputColumnInputs>
-          </v-card-text>
-          <v-card-actions>
-            <div class="flex-grow-1"/>
-            <v-btn
-              color="primary"
-              text
-              @click="cancelCommand"
-            >
-              Cancel
-            </v-btn>
-            <v-btn
-              color="primary"
-							:disabled="currentCommand.index>=currentCommand.splits || currentCommand.separator=='' || currentCommand.output_cols.filter(e=>e!=='').length%currentCommand.columns.length!==0"
-              text
               @click="confirmCommand()"
             >
               Accept
@@ -372,7 +324,7 @@
         </v-card>
       </v-dialog>
     </template>
-    <div class="sidebar-content options-fields-container" :class="{'empty': !cells.length}">
+    <div class="sidebar-content options-fields-container" ref="cells-container" :class="{'empty': !cells.length}">
       <draggable
         tag="div"
         class="options-fields"
@@ -460,6 +412,97 @@ export default {
         'apply sort': {
           code: (columns, payload) => {
             return `df = df.cols.keep(["${columns.join('", "')}"])`
+          }
+        },
+        create: {
+          dialog: {
+            title: (command) => command.name,
+            fields: [
+              {
+                type: 'field',
+                key: 'newName',
+                label: 'New column name',
+              },
+              {
+                type: 'field',
+                key: 'expression',
+                label: 'Expression',
+              },
+            ],
+            validate: (command) => (command.newName!=='')
+          },
+          payload: (columns) => ({
+            command: 'create',
+            fromColumns: columns,
+            expression: (columns.length!=0) ? columns.map(e=>`df["${e}"]`).join(' + ') : '',
+            name:
+              (columns.length==0) ?
+                'Create column'
+              : (columns.length==1) ?
+                  `Create column from "${columns[0]}"`
+                :
+                  'Create column from columns',
+            newName: columns.length==1 ? newName(columns[0]) : ''
+          }),
+          code: (columns, payload) => {
+            return `df = df.cols.create("${payload.newName}"`
+            +( (payload.expression) ? `, ${payload.expression}` : '')
+            +`)`
+          }
+        },
+        rename: {
+          dialog: {
+            title: (command)=>('Rename '+command.name),
+            output_cols: true,
+            output_cols_label: true,
+            no_label: true,
+            validate: (command) => {
+              return (command.output_cols.filter(e=>e!=='').length==command.columns.length)
+            }
+          },
+          payload: (columns) => {
+            return {
+              command: 'rename',
+              columns,
+              name: (columns.length==1) ? `column` : 'columns',
+              output_cols: columns.map(e=>newName(e))
+            }
+          },
+          code: (columns, payload) => {
+            if (columns.length==1) {
+              return `df = df.cols.rename("${columns[0]}", "${payload.output_cols[0]}")`
+            }
+            else {
+              return `df = df.cols.rename([${columns.map((e,i)=>`("${e}", "${payload.output_cols[i]}")`)}])`
+            }
+          }
+        },
+        duplicate: {
+          dialog: {
+            title: (command)=>('Duplicate '+command.name),
+            output_cols: true,
+            validate: (command) => {
+              return (command.output_cols.filter(e=>e!=='').length==command.columns.length)
+            }
+          },
+          payload: (columns) => {
+            return {
+              command: 'duplicate',
+              columns,
+              name: (columns.length==1) ? `column` : 'columns',
+              output_cols: columns.map(e=>newName(e))
+            }
+          },
+          code: (columns, payload) => {
+            var _argument = (columns.length==1) ? `"${columns[0]}"` : `["${columns.join('", "')}"]`
+            var output_cols_argument =
+              (!payload.output_cols.join('').trim().length) ? false :
+              (payload.output_cols.length==1) ? `"${payload.output_cols[0]}"` :
+              `[${payload.output_cols.map((e)=>((e!==null) ? `"${e}"` : 'None')).join(', ')}]`
+            return 'df = df.cols.copy('
+              +_argument
+              +( (output_cols_argument) ? `, output_cols=${output_cols_argument}` : '')
+              +')'
           }
         },
         bucketizer: {
@@ -802,42 +845,6 @@ export default {
         _columns = event.columns
 
       switch (event.command) {
-        case 'create':
-          this.currentCommand = {
-            command: 'create',
-            fromColumns: _columns,
-            expression: (_columns.length!=0) ? _columns.map(e=>`df["${e}"]`).join(' + ') : '',
-            name:
-              (_columns.length==0) ?
-                false
-              : (_columns.length==1) ?
-                  `"${_columns[0]}"`
-                :
-                  'columns',
-            newName: ''
-          }
-          break;
-        case 'rename':
-          this.currentCommand = {
-            command: 'rename',
-            columns: _columns,
-            name: (_columns.length==1) ? `"${_columns[0]}"` : 'columns',
-            renames: _columns.map((e)=>{
-              return{
-                name: e,
-                newName: ''
-              }
-            })
-          }
-          break;
-        case 'duplicate':
-          this.currentCommand = {
-            command: 'duplicate',
-            columns: _columns,
-            name: (_columns.length==1) ? `"${_columns[0]}"` : 'columns',
-            output_cols: _columns.map(e=>newName(e))
-          }
-          break;
         case 'nest':
           this.currentCommand = {
 						command: 'nest',
@@ -895,6 +902,12 @@ export default {
             var _command = this.commandsPallete[event.command]
             if (_command.dialog) {
               this.currentCommand = _command.payload ? _command.payload(_columns) : undefined
+              setTimeout(() => {
+                var ref = this.$refs['command-dialog'][0]
+                if (ref && ref.$el){
+                  ref.$el.getElementsByTagName('input')[0].focus()
+                }
+              }, 100);
             }
             else {
               payload = _command.payload ? _command.payload(_columns) : undefined
@@ -918,26 +931,42 @@ export default {
       this.currentCommand = false
     },
 
-    setActiveCell (index) {
+    setActiveCell (index, delayed = false) {
       for (let i = 0; i < this.cells.length; i++) {
         this.cells[i].active = false
       }
       if (this.cells[index]) {
         this.cells[index].active = true
         this.activeCell = index
-        if (this.$refs.cells && this.$refs['cell-controls']) {
-          this.$refs['cell-controls'].style.top = (this.$refs.cells.$el.getElementsByClassName('cell-container')[index].offsetTop+11) + 'px'
+        if (this.$refs.cells) {
+          var moveBar = (delayed) ? this.moveBarDelayed : this.moveBar
+          moveBar(this.$refs.cells.$el.getElementsByClassName('cell-container')[index].offsetTop+11)
         }
       }
       else {
         this.activeCell = -1
-        if (this.$refs['cell-controls']) {
-          this.$refs['cell-controls'].style.top = '13px'
-        }
+        this.moveBar(13)
+      }
+    },
+
+    moveBarDelayed: debounce(async function(value) {
+      this.moveBar(value)
+    },300),
+
+    moveBar (value) {
+      if (this.$refs.cells.$el){
+        this.$refs.cells.$el.style.minHeight = value+30 + 'px'
+      }
+
+      if (this.$refs['cell-controls']) {
+        this.$refs['cell-controls'].style.top = value + 'px'
       }
     },
 
     removeCell (index) {
+
+      this.codeError = ''
+
       if (index<0)
         return
 
@@ -945,7 +974,7 @@ export default {
       if (this.cells.length==index) {
         index--
       }
-      this.setActiveCell(index)
+      this.setActiveCell(index, true)
     },
 
     markCells(mark = true) {
@@ -972,38 +1001,19 @@ export default {
 
     addCell (at = -1, type = 'code', columns = [], payload) {
 
+      this.codeError = ''
+
       var content = ''
 
       if (!columns.length)
         columns = this.columns.map(e=>this.dataset.columns[e.index].name)
 
       switch (type) {
-        case 'create':
-          content = `df = df.cols.create("${payload.newName}"`
-            +( (payload.expression) ? `, ${payload.expression}` : '')
-            +`)`
+        case 'creERASEate':
+
           break;
         case 'drop':
           content = `df = df.cols.drop(["${columns.join('", "')}"])`
-          break;
-        case 'rename':
-          if (payload.renames.length==1) {
-            content = `df = df.cols.rename("${payload.renames[0].name}", "${payload.renames[0].newName}")`
-          }
-          else {
-            content = `df = df.cols.rename([${payload.renames.map(e=>`("${e.name}", "${e.newName}")`)}])`
-          }
-          break;
-        case 'duplicate':
-          var _argument = (columns.length==1) ? `"${columns[0]}"` : `["${columns.join('", "')}"]`
-					var output_cols_argument =
-						(!payload.output_cols.join('').trim().length) ? false :
-						(payload.output_cols.length==1) ? `"${payload.output_cols[0]}"` :
-						`[${payload.output_cols.map((e)=>((e!==null) ? `"${e}"` : 'None')).join(', ')}]`
-          content = 'df = df.cols.copy('
-						+_argument
-						+( (output_cols_argument) ? `, output_cols=${output_cols_argument}` : '')
-						+')'
           break;
         case 'keep':
           content = `df = df.cols.keep(["${columns.join('", "')}"])`
@@ -1101,18 +1111,18 @@ export default {
 
     runCode: debounce(async function() {
 
-      var code = this.cells.map(e=>(e.content!=='') ? e.content+'\n' : '').join('').trim()
+      var code = (this.cells.length) ? this.cells.filter(e=>(e.content!=='')).join('\n').trim() : ''
       var codeDone = this.codeDone.trim()
-      var rerun
+      var rerun = false
 
-      if (code == codeDone && code!==''){
+      if (code == codeDone){
         return;
       }
       else if (code.indexOf(codeDone)!=0 || codeDone=='') {
         rerun = true
       }
       else {
-        code = this.cells.filter(e=>!e.done).map(e=>(e.content!=='') ? e.content+'\n' : '').join('').trim()
+        code = this.cells.filter(e=>!e.done).filter(e=>(e.content!=='')).join('\n').trim()
       }
 
       if (code===this.lastWrongCode) {
