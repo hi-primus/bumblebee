@@ -279,7 +279,7 @@ export default {
       if (this.$route.query.kernel=='1') {
         switch (value) {
           case 'receiving back':
-						this.$store.commit('status','waiting')
+            this.stopClient(true)
             break;
           case 'receiving':
 							this.$store.commit('kernel',false)
@@ -290,7 +290,7 @@ export default {
               {
                 session: this.$store.state.session
               })
-              console.log('intialization response', response)
+              console.log('initialization response', response)
               if (response.data.content == '\'initialization ok\'') {
 								this.$store.commit('kernel')
 							}
@@ -352,9 +352,10 @@ export default {
 
 		this.inputSession = this.$route.query.session || ''
 		this.inputKey = this.$route.query.key || ''
-		if (this.inputSession && this.inputSession) {
+		if (this.inputSession && this.inputKey) {
       this.subscribe()
-      this.$store.commit('status', 'receiving')
+      // console.log(this.$store.state.status)
+      // this.$store.commit('status', 'receiving')
 		}
 	},
 

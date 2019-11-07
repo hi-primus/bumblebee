@@ -71,7 +71,6 @@ export default {
 				})
 
 				try {
-          // console.log('[DEBUG] dataset JSON received', originalInput)
 					this.$store.commit('add', {
 						dataset: JSON.parse(originalInput)
 					})
@@ -83,7 +82,7 @@ export default {
 			})
 
 			socket.on('connect', () => {
-				console.log('CONNECTION SUCCESS')
+        console.log('CONNECTION SUCCESS')
         this.$store.commit('status', 'receiving')
 			})
 
