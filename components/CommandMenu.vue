@@ -5,7 +5,12 @@
     </template>
     <v-list flat dense style="max-height: 400px; min-width: 160px;" class="scroll-y">
       <v-list-item-group color="black">
-        <v-list-item v-for="command in filteredCommands" :key="command.command" @click="$emit('command',{command: command.command, columns: []})">
+        <v-list-item
+          v-for="command in commands"
+          :key="command.command"
+          @click="$emit('command',{command: command.command, columns: []})"
+          :disabled="!(columnsNumber>=(command.min || 0) && columnsNumber<=(command.max || Infinity))"
+        >
           <v-list-item-content>
             <v-list-item-title>
               {{command.name}}

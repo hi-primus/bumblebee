@@ -1,18 +1,18 @@
 <template>
   <div class="data-bar">
-    <v-tooltip :left="!bottom" :bottom="bottom" content-class="bar-tooltip" color="success darken-2">
+    <v-tooltip transition="fade-transition" :left="!bottom" :bottom="bottom" content-class="bar-tooltip" color="success darken-2">
       <template v-slot:activator="{ on }">
         <div :class="{'data-bar-min': okP!=0}" :style="{'width': okP+'%'}" class="data-bar-green" v-on="on" />
       </template>
       <span>{{ okValues }} valid values <span class="percentage">{{ okP }}%</span></span>
     </v-tooltip>
-    <v-tooltip :left="!bottom" :bottom="bottom" content-class="bar-tooltip" color="error darken-2">
+    <v-tooltip transition="fade-transition" :left="!bottom" :bottom="bottom" content-class="bar-tooltip" color="error darken-2">
       <template v-slot:activator="{ on }">
         <div :class="{'data-bar-min': mismatchP!=0}" :style="{'width': mismatchP+'%'}" class="data-bar-red" v-on="on" />
       </template>
       <span>{{ mismatch }} mismatches values <span class="percentage">{{ mismatchP }}%</span></span>
     </v-tooltip>
-    <v-tooltip :left="!bottom" :bottom="bottom" content-class="bar-tooltip" background-color="#6c7680" color="#6c7680">
+    <v-tooltip transition="fade-transition" :left="!bottom" :bottom="bottom" content-class="bar-tooltip" background-color="#6c7680" color="#6c7680">
       <template v-slot:activator="{ on }">
         <div :class="{'data-bar-min': missingP!=0}" class="data-bar-grey" v-on="on" />
       </template>
@@ -75,7 +75,7 @@ export default {
 	color: #fff !important;
 }
 
-.bar-tooltip {
+.bar-tooltip.menuable__content__active {
   opacity: 1 !important;
   &>span>span {
     opacity: 0.8;

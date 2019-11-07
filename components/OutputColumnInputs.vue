@@ -1,13 +1,13 @@
 <template>
 	<v-row no-gutters style="align-items: center">
     <template v-for="(title, i) in currentCommand.columns">
-      <v-col :key="i+'label'" class="col-12 col-sm-4 col-md-3 font-weight-bold pr-4 text-ellipsis" :title="title">
+      <v-col v-if="!noLabel" :key="i+'label'" class="col-12 col-sm-4 col-md-3 font-weight-bold pr-4 text-ellipsis" :title="title">
         {{title}}
       </v-col>
-      <v-col :key="i" class="col-12 col-sm-8 col-md-9 oci-input-container">
+      <v-col :key="i" class="col-12 oci-input-container" :class="{'col-sm-8 col-md-9': !noLabel}">
         <v-text-field
           v-model="_currentCommand.output_cols[i]"
-          :label="`New column`"
+          :label="(fieldLabel===true ? title : fieldLabel) || `New column`"
           dense
           required
           outlined
@@ -24,6 +24,13 @@ export default {
       type: Object,
       required: true
     },
+    fieldLabel: {
+      default: false
+    },
+    noLabel: {
+      type: Boolean,
+      default: false
+    }
   },
   computed: {
     _currentCommand: {

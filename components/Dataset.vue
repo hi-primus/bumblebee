@@ -22,7 +22,7 @@
 						<template v-else>check_box_outline_blank</template>
 					</v-icon>
 				</v-btn>
-				<v-tooltip bottom>
+				<v-tooltip transition="fade-transition" bottom>
 					<template v-slot:activator="{ on }">
 						<v-btn
               color="#888"
@@ -42,7 +42,7 @@
 					<span v-if="!visibilityStatus">Show selected columns on table</span>
 					<span v-else>Hide selected columns on table</span>
 				</v-tooltip>
-				<v-tooltip bottom>
+				<v-tooltip transition="fade-transition" bottom>
 					<template v-slot:activator="{ on }">
 						<v-btn
               color="#888"
@@ -81,7 +81,7 @@
 							<template v-if="selectedColumns[item.name]">check_box</template>
 							<template v-else>check_box_outline_blank</template>
 						</v-icon>
-						<v-tooltip bottom>
+						<v-tooltip transition="fade-transition" bottom>
 							<template v-slot:activator="{ on }">
 								<v-icon
 									:class="{'control-hide-hidden': hiddenColumns[item.name]}"
@@ -103,7 +103,7 @@
 					</div>
 				</template>
 				<template v-slot:item.column_dtype="{ item }">
-					<v-tooltip bottom>
+					<v-tooltip transition="fade-transition" bottom>
 						<template v-slot:activator="{ on }">
 							<div class="data-type pr-4" v-on="on">
 								{{ dataType(item.column_dtype) }}
