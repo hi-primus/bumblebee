@@ -147,7 +147,7 @@
             </v-btn>
             <v-btn
               color="primary"
-							:disabled="currentCommand.separator==='' || currentCommand.newName===''"
+							:disabled="currentCommand.newName===''"
               text
               @click="confirmCommand()"
             >
@@ -356,7 +356,7 @@
       <v-alert key="error" type="error" class="mt-2" dismissible v-if="codeError!=''"  @input="codeError=''">
         {{codeError}}
       </v-alert>
-      <div key="controls" ref="cell-controls" class="cell-controls toolbar vertical">
+      <div key="controls" ref="cells-controls" class="cells-controls toolbar vertical" :class="{'disabled': commandsDisabled}">
         <v-btn v-if="activeCell>=0" text class="icon-btn" color="#888" @click.stop="removeCell(activeCell)">
           <v-icon>delete</v-icon>
         </v-btn>
@@ -407,6 +407,7 @@ export default {
       drag: false,
       currentCommand: false,
       codeError: '',
+      noReset: true,
 
       commandsPallete: {
         'apply sort': {
@@ -958,8 +959,8 @@ export default {
         this.$refs.cells.$el.style.minHeight = value+30 + 'px'
       }
 
-      if (this.$refs['cell-controls']) {
-        this.$refs['cell-controls'].style.top = value + 'px'
+      if (this.$refs['cells-controls']) {
+        this.$refs['cells-controls'].style.top = value + 'px'
       }
     },
 
@@ -986,7 +987,7 @@ export default {
       }
 
       if (mark && this.cells)
-        this.codeDone = this.cells.map(e=>(e.content!=='') ? e.content+'\n' : '').join('').trim()
+        this.codeDone = this.cells.map(e=>e.content).join('\n').trim()
       else
         this.codeDone = ''
 
@@ -997,12 +998,17 @@ export default {
         if (!this.cells[i].done && this.cells[i].content)
           this.cells[i].error = true
       }
+
+      if (this.cells)
+        this.codeDone = this.cells.map(e=>e.content).join('\n').trim()
+      else
+        this.codeDone = ''
     },
 
     addCell (at = -1, type = 'code', columns = [], payload) {
 
-      this.codeError = ''
 
+      this.codeError = ''
       var content = ''
 
       if (!columns.length)
@@ -1115,11 +1121,12 @@ export default {
       var codeDone = this.codeDone.trim()
       var rerun = false
 
-      if (code == codeDone){
+      if (code === codeDone){
         return;
       }
-      else if (code.indexOf(codeDone)!=0 || codeDone=='') {
+      else if ( !this.noReset && (code.indexOf(codeDone)!=0 || codeDone=='' || this.lastWrongCode) ) {
         rerun = true
+        this.noReset = false
       }
       else {
         code = this.cells.filter(e=>!e.done).filter(e=>(e.content!=='')).map(e=>e.content).join('\n').trim()
@@ -1153,7 +1160,7 @@ export default {
           this.lastWrongCode = false
         }
         else {
-          this.codeError = response.data.error.ename + ': ' + response.data.error.evalue
+          this.codeError = (response.data.error && response.data.error.ename) ? response.data.error.ename + ': ' + response.data.error.evalue : response.data.content
           this.markCellsError()
           this.lastWrongCode = code
         }

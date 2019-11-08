@@ -28,7 +28,6 @@ html:root {
         width: 100%;
       }
       .sidebar-container, .table-container {
-        // max-height: calc(100% - 47px)
         max-height: calc(100vh - 191px);
       }
     }
@@ -370,12 +369,9 @@ table {
     max-height: calc(100vh - 191px);
   }
   &>.sidebar-container {
-    // text-align: right;
     border-left: solid 1px $line-color-1;
     border-top: solid 1px $line-color-1;
     order: 9;
-    // height: calc(100vh - 191px);
-    // max-height: calc(100vh - 191px);
     display: flex;
     flex-direction: column;
     padding: 4px;
@@ -435,20 +431,15 @@ table {
       font-family: $font-mono;
       line-height: 26px;
       border-bottom: $line-color-1 1px solid;
-      // &:first-child {
-      //   border-top: $line-color-1 1px solid;
-      // }
     }
     .column-title {
       font-family: $font-mono;
-      // font-weight: 700;
     }
     .sidebar-section {
       border-bottom: $line-color-1 1px solid;
       margin-left: -4px;
       margin-right: -4px;
       padding: 3px 12px 4px 12px;
-      // font-family: $font-mono;
       line-height: 26px;
     }
     .columns-selected {
@@ -469,7 +460,6 @@ table {
       .plot-title {
         padding-left: 8px;
         text-transform: uppercase;
-        // font-family: $font-mono;
         font-weight: 700;
         font-size: 13px;
       }
@@ -483,42 +473,18 @@ table {
   .sidebar-container {
     width: $sidebar-width;
   }
-  // .sidebar-container + .table-container {
-  //   width: calc(100% - #{$sidebar-width});
-  // }
 
   .sidebar-container.bigger {
     width: $sidebar-width-bigger;
     min-width: $sidebar-width;
     max-width: $sidebar-max-width;
   }
-  // .sidebar-container.bigger + .table-container {
-  //   width: calc(100% - #{$sidebar-width-bigger});
-  //   min-width: calc(100% - #{$sidebar-max-width});
-  //   width: calc(100% - #{$sidebar-width});
-  // }
 }
 
 .vega-component {
   summary {
     display: none;
   }
-}
-
-.heat-map {
-  // min-height: 170px;
-	// .role-legend-entry {
-  //   transform: rotate(-90deg) translate(-118px, -22px) scale(1);
-  //   text {
-  //     text-anchor: start;
-  //     &:last-child {
-  //       transform: rotate(90deg) translate(29px, -90px)
-  //     }
-  //     &:first-child {
-  //       transform: rotate(90deg) translate(23px, -2px)
-  //     }
-  //   }
-	// }
 }
 
 .heat-map-grid {
@@ -964,7 +930,6 @@ table {
     background-color: #fefefe !important;
     &.ht__active_highlight, &.ht__active_highlight {
       background-color: darken(saturate($data-highlight,5%),1%) !important;
-      // color: #000;
     }
     .changeType {
       opacity: 0.71;
@@ -980,8 +945,6 @@ table {
 
  td.area, td.area-1, td.area-2, td.area-3, td.area-4, td.area-5, td.area-6, td.area-7 {
    z-index: 0;
-  //  background-color: $data-highlight !important;
-  //  opacity: 1 !important;
  }
 
   tr:first-child td {
@@ -1055,8 +1018,6 @@ table {
       cursor: crosshair;
       height: 90px;
       display: flex;
-
-      // justify-content: center;
 
       .freq-bar {
         height: 100%;
@@ -1141,9 +1102,6 @@ table {
     display: none;
   }
   .current-value {
-    // font-size: 12px;
-    // font-weight: 700 !important;
-    // line-height: 1.25;
     height: 1.5em;
     font-family: $font-mono;
     max-width: 100%;
@@ -1161,7 +1119,6 @@ table {
   font-weight: 700 !important;
   display: inline;
   &.in-autocomplete {
-    // font-size: 0.75em;
     width: 3em;
     color: rgba(0, 0, 0, 0.71)
   }
@@ -1196,7 +1153,6 @@ table {
 .options-fields:not(.dragging) {
   .cell-container:hover {
     .left-handle {
-      // background-color: lighten($primary-color,35%);
       background-color: darken($line-color-2,5%);
     }
   }
@@ -1212,7 +1168,7 @@ $side-controls-width: 54px;
   position: relative;
   min-height: 300px;
   max-height: calc(100vh - 226px);
-  &.empty .cell-controls{
+  &.empty .cells-controls{
     right: 50%;
     margin-left: initial;
     transform: translateX(75%);
@@ -1222,13 +1178,13 @@ $side-controls-width: 54px;
     transition: all ease-in-out 0.39s;
   }
 
-  &:not(.empty) .cell-controls {
+  &:not(.empty) .cells-controls {
     border-radius: 4px;
     transition: top ease-in-out 0.39s;
     z-index: 99;
   }
 
-  .cell-controls {
+  .cells-controls {
     box-shadow: rgba(0,0,0,0.33) 0 0 8px -2px;
     position: absolute;
     right: 4px;
@@ -1238,7 +1194,12 @@ $side-controls-width: 54px;
     margin-left: auto;
     background: white;
     margin-left: 6px;
+    &.disabled{
+      opacity: 0.71;
+      pointer-events: none;
+    }
   }
+
 }
 
 .options-fields {
@@ -1331,6 +1292,7 @@ $side-controls-width: 54px;
       // max-width: calc(100% - #{$side-controls-width});
     }
     .left-handle {
+      cursor: grab;
       width: 12px;
       height: 100%;
       top: 0;
@@ -1408,7 +1370,7 @@ $editor-top-padding: 6px;
   textarea, .code {
     font-size: 14px !important;
     font-family: $font-mono;
-    line-height: 23px !important;
+    line-height: 24px !important;
     overflow: visible;
     letter-spacing: initial !important;
 
@@ -1416,14 +1378,14 @@ $editor-top-padding: 6px;
   }
 
   .code-container {
-    white-space: nowrap;
+    white-space: normal;
   }
 
   textarea {
     position: absolute;
     top: $editor-top-padding;
     left: 12px;
-    min-width: calc(100% - 12px);
+    width: calc(100% - 24px);
     height: calc(100% - #{$editor-top-padding}) !important;
     resize: none;
     overflow: hidden;
@@ -1434,12 +1396,11 @@ $editor-top-padding: 6px;
     text-fill-color: transparent;
   }
 
-  pre {
-    // background-color: rgba(red,0.12);
-  }
   .code{
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    white-space: normal;
     z-index: 1;
-    // background-color: rgba(red,0.13);
     pointer-events: none;
     display: inline;
   }
