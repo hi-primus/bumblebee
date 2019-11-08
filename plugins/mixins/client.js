@@ -51,7 +51,7 @@ export default {
 			socket.on('new-error', (reason) => {
 				console.log('ERROR - ' + reason)
 				this.handleError(reason)
-			})
+      })
 
 			socket.on('dataset', (dataset) => {
 				const fernet = require('fernet')
@@ -83,7 +83,10 @@ export default {
 
 			socket.on('connect', () => {
         console.log('CONNECTION SUCCESS')
-        this.$store.commit('status', 'receiving')
+        socket.on('success', () => {
+          console.log('CONNECTION CONFIRMED')
+          this.$store.commit('status', 'receiving')
+        })
 			})
 
 			socket.on('connection-error', (reason) => {
