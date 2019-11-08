@@ -1111,7 +1111,7 @@ export default {
 
     runCode: debounce(async function() {
 
-      var code = (this.cells.length) ? this.cells.filter(e=>(e.content!=='')).join('\n').trim() : ''
+      var code = (this.cells.length) ? (this.cells.filter(e=>(e.content!=='')).map(e=>e.content).join('\n').trim()) : ''
       var codeDone = this.codeDone.trim()
       var rerun = false
 
@@ -1122,7 +1122,7 @@ export default {
         rerun = true
       }
       else {
-        code = this.cells.filter(e=>!e.done).filter(e=>(e.content!=='')).join('\n').trim()
+        code = this.cells.filter(e=>!e.done).filter(e=>(e.content!=='')).map(e=>e.content).join('\n').trim()
       }
 
       if (code===this.lastWrongCode) {
