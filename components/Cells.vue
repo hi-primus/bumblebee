@@ -846,13 +846,16 @@ export default {
     },
     cellsOrder: {
       handler () {
-        if (!this.runButton) {
-          this.runCode() // reordering or deleting
-        }
-        if (this.codeText.trim()===''){
-          this.runButton = false
+				if (this.codeText.trim()===''){
+					this.runButton = false
           this.codeError = ''
+					this.runCode() // deleting every cell
+					return;
         }
+				if (!this.runButton) {
+					this.runCode() // reordering or deleting
+					return;
+				}
       }
     },
     dataset: {
