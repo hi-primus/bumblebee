@@ -8,7 +8,7 @@
         <v-list-item
           v-for="command in commands"
           :key="command.command"
-          @click="$emit('command',{command: command.command, columns: []})"
+          @click="$emit('command',{command: command.command, columns: [], type: command.type})"
           :disabled="!(columnsNumber>=(command.min || 0) && columnsNumber<=(command.max || Infinity))"
         >
           <v-list-item-content>
@@ -42,17 +42,17 @@ export default {
       commands: [
         {command: 'rename',       name: 'Rename'},
         {command: 'duplicate',    name: 'Duplicate'},
-        {command: 'keep',         name: 'Keep'},
-        {command: 'drop',         name: 'Drop'},
+        {command: 'keep',         name: 'Keep', type: 'KEEP_DROP'},
+        {command: 'drop',         name: 'Drop', type: 'KEEP_DROP'},
         {command: 'nest',         name: 'Nest', min: 2},
         {command: 'unnest',       name: 'Unnest'},
         {command: 'replace',      name: 'Replace'},
-        {command: 'fill',         name: 'Fill'},
-        {command: 'lower',        name: 'To lower case'},
-        {command: 'upper',        name: 'To upper case'},
-        {command: 'remove_accents', name: 'Remove accents'},
-        {command: 'remove_special_chars', name: 'Remove special chars'},
-        {command: 'trim',             name: 'Trim white space'},
+        {command: 'fill_na',         name: 'Fill'},
+        {command: 'lower',        name: 'To lower case', type: 'STRING'},
+        {command: 'upper',        name: 'To upper case', type: 'STRING'},
+        {command: 'remove_accents', name: 'Remove accents', type: 'STRING'},
+        {command: 'remove_special_chars', name: 'Remove special chars', type: 'STRING'},
+        {command: 'trim',             name: 'Trim white space', type: 'STRING'},
         {command: 'bucketizer',       name: 'Create Bins', max: 1}, // TODO: remove limit
         {command: 'values_to_cols',   name: 'Values to Columns', max: 1},
         {command: 'string_to_index',  name: 'Strings to Index', max: 1}, // TODO: remove limit
