@@ -230,7 +230,7 @@
           </v-list-item-group>
         </v-list>
       </v-menu>
-      <v-tooltip transition="fade-transition" bottom>
+      <v-tooltip transition="fade-transition" v-if="$route.query.kernel=='1'" bottom>
         <template v-slot:activator="{ on }">
           <v-btn
             :color="'#888'"
@@ -260,16 +260,17 @@
       </v-tooltip>
       <div class="divider" v-if="$route.query.kernel=='1'" />
       <template v-if="$route.query.kernel=='1'" name="fade">
-        <v-tooltip transition="fade-transition" bottom key="create"> <!-- create -->
+        <v-tooltip transition="fade-transition" bottom key="set"> <!-- set -->
           <template v-slot:activator="{ on }">
-            <v-btn v-on="on" color="#888" text class="icon-btn" @click="commandHandle({command: 'create'})" :disabled="!(dataset && dataset.summary)">
+            <v-btn v-on="on" color="#888" text class="icon-btn" @click="commandHandle({command: 'set'})" :disabled="!(dataset && dataset.summary)">
               <v-icon>add_box</v-icon>
             </v-btn>
           </template>
-          <span>New column
-            <template v-if="detailedColumns.length">
+          <span>
+						New column
+            <!-- <template v-if="detailedColumns.length">
               from column<span v-show="detailedColumns.length>1">s</span>
-            </template>
+            </template> -->
           </span>
         </v-tooltip>
         <v-tooltip transition="fade-transition" bottom key="rename"> <!-- rename -->
@@ -321,9 +322,9 @@
           <span>Unnest column<span v-show="detailedColumns.length>1">s</span></span>
         </v-tooltip>
         <div class="divider" />
-        <v-tooltip transition="fade-transition" bottom key="fill"> <!-- fill -->
+        <v-tooltip transition="fade-transition" bottom key="fill_na"> <!-- fill_na -->
           <template v-slot:activator="{ on }">
-            <v-btn v-on="on" :disabled="!detailedColumns.length>0" color="#888" text class="icon-btn" @click="commandHandle({command: 'fill'})">
+            <v-btn v-on="on" :disabled="!detailedColumns.length>0" color="#888" text class="icon-btn" @click="commandHandle({command: 'fill_na'})">
               <v-icon>brush</v-icon>
             </v-btn>
           </template>
@@ -360,7 +361,7 @@
           <v-list flat dense style="max-height: 400px; min-width: 160px;">
             <v-list-item-group color="black">
               <v-list-item
-                v-for="(item, i) in textMenuItems"
+                v-for="(item, i) in stringMenuItems"
                 :key="i"
                 @click="commandHandle(item)"
               >
@@ -711,34 +712,34 @@ export default {
       lastSort: [],
 
       commandItems: [
-				{command: 'lower', text: 'To lower case', type: 'text'},
-				{command: 'upper', text: 'To upper case', type: 'text'},
-				{command: 'remove_accents', text: 'Remove accents', type: 'text'},
-				{command: 'remove_special_chars', text: 'Remove special chars', type: 'text'},
-        {command: 'trim', text: 'Trim white space', type: 'text'},
+				{command: 'lower', text: 'To lower case', type: 'STRING'},
+				{command: 'upper', text: 'To upper case', type: 'STRING'},
+				{command: 'remove_accents', text: 'Remove accents', type: 'STRING'},
+				{command: 'remove_special_chars', text: 'Remove special chars', type: 'STRING'},
+        {command: 'trim', text: 'Trim white space', type: 'STRING'},
 
-				{command: 'bucketizer',       text: 'Create Bins',          type: 'prepare', max: 1},
-				{command: 'impute',           text: 'Impute rows',          type: 'prepare'},
-        {command: 'z_score',          text: 'Calculate Z-score',               type: 'prepare'},
+				{command: 'bucketizer',       text: 'Create Bins',          type: 'PREPARE', max: 1},
+				{command: 'impute',           text: 'Impute rows',          type: 'PREPARE'},
+        {command: 'z_score',          text: 'Calculate Z-score',               type: 'PREPARE'},
 
-				{command: 'values_to_cols',   text: 'Values to Columns',    type: 'encoding', max: 1},
-				{command: 'string_to_index',  text: 'Strings to Index',     type: 'encoding', max: 1},
-				// {command: 'random_split',     teaxt: 'Split train and test', type: 'prepare'},
+				{command: 'values_to_cols',   text: 'Values to Columns',    type: 'ENCODING', max: 1},
+				{command: 'string_to_index',  text: 'Strings to Index',     type: 'ENCODING', max: 1},
+				// {command: 'random_split',     teaxt: 'Split train and test', type: 'PREPARE'},
 
-        {command: 'cast', dtype: 'int',     text: 'Int', type: 'cast'},
-				{command: 'cast', dtype: 'float',   text: 'Float', type: 'cast'},
-				{command: 'cast', dtype: 'double',  text: 'Double', type: 'cast'},
-				{command: 'cast', dtype: 'boolean', text: 'Boolean', type: 'cast'},
-				{command: 'cast', dtype: 'struct',  text: 'Struct', type: 'cast'},
-				{command: 'cast', dtype: 'array',   text: 'Array', type: 'cast'},
-				{command: 'cast', dtype: 'bigint',  text: 'Big Int', type: 'cast'},
-				{command: 'cast', dtype: 'date',    text: 'Date', type: 'cast'},
-				{command: 'cast', dtype: 'byte',    text: 'Byte', type: 'cast'},
-				{command: 'cast', dtype: 'short',   text: 'Short', type: 'cast'},
-				{command: 'cast', dtype: 'datetime', text: 'Datetime', type: 'cast'},
-				{command: 'cast', dtype: 'binary',  text: 'Binary', type: 'cast'},
-				{command: 'cast', dtype: 'null',    text: 'Null', type: 'cast'},
-				{command: 'cast', dtype: 'vector',  text: 'Vector', type: 'cast'}
+        {command: 'cast', dtype: 'int',     text: 'Int', type: 'CAST'},
+				{command: 'cast', dtype: 'float',   text: 'Float', type: 'CAST'},
+				{command: 'cast', dtype: 'double',  text: 'Double', type: 'CAST'},
+				{command: 'cast', dtype: 'boolean', text: 'Boolean', type: 'CAST'},
+				{command: 'cast', dtype: 'struct',  text: 'Struct', type: 'CAST'},
+				{command: 'cast', dtype: 'array',   text: 'Array', type: 'CAST'},
+				{command: 'cast', dtype: 'bigint',  text: 'Big Int', type: 'CAST'},
+				{command: 'cast', dtype: 'date',    text: 'Date', type: 'CAST'},
+				{command: 'cast', dtype: 'byte',    text: 'Byte', type: 'CAST'},
+				{command: 'cast', dtype: 'short',   text: 'Short', type: 'CAST'},
+				{command: 'cast', dtype: 'datetime', text: 'Datetime', type: 'CAST'},
+				{command: 'cast', dtype: 'binary',  text: 'Binary', type: 'CAST'},
+				{command: 'cast', dtype: 'null',    text: 'Null', type: 'CAST'},
+				{command: 'cast', dtype: 'vector',  text: 'Vector', type: 'CAST'}
       ],
 
 
@@ -758,20 +759,20 @@ export default {
 
 	computed: {
 
-    textMenuItems () {
-      return this.commandItems.filter(e => e.type=='text')
+    stringMenuItems () {
+      return this.commandItems.filter(e => e.type=='STRING')
     },
 
     prepareMenuItems () {
-      return this.commandItems.filter(e => e.type=='prepare')
+      return this.commandItems.filter(e => e.type=='PREPARE')
     },
 
     encodingMenuItems () {
-      return this.commandItems.filter(e => e.type=='encoding')
+      return this.commandItems.filter(e => e.type=='ENCODING')
     },
 
     castMenuItems () {
-      return this.commandItems.filter(e => e.type=='cast')
+      return this.commandItems.filter(e => e.type=='CAST')
     },
 
     tableKey () {

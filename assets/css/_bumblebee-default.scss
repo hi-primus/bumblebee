@@ -648,6 +648,10 @@ table {
     background-color: $line-color-2;
     margin: 0 4px;
   }
+  .v-btn i {
+    max-width: 24px;
+    overflow: hidden;
+  }
 }
 
 .icon-btn {
@@ -1163,19 +1167,20 @@ $side-controls-width: 54px;
 .options-fields-container {
   padding-left: 12px !important;
   padding-right: $side-controls-width + 4px !important;
-  padding-bottom: 68px;
+  padding-bottom: 75px;
   padding-top: 12px;
   position: relative;
   min-height: 300px;
   max-height: calc(100vh - 226px);
   &.empty .cells-controls{
+    top: 12px !important;
     right: 50%;
     margin-left: initial;
     transform: translateX(75%);
     border: 1px solid lighten($primary-color,35%);
     border-radius: 64px;
     overflow: hidden;
-    transition: all ease-in-out 0.39s;
+    transition: top ease-in 0.21s, right ease-out 0.21s, transform linear 0.21s ;
   }
 
   &:not(.empty) .cells-controls {
@@ -1370,7 +1375,6 @@ $editor-top-padding: 6px;
   textarea, .code {
     font-size: 14px !important;
     font-family: $font-mono;
-    line-height: 24px !important;
     overflow: visible;
     letter-spacing: initial !important;
 
@@ -1385,7 +1389,7 @@ $editor-top-padding: 6px;
     position: absolute;
     top: $editor-top-padding;
     left: 12px;
-    width: calc(100% - 24px);
+    width: calc(100% - 28px);
     height: calc(100% - #{$editor-top-padding}) !important;
     resize: none;
     overflow: hidden;
@@ -1394,12 +1398,14 @@ $editor-top-padding: 6px;
     text-shadow: 0px 0px 0px rgba(0, 0, 0, 0);
     -webkit-text-fill-color: transparent;
     text-fill-color: transparent;
+    line-height: 25px !important;
   }
 
   .code{
+    line-height: 24px !important;
     overflow-wrap: break-word;
     word-wrap: break-word;
-    white-space: normal;
+    white-space: pre-line;
     z-index: 1;
     pointer-events: none;
     display: inline;
@@ -1413,7 +1419,8 @@ $editor-top-padding: 6px;
 .command-card-text {
   padding-top: 10px !important;
   margin-top: -10px !important;
-  max-height: calc(100vh - 350px);
+	max-height: calc(100vh - 350px);
+	min-height: 54px;
   overflow: auto;
   .v-text-field {
     &:not(:last-child) {
@@ -1424,6 +1431,8 @@ $editor-top-padding: 6px;
     display: none !important;
   }
 }
+
+
 
 .no-pe {
   &, & *{
