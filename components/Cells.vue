@@ -199,7 +199,7 @@ export default {
       drag: false,
       currentCommand: false,
       codeError: '',
-      noReset: true,
+      firstRun: true,
       runButton: false,
 
       commandsPallete: {
@@ -1059,9 +1059,8 @@ export default {
       if (code === codeDone){
         return;
       }
-      else if ( !this.noReset && (force || code.indexOf(codeDone)!=0 || codeDone=='' || this.lastWrongCode) ) {
+      else if ( !this.firstRun && (force || code.indexOf(codeDone)!=0 || codeDone=='' || this.lastWrongCode) ) {
         rerun = true
-        this.noReset = false
       }
       else {
         code = this.codeNewText
@@ -1072,7 +1071,12 @@ export default {
       }
 
       if (rerun)
-        this.markCells(false)
+				this.markCells(false)
+				
+			if (this.firstRun){
+				this.firstRun = false
+				rerun = false
+			}
 
       this._commandsDisabled = true;
 
