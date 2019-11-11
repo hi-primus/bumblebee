@@ -907,12 +907,14 @@ export default {
           payload.type = event.type
           payload.command = event.command
           var cell = {...event, columns: payload.columns || columns, payload}
-          this.addCell(-1, cell)
+					this.addCell(-1, cell)
+					this.runButton = false
       }
     },
 
     confirmCommand () {
-      this.addCell(-1, this.currentCommand )
+			this.addCell(-1, this.currentCommand )
+			this.runButton = false
       this.currentCommand = false
     },
 
