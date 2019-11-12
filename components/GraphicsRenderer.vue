@@ -6,6 +6,7 @@
   </span>
   <div v-else class="graphic-ht-container">
     <DataBar
+      :key="value.key+'databar'"
       :missing="value.missing"
       :total="+value.total"
       :mismatch="+value.mismatch"
@@ -15,6 +16,7 @@
     />
     <Frequent
       v-if="value.frequency"
+      :key="value.key"
       :uniques="value.count_uniques"
       :values="value.frequency"
       :total="+value.frequency[0].count"
@@ -23,6 +25,7 @@
     />
     <Histogram
       v-else-if="value.hist"
+      :key="value.key"
       :uniques="value.count_uniques"
       :values="value.hist"
       :total="+value.total"
@@ -31,6 +34,7 @@
     />
     <Histogram
       v-else-if="value.hist_years"
+      :key="value.key"
       :uniques="value.count_uniques"
       :values="value.hist_years"
       :total="+value.total"

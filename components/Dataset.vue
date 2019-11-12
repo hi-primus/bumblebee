@@ -162,7 +162,7 @@
 					ref="hot-table"
 				>
 					<HotColumn v-for="(column, i) in hotColumns" :key="i" :settings="column">
-						<GraphicsRenderer hot-renderer/>
+						<GraphicsRenderer hot-renderer :key="tableUpdate+'renderer'+i"/>
 					</HotColumn>
 				</HotTable>
 			</div>
@@ -251,6 +251,10 @@ export default {
 
   computed: {
 
+    tableKey () {
+			return this.$store.state.datasetUpdates * 100 + this.currentTab
+		},
+
     _sortBy: {
       get () {
         return this.sortBy
@@ -297,6 +301,7 @@ export default {
 					toString () {
 						return ''
           },
+          key: this.tableKey+'e'+i,
           index: i,
           name: column.name,
           plotable: (
