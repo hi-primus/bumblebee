@@ -19,6 +19,14 @@ export const throttle = (func, limit) => {
 	}
 }
 
+export const trimCharacters = (s, c) => {
+  if (c === "]") c = "\\]";
+  if (c === "\\") c = "\\\\";
+  return s.replace(new RegExp(
+    "^[" + c + "]+|[" + c + "]+$", "g"
+  ), "");
+}
+
 export const newName = (name) => {
 	name = name.toString()
   let matches = name.match(/\d+$/);

@@ -642,7 +642,9 @@ import ColumnDetails from '@/components/ColumnDetails'
 import Cells from '@/components/Cells'
 import Dataset from '@/components/Dataset'
 import VegaEmbed from '@/components/VegaEmbed'
+import clientMixin from '@/plugins/mixins/client'
 import dataTypesMixin from '@/plugins/mixins/data-types'
+import { trimCharacters } from '@/utils/functions.js'
 
 import axios from 'axios'
 
@@ -657,7 +659,7 @@ export default {
     VegaEmbed
 	},
 
-	mixins: [dataTypesMixin],
+	mixins: [clientMixin, dataTypesMixin],
 
 	props: {
 		dataset: {
@@ -831,21 +833,15 @@ export default {
         code +=`.limit(${file.limit})`
       }
 
-      console.log('code',code)
-
       var response = await axios.post(api_url+'/dataset-file',
       {
         code,
         session: this.$store.state.session
       })
 
-      console.log('response',response)
-      if (response.data.content=='\'load file ok\'') {
-				console.log('received')
-			}
-			else {
-				console.error(response.data)
-			}
+      var content = JSON.parse(trimCharacters(response.data.content,"'")).data
+      this.handleDatasetResponse(content)
+
 			this.commandsDisabled = false
 
     },
