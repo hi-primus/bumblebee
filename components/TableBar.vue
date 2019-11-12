@@ -519,7 +519,7 @@
 
     <Dataset
       :commandsDisabled="commandsDisabled"
-      :key="tableKey"
+      :key="tableKey+'dataset'"
       :view="view"
       :dataset="dataset"
       :sortBy.sync="sortBy"
