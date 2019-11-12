@@ -1,13 +1,13 @@
 <template>
   <div>
 		<template v-for="(command, key) in commandsPallete">
-			<v-dialog 
-				:key="key" 
-				persistent 
-				v-if="command.dialog && currentCommand.command == key" 
+			<v-dialog
+				:key="key"
+				persistent
+				v-if="command.dialog && currentCommand.command == key"
 				:value="currentCommand.command == key"
-				max-width="410" 
-				@click:outside="cancelCommand" 
+				max-width="410"
+				@click:outside="cancelCommand"
 				@keydown.esc="cancelCommand"
 			>
 				<v-form @submit.prevent="confirmCommand" id="command-form">
@@ -410,6 +410,7 @@ export default {
         unnest: {
           dialog: {
             output_cols: true,
+            output_cols_label: 'Output columns name',
             fields: [
               {
                 type: 'field',
@@ -443,7 +444,7 @@ export default {
               splits: 2,
               index: '',
               title: 'Unnest '+(columns.length==1 ? `column` : 'columns'),
-              output_cols: columns.map(e=>newName(e))
+              output_cols: columns.map(e=>e)
             }
 					},
 					code: (payload) => {
@@ -452,7 +453,7 @@ export default {
               (!payload.output_cols.join('').trim().length) ? false :
               (payload.output_cols.length==1) ? `"${payload.output_cols[0]}"` :
               `[${payload.output_cols.map((e)=>((e!==null) ? `"${e}"` : 'None')).join(', ')}]`
-            return 'df = df.cols.nest('
+            return 'df = df.cols.unnest('
               +_argument
               +( (payload.separator) ? `, separator="${payload.separator}"` : '')
               +( (payload.splits) ? `, splits=${payload.splits}` : '')
@@ -473,7 +474,7 @@ export default {
               {
                 type: 'field',
                 key: 'newName',
-                label: 'New column name',
+                label: 'Output column name',
                 clearable: true,
               },
             ],
@@ -1074,7 +1075,7 @@ export default {
 
       if (rerun)
 				this.markCells(false)
-				
+
 			if (this.firstRun){
 				this.firstRun = false
 				rerun = false
