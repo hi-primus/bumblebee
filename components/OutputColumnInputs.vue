@@ -7,7 +7,7 @@
       <v-col :key="i" class="col-12 oci-input-container" :class="{'col-sm-8 col-md-9': !noLabel}">
         <v-text-field
           v-model="_currentCommand.output_cols[i]"
-          :label="(fieldLabel===true ? title : fieldLabel) || `New column`"
+          :label="(fieldLabel===true ? title : fieldLabel) || `Output column name`"
           dense
           required
           outlined
