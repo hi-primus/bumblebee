@@ -9,6 +9,33 @@ export default {
 
 	methods: {
 
+    handleDatasetResponse (content, key = undefined) {
+
+      if (key===undefined)
+        key = this.$store.state.key
+
+      const fernet = require('fernet')
+
+      let secret = new fernet.Secret(key)
+
+      let token = new fernet.Token({
+        secret,
+        token: content,
+        ttl: 0
+      })
+
+      const pako = require('pako')
+
+      let originalInput = pako.inflate(atob(token.decode()), {
+        to: 'string'
+      })
+
+      this.$store.commit('add', {
+        dataset: JSON.parse(originalInput)
+      })
+
+    },
+
 		handleError (reason) {
 			if (reason) {
 				if (reason.includes('OK') ||
@@ -44,6 +71,8 @@ export default {
 
       this.$store.commit('session', session)
 
+      this.$store.commit('key', key)
+
 			socket = io(api_url, {
 				query: `session=${session}`
 			})
@@ -54,27 +83,8 @@ export default {
       })
 
 			socket.on('dataset', (dataset) => {
-				const fernet = require('fernet')
-
-				let secret = new fernet.Secret(key)
-
-				let token = new fernet.Token({
-					secret,
-					token: dataset,
-					ttl: 0
-				})
-
-				const pako = require('pako')
-
-				let originalInput = pako.inflate(atob(token.decode()), {
-					to: 'string'
-				})
-
 				try {
-					this.$store.commit('add', {
-						dataset: JSON.parse(originalInput)
-					})
-					this.$forceUpdate()
+          this.handleDatasetResponse(dataset,key)
 				} catch (error) {
 					console.error(error)
 					this.$store.commit('status', error)

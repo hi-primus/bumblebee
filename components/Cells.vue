@@ -165,7 +165,8 @@
 import axios from 'axios'
 import CodeEditor from '@/components/CodeEditor'
 import OutputColumnInputs from '@/components/OutputColumnInputs'
-import { debounce, newName } from '@/utils/functions.js'
+import clientMixin from '@/plugins/mixins/client'
+import { trimCharacters, debounce, newName } from '@/utils/functions.js'
 
 const api_url = process.env.API_URL || 'http://localhost:5000'
 
@@ -175,6 +176,8 @@ export default {
     CodeEditor,
     OutputColumnInputs
   },
+
+  mixins: [clientMixin],
 
   props: {
     columns: {
@@ -1094,18 +1097,29 @@ export default {
           timeout: 0
         }
         )
-        console.log('response',response)
+
         this._commandsDisabled = false;
-        if (response.data.content === '\'run ok\'') {
+
+        try {
+
+          var content = JSON.parse(trimCharacters(response.data.content,"'")).data
+          this.handleDatasetResponse(content)
+
+					this.$forceUpdate()
           this.markCells()
+
           this.codeError = ''
           this.lastWrongCode = false
-        }
-        else {
-          this.codeError = (response.data.error && response.data.error.ename) ? response.data.error.ename + ': ' + response.data.error.evalue : response.data.content
+
+				} catch (error) {
+
+					console.error(error)
+          this.codeError = (response.data.error && response.data.error.ename) ? response.data.error.ename + ': ' + response.data.error.evalue : error
           this.markCellsError()
           this.lastWrongCode = code
-        }
+
+				}
+
       } catch (error) {
         console.error(error)
         this._commandsDisabled = undefined;

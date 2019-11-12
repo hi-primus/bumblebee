@@ -290,8 +290,7 @@ export default {
               {
                 session: this.$store.state.session
               })
-              console.log('initialization response', response)
-              if (response.data.content == '\'initialization ok\'') {
+              if (response.data.content == `'already initialized'` || response.data.content == `'initialization ok'`) {
 								this.$store.commit('kernel')
 							}
 							else {
