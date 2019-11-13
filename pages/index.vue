@@ -286,15 +286,18 @@ export default {
               if (!this.$store.state.datasets.length) {
 								this.$store.commit('addNew')
 							}
-              var response = await axios.post(api_url+'/initialize',
+              var response = await this.socketPost('initialize',
               {
                 session: this.$store.state.session
               })
-              if (response.data.content == `'already initialized'` || response.data.content == `'initialization ok'`) {
+
+
+              if (response.content == `'already initialized'` || response.content == `'initialization ok'`) {
+                console.log('KERNEL OK')
 								this.$store.commit('kernel')
 							}
 							else {
-								console.error(response.data)
+								console.error(response)
 								this.$store.commit('status','waiting')
 								this.$store.commit('status','receiving')
 							}
@@ -347,13 +350,12 @@ export default {
 	},
 
 	mounted () {
-		console.log(`bumblebee v${version}`)
+		console.log(`Bumblebee v${version}`)
 
 		this.inputSession = this.$route.query.session || ''
 		this.inputKey = this.$route.query.key || ''
 		if (this.inputSession && this.inputKey) {
       this.subscribe()
-      // console.log(this.$store.state.status)
       // this.$store.commit('status', 'receiving')
 		}
 	},

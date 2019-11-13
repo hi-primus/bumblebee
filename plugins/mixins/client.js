@@ -2,12 +2,32 @@ import io from 'socket.io-client'
 // import axios from 'axios'
 
 let socket
+let promises = {}
 
 const api_url = process.env.API_URL || 'http://localhost:5000'
 
 export default {
 
 	methods: {
+
+    socketPost (message, payload = {}) {
+      var timestamp = new Date().toISOString()
+      return new Promise( async function (resolve, reject) {
+
+        if (socket) {
+          try {
+            socket.emit(message,{...payload, timestamp})
+            promises[timestamp] = {resolve, reject}
+          } catch (error) {
+            reject('Error '+error)
+          }
+        }
+        else {
+          reject('Socket error')
+        }
+
+      })
+    },
 
     handleDatasetResponse (content, key = undefined) {
 
@@ -59,12 +79,17 @@ export default {
 
 			if (socket) {
 				try {
-					socket.disconnect()
+          socket.disconnect()
 				} catch (error) {
-					console.error(error)
+          console.error(error)
 				}
-			}
-		},
+        socket = undefined;
+        console.log('SOCKET CLOSED')
+        return
+      }
+      else
+        console.warn('SOCKET ALREADY CLOSED')
+    },
 
 		startClient (session, key) {
       this.$store.commit('status', 'loading')
@@ -78,7 +103,7 @@ export default {
 			})
 
 			socket.on('new-error', (reason) => {
-				console.log('ERROR - ' + reason)
+				console.error('ERROR - ' + reason)
 				this.handleError(reason)
       })
 
@@ -89,7 +114,17 @@ export default {
 					console.error(error)
 					this.$store.commit('status', error)
 				}
-			})
+      })
+
+      socket.on('reply', (payload) => {
+        if (payload.timestamp && promises[payload.timestamp]) {
+          promises[payload.timestamp].resolve(payload)
+          delete promises[payload.timestamp]
+        }
+        else {
+          console.warn('Unhandled reply',payload)
+        }
+      })
 
 			socket.on('connect', () => {
         console.log('CONNECTION SUCCESS')
@@ -100,7 +135,7 @@ export default {
 			})
 
 			socket.on('connection-error', (reason) => {
-				console.log('CONNECTION FAILURE - ' + reason)
+				console.warn('CONNECTION FAILURE - ' + reason)
 				this.handleError()
 			})
 
