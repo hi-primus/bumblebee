@@ -833,13 +833,13 @@ export default {
         code +=`.limit(${file.limit})`
       }
 
-      var response = await axios.post(api_url+'/dataset-file',
+      var response = await this.socketPost('dataset-file',
       {
         code,
         session: this.$store.state.session
       })
 
-      var content = JSON.parse(trimCharacters(response.data.content,"'")).data
+      var content = JSON.parse(trimCharacters(response.content,"'")).data
       this.handleDatasetResponse(content)
 
 			this.commandsDisabled = false

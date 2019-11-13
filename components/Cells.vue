@@ -1087,7 +1087,7 @@ export default {
       this._commandsDisabled = true;
 
       try {
-        var response = await axios.post(api_url+(rerun ? '/run-load' : '/run'),
+        var response = await this.socketPost(rerun ? 'run-load' : 'run',
         {
           code,
           name: this.dataset.name,
@@ -1102,7 +1102,7 @@ export default {
 
         try {
 
-          var content = JSON.parse(trimCharacters(response.data.content,"'")).data
+          var content = JSON.parse(trimCharacters(response.content,"'")).data
           this.handleDatasetResponse(content)
 
 					this.$forceUpdate()
@@ -1114,7 +1114,7 @@ export default {
 				} catch (error) {
 
 					console.error(error)
-          this.codeError = (response.data.error && response.data.error.ename) ? response.data.error.ename + ': ' + response.data.error.evalue : error
+          this.codeError = (response.error && response.error.ename) ? response.error.ename + ': ' + response.error.evalue : error
           this.markCellsError()
           this.lastWrongCode = code
 

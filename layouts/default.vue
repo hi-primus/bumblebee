@@ -1,5 +1,5 @@
 <template>
-  <v-app>
+  <v-app class="bb__application" style="display: none">
     <nuxt/>
   </v-app>
 </template>
@@ -12,3 +12,9 @@ export default {
 	}
 }
 </script>
+
+<style lang="scss" scoped>
+  .bb__application {
+    display: flex !important;
+  }
+</style>

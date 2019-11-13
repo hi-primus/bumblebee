@@ -45,7 +45,7 @@ export const mutations = {
 
 		state.datasetUpdates = state.datasetUpdates + 1
 
-		console.log('DEBUG: state.datasets[found]', state.datasets[found])
+		console.log('DEBUG: dataset', state.datasets[found])
   },
 
   addNew (state) {
