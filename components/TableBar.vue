@@ -833,14 +833,26 @@ export default {
         code +=`.limit(${file.limit})`
       }
 
-      var response = await this.socketPost('dataset-file',
-      {
-        code,
-        session: this.$store.state.session
-      })
+      var response
 
-      var content = JSON.parse(trimCharacters(response.content,"'")).data
-      this.handleDatasetResponse(content)
+      try {
+
+        response = await this.socketPost('dataset-file', {
+          code,
+          session: this.$store.state.session
+        })
+
+        if (response.status!='ok') {
+          throw response
+        }
+
+        var content = JSON.parse(trimCharacters(response.content,"'")).data
+
+        this.handleDatasetResponse(content)
+
+      } catch (error) {
+        console.error(error, 'on response', response)
+      }
 
 			this.commandsDisabled = false
 

@@ -118,7 +118,12 @@ export default {
 
       socket.on('reply', (payload) => {
         if (payload.timestamp && promises[payload.timestamp]) {
-          promises[payload.timestamp].resolve(payload)
+          if (payload.error) {
+            promises[payload.timestamp].reject(payload)
+          }
+          else {
+            promises[payload.timestamp].resolve(payload)
+          }
           delete promises[payload.timestamp]
         }
         else {
