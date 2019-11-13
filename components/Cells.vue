@@ -1087,20 +1087,22 @@ export default {
       this._commandsDisabled = true;
 
       try {
-        var response = await this.socketPost(rerun ? 'run-load' : 'run',
-        {
+        var response = await this.socketPost(rerun ? 'cells-reset' : 'cells', {
           code,
           name: this.dataset.name,
           session: this.$store.state.session
-        },
-        {
+        }, {
           timeout: 0
-        }
-        )
+        })
+
 
         this._commandsDisabled = false;
 
         try {
+
+          if (response.status!='ok') {
+            throw response
+          }
 
           var content = JSON.parse(trimCharacters(response.content,"'")).data
           this.handleDatasetResponse(content)
@@ -1113,7 +1115,7 @@ export default {
 
 				} catch (error) {
 
-					console.error(error)
+					console.error(error, 'on response', response)
           this.codeError = (response.error && response.error.ename) ? response.error.ename + ': ' + response.error.evalue : error
           this.markCellsError()
           this.lastWrongCode = code
