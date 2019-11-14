@@ -291,9 +291,8 @@ export default {
                 session: this.$store.state.session
               })
 
-
-              if (response.content == `'already initialized'` || response.content == `'initialization ok'`) {
-                console.log('KERNEL OK')
+              if (response.content.includes('optimus')) {
+                console.log('Optimus initialized')
 								this.$store.commit('kernel')
 							}
 							else {
