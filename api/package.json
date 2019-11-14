@@ -1,0 +1,43 @@
+{
+  "name": "bumblebee-api",
+  "version": "0.4.5",
+  "description": "The api of the GUI that works with Optimus to make data profiling easier",
+  "main": "index.js",
+  "scripts": {
+    "start": "nodemon --exec babel-node app.js",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint:init": "eslint --init",
+    "lint:fix": "eslint --ext .js --ignore-path .gitignore --fix ."
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@babel/core": "^7.6.0",
+    "@babel/node": "^7.6.1",
+    "@babel/preset-env": "^7.6.0",
+    "eslint": "^6.3.0",
+    "nodemon": "^1.19.2",
+    "standard": "^14.1.0"
+  },
+  "dependencies": {
+    "@okta/jwt-verifier": "^1.0.0",
+    "bcryptjs": "^2.4.3",
+    "body-parser": "^1.19.0",
+    "btoa": "^1.2.1",
+    "cors": "^2.8.5",
+    "dataloader": "^1.4.0",
+    "dotenv": "^8.1.0",
+    "express": "^4.17.1",
+    "express-session": "^1.16.2",
+    "externalip": "^1.0.2",
+    "jsonwebtoken": "^8.5.1",
+    "mqtt": "^3.0.0",
+    "request-promise": "^4.2.4",
+    "short-uuid": "^3.1.1",
+    "socket.io": "^2.2.0",
+    "util": "^0.12.1",
+    "uuid": "^3.3.3",
+    "websocket": "^1.0.30"
+  }
+}
