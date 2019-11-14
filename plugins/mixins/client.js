@@ -11,19 +11,25 @@ export default {
 	methods: {
 
     socketPost (message, payload = {}) {
-      var timestamp = new Date().toISOString()
-      return new Promise( async function (resolve, reject) {
 
-        if (socket) {
-          try {
-            socket.emit(message,{...payload, timestamp})
-            promises[timestamp] = {resolve, reject}
-          } catch (error) {
-            reject('Error '+error)
+      var timestamp = new Date().toISOString()
+
+      return new Promise( async (resolve, reject) => {
+
+        try {
+          if (!socket) {
+            // reject('Socket error')
+            await this.startSocket ()
+            var response = await this.socketPost('initialize',{
+              session: this.$store.state.session
+            })
+            if (response.status!='ok')
+              throw response.content
           }
-        }
-        else {
-          reject('Socket error')
+          socket.emit(message,{...payload, timestamp})
+          promises[timestamp] = {resolve, reject}
+        } catch (error) {
+          reject('Error '+error)
         }
 
       })
@@ -58,9 +64,10 @@ export default {
 
 		handleError (reason) {
 			if (reason) {
-				if (reason.includes('OK') ||
+        var reason_string = reason.toString()
+				if (reason_string.includes('OK') ||
           (
-          	reason.includes('Socket closed') &&
+          	reason_string.includes('Socket closed') &&
             (this.$store.state.datasets.length > 0)
           )
 				) {
@@ -84,70 +91,104 @@ export default {
           console.error(error)
 				}
         socket = undefined;
-        console.log('SOCKET CLOSED')
+        console.log('Socket closed')
         return
       }
       else
-        console.warn('SOCKET ALREADY CLOSED')
+        console.warn('Socket already closed')
     },
 
-		startClient (session, key) {
-      this.$store.commit('status', 'loading')
+    startSocket (session, key) {
 
-      this.$store.commit('session', session)
+      return new Promise((resolve, reject)=>{
 
-      this.$store.commit('key', key)
+        if (session)
+          this.$store.commit('session', session)
+        else if (this.$store.state.session)
+          session = this.$store.state.session
+        else
+          throw new Error('Credentials not found')
 
-			socket = io(api_url, {
-				query: `session=${session}`
-			})
+        if (key)
+          this.$store.commit('key', key)
+        else if (this.$store.state.key)
+          key = this.$store.state.key
+        else
+          throw new Error('Credentials not found')
 
-			socket.on('new-error', (reason) => {
-				console.error('ERROR - ' + reason)
-				this.handleError(reason)
-      })
+        socket = io(api_url, {
+          query: `session=${session}`
+        })
 
-			socket.on('dataset', (dataset) => {
-				try {
-          this.handleDatasetResponse(dataset,key)
-				} catch (error) {
-					console.error(error)
-					this.$store.commit('status', error)
-				}
-      })
+        socket.on('new-error', (reason) => {
+          console.error('Socket error', reason)
+          reject(reason)
+        })
 
-      socket.on('reply', (payload) => {
-        if (payload.timestamp && promises[payload.timestamp]) {
-          if (payload.error) {
-            promises[payload.timestamp].reject(payload)
+        socket.on('dataset', (dataset) => {
+          try {
+            this.handleDatasetResponse(dataset,key)
+          } catch (error) {
+            console.error(error)
+            reject(error)
+          }
+        })
+
+        socket.on('reply', (payload) => {
+          if (payload.timestamp && promises[payload.timestamp]) {
+            if (payload.error) {
+              promises[payload.timestamp].reject(payload)
+            }
+            else {
+              promises[payload.timestamp].resolve(payload)
+            }
+            delete promises[payload.timestamp]
           }
           else {
-            promises[payload.timestamp].resolve(payload)
+            console.warn('Unhandled reply',payload)
           }
-          delete promises[payload.timestamp]
-        }
-        else {
-          console.warn('Unhandled reply',payload)
-        }
+        })
+
+        socket.on('connect', () => {
+          console.log('Connection success')
+          socket.on('success', () => {
+            console.log('Connection confirmed')
+            resolve('ok')
+          })
+        })
+
+        socket.on('connection-error', (reason) => {
+          console.warn('Connection failure', reason)
+          this.handleError()
+          reject('Connection failure')
+        })
+
+        socket.on('disconnect', (reason) => {
+          console.log('Connection lost', reason)
+          this.handleError()
+          reject('Connection lost')
+        })
+
+
       })
 
-			socket.on('connect', () => {
-        console.log('CONNECTION SUCCESS')
-        socket.on('success', () => {
-          console.log('CONNECTION CONFIRMED')
+
+    },
+
+		async startClient (session, key) {
+
+      try {
+        this.$store.commit('status', 'loading')
+        this.$store.commit('session', session)
+        this.$store.commit('key', key)
+        var client_status = await this.startSocket(session, key)
+
+        if (client_status=='ok')
           this.$store.commit('status', 'receiving')
-        })
-			})
 
-			socket.on('connection-error', (reason) => {
-				console.warn('CONNECTION FAILURE - ' + reason)
-				this.handleError()
-			})
-
-			socket.on('disconnect', (reason) => {
-				console.log('CONNECTION LOST - ' + reason)
-				this.handleError()
-			})
-		}
+      } catch (error) {
+        this.handleError(error)
+      }
+    }
 	}
 }
