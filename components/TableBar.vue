@@ -1,7 +1,29 @@
 <template>
   <div class="dashboard-container">
     <div class="toolbar bb-toolbar" :class="{'disabled': commandsDisabled}">
-      <template v-if="$route.query.kernel=='1'">
+
+      <v-tooltip transition="fade-transition" bottom>
+        <template v-slot:activator="{ on }">
+          <v-btn v-on="on" text class="icon-btn" @click="$emit('update:view',0)" :disabled="!(dataset && dataset.summary)">
+            <v-icon :color="(view==0) ? 'black' : '#888'">
+              view_headline
+            </v-icon>
+          </v-btn>
+        </template>
+        <span>Columns list view</span>
+      </v-tooltip>
+      <v-tooltip transition="fade-transition" bottom>
+        <template v-slot:activator="{ on }">
+          <v-btn v-on="on" text class="icon-btn" @click="$emit('update:view',1)" :disabled="!(dataset && dataset.summary)">
+            <v-icon :color="(view==1) ? 'black' : '#888'">
+              view_module
+            </v-icon>
+          </v-btn>
+        </template>
+        <span>Table view</span>
+      </v-tooltip>
+      <div class="divider"/>
+            <template v-if="$route.query.kernel=='1'">
         <v-tooltip transition="fade-transition" bottom>
           <template v-slot:activator="{ on }">
             <v-btn v-on="on"
@@ -17,6 +39,22 @@
           </template>
           <span>Load file</span>
         </v-tooltip>
+        <v-tooltip transition="fade-transition" bottom>
+          <template v-slot:activator="{ on }">
+            <v-btn v-on="on"
+              text
+              class="icon-btn"
+              @click="commandHandle({command: 'save to server'})"
+              :disabled="!(dataset && dataset.summary)"
+            >
+              <v-icon color="#888">
+                save
+              </v-icon>
+            </v-btn>
+          </template>
+          <span>Save file to server</span>
+        </v-tooltip>
+        <div class="divider" />
         <v-tooltip transition="fade-transition" bottom>
           <template v-slot:activator="{ on }">
             <v-btn
@@ -39,38 +77,17 @@
             <v-btn v-on="on"
               text
               class="icon-btn"
-              :disabled="!(dataset && dataset.summary)"
+              @click="commandHandle({command: 'save to database'})"
+              :disabled="!(dataset && dataset.summary && $store.state.database)"
             >
-              <v-icon color="#888">
-                save
-              </v-icon>
+              <v-icon color="#888">storage</v-icon>
+              <v-icon color="#888" style="margin-left: -4px;">check</v-icon>
             </v-btn>
           </template>
-          <span>Save file</span>
+          <span>Save dataset to database</span>
         </v-tooltip> -->
         <div class="divider"/>
       </template>
-      <v-tooltip transition="fade-transition" bottom>
-        <template v-slot:activator="{ on }">
-          <v-btn v-on="on" text class="icon-btn" @click="$emit('update:view',0)" :disabled="!(dataset && dataset.summary)">
-            <v-icon :color="(view==0) ? 'black' : '#888'">
-              view_headline
-            </v-icon>
-          </v-btn>
-        </template>
-        <span>Columns list view</span>
-      </v-tooltip>
-      <v-tooltip transition="fade-transition" bottom>
-        <template v-slot:activator="{ on }">
-          <v-btn v-on="on" text class="icon-btn" @click="$emit('update:view',1)" :disabled="!(dataset && dataset.summary)">
-            <v-icon :color="(view==1) ? 'black' : '#888'">
-              view_module
-            </v-icon>
-          </v-btn>
-        </template>
-        <span>Table view</span>
-      </v-tooltip>
-      <div class="divider"/>
       <v-menu :close-on-content-click="false" offset-y>
         <template v-slot:activator="{ on: onSortBy }">
           <v-btn
