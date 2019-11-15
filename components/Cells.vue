@@ -118,16 +118,16 @@
       <draggable
         tag="div"
         class="options-fields"
-        :class="{'no-pe disabled': commandsDisabled,'dragging': drag}"
-        v-model="cells"
+        :class="{ 'no-pe disabled': commandsDisabled, 'dragging': drag }"
+        :list="cells"
         v-bind="dragOptions"
         handle=".handle"
         ref="cells"
         @start="drag = true"
-        @end="drag = false"
+        @end="drag = false; draggableEnd()"
       >
         <transition-group type="transition" :name="!drag ? 'flip-list' : null">
-          <div class="cell-container" v-for="(cell, index) in cells" :key="cell.id" :class="{'cell-error': cell.error,'done': cell.done,'active': cell.active}" @click="setActiveCell(index)">
+          <div class="cell-container" v-for="(cell, index) in cells" :key="cell.id" :class="{'fixed-cell': cell.fixed, 'cell-error': cell.error,'done': cell.done,'active': cell.active}" @click="setActiveCell(index)">
 
             <div class="cell">
               <div class="handle left-handle"></div>
@@ -816,17 +816,11 @@ export default {
       return (this.cells.length) ? (this.cells.filter(e=>(e.content!=='' && !e.done)).map(e=>e.content).join('\n').trim()) : ''
     },
 
-    cellsOrder () {
-      return this.cells.map(e=>{
-        return e.id
-      }).join()
-    },
-
     dragOptions () {
       return {
         animation: 200,
         group: "description",
-        disabled: false,
+        disabled: this.commandsDisabled,
         ghostClass: "ghost"
       }
     },
@@ -846,20 +840,6 @@ export default {
     barHovered (value) {
       if (!value){
         this.moveBarDelayed(this.barTop)
-      }
-    },
-    cellsOrder: {
-      handler () {
-				if (this.codeText.trim()===''){
-					this.runButton = false
-          this.codeError = ''
-					this.runCode() // deleting every cell
-					return;
-        }
-				if (!this.runButton) {
-					this.runCode() // reordering or deleting
-					return;
-				}
       }
     },
     dataset: {
@@ -966,18 +946,42 @@ export default {
       }
     },
 
+    draggableEnd() {
+      if (this.codeText.trim()===''){
+        this.runButton = false
+        this.codeError = ''
+        this.runCode() // deleting every cell
+        return;
+      }
+      if (!this.runButton) {
+        this.runCode() // reordering or deleting
+        return;
+      }
+    },
+
+    // draggableMove({ relatedContext, draggedContext }) {
+    //   const relatedElement = relatedContext.element;
+    //   const draggedElement = draggedContext.element;
+    //   return (
+    //     (!relatedElement || !relatedElement.fixed) && !draggedElement.fixed
+    //   );
+    // },
+
     removeCell (index) {
 
-      this.codeError = ''
-
-      if (index<0)
+      if (index<0 || (this.cells[index].command == 'load' && this.cells.filter(e=>e.command=='load').length<=1)) {
         return
+      }
+
+      this.codeError = ''
 
       this.cells.splice(index,1)
       if (this.cells.length==index) {
         index--
       }
       this.setActiveCell(index, true)
+
+      this.draggableEnd()
     },
 
     markCells(mark = true) {
@@ -1007,28 +1011,39 @@ export default {
         this.codeDone = ''
     },
 
+    setLoad (code) {
+      this.addCell(-1,{ content: code, command: 'load' })
+    },
+
     addCell (at = -1, payload = {command: 'code', columns: []}) {
 
       this.codeError = ''
 
       var content = ''
 
-      if (!payload.columns || !payload.columns.length)
+      if (!payload.columns || !payload.columns.length) {
         payload.columns = this.columns.map(e=>this.dataset.columns[e.index].name)
+      }
 
-      switch (payload.command) {
-        case 'drop':
-          content = `df = df.cols.drop(["${payload.columns.join('", "')}"])`
-          break;
-        case 'keep':
-          content = `df = df.cols.keep(["${payload.columns.join('", "')}"])`
-          break;
-				default:
-          var _command = this.commandsPallete[payload.command] || this.commandsPallete[payload.type]
-          if (_command) {
-            content = _command.code ? _command.code(payload) : ''
-          }
-          break;
+      if (!payload.content) {
+
+        switch (payload.command) {
+          case 'drop':
+            content = `df = df.cols.drop(["${payload.columns.join('", "')}"])`
+            break;
+          case 'keep':
+            content = `df = df.cols.keep(["${payload.columns.join('", "')}"])`
+            break;
+          default:
+            var _command = this.commandsPallete[payload.command] || this.commandsPallete[payload.type]
+            if (_command) {
+              content = _command.code ? _command.code(payload) : ''
+            }
+            break;
+        }
+      }
+      else {
+        content = payload.content
       }
 
       if (at==-1)
@@ -1050,13 +1065,7 @@ export default {
 
     },
 
-    runCodeLater(force = false) {
-      setTimeout(() => {
-        this.runCode(force)
-      }, 400);
-    },
-
-    runCode: debounce(async function(force = false) {
+    async runCodeNow (force = false) {
 
       var code = this.codeText
       var codeDone = this.codeDone.trim()
@@ -1076,8 +1085,10 @@ export default {
         return;
       }
 
-      if (rerun)
+      if (rerun) {
+        console.log('this.markCells(false)')
 				this.markCells(false)
+      }
 
 			if (this.firstRun){
 				this.firstRun = false
@@ -1087,47 +1098,46 @@ export default {
       this._commandsDisabled = true;
 
       try {
-        var response = await this.socketPost(rerun ? 'cells-reset' : 'cells', {
+        var response = await this.socketPost('cells', {
           code,
-          name: this.dataset.name,
+          name: this.dataset.summary ? this.dataset.name : null,
           session: this.$store.state.session
         }, {
           timeout: 0
         })
 
-
         this._commandsDisabled = false;
 
-        try {
+        if (response.status!='ok') {
+          throw response
+        }
 
-          if (response.status!='ok') {
-            throw response
-          }
+        var content = JSON.parse(trimCharacters(response.content,"'")).data
+        this.handleDatasetResponse(content)
 
-          var content = JSON.parse(trimCharacters(response.content,"'")).data
-          this.handleDatasetResponse(content)
+        this.$forceUpdate()
+        this.markCells()
 
-					this.$forceUpdate()
-          this.markCells()
-
-          this.codeError = ''
-          this.lastWrongCode = false
-
-				} catch (error) {
-
-					console.error(error, 'on response', response)
-          this.codeError = (response.error && response.error.ename) ? response.error.ename + ': ' + response.error.evalue : error
-          this.markCellsError()
-          this.lastWrongCode = code
-
-				}
+        this.codeError = ''
+        this.lastWrongCode = false
 
       } catch (error) {
         console.error(error)
+        this.codeError = (error.content && error.content.ename) ? error.content.ename + ': ' + error.content.evalue : error
+        this.markCellsError()
+        this.lastWrongCode = code
         this._commandsDisabled = undefined;
       }
 
-    },1000)
+      if (this.codeText !== code) {
+        this.runCodeNow(false)
+      }
+
+    },
+
+    runCode: debounce(async function(force = false){
+      this.runCodeNow(force)
+    },1000),
   }
 }
 </script>
