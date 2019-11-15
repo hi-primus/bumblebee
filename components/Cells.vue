@@ -34,9 +34,30 @@
 										command.dialog.text
 								}}
 							</div>
-							<template v-for="field in command.dialog.fields">
+							<template v-for="field in command.dialog.fields.filter(f=>(!f.condition || f.condition && f.condition(currentCommand)))">
 								<template v-if="field.type=='field'">
 									<v-text-field
+										v-model="currentCommand[field.key]"
+										:key="field.key"
+										:label="(typeof field.label == 'function') ? field.label(currentCommand) : field.label"
+										:placeholder="(typeof field.placeholder == 'function') ? field.placeholder(currentCommand) : field.placeholder"
+                    :clearable="field.clearable"
+										dense
+										required
+										outlined
+									></v-text-field>
+								</template>
+								<template v-if="field.type=='switch'">
+                  <v-switch
+										:key="field.key"
+										v-model="currentCommand[field.key]"
+                    color="black"
+                    class="mt-0"
+                    :label="(typeof field.label == 'function') ? field.label(currentCommand) : field.label"
+                  ></v-switch>
+								</template>
+								<template v-else-if="field.type=='password'">
+                  <v-text-field
 										v-model="currentCommand[field.key]"
 										:key="field.key"
 										:label="field.label"
@@ -44,9 +65,13 @@
 										dense
 										required
 										outlined
-									></v-text-field>
+                    :append-icon="field.showable ? (field.show ? 'visibility' : 'visibility_off') : undefined"
+                    :type="(field.show || !field.showable) ? 'text' : 'password'"
+                    :clearable="field.clearable"
+                    @click:append="field.show = !field.show"
+                  />
 								</template>
-								<template v-if="field.type=='number'">
+								<template v-else-if="field.type=='number'">
 									<v-text-field
 										type="number"
 										v-model="currentCommand[field.key]"
@@ -60,7 +85,7 @@
 										outlined
 									></v-text-field>
 								</template>
-								<template v-if="field.type=='number_index'">
+								<template v-else-if="field.type=='number_index'">
 									<v-text-field
 										type="number"
 										:value="(currentCommand.index>=0) ? currentCommand.index : ''"
@@ -76,13 +101,13 @@
 										outlined
 									></v-text-field>
 								</template>
-								<template v-else-if="field.type=='select'">
+								<template v-else-if="field.type=='select' && (!field.items_key == !currentCommand[field.items_key])">
 									<v-select
 										:key="field.key"
 										v-model="currentCommand[field.key]"
 										:label="field.label"
 										:placeholder="field.placeholder"
-										:items="field.items"
+										:items="(field.items_key) ? currentCommand[field.items_key] : field.items"
 										dense
 										required
 										outlined
@@ -90,9 +115,23 @@
 								</template>
 							</template>
 							<OutputColumnInputs v-if="command.dialog.output_cols" :fieldLabel="command.dialog.output_cols_label" :noLabel="command.dialog.no_label" :currentCommand.sync="currentCommand"></OutputColumnInputs>
+              <template>
+                <v-alert key="error" type="error" class="mt-3" dismissible v-if="currentCommand.error"  @input="currentCommand.error=''">
+                  {{currentCommand.error}}
+                </v-alert>
+              </template>
 						</v-card-text>
 						<v-card-actions>
 							<div class="flex-grow-1"/>
+							<v-btn
+								color="primary"
+								text
+                v-if="command.onTest"
+                :loading="currentCommand.loadingTest"
+								@click="command.onTest(currentCommand)"
+							>
+								{{ command.dialog.testLabel || 'Test'}}
+							</v-btn>
 							<v-btn
 								color="primary"
 								text
@@ -104,10 +143,11 @@
 								color="primary"
 								text
 								:disabled="!command.dialog.validate(currentCommand)"
+                :loading="currentCommand.loadingAccept"
 								type="submit"
 								form="command-form"
 							>
-								Accept
+								{{ command.dialog.acceptLabel || 'Accept'}}
 							</v-btn>
 						</v-card-actions>
 					</v-card>
@@ -293,6 +333,316 @@ export default {
               +`, "${payload.fill}"`
               +( (output_cols_argument) ? `, output_cols=${output_cols_argument}` : '')
               +')'
+          }
+        },
+        'load file': {
+          dialog: {
+            title: 'Load file',
+            acceptLabel: 'Load',
+            fields: [
+              {
+                key: 'file_type',
+                label: 'File type',
+                type: 'select',
+                items: [
+                  {text: 'CSV', value: 'csv'},
+                  {text: 'XLS', value: 'xls'},
+                  {text: 'JSON', value: 'json'},
+                  {text: 'Avro', value: 'avro'},
+                  {text: 'Parquet', value: 'parquet'}
+                ]
+              },
+              {
+                key: 'url',
+                label: 'File url',
+                placeholder: (c)=>`https://example.com/my_file.${c.type}`,
+                type: 'field'
+              },
+              {
+                key: 'limit',
+                label: 'Limit',
+                min: 1,
+                clearable: true,
+                type: 'number'
+              },
+              {
+                condition: (c)=>c.file_type==='csv',
+                key: 'header',
+                label: (c) => `First row as Header: ${c.header ? 'Yes' : 'No'}`,
+                type: 'switch'
+              },
+              {
+                condition: (c)=>c.file_type==='csv',
+                key: 'sep',
+                label: 'Separator',
+                type: 'field'
+              },
+              {
+                condition: (c)=>c.file_type==='csv',
+                key: 'charset',
+                label: 'File encoding',
+                type: 'select',
+                items: [
+                  { text: 'Unicode (UTF-8)', value: 'UTF-8'}, { text: 'English (ASCII)', value: 'ASCII'},
+                  { text: 'Baltic (ISO-8859-4)', value: 'ISO-8859-4'}, { text: 'Baltic (ISO-8859-13)', value: 'ISO-8859-13'},
+                  { text: 'Baltic (Windows-1257)', value: 'Windows-1257'}, { text: 'Celtic (ISO-8859-14)', value: 'ISO-8859-14'},
+                  { text: 'Central European (ISO-8859-2)', value: 'ISO-8859-2'}, { text: 'Central European (Windows-1250)', value: 'Windows-1250'},
+                  { text: 'Chinese Traditional (BIG5)', value: 'BIG5'}, { text: 'Chinese Simplified (GB18030)', value: 'GB18030'},
+                  { text: 'Chinese Simplified (GB2312)', value: 'GB2312'}, { text: 'Cyrillic (ISO-8859-5)', value: 'ISO-8859-5'},
+                  { text: 'Cyrillic (Windows-1251)', value: 'Windows-1251'}, { text: 'Cyrillic (KOI8-R)', value: 'KOI8-R'}, { text: 'Cyrillic (KOI8—U)', value: 'KOI8—U'},
+                  { text: 'Cyrillic (IBM866)', value: 'IBM866'}, { text: 'Greek (ISO-8859-7)', value: 'ISO-8859-7'}, { text: 'Greek (Windows-1253)', value: 'Windows-1253'},
+                  { text: 'Japanese (ISO-2022-JP)', value: 'ISO-2022-JP'}, { text: 'Japanese (Shift-JIS)', value: 'Shift-JIS'},
+                  { text: 'Japanese (EUC-JP)', value: 'EUC-JP'}, { text: 'Japanese (cp932)', value: 'cp932'},
+                  { text: 'Korean (ISO-2022-KR)', value: 'ISO-2022-KR'}, { text: 'Korean (EUC—KR)', value: 'EUC—KR'},
+                  { text: 'Nordic (ISO-8859-10)', value: 'ISO-8859-10'}, { text: 'Thai (ISO-8859-11)', value: 'ISO-8859-11'},
+                  { text: 'Turkish (ISO-8859-9)', value: 'ISO-8859-9'}, { text: 'Vietnamese (Windows-1258)', value: 'Windows-1258'},
+                  { text: 'Western (ISO-8859-1)', value: 'ISO-8859-1'}, { text: 'Western (ISO-8859-3)', value: 'ISO-8859-3'},
+                  { text: 'Western (Windows-1252)', value: 'Windows-1252'}
+                ]
+              },
+              {
+                condition: (c)=>c.file_type==='json',
+                key: 'multiline',
+                label: (c) => `Multiline: ${c.multiline ? 'Yes' : 'No'}`,
+                type: 'switch'
+              },
+              {
+                condition: (c)=>c.file_type==='xls',
+                key: 'sheet_name',
+                label: `Sheet name`,
+                type: 'field'
+              },
+            ],
+            validate: (c) => (c.url!='' && (c.file_type!='csv' || c.sep))
+          },
+
+          payload: () => ({
+            command: 'load file',
+            file_type: 'csv',
+            url: '',
+            sep: ',',
+            sheet_name: '0',
+            header: true,
+            limit: '',
+            multiline: true,
+            charset: 'UTF-8'
+          }),
+
+          code: (payload) => {
+            let file = {
+              ...payload,
+              header: (payload.header) ? `'true'` : `'false'`,
+              multiline: (payload.multiline) ? `True` : `False`,
+            }
+            let code = `df = op.load.${file.file_type}("${file.url}"`
+            if (file.file_type=='csv'){
+              code += `, sep="${file.sep}"`
+              code += `, header=${file.header}`
+              code += `, infer_schema='true'`
+              code += `, charset="${file.charset}"`
+            }
+            else if (file.file_type=='json'){
+              code += `, multiline=${file.multiline}`
+            }
+            else if (file.file_type=='xls'){
+              code += `, sheet_name="${file.sheet_name}"`
+            }
+
+            code += `)`
+
+            if (file.limit>0) {
+              code +=`.limit(${file.limit})`
+            }
+
+            code += '.cache()'
+
+            return code
+          }
+        },
+        'load from database': {
+          dialog: {
+            title: 'Connect a database',
+            testLabel: 'connect',
+            fields: [
+              {
+                key: 'driver',
+                type: 'select',
+                label: 'Driver',
+                items: [
+                  {text: 'MySQL', value: 'mysql'},
+                  {text: 'Oracle Database', value: 'oracle'},
+                  {text: 'PostgreSQL', value: 'postgres'},
+                  {text: 'Apache Cassandra', value: 'cassandra'},
+                  {text: 'SQLite', value: 'sqlite'},
+                  {text: 'Amazon Redshift', value: 'redshift'},
+                  {text: 'Presto', value: 'presto'},
+                  {text: 'Microsoft SQL Server', value: 'sqlserver'},
+                ]
+              },
+              {
+                condition: (c)=>c.driver=='oracle',
+                key: 'oracle_type',
+                type: 'select',
+                label: 'Type',
+                items: [
+                  {text: 'SID', value: 'oracle_sid'},
+                  {text: 'Service name', value: 'oracle_service_name'},
+                  {text: 'TNS', value: 'oracle_tns'},
+                ]
+              },
+              {
+                condition: (c)=>(c.driver=='oracle' && c.oracle_type=='oracle_sid'),
+                key: 'oracle_sid',
+                type: 'field',
+                label: 'SID'
+              },
+              {
+                condition: (c)=>(c.driver=='oracle' && c.oracle_type=='oracle_service_name'),
+                key: 'oracle_service_name',
+                type: 'field',
+                label: 'Service name'
+              },
+              {
+                condition: (c)=>(c.driver=='oracle' && c.oracle_type=='oracle_tns'),
+                key: 'oracle_tns',
+                type: 'field',
+                label: 'TNS'
+              },
+              {
+                condition: (c)=>(c.driver!='oracle' || c.oracle_type!='oracle_tns') && c.driver!='cassandra',
+                key: 'host',
+                type: 'field',
+                label: 'Host'
+              },
+              {
+                condition: (c)=>(c.driver!='oracle' || c.oracle_type!='oracle_tns') && c.driver!='cassandra',
+                key: 'port',
+                type: 'field',
+                label: 'Port'
+              },
+              {
+                condition: (c)=>(c.driver=='presto'),
+                key: 'presto_catalog',
+                type: 'field',
+                label: 'Catalog'
+              },
+              {
+                condition: (c)=>['postgres','presto','redshift','sqlserver','mysql'].includes(c.driver),
+                key: 'database',
+                type: 'field',
+                label: 'Database'
+              },
+              {
+                condition: (c)=>['postgres','redshift'].includes(c.driver),
+                key: 'schema',
+                type: 'field',
+                label: 'Schema'
+              },
+              {
+                condition: (c)=>(c.driver=='cassandra'),
+                key: 'url',
+                type: 'field',
+                label: 'Url'
+              },
+              {
+                condition: (c)=>(c.driver=='cassandra'),
+                key: 'keyspace',
+                type: 'field',
+                label: 'Keyspace'
+              },
+              {
+                key: 'user',
+                type: 'field',
+                label: 'User'
+              },
+              {
+                key: 'password',
+                type: 'password',
+                label: 'Password',
+                showable: true,
+                show: false
+              },
+              {
+                key: 'table',
+                type: 'select',
+                label: 'Table',
+                items_key: 'tables'
+              },
+            ],
+            validate: (command) => (
+              command.table &&
+              command.driver == command.validDriver /* &&
+              command.host == command.validHost &&
+              command.database == command.validDatabase
+              */
+            )
+          },
+          payload: () => ({
+						command: 'load from database',
+            driver: 'mysql',
+            host: '',
+						database: '',
+						user: '',
+            password: '',
+            loadingTest: false
+          }),
+          code: (payload) => {
+            return `${payload.previous_code}
+df = db.table_to_df("${payload.table}").cache()`
+          },
+          onTest: async (payload) => {
+
+            this.currentCommand.loadingTest = true
+            this.currentCommand.error = ''
+
+            var fields = this.commandsPallete['load from database'].dialog.fields
+
+            try {
+              var code = `db = op.connect(driver="${payload.driver}"`
+
+              fields.forEach(field => {
+                if (field.key!='driver' && field.key!='oracle_type' && field.key!='table') {
+                  code += (
+                    (!field.condition || field.condition(this.currentCommand) && payload[field.key]!==undefined) ?
+                    `, ${field.key}="${payload[field.key]}"` : ''
+                  )
+                }
+              });
+
+              code += ')'
+
+              var response = await this.evalCode(code+`
+db.tables_names_to_json()`)
+
+              var tables = JSON.parse(trimCharacters(response.content,"'"))
+              if (!tables.length){
+                throw 'Database has no tables'
+              }
+              this.currentCommand = {
+                ...payload,
+                tables,
+                table: tables[0],
+                previous_code: code,
+                validDriver: payload.driver,
+                validHost: payload.host,
+                validDatabase: payload.database
+              }
+              this.currentCommand.loadingTest = false
+            }
+            catch (error) {
+
+              console.error(error)
+
+              var _error = error
+
+              if (error.content.ename)
+                _error = error.content.ename
+              if (error.content.evalue && error.content.evalue.length<50)
+                _error += ': '+error.content.evalue
+
+              this.currentCommand = {...payload, error: _error}
+              this.currentCommand.loadingTest = false
+            }
           }
         },
         replace: {
@@ -866,40 +1216,40 @@ export default {
       else
         columns = event.columns
 
-      switch (event.command) {
-        default:
-          var _command = this.commandsPallete[event.command] || this.commandsPallete[event.type]
+      var _command = this.commandsPallete[event.command] || this.commandsPallete[event.type]
 
-
-          if (_command) {
-            if (_command.dialog) {
-              this.currentCommand = _command.payload ? _command.payload(columns) : {}
-              this.currentCommand.type = event.type
-              this.currentCommand.command = event.command
-              setTimeout(() => {
-                var ref = this.$refs['command-dialog'][0]
-                if (ref && ref.$el){
-                  ref.$el.getElementsByTagName('input')[0].focus()
-                }
-              }, 100);
-              break;
+      if (_command) {
+        if (_command.dialog) {
+          this.currentCommand = _command.payload ? _command.payload(columns) : {}
+          this.currentCommand.type = event.type
+          this.currentCommand.command = event.command
+          setTimeout(() => {
+            var ref = this.$refs['command-dialog'][0]
+            if (ref && ref.$el){
+              ref.$el.getElementsByTagName('input')[0].focus()
             }
-            else {
-              payload = _command.payload ? _command.payload(columns) : {}
-            }
-          }
+          }, 100);
+        }
+        else {
+          payload = _command.payload ? _command.payload(columns) : {}
           payload.type = event.type
           payload.command = event.command
           var cell = {...event, columns: payload.columns || columns, payload}
-					this.addCell(-1, cell)
-					this.runButton = false
+          this.addCell(-1, cell)
+          this.runButton = false
+        }
       }
     },
 
-    confirmCommand () {
-			this.addCell(-1, this.currentCommand )
-			this.runButton = false
-      this.currentCommand = false
+    async confirmCommand () {
+      if (this.commandsPallete[this.currentCommand.command].onDone) {
+        this.currentCommand = await this.commandsPallete[this.currentCommand.command].onDone(this.currentCommand)
+      }
+      else {
+        this.addCell(-1, this.currentCommand )
+        this.runButton = false
+        this.currentCommand = false
+      }
     },
 
     cancelCommand () {
@@ -969,7 +1319,7 @@ export default {
 
     removeCell (index) {
 
-      if (index<0 || (this.cells[index].command == 'load' && this.cells.filter(e=>e.command=='load').length<=1)) {
+      if (index<0 || (['load file', 'load from database'].includes(this.cells[index].command) && this.cells.filter(e => ['load file', 'load from database'].includes(e.command) ).length<=1)) {
         return
       }
 
@@ -1011,9 +1361,9 @@ export default {
         this.codeDone = ''
     },
 
-    setLoad (code) {
-      this.addCell(-1,{ content: code, command: 'load' })
-    },
+    // setLoad (code) {
+    //   this.addCell(-1,{ content: code, command: 'load file' })
+    // },
 
     addCell (at = -1, payload = {command: 'code', columns: []}) {
 
@@ -1065,6 +1415,17 @@ export default {
 
     },
 
+    async evalCode (code) {
+      var response = await this.socketPost('run', {
+        code,
+        session: this.$store.state.session
+      }, {
+        timeout: 0
+      })
+
+      return response
+    },
+
     async runCodeNow (force = false) {
 
       var code = this.codeText
@@ -1086,7 +1447,6 @@ export default {
       }
 
       if (rerun) {
-        console.log('this.markCells(false)')
 				this.markCells(false)
       }
 

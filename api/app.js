@@ -130,7 +130,7 @@ const new_socket = function (socket, session) {
 	socket.on('cells', async (payload) => {
 		var user_session = payload.session
 		var result = await run_code(`${payload.code}
-df.send(output="json", infer=False, advanced_stats=False${ payload.name ? ', name="'+payload.name+'"' : '' })`,
+df.send(output="json", infer=False, advanced_stats=False${ payload.name ? (', name="'+payload.name+'"') : '' })`,
 	user_session)
 	socket.emit('reply',{...result, timestamp: payload.timestamp})
 	})
@@ -240,13 +240,13 @@ const run_code = async function(code = '', user_session = '') {
 						}
 						else if (response.msg_type === 'error') {
 							connection.close()
-							console.error("Message error", response.content);
-							resolve({status: 'error', content: response.content, error: 'Message error'})
+							// console.error("Error", response.content);
+							resolve({status: 'error', content: response.content, error: 'Error'})
 						}
 					}
 					else {
 						connection.close()
-						console.error("Message type error", response.content);
+						// console.error("Message type error", response.content);
 						resolve({status: 'error', content: 'Response from gateway is not utf8 type', error: 'Message type error'})
 					}
 
@@ -259,7 +259,7 @@ const run_code = async function(code = '', user_session = '') {
 				});
 
 				connection.on('close', function(reason) {
-					console.log('Connection closed before response')
+					// console.log('Connection closed before response')
 					resolve({status: 'error', retry: true, error: 'Connection to Jupyter Kernel Gateway closed before response', content: reason})
 				});
 
@@ -268,7 +268,7 @@ const run_code = async function(code = '', user_session = '') {
 			})
 
 			client.on('disconnect',async function(reason) {
-				console.log('Client disconnected')
+				// console.log('Client disconnected')
 				resolve({status: 'disconnected', retry: true, error: 'Client disconnected', content: reason})
 			})
 
