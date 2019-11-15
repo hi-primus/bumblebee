@@ -1,136 +1,5 @@
 <template>
   <div class="dashboard-container">
-    <v-dialog persistent :value="file.dialog!==false" max-width="410" @click:outside="file.dialog = false">
-      <v-form @submit="loadFile()">
-        <v-card>
-          <v-card-title class="title px-6">Load file</v-card-title>
-          <v-card-text class="pb-0 command-card-text px-6">
-            <v-select
-              v-model="file.type"
-              label="File type"
-              dense
-              required
-              outlined
-              :items="[
-                {text: 'CSV', value: 'csv'},
-                {text: 'XLS', value: 'xls'},
-                {text: 'JSON', value: 'json'},
-                {text: 'Avro', value: 'avro'},
-                {text: 'Parquet', value: 'parquet'}
-              ]"
-            ></v-select>
-            <v-text-field
-              v-model="file.url"
-              label="File url"
-              :placeholder="`https://example.com/my_file.${file.type}`"
-              dense
-              required
-              outlined
-            ></v-text-field>
-            <v-text-field
-              v-model="file.limit"
-              label="Limit"
-							type="number"
-							min="1"
-              clearable
-              dense
-              outlined
-            ></v-text-field>
-            <template v-if="file.type==='csv'">
-              <v-switch
-                v-model="file.header"
-                color="black"
-                class="mt-0"
-                :label="`First row as Header: ${file.header ? 'Yes' : 'No'}`"
-              ></v-switch>
-              <v-text-field
-                v-model="file.sep"
-                label="Separator"
-                dense
-                required
-                outlined
-              ></v-text-field>
-              <v-select
-                v-model="file.charset"
-                label="File encoding"
-                dense
-                required
-                outlined
-                :items="[
-                  { text: 'Unicode (UTF-8)', value: 'UTF-8'},
-                  { text: 'English (ASCII)', value: 'ASCII'},
-                  { text: 'Baltic (ISO-8859-4)', value: 'ISO-8859-4'},
-                  { text: 'Baltic (ISO-8859-13)', value: 'ISO-8859-13'},
-                  { text: 'Baltic (Windows-1257)', value: 'Windows-1257'},
-                  { text: 'Celtic (ISO-8859-14)', value: 'ISO-8859-14'},
-                  { text: 'Central European (ISO-8859-2)', value: 'ISO-8859-2'},
-                  { text: 'Central European (Windows-1250)', value: 'Windows-1250'},
-                  { text: 'Chinese Traditional (BIG5)', value: 'BIG5'},
-                  { text: 'Chinese Simplified (GB18030)', value: 'GB18030'},
-                  { text: 'Chinese Simplified (GB2312)', value: 'GB2312'},
-                  { text: 'Cyrillic (ISO-8859-5)', value: 'ISO-8859-5'},
-                  { text: 'Cyrillic (Windows-1251)', value: 'Windows-1251'},
-                  { text: 'Cyrillic (KOI8-R)', value: 'KOI8-R'},
-                  { text: 'Cyrillic (KOI8—U)', value: 'KOI8—U'},
-                  { text: 'Cyrillic (IBM866)', value: 'IBM866'},
-                  { text: 'Greek (ISO-8859-7)', value: 'ISO-8859-7'},
-                  { text: 'Greek (Windows-1253)', value: 'Windows-1253'},
-                  { text: 'Japanese (ISO-2022-JP)', value: 'ISO-2022-JP'},
-                  { text: 'Japanese (Shift-JIS)', value: 'Shift-JIS'},
-                  { text: 'Japanese (EUC-JP)', value: 'EUC-JP'},
-                  { text: 'Japanese (cp932)', value: 'cp932'},
-                  { text: 'Korean (ISO-2022-KR)', value: 'ISO-2022-KR'},
-                  { text: 'Korean (EUC—KR)', value: 'EUC—KR'},
-                  { text: 'Nordic (ISO-8859-10)', value: 'ISO-8859-10'},
-                  { text: 'Thai (ISO-8859-11)', value: 'ISO-8859-11'},
-                  { text: 'Turkish (ISO-8859-9)', value: 'ISO-8859-9'},
-                  { text: 'Vietnamese (Windows-1258)', value: 'Windows-1258'},
-                  { text: 'Western (ISO-8859-1)', value: 'ISO-8859-1'},
-                  { text: 'Western (ISO-8859-3)', value: 'ISO-8859-3'},
-                  { text: 'Western (Windows-1252)', value: 'Windows-1252'}
-                ]"
-              ></v-select>
-            </template>
-            <template v-else-if="file.type=='json'">
-              <v-switch
-                v-model="file.multiline"
-                color="black"
-                class="mt-0"
-                :label="`Multiline: ${file.multiline ? 'Yes' : 'No'}`"
-              ></v-switch>
-            </template>
-            <template v-else-if="file.type=='xls'">
-              <v-text-field
-                v-model="file.sheet_name"
-                label="Sheet name"
-                placeholder="0"
-                dense
-                required
-                outlined
-              ></v-text-field>
-            </template>
-          </v-card-text>
-          <v-card-actions>
-            <div class="flex-grow-1"/>
-            <v-btn
-              color="primary"
-              text
-              @click="file.dialog = false"
-            >
-              Cancel
-            </v-btn>
-            <v-btn
-              color="primary"
-              text
-              :disabled="file.url=='' || (file.type=='csv' && !file.sep)"
-              @click="loadFile()"
-            >
-              Load
-            </v-btn>
-          </v-card-actions>
-        </v-card>
-      </v-form>
-    </v-dialog>
     <div class="toolbar bb-toolbar" :class="{'disabled': commandsDisabled}">
       <template v-if="$route.query.kernel=='1'">
         <v-tooltip transition="fade-transition" bottom>
@@ -138,7 +7,7 @@
             <v-btn v-on="on"
               text
               class="icon-btn"
-              @click="openFile()"
+              @click="commandHandle({command: 'load file'})"
               :disabled="!$store.state.kernel"
             >
               <v-icon color="#888">
@@ -147,6 +16,23 @@
             </v-btn>
           </template>
           <span>Load file</span>
+        </v-tooltip>
+        <v-tooltip transition="fade-transition" bottom>
+          <template v-slot:activator="{ on }">
+            <v-btn
+              :color="'#888'"
+              class="icon-btn"
+              text
+              v-on="on"
+              @click="commandHandle({command: 'load from database'})"
+              :disabled="!$store.state.kernel"
+            >
+              <v-icon>storage</v-icon>
+            </v-btn>
+          </template>
+          <span>
+            Connect a database
+          </span>
         </v-tooltip>
         <!-- <v-tooltip transition="fade-transition" bottom>
           <template v-slot:activator="{ on }">
@@ -803,56 +689,6 @@ export default {
   },
 
   methods: {
-
-    async loadFile () {
-      this.commandsDisabled = true
-      let file = {
-        ...this.file,
-        header: (this.file.header) ? `'true'` : `'false'`,
-        multiline: (this.file.multiline) ? `True` : `False`,
-      }
-      let code = `df = op.load.${file.type}("${file.url}"`
-      if (file.type=='csv'){
-        code += `, sep="${file.sep}"`
-        code += `, header=${file.header}`
-        code += `, infer_schema='true'`
-        code += `, charset="${file.charset}"`
-      }
-      else if (file.type=='json'){
-        code += `, multiline=${file.multiline}`
-      }
-      else if (file.type=='xls'){
-        code += `, sheet_name="${file.sheet_name}"`
-      }
-
-      code += `)`
-
-
-      this.file.dialog = false
-
-      if (file.limit>0) {
-        code +=`.limit(${file.limit})`
-      }
-
-      code += '.cache()'
-
-      this.$refs.cells & this.$refs.cells.setLoad( code )
-
-    },
-
-    openFile() {
-      this.file = {
-        dialog: true,
-        type: 'csv',
-        url: '',
-        sep: ',',
-        sheet_name: '0',
-        header: true,
-        limit: '',
-        multiline: true,
-        charset: 'UTF-8'
-      }
-    },
 
     commandHandle (event) {
       this.optionsActive = true
