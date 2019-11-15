@@ -29,27 +29,27 @@ function updateHost (host = 'localhost') {
 	var app_port = process.env.APP_PORT || 3000
 
 	app_url = `${app_host}:${app_port}`
-	
+
 	var api_host = process.env.HOST || host
 	var api_port = process.env.PORT || 5000
-	
+
 	api_url = `${api_host}:${api_port}`
-	
+
 }
 
 updateHost ()
 
 if (!process.env.DISABLE_CORS) {
-	
+
 	const cors = require('cors')
-	
+
 	whitelist = [
 		'http://'+app_url,
 		'https://'+app_url,
 		'http://'+app_host,
 		'https://'+app_host
 	]
-	
+
 	var corsOptions = {
 		origin: function (origin, callback) {
 			if (whitelist.indexOf(origin) !== -1 || !origin) {
@@ -58,8 +58,8 @@ if (!process.env.DISABLE_CORS) {
 				callback(new Error('Not allowed by CORS'))
 			}
 		},
-		optionsSuccessStatus: 200 
-	}	
+		optionsSuccessStatus: 200
+	}
 
 	app.use(cors(corsOptions));
 
@@ -115,47 +115,22 @@ const new_socket = function (socket, session) {
 
 	socket.emit('success')
 
-	socket.on('disconnect', async () => {
-		if (session) {
-			// await delete_kernel(session)
-			// delete sockets[session]
-		}
-	})
-
 	socket.on('initialize', async (payload) => {
 		var user_session = payload.session
 		var result = await createKernel(user_session)
 		socket.emit('reply',{...result, timestamp: payload.timestamp})
 	})
-	
-	socket.on('dataset-file', async (payload) => {
-		var user_session = payload.session
-		var result = await run_code(`_df = op.load.${payload.code}
-df = _df.reset()
-df.send(output="json", infer= False, advanced_stats=False)`,
-	user_session)
-	socket.emit('reply',{...result, timestamp: payload.timestamp})
-	})
-	
+
 	socket.on('run', async (payload) => {
 		var user_session = payload.session
 		var result = await run_code(`${payload.code}`,user_session)
 	socket.emit('reply',{...result, timestamp: payload.timestamp})
 	})
-	
+
 	socket.on('cells', async (payload) => {
 		var user_session = payload.session
 		var result = await run_code(`${payload.code}
-df.send(output="json", infer=False, advanced_stats=False, name="${payload.name}")`,
-	user_session)
-	socket.emit('reply',{...result, timestamp: payload.timestamp})
-	})
-	
-	socket.on('cells-reset', async (payload) => {
-		var user_session = payload.session
-		var result = await run_code(`df = _df.reset()
-${payload.code}
-df.send(output="json", infer=False, advanced_stats=False, name="${payload.name}")`,
+df.send(output="json", infer=False, advanced_stats=False${ payload.name ? ', name="'+payload.name+'"' : '' })`,
 	user_session)
 	socket.emit('reply',{...result, timestamp: payload.timestamp})
 	})
@@ -164,17 +139,16 @@ df.send(output="json", infer=False, advanced_stats=False, name="${payload.name}"
 }
 
 io.on('connection', async (socket) => {
-	
+
 	const session = socket.handshake.query.session
-	
+
 	if (!session) {
 		socket.disconnect()
 		return
 	}
 
-	
+
 	if (sockets[session] == undefined || !sockets[session].connected || sockets[session].disconnected) {
-		// await delete_kernel(session)
 		socket = new_socket(socket,session)
 		return
 	}
@@ -194,26 +168,10 @@ const request = require('request-promise')
 
 const uuidv1 = require('uuid/v1');
 
-const delete_kernel = async function(session) {
-	try {
-		if (kernels[session] != undefined) {
-			await request({
-				uri: `${base}/api/kernels/${kernels[session].kernel['id']}`,
-				method: 'DELETE',
-				headers: {}, 
-			})
-			console.log('Deleting Jupyter Kernel Gateway session for',session,kernels[session].kernel['id'])
-			kernels[session] = undefined
-		}
-	} catch (err) {
-		console.error(err)
-	}
-}
-
 const run_code = async function(code = '', user_session = '') {
-	
+
 	return new Promise( async function(resolve,reject) {
-		
+
 		if (!user_session)
 			resolve({error: 'user_session is empty'})
 
@@ -227,7 +185,7 @@ const run_code = async function(code = '', user_session = '') {
 			const version = JSON.parse(version_response).version
 
 			if (kernels[user_session]==undefined) {
-				
+
 				console.log('Jupyter Kernel Gateway Version',version)
 
 				let uuid = Buffer.from( uuidv1(), 'utf8' ).toString('hex')
@@ -235,7 +193,7 @@ const run_code = async function(code = '', user_session = '') {
 				const response = await request({
 					uri: `${base}/api/kernels`,
 					method: 'POST',
-					headers: {}, 
+					headers: {},
 				})
 
 				kernels[user_session] = { kernel: JSON.parse(response), uuid }
@@ -245,7 +203,7 @@ const run_code = async function(code = '', user_session = '') {
 
 			var content = { code: code+'\n', silent: false }
 
-			var hdr = { 
+			var hdr = {
 				'msg_id' : kernels[user_session].uuid,
 				'session': kernels[user_session].uuid,
 				'date': new Date().toISOString(),
@@ -253,29 +211,26 @@ const run_code = async function(code = '', user_session = '') {
 				'version' : version_response.version
 			}
 
-			var codeMsg = { 
-				'header': hdr, 
-				'parent_header': hdr, 
+			var codeMsg = {
+				'header': hdr,
+				'parent_header': hdr,
 				'metadata': {},
-				'content': content 
+				'content': content
 			}
-			
+
 			const WebSocketClient = require('websocket').client
 
 			var client = new WebSocketClient({closeTimeout: 20 * 60 * 1000})
 
 			client.on('connectFailed', async function(error) {
 				console.warn('Connection to Jupyter Kernel Gateway failed')
-				// if (kernels[user_session]!=undefined){
-				// 	await delete_kernel(user_session)
-				// }
-				resolve({status: 'error', content: error})
+				resolve({status: 'error', content: error, error: 'Connection to Jupyter Kernel Gateway failed'})
 			});
 
 			client.on('connect',function(connection){
 
 				connection.on('message', async function(message) {
-					
+
 					var response = JSON.parse(message.utf8Data)
 
 					if (message.type === 'utf8'){
@@ -285,38 +240,36 @@ const run_code = async function(code = '', user_session = '') {
 						}
 						else if (response.msg_type === 'error') {
 							connection.close()
-							console.error("Message Error", response.content);
-							resolve({status: 'error', content: response.content})
+							console.error("Message error", response.content);
+							resolve({status: 'error', content: response.content, error: 'Message error'})
 						}
 					}
 					else {
 						connection.close()
-						console.error("Message type Error", response.content);
-						resolve({status: 'error', content: 'Response from gateway is not utf8 type'})
+						console.error("Message type error", response.content);
+						resolve({status: 'error', content: 'Response from gateway is not utf8 type', error: 'Message type error'})
 					}
-							
+
 				});
 
 				connection.on('error', async function(error) {
 					console.error("Connection Error", error);
 					connection.close()
-					// await delete_kernel(user_session)
-					resolve({status: 'error', content: error})
+					resolve({status: 'error', content: error, error: 'Connection error'})
 				});
 
 				connection.on('close', function(reason) {
 					console.log('Connection closed before response')
-					resolve({status: 'error', retry: true, content: 'Connection to Jupyter Kernel Gateway closed before response: '+ reason})
+					resolve({status: 'error', retry: true, error: 'Connection to Jupyter Kernel Gateway closed before response', content: reason})
 				});
 
 				connection.sendUTF(JSON.stringify(codeMsg))
 
 			})
-			
+
 			client.on('disconnect',async function(reason) {
-				// await delete_kernel(user_session)
 				console.log('Client disconnected')
-				resolve({status: 'disconnected', retry: true, content: 'Client disconnected: '+reason})
+				resolve({status: 'disconnected', retry: true, error: 'Client disconnected', content: reason})
 			})
 
 			console.log('Connecting client')
@@ -324,7 +277,10 @@ const run_code = async function(code = '', user_session = '') {
 
 
 		} catch (error) {
-			resolve({status: 'error', error})
+      if (error.error)
+        resolve({status: 'error',...error, content: error.message})
+      else
+			  resolve({status: 'error', error: 'Internal error', content: error})
 		}
 	})
 }
@@ -346,7 +302,7 @@ try:
 	op
 	_status += 'optimus ok '
 	try:
-		_df
+		df
 		_status += 'dataframe ok '
 	except NameError:
 		_status += ''
@@ -359,7 +315,7 @@ except NameError:
 _status`,user_session)
 	}
 }
-	
+
 const startServer = async () => {
 	const port = process.env.PORT || 5000
 	const host = process.env.HOST || '0.0.0.0'

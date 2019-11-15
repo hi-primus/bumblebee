@@ -291,7 +291,7 @@ export default {
                 session: this.$store.state.session
               })
 
-              if (response.content.includes('optimus')) {
+              if (response.content.toString().includes('optimus')) {
                 console.log('Optimus initialized')
 								this.$store.commit('kernel')
 							}

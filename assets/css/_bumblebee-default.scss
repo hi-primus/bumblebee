@@ -761,6 +761,11 @@ table {
   transform: translate(-50%,-50%);
   height: 0;
 }
+.progress-top {
+  position: absolute !important;
+  top: -1px;
+  height: 0;
+}
 
 .mx-a {
   margin-left: auto;
@@ -1296,8 +1301,10 @@ $side-controls-width: 54px;
       padding: 0 0 0 12px;
       // max-width: calc(100% - #{$side-controls-width});
     }
-    .left-handle {
+    &:not(.fixed-cell) .left-handle {
       cursor: grab;
+    }
+    .left-handle {
       width: 12px;
       height: 100%;
       top: 0;
@@ -1389,7 +1396,7 @@ $editor-top-padding: 6px;
     position: absolute;
     top: $editor-top-padding;
     left: 12px;
-    width: calc(100% - 28px);
+    width: calc(100% - 23px);
     height: calc(100% - #{$editor-top-padding}) !important;
     resize: none;
     overflow: hidden;
@@ -1398,7 +1405,7 @@ $editor-top-padding: 6px;
     text-shadow: 0px 0px 0px rgba(0, 0, 0, 0);
     -webkit-text-fill-color: transparent;
     text-fill-color: transparent;
-    line-height: 25px !important;
+    line-height: 24px !important;
   }
 
   .code{

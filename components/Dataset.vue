@@ -8,6 +8,12 @@
         color="#888"
         size="64"
       />
+      <!-- <v-progress-linear
+        indeterminate
+        v-if="commandsDisabled"
+        class="progress-top"
+        color="#888"
+      /> -->
       <div v-else class="title grey--text text-center">
         No data to display
       </div>

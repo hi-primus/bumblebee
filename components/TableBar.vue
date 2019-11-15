@@ -546,12 +546,12 @@
           :commandsDisabled.sync="commandsDisabled"
           :dataset="dataset"
         />
-				<v-progress-circular
+				<v-progress-linear
           indeterminate
           v-if="commandsDisabled && optionsActive && $route.query.kernel=='1'"
-          class="mx-a"
           color="#888"
           size="64"
+          style="position: absolute; left: 0; top: 34px;"
         />
       </template>
       <template v-if="detailsActive!==false && !optionsActive">
@@ -811,7 +811,7 @@ export default {
         header: (this.file.header) ? `'true'` : `'false'`,
         multiline: (this.file.multiline) ? `True` : `False`,
       }
-      let code = `${file.type}("${file.url}"`
+      let code = `df = op.load.${file.type}("${file.url}"`
       if (file.type=='csv'){
         code += `, sep="${file.sep}"`
         code += `, header=${file.header}`
@@ -827,34 +827,16 @@ export default {
 
       code += `)`
 
+
       this.file.dialog = false
 
       if (file.limit>0) {
         code +=`.limit(${file.limit})`
       }
 
-      var response
+      code += '.cache()'
 
-      try {
-
-        response = await this.socketPost('dataset-file', {
-          code,
-          session: this.$store.state.session
-        })
-
-        if (response.status!='ok') {
-          throw response
-        }
-
-        var content = JSON.parse(trimCharacters(response.content,"'")).data
-
-        this.handleDatasetResponse(content)
-
-      } catch (error) {
-        console.error(error, 'on response', response)
-      }
-
-			this.commandsDisabled = false
+      this.$refs.cells & this.$refs.cells.setLoad( code )
 
     },
 
