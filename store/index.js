@@ -3,6 +3,7 @@ export const state = () => ({
 	datasetUpdates: 0,
   status: 'waiting',
   session: '',
+  database: false,
   key: '',
   datasetCounter: 1,
   kernel: false
@@ -79,6 +80,10 @@ export const mutations = {
 
 	session (state, payload) {
     state.session = payload
+  },
+
+  database (state, payload) {
+    state.database = payload
   },
 
 	key (state, payload) {

@@ -618,6 +618,9 @@ db.tables_names_to_json()`)
               if (!tables.length){
                 throw 'Database has no tables'
               }
+
+              this.$store.commit('database',true)
+
               this.currentCommand = {
                 ...payload,
                 tables,
@@ -644,6 +647,54 @@ db.tables_names_to_json()`)
               this.currentCommand.loadingTest = false
             }
           }
+        },
+        'save to server': {
+          dialog: {
+            title: 'Save file to server',
+            fields: [
+              {
+                type: 'field',
+                key: 'file_name',
+                label: 'File name',
+                placeholder: (c)=>`my_file.${c.format}`,
+              },
+              {
+                type: 'select',
+                key: 'format',
+                label: 'Format',
+                items: [
+                  {text: 'CSV', value: 'csv'},
+                  {text: 'Parquet', value: 'parquet'},
+                  {text: 'JSON', value: 'json'}
+                ]
+              }
+            ],
+            validate: (c) => (c.file_name && c.format)
+          },
+          payload: () => ({
+            command: 'save to server',
+            format: 'csv',
+            file_name: ''
+          }),
+          code: (payload) => (`df.save.${payload.format}("${payload.file_name}")`)
+        },
+        'save to database': {
+          dialog: {
+            title: 'Save dataset to database',
+            fields: [
+              {
+                type: 'field',
+                key: 'table_name',
+                label: 'Table name',
+              }
+            ],
+            validate: (c) => (c.table_name)
+          },
+          payload: () => ({
+            command: 'save to database',
+            table_name: ''
+          }),
+          code: (payload) => (`db.df_to_table(df, table="${payload.table_name}", mode="overwrite")`)
         },
         replace: {
           dialog: {
