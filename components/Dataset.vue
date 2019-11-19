@@ -491,9 +491,12 @@ export default {
               ${e.name}
             </span>`
 				}
-			})
+      })
 
-			this.tableUpdate = this.tableUpdate + 1
+      this.$nextTick(()=>{
+        this.tableUpdate = this.tableUpdate + 1
+      })
+
 		},
 
 		getFilteredColumns () {

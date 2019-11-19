@@ -6,7 +6,8 @@ export const state = () => ({
   database: false,
   key: '',
   datasetCounter: 1,
-  kernel: false
+  kernel: false,
+  cells: []
 })
 
 export const mutations = {
@@ -36,9 +37,20 @@ export const mutations = {
 
 		if (found === -1) {
 			found = state.datasets.length
-		}
+    }
 
-		state.datasets[found] = dataset
+    dataset.varname = 'df' // TODO: multiple dfs
+
+    /*
+
+    if (found>=1)
+      dataset.varname = `df${found}`
+    else
+      dataset.varname = 'df'
+
+    */
+
+    state.datasets[found] = dataset
 
 		if (state.datasets[found].columns instanceof Object) { state.datasets[found].columns = Object.values(state.datasets[found].columns) }
 
@@ -80,6 +92,18 @@ export const mutations = {
 
 	session (state, payload) {
     state.session = payload
+  },
+
+  cells (state, payload) {
+    state.cells = payload
+  },
+
+  cellContent (state, {index, content}) {
+    try {
+      state.cells[index].content = content
+    } catch (error) {
+      console.error(error)
+    }
   },
 
   database (state, payload) {

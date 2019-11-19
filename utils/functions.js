@@ -19,6 +19,18 @@ export const throttle = (func, limit) => {
 	}
 }
 
+export const arrayJoin = (array,separator = ', ',final_separator = ' and ') => {
+  var outStr = "";
+  if (array.length === 1) {
+    outStr = array[0];
+  } else if (array.length === 2) {
+    outStr = array.join(final_separator);
+  } else if (array.length > 2) {
+    outStr = array.slice(0, -1).join(separator) + final_separator + array.slice(-1);
+  }
+  return outStr;
+}
+
 export const trimCharacters = (s, c) => {
   if (c === "]") c = "\\]";
   if (c === "\\") c = "\\\\";

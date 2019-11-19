@@ -55,9 +55,11 @@ export default {
         {command: 'trim',             name: 'Trim white space', type: 'STRING'},
         {command: 'bucketizer',       name: 'Create Bins', max: 1}, // TODO: remove limit
         {command: 'values_to_cols',   name: 'Values to Columns', max: 1},
-        {command: 'string_to_index',  name: 'Strings to Index', max: 1}, // TODO: remove limit
+        {command: 'string_to_index',  name: 'Strings to Index'},
         {command: 'impute',           name: 'Impute rows'},
-        {command: 'z_score',          name: 'Calculate Z-score'}
+        {command: 'z_score',          name: 'Standard scaler',  type: 'SCALER'},
+        {command: 'min_max_scaler',   name: 'Min max scaler',   type: 'SCALER'},
+        {command: 'max_abs_scaler',   name: 'Max abs scaler',   type: 'SCALER'}
 
       ]
     }
