@@ -4,8 +4,8 @@
 			<v-dialog
 				:key="key"
 				persistent
-				v-if="command.dialog && currentCommand.command == key"
-				:value="currentCommand.command == key"
+				v-if="command.dialog && (currentCommand.command == key || currentCommand.type == key)"
+				:value="(currentCommand.command == key || currentCommand.type == key)"
 				max-width="410"
 				@click:outside="cancelCommand"
 				@keydown.esc="cancelCommand"
@@ -26,7 +26,7 @@
 							}}
 						</v-card-title>
 						<v-card-text class="command-card-text pb-0 px-6">
-							<div class="mb-2" v-if="command.dialog.text">
+							<div class="mb-6" v-if="command.dialog.text">
 								{{
 									(typeof command.dialog.text == 'function') ?
 										command.dialog.text(currentCommand)
@@ -34,86 +34,88 @@
 										command.dialog.text
 								}}
 							</div>
-							<template v-for="field in command.dialog.fields.filter(f=>(!f.condition || f.condition && f.condition(currentCommand)))">
-								<template v-if="field.type=='field'">
-									<v-text-field
-										v-model="currentCommand[field.key]"
-										:key="field.key"
-										:label="(typeof field.label == 'function') ? field.label(currentCommand) : field.label"
-										:placeholder="(typeof field.placeholder == 'function') ? field.placeholder(currentCommand) : field.placeholder"
-                    :clearable="field.clearable"
-										dense
-										required
-										outlined
-									></v-text-field>
-								</template>
-								<template v-if="field.type=='switch'">
-                  <v-switch
-										:key="field.key"
-										v-model="currentCommand[field.key]"
-                    color="black"
-                    class="mt-0"
-                    :label="(typeof field.label == 'function') ? field.label(currentCommand) : field.label"
-                  ></v-switch>
-								</template>
-								<template v-else-if="field.type=='password'">
-                  <v-text-field
-										v-model="currentCommand[field.key]"
-										:key="field.key"
-										:label="field.label"
-										:placeholder="field.placeholder"
-										dense
-										required
-										outlined
-                    :append-icon="field.showable ? (field.show ? 'visibility' : 'visibility_off') : undefined"
-                    :type="(field.show || !field.showable) ? 'text' : 'password'"
-                    :clearable="field.clearable"
-                    @click:append="field.show = !field.show"
-                  />
-								</template>
-								<template v-else-if="field.type=='number'">
-									<v-text-field
-										type="number"
-										v-model="currentCommand[field.key]"
-										:key="field.key"
-										:label="field.label"
-										:placeholder="field.placeholder"
-										:min="field.min"
-										:clearable="field.clearable"
-										dense
-										required
-										outlined
-									></v-text-field>
-								</template>
-								<template v-else-if="field.type=='number_index'">
-									<v-text-field
-										type="number"
-										:value="(currentCommand.index>=0) ? currentCommand.index : ''"
-										@input="currentCommand.index = ($event>=0) ? $event : ''"
-										:key="field.key"
-										label="Index"
-										:clearable="field.clearable"
-										:max="(field.splits!=='') ? field.splits-1 : undefined"
-										:placeholder="field.placeholder"
-										:min="field.min"
-										dense
-										required
-										outlined
-									></v-text-field>
-								</template>
-								<template v-else-if="field.type=='select' && (!field.items_key == !currentCommand[field.items_key])">
-									<v-select
-										:key="field.key"
-										v-model="currentCommand[field.key]"
-										:label="field.label"
-										:placeholder="field.placeholder"
-										:items="(field.items_key) ? currentCommand[field.items_key] : field.items"
-										dense
-										required
-										outlined
-									></v-select>
-								</template>
-							</template>
+              <template v-if="command.dialog.fields">
+                <template v-for="field in command.dialog.fields.filter(f=>(!f.condition || f.condition && f.condition(currentCommand)))">
+                  <template v-if="field.type=='field'">
+                    <v-text-field
+                      v-model="currentCommand[field.key]"
+                      :key="field.key"
+                      :label="(typeof field.label == 'function') ? field.label(currentCommand) : field.label"
+                      :placeholder="(typeof field.placeholder == 'function') ? field.placeholder(currentCommand) : field.placeholder"
+                      :clearable="field.clearable"
+                      dense
+                      required
+                      outlined
+                    ></v-text-field>
+                  </template>
+                  <template v-if="field.type=='switch'">
+                    <v-switch
+                      :key="field.key"
+                      v-model="currentCommand[field.key]"
+                      color="black"
+                      class="mt-0"
+                      :label="(typeof field.label == 'function') ? field.label(currentCommand) : field.label"
+                    ></v-switch>
+                  </template>
+                  <template v-else-if="field.type=='password'">
+                    <v-text-field
+                      v-model="currentCommand[field.key]"
+                      :key="field.key"
+                      :label="field.label"
+                      :placeholder="field.placeholder"
+                      dense
+                      required
+                      outlined
+                      :append-icon="field.showable ? (field.show ? 'visibility' : 'visibility_off') : undefined"
+                      :type="(field.show || !field.showable) ? 'text' : 'password'"
+                      :clearable="field.clearable"
+                      @click:append="field.show = !field.show"
+                    />
+                  </template>
+                  <template v-else-if="field.type=='number'">
+                    <v-text-field
+                      type="number"
+                      v-model="currentCommand[field.key]"
+                      :key="field.key"
+                      :label="field.label"
+                      :placeholder="field.placeholder"
+                      :min="field.min"
+                      :clearable="field.clearable"
+                      dense
+                      required
+                      outlined
+                    ></v-text-field>
+                  </template>
+                  <template v-else-if="field.type=='number_index'">
+                    <v-text-field
+                      type="number"
+                      :value="(currentCommand.index>=0) ? currentCommand.index : ''"
+                      @input="currentCommand.index = ($event>=0) ? $event : ''"
+                      :key="field.key"
+                      label="Index"
+                      :clearable="field.clearable"
+                      :max="(field.splits!=='') ? field.splits-1 : undefined"
+                      :placeholder="field.placeholder"
+                      :min="field.min"
+                      dense
+                      required
+                      outlined
+                    ></v-text-field>
+                  </template>
+                  <template v-else-if="field.type=='select' && (!field.items_key == !currentCommand[field.items_key])">
+                    <v-select
+                      :key="field.key"
+                      v-model="currentCommand[field.key]"
+                      :label="field.label"
+                      :placeholder="field.placeholder"
+                      :items="(field.items_key) ? currentCommand[field.items_key] : field.items"
+                      dense
+                      required
+                      outlined
+                    ></v-select>
+                  </template>
+                </template>
+              </template>
 							<OutputColumnInputs v-if="command.dialog.output_cols" :fieldLabel="command.dialog.output_cols_label" :noLabel="command.dialog.no_label" :currentCommand.sync="currentCommand"></OutputColumnInputs>
               <template>
                 <v-alert key="error" type="error" class="mt-3" dismissible v-if="currentCommand.error"  @input="currentCommand.error=''">
@@ -166,21 +168,19 @@
         @start="drag = true"
         @end="drag = false; draggableEnd()"
       >
-        <transition-group type="transition" :name="!drag ? 'flip-list' : null">
-          <div class="cell-container" v-for="(cell, index) in cells" :key="cell.id" :class="{'fixed-cell': cell.fixed, 'cell-error': cell.error,'done': cell.done,'active': cell.active}" @click="setActiveCell(index)">
+        <div class="cell-container" v-for="(cell, index) in this.cells" :key="cell.id" :class="{'fixed-cell': cell.fixed, 'cell-error': cell.error,'done': cell.done,'active': activeCell==index}" @click="setActiveCell(index)">
 
-            <div class="cell">
-              <div class="handle left-handle"></div>
-              <CodeEditor
-                :active="cell.active"
-                @update:active="setActiveCell(index)"
-                @input="cell.content = $event; runButton = true"
-                :value="cell.content"
-              />
-              <div class="cell-type cell-type-label" v-if="cell.command && cell.command!='code'">{{cell.command}}</div>
-            </div>
+          <div class="cell">
+            <div class="handle left-handle"></div>
+            <CodeEditor
+              :active="activeCell==index"
+              @update:active="setActiveCell(index)"
+              @input="$store.commit('cellContent',{index, content: $event}) ; runButton = true"
+              :value="cell.content"
+            />
+            <div class="cell-type cell-type-label" v-if="cell.command && cell.command!='code'">{{cell.command}}</div>
           </div>
-        </transition-group>
+        </div>
       </draggable>
       <v-alert key="error" type="error" class="mt-3" dismissible v-if="codeError!=''"  @input="codeError=''">
         {{codeError}}
@@ -206,7 +206,7 @@ import axios from 'axios'
 import CodeEditor from '@/components/CodeEditor'
 import OutputColumnInputs from '@/components/OutputColumnInputs'
 import clientMixin from '@/plugins/mixins/client'
-import { trimCharacters, debounce, newName } from '@/utils/functions.js'
+import { trimCharacters, debounce, newName, arrayJoin } from '@/utils/functions.js'
 
 const api_url = process.env.API_URL || 'http://localhost:5000'
 
@@ -235,7 +235,10 @@ export default {
 
   data () {
     return {
-      cells: [],
+
+      barTop: 0,
+      barHovered: false,
+
       activeCell: -1,
       codeDone: '',
       lastWrongCode: false,
@@ -248,52 +251,159 @@ export default {
       commandsPallete: {
         'apply sort': {
           code: (payload) => {
-            return `df = df.cols.keep(["${payload.columns.join('", "')}"])`
+            return `${this.dataset.varname} = ${this.dataset.varname}.cols.sort(columns=["${payload.columns.join('", "')}"])`
           }
         },
-        BASE_DIALOG: {
+        'filter rows': {
           dialog: {
+            title: 'Filter rows',
+            text: (c)=>`In column "${c.columns[0]}"`,
             fields: [
-              {}
+              {
+                key: 'condition',
+                label: 'Condition',
+                type: 'select',
+                items: [
+                  { text: 'Is exactly', value: 'exactly' },
+                  // { text: 'Is one of', value: 'oneof' },
+                  { text: 'Is not', value: 'not' },
+                  { divider: true },
+                  { text: 'Less than or equal to', value: 'less' },
+                  { text: 'Greater than or equal to', value: 'greater' },
+                  { text: 'Is Between', value: 'between' },
+                  { divider: true },
+                  { text: 'Contains', value: 'contains' },
+                  { text: 'Starts with', value: 'startswith' },
+                  { text: 'Ends with', value: 'endswith' },
+                  { divider: true },
+                  { text: 'Custom expression', value: 'custom' }
+                ]
+              },
+              {
+                condition: (c)=>['exactly','oneof','not','less','greater'].includes(c.condition),
+                key: 'value',
+                placeholder: 'numeric or "string"',
+                label: 'Value',
+                type: 'field'
+              },
+              {
+                condition: (c)=>('between'==c.condition),
+                key: 'value',
+                label: 'Min value',
+                placeholder: '0',
+                type: 'number'
+              },
+              {
+                condition: (c)=>('between'==c.condition),
+                key: 'value_2',
+                label: 'Max value',
+                placeholder: '1',
+                type: 'number'
+              },
+              {
+                condition: (c)=>('custom'==c.condition),
+                key: 'expression',
+                label: 'Expression',
+                placeholder: 'df["col_name"]>=0',
+                type: 'field'
+              },
+              {
+                condition: (c)=>['contains','startswith','endswith'].includes(c.condition),
+                key: 'text',
+                label: 'Text',
+                placeholder: 'lorem ipsum',
+                type: 'field'
+              },
+              // {
+              //   key: 'action',
+              //   label: 'Action',
+              //   type: 'select',
+              //   items: [
+              //     {text: 'Keep matching rows', value: 'keep'},
+              //     {text: 'Drop matching rows', value: 'drop'}
+              //   ]
+              // }
             ],
-            output_cols: true,
-            validate: (command) => true
+            validate: (c) => {
+              switch (c.condition) {
+                case 'exactly':
+                case 'oneof':
+                case 'not':
+                case 'less':
+                case 'greater':
+                  return (c.value!='')
+                case 'between':
+                  return (c.value!='' && c.value_2!='')
+                case 'contains':
+                case 'startswith':
+                case 'endswith':
+                  return (c.text!='')
+                case 'custom':
+                  return (c.expression!='')
+                default:
+                  return false
+              }
+            }
           },
+
           payload: (columns) => ({
-            command: 'BASE_DIALOG',
-            columns: columns,
+            columns,
+            condition: 'exactly',
+            value: '',
+            value_2: '',
+            text: '',
+            expression: `${this.dataset.varname}["${columns[0]}"]`,
+            action: 'keep'
           }),
+
           code: (payload) => {
 
-            // Multiple columns
-            var _argument = (payload.columns.length==1) ? `"${payload.columns[0]}"` : `["${payload.columns.join('", "')}"]`
+            var expression = payload.expression
 
-            // Multiple outputs n->n
-            var output_cols_argument =
-              (!payload.output_cols.join('').trim().length) ? false :
-              (payload.output_cols.length==1) ? `"${payload.output_cols[0]}"` :
-              `[${payload.output_cols.map((e)=>((e!==null) ? `"${e}"` : 'None')).join(', ')}]`
+            switch (payload.condition) {
+              case 'exactly':
+                expression = `${this.dataset.varname}["${payload.columns[0]}"]==${payload.value}`
+                break
+              case 'oneof':
+              case 'not':
+                expression = `${this.dataset.varname}["${payload.columns[0]}"]!=${payload.value}`
+                break
+              case 'less':
+                expression = `${this.dataset.varname}["${payload.columns[0]}"]<=${payload.value}`
+                break
+              case 'greater':
+                expression = `${this.dataset.varname}["${payload.columns[0]}"]>=${payload.value}`
+                break
+              case 'between':
+                expression = `(${this.dataset.varname}["${payload.columns[0]}"]>=${payload.value}) & (${this.dataset.varname}["${payload.columns[0]}"]<${payload.value_2})`
+                break
+              case 'contains':
+                expression = `${this.dataset.varname}["${payload.columns[0]}"].contains("${payload.text}")`
+                break
+              case 'startswith':
+                expression = `${this.dataset.varname}["${payload.columns[0]}"].startswith("${payload.text}")`
+                break
+              case 'endswith':
+                expression = `${this.dataset.varname}["${payload.columns[0]}"].endswith("${payload.text}")`
+                break
+              case 'custom':
+              default:
+            }
 
-
-            return 'df = df.cols.BASE_DIALOG('
-              +_argument
-              // optional argument
-              +( (payload.separator) ? `, separator="${payload.separator}"` : '')
-              +( (output_cols_argument) ? `, output_cols=${output_cols_argument}` : '')
-              +')'
+            return `${this.dataset.varname} = ${this.dataset.varname}.rows.select( ${expression} )` // ${this.dataset.varname}.rows.${payload.action}()
           }
         },
         STRING: {
           code: (payload) => {
             var _argument = payload.columns.length==0 ? `"*"`
             : (payload.columns.length==1 ? `"${payload.columns[0]}"` : `input_cols=["${payload.columns.join('", "')}"]`)
-            return `df = df.cols.${payload.command}(${_argument})`
+            return `${this.dataset.varname} = ${this.dataset.varname}.cols.${payload.command}(${_argument})`
           }
         },
         cast: {
           code: (payload) => {
             var _argument = (payload.columns.length==1) ? `"${payload.columns[0]}"` : `["${payload.columns.join('", "')}"]`
-            return 'df = df.cols.cast('
+            return `${this.dataset.varname} = ${this.dataset.varname}.cols.cast(`
             +_argument
             +`, dtype="${payload.dtype}"`
             +')'
@@ -328,7 +438,7 @@ export default {
               (!payload.output_cols.join('').trim().length) ? false :
               (payload.output_cols.length==1) ? `"${payload.output_cols[0]}"` :
               `[${payload.output_cols.map((e)=>((e!==null) ? `"${e}"` : 'None')).join(', ')}]`
-            return 'df = df.cols.fill_na('
+            return `${this.dataset.varname} = ${this.dataset.varname}.cols.fill_na(`
               +_argument
               +`, "${payload.fill}"`
               +( (output_cols_argument) ? `, output_cols=${output_cols_argument}` : '')
@@ -345,17 +455,17 @@ export default {
                 label: 'File type',
                 type: 'select',
                 items: [
-                  {text: 'CSV', value: 'csv'},
-                  {text: 'XLS', value: 'xls'},
-                  {text: 'JSON', value: 'json'},
-                  {text: 'Avro', value: 'avro'},
-                  {text: 'Parquet', value: 'parquet'}
+                  { text: 'CSV', value: 'csv' },
+                  { text: 'XLS', value: 'xls' },
+                  { text: 'JSON', value: 'json' },
+                  { text: 'Avro', value: 'avro' },
+                  { text: 'Parquet', value: 'parquet' }
                 ]
               },
               {
                 key: 'url',
                 label: 'File url',
-                placeholder: (c)=>`https://example.com/my_file.${c.type}`,
+                placeholder: (c)=>`https://example.com/my_file.${c.file_type}`,
                 type: 'field'
               },
               {
@@ -434,7 +544,7 @@ export default {
               header: (payload.header) ? `'true'` : `'false'`,
               multiline: (payload.multiline) ? `True` : `False`,
             }
-            let code = `df = op.load.${file.file_type}("${file.url}"`
+            let code = `${this.availableVariableName} = op.load.${file.file_type}("${file.url}"`
             if (file.file_type=='csv'){
               code += `, sep="${file.sep}"`
               code += `, header=${file.header}`
@@ -588,7 +698,7 @@ export default {
           }),
           code: (payload) => {
             return `${payload.previous_code}
-df = db.table_to_df("${payload.table}").cache()`
+${this.availableVariableName} = db.table_to_df("${payload.table}").cache()`
           },
           onTest: async (payload) => {
 
@@ -676,7 +786,7 @@ db.tables_names_to_json()`)
             format: 'csv',
             file_name: ''
           }),
-          code: (payload) => (`df.save.${payload.format}("${payload.file_name}")`)
+          code: (payload) => (`${this.dataset.varname}.save.${payload.format}("${payload.file_name}")`)
         },
         'save to database': {
           dialog: {
@@ -694,7 +804,7 @@ db.tables_names_to_json()`)
             command: 'save to database',
             table_name: ''
           }),
-          code: (payload) => (`db.df_to_table(df, table="${payload.table_name}", mode="overwrite")`)
+          code: (payload) => (`db.df_to_table(${this.dataset.varname}, table="${payload.table_name}", mode="overwrite")`)
         },
         replace: {
           dialog: {
@@ -740,7 +850,7 @@ db.tables_names_to_json()`)
               (!payload.output_cols.join('').trim().length) ? false :
               (payload.output_cols.length==1) ? `"${payload.output_cols[0]}"` :
               `[${payload.output_cols.map((e)=>((e!==null) ? `"${e}"` : 'None')).join(', ')}]`
-            return 'df = df.cols.replace('
+            return `${this.dataset.varname} = ${this.dataset.varname}.cols.replace(`
               +_argument
               +`, search="${payload.search}"`
               +`, replace_by="${payload.replace}"`
@@ -780,7 +890,7 @@ db.tables_names_to_json()`)
             newName: '' // columns.length==1 ? newName(columns[0]) : ''
           }),
           code: (payload) => {
-            return `df = df.cols.set("${payload.newName}"`
+            return `${this.dataset.varname} = ${this.dataset.varname}.cols.set("${payload.newName}"`
             +( (payload.expression) ? `, ${payload.expression}` : '')
             +`)`
           }
@@ -804,10 +914,10 @@ db.tables_names_to_json()`)
           },
           code: (payload) => {
             if (payload.columns.length==1) {
-              return `df = df.cols.rename("${payload.columns[0]}", "${payload.output_cols[0]}")`
+              return `${this.dataset.varname} = ${this.dataset.varname}.cols.rename("${payload.columns[0]}", "${payload.output_cols[0]}")`
             }
             else {
-              return `df = df.cols.rename([${payload.columns.map((e,i)=>`("${e}", "${payload.output_cols[i]}")`)}])`
+              return `${this.dataset.varname} = ${this.dataset.varname}.cols.rename([${payload.columns.map((e,i)=>`("${e}", "${payload.output_cols[i]}")`)}])`
             }
           }
         },
@@ -857,7 +967,7 @@ db.tables_names_to_json()`)
               (!payload.output_cols.join('').trim().length) ? false :
               (payload.output_cols.length==1) ? `"${payload.output_cols[0]}"` :
               `[${payload.output_cols.map((e)=>((e!==null) ? `"${e}"` : 'None')).join(', ')}]`
-            return 'df = df.cols.unnest('
+            return `${this.dataset.varname} = ${this.dataset.varname}.cols.unnest(`
               +_argument
               +( (payload.separator) ? `, separator="${payload.separator}"` : '')
               +( (payload.splits) ? `, splits=${payload.splits}` : '')
@@ -894,7 +1004,7 @@ db.tables_names_to_json()`)
 					}
           },
 					code: (payload) => {
-            return `df = df.cols.nest(["${payload.columns.join('", "')}"]`
+            return `${this.dataset.varname} = ${this.dataset.varname}.cols.nest(["${payload.columns.join('", "')}"]`
 						+( (payload.separator) ? `, separator="${payload.separator}"` : '')
 						+`, output_col="${payload.newName}")`
           }
@@ -920,7 +1030,7 @@ db.tables_names_to_json()`)
               (!payload.output_cols.join('').trim().length) ? false :
               (payload.output_cols.length==1) ? `"${payload.output_cols[0]}"` :
               `[${payload.output_cols.map((e)=>((e!==null) ? `"${e}"` : 'None')).join(', ')}]`
-            return 'df = df.cols.copy('
+            return `${this.dataset.varname} = ${this.dataset.varname}.cols.copy(`
               +_argument
               +( (output_cols_argument) ? `, output_cols=${output_cols_argument}` : '')
               +')'
@@ -963,7 +1073,7 @@ db.tables_names_to_json()`)
                 :
                   `[${payload.output_cols.map((e)=>((e!==null) ? `"${e}"` : 'None')).join(', ')}]`
 
-            return 'df = df.cols.bucketizer('
+            return `${this.dataset.varname} = ${this.dataset.varname}.cols.bucketizer(`
               + _argument
               + ( (payload.splits) ? `, ${payload.splits}` : '')
               + ( (output_cols_argument) ? `, output_cols=${output_cols_argument}` : '')
@@ -978,7 +1088,7 @@ db.tables_names_to_json()`)
             }
           },
           code: (payload) => {
-            return `df = df.cols.values_to_cols("${payload.columns[0]}")`
+            return `${this.dataset.varname} = ${this.dataset.varname}.cols.values_to_cols("${payload.columns[0]}")`
           }
         },
         string_to_index: {
@@ -1011,15 +1121,25 @@ db.tables_names_to_json()`)
                 :
                   `[${payload.output_cols.map((e)=>((e!==null) ? `"${e}"` : 'None')).join(', ')}]`
 
-            return 'df = df.cols.string_to_index('
+            return `${this.dataset.varname} = ${this.dataset.varname}.cols.string_to_index(`
               + _argument
               + ( (output_cols_argument) ? `, output_cols=${output_cols_argument}` : '')
               + ')'
           },
         },
-        z_score: {
+        SCALER: {
           dialog: {
-            title: 'Calculate Z-score',
+            title: (command) => {
+              if (command.command=='z_score')
+                return 'Standard scaler'
+              if (command.command== 'min_max_scaler')
+                return 'Min max scaler'
+              if (command.command== 'max_abs_scaler')
+                return 'Max abs scaler'
+            },
+            text: (command) => {
+              return `Apply to ${arrayJoin(command.columns)}`
+            },
             output_cols: true,
             validate: (command) => {
               if (command.output_cols.filter(e=>e!=='').length%command.columns.length==0)
@@ -1029,13 +1149,11 @@ db.tables_names_to_json()`)
           },
           payload: (columns) => {
             return {
-              command: 'z_score',
               columns: columns,
               output_cols: columns.map(e=>'')
             }
           },
           code: (payload) => {
-            // cols.z_score(input_cols, output_cols=None)
             var _argument = (payload.columns.length==1) ? `"${payload.columns[0]}"` : `["${payload.columns.join('", "')}"]`
 
             var output_cols_argument =
@@ -1047,7 +1165,7 @@ db.tables_names_to_json()`)
                 :
                   `[${payload.output_cols.map((e)=>((e!==null) ? `"${e}"` : 'None')).join(', ')}]`
 
-            return 'df = df.cols.z_score('
+            return `${this.dataset.varname} = ${this.dataset.varname}.cols.${payload.command}(`
               + _argument
               + ( (output_cols_argument) ? `, output_cols=${output_cols_argument}` : '')
               + ')'
@@ -1107,7 +1225,7 @@ db.tables_names_to_json()`)
                 :
                   `[${payload.output_cols.map((e)=>((e!==null) ? `"${e}"` : 'None')).join(', ')}]`
 
-            return 'df = df.cols.impute('
+            return `${this.dataset.varname} = ${this.dataset.varname}.cols.impute(`
               + _argument
               + `, "${payload.data_type}"`
               + `, "${payload.strategy}"`
@@ -1140,7 +1258,7 @@ db.tables_names_to_json()`)
             }
           },
           code: (payload) => {
-            return 'df = df.sample_n('+ payload.n+')'
+            return `${this.dataset.varname} = ${this.dataset.varname}.sample_n('+ payload.n+')`
           },
         },
         /*
@@ -1195,26 +1313,45 @@ db.tables_names_to_json()`)
             }
           },
           code: (payload) => {
-            return `dfs['${payload.new_df}'] = df.random_split(${payload.self}, weights=[${payload.weight1},${payload.weight2}], seed=${payload.seed})`
+            return `${this.availableVariableName} = ${this.dataset.varname}.random_split(${payload.self}, weights=[${payload.weight1},${payload.weight2}], seed=${payload.seed})`
           }
         }
         */
-      },
-
-      barTop: 0,
-      barHovered: false
-
+      }
     }
   },
 
   computed: {
 
-    codeText () {
-      return (this.cells.length) ? (this.cells.filter(e=>(e.content!=='')).map(e=>e.content).join('\n').trim()) : ''
+    cells: {
+      get() {
+        return Array.from(this.$store.state.cells)
+      },
+      set(value) {
+        this.$store.commit('cells', value)
+      }
     },
 
-    codeNewText () {
-      return (this.cells.length) ? (this.cells.filter(e=>(e.content!=='' && !e.done)).map(e=>e.content).join('\n').trim()) : ''
+    availableVariableName () {
+
+      return 'df' // TODO: multiple dfs
+
+      var found = this.$store.state.datasets.findIndex(e => {
+        console.log('e',e)
+        return (!e.summary)
+      })
+
+      if (found === -1) {
+        found = this.$store.state.datasets.length
+        console.log("this.$store.state.datasets.length",this.$store.state.datasets.length)
+      }
+
+      console.log("found",found)
+
+      if (found>=1)
+        return `df${found}`
+      else
+        return 'df'
     },
 
     dragOptions () {
@@ -1238,6 +1375,12 @@ db.tables_names_to_json()`)
   },
 
   watch: {
+    // cells: {
+    //   deep: true,
+    //   handler (value) {
+    //     this.store_cells = value
+    //   }
+    // },
     barHovered (value) {
       if (!value){
         this.moveBarDelayed(this.barTop)
@@ -1257,6 +1400,14 @@ db.tables_names_to_json()`)
   },
 
   methods: {
+
+    codeText (n = false) {
+      if (n)
+        return (this.cells.length) ? (this.cells.filter(e=>(e.content!=='' && !e.done)).map(e=>e.content).join('\n').trim()) : ''
+      else
+        return (this.cells.length) ? (this.cells.filter(e=>(e.content!=='')).map(e=>e.content).join('\n').trim()) : ''
+    },
+
     commandHandle ( event ) {
 
 			var payload = {}
@@ -1293,8 +1444,9 @@ db.tables_names_to_json()`)
     },
 
     async confirmCommand () {
-      if (this.commandsPallete[this.currentCommand.command].onDone) {
-        this.currentCommand = await this.commandsPallete[this.currentCommand.command].onDone(this.currentCommand)
+      var _command = this.commandsPallete[this.currentCommand.command] || this.commandsPallete[this.currentCommand.type]
+      if (_command.onDone) {
+        this.currentCommand = await _command.onDone(this.currentCommand)
       }
       else {
         this.addCell(-1, this.currentCommand )
@@ -1310,11 +1462,8 @@ db.tables_names_to_json()`)
     },
 
     setActiveCell (index, delayed = false) {
-      for (let i = 0; i < this.cells.length; i++) {
-        this.cells[i].active = false
-      }
+
       if (this.cells[index]) {
-        this.cells[index].active = true
         this.activeCell = index
         if (this.$refs.cells) {
           this.moveBar(this.$refs.cells.$el.getElementsByClassName('cell-container')[index].offsetTop+11)
@@ -1324,6 +1473,7 @@ db.tables_names_to_json()`)
         this.activeCell = -1
         this.moveBar(12)
       }
+
     },
 
     moveBarDelayed: debounce(async function(value) {
@@ -1348,7 +1498,7 @@ db.tables_names_to_json()`)
     },
 
     draggableEnd() {
-      if (this.codeText.trim()===''){
+      if (this.codeText().trim()===''){
         this.runButton = false
         this.codeError = ''
         this.runCode() // deleting every cell
@@ -1370,13 +1520,16 @@ db.tables_names_to_json()`)
 
     removeCell (index) {
 
-      if (index<0 || (['load file', 'load from database'].includes(this.cells[index].command) && this.cells.filter(e => ['load file', 'load from database'].includes(e.command) ).length<=1)) {
+      var permanentCells = ['load file', 'load from database']
+
+      if (index<0 || (permanentCells.includes(this.cells[index].command) && this.cells.filter(e => permanentCells.includes(e.command) ).length<=1)) {
         return
       }
-
       this.codeError = ''
 
-      this.cells.splice(index,1)
+      var cells = this.cells
+      cells.splice(index,1)
+      this.cells = cells
       if (this.cells.length==index) {
         index--
       }
@@ -1386,35 +1539,34 @@ db.tables_names_to_json()`)
     },
 
     markCells(mark = true) {
+      var cells = [...this.cells]
       for (let i = 0; i < this.cells.length; i++) {
-        if (this.cells[i].content) {
-          this.cells[i].done = mark
+        if (cells[i].content) {
+          cells[i].done = mark
         }
-        this.cells[i].error = false
+        cells[i].error = false
       }
+      this.cells = cells
 
       if (mark && this.cells)
         this.codeDone = this.cells.map(e=>e.content).join('\n').trim()
       else
         this.codeDone = ''
-
     },
 
     markCellsError() {
-      for (let i = 0; i < this.cells.length; i++) {
-        if (!this.cells[i].done && this.cells[i].content)
-          this.cells[i].error = true
+      var cells = [...this.cells]
+      for (let i = 0; i < cells.length; i++) {
+        if (!cells[i].done && cells[i].content)
+          cells[i].error = true
       }
+      this.cells = cells
 
       if (this.cells)
         this.codeDone = this.cells.map(e=>e.content).join('\n').trim()
       else
         this.codeDone = ''
     },
-
-    // setLoad (code) {
-    //   this.addCell(-1,{ content: code, command: 'load file' })
-    // },
 
     addCell (at = -1, payload = {command: 'code', columns: []}) {
 
@@ -1430,10 +1582,10 @@ db.tables_names_to_json()`)
 
         switch (payload.command) {
           case 'drop':
-            content = `df = df.cols.drop(["${payload.columns.join('", "')}"])`
+            content = `${this.dataset.varname} = ${this.dataset.varname}.cols.drop(["${payload.columns.join('", "')}"])`
             break;
           case 'keep':
-            content = `df = df.cols.keep(["${payload.columns.join('", "')}"])`
+            content = `${this.dataset.varname} = ${this.dataset.varname}.cols.keep(["${payload.columns.join('", "')}"])`
             break;
           default:
             var _command = this.commandsPallete[payload.command] || this.commandsPallete[payload.type]
@@ -1450,12 +1602,16 @@ db.tables_names_to_json()`)
       if (at==-1)
         at = this.cells.length
 
-      this.cells.splice(at,0, {
+      var cells = [...this.cells]
+
+      cells.splice(at,0, {
         command: payload.command,
         content,
         id: Number(new Date()),
         active: false
       })
+
+      this.cells = cells
 
       this.$nextTick(()=>{
         if (this.activeCell<0)
@@ -1479,7 +1635,7 @@ db.tables_names_to_json()`)
 
     async runCodeNow (force = false) {
 
-      var code = this.codeText
+      var code = this.codeText()
       var codeDone = this.codeDone.trim()
       var rerun = false
 
@@ -1490,7 +1646,7 @@ db.tables_names_to_json()`)
         rerun = true
       }
       else {
-        code = this.codeNewText
+        code = this.codeText(true)
       }
 
       if (code===this.lastWrongCode) {
@@ -1540,7 +1696,7 @@ db.tables_names_to_json()`)
         this._commandsDisabled = undefined;
       }
 
-      if (this.codeText !== code) {
+      if (this.codeText() !== code) {
         this.runCodeNow(false)
       }
 
