@@ -640,7 +640,7 @@ db.tables_names_to_json()`)
 
               if (error.content.ename)
                 _error = error.content.ename
-              if (error.content.evalue && error.content.evalue.length<50)
+              if (error.content.evalue /*&& error.content.evalue.length<50*/)
                 _error += ': '+error.content.evalue
 
               this.currentCommand = {...payload, error: _error}

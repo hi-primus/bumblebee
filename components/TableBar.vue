@@ -72,7 +72,7 @@
             Connect a database
           </span>
         </v-tooltip>
-        <!-- <v-tooltip transition="fade-transition" bottom>
+        <v-tooltip transition="fade-transition" bottom>
           <template v-slot:activator="{ on }">
             <v-btn v-on="on"
               text
@@ -85,7 +85,7 @@
             </v-btn>
           </template>
           <span>Save dataset to database</span>
-        </v-tooltip> -->
+        </v-tooltip>
         <div class="divider"/>
       </template>
       <v-menu :close-on-content-click="false" offset-y>
