@@ -211,7 +211,7 @@
         </v-tooltip>
         <v-tooltip transition="fade-transition" bottom key="keep"> <!-- keep -->
           <template v-slot:activator="{ on }">
-            <v-btn v-on="on" :disabled="!detailedColumns.length>0" color="#888" text class="icon-btn" @click="commandHandle({command: 'keep'})">
+            <v-btn v-on="on" :disabled="!detailedColumns.length>0" color="#888" text class="icon-btn" @click="commandHandle({command: 'keep', type: 'DROP_KEEP'})">
               <v-icon>all_out</v-icon>
             </v-btn>
           </template>
@@ -219,7 +219,7 @@
         </v-tooltip>
         <v-tooltip transition="fade-transition" bottom key="delete"> <!-- delete -->
           <template v-slot:activator="{ on }">
-            <v-btn v-on="on" :disabled="!detailedColumns.length>0" color="#888" text class="icon-btn" @click="commandHandle({command: 'drop'})">
+            <v-btn v-on="on" :disabled="!detailedColumns.length>0" color="#888" text class="icon-btn" @click="commandHandle({command: 'drop', type: 'DROP_KEEP'})">
               <v-icon>delete</v-icon>
             </v-btn>
           </template>
