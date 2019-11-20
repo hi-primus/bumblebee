@@ -350,10 +350,35 @@ _status`,user_session)
 const startServer = async () => {
 	const port = process.env.PORT || 5000
 	const host = process.env.HOST || '0.0.0.0'
-	var _server = server.listen(port, host, () => {
-		console.log(`Bumblebee-api v${version} listening on ${host}:${port}`)
+	var _server = server.listen(port, host, async () => {
+    console.log(`Bumblebee-api v${version} listening on ${host}:${port}`)
+
+    try {
+
+      const response = await request({
+        uri: `${base}/api/kernels`,
+        method: 'GET',
+        headers: {},
+      })
+
+      const kernels = JSON.parse(response)
+
+      if (process.env.NODE_ENV == 'production') {
+        kernels.forEach(async kernel => {
+          console.log(`Deleting kernel ${kernel.id}`)
+          await request({
+            uri: `${base}/api/kernels/${kernel.id}`,
+            method: 'DELETE',
+            headers: {},
+          })
+        });
+      }
+
+    } catch (error) {}
+
 	})
-	_server.timeout = 10 * 60 * 1000;
+  _server.timeout = 10 * 60 * 1000;
+
 }
 
 startServer()
