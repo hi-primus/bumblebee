@@ -330,15 +330,15 @@ export default {
                 placeholder: 'lorem ipsum',
                 type: 'field'
               },
-              // {
-              //   key: 'action',
-              //   label: 'Action',
-              //   type: 'select',
-              //   items: [
-              //     {text: 'Keep matching rows', value: 'keep'},
-              //     {text: 'Drop matching rows', value: 'drop'}
-              //   ]
-              // }
+              {
+                key: 'action',
+                label: 'Action',
+                type: 'select',
+                items: [
+                  {text: 'Keep matching rows', value: 'select'},
+                  {text: 'Drop matching rows', value: 'drop'}
+                ]
+              }
             ],
             validate: (c) => {
               switch (c.condition) {
@@ -369,7 +369,7 @@ export default {
             value_2: '',
             text: '',
             expression: `${this.dataset.varname}["${columns[0]}"]`,
-            action: 'keep'
+            action: 'select'
           }),
 
           code: (payload) => {
@@ -406,7 +406,7 @@ export default {
               default:
             }
 
-            return `${this.dataset.varname} = ${this.dataset.varname}.rows.select( ${expression} )` // ${this.dataset.varname}.rows.${payload.action}()
+            return `${this.dataset.varname} = ${this.dataset.varname}.rows.${payload.action}( ${expression} )` // ${this.dataset.varname}.rows.${payload.action}()
           }
         },
         STRING: {
