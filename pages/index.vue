@@ -160,7 +160,7 @@
                   chips
                   deletable-chips
                   color="grey darken-3"
-                  class="placeholder-chip primary--chips"
+                  class="placeholder-chip primary--chips capitalized--chips"
                   label="Data type"
                   hide-details
                   hide-no-data

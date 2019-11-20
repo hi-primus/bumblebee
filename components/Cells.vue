@@ -40,13 +40,22 @@
                     <v-text-field
                       v-model="currentCommand[field.key]"
                       :key="field.key"
-                      :label="(typeof field.label == 'function') ? field.label(currentCommand) : field.label"
-                      :placeholder="(typeof field.placeholder == 'function') ? field.placeholder(currentCommand) : field.placeholder"
+                      :label="(typeof field.label == 'function') ? field.label(currentCommand) : (field.label || '')"
+                      :placeholder="(typeof field.placeholder == 'function') ? field.placeholder(currentCommand) : (field.placeholder || '')"
                       :clearable="field.clearable"
                       dense
                       required
                       outlined
                     ></v-text-field>
+                  </template>
+                  <template v-if="field.type=='chips'">
+                    <chips
+                      v-model="currentCommand[field.key]"
+                      :key="field.key"
+                      :label="(typeof field.label == 'function') ? field.label(currentCommand) : (field.label || '')"
+                      :placeholder="(typeof field.placeholder == 'function') ? field.placeholder(currentCommand) : (field.placeholder || '')"
+                      :clearable="field.clearable"
+                    ></chips>
                   </template>
                   <template v-if="field.type=='switch'">
                     <v-switch
@@ -204,6 +213,7 @@
 
 import axios from 'axios'
 import CodeEditor from '@/components/CodeEditor'
+import Chips from '@/components/Chips'
 import OutputColumnInputs from '@/components/OutputColumnInputs'
 import clientMixin from '@/plugins/mixins/client'
 import { trimCharacters, debounce, newName, arrayJoin } from '@/utils/functions.js'
@@ -214,7 +224,8 @@ export default {
 
   components: {
     CodeEditor,
-    OutputColumnInputs
+    OutputColumnInputs,
+    Chips
   },
 
   mixins: [clientMixin],
@@ -252,6 +263,11 @@ export default {
         'apply sort': {
           code: (payload) => {
             return `${this.dataset.varname} = ${this.dataset.varname}.cols.sort(columns=["${payload.columns.join('", "')}"])`
+          }
+        },
+        DROP_KEEP: {
+          code: (payload) => {
+            return `${this.dataset.varname} = ${this.dataset.varname}.cols.${payload.command}(["${payload.columns.join('", "')}"])`
           }
         },
         'filter rows': {
@@ -814,8 +830,9 @@ db.tables_names_to_json()`)
             },
             fields: [
               {
-                type: 'field',
+                type: 'chips',
                 key: 'search',
+                placeholder: 'Find',
                 label: 'Find'
               },
               {
@@ -839,7 +856,8 @@ db.tables_names_to_json()`)
           payload: (columns) => ({
 						command: 'replace',
 						columns: columns,
-						search: '', replace: '',
+            search: [],
+            replace: '',
 						search_by: 'chars',
             output_cols: columns.map(e=>newName(e)),
             title: 'Replace in ' + (columns.length==1 ? `column` : 'columns'),
@@ -852,7 +870,7 @@ db.tables_names_to_json()`)
               `[${payload.output_cols.map((e)=>((e!==null) ? `"${e}"` : 'None')).join(', ')}]`
             return `${this.dataset.varname} = ${this.dataset.varname}.cols.replace(`
               +_argument
-              +`, search="${payload.search}"`
+              +`, search=["${payload.search.join('","')}"]`
               +`, replace_by="${payload.replace}"`
               +`, search_by="${payload.search_by}"`
               +( (output_cols_argument) ? `, output_cols=${output_cols_argument}` : '')
@@ -1337,16 +1355,12 @@ db.tables_names_to_json()`)
       return 'df' // TODO: multiple dfs
 
       var found = this.$store.state.datasets.findIndex(e => {
-        console.log('e',e)
         return (!e.summary)
       })
 
       if (found === -1) {
         found = this.$store.state.datasets.length
-        console.log("this.$store.state.datasets.length",this.$store.state.datasets.length)
       }
-
-      console.log("found",found)
 
       if (found>=1)
         return `df${found}`
@@ -1520,6 +1534,8 @@ db.tables_names_to_json()`)
 
     removeCell (index) {
 
+      this.runButton = false
+
       var permanentCells = ['load file', 'load from database']
 
       if (index<0 || (permanentCells.includes(this.cells[index].command) && this.cells.filter(e => permanentCells.includes(e.command) ).length<=1)) {
@@ -1579,20 +1595,9 @@ db.tables_names_to_json()`)
       }
 
       if (!payload.content) {
-
-        switch (payload.command) {
-          case 'drop':
-            content = `${this.dataset.varname} = ${this.dataset.varname}.cols.drop(["${payload.columns.join('", "')}"])`
-            break;
-          case 'keep':
-            content = `${this.dataset.varname} = ${this.dataset.varname}.cols.keep(["${payload.columns.join('", "')}"])`
-            break;
-          default:
-            var _command = this.commandsPallete[payload.command] || this.commandsPallete[payload.type]
-            if (_command) {
-              content = _command.code ? _command.code(payload) : ''
-            }
-            break;
+        var _command = this.commandsPallete[payload.command] || this.commandsPallete[payload.type]
+        if (_command) {
+          content = _command.code ? _command.code(payload) : ''
         }
       }
       else {
