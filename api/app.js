@@ -116,8 +116,24 @@ const new_socket = function (socket, session) {
 	socket.emit('success')
 
 	socket.on('initialize', async (payload) => {
-		var user_session = payload.session
-		var result = await createKernel(user_session)
+    var user_session = payload.session
+
+    var result
+
+    var tries = 10
+
+    while (tries--) {
+      result = await createKernel(user_session)
+      if (result.status=='error') {
+        console.log(' Kernel error, retrying')
+        await deleteKernel(user_session)
+      }
+      else {
+        console.log(result)
+        break
+      }
+    }
+
 		socket.emit('reply',{...result, timestamp: payload.timestamp})
 	})
 
@@ -283,6 +299,21 @@ const run_code = async function(code = '', user_session = '') {
 			  resolve({status: 'error', error: 'Internal error', content: error})
 		}
 	})
+}
+
+const deleteKernel = async function(session) {
+	try {
+		if (kernels[session] != undefined) {
+      var _id = kernels[session].kernel['id']
+			kernels[session] = undefined
+      await request({
+        uri: `${base}/api/kernels/${_id}`,
+        method: 'DELETE',
+        headers: {},
+      })
+      console.log('Deleting Jupyter Kernel Gateway session for',session,_id)
+		}
+	} catch (err) {}
 }
 
 const createKernel = async function (user_session) {
