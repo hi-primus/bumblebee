@@ -90,22 +90,27 @@
       </template>
       <v-menu :close-on-content-click="false" offset-y>
         <template v-slot:activator="{ on: onSortBy }">
-          <v-btn
-            :color="sortBy[0] ? 'black' : '#888'"
-            :disabled="!(dataset && dataset.summary)"
-            class="icon-btn"
-            text
-            v-on="onSortBy"
-          >
-            <v-icon>sort</v-icon>
-            <span style="min-width: 2em; margin-left: -2px">
-              {{ sortByLabel }}
-            </span>
-            <v-icon v-show="sortBy[0]" color="black" small>
-              <template v-if="sortDesc[0]">arrow_downward</template>
-              <template v-else>arrow_upward</template>
-            </v-icon>
-          </v-btn>
+          <v-tooltip transition="fade-transition" bottom>
+            <template v-slot:activator="{ on: tooltip }">
+              <v-btn
+                :color="sortBy[0] ? 'black' : '#888'"
+                :disabled="!(dataset && dataset.summary)"
+                class="icon-btn"
+                text
+                v-on="{...tooltip, ...onSortBy}"
+              >
+                <v-icon>sort</v-icon>
+                <span style="min-width: 2em; margin-left: -2px">
+                  {{ sortByLabel }}
+                </span>
+                <v-icon v-show="sortBy[0]" color="black" small>
+                  <template v-if="sortDesc[0]">arrow_downward</template>
+                  <template v-else>arrow_upward</template>
+                </v-icon>
+              </v-btn>
+            </template>
+            <span>Sort columns</span>
+          </v-tooltip>
         </template>
         <v-list flat dense>
           <v-list-item-group :value="sortBy[0]" color="black">
@@ -151,6 +156,7 @@
           Apply sorting
         </span>
       </v-tooltip>
+      <div class="divider" v-if="$route.query.kernel=='1'" />
       <v-tooltip transition="fade-transition" v-if="$route.query.kernel=='1'" bottom key="sample_n"> <!-- sample_n -->
         <template v-slot:activator="{ on }">
           <v-btn v-on="on" color="#888" text class="icon-btn" @click="commandHandle({command: 'sample_n'})" :disabled="!(dataset && dataset.summary)">
@@ -159,6 +165,24 @@
         </template>
         <span>
           Sampling
+        </span>
+      </v-tooltip>
+      <v-tooltip transition="fade-transition" bottom>
+        <template v-slot:activator="{ on }">
+          <v-btn
+            :color="'#888'"
+            class="icon-btn"
+            text
+            v-on="on"
+            @click="commandHandle({command: 'sort rows'})"
+            :disabled="detailedColumns.length<1"
+          >
+            <v-icon style="transform: rotate(90deg); margin-right: -7px; margin-left: -5px">arrow_right_alt</v-icon>
+            <v-icon style="transform: rotate(-90deg); margin-left: -7px; margin-right: -5px">arrow_right_alt</v-icon>
+          </v-btn>
+        </template>
+        <span>
+          Sort rows
         </span>
       </v-tooltip>
       <v-tooltip transition="fade-transition" bottom>
@@ -259,15 +283,15 @@
           <span>Replace in column<span v-show="detailedColumns.length>1">s</span></span>
         </v-tooltip>
         <v-menu v-model="menus['TEXT']" offset-y key="string">  <!-- string -->
-          <template v-slot:activator="{ on: menuText }">
+          <template v-slot:activator="{ on: menuString }">
             <v-tooltip transition="fade-transition" bottom>
-              <template v-slot:activator="{ on: tooltipText }">
+              <template v-slot:activator="{ on: tooltip }">
                 <v-btn
                   :color="'#888'"
                   :disabled="!(dataset && dataset.summary && detailedColumns.length>=0)"
                   class="icon-btn"
                   text
-                  v-on="{...tooltipText, ...menuText}"
+                  v-on="{...tooltip, ...menuString}"
                 >
                   <v-icon>text_format</v-icon>
                   <v-icon style="margin-right: -8px; margin-left: -4px" :color="menus['TEXT'] ? 'black' : '#888'">

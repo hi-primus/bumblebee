@@ -10,7 +10,11 @@
 
     <div class="sidebar-section pt-1" v-if="expanded">
       <div class="component-container">
-        <General :rowsCount="rowsCount" :dtypes="column.dtypes_stats" :values="column.stats" />
+        <General
+         :rowsCount="rowsCount"
+         :dtypes="column.dtypes_stats"
+         :values="column.stats"
+        />
       </div>
 
       <div

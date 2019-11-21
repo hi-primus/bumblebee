@@ -282,7 +282,7 @@ export default {
             this.stopClient(true)
             break;
           case 'receiving':
-							this.$store.commit('kernel',false)
+							this.$store.commit('kernel','loading')
               if (!this.$store.state.datasets.length) {
 								this.$store.commit('addNew')
 							}
@@ -293,7 +293,7 @@ export default {
 
               if (response.content.toString().includes('optimus')) {
                 console.log('Optimus initialized')
-								this.$store.commit('kernel')
+								this.$store.commit('kernel','done')
 							}
 							else {
 								console.error(response)

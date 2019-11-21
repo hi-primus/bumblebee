@@ -1,6 +1,6 @@
 <template>
-  <span v-if="typeof value !== 'object' || value === null" :title="value">
-    <template v-if="value!==null && value!==undefined">
+  <span v-if="typeof value !== 'object' || value === null" :title="value" :class="{'missing': value===''}">
+    <template v-if="value!==null && value!==undefined && value!==''">
       &nbsp;{{ value }}&nbsp;
     </template>
   </span>

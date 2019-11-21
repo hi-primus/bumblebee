@@ -1,13 +1,20 @@
 <template>
 	<div class="table-container">
     <div v-if="!(dataset && dataset.summary)" class="no-data">
-      <v-progress-circular
-        indeterminate
-        v-if="commandsDisabled"
-        class="progress-middle"
-        color="#888"
-        size="64"
-      />
+      <div
+        v-if="commandsDisabled || $store.state.kernel=='loading'"
+        class="progress-middle title grey--text text-center"
+        :class="{'has-text': $store.state.kernel=='loading'}"
+      >
+        <v-progress-circular
+          indeterminate
+          color="#888"
+          size="64"
+        />
+        <template v-if="$store.state.kernel=='loading'">
+          Initializing optimus
+        </template>
+      </div>
       <!-- <v-progress-linear
         indeterminate
         v-if="commandsDisabled"
@@ -143,9 +150,9 @@
 						{{ item.stats.missing_count | formatNumberInt }}
 					</div>
 				</template>
-				<template v-slot:item.stats.count_na="{ item }">
+				<template v-slot:item.stats.null="{ item }">
 					<div class="pr-4">
-						{{ item.stats.count_na | formatNumberInt }}
+						{{ item.stats.null | formatNumberInt }}
 					</div>
 				</template>
 				<template v-slot:item.stats.zeros="{ item }">
@@ -318,7 +325,7 @@ export default {
             ),
           mismatch: (column.dtypes_stats.mismatch) ? +column.dtypes_stats.mismatch : 0,
           null: (column.dtypes_stats.null) ? +column.dtypes_stats.null : 0,
-					missing: column.stats.count_na,
+          missing: (column.dtypes_stats.missing) ? +column.dtypes_stats.missing : 0,
 					zeros: column.stats.zeros,
 					total: this.dataset.summary.rows_count,
 					count_uniques: column.stats.count_uniques,
@@ -514,7 +521,7 @@ export default {
 			this.filteredColumns = this.filteredColumns.map((column) => {
 				return {
 					__missing: +column.dtypes_stats.missing || 0,
-					__na: +column.stats.count_na || 0,
+					__na: +column.dtypes_stats.null || 0,
 					__zeros: +column.stats.zeros || 0,
 					...column
 				}

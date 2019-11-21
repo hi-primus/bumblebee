@@ -123,6 +123,27 @@
                       outlined
                     ></v-select>
                   </template>
+                  <template v-else-if="field.type=='select-foreach' && (!field.items_key == !currentCommand[field.items_key])">
+                    <v-row :key="field.key" no-gutters style="align-items: center">
+                      <template v-for="(title, i) in currentCommand.columns">
+                        <v-col v-if="!field.noLabel" :key="i+'label'" class="col-12 col-sm-4 col-md-3 font-weight-bold pr-4 text-ellipsis" :title="title">
+                          {{title}}
+                        </v-col>
+                        <v-col :key="i" class="col-12 oci-input-container" :class="{'col-sm-8 col-md-9': !field.noLabel}">
+                          <v-select
+                            v-model="currentCommand[field.key][i]"
+                            :key="field.key"
+                            :label="field.label===true ? title : field.label"
+                            :placeholder="field.placeholder===true ? title : field.placeholder"
+                            :items="(field.items_key) ? currentCommand[field.items_key] : field.items"
+                            dense
+                            required
+                            outlined
+                          ></v-select>
+                        </v-col>
+                      </template>
+                    </v-row>
+                  </template>
                 </template>
               </template>
 							<OutputColumnInputs v-if="command.dialog.output_cols" :fieldLabel="command.dialog.output_cols_label" :noLabel="command.dialog.no_label" :currentCommand.sync="currentCommand"></OutputColumnInputs>
@@ -153,7 +174,7 @@
 							<v-btn
 								color="primary"
 								text
-								:disabled="!command.dialog.validate(currentCommand)"
+								:disabled="command.dialog.validate && !command.dialog.validate(currentCommand)"
                 :loading="currentCommand.loadingAccept"
 								type="submit"
 								form="command-form"
@@ -270,6 +291,37 @@ export default {
             return `${this.dataset.varname} = ${this.dataset.varname}.cols.${payload.command}(["${payload.columns.join('", "')}"])`
           }
         },
+        'sort rows': {
+          dialog: {
+            title: 'Sort rows',
+            text: (c) => {
+              return `Sort using ${arrayJoin(c.columns)}`
+            },
+            fields: [
+              {
+                key: 'orders',
+                label: 'Order',
+                type: 'select-foreach',
+                items: [
+                  { text: 'Ascending', value: 'asc' },
+                  { text: 'Descending', value: 'desc' }
+                ]
+              }
+            ],
+          },
+
+          payload: (columns) => ({
+            columns,
+            orders: columns.map(e=>'asc'),
+          }),
+
+          code: (payload) => {
+            var _argument = (payload.columns.length==1) ?
+              `"${payload.columns[0]}","${payload.orders[0]}"` :
+              `[${payload.columns.map((e,i)=>(`("${e}","${payload.orders[i]}")`)).join(',')}]`
+            return `${this.dataset.varname} = ${this.dataset.varname}.rows.sort( ${_argument} )`
+          }
+        },
         'filter rows': {
           dialog: {
             title: 'Filter rows',
@@ -281,7 +333,7 @@ export default {
                 type: 'select',
                 items: [
                   { text: 'Is exactly', value: 'exactly' },
-                  // { text: 'Is one of', value: 'oneof' },
+                  { text: 'Is one of', value: 'oneof' },
                   { text: 'Is not', value: 'not' },
                   { divider: true },
                   { text: 'Less than or equal to', value: 'less' },
@@ -296,7 +348,7 @@ export default {
                 ]
               },
               {
-                condition: (c)=>['exactly','oneof','not','less','greater'].includes(c.condition),
+                condition: (c)=>['exactly','not','less','greater'].includes(c.condition),
                 key: 'value',
                 placeholder: 'numeric or "string"',
                 label: 'Value',
@@ -390,7 +442,7 @@ export default {
                 expression = `${this.dataset.varname}["${payload.columns[0]}"]==${payload.value}`
                 break
               case 'oneof':
-                expression = `${this.dataset.varname}["${payload.columns[0]}"] in ["${payload.values.join('","')}"]`
+                expression = `${this.dataset.varname}.${payload.columns[0]}.isin("${payload.values.join('","')}")`
                 break
               case 'not':
                 expression = `${this.dataset.varname}["${payload.columns[0]}"]!=${payload.value}`
@@ -588,7 +640,7 @@ export default {
             code += `)`
 
             if (file.limit>0) {
-              code +=`.limit(${file.limit})`
+              code +=`.rows.limit(${file.limit})`
             }
 
             code += '.cache()'
@@ -1287,7 +1339,7 @@ db.tables_names_to_json()`)
             }
           },
           code: (payload) => {
-            return `${this.dataset.varname} = ${this.dataset.varname}.sample_n('+ payload.n+')`
+            return `${this.dataset.varname} = ${this.dataset.varname}.sample_n(${payload.n})`
           },
         },
         /*
@@ -1549,7 +1601,13 @@ db.tables_names_to_json()`)
 
       var permanentCells = ['load file', 'load from database']
 
-      if (index<0 || (permanentCells.includes(this.cells[index].command) && this.cells.filter(e => permanentCells.includes(e.command) ).length<=1)) {
+      if (permanentCells.includes(this.cells[index].command) && this.cells.filter(e => permanentCells.includes(e.command) ).length<=1) {
+        if (this.cells.length>1) {
+          return
+        }
+      }
+
+      if (index<0) {
         return
       }
       this.codeError = ''
@@ -1560,7 +1618,11 @@ db.tables_names_to_json()`)
       if (this.cells.length==index) {
         index--
       }
+
       this.setActiveCell(index, true)
+
+      if (this.cells.length==0)
+        this.$store.commit('resetDataset')
 
       this.draggableEnd()
     },
@@ -1655,7 +1717,11 @@ db.tables_names_to_json()`)
       var codeDone = this.codeDone.trim()
       var rerun = false
 
-      if (code === codeDone){
+      if (code==='') {
+        return
+      }
+
+      if (code === codeDone) {
         return;
       }
       else if ( !this.firstRun && (force || code.indexOf(codeDone)!=0 || codeDone=='' || this.lastWrongCode) ) {
