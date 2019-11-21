@@ -352,7 +352,12 @@ export default {
 		console.log(`Bumblebee v${version}`)
 
 		this.inputSession = this.$route.query.session || ''
-		this.inputKey = this.$route.query.key || ''
+    this.inputKey = this.$route.query.key || ''
+
+    // let query = Object.assign({}, this.$route.query);
+    // delete query.key;
+    // this.$router.replace({ query });
+
 		if (this.inputSession && this.inputKey) {
       this.subscribe()
       // this.$store.commit('status', 'receiving')

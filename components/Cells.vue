@@ -198,7 +198,7 @@
         @start="drag = true"
         @end="drag = false; draggableEnd()"
       >
-        <div class="cell-container" v-for="(cell, index) in this.cells" :key="cell.id" :class="{'fixed-cell': cell.fixed, 'cell-error': cell.error,'done': cell.done,'active': activeCell==index}" @click="setActiveCell(index)">
+        <div class="cell-container" v-for="(cell, index) in this.cells" :key="cell.id" :class="{'fixed-cell': cell.fixed, 'cell-error': cell.error,'done': cell.done,'active': activeCell>=0 && activeCell==index}" @click="setActiveCell(index)">
 
           <div class="cell">
             <div class="handle left-handle"></div>
@@ -646,6 +646,18 @@ export default {
             code += '.cache()'
 
             return code
+          }
+        },
+        'string clustering': {
+          dialog: {
+            big: true,
+            title: 'string clustering',
+            // testLabel: 'Get clusters',
+            acceptLabel: 'Apply',
+            loading: () => true,
+            fields: [
+
+            ]
           }
         },
         'load from database': {
@@ -1623,6 +1635,7 @@ db.tables_names_to_json()`)
 
       if (this.cells.length==0)
         this.$store.commit('resetDataset')
+        this.codeDone = ''
 
       this.draggableEnd()
     },

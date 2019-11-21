@@ -23,14 +23,14 @@
         <span>Table view</span>
       </v-tooltip>
       <div class="divider"/>
-            <template v-if="$route.query.kernel=='1'">
+      <template v-if="$route.query.kernel=='1'">
         <v-tooltip transition="fade-transition" bottom>
           <template v-slot:activator="{ on }">
             <v-btn v-on="on"
               text
               class="icon-btn"
               @click="commandHandle({command: 'load file'})"
-              :disabled="!$store.state.kernel"
+              :disabled="$store.state.kernel!='done'"
             >
               <v-icon color="#888">
                 cloud_upload
@@ -63,7 +63,7 @@
               text
               v-on="on"
               @click="commandHandle({command: 'load from database'})"
-              :disabled="!$store.state.kernel"
+              :disabled="$store.state.kernel!='done'"
             >
               <v-icon>storage</v-icon>
             </v-btn>
