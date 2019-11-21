@@ -258,7 +258,7 @@
           </template>
           <span>Replace in column<span v-show="detailedColumns.length>1">s</span></span>
         </v-tooltip>
-        <v-menu v-model="textMenu"offset-y key="string">  <!-- string -->
+        <v-menu v-model="menus['TEXT']" offset-y key="string">  <!-- string -->
           <template v-slot:activator="{ on: menuText }">
             <v-tooltip transition="fade-transition" bottom>
               <template v-slot:activator="{ on: tooltipText }">
@@ -270,7 +270,7 @@
                   v-on="{...tooltipText, ...menuText}"
                 >
                   <v-icon>text_format</v-icon>
-                  <v-icon style="margin-right: -8px; margin-left: -4px" :color="textMenu ? 'black' : '#888'">
+                  <v-icon style="margin-right: -8px; margin-left: -4px" :color="menus['TEXT'] ? 'black' : '#888'">
                     arrow_drop_down
                   </v-icon>
                 </v-btn>
@@ -281,7 +281,7 @@
           <v-list flat dense style="max-height: 400px; min-width: 160px;">
             <v-list-item-group color="black">
               <v-list-item
-                v-for="(item, i) in stringMenuItems"
+                v-for="(item, i) in menuItems('STRING')"
                 :key="i"
                 @click="commandHandle(item)"
               >
@@ -295,7 +295,7 @@
           </v-list>
         </v-menu>
         <v-menu
-          v-model="castMenu"
+          v-model="menus['CAST']"
           offset-y
           key="cast"
         > <!-- cast -->
@@ -309,9 +309,8 @@
                   text
                   v-on="{...tooltip, ...menu}"
                 >
-                  <!-- class="v-btn-icon-text" -->
                   <v-icon>category</v-icon>
-                  <v-icon style="margin-right: -8px; margin-left: -4px" :color="castMenu ? 'black' : '#888'">
+                  <v-icon style="margin-right: -8px; margin-left: -4px" :color="menus['CAST'] ? 'black' : '#888'">
                     arrow_drop_down
                   </v-icon>
                 </v-btn>
@@ -322,7 +321,7 @@
           <v-list flat dense style="max-height: 400px; min-width: 160px;" class="scroll-y">
             <v-list-item-group color="black">
               <v-list-item
-                v-for="(item, i) in castMenuItems"
+                v-for="(item, i) in menuItems('CAST')"
                 :key="i"
                 @click="commandHandle(item)"
               >
@@ -337,7 +336,7 @@
         </v-menu>
         <div class="divider" />
         <v-menu
-          v-model="prepareMenu"
+          v-model="menus['PREPARE']"
           offset-y
           key="prepare"
         > <!-- prepare -->
@@ -351,9 +350,8 @@
                   text
                   v-on="{...tooltip, ...menu}"
                 >
-                  <!-- class="v-btn-icon-text" -->
                   <v-icon>hdr_strong</v-icon>
-                  <v-icon style="margin-right: -8px; margin-left: -4px" :color="prepareMenu ? 'black' : '#888'">
+                  <v-icon style="margin-right: -8px; margin-left: -4px" :color="menus['PREPARE'] ? 'black' : '#888'">
                     arrow_drop_down
                   </v-icon>
                 </v-btn>
@@ -365,7 +363,7 @@
           <v-list flat dense style="max-height: 400px; min-width: 160px;" class="scroll-y">
             <v-list-item-group color="black">
               <v-list-item
-                v-for="(item, i) in prepareMenuItems"
+                v-for="(item, i) in menuItems('PREPARE')"
                 :key="i"
                 @click="commandHandle(item)"
                 :disabled="item.max && detailedColumns.length>item.max"
@@ -380,7 +378,49 @@
           </v-list>
         </v-menu>
         <v-menu
-          v-model="scalerMenu"
+          v-model="menus['IMPUTE']"
+          offset-y
+          key="impute"
+        > <!-- impute -->
+          <template v-slot:activator="{ on: menu }">
+            <v-tooltip transition="fade-transition" bottom>
+              <template v-slot:activator="{ on: tooltip }">
+                <v-btn
+                  :color="'#888'"
+                  :disabled="!(dataset && dataset.summary && detailedColumns.length>0)"
+                  class="icon-btn"
+                  text
+                  v-on="{...tooltip, ...menu}"
+                >
+                  <v-icon>flip_to_front</v-icon>
+                  <v-icon style="margin-right: -8px; margin-left: -4px" :color="menus['IMPUTE'] ? 'black' : '#888'">
+                    arrow_drop_down
+                  </v-icon>
+                </v-btn>
+              </template>
+              <span>Impute</span>
+            </v-tooltip>
+
+          </template>
+          <v-list flat dense style="max-height: 400px; min-width: 160px;" class="scroll-y">
+            <v-list-item-group color="black">
+              <v-list-item
+                v-for="(item, i) in menuItems('IMPUTE')"
+                :key="i"
+                @click="commandHandle(item)"
+                :disabled="item.max && detailedColumns.length>item.max"
+              >
+                <v-list-item-content>
+                  <v-list-item-title>
+                    {{ item.text }}
+                  </v-list-item-title>
+                </v-list-item-content>
+              </v-list-item>
+            </v-list-item-group>
+          </v-list>
+        </v-menu>
+        <v-menu
+          v-model="menus['SCALER']"
           offset-y
           key="scalers"
         > <!-- scalers -->
@@ -394,9 +434,8 @@
                   text
                   v-on="{...tooltip, ...menu}"
                 >
-                  <!-- class="v-btn-icon-text" -->
                   <v-icon>crop_portrait</v-icon>
-                  <v-icon style="margin-right: -8px; margin-left: -4px" :color="scalerMenu ? 'black' : '#888'">
+                  <v-icon style="margin-right: -8px; margin-left: -4px" :color="menus['SCALER'] ? 'black' : '#888'">
                     arrow_drop_down
                   </v-icon>
                 </v-btn>
@@ -408,7 +447,7 @@
           <v-list flat dense style="max-height: 400px; min-width: 160px;" class="scroll-y">
             <v-list-item-group color="black">
               <v-list-item
-                v-for="(item, i) in scalerMenuItems"
+                v-for="(item, i) in menuItems('SCALER')"
                 :key="i"
                 @click="commandHandle(item)"
                 :disabled="item.max && detailedColumns.length>item.max"
@@ -423,7 +462,7 @@
           </v-list>
         </v-menu>
         <v-menu
-          v-model="encodingMenu"
+          v-model="menus['ENCODING']"
           offset-y
           key="encoding"
         >
@@ -438,7 +477,7 @@
                   v-on="{...tooltip, ...menu}"
                 >
                   <v-icon>exposure_zero</v-icon>
-                  <v-icon style="margin-right: -8px; margin-left: -4px" :color="encodingMenu ? 'black' : '#888'">
+                  <v-icon style="margin-right: -8px; margin-left: -4px" :color="menus['ENCODING'] ? 'black' : '#888'">
                     arrow_drop_down
                   </v-icon>
                 </v-btn>
@@ -450,7 +489,7 @@
           <v-list flat dense style="max-height: 400px; min-width: 160px;" class="scroll-y">
             <v-list-item-group color="black">
               <v-list-item
-                v-for="(item, i) in encodingMenuItems"
+                v-for="(item, i) in menuItems('ENCODING')"
                 :key="i"
                 @click="commandHandle(item)"
                 :disabled="item.max && detailedColumns.length>item.max"
@@ -668,11 +707,7 @@ export default {
 
       detailedColumns: [],
 
-			textMenu: false,
-      prepareMenu: false,
-      scalerMenu: false,
-      encodingMenu: false,
-      castMenu: false,
+      menus: [],
 
       lastSort: [],
 
@@ -684,7 +719,7 @@ export default {
         {command: 'trim', text: 'Trim white space', type: 'STRING'},
 
 				{command: 'bucketizer',       text: 'Create Bins',          type: 'PREPARE', max: 1}, // TODO: Remove limit
-				{command: 'impute',           text: 'Impute rows',          type: 'PREPARE'},
+				{command: 'impute',           text: 'Impute rows',          type: 'IMPUTE'},
 				// {command: 'random_split',     teaxt: 'Split train and test', type: 'PREPARE'},
         {command: 'z_score',          text: 'Standard',  type: 'SCALER'},
         {command: 'min_max_scaler',   text: 'Min max',   type: 'SCALER'},
@@ -726,26 +761,6 @@ export default {
 
 	computed: {
 
-    stringMenuItems () {
-      return this.commandItems.filter(e => e.type=='STRING')
-    },
-
-    prepareMenuItems () {
-      return this.commandItems.filter(e => e.type=='PREPARE')
-    },
-
-    scalerMenuItems () {
-      return this.commandItems.filter(e => e.type=='SCALER')
-    },
-
-    encodingMenuItems () {
-      return this.commandItems.filter(e => e.type=='ENCODING')
-    },
-
-    castMenuItems () {
-      return this.commandItems.filter(e => e.type=='CAST')
-    },
-
     tableKey () {
 			return this.$store.state.datasetUpdates * 100 + this.currentTab
 		},
@@ -772,6 +787,10 @@ export default {
   },
 
   methods: {
+
+    menuItems (type) {
+      return this.commandItems.filter(e => e.type==type)
+    },
 
     commandHandle (event) {
       this.optionsActive = true
