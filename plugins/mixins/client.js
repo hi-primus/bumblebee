@@ -80,6 +80,11 @@ export default {
 		},
 
 		stopClient (waiting) {
+
+      this.$store.commit('cells', [])
+
+
+
 			if (waiting) {
 				this.$store.commit('status', 'waiting')
 			}

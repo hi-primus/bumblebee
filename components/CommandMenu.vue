@@ -52,6 +52,8 @@ export default {
         {command: 'upper',        name: 'To upper case', type: 'STRING'},
         {command: 'remove_accents', name: 'Remove accents', type: 'STRING'},
         {command: 'remove_special_chars', name: 'Remove special chars', type: 'STRING'},
+        {command: 'sort rows',           name: 'Sort'},
+        {command: 'filter rows',           name: 'Filter', max: 1},
         {command: 'trim',             name: 'Trim white space', type: 'STRING'},
         {command: 'bucketizer',       name: 'Create Bins', max: 1}, // TODO: remove limit
         {command: 'values_to_cols',   name: 'Values to Columns', max: 1},

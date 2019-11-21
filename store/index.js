@@ -19,7 +19,7 @@ export const mutations = {
         dataset.name = dataset.file_name.split('.')[0]
       }
       else {
-        dataset.name = `Dataset-${state.datasetCounter}`
+        dataset.name = `Dataset${state.datasetCounter}`
         state.datasetCounter = state.datasetCounter + 1
       }
 
@@ -78,6 +78,23 @@ export const mutations = {
 
   },
 
+  resetDataset (state) {
+    state.datasets = []
+
+    let found = state.datasets.length
+
+    let dataset = {
+      name: '(new dataset)',
+      blank: true
+    }
+
+    state.status = 'received'
+
+		state.datasets[found] = dataset
+
+		state.datasetUpdates = state.datasetUpdates + 1
+  },
+
 	delete (state, { index }) {
 		state.datasets.splice(index, 1)
 		if (!state.datasets.length) {
@@ -115,7 +132,7 @@ export const mutations = {
   },
 
   kernel (state, payload) {
-    state.kernel = (payload==undefined) ? true : payload
+    state.kernel = payload
   }
 
 }

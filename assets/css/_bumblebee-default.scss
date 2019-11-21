@@ -755,11 +755,19 @@ table {
 }
 
 .progress-middle {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   position: absolute !important;
-  top: 50%;
   left: 50%;
-  transform: translate(-50%,-50%);
-  height: 0;
+  transform: translate(-50%);
+  .v-progress-circular {
+    margin-bottom: 8px;
+  }
+  &.has-text .v-progress-circular {
+    margin-top: -72px;
+  }
 }
 .progress-top {
   position: absolute !important;
@@ -998,6 +1006,11 @@ table {
 
 	  &>span:empty:after/*, &:empty:after */{
       content: 'None';
+      margin-left: 0.5em;
+      opacity: 0.5;
+    }
+	  &>span.missing:after/*, &:empty:after */{
+      content: 'Missing';
       margin-left: 0.5em;
       opacity: 0.5;
     }
