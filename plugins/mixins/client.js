@@ -83,7 +83,10 @@ export default {
 
       this.$store.commit('cells', [])
 
-
+      let query = Object.assign({}, this.$route.query);
+      delete query.key;
+      delete query.session;
+      this.$router.replace({ query });
 
 			if (waiting) {
 				this.$store.commit('status', 'waiting')
