@@ -303,6 +303,13 @@ export default {
                 type: 'field'
               },
               {
+                condition: (c)=>('oneof'==c.condition),
+                key: 'values',
+                placeholder: 'Values',
+                label: 'Values',
+                type: 'chips'
+              },
+              {
                 condition: (c)=>('between'==c.condition),
                 key: 'value',
                 label: 'Min value',
@@ -342,8 +349,9 @@ export default {
             ],
             validate: (c) => {
               switch (c.condition) {
-                case 'exactly':
                 case 'oneof':
+                  return (c.values.length)
+                case 'exactly':
                 case 'not':
                 case 'less':
                 case 'greater':
@@ -366,6 +374,7 @@ export default {
             columns,
             condition: 'exactly',
             value: '',
+            values: [],
             value_2: '',
             text: '',
             expression: `${this.dataset.varname}["${columns[0]}"]`,
@@ -381,6 +390,8 @@ export default {
                 expression = `${this.dataset.varname}["${payload.columns[0]}"]==${payload.value}`
                 break
               case 'oneof':
+                expression = `${this.dataset.varname}["${payload.columns[0]}"] in ["${payload.values.join('","')}"]`
+                break
               case 'not':
                 expression = `${this.dataset.varname}["${payload.columns[0]}"]!=${payload.value}`
                 break

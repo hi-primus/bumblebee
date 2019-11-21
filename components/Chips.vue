@@ -1,5 +1,4 @@
 <template>
-  <div>
   <v-autocomplete
     autocomplete="off"
     ref="chips"
@@ -26,8 +25,6 @@
     @change="onChange"
     @blur="onBlur"
   />
-  {{value}}
-  </div>
 </template>
 
 <script>
