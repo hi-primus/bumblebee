@@ -8,9 +8,7 @@
     :search-input.sync="input"
     dense
     required
-    outlined
     chips
-    small-chips
     deletable-chips
     class="primary--chips chips-input"
     :placeholder="placeholder"

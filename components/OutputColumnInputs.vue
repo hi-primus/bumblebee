@@ -11,6 +11,7 @@
           dense
           required
           outlined
+          clearable
         ></v-text-field>
       </v-col>
     </template>

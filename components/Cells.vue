@@ -6,7 +6,7 @@
 				persistent
 				v-if="command.dialog && (currentCommand.command == key || currentCommand.type == key)"
 				:value="(currentCommand.command == key || currentCommand.type == key)"
-				max-width="410"
+				:max-width="command.dialog.big ? 820 : 410"
 				@click:outside="cancelCommand"
 				@keydown.esc="cancelCommand"
 			>
@@ -25,7 +25,7 @@
 									currentCommand.title
 							}}
 						</v-card-title>
-						<v-card-text class="command-card-text pb-0 px-6">
+						<v-card-text class="command-card-text pb-0 px-6" :class="{'command-big': command.dialog.big}">
 							<div class="mb-6" v-if="command.dialog.text">
 								{{
 									(typeof command.dialog.text == 'function') ?
@@ -34,7 +34,15 @@
 										command.dialog.text
 								}}
 							</div>
-              <template v-if="command.dialog.fields">
+              <div class="progress-middle" style="height: 86%">
+                <v-progress-circular
+                  indeterminate
+                  color="#888"
+                  size="64"
+                  v-if="currentCommand.loading"
+                />
+              </div>
+              <template v-if="!currentCommand.loading && command.dialog.fields">
                 <template v-for="field in command.dialog.fields.filter(f=>(!f.condition || f.condition && f.condition(currentCommand)))">
                   <template v-if="field.type=='field'">
                     <v-text-field
@@ -123,7 +131,7 @@
                       outlined
                     ></v-select>
                   </template>
-                  <template v-else-if="field.type=='select-foreach' && (!field.items_key == !currentCommand[field.items_key])">
+                  <template v-else-if="field.type=='select-foreach'">
                     <v-row :key="field.key" no-gutters style="align-items: center">
                       <template v-for="(title, i) in currentCommand.columns">
                         <v-col v-if="!field.noLabel" :key="i+'label'" class="col-12 col-sm-4 col-md-3 font-weight-bold pr-4 text-ellipsis" :title="title">
@@ -131,6 +139,7 @@
                         </v-col>
                         <v-col :key="i" class="col-12 oci-input-container" :class="{'col-sm-8 col-md-9': !field.noLabel}">
                           <v-select
+                            class="mb-4"
                             v-model="currentCommand[field.key][i]"
                             :key="field.key"
                             :label="field.label===true ? title : field.label"
@@ -143,6 +152,38 @@
                         </v-col>
                       </template>
                     </v-row>
+                  </template>
+                  <template v-else-if="field.type=='clusters'">
+                    <div :key="field.key" class="clusters-table-container" style="overflow-y: auto; min-heigth: 240px;">
+                      <div v-for="(cluster, i) in currentCommand[field.key]" :key="i+'label'" class="cluster" :class="{'disabled-cluster': !cluster.merge}" >
+                          <v-data-table
+                            flat
+                            depressed
+                            v-model="cluster.selected"
+                            :items="cluster.values"
+                            :headers="clusterHeaders"
+                            item-key="value"
+                            dense
+                            show-select
+                            hide-default-footer
+                          >
+                          </v-data-table>
+                          <div class="cluster-info">
+                            {{`${cluster.values.length} value${(cluster.values.length>1 ? 's' : '')}`}}
+                            <!-- · 5 rows -->
+                          </div>
+                          <v-text-field
+                            v-model="cluster.replace"
+                            class="cluster-replace-field pt-2"
+                            :label="(field.label===true ? cluster.replace : field.label) || 'New cell value'"
+                            :placeholder="field.placeholder===true ? cluster.replace : field.placeholder"
+                            :disabled="!cluster.selected.length"
+                            dense
+                            required
+                            outlined
+                          ></v-text-field>
+                      </div>
+                    </div>
                   </template>
                 </template>
               </template>
@@ -267,6 +308,10 @@ export default {
 
   data () {
     return {
+
+      clusterHeaders: [
+        { text: 'Values', value: 'value', sortable: false },
+      ],
 
       barTop: 0,
       barHovered: false,
@@ -651,13 +696,80 @@ export default {
         'string clustering': {
           dialog: {
             big: true,
-            title: 'string clustering',
-            // testLabel: 'Get clusters',
-            acceptLabel: 'Apply',
-            loading: () => true,
+            title: 'String clustering',
+            acceptLabel: 'Merge',
             fields: [
+              {
+                type: 'clusters',
+                key: 'clusters'
+              }
+            ],
+            contentMinHeight: 160,
+            validate: (c) => (c.clusters)
+          },
+          onInit: async () => {
 
-            ]
+            try {
+
+              var code =
+`from optimus.ml import distancecluster as dc
+dc.levenshtein_json(${this.dataset.varname}, "${this.currentCommand.columns[0]}")`
+
+              var response = await this.evalCode(code)
+
+              console.log('response',response)
+              var clusters = JSON.parse(trimCharacters(response.content,"'"))
+              console.log('clusters',clusters)
+
+              clusters = Object.entries(clusters).map(e=>({
+                replace: e[0],
+                values: e[1].map(e=>({value: e})),
+                selected: []
+              }))
+
+              if (!clusters.length){
+                throw 'No clusters found'
+              }
+
+              this.currentCommand = {
+                ...this.currentCommand,
+                clusters
+              }
+
+            }
+            catch (error) {
+
+              console.error(error)
+              var _error = error
+              if (error.content.ename)
+                _error = error.content.ename
+              if (error.content.evalue)
+                _error += ': '+error.content.evalue
+              this.currentCommand = {...this.currentCommand, error: _error}
+            }
+
+            this.currentCommand.loading = false
+          },
+          payload: (columns) => {
+            return {
+              columns,
+              clusters: false,
+              loading: true
+            }
+          },
+          code: (payload) => {
+            return payload.clusters
+            .filter(cluster=>cluster.selected.length)
+            .map(cluster=>{
+              var values = cluster.selected.map(e=>e.value)
+              return `${this.dataset.varname} = ${this.dataset.varname}.cols.replace(`
+              +`"${payload.columns[0]}"`
+              +`, search=["${values.join('","')}"]`
+              +`, replace_by="${cluster.replace}"`
+              +`, search_by="full"`
+              +')'
+            })
+            .join('\n')
           }
         },
         'load from database': {
@@ -841,7 +953,7 @@ db.tables_names_to_json()`)
 
               if (error.content.ename)
                 _error = error.content.ename
-              if (error.content.evalue /*&& error.content.evalue.length<50*/)
+              if (error.content.evalue)
                 _error += ': '+error.content.evalue
 
               this.currentCommand = {...payload, error: _error}
@@ -900,7 +1012,7 @@ db.tables_names_to_json()`)
         replace: {
           dialog: {
             text: (command) => {
-              return `Replace from "${command.search}" to "${command.replace}"`
+              return `Replace "${command.search}" by "${command.replace}"`
               + (command.columns.length==1 ? ` in ${command.columns[0]}` : '')
             },
             fields: [
@@ -934,7 +1046,7 @@ db.tables_names_to_json()`)
             search: [],
             replace: '',
 						search_by: 'chars',
-            output_cols: columns.map(e=>newName(e)),
+            output_cols: columns.map(e=>e),
             title: 'Replace in ' + (columns.length==1 ? `column` : 'columns'),
 					}),
           code: (payload) => {
@@ -1497,7 +1609,7 @@ db.tables_names_to_json()`)
         return (this.cells.length) ? (this.cells.filter(e=>(e.content!=='')).map(e=>e.content).join('\n').trim()) : ''
     },
 
-    commandHandle ( event ) {
+    async commandHandle ( event ) {
 
 			var payload = {}
 			var columns = undefined
@@ -1510,21 +1622,25 @@ db.tables_names_to_json()`)
       var _command = this.commandsPallete[event.command] || this.commandsPallete[event.type]
 
       if (_command) {
+
+        payload = _command.payload ? ( _command.payload(columns) ) : {}
+        payload.type = event.type
+        payload.command = event.command
+
         if (_command.dialog) {
-          this.currentCommand = _command.payload ? _command.payload(columns) : {}
-          this.currentCommand.type = event.type
-          this.currentCommand.command = event.command
+          this.currentCommand = payload
+          if (_command.onInit)
+            await _command.onInit()
           setTimeout(() => {
             var ref = this.$refs['command-dialog'][0]
             if (ref && ref.$el){
-              ref.$el.getElementsByTagName('input')[0].focus()
+              var el = ref.$el.getElementsByTagName('input')[0]
+              if (el)
+                el.focus()
             }
           }, 100);
         }
         else {
-          payload = _command.payload ? _command.payload(columns) : {}
-          payload.type = event.type
-          payload.command = event.command
           var cell = {...event, columns: payload.columns || columns, payload}
           this.addCell(-1, cell)
           this.runButton = false

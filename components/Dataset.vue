@@ -12,7 +12,7 @@
           size="64"
         />
         <template v-if="$store.state.kernel=='loading'">
-          Initializing optimus
+          Initializing
         </template>
       </div>
       <!-- <v-progress-linear
