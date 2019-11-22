@@ -339,8 +339,49 @@ table {
   }
 }
 
-/* table container */
-
+.clusters-table-container {
+  margin-left: -24px;
+  margin-right: -24px;
+  .v-data-table, table, tr, td, th {
+    border: none !important;
+    background: transparent !important;
+  }
+  table td{
+    font-family: $font-mono-table;
+    font-size: 13px;
+  }
+  th span {
+    display: none;
+  }
+  .v-data-table-header {
+    background: #f5f5f5 !important;
+  }
+  .cluster {
+    position: relative;
+    min-height: 110px;
+  }
+  .cluster-info {
+    font-family: $font-mono;
+    position: absolute;
+    right: 24px;
+    top: 4px;
+    width: 50%;
+    pointer-events: none;
+    text-align: right;
+    font-weight: 700;
+    opacity: $black-opacity;
+  }
+  .cluster-replace-field {
+    position: absolute;
+    right: 24px;
+    top: 43px;
+    width: 40%;
+    min-width: 210px;
+  }
+  .v-text-field .v-input__slot {
+    background: white !important;
+  }
+}
 
 .v-icon.control-button {
   user-select: none;
@@ -544,8 +585,6 @@ table {
 
 /* plots */
 
-
-
 .table-container {
   height: 100%;
 
@@ -665,6 +704,7 @@ table {
   font-family: $font-mono;
   font-size: 0.75rem;
   font-weight: 700;
+  opacity: $black-opacity;
   min-width: 3em;
   display: inline-block;
 }
@@ -767,6 +807,9 @@ table {
   }
   &.has-text .v-progress-circular {
     margin-top: -72px;
+  }
+  .command-card-text &{
+    height: 85%;
   }
 }
 .progress-top {
@@ -909,9 +952,15 @@ table {
 	background: white;
 }
 
-.v-input.v-text-field--outlined .v-label {
+.v-input.v-text-field--outlined .v-label::after {
+  content: '';
   background: white;
-  padding-right: 0px;
+  position: absolute;
+  left: 0;
+  top: 33%;
+  width: 100%;
+  height: 66%;
+  z-index: -1;
 }
 
 .v-text-field--full-width {
@@ -1165,10 +1214,11 @@ table {
   font-family: $font-mono;
   transform-origin: 8px center;
   font-weight: 700 !important;
+  opacity: $black-opacity;
   display: inline;
   &.in-autocomplete {
     width: 3em;
-    color: rgba(0, 0, 0, 0.71)
+    // color: rgba(0, 0, 0, 0.71)
   }
 }
 .data-type-name {
@@ -1332,6 +1382,7 @@ $side-controls-width: 54px;
       color: lighten($text-color, 18%);
       font-family: $font-mono;
       font-weight: 700;
+      opacity: $black-opacity;
       text-transform: uppercase;
     }
     .cell-title {
@@ -1450,7 +1501,11 @@ $editor-top-padding: 6px;
   .v-text-field__details {
     display: none !important;
   }
+  &.command-big {
+    min-height: calc(100vh - 350px);
+  }
 }
+
 
 
 

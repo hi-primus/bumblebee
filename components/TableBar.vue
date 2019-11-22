@@ -88,16 +88,16 @@
         </v-tooltip>
         <div class="divider" />
       </template>
-      <v-menu :close-on-content-click="false" offset-y>
-        <template v-slot:activator="{ on: onSortBy }">
-          <v-tooltip transition="fade-transition" bottom>
+      <v-menu :close-on-content-click="false" @input="menus['sort'] = $event" offset-y>
+       <template v-slot:activator="{ on: menu }">
+          <v-tooltip :disabled="menus['sort']" transition="fade-transition" bottom>
             <template v-slot:activator="{ on: tooltip }">
               <v-btn
                 :color="sortBy[0] ? 'black' : '#888'"
                 :disabled="!(dataset && dataset.summary)"
                 class="icon-btn"
                 text
-                v-on="{...tooltip, ...onSortBy}"
+                v-on="{...tooltip, ...menu}"
               >
                 <v-icon>sort</v-icon>
                 <span style="min-width: 2em; margin-left: -2px">
@@ -112,7 +112,7 @@
             <span>Sort columns</span>
           </v-tooltip>
         </template>
-        <v-list flat dense>
+        <v-list dense>
           <v-list-item-group :value="sortBy[0]" color="black">
             <v-list-item
               v-for="(item, i) in sortableColumnsTableHeaders"
@@ -283,15 +283,15 @@
           <span>Replace in column<span v-show="detailedColumns.length>1">s</span></span>
         </v-tooltip>
         <v-menu v-model="menus['TEXT']" offset-y key="string">  <!-- string -->
-          <template v-slot:activator="{ on: menuString }">
-            <v-tooltip transition="fade-transition" bottom>
+          <template v-slot:activator="{ on: menu }">
+            <v-tooltip :disabled="menus['TEXT']" transition="fade-transition" bottom>
               <template v-slot:activator="{ on: tooltip }">
                 <v-btn
                   :color="'#888'"
                   :disabled="!(dataset && dataset.summary && detailedColumns.length>=0)"
                   class="icon-btn"
                   text
-                  v-on="{...tooltip, ...menuString}"
+                  v-on="{...tooltip, ...menu}"
                 >
                   <v-icon>text_format</v-icon>
                   <v-icon style="margin-right: -8px; margin-left: -4px" :color="menus['TEXT'] ? 'black' : '#888'">
@@ -302,7 +302,7 @@
               <span>String operations</span>
             </v-tooltip>
           </template>
-          <v-list flat dense style="max-height: 400px; min-width: 160px;">
+          <v-list dense style="max-height: 400px; min-width: 160px;">
             <v-list-item-group color="black">
               <v-list-item
                 v-for="(item, i) in menuItems('STRING')"
@@ -324,7 +324,7 @@
           key="cast"
         > <!-- cast -->
           <template v-slot:activator="{ on: menu }">
-            <v-tooltip transition="fade-transition" bottom>
+            <v-tooltip :disabled="menus['CAST']" transition="fade-transition" bottom>
               <template v-slot:activator="{ on: tooltip }">
                 <v-btn
                   :color="'#888'"
@@ -342,7 +342,7 @@
               <span>Cast</span>
             </v-tooltip>
           </template>
-          <v-list flat dense style="max-height: 400px; min-width: 160px;" class="scroll-y">
+          <v-list dense style="max-height: 400px; min-width: 160px;" class="scroll-y">
             <v-list-item-group color="black">
               <v-list-item
                 v-for="(item, i) in menuItems('CAST')"
@@ -365,7 +365,7 @@
           key="prepare"
         > <!-- prepare -->
           <template v-slot:activator="{ on: menu }">
-            <v-tooltip transition="fade-transition" bottom>
+            <v-tooltip :disabled="menus['PREPARE']" transition="fade-transition" bottom>
               <template v-slot:activator="{ on: tooltip }">
                 <v-btn
                   :color="'#888'"
@@ -384,7 +384,7 @@
             </v-tooltip>
 
           </template>
-          <v-list flat dense style="max-height: 400px; min-width: 160px;" class="scroll-y">
+          <v-list dense style="max-height: 400px; min-width: 160px;" class="scroll-y">
             <v-list-item-group color="black">
               <v-list-item
                 v-for="(item, i) in menuItems('PREPARE')"
@@ -407,7 +407,7 @@
           key="impute"
         > <!-- impute -->
           <template v-slot:activator="{ on: menu }">
-            <v-tooltip transition="fade-transition" bottom>
+            <v-tooltip :disabled="menus['IMPUTE']"  transition="fade-transition" bottom>
               <template v-slot:activator="{ on: tooltip }">
                 <v-btn
                   :color="'#888'"
@@ -426,7 +426,7 @@
             </v-tooltip>
 
           </template>
-          <v-list flat dense style="max-height: 400px; min-width: 160px;" class="scroll-y">
+          <v-list dense style="max-height: 400px; min-width: 160px;" class="scroll-y">
             <v-list-item-group color="black">
               <v-list-item
                 v-for="(item, i) in menuItems('IMPUTE')"
@@ -449,7 +449,7 @@
           key="scalers"
         > <!-- scalers -->
           <template v-slot:activator="{ on: menu }">
-            <v-tooltip transition="fade-transition" bottom>
+            <v-tooltip :disabled="menus['SCALER']" transition="fade-transition" bottom>
               <template v-slot:activator="{ on: tooltip }">
                 <v-btn
                   :color="'#888'"
@@ -468,7 +468,7 @@
             </v-tooltip>
 
           </template>
-          <v-list flat dense style="max-height: 400px; min-width: 160px;" class="scroll-y">
+          <v-list dense style="max-height: 400px; min-width: 160px;" class="scroll-y">
             <v-list-item-group color="black">
               <v-list-item
                 v-for="(item, i) in menuItems('SCALER')"
@@ -491,7 +491,7 @@
           key="encoding"
         >
           <template v-slot:activator="{ on: menu }">
-            <v-tooltip transition="fade-transition" bottom>
+            <v-tooltip :disabled="menus['ENCODING']"  transition="fade-transition" bottom>
               <template v-slot:activator="{ on: tooltip }">
                 <v-btn
                   :color="'#888'"
@@ -510,7 +510,7 @@
             </v-tooltip>
 
           </template>
-          <v-list flat dense style="max-height: 400px; min-width: 160px;" class="scroll-y">
+          <v-list dense style="max-height: 400px; min-width: 160px;" class="scroll-y">
             <v-list-item-group color="black">
               <v-list-item
                 v-for="(item, i) in menuItems('ENCODING')"
@@ -731,7 +731,7 @@ export default {
 
       detailedColumns: [],
 
-      menus: [],
+      menus: {},
 
       lastSort: [],
 
@@ -741,6 +741,7 @@ export default {
 				{command: 'remove_accents', text: 'Remove accents', type: 'STRING'},
 				{command: 'remove_special_chars', text: 'Remove special chars', type: 'STRING'},
         {command: 'trim', text: 'Trim white space', type: 'STRING'},
+        {command: 'string clustering', text: 'String clustering', type: 'STRING', max: 1},
 
 				{command: 'bucketizer',       text: 'Create Bins',          type: 'PREPARE', max: 1}, // TODO: Remove limit
 				{command: 'impute',           text: 'Impute rows',          type: 'IMPUTE'},
