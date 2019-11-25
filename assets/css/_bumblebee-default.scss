@@ -346,9 +346,25 @@ table {
     border: none !important;
     background: transparent !important;
   }
+  table tr:first-child td {
+    padding-top: 12px;
+  }
+  table tr:last-child td {
+    padding-bottom: 12px;
+  }
   table td{
     font-family: $font-mono-table;
     font-size: 13px;
+    &:nth-child(2){
+      font-family: $font-mono;
+      opacity: $black-opacity;
+      font-weight: 700;
+      width: 8em;
+      &::after {
+        content: ' rows';
+        vertical-align: initial;
+      }
+    }
   }
   th span {
     display: none;
@@ -659,6 +675,10 @@ table {
   }
 }
 
+.pseudo-disabled {
+  opacity: 0.26;
+}
+
 /* icon buttons toolbar */
 
 .toolbar {
@@ -835,6 +855,10 @@ table {
   .v-chip__content {
     text-transform: capitalize;
   }
+}
+
+.chips-no-items .v-input__append-inner:last-child {
+  display: none !important;
 }
 
 

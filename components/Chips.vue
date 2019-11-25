@@ -1,5 +1,5 @@
 <template>
-  <v-autocomplete
+  <!-- <v-autocomplete
     autocomplete="off"
     ref="chips"
     :value="value"
@@ -9,8 +9,7 @@
     dense
     required
     chips
-    deletable-chips
-    class="primary--chips chips-input"
+
     :placeholder="placeholder"
     :label="label"
     :clearable="clearable"
@@ -18,11 +17,26 @@
     hide-no-data
     hide-selected
     multiple
-    single-line
     :menu-props="{ contentClass: 'hidden-menu' }"
     @change="onChange"
     @blur="onBlur"
-  />
+  /> -->
+  <v-combobox
+    :value="value"
+    @input="$emit('input',$event)"
+    autocomplete="off"
+    ref="chips"
+    chips
+    deletable-chips
+    :items="[]"
+    :placeholder="placeholder"
+    :label="label"
+    :clearable="clearable"
+    multiple
+    single-line
+    solo
+  >
+  </v-combobox>
 </template>
 
 <script>
@@ -62,24 +76,13 @@ export default {
       },10)
     }
   },
+
   methods: {
-    onChange () {
-      this.input = ""
-		},
-    onBlur () {
-      const lastInput = this.lastInput || ''
-      if (lastInput.length && !this.value.includes(lastInput)) {
-        this.$nextTick(()=>{
-          this.$emit('input',[...this.value, lastInput])
-        })
-      }
-		},
+    remove (item) {
+      var value = [...this.value]
+      value.splice(value.indexOf(item), 1)
+      this.$emit('input',[...value])
+    }
   }
 }
 </script>
-
-<style lang="scss">
-  .chips-input .v-input__append-inner {
-    display: none !important;
-  }
-</style>
