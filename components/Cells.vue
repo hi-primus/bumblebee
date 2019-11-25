@@ -57,13 +57,20 @@
                     ></v-text-field>
                   </template>
                   <template v-if="field.type=='chips'">
-                    <chips
+                    <v-combobox
                       v-model="currentCommand[field.key]"
                       :key="field.key"
                       :label="(typeof field.label == 'function') ? field.label(currentCommand) : (field.label || '')"
                       :placeholder="(typeof field.placeholder == 'function') ? field.placeholder(currentCommand) : (field.placeholder || '')"
                       :clearable="field.clearable"
-                    ></chips>
+                      autocomplete="off"
+                      chips
+                      deletable-chips
+                      :items="[]"
+                      class="chips-no-items"
+                      multiple
+                    >
+                    </v-combobox>
                   </template>
                   <template v-if="field.type=='switch'">
                     <v-switch
@@ -126,6 +133,7 @@
                       :label="field.label"
                       :placeholder="field.placeholder"
                       :items="(field.items_key) ? currentCommand[field.items_key] : field.items"
+                      @input="(field.onChange) ? command[field.onChange]() : 0"
                       dense
                       required
                       outlined
@@ -162,6 +170,7 @@
                             v-model="cluster.selected"
                             :items="cluster.values"
                             :headers="clusterHeaders"
+                            disable-pagination
                             item-key="value"
                             dense
                             show-select
@@ -169,7 +178,7 @@
                           >
                           </v-data-table>
                           <div class="cluster-info">
-                            {{`${cluster.values.length} value${(cluster.values.length>1 ? 's' : '')}`}}
+                            {{`${cluster.values.length} value${(cluster.values.length!=1 ? 's' : '')}`}} · {{`${cluster.count} row${(cluster.count!=1 ? 's' : '')}`}}
                             <!-- · 5 rows -->
                           </div>
                           <v-text-field
@@ -177,7 +186,8 @@
                             class="cluster-replace-field pt-2"
                             :label="(field.label===true ? cluster.replace : field.label) || 'New cell value'"
                             :placeholder="field.placeholder===true ? cluster.replace : field.placeholder"
-                            :disabled="!cluster.selected.length"
+                            :disabled="false && !cluster.selected.length"
+                            @input="clusterFieldUpdated(cluster)"
                             dense
                             required
                             outlined
@@ -275,19 +285,20 @@
 
 import axios from 'axios'
 import CodeEditor from '@/components/CodeEditor'
-import Chips from '@/components/Chips'
 import OutputColumnInputs from '@/components/OutputColumnInputs'
 import clientMixin from '@/plugins/mixins/client'
 import { trimCharacters, debounce, newName, arrayJoin } from '@/utils/functions.js'
 
 const api_url = process.env.API_URL || 'http://localhost:5000'
 
+const sl = `
+`
+
 export default {
 
   components: {
     CodeEditor,
     OutputColumnInputs,
-    Chips
   },
 
   mixins: [clientMixin],
@@ -310,7 +321,8 @@ export default {
     return {
 
       clusterHeaders: [
-        { text: 'Values', value: 'value', sortable: false },
+        { text: 'Rows', value: 'count', sortable: false, class: 'rows-count' },
+        { text: 'Values', value: 'value', sortable: false }
       ],
 
       barTop: 0,
@@ -404,7 +416,8 @@ export default {
                 key: 'values',
                 placeholder: 'Values',
                 label: 'Values',
-                type: 'chips'
+                type: 'chips',
+                clearable: true
               },
               {
                 condition: (c)=>('between'==c.condition),
@@ -700,6 +713,17 @@ export default {
             acceptLabel: 'Merge',
             fields: [
               {
+                type: 'select',
+                key: 'algorithm',
+                label: 'Algorithm',
+                items: [
+                  {text: 'Levenshtein', value: 'levenshtein'},
+                  {text: 'Fingerprint', value: 'fingerprint'},
+                  {text: 'N-gram fingerprint', value: 'n_gram_fingerprint'}
+                ],
+                onChange: 'onInit'
+              },
+              {
                 type: 'clusters',
                 key: 'clusters'
               }
@@ -711,21 +735,43 @@ export default {
 
             try {
 
-              var code =
-`from optimus.ml import distancecluster as dc
-dc.levenshtein_json(${this.dataset.varname}, "${this.currentCommand.columns[0]}")`
+              var code
+
+              if (this.currentCommand.algorithm == 'levenshtein')
+                code = `from optimus.ml import distancecluster as dc${sl}dc.levenshtein_cluster(${this.dataset.varname}, "${this.currentCommand.columns[0]}", output="json")`
+              else if (this.currentCommand.algorithm == 'fingerprint')
+                code = `from optimus.ml import keycollision as kc${sl}kc.fingerprint_cluster(${this.dataset.varname}, input_cols="${this.currentCommand.columns[0]}", output="json")`
+              else if (this.currentCommand.algorithm == 'n_gram_fingerprint')
+                code = `from optimus.ml import keycollision as kc${sl}kc.n_gram_fingerprint_cluster(${this.dataset.varname}, input_cols="${this.currentCommand.columns[0]}", n_size=2, output="json")`
+              else
+                throw 'Invalid algorithm type input'
+
+              this.currentCommand.loading = true
 
               var response = await this.evalCode(code)
 
-              console.log('response',response)
               var clusters = JSON.parse(trimCharacters(response.content,"'"))
+
               console.log('clusters',clusters)
 
-              clusters = Object.entries(clusters).map(e=>({
-                replace: e[0],
-                values: e[1].map(e=>({value: e})),
-                selected: []
-              }))
+              clusters = Object.entries(clusters).map(e=>{
+
+                const cluster_name = e[0]
+                const cluster_object = e[1]
+
+                var values =
+                  (Array.isArray(cluster_object.similar)) ?
+                    cluster_object.similar.map(s=>({value: s, count: '1+'}))
+                  :
+                    Object.entries(cluster_object.similar).map( (s) => ({ value: s[0], count: s[1] }) )
+
+                return {
+                  replace: cluster_name,
+                  count: (Array.isArray(cluster_object.similar)) ? '1+' : cluster_object.sum,
+                  values,
+                  selected: []
+                }
+              })
 
               if (!clusters.length){
                 throw 'No clusters found'
@@ -753,6 +799,7 @@ dc.levenshtein_json(${this.dataset.varname}, "${this.currentCommand.columns[0]}"
           payload: (columns) => {
             return {
               columns,
+              algorithm: 'levenshtein',
               clusters: false,
               loading: true
             }
@@ -1019,8 +1066,8 @@ db.tables_names_to_json()`)
               {
                 type: 'chips',
                 key: 'search',
-                placeholder: 'Find',
-                label: 'Find'
+                label: 'Find',
+                clearable: true
               },
               {
                 type: 'field',
@@ -1601,6 +1648,12 @@ db.tables_names_to_json()`)
   },
 
   methods: {
+
+    clusterFieldUpdated(cluster) {
+      if (cluster.selected.length==0) {
+        cluster.selected = cluster.values
+      }
+    },
 
     codeText (n = false) {
       if (n)
