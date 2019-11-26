@@ -51,6 +51,7 @@
                       :label="(typeof field.label == 'function') ? field.label(currentCommand) : (field.label || '')"
                       :placeholder="(typeof field.placeholder == 'function') ? field.placeholder(currentCommand) : (field.placeholder || '')"
                       :clearable="field.clearable"
+                      @input="(field.onChange) ? command[field.onChange]() : 0"
                       dense
                       required
                       outlined
@@ -71,6 +72,16 @@
                       multiple
                     >
                     </v-combobox>
+                  </template>
+                  <template v-if="field.type=='outliers-info'">
+                    <div :key="field.key">
+                      <OutliersBar
+                        :lower_bound_count="currentCommand.data.lower_bound_count"
+                        :upper_bound_count="currentCommand.data.upper_bound_count"
+                        :count_non_outliers="currentCommand.data.count_non_outliers"
+                      />
+                      {{currentCommand}}
+                    </div>
                   </template>
                   <template v-if="field.type=='switch'">
                     <v-switch
@@ -93,6 +104,7 @@
                       :append-icon="field.showable ? (field.show ? 'visibility' : 'visibility_off') : undefined"
                       :type="(field.show || !field.showable) ? 'text' : 'password'"
                       :clearable="field.clearable"
+                      @input="(field.onChange) ? command[field.onChange]() : 0"
                       @click:append="field.show = !field.show"
                     />
                   </template>
@@ -105,6 +117,7 @@
                       :placeholder="field.placeholder"
                       :min="field.min"
                       :clearable="field.clearable"
+                      @input="(field.onChange) ? command[field.onChange]() : 0"
                       dense
                       required
                       outlined
@@ -140,14 +153,13 @@
                     ></v-select>
                   </template>
                   <template v-else-if="field.type=='select-foreach'">
-                    <v-row :key="field.key" no-gutters style="align-items: center">
+                    <v-row :key="field.key" no-gutters class="foreach-label">
                       <template v-for="(title, i) in currentCommand.columns">
                         <v-col v-if="!field.noLabel" :key="i+'label'" class="col-12 col-sm-4 col-md-3 font-weight-bold pr-4 text-ellipsis" :title="title">
                           {{title}}
                         </v-col>
                         <v-col :key="i" class="col-12 oci-input-container" :class="{'col-sm-8 col-md-9': !field.noLabel}">
                           <v-select
-                            class="mb-4"
                             v-model="currentCommand[field.key][i]"
                             :key="field.key"
                             :label="field.label===true ? title : field.label"
@@ -170,6 +182,8 @@
                             v-model="cluster.selected"
                             :items="cluster.values"
                             :headers="clusterHeaders"
+                            :sort-by="'count'"
+				                    sort-desc
                             disable-pagination
                             item-key="value"
                             dense
@@ -211,6 +225,7 @@
 								text
                 v-if="command.onTest"
                 :loading="currentCommand.loadingTest"
+								:disabled="command.dialog.testValidate && !command.dialog.testValidate(currentCommand)"
 								@click="command.onTest(currentCommand)"
 							>
 								{{ command.dialog.testLabel || 'Test'}}
@@ -286,6 +301,7 @@
 import axios from 'axios'
 import CodeEditor from '@/components/CodeEditor'
 import OutputColumnInputs from '@/components/OutputColumnInputs'
+import OutliersBar from '@/components/OutliersBar'
 import clientMixin from '@/plugins/mixins/client'
 import { trimCharacters, debounce, newName, arrayJoin } from '@/utils/functions.js'
 
@@ -298,7 +314,8 @@ export default {
 
   components: {
     CodeEditor,
-    OutputColumnInputs,
+		OutputColumnInputs,
+		OutliersBar
   },
 
   mixins: [clientMixin],
@@ -711,6 +728,7 @@ export default {
             big: true,
             title: 'String clustering',
             acceptLabel: 'Merge',
+            testLabel: 'Get clusters',
             fields: [
               {
                 type: 'select',
@@ -721,32 +739,65 @@ export default {
                   {text: 'Fingerprint', value: 'fingerprint'},
                   {text: 'N-gram fingerprint', value: 'n_gram_fingerprint'}
                 ],
-                onChange: 'onInit'
+                onChange: 'onChange'
+              },
+              {
+                condition: (c)=>c.algorithm=='n_gram_fingerprint',
+                type: 'number',
+                label: 'N size',
+                key: 'n_size',
+                onChange: 'onChange'
+              },
+              {
+                condition: (c)=>c.algorithm=='levenshtein',
+                type: 'number',
+                label: 'Threshold',
+                key: 'threshold',
+                onChange: 'onChange'
               },
               {
                 type: 'clusters',
                 key: 'clusters'
               }
             ],
-            contentMinHeight: 160,
-            validate: (c) => (c.clusters)
+            validate: (c) => {
+              console.log('c.clusters',c.clusters)
+              if (c.algorithm == 'n_gram_fingerprint')
+                return (c.clusters && c.clusters.filter(e=>e.selected.length).length && c.n_size && !c.should_update)
+              else
+                return (c.clusters && c.clusters.filter(e=>e.selected.length).length && !c.should_update)
+            },
+            testValidate: (c) => {
+              return (c.should_update)
+            }
           },
-          onInit: async () => {
+          onChange: () => {
+            this.currentCommand.should_update = true
+          },
+          onInit: () => {
+            this.commandsPallete['string clustering'].onTest()
+          },
+          onTest: async () => {
+
+            this.currentCommand.should_update = false
 
             try {
 
               var code
 
               if (this.currentCommand.algorithm == 'levenshtein')
-                code = `from optimus.ml import distancecluster as dc${sl}dc.levenshtein_cluster(${this.dataset.varname}, "${this.currentCommand.columns[0]}", output="json")`
+                code = `from optimus.ml import distancecluster as dc${sl}dc.levenshtein_cluster(${this.dataset.varname}, "${this.currentCommand.columns[0]}"`
+                +(this.currentCommand.threshold!='' ? `, threshold=${this.currentCommand.threshold}` : '')
+                +`, output="json")`
               else if (this.currentCommand.algorithm == 'fingerprint')
                 code = `from optimus.ml import keycollision as kc${sl}kc.fingerprint_cluster(${this.dataset.varname}, input_cols="${this.currentCommand.columns[0]}", output="json")`
               else if (this.currentCommand.algorithm == 'n_gram_fingerprint')
-                code = `from optimus.ml import keycollision as kc${sl}kc.n_gram_fingerprint_cluster(${this.dataset.varname}, input_cols="${this.currentCommand.columns[0]}", n_size=2, output="json")`
+                code = `from optimus.ml import keycollision as kc${sl}kc.n_gram_fingerprint_cluster(${this.dataset.varname}, input_cols="${this.currentCommand.columns[0]}", n_size=${this.currentCommand.n_size}, output="json")`
               else
                 throw 'Invalid algorithm type input'
 
               this.currentCommand.loading = true
+              this.currentCommand.clusters = false
 
               var response = await this.evalCode(code)
 
@@ -779,6 +830,7 @@ export default {
 
               this.currentCommand = {
                 ...this.currentCommand,
+                should_update: false,
                 clusters
               }
 
@@ -791,7 +843,7 @@ export default {
                 _error = error.content.ename
               if (error.content.evalue)
                 _error += ': '+error.content.evalue
-              this.currentCommand = {...this.currentCommand, error: _error}
+              this.currentCommand = {...this.currentCommand, error: _error, should_update: true}
             }
 
             this.currentCommand.loading = false
@@ -801,6 +853,113 @@ export default {
               columns,
               algorithm: 'levenshtein',
               clusters: false,
+              loading: true,
+              n_size: 2,
+              threshold: '',
+              should_update: false
+            }
+          },
+          code: (payload) => {
+            return payload.clusters
+            .filter(cluster=>cluster.selected.length)
+            .map(cluster=>{
+              var values = cluster.selected.map(e=>e.value)
+              return `${this.dataset.varname} = ${this.dataset.varname}.cols.replace(`
+              +`"${payload.columns[0]}"`
+              +`, search=["${values.join('","')}"]`
+              +`, replace_by="${cluster.replace}"`
+              +`, search_by="full"`
+              +')'
+            })
+            .join('\n')
+          }
+        },
+        outliers: {
+          dialog: {
+            big: true,
+            title: 'Outliers',
+            acceptLabel: 'Drop',
+            fields: [
+              {
+                type: 'select',
+                key: 'algorithm',
+                label: 'Algorithm',
+                items: [
+                  {text: 'Tukey', value: 'tukey'},
+                  {text: 'Mad', value: 'mad'},
+                  {text: 'Z score', value: 'z_score'},
+                  {text: 'Modified Z score', value: 'modified_z_score'}
+                ],
+                onChange: 'onInit'
+              },
+              {
+                type: 'outliers-info',
+                key: 'data'
+              }
+            ],
+            validate: (c) => (c.data)
+          },
+          onInit: async () => {
+
+            try {
+
+              var code
+
+              if (this.currentCommand.algorithm == 'tukey')
+                code = `outlier = ${this.dataset.varname}.outliers.tukey(columns="${this.currentCommand.columns[0]}")`
+              else if (this.currentCommand.algorithm == 'z_score')
+                code = `outlier = ${this.dataset.varname}.outliers.z_score(columns="${this.currentCommand.columns[0]}", threshold=${this.currentCommand.threshold})`
+              else if (this.currentCommand.algorithm == 'mad')
+                code = `outlier = ${this.dataset.varname}.outliers.mad(columns="${this.currentCommand.columns[0]}", threshold=${this.currentCommand.threshold})`
+              else if (this.currentCommand.algorithm == 'modified_z_score')
+                code = `outlier = ${this.dataset.varname}.outliers.modified_z_score(columns="${this.currentCommand.columns[0]}", threshold=${this.currentCommand.threshold})`
+              else
+                throw 'Invalid algorithm type input'
+
+              this.currentCommand.loading = true
+
+              var response = await this.evalCode(`import json${sl}${code}${sl}json.dumps(outlier.info())`)
+
+              console.log('response',response)
+
+              var outliers_data = JSON.parse(trimCharacters(response.content, "'"))
+
+              var upper_response = await this.evalCode(`outlier.select_upper_bound()`)
+              var lower_response = await this.evalCode(`outlier.select_lower_bound()`)
+
+              var upper_data = JSON.parse(trimCharacters(upper_response.content, "'"))
+              var lower_data = JSON.parse(trimCharacters(lower_response.content, "'"))
+
+              outliers_data = { ...outliers_data, upper_data, lower_data }
+
+              console.log('outliers_data',outliers_data)
+
+              this.currentCommand = {
+                ...this.currentCommand,
+                data: outliers_data
+              }
+
+            }
+            catch (error) {
+
+              console.error(error)
+              var _error = error
+              if (error.content && error.content.ename)
+                _error = error.content.ename
+              if (error.content && error.content.evalue)
+                _error += ': '+error.content.evalue
+              this.currentCommand = {...this.currentCommand, error: _error}
+            }
+
+            this.currentCommand.loading = false
+          },
+          payload: (columns) => {
+            return {
+              columns,
+              algorithm: 'tukey',
+              threshold: 1,
+              data: false,
+              remove: false,
               loading: true
             }
           },
