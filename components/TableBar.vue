@@ -29,7 +29,7 @@
             <v-btn v-on="on"
               text
               class="icon-btn"
-              @click="commandHandle({command: 'load file'})"
+              @click="commandHandle({command: 'load file', noOptions: true})"
               :disabled="$store.state.kernel!='done'"
             >
               <v-icon color="#888">
@@ -62,7 +62,7 @@
               class="icon-btn"
               text
               v-on="on"
-              @click="commandHandle({command: 'load from database'})"
+              @click="commandHandle({command: 'load from database', noOptions: true})"
               :disabled="$store.state.kernel!='done'"
             >
               <v-icon>storage</v-icon>
@@ -742,6 +742,7 @@ export default {
 				{command: 'remove_special_chars', text: 'Remove special chars', type: 'STRING'},
         {command: 'trim', text: 'Trim white space', type: 'STRING'},
         {command: 'string clustering', text: 'String clustering', type: 'STRING', max: 1},
+        // {command: 'outliers', text: 'OUTLIERS', type: 'STRING', max: 1},
 
 				{command: 'bucketizer',       text: 'Create Bins',          type: 'PREPARE', max: 1}, // TODO: Remove limit
 				{command: 'impute',           text: 'Impute rows',          type: 'IMPUTE'},
@@ -756,6 +757,7 @@ export default {
         {command: 'cast', dtype: 'int',     text: 'Int', type: 'CAST'},
 				{command: 'cast', dtype: 'float',   text: 'Float', type: 'CAST'},
 				{command: 'cast', dtype: 'double',  text: 'Double', type: 'CAST'},
+				{command: 'cast', dtype: 'string',  text: 'String', type: 'CAST'},
 				{command: 'cast', dtype: 'boolean', text: 'Boolean', type: 'CAST'},
 				{command: 'cast', dtype: 'struct',  text: 'Struct', type: 'CAST'},
 				{command: 'cast', dtype: 'array',   text: 'Array', type: 'CAST'},
@@ -818,7 +820,8 @@ export default {
     },
 
     commandHandle (event) {
-      this.optionsActive = true
+      if (!event.noOptions)
+        this.optionsActive = true
 
       this.$nextTick(()=>{
         this.$refs.cells & this.$refs.cells.commandHandle(event)

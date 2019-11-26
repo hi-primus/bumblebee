@@ -21,8 +21,8 @@
         class="progress-top"
         color="#888"
       /> -->
-      <div v-else class="title grey--text text-center">
-        No data to display
+      <div v-else class="title grey--text text-center text-with-icons">
+        Use <v-icon>cloud_upload</v-icon> or <v-icon>storage</v-icon> to load some data
       </div>
     </div>
 		<div v-else-if="view==0" class="table-view-container">

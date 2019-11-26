@@ -17,31 +17,31 @@
         <tr v-if="values.count_uniques!==null && values.count_uniques!==undefined">
           <td style="width:45%;">Uniques</td>
           <td style="width:100%; text-align: right;" :title="(+values.count_uniques)">{{ (+values.count_uniques) }}</td>
-          <td style="width:10%; opacity: 0.71;" :title="+pUniques">{{ +pUniques.toFixed(2) }}%</td>
+          <td style="width:10%; opacity: 0.71;" :title="+pUniques+'%'">{{ +pUniques.toFixed(2) }}%</td>
         </tr>
 
         <tr v-if="dtypes.missing!==null && dtypes.missing!==undefined">
           <td style="width:45%;">Missing</td>
           <td style="width:100%; text-align: right;" :title="(+dtypes.missing)">{{ (+dtypes.missing) }}</td>
-          <td style="width:10%; opacity: 0.71;" :title="+pMissing">{{ +pMissing.toFixed(2) }}%</td>
+          <td style="width:10%; opacity: 0.71;" :title="+pMissing+'%'">{{ +pMissing.toFixed(2) }}%</td>
         </tr>
 
         <tr v-if="values.zeros!==null && values.zeros!==undefined">
           <td style="width:45%;">Zeros</td>
           <td style="width:100%; text-align: right;" :title="(+values.zeros)">{{ (+values.zeros) }}</td>
-          <td style="width:10%; opacity: 0.71;" :title="+pZeros"> {{ +pZeros.toFixed(2) }}% </td>
+          <td style="width:10%; opacity: 0.71;" :title="+pZeros+'%'"> {{ +pZeros.toFixed(2) }}% </td>
         </tr>
 
         <tr>
           <td style="width:45%;">Null values</td>
           <td style="width:100%; text-align: right;" :title="(+dtypes.null)">{{ (+dtypes.null) }}</td>
-          <td style="width:10%; opacity: 0.71;" :title="+pNull"> {{ +pNull.toFixed(2) }}% </td>
+          <td style="width:10%; opacity: 0.71;" :title="+pNull+'%'"> {{ +pNull.toFixed(2) }}% </td>
         </tr>
 
         <tr>
           <td style="width:45%;">Mismatches</td>
-          <td style="width:100%; text-align: right;" :title="(+dtypes.mismatch)">{{ (+dtypes.mismatch) }}</td>
-          <td style="width:10%; opacity: 0.71;" :title="+pMismatch"> {{ +pMismatch.toFixed(2) }}% </td>
+          <td style="width:100%; text-align: right;" :title="(+dtypes.mismatch || 0)">{{ (+dtypes.mismatch || 0) }}</td>
+          <td style="width:10%; opacity: 0.71;" :title="+pMismatch+'%'"> {{ +pMismatch.toFixed(2) }}% </td>
         </tr>
       </tbody>
     </table>
@@ -86,7 +86,7 @@ export default {
       return (this.values.zeros / this.rowsCount)*100
     },
     pMismatch () {
-      return (this.dtypes.mismatch / this.rowsCount)*100
+      return ((this.dtypes.mismatch || 0) / this.rowsCount)*100
     }
   }
 }

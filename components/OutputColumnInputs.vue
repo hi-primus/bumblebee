@@ -1,5 +1,5 @@
 <template>
-	<v-row no-gutters style="align-items: center">
+	<v-row no-gutters class="foreach-label">
     <template v-for="(title, i) in currentCommand.columns">
       <v-col v-if="!noLabel" :key="i+'label'" class="col-12 col-sm-4 col-md-3 font-weight-bold pr-4 text-ellipsis" :title="title">
         {{title}}
@@ -45,15 +45,3 @@ export default {
   }
 }
 </script>
-
-<style lang="scss" scoped>
-  .row {
-    margin-top: -8px;
-    margin-bottom: -8px;
-    overflow: hidden;
-    .oci-input-container {
-      margin-top: 8px;
-      margin-bottom: 8px;
-    }
-  }
-</style>
