@@ -160,13 +160,22 @@
       <v-tooltip transition="fade-transition" v-if="$route.query.kernel=='1'" bottom key="sample_n"> <!-- sample_n -->
         <template v-slot:activator="{ on }">
           <v-btn v-on="on" color="#888" text class="icon-btn" @click="commandHandle({command: 'sample_n'})" :disabled="!(dataset && dataset.summary)">
-            <v-icon>blur_linear</v-icon>
+            <v-icon>blur_circular</v-icon>
           </v-btn>
         </template>
         <span>
           Sampling
         </span>
       </v-tooltip>
+      <v-tooltip transition="fade-transition" bottom key="stratified_sample"> <!-- stratified_sample -->
+        <template v-slot:activator="{ on }">
+          <v-btn v-on="on" :disabled="!detailedColumns.length!=1" color="#888" text class="icon-btn" @click="commandHandle({command: 'stratified_sample'})">
+            <v-icon>blur_linear</v-icon>
+          </v-btn>
+        </template>
+        <span>Stratified sampling</span></span>
+      </v-tooltip>
+      <div class="divider" v-if="$route.query.kernel=='1'" />
       <v-tooltip transition="fade-transition" bottom>
         <template v-slot:activator="{ on }">
           <v-btn
@@ -308,6 +317,7 @@
                 v-for="(item, i) in menuItems('STRING')"
                 :key="i"
                 @click="commandHandle(item)"
+                :disabled="item.max && detailedColumns.length>item.max"
               >
                 <v-list-item-content>
                   <v-list-item-title>
@@ -348,6 +358,7 @@
                 v-for="(item, i) in menuItems('CAST')"
                 :key="i"
                 @click="commandHandle(item)"
+                :disabled="item.max && detailedColumns.length>item.max"
               >
                 <v-list-item-content>
                   <v-list-item-title>
@@ -741,7 +752,7 @@ export default {
 				{command: 'remove_accents', text: 'Remove accents', type: 'STRING'},
 				{command: 'remove_special_chars', text: 'Remove special chars', type: 'STRING'},
         {command: 'trim', text: 'Trim white space', type: 'STRING'},
-        {command: 'string clustering', text: 'String clustering', type: 'STRING', max: 1},
+        {command: 'string clustering', text: 'String clustering', type: 'STRING', max: 1, min: 1},
         // {command: 'outliers', text: 'OUTLIERS', type: 'STRING', max: 1},
 
 				{command: 'bucketizer',       text: 'Create Bins',          type: 'PREPARE', max: 1}, // TODO: Remove limit
