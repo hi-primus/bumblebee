@@ -761,7 +761,6 @@ export default {
               }
             ],
             validate: (c) => {
-              console.log('c.clusters',c.clusters)
               if (c.algorithm == 'n_gram_fingerprint')
                 return (c.clusters && c.clusters.filter(e=>e.selected.length).length && c.n_size && !c.should_update)
               else
@@ -802,8 +801,6 @@ export default {
               var response = await this.evalCode(code)
 
               var clusters = JSON.parse(trimCharacters(response.content,"'"))
-
-              console.log('clusters',clusters)
 
               clusters = Object.entries(clusters).map(e=>{
 
@@ -906,7 +903,7 @@ export default {
               var code
 
               if (this.currentCommand.algorithm == 'tukey')
-                code = `outlier = ${this.dataset.varname}.outliers.tukey(columns="${this.currentCommand.columns[0]}")`
+                code = `outlier = ${this.dataset.varname}.outliers.tukey("${this.currentCommand.columns[0]}")`
               else if (this.currentCommand.algorithm == 'z_score')
                 code = `outlier = ${this.dataset.varname}.outliers.z_score(columns="${this.currentCommand.columns[0]}", threshold=${this.currentCommand.threshold})`
               else if (this.currentCommand.algorithm == 'mad')
@@ -926,11 +923,13 @@ export default {
 
               var upper_response = await this.evalCode(`outlier.select_upper_bound()`)
               var lower_response = await this.evalCode(`outlier.select_lower_bound()`)
+              var hist_response = await this.evalCode(`outlier.hist("${this.currentCommand.columns[0]}")`)
 
               var upper_data = JSON.parse(trimCharacters(upper_response.content, "'"))
               var lower_data = JSON.parse(trimCharacters(lower_response.content, "'"))
+              var hist_data = JSON.parse(trimCharacters(hist_response.content, "'"))
 
-              outliers_data = { ...outliers_data, upper_data, lower_data }
+              outliers_data = { ...outliers_data, upper_data, lower_data, hist_data }
 
               console.log('outliers_data',outliers_data)
 
@@ -1214,6 +1213,30 @@ db.tables_names_to_json()`)
             table_name: ''
           }),
           code: (payload) => (`db.df_to_table(${this.dataset.varname}, table="${payload.table_name}", mode="overwrite")`)
+        },
+        stratified_sample: {
+          dialog: {
+            text: 'Stratified sampling',
+            fields: [
+              {
+                type: 'number',
+                key: 'seed',
+                label: 'Seed',
+                clearable: true
+              },
+            ],
+          },
+          payload: (columns) => ({
+						seed: 1,
+						columns: columns,
+					}),
+          code: (payload) => {
+            var _argument = (payload.columns.length==1) ? `"${payload.columns[0]}"` : `["${payload.columns.join('", "')}"]`
+            return `${this.dataset.varname} = ${this.dataset.varname}.stratified_sample(`
+              +_argument
+              +( (payload.seed) ? `, seed=${payload.seed}` : '')
+              +')'
+          }
         },
         replace: {
           dialog: {

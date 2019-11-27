@@ -52,7 +52,7 @@ export default {
         {command: 'upper',        name: 'To upper case', type: 'STRING'},
         {command: 'remove_accents', name: 'Remove accents', type: 'STRING'},
         {command: 'remove_special_chars', name: 'Remove special chars', type: 'STRING'},
-        {command: 'string clustering', name: 'String clustering', type: 'STRING', max: 1},
+        {command: 'string clustering', name: 'String clustering', type: 'STRING', max: 1, min: 1},
         {command: 'sort rows',           name: 'Sort'},
         {command: 'filter rows',           name: 'Filter', max: 1},
         {command: 'trim',             name: 'Trim white space', type: 'STRING'},
