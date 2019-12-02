@@ -5,8 +5,8 @@
       ref="hist"
       class="hist-grid pa-0"
       style="margin: -5px;"
-      v-if="data.hist_data"
-      :data="{values: data.hist_data[columnName].hist}"
+      v-if="data.hist"
+      :data="{values: data.hist}"
       :mark="{
         type: 'bar',
       }"
@@ -186,7 +186,7 @@ export default {
   computed: {
     binSize () {
       try {
-        var values = this.data.hist_data[this.columnName].hist
+        var values = this.data.hist
         var bs = (values[values.length-1].upper-values[0].lower)/values.length
         return bs
       } catch (error) {
@@ -195,18 +195,18 @@ export default {
     },
     offset () {
       try {
-        var values = this.data.hist_data[this.columnName].hist
+        var values = this.data.hist
         return values[0].lower
       } catch (error) {
         return 0
       }
     },
     upper () {
-      var values = this.data.hist_data[this.columnName].hist
+      var values = this.data.hist
       return values[values.length-1].upper
     },
     lower () {
-      var values = this.data.hist_data[this.columnName].hist
+      var values = this.data.hist
       return values[0].lower - this.binSize
     }
   }

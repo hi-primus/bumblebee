@@ -44,6 +44,38 @@
               </div>
               <template v-if="!currentCommand.loading && command.dialog.fields">
                 <template v-for="field in command.dialog.fields.filter(f=>(!f.condition || f.condition && f.condition(currentCommand)))">
+                  <template v-if="field.type=='action'">
+                    <v-btn
+                      :key="field.key"
+                      depressed
+                      color="primary"
+                      @click="(field.func) ? command[field.func]() : 0"
+                      class="mb-6 mx-a d-flex"
+                      :disabled="field.validate && !field.validate(currentCommand)"
+                    >
+                      {{
+                        (typeof field.label == 'function') ?
+                          field.label(currentCommand)
+                        :
+                          field.label
+                      }}
+                    </v-btn>
+                  </template>
+                  <template v-if="field.type=='text'">
+                    <div
+                      :key="field.key"
+                      class="mb-6"
+                      :class="{'title': field.big}"
+                      v-if="field.text"
+                    >
+                      {{
+                        (typeof field.text == 'function') ?
+                          field.text(currentCommand)
+                        :
+                          field.text
+                      }}
+                    </div>
+                  </template>
                   <template v-if="field.type=='field'">
                     <v-text-field
                       v-model="currentCommand[field.key]"
@@ -736,7 +768,6 @@ export default {
             tall: true,
             title: 'String clustering',
             acceptLabel: 'Merge',
-            testLabel: 'Get clusters',
             fields: [
               {
                 type: 'select',
@@ -746,22 +777,25 @@ export default {
                   {text: 'Levenshtein', value: 'levenshtein'},
                   {text: 'Fingerprint', value: 'fingerprint'},
                   {text: 'N-gram fingerprint', value: 'n_gram_fingerprint'}
-                ],
-                onChange: 'onChange'
+                ]
               },
               {
                 condition: (c)=>c.algorithm=='n_gram_fingerprint',
                 type: 'number',
                 label: 'N size',
-                key: 'n_size',
-                onChange: 'onChange'
+                key: 'n_size'
               },
               {
                 condition: (c)=>c.algorithm=='levenshtein',
                 type: 'number',
                 label: 'Threshold',
-                key: 'threshold',
-                onChange: 'onChange'
+                key: 'threshold'
+              },
+              {
+                type: 'action',
+                label: 'Get clusters',
+                func: 'getClusters',
+                validate: (c)=>(c.algorithm!=c.valid.algorithm || (c.n_size!=c.valid.n_size && c.algorithm=='n_gram_fingerprint') ||(c.threshold!=c.valid.threshold && c.algorithm=='levenshtein'))
               },
               {
                 type: 'clusters',
@@ -770,23 +804,12 @@ export default {
             ],
             validate: (c) => {
               if (c.algorithm == 'n_gram_fingerprint')
-                return (c.clusters && c.clusters.filter(e=>e.selected.length).length && c.n_size && !c.should_update)
+                return (c.clusters && c.clusters.filter(e=>e.selected.length).length && c.n_size)
               else
-                return (c.clusters && c.clusters.filter(e=>e.selected.length).length && !c.should_update)
+                return (c.clusters && c.clusters.filter(e=>e.selected.length).length)
             },
-            testValidate: (c) => {
-              return (c.should_update)
-            }
           },
-          onChange: () => {
-            this.currentCommand.should_update = true
-          },
-          onInit: () => {
-            this.commandsPallete['string clustering'].onTest()
-          },
-          onTest: async () => {
-
-            this.currentCommand.should_update = false
+          getClusters: async () => {
 
             try {
 
@@ -805,6 +828,7 @@ export default {
 
               this.currentCommand.loading = true
               this.currentCommand.clusters = false
+              this.currentCommand.error = false
 
               var response = await this.evalCode(code)
 
@@ -835,7 +859,11 @@ export default {
 
               this.currentCommand = {
                 ...this.currentCommand,
-                should_update: false,
+                valid: {
+                  algorithm: this.currentCommand.algorithm,
+                  threshold: this.currentCommand.threshold,
+                  n_size: this.currentCommand.n_size,
+                },
                 clusters
               }
 
@@ -844,9 +872,9 @@ export default {
 
               console.error(error)
               var _error = error
-              if (error.content.ename)
+              if ( error.content && error.content.ename )
                 _error = error.content.ename
-              if (error.content.evalue)
+              if ( error.content && error.content.evalue )
                 _error += ': '+error.content.evalue
               this.currentCommand = {...this.currentCommand, error: _error, should_update: true}
             }
@@ -855,10 +883,15 @@ export default {
           },
           payload: (columns) => {
             return {
+              valid: {
+                algorithm: undefined,
+                n_size: undefined,
+                threshold: undefined
+              },
               columns,
               algorithm: 'levenshtein',
               clusters: false,
-              loading: true,
+              loading: false,
               n_size: 2,
               threshold: '',
               should_update: false
@@ -883,14 +916,6 @@ export default {
           dialog: {
             big: true,
             title: 'Outliers',
-            // acceptLabel: (c)=>c.action,
-            bigText: true,
-            text: (c) => {
-              if (c.selection.length>=2)
-                return `${c.action} values between ${c.selection[0]} and ${c.selection[1]} in ${c.columns[0]}`
-              else
-                return `${c.action} values in ${c.columns[0]}`
-            },
             fields: [
               {
                 type: 'select',
@@ -902,7 +927,19 @@ export default {
                   // {text: 'Z score', value: 'z_score'},
                   // {text: 'Modified Z score', value: 'modified_z_score'}
                 ],
-                onChange: 'onInit'
+                // onChange: 'onInit'
+              },
+              {
+                condition: (c)=>(c.algorithm=='mad'),
+                type: 'number',
+                key: 'threshold',
+                label: 'Threshold'
+              },
+              {
+                type: 'action',
+                label: 'Get outliers',
+                func: 'getOutliers',
+                validate: (c)=>(c.algorithm!=c.valid.algorithm || (c.threshold!=c.valid.threshold && c.algorithm=='mad') || !c.data)
               },
               {
                 type: 'outliers-range',
@@ -910,6 +947,7 @@ export default {
                 selection_key: 'selection'
               },
               {
+                condition: (c)=>(c.data),
                 type: 'select',
                 key: 'action',
                 label: 'Action',
@@ -918,11 +956,22 @@ export default {
                   { text: 'Keep', value: 'Keep' },
                   // { text: 'Replace', value: 'replace' }
                 ],
+              },
+              {
+                condition: (c)=>(c.data),
+                type: 'text',
+                big: true,
+                text: (c) => {
+                  if (c.selection.length>=2)
+                    return `${c.action} values between ${c.selection[0]} and ${c.selection[1]} in ${c.columns[0]}`
+                  else
+                    return `${c.action} values in ${c.columns[0]}`
+                },
               }
             ],
             validate: (c) => (c.data && (c.selection.length>=2 || ['z_score','modified_z_score'].includes(c.algorithm) ) && !c.loading)
           },
-          onInit: async () => {
+          getOutliers: async () => {
 
             try {
 
@@ -948,11 +997,23 @@ export default {
 
                 var hist_response = await this.evalCode(`outlier.hist("${this.currentCommand.columns[0]}")`)
                 var hist_data = JSON.parse(trimCharacters(hist_response.content, "'"))
-                outliers_data = { ...outliers_data, hist_data }
+
+                var hist = hist_data[this.currentCommand.columns[0]].hist.map(e=>({
+                  upper: e.upper,
+                  lower: e.lower,
+                  count: e.count || 0.0001,
+                }))
+
+                outliers_data = { ...outliers_data, hist }
+
               }
 
               this.currentCommand = {
                 ...this.currentCommand,
+                valid: {
+                  algorithm: this.currentCommand.algorithm,
+                  threshold: this.currentCommand.threshold,
+                },
                 data: outliers_data,
                 selection: [],
                 code_done: code
@@ -978,10 +1039,14 @@ export default {
               columns,
               algorithm: 'tukey',
               threshold: 1,
+              valid: {
+                algorithm: undefined,
+                threshold: undefined
+              },
               data: false,
               selection: [],
               action: 'Drop',
-              loading: true,
+              loading: false,
               code_done: ''
             }
           },
