@@ -7,61 +7,93 @@
       style="margin: -5px;"
       v-if="data.hist"
       :data="{values: data.hist}"
-      :mark="{
-        type: 'bar',
-      }"
-      :selection="{
-        brush: {
-          type: 'interval',
-          encodings: 'x'
+      :layer="[
+      {
+        mark: 'bar',
+        encoding: {
+          x: {
+            field: 'lower',
+            bin: 'binned',
+            type: 'quantitative'
+          },
+          x2: {
+            field: 'upper'
+          },
+          y: {
+            type: 'quantitative',
+            value: 1,
+          },
+          color: {
+            condition: { selection: 'hover', value: '#00000020' },
+            value: '#00000000'
+          }
         },
-        hover: {
-          type: 'single',
-          fields: ['lower','upper','count'],
-          on: 'mouseover'
+        selection: {
+          hover: {
+            type: 'single',
+            empty: 'none',
+            clear: 'mouseout',
+            fields: ['lower','upper','count'],
+            on: 'mouseover'
+          },
+        }
+      },
+      {
+        mark: 'bar',
+        encoding: {
+          x: {
+            field: 'lower',
+            bin: 'binned',
+            type: 'quantitative'
+          },
+          x2: {
+            field: 'upper'
+          },
+          y: {
+            type: 'quantitative',
+            field: 'count'
+          },
+          color: {
+            condition: [
+              {
+                test: `(datum['lower'] < col_lower) || (datum['upper'] > col_upper)`,
+                value: 'grey'
+              },
+              {
+                test: `(datum['lower'] > ${data.lower_bound}) && (datum['upper'] < ${data.upper_bound})`,
+                value: '#4db6ac'
+              }
+            ],
+            value: '#e57373'
+          }
         },
-        col: {
-          type: 'single',
-          fields: ['lower','upper'],
-          bind: {
-            lower: {input: 'range', min: lower, max: upper + binSize},
-            upper: {input: 'range', min: lower, max: upper + binSize}
+        selection: {
+          brush: {
+            type: 'interval',
+            encodings: 'x'
+          },
+          h123over: {
+            type: 'single',
+            fields: ['lower','upper','count'],
+            on: 'mouseover'
+          },
+          col: {
+            type: 'single',
+            fields: ['lower','upper'],
+            bind: {
+              lower: {input: 'range', min: lower, max: upper + binSize},
+              upper: {input: 'range', min: lower, max: upper + binSize}
+            }
           }
         }
-      }"
+      }
+      ]"
       :height="160"
       :signals="[
         {name: 'brush'},
         {name: 'hover'},
       ]"
       :width="770"
-      :encoding="{
-        x: {
-          field: 'lower',
-          bin: 'binned',
-          type: 'quantitative'
-        },
-        x2: {
-          field: 'upper'
-        },
-        y: {
-          type: 'quantitative',
-          field: 'count'
-        },
-        color: {
-          condition: [
-            {
-              test: `(datum['lower'] < col_lower) || (datum['upper'] > col_upper)`,
-              value: 'grey'
-            },
-            {
-              test: `(datum['lower'] > ${data.lower_bound}) && (datum['upper'] < ${data.upper_bound})`,
-              value: '#4db6ac'
-            }
-          ],
-          value: '#e57373'
-        }
-      }"
       :config="{
         view: {
           strokeWidth: 0,
@@ -91,6 +123,9 @@
       </template>
       <template v-else-if="selection && selection.length>=2">
         {{selection[0]}} - {{selection[1]}}
+      </template>
+      <template v-else>
+        {{ lower }} - {{ upper }}
       </template>
       &nbsp;
     </div>
