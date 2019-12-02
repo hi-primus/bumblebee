@@ -998,11 +998,7 @@ export default {
                 var hist_response = await this.evalCode(`outlier.hist("${this.currentCommand.columns[0]}")`)
                 var hist_data = JSON.parse(trimCharacters(hist_response.content, "'"))
 
-                var hist = hist_data[this.currentCommand.columns[0]].hist.map(e=>({
-                  upper: e.upper,
-                  lower: e.lower,
-                  count: e.count || 0.0001,
-                }))
+                var hist = hist_data[this.currentCommand.columns[0]].hist
 
                 outliers_data = { ...outliers_data, hist }
 
