@@ -25,8 +25,8 @@
 									currentCommand.title
 							}}
 						</v-card-title>
-						<v-card-text class="command-card-text pb-0 px-6" :class="{'command-big': command.dialog.big}">
-							<div class="mb-6" v-if="command.dialog.text">
+						<v-card-text class="command-card-text pb-0 px-6" :class="{'command-big': command.dialog.big, 'command-tall': command.dialog.tall}">
+							<div class="mb-6" :class="{'title': command.dialog.bigText}" v-if="command.dialog.text">
 								{{
 									(typeof command.dialog.text == 'function') ?
 										command.dialog.text(currentCommand)
@@ -34,7 +34,7 @@
 										command.dialog.text
 								}}
 							</div>
-              <div class="progress-middle" style="height: 86%">
+              <div class="progress-middle" style="height: 65%">
                 <v-progress-circular
                   indeterminate
                   color="#888"
@@ -73,15 +73,14 @@
                     >
                     </v-combobox>
                   </template>
-                  <template v-if="field.type=='outliers-info'">
-                    <div :key="field.key">
-                      <OutliersBar
-                        :lower_bound_count="currentCommand.data.lower_bound_count"
-                        :upper_bound_count="currentCommand.data.upper_bound_count"
-                        :count_non_outliers="currentCommand.data.count_non_outliers"
-                      />
-                      {{currentCommand}}
-                    </div>
+                  <template v-if="field.type=='outliers-range'">
+                    <Outliers
+                      :key="field.key"
+                      v-if="currentCommand[field.key]"
+                      :data="currentCommand[field.key]"
+                      :columnName="currentCommand.columns[0]"
+                      :selection.sync="currentCommand[field.selection_key]"
+                    />
                   </template>
                   <template v-if="field.type=='switch'">
                     <v-switch
@@ -245,7 +244,15 @@
 								type="submit"
 								form="command-form"
 							>
-								{{ command.dialog.acceptLabel || 'Accept'}}
+                {{
+                  command.dialog.acceptLabel ? (
+                    typeof command.dialog.acceptLabel == 'function' ?
+                      command.dialog.acceptLabel(currentCommand)
+                    :
+                      command.dialog.acceptLabel
+                  ):
+                    'Accept'
+                }}
 							</v-btn>
 						</v-card-actions>
 					</v-card>
@@ -301,7 +308,7 @@
 import axios from 'axios'
 import CodeEditor from '@/components/CodeEditor'
 import OutputColumnInputs from '@/components/OutputColumnInputs'
-import OutliersBar from '@/components/OutliersBar'
+import Outliers from '@/components/Outliers'
 import clientMixin from '@/plugins/mixins/client'
 import { trimCharacters, debounce, newName, arrayJoin } from '@/utils/functions.js'
 
@@ -315,7 +322,7 @@ export default {
   components: {
     CodeEditor,
 		OutputColumnInputs,
-		OutliersBar
+		Outliers
   },
 
   mixins: [clientMixin],
@@ -726,6 +733,7 @@ export default {
         'string clustering': {
           dialog: {
             big: true,
+            tall: true,
             title: 'String clustering',
             acceptLabel: 'Merge',
             testLabel: 'Get clusters',
@@ -875,7 +883,14 @@ export default {
           dialog: {
             big: true,
             title: 'Outliers',
-            acceptLabel: 'Drop',
+            // acceptLabel: (c)=>c.action,
+            bigText: true,
+            text: (c) => {
+              if (c.selection.length>=2)
+                return `${c.action} values between ${c.selection[0]} and ${c.selection[1]} in ${c.columns[0]}`
+              else
+                return `${c.action} values in ${c.columns[0]}`
+            },
             fields: [
               {
                 type: 'select',
@@ -883,18 +898,29 @@ export default {
                 label: 'Algorithm',
                 items: [
                   {text: 'Tukey', value: 'tukey'},
-                  {text: 'Mad', value: 'mad'},
-                  {text: 'Z score', value: 'z_score'},
-                  {text: 'Modified Z score', value: 'modified_z_score'}
+                  {text: 'Mad', value: 'mad'}
+                  // {text: 'Z score', value: 'z_score'},
+                  // {text: 'Modified Z score', value: 'modified_z_score'}
                 ],
                 onChange: 'onInit'
               },
               {
-                type: 'outliers-info',
-                key: 'data'
+                type: 'outliers-range',
+                key: 'data',
+                selection_key: 'selection'
+              },
+              {
+                type: 'select',
+                key: 'action',
+                label: 'Action',
+                items: [
+                  { text: 'Drop', value: 'Drop' },
+                  { text: 'Keep', value: 'Keep' },
+                  // { text: 'Replace', value: 'replace' }
+                ],
               }
             ],
-            validate: (c) => (c.data)
+            validate: (c) => (c.data && (c.selection.length>=2 || ['z_score','modified_z_score'].includes(c.algorithm) ) && !c.loading)
           },
           onInit: async () => {
 
@@ -916,27 +942,22 @@ export default {
               this.currentCommand.loading = true
 
               var response = await this.evalCode(`import json${sl}${code}${sl}json.dumps(outlier.info())`)
-
-              console.log('response',response)
-
               var outliers_data = JSON.parse(trimCharacters(response.content, "'"))
 
-              var upper_response = await this.evalCode(`outlier.select_upper_bound()`)
-              var lower_response = await this.evalCode(`outlier.select_lower_bound()`)
-              var hist_response = await this.evalCode(`outlier.hist("${this.currentCommand.columns[0]}")`)
+              if ( ['tukey','mad'].includes(this.currentCommand.algorithm) ) {
 
-              var upper_data = JSON.parse(trimCharacters(upper_response.content, "'"))
-              var lower_data = JSON.parse(trimCharacters(lower_response.content, "'"))
-              var hist_data = JSON.parse(trimCharacters(hist_response.content, "'"))
-
-              outliers_data = { ...outliers_data, upper_data, lower_data, hist_data }
-
-              console.log('outliers_data',outliers_data)
+                var hist_response = await this.evalCode(`outlier.hist("${this.currentCommand.columns[0]}")`)
+                var hist_data = JSON.parse(trimCharacters(hist_response.content, "'"))
+                outliers_data = { ...outliers_data, hist_data }
+              }
 
               this.currentCommand = {
                 ...this.currentCommand,
-                data: outliers_data
+                data: outliers_data,
+                selection: [],
+                code_done: code
               }
+
 
             }
             catch (error) {
@@ -947,7 +968,7 @@ export default {
                 _error = error.content.ename
               if (error.content && error.content.evalue)
                 _error += ': '+error.content.evalue
-              this.currentCommand = {...this.currentCommand, error: _error}
+              this.currentCommand = {...this.currentCommand, error: _error, data: false, selection: []}
             }
 
             this.currentCommand.loading = false
@@ -958,23 +979,25 @@ export default {
               algorithm: 'tukey',
               threshold: 1,
               data: false,
-              remove: false,
-              loading: true
+              selection: [],
+              action: 'Drop',
+              loading: true,
+              code_done: ''
             }
           },
           code: (payload) => {
-            return payload.clusters
-            .filter(cluster=>cluster.selected.length)
-            .map(cluster=>{
-              var values = cluster.selected.map(e=>e.value)
-              return `${this.dataset.varname} = ${this.dataset.varname}.cols.replace(`
+            if ( ['z_score','modified_z_score'].includes(payload.algorithm) ) {
+              return `${payload.code_done}${sl}outlier.${payload.action=='Drop' ? 'drop' : 'select'}()`
+            }
+            else {
+
+              return `${this.dataset.varname} = ${this.dataset.varname}.rows.between(`
               +`"${payload.columns[0]}"`
-              +`, search=["${values.join('","')}"]`
-              +`, replace_by="${cluster.replace}"`
-              +`, search_by="full"`
+              +`, lower_bound=${payload.selection[0]}`
+              +`, upper_bound=${payload.selection[1]}`
+              +`, invert=${payload.action=='Drop' ? 'True' : 'False'}`
               +')'
-            })
-            .join('\n')
+            }
           }
         },
         'load from database': {

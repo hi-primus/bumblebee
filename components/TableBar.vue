@@ -538,6 +538,14 @@
             </v-list-item-group>
           </v-list>
         </v-menu>
+        <v-tooltip transition="fade-transition" bottom key="outliers"> <!-- outliers -->
+          <template v-slot:activator="{ on }">
+            <v-btn v-on="on" :disabled="detailedColumns.length!=1" color="#888" text class="icon-btn" @click="commandHandle({command: 'outliers'})">
+              <v-icon>scatter_plot</v-icon>
+            </v-btn>
+          </template>
+          <span>Outliers</span>
+        </v-tooltip>
       </template>
       <v-spacer></v-spacer>
       <v-btn
@@ -753,7 +761,6 @@ export default {
 				{command: 'remove_special_chars', text: 'Remove special chars', type: 'STRING'},
         {command: 'trim', text: 'Trim white space', type: 'STRING'},
         {command: 'string clustering', text: 'String clustering', type: 'STRING', max: 1, min: 1},
-        // {command: 'outliers', text: 'OUTLIERS', type: 'STRING', max: 1},
 
 				{command: 'bucketizer',       text: 'Create Bins',          type: 'PREPARE', max: 1}, // TODO: Remove limit
 				{command: 'impute',           text: 'Impute rows',          type: 'IMPUTE'},
