@@ -1,5 +1,4 @@
 import io from 'socket.io-client'
-// import axios from 'axios'
 
 let socket
 let promises = {}
@@ -18,7 +17,6 @@ export default {
 
         try {
           if (!socket) {
-            // reject('Socket error')
             await this.startSocket ()
             var response = await this.socketPost('initialize',{
               session: this.$store.state.session

@@ -1133,6 +1133,9 @@ table {
 /* graphics */
 
 .bb-graphic {
+
+  padding: 0 4px;
+
   .scroll-container::-webkit-scrollbar {
     width: 2px;
     height: 4px;
