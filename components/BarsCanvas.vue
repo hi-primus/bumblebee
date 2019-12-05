@@ -133,8 +133,7 @@ export default {
 
     fitStageIntoParentContainer () {
       var container = this.$el
-      var containerWidth = container.offsetWidth
-      this.totalWidth = containerWidth
+      this.totalWidth = container.offsetWidth
     },
 
     onMouseDown (event) {

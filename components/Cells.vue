@@ -958,7 +958,7 @@ export default {
                 ],
               },
               {
-                condition: (c)=>(c.data),
+                condition: (c)=>(/*c.data*/false),
                 type: 'text',
                 big: true,
                 text: (c) => {
