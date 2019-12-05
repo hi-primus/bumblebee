@@ -234,7 +234,7 @@ export default {
 
 	components: {
 		Layout,
-		TableBar
+    TableBar,
 	},
 
 	mixins: [clientMixin, dataTypesMixin],

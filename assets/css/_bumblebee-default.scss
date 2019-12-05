@@ -243,15 +243,15 @@ table.table thead td:not(:nth-child(1)), table.table tbody td:not(:nth-child(1))
 
 /* data bar */
 
-
 %bar {
-  height: 0.5em;
+  height: 1em;
   width: 100%;
   overflow: overlay;
   display: flex;
   position: relative;
-  &:hover {
-		cursor: crosshair;
+  cursor: crosshair;
+  &.rounded {
+    border-radius: 0.5em;
   }
   .bar {
     height: 100%;
@@ -281,48 +281,17 @@ table.table thead td:not(:nth-child(1)), table.table tbody td:not(:nth-child(1))
       min-width: 4px;
     }
     &.rounded {
-      border-radius: 0.25em;
+      border-radius: 0.5em;
     }
   }
 }
 
-.outliers-bar {
-  @extend %bar;
-  font-size: 24px;
-  $color: lighten($data-grey,12%);
-  // border-left-style: solid;
-  // border-right-style: solid;
-  // border-left-width: 2px;
-  // border-right-width: 2px;
-  // border-left-color: $color;
-  // border-right-color: $color;
-  background-color: transparent;
-  &::before {
-    position: absolute;
-    top: calc(50% - 1px);
-    height: 2px;
-    width: 100%;
-    background-color: $color;
-    content: '';
-    z-index: 1;
-  }
-  .bar {
-
-    z-index: 2;
-  }
-
-}
-
 .data-bar {
   @extend %bar;
-  font-size: 16px;
+  font-size: 8px;
 	background-color: lighten($data-grey,40%);
-
-  &.rounded {
-    height: 0.25em;
-  }
-  .bar {
-  }
+  height: 1em;
+  min-height: 1em;
 }
 
 table {
@@ -1290,40 +1259,6 @@ table {
       top: 0;
       left: 30%;
     }
-  }
-}
-
-/* table graphics */
-
-.table-graphic {
-  height: 100%;
-  padding-left: 4px;
-  padding-right: 4px;
-  .scroll-container {
-    max-height: calc(100% - 18px);
-    height: calc(100% - 18px);
-    overflow: hidden;
-  }
-  .freq-container {
-    justify-content: center;
-    height: 100% !important;
-    .freq-bar {
-      min-width: 1px !important;
-      &:not(:first-child) {
-        margin-left: 1px !important;
-      }
-    }
-  }
-  h3 {
-    display: none;
-  }
-  .current-value {
-    height: 1.5em;
-    font-family: $font-mono;
-    max-width: 100%;
-    text-overflow: ellipsis;
-    overflow: hidden;
-    white-space: nowrap;
   }
 }
 

@@ -284,7 +284,7 @@ export default {
 
 <style lang="scss">
   .data-bar.main-data-bar {
-    height: 8px;
+    font-size: 8px;
     border-top-left-radius: 0;
     border-top-right-radius: 0;
   }

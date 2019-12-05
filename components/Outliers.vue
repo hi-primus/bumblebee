@@ -70,12 +70,9 @@
         selection: {
           brush: {
             type: 'interval',
+            clear: 'window:mousedown',
+            translate: '[mousedown[event.shiftKey], window:mouseup] > window:mousemove!',
             encodings: 'x'
-          },
-          h123over: {
-            type: 'single',
-            fields: ['lower','upper','count'],
-            on: 'mouseover'
           },
           col: {
             type: 'single',

@@ -1,5 +1,5 @@
 <template>
-  <div class="data-bar rounded">
+  <div class="data-bar">
     <v-tooltip transition="fade-transition" :left="!bottom" :bottom="bottom" content-class="bar-tooltip" color="success darken-2">
       <template v-slot:activator="{ on }">
         <div :class="{'min-bar': okP!=0}" :style="{'width': okP+'%'}" class="bar teal-bar" v-on="on" />

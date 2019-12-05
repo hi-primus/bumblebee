@@ -11,6 +11,7 @@
               :mismatch="dtypes.mismatch"
               :nullV="dtypes.null"
               bottom
+              class="rounded"
             />
           </td>
         </tr>

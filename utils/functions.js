@@ -62,3 +62,7 @@ export const debounce = (func, delay) => {
   }
 }
 
+export const stepify = (a, b, f = Math.round) => {
+  return f(a / b) * b;
+}
+

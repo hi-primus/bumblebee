@@ -1,24 +1,25 @@
 <template>
   <div :class="{'table-graphic': table}" class="bb-graphic" @mouseleave="currentVal = false">
     <h3>Frequent values</h3>
-    <div class="scroll-container">
-      <div class="freq-container">
-        <div
-          v-for="(item, index) in values"
-          :key="index"
-          class="freq-bar"
-          @mouseover="currentVal = `${item.value}, ${item.count}, ${item.percentage}%`"
-        >
-          <div v-if="item.count>0" :style="{'height': normVal(item.count)+'%'}" class="freq-value" />
-        </div>
-      </div>
-    </div>
+    <BarsCanvas
+      :values="values"
+      :binMargin="1"
+      :width="'auto'"
+      :height="table ? 66 : 90"
+      @hovered="setValueIndex($event)"
+    />
     <div class="current-value" :title="currentValueString">{{ currentValueString }}</div>
   </div>
 </template>
 
 <script>
+import BarsCanvas from '@/components/BarsCanvas'
+
 export default {
+
+  components: {
+    BarsCanvas
+  },
 	props: {
 		values: {
 			default: [],
@@ -35,22 +36,38 @@ export default {
 		table: {
 			default: false,
 			type: Boolean
-		}
+    },
 	},
 
 	data () {
 		return {
-			currentVal: false
+      currentVal: false,
+      maxVal: 0,
 		}
-	},
+  },
+
+  beforeMount() {
+    this.maxVal = this.getMaxVal(this.values)
+  },
 
 	methods: {
 		changeValue (newVal) {
 			this.currentVal = newVal
 		},
+		getMaxVal (arr) {
+			return arr.reduce(
+				(max, p) => (p.count > max ? p.count : max),
+				arr[0].count
+			)
+		},
 		normVal (val) {
-			return (val * 100) / this.total
-		}
+			return (val * 100) / this.maxVal
+    },
+    setValueIndex(index) {
+      var item = this.values[index]
+      if (item)
+        this.currentVal = `${item.value}, ${item.count}, ${item.percentage}%`
+    },
   },
 
   computed: {

@@ -1,0 +1,265 @@
+<template>
+  <v-stage
+    ref="konva"
+    class="konva-canvas-container"
+    :config="{width: w, height}"
+    @mousedown="onMouseDown"
+    @mousemove="onMouseMove"
+    @mouseleave="setHovered(-1)"
+  >
+    <v-layer>
+      <v-rect
+        v-if="selectionRange.length"
+        :config="{
+          ...selectionRect,
+          y: 0,
+          height: height,
+          fill: '#00000020'
+        }"
+      ></v-rect>
+      <v-rect
+        v-for="(value, index) in values"
+        :key="index+'b'"
+        :config="getBackConfig(index)"
+        @mouseenter="setHovered(index)"
+        @mouseleave="unsetHovered(index)"
+      ></v-rect>
+      <v-rect
+        v-for="(value, index) in values"
+        :key="index"
+        :config="getRectConfig(index)"
+      ></v-rect>
+    </v-layer>
+  </v-stage>
+</template>
+
+<script>
+
+import { stepify } from '@/utils/functions.js'
+
+export default {
+
+  props: {
+    values: {
+      type: Array,
+      required: true
+    },
+    selected: {
+      type: Array
+    },
+    width: {
+      type: [Number, String],
+      default: 0,
+    },
+    binWidth: {
+      type: Number,
+      default: 6
+    },
+    maxVal: {
+      type: Number,
+      default: 0
+    },
+    binMargin: {
+      type: Number,
+      default: -1
+    },
+    height: {
+      type: Number,
+      default: 90
+    },
+    selectable: {
+      type: Boolean,
+      default: false
+    }
+  },
+
+  data() {
+    return {
+      selectionRange: [],
+      selectionRect: {},
+      rectConfig: {
+        x: 10,
+        y: 0,
+        height: 100,
+        width: 9,
+        fill: "#4db6ac",
+        stroke: "black",
+        strokeWidth: 0
+      },
+      bins: this.values.map(e=>({})),
+      totalWidth: 0
+    }
+  },
+
+  computed: {
+    calculatedMaxVal () {
+      return this.maxVal || this.values.reduce( (prev,current) => (prev.count > current.count) ? prev.count : current.count ) || 1
+    },
+    binBorder () {
+      return (this.binMargin >= 0) ? this.binMargin : Math.ceil( (this.totalWidth / 8) / this.values.length )
+    },
+    maxBinWidth () {
+      return Math.max(this.height / 8, this.totalWidth / 8, 1)
+    },
+    calculatedBinWidth () {
+      return (this.totalWidth) ? Math.floor((this.totalWidth + this.binBorder) / this.values.length) : this.binWidth
+    },
+    w () {
+      return this.calculatedBinWidth*this.values.length
+    }
+  },
+
+  beforeMount() {
+    this.totalWidth = (this.width=='auto') ? 0 : this.width
+  },
+
+  mounted () {
+    document.documentElement.addEventListener('mouseup', ()=>{
+      this.onMouseUp()
+    });
+
+    if (this.width=='auto') {
+      this.$nextTick(()=>{
+        this.fitStageIntoParentContainer()
+      })
+    }
+  },
+
+  methods: {
+
+    fitStageIntoParentContainer () {
+      var container = this.$el
+      var containerWidth = container.offsetWidth
+      this.totalWidth = containerWidth
+    },
+
+    onMouseDown (event) {
+      if (!this.selectable) {
+        return
+      }
+      if (event.evt.which==1) {
+        // this.setHovered(-1)
+        this.multipleSelection = event.evt.ctrlKey
+        this.selectionRange = [event.evt.layerX, event.evt.layerX]
+        this.updateSelectionRange( event.evt.layerX )
+      }
+      else if (event.evt.which==3 && !event.evt.ctrlKey) {
+        this.setSelection()
+      }
+    },
+
+    onMouseMove (event) {
+      if (!this.selectable) {
+        return
+      }
+      if (this.selectionRange.length){
+        this.updateSelectionRange(event.evt.layerX)
+      }
+    },
+
+    updateSelectionRange (layerX) {
+      this.selectionRange[1] = layerX
+      var sr = [...this.selectionRange]
+
+      sr.sort((a,b)=>(a-b))
+
+      var b2 = this.binBorder/2
+
+      sr[0] = stepify(sr[0]+b2, this.calculatedBinWidth, Math.floor)
+      sr[1] = stepify(sr[1]+b2, this.calculatedBinWidth, Math.ceil)
+
+      var width = sr[1]-sr[0]
+
+      if (width)
+        width -= this.binBorder
+
+      this.selectionRect = { x: sr[0], width }
+
+      var start = +(sr[0]/this.calculatedBinWidth).toPrecision(6)
+      var end = +(sr[1]/this.calculatedBinWidth).toPrecision(6)
+      this.setSelection(start, end)
+    },
+
+    onMouseUp () {
+      if (!this.selectable) {
+        return
+      }
+      this.selectionRange = []
+      this.selectionRect = {}
+      this.bins = this.bins.map(e=>({...e, selected: e.selected || e.selecting, selecting: false}))
+      this.$emit('update:selected', this.bins.map((e,i)=>e.selected ? i : -1).filter(e=>(e>=0)) )
+    },
+
+    setHovered (index) {
+      this.bins = this.bins.map(e=>({...e, hovered: false}))
+      if (index>=0) {
+        this.bins[index].hovered = true
+      }
+      this.$emit('hovered', index )
+    },
+
+    unsetHovered (index) {
+      if (index>=0) {
+        this.bins[index].hovered = false
+      }
+    },
+
+    setSelection (from = -1, to = -2) {
+
+      if (from==to){
+        from--
+      }
+
+      if (from>=0 && !this.multipleSelection && to-from<=1 && this.bins[from].selected) {
+        this.bins = this.bins.map(e=>({...e, selecting: false, selected: false}))
+        return;
+      }
+
+      if (!this.multipleSelection) {
+        this.bins = this.bins.map(e=>({...e, selecting: false, selected: false}))
+      }
+
+      if (from>=0)
+        for (let i = from; i < to; i++)
+          this.bins[i].selecting = true
+    },
+    getBackConfig (index) {
+      return {
+        ...this.rectConfig,
+        width: this.calculatedBinWidth - this.binBorder,
+        height: this.height,
+        y: 0,
+        x: this.calculatedBinWidth*index,
+        fill: ( (this.bins[index].hovered || this.bins[index].selected ) && !this.bins[index].selecting) ? '#00000010' : '#0000'
+      }
+
+    },
+    getRectConfig (index) {
+      var h = this.height * (this.values[index].count / this.calculatedMaxVal) || Math.max(Math.ceil(this.binWidth/16), 2)
+
+      return {
+        ...this.getBackConfig(index),
+        height: h,
+        y: this.height - h,
+				fill: (this.bins[index].hovered || this.bins[index].selected || this.bins[index].selecting) ? '#3c938b' : '#4db6ac',
+				opacity: (this.values[index].count) ? 1 : 0.5,
+				listening: false
+      }
+
+    },
+  }
+}
+</script>
+
+<style lang="scss">
+  .konva-canvas-container {
+    width: 100%;
+    &>* {
+      margin: auto
+    }
+    canvas {
+      cursor: crosshair;
+    }
+
+  }
+</style>
