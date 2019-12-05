@@ -79,20 +79,11 @@ export default {
 
     .table-data-bar {
       margin-bottom: 2px;
-      position: relative;
-      border-radius: 0;
-      width: 100%;
+      font-size: 4px;
     }
 
     .histfreq {
       flex: 1;
     }
-    // .data-type-header {
-    //   pointer-events: none;
-    //   position: absolute;
-    //   top: -25px;
-    //   left: 4px;
-    //   z-index: 103;
-    // }
   }
 </style>
