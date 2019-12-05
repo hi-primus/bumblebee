@@ -328,24 +328,12 @@ export default {
 				return
 			}
 
-			// this.$router.replace({ path: this.$route.fullPath, query: { tab: value } }, () => {
-			// 	history.replaceState('Dashboard', 'Bumblebee', this.$route.fullPath)
-      // })
-
       if (dataset && dataset.dtypes_list)
         this.typesAvailable = dataset.dtypes_list
 		},
 		view (value) {
 			if (value === undefined) { return }
-			// this.$router.replace({ path: this.$route.fullPath, query: { view: value } }, () => {
-			// 	history.replaceState('Dashboard', 'Bumblebee', this.$route.fullPath)
-			// })
 		}
-	},
-
-	created () {
-		// this.tab = this.$route.query.tab
-		// this.view = +(this.$route.query.view || 0)
 	},
 
 	mounted () {
@@ -354,13 +342,8 @@ export default {
 		this.inputSession = this.$route.query.session || ''
     this.inputKey = this.$route.query.key || ''
 
-    // let query = Object.assign({}, this.$route.query);
-    // delete query.key;
-    // this.$router.replace({ query });
-
 		if (this.inputSession && this.inputKey) {
       this.subscribe()
-      // this.$store.commit('status', 'receiving')
 		}
 	},
 

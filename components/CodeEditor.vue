@@ -34,13 +34,6 @@ export default {
     query: {
       handler () {
         this.highlightSyntax()
-        // this.$nextTick(()=>{
-        //   if (this.$refs.editor && this.$refs.code) {
-        //     this.$nextTick(()=>{
-        //       this.$refs.editor.style.width = this.$refs.code.offsetWidth+'px'
-        //     })
-        //   }
-        // })
       },
       immediate: true,
     }

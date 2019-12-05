@@ -962,14 +962,23 @@ export default {
                 type: 'text',
                 big: true,
                 text: (c) => {
-                  if (c.selection.length>=2)
-                    return `${c.action} values between ${c.selection[0]} and ${c.selection[1]} in ${c.columns[0]}`
-                  else
-                    return `${c.action} values in ${c.columns[0]}`
+                  var ranges
+
+                  if (c.selection.length>1) {
+                    ranges = `some values between ${c.selection[0][0]} and ${c.selection[c.selection.length-1][1]}`
+                  }
+                  else if (c.selection.length==1) {
+                    ranges = `values between ${c.selection[0][0]} and ${c.selection[0][1]}`
+                  }
+                  else {
+                    ranges = 'values'
+                  }
+
+                  return `${c.action} ${ranges} in ${c.columns[0]}`
                 },
               }
             ],
-            validate: (c) => (c.data && (c.selection.length>=2 || ['z_score','modified_z_score'].includes(c.algorithm) ) && !c.loading)
+            validate: (c) => (c.data && (c.selection.length || ['z_score','modified_z_score'].includes(c.algorithm) ) && !c.loading)
           },
           getOutliers: async () => {
 
@@ -1052,12 +1061,15 @@ export default {
             }
             else {
 
-              return `${this.dataset.varname} = ${this.dataset.varname}.rows.between(`
+              // TODO various ranges
+
+              return payload.selection.map(selection=>`${this.dataset.varname} = ${this.dataset.varname}.rows.between(`
               +`"${payload.columns[0]}"`
-              +`, lower_bound=${payload.selection[0]}`
-              +`, upper_bound=${payload.selection[1]}`
+              +`, lower_bound=${selection[0]}`
+              +`, upper_bound=${selection[1]}`
               +`, invert=${payload.action=='Drop' ? 'True' : 'False'}`
               +')'
+              ).join('\n')
             }
           }
         },

@@ -1,6 +1,6 @@
 <template>
-  <div :class="{'table-graphic': table}" class="bb-graphic" @mouseleave="currentVal = false">
-    <h3>Frequent values</h3>
+  <div class="bb-graphic" @mouseleave="currentVal = false">
+    <h3 v-if="!table">Frequent values</h3>
     <BarsCanvas
       :values="values"
       :binMargin="1"
