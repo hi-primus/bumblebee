@@ -638,8 +638,7 @@
                   title: 'n',
                   'type': 'quantitative',
                   scale: {range: ['#e6fffd', '#8cd7d0', '#4db6ac']},
-                  legend: { direction: 'vertical', type: 'gradient', gradientLength: 120, titleAlign: 'left', title: ' n' },
-                  // condition: { test: 'datum.z<=0', value: 'white'}
+                  legend: { direction: 'vertical', type: 'gradient', gradientLength: 120, titleAlign: 'left', title: ' n' }
                 }
               }"
               :config="{

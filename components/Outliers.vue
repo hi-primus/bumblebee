@@ -1,125 +1,20 @@
 <template>
   <div @mouseleave="nowValues = false">
-    <VegaEmbed
-      :name="'hist'"
-      ref="hist"
-      class="hist-grid pa-0"
-      style="margin: -5px;"
-      v-if="data.hist"
-      :data="{values: data.hist}"
-      :layer="[
-      {
-        mark: 'bar',
-        encoding: {
-          x: {
-            field: 'lower',
-            bin: 'binned',
-            type: 'quantitative'
-          },
-          x2: {
-            field: 'upper'
-          },
-          y: {
-            type: 'quantitative',
-            value: 1,
-          },
-          color: {
-            condition: { selection: 'hover', value: '#00000020' },
-            value: '#00000000'
-          }
-        },
-        selection: {
-          hover: {
-            type: 'single',
-            empty: 'none',
-            clear: 'mouseout',
-            fields: ['lower','upper','count'],
-            on: 'mouseover'
-          },
-        }
-      },
-      {
-        mark: 'bar',
-        encoding: {
-          x: {
-            field: 'lower',
-            bin: 'binned',
-            type: 'quantitative'
-          },
-          x2: {
-            field: 'upper'
-          },
-          y: {
-            type: 'quantitative',
-            field: 'count'
-          },
-          color: {
-            condition: [
-              {
-                test: `(datum['lower'] < col_lower) || (datum['upper'] > col_upper)`,
-                value: 'grey'
-              },
-              {
-                test: `(datum['lower'] > ${data.lower_bound}) && (datum['upper'] < ${data.upper_bound})`,
-                value: '#4db6ac'
-              }
-            ],
-            value: '#e57373'
-          }
-        },
-        selection: {
-          brush: {
-            type: 'interval',
-            clear: 'window:mousedown',
-            translate: '[mousedown[event.shiftKey], window:mouseup] > window:mousemove!',
-            encodings: 'x'
-          },
-          col: {
-            type: 'single',
-            fields: ['lower','upper'],
-            bind: {
-              lower: {input: 'range', min: lower, max: upper + binSize},
-              upper: {input: 'range', min: lower, max: upper + binSize}
-            }
-          }
-        }
-      }
-      ]"
+    <BarsCanvas
+      :selectable="'single'"
+      :values="data.hist"
+      :binMargin="1"
+      :width="'auto'"
       :height="160"
-      :signals="[
-        {name: 'brush'},
-        {name: 'hover'},
-      ]"
-      :width="770"
-      :config="{
-        view: {
-          strokeWidth: 0,
-          stroke: 'transparent',
-          step: 13
-        },
-        axis: {
-          titleOpacity: 0,
-          domainColor: '#fff',
-          title: 0,
-          gridColor: '#fff',
-          ticks: false,
-          domainOpacity: 0,
-          gridOpacity: 0,
-          tickOpacity: 0,
-          labelPadding: 0,
-          labels: false,
-        },
-      }"
-      @signal:brush="updateRange"
-      @signal:hover="getHover"
-      >
-    </VegaEmbed>
+      @hovered="getHover($event)"
+      @update:selected="updateSelection"
+    />
     <div class="range-hover mb-2">
       <template v-if="nowValues">
         {{ nowValues }}
       </template>
-      <template v-else-if="selection && selection.length>=2">
-        {{selection[0]}} - {{selection[1]}}
+      <template v-else-if="selection && selection.length">
+        {{ selection.map(s=>`${s[0]} - ${s[1]}`).join(',   ') }}
       </template>
       <template v-else>
         {{ lower }} - {{ upper }}
@@ -130,13 +25,14 @@
 </template>
 
 <script>
-import VegaEmbed from '@/components/VegaEmbed'
-import { throttle } from '@/utils/functions.js'
+import { throttle, reduceRanges } from '@/utils/functions.js'
+
+import BarsCanvas from '@/components/BarsCanvas'
 
 export default {
 
   components: {
-    VegaEmbed
+    BarsCanvas,
   },
 
   data () {
@@ -147,7 +43,7 @@ export default {
 
 	props: {
     selection: {
-      default: ()=>([0,0]),
+      default: ()=>([]),
       type: Array
     },
 		data: {
@@ -158,61 +54,28 @@ export default {
   },
 
   mounted () {
-    this.updateRange({lower: undefined})
+    this.updateSelection([])
   },
 
   methods: {
-    getHover (value) {
-      if (value && value.lower && value.lower.length) {
+    getHover (index) {
+      var value = this.data.hist[index]
+      if (value && value.lower) {
         this.nowValues = value.lower + ' - ' + value.upper + ', ' + value.count
-      }
-      else if (this.selection.length<2) {
-        this.nowValues = this.lower + ' - ' + this.upper
       }
       else {
         this.nowValues = false
       }
     },
-    updateRange: throttle ( async function (range) {
+    updateSelection (indices = []) {
 
-      var a = [this.lower,this.upper]
+      var ranges = indices.map(index=>[this.data.hist[index].lower, this.data.hist[index].upper])
 
-      var binSize = this.binSize
+      ranges = reduceRanges(ranges)
 
-			if (range.lower) {
-				var offset = this.offset
-				a = [...range.lower]
-				a[0] = +( ( Math.floor( (a[0]-offset)/binSize ) * binSize ) + offset ).toFixed(8)
-        a[1] = +( (  Math.ceil( (a[1]-offset)/binSize ) * binSize ) + offset ).toFixed(8)
-        this.$emit('update:selection',a)
-      }
-      else {
-        this.$emit('update:selection',[])
-      }
+      this.$emit('update:selection', ranges )
 
-      if (this.$refs.hist) {
-        function triggerEvent(el, type){
-          if ('createEvent' in document) {
-            // modern browsers, IE9+
-            var e = document.createEvent('HTMLEvents');
-            e.initEvent(type, false, true);
-            el.dispatchEvent(e);
-          } else {
-            // IE 8
-            var e = document.createEventObject();
-            e.eventType = type;
-            el.fireEvent('on'+e.eventType, e);
-          }
-        }
-
-        this.$refs.hist.$el.getElementsByTagName('input')['col_lower'].value = a[0]-binSize
-        this.$refs.hist.$el.getElementsByTagName('input')['col_upper'].value = a[1]
-
-        triggerEvent(this.$refs.hist.$el.getElementsByTagName('input')['col_lower'],'input')
-        triggerEvent(this.$refs.hist.$el.getElementsByTagName('input')['col_upper'],'input')
-      }
-
-    },100),
+    },
   },
 
   computed: {

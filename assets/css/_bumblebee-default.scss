@@ -614,22 +614,6 @@ table {
   }
 }
 
-// .plot svg {
-//   overflow: visible !important;
-// }
-.plot-display {
-  width: 100%;
-  text-align: left;
-  padding-left: 8px;
-  font-family: $font-mono;
-  display: flex;
-  flex-wrap: wrap;
-  .value {
-    min-width: 50%;
-    padding-right: 1.5rem;
-  }
-}
-
 /* plots */
 
 .table-container {
@@ -719,7 +703,6 @@ table {
     &>*:not(:first-child) {
       margin-top: 2px;
     }
-    // width: $toolbar-height;
   }
   &:not(.vertical){
     height: $toolbar-height;
@@ -1272,7 +1255,6 @@ table {
   display: inline;
   &.in-autocomplete {
     width: 3em;
-    // color: rgba(0, 0, 0, 0.71)
   }
 }
 .data-type-name {
@@ -1402,7 +1384,6 @@ $side-controls-width: 54px;
       }
       .left-handle {
         background-color: darken($line-color-2,10%) !important;
-        // border-bottom-color: rgba(0,0,0,0.33);
       }
       .cell-type {
         color: $primary-color;
@@ -1458,7 +1439,6 @@ $side-controls-width: 54px;
 
 }
 
-
 // editor
 
 $editor-top-padding: 6px;
@@ -1473,7 +1453,6 @@ $editor-top-padding: 6px;
   padding: $editor-top-padding 12px;
   overflow-y: hidden;
   overflow-x: auto;
-  // border-radius: 4px;
   background-color: #fbfbfb;
 
   width: 100%;

@@ -68,8 +68,12 @@ export default {
       default: 90
     },
     selectable: {
-      type: Boolean,
+      type: [Boolean, String],
       default: false
+    },
+    yKey: {
+      type: String,
+      default: 'count'
     }
   },
 
@@ -93,7 +97,7 @@ export default {
 
   computed: {
     calculatedMaxVal () {
-      return this.maxVal || this.values.reduce( (prev,current) => (prev.count > current.count) ? prev.count : current.count ) || 1
+      return this.maxVal || this.values.reduce( (prev,current) => prev.count>current.count ? prev : current, {count: 0} ).count || 1
     },
     binBorder () {
       return (this.binMargin >= 0) ? this.binMargin : Math.ceil( (this.totalWidth / 8) / this.values.length )
@@ -138,12 +142,11 @@ export default {
         return
       }
       if (event.evt.which==1) {
-        // this.setHovered(-1)
-        this.multipleSelection = event.evt.ctrlKey
+        this.multipleSelection = event.evt.ctrlKey && this.selectable!='single'
         this.selectionRange = [event.evt.layerX, event.evt.layerX]
         this.updateSelectionRange( event.evt.layerX )
       }
-      else if (event.evt.which==3 && !event.evt.ctrlKey) {
+      else if (event.evt.which==3 && !this.multipleSelection) {
         this.setSelection()
       }
     },

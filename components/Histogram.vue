@@ -1,6 +1,6 @@
 <template>
-  <div :class="{'table-graphic': table}" class="bb-graphic" @mouseleave="currentCount = false">
-    <h3>{{ title }}</h3>
+  <div class="bb-graphic" @mouseleave="currentCount = false">
+    <h3 v-if="!table">{{ title }}</h3>
     <BarsCanvas
       :values="values"
       :maxVal="maxVal"

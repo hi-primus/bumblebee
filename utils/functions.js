@@ -66,3 +66,20 @@ export const stepify = (a, b, f = Math.round) => {
   return f(a / b) * b;
 }
 
+export const reduceRanges = (ranges_array) => {
+  return ranges_array.reduce( (ranges, range) => {
+    if (ranges.length==0) {
+      return [range]
+    }
+    else {
+      var last = ranges[ranges.length-1][1]
+      if (last==range[0]) {
+        ranges[ranges.length-1][1] = range[1]
+        return ranges
+      }
+      else {
+        return [...ranges, range]
+      }
+    }
+  }, [])
+}
