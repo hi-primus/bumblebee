@@ -1,6 +1,6 @@
 {
   "name": "bumblebee-api",
-  "version": "0.6.5",
+  "version": "0.6.6",
   "description": "The api of the GUI that works with Optimus to make data profiling easier",
   "main": "index.js",
   "scripts": {
