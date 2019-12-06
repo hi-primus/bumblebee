@@ -125,7 +125,8 @@ const new_socket = function (socket, session) {
     while (tries--) {
       result = await createKernel(user_session)
       if (result.status=='error') {
-        console.log(' Kernel error, retrying')
+        console.log(result)
+        console.log('Kernel error, retrying')
         await deleteKernel(user_session)
       }
       else {
@@ -321,7 +322,6 @@ const createKernel = async function (user_session) {
 	if (kernels[user_session]==undefined){
 		return await run_code(`
 from optimus import Optimus
-from optimus.bumblebee import Comm
 op = Optimus(master="local[*]", app_name="optimus", comm=True)
 'kernel init optimus init'`,user_session)
 	}
@@ -339,7 +339,6 @@ try:
 		_status += ''
 except NameError:
 	from optimus import Optimus
-	from optimus.bumblebee import Comm
 	op = Optimus(master="local[*]", app_name="optimus", comm=True)
 	_status = 'optimus init '
 
