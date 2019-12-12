@@ -178,6 +178,7 @@
                       :placeholder="field.placeholder"
                       :items="(field.items_key) ? currentCommand[field.items_key] : field.items"
                       @input="(field.onChange) ? command[field.onChange]() : 0"
+                      :disabled="!!+field.disabled"
                       dense
                       required
                       outlined
@@ -476,8 +477,10 @@ export default {
                   { text: 'Starts with', value: 'startswith' },
                   { text: 'Ends with', value: 'endswith' },
                   { divider: true },
-                  { text: 'Custom expression', value: 'custom' }
-                ]
+                  { text: 'Custom expression', value: 'custom' },
+                  { text: 'Selected', value: 'selected', disabled: true }
+                ],
+                disabled: {valueOf: ()=>this.selectionType!='columns'}
               },
               {
                 condition: (c)=>['exactly','not','less','greater'].includes(c.condition),
@@ -549,22 +552,44 @@ export default {
                   return (c.text!='')
                 case 'custom':
                   return (c.expression!='')
+                case 'selected':
+                  return true
                 default:
                   return false
               }
             }
           },
 
-          payload: (columns) => ({
-            columns,
-            condition: 'exactly',
-            value: '',
-            values: [],
-            value_2: '',
-            text: '',
-            expression: `${this.dataset.varname}["${columns[0]}"]`,
-            action: 'select'
-          }),
+          payload: (columns) => {
+
+            var condition = 'exactly'
+            var selectionType, selection
+
+
+            if (this.selectionType=='ranges') {
+              selectionType = this.selectionType
+              selection = { ranges: this.currentSelection.ranged.ranges }
+              condition = 'selected'
+            }
+            else if (this.selectionType=='values') {
+              selectionType = this.selectionType
+              selection = { values: this.currentSelection.ranged.values }
+              condition = 'selected'
+            }
+
+            return {
+              columns,
+              condition,
+              selection,
+              selectionType,
+              value: '',
+              value_2: '',
+              values: [],
+              text: '',
+              expression: `${this.dataset.varname}["${columns[0]}"]`,
+              action: 'select'
+            }
+          },
 
           code: (payload) => {
 
@@ -598,6 +623,13 @@ export default {
               case 'endswith':
                 expression = `${this.dataset.varname}["${payload.columns[0]}"].endswith("${payload.text}")`
                 break
+              case 'selected':
+                if (payload.selectionType=='ranges') {
+                  expression = `(${this.dataset.varname}["${payload.columns[0]}"]>=${payload.selection.ranges[0][0]}) & (${this.dataset.varname}["${payload.columns[0]}"]<=${payload.selection.ranges[0][1]})`
+                }
+                else if (payload.selectionType=='values') {
+                  expression = `${this.dataset.varname}.${payload.columns[0]}.isin("${payload.selection.values.join('","')}")`
+                }
               case 'custom':
               default:
             }
@@ -1912,7 +1944,7 @@ export default {
 
   computed: {
 
-    ...mapGetters(['currentSelection']),
+    ...mapGetters(['currentSelection','selectionType']),
 
     cells: {
       get() {

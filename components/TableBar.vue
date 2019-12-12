@@ -353,8 +353,8 @@ export default {
 				{command: 'drop rows', text: 'Drop rows', type: 'FILTER'},
         {command: 'keep rows', text: 'Keep rows', type: 'FILTER'},
 
-				{command: 'sample_n', text: 'Sampling', type: 'SAMPLING'},
-        {command: 'stratified_sample', text: 'Stratified sampling', type: 'SAMPLING', min: 1, max: 1},
+				{command: 'sample_n', text: 'Random', type: 'SAMPLING'},
+        {command: 'stratified_sample', text: 'Stratified', type: 'SAMPLING', min: 1, max: 1},
 
 				{command: 'lower', text: 'To lower case', type: 'STRING'},
 				{command: 'upper', text: 'To upper case', type: 'STRING'},
@@ -406,17 +406,7 @@ export default {
 
 	computed: {
 
-    ...mapGetters(['currentSelection']),
-
-    selectionType () {
-      var _ds = this.currentSelection
-      if (_ds && _ds.ranged &&  _ds.ranged.values && _ds.ranged.values.length)
-        return 'values'
-      if (_ds && _ds.ranged && _ds.ranged.ranges && _ds.ranged.ranges.length)
-        return 'ranges'
-      return 'columns'
-
-    },
+    ...mapGetters(['currentSelection','selectionType']),
 
     toolbarElements () {
       return [
@@ -516,8 +506,8 @@ export default {
           ]
         },
         {
-          type: {toString: ()=>(this.selectionType=='columns' ? 'button' : 'menu')},
-          group: 'FILTER',
+          type: 'button',// {toString: ()=>(this.selectionType=='columns' ? 'button' : 'menu')},
+          // group: 'FILTER',
           onClick: ()=>this.commandHandle({command: 'filter rows'}),
           tooltip: 'Filter rows',
           disabled: { valueOf: ()=>this.selectedColumns.length!=1 },

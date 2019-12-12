@@ -178,5 +178,13 @@ export const getters = {
   },
   currentTab(state) {
     return state.tab
+  },
+  selectionType(state) {
+    var _ds = state.datasetSelection[state.tab] || []
+    if (_ds && _ds.ranged &&  _ds.ranged.values && _ds.ranged.values.length)
+      return 'values'
+    if (_ds && _ds.ranged && _ds.ranged.ranges && _ds.ranged.ranges.length)
+      return 'ranges'
+    return 'columns'
   }
 }

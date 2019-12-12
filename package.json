@@ -1,6 +1,6 @@
 {
   "name": "bumblebee",
-  "version": "0.7.9",
+  "version": "0.7.10",
   "description": "A GUI that works with Optimus to make data profiling easier",
   "author": "Iron",
   "private": true,
