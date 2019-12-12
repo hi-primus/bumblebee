@@ -20,6 +20,7 @@
       :uniques="value.count_uniques"
       :values="value.frequency"
       :total="+value.frequency[0].count"
+      :columnIndex="value.index"
       class="histfreq"
       table
     />
@@ -29,6 +30,7 @@
       :uniques="value.count_uniques"
       :values="value.hist"
       :total="+value.total"
+      :columnIndex="value.index"
       class="histfreq"
       table
     />
@@ -38,6 +40,7 @@
       :uniques="value.count_uniques"
       :values="value.hist_years"
       :total="+value.total"
+      :columnIndex="value.index"
       class="histfreq"
       table
     />

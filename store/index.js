@@ -1,5 +1,8 @@
+import Vue from 'vue'
+
 export const state = () => ({
 	datasets: [],
+	datasetSelection: [],
 	datasetUpdates: 0,
   status: 'waiting',
   session: '',
@@ -7,10 +10,15 @@ export const state = () => ({
   key: '',
   datasetCounter: 1,
   kernel: false,
-  cells: []
+  cells: [],
+  tab: 0
 })
 
 export const mutations = {
+
+  setTab (state, { tab }) {
+    state.tab = tab
+  },
 
 	add (state, { dataset }) {
 
@@ -42,23 +50,32 @@ export const mutations = {
     dataset.varname = 'df' // TODO: multiple dfs
 
     /*
-
     if (found>=1)
       dataset.varname = `df${found}`
     else
       dataset.varname = 'df'
-
     */
 
-    state.datasets[found] = dataset
+    if (dataset.columns instanceof Object) { dataset.columns = Object.values(dataset.columns) }
 
-		if (state.datasets[found].columns instanceof Object) { state.datasets[found].columns = Object.values(state.datasets[found].columns) }
+    var _c
+    try {
+      _c = state.datasetSelection[found].columns
+    }
+    catch (err) {
+      _c = []
+    }
+
+    Vue.set(state.datasets, found, dataset)
+
+    state.datasetSelection[found] = {columns: _c}
+
+    Vue.set(state.datasetSelection, found, state.datasetSelection[found] )
 
 		state.status = 'received'
 
-		state.datasetUpdates = state.datasetUpdates + 1
+    state.datasetUpdates = state.datasetUpdates + 1
 
-		console.log('DEBUG: dataset', state.datasets[found])
   },
 
   addNew (state) {
@@ -72,7 +89,8 @@ export const mutations = {
 
     state.status = 'received'
 
-		state.datasets[found] = dataset
+    Vue.set(state.datasets, found, dataset)
+    Vue.set(state.datasetSelection, found, {})
 
 		state.datasetUpdates = state.datasetUpdates + 1
 
@@ -90,13 +108,15 @@ export const mutations = {
 
     state.status = 'received'
 
-		state.datasets[found] = dataset
+    Vue.set(state.datasets, found, dataset)
+    Vue.set(state.datasetSelection, found, {})
 
 		state.datasetUpdates = state.datasetUpdates + 1
   },
 
 	delete (state, { index }) {
-		state.datasets.splice(index, 1)
+    Vue.delete(state.datasets, index)
+    Vue.delete(state.datasetSelection, index)
 		if (!state.datasets.length) {
 			state.status = 'receiving back'
 		}
@@ -133,6 +153,30 @@ export const mutations = {
 
   kernel (state, payload) {
     state.kernel = payload
+  },
+
+  selection (state, {tab, columns, ranged} ) {
+    if (tab===undefined) {
+      tab = state.tab
+    }
+    if (tab!==undefined) {
+      Vue.set(state.datasetSelection,tab,{
+        columns: (columns !== undefined) ? columns : (state.datasetSelection[tab]) ? state.datasetSelection[tab].columns || [] : [],
+        ranged: (ranged !== undefined) ? ranged : (state.datasetSelection[tab]) ? state.datasetSelection[tab].ranged || {} : {},
+      })
+    }
   }
 
+}
+
+export const getters = {
+  currentDataset(state) {
+    return state.datasets[state.tab]
+  },
+  currentSelection(state) {
+    return state.datasetSelection[state.tab] || []
+  },
+  currentTab(state) {
+    return state.tab
+  }
 }

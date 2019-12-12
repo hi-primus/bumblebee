@@ -70,7 +70,6 @@ export default {
     updateSelection (indices = []) {
 
       var ranges = indices.map(index=>[this.data.hist[index].lower, this.data.hist[index].upper])
-
       ranges = reduceRanges(ranges)
 
       this.$emit('update:selection', ranges )

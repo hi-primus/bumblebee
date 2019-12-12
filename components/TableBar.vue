@@ -1,7 +1,6 @@
 <template>
   <div class="dashboard-container">
     <div class="toolbar bb-toolbar" :class="{'disabled': commandsDisabled}">
-
       <v-tooltip transition="fade-transition" bottom>
         <template v-slot:activator="{ on }">
           <v-btn v-on="on" text class="icon-btn" @click="$emit('update:view',0)" :disabled="!(dataset && dataset.summary)">
@@ -23,529 +22,133 @@
         <span>Table view</span>
       </v-tooltip>
       <div class="divider"/>
-      <template v-if="$route.query.kernel=='1'">
-        <v-tooltip transition="fade-transition" bottom>
-          <template v-slot:activator="{ on }">
-            <v-btn v-on="on"
-              text
-              class="icon-btn"
-              @click="commandHandle({command: 'load file', noOptions: true})"
-              :disabled="$store.state.kernel!='done'"
-            >
-              <v-icon color="#888">
-                cloud_upload
-              </v-icon>
-            </v-btn>
-          </template>
-          <span>Load file</span>
-        </v-tooltip>
-        <v-tooltip transition="fade-transition" bottom>
-          <template v-slot:activator="{ on }">
-            <v-btn v-on="on"
-              text
-              class="icon-btn"
-              @click="commandHandle({command: 'save to server'})"
-              :disabled="!(dataset && dataset.summary)"
-            >
-              <v-icon color="#888">
-                save
-              </v-icon>
-            </v-btn>
-          </template>
-          <span>Save file to server</span>
-        </v-tooltip>
-        <div class="divider" />
-        <v-tooltip transition="fade-transition" bottom>
-          <template v-slot:activator="{ on }">
-            <v-btn
-              :color="'#888'"
-              class="icon-btn"
-              text
-              v-on="on"
-              @click="commandHandle({command: 'load from database', noOptions: true})"
-              :disabled="$store.state.kernel!='done'"
-            >
-              <v-icon>storage</v-icon>
-            </v-btn>
-          </template>
-          <span>
-            Connect a database
-          </span>
-        </v-tooltip>
-        <v-tooltip transition="fade-transition" bottom>
-          <template v-slot:activator="{ on }">
-            <v-btn v-on="on"
-              text
-              class="icon-btn"
-              @click="commandHandle({command: 'save to database'})"
-              :disabled="!(dataset && dataset.summary && $store.state.database)"
-            >
-              <v-icon color="#888">storage</v-icon>
-              <v-icon color="#888" style="margin-left: -4px;">check</v-icon>
-            </v-btn>
-          </template>
-          <span>Save dataset to database</span>
-        </v-tooltip>
-        <div class="divider" />
-      </template>
-      <v-menu :close-on-content-click="false" @input="menus['sort'] = $event" offset-y>
-       <template v-slot:activator="{ on: menu }">
-          <v-tooltip :disabled="menus['sort']" transition="fade-transition" bottom>
-            <template v-slot:activator="{ on: tooltip }">
+      <template v-for="(element, index) in toolbarElements">
+        <div v-if="element.divider" :key="index" class="divider"/>
+        <template v-else-if="element.type=='button'">
+          <v-tooltip :key="'toolbar'+index" transition="fade-transition" bottom>
+            <template v-slot:activator="{ on }">
               <v-btn
-                :color="sortBy[0] ? 'black' : '#888'"
-                :disabled="!(dataset && dataset.summary)"
-                class="icon-btn"
+                v-on="on"
                 text
-                v-on="{...tooltip, ...menu}"
+                class="icon-btn"
+                @click="element.onClick"
+                :disabled="!!+element.disabled"
               >
-                <v-icon>sort</v-icon>
-                <span style="min-width: 2em; margin-left: -2px">
-                  {{ sortByLabel }}
-                </span>
-                <v-icon v-show="sortBy[0]" color="black" small>
-                  <template v-if="sortDesc[0]">arrow_downward</template>
-                  <template v-else>arrow_upward</template>
-                </v-icon>
+                <template v-for="(icon, ii) in element.icons">
+                  <v-icon
+                    :key="ii"
+                    :color="icon.color || '#888'"
+                    :style="icon.style || {}"
+                  >
+                    {{icon.icon}}
+                  </v-icon>
+                </template>
               </v-btn>
             </template>
-            <span>Sort columns</span>
+            <span>{{element.tooltip}}</span>
           </v-tooltip>
         </template>
-        <v-list dense>
-          <v-list-item-group :value="sortBy[0]" color="black">
-            <v-list-item
-              v-for="(item, i) in sortableColumnsTableHeaders"
-              :key="i"
-              :value="item.value"
-              @click="clickSort(item.value)"
-            >
-              <v-list-item-content>
-                <v-list-item-title>
-                  <span class="sort-hint">
-                    {{ item.hint }}
-                  </span>
-                  {{ item.text }}
-                </v-list-item-title>
-              </v-list-item-content>
-              <v-list-item-icon>
-                <v-icon v-show="item.value===sortBy[0]" color="black">
-                  <template v-if="sortDesc[0]">arrow_downward</template>
-                  <template v-else>arrow_upward</template>
-                </v-icon>
-              </v-list-item-icon>
-            </v-list-item>
-          </v-list-item-group>
-        </v-list>
-      </v-menu>
-      <v-tooltip transition="fade-transition" v-if="$route.query.kernel=='1'" bottom>
-        <template v-slot:activator="{ on }">
-          <v-btn
-            :color="'#888'"
-            :disabled="!sortBy[0]"
-            class="icon-btn"
-            text
-            v-on="on"
-            @click="commandHandle({command: 'apply sort', columns: lastSort})"
+        <template v-else-if="element.type=='menu'">
+          <v-menu
+            v-model="menus[element.group]"
+            offset-y
+            :key="'toolbar'+index"
           >
-            <v-icon>sort</v-icon>
-            <v-icon style="margin-left: -8px;">check</v-icon>
-          </v-btn>
+            <template v-slot:activator="{ on: menu }">
+              <v-tooltip :disabled="menus[element.group]" transition="fade-transition" bottom>
+                <template v-slot:activator="{ on: tooltip }">
+                  <v-btn
+                    :color="'#888'"
+                    :disabled="!!+element.disabled"
+                    class="icon-btn"
+                    text
+                    v-on="{...tooltip, ...menu}"
+                  >
+                    <template v-for="(icon, ii) in element.icons">
+                      <v-icon
+                        :key="ii"
+                        :color="icon.color || '#888'"
+                        :style="icon.style || {}"
+                      >
+                        {{icon.icon}}
+                      </v-icon>
+                    </template>
+                    <v-icon style="margin-right: -8px; margin-left: -4px" :color="menus[element.group] ? 'black' : '#888'">
+                      arrow_drop_down
+                    </v-icon>
+                  </v-btn>
+                </template>
+                <span>{{element.tooltip}}</span>
+              </v-tooltip>
+            </template>
+            <v-list dense style="max-height: 400px; min-width: 160px;" class="scroll-y">
+              <v-list-item-group color="black">
+                <v-list-item
+                  v-for="(item, i) in menuItems(element.group)"
+                  :key="i+'mc'"
+                  @click="commandHandle(item)"
+                  :disabled="(item.max && selectedColumns.length>item.max) || (item.min && selectedColumns.length<item.min)"
+                >
+                  <v-list-item-content>
+                    <v-list-item-title>
+                      {{ item.text }}
+                    </v-list-item-title>
+                  </v-list-item-content>
+                </v-list-item>
+              </v-list-item-group>
+            </v-list>
+          </v-menu>
         </template>
-        <span>
-          Apply sorting
-        </span>
-      </v-tooltip>
-      <div class="divider" v-if="$route.query.kernel=='1'" />
-      <v-tooltip transition="fade-transition" v-if="$route.query.kernel=='1'" bottom key="sample_n"> <!-- sample_n -->
-        <template v-slot:activator="{ on }">
-          <v-btn v-on="on" color="#888" text class="icon-btn" @click="commandHandle({command: 'sample_n'})" :disabled="!(dataset && dataset.summary)">
-            <v-icon>blur_circular</v-icon>
-          </v-btn>
-        </template>
-        <span>
-          Sampling
-        </span>
-      </v-tooltip>
-      <v-tooltip transition="fade-transition" bottom key="stratified_sample"> <!-- stratified_sample -->
-        <template v-slot:activator="{ on }">
-          <v-btn v-on="on" :disabled="!detailedColumns.length!=1" color="#888" text class="icon-btn" @click="commandHandle({command: 'stratified_sample'})">
-            <v-icon>blur_linear</v-icon>
-          </v-btn>
-        </template>
-        <span>Stratified sampling</span></span>
-      </v-tooltip>
-      <div class="divider" v-if="$route.query.kernel=='1'" />
-      <v-tooltip transition="fade-transition" bottom>
-        <template v-slot:activator="{ on }">
-          <v-btn
-            :color="'#888'"
-            class="icon-btn"
-            text
-            v-on="on"
-            @click="commandHandle({command: 'sort rows'})"
-            :disabled="detailedColumns.length<1"
-          >
-            <v-icon style="transform: rotate(90deg); margin-right: -7px; margin-left: -5px">arrow_right_alt</v-icon>
-            <v-icon style="transform: rotate(-90deg); margin-left: -7px; margin-right: -5px">arrow_right_alt</v-icon>
-          </v-btn>
-        </template>
-        <span>
-          Sort rows
-        </span>
-      </v-tooltip>
-      <v-tooltip transition="fade-transition" bottom>
-        <template v-slot:activator="{ on }">
-          <v-btn
-            :color="'#888'"
-            class="icon-btn"
-            text
-            v-on="on"
-            @click="commandHandle({command: 'filter rows'})"
-            :disabled="detailedColumns.length!=1"
-          >
-            <v-icon>filter_list</v-icon>
-          </v-btn>
-        </template>
-        <span>
-          Filter rows
-        </span>
-      </v-tooltip>
-      <div class="divider" v-if="$route.query.kernel=='1'" />
-      <template v-if="$route.query.kernel=='1'" name="fade">
-        <v-tooltip transition="fade-transition" bottom key="set"> <!-- set -->
-          <template v-slot:activator="{ on }">
-            <v-btn v-on="on" color="#888" text class="icon-btn" @click="commandHandle({command: 'set'})" :disabled="!(dataset && dataset.summary)">
-              <v-icon>add_box</v-icon>
-            </v-btn>
-          </template>
-          <span>
-						New column
-            <!-- <template v-if="detailedColumns.length">
-              from column<span v-show="detailedColumns.length>1">s</span>
-            </template> -->
-          </span>
-        </v-tooltip>
-        <v-tooltip transition="fade-transition" bottom key="rename"> <!-- rename -->
-          <template v-slot:activator="{ on }">
-            <v-btn :disabled="!detailedColumns.length>0" v-on="on" color="#888" text class="icon-btn" @click="commandHandle({command: 'rename'})">
-              <v-icon>edit</v-icon>
-            </v-btn>
-          </template>
-          <span>Rename column<span v-show="detailedColumns.length>1">s</span></span>
-        </v-tooltip>
-        <v-tooltip transition="fade-transition" bottom key="duplicate"> <!-- duplicate -->
-          <template v-slot:activator="{ on }">
-            <v-btn v-on="on" :disabled="!detailedColumns.length>0" color="#888" text class="icon-btn" @click="commandHandle({command: 'duplicate'})">
-              <v-icon>file_copy</v-icon>
-            </v-btn>
-          </template>
-          <span>Duplicate column<span v-show="detailedColumns.length>1">s</span></span>
-        </v-tooltip>
-        <v-tooltip transition="fade-transition" bottom key="keep"> <!-- keep -->
-          <template v-slot:activator="{ on }">
-            <v-btn v-on="on" :disabled="!detailedColumns.length>0" color="#888" text class="icon-btn" @click="commandHandle({command: 'keep', type: 'DROP_KEEP'})">
-              <v-icon>all_out</v-icon>
-            </v-btn>
-          </template>
-          <span>Keep column<span v-show="detailedColumns.length>1">s</span></span>
-        </v-tooltip>
-        <v-tooltip transition="fade-transition" bottom key="delete"> <!-- delete -->
-          <template v-slot:activator="{ on }">
-            <v-btn v-on="on" :disabled="!detailedColumns.length>0" color="#888" text class="icon-btn" @click="commandHandle({command: 'drop', type: 'DROP_KEEP'})">
-              <v-icon>delete</v-icon>
-            </v-btn>
-          </template>
-          <span>Drop column<span v-show="detailedColumns.length>1">s</span></span>
-        </v-tooltip>
-        <v-tooltip transition="fade-transition" bottom key="nest"> <!-- nest -->
-          <template v-slot:activator="{ on }">
-            <v-btn v-on="on" :disabled="detailedColumns.length<=1 || !dataset.summary" color="#888" text class="icon-btn" @click="commandHandle({command: 'nest'})">
-              <v-icon>link</v-icon>
-            </v-btn>
-          </template>
-          <span>Nest columns</span>
-        </v-tooltip>
-        <v-tooltip transition="fade-transition" bottom key="unnest"> <!-- unnest -->
-          <template v-slot:activator="{ on }">
-            <v-btn v-on="on" :disabled="!detailedColumns.length>0" color="#888" text class="icon-btn" @click="commandHandle({command: 'unnest'})">
-              <v-icon>link_off</v-icon>
-            </v-btn>
-          </template>
-          <span>Unnest column<span v-show="detailedColumns.length>1">s</span></span>
-        </v-tooltip>
-        <div class="divider" />
-        <v-tooltip transition="fade-transition" bottom key="fill_na"> <!-- fill_na -->
-          <template v-slot:activator="{ on }">
-            <v-btn v-on="on" :disabled="!detailedColumns.length>0" color="#888" text class="icon-btn" @click="commandHandle({command: 'fill_na'})">
-              <v-icon>brush</v-icon>
-            </v-btn>
-          </template>
-          <span>Fill column<span v-show="detailedColumns.length>1">s</span></span>
-        </v-tooltip>
-        <v-tooltip transition="fade-transition" bottom key="replace"> <!-- replace -->
-          <template v-slot:activator="{ on }">
-            <v-btn v-on="on" :disabled="!detailedColumns.length>0" color="#888" text class="icon-btn" @click="commandHandle({command: 'replace'})">
-              <v-icon>find_replace</v-icon>
-            </v-btn>
-          </template>
-          <span>Replace in column<span v-show="detailedColumns.length>1">s</span></span>
-        </v-tooltip>
-        <v-menu v-model="menus['TEXT']" offset-y key="string">  <!-- string -->
+        <v-menu v-else-if="element.type=='sort'" :key="index" :close-on-content-click="false" @input="menus['sort'] = $event" offset-y>
           <template v-slot:activator="{ on: menu }">
-            <v-tooltip :disabled="menus['TEXT']" transition="fade-transition" bottom>
-              <template v-slot:activator="{ on: tooltip }">
-                <v-btn
-                  :color="'#888'"
-                  :disabled="!(dataset && dataset.summary && detailedColumns.length>=0)"
-                  class="icon-btn"
-                  text
-                  v-on="{...tooltip, ...menu}"
+              <v-tooltip :disabled="menus['sort']" transition="fade-transition" bottom>
+                <template v-slot:activator="{ on: tooltip }">
+                  <v-btn
+                    :color="sortBy[0] ? 'black' : '#888'"
+                    :disabled="!(dataset && dataset.summary)"
+                    class="icon-btn"
+                    text
+                    v-on="{...tooltip, ...menu}"
+                  >
+                    <v-icon>sort</v-icon>
+                    <span style="min-width: 2em; margin-left: -2px">
+                      {{ sortByLabel }}
+                    </span>
+                    <v-icon v-show="sortBy[0]" color="black" small>
+                      <template v-if="sortDesc[0]">arrow_downward</template>
+                      <template v-else>arrow_upward</template>
+                    </v-icon>
+                  </v-btn>
+                </template>
+                <span>Sort columns</span>
+              </v-tooltip>
+            </template>
+            <v-list dense>
+              <v-list-item-group :value="sortBy[0]" color="black">
+                <v-list-item
+                  v-for="(item, i) in sortableColumnsTableHeaders"
+                  :key="i+'scth'"
+                  :value="item.value"
+                  @click="clickSort(item.value)"
                 >
-                  <v-icon>text_format</v-icon>
-                  <v-icon style="margin-right: -8px; margin-left: -4px" :color="menus['TEXT'] ? 'black' : '#888'">
-                    arrow_drop_down
-                  </v-icon>
-                </v-btn>
-              </template>
-              <span>String operations</span>
-            </v-tooltip>
-          </template>
-          <v-list dense style="max-height: 400px; min-width: 160px;">
-            <v-list-item-group color="black">
-              <v-list-item
-                v-for="(item, i) in menuItems('STRING')"
-                :key="i"
-                @click="commandHandle(item)"
-                :disabled="item.max && detailedColumns.length>item.max"
-              >
-                <v-list-item-content>
-                  <v-list-item-title>
-                    {{ item.text }}
-                  </v-list-item-title>
-                </v-list-item-content>
-              </v-list-item>
-            </v-list-item-group>
-          </v-list>
-        </v-menu>
-        <v-menu
-          v-model="menus['CAST']"
-          offset-y
-          key="cast"
-        > <!-- cast -->
-          <template v-slot:activator="{ on: menu }">
-            <v-tooltip :disabled="menus['CAST']" transition="fade-transition" bottom>
-              <template v-slot:activator="{ on: tooltip }">
-                <v-btn
-                  :color="'#888'"
-                  :disabled="!(dataset && dataset.summary && detailedColumns.length>0)"
-                  class="icon-btn"
-                  text
-                  v-on="{...tooltip, ...menu}"
-                >
-                  <v-icon>category</v-icon>
-                  <v-icon style="margin-right: -8px; margin-left: -4px" :color="menus['CAST'] ? 'black' : '#888'">
-                    arrow_drop_down
-                  </v-icon>
-                </v-btn>
-              </template>
-              <span>Cast</span>
-            </v-tooltip>
-          </template>
-          <v-list dense style="max-height: 400px; min-width: 160px;" class="scroll-y">
-            <v-list-item-group color="black">
-              <v-list-item
-                v-for="(item, i) in menuItems('CAST')"
-                :key="i"
-                @click="commandHandle(item)"
-                :disabled="item.max && detailedColumns.length>item.max"
-              >
-                <v-list-item-content>
-                  <v-list-item-title>
-                    {{ item.text }}
-                  </v-list-item-title>
-                </v-list-item-content>
-              </v-list-item>
-            </v-list-item-group>
-          </v-list>
-        </v-menu>
-        <div class="divider" />
-        <v-menu
-          v-model="menus['PREPARE']"
-          offset-y
-          key="prepare"
-        > <!-- prepare -->
-          <template v-slot:activator="{ on: menu }">
-            <v-tooltip :disabled="menus['PREPARE']" transition="fade-transition" bottom>
-              <template v-slot:activator="{ on: tooltip }">
-                <v-btn
-                  :color="'#888'"
-                  :disabled="!(dataset && dataset.summary && detailedColumns.length>0)"
-                  class="icon-btn"
-                  text
-                  v-on="{...tooltip, ...menu}"
-                >
-                  <v-icon>hdr_strong</v-icon>
-                  <v-icon style="margin-right: -8px; margin-left: -4px" :color="menus['PREPARE'] ? 'black' : '#888'">
-                    arrow_drop_down
-                  </v-icon>
-                </v-btn>
-              </template>
-              <span>Prepare</span>
-            </v-tooltip>
-
-          </template>
-          <v-list dense style="max-height: 400px; min-width: 160px;" class="scroll-y">
-            <v-list-item-group color="black">
-              <v-list-item
-                v-for="(item, i) in menuItems('PREPARE')"
-                :key="i"
-                @click="commandHandle(item)"
-                :disabled="item.max && detailedColumns.length>item.max"
-              >
-                <v-list-item-content>
-                  <v-list-item-title>
-                    {{ item.text }}
-                  </v-list-item-title>
-                </v-list-item-content>
-              </v-list-item>
-            </v-list-item-group>
-          </v-list>
-        </v-menu>
-        <v-menu
-          v-model="menus['IMPUTE']"
-          offset-y
-          key="impute"
-        > <!-- impute -->
-          <template v-slot:activator="{ on: menu }">
-            <v-tooltip :disabled="menus['IMPUTE']"  transition="fade-transition" bottom>
-              <template v-slot:activator="{ on: tooltip }">
-                <v-btn
-                  :color="'#888'"
-                  :disabled="!(dataset && dataset.summary && detailedColumns.length>0)"
-                  class="icon-btn"
-                  text
-                  v-on="{...tooltip, ...menu}"
-                >
-                  <v-icon>flip_to_front</v-icon>
-                  <v-icon style="margin-right: -8px; margin-left: -4px" :color="menus['IMPUTE'] ? 'black' : '#888'">
-                    arrow_drop_down
-                  </v-icon>
-                </v-btn>
-              </template>
-              <span>Impute</span>
-            </v-tooltip>
-
-          </template>
-          <v-list dense style="max-height: 400px; min-width: 160px;" class="scroll-y">
-            <v-list-item-group color="black">
-              <v-list-item
-                v-for="(item, i) in menuItems('IMPUTE')"
-                :key="i"
-                @click="commandHandle(item)"
-                :disabled="item.max && detailedColumns.length>item.max"
-              >
-                <v-list-item-content>
-                  <v-list-item-title>
-                    {{ item.text }}
-                  </v-list-item-title>
-                </v-list-item-content>
-              </v-list-item>
-            </v-list-item-group>
-          </v-list>
-        </v-menu>
-        <v-menu
-          v-model="menus['SCALER']"
-          offset-y
-          key="scalers"
-        > <!-- scalers -->
-          <template v-slot:activator="{ on: menu }">
-            <v-tooltip :disabled="menus['SCALER']" transition="fade-transition" bottom>
-              <template v-slot:activator="{ on: tooltip }">
-                <v-btn
-                  :color="'#888'"
-                  :disabled="!(dataset && dataset.summary && detailedColumns.length>0)"
-                  class="icon-btn"
-                  text
-                  v-on="{...tooltip, ...menu}"
-                >
-                  <v-icon>crop_portrait</v-icon>
-                  <v-icon style="margin-right: -8px; margin-left: -4px" :color="menus['SCALER'] ? 'black' : '#888'">
-                    arrow_drop_down
-                  </v-icon>
-                </v-btn>
-              </template>
-              <span>Scaler</span>
-            </v-tooltip>
-
-          </template>
-          <v-list dense style="max-height: 400px; min-width: 160px;" class="scroll-y">
-            <v-list-item-group color="black">
-              <v-list-item
-                v-for="(item, i) in menuItems('SCALER')"
-                :key="i"
-                @click="commandHandle(item)"
-                :disabled="item.max && detailedColumns.length>item.max"
-              >
-                <v-list-item-content>
-                  <v-list-item-title>
-                    {{ item.text }}
-                  </v-list-item-title>
-                </v-list-item-content>
-              </v-list-item>
-            </v-list-item-group>
-          </v-list>
-        </v-menu>
-        <v-menu
-          v-model="menus['ENCODING']"
-          offset-y
-          key="encoding"
-        >
-          <template v-slot:activator="{ on: menu }">
-            <v-tooltip :disabled="menus['ENCODING']"  transition="fade-transition" bottom>
-              <template v-slot:activator="{ on: tooltip }">
-                <v-btn
-                  :color="'#888'"
-                  :disabled="!(dataset && dataset.summary && detailedColumns.length>=1)"
-                  class="icon-btn"
-                  text
-                  v-on="{...tooltip, ...menu}"
-                >
-                  <v-icon>exposure_zero</v-icon>
-                  <v-icon style="margin-right: -8px; margin-left: -4px" :color="menus['ENCODING'] ? 'black' : '#888'">
-                    arrow_drop_down
-                  </v-icon>
-                </v-btn>
-              </template>
-              <span>Encoding</span>
-            </v-tooltip>
-
-          </template>
-          <v-list dense style="max-height: 400px; min-width: 160px;" class="scroll-y">
-            <v-list-item-group color="black">
-              <v-list-item
-                v-for="(item, i) in menuItems('ENCODING')"
-                :key="i"
-                @click="commandHandle(item)"
-                :disabled="item.max && detailedColumns.length>item.max"
-              >
-                <v-list-item-content>
-                  <v-list-item-title>
-                    {{ item.text }}
-                  </v-list-item-title>
-                </v-list-item-content>
-              </v-list-item>
-            </v-list-item-group>
-          </v-list>
-        </v-menu>
-        <v-tooltip transition="fade-transition" bottom key="outliers"> <!-- outliers -->
-          <template v-slot:activator="{ on }">
-            <v-btn v-on="on" :disabled="detailedColumns.length!=1" color="#888" text class="icon-btn" @click="commandHandle({command: 'outliers'})">
-              <v-icon>scatter_plot</v-icon>
-            </v-btn>
-          </template>
-          <span>Outliers</span>
-        </v-tooltip>
+                  <v-list-item-content>
+                    <v-list-item-title>
+                      <span class="sort-hint">
+                        {{ item.hint }}
+                      </span>
+                      {{ item.text }}
+                    </v-list-item-title>
+                  </v-list-item-content>
+                  <v-list-item-icon>
+                    <v-icon v-show="item.value===sortBy[0]" color="black">
+                      <template v-if="sortDesc[0]">arrow_downward</template>
+                      <template v-else>arrow_upward</template>
+                    </v-icon>
+                  </v-list-item-icon>
+                </v-list-item>
+              </v-list-item-group>
+            </v-list>
+          </v-menu>
       </template>
       <v-spacer></v-spacer>
       <v-btn
@@ -559,13 +162,10 @@
         <v-icon>code</v-icon>
       </v-btn>
     </div>
-
-
     <Dataset
       :commandsDisabled="commandsDisabled"
       :key="tableKey+'dataset'"
       :view="view"
-      :dataset="dataset"
       :sortBy.sync="sortBy"
       :sortDesc.sync="sortDesc"
       :optionsActive="optionsActive"
@@ -586,7 +186,7 @@
         <Cells
           v-show="optionsActive && $route.query.kernel=='1'"
           ref="cells"
-          :columns="detailedColumns"
+          :columns="selectedColumns || []"
           :commandsDisabled.sync="commandsDisabled"
           :dataset="dataset"
         />
@@ -605,9 +205,9 @@
         </div>
         <div class="sidebar-content">
 
-          <div v-if="detailedColumns.length>1" class="sidebar-section pr-10 columns-selected">
-            <CommandMenu v-if="$route.query.kernel=='1'" :columnsNumber="detailedColumns.length" button.class="right-button-center" :disabled="commandsDisabled" @command="commandHandle($event)"></CommandMenu>
-            <div class="column-selected" v-for="column in detailedColumns" :key="column.index">
+          <div v-if="selectedColumns.length>1" class="sidebar-section pr-10 columns-selected">
+            <CommandMenu v-if="$route.query.kernel=='1'" :columnsNumber="selectedColumns.length" button.class="right-button-center" :disabled="commandsDisabled" @command="commandHandle($event)"></CommandMenu>
+            <div class="column-selected" v-for="(column, i) in selectedColumns" :key="column.index+'selc'+i">
               <span class="data-type" :class="`type-${dataset.columns[column.index].column_dtype}`">{{ dataType(dataset.columns[column.index].column_dtype) }}</span>
               <span class="data-column-name">{{ dataset.columns[column.index].name }}</span>
             </div>
@@ -663,9 +263,9 @@
               >
             </VegaEmbed>
           </div>
-          <template v-for="(column, i) in detailedColumns">
+          <template v-for="(column, i) in selectedColumns">
             <ColumnDetails
-              :key="column.index"
+              :key="column.index+'cd'"
               :startExpanded="i==0"
               :rowsCount="+dataset.summary.rows_count"
               :column="dataset.columns[column.index]"
@@ -688,6 +288,7 @@ import VegaEmbed from '@/components/VegaEmbed'
 import clientMixin from '@/plugins/mixins/client'
 import dataTypesMixin from '@/plugins/mixins/data-types'
 import { trimCharacters } from '@/utils/functions.js'
+import { mapGetters } from 'vuex'
 
 import axios from 'axios'
 
@@ -719,10 +320,6 @@ export default {
 			default: 0,
 			type: Number
 		},
-		currentTab: {
-			default: '',
-			type: [Number, String]
-		},
 		searchText: {
 			default: '',
 			type: String
@@ -747,13 +344,18 @@ export default {
       heatMap: [],
       heatMapEncoding: {},
 
-      detailedColumns: [],
-
       menus: {},
 
       lastSort: [],
 
       commandItems: [
+
+				{command: 'drop rows', text: 'Drop rows', type: 'FILTER'},
+        {command: 'keep rows', text: 'Keep rows', type: 'FILTER'},
+
+				{command: 'sample_n', text: 'Sampling', type: 'SAMPLING'},
+        {command: 'stratified_sample', text: 'Stratified sampling', type: 'SAMPLING', min: 1, max: 1},
+
 				{command: 'lower', text: 'To lower case', type: 'STRING'},
 				{command: 'upper', text: 'To upper case', type: 'STRING'},
 				{command: 'remove_accents', text: 'Remove accents', type: 'STRING'},
@@ -788,7 +390,6 @@ export default {
 				{command: 'cast', dtype: 'vector',  text: 'Vector', type: 'CAST'}
       ],
 
-
       sortBy: [],
       sortDesc: [false],
       columnsTableHeaders: [
@@ -800,13 +401,279 @@ export default {
 				{ hint: '0', text: 'Zeros', width: '2%', value: '__zeros' },
 				{ text: '', sortable: false, width: '50%', value: '' }
 			]
-		}
+    }
   },
 
 	computed: {
 
+    ...mapGetters(['currentSelection']),
+
+    selectionType () {
+      var _ds = this.currentSelection
+      if (_ds && _ds.ranged &&  _ds.ranged.values && _ds.ranged.values.length)
+        return 'values'
+      if (_ds && _ds.ranged && _ds.ranged.ranges && _ds.ranged.ranges.length)
+        return 'ranges'
+      return 'columns'
+
+    },
+
+    toolbarElements () {
+      return [
+        {
+          type: 'button',
+          onClick: () => {
+            this.commandHandle({command: 'load file', noOptions: true})
+          },
+          icons: [{ icon: 'cloud_upload' }],
+          tooltip: 'Load file',
+          disabled: {
+            //valueOf: ()=>!(this.dataset && this.dataset.summary)
+            valueOf: ()=>(this.$store.state.kernel!='done')
+          }
+        },
+        {
+          type: 'button',
+          onClick: () => {
+            this.commandHandle({command: 'save to server'})
+          },
+          icons: [{ icon: 'save' }],
+          tooltip: 'Save file to server',
+          disabled: {
+            valueOf: ()=>!(this.dataset && this.dataset.summary)
+          }
+        },
+        { divider: true },
+        {
+          type: 'button',
+          onClick: () => {
+            this.commandHandle({command: 'load from database', noOptions: true})
+          },
+          icons: [{ icon: 'storage' }],
+          tooltip: 'Connect a database',
+          disabled: {
+            valueOf: ()=>(this.$store.state.kernel!='done')
+          }
+        },
+        {
+          type: 'button',
+          onClick: () => {
+            this.commandHandle({command: 'save to database'})
+          },
+          icons: [
+            { icon: 'storage' },
+            { icon: 'check', style: {marginLeft: '-4px'} }
+          ],
+          tooltip: 'Save dataset to database',
+          disabled: {
+            valueOf: ()=>!(this.dataset && this.dataset.summary && this.$store.state.database)
+          }
+        },
+        { divider: true },
+        {
+          type: 'sort'
+        },
+        {
+          type: 'button',
+          onClick: ()=>this.commandHandle({command: 'apply sort', columns: this.lastSort}),
+          disabled: {
+            valueOf: ()=>!(this.dataset && this.dataset.summary && this.sortBy[0])
+          },
+          icons: [{icon: 'sort'},{icon: 'check', style: {marginLeft: '-8px'}}],
+          tooltip: 'Apply sorting'
+        },
+        { divider: true },
+        {
+          type: 'menu',
+          group: 'SAMPLING',
+          tooltip: 'Sampling',
+          icons: [{ icon: 'blur_linear' }],
+          disabled: { valueOf: ()=>!(this.selectionType=='columns' && this.dataset && this.dataset.summary) },
+        },
+        { divider: true },
+        {
+          type: 'button',
+          onClick: ()=>this.commandHandle({command: 'sort rows'}),
+          tooltip: 'Sort rows',
+          disabled: { valueOf: ()=>this.selectionType!='columns' || this.selectedColumns.length<1 },
+          icons: [
+            {
+              icon: 'arrow_right_alt',
+              style: {
+                transform: 'rotate(90deg)',
+                marginLeft: '-5px',
+                marginRight: '-7px'
+              }
+            },
+            {
+              icon: 'arrow_right_alt',
+              style: {
+                transform: 'rotate(-90deg)',
+                marginLeft: '-7px',
+                marginRight: '-5px'
+              }
+            }
+          ]
+        },
+        {
+          type: {toString: ()=>(this.selectionType=='columns' ? 'button' : 'menu')},
+          group: 'FILTER',
+          onClick: ()=>this.commandHandle({command: 'filter rows'}),
+          tooltip: 'Filter rows',
+          disabled: { valueOf: ()=>this.selectedColumns.length!=1 },
+          icons: [{icon: 'filter_list'}]
+        },
+        { divider: true },
+        {
+          type: 'button',
+          onClick: ()=>this.commandHandle({command: 'set'}),
+          tooltip: 'New column',
+          icons: [{icon: 'add_box'}],
+          disabled: {valueOf: ()=>!(this.selectionType=='columns' && this.dataset && this.dataset.summary)}
+        },
+        {
+          type: 'button',
+          onClick: ()=>this.commandHandle({command: 'rename'}),
+          tooltip: { toString: ()=> 'Rename column'+ (this.selectedColumns.length!=1 ? 's' : '')},
+          icons: [{icon: 'edit'}],
+          disabled: {valueOf: ()=>!(this.selectionType=='columns' && this.selectedColumns.length>0)}
+        },
+        {
+          type: 'button',
+          onClick: ()=>this.commandHandle({command: 'duplicate'}),
+          tooltip: { toString: ()=> 'Duplicate column'+ (this.selectedColumns.length!=1 ? 's' : '')},
+          icons: [{icon: 'file_copy'}],
+          disabled: {valueOf: ()=>!(this.selectionType=='columns' && this.selectedColumns.length>0)}
+        },
+        {
+          type: 'button',
+          onClick: ()=>this.commandHandle({command: 'keep', type: 'DROP_KEEP'}),
+          tooltip: { toString: ()=> 'Keep column'+ (this.selectedColumns.length!=1 ? 's' : '')},
+          icons: [{icon: 'all_out'}],
+          disabled: {valueOf: ()=>!(this.selectionType=='columns' && this.selectedColumns.length>0)}
+        },
+        {
+          type: 'button',
+          onClick: ()=>this.commandHandle({command: 'drop', type: 'DROP_KEEP'}),
+          tooltip: { toString: ()=> 'Drop column'+ (this.selectedColumns.length!=1 ? 's' : '')},
+          icons: [{icon: 'delete'}],
+          disabled: {valueOf: ()=>!(this.selectionType=='columns' && this.selectedColumns.length>0)}
+        },
+        {
+          type: 'button',
+          onClick: ()=>this.commandHandle({command: 'nest'}),
+          tooltip: 'Nest columns',
+          icons: [{icon: 'link'}],
+          disabled: {valueOf: ()=>this.selectionType!='columns' || this.selectedColumns.length<=1 || !this.dataset.summary}
+        },
+        {
+          type: 'button',
+          onClick: ()=>this.commandHandle({command: 'unnest'}),
+          tooltip: { toString: ()=> 'Unnest column'+ (this.selectedColumns.length!=1 ? 's' : '')},
+          icons: [{icon: 'link_off'}],
+          disabled: {valueOf: ()=>!(this.selectionType=='columns' && this.selectedColumns.length>0)}
+        },
+        { divider: true },
+        {
+          type: 'button',
+          onClick: ()=>this.commandHandle({command: 'fill_na'}),
+          tooltip: { toString: ()=> 'Fill column'+ (this.selectedColumns.length!=1 ? 's' : '')},
+          icons: [{icon: 'brush'}],
+          disabled: {valueOf: ()=>!(this.selectionType=='columns' && this.selectedColumns.length>0)}
+        },
+        {
+          type: 'button', // rows
+          onClick: ()=>{
+            if (this.selectionType=='columns')
+              this.commandHandle({command: 'replace'})
+            else if (this.selectionType=='values')
+              this.commandHandle({command: 'replace values'})
+            else
+              this.commandHandle({command: 'replace range'})
+          },
+          tooltip: {
+            toString: ()=>{
+              if (this.selectionType=='columns')
+                return 'Replace in column'+ (this.selectedColumns.length!=1 ? 's' : '')
+              else if (this.selectionType=='values')
+                return 'Replace values'
+              else
+                return 'Replace rows'
+            }
+          },
+          icons: [{icon: 'find_replace'}],
+          disabled: {valueOf: ()=>!(this.selectionType!='ranges' && this.selectedColumns.length>0)}
+        },
+        {
+          type: 'menu',
+          group: 'STRING',
+          icons: [{ icon: 'text_format' }],
+          tooltip: 'String operations',
+          disabled: { valueOf: ()=>!(this.selectionType=='columns' && this.dataset && this.dataset.summary && this.selectedColumns.length>=0)}
+        },
+        {
+          type: 'menu',
+          group: 'CAST',
+          icons: [{ icon: 'category' }],
+          tooltip: 'Cast',
+          disabled: { valueOf: ()=>!(this.selectionType=='columns' && this.selectedColumns.length>0)}
+        },
+        { divider: true },
+        {
+          type: 'menu',
+          group: 'PREPARE',
+          icons: [{ icon: 'hdr_strong' }],
+          tooltip: 'Prepare',
+          disabled: { valueOf: ()=>!(this.selectionType=='columns' && this.selectedColumns.length>0)}
+        },
+        {
+          type: 'menu',
+          group: 'IMPUTE',
+          icons: [{ icon: 'flip_to_front' }],
+          tooltip: 'Impute',
+          disabled: { valueOf: ()=>!(this.selectionType=='columns' && this.selectedColumns.length>0)}
+        },
+        {
+          type: 'menu',
+          group: 'SCALER',
+          icons: [{ icon: 'crop_portrait' }],
+          tooltip: 'Scaler',
+          disabled: { valueOf: ()=>!(this.selectionType=='columns' && this.selectedColumns.length>0)}
+        },
+        {
+          type: 'menu',
+          group: 'ENCODING',
+          icons: [{ icon: 'exposure_zero' }],
+          tooltip: 'Encoding',
+          disabled: { valueOf: ()=>!(this.selectionType=='columns' && this.selectedColumns.length>0)}
+        },
+        {
+          type: 'button',
+          disabled: {valueOf: ()=>!(this.selectionType=='columns' && this.selectedColumns.length==1)},
+          icons: [{icon: 'scatter_plot'}],
+          tooltip: 'Outliers',
+          onClick: ()=>this.commandHandle({command: 'outliers'})
+        }
+      ]
+    },
+
+    selectedColumns: {
+      set (c) {
+        if (this.isMounted) {
+          this.$store.commit('selection',{ columns: c })
+        }
+      },
+      get () {
+        try {
+          return this.currentSelection.columns || []
+        }
+        catch (error) {}
+        return false
+      }
+    },
+
     tableKey () {
-			return this.$store.state.datasetUpdates * 100 + this.currentTab
+			return this.$store.state.datasetUpdates * 100 + this.$store.state.tab
 		},
 
 		sortByLabel () {
@@ -828,6 +695,10 @@ export default {
 			})
     },
 
+  },
+
+  mounted () {
+    this.isMounted = true
   },
 
   methods: {
@@ -859,7 +730,7 @@ export default {
 
     selectionEvent (event) {
       if (event!==false) {
-        this.handleSelection(event.selected, event.plotable)
+        this.handleSelection(event.selected, event.indices)
       }
     },
 
@@ -968,22 +839,37 @@ export default {
 
     },
 
-     handleSelection (selected, plotable = []) {
+     handleSelection (selected, indices = true) {
+
+
+      if (!indices) {
+        // selected(names) -> selected(indices)
+        selected = selected.map(name=>this.dataset.columns.findIndex(column => column.name===name))
+      }
+
       if (selected.length) {
+
+        var plotable = selected.map( (i)=>{
+          var column = this.dataset.columns[i]
+          return ['decimal','float','double'].includes(column.column_dtype) ? 'quantitative'
+            : (['int','integer'].includes(column.column_dtype) && column.stats.count_uniques>25) ? 'quantitative'
+            : (column.stats.count_uniques<=25) ? column.stats.count_uniques
+            : false
+        })
+
         this.detailsActive = {}
         this.optionsActive = false
         if (plotable.length==2 && selected.length==2) {
           // this.detailsActive['scatter-plot'] = true
           this.detailsActive['heat-map'] = true
-          this.heatMap = this.calculateHeatMap(plotable[0].index,plotable[1].index,plotable[0].type,plotable[1].type)
-
+          this.heatMap = this.calculateHeatMap(selected[0], selected[1], plotable[0], plotable[1])
 
           let _x =
-          (plotable[0].type==='quantitative') ? {
+          (plotable[0]==='quantitative') ? {
             x: {
               field: 'x',
-              title: this.dataset.columns[plotable[0].index].name,
-              type: plotable[0].type,
+              title: this.dataset.columns[selected[0]].name,
+              type: plotable[0],
               bin: {
                 binned: true
               }
@@ -995,17 +881,17 @@ export default {
           : {
             x: {
               field: 'x',
-              title: this.dataset.columns[plotable[0].index].name,
+              title: this.dataset.columns[selected[0]].name,
               type: 'ordinal'
             }
           }
 
           let _y =
-          (plotable[1].type==='quantitative') ? {
+          (plotable[1]==='quantitative') ? {
             y: {
               field: 'y',
-              title: this.dataset.columns[plotable[1].index].name,
-              type: plotable[1].type,
+              title: this.dataset.columns[selected[1]].name,
+              type: plotable[1],
               bin: {
                 binned: true
               }
@@ -1017,7 +903,7 @@ export default {
           : {
             y: {
               field: 'y',
-              title: this.dataset.columns[plotable[1].index].name,
+              title: this.dataset.columns[selected[1]].name,
               type: 'ordinal'
             }
           }
@@ -1032,7 +918,8 @@ export default {
         this.detailsActive = false
       }
 
-      this.detailedColumns = selected;
+
+      this.selectedColumns = selected.map(e=>({index: e, name: this.dataset.columns[e].name}))
     },
   }
 
