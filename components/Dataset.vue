@@ -1,6 +1,6 @@
 <template>
 	<div class="table-container">
-    <div v-if="!(dataset && dataset.summary)" class="no-data">
+    <div v-if="!(currentDataset && currentDataset.summary)" class="no-data">
       <div
         v-if="commandsDisabled || $store.state.kernel=='loading'"
         class="progress-middle title grey--text text-center"
@@ -77,7 +77,7 @@
 			<v-data-table
 				v-show="view==0"
 				:headers="columnsTableHeaders"
-				:items="filteredColumns"
+				:items="newFilteredColumns"
 				:sort-by.sync="_sortBy"
 				:sort-desc.sync="_sortDesc"
 				:mobile-breakpoint="0"
@@ -164,15 +164,15 @@
 		</div>
 		<client-only>
 			<div
-				v-show="view==1 && dataset && dataset.summary"
+				v-show="view==1 && currentDataset && currentDataset.summary"
 				class="hot-table-container"
 			>
 				<HotTable
-					v-if="dataset && dataset.sample && hotColumns.length>0"
+					v-if="currentDataset && currentDataset.sample && hotColumns.length>0"
 					:settings="hotSettings"
 					:key="tableUpdate"
 					class="hot-table"
-					ref="hot-table"
+					ref="hotTable"
 				>
 					<HotColumn v-for="(column, i) in hotColumns" :key="i" :settings="column">
 						<GraphicsRenderer hot-renderer :key="tableUpdate+'renderer'+i"/>
@@ -185,9 +185,10 @@
 
 <script>
 
-import { throttle } from '@/utils/functions.js'
+import { debounce, throttle } from '@/utils/functions.js'
 import dataTypesMixin from '@/plugins/mixins/data-types'
 import GraphicsRenderer from '@/components/GraphicsRenderer'
+import { mapGetters } from 'vuex'
 
 export default {
 
@@ -208,12 +209,6 @@ export default {
       default: 0,
       type: Number
     },
-    dataset: {
-			default: () => {
-				return {}
-			},
-			type: Object
-		},
     detailsActive: {
       default: false
     },
@@ -244,28 +239,155 @@ export default {
 
   data () {
     return {
-			// affects table view only
-			hotColumns: [],
+
 			tableUpdate: 0,
-			// controls
+
+      // controls
 			hiddenColumns: {},
-			selectedColumns: {},
-			// status
-			selectionStatus: false,
-			visibilityStatus: 1, // visible
 
 			HotTable: undefined,
       HotColumn: undefined,
 
       resultsColumns: [], // search
-			filteredColumns: [], // filter
+      selectedColumns: {},
+
+      isMounted: false
     }
   },
 
   computed: {
 
+    ...mapGetters(['currentSelection','currentDataset']),
+
+    selectionStatus () {
+
+      let status
+
+			for (let i = 0; i < this.newFilteredColumns.length; i++) {
+				const column = this.newFilteredColumns[i]
+				if (status !== undefined && status === +!this.selectedColumns[column.name]) { // different from previous value
+					return -1 // indeterminate
+				}
+				status = +!!this.selectedColumns[column.name] // all or none selected
+			}
+			return +!!status
+    },
+
+    visibilityStatus () {
+
+			for (let i = 0; i < this.newFilteredColumns.length; i++) {
+				const column = this.newFilteredColumns[i]
+				if (this.selectedColumns[column.name] && this.hiddenColumns[column.name]) {
+					return 0 // at least one is hidden
+				}
+			}
+			return 1
+    },
+
+    // affects table view only
+    hotColumns () {
+      var hotColumns = this.newFilteredColumns ? [...this.newFilteredColumns.filter((column) => {
+				return !this.hiddenColumns[column.name]
+      })] : []
+
+      let selectColumns = [...(this.currentDataset.columns || [])]
+
+			if (this.sortBy[0] && hotColumns.length) {
+				if (typeof hotColumns[0][this.sortBy[0]] === 'string') {
+					hotColumns.sort((a, b) => {
+						let _a = a[this.sortBy[0]].toLowerCase()
+						let _b = b[this.sortBy[0]].toLowerCase()
+						return (_a < _b) ? -1 : (_a > _b) ? 1 : 0
+          })
+          selectColumns.sort((a, b) => {
+						let _a = a[this.sortBy[0]].toLowerCase()
+						let _b = b[this.sortBy[0]].toLowerCase()
+						return (_a < _b) ? -1 : (_a > _b) ? 1 : 0
+          })
+				} else {
+					hotColumns.sort((a, b) => {
+						let _a = a[this.sortBy[0]]
+						let _b = b[this.sortBy[0]]
+						return (_a < _b) ? -1 : (_a > _b) ? 1 : 0
+          })
+          selectColumns.sort((a, b) => {
+						let _a = a[this.sortBy[0]]
+						let _b = b[this.sortBy[0]]
+						return (_a < _b) ? -1 : (_a > _b) ? 1 : 0
+          })
+				}
+				if (this.sortDesc[0]) {
+          hotColumns.reverse()
+          selectColumns.reverse()
+        }
+      }
+
+      this.$emit('sort',selectColumns.map(e=>e.name))
+
+			return hotColumns.map((e, i) => {
+				return {
+					data: this.currentDataset.columns.findIndex(de => de.name === e.name),
+					editor: false,
+					readOnly: true,
+					title: `
+            <span class="data-type-in-table abs data-type type-${e.column_dtype}">
+              ${this.dataType(e.column_dtype)}
+            </span>
+            <span class="data-title">
+              ${e.name}
+            </span>`
+				}
+      })
+
+    },
+
+    hotColumnsJoin () {
+      return this.hotColumns.map(e=>e.data).join('')
+    },
+
+    newFilteredColumns () {
+
+      var filteredColumns
+
+      if (this.typesSelected.length > 0) {
+				filteredColumns = this.resultsColumns.filter((column) => {
+					return this.typesSelected.includes(column.column_dtype)
+				})
+			} else {
+				filteredColumns = this.resultsColumns
+      }
+
+      if (filteredColumns) {
+        filteredColumns = filteredColumns.map((column) => {
+          return {
+            __missing: +column.dtypes_stats.missing || 0,
+            __na: +column.dtypes_stats.null || 0,
+            __zeros: +column.stats.zeros || 0,
+            ...column
+          }
+        })
+
+        this.$nextTick(()=>{
+          let _selected = []
+
+          if (this.currentDataset.columns) {
+            for (let i = 0; i < this.currentDataset.columns.length; i++) {
+            const column = this.currentDataset.columns[i];
+            if (this.selectedColumns[column.name]){
+                _selected.push(i)
+              }
+            }
+          }
+          this.handleSelection( _selected, true )
+        })
+
+
+      }
+      return filteredColumns
+    },
+
     tableKey () {
-			return this.$store.state.datasetUpdates * 100 + this.currentTab
+			return this.$store.state.datasetUpdates * 100 + this.$store.state.tab
 		},
 
     _sortBy: {
@@ -288,7 +410,7 @@ export default {
 		hotSettings () {
 			return {
 				// dropdownMenu: ['filter_by_condition', 'filter_operators', 'filter_by_condition2', 'filter_action_bar'],
-				data: [this.graphicsData, ...this.dataset.sample.value],
+				data: [this.graphicsData, ...this.currentDataset.sample.value],
 				fixedRowsTop: 1,
 				autoColumnSize: false,
 				autoRowSize: false,
@@ -309,7 +431,7 @@ export default {
 		},
 
 		graphicsData () {
-			return this.dataset.columns.map((column, i) => {
+			return this.currentDataset.columns.map((column, i) => {
 				return {
 					toString () {
 						return ''
@@ -317,17 +439,11 @@ export default {
           key: this.tableKey+'e'+i,
           index: i,
           name: column.name,
-          plotable: (
-              ['decimal','float','double'].includes(column.column_dtype) ? 'quantitative'
-              : (['int','integer'].includes(column.column_dtype) && column.stats.count_uniques>25) ? 'quantitative'
-              : (column.stats.count_uniques<=25) ? column.stats.count_uniques
-              : false
-            ),
           mismatch: (column.dtypes_stats.mismatch) ? +column.dtypes_stats.mismatch : 0,
           null: (column.dtypes_stats.null) ? +column.dtypes_stats.null : 0,
           missing: (column.dtypes_stats.missing) ? +column.dtypes_stats.missing : 0,
 					zeros: column.stats.zeros,
-					total: this.dataset.summary.rows_count,
+					total: this.currentDataset.summary.rows_count,
 					count_uniques: column.stats.count_uniques,
 					hist: (column.stats.hist && column.stats.hist[0]) ? column.stats.hist : undefined,
 					hist_years: (column.stats.hist && column.stats.hist.years) ? column.stats.hist.years : undefined,
@@ -337,33 +453,65 @@ export default {
     }
   },
 
+  beforeCreate() {
+    this.isMounted = false
+  },
+
+  mounted() {
+
+    try {
+      var selectedColumns = {}
+      var storeSelectedColumns = this.currentSelection.columns
+      if (storeSelectedColumns) {
+        for (let index = 0; index < storeSelectedColumns.length; index++) {
+            selectedColumns[storeSelectedColumns[index].name] = true
+        }
+      }
+
+      this.selectedColumns = selectedColumns
+    } catch (error) {}
+
+    this.$nextTick(()=>{
+      this.isMounted = true
+    })
+
+  },
+
   methods: {
+
+
+    displaySelection: throttle( async function (item) {
+			if (item) {
+				this.scatterPlotDisplay = item.values
+      }
+    },100),
+
+    watchSearchText: throttle( async function() {
+      try {
+        this.resultsColumns = this.searchText
+          ? await this.$search(this.searchText, this.currentDataset.columns, {
+            shouldSort: true,
+            threshold: 0.1,
+            keys: ['name']
+          })
+          : this.currentDataset.columns
+
+      } catch (err) {}
+    }, 1000),
+
 		toggleColumnsSelection () {
 			let select = this.selectionStatus !== 1
 
 			if (!select) {
 				this.selectedColumns = {}
 			} else {
-				for (let i = 0; i < this.filteredColumns.length; i++) {
-					const column = this.filteredColumns[i]
-					this.selectedColumns[column.name] = select
+				for (let i = 0; i < this.newFilteredColumns.length; i++) {
+					const column = this.newFilteredColumns[i]
+					this.$set(this.selectedColumns, column.name, select)
 				}
 			}
 
-			this.selectionStatus = +select
-
-			this.getFilteredColumns()
 		},
-
-    displaySelection: throttle ( async function (item) {
-			if (item) {
-				this.scatterPlotDisplay = item.values
-      }
-      else {
-        // this.scatterPlotDisplay = ''
-      }
-    },100),
-
 
 		getSubTypes (item) {
 			if (item.dtypes_stats) {
@@ -377,40 +525,23 @@ export default {
 			}
 		},
 
-		searchTextWatch: throttle(async function () {
-			try {
-				this.resultsColumns = this.searchText
-					? await this.$search(this.searchText, this.dataset.columns, {
-						shouldSort: true,
-						threshold: 0.1,
-						keys: ['name']
-					})
-					: this.dataset.columns
-
-				this.getFilteredColumns()
-			} catch (err) {
-				console.error(err)
-			}
-		}, 1000),
-
 		rowClicked (e) {
-      // this.$router.push(`${this.currentTab}/${e.name}`)
       this.toggleColumnSelection(e.name)
 		},
 
-		selectionEvent (row, prop, row2, prop2) {
+		selectionEvent: debounce( function(row, prop, row2, prop2) {
+
 			if (row <= 0) {
 
-				const tableInstance = this.$refs['hot-table'].hotInstance;
+        const tableInstance = this.$refs['hotTable'].hotInstance;
 
         var selected = tableInstance.getSelected()
 
-        if (!selected.length) {
+        if (!selected.length && this.isMounted) {
           this.$emit('selection',false)
           return;
         }
 
-        let plotableIndices = [];
         let selectedIndices = [];
 
         selected.forEach(selection => {
@@ -422,202 +553,87 @@ export default {
 
             const columnData = tableInstance.getDataAtCell(0,i)
 
-            let found = selectedIndices.findIndex( (e) => { return (e === columnData.index.toString()) } )
+            var found = selectedIndices.findIndex( (e) => { return (e === columnData.index.toString()) } )
 
-            if (found===-1) {
-              selectedIndices.push({index: columnData.index.toString(), type: columnData.plotable})
-              if (columnData.plotable) {
-                plotableIndices.push({index: columnData.index.toString(), type: columnData.plotable})
-              }
+            var index = +columnData.index.toString()
+
+            if (found===-1 && !selectedIndices.includes(index)) {
+              selectedIndices.push(index)
             }
 
           }
 
         });
 
-        this.handleSelection(selectedIndices,plotableIndices)
+        this.handleSelection(selectedIndices,true)
+
 			}
+    }, 200),
+
+    handleSelection (selected, indices = false) {
+
+      if (this.isMounted) {
+        this.$emit('selection',{selected, indices})
+      }
+
     },
-
-    handleSelection (selected, plotable = []) {
-
-      this.$emit('selection',{selected,plotable})
-
-      return;
-    },
-
-		getHotColumns () {
-			this.hotColumns = this.filteredColumns.filter((column) => {
-				return !this.hiddenColumns[column.name]
-      })
-
-      let selectColumns = this.dataset.columns
-
-			if (this.sortBy[0]) {
-				if (typeof this.hotColumns[0][this.sortBy[0]] === 'string') {
-					this.hotColumns.sort((a, b) => {
-						let _a = a[this.sortBy[0]].toLowerCase()
-						let _b = b[this.sortBy[0]].toLowerCase()
-						return (_a < _b) ? -1 : (_a > _b) ? 1 : 0
-          })
-          selectColumns.sort((a, b) => {
-						let _a = a[this.sortBy[0]].toLowerCase()
-						let _b = b[this.sortBy[0]].toLowerCase()
-						return (_a < _b) ? -1 : (_a > _b) ? 1 : 0
-          })
-				} else {
-					this.hotColumns.sort((a, b) => {
-						let _a = a[this.sortBy[0]]
-						let _b = b[this.sortBy[0]]
-						return (_a < _b) ? -1 : (_a > _b) ? 1 : 0
-          })
-          selectColumns.sort((a, b) => {
-						let _a = a[this.sortBy[0]]
-						let _b = b[this.sortBy[0]]
-						return (_a < _b) ? -1 : (_a > _b) ? 1 : 0
-          })
-				}
-				if (this.sortDesc[0]) {
-          this.hotColumns.reverse()
-          selectColumns.reverse()
-        }
-      }
-
-      this.$emit('sort',selectColumns.map(e=>e.name))
-
-			this.hotColumns = this.hotColumns.map((e, i) => {
-				return {
-					data: this.dataset.columns.findIndex(de => de.name === e.name),
-					editor: false,
-					readOnly: true,
-					title: `
-            <span class="data-type-in-table abs data-type type-${e.column_dtype}">
-              ${this.dataType(e.column_dtype)}
-            </span>
-            <span class="data-title">
-              ${e.name}
-            </span>`
-				}
-      })
-
-      this.$nextTick(()=>{
-        this.tableUpdate = this.tableUpdate + 1
-      })
-
-		},
-
-		getFilteredColumns () {
-			if (this.typesSelected.length > 0) {
-				this.filteredColumns = this.resultsColumns.filter((column) => {
-					return this.typesSelected.includes(column.column_dtype)
-				})
-			} else {
-				this.filteredColumns = this.resultsColumns
-      }
-
-      if (!this.filteredColumns)
-        return
-
-			this.filteredColumns = this.filteredColumns.map((column) => {
-				return {
-					__missing: +column.dtypes_stats.missing || 0,
-					__na: +column.dtypes_stats.null || 0,
-					__zeros: +column.stats.zeros || 0,
-					...column
-				}
-      })
-
-      let _selected = []
-      let _plotable = []
-
-      for (let i = 0; i < this.dataset.columns.length; i++) {
-        const column = this.dataset.columns[i];
-        if (this.selectedColumns[column.name]){
-          if (this.graphicsData[i].plotable)
-            _plotable.push({index: i, type: this.graphicsData[i].plotable})
-          _selected.push({index: i, type: this.graphicsData[i].plotable})
-        }
-      }
-
-      this.handleSelection( _selected, _plotable )
-
-			this.getHotColumns()
-			this.setSelectionStatus()
-			this.setVisibilityStatus()
-		},
 
 		toggleColumnSelection (value) {
 			if (this.selectedColumns[value]) {
-				this.selectedColumns[value] = false
+				this.$set(this.selectedColumns, value, false)
 				delete this.selectedColumns[value]
-			} else { this.selectedColumns[value] = true }
-
-			this.getFilteredColumns()
+      }
+      else {
+        this.$set(this.selectedColumns, value, true)
+      }
 		},
 
 		invertSelection () {
-			for (let i = 0; i < this.filteredColumns.length; i++) {
-				const column = this.filteredColumns[i]
-				if (this.selectedColumns[column.name]) { delete this.selectedColumns[column.name] } else { this.selectedColumns[column.name] = true }
+			for (let i = 0; i < this.newFilteredColumns.length; i++) {
+				const column = this.newFilteredColumns[i]
+				if (this.selectedColumns[column.name]) {
+          // this.$delete(this.cSelectedColumn, column.name)
+          this.$set(this.selectedColumns, column.name, false)
+        }
+        else {
+          this.$set(this.selectedColumns, column.name, true)
+        }
 			}
-
-			this.getFilteredColumns()
 		},
 
 		toggleColumnsVisibility (value) {
-			for (let i = 0; i < this.filteredColumns.length; i++) {
-				const column = this.filteredColumns[i]
-				if (this.selectedColumns[column.name]) { this.hiddenColumns[column.name] = !value }
+			for (let i = 0; i < this.newFilteredColumns.length; i++) {
+				const column = this.newFilteredColumns[i]
+				if (this.selectedColumns[column.name]) {
+          this.$set(this.hiddenColumns, column.name, !value)
+        }
 			}
-
-			this.setVisibilityStatus()
-			this.getHotColumns()
-			this.getFilteredColumns()
 		},
 
 		toggleColumnVisibility (colName) {
-			this.hiddenColumns[colName] = !this.hiddenColumns[colName]
-			this.setVisibilityStatus()
-			this.getHotColumns()
-		},
+			this.$set(this.hiddenColumns, colName, !this.hiddenColumns[colName])
+    }
 
-		setSelectionStatus () {
-			let status
-
-			for (let i = 0; i < this.filteredColumns.length; i++) {
-				const column = this.filteredColumns[i]
-				if (status !== undefined && status === +!this.selectedColumns[column.name]) { // different from previous value
-					this.selectionStatus = -1 // indeterminate
-					return -1
-				}
-				status = +!!this.selectedColumns[column.name] // all or none selected
-			}
-
-			this.selectionStatus = +!!status
-			return +!!status
-		},
-
-		setVisibilityStatus () {
-			for (let i = 0; i < this.filteredColumns.length; i++) {
-				const column = this.filteredColumns[i]
-				if (this.selectedColumns[column.name] && this.hiddenColumns[column.name]) {
-					this.visibilityStatus = 0 // at least one is hidden
-					return 0
-				}
-			}
-			this.visibilityStatus = 1
-			return 1
-		}
   },
 
   watch: {
+
+    selectedColumns: {
+      deep: true,
+      handler (v) {
+        this.handleSelection(Object.entries(v).filter((e)=>e[1]).map(e=>e[0]) || [], false)
+      }
+    },
+
+    hotColumnsJoin () {
+      this.$nextTick(()=>{
+        this.tableUpdate = this.tableUpdate + 1
+      })
+    },
+
     searchText: {
 			immediate: true,
-
-			handler () {
-				this.searchTextWatch()
-			}
-
+			handler: 'watchSearchText'
 		},
 
 		detailsActive: {
@@ -625,7 +641,7 @@ export default {
 			handler (value) {
 				this.$nextTick(() => {
           try {
-            this.$refs['hot-table'].hotInstance.render()
+            this.$refs['hotTable'].hotInstance.render()
           }
           catch {}
 				})
@@ -636,35 +652,12 @@ export default {
       handler (value) {
 				this.$nextTick(() => {
           try {
-            this.$refs['hot-table'].hotInstance.render()
+            this.$refs['hotTable'].hotInstance.render()
           }
           catch {}
 				})
 			}
     },
-
-		sortBy: {
-			handler: 'getHotColumns',
-			deep: true
-		},
-		sortDesc: {
-			handler: 'getHotColumns',
-			deep: true
-		},
-
-		hiddenColumns: {
-			handler () {
-				this.getHotColumns()
-			},
-			deep: true
-		},
-
-		typesSelected: {
-			handler () {
-				this.getFilteredColumns()
-			},
-			deep: true
-		}
 	},
 
 

@@ -91,7 +91,8 @@ export default {
         strokeWidth: 0
       },
       bins: this.values.map(e=>({})),
-      totalWidth: 0
+      totalWidth: 0,
+      selecting: false
     }
   },
 
@@ -118,10 +119,6 @@ export default {
   },
 
   mounted () {
-    document.documentElement.addEventListener('mouseup', ()=>{
-      this.onMouseUp()
-    });
-
     if (this.width=='auto') {
       this.$nextTick(()=>{
         this.fitStageIntoParentContainer()
@@ -129,7 +126,20 @@ export default {
     }
   },
 
+  watch: {
+    selected (indices) {
+      this.bins = this.bins.map((e,i)=>({...e, selected: indices.includes(i), selecting: false}))
+    }
+  },
+
   methods: {
+
+    addMouseUpEventListener () {
+      document.documentElement.addEventListener('mouseup', this.onMouseUp );
+    },
+    removeMouseUpEventListener () {
+      document.documentElement.removeEventListener('mouseup', this.onMouseUp );
+    },
 
     fitStageIntoParentContainer () {
       var container = this.$el
@@ -141,6 +151,8 @@ export default {
         return
       }
       if (event.evt.which==1) {
+        this.addMouseUpEventListener()
+        this.selecting = true
         this.multipleSelection = event.evt.ctrlKey && this.selectable!='single'
         this.selectionRange = [event.evt.layerX, event.evt.layerX]
         this.updateSelectionRange( event.evt.layerX )
@@ -183,13 +195,16 @@ export default {
     },
 
     onMouseUp () {
-      if (!this.selectable) {
+      this.removeMouseUpEventListener()
+      if (!this.selectable || !this.selecting) {
         return
       }
+      this.selecting = false
       this.selectionRange = []
       this.selectionRect = {}
-      this.bins = this.bins.map(e=>({...e, selected: e.selected || e.selecting, selecting: false}))
-      this.$emit('update:selected', this.bins.map((e,i)=>e.selected ? i : -1).filter(e=>(e>=0)) )
+      var _s = this.bins.map((e,i)=>(e.selected || e.selecting) ? i : -1).filter(e=>(e>=0))
+      if (_s!==this.selected)
+        this.$emit('update:selected', _s)
     },
 
     setHovered (index) {

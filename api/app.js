@@ -323,7 +323,7 @@ const createKernel = async function (user_session) {
 		return await run_code(`
 from optimus import Optimus
 op = Optimus(master="local[*]", app_name="optimus", comm=True)
-'kernel init optimus init'`,user_session)
+'kernel init optimus init ' + op.__version__`,user_session)
 	}
 	else {
 		return await run_code(`
@@ -331,7 +331,7 @@ _status = 'kernel ok '
 
 try:
 	op
-	_status += 'optimus ok '
+	_status += 'optimus ok '+ op.__version + ' '
 	try:
 		df
 		_status += 'dataframe ok '
@@ -340,7 +340,7 @@ try:
 except NameError:
 	from optimus import Optimus
 	op = Optimus(master="local[*]", app_name="optimus", comm=True)
-	_status = 'optimus init '
+	_status = 'optimus init ' + op.__version__ + ' '
 
 _status`,user_session)
 	}

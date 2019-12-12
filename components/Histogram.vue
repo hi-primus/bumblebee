@@ -2,6 +2,9 @@
   <div class="bb-graphic" @mouseleave="currentCount = false">
     <h3 v-if="!table">{{ title }}</h3>
     <BarsCanvas
+      :selectable="table ? 'single' : false"
+      :selected="selected"
+      @update:selected="updateSelected"
       :values="values"
       :maxVal="maxVal"
       :binMargin="1"
@@ -15,6 +18,8 @@
 
 <script>
 import BarsCanvas from '@/components/BarsCanvas'
+import { reduceRanges, arraysEqual } from '@/utils/functions.js'
+import { mapState, mapGetters } from 'vuex';
 
 export default {
 
@@ -39,13 +44,13 @@ export default {
 			default: false,
 			type: Boolean
     },
+    columnIndex: {
+      default: -1,
+      type: Number
+    },
 		selectable: {
 			default: false,
 			type: Boolean
-    },
-    barColor: {
-      default: 'success',
-      type: String
     },
 	},
 
@@ -56,19 +61,22 @@ export default {
 			currentUpper: 0,
 			currentCount: false,
 			lower: '',
-      selected: {},
+      selected: [],
       upper: '',
 		}
   },
 
   computed: {
 
+    ...mapGetters(['currentSelection']),
+    ...mapState(['datasetSelection','tab']),
+
     currentValueString () {
       if (this.currentCount)
         return this.$options.filters.humanNumber(this.currentLower) + ' - ' + this.$options.filters.humanNumber(this.currentUpper) + ', ' + this.currentCount
       else
         return this.$options.filters.humanNumber(this.lower) + ' - ' + this.$options.filters.humanNumber(this.upper)
-    }
+    },
   },
 
 	beforeMount () {
@@ -77,11 +85,58 @@ export default {
 		this.upper = (+this.values[this.values.length-1].upper).toFixed(2)
   },
 
+  watch: {
+    datasetSelection: { // store
+      // deep: true,
+      handler (ds) {
+        if (ds[this.tab] && ds[this.tab].ranged) {
+          if (ds[this.tab].ranged.index!=this.columnIndex && this.selected.length>0) {
+            this.selected = []
+          }
+          else if (ds[this.tab].ranged.index==this.columnIndex && !arraysEqual(this.selected,ds[this.tab].ranged.indices)){
+            this.selected = ds[this.tab].ranged.indices
+          }
+        }
+      }
+    }
+  },
+
 	methods: {
-    clicked (index) {
-      if (this.values[index].count)
-        this.$set(this.selected, index, !this.selected[index]);
-        this.$emit('clicked',this.values[index])
+
+    updateSelected(v) {
+
+      v = v || []
+
+      if (arraysEqual(this.selected,v)) {
+        return
+      }
+      else {
+        this.selected = v
+      }
+
+
+      var { index, ranges } = this.currentSelection.ranged || {}
+
+      ranges = ranges || []
+      index = index || -1
+
+      if (
+        (!ranges.length && v.length)
+        ||
+        index===this.columnIndex
+        ||
+        (v.length && index!==this.columnIndex)
+      ) {
+        var newRanges = reduceRanges( v.map(index=>[this.values[index].lower, this.values[index].upper]) )
+        if (!arraysEqual(ranges,newRanges) || index!=this.columnIndex )
+          this.$store.commit('selection',{
+            ranged: {
+              index: (!!v.length) ? this.columnIndex : -1,
+              ranges: newRanges,
+              indices: v
+            }
+          })
+      }
     },
 
     setValueIndex(index) {

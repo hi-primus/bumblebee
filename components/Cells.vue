@@ -342,6 +342,7 @@ import CodeEditor from '@/components/CodeEditor'
 import OutputColumnInputs from '@/components/OutputColumnInputs'
 import Outliers from '@/components/Outliers'
 import clientMixin from '@/plugins/mixins/client'
+import { mapGetters } from 'vuex'
 import { trimCharacters, debounce, newName, arrayJoin } from '@/utils/functions.js'
 
 const api_url = process.env.API_URL || 'http://localhost:5000'
@@ -434,6 +435,24 @@ export default {
               `[${payload.columns.map((e,i)=>(`("${e}","${payload.orders[i]}")`)).join(',')}]`
             return `${this.dataset.varname} = ${this.dataset.varname}.rows.sort( ${_argument} )`
           }
+        },
+        FILTER: {
+          code: (payload) => {
+            var values = this.currentSelection.ranged.values
+            var ranges = this.currentSelection.ranged.ranges
+            var type = (this.currentSelection.ranged.values && this.currentSelection.ranged.values.length) ? 'values' : 'ranges'
+            var action = payload.command=='keep rows' ? 'select' : 'drop'
+            var expression
+
+            if (type=='values') {
+              expression = `${this.dataset.varname}.${payload.columns[0]}.isin("${values.join('","')}")`
+            }
+            else {
+              expression = `(${this.dataset.varname}["${payload.columns[0]}"]>=${ranges[0][0]}) & (${this.dataset.varname}["${payload.columns[0]}"]<=${ranges[0][1]})`
+            }
+            return `${this.dataset.varname} = ${this.dataset.varname}.rows.${action}( ${expression} )`
+          }
+
         },
         'filter rows': {
           dialog: {
@@ -568,7 +587,7 @@ export default {
                 expression = `${this.dataset.varname}["${payload.columns[0]}"]>=${payload.value}`
                 break
               case 'between':
-                expression = `(${this.dataset.varname}["${payload.columns[0]}"]>=${payload.value}) & (${this.dataset.varname}["${payload.columns[0]}"]<${payload.value_2})`
+                expression = `(${this.dataset.varname}["${payload.columns[0]}"]>=${payload.value}) & (${this.dataset.varname}["${payload.columns[0]}"]<=${payload.value_2})`
                 break
               case 'contains':
                 expression = `${this.dataset.varname}["${payload.columns[0]}"].contains("${payload.text}")`
@@ -1201,8 +1220,7 @@ export default {
             loadingTest: false
           }),
           code: (payload) => {
-            return `${payload.previous_code}
-${this.availableVariableName} = db.table_to_df("${payload.table}").cache()`
+            return `${payload.previous_code}${sl}${this.availableVariableName} = db.table_to_df("${payload.table}").cache()`
           },
           onTest: async (payload) => {
 
@@ -1225,8 +1243,7 @@ ${this.availableVariableName} = db.table_to_df("${payload.table}").cache()`
 
               code += ')'
 
-              var response = await this.evalCode(code+`
-db.tables_names_to_json()`)
+              var response = await this.evalCode(code+`${sl}db.tables_names_to_json()`)
 
               var tables = JSON.parse(trimCharacters(response.content,"'"))
               if (!tables.length){
@@ -1331,6 +1348,48 @@ db.tables_names_to_json()`)
             return `${this.dataset.varname} = ${this.dataset.varname}.stratified_sample(`
               +_argument
               +( (payload.seed) ? `, seed=${payload.seed}` : '')
+              +')'
+          }
+        },
+        'replace values': {
+          dialog: {
+            text: 'Replace row values',
+            fields: [
+              // {
+              //   type: 'chips',
+              //   key: 'search',
+              //   label: 'Find',
+              //   clearable: true
+              // },
+              {
+                type: 'field',
+                key: 'replace',
+                label: 'Replace'
+              },
+              // {
+              //   type: 'select',
+              //   key: 'search_by',
+              //   label: 'Search by',
+              //   items: [
+              //     {text: 'Characters', value: 'chars'},
+              //     {text: 'Words', value: 'words'}
+              //   ]
+              // },
+            ],
+          },
+          payload: (columns) => ({
+						command: 'replace',
+						columns: columns,
+            search: this.currentSelection.ranged.values,
+            replace: '',
+            title: 'Replace in column',
+					}),
+          code: (payload) => {
+            return `${this.dataset.varname} = ${this.dataset.varname}.cols.replace(`
+              +`"${payload.columns[0]}"`
+              +`, search=["${payload.search.join('","')}"]`
+              +`, replace_by="${payload.replace}"`
+              +`, search_by="full"`
               +')'
           }
         },
@@ -1852,6 +1911,8 @@ db.tables_names_to_json()`)
   },
 
   computed: {
+
+    ...mapGetters(['currentSelection']),
 
     cells: {
       get() {

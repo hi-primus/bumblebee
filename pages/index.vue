@@ -145,7 +145,7 @@
                 class="search-filter mt-2 mr-4 elevation-0"
                 prepend-inner-icon="search"
                 label="Search column"
-                :disabled="!($store.state.datasets[tab] && $store.state.datasets[tab].summary)"
+                :disabled="!(currentDataset && currentDataset.summary)"
               />
               <div class="filter-container">
                 <v-autocomplete
@@ -171,7 +171,7 @@
                     closeOnContentClick: true
                   }"
                   @change="typesUpdated"
-                  :disabled="!($store.state.datasets[tab] && $store.state.datasets[tab].summary)"
+                  :disabled="!(currentDataset && currentDataset.summary)"
                 >
                   <template v-slot:item="{ item }">
                     <div class="data-type in-autocomplete">{{ dataType(item) }}</div> <span class="capitalize">{{ item }}</span>
@@ -181,11 +181,10 @@
             </div>
               <!-- :key="tableKey" -->
             <TableBar
-              v-if="$store.state.datasets[tab]"
-              :current-tab="tab"
+              v-if="currentDataset"
               :view.sync="view"
-              :dataset="$store.state.datasets[tab]"
-              :total="($store.state.datasets[tab].summary) ? +$store.state.datasets[tab].summary.rows_count : 1"
+              :dataset="currentDataset"
+              :total="(currentDataset.summary) ? +currentDataset.summary.rows_count : 1"
               :searchText="searchText"
               :types-selected="typesSelected"
             />
@@ -195,20 +194,20 @@
             <v-layout class="px-4" row justify-space-between>
               <span/>
               <span
-                v-if="$store.state.datasets[tab] && $store.state.datasets[tab].summary"
+                v-if="currentDataset && currentDataset.summary"
                 class="caption-2"
               >
-                <template v-if="$store.state.datasets[tab].total_count_dtypes">
-                  {{ $store.state.datasets[tab].total_count_dtypes | formatNumberInt }} Data types &emsp;
+                <template v-if="currentDataset.total_count_dtypes">
+                  {{ currentDataset.total_count_dtypes | formatNumberInt }} Data types &emsp;
                 </template>
-                <template v-if="$store.state.datasets[tab].summary.sample_size">
-                  {{ $store.state.datasets[tab].summary.sample_size | formatNumberInt }} of
+                <template v-if="currentDataset.summary.sample_size">
+                  {{ currentDataset.summary.sample_size | formatNumberInt }} of
                 </template>
-                <template v-if="$store.state.datasets[tab].summary.rows_count">
-                  {{ $store.state.datasets[tab].summary.rows_count | formatNumberInt }} Rows &emsp;
+                <template v-if="currentDataset.summary.rows_count">
+                  {{ currentDataset.summary.rows_count | formatNumberInt }} Rows &emsp;
                 </template>
-                <template v-if="$store.state.datasets[tab].summary.cols_count">
-                  {{ $store.state.datasets[tab].summary.cols_count | formatNumberInt }} Columns
+                <template v-if="currentDataset.summary.cols_count">
+                  {{ currentDataset.summary.cols_count | formatNumberInt }} Columns
                 </template>
               </span>
             </v-layout>
@@ -224,6 +223,8 @@ import Layout from '@/components/Layout'
 import TableBar from '@/components/TableBar'
 import clientMixin from '@/plugins/mixins/client'
 import dataTypesMixin from '@/plugins/mixins/data-types'
+
+import { mapGetters } from 'vuex'
 
 import axios from 'axios'
 
@@ -265,6 +266,7 @@ export default {
 	},
 
 	computed: {
+    ...mapGetters(['currentDataset']),
 		statusError () {
 			return (!!this.$store.state.status.message)
 		},
@@ -274,6 +276,19 @@ export default {
 	},
 
 	watch: {
+
+    view (v) {
+      if (v==0) {
+        this.$store.commit('selection',{
+          ranged: {
+            index: -1,
+            ranges: [],
+            values: [],
+            indices: []
+          }
+        })
+      }
+    },
 
     async status (value) {
       if (this.$route.query.kernel=='1') {
@@ -292,7 +307,7 @@ export default {
               })
 
               if (response.content.toString().includes('optimus')) {
-                console.log('Optimus initialized')
+                console.log('Optimus initialized',response.content.toString())
 								this.$store.commit('kernel','done')
 							}
 							else {
@@ -310,7 +325,7 @@ export default {
       if (value!='received')
         return
 
-      let dataset = this.$store.state.datasets[this.tab]
+      let dataset = this.currentDataset
 
       if (dataset && dataset.dtypes_list)
         this.typesAvailable = dataset.dtypes_list
@@ -324,16 +339,16 @@ export default {
       let dataset = this.$store.state.datasets[value]
 
 			if (value !== undefined && !dataset) {
-				this.tab = (this.$store.state.datasets[0]) ? 0 : undefined
+        this.tab = (this.$store.state.datasets[0]) ? 0 : undefined
+        this.$store.commit('setTab', { tab: 0 })
 				return
-			}
+      }
+
+      this.$store.commit('setTab',{ tab: value })
 
       if (dataset && dataset.dtypes_list)
         this.typesAvailable = dataset.dtypes_list
-		},
-		view (value) {
-			if (value === undefined) { return }
-		}
+    },
 	},
 
 	mounted () {
