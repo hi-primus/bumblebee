@@ -295,6 +295,7 @@ export default {
         switch (value) {
           case 'receiving back':
             this.stopClient(true)
+            this.$store.commit('cells', [])
             break;
           case 'receiving':
 							this.$store.commit('kernel','loading')

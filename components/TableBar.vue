@@ -183,6 +183,32 @@
           Operations
           <v-icon class="right-button" color="black" @click="optionsActive = false">close</v-icon>
         </div>
+        <div v-show="optionsActive && $route.query.kernel=='1'" class="px-2 py-1">
+          <v-tooltip transition="fade-transition" bottom color="success darken-2" v-model="copied">
+            <template v-slot:activator="{on: success}">
+              <v-tooltip :disabled="copied" transition="fade-transition" bottom>
+                <template v-slot:activator="{ on: hint }">
+                  <v-btn
+                    text
+                    color="#888"
+                    class="icon-btn"
+                    :disabled="commandsDisabled"
+                    v-on="hint"
+                    @click="copyCodeToClipboard"
+                  >
+                    <v-icon>
+                      file_copy
+                    </v-icon>
+                  </v-btn>
+                </template>
+                <span>
+                  Copy code to clipboard
+                </span>
+              </v-tooltip>
+            </template>
+            <span>Copied succesfully</span>
+          </v-tooltip>
+        </div>
         <Cells
           v-show="optionsActive && $route.query.kernel=='1'"
           ref="cells"
@@ -287,7 +313,7 @@ import Dataset from '@/components/Dataset'
 import VegaEmbed from '@/components/VegaEmbed'
 import clientMixin from '@/plugins/mixins/client'
 import dataTypesMixin from '@/plugins/mixins/data-types'
-import { trimCharacters } from '@/utils/functions.js'
+import { trimCharacters, copyToClipboard } from '@/utils/functions.js'
 import { mapGetters } from 'vuex'
 
 import axios from 'axios'
@@ -333,6 +359,8 @@ export default {
 	data () {
 		return {
 
+      copied: false,
+
       file: {dialog: false},
 
       scatterPlotDisplay: [],
@@ -372,6 +400,7 @@ export default {
 
 				{command: 'values_to_cols',   text: 'Values to Columns',    type: 'ENCODING', max: 1},
 				{command: 'string_to_index',  text: 'Strings to Index',     type: 'ENCODING'},
+				{command: 'index_to_string',  text: 'Indices to Strings',     type: 'ENCODING'},
 
         {command: 'cast', dtype: 'int',     text: 'Int', type: 'CAST'},
 				{command: 'cast', dtype: 'float',   text: 'Float', type: 'CAST'},
@@ -407,6 +436,15 @@ export default {
 	computed: {
 
     ...mapGetters(['currentSelection','selectionType']),
+
+    cells: {
+      get() {
+        return Array.from(this.$store.state.cells)
+      },
+      set(value) {
+        this.$store.commit('cells', value)
+      }
+    },
 
     toolbarElements () {
       return [
@@ -695,6 +733,17 @@ export default {
 
     menuItems (type) {
       return this.commandItems.filter(e => e.type==type)
+    },
+
+    copyCodeToClipboard () {
+      var code = 'from optimus import Optimus\n'
+      +'op = Optimus(master="local[*]", app_name="optimus", comm=True)\n'
+      + this.cells.map(e=>e.content).filter(c=>c.trim()).join('\n')
+      copyToClipboard(code)
+      this.copied = true
+      setTimeout(() => {
+        this.copied = false
+      }, 2000);
     },
 
     commandHandle (event) {

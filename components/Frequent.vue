@@ -4,11 +4,11 @@
     <BarsCanvas
       :selectable="table"
       :selected="selected"
-      @update:selected="updateSelected"
       :values="values"
       :binMargin="1"
       :width="'auto'"
       :height="table ? 66 : 90"
+      @update:selected="updateSelected"
       @hovered="setValueIndex($event)"
     />
 

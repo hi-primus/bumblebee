@@ -7,6 +7,12 @@ const api_url = process.env.API_URL || 'http://localhost:5000'
 
 export default {
 
+  data () {
+    return {
+      socketAvailable: false
+    }
+  },
+
 	methods: {
 
     socketPost (message, payload = {}) {
@@ -79,7 +85,7 @@ export default {
 
 		stopClient (waiting) {
 
-      this.$store.commit('cells', [])
+      this.socketAvailable = false
 
       let query = Object.assign({}, this.$route.query);
       delete query.key;
@@ -159,6 +165,7 @@ export default {
           console.log('Connection success')
           socket.on('success', () => {
             console.log('Connection confirmed')
+            this.socketAvailable = true
             resolve('ok')
           })
         })

@@ -135,10 +135,10 @@ export default {
   methods: {
 
     addMouseUpEventListener () {
-      document.documentElement.addEventListener('mouseup', this.onMouseUp );
+      document.documentElement.addEventListener('mouseup', this.onMouseUp, { passive: true } )
     },
     removeMouseUpEventListener () {
-      document.documentElement.removeEventListener('mouseup', this.onMouseUp );
+      document.documentElement.removeEventListener('mouseup', this.onMouseUp )
     },
 
     fitStageIntoParentContainer () {

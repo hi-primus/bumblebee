@@ -289,7 +289,7 @@ const run_code = async function(code = '', user_session = '') {
 				resolve({status: 'disconnected', retry: true, error: 'Client disconnected', content: reason})
 			})
 
-			console.log('Connecting client')
+			// console.log('Connecting client')
 			client.connect(`${ws_kernel_base}/api/kernels/${kernels[user_session].kernel['id']}/channels`)
 
 
@@ -331,7 +331,7 @@ _status = 'kernel ok '
 
 try:
 	op
-	_status += 'optimus ok '+ op.__version + ' '
+	_status += 'optimus ok '+ op.__version__ + ' '
 	try:
 		df
 		_status += 'dataframe ok '
