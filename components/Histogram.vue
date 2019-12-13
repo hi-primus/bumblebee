@@ -2,14 +2,14 @@
   <div class="bb-graphic" @mouseleave="currentCount = false">
     <h3 v-if="!table">{{ title }}</h3>
     <BarsCanvas
-      :selectable="table ? 'single' : false"
+      :selectable="table"
       :selected="selected"
-      @update:selected="updateSelected"
       :values="values"
       :maxVal="maxVal"
       :binMargin="1"
       :width="'auto'"
       :height="table ? 66 : 90"
+      @update:selected="updateSelected"
       @hovered="setValueIndex($event)"
     />
     <div v-if="currentValueString" :title="currentValueString" class="current-value">{{ currentValueString }}</div>

@@ -304,8 +304,13 @@
         @start="drag = true"
         @end="drag = false; draggableEnd()"
       >
-        <div class="cell-container" v-for="(cell, index) in this.cells" :key="cell.id" :class="{'fixed-cell': cell.fixed, 'cell-error': cell.error,'done': cell.done,'active': activeCell>=0 && activeCell==index}" @click="setActiveCell(index)">
-
+        <div
+          class="cell-container"
+          v-for="(cell, index) in this.cells"
+          :key="cell.id"
+          :class="{'fixed-cell': cell.fixed, 'cell-error': cell.error,'done': cell.done,'active': activeCell>=0 && activeCell==index}"
+          @click="setActiveCell(index)"
+        >
           <div class="cell">
             <div class="handle left-handle"></div>
             <CodeEditor
@@ -449,7 +454,12 @@ export default {
               expression = `${this.dataset.varname}.${payload.columns[0]}.isin("${values.join('","')}")`
             }
             else {
-              expression = `(${this.dataset.varname}["${payload.columns[0]}"]>=${ranges[0][0]}) & (${this.dataset.varname}["${payload.columns[0]}"]<=${ranges[0][1]})`
+              if (ranges.length>1)
+                expression = '('
+                +ranges.map(range=>`(${this.dataset.varname}["${payload.columns[0]}"]>=${range[0]}) & (${this.dataset.varname}["${payload.columns[0]}"]<=${range[1]})`).join(' | ')
+                +')'
+              else
+                expression = `(${this.dataset.varname}["${payload.columns[0]}"]>=${ranges[0][0]}) & (${this.dataset.varname}["${payload.columns[0]}"]<=${ranges[0][1]})`
             }
             return `${this.dataset.varname} = ${this.dataset.varname}.rows.${action}( ${expression} )`
           }
@@ -625,7 +635,12 @@ export default {
                 break
               case 'selected':
                 if (payload.selectionType=='ranges') {
-                  expression = `(${this.dataset.varname}["${payload.columns[0]}"]>=${payload.selection.ranges[0][0]}) & (${this.dataset.varname}["${payload.columns[0]}"]<=${payload.selection.ranges[0][1]})`
+                  if (payload.selection.ranges.length>1)
+                    expression = '('
+                    +payload.selection.ranges.map(range=>`(${this.dataset.varname}["${payload.columns[0]}"]>=${range[0]}) & (${this.dataset.varname}["${payload.columns[0]}"]<=${range[1]})`).join(' | ')
+                    +')'
+                  else
+                    expression = `(${this.dataset.varname}["${payload.columns[0]}"]>=${payload.selection.ranges[0][0]}) & (${this.dataset.varname}["${payload.columns[0]}"]<=${payload.selection.ranges[0][1]})`
                 }
                 else if (payload.selectionType=='values') {
                   expression = `${this.dataset.varname}.${payload.columns[0]}.isin("${payload.selection.values.join('","')}")`
@@ -727,6 +742,12 @@ export default {
               },
               {
                 condition: (c)=>c.file_type==='csv',
+                key: 'null_value',
+                label: 'Null value',
+                type: 'field'
+              },
+              {
+                condition: (c)=>c.file_type==='csv',
                 key: 'sep',
                 label: 'Separator',
                 type: 'field'
@@ -775,6 +796,7 @@ export default {
             file_type: 'csv',
             url: '',
             sep: ',',
+            null_value: 'null',
             sheet_name: '0',
             header: true,
             limit: '',
@@ -784,28 +806,28 @@ export default {
 
           code: (payload) => {
             let file = {
-              ...payload,
               header: (payload.header) ? `'true'` : `'false'`,
               multiline: (payload.multiline) ? `True` : `False`,
             }
-            let code = `${this.availableVariableName} = op.load.${file.file_type}("${file.url}"`
-            if (file.file_type=='csv'){
-              code += `, sep="${file.sep}"`
+            let code = `${this.availableVariableName} = op.load.${payload.file_type}("${payload.url}"`
+            if (payload.file_type=='csv'){
+              code += `, sep="${payload.sep}"`
               code += `, header=${file.header}`
+              code += `, null_value="${payload.null_value}"`
               code += `, infer_schema='true'`
-              code += `, charset="${file.charset}"`
+              code += `, charset="${payload.charset}"`
             }
-            else if (file.file_type=='json'){
+            else if (payload.file_type=='json'){
               code += `, multiline=${file.multiline}`
             }
-            else if (file.file_type=='xls'){
-              code += `, sheet_name="${file.sheet_name}"`
+            else if (payload.file_type=='xls'){
+              code += `, sheet_name="${payload.sheet_name}"`
             }
 
             code += `)`
 
-            if (file.limit>0) {
-              code +=`.rows.limit(${file.limit})`
+            if (payload.limit>0) {
+              code +=`.rows.limit(${payload.limit})`
             }
 
             code += '.cache()'
@@ -1748,6 +1770,42 @@ export default {
               + ')'
           },
         },
+        index_to_string: {
+          dialog: {
+            title: 'Indices to Strings',
+            output_cols: true,
+            validate: (command) => {
+              if (command.output_cols.filter(e=>e!=='').length%command.columns.length==0)
+                return true
+              return false
+            }
+          },
+          payload: (columns) => {
+            return {
+              command: 'index_to_string',
+              columns: columns,
+              output_cols: columns.map(e=>'')
+            }
+          },
+          code: (payload) => {
+            // cols.index_to_string(input_cols, output_cols=None)
+            var _argument = (payload.columns.length==1) ? `"${payload.columns[0]}"` : `["${payload.columns.join('", "')}"]`
+
+            var output_cols_argument =
+              (!payload.output_cols.join('').trim().length) ?
+                false
+              :
+                (payload.output_cols.length==1) ?
+                  `"${payload.output_cols[0]}"`
+                :
+                  `[${payload.output_cols.map((e)=>((e!==null) ? `"${e}"` : 'None')).join(', ')}]`
+
+            return `${this.dataset.varname} = ${this.dataset.varname}.cols.index_to_string(`
+              + _argument
+              + ( (output_cols_argument) ? `, output_cols=${output_cols_argument}` : '')
+              + ')'
+          },
+        },
         SCALER: {
           dialog: {
             title: (command) => {
@@ -2277,11 +2335,15 @@ export default {
       if (code === codeDone) {
         return;
       }
-      else if ( !this.firstRun && (force || code.indexOf(codeDone)!=0 || codeDone=='' || this.lastWrongCode) ) {
+      else if (
+        ( !this.firstRun && (force || code.indexOf(codeDone)!=0 || codeDone=='' || this.lastWrongCode) )
+        ||
+        !this.socketAvailable
+      ) {
         rerun = true
       }
       else {
-        code = this.codeText(true)
+        code = this.codeText(true) // new cells only
       }
 
       if (code===this.lastWrongCode) {

@@ -68,7 +68,7 @@ export const mutations = {
 
     Vue.set(state.datasets, found, dataset)
 
-    state.datasetSelection[found] = {columns: _c}
+    state.datasetSelection[found] = {} // {columns: _c} // TODO: check selection
 
     Vue.set(state.datasetSelection, found, state.datasetSelection[found] )
 
