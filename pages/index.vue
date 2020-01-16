@@ -312,6 +312,8 @@ export default {
 								this.$store.commit('kernel','done')
 							}
 							else {
+                if (response.traceback.length)
+                  response.traceback_escaped = response.traceback.join('\n').replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '')
 								console.error(response)
 								this.$store.commit('status','waiting')
 								this.$store.commit('status','receiving')

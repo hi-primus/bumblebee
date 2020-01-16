@@ -943,6 +943,8 @@ export default {
             }
             catch (error) {
 
+              if (error.content.traceback.length)
+                error.content.traceback_escaped = error.content.traceback.join('\n').replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '')
               console.error(error)
               var _error = error
               if ( error.content && error.content.ename )
@@ -1101,6 +1103,8 @@ export default {
             }
             catch (error) {
 
+              if (error.content.traceback.length)
+                error.content.traceback_escaped = error.content.traceback.join('\n').replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '')
               console.error(error)
               var _error = error
               if (error.content && error.content.ename)
@@ -1318,6 +1322,9 @@ export default {
               this.currentCommand.loadingTest = false
             }
             catch (error) {
+
+              if (error.content.traceback.length)
+                error.content.traceback_escaped = error.content.traceback.join('\n').replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '')
 
               console.error(error)
 
@@ -2386,8 +2393,11 @@ export default {
         this.lastWrongCode = false
 
       } catch (error) {
+        if (error.content.traceback.length)
+          error.content.traceback_escaped = error.content.traceback.join('\n').replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '')
         console.error(error)
         this.codeError = (error.content && error.content.ename) ? error.content.ename + ': ' + error.content.evalue : error
+
         this.markCellsError()
         this.lastWrongCode = code
         this._commandsDisabled = undefined;
