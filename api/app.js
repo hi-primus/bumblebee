@@ -147,7 +147,7 @@ const new_socket = function (socket, session) {
 	socket.on('cells', async (payload) => {
 		var user_session = payload.session
 		var result = await run_code(`${payload.code}
-df.send(output="json", infer=False, advanced_stats=False${ payload.name ? (', name="'+payload.name+'"') : '' })`,
+df.ext.send(output="json", infer=False, advanced_stats=False${ payload.name ? (', name="'+payload.name+'"') : '' })`,
 	user_session)
 	socket.emit('reply',{...result, timestamp: payload.timestamp})
 	})
