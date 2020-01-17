@@ -806,7 +806,7 @@ export default {
 
           code: (payload) => {
             let file = {
-              header: (payload.header) ? `'true'` : `'false'`,
+              header: (payload.header) ? `True` : `False`,
               multiline: (payload.multiline) ? `True` : `False`,
             }
             let code = `${this.availableVariableName} = op.load.${payload.file_type}("${payload.url}"`
@@ -830,7 +830,7 @@ export default {
               code +=`.rows.limit(${payload.limit})`
             }
 
-            code += '.cache()'
+            code += '.ext.cache()'
 
             return code
           }
@@ -1278,7 +1278,7 @@ export default {
             loadingTest: false
           }),
           code: (payload) => {
-            return `${payload.previous_code}${sl}${this.availableVariableName} = db.table_to_df("${payload.table}").cache()`
+            return `${payload.previous_code}${sl}${this.availableVariableName} = db.table_to_df("${payload.table}").ext.cache()`
           },
           onTest: async (payload) => {
 
@@ -1406,7 +1406,7 @@ export default {
 					}),
           code: (payload) => {
             var _argument = (payload.columns.length==1) ? `"${payload.columns[0]}"` : `["${payload.columns.join('", "')}"]`
-            return `${this.dataset.varname} = ${this.dataset.varname}.stratified_sample(`
+            return `${this.dataset.varname} = ${this.dataset.varname}.ext.stratified_sample(`
               +_argument
               +( (payload.seed) ? `, seed=${payload.seed}` : '')
               +')'
@@ -1944,7 +1944,7 @@ export default {
             }
           },
           code: (payload) => {
-            return `${this.dataset.varname} = ${this.dataset.varname}.sample_n(${payload.n})`
+            return `${this.dataset.varname} = ${this.dataset.varname}.ext.sample(${payload.n})`
           },
         },
         /*
