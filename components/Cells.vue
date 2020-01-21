@@ -830,7 +830,7 @@ export default {
               code +=`.rows.limit(${payload.limit})`
             }
 
-            code += '.cache()'
+            code += '.ext.cache()'
 
             return code
           }
@@ -1283,7 +1283,7 @@ export default {
             loadingTest: false
           }),
           code: (payload) => {
-            return `${payload.previous_code}${sl}${this.availableVariableName} = db.table_to_df("${payload.table}").cache()`
+            return `${payload.previous_code}${sl}${this.availableVariableName} = db.table_to_df("${payload.table}").ext.cache()`
           },
           onTest: async (payload) => {
 
@@ -2400,10 +2400,10 @@ export default {
         this.lastWrongCode = false
 
       } catch (error) {
-        if (error.content.traceback.length)
-                error.content.traceback_escaped = error.content.traceback.map(l=>
-                  l.replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '')
-                )
+        if (error.content && error.content.traceback.length)
+          error.content.traceback_escaped = error.content.traceback.map(l=>
+            l.replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '')
+          )
         console.error(error)
         this.codeError = (error.content && error.content.ename) ? error.content.ename + ': ' + error.content.evalue : error
 

@@ -6,6 +6,7 @@ export const state = () => ({
 	datasetUpdates: 0,
   status: 'waiting',
   session: '',
+  engine: 'spark',
   database: false,
   key: '',
   datasetCounter: 1,
@@ -129,6 +130,10 @@ export const mutations = {
 
 	session (state, payload) {
     state.session = payload
+  },
+
+  engine (state, payload) {
+    state.engine = payload
   },
 
   cells (state, payload) {

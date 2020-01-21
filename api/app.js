@@ -123,7 +123,7 @@ const new_socket = function (socket, session) {
     var tries = 10
 
     while (tries--) {
-      result = await createKernel(user_session)
+      result = await createKernel(user_session, payload.engine ? payload.engine : "spark")
       if (result.status=='error') {
         console.log(result)
         console.log('Kernel error, retrying')
@@ -147,7 +147,7 @@ const new_socket = function (socket, session) {
 	socket.on('cells', async (payload) => {
 		var user_session = payload.session
 		var result = await run_code(`${payload.code}
-df.send(output="json", infer=False, advanced_stats=False${ payload.name ? (', name="'+payload.name+'"') : '' })`,
+df.ext.send(output="json", infer=False, advanced_stats=False${ payload.name ? (', name="'+payload.name+'"') : '' })`,
 	user_session)
 	socket.emit('reply',{...result, timestamp: payload.timestamp})
 	})
@@ -317,13 +317,13 @@ const deleteKernel = async function(session) {
 	} catch (err) {}
 }
 
-const createKernel = async function (user_session) {
+const createKernel = async function (user_session, engine) {
 
 	if (kernels[user_session]==undefined){
 		return await run_code(`
 from optimus import Optimus
-op = Optimus(master="local[*]", app_name="optimus", comm=True)
-'kernel init optimus init ' + op.__version__`,user_session)
+op = Optimus(engine="${engine}", master="local[*]", app_name="optimus", comm=True)
+'kernel init optimus init ' + op.__version__ + ' ${engine} '`,user_session)
 	}
 	else {
 		return await run_code(`
@@ -331,7 +331,7 @@ _status = 'kernel ok '
 
 try:
 	op
-	_status += 'optimus ok '+ op.__version__ + ' '
+	_status += 'optimus ok '+ op.__version__ + ' ${engine} '
 	try:
 		df
 		_status += 'dataframe ok '
@@ -339,8 +339,8 @@ try:
 		_status += ''
 except NameError:
 	from optimus import Optimus
-	op = Optimus(master="local[*]", app_name="optimus", comm=True)
-	_status = 'optimus init ' + op.__version__ + ' '
+	op = Optimus(engine="${engine}", master="local[*]", app_name="optimus", comm=True)
+	_status = 'optimus init ' + op.__version__ + ' ${engine} '
 
 _status`,user_session)
 	}

@@ -97,7 +97,7 @@
                 df = op.load.csv(<span class="string">"https://raw.githubusercontent.com/ironmussa/Optimus/master/examples/data/Meteorite_Landings.csv"</span>)<br>
                 <br>
                 <span class="comment"># Visualize</span><br>
-                df.send(<span class="string">"Meteorite"</span>)
+                df.ext.send(<span class="string">"Meteorite"</span>)
               </v-card-text>
             </v-card>
 
@@ -245,6 +245,7 @@ export default {
 			showKey: false,
 			inputKey: '',
 			inputSession: '',
+			inputEngine: 'spark',
 			searchText: '',
 			tab: undefined,
 			view: undefined,
@@ -304,7 +305,8 @@ export default {
 							}
               var response = await this.socketPost('initialize',
               {
-                session: this.$store.state.session
+                session: this.$store.state.session,
+                engine: this.$store.state.engine
               })
 
               if (response.content.toString().includes('optimus')) {
@@ -361,6 +363,7 @@ export default {
 
 		this.inputSession = this.$route.query.session || ''
     this.inputKey = this.$route.query.key || ''
+    this.inputEngine = this.$route.query.engine || 'spark'
 
 		if (this.inputSession && this.inputKey) {
       this.subscribe()
@@ -374,7 +377,7 @@ export default {
       this.$refs.autocomplete.loseFocus
 		},
 		subscribe () {
-			this.startClient(this.inputSession, this.inputKey)
+			this.startClient(this.inputSession, this.inputEngine, this.inputKey)
 		},
 		resetStatus (closing) {
 			if (!closing) { this.$store.commit('status') }

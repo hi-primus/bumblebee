@@ -25,7 +25,8 @@ export default {
           if (!socket) {
             await this.startSocket ()
             var response = await this.socketPost('initialize',{
-              session: this.$store.state.session
+              session: this.$store.state.session,
+              engine: this.$store.state.engine
             })
             if (response.status!='ok')
               throw response.content
@@ -110,7 +111,7 @@ export default {
         console.warn('Socket already closed')
     },
 
-    startSocket (session, key) {
+    startSocket (session, engine, key) {
 
       return new Promise((resolve, reject)=>{
 
@@ -188,13 +189,14 @@ export default {
 
     },
 
-		async startClient (session, key) {
+		async startClient (session, engine, key) {
 
       try {
         this.$store.commit('status', 'loading')
         this.$store.commit('session', session)
+        this.$store.commit('engine', engine)
         this.$store.commit('key', key)
-        var client_status = await this.startSocket(session, key)
+        var client_status = await this.startSocket(session, engine, key)
 
         if (client_status=='ok')
           this.$store.commit('status', 'receiving')
