@@ -830,7 +830,7 @@ export default {
               code +=`.rows.limit(${payload.limit})`
             }
 
-            code += '.ext.cache()'
+            code += '.cache()'
 
             return code
           }
@@ -944,7 +944,10 @@ export default {
             catch (error) {
 
               if (error.content.traceback.length)
-                error.content.traceback_escaped = error.content.traceback.join('\n').replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '')
+                error.content.traceback_escaped = error.content.traceback.map(l=>
+                  l.replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '')
+                )
+
               console.error(error)
               var _error = error
               if ( error.content && error.content.ename )
@@ -1104,7 +1107,9 @@ export default {
             catch (error) {
 
               if (error.content.traceback.length)
-                error.content.traceback_escaped = error.content.traceback.join('\n').replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '')
+                error.content.traceback_escaped = error.content.traceback.map(l=>
+                  l.replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '')
+                )
               console.error(error)
               var _error = error
               if (error.content && error.content.ename)
@@ -1278,7 +1283,7 @@ export default {
             loadingTest: false
           }),
           code: (payload) => {
-            return `${payload.previous_code}${sl}${this.availableVariableName} = db.table_to_df("${payload.table}").ext.cache()`
+            return `${payload.previous_code}${sl}${this.availableVariableName} = db.table_to_df("${payload.table}").cache()`
           },
           onTest: async (payload) => {
 
@@ -1324,7 +1329,9 @@ export default {
             catch (error) {
 
               if (error.content.traceback.length)
-                error.content.traceback_escaped = error.content.traceback.join('\n').replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '')
+                error.content.traceback_escaped = error.content.traceback.map(l=>
+                  l.replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '')
+                )
 
               console.error(error)
 
@@ -1406,7 +1413,7 @@ export default {
 					}),
           code: (payload) => {
             var _argument = (payload.columns.length==1) ? `"${payload.columns[0]}"` : `["${payload.columns.join('", "')}"]`
-            return `${this.dataset.varname} = ${this.dataset.varname}.ext.stratified_sample(`
+            return `${this.dataset.varname} = ${this.dataset.varname}.stratified_sample(`
               +_argument
               +( (payload.seed) ? `, seed=${payload.seed}` : '')
               +')'
@@ -1944,7 +1951,7 @@ export default {
             }
           },
           code: (payload) => {
-            return `${this.dataset.varname} = ${this.dataset.varname}.ext.sample(${payload.n})`
+            return `${this.dataset.varname} = ${this.dataset.varname}.sample(${payload.n})`
           },
         },
         /*
@@ -2394,7 +2401,9 @@ export default {
 
       } catch (error) {
         if (error.content.traceback.length)
-          error.content.traceback_escaped = error.content.traceback.join('\n').replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '')
+                error.content.traceback_escaped = error.content.traceback.map(l=>
+                  l.replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '')
+                )
         console.error(error)
         this.codeError = (error.content && error.content.ename) ? error.content.ename + ': ' + error.content.evalue : error
 
