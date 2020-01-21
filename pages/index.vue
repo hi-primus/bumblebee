@@ -97,7 +97,7 @@
                 df = op.load.csv(<span class="string">"https://raw.githubusercontent.com/ironmussa/Optimus/master/examples/data/Meteorite_Landings.csv"</span>)<br>
                 <br>
                 <span class="comment"># Visualize</span><br>
-                df.ext.send(<span class="string">"Meteorite"</span>)
+                df.send(<span class="string">"Meteorite"</span>)
               </v-card-text>
             </v-card>
 
@@ -312,8 +312,10 @@ export default {
 								this.$store.commit('kernel','done')
 							}
 							else {
-                if (response.traceback.length)
-                  response.traceback_escaped = response.traceback.join('\n').replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '')
+                if (response.content.traceback.length)
+                response.content.traceback_escaped = response.content.traceback.map(l=>
+                  l.replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '')
+                )
 								console.error(response)
 								this.$store.commit('status','waiting')
 								this.$store.commit('status','receiving')
