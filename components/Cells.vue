@@ -943,12 +943,14 @@ export default {
             }
             catch (error) {
 
-              if (error.content.traceback.length)
+              if (error.content && error.content.traceback.length){
                 error.content.traceback_escaped = error.content.traceback.map(l=>
                   l.replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '')
                 )
-
+                console.error(error.content.traceback_escaped.join('\n'))
+              }
               console.error(error)
+
               var _error = error
               if ( error.content && error.content.ename )
                 _error = error.content.ename
@@ -1106,10 +1108,12 @@ export default {
             }
             catch (error) {
 
-              if (error.content.traceback.length)
+              if (error.content && error.content.traceback.length){
                 error.content.traceback_escaped = error.content.traceback.map(l=>
                   l.replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '')
                 )
+                console.error(error.content.traceback_escaped.join('\n'))
+              }
               console.error(error)
               var _error = error
               if (error.content && error.content.ename)
@@ -1328,11 +1332,12 @@ export default {
             }
             catch (error) {
 
-              if (error.content.traceback.length)
+              if (error.content && error.content.traceback.length){
                 error.content.traceback_escaped = error.content.traceback.map(l=>
                   l.replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '')
                 )
-
+                console.error(error.content.traceback_escaped.join('\n'))
+              }
               console.error(error)
 
               var _error = error
@@ -2400,10 +2405,12 @@ export default {
         this.lastWrongCode = false
 
       } catch (error) {
-        if (error.content && error.content.traceback.length)
+        if (error.content && error.content.traceback.length){
           error.content.traceback_escaped = error.content.traceback.map(l=>
             l.replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '')
           )
+          console.error(error.content.traceback_escaped.join('\n'))
+        }
         console.error(error)
         this.codeError = (error.content && error.content.ename) ? error.content.ename + ': ' + error.content.evalue : error
 

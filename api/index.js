@@ -1,10 +1,11 @@
 require('dotenv/config')
 const express = require('express')
 const bodyParser = require('body-parser')
-
+let mongoose = require('mongoose')
 const session = require('express-session')
 
 const app = express()
+
 var server = require('http').createServer(app)
 
 const { version } = require('./package.json')
@@ -61,13 +62,19 @@ if (!process.env.DISABLE_CORS) {
 		optionsSuccessStatus: 200
 	}
 
-	app.use(cors(corsOptions));
+	app.use(cors(corsOptions))
 
 }
+
+app.use(bodyParser.urlencoded({
+  extended: true
+}))
 
 app.use(bodyParser.json({
 	limit: '100mb',
 }))
+
+mongoose.connect('mongodb://localhost/bumblebee', { useNewUrlParser: true, useUnifiedTopology: true })
 
 const app_secret = process.env.APP_SECRET || '6um61e6ee'
 
@@ -77,9 +84,14 @@ app.use(session({
 	saveUninitialized: false
 }))
 
+
+let apiRoutes = require("./api-routes")
+
+app.use('/api', apiRoutes)
+
 app.get('/', (req, res) => {
 	if (req.userContext && req.userContext.userinfo) {
-		res.send(`Bumblebee API v${version}- ${req.userContext.userinfo.name}!`)
+		res.send(`Bumblebee API v${version} - ${req.userContext.userinfo.name}!`)
 	} else {
 		res.send(`Bumblebee API v${version}`)
 	}
@@ -164,7 +176,6 @@ io.on('connection', async (socket) => {
 		return
 	}
 
-
 	if (sockets[session] == undefined || !sockets[session].connected || sockets[session].disconnected) {
 		socket = new_socket(socket,session)
 		return
@@ -177,13 +188,13 @@ io.on('connection', async (socket) => {
 		}
 		socket.emit('new-error','Session already exists. Change your session name.')
 		socket.disconnect()
-	}, 2000);
+	}, 2000)
 
 })
 
 const request = require('request-promise')
 
-const uuidv1 = require('uuid/v1');
+const uuidv1 = require('uuid/v1')
 
 const run_code = async function(code = '', user_session = '') {
 
@@ -242,7 +253,7 @@ const run_code = async function(code = '', user_session = '') {
 			client.on('connectFailed', async function(error) {
 				console.warn('Connection to Jupyter Kernel Gateway failed')
 				resolve({status: 'error', content: error, error: 'Connection to Jupyter Kernel Gateway failed'})
-			});
+			})
 
 			client.on('connect',function(connection){
 
@@ -252,33 +263,35 @@ const run_code = async function(code = '', user_session = '') {
 
 					if (message.type === 'utf8'){
 						if (response.msg_type === 'execute_result') {
-							connection.close()
-							resolve({status: 'ok', content: response.content.data['text/plain']})
+              connection.close()
+              const content = response.content.data['text/plain']
+              console.log("content",content)
+							resolve({ status: 'ok', content })
 						}
 						else if (response.msg_type === 'error') {
 							connection.close()
-							// console.error("Error", response.content);
+							// console.error("Error", response.content)
 							resolve({status: 'error', content: response.content, error: 'Error'})
 						}
 					}
 					else {
 						connection.close()
-						// console.error("Message type error", response.content);
+						// console.error("Message type error", response.content)
 						resolve({status: 'error', content: 'Response from gateway is not utf8 type', error: 'Message type error'})
 					}
 
-				});
+				})
 
 				connection.on('error', async function(error) {
-					console.error("Connection Error", error);
+					console.error("Connection Error", error)
 					connection.close()
 					resolve({status: 'error', content: error, error: 'Connection error'})
-				});
+				})
 
 				connection.on('close', function(reason) {
 					// console.log('Connection closed before response')
 					resolve({status: 'error', retry: true, error: 'Connection to Jupyter Kernel Gateway closed before response', content: reason})
-				});
+				})
 
 				connection.sendUTF(JSON.stringify(codeMsg))
 
@@ -322,7 +335,7 @@ const createKernel = async function (user_session, engine) {
 	if (kernels[user_session]==undefined){
 		return await run_code(`
 from optimus import Optimus
-op = Optimus(engine="${engine}", master="local[*]", app_name="optimus", comm=True)
+op = Optimus("${engine}", master="local[*]", app_name="optimus", comm=True)
 'kernel init optimus init ' + op.__version__ + ' ${engine} '`,user_session)
 	}
 	else {
@@ -339,7 +352,7 @@ try:
 		_status += ''
 except NameError:
 	from optimus import Optimus
-	op = Optimus(engine="${engine}", master="local[*]", app_name="optimus", comm=True)
+	op = Optimus("${engine}", master="local[*]", app_name="optimus", comm=True)
 	_status = 'optimus init ' + op.__version__ + ' ${engine} '
 
 _status`,user_session)
@@ -370,13 +383,13 @@ const startServer = async () => {
             method: 'DELETE',
             headers: {},
           })
-        });
+        })
       }
 
     } catch (error) {}
 
 	})
-  _server.timeout = 10 * 60 * 1000;
+  _server.timeout = 10 * 60 * 1000
 
 }
 

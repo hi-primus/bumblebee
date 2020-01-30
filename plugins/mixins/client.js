@@ -1,4 +1,5 @@
 import io from 'socket.io-client'
+import { trimCharacters } from '@/utils/functions.js'
 
 let socket
 let promises = {}
@@ -62,7 +63,7 @@ export default {
       })
 
       this.$store.commit('add', {
-        dataset: JSON.parse(originalInput)
+        dataset: JSON.parse(trimCharacters(originalInput,"'"))
       })
 
     },

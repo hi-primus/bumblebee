@@ -314,11 +314,13 @@ export default {
 								this.$store.commit('kernel','done')
 							}
 							else {
-                if (response.content.traceback.length)
-                response.content.traceback_escaped = response.content.traceback.map(l=>
-                  l.replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '')
-                )
-								console.error(response)
+                if (response.content.traceback.length) {
+                  response.content.traceback_escaped = response.content.traceback.map(l=>
+                    l.replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '')
+                  )
+                  console.error(response.content.traceback_escaped.join('\n'))
+                }
+                console.error(response)
 								this.$store.commit('status','waiting')
 								this.$store.commit('status','receiving')
 							}
