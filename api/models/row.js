@@ -2,7 +2,7 @@ var mongoose = require('mongoose')
 
 var rowSchema = mongoose.Schema({
   value: {
-    type: Map,
+    type: [],
     required: true
   },
   dataset: {

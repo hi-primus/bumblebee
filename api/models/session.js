@@ -1,7 +1,11 @@
 var mongoose = require('mongoose')
 
 var sessionSchema = mongoose.Schema({
-  name: {
+  queue_name: {
+    type: String,
+    required: true
+  },
+  user_session: {
     type: String,
     required: true
   },

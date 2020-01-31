@@ -10,6 +10,9 @@ var server = require('http').createServer(app)
 
 const { version } = require('./package.json')
 
+import { trimCharacters, pakoFernet } from './utils/functions.js'
+import { findOrCreate } from './utils/controllers'
+
 var app_url
 var app_host
 var api_url
@@ -103,7 +106,7 @@ var kernels = []
 
 app.post('/dataset', (req, res) => {
 
-	var socketName = req.body.username || req.body.session
+	var socketName = req.body.queue_name || req.body.session || req.body.session
 
 	if (!socketName || !req.body.data) {
 		res.send({status: 'error', message: '"session/username" and "data" fields required'})
@@ -151,16 +154,17 @@ const new_socket = function (socket, session) {
 	})
 
 	socket.on('run', async (payload) => {
-		var user_session = payload.session
+    var user_session = payload.session
 		var result = await run_code(`${payload.code}`,user_session)
 	socket.emit('reply',{...result, timestamp: payload.timestamp})
 	})
 
 	socket.on('cells', async (payload) => {
-		var user_session = payload.session
+    var user_session = payload.session
+    var user_key = payload.key
 		var result = await run_code(`${payload.code}
 df.ext.send(output="json", infer=False, advanced_stats=False${ payload.name ? (', name="'+payload.name+'"') : '' })`,
-	user_session)
+	user_session, user_key)
 	socket.emit('reply',{...result, timestamp: payload.timestamp})
 	})
 
@@ -196,7 +200,7 @@ const request = require('request-promise')
 
 const uuidv1 = require('uuid/v1')
 
-const run_code = async function(code = '', user_session = '') {
+const run_code = async function(code = '', user_session = '', save_rows = false) {
 
 	return new Promise( async function(resolve,reject) {
 
@@ -259,24 +263,61 @@ const run_code = async function(code = '', user_session = '') {
 
 				connection.on('message', async function(message) {
 
-					var response = JSON.parse(message.utf8Data)
+					var parsed_message = JSON.parse(message.utf8Data)
 
 					if (message.type === 'utf8'){
-						if (response.msg_type === 'execute_result') {
+						if (parsed_message.msg_type === 'execute_result') {
               connection.close()
-              const content = response.content.data['text/plain']
-              console.log("content",content)
-							resolve({ status: 'ok', content })
+              const response = parsed_message.content.data['text/plain']
+
+              if (save_rows) {
+                try {
+                  const parsed_response = JSON.parse(trimCharacters(response,"'"))
+
+                  const Session = require('./models/session')
+                  const current_session = await findOrCreate(Session, {user_session}, {user_session, queue_name: parsed_response.queue_name})
+
+                  let data = pakoFernet(save_rows, parsed_response.data)
+
+                  let rows = [...data.sample.value]
+                  delete data.sample
+
+                  const Row = require('./models/row')
+                  const Dataset = require('./models/dataset')
+                  const dataset = await findOrCreate( Dataset, { meta: data, session: current_session } )
+
+                  // current_session TODO: add dataset to current_session.datasets Array and save
+
+                  Row.find({dataset}).remove().exec()
+
+                  for (let i = 0; i < rows.length; i++) {
+                    var row = new Row()
+                    row.value = rows[i] || []
+                    row.dataset = dataset || row.dataset
+                    row.save(function (err) {
+											if (err)
+												console.error(err)
+											else
+												console.log('New row created')
+                    })
+                  }
+
+                } catch (error) {
+                  console.error(error)
+                }
+							}
+
+							resolve({ status: 'ok', content: response })
 						}
-						else if (response.msg_type === 'error') {
+						else if (parsed_message.msg_type === 'error') {
 							connection.close()
-							// console.error("Error", response.content)
-							resolve({status: 'error', content: response.content, error: 'Error'})
+							// console.error("Error", parsed_message.content)
+							resolve({status: 'error', content: parsed_message.content, error: 'Error'})
 						}
 					}
 					else {
 						connection.close()
-						// console.error("Message type error", response.content)
+						// console.error("Message type error", parsed_message.content)
 						resolve({status: 'error', content: 'Response from gateway is not utf8 type', error: 'Message type error'})
 					}
 
