@@ -1575,3 +1575,27 @@ $editor-top-padding: 6px;
 .vega-bindings {
   display: none;
 }
+
+/* BB-TABLE */
+
+.bb-table-container {
+  max-height: 700px;
+  max-width: 100%;
+  overflow-y: scroll;
+  position: relative;
+  .bb-table {
+    overflow: hidden;
+    position: relative
+  }
+  .bb-table-row {
+    position: absolute;
+    overflow: hidden;
+    display: flex;
+  }
+  .bb-table-cell {
+    width: 100px;
+    white-space: nowrap;
+    overflow: hidden;
+    @extend .text-ellipsis;
+  }
+}

@@ -50,9 +50,6 @@ export default {
 
       let secret = new fernet.Secret(key)
 
-      console.log("key",key)
-      console.log("content",content)
-
       let token = new fernet.Token({
         secret,
         token: content,

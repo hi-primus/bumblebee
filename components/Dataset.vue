@@ -167,8 +167,12 @@
 				v-show="view==1 && currentDataset && currentDataset.summary"
 				class="hot-table-container"
 			>
+        <BumblebeeTable
+					v-if="currentDataset && currentDataset.sample"
+          ref="bumblebeeTable"
+        />
 				<HotTable
-					v-if="currentDataset && currentDataset.sample && hotColumns.length>0"
+					v-if="false && currentDataset && currentDataset.sample && hotColumns.length>0"
 					:settings="hotSettings"
 					:key="tableUpdate"
 					class="hot-table"
@@ -186,9 +190,10 @@
 <script>
 
 import { debounce, throttle } from '@/utils/functions.js'
+import { mapGetters } from 'vuex'
 import dataTypesMixin from '@/plugins/mixins/data-types'
 import GraphicsRenderer from '@/components/GraphicsRenderer'
-import { mapGetters } from 'vuex'
+import BumblebeeTable from '@/components/BumblebeeTable'
 
 export default {
 
@@ -197,7 +202,8 @@ export default {
   ],
 
   components: {
-    GraphicsRenderer
+    GraphicsRenderer,
+    BumblebeeTable
   },
 
   props: {
@@ -242,7 +248,6 @@ export default {
 
 			tableUpdate: 0,
 
-      // controls
 			hiddenColumns: {},
 
 			HotTable: undefined,
