@@ -2129,20 +2129,36 @@ export default {
         payload.command = event.command
 
         if (_command.dialog) {
-          this.currentCommand = payload
+
+          this.currentCommand = {...payload, ...(event.payload || {})}
+
           if (_command.onInit)
             await _command.onInit()
-          setTimeout(() => {
-            var ref = this.$refs['command-dialog'][0]
-            if (ref && ref.$el){
-              var el = ref.$el.getElementsByTagName('input')[0]
-              if (el)
-                el.focus()
-            }
-          }, 100);
+
+          if (event.immediate) {
+            await this.confirmCommand()
+          }
+
+          else {
+            setTimeout(() => {
+              var ref = this.$refs['command-dialog'][0]
+              if (ref && ref.$el){
+                var el = ref.$el.getElementsByTagName('input')[0]
+                if (el)
+                  el.focus()
+              }
+            }, 100);
+          }
         }
         else {
-          var cell = {...event, columns: payload.columns || columns, payload}
+
+          console.log('payload',payload)
+
+          var cell = {
+            ...event,
+            columns: payload.columns || columns,
+            payload
+          }
           this.addCell(-1, cell)
           this.runButton = false
         }

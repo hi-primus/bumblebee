@@ -181,6 +181,7 @@
             </div>
               <!-- :key="tableKey" -->
             <TableBar
+              ref="tableBar"
               v-if="currentDataset"
               :view.sync="view"
               :dataset="currentDataset"
@@ -331,13 +332,25 @@ export default {
         }
       }
 
-      if (value!='received')
-        return
+      if (value=='receiving') {
+        var dataset_csv = this.$route.query.dataset_csv
+        if (dataset_csv) {
+          this.$refs.tableBar & this.$refs.tableBar.commandHandle({
+            command: 'load file',
+            noOptions: true,
+            immediate: true,
+            payload: {url: dataset_csv}
+          })
+        }
+      }
 
-      let dataset = this.currentDataset
+      if (value=='received') {
+        let dataset = this.currentDataset
 
-      if (dataset && dataset.dtypes_list)
-        this.typesAvailable = dataset.dtypes_list
+
+        if (dataset && dataset.dtypes_list)
+          this.typesAvailable = dataset.dtypes_list
+      }
     },
 
 		tab (value) {

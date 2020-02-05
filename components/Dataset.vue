@@ -165,23 +165,13 @@
 		<client-only>
 			<div
 				v-show="view==1 && currentDataset && currentDataset.summary"
-				class="hot-table-container"
+				class="the-table-container"
 			>
         <BumblebeeTable
-					v-if="currentDataset && currentDataset.sample"
+					v-if="view==1 && currentDataset && currentDataset.sample"
+          :bbColumns="bbColumns"
           ref="bumblebeeTable"
         />
-				<HotTable
-					v-if="false && currentDataset && currentDataset.sample && hotColumns.length>0"
-					:settings="hotSettings"
-					:key="tableUpdate"
-					class="hot-table"
-					ref="hotTable"
-				>
-					<HotColumn v-for="(column, i) in hotColumns" :key="i" :settings="column">
-						<GraphicsRenderer hot-renderer :key="tableUpdate+'renderer'+i"/>
-					</HotColumn>
-				</HotTable>
 			</div>
 		</client-only>
 	</div>
@@ -214,12 +204,6 @@ export default {
     view: {
       default: 0,
       type: Number
-    },
-    detailsActive: {
-      default: false
-    },
-    optionsActive: {
-      default: false
     },
     sortBy: {
       type: Array,
@@ -290,16 +274,16 @@ export default {
     },
 
     // affects table view only
-    hotColumns () {
-      var hotColumns = this.newFilteredColumns ? [...this.newFilteredColumns.filter((column) => {
+    bbColumns () {
+      var bbColumns = this.newFilteredColumns ? [...this.newFilteredColumns.filter((column) => {
 				return !this.hiddenColumns[column.name]
       })] : []
 
       let selectColumns = [...(this.currentDataset.columns || [])]
 
-			if (this.sortBy[0] && hotColumns.length) {
-				if (typeof hotColumns[0][this.sortBy[0]] === 'string') {
-					hotColumns.sort((a, b) => {
+			if (this.sortBy[0] && bbColumns.length) {
+				if (typeof bbColumns[0][this.sortBy[0]] === 'string') {
+					bbColumns.sort((a, b) => {
 						let _a = a[this.sortBy[0]].toLowerCase()
 						let _b = b[this.sortBy[0]].toLowerCase()
 						return (_a < _b) ? -1 : (_a > _b) ? 1 : 0
@@ -310,7 +294,7 @@ export default {
 						return (_a < _b) ? -1 : (_a > _b) ? 1 : 0
           })
 				} else {
-					hotColumns.sort((a, b) => {
+					bbColumns.sort((a, b) => {
 						let _a = a[this.sortBy[0]]
 						let _b = b[this.sortBy[0]]
 						return (_a < _b) ? -1 : (_a > _b) ? 1 : 0
@@ -322,32 +306,19 @@ export default {
           })
 				}
 				if (this.sortDesc[0]) {
-          hotColumns.reverse()
+          bbColumns.reverse()
           selectColumns.reverse()
         }
       }
 
       this.$emit('sort',selectColumns.map(e=>e.name))
 
-			return hotColumns.map((e, i) => {
-				return {
-					data: this.currentDataset.columns.findIndex(de => de.name === e.name),
-					editor: false,
-					readOnly: true,
-					title: `
-            <span class="data-type-in-table abs data-type type-${e.column_dtype}">
-              ${this.dataType(e.column_dtype)}
-            </span>
-            <span class="data-title">
-              ${e.name}
-            </span>`
-				}
-      })
+			return bbColumns.map(e=> this.currentDataset.columns.findIndex(de => de.name === e.name))
 
     },
 
-    hotColumnsJoin () {
-      return this.hotColumns.map(e=>e.data).join('')
+    bbColumnsJoin () {
+      return this.bbColumns.map(e=>e.data).join('')
     },
 
     newFilteredColumns () {
@@ -412,28 +383,11 @@ export default {
       }
     },
 
-		hotSettings () {
-			return {
-				// dropdownMenu: ['filter_by_condition', 'filter_operators', 'filter_by_condition2', 'filter_action_bar'],
-				data: [this.graphicsData, ...this.currentDataset.sample.value],
-				fixedRowsTop: 1,
-				autoColumnSize: false,
-				autoRowSize: false,
-				colWidths: 170,
-				rowHeaders: false,
-				rowHeight: '30px',
-				copyPaste: true,
-				manualColumnResize: true,
-				colHeaders: this.colHeaders,
-				renderAllRows: false,
-				height: '100vh',
-				columnSorting: false,
-				filters: true,
-				disabledHover: true,
-				afterSelectionEndByProp: this.selectionEvent,
-				licenseKey: 'non-commercial-and-evaluation'
-			}
-		},
+    columnsHeader () {
+			return this.currentDataset.columns.map((e) => {
+				return e.name
+			})
+    },
 
 		graphicsData () {
 			return this.currentDataset.columns.map((column, i) => {
@@ -630,7 +584,7 @@ export default {
       }
     },
 
-    hotColumnsJoin () {
+    bbColumnsJoin () {
       this.$nextTick(()=>{
         this.tableUpdate = this.tableUpdate + 1
       })
@@ -639,30 +593,7 @@ export default {
     searchText: {
 			immediate: true,
 			handler: 'watchSearchText'
-		},
-
-		detailsActive: {
-			deep: true,
-			handler (value) {
-				this.$nextTick(() => {
-          try {
-            this.$refs['hotTable'].hotInstance.render()
-          }
-          catch {}
-				})
-			}
-    },
-
-    optionsActive: {
-      handler (value) {
-				this.$nextTick(() => {
-          try {
-            this.$refs['hotTable'].hotInstance.render()
-          }
-          catch {}
-				})
-			}
-    },
+		}
 	},
 
 

@@ -1578,24 +1578,190 @@ $editor-top-padding: 6px;
 
 /* BB-TABLE */
 
-.bb-table-container {
-  max-height: 700px;
-  max-width: 100%;
-  overflow-y: scroll;
-  position: relative;
-  .bb-table {
-    overflow: hidden;
-    position: relative
+.bbt-container {
+  height: calc(100vh - 191px) !important;
+  max-height: calc(100vh - 191px) !important;
+  overflow: hidden;
+
+  min-width: 100%;
+
+  &, & * {
+    border-color: $line-color-1 !important;
   }
-  .bb-table-row {
-    position: absolute;
-    overflow: hidden;
-    display: flex;
+
+  border-width: 1px;
+  border-style: solid;
+
+  border-top-width: 0;
+
+  display: flex;
+  flex-direction: column;
+
+  align-items: stretch;
+  justify-content: stretch;
+
+  .bb-table-header, .bb-table-row, .bb-table-plots {
+
+    display: inline-flex;
+    justify-content: flex-start;
+    align-items: baseline;
+    min-width: 100%;
+
+    &>* {
+      flex-shrink: 0;
+    }
   }
-  .bb-table-cell {
-    width: 100px;
+
+
+  .bb-table-top-container {
+    overflow-x: hidden;
+    overflow-y: scroll;
+    flex-shrink: 0;
+    flex-basis: auto;
+    .bb-table-header {
+
+      border-bottom-width: 1px;
+      border-bottom-style: solid;
+
+      font-size: 16px;
+      font-family: $font-mono-table;
+
+      font-weight: 400;
+      line-height: 28px;
+
+      height: 28px;
+
+      .bb-table-h-cell {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: nowrap;
+
+        .data-type {
+          height: inherit;
+          flex: 1;
+          max-width: 32px;
+        }
+        .column-title {
+          height: inherit;
+          flex: 2;
+          text-align: center;
+          width: initial;
+          min-width: initial;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+      }
+
+    }
+
+    .bb-table-plots {
+      border-bottom-width: 1px;
+      border-bottom-style: solid;
+
+      font-family: $font-mono;
+    }
+  }
+
+  .bb-table-container {
+    overflow-y: scroll;
+    overflow-x: scroll;
+    // position: relative;
+    .bb-table {
+      width: 100%;
+      position: relative;
+      font-family: $font-mono-table;
+      color: $text-color;
+      .bb-table-row {
+        position: absolute;
+        background: white;
+        height: 23px;
+        line-height: 21px;
+        &:not(:last-child) {
+          border-bottom-width: 1px;
+          border-bottom-style: solid;
+        }
+      }
+    }
+  }
+
+
+
+  .bb-table-h-cell, .bb-table-cell {
     white-space: nowrap;
     overflow: hidden;
+    padding: 0 4px;
     @extend .text-ellipsis;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    color: inherit !important;
+    border-right-width: 1px;
+    border-right-style: solid;
+    // &:not(:last-child) {
+    // }
   }
+
+  .bb-table-cell {
+
+    font-size: 13px;
+
+    &:not(:last-child) {
+      border-right-width: 1px;
+      border-right-style: solid;
+    }
+
+  }
+  .bb-table-h-cell {
+
+    position: relative;
+    font-size: 16px;
+
+    &:not(:last-child) {
+      border-right-width: 1px;
+      border-right-style: solid;
+    }
+
+  }
+
+
+}
+
+.bb-table-container {
+  animation: background-animation 2.1s ease-in-out infinite;
+  background-image:
+    repeating-linear-gradient(
+      to right,
+      white 0,
+      white 4px,
+      transparent 4px,
+      transparent 68px,
+      white 68px,
+      white 170px
+    ),
+    repeating-linear-gradient(
+      to bottom,
+      white 0,
+      white 6px,
+      transparent 6px,
+      transparent 15px,
+      white 15px,
+      white 23px
+  );
+}
+@keyframes background-animation {
+  0% {
+    background-color: #e5e5e5;
+  }
+
+  50% {
+    background-color: #f1f1f1;
+  }
+
+  100% {
+    background-color: #e5e5e5;
+  }
+}
+
+.the-table-container {
+  padding-left: 9px;
 }

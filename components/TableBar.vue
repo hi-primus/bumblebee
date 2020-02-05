@@ -169,7 +169,6 @@
       :sortBy.sync="sortBy"
       :sortDesc.sync="sortDesc"
       :optionsActive="optionsActive"
-      :detailsActive.sync="detailsActive"
       :searchText="searchText"
       @selection="selectionEvent($event)"
       @sort="lastSort=$event"
@@ -717,12 +716,6 @@ export default {
 			return this.columnsTableHeaders.filter(e => e.sortable !== false)
 		},
 
-		colHeaders () {
-			return this.dataset.columns.map((e) => {
-				return e.name
-			})
-    },
-
   },
 
   mounted () {
@@ -971,16 +964,14 @@ export default {
   user-select: none;
 }
 
-.hot-table-container {
-  margin-top: -1px;
-  padding-left: 9px;
-
+.the-table-container {
   .wtHolder, .ht_master {
     height: inherit !important;
   }
   .wtHolder {
     overflow: scroll;
   }
+  // TODO: erase?
 }
 
 </style>
@@ -1018,12 +1009,6 @@ export default {
     top: 4px;
     left: 32px;
     position: relative;
-  }
-
-  .hot-table {
-    height: calc(100vh - 191px) !important;
-    max-height: calc(100vh - 191px) !important;
-    overflow: hidden;
   }
 
   // drag
