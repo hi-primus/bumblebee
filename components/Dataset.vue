@@ -388,28 +388,6 @@ export default {
 				return e.name
 			})
     },
-
-		graphicsData () {
-			return this.currentDataset.columns.map((column, i) => {
-				return {
-					toString () {
-						return ''
-          },
-          key: this.tableKey+'e'+i,
-          index: i,
-          name: column.name,
-          mismatch: (column.dtypes_stats.mismatch) ? +column.dtypes_stats.mismatch : 0,
-          null: (column.dtypes_stats.null) ? +column.dtypes_stats.null : 0,
-          missing: (column.dtypes_stats.missing) ? +column.dtypes_stats.missing : 0,
-					zeros: column.stats.zeros,
-					total: this.currentDataset.summary.rows_count,
-					count_uniques: column.stats.count_uniques,
-					hist: (column.stats.hist && column.stats.hist[0]) ? column.stats.hist : undefined,
-					hist_years: (column.stats.hist && column.stats.hist.years) ? column.stats.hist.years : undefined,
-					frequency: (column.frequency) ? column.frequency : undefined
-				}
-			})
-    }
   },
 
   beforeCreate() {

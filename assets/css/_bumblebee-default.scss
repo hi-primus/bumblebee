@@ -1618,6 +1618,10 @@ $editor-top-padding: 6px;
     overflow-y: scroll;
     flex-shrink: 0;
     flex-basis: auto;
+
+    display: flex;
+    flex-direction: column;
+
     .bb-table-header {
 
       border-bottom-width: 1px;
@@ -1660,6 +1664,26 @@ $editor-top-padding: 6px;
       border-bottom-style: solid;
 
       font-family: $font-mono;
+
+
+      .bb-table-plot {
+        height: 90px;
+        display: flex;
+        flex-direction: column;
+        margin: 0 0 2px 0;
+
+        position: relative;
+
+        .table-data-bar {
+          margin-bottom: 2px;
+          font-size: 4px;
+        }
+
+        .histfreq {
+          flex: 1;
+        }
+      }
+
     }
   }
 
@@ -1687,6 +1711,14 @@ $editor-top-padding: 6px;
 
 
 
+  .bb-table-h-cell, .bb-table-cell, .bb-table-plot {
+    &.bb-selected {
+      background-color: $data-highlight;
+    }
+    border-right-width: 1px;
+    border-right-style: solid;
+  }
+
   .bb-table-h-cell, .bb-table-cell {
     white-space: nowrap;
     overflow: hidden;
@@ -1695,8 +1727,6 @@ $editor-top-padding: 6px;
     white-space: nowrap;
     text-overflow: ellipsis;
     color: inherit !important;
-    border-right-width: 1px;
-    border-right-style: solid;
     // &:not(:last-child) {
     // }
   }
@@ -1713,8 +1743,11 @@ $editor-top-padding: 6px;
   }
   .bb-table-h-cell {
 
+    cursor: pointer;
+
     position: relative;
     font-size: 16px;
+    padding-right: 16px;
 
     &:not(:last-child) {
       border-right-width: 1px;
@@ -1722,11 +1755,12 @@ $editor-top-padding: 6px;
     }
 
   }
-
-
 }
 
 .bb-table-container {
+    &::-webkit-scrollbar-track {
+        background: white;
+    }
   animation: background-animation 2.1s ease-in-out infinite;
   background-image:
     repeating-linear-gradient(

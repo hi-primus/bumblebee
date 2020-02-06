@@ -3,14 +3,16 @@
   class="bbt-container"
   ref="BbContainer"
 >
-  <div class="bb-table-top-container" ref="BbTableTopContainer">
-    <div
-      v-if="columns && bbColumns"
-      class="bb-table-header"
-    >
+  <div
+    class="bb-table-top-container" ref="BbTableTopContainer"
+    v-if="columns && bbColumns"
+  >
+    <div class="bb-table-header">
       <template v-for="index in bbColumns">
         <div
+          @click="onClickHeaderCell(index)"
           class="bb-table-h-cell"
+          :class="{'bb-selected': selected[index]}"
           v-if="columns[index]"
           :key="index"
           :style="{width: columns[index].width+'px'}"
@@ -24,10 +26,57 @@
         </div>
       </template>
     </div>
-    <!-- <div class="bb-table-plots">
-      {{bbColumns}}
-      {{columns}}
-    </div> -->
+    <div v-if="true" class="bb-table-plots">
+      <template v-for="index in bbColumns">
+        <div
+          class="bb-table-plot"
+          v-if="columns[index]"
+          :key="index"
+          :style="{width: columns[index].width+'px'}"
+          :class="{'bb-selected': selected[index]}"
+        >
+          <DataBar
+            :key="plotsData[index].key+'databar'"
+            :missing="plotsData[index].missing"
+            :total="+plotsData[index].total"
+            :mismatch="+plotsData[index].mismatch"
+            :nullV="+plotsData[index].null"
+            class="table-data-bar"
+            bottom
+          />
+          <Frequent
+            v-if="plotsData[index].frequency"
+            :key="plotsData[index].key"
+            :uniques="plotsData[index].count_uniques"
+            :values="plotsData[index].frequency"
+            :total="+plotsData[index].frequency[0].count"
+            :columnIndex="index"
+            class="histfreq"
+            table
+          />
+          <Histogram
+            v-else-if="plotsData[index].hist"
+            :key="plotsData[index].key"
+            :uniques="plotsData[index].count_uniques"
+            :values="plotsData[index].hist"
+            :total="+plotsData[index].total"
+            :columnIndex="index"
+            class="histfreq"
+            table
+          />
+          <Histogram
+            v-else-if="plotsData[index].hist_years"
+            :key="plotsData[index].key"
+            :uniques="plotsData[index].count_uniques"
+            :values="plotsData[index].hist_years"
+            :total="+plotsData[index].total"
+            :columnIndex="index"
+            class="histfreq"
+            table
+          />
+        </div>
+      </template>
+    </div>
   </div>
   <div
     class="bb-table-container" ref="BbTableContainer"
@@ -40,6 +89,7 @@
               v-if="row.value[index]"
               :key="index"
               class="bb-table-cell"
+              :class="{'bb-selected': selected[index]}"
               :style="{width: columns[index].width+'px'}"
             >
               {{ row.value[index] }}
@@ -60,7 +110,18 @@ import { mapGetters } from 'vuex'
 
 import dataTypesMixin from '@/plugins/mixins/data-types'
 
+import Histogram from '@/components/Histogram'
+import Frequent from '@/components/Frequent'
+import DataBar from '@/components/DataBar'
+
 export default {
+
+	components: {
+		Histogram,
+		Frequent,
+		DataBar
+	},
+
 
   mixins: [dataTypesMixin],
 
@@ -86,6 +147,7 @@ export default {
 		return {
       chunks: [],
       columns: {},
+      selection: []
 		}
   },
 
@@ -93,12 +155,30 @@ export default {
 
     ...mapGetters(['currentSelection','currentDataset']),
 
+    plotsData () {
+			return this.currentDataset.columns.map((column, i) => {
+				return {
+          name: column.name,
+          mismatch: (column.dtypes_stats.mismatch) ? +column.dtypes_stats.mismatch : 0,
+          null: (column.dtypes_stats.null) ? +column.dtypes_stats.null : 0,
+          missing: (column.dtypes_stats.missing) ? +column.dtypes_stats.missing : 0,
+					zeros: column.stats.zeros,
+					total: this.currentDataset.summary.rows_count,
+					count_uniques: column.stats.count_uniques,
+					hist: (column.stats.hist && column.stats.hist[0]) ? column.stats.hist : undefined,
+					hist_years: (column.stats.hist && column.stats.hist.years) ? column.stats.hist.years : undefined,
+					frequency: (column.frequency) ? column.frequency : undefined
+				}
+			})
+    },
+
     rows() {
       var rows = []
       this.chunks.forEach(chunk => {
         rows = [...rows, ...chunk.rows]
       });
       rows = [...new Set(rows)];
+      rows.sort((a,b)=>a.index-b.index)
       return rows
     },
 
@@ -136,6 +216,10 @@ export default {
   },
 
   methods: {
+
+    onClickHeaderCell(index) {
+      this.selected[index] = !this.selected[index]
+    },
 
     scrollLeftCheck() {
       this.$refs['BbTableTopContainer'].scrollLeft = this.$refs['BbTableContainer'].scrollLeft
