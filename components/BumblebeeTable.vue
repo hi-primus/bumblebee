@@ -10,9 +10,9 @@
     <div class="bb-table-header">
       <template v-for="index in bbColumns">
         <div
-          @click="onClickHeaderCell(index)"
+          @click="selectColumn(index)"
           class="bb-table-h-cell"
-          :class="{'bb-selected': selected[index]}"
+          :class="{'bb-selected': selection[index]}"
           v-if="columns[index]"
           :key="index"
           :style="{width: columns[index].width+'px'}"
@@ -33,7 +33,7 @@
           v-if="columns[index]"
           :key="index"
           :style="{width: columns[index].width+'px'}"
-          :class="{'bb-selected': selected[index]}"
+          :class="{'bb-selected': selection[index]}"
         >
           <DataBar
             :key="plotsData[index].key+'databar'"
@@ -83,13 +83,13 @@
   >
     <div class="bb-table" ref="BbTable" :style="tableStyle">
       <template v-for="row in rows">
-        <div :key="row.index" class="bb-table-row" :style="{height: rowHeight, top: row.index*rowHeight+'px'}">
+        <div :key="'r'+row.index" class="bb-table-row" :style="{height: rowHeight+'px', top: row.index*rowHeight+'px'}">
           <template v-for="index in bbColumns">
             <div
               v-if="row.value[index]"
               :key="index"
               class="bb-table-cell"
-              :class="{'bb-selected': selected[index]}"
+              :class="{'bb-selected': selection[index]}"
               :style="{width: columns[index].width+'px'}"
             >
               {{ row.value[index] }}
@@ -114,6 +114,8 @@ import Histogram from '@/components/Histogram'
 import Frequent from '@/components/Frequent'
 import DataBar from '@/components/DataBar'
 
+import { arraysEqual } from '@/utils/functions.js'
+
 export default {
 
 	components: {
@@ -121,7 +123,6 @@ export default {
 		Frequent,
 		DataBar
 	},
-
 
   mixins: [dataTypesMixin],
 
@@ -145,9 +146,9 @@ export default {
 
 	data() {
 		return {
+      selection: {},
       chunks: [],
-      columns: {},
-      selection: []
+      columns: {}
 		}
   },
 
@@ -177,7 +178,7 @@ export default {
       this.chunks.forEach(chunk => {
         rows = [...rows, ...chunk.rows]
       });
-      rows = [...new Set(rows)];
+      // rows = [...new Set(rows)];
       rows.sort((a,b)=>a.index-b.index)
       return rows
     },
@@ -215,10 +216,20 @@ export default {
     });
   },
 
+  watch: {
+    currentSelection (value) {
+      var newSelection = value.columns.map(e=>e.index)
+      if (!arraysEqual(this.selection,newSelection)) {
+        this.selection = newSelection
+      }
+    }
+  },
+
   methods: {
 
-    onClickHeaderCell(index) {
-      this.selected[index] = !this.selected[index]
+    selectColumn(index) {
+      this.$set(this.selection, index, !this.selection[index])
+      this.$emit('updatedSelection',this.selection)
     },
 
     scrollLeftCheck() {

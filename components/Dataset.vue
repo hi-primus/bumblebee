@@ -170,6 +170,7 @@
         <BumblebeeTable
 					v-if="view==1 && currentDataset && currentDataset.sample"
           :bbColumns="bbColumns"
+          @updatedSelection="selectionEvent"
           ref="bumblebeeTable"
         />
 			</div>
@@ -464,9 +465,27 @@ export default {
 
 		rowClicked (e) {
       this.toggleColumnSelection(e.name)
-		},
+    },
 
-		selectionEvent: debounce( function(row, prop, row2, prop2) {
+    selectionEvent (selection) {
+
+      var selectedIndices = []
+
+      for (const key in selection) {
+        if (selection[key]) {
+          selectedIndices.push(key)
+        }
+      }
+
+      // if (!selectedIndices.length && this.isMounted) {
+      //   this.$emit('selection',false)
+      //   return;
+      // }
+
+      this.handleSelection(selectedIndices,true)
+    },
+
+		oldselectionEvent: debounce( function(row, prop, row2, prop2) {
 
 			if (row <= 0) {
 

@@ -1585,20 +1585,37 @@ $editor-top-padding: 6px;
 
   min-width: 100%;
 
-  &, & * {
+  &, & *, &::after {
     border-color: $line-color-1 !important;
   }
 
   border-width: 1px;
   border-style: solid;
-
   border-top-width: 0;
+  border-width: 0;
 
   display: flex;
   flex-direction: column;
 
   align-items: stretch;
   justify-content: stretch;
+
+  position: relative;
+
+  &::after {
+    position: absolute;
+    content: ' ';
+    pointer-events: none;
+    border-right-style: solid;
+    border-right-width: 1px;
+    border-bottom-style: solid;
+    border-bottom-width: 1px;
+    top: 0;
+    left: 0;
+    display: block;
+    height: calc(100% - 10px);
+    width: calc(100% - 10px);
+  }
 
   .bb-table-header, .bb-table-row, .bb-table-plots {
 
@@ -1621,11 +1638,13 @@ $editor-top-padding: 6px;
 
     display: flex;
     flex-direction: column;
+    padding-bottom: 2px;
+    margin-bottom: -2px;
 
     .bb-table-header {
 
-      border-bottom-width: 1px;
-      border-bottom-style: solid;
+      // border-bottom-width: 1px;
+      // border-bottom-style: solid;
 
       font-size: 16px;
       font-family: $font-mono-table;
@@ -1660,17 +1679,17 @@ $editor-top-padding: 6px;
     }
 
     .bb-table-plots {
-      border-bottom-width: 1px;
-      border-bottom-style: solid;
+      // border-bottom-width: 1px;
+      // border-bottom-style: solid;
 
       font-family: $font-mono;
 
 
       .bb-table-plot {
-        height: 90px;
+        height: 92px;
         display: flex;
         flex-direction: column;
-        margin: 0 0 2px 0;
+        padding: 0 0 0 0;
 
         position: relative;
 
@@ -1690,21 +1709,26 @@ $editor-top-padding: 6px;
   .bb-table-container {
     overflow-y: scroll;
     overflow-x: scroll;
+    position: relative;
+
+
     // position: relative;
     .bb-table {
       width: 100%;
       position: relative;
       font-family: $font-mono-table;
       color: $text-color;
+      margin-top: -1px;
       .bb-table-row {
+        animation: fadein-cell 0.7s ease-in-out;
         position: absolute;
         background: white;
         height: 23px;
         line-height: 21px;
-        &:not(:last-child) {
-          border-bottom-width: 1px;
-          border-bottom-style: solid;
-        }
+        // &:not(:last-child) {
+        //   border-bottom-width: 1px;
+        //   border-bottom-style: solid;
+        // }
       }
     }
   }
@@ -1712,11 +1736,33 @@ $editor-top-padding: 6px;
 
 
   .bb-table-h-cell, .bb-table-cell, .bb-table-plot {
+    height: 100%;
+    z-index: 1;
     &.bb-selected {
       background-color: $data-highlight;
+      border-color: darken($data-highlight, 10%) !important;
     }
-    border-right-width: 1px;
-    border-right-style: solid;
+    &.bb-selected + * {
+      border-left-color: darken($data-highlight, 10%) !important;
+    }
+    &:not(:first-child) {
+      margin-left: -1px;
+    }
+    &:last-child {
+      border-right-width: 1px;
+      border-right-style: solid;
+    }
+
+    border-top-width: 1px;
+    border-top-style: solid;
+
+    border-left-width: 1px;
+    border-left-style: solid;
+  }
+
+  .bb-table-plot {
+    border-bottom-width: 1px;
+    border-bottom-style: solid;
   }
 
   .bb-table-h-cell, .bb-table-cell {
@@ -1727,24 +1773,19 @@ $editor-top-padding: 6px;
     white-space: nowrap;
     text-overflow: ellipsis;
     color: inherit !important;
-    // &:not(:last-child) {
-    // }
   }
 
   .bb-table-cell {
-
     font-size: 13px;
 
     &:not(:last-child) {
       border-right-width: 1px;
       border-right-style: solid;
     }
-
   }
+
   .bb-table-h-cell {
-
     cursor: pointer;
-
     position: relative;
     font-size: 16px;
     padding-right: 16px;
@@ -1758,9 +1799,9 @@ $editor-top-padding: 6px;
 }
 
 .bb-table-container {
-    &::-webkit-scrollbar-track {
-        background: white;
-    }
+  &::-webkit-scrollbar-track {
+    background: white;
+  }
   animation: background-animation 2.1s ease-in-out infinite;
   background-image:
     repeating-linear-gradient(
@@ -1782,6 +1823,17 @@ $editor-top-padding: 6px;
       white 23px
   );
 }
+
+@keyframes fadein-cell {
+  0% {
+    opacity: 0;
+  }
+
+  100% {
+    opacity: 1;
+  }
+}
+
 @keyframes background-animation {
   0% {
     background-color: #e5e5e5;
