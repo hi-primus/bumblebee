@@ -7,13 +7,24 @@ const PAGE_SIZE = 100
 
 import { findById } from '../utils/controllers'
 
-exports.get = async function (req, res) {
+exports.get = async function (req, res, params) {
 
-  var last_id = req.body.last_id ? req.body.last_id : 0
-  // var page = req.body.page ? req.body.page : 0
+  var last_id = req.body.last_id ? req.body.last_id : undefined
+  var page = req.body.page ? req.body.page : 0
   var page_size = req.body.page_size ? req.body.page_size : PAGE_SIZE
 
-  const results = await Product.find({_id: {$gt: last_id}, dataset: req.body.dataset}).limit(page_size)
+  if (last_id===undefined && page===undefined) {
+    page = 0
+  }
+
+  var results
+
+  if (page!==undefined) {
+    results = await Product.find({ dataset: req.body.dataset }).skip(page_size*page).limit(page_size)
+  }
+  else {
+    results = await Product.find({_id: {$gt: last_id}, dataset: req.body.dataset}).limit(page_size)
+  }
 
   res.json({
     status: "success",

@@ -209,25 +209,54 @@ export default {
     this.$refs['BbTableContainer'] & this.$refs['BbTableContainer'].addEventListener('scroll', this.debounceCheck)
     this.check()
 
-    console.log(this.currentDataset.columns)
-
     this.currentDataset.columns.forEach((column, index) => {
       this.$set(this.columns, index, {name: column.name, width: 170})
     });
+
+    this.updateSelection(this.currentSelection)
   },
 
   watch: {
+
+    selection (value) {
+      //
+    },
+
     currentSelection (value) {
-      var newSelection = value.columns.map(e=>e.index)
-      if (!arraysEqual(this.selection,newSelection)) {
-        this.selection = newSelection
-      }
+      this.updateSelection(value)
     }
   },
 
   methods: {
 
+    updateSelection(value) {
+      console.log("updating selection")
+
+      var selectionArray = []
+
+      for (const index in this.selection) {
+        if (this.selection[index]) {
+          selectionArray.push(index)
+        }
+      }
+
+      var newSelection = value.columns.map(e=>e.index)
+
+      selectionArray.sort()
+      newSelection.sort()
+
+      if (!arraysEqual(selectionArray,newSelection)) {
+
+        this.selection = newSelection.reduce((p,v)=>{
+          p[v] = true
+          return p
+        },{})
+
+      }
+    },
+
     selectColumn(index) {
+      console.log("selectColumn index",index, !this.selection[index])
       this.$set(this.selection, index, !this.selection[index])
       this.$emit('updatedSelection',this.selection)
     },

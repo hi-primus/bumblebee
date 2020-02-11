@@ -307,7 +307,7 @@ const run_code = async function(code = '', user_session = '', save_rows = false)
                 }
 							}
 
-							resolve({ status: 'ok', content: response })
+							resolve({ status: 'ok', content: response, dataset_id: dataset._id })
 						}
 						else if (parsed_message.msg_type === 'error') {
 							connection.close()

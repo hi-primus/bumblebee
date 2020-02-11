@@ -398,15 +398,7 @@ export default {
   mounted() {
 
     try {
-      var selectedColumns = {}
-      var storeSelectedColumns = this.currentSelection.columns
-      if (storeSelectedColumns) {
-        for (let index = 0; index < storeSelectedColumns.length; index++) {
-            selectedColumns[storeSelectedColumns[index].name] = true
-        }
-      }
-
-      this.selectedColumns = selectedColumns
+      this.getSelectionFromStore()
     } catch (error) {}
 
     this.$nextTick(()=>{
@@ -416,6 +408,22 @@ export default {
   },
 
   methods: {
+
+    getSelectionFromStore () {
+      var selectedColumns = {}
+      var storeSelectedColumns = this.currentSelection.columns
+
+      if (storeSelectedColumns) {
+        for (let index = 0; index < storeSelectedColumns.length; index++) {
+            selectedColumns[storeSelectedColumns[index].name] = true
+        }
+      }
+
+      if (JSON.stringify(selectedColumns) !== JSON.stringify(this.selectedColumns)) {
+        this.selectedColumns = selectedColumns
+      }
+
+    },
 
 
     displaySelection: throttle( async function (item) {
@@ -476,11 +484,6 @@ export default {
           selectedIndices.push(key)
         }
       }
-
-      // if (!selectedIndices.length && this.isMounted) {
-      //   this.$emit('selection',false)
-      //   return;
-      // }
 
       this.handleSelection(selectedIndices,true)
     },
@@ -579,6 +582,10 @@ export default {
       handler (v) {
         this.handleSelection(Object.entries(v).filter((e)=>e[1]).map(e=>e[0]) || [], false)
       }
+    },
+
+    currentSelection() {
+      this.getSelectionFromStore()
     },
 
     bbColumnsJoin () {
