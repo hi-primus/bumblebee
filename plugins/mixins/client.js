@@ -1,5 +1,4 @@
 import io from 'socket.io-client'
-import { trimCharacters } from '@/utils/functions.js'
 
 let socket
 let promises = {}
@@ -41,29 +40,29 @@ export default {
       })
     },
 
-    handleDatasetResponse (content, key = undefined) {
+    handleDatasetResponse (data, key = undefined) {
 
       if (key===undefined)
         key = this.$store.state.key
 
-      const fernet = require('fernet')
+      // const fernet = require('fernet')
 
-      let secret = new fernet.Secret(key)
+      // let secret = new fernet.Secret(key)
 
-      let token = new fernet.Token({
-        secret,
-        token: content,
-        ttl: 0
-      })
+      // let token = new fernet.Token({
+      //   secret,
+      //   token: data,
+      //   ttl: 0
+      // })
 
-      const pako = require('pako')
+      // const pako = require('pako')
 
-      let originalInput = pako.inflate(atob(token.decode()), {
-        to: 'string'
-      })
+      // let originalInput = pako.inflate(atob(token.decode()), {
+      //   to: 'string'
+      // })
 
       this.$store.commit('add', {
-        dataset: JSON.parse(trimCharacters(originalInput,"'"))
+        dataset: data
       })
 
     },

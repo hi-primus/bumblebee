@@ -279,35 +279,42 @@ const run_code = async function(code = '', user_session = '', save_rows = false)
 
                   let data = pakoFernet(save_rows, parsed_response.data)
 
-                  let rows = [...data.sample.value]
-                  delete data.sample
-
                   const Row = require('./models/row')
                   const Dataset = require('./models/dataset')
                   const dataset = await findOrCreate( Dataset, { meta: data, session: current_session } )
 
                   // current_session TODO: add dataset to current_session.datasets Array and save
 
-                  Row.find({dataset}).remove().exec()
+                  await Row.deleteMany({dataset})
 
-                  for (let i = 0; i < rows.length; i++) {
-                    var row = new Row()
-                    row.value = rows[i] || []
-                    row.dataset = dataset || row.dataset
-                    row.save(function (err) {
-											if (err)
-												console.error(err)
-											else
-												console.log('New row created')
-                    })
+                  if (data.sample.value.length*data.sample.value[0].length > 100) {
+                    let rows = [...data.sample.value]
+                    delete data.sample
+
+
+                    for (let i = 0; i < rows.length; i++) {
+                      var row = new Row()
+                      row.value = rows[i] || []
+                      row.dataset = dataset || row.dataset
+                      row.save(function (err) {
+                        if (err)
+                          console.error(err)
+                      })
+                    }
                   }
+
+                  data.id = dataset._id
+
+                  resolve({ status: 'ok', content: data })
 
                 } catch (error) {
                   console.error(error)
                 }
-							}
+              }
+              else {
+                resolve({ status: 'ok', content: response })
+              }
 
-							resolve({ status: 'ok', content: response, dataset_id: dataset._id })
 						}
 						else if (parsed_message.msg_type === 'error') {
 							connection.close()

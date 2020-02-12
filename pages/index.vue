@@ -227,8 +227,6 @@ import dataTypesMixin from '@/plugins/mixins/data-types'
 
 import { mapGetters } from 'vuex'
 
-import axios from 'axios'
-
 const { version } = require('@/package.json')
 const api_url = process.env.API_URL || 'http://localhost:5000'
 

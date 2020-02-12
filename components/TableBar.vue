@@ -312,10 +312,8 @@ import Dataset from '@/components/Dataset'
 import VegaEmbed from '@/components/VegaEmbed'
 import clientMixin from '@/plugins/mixins/client'
 import dataTypesMixin from '@/plugins/mixins/data-types'
-import { trimCharacters, copyToClipboard } from '@/utils/functions.js'
+import { copyToClipboard } from '@/utils/functions.js'
 import { mapGetters } from 'vuex'
-
-import axios from 'axios'
 
 const api_url = process.env.API_URL || 'http://localhost:5000'
 

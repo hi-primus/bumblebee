@@ -343,7 +343,6 @@
 
 <script>
 
-import axios from 'axios'
 import CodeEditor from '@/components/CodeEditor'
 import OutputColumnInputs from '@/components/OutputColumnInputs'
 import Outliers from '@/components/Outliers'
@@ -2412,8 +2411,8 @@ export default {
           throw response
         }
 
-        var content = JSON.parse(trimCharacters(response.content,"'")).data
-        this.handleDatasetResponse(content)
+        // var content = JSON.parse(trimCharacters(response.content,"'")).data
+        this.handleDatasetResponse(response.content)
 
         this.$forceUpdate()
         this.markCells()
