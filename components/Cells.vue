@@ -450,7 +450,7 @@ export default {
             var expression
 
             if (type=='values') {
-              expression = `${this.dataset.varname}.${payload.columns[0]}.isin("${values.join('","')}")`
+              expression = `${this.dataset.varname}.${payload.columns[0]}.isin(["${values.join('","')}"])`
             }
             else {
               if (ranges.length>1)
@@ -609,7 +609,7 @@ export default {
                 expression = `${this.dataset.varname}["${payload.columns[0]}"]==${payload.value}`
                 break
               case 'oneof':
-                expression = `${this.dataset.varname}.${payload.columns[0]}.isin("${payload.values.join('","')}")`
+                expression = `${this.dataset.varname}.${payload.columns[0]}.isin(["${payload.values.join('","')}"])`
                 break
               case 'not':
                 expression = `${this.dataset.varname}["${payload.columns[0]}"]!=${payload.value}`
@@ -642,7 +642,7 @@ export default {
                     expression = `(${this.dataset.varname}["${payload.columns[0]}"]>=${payload.selection.ranges[0][0]}) & (${this.dataset.varname}["${payload.columns[0]}"]<=${payload.selection.ranges[0][1]})`
                 }
                 else if (payload.selectionType=='values') {
-                  expression = `${this.dataset.varname}.${payload.columns[0]}.isin("${payload.selection.values.join('","')}")`
+                  expression = `${this.dataset.varname}.${payload.columns[0]}.isin(["${payload.selection.values.join('","')}"])`
                 }
               case 'custom':
               default:
