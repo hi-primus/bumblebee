@@ -168,7 +168,7 @@
 				class="the-table-container"
 			>
         <BumblebeeTable
-					v-if="view==1 && currentDataset && currentDataset.sample"
+					v-if="view==1 && currentDataset && (currentDataset.sample || currentDataset.id)"
           :bbColumns="bbColumns"
           @updatedSelection="selectionEvent"
           ref="bumblebeeTable"

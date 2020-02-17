@@ -85,15 +85,19 @@
       <template v-for="row in rows">
         <div :key="'r'+row.index" class="bb-table-row" :style="{height: rowHeight+'px', top: row.index*rowHeight+'px'}">
           <template v-for="index in bbColumns">
+              <!-- v-if="row.value[index]" -->
             <div
-              v-if="row.value[index]"
               :key="index"
+              v-if="row.value"
               class="bb-table-cell"
-              :class="{'bb-selected': selection[index]}"
+              :class="{
+                'bb-selected': selection[index],
+                'missing': row.value[index]==='',
+                'none': row.value[index]===null
+              }"
               :style="{width: columns[index].width+'px'}"
-            >
-              {{ row.value[index] }}
-            </div>
+              :data-val="row.value[index]"
+            >&nbsp;{{row.value[index]}}&nbsp;</div>
           </template>
         </div>
       </template>
@@ -116,6 +120,8 @@ import DataBar from '@/components/DataBar'
 
 import { arraysEqual } from '@/utils/functions.js'
 
+const debounceScrollTime = 300
+
 export default {
 
 	components: {
@@ -131,14 +137,6 @@ export default {
       default: 23,
       type: Number
     },
-    chunkSize: {
-      default: 15,
-      type: Number
-    },
-    maxChunks: {
-      default: 10,
-      type: Number
-    },
     bbColumns: {
       type: Array
     }
@@ -146,6 +144,12 @@ export default {
 
 	data() {
 		return {
+      maxChunks: 20/5,
+      fetching: false,
+
+      visibleChunkTop: 0,
+      visibleChunkBottom: 100,
+
       selection: {},
       chunks: [],
       columns: {}
@@ -155,6 +159,10 @@ export default {
 	computed: {
 
     ...mapGetters(['currentSelection','currentDataset']),
+
+    chunkSize () {
+      return Math.max(Math.ceil(300/this.currentDataset.columns.length),40)
+    },
 
     plotsData () {
 			return this.currentDataset.columns.map((column, i) => {
@@ -173,18 +181,26 @@ export default {
 			})
     },
 
-    rows() {
+    rows () {
       var rows = []
+      // this.chunks.sort((a,b)=>a.index-b.index) // NO
+      console.log({visibleChunkTop: this.visibleChunkTop, visibleChunkBottom: this.visibleChunkBottom})
       this.chunks.forEach(chunk => {
-        rows = [...rows, ...chunk.rows]
-      });
+        if ((chunk.index>=this.visibleChunkTop) && (chunk.index<=this.visibleChunkBottom)) {
+          rows = [...rows, ...chunk.rows]
+        }
+      })
       // rows = [...new Set(rows)];
       rows.sort((a,b)=>a.index-b.index)
       return rows
     },
 
+    visibleRows () {
+
+    },
+
     rowsCount() {
-      return 10001
+      return this.currentDataset.sample_length
     },
 
     rowStyle() {
@@ -193,8 +209,8 @@ export default {
 
     tableStyle() {
       return {
-        maxHeight: (this.rowHeight * this.rowsCount -1) + 'px',
-        height: (this.rowHeight * this.rowsCount -1) + 'px',
+        maxHeight: (this.rowHeight * this.rowsCount ) + 'px',
+        height: (this.rowHeight * this.rowsCount ) + 'px',
       }
     },
 
@@ -206,8 +222,8 @@ export default {
 
   mounted() {
     this.$refs['BbTableContainer'] & this.$refs['BbTableContainer'].addEventListener('scroll', this.scrollLeftCheck)
-    this.$refs['BbTableContainer'] & this.$refs['BbTableContainer'].addEventListener('scroll', this.debounceCheck)
-    this.check()
+    this.$refs['BbTableContainer'] & this.$refs['BbTableContainer'].addEventListener('scroll', this.debounceCheckScroll)
+    this.checkScroll()
 
     this.currentDataset.columns.forEach((column, index) => {
       this.$set(this.columns, index, {name: column.name, width: 170})
@@ -217,10 +233,6 @@ export default {
   },
 
   watch: {
-
-    selection (value) {
-      //
-    },
 
     currentSelection (value) {
       this.updateSelection(value)
@@ -240,13 +252,16 @@ export default {
         }
       }
 
-      var newSelection = value.columns.map(e=>e.index)
+      var newSelection = []
+
+      if (value.columns) {
+        newSelection = value.columns.map(e=>e.index)
+      }
 
       selectionArray.sort()
       newSelection.sort()
 
       if (!arraysEqual(selectionArray,newSelection)) {
-
         this.selection = newSelection.reduce((p,v)=>{
           p[v] = true
           return p
@@ -265,62 +280,97 @@ export default {
       this.$refs['BbTableTopContainer'].scrollLeft = this.$refs['BbTableContainer'].scrollLeft
     },
 
-    debounceCheck: debounce(function(e) {this.check(e)} ,300), // TODO: Parameter
+    debounceCheckScroll: debounce(function(e) {this.checkScroll(e)} , debounceScrollTime), // TODO: Parameter
 
-    check() {
+    async checkScroll () {
 
-      var topPosition = this.$refs['BbTableContainer'].scrollTop
-      var bottomPosition = topPosition+this.$refs['BbTableContainer'].clientHeight
+      var element = this.$refs['BbTableContainer']
 
-      var topRow = Math.floor(topPosition/this.rowHeight)
-      var bottomRow = Math.ceil(bottomPosition/this.rowHeight)
+      var topPosition = (element) ? element.scrollTop : 0
+      var bottomPosition = topPosition + ((element) ? element.clientHeight : 1080)
 
-      this.loadChunks(topRow, bottomRow)
+      var startRow = Math.floor(topPosition/this.rowHeight)
+      var endRow = Math.ceil(bottomPosition/this.rowHeight)
+
+      console.log("checking position and rows",{topPosition, bottomPosition, startRow, endRow})
+
+      var time = - new Date()
+
+      await this.fetchChunks(startRow, endRow+1)
+
+      time += new Date()
+
+      console.log({ time })
+
+      this.fetchChunks(startRow, endRow+1)
 
     },
 
-    loadChunks(top, bottom) {
+    async fetchChunks(start, end) {
 
-      var chunk0 = Math.max(Math.floor(top/this.chunkSize)-1,0)
-      var chunk1 = Math.min(Math.ceil(bottom/this.chunkSize)+1,this.lastChunk)
+      var from = Math.max( Math.floor(start/this.chunkSize), 0 )
+      var to = Math.min( Math.ceil(end/this.chunkSize), this.lastChunk )
 
-      for (let i = chunk0; i <= chunk1; i++) {
+      this.visibleChunkTop = from-1
+      this.visibleChunkBottom = to+1
 
-        var result = this.chunks.find(chunk => {
-          return chunk.index === i
-        })
+      console.log({from, to})
 
-        if (result===undefined) {
-          this.loadChunk(i)
-        }
+      var promises = []
 
+      for (let i = from; i <= to; i++) {
+        promises.push(this.fetchChunk(i))
       }
+
+      return await Promise.all(promises)
     },
 
-    loadChunk(index) {
+    async fetchChunk(index) {
 
-      setTimeout(() => {
-        var from = index*this.chunkSize
-        var to = Math.min(from+this.chunkSize,this.rowsCount)
+      // console.log({checking: index})
 
-        // debug
-        var rows = []
-        for (let i = from; i < to; i++) {
-          rows.push({
-            index: i,
-            value: this.currentDataset.sample.value[i%15]
-          })
-          //rows.push({ index: i, value: ['row '+i,'name','04/02/2020'] })
-        }
-        // debug
+      this.fetching = true
 
-        var chunk = { index, rows }
+      var result = this.chunks.findIndex(chunk => {
+        return chunk && chunk.index === index
+      })
 
-        if (this.chunks.length>this.maxChunks){
-          this.chunks.splice(0,1)
-        }
-        this.chunks.push(chunk)
-      }, 200);
+      if (result!==-1) {
+        // console.log({result: this.chunks[result]})
+        return true
+      }
+
+      // console.log({loading: index})
+
+      // console.log({chunksBefore: this.chunks.map(c=>c.index).join()})
+
+      var chunkIndexInArray = this.chunks.push({ index: index, rows: []}) - 1
+
+      var response = await this.$axios.$post('api/rows', {
+        page: index,
+        page_size: this.chunkSize,
+        dataset: this.currentDataset.id
+      })
+
+      console.log({response})
+
+      var from = index*this.chunkSize
+
+      var rows = response.data.map((r,i)=>({
+        value: r.value,
+        index: from+i
+      }))
+
+      var chunk = { index: index, rows }
+
+      this.$set(this.chunks, chunkIndexInArray, chunk)
+
+      if (this.chunks.length>this.maxChunks){
+        this.chunks.splice(0,1)
+      }
+
+      console.log({chunksAfter: this.chunks.map(c=>c.index).join()})
+
     }
   }
 

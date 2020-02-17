@@ -31,7 +31,7 @@
             :name="'box-plot'"
             ref="box-plot"
             class="box-plot-grid mb-2"
-            v-if="dataset"
+            v-if="dataset && dataset.sample"
             :data="{values: dataset.sample.value}"
             :mark="{
               type: 'boxplot',

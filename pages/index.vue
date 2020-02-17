@@ -201,8 +201,8 @@
                 <template v-if="currentDataset.total_count_dtypes">
                   {{ currentDataset.total_count_dtypes | formatNumberInt }} Data types &emsp;
                 </template>
-                <template v-if="currentDataset.summary.sample_size">
-                  {{ currentDataset.summary.sample_size | formatNumberInt }} of
+                <template v-if="sampleSize">
+                  {{ sampleSize | formatNumberInt }} of
                 </template>
                 <template v-if="currentDataset.summary.rows_count">
                   {{ currentDataset.summary.rows_count | formatNumberInt }} Rows &emsp;
@@ -266,7 +266,13 @@ export default {
 	},
 
 	computed: {
+
     ...mapGetters(['currentDataset']),
+
+    sampleSize () {
+      return Math.min(this.currentDataset.summary.sample_size, this.currentDataset.summary.rows_count)
+    },
+
 		statusError () {
 			return (!!this.$store.state.status.message)
 		},

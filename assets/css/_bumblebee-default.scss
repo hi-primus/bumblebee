@@ -618,7 +618,7 @@ table {
 
 .table-container {
   height: 100%;
-
+  max-width: 100vw;
   z-index: 101;
 
 
@@ -1091,12 +1091,12 @@ table {
     text-overflow: ellipsis;
     color: inherit !important;
 
-	  &>span:empty:after/*, &:empty:after */{
+	  &>span:empty:after{
       content: 'None';
       margin-left: 0.5em;
       opacity: 0.5;
     }
-	  &>span.missing:after/*, &:empty:after */{
+	  &>span.missing:after{
       content: 'Missing';
       margin-left: 0.5em;
       opacity: 0.5;
@@ -1621,7 +1621,7 @@ $editor-top-padding: 6px;
 
     display: inline-flex;
     justify-content: flex-start;
-    align-items: baseline;
+    align-items: flex-start;
     min-width: 100%;
 
     &>* {
@@ -1720,23 +1720,27 @@ $editor-top-padding: 6px;
       color: $text-color;
       margin-top: -1px;
       .bb-table-row {
-        animation: fadein-cell 0.7s ease-in-out;
+        animation: fadein-cell 0.41s ease-in-out;
         position: absolute;
         background: white;
         height: 23px;
         line-height: 21px;
-        // &:not(:last-child) {
-        //   border-bottom-width: 1px;
-        //   border-bottom-style: solid;
-        // }
+        &:last-child {
+          .bb-table-cell {
+            border-bottom-width: 1px;
+            border-bottom-style: solid;
+          }
+        }
       }
     }
   }
 
 
 
-  .bb-table-h-cell, .bb-table-cell, .bb-table-plot {
+  .bb-table-h-cell, .bb-table-plot {
     height: 100%;
+  }
+  .bb-table-h-cell, .bb-table-cell, .bb-table-plot {
     z-index: 1;
     &.bb-selected {
       background-color: $data-highlight;
@@ -1777,6 +1781,27 @@ $editor-top-padding: 6px;
 
   .bb-table-cell {
     font-size: 13px;
+    height: inherit;
+    padding: 0;
+
+    // &:empty:after {
+    //   content: 'None';
+    //   opacity: 0.667;
+    // }
+
+    &.none, &.missing {
+      &::after {
+        margin-left: -0.5em;
+        opacity: 0.667;
+      }
+    }
+
+	  &.none:after {
+      content: 'None';
+    }
+	  &.missing:after {
+      content: 'Missing';
+    }
 
     &:not(:last-child) {
       border-right-width: 1px;
