@@ -58,6 +58,7 @@ module.exports = {
 	buildModules: [
 		// '@nuxtjs/eslint-module',
 		['@nuxtjs/google-tag-manager', { id: 'GTM-K8DTWMW' }],
+		'@nuxtjs/axios',
 		'@nuxtjs/dotenv',
 		'@nuxtjs/vuetify',
 		'@nuxtjs/style-resources'
@@ -74,7 +75,8 @@ module.exports = {
 	],
 
 	axios: {
-
+    loading: false,
+		// proxyHeaders: false
 	},
 
 	vuetify: {

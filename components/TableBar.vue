@@ -169,7 +169,6 @@
       :sortBy.sync="sortBy"
       :sortDesc.sync="sortDesc"
       :optionsActive="optionsActive"
-      :detailsActive.sync="detailsActive"
       :searchText="searchText"
       @selection="selectionEvent($event)"
       @sort="lastSort=$event"
@@ -239,7 +238,7 @@
             </div>
           </div>
           <div v-if="detailsActive['heat-map']" class="heat-map plot">
-            <div class="plot-title">
+            <div class="plot-title" v-if="heatMap">
               Heat Map
             </div>
             <VegaEmbed
@@ -313,10 +312,8 @@ import Dataset from '@/components/Dataset'
 import VegaEmbed from '@/components/VegaEmbed'
 import clientMixin from '@/plugins/mixins/client'
 import dataTypesMixin from '@/plugins/mixins/data-types'
-import { trimCharacters, copyToClipboard } from '@/utils/functions.js'
+import { copyToClipboard } from '@/utils/functions.js'
 import { mapGetters } from 'vuex'
-
-import axios from 'axios'
 
 const api_url = process.env.API_URL || 'http://localhost:5000'
 
@@ -717,12 +714,6 @@ export default {
 			return this.columnsTableHeaders.filter(e => e.sortable !== false)
 		},
 
-		colHeaders () {
-			return this.dataset.columns.map((e) => {
-				return e.name
-			})
-    },
-
   },
 
   mounted () {
@@ -775,6 +766,10 @@ export default {
 
 
     calculateHeatMap (xindex,yindex,xsize,ysize) {
+
+      if (!this.dataset.sample) {
+        return false
+      }
 
       let xint = (xsize===+xsize)
       let yint = (ysize===+ysize)
@@ -900,56 +895,58 @@ export default {
         this.optionsActive = false
         if (plotable.length==2 && selected.length==2) {
           // this.detailsActive['scatter-plot'] = true
-          this.detailsActive['heat-map'] = true
           this.heatMap = this.calculateHeatMap(selected[0], selected[1], plotable[0], plotable[1])
+          if (this.heatMap) {
+            this.detailsActive['heat-map'] = true
 
-          let _x =
-          (plotable[0]==='quantitative') ? {
-            x: {
-              field: 'x',
-              title: this.dataset.columns[selected[0]].name,
-              type: plotable[0],
-              bin: {
-                binned: true
-              }
-            },
-            x2: {
-              field: 'x2',
-            },
-          }
-          : {
-            x: {
-              field: 'x',
-              title: this.dataset.columns[selected[0]].name,
-              type: 'ordinal'
+            let _x =
+            (plotable[0]==='quantitative') ? {
+              x: {
+                field: 'x',
+                title: this.dataset.columns[selected[0]].name,
+                type: plotable[0],
+                bin: {
+                  binned: true
+                }
+              },
+              x2: {
+                field: 'x2',
+              },
             }
-          }
-
-          let _y =
-          (plotable[1]==='quantitative') ? {
-            y: {
-              field: 'y',
-              title: this.dataset.columns[selected[1]].name,
-              type: plotable[1],
-              bin: {
-                binned: true
+            : {
+              x: {
+                field: 'x',
+                title: this.dataset.columns[selected[0]].name,
+                type: 'ordinal'
               }
-            },
-            y2: {
-              field: 'y2',
-            },
-          }
-          : {
-            y: {
-              field: 'y',
-              title: this.dataset.columns[selected[1]].name,
-              type: 'ordinal'
             }
-          }
 
-          this.heatMapEncoding ={
-            ..._x,
-            ..._y
+            let _y =
+            (plotable[1]==='quantitative') ? {
+              y: {
+                field: 'y',
+                title: this.dataset.columns[selected[1]].name,
+                type: plotable[1],
+                bin: {
+                  binned: true
+                }
+              },
+              y2: {
+                field: 'y2',
+              },
+            }
+            : {
+              y: {
+                field: 'y',
+                title: this.dataset.columns[selected[1]].name,
+                type: 'ordinal'
+              }
+            }
+
+            this.heatMapEncoding ={
+              ..._x,
+              ..._y
+            }
           }
         }
       }
@@ -971,16 +968,14 @@ export default {
   user-select: none;
 }
 
-.hot-table-container {
-  margin-top: -1px;
-  padding-left: 9px;
-
+.the-table-container {
   .wtHolder, .ht_master {
     height: inherit !important;
   }
   .wtHolder {
     overflow: scroll;
   }
+  // TODO: erase?
 }
 
 </style>
@@ -1018,12 +1013,6 @@ export default {
     top: 4px;
     left: 32px;
     position: relative;
-  }
-
-  .hot-table {
-    height: calc(100vh - 191px) !important;
-    max-height: calc(100vh - 191px) !important;
-    overflow: hidden;
   }
 
   // drag

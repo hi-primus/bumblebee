@@ -23,6 +23,8 @@ export const mutations = {
 
 	add (state, { dataset }) {
 
+    console.log("adding dataset",dataset)
+
     if (dataset.name===null){
       if (dataset.file_name){
         dataset.name = dataset.file_name.split('.')[0]

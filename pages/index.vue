@@ -181,6 +181,7 @@
             </div>
               <!-- :key="tableKey" -->
             <TableBar
+              ref="tableBar"
               v-if="currentDataset"
               :view.sync="view"
               :dataset="currentDataset"
@@ -200,8 +201,8 @@
                 <template v-if="currentDataset.total_count_dtypes">
                   {{ currentDataset.total_count_dtypes | formatNumberInt }} Data types &emsp;
                 </template>
-                <template v-if="currentDataset.summary.sample_size">
-                  {{ currentDataset.summary.sample_size | formatNumberInt }} of
+                <template v-if="sampleSize">
+                  {{ sampleSize | formatNumberInt }} of
                 </template>
                 <template v-if="currentDataset.summary.rows_count">
                   {{ currentDataset.summary.rows_count | formatNumberInt }} Rows &emsp;
@@ -225,8 +226,6 @@ import clientMixin from '@/plugins/mixins/client'
 import dataTypesMixin from '@/plugins/mixins/data-types'
 
 import { mapGetters } from 'vuex'
-
-import axios from 'axios'
 
 const { version } = require('@/package.json')
 const api_url = process.env.API_URL || 'http://localhost:5000'
@@ -267,7 +266,13 @@ export default {
 	},
 
 	computed: {
+
     ...mapGetters(['currentDataset']),
+
+    sampleSize () {
+      return Math.min(this.currentDataset.summary.sample_size, this.currentDataset.summary.rows_count)
+    },
+
 		statusError () {
 			return (!!this.$store.state.status.message)
 		},
@@ -314,11 +319,13 @@ export default {
 								this.$store.commit('kernel','done')
 							}
 							else {
-                if (response.content.traceback.length)
-                response.content.traceback_escaped = response.content.traceback.map(l=>
-                  l.replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '')
-                )
-								console.error(response)
+                if (response.content && response.content.traceback && response.content.traceback.length) {
+                  response.content.traceback_escaped = response.content.traceback.map(l=>
+                    l.replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '')
+                  )
+                  console.error(response.content.traceback_escaped.join('\n'))
+                }
+                console.error(response)
 								this.$store.commit('status','waiting')
 								this.$store.commit('status','receiving')
 							}
@@ -329,13 +336,25 @@ export default {
         }
       }
 
-      if (value!='received')
-        return
+      if (value=='receiving') {
+        var dataset_csv = this.$route.query.dataset_csv
+        if (dataset_csv) {
+          this.$refs.tableBar & this.$refs.tableBar.commandHandle({
+            command: 'load file',
+            noOptions: true,
+            immediate: true,
+            payload: {url: dataset_csv}
+          })
+        }
+      }
 
-      let dataset = this.currentDataset
+      if (value=='received') {
+        let dataset = this.currentDataset
 
-      if (dataset && dataset.dtypes_list)
-        this.typesAvailable = dataset.dtypes_list
+
+        if (dataset && dataset.dtypes_list)
+          this.typesAvailable = dataset.dtypes_list
+      }
     },
 
 		tab (value) {

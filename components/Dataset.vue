@@ -165,19 +165,14 @@
 		<client-only>
 			<div
 				v-show="view==1 && currentDataset && currentDataset.summary"
-				class="hot-table-container"
+				class="the-table-container"
 			>
-				<HotTable
-					v-if="currentDataset && currentDataset.sample && hotColumns.length>0"
-					:settings="hotSettings"
-					:key="tableUpdate"
-					class="hot-table"
-					ref="hotTable"
-				>
-					<HotColumn v-for="(column, i) in hotColumns" :key="i" :settings="column">
-						<GraphicsRenderer hot-renderer :key="tableUpdate+'renderer'+i"/>
-					</HotColumn>
-				</HotTable>
+        <BumblebeeTable
+					v-if="view==1 && currentDataset && (currentDataset.sample || currentDataset.id)"
+          :bbColumns="bbColumns"
+          @updatedSelection="selectionEvent"
+          ref="bumblebeeTable"
+        />
 			</div>
 		</client-only>
 	</div>
@@ -186,9 +181,10 @@
 <script>
 
 import { debounce, throttle } from '@/utils/functions.js'
+import { mapGetters } from 'vuex'
 import dataTypesMixin from '@/plugins/mixins/data-types'
 import GraphicsRenderer from '@/components/GraphicsRenderer'
-import { mapGetters } from 'vuex'
+import BumblebeeTable from '@/components/BumblebeeTable'
 
 export default {
 
@@ -197,7 +193,8 @@ export default {
   ],
 
   components: {
-    GraphicsRenderer
+    GraphicsRenderer,
+    BumblebeeTable
   },
 
   props: {
@@ -208,12 +205,6 @@ export default {
     view: {
       default: 0,
       type: Number
-    },
-    detailsActive: {
-      default: false
-    },
-    optionsActive: {
-      default: false
     },
     sortBy: {
       type: Array,
@@ -242,7 +233,6 @@ export default {
 
 			tableUpdate: 0,
 
-      // controls
 			hiddenColumns: {},
 
 			HotTable: undefined,
@@ -285,16 +275,16 @@ export default {
     },
 
     // affects table view only
-    hotColumns () {
-      var hotColumns = this.newFilteredColumns ? [...this.newFilteredColumns.filter((column) => {
+    bbColumns () {
+      var bbColumns = this.newFilteredColumns ? [...this.newFilteredColumns.filter((column) => {
 				return !this.hiddenColumns[column.name]
       })] : []
 
       let selectColumns = [...(this.currentDataset.columns || [])]
 
-			if (this.sortBy[0] && hotColumns.length) {
-				if (typeof hotColumns[0][this.sortBy[0]] === 'string') {
-					hotColumns.sort((a, b) => {
+			if (this.sortBy[0] && bbColumns.length) {
+				if (typeof bbColumns[0][this.sortBy[0]] === 'string') {
+					bbColumns.sort((a, b) => {
 						let _a = a[this.sortBy[0]].toLowerCase()
 						let _b = b[this.sortBy[0]].toLowerCase()
 						return (_a < _b) ? -1 : (_a > _b) ? 1 : 0
@@ -305,7 +295,7 @@ export default {
 						return (_a < _b) ? -1 : (_a > _b) ? 1 : 0
           })
 				} else {
-					hotColumns.sort((a, b) => {
+					bbColumns.sort((a, b) => {
 						let _a = a[this.sortBy[0]]
 						let _b = b[this.sortBy[0]]
 						return (_a < _b) ? -1 : (_a > _b) ? 1 : 0
@@ -317,32 +307,19 @@ export default {
           })
 				}
 				if (this.sortDesc[0]) {
-          hotColumns.reverse()
+          bbColumns.reverse()
           selectColumns.reverse()
         }
       }
 
       this.$emit('sort',selectColumns.map(e=>e.name))
 
-			return hotColumns.map((e, i) => {
-				return {
-					data: this.currentDataset.columns.findIndex(de => de.name === e.name),
-					editor: false,
-					readOnly: true,
-					title: `
-            <span class="data-type-in-table abs data-type type-${e.column_dtype}">
-              ${this.dataType(e.column_dtype)}
-            </span>
-            <span class="data-title">
-              ${e.name}
-            </span>`
-				}
-      })
+			return bbColumns.map(e=> this.currentDataset.columns.findIndex(de => de.name === e.name))
 
     },
 
-    hotColumnsJoin () {
-      return this.hotColumns.map(e=>e.data).join('')
+    bbColumnsJoin () {
+      return this.bbColumns.map(e=>e.data).join('')
     },
 
     newFilteredColumns () {
@@ -407,50 +384,11 @@ export default {
       }
     },
 
-		hotSettings () {
-			return {
-				// dropdownMenu: ['filter_by_condition', 'filter_operators', 'filter_by_condition2', 'filter_action_bar'],
-				data: [this.graphicsData, ...this.currentDataset.sample.value],
-				fixedRowsTop: 1,
-				autoColumnSize: false,
-				autoRowSize: false,
-				colWidths: 170,
-				rowHeaders: false,
-				rowHeight: '30px',
-				copyPaste: true,
-				manualColumnResize: true,
-				colHeaders: this.colHeaders,
-				renderAllRows: false,
-				height: '100vh',
-				columnSorting: false,
-				filters: true,
-				disabledHover: true,
-				afterSelectionEndByProp: this.selectionEvent,
-				licenseKey: 'non-commercial-and-evaluation'
-			}
-		},
-
-		graphicsData () {
-			return this.currentDataset.columns.map((column, i) => {
-				return {
-					toString () {
-						return ''
-          },
-          key: this.tableKey+'e'+i,
-          index: i,
-          name: column.name,
-          mismatch: (column.dtypes_stats.mismatch) ? +column.dtypes_stats.mismatch : 0,
-          null: (column.dtypes_stats.null) ? +column.dtypes_stats.null : 0,
-          missing: (column.dtypes_stats.missing) ? +column.dtypes_stats.missing : 0,
-					zeros: column.stats.zeros,
-					total: this.currentDataset.summary.rows_count,
-					count_uniques: column.stats.count_uniques,
-					hist: (column.stats.hist && column.stats.hist[0]) ? column.stats.hist : undefined,
-					hist_years: (column.stats.hist && column.stats.hist.years) ? column.stats.hist.years : undefined,
-					frequency: (column.frequency) ? column.frequency : undefined
-				}
+    columnsHeader () {
+			return this.currentDataset.columns.map((e) => {
+				return e.name
 			})
-    }
+    },
   },
 
   beforeCreate() {
@@ -460,15 +398,7 @@ export default {
   mounted() {
 
     try {
-      var selectedColumns = {}
-      var storeSelectedColumns = this.currentSelection.columns
-      if (storeSelectedColumns) {
-        for (let index = 0; index < storeSelectedColumns.length; index++) {
-            selectedColumns[storeSelectedColumns[index].name] = true
-        }
-      }
-
-      this.selectedColumns = selectedColumns
+      this.getSelectionFromStore()
     } catch (error) {}
 
     this.$nextTick(()=>{
@@ -478,6 +408,22 @@ export default {
   },
 
   methods: {
+
+    getSelectionFromStore () {
+      var selectedColumns = {}
+      var storeSelectedColumns = this.currentSelection.columns
+
+      if (storeSelectedColumns) {
+        for (let index = 0; index < storeSelectedColumns.length; index++) {
+            selectedColumns[storeSelectedColumns[index].name] = true
+        }
+      }
+
+      if (JSON.stringify(selectedColumns) !== JSON.stringify(this.selectedColumns)) {
+        this.selectedColumns = selectedColumns
+      }
+
+    },
 
 
     displaySelection: throttle( async function (item) {
@@ -527,9 +473,22 @@ export default {
 
 		rowClicked (e) {
       this.toggleColumnSelection(e.name)
-		},
+    },
 
-		selectionEvent: debounce( function(row, prop, row2, prop2) {
+    selectionEvent (selection) {
+
+      var selectedIndices = []
+
+      for (const key in selection) {
+        if (selection[key]) {
+          selectedIndices.push(key)
+        }
+      }
+
+      this.handleSelection(selectedIndices,true)
+    },
+
+		oldselectionEvent: debounce( function(row, prop, row2, prop2) {
 
 			if (row <= 0) {
 
@@ -625,7 +584,11 @@ export default {
       }
     },
 
-    hotColumnsJoin () {
+    currentSelection() {
+      this.getSelectionFromStore()
+    },
+
+    bbColumnsJoin () {
       this.$nextTick(()=>{
         this.tableUpdate = this.tableUpdate + 1
       })
@@ -634,30 +597,7 @@ export default {
     searchText: {
 			immediate: true,
 			handler: 'watchSearchText'
-		},
-
-		detailsActive: {
-			deep: true,
-			handler (value) {
-				this.$nextTick(() => {
-          try {
-            this.$refs['hotTable'].hotInstance.render()
-          }
-          catch {}
-				})
-			}
-    },
-
-    optionsActive: {
-      handler (value) {
-				this.$nextTick(() => {
-          try {
-            this.$refs['hotTable'].hotInstance.render()
-          }
-          catch {}
-				})
-			}
-    },
+		}
 	},
 
 

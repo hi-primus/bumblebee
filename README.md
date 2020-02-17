@@ -2,24 +2,35 @@
 
 # Bumblebee
 
->> This is an alpha release
+With Bumblebee, you can easily clean and prepare bigdata using a visual interface. It is built over Optimus/Pyspark so you can handle small and big data efficiently.
 
-A GUI that wants to make data profiling beautiful. You can read any json with this schema https://gist.github.com/argenisleon/f3989cc61da28a6cedcf5c77e5942888 and bumblebee will plot frecuency and histograms charts to better help you make sense of your data.
+For more info about Bumblebee, please go to:
+https://hi-bumblebee.com/
 
-## Blublebee is Agnostic 
-You can output this json from whatever software or library you want, for example R or Pandas(Python) and use it with Bumblebee.
+## Installation
 
-For now Optimus https://github.com/ironmussa/Optimus can output json compatible with Bumblebee when you run the profiler().
+Please follow this https://blog.hi-bumblebee.com/install-bumblebee/
 
-If you write a function to output a json formatted to bumblebee please be sure to contribute with the repo.
+### Load and explore
+Get data from CSV, JSON, parquet, Avro files, and databases. Then get histograms, frequency charts, and advance stats.
 
-## Install
+![Database](images/db.gif)
 
+### Transform and Clean
+Convert unstructured data, standardize string values, unify date format, Impute data, and handle outliers. Also, you can create custom functions.
+![Database](images/jupyter.gif)
 
-* Install node/npm https://www.npmjs.com/get-npm
-* Clone or download the Bumblebee repo
-* `npm install`
-* `npm run dev`
+### Prepare for Machine Learning
+Bin columns, string clustering, one-hot encode, scaling, and split train and test data.
+![Database](images/ml.gif)
+
+### Interact with code like in jupyter notebook
+Every action over your data is added as a transformation step using python code that you can modify anytime. Also, you can add any python code you want to make complex Apache Spark transformations.
+![Database](images/transform.gif)
+
+### See Bumblebee in action
+https://www.loom.com/embed/c2cfb6a2e0a549e2afeb8d484865b968
+
 
 ## Contributing to Bumblebee 
 Contributions go far beyond pull requests and commits. We are very happy to receive any kind of contributions including:

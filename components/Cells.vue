@@ -343,7 +343,6 @@
 
 <script>
 
-import axios from 'axios'
 import CodeEditor from '@/components/CodeEditor'
 import OutputColumnInputs from '@/components/OutputColumnInputs'
 import Outliers from '@/components/Outliers'
@@ -943,12 +942,14 @@ export default {
             }
             catch (error) {
 
-              if (error.content.traceback.length)
+              if (error.content && error.content.traceback && error.content.traceback.length){
                 error.content.traceback_escaped = error.content.traceback.map(l=>
                   l.replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '')
                 )
-
+                console.error(error.content.traceback_escaped.join('\n'))
+              }
               console.error(error)
+
               var _error = error
               if ( error.content && error.content.ename )
                 _error = error.content.ename
@@ -1106,10 +1107,12 @@ export default {
             }
             catch (error) {
 
-              if (error.content.traceback.length)
+              if (error.content && error.content.traceback && error.content.traceback.length){
                 error.content.traceback_escaped = error.content.traceback.map(l=>
                   l.replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '')
                 )
+                console.error(error.content.traceback_escaped.join('\n'))
+              }
               console.error(error)
               var _error = error
               if (error.content && error.content.ename)
@@ -1328,11 +1331,12 @@ export default {
             }
             catch (error) {
 
-              if (error.content.traceback.length)
+              if (error.content && error.content.traceback && error.content.traceback.length){
                 error.content.traceback_escaped = error.content.traceback.map(l=>
                   l.replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '')
                 )
-
+                console.error(error.content.traceback_escaped.join('\n'))
+              }
               console.error(error)
 
               var _error = error
@@ -2124,20 +2128,36 @@ export default {
         payload.command = event.command
 
         if (_command.dialog) {
-          this.currentCommand = payload
+
+          this.currentCommand = {...payload, ...(event.payload || {})}
+
           if (_command.onInit)
             await _command.onInit()
-          setTimeout(() => {
-            var ref = this.$refs['command-dialog'][0]
-            if (ref && ref.$el){
-              var el = ref.$el.getElementsByTagName('input')[0]
-              if (el)
-                el.focus()
-            }
-          }, 100);
+
+          if (event.immediate) {
+            await this.confirmCommand()
+          }
+
+          else {
+            setTimeout(() => {
+              var ref = this.$refs['command-dialog'][0]
+              if (ref && ref.$el){
+                var el = ref.$el.getElementsByTagName('input')[0]
+                if (el)
+                  el.focus()
+              }
+            }, 100);
+          }
         }
         else {
-          var cell = {...event, columns: payload.columns || columns, payload}
+
+          console.log('payload',payload)
+
+          var cell = {
+            ...event,
+            columns: payload.columns || columns,
+            payload
+          }
           this.addCell(-1, cell)
           this.runButton = false
         }
@@ -2379,7 +2399,8 @@ export default {
         var response = await this.socketPost('cells', {
           code,
           name: this.dataset.summary ? this.dataset.name : null,
-          session: this.$store.state.session
+          session: this.$store.state.session,
+          key: this.$store.state.key
         }, {
           timeout: 0
         })
@@ -2390,8 +2411,8 @@ export default {
           throw response
         }
 
-        var content = JSON.parse(trimCharacters(response.content,"'")).data
-        this.handleDatasetResponse(content)
+        // var content = JSON.parse(trimCharacters(response.content,"'")).data
+        this.handleDatasetResponse(response.content)
 
         this.$forceUpdate()
         this.markCells()
@@ -2400,10 +2421,12 @@ export default {
         this.lastWrongCode = false
 
       } catch (error) {
-        if (error.content && error.content.traceback.length)
+        if (error.content && error.content.traceback && error.content.traceback.length){
           error.content.traceback_escaped = error.content.traceback.map(l=>
             l.replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '')
           )
+          console.error(error.content.traceback_escaped.join('\n'))
+        }
         console.error(error)
         this.codeError = (error.content && error.content.ename) ? error.content.ename + ': ' + error.content.evalue : error
 
