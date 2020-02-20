@@ -230,11 +230,11 @@
         </div>
         <div class="sidebar-content">
 
-          <div v-if="selectedColumns.length>1" class="sidebar-section pr-10 columns-selected">
-            <CommandMenu v-if="$route.query.kernel=='1'" :columnsNumber="selectedColumns.length" button.class="right-button-center" :disabled="commandsDisabled" @command="commandHandle($event)"></CommandMenu>
-            <div class="column-selected" v-for="(column, i) in selectedColumns" :key="column.index+'selc'+i">
-              <span class="data-type" :class="`type-${dataset.columns[column.index].column_dtype}`">{{ dataType(dataset.columns[column.index].column_dtype) }}</span>
-              <span class="data-column-name">{{ dataset.columns[column.index].name }}</span>
+          <div v-if="detailedColumns.length>1" class="sidebar-section pr-10 columns-selected">
+            <CommandMenu v-if="$route.query.kernel=='1'" :columnsNumber="detailedColumns.length" button.class="right-button-center" :disabled="commandsDisabled" @command="commandHandle($event)"></CommandMenu>
+            <div class="column-selected" v-for="(index, i) in detailedColumns" :key="index+'selc'+i">
+              <span class="data-type" :class="`type-${dataset.columns[index].column_dtype}`">{{ dataType(dataset.columns[index].column_dtype) }}</span>
+              <span class="data-column-name">{{ dataset.columns[index].name }}</span>
             </div>
           </div>
           <div v-if="detailsActive['heat-map']" class="heat-map plot">
@@ -288,12 +288,12 @@
               >
             </VegaEmbed>
           </div>
-          <template v-for="(column, i) in selectedColumns">
+          <template v-for="(index, i) in detailedColumns">
             <ColumnDetails
-              :key="column.index+'cd'"
+              :key="index+'cd'"
               :startExpanded="i==0"
               :rowsCount="+dataset.summary.rows_count"
-              :column="dataset.columns[column.index]"
+              :column="dataset.columns[index]"
               :commandsDisabled="commandsDisabled"
               @command="commandHandle($event)"
             ></ColumnDetails>
@@ -362,7 +362,6 @@ export default {
 
       scatterPlotDisplay: [],
 
-      detailsActive: false,
       optionsActive: false,
       commandsDisabled: false,
       operation: undefined,
@@ -433,6 +432,92 @@ export default {
 	computed: {
 
     ...mapGetters(['currentSelection','selectionType']),
+
+    detailsActive() {
+
+      var selected = this.selectedColumns.map(e=>e.index)
+
+      var detailsActive = false
+
+      if (this.selectionType=='columns' && !selected.length) {
+        detailsActive = false
+      }
+      else {
+        detailsActive = {}
+        this.optionsActive = false
+      }
+
+      if (selected.length) {
+
+        var plotable = selected.map( (i)=>{
+          var column = this.dataset.columns[i]
+          return ['decimal','float','double'].includes(column.column_dtype) ? 'quantitative'
+            : (['int','integer'].includes(column.column_dtype) && column.stats.count_uniques>25) ? 'quantitative'
+            : (column.stats.count_uniques<=25) ? column.stats.count_uniques
+            : false
+        })
+
+        if (plotable.length==2 && selected.length==2) {
+
+          this.heatMap = this.calculateHeatMap(selected[0], selected[1], plotable[0], plotable[1])
+
+          if (this.heatMap) {
+            detailsActive['heat-map'] = true
+
+            let _x =
+            (plotable[0]==='quantitative') ? {
+              x: {
+                field: 'x',
+                title: this.dataset.columns[selected[0]].name,
+                type: plotable[0],
+                bin: {
+                  binned: true
+                }
+              },
+              x2: {
+                field: 'x2',
+              },
+            }
+            : {
+              x: {
+                field: 'x',
+                title: this.dataset.columns[selected[0]].name,
+                type: 'ordinal'
+              }
+            }
+
+            let _y =
+            (plotable[1]==='quantitative') ? {
+              y: {
+                field: 'y',
+                title: this.dataset.columns[selected[1]].name,
+                type: plotable[1],
+                bin: {
+                  binned: true
+                }
+              },
+              y2: {
+                field: 'y2',
+              },
+            }
+            : {
+              y: {
+                field: 'y',
+                title: this.dataset.columns[selected[1]].name,
+                type: 'ordinal'
+              }
+            }
+
+            this.heatMapEncoding ={
+              ..._x,
+              ..._y
+            }
+          }
+        }
+      }
+
+      return detailsActive
+    },
 
     cells: {
       get() {
@@ -545,7 +630,7 @@ export default {
           // group: 'FILTER',
           onClick: ()=>this.commandHandle({command: 'filter rows'}),
           tooltip: 'Filter rows',
-          disabled: { valueOf: ()=>this.selectedColumns.length!=1 },
+          disabled: { valueOf: ()=>!(this.selectionType!='columns' || this.selectedColumns.length==1) },
           icons: [{icon: 'filter_list'}]
         },
         { divider: true },
@@ -614,11 +699,11 @@ export default {
             else if (this.selectionType=='values')
               this.commandHandle({command: 'replace values'})
             else
-              this.commandHandle({command: 'replace range'})
+              this.commandHandle({command: 'replace'})
           },
           tooltip: {
             toString: ()=>{
-              if (this.selectionType=='columns')
+              if (this.selectionType!='values')
                 return 'Replace in column'+ (this.selectedColumns.length!=1 ? 's' : '')
               else if (this.selectionType=='values')
                 return 'Replace values'
@@ -627,7 +712,7 @@ export default {
             }
           },
           icons: [{icon: 'find_replace'}],
-          disabled: {valueOf: ()=>!(this.selectionType!='ranges' && this.selectedColumns.length>0)}
+          disabled: {valueOf: ()=>!(this.selectionType=='values' || this.selectedColumns.length>0)}
         },
         {
           type: 'menu',
@@ -680,6 +765,13 @@ export default {
           onClick: ()=>this.commandHandle({command: 'outliers'})
         }
       ]
+    },
+
+    detailedColumns() {
+      if (this.selectionType!='columns') {
+        return [this.currentSelection.ranged.index]
+      }
+      return this.selectedColumns.map(e=>e.index)
     },
 
     selectedColumns: {
@@ -875,85 +967,10 @@ export default {
 
      handleSelection (selected, indices = true) {
 
-
       if (!indices) {
         // selected(names) -> selected(indices)
         selected = selected.map(name=>this.dataset.columns.findIndex(column => column.name===name))
       }
-
-      if (selected.length) {
-
-        var plotable = selected.map( (i)=>{
-          var column = this.dataset.columns[i]
-          return ['decimal','float','double'].includes(column.column_dtype) ? 'quantitative'
-            : (['int','integer'].includes(column.column_dtype) && column.stats.count_uniques>25) ? 'quantitative'
-            : (column.stats.count_uniques<=25) ? column.stats.count_uniques
-            : false
-        })
-
-        this.detailsActive = {}
-        this.optionsActive = false
-        if (plotable.length==2 && selected.length==2) {
-          // this.detailsActive['scatter-plot'] = true
-          this.heatMap = this.calculateHeatMap(selected[0], selected[1], plotable[0], plotable[1])
-          if (this.heatMap) {
-            this.detailsActive['heat-map'] = true
-
-            let _x =
-            (plotable[0]==='quantitative') ? {
-              x: {
-                field: 'x',
-                title: this.dataset.columns[selected[0]].name,
-                type: plotable[0],
-                bin: {
-                  binned: true
-                }
-              },
-              x2: {
-                field: 'x2',
-              },
-            }
-            : {
-              x: {
-                field: 'x',
-                title: this.dataset.columns[selected[0]].name,
-                type: 'ordinal'
-              }
-            }
-
-            let _y =
-            (plotable[1]==='quantitative') ? {
-              y: {
-                field: 'y',
-                title: this.dataset.columns[selected[1]].name,
-                type: plotable[1],
-                bin: {
-                  binned: true
-                }
-              },
-              y2: {
-                field: 'y2',
-              },
-            }
-            : {
-              y: {
-                field: 'y',
-                title: this.dataset.columns[selected[1]].name,
-                type: 'ordinal'
-              }
-            }
-
-            this.heatMapEncoding ={
-              ..._x,
-              ..._y
-            }
-          }
-        }
-      }
-      else {
-        this.detailsActive = false
-      }
-
 
       this.selectedColumns = selected.map(e=>({index: e, name: this.dataset.columns[e].name}))
     },

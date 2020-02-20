@@ -2151,8 +2151,6 @@ export default {
         }
         else {
 
-          console.log('payload',payload)
-
           var cell = {
             ...event,
             columns: payload.columns || columns,

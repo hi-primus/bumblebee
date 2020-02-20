@@ -579,41 +579,6 @@ table {
   margin-left: -11px;
 }
 
-.scatter-plot {
-  display: flex;
-  flex-wrap: wrap;
-  $label-space: 20px;
-  .scatter-plot-x, .scatter-plot-y {
-    text-align: center;
-    font-weight: 700;
-    font-size: 0.75rem;
-    text-transform: uppercase;
-  }
-  .scatter-plot-x {
-    padding-left: $label-space;
-    width: 100%;
-  }
-  .scatter-plot-y {
-    padding-top: $label-space*2;
-    width: $label-space;
-    writing-mode: vertical-lr;
-    transform: rotate(180deg)
-  }
-  .scatter-plot-grid {
-    margin-left: -24px;
-    g.mark-symbol.role-mark.marks * {
-      fill: rgba($data-teal, 60%) !important;
-      stroke: rgba($data-teal, 30%) !important;
-    }
-    g .background {
-      display: none;
-    }
-    g .role-axis-domain {
-      display: none;
-    }
-  }
-}
-
 /* plots */
 
 .table-container {
@@ -1578,6 +1543,8 @@ $editor-top-padding: 6px;
 
 /* BB-TABLE */
 
+
+
 .bbt-container {
   height: calc(100vh - 191px) !important;
   max-height: calc(100vh - 191px) !important;
@@ -1636,6 +1603,10 @@ $editor-top-padding: 6px;
     flex-shrink: 0;
     flex-basis: auto;
 
+    &::-webkit-scrollbar-track {
+      border-bottom: $line-color-1 solid 3px !important;
+    }
+
     display: flex;
     flex-direction: column;
     padding-bottom: 2px;
@@ -1655,6 +1626,7 @@ $editor-top-padding: 6px;
       height: 28px;
 
       .bb-table-h-cell {
+        border-top-color: white !important;
         display: flex;
         flex-direction: row;
         flex-wrap: nowrap;
@@ -1679,11 +1651,8 @@ $editor-top-padding: 6px;
     }
 
     .bb-table-plots {
-      // border-bottom-width: 1px;
-      // border-bottom-style: solid;
 
       font-family: $font-mono;
-
 
       .bb-table-plot {
         height: 92px;
@@ -1711,7 +1680,6 @@ $editor-top-padding: 6px;
     overflow-x: scroll;
     position: relative;
 
-
     // position: relative;
     .bb-table {
       width: 100%;
@@ -1720,7 +1688,7 @@ $editor-top-padding: 6px;
       color: $text-color;
       margin-top: -1px;
       .bb-table-row {
-        animation: fadein-cell 0.41s ease-in-out;
+        // animation: fadein-cell 0.41s ease-in-out;
         position: absolute;
         background: white;
         height: 23px;
@@ -1740,18 +1708,27 @@ $editor-top-padding: 6px;
   .bb-table-h-cell, .bb-table-plot {
     height: 100%;
   }
+
+  &:not(.range--selected) {
+    .bb-table-h-cell, .bb-table-cell, .bb-table-plot {
+      &.bb-selected {
+        background-color: $data-highlight;
+        border-color: darken($data-highlight, 10%) !important;
+      }
+      &.bb-selected + * {
+        border-left-color: darken($data-highlight, 10%) !important;
+      }
+    }
+  }
+
   .bb-table-h-cell, .bb-table-cell, .bb-table-plot {
     z-index: 1;
-    &.bb-selected {
-      background-color: $data-highlight;
-      border-color: darken($data-highlight, 10%) !important;
-    }
-    &.bb-selected + * {
-      border-left-color: darken($data-highlight, 10%) !important;
-    }
+    margin-left: 1px;
+
     &:not(:first-child) {
       margin-left: -1px;
     }
+
     &:last-child {
       border-right-width: 1px;
       border-right-style: solid;

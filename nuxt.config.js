@@ -75,7 +75,7 @@ module.exports = {
 	],
 
 	axios: {
-    loading: false,
+    progress: false,
     baseUrl: process.env.API_URL || 'http://localhost:5000',
 		// proxyHeaders: false
 	},

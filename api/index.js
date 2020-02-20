@@ -160,7 +160,7 @@ const new_socket = function (socket, session) {
     var tries = 10
 
     while (tries--) {
-      result = await createKernel(user_session, payload.engine ? payload.engine : "spark")
+      result = await createKernel(user_session, payload.engine ? payload.engine : "dask")
       if (result.status=='error') {
         console.log(result)
         console.log('Kernel error, retrying')
@@ -349,8 +349,8 @@ const run_code = function(code = '', user_session = '', save_rows = false) {
             connection.close()
           }
           else {
-            console.warn('Received message with unhandled msg_type')
-            console.log({msg_type: parsed_message.msg_type})
+            // console.warn('Received message with unhandled msg_type')
+            // console.log({msg_type: parsed_message.msg_type})
             // resolve({ status: 'error', content: parsed_message })
           }
 

@@ -1,6 +1,7 @@
 <template>
 <div
   class="bbt-container"
+  :class="{'range--selected': selectionType!='columns'}"
   ref="BbContainer"
 >
   <div
@@ -10,7 +11,7 @@
     <div class="bb-table-header">
       <template v-for="index in bbColumns">
         <div
-          @click="selectColumn(index)"
+          @click="selectColumn($event,index)"
           class="bb-table-h-cell"
           :class="{'bb-selected': selection[index]}"
           v-if="columns[index]"
@@ -83,7 +84,12 @@
   >
     <div class="bb-table" ref="BbTable" :style="tableStyle">
       <template v-for="row in rows">
-        <div :key="'r'+row.index" class="bb-table-row" :style="{height: rowHeight+'px', top: row.index*rowHeight+'px'}">
+        <!-- v-show="((row.index>=visibleRowsTop) && (row.index<=visibleRowsBottom))" -->
+        <div
+          class="bb-table-row"
+          :key="'r'+row.index"
+          :style="{height: rowHeight+'px', top: row.index*rowHeight+'px'}"
+        >
           <template v-for="index in bbColumns">
               <!-- v-if="row.value[index]" -->
             <div
@@ -120,7 +126,7 @@ import DataBar from '@/components/DataBar'
 
 import { arraysEqual } from '@/utils/functions.js'
 
-const debounceScrollTime = 300
+const throttleScrollTime = 500
 
 export default {
 
@@ -144,11 +150,13 @@ export default {
 
 	data() {
 		return {
-      maxChunks: 20/5,
+      maxChunks: 10,
       fetching: false,
 
-      visibleChunkTop: 0,
-      visibleChunkBottom: 100,
+      // visibleRowsTop: 0,
+      // visibleRowsBottom: 100,
+      loadedChunksTop: 0,
+      loadedChunksBottom: 1,
 
       selection: {},
       chunks: [],
@@ -158,7 +166,11 @@ export default {
 
 	computed: {
 
-    ...mapGetters(['currentSelection','currentDataset']),
+    ...mapGetters(['currentSelection','currentDataset','selectionType']),
+
+    postochunk() {
+      return 1/(this.rowHeight*this.chunkSize)
+    },
 
     chunkSize () {
       return Math.max(Math.ceil(300/this.currentDataset.columns.length),40)
@@ -184,19 +196,14 @@ export default {
     rows () {
       var rows = []
       // this.chunks.sort((a,b)=>a.index-b.index) // NO
-      console.log({visibleChunkTop: this.visibleChunkTop, visibleChunkBottom: this.visibleChunkBottom})
       this.chunks.forEach(chunk => {
-        if ((chunk.index>=this.visibleChunkTop) && (chunk.index<=this.visibleChunkBottom)) {
+        if ((chunk.index>=this.loadedChunksTop) && (chunk.index<=this.loadedChunksBottom)) {
           rows = [...rows, ...chunk.rows]
         }
       })
       // rows = [...new Set(rows)];
       rows.sort((a,b)=>a.index-b.index)
       return rows
-    },
-
-    visibleRows () {
-
     },
 
     rowsCount() {
@@ -221,8 +228,8 @@ export default {
   },
 
   mounted() {
-    this.$refs['BbTableContainer'] & this.$refs['BbTableContainer'].addEventListener('scroll', this.scrollLeftCheck)
-    this.$refs['BbTableContainer'] & this.$refs['BbTableContainer'].addEventListener('scroll', this.debounceCheckScroll)
+    this.$refs['BbTableContainer'] & this.$refs['BbTableContainer'].addEventListener('scroll', this.throttleCheckScroll, {passive: true})
+    this.$refs['BbTableContainer'] & this.$refs['BbTableContainer'].addEventListener('scroll', this.scrollLeftCheck, {passive: true})
     this.checkScroll()
 
     this.currentDataset.columns.forEach((column, index) => {
@@ -230,6 +237,16 @@ export default {
     });
 
     this.updateSelection(this.currentSelection)
+  },
+
+  beforeDestroy() {
+    try {
+      this.$refs['BbTableContainer'].removeEventListener('scroll', this.throttleCheckScroll)
+      this.$refs['BbTableContainer'].removeEventListener('scroll', this.scrollLeftCheck)
+    }
+    catch (err) {
+      console.error(err)
+    }
   },
 
   watch: {
@@ -242,8 +259,6 @@ export default {
   methods: {
 
     updateSelection(value) {
-      console.log("updating selection")
-
       var selectionArray = []
 
       for (const index in this.selection) {
@@ -270,9 +285,12 @@ export default {
       }
     },
 
-    selectColumn(index) {
-      console.log("selectColumn index",index, !this.selection[index])
+    selectColumn(event, index) {
+      if (!event.ctrlKey && !this.selection[index]) {
+        this.selection = {}
+      }
       this.$set(this.selection, index, !this.selection[index])
+
       this.$emit('updatedSelection',this.selection)
     },
 
@@ -280,69 +298,60 @@ export default {
       this.$refs['BbTableTopContainer'].scrollLeft = this.$refs['BbTableContainer'].scrollLeft
     },
 
-    debounceCheckScroll: debounce(function(e) {this.checkScroll(e)} , debounceScrollTime), // TODO: Parameter
+    throttleCheckScroll: throttle(function(e) {this.checkScroll(e)} , throttleScrollTime),
 
     async checkScroll () {
 
       var element = this.$refs['BbTableContainer']
 
-      var topPosition = (element) ? element.scrollTop : 0
-      var bottomPosition = topPosition + ((element) ? element.clientHeight : 1080)
+      var topPosition = element.scrollTop
+      var bottomPosition = topPosition + element.clientHeight
 
-      var startRow = Math.floor(topPosition/this.rowHeight)
-      var endRow = Math.ceil(bottomPosition/this.rowHeight)
+      this.fetchChunks(topPosition, bottomPosition)
 
-      console.log("checking position and rows",{topPosition, bottomPosition, startRow, endRow})
+      // this.visibleRowsTop = topPosition/this.rowHeight - 80
+      // this.visibleRowsBottom = bottomPosition/this.rowHeight + 80
 
-      var time = - new Date()
-
-      await this.fetchChunks(startRow, endRow+1)
-
-      time += new Date()
-
-      console.log({ time })
-
-      this.fetchChunks(startRow, endRow+1)
-
+      // this.fetchChunks(startRow, endRow+1)
     },
 
     async fetchChunks(start, end) {
 
-      var from = Math.max( Math.floor(start/this.chunkSize), 0 )
-      var to = Math.min( Math.ceil(end/this.chunkSize), this.lastChunk )
+      var from = Math.max( Math.floor(start*this.postochunk), 0 )
+      var to = Math.min( Math.ceil(end*this.postochunk), this.lastChunk )
 
-      this.visibleChunkTop = from-1
-      this.visibleChunkBottom = to+1
-
-      console.log({from, to})
+      this.loadedChunksTop = from - 3
+      this.loadedChunksBottom = to + 3
 
       var promises = []
+
+      this.fetching = true
 
       for (let i = from; i <= to; i++) {
         promises.push(this.fetchChunk(i))
       }
 
-      return await Promise.all(promises)
+      await Promise.all(promises)
+
+      this.fetching = false
+
+      if (this.chunks.length>this.maxChunks){
+        this.chunks.splice(0,this.chunks.length-this.maxChunks)
+        // console.log({removing: this.chunks.length-this.maxChunks})
+      }
+
+      // console.log({length: this.chunks.length})
     },
 
     async fetchChunk(index) {
 
-      // console.log({checking: index})
-
-      this.fetching = true
-
-      var result = this.chunks.findIndex(chunk => {
+      var foundIndex = this.chunks.findIndex(chunk => {
         return chunk && chunk.index === index
       })
 
-      if (result!==-1) {
-        // console.log({result: this.chunks[result]})
-        return true
+      if (foundIndex!==-1) {
+        return false
       }
-
-      // console.log({loading: index})
-
-      // console.log({chunksBefore: this.chunks.map(c=>c.index).join()})
 
       var chunkIndexInArray = this.chunks.push({ index: index, rows: []}) - 1
 
@@ -352,8 +361,6 @@ export default {
         dataset: this.currentDataset.id
       })
 
-      console.log({response})
-
       var from = index*this.chunkSize
 
       var rows = response.data.map((r,i)=>({
@@ -361,15 +368,9 @@ export default {
         index: from+i
       }))
 
-      var chunk = { index: index, rows }
+      this.$set(this.chunks,chunkIndexInArray,{ index: index, rows })
 
-      this.$set(this.chunks, chunkIndexInArray, chunk)
-
-      if (this.chunks.length>this.maxChunks){
-        this.chunks.splice(0,1)
-      }
-
-      console.log({chunksAfter: this.chunks.map(c=>c.index).join()})
+      return true
 
     }
   }

@@ -167,9 +167,14 @@ export const mutations = {
       tab = state.tab
     }
     if (tab!==undefined) {
+      var columnsSelected = (columns !== undefined) ? columns : (state.datasetSelection[tab]) ? state.datasetSelection[tab].columns || [] : []
+      columnsSelected = (ranged !== undefined) ? [] : columnsSelected
+
+      var rangedSelected = (columnsSelected.length) ? {} : (ranged !== undefined) ? ranged : (state.datasetSelection[tab]) ? state.datasetSelection[tab].ranged || {} : {}
+
       Vue.set(state.datasetSelection,tab,{
-        columns: (columns !== undefined) ? columns : (state.datasetSelection[tab]) ? state.datasetSelection[tab].columns || [] : [],
-        ranged: (ranged !== undefined) ? ranged : (state.datasetSelection[tab]) ? state.datasetSelection[tab].ranged || {} : {},
+        columns: columnsSelected,
+        ranged: rangedSelected,
       })
     }
   }
@@ -188,10 +193,12 @@ export const getters = {
   },
   selectionType(state) {
     var _ds = state.datasetSelection[state.tab] || []
-    if (_ds && _ds.ranged &&  _ds.ranged.values && _ds.ranged.values.length)
+    if (_ds && _ds.ranged &&  _ds.ranged.values && _ds.ranged.values.length) {
       return 'values'
-    if (_ds && _ds.ranged && _ds.ranged.ranges && _ds.ranged.ranges.length)
+    }
+    if (_ds && _ds.ranged && _ds.ranged.ranges && _ds.ranged.ranges.length) {
       return 'ranges'
+    }
     return 'columns'
   }
 }
