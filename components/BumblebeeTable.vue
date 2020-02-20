@@ -4,6 +4,50 @@
   :class="{'range--selected': selectionType!='columns'}"
   ref="BbContainer"
 >
+  <v-menu
+    outlined
+    v-model="columnMenu"
+    v-if="columnMenuIndex!==false"
+    :key="columnMenuIndex"
+    :close-on-content-click="false"
+    attach=".active-menu-column"
+    nudge-bottom="29px"
+    nudge-left="4px"
+    :min-width="columns[columnMenuIndex].width+6+'px'"
+    max-height="75vh"
+    eager
+  >
+    <v-card
+      class="column-menu font-reset"
+    >
+      <v-list>
+        <v-list-item>
+          <v-text-field
+            outlined
+            placeholder="Column name"
+            value="columnName"
+          />
+        </v-list-item>
+
+        <v-list-item>
+          <v-list-item-action>
+            <v-switch v-model="hints" color="purple"></v-switch>
+          </v-list-item-action>
+          <v-list-item-title>Enable hints</v-list-item-title>
+        </v-list-item>
+        <v-list-item>
+          menu {{columnMenuIndex}}
+        </v-list-item>
+      </v-list>
+
+      <v-card-actions>
+        <v-spacer></v-spacer>
+
+        <v-btn text @click="menu = false">Cancel</v-btn>
+        <v-btn color="primary" text @click="menu = false">Save</v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-menu>
   <div
     class="bb-table-top-container" ref="BbTableTopContainer"
     v-if="columns && bbColumns"
@@ -11,9 +55,10 @@
     <div class="bb-table-header">
       <template v-for="index in bbColumns">
         <div
-          @click="selectColumn($event,index)"
+          @click="selectColumn($event, index)"
+          @dblclick="setMenu($event, index)"
           class="bb-table-h-cell"
-          :class="{'bb-selected': selection[index]}"
+          :class="{'active-menu-column': (columnMenuIndex===index) ,'bb-selected': selection[index]}"
           v-if="columns[index]"
           :key="index"
           :style="{width: columns[index].width+'px'}"
@@ -148,10 +193,15 @@ export default {
     }
 	},
 
+  // index -> columnMenuIndex
+
 	data() {
 		return {
       maxChunks: 10,
       fetching: false,
+
+      columnMenuIndex: false,
+      columnMenu: false,
 
       // visibleRowsTop: 0,
       // visibleRowsBottom: 100,
@@ -292,6 +342,17 @@ export default {
       this.$set(this.selection, index, !this.selection[index])
 
       this.$emit('updatedSelection',this.selection)
+    },
+    setMenu(event, index) {
+      if (this.columnMenuIndex!==index) {
+        this.columnMenuIndex = index
+        this.columnMenu = true
+      }
+      else {
+        this.columnMenuIndex = false
+        this.columnMenu = false
+
+      }
     },
 
     scrollLeftCheck() {

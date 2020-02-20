@@ -1598,10 +1598,14 @@ $editor-top-padding: 6px;
 
 
   .bb-table-top-container {
-    overflow-x: hidden;
+    overflow-x: scroll;
     overflow-y: scroll;
+    min-height: 1000px;
     flex-shrink: 0;
     flex-basis: auto;
+    &::-webkit-scrollbar {
+      display: none
+    }
 
     &::-webkit-scrollbar-track {
       border-bottom: $line-color-1 solid 3px !important;
@@ -1626,6 +1630,8 @@ $editor-top-padding: 6px;
       height: 28px;
 
       .bb-table-h-cell {
+        overflow: visible;
+        border-top-style: none;
         border-top-color: white !important;
         display: flex;
         flex-direction: row;
@@ -1653,6 +1659,7 @@ $editor-top-padding: 6px;
     .bb-table-plots {
 
       font-family: $font-mono;
+      z-index: 0;
 
       .bb-table-plot {
         height: 92px;
@@ -1679,6 +1686,7 @@ $editor-top-padding: 6px;
     overflow-y: scroll;
     overflow-x: scroll;
     position: relative;
+    margin-top: calc(122px - 1000px);
 
     // position: relative;
     .bb-table {
@@ -1688,6 +1696,7 @@ $editor-top-padding: 6px;
       color: $text-color;
       margin-top: -1px;
       .bb-table-row {
+        z-index: 0;
         // animation: fadein-cell 0.41s ease-in-out;
         position: absolute;
         background: white;
@@ -1710,6 +1719,19 @@ $editor-top-padding: 6px;
   }
 
   &:not(.range--selected) {
+    .bb-table-h-cell.bb-selected {
+      position: relative;
+      &::before {
+        content: ' ';
+        position: absolute;
+        height: 1px;
+        width: calc(100% + 1px);
+        top: 0px;
+        left: 0;
+        background-color: darken($data-highlight, 10%);
+        z-index: 100;
+      }
+    }
     .bb-table-h-cell, .bb-table-cell, .bb-table-plot {
       &.bb-selected {
         background-color: $data-highlight;
@@ -1852,4 +1874,8 @@ $editor-top-padding: 6px;
 
 .the-table-container {
   padding-left: 9px;
+}
+
+.font-reset {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif !important;
 }
