@@ -244,7 +244,7 @@ export default {
 			showKey: false,
 			inputKey: '',
 			inputSession: '',
-			inputEngine: 'spark',
+			inputEngine: 'dask',
 			searchText: '',
 			tab: undefined,
 			view: undefined,
@@ -382,7 +382,7 @@ export default {
 
 		this.inputSession = this.$route.query.session || ''
     this.inputKey = this.$route.query.key || ''
-    this.inputEngine = this.$route.query.engine || 'spark'
+    this.inputEngine = this.$route.query.engine || 'dask'
 
 		if (this.inputSession && this.inputKey) {
       this.subscribe()

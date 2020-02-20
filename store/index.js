@@ -6,7 +6,7 @@ export const state = () => ({
 	datasetUpdates: 0,
   status: 'waiting',
   session: '',
-  engine: 'spark',
+  engine: 'dask',
   database: false,
   key: '',
   datasetCounter: 1,
