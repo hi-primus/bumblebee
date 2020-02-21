@@ -313,7 +313,7 @@ import VegaEmbed from '@/components/VegaEmbed'
 import clientMixin from '@/plugins/mixins/client'
 import dataTypesMixin from '@/plugins/mixins/data-types'
 import { copyToClipboard } from '@/utils/functions.js'
-import { mapGetters } from 'vuex'
+import { mapState, mapGetters } from 'vuex';
 
 const api_url = process.env.API_URL || 'http://localhost:5000'
 
@@ -432,6 +432,8 @@ export default {
 	computed: {
 
     ...mapGetters(['currentSelection','selectionType']),
+
+    ...mapState(['nextCommand']),
 
     detailsActive() {
 
@@ -810,6 +812,14 @@ export default {
 
   mounted () {
     this.isMounted = true
+  },
+
+  watch: {
+    nextCommand (event) {
+      if (event) {
+        this.commandHandle(event)
+      }
+    }
   },
 
   methods: {
