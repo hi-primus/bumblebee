@@ -8,10 +8,21 @@ export const state = () => ({
   session: '',
   engine: 'dask',
   database: false,
-  key: '',
+	key: '',
+	allTypes: [
+		'string',
+		'int',
+		'decimal',
+		'date',
+		'boolean',
+		'binary',
+		'array',
+		'null'
+	],
   datasetCounter: 1,
   kernel: false,
   cells: [],
+  nextCommand: false,
   tab: 0
 })
 
@@ -19,6 +30,10 @@ export const mutations = {
 
   setTab (state, { tab }) {
     state.tab = tab
+  },
+
+  commandHandle(state, command) {
+    state.nextCommand = command
   },
 
 	add (state, { dataset }) {
@@ -68,6 +83,9 @@ export const mutations = {
     catch (err) {
       _c = []
     }
+
+    if (dataset && dataset.dtypes_list)
+      state.typesAvailable = dataset.dtypes_list
 
     Vue.set(state.datasets, found, dataset)
 
@@ -200,5 +218,8 @@ export const getters = {
       return 'ranges'
     }
     return 'columns'
+  },
+  typesAvailable(state) {
+    return state.datasets[state.tab].dtypes_list || state.allTypes
   }
 }

@@ -5,47 +5,62 @@
   ref="BbContainer"
 >
   <v-menu
-    outlined
-    v-model="columnMenu"
     v-if="columnMenuIndex!==false"
+    v-model="columnMenuActive"
+    outlined
     :key="columnMenuIndex"
     :close-on-content-click="false"
     attach=".active-menu-column"
     nudge-bottom="29px"
     nudge-left="4px"
-    :min-width="columns[columnMenuIndex].width+6+'px'"
+    :min-width="(columnMenuIndex!==false ? Math.max(250,columns[columnMenuIndex].width+6) : 250) +'px'"
+    width="250px"
     max-height="75vh"
     eager
   >
     <v-card
-      class="column-menu font-reset"
+      class="column-menu font-reset pt-2"
+      @dblclick="function(e){e.stopPropagation()}"
+      style="cursor: initial"
     >
-      <v-list>
-        <v-list-item>
-          <v-text-field
-            outlined
-            placeholder="Column name"
-            value="columnName"
-          />
-        </v-list-item>
+      <v-form
+        @submit.prevent="saveColumnData"
+        ref="column-menu"
+      >
+        <v-list>
+          <v-list-item>
+              <!-- filled -->
+            <v-text-field
+              outlined
+              dense
+              label="New column name"
+              v-model="newColumnName"
+            />
+          </v-list-item>
+          <v-list-item>
+            <v-select
+              outlined
+              dense
+              :items="allTypes"
+              label="New column type"
+              v-model="newColumnType"
+            >
+              <template v-slot:item="{ item }">
+                <div class="data-type in-autocomplete">{{ dataType(item) }}</div> <span class="capitalize">{{ item }}</span>
+              </template>
+              <template v-slot:selection="{ item }">
+                <div class="data-type in-autocomplete mr-2">{{ dataType(item) }}</div> <span class="capitalize">{{ item }}</span>
+              </template>
+            </v-select>
+          </v-list-item>
+        </v-list>
 
-        <v-list-item>
-          <v-list-item-action>
-            <v-switch v-model="hints" color="purple"></v-switch>
-          </v-list-item-action>
-          <v-list-item-title>Enable hints</v-list-item-title>
-        </v-list-item>
-        <v-list-item>
-          menu {{columnMenuIndex}}
-        </v-list-item>
-      </v-list>
-
-      <v-card-actions>
-        <v-spacer></v-spacer>
-
-        <v-btn text @click="menu = false">Cancel</v-btn>
-        <v-btn color="primary" text @click="menu = false">Save</v-btn>
-      </v-card-actions>
+        <v-card-actions style="margin-top: -32px; margin-right: 8px; padding-bottom: 10px;">
+          <v-spacer></v-spacer>
+          <v-btn small text @click="columnMenuIndex = false">Cancel</v-btn>
+          <v-btn small depressed color="primary" type="submit">Save</v-btn>
+        </v-card-actions>
+      </v-form>
     </v-card>
   </v-menu>
   <div
@@ -161,7 +176,7 @@
 <script>
 
 import { throttle, debounce } from '@/utils/functions.js'
-import { mapGetters } from 'vuex'
+import { mapState, mapGetters } from 'vuex';
 
 import dataTypesMixin from '@/plugins/mixins/data-types'
 
@@ -170,6 +185,8 @@ import Frequent from '@/components/Frequent'
 import DataBar from '@/components/DataBar'
 
 import { arraysEqual } from '@/utils/functions.js'
+
+var doubleClick = false
 
 const throttleScrollTime = 500
 
@@ -201,14 +218,17 @@ export default {
       fetching: false,
 
       columnMenuIndex: false,
-      columnMenu: false,
 
       // visibleRowsTop: 0,
       // visibleRowsBottom: 100,
       loadedChunksTop: 0,
       loadedChunksBottom: 1,
 
+      newColumnName: '',
+      newColumnType: 'string',
+
       selection: {},
+      previousSelection : {},
       chunks: [],
       columns: {}
 		}
@@ -217,6 +237,22 @@ export default {
 	computed: {
 
     ...mapGetters(['currentSelection','currentDataset','selectionType']),
+
+    ...mapState(['allTypes']),
+
+    columnMenuActive: {
+      get () {
+        return this.columnMenuIndex!==false
+      },
+      set (v) {
+        if (v!==false) {
+          this.columnMenuIndex=v
+        }
+        else {
+          this.columnMenuIndex=false
+        }
+      }
+    },
 
     postochunk() {
       return 1/(this.rowHeight*this.chunkSize)
@@ -278,8 +314,8 @@ export default {
   },
 
   mounted() {
-    this.$refs['BbTableContainer'] & this.$refs['BbTableContainer'].addEventListener('scroll', this.throttleCheckScroll, {passive: true})
-    this.$refs['BbTableContainer'] & this.$refs['BbTableContainer'].addEventListener('scroll', this.scrollLeftCheck, {passive: true})
+    this.$refs['BbTableContainer'] && this.$refs['BbTableContainer'].addEventListener('scroll', this.throttleCheckScroll, {passive: true})
+    this.$refs['BbTableContainer'] && this.$refs['BbTableContainer'].addEventListener('scroll', this.scrollLeftCheck, {passive: true})
     this.checkScroll()
 
     this.currentDataset.columns.forEach((column, index) => {
@@ -308,6 +344,10 @@ export default {
 
   methods: {
 
+    commandHandle(command) {
+      this.$store.commit('commandHandle',command)
+    },
+
     updateSelection(value) {
       var selectionArray = []
 
@@ -335,24 +375,85 @@ export default {
       }
     },
 
+    columnClicked(event, index) {
+
+    },
+
     selectColumn(event, index) {
-      if (!event.ctrlKey && !this.selection[index]) {
-        this.selection = {}
-      }
+      setTimeout(() => {
+
+        if (doubleClick) {
+          doubleClick = false
+          return
+        }
+
+        // this.previousSelection = {...this.selection}
+
+        if (!event.ctrlKey && !this.selection[index]) {
+          this.selection = {}
+        }
+        this.$set(this.selection, index, !this.selection[index])
+
+        this.$emit('updatedSelection',this.selection)
+      }, 5);
+    },
+
+    setMenu(event, index) {
+
+      doubleClick = true
+
+      this.newColumnName = this.currentDataset.columns[index].name
+      this.newColumnType = this.currentDataset.columns[index].column_dtype
+
+      this.columnMenuIndex = index
+
+      this.selection = {}
       this.$set(this.selection, index, !this.selection[index])
 
-      this.$emit('updatedSelection',this.selection)
-    },
-    setMenu(event, index) {
-      if (this.columnMenuIndex!==index) {
-        this.columnMenuIndex = index
-        this.columnMenu = true
-      }
-      else {
-        this.columnMenuIndex = false
-        this.columnMenu = false
+      setTimeout(() => {
+        var ref = this.$refs['column-menu']
+        if (ref && ref.$el){
+          var el = ref.$el.getElementsByTagName('input')[0]
+          if (el)
+            el.focus()
+          this.$nextTick(()=>{
+            this.$refs['BbTableContainer'].scrollLeft = this.$refs['BbTableTopContainer'].scrollLeft
+          })
+          // if (this.previousSelection) {
+          //   this.selection = {...this.previousSelection}
+          //   this.previousSelection = false
+          // }
+        }
+      }, 100);
 
+    },
+
+    saveColumnData() {
+      var index = this.columnMenuIndex
+      var prevName = this.currentDataset.columns[index].name
+      var prevType = this.currentDataset.columns[index].column_dtype
+
+      if (this.newColumnType != prevType) {
+        var payload = {
+          columns: [prevName],
+          dtype: this.newColumnType
+        }
+        this.commandHandle({command: 'cast', ...payload})
+        // commandHandle(...)
       }
+
+      this.$nextTick(()=>{
+        if (this.newColumnName != prevName) {
+          var payload = {
+            columns: [prevName],
+            output_cols: [this.newColumnName]
+          }
+          this.commandHandle({command: 'rename', payload, immediate: true})
+        }
+        this.$nextTick(()=>{
+          this.columnMenuIndex = false
+        })
+      })
     },
 
     scrollLeftCheck() {
@@ -438,3 +539,4 @@ export default {
 
 }
 </script>
+

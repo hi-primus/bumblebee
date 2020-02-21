@@ -249,16 +249,6 @@ export default {
 			tab: undefined,
 			view: undefined,
 			confirmDelete: -1,
-			typesAvailable: [
-				'string',
-				'int',
-				'decimal',
-				'date',
-				'boolean',
-				'binary',
-				'array',
-				'null'
-			],
 			typesSelected: [],
 			typesInput: '',
 			version: ''
@@ -267,7 +257,7 @@ export default {
 
 	computed: {
 
-    ...mapGetters(['currentDataset']),
+    ...mapGetters(['currentDataset','typesAvailable']),
 
     sampleSize () {
       return Math.min(this.currentDataset.summary.sample_size, this.currentDataset.summary.rows_count)
@@ -347,14 +337,6 @@ export default {
           })
         }
       }
-
-      if (value=='received') {
-        let dataset = this.currentDataset
-
-
-        if (dataset && dataset.dtypes_list)
-          this.typesAvailable = dataset.dtypes_list
-      }
     },
 
 		tab (value) {
@@ -372,8 +354,6 @@ export default {
 
       this.$store.commit('setTab',{ tab: value })
 
-      if (dataset && dataset.dtypes_list)
-        this.typesAvailable = dataset.dtypes_list
     },
 	},
 

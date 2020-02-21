@@ -1001,77 +1001,6 @@ table {
   }
 }
 
-
-.handsontable{
-  font-family: $font-mono-table;
-  color: $text-color;
-
-  .wtBorder {
-    display: none !important;
-  }
-  .wtBorder.current {
-    z-index: 102;
-  }
-
-  * {
-    border-color: $line-color-1 !important;
-  }
-
-  th {
-    &>span {
-      width: 100%;
-    }
-    cursor: pointer;
-    background-color: #fefefe !important;
-    &.ht__active_highlight, &.ht__active_highlight {
-      background-color: darken(saturate($data-highlight,5%),1%) !important;
-    }
-    .changeType {
-      opacity: 0.71;
-      color: $text-color !important;
-    }
-  }
-
- td.area:before, td.area-1:before, td.area-2:before, td.area-3:before, td.area-4:before, td.area-5:before, td.area-6:before, td.area-7:before {
-   background-color: $data-highlight !important;
-   opacity: 1 !important;
-   z-index: -1;
- }
-
- td.area, td.area-1, td.area-2, td.area-3, td.area-4, td.area-5, td.area-6, td.area-7 {
-   z-index: 0;
- }
-
-  tr:first-child td {
-    height: 100px;
-    overflow: initial;
-  }
-
-  tr td {
-    font-size: 13px;
-    height: $table-cell-height - 1px;
-    line-height: $table-cell-height - 1px;
-		white-space: nowrap;
-		overflow: hidden;
-    text-overflow: ellipsis;
-    color: inherit !important;
-
-	  &>span:empty:after{
-      content: 'None';
-      margin-left: 0.5em;
-      opacity: 0.5;
-    }
-	  &>span.missing:after{
-      content: 'Missing';
-      margin-left: 0.5em;
-      opacity: 0.5;
-    }
-	  &>span{
-      margin-left: -0.5em;
-    }
-	}
-}
-
 /* component vuetify table */
 
 .component-container {
@@ -1271,7 +1200,6 @@ $side-controls-width: 54px;
   padding-left: 12px !important;
   padding-right: $side-controls-width + 4px !important;
   padding-bottom: 75px;
-  // padding-top: 12px;
   position: relative;
   min-height: 300px;
   max-height: calc(100vh - 270px);
@@ -1553,7 +1481,7 @@ $editor-top-padding: 6px;
   min-width: 100%;
 
   &, & *, &::after {
-    border-color: $line-color-1 !important;
+    border-color: $line-color-1;
   }
 
   border-width: 1px;
@@ -1603,12 +1531,20 @@ $editor-top-padding: 6px;
     min-height: 1000px;
     flex-shrink: 0;
     flex-basis: auto;
+
     &::-webkit-scrollbar {
-      display: none
+      opacity: 0;
+      pointer-events: none;
     }
 
-    &::-webkit-scrollbar-track {
-      border-bottom: $line-color-1 solid 3px !important;
+    &::before {
+      content: ' ';
+      position: absolute;
+      background-color: $line-color-1;
+      right: 0;
+      width: 10px;
+      height: 1px;
+      top: 119px;
     }
 
     display: flex;
@@ -1617,9 +1553,6 @@ $editor-top-padding: 6px;
     margin-bottom: -2px;
 
     .bb-table-header {
-
-      // border-bottom-width: 1px;
-      // border-bottom-style: solid;
 
       font-size: 16px;
       font-family: $font-mono-table;
@@ -1631,6 +1564,7 @@ $editor-top-padding: 6px;
 
       .bb-table-h-cell {
         overflow: visible;
+        user-select: none;
         border-top-style: none;
         border-top-color: white !important;
         display: flex;
@@ -1688,7 +1622,6 @@ $editor-top-padding: 6px;
     position: relative;
     margin-top: calc(122px - 1000px);
 
-    // position: relative;
     .bb-table {
       width: 100%;
       position: relative;
@@ -1697,7 +1630,6 @@ $editor-top-padding: 6px;
       margin-top: -1px;
       .bb-table-row {
         z-index: 0;
-        // animation: fadein-cell 0.41s ease-in-out;
         position: absolute;
         background: white;
         height: 23px;
@@ -1710,6 +1642,7 @@ $editor-top-padding: 6px;
         }
       }
     }
+
   }
 
 
@@ -1782,11 +1715,6 @@ $editor-top-padding: 6px;
     font-size: 13px;
     height: inherit;
     padding: 0;
-
-    // &:empty:after {
-    //   content: 'None';
-    //   opacity: 0.667;
-    // }
 
     &.none, &.missing {
       &::after {
@@ -1878,4 +1806,17 @@ $editor-top-padding: 6px;
 
 .font-reset {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif !important;
+}
+
+.bb-table-h-cell {
+  &:last-child {
+    .v-menu__content {
+      transform: translateX(-85px); // TODO: 170px -> Ypx
+    }
+  }
+  &:first-child {
+    .v-menu__content {
+      transform: translateX(11px);
+    }
+  }
 }
