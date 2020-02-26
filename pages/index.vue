@@ -273,19 +273,6 @@ export default {
 
 	watch: {
 
-    view (v) {
-      if (v==0) {
-        this.$store.commit('selection',{
-          ranged: {
-            index: -1,
-            ranges: [],
-            values: [],
-            indices: []
-          }
-        })
-      }
-    },
-
     async status (value) {
       if (this.$route.query.kernel=='1') {
         switch (value) {
