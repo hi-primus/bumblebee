@@ -830,7 +830,7 @@ export default {
 
     copyCodeToClipboard () {
       var code = 'from optimus import Optimus\n'
-      +'op = Optimus(master="local[*]", app_name="optimus", comm=True)\n'
+      +'op = Optimus(master="local[*]", app_name="optimus", comm=True)\n' // TODO: Update
       + this.cells.map(e=>e.content).filter(c=>c.trim()).join('\n')
       copyToClipboard(code)
       this.copied = true
