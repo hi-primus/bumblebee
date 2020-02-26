@@ -73,7 +73,7 @@
           @click="selectColumn($event, index)"
           @dblclick="setMenu($event, index)"
           class="bb-table-h-cell"
-          :class="{'active-menu-column': (columnMenuIndex===index) ,'bb-selected': selection[index]}"
+          :class="{'active-menu-column': (columnMenuIndex===index) ,'bb-selected': selectionMap[index]}"
           v-if="columns[index]"
           :key="index"
           :style="{width: columns[index].width+'px'}"
@@ -94,7 +94,7 @@
           v-if="columns[index]"
           :key="index"
           :style="{width: columns[index].width+'px'}"
-          :class="{'bb-selected': selection[index]}"
+          :class="{'bb-selected': selectionMap[index]}"
         >
           <DataBar
             :key="plotsData[index].key+'databar'"
@@ -157,7 +157,7 @@
               v-if="row.value"
               class="bb-table-cell"
               :class="{
-                'bb-selected': selection[index],
+                'bb-selected': selectionMap[index],
                 'missing': row.value[index]==='',
                 'none': row.value[index]===null
               }"
@@ -227,7 +227,7 @@ export default {
       newColumnName: '',
       newColumnType: 'string',
 
-      selection: {},
+      selection: [],
       previousSelection : {},
       chunks: [],
       columns: {}
@@ -252,6 +252,13 @@ export default {
           this.columnMenuIndex=false
         }
       }
+    },
+
+    selectionMap() {
+      return this.selection.reduce((p,v)=>{
+        p[v] = true
+        return p
+      },{})
     },
 
     postochunk() {
@@ -349,37 +356,18 @@ export default {
     },
 
     updateSelection(value) {
-      var selectionArray = []
-
-      for (const index in this.selection) {
-        if (this.selection[index]) {
-          selectionArray.push(index)
-        }
-      }
-
-      var newSelection = []
-
-      if (value.columns) {
-        newSelection = value.columns.map(e=>e.index)
-      }
+      var selectionArray = [...this.selection]
+      var newSelection = (value.columns) ? [...value.columns] : []
 
       selectionArray.sort()
       newSelection.sort()
 
       if (!arraysEqual(selectionArray,newSelection)) {
-        this.selection = newSelection.reduce((p,v)=>{
-          p[v] = true
-          return p
-        },{})
-
+        this.selection = value.columns.map(c=>c.index)
       }
     },
 
-    columnClicked(event, index) {
-
-    },
-
-    selectColumn(event, index) {
+    selectColumn(event, columnIndex) {
       setTimeout(() => {
 
         if (doubleClick) {
@@ -388,11 +376,49 @@ export default {
         }
 
         // this.previousSelection = {...this.selection}
+        var indexInSelection = this.selection.findIndex(e=>e==columnIndex)
 
-        if (!event.ctrlKey && !this.selection[index]) {
-          this.selection = {}
+        if (event.shiftKey) {
+          if (this.selection.length>0) {
+
+            var lastIndex = this.selection[this.selection.length-1]
+            var sign = Math.sign(columnIndex - lastIndex)
+            sign = sign || 1
+
+            for (let i = lastIndex; (i-lastIndex)*(i-columnIndex)<=0; i+=sign) {
+              var found = this.selection.findIndex(e=>e==i)
+              if (found>=0) {
+                this.$delete(this.selection,found)
+              }
+              this.$set(this.selection, this.selection.length, i)
+            }
+          }
+          else {
+            this.selection = [columnIndex]
+          }
+          if (indexInSelection>=0) {
+            this.$delete(this.selection, indexInSelection)
+          }
+          else {
+            this.$set(this.selection, this.selection.length, columnIndex)
+          }
         }
-        this.$set(this.selection, index, !this.selection[index])
+        else if (event.ctrlKey) {
+          if (indexInSelection>=0) {
+            this.$delete(this.selection, indexInSelection)
+          }
+          else {
+            this.$set(this.selection, this.selection.length, columnIndex)
+          }
+        }
+        else {
+          if (indexInSelection<0 || this.selection.length!=1) {
+            this.selection = [columnIndex]
+          }
+          else {
+            this.selection = []
+          }
+        }
 
         this.$emit('updatedSelection',this.selection)
       }, 5);
@@ -407,8 +433,8 @@ export default {
 
       this.columnMenuIndex = index
 
-      this.selection = {}
-      this.$set(this.selection, index, !this.selection[index])
+      this.selection = [index]
+      //this.$set(this.selection, index, !this.selection[index])
 
       setTimeout(() => {
         var ref = this.$refs['column-menu']
@@ -499,10 +525,8 @@ export default {
 
       if (this.chunks.length>this.maxChunks){
         this.chunks.splice(0,this.chunks.length-this.maxChunks)
-        // console.log({removing: this.chunks.length-this.maxChunks})
       }
 
-      // console.log({length: this.chunks.length})
     },
 
     async fetchChunk(index) {

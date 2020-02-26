@@ -476,65 +476,13 @@ export default {
     },
 
     selectionEvent (selection) {
-
-      var selectedIndices = []
-
-      for (const key in selection) {
-        if (selection[key]) {
-          selectedIndices.push(key)
-        }
-      }
-
-      this.handleSelection(selectedIndices,true)
+      this.handleSelection(selection,true)
     },
 
-		oldselectionEvent: debounce( function(row, prop, row2, prop2) {
-
-			if (row <= 0) {
-
-        const tableInstance = this.$refs['hotTable'].hotInstance;
-
-        var selected = tableInstance.getSelected()
-
-        if (!selected.length && this.isMounted) {
-          this.$emit('selection',false)
-          return;
-        }
-
-        let selectedIndices = [];
-
-        selected.forEach(selection => {
-
-          var smin = Math.min(selection[1],selection[3])
-          var smax = Math.max(selection[1],selection[3])
-
-          for (let i = smin; i <= smax; i++)  {
-
-            const columnData = tableInstance.getDataAtCell(0,i)
-
-            var found = selectedIndices.findIndex( (e) => { return (e === columnData.index.toString()) } )
-
-            var index = +columnData.index.toString()
-
-            if (found===-1 && !selectedIndices.includes(index)) {
-              selectedIndices.push(index)
-            }
-
-          }
-
-        });
-
-        this.handleSelection(selectedIndices,true)
-
-			}
-    }, 200),
-
     handleSelection (selected, indices = false) {
-
       if (this.isMounted) {
         this.$emit('selection',{selected, indices})
       }
-
     },
 
 		toggleColumnSelection (value) {
@@ -572,7 +520,6 @@ export default {
 		toggleColumnVisibility (colName) {
 			this.$set(this.hiddenColumns, colName, !this.hiddenColumns[colName])
     }
-
   },
 
   watch: {

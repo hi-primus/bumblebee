@@ -410,7 +410,7 @@ const createKernel = async function (user_session, engine) {
 	if (kernels[user_session]==undefined){
 		return await run_code(`
 from optimus import Optimus
-op = Optimus("${engine}", master="local[*]", app_name="optimus", comm=True)
+op = Optimus("${engine}", n_workers=4, threads_per_worker=2, processes=False, memory_limit="3G", comm=True)
 'kernel init optimus init ' + op.__version__ + ' ${engine} '`,user_session)
 	}
 	else {
@@ -427,7 +427,7 @@ try:
 		_status += ''
 except NameError:
 	from optimus import Optimus
-	op = Optimus("${engine}", master="local[*]", app_name="optimus", comm=True)
+	op = Optimus("${engine}", n_workers=4, threads_per_worker=2, processes=False, memory_limit="3G", comm=True)
 	_status = 'optimus init ' + op.__version__ + ' ${engine} '
 
 _status`,user_session)
