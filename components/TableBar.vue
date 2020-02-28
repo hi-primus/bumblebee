@@ -151,16 +151,23 @@
           </v-menu>
       </template>
       <v-spacer></v-spacer>
-      <v-btn
-        v-if="$route.query.kernel=='1'"
-        :disabled="!dataset.summary"
-        :color="(optionsActive) ? 'black' : '#888'"
-        text
-        class="icon-btn"
-        @click="optionsActive = !optionsActive"
+      <v-badge
+        :value="cellsError!==''"
+        color="error"
+        dot
+        overlap
       >
-        <v-icon>code</v-icon>
-      </v-btn>
+        <v-btn
+          v-if="$route.query.kernel=='1'"
+          :disabled="cells.length==0"
+          :color="(optionsActive=='operations') ? 'black' : '#888'"
+          text
+          class="icon-btn"
+          @click="optionsActive = (optionsActive) ? false : 'operations'"
+        >
+          <v-icon>code</v-icon>
+        </v-btn>
+      </v-badge>
     </div>
     <Dataset
       :commandsDisabled="commandsDisabled"
@@ -175,14 +182,18 @@
       :typesSelected="typesSelected"
       :columnsTableHeaders="columnsTableHeaders"
     />
-        <div class="sidebar-container" :class="{'bigger': optionsActive}" v-show="detailsActive || (optionsActive && $route.query.kernel=='1')">
+    <div class="sidebar-container" :class="{'bigger': optionsActive}" v-show="detailsActive || (optionsActive && $route.query.kernel=='1')">
 
       <template>
-        <div class="sidebar-header" v-show="optionsActive && $route.query.kernel=='1'">
+        <div class="sidebar-header" v-show="optionsActive=='operations' && $route.query.kernel=='1'">
           Operations
           <v-icon class="right-button" color="black" @click="optionsActive = false">close</v-icon>
         </div>
-        <div v-show="optionsActive && $route.query.kernel=='1'" class="px-2 py-1">
+        <div class="sidebar-header" v-show="optionsActive!='operations' && optionsActive && $route.query.kernel=='1'">
+          {{optionsActive}}
+          <v-icon class="right-button" color="black" @click="optionsActive = false">close</v-icon>
+        </div>
+        <div v-show="optionsActive=='operations' && $route.query.kernel=='1'" class="px-2 py-1">
           <v-tooltip transition="fade-transition" bottom color="success darken-2" v-model="copied">
             <template v-slot:activator="{on: success}">
               <v-tooltip :disabled="copied" transition="fade-transition" bottom>
@@ -211,13 +222,15 @@
         <Cells
           v-show="optionsActive && $route.query.kernel=='1'"
           ref="cells"
+          :view.sync="optionsActive"
+          :codeError.sync="cellsError"
           :columns="selectedColumns || []"
           :commandsDisabled.sync="commandsDisabled"
           :dataset="dataset"
         />
 				<v-progress-linear
           indeterminate
-          v-if="commandsDisabled && optionsActive && $route.query.kernel=='1'"
+          v-if="commandsDisabled && optionsActive=='operations' && $route.query.kernel=='1'"
           color="#888"
           size="64"
           style="position: absolute; left: 0; top: 34px;"
@@ -226,7 +239,7 @@
       <template v-if="detailsActive!==false && !optionsActive">
         <div class="sidebar-header">
           Details
-          <v-icon class="right-button" color="black" @click="detailsActive = false">close</v-icon>
+          <v-icon class="right-button" color="black" @click="clearSelection">close</v-icon>
         </div>
         <div class="sidebar-content">
 
@@ -355,7 +368,7 @@ export default {
 
 	data () {
 		return {
-
+      cellsError: '',
       copied: false,
 
       file: {dialog: false},
@@ -438,9 +451,7 @@ export default {
     detailsActive() {
 
       var selected = this.selectedColumns.map(e=>e.index)
-
       var detailsActive = false
-
       if (this.selectionType=='columns' && !selected.length) {
         detailsActive = false
       }
@@ -448,7 +459,6 @@ export default {
         detailsActive = {}
         this.optionsActive = false
       }
-
       if (selected.length) {
 
         var plotable = selected.map( (i)=>{
@@ -815,14 +825,28 @@ export default {
   },
 
   watch: {
-    nextCommand (event) {
-      if (event) {
-        this.commandHandle(event)
+    cellsError (value) {
+      if (value!='') {
+        this.optionsActive = 'operations'
+      }
+    },
+    nextCommand (command) {
+      if (command) {
+        this.commandHandle(command)
+      }
+    },
+    cells (cells) {
+      if (cells.length==0) {
+        this.optionsActive = false
       }
     }
   },
 
   methods: {
+
+    clearSelection () {
+      this.$store.commit('selection',{ clear: true })
+    },
 
     menuItems (type) {
       return this.commandItems.filter(e => e.type==type)
@@ -841,10 +865,13 @@ export default {
 
     commandHandle (event) {
       if (!event.noOptions)
-        this.optionsActive = true
+        this.optionsActive = 'operations'
 
       this.$nextTick(()=>{
         this.$refs.cells & this.$refs.cells.commandHandle(event)
+        this.$nextTick(()=>{
+          console.log(this.$store)
+        })
       })
     },
 

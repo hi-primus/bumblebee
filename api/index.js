@@ -411,7 +411,7 @@ const createKernel = async function (user_session, engine) {
 		return await run_code(`
 from optimus import Optimus
 op = Optimus("${engine}", n_workers=4, threads_per_worker=2, processes=False, memory_limit="3G", comm=True)
-'kernel init optimus init ' + op.__version__ + ' ${engine} '`,user_session)
+'kernel init optimus init ' + op.__version__ + '  ' + op.engine`,user_session)
 	}
 	else {
 		return await run_code(`
@@ -419,7 +419,7 @@ _status = 'kernel ok '
 
 try:
 	op
-	_status += 'optimus ok '+ op.__version__ + ' ${engine} '
+	_status += 'optimus ok '+ op.__version__ + ' ' + op.engine
 	try:
 		df
 		_status += 'dataframe ok '

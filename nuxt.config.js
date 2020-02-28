@@ -82,13 +82,15 @@ module.exports = {
 
 	vuetify: {
 		materialIcons: false,
-		// customVariables: ['~/assets/variables.scss'],
+    customVariables: ['~/assets/css/vuetify-variables.scss'],
+    treeShake: true,
+    options: {
+      customProperties: true
+    },
 		theme: {
 			themes: {
 				light: {
 					primary: '#1972d1',
-					// accent: colors.grey.darken3,
-					// secondary: colors.amber.darken3,
 					info: '#82bcfa',
 					warning: colors.amber,
 					error: '#e57373',

@@ -180,11 +180,20 @@ export const mutations = {
     state.kernel = payload
   },
 
-  selection (state, {tab, columns, ranged} ) {
+  selection (state, {tab, columns, ranged, clear} ) {
     if (tab===undefined) {
       tab = state.tab
     }
     if (tab!==undefined) {
+
+      if (clear) {
+        Vue.set(state.datasetSelection,tab,{
+          columns: [],
+          ranged: undefined
+        })
+        return
+      }
+
       var columnsSelected = (columns !== undefined) ? columns : (state.datasetSelection[tab]) ? state.datasetSelection[tab].columns || [] : []
       columnsSelected = (ranged !== undefined) ? [] : columnsSelected
 

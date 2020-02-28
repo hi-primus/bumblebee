@@ -179,6 +179,7 @@ import { throttle, debounce } from '@/utils/functions.js'
 import { mapState, mapGetters } from 'vuex';
 
 import dataTypesMixin from '@/plugins/mixins/data-types'
+import clientMixin from '@/plugins/mixins/client'
 
 import Histogram from '@/components/Histogram'
 import Frequent from '@/components/Frequent'
@@ -198,7 +199,7 @@ export default {
 		DataBar
 	},
 
-  mixins: [dataTypesMixin],
+  mixins: [dataTypesMixin, clientMixin],
 
 	props: {
     rowHeight: {
@@ -546,6 +547,10 @@ export default {
         page_size: this.chunkSize,
         dataset: this.currentDataset.id
       })
+
+      var response2 = await this.evalCode(`df.rows.between_index("*", ${index*this.chunkSize},${(index+1)*this.chunkSize}).rows.to_list("*")`)
+
+      console.log({response, response2})
 
       var from = index*this.chunkSize
 

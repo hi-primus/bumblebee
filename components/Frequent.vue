@@ -91,6 +91,9 @@ export default {
             this.selected = ds[this.tab].ranged.indices
           }
         }
+        else if (ds[this.tab] && ds[this.tab].ranged===undefined) {
+          this.selected = []
+        }
       }
     }
   },

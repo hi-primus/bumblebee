@@ -323,7 +323,7 @@
           </div>
         </div>
       </draggable>
-      <v-alert key="error" type="error" class="mt-3" dismissible v-if="codeError!=''"  @input="codeError=''">
+      <v-alert key="error" type="error" class="mt-3" dismissible v-if="codeError!=''"  @input="cleanCodeError">
         {{codeError}}
       </v-alert>
       <div key="controls" ref="cells-controls" class="cells-controls toolbar vertical" :class="{'disabled': commandsDisabled}" @mouseover="barHovered = true" @mouseleave="barHovered = false">
@@ -377,6 +377,10 @@ export default {
       type: Object,
       required: true
     },
+    codeError: {
+      type: String,
+      default: ''
+    }
   },
 
   data () {
@@ -395,7 +399,6 @@ export default {
       lastWrongCode: false,
       drag: false,
       currentCommand: false,
-      codeError: '',
       firstRun: true,
       runButton: false,
 
@@ -768,6 +771,7 @@ export default {
                   { text: 'Japanese (ISO-2022-JP)', value: 'ISO-2022-JP'}, { text: 'Japanese (Shift-JIS)', value: 'Shift-JIS'},
                   { text: 'Japanese (EUC-JP)', value: 'EUC-JP'}, { text: 'Japanese (cp932)', value: 'cp932'},
                   { text: 'Korean (ISO-2022-KR)', value: 'ISO-2022-KR'}, { text: 'Korean (EUC—KR)', value: 'EUC—KR'},
+                  { text: 'Latin', value: 'latin1'},
                   { text: 'Nordic (ISO-8859-10)', value: 'ISO-8859-10'}, { text: 'Thai (ISO-8859-11)', value: 'ISO-8859-11'},
                   { text: 'Turkish (ISO-8859-9)', value: 'ISO-8859-9'}, { text: 'Vietnamese (Windows-1258)', value: 'Windows-1258'},
                   { text: 'Western (ISO-8859-1)', value: 'ISO-8859-1'}, { text: 'Western (ISO-8859-3)', value: 'ISO-8859-3'},
@@ -811,6 +815,7 @@ export default {
             let code = `${this.availableVariableName} = op.load.${payload.file_type}("${payload.url}"`
             if (payload.file_type=='csv'){
               code += `, sep="${payload.sep}"`
+              code += `, error_bad_lines=False`
               code += `, header=${file.header}`
               code += `, null_value="${payload.null_value}"`
               code += `, infer_schema='true'`
@@ -822,12 +827,13 @@ export default {
             else if (payload.file_type=='xls'){
               code += `, sheet_name="${payload.sheet_name}"`
             }
+            if (payload.limit>0) {
+              code +=`, n_rows=${payload.limit}`
+            }
 
             code += `)`
 
-            if (payload.limit>0) {
-              code +=`.rows.limit(${payload.limit})`
-            }
+            // code +=`.rows.limit(${payload.limit})`
 
             code += '.ext.cache()'
 
@@ -2087,7 +2093,7 @@ export default {
         if (this._commandsDisabled===undefined){
           this._commandsDisabled = false
           this.markCells()
-          this.codeError = ''
+          this.$emit('update:codeError','')
           this.lastWrongCode = false
         }
       }
@@ -2095,6 +2101,10 @@ export default {
   },
 
   methods: {
+
+    cleanCodeError() {
+      this.$emit('update:codeError','')
+    },
 
     clusterFieldUpdated(cluster) {
       if (cluster.selected.length==0) {
@@ -2219,7 +2229,7 @@ export default {
     draggableEnd() {
       if (this.codeText().trim()===''){
         this.runButton = false
-        this.codeError = ''
+        this.$emit('update:codeError','')
         this.runCode() // deleting every cell
         return;
       }
@@ -2252,7 +2262,7 @@ export default {
       if (index<0) {
         return
       }
-      this.codeError = ''
+      this.$emit('update:codeError','')
 
       var cells = this.cells
       cells.splice(index,1)
@@ -2302,7 +2312,7 @@ export default {
 
     addCell (at = -1, payload = {command: 'code', columns: []}) {
 
-      this.codeError = ''
+      this.$emit('update:codeError','')
 
       var content = ''
 
@@ -2343,16 +2353,7 @@ export default {
 
     },
 
-    async evalCode (code) {
-      var response = await this.socketPost('run', {
-        code,
-        session: this.$store.state.session
-      }, {
-        timeout: 0
-      })
 
-      return response
-    },
 
     async runCodeNow (force = false) {
 
@@ -2415,7 +2416,7 @@ export default {
         this.$forceUpdate()
         this.markCells()
 
-        this.codeError = ''
+        this.$emit('update:codeError','')
         this.lastWrongCode = false
 
       } catch (error) {
@@ -2426,7 +2427,8 @@ export default {
           console.error(error.content.traceback_escaped.join('\n'))
         }
         console.error(error)
-        this.codeError = (error.content && error.content.ename) ? error.content.ename + ': ' + error.content.evalue : error
+        var codeError = (error.content && error.content.ename) ? error.content.ename + ': ' + error.content.evalue : error
+        this.$emit('update:codeError',codeError)
 
         this.markCellsError()
         this.lastWrongCode = code
