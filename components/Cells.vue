@@ -1,257 +1,241 @@
 <template>
   <div>
-    <v-dialog
+    <div
       persistent
       v-if="command && command.dialog"
-      :value="(currentCommand.command)"
-      :max-width="command.dialog.big ? 820 : 410"
+      v-show="(currentCommand.command)"
+      ref="command-form"
       @click:outside="cancelCommand"
       @keydown.esc="cancelCommand"
     >
-      <v-form @submit.prevent="confirmCommand" id="command-form">
-        <v-card class="command-dialog" ref="command-dialog">
-          <v-card-title class="title px-6">
+      <v-form @submit.prevent="confirmCommand" id="command-form" class="pl-4 pr-5 pt-4 smaller-fields">
+          <div class="body-2 mb-1" :class="{'title': command.dialog.bigText}" v-if="command.dialog.text">
             {{
-              command.dialog.title ?
-              (
-                typeof command.dialog.title == 'function' ?
-                  command.dialog.title(currentCommand)
-                :
-                  command.dialog.title
-              )
+              (typeof command.dialog.text == 'function') ?
+                command.dialog.text(currentCommand)
               :
-                currentCommand.title
+                command.dialog.text
             }}
-          </v-card-title>
-          <v-card-text class="command-card-text pb-0 px-6" :class="{'command-big': command.dialog.big, 'command-tall': command.dialog.tall}">
-            <div class="mb-6" :class="{'title': command.dialog.bigText}" v-if="command.dialog.text">
-              {{
-                (typeof command.dialog.text == 'function') ?
-                  command.dialog.text(currentCommand)
-                :
-                  command.dialog.text
-              }}
-            </div>
-            <div class="progress-middle" style="height: 65%">
-              <v-progress-circular
-                indeterminate
-                color="#888"
-                size="64"
-                v-if="currentCommand.loading"
-              />
-            </div>
-            <template v-if="!currentCommand.loading && command.dialog.fields">
-              <template v-for="field in command.dialog.fields.filter(f=>(!f.condition || f.condition && f.condition(currentCommand)))">
-                <template v-if="field.type=='action'">
-                  <v-btn
-                    :key="field.key"
-                    depressed
-                    color="primary"
-                    @click="(field.func) ? command[field.func]() : 0"
-                    class="mb-6 mx-a d-flex"
-                    :disabled="field.validate && !field.validate(currentCommand)"
-                  >
-                    {{
-                      (typeof field.label == 'function') ?
-                        field.label(currentCommand)
-                      :
-                        field.label
-                    }}
-                  </v-btn>
-                </template>
-                <template v-if="field.type=='text'">
-                  <div
-                    :key="field.key"
-                    class="mb-6"
-                    :class="{'title': field.big}"
-                    v-if="field.text"
-                  >
-                    {{
-                      (typeof field.text == 'function') ?
-                        field.text(currentCommand)
-                      :
-                        field.text
-                    }}
+          </div>
+          <div class="progress-middle" style="height: 65%">
+            <v-progress-circular
+              indeterminate
+              color="#888"
+              size="64"
+              v-if="currentCommand.loading"
+            />
+          </div>
+          <template v-if="!currentCommand.loading && command.dialog.fields">
+            <template v-for="field in command.dialog.fields.filter(f=>(!f.condition || f.condition && f.condition(currentCommand)))">
+              <template v-if="field.type=='action'">
+                <v-btn
+                  :key="field.key"
+                  depressed
+                  color="primary"
+                  @click="(field.func) ? command[field.func]() : 0"
+                  class="mb-6 mx-a d-flex"
+                  :disabled="field.validate && !field.validate(currentCommand)"
+                >
+                  {{
+                    (typeof field.label == 'function') ?
+                      field.label(currentCommand)
+                    :
+                      field.label
+                  }}
+                </v-btn>
+              </template>
+              <template v-if="field.type=='text'">
+                <div
+                  :key="field.key"
+                  class="mb-6"
+                  :class="{'title': field.big}"
+                  v-if="field.text"
+                >
+                  {{
+                    (typeof field.text == 'function') ?
+                      field.text(currentCommand)
+                    :
+                      field.text
+                  }}
+                </div>
+              </template>
+              <template v-if="field.type=='field'">
+                <v-text-field
+                  v-model="currentCommand[field.key]"
+                  :key="field.key"
+                  :label="(typeof field.label == 'function') ? field.label(currentCommand) : (field.label || '')"
+                  :placeholder="(typeof field.placeholder == 'function') ? field.placeholder(currentCommand) : (field.placeholder || '')"
+                  :clearable="field.clearable"
+                  @input="(field.onChange) ? command[field.onChange]() : 0"
+                  dense
+                  required
+                  outlined
+                ></v-text-field>
+              </template>
+              <template v-if="field.type=='chips'">
+                <v-combobox
+                  v-model="currentCommand[field.key]"
+                  :key="field.key"
+                  :label="(typeof field.label == 'function') ? field.label(currentCommand) : (field.label || '')"
+                  :placeholder="(typeof field.placeholder == 'function') ? field.placeholder(currentCommand) : (field.placeholder || '')"
+                  :clearable="field.clearable"
+                  autocomplete="off"
+                  chips
+                  deletable-chips
+                  :items="[]"
+                  class="chips-no-items"
+                  multiple
+                >
+                </v-combobox>
+              </template>
+              <template v-if="field.type=='outliers-range'">
+                <Outliers
+                  :key="field.key"
+                  v-if="currentCommand[field.key]"
+                  :data="currentCommand[field.key]"
+                  :columnName="currentCommand.columns[0]"
+                  :selection.sync="currentCommand[field.selection_key]"
+                />
+              </template>
+              <template v-if="field.type=='switch'">
+                <v-switch
+                  :key="field.key"
+                  v-model="currentCommand[field.key]"
+                  color="black"
+                  :label="(typeof field.label == 'function') ? field.label(currentCommand) : field.label"
+                ></v-switch>
+              </template>
+              <template v-else-if="field.type=='password'">
+                <v-text-field
+                  v-model="currentCommand[field.key]"
+                  :key="field.key"
+                  :label="field.label"
+                  :placeholder="field.placeholder"
+                  dense
+                  required
+                  outlined
+                  :append-icon="field.showable ? (field.show ? 'visibility' : 'visibility_off') : undefined"
+                  :type="(field.show || !field.showable) ? 'text' : 'password'"
+                  :clearable="field.clearable"
+                  @input="(field.onChange) ? command[field.onChange]() : 0"
+                  @click:append="field.show = !field.show"
+                />
+              </template>
+              <template v-else-if="field.type=='number'">
+                <v-text-field
+                  type="number"
+                  v-model="currentCommand[field.key]"
+                  :key="field.key"
+                  :label="field.label"
+                  :placeholder="field.placeholder"
+                  :min="field.min"
+                  :clearable="field.clearable"
+                  @input="(field.onChange) ? command[field.onChange]() : 0"
+                  dense
+                  required
+                  outlined
+                ></v-text-field>
+              </template>
+              <template v-else-if="field.type=='number_index'">
+                <v-text-field
+                  type="number"
+                  :value="(currentCommand.index>=0) ? currentCommand.index : ''"
+                  @input="currentCommand.index = ($event>=0) ? $event : ''"
+                  :key="field.key"
+                  label="Index"
+                  :clearable="field.clearable"
+                  :max="(field.splits!=='') ? field.splits-1 : undefined"
+                  :placeholder="field.placeholder"
+                  :min="field.min"
+                  dense
+                  required
+                  outlined
+                ></v-text-field>
+              </template>
+              <template v-else-if="field.type=='select' && (!field.items_key == !currentCommand[field.items_key])">
+                <v-select
+                  :key="field.key"
+                  v-model="currentCommand[field.key]"
+                  :label="field.label"
+                  :placeholder="field.placeholder"
+                  :items="(field.items_key) ? currentCommand[field.items_key] : field.items"
+                  @input="(field.onChange) ? command[field.onChange]() : 0"
+                  :disabled="!!+field.disabled"
+                  dense
+                  required
+                  outlined
+                ></v-select>
+              </template>
+              <template v-else-if="field.type=='select-foreach'">
+                <v-row :key="field.key" no-gutters class="foreach-label">
+                  <template v-for="(title, i) in currentCommand.columns">
+                    <v-col v-if="!field.noLabel" :key="i+'label'" class="col-12 col-sm-4 col-md-3 font-weight-bold pr-4 text-ellipsis" :title="title">
+                      {{title}}
+                    </v-col>
+                    <v-col :key="i" class="col-12 oci-input-container" :class="{'col-sm-8 col-md-9': !field.noLabel}">
+                      <v-select
+                        v-model="currentCommand[field.key][i]"
+                        :key="field.key"
+                        :label="field.label===true ? title : field.label"
+                        :placeholder="field.placeholder===true ? title : field.placeholder"
+                        :items="(field.items_key) ? currentCommand[field.items_key] : field.items"
+                        dense
+                        required
+                        outlined
+                      ></v-select>
+                    </v-col>
+                  </template>
+                </v-row>
+              </template>
+              <template v-else-if="field.type=='clusters'">
+                <div :key="field.key" class="clusters-table-container" style="overflow-y: auto; min-heigth: 240px;">
+                  <div v-for="(cluster, i) in currentCommand[field.key]" :key="i+'label'" class="cluster" :class="{'disabled-cluster': !cluster.merge}" >
+                      <v-data-table
+                        flat
+                        depressed
+                        v-model="cluster.selected"
+                        :items="cluster.values"
+                        :headers="clusterHeaders"
+                        :sort-by="'count'"
+                        sort-desc
+                        disable-pagination
+                        item-key="value"
+                        dense
+                        show-select
+                        hide-default-footer
+                      >
+                      </v-data-table>
+                      <div class="cluster-info">
+                        {{`${cluster.values.length} value${(cluster.values.length!=1 ? 's' : '')}`}} · {{`${cluster.count} row${(cluster.count!=1 ? 's' : '')}`}}
+                        <!-- · 5 rows -->
+                      </div>
+                      <v-text-field
+                        v-model="cluster.replace"
+                        class="cluster-replace-field pt-2"
+                        :label="(field.label===true ? cluster.replace : field.label) || 'New cell value'"
+                        :placeholder="field.placeholder===true ? cluster.replace : field.placeholder"
+                        :disabled="false && !cluster.selected.length"
+                        @input="clusterFieldUpdated(cluster)"
+                        dense
+                        required
+                        outlined
+                      ></v-text-field>
                   </div>
-                </template>
-                <template v-if="field.type=='field'">
-                  <v-text-field
-                    v-model="currentCommand[field.key]"
-                    :key="field.key"
-                    :label="(typeof field.label == 'function') ? field.label(currentCommand) : (field.label || '')"
-                    :placeholder="(typeof field.placeholder == 'function') ? field.placeholder(currentCommand) : (field.placeholder || '')"
-                    :clearable="field.clearable"
-                    @input="(field.onChange) ? command[field.onChange]() : 0"
-                    dense
-                    required
-                    outlined
-                  ></v-text-field>
-                </template>
-                <template v-if="field.type=='chips'">
-                  <v-combobox
-                    v-model="currentCommand[field.key]"
-                    :key="field.key"
-                    :label="(typeof field.label == 'function') ? field.label(currentCommand) : (field.label || '')"
-                    :placeholder="(typeof field.placeholder == 'function') ? field.placeholder(currentCommand) : (field.placeholder || '')"
-                    :clearable="field.clearable"
-                    autocomplete="off"
-                    chips
-                    deletable-chips
-                    :items="[]"
-                    class="chips-no-items"
-                    multiple
-                  >
-                  </v-combobox>
-                </template>
-                <template v-if="field.type=='outliers-range'">
-                  <Outliers
-                    :key="field.key"
-                    v-if="currentCommand[field.key]"
-                    :data="currentCommand[field.key]"
-                    :columnName="currentCommand.columns[0]"
-                    :selection.sync="currentCommand[field.selection_key]"
-                  />
-                </template>
-                <template v-if="field.type=='switch'">
-                  <v-switch
-                    :key="field.key"
-                    v-model="currentCommand[field.key]"
-                    color="black"
-                    class="mt-0"
-                    :label="(typeof field.label == 'function') ? field.label(currentCommand) : field.label"
-                  ></v-switch>
-                </template>
-                <template v-else-if="field.type=='password'">
-                  <v-text-field
-                    v-model="currentCommand[field.key]"
-                    :key="field.key"
-                    :label="field.label"
-                    :placeholder="field.placeholder"
-                    dense
-                    required
-                    outlined
-                    :append-icon="field.showable ? (field.show ? 'visibility' : 'visibility_off') : undefined"
-                    :type="(field.show || !field.showable) ? 'text' : 'password'"
-                    :clearable="field.clearable"
-                    @input="(field.onChange) ? command[field.onChange]() : 0"
-                    @click:append="field.show = !field.show"
-                  />
-                </template>
-                <template v-else-if="field.type=='number'">
-                  <v-text-field
-                    type="number"
-                    v-model="currentCommand[field.key]"
-                    :key="field.key"
-                    :label="field.label"
-                    :placeholder="field.placeholder"
-                    :min="field.min"
-                    :clearable="field.clearable"
-                    @input="(field.onChange) ? command[field.onChange]() : 0"
-                    dense
-                    required
-                    outlined
-                  ></v-text-field>
-                </template>
-                <template v-else-if="field.type=='number_index'">
-                  <v-text-field
-                    type="number"
-                    :value="(currentCommand.index>=0) ? currentCommand.index : ''"
-                    @input="currentCommand.index = ($event>=0) ? $event : ''"
-                    :key="field.key"
-                    label="Index"
-                    :clearable="field.clearable"
-                    :max="(field.splits!=='') ? field.splits-1 : undefined"
-                    :placeholder="field.placeholder"
-                    :min="field.min"
-                    dense
-                    required
-                    outlined
-                  ></v-text-field>
-                </template>
-                <template v-else-if="field.type=='select' && (!field.items_key == !currentCommand[field.items_key])">
-                  <v-select
-                    :key="field.key"
-                    v-model="currentCommand[field.key]"
-                    :label="field.label"
-                    :placeholder="field.placeholder"
-                    :items="(field.items_key) ? currentCommand[field.items_key] : field.items"
-                    @input="(field.onChange) ? command[field.onChange]() : 0"
-                    :disabled="!!+field.disabled"
-                    dense
-                    required
-                    outlined
-                  ></v-select>
-                </template>
-                <template v-else-if="field.type=='select-foreach'">
-                  <v-row :key="field.key" no-gutters class="foreach-label">
-                    <template v-for="(title, i) in currentCommand.columns">
-                      <v-col v-if="!field.noLabel" :key="i+'label'" class="col-12 col-sm-4 col-md-3 font-weight-bold pr-4 text-ellipsis" :title="title">
-                        {{title}}
-                      </v-col>
-                      <v-col :key="i" class="col-12 oci-input-container" :class="{'col-sm-8 col-md-9': !field.noLabel}">
-                        <v-select
-                          v-model="currentCommand[field.key][i]"
-                          :key="field.key"
-                          :label="field.label===true ? title : field.label"
-                          :placeholder="field.placeholder===true ? title : field.placeholder"
-                          :items="(field.items_key) ? currentCommand[field.items_key] : field.items"
-                          dense
-                          required
-                          outlined
-                        ></v-select>
-                      </v-col>
-                    </template>
-                  </v-row>
-                </template>
-                <template v-else-if="field.type=='clusters'">
-                  <div :key="field.key" class="clusters-table-container" style="overflow-y: auto; min-heigth: 240px;">
-                    <div v-for="(cluster, i) in currentCommand[field.key]" :key="i+'label'" class="cluster" :class="{'disabled-cluster': !cluster.merge}" >
-                        <v-data-table
-                          flat
-                          depressed
-                          v-model="cluster.selected"
-                          :items="cluster.values"
-                          :headers="clusterHeaders"
-                          :sort-by="'count'"
-                          sort-desc
-                          disable-pagination
-                          item-key="value"
-                          dense
-                          show-select
-                          hide-default-footer
-                        >
-                        </v-data-table>
-                        <div class="cluster-info">
-                          {{`${cluster.values.length} value${(cluster.values.length!=1 ? 's' : '')}`}} · {{`${cluster.count} row${(cluster.count!=1 ? 's' : '')}`}}
-                          <!-- · 5 rows -->
-                        </div>
-                        <v-text-field
-                          v-model="cluster.replace"
-                          class="cluster-replace-field pt-2"
-                          :label="(field.label===true ? cluster.replace : field.label) || 'New cell value'"
-                          :placeholder="field.placeholder===true ? cluster.replace : field.placeholder"
-                          :disabled="false && !cluster.selected.length"
-                          @input="clusterFieldUpdated(cluster)"
-                          dense
-                          required
-                          outlined
-                        ></v-text-field>
-                    </div>
-                  </div>
-                </template>
+                </div>
               </template>
             </template>
-            <OutputColumnInputs v-if="command.dialog.output_cols" :fieldLabel="command.dialog.output_cols_label" :noLabel="command.dialog.no_label" :currentCommand.sync="currentCommand"></OutputColumnInputs>
-            <template>
-              <v-alert key="error" type="error" class="mt-3" dismissible v-if="currentCommand.error"  @input="currentCommand.error=''">
-                {{currentCommand.error}}
-              </v-alert>
-            </template>
-          </v-card-text>
-          <v-card-actions>
-            <div class="flex-grow-1"/>
+          </template>
+          <OutputColumnInputs v-if="command.dialog.output_cols" :fieldLabel="command.dialog.output_cols_label" :noLabel="command.dialog.no_label" :currentCommand.sync="currentCommand"></OutputColumnInputs>
+          <template>
+            <v-alert key="error" type="error" class="mt-3" dismissible v-if="currentCommand.error"  @input="currentCommand.error=''">
+              {{currentCommand.error}}
+            </v-alert>
+          </template>
+          <div class="d-flex justify-end">
+            <v-spacer></v-spacer>
             <v-btn
               color="primary"
+              dense
               text
               v-if="command.onTest"
               :loading="currentCommand.loadingTest"
@@ -262,6 +246,7 @@
             </v-btn>
             <v-btn
               color="primary"
+              dense
               text
               @click="cancelCommand"
             >
@@ -269,7 +254,8 @@
             </v-btn>
             <v-btn
               color="primary"
-              text
+              depressed
+              dense
               :disabled="command.dialog.validate && !command.dialog.validate(currentCommand)"
               :loading="currentCommand.loadingAccept"
               type="submit"
@@ -285,11 +271,16 @@
                   'Accept'
               }}
             </v-btn>
-          </v-card-actions>
-        </v-card>
+          </div>
+        <!-- </v-card> -->
       </v-form>
-    </v-dialog>
-    <div class="sidebar-content options-fields-container" ref="cells-container" :class="{'empty': !cells.length}">
+    </div>
+    <div
+      v-show="view=='operations'"
+      class="sidebar-content options-fields-container"
+      :class="{'empty': !cells.length}"
+      ref="cells-container"
+    >
       <draggable
         tag="div"
         class="options-fields"
@@ -366,6 +357,9 @@ export default {
     view: {
       default: false
     },
+    big: {
+      default: true
+    },
     columns: {
       type: Array,
       default: ()=>{return []}
@@ -394,6 +388,8 @@ export default {
       barTop: 0,
       barHovered: false,
 
+      previousView: false,
+
       activeCell: -1,
       codeDone: '',
       lastWrongCode: false,
@@ -405,12 +401,12 @@ export default {
       commandsPallete: {
         'apply sort': {
           code: (payload) => {
-            return `${this.dataset.varname} = ${this.dataset.varname}.cols.sort(columns=["${payload.columns.join('", "')}"])`
+            return `.cols.sort(columns=["${payload.columns.join('", "')}"])`
           }
         },
         DROP_KEEP: {
           code: (payload) => {
-            return `${this.dataset.varname} = ${this.dataset.varname}.cols.${payload.command}(["${payload.columns.join('", "')}"])`
+            return `.cols.${payload.command}(["${payload.columns.join('", "')}"])`
           }
         },
         'sort rows': {
@@ -441,7 +437,7 @@ export default {
             var _argument = (payload.columns.length==1) ?
               `"${payload.columns[0]}","${payload.orders[0]}"` :
               `[${payload.columns.map((e,i)=>(`("${e}","${payload.orders[i]}")`)).join(',')}]`
-            return `${this.dataset.varname} = ${this.dataset.varname}.rows.sort( ${_argument} )`
+            return `.rows.sort( ${_argument} )`
           }
         },
         FILTER: {
@@ -463,7 +459,7 @@ export default {
               else
                 expression = `(${this.dataset.varname}["${payload.columns[0]}"]>=${ranges[0][0]}) & (${this.dataset.varname}["${payload.columns[0]}"]<=${ranges[0][1]})`
             }
-            return `${this.dataset.varname} = ${this.dataset.varname}.rows.${action}( ${expression} )`
+            return `.rows.${action}( ${expression} )`
           }
 
         },
@@ -651,20 +647,20 @@ export default {
               default:
             }
 
-            return `${this.dataset.varname} = ${this.dataset.varname}.rows.${payload.action}( ${expression} )` // ${this.dataset.varname}.rows.${payload.action}()
+            return `.rows.${payload.action}( ${expression} )` // ${this.dataset.varname}.rows.${payload.action}()
           }
         },
         STRING: {
           code: (payload) => {
             var _argument = payload.columns.length==0 ? `"*"`
             : (payload.columns.length==1 ? `"${payload.columns[0]}"` : `input_cols=["${payload.columns.join('", "')}"]`)
-            return `${this.dataset.varname} = ${this.dataset.varname}.cols.${payload.command}(${_argument})`
+            return `.cols.${payload.command}(${_argument})`
           }
         },
         cast: {
           code: (payload) => {
             var _argument = (payload.columns.length==1) ? `"${payload.columns[0]}"` : `["${payload.columns.join('", "')}"]`
-            return `${this.dataset.varname} = ${this.dataset.varname}.cols.cast(`
+            return `.cols.cast(`
             +_argument
             +`, dtype="${payload.dtype}"`
             +')'
@@ -672,6 +668,7 @@ export default {
         },
         fill_na: {
           dialog: {
+            title: (command)=>'Fill in ' + (command.columns.length==1 ? `column` : 'columns'),
             text: (command) => {
               return `Fill "${command.fill}"`
               + (command.columns.length==1 ? ` in ${command.columns[0]}` : '')
@@ -691,7 +688,6 @@ export default {
             columns: columns,
             fill: '',
             output_cols: columns.map(e=>''),
-            title: 'Fill in ' + (columns.length==1 ? `column` : 'columns'),
           }),
           code: (payload) => {
             var _argument = (payload.columns.length==1) ? `"${payload.columns[0]}"` : `["${payload.columns.join('", "')}"]`
@@ -699,7 +695,7 @@ export default {
               (!payload.output_cols.join('').trim().length) ? false :
               (payload.output_cols.length==1) ? `"${payload.output_cols[0]}"` :
               `[${payload.output_cols.map((e)=>((e!==null) ? `"${e}"` : 'None')).join(', ')}]`
-            return `${this.dataset.varname} = ${this.dataset.varname}.cols.fill_na(`
+            return `.cols.fill_na(`
               +_argument
               +`, "${payload.fill}"`
               +( (output_cols_argument) ? `, output_cols=${output_cols_argument}` : '')
@@ -987,7 +983,7 @@ export default {
             .filter(cluster=>cluster.selected.length)
             .map(cluster=>{
               var values = cluster.selected.map(e=>e.value)
-              return `${this.dataset.varname} = ${this.dataset.varname}.cols.replace(`
+              return `.cols.replace(`
               +`"${payload.columns[0]}"`
               +`, search=["${values.join('","')}"]`
               +`, replace_by="${cluster.replace}"`
@@ -1154,7 +1150,7 @@ export default {
 
               // TODO various ranges
 
-              return payload.selection.map(selection=>`${this.dataset.varname} = ${this.dataset.varname}.rows.between(`
+              return payload.selection.map(selection=>`.rows.between(`
               +`"${payload.columns[0]}"`
               +`, lower_bound=${selection[0]}`
               +`, upper_bound=${selection[1]}`
@@ -1423,7 +1419,7 @@ export default {
 					}),
           code: (payload) => {
             var _argument = (payload.columns.length==1) ? `"${payload.columns[0]}"` : `["${payload.columns.join('", "')}"]`
-            return `${this.dataset.varname} = ${this.dataset.varname}.stratified_sample(`
+            return `.stratified_sample(`
               +_argument
               +( (payload.seed) ? `, seed=${payload.seed}` : '')
               +')'
@@ -1463,7 +1459,7 @@ export default {
             title: 'Replace in column',
 					}),
           code: (payload) => {
-            return `${this.dataset.varname} = ${this.dataset.varname}.cols.replace(`
+            return `.cols.replace(`
               +`"${payload.columns[0]}"`
               +`, search=["${payload.search.join('","')}"]`
               +`, replace_by="${payload.replace}"`
@@ -1517,7 +1513,7 @@ export default {
               (!payload.output_cols.join('').trim().length) ? false :
               (payload.output_cols.length==1) ? `"${payload.output_cols[0]}"` :
               `[${payload.output_cols.map((e)=>((e!==null) ? `"${e}"` : 'None')).join(', ')}]`
-            return `${this.dataset.varname} = ${this.dataset.varname}.cols.replace(`
+            return `.cols.replace(`
               +_argument
               +`, search=["${payload.search.join('","')}"]`
               +`, replace_by="${payload.replace}"`
@@ -1557,13 +1553,14 @@ export default {
             newName: '' // columns.length==1 ? newName(columns[0]) : ''
           }),
           code: (payload) => {
-            return `${this.dataset.varname} = ${this.dataset.varname}.cols.set("${payload.newName}"`
+            return `.cols.set("${payload.newName}"`
             +( (payload.expression) ? `, ${payload.expression}` : '')
             +`)`
           }
         },
         rename: {
           dialog: {
+            title: (command) => 'Rename '+(command.columns.length==1 ? `column` : 'columns'),
             output_cols: true,
             output_cols_label: true,
             no_label: true,
@@ -1575,21 +1572,21 @@ export default {
             return {
               command: 'rename',
               columns,
-              title: 'Rename '+(columns.length==1 ? `column` : 'columns'),
               output_cols: columns.map(e=>newName(e))
             }
           },
           code: (payload) => {
             if (payload.columns.length==1) {
-              return `${this.dataset.varname} = ${this.dataset.varname}.cols.rename("${payload.columns[0]}", "${payload.output_cols[0]}")`
+              return `.cols.rename("${payload.columns[0]}", "${payload.output_cols[0]}")`
             }
             else {
-              return `${this.dataset.varname} = ${this.dataset.varname}.cols.rename([${payload.columns.map((e,i)=>`("${e}", "${payload.output_cols[i]}")`)}])`
+              return `.cols.rename([${payload.columns.map((e,i)=>`("${e}", "${payload.output_cols[i]}")`)}])`
             }
           }
         },
         unnest: {
           dialog: {
+            title: (command) => 'Unnest '+(command.columns.length==1 ? `column` : 'columns'),
             output_cols: true,
             output_cols_label: 'Output columns name',
             fields: [
@@ -1624,8 +1621,8 @@ export default {
               separator: ', ',
               splits: 2,
               index: '',
-              title: 'Unnest '+(columns.length==1 ? `column` : 'columns'),
-              output_cols: columns.map(e=>e)
+              output_cols: columns.map(e=>e),
+              _preview: true
             }
 					},
 					code: (payload) => {
@@ -1634,7 +1631,7 @@ export default {
               (!payload.output_cols.join('').trim().length) ? false :
               (payload.output_cols.length==1) ? `"${payload.output_cols[0]}"` :
               `[${payload.output_cols.map((e)=>((e!==null) ? `"${e}"` : 'None')).join(', ')}]`
-            return `${this.dataset.varname} = ${this.dataset.varname}.cols.unnest(`
+            return `.cols.unnest(`
               +_argument
               +( (payload.separator) ? `, separator="${payload.separator}"` : '')
               +( (payload.splits) ? `, splits=${payload.splits}` : '')
@@ -1671,7 +1668,7 @@ export default {
 					}
           },
 					code: (payload) => {
-            return `${this.dataset.varname} = ${this.dataset.varname}.cols.nest(["${payload.columns.join('", "')}"]`
+            return `.cols.nest(["${payload.columns.join('", "')}"]`
 						+( (payload.separator) ? `, separator="${payload.separator}"` : '')
 						+`, output_col="${payload.newName}")`
           }
@@ -1697,7 +1694,7 @@ export default {
               (!payload.output_cols.join('').trim().length) ? false :
               (payload.output_cols.length==1) ? `"${payload.output_cols[0]}"` :
               `[${payload.output_cols.map((e)=>((e!==null) ? `"${e}"` : 'None')).join(', ')}]`
-            return `${this.dataset.varname} = ${this.dataset.varname}.cols.copy(`
+            return `.cols.copy(`
               +_argument
               +( (output_cols_argument) ? `, output_cols=${output_cols_argument}` : '')
               +')'
@@ -1740,7 +1737,7 @@ export default {
                 :
                   `[${payload.output_cols.map((e)=>((e!==null) ? `"${e}"` : 'None')).join(', ')}]`
 
-            return `${this.dataset.varname} = ${this.dataset.varname}.cols.bucketizer(`
+            return `.cols.bucketizer(`
               + _argument
               + ( (payload.splits) ? `, ${payload.splits}` : '')
               + ( (output_cols_argument) ? `, output_cols=${output_cols_argument}` : '')
@@ -1755,7 +1752,7 @@ export default {
             }
           },
           code: (payload) => {
-            return `${this.dataset.varname} = ${this.dataset.varname}.cols.values_to_cols("${payload.columns[0]}")`
+            return `.cols.values_to_cols("${payload.columns[0]}")`
           }
         },
         string_to_index: {
@@ -1788,7 +1785,7 @@ export default {
                 :
                   `[${payload.output_cols.map((e)=>((e!==null) ? `"${e}"` : 'None')).join(', ')}]`
 
-            return `${this.dataset.varname} = ${this.dataset.varname}.cols.string_to_index(`
+            return `.cols.string_to_index(`
               + _argument
               + ( (output_cols_argument) ? `, output_cols=${output_cols_argument}` : '')
               + ')'
@@ -1824,7 +1821,7 @@ export default {
                 :
                   `[${payload.output_cols.map((e)=>((e!==null) ? `"${e}"` : 'None')).join(', ')}]`
 
-            return `${this.dataset.varname} = ${this.dataset.varname}.cols.index_to_string(`
+            return `.cols.index_to_string(`
               + _argument
               + ( (output_cols_argument) ? `, output_cols=${output_cols_argument}` : '')
               + ')'
@@ -1868,7 +1865,7 @@ export default {
                 :
                   `[${payload.output_cols.map((e)=>((e!==null) ? `"${e}"` : 'None')).join(', ')}]`
 
-            return `${this.dataset.varname} = ${this.dataset.varname}.cols.${payload.command}(`
+            return `.cols.${payload.command}(`
               + _argument
               + ( (output_cols_argument) ? `, output_cols=${output_cols_argument}` : '')
               + ')'
@@ -1928,7 +1925,7 @@ export default {
                 :
                   `[${payload.output_cols.map((e)=>((e!==null) ? `"${e}"` : 'None')).join(', ')}]`
 
-            return `${this.dataset.varname} = ${this.dataset.varname}.cols.impute(`
+            return `.cols.impute(`
               + _argument
               + `, "${payload.data_type}"`
               + `, "${payload.strategy}"`
@@ -1961,7 +1958,7 @@ export default {
             }
           },
           code: (payload) => {
-            return `${this.dataset.varname} = ${this.dataset.varname}.sample(${payload.n})`
+            return `.sample(${payload.n})`
           },
         },
         /*
@@ -2026,7 +2023,7 @@ export default {
 
   computed: {
 
-    ...mapGetters(['currentSelection','selectionType']),
+    ...mapGetters(['currentSelection','selectionType','currentTab']),
 
     cells: {
       get() {
@@ -2086,17 +2083,38 @@ export default {
   },
 
   watch: {
-    // cells: {
-    //   deep: true,
-    //   handler (value) {
-    //     this.store_cells = value
-    //   }
-    // },
+
+    view (value) {
+      if (value=='operations' || !value) {
+        this.currentCommand = false
+        this.previousView = value
+      }
+    },
+
     barHovered (value) {
       if (!value){
         this.moveBarDelayed(this.barTop)
       }
     },
+
+    currentCommand: {
+      deep: true,
+      async handler () {
+        // try {
+        //   if (this.command && this.command.dialog && (!this.command.dialog.validate || this.command.dialog.validate(this.currentCommand))) {
+        //     if (this.currentCommand._preview) {
+        //       var result = await this.evalCode(await this.getCode(this.currentCommand,true))
+        //       console.log('preview', result)
+              
+        //     }
+        //   }
+        // }
+        // catch (error) {
+        //   console.error(error)
+        // }
+      }
+    },
+
     dataset: {
       deep: true,
       handler () {
@@ -2107,13 +2125,29 @@ export default {
           this.lastWrongCode = false
         }
       }
-    }
+    },
+
   },
 
   methods: {
 
     cleanCodeError() {
       this.$emit('update:codeError','')
+    },
+
+    getCommandTitle() {
+      try {
+        if (this.command.dialog.title) {
+          if (typeof this.command.dialog.title == 'function') {
+            return this.command.dialog.title(this.currentCommand)
+          }
+          return this.command.dialog.title
+        }
+        return  this.currentCommand.title
+      }
+      catch {
+        return 'Operation'
+      }
     },
 
     clusterFieldUpdated(cluster) {
@@ -2129,7 +2163,7 @@ export default {
         return (this.cells.length) ? (this.cells.filter(e=>(e.content!=='')).map(e=>e.content).join('\n').trim()) : ''
     },
 
-    async commandHandle ( event ) {
+    async commandHandle (event) {
 
 			var payload = {}
 			var columns = undefined
@@ -2141,15 +2175,20 @@ export default {
 
       var _command = this.commandsPallete[event.command] || this.commandsPallete[event.type]
 
+      payload.type = event.type
+      payload.command = event.command
+      payload._noOptions = event.noOptions
+
       if (_command) {
 
         payload = _command.payload ? ( _command.payload(columns) ) : {}
-        payload.type = event.type
-        payload.command = event.command
 
         if (_command.dialog) {
 
           this.currentCommand = {...payload, ...(event.payload || {})}
+
+          this.$emit('update:view',this.getCommandTitle())
+          this.$emit('update:big',_command.dialog.big) // :max-width="command.dialog.big ? 820 : 410"
 
           if (_command.onInit)
             await _command.onInit()
@@ -2160,7 +2199,7 @@ export default {
 
           else {
             setTimeout(() => {
-              var ref = this.$refs['command-dialog'][0]
+              var ref = this.$refs['command-form'][0]
               if (ref && ref.$el){
                 var el = ref.$el.getElementsByTagName('input')[0]
                 if (el)
@@ -2176,7 +2215,7 @@ export default {
             columns: payload.columns || columns,
             payload
           }
-          this.addCell(-1, cell)
+          this.addCell(-1, event.command, await this.getCode(cell,false))
           this.runButton = false
         }
       }
@@ -2187,16 +2226,17 @@ export default {
       if (_command.onDone) {
         this.currentCommand = await _command.onDone(this.currentCommand)
       }
-      else {
-        this.addCell(-1, this.currentCommand )
-        this.runButton = false
-        this.currentCommand = false
-      }
+      var code = await this.getCode(this.currentCommand, false)
+      this.addCell(-1, this.currentCommand.command, code )
+      this.runButton = false
+      this.currentCommand = false
+      this.$emit('update:view',(this.currentCommand._noOptions) ? false : 'operations')
     },
 
     cancelCommand () {
 			setTimeout(() => {
-				this.currentCommand = false
+        this.currentCommand = false
+        this.$emit('update:view',(this.previousView=='operations') ? 'operations' : false )
 			}, 10);
     },
 
@@ -2320,10 +2360,7 @@ export default {
         this.codeDone = ''
     },
 
-    addCell (at = -1, payload = {command: 'code', columns: []}) {
-
-      this.$emit('update:codeError','')
-
+    async getCode (payload, preview) {
       var content = ''
 
       if (!payload.columns || !payload.columns.length) {
@@ -2340,14 +2377,26 @@ export default {
         content = payload.content
       }
 
+      if (preview && !this.$store.state.buffers[this.currentTab]) {
+        await this.evalCode(evalCode(this.dataset.varname+'.ext.set_buffer()\n"done"'))
+        this.$store.commit('buffer',true)
+      }
+
+      return (preview ? `${this.dataset.varname}` : `${this.dataset.varname} = ${this.dataset.varname}`) + content
+    },
+
+    addCell (at = -1, command = 'code', code = '') {
+
+      this.$emit('update:codeError','')
+
       if (at==-1)
         at = this.cells.length
 
       var cells = [...this.cells]
 
       cells.splice(at,0, {
-        command: payload.command,
-        content,
+        command,
+        content: code,
         id: Number(new Date()),
         active: false
       })
@@ -2357,7 +2406,7 @@ export default {
       this.$nextTick(()=>{
         if (this.activeCell<0)
           this.setActiveCell(0)
-        if (content.length)
+        if (code.length)
           this.runCode()
       })
 

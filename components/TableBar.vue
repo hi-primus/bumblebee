@@ -182,7 +182,7 @@
       :typesSelected="typesSelected"
       :columnsTableHeaders="columnsTableHeaders"
     />
-    <div class="sidebar-container" :class="{'bigger': optionsActive}" v-show="detailsActive || (optionsActive && $route.query.kernel=='1')">
+    <div class="sidebar-container" :class="{'bigger': (optionsActive && (bigOptions || optionsActive=='operations'))}" v-show="detailsActive || (optionsActive && $route.query.kernel=='1')">
 
       <template>
         <div class="sidebar-header" v-show="optionsActive=='operations' && $route.query.kernel=='1'">
@@ -191,7 +191,7 @@
         </div>
         <div class="sidebar-header" v-show="optionsActive!='operations' && optionsActive && $route.query.kernel=='1'">
           {{optionsActive}}
-          <v-icon class="right-button" color="black" @click="optionsActive = false">close</v-icon>
+          <v-icon class="right-button" color="black" @click="cancelCommand">close</v-icon>
         </div>
         <div v-show="optionsActive=='operations' && $route.query.kernel=='1'" class="px-2 py-1">
           <v-tooltip transition="fade-transition" bottom color="success darken-2" v-model="copied">
@@ -222,6 +222,7 @@
         <Cells
           v-show="optionsActive && $route.query.kernel=='1'"
           ref="cells"
+          :big.sync="bigOptions"
           :view.sync="optionsActive"
           :codeError.sync="cellsError"
           :columns="selectedColumns || []"
@@ -376,6 +377,7 @@ export default {
       scatterPlotDisplay: [],
 
       optionsActive: false,
+      bigOptions: true,
       commandsDisabled: false,
       operation: undefined,
       heatMap: [],
@@ -863,15 +865,20 @@ export default {
       }, 2000);
     },
 
+    cancelCommand () {
+      this.$nextTick(()=>{
+        this.$refs.cells & this.$refs.cells.cancelCommand()
+      })
+    },
+
     commandHandle (event) {
-      if (!event.noOptions)
-        this.optionsActive = 'operations'
+      // if (event.noOptions)
+      //   this.optionsActive = false
+      // else
+      //   this.optionsActive = 'operations'
 
       this.$nextTick(()=>{
         this.$refs.cells & this.$refs.cells.commandHandle(event)
-        this.$nextTick(()=>{
-          console.log(this.$store)
-        })
       })
     },
 

@@ -163,7 +163,7 @@
               }"
               :style="{width: columns[index].width+'px'}"
               :data-val="row.value[index]"
-            >&nbsp;{{row.value[index]}}&nbsp;</div>
+            ><span class="select-none">&nbsp;</span>{{row.value[index]}}<span class="select-none">&nbsp;</span></div>
           </template>
         </div>
       </template>

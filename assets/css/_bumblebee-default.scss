@@ -177,11 +177,14 @@ table.details-table {
 .foreach-label.row {
   align-items: center;
   margin-top: -8px;
-  margin-bottom: -8px;
+  margin-bottom: 8px;
   overflow: hidden;
   .oci-input-container {
     margin-top: 8px;
     margin-bottom: 8px;
+    .v-text-field__details {
+      display: none;
+    }
   }
 }
 
@@ -822,6 +825,10 @@ table {
   margin-right: auto;
 }
 
+.select-none {
+  user-select: none;
+}
+
 .primary--chips {
   .v-chip {
     background-color: $primary-color !important;
@@ -836,7 +843,7 @@ table {
   }
 }
 
-.chips-no-items .v-input__append-inner:last-child {
+.chips-no-items .v-input__append-inner:last-of-type {
   display: none !important;
 }
 
@@ -1712,6 +1719,10 @@ $editor-top-padding: 6px;
   }
 
   .bb-table-cell {
+    &::selection {
+      background: lighten($data-teal,33%);
+    }
+    cursor: initial;
     font-size: 13px;
     height: inherit;
     padding: 0;
@@ -1823,4 +1834,39 @@ $editor-top-padding: 6px;
 
 .v-tab {
   letter-spacing: 0 !important;
+}
+
+.smaller-fields {
+  .v-label, .v-input {
+    // background: cyan;
+    font-size: 12px;
+  }
+  .v-input__slot {
+    min-height: 34px !important;
+  }
+  .v-label {
+    top: 7px !important;
+  }
+  .v-select__selections {
+    max-height: 34px;
+  }
+  .v-select__selection--comma {
+    margin-top: 2px;
+    // margin-bottom: 5px;
+  }
+  .v-text-field__details {
+    margin-bottom: 0 !important;
+  }
+  .v-input--switch {
+    margin-top: -8px !important;
+    .v-label {
+      top: 0 !important;
+    }
+  }
+  .v-input__append-inner {
+    margin-top: 5px !important;
+  }
+  position: relative;
+  left: 4px;
+
 }

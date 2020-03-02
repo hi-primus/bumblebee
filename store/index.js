@@ -7,7 +7,8 @@ export const state = () => ({
   status: 'waiting',
   session: '',
   engine: 'dask',
-  database: false,
+	databases: [],
+	buffers: [],
 	key: '',
 	allTypes: [
 		'string',
@@ -169,7 +170,11 @@ export const mutations = {
   },
 
   database (state, payload) {
-    state.database = payload
+    state.databases[state.tab] = payload
+  },
+	
+	buffer (state, payload) {
+    state.buffers[state.tab] = payload
   },
 
 	key (state, payload) {

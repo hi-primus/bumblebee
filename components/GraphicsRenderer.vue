@@ -1,7 +1,7 @@
 <template>
   <span v-if="typeof value !== 'object' || value === null" :title="value" :class="{'missing': value===''}">
     <template v-if="value!==null && value!==undefined && value!==''">
-      &nbsp;{{ value }}&nbsp;
+      <span class="select-none">&nbsp;</span>{{ value }}<span class="select-none">&nbsp;</span>
     </template>
   </span>
   <div v-else class="graphic-ht-container">
