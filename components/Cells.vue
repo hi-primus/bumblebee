@@ -1,297 +1,294 @@
 <template>
   <div>
-		<template v-for="(command, key) in commandsPallete">
-			<v-dialog
-				:key="key"
-				persistent
-				v-if="command.dialog && (currentCommand.command == key || currentCommand.type == key)"
-				:value="(currentCommand.command == key || currentCommand.type == key)"
-				:max-width="command.dialog.big ? 820 : 410"
-				@click:outside="cancelCommand"
-				@keydown.esc="cancelCommand"
-			>
-				<v-form @submit.prevent="confirmCommand" id="command-form">
-					<v-card class="command-dialog" ref="command-dialog">
-						<v-card-title class="title px-6">
-							{{
-								command.dialog.title ?
-								(
-									typeof command.dialog.title == 'function' ?
-										command.dialog.title(currentCommand)
-									:
-										command.dialog.title
-								)
-								:
-									currentCommand.title
-							}}
-						</v-card-title>
-						<v-card-text class="command-card-text pb-0 px-6" :class="{'command-big': command.dialog.big, 'command-tall': command.dialog.tall}">
-							<div class="mb-6" :class="{'title': command.dialog.bigText}" v-if="command.dialog.text">
-								{{
-									(typeof command.dialog.text == 'function') ?
-										command.dialog.text(currentCommand)
-									:
-										command.dialog.text
-								}}
-							</div>
-              <div class="progress-middle" style="height: 65%">
-                <v-progress-circular
-                  indeterminate
-                  color="#888"
-                  size="64"
-                  v-if="currentCommand.loading"
-                />
-              </div>
-              <template v-if="!currentCommand.loading && command.dialog.fields">
-                <template v-for="field in command.dialog.fields.filter(f=>(!f.condition || f.condition && f.condition(currentCommand)))">
-                  <template v-if="field.type=='action'">
-                    <v-btn
-                      :key="field.key"
-                      depressed
-                      color="primary"
-                      @click="(field.func) ? command[field.func]() : 0"
-                      class="mb-6 mx-a d-flex"
-                      :disabled="field.validate && !field.validate(currentCommand)"
-                    >
-                      {{
-                        (typeof field.label == 'function') ?
-                          field.label(currentCommand)
-                        :
-                          field.label
-                      }}
-                    </v-btn>
-                  </template>
-                  <template v-if="field.type=='text'">
-                    <div
-                      :key="field.key"
-                      class="mb-6"
-                      :class="{'title': field.big}"
-                      v-if="field.text"
-                    >
-                      {{
-                        (typeof field.text == 'function') ?
-                          field.text(currentCommand)
-                        :
-                          field.text
-                      }}
+    <v-dialog
+      persistent
+      v-if="command && command.dialog"
+      :value="(currentCommand.command)"
+      :max-width="command.dialog.big ? 820 : 410"
+      @click:outside="cancelCommand"
+      @keydown.esc="cancelCommand"
+    >
+      <v-form @submit.prevent="confirmCommand" id="command-form">
+        <v-card class="command-dialog" ref="command-dialog">
+          <v-card-title class="title px-6">
+            {{
+              command.dialog.title ?
+              (
+                typeof command.dialog.title == 'function' ?
+                  command.dialog.title(currentCommand)
+                :
+                  command.dialog.title
+              )
+              :
+                currentCommand.title
+            }}
+          </v-card-title>
+          <v-card-text class="command-card-text pb-0 px-6" :class="{'command-big': command.dialog.big, 'command-tall': command.dialog.tall}">
+            <div class="mb-6" :class="{'title': command.dialog.bigText}" v-if="command.dialog.text">
+              {{
+                (typeof command.dialog.text == 'function') ?
+                  command.dialog.text(currentCommand)
+                :
+                  command.dialog.text
+              }}
+            </div>
+            <div class="progress-middle" style="height: 65%">
+              <v-progress-circular
+                indeterminate
+                color="#888"
+                size="64"
+                v-if="currentCommand.loading"
+              />
+            </div>
+            <template v-if="!currentCommand.loading && command.dialog.fields">
+              <template v-for="field in command.dialog.fields.filter(f=>(!f.condition || f.condition && f.condition(currentCommand)))">
+                <template v-if="field.type=='action'">
+                  <v-btn
+                    :key="field.key"
+                    depressed
+                    color="primary"
+                    @click="(field.func) ? command[field.func]() : 0"
+                    class="mb-6 mx-a d-flex"
+                    :disabled="field.validate && !field.validate(currentCommand)"
+                  >
+                    {{
+                      (typeof field.label == 'function') ?
+                        field.label(currentCommand)
+                      :
+                        field.label
+                    }}
+                  </v-btn>
+                </template>
+                <template v-if="field.type=='text'">
+                  <div
+                    :key="field.key"
+                    class="mb-6"
+                    :class="{'title': field.big}"
+                    v-if="field.text"
+                  >
+                    {{
+                      (typeof field.text == 'function') ?
+                        field.text(currentCommand)
+                      :
+                        field.text
+                    }}
+                  </div>
+                </template>
+                <template v-if="field.type=='field'">
+                  <v-text-field
+                    v-model="currentCommand[field.key]"
+                    :key="field.key"
+                    :label="(typeof field.label == 'function') ? field.label(currentCommand) : (field.label || '')"
+                    :placeholder="(typeof field.placeholder == 'function') ? field.placeholder(currentCommand) : (field.placeholder || '')"
+                    :clearable="field.clearable"
+                    @input="(field.onChange) ? command[field.onChange]() : 0"
+                    dense
+                    required
+                    outlined
+                  ></v-text-field>
+                </template>
+                <template v-if="field.type=='chips'">
+                  <v-combobox
+                    v-model="currentCommand[field.key]"
+                    :key="field.key"
+                    :label="(typeof field.label == 'function') ? field.label(currentCommand) : (field.label || '')"
+                    :placeholder="(typeof field.placeholder == 'function') ? field.placeholder(currentCommand) : (field.placeholder || '')"
+                    :clearable="field.clearable"
+                    autocomplete="off"
+                    chips
+                    deletable-chips
+                    :items="[]"
+                    class="chips-no-items"
+                    multiple
+                  >
+                  </v-combobox>
+                </template>
+                <template v-if="field.type=='outliers-range'">
+                  <Outliers
+                    :key="field.key"
+                    v-if="currentCommand[field.key]"
+                    :data="currentCommand[field.key]"
+                    :columnName="currentCommand.columns[0]"
+                    :selection.sync="currentCommand[field.selection_key]"
+                  />
+                </template>
+                <template v-if="field.type=='switch'">
+                  <v-switch
+                    :key="field.key"
+                    v-model="currentCommand[field.key]"
+                    color="black"
+                    class="mt-0"
+                    :label="(typeof field.label == 'function') ? field.label(currentCommand) : field.label"
+                  ></v-switch>
+                </template>
+                <template v-else-if="field.type=='password'">
+                  <v-text-field
+                    v-model="currentCommand[field.key]"
+                    :key="field.key"
+                    :label="field.label"
+                    :placeholder="field.placeholder"
+                    dense
+                    required
+                    outlined
+                    :append-icon="field.showable ? (field.show ? 'visibility' : 'visibility_off') : undefined"
+                    :type="(field.show || !field.showable) ? 'text' : 'password'"
+                    :clearable="field.clearable"
+                    @input="(field.onChange) ? command[field.onChange]() : 0"
+                    @click:append="field.show = !field.show"
+                  />
+                </template>
+                <template v-else-if="field.type=='number'">
+                  <v-text-field
+                    type="number"
+                    v-model="currentCommand[field.key]"
+                    :key="field.key"
+                    :label="field.label"
+                    :placeholder="field.placeholder"
+                    :min="field.min"
+                    :clearable="field.clearable"
+                    @input="(field.onChange) ? command[field.onChange]() : 0"
+                    dense
+                    required
+                    outlined
+                  ></v-text-field>
+                </template>
+                <template v-else-if="field.type=='number_index'">
+                  <v-text-field
+                    type="number"
+                    :value="(currentCommand.index>=0) ? currentCommand.index : ''"
+                    @input="currentCommand.index = ($event>=0) ? $event : ''"
+                    :key="field.key"
+                    label="Index"
+                    :clearable="field.clearable"
+                    :max="(field.splits!=='') ? field.splits-1 : undefined"
+                    :placeholder="field.placeholder"
+                    :min="field.min"
+                    dense
+                    required
+                    outlined
+                  ></v-text-field>
+                </template>
+                <template v-else-if="field.type=='select' && (!field.items_key == !currentCommand[field.items_key])">
+                  <v-select
+                    :key="field.key"
+                    v-model="currentCommand[field.key]"
+                    :label="field.label"
+                    :placeholder="field.placeholder"
+                    :items="(field.items_key) ? currentCommand[field.items_key] : field.items"
+                    @input="(field.onChange) ? command[field.onChange]() : 0"
+                    :disabled="!!+field.disabled"
+                    dense
+                    required
+                    outlined
+                  ></v-select>
+                </template>
+                <template v-else-if="field.type=='select-foreach'">
+                  <v-row :key="field.key" no-gutters class="foreach-label">
+                    <template v-for="(title, i) in currentCommand.columns">
+                      <v-col v-if="!field.noLabel" :key="i+'label'" class="col-12 col-sm-4 col-md-3 font-weight-bold pr-4 text-ellipsis" :title="title">
+                        {{title}}
+                      </v-col>
+                      <v-col :key="i" class="col-12 oci-input-container" :class="{'col-sm-8 col-md-9': !field.noLabel}">
+                        <v-select
+                          v-model="currentCommand[field.key][i]"
+                          :key="field.key"
+                          :label="field.label===true ? title : field.label"
+                          :placeholder="field.placeholder===true ? title : field.placeholder"
+                          :items="(field.items_key) ? currentCommand[field.items_key] : field.items"
+                          dense
+                          required
+                          outlined
+                        ></v-select>
+                      </v-col>
+                    </template>
+                  </v-row>
+                </template>
+                <template v-else-if="field.type=='clusters'">
+                  <div :key="field.key" class="clusters-table-container" style="overflow-y: auto; min-heigth: 240px;">
+                    <div v-for="(cluster, i) in currentCommand[field.key]" :key="i+'label'" class="cluster" :class="{'disabled-cluster': !cluster.merge}" >
+                        <v-data-table
+                          flat
+                          depressed
+                          v-model="cluster.selected"
+                          :items="cluster.values"
+                          :headers="clusterHeaders"
+                          :sort-by="'count'"
+                          sort-desc
+                          disable-pagination
+                          item-key="value"
+                          dense
+                          show-select
+                          hide-default-footer
+                        >
+                        </v-data-table>
+                        <div class="cluster-info">
+                          {{`${cluster.values.length} value${(cluster.values.length!=1 ? 's' : '')}`}} · {{`${cluster.count} row${(cluster.count!=1 ? 's' : '')}`}}
+                          <!-- · 5 rows -->
+                        </div>
+                        <v-text-field
+                          v-model="cluster.replace"
+                          class="cluster-replace-field pt-2"
+                          :label="(field.label===true ? cluster.replace : field.label) || 'New cell value'"
+                          :placeholder="field.placeholder===true ? cluster.replace : field.placeholder"
+                          :disabled="false && !cluster.selected.length"
+                          @input="clusterFieldUpdated(cluster)"
+                          dense
+                          required
+                          outlined
+                        ></v-text-field>
                     </div>
-                  </template>
-                  <template v-if="field.type=='field'">
-                    <v-text-field
-                      v-model="currentCommand[field.key]"
-                      :key="field.key"
-                      :label="(typeof field.label == 'function') ? field.label(currentCommand) : (field.label || '')"
-                      :placeholder="(typeof field.placeholder == 'function') ? field.placeholder(currentCommand) : (field.placeholder || '')"
-                      :clearable="field.clearable"
-                      @input="(field.onChange) ? command[field.onChange]() : 0"
-                      dense
-                      required
-                      outlined
-                    ></v-text-field>
-                  </template>
-                  <template v-if="field.type=='chips'">
-                    <v-combobox
-                      v-model="currentCommand[field.key]"
-                      :key="field.key"
-                      :label="(typeof field.label == 'function') ? field.label(currentCommand) : (field.label || '')"
-                      :placeholder="(typeof field.placeholder == 'function') ? field.placeholder(currentCommand) : (field.placeholder || '')"
-                      :clearable="field.clearable"
-                      autocomplete="off"
-                      chips
-                      deletable-chips
-                      :items="[]"
-                      class="chips-no-items"
-                      multiple
-                    >
-                    </v-combobox>
-                  </template>
-                  <template v-if="field.type=='outliers-range'">
-                    <Outliers
-                      :key="field.key"
-                      v-if="currentCommand[field.key]"
-                      :data="currentCommand[field.key]"
-                      :columnName="currentCommand.columns[0]"
-                      :selection.sync="currentCommand[field.selection_key]"
-                    />
-                  </template>
-                  <template v-if="field.type=='switch'">
-                    <v-switch
-                      :key="field.key"
-                      v-model="currentCommand[field.key]"
-                      color="black"
-                      class="mt-0"
-                      :label="(typeof field.label == 'function') ? field.label(currentCommand) : field.label"
-                    ></v-switch>
-                  </template>
-                  <template v-else-if="field.type=='password'">
-                    <v-text-field
-                      v-model="currentCommand[field.key]"
-                      :key="field.key"
-                      :label="field.label"
-                      :placeholder="field.placeholder"
-                      dense
-                      required
-                      outlined
-                      :append-icon="field.showable ? (field.show ? 'visibility' : 'visibility_off') : undefined"
-                      :type="(field.show || !field.showable) ? 'text' : 'password'"
-                      :clearable="field.clearable"
-                      @input="(field.onChange) ? command[field.onChange]() : 0"
-                      @click:append="field.show = !field.show"
-                    />
-                  </template>
-                  <template v-else-if="field.type=='number'">
-                    <v-text-field
-                      type="number"
-                      v-model="currentCommand[field.key]"
-                      :key="field.key"
-                      :label="field.label"
-                      :placeholder="field.placeholder"
-                      :min="field.min"
-                      :clearable="field.clearable"
-                      @input="(field.onChange) ? command[field.onChange]() : 0"
-                      dense
-                      required
-                      outlined
-                    ></v-text-field>
-                  </template>
-                  <template v-else-if="field.type=='number_index'">
-                    <v-text-field
-                      type="number"
-                      :value="(currentCommand.index>=0) ? currentCommand.index : ''"
-                      @input="currentCommand.index = ($event>=0) ? $event : ''"
-                      :key="field.key"
-                      label="Index"
-                      :clearable="field.clearable"
-                      :max="(field.splits!=='') ? field.splits-1 : undefined"
-                      :placeholder="field.placeholder"
-                      :min="field.min"
-                      dense
-                      required
-                      outlined
-                    ></v-text-field>
-                  </template>
-                  <template v-else-if="field.type=='select' && (!field.items_key == !currentCommand[field.items_key])">
-                    <v-select
-                      :key="field.key"
-                      v-model="currentCommand[field.key]"
-                      :label="field.label"
-                      :placeholder="field.placeholder"
-                      :items="(field.items_key) ? currentCommand[field.items_key] : field.items"
-                      @input="(field.onChange) ? command[field.onChange]() : 0"
-                      :disabled="!!+field.disabled"
-                      dense
-                      required
-                      outlined
-                    ></v-select>
-                  </template>
-                  <template v-else-if="field.type=='select-foreach'">
-                    <v-row :key="field.key" no-gutters class="foreach-label">
-                      <template v-for="(title, i) in currentCommand.columns">
-                        <v-col v-if="!field.noLabel" :key="i+'label'" class="col-12 col-sm-4 col-md-3 font-weight-bold pr-4 text-ellipsis" :title="title">
-                          {{title}}
-                        </v-col>
-                        <v-col :key="i" class="col-12 oci-input-container" :class="{'col-sm-8 col-md-9': !field.noLabel}">
-                          <v-select
-                            v-model="currentCommand[field.key][i]"
-                            :key="field.key"
-                            :label="field.label===true ? title : field.label"
-                            :placeholder="field.placeholder===true ? title : field.placeholder"
-                            :items="(field.items_key) ? currentCommand[field.items_key] : field.items"
-                            dense
-                            required
-                            outlined
-                          ></v-select>
-                        </v-col>
-                      </template>
-                    </v-row>
-                  </template>
-                  <template v-else-if="field.type=='clusters'">
-                    <div :key="field.key" class="clusters-table-container" style="overflow-y: auto; min-heigth: 240px;">
-                      <div v-for="(cluster, i) in currentCommand[field.key]" :key="i+'label'" class="cluster" :class="{'disabled-cluster': !cluster.merge}" >
-                          <v-data-table
-                            flat
-                            depressed
-                            v-model="cluster.selected"
-                            :items="cluster.values"
-                            :headers="clusterHeaders"
-                            :sort-by="'count'"
-				                    sort-desc
-                            disable-pagination
-                            item-key="value"
-                            dense
-                            show-select
-                            hide-default-footer
-                          >
-                          </v-data-table>
-                          <div class="cluster-info">
-                            {{`${cluster.values.length} value${(cluster.values.length!=1 ? 's' : '')}`}} · {{`${cluster.count} row${(cluster.count!=1 ? 's' : '')}`}}
-                            <!-- · 5 rows -->
-                          </div>
-                          <v-text-field
-                            v-model="cluster.replace"
-                            class="cluster-replace-field pt-2"
-                            :label="(field.label===true ? cluster.replace : field.label) || 'New cell value'"
-                            :placeholder="field.placeholder===true ? cluster.replace : field.placeholder"
-                            :disabled="false && !cluster.selected.length"
-                            @input="clusterFieldUpdated(cluster)"
-                            dense
-                            required
-                            outlined
-                          ></v-text-field>
-                      </div>
-                    </div>
-                  </template>
+                  </div>
                 </template>
               </template>
-							<OutputColumnInputs v-if="command.dialog.output_cols" :fieldLabel="command.dialog.output_cols_label" :noLabel="command.dialog.no_label" :currentCommand.sync="currentCommand"></OutputColumnInputs>
-              <template>
-                <v-alert key="error" type="error" class="mt-3" dismissible v-if="currentCommand.error"  @input="currentCommand.error=''">
-                  {{currentCommand.error}}
-                </v-alert>
-              </template>
-						</v-card-text>
-						<v-card-actions>
-							<div class="flex-grow-1"/>
-							<v-btn
-								color="primary"
-								text
-                v-if="command.onTest"
-                :loading="currentCommand.loadingTest"
-								:disabled="command.dialog.testValidate && !command.dialog.testValidate(currentCommand)"
-								@click="command.onTest(currentCommand)"
-							>
-								{{ command.dialog.testLabel || 'Test'}}
-							</v-btn>
-							<v-btn
-								color="primary"
-								text
-								@click="cancelCommand"
-							>
-								Cancel
-							</v-btn>
-							<v-btn
-								color="primary"
-								text
-								:disabled="command.dialog.validate && !command.dialog.validate(currentCommand)"
-                :loading="currentCommand.loadingAccept"
-								type="submit"
-								form="command-form"
-							>
-                {{
-                  command.dialog.acceptLabel ? (
-                    typeof command.dialog.acceptLabel == 'function' ?
-                      command.dialog.acceptLabel(currentCommand)
-                    :
-                      command.dialog.acceptLabel
-                  ):
-                    'Accept'
-                }}
-							</v-btn>
-						</v-card-actions>
-					</v-card>
-				</v-form>
-			</v-dialog>
-		</template>
+            </template>
+            <OutputColumnInputs v-if="command.dialog.output_cols" :fieldLabel="command.dialog.output_cols_label" :noLabel="command.dialog.no_label" :currentCommand.sync="currentCommand"></OutputColumnInputs>
+            <template>
+              <v-alert key="error" type="error" class="mt-3" dismissible v-if="currentCommand.error"  @input="currentCommand.error=''">
+                {{currentCommand.error}}
+              </v-alert>
+            </template>
+          </v-card-text>
+          <v-card-actions>
+            <div class="flex-grow-1"/>
+            <v-btn
+              color="primary"
+              text
+              v-if="command.onTest"
+              :loading="currentCommand.loadingTest"
+              :disabled="command.dialog.testValidate && !command.dialog.testValidate(currentCommand)"
+              @click="command.onTest(currentCommand)"
+            >
+              {{ command.dialog.testLabel || 'Test'}}
+            </v-btn>
+            <v-btn
+              color="primary"
+              text
+              @click="cancelCommand"
+            >
+              Cancel
+            </v-btn>
+            <v-btn
+              color="primary"
+              text
+              :disabled="command.dialog.validate && !command.dialog.validate(currentCommand)"
+              :loading="currentCommand.loadingAccept"
+              type="submit"
+              form="command-form"
+            >
+              {{
+                command.dialog.acceptLabel ? (
+                  typeof command.dialog.acceptLabel == 'function' ?
+                    command.dialog.acceptLabel(currentCommand)
+                  :
+                    command.dialog.acceptLabel
+                ):
+                  'Accept'
+              }}
+            </v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-form>
+    </v-dialog>
     <div class="sidebar-content options-fields-container" ref="cells-container" :class="{'empty': !cells.length}">
       <draggable
         tag="div"
@@ -366,6 +363,9 @@ export default {
   mixins: [clientMixin],
 
   props: {
+    view: {
+      default: false
+    },
     columns: {
       type: Array,
       default: ()=>{return []}
@@ -2035,6 +2035,16 @@ export default {
       set(value) {
         this.$store.commit('cells', value)
       }
+    },
+
+    command () {
+      try {
+        return this.commandsPallete[this.currentCommand.command] || this.commandsPallete[this.currentCommand.type]
+      }
+      catch (error) {
+        return undefined
+      }
+      // command.dialog && (currentCommand.command == key || currentCommand.type == key)
     },
 
     availableVariableName () {
