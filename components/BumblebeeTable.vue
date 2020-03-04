@@ -65,73 +65,93 @@
   </v-menu>
   <div
     class="bb-table-top-container" ref="BbTableTopContainer"
-    v-if="columns && bbColumns"
+    v-if="columns && allColumns"
   >
     <div class="bb-table-header">
-      <template v-for="index in bbColumns">
+      <template v-for="column in allColumns">
         <div
-          @click="selectColumn($event, index)"
-          @dblclick="setMenu($event, index)"
-          class="bb-table-h-cell"
-          :class="{'active-menu-column': (columnMenuIndex===index) ,'bb-selected': selectionMap[index]}"
-          v-if="columns[index]"
-          :key="index"
-          :style="{width: columns[index].width+'px'}"
+          class="bb-table-h-cell bb-preview"
+          v-if="column.type=='preview'"
+          :key="'p'+column.index"
+          style="width: 170px"
         >
-          <div class="data-type" :class="`type-${columns[index].column_dtype}`">
-            {{ dataType(currentDataset.columns[index].column_dtype) }}
+          <!-- <div class="data-type" :class="`type-${columns[column.index].column_dtype}`">
+            {{ dataType(currentDataset.columns[column.index].column_dtype) }}
+          </div> -->
+          <div class="column-title">
+            {{currentPreview.dataset.columns[column.index].title}}
+          </div>
+        </div>
+        <div
+          @click="selectColumn($event, column.index)"
+          @dblclick="setMenu($event, column.index)"
+          class="bb-table-h-cell"
+          :class="{'active-menu-column': (columnMenuIndex===column.index) ,'bb-selected': selectionMap[column.index]}"
+          v-else-if="columns[column.index]"
+          :key="column.index"
+          :style="{width: columns[column.index].width+'px'}"
+        >
+          <div class="data-type" :class="`type-${columns[column.index].column_dtype}`">
+            {{ dataType(currentDataset.columns[column.index].column_dtype) }}
           </div>
           <div class="column-title">
-            {{columns[index].name}}
+            {{columns[column.index].name}}
           </div>
         </div>
       </template>
     </div>
     <div v-if="true" class="bb-table-plots">
-      <template v-for="index in bbColumns">
+      <template v-for="column in allColumns">
+        <div
+          :key="'p'+column.index"
+          class="bb-table-plot bb-preview"
+          v-if="column.type=='preview'"
+          style="width: 170px"
+        >
+        </div>
         <div
           class="bb-table-plot"
-          v-if="columns[index]"
-          :key="index"
-          :style="{width: columns[index].width+'px'}"
-          :class="{'bb-selected': selectionMap[index]}"
+          v-else-if="columns[column.index]"
+          :key="column.index"
+          :style="{width: columns[column.index].width+'px'}"
+          :class="{'bb-selected': selectionMap[column.index]}"
         >
           <DataBar
-            :key="plotsData[index].key+'databar'"
-            :missing="plotsData[index].missing"
-            :total="+plotsData[index].total"
-            :mismatch="+plotsData[index].mismatch"
-            :nullV="+plotsData[index].null"
+            :key="plotsData[column.index].key+'databar'"
+            :missing="plotsData[column.index].missing"
+            :total="+plotsData[column.index].total"
+            :mismatch="+plotsData[column.index].mismatch"
+            :nullV="+plotsData[column.index].null"
             class="table-data-bar"
             bottom
           />
           <Frequent
-            v-if="plotsData[index].frequency"
-            :key="plotsData[index].key"
-            :uniques="plotsData[index].count_uniques"
-            :values="plotsData[index].frequency"
-            :total="+plotsData[index].frequency[0].count"
-            :columnIndex="index"
+            v-if="plotsData[column.index].frequency"
+            :key="plotsData[column.index].key"
+            :uniques="plotsData[column.index].count_uniques"
+            :values="plotsData[column.index].frequency"
+            :total="+plotsData[column.index].frequency[0].count"
+            :columnIndex="column.index"
             class="histfreq"
             table
           />
           <Histogram
-            v-else-if="plotsData[index].hist"
-            :key="plotsData[index].key"
-            :uniques="plotsData[index].count_uniques"
-            :values="plotsData[index].hist"
-            :total="+plotsData[index].total"
-            :columnIndex="index"
+            v-else-if="plotsData[column.index].hist"
+            :key="plotsData[column.index].key"
+            :uniques="plotsData[column.index].count_uniques"
+            :values="plotsData[column.index].hist"
+            :total="+plotsData[column.index].total"
+            :columnIndex="column.index"
             class="histfreq"
             table
           />
           <Histogram
-            v-else-if="plotsData[index].hist_years"
-            :key="plotsData[index].key"
-            :uniques="plotsData[index].count_uniques"
-            :values="plotsData[index].hist_years"
-            :total="+plotsData[index].total"
-            :columnIndex="index"
+            v-else-if="plotsData[column.index].hist_years"
+            :key="plotsData[column.index].key"
+            :uniques="plotsData[column.index].count_uniques"
+            :values="plotsData[column.index].hist_years"
+            :total="+plotsData[column.index].total"
+            :columnIndex="column.index"
             class="histfreq"
             table
           />
@@ -150,20 +170,28 @@
           :key="'r'+row.index"
           :style="{height: rowHeight+'px', top: row.index*rowHeight+'px'}"
         >
-          <template v-for="index in bbColumns">
-              <!-- v-if="row.value[index]" -->
+          <template v-for="column in allColumns">
             <div
-              :key="index"
-              v-if="row.value"
+              v-if="column.type=='preview'"
+              :key="'p'+column.index"
+              class="bb-table-cell bb-preview"
+              :class="{
+                'missing': currentPreview.dataset.value[row.index-currentPreview.startingRow][column.index]==='',
+                'none': currentPreview.dataset.value[row.index-currentPreview.startingRow][column.index]===null
+              }"
+              style="width: 170px"
+            ><span class="select-none">&nbsp;</span>{{currentPreview.dataset.value[row.index-currentPreview.startingRow][column.index]}}<span class="select-none">&nbsp;</span></div>
+            <div
+              :key="column.index"
+              v-else-if="row.value"
               class="bb-table-cell"
               :class="{
-                'bb-selected': selectionMap[index],
-                'missing': row.value[index]==='',
-                'none': row.value[index]===null
+                'bb-selected': selectionMap[column.index],
+                'missing': row.value[column.index]==='',
+                'none': row.value[column.index]===null
               }"
-              :style="{width: columns[index].width+'px'}"
-              :data-val="row.value[index]"
-            ><span class="select-none">&nbsp;</span>{{row.value[index]}}<span class="select-none">&nbsp;</span></div>
+              :style="{width: columns[column.index].width+'px'}"
+            ><span class="select-none">&nbsp;</span>{{row.value[column.index]}}<span class="select-none">&nbsp;</span></div>
           </template>
         </div>
       </template>
@@ -237,9 +265,28 @@ export default {
 
 	computed: {
 
-    ...mapGetters(['currentSelection','currentDataset','selectionType']),
+    ...mapGetters(['currentSelection','currentDataset','selectionType','currentPreview']),
 
     ...mapState(['allTypes']),
+
+    allColumns () {
+      console.log({preview: this.currentPreview})
+      if (this.currentPreview.type=='columns' && this.currentPreview.dataset.columns) {
+        // var arr = [
+        //   ...this.bbColumns.map(index=>({index})),
+        //   ...this.currentPreview.dataset.columns.map((v,index)=>({index, type: 'preview'}))
+        // ]
+        var arr = [
+          ...this.bbColumns.map(index=>({index})),
+        ]
+        var insertIndex = arr.findIndex(e=>this.currentDataset.columns[e.index].name==this.currentPreview.after)+1
+        this.currentPreview.dataset.columns.map((v,index)=>({index, type: 'preview'})).forEach(e=>{
+          arr.splice(insertIndex++,0,e)
+        })
+        return arr
+      }
+      return this.bbColumns.map(index=>({index}))
+    },
 
     columnMenuActive: {
       get () {
@@ -347,6 +394,10 @@ export default {
 
     currentSelection (value) {
       this.updateSelection(value)
+    },
+
+    allColumns(v) {
+      console.log('allColumns',v)
     }
   },
 
@@ -548,9 +599,8 @@ export default {
         dataset: this.currentDataset.id
       })
 
-      var response2 = await this.evalCode(`df.rows.between_index("*", ${index*this.chunkSize},${(index+1)*this.chunkSize}).rows.to_list("*")`)
-
-      console.log({response, response2})
+      // var response2 = await this.evalCode(`df.rows.between_index("*", ${index*this.chunkSize},${(index+1)*this.chunkSize}).rows.to_list("*")`)
+      // console.log({response, response2})
 
       var from = index*this.chunkSize
 
@@ -558,11 +608,8 @@ export default {
         value: r.value,
         index: from+i
       }))
-
       this.$set(this.chunks,chunkIndexInArray,{ index: index, rows })
-
       return true
-
     }
   }
 

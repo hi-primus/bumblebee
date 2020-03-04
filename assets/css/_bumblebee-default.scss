@@ -1673,12 +1673,21 @@ $editor-top-padding: 6px;
       }
     }
     .bb-table-h-cell, .bb-table-cell, .bb-table-plot {
+      &.bb-preview {
+        background-color: $data-preview;
+        // border-color: darken($data-preview, 10%) !important;
+        // border-top-color: darken($data-preview, 10%) !important;
+        // border-right-color: darken($data-preview, 10%) !important;
+        // & + * {
+        //   border-left-color: darken($data-preview, 10%) !important;
+        // }
+      }
       &.bb-selected {
         background-color: $data-highlight;
         border-color: darken($data-highlight, 10%) !important;
-      }
-      &.bb-selected + * {
-        border-left-color: darken($data-highlight, 10%) !important;
+        & + * {
+          border-left-color: darken($data-highlight, 10%) !important;
+        }
       }
     }
   }
@@ -1748,7 +1757,10 @@ $editor-top-padding: 6px;
   }
 
   .bb-table-h-cell {
-    cursor: pointer;
+    &:not(.bb-preview) {
+      cursor: pointer;
+      padding-right: 16px;
+    }
     position: relative;
     font-size: 16px;
     padding-right: 16px;

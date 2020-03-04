@@ -792,6 +792,7 @@ export default {
 
           payload: () => ({
             command: 'load file',
+            _init: true,
             file_type: 'csv',
             url: '',
             sep: ',',
@@ -1279,7 +1280,8 @@ export default {
             )
           },
           payload: () => ({
-						command: 'load from database',
+            command: 'load from database',
+            _init: true,
             driver: 'mysql',
             host: '',
 						database: '',
@@ -1622,7 +1624,7 @@ export default {
               splits: 2,
               index: '',
               output_cols: columns.map(e=>e),
-              _preview: true
+              _preview: 'columns'
             }
 					},
 					code: (payload) => {
@@ -2100,18 +2102,19 @@ export default {
     currentCommand: {
       deep: true,
       async handler () {
-        // try {
-        //   if (this.command && this.command.dialog && (!this.command.dialog.validate || this.command.dialog.validate(this.currentCommand))) {
-        //     if (this.currentCommand._preview) {
-        //       var result = await this.evalCode(await this.getCode(this.currentCommand,true))
-        //       console.log('preview', result)
-              
-        //     }
-        //   }
-        // }
-        // catch (error) {
-        //   console.error(error)
-        // }
+        try {
+          if (this.command && this.command.dialog && (!this.command.dialog.validate || this.command.dialog.validate(this.currentCommand))) {
+            if (this.currentCommand._preview=='columns') {
+              var result = await this.getCode(this.currentCommand, true) // no
+              // var result = await this.evalCode(await this.getCode(this.currentCommand,true))
+              console.log('previewColumns', result)
+              this.$store.commit('previewColumns',{dataset: result, startingRow: 0, after: this.currentCommand.columns[0]})
+            }
+          }
+        }
+        catch (error) {
+          console.error(error)
+        }
       }
     },
 
@@ -2199,7 +2202,7 @@ export default {
 
           else {
             setTimeout(() => {
-              var ref = this.$refs['command-form'][0]
+              var ref = this.$refs['command-form'] && this.$refs['command-form'][0]
               if (ref && ref.$el){
                 var el = ref.$el.getElementsByTagName('input')[0]
                 if (el)
@@ -2377,12 +2380,24 @@ export default {
         content = payload.content
       }
 
-      if (preview && !this.$store.state.buffers[this.currentTab]) {
-        await this.evalCode(evalCode(this.dataset.varname+'.ext.set_buffer()\n"done"'))
-        this.$store.commit('buffer',true)
-      }
+      // if (preview && (!this.$store.state.buffers[this.currentTab] || this.$store.state.buffers[this.currentTab]!=[payload.command,payload.columns])) {
+      //   await this.evalCode(this.dataset.varname+'.ext.set_buffer(["'+payload.columns.join(", ")+'"])\n"done"')
+      //   this.$store.commit('buffer',true)
+      // }
 
-      return (preview ? `${this.dataset.varname}` : `${this.dataset.varname} = ${this.dataset.varname}`) + content
+      if (payload._init) {
+        return content
+      }
+      if (preview) {
+        return {
+          columns: [{title: 'ph_0'},{title: 'ph_1'}],
+          value: [
+            [1,2],[2,4],[3,6],[4,8],[5,10],[6,2],[3,4],[5,6],[7,8],[9,10],[11,2],[12,4],[5,6],[7,8],[15,10],[1,2],[3,4],[5,6],[19,8]
+          ]
+        }
+        // return `${this.dataset.varname}.ext.buffer_window(["${payload.columns.join(", ")}"],0,25)${content}.ext.to_json("*")`
+      }
+      return `${this.dataset.varname} = ${this.dataset.varname}${content}`
     },
 
     addCell (at = -1, command = 'code', code = '') {

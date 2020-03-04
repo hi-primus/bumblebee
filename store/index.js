@@ -24,6 +24,7 @@ export const state = () => ({
   kernel: false,
   cells: [],
   nextCommand: false,
+  previews: [],
   tab: 0
 })
 
@@ -31,6 +32,18 @@ export const mutations = {
 
   setTab (state, { tab }) {
     state.tab = tab
+  },
+
+  previewColumns (state, {dataset, after, startingRow}) {
+    Vue.set(state.previews,state.tab,{type: 'columns', after, dataset, startingRow})
+  },
+
+  previewHighlight(state, {indices, columns}) {
+    Vue.set(state.previews,state.tab,{type: 'highlight', columns, indices})
+  },
+
+  previewDefault(state) {
+    Vue.set(state.previews,state.tab,undefined)
   },
 
   commandHandle(state, command) {
@@ -172,7 +185,7 @@ export const mutations = {
   database (state, payload) {
     state.databases[state.tab] = payload
   },
-	
+
 	buffer (state, payload) {
     state.buffers[state.tab] = payload
   },
@@ -219,6 +232,9 @@ export const getters = {
   },
   currentSelection(state) {
     return state.datasetSelection[state.tab] || []
+  },
+  currentPreview(state) {
+    return state.previews[state.tab] || []
   },
   currentTab(state) {
     return state.tab
