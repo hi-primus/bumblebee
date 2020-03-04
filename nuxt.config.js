@@ -65,7 +65,6 @@ module.exports = {
 	],
 
 	plugins: [
-		{ src: '@/plugins/handsontable.js', mode: 'client' },
 		{ src: '@/plugins/konva.js', mode: 'client' },
 		'@/plugins/draggable.js',
 		'@/plugins/components.js',

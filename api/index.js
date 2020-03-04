@@ -137,12 +137,11 @@ const createRows = async function (rows, dataset) {
     try {
       var row = new Row()
 			row.value = rows[i%rows.length] || []
-			row.value[0] = i // DEBUG
       row.dataset = dataset
       await row.save()
     }
     catch (err) {
-      console.error(err)
+      console.error('"""',err,'"""')
     }
   }
 }
@@ -162,12 +161,12 @@ const new_socket = function (socket, session) {
     while (tries--) {
       result = await createKernel(user_session, payload.engine ? payload.engine : "dask")
       if (result.status=='error') {
-        console.log(result)
-        console.log('Kernel error, retrying')
+        console.log('"""',result,'"""')
+        console.log('# Kernel error, retrying')
         await deleteKernel(user_session)
       }
       else {
-        console.log(result)
+        console.log('"""',result,'"""')
         break
       }
     }
@@ -243,7 +242,7 @@ const run_code = function(code = '', user_session = '', save_rows = false) {
 
 			if (kernels[user_session]==undefined) {
 
-				console.log('Jupyter Kernel Gateway Version',version)
+				console.log('# Jupyter Kernel Gateway Version',version)
 
 				let uuid = Buffer.from( uuidv1(), 'utf8' ).toString('hex')
 
@@ -255,7 +254,7 @@ const run_code = function(code = '', user_session = '', save_rows = false) {
 
 				kernels[user_session] = { kernel: JSON.parse(response), uuid }
 
-				console.log('Kernel ID for',user_session,'is',kernels[user_session].kernel['id'])
+				console.log('# Kernel ID for',user_session,'is',kernels[user_session].kernel['id'])
 			}
 
 			var content = { code: code+'\n', silent: false }
@@ -338,7 +337,7 @@ const run_code = function(code = '', user_session = '', save_rows = false) {
                 resolve({ status: 'ok', content: data })
 
               } catch (error) {
-                console.error(error)
+                console.error('"""',error,'"""')
                 resolve({ status: 'error', content: error })
               }
             }
@@ -348,16 +347,16 @@ const run_code = function(code = '', user_session = '', save_rows = false) {
 
             connection.close()
           }
-          else {
-            // console.warn('Received message with unhandled msg_type')
+          // else {
+            // console.warn('# Received message with unhandled msg_type')
             // console.log({msg_type: parsed_message.msg_type})
             // resolve({ status: 'error', content: parsed_message })
-          }
+          // }
 
 				})
 
 				connection.on('error', async function(error) {
-					console.error("Connection Error", error)
+					console.error('"""Connection Error', error,'"""')
 					connection.close()
 					resolve({status: 'error', content: error, error: 'Connection error'})
 				})
@@ -365,7 +364,10 @@ const run_code = function(code = '', user_session = '', save_rows = false) {
 				connection.on('close', function(reason) {
 					// console.log('Connection closed before response, reason: ' + reason)
 					resolve({status: 'error', retry: true, error: 'Connection to Jupyter Kernel Gateway closed before response', content: reason})
-				})
+        })
+
+        if (process.env.NODE_ENV != 'production')
+          console.log(code)
 
 				connection.sendUTF(JSON.stringify(codeMsg))
 
@@ -400,7 +402,7 @@ const deleteKernel = async function(session) {
         method: 'DELETE',
         headers: {},
       })
-      console.log('Deleting Jupyter Kernel Gateway session for',session,_id)
+      console.log('# Deleting Jupyter Kernel Gateway session for',session,_id)
 		}
 	} catch (err) {}
 }
@@ -438,7 +440,7 @@ const startServer = async () => {
 	const port = process.env.PORT || 5000
 	const host = process.env.HOST || '0.0.0.0'
 	var _server = server.listen(port, host, async () => {
-    console.log(`Bumblebee-api v${version} listening on ${host}:${port}`)
+    console.log(`# Bumblebee-api v${version} listening on ${host}:${port}`)
 
     try {
 
@@ -452,7 +454,7 @@ const startServer = async () => {
 
       if (process.env.NODE_ENV == 'production') {
         kernels.forEach(async kernel => {
-          console.log(`Deleting kernel ${kernel.id}`)
+          console.log(`# Deleting kernel ${kernel.id}`)
           await request({
             uri: `${base}/api/kernels/${kernel.id}`,
             method: 'DELETE',

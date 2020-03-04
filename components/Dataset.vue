@@ -170,6 +170,7 @@
         <BumblebeeTable
 					v-if="view==1 && currentDataset && (currentDataset.sample || currentDataset.id)"
           :bbColumns="bbColumns"
+          @sort="updateSortedColumns"
           @updatedSelection="selectionEvent"
           ref="bumblebeeTable"
         />
@@ -235,11 +236,10 @@ export default {
 
 			hiddenColumns: {},
 
-			HotTable: undefined,
-      HotColumn: undefined,
-
       resultsColumns: [], // search
       selectedColumns: {},
+
+      sortedColumns: [], // table manual sorting
 
       isMounted: false
     }
@@ -248,6 +248,12 @@ export default {
   computed: {
 
     ...mapGetters(['currentSelection','currentDataset']),
+
+    customSortedColumns () {
+      if (this.sortedColumns.length)
+        return this.sortedColumns.map(i=>this.currentDataset.columns[i])
+      return this.currentDataset.columns
+    },
 
     selectionStatus () {
 
@@ -409,6 +415,23 @@ export default {
 
   methods: {
 
+    async updateResults() {
+      this.resultsColumns = this.searchText
+        ?
+        await this.$search(this.searchText, this.customSortedColumns, {
+          shouldSort: true,
+          threshold: 0.1,
+          keys: ['name']
+        })
+        :
+        this.customSortedColumns
+    },
+
+    updateSortedColumns(event) {
+      this.sortedColumns = event
+      this.updateResults()
+    },
+
     getSelectionFromStore () {
       var selectedColumns = {}
       var storeSelectedColumns = this.currentSelection.columns
@@ -434,14 +457,7 @@ export default {
 
     watchSearchText: throttle( async function() {
       try {
-        this.resultsColumns = this.searchText
-          ? await this.$search(this.searchText, this.currentDataset.columns, {
-            shouldSort: true,
-            threshold: 0.1,
-            keys: ['name']
-          })
-          : this.currentDataset.columns
-
+        this.updateResults()
       } catch (err) {}
     }, 1000),
 

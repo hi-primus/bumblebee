@@ -1623,6 +1623,7 @@ export default {
               separator: ', ',
               splits: 2,
               index: '',
+              drop: false,
               output_cols: columns.map(e=>e),
               _preview: 'columns'
             }
@@ -1639,6 +1640,7 @@ export default {
               +( (payload.splits) ? `, splits=${payload.splits}` : '')
               +( (payload.index) ? `, index=${payload.index}` : '')
               +( (output_cols_argument) ? `, output_cols=${output_cols_argument}` : '')
+              +( (payload._previewRequest || payload.drop) ? ', drop=True' : '')
               +')'
 					}
 
@@ -2099,24 +2101,21 @@ export default {
       }
     },
 
-    currentCommand: {
-      deep: true,
-      async handler () {
-        try {
-          if (this.command && this.command.dialog && (!this.command.dialog.validate || this.command.dialog.validate(this.currentCommand))) {
-            if (this.currentCommand._preview=='columns') {
-              var result = await this.getCode(this.currentCommand, true) // no
-              // var result = await this.evalCode(await this.getCode(this.currentCommand,true))
-              console.log('previewColumns', result)
-              this.$store.commit('previewColumns',{dataset: result, startingRow: 0, after: this.currentCommand.columns[0]})
-            }
-          }
-        }
-        catch (error) {
-          console.error(error)
-        }
-      }
-    },
+    // currentCommand: {
+    //   deep: true,
+    //   async handler () {
+    //     try {
+    //       if (this.command && this.command.dialog && (!this.command.dialog.validate || this.command.dialog.validate(this.currentCommand))) {
+    //         if (this.currentCommand._preview=='columns') {
+    //           this.getPreviewDebounced()
+    //         }
+    //       }
+    //     }
+    //     catch (error) {
+    //       console.error(error)
+    //     }
+    //   }
+    // },
 
     dataset: {
       deep: true,
@@ -2137,6 +2136,19 @@ export default {
     cleanCodeError() {
       this.$emit('update:codeError','')
     },
+
+    async getPreview() {
+      var response = await this.evalCode(await this.getCode(this.currentCommand,true))
+      this.$store.commit('previewColumns',{dataset: JSON.parse(trimCharacters(response.content,"'")), startingRow: 0, after: this.currentCommand.columns[0]})
+    },
+
+    moveBarDelayed: debounce(async function(value) {
+      this.moveBar(value)
+    },300),
+
+    getPreviewDebounced: debounce(async function() {
+      this.getPreview()
+    },300),
 
     getCommandTitle() {
       try {
@@ -2180,11 +2192,11 @@ export default {
 
       payload.type = event.type
       payload.command = event.command
-      payload._noOptions = event.noOptions
+      payload._noOperations = event.noOperations
 
       if (_command) {
 
-        payload = _command.payload ? ( _command.payload(columns) ) : {}
+        payload = (_command.payload) ? ( {..._command.payload(columns), ...payload} ) : payload
 
         if (_command.dialog) {
 
@@ -2232,14 +2244,18 @@ export default {
       var code = await this.getCode(this.currentCommand, false)
       this.addCell(-1, this.currentCommand.command, code )
       this.runButton = false
+
+      this.$emit('update:view',(this.currentCommand._noOperations) ? false : 'operations')
+
       this.currentCommand = false
-      this.$emit('update:view',(this.currentCommand._noOptions) ? false : 'operations')
+      this.$store.commit('previewDefault')
     },
 
     cancelCommand () {
 			setTimeout(() => {
         this.currentCommand = false
         this.$emit('update:view',(this.previousView=='operations') ? 'operations' : false )
+        this.$store.commit('previewDefault')
 			}, 10);
     },
 
@@ -2373,29 +2389,23 @@ export default {
       if (!payload.content) {
         var _command = this.commandsPallete[payload.command] || this.commandsPallete[payload.type]
         if (_command) {
-          content = _command.code ? _command.code(payload) : ''
+          content = _command.code ? _command.code({...payload, _previewRequest: preview}) : ''
         }
       }
       else {
         content = payload.content
       }
 
-      // if (preview && (!this.$store.state.buffers[this.currentTab] || this.$store.state.buffers[this.currentTab]!=[payload.command,payload.columns])) {
-      //   await this.evalCode(this.dataset.varname+'.ext.set_buffer(["'+payload.columns.join(", ")+'"])\n"done"')
-      //   this.$store.commit('buffer',true)
-      // }
+      if (preview && (!this.$store.state.buffers[this.currentTab] || this.$store.state.buffers[this.currentTab]!=[payload.command,payload.columns])) {
+        await this.evalCode(this.dataset.varname+'.ext.set_buffer(["'+payload.columns.join(", ")+'"])\n"done"')
+        this.$store.commit('buffer',true)
+      }
 
       if (payload._init) {
         return content
       }
       if (preview) {
-        return {
-          columns: [{title: 'ph_0'},{title: 'ph_1'}],
-          value: [
-            [1,2],[2,4],[3,6],[4,8],[5,10],[6,2],[3,4],[5,6],[7,8],[9,10],[11,2],[12,4],[5,6],[7,8],[15,10],[1,2],[3,4],[5,6],[19,8]
-          ]
-        }
-        // return `${this.dataset.varname}.ext.buffer_window(["${payload.columns.join(", ")}"],0,25)${content}.ext.to_json("*")`
+        return `${this.dataset.varname}.ext.buffer_window(["${payload.columns.join(", ")}"],0,500)${content}.ext.to_json("*")`
       }
       return `${this.dataset.varname} = ${this.dataset.varname}${content}`
     },

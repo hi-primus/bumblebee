@@ -35,6 +35,7 @@ export const mutations = {
   },
 
   previewColumns (state, {dataset, after, startingRow}) {
+    console.log({dataset,after,startingRow})
     Vue.set(state.previews,state.tab,{type: 'columns', after, dataset, startingRow})
   },
 
@@ -44,6 +45,7 @@ export const mutations = {
 
   previewDefault(state) {
     Vue.set(state.previews,state.tab,undefined)
+    Vue.set(state.buffers,state.tab,undefined)
   },
 
   commandHandle(state, command) {
@@ -183,11 +185,11 @@ export const mutations = {
   },
 
   database (state, payload) {
-    state.databases[state.tab] = payload
+    Vue.set(state.databases,state.tab,payload)
   },
 
 	buffer (state, payload) {
-    state.buffers[state.tab] = payload
+    Vue.set(state.buffers,state.tab,payload)
   },
 
 	key (state, payload) {
@@ -203,6 +205,9 @@ export const mutations = {
       tab = state.tab
     }
     if (tab!==undefined) {
+
+      Vue.set(state.previews,state.tab,undefined)
+      Vue.set(state.buffers,state.tab,undefined)
 
       if (clear) {
         Vue.set(state.datasetSelection,tab,{

@@ -320,7 +320,7 @@ export default {
         if (dataset_csv) {
           this.$refs.tableBar & this.$refs.tableBar.commandHandle({
             command: 'load file',
-            noOptions: true,
+            noOperations: true,
             immediate: true,
             payload: {url: dataset_csv}
           })

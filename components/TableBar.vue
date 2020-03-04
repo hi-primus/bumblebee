@@ -152,18 +152,18 @@
       </template>
       <v-spacer></v-spacer>
       <v-badge
-        :value="cellsError!==''"
-        color="error"
+        :value="cellsError!=='' || (operationsTitle && operationsTitle!='operations')"
+        :color="(operationsTitle!='operations') ? 'success' : 'error'"
         dot
         overlap
       >
         <v-btn
           v-if="$route.query.kernel=='1'"
           :disabled="cells.length==0"
-          :color="(optionsActive=='operations') ? 'black' : '#888'"
+          :color="(operationsActive!=false) ? 'black' : '#888'"
           text
           class="icon-btn"
-          @click="optionsActive = (optionsActive) ? false : 'operations'"
+          @click="operationsActive = !operationsActive"
         >
           <v-icon>code</v-icon>
         </v-btn>
@@ -175,25 +175,25 @@
       :view="view"
       :sortBy.sync="sortBy"
       :sortDesc.sync="sortDesc"
-      :optionsActive="optionsActive"
+      :operationsActive="operationsActive"
       :searchText="searchText"
       @selection="selectionEvent($event)"
       @sort="lastSort=$event"
       :typesSelected="typesSelected"
       :columnsTableHeaders="columnsTableHeaders"
     />
-    <div class="sidebar-container" :class="{'bigger': (optionsActive && (bigOptions || optionsActive=='operations'))}" v-show="detailsActive || (optionsActive && $route.query.kernel=='1')">
+    <div class="sidebar-container" :class="{'bigger': (operationsActive && (bigOptions || operationsTitle=='operations'))}" v-show="detailsActive || (operationsActive && $route.query.kernel=='1')">
 
       <template>
-        <div class="sidebar-header" v-show="optionsActive=='operations' && $route.query.kernel=='1'">
+        <div class="sidebar-header" v-show="operationsActive && operationsTitle=='operations' && $route.query.kernel=='1'">
           Operations
-          <v-icon class="right-button" color="black" @click="optionsActive = false">close</v-icon>
+          <v-icon class="right-button" color="black" @click="operationsActive = false">close</v-icon>
         </div>
-        <div class="sidebar-header" v-show="optionsActive!='operations' && optionsActive && $route.query.kernel=='1'">
-          {{optionsActive}}
+        <div class="sidebar-header" v-show="operationsTitle!='operations' && operationsActive && $route.query.kernel=='1'">
+          {{operationsTitle}}
           <v-icon class="right-button" color="black" @click="cancelCommand">close</v-icon>
         </div>
-        <div v-show="optionsActive=='operations' && $route.query.kernel=='1'" class="px-2 py-1">
+        <div v-show="operationsTitle=='operations' && operationsActive && $route.query.kernel=='1'" class="px-2 py-1">
           <v-tooltip transition="fade-transition" bottom color="success darken-2" v-model="copied">
             <template v-slot:activator="{on: success}">
               <v-tooltip :disabled="copied" transition="fade-transition" bottom>
@@ -220,10 +220,10 @@
           </v-tooltip>
         </div>
         <Cells
-          v-show="optionsActive && $route.query.kernel=='1'"
+          v-show="operationsActive && $route.query.kernel=='1'"
           ref="cells"
           :big.sync="bigOptions"
-          :view.sync="optionsActive"
+          :view.sync="operationsTitle"
           :codeError.sync="cellsError"
           :columns="selectedColumns || []"
           :commandsDisabled.sync="commandsDisabled"
@@ -231,13 +231,13 @@
         />
 				<v-progress-linear
           indeterminate
-          v-if="commandsDisabled && optionsActive=='operations' && $route.query.kernel=='1'"
+          v-if="commandsDisabled && operationsActive && operationsTitle=='operations' && $route.query.kernel=='1'"
           color="#888"
           size="64"
           style="position: absolute; left: 0; top: 34px;"
         />
       </template>
-      <template v-if="detailsActive!==false && !optionsActive">
+      <template v-if="detailsActive!==false && !operationsActive">
         <div class="sidebar-header">
           Details
           <v-icon class="right-button" color="black" @click="clearSelection">close</v-icon>
@@ -376,7 +376,8 @@ export default {
 
       scatterPlotDisplay: [],
 
-      optionsActive: false,
+      operationsActive: false,
+      operationsTitle: 'operations',
       bigOptions: true,
       commandsDisabled: false,
       operation: undefined,
@@ -459,7 +460,7 @@ export default {
       }
       else {
         detailsActive = {}
-        this.optionsActive = false
+        this.operationsActive = false
       }
       if (selected.length) {
 
@@ -547,7 +548,7 @@ export default {
         {
           type: 'button',
           onClick: () => {
-            this.commandHandle({command: 'load file', noOptions: true})
+            this.commandHandle({command: 'load file', noOperations: true})
           },
           icons: [{ icon: 'cloud_upload' }],
           tooltip: 'Load file',
@@ -571,7 +572,7 @@ export default {
         {
           type: 'button',
           onClick: () => {
-            this.commandHandle({command: 'load from database', noOptions: true})
+            this.commandHandle({command: 'load from database', noOperations: true})
           },
           icons: [{ icon: 'storage' }],
           tooltip: 'Connect a database',
@@ -829,7 +830,7 @@ export default {
   watch: {
     cellsError (value) {
       if (value!='') {
-        this.optionsActive = 'operations'
+        this.operationsActive = 'operations'
       }
     },
     nextCommand (command) {
@@ -839,7 +840,20 @@ export default {
     },
     cells (cells) {
       if (cells.length==0) {
-        this.optionsActive = false
+        this.operationsActive = false
+      }
+    },
+    operationsTitle (v) {
+      if (v==false) {
+        this.operationsActive = false
+      }
+      else if (v!='operations') {
+        this.operationsActive = true
+      }
+    },
+    operationsActive (v) {
+      if (v && !this.operationsTitle) {
+        this.operationsTitle = 'operations'
       }
     }
   },
@@ -872,10 +886,10 @@ export default {
     },
 
     commandHandle (event) {
-      // if (event.noOptions)
-      //   this.optionsActive = false
+      // if (event.noOperations)
+      //   this.operationsActive = false
       // else
-      //   this.optionsActive = 'operations'
+      //   this.operationsActive = 'operations'
 
       this.$nextTick(()=>{
         this.$refs.cells & this.$refs.cells.commandHandle(event)
@@ -1042,13 +1056,6 @@ export default {
 </style>
 
 <style lang="scss">
-  .handsontable thead th .relative {
-    padding: 0px 4px 1px !important;
-  }
-  .handsontable .colHeader {
-    width: 100%;
-    line-height: 1.25 !important;
-  }
   .data-type-in-table.abs {
     position: absolute;
     left: 4px;
@@ -1091,5 +1098,3 @@ export default {
     opacity: 0.5;
   }
 </style>
-
-<style src="../node_modules/handsontable/dist/handsontable.full.css"></style>

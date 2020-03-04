@@ -68,7 +68,7 @@
     v-if="columns && allColumns"
   >
     <div class="bb-table-header">
-      <template v-for="column in allColumns">
+      <template v-for="(column, i) in allColumns">
         <div
           class="bb-table-h-cell bb-preview"
           v-if="column.type=='preview'"
@@ -83,10 +83,20 @@
           </div>
         </div>
         <div
+          :draggable="selectionMap[column.index]"
+          @dragstart="dragStart(i, $event)"
+          @dragover.prevent="dragOver=i"
+          @dragend="dragEnd"
+          @drop="dragFinish(i, $event)"
           @click="selectColumn($event, column.index)"
           @dblclick="setMenu($event, column.index)"
           class="bb-table-h-cell"
-          :class="{'active-menu-column': (columnMenuIndex===column.index) ,'bb-selected': selectionMap[column.index]}"
+          :class="{
+            'active-menu-column': (columnMenuIndex===column.index),
+            'bb-selected': selectionMap[column.index],
+            'bb-drag-over': (dragOver===i && dragging!==i),
+            'bb-drag-over-right': (dragOver===i && dragging<i),
+          }"
           v-else-if="columns[column.index]"
           :key="column.index"
           :style="{width: columns[column.index].width+'px'}"
@@ -176,11 +186,12 @@
               :key="'p'+column.index"
               class="bb-table-cell bb-preview"
               :class="{
-                'missing': currentPreview.dataset.value[row.index-currentPreview.startingRow][column.index]==='',
-                'none': currentPreview.dataset.value[row.index-currentPreview.startingRow][column.index]===null
+                'missing': previewCell(column.index,row.index).value==='',
+                'none': previewCell(column.index,row.index).value===null,
+                'not-available': previewCell(column.index,row.index).notAvailable==true
               }"
               style="width: 170px"
-            ><span class="select-none">&nbsp;</span>{{currentPreview.dataset.value[row.index-currentPreview.startingRow][column.index]}}<span class="select-none">&nbsp;</span></div>
+            ><span class="select-none">&nbsp;</span>{{previewCell(column.index,row.index).value}}<span class="select-none">&nbsp;</span></div>
             <div
               :key="column.index"
               v-else-if="row.value"
@@ -241,7 +252,7 @@ export default {
 
   // index -> columnMenuIndex
 
-	data() {
+	data () {
 		return {
       maxChunks: 10,
       fetching: false,
@@ -255,6 +266,9 @@ export default {
 
       newColumnName: '',
       newColumnType: 'string',
+
+      dragOver: -1,
+      dragging: -1,
 
       selection: [],
       previousSelection : {},
@@ -270,7 +284,6 @@ export default {
     ...mapState(['allTypes']),
 
     allColumns () {
-      console.log({preview: this.currentPreview})
       if (this.currentPreview.type=='columns' && this.currentPreview.dataset.columns) {
         // var arr = [
         //   ...this.bbColumns.map(index=>({index})),
@@ -395,16 +408,56 @@ export default {
     currentSelection (value) {
       this.updateSelection(value)
     },
-
-    allColumns(v) {
-      console.log('allColumns',v)
-    }
   },
 
   methods: {
 
+    /* drag events */
+
+    dragStart(which, ev) {
+      this.dragging = which
+    },
+    dragEnd(ev) {
+      this.dragOver = -1
+      this.dragging = -1
+    },
+
+    dragFinish(to, ev) {
+      var columns = this.bbColumns
+      var selection = this.currentSelection.columns.map(e=>e.index)
+
+      if (this.dragging>to) {
+        to--
+      }
+
+      columns = [
+        ...columns.filter((e,i)=>(i<=to && selection.indexOf(e)==-1)),
+        ...selection,
+        ...columns.filter((e,i)=>(i>to && selection.indexOf(e)==-1)),
+      ]
+      this.$emit('sort',columns)
+    },
+
+    moveItem(from, to) {
+      // if (to === -1) {
+      //   this.removeItemAt(from);
+      // } else {
+      //   this.todos.splice(to, 0, this.todos.splice(from, 1)[0]);
+      // }
+    },
+    /* end of drag events */
+
     commandHandle(command) {
       this.$store.commit('commandHandle',command)
+    },
+
+    previewCell(column,row) {
+      try {
+        return {value: this.currentPreview.dataset.value[row-this.currentPreview.startingRow][column]}
+      }
+      catch (error) {
+        return {value: '[not available]', notAvailable: true}
+      }
     },
 
     updateSelection(value) {

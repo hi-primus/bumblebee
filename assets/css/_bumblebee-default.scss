@@ -1689,6 +1689,21 @@ $editor-top-padding: 6px;
           border-left-color: darken($data-highlight, 10%) !important;
         }
       }
+      &.bb-drag-over {
+        &::after {
+          content: '';
+          background-color: $data-blue;
+          position: absolute;
+          width: 3px;
+          height: 100%;
+        }
+        &.bb-drag-over-right::after {
+          right: 0 !important;
+        }
+        &:not(.bb-drag-over-right)::after {
+          left: 0;
+        }
+      }
     }
   }
 
@@ -1748,6 +1763,10 @@ $editor-top-padding: 6px;
     }
 	  &.missing:after {
       content: 'Missing';
+    }
+    &.not-available {
+      color: darken($data-red,15%) !important;
+      font-family: $font-mono;
     }
 
     &:not(:last-child) {
