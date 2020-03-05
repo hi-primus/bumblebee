@@ -595,7 +595,9 @@ export default {
               values: [],
               text: '',
               expression: `${this.dataset.varname}["${columns[0]}"]`,
-              action: 'select'
+              action: 'select',
+              _preview: 'highlight',
+              _highlight: 'green'
             }
           },
 
@@ -2106,7 +2108,7 @@ export default {
       async handler () {
         try {
           if (this.command && this.command.dialog && (!this.command.dialog.validate || this.command.dialog.validate(this.currentCommand))) {
-            if (this.currentCommand._preview=='columns') {
+            if (this.currentCommand._preview) {
               this.getPreviewDebounced()
             }
           }
@@ -2137,14 +2139,19 @@ export default {
       this.$emit('update:codeError','')
     },
 
-    async getPreview() {
-      var response = await this.evalCode(await this.getCode(this.currentCommand,true))
-      this.$store.commit('previewColumns',{dataset: JSON.parse(trimCharacters(response.content,"'")), startingRow: 0, after: this.currentCommand.columns[0]})
-    },
-
     moveBarDelayed: debounce(async function(value) {
       this.moveBar(value)
     },300),
+
+    async getPreview() {
+      if (this.currentCommand._preview=='columns') {
+        var response = await this.evalCode(await this.getCode(this.currentCommand,true))
+        this.$store.commit('previewColumns',{dataset: JSON.parse(trimCharacters(response.content,"'")), startingRow: 0, after: this.currentCommand.columns[0]})
+      }
+      else if (this.currentCommand._preview=='highlight') {
+        this.$store.commit('previewHighlight',{indices: [0,1,2,3,4,5,6], columns: ['id'], color: this.currentCommand._highlight})
+      }
+    },
 
     getPreviewDebounced: debounce(async function() {
       this.getPreview()
@@ -2380,6 +2387,7 @@ export default {
     },
 
     async getCode (payload, preview) {
+
       var content = ''
 
       if (!payload.columns || !payload.columns.length) {

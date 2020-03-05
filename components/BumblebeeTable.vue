@@ -178,6 +178,7 @@
         <div
           class="bb-table-row"
           :key="'r'+row.index"
+          :class="[(currentPreview.type=='highlight' && currentPreview.indices.includes(row.index)) ? 'bb-highlight-'+(currentPreview.color || 'green') : '']"
           :style="{height: rowHeight+'px', top: row.index*rowHeight+'px'}"
         >
           <template v-for="column in allColumns">

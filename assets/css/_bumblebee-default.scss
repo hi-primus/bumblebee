@@ -1531,6 +1531,18 @@ $editor-top-padding: 6px;
     }
   }
 
+  .bb-table-row.bb-highlight-green {
+    background: lighten($data-teal,39%) !important;
+  }
+
+  .bb-table-row.bb-highlight-red {
+    background: lighten($data-red,36%) !important;
+  }
+
+  .bb-table-row.bb-highlight-blue {
+    background: lighten($data-blue,36%) !important;
+  }
+
 
   .bb-table-top-container {
     overflow-x: scroll;
@@ -1683,7 +1695,8 @@ $editor-top-padding: 6px;
         // }
       }
       &.bb-selected {
-        background-color: $data-highlight;
+        // background-color: $data-highlight;
+        background-color: rgba($data-blue, 13%); // $data-highlight;
         border-color: darken($data-highlight, 10%) !important;
         & + * {
           border-left-color: darken($data-highlight, 10%) !important;

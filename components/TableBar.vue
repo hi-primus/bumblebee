@@ -153,7 +153,7 @@
       <v-spacer></v-spacer>
       <v-badge
         :value="cellsError!=='' || (operationsTitle && operationsTitle!='operations')"
-        :color="(operationsTitle!='operations') ? 'success' : 'error'"
+        :color="(operationsTitle!='operations') ? 'primary lighten-2' : 'error'"
         dot
         overlap
       >

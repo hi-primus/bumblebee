@@ -39,8 +39,9 @@ export const mutations = {
     Vue.set(state.previews,state.tab,{type: 'columns', after, dataset, startingRow})
   },
 
-  previewHighlight(state, {indices, columns}) {
-    Vue.set(state.previews,state.tab,{type: 'highlight', columns, indices})
+  previewHighlight(state, {indices, columns, color}) {
+    console.log('getPreview store')
+    Vue.set(state.previews,state.tab,{type: 'highlight', columns, indices: indices || [], color: color || 'green'})
   },
 
   previewDefault(state) {
