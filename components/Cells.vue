@@ -2101,21 +2101,21 @@ export default {
       }
     },
 
-    // currentCommand: {
-    //   deep: true,
-    //   async handler () {
-    //     try {
-    //       if (this.command && this.command.dialog && (!this.command.dialog.validate || this.command.dialog.validate(this.currentCommand))) {
-    //         if (this.currentCommand._preview=='columns') {
-    //           this.getPreviewDebounced()
-    //         }
-    //       }
-    //     }
-    //     catch (error) {
-    //       console.error(error)
-    //     }
-    //   }
-    // },
+    currentCommand: {
+      deep: true,
+      async handler () {
+        try {
+          if (this.command && this.command.dialog && (!this.command.dialog.validate || this.command.dialog.validate(this.currentCommand))) {
+            if (this.currentCommand._preview=='columns') {
+              this.getPreviewDebounced()
+            }
+          }
+        }
+        catch (error) {
+          console.error(error)
+        }
+      }
+    },
 
     dataset: {
       deep: true,
