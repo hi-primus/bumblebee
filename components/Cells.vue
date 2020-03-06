@@ -336,7 +336,7 @@ import OutputColumnInputs from '@/components/OutputColumnInputs'
 import Outliers from '@/components/Outliers'
 import clientMixin from '@/plugins/mixins/client'
 import { mapGetters } from 'vuex'
-import { trimCharacters, debounce, newName, arrayJoin } from '@/utils/functions.js'
+import { parseResponse, debounce, newName, arrayJoin } from '@/utils/functions.js'
 
 const api_url = process.env.API_URL || 'http://localhost:5000'
 
@@ -387,8 +387,6 @@ export default {
 
       barTop: 0,
       barHovered: false,
-
-      previousView: false,
 
       activeCell: -1,
       codeDone: '',
@@ -909,7 +907,7 @@ export default {
 
               var response = await this.evalCode(code)
 
-              var clusters = JSON.parse(trimCharacters(response.content,"'"))
+              var clusters = parseResponse(response.content)
 
               clusters = Object.entries(clusters).map(e=>{
 
@@ -1084,12 +1082,12 @@ export default {
               this.currentCommand.loading = true
 
               var response = await this.evalCode(`import json${sl}${code}${sl}json.dumps(outlier.info())`)
-              var outliers_data = JSON.parse(trimCharacters(response.content, "'"))
+              var outliers_data = parseResponse(response.content)
 
               if ( ['tukey','mad'].includes(this.currentCommand.algorithm) ) {
 
                 var hist_response = await this.evalCode(`outlier.hist("${this.currentCommand.columns[0]}")`)
-                var hist_data = JSON.parse(trimCharacters(hist_response.content, "'"))
+                var hist_data = parseResponse(hist_response.content)
 
                 var hist = hist_data[this.currentCommand.columns[0]].hist
 
@@ -1317,7 +1315,7 @@ export default {
 
               var response = await this.evalCode(code+`${sl}db.tables_names_to_json()`)
 
-              var tables = JSON.parse(trimCharacters(response.content,"'"))
+              var tables = parseResponse(response.content)
               if (!tables.length){
                 throw 'Database has no tables'
               }
@@ -2029,7 +2027,7 @@ export default {
 
   computed: {
 
-    ...mapGetters(['currentSelection','selectionType','currentTab']),
+    ...mapGetters(['currentSelection','selectionType','currentTab','currentWindow','currentBuffer']),
 
     cells: {
       get() {
@@ -2090,10 +2088,13 @@ export default {
 
   watch: {
 
+    currentWindow(value) {
+      this.getPreview()
+    },
+
     view (value) {
       if (value=='operations' || !value) {
         this.currentCommand = false
-        this.previousView = value
       }
     },
 
@@ -2144,9 +2145,15 @@ export default {
     },300),
 
     async getPreview() {
+      this.$store.commit('previewDefault')
       if (this.currentCommand._preview=='columns') {
         var response = await this.evalCode(await this.getCode(this.currentCommand,true))
-        this.$store.commit('previewColumns',{dataset: JSON.parse(trimCharacters(response.content,"'")), startingRow: 0, after: this.currentCommand.columns[0]})
+        var payload = {
+          dataset: parseResponse(response.content),
+          startingRow: 0,
+          after: this.currentCommand.columns[0]
+        }
+        this.$store.commit('previewColumns',payload)
       }
       else if (this.currentCommand._preview=='highlight') {
         this.$store.commit('previewHighlight',{indices: [0,1,2,3,4,5,6], columns: ['id'], color: this.currentCommand._highlight})
@@ -2209,7 +2216,7 @@ export default {
 
           this.currentCommand = {...payload, ...(event.payload || {})}
 
-          this.$emit('update:view',this.getCommandTitle())
+          this.$emit('updateOperations', { active: true, title: this.getCommandTitle() })
           this.$emit('update:big',_command.dialog.big) // :max-width="command.dialog.big ? 820 : 410"
 
           if (_command.onInit)
@@ -2252,7 +2259,7 @@ export default {
       this.addCell(-1, this.currentCommand.command, code )
       this.runButton = false
 
-      this.$emit('update:view',(this.currentCommand._noOperations) ? false : 'operations')
+      this.$emit('updateOperations', { active: (this.currentCommand._noOperations ? undefined : true), title: 'operations' } )
 
       this.currentCommand = false
       this.$store.commit('previewDefault')
@@ -2261,7 +2268,10 @@ export default {
     cancelCommand () {
 			setTimeout(() => {
         this.currentCommand = false
-        this.$emit('update:view',(this.previousView=='operations') ? 'operations' : false )
+        this.$emit('updateOperations', {
+          active: false,
+          title: 'operations'
+        })
         this.$store.commit('previewDefault')
 			}, 10);
     },
@@ -2404,16 +2414,19 @@ export default {
         content = payload.content
       }
 
-      if (preview && (!this.$store.state.buffers[this.currentTab] || this.$store.state.buffers[this.currentTab]!=[payload.command,payload.columns])) {
+      if (preview && (!this.currentBuffer || this.currentBuffer.join()!=[payload.command,payload.columns].join())) {
         await this.evalCode(this.dataset.varname+'.ext.set_buffer(["'+payload.columns.join(", ")+'"])\n"done"')
-        this.$store.commit('buffer',true)
+        this.$store.commit('setBuffer',[payload.command,payload.columns])
       }
 
       if (payload._init) {
         return content
       }
       if (preview) {
-        return `${this.dataset.varname}.ext.buffer_window(["${payload.columns.join(", ")}"],0,500)${content}.ext.to_json("*")`
+        var [top,bottom] = this.currentWindow || [0,500]
+        var func = (a,b) => `${this.dataset.varname}.ext.buffer_window(["${payload.columns.join(", ")}"],${a},${b})${content}.ext.to_json("*")`
+        this.$store.commit('setPreviewFunction', func)
+        return func(top,bottom)
       }
       return `${this.dataset.varname} = ${this.dataset.varname}${content}`
     },
@@ -2502,7 +2515,7 @@ export default {
           throw response
         }
 
-        // var content = JSON.parse(trimCharacters(response.content,"'")).data
+        // var content = parseResponse(response.content).data
         this.handleDatasetResponse(response.content)
 
         this.$forceUpdate()

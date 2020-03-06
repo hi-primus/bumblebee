@@ -70,9 +70,10 @@
     <div class="bb-table-header">
       <template v-for="(column, i) in allColumns">
         <div
-          class="bb-table-h-cell bb-preview"
           v-if="column.type=='preview'"
           :key="'p'+column.index"
+          class="bb-table-h-cell bb-preview"
+          :id="(column.index == currentPreview.dataset.columns.length-1) ? 'bb-table-preview-last' : false"
           style="width: 170px"
         >
           <!-- <div class="data-type" :class="`type-${columns[column.index].column_dtype}`">
@@ -83,13 +84,9 @@
           </div>
         </div>
         <div
-          :draggable="selectionMap[column.index]"
-          @dragstart="dragStart(i, $event)"
-          @dragover.prevent="dragOver=i"
-          @dragend="dragEnd"
-          @drop="dragFinish(i, $event)"
-          @click="selectColumn($event, column.index)"
-          @dblclick="setMenu($event, column.index)"
+          v-else-if="columns[column.index]"
+          :key="column.index"
+          :id="'bb-table-'+columns[column.index].name"
           class="bb-table-h-cell"
           :class="{
             'active-menu-column': (columnMenuIndex===column.index),
@@ -97,9 +94,14 @@
             'bb-drag-over': (dragOver===i && dragging!==i),
             'bb-drag-over-right': (dragOver===i && dragging<i),
           }"
-          v-else-if="columns[column.index]"
-          :key="column.index"
-          :style="{width: columns[column.index].width+'px'}"
+          :style="{ width: columns[column.index].width+'px' }"
+          :draggable="selectionMap[column.index]"
+          @dragstart="dragStart(i, $event)"
+          @dragover.prevent="dragOver=i"
+          @dragend="dragEnd"
+          @drop="dragFinish(i, $event)"
+          @click="selectColumn($event, column.index)"
+          @dblclick="setMenu($event, column.index)"
         >
           <div class="data-type" :class="`type-${columns[column.index].column_dtype}`">
             {{ dataType(currentDataset.columns[column.index].column_dtype) }}
@@ -383,9 +385,12 @@ export default {
   },
 
   mounted() {
-    this.$refs['BbTableContainer'] && this.$refs['BbTableContainer'].addEventListener('scroll', this.throttleCheckScroll, {passive: true})
-    this.$refs['BbTableContainer'] && this.$refs['BbTableContainer'].addEventListener('scroll', this.scrollLeftCheck, {passive: true})
-    this.checkScroll()
+    this.$refs['BbTableContainer'] && this.$refs['BbTableContainer'].addEventListener('scroll', this.throttleScrollCheck, {passive: true})
+
+    this.$refs['BbTableContainer'] && this.$refs['BbTableContainer'].addEventListener('scroll', this.horizontalScrollCheckUp, {passive: true})
+    this.$refs['BbTableTopContainer'] && this.$refs['BbTableTopContainer'].addEventListener('scroll', this.horizontalScrollCheckDown, {passive: true})
+
+    this.scrollCheck()
 
     this.currentDataset.columns.forEach((column, index) => {
       this.$set(this.columns, index, {name: column.name, width: 170})
@@ -396,8 +401,9 @@ export default {
 
   beforeDestroy() {
     try {
-      this.$refs['BbTableContainer'].removeEventListener('scroll', this.throttleCheckScroll)
-      this.$refs['BbTableContainer'].removeEventListener('scroll', this.scrollLeftCheck)
+      this.$refs['BbTableContainer'].removeEventListener('scroll', this.throttleScrollCheck)
+      this.$refs['BbTableContainer'].removeEventListener('scroll', this.horizontalScrollCheckUp)
+      this.$refs['BbTableTopContainer'].removeEventListener('scroll', this.horizontalScrollCheckDown)
     }
     catch (err) {
       console.error(err)
@@ -409,6 +415,19 @@ export default {
     currentSelection (value) {
       this.updateSelection(value)
     },
+
+    currentPreview (preview) {
+      this.$nextTick(()=>{
+        if (preview.after) {
+          var af = document.getElementById("bb-table-"+preview.after)
+          af && af.scrollIntoView();
+          var lp = document.getElementById("bb-table-preview-last")
+          lp && lp.scrollIntoView();
+
+          this.horizontalScrollCheckDown()
+        }
+      })
+    }
   },
 
   methods: {
@@ -439,13 +458,6 @@ export default {
       this.$emit('sort',columns)
     },
 
-    moveItem(from, to) {
-      // if (to === -1) {
-      //   this.removeItemAt(from);
-      // } else {
-      //   this.todos.splice(to, 0, this.todos.splice(from, 1)[0]);
-      // }
-    },
     /* end of drag events */
 
     commandHandle(command) {
@@ -588,18 +600,26 @@ export default {
       })
     },
 
-    scrollLeftCheck() {
-      this.$refs['BbTableTopContainer'].scrollLeft = this.$refs['BbTableContainer'].scrollLeft
+    horizontalScrollCheckUp () {
+      if (this.$refs['BbTableTopContainer'].scrollLeft != this.$refs['BbTableContainer'].scrollLeft)
+        this.$refs['BbTableTopContainer'].scrollLeft = this.$refs['BbTableContainer'].scrollLeft
     },
 
-    throttleCheckScroll: throttle(function(e) {this.checkScroll(e)} , throttleScrollTime),
+    horizontalScrollCheckDown () {
+      if (this.$refs['BbTableContainer'].scrollLeft != this.$refs['BbTableTopContainer'].scrollLeft)
+        this.$refs['BbTableContainer'].scrollLeft = this.$refs['BbTableTopContainer'].scrollLeft
+    },
 
-    async checkScroll () {
+    throttleScrollCheck: throttle(function(e) {this.scrollCheck(e)} , throttleScrollTime),
+
+    async scrollCheck () {
 
       var element = this.$refs['BbTableContainer']
 
       var topPosition = element.scrollTop
       var bottomPosition = topPosition + element.clientHeight
+
+      this.$store.commit('setWindow',[Math.floor(topPosition/this.rowHeight),Math.ceil(bottomPosition/this.rowHeight)])
 
       this.fetchChunks(topPosition, bottomPosition)
 

@@ -1,5 +1,5 @@
 <template>
-  <Layout :wide="view==1">
+  <Layout>
     <v-dialog v-if="$store.state.datasets[confirmDelete]" :value="confirmDelete>=0" max-width="290" @click:outside="confirmDelete=-1">
       <v-card>
         <v-card-title class="title">Close tab</v-card-title>
@@ -134,7 +134,7 @@
             </v-tab>
           </v-tabs>
           <div class="bb-content">
-            <div :class="{'inside-bar': view==1}" class="controls-container text-xs-center">
+            <div class="controls-container text-xs-center">
               <v-text-field
                 autocomplete="off"
                 v-model="searchText"
@@ -185,7 +185,6 @@
             <TableBar
               ref="tableBar"
               v-if="currentDataset"
-              :view.sync="view"
               :dataset="currentDataset"
               :total="(currentDataset.summary) ? +currentDataset.summary.rows_count : 1"
               :searchText="searchText"
@@ -249,7 +248,6 @@ export default {
 			inputEngine: 'dask',
 			searchText: '',
 			tab: undefined,
-			view: undefined,
 			confirmDelete: -1,
 			typesSelected: [],
 			typesInput: '',

@@ -54,6 +54,12 @@ export const trimCharacters = (s, c) => {
   ), "");
 }
 
+export const parseResponse = (content) => {
+  content = trimCharacters(content,"'")
+  content = content.replace(/\bNaN\b/g,null)
+  return JSON.parse(content)
+}
+
 export const newName = (name) => {
 	name = name.toString()
   let matches = name.match(/\d+$/);

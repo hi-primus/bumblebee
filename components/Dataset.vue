@@ -25,7 +25,7 @@
         Use <v-icon>cloud_upload</v-icon> or <v-icon>storage</v-icon> to load some data
       </div>
     </div>
-		<div v-else-if="view==0" class="table-view-container">
+		<div v-else-if="!currentTableView" class="table-view-container">
 			<div class="table-controls d-flex">
 				<v-btn
           color="#888" text icon small @click="toggleColumnsSelection">
@@ -59,7 +59,7 @@
 					<template v-slot:activator="{ on }">
 						<v-btn
               color="#888"
-							:class="{'active': view==0 && selectionStatus==-1}"
+							:class="{'active': !currentTableView && selectionStatus==-1}"
 							text
 							icon
 							small
@@ -75,7 +75,7 @@
 				</v-tooltip>
 			</div>
 			<v-data-table
-				v-show="view==0"
+				v-show="!currentTableView"
 				:headers="columnsTableHeaders"
 				:items="newFilteredColumns"
 				:sort-by.sync="_sortBy"
@@ -164,11 +164,11 @@
 		</div>
 		<client-only>
 			<div
-				v-show="view==1 && currentDataset && currentDataset.summary"
+				v-show="currentTableView && currentDataset && currentDataset.summary"
 				class="the-table-container"
 			>
         <BumblebeeTable
-					v-if="view==1 && currentDataset && (currentDataset.sample || currentDataset.id)"
+					v-if="currentTableView && currentDataset && (currentDataset.sample || currentDataset.id)"
           :bbColumns="bbColumns"
           @sort="updateSortedColumns"
           @updatedSelection="selectionEvent"
@@ -202,10 +202,6 @@ export default {
     commandsDisabled: {
       type: Boolean,
       default: false
-    },
-    view: {
-      default: 0,
-      type: Number
     },
     sortBy: {
       type: Array,
@@ -247,7 +243,7 @@ export default {
 
   computed: {
 
-    ...mapGetters(['currentSelection','currentDataset']),
+    ...mapGetters(['currentSelection','currentDataset','currentTableView']),
 
     customSortedColumns () {
       if (this.sortedColumns.length)

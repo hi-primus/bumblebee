@@ -2,14 +2,20 @@ import Vue from 'vue'
 
 export const state = () => ({
 	datasets: [],
-	datasetSelection: [],
+  datasetConfig: [], // TODO
+  datasetSelection: [],
+  previewFunctions: [],
+	databases: [],
+  buffers: [],
+  windows: [],
+  tableViews: [],
+  cells: [],
+  previews: [],
 	datasetUpdates: 0,
   status: 'waiting',
   session: '',
   engine: 'dask',
-	databases: [],
-	buffers: [],
-	key: '',
+  key: '',
 	allTypes: [
 		'string',
 		'int',
@@ -22,9 +28,7 @@ export const state = () => ({
 	],
   datasetCounter: 1,
   kernel: false,
-  cells: [],
   nextCommand: false,
-  previews: [],
   tab: 0
 })
 
@@ -35,12 +39,10 @@ export const mutations = {
   },
 
   previewColumns (state, {dataset, after, startingRow}) {
-    console.log({dataset,after,startingRow})
     Vue.set(state.previews,state.tab,{type: 'columns', after, dataset, startingRow})
   },
 
   previewHighlight(state, {indices, columns, color}) {
-    console.log('getPreview store')
     Vue.set(state.previews,state.tab,{type: 'highlight', columns, indices: indices || [], color: color || 'green'})
   },
 
@@ -53,9 +55,21 @@ export const mutations = {
     state.nextCommand = command
   },
 
+  setWindow(state, window) {
+    Vue.set(state.windows,state.tab,window)
+  },
+
+  setTableView(state, tableView) {
+    Vue.set(state.tableViews,state.tab,tableView)
+  },
+
+  setPreviewFunction(state, func) {
+    Vue.set(state.previewFunctions,state.tab,func)
+  },
+
 	add (state, { dataset }) {
 
-    console.log("adding dataset",dataset)
+    console.log("[BUMBLEBLEE] Opening dataset",dataset)
 
     if (dataset.name===null){
       if (dataset.file_name){
@@ -189,7 +203,7 @@ export const mutations = {
     Vue.set(state.databases,state.tab,payload)
   },
 
-	buffer (state, payload) {
+	setBuffer (state, payload) {
     Vue.set(state.buffers,state.tab,payload)
   },
 
@@ -244,6 +258,41 @@ export const getters = {
   },
   currentTab(state) {
     return state.tab
+  },
+  currentTableView(state) {
+    return state.tableViews[state.tab] || false
+  },
+  currentBuffer(state) {
+    try {
+      return state.buffers[state.tab]
+    }
+    catch (error) {
+      return false
+    }
+  },
+  currentPreviewFunction(state) {
+    try {
+      return state.previewFunctions[state.tab]
+    }
+    catch (error) {
+      return false
+    }
+  },
+  currentWindow(state) {
+    try {
+      return state.windows[state.tab]
+    }
+    catch (error) {
+      return false
+    }
+  },
+  currentWindow(state) {
+    try {
+      return state.windows[state.tab]
+    }
+    catch (error) {
+      return false
+    }
   },
   selectionType(state) {
     var _ds = state.datasetSelection[state.tab] || []

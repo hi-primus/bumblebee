@@ -3,8 +3,8 @@
     <div class="toolbar bb-toolbar" :class="{'disabled': commandsDisabled}">
       <v-tooltip transition="fade-transition" bottom>
         <template v-slot:activator="{ on }">
-          <v-btn v-on="on" text class="icon-btn" @click="$emit('update:view',0)" :disabled="!(dataset && dataset.summary)">
-            <v-icon :color="(view==0) ? 'black' : '#888'">
+          <v-btn v-on="on" text class="icon-btn" @click="tableView=false" :disabled="!(dataset && dataset.summary)">
+            <v-icon :color="(!tableView) ? 'black' : '#888'">
               view_headline
             </v-icon>
           </v-btn>
@@ -13,8 +13,8 @@
       </v-tooltip>
       <v-tooltip transition="fade-transition" bottom>
         <template v-slot:activator="{ on }">
-          <v-btn v-on="on" text class="icon-btn" @click="$emit('update:view',1)" :disabled="!(dataset && dataset.summary)">
-            <v-icon :color="(view==1) ? 'black' : '#888'">
+          <v-btn v-on="on" text class="icon-btn" @click="tableView=true" :disabled="!(dataset && dataset.summary)">
+            <v-icon :color="(tableView) ? 'black' : '#888'">
               view_module
             </v-icon>
           </v-btn>
@@ -152,7 +152,7 @@
       </template>
       <v-spacer></v-spacer>
       <v-badge
-        :value="cellsError!=='' || (operationsTitle && operationsTitle!='operations')"
+        :value="cellsError!=='' || (operationsTitle && operationsTitle!='operations') && cells.length!=0"
         :color="(operationsTitle!='operations') ? 'primary lighten-2' : 'error'"
         dot
         overlap
@@ -172,7 +172,6 @@
     <Dataset
       :commandsDisabled="commandsDisabled"
       :key="tableKey+'dataset'"
-      :view="view"
       :sortBy.sync="sortBy"
       :sortDesc.sync="sortDesc"
       :operationsActive="operationsActive"
@@ -223,7 +222,8 @@
           v-show="operationsActive && $route.query.kernel=='1'"
           ref="cells"
           :big.sync="bigOptions"
-          :view.sync="operationsTitle"
+          :view="operationsTitle"
+          @updateOperations="updateOperations"
           :codeError.sync="cellsError"
           :columns="selectedColumns || []"
           :commandsDisabled.sync="commandsDisabled"
@@ -353,10 +353,6 @@ export default {
 			default: 1,
 			type: Number
 		},
-		view: {
-			default: 0,
-			type: Number
-		},
 		searchText: {
 			default: '',
 			type: String
@@ -369,6 +365,7 @@ export default {
 
 	data () {
 		return {
+
       cellsError: '',
       copied: false,
 
@@ -447,9 +444,18 @@ export default {
 
 	computed: {
 
-    ...mapGetters(['currentSelection','selectionType']),
+    ...mapGetters(['currentSelection','currentTableView','selectionType']),
 
     ...mapState(['nextCommand']),
+
+    tableView: {
+      get () {
+        return this.currentTableView
+      },
+      set (view) {
+        this.$store.commit('setTableView',view)
+      }
+    },
 
     detailsActive() {
 
@@ -843,22 +849,26 @@ export default {
         this.operationsActive = false
       }
     },
-    operationsTitle (v) {
-      if (v==false) {
-        this.operationsActive = false
-      }
-      else if (v!='operations') {
-        this.operationsActive = true
-      }
-    },
-    operationsActive (v) {
-      if (v && !this.operationsTitle) {
-        this.operationsTitle = 'operations'
-      }
-    }
+    // operationsTitle (v) {
+    //   if (v==false) {
+    //     this.operationsActive = false
+    //   }
+    // },
+    // operationsActive (v) {
+    //   if (!!v != !!this.operationsTitle) {
+    //     this.operationsTitle = 'operations'
+    //   }
+    // }
   },
 
   methods: {
+
+    updateOperations (event) {
+      var {active, title} = event
+      console.log({active, title})
+      if (active!==undefined) this.operationsActive = active
+      this.operationsTitle = title
+    },
 
     clearSelection () {
       this.$store.commit('selection',{ clear: true })
