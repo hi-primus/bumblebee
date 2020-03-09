@@ -70,17 +70,17 @@
     <div class="bb-table-header">
       <template v-for="(column, i) in allColumns">
         <div
-          v-if="column.type=='preview'"
+          v-if="column.type=='preview' && !column.hidden"
           :key="'p'+column.index"
           class="bb-table-h-cell bb-preview"
-          :id="(column.index == currentPreview.dataset.columns.length-1) ? 'bb-table-preview-last' : false"
+          :id="(column.index == previewColumns.length-1) ? 'bb-table-preview-last' : false"
           style="width: 170px"
         >
           <!-- <div class="data-type" :class="`type-${columns[column.index].column_dtype}`">
             {{ dataType(currentDataset.columns[column.index].column_dtype) }}
           </div> -->
           <div class="column-title">
-            {{currentPreview.dataset.columns[column.index].title}}
+            {{ previewColumns[column.index].title }}
           </div>
         </div>
         <div
@@ -117,7 +117,7 @@
         <div
           :key="'p'+column.index"
           class="bb-table-plot bb-preview"
-          v-if="column.type=='preview'"
+          v-if="column.type=='preview' && !column.hidden"
           style="width: 170px"
         >
         </div>
@@ -180,7 +180,7 @@
         <div
           class="bb-table-row"
           :key="'r'+row.index"
-          :class="[(currentPreview.type=='highlight' && currentPreview.indices.includes(row.index)) ? 'bb-highlight-'+(currentPreview.color || 'green') : '']"
+          :class="[(currentHighlights && currentHighlights.indices.includes(row.index)) ? 'bb-highlight-'+(currentHighlights.color || 'green') : '']"
           :style="{height: rowHeight+'px', top: row.index*rowHeight+'px'}"
         >
           <template v-for="column in allColumns">
@@ -282,26 +282,45 @@ export default {
 
 	computed: {
 
-    ...mapGetters(['currentSelection','currentDataset','selectionType','currentPreview']),
+    ...mapGetters([
+      'currentSelection',
+      'currentDataset',
+      'selectionType',
+      'currentColumnsPreview',
+      'currentHighlights',
+      'currentFocusedColumns'
+    ]),
 
     ...mapState(['allTypes']),
 
-    allColumns () {
-      if (this.currentPreview.type=='columns' && this.currentPreview.dataset.columns) {
-        // var arr = [
-        //   ...this.bbColumns.map(index=>({index})),
-        //   ...this.currentPreview.dataset.columns.map((v,index)=>({index, type: 'preview'}))
-        // ]
-        var arr = [
-          ...this.bbColumns.map(index=>({index})),
-        ]
-        var insertIndex = arr.findIndex(e=>this.currentDataset.columns[e.index].name==this.currentPreview.after)+1
-        this.currentPreview.dataset.columns.map((v,index)=>({index, type: 'preview'})).forEach(e=>{
-          arr.splice(insertIndex++,0,e)
-        })
-        return arr
+    previewColumns () {
+      try {
+        return this.currentColumnsPreview.dataset.sample.columns
+        .map((col, index)=>({
+          ...col,
+          index,
+          hidden: ([this.currentColumnsPreview.after,'__match_positions__'].includes(col.title))
+        })) || []
+      } catch (err) {
+        return []
       }
-      return this.bbColumns.map(index=>({index}))
+    },
+
+    allColumns () {
+      var arr = this.bbColumns.map(index=>({index}))
+      try {
+        var after = this.currentColumnsPreview.after
+        console.log({after, ccp: this.currentColumnsPreview})
+        if (this.previewColumns.length && after) {
+          var insertIndex = arr.findIndex(e=>this.currentDataset.columns[e.index].name==after)+1
+          this.previewColumns.map((col,index)=>({hidden: col.hidden, index: col.index, type: 'preview'})).forEach(e=>{
+            arr.splice(insertIndex++,0,e)
+          })
+        }
+      } catch (err) {
+        console.error(err)
+      }
+      return arr
     },
 
     columnMenuActive: {
@@ -416,10 +435,18 @@ export default {
       this.updateSelection(value)
     },
 
-    currentPreview (preview) {
+    // currentColumnsPreview (v) {
+    //   this.focusPreview()
+    // }
+
+  },
+
+  methods: {
+
+    focusPreview () {
       this.$nextTick(()=>{
-        if (preview.after) {
-          var af = document.getElementById("bb-table-"+preview.after)
+        if (this.currentFocusedColumns!==undefined) {
+          var af = document.getElementById("bb-table-"+this.currentFocusedColumns)
           af && af.scrollIntoView();
           var lp = document.getElementById("bb-table-preview-last")
           lp && lp.scrollIntoView();
@@ -427,10 +454,7 @@ export default {
           this.horizontalScrollCheckDown()
         }
       })
-    }
-  },
-
-  methods: {
+    },
 
     /* drag events */
 
@@ -466,7 +490,9 @@ export default {
 
     previewCell(column,row) {
       try {
-        return {value: this.currentPreview.dataset.value[row-this.currentPreview.startingRow][column]}
+        return {
+          value: this.currentColumnsPreview.dataset.sample.value[row-this.currentColumnsPreview.startingRow][column]
+        }
       }
       catch (error) {
         return {value: '[not available]', notAvailable: true}
@@ -614,14 +640,18 @@ export default {
 
     async scrollCheck () {
 
-      var element = this.$refs['BbTableContainer']
+      try {
 
-      var topPosition = element.scrollTop
-      var bottomPosition = topPosition + element.clientHeight
+        var element = this.$refs['BbTableContainer']
 
-      this.$store.commit('setWindow',[Math.floor(topPosition/this.rowHeight),Math.ceil(bottomPosition/this.rowHeight)])
+        var topPosition = element.scrollTop
+        var bottomPosition = topPosition + element.clientHeight
 
-      this.fetchChunks(topPosition, bottomPosition)
+        this.$store.commit('setWindow',[Math.floor(topPosition/this.rowHeight),Math.ceil(bottomPosition/this.rowHeight)])
+
+        this.fetchChunks(topPosition, bottomPosition)
+
+      } catch (err) {}
 
       // this.visibleRowsTop = topPosition/this.rowHeight - 80
       // this.visibleRowsBottom = bottomPosition/this.rowHeight + 80

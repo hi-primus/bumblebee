@@ -10,7 +10,10 @@ export const state = () => ({
   windows: [],
   tableViews: [],
   cells: [],
-  previews: [],
+  columnsPreviews: [],
+  highlightRows: [],
+  highlights: [],
+  focusedColumns: [],
 	datasetUpdates: 0,
   status: 'waiting',
   session: '',
@@ -38,17 +41,33 @@ export const mutations = {
     state.tab = tab
   },
 
-  previewColumns (state, {dataset, after, startingRow}) {
-    Vue.set(state.previews,state.tab,{type: 'columns', after, dataset, startingRow})
+  setColumnsPreview (state, payload) {
+    Vue.set( state.columnsPreviews, state.tab, payload )
   },
 
-  previewHighlight(state, {indices, columns, color}) {
-    Vue.set(state.previews,state.tab,{type: 'highlight', columns, indices: indices || [], color: color || 'green'})
+  setHighlightRows (state, {indices, color}) {
+    var highlightRows = { indices: indices || [], color: color || 'green' }
+
+    Vue.set( state.highlightRows, state.tab, highlightRows )
   },
 
-  previewDefault(state) {
-    Vue.set(state.previews,state.tab,undefined)
-    Vue.set(state.buffers,state.tab,undefined)
+  setHighlights (state, {matches, color}) {
+    var highlights ={ matches: matches || [], color: color || 'green' }
+
+    Vue.set( state.highlights, state.tab, highlights )
+  },
+
+  setFocusedColumns (state, column) {
+    Vue.set( state.focusedColumns, state.tab, column )
+  },
+
+  previewDefault (state) {
+    Vue.set(state.columnsPreviews,state.tab,false)
+    Vue.set(state.highlights,state.tab,false)
+    Vue.set(state.highlightRows,state.tab,false)
+    Vue.set(state.focusedColumns,state.tab,false)
+    Vue.set(state.previewFunctions,state.tab,false)
+    Vue.set(state.buffers,state.tab,false)
   },
 
   commandHandle(state, command) {
@@ -221,7 +240,11 @@ export const mutations = {
     }
     if (tab!==undefined) {
 
-      Vue.set(state.previews,state.tab,undefined)
+      Vue.set(state.columnsPreviews,state.tab,false)
+      Vue.set(state.highlights,state.tab,false)
+      Vue.set(state.highlightRows,state.tab,false)
+      Vue.set(state.focusedColumns,state.tab,false)
+      Vue.set(state.previewFunctions,state.tab,false)
       Vue.set(state.buffers,state.tab,undefined)
 
       if (clear) {
@@ -253,8 +276,17 @@ export const getters = {
   currentSelection(state) {
     return state.datasetSelection[state.tab] || []
   },
-  currentPreview(state) {
-    return state.previews[state.tab] || []
+  currentColumnsPreview (state) {
+    return state.columnsPreviews[state.tab] || false
+  },
+  currentHighlightRows (state) {
+    return state.highlightRows[state.tab] || false
+  },
+  currentHighlights (state) {
+    return state.highlights[state.tab] || false
+  },
+  currentFocusedColumns (state) {
+    return state.focusedColumns[state.tab] || undefined
   },
   currentTab(state) {
     return state.tab

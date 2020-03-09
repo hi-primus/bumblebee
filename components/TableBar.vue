@@ -865,7 +865,6 @@ export default {
 
     updateOperations (event) {
       var {active, title} = event
-      console.log({active, title})
       if (active!==undefined) this.operationsActive = active
       this.operationsTitle = title
     },

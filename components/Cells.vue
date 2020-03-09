@@ -1642,7 +1642,7 @@ export default {
               +( (output_cols_argument) ? `, output_cols=${output_cols_argument}` : '')
               // +( (payload._previewRequest || payload.drop) ? ', drop=True' : '')
               +')'
-              +( (payload._previewRequest) ? `.cols.find(${_argument}, sub="${payload.separator}")` : '')
+              +( (payload._previewRequest) ? `.cols.find(${_argument}, sub=["${payload.separator}"])` : '')
 					}
 
         },
@@ -2146,33 +2146,50 @@ export default {
     },300),
 
     async getPreview() {
-      this.$store.commit('previewDefault')
-      if (this.currentCommand._preview==='columns') {
-        var response = await this.evalCode(await this.getCode(this.currentCommand,true))
-        var payload = {
-          dataset: parseResponse(response.content),
-          startingRow: 0,
-          after: this.currentCommand.columns[0]
-        }
-        this.$store.commit('previewColumns',payload)
-      }
-
-      if (this.currentCommand._preview==='unnest') {
-        var response = await this.evalCode(await this.getCode(this.currentCommand,true))
-
-        var dataset = parseResponse(response.content)
-
-        var payload = {
-          dataset,
-          startingRow: 0,
-          after: this.currentCommand.columns[0]
-        }
-        this.$store.commit('previewColumns',payload)
-      }
+      // this.$store.commit('previewDefault')
 
       if (this.currentCommand._preview==='highlight') {
-        this.$store.commit('previewHighlight',{indices: [0,1,2,3,4,5,6], columns: ['id'], color: this.currentCommand._highlight})
+        this.$store.commit('setHighlights',{indices: [0,1,2,3,4,5,6], columns: ['id'], color: this.currentCommand._highlight})
+        return true
       }
+
+
+      try {
+
+        if (this.currentCommand._preview==='columns') {
+          var response = await this.evalCode(await this.getCode(this.currentCommand,true))
+          var dataset = parseResponse(response.content)
+          var payload = {
+            dataset,
+            after: this.currentCommand.columns[0],
+            startingRow: 0,
+          }
+          this.$store.commit('setColumnsPreview',payload)
+          this.$store.commit('setFocusedColumns',this.currentCommand.columns[0])
+        }
+
+        if (this.currentCommand._preview==='unnest') {
+          var response = await this.evalCode(await this.getCode(this.currentCommand,true))
+          var dataset = parseResponse(response.content)
+
+          if (typeof dataset !== 'object') {
+            throw { msg: 'Parsed content is not an object', content: dataset }
+          }
+
+          var payload = {
+            dataset,
+            after: this.currentCommand.columns[0],
+            startingRow: 0,
+          }
+          this.$store.commit('setColumnsPreview',payload)
+          this.$store.commit('setFocusedColumns',this.currentCommand.columns[0])
+        }
+
+      } catch (err) {
+        console.error(err)
+      }
+
+
     },
 
     getPreviewDebounced: debounce(async function() {
@@ -2429,9 +2446,9 @@ export default {
         content = payload.content
       }
 
-      if (preview && (!this.currentBuffer || this.currentBuffer.join()!=[payload.command,payload.columns].join())) {
-        await this.evalCode(this.dataset.varname+'.ext.set_buffer(["'+payload.columns.join(", ")+'"])\n"done"')
-        this.$store.commit('setBuffer',[payload.command,payload.columns])
+      if (preview && (!this.currentBuffer || this.currentBuffer!==[payload.command,payload.columns].join())) {
+        var buffer = await this.evalCode(this.dataset.varname+'.ext.set_buffer(["'+payload.columns.join(", ")+'"])\n"0"')
+        this.$store.commit('setBuffer',[payload.command,payload.columns].join())
       }
 
       if (payload._init) {
