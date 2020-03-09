@@ -1625,7 +1625,7 @@ export default {
               index: '',
               drop: false,
               output_cols: columns.map(e=>e),
-              _preview: 'columns'
+              _preview: 'unnest'
             }
 					},
 					code: (payload) => {
@@ -1640,8 +1640,9 @@ export default {
               +( (payload.splits) ? `, splits=${payload.splits}` : '')
               +( (payload.index) ? `, index=${payload.index}` : '')
               +( (output_cols_argument) ? `, output_cols=${output_cols_argument}` : '')
-              +( (payload._previewRequest || payload.drop) ? ', drop=True' : '')
+              // +( (payload._previewRequest || payload.drop) ? ', drop=True' : '')
               +')'
+              +( (payload._previewRequest) ? `.cols.find(${_argument}, sub="${payload.separator}")` : '')
 					}
 
         },
@@ -2146,7 +2147,7 @@ export default {
 
     async getPreview() {
       this.$store.commit('previewDefault')
-      if (this.currentCommand._preview=='columns') {
+      if (this.currentCommand._preview==='columns') {
         var response = await this.evalCode(await this.getCode(this.currentCommand,true))
         var payload = {
           dataset: parseResponse(response.content),
@@ -2155,7 +2156,21 @@ export default {
         }
         this.$store.commit('previewColumns',payload)
       }
-      else if (this.currentCommand._preview=='highlight') {
+
+      if (this.currentCommand._preview==='unnest') {
+        var response = await this.evalCode(await this.getCode(this.currentCommand,true))
+
+        var dataset = parseResponse(response.content)
+
+        var payload = {
+          dataset,
+          startingRow: 0,
+          after: this.currentCommand.columns[0]
+        }
+        this.$store.commit('previewColumns',payload)
+      }
+
+      if (this.currentCommand._preview==='highlight') {
         this.$store.commit('previewHighlight',{indices: [0,1,2,3,4,5,6], columns: ['id'], color: this.currentCommand._highlight})
       }
     },
