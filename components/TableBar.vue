@@ -193,7 +193,7 @@
           <v-icon class="right-button" color="black" @click="cancelCommand">close</v-icon>
         </div>
         <div v-show="operationsTitle=='operations' && operationsActive && $route.query.kernel=='1'" class="px-2 py-1">
-          <v-tooltip transition="fade-transition" bottom color="success darken-2" v-model="copied">
+          <v-tooltip transition="fade-transition" bottom color="dataprimary darken-2" v-model="copied">
             <template v-slot:activator="{on: success}">
               <v-tooltip :disabled="copied" transition="fade-transition" bottom>
                 <template v-slot:activator="{ on: hint }">

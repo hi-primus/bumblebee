@@ -258,7 +258,7 @@ export default {
         ...this.getBackConfig(index),
         height: h,
         y: this.height - h,
-				fill: (this.bins[index].hovered || this.bins[index].selected || this.bins[index].selecting) ? '#3c938b' : '#4db6ac',
+				fill: (this.bins[index].hovered || this.bins[index].selected || this.bins[index].selecting) ? '#288bc9' : '#309ee3',
 				opacity: (this.values[index].count) ? 1 : 0.5,
 				listening: false
       }

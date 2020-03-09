@@ -260,13 +260,13 @@ table.table thead td:not(:nth-child(1)), table.table tbody td:not(:nth-child(1))
     height: 100%;
     width: 0;
     &.teal-bar {
-      background-color: $data-teal;
+      background-color: $data-primary;
     }
     &.red-bar {
       background-color: $data-red;
     }
     &.valid-bar {
-      background-color: rgba($data-teal,0.91)
+      background-color: rgba($data-primary,0.91)
     }
     &.invalid-bar {
       background-color: rgba($data-red,0.91)
@@ -516,7 +516,7 @@ table {
       text-align: center;
       margin-top: -4px;
       line-height: 28px;
-      background-color: $data-highlight;
+      background-color: $data-highlight-bg;
     }
     .sidebar-subheader {
       font-family: $font-mono;
@@ -634,14 +634,15 @@ table {
 .top-bar {
   position: relative;
   .bar {
-    background-color: $data-teal;
+    background-color: $data-primary;
     position: relative;
     height: calc(100% - 1px);
   }
   &:hover .bar {
-    background-color: #3c948b;
+    background-color: $data-primary-darken-bar;
   }
   .value {
+    color: $text-color-darken;
     @include ellipsis;
     padding-left: 12px;
     padding-right: 12px;
@@ -1105,7 +1106,7 @@ table {
           overflow: hidden;
           min-height: 2px;
           width: 100%;
-          color: $data-teal;
+          color: $data-primary;
           background-color: currentColor;
           height: 50%;
           position: absolute;
@@ -1123,29 +1124,6 @@ table {
 
   .table-font {
     font-family: $font-mono-table;
-  }
-
-  .sidechart {
-    margin-bottom: 5px;
-    position: relative;
-    font-size: 10px;
-    &:hover {
-      background-color: $data-highlight-grey;
-    }
-    .bartext {
-      background-color: #aeccde;
-      width: 50%;
-    }
-    .totaltext {
-      position: absolute;
-      top: 0;
-      left: 50%;
-    }
-    .counttext {
-      position: absolute;
-      top: 0;
-      left: 30%;
-    }
   }
 }
 
@@ -1511,7 +1489,7 @@ $editor-top-padding: 6px;
     left: 0;
     display: block;
     height: calc(100% - 10px);
-    width: calc(100% - 10px);
+    width: calc(100% - 9px);
   }
 
   .bb-table-header, .bb-table-row, .bb-table-plots {
@@ -1527,7 +1505,7 @@ $editor-top-padding: 6px;
   }
 
   .bb-table-row.bb-highlight-green {
-    background: lighten($data-teal,39%) !important;
+    background: lighten($data-primary,39%) !important;
   }
 
   .bb-table-row.bb-highlight-red {
@@ -1584,6 +1562,7 @@ $editor-top-padding: 6px;
         display: flex;
         flex-direction: row;
         flex-wrap: nowrap;
+
 
         .data-type {
           height: inherit;
@@ -1681,7 +1660,8 @@ $editor-top-padding: 6px;
     }
     .bb-table-h-cell, .bb-table-cell, .bb-table-plot {
       &.bb-preview {
-        background-color: $data-preview;
+        // background-color: $data-preview;
+        color: $data-preview;
         // border-color: darken($data-preview, 10%) !important;
         // border-top-color: darken($data-preview, 10%) !important;
         // border-right-color: darken($data-preview, 10%) !important;
@@ -1691,7 +1671,7 @@ $editor-top-padding: 6px;
       }
       &.bb-selected {
         // background-color: $data-highlight;
-        background-color: rgba($data-blue, 13%); // $data-highlight;
+        background-color: $data-highlight-bg; // $data-highlight;
         border-color: darken($data-highlight, 10%) !important;
         & + * {
           border-left-color: darken($data-highlight, 10%) !important;
@@ -1752,7 +1732,7 @@ $editor-top-padding: 6px;
 
   .bb-table-cell {
     &::selection {
-      background: lighten($data-teal,33%);
+      background: lighten($data-primary,33%);
     }
     cursor: initial;
     font-size: 13px;

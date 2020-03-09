@@ -7,7 +7,7 @@
       <span>{{ lower_bound_count }} outlier{{(lower_bound_count!=1) ? 's': ''}}</span>
     </v-tooltip>
     <div :class="{'min-bar': lowerW!=0}" class="bar empty-bar default-bar"/>
-    <v-tooltip transition="fade-transition" bottom content-class="bar-tooltip tooltip-above-dialog" color="success darken-2">
+    <v-tooltip transition="fade-transition" bottom content-class="bar-tooltip tooltip-above-dialog" color="dataprimary darken-2">
       <template v-slot:activator="{ on }">
         <div :class="{'min-bar': validW!=0}" :style="{'width': validW+'%'}" class="bar teal-bar" v-on="on" />
       </template>

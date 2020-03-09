@@ -1,23 +1,29 @@
-$data-teal: #4db6ac;
-$data-teal-darken: #3c938b;
-$data-green: #8eff6c;
-$data-yellow: #eedc3e;
-$data-orange: #ffb046;
-$data-red: #e57373;
-$data-pink: #dda2ff;
-$data-indigo: #847aff;
-$data-blue: #82bcfa;
+$data-primary: #309ee3;
+$data-primary-darken: #288bc9;
+$data-primary-darken-bar: #288bc9;
+$data-teal: #00AE8D;
+$data-green: #56A857;
+// $data-yellow: #eedc3e;
+// $data-orange: #ffb046;
+$data-red: #F15555; // #F16E55;
+$data-pink: #E66DA7;
+// $data-indigo: #847aff;
+$data-blue: lighten(#309ee3,10%);
+
 
 $data-grey: #6c7680;
 $data-highlight-grey: lighten($data-grey,50%);
-$data-highlight: #edf6ff;
-$data-preview: lighten($data-yellow,39%);
+$data-highlight: #bde2fb;
+$data-highlight-bg: rgba($data-blue, 13%);
+$data-preview: #2A625C;
+$data-preview-background: #EEE8A9;
 
-$primary-color: #1972d1;
+$primary-color: #1888cc;
 
 $black-opacity: 0.91;
 
-$text-color: #24292e;
+$text-color: #242a2e;
+$text-color-darken: rgba(0,1,1,0.91);
 
 $line-color-1: #f5f5f5;
 $line-color-2: #e5e5e5;
