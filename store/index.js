@@ -11,6 +11,7 @@ export const state = () => ({
   tableViews: [],
   cells: [],
   columnsPreviews: [],
+  plotsData: [],
   highlightRows: [],
   highlights: [],
   focusedColumns: [],
@@ -59,6 +60,10 @@ export const mutations = {
 
   setFocusedColumns (state, column) {
     Vue.set( state.focusedColumns, state.tab, column )
+  },
+
+  setPlotData (state, columns) {
+    Vue.set( state.plotsData, state.tab, column )
   },
 
   previewDefault (state) {

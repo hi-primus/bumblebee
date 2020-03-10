@@ -290,7 +290,8 @@ export default {
       'currentColumnsPreview',
       'currentHighlights',
       'currentHighlightRows',
-      'currentFocusedColumns'
+      'currentFocusedColumns',
+      'currentPreviewFunction'
     ]),
 
     ...mapState(['allTypes']),
@@ -451,9 +452,11 @@ export default {
       this.updateSelection(value)
     },
 
-    previewColumns (value) {
+    async previewColumns (value) {
       if (value.length) {
-        //
+        var func = this.currentPreviewFunction
+        const response = await this.evalCode(func()+'.ext.profile("*",0,18)')
+        console.log({response})
       }
     },
 
