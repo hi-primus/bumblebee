@@ -16,7 +16,7 @@ export default {
   mounted() {
     window.evalCode = async (code) => {
       var result = await this.evalCode(code)
-      console.log(result)
+      console.log('[DEBUG]',result)
     }
   },
 
@@ -25,17 +25,16 @@ export default {
     async evalCode (code) {
       try {
 
-        var response = await this.socketPost('run', {
+        return await this.socketPost('run', {
           code,
           session: this.$store.state.session
         }, {
           timeout: 0
         })
 
-        return response
-
       } catch (error) {
-        if (error.content && error.content.traceback && error.content.traceback.length){
+
+        if (error.content && error.content.traceback && error.content.traceback.length) {
           error.content.traceback_escaped = error.content.traceback.map(l=>
             l.replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '')
           )
@@ -43,6 +42,7 @@ export default {
         }
         console.error(error)
         return error
+
       }
     },
 

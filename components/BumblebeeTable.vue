@@ -180,7 +180,7 @@
         <div
           class="bb-table-row"
           :key="'r'+row.index"
-          :class="[(currentHighlights && currentHighlights.indices.includes(row.index)) ? 'bb-highlight-'+(currentHighlights.color || 'green') : '']"
+          :class="[(currentHighlightRows && currentHighlightRows.indices.includes(row.index)) ? 'bb-highlight--'+(currentHighlightRows.color || 'green') : '']"
           :style="{height: rowHeight+'px', top: row.index*rowHeight+'px'}"
         >
           <template v-for="column in allColumns">
@@ -205,7 +205,8 @@
                 'none': row.value[column.index]===null
               }"
               :style="{width: columns[column.index].width+'px'}"
-            ><span class="select-none">&nbsp;</span>{{row.value[column.index]}}<span class="select-none">&nbsp;</span></div>
+              v-html="getCell(column.index,row.index)"
+            ></div>
           </template>
         </div>
       </template>
@@ -288,10 +289,24 @@ export default {
       'selectionType',
       'currentColumnsPreview',
       'currentHighlights',
+      'currentHighlightRows',
       'currentFocusedColumns'
     ]),
 
     ...mapState(['allTypes']),
+
+    highlightMatches () {
+      var hm = {}
+      try {
+        for (var [key, e] of Object.entries(this.currentHighlights.matches)) {
+          const i = this.currentDataset.columns.findIndex(col=>(col.name===key))
+          hm[i] = e
+        }
+      } catch (err) {
+        console.error(err)
+      }
+      return hm
+    },
 
     previewColumns () {
       try {
@@ -310,11 +325,12 @@ export default {
       var arr = this.bbColumns.map(index=>({index}))
       try {
         var after = this.currentColumnsPreview.after
-        console.log({after, ccp: this.currentColumnsPreview})
         if (this.previewColumns.length && after) {
           var insertIndex = arr.findIndex(e=>this.currentDataset.columns[e.index].name==after)+1
           this.previewColumns.map((col,index)=>({hidden: col.hidden, index: col.index, type: 'preview'})).forEach(e=>{
-            arr.splice(insertIndex++,0,e)
+            if (!e.hidden) {
+              arr.splice(insertIndex++,0,e)
+            }
           })
         }
       } catch (err) {
@@ -435,9 +451,15 @@ export default {
       this.updateSelection(value)
     },
 
-    // currentColumnsPreview (v) {
-    //   this.focusPreview()
-    // }
+    previewColumns (value) {
+      if (value.length) {
+        //
+      }
+    },
+
+    currentColumnsPreview (v) {
+      this.focusPreview()
+    }
 
   },
 
@@ -497,6 +519,23 @@ export default {
       catch (error) {
         return {value: '[not available]', notAvailable: true}
       }
+    },
+
+    getCell (column, row) {
+      var content = this.rows[row].value[column]
+
+      try {
+        if (this.highlightMatches[column]) {
+          for (let i = this.highlightMatches[column][row].length - 1; i >= 0; i--) {
+            const [a,b] = this.highlightMatches[column][row][i];
+            content = content.substring(0,a)+`<span class="hlt--${this.currentHighlights.color}">`+content.substring(a,b)+'</span>'+content.substring(b)
+
+          }
+          this.highlightMatches[column][row].forEach(arr => {
+            });
+        }
+      } catch (err) {}
+      return `<span class="select-none">&nbsp;</span>${content}<span class="select-none">&nbsp;</span>`
     },
 
     updateSelection(value) {
@@ -651,7 +690,9 @@ export default {
 
         this.fetchChunks(topPosition, bottomPosition)
 
-      } catch (err) {}
+      } catch (err) {
+        console.error(err)
+      }
 
       // this.visibleRowsTop = topPosition/this.rowHeight - 80
       // this.visibleRowsBottom = bottomPosition/this.rowHeight + 80

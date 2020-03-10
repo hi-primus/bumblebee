@@ -46,6 +46,17 @@ export const arraysEqual = (_arr1, _arr2) => {
   return true;
 }
 
+export const cancellablePromise = (promiseToCancel) => {
+  let cancel
+  const promise = new Promise((resolve, reject) => {
+    cancel = reject
+    promiseToCancel
+      .then(resolve)
+      .catch(reject)
+  })
+  return {promise, cancel}
+}
+
 export const trimCharacters = (s, c) => {
   if (c === "]") c = "\\]";
   if (c === "\\") c = "\\\\";

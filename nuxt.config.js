@@ -89,7 +89,7 @@ module.exports = {
 		theme: {
 			themes: {
 				light: {
-					primary: '#1888cc',
+					primary: '#309ee3',
 					info: '#82bcfa',
 					warning: colors.amber,
 					error: '#F15555',

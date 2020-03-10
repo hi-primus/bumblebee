@@ -516,7 +516,7 @@ table {
       text-align: center;
       margin-top: -4px;
       line-height: 28px;
-      background-color: $data-highlight-bg;
+      background-color: $data-highlight-background;
     }
     .sidebar-subheader {
       font-family: $font-mono;
@@ -1504,16 +1504,16 @@ $editor-top-padding: 6px;
     }
   }
 
-  .bb-table-row.bb-highlight-green {
-    background: lighten($data-primary,39%) !important;
+  .bb-table-row.bb-highlight--green {
+    background: $highlight-green !important;
   }
 
-  .bb-table-row.bb-highlight-red {
-    background: lighten($data-red,36%) !important;
+  .bb-table-row.bb-highlight--red {
+    background: $highlight-red !important;
   }
 
-  .bb-table-row.bb-highlight-blue {
-    background: lighten($data-blue,36%) !important;
+  .bb-table-row.bb-highlight--blue {
+    background: $highlight-blue !important;
   }
 
 
@@ -1660,8 +1660,8 @@ $editor-top-padding: 6px;
     }
     .bb-table-h-cell, .bb-table-cell, .bb-table-plot {
       &.bb-preview {
-        // background-color: $data-preview;
-        color: $data-preview;
+        // background-color: $data-preview-background;
+        color: $data-preview !important;
         // border-color: darken($data-preview, 10%) !important;
         // border-top-color: darken($data-preview, 10%) !important;
         // border-right-color: darken($data-preview, 10%) !important;
@@ -1671,7 +1671,7 @@ $editor-top-padding: 6px;
       }
       &.bb-selected {
         // background-color: $data-highlight;
-        background-color: $data-highlight-bg; // $data-highlight;
+        background-color: $data-highlight-background; // $data-highlight;
         border-color: darken($data-highlight, 10%) !important;
         & + * {
           border-left-color: darken($data-highlight, 10%) !important;
@@ -1888,4 +1888,17 @@ $editor-top-padding: 6px;
   position: relative;
   left: 4px;
 
+}
+
+
+.hlt {
+  &--red {
+    background-color: $highlight-red;
+  }
+  &--green {
+    background-color: $highlight-green;
+  }
+  &--blue {
+    background-color: $highlight-blue;
+  }
 }

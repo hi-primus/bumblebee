@@ -51,8 +51,8 @@ export const mutations = {
     Vue.set( state.highlightRows, state.tab, highlightRows )
   },
 
-  setHighlights (state, {matches, color}) {
-    var highlights ={ matches: matches || [], color: color || 'green' }
+  setHighlights (state, { matches, color }) {
+    var highlights = { matches: matches || {}, color: color || 'green' }
 
     Vue.set( state.highlights, state.tab, highlights )
   },
@@ -75,7 +75,9 @@ export const mutations = {
   },
 
   setWindow(state, window) {
-    Vue.set(state.windows,state.tab,window)
+    if (!state.windows[state.tab] || state.windows[state.tab].join()!==window.join()) {
+      Vue.set(state.windows,state.tab,window)
+    }
   },
 
   setTableView(state, tableView) {
@@ -305,14 +307,6 @@ export const getters = {
   currentPreviewFunction(state) {
     try {
       return state.previewFunctions[state.tab]
-    }
-    catch (error) {
-      return false
-    }
-  },
-  currentWindow(state) {
-    try {
-      return state.windows[state.tab]
     }
     catch (error) {
       return false

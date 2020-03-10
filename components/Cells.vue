@@ -336,7 +336,7 @@ import OutputColumnInputs from '@/components/OutputColumnInputs'
 import Outliers from '@/components/Outliers'
 import clientMixin from '@/plugins/mixins/client'
 import { mapGetters } from 'vuex'
-import { parseResponse, debounce, newName, arrayJoin } from '@/utils/functions.js'
+import { parseResponse, debounce, newName, arrayJoin, cancellablePromise } from '@/utils/functions.js'
 
 const api_url = process.env.API_URL || 'http://localhost:5000'
 
@@ -395,6 +395,8 @@ export default {
       currentCommand: false,
       firstRun: true,
       runButton: false,
+
+      cancelPreview: false,
 
       commandsPallete: {
         'apply sort': {
@@ -2149,15 +2151,26 @@ export default {
       // this.$store.commit('previewDefault')
 
       if (this.currentCommand._preview==='highlight') {
-        this.$store.commit('setHighlights',{indices: [0,1,2,3,4,5,6], columns: ['id'], color: this.currentCommand._highlight})
+        this.$store.commit('setHighlightRows',{indices: [0,1,2,3,4,5,6], columns: ['id'], color: this.currentCommand._highlight})
         return true
       }
-
 
       try {
 
         if (this.currentCommand._preview==='columns') {
-          var response = await this.evalCode(await this.getCode(this.currentCommand,true))
+
+          if (this.cancelPreview) {
+            this.cancelPreview()
+          }
+
+          const { promise, cancel } = cancellablePromise( this.evalCode(await this.getCode(this.currentCommand,true)) )
+
+          this.cancelPreview = cancel
+
+          const response = await promise
+
+          this.cancelPreview = false
+
           var dataset = parseResponse(response.content)
           var payload = {
             dataset,
@@ -2169,19 +2182,35 @@ export default {
         }
 
         if (this.currentCommand._preview==='unnest') {
-          var response = await this.evalCode(await this.getCode(this.currentCommand,true))
-          var dataset = parseResponse(response.content)
+
+          var startingRow = this.currentWindow[0]
+
+          const response = await this.evalCode(await this.getCode(this.currentCommand,true))
+          const dataset = parseResponse(response.content)
 
           if (typeof dataset !== 'object') {
             throw { msg: 'Parsed content is not an object', content: dataset }
           }
 
+          const after = this.currentCommand.columns[0]
+
           var payload = {
             dataset,
-            after: this.currentCommand.columns[0],
-            startingRow: 0,
+            after,
+            startingRow,
           }
+
           this.$store.commit('setColumnsPreview',payload)
+
+          var matches = {}
+
+          const matchesIndex = dataset.sample.columns.findIndex(e=>e.title.includes('__match_positions__'))
+          const matchesColumn = after // dataset.sample.columns[matchesIndex].split('__match_positions__')[0]
+
+          matches[matchesColumn] = dataset.sample.value.map(row=>row[matchesIndex])
+
+          this.$store.commit('setHighlights',{ matches, color: 'red' })
+
           this.$store.commit('setFocusedColumns',this.currentCommand.columns[0])
         }
 
@@ -2194,7 +2223,7 @@ export default {
 
     getPreviewDebounced: debounce(async function() {
       this.getPreview()
-    },300),
+    },350),
 
     getCommandTitle() {
       try {
@@ -2454,12 +2483,14 @@ export default {
       if (payload._init) {
         return content
       }
+
       if (preview) {
         var [top,bottom] = this.currentWindow || [0,500]
-        var func = (a,b) => `${this.dataset.varname}.ext.buffer_window(["${payload.columns.join(", ")}"],${a},${b})${content}.ext.to_json("*")`
+        var func = (a,b) => `${this.dataset.varname}.ext.buffer_window(["${payload.columns.join(", ")}"]${a!==undefined && b!==undefined ? ','+a+','+b : ''})${content}`
         this.$store.commit('setPreviewFunction', func)
-        return func(top,bottom)
+        return func(top,bottom)+'.ext.to_json("*")'
       }
+
       return `${this.dataset.varname} = ${this.dataset.varname}${content}`
     },
 
