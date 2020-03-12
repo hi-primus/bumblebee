@@ -604,7 +604,7 @@ export default {
     },
 
     getCell (column, row) {
-      var content = this.rows[row].value[column]
+      var content = (this.rows[row].value[column]!==null && this.rows[row].value[column]!==undefined) ? this.rows[row].value[column] : ''
 
       try {
         const rowInArray = row-this.currentHighlights.startingRow
