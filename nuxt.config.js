@@ -70,6 +70,7 @@ module.exports = {
 		'@/plugins/components.js',
 		'@/plugins/numeral.js',
 		'@/plugins/fuse.js',
+		{ src: '@/plugins/authenticate.js', mode: 'client'},
 		'@/plugins/varCheck.js'
 	],
 
