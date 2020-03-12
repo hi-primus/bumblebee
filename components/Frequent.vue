@@ -131,7 +131,6 @@ export default {
 			return (val * 100) / this.maxVal
     },
     setValueIndex(index) {
-      console.log(this.calculatedValues)
       var item = this.calculatedValues[index]
       if (item)
         this.currentVal = `${item.value},&nbsp;${item.count},&nbsp;${item.percentage}%`
