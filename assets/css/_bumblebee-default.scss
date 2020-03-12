@@ -1451,7 +1451,31 @@ $editor-top-padding: 6px;
 
 /* BB-TABLE */
 
-
+%bb-table-loading {
+  &::-webkit-scrollbar-track {
+    background: white;
+  }
+  animation: background-animation 2.1s ease-in-out infinite;
+  background-image:
+    repeating-linear-gradient(
+      to right,
+      white 0,
+      white 4px,
+      transparent 4px,
+      transparent 68px,
+      white 68px,
+      white 170px
+    ),
+    repeating-linear-gradient(
+      to bottom,
+      white 0,
+      white 6px,
+      transparent 6px,
+      transparent 15px,
+      white 15px,
+      white 23px
+  );
+}
 
 .bbt-container {
   height: calc(100vh - 191px) !important;
@@ -1755,6 +1779,7 @@ $editor-top-padding: 6px;
     &.not-available {
       color: darken($data-red,15%) !important;
       font-family: $font-mono;
+      @extend %bb-table-loading
     }
 
     &:not(:last-child) {
@@ -1781,29 +1806,7 @@ $editor-top-padding: 6px;
 }
 
 .bb-table-container {
-  &::-webkit-scrollbar-track {
-    background: white;
-  }
-  animation: background-animation 2.1s ease-in-out infinite;
-  background-image:
-    repeating-linear-gradient(
-      to right,
-      white 0,
-      white 4px,
-      transparent 4px,
-      transparent 68px,
-      white 68px,
-      white 170px
-    ),
-    repeating-linear-gradient(
-      to bottom,
-      white 0,
-      white 6px,
-      transparent 6px,
-      transparent 15px,
-      white 15px,
-      white 23px
-  );
+  @extend %bb-table-loading
 }
 
 @keyframes fadein-cell {

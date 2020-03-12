@@ -340,6 +340,7 @@ export default {
       'currentDataset',
       'selectionType',
       'currentColumnsPreview',
+      'currentProfilePreview',
       'currentHighlights',
       'currentHighlightRows',
       'currentFocusedColumns',
@@ -446,8 +447,8 @@ export default {
 
         var ppd = {}
 
-        for (const colName in this.currentColumnsPreview.dataset.columns) {
-          const column = this.currentColumnsPreview.dataset.columns[colName]
+        for (const colName in this.currentProfilePreview.columns) {
+          const column = this.currentProfilePreview.columns[colName]
           ppd[colName] = {
             key: colName,
             name: colName,
@@ -455,15 +456,13 @@ export default {
             mismatch: (column.stats.mismatch) ? +column.stats.mismatch : 0,
             null: (column.stats.null) ? +column.stats.null : 0,
             // zeros: column.stats.zeros,
-            total: this.currentColumnsPreview.dataset.stats.rows_count,
+            total: this.currentProfilePreview.stats.rows_count,
             count_uniques: column.stats.count_uniques,
             hist: (column.stats.hist && column.stats.hist[0]) ? column.stats.hist : undefined,
             hist_years: (column.stats.hist && column.stats.hist.years) ? column.stats.hist.years : undefined,
             frequency: ((column.stats.frequency) ? column.stats.frequency : undefined) || column.frequency || undefined
           }
         }
-
-        console.log( {ppd} )
 
         return ppd
 
@@ -599,7 +598,7 @@ export default {
         }
       }
       catch (error) {
-        return {value: '[not available]', notAvailable: true}
+        return {value: ' ', notAvailable: true}
       }
     },
 
@@ -769,9 +768,13 @@ export default {
         var topPosition = element.scrollTop
         var bottomPosition = topPosition + element.clientHeight
 
+        var top = Math.floor(topPosition/this.rowHeight)
+        var bottom = Math.ceil(bottomPosition/this.rowHeight)
+        var length = bottom-top
+
         this.$store.commit('setWindow',[
-          Math.floor(topPosition/this.rowHeight),
-          Math.ceil(bottomPosition/this.rowHeight)
+          Math.max(top-length,0),
+          Math.min(bottom+length,this.currentDataset.summary.rows_count)
         ])
 
         this.fetchChunks(topPosition, bottomPosition)

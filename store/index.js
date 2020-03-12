@@ -4,13 +4,13 @@ export const state = () => ({
 	datasets: [],
   datasetConfig: [], // TODO
   datasetSelection: [],
-  previewFunctions: [],
 	databases: [],
   buffers: [],
   windows: [],
   tableViews: [],
   cells: [],
   columnsPreviews: [],
+  profilePreviews: [],
   plotsData: [],
   highlightRows: [],
   highlights: [],
@@ -43,12 +43,19 @@ export const mutations = {
   },
 
   setColumnsPreview (state, payload) {
-    try {
-      if (!payload.dataset.columns && state.columnsPreviews[state.tab].dataset.columns) {
-        payload.dataset = {...state.columnsPreviews[state.tab].dataset, ...payload.dataset}
-      }
-    } catch (error) {}
     Vue.set( state.columnsPreviews, state.tab, payload )
+    // try {
+    //   var _payload = { ...payload }
+    //   if (!payload.dataset.columns && state.columnsPreviews[state.tab].dataset.columns) {
+    //     _payload.dataset = {...state.columnsPreviews[state.tab].dataset, ...payload.dataset}
+    //   } else {
+    //     _payload.dataset = {...payload.dataset, ...state.columnsPreviews[state.tab].dataset}
+    //   }
+    // } catch (error) {}
+  },
+
+  setProfilePreview (state, dataset) {
+    Vue.set( state.profilePreviews, state.tab, dataset )
   },
 
   setHighlightRows (state, {indices, color}) {
@@ -73,10 +80,10 @@ export const mutations = {
 
   previewDefault (state) {
     Vue.set(state.columnsPreviews,state.tab,false)
+    Vue.set(state.profilePreviews,state.tab,false)
     Vue.set(state.highlights,state.tab,false)
     Vue.set(state.highlightRows,state.tab,false)
     Vue.set(state.focusedColumns,state.tab,false)
-    Vue.set(state.previewFunctions,state.tab,false)
     Vue.set(state.buffers,state.tab,false)
   },
 
@@ -92,10 +99,6 @@ export const mutations = {
 
   setTableView(state, tableView) {
     Vue.set(state.tableViews,state.tab,tableView)
-  },
-
-  setPreviewFunction(state, func) {
-    Vue.set(state.previewFunctions,state.tab,func)
   },
 
 	add (state, { dataset }) {
@@ -253,10 +256,10 @@ export const mutations = {
     if (tab!==undefined) {
 
       Vue.set(state.columnsPreviews,state.tab,false)
+      Vue.set(state.profilePreviews,state.tab,false)
       Vue.set(state.highlights,state.tab,false)
       Vue.set(state.highlightRows,state.tab,false)
       Vue.set(state.focusedColumns,state.tab,false)
-      Vue.set(state.previewFunctions,state.tab,false)
       Vue.set(state.buffers,state.tab,undefined)
 
       if (clear) {
@@ -291,6 +294,9 @@ export const getters = {
   currentColumnsPreview (state) {
     return state.columnsPreviews[state.tab] || false
   },
+  currentProfilePreview (state) {
+    return state.profilePreviews[state.tab] || false
+  },
   currentHighlightRows (state) {
     return state.highlightRows[state.tab] || false
   },
@@ -314,14 +320,7 @@ export const getters = {
       return false
     }
   },
-  currentPreviewFunction(state) {
-    try {
-      return state.previewFunctions[state.tab]
-    }
-    catch (error) {
-      return false
-    }
-  },
+
   currentWindow(state) {
     try {
       return state.windows[state.tab]

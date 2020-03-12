@@ -66,7 +66,7 @@ export const trimCharacters = (s, c) => {
 }
 
 export const parseResponse = (content) => {
-  console.log('[DEBUG] parsedContent',content)
+  // console.log('[DEBUG] parsedContent',content)
   content = trimCharacters(content,"'")
   content = content.replace(/\bNaN\b/g,null)
   return JSON.parse(content)

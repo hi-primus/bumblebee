@@ -211,14 +211,14 @@ export default {
     setHovered (index) {
       this.bins = this.bins.map(e=>({...e, hovered: false}))
       if (index>=0) {
-        this.bins[index].hovered = true
+        this.bins[index] && ((this.bins[index].hovered = true))
       }
       this.$emit('hovered', index )
     },
 
     unsetHovered (index) {
       if (index>=0) {
-        this.bins[index].hovered = false
+        this.bins[index] && ((this.bins[index].hovered = false))
       }
     },
 
@@ -248,7 +248,7 @@ export default {
         height: this.height,
         y: 0,
         x: this.calculatedBinWidth*index,
-        fill: ( (this.bins[index].hovered || this.bins[index].selected ) && !this.bins[index].selecting) ? '#00000010' : '#0000'
+        fill: ( this.bins[index] && (this.bins[index].hovered || this.bins[index].selected ) && !this.bins[index].selecting) ? '#00000010' : '#0000'
       }
 
     },
@@ -259,7 +259,7 @@ export default {
         ...this.getBackConfig(index),
         height: h,
         y: this.height - h,
-				fill: (this.bins[index].hovered || this.bins[index].selected || this.bins[index].selecting) ? '#288bc9' : '#309ee3',
+				fill: ( this.bins[index] && (this.bins[index].hovered || this.bins[index].selected || this.bins[index].selecting )) ? '#288bc9' : '#309ee3',
 				opacity: (this.values[index].count) ? 1 : 0.5,
 				listening: false
       }
