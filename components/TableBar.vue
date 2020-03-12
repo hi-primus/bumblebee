@@ -276,7 +276,7 @@
                   'field': 'z',
                   title: 'n',
                   'type': 'quantitative',
-                  scale: {range: ['#e6fffd', '#8cd7d0', '#4db6ac']},
+                  scale: {range: ['#dcedf7', '#84c6f0', '#309ee3']},
                   legend: { direction: 'vertical', type: 'gradient', gradientLength: 120, titleAlign: 'left', title: ' n' }
                 }
               }"
