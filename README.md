@@ -8,6 +8,11 @@ For more info about Bumblebee, please go to:
 https://hi-bumblebee.com/
 
 ## Installation
+### Docker
+https://medium.com/hi-bumblebee/how-to-run-bumblebee-in-a-docker-container-c9da047d1ff1
+
+### Ubuntu/Digital Ocean
+https://medium.com/hi-bumblebee/how-to-install-bumblebee-on-digital-ocean-ef77138f1838
 
 Please follow this https://blog.hi-bumblebee.com/install-bumblebee/
 
