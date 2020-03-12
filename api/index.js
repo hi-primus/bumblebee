@@ -92,8 +92,10 @@ app.use(session({
 
 
 let apiRoutes = require("./api-routes")
-
 app.use('/api', apiRoutes)
+
+let authRoutes = require("./auth-routes")
+app.use('/auth', authRoutes)
 
 app.get('/', (req, res) => {
 	if (req.userContext && req.userContext.userinfo) {
@@ -146,7 +148,7 @@ const createRows = async function (rows, dataset) {
   }
 }
 
-const new_socket = function (socket, session) {
+const newSocket = function (socket, session) {
 	sockets[session] = socket
 
 	socket.emit('success')
@@ -197,21 +199,23 @@ const new_socket = function (socket, session) {
 
 io.on('connection', async (socket) => {
 
-	const session = socket.handshake.query.session
+	const {session , token} = socket.handshake.query
 
-	if (!session) {
+	if (!session || token!=='bbt') {
 		socket.disconnect()
 		return
-	}
+  }
+
+  console.log('!!!',token)
 
 	if (sockets[session] == undefined || !sockets[session].connected || sockets[session].disconnected) {
-		socket = new_socket(socket,session)
+		socket = newSocket(socket,session)
 		return
 	}
 
 	setTimeout(() => {
 		if (sockets[session] == undefined || !sockets[session].connected || sockets[session].disconnected) {
-			new_socket(socket,session)
+			newSocket(socket,session)
 			return
 		}
 		socket.emit('new-error','Session already exists. Change your session name.')
@@ -430,7 +434,7 @@ try:
 except NameError:
 	from optimus import Optimus
 	op = Optimus("${engine}", n_workers=4, threads_per_worker=2, processes=False, memory_limit="3G", comm=True)
-	_status = 'optimus init ' + op.__version__ + ' ${engine} '
+	_status = 'optimus init ' + op.__version__ + ' ' + op.engine
 
 _status`,user_session)
 	}

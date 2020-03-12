@@ -10,7 +10,7 @@ Vue.use(VueAuthenticate, {
   providers: {
     github: {
       clientId: '',
-      redirectUri: 'http://localhost:3000/auth/callback' // Your client app URL
+      redirectUri: `http://${process.env.HOST || '127.0.0.1'}:${process.env.PORT || 3000}/auth/callback` // Your client app URL
     }
   }
 })

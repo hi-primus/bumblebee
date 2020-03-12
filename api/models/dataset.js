@@ -16,6 +16,7 @@ var datasetSchema = mongoose.Schema({
 })
 
 var Dataset = module.exports = mongoose.model('dataset', datasetSchema)
+
 module.exports.get = function (callback, limit) {
   Dataset.find(callback).limit(limit)
 }

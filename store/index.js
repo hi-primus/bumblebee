@@ -1,5 +1,7 @@
 import Vue from 'vue'
 
+import { setAuthToken, resetAuthToken } from '@/utils/auth'
+
 export const state = () => ({
 	datasets: [],
   datasetConfig: [], // TODO
@@ -279,6 +281,27 @@ export const mutations = {
     }
   }
 
+}
+
+export const actions = {
+  async nuxtServerInit ({ dispatch }, context) {
+    console.log('nuxtServerInit')
+    const cookies = this.$cookies.getAll() // cookie.parse(context.req.headers.cookie || '')
+    if (cookies.hasOwnProperty('x-access-token')) {
+      try {
+        setAuthToken(cookies['x-access-token'])
+        await dispatch('auth/fetch')
+        return true
+      } catch (err) {
+        console.error('Provided token is invalid:', err)
+        resetAuthToken()
+        return false
+      }
+    } else {
+      resetAuthToken()
+      return false
+    }
+  }
 }
 
 export const getters = {

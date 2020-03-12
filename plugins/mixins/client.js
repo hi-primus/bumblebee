@@ -161,7 +161,12 @@ export default {
           throw new Error('Credentials not found')
 
         socket = io(api_url, {
-          query: `session=${session}`
+          query: {
+            session,
+            token: 'bbt'
+          }
+          //`session=${session}`
+          // TODO: auth
         })
 
         socket.on('new-error', (reason) => {
@@ -227,6 +232,7 @@ export default {
         this.$store.commit('session', session)
         this.$store.commit('engine', engine)
         this.$store.commit('key', key)
+
         var client_status = await this.startSocket(session, engine, key)
 
         if (client_status=='ok')

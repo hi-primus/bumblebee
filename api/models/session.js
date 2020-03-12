@@ -19,6 +19,7 @@ var sessionSchema = mongoose.Schema({
 })
 
 var Session = module.exports = mongoose.model('session', sessionSchema)
+
 module.exports.get = function (callback, limit) {
   Session.find(callback).limit(limit)
 }

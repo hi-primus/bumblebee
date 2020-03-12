@@ -61,7 +61,8 @@ module.exports = {
 		'@nuxtjs/axios',
 		'@nuxtjs/dotenv',
 		'@nuxtjs/vuetify',
-		'@nuxtjs/style-resources'
+    '@nuxtjs/style-resources',
+    'cookie-universal-nuxt'
 	],
 
 	plugins: [
@@ -70,7 +71,7 @@ module.exports = {
 		'@/plugins/components.js',
 		'@/plugins/numeral.js',
 		'@/plugins/fuse.js',
-		{ src: '@/plugins/authenticate.js', mode: 'client'},
+		{ src: '@/plugins/auth.js', mode: 'client'},
 		'@/plugins/varCheck.js'
 	],
 
