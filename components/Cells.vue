@@ -1642,9 +1642,9 @@ export default {
               +( (payload.splits) ? `, splits=${payload.splits}` : '')
               +( (payload.index) ? `, index=${payload.index}` : '')
               +( (output_cols_argument) ? `, output_cols=${output_cols_argument}` : '')
-              // +( (payload._previewRequest || payload.drop) ? ', drop=True' : '')
+              +( (payload._requestType==='profile' || payload.drop) ? ', drop=True' : '')
               +')'
-              +( (payload._previewRequest) ? `.cols.find(${_argument}, sub=["${payload.separator}"])` : '')
+              +( (payload._requestType==='preview') ? `.cols.find(${_argument}, sub=["${payload.separator}"])` : '')
 					}
 
         },
@@ -2163,7 +2163,7 @@ export default {
             this.cancelPreview()
           }
 
-          const { promise, cancel } = cancellablePromise( this.evalCode(await this.getCode(this.currentCommand,true)) )
+          const { promise, cancel } = cancellablePromise( this.evalCode(await this.getCode(this.currentCommand,'preview')) )
 
           this.cancelPreview = cancel
 
@@ -2185,7 +2185,7 @@ export default {
 
           var startingRow = this.currentWindow[0]
 
-          const response = await this.evalCode(await this.getCode(this.currentCommand,true))
+          const response = await this.evalCode(await this.getCode(this.currentCommand,'preview'))
           const dataset = parseResponse(response.content)
 
           if (typeof dataset !== 'object') {
@@ -2200,18 +2200,36 @@ export default {
             startingRow,
           }
 
-          this.$store.commit('setColumnsPreview',payload)
+          this.$store.commit('setColumnsPreview', payload)
 
           var matches = {}
 
           const matchesIndex = dataset.sample.columns.findIndex(e=>e.title.includes('__match_positions__'))
-          const matchesColumn = after // dataset.sample.columns[matchesIndex].split('__match_positions__')[0]
+
+          const matchesColumn = (dataset.sample.columns[matchesIndex] && dataset.sample.columns[matchesIndex].title)
+            ? dataset.sample.columns[matchesIndex].title.split('__match_positions__')[0]
+            : after
 
           matches[matchesColumn] = dataset.sample.value.map(row=>row[matchesIndex])
 
-          this.$store.commit('setHighlights',{ matches, color: 'red' })
+          this.$store.commit('setHighlights', { matches, color: 'red', startingRow })
 
           this.$store.commit('setFocusedColumns',this.currentCommand.columns[0])
+
+          if (dataset.sample.columns.length) {
+            const responseProfile = await this.evalCode(await this.getCode(this.currentCommand,'profile'))
+            const datasetProfile = parseResponse(responseProfile.content)
+
+            if (!datasetProfile.columns) {
+              datasetProfile.columns = { ...datasetProfile }
+            }
+
+            var newPayload = {...payload, dataset: datasetProfile}
+
+            this.$store.commit('setColumnsPreview', newPayload)
+            console.log({datasetProfile, dataset})
+          }
+
         }
 
       } catch (err) {
@@ -2457,7 +2475,7 @@ export default {
         this.codeDone = ''
     },
 
-    async getCode (payload, preview) {
+    async getCode (payload, type) {
 
       var content = ''
 
@@ -2468,14 +2486,14 @@ export default {
       if (!payload.content) {
         var _command = this.commandsPallete[payload.command] || this.commandsPallete[payload.type]
         if (_command) {
-          content = _command.code ? _command.code({...payload, _previewRequest: preview}) : ''
+          content = _command.code ? _command.code({...payload, _requestType: type}) : ''
         }
       }
       else {
         content = payload.content
       }
 
-      if (preview && (!this.currentBuffer || this.currentBuffer!==[payload.command,payload.columns].join())) {
+      if (type && (!this.currentBuffer || this.currentBuffer!==[payload.command,payload.columns].join())) {
         var buffer = await this.evalCode(this.dataset.varname+'.ext.set_buffer(["'+payload.columns.join(", ")+'"])\n"0"')
         this.$store.commit('setBuffer',[payload.command,payload.columns].join())
       }
@@ -2484,14 +2502,24 @@ export default {
         return content
       }
 
-      if (preview) {
+      if (type=='preview') {
+
         var [top,bottom] = this.currentWindow || [0,500]
-        var func = (a,b) => `${this.dataset.varname}.ext.buffer_window(["${payload.columns.join(", ")}"]${a!==undefined && b!==undefined ? ','+a+','+b : ''})${content}`
-        this.$store.commit('setPreviewFunction', func)
-        return func(top,bottom)+'.ext.to_json("*")'
+        return `${this.dataset.varname}.ext.buffer_window(["${payload.columns.join(", ")}"], ${top}, ${bottom})${content}.ext.to_json("*")`
+
+      } else if (type=='profile') {
+
+        var [top,bottom] = this.currentWindow || [0,500]
+        return `${this.dataset.varname}.ext.buffer_window(["${payload.columns.join(", ")}"])${content}.ext.profile("*", ${top}, ${bottom}, output="json")`
+
+      }
+      else {
+
+        return `${this.dataset.varname} = ${this.dataset.varname}${content}`
+
       }
 
-      return `${this.dataset.varname} = ${this.dataset.varname}${content}`
+
     },
 
     addCell (at = -1, command = 'code', code = '') {

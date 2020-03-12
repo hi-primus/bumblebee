@@ -120,6 +120,55 @@
           v-if="column.type=='preview' && !column.hidden"
           style="width: 170px"
         >
+          <template v-if="previewPlotsData[column.name]">
+            <DataBar
+              :key="previewPlotsData[column.name].key+'databar'"
+              :missing="previewPlotsData[column.name].missing"
+              :total="+previewPlotsData[column.name].total"
+              :mismatch="+previewPlotsData[column.name].mismatch"
+              :nullV="+previewPlotsData[column.name].null"
+              class="table-data-bar"
+              bottom
+            />
+            <Frequent
+              v-if="previewPlotsData[column.name].frequency"
+              :key="previewPlotsData[column.name].key"
+              :uniques="previewPlotsData[column.name].count_uniques"
+              :values="previewPlotsData[column.name].frequency.values"
+              :count="previewPlotsData[column.name].frequency.count"
+              :total="+previewPlotsData[column.name].total"
+              :columnIndex="column.index"
+              class="histfreq"
+              table
+            />
+            <Histogram
+              v-else-if="previewPlotsData[column.name].hist"
+              :key="previewPlotsData[column.name].key"
+              :uniques="previewPlotsData[column.name].count_uniques"
+              :values="previewPlotsData[column.name].hist"
+              :total="+previewPlotsData[column.name].total"
+              :columnIndex="column.index"
+              class="histfreq"
+              table
+            />
+            <Histogram
+              v-else-if="previewPlotsData[column.name].hist_years"
+              :key="previewPlotsData[column.name].key"
+              :uniques="previewPlotsData[column.name].count_uniques"
+              :values="previewPlotsData[column.name].hist_years"
+              :total="+previewPlotsData[column.name].total"
+              :columnIndex="column.index"
+              class="histfreq"
+              table
+            />
+            <div
+              v-else
+              class="aaa"
+              :key="column.name"
+            >
+              {{previewPlotsData[column.name]}}
+            </div>
+          </template>
         </div>
         <div
           class="bb-table-plot"
@@ -145,6 +194,7 @@
             :total="+plotsData[column.index].frequency[0].count"
             :columnIndex="column.index"
             class="histfreq"
+            selectable
             table
           />
           <Histogram
@@ -155,6 +205,7 @@
             :total="+plotsData[column.index].total"
             :columnIndex="column.index"
             class="histfreq"
+            selectable
             table
           />
           <Histogram
@@ -165,6 +216,7 @@
             :total="+plotsData[column.index].total"
             :columnIndex="column.index"
             class="histfreq"
+            selectable
             table
           />
         </div>
@@ -311,11 +363,13 @@ export default {
 
     previewColumns () {
       try {
+        var after = this.currentColumnsPreview.after
         return this.currentColumnsPreview.dataset.sample.columns
         .map((col, index)=>({
           ...col,
           index,
-          hidden: ([this.currentColumnsPreview.after,'__match_positions__'].includes(col.title))
+          name: col.title,
+          hidden: ([after, after+'__match_positions__'].includes(col.title))
         })) || []
       } catch (err) {
         return []
@@ -328,7 +382,7 @@ export default {
         var after = this.currentColumnsPreview.after
         if (this.previewColumns.length && after) {
           var insertIndex = arr.findIndex(e=>this.currentDataset.columns[e.index].name==after)+1
-          this.previewColumns.map((col,index)=>({hidden: col.hidden, index: col.index, type: 'preview'})).forEach(e=>{
+          this.previewColumns.map((col,index)=>({hidden: col.hidden, name: col.name, index: col.index, type: 'preview'})).forEach(e=>{
             if (!e.hidden) {
               arr.splice(insertIndex++,0,e)
             }
@@ -372,18 +426,51 @@ export default {
     plotsData () {
 			return this.currentDataset.columns.map((column, i) => {
 				return {
+          key: i,
           name: column.name,
+          missing: (column.dtypes_stats.missing) ? +column.dtypes_stats.missing : 0,
           mismatch: (column.dtypes_stats.mismatch) ? +column.dtypes_stats.mismatch : 0,
           null: (column.dtypes_stats.null) ? +column.dtypes_stats.null : 0,
-          missing: (column.dtypes_stats.missing) ? +column.dtypes_stats.missing : 0,
-					zeros: column.stats.zeros,
+					// zeros: column.stats.zeros,
 					total: this.currentDataset.summary.rows_count,
 					count_uniques: column.stats.count_uniques,
 					hist: (column.stats.hist && column.stats.hist[0]) ? column.stats.hist : undefined,
 					hist_years: (column.stats.hist && column.stats.hist.years) ? column.stats.hist.years : undefined,
-					frequency: (column.frequency) ? column.frequency : undefined
+					frequency: ((column.stats.frequency) ? column.stats.frequency : undefined) || column.frequency || undefined
 				}
 			})
+    },
+
+    previewPlotsData () {
+      try {
+
+        var ppd = {}
+
+        for (const colName in this.currentColumnsPreview.dataset.columns) {
+          const column = this.currentColumnsPreview.dataset.columns[colName]
+          ppd[colName] = {
+            key: colName,
+            name: colName,
+            missing: (column.stats.missing) ? +column.stats.missing : 0,
+            mismatch: (column.stats.mismatch) ? +column.stats.mismatch : 0,
+            null: (column.stats.null) ? +column.stats.null : 0,
+            // zeros: column.stats.zeros,
+            total: this.currentColumnsPreview.dataset.stats.rows_count,
+            count_uniques: column.stats.count_uniques,
+            hist: (column.stats.hist && column.stats.hist[0]) ? column.stats.hist : undefined,
+            hist_years: (column.stats.hist && column.stats.hist.years) ? column.stats.hist.years : undefined,
+            frequency: ((column.stats.frequency) ? column.stats.frequency : undefined) || column.frequency || undefined
+          }
+        }
+
+        console.log( {ppd} )
+
+        return ppd
+
+      } catch (err) {
+        console.error(err)
+        return []
+      }
     },
 
     rows () {
@@ -450,14 +537,6 @@ export default {
 
     currentSelection (value) {
       this.updateSelection(value)
-    },
-
-    async previewColumns (value) {
-      if (value.length) {
-        var func = this.currentPreviewFunction
-        const response = await this.evalCode(func()+'.ext.profile("*",0,18)')
-        console.log({response})
-      }
     },
 
     currentColumnsPreview (v) {
@@ -528,13 +607,14 @@ export default {
       var content = this.rows[row].value[column]
 
       try {
+        const rowInArray = row-this.currentHighlights.startingRow
         if (this.highlightMatches[column]) {
-          for (let i = this.highlightMatches[column][row].length - 1; i >= 0; i--) {
-            const [a,b] = this.highlightMatches[column][row][i];
+          for (let i = this.highlightMatches[column][rowInArray].length - 1; i >= 0; i--) {
+            const [a,b] = this.highlightMatches[column][rowInArray][i];
             content = content.substring(0,a)+`<span class="hlt--${this.currentHighlights.color}">`+content.substring(a,b)+'</span>'+content.substring(b)
 
           }
-          this.highlightMatches[column][row].forEach(arr => {
+          this.highlightMatches[column][rowInArray].forEach(arr => {
             });
         }
       } catch (err) {}
@@ -689,7 +769,10 @@ export default {
         var topPosition = element.scrollTop
         var bottomPosition = topPosition + element.clientHeight
 
-        this.$store.commit('setWindow',[Math.floor(topPosition/this.rowHeight),Math.ceil(bottomPosition/this.rowHeight)])
+        this.$store.commit('setWindow',[
+          Math.floor(topPosition/this.rowHeight),
+          Math.ceil(bottomPosition/this.rowHeight)
+        ])
 
         this.fetchChunks(topPosition, bottomPosition)
 

@@ -2,9 +2,9 @@
   <div class="bb-graphic" @mouseleave="currentVal = false">
     <h3 v-if="!table">Frequent values</h3>
     <BarsCanvas
-      :selectable="table"
+      :selectable="selectable"
       :selected="selected"
-      :values="values"
+      :values="calculatedValues"
       :binMargin="1"
       :width="'auto'"
       :height="table ? 66 : 90"
@@ -29,7 +29,11 @@ export default {
   },
 	props: {
 		values: {
-			default: [],
+			default: ()=>[],
+			type: Array
+		},
+		count: {
+			default: ()=>[],
 			type: Array
 		},
 		total: {
@@ -63,13 +67,27 @@ export default {
   },
 
   beforeMount() {
-    this.maxVal = this.getMaxVal(this.values)
+    this.maxVal = (this.values.length) ? this.getMaxVal(this.calculatedValues) : 1
   },
 
   computed: {
 
     ...mapGetters(['currentSelection']),
     ...mapState(['datasetSelection','tab']),
+
+    calculatedValues() {
+      if (this.count.length) {
+        return this.values.map((e,i)=>{
+          return {
+            value: e,
+            count: this.count[i],
+            percentage: +((this.count[i]/this.total)*100).toFixed(2)
+          }
+        })
+      } else {
+        return this.values
+      }
+    },
 
     uniqueElements () {
       return Math.max(this.values.length, this.uniques)
@@ -113,7 +131,8 @@ export default {
 			return (val * 100) / this.maxVal
     },
     setValueIndex(index) {
-      var item = this.values[index]
+      console.log(this.calculatedValues)
+      var item = this.calculatedValues[index]
       if (item)
         this.currentVal = `${item.value},&nbsp;${item.count},&nbsp;${item.percentage}%`
     },
@@ -142,7 +161,7 @@ export default {
         ||
         (v.length && index!==this.columnIndex)
       ) {
-        var newValues = v.map(i=>this.values[i].value)
+        var newValues = v.map(i=>this.calculatedValues[i].value)
         if (!arraysEqual(values,newValues) || index!=this.columnIndex )
           this.$store.commit('selection',{
             ranged: {

@@ -43,6 +43,11 @@ export const mutations = {
   },
 
   setColumnsPreview (state, payload) {
+    try {
+      if (!payload.dataset.columns && state.columnsPreviews[state.tab].dataset.columns) {
+        payload.dataset = {...state.columnsPreviews[state.tab].dataset, ...payload.dataset}
+      }
+    } catch (error) {}
     Vue.set( state.columnsPreviews, state.tab, payload )
   },
 
@@ -52,8 +57,8 @@ export const mutations = {
     Vue.set( state.highlightRows, state.tab, highlightRows )
   },
 
-  setHighlights (state, { matches, color }) {
-    var highlights = { matches: matches || {}, color: color || 'green' }
+  setHighlights (state, { matches, color, startingRow }) {
+    var highlights = { matches: matches || {}, color: color || 'green', startingRow: startingRow || 0 }
 
     Vue.set( state.highlights, state.tab, highlights )
   },

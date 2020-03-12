@@ -2,7 +2,7 @@
   <div class="bb-graphic" @mouseleave="currentCount = false">
     <h3 v-if="!table">{{ title }}</h3>
     <BarsCanvas
-      :selectable="table"
+      :selectable="selectable"
       :selected="selected"
       :values="values"
       :maxVal="maxVal"
@@ -148,7 +148,7 @@ export default {
 		setValue (lower, upper, count) {
 			this.currentLower = lower
 			this.currentUpper = upper
-			this.currentCount = `${count}, ${+(count/this.total).toFixed(2)}%`
+			this.currentCount = `${count}, ${+((count/this.total)*100).toFixed(2)}%`
 		},
 
 		getMaxVal (arr) {

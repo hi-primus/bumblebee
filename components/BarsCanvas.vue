@@ -9,7 +9,7 @@
   >
     <v-layer>
       <v-rect
-        v-if="selectionRange.length"
+        v-if="selectable && selectionRange && selectionRange.length"
         :config="{
           ...selectionRect,
           y: 0,
@@ -42,10 +42,11 @@ export default {
   props: {
     values: {
       type: Array,
-      required: true
+      default: () => []
     },
     selected: {
-      type: Array
+      type: Array,
+      default: () => []
     },
     width: {
       type: [Number, String],
