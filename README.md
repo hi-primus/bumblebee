@@ -20,7 +20,7 @@ Get data from CSV, JSON, parquet, Avro files, and databases. Then get histograms
 ![Database](images/db.gif)
 
 ## Transform and Clean
-Convert unstructured data, standardize string values, unify date format, Impute data, handle outliers and create custom functions.
+Convert unstructured data, standardize strings, unify date format, Impute data, handle outliers and create custom functions.
 ![Transform](images/jupyter.gif)
 
 ## Prepare for Machine Learning
