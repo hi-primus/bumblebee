@@ -139,8 +139,7 @@ const createRows = async function (rows, dataset) {
 			row.value = rows[i%rows.length] || []
       row.dataset = dataset
       await row.save()
-    }
-    catch (err) {
+    } catch (err) {
       console.error('"""',err,'"""')
     }
   }
@@ -336,9 +335,9 @@ const run_code = function(code = '', user_session = '', save_rows = false) {
 
                 resolve({ status: 'ok', content: data })
 
-              } catch (error) {
-                console.error('"""',error,'"""')
-                resolve({ status: 'error', content: error })
+              } catch (err) {
+                console.error('"""',err,'"""')
+                resolve({ status: 'error', content: err })
               }
             }
             else {
@@ -382,11 +381,11 @@ const run_code = function(code = '', user_session = '', save_rows = false) {
 			client.connect(`${ws_kernel_base}/api/kernels/${kernels[user_session].kernel['id']}/channels`)
 
 
-		} catch (error) {
-      if (error.error)
-        resolve({status: 'error',...error, content: error.message})
+		} catch (err) {
+      if (err.error)
+        resolve({status: 'error',...err, content: err.message})
       else
-			  resolve({status: 'error', error: 'Internal error', content: error})
+			  resolve({status: 'error', error: 'Internal error', content: err})
 		}
   })
 
@@ -463,7 +462,7 @@ const startServer = async () => {
         })
       }
 
-    } catch (error) {}
+    } catch (err) {}
 
 	})
   _server.timeout = 10 * 60 * 1000

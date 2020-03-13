@@ -944,8 +944,7 @@ export default {
                 clusters
               }
 
-            }
-            catch (error) {
+            } catch (error) {
 
               if (error.content && error.content.traceback && error.content.traceback.length){
                 error.content.traceback_escaped = error.content.traceback.map(l=>
@@ -1109,8 +1108,7 @@ export default {
               }
 
 
-            }
-            catch (error) {
+            } catch (error) {
 
               if (error.content && error.content.traceback && error.content.traceback.length){
                 error.content.traceback_escaped = error.content.traceback.map(l=>
@@ -1334,8 +1332,7 @@ export default {
                 validDatabase: payload.database
               }
               this.currentCommand.loadingTest = false
-            }
-            catch (error) {
+            } catch (error) {
 
               if (error.content && error.content.traceback && error.content.traceback.length){
                 error.content.traceback_escaped = error.content.traceback.map(l=>
@@ -2044,8 +2041,7 @@ export default {
     command () {
       try {
         return this.commandsPallete[this.currentCommand.command] || this.commandsPallete[this.currentCommand.type]
-      }
-      catch (error) {
+      } catch (error) {
         return undefined
       }
       // command.dialog && (currentCommand.command == key || currentCommand.type == key)
@@ -2116,8 +2112,7 @@ export default {
               this.getPreviewDebounced()
             }
           }
-        }
-        catch (error) {
+        } catch (error) {
           console.error(error)
         }
       }

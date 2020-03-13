@@ -804,8 +804,7 @@ export default {
       get () {
         try {
           return this.currentSelection.columns || []
-        }
-        catch (error) {}
+        } catch (error) {}
         return false
       }
     },

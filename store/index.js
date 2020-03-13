@@ -306,8 +306,7 @@ export const getters = {
   currentBuffer(state) {
     try {
       return state.buffers[state.tab]
-    }
-    catch (error) {
+    } catch (error) {
       return false
     }
   },
@@ -315,8 +314,7 @@ export const getters = {
   currentWindow(state) {
     try {
       return state.windows[state.tab]
-    }
-    catch (error) {
+    } catch (error) {
       return false
     }
   },

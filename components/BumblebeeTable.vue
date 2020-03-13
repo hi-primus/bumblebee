@@ -526,8 +526,7 @@ export default {
       this.$refs['BbTableContainer'].removeEventListener('scroll', this.throttleScrollCheck)
       this.$refs['BbTableContainer'].removeEventListener('scroll', this.horizontalScrollCheckUp)
       this.$refs['BbTableTopContainer'].removeEventListener('scroll', this.horizontalScrollCheckDown)
-    }
-    catch (err) {
+    } catch (err) {
       console.error(err)
     }
   },
@@ -596,8 +595,7 @@ export default {
         return {
           value: this.currentColumnsPreview.dataset.sample.value[row-this.currentColumnsPreview.startingRow][column]
         }
-      }
-      catch (error) {
+      } catch (err) {
         return {value: ' ', notAvailable: true}
       }
     },
