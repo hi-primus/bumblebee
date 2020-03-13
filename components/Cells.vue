@@ -2092,7 +2092,7 @@ export default {
   watch: {
 
     currentWindow(value) {
-      this.getPreview()
+      this.getPreviewDebounced()
     },
 
     view (value) {
@@ -2140,9 +2140,7 @@ export default {
   methods: {
 
     async getCommandResponse (type = false) {
-      console.log('getting')
       if (this.cancelPromise[type]) {
-        console.log('cancelling')
         this.cancelPromise[type]({status: 'error', message: 'cancelled request'})
       }
       var { promise, cancel } = cancellablePromise( this.getCode(this.currentCommand,type) )
@@ -2199,6 +2197,10 @@ export default {
             throw { msg: 'Parsed content is not an object', content: dataset }
           }
 
+          if (dataset.stats) {
+            throw { msg: 'Wrong response', content: dataset }
+          }
+
           var payload = {
             dataset,
             after,
@@ -2231,6 +2233,10 @@ export default {
               const responseProfile = await this.getCommandResponse('profile')
               const datasetProfile = parseResponse(responseProfile.content)
 
+              if (!datasetProfile.stats) {
+                throw { msg: 'Wrong response', content: datasetProfile }
+              }
+
               this.$store.commit('setProfilePreview', datasetProfile)
             }
           } catch (error) {
@@ -2240,7 +2246,7 @@ export default {
         }
 
       } catch (err) {
-        console.error(err)
+        // console.error(err) // probably just a cancelled request
       }
 
 
