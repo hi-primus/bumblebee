@@ -44,14 +44,6 @@ export const mutations = {
 
   setColumnsPreview (state, payload) {
     Vue.set( state.columnsPreviews, state.tab, payload )
-    // try {
-    //   var _payload = { ...payload }
-    //   if (!payload.dataset.columns && state.columnsPreviews[state.tab].dataset.columns) {
-    //     _payload.dataset = {...state.columnsPreviews[state.tab].dataset, ...payload.dataset}
-    //   } else {
-    //     _payload.dataset = {...payload.dataset, ...state.columnsPreviews[state.tab].dataset}
-    //   }
-    // } catch (error) {}
   },
 
   setProfilePreview (state, dataset) {
@@ -144,8 +136,7 @@ export const mutations = {
     var _c
     try {
       _c = state.datasetSelection[found].columns
-    }
-    catch (err) {
+    } catch (err) {
       _c = []
     }
 

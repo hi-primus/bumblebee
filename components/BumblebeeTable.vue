@@ -833,9 +833,6 @@ export default {
         dataset: this.currentDataset.id
       })
 
-      // var response2 = await this.evalCode(`df.rows.between_index("*", ${index*this.chunkSize},${(index+1)*this.chunkSize}).rows.to_list("*")`)
-      // console.log({response, response2})
-
       var from = index*this.chunkSize
 
       var rows = response.data.map((r,i)=>({
