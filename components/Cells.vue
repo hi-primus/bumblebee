@@ -396,7 +396,7 @@ export default {
       firstRun: true,
       runButton: false,
 
-      cancelPreview: false,
+      cancelPromise: {},
 
       commandsPallete: {
         'apply sort': {
@@ -944,8 +944,7 @@ export default {
                 clusters
               }
 
-            }
-            catch (error) {
+            } catch (error) {
 
               if (error.content && error.content.traceback && error.content.traceback.length){
                 error.content.traceback_escaped = error.content.traceback.map(l=>
@@ -1109,8 +1108,7 @@ export default {
               }
 
 
-            }
-            catch (error) {
+            } catch (error) {
 
               if (error.content && error.content.traceback && error.content.traceback.length){
                 error.content.traceback_escaped = error.content.traceback.map(l=>
@@ -1334,8 +1332,7 @@ export default {
                 validDatabase: payload.database
               }
               this.currentCommand.loadingTest = false
-            }
-            catch (error) {
+            } catch (error) {
 
               if (error.content && error.content.traceback && error.content.traceback.length){
                 error.content.traceback_escaped = error.content.traceback.map(l=>
@@ -2044,8 +2041,7 @@ export default {
     command () {
       try {
         return this.commandsPallete[this.currentCommand.command] || this.commandsPallete[this.currentCommand.type]
-      }
-      catch (error) {
+      } catch (error) {
         return undefined
       }
       // command.dialog && (currentCommand.command == key || currentCommand.type == key)
@@ -2092,7 +2088,7 @@ export default {
   watch: {
 
     currentWindow(value) {
-      this.getPreview()
+      this.getPreviewDebounced()
     },
 
     view (value) {
@@ -2116,8 +2112,7 @@ export default {
               this.getPreviewDebounced()
             }
           }
-        }
-        catch (error) {
+        } catch (error) {
           console.error(error)
         }
       }
@@ -2139,7 +2134,21 @@ export default {
 
   methods: {
 
-    cleanCodeError() {
+    async getCommandResponse (type = false) {
+      if (this.cancelPromise[type]) {
+        this.cancelPromise[type]({status: 'error', message: 'cancelled request'})
+      }
+      var { promise, cancel } = cancellablePromise( this.getCode(this.currentCommand,type) )
+      this.cancelPromise[type] = cancel
+      var code = await promise
+      var { promise, cancel } = cancellablePromise( this.evalCode( code ) )
+      this.cancelPromise[type] = cancel
+      var response = await promise
+      this.cancelPromise[type] = false
+      return response
+    },
+
+    cleanCodeError () {
       this.$emit('update:codeError','')
     },
 
@@ -2159,17 +2168,7 @@ export default {
 
         if (this.currentCommand._preview==='columns') {
 
-          if (this.cancelPreview) {
-            this.cancelPreview()
-          }
-
-          const { promise, cancel } = cancellablePromise( this.evalCode(await this.getCode(this.currentCommand,'preview')) )
-
-          this.cancelPreview = cancel
-
-          const response = await promise
-
-          this.cancelPreview = false
+          const response = await this.getCommandResponse('preview')
 
           var dataset = parseResponse(response.content)
           var payload = {
@@ -2183,16 +2182,19 @@ export default {
 
         if (this.currentCommand._preview==='unnest') {
 
-          var startingRow = this.currentWindow[0]
+          const startingRow = this.currentWindow[0]
+          const after = this.currentCommand.columns[0]
 
-          const response = await this.evalCode(await this.getCode(this.currentCommand,'preview'))
+          const response = await this.getCommandResponse('preview')
           const dataset = parseResponse(response.content)
 
           if (typeof dataset !== 'object') {
             throw { msg: 'Parsed content is not an object', content: dataset }
           }
 
-          const after = this.currentCommand.columns[0]
+          if (dataset.stats) {
+            throw { msg: 'Wrong response', content: dataset }
+          }
 
           var payload = {
             dataset,
@@ -2202,38 +2204,44 @@ export default {
 
           this.$store.commit('setColumnsPreview', payload)
 
-          var matches = {}
+          this.$store.commit('setFocusedColumns',after)
 
-          const matchesIndex = dataset.sample.columns.findIndex(e=>e.title.includes('__match_positions__'))
+          try {
+            var matches = {}
 
-          const matchesColumn = (dataset.sample.columns[matchesIndex] && dataset.sample.columns[matchesIndex].title)
-            ? dataset.sample.columns[matchesIndex].title.split('__match_positions__')[0]
-            : after
+            const matchesIndex = dataset.sample.columns.findIndex(e=>e.title.includes('__match_positions__'))
 
-          matches[matchesColumn] = dataset.sample.value.map(row=>row[matchesIndex])
+            const matchesColumn = (dataset.sample.columns[matchesIndex] && dataset.sample.columns[matchesIndex].title)
+              ? dataset.sample.columns[matchesIndex].title.split('__match_positions__')[0]
+              : after
 
-          this.$store.commit('setHighlights', { matches, color: 'red', startingRow })
+            matches[matchesColumn] = dataset.sample.value.map(row=>row[matchesIndex])
 
-          this.$store.commit('setFocusedColumns',this.currentCommand.columns[0])
+            this.$store.commit('setHighlights', { matches, color: 'red', startingRow })
 
-          if (dataset.sample.columns.length) {
-            const responseProfile = await this.evalCode(await this.getCode(this.currentCommand,'profile'))
-            const datasetProfile = parseResponse(responseProfile.content)
+          } catch (error) {
+            console.error('highlights',error)
+          }
 
-            if (!datasetProfile.columns) {
-              datasetProfile.columns = { ...datasetProfile }
+          try {
+            if (dataset.sample.columns.length) {
+              const responseProfile = await this.getCommandResponse('profile')
+              const datasetProfile = parseResponse(responseProfile.content)
+
+              if (!datasetProfile.stats) {
+                throw { msg: 'Wrong response', content: datasetProfile }
+              }
+
+              this.$store.commit('setProfilePreview', datasetProfile)
             }
-
-            var newPayload = {...payload, dataset: datasetProfile}
-
-            this.$store.commit('setColumnsPreview', newPayload)
-            console.log({datasetProfile, dataset})
+          } catch (error) {
+            console.error('profile',error)
           }
 
         }
 
       } catch (err) {
-        console.error(err)
+        // console.error(err) // probably just a cancelled request
       }
 
 

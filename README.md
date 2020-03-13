@@ -8,27 +8,30 @@ For more info about Bumblebee, please go to:
 https://hi-bumblebee.com/
 
 ## Installation
+### Docker
+https://medium.com/hi-bumblebee/how-to-run-bumblebee-in-a-docker-container-c9da047d1ff1
 
-Please follow this https://blog.hi-bumblebee.com/install-bumblebee/
+### Ubuntu/Digital Ocean
+https://medium.com/hi-bumblebee/how-to-install-bumblebee-on-digital-ocean-ef77138f1838
 
-### Load and explore
+
+## Load and explore
 Get data from CSV, JSON, parquet, Avro files, and databases. Then get histograms, frequency charts, and advance stats.
-
 ![Database](images/db.gif)
 
-### Transform and Clean
-Convert unstructured data, standardize string values, unify date format, Impute data, and handle outliers. Also, you can create custom functions.
-![Database](images/jupyter.gif)
+## Transform and Clean
+Convert unstructured data, standardize strings, unify date format, Impute data, handle outliers and create custom functions.
+![Transform](images/jupyter.gif)
 
-### Prepare for Machine Learning
+## Prepare for Machine Learning
 Bin columns, string clustering, one-hot encode, scaling, and split train and test data.
-![Database](images/ml.gif)
+![Prepare](images/ml.gif)
 
-### Interact with code like in jupyter notebook
+## Interact with code like in jupyter notebook
 Every action over your data is added as a transformation step using python code that you can modify anytime. Also, you can add any python code you want to make complex Apache Spark transformations.
-![Database](images/transform.gif)
+![Interact](images/transform.gif)
 
-### See Bumblebee in action
+## See Bumblebee in action
 https://www.loom.com/embed/c2cfb6a2e0a549e2afeb8d484865b968
 
 
