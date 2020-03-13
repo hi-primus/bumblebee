@@ -280,7 +280,7 @@ import Histogram from '@/components/Histogram'
 import Frequent from '@/components/Frequent'
 import DataBar from '@/components/DataBar'
 
-import { arraysEqual } from '@/utils/functions.js'
+import { parseResponse, arraysEqual } from '@/utils/functions.js'
 
 var doubleClick = false
 
@@ -344,7 +344,8 @@ export default {
       'currentHighlights',
       'currentHighlightRows',
       'currentFocusedColumns',
-      'currentPreviewFunction'
+      'currentPreviewCode',
+      'currentBuffer'
     ]),
 
     ...mapState(['allTypes']),
@@ -537,8 +538,14 @@ export default {
       this.updateSelection(value)
     },
 
-    currentColumnsPreview (v) {
+    currentColumnsPreview (value) {
       this.focusPreview()
+    },
+
+    currentPreviewCode: {
+      handler (value) {
+        this.throttleScrollCheck()
+      }
     }
 
   },
@@ -815,29 +822,35 @@ export default {
 
     async fetchChunk(index) {
 
+      var previewCode = (this.currentPreviewCode ? this.currentPreviewCode.code : false) || ''
+
       var foundIndex = this.chunks.findIndex(chunk => {
-        return chunk && chunk.index === index
+        return chunk && (chunk.index === index)
       })
 
-      if (foundIndex!==-1) {
+      if (foundIndex!==-1 && (chunk.preview === previewCode)) {
         return false
       }
 
-      var chunkIndexInArray = this.chunks.push({ index: index, rows: []}) - 1
+      var chunkIndexInArray = (foundIndex!==-1) ? this.chunks.push({ index: index, rows: []}) - 1 : foundIndex
 
-      var response = await this.$axios.$post('api/rows', {
-        page: index,
-        page_size: this.chunkSize,
-        dataset: this.currentDataset.id
-      })
+      if (!this.currentBuffer) {
+        var buffer = await this.evalCode(this.currentDataset.varname+'.ext.set_buffer("*")\n"0"')
+        this.$store.commit('setBuffer',true)
+      }
+
+      var response = await this.evalCode(`df.ext.buffer_window("*", ${index*this.chunkSize}, ${(index+1*this.chunkSize)})${previewCode || ''}.ext.to_json("*")`)
+
+      var parsed = parseResponse(response.content)
 
       var from = index*this.chunkSize
 
-      var rows = response.data.map((r,i)=>({
-        value: r.value,
+      var rows = parsed.sample.value.map((value,i)=>({
+        value,
         index: from+i
       }))
-      this.$set(this.chunks,chunkIndexInArray,{ index: index, rows })
+
+      this.$set(this.chunks,chunkIndexInArray,{ index: index, rows, preview: previewCode || '' })
       return true
     }
   }

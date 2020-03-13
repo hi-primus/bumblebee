@@ -292,6 +292,8 @@ const run_code = function(code = '', user_session = '', save_rows = false) {
           // if (parsed_message.content.code)
           //   console.log({ code: parsed_message.content.code })
 
+          // console.log({message})
+
 					if (message.type !== 'utf8'){
             connection.close()
 						// console.error("Message type error", parsed_message.content)

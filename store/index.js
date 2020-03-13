@@ -11,7 +11,7 @@ export const state = () => ({
   cells: [],
   columnsPreviews: [],
   profilePreviews: [],
-  plotsData: [],
+  previewCodes: [],
   highlightRows: [],
   highlights: [],
   focusedColumns: [],
@@ -46,6 +46,10 @@ export const mutations = {
     Vue.set( state.columnsPreviews, state.tab, payload )
   },
 
+  setPreviewCode (state, payload) {
+    Vue.set(state.previewCodes,state.tab, payload )
+  },
+
   setProfilePreview (state, dataset) {
     Vue.set( state.profilePreviews, state.tab, dataset )
   },
@@ -66,9 +70,6 @@ export const mutations = {
     Vue.set( state.focusedColumns, state.tab, column )
   },
 
-  setPlotData (state, columns) {
-    Vue.set( state.plotsData, state.tab, column )
-  },
 
   previewDefault (state) {
     Vue.set(state.columnsPreviews,state.tab,false)
@@ -77,6 +78,7 @@ export const mutations = {
     Vue.set(state.highlightRows,state.tab,false)
     Vue.set(state.focusedColumns,state.tab,false)
     Vue.set(state.buffers,state.tab,false)
+    Vue.set(state.previewCodes,state.tab,undefined)
   },
 
   commandHandle(state, command) {
@@ -252,6 +254,7 @@ export const mutations = {
       Vue.set(state.highlightRows,state.tab,false)
       Vue.set(state.focusedColumns,state.tab,false)
       Vue.set(state.buffers,state.tab,undefined)
+      Vue.set(state.previewCodes,state.tab,undefined)
 
       if (clear) {
         Vue.set(state.datasetSelection,tab,{
@@ -293,6 +296,9 @@ export const getters = {
   },
   currentHighlights (state) {
     return state.highlights[state.tab] || false
+  },
+  currentPreviewCode (state) {
+    return state.previewCodes[state.tab] || false
   },
   currentFocusedColumns (state) {
     return state.focusedColumns[state.tab] || undefined
