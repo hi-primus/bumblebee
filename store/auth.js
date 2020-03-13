@@ -4,13 +4,40 @@ export const state = () => ({
 	email: false
 })
 
-export const mutations = {}
+export const mutations = {
+
+  tokenlogin(state,token){
+  state.token=token
+
+}
+
+}
 
 export const actions = {
 	async login (context, payload) {
-		const response = await window.$nuxt.$auth.login(payload)
+    const response = await window.$nuxt.$auth.login(payload)
+    
+    if(response.data.token){
+    context.commit('tokenlogin',response.data.token)
+    }
+    else{
+
+      context.commit('tokenlogin',false)
+    }
+    
+
+    
 
     console.log({response})
+
+
+
+
+    
+
+    
+
+
 
     // const sessionToken = `Bearer ${response.data.login.token}`
 
@@ -23,7 +50,10 @@ export const actions = {
 
     // setAuthToken(sessionToken)
 
-    context.state.token = 'bbt'
+    // context.state.token = algo
+    
+
+
   },
   async fetch (context, payload) {
     await context.dispatch('login', payload)

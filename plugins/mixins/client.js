@@ -163,7 +163,7 @@ export default {
         socket = io(api_url, {
           query: {
             session,
-            token: 'bbt'
+            token:this.$store.state.auth.token,
           }
           //`session=${session}`
           // TODO: auth
