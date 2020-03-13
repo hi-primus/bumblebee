@@ -69,7 +69,7 @@ export default {
   computed: {
 
     ...mapGetters(['currentSelection']),
-    ...mapState(['datasetSelection','tab']),
+    ...mapState(['tab']),
 
     currentValueString () {
       if (this.currentCount)
@@ -86,15 +86,15 @@ export default {
   },
 
   watch: {
-    datasetSelection: { // store
+    currentSelection: {
       // deep: true,
       handler (ds) {
-        if (ds[this.tab] && ds[this.tab].ranged) {
-          if (ds[this.tab].ranged.index!=this.columnIndex && this.selected.length>0) {
+        if (ds && ds.ranged) {
+          if (ds.ranged.index!=this.columnIndex && this.selected.length>0) {
             this.selected = []
           }
-          else if (ds[this.tab].ranged.index==this.columnIndex && !arraysEqual(this.selected,ds[this.tab].ranged.indices)){
-            this.selected = ds[this.tab].ranged.indices
+          else if (ds.ranged.index==this.columnIndex && !arraysEqual(this.selected,ds.ranged.indices)){
+            this.selected = ds.ranged.indices
           }
         }
       }
