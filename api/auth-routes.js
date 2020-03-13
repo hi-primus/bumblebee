@@ -10,11 +10,36 @@ router.get('/', function (req, res) {
 
 router.route('/login')
   .post(function (req, res) {
-    console.log(req.body)
-    res.json({
-      status: 'OK',
-      message: 'Login'
-    })
+
+    
+
+    if (req.body.username!==undefined && req.body.password!==undefined) {
+      //
+      res.json({
+        status: 'OK',
+        message: 'Login',
+        token:'bbt'
+      
+      })
+    } 
+    else{
+
+      res.json({
+        styatus: 'NOT OK',
+        message: 'Login'
+      
+      })
+
+    }
+     
+    
+
+
+
+    
+
+
+
   })
 
   router.route('/register')
