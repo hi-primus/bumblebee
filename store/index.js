@@ -280,7 +280,7 @@ export const mutations = {
 export const actions = {
   async nuxtServerInit ({ dispatch }, context) {
     console.log('nuxtServerInit')
-    const cookies = this.$cookies.getAll() // cookie.parse(context.req.headers.cookie || '')
+    const cookies = this.$cookies.getAll() || {} // cookie.parse(context.req.headers.cookie || '')
     if (cookies.hasOwnProperty('x-access-token')) {
       try {
         setAuthToken(cookies['x-access-token'])
@@ -299,11 +299,11 @@ export const actions = {
 }
 
 export const getters = {
-  currentDataset(state) {
+  currentDataset (state) {
     return state.datasets[state.tab]
   },
-  currentSelection(state) {
-    return state.datasetSelection[state.tab] || []
+  currentSelection (state) {
+    return state.datasetSelection[state.tab] || {}
   },
   currentColumnsPreview (state) {
     return state.columnsPreviews[state.tab] || false
@@ -320,13 +320,13 @@ export const getters = {
   currentFocusedColumns (state) {
     return state.focusedColumns[state.tab] || undefined
   },
-  currentTab(state) {
+  currentTab (state) {
     return state.tab
   },
-  currentTableView(state) {
+  currentTableView (state) {
     return state.tableViews[state.tab] || false
   },
-  currentBuffer(state) {
+  currentBuffer (state) {
     try {
       return state.buffers[state.tab]
     } catch (error) {
@@ -334,15 +334,15 @@ export const getters = {
     }
   },
 
-  currentWindow(state) {
+  currentWindow (state) {
     try {
       return state.windows[state.tab]
     } catch (error) {
       return false
     }
   },
-  selectionType(state) {
-    var _ds = state.datasetSelection[state.tab] || []
+  selectionType (state) {
+    var _ds = state.datasetSelection[state.tab] || {}
     if (_ds && _ds.ranged &&  _ds.ranged.values && _ds.ranged.values.length) {
       return 'values'
     }
@@ -351,7 +351,7 @@ export const getters = {
     }
     return 'columns'
   },
-  typesAvailable(state) {
+  typesAvailable (state) {
     return state.datasets[state.tab].dtypes_list || state.allTypes
   }
 }

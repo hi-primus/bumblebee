@@ -53,7 +53,11 @@ module.exports = {
 		scss: [
 			// '~assets/css/import/_index.scss'
 		]
-	},
+  },
+
+  modules: [
+    'cookie-universal-nuxt'
+  ],
 
 	buildModules: [
 		// '@nuxtjs/eslint-module',
@@ -61,8 +65,7 @@ module.exports = {
 		'@nuxtjs/axios',
 		'@nuxtjs/dotenv',
 		'@nuxtjs/vuetify',
-    '@nuxtjs/style-resources',
-    'cookie-universal-nuxt'
+    '@nuxtjs/style-resources'
 	],
 
 	plugins: [
