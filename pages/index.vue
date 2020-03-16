@@ -142,6 +142,7 @@
                 clearable
                 dense
                 full-width
+                solo flat
                 class="search-filter mt-2 mr-4 elevation-0"
                 prepend-inner-icon="search"
                 label="Search column"
@@ -157,6 +158,7 @@
                   :search-input.sync="typesInput"
                   dense
                   full-width
+                  solo flat
                   chips
                   deletable-chips
                   color="grey darken-3"
