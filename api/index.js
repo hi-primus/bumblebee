@@ -132,19 +132,6 @@ const Row = require('./models/row')
 const Session = require('./models/session')
 const Dataset = require('./models/dataset')
 
-const createRows = async function (rows, dataset) {
-  for (let i = 0; i < rows.length; i++) {
-    try {
-      var row = new Row()
-			row.value = rows[i%rows.length] || []
-      row.dataset = dataset
-      await row.save()
-    } catch (err) {
-      console.error('"""',err,'"""')
-    }
-  }
-}
-
 const new_socket = function (socket, session) {
 	sockets[session] = socket
 
@@ -223,7 +210,7 @@ const request = require('request-promise')
 
 const uuidv1 = require('uuid/v1')
 
-const run_code = function(code = '', user_session = '', save_rows = false) {
+const run_code = function(code = '', user_session = '', deleteSample = false) {
 
 	return new Promise( async function(resolve,reject) {
 
@@ -307,31 +294,25 @@ const run_code = function(code = '', user_session = '', save_rows = false) {
           else if (parsed_message.msg_type === 'execute_result'){
             const response = parsed_message.content.data['text/plain']
 
-            if (save_rows) {
+            if (deleteSample) {
               try {
-                const parsed_response = JSON.parse(trimCharacters(response,"'"))
+                const parsedResponse = JSON.parse(trimCharacters(response,"'"))
 
-                const current_session = await findOneOrCreate(Session, {user_session}, {user_session, queue_name: parsed_response.queue_name})
+                const currentSession = await findOneOrCreate(Session, {user_session}, {user_session, queue_name: parsedResponse.queue_name})
 
-                let data = pakoFernet(save_rows, parsed_response.data)
+                let data = pakoFernet(deleteSample, parsedResponse.data)
 
-                const dataset = await findOneOrCreate( Dataset, { meta: data, session: current_session._id } )
+                const dataset = await findOneOrCreate( Dataset, { meta: data, session: currentSession._id } )
 
-                // current_session TODO: add dataset to current_session.datasets Array and save
+                // currentSession TODO: add dataset to currentSession.datasets Array and save
 
                 await Row.deleteMany({dataset})
 
-                let rows = [...data.sample.value]
+                data.sample_length = data.sample.value.length
 
-                if (data.sample.value && data.sample.value[0] && data.sample.value.length*data.sample.value[0].length > 700) {
+                if (data.sample && data.sample.value && data.sample.value[0] && data.sample.value.length*data.sample.value[0].length > 700) {
                   delete data.sample
                 }
-
-                createRows(rows, dataset._id)
-
-                data.sample_length = rows.length
-
-                // data.sample_length Math.min(data.summary.sample_size, data.summary.rows_count, rows.length)
 
                 data.id = (dataset && dataset._id) ? dataset._id : '0'
 

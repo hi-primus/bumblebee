@@ -73,14 +73,14 @@
           v-if="column.type=='preview' && !column.hidden"
           :key="'p'+column.index"
           class="bb-table-h-cell bb-preview"
-          :id="(column.index == previewColumns.length-1) ? 'bb-table-preview-last' : false"
+          :id="(column.previewIndex === previewColumns.length-1) ? 'bb-table-preview-last' : false"
           style="width: 170px"
         >
           <!-- <div class="data-type" :class="`type-${columns[column.index].column_dtype}`">
             {{ dataType(currentDataset.columns[column.index].column_dtype) }}
           </div> -->
           <div class="column-title">
-            {{ previewColumns[column.index].title }}
+            {{ column.title }}
           </div>
         </div>
         <div
@@ -227,38 +227,31 @@
     class="bb-table-container" ref="BbTableContainer"
   >
     <div class="bb-table" ref="BbTable" :style="tableStyle">
-      <template v-for="row in rows">
+      <template v-for="(row, rowArrayIndex) in rows">
         <!-- v-show="((row.index>=visibleRowsTop) && (row.index<=visibleRowsBottom))" -->
         <div
           class="bb-table-row"
-          :key="'r'+row.index"
+          :key="'r'+row.index+rowArrayIndex"
+          :data-rai="rowArrayIndex"
+          :data-ri="row.index"
           :class="[(currentHighlightRows && currentHighlightRows.indices.includes(row.index)) ? 'bb-highlight--'+(currentHighlightRows.color || 'green') : '']"
           :style="{height: rowHeight+'px', top: row.index*rowHeight+'px'}"
         >
           <template v-for="column in allColumns">
-            <div
-              v-if="column.type=='preview'"
-              :key="'p'+column.index"
-              class="bb-table-cell bb-preview"
-              :class="{
-                'missing': previewCell(column.index,row.index).value==='',
-                'none': previewCell(column.index,row.index).value===null,
-                'not-available': previewCell(column.index,row.index).notAvailable==true
-              }"
-              style="width: 170px"
-            ><span class="select-none">&nbsp;</span>{{previewCell(column.index,row.index).value}}<span class="select-none">&nbsp;</span></div>
-            <div
-              :key="column.index"
-              v-else-if="row.value"
-              class="bb-table-cell"
-              :class="{
-                'bb-selected': selectionMap[column.index],
-                'missing': row.value[column.index]==='',
-                'none': row.value[column.index]===null
-              }"
-              :style="{width: columns[column.index].width+'px'}"
-              v-html="getCell(column.index,row.index)"
-            ></div>
+            <template v-if="row.value">
+              <div
+                :key="column.index"
+                class="bb-table-cell"
+                :class="{
+                  'bb-selected': selectionMap[column.index],
+                  'missing': row.value[column.index]==='',
+                  'none': row.value[column.index]===null,
+                  'bb-preview': column.type=='preview'
+                }"
+                :style="{width: (columns[column.index] || {width: 170}).width+'px'}"
+                v-html="getCell(column.index,rowArrayIndex)"
+              ></div>
+            </template>
           </template>
         </div>
       </template>
@@ -270,7 +263,6 @@
 
 <script>
 
-import { throttle, debounce } from '@/utils/functions.js'
 import { mapState, mapGetters } from 'vuex';
 
 import dataTypesMixin from '@/plugins/mixins/data-types'
@@ -280,7 +272,7 @@ import Histogram from '@/components/Histogram'
 import Frequent from '@/components/Frequent'
 import DataBar from '@/components/DataBar'
 
-import { parseResponse, arraysEqual } from '@/utils/functions.js'
+import { parseResponse, arraysEqual, cancellablePromise, throttle, debounce } from '@/utils/functions.js'
 
 var doubleClick = false
 
@@ -312,8 +304,12 @@ export default {
 		return {
       maxChunks: 10,
       fetching: false,
+      cancelFetch: false,
 
       columnMenuIndex: false,
+
+      mustCheck: false,
+      mustCheckProfile: false,
 
       // visibleRowsTop: 0,
       // visibleRowsBottom: 100,
@@ -353,10 +349,9 @@ export default {
     highlightMatches () {
       var hm = {}
       try {
-        for (var [key, e] of Object.entries(this.currentHighlights.matches)) {
-          const i = this.currentDataset.columns.findIndex(col=>(col.name===key))
-          hm[i] = e
-        }
+        this.currentHighlights.matchColumns.forEach(column => {
+          hm[column.columnIndex] = column
+        })
       } catch (err) {
         // console.error(err)
       }
@@ -365,13 +360,12 @@ export default {
 
     previewColumns () {
       try {
-        var after = this.currentColumnsPreview.after
-        return this.currentColumnsPreview.dataset.sample.columns
+        return this.currentColumnsPreview
         .map((col, index)=>({
           ...col,
-          index,
+					type: 'preview',
           name: col.title,
-          hidden: ([after, after+'__match_positions__'].includes(col.title))
+          previewIndex: index
         })) || []
       } catch (err) {
         return []
@@ -381,13 +375,12 @@ export default {
     allColumns () {
       var arr = this.bbColumns.map(index=>({index}))
       try {
-        var after = this.currentColumnsPreview.after
+        var after = this.currentPreviewCode.from
+
         if (this.previewColumns.length && after) {
-          var insertIndex = arr.findIndex(e=>this.currentDataset.columns[e.index].name==after)+1
-          this.previewColumns.map((col,index)=>({hidden: col.hidden, name: col.name, index: col.index, type: 'preview'})).forEach(e=>{
-            if (!e.hidden) {
-              arr.splice(insertIndex++,0,e)
-            }
+          var insertIndex = arr.findIndex(e=>this.currentDataset.columns[e.index].name===after)+1
+          this.previewColumns.forEach(e=>{
+            arr.splice(insertIndex++,0,e)
           })
         }
       } catch (err) {
@@ -508,7 +501,7 @@ export default {
   },
 
   mounted() {
-    this.$refs['BbTableContainer'] && this.$refs['BbTableContainer'].addEventListener('scroll', this.throttleScrollCheck, {passive: true})
+    this.$refs['BbTableContainer'] && this.$refs['BbTableContainer'].addEventListener('scroll', this.throttledScrollCheck, {passive: true})
 
     this.$refs['BbTableContainer'] && this.$refs['BbTableContainer'].addEventListener('scroll', this.horizontalScrollCheckUp, {passive: true})
     this.$refs['BbTableTopContainer'] && this.$refs['BbTableTopContainer'].addEventListener('scroll', this.horizontalScrollCheckDown, {passive: true})
@@ -524,7 +517,7 @@ export default {
 
   beforeDestroy() {
     try {
-      this.$refs['BbTableContainer'].removeEventListener('scroll', this.throttleScrollCheck)
+      this.$refs['BbTableContainer'].removeEventListener('scroll', this.throttledScrollCheck)
       this.$refs['BbTableContainer'].removeEventListener('scroll', this.horizontalScrollCheckUp)
       this.$refs['BbTableTopContainer'].removeEventListener('scroll', this.horizontalScrollCheckDown)
     } catch (err) {
@@ -544,18 +537,64 @@ export default {
 
     currentPreviewCode: {
       handler (value) {
-        this.throttleScrollCheck()
+        this.mustCheck = true
+        this.throttledScrollCheck()
       }
-    }
+    },
 
   },
 
   methods: {
 
-    focusPreview () {
+    async checkIncomingColumns (columns) {
+      if (this.mustCheck) {
+        if (columns.length>this.currentDataset.columns.length) { // TODO: Check for preview columns
+          var receivedColumns = columns
+						.map((column, index)=>({...column, index}))
+
+					var columnNames = this.currentDataset.columns.map(e=>e.name)
+
+          var previewColumns = receivedColumns
+            .filter((column, index)=>(
+              !columnNames.includes(column.title)//index>=this.currentDataset.columns.length
+              &&
+              !column.title.includes('__match_positions__')
+            ))
+
+          var matchColumns = receivedColumns
+            .filter((column, index)=>(
+              !columnNames.includes(column.title)//index>=this.currentDataset.columns.length
+              &&
+              column.title.includes('__match_positions__')
+            ))
+            .map((column)=>{
+              var columnTitle = column.title.split('__match_positions__')[0]
+              return {
+                ...column,
+                columnTitle,
+                columnIndex: this.currentDataset.columns.findIndex(col=>col.name===columnTitle)
+              }
+            })
+
+          this.$store.commit('setColumnsPreview', previewColumns)
+
+          var color = this.currentPreviewCode.color
+
+          this.$store.commit('setHighlights', { matchColumns, color })
+
+          if (previewColumns.length) {
+            this.mustCheckProfile = true
+          }
+
+        }
+      }
+    },
+
+    focusPreview (column = undefined) {
       this.$nextTick(()=>{
-        if (this.currentFocusedColumns!==undefined) {
-          var af = document.getElementById("bb-table-"+this.currentFocusedColumns)
+        column = (column!==undefined) ? column : this.currentPreviewCode.from
+        if (column!==undefined) {
+          var af = document.getElementById("bb-table-"+column)
           af && af.scrollIntoView();
           var lp = document.getElementById("bb-table-preview-last")
           lp && lp.scrollIntoView();
@@ -597,29 +636,21 @@ export default {
       this.$store.commit('commandHandle',command)
     },
 
-    previewCell(column,row) {
-      try {
-        return {
-          value: this.currentColumnsPreview.dataset.sample.value[row-this.currentColumnsPreview.startingRow][column]
-        }
-      } catch (err) {
-        return {value: ' ', notAvailable: true}
-      }
-    },
-
     getCell (column, row) {
-      var content = (this.rows[row].value[column]!==null && this.rows[row].value[column]!==undefined) ? this.rows[row].value[column] : ''
-
+      var content
       try {
-        const rowInArray = row-this.currentHighlights.startingRow
-        if (this.highlightMatches[column]) {
-          for (let i = this.highlightMatches[column][rowInArray].length - 1; i >= 0; i--) {
-            const [a,b] = this.highlightMatches[column][rowInArray][i];
+        content = (this.rows[row].value[column]!==null && this.rows[row].value[column]!==undefined) ? this.rows[row].value[column] : ''
+      } catch (err) {
+        console.error('err',err)
+        content = 'ERROR.'
+      }
+      try {
+        var hlCol = this.highlightMatches[column] && this.highlightMatches[column].index
+        if (hlCol) {
+          for (let i = this.rows[row].value[hlCol].length - 1; i >= 0; i--) {
+            const [a,b] = this.rows[row].value[hlCol][i]
             content = content.substring(0,a)+`<span class="hlt--${this.currentHighlights.color}">`+content.substring(a,b)+'</span>'+content.substring(b)
-
           }
-          this.highlightMatches[column][rowInArray].forEach(arr => {
-            });
         }
       } catch (err) {}
       return `<span class="select-none">&nbsp;</span>${content}<span class="select-none">&nbsp;</span>`
@@ -753,16 +784,37 @@ export default {
     },
 
     horizontalScrollCheckUp () {
-      if (this.$refs['BbTableTopContainer'].scrollLeft != this.$refs['BbTableContainer'].scrollLeft)
+      if (this.$refs['BbTableTopContainer'].scrollLeft != this.$refs['BbTableContainer'].scrollLeft) {
+        this.$refs['BbTable'].style.minWidth = this.$refs['BbTableTopContainer'].scrollWidth + 'px'
         this.$refs['BbTableTopContainer'].scrollLeft = this.$refs['BbTableContainer'].scrollLeft
+      }
     },
 
     horizontalScrollCheckDown () {
-      if (this.$refs['BbTableContainer'].scrollLeft != this.$refs['BbTableTopContainer'].scrollLeft)
+      if (this.$refs['BbTableContainer'].scrollLeft != this.$refs['BbTableTopContainer'].scrollLeft) {
+        this.$refs['BbTable'].style.minWidth = this.$refs['BbTableTopContainer'].scrollWidth + 'px'
         this.$refs['BbTableContainer'].scrollLeft = this.$refs['BbTableTopContainer'].scrollLeft
+      }
     },
 
-    throttleScrollCheck: throttle(function(e) {this.scrollCheck(e)} , throttleScrollTime),
+    debouncedSetProfile: debounce(function(p) {
+      this.setProfile(p)
+    } , 100 ),
+
+    async setProfile (previewCode) {
+      if (this.currentProfilePreview.code !== previewCode) {
+        const response = await this.evalCode(`df.ext.buffer_window("*")${previewCode || ''}.ext.profile("*", output="json")`)
+        var dataset = parseResponse(response.content)
+
+        dataset = { ...dataset, code: previewCode }
+
+        this.$store.commit('setProfilePreview', dataset)
+
+        this.mustCheckProfile = false
+      }
+    },
+
+    throttledScrollCheck: throttle(function(e) {this.scrollCheck(e)} , throttleScrollTime),
 
     async scrollCheck () {
 
@@ -782,10 +834,22 @@ export default {
           Math.min(bottom+length,this.currentDataset.summary.rows_count)
         ])
 
-        this.fetchChunks(topPosition, bottomPosition)
+        if (this.cancelFetch!==false) {
+          try {
+            this.cancelFetch('cancelling')
+          } catch (err) {}
+        }
+
+        var {promise, cancel} = cancellablePromise( this.fetchChunks(topPosition, bottomPosition) )
+
+        this.cancelFetch = cancel
+
+        await promise
+
+        this.cancelFetch = false
 
       } catch (err) {
-        console.error(err)
+        // console.error(err)
       }
 
       // this.visibleRowsTop = topPosition/this.rowHeight - 80
@@ -807,10 +871,8 @@ export default {
       this.fetching = true
 
       for (let i = from; i <= to; i++) {
-        promises.push(this.fetchChunk(i))
+        await this.fetchChunk(i)
       }
-
-      await Promise.all(promises)
 
       this.fetching = false
 
@@ -818,40 +880,54 @@ export default {
         this.chunks.splice(0,this.chunks.length-this.maxChunks)
       }
 
+      if (this.mustCheckProfile) {
+        var previewCode = (this.currentPreviewCode ? this.currentPreviewCode.profileCode : false) || ''
+
+        if (this.currentProfilePreview.code !== previewCode) {
+          this.debouncedSetProfile(previewCode)
+        }
+      }
+
     },
 
     async fetchChunk(index) {
 
       var previewCode = (this.currentPreviewCode ? this.currentPreviewCode.code : false) || ''
-
       var foundIndex = this.chunks.findIndex(chunk => {
         return chunk && (chunk.index === index)
       })
 
-      if (foundIndex!==-1 && (chunk.preview === previewCode)) {
+      if (foundIndex!==-1 && (this.chunks[foundIndex].preview === previewCode)) {
         return false
       }
 
-      var chunkIndexInArray = (foundIndex!==-1) ? this.chunks.push({ index: index, rows: []}) - 1 : foundIndex
+      var chunkIndexInArray = (foundIndex!==-1) ? foundIndex : this.chunks.push({ index: index, rows: []}) - 1
+
+      this.$set(this.chunks, chunkIndexInArray,{ index: index, rows: [], preview: previewCode || '' })
 
       if (!this.currentBuffer) {
         var buffer = await this.evalCode(this.currentDataset.varname+'.ext.set_buffer("*")\n"0"')
         this.$store.commit('setBuffer',true)
       }
 
-      var response = await this.evalCode(`df.ext.buffer_window("*", ${index*this.chunkSize}, ${(index+1*this.chunkSize)})${previewCode || ''}.ext.to_json("*")`)
+      var response = await this.evalCode(`${this.currentDataset.varname}.ext.buffer_window("*", ${index*this.chunkSize}, ${((index+1)*this.chunkSize)})${previewCode || ''}.ext.to_json("*")`)
 
       var parsed = parseResponse(response.content)
 
       var from = index*this.chunkSize
 
-      var rows = parsed.sample.value.map((value,i)=>({
-        value,
-        index: from+i
-      }))
+      if (parsed.sample) {
 
-      this.$set(this.chunks,chunkIndexInArray,{ index: index, rows, preview: previewCode || '' })
-      return true
+        var rows = parsed.sample.value.map((value,i)=>({
+          value,
+          index: from+i
+        }))
+        this.checkIncomingColumns(parsed.sample.columns)
+        this.$set(this.chunks, chunkIndexInArray,{ index: index, rows, preview: previewCode || '' })
+        return true
+      } else {
+        return false
+      }
     }
   }
 

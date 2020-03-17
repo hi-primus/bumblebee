@@ -336,7 +336,7 @@ import OutputColumnInputs from '@/components/OutputColumnInputs'
 import Outliers from '@/components/Outliers'
 import clientMixin from '@/plugins/mixins/client'
 import { mapGetters } from 'vuex'
-import { parseResponse, debounce, newName, arrayJoin, cancellablePromise } from '@/utils/functions.js'
+import { parseResponse, debounce, newName, arrayJoin } from '@/utils/functions.js'
 
 const api_url = process.env.API_URL || 'http://localhost:5000'
 
@@ -596,7 +596,7 @@ export default {
               text: '',
               expression: `${this.dataset.varname}["${columns[0]}"]`,
               action: 'select',
-              _preview: 'highlight',
+              // _preview: 'highlight',
               _highlight: 'green'
             }
           },
@@ -1625,7 +1625,8 @@ export default {
               index: '',
               drop: false,
               output_cols: columns.map(e=>e),
-              _preview: 'unnest'
+              _preview: 'unnest',
+              _highlightColor: 'red'
             }
 					},
 					code: (payload) => {
@@ -2142,19 +2143,20 @@ export default {
     async getPreview() {
       // this.$store.commit('previewDefault')
 
-      if (this.currentCommand._preview==='highlight') {
-        this.$store.commit('setHighlightRows',{indices: [0,1,2,3,4,5,6], columns: ['id'], color: this.currentCommand._highlight})
-        return true
-      }
+      // if (this.currentCommand._preview==='highlight') {
+      //   this.$store.commit('setHighlightRows',{indices: [0,1,2,3,4,5,6], columns: ['id'], color: this.currentCommand._highlight})
+      //   return true
+      // }
 
       try {
 
         if (this.currentCommand._preview) {
 
-
           this.$store.commit('setPreviewCode',{
             code: this.getCode(this.currentCommand,'preview'),
-            type: 'unnest'
+            profileCode: this.getCode(this.currentCommand,'profile'),
+            color: this.currentCommand._highlightColor,
+            from: this.currentCommand.columns[0]
           })
 
         }

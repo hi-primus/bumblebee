@@ -60,8 +60,8 @@ export const mutations = {
     Vue.set( state.highlightRows, state.tab, highlightRows )
   },
 
-  setHighlights (state, { matches, color, startingRow }) {
-    var highlights = { matches: matches || {}, color: color || 'green', startingRow: startingRow || 0 }
+  setHighlights (state, { matchColumns, color }) {
+    var highlights = { matchColumns: matchColumns || {}, color: color || 'green' }
 
     Vue.set( state.highlights, state.tab, highlights )
   },

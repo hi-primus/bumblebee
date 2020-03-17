@@ -652,7 +652,7 @@ export default {
           onClick: ()=>{
             var command = { command: 'filter rows' }
             if (this.currentSelection && this.currentSelection.ranged) {
-              command.columns = [ currentSelection.ranged.index ]
+              command.columns = [ this.dataset.columns[this.currentSelection.ranged.index].name ]
             }
             this.commandHandle( command )
           },
