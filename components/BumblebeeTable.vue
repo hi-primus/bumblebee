@@ -483,7 +483,7 @@ export default {
       })
       // rows = [...new Set(rows)];
       rows.sort((a,b)=>a.index-b.index)
-      return rows
+      return [...new Set(rows)]
     },
 
     rowsCount() {
