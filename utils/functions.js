@@ -67,10 +67,14 @@ export const trimCharacters = (s, c) => {
 
 export const parseResponse = (content) => {
   // console.log('[DEBUG] parsedContent',content)
-  content = trimCharacters(content,"'")
-  content = content.replace(/\bNaN\b/g,null)
-  content = content.replace(/\b\\'\b/g,"'")
-  return JSON.parse(content)
+  try {
+    content = trimCharacters(content,"'")
+    content = content.replace(/\bNaN\b/g,null)
+    content = content.replace(/\b\\'\b/g,"'")
+    return JSON.parse(content)
+  } catch (error) {
+    return false
+  }
 }
 
 export const newName = (name) => {

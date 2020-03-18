@@ -798,20 +798,32 @@ export default {
     },
 
     debouncedSetProfile: debounce(function(p) {
-      this.setProfile(p)
+      return this.setProfile(p)
     } , 100 ),
 
     async setProfile (previewCode) {
       if (this.currentProfilePreview.code !== previewCode) {
-        const response = await this.evalCode(`df.ext.buffer_window("*")${previewCode || ''}.ext.profile("*", output="json")`)
-        var dataset = parseResponse(response.content)
+        var response = await this.evalCode(`_output = df.ext.buffer_window("*",0,100)${previewCode || ''}.ext.profile("*", output="json")`)
+        var dataset = parseResponse(response.data.result)
+
+        if (!dataset) {
+          response = await this.evalCode(`_output = df.ext.buffer_window("*",0,100)${previewCode || ''}.ext.profile("*", output="json")`)
+          dataset = parseResponse(response.data.result)
+        }
+
+        if (!dataset) {
+          throw response
+        }
 
         dataset = { ...dataset, code: previewCode }
 
         this.$store.commit('setProfilePreview', dataset)
 
         this.mustCheckProfile = false
+
+        return true
       }
+      return false
     },
 
     throttledScrollCheck: throttle(function(e) {this.scrollCheck(e)} , throttleScrollTime),
@@ -884,7 +896,8 @@ export default {
         var previewCode = (this.currentPreviewCode ? this.currentPreviewCode.profileCode : false) || ''
 
         if (this.currentProfilePreview.code !== previewCode) {
-          this.debouncedSetProfile(previewCode)
+          var dbsp = await this.debouncedSetProfile(previewCode)
+          console.log({dbsp})
         }
       }
 

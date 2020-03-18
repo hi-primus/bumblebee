@@ -171,7 +171,9 @@ export default {
 
         socket.on('dataset', (dataset) => {
           try {
-            this.handleDatasetResponse(dataset,key)
+            this.$store.commit('add', {
+              dataset
+            })
           } catch (error) {
             console.error(error)
             reject(error)

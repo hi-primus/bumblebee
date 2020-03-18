@@ -643,7 +643,6 @@ export default {
                     expression = `(${this.dataset.varname}["${payload.columns[0]}"]>=${payload.selection.ranges[0][0]}) & (${this.dataset.varname}["${payload.columns[0]}"]<=${payload.selection.ranges[0][1]})`
                 }
                 else if (payload.selectionType=='values') {
-                  console.log({payload})
                   expression = `${this.dataset.varname}["${payload.columns[0]}"].isin(["${payload.selection.values.join('","')}"])`
                 }
               case 'custom':
@@ -894,13 +893,13 @@ export default {
               var code
 
               if (this.currentCommand.algorithm == 'levenshtein')
-                code = `from optimus.ml import distancecluster as dc${sl}dc.levenshtein_cluster(${this.dataset.varname}, "${this.currentCommand.columns[0]}"`
+                code = `from optimus.ml import distancecluster as dc; _output = dc.levenshtein_cluster(${this.dataset.varname}, "${this.currentCommand.columns[0]}"`
                 +(this.currentCommand.threshold!='' ? `, threshold=${this.currentCommand.threshold}` : '')
                 +`, output="json")`
               else if (this.currentCommand.algorithm == 'fingerprint')
-                code = `from optimus.ml import keycollision as kc${sl}kc.fingerprint_cluster(${this.dataset.varname}, input_cols="${this.currentCommand.columns[0]}", output="json")`
+                code = `from optimus.ml import keycollision as kc; _output = kc.fingerprint_cluster(${this.dataset.varname}, input_cols="${this.currentCommand.columns[0]}", output="json")`
               else if (this.currentCommand.algorithm == 'n_gram_fingerprint')
-                code = `from optimus.ml import keycollision as kc${sl}kc.n_gram_fingerprint_cluster(${this.dataset.varname}, input_cols="${this.currentCommand.columns[0]}", n_size=${this.currentCommand.n_size}, output="json")`
+                code = `from optimus.ml import keycollision as kc; _output = kc.n_gram_fingerprint_cluster(${this.dataset.varname}, input_cols="${this.currentCommand.columns[0]}", n_size=${this.currentCommand.n_size}, output="json")`
               else
                 throw 'Invalid algorithm type input'
 
@@ -909,8 +908,16 @@ export default {
               this.currentCommand.error = false
 
               var response = await this.evalCode(code)
+              var clusters = parseResponse(response.data.result)
 
-              var clusters = parseResponse(response.content)
+              if (!clusters) {
+                response = await this.evalCode(code)
+                clusters = parseResponse(response.data.result)
+              }
+
+              if (!clusters) {
+                throw response
+              }
 
               clusters = Object.entries(clusters).map(e=>{
 
@@ -1083,13 +1090,31 @@ export default {
 
               this.currentCommand.loading = true
 
-              var response = await this.evalCode(`import json${sl}${code}${sl}json.dumps(outlier.info())`)
+              var response = await this.evalCode(`import json; ${code}; _output = json.dumps(outlier.info())`)
               var outliers_data = parseResponse(response.content)
+
+              if (!outliers_data) {
+                response = await this.evalCode(`import json; ${code}; _output = json.dumps(outlier.info())`)
+                outliers_data = parseResponse(response.content)
+              }
+
+              if (!outliers_data) {
+                throw response
+              }
 
               if ( ['tukey','mad'].includes(this.currentCommand.algorithm) ) {
 
-                var hist_response = await this.evalCode(`outlier.hist("${this.currentCommand.columns[0]}")`)
+                var hist_response = await this.evalCode(`_output = outlier.hist("${this.currentCommand.columns[0]}")`)
                 var hist_data = parseResponse(hist_response.content)
+
+                if (!hist_data) {
+                  hist_response = await this.evalCode(`_output = outlier.hist("${this.currentCommand.columns[0]}")`)
+                  hist_data = parseResponse(hist_response.content)
+                }
+
+                if (!hist_data) {
+                  throw hist_response
+                }
 
                 var hist = hist_data[this.currentCommand.columns[0]].hist
 
@@ -1314,7 +1339,7 @@ export default {
 
               code += ')'
 
-              var response = await this.evalCode(code+`${sl}db.tables_names_to_json()`)
+              var response = await this.evalCode(code+`; _output = db.tables_names_to_json()`)
 
               var tables = parseResponse(response.content)
               if (!tables.length){
@@ -2263,7 +2288,7 @@ export default {
       this.addCell(-1, this.currentCommand.command, code )
       this.runButton = false
 
-      this.$emit('updateOperations', { active: (this.currentCommand._noOperations ? undefined : true), title: 'operations' } )
+      this.$emit('updateOperations', { active: (this.currentCommand._noOperations ? true : undefined), title: 'operations' } )
 
       this.currentCommand = false
       this.$store.commit('previewDefault')
@@ -2518,8 +2543,9 @@ export default {
           throw response
         }
 
-        // var content = parseResponse(response.content).data
-        this.handleDatasetResponse(response.content)
+        this.$store.commit('add', {
+          dataset: response.data.result
+        })
 
         this.$forceUpdate()
         this.markCells()
