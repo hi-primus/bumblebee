@@ -6,7 +6,6 @@ export const state = () => ({
   datasetSelection: [],
 	databases: [],
   buffers: [],
-  windows: [],
   tableViews: [],
   cells: [],
   columnsPreviews: [],
@@ -83,12 +82,6 @@ export const mutations = {
 
   commandHandle(state, command) {
     state.nextCommand = command
-  },
-
-  setWindow(state, window) {
-    if (!state.windows[state.tab] || state.windows[state.tab].join()!==window.join()) {
-      Vue.set(state.windows,state.tab,window)
-    }
   },
 
   setTableView(state, tableView) {
@@ -317,13 +310,6 @@ export const getters = {
     }
   },
 
-  currentWindow(state) {
-    try {
-      return state.windows[state.tab]
-    } catch (error) {
-      return false
-    }
-  },
   selectionType(state) {
     var _ds = state.datasetSelection[state.tab] || []
     if (_ds && _ds.ranged &&  _ds.ranged.values && _ds.ranged.values.length) {
