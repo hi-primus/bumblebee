@@ -16,28 +16,13 @@ export const mutations = {
 export const actions = {
 	async login (context, payload) {
     const response = await window.$nuxt.$auth.login(payload)
-    
+
     if(response.data.token){
-    context.commit('tokenlogin',response.data.token)
+      context.commit('tokenlogin',response.data.token)
     }
     else{
-
       context.commit('tokenlogin',false)
     }
-    
-
-    
-
-    console.log({response})
-
-
-
-
-    
-
-    
-
-
 
     // const sessionToken = `Bearer ${response.data.login.token}`
 
@@ -49,10 +34,6 @@ export const actions = {
     // })
 
     // setAuthToken(sessionToken)
-
-    // context.state.token = algo
-    
-
 
   },
   async fetch (context, payload) {

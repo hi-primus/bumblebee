@@ -20,7 +20,6 @@ export const state = () => ({
   status: 'waiting',
   session: '',
   engine: 'dask',
-  key: '',
 	allTypes: [
 		'string',
 		'int',
@@ -229,10 +228,6 @@ export const mutations = {
     Vue.set(state.buffers,state.tab,payload)
   },
 
-	key (state, payload) {
-    state.key = payload
-  },
-
   kernel (state, payload) {
     state.kernel = payload
   },
@@ -275,7 +270,7 @@ export const mutations = {
 
 export const actions = {
   async nuxtServerInit ({ dispatch }, context) {
-    console.log('nuxtServerInit')
+    // console.log('[DEBUG] nuxtServerInit')
     const cookies = this.$cookies.getAll() || {} // cookie.parse(context.req.headers.cookie || '')
     if (cookies.hasOwnProperty('x-access-token')) {
       try {
