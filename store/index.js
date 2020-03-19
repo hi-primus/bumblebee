@@ -31,6 +31,7 @@ export const state = () => ({
 		'null'
 	],
   datasetCounter: 1,
+  key: '',
   kernel: false,
   nextCommand: false,
   tab: 0
@@ -226,6 +227,10 @@ export const mutations = {
 
 	setBuffer (state, payload) {
     Vue.set(state.buffers,state.tab,payload)
+  },
+
+  key (state, payload) {
+    state.key = payload
   },
 
   kernel (state, payload) {

@@ -112,7 +112,7 @@ var kernels = []
 
 app.post('/dataset', (req, res) => {
 
-  var socketName = req.body.queue_name || req.body.session || req.body.session
+  var socketName = req.body.queue_name || req.body.session
 
   if (!socketName || !req.body.data) {
     res.send({status: 'error', message: '"session/username" and "data" fields required'})
@@ -131,60 +131,60 @@ app.post('/dataset', (req, res) => {
 const Server = require('socket.io')
 const io = new Server(server)
 
-const Row = require('./models/row')
-const Session = require('./models/session')
-const Dataset = require('./models/dataset')
-
 const newSocket = function (socket, session) {
   sockets[session] = socket
 
   socket.emit('success')
 
-  socket.on('initialize', async (payload) => {
-    var user_session = payload.session
+  if (!socket.unsecure) {
+    socket.on('initialize', async (payload) => {
+      var user_session = payload.session
 
-    var result
+      var result = {}
 
-    var tries = 10
-
-    while (tries--) {
-      result = await createKernel(user_session, payload.engine ? payload.engine : "dask")
-      if (result.status=='error') {
-        console.log('"""',result,'"""')
-        console.log('# Kernel error, retrying')
-        await deleteKernel(user_session)
+      var tries = 10
+      while (tries-->0) {
+        result = await createKernel(user_session, payload.engine ? payload.engine : "dask")
+        if (result.status=='error') {
+          console.log('"""',result,'"""')
+          console.log('# Kernel error, retrying')
+          await deleteKernel(user_session)
+        }
+        else {
+          console.log('"""',result,'"""')
+          break
+        }
       }
-      else {
-        console.log('"""',result,'"""')
-        break
-      }
-    }
 
-    socket.emit('reply',{...result, timestamp: payload.timestamp})
-  })
+      socket.emit('reply',{...result, timestamp: payload.timestamp})
+    })
 
-  socket.on('run', async (payload) => {
-    var user_session = payload.session
-    var result = await run_code(`${payload.code}`,user_session)
-    socket.emit('reply',{...result, timestamp: payload.timestamp})
-  })
+    socket.on('run', async (payload) => {
+      var user_session = payload.session
+      var result = await run_code(`${payload.code}`,user_session)
+      socket.emit('reply',{...result, timestamp: payload.timestamp})
+    })
 
-  socket.on('cells', async (payload) => {
-    var user_session = payload.session
-    var result = await run_code(`${payload.code}` + sl
-      + `_output = df.ext.send(output="json", infer=False, advanced_stats=False${ payload.name ? (', name="'+payload.name+'"') : '' })`,
-      user_session,
-      true
-    )
-    socket.emit('reply',{...result, timestamp: payload.timestamp})
-  })
+    socket.on('cells', async (payload) => {
+      var user_session = payload.session
+      var result = await run_code(`${payload.code}` + sl
+        + `_output = df.ext.send(output="json", infer=False, advanced_stats=False${ payload.name ? (', name="'+payload.name+'"') : '' })`,
+        user_session,
+        true
+      )
+      socket.emit('reply',{...result, timestamp: payload.timestamp})
+    })
+  }
+  else {
+    console.log('unsecure socket connection for', session)
+  }
 
   return socket
 }
 
 
 io.use(function (socket, next) {
-  if (socket.handshake.query && socket.handshake.query.token){
+  if (socket.handshake.query && socket.handshake.query.token) {
     jwt.verify(socket.handshake.query.token, process.env.TOKEN_SECRET, function (err, decoded) {
       if (err) {
         return next(new Error('Authentication error'))
@@ -193,7 +193,8 @@ io.use(function (socket, next) {
       next()
     })
   } else {
-    next(new Error('Authentication error'))
+    socket.unsecure = true
+    next()
   }
 })
 
@@ -201,18 +202,20 @@ io.on('connection', async (socket) => {
 
   const { session } = socket.handshake.query
 
+  console.log({unsecure: socket.unsecure})
+
   if (!session) {
     socket.disconnect()
     return
   }
 
-  if (sockets[session] == undefined || !sockets[session].connected || sockets[session].disconnected) {
+  if (sockets[session] == undefined || !sockets[session].connected || sockets[session].disconnected ) {
     socket = newSocket(socket,session)
     return
   }
 
   setTimeout(() => {
-    if (sockets[session] == undefined || !sockets[session].connected || sockets[session].disconnected) {
+    if (sockets[session] == undefined || !sockets[session].connected || sockets[session].disconnected ) {
       newSocket(socket,session)
       return
     }

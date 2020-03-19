@@ -144,7 +144,7 @@ export default {
         console.warn('Socket already closed')
     },
 
-    startSocket (session, engine) {
+    startSocket (session, key, engine) {
 
       return new Promise((resolve, reject)=>{
 
@@ -155,19 +155,18 @@ export default {
         else
           throw new Error('Credentials not found')
 
-        // if (key)
-        //   this.$store.commit('key', key)
-        // else if (this.$store.state.key)
-        //   key = this.$store.state.key
-        // else
-        //   throw new Error('Credentials not found')
+        if (key)
+          this.$store.commit('key', key)
+        else if (this.$store.state.key)
+          key = this.$store.state.key
 
-        socket = io(api_url, {
-          query: {
-            session,
-            token: this.$store.state.auth.token,
-          }
-        })
+        var token = this.$store.state.auth.token || ''
+
+        key = key || ''
+
+        console.log({session, token, key})
+
+        socket = io(api_url, { query: { session, token, key } })
 
         socket.on('new-error', (reason) => {
           console.error('Socket error', reason)
@@ -227,14 +226,15 @@ export default {
 
     },
 
-		async startClient (session, engine) {
+		async startClient (session, key, engine) {
 
       try {
         this.$store.commit('status', 'loading')
         this.$store.commit('session', session)
         this.$store.commit('engine', engine)
+        key && this.$store.commit('key', key)
 
-        var client_status = await this.startSocket(session, engine)
+        var client_status = await this.startSocket(session, key, engine)
 
         if (client_status=='ok')
           this.$store.commit('status', 'receiving')

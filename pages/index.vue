@@ -47,11 +47,24 @@
               />
 
               <v-text-field
+                v-if="$route.query.kernel=='1'"
                 v-model="inputPassword"
                 :append-icon="showPassword ? 'visibility' : 'visibility_off'"
                 :type="(showPassword) ? 'text' : 'password'"
                 autocomplete="current-password"
                 label="Password"
+                required
+                outlined
+                clearable
+                @click:append="showPassword = !showPassword"
+              />
+              <v-text-field
+                v-else
+                v-model="inputPassword"
+                :append-icon="showPassword ? 'visibility' : 'visibility_off'"
+                :type="(showPassword) ? 'text' : 'password'"
+                autocomplete="current-key"
+                label="Key"
                 required
                 outlined
                 clearable
@@ -364,8 +377,12 @@ export default {
 		},
 		async subscribe () {
       try {
-        var login = await this.$store.dispatch('auth/login',{ username: this.inputUsername, password: this.inputPassword })
-			  this.startClient(this.inputUsername, this.inputEngine)
+        if (this.$route.query.kernel=='1') {
+          var login = await this.$store.dispatch('auth/login',{ username: this.inputUsername, password: this.inputPassword })
+			    this.startClient(this.inputUsername, false, this.inputEngine)
+        } else {
+			    this.startClient(this.inputUsername, this.inputPassword, this.inputEngine)
+        }
       } catch (error) {
         console.error(error)
         this.handleError(error)

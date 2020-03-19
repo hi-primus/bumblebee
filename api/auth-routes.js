@@ -23,9 +23,17 @@ router.route('/login')
         ]
       })
 
-      var result = await user.comparePassword(req.body.password)
+      if (!user) {
+        res.status(400).json({
+          status: 'error',
+          message: 'User not found'
+        })
+        return
+      }
 
-      if (result) {
+      var valid = await user.comparePassword(req.body.password)
+
+      if (valid) {
 
         var token = jwt.sign({ username: req.body.username }, process.env.TOKEN_SECRET, { expiresIn: '2h' })
         res.status(200).json({
