@@ -8,12 +8,11 @@ export const state = () => ({
   datasetSelection: [],
 	databases: [],
   buffers: [],
-  windows: [],
   tableViews: [],
   cells: [],
   columnsPreviews: [],
   profilePreviews: [],
-  plotsData: [],
+  previewCodes: [],
   highlightRows: [],
   highlights: [],
   focusedColumns: [],
@@ -48,6 +47,10 @@ export const mutations = {
     Vue.set( state.columnsPreviews, state.tab, payload )
   },
 
+  setPreviewCode (state, payload) {
+    Vue.set(state.previewCodes,state.tab, payload )
+  },
+
   setProfilePreview (state, dataset) {
     Vue.set( state.profilePreviews, state.tab, dataset )
   },
@@ -58,8 +61,8 @@ export const mutations = {
     Vue.set( state.highlightRows, state.tab, highlightRows )
   },
 
-  setHighlights (state, { matches, color, startingRow }) {
-    var highlights = { matches: matches || {}, color: color || 'green', startingRow: startingRow || 0 }
+  setHighlights (state, { matchColumns, color }) {
+    var highlights = { matchColumns: matchColumns || {}, color: color || 'green' }
 
     Vue.set( state.highlights, state.tab, highlights )
   },
@@ -68,9 +71,6 @@ export const mutations = {
     Vue.set( state.focusedColumns, state.tab, column )
   },
 
-  setPlotData (state, columns) {
-    Vue.set( state.plotsData, state.tab, column )
-  },
 
   previewDefault (state) {
     Vue.set(state.columnsPreviews,state.tab,false)
@@ -79,16 +79,11 @@ export const mutations = {
     Vue.set(state.highlightRows,state.tab,false)
     Vue.set(state.focusedColumns,state.tab,false)
     Vue.set(state.buffers,state.tab,false)
+    Vue.set(state.previewCodes,state.tab,undefined)
   },
 
   commandHandle(state, command) {
     state.nextCommand = command
-  },
-
-  setWindow(state, window) {
-    if (!state.windows[state.tab] || state.windows[state.tab].join()!==window.join()) {
-      Vue.set(state.windows,state.tab,window)
-    }
   },
 
   setTableView(state, tableView) {
@@ -254,6 +249,7 @@ export const mutations = {
       Vue.set(state.highlightRows,state.tab,false)
       Vue.set(state.focusedColumns,state.tab,false)
       Vue.set(state.buffers,state.tab,undefined)
+      Vue.set(state.previewCodes,state.tab,undefined)
 
       if (clear) {
         Vue.set(state.datasetSelection,tab,{
@@ -317,6 +313,9 @@ export const getters = {
   currentHighlights (state) {
     return state.highlights[state.tab] || false
   },
+  currentPreviewCode (state) {
+    return state.previewCodes[state.tab] || false
+  },
   currentFocusedColumns (state) {
     return state.focusedColumns[state.tab] || undefined
   },
@@ -334,15 +333,8 @@ export const getters = {
     }
   },
 
-  currentWindow (state) {
-    try {
-      return state.windows[state.tab]
-    } catch (error) {
-      return false
-    }
-  },
-  selectionType (state) {
-    var _ds = state.datasetSelection[state.tab] || {}
+  selectionType(state) {
+    var _ds = state.datasetSelection[state.tab] || []
     if (_ds && _ds.ranged &&  _ds.ranged.values && _ds.ranged.values.length) {
       return 'values'
     }

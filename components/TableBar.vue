@@ -649,7 +649,13 @@ export default {
         {
           type: 'button',// {toString: ()=>(this.selectionType=='columns' ? 'button' : 'menu')},
           // group: 'FILTER',
-          onClick: ()=>this.commandHandle({command: 'filter rows'}),
+          onClick: ()=>{
+            var command = { command: 'filter rows' }
+            if (this.currentSelection && this.currentSelection.ranged) {
+              command.columns = [ this.dataset.columns[this.currentSelection.ranged.index].name ]
+            }
+            this.commandHandle( command )
+          },
           tooltip: 'Filter rows',
           disabled: { valueOf: ()=>!(this.selectionType!='columns' || this.selectedColumns.length==1) },
           icons: [{icon: 'filter_list'}]

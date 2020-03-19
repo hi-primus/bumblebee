@@ -336,7 +336,7 @@ import OutputColumnInputs from '@/components/OutputColumnInputs'
 import Outliers from '@/components/Outliers'
 import clientMixin from '@/plugins/mixins/client'
 import { mapGetters } from 'vuex'
-import { parseResponse, debounce, newName, arrayJoin, cancellablePromise } from '@/utils/functions.js'
+import { parseResponse, debounce, newName, arrayJoin } from '@/utils/functions.js'
 
 const api_url = process.env.API_URL || 'http://localhost:5000'
 
@@ -596,7 +596,7 @@ export default {
               text: '',
               expression: `${this.dataset.varname}["${columns[0]}"]`,
               action: 'select',
-              _preview: 'highlight',
+              // _preview: 'highlight',
               _highlight: 'green'
             }
           },
@@ -643,7 +643,7 @@ export default {
                     expression = `(${this.dataset.varname}["${payload.columns[0]}"]>=${payload.selection.ranges[0][0]}) & (${this.dataset.varname}["${payload.columns[0]}"]<=${payload.selection.ranges[0][1]})`
                 }
                 else if (payload.selectionType=='values') {
-                  expression = `${this.dataset.varname}.${payload.columns[0]}.isin(["${payload.selection.values.join('","')}"])`
+                  expression = `${this.dataset.varname}["${payload.columns[0]}"].isin(["${payload.selection.values.join('","')}"])`
                 }
               case 'custom':
               default:
@@ -893,13 +893,13 @@ export default {
               var code
 
               if (this.currentCommand.algorithm == 'levenshtein')
-                code = `from optimus.ml import distancecluster as dc${sl}dc.levenshtein_cluster(${this.dataset.varname}, "${this.currentCommand.columns[0]}"`
+                code = `from optimus.ml import distancecluster as dc; _output = dc.levenshtein_cluster(${this.dataset.varname}, "${this.currentCommand.columns[0]}"`
                 +(this.currentCommand.threshold!='' ? `, threshold=${this.currentCommand.threshold}` : '')
                 +`, output="json")`
               else if (this.currentCommand.algorithm == 'fingerprint')
-                code = `from optimus.ml import keycollision as kc${sl}kc.fingerprint_cluster(${this.dataset.varname}, input_cols="${this.currentCommand.columns[0]}", output="json")`
+                code = `from optimus.ml import keycollision as kc; _output = kc.fingerprint_cluster(${this.dataset.varname}, input_cols="${this.currentCommand.columns[0]}", output="json")`
               else if (this.currentCommand.algorithm == 'n_gram_fingerprint')
-                code = `from optimus.ml import keycollision as kc${sl}kc.n_gram_fingerprint_cluster(${this.dataset.varname}, input_cols="${this.currentCommand.columns[0]}", n_size=${this.currentCommand.n_size}, output="json")`
+                code = `from optimus.ml import keycollision as kc; _output = kc.n_gram_fingerprint_cluster(${this.dataset.varname}, input_cols="${this.currentCommand.columns[0]}", n_size=${this.currentCommand.n_size}, output="json")`
               else
                 throw 'Invalid algorithm type input'
 
@@ -908,8 +908,16 @@ export default {
               this.currentCommand.error = false
 
               var response = await this.evalCode(code)
+              var clusters = parseResponse(response.data.result)
 
-              var clusters = parseResponse(response.content)
+              if (!clusters) {
+                response = await this.evalCode(code)
+                clusters = parseResponse(response.data.result)
+              }
+
+              if (!clusters) {
+                throw response
+              }
 
               clusters = Object.entries(clusters).map(e=>{
 
@@ -1082,13 +1090,31 @@ export default {
 
               this.currentCommand.loading = true
 
-              var response = await this.evalCode(`import json${sl}${code}${sl}json.dumps(outlier.info())`)
+              var response = await this.evalCode(`import json; ${code}; _output = json.dumps(outlier.info())`)
               var outliers_data = parseResponse(response.content)
+
+              if (!outliers_data) {
+                response = await this.evalCode(`import json; ${code}; _output = json.dumps(outlier.info())`)
+                outliers_data = parseResponse(response.content)
+              }
+
+              if (!outliers_data) {
+                throw response
+              }
 
               if ( ['tukey','mad'].includes(this.currentCommand.algorithm) ) {
 
-                var hist_response = await this.evalCode(`outlier.hist("${this.currentCommand.columns[0]}")`)
+                var hist_response = await this.evalCode(`_output = outlier.hist("${this.currentCommand.columns[0]}")`)
                 var hist_data = parseResponse(hist_response.content)
+
+                if (!hist_data) {
+                  hist_response = await this.evalCode(`_output = outlier.hist("${this.currentCommand.columns[0]}")`)
+                  hist_data = parseResponse(hist_response.content)
+                }
+
+                if (!hist_data) {
+                  throw hist_response
+                }
 
                 var hist = hist_data[this.currentCommand.columns[0]].hist
 
@@ -1313,7 +1339,7 @@ export default {
 
               code += ')'
 
-              var response = await this.evalCode(code+`${sl}db.tables_names_to_json()`)
+              var response = await this.evalCode(code+`; _output = db.tables_names_to_json()`)
 
               var tables = parseResponse(response.content)
               if (!tables.length){
@@ -1624,7 +1650,8 @@ export default {
               index: '',
               drop: false,
               output_cols: columns.map(e=>e),
-              _preview: 'unnest'
+              _preview: 'unnest',
+              _highlightColor: 'red'
             }
 					},
 					code: (payload) => {
@@ -2027,7 +2054,7 @@ export default {
 
   computed: {
 
-    ...mapGetters(['currentSelection','selectionType','currentTab','currentWindow','currentBuffer']),
+    ...mapGetters(['currentSelection','selectionType','currentTab']),
 
     cells: {
       get() {
@@ -2087,10 +2114,6 @@ export default {
 
   watch: {
 
-    currentWindow(value) {
-      this.getPreviewDebounced()
-    },
-
     view (value) {
       if (value=='operations' || !value) {
         this.currentCommand = false
@@ -2109,7 +2132,7 @@ export default {
         try {
           if (this.command && this.command.dialog && (!this.command.dialog.validate || this.command.dialog.validate(this.currentCommand))) {
             if (this.currentCommand._preview) {
-              this.getPreviewDebounced()
+              this.getPreview()
             }
           }
         } catch (error) {
@@ -2134,20 +2157,6 @@ export default {
 
   methods: {
 
-    async getCommandResponse (type = false) {
-      if (this.cancelPromise[type]) {
-        this.cancelPromise[type]({status: 'error', message: 'cancelled request'})
-      }
-      var { promise, cancel } = cancellablePromise( this.getCode(this.currentCommand,type) )
-      this.cancelPromise[type] = cancel
-      var code = await promise
-      var { promise, cancel } = cancellablePromise( this.evalCode( code ) )
-      this.cancelPromise[type] = cancel
-      var response = await promise
-      this.cancelPromise[type] = false
-      return response
-    },
-
     cleanCodeError () {
       this.$emit('update:codeError','')
     },
@@ -2159,84 +2168,21 @@ export default {
     async getPreview() {
       // this.$store.commit('previewDefault')
 
-      if (this.currentCommand._preview==='highlight') {
-        this.$store.commit('setHighlightRows',{indices: [0,1,2,3,4,5,6], columns: ['id'], color: this.currentCommand._highlight})
-        return true
-      }
+      // if (this.currentCommand._preview==='highlight') {
+      //   this.$store.commit('setHighlightRows',{indices: [0,1,2,3,4,5,6], columns: ['id'], color: this.currentCommand._highlight})
+      //   return true
+      // }
 
       try {
 
-        if (this.currentCommand._preview==='columns') {
+        if (this.currentCommand._preview) {
 
-          const response = await this.getCommandResponse('preview')
-
-          var dataset = parseResponse(response.content)
-          var payload = {
-            dataset,
-            after: this.currentCommand.columns[0],
-            startingRow: 0,
-          }
-          this.$store.commit('setColumnsPreview',payload)
-          this.$store.commit('setFocusedColumns',this.currentCommand.columns[0])
-        }
-
-        if (this.currentCommand._preview==='unnest') {
-
-          const startingRow = this.currentWindow[0]
-          const after = this.currentCommand.columns[0]
-
-          const response = await this.getCommandResponse('preview')
-          const dataset = parseResponse(response.content)
-
-          if (typeof dataset !== 'object') {
-            throw { msg: 'Parsed content is not an object', content: dataset }
-          }
-
-          if (dataset.stats) {
-            throw { msg: 'Wrong response', content: dataset }
-          }
-
-          var payload = {
-            dataset,
-            after,
-            startingRow,
-          }
-
-          this.$store.commit('setColumnsPreview', payload)
-
-          this.$store.commit('setFocusedColumns',after)
-
-          try {
-            var matches = {}
-
-            const matchesIndex = dataset.sample.columns.findIndex(e=>e.title.includes('__match_positions__'))
-
-            const matchesColumn = (dataset.sample.columns[matchesIndex] && dataset.sample.columns[matchesIndex].title)
-              ? dataset.sample.columns[matchesIndex].title.split('__match_positions__')[0]
-              : after
-
-            matches[matchesColumn] = dataset.sample.value.map(row=>row[matchesIndex])
-
-            this.$store.commit('setHighlights', { matches, color: 'red', startingRow })
-
-          } catch (error) {
-            console.error('highlights',error)
-          }
-
-          try {
-            if (dataset.sample.columns.length) {
-              const responseProfile = await this.getCommandResponse('profile')
-              const datasetProfile = parseResponse(responseProfile.content)
-
-              if (!datasetProfile.stats) {
-                throw { msg: 'Wrong response', content: datasetProfile }
-              }
-
-              this.$store.commit('setProfilePreview', datasetProfile)
-            }
-          } catch (error) {
-            console.error('profile',error)
-          }
+          this.$store.commit('setPreviewCode',{
+            code: this.getCode(this.currentCommand,'preview'),
+            profileCode: this.getCode(this.currentCommand,'profile'),
+            color: this.currentCommand._highlightColor,
+            from: this.currentCommand.columns[0]
+          })
 
         }
 
@@ -2246,10 +2192,6 @@ export default {
 
 
     },
-
-    getPreviewDebounced: debounce(async function() {
-      this.getPreview()
-    },350),
 
     getCommandTitle() {
       try {
@@ -2331,7 +2273,7 @@ export default {
             columns: payload.columns || columns,
             payload
           }
-          this.addCell(-1, event.command, await this.getCode(cell,false))
+          this.addCell(-1, event.command, this.getCode(cell,false))
           this.runButton = false
         }
       }
@@ -2342,11 +2284,11 @@ export default {
       if (_command.onDone) {
         this.currentCommand = await _command.onDone(this.currentCommand)
       }
-      var code = await this.getCode(this.currentCommand, false)
+      var code = this.getCode(this.currentCommand, false)
       this.addCell(-1, this.currentCommand.command, code )
       this.runButton = false
 
-      this.$emit('updateOperations', { active: (this.currentCommand._noOperations ? undefined : true), title: 'operations' } )
+      this.$emit('updateOperations', { active: (this.currentCommand._noOperations ? true : undefined), title: 'operations' } )
 
       this.currentCommand = false
       this.$store.commit('previewDefault')
@@ -2483,7 +2425,7 @@ export default {
         this.codeDone = ''
     },
 
-    async getCode (payload, type) {
+    getCode (payload, type) {
 
       var content = ''
 
@@ -2501,30 +2443,17 @@ export default {
         content = payload.content
       }
 
-      if (type && (!this.currentBuffer || this.currentBuffer!==[payload.command,payload.columns].join())) {
-        var buffer = await this.evalCode(this.dataset.varname+'.ext.set_buffer(["'+payload.columns.join(", ")+'"])\n"0"')
-        this.$store.commit('setBuffer',[payload.command,payload.columns].join())
-      }
-
       if (payload._init) {
         return content
       }
 
       if (type=='preview') {
-
-        var [top,bottom] = this.currentWindow || [0,500]
-        return `${this.dataset.varname}.ext.buffer_window(["${payload.columns.join(", ")}"], ${top}, ${bottom})${content}.ext.to_json("*")`
-
+        return content
       } else if (type=='profile') {
-
-        var [top,bottom] = this.currentWindow || [0,500]
-        return `${this.dataset.varname}.ext.buffer_window(["${payload.columns.join(", ")}"])${content}.ext.profile("*", ${top}, ${bottom}, output="json")`
-
+        return content
       }
       else {
-
         return `${this.dataset.varname} = ${this.dataset.varname}${content}`
-
       }
 
 
@@ -2614,8 +2543,9 @@ export default {
           throw response
         }
 
-        // var content = parseResponse(response.content).data
-        this.handleDatasetResponse(response.content)
+        this.$store.commit('add', {
+          dataset: response.data.result
+        })
 
         this.$forceUpdate()
         this.markCells()
