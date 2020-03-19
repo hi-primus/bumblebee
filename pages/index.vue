@@ -39,23 +39,36 @@
             </v-card-title>
             <v-card-text>
               <v-text-field
-                v-model="inputSession"
-                label="Session"
+                v-model="inputUsername"
+                label="Username"
                 required
                 outlined
                 clearable
               />
 
               <v-text-field
-                v-model="inputKey"
-                :append-icon="showKey ? 'visibility' : 'visibility_off'"
-                :type="(showKey) ? 'text' : 'password'"
+                v-if="$route.query.kernel=='1'"
+                v-model="inputPassword"
+                :append-icon="showPassword ? 'visibility' : 'visibility_off'"
+                :type="(showPassword) ? 'text' : 'password'"
                 autocomplete="current-password"
+                label="Password"
+                required
+                outlined
+                clearable
+                @click:append="showPassword = !showPassword"
+              />
+              <v-text-field
+                v-else
+                v-model="inputPassword"
+                :append-icon="showPassword ? 'visibility' : 'visibility_off'"
+                :type="(showPassword) ? 'text' : 'password'"
+                autocomplete="current-key"
                 label="Key"
                 required
                 outlined
                 clearable
-                @click:append="showKey = !showKey"
+                @click:append="showPassword = !showPassword"
               />
             </v-card-text>
             <v-card-actions>
@@ -242,9 +255,9 @@ export default {
 
 	data () {
 		return {
-			showKey: false,
-			inputKey: '',
-			inputSession: '',
+			showPassword: false,
+			inputPassword: '',
+			inputUsername: '',
 			inputEngine: 'dask',
 			searchText: '',
 			tab: undefined,
@@ -290,8 +303,6 @@ export default {
                 session: this.$store.state.session,
                 engine: this.$store.state.engine
               })
-
-              console.log({response})
 
               if (response.data.optimus) {
                 console.log('Optimus initialized',response.data)
@@ -349,13 +360,13 @@ export default {
 	mounted () {
 		console.log(`Bumblebee v${version}`)
 
-		this.inputSession = this.$route.query.session || ''
-    this.inputKey = this.$route.query.key || ''
+		// this.inputUsername = this.$route.query.username || ''
+    // this.inputPassword = this.$route.query.password || ''
     this.inputEngine = this.$route.query.engine || 'dask'
 
-		if (this.inputSession && this.inputKey) {
-      this.subscribe()
-		}
+		// if (this.inputUsername && this.inputPassword) {
+    //   this.subscribe()
+		// }
 	},
 
 	methods: {
@@ -364,8 +375,18 @@ export default {
       this.typesInput = ''
       this.$refs.autocomplete.loseFocus
 		},
-		subscribe () {
-			this.startClient(this.inputSession, this.inputEngine, this.inputKey)
+		async subscribe () {
+      try {
+        if (this.$route.query.kernel=='1') {
+          var login = await this.$store.dispatch('auth/login',{ username: this.inputUsername, password: this.inputPassword })
+			    this.startClient(this.inputUsername, false, this.inputEngine)
+        } else {
+			    this.startClient(this.inputUsername, this.inputPassword, this.inputEngine)
+        }
+      } catch (error) {
+        console.error(error)
+        this.handleError(error)
+      }
 		},
 		resetStatus (closing) {
 			if (!closing) { this.$store.commit('status') }

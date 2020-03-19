@@ -13,6 +13,7 @@ var rowSchema = mongoose.Schema({
 })
 
 var Row = module.exports = mongoose.model('row', rowSchema)
+
 module.exports.get = function (callback, limit) {
   Row.find(callback).limit(limit)
 }

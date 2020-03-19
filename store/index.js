@@ -1,5 +1,7 @@
 import Vue from 'vue'
 
+import { setAuthToken, resetAuthToken } from '@/utils/auth'
+
 export const state = () => ({
 	datasets: [],
   datasetConfig: [], // TODO
@@ -18,7 +20,6 @@ export const state = () => ({
   status: 'waiting',
   session: '',
   engine: 'dask',
-  key: '',
 	allTypes: [
 		'string',
 		'int',
@@ -30,6 +31,7 @@ export const state = () => ({
 		'null'
 	],
   datasetCounter: 1,
+  key: '',
   kernel: false,
   nextCommand: false,
   tab: 0
@@ -227,7 +229,7 @@ export const mutations = {
     Vue.set(state.buffers,state.tab,payload)
   },
 
-	key (state, payload) {
+  key (state, payload) {
     state.key = payload
   },
 
@@ -271,12 +273,33 @@ export const mutations = {
 
 }
 
+export const actions = {
+  async nuxtServerInit ({ dispatch }, context) {
+    // console.log('[DEBUG] nuxtServerInit')
+    const cookies = this.$cookies.getAll() || {} // cookie.parse(context.req.headers.cookie || '')
+    if (cookies.hasOwnProperty('x-access-token')) {
+      try {
+        setAuthToken(cookies['x-access-token'])
+        await dispatch('auth/fetch')
+        return true
+      } catch (err) {
+        console.error('Provided token is invalid:', err)
+        resetAuthToken()
+        return false
+      }
+    } else {
+      resetAuthToken()
+      return false
+    }
+  }
+}
+
 export const getters = {
-  currentDataset(state) {
+  currentDataset (state) {
     return state.datasets[state.tab]
   },
-  currentSelection(state) {
-    return state.datasetSelection[state.tab] || []
+  currentSelection (state) {
+    return state.datasetSelection[state.tab] || {}
   },
   currentColumnsPreview (state) {
     return state.columnsPreviews[state.tab] || false
@@ -296,13 +319,13 @@ export const getters = {
   currentFocusedColumns (state) {
     return state.focusedColumns[state.tab] || undefined
   },
-  currentTab(state) {
+  currentTab (state) {
     return state.tab
   },
-  currentTableView(state) {
+  currentTableView (state) {
     return state.tableViews[state.tab] || false
   },
-  currentBuffer(state) {
+  currentBuffer (state) {
     try {
       return state.buffers[state.tab]
     } catch (error) {
@@ -320,7 +343,7 @@ export const getters = {
     }
     return 'columns'
   },
-  typesAvailable(state) {
+  typesAvailable (state) {
     return state.datasets[state.tab].dtypes_list || state.allTypes
   }
 }

@@ -20,6 +20,7 @@
     "@nuxtjs/google-tag-manager": "^2.3.2",
     "acorn": "^7.1.1",
     "canvas-datagrid": "^0.22.12",
+    "cookie-universal-nuxt": "^2.1.2",
     "cross-env": "^5.2.1",
     "express": "^4.16.4",
     "fernet": "^0.3.1",
