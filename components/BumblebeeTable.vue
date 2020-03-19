@@ -227,12 +227,11 @@
     class="bb-table-container" ref="BbTableContainer"
   >
     <div class="bb-table" ref="BbTable" :style="tableStyle">
-      <template v-for="(row, rowArrayIndex) in rows">
         <!-- v-show="((row.index>=visibleRowsTop) && (row.index<=visibleRowsBottom))" -->
         <div
           class="bb-table-row"
-          :key="'r'+row.index+rowArrayIndex"
-          :data-rai="rowArrayIndex"
+          v-for="(row, rowArrayIndex) in rows"
+          :key="'r'+rowArrayIndex"
           :data-ri="row.index"
           :class="[(currentHighlightRows && currentHighlightRows.indices.includes(row.index)) ? 'bb-highlight--'+(currentHighlightRows.color || 'green') : '']"
           :style="{height: rowHeight+'px', top: row.index*rowHeight+'px'}"
@@ -254,7 +253,6 @@
             </template>
           </template>
         </div>
-      </template>
     </div>
 
   </div>
@@ -304,7 +302,8 @@ export default {
 		return {
       maxChunks: 10,
       fetching: false,
-      cancelFetch: false,
+
+      rows: [],
 
       columnMenuIndex: false,
 
@@ -315,6 +314,8 @@ export default {
       // visibleRowsBottom: 100,
       loadedChunksTop: 0,
       loadedChunksBottom: 1,
+
+      loadingChunks: [],
 
       newColumnName: '',
       newColumnType: 'string',
@@ -466,21 +467,8 @@ export default {
       }
     },
 
-    rows () {
-      var rows = []
-      // this.chunks.sort((a,b)=>a.index-b.index) // NO
-      this.chunks.forEach(chunk => {
-        if ((chunk.index>=this.loadedChunksTop) && (chunk.index<=this.loadedChunksBottom)) {
-          rows = [...rows, ...chunk.rows]
-        }
-      })
-      // rows = [...new Set(rows)];
-      rows.sort((a,b)=>a.index-b.index)
-      return [...new Set(rows)]
-    },
-
     rowsCount() {
-      return this.currentDataset.sample_length
+      return this.currentDataset.summary.rows_count
     },
 
     rowStyle() {
@@ -601,6 +589,21 @@ export default {
 
           this.horizontalScrollCheckDown()
         }
+      })
+    },
+
+    updateRows () {
+      this.$nextTick(()=>{
+        var rows = []
+        // this.chunks.sort((a,b)=>a.index-b.index) // NO
+        this.chunks.forEach(chunk => {
+          if ((chunk.index>=this.loadedChunksTop) && (chunk.index<=this.loadedChunksBottom)) {
+            rows = [...rows, ...chunk.rows]
+          }
+        })
+        // rows = [...new Set(rows)];
+        rows.sort((a,b)=>a.index-b.index)
+        this.rows = [...new Set(rows)]
       })
     },
 
@@ -841,27 +844,10 @@ export default {
         var bottom = Math.ceil(bottomPosition/this.rowHeight)
         var length = bottom-top
 
-        this.$store.commit('setWindow',[
-          Math.max(top-length,0),
-          Math.min(bottom+length,this.currentDataset.summary.rows_count)
-        ])
-
-        if (this.cancelFetch!==false) {
-          try {
-            this.cancelFetch('cancelling')
-          } catch (err) {}
-        }
-
-        var {promise, cancel} = cancellablePromise( this.fetchChunks(topPosition, bottomPosition) )
-
-        this.cancelFetch = cancel
-
-        await promise
-
-        this.cancelFetch = false
+        this.fetchChunks(topPosition, bottomPosition)
 
       } catch (err) {
-        // console.error(err)
+        console.error(err)
       }
 
       // this.visibleRowsTop = topPosition/this.rowHeight - 80
@@ -871,6 +857,8 @@ export default {
     },
 
     async fetchChunks(start, end) {
+
+      var fetchid = (Math.random()*1000)%1
 
       var from = Math.max( Math.floor(start*this.postochunk), 0 )
       var to = Math.min( Math.ceil(end*this.postochunk), this.lastChunk )
@@ -882,22 +870,30 @@ export default {
 
       this.fetching = true
 
+      promises = []
+
       for (let i = from; i <= to; i++) {
-        await this.fetchChunk(i)
+        promises.push(this.fetchChunk(i))
       }
+
+      var results = await Promise.all(promises)
 
       this.fetching = false
 
-      if (this.chunks.length>this.maxChunks){
-        this.chunks.splice(0,this.chunks.length-this.maxChunks)
+      var chunks = [...this.chunks]
+
+      if (chunks.length>this.maxChunks){
+        chunks.splice(0,chunks.length-this.maxChunks)
       }
+
+      this.chunks = [...chunks]
+      // this.updateRows()
 
       if (this.mustCheckProfile) {
         var previewCode = (this.currentPreviewCode ? this.currentPreviewCode.profileCode : false) || ''
 
         if (this.currentProfilePreview.code !== previewCode) {
           var dbsp = await this.debouncedSetProfile(previewCode)
-          console.log({dbsp})
         }
       }
 
@@ -905,27 +901,31 @@ export default {
 
     async fetchChunk(index) {
 
+      if (this.loadingChunks[index]) {
+        return 2
+      }
+
+      this.loadingChunks[index] = true
+
       var previewCode = (this.currentPreviewCode ? this.currentPreviewCode.code : false) || ''
+
       var foundIndex = this.chunks.findIndex(chunk => {
         return chunk && (chunk.index === index)
       })
 
       if (foundIndex!==-1 && (this.chunks[foundIndex].preview === previewCode)) {
-        return false
+        this.loadingChunks[index] = false
+        return 2
       }
 
-      var chunkIndexInArray = (foundIndex!==-1) ? foundIndex : this.chunks.push({ index: index, rows: []}) - 1
-
-      this.$set(this.chunks, chunkIndexInArray,{ index: index, rows: [], preview: previewCode || '' })
-
       if (!this.currentBuffer) {
-        var buffer = await this.evalCode(this.currentDataset.varname+'.ext.set_buffer("*")\n"0"')
+        var buffer = await this.evalCode('_output = '+this.currentDataset.varname+'.ext.set_buffer("*")\n"0"')
         this.$store.commit('setBuffer',true)
       }
 
-      var response = await this.evalCode(`${this.currentDataset.varname}.ext.buffer_window("*", ${index*this.chunkSize}, ${((index+1)*this.chunkSize)})${previewCode || ''}.ext.to_json("*")`)
+      var response = await this.evalCode(`_output = ${this.currentDataset.varname}.ext.buffer_window("*", ${index*this.chunkSize}, ${((index+1)*this.chunkSize)})${previewCode || ''}.ext.to_json("*")`)
 
-      var parsed = parseResponse(response.content)
+      var parsed = parseResponse(response.data.result)
 
       var from = index*this.chunkSize
 
@@ -935,11 +935,20 @@ export default {
           value,
           index: from+i
         }))
+
         this.checkIncomingColumns(parsed.sample.columns)
-        this.$set(this.chunks, chunkIndexInArray,{ index: index, rows, preview: previewCode || '' })
-        return true
+        var chunkIndexInArray = (foundIndex!==-1) ? foundIndex : this.chunks.length
+        this.$set(this.chunks, chunkIndexInArray, { index: index, rows, preview: previewCode || '' })
+
+        this.loadingChunks[index] = false
+        this.updateRows()
+        return 1
+
       } else {
-        return false
+
+        this.loadingChunks[index] = false
+        return 0
+
       }
     }
   }

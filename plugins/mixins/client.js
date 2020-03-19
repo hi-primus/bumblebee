@@ -3,6 +3,8 @@ import io from 'socket.io-client'
 let socket
 let promises = {}
 
+let timestamps = 0
+
 const api_url = process.env.API_URL || 'http://localhost:5000'
 
 export default {
@@ -48,7 +50,7 @@ export default {
 
     socketPost (message, payload = {}) {
 
-      var timestamp = new Date().toISOString()
+      var timestamp = ++timestamps
 
       return new Promise( async (resolve, reject) => {
 
@@ -191,7 +193,7 @@ export default {
             delete promises[payload.timestamp]
           }
           else {
-            console.warn('Unhandled reply',payload)
+            console.warn('Wrong timestamp reply',payload.timestamp,payload)
           }
         })
 
