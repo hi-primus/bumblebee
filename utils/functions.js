@@ -130,3 +130,35 @@ export const copyToClipboard = (str) => {
   document.execCommand('copy');
   document.body.removeChild(el);
 };
+
+export const optimizeRanges = (inputRange, existingRanges) => {
+  var newRanges = [inputRange]
+
+  for (let i = 0; i < newRanges.length; i++) {
+    existingRanges.forEach(range => {
+      if (newRanges[i][0]<=range[0] && newRanges[i][1]>=range[1]) {
+        var pushChunk = [range[1]+1, newRanges[i][1]]
+        newRanges[i] = [newRanges[i][0], range[0]-1,]
+        newRanges.push(pushChunk)
+      }
+    })
+  }
+  for (let i = 0; i < newRanges.length; i++) {
+    existingRanges.forEach(range => {
+      if (newRanges[i][0]<=range[1] && newRanges[i][0]>=range[0]) {
+        newRanges[i][0] = range[1] + 1
+      }
+    });
+    existingRanges.reverse().forEach(range => {
+      if (newRanges[i][1]>=range[0] && newRanges[i][1]<=range[1]) {
+        newRanges[i][1] = range[0] - 1
+      }
+    })
+  }
+  for (let i = newRanges.length - 1; i >= 0 ; i--) {
+		if (newRanges[i][0]>newRanges[i][1]) {
+			newRanges.splice(i, 1)
+		}
+	}
+  return newRanges
+}

@@ -176,7 +176,7 @@ const newSocket = function (socket, session) {
     })
   }
   else {
-    console.log('unsecure socket connection for', session)
+    console.log('"""Unsecure socket connection for', session,'"""')
   }
 
   return socket
@@ -201,8 +201,6 @@ io.use(function (socket, next) {
 io.on('connection', async (socket) => {
 
   const { session } = socket.handshake.query
-
-  console.log({unsecure: socket.unsecure})
 
   if (!session) {
     socket.disconnect()

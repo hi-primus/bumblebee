@@ -270,7 +270,7 @@ import Histogram from '@/components/Histogram'
 import Frequent from '@/components/Frequent'
 import DataBar from '@/components/DataBar'
 
-import { parseResponse, arraysEqual, cancellablePromise, throttle, debounce } from '@/utils/functions.js'
+import { parseResponse, arraysEqual, cancellablePromise, throttle, debounce, optimizeRanges } from '@/utils/functions.js'
 
 var doubleClick = false
 
@@ -303,6 +303,8 @@ export default {
       maxChunks: 10,
       fetching: false,
 
+      toFetch: [],
+
       rows: [],
 
       columnMenuIndex: false,
@@ -312,10 +314,10 @@ export default {
 
       // visibleRowsTop: 0,
       // visibleRowsBottom: 100,
-      loadedChunksTop: 0,
-      loadedChunksBottom: 1,
+      loadedRowsTop: 0,
+      loadedRowsBottom: 1,
 
-      loadingChunks: [],
+      loadingRows: [],
 
       newColumnName: '',
       newColumnType: 'string',
@@ -326,6 +328,8 @@ export default {
       selection: [],
       previousSelection : {},
       chunks: [],
+      chunksPreview: [],
+      chunksPreviewCode: '',
       columns: {}
 		}
   },
@@ -415,14 +419,6 @@ export default {
       },{})
     },
 
-    postochunk() {
-      return 1/(this.rowHeight*this.chunkSize)
-    },
-
-    chunkSize () {
-      return Math.max(Math.ceil(300/this.currentDataset.columns.length),40)
-    },
-
     plotsData () {
 			return this.currentDataset.columns.map((column, i) => {
 				return {
@@ -486,7 +482,7 @@ export default {
       }
     },
 
-    lastChunk() {
+    lastRow() {
       return Math.floor(this.rowsCount / this.chunkSize)
     }
 
@@ -519,6 +515,16 @@ export default {
 
   watch: {
 
+    toFetch() {
+      if (this.toFetch.length) {
+        var [from, to] = this.toFetch[this.toFetch.length - 1] // FILO
+        if (to) {
+          this.fetchRows(from, to)
+        }
+        this.toFetch.pop()
+      }
+    },
+
     currentSelection (value) {
       this.updateSelection(value)
     },
@@ -528,7 +534,11 @@ export default {
     },
 
     currentPreviewCode: {
-      handler (value) {
+      handler () {
+        if (this.chunksPreviewCode!==this.currentPreviewCode.code) {
+          this.chunksPreview = []
+          this.updateRows()
+        }
         this.mustCheck = true
         this.throttledScrollCheck()
       }
@@ -537,6 +547,22 @@ export default {
   },
 
   methods: {
+
+    getCurrentWindow () {
+      var element = this.$refs['BbTableContainer']
+
+      if (!element) {
+        return false
+      }
+
+      var topPosition = element.scrollTop
+      var bottomPosition = topPosition + element.clientHeight
+
+      var top = Math.floor(topPosition/this.rowHeight)
+      var bottom = Math.ceil(bottomPosition/this.rowHeight)
+
+      return [top, bottom]
+    },
 
     async checkIncomingColumns (columns) {
       if (this.mustCheck) {
@@ -600,10 +626,13 @@ export default {
       this.$nextTick(()=>{
         var rows = []
         // this.chunks.sort((a,b)=>a.index-b.index) // NO
-        this.chunks.forEach(chunk => {
-          if ((chunk.index>=this.loadedChunksTop) && (chunk.index<=this.loadedChunksBottom)) {
-            rows = [...rows, ...chunk.rows]
-          }
+        var chunks = (this.currentPreviewCode) ? this.chunksPreview : this.chunks
+        chunks.forEach(chunk => {
+          // if ((chunk.index>=this.loadedRowsTop) && (chunk.index<=this.loadedRowsBottom)) {
+            if (chunk.rows && chunk.rows.length) {
+              rows = [...rows, ...chunk.rows]
+            }
+          // }
         })
         // rows = [...new Set(rows)];
         rows.sort((a,b)=>a.index-b.index)
@@ -841,59 +870,56 @@ export default {
 
       try {
 
-        var element = this.$refs['BbTableContainer']
+        var range = this.getCurrentWindow()
 
-        var topPosition = element.scrollTop
-        var bottomPosition = topPosition + element.clientHeight
-
-        var top = Math.floor(topPosition/this.rowHeight)
-        var bottom = Math.ceil(bottomPosition/this.rowHeight)
-        var length = bottom-top
-
-        this.fetchChunks(topPosition, bottomPosition)
+        if (range) {
+          this.toFetch.push(range)
+        }
 
       } catch (err) {
         console.error(err)
       }
-
-      // this.visibleRowsTop = topPosition/this.rowHeight - 80
-      // this.visibleRowsBottom = bottomPosition/this.rowHeight + 80
-
-      // this.fetchChunks(startRow, endRow+1)
     },
 
-    async fetchChunks(start, end) {
+    async fetchRows(from, to) {
 
-      var fetchid = (Math.random()*1000)%1
+      var length = to - from
+      var values = this.getCurrentWindow()
 
-      var from = Math.max( Math.floor(start*this.postochunk), 0 )
-      var to = Math.min( Math.ceil(end*this.postochunk), this.lastChunk )
+      if (values) {
+        var [currentFrom, currentTo] = values
 
-      this.loadedChunksTop = from - 3
-      this.loadedChunksBottom = to + 3
+        if ( Math.abs(currentFrom-from)>length*1.5 ) {
+          return false // not neccessary
+        }
+      }
+
+      from = Math.max( from - length, 0 )
+      to = Math.min( to + length, this.rowsCount - 1 )
 
       var promises = []
 
-      this.fetching = true
+      var chunks = (this.currentPreviewCode) ? this.chunksPreview : this.chunks
 
-      promises = []
-
-      for (let i = from; i <= to; i++) {
-        promises.push(this.fetchChunk(i))
+      while (chunks.length>this.maxChunks){
+        var index = chunks.findIndex(chunk=>( Math.abs(values[0]-chunk.from)>length*2 ))
+        chunks.splice(index, 1)
       }
 
-      var results = await Promise.all(promises)
+      var newChunks = optimizeRanges(
+        [from,to],
+        chunks.map(e=>[e.from,e.to])
+      )
 
-      this.fetching = false
-
-      var chunks = [...this.chunks]
-
-      if (chunks.length>this.maxChunks){
-        chunks.splice(0,chunks.length-this.maxChunks)
+      if (!newChunks.length) {
+        return false // not neccessary
       }
 
-      this.chunks = [...chunks]
-      // this.updateRows()
+      for (let i = 0; i < newChunks.length; i++) {
+        await this.fetchChunk(newChunks[i][0], newChunks[i][1])
+      }
+
+      this.updateRows()
 
       if (this.mustCheckProfile) {
         var previewCode = (this.currentPreviewCode ? this.currentPreviewCode.profileCode : false) || ''
@@ -905,35 +931,24 @@ export default {
 
     },
 
-    async fetchChunk(index) {
+    async fetchChunk(from, to) {
 
-      if (this.loadingChunks[index]) {
-        return 2
-      }
+      var chunks = (this.currentPreviewCode) ? this.chunksPreview : this.chunks
 
-      this.loadingChunks[index] = true
+      var index = chunks.length
 
       var previewCode = (this.currentPreviewCode ? this.currentPreviewCode.code : false) || ''
 
-      var foundIndex = this.chunks.findIndex(chunk => {
-        return chunk && (chunk.index === index)
-      })
-
-      if (foundIndex!==-1 && (this.chunks[foundIndex].preview === previewCode)) {
-        this.loadingChunks[index] = false
-        return 2
-      }
+      // chunks[index] = { from, to, preview: previewCode || '' }
 
       if (!this.currentBuffer) {
         var buffer = await this.evalCode('_output = '+this.currentDataset.varname+'.ext.set_buffer("*")\n"0"')
         this.$store.commit('setBuffer',true)
       }
 
-      var response = await this.evalCode(`_output = ${this.currentDataset.varname}.ext.buffer_window("*", ${index*this.chunkSize}, ${((index+1)*this.chunkSize)})${previewCode || ''}.ext.to_json("*")`)
+      var response = await this.evalCode(`_output = ${this.currentDataset.varname}.ext.buffer_window("*", ${from}, ${to+1})${previewCode || ''}.ext.to_json("*")`)
 
       var parsed = parseResponse(response.data.result)
-
-      var from = index*this.chunkSize
 
       if (parsed.sample) {
 
@@ -942,19 +957,12 @@ export default {
           index: from+i
         }))
 
-        this.checkIncomingColumns(parsed.sample.columns)
-        var chunkIndexInArray = (foundIndex!==-1) ? foundIndex : this.chunks.length
-        this.$set(this.chunks, chunkIndexInArray, { index: index, rows, preview: previewCode || '' })
-
-        this.loadingChunks[index] = false
-        this.updateRows()
+        chunks[index] = { from, to, rows, preview: previewCode || '' }
+        this.checkIncomingColumns(parsed.sample.columns) // TODO: check debounce
         return 1
 
       } else {
-
-        this.loadingChunks[index] = false
         return 0
-
       }
     }
   }

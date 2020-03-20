@@ -651,7 +651,7 @@ export default {
           // group: 'FILTER',
           onClick: ()=>{
             var command = { command: 'filter rows' }
-            if (this.currentSelection && this.currentSelection.ranged) {
+            if (this.selectionType!='columns' && this.currentSelection && this.currentSelection.ranged) {
               command.columns = [ this.dataset.columns[this.currentSelection.ranged.index].name ]
             }
             this.commandHandle( command )
