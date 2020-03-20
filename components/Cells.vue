@@ -1533,9 +1533,16 @@ export default {
 						search_by: 'chars',
             output_cols: columns.map(e=>e),
             title: 'Replace in ' + (columns.length==1 ? `column` : 'columns'),
+            _preview: 'replace',
+            _highlightColor: {default: 'red', preview: 'green'}
 					}),
           code: (payload) => {
             var _argument = (payload.columns.length==1) ? `"${payload.columns[0]}"` : `["${payload.columns.join('", "')}"]`
+
+            if (payload._requestType==='preview' || payload._requestType==='profile') {
+              payload.output_cols = payload.output_cols.map(col=>'new '+col)
+            }
+
             var output_cols_argument =
               (!payload.output_cols.join('').trim().length) ? false :
               (payload.output_cols.length==1) ? `"${payload.output_cols[0]}"` :
@@ -1547,6 +1554,8 @@ export default {
               +`, search_by="${payload.search_by}"`
               +( (output_cols_argument) ? `, output_cols=${output_cols_argument}` : '')
               +')'
+              +( (payload._requestType==='preview') ? `.cols.find(${_argument}, sub=["${payload.search.join('","')}"])` : '')
+              +( (payload._requestType==='preview') ? `.cols.find(${output_cols_argument}, sub=["${payload.replace}"])` : '')
           }
         },
         set: {
