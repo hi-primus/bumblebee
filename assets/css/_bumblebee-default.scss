@@ -1904,4 +1904,9 @@ $editor-top-padding: 6px;
   &--blue {
     background-color: $highlight-blue;
   }
+  .bb-preview & {
+    &--red, &--green, &--blue {
+      color: darken(desaturate($data-preview,45%),10%);
+    }
+  }
 }

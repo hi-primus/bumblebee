@@ -39,6 +39,6 @@ $font-mono-table: "Ubuntu Mono Table", monospace !important;
 
 // highlights //
 
-$highlight-green: lighten($data-teal,39%);
+$highlight-green: lighten(desaturate($data-teal,50%),45%);
 $highlight-red: lighten($data-red,24%);
 $highlight-blue: lighten($data-primary,36%);

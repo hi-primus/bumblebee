@@ -248,7 +248,7 @@
                   'bb-preview': column.type=='preview'
                 }"
                 :style="{width: (columns[column.index] || {width: 170}).width+'px'}"
-                v-html="getCell(column.index,rowArrayIndex)"
+                v-html="getCell(column.index,rowArrayIndex,(column.type==='preview') ? column.name : false)"
               ></div>
             </template>
           </template>
@@ -351,7 +351,11 @@ export default {
       var hm = {}
       try {
         this.currentHighlights.matchColumns.forEach(column => {
-          hm[column.columnIndex] = column
+          if (column.columnIndex>=0) {
+            hm[column.columnIndex] = column
+          } else {
+            hm[column.columnTitle] = column
+          }
         })
       } catch (err) {
         // console.error(err)
@@ -639,7 +643,7 @@ export default {
       this.$store.commit('commandHandle',command)
     },
 
-    getCell (column, row) {
+    getCell (column, row, preview = false) {
       var content
       try {
         content = (this.rows[row].value[column]!==null && this.rows[row].value[column]!==undefined) ? this.rows[row].value[column] : ''
@@ -648,11 +652,13 @@ export default {
         content = 'ERROR.'
       }
       try {
-        var hlCol = this.highlightMatches[column] && this.highlightMatches[column].index
-        if (hlCol) {
+        var hlCol = (this.highlightMatches[preview || column]) ? this.highlightMatches[preview || column].index : undefined
+
+        if (hlCol!==undefined) {
+          var color = this.currentHighlights.color['default'] ? this.currentHighlights.color[preview ? 'preview' : 'default'] : this.currentHighlights.color
           for (let i = this.rows[row].value[hlCol].length - 1; i >= 0; i--) {
             const [a,b] = this.rows[row].value[hlCol][i]
-            content = content.substring(0,a)+`<span class="hlt--${this.currentHighlights.color}">`+content.substring(a,b)+'</span>'+content.substring(b)
+            content = content.substring(0,a)+`<span class="hlt--${color}">`+content.substring(a,b)+'</span>'+content.substring(b)
           }
         }
       } catch (err) {}
