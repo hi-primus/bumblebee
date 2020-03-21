@@ -306,6 +306,7 @@ export default {
       toFetch: [],
 
       rows: [],
+      rowsPreview: [],
 
       columnMenuIndex: false,
 
@@ -625,18 +626,21 @@ export default {
     updateRows () {
       this.$nextTick(()=>{
         var rows = []
-        // this.chunks.sort((a,b)=>a.index-b.index) // NO
-        var chunks = (this.currentPreviewCode) ? this.chunksPreview : this.chunks
-        chunks.forEach(chunk => {
-          // if ((chunk.index>=this.loadedRowsTop) && (chunk.index<=this.loadedRowsBottom)) {
+        var rowsPreview = []
+        this.chunksPreview.forEach(chunk => {
+            if (chunk.rows && chunk.rows.length) {
+              rowsPreview = [...rowsPreview, ...chunk.rows]
+            }
+        })
+        this.chunks.forEach(chunk => {
             if (chunk.rows && chunk.rows.length) {
               rows = [...rows, ...chunk.rows]
             }
-          // }
         })
-        // rows = [...new Set(rows)];
         rows.sort((a,b)=>a.index-b.index)
+        rowsPreview.sort((a,b)=>a.index-b.index)
         this.rows = [...new Set(rows)]
+        this.rowsPreview = [...new Set(rowsPreview)]
       })
     },
 
@@ -673,24 +677,27 @@ export default {
     },
 
     getCell (column, row, preview = false) {
-      var content
-      try {
-        content = (this.rows[row].value[column]!==null && this.rows[row].value[column]!==undefined) ? this.rows[row].value[column] : ''
-      } catch (err) {
-        console.error('err',err)
-        content = 'ERROR.'
-      }
-      try {
-        var hlCol = (this.highlightMatches[preview || column]) ? this.highlightMatches[preview || column].index : undefined
-
-        if (hlCol!==undefined) {
-          var color = this.currentHighlights.color['default'] ? this.currentHighlights.color[preview ? 'preview' : 'default'] : this.currentHighlights.color
-          for (let i = this.rows[row].value[hlCol].length - 1; i >= 0; i--) {
-            const [a,b] = this.rows[row].value[hlCol][i]
-            content = content.substring(0,a)+`<span class="hlt--${color}">`+content.substring(a,b)+'</span>'+content.substring(b)
-          }
+      var content = ''
+      var rows = (preview) ? this.rowsPreview : this.rows
+      if (rows && rows.length && rows[row]) {
+        try {
+          content = (rows[row].value[column]!==null && rows[row].value[column]!==undefined) ? rows[row].value[column] : ''
+        } catch (err) {
+          console.error('err',err)
+          content = 'ERROR.'
         }
-      } catch (err) {}
+        try {
+          var hlCol = (this.highlightMatches[preview || column]) ? this.highlightMatches[preview || column].index : undefined
+
+          if (hlCol!==undefined) {
+            var color = this.currentHighlights.color['default'] ? this.currentHighlights.color[preview ? 'preview' : 'default'] : this.currentHighlights.color
+            for (let i = this.rowsPreview[row].value[hlCol].length - 1; i >= 0; i--) {
+              const [a,b] = this.rowsPreview[row].value[hlCol][i]
+              content = content.substring(0,a)+`<span class="hlt--${color}">`+content.substring(a,b)+'</span>'+content.substring(b)
+            }
+          }
+        } catch (err) {}
+      }
       return `<span class="select-none">&nbsp;</span>${content}<span class="select-none">&nbsp;</span>`
     },
 
