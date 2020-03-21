@@ -931,7 +931,7 @@ export default {
 
     calculateHeatMap (xindex,yindex,xsize,ysize) {
 
-      if (!this.dataset.sample) {
+      if (!this.dataset.sample || !this.dataset.sample.value) {
         return false
       }
 
