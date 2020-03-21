@@ -227,32 +227,32 @@
     class="bb-table-container" ref="BbTableContainer"
   >
     <div class="bb-table" ref="BbTable" :style="tableStyle">
-        <!-- v-show="((row.index>=visibleRowsTop) && (row.index<=visibleRowsBottom))" -->
-        <div
-          class="bb-table-row"
-          v-for="(row, rowArrayIndex) in rows"
-          :key="'r'+rowArrayIndex"
-          :data-ri="row.index"
-          :class="[(currentHighlightRows && currentHighlightRows.indices.includes(row.index)) ? 'bb-highlight--'+(currentHighlightRows.color || 'green') : '']"
-          :style="{height: rowHeight+'px', top: row.index*rowHeight+'px'}"
-        >
-          <template v-for="column in allColumns">
-            <template v-if="row.value">
-              <div
-                :key="column.index"
-                class="bb-table-cell"
-                :class="{
-                  'bb-selected': selectionMap[column.index],
-                  'missing': row.value[column.index]==='',
-                  'none': row.value[column.index]===null,
-                  'bb-preview': column.type=='preview'
-                }"
-                :style="{width: (columns[column.index] || {width: 170}).width+'px'}"
-                v-html="getCell(column.index,rowArrayIndex,(column.type==='preview') ? column.name : false)"
-              ></div>
-            </template>
+      <!-- v-show="((row.index>=visibleRowsTop) && (row.index<=visibleRowsBottom))" -->
+      <div
+        class="bb-table-row"
+        v-for="(row, rowArrayIndex) in rows"
+        :key="'r'+rowArrayIndex"
+        :data-ri="row.index"
+        :class="[(currentHighlightRows && currentHighlightRows.indices.includes(row.index)) ? 'bb-highlight--'+(currentHighlightRows.color || 'green') : '']"
+        :style="{height: rowHeight+'px', top: row.index*rowHeight+'px'}"
+      >
+        <template v-for="column in allColumns">
+          <template v-if="row.value">
+            <div
+              :key="column.index"
+              class="bb-table-cell"
+              :class="{
+                'bb-selected': selectionMap[column.index],
+                'missing': row.value[column.index]==='',
+                'none': row.value[column.index]===null,
+                'bb-preview': column.type=='preview'
+              }"
+              :style="{width: (columns[column.index] || {width: 170}).width+'px'}"
+              v-html="getCell(column.index,rowArrayIndex,(column.type==='preview') ? column.name : false)"
+            ></div>
           </template>
-        </div>
+        </template>
+      </div>
     </div>
 
   </div>
