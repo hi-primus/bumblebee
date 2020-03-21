@@ -1704,13 +1704,16 @@ export default {
               columns,
               separator: ', ',
               title: 'Nest '+(columns.length==1 ? `column` : 'columns'),
-							newName: ''
+              newName: '',
+              _preview: 'nest',
+              _highlightColor: {default: 'none', preview: 'green'}
 					}
           },
 					code: (payload) => {
             return `.cols.nest(["${payload.columns.join('", "')}"]`
 						+( (payload.separator) ? `, separator="${payload.separator}"` : '')
-						+`, output_col="${payload.newName}")`
+            +`, output_col="${payload.newName}")`
+            +( (payload._requestType==='preview' && payload.separator) ? `.cols.find("${payload.newName}", sub=["${payload.separator}"])` : '')
           }
         },
         duplicate: {
