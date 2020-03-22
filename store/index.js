@@ -55,8 +55,8 @@ export const mutations = {
     Vue.set( state.profilePreviews, state.tab, dataset )
   },
 
-  setHighlightRows (state, {indices, color}) {
-    var highlightRows = { indices: indices || [], color: color || 'green' }
+  setHighlightRows (state, payload ) {
+    var highlightRows = payload
 
     Vue.set( state.highlightRows, state.tab, highlightRows )
   },

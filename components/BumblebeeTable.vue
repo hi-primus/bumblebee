@@ -233,7 +233,7 @@
         v-for="(row, rowArrayIndex) in rows"
         :key="'r'+rowArrayIndex"
         :data-ri="row.index"
-        :class="[(currentHighlightRows && currentHighlightRows.indices.includes(row.index)) ? 'bb-highlight--'+(currentHighlightRows.color || 'green') : '']"
+        :class="['bb-highlight--'+getRowHighlight(rowArrayIndex)]"
         :style="{height: rowHeight+'px', top: row.index*rowHeight+'px'}"
       >
         <template v-for="column in allColumns">
@@ -301,8 +301,8 @@ export default {
 	data () {
 		return {
       maxChunks: 10,
-      fetching: false,
 
+      fetching: false,
       toFetch: [],
 
       rows: [],
@@ -516,16 +516,6 @@ export default {
 
   watch: {
 
-    toFetch() {
-      if (this.toFetch.length) {
-        var [from, to] = this.toFetch[this.toFetch.length - 1] // FILO
-        if (to) {
-          this.fetchRows(from, to)
-        }
-        this.toFetch.pop()
-      }
-    },
-
     currentSelection (value) {
       this.updateSelection(value)
     },
@@ -578,13 +568,20 @@ export default {
               !columnNames.includes(column.title)//index>=this.currentDataset.columns.length
               &&
               !column.title.includes('__match_positions__')
+              &&
+              column.title!=='__match__'
             ))
+
+          var matchRowsColumns = receivedColumns
+            .filter((column, index)=>(column.title==='__match__'))
 
           var matchColumns = receivedColumns
             .filter((column, index)=>(
               !columnNames.includes(column.title)//index>=this.currentDataset.columns.length
               &&
               column.title.includes('__match_positions__')
+              &&
+              column.title!=='__match__'
             ))
             .map((column)=>{
               var columnTitle = column.title.split('__match_positions__')[0]
@@ -595,9 +592,13 @@ export default {
               }
             })
 
-          this.$store.commit('setColumnsPreview', previewColumns)
-
           var color = this.currentPreviewCode.color
+
+          if (matchRowsColumns[0]) {
+            this.$store.commit('setHighlightRows', { ...matchRowsColumns[0], color })
+          }
+
+          this.$store.commit('setColumnsPreview', previewColumns)
 
           this.$store.commit('setHighlights', { matchColumns, color })
 
@@ -630,11 +631,15 @@ export default {
         this.chunksPreview.forEach(chunk => {
             if (chunk.rows && chunk.rows.length) {
               rowsPreview = [...rowsPreview, ...chunk.rows]
+            } else {
+              console.warn(chunk)
             }
         })
         this.chunks.forEach(chunk => {
             if (chunk.rows && chunk.rows.length) {
               rows = [...rows, ...chunk.rows]
+            } else {
+              console.warn(chunk)
             }
         })
         rows.sort((a,b)=>a.index-b.index)
@@ -674,6 +679,20 @@ export default {
 
     commandHandle(command) {
       this.$store.commit('commandHandle',command)
+    },
+
+    getRowHighlight (row) {
+      var rows = this.rowsPreview
+      if (rows && rows.length && rows[row]) {
+        var hlCol = this.currentHighlightRows.index
+        var color = this.currentHighlightRows.color
+        try {
+          if (rows[row].value[hlCol]) {
+            return this.currentHighlightRows.color || 'green'
+          }
+        } catch (err) {}
+      }
+      return ''
     },
 
     getCell (column, row, preview = false) {
@@ -873,44 +892,88 @@ export default {
 
     throttledScrollCheck: throttle(function(e) {this.scrollCheck(e)} , throttleScrollTime),
 
-    async scrollCheck () {
+    async scrollCheck (e) {
 
       try {
 
         var range = this.getCurrentWindow()
 
         if (range) {
-          this.toFetch.push(range)
+          var [from, to] = range
+          var length = to - from
+          this.toFetch.push(
+            [from - length, to - length],
+            [from + length, to + length],
+            [from, to]
+          )
         }
+
+        this.debouncedFetchRows()
 
       } catch (err) {
         console.error(err)
       }
     },
 
-    async fetchRows(from, to) {
+    async alwaysFetchRows () {
+      var result = await this.fetchRows()
+      if (result) {
+        this.alwaysFetchRows()
+      } else {
+        setTimeout(() => {
+
+        }, 2000);
+      }
+    },
+
+    debouncedFetchRows: debounce( async function(){
+      try {
+        if (!this.fetching) {
+          this.fetching = true
+          var result = await this.fetchRows()
+          this.fetching = false
+        }
+        if (this.toFetch.length) {
+          this.debouncedFetchRows()
+        }
+      } catch (err) {
+        console.error(err)
+        this.fetching = false
+        if (this.toFetch.length) {
+          this.debouncedFetchRows()
+        }
+      }
+    }, 200),
+
+    async fetchRows () {
+
+      var [from, to] = this.toFetch.pop() // FILO
+
+      if (!to) {
+        return false
+      }
+
+      from = Math.max( from, 0 )
+      to = Math.min( to, this.rowsCount - 1 )
 
       var length = to - from
       var values = this.getCurrentWindow()
+
+      var chunks = (this.currentPreviewCode) ? this.chunksPreview : this.chunks
 
       if (values) {
         var [currentFrom, currentTo] = values
 
         if ( Math.abs(currentFrom-from)>length*1.5 ) {
-          return false // not neccessary
+          return false // too far
         }
-      }
 
-      from = Math.max( from - length, 0 )
-      to = Math.min( to + length, this.rowsCount - 1 )
+        var tries = 10
 
-      var promises = []
-
-      var chunks = (this.currentPreviewCode) ? this.chunksPreview : this.chunks
-
-      while (chunks.length>this.maxChunks){
-        var index = chunks.findIndex(chunk=>( Math.abs(values[0]-chunk.from)>length*2 ))
-        chunks.splice(index, 1)
+        while (chunks.length>this.maxChunks && tries--){
+          var index = chunks.findIndex(chunk=>( Math.abs(currentFrom-chunk.from)>length*2 ))
+          chunks.splice(index, 1)
+        }
       }
 
       var newChunks = optimizeRanges(
@@ -919,7 +982,7 @@ export default {
       )
 
       if (!newChunks.length) {
-        return false // not neccessary
+        return false // no chunks
       }
 
       for (let i = 0; i < newChunks.length; i++) {
@@ -935,6 +998,8 @@ export default {
           var dbsp = await this.debouncedSetProfile(previewCode)
         }
       }
+
+      return true
 
     },
 

@@ -1529,15 +1529,15 @@ $editor-top-padding: 6px;
   }
 
   .bb-table-row.bb-highlight--green {
-    background: $highlight-green !important;
+    background: rgba($highlight-green,0.88) !important;
   }
 
   .bb-table-row.bb-highlight--red {
-    background: $highlight-red !important;
+    background: rgba($highlight-red,0.88) !important;
   }
 
   .bb-table-row.bb-highlight--blue {
-    background: $highlight-blue !important;
+    background: rgba($highlight-blue,0.88) !important;
   }
 
 
@@ -1721,14 +1721,14 @@ $editor-top-padding: 6px;
 
   .bb-table-h-cell, .bb-table-cell, .bb-table-plot {
     z-index: 1;
-    margin-left: 1px;
+    margin-left: 0px;
 
     &:not(:first-child) {
       margin-left: -1px;
     }
 
     &:last-child {
-      border-right-width: 1px;
+      border-right-width: 0px;
       border-right-style: solid;
     }
 

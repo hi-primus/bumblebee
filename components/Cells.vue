@@ -544,6 +544,9 @@ export default {
               }
             ],
             validate: (c) => {
+
+              this.currentCommand._highlightColor = (c.action==='select') ? 'green' : 'red'
+
               switch (c.condition) {
                 case 'oneof':
                   return (c.values.length)
@@ -596,60 +599,68 @@ export default {
               text: '',
               expression: `${this.dataset.varname}["${columns[0]}"]`,
               action: 'select',
-              // _preview: 'highlight',
-              _highlight: 'green'
+              _preview: 'filter rows',
+              _highlightColor: 'green'
             }
           },
 
           code: (payload) => {
 
             var expression = payload.expression
+            var varname = this.dataset.varname
+
+            if (payload._requestType==='preview') {
+              varname = `${varname}.ext.get_buffer()`
+            }
 
             switch (payload.condition) {
               case 'exactly':
-                expression = `${this.dataset.varname}["${payload.columns[0]}"]==${payload.value}`
+                expression = `${varname}["${payload.columns[0]}"]==${payload.value}`
                 break
               case 'oneof':
-                expression = `${this.dataset.varname}.${payload.columns[0]}.isin(["${payload.values.join('","')}"])`
+                expression = `${varname}.${payload.columns[0]}.isin(["${payload.values.join('","')}"])`
                 break
               case 'not':
-                expression = `${this.dataset.varname}["${payload.columns[0]}"]!=${payload.value}`
+                expression = `${varname}["${payload.columns[0]}"]!=${payload.value}`
                 break
               case 'less':
-                expression = `${this.dataset.varname}["${payload.columns[0]}"]<=${payload.value}`
+                expression = `${varname}["${payload.columns[0]}"]<=${payload.value}`
                 break
               case 'greater':
-                expression = `${this.dataset.varname}["${payload.columns[0]}"]>=${payload.value}`
+                expression = `${varname}["${payload.columns[0]}"]>=${payload.value}`
                 break
               case 'between':
-                expression = `(${this.dataset.varname}["${payload.columns[0]}"]>=${payload.value}) & (${this.dataset.varname}["${payload.columns[0]}"]<=${payload.value_2})`
+                expression = `(${varname}["${payload.columns[0]}"]>=${payload.value}) & (${varname}["${payload.columns[0]}"]<=${payload.value_2})`
                 break
               case 'contains':
-                expression = `${this.dataset.varname}["${payload.columns[0]}"].contains("${payload.text}")`
+                expression = `${varname}["${payload.columns[0]}"].contains("${payload.text}")`
                 break
               case 'startswith':
-                expression = `${this.dataset.varname}["${payload.columns[0]}"].startswith("${payload.text}")`
+                expression = `${varname}["${payload.columns[0]}"].startswith("${payload.text}")`
                 break
               case 'endswith':
-                expression = `${this.dataset.varname}["${payload.columns[0]}"].endswith("${payload.text}")`
+                expression = `${varname}["${payload.columns[0]}"].endswith("${payload.text}")`
                 break
               case 'selected':
                 if (payload.selectionType=='ranges') {
                   if (payload.selection.ranges.length>1)
                     expression = '('
-                    +payload.selection.ranges.map(range=>`(${this.dataset.varname}["${payload.columns[0]}"]>=${range[0]}) & (${this.dataset.varname}["${payload.columns[0]}"]<=${range[1]})`).join(' | ')
+                    +payload.selection.ranges.map(range=>`(${varname}["${payload.columns[0]}"]>=${range[0]}) & (${varname}["${payload.columns[0]}"]<=${range[1]})`).join(' | ')
                     +')'
                   else
-                    expression = `(${this.dataset.varname}["${payload.columns[0]}"]>=${payload.selection.ranges[0][0]}) & (${this.dataset.varname}["${payload.columns[0]}"]<=${payload.selection.ranges[0][1]})`
+                    expression = `(${varname}["${payload.columns[0]}"]>=${payload.selection.ranges[0][0]}) & (${varname}["${payload.columns[0]}"]<=${payload.selection.ranges[0][1]})`
                 }
                 else if (payload.selectionType=='values') {
-                  expression = `${this.dataset.varname}["${payload.columns[0]}"].isin(["${payload.selection.values.join('","')}"])`
+                  expression = `${varname}["${payload.columns[0]}"].isin(["${payload.selection.values.join('","')}"])`
                 }
               case 'custom':
               default:
             }
-
-            return `.rows.${payload.action}( ${expression} )` // ${this.dataset.varname}.rows.${payload.action}()
+            if (payload._requestType==='preview') {
+              return `.rows.find( ${expression} )` // ${varname}.rows.${payload.action}()
+            } else {
+              return `.rows.${payload.action}( ${expression} )` // ${varname}.rows.${payload.action}()
+            }
           }
         },
         STRING: {
@@ -2193,7 +2204,7 @@ export default {
             code: this.getCode(this.currentCommand,'preview'),
             profileCode: this.getCode(this.currentCommand,'profile'),
             color: this.currentCommand._highlightColor,
-            from: this.currentCommand.columns[this.currentCommand.columns.length - 1]
+            from: this.currentCommand.columns.length ? this.currentCommand.columns[this.currentCommand.columns.length - 1] : 0
           })
 
         }
