@@ -1452,9 +1452,6 @@ $editor-top-padding: 6px;
 /* BB-TABLE */
 
 %bb-table-loading {
-  &::-webkit-scrollbar-track {
-    background: white;
-  }
   animation: background-animation 2.1s ease-in-out infinite;
   background-image:
     repeating-linear-gradient(
@@ -1665,6 +1662,7 @@ $editor-top-padding: 6px;
 
 
   .bb-table-h-cell, .bb-table-plot {
+    background-color: white;
     height: 100%;
   }
 
@@ -1699,6 +1697,11 @@ $editor-top-padding: 6px;
         border-color: darken($data-highlight, 10%) !important;
         & + * {
           border-left-color: darken($data-highlight, 10%) !important;
+        }
+        &:last-child {
+          border-right-color: darken($data-highlight, 10%) !important;
+          border-right-style: solid;
+          border-right-width: 1px;
         }
       }
       &.bb-drag-over {
@@ -1806,6 +1809,12 @@ $editor-top-padding: 6px;
 }
 
 .bb-table-container {
+  &::-webkit-scrollbar-track {
+    background: white;
+  }
+}
+
+.bb-table {
   @extend %bb-table-loading
 }
 
@@ -1835,6 +1844,7 @@ $editor-top-padding: 6px;
 
 .the-table-container {
   padding-left: 9px;
+  background-color: white;
 }
 
 .font-reset {
