@@ -956,7 +956,38 @@ export default {
 
     async fetchRows () {
 
-      var [from, to, force] = this.toFetch.pop() // FILO
+      var chunks = (this.currentPreviewCode) ? this.chunksPreview : this.chunks
+
+      var values = this.getCurrentWindow()
+
+      var currentFrom = (values && values[0]) ? values[0] : 0
+
+      var distanceMap = []
+
+      if (chunks.length>this.maxChunks) {
+        var distanceMap = chunks.map((chunk, index)=>({distance: Math.abs(currentFrom-chunk.from), index, from: chunk.from}))
+          .filter(c=>c.from!==0)
+          .sort((a,b)=>(a.distance-b.distance))
+        var tries = 10
+
+        while (chunks.length>this.maxChunks && tries--){
+          var toDelete = distanceMap.pop()
+          chunks.splice(toDelete.index, 1)
+        }
+      }
+
+      var found = this.toFetch.length - 1
+      var minDistance = Math.abs(this.toFetch[found][0] - currentFrom)
+
+      for (let i = 0; i < this.toFetch.length; i++) {
+        var distance = Math.abs(this.toFetch[i][0] - currentFrom)
+        if (minDistance>distance){
+          found = i
+          minDistance = distance
+        }
+      }
+
+      var [from, to, force] = this.toFetch.splice(found,1)[0]
 
       if (!to) {
         return false
@@ -967,25 +998,10 @@ export default {
 
       var length = to - from
 
-      var chunks = (this.currentPreviewCode) ? this.chunksPreview : this.chunks
+      var distanceFromWindow = Math.abs(currentFrom-from)
 
-      var values = this.getCurrentWindow()
-
-      var currentFrom = undefined
-      var currentTo = undefined
-
-      if (values) {
-        [currentFrom, currentTo] = values
-      }
-
-      if (currentFrom!==undefined) {
-
-        var distanceFromWindow = Math.abs(currentFrom-from)
-
-        if ( distanceFromWindow>length*4 && !force ) {
-          return false // too far
-        }
-
+      if ( distanceFromWindow>length*4 && !force ) {
+        return false // too far
       }
 
       var newChunks = optimizeRanges(
@@ -995,21 +1011,6 @@ export default {
 
       if (!newChunks.length) {
         return false // no chunks
-      }
-
-      if (currentFrom!==undefined) {
-
-        if (chunks.length>this.maxChunks || true) {
-          var distanceMap = chunks.map((chunk, index)=>({distance: Math.abs(currentFrom-chunk.from), index, from: chunk.from})).filter(c=>c.from!==0)
-          distanceMap.sort((a,b)=>(a.distance-b.distance))
-        }
-
-        var tries = 10
-
-        while (chunks.length>this.maxChunks && tries--){
-          var toSplice = distanceMap.pop()
-          chunks.splice(toSplice.index, 1)
-        }
       }
 
       for (let i = 0; i < newChunks.length; i++) {
