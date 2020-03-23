@@ -274,7 +274,7 @@ import { parseResponse, arraysEqual, cancellablePromise, throttle, debounce, opt
 
 var doubleClick = false
 
-const throttleScrollTime = 500
+const throttleScrollTime = 100
 
 export default {
 
@@ -300,11 +300,10 @@ export default {
 
 	data () {
 		return {
-      maxChunks: 16,
+      maxChunks: 8, // 16,
 
       fetching: false,
       toFetch: [],
-      lastFrom: 0,
 
       rows: [],
       rowsPreview: [],
@@ -891,80 +890,79 @@ export default {
       return false
     },
 
-    throttledScrollCheck: throttle(function(e) {this.scrollCheck(e)} , throttleScrollTime),
+    throttledScrollCheck: throttle(function(aw = true) {this.scrollCheck(aw)} , throttleScrollTime),
 
-    async scrollCheck (e) {
-
-      try {
-
-        var range = this.getCurrentWindow()
-
-        if (range) {
-          var [from, to] = range
-          var length = to - from
-
-          this.toFetch.push(
-            [from - (length*4), to - (length*4)],
-            [from + (length*4), to + (length*4)],
-            [from - (length*3), to - (length*3)],
-            [from + (length*3), to + (length*3)],
-            [from - (length*2), to - (length*2)],
-            [from + (length*2), to + (length*2)],
-            [from - length, to - length],
-            [from + length, to + length],
-            [from, to]
-          )
-        }
-
-        this.debouncedFetchRows()
-
-      } catch (err) {
-        console.error(err)
-      }
-    },
-
-    async alwaysFetchRows () {
-      var result = await this.fetchRows()
-      if (result) {
-        this.alwaysFetchRows()
-      } else {
-        setTimeout(() => {
-
-        }, 2000);
-      }
-    },
-
-    debouncedFetchRows: debounce( async function(){
+    async scrollCheck (awaited = true) {
       try {
         if (!this.fetching) {
+
           this.fetching = true
-          var result = await this.fetchRows()
-          this.lastFrom = this.getCurrentWindow()[0]
+
+          if (awaited) {
+            var range = this.getCurrentWindow()
+            if (range) {
+              var [from, to] = range
+              var length = to - from
+              this.toFetch = [
+                [from - (length*8), to + (length*8)],
+                [from - (length*6), to + (length*6)],
+                [from - (length*4), to + (length*4)],
+                [from - (length*2), to + (length*2)],
+                [from - 3, to + 3]
+              ]
+
+              for (let i = this.toFetch.length - 1; i >= 0; i--) {
+                if (this.toFetch[i][0]<0 && this.toFetch[i][1]<0) {
+                  this.toFetch.splice(i,1)
+                  continue;
+                }
+              }
+            }
+          }
+
+          var _awaited = false
+
+          while (!_awaited && this.toFetch.length) {
+             _awaited = await this.fetchRows()
+          }
+
           this.fetching = false
+          if (this.toFetch.length) {
+            this.$nextTick(()=>{
+              this.throttledScrollCheck(_awaited)
+            })
+            return true
+          }
+
         }
-        if (this.toFetch.length) {
-          this.debouncedFetchRows()
+        else if (this.toFetch.length) {
+          this.$nextTick(()=>{
+            this.throttledScrollCheck(false)
+          })
+          return false
         }
       } catch (err) {
         console.error(err)
         this.fetching = false
         if (this.toFetch.length) {
-          this.debouncedFetchRows()
+          this.$nextTick(()=>{
+            this.throttledScrollCheck(false)
+          })
+          return false
         }
       }
-    }, 200),
+
+    },
 
     async fetchRows () {
 
       var chunks = (this.currentPreviewCode) ? this.chunksPreview : this.chunks
 
       var values = this.getCurrentWindow()
+      var currentFrom = (values && values[0]) ? values[0] : -1
 
-      var currentFrom = (values && values[0]) ? values[0] : 0
+      if (chunks.length>this.maxChunks && currentFrom>=0) {
 
-      var distanceMap = []
-
-      if (chunks.length>this.maxChunks) {
         var distanceMap = chunks.map((chunk, index)=>({distance: Math.abs(currentFrom-chunk.from), index, from: chunk.from}))
           .filter(c=>c.from!==0)
           .sort((a,b)=>(a.distance-b.distance))
@@ -972,24 +970,112 @@ export default {
 
         while (chunks.length>this.maxChunks && tries--){
           var toDelete = distanceMap.pop()
-          chunks.splice(toDelete.index, 1)
+          if (toDelete) {
+            chunks.splice(toDelete.index, 1)
+            // console.log(`deleting ${toDelete.from} in chunks`)
+          }
         }
       }
 
-      var found = this.toFetch.length - 1
-      var minDistance = Math.abs(this.toFetch[found][0] - currentFrom)
+      var [from, to, force] = this.toFetch.pop()
 
-      for (let i = 0; i < this.toFetch.length; i++) {
-        var distance = Math.abs(this.toFetch[i][0] - currentFrom)
-        if (minDistance>distance){
-          found = i
-          minDistance = distance
+      if (!to) {
+        // console.log(`cancelling ${from} bc !to ${to}`)
+        return false
+      }
+
+      from = Math.max( from, 0 )
+      to = Math.min( to, this.rowsCount - 1 )
+
+      var length = to - from
+
+      var distanceFromWindow = Math.abs(currentFrom-from)
+
+      var newChunks = optimizeRanges(
+        [from,to],
+        chunks.map(e=>[e.from,e.to])
+      )
+
+      if (!newChunks.length) {
+        // console.log(`cancelling ${from} bc it is already loaded!`)
+        return false // no chunks
+      }
+
+      for (let i = newChunks.length - 1; i >= 0 ; i--) {
+        await this.fetchChunk(newChunks[i][0], newChunks[i][1])
+      }
+
+      this.updateRows()
+
+      if (this.mustCheckProfile) {
+        var previewCode = (this.currentPreviewCode ? this.currentPreviewCode.profileCode : false) || ''
+
+        if (this.currentProfilePreview.code !== previewCode) {
+          var dbsp = await this.debouncedSetProfile(previewCode)
         }
+      }
+
+      return true
+
+    },
+
+    async fetchRowsPrevious () {
+
+      var chunks = (this.currentPreviewCode) ? this.chunksPreview : this.chunks
+
+      var values = this.getCurrentWindow()
+
+      var currentFrom = (values && values[0]) ? values[0] : -1
+
+      var distanceMap = []
+
+
+      var maxDistance = -1
+
+      if (chunks.length>this.maxChunks && currentFrom>=0) {
+
+        var distanceMap = chunks.map((chunk, index)=>({distance: Math.abs(currentFrom-chunk.from), index, from: chunk.from}))
+          .filter(c=>c.from!==0)
+          .sort((a,b)=>(a.distance-b.distance))
+        var tries = 10
+
+        while (chunks.length>this.maxChunks && tries--){
+          var toDelete = distanceMap.pop()
+          if (toDelete) {
+            chunks.splice(toDelete.index, 1)
+            console.log(`deleting ${toDelete.from} in chunks`)
+          }
+        }
+
+        maxDistance = distanceMap[distanceMap.length - 1].distance
+      }
+
+      var found = this.toFetch.length - 1
+
+      if (currentFrom>=0) {
+        var minDistance = Math.abs(this.toFetch[found][0] - currentFrom)
+
+        for (let i = this.toFetch.length - 1; i >= 0; i--) {
+
+          var distance = Math.abs(this.toFetch[i][0] - currentFrom)
+          if (minDistance>distance){
+            found = i
+            minDistance = distance
+          }
+        }
+
+        console.log(`selecting ${this.toFetch[found][0]} in toFetch, nearest of ${currentFrom}`)
+      }
+
+      if (maxDistance>=0 && minDistance>maxDistance) {
+        console.log(`cancelling ${from} bc it would be further ${to}`)
+        return false
       }
 
       var [from, to, force] = this.toFetch.splice(found,1)[0]
 
       if (!to) {
+        console.log(`cancelling ${from} bc !to ${to}`)
         return false
       }
 
@@ -1001,6 +1087,7 @@ export default {
       var distanceFromWindow = Math.abs(currentFrom-from)
 
       if ( distanceFromWindow>length*4 && !force ) {
+        console.log(`cancelling ${from} bc it is too far from ${currentFrom}`)
         return false // too far
       }
 
@@ -1010,6 +1097,7 @@ export default {
       )
 
       if (!newChunks.length) {
+        console.log(`cancelling ${from} bc it is already loaded!`)
         return false // no chunks
       }
 
