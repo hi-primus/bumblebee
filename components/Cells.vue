@@ -2311,7 +2311,7 @@ export default {
       this.addCell(-1, this.currentCommand.command, code )
       this.runButton = false
 
-      this.$emit('updateOperations', { active: (this.currentCommand._noOperations ? true : undefined), title: 'operations' } )
+      this.$emit('updateOperations', { active: (this.currentCommand._noOperations ? false : true), title: 'operations' } )
 
       this.currentCommand = false
       this.$store.commit('previewDefault')
