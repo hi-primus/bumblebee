@@ -2149,20 +2149,20 @@ export default {
       }
     },
 
-    currentCommand: {
-      deep: true,
-      async handler () {
-        try {
-          if (this.command && this.command.dialog && (!this.command.dialog.validate || this.command.dialog.validate(this.currentCommand))) {
-            if (this.currentCommand._preview) {
-              this.getPreview()
-            }
-          }
-        } catch (error) {
-          console.error(error)
-        }
-      }
-    },
+    // currentCommand: {
+    //   deep: true,
+    //   async handler () {
+    //     try {
+    //       if (this.command && this.command.dialog && (!this.command.dialog.validate || this.command.dialog.validate(this.currentCommand))) {
+    //         if (this.currentCommand._preview) {
+    //           this.getPreview()
+    //         }
+    //       }
+    //     } catch (error) {
+    //       console.error(error)
+    //     }
+    //   }
+    // },
 
     dataset: {
       deep: true,
@@ -2189,12 +2189,6 @@ export default {
     },300),
 
     async getPreview() {
-      // this.$store.commit('previewDefault')
-
-      // if (this.currentCommand._preview==='highlight') {
-      //   this.$store.commit('setHighlightRows',{indices: [0,1,2,3,4,5,6], columns: ['id'], color: this.currentCommand._highlight})
-      //   return true
-      // }
 
       try {
 
