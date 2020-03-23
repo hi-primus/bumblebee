@@ -300,10 +300,11 @@ export default {
 
 	data () {
 		return {
-      maxChunks: 10,
+      maxChunks: 16,
 
       fetching: false,
       toFetch: [],
+      lastFrom: 0,
 
       rows: [],
       rowsPreview: [],
@@ -901,7 +902,14 @@ export default {
         if (range) {
           var [from, to] = range
           var length = to - from
+
           this.toFetch.push(
+            [from - (length*4), to - (length*4)],
+            [from + (length*4), to + (length*4)],
+            [from - (length*3), to - (length*3)],
+            [from + (length*3), to + (length*3)],
+            [from - (length*2), to - (length*2)],
+            [from + (length*2), to + (length*2)],
             [from - length, to - length],
             [from + length, to + length],
             [from, to]
@@ -931,6 +939,7 @@ export default {
         if (!this.fetching) {
           this.fetching = true
           var result = await this.fetchRows()
+          this.lastFrom = this.getCurrentWindow()[0]
           this.fetching = false
         }
         if (this.toFetch.length) {
@@ -947,7 +956,7 @@ export default {
 
     async fetchRows () {
 
-      var [from, to] = this.toFetch.pop() // FILO
+      var [from, to, force] = this.toFetch.pop() // FILO
 
       if (!to) {
         return false
@@ -957,23 +966,26 @@ export default {
       to = Math.min( to, this.rowsCount - 1 )
 
       var length = to - from
-      var values = this.getCurrentWindow()
 
       var chunks = (this.currentPreviewCode) ? this.chunksPreview : this.chunks
 
-      if (values) {
-        var [currentFrom, currentTo] = values
+      var values = this.getCurrentWindow()
 
-        if ( Math.abs(currentFrom-from)>length*1.5 ) {
+      var currentFrom = undefined
+      var currentTo = undefined
+
+      if (values) {
+        [currentFrom, currentTo] = values
+      }
+
+      if (currentFrom!==undefined) {
+
+        var distanceFromWindow = Math.abs(currentFrom-from)
+
+        if ( distanceFromWindow>length*4 && !force ) {
           return false // too far
         }
 
-        var tries = 10
-
-        while (chunks.length>this.maxChunks && tries--){
-          var index = chunks.findIndex(chunk=>( Math.abs(currentFrom-chunk.from)>length*2 ))
-          chunks.splice(index, 1)
-        }
       }
 
       var newChunks = optimizeRanges(
@@ -983,6 +995,21 @@ export default {
 
       if (!newChunks.length) {
         return false // no chunks
+      }
+
+      if (currentFrom!==undefined) {
+
+        if (chunks.length>this.maxChunks || true) {
+          var distanceMap = chunks.map((chunk, index)=>({distance: Math.abs(currentFrom-chunk.from), index, from: chunk.from})).filter(c=>c.from!==0)
+          distanceMap.sort((a,b)=>(a.distance-b.distance))
+        }
+
+        var tries = 10
+
+        while (chunks.length>this.maxChunks && tries--){
+          var toSplice = distanceMap.pop()
+          chunks.splice(toSplice.index, 1)
+        }
       }
 
       for (let i = 0; i < newChunks.length; i++) {
