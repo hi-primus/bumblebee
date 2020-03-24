@@ -1682,17 +1682,9 @@ $editor-top-padding: 6px;
     }
     .bb-table-h-cell, .bb-table-cell, .bb-table-plot {
       &.bb-preview {
-        // background-color: $data-preview-background;
         color: $data-preview !important;
-        // border-color: darken($data-preview, 10%) !important;
-        // border-top-color: darken($data-preview, 10%) !important;
-        // border-right-color: darken($data-preview, 10%) !important;
-        // & + * {
-        //   border-left-color: darken($data-preview, 10%) !important;
-        // }
       }
       &.bb-selected {
-        // background-color: $data-highlight;
         background-color: $data-highlight-background; // $data-highlight;
         border-color: darken($data-highlight, 10%) !important;
         & + * {

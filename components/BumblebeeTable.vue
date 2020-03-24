@@ -76,9 +76,6 @@
           :id="(column.previewIndex === previewColumns.length-1) ? 'bb-table-preview-last' : false"
           style="width: 170px"
         >
-          <!-- <div class="data-type" :class="`type-${columns[column.index].column_dtype}`">
-            {{ dataType(currentDataset.columns[column.index].column_dtype) }}
-          </div> -->
           <div class="column-title">
             {{ column.title }}
           </div>
@@ -231,26 +228,40 @@
       <div
         class="bb-table-row"
         v-for="(row, rowArrayIndex) in rows"
-        :key="'r'+rowArrayIndex"
-        :data-ri="row.index"
+        :key="'r'+row.index"
         :class="['bb-highlight--'+getRowHighlight(rowArrayIndex)]"
         :style="{height: rowHeight+'px', top: row.index*rowHeight+'px'}"
       >
         <template v-for="column in allColumns">
-          <template v-if="row.value">
+          <template v-if="column.previewIndex!==undefined && rowsPreview && rowsPreview[rowArrayIndex] && rowsPreview[rowArrayIndex].value[column.previewIndex]">
+            <div
+              :key="'p'+column.index"
+              class="bb-table-cell"
+              :class="[
+                ...column.classes,
+                ...rowsPreview[rowArrayIndex].value[column.previewIndex].classes
+              ]"
+              :style="{width: column.width+'px'}"
+              v-html="rowsPreview[rowArrayIndex].value[column.previewIndex].html"
+            ></div>
+          </template>
+          <template v-else-if="column.previewIndex===undefined && row.value[column.index]">
             <div
               :key="column.index"
               class="bb-table-cell"
-              :class="{
-                'bb-selected': selectionMap[column.index],
-                'missing': row.value[column.index]==='',
-                'none': row.value[column.index]===null,
-                'bb-preview': column.type=='preview'
-              }"
-              :style="{width: (columns[column.index] || {width: 170}).width+'px'}"
-              v-html="getCell(column.index,rowArrayIndex,(column.type==='preview') ? column.name : false)"
+              :class="[
+                ...column.classes,
+                ...row.value[column.index].classes
+              ]"
+              :style="{width: column.width+'px'}"
+              v-html="row.value[column.index].html"
             ></div>
           </template>
+          <div v-else
+            :key="rowArrayIndex+' '+column.index"
+            class="bb-table-cell not-available --e"
+          >
+          </div>
         </template>
       </div>
     </div>
@@ -305,8 +316,8 @@ export default {
       fetching: false,
       toFetch: [],
 
-      rows: [],
-      rowsPreview: [],
+      rowsValues: [],
+      rowsPreviewValues: [],
 
       columnMenuIndex: false,
 
@@ -352,6 +363,22 @@ export default {
 
     ...mapState(['allTypes']),
 
+    rows () {
+      return this.rowsValues.map((r,ri) => {
+        var value = r.value.map((val, ci)=>this.getCellData(ci, ri, val ))
+        return { ...r, value}
+      })
+    },
+
+    rowsPreview () {
+      return this.rowsPreviewValues.map((r, ri) => {
+        var value = this.previewColumns.map(col=>{
+          return this.getCellData(col.name, ri, r.value[col.index], true)
+        })
+        return { ...r, value}
+      })
+    },
+
     highlightMatches () {
       var hm = {}
       try {
@@ -383,14 +410,28 @@ export default {
     },
 
     allColumns () {
-      var arr = this.bbColumns.map(index=>({index}))
+      var arr = this.bbColumns.map(index=>{
+        var classes = []
+        if (this.selectionMap[index]) {
+          classes.push('bb-selected')
+        }
+        return {
+          index,
+          classes,
+          width: 170
+        }
+      })
       try {
         var after = this.currentPreviewCode.from
 
         if (this.previewColumns.length && after) {
           var insertIndex = arr.findIndex(e=>this.currentDataset.columns[e.index].name===after)+1
           this.previewColumns.forEach(e=>{
-            arr.splice(insertIndex++,0,e)
+            arr.splice(insertIndex++,0,{
+              ...e,
+              classes: ['bb-preview'],
+              width: 170
+            })
           })
         }
       } catch (err) {
@@ -628,6 +669,7 @@ export default {
       this.$nextTick(()=>{
         var rows = []
         var rowsPreview = []
+
         this.chunksPreview.forEach(chunk => {
             if (chunk.rows && chunk.rows.length) {
               rowsPreview = [...rowsPreview, ...chunk.rows]
@@ -644,8 +686,10 @@ export default {
         })
         rows.sort((a,b)=>a.index-b.index)
         rowsPreview.sort((a,b)=>a.index-b.index)
-        this.rows = [...new Set(rows)]
-        this.rowsPreview = [...new Set(rowsPreview)]
+
+        this.rowsValues = [...new Set(rows)]
+        this.rowsPreviewValues = [...new Set(rowsPreview)]
+
       })
     },
 
@@ -682,7 +726,7 @@ export default {
     },
 
     getRowHighlight (row) {
-      var rows = this.rowsPreview
+      var rows = this.rowsPreviewValues
       if (rows && rows.length && rows[row]) {
         var hlCol = this.currentHighlightRows.index
         var color = this.currentHighlightRows.color
@@ -695,29 +739,39 @@ export default {
       return ''
     },
 
-    getCell (column, row, preview = false) {
-      var content = ''
-      var rows = (preview) ? this.rowsPreview : this.rows
-      if (rows && rows.length && rows[row]) {
-        try {
-          content = (rows[row].value[column]!==null && rows[row].value[column]!==undefined) ? rows[row].value[column] : ''
-        } catch (err) {
-          console.error('err',err)
-          content = 'ERROR.'
-        }
-        try {
-          var hlCol = (this.highlightMatches[preview || column]) ? this.highlightMatches[preview || column].index : undefined
+    getCellData (col, ri, value, preview) {
+      var html = this.getCellContent(col, ri, value, preview)
+      var classes = []
+      if (html===false) {
+        classes.push('not-available')
+      } else if (value===null) {
+        classes.push('none')
+      } else if (value==='') {
+        classes.push('missing')
+      }
+      return {
+        html: html || '',
+        classes
+      }
+    },
 
-          if (hlCol!==undefined) {
-            var color = this.currentHighlights.color['default'] ? this.currentHighlights.color[preview ? 'preview' : 'default'] : this.currentHighlights.color
-            for (let i = this.rowsPreview[row].value[hlCol].length - 1; i >= 0; i--) {
-              const [a,b] = this.rowsPreview[row].value[hlCol][i]
-              content = content.substring(0,a)+`<span class="hlt--${color}">`+content.substring(a,b)+'</span>'+content.substring(b)
+    getCellContent (col, ri, value, preview) {
+      try {
+        var hlCol = (this.highlightMatches[col]) ? this.highlightMatches[col].index : undefined
+        if (hlCol!==undefined) {
+          var color = this.currentHighlights.color['default'] ? this.currentHighlights.color[preview ? 'preview' : 'default'] : this.currentHighlights.color
+          var hlv = this.rowsPreviewValues[ri].value[hlCol]
+          if (hlv && hlv.length) {
+            for (let i = hlv.length - 1; i >= 0; i--) {
+              const [a,b] = hlv[i]
+              value = value.substring(0,a)+`<span class="hlt--${color}">`+value.substring(a,b)+'</span>'+value.substring(b)
             }
           }
-        } catch (err) {}
+        }
+        return `<span class="select-none">&nbsp;</span>${value}<span class="select-none">&nbsp;</span>`
+      } catch (err) {
+        return false
       }
-      return `<span class="select-none">&nbsp;</span>${content}<span class="select-none">&nbsp;</span>`
     },
 
     updateSelection(value) {
@@ -1043,7 +1097,7 @@ export default {
           var toDelete = distanceMap.pop()
           if (toDelete) {
             chunks.splice(toDelete.index, 1)
-            console.log(`deleting ${toDelete.from} in chunks`)
+            // console.log(`deleting ${toDelete.from} in chunks`)
           }
         }
 
@@ -1064,18 +1118,18 @@ export default {
           }
         }
 
-        console.log(`selecting ${this.toFetch[found][0]} in toFetch, nearest of ${currentFrom}`)
+        // console.log(`selecting ${this.toFetch[found][0]} in toFetch, nearest of ${currentFrom}`)
       }
 
       if (maxDistance>=0 && minDistance>maxDistance) {
-        console.log(`cancelling ${from} bc it would be further ${to}`)
+        // console.log(`cancelling ${from} bc it would be further ${to}`)
         return false
       }
 
       var [from, to, force] = this.toFetch.splice(found,1)[0]
 
       if (!to) {
-        console.log(`cancelling ${from} bc !to ${to}`)
+        // console.log(`cancelling ${from} bc !to ${to}`)
         return false
       }
 
@@ -1087,7 +1141,7 @@ export default {
       var distanceFromWindow = Math.abs(currentFrom-from)
 
       if ( distanceFromWindow>length*4 && !force ) {
-        console.log(`cancelling ${from} bc it is too far from ${currentFrom}`)
+        // console.log(`cancelling ${from} bc it is too far from ${currentFrom}`)
         return false // too far
       }
 
@@ -1097,7 +1151,7 @@ export default {
       )
 
       if (!newChunks.length) {
-        console.log(`cancelling ${from} bc it is already loaded!`)
+        // console.log(`cancelling ${from} bc it is already loaded!`)
         return false // no chunks
       }
 
