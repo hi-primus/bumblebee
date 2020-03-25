@@ -73,7 +73,7 @@
             </v-card-text>
             <v-card-actions>
               <v-spacer/>
-              <v-btn color="primary" large depressed @click="subscribe">Subscribe</v-btn>
+              <v-btn color="primary darken-1" large depressed @click="subscribe">{{($route.query.kernel=='1') ? 'Sign in' : 'Subscribe'}}</v-btn>
               <v-spacer/>
             </v-card-actions>
             <v-card-text v-if="statusError" class="pb-0" >
