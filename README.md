@@ -4,15 +4,17 @@
 
 With Bumblebee, you can easily clean and prepare bigdata using a visual interface. It is built over Optimus/Pyspark so you can handle small and big data efficiently.
 
-For more info about Bumblebee, please go to:
+For more info about Bumblebee, please visit:
 https://hi-bumblebee.com/
 
 ## Installation
 ### Docker
-https://medium.com/hi-bumblebee/how-to-run-bumblebee-in-a-docker-container-c9da047d1ff1
+
+[How to run bumblebee in a docker container](https://medium.com/hi-bumblebee/how-to-run-bumblebee-in-a-docker-container-c9da047d1ff1 "Docker Installation")
 
 ### Ubuntu/Digital Ocean
-https://medium.com/hi-bumblebee/how-to-install-bumblebee-on-digital-ocean-ef77138f1838
+
+[How to install bumblebee on digital ocean](https://medium.com/hi-bumblebee/how-to-install-bumblebee-on-digital-ocean-ef77138f1838 "Ubuntu/Digital Ocean Installation")
 
 
 ## Load and explore
