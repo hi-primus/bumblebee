@@ -91,7 +91,7 @@
             'bb-drag-over': (dragOver===i && dragging!==i),
             'bb-drag-over-right': (dragOver===i && dragging<i),
           }"
-          :style="{ width: columns[column.index].width+'px' }"
+          :style="{ width: column.width+'px' }"
           :draggable="selectionMap[column.index]"
           @dragstart="dragStart(i, $event)"
           @dragover.prevent="dragOver=i"
@@ -115,7 +115,7 @@
           :key="'p'+column.index"
           class="bb-table-plot bb-preview"
           v-if="column.type=='preview' && !column.hidden"
-          style="width: 170px"
+          :style="{ width: column.width+'px' }"
         >
           <template v-if="previewPlotsData[column.name]">
             <DataBar
@@ -418,7 +418,7 @@ export default {
     },
 
     allColumns () {
-      var arr = this.bbColumns.map(index=>{
+      var cols = this.bbColumns.map(index=>{
         var classes = []
         if (this.selectionMap[index]) {
           classes.push('bb-selected')
@@ -426,26 +426,52 @@ export default {
         return {
           index,
           classes,
-          width: 170
+          width: 170,
+          name: this.currentDataset.columns[index].name
         }
       })
       try {
-        var after = this.currentPreviewCode.from
+        var after = [...(this.currentPreviewCode.from || [])]
 
-        if (this.previewColumns.length && after) {
-          var insertIndex = arr.findIndex(e=>this.currentDataset.columns[e.index].name===after)+1
-          this.previewColumns.forEach(e=>{
-            arr.splice(insertIndex++,0,{
-              ...e,
+        if (this.previewColumns.length && after && after.length) {
+
+          if (this.previewColumns.length===1 && after.length!==1) {
+
+            var insertIndex = Math.max(...after.map(colname=>cols.findIndex(col=>colname===col.name)))+1
+
+            cols.splice(insertIndex,0,{
+              ...this.previewColumns[0],
               classes: ['bb-preview'],
               width: 170
             })
-          })
+
+          } else {
+
+            var _after = after[0]
+            var insertIndex = cols.findIndex(col=>_after===col.name)+1
+
+            this.previewColumns.forEach((pcol, i)=>{
+
+              if (after[i]) {
+                insertIndex = cols.findIndex(col=>after[i]===col.name)+1
+              }
+
+              if (insertIndex === 0) { // previews cannot be on position 0
+                insertIndex = cols.length
+              }
+
+              cols.splice(insertIndex++,0,{
+                ...pcol,
+                classes: ['bb-preview'],
+                width: 170
+              })
+            })
+          }
         }
       } catch (err) {
         console.error(err)
       }
-      return arr
+      return cols
     },
 
     columnMenuActive: {
@@ -659,14 +685,20 @@ export default {
       }
     },
 
-    focusPreview (column = undefined) {
-      this.$nextTick(()=>{
-        column = (column!==undefined) ? column : this.currentPreviewCode.from
-        if (column!==undefined) {
-          var af = document.getElementById("bb-table-"+column)
-          af && af.scrollIntoView();
+    focusPreview () {
+      this.$nextTick(() => {
+        var columns = this.currentPreviewCode.from
+        if (columns && columns.length) {
+          columns.forEach(column => {
+            var af = document.getElementById("bb-table-"+column)
+            if (af) {
+              af.scrollIntoView()
+            }
+          })
           var lp = document.getElementById("bb-table-preview-last")
-          lp && lp.scrollIntoView();
+          if (lp) {
+            lp.scrollIntoView()
+          }
 
           this.horizontalScrollCheckDown()
         }

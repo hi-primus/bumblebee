@@ -2174,7 +2174,7 @@ export default {
             code: this.getCode(this.currentCommand,'preview'),
             profileCode: this.getCode(this.currentCommand,'profile'),
             color: this.currentCommand._highlightColor,
-            from: this.currentCommand.columns.length ? this.currentCommand.columns[this.currentCommand.columns.length - 1] : 0
+            from: this.currentCommand.columns
           })
 
         }
