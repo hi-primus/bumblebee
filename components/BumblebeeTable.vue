@@ -740,14 +740,16 @@ export default {
     },
 
     getCellData (col, ri, value, preview) {
-      var html = this.getCellContent(col, ri, value, preview)
       var classes = []
-      if (html===false) {
-        classes.push('not-available')
-      } else if (value===null) {
+      if (value===null) {
         classes.push('none')
+        value = ''
       } else if (value==='') {
         classes.push('missing')
+      }
+      var html = this.getCellContent(col, ri, value, preview)
+      if (html===false) {
+        classes.push('not-available')
       }
       return {
         html: html || '',
