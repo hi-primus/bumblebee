@@ -664,10 +664,28 @@ export default {
           }
         },
         STRING: {
+          dialog: {
+            title: 'String operation',
+            output_cols: true,
+          },
+          payload: (columns) => ({
+            columns: columns,
+            output_cols: columns.map(e=>''),
+            _preview: 'STRING'
+          }),
           code: (payload) => {
-            var _argument = payload.columns.length==0 ? `"*"`
-            : (payload.columns.length==1 ? `"${payload.columns[0]}"` : `input_cols=["${payload.columns.join('", "')}"]`)
-            return `.cols.${payload.command}(${_argument})`
+
+            var output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (payload._requestType) ? 'new ' : '')
+
+            var _argument = payload.columns.length==0
+              ? `"*"`
+              : payload.columns.length===1
+                ? `"${payload.columns[0]}"`
+                : `input_cols=["${payload.columns.join('", "')}"]`
+
+            return `.cols.${payload.command}(${_argument}`
+            + ( output_cols_argument ? `, output_cols=${output_cols_argument}` : '')
+            + `)`
           }
         },
         cast: {
