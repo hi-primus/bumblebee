@@ -974,6 +974,8 @@ export default {
               console.error(error)
 
               var _error = error
+              if ( error.error)
+                _error = error.error
               if ( error.content && error.content.ename )
                 _error = error.content.ename
               if ( error.content && error.content.evalue )
@@ -1155,6 +1157,8 @@ export default {
               }
               console.error(error)
               var _error = error
+              if ( error.error)
+                _error = error.error
               if (error.content && error.content.ename)
                 _error = error.content.ename
               if (error.content && error.content.evalue)
@@ -1381,6 +1385,8 @@ export default {
 
               var _error = error
 
+              if ( error.error)
+                _error = error.error
               if (error.content.ename)
                 _error = error.content.ename
               if (error.content.evalue)
@@ -2578,7 +2584,7 @@ export default {
           console.error(error.content.traceback_escaped.join('\n'))
         }
         console.error(error)
-        var codeError = (error.content && error.content.ename) ? error.content.ename + ': ' + error.content.evalue : error
+        var codeError = (error.error) ? error.error : error
         this.$emit('update:codeError',codeError)
 
         this.markCellsError()
