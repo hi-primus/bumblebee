@@ -166,12 +166,20 @@
               {{previewPlotsData[column.name]}}
             </div>
           </template>
+          <v-progress-circular
+            v-else
+            indeterminate
+            color="primary"
+            class="progress-middle"
+            style="margin-top: 28px"
+          />
+
         </div>
         <div
           class="bb-table-plot"
           v-else-if="columns[column.index]"
           :key="column.index"
-          :style="{width: columns[column.index].width+'px'}"
+          :style="{ width: column.width+'px' }"
           :class="{'bb-selected': selectionMap[column.index]}"
         >
           <DataBar
