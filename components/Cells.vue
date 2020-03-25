@@ -336,7 +336,7 @@ import OutputColumnInputs from '@/components/OutputColumnInputs'
 import Outliers from '@/components/Outliers'
 import clientMixin from '@/plugins/mixins/client'
 import { mapGetters } from 'vuex'
-import { parseResponse, debounce, newName, arrayJoin } from '@/utils/functions.js'
+import { parseResponse, debounce, newName, arrayJoin, getOutputColsArgument } from '@/utils/functions.js'
 
 const api_url = process.env.API_URL || 'http://localhost:5000'
 
@@ -704,10 +704,7 @@ export default {
           }),
           code: (payload) => {
             var _argument = (payload.columns.length==1) ? `"${payload.columns[0]}"` : `["${payload.columns.join('", "')}"]`
-            var output_cols_argument =
-              (!payload.output_cols.join('').trim().length) ? false :
-              (payload.output_cols.length==1) ? `"${payload.output_cols[0]}"` :
-              `[${payload.output_cols.map((e)=>((e!==null) ? `"${e}"` : 'None')).join(', ')}]`
+            var output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (payload._requestType) ? 'new ' : '')
             return `.cols.fill_na(`
               +_argument
               +`, "${payload.fill}"`
@@ -1560,10 +1557,7 @@ export default {
               payload.output_cols = payload.output_cols.map(col=>'new '+col)
             }
 
-            var output_cols_argument =
-              (!payload.output_cols.join('').trim().length) ? false :
-              (payload.output_cols.length==1) ? `"${payload.output_cols[0]}"` :
-              `[${payload.output_cols.map((e)=>((e!==null) ? `"${e}"` : 'None')).join(', ')}]`
+            var output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (payload._requestType) ? 'new ' : '')
             return `.cols.replace(`
               +_argument
               +`, search=["${payload.search.join('","')}"]`
@@ -1682,10 +1676,7 @@ export default {
 					},
 					code: (payload) => {
             var _argument = (payload.columns.length==1) ? `"${payload.columns[0]}"` : `["${payload.columns.join('", "')}"]`
-            var output_cols_argument =
-              (!payload.output_cols.join('').trim().length) ? false :
-              (payload.output_cols.length==1) ? `"${payload.output_cols[0]}"` :
-              `[${payload.output_cols.map((e)=>((e!==null) ? `"${e}"` : 'None')).join(', ')}]`
+            var output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (payload._requestType) ? 'new ' : '')
             return `.cols.unnest(`
               +_argument
               +( (payload.separator) ? `, separator="${payload.separator}"` : '')
@@ -1750,10 +1741,7 @@ export default {
           },
           code: (payload) => {
             var _argument = (payload.columns.length==1) ? `"${payload.columns[0]}"` : `["${payload.columns.join('", "')}"]`
-            var output_cols_argument =
-              (!payload.output_cols.join('').trim().length) ? false :
-              (payload.output_cols.length==1) ? `"${payload.output_cols[0]}"` :
-              `[${payload.output_cols.map((e)=>((e!==null) ? `"${e}"` : 'None')).join(', ')}]`
+            var output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (payload._requestType) ? 'new ' : '')
             return `.cols.copy(`
               +_argument
               +( (output_cols_argument) ? `, output_cols=${output_cols_argument}` : '')
@@ -1787,15 +1775,7 @@ export default {
           code: (payload) => {
             // df.cols.bucketizer("id",2,"buckets_output")
             var _argument = (payload.columns.length==1) ? `"${payload.columns[0]}"` : `["${payload.columns.join('", "')}"]`
-
-            var output_cols_argument =
-              (!payload.output_cols.join('').trim().length) ?
-                false
-              :
-                (payload.output_cols.length==1) ?
-                  `"${payload.output_cols[0]}"`
-                :
-                  `[${payload.output_cols.map((e)=>((e!==null) ? `"${e}"` : 'None')).join(', ')}]`
+            var output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (payload._requestType) ? 'new ' : '')
 
             return `.cols.bucketizer(`
               + _argument
@@ -1836,14 +1816,7 @@ export default {
             // cols.string_to_index(input_cols, output_cols=None)
             var _argument = (payload.columns.length==1) ? `"${payload.columns[0]}"` : `["${payload.columns.join('", "')}"]`
 
-            var output_cols_argument =
-              (!payload.output_cols.join('').trim().length) ?
-                false
-              :
-                (payload.output_cols.length==1) ?
-                  `"${payload.output_cols[0]}"`
-                :
-                  `[${payload.output_cols.map((e)=>((e!==null) ? `"${e}"` : 'None')).join(', ')}]`
+            var output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (payload._requestType) ? 'new ' : '')
 
             return `.cols.string_to_index(`
               + _argument
@@ -1872,14 +1845,7 @@ export default {
             // cols.index_to_string(input_cols, output_cols=None)
             var _argument = (payload.columns.length==1) ? `"${payload.columns[0]}"` : `["${payload.columns.join('", "')}"]`
 
-            var output_cols_argument =
-              (!payload.output_cols.join('').trim().length) ?
-                false
-              :
-                (payload.output_cols.length==1) ?
-                  `"${payload.output_cols[0]}"`
-                :
-                  `[${payload.output_cols.map((e)=>((e!==null) ? `"${e}"` : 'None')).join(', ')}]`
+            var output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (payload._requestType) ? 'new ' : '')
 
             return `.cols.index_to_string(`
               + _argument
@@ -1916,14 +1882,7 @@ export default {
           code: (payload) => {
             var _argument = (payload.columns.length==1) ? `"${payload.columns[0]}"` : `["${payload.columns.join('", "')}"]`
 
-            var output_cols_argument =
-              (!payload.output_cols.join('').trim().length) ?
-                false
-              :
-                (payload.output_cols.length==1) ?
-                  `"${payload.output_cols[0]}"`
-                :
-                  `[${payload.output_cols.map((e)=>((e!==null) ? `"${e}"` : 'None')).join(', ')}]`
+            var output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (payload._requestType) ? 'new ' : '')
 
             return `.cols.${payload.command}(`
               + _argument
@@ -1976,14 +1935,7 @@ export default {
             // df.cols.impute(input_cols, data_type="continuous", strategy="mean", output_cols=None)
             var _argument = (payload.columns.length==1) ? `"${payload.columns[0]}"` : `["${payload.columns.join('", "')}"]`
 
-            var output_cols_argument =
-              (!payload.output_cols.join('').trim().length) ?
-                false
-              :
-                (payload.output_cols.length==1) ?
-                  `"${payload.output_cols[0]}"`
-                :
-                  `[${payload.output_cols.map((e)=>((e!==null) ? `"${e}"` : 'None')).join(', ')}]`
+            var output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (payload._requestType) ? 'new ' : '')
 
             return `.cols.impute(`
               + _argument
