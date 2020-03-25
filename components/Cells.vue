@@ -2470,9 +2470,9 @@ export default {
         return content
       }
 
-      if (type=='preview') {
+      if (type==='preview') {
         return content
-      } else if (type=='profile') {
+      } else if (type==='profile') {
         return content
       }
       else {
