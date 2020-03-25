@@ -1,6 +1,5 @@
-[![built_by iron](https://img.shields.io/badge/built_by-iron-FF69A4.svg)](http://ironmussa.com)
 
-# Bumblebee
+# Bumblebee Data
 
 With Bumblebee, you can easily clean and prepare bigdata using a visual interface. It is built over Optimus/Pyspark so you can handle small and big data efficiently.
 
