@@ -167,7 +167,7 @@ export default {
       if (!this.selectable) {
         return
       }
-      if (this.selectionRange.length){
+      if (this.selectionRange.length) {
         this.updateSelectionRange(event.evt.layerX)
       }
     },
@@ -185,8 +185,9 @@ export default {
 
       var width = sr[1]-sr[0]
 
-      if (width)
+      if (width) {
         width -= this.binBorder
+      }
 
       this.selectionRect = { x: sr[0], width }
 
@@ -224,7 +225,7 @@ export default {
 
     setSelection (from = -1, to = -2) {
 
-      if (from==to){
+      if (from==to) {
         from--
       }
 
@@ -237,9 +238,11 @@ export default {
         this.bins = this.bins.map(e=>({...e, selecting: false, selected: false}))
       }
 
-      if (from>=0)
-        for (let i = from; i < to; i++)
+      if (from>=0) {
+        for (let i = from; i < to; i++) {
           this.bins[i].selecting = true
+        }
+      }
     },
     getBackConfig (index) {
       return {

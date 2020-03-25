@@ -389,7 +389,7 @@ table {
   table td{
     font-family: $font-mono-table;
     font-size: 13px;
-    &:nth-child(2){
+    &:nth-child(2) {
       font-family: $font-mono;
       opacity: $black-opacity;
       font-weight: 700;
@@ -668,7 +668,7 @@ table {
       margin-top: 2px;
     }
   }
-  &:not(.vertical){
+  &:not(.vertical) {
     height: $toolbar-height;
   }
   &.disabled {

@@ -43,8 +43,8 @@ export default {
     this.$nextTick(()=>{
       if (this.$refs.editor) {
         var nuxt = this;
-        this.$refs.editor.onkeydown = function(e){
-          if(e.keyCode==9 || e.which==9){
+        this.$refs.editor.onkeydown = function(e) {
+          if(e.keyCode==9 || e.which==9) {
             if (e.shiftKey) {
 
             }
@@ -73,7 +73,7 @@ export default {
   },
 
   computed: {
-    escapedQuery(){
+    escapedQuery() {
       return this.query
            .replace(/&/g, "&amp;")
            .replace(/</g, "&lt;")

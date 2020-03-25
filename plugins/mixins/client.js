@@ -61,8 +61,10 @@ export default {
               session: this.$store.state.session,
               engine: this.$store.state.engine
             })
-            if (response.status!='ok')
+
+            if (response.status!='ok') {
               throw response.content
+            }
           }
           socket.emit(message,{...payload, timestamp})
           promises[timestamp] = {resolve, reject}

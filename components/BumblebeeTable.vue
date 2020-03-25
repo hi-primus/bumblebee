@@ -857,10 +857,11 @@ export default {
 
       setTimeout(() => {
         var ref = this.$refs['column-menu']
-        if (ref && ref.$el){
+        if (ref && ref.$el) {
           var el = ref.$el.getElementsByTagName('input')[0]
-          if (el)
+          if (el) {
             el.focus()
+          }
           this.$nextTick(()=>{
             this.$refs['BbTableContainer'].scrollLeft = this.$refs['BbTableTopContainer'].scrollLeft
           })
@@ -1022,7 +1023,7 @@ export default {
           .sort((a,b)=>(a.distance-b.distance))
         var tries = 10
 
-        while (chunks.length>this.maxChunks && tries--){
+        while (chunks.length>this.maxChunks && tries--) {
           var toDelete = distanceMap.pop()
           if (toDelete) {
             chunks.splice(toDelete.index, 1)
@@ -1093,7 +1094,7 @@ export default {
           .sort((a,b)=>(a.distance-b.distance))
         var tries = 10
 
-        while (chunks.length>this.maxChunks && tries--){
+        while (chunks.length>this.maxChunks && tries--) {
           var toDelete = distanceMap.pop()
           if (toDelete) {
             chunks.splice(toDelete.index, 1)
@@ -1112,7 +1113,7 @@ export default {
         for (let i = this.toFetch.length - 1; i >= 0; i--) {
 
           var distance = Math.abs(this.toFetch[i][0] - currentFrom)
-          if (minDistance>distance){
+          if (minDistance>distance) {
             found = i
             minDistance = distance
           }

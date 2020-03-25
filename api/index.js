@@ -117,7 +117,7 @@ app.post('/dataset', (req, res) => {
   if (!socketName || !req.body.data) {
     res.send({status: 'error', message: '"session/username" and "data" fields required'})
   }
-  else if (!sockets[socketName]){
+  else if (!sockets[socketName]) {
     res.send({status: 'error', message: 'Socket with client not found'})
   }
   else {
@@ -254,7 +254,7 @@ const run_code = async function(code = '', userSession = '', deleteSample = fals
       kernels[userSession] = userSession // TODO: secure token?
     }
 
-    if (process.env.NODE_ENV != 'production'){
+    if (process.env.NODE_ENV !== 'production') {
       console.log(code)
     }
 

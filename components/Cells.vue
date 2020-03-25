@@ -823,7 +823,7 @@ export default {
               multiline: (payload.multiline) ? `True` : `False`,
             }
             let code = `${this.availableVariableName} = op.load.${payload.file_type}("${payload.url}"`
-            if (payload.file_type=='csv'){
+            if (payload.file_type=='csv') {
               code += `, sep="${payload.sep}"`
               code += `, error_bad_lines=False`
               code += `, header=${file.header}`
@@ -831,10 +831,10 @@ export default {
               code += `, infer_schema='true'`
               code += `, charset="${payload.charset}"`
             }
-            else if (payload.file_type=='json'){
+            else if (payload.file_type=='json') {
               code += `, multiline=${file.multiline}`
             }
-            else if (payload.file_type=='xls'){
+            else if (payload.file_type=='xls') {
               code += `, sheet_name="${payload.sheet_name}"`
             }
             if (payload.limit>0) {
@@ -949,7 +949,7 @@ export default {
                 }
               })
 
-              if (!clusters.length){
+              if (!clusters.length) {
                 throw 'No clusters found'
               }
 
@@ -965,7 +965,7 @@ export default {
 
             } catch (error) {
 
-              if (error.content && error.content.traceback && error.content.traceback.length){
+              if (error.content && error.content.traceback && error.content.traceback.length) {
                 error.content.traceback_escaped = error.content.traceback.map(l=>
                   l.replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '')
                 )
@@ -1147,7 +1147,7 @@ export default {
 
             } catch (error) {
 
-              if (error.content && error.content.traceback && error.content.traceback.length){
+              if (error.content && error.content.traceback && error.content.traceback.length) {
                 error.content.traceback_escaped = error.content.traceback.map(l=>
                   l.replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '')
                 )
@@ -1353,7 +1353,7 @@ export default {
               var response = await this.evalCode(code+`; _output = db.tables_names_to_json()`)
 
               var tables = parseResponse(response.content)
-              if (!tables.length){
+              if (!tables.length) {
                 throw 'Database has no tables'
               }
 
@@ -1371,7 +1371,7 @@ export default {
               this.currentCommand.loadingTest = false
             } catch (error) {
 
-              if (error.content && error.content.traceback && error.content.traceback.length){
+              if (error.content && error.content.traceback && error.content.traceback.length) {
                 error.content.traceback_escaped = error.content.traceback.map(l=>
                   l.replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '')
                 )
@@ -2144,7 +2144,7 @@ export default {
     },
 
     barHovered (value) {
-      if (!value){
+      if (!value) {
         this.moveBarDelayed(this.barTop)
       }
     },
@@ -2167,7 +2167,7 @@ export default {
     dataset: {
       deep: true,
       handler () {
-        if (this._commandsDisabled===undefined){
+        if (this._commandsDisabled===undefined) {
           this._commandsDisabled = false
           this.markCells()
           this.$emit('update:codeError','')
@@ -2275,7 +2275,7 @@ export default {
           else {
             setTimeout(() => {
               var ref = this.$refs['command-form'] && this.$refs['command-form'][0]
-              if (ref && ref.$el){
+              if (ref && ref.$el) {
                 var el = ref.$el.getElementsByTagName('input')[0]
                 if (el)
                   el.focus()
@@ -2349,7 +2349,7 @@ export default {
     },
 
     moveBarNow(value) {
-      if (this.$refs.cells.$el){
+      if (this.$refs.cells.$el) {
         this.$refs.cells.$el.style.minHeight = value+27 + 'px'
       }
 
@@ -2359,7 +2359,7 @@ export default {
     },
 
     draggableEnd() {
-      if (this.codeText().trim()===''){
+      if (this.codeText().trim()==='') {
         this.runButton = false
         this.$emit('update:codeError','')
         this.runCode() // deleting every cell
@@ -2537,7 +2537,7 @@ export default {
 				this.markCells(false)
       }
 
-			if (this.firstRun){
+			if (this.firstRun) {
 				this.firstRun = false
 				rerun = false
 			}
@@ -2571,7 +2571,7 @@ export default {
         this.lastWrongCode = false
 
       } catch (error) {
-        if (error.content && error.content.traceback && error.content.traceback.length){
+        if (error.content && error.content.traceback && error.content.traceback.length) {
           error.content.traceback_escaped = error.content.traceback.map(l=>
             l.replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '')
           )
@@ -2592,7 +2592,7 @@ export default {
 
     },
 
-    runCode: debounce(async function(force = false){
+    runCode: debounce(async function(force = false) {
       this.runCodeNow(force)
     },1000),
   }

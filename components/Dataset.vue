@@ -352,7 +352,7 @@ export default {
           if (this.currentDataset.columns) {
             for (let i = 0; i < this.currentDataset.columns.length; i++) {
             const column = this.currentDataset.columns[i];
-            if (this.selectedColumns[column.name]){
+            if (this.selectedColumns[column.name]) {
                 _selected.push(i)
               }
             }

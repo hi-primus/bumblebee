@@ -93,7 +93,7 @@ export default {
           if (ds.ranged.index!=this.columnIndex && this.selected.length>0) {
             this.selected = []
           }
-          else if (ds.ranged.index==this.columnIndex && !arraysEqual(this.selected,ds.ranged.indices)){
+          else if (ds.ranged.index==this.columnIndex && !arraysEqual(this.selected,ds.ranged.indices)) {
             this.selected = ds.ranged.indices
           }
         }
