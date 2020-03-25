@@ -310,15 +310,18 @@ const deleteKernel = async function(session) {
 const handleResponse = function (response) {
   try {
 
-    if (response['text/plain'] && !response['status']) {
-      var content = trimCharacters(response['text/plain'],"'")
-      content = content.replace(/\bNaN\b/g,null)
-      content = content.replace(/\b\\'\b/g,"'")
-      content = content.replace(/\\\\"/g,'\\"')
-      return JSON.parse( content )
-    } else {
+    if (typeof response === 'object' && !response['text/plain'] && response['status']) {
       return response
+    } else if (typeof response === 'object' && response['text/plain']) {
+      response = response['text/plain']
     }
+
+    response = trimCharacters(response,"'")
+    response = response.replace(/\bNaN\b/g,null)
+    response = response.replace(/\b\\'\b/g,"'")
+    response = response.replace(/\\\\"/g,'\\"')
+    return JSON.parse( response )
+
   } catch (error) {
     console.error(error)
   }
