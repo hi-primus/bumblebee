@@ -230,6 +230,10 @@ export default {
 
 		async startClient (session, key, engine) {
 
+      if (['loading','receiving'].includes(this.$store.state.status)) {
+        return false
+      }
+
       try {
         this.$store.commit('status', 'loading')
         this.$store.commit('session', session)
