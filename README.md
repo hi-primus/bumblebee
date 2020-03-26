@@ -1,5 +1,5 @@
 
-# Bumblebee Data
+# Bumblebee
 
 With Bumblebee, you can easily clean and prepare bigdata using a visual interface. It is built over Optimus/Pyspark so you can handle small and big data efficiently.
 
