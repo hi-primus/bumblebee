@@ -2532,7 +2532,7 @@ export default {
 
         this._commandsDisabled = false;
 
-        if (response.status!='ok') {
+        if (response.status!=='ok') {
           throw response
         }
 

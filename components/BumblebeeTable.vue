@@ -608,7 +608,7 @@ export default {
           this.updateRows()
         }
         this.mustCheck = true
-        this.throttledScrollCheck()
+        this.debouncedThrottledScrollCheck()
       }
     },
 
@@ -814,7 +814,11 @@ export default {
         }
         return `<span class="select-none">&nbsp;</span>${value}<span class="select-none">&nbsp;</span>`
       } catch (err) {
-        return false
+        if (value) {
+          return `<span class="select-none">&nbsp;</span>${value}<span class="select-none">&nbsp;</span>`
+        } else {
+          return false
+        }
       }
     },
 
@@ -988,6 +992,11 @@ export default {
       }
       return false
     },
+
+    debouncedThrottledScrollCheck: debounce(function () {
+      console.log('dtsc')
+      this.throttledScrollCheck()
+    }, 200),
 
     throttledScrollCheck: throttle(function(aw = true) {this.scrollCheck(aw)} , throttleScrollTime),
 
