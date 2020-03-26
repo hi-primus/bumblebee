@@ -268,6 +268,8 @@
           <div v-else
             :key="rowArrayIndex+' '+column.index"
             class="bb-table-cell not-available --e"
+            :class="column.classes"
+            style="width: 170px"
           >
           </div>
         </template>

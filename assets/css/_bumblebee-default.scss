@@ -1796,7 +1796,16 @@ $editor-top-padding: 6px;
     &.not-available {
       color: darken($data-red,15%) !important;
       font-family: $font-mono;
-      @extend %bb-table-loading
+      position: relative;
+      &::before {
+        content: '';
+        position: absolute;
+        animation: background-animation 2.1s ease-in-out infinite;
+        left: 4px;
+        width: 64px;
+        top: 6px;
+        height: 9px;
+      }
     }
 
     &:not(:last-child) {
@@ -1844,15 +1853,18 @@ $editor-top-padding: 6px;
 
 @keyframes background-animation {
   0% {
-    background-color: #e5e5e5;
+    background-color: rgba(0,0,0,0.11);
+    // background-color: #e5e5e5;
   }
 
   50% {
-    background-color: #f1f1f1;
+    background-color: rgba(0,0,0,0.06);
+    // background-color: #f1f1f1;
   }
 
   100% {
-    background-color: #e5e5e5;
+    background-color: rgba(0,0,0,0.11);
+    // background-color: #e5e5e5;
   }
 }
 
