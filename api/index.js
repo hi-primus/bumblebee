@@ -145,7 +145,7 @@ const newSocket = function (socket, session) {
       var tries = 10
       while (tries-->0) {
         result = await createKernel(user_session, payload.engine ? payload.engine : "dask")
-        if (result.status=='error') {
+        if (!result || result.status==='error') {
           console.log('"""',result,'"""')
           console.log('# Kernel error, retrying')
           await deleteKernel(user_session)
@@ -314,6 +314,10 @@ const handleResponse = function (response) {
       return response
     } else if (typeof response === 'object' && response['text/plain']) {
       response = response['text/plain']
+    }
+
+    if (typeof response !== 'string') {
+      throw response
     }
 
     response = trimCharacters(response,"'")
