@@ -162,7 +162,7 @@ const newSocket = function (socket, session) {
     socket.on('run', async (payload) => {
       var user_session = payload.session
       var result = await run_code(`${payload.code}`,user_session)
-      socket.emit('reply',{...result, timestamp: payload.timestamp})
+      socket.emit('reply',{...result, code: payload.code, timestamp: payload.timestamp})
     })
 
     socket.on('cells', async (payload) => {
@@ -172,7 +172,7 @@ const newSocket = function (socket, session) {
         user_session,
         true
       )
-      socket.emit('reply',{...result, timestamp: payload.timestamp})
+      socket.emit('reply',{...result, code: payload.code, timestamp: payload.timestamp})
     })
   }
   else {

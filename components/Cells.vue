@@ -2526,6 +2526,8 @@ export default {
           timeout: 0
         })
 
+        console.log('"""[DEBUG][CODE]"""',response.code)
+
         this._commandsDisabled = false;
 
         if (response.status!=='ok') {

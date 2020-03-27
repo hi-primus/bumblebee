@@ -27,12 +27,16 @@ export default {
     async evalCode (code) {
       try {
 
-        return await this.socketPost('run', {
+        var result = await this.socketPost('run', {
           code,
           session: this.$store.state.session
         }, {
           timeout: 0
         })
+
+        console.log('"""[DEBUG][CODE]"""',result.code)
+
+        return result
 
       } catch (error) {
 

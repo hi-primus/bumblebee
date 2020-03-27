@@ -1237,7 +1237,7 @@ export default {
       // chunks[index] = { from, to, preview: previewCode || '' }
 
       if (!this.currentBuffer) {
-        var buffer = await this.evalCode('_output = '+this.currentDataset.varname+'.ext.set_buffer("*")\n"0"')
+        var buffer = await this.evalCode('_output = '+this.currentDataset.varname+'.ext.set_buffer("*")')
         this.$store.commit('setBuffer',true)
       }
 
