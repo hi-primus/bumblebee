@@ -618,7 +618,7 @@ export default {
                 expression = `${varname}["${payload.columns[0]}"]==${payload.value}`
                 break
               case 'oneof':
-                expression = `${varname}.${payload.columns[0]}.isin(["${payload.values.join('","')}"])`
+                expression = `${varname}.${payload.columns[0]}.isin([${payload.values.join(', ')}])`
                 break
               case 'not':
                 expression = `${varname}["${payload.columns[0]}"]!=${payload.value}`
