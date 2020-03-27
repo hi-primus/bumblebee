@@ -719,6 +719,7 @@ export default {
             columns: columns,
             fill: '',
             output_cols: columns.map(e=>''),
+						_preview: 'fill_na'
           }),
           code: (payload) => {
             var _argument = (payload.columns.length==1) ? `"${payload.columns[0]}"` : `["${payload.columns.join('", "')}"]`
@@ -1609,13 +1610,8 @@ export default {
             fromColumns: columns,
             expression: '', // (columns.length!=0) ? columns.map(e=>`df["${e}"]`).join(' + ') : '',
             title: 'Create column',
-              // (columns.length==0) ?
-              //   'Create column'
-              // : (columns.length==1) ?
-              //     `Create column from "payload.${columns[0]}"`
-              //   :
-              //     'Create column from columns',
-            newName: '' // columns.length==1 ? newName(columns[0]) : ''
+						_preview: 'set',
+            newName: ''
           }),
           code: (payload) => {
             return `.cols.set("${payload.newName}"`
