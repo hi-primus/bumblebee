@@ -145,6 +145,7 @@ export const mutations = {
     state.datasetSelection[found] = {} // {columns: _c} // TODO: check selection
 
     Vue.set(state.datasetSelection, found, state.datasetSelection[found] )
+    Vue.set(state.buffers,found,false)
 
 		state.status = 'received'
 
@@ -248,7 +249,6 @@ export const mutations = {
       Vue.set(state.highlights,state.tab,false)
       Vue.set(state.highlightRows,state.tab,false)
       Vue.set(state.focusedColumns,state.tab,false)
-      Vue.set(state.buffers,state.tab,undefined)
       Vue.set(state.previewCodes,state.tab,undefined)
 
       if (clear) {
