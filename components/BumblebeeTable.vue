@@ -994,7 +994,6 @@ export default {
     },
 
     debouncedThrottledScrollCheck: debounce(function () {
-      console.log('dtsc')
       this.throttledScrollCheck()
     }, 200),
 
