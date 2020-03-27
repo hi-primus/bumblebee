@@ -166,16 +166,33 @@ export const optimizeRanges = (inputRange, existingRanges) => {
   return newRanges
 }
 
+export const escapeQuotes = (str) => {
+  if (typeof str === 'string' && str && str.replace ) {
+    return str.replace(/[\""]/g, '\\"')
+  } else if (str && str.map) {
+    str = str.map(_str=>(_str && _str.replace) ? _str.replace(/[\""]/g, '\\"') : _str)
+  }
+  return str
+}
+
 export const getOutputColsArgument = (output_cols = [], input_cols = [], pre = '') => {
   if (output_cols.join('').trim().length) {
     return (output_cols.length===1)
     ? `"${output_cols[0]}"`
-    : `[${output_cols.map((e, i)=>(e ? `"${e}"` : (input_cols[i] ? `"${pre}${input_cols[i]}"` : "None"))).join(', ')}]`
+    : `[${output_cols.map((e, i)=>(e ? `"${escapeQuotes(e)}"` : (input_cols[i] ? `"${escapeQuotes(pre+input_cols[i])}"` : 'None'))).join(', ')}]`
   }
   if (input_cols.join('').trim().length) {
     return (input_cols.length===1)
       ? `"${pre}${input_cols[0]}"`
-      : `[${input_cols.map((e)=>(e ? `"${pre}${e}"` : "None")).join(', ')}]`
+      : `[${input_cols.map((e)=>(e ? `"${escapeQuotes(pre+e)}"` : 'None')).join(', ')}]`
   }
   return false
+}
+
+export const escapeQuotesOn = (payload = {}, keys = []) => {
+  var _payload = {}
+  keys.forEach(key => {
+    _payload[key] = escapeQuotes(payload[key])
+  });
+  return {...payload, ..._payload}
 }

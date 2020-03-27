@@ -336,7 +336,7 @@ import OutputColumnInputs from '@/components/OutputColumnInputs'
 import Outliers from '@/components/Outliers'
 import clientMixin from '@/plugins/mixins/client'
 import { mapGetters } from 'vuex'
-import { parseResponse, debounce, newName, arrayJoin, getOutputColsArgument } from '@/utils/functions.js'
+import { parseResponse, debounce, newName, arrayJoin, getOutputColsArgument, escapeQuotes, escapeQuotesOn } from '@/utils/functions.js'
 
 const api_url = process.env.API_URL || 'http://localhost:5000'
 
@@ -449,7 +449,8 @@ export default {
             var expression
 
             if (type=='values') {
-              expression = `${this.dataset.varname}.${payload.columns[0]}.isin(["${values.join('","')}"])`
+              values = values.map(v=>escapeQuotes(v))
+              expression = `${this.dataset.varname}.${payload.columns[0]}.isin(["${values.join('", "')}"])`
             }
             else {
               if (ranges.length>1)
@@ -613,6 +614,12 @@ export default {
               varname = `${varname}.ext.get_buffer()`
             }
 
+            try {
+              payload = escapeQuotesOn(payload,[/*'values','value','value_2',*/'text','selection'])
+            } catch (error) {
+              console.error(error)
+            }
+
             switch (payload.condition) {
               case 'exactly':
                 expression = `${varname}["${payload.columns[0]}"]==${payload.value}`
@@ -643,14 +650,17 @@ export default {
                 break
               case 'selected':
                 if (payload.selectionType=='ranges') {
-                  if (payload.selection.ranges.length>1)
+                  if (payload.selection.ranges.length>1) {
+
                     expression = '('
                     +payload.selection.ranges.map(range=>`(${varname}["${payload.columns[0]}"]>=${range[0]}) & (${varname}["${payload.columns[0]}"]<=${range[1]})`).join(' | ')
                     +')'
-                  else
+                  } else {
                     expression = `(${varname}["${payload.columns[0]}"]>=${payload.selection.ranges[0][0]}) & (${varname}["${payload.columns[0]}"]<=${payload.selection.ranges[0][1]})`
+                  }
                 }
                 else if (payload.selectionType=='values') {
+                  payload.selection.values = payload.selection.values.map(v=>escapeQuotes(v))
                   expression = `${varname}["${payload.columns[0]}"].isin(["${payload.selection.values.join('","')}"])`
                 }
               case 'custom':
@@ -1021,7 +1031,7 @@ export default {
             return payload.clusters
             .filter(cluster=>cluster.selected.length)
             .map(cluster=>{
-              var values = cluster.selected.map(e=>e.value)
+              var values = cluster.selected.map(e=>escapeQuotes(e.value))
               return `.cols.replace(`
               +`"${payload.columns[0]}"`
               +`, search=["${values.join('","')}"]`
@@ -1519,8 +1529,9 @@ export default {
             title: 'Replace in column',
 					}),
           code: (payload) => {
+            payload = escapeQuotesOn(payload,['search','replace'])
             return `.cols.replace(`
-              +`"${payload.columns[0]}"`
+              +`"${escapeQuotes(payload.columns[0])}"`
               +`, search=["${payload.search.join('","')}"]`
               +`, replace_by="${payload.replace}"`
               +`, search_by="full"`
@@ -1691,6 +1702,7 @@ export default {
 					code: (payload) => {
             var _argument = (payload.columns.length==1) ? `"${payload.columns[0]}"` : `["${payload.columns.join('", "')}"]`
             var output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (payload._requestType) ? 'new ' : '')
+            payload = escapeQuotesOn(payload, ['separator'])
             return `.cols.unnest(`
               +_argument
               +( (payload.separator) ? `, separator="${payload.separator}"` : '')
@@ -1732,6 +1744,7 @@ export default {
 					}
           },
 					code: (payload) => {
+            payload = escapeQuotesOn(payload,['separator','newName'])
             return `.cols.nest(["${payload.columns.join('", "')}"]`
 						+( (payload.separator) ? `, separator="${payload.separator}"` : '')
             +`, output_col="${payload.newName}")`
