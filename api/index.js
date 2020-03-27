@@ -320,6 +320,13 @@ const handleResponse = function (response) {
       throw response
     }
 
+    var bracketIndex = response.indexOf('{')
+
+    if (bracketIndex<0) {
+      throw {message: 'Invalid response format', response}
+    }
+
+    response = response.substr(bracketIndex)
     response = trimCharacters(response,"'")
     response = response.replace(/\bNaN\b/g,null)
     response = response.replace(/\b\\'\b/g,"'")
