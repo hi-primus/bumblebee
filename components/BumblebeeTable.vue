@@ -642,7 +642,7 @@ export default {
 
           var previewColumns = receivedColumns
             .filter((column, index)=>(
-              !columnNames.includes(column.title)//index>=this.currentDataset.columns.length
+              !columnNames.includes(column.title)
               &&
               !column.title.includes('__match_positions__')
               &&
@@ -1253,7 +1253,7 @@ export default {
         }))
 
         chunks[index] = { from, to, rows, preview: previewCode || '' }
-        this.checkIncomingColumns(parsed.sample.columns) // TODO: check debounce
+        this.checkIncomingColumns(parsed.sample.columns)
         return 1
 
       } else {

@@ -251,7 +251,7 @@ const run_code = async function(code = '', userSession = '', deleteSample = fals
           session_id: userSession
         }
       })
-      kernels[userSession] = userSession // TODO: secure token?
+      kernels[userSession] = userSession
     }
 
     if (process.env.NODE_ENV !== 'production') {

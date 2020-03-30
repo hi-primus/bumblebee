@@ -2265,7 +2265,7 @@ export default {
           this.currentCommand = {...payload, ...(event.payload || {})}
 
           this.$emit('updateOperations', { active: true, title: this.getCommandTitle() })
-          this.$emit('update:big',_command.dialog.big) // :max-width="command.dialog.big ? 820 : 410"
+          this.$emit('update:big',_command.dialog.big)
 
           if (_command.onInit)
             await _command.onInit()
