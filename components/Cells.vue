@@ -2266,16 +2266,15 @@ export default {
           this.currentCommand = {...payload, ...(event.payload || {})}
 
           this.$emit('updateOperations', { active: true, title: this.getCommandTitle() })
-          this.$emit('update:big',_command.dialog.big)
+          this.$emit('update:big',_command.dialog.big) // :max-width="command.dialog.big ? 820 : 410"
 
-          if (_command.onInit)
+          if (_command.onInit) {
             await _command.onInit()
+          }
 
           if (event.immediate) {
             await this.confirmCommand()
-          }
-
-          else {
+          } else {
             setTimeout(() => {
               var ref = this.$refs['command-form'] && this.$refs['command-form'][0]
               if (ref && ref.$el) {
