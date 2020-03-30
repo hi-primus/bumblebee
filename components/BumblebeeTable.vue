@@ -291,7 +291,7 @@ import Histogram from '@/components/Histogram'
 import Frequent from '@/components/Frequent'
 import DataBar from '@/components/DataBar'
 
-import { parseResponse, arraysEqual, cancellablePromise, throttle, debounce, optimizeRanges } from '@/utils/functions.js'
+import { parseResponse, arraysEqual, cancellablePromise, throttle, debounce, optimizeRanges, escapeQuotes } from '@/utils/functions.js'
 
 var doubleClick = false
 
@@ -970,11 +970,13 @@ export default {
 
     async setProfile (previewCode) {
       if (this.currentProfilePreview.code !== previewCode) {
-        var response = await this.evalCode(`_output = df.ext.buffer_window("*",0,100)${previewCode || ''}.ext.profile("*", output="json")`)
-        var dataset = parseResponse(response.data.result)
 
+        var cols = this.currentColumnsPreview.map(e=>escapeQuotes(e.title))
+
+        var response = await this.evalCode(`_output = df.ext.buffer_window("*",0,100)${previewCode || ''}.ext.profile(["${cols.join('", "')}"], output="json")`)
+        var dataset = parseResponse(response.data.result)
         if (!dataset) {
-          response = await this.evalCode(`_output = df.ext.buffer_window("*",0,100)${previewCode || ''}.ext.profile("*", output="json")`)
+          response = await this.evalCode(`_output = df.ext.buffer_window("*",0,100)${previewCode || ''}.ext.profile(["${cols.join('", "')}"], output="json")`)
           dataset = parseResponse(response.data.result)
         }
 
