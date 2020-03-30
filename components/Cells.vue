@@ -1491,12 +1491,13 @@ export default {
             ],
           },
           payload: (columns) => ({
+            command: 'stratified_sample',
 						seed: 1,
 						columns: columns,
 					}),
           code: (payload) => {
             var _argument = (payload.columns.length==1) ? `"${payload.columns[0]}"` : `["${payload.columns.join('", "')}"]`
-            return `.stratified_sample(`
+            return `.ext.stratified_sample(`
               +_argument
               +( (payload.seed) ? `, seed=${payload.seed}` : '')
               +')'
@@ -2009,7 +2010,7 @@ export default {
             }
           },
           code: (payload) => {
-            return `.sample(${payload.n})`
+            return `.ext.sample(${payload.n})`
           },
         },
         /*
