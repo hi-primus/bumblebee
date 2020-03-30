@@ -640,13 +640,9 @@ export default {
                 expression = `(${varname}["${payload.columns[0]}"]>=${payload.value}) & (${varname}["${payload.columns[0]}"]<=${payload.value_2})`
                 break
               case 'contains':
-                expression = `${varname}["${payload.columns[0]}"].contains("${payload.text}")`
-                break
               case 'startswith':
-                expression = `${varname}["${payload.columns[0]}"].startswith("${payload.text}")`
-                break
               case 'endswith':
-                expression = `${varname}["${payload.columns[0]}"].endswith("${payload.text}")`
+                expression = `${varname}["${payload.columns[0]}"].str.${payload.condition}("${payload.text}", na=False)`
                 break
               case 'selected':
                 if (payload.selectionType=='ranges') {
