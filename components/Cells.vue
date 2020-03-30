@@ -1480,7 +1480,7 @@ export default {
         },
         stratified_sample: {
           dialog: {
-            text: 'Stratified sampling',
+            title: 'Stratified sampling',
             fields: [
               {
                 type: 'number',
