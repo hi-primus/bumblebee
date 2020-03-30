@@ -615,7 +615,7 @@ export default {
             }
 
             try {
-              payload = escapeQuotesOn(payload,[/*'values','value','value_2',*/'text','selection'])
+              payload = escapeQuotesOn(payload,['text','selection'])
             } catch (error) {
               console.error(error)
             }
@@ -734,6 +734,7 @@ export default {
           code: (payload) => {
             var _argument = (payload.columns.length==1) ? `"${payload.columns[0]}"` : `["${payload.columns.join('", "')}"]`
             var output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (payload._requestType) ? 'new ' : '')
+            payload = escapeQuotesOn(payload,['fill'])
             return `.cols.fill_na(`
               +_argument
               +`, "${payload.fill}"`
@@ -848,6 +849,7 @@ export default {
               header: (payload.header) ? `True` : `False`,
               multiline: (payload.multiline) ? `True` : `False`,
             }
+            payload = escapeQuotesOn(payload,['sep','null_value','sheet_name'])
             let code = `${this.availableVariableName} = op.load.${payload.file_type}("${payload.url}"`
             if (payload.file_type=='csv') {
               code += `, sep="${payload.sep}"`
@@ -1032,10 +1034,11 @@ export default {
             .filter(cluster=>cluster.selected.length)
             .map(cluster=>{
               var values = cluster.selected.map(e=>escapeQuotes(e.value))
+              replace = escapeQuotes(cluster.replace)
               return `.cols.replace(`
               +`"${payload.columns[0]}"`
               +`, search=["${values.join('","')}"]`
-              +`, replace_by="${cluster.replace}"`
+              +`, replace_by="${replace}"`
               +`, search_by="full"`
               +')'
             })
@@ -1357,7 +1360,8 @@ export default {
             loadingTest: false
           }),
           code: (payload) => {
-            return `${payload.previous_code}${sl}${this.availableVariableName} = db.table_to_df("${payload.table}").ext.cache()`
+            var table = escapeQuotes(payload.table)
+            return `${payload.previous_code}${sl}${this.availableVariableName} = db.table_to_df("${table}").ext.cache()`
           },
           onTest: async (payload) => {
 
@@ -1367,13 +1371,14 @@ export default {
             var fields = this.commandsPallete['load from database'].dialog.fields
 
             try {
-              var code = `db = op.connect(driver="${payload.driver}"`
+              var driver = escapeQuotes(payload.driver)
+              var code = `db = op.connect(driver="${driver}"`
 
               fields.forEach(field => {
                 if (field.key!='driver' && field.key!='oracle_type' && field.key!='table') {
                   code += (
                     (!field.condition || field.condition(this.currentCommand) && payload[field.key]!==undefined) ?
-                    `, ${field.key}="${payload[field.key]}"` : ''
+                    `, ${field.key}="${escapeQuotes(payload[field.key])}"` : ''
                   )
                 }
               });
@@ -1451,7 +1456,10 @@ export default {
             format: 'csv',
             file_name: ''
           }),
-          code: (payload) => (`${this.dataset.varname}.save.${payload.format}("${payload.file_name}")`)
+          code: (payload) => {
+            var file_name = escapeQuotes(payload.file_name)
+            return `${this.dataset.varname}.save.${payload.format}("${file_name}")`
+          }
         },
         'save to database': {
           dialog: {
@@ -1469,7 +1477,10 @@ export default {
             command: 'save to database',
             table_name: ''
           }),
-          code: (payload) => (`db.df_to_table(${this.dataset.varname}, table="${payload.table_name}", mode="overwrite")`)
+          code: (payload) => {
+            var table_name = escapeQuotes(payload.table_name)
+            return `db.df_to_table(${this.dataset.varname}, table="${table_name}", mode="overwrite")`
+          }
         },
         stratified_sample: {
           dialog: {
@@ -1588,14 +1599,18 @@ export default {
             }
 
             var output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (payload._requestType) ? 'new ' : '')
+
+            payload = escapeQuotesOn(payload,['replace','search_by'])
+            var search = payload.search.map(v=>escapeQuotes(v))
+
             return `.cols.replace(`
               +_argument
-              +`, search=["${payload.search.join('","')}"]`
+              +`, search=["${search.join('","')}"]`
               +`, replace_by="${payload.replace}"`
               +`, search_by="${payload.search_by}"`
               +( (output_cols_argument) ? `, output_cols=${output_cols_argument}` : '')
               +')'
-              +( (payload._requestType==='preview') ? `.cols.find(${_argument}, sub=["${payload.search.join('","')}"])` : '')
+              +( (payload._requestType==='preview') ? `.cols.find(${_argument}, sub=["${search.join('","')}"])` : '')
               +( (payload._requestType==='preview') ? `.cols.find(${output_cols_argument}, sub=["${payload.replace}"])` : '')
           }
         },
@@ -1625,7 +1640,8 @@ export default {
             newName: ''
           }),
           code: (payload) => {
-            return `.cols.set("${payload.newName}"`
+            var newName = escapeQuotes(payload.newName)
+            return `.cols.set("${newName}"`
             +( (payload.expression) ? `, ${payload.expression}` : '')
             +`)`
           }
@@ -2141,6 +2157,11 @@ export default {
           if (this.command && this.command.dialog && (!this.command.dialog.validate || this.command.dialog.validate(this.currentCommand))) {
             if (this.currentCommand._preview) {
               this.getPreview()
+            }
+            if (this.currentCommand._fakePreview==='rename') {
+							// TODO
+            } else if (this.currentCommand._fakePreview==='duplicate') {
+							// TODO
             }
           }
         } catch (error) {
