@@ -435,7 +435,7 @@ export default {
       try {
         var after = [...(this.currentPreviewCode.from || [])]
 
-        if (this.previewColumns.length && after && after.length) {
+        if (this.previewColumns.length && after) {
 
           if (this.previewColumns.length===1 && after.length!==1) {
 
