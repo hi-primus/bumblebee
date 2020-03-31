@@ -13,6 +13,8 @@ export const state = () => ({
   columnsPreviews: [],
   profilePreviews: [],
   previewCodes: [],
+  duplicatedColumns: [],
+  previewNames: [],
   highlightRows: [],
   highlights: [],
   focusedColumns: [],
@@ -45,6 +47,14 @@ export const mutations = {
 
   setColumnsPreview (state, payload) {
     Vue.set( state.columnsPreviews, state.tab, payload )
+  },
+
+  setPreviewNames (state, payload) {
+    Vue.set(state.previewNames,state.tab, payload )
+  },
+
+  setDuplicatedColumns (state, payload) {
+    Vue.set(state.duplicatedColumns,state.tab, payload )
   },
 
   setPreviewCode (state, payload) {
@@ -80,6 +90,7 @@ export const mutations = {
     Vue.set(state.focusedColumns,state.tab,false)
     Vue.set(state.buffers,state.tab,false)
     Vue.set(state.previewCodes,state.tab,undefined)
+    Vue.set(state.previewNames,state.tab,undefined)
   },
 
   commandHandle(state, command) {
@@ -250,6 +261,7 @@ export const mutations = {
       Vue.set(state.highlightRows,state.tab,false)
       Vue.set(state.focusedColumns,state.tab,false)
       Vue.set(state.previewCodes,state.tab,undefined)
+      Vue.set(state.previewNames,state.tab,undefined)
 
       if (clear) {
         Vue.set(state.datasetSelection,tab,{
@@ -315,6 +327,12 @@ export const getters = {
   },
   currentPreviewCode (state) {
     return state.previewCodes[state.tab] || false
+  },
+  currentDuplicatedColumns (state) {
+    return state.duplicatedColumns[state.tab] || false
+  },
+  currentPreviewNames (state) {
+    return state.previewNames[state.tab] || false
   },
   currentFocusedColumns (state) {
     return state.focusedColumns[state.tab] || undefined

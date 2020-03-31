@@ -70,7 +70,18 @@
     <div class="bb-table-header">
       <template v-for="(column, i) in allColumns">
         <div
-          v-if="column.type=='preview' && !column.hidden"
+          v-if="column.type=='duplicated'"
+          :key="'d'+column.index"
+          class="bb-table-h-cell bb-preview"
+          :id="(column.previewIndex === previewColumns.length-1) ? 'bb-table-preview-last' : false"
+          style="width: 170px"
+        >
+          <div class="column-title">
+            {{column.name}}
+          </div>
+        </div>
+        <div
+          v-else-if="column.type=='preview'"
           :key="'p'+column.index"
           class="bb-table-h-cell bb-preview"
           :id="(column.previewIndex === previewColumns.length-1) ? 'bb-table-preview-last' : false"
@@ -103,8 +114,11 @@
           <div class="data-type" :class="`type-${columns[column.index].column_dtype}`">
             {{ dataType(currentDataset.columns[column.index].column_dtype) }}
           </div>
-          <div class="column-title">
-            {{columns[column.index].name}}
+          <div v-if="currentPreviewNames && currentPreviewNames[columns[column.index].name]" class="column-title title-preview-highlight">
+            <span>{{ currentPreviewNames[columns[column.index].name] }}</span>
+          </div>
+          <div v-else class="column-title">
+            {{ columns[column.index].name }}
           </div>
         </div>
       </template>
@@ -178,9 +192,12 @@
         <div
           class="bb-table-plot"
           v-else-if="columns[column.index]"
-          :key="column.index"
+          :key="''+column.type+column.index"
           :style="{ width: column.width+'px' }"
-          :class="{'bb-selected': selectionMap[column.index]}"
+          :class="{
+            'bb-selected': selectionMap[column.index] && column.type!=='duplicated',
+            'bb-preview': column.type==='duplicated',
+          }"
         >
           <DataBar
             :key="plotsData[column.index].key+'databar'"
@@ -241,7 +258,7 @@
         :style="{height: rowHeight+'px', top: row.index*rowHeight+'px'}"
       >
         <template v-for="column in allColumns">
-          <template v-if="column.previewIndex!==undefined && rowsPreview && rowsPreview[rowArrayIndex] && rowsPreview[rowArrayIndex].value[column.previewIndex]">
+          <template v-if="column.type==='preview' && rowsPreview && rowsPreview[rowArrayIndex] && rowsPreview[rowArrayIndex].value[column.previewIndex]">
             <div
               :key="'p'+column.index"
               class="bb-table-cell"
@@ -253,9 +270,9 @@
               v-html="rowsPreview[rowArrayIndex].value[column.previewIndex].html"
             ></div>
           </template>
-          <template v-else-if="column.previewIndex===undefined && row.value[column.index]">
+          <template v-else-if="column.type!=='preview' && row.value[column.index]">
             <div
-              :key="column.index"
+              :key="''+column.type+column.index"
               class="bb-table-cell"
               :class="[
                 ...column.classes,
@@ -368,6 +385,8 @@ export default {
       'currentHighlightRows',
       'currentFocusedColumns',
       'currentPreviewCode',
+      'currentDuplicatedColumns',
+      'currentPreviewNames',
       'currentBuffer'
     ]),
 
@@ -407,13 +426,26 @@ export default {
 
     previewColumns () {
       try {
-        return this.currentColumnsPreview
-        .map((col, index)=>({
+        var pc = this.currentColumnsPreview.length
+        ? this.currentColumnsPreview.map((col)=>({
+            ...col,
+            type: 'preview',
+            name: col.title,
+          }))
+        : []
+
+        var dc = this.currentDuplicatedColumns.length
+        ? this.currentDuplicatedColumns.map((col)=>({
+            type: 'duplicated',
+            index: this.currentDataset.columns.findIndex(c=>c.name===col.name),
+            name: col.newName,
+          }))
+        : []
+
+        return [...pc, ...dc].map((col,index)=>({
           ...col,
-					type: 'preview',
-          name: col.title,
           previewIndex: index
-        })) || []
+        }))
       } catch (err) {
         return []
       }
@@ -433,7 +465,15 @@ export default {
         }
       })
       try {
-        var after = [...(this.currentPreviewCode.from || [])]
+
+        var after = []
+
+        if (this.currentPreviewCode.from) {
+          after = this.currentPreviewCode.from
+        }
+        if (!after.length && this.currentSelection.columns.length) {
+          after = this.currentSelection.columns.map(s=>s.name)
+        }
 
         if (this.previewColumns.length && after) {
 
@@ -697,7 +737,7 @@ export default {
               af.scrollIntoView()
             }
           })
-          var lp = document.getElementById("bb-table-preview-last")
+          var lp = document.getElementById("bb-table-preview-last") // TODO: Every preview?
           if (lp) {
             lp.scrollIntoView()
           }

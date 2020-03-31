@@ -1657,7 +1657,8 @@ export default {
             return {
               command: 'rename',
               columns,
-              output_cols: columns.map(e=>newName(e))
+              output_cols: columns.map(e=>newName(e)),
+              _fakePreview: 'rename'
             }
           },
           code: (payload) => {
@@ -1776,7 +1777,8 @@ export default {
               command: 'duplicate',
               columns,
               title: 'Duplicate '+(columns.length==1 ? `column` : 'columns'),
-              output_cols: columns.map(e=>newName(e))
+              output_cols: columns.map(e=>newName(e)),
+              _fakePreview: 'duplicate'
             }
           },
           code: (payload) => {
@@ -2075,7 +2077,7 @@ export default {
 
   computed: {
 
-    ...mapGetters(['currentSelection','selectionType','currentTab']),
+    ...mapGetters(['currentSelection','selectionType','currentTab', 'currentDuplicatedColumns', 'currentPreviewNames']),
 
     cells: {
       get() {
@@ -2156,9 +2158,24 @@ export default {
               this.getPreview()
             }
             if (this.currentCommand._fakePreview==='rename') {
-							// TODO
+              var nameMap = {}
+              this.currentCommand.output_cols.forEach((col, i) => {
+                nameMap[this.currentCommand.columns[i]] = col
+              })
+              this.$store.commit('setPreviewNames',nameMap)
             } else if (this.currentCommand._fakePreview==='duplicate') {
-							// TODO
+              var duplicatedColumns = []
+              this.currentCommand.output_cols.forEach((col, i) => {
+                duplicatedColumns.push({name: this.currentCommand.columns[i], newName: col})
+              })
+              this.$store.commit('setDuplicatedColumns',duplicatedColumns.length ? duplicatedColumns : undefined)
+            }
+          } else {
+            if (this.currentPreviewNames) {
+              this.$store.commit('setPreviewNames',undefined)
+            }
+            if (this.currentDuplicatedColumns) {
+              this.$store.commit('setDuplicatedColumns',undefined)
             }
           }
         } catch (error) {
