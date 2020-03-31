@@ -165,8 +165,6 @@ export default {
 
         key = key || ''
 
-        console.log({session, token, key})
-
         socket = io(api_url, { query: { session, token, key } })
 
         socket.on('new-error', (reason) => {
