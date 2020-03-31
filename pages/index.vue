@@ -238,6 +238,7 @@ import Layout from '@/components/Layout'
 import TableBar from '@/components/TableBar'
 import clientMixin from '@/plugins/mixins/client'
 import dataTypesMixin from '@/plugins/mixins/data-types'
+import { printError } from '@/utils/functions.js'
 
 import { mapGetters } from 'vuex'
 
@@ -309,13 +310,7 @@ export default {
 								this.$store.commit('kernel','done')
 							}
 							else {
-                if (response.error && response.error.traceback && response.error.traceback.length) {
-                  response.error.traceback_escaped = response.error.traceback.map(l=>
-                    l.replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '')
-                  )
-                  console.error(response.error.traceback_escaped.join('\n'))
-                }
-                console.error(response)
+                printError(response)
 								this.$store.commit('status','waiting')
 								this.$store.commit('status','receiving')
 							}

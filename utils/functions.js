@@ -196,3 +196,19 @@ export const escapeQuotesOn = (payload = {}, keys = []) => {
   });
   return {...payload, ..._payload}
 }
+
+export const printError = (response) => {
+  // if (response.content && response.content.traceback && response.content.traceback.length) {
+  //   response.content.traceback_escaped = response.content.traceback.map(l=>
+  //     l.replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '')
+  //   )
+  //   console.error(response.content.traceback_escaped.join('\n'))
+  // }
+  if (response.traceback) {
+    console.error('[DEBUG][ERROR]\n\n',response.traceback.join('\n\n'))
+  } else if (response.message) {
+    console.error('[DEBUG][ERROR]\n',response.message)
+  } else {
+    console.error(response)
+  }
+}

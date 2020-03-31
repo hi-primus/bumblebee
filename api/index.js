@@ -269,6 +269,10 @@ const run_code = async function(code = '', userSession = '', deleteSample = fals
       }
     })
 
+    if (response.status==='error') {
+      throw response
+    }
+
     response = handleResponse(response)
 
     if (deleteSample && response && response.data && response.data.result) {
@@ -283,10 +287,12 @@ const run_code = async function(code = '', userSession = '', deleteSample = fals
     return response
 
   } catch (err) {
-    if (err.error)
-      return {status: 'error', ...err, content: err.message}
-    else
-      return {status: 'error', error: 'Internal error', content: err}
+    console.error(err)
+    if (err.error && (err.error.result || err.error.output)) {
+      return { status: 'error', error: err.error.result, traceback: err.error.output }
+    } else {
+      return { status: 'error', error: 'Internal error', content: err }
+    }
   }
 
 

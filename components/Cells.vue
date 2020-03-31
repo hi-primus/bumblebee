@@ -336,7 +336,7 @@ import OutputColumnInputs from '@/components/OutputColumnInputs'
 import Outliers from '@/components/Outliers'
 import clientMixin from '@/plugins/mixins/client'
 import { mapGetters } from 'vuex'
-import { parseResponse, debounce, newName, arrayJoin, getOutputColsArgument, escapeQuotes, escapeQuotesOn } from '@/utils/functions.js'
+import { printError, parseResponse, debounce, newName, arrayJoin, getOutputColsArgument, escapeQuotes, escapeQuotesOn } from '@/utils/functions.js'
 
 const api_url = process.env.API_URL || 'http://localhost:5000'
 
@@ -989,13 +989,7 @@ export default {
 
             } catch (error) {
 
-              if (error.content && error.content.traceback && error.content.traceback.length) {
-                error.content.traceback_escaped = error.content.traceback.map(l=>
-                  l.replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '')
-                )
-                console.error(error.content.traceback_escaped.join('\n'))
-              }
-              console.error(error)
+              printError(error)
 
               var _error = error
               if ( error.error)
@@ -1174,13 +1168,8 @@ export default {
 
             } catch (error) {
 
-              if (error.content && error.content.traceback && error.content.traceback.length) {
-                error.content.traceback_escaped = error.content.traceback.map(l=>
-                  l.replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '')
-                )
-                console.error(error.content.traceback_escaped.join('\n'))
-              }
-              console.error(error)
+              printError(error)
+
               var _error = error
               if ( error.error)
                 _error = error.error
@@ -1402,13 +1391,7 @@ export default {
               this.currentCommand.loadingTest = false
             } catch (error) {
 
-              if (error.content && error.content.traceback && error.content.traceback.length) {
-                error.content.traceback_escaped = error.content.traceback.map(l=>
-                  l.replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '')
-                )
-                console.error(error.content.traceback_escaped.join('\n'))
-              }
-              console.error(error)
+              printError(error)
 
               var _error = error
 
@@ -2592,14 +2575,9 @@ export default {
         this.lastWrongCode = false
 
       } catch (error) {
-        if (error.content && error.content.traceback && error.content.traceback.length) {
-          error.content.traceback_escaped = error.content.traceback.map(l=>
-            l.replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '')
-          )
-          console.error(error.content.traceback_escaped.join('\n'))
-        }
-        console.error(error)
+        printError(error)
         var codeError = (error.error) ? error.error : error
+        if (codeError && codeError.split) codeError = codeError.split("\n")[0]
         this.$emit('update:codeError',codeError)
 
         this.markCellsError()

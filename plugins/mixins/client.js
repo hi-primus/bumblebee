@@ -1,4 +1,5 @@
 import io from 'socket.io-client'
+import { printError } from '@/utils/functions.js'
 
 let socket
 let promises = {}
@@ -40,13 +41,7 @@ export default {
 
       } catch (error) {
 
-        if (error.content && error.content.traceback && error.content.traceback.length) {
-          error.content.traceback_escaped = error.content.traceback.map(l=>
-            l.replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '')
-          )
-          console.error(error.content.traceback_escaped.join('\n'))
-        }
-        console.error(error)
+        printError(error)
         return error
 
       }
