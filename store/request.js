@@ -18,7 +18,7 @@ export const actions = {
       }
     )
 
-    var fileUrl = baseUrl + '/' + response.data.path.split('public/')[0]
+    var fileUrl = baseUrl + '/' + response.data.path.split('public/')[1]
     var fileType = undefined
     var fileName = undefined
 
