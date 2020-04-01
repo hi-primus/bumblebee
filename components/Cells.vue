@@ -59,6 +59,19 @@
                   }}
                 </div>
               </template>
+              <template v-if="field.type=='file'">
+                <v-file-input
+                  v-model="currentCommand[field.key]"
+                  :key="field.key"
+                  :label="(typeof field.label == 'function') ? field.label(currentCommand) : (field.label || '')"
+                  :placeholder="(typeof field.placeholder == 'function') ? field.placeholder(currentCommand) : (field.placeholder || '')"
+                  :clearable="field.clearable"
+                  @input="(field.onChange) ? command[field.onChange]() : 0"
+                  dense
+                  required
+                  outlined
+                ></v-file-input>
+              </template>
               <template v-if="field.type=='field'">
                 <v-text-field
                   v-model="currentCommand[field.key]"
@@ -744,6 +757,27 @@ export default {
             acceptLabel: 'Load',
             fields: [
               {
+                key: 'file_input',
+                label: 'File upload',
+                type: 'file'
+              },
+              {
+                condition: (c)=>c.file_input,
+                type: 'action',
+                label: 'Upload',
+                func: 'uploadFile'
+              },
+              {
+                type: 'separator',
+                label: 'or'
+              },
+              {
+                key: 'url',
+                label: 'File url',
+                placeholder: (c)=>`https://example.com/my_file.${c.file_type}`,
+                type: 'field'
+              },
+              {
                 key: 'file_type',
                 label: 'File type',
                 type: 'select',
@@ -754,12 +788,6 @@ export default {
                   { text: 'Avro', value: 'avro' },
                   { text: 'Parquet', value: 'parquet' }
                 ]
-              },
-              {
-                key: 'url',
-                label: 'File url',
-                placeholder: (c)=>`https://example.com/my_file.${c.file_type}`,
-                type: 'field'
               },
               {
                 key: 'limit',
@@ -826,9 +854,25 @@ export default {
             validate: (c) => (c.url!='' && (c.file_type!='csv' || c.sep))
           },
 
+          uploadFile: async () => {
+            try {
+
+              var response = await this.$store.dispatch('request/uploadFile',{file: this.currentCommand.file_input})
+
+              if (response.fileType) {
+                this.currentCommand.file_type = response.fileType
+              }
+              this.currentCommand.url = response.fileUrl
+            } catch (error) {
+
+            }
+          },
+
           payload: () => ({
             command: 'load file',
             _init: true,
+            file_url: '',
+            file_input: '',
             file_type: 'csv',
             url: '',
             sep: ',',

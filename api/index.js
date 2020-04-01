@@ -91,12 +91,16 @@ app.use(session({
   saveUninitialized: false
 }))
 
+app.use(express.static('public'));
 
 let apiRoutes = require("./api-routes")
 app.use('/api', apiRoutes)
 
 let authRoutes = require("./auth-routes")
 app.use('/auth', authRoutes)
+
+let uploadRoutes = require("./upload-routes")
+app.use('/upload', uploadRoutes)
 
 app.get('/', (req, res) => {
   if (req.userContext && req.userContext.userinfo) {
