@@ -859,6 +859,7 @@ export default {
               if (response.fileType) {
                 this.currentCommand.file_type = response.fileType
               }
+              this.currentCommand.dataset_name = response.fileName || false
               this.currentCommand.url = response.fileUrl
             } catch (error) {
 
@@ -878,6 +879,7 @@ export default {
             header: true,
             limit: '',
             multiline: true,
+            dataset_name: false,
             charset: 'UTF-8'
           }),
 
@@ -886,7 +888,7 @@ export default {
               header: (payload.header) ? `True` : `False`,
               multiline: (payload.multiline) ? `True` : `False`,
             }
-            payload = escapeQuotesOn(payload,['sep','null_value','sheet_name'])
+            payload = escapeQuotesOn(payload,['sep','null_value','sheet_name','dataset_name','url'])
             let code = `${this.availableVariableName} = op.load.${payload.file_type}("${payload.url}"`
             if (payload.file_type=='csv') {
               code += `, sep="${payload.sep}"`

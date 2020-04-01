@@ -18,8 +18,9 @@ export const actions = {
       }
     )
 
-    var fileUrl = baseUrl + '/' + response.data.path
+    var fileUrl = baseUrl + '/' + response.data.path.split('public/')[0]
     var fileType = undefined
+    var fileName = undefined
 
     try {
       fileType = response.data.originalname.split('.')
@@ -27,12 +28,13 @@ export const actions = {
       if (!['csv','xls','json','avro','parquet'].includes(fileType)) {
         throw new Error()
       }
+      fileName = response.data.originalname.split(fileType)[0]
     } catch (error) {
       fileType = undefined
       console.warn('Bad file name', response.data.originalname)
     }
 
-    return {fileUrl, fileType}
+    return {fileUrl, fileType, fileName}
 
   },
 
