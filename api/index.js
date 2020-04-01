@@ -4,26 +4,25 @@ const bodyParser = require('body-parser')
 let mongoose = require('mongoose')
 const session = require('express-session')
 const jwt = require('jsonwebtoken')
+const { version } = require('./package.json')
+const Server = require('socket.io')
+const request = require('request-promise')
 
 const app = express()
-
 var server = require('http').createServer(app)
-
-const { version } = require('./package.json')
+const io = new Server(server)
 
 import { trimCharacters, pakoFernet } from './utils/functions.js'
 
-
+const app_secret = process.env.APP_SECRET || '6um61e6ee'
 var app_url
 var app_host
 var api_url
 var base
 var ws_kernel_base
-
 var whitelist = []
-
-const sl = `
-`
+var sockets = []
+var kernels = []
 
 function updateHost (host = 'localhost') {
 
@@ -51,12 +50,7 @@ if (!process.env.DISABLE_CORS) {
 
   const cors = require('cors')
 
-  whitelist = [
-    'http://'+app_url,
-    'https://'+app_url,
-    'http://'+app_host,
-    'https://'+app_host
-  ]
+  whitelist = [ 'http://'+app_url, 'https://'+app_url, 'http://'+app_host, 'https://'+app_host ]
 
   var corsOptions = {
     origin: function (origin, callback) {
@@ -83,8 +77,6 @@ app.use(bodyParser.json({
 
 mongoose.connect('mongodb://localhost/bumblebee', { useNewUrlParser: true, useUnifiedTopology: true })
 
-const app_secret = process.env.APP_SECRET || '6um61e6ee'
-
 app.use(session({
   secret: app_secret,
   resave: true,
@@ -110,10 +102,6 @@ app.get('/', (req, res) => {
   }
 })
 
-var sockets = []
-
-var kernels = []
-
 app.post('/dataset', (req, res) => {
 
   var socketName = req.body.queue_name || req.body.session
@@ -131,9 +119,6 @@ app.post('/dataset', (req, res) => {
   }
 
 })
-
-const Server = require('socket.io')
-const io = new Server(server)
 
 const newSocket = function (socket, session) {
   sockets[session] = socket
@@ -171,7 +156,7 @@ const newSocket = function (socket, session) {
 
     socket.on('cells', async (payload) => {
       var user_session = payload.session
-      var result = await run_code(`${payload.code}` + sl
+      var result = await run_code(payload.code + '\n'
         + `_output = df.ext.send(output="json", infer=False, advanced_stats=False${ payload.name ? (', name="'+payload.name+'"') : '' })`,
         user_session,
         true
@@ -185,7 +170,6 @@ const newSocket = function (socket, session) {
 
   return socket
 }
-
 
 io.use(function (socket, next) {
   if (socket.handshake.query && socket.handshake.query.token) {
@@ -227,7 +211,7 @@ io.on('connection', async (socket) => {
 
 })
 
-const request = require('request-promise')
+
 
 const run_code = async function(code = '', userSession = '', deleteSample = false) {
 

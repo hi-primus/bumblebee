@@ -353,9 +353,6 @@ import { printError, parseResponse, debounce, newName, arrayJoin, getOutputColsA
 
 const api_url = process.env.API_URL || 'http://localhost:5000'
 
-const sl = `
-`
-
 export default {
 
   components: {
@@ -1244,7 +1241,7 @@ export default {
           },
           code: (payload) => {
             if ( ['z_score','modified_z_score'].includes(payload.algorithm) ) {
-              return `${payload.code_done}${sl}outlier.${payload.action=='Drop' ? 'drop' : 'select'}()`
+              return `${payload.code_done}${'\n'}outlier.${payload.action=='Drop' ? 'drop' : 'select'}()`
             }
             else {
 
@@ -1390,7 +1387,7 @@ export default {
           }),
           code: (payload) => {
             var table = escapeQuotes(payload.table)
-            return `${payload.previous_code}${sl}${this.availableVariableName} = db.table_to_df("${table}").ext.cache()`
+            return `${payload.previous_code}${'\n'}${this.availableVariableName} = db.table_to_df("${table}").ext.cache()`
           },
           onTest: async (payload) => {
 

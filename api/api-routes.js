@@ -1,10 +1,10 @@
 let router = require('express').Router()
 
 router.get('/', function (req, res) {
-    res.json({
-        status: 'Working',
-        message: 'API'
-    })
+  res.json({
+    status: 'Working',
+    message: 'API'
+  })
 })
 
 var datasetController = require('./controllers/dataset')
