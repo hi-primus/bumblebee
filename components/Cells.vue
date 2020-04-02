@@ -34,7 +34,8 @@
                   color="primary"
                   @click="(field.func) ? command[field.func]() : 0"
                   class="mb-6 mx-a d-flex"
-                  :disabled="field.validate && !field.validate(currentCommand)"
+                  :loading="currentCommand[field.loading]"
+                  :disabled="!currentCommand[field.loading] && field.validate && !field.validate(currentCommand)"
                 >
                   {{
                     (typeof field.label == 'function') ?
@@ -66,6 +67,7 @@
                   :label="(typeof field.label == 'function') ? field.label(currentCommand) : (field.label || '')"
                   :placeholder="(typeof field.placeholder == 'function') ? field.placeholder(currentCommand) : (field.placeholder || '')"
                   :clearable="field.clearable"
+                  :accept="field.accept"
                   @input="(field.onChange) ? command[field.onChange]() : 0"
                   dense
                   required
@@ -754,14 +756,16 @@ export default {
             acceptLabel: 'Load',
             fields: [
               {
-                key: 'file_input',
+                key: '_fileInput',
                 label: 'File upload',
+                accept: 'text/csv, .csv, application/json, application/vnd.ms-excel, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, .avro, .parquet',
                 type: 'file'
               },
               {
-                condition: (c)=>c.file_input,
+                condition: (c)=>(c._fileInput && c._fileInput!==c._fileLoaded),
                 type: 'action',
                 label: 'Upload',
+                loading: '_fileUploading',
                 func: 'uploadFile'
               },
               {
@@ -854,23 +858,31 @@ export default {
           uploadFile: async () => {
             try {
 
-              var response = await this.$store.dispatch('request/uploadFile',{file: this.currentCommand.file_input})
+              this.currentCommand._fileUploading = true
+
+              var response = await this.$store.dispatch('request/uploadFile',{file: this.currentCommand._fileInput})
 
               if (response.fileType) {
                 this.currentCommand.file_type = response.fileType
               }
-              this.currentCommand.dataset_name = response.fileName || false
               this.currentCommand.url = response.fileUrl
+              this.currentCommand._fileUrl = response.fileUrl
+              this.currentCommand._fileUploading = false
+              this.currentCommand._datasetName = response.datasetName || false
+              this.currentCommand._fileLoaded = this.currentCommand._fileInput
             } catch (error) {
-
+              console.error(error)
+              this.currentCommand.error = error
+              this.currentCommand._fileUploading = false
             }
           },
 
           payload: () => ({
             command: 'load file',
             _init: true,
-            file_url: '',
-            file_input: '',
+            _fileUrl: '',
+            _fileUploading: false,
+            _fileInput: '',
             file_type: 'csv',
             url: '',
             sep: ',',
@@ -879,7 +891,7 @@ export default {
             header: true,
             limit: '',
             multiline: true,
-            dataset_name: false,
+            _datasetName: false,
             charset: 'UTF-8'
           }),
 
@@ -888,7 +900,7 @@ export default {
               header: (payload.header) ? `True` : `False`,
               multiline: (payload.multiline) ? `True` : `False`,
             }
-            payload = escapeQuotesOn(payload,['sep','null_value','sheet_name','dataset_name','url'])
+            payload = escapeQuotesOn(payload,['sep','null_value','sheet_name','_datasetName','url'])
             let code = `${this.availableVariableName} = op.load.${payload.file_type}("${payload.url}"`
             if (payload.file_type=='csv') {
               code += `, sep="${payload.sep}"`

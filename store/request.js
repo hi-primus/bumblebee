@@ -18,23 +18,36 @@ export const actions = {
       }
     )
 
-    var fileUrl = baseUrl + '/' + response.data.path.split('public/')[1]
+    var path = response.data.path.split('public/').join('').replace(/\b\\\b/g,"/")
+
+    var fileOriginalName = file.name
+    var fileUrl = baseUrl + '/' + path
     var fileType = undefined
-    var fileName = undefined
+    var datasetName = undefined
 
     try {
-      fileType = response.data.originalname.split('.')
+
+      var originalName = response.data.originalname
+
+      if (fileOriginalName!==originalName) {
+        console.warn('Bad file name', fileOriginalName, originalName)
+      }
+      fileType = originalName.split('.')
       fileType = fileType[fileType.length - 1]
       if (!['csv','xls','json','avro','parquet'].includes(fileType)) {
         throw new Error()
       }
-      fileName = response.data.originalname.split(fileType)[0]
+      datasetName = originalName.split(fileType)[0]
     } catch (error) {
       fileType = undefined
-      console.warn('Bad file name', response.data.originalname)
+      console.warn('Bad file name', originalName)
     }
 
-    return {fileUrl, fileType, fileName}
+    if (!fileUrl || !fileType || !datasetName) {
+      console.warn('Bad file name', { fileUrl, fileType, datasetName, responseData: response.data } )
+    }
+
+    return {fileUrl, fileType, datasetName, fileOriginalName}
 
   },
 
