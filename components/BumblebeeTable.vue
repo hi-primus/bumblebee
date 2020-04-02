@@ -205,6 +205,7 @@
             :total="+plotsData[column.index].total"
             :mismatch="+plotsData[column.index].mismatch"
             :nullV="+plotsData[column.index].null"
+            @clicked="clickedBar($event,column)"
             class="table-data-bar"
             bottom
           />
@@ -802,6 +803,24 @@ export default {
     },
 
     /* end of drag events */
+
+    clickedBar (event, column) {
+      if (column.type==='duplicated') {
+        return
+      }
+      if (event==='missing') {
+        var payload = {
+          columns: [ this.columns[column.index].name ],
+          condition: 'exactly',
+          value: 'None'
+        }
+        this.commandHandle({
+          command: 'filter rows',
+          payload,
+          immediate: true
+        })
+      }
+    },
 
     commandHandle(command) {
       this.$store.commit('commandHandle',command)

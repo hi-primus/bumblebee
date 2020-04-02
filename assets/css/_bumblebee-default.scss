@@ -281,7 +281,7 @@ table.table thead td:not(:nth-child(1)), table.table tbody td:not(:nth-child(1))
       cursor: initial;
     }
     &.min-bar {
-      min-width: 4px;
+      min-width: 1em;
     }
     &.rounded {
       border-radius: 0.5em;
@@ -1619,7 +1619,7 @@ $editor-top-padding: 6px;
 
         .table-data-bar {
           margin-bottom: 2px;
-          font-size: 4px;
+          font-size: 8px;
         }
 
         .histfreq {
