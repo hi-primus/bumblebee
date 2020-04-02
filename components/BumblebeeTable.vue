@@ -469,7 +469,7 @@ export default {
         var after = []
 
         if (this.currentPreviewCode.from) {
-          after = this.currentPreviewCode.from
+          after = this.currentPreviewCode.from || after
         }
         if (!after.length && this.currentSelection.columns.length) {
           after = this.currentSelection.columns.map(s=>s.name)
