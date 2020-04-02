@@ -349,7 +349,6 @@ export default {
       columnMenuIndex: false,
 
       mustCheck: false,
-      mustCheckProfile: false,
 
       // visibleRowsTop: 0,
       // visibleRowsBottom: 100,
@@ -672,7 +671,7 @@ export default {
       return [top, bottom]
     },
 
-    async checkIncomingColumns (columns) {
+    checkIncomingColumns (columns) {
       if (this.mustCheck) {
         if (columns.length>this.currentDataset.columns.length) { // TODO: Check for preview columns
           var receivedColumns = columns
@@ -720,11 +719,12 @@ export default {
           this.$store.commit('setHighlights', { matchColumns, color })
 
           if (previewColumns.length) {
-            this.mustCheckProfile = true
+            return true // must cehck
           }
 
         }
       }
+      return false // no check
     },
 
     focusPreview () {
@@ -1004,12 +1004,10 @@ export default {
       }
     },
 
-    debouncedSetProfile: debounce(function(p) {
-      return this.setProfile(p)
-    } , 100 ),
-
     async setProfile (previewCode) {
       if (this.currentProfilePreview.code !== previewCode) {
+
+        this.$store.commit('setProfilePreview', {code: previewCode, columns: []})
 
         var cols = this.currentColumnsPreview.map(e=>escapeQuotes(e.title))
 
@@ -1027,8 +1025,6 @@ export default {
         dataset = { ...dataset, code: previewCode }
 
         this.$store.commit('setProfilePreview', dataset)
-
-        this.mustCheckProfile = false
 
         return true
       }
@@ -1151,118 +1147,19 @@ export default {
       }
 
       for (let i = newChunks.length - 1; i >= 0 ; i--) {
-        await this.fetchChunk(newChunks[i][0], newChunks[i][1])
-      }
+        var checkProfile = await this.fetchChunk(newChunks[i][0], newChunks[i][1])
 
-      this.updateRows()
+        this.updateRows()
 
-      if (this.mustCheckProfile) {
-        var previewCode = (this.currentPreviewCode ? this.currentPreviewCode.profileCode : false) || ''
-
-        if (this.currentProfilePreview.code !== previewCode) {
-          var dbsp = await this.debouncedSetProfile(previewCode)
-        }
-      }
-
-      return true
-
-    },
-
-    async fetchRowsPrevious () {
-
-      var chunks = (this.currentPreviewCode) ? this.chunksPreview : this.chunks
-
-      var values = this.getCurrentWindow()
-
-      var currentFrom = (values && values[0]) ? values[0] : -1
-
-      var distanceMap = []
-
-
-      var maxDistance = -1
-
-      if (chunks.length>this.maxChunks && currentFrom>=0) {
-
-        var distanceMap = chunks.map((chunk, index)=>({distance: Math.abs(currentFrom-chunk.from), index, from: chunk.from}))
-          .filter(c=>c.from!==0)
-          .sort((a,b)=>(a.distance-b.distance))
-        var tries = 10
-
-        while (chunks.length>this.maxChunks && tries--) {
-          var toDelete = distanceMap.pop()
-          if (toDelete) {
-            chunks.splice(toDelete.index, 1)
-            // console.log(`deleting ${toDelete.from} in chunks`)
+        if (checkProfile) {
+          var previewCode = (this.currentPreviewCode ? this.currentPreviewCode.profileCode : false) || ''
+          if (this.currentProfilePreview.code !== previewCode) {
+            await this.setProfile(previewCode)
           }
         }
-
-        maxDistance = distanceMap[distanceMap.length - 1].distance
       }
 
-      var found = this.toFetch.length - 1
-
-      if (currentFrom>=0) {
-        var minDistance = Math.abs(this.toFetch[found][0] - currentFrom)
-
-        for (let i = this.toFetch.length - 1; i >= 0; i--) {
-
-          var distance = Math.abs(this.toFetch[i][0] - currentFrom)
-          if (minDistance>distance) {
-            found = i
-            minDistance = distance
-          }
-        }
-
-        // console.log(`selecting ${this.toFetch[found][0]} in toFetch, nearest of ${currentFrom}`)
-      }
-
-      if (maxDistance>=0 && minDistance>maxDistance) {
-        // console.log(`cancelling ${from} bc it would be further ${to}`)
-        return false
-      }
-
-      var [from, to, force] = this.toFetch.splice(found,1)[0]
-
-      if (!to) {
-        // console.log(`cancelling ${from} bc !to ${to}`)
-        return false
-      }
-
-      from = Math.max( from, 0 )
-      to = Math.min( to, this.rowsCount - 1 )
-
-      var length = to - from
-
-      var distanceFromWindow = Math.abs(currentFrom-from)
-
-      if ( distanceFromWindow>length*4 && !force ) {
-        // console.log(`cancelling ${from} bc it is too far from ${currentFrom}`)
-        return false // too far
-      }
-
-      var newChunks = optimizeRanges(
-        [from,to],
-        chunks.map(e=>[e.from,e.to])
-      )
-
-      if (!newChunks.length) {
-        // console.log(`cancelling ${from} bc it is already loaded!`)
-        return false // no chunks
-      }
-
-      for (let i = 0; i < newChunks.length; i++) {
-        await this.fetchChunk(newChunks[i][0], newChunks[i][1])
-      }
-
-      this.updateRows()
-
-      if (this.mustCheckProfile) {
-        var previewCode = (this.currentPreviewCode ? this.currentPreviewCode.profileCode : false) || ''
-
-        if (this.currentProfilePreview.code !== previewCode) {
-          var dbsp = await this.debouncedSetProfile(previewCode)
-        }
-      }
+      // this.updateRows()
 
       return true
 
@@ -1295,11 +1192,10 @@ export default {
         }))
 
         chunks[index] = { from, to, rows, preview: previewCode || '' }
-        this.checkIncomingColumns(parsed.sample.columns)
-        return 1
+        return this.checkIncomingColumns(parsed.sample.columns)
 
       } else {
-        return 0
+        return undefined
       }
     }
   }
