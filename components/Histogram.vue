@@ -8,7 +8,7 @@
       :maxVal="maxVal"
       :binMargin="1"
       :width="'auto'"
-      :height="table ? 66 : 90"
+      :height="table ? 62 : 90"
       @update:selected="updateSelected"
       @hovered="setValueIndex($event)"
     />
