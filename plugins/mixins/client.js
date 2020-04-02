@@ -28,6 +28,9 @@ export default {
     async evalCode (code) {
       try {
 
+        var _c = 'Code #'+(timestamps+1)
+        console.time(_c)
+
         var result = await this.socketPost('run', {
           code,
           session: this.$store.state.session
@@ -35,7 +38,8 @@ export default {
           timeout: 0
         })
 
-        console.log('"""[DEBUG][CODE]"""',result.code)
+        console.log('"""[DEBUG][CODE]"""', result.code)
+        console.timeEnd(_c)
 
         return result
 
