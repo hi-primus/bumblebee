@@ -812,6 +812,7 @@ export default {
         var payload = {
           columns: [ this.columns[column.index].name ],
           condition: 'exactly',
+          action: 'drop',
           value: 'None'
         }
         this.commandHandle({
