@@ -180,13 +180,13 @@
               {{previewPlotsData[column.name]}}
             </div>
           </template>
-          <v-progress-circular
+          <!-- <v-progress-circular
             v-else
             indeterminate
             color="primary"
             class="progress-middle"
             style="margin-top: 28px"
-          />
+          /> -->
 
         </div>
         <div
