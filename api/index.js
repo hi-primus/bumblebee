@@ -242,9 +242,9 @@ const run_code = async function(code = '', userSession = '', deleteSample = fals
       kernels[userSession] = userSession
     }
 
-    if (process.env.NODE_ENV !== 'production') {
-      console.log(code)
-    }
+    // if (process.env.NODE_ENV !== 'production') {
+    //   console.log(code)
+    // }
 
     var response = await request({
       uri: `${base}/bumblebee`,
