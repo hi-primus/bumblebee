@@ -1,5 +1,7 @@
 let router = require('express').Router()
 
+const File = require('./models/file')
+
 const multer = require('multer');
 
 var storage = multer.diskStorage({
@@ -13,13 +15,14 @@ var storage = multer.diskStorage({
 
 var upload = multer({ storage: storage })
 
-router.post('/', upload.single('datasetFile'), (req, res, next) => {
+router.post('/', upload.single('datasetFile'), async (req, res, next) => {
   const file = req.file
   if (!file) {
     const error = new Error('Please upload a file')
     error.httpStatusCode = 400
     return next(error)
   }
+  // await File.create(file)
   res.send(file)
 })
 
