@@ -434,6 +434,7 @@ export default {
         ? this.currentColumnsPreview.map((col)=>({
             ...col,
             type: 'preview',
+            preview: true,
             name: col.title,
           }))
         : []
@@ -441,6 +442,7 @@ export default {
         var dc = this.currentDuplicatedColumns.length
         ? this.currentDuplicatedColumns.map((col)=>({
             type: 'duplicated',
+            duplicated: true,
             index: this.currentDataset.columns.findIndex(c=>c.name===col.name),
             name: col.newName,
           }))
@@ -479,6 +481,10 @@ export default {
           after = this.currentSelection.columns.map(s=>s.name)
         }
 
+        var expectedColumns = this.currentPreviewCode.expectedColumns
+
+        var pushedColumns = 0
+
         if (this.previewColumns.length && after) {
 
           if (this.previewColumns.length===1 && after.length!==1) {
@@ -490,6 +496,7 @@ export default {
               classes: ['bb-preview'],
               width: 170
             })
+            pushedColumns++
 
           } else {
 
@@ -497,6 +504,10 @@ export default {
             var insertIndex = cols.findIndex(col=>_after===col.name)+1
 
             this.previewColumns.forEach((pcol, i)=>{
+
+              if (i>=expectedColumns) {
+                return
+              }
 
               if (after[i]) {
                 insertIndex = cols.findIndex(col=>after[i]===col.name)+1
@@ -511,6 +522,30 @@ export default {
                 classes: ['bb-preview'],
                 width: 170
               })
+              pushedColumns++
+            })
+          }
+        }
+
+        if (expectedColumns!==undefined && after && pushedColumns<expectedColumns){
+          for (let i = 0; i < expectedColumns-pushedColumns; i++) {
+
+            if (after[i]) {
+              insertIndex = cols.findIndex(col=>after[i]===col.name)+1+pushedColumns
+            }
+
+            if (insertIndex === 0) { // previews cannot be on position 0
+              insertIndex = cols.length
+            }
+
+            cols.splice(insertIndex, 0, {
+              type: 'preview',
+              index: -i,
+              previewIndex: -i,
+              preview: true,
+              placeholder: true,
+              classes: ['bb-preview', 'bb-placeholder'],
+              width: 170
             })
           }
         }
@@ -1057,7 +1092,7 @@ export default {
 
     debouncedThrottledScrollCheck: debounce(function () {
       this.throttledScrollCheck()
-    }, 200),
+    }, 400),
 
     throttledScrollCheck: throttle(function(aw = true) {this.scrollCheck(aw)} , throttleScrollTime),
 

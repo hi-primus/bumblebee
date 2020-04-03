@@ -351,7 +351,17 @@ import OutputColumnInputs from '@/components/OutputColumnInputs'
 import Outliers from '@/components/Outliers'
 import clientMixin from '@/plugins/mixins/client'
 import { mapGetters } from 'vuex'
-import { printError, parseResponse, debounce, newName, arrayJoin, getOutputColsArgument, escapeQuotes, escapeQuotesOn } from '@/utils/functions.js'
+import {
+  printError,
+  parseResponse,
+  debounce,
+  newName,
+  arrayJoin,
+  getOutputColsArgument,
+  escapeQuotes,
+  escapeQuotesOn,
+  getProperty
+} from '@/utils/functions.js'
 
 const api_url = process.env.API_URL || 'http://localhost:5000'
 
@@ -1748,6 +1758,7 @@ export default {
               drop: false,
               output_cols: columns.map(e=>e),
               _preview: 'unnest',
+              _expectedColumns: () => this.currentCommand.splits,
               _highlightColor: 'red'
             }
 					},
@@ -2250,16 +2261,15 @@ export default {
 
       try {
 
-        if (this.currentCommand._preview) {
+        var expectedColumns = this.currentCommand._expectedColumns!==undefined ? getProperty(this.currentCommand._expectedColumns) : undefined
 
-          this.$store.commit('setPreviewCode',{
-            code: this.getCode(this.currentCommand,'preview'),
-            profileCode: this.getCode(this.currentCommand,'profile'),
-            color: this.currentCommand._highlightColor,
-            from: this.currentCommand.columns
-          })
-
-        }
+        this.$store.commit('setPreviewCode',{
+          code: this.getCode(this.currentCommand,'preview'),
+          profileCode: this.getCode(this.currentCommand,'profile'),
+          color: this.currentCommand._highlightColor,
+          from: this.currentCommand.columns,
+          expectedColumns
+        })
 
       } catch (err) {
         // console.error(err) // probably just a cancelled request
