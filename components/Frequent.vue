@@ -1,5 +1,5 @@
 <template>
-  <div class="bb-graphic" @mouseleave="currentVal = false">
+  <div class="bb-graphic" v-if="calculatedValues.length" @mouseleave="currentVal = false">
     <h3 v-if="!table">Frequent values</h3>
     <BarsCanvas
       :selectable="selectable"
@@ -11,7 +11,6 @@
       @update:selected="updateSelected"
       @hovered="setValueIndex($event)"
     />
-
     <div v-if="currentVal" class="current-value table-font" :title="currentVal" v-html="currentVal"></div>
     <div v-else class="current-value" :title="elementsString">{{ elementsString }}</div>
   </div>

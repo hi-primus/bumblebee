@@ -1,5 +1,5 @@
 <template>
-  <div class="bb-graphic" @mouseleave="currentCount = false">
+  <div class="bb-graphic"  v-if="values.length" @mouseleave="currentCount = false">
     <h3 v-if="!table">{{ title }}</h3>
     <BarsCanvas
       :selectable="selectable"
