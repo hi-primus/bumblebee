@@ -1157,6 +1157,12 @@ table {
   }
 }
 
+.slow-fade-enter-active, .slow-fade-leave-active {
+  transition: opacity .37s ease-in-out;
+}
+.slow-fade-enter, .slow-fade-leave-to {
+  opacity: 0;
+}
 .fade-enter-active, .fade-leave-active {
   transition: opacity .21s ease-in-out;
 }
@@ -1611,9 +1617,13 @@ $editor-top-padding: 6px;
 
       .bb-table-plot {
         height: 92px;
-        display: flex;
-        flex-direction: column;
-        padding: 0 0 0 0;
+        &>* {
+          display: flex;
+          flex-direction: column;
+        }
+        &, &>* {
+          padding: 0 0 0 0;
+        }
 
         position: relative;
 
@@ -1624,6 +1634,7 @@ $editor-top-padding: 6px;
 
         .histfreq {
           flex: 1;
+          opacity: 1;
         }
       }
 
