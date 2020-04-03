@@ -1,17 +1,19 @@
 <template>
   <div class="bb-graphic"  v-if="values.length" @mouseleave="currentCount = false">
     <h3 v-if="!table">{{ title }}</h3>
-    <BarsCanvas
-      :selectable="selectable"
-      :selected="selected"
-      :values="values"
-      :maxVal="maxVal"
-      :binMargin="1"
-      :width="'auto'"
-      :height="table ? 62 : 90"
-      @update:selected="updateSelected"
-      @hovered="setValueIndex($event)"
-    />
+    <div :style="{'min-height': 62+'px'}">
+      <BarsCanvas
+        :selectable="selectable"
+        :selected="selected"
+        :values="values"
+        :maxVal="maxVal"
+        :binMargin="1"
+        :width="'auto'"
+        :height="table ? 62 : 90"
+        @update:selected="updateSelected"
+        @hovered="setValueIndex($event)"
+      />
+    </div>
     <div v-if="currentValueString" :title="currentValueString" class="current-value">{{ currentValueString }}</div>
   </div>
 </template>

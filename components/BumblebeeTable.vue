@@ -131,7 +131,7 @@
           v-if="column.type=='preview' && !column.hidden"
           :style="{ width: column.width+'px' }"
         >
-          <transition name="fade">
+          <transition name="slow-fade">
             <div v-if="previewPlotsData[column.name]">
               <DataBar
                 :key="previewPlotsData[column.name].key+'databar'"

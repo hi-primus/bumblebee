@@ -1157,8 +1157,11 @@ table {
   }
 }
 
-.slow-fade-enter-active, .slow-fade-leave-active {
+.slow-fade-enter-active{
   transition: opacity .37s ease-in-out;
+}
+.slow-fade-leave-active {
+  transition: opacity .21s ease-in-out;
 }
 .slow-fade-enter, .slow-fade-leave-to {
   opacity: 0;
