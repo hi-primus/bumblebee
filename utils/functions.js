@@ -212,3 +212,11 @@ export const printError = (response) => {
     console.error(response)
   }
 }
+
+export const getProperty = (pof, args = []) => {
+  if (typeof pof === 'function') {
+    return pof(...args)
+  } else {
+    return pof
+  }
+}
