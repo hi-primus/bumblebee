@@ -360,7 +360,8 @@ import {
   getOutputColsArgument,
   escapeQuotes,
   escapeQuotesOn,
-  getProperty
+  getProperty,
+  namesToIndices
 } from '@/utils/functions.js'
 
 const api_url = process.env.API_URL || 'http://localhost:5000'
@@ -509,7 +510,10 @@ export default {
                   { text: 'Ends with', value: 'endswith' },
                   { divider: true },
                   { text: 'Custom expression', value: 'custom' },
-                  { text: 'Selected', value: 'selected', disabled: true }
+                  { text: 'Selected', value: 'selected', disabled: true },
+                  { divider: true },
+                  { text: 'Mismatches values', value: 'mismatch' },
+                  { text: 'Null values', value: 'null' }
                 ],
                 disabled: {valueOf: ()=>this.selectionType!='columns'}
               },
@@ -587,6 +591,8 @@ export default {
                 case 'custom':
                   return (c.expression!='')
                 case 'selected':
+                case 'null':
+                case 'mismatch':
                   return true
                 default:
                   return false
@@ -2329,7 +2335,8 @@ export default {
     async commandHandle (event) {
 
 			var payload = {}
-			var columns = undefined
+      var columns = undefined
+      var columnDataTypes = undefined
 
       if (!event.columns || !event.columns.length) {
         columns = this.columns.map(e=>this.dataset.columns[e.index].name)
@@ -2337,6 +2344,9 @@ export default {
       }
       else {
         columns = event.columns
+        var columnIndices = namesToIndices(columns, this.dataset.columns)
+        columnDataTypes = columnIndices.map(i=>this.dataset.columns[i].column_dtype)
+      }
 
       var _command = this.commandsPallete[event.command] || this.commandsPallete[event.type]
 
