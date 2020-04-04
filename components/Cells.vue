@@ -1790,10 +1790,10 @@ export default {
                 type: 'field',
                 key: 'newName',
                 label: 'Output column name',
+                placeholder: (c) => c.columns.join('_'),
                 clearable: true,
               },
-            ],
-            validate: (command) => command.newName
+            ]
           },
           payload: (columns) => {
             return {
@@ -1801,12 +1801,16 @@ export default {
               columns,
               separator: ', ',
               title: 'Nest '+(columns.length==1 ? `column` : 'columns'),
-              newName: '',
+              newName: columns.join('_'),
               _preview: 'nest',
+              _expectedColumns: 1,
               _highlightColor: {default: 'none', preview: 'green'}
 					}
           },
 					code: (payload) => {
+            if (!payload.newName) {
+              payload.newName = payload.columns.join('_')
+            }
             payload = escapeQuotesOn(payload,['separator','newName'])
             return `.cols.nest(["${payload.columns.join('", "')}"]`
 						+( (payload.separator) ? `, separator="${payload.separator}"` : '')
