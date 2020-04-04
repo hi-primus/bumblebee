@@ -2325,9 +2325,11 @@ export default {
 			var payload = {}
 			var columns = undefined
 
-      if (!event.columns || !event.columns.length)
+      if (!event.columns || !event.columns.length) {
         columns = this.columns.map(e=>this.dataset.columns[e.index].name)
-      else
+        columnDataTypes = this.columns.map(e=>this.dataset.columns[e.index].column_dtype)
+      }
+      else {
         columns = event.columns
 
       var _command = this.commandsPallete[event.command] || this.commandsPallete[event.type]
@@ -2335,6 +2337,8 @@ export default {
       payload.type = event.type
       payload.command = event.command
       payload._noOperations = event.noOperations
+
+      payload.columnDataTypes = columnDataTypes
 
       if (_command) {
 
