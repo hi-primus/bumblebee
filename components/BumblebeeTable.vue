@@ -313,7 +313,7 @@ import Histogram from '@/components/Histogram'
 import Frequent from '@/components/Frequent'
 import DataBar from '@/components/DataBar'
 
-import { parseResponse, arraysEqual, cancellablePromise, throttle, debounce, optimizeRanges, escapeQuotes } from '@/utils/functions.js'
+import { parseResponse, arraysEqual, cancellablePromise, throttle, debounce, optimizeRanges, escapeQuotes, namesToIndices } from '@/utils/functions.js'
 
 var doubleClick = false
 
@@ -489,7 +489,8 @@ export default {
 
           if (this.previewColumns.length===1 && after.length!==1) {
 
-            var insertIndex = Math.max(...after.map(colname=>cols.findIndex(col=>colname===col.name)))+1
+            // TODO: cols unordered
+            var insertIndex = Math.max(...namesToIndices(after,cols))+1
 
             cols.splice(insertIndex,0,{
               ...this.previewColumns[0],
@@ -528,15 +529,10 @@ export default {
         }
 
         if (expectedColumns!==undefined && after && pushedColumns<expectedColumns){
-          for (let i = 0; i < expectedColumns-pushedColumns; i++) {
 
-            if (after[i]) {
-              insertIndex = cols.findIndex(col=>after[i]===col.name)+1+pushedColumns
-            }
+          if (expectedColumns===1) {
 
-            if (insertIndex === 0) { // previews cannot be on position 0
-              insertIndex = cols.length
-            }
+            var insertIndex = Math.max(...after.map(colname=>cols.findIndex(col=>colname===col.name)))+1
 
             cols.splice(insertIndex, 0, {
               type: 'preview',
@@ -547,7 +543,31 @@ export default {
               classes: ['bb-preview', 'bb-placeholder'],
               width: 170
             })
+
+          } else {
+            for (let i = 0; i < expectedColumns-pushedColumns; i++) {
+
+              if (after[i]) {
+                insertIndex = cols.findIndex(col=>after[i]===col.name)+1+pushedColumns
+              }
+
+              if (insertIndex === 0) { // previews cannot be on position 0
+                insertIndex = cols.length
+              }
+
+              cols.splice(insertIndex, 0, {
+                type: 'preview',
+                index: -i,
+                previewIndex: -i,
+                preview: true,
+                placeholder: true,
+                classes: ['bb-preview', 'bb-placeholder'],
+                width: 170
+              })
+            }
           }
+
+
         }
       } catch (err) {
         console.error(err)

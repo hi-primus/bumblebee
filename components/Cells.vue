@@ -1802,10 +1802,10 @@ export default {
                 type: 'field',
                 key: 'newName',
                 label: 'Output column name',
+                placeholder: (c) => c.columns.join('_'),
                 clearable: true,
               },
-            ],
-            validate: (command) => command.newName
+            ]
           },
           payload: (columns) => {
             return {
@@ -1813,12 +1813,16 @@ export default {
               columns,
               separator: ', ',
               title: 'Nest '+(columns.length==1 ? `column` : 'columns'),
-              newName: '',
+              newName: columns.join('_'),
               _preview: 'nest',
+              _expectedColumns: 1,
               _highlightColor: {default: 'none', preview: 'green'}
 					}
           },
 					code: (payload) => {
+            if (!payload.newName) {
+              payload.newName = payload.columns.join('_')
+            }
             payload = escapeQuotesOn(payload,['separator','newName'])
             return `.cols.nest(["${payload.columns.join('", "')}"]`
 						+( (payload.separator) ? `, separator="${payload.separator}"` : '')
@@ -2273,7 +2277,15 @@ export default {
 
       try {
 
-        var expectedColumns = this.currentCommand._expectedColumns!==undefined ? getProperty(this.currentCommand._expectedColumns) : undefined
+        var expectedColumns
+
+        if (this.currentCommand._expectedColumns) {
+          expectedColumns = getProperty(this.currentCommand._expectedColumns)
+        } else if (this.currentCommand.output_cols && this.currentCommand.output_cols.length) {
+          expectedColumns = this.currentCommand.output_cols.length
+        } else if (this.currentCommand.columns) {
+          expectedColumns = this.currentCommand.columns.length
+        }
 
         this.$store.commit('setPreviewCode',{
           code: this.getCode(this.currentCommand,'preview'),
