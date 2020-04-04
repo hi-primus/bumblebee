@@ -1070,6 +1070,12 @@ export default {
     },
 
     async setProfile (previewCode) {
+
+      if (!previewCode) {
+        this.$store.commit('setProfilePreview', false )
+        return
+      }
+
       if (this.currentProfilePreview.code !== previewCode) {
 
         this.$store.commit('setProfilePreview', {code: previewCode, columns: []})
@@ -1211,13 +1217,19 @@ export default {
         return false // no chunks
       }
 
+
       for (let i = newChunks.length - 1; i >= 0 ; i--) {
+
+        var previewCode = (this.currentPreviewCode ? this.currentPreviewCode.profileCode : false) || ''
+        if (this.currentProfilePreview.code !== previewCode) {
+          this.setProfile(false)
+        }
+
         var checkProfile = await this.fetchChunk(newChunks[i][0], newChunks[i][1])
 
         this.updateRows()
 
         if (checkProfile) {
-          var previewCode = (this.currentPreviewCode ? this.currentPreviewCode.profileCode : false) || ''
           if (this.currentProfilePreview.code !== previewCode) {
             await this.setProfile(previewCode)
           }
