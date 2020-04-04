@@ -536,8 +536,8 @@ export default {
 
             cols.splice(insertIndex, 0, {
               type: 'preview',
-              index: -i,
-              previewIndex: -i,
+              index: -1,
+              previewIndex: -1,
               preview: true,
               placeholder: true,
               classes: ['bb-preview', 'bb-placeholder'],
