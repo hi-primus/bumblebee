@@ -483,6 +483,10 @@ export default {
 
         var expectedColumns = this.currentPreviewCode.expectedColumns
 
+        if (expectedColumns===0) {
+          return cols
+        }
+
         var pushedColumns = 0
 
         if (this.previewColumns.length && after) {

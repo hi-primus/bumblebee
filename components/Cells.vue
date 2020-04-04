@@ -622,6 +622,7 @@ export default {
               text: '',
               expression: `${this.dataset.varname}["${columns[0]}"]`,
               action: 'select',
+              _expectedColumns: 0,
               _preview: 'filter rows',
               _highlightColor: 'green'
             }
@@ -1681,6 +1682,7 @@ export default {
             fromColumns: columns,
             expression: '', // (columns.length!=0) ? columns.map(e=>`df["${e}"]`).join(' + ') : '',
             title: 'Create column',
+            _expectedColumns: 1,
 						_preview: 'set',
             newName: ''
           }),
@@ -2267,7 +2269,7 @@ export default {
 
         var expectedColumns
 
-        if (this.currentCommand._expectedColumns) {
+        if (this.currentCommand._expectedColumns!==undefined) {
           expectedColumns = getProperty(this.currentCommand._expectedColumns)
         } else if (this.currentCommand.output_cols && this.currentCommand.output_cols.length) {
           expectedColumns = this.currentCommand.output_cols.length
