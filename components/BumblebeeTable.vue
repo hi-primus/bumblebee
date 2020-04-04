@@ -1037,20 +1037,17 @@ export default {
 
       if (this.newColumnType != prevType) {
         var payload = {
-          columns: [prevName],
           dtype: this.newColumnType
         }
-        this.commandHandle({command: 'cast', ...payload})
-        // commandHandle(...)
+        this.commandHandle({command: 'cast', columns: [prevName], payload})
       }
 
       this.$nextTick(()=>{
         if (this.newColumnName != prevName) {
           var payload = {
-            columns: [prevName],
             output_cols: [this.newColumnName]
           }
-          this.commandHandle({command: 'rename', payload, immediate: true})
+          this.commandHandle({command: 'rename', columns: [prevName], payload, immediate: true})
         }
         this.$nextTick(()=>{
           this.columnMenuIndex = false
