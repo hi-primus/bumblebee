@@ -220,3 +220,19 @@ export const getProperty = (pof, args = []) => {
     return pof
   }
 }
+
+export const namesToIndices = (cols = [], datasetColumns = []) => {
+  try {
+    return cols.map(name=>datasetColumns.findIndex(column => column.name===name))
+  } catch (error) {
+    return cols
+  }
+}
+
+export const indicesToNames = (cols = [], datasetColumns = []) => {
+  try {
+    return cols.map(i=>datasetColumns[i].name)
+  } catch (error) {
+    return cols
+  }
+}
