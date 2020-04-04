@@ -326,7 +326,7 @@ import Dataset from '@/components/Dataset'
 import VegaEmbed from '@/components/VegaEmbed'
 import clientMixin from '@/plugins/mixins/client'
 import dataTypesMixin from '@/plugins/mixins/data-types'
-import { copyToClipboard } from '@/utils/functions.js'
+import { copyToClipboard, namesToIndices } from '@/utils/functions.js'
 import { mapState, mapGetters } from 'vuex';
 
 const api_url = process.env.API_URL || 'http://localhost:5000'
@@ -1040,8 +1040,7 @@ export default {
      handleSelection (selected, indices = true) {
 
       if (!indices) {
-        // selected(names) -> selected(indices)
-        selected = selected.map(name=>this.dataset.columns.findIndex(column => column.name===name))
+        selected = namesToIndices(selected, this.dataset.columns)
       }
 
       this.selectedColumns = selected.map(e=>({index: e, name: this.dataset.columns[e].name}))
