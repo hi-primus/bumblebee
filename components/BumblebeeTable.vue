@@ -849,15 +849,24 @@ export default {
       }
       if (event==='missing') {
         var payload = {
-          columns: [ this.columns[column.index].name ],
-          condition: 'exactly',
-          action: 'drop',
-          value: 'None'
+          condition: 'null',
+          action: 'drop'
         }
         this.commandHandle({
           command: 'filter rows',
-          payload,
-          immediate: true
+          columns: [ this.columns[column.index].name ],
+          payload
+        })
+      }
+      if (event==='mismatch') {
+        var payload = {
+          condition: 'mismatch',
+          action: 'drop'
+        }
+        this.commandHandle({
+          command: 'filter rows',
+          columns: [ this.columns[column.index].name ],
+          payload
         })
       }
     },
