@@ -257,22 +257,22 @@
       <!-- v-show="((row.index>=visibleRowsTop) && (row.index<=visibleRowsBottom))" -->
       <div
         class="bb-table-row"
-        v-for="(row, rowArrayIndex) in rows"
+        v-for="(row, rowArrayIndex) in (rowsPreview.length ? rowsPreview : rows)"
         :key="'r'+row.index"
         :class="[getRowHighlight(rowArrayIndex)]"
         :style="{height: rowHeight+'px', top: row.index*rowHeight+'px'}"
       >
         <template v-for="column in allColumns">
-          <template v-if="column.type==='preview' && rowsPreview && rowsPreview[rowArrayIndex] && rowsPreview[rowArrayIndex].value[column.previewIndex]">
+          <template v-if="column.type==='preview' && rowsPreview && rowsPreview[rowArrayIndex] && rowsPreview[rowArrayIndex].value[column.index]">
             <div
               :key="'p'+column.index"
               class="bb-table-cell"
               :class="[
                 ...column.classes,
-                ...rowsPreview[rowArrayIndex].value[column.previewIndex].classes
+                ...rowsPreview[rowArrayIndex].value[column.index].classes
               ]"
               :style="{width: column.width+'px'}"
-              v-html="rowsPreview[rowArrayIndex].value[column.previewIndex].html"
+              v-html="rowsPreview[rowArrayIndex].value[column.index].html"
             ></div>
           </template>
           <template v-else-if="column.type!=='preview' && row.value[column.index]">
@@ -404,9 +404,17 @@ export default {
     },
 
     rowsPreview () {
+      var cols = this.allColumns.map(col=>({
+        index: col.index,
+        preview: col.preview,
+        nameOrIndex: col.preview ? col.name : col.index,
+      }))
+
+      cols.sort((a,b)=>(a.index-b.index))
+
       return this.rowsPreviewValues.map((r, ri) => {
-        var value = this.previewColumns.map(col=>{
-          return this.getCellData(col.name, ri, r.value[col.index], true)
+        var value = cols.map((col,ci)=>{
+          return this.getCellData(col.nameOrIndex, ri, r.value[ci], col.preview)
         })
         return { ...r, value}
       })
