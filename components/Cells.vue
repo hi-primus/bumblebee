@@ -644,6 +644,12 @@ export default {
             }
 
             switch (payload.condition) {
+              case 'null':
+                expression = `${varname}["${payload.columns[0]}"].isnull()`
+                break
+              case 'mismatch':
+                expression = `~${varname}.cols.is_match("${payload.columns[0]}", "${payload.columnDataTypes[0]}")`
+                break
               case 'exactly':
                 expression = `${varname}["${payload.columns[0]}"]==${payload.value}`
                 break
