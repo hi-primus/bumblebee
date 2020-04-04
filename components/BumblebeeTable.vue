@@ -259,7 +259,7 @@
         class="bb-table-row"
         v-for="(row, rowArrayIndex) in rows"
         :key="'r'+row.index"
-        :class="['bb-highlight--'+getRowHighlight(rowArrayIndex)]"
+        :class="[getRowHighlight(rowArrayIndex)]"
         :style="{height: rowHeight+'px', top: row.index*rowHeight+'px'}"
       >
         <template v-for="column in allColumns">
@@ -776,6 +776,8 @@ export default {
 
           if (matchRowsColumns[0]) {
             this.$store.commit('setHighlightRows', { ...matchRowsColumns[0], color })
+          } else {
+            this.$store.commit('setHighlightRows', false)
           }
 
           this.$store.commit('setColumnsPreview', previewColumns)
@@ -906,7 +908,7 @@ export default {
         var color = this.currentHighlightRows.color
         try {
           if (rows[row].value[hlCol]) {
-            return this.currentHighlightRows.color || 'green'
+            return 'bb-highlight--'+(this.currentHighlightRows.color || 'green')
           }
         } catch (err) {}
       }
