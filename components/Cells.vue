@@ -2265,7 +2265,15 @@ export default {
 
       try {
 
-        var expectedColumns = this.currentCommand._expectedColumns!==undefined ? getProperty(this.currentCommand._expectedColumns) : undefined
+        var expectedColumns
+
+        if (this.currentCommand._expectedColumns) {
+          expectedColumns = getProperty(this.currentCommand._expectedColumns)
+        } else if (this.currentCommand.output_cols && this.currentCommand.output_cols.length) {
+          expectedColumns = this.currentCommand.output_cols.length
+        } else if (this.currentCommand.columns) {
+          expectedColumns = this.currentCommand.columns.length
+        }
 
         this.$store.commit('setPreviewCode',{
           code: this.getCode(this.currentCommand,'preview'),
