@@ -148,8 +148,9 @@ export const mutations = {
       _c = []
     }
 
-    if (dataset && dataset.dtypes_list)
+    if (dataset && dataset.dtypes_list) {
       state.typesAvailable = dataset.dtypes_list
+    }
 
     Vue.set(state.datasets, found, dataset)
 
