@@ -127,7 +127,7 @@
             center-active
             style="flex: 0;"
           >
-            <v-tab v-for="(_tab, key) in $store.state.datasets" :key="key" >
+            <v-tab v-for="(_tab, key) in $store.state.datasets" :key="key" class="bb-tab" >
               <span class="tab-title">
                 {{ _tab.name || key+1 }}
               </span>
@@ -144,6 +144,11 @@
                   close
                 </v-icon>
               </v-hover>
+            </v-tab>
+            <v-tab class="new-tab" color="primary darken-1" @click="$store.commit('newDataset')">
+              <v-icon color="primary">
+                add
+              </v-icon>
             </v-tab>
           </v-tabs>
           <div class="bb-content">
@@ -291,12 +296,12 @@ export default {
         switch (value) {
           case 'receiving back':
             this.stopClient(true)
-            this.$store.commit('cells', [])
+            this.$store.commit('setCells', [])
             break;
           case 'receiving':
 							this.$store.commit('kernel','loading')
               if (!this.$store.state.datasets.length) {
-								this.$store.commit('addNew')
+								this.$store.commit('newDataset')
 							}
               var response = await this.socketPost('initialize',
               {
@@ -349,6 +354,10 @@ export default {
       this.$store.commit('setTab',{ tab: value })
 
     },
+
+    confirmDelete (value) {
+      // TODO: Remove confirmation on empty datasets
+    }
 	},
 
 	mounted () {

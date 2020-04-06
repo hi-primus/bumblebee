@@ -307,7 +307,7 @@
       >
         <div
           class="cell-container"
-          v-for="(cell, index) in this.cells"
+          v-for="(cell, index) in cells"
           :key="cell.id"
           :class="{'fixed-cell': cell.fixed, 'cell-error': cell.error,'done': cell.done,'active': activeCell>=0 && activeCell==index}"
           @click="setActiveCell(index)"
@@ -317,7 +317,7 @@
             <CodeEditor
               :active="activeCell==index"
               @update:active="setActiveCell(index)"
-              @input="$store.commit('cellContent',{index, content: $event}) ; runButton = true"
+              @input="$store.commit('setCellContent',{index, content: $event}); runButton = true"
               :value="cell.content"
             />
             <div class="cell-type cell-type-label" v-if="cell.command && cell.command!='code'">{{cell.command}}</div>
@@ -700,6 +700,51 @@ export default {
             } else {
               return `.rows.${payload.action}( ${expression} )` // ${varname}.rows.${payload.action}()
             }
+          }
+        },
+        join: {
+          dialog: {
+            title: 'Join datasets',
+            fields: [
+              {
+                key: 'how',
+                label: 'Join type',
+                type: 'select',
+                items: [
+                  { text: 'Inner join', value: 'inner' },
+                  { text: 'Left join', value: 'left' },
+                  { text: 'Right join', value: 'right' },
+                  { text: 'Outer join', value: 'outer' }
+                ]
+              },
+              {
+                key: 'with',
+                label: 'Dataset (right)',
+                type: 'select',
+                items_key: 'items_with'
+              },
+              {
+                key: 'on',
+                label: 'Key column (left and right)',
+                type: 'select',
+                items_key: 'items_on'
+              },
+            ]
+          },
+          payload: (columns) => {
+
+            var items_with = this.currentSecondaryDatasets.map(e=>e.name)
+
+            return {
+              how: 'inner',
+              on: this.allColumns[0],
+              items_on: this.allColumns,
+              with: items_with[0],
+              items_with
+            }
+          },
+          code: (payload) => {
+            return `.cols.join(${payload.with}, on="${payload.on}", how="${payload.how}")`
           }
         },
         STRING: {
@@ -2142,14 +2187,14 @@ export default {
 
   computed: {
 
-    ...mapGetters(['currentSelection','selectionType','currentTab', 'currentDuplicatedColumns', 'currentPreviewNames']),
+    ...mapGetters(['currentSelection','currentCells','selectionType','currentTab', 'currentSecondaryDatasets', 'currentDuplicatedColumns', 'currentPreviewNames']),
 
     cells: {
       get() {
-        return Array.from(this.$store.state.cells)
+        return Array.from(this.currentCells || [])
       },
       set(value) {
-        this.$store.commit('cells', value)
+        this.$store.commit('setCells', value)
       }
     },
 
@@ -2162,22 +2207,31 @@ export default {
       // command.dialog && (currentCommand.command == key || currentCommand.type == key)
     },
 
+    allColumns () {
+      return this.dataset.columns.map(e=>e.name)
+    },
+
     availableVariableName () {
 
-      return 'df' // TODO: multiple dfs
+      // return 'df' // TODO: multiple dfs
 
-      var found = this.$store.state.datasets.findIndex(e => {
-        return (!e.summary)
-      })
+      var name = 'df'
 
-      if (found === -1) {
-        found = this.$store.state.datasets.length
+      if (this.currentTab) {
+        var name = name+this.currentTab
       }
 
-      if (found>=1)
-        return `df${found}`
-      else
-        return 'df'
+      if (!this.dataset || this.dataset.blank) {
+        return name
+      }
+
+      name = name+'_'+(this.currentSecondaryDatasets || []).length
+
+      this.$store.commit('setSecondaryDataset',{ name })
+
+      // TODO secondary dataset checking
+
+      return name
     },
 
     dragOptions () {
@@ -2498,7 +2552,7 @@ export default {
       }
       this.$emit('update:codeError','')
 
-      var cells = this.cells
+      var cells = [...this.cells]
       cells.splice(index,1)
       this.cells = cells
       if (this.cells.length==index) {
@@ -2508,7 +2562,7 @@ export default {
       this.setActiveCell(index, true)
 
       if (this.cells.length==0)
-        this.$store.commit('resetDataset')
+        this.$store.commit('newDataset', true)
         this.codeDone = ''
 
       this.draggableEnd()
@@ -2665,7 +2719,7 @@ export default {
           throw response
         }
 
-        this.$store.commit('add', {
+        this.$store.commit('loadDataset', {
           dataset: response.data.result
         })
 

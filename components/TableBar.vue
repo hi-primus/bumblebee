@@ -159,7 +159,6 @@
       >
         <v-btn
           v-if="$route.query.kernel=='1'"
-          :disabled="cells.length==0"
           :color="(operationsActive!=false) ? 'black' : '#888'"
           text
           class="icon-btn"
@@ -444,7 +443,7 @@ export default {
 
 	computed: {
 
-    ...mapGetters(['currentSelection','currentTableView','selectionType']),
+    ...mapGetters(['currentSelection', 'currentSecondaryDatasets', 'currentCells','currentTableView','selectionType']),
 
     ...mapState(['nextCommand']),
 
@@ -542,10 +541,10 @@ export default {
 
     cells: {
       get() {
-        return Array.from(this.$store.state.cells)
+        return Array.from(this.currentCells || [])
       },
       set(value) {
-        this.$store.commit('cells', value)
+        this.$store.commit('setCells', value)
       }
     },
 
@@ -598,6 +597,20 @@ export default {
           tooltip: 'Save dataset to database',
           disabled: {
             valueOf: ()=>!(this.dataset && this.dataset.summary && this.$store.state.database)
+          }
+        },
+        { divider: true },
+        {
+          type: 'button',
+          onClick: () => {
+            this.commandHandle({command: 'join'})
+          },
+          icons: [
+            { icon: 'playlist_add' },
+          ],
+          tooltip: 'Join dataframes',
+          disabled: {
+            valueOf: ()=>!(this.dataset && this.dataset.summary && this.currentSecondaryDatasets && this.currentSecondaryDatasets.length) // TODO secondary dataset filtered by columns.length
           }
         },
         { divider: true },

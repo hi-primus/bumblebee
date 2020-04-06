@@ -846,7 +846,7 @@ table {
 
 .bb-tabs {
   position: relative;
-  .v-tab {
+  .bb-tab {
     display: flex;
     flex-direction: column;
     padding-right: 40px;
@@ -865,6 +865,10 @@ table {
       color: #555;
       font-size: 0.75em;
     }
+  }
+  .new-tab {
+    padding: 0;
+    min-width: 48px;
   }
 	.v-tabs-bar {
 		background: none !important;

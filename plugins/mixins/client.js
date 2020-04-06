@@ -99,7 +99,7 @@ export default {
       //   to: 'string'
       // })
 
-      this.$store.commit('add', {
+      this.$store.commit('loadDataset', {
         dataset: data
       })
 
@@ -178,7 +178,7 @@ export default {
 
         socket.on('dataset', (dataset) => {
           try {
-            this.$store.commit('add', {
+            this.$store.commit('loadDataset', {
               dataset
             })
           } catch (error) {
