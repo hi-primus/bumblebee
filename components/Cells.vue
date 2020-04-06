@@ -2652,6 +2652,7 @@ export default {
         var response = await this.socketPost('cells', {
           code,
           name: this.dataset.summary ? this.dataset.name : null,
+          varname: this.dataset.varname,
           session: this.$store.state.session,
           key: this.$store.state.key
         }, {
