@@ -29,7 +29,6 @@
       >
         <v-list>
           <v-list-item>
-              <!-- filled -->
             <v-text-field
               outlined
               dense
@@ -182,14 +181,6 @@
               </div>
             </div>
           </transition>
-          <!-- <v-progress-circular
-            v-else
-            indeterminate
-            color="primary"
-            class="progress-middle"
-            style="margin-top: 28px"
-          /> -->
-
         </div>
         <div
           class="bb-table-plot"
@@ -254,7 +245,6 @@
     class="bb-table-container" ref="BbTableContainer"
   >
     <div class="bb-table" ref="BbTable" :style="tableStyle">
-      <!-- v-show="((row.index>=visibleRowsTop) && (row.index<=visibleRowsBottom))" -->
       <div
         class="bb-table-row"
         v-for="(row, rowArrayIndex) in (rowsPreview.length ? rowsPreview : rows)"

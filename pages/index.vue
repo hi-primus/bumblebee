@@ -194,7 +194,6 @@
                 </v-autocomplete>
               </div>
             </div>
-              <!-- :key="tableKey" -->
             <TableBar
               ref="tableBar"
               v-if="currentDataset"

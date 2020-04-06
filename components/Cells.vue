@@ -222,7 +222,6 @@
                       </v-data-table>
                       <div class="cluster-info">
                         {{`${cluster.values.length} value${(cluster.values.length!=1 ? 's' : '')}`}} · {{`${cluster.count} row${(cluster.count!=1 ? 's' : '')}`}}
-                        <!-- · 5 rows -->
                       </div>
                       <v-text-field
                         v-model="cluster.replace"
@@ -287,7 +286,6 @@
               }}
             </v-btn>
           </div>
-        <!-- </v-card> -->
       </v-form>
     </div>
     <div

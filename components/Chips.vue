@@ -1,26 +1,4 @@
 <template>
-  <!-- <v-autocomplete
-    autocomplete="off"
-    ref="chips"
-    :value="value"
-    @input="$emit('input',$event)"
-    :items="items"
-    :search-input.sync="input"
-    dense
-    required
-    chips
-
-    :placeholder="placeholder"
-    :label="label"
-    :clearable="clearable"
-    hide-details
-    hide-no-data
-    hide-selected
-    multiple
-    :menu-props="{ contentClass: 'hidden-menu' }"
-    @change="onChange"
-    @blur="onBlur"
-  /> -->
   <v-combobox
     :value="value"
     @input="$emit('input',$event)"

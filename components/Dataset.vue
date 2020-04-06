@@ -15,12 +15,6 @@
           Initializing
         </template>
       </div>
-      <!-- <v-progress-linear
-        indeterminate
-        v-if="commandsDisabled"
-        class="progress-top"
-        color="#888"
-      /> -->
       <div v-else class="title grey--text text-center text-with-icons">
         Use <v-icon>cloud_upload</v-icon> or <v-icon>storage</v-icon> to load some data
       </div>

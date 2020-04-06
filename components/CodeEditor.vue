@@ -1,7 +1,6 @@
 <template>
   <div id="editor" class="editor-holder">
     <div class="code-container">
-        <!-- @blur="_active = false" -->
       <textarea
         @focus="_active = true"
         @blur="$emit('blur')"
