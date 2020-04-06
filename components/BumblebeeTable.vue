@@ -478,6 +478,11 @@ export default {
           name: this.currentDataset.columns[index].name
         }
       })
+
+      if (!this.currentPreviewCode) {
+        return cols
+      }
+
       try {
 
         var after = []

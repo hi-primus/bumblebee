@@ -2238,6 +2238,9 @@ export default {
               this.$store.commit('setDuplicatedColumns',duplicatedColumns.length ? duplicatedColumns : undefined)
             }
           } else {
+            if (this.currentPreviewCode) {
+              this.$store.commit('setPreviewCode',undefined)
+            }
             if (this.currentPreviewNames) {
               this.$store.commit('setPreviewNames',undefined)
             }
