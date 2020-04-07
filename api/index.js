@@ -126,18 +126,31 @@ const newSocket = function (socket, session) {
   socket.emit('success')
 
   if (!socket.unsecure) {
+
+    socket.on('datasets', async (payload) => {
+      var sessionId = payload.session
+      var result = {}
+      try {
+        result = await getDatasets(sessionId)
+        console.log({result})
+      } catch (error) {
+        console.error(error)
+      }
+      socket.emit('reply',{...result, timestamp: payload.timestamp})
+    })
+
     socket.on('initialize', async (payload) => {
-      var user_session = payload.session
+      var sessionId = payload.session
 
       var result = {}
 
       var tries = 10
       while (tries-->0) {
-        result = await createKernel(user_session, payload.engine ? payload.engine : "dask")
+        result = await createKernel(sessionId, payload.engine ? payload.engine : "dask")
         if (!result || result.status==='error') {
           console.log('"""',result,'"""')
           console.log('# Kernel error, retrying')
-          await deleteKernel(user_session)
+          await deleteKernel(sessionId)
         }
         else {
           console.log('"""',result,'"""')
@@ -149,17 +162,17 @@ const newSocket = function (socket, session) {
     })
 
     socket.on('run', async (payload) => {
-      var user_session = payload.session
-      var result = await run_code(`${payload.code}`,user_session)
+      var sessionId = payload.session
+      var result = await run_code(`${payload.code}`,sessionId)
       socket.emit('reply',{...result, code: payload.code, timestamp: payload.timestamp})
     })
 
     socket.on('cells', async (payload) => {
-      var user_session = payload.session
+      var sessionId = payload.session
       var varname = payload.varname || 'df'
       var result = await run_code(payload.code + '\n'
         + `_output = ${varname}.ext.send(output="json", infer=False, advanced_stats=False${ payload.name ? (', name="'+payload.name+'"') : '' })`,
-        user_session,
+        sessionId,
         true
       )
       socket.emit('reply',{...result, code: payload.code, timestamp: payload.timestamp})
@@ -214,12 +227,12 @@ io.on('connection', async (socket) => {
 
 
 
-const run_code = async function(code = '', userSession = '', deleteSample = false) {
+const run_code = async function(code = '', sessionId = '', deleteSample = false) {
 
-  if (!userSession) {
+  if (!sessionId) {
     return {
       error: {
-        message: 'userSession is empty',
+        message: 'sessionId is empty',
         code: "400"
       },
       status: "error",
@@ -229,7 +242,7 @@ const run_code = async function(code = '', userSession = '', deleteSample = fals
 
   try {
 
-    if (kernels[userSession]==undefined) {
+    if (kernels[sessionId]==undefined) {
       const response = await request({
         uri: `${base}/bumblebee-session`,
         method: 'POST',
@@ -237,10 +250,10 @@ const run_code = async function(code = '', userSession = '', deleteSample = fals
         json: true,
         body: {
           secret: process.env.KERNEL_SECRET,
-          session_id: userSession
+          session_id: sessionId
         }
       })
-      kernels[userSession] = userSession
+      kernels[sessionId] = sessionId
     }
 
     // if (process.env.NODE_ENV !== 'production') {
@@ -254,7 +267,7 @@ const run_code = async function(code = '', userSession = '', deleteSample = fals
       json: true,
       body: {
         code,
-        session_id: userSession
+        session_id: sessionId
       }
     })
 
@@ -333,7 +346,28 @@ const handleResponse = function (response) {
   }
 }
 
-const createKernel = async function (userSession, engine) {
+const getDatasets = async function (sessionId) {
+
+  try {
+    var response = await request({
+      uri: `${base}/bumblebee-datasets`,
+      method: 'POST',
+      json: true,
+      body: {
+        session_id: sessionId,
+      }
+    })
+
+    response = handleResponse(response)
+
+    return response
+  } catch (error) {
+    console.error(error)
+    return error
+  }
+}
+
+const createKernel = async function (sessionId, engine) {
 
   try {
 
@@ -342,7 +376,7 @@ const createKernel = async function (userSession, engine) {
       method: 'POST',
       json: true,
       body: {
-        session_id: userSession,
+        session_id: sessionId,
         secret: process.env.KERNEL_SECRET,
         engine: engine
       }

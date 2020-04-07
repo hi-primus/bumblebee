@@ -1969,3 +1969,9 @@ $editor-top-padding: 6px;
   background-color: $highlight-yellow;
   background-color: $highlight-yellow;
 }
+
+.vdf--hide-select {
+  .v-data-footer__select {
+    display: none;
+  }
+}

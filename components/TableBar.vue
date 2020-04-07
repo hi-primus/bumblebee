@@ -443,7 +443,7 @@ export default {
 
 	computed: {
 
-    ...mapGetters(['currentSelection', 'currentSecondaryDatasets', 'currentCells','currentTableView','selectionType']),
+    ...mapGetters(['currentSelection', 'hasSecondaryDatasets', 'currentCells','currentTableView','selectionType']),
 
     ...mapState(['nextCommand']),
 
@@ -610,7 +610,7 @@ export default {
           ],
           tooltip: 'Join dataframes',
           disabled: {
-            valueOf: ()=>!(this.dataset && this.dataset.summary && this.currentSecondaryDatasets && this.currentSecondaryDatasets.length) // TODO secondary dataset filtered by columns.length
+            valueOf: ()=>!(this.dataset && this.dataset.summary && this.hasSecondaryDatasets)
           }
         },
         { divider: true },

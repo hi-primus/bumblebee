@@ -6,7 +6,8 @@ export const state = () => ({
 	datasets: [],
   datasetConfig: [], // TODO
   datasetSelection: [],
-  secondaryDatasets: [],
+  hasSecondaryDatasets: false,
+  // currentSecondaryDatasets: []
 	databases: [],
   buffers: [],
   tableViews: [],
@@ -46,20 +47,24 @@ export const mutations = {
     state.tab = tab
   },
 
-  setSecondaryDataset (state, {name, columns, position}) {
-    var dataset = {name, columns: columns || []}
-    if (!state.secondaryDatasets[state.tab]) {
-      Vue.set( state.secondaryDatasets, state.tab, [])
-    }
-    position = position!==undefined ? position : state.secondaryDatasets[state.tab].length
-    Vue.set( state.secondaryDatasets[state.tab], position, dataset )
-  },
+  // setSecondaryDataset (state, {name, columns, position}) {
+  //   var dataset = {name, columns: columns || []}
+  //   if (!state.secondaryDatasets[state.tab]) {
+  //     Vue.set( state.secondaryDatasets, state.tab, [])
+  //   }
+  //   position = position!==undefined ? position : state.secondaryDatasets[state.tab].length
+  //   Vue.set( state.secondaryDatasets[state.tab], position, dataset )
+  // },
 
-  deleteSecondaryDataset (state, position) {
-    if (!state.secondaryDatasets[state.tab]) {
-      return
-    }
-    Vue.delete(state.secondaryDatasets[state.tab], position)
+  // deleteSecondaryDataset (state, position) {
+  //   if (!state.secondaryDatasets[state.tab]) {
+  //     return
+  //   }
+  //   Vue.delete(state.secondaryDatasets[state.tab], position)
+  // },
+
+  setHasSecondaryDatasets (state, payload) {
+    state.hasSecondaryDatasets = payload
   },
 
   setColumnsPreview (state, payload) {
@@ -294,24 +299,24 @@ export const mutations = {
 }
 
 export const actions = {
-  async nuxtServerInit ({ dispatch }, context) {
-    // console.log('[DEBUG] nuxtServerInit')
-    const cookies = this.$cookies.getAll() || {} // cookie.parse(context.req.headers.cookie || '')
-    if (cookies.hasOwnProperty('x-access-token')) {
-      try {
-        setAuthToken(cookies['x-access-token'])
-        await dispatch('auth/fetch')
-        return true
-      } catch (err) {
-        console.error('Provided token is invalid:', err)
-        resetAuthToken()
-        return false
-      }
-    } else {
-      resetAuthToken()
-      return false
-    }
-  }
+  // async nuxtServerInit ({ dispatch }, context) {
+  //   console.log('[DEBUG] nuxtServerInit')
+  //   const cookies = this.$cookies.getAll() || {} // cookie.parse(context.req.headers.cookie || '')
+  //   if (cookies.hasOwnProperty('x-access-token')) {
+  //     try {
+  //       setAuthToken(cookies['x-access-token'])
+  //       await dispatch('auth/fetch')
+  //       return true
+  //     } catch (err) {
+  //       console.error('Provided token is invalid:', err)
+  //       resetAuthToken()
+  //       return false
+  //     }
+  //   } else {
+  //     resetAuthToken()
+  //     return false
+  //   }
+  // },
 }
 
 export const getters = {
@@ -321,8 +326,11 @@ export const getters = {
   currentCells (state) {
     return state.cells[state.tab]
   },
-  currentSecondaryDatasets (state) {
-    return state.secondaryDatasets[state.tab]
+  // currentSecondaryDatasets (state) {
+  //   return state.secondaryDatasets[state.tab]
+  // },
+  hasSecondaryDatasets (state) {
+    return state.hasSecondaryDatasets
   },
   currentSelection (state) {
     return state.datasetSelection[state.tab] || {}

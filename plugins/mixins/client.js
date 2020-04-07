@@ -1,10 +1,13 @@
 import io from 'socket.io-client'
 import { printError } from '@/utils/functions.js'
 
+// TODO: this should be a VUEX store
+
 let socket
 let promises = {}
 
 let timestamps = 0
+let secondaryDatasets = {}
 
 const api_url = process.env.API_URL || 'http://localhost:5000'
 
@@ -12,7 +15,7 @@ export default {
 
   data () {
     return {
-      socketAvailable: false
+      socketAvailable: false,
     }
   },
 
@@ -76,33 +79,6 @@ export default {
         }
 
       })
-    },
-
-    handleDatasetResponse (data, key = undefined) {
-
-      if (key===undefined)
-        key = this.$store.state.key
-
-      // const fernet = require('fernet')
-
-      // let secret = new fernet.Secret(key)
-
-      // let token = new fernet.Token({
-      //   secret,
-      //   token: data,
-      //   ttl: 0
-      // })
-
-      // const pako = require('pako')
-
-      // let originalInput = pako.inflate(atob(token.decode()), {
-      //   to: 'string'
-      // })
-
-      this.$store.commit('loadDataset', {
-        dataset: data
-      })
-
     },
 
 		handleError (reason) {
@@ -249,6 +225,22 @@ export default {
       } catch (error) {
         this.handleError(error)
       }
+    },
+
+    async updateSecondaryDatasets() {
+      try {
+        var response = await this.socketPost('datasets',{session: this.$store.state.session})
+        secondaryDatasets = response.data
+        this.$store.commit('setHasSecondaryDatasets', (Object.keys(secondaryDatasets).length>1) )
+        return response.data
+      } catch (error) {
+        console.error(error)
+        return []
+      }
+    },
+
+    getSecondaryDatasets() {
+      return secondaryDatasets
     }
 	}
 }

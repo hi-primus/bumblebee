@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="sidebar-content">
     <div
       persistent
       v-if="command && command.dialog"
@@ -68,7 +68,7 @@
                   :placeholder="(typeof field.placeholder == 'function') ? field.placeholder(currentCommand) : (field.placeholder || '')"
                   :clearable="field.clearable"
                   :accept="field.accept"
-                  @input="(field.onChange) ? command[field.onChange]() : 0"
+                  @input="(field.onChange) ? field.onChange($event) : 0"
                   dense
                   required
                   outlined
@@ -81,7 +81,7 @@
                   :label="(typeof field.label == 'function') ? field.label(currentCommand) : (field.label || '')"
                   :placeholder="(typeof field.placeholder == 'function') ? field.placeholder(currentCommand) : (field.placeholder || '')"
                   :clearable="field.clearable"
-                  @input="(field.onChange) ? command[field.onChange]() : 0"
+                  @input="(field.onChange) ? field.onChange($event) : 0"
                   dense
                   required
                   outlined
@@ -132,7 +132,7 @@
                   :append-icon="field.showable ? (field.show ? 'visibility' : 'visibility_off') : undefined"
                   :type="(field.show || !field.showable) ? 'text' : 'password'"
                   :clearable="field.clearable"
-                  @input="(field.onChange) ? command[field.onChange]() : 0"
+                  @input="(field.onChange) ? field.onChange($event) : 0"
                   @click:append="field.show = !field.show"
                 />
               </template>
@@ -145,7 +145,7 @@
                   :placeholder="field.placeholder"
                   :min="field.min"
                   :clearable="field.clearable"
-                  @input="(field.onChange) ? command[field.onChange]() : 0"
+                  @input="(field.onChange) ? field.onChange($event) : 0"
                   dense
                   required
                   outlined
@@ -173,13 +173,38 @@
                   v-model="currentCommand[field.key]"
                   :label="field.label"
                   :placeholder="field.placeholder"
-                  :items="(field.items_key) ? currentCommand[field.items_key] : field.items"
-                  @input="(field.onChange) ? command[field.onChange]() : 0"
+                  :items="(field.items_key) ? getProperty(currentCommand[field.items_key],[currentCommand]) : field.items"
+                  @input="(field.onChange) ? field.onChange($event) : 0"
                   :disabled="!!+field.disabled"
                   dense
                   required
                   outlined
                 ></v-select>
+              </template>
+              <template v-else-if="field.type=='items_filter'">
+                <v-data-table
+                  :key="field.key"
+                  v-model="currentCommand[field.key]"
+                  show-select
+                  :headers="field.headers"
+                  :item-key="field.item_key"
+                  :items="(field.items_key) ? getProperty(currentCommand[field.items_key],[currentCommand]) : field.items"
+                  @input="(field.onChange) ? field.onChange($event) : 0"
+                  :disabled="!!+field.disabled"
+                  :items-per-page="10"
+                  class="vdf--hide-select"
+                  :hide-default-footer="((field.items_key) ? getProperty(currentCommand[field.items_key],[currentCommand]) : field.items).length<10"
+                  dense
+                  required
+                  outlined
+                >
+                  <template v-slot:item.source="{ item }">
+                    <span dark class="capitalize text--darken-3" :class="[ item.source==='right' ? 'warning--text' : 'primary--text' ]">
+                      {{ item.source }}
+                    </span>
+                  </template>
+                </v-data-table>
+                  <!-- disable-pagination -->
               </template>
               <template v-else-if="field.type=='select-foreach'">
                 <v-row :key="field.key" no-gutters class="foreach-label">
@@ -721,30 +746,188 @@ export default {
                 key: 'with',
                 label: 'Dataset (right)',
                 type: 'select',
-                items_key: 'items_with'
+                items_key: 'items_with',
+                onChange: (event)=>{
+                  // if (this.currentCommand.with!==event) {
+                  // }
+                  for (let i = this.currentCommand.selected_columns.length-1; i >= 0; i--) {
+                    if (this.currentCommand.selected_columns[i].source==='right') {
+                      this.currentCommand.selected_columns.splice(i,1)
+                    }
+                  }
+                  this.currentCommand.right_on = false
+                }
               },
               {
-                key: 'on',
-                label: 'Key column (left and right)',
+                key: 'left_on',
+                label: 'Key column (left)',
                 type: 'select',
-                items_key: 'items_on'
-              },
-            ]
-          },
-          payload: (columns) => {
+                onChange: ()=>{
+                  var _command = {...this.currentCommand}
 
-            var items_with = this.currentSecondaryDatasets.map(e=>e.name)
+                  if (_command._unselect_left == _command.left_on) {
+                    return
+                  }
+
+                  var selected = _command.selected_columns
+                  var changed = false
+
+                  if (_command._unselect_left) {
+                    var found = selected.findIndex(c=>(c.name===_command._unselect_left && c.source==='left'))
+                    if (found>=0) {
+                      selected.splice(found,1)
+                    }
+                    _command._unselect_left = false
+                    changed = true
+                  }
+                  if (selected.findIndex(c=>(c.name===_command.left_on && c.source==='left'))<0) {
+                    _command._unselect_left = _command.left_on
+                    selected.push({
+                      name: _command.left_on,
+                      source: 'left',
+                      key: _command.left_on+'l',
+                    })
+                    changed = true
+                  }
+                  if (!changed) {
+                    return
+                  }
+                  _command.selected_columns = selected
+                  this.currentCommand = _command
+                },
+                items_key: 'items_l_on'
+              },
+              {
+                key: 'right_on',
+                label: 'Key column (right)',
+                type: 'select',
+                onChange: ()=>{
+                  var _command = {...this.currentCommand}
+
+                  if (_command._unselect_right == _command.right_on) {
+                    return
+                  }
+
+                  var selected = _command.selected_columns
+                  var changed = false
+
+                  if (_command._unselect_right) {
+                    var found = selected.findIndex(c=>(c.name===_command._unselect_right && c.source==='right'))
+                    if (found>=0) {
+                      selected.splice(found,1)
+                    }
+                    _command._unselect_right = false
+                    changed = true
+                  }
+                  if (selected.findIndex(c=>(c.name===_command.right_on && c.source==='right'))<0) {
+                    _command._unselect_right = _command.right_on
+                    selected.push({
+                      name: _command.right_on,
+                      source: 'right',
+                      key: _command.right_on+'r',
+                    })
+                    changed = true
+                  }
+                  if (!changed) {
+                    return
+                  }
+                  _command.selected_columns = selected
+                  this.currentCommand = _command
+                },
+                items_key: 'items_r_on'
+              },
+              {
+                key: 'selected_columns',
+                label: 'Filter columns',
+                item_key: 'key',
+                type: 'items_filter',
+                items_key: 'items_selected_columns',
+                headers: [
+                  {
+                    text: 'Column',
+                    sortable: true,
+                    align: 'start',
+                    value: 'name'
+                  },
+                  {
+                    text: 'Source',
+                    value: 'source'
+                  }
+                ],
+                onChange: (selected)=>{
+                  var _command = {...this.currentCommand}
+                  if (!selected.length) {
+                    _command._unselect_left = _command.left_on
+                    _command._unselect_right = _command.right_on
+                  }
+                  var changed = false
+                  if (selected.findIndex(c=>(c.name===_command.left_on && c.source==='left'))<0) {
+                    selected.push({
+                      name: _command.left_on,
+                      source: 'left',
+                      key: _command.left_on+'l',
+                    })
+                    changed = true
+                  }
+                  if (selected.findIndex(c=>(c.name===_command.right_on && c.source==='right'))<0) {
+                    selected.push({
+                      name: _command.right_on,
+                      source: 'right',
+                      key: _command.right_on+'r',
+                    })
+                    changed = true
+                  }
+                  if (changed) {
+                    _command.columns_selected = selected
+                    this.currentCommand = _command
+                  }
+                }
+              },
+            ],
+            validate: (c) => {
+              return (c.selected_columns.length && c.right_on)
+            }
+          },
+          payload: async (columns) => {
+
+            var _datasets_right = this.getSecondaryDatasets()
+            var items_with = Object.keys(_datasets_right)
+
+            var df2 = Object.keys(_datasets_right)[0]
 
             return {
               how: 'inner',
-              on: this.allColumns[0],
-              items_on: this.allColumns,
-              with: items_with[0],
-              items_with
+              _datasets_right,
+              _unselect_on_change: {
+                left: [],
+                right: []
+              },
+              left_on: this.allColumns[0],
+              items_l_on: this.allColumns,
+              right_on: _datasets_right[df2][0],
+              items_r_on: (c)=>c._datasets_right[c.with],
+              with: df2,
+              items_with: (c)=>Object.keys(c._datasets_right),
+              items_selected_columns: (c)=>{
+                return [
+                  ...(this.allColumns || []).map(n=>({name: n, 'source': 'left', key: n+'l'})),
+                  ...(c._datasets_right[c.with] || []).map(n=>({name: n, 'source': 'right', key: n+'r'}))
+                ]
+              },
+              selected_columns: [
+                ...(this.allColumns || []).map(n=>({name: n, 'source': 'left', key: n+'l'})),
+                ...(_datasets_right[df2] || []).map(n=>({name: n, 'source': 'right', key: n+'r'}))
+              ],
             }
           },
           code: (payload) => {
-            return `.cols.join(${payload.with}, on="${payload.on}", how="${payload.how}")`
+            var columnsLeft = payload.selected_columns.filter(c=>c.source==='left').map(c=>c.name)
+            var columnsRight = payload.selected_columns.filter(c=>(c.name && c.source==='right')).map(c=>c.name)
+            var filterLeft = `.cols.select(["${columnsLeft.join('", "')}"])`
+            var filterRight = `.cols.select(["${columnsRight.join('", "')}"])`
+            return `${filterLeft}.cols.join(${payload.with}${filterRight}`
+              + `, left_on="${payload.left_on}"`
+              + `, right_on="${payload.right_on}", how="${payload.how}")`
           }
         },
         STRING: {
@@ -2187,7 +2370,7 @@ export default {
 
   computed: {
 
-    ...mapGetters(['currentSelection','currentCells','selectionType','currentTab', 'currentSecondaryDatasets', 'currentDuplicatedColumns', 'currentPreviewNames']),
+    ...mapGetters(['currentSelection','currentCells','selectionType','currentTab', 'currentDuplicatedColumns', 'currentPreviewNames']),
 
     cells: {
       get() {
@@ -2213,8 +2396,6 @@ export default {
 
     availableVariableName () {
 
-      // return 'df' // TODO: multiple dfs
-
       var name = 'df'
 
       if (this.currentTab) {
@@ -2225,11 +2406,12 @@ export default {
         return name
       }
 
-      name = name+'_'+(this.currentSecondaryDatasets || []).length
+      var sd = Object.keys(this.getSecondaryDatasets()).filter(n=>n.startsWith(name+'_'))
 
-      this.$store.commit('setSecondaryDataset',{ name })
+      name = name+'_'+sd.length
 
-      // TODO secondary dataset checking
+      // this.$store.commit('setSecondaryDataset',{ name })
+      this.$store.commit('setHasSecondaryDatasets', true )
 
       return name
     },
@@ -2322,6 +2504,10 @@ export default {
 
   methods: {
 
+    getProperty(pof, args = []) {
+      return getProperty(pof, args)
+    },
+
     cleanCodeError () {
       this.$emit('update:codeError','')
     },
@@ -2413,7 +2599,7 @@ export default {
 
       if (_command) {
 
-        payload = (_command.payload) ? ( {..._command.payload(columns), ...payload} ) : payload
+        payload = (_command.payload) ? ( {...await _command.payload(columns), ...payload} ) : payload
 
         if (_command.dialog) {
 
@@ -2710,6 +2896,8 @@ export default {
         }, {
           timeout: 0
         })
+
+        this.updateSecondaryDatasets()
 
         console.log('"""[DEBUG][CODE]"""',response.code)
 
