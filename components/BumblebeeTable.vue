@@ -1104,11 +1104,12 @@ export default {
         var cols = this.currentColumnsPreview.map(e=>escapeQuotes(e.title))
 
         var response = await this.evalCode(`_output = df.ext.buffer_window("*")${previewCode || ''}.ext.profile(["${cols.join('", "')}"], output="json")`)
-        var dataset = parseResponse(response.data.result)
-        if (!dataset) {
-          response = await this.evalCode(`_output = df.ext.buffer_window("*")${previewCode || ''}.ext.profile(["${cols.join('", "')}"], output="json")`)
-          dataset = parseResponse(response.data.result)
+
+        if (!response) {
+          throw response
         }
+
+        var dataset = parseResponse(response.data.result)
 
         if (!dataset) {
           throw response
@@ -1277,9 +1278,9 @@ export default {
 
       var response = await this.evalCode(`_output = ${this.currentDataset.varname}.ext.buffer_window("*", ${from}, ${to+1})${previewCode || ''}.ext.to_json("*")`)
 
-      var parsed = parseResponse(response.data.result)
+      var parsed = response && response.data && response.data.result ? parseResponse(response.data.result) : undefined
 
-      if (parsed.sample) {
+      if (parsed && parsed.sample) {
 
         var rows = parsed.sample.value.map((value,i)=>({
           value,
