@@ -169,7 +169,7 @@ const newSocket = function (socket, session) {
       var sessionId = payload.session
       var varname = payload.varname || 'df'
       var result = await run_code(payload.code + '\n'
-        + `_output = ${varname}.ext.send(output="json", infer=False, advanced_stats=False${ payload.name ? (', name="'+payload.name+'"') : '' })`,
+        + `_output = ${varname}.ext.send(output="json", infer=False, advanced_stats=False, sample=0${ payload.name ? (', name="'+payload.name+'"') : '' })`,
         sessionId,
         true
       )
