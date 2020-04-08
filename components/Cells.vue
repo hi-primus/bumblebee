@@ -2434,6 +2434,11 @@ export default {
           if (this.command && this.command.dialog && (!this.command.dialog.validate || this.command.dialog.validate(this.currentCommand))) {
             if (this.currentCommand._preview) {
               this.getPreview()
+              var nameMap = {}
+              this.currentCommand.output_cols.forEach((col, i) => {
+                nameMap['__preview__'+this.currentCommand.columns[i]] = col
+              })
+              this.$store.commit('setPreviewNames',nameMap)
             }
             if (this.currentCommand._fakePreview==='rename') {
               var nameMap = {}
@@ -2753,12 +2758,20 @@ export default {
         this.codeDone = ''
     },
 
-    getCode (payload, type) {
+    getCode (currentCommand, type) {
+
+      var payload = {...currentCommand}
 
       var content = ''
 
       if (!payload.columns || !payload.columns.length) {
         payload.columns = this.columns.map(e=>this.dataset.columns[e.index].name)
+      }
+
+      if (type==='preview' || type==='profile') {
+        if (payload.columns) {
+          payload.output_cols = payload.columns.map(e=>'__preview__'+e)
+        }
       }
 
       if (!payload.content) {

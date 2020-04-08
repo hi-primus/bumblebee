@@ -86,8 +86,11 @@
           :id="(column.previewIndex === previewColumns.length-1) ? 'bb-table-preview-last' : false"
           style="width: 170px"
         >
-          <div class="column-title">
-            {{ column.title }}
+          <div v-if="currentPreviewNames && currentPreviewNames[column.title]" class="column-title">
+            <span>{{ currentPreviewNames[column.title] }}</span>
+          </div>
+          <div v-else class="column-title">
+            {{ column.title ? column.title.split('__preview__').join('') : '' }}
           </div>
         </div>
         <div
@@ -465,7 +468,7 @@ export default {
         }
       })
 
-      if (!this.currentPreviewCode) {
+      if (!this.currentPreviewCode && (!this.currentDuplicatedColumns || !this.currentDuplicatedColumns.length)) {
         return cols
       }
 
@@ -480,7 +483,7 @@ export default {
           after = this.currentSelection.columns.map(s=>s.name)
         }
 
-        var expectedColumns = this.currentPreviewCode.expectedColumns
+        var expectedColumns = (this.currentDuplicatedColumns) ? this.currentDuplicatedColumns.length : this.currentPreviewCode.expectedColumns
 
         if (expectedColumns===0) {
           return cols
@@ -706,11 +709,13 @@ export default {
     currentPreviewCode: {
       handler () {
         if (this.chunksPreviewCode!==this.currentPreviewCode.code) {
+          this.chunksPreviewCode = this.currentPreviewCode.code
           this.chunksPreview = []
           this.updateRows()
+          this.mustCheck = true
+          this.debouncedThrottledScrollCheck()
+          return
         }
-        this.mustCheck = true
-        this.debouncedThrottledScrollCheck()
       }
     },
 
