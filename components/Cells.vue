@@ -748,8 +748,6 @@ export default {
                 type: 'select',
                 items_key: 'items_with',
                 onChange: (event)=>{
-                  // if (this.currentCommand.with!==event) {
-                  // }
                   for (let i = this.currentCommand.selected_columns.length-1; i >= 0; i--) {
                     if (this.currentCommand.selected_columns[i].source==='right') {
                       this.currentCommand.selected_columns.splice(i,1)
@@ -1168,11 +1166,8 @@ export default {
             if (payload.limit>0) {
               code +=`, n_rows=${payload.limit}`
             }
-
             code += `)`
-
             // code +=`.rows.limit(${payload.limit})`
-
             code += '.ext.cache()'
 
             return code
@@ -1354,7 +1349,6 @@ export default {
                   // {text: 'Z score', value: 'z_score'},
                   // {text: 'Modified Z score', value: 'modified_z_score'}
                 ],
-                // onChange: 'onInit'
               },
               {
                 condition: (c)=>(c.algorithm=='mad'),
@@ -1794,26 +1788,11 @@ export default {
           dialog: {
             text: 'Replace row values',
             fields: [
-              // {
-              //   type: 'chips',
-              //   key: 'search',
-              //   label: 'Find',
-              //   clearable: true
-              // },
               {
                 type: 'field',
                 key: 'replace',
                 label: 'Replace'
               },
-              // {
-              //   type: 'select',
-              //   key: 'search_by',
-              //   label: 'Search by',
-              //   items: [
-              //     {text: 'Characters', value: 'chars'},
-              //     {text: 'Words', value: 'words'}
-              //   ]
-              // },
             ],
           },
           payload: (columns) => ({
@@ -2712,14 +2691,6 @@ export default {
         return;
       }
     },
-
-    // draggableMove({ relatedContext, draggedContext }) {
-    //   const relatedElement = relatedContext.element;
-    //   const draggedElement = draggedContext.element;
-    //   return (
-    //     (!relatedElement || !relatedElement.fixed) && !draggedElement.fixed
-    //   );
-    // },
 
     removeCell (index) {
 

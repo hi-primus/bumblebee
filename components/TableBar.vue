@@ -867,16 +867,6 @@ export default {
         this.operationsActive = false
       }
     },
-    // operationsTitle (v) {
-    //   if (v==false) {
-    //     this.operationsActive = false
-    //   }
-    // },
-    // operationsActive (v) {
-    //   if (!!v != !!this.operationsTitle) {
-    //     this.operationsTitle = 'operations'
-    //   }
-    // }
   },
 
   methods: {
@@ -913,11 +903,6 @@ export default {
     },
 
     commandHandle (event) {
-      // if (event.noOperations)
-      //   this.operationsActive = false
-      // else
-      //   this.operationsActive = 'operations'
-
       this.$nextTick(()=>{
         this.$refs.cells & this.$refs.cells.commandHandle(event)
       })

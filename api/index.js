@@ -304,10 +304,6 @@ const deleteKernel = async function(session) {
       var _id = kernels[session].kernel['id']
       kernels[session] = undefined
       console.log('# Deleting Session',session,_id)
-      //   uri: `${base}/session-delete/${_id}`,
-      //   method: 'DELETE',
-      //   headers: {},
-      // })
     }
   } catch (err) {}
 }

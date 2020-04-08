@@ -329,8 +329,6 @@ export default {
     }
 	},
 
-  // index -> columnMenuIndex
-
 	data () {
 		return {
       maxChunks: 8, // 16,
@@ -345,8 +343,6 @@ export default {
 
       mustCheck: false,
 
-      // visibleRowsTop: 0,
-      // visibleRowsBottom: 100,
       loadedRowsTop: 0,
       loadedRowsBottom: 1,
 
@@ -1050,10 +1046,6 @@ export default {
           this.$nextTick(()=>{
             this.$refs['BbTableContainer'].scrollLeft = this.$refs['BbTableTopContainer'].scrollLeft
           })
-          // if (this.previousSelection) {
-          //   this.selection = {...this.previousSelection}
-          //   this.previousSelection = false
-          // }
         }
       }, 100);
 
@@ -1217,7 +1209,6 @@ export default {
           var toDelete = distanceMap.pop()
           if (toDelete) {
             chunks.splice(toDelete.index, 1)
-            // console.log(`deleting ${toDelete.from} in chunks`)
           }
         }
       }
@@ -1225,7 +1216,6 @@ export default {
       var [from, to, force] = this.toFetch.pop()
 
       if (!to) {
-        // console.log(`cancelling ${from} bc !to ${to}`)
         return false
       }
 
@@ -1242,7 +1232,6 @@ export default {
       )
 
       if (!newChunks.length) {
-        // console.log(`cancelling ${from} bc it is already loaded!`)
         return false // no chunks
       }
 

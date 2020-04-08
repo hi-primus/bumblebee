@@ -139,23 +139,6 @@ export const mutations = {
 
     dataset.blank = false
 
-		// let found = state.datasets.findIndex((e) => {
-		// 	return (e.name === dataset.name)
-    // })
-
-    // if (found === -1) {
-    //   found = state.datasets.findIndex((e) => {
-    //     return (!e.summary)
-    //   })
-    // }
-
-		// if (found === -1) {
-		// 	found = state.datasets.length
-    // }
-
-    // dataset.varname = 'df' // TODO: multiple dfs
-
-
     if (state.tab>=1)
       dataset.varname = `df${state.tab}`
     else
