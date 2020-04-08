@@ -1242,12 +1242,12 @@ export default {
               this.currentCommand.error = false
 
               var response = await this.evalCode(code)
-              var clusters = parseResponse(response.data.result)
 
-              if (!clusters) {
-                response = await this.evalCode(code)
-                clusters = parseResponse(response.data.result)
+              if (!response || !response.data || !response.data.result) {
+                throw response
               }
+
+              var clusters = parseResponse(response.data.result)
 
               if (!clusters) {
                 throw response
@@ -2858,6 +2858,8 @@ export default {
       this._commandsDisabled = true;
 
       try {
+
+        console.time('task')
         var response = await this.socketPost('cells', {
           code,
           name: this.dataset.summary ? this.dataset.name : null,
@@ -2867,10 +2869,11 @@ export default {
         }, {
           timeout: 0
         })
+        console.log('"""[DEBUG][CODE]"""',response.code)
+        console.timeEnd('task')
 
         this.updateSecondaryDatasets()
 
-        console.log('"""[DEBUG][CODE]"""',response.code)
 
         this._commandsDisabled = false;
 

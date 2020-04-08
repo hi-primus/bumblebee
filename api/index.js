@@ -258,6 +258,7 @@ const run_code = async function(code = '', sessionId = '', deleteSample = false)
     //   console.log(code)
     // }
 
+    console.time('gettingResponse')
     var response = await request({
       uri: `${base}/bumblebee`,
       method: 'POST',
@@ -268,6 +269,9 @@ const run_code = async function(code = '', sessionId = '', deleteSample = false)
         session_id: sessionId
       }
     })
+    console.timeEnd('gettingResponse')
+    // console.log('response',response)
+    console.time('responseHandling')
 
     if (response.status==='error') {
       throw response
@@ -283,6 +287,8 @@ const run_code = async function(code = '', sessionId = '', deleteSample = false)
         delete response.data.result.sample.value
       }
     }
+
+    console.timeEnd('responseHandling')
 
     return response
 
