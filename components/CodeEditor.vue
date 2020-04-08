@@ -1,7 +1,6 @@
 <template>
   <div id="editor" class="editor-holder">
     <div class="code-container">
-        <!-- @blur="_active = false" -->
       <textarea
         @focus="_active = true"
         @blur="$emit('blur')"
@@ -43,8 +42,8 @@ export default {
     this.$nextTick(()=>{
       if (this.$refs.editor) {
         var nuxt = this;
-        this.$refs.editor.onkeydown = function(e){
-          if(e.keyCode==9 || e.which==9){
+        this.$refs.editor.onkeydown = function(e) {
+          if(e.keyCode==9 || e.which==9) {
             if (e.shiftKey) {
 
             }
@@ -73,7 +72,7 @@ export default {
   },
 
   computed: {
-    escapedQuery(){
+    escapedQuery() {
       return this.query
            .replace(/&/g, "&amp;")
            .replace(/</g, "&lt;")

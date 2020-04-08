@@ -27,8 +27,9 @@ exports.new = function (req, res) {
   session.datasets = []
 
   session.save(function (err) {
-    // if (err)
+    // if (err) {
     //     res.json(err)
+    // }
     res.json({
       message: 'New session created!',
       data: session
@@ -52,13 +53,15 @@ exports.view = function (req, res) {
 
 exports.update = function (req, res) {
   Session.findById(req.params.session_id, function (err, session) {
-    if (err)
+    if (err) {
       res.send(err)
+    }
     session.name = req.body.name ? req.body.name : session.name
 
     session.save(function (err) {
-      if (err)
+      if (err) {
         res.json(err)
+      }
       res.json({
         message: 'Session Info updated',
         data: session

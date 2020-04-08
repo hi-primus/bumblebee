@@ -29,7 +29,6 @@
       >
         <v-list>
           <v-list-item>
-              <!-- filled -->
             <v-text-field
               outlined
               dense
@@ -70,15 +69,23 @@
     <div class="bb-table-header">
       <template v-for="(column, i) in allColumns">
         <div
-          v-if="column.type=='preview' && !column.hidden"
+          v-if="column.type=='duplicated'"
+          :key="'d'+column.index"
+          class="bb-table-h-cell bb-preview"
+          :id="(column.previewIndex === previewColumns.length-1) ? 'bb-table-preview-last' : false"
+          style="width: 170px"
+        >
+          <div class="column-title">
+            {{column.name}}
+          </div>
+        </div>
+        <div
+          v-else-if="column.type=='preview'"
           :key="'p'+column.index"
           class="bb-table-h-cell bb-preview"
           :id="(column.previewIndex === previewColumns.length-1) ? 'bb-table-preview-last' : false"
           style="width: 170px"
         >
-          <!-- <div class="data-type" :class="`type-${columns[column.index].column_dtype}`">
-            {{ dataType(currentDataset.columns[column.index].column_dtype) }}
-          </div> -->
           <div class="column-title">
             {{ column.title }}
           </div>
@@ -94,7 +101,7 @@
             'bb-drag-over': (dragOver===i && dragging!==i),
             'bb-drag-over-right': (dragOver===i && dragging<i),
           }"
-          :style="{ width: columns[column.index].width+'px' }"
+          :style="{ width: column.width+'px' }"
           :draggable="selectionMap[column.index]"
           @dragstart="dragStart(i, $event)"
           @dragover.prevent="dragOver=i"
@@ -106,8 +113,11 @@
           <div class="data-type" :class="`type-${columns[column.index].column_dtype}`">
             {{ dataType(currentDataset.columns[column.index].column_dtype) }}
           </div>
-          <div class="column-title">
-            {{columns[column.index].name}}
+          <div v-if="currentPreviewNames && currentPreviewNames[columns[column.index].name]" class="column-title title-preview-highlight">
+            <span>{{ currentPreviewNames[columns[column.index].name] }}</span>
+          </div>
+          <div v-else class="column-title">
+            {{ columns[column.index].name }}
           </div>
         </div>
       </template>
@@ -118,107 +128,115 @@
           :key="'p'+column.index"
           class="bb-table-plot bb-preview"
           v-if="column.type=='preview' && !column.hidden"
-          style="width: 170px"
+          :style="{ width: column.width+'px' }"
         >
-          <template v-if="previewPlotsData[column.name]">
-            <DataBar
-              :key="previewPlotsData[column.name].key+'databar'"
-              :missing="previewPlotsData[column.name].missing"
-              :total="+previewPlotsData[column.name].total"
-              :mismatch="+previewPlotsData[column.name].mismatch"
-              :nullV="+previewPlotsData[column.name].null"
-              class="table-data-bar"
-              bottom
-            />
-            <Frequent
-              v-if="previewPlotsData[column.name].frequency"
-              :key="previewPlotsData[column.name].key"
-              :uniques="previewPlotsData[column.name].count_uniques"
-              :values="previewPlotsData[column.name].frequency.values"
-              :count="previewPlotsData[column.name].frequency.count"
-              :total="+previewPlotsData[column.name].total"
-              :columnIndex="column.index"
-              class="histfreq"
-              table
-            />
-            <Histogram
-              v-else-if="previewPlotsData[column.name].hist"
-              :key="previewPlotsData[column.name].key"
-              :uniques="previewPlotsData[column.name].count_uniques"
-              :values="previewPlotsData[column.name].hist"
-              :total="+previewPlotsData[column.name].total"
-              :columnIndex="column.index"
-              class="histfreq"
-              table
-            />
-            <Histogram
-              v-else-if="previewPlotsData[column.name].hist_years"
-              :key="previewPlotsData[column.name].key"
-              :uniques="previewPlotsData[column.name].count_uniques"
-              :values="previewPlotsData[column.name].hist_years"
-              :total="+previewPlotsData[column.name].total"
-              :columnIndex="column.index"
-              class="histfreq"
-              table
-            />
-            <div
-              v-else
-              class="aaa"
-              :key="column.name"
-            >
-              {{previewPlotsData[column.name]}}
+          <transition name="slow-fade">
+            <div v-if="previewPlotsData[column.name]">
+              <DataBar
+                :key="previewPlotsData[column.name].key+'databar'"
+                :missing="previewPlotsData[column.name].missing"
+                :total="+previewPlotsData[column.name].total"
+                :mismatch="+previewPlotsData[column.name].mismatch"
+                :nullV="+previewPlotsData[column.name].null"
+                class="table-data-bar"
+                bottom
+              />
+              <Frequent
+                v-if="previewPlotsData[column.name].frequency"
+                :key="previewPlotsData[column.name].key"
+                :uniques="previewPlotsData[column.name].count_uniques"
+                :values="previewPlotsData[column.name].frequency.values"
+                :count="previewPlotsData[column.name].frequency.count"
+                :total="+previewPlotsData[column.name].total"
+                :columnIndex="column.index"
+                class="histfreq"
+                table
+              />
+              <Histogram
+                v-else-if="previewPlotsData[column.name].hist"
+                :key="previewPlotsData[column.name].key"
+                :uniques="previewPlotsData[column.name].count_uniques"
+                :values="previewPlotsData[column.name].hist"
+                :total="+previewPlotsData[column.name].total"
+                :columnIndex="column.index"
+                class="histfreq"
+                table
+              />
+              <Histogram
+                v-else-if="previewPlotsData[column.name].hist_years"
+                :key="previewPlotsData[column.name].key"
+                :uniques="previewPlotsData[column.name].count_uniques"
+                :values="previewPlotsData[column.name].hist_years"
+                :total="+previewPlotsData[column.name].total"
+                :columnIndex="column.index"
+                class="histfreq"
+                table
+              />
+              <div
+                v-else
+                class="aaa"
+                :key="column.name"
+              >
+                {{previewPlotsData[column.name]}}
+              </div>
             </div>
-          </template>
+          </transition>
         </div>
         <div
           class="bb-table-plot"
           v-else-if="columns[column.index]"
-          :key="column.index"
-          :style="{width: columns[column.index].width+'px'}"
-          :class="{'bb-selected': selectionMap[column.index]}"
+          :key="''+column.type+column.index"
+          :style="{ width: column.width+'px' }"
+          :class="{
+            'bb-selected': selectionMap[column.index] && column.type!=='duplicated',
+            'bb-preview': column.type==='duplicated',
+          }"
         >
-          <DataBar
-            :key="plotsData[column.index].key+'databar'"
-            :missing="plotsData[column.index].missing"
-            :total="+plotsData[column.index].total"
-            :mismatch="+plotsData[column.index].mismatch"
-            :nullV="+plotsData[column.index].null"
-            class="table-data-bar"
-            bottom
-          />
-          <Frequent
-            v-if="plotsData[column.index].frequency"
-            :key="plotsData[column.index].key"
-            :uniques="plotsData[column.index].count_uniques"
-            :values="plotsData[column.index].frequency"
-            :total="+plotsData[column.index].frequency[0].count"
-            :columnIndex="column.index"
-            class="histfreq"
-            selectable
-            table
-          />
-          <Histogram
-            v-else-if="plotsData[column.index].hist"
-            :key="plotsData[column.index].key"
-            :uniques="plotsData[column.index].count_uniques"
-            :values="plotsData[column.index].hist"
-            :total="+plotsData[column.index].total"
-            :columnIndex="column.index"
-            class="histfreq"
-            selectable
-            table
-          />
-          <Histogram
-            v-else-if="plotsData[column.index].hist_years"
-            :key="plotsData[column.index].key"
-            :uniques="plotsData[column.index].count_uniques"
-            :values="plotsData[column.index].hist_years"
-            :total="+plotsData[column.index].total"
-            :columnIndex="column.index"
-            class="histfreq"
-            selectable
-            table
-          />
+          <div>
+            <DataBar
+              :key="plotsData[column.index].key+'databar'"
+              :missing="plotsData[column.index].missing"
+              :total="+plotsData[column.index].total"
+              :mismatch="+plotsData[column.index].mismatch"
+              :nullV="+plotsData[column.index].null"
+              @clicked="clickedBar($event,column)"
+              class="table-data-bar"
+              bottom
+            />
+            <Frequent
+              v-if="plotsData[column.index].frequency"
+              :key="plotsData[column.index].key"
+              :uniques="plotsData[column.index].count_uniques"
+              :values="plotsData[column.index].frequency"
+              :total="+plotsData[column.index].frequency[0].count"
+              :columnIndex="column.index"
+              class="histfreq"
+              selectable
+              table
+            />
+            <Histogram
+              v-else-if="plotsData[column.index].hist"
+              :key="plotsData[column.index].key"
+              :uniques="plotsData[column.index].count_uniques"
+              :values="plotsData[column.index].hist"
+              :total="+plotsData[column.index].total"
+              :columnIndex="column.index"
+              class="histfreq"
+              selectable
+              table
+            />
+            <Histogram
+              v-else-if="plotsData[column.index].hist_years"
+              :key="plotsData[column.index].key"
+              :uniques="plotsData[column.index].count_uniques"
+              :values="plotsData[column.index].hist_years"
+              :total="+plotsData[column.index].total"
+              :columnIndex="column.index"
+              class="histfreq"
+              selectable
+              table
+            />
+          </div>
         </div>
       </template>
     </div>
@@ -227,32 +245,47 @@
     class="bb-table-container" ref="BbTableContainer"
   >
     <div class="bb-table" ref="BbTable" :style="tableStyle">
-        <!-- v-show="((row.index>=visibleRowsTop) && (row.index<=visibleRowsBottom))" -->
-        <div
-          class="bb-table-row"
-          v-for="(row, rowArrayIndex) in rows"
-          :key="'r'+rowArrayIndex"
-          :data-ri="row.index"
-          :class="[(currentHighlightRows && currentHighlightRows.indices.includes(row.index)) ? 'bb-highlight--'+(currentHighlightRows.color || 'green') : '']"
-          :style="{height: rowHeight+'px', top: row.index*rowHeight+'px'}"
-        >
-          <template v-for="column in allColumns">
-            <template v-if="row.value">
-              <div
-                :key="column.index"
-                class="bb-table-cell"
-                :class="{
-                  'bb-selected': selectionMap[column.index],
-                  'missing': row.value[column.index]==='',
-                  'none': row.value[column.index]===null,
-                  'bb-preview': column.type=='preview'
-                }"
-                :style="{width: (columns[column.index] || {width: 170}).width+'px'}"
-                v-html="getCell(column.index,rowArrayIndex,(column.type==='preview') ? column.name : false)"
-              ></div>
-            </template>
+      <div
+        class="bb-table-row"
+        v-for="(row, rowArrayIndex) in (rowsPreview.length ? rowsPreview : rows)"
+        :key="'r'+row.index"
+        :class="[getRowHighlight(rowArrayIndex)]"
+        :style="{height: rowHeight+'px', top: row.index*rowHeight+'px'}"
+      >
+        <template v-for="column in allColumns">
+          <template v-if="column.type==='preview' && rowsPreview && rowsPreview[rowArrayIndex] && rowsPreview[rowArrayIndex].value[column.index]">
+            <div
+              :key="'p'+column.index"
+              class="bb-table-cell"
+              :class="[
+                ...column.classes,
+                ...rowsPreview[rowArrayIndex].value[column.index].classes
+              ]"
+              :style="{width: column.width+'px'}"
+              v-html="rowsPreview[rowArrayIndex].value[column.index].html"
+            ></div>
           </template>
-        </div>
+          <template v-else-if="column.type!=='preview' && row.value[column.index]">
+            <div
+              :key="''+column.type+column.index"
+              class="bb-table-cell"
+              :class="[
+                ...column.classes,
+                ...row.value[column.index].classes
+              ]"
+              :style="{width: column.width+'px'}"
+              v-html="row.value[column.index].html"
+            ></div>
+          </template>
+          <div v-else
+            :key="rowArrayIndex+' '+column.index"
+            class="bb-table-cell not-available --e"
+            :class="column.classes"
+            style="width: 170px"
+          >
+          </div>
+        </template>
+      </div>
     </div>
 
   </div>
@@ -270,11 +303,11 @@ import Histogram from '@/components/Histogram'
 import Frequent from '@/components/Frequent'
 import DataBar from '@/components/DataBar'
 
-import { parseResponse, arraysEqual, cancellablePromise, throttle, debounce } from '@/utils/functions.js'
+import { parseResponse, arraysEqual, cancellablePromise, throttle, debounce, optimizeRanges, escapeQuotes, namesToIndices } from '@/utils/functions.js'
 
 var doubleClick = false
 
-const throttleScrollTime = 500
+const throttleScrollTime = 100
 
 export default {
 
@@ -296,26 +329,24 @@ export default {
     }
 	},
 
-  // index -> columnMenuIndex
-
 	data () {
 		return {
-      maxChunks: 10,
-      fetching: false,
+      maxChunks: 8, // 16,
 
-      rows: [],
+      fetching: false,
+      toFetch: [],
+
+      rowsValues: [],
+      rowsPreviewValues: [],
 
       columnMenuIndex: false,
 
       mustCheck: false,
-      mustCheckProfile: false,
 
-      // visibleRowsTop: 0,
-      // visibleRowsBottom: 100,
-      loadedChunksTop: 0,
-      loadedChunksBottom: 1,
+      loadedRowsTop: 0,
+      loadedRowsBottom: 1,
 
-      loadingChunks: [],
+      loadingRows: [],
 
       newColumnName: '',
       newColumnType: 'string',
@@ -326,6 +357,8 @@ export default {
       selection: [],
       previousSelection : {},
       chunks: [],
+      chunksPreview: [],
+      chunksPreviewCode: '',
       columns: {}
 		}
   },
@@ -342,10 +375,36 @@ export default {
       'currentHighlightRows',
       'currentFocusedColumns',
       'currentPreviewCode',
+      'currentDuplicatedColumns',
+      'currentPreviewNames',
       'currentBuffer'
     ]),
 
     ...mapState(['allTypes']),
+
+    rows () {
+      return this.rowsValues.map((r,ri) => {
+        var value = r.value.map((val, ci)=>this.getCellData(ci, ri, val ))
+        return { ...r, value}
+      })
+    },
+
+    rowsPreview () {
+      var cols = this.allColumns.map(col=>({
+        index: col.index,
+        preview: col.preview,
+        nameOrIndex: col.preview ? col.name : col.index,
+      }))
+
+      cols.sort((a,b)=>(a.index-b.index))
+
+      return this.rowsPreviewValues.map((r, ri) => {
+        var value = cols.map((col,ci)=>{
+          return this.getCellData(col.nameOrIndex, ri, r.value[ci], col.preview)
+        })
+        return { ...r, value}
+      })
+    },
 
     highlightMatches () {
       var hm = {}
@@ -365,33 +424,158 @@ export default {
 
     previewColumns () {
       try {
-        return this.currentColumnsPreview
-        .map((col, index)=>({
+        var pc = this.currentColumnsPreview.length
+        ? this.currentColumnsPreview.map((col)=>({
+            ...col,
+            type: 'preview',
+            preview: true,
+            name: col.title,
+          }))
+        : []
+
+        var dc = this.currentDuplicatedColumns.length
+        ? this.currentDuplicatedColumns.map((col)=>({
+            type: 'duplicated',
+            duplicated: true,
+            index: this.currentDataset.columns.findIndex(c=>c.name===col.name),
+            name: col.newName,
+          }))
+        : []
+
+        return [...pc, ...dc].map((col,index)=>({
           ...col,
-					type: 'preview',
-          name: col.title,
           previewIndex: index
-        })) || []
+        }))
       } catch (err) {
         return []
       }
     },
 
     allColumns () {
-      var arr = this.bbColumns.map(index=>({index}))
+      var cols = this.bbColumns.map(index=>{
+        var classes = []
+        if (this.selectionMap[index]) {
+          classes.push('bb-selected')
+        }
+        return {
+          index,
+          classes,
+          width: 170,
+          name: this.currentDataset.columns[index].name
+        }
+      })
+
+      if (!this.currentPreviewCode) {
+        return cols
+      }
+
       try {
-        var after = this.currentPreviewCode.from
+
+        var after = []
+
+        if (this.currentPreviewCode.from) {
+          after = this.currentPreviewCode.from || after
+        }
+        if (!after.length && this.currentSelection.columns.length) {
+          after = this.currentSelection.columns.map(s=>s.name)
+        }
+
+        var expectedColumns = this.currentPreviewCode.expectedColumns
+
+        if (expectedColumns===0) {
+          return cols
+        }
+
+        var pushedColumns = 0
 
         if (this.previewColumns.length && after) {
-          var insertIndex = arr.findIndex(e=>this.currentDataset.columns[e.index].name===after)+1
-          this.previewColumns.forEach(e=>{
-            arr.splice(insertIndex++,0,e)
-          })
+
+          if (this.previewColumns.length===1 && after.length!==1) {
+
+            // TODO: cols unordered
+            var insertIndex = Math.max(...namesToIndices(after,cols))+1
+
+            cols.splice(insertIndex,0,{
+              ...this.previewColumns[0],
+              classes: ['bb-preview'],
+              width: 170
+            })
+            pushedColumns++
+
+          } else {
+
+            var _after = after[0]
+            var insertIndex = cols.findIndex(col=>_after===col.name)+1
+
+            this.previewColumns.forEach((pcol, i)=>{
+
+              if (i>=expectedColumns) {
+                return
+              }
+
+              if (after[i]) {
+                insertIndex = cols.findIndex(col=>after[i]===col.name)+1
+              }
+
+              if (insertIndex === 0) { // previews cannot be on position 0
+                insertIndex = cols.length
+              }
+
+              cols.splice(insertIndex++,0,{
+                ...pcol,
+                classes: ['bb-preview'],
+                width: 170
+              })
+              pushedColumns++
+            })
+          }
+        }
+
+        if (expectedColumns!==undefined && after && pushedColumns<expectedColumns){
+
+          if (expectedColumns===1) {
+
+            var insertIndex = Math.max(...after.map(colname=>cols.findIndex(col=>colname===col.name)))+1
+
+            cols.splice(insertIndex, 0, {
+              type: 'preview',
+              index: -1,
+              previewIndex: -1,
+              preview: true,
+              placeholder: true,
+              classes: ['bb-preview', 'bb-placeholder'],
+              width: 170
+            })
+
+          } else {
+            for (let i = 0; i < expectedColumns-pushedColumns; i++) {
+
+              if (after[i]) {
+                insertIndex = cols.findIndex(col=>after[i]===col.name)+1+pushedColumns
+              }
+
+              if (insertIndex === 0) { // previews cannot be on position 0
+                insertIndex = cols.length
+              }
+
+              cols.splice(insertIndex, 0, {
+                type: 'preview',
+                index: -i,
+                previewIndex: -i,
+                preview: true,
+                placeholder: true,
+                classes: ['bb-preview', 'bb-placeholder'],
+                width: 170
+              })
+            }
+          }
+
+
         }
       } catch (err) {
         console.error(err)
       }
-      return arr
+      return cols
     },
 
     columnMenuActive: {
@@ -413,14 +597,6 @@ export default {
         p[v] = true
         return p
       },{})
-    },
-
-    postochunk() {
-      return 1/(this.rowHeight*this.chunkSize)
-    },
-
-    chunkSize () {
-      return Math.max(Math.ceil(300/this.currentDataset.columns.length),40)
     },
 
     plotsData () {
@@ -486,7 +662,7 @@ export default {
       }
     },
 
-    lastChunk() {
+    lastRow() {
       return Math.floor(this.rowsCount / this.chunkSize)
     }
 
@@ -528,9 +704,13 @@ export default {
     },
 
     currentPreviewCode: {
-      handler (value) {
+      handler () {
+        if (this.chunksPreviewCode!==this.currentPreviewCode.code) {
+          this.chunksPreview = []
+          this.updateRows()
+        }
         this.mustCheck = true
-        this.throttledScrollCheck()
+        this.debouncedThrottledScrollCheck()
       }
     },
 
@@ -538,7 +718,23 @@ export default {
 
   methods: {
 
-    async checkIncomingColumns (columns) {
+    getCurrentWindow () {
+      var element = this.$refs['BbTableContainer']
+
+      if (!element) {
+        return false
+      }
+
+      var topPosition = element.scrollTop
+      var bottomPosition = topPosition + element.clientHeight
+
+      var top = Math.floor(topPosition/this.rowHeight)
+      var bottom = Math.ceil(bottomPosition/this.rowHeight)
+
+      return [top, bottom]
+    },
+
+    checkIncomingColumns (columns) {
       if (this.mustCheck) {
         if (columns.length>this.currentDataset.columns.length) { // TODO: Check for preview columns
           var receivedColumns = columns
@@ -548,16 +744,23 @@ export default {
 
           var previewColumns = receivedColumns
             .filter((column, index)=>(
-              !columnNames.includes(column.title)//index>=this.currentDataset.columns.length
+              !columnNames.includes(column.title)
               &&
               !column.title.includes('__match_positions__')
+              &&
+              column.title!=='__match__'
             ))
+
+          var matchRowsColumns = receivedColumns
+            .filter((column, index)=>(column.title==='__match__'))
 
           var matchColumns = receivedColumns
             .filter((column, index)=>(
               !columnNames.includes(column.title)//index>=this.currentDataset.columns.length
               &&
               column.title.includes('__match_positions__')
+              &&
+              column.title!=='__match__'
             ))
             .map((column)=>{
               var columnTitle = column.title.split('__match_positions__')[0]
@@ -568,28 +771,41 @@ export default {
               }
             })
 
-          this.$store.commit('setColumnsPreview', previewColumns)
-
           var color = this.currentPreviewCode.color
+
+          if (matchRowsColumns[0]) {
+            this.$store.commit('setHighlightRows', { ...matchRowsColumns[0], color })
+          } else {
+            this.$store.commit('setHighlightRows', false)
+          }
+
+          this.$store.commit('setColumnsPreview', previewColumns)
 
           this.$store.commit('setHighlights', { matchColumns, color })
 
           if (previewColumns.length) {
-            this.mustCheckProfile = true
+            return true // must cehck
           }
 
         }
       }
+      return false // no check
     },
 
-    focusPreview (column = undefined) {
-      this.$nextTick(()=>{
-        column = (column!==undefined) ? column : this.currentPreviewCode.from
-        if (column!==undefined) {
-          var af = document.getElementById("bb-table-"+column)
-          af && af.scrollIntoView();
-          var lp = document.getElementById("bb-table-preview-last")
-          lp && lp.scrollIntoView();
+    focusPreview () {
+      this.$nextTick(() => {
+        var columns = this.currentPreviewCode.from
+        if (columns && columns.length) {
+          columns.forEach(column => {
+            var af = document.getElementById("bb-table-"+column)
+            if (af) {
+              af.scrollIntoView()
+            }
+          })
+          var lp = document.getElementById("bb-table-preview-last") // TODO: Every preview?
+          if (lp) {
+            lp.scrollIntoView()
+          }
 
           this.horizontalScrollCheckDown()
         }
@@ -599,15 +815,28 @@ export default {
     updateRows () {
       this.$nextTick(()=>{
         var rows = []
-        // this.chunks.sort((a,b)=>a.index-b.index) // NO
-        this.chunks.forEach(chunk => {
-          if ((chunk.index>=this.loadedChunksTop) && (chunk.index<=this.loadedChunksBottom)) {
-            rows = [...rows, ...chunk.rows]
-          }
+        var rowsPreview = []
+
+        this.chunksPreview.forEach(chunk => {
+            if (chunk.rows && chunk.rows.length) {
+              rowsPreview = [...rowsPreview, ...chunk.rows]
+            } else {
+              console.warn(chunk)
+            }
         })
-        // rows = [...new Set(rows)];
+        this.chunks.forEach(chunk => {
+            if (chunk.rows && chunk.rows.length) {
+              rows = [...rows, ...chunk.rows]
+            } else {
+              console.warn(chunk)
+            }
+        })
         rows.sort((a,b)=>a.index-b.index)
-        this.rows = [...new Set(rows)]
+        rowsPreview.sort((a,b)=>a.index-b.index)
+
+        this.rowsValues = [...new Set(rows)]
+        this.rowsPreviewValues = [...new Set(rowsPreview)]
+
       })
     },
 
@@ -639,30 +868,91 @@ export default {
 
     /* end of drag events */
 
+    clickedBar (event, column) {
+      if (column.type==='duplicated') {
+        return
+      }
+      if (event==='missing') {
+        var payload = {
+          condition: 'null',
+          action: 'drop'
+        }
+        this.commandHandle({
+          command: 'filter rows',
+          columns: [ this.columns[column.index].name ],
+          payload
+        })
+      }
+      if (event==='mismatch') {
+        var payload = {
+          condition: 'mismatch',
+          action: 'drop'
+        }
+        this.commandHandle({
+          command: 'filter rows',
+          columns: [ this.columns[column.index].name ],
+          payload
+        })
+      }
+    },
+
     commandHandle(command) {
       this.$store.commit('commandHandle',command)
     },
 
-    getCell (column, row, preview = false) {
-      var content
-      try {
-        content = (this.rows[row].value[column]!==null && this.rows[row].value[column]!==undefined) ? this.rows[row].value[column] : ''
-      } catch (err) {
-        console.error('err',err)
-        content = 'ERROR.'
+    getRowHighlight (row) {
+      var rows = this.rowsPreviewValues
+      if (rows && rows.length && rows[row]) {
+        var hlCol = this.currentHighlightRows.index
+        var color = this.currentHighlightRows.color
+        try {
+          if (rows[row].value[hlCol]) {
+            return 'bb-highlight--'+(this.currentHighlightRows.color || 'green')
+          }
+        } catch (err) {}
       }
-      try {
-        var hlCol = (this.highlightMatches[preview || column]) ? this.highlightMatches[preview || column].index : undefined
+      return ''
+    },
 
+    getCellData (col, ri, value, preview) {
+      var classes = []
+      if (value===null) {
+        classes.push('none')
+        value = ''
+      } else if (value==='') {
+        classes.push('missing')
+      }
+      var html = this.getCellContent(col, ri, value, preview)
+      if (html===false) {
+        classes.push('not-available')
+      }
+      return {
+        html: html || '',
+        classes
+      }
+    },
+
+    getCellContent (col, ri, value, preview) {
+      try {
+        var hlCol = (this.highlightMatches[col]) ? this.highlightMatches[col].index : undefined
         if (hlCol!==undefined) {
           var color = this.currentHighlights.color['default'] ? this.currentHighlights.color[preview ? 'preview' : 'default'] : this.currentHighlights.color
-          for (let i = this.rows[row].value[hlCol].length - 1; i >= 0; i--) {
-            const [a,b] = this.rows[row].value[hlCol][i]
-            content = content.substring(0,a)+`<span class="hlt--${color}">`+content.substring(a,b)+'</span>'+content.substring(b)
+          var hlv = this.rowsPreviewValues[ri].value[hlCol]
+          if (hlv && hlv.length) {
+            for (let i = hlv.length - 1; i >= 0; i--) {
+              const [a,b] = hlv[i]
+              value = value.substring(0,a)+`<span class="hlt--${color}">`+value.substring(a,b)+'</span>'+value.substring(b)
+            }
           }
         }
-      } catch (err) {}
-      return `<span class="select-none">&nbsp;</span>${content}<span class="select-none">&nbsp;</span>`
+        return `<span class="select-none">&nbsp;</span>${value}<span class="select-none">&nbsp;</span>`
+      } catch (err) {
+        if (value) {
+          return `<span class="select-none">&nbsp;</span>${value}<span class="select-none">&nbsp;</span>`
+        } else {
+          return false
+        }
+      }
     },
 
     updateSelection(value) {
@@ -748,17 +1038,14 @@ export default {
 
       setTimeout(() => {
         var ref = this.$refs['column-menu']
-        if (ref && ref.$el){
+        if (ref && ref.$el) {
           var el = ref.$el.getElementsByTagName('input')[0]
-          if (el)
+          if (el) {
             el.focus()
+          }
           this.$nextTick(()=>{
             this.$refs['BbTableContainer'].scrollLeft = this.$refs['BbTableTopContainer'].scrollLeft
           })
-          // if (this.previousSelection) {
-          //   this.selection = {...this.previousSelection}
-          //   this.previousSelection = false
-          // }
         }
       }, 100);
 
@@ -771,20 +1058,17 @@ export default {
 
       if (this.newColumnType != prevType) {
         var payload = {
-          columns: [prevName],
           dtype: this.newColumnType
         }
-        this.commandHandle({command: 'cast', ...payload})
-        // commandHandle(...)
+        this.commandHandle({command: 'cast', columns: [prevName], payload})
       }
 
       this.$nextTick(()=>{
         if (this.newColumnName != prevName) {
           var payload = {
-            columns: [prevName],
             output_cols: [this.newColumnName]
           }
-          this.commandHandle({command: 'rename', payload, immediate: true})
+          this.commandHandle({command: 'rename', columns: [prevName], payload, immediate: true})
         }
         this.$nextTick(()=>{
           this.columnMenuIndex = false
@@ -806,17 +1090,23 @@ export default {
       }
     },
 
-    debouncedSetProfile: debounce(function(p) {
-      return this.setProfile(p)
-    } , 100 ),
-
     async setProfile (previewCode) {
-      if (this.currentProfilePreview.code !== previewCode) {
-        var response = await this.evalCode(`_output = df.ext.buffer_window("*",0,100)${previewCode || ''}.ext.profile("*", output="json")`)
-        var dataset = parseResponse(response.data.result)
 
+      if (!previewCode) {
+        this.$store.commit('setProfilePreview', false )
+        return
+      }
+
+      if (this.currentProfilePreview.code !== previewCode) {
+
+        this.$store.commit('setProfilePreview', {code: previewCode, columns: []})
+
+        var cols = this.currentColumnsPreview.map(e=>escapeQuotes(e.title))
+
+        var response = await this.evalCode(`_output = df.ext.buffer_window("*")${previewCode || ''}.ext.profile(["${cols.join('", "')}"], output="json")`)
+        var dataset = parseResponse(response.data.result)
         if (!dataset) {
-          response = await this.evalCode(`_output = df.ext.buffer_window("*",0,100)${previewCode || ''}.ext.profile("*", output="json")`)
+          response = await this.evalCode(`_output = df.ext.buffer_window("*")${previewCode || ''}.ext.profile(["${cols.join('", "')}"], output="json")`)
           dataset = parseResponse(response.data.result)
         }
 
@@ -828,112 +1118,166 @@ export default {
 
         this.$store.commit('setProfilePreview', dataset)
 
-        this.mustCheckProfile = false
-
         return true
       }
       return false
     },
 
-    throttledScrollCheck: throttle(function(e) {this.scrollCheck(e)} , throttleScrollTime),
+    debouncedThrottledScrollCheck: debounce(function () {
+      this.throttledScrollCheck()
+    }, 400),
 
-    async scrollCheck () {
+    throttledScrollCheck: throttle(function(aw = true) {this.scrollCheck(aw)} , throttleScrollTime),
 
+    async scrollCheck (awaited = true) {
       try {
+        if (!this.fetching) {
 
-        var element = this.$refs['BbTableContainer']
+          this.fetching = true
 
-        var topPosition = element.scrollTop
-        var bottomPosition = topPosition + element.clientHeight
+          if (awaited) {
+            var range = this.getCurrentWindow()
+            if (range) {
+              var [from, to] = range
+              var length = to - from
+              this.toFetch = [
+                [from - (length*8), to + (length*8)],
+                [from - (length*6), to + (length*6)],
+                [from - (length*4), to + (length*4)],
+                [from - (length*2), to + (length*2)],
+                [from - 3, to + 3]
+              ]
 
-        var top = Math.floor(topPosition/this.rowHeight)
-        var bottom = Math.ceil(bottomPosition/this.rowHeight)
-        var length = bottom-top
+              for (let i = this.toFetch.length - 1; i >= 0; i--) {
+                if (this.toFetch[i][0]<0 && this.toFetch[i][1]<0) {
+                  this.toFetch.splice(i,1)
+                  continue;
+                }
+              }
+            }
+          }
 
-        this.fetchChunks(topPosition, bottomPosition)
+          var _awaited = false
 
+          while (!_awaited && this.toFetch.length) {
+             _awaited = await this.fetchRows()
+          }
+
+          this.fetching = false
+          if (this.toFetch.length) {
+            this.$nextTick(()=>{
+              this.throttledScrollCheck(_awaited)
+            })
+            return true
+          }
+
+        }
+        else if (this.toFetch.length) {
+          this.$nextTick(()=>{
+            this.throttledScrollCheck(false)
+          })
+          return false
+        }
       } catch (err) {
         console.error(err)
-      }
-
-      // this.visibleRowsTop = topPosition/this.rowHeight - 80
-      // this.visibleRowsBottom = bottomPosition/this.rowHeight + 80
-
-      // this.fetchChunks(startRow, endRow+1)
-    },
-
-    async fetchChunks(start, end) {
-
-      var fetchid = (Math.random()*1000)%1
-
-      var from = Math.max( Math.floor(start*this.postochunk), 0 )
-      var to = Math.min( Math.ceil(end*this.postochunk), this.lastChunk )
-
-      this.loadedChunksTop = from - 3
-      this.loadedChunksBottom = to + 3
-
-      var promises = []
-
-      this.fetching = true
-
-      promises = []
-
-      for (let i = from; i <= to; i++) {
-        promises.push(this.fetchChunk(i))
-      }
-
-      var results = await Promise.all(promises)
-
-      this.fetching = false
-
-      var chunks = [...this.chunks]
-
-      if (chunks.length>this.maxChunks){
-        chunks.splice(0,chunks.length-this.maxChunks)
-      }
-
-      this.chunks = [...chunks]
-      // this.updateRows()
-
-      if (this.mustCheckProfile) {
-        var previewCode = (this.currentPreviewCode ? this.currentPreviewCode.profileCode : false) || ''
-
-        if (this.currentProfilePreview.code !== previewCode) {
-          var dbsp = await this.debouncedSetProfile(previewCode)
+        this.fetching = false
+        if (this.toFetch.length) {
+          this.$nextTick(()=>{
+            this.throttledScrollCheck(false)
+          })
+          return false
         }
       }
 
     },
 
-    async fetchChunk(index) {
+    async fetchRows () {
 
-      if (this.loadingChunks[index]) {
-        return 2
+      var chunks = (this.currentPreviewCode) ? this.chunksPreview : this.chunks
+
+      var values = this.getCurrentWindow()
+      var currentFrom = (values && values[0]) ? values[0] : -1
+
+      if (chunks.length>this.maxChunks && currentFrom>=0) {
+
+        var distanceMap = chunks.map((chunk, index)=>({distance: Math.abs(currentFrom-chunk.from), index, from: chunk.from}))
+          .filter(c=>c.from!==0)
+          .sort((a,b)=>(a.distance-b.distance))
+        var tries = 10
+
+        while (chunks.length>this.maxChunks && tries--) {
+          var toDelete = distanceMap.pop()
+          if (toDelete) {
+            chunks.splice(toDelete.index, 1)
+          }
+        }
       }
 
-      this.loadingChunks[index] = true
+      var [from, to, force] = this.toFetch.pop()
+
+      if (!to) {
+        return false
+      }
+
+      from = Math.max( from, 0 )
+      to = Math.min( to, this.rowsCount - 1 )
+
+      var length = to - from
+
+      var distanceFromWindow = Math.abs(currentFrom-from)
+
+      var newChunks = optimizeRanges(
+        [from,to],
+        chunks.map(e=>[e.from,e.to])
+      )
+
+      if (!newChunks.length) {
+        return false // no chunks
+      }
+
+
+      for (let i = newChunks.length - 1; i >= 0 ; i--) {
+
+        var previewCode = (this.currentPreviewCode ? this.currentPreviewCode.profileCode : false) || ''
+        if (this.currentProfilePreview.code !== previewCode) {
+          this.setProfile(false)
+        }
+
+        var checkProfile = await this.fetchChunk(newChunks[i][0], newChunks[i][1])
+
+        this.updateRows()
+
+        if (checkProfile) {
+          if (this.currentProfilePreview.code !== previewCode) {
+            await this.setProfile(previewCode)
+          }
+        }
+      }
+
+      // this.updateRows()
+
+      return true
+
+    },
+
+    async fetchChunk(from, to) {
+
+      var chunks = (this.currentPreviewCode) ? this.chunksPreview : this.chunks
+
+      var index = chunks.length
 
       var previewCode = (this.currentPreviewCode ? this.currentPreviewCode.code : false) || ''
 
-      var foundIndex = this.chunks.findIndex(chunk => {
-        return chunk && (chunk.index === index)
-      })
-
-      if (foundIndex!==-1 && (this.chunks[foundIndex].preview === previewCode)) {
-        this.loadingChunks[index] = false
-        return 2
-      }
+      // chunks[index] = { from, to, preview: previewCode || '' }
 
       if (!this.currentBuffer) {
-        var buffer = await this.evalCode('_output = '+this.currentDataset.varname+'.ext.set_buffer("*")\n"0"')
+        var buffer = await this.evalCode('_output = '+this.currentDataset.varname+'.ext.set_buffer("*")')
         this.$store.commit('setBuffer',true)
       }
 
-      var response = await this.evalCode(`_output = ${this.currentDataset.varname}.ext.buffer_window("*", ${index*this.chunkSize}, ${((index+1)*this.chunkSize)})${previewCode || ''}.ext.to_json("*")`)
+      var response = await this.evalCode(`_output = ${this.currentDataset.varname}.ext.buffer_window("*", ${from}, ${to+1})${previewCode || ''}.ext.to_json("*")`)
 
       var parsed = parseResponse(response.data.result)
-
-      var from = index*this.chunkSize
 
       if (parsed.sample) {
 
@@ -942,19 +1286,11 @@ export default {
           index: from+i
         }))
 
-        this.checkIncomingColumns(parsed.sample.columns)
-        var chunkIndexInArray = (foundIndex!==-1) ? foundIndex : this.chunks.length
-        this.$set(this.chunks, chunkIndexInArray, { index: index, rows, preview: previewCode || '' })
-
-        this.loadingChunks[index] = false
-        this.updateRows()
-        return 1
+        chunks[index] = { from, to, rows, preview: previewCode || '' }
+        return this.checkIncomingColumns(parsed.sample.columns)
 
       } else {
-
-        this.loadingChunks[index] = false
-        return 0
-
+        return undefined
       }
     }
   }

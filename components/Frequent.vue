@@ -1,17 +1,18 @@
 <template>
-  <div class="bb-graphic" @mouseleave="currentVal = false">
+  <div class="bb-graphic" v-if="calculatedValues.length" @mouseleave="currentVal = false">
     <h3 v-if="!table">Frequent values</h3>
-    <BarsCanvas
-      :selectable="selectable"
-      :selected="selected"
-      :values="calculatedValues"
-      :binMargin="1"
-      :width="'auto'"
-      :height="table ? 66 : 90"
-      @update:selected="updateSelected"
-      @hovered="setValueIndex($event)"
-    />
-
+    <div :style="{'min-height': 62+'px'}">
+      <BarsCanvas
+        :selectable="selectable"
+        :selected="selected"
+        :values="calculatedValues"
+        :binMargin="1"
+        :width="'auto'"
+        :height="!table ? 90 : 62"
+        @update:selected="updateSelected"
+        @hovered="setValueIndex($event)"
+      />
+    </div>
     <div v-if="currentVal" class="current-value table-font" :title="currentVal" v-html="currentVal"></div>
     <div v-else class="current-value" :title="elementsString">{{ elementsString }}</div>
   </div>
@@ -104,7 +105,7 @@ export default {
           if (ds.ranged.index!=this.columnIndex && this.selected.length>0) {
             this.selected = []
           }
-          else if (ds.ranged.index==this.columnIndex && !arraysEqual(this.selected,ds.ranged.indices)){
+          else if (ds.ranged.index==this.columnIndex && !arraysEqual(this.selected,ds.ranged.indices)) {
             this.selected = ds.ranged.indices
           }
         }

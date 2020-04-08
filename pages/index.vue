@@ -73,7 +73,7 @@
             </v-card-text>
             <v-card-actions>
               <v-spacer/>
-              <v-btn color="primary" large depressed @click="subscribe">Subscribe</v-btn>
+              <v-btn color="primary darken-1" large depressed @click="subscribe">{{($route.query.kernel=='1') ? 'Sign in' : 'Subscribe'}}</v-btn>
               <v-spacer/>
             </v-card-actions>
             <v-card-text v-if="statusError" class="pb-0" >
@@ -127,7 +127,7 @@
             center-active
             style="flex: 0;"
           >
-            <v-tab v-for="(_tab, key) in $store.state.datasets" :key="key" >
+            <v-tab v-for="(_tab, key) in $store.state.datasets" :key="key" class="bb-tab" >
               <span class="tab-title">
                 {{ _tab.name || key+1 }}
               </span>
@@ -144,6 +144,11 @@
                   close
                 </v-icon>
               </v-hover>
+            </v-tab>
+            <v-tab class="new-tab" color="primary darken-1" @click="$store.commit('newDataset')">
+              <v-icon color="primary">
+                add
+              </v-icon>
             </v-tab>
           </v-tabs>
           <div class="bb-content">
@@ -194,7 +199,6 @@
                 </v-autocomplete>
               </div>
             </div>
-              <!-- :key="tableKey" -->
             <TableBar
               ref="tableBar"
               v-if="currentDataset"
@@ -238,6 +242,7 @@ import Layout from '@/components/Layout'
 import TableBar from '@/components/TableBar'
 import clientMixin from '@/plugins/mixins/client'
 import dataTypesMixin from '@/plugins/mixins/data-types'
+import { printError } from '@/utils/functions.js'
 
 import { mapGetters } from 'vuex'
 
@@ -291,12 +296,12 @@ export default {
         switch (value) {
           case 'receiving back':
             this.stopClient(true)
-            this.$store.commit('cells', [])
+            this.$store.commit('setCells', [])
             break;
           case 'receiving':
 							this.$store.commit('kernel','loading')
               if (!this.$store.state.datasets.length) {
-								this.$store.commit('addNew')
+								this.$store.commit('newDataset')
 							}
               var response = await this.socketPost('initialize',
               {
@@ -309,13 +314,7 @@ export default {
 								this.$store.commit('kernel','done')
 							}
 							else {
-                if (response.error && response.error.traceback && response.error.traceback.length) {
-                  response.error.traceback_escaped = response.error.traceback.map(l=>
-                    l.replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '')
-                  )
-                  console.error(response.error.traceback_escaped.join('\n'))
-                }
-                console.error(response)
+                printError(response)
 								this.$store.commit('status','waiting')
 								this.$store.commit('status','receiving')
 							}
@@ -355,6 +354,10 @@ export default {
       this.$store.commit('setTab',{ tab: value })
 
     },
+
+    confirmDelete (value) {
+      // TODO: Remove confirmation on empty datasets
+    }
 	},
 
 	mounted () {

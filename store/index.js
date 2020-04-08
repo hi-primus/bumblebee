@@ -6,6 +6,8 @@ export const state = () => ({
 	datasets: [],
   datasetConfig: [], // TODO
   datasetSelection: [],
+  hasSecondaryDatasets: false,
+  // currentSecondaryDatasets: []
 	databases: [],
   buffers: [],
   tableViews: [],
@@ -13,6 +15,8 @@ export const state = () => ({
   columnsPreviews: [],
   profilePreviews: [],
   previewCodes: [],
+  duplicatedColumns: [],
+  previewNames: [],
   highlightRows: [],
   highlights: [],
   focusedColumns: [],
@@ -43,8 +47,36 @@ export const mutations = {
     state.tab = tab
   },
 
+  // setSecondaryDataset (state, {name, columns, position}) {
+  //   var dataset = {name, columns: columns || []}
+  //   if (!state.secondaryDatasets[state.tab]) {
+  //     Vue.set( state.secondaryDatasets, state.tab, [])
+  //   }
+  //   position = position!==undefined ? position : state.secondaryDatasets[state.tab].length
+  //   Vue.set( state.secondaryDatasets[state.tab], position, dataset )
+  // },
+
+  // deleteSecondaryDataset (state, position) {
+  //   if (!state.secondaryDatasets[state.tab]) {
+  //     return
+  //   }
+  //   Vue.delete(state.secondaryDatasets[state.tab], position)
+  // },
+
+  setHasSecondaryDatasets (state, payload) {
+    state.hasSecondaryDatasets = payload
+  },
+
   setColumnsPreview (state, payload) {
     Vue.set( state.columnsPreviews, state.tab, payload )
+  },
+
+  setPreviewNames (state, payload) {
+    Vue.set(state.previewNames,state.tab, payload )
+  },
+
+  setDuplicatedColumns (state, payload) {
+    Vue.set(state.duplicatedColumns,state.tab, payload )
   },
 
   setPreviewCode (state, payload) {
@@ -55,8 +87,8 @@ export const mutations = {
     Vue.set( state.profilePreviews, state.tab, dataset )
   },
 
-  setHighlightRows (state, {indices, color}) {
-    var highlightRows = { indices: indices || [], color: color || 'green' }
+  setHighlightRows (state, payload ) {
+    var highlightRows = payload
 
     Vue.set( state.highlightRows, state.tab, highlightRows )
   },
@@ -71,7 +103,6 @@ export const mutations = {
     Vue.set( state.focusedColumns, state.tab, column )
   },
 
-
   previewDefault (state) {
     Vue.set(state.columnsPreviews,state.tab,false)
     Vue.set(state.profilePreviews,state.tab,false)
@@ -80,6 +111,7 @@ export const mutations = {
     Vue.set(state.focusedColumns,state.tab,false)
     Vue.set(state.buffers,state.tab,false)
     Vue.set(state.previewCodes,state.tab,undefined)
+    Vue.set(state.previewNames,state.tab,undefined)
   },
 
   commandHandle(state, command) {
@@ -90,12 +122,12 @@ export const mutations = {
     Vue.set(state.tableViews,state.tab,tableView)
   },
 
-	add (state, { dataset }) {
+	loadDataset (state, { dataset }) {
 
     console.log("[BUMBLEBLEE] Opening dataset",dataset)
 
-    if (dataset.name===null){
-      if (dataset.file_name){
+    if (dataset.name===null) {
+      if (dataset.file_name) {
         dataset.name = dataset.file_name.split('.')[0]
       }
       else {
@@ -105,46 +137,32 @@ export const mutations = {
 
     }
 
-		let found = state.datasets.findIndex((e) => {
-			return (e.name === dataset.name)
-    })
+    dataset.blank = false
 
-    if (found === -1) {
-      found = state.datasets.findIndex((e) => {
-        return (!e.summary)
-      })
-    }
-
-		if (found === -1) {
-			found = state.datasets.length
-    }
-
-    dataset.varname = 'df' // TODO: multiple dfs
-
-    /*
-    if (found>=1)
-      dataset.varname = `df${found}`
+    if (state.tab>=1)
+      dataset.varname = `df${state.tab}`
     else
       dataset.varname = 'df'
-    */
 
     if (dataset.columns instanceof Object) { dataset.columns = Object.values(dataset.columns) }
 
     var _c
     try {
-      _c = state.datasetSelection[found].columns
+      _c = state.datasetSelection[state.tab].columns
     } catch (err) {
       _c = []
     }
 
-    if (dataset && dataset.dtypes_list)
+    if (dataset && dataset.dtypes_list) {
       state.typesAvailable = dataset.dtypes_list
+    }
 
-    Vue.set(state.datasets, found, dataset)
+    Vue.set(state.datasets, state.tab, dataset)
 
-    state.datasetSelection[found] = {} // {columns: _c} // TODO: check selection
+    state.datasetSelection[state.tab] = {} // {columns: _c} // TODO: check selection
 
-    Vue.set(state.datasetSelection, found, state.datasetSelection[found] )
+    Vue.set(state.datasetSelection, state.tab, state.datasetSelection[state.tab] )
+    Vue.set(state.buffers, state.tab, false)
 
 		state.status = 'received'
 
@@ -152,31 +170,19 @@ export const mutations = {
 
   },
 
-  addNew (state) {
+  newDataset (state, current) {
 
-    let found = state.datasets.length
+    let found = current ? state.tab : state.datasets.length
 
-    let dataset = {
-      name: '(new dataset)',
-      blank: true
+    let varname = 'df'
+
+    if (found) {
+      varname = varname + found
     }
 
-    state.status = 'received'
-
-    Vue.set(state.datasets, found, dataset)
-    Vue.set(state.datasetSelection, found, {})
-
-		state.datasetUpdates = state.datasetUpdates + 1
-
-  },
-
-  resetDataset (state) {
-    state.datasets = []
-
-    let found = state.datasets.length
-
     let dataset = {
       name: '(new dataset)',
+      varname,
       blank: true
     }
 
@@ -209,13 +215,15 @@ export const mutations = {
     state.engine = payload
   },
 
-  cells (state, payload) {
-    state.cells = payload
+  setCells (state, payload) {
+    Vue.set(state.cells, state.tab, payload)
   },
 
-  cellContent (state, {index, content}) {
+  setCellContent (state, {index, content}) {
     try {
-      state.cells[index].content = content
+      var currentCells = state.cells[state.tab] || []
+      currentCells[index].content = content
+      Vue.set(state.cells, state.tab, currentCells)
     } catch (error) {
       console.error(error)
     }
@@ -248,8 +256,8 @@ export const mutations = {
       Vue.set(state.highlights,state.tab,false)
       Vue.set(state.highlightRows,state.tab,false)
       Vue.set(state.focusedColumns,state.tab,false)
-      Vue.set(state.buffers,state.tab,undefined)
       Vue.set(state.previewCodes,state.tab,undefined)
+      Vue.set(state.previewNames,state.tab,undefined)
 
       if (clear) {
         Vue.set(state.datasetSelection,tab,{
@@ -274,29 +282,38 @@ export const mutations = {
 }
 
 export const actions = {
-  async nuxtServerInit ({ dispatch }, context) {
-    // console.log('[DEBUG] nuxtServerInit')
-    const cookies = this.$cookies.getAll() || {} // cookie.parse(context.req.headers.cookie || '')
-    if (cookies.hasOwnProperty('x-access-token')) {
-      try {
-        setAuthToken(cookies['x-access-token'])
-        await dispatch('auth/fetch')
-        return true
-      } catch (err) {
-        console.error('Provided token is invalid:', err)
-        resetAuthToken()
-        return false
-      }
-    } else {
-      resetAuthToken()
-      return false
-    }
-  }
+  // async nuxtServerInit ({ dispatch }, context) {
+  //   console.log('[DEBUG] nuxtServerInit')
+  //   const cookies = this.$cookies.getAll() || {} // cookie.parse(context.req.headers.cookie || '')
+  //   if (cookies.hasOwnProperty('x-access-token')) {
+  //     try {
+  //       setAuthToken(cookies['x-access-token'])
+  //       await dispatch('auth/fetch')
+  //       return true
+  //     } catch (err) {
+  //       console.error('Provided token is invalid:', err)
+  //       resetAuthToken()
+  //       return false
+  //     }
+  //   } else {
+  //     resetAuthToken()
+  //     return false
+  //   }
+  // },
 }
 
 export const getters = {
   currentDataset (state) {
     return state.datasets[state.tab]
+  },
+  currentCells (state) {
+    return state.cells[state.tab]
+  },
+  // currentSecondaryDatasets (state) {
+  //   return state.secondaryDatasets[state.tab]
+  // },
+  hasSecondaryDatasets (state) {
+    return state.hasSecondaryDatasets
   },
   currentSelection (state) {
     return state.datasetSelection[state.tab] || {}
@@ -315,6 +332,12 @@ export const getters = {
   },
   currentPreviewCode (state) {
     return state.previewCodes[state.tab] || false
+  },
+  currentDuplicatedColumns (state) {
+    return state.duplicatedColumns[state.tab] || false
+  },
+  currentPreviewNames (state) {
+    return state.previewNames[state.tab] || false
   },
   currentFocusedColumns (state) {
     return state.focusedColumns[state.tab] || undefined
@@ -344,6 +367,10 @@ export const getters = {
     return 'columns'
   },
   typesAvailable (state) {
-    return state.datasets[state.tab].dtypes_list || state.allTypes
+    try {
+      return state.datasets[state.tab].dtypes_list || state.allTypes
+    } catch (error) {
+      return state.allTypes
+    }
   }
 }

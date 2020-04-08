@@ -6,7 +6,7 @@ export const state = () => ({
 
 export const mutations = {
 
-  tokenlogin(state,token){
+  tokenlogin(state,token) {
   state.token=token
 
 }
@@ -17,7 +17,7 @@ export const actions = {
 	async login (context, payload) {
     const response = await window.$nuxt.$auth.login(payload)
 
-    if(response.data.token){
+    if(response.data.token) {
       context.commit('tokenlogin',response.data.token)
     }
     else{

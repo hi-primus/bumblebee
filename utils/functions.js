@@ -68,6 +68,9 @@ export const trimCharacters = (s, c) => {
 export const parseResponse = (content) => {
   // console.log('[DEBUG] parsedContent',content)
   try {
+    if (typeof content !== 'string') {
+      return content
+    }
     content = trimCharacters(content,"'")
     content = content.replace(/\bNaN\b/g,null)
     content = content.replace(/\b\\'\b/g,"'")
@@ -130,3 +133,106 @@ export const copyToClipboard = (str) => {
   document.execCommand('copy');
   document.body.removeChild(el);
 };
+
+export const optimizeRanges = (inputRange, existingRanges) => {
+  var newRanges = [inputRange]
+
+  for (let i = 0; i < newRanges.length; i++) {
+    existingRanges.forEach(range => {
+      if (newRanges[i][0]<=range[0] && newRanges[i][1]>=range[1]) {
+        var pushChunk = [range[1]+1, newRanges[i][1]]
+        newRanges[i] = [newRanges[i][0], range[0]-1,]
+        newRanges.push(pushChunk)
+      }
+    })
+  }
+  for (let i = 0; i < newRanges.length; i++) {
+    existingRanges.forEach(range => {
+      if (newRanges[i][0]<=range[1] && newRanges[i][0]>=range[0]) {
+        newRanges[i][0] = range[1] + 1
+      }
+    });
+    existingRanges.reverse().forEach(range => {
+      if (newRanges[i][1]>=range[0] && newRanges[i][1]<=range[1]) {
+        newRanges[i][1] = range[0] - 1
+      }
+    })
+  }
+  for (let i = newRanges.length - 1; i >= 0 ; i--) {
+		if (newRanges[i][0]>newRanges[i][1]) {
+			newRanges.splice(i, 1)
+		}
+	}
+  return newRanges
+}
+
+export const escapeQuotes = (str) => {
+  if (typeof str === 'string' && str && str.replace ) {
+    return str.replace(/[\""]/g, '\\"')
+  } else if (str && str.map) {
+    str = str.map(_str=>(_str && _str.replace) ? _str.replace(/[\""]/g, '\\"') : _str)
+  }
+  return str
+}
+
+export const getOutputColsArgument = (output_cols = [], input_cols = [], pre = '') => {
+  if (output_cols.join('').trim().length) {
+    return (output_cols.length===1)
+    ? `"${output_cols[0]}"`
+    : `[${output_cols.map((e, i)=>(e ? `"${escapeQuotes(e)}"` : (input_cols[i] ? `"${escapeQuotes(pre+input_cols[i])}"` : 'None'))).join(', ')}]`
+  }
+  if (input_cols.join('').trim().length) {
+    return (input_cols.length===1)
+      ? `"${pre}${input_cols[0]}"`
+      : `[${input_cols.map((e)=>(e ? `"${escapeQuotes(pre+e)}"` : 'None')).join(', ')}]`
+  }
+  return false
+}
+
+export const escapeQuotesOn = (payload = {}, keys = []) => {
+  var _payload = {}
+  keys.forEach(key => {
+    _payload[key] = escapeQuotes(payload[key])
+  });
+  return {...payload, ..._payload}
+}
+
+export const printError = (response) => {
+  // if (response.content && response.content.traceback && response.content.traceback.length) {
+  //   response.content.traceback_escaped = response.content.traceback.map(l=>
+  //     l.replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '')
+  //   )
+  //   console.error(response.content.traceback_escaped.join('\n'))
+  // }
+  if (response.traceback) {
+    console.error('[DEBUG][ERROR]\n\n',response.traceback.join('\n\n'))
+  } else if (response.message) {
+    console.error('[DEBUG][ERROR]\n',response.message)
+  } else {
+    console.error(response)
+  }
+}
+
+export const getProperty = (pof, args = []) => {
+  if (typeof pof === 'function') {
+    return pof(...args)
+  } else {
+    return pof
+  }
+}
+
+export const namesToIndices = (cols = [], datasetColumns = []) => {
+  try {
+    return cols.map(name=>datasetColumns.findIndex(column => column.name===name))
+  } catch (error) {
+    return cols
+  }
+}
+
+export const indicesToNames = (cols = [], datasetColumns = []) => {
+  try {
+    return cols.map(i=>datasetColumns[i].name)
+  } catch (error) {
+    return cols
+  }
+}

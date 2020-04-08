@@ -159,7 +159,6 @@
       >
         <v-btn
           v-if="$route.query.kernel=='1'"
-          :disabled="cells.length==0"
           :color="(operationsActive!=false) ? 'black' : '#888'"
           text
           class="icon-btn"
@@ -326,7 +325,7 @@ import Dataset from '@/components/Dataset'
 import VegaEmbed from '@/components/VegaEmbed'
 import clientMixin from '@/plugins/mixins/client'
 import dataTypesMixin from '@/plugins/mixins/data-types'
-import { copyToClipboard } from '@/utils/functions.js'
+import { copyToClipboard, namesToIndices } from '@/utils/functions.js'
 import { mapState, mapGetters } from 'vuex';
 
 const api_url = process.env.API_URL || 'http://localhost:5000'
@@ -444,7 +443,7 @@ export default {
 
 	computed: {
 
-    ...mapGetters(['currentSelection','currentTableView','selectionType']),
+    ...mapGetters(['currentSelection', 'hasSecondaryDatasets', 'currentCells','currentTableView','selectionType']),
 
     ...mapState(['nextCommand']),
 
@@ -542,10 +541,10 @@ export default {
 
     cells: {
       get() {
-        return Array.from(this.$store.state.cells)
+        return Array.from(this.currentCells || [])
       },
       set(value) {
-        this.$store.commit('cells', value)
+        this.$store.commit('setCells', value)
       }
     },
 
@@ -602,6 +601,20 @@ export default {
         },
         { divider: true },
         {
+          type: 'button',
+          onClick: () => {
+            this.commandHandle({command: 'join'})
+          },
+          icons: [
+            { icon: 'playlist_add' },
+          ],
+          tooltip: 'Join dataframes',
+          disabled: {
+            valueOf: ()=>!(this.dataset && this.dataset.summary && this.hasSecondaryDatasets)
+          }
+        },
+        { divider: true },
+        {
           type: 'sort'
         },
         {
@@ -651,7 +664,7 @@ export default {
           // group: 'FILTER',
           onClick: ()=>{
             var command = { command: 'filter rows' }
-            if (this.currentSelection && this.currentSelection.ranged) {
+            if (this.selectionType!='columns' && this.currentSelection && this.currentSelection.ranged) {
               command.columns = [ this.dataset.columns[this.currentSelection.ranged.index].name ]
             }
             this.commandHandle( command )
@@ -854,16 +867,6 @@ export default {
         this.operationsActive = false
       }
     },
-    // operationsTitle (v) {
-    //   if (v==false) {
-    //     this.operationsActive = false
-    //   }
-    // },
-    // operationsActive (v) {
-    //   if (!!v != !!this.operationsTitle) {
-    //     this.operationsTitle = 'operations'
-    //   }
-    // }
   },
 
   methods: {
@@ -900,11 +903,6 @@ export default {
     },
 
     commandHandle (event) {
-      // if (event.noOperations)
-      //   this.operationsActive = false
-      // else
-      //   this.operationsActive = 'operations'
-
       this.$nextTick(()=>{
         this.$refs.cells & this.$refs.cells.commandHandle(event)
       })
@@ -931,7 +929,7 @@ export default {
 
     calculateHeatMap (xindex,yindex,xsize,ysize) {
 
-      if (!this.dataset.sample) {
+      if (!this.dataset.sample || !this.dataset.sample.value) {
         return false
       }
 
@@ -1040,8 +1038,7 @@ export default {
      handleSelection (selected, indices = true) {
 
       if (!indices) {
-        // selected(names) -> selected(indices)
-        selected = selected.map(name=>this.dataset.columns.findIndex(column => column.name===name))
+        selected = namesToIndices(selected, this.dataset.columns)
       }
 
       this.selectedColumns = selected.map(e=>({index: e, name: this.dataset.columns[e].name}))

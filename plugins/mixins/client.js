@@ -1,9 +1,13 @@
 import io from 'socket.io-client'
+import { printError } from '@/utils/functions.js'
+
+// TODO: this should be a VUEX store
 
 let socket
 let promises = {}
 
 let timestamps = 0
+let secondaryDatasets = {}
 
 const api_url = process.env.API_URL || 'http://localhost:5000'
 
@@ -11,7 +15,7 @@ export default {
 
   data () {
     return {
-      socketAvailable: false
+      socketAvailable: false,
     }
   },
 
@@ -27,22 +31,24 @@ export default {
     async evalCode (code) {
       try {
 
-        return await this.socketPost('run', {
+        var _c = 'Code #'+(timestamps+1)
+        console.time(_c)
+
+        var result = await this.socketPost('run', {
           code,
           session: this.$store.state.session
         }, {
           timeout: 0
         })
 
+        console.log('"""[DEBUG][CODE]"""', result.code)
+        console.timeEnd(_c)
+
+        return result
+
       } catch (error) {
 
-        if (error.content && error.content.traceback && error.content.traceback.length) {
-          error.content.traceback_escaped = error.content.traceback.map(l=>
-            l.replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '')
-          )
-          console.error(error.content.traceback_escaped.join('\n'))
-        }
-        console.error(error)
+        printError(error)
         return error
 
       }
@@ -61,8 +67,10 @@ export default {
               session: this.$store.state.session,
               engine: this.$store.state.engine
             })
-            if (response.status!='ok')
+
+            if (response.status!='ok') {
               throw response.content
+            }
           }
           socket.emit(message,{...payload, timestamp})
           promises[timestamp] = {resolve, reject}
@@ -71,33 +79,6 @@ export default {
         }
 
       })
-    },
-
-    handleDatasetResponse (data, key = undefined) {
-
-      if (key===undefined)
-        key = this.$store.state.key
-
-      // const fernet = require('fernet')
-
-      // let secret = new fernet.Secret(key)
-
-      // let token = new fernet.Token({
-      //   secret,
-      //   token: data,
-      //   ttl: 0
-      // })
-
-      // const pako = require('pako')
-
-      // let originalInput = pako.inflate(atob(token.decode()), {
-      //   to: 'string'
-      // })
-
-      this.$store.commit('add', {
-        dataset: data
-      })
-
     },
 
 		handleError (reason) {
@@ -164,8 +145,6 @@ export default {
 
         key = key || ''
 
-        console.log({session, token, key})
-
         socket = io(api_url, { query: { session, token, key } })
 
         socket.on('new-error', (reason) => {
@@ -175,7 +154,7 @@ export default {
 
         socket.on('dataset', (dataset) => {
           try {
-            this.$store.commit('add', {
+            this.$store.commit('loadDataset', {
               dataset
             })
           } catch (error) {
@@ -228,6 +207,10 @@ export default {
 
 		async startClient (session, key, engine) {
 
+      if (['loading','receiving'].includes(this.$store.state.status)) {
+        return false
+      }
+
       try {
         this.$store.commit('status', 'loading')
         this.$store.commit('session', session)
@@ -242,6 +225,22 @@ export default {
       } catch (error) {
         this.handleError(error)
       }
+    },
+
+    async updateSecondaryDatasets() {
+      try {
+        var response = await this.socketPost('datasets',{session: this.$store.state.session})
+        secondaryDatasets = response.data
+        this.$store.commit('setHasSecondaryDatasets', (Object.keys(secondaryDatasets).length>1) )
+        return response.data
+      } catch (error) {
+        console.error(error)
+        return []
+      }
+    },
+
+    getSecondaryDatasets() {
+      return secondaryDatasets
     }
 	}
 }

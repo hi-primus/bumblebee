@@ -42,8 +42,9 @@ exports.new = async function (req, res) { // this is not neccessary
   row.dataset = dataset || row.dataset
 
   row.save(function (err) {
-    if (err)
+    if (err) {
       res.json(err)
+    }
     res.json({
       message: 'New row created!',
       data: row
@@ -67,13 +68,15 @@ exports.view = function (req, res) {
 
 exports.update = function (req, res) {
   Row.findById(req.params.row_id, function (err, row) {
-    if (err)
+    if (err) {
       res.send(err)
+    }
     row.name = req.body.name ? req.body.name : row.name
 
     row.save(function (err) {
-      if (err)
+      if (err) {
         res.json(err)
+      }
       res.json({
         message: 'Row Info updated',
         data: row
