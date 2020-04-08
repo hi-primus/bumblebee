@@ -1166,9 +1166,7 @@ export default {
             if (payload.limit>0) {
               code +=`, n_rows=${payload.limit}`
             }
-            code += `)`
-            // code +=`.rows.limit(${payload.limit})`
-            code += '.ext.cache()'
+            code += `, cache=True)`
 
             return code
           }
@@ -2783,7 +2781,7 @@ export default {
         return content
       }
       else {
-        return `${this.dataset.varname} = ${this.dataset.varname}${content}`
+        return `${this.dataset.varname} = ${this.dataset.varname}${content}.ext.cache()`
       }
 
 
