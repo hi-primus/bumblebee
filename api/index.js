@@ -132,7 +132,6 @@ const newSocket = function (socket, session) {
       var result = {}
       try {
         result = await getDatasets(sessionId)
-        console.log({result})
       } catch (error) {
         console.error(error)
       }
@@ -153,7 +152,6 @@ const newSocket = function (socket, session) {
           await deleteKernel(sessionId)
         }
         else {
-          console.log('"""',result,'"""')
           break
         }
       }
@@ -305,12 +303,11 @@ const deleteKernel = async function(session) {
     if (kernels[session] != undefined) {
       var _id = kernels[session].kernel['id']
       kernels[session] = undefined
-      // await request({
+      console.log('# Deleting Session',session,_id)
       //   uri: `${base}/session-delete/${_id}`,
       //   method: 'DELETE',
       //   headers: {},
       // })
-      console.log('# Deleting Jupyter Kernel Gateway session for',session,_id)
     }
   } catch (err) {}
 }
