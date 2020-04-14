@@ -893,10 +893,10 @@ export default {
           },
           payload: async (columns) => {
 
-            var _datasets_right = this.getSecondaryDatasets()
-            var items_with = Object.keys(_datasets_right)
+            var _datasets_right = {...this.currentSecondaryDatasets}
+            var items_with = Object.keys(_datasets_right).filter(e=>e!==this.dataset.varname)
 
-            var df2 = Object.keys(_datasets_right)[0]
+            var df2 = items_with[0]
 
             return {
               how: 'inner',
@@ -910,7 +910,7 @@ export default {
               right_on: _datasets_right[df2][0],
               items_r_on: (c)=>c._datasets_right[c.with],
               with: df2,
-              items_with: (c)=>Object.keys(c._datasets_right),
+              items_with: (c)=>Object.keys(c._datasets_right).filter(e=>e!==this.dataset.varname),
               items_selected_columns: (c)=>{
                 return [
                   ...(this.allColumns || []).map(n=>({name: n, 'source': 'left', key: n+'l'})),
@@ -921,16 +921,39 @@ export default {
                 ...(this.allColumns || []).map(n=>({name: n, 'source': 'left', key: n+'l'})),
                 ...(_datasets_right[df2] || []).map(n=>({name: n, 'source': 'right', key: n+'r'}))
               ],
+              _preview: 'join',
+              _previewDelay: 500,
+              _expectedColumns: () => this.currentCommand.selected_columns.filter(c=>(c.name)).length-1,
+              _datasetPreview: true
             }
           },
           code: (payload) => {
             var columnsLeft = payload.selected_columns.filter(c=>c.source==='left').map(c=>c.name)
             var columnsRight = payload.selected_columns.filter(c=>(c.name && c.source==='right')).map(c=>c.name)
+
             var filterLeft = `.cols.select(["${columnsLeft.join('", "')}"])`
             var filterRight = `.cols.select(["${columnsRight.join('", "')}"])`
-            return `${filterLeft}.cols.join(${payload.with}${filterRight}`
-              + `, left_on="${payload.left_on}"`
-              + `, right_on="${payload.right_on}", how="${payload.how}")`
+
+            if (payload._requestType) {
+              return async (from, to) => {
+                var window = ''
+                if (from!==undefined) {
+                  window = `,${from},${to}`
+                }
+                if (!this.currentSecondaryDatasets[payload.with] || !this.currentSecondaryDatasets[payload.with].buffer) {
+                  this.$store.commit('setSecondaryBuffer',{ key: payload.with, value: true})
+                  await this.evalCode('_output = '+payload.with+'.ext.set_buffer("*")') // TODO call once
+                }
+                return `${filterLeft}.cols.join(${payload.with}.ext.buffer_window("*"${window})${filterRight}`
+                + `, left_on="${payload.left_on}"`
+                + `, right_on="${payload.right_on}", how="${payload.how}")`
+              }
+            } else {
+              return `${filterLeft}.cols.join(${payload.with}${filterRight}`
+                + `, left_on="${payload.left_on}"`
+                + `, right_on="${payload.right_on}", how="${payload.how}")`
+            }
+
           }
         },
         STRING: {
@@ -2352,7 +2375,7 @@ export default {
 
   computed: {
 
-    ...mapGetters(['currentSelection','currentCells','selectionType','currentTab', 'currentDuplicatedColumns', 'currentPreviewNames']),
+    ...mapGetters(['currentSelection','currentCells','selectionType','currentTab', 'currentDuplicatedColumns', 'currentPreviewNames', 'currentSecondaryDatasets']),
 
     cells: {
       get() {
@@ -2388,7 +2411,7 @@ export default {
         return name
       }
 
-      var sd = Object.keys(this.getSecondaryDatasets()).filter(n=>n.startsWith(name+'_'))
+      var sd = Object.keys(this.currentSecondaryDatasets).filter(n=>n.startsWith(name+'_'))
 
       name = name+'_'+sd.length
 
@@ -2439,11 +2462,13 @@ export default {
           if (this.command && this.command.dialog && (!this.command.dialog.validate || this.command.dialog.validate(this.currentCommand))) {
             if (this.currentCommand._preview) {
               this.getPreview()
-              var nameMap = {}
-              this.currentCommand.output_cols.forEach((col, i) => {
-                nameMap['__preview__'+this.currentCommand.columns[i]] = col
-              })
-              this.$store.commit('setPreviewNames',nameMap)
+              if (this.currentCommand.output_cols) {
+                var nameMap = {}
+                this.currentCommand.output_cols.forEach((col, i) => {
+                  nameMap['__preview__'+this.currentCommand.columns[i]] = col
+                })
+                this.$store.commit('setPreviewNames',nameMap)
+              }
             }
             if (this.currentCommand._fakePreview==='rename') {
               var nameMap = {}
@@ -2536,6 +2561,9 @@ export default {
 
         var expectedColumns
 
+        // if (this.currentCommand._datasetPreview) {
+        //   expectedColumns = -1
+        // } else
         if (this.currentCommand._expectedColumns!==undefined) {
           expectedColumns = getProperty(this.currentCommand._expectedColumns)
         } else if (this.currentCommand.output_cols && this.currentCommand.output_cols.length) {
@@ -2549,6 +2577,7 @@ export default {
           profileCode: this.getCode(this.currentCommand,'profile'),
           color: this.currentCommand._highlightColor,
           from: this.currentCommand.columns,
+          datasetPreview: !!this.currentCommand._datasetPreview,
           expectedColumns
         })
 

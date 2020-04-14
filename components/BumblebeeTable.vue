@@ -177,7 +177,7 @@
               />
               <div
                 v-else
-                class="aaa"
+                class="hidden-error"
                 :key="column.name"
               >
                 {{previewPlotsData[column.name]}}
@@ -287,10 +287,11 @@
           </template>
           <div v-else
             :key="rowArrayIndex+' '+column.index"
-            class="bb-table-cell not-available --e"
+            class="bb-table-cell not-available --e hidden-error"
             :class="column.classes"
             style="width: 170px"
           >
+            {{row.value}}
           </div>
         </template>
       </div>
@@ -311,7 +312,7 @@ import Histogram from '@/components/Histogram'
 import Frequent from '@/components/Frequent'
 import DataBar from '@/components/DataBar'
 
-import { parseResponse, arraysEqual, cancellablePromise, throttle, debounce, optimizeRanges, escapeQuotes, namesToIndices, getSelectedText } from '@/utils/functions.js'
+import { parseResponse, arraysEqual, cancellablePromise, throttle, debounce, optimizeRanges, escapeQuotes, namesToIndices, getSelectedText, getPropertyAsync } from '@/utils/functions.js'
 
 var doubleClick = false
 
@@ -462,18 +463,21 @@ export default {
     },
 
     allColumns () {
-      var cols = this.bbColumns.map(index=>{
-        var classes = []
-        if (this.selectionMap[index]) {
-          classes.push('bb-selected')
-        }
-        return {
-          index,
-          classes,
-          width: 170,
-          name: this.currentDataset.columns[index].name
-        }
-      })
+      var cols = []
+      if (!this.currentPreviewCode || !this.currentPreviewCode.datasetPreview) {
+        cols = this.bbColumns.map(index=>{
+          var classes = []
+          if (this.selectionMap[index]) {
+            classes.push('bb-selected')
+          }
+          return {
+            index,
+            classes,
+            width: 170,
+            name: this.currentDataset.columns[index].name
+          }
+        })
+      }
 
       if (!this.currentPreviewCode && (!this.currentDuplicatedColumns || !this.currentDuplicatedColumns.length)) {
         return cols
@@ -486,8 +490,9 @@ export default {
         if (this.currentPreviewCode.from) {
           after = this.currentPreviewCode.from || after
         }
+
         if (!after.length && this.currentSelection.columns.length) {
-          after = this.currentSelection.columns.map(s=>s.name)
+          after = this.currentSelection.columns.map(s=>s.name) || after
         }
 
         var expectedColumns = (this.currentDuplicatedColumns) ? this.currentDuplicatedColumns.length : this.currentPreviewCode.expectedColumns
@@ -498,9 +503,9 @@ export default {
 
         var pushedColumns = 0
 
-        if (this.previewColumns.length && after) {
+        if (this.previewColumns.length) {
 
-          if (this.previewColumns.length===1 && after.length!==1) {
+          if (this.previewColumns.length===1 && after.length>1) {
 
             // TODO: cols unordered
             var insertIndex = Math.max(...namesToIndices(after,cols))+1
@@ -515,7 +520,7 @@ export default {
           } else {
 
             var _after = after[0]
-            var insertIndex = cols.findIndex(col=>_after===col.name)+1
+            var insertIndex = _after ? cols.findIndex(col=>_after===col.name)+1 : 0
 
             this.previewColumns.forEach((pcol, i)=>{
 
@@ -792,20 +797,31 @@ export default {
 
     checkIncomingColumns (columns) {
       if (this.mustCheck) {
-        if (columns.length>this.currentDataset.columns.length) { // TODO: Check for preview columns
+        if (columns.map(c=>c.title).join()!==this.currentDataset.columns.map(c=>c.name).join()) {
           var receivedColumns = columns
 						.map((column, index)=>({...column, index}))
 
 					var columnNames = this.currentDataset.columns.map(e=>e.name)
 
-          var previewColumns = receivedColumns
-            .filter((column, index)=>(
-              !columnNames.includes(column.title)
-              &&
-              !column.title.includes('__match_positions__')
-              &&
-              column.title!=='__match__'
-            ))
+          var previewColumns = []
+          if (this.currentPreviewCode && this.currentPreviewCode.datasetPreview) {
+            previewColumns = receivedColumns
+              .filter((column, index)=>(
+                !column.title.includes('__match_positions__')
+                &&
+                column.title!=='__match__'
+              ))
+            } else {
+            previewColumns = receivedColumns
+              .filter((column, index)=>(
+                !columnNames.includes(column.title)
+                &&
+                !column.title.includes('__match_positions__')
+                &&
+                column.title!=='__match__'
+              ))
+
+          }
 
           var matchRowsColumns = receivedColumns
             .filter((column, index)=>(column.title==='__match__'))
@@ -1159,7 +1175,7 @@ export default {
 
         var cols = this.currentColumnsPreview.map(e=>escapeQuotes(e.title))
 
-        var response = await this.evalCode(`_output = df.ext.buffer_window("*")${previewCode || ''}.ext.profile(["${cols.join('", "')}"], output="json")`)
+        var response = await this.evalCode(`_output = df.ext.buffer_window("*")${await getPropertyAsync(previewCode) || ''}.ext.profile(["${cols.join('", "')}"], output="json")`)
 
         if (!response) {
           throw response
@@ -1332,7 +1348,7 @@ export default {
         this.$store.commit('setBuffer',true)
       }
 
-      var response = await this.evalCode(`_output = ${this.currentDataset.varname}.ext.buffer_window("*", ${from}, ${to+1})${previewCode || ''}.ext.to_json("*")`)
+      var response = await this.evalCode(`_output = ${this.currentDataset.varname}.ext.buffer_window("*", ${from}, ${to+1})${await getPropertyAsync(previewCode, [from, to+1]) || ''}.ext.to_json("*")`)
 
       var parsed = response && response.data && response.data.result ? parseResponse(response.data.result) : undefined
 

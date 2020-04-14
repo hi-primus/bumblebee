@@ -237,6 +237,13 @@ export const getProperty = (pof, args = []) => {
     return pof
   }
 }
+export const getPropertyAsync = async (pof, args = []) => {
+  if (typeof pof === 'function') {
+    return await pof(...args)
+  } else {
+    return pof
+  }
+}
 
 export const namesToIndices = (cols = [], datasetColumns = []) => {
   try {

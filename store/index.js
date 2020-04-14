@@ -7,7 +7,7 @@ export const state = () => ({
   datasetConfig: [], // TODO
   datasetSelection: [],
   hasSecondaryDatasets: false,
-  // currentSecondaryDatasets: []
+  secondaryDatasets: [],
 	databases: [],
   buffers: [],
   tableViews: [],
@@ -47,21 +47,16 @@ export const mutations = {
     state.tab = tab
   },
 
-  // setSecondaryDataset (state, {name, columns, position}) {
-  //   var dataset = {name, columns: columns || []}
-  //   if (!state.secondaryDatasets[state.tab]) {
-  //     Vue.set( state.secondaryDatasets, state.tab, [])
-  //   }
-  //   position = position!==undefined ? position : state.secondaryDatasets[state.tab].length
-  //   Vue.set( state.secondaryDatasets[state.tab], position, dataset )
-  // },
+  setSecondaryDatasets (state, payload) {
+    Vue.set( state.secondaryDatasets, state.tab, payload)
+  },
 
-  // deleteSecondaryDataset (state, position) {
-  //   if (!state.secondaryDatasets[state.tab]) {
-  //     return
-  //   }
-  //   Vue.delete(state.secondaryDatasets[state.tab], position)
-  // },
+  setSecondaryBuffer (state, {key, value}) {
+    var datasets = {...state.secondaryDatasets[state.tab]}
+    datasets[key] = datasets[key] || {columns: [], buffer: false}
+    datasets[key].buffer = value
+    Vue.set( state.secondaryDatasets, state.tab, datasets)
+  },
 
   setHasSecondaryDatasets (state, payload) {
     state.hasSecondaryDatasets = payload
@@ -334,9 +329,9 @@ export const getters = {
   currentCells (state) {
     return state.cells[state.tab]
   },
-  // currentSecondaryDatasets (state) {
-  //   return state.secondaryDatasets[state.tab]
-  // },
+  currentSecondaryDatasets (state) {
+    return state.secondaryDatasets[state.tab]
+  },
   hasSecondaryDatasets (state) {
     return state.hasSecondaryDatasets
   },

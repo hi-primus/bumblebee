@@ -232,15 +232,13 @@ export default {
         var response = await this.socketPost('datasets',{session: this.$store.state.session})
         secondaryDatasets = response.data
         this.$store.commit('setHasSecondaryDatasets', (Object.keys(secondaryDatasets).length>1) )
+        this.$store.commit('setSecondaryDatasets', secondaryDatasets )
+
         return response.data
       } catch (error) {
         console.error(error)
         return []
       }
     },
-
-    getSecondaryDatasets() {
-      return secondaryDatasets
-    }
 	}
 }
