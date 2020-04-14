@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div v-if="column">
 
     <div class="sidebar-subheader hoverable column-title" @click="expanded = !expanded">
       <span class="data-type" :class="`type-${column.column_dtype}`">{{ dataType(column.column_dtype) }}</span>

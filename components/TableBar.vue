@@ -639,7 +639,7 @@ export default {
           type: 'button',
           onClick: ()=>this.commandHandle({command: 'sort rows'}),
           tooltip: 'Sort rows',
-          disabled: { valueOf: ()=>this.selectionType!='columns' || this.selectedColumns.length<1 },
+          disabled: { valueOf: ()=>['values','ranges'].includes(this.selectionType) || this.selectedColumns.length<1 },
           icons: [
             {
               icon: 'arrow_right_alt',
@@ -664,13 +664,18 @@ export default {
           // group: 'FILTER',
           onClick: ()=>{
             var command = { command: 'filter rows' }
-            if (this.selectionType!='columns' && this.currentSelection && this.currentSelection.ranged) {
+            if (['values','ranges'].includes(this.selectionType) && this.currentSelection && this.currentSelection.ranged) {
               command.columns = [ this.dataset.columns[this.currentSelection.ranged.index].name ]
+            } else if (this.selectionType==='text') {
+              command.payload = {
+                columns: [this.currentSelection.text.column],
+                text: this.currentSelection.text.value
+              }
             }
             this.commandHandle( command )
           },
           tooltip: 'Filter rows',
-          disabled: { valueOf: ()=>!(this.selectionType!='columns' || this.selectedColumns.length==1) },
+          disabled: { valueOf: ()=>!(['values','ranges','text'].includes(this.selectionType) || this.selectedColumns.length==1) },
           icons: [{icon: 'filter_list'}]
         },
         { divider: true },
@@ -714,14 +719,23 @@ export default {
           onClick: ()=>this.commandHandle({command: 'nest'}),
           tooltip: 'Nest columns',
           icons: [{icon: 'link'}],
-          disabled: {valueOf: ()=>this.selectionType!='columns' || this.selectedColumns.length<=1 || !this.dataset.summary}
+          disabled: {valueOf: ()=>['values','ranges'].includes(this.selectionType) || this.selectedColumns.length<=1 || !this.dataset.summary}
         },
         {
           type: 'button',
-          onClick: ()=>this.commandHandle({command: 'unnest'}),
+          onClick: ()=>{
+            var payload = undefined
+            if (this.selectionType==='text') {
+              payload = {
+                separator: this.currentSelection.text.value,
+                columns: [ this.currentSelection.text.column]
+              }
+            }
+            this.commandHandle({command: 'unnest', payload})
+          },
           tooltip: { toString: ()=> 'Unnest column'+ (this.selectedColumns.length!=1 ? 's' : '')},
           icons: [{icon: 'link_off'}],
-          disabled: {valueOf: ()=>!(this.selectionType=='columns' && this.selectedColumns.length>0)}
+          disabled: {valueOf: ()=>!((this.selectionType=='columns' && this.selectedColumns.length>0) || this.selectionType==='text')}
         },
         { divider: true },
         {
@@ -734,12 +748,22 @@ export default {
         {
           type: 'button', // rows
           onClick: ()=>{
-            if (this.selectionType=='columns')
+            if (this.selectionType=='columns') {
               this.commandHandle({command: 'replace'})
-            else if (this.selectionType=='values')
+            }
+            else if (this.selectionType=='values') {
               this.commandHandle({command: 'replace values'})
-            else
+            }
+            else if (this.selectionType=='text') {
+              var payload = {
+                columns: [this.currentSelection.text.column],
+                search: [this.currentSelection.text.value]
+              }
+              this.commandHandle({command: 'replace', payload})
+            }
+            else {
               this.commandHandle({command: 'replace'})
+            }
           },
           tooltip: {
             toString: ()=>{
@@ -752,7 +776,7 @@ export default {
             }
           },
           icons: [{icon: 'find_replace'}],
-          disabled: {valueOf: ()=>!(this.selectionType=='values' || this.selectedColumns.length>0)}
+          disabled: {valueOf: ()=>!(['values','text'].includes(this.selectionType) || this.selectedColumns.length>0)}
         },
         {
           type: 'menu',
@@ -808,7 +832,10 @@ export default {
     },
 
     detailedColumns() {
-      if (this.selectionType!='columns') {
+      if (this.selectionType==='text') {
+        return [this.currentSelection.text.index]
+      }
+      if (['values','ranges'].includes(this.selectionType)) {
         return [this.currentSelection.ranged.index]
       }
       return this.selectedColumns.map(e=>e.index)

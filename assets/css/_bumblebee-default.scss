@@ -1619,6 +1619,8 @@ $editor-top-padding: 6px;
 
     .bb-table-plots {
 
+			user-select: none;
+
       font-family: $font-mono;
       z-index: 0;
 
@@ -1792,8 +1794,10 @@ $editor-top-padding: 6px;
   .bb-table-cell {
     &::selection {
       background: lighten($data-primary,33%);
+		}
+		&:not(.bb-preview) {
+			cursor: text;
     }
-    cursor: initial;
     font-size: 13px;
     height: inherit;
     padding: 0;

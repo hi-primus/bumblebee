@@ -245,36 +245,61 @@ export const mutations = {
     state.kernel = payload
   },
 
-  selection (state, {tab, columns, ranged, clear} ) {
+  selection (state, {tab, columns, ranged, clear, text} ) {
     if (tab===undefined) {
       tab = state.tab
     }
     if (tab!==undefined) {
 
-      Vue.set(state.columnsPreviews,state.tab,false)
-      Vue.set(state.profilePreviews,state.tab,false)
-      Vue.set(state.highlights,state.tab,false)
-      Vue.set(state.highlightRows,state.tab,false)
-      Vue.set(state.focusedColumns,state.tab,false)
-      Vue.set(state.previewCodes,state.tab,undefined)
-      Vue.set(state.previewNames,state.tab,undefined)
+      Vue.set(state.columnsPreviews,tab,false)
+      Vue.set(state.profilePreviews,tab,false)
+      Vue.set(state.highlights,tab,false)
+      Vue.set(state.highlightRows,tab,false)
+      Vue.set(state.focusedColumns,tab,false)
+      Vue.set(state.previewCodes,tab,undefined)
+      Vue.set(state.previewNames,tab,undefined)
 
       if (clear) {
         Vue.set(state.datasetSelection,tab,{
           columns: [],
-          ranged: undefined
+          ranged: undefined,
+          text: undefined
         })
         return
       }
 
-      var columnsSelected = (columns !== undefined) ? columns : (state.datasetSelection[tab]) ? state.datasetSelection[tab].columns || [] : []
-      columnsSelected = (ranged !== undefined) ? [] : columnsSelected
+      var columnsSelected = []
+      var rangedSelected = undefined
+      var textSelected = undefined
 
-      var rangedSelected = (columnsSelected.length) ? {} : (ranged !== undefined) ? ranged : (state.datasetSelection[tab]) ? state.datasetSelection[tab].ranged || {} : {}
+      if (ranged===undefined && text===undefined) {
+        if (columns !== undefined) {
+          columnsSelected = columns
+        } else if (state.datasetSelection[tab]) {
+          columnsSelected = state.datasetSelection[tab].columns || []
+        }
+      }
+
+      if (!columnsSelected.length && text===undefined) {
+        if (ranged!==undefined) {
+          rangedSelected = ranged
+        } else if (state.datasetSelection[tab]) {
+          rangedSelected = state.datasetSelection[tab].ranged || {}
+        }
+      }
+
+      if (!columnsSelected.length && (!rangedSelected || !Object.keys(rangedSelected).length)) {
+        if (text !== undefined) {
+          textSelected = text
+        } else if (state.datasetSelection[tab]) {
+          textSelected = state.datasetSelection[tab].text || {}
+        }
+      }
 
       Vue.set(state.datasetSelection,tab,{
         columns: columnsSelected,
         ranged: rangedSelected,
+        text: textSelected
       })
     }
   }
@@ -363,6 +388,9 @@ export const getters = {
     }
     if (_ds && _ds.ranged && _ds.ranged.ranges && _ds.ranged.ranges.length) {
       return 'ranges'
+    }
+    if (_ds && _ds.text && _ds.text.value) {
+      return 'text'
     }
     return 'columns'
   },

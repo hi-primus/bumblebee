@@ -65,6 +65,23 @@ export const trimCharacters = (s, c) => {
   ), "");
 }
 
+export const getSelectedText = () => {
+  var text = ""
+  var selection
+  if (typeof window.getSelection != "undefined") {
+    selection = window.getSelection()
+    try {
+      text = selection.toString()
+    } catch (error) {
+      text = selection.baseNode.data
+    }
+  } else if (typeof document.selection != "undefined" && document.selection.type == "Text") {
+    selection = document.selection.createRange()
+    text = selection.text
+  }
+  return {selection, selectedText: text}
+}
+
 export const parseResponse = (content) => {
   // console.log('[DEBUG] parsedContent',content)
   try {

@@ -1,7 +1,7 @@
 <template>
 <div
   class="bbt-container"
-  :class="{'range--selected': selectionType!='columns'}"
+  :class="{'range--selected': ['values','ranges'].includes(selectionType)}"
   ref="BbContainer"
 >
   <v-menu
@@ -276,8 +276,13 @@
                 ...column.classes,
                 ...row.value[column.index].classes
               ]"
-              :style="{width: column.width+'px'}"
+              :style="{
+                width: column.width+'px',
+                userSelect: (cellsSelection==[column.index, row.index].join()) ? 'text' : 'none'
+              }"
               v-html="row.value[column.index].html"
+              @mousedown="clearSelection(); cellsSelection = [column.index, row.index].join()"
+              @mouseup="checkSelection(column.index,row.index)"
             ></div>
           </template>
           <div v-else
@@ -306,7 +311,7 @@ import Histogram from '@/components/Histogram'
 import Frequent from '@/components/Frequent'
 import DataBar from '@/components/DataBar'
 
-import { parseResponse, arraysEqual, cancellablePromise, throttle, debounce, optimizeRanges, escapeQuotes, namesToIndices } from '@/utils/functions.js'
+import { parseResponse, arraysEqual, cancellablePromise, throttle, debounce, optimizeRanges, escapeQuotes, namesToIndices, getSelectedText } from '@/utils/functions.js'
 
 var doubleClick = false
 
@@ -338,6 +343,8 @@ export default {
 
       fetching: false,
       toFetch: [],
+
+      cellsSelection: '',
 
       rowsValues: [],
       rowsPreviewValues: [],
@@ -722,6 +729,50 @@ export default {
   },
 
   methods: {
+
+    clearSelection () {
+      if (window.getSelection) {
+        window.getSelection().removeAllRanges()
+      }
+      else if (document.selection) {
+        document.selection.empty()
+      }
+      this.$store.commit('selection',{ clear: true })
+    },
+
+    checkSelection (ci, rai) {
+
+      var {selectedText, selection} = getSelectedText()
+
+      if (!selectedText && this.selectionType==='text') {
+        this.$store.commit('selection',{ clear: true })
+        return
+      }
+
+      selectedText = selectedText.split('\n')[0]
+
+			if (this.cellsSelection) {
+        [ci, rai] = this.cellsSelection.split(',')
+			}
+      var cellValue = this.rowsValues[rai] ? this.rowsValues[rai].value[ci] || '': ''
+
+      cellValue = cellValue.toString()
+
+      // if (selectedText.endsWith(' ') && !cellValue.endsWith(' ')) {
+      //   selectedText = selectedText.substr(0,selectedText.length - 1) // remove unwanted extra space
+      // }
+
+			if (cellValue && cellValue.includes(selectedText)) {
+        this.$store.commit('selection',{
+          text: {
+            column: this.columns[ci].name,
+            index: ci,
+            value: selectedText,
+            selection
+          }
+        })
+			}
+    },
 
     getCurrentWindow () {
       var element = this.$refs['BbTableContainer']

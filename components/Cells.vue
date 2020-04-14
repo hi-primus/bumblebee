@@ -538,7 +538,7 @@ export default {
                   { text: 'Mismatches values', value: 'mismatch' },
                   { text: 'Null values', value: 'null' }
                 ],
-                disabled: {valueOf: ()=>this.selectionType!='columns'}
+                disabled: {valueOf: ()=>['values','ranges'].includes(this.selectionType)},
               },
               {
                 condition: (c)=>['exactly','not','less','greater'].includes(c.condition),
@@ -581,7 +581,8 @@ export default {
                 key: 'text',
                 label: 'Text',
                 placeholder: 'lorem ipsum',
-                type: 'field'
+                type: 'field',
+                // disabled: {valueOf: ()=>['text'].includes(this.selectionType)}
               },
               {
                 key: 'action',
@@ -626,25 +627,29 @@ export default {
           payload: (columns) => {
 
             var condition = 'exactly'
-            var selectionType, selection
+            var _selectionType, _selection
 
 
             if (this.selectionType=='ranges') {
-              selectionType = this.selectionType
-              selection = { ranges: this.currentSelection.ranged.ranges }
+              _selectionType = this.selectionType
+              _selection = { ranges: this.currentSelection.ranged.ranges }
               condition = 'selected'
             }
             else if (this.selectionType=='values') {
-              selectionType = this.selectionType
-              selection = { values: this.currentSelection.ranged.values }
+              _selectionType = this.selectionType
+              _selection = { values: this.currentSelection.ranged.values }
               condition = 'selected'
+            }
+            else if (this.selectionType=='text') {
+              _selectionType = this.selectionType
+              condition = 'contains'
             }
 
             return {
               columns,
               condition,
-              selection,
-              selectionType,
+              _selection,
+              _selectionType,
               value: '',
               value_2: '',
               values: [],
@@ -703,19 +708,19 @@ export default {
                 expression = `${varname}["${payload.columns[0]}"].str.${payload.condition}("${payload.text}", na=False)`
                 break
               case 'selected':
-                if (payload.selectionType=='ranges') {
-                  if (payload.selection.ranges.length>1) {
+                if (payload._selectionType=='ranges') {
+                  if (payload._selection.ranges.length>1) {
 
                     expression = '('
-                    +payload.selection.ranges.map(range=>`(${varname}["${payload.columns[0]}"]>=${range[0]}) & (${varname}["${payload.columns[0]}"]<=${range[1]})`).join(' | ')
+                    +payload._selection.ranges.map(range=>`(${varname}["${payload.columns[0]}"]>=${range[0]}) & (${varname}["${payload.columns[0]}"]<=${range[1]})`).join(' | ')
                     +')'
                   } else {
-                    expression = `(${varname}["${payload.columns[0]}"]>=${payload.selection.ranges[0][0]}) & (${varname}["${payload.columns[0]}"]<=${payload.selection.ranges[0][1]})`
+                    expression = `(${varname}["${payload.columns[0]}"]>=${payload._selection.ranges[0][0]}) & (${varname}["${payload.columns[0]}"]<=${payload._selection.ranges[0][1]})`
                   }
                 }
-                else if (payload.selectionType=='values') {
-                  payload.selection.values = payload.selection.values.map(v=>escapeQuotes(v))
-                  expression = `${varname}["${payload.columns[0]}"].isin(["${payload.selection.values.join('","')}"])`
+                else if (payload._selectionType=='values') {
+                  payload._selection.values = payload._selection.values.map(v=>escapeQuotes(v))
+                  expression = `${varname}["${payload.columns[0]}"].isin(["${payload._selection.values.join('","')}"])`
                 }
               case 'custom':
               default:
@@ -2486,6 +2491,33 @@ export default {
 
   methods: {
 
+    clearTextSelection () {
+
+      if (window.getSelection) {
+        window.getSelection().removeAllRanges()
+      }
+      else if (document.selection) {
+        document.selection.empty()
+      }
+
+      if (this.selectionType==='text') {
+        this.$store.commit('selection',{ clear: true })
+        return
+      }
+
+    },
+
+    recoverTextSelection () {
+
+      this.$nextTick(()=>{
+        try {
+          window.getSelection().removeAllRanges()
+          window.getSelection().addRange(this.currentSelection.text.selection)
+        } catch (error) {}
+      })
+
+    },
+
     getProperty(pof, args = []) {
       return getProperty(pof, args)
     },
@@ -2557,6 +2589,10 @@ export default {
 
     async commandHandle (event) {
 
+      if (this.selectionType!=='text') {
+        this.clearTextSelection()
+      }
+
 			var payload = {}
       var columns = undefined
       var columnDataTypes = undefined
@@ -2606,8 +2642,7 @@ export default {
               }
             }, 100);
           }
-        }
-        else {
+        } else {
 
           var cell = {
             ...event,
@@ -2616,11 +2651,14 @@ export default {
           }
           this.addCell(-1, event.command, this.getCode(cell,false))
           this.runButton = false
+
+          this.clearTextSelection()
         }
       }
     },
 
     async confirmCommand () {
+      this.clearTextSelection()
       var _command = this.commandsPallete[this.currentCommand.command] || this.commandsPallete[this.currentCommand.type]
       if (_command.onDone) {
         this.currentCommand = await _command.onDone(this.currentCommand)
@@ -2637,6 +2675,8 @@ export default {
 
     cancelCommand () {
 			setTimeout(() => {
+        // this.recoverTextSelection()
+        this.clearTextSelection()
         this.currentCommand = false
         this.$emit('updateOperations', {
           active: false,
