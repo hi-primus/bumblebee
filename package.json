@@ -57,7 +57,7 @@
     "eslint-plugin-nuxt": "^0.5.1",
     "eslint-plugin-vue": "^6.2.2",
     "json-loader": "^0.5.7",
-    "nodemon": "^1.19.4",
+    "nodemon": "^2.0.3",
     "nuxt-material-design-icons": "^1.0.4",
     "require-extension-hooks": "^0.3.3",
     "require-extension-hooks-babel": "^1.0.0",
