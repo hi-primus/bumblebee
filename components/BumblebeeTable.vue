@@ -255,7 +255,7 @@
         :class="[getRowHighlight(rowArrayIndex)]"
         :style="{height: rowHeight+'px', top: row.index*rowHeight+'px'}"
       >
-        <template v-for="column in allColumns">
+        <template v-for="(column) in allColumns">
           <template v-if="column.type==='preview' && rowsPreview && rowsPreview[rowArrayIndex] && rowsPreview[rowArrayIndex].value[column.index]">
             <div
               :key="'p'+column.index"
@@ -291,7 +291,7 @@
             :class="column.classes"
             style="width: 170px"
           >
-            {{row.value}}
+            {{row.index}} {{column.index}} - {{row}} {{column}}
           </div>
         </template>
       </div>
@@ -366,7 +366,6 @@ export default {
       dragging: -1,
 
       selection: [],
-      previousSelection : {},
       chunks: [],
       chunksPreview: [],
       chunksPreviewCode: '',
@@ -395,23 +394,31 @@ export default {
 
     rows () {
       return this.rowsValues.map((r,ri) => {
-        var value = r.value.map((val, ci)=>this.getCellData(ci, ri, val ))
+        var value = r.value.map((val, i)=>this.getCellData(i, ri, val ))
         return { ...r, value}
       })
     },
 
     rowsPreview () {
-      var cols = this.allColumns.map(col=>({
+      var _cols = this.allColumns.map((col, i)=>({
         index: col.index,
         preview: col.preview,
         nameOrIndex: col.preview ? col.name : col.index,
       }))
 
-      cols.sort((a,b)=>(a.index-b.index))
+      _cols.sort((a,b)=>(a.index-b.index))
+
+      var cols = []
+
+      _cols.forEach(c=>{
+        cols[c.index] = c
+      })
+
+      var indices = this.allColumns.map(col=>col.index)
 
       return this.rowsPreviewValues.map((r, ri) => {
         var value = cols.map((col,ci)=>{
-          return this.getCellData(col.nameOrIndex, ri, r.value[ci], col.preview)
+          return this.getCellData(col.nameOrIndex, ri, r.value[col.index], col.preview)
         })
         return { ...r, value}
       })
@@ -464,7 +471,11 @@ export default {
 
     allColumns () {
       var cols = []
-      if (!this.currentPreviewCode || !this.currentPreviewCode.datasetPreview) {
+      if (
+        !this.currentPreviewCode || !this.currentPreviewCode.datasetPreview
+        ||
+        (this.currentPreviewCode.datasetPreview && !this.previewColumns.length)
+        ) {
         cols = this.bbColumns.map(index=>{
           var classes = []
           if (this.selectionMap[index]) {
@@ -479,7 +490,11 @@ export default {
         })
       }
 
-      if (!this.currentPreviewCode && (!this.currentDuplicatedColumns || !this.currentDuplicatedColumns.length)) {
+      if (
+        (this.currentPreviewCode && this.currentPreviewCode.datasetPreview && !this.previewColumns.length)
+        ||
+        (!this.currentPreviewCode && (!this.currentDuplicatedColumns || !this.currentDuplicatedColumns.length))
+      ) {
         return cols
       }
 
@@ -507,7 +522,6 @@ export default {
 
           if (this.previewColumns.length===1 && after.length>1) {
 
-            // TODO: cols unordered
             var insertIndex = Math.max(...namesToIndices(after,cols))+1
 
             cols.splice(insertIndex,0,{
@@ -590,7 +604,11 @@ export default {
       } catch (err) {
         console.error(err)
       }
-      return cols
+
+      var valueIndices = cols.map(col=>col.index)
+      valueIndices.sort((a,b)=>a-b)
+
+      return cols.map((col,i)=>({...col, valueIndex: valueIndices.findIndex((vi)=>vi===col.index)}))
     },
 
     columnMenuActive: {
@@ -824,7 +842,7 @@ export default {
 
           var matchColumns = receivedColumns
             .filter((column, index)=>(
-              !columnNames.includes(column.title)//index>=this.currentDataset.columns.length
+              !columnNames.includes(column.title)
               &&
               column.title.includes('__match_positions__')
               &&
@@ -1043,7 +1061,6 @@ export default {
           return
         }
 
-        // this.previousSelection = {...this.selection}
         var indexInSelection = this.selection.findIndex(e=>e==columnIndex)
 
         if (event.shiftKey) {
