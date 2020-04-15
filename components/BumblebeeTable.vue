@@ -210,8 +210,8 @@
               v-if="plotsData[column.index].frequency"
               :key="plotsData[column.index].key"
               :uniques="plotsData[column.index].count_uniques"
-              :values="plotsData[column.index].frequency"
-              :total="+plotsData[column.index].frequency[0].count"
+              :values="plotsData[column.index].frequency.frequency"
+              :total="plotsData[column.index].frequency.frequency[0].count"
               :columnIndex="column.index"
               class="histfreq"
               selectable

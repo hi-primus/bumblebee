@@ -117,8 +117,8 @@
       >
         <TopValues
           v-if="column.frequency"
-          :values="column.frequency"
-          :total="+column.frequency[0].count"
+          :values="column.frequency.frequency"
+          :total="+column.frequency.frequency[0].count"
         />
       </div>
 
@@ -195,8 +195,8 @@
         <Frequent
           v-if="column.frequency"
           :uniques="column.stats.count_uniques"
-          :values="column.frequency"
-          :total="+column.frequency[0].count"
+          :values="column.frequency.frequency"
+          :total="+column.frequency.frequency[0].count"
         />
       </div>
 
@@ -206,8 +206,8 @@
       >
         <TopValues
           v-if="column.frequency"
-          :values="column.frequency"
-          :total="column.frequency[0].count"
+          :values="column.frequency.frequency"
+          :total="column.frequency.frequency[0].count"
         />
       </div>
     </div>
