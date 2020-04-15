@@ -671,16 +671,12 @@ export default {
     },
 
     tableStyle() {
+      var h = this.rowHeight * Math.max(this.rowsCount, (this.rowsPreviewValues || []).length)
       return {
-        maxHeight: (this.rowHeight * this.rowsCount ) + 'px',
-        height: (this.rowHeight * this.rowsCount ) + 'px',
+        maxHeight: h+'px',
+        height: h+'px'
       }
     },
-
-    lastRow() {
-      return Math.floor(this.rowsCount / this.chunkSize)
-    }
-
   },
 
   mounted() {
