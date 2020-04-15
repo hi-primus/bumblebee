@@ -178,7 +178,6 @@
 import { debounce, throttle } from '@/utils/functions.js'
 import { mapGetters } from 'vuex'
 import dataTypesMixin from '@/plugins/mixins/data-types'
-import GraphicsRenderer from '@/components/GraphicsRenderer'
 import BumblebeeTable from '@/components/BumblebeeTable'
 
 export default {
@@ -188,7 +187,6 @@ export default {
   ],
 
   components: {
-    GraphicsRenderer,
     BumblebeeTable
   },
 
