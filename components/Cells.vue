@@ -2033,7 +2033,7 @@ export default {
               },
               {
                 type: 'field',
-                key: 'newName',
+                key: 'output_col',
                 label: 'Output column name',
                 placeholder: (c) => c.columns.join('_'),
                 clearable: true,
@@ -2046,21 +2046,21 @@ export default {
               columns,
               separator: ', ',
               title: 'Nest '+(columns.length==1 ? `column` : 'columns'),
-              newName: columns.join('_'),
+              output_col: columns.join('_'),
               _preview: 'nest',
               _expectedColumns: 1,
               _highlightColor: {default: 'none', preview: 'green'}
 					}
           },
 					code: (payload) => {
-            if (!payload.newName) {
-              payload.newName = payload.columns.join('_')
+            if (!payload.output_col) {
+              payload.output_col = payload.columns.join('_')
             }
-            payload = escapeQuotesOn(payload,['separator','newName'])
+            payload = escapeQuotesOn(payload,['separator','output_col'])
             return `.cols.nest(["${payload.columns.join('", "')}"]`
 						+( (payload.separator) ? `, separator="${payload.separator}"` : '')
-            +`, output_col="${payload.newName}")`
-            +( (payload._requestType==='preview' && payload.separator) ? `.cols.find("${payload.newName}", sub=["${payload.separator}"])` : '')
+            +`, output_col="${payload.output_col}")`
+            +( (payload._requestType==='preview' && payload.separator) ? `.cols.find("${payload.output_col}", sub=["${payload.separator}"])` : '')
           }
         },
         duplicate: {
