@@ -222,7 +222,7 @@ export const printError = (response) => {
   //   console.error(response.content.traceback_escaped.join('\n'))
   // }
   if (response.traceback) {
-    console.error('[DEBUG][ERROR]\n\n',response.traceback.join('\n\n'))
+    console.error('[DEBUG][ERROR]\n\n',response.traceback)
   } else if (response.message) {
     console.error('[DEBUG][ERROR]\n',response.message)
   } else {
