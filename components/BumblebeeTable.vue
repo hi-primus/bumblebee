@@ -537,7 +537,7 @@ export default {
 
             this.previewColumns.forEach((pcol, i)=>{
 
-              if (i>=expectedColumns) {
+              if (expectedColumns>=0 && i>=expectedColumns) {
                 return
               }
 

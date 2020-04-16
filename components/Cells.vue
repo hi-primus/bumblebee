@@ -181,7 +181,7 @@
                   outlined
                 ></v-select>
               </template>
-              <template v-else-if="field.type=='items_filter'">
+              <template v-else-if="field.type=='columns_filter'">
                 <v-data-table
                   :key="field.key"
                   v-model="currentCommand[field.key]"
@@ -189,11 +189,13 @@
                   :headers="field.headers"
                   :item-key="field.item_key"
                   :items="(field.items_key) ? getProperty(currentCommand[field.items_key],[currentCommand]) : field.items"
-                  @input="(field.onChange) ? field.onChange($event) : 0"
+                  @input="(field.onChange) ? field.onChange($event) : ()=>{}"
+                  @click:row="field.onClickRow ? field.onClickRow($event) : ()=>{}"
                   :disabled="!!+field.disabled"
-                  :items-per-page="10"
-                  class="vdf--hide-select"
-                  :hide-default-footer="((field.items_key) ? getProperty(currentCommand[field.items_key],[currentCommand]) : field.items).length<10"
+                  :items-per-page="(field.items_key) ? getProperty(currentCommand[field.items_key],[currentCommand]).length : field.items.length"
+                  class="vdf--hide-select mb-4 columns-filter"
+                  style="margin-top: -4px; max-height: 255px; overflow-y: scroll;"
+                  hide-default-footer
                   dense
                   required
                   outlined
@@ -203,8 +205,20 @@
                       {{ item.source }}
                     </span>
                   </template>
+                  <template v-slot:item.key="{ item }">
+                    <span
+                      @click.stop="field.selectKey ? field.selectKey(item) : ()=>{}"
+                      :style="{
+                        opacity: ((currentCommand.right_on===item.name && item.source==='right')||(currentCommand.left_on===item.name && item.source==='left')) ? 1 : 0.5
+                      }"
+                      style="cursor: pointer"
+                    >
+                      <v-icon>
+                        vpn_key
+                      </v-icon>
+                    </span>
+                  </template>
                 </v-data-table>
-                  <!-- disable-pagination -->
               </template>
               <template v-else-if="field.type=='select-foreach'">
                 <v-row :key="field.key" no-gutters class="foreach-label">
@@ -762,90 +776,20 @@ export default {
                 }
               },
               {
-                key: 'left_on',
-                label: 'Key column (left)',
-                type: 'select',
-                onChange: ()=>{
-                  var _command = {...this.currentCommand}
-
-                  if (_command._unselect_left == _command.left_on) {
-                    return
-                  }
-
-                  var selected = _command.selected_columns
-                  var changed = false
-
-                  if (_command._unselect_left) {
-                    var found = selected.findIndex(c=>(c.name===_command._unselect_left && c.source==='left'))
-                    if (found>=0) {
-                      selected.splice(found,1)
-                    }
-                    _command._unselect_left = false
-                    changed = true
-                  }
-                  if (selected.findIndex(c=>(c.name===_command.left_on && c.source==='left'))<0) {
-                    _command._unselect_left = _command.left_on
-                    selected.push({
-                      name: _command.left_on,
-                      source: 'left',
-                      key: _command.left_on+'l',
-                    })
-                    changed = true
-                  }
-                  if (!changed) {
-                    return
-                  }
-                  _command.selected_columns = selected
-                  this.currentCommand = _command
-                },
-                items_key: 'items_l_on'
-              },
-              {
-                key: 'right_on',
-                label: 'Key column (right)',
-                type: 'select',
-                onChange: ()=>{
-                  var _command = {...this.currentCommand}
-
-                  if (_command._unselect_right == _command.right_on) {
-                    return
-                  }
-
-                  var selected = _command.selected_columns
-                  var changed = false
-
-                  if (_command._unselect_right) {
-                    var found = selected.findIndex(c=>(c.name===_command._unselect_right && c.source==='right'))
-                    if (found>=0) {
-                      selected.splice(found,1)
-                    }
-                    _command._unselect_right = false
-                    changed = true
-                  }
-                  if (selected.findIndex(c=>(c.name===_command.right_on && c.source==='right'))<0) {
-                    _command._unselect_right = _command.right_on
-                    selected.push({
-                      name: _command.right_on,
-                      source: 'right',
-                      key: _command.right_on+'r',
-                    })
-                    changed = true
-                  }
-                  if (!changed) {
-                    return
-                  }
-                  _command.selected_columns = selected
-                  this.currentCommand = _command
-                },
-                items_key: 'items_r_on'
-              },
-              {
                 key: 'selected_columns',
                 label: 'Filter columns',
                 item_key: 'key',
-                type: 'items_filter',
+                type: 'columns_filter',
                 items_key: 'items_selected_columns',
                 headers: [
+                  {
+                    text: '',
+                    sortable: false,
+                    align: 'center',
+                    class: 'pa-0',
+                    value: 'key',
+                    width: 12
+                  },
                   {
                     text: 'Column',
                     sortable: true,
@@ -857,33 +801,19 @@ export default {
                     value: 'source'
                   }
                 ],
-                onChange: (selected)=>{
-                  var _command = {...this.currentCommand}
-                  if (!selected.length) {
-                    _command._unselect_left = _command.left_on
-                    _command._unselect_right = _command.right_on
+                onClickRow: (item)=>{
+                  var found = this.currentCommand.selected_columns.findIndex(it=>it.key===item.key)
+                  if (found===-1) {
+                    this.currentCommand.selected_columns.push(item)
+                  } else {
+                    this.$delete(this.currentCommand.selected_columns, found)
                   }
-                  var changed = false
-                  if (selected.findIndex(c=>(c.name===_command.left_on && c.source==='left'))<0) {
-                    selected.push({
-                      name: _command.left_on,
-                      source: 'left',
-                      key: _command.left_on+'l',
-                    })
-                    changed = true
-                  }
-                  if (selected.findIndex(c=>(c.name===_command.right_on && c.source==='right'))<0) {
-                    selected.push({
-                      name: _command.right_on,
-                      source: 'right',
-                      key: _command.right_on+'r',
-                    })
-                    changed = true
-                  }
-                  if (changed) {
-                    _command.columns_selected = selected
-                    this.currentCommand = _command
-                  }
+                },
+                selectKey: (item)=>{
+
+                  var on = item.source+'_on'
+                  this.currentCommand[on] = item.name
+
                 }
               },
             ],
@@ -923,13 +853,23 @@ export default {
               ],
               _preview: 'join',
               _previewDelay: 500,
-              _expectedColumns: () => this.currentCommand.selected_columns.filter(c=>(c.name)).length-1,
+              _expectedColumns: -1,// () => this.currentCommand.selected_columns.filter(c=>(c.name)).length,
               _datasetPreview: true
             }
           },
           code: (payload) => {
             var columnsLeft = payload.selected_columns.filter(c=>c.source==='left').map(c=>c.name)
             var columnsRight = payload.selected_columns.filter(c=>(c.name && c.source==='right')).map(c=>c.name)
+
+            var selectedColumns = [...new Set([...columnsLeft.filter(name=>name!==payload.left_on), ...columnsRight])]
+            var filterEnd = `.cols.select(["${selectedColumns.join('", "')}"])`
+
+            if (columnsLeft.indexOf(payload.left_on)===-1) {
+              columnsLeft.push(payload.left_on)
+            }
+            if (columnsRight.indexOf(payload.right_on)===-1) {
+              columnsRight.push(payload.right_on)
+            }
 
             var filterLeft = `.cols.select(["${columnsLeft.join('", "')}"])`
             var filterRight = `.cols.select(["${columnsRight.join('", "')}"])`
@@ -941,17 +881,17 @@ export default {
                   window = `,${from},${to}`
                 }
                 if (!this.currentSecondaryDatasets[payload.with] || !this.currentSecondaryDatasets[payload.with].buffer) {
-                  await this.evalCode('_output = '+payload.with+'.ext.set_buffer("*")') // TODO call once
+                  await this.evalCode('_output = '+payload.with+'.ext.set_buffer("*")') // TODO check changed
                   this.$store.commit('setSecondaryBuffer',{ key: payload.with, value: true})
                 }
                 return `${filterLeft}.cols.join(${payload.with}.ext.buffer_window("*"${window})${filterRight}`
                 + `, left_on="${payload.left_on}"`
-                + `, right_on="${payload.right_on}", how="${payload.how}")`
+                + `, right_on="${payload.right_on}", how="${payload.how}")${filterEnd}`
               }
             } else {
               return `${filterLeft}.cols.join(${payload.with}${filterRight}`
                 + `, left_on="${payload.left_on}"`
-                + `, right_on="${payload.right_on}", how="${payload.how}")`
+                + `, right_on="${payload.right_on}", how="${payload.how}")${filterEnd}`
             }
 
           }
@@ -1529,7 +1469,6 @@ export default {
             else {
 
               // TODO various ranges
-
               return payload.selection.map(selection=>`.rows.between(`
               +`"${payload.columns[0]}"`
               +`, lower_bound=${selection[0]}`

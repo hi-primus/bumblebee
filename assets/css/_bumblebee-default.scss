@@ -1978,3 +1978,30 @@ $editor-top-padding: 6px;
 .hidden-error {
   font-size: 0 !important;
 }
+
+.v-data-table table td {
+  border-color: $line-color-1 !important;
+}
+
+.v-data-table.columns-filter {
+  margin-left: -25px;
+  tr.v-data-table__selected {
+    background: initial !important;
+  }
+  tbody>tr {
+    cursor: pointer;
+    &:hover {
+      background: $data-highlight !important;
+    }
+  }
+  tr>td, tr>th {
+    &:nth-child(1) {
+      padding-right: 0;
+      padding-left: 23px;
+    }
+    &:nth-child(2) {
+      padding-left: 7px;
+      padding-right: 3px;
+    }
+  }
+}
