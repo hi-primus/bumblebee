@@ -256,14 +256,17 @@ export default {
 
     },
     getRectConfig (index) {
-      var h = this.height * (this.values[index].count / this.calculatedMaxVal) || Math.max(Math.ceil(this.binWidth/16), 2)
+      var h = this.height * (this.values[index].count / this.calculatedMaxVal)
+      var hmin = Math.max(Math.ceil(this.binWidth/16), 2)
+      var opacity = (h>hmin) ? 1 : (0.5+(h/hmin)*0.5)
+      h = Math.max( h , hmin )
 
       return {
         ...this.getBackConfig(index),
         height: h,
         y: this.height - h,
 				fill: ( this.bins[index] && (this.bins[index].hovered || this.bins[index].selected || this.bins[index].selecting )) ? '#288bc9' : '#309ee3',
-				opacity: (this.values[index].count) ? 1 : 0.5,
+				opacity,
 				listening: false
       }
 
