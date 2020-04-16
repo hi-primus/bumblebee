@@ -386,8 +386,7 @@ export default {
       'currentFocusedColumns',
       'currentPreviewCode',
       'currentDuplicatedColumns',
-      'currentPreviewNames',
-      'currentBuffer'
+      'currentPreviewNames'
     ]),
 
     ...mapState(['allTypes']),
@@ -1356,10 +1355,10 @@ export default {
 
       // chunks[index] = { from, to, preview: previewCode || '' }
 
-      if (!this.currentBuffer) {
-        var buffer = await this.evalCode('_output = '+this.currentDataset.varname+'.ext.set_buffer("*")')
-        this.$store.commit('setBuffer',true)
-      }
+      // if (!this.currentBuffer) {
+      //   this.$store.commit('setBuffer',true)
+      //   var buffer = await this.evalCode('_output = '+this.currentDataset.varname+'.ext.set_buffer("*")')
+      // }
 
       var response = await this.evalCode(`_output = ${this.currentDataset.varname}.ext.buffer_window("*", ${from}, ${to+1})${await getPropertyAsync(previewCode, [from, to+1]) || ''}.ext.to_json("*")`)
 

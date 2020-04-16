@@ -941,8 +941,8 @@ export default {
                   window = `,${from},${to}`
                 }
                 if (!this.currentSecondaryDatasets[payload.with] || !this.currentSecondaryDatasets[payload.with].buffer) {
-                  this.$store.commit('setSecondaryBuffer',{ key: payload.with, value: true})
                   await this.evalCode('_output = '+payload.with+'.ext.set_buffer("*")') // TODO call once
+                  this.$store.commit('setSecondaryBuffer',{ key: payload.with, value: true})
                 }
                 return `${filterLeft}.cols.join(${payload.with}.ext.buffer_window("*"${window})${filterRight}`
                 + `, left_on="${payload.left_on}"`
@@ -2952,8 +2952,6 @@ export default {
         console.log('"""[DEBUG][CODE]"""',response.code)
         console.timeEnd('task')
 
-        this.updateSecondaryDatasets()
-
 
         this._commandsDisabled = false;
 
@@ -2964,6 +2962,9 @@ export default {
         this.$store.commit('loadDataset', {
           dataset: response.data.result
         })
+
+        await this.evalCode('_output = '+this.dataset.varname+'.ext.set_buffer("*")')
+        this.updateSecondaryDatasets()
 
         this.$forceUpdate()
         this.markCells()

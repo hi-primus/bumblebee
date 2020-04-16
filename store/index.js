@@ -4,10 +4,9 @@ import { setAuthToken, resetAuthToken } from '@/utils/auth'
 
 export const state = () => ({
 	datasets: [],
-  datasetConfig: [], // TODO
   datasetSelection: [],
   hasSecondaryDatasets: false,
-  secondaryDatasets: [],
+  secondaryDatasets: [], // TODO: not tab-separated
 	databases: [],
   buffers: [],
   tableViews: [],
@@ -104,7 +103,7 @@ export const mutations = {
     Vue.set(state.highlights,state.tab,false)
     Vue.set(state.highlightRows,state.tab,false)
     Vue.set(state.focusedColumns,state.tab,false)
-    Vue.set(state.buffers,state.tab,false)
+    // Vue.set(state.buffers,state.tab,false)
     Vue.set(state.previewCodes,state.tab,undefined)
     Vue.set(state.previewNames,state.tab,undefined)
   },
@@ -228,9 +227,9 @@ export const mutations = {
     Vue.set(state.databases,state.tab,payload)
   },
 
-	setBuffer (state, payload) {
-    Vue.set(state.buffers,state.tab,payload)
-  },
+	// setBuffer (state, payload) {
+  //   Vue.set(state.buffers,state.tab,payload)
+  // },
 
   key (state, payload) {
     state.key = payload
@@ -370,7 +369,7 @@ export const getters = {
   },
   currentBuffer (state) {
     try {
-      return state.buffers[state.tab]
+      return state.buffers[state.tab] // TODO: varname
     } catch (error) {
       return false
     }
