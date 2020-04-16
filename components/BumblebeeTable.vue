@@ -1187,7 +1187,9 @@ export default {
 
         var cols = this.currentColumnsPreview.map(e=>escapeQuotes(e.title))
 
-        var response = await this.evalCode(`_output = df.ext.buffer_window("*")${await getPropertyAsync(previewCode) || ''}.ext.profile(["${cols.join('", "')}"], output="json")`)
+        var code = `_output = df.ext.buffer_window("*")${await getPropertyAsync(previewCode) || ''}.ext.profile(["${cols.join('", "')}"], output="json")`
+
+        var response = await this.evalCode(code)
 
         if (!response) {
           throw response
