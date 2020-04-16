@@ -1,20 +1,16 @@
 <template>
   <div class="sidebar-content">
-    <div
-      persistent
+    <CommandFormContainer
       v-if="command && command.dialog"
       v-show="(currentCommand.command)"
-      ref="command-form"
-      @click:outside="cancelCommand"
-      @keydown.esc="cancelCommand"
+      :currentCommand="currentCommand"
+      :command="command"
+      @cancelCommand="cancelCommand"
     >
       <v-form @submit.prevent="confirmCommand" id="command-form" class="pl-4 pr-5 pt-4 smaller-fields">
           <div class="body-2 mb-1" :class="{'title': command.dialog.bigText}" v-if="command.dialog.text">
             {{
-              (typeof command.dialog.text == 'function') ?
-                command.dialog.text(currentCommand)
-              :
-                command.dialog.text
+              {value: command.dialog.text, args: [currentCommand]} | property
             }}
           </div>
           <div class="progress-middle" style="height: 65%">
@@ -38,10 +34,7 @@
                   :disabled="!currentCommand[field.loading] && field.validate && !field.validate(currentCommand)"
                 >
                   {{
-                    (typeof field.label == 'function') ?
-                      field.label(currentCommand)
-                    :
-                      field.label
+                    {value: field.label, args: [currentCommand]} | property
                   }}
                 </v-btn>
               </template>
@@ -53,10 +46,7 @@
                   v-if="field.text"
                 >
                   {{
-                    (typeof field.text == 'function') ?
-                      field.text(currentCommand)
-                    :
-                      field.text
+                    {value: field.text, args: [currentCommand]} | property
                   }}
                 </div>
               </template>
@@ -315,18 +305,21 @@
               form="command-form"
             >
               {{
-                command.dialog.acceptLabel ? (
-                  typeof command.dialog.acceptLabel == 'function' ?
-                    command.dialog.acceptLabel(currentCommand)
-                  :
-                    command.dialog.acceptLabel
-                ):
-                  'Accept'
+                {value: (command.dialog.acceptLabel || 'Accept'), args: [currentCommand]} | property
               }}
             </v-btn>
           </div>
       </v-form>
-    </div>
+    </CommandFormContainer>
+    <!-- <div
+      persistent
+      v-if="command && command.dialog"
+      v-show="(currentCommand.command)"
+      ref="command-form"
+      @click:outside="cancelCommand"
+      @keydown.esc="cancelCommand"
+    >
+    </div> -->
     <div
       v-show="view=='operations'"
       class="sidebar-content options-fields-container"
@@ -384,6 +377,7 @@
 <script>
 
 import CodeEditor from '@/components/CodeEditor'
+import CommandFormContainer from '@/components/CommandFormContainer'
 import OutputColumnInputs from '@/components/OutputColumnInputs'
 import Outliers from '@/components/Outliers'
 import clientMixin from '@/plugins/mixins/client'
@@ -406,6 +400,7 @@ const api_url = process.env.API_URL || 'http://localhost:5000'
 export default {
 
   components: {
+    CommandFormContainer,
     CodeEditor,
 		OutputColumnInputs,
 		Outliers
@@ -1141,7 +1136,7 @@ export default {
         },
         'string clustering': {
           dialog: {
-            big: true,
+            dialog: true,
             tall: true,
             title: 'String clustering',
             acceptLabel: 'Merge',
@@ -1302,7 +1297,7 @@ export default {
         },
         outliers: {
           dialog: {
-            big: true,
+            dialog: true,
             title: 'Outliers',
             fields: [
               {
@@ -2529,13 +2524,7 @@ export default {
 
     getCommandTitle() {
       try {
-        if (this.command.dialog.title) {
-          if (typeof this.command.dialog.title == 'function') {
-            return this.command.dialog.title(this.currentCommand)
-          }
-          return this.command.dialog.title
-        }
-        return  this.currentCommand.title
+        return getProperty(this.command.dialog.title,[this.currentCommand])
       }
       catch {
         return 'Operation'

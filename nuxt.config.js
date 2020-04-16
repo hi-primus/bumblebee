@@ -72,6 +72,7 @@ module.exports = {
 		{ src: '@/plugins/konva.js', mode: 'client' },
 		'@/plugins/draggable.js',
 		'@/plugins/components.js',
+		'@/plugins/filters.js',
 		'@/plugins/numeral.js',
 		'@/plugins/fuse.js',
 		{ src: '@/plugins/auth.js', mode: 'client'},

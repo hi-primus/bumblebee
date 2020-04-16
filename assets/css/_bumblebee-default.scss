@@ -1916,6 +1916,16 @@ $editor-top-padding: 6px;
   letter-spacing: 0 !important;
 }
 
+.command-dialog {
+  background-color: white;
+  padding-top: 14px;
+  padding-bottom: 22px;
+  .v-form {
+    margin: 0;
+    left: 0;
+  }
+}
+
 .smaller-fields {
   .v-label, .v-input {
     // background: cyan;
