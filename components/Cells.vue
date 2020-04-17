@@ -456,7 +456,7 @@ export default {
       commandsPallete: {
         'apply sort': {
           code: (payload) => {
-            return `.cols.sort(columns=["${payload.columns.join('", "')}"])`
+            return `.cols.sort(["${payload.columns.join('", "')}"])`
           }
         },
         DROP_KEEP: {
