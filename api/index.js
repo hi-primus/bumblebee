@@ -12,7 +12,7 @@ const app = express()
 var server = require('http').createServer(app)
 const io = new Server(server)
 
-import { trimCharacters, pakoFernet } from './utils/functions.js'
+import { trimCharacters } from './utils/functions.js'
 
 const app_secret = process.env.APP_SECRET || '6um61e6ee'
 var app_url
@@ -169,9 +169,8 @@ const newSocket = function (socket, session) {
       var sessionId = payload.session
       var varname = payload.varname || 'df'
       var result = await run_code(payload.code + '\n'
-        + `_output = ${varname}.ext.send(output="json", infer=False, advanced_stats=False, sample=0${ payload.name ? (', name="'+payload.name+'"') : '' })`,
-        sessionId,
-        true
+        + `_output = ${varname}.ext.profile(columns="*", output="json")`,
+        sessionId
       )
       socket.emit('reply',{...result, code: payload.code, timestamp: payload.timestamp})
     })
@@ -225,7 +224,7 @@ io.on('connection', async (socket) => {
 
 
 
-const run_code = async function(code = '', sessionId = '', deleteSample = false) {
+const run_code = async function(code = '', sessionId = '') {
 
   if (!sessionId) {
     return {
@@ -277,15 +276,6 @@ const run_code = async function(code = '', sessionId = '', deleteSample = false)
     }
 
     response = handleResponse(response)
-
-    if (deleteSample && response && response.data && response.data.result) {
-      response.data.result = JSON.parse(response.data.result).data
-      response.data.result = pakoFernet(process.env.COMM_KEY, response.data.result)
-
-      if (response.data.result.sample && response.data.result.sample.value) {
-        delete response.data.result.sample.value
-      }
-    }
 
     // console.timeEnd('responseHandling')
 
