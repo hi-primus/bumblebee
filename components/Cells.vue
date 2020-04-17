@@ -2524,7 +2524,10 @@ export default {
 
     getCommandTitle() {
       try {
-        return getProperty(this.command.dialog.title,[this.currentCommand])
+        if (this.command.dialog.title) {
+          return getProperty(this.command.dialog.title,[this.currentCommand])
+        }
+        return this.currentCommand.title
       }
       catch {
         return 'Operation'

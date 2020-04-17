@@ -1,13 +1,6 @@
 <template>
-  <div
-    v-if="(!command.dialog.dialog)"
-    ref="command-form"
-    @keydown.esc="$emit('cancelCommand')"
-  >
-    <slot></slot>
-  </div>
   <v-dialog
-    v-else
+    v-if="command.dialog.dialog"
     ref="command-form"
     persistent
     :value="(currentCommand.command)"
@@ -21,6 +14,13 @@
     </div>
     <slot></slot>
   </v-dialog>
+  <div
+    v-else
+    ref="command-form"
+    @keydown.esc="$emit('cancelCommand')"
+  >
+    <slot></slot>
+  </div>
 </template>
 
 <script>
@@ -28,11 +28,11 @@ export default {
   props: {
     currentCommand: {
       type: Object,
-      default: ()=>({})
+      required: true
     },
     command: {
       type: Object,
-      default: ()=>({dialog: {dialog: false}})
+      required: true
     }
   }
 }
