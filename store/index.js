@@ -24,14 +24,19 @@ export const state = () => ({
   session: '',
   engine: 'dask',
 	allTypes: [
-		'string',
-		'int',
-		'decimal',
-		'date',
-		'boolean',
-		'binary',
-		'array',
-		'null'
+    'int',
+    'decimal',
+    'string',
+    'boolean',
+    'date',
+    'array',
+    'object',
+    'gender',
+    'ip',
+    'url',
+    'email',
+    'credit_card_number',
+    'zip_code'
 	],
   datasetCounter: 1,
   key: '',
@@ -147,8 +152,8 @@ export const mutations = {
       _c = []
     }
 
-    if (dataset && dataset.dtypes_list) {
-      state.typesAvailable = dataset.dtypes_list
+    if (dataset && dataset.summary.dtypes_list) {
+      state.typesAvailable = dataset.summary.dtypes_list
     }
 
     Vue.set(state.datasets, state.tab, dataset)
@@ -390,7 +395,7 @@ export const getters = {
   },
   typesAvailable (state) {
     try {
-      return state.datasets[state.tab].dtypes_list || state.allTypes
+      return state.datasets[state.tab].summary.dtypes_list || state.allTypes
     } catch (error) {
       return state.allTypes
     }
