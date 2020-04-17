@@ -1129,7 +1129,7 @@ export default {
             if (payload.limit>0) {
               code +=`, n_rows=${payload.limit}`
             }
-            code += `, cache=True)`
+            code += `, quoting=0, lineterminator=None, cache=True)`
 
             return code
           }
@@ -1382,12 +1382,8 @@ export default {
               this.currentCommand.loading = true
 
               var response = await this.evalCode(`import json; ${code}; _output = json.dumps(outlier.info())`)
-              var outliers_data = parseResponse(response.content)
 
-              if (!outliers_data) {
-                response = await this.evalCode(`import json; ${code}; _output = json.dumps(outlier.info())`)
-                outliers_data = parseResponse(response.content)
-              }
+              var outliers_data = parseResponse(response.data.result)
 
               if (!outliers_data) {
                 throw response
@@ -1396,12 +1392,7 @@ export default {
               if ( ['tukey','mad'].includes(this.currentCommand.algorithm) ) {
 
                 var hist_response = await this.evalCode(`_output = outlier.hist("${this.currentCommand.columns[0]}")`)
-                var hist_data = parseResponse(hist_response.content)
-
-                if (!hist_data) {
-                  hist_response = await this.evalCode(`_output = outlier.hist("${this.currentCommand.columns[0]}")`)
-                  hist_data = parseResponse(hist_response.content)
-                }
+                var hist_data = parseResponse(hist_response.data.result)
 
                 if (!hist_data) {
                   throw hist_response
@@ -2890,8 +2881,10 @@ export default {
           throw response
         }
 
+        var dataset = JSON.parse(response.data.result)
+
         this.$store.commit('loadDataset', {
-          dataset: response.data.result
+          dataset
         })
 
         await this.evalCode('_output = '+this.dataset.varname+'.ext.set_buffer("*")')
