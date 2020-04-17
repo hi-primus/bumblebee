@@ -1,7 +1,7 @@
 {
     "columns": {
         "GeoLocation": {
-            "column_dtype": "string",
+            "dtype": "string",
             "column_type": "categorical",
             "dtypes_stats": {
                 "array": 0,
@@ -403,7 +403,7 @@
             }
         },
         "fall": {
-            "column_dtype": "string",
+            "dtype": "string",
             "column_type": "categorical",
             "dtypes_stats": {
                 "array": 0,
@@ -475,7 +475,7 @@
             }
         },
         "id": {
-            "column_dtype": "int",
+            "dtype": "int",
             "column_type": "numeric",
             "dtypes_stats": {
                 "array": 0,
@@ -975,7 +975,7 @@
             }
         },
         "mass (g)": {
-            "column_dtype": "string",
+            "dtype": "string",
             "column_type": "categorical",
             "dtypes_stats": {
                 "array": 0,
@@ -1297,7 +1297,7 @@
             }
         },
         "name": {
-            "column_dtype": "string",
+            "dtype": "string",
             "column_type": "categorical",
             "dtypes_stats": {
                 "array": 0,
@@ -1714,7 +1714,7 @@
             }
         },
         "nametype": {
-            "column_dtype": "string",
+            "dtype": "string",
             "column_type": "categorical",
             "dtypes_stats": {
                 "array": 0,
@@ -1791,7 +1791,7 @@
             }
         },
         "recclass": {
-            "column_dtype": "string",
+            "dtype": "string",
             "column_type": "categorical",
             "dtypes_stats": {
                 "array": 0,
@@ -2198,7 +2198,7 @@
             }
         },
         "reclat": {
-            "column_dtype": "string",
+            "dtype": "string",
             "column_type": "categorical",
             "dtypes_stats": {
                 "array": 0,
@@ -2525,7 +2525,7 @@
             }
         },
         "reclong": {
-            "column_dtype": "string",
+            "dtype": "string",
             "column_type": "categorical",
             "dtypes_stats": {
                 "array": 0,
@@ -2857,7 +2857,7 @@
             }
         },
         "year": {
-            "column_dtype": "string",
+            "dtype": "string",
             "column_type": "categorical",
             "dtypes_stats": {
                 "array": 0,

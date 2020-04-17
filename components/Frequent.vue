@@ -77,17 +77,13 @@ export default {
     ...mapState(['tab']),
 
     calculatedValues() {
-      if (this.count.length) {
-        return this.values.map((e,i)=>{
-          return {
-            value: e,
-            count: this.count[i],
-            percentage: +((this.count[i]/this.total)*100).toFixed(2)
-          }
-        })
-      } else {
-        return this.values
-      }
+      return this.values.map((e,i)=>{
+        return {
+          value: e.value,
+          count: e.count,
+          percentage: +((e.count/this.total)*100).toFixed(2)
+        }
+      })
     },
 
     uniqueElements () {
@@ -132,8 +128,9 @@ export default {
     },
     setValueIndex(index) {
       var item = this.calculatedValues[index]
-      if (item)
+      if (item) {
         this.currentVal = `${item.value},&nbsp;${item.count},&nbsp;${item.percentage}%`
+      }
     },
     updateSelected(v) {
 

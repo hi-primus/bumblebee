@@ -113,8 +113,8 @@
           @click="selectColumn($event, column.index)"
           @dblclick="setMenu($event, column.index)"
         >
-          <div class="data-type" :class="`type-${columns[column.index].column_dtype}`">
-            {{ dataType(currentDataset.columns[column.index].column_dtype) }}
+          <div class="data-type" :class="`type-${columns[column.index].dtype}`">
+            {{ dataType(currentDataset.columns[column.index].dtype) }}
           </div>
           <div v-if="currentPreviewNames && currentPreviewNames[columns[column.index].name]" class="column-title title-preview-highlight">
             <span>{{ currentPreviewNames[columns[column.index].name] }}</span>
@@ -148,9 +148,8 @@
                 v-if="previewPlotsData[column.name].frequency"
                 :key="previewPlotsData[column.name].key"
                 :uniques="previewPlotsData[column.name].count_uniques"
-                :values="previewPlotsData[column.name].frequency.values"
-                :count="previewPlotsData[column.name].frequency.count"
-                :total="+previewPlotsData[column.name].total"
+                :values="previewPlotsData[column.name].frequency"
+                :total="+previewPlotsData[column.name].total || 1"
                 :columnIndex="column.index"
                 class="histfreq"
                 table
@@ -199,7 +198,7 @@
             <DataBar
               :key="plotsData[column.index].key+'databar'"
               :missing="plotsData[column.index].missing"
-              :total="+plotsData[column.index].total"
+              :total="+plotsData[column.index].total || 1"
               :mismatch="+plotsData[column.index].mismatch"
               :nullV="+plotsData[column.index].null"
               @clicked="clickedBar($event,column)"
@@ -210,8 +209,8 @@
               v-if="plotsData[column.index].frequency"
               :key="plotsData[column.index].key"
               :uniques="plotsData[column.index].count_uniques"
-              :values="plotsData[column.index].frequency.frequency"
-              :total="plotsData[column.index].frequency.frequency[0].count"
+              :values="plotsData[column.index].frequency"
+              :total="+plotsData[column.index].total || 1"
               :columnIndex="column.index"
               class="histfreq"
               selectable
@@ -222,7 +221,7 @@
               :key="plotsData[column.index].key"
               :uniques="plotsData[column.index].count_uniques"
               :values="plotsData[column.index].hist"
-              :total="+plotsData[column.index].total"
+              :total="+plotsData[column.index].total || 1"
               :columnIndex="column.index"
               class="histfreq"
               selectable
@@ -233,7 +232,7 @@
               :key="plotsData[column.index].key"
               :uniques="plotsData[column.index].count_uniques"
               :values="plotsData[column.index].hist_years"
-              :total="+plotsData[column.index].total"
+              :total="+plotsData[column.index].total || 1"
               :columnIndex="column.index"
               class="histfreq"
               selectable
@@ -636,15 +635,15 @@ export default {
 				return {
           key: i,
           name: column.name,
-          missing: (column.dtypes_stats.missing) ? +column.dtypes_stats.missing : 0,
-          mismatch: (column.dtypes_stats.mismatch) ? +column.dtypes_stats.mismatch : 0,
-          null: (column.dtypes_stats.null) ? +column.dtypes_stats.null : 0,
-					// zeros: column.stats.zeros,
-					total: this.currentDataset.summary.rows_count,
+          missing: (column.stats.missing) ? +column.stats.missing : 0,
+          mismatch: (column.stats.mismatch) ? +column.stats.mismatch : 0,
 					count_uniques: column.stats.count_uniques,
 					hist: (column.stats.hist && column.stats.hist[0]) ? column.stats.hist : undefined,
-					hist_years: (column.stats.hist && column.stats.hist.years) ? column.stats.hist.years : undefined,
-					frequency: ((column.stats.frequency) ? column.stats.frequency : undefined) || column.frequency || undefined
+					frequency: ((column.stats.frequency) ? column.stats.frequency : undefined) || column.frequency || undefined,
+					total: +this.currentDataset.summary.rows_count,
+					zeros: column.stats.zeros,
+          null: column.stats.null,
+					// hist_years: (column.stats.hist && column.stats.hist.years) ? column.stats.hist.years : undefined
 				}
 			})
     },
@@ -661,13 +660,13 @@ export default {
             name: colName,
             missing: (column.stats.missing) ? +column.stats.missing : 0,
             mismatch: (column.stats.mismatch) ? +column.stats.mismatch : 0,
-            null: (column.stats.null) ? +column.stats.null : 0,
-            // zeros: column.stats.zeros,
-            total: this.currentProfilePreview.stats.rows_count,
+            total: +this.currentProfilePreview.stats.rows_count,
             count_uniques: column.stats.count_uniques,
             hist: (column.stats.hist && column.stats.hist[0]) ? column.stats.hist : undefined,
-            hist_years: (column.stats.hist && column.stats.hist.years) ? column.stats.hist.years : undefined,
-            frequency: ((column.stats.frequency) ? column.stats.frequency : undefined) || column.frequency || undefined
+            frequency: ((column.stats.frequency) ? column.stats.frequency : undefined) || column.frequency || undefined,
+            zeros: column.stats.zeros,
+            null: column.stats.null,
+            // hist_years: (column.stats.hist && column.stats.hist.years) ? column.stats.hist.years : undefined,
           }
         }
 
@@ -1113,7 +1112,7 @@ export default {
       doubleClick = true
 
       this.newColumnName = this.currentDataset.columns[index].name
-      this.newColumnType = this.currentDataset.columns[index].column_dtype
+      this.newColumnType = this.currentDataset.columns[index].dtype
 
       this.columnMenuIndex = index
 
@@ -1138,7 +1137,7 @@ export default {
     saveColumnData() {
       var index = this.columnMenuIndex
       var prevName = this.currentDataset.columns[index].name
-      var prevType = this.currentDataset.columns[index].column_dtype
+      var prevType = this.currentDataset.columns[index].dtype
 
       if (this.newColumnType != prevType) {
         var payload = {

@@ -246,7 +246,7 @@
           <div v-if="detailedColumns.length>1" class="sidebar-section pr-10 columns-selected">
             <CommandMenu v-if="$route.query.kernel=='1'" :columnsNumber="detailedColumns.length" button.class="right-button-center" :disabled="commandsDisabled" @command="commandHandle($event)"></CommandMenu>
             <div class="column-selected" v-for="(index, i) in detailedColumns" :key="index+'selc'+i">
-              <span class="data-type" :class="`type-${dataset.columns[index].column_dtype}`">{{ dataType(dataset.columns[index].column_dtype) }}</span>
+              <span class="data-type" :class="`type-${dataset.columns[index].dtype}`">{{ dataType(dataset.columns[index].dtype) }}</span>
               <span class="data-column-name">{{ dataset.columns[index].name }}</span>
             </div>
           </div>
@@ -431,11 +431,12 @@ export default {
       sortDesc: [false],
       columnsTableHeaders: [
 				{ text: '', sortable: false, width: '1%', value: 'controls' },
-				{ hint: '#/A', text: 'Type', value: 'column_dtype', width: '1%' },
+				{ hint: '#/A', text: 'Type', value: 'dtype', width: '1%' },
 				{ hint: 'ABC', text: 'Name', value: 'name', width: '3%' },
-				{ hint: '""', text: 'Missing values', width: '2%', value: '__missing' },
-				{ hint: 'null', text: 'Null values', width: '2%', value: '__na' },
-				{ hint: '0', text: 'Zeros', width: '2%', value: '__zeros' },
+				{ hint: '""', text: 'Missing values', width: '2%', value: 'missing' },
+				// { hint: 'null', text: 'Null values', width: '2%', value: 'null' },
+        // { hint: '0', text: 'Zeros', width: '2%', value: 'zeros' },
+        // TODO: Zeros?
 				{ text: '', sortable: false, width: '50%', value: '' }
 			]
     }
@@ -471,8 +472,8 @@ export default {
 
         var plotable = selected.map( (i)=>{
           var column = this.dataset.columns[i]
-          return ['decimal','float','double'].includes(column.column_dtype) ? 'quantitative'
-            : (['int','integer'].includes(column.column_dtype) && column.stats.count_uniques>25) ? 'quantitative'
+          return ['decimal','float','double','float64'].includes(column.dtype) ? 'quantitative'
+            : (['int','integer','int64'].includes(column.dtype) && column.stats.count_uniques>25) ? 'quantitative'
             : (column.stats.count_uniques<=25) ? column.stats.count_uniques
             : false
         })
@@ -1076,50 +1077,6 @@ export default {
 </script>
 
 <style lang="scss">
-
-.v-icon.control-button {
-  user-select: none;
-}
-
-.the-table-container {
-  .wtHolder, .ht_master {
-    height: inherit !important;
-  }
-  .wtHolder {
-    overflow: scroll;
-  }
-  // TODO: erase?
-}
-
-</style>
-
-<style lang="scss">
-  .data-type-in-table.abs {
-    position: absolute;
-    left: 4px;
-    pointer-events: none;
-    top: 4px;
-		max-width: 32px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  .columnSorting {
-    position: initial !important;
-    &::before {
-      right: 22px !important;
-    }
-  }
-  .data-title {
-    max-width: calc(100% - 46px);
-    width: 100%;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    display: block;
-    top: 4px;
-    left: 32px;
-    position: relative;
-  }
 
   // drag
 

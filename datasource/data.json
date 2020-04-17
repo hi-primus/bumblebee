@@ -1,7 +1,7 @@
 {
     "columns": {
         "GeoLocation": {
-            "column_dtype": "string",
+            "dtype": "string",
             "column_type": "categorical",
             "dtypes_stats": {
                 "bool": 0,
@@ -402,7 +402,7 @@
             }
         },
         "fall": {
-            "column_dtype": "string",
+            "dtype": "string",
             "column_type": "categorical",
             "dtypes_stats": {
                 "bool": 0,
@@ -473,7 +473,7 @@
             }
         },
         "id": {
-            "column_dtype": "int",
+            "dtype": "int",
             "column_type": "numeric",
             "dtypes_stats": {
                 "bool": 0,
@@ -971,7 +971,7 @@
             }
         },
         "mass (g)": {
-            "column_dtype": "float",
+            "dtype": "float",
             "column_type": "numeric",
             "dtypes_stats": {
                 "bool": 0,
@@ -1469,7 +1469,7 @@
             }
         },
         "name": {
-            "column_dtype": "string",
+            "dtype": "string",
             "column_type": "categorical",
             "dtypes_stats": {
                 "bool": 0,
@@ -1885,7 +1885,7 @@
             }
         },
         "nametype": {
-            "column_dtype": "string",
+            "dtype": "string",
             "column_type": "categorical",
             "dtypes_stats": {
                 "bool": 0,
@@ -1961,7 +1961,7 @@
             }
         },
         "recclass": {
-            "column_dtype": "string",
+            "dtype": "string",
             "column_type": "categorical",
             "dtypes_stats": {
                 "bool": 0,
@@ -2367,7 +2367,7 @@
             }
         },
         "reclat": {
-            "column_dtype": "float",
+            "dtype": "float",
             "column_type": "numeric",
             "dtypes_stats": {
                 "bool": 0,
@@ -2865,7 +2865,7 @@
             }
         },
         "reclong": {
-            "column_dtype": "float",
+            "dtype": "float",
             "column_type": "numeric",
             "dtypes_stats": {
                 "bool": 0,
@@ -3363,7 +3363,7 @@
             }
         },
         "year": {
-            "column_dtype": "date",
+            "dtype": "date",
             "column_type": "date",
             "dtypes_stats": {
                 "bool": 0,

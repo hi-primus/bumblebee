@@ -2550,12 +2550,12 @@ export default {
 
       if (!event.columns || !event.columns.length) {
         columns = this.columns.map(e=>this.dataset.columns[e.index].name)
-        columnDataTypes = this.columns.map(e=>this.dataset.columns[e.index].column_dtype)
+        columnDataTypes = this.columns.map(e=>this.dataset.columns[e.index].dtype)
       }
       else {
         columns = event.columns
         var columnIndices = namesToIndices(columns, this.dataset.columns)
-        columnDataTypes = columnIndices.map(i=>this.dataset.columns[i].column_dtype)
+        columnDataTypes = columnIndices.map(i=>this.dataset.columns[i].dtype)
       }
 
       var _command = this.commandsPallete[event.command] || this.commandsPallete[event.type]

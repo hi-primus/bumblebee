@@ -216,8 +216,8 @@
                 v-if="currentDataset && currentDataset.summary"
                 class="caption-2"
               >
-                <template v-if="currentDataset.total_count_dtypes">
-                  {{ currentDataset.total_count_dtypes | formatNumberInt }} Data types &emsp;
+                <template v-if="currentDataset.summary.total_count_dtypes">
+                  {{ currentDataset.summary.total_count_dtypes | formatNumberInt }} Data types &emsp;
                 </template>
                 <template v-if="sampleSize">
                   {{ sampleSize | formatNumberInt }} of

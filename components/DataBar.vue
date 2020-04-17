@@ -2,24 +2,22 @@
   <div class="data-bar">
     <v-tooltip transition="fade-transition" :left="!bottom" :bottom="bottom" content-class="bar-tooltip" color="dataprimary darken-2">
       <template v-slot:activator="{ on }">
-        <div :class="{'min-bar': okP!=0}" :style="{'width': okP+'%'}" class="bar teal-bar" v-on="on" @click="$emit('clicked', 'ok')"/>
+        <div :class="{'min-bar': matchP!=0}" :style="{'width': matchP+'%'}" class="bar teal-bar" v-on="on" @click="$emit('clicked', 'ok')"/>
       </template>
-      <span>{{ okValues }} valid values <span class="percentage">{{ okP }}%</span></span>
+      <span>{{ match | humanNumberInt }} match values <span class="percentage">{{ matchP }}%</span></span>
     </v-tooltip>
     <v-tooltip transition="fade-transition" :left="!bottom" :bottom="bottom" content-class="bar-tooltip" color="error darken-2">
       <template v-slot:activator="{ on }">
         <div :class="{'min-bar': mismatchP!=0}" :style="{'width': mismatchP+'%'}" class="bar red-bar" v-on="on" @click="$emit('clicked', 'mismatch')" />
       </template>
-      <span>{{ mismatch }} mismatches values <span class="percentage">{{ mismatchP }}%</span></span>
+      <span>{{ mismatch | humanNumberInt }} mismatch values <span class="percentage">{{ mismatchP }}%</span></span>
     </v-tooltip>
     <v-tooltip transition="fade-transition" :left="!bottom" :bottom="bottom" content-class="bar-tooltip" background-color="#6c7680" color="#6c7680">
       <template v-slot:activator="{ on }">
         <div :class="{'min-bar': missingP!=0}" class="bar grey-bar default-bar" v-on="on" @click="$emit('clicked', 'missing')" />
       </template>
       <span>
-        {{ missing | humanNumberInt}} missing values <span class="percentage">{{ missingP }}%</span><br/>
-        {{ nullV | humanNumberInt}} null values <span class="percentage">{{ nullP }}%</span><br/>
-        {{ missing+nullV | humanNumberInt}} total values <span class="percentage">{{ missingP + nullP }}%</span>
+        {{ missing | humanNumberInt }} missing values <span class="percentage">{{ missingP }}%</span><br/>
       </span>
     </v-tooltip>
   </div>
@@ -52,20 +50,20 @@ export default {
 
 	data () {
 		return {
-			okP: 0,
+			matchP: 0,
 			missingP: 0,
 			nullP: 0,
-      okValues: 0,
+      match: 0,
       mismatchP: 0
 		}
 	},
 
 	beforeMount () {
-		this.okValues = this.total - (this.missing + this.nullV + this.mismatch)
+		this.match = this.total - (this.missing + this.mismatch)
+		this.matchP = +(+((this.match * 100) / this.total)).toFixed(2) // nh
 		this.missingP = +(+((this.missing * 100) / this.total)).toFixed(2) // nh
 		this.nullP = +(+((this.nullV * 100) / this.total)).toFixed(2) // nh
 		this.mismatchP = +(+((this.mismatch * 100) / this.total)).toFixed(2) // nh
-		this.okP = +(+((this.okValues * 100) / this.total)).toFixed(2) // nh
 	}
 }
 </script>

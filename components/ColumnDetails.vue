@@ -2,7 +2,7 @@
   <div v-if="column">
 
     <div class="sidebar-subheader hoverable column-title" @click="expanded = !expanded">
-      <span class="data-type" :class="`type-${column.column_dtype}`">{{ dataType(column.column_dtype) }}</span>
+      <span class="data-type" :class="`type-${column.dtype}`">{{ dataType(column.dtype) }}</span>
       <span class="data-column-name">{{ column.name }}</span>
       <CommandMenu v-if="$route.query.kernel=='1'" button.class="right-button-2" :disabled="commandsDisabled" @command="$emit('command',{command: $event.command, columns: [column.name]})"></CommandMenu>
       <v-icon class="right-button flippable" :class="{'flipped': expanded}" color="black">expand_more</v-icon>
@@ -12,7 +12,6 @@
       <div class="component-container">
         <General
          :rowsCount="rowsCount"
-         :dtypes="column.dtypes_stats"
          :values="column.stats"
         />
       </div>
@@ -107,9 +106,9 @@
         <Descriptive :values="column.stats" />
       </div>
 
-      <div class="component-container">
-        <DataTypes :values="column.dtypes_stats" />
-      </div>
+      <!-- <div class="component-container">
+        <DataTypes :values="column.stats" />
+      </div> -->
 
       <div
         v-if="column.stats.percentile==undefined"
@@ -117,8 +116,8 @@
       >
         <TopValues
           v-if="column.frequency"
-          :values="column.frequency.frequency"
-          :total="+column.frequency.frequency[0].count"
+          :values="column.frequency"
+          :total="+column.frequency[0].count"
         />
       </div>
 
@@ -195,8 +194,8 @@
         <Frequent
           v-if="column.frequency"
           :uniques="column.stats.count_uniques"
-          :values="column.frequency.frequency"
-          :total="+column.frequency.frequency[0].count"
+          :values="column.frequency"
+          :total="+column.frequency[0].count"
         />
       </div>
 
@@ -206,8 +205,8 @@
       >
         <TopValues
           v-if="column.frequency"
-          :values="column.frequency.frequency"
-          :total="column.frequency.frequency[0].count"
+          :values="column.frequency"
+          :total="column.frequency[0].count"
         />
       </div>
     </div>

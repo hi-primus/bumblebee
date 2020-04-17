@@ -109,16 +109,16 @@
 						</v-tooltip>
 					</div>
 				</template>
-				<template v-slot:item.column_dtype="{ item }">
+				<template v-slot:item.dtype="{ item }">
 					<v-tooltip transition="fade-transition" bottom>
 						<template v-slot:activator="{ on }">
 							<div class="data-type pr-4" v-on="on">
-								{{ dataType(item.column_dtype) }}
+								{{ dataType(item.dtype) }}
 							</div>
 						</template>
 						<span :key="'column-type-hint'" class="capitalize column-type">
-							{{ item.column_dtype }}
-							<template v-if="item.column_dtype==='string*'">
+							{{ item.dtype }}
+							<template v-if="item.dtype==='string*'">
 								<br>
 								<span v-for="(subtype) in getSubTypes(item)" :key="subtype" class="subtype">
 									{{ subtype }}
@@ -139,19 +139,19 @@
 						{{ item.name }}
 					</div>
 				</template>
-				<template v-slot:item.stats.missing_count="{ item }">
+				<template v-slot:item.missing="{ item }">
 					<div class="pr-4">
-						{{ item.stats.missing_count | formatNumberInt }}
+						{{ item.missing | formatNumberInt }}
 					</div>
 				</template>
-				<template v-slot:item.stats.null="{ item }">
-					<div class="pr-4">
-						{{ item.stats.null | formatNumberInt }}
+				<template v-slot:item.null="{ item }">
+					<div class="pr-4" v-if="item.null!==undefined">
+						{{ item.null | formatNumberInt }}
 					</div>
 				</template>
-				<template v-slot:item.stats.zeros="{ item }">
-					<div class="pr-4">
-						{{ item.stats.zeros | formatNumberInt }}
+        <template v-slot:item.zeros="{ item }">
+					<div class="pr-4" v-if="item.zeros!==undefined">
+						{{ item.zeros | formatNumberInt }}
 					</div>
 				</template>
 			</v-data-table>
@@ -162,7 +162,7 @@
 				class="the-table-container"
 			>
         <BumblebeeTable
-					v-if="currentTableView && currentDataset && (currentDataset.sample || currentDataset.id)"
+					v-if="currentTableView && currentDataset"
           :bbColumns="bbColumns"
           @sort="updateSortedColumns"
           @updatedSelection="selectionEvent"
@@ -322,21 +322,13 @@ export default {
 
       if (this.typesSelected.length > 0) {
 				filteredColumns = this.resultsColumns.filter((column) => {
-					return this.typesSelected.includes(column.column_dtype)
+					return this.typesSelected.includes(column.dtype)
 				})
 			} else {
 				filteredColumns = this.resultsColumns
       }
 
       if (filteredColumns) {
-        filteredColumns = filteredColumns.map((column) => {
-          return {
-            __missing: +column.dtypes_stats.missing || 0,
-            __na: +column.dtypes_stats.null || 0,
-            __zeros: +column.stats.zeros || 0,
-            ...column
-          }
-        })
 
         this.$nextTick(()=>{
           let _selected = []
@@ -464,13 +456,13 @@ export default {
 		},
 
 		getSubTypes (item) {
-			if (item.dtypes_stats) {
-				return Object.keys(item.dtypes_stats)
+			if (item.stats) {
+				return Object.keys(item.stats)
 					.filter((k) => {
-						return (!!item.dtypes_stats[k] && k !== 'string' && k !== 'missing' && k !== 'null')
+						return (!!item.stats[k] && k !== 'string' && k !== 'missing' && k !== 'null')
 					})
 					.map((k) => {
-						return item.dtypes_stats[k] + ' ' + k
+						return item.stats[k] + ' ' + k
 					})
 			}
 		},

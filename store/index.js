@@ -143,7 +143,9 @@ export const mutations = {
     else
       dataset.varname = 'df'
 
-    if (dataset.columns instanceof Object) { dataset.columns = Object.values(dataset.columns) }
+    if (dataset.columns instanceof Object) {
+      dataset.columns = Object.entries(dataset.columns).map(([key, value])=>({...value, name: key}))
+    }
 
     var _c
     try {
