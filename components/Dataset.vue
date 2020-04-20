@@ -19,7 +19,7 @@
         Use <v-icon>cloud_upload</v-icon> or <v-icon>storage</v-icon> to load some data
       </div>
     </div>
-		<div v-else-if="!currentTableView" class="table-view-container">
+		<div v-else-if="currentListView" class="table-view-container">
 			<div class="table-controls d-flex">
 				<v-btn
           color="#888" text icon small @click="toggleColumnsSelection">
@@ -53,7 +53,7 @@
 					<template v-slot:activator="{ on }">
 						<v-btn
               color="#888"
-							:class="{'active': !currentTableView && selectionStatus==-1}"
+							:class="{'active': currentListView && selectionStatus==-1}"
 							text
 							icon
 							small
@@ -69,7 +69,7 @@
 				</v-tooltip>
 			</div>
 			<v-data-table
-				v-show="!currentTableView"
+				v-show="currentListView"
 				:headers="columnsTableHeaders"
 				:items="newFilteredColumns"
 				:sort-by.sync="_sortBy"
@@ -158,11 +158,11 @@
 		</div>
 		<client-only>
 			<div
-				v-show="currentTableView && currentDataset && currentDataset.summary"
+				v-show="!currentListView && currentDataset && currentDataset.summary"
 				class="the-table-container"
 			>
         <BumblebeeTable
-					v-if="currentTableView && currentDataset"
+					v-if="!currentListView && currentDataset && currentDataset.summary"
           :bbColumns="bbColumns"
           @sort="updateSortedColumns"
           @updatedSelection="selectionEvent"
@@ -229,13 +229,15 @@ export default {
 
       sortedColumns: [], // table manual sorting
 
-      isMounted: false
+      isMounted: false,
+
+      loadedPreviewCode: ''
     }
   },
 
   computed: {
 
-    ...mapGetters(['currentSelection','currentDataset','currentTableView']),
+    ...mapGetters(['currentSelection','currentDataset','currentListView','currentPreviewCode']),
 
     customSortedColumns () {
       if (this.sortedColumns.length)
@@ -519,6 +521,18 @@ export default {
   },
 
   watch: {
+
+    // currentPreviewCode: {
+    //   deep: true,
+    //   handler () {
+    //     if (this.loadedPreviewCode!==this.currentPreviewCode.code) {
+    //       this.loadedPreviewCode = this.currentPreviewCode.code
+    //       if (this.currentPreviewCode.load) {
+    //         console.log(this.currentPreviewCode)
+    //       }
+    //     }
+    //   },
+    // },
 
     selectedColumns: {
       deep: true,

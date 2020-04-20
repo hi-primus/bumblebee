@@ -145,7 +145,7 @@ const newSocket = function (socket, session) {
 
       var tries = 10
       while (tries-->0) {
-        result = await createKernel(sessionId, payload.engine ? payload.engine : "dask")
+        result = await createKernel(sessionId, payload)
         if (!result || result.status==='error') {
           console.log('"""',result,'"""')
           console.log('# Kernel error, retrying')
@@ -355,7 +355,7 @@ const getDatasets = async function (sessionId) {
   }
 }
 
-const createKernel = async function (sessionId, engine) {
+const createKernel = async function (sessionId, payload) {
 
   try {
 
@@ -366,7 +366,7 @@ const createKernel = async function (sessionId, engine) {
       body: {
         session_id: sessionId,
         secret: process.env.KERNEL_SECRET,
-        engine: engine
+        ...payload
       }
     })
 

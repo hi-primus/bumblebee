@@ -9,6 +9,7 @@
           v-model="_currentCommand.output_cols[i]"
           :label="(fieldLabel===true ? title : fieldLabel) || `Output column name`"
           dense
+          :placeholder="title"
           required
           outlined
           clearable

@@ -3,8 +3,8 @@
     <div class="toolbar bb-toolbar" :class="{'disabled': commandsDisabled}">
       <v-tooltip transition="fade-transition" bottom>
         <template v-slot:activator="{ on }">
-          <v-btn v-on="on" text class="icon-btn" @click="tableView=false" :disabled="!(dataset && dataset.summary)">
-            <v-icon :color="(!tableView) ? 'black' : '#888'">
+          <v-btn v-on="on" text class="icon-btn" @click="listView=true" :disabled="!(dataset && dataset.summary)">
+            <v-icon :color="(listView) ? 'black' : '#888'">
               view_headline
             </v-icon>
           </v-btn>
@@ -13,8 +13,8 @@
       </v-tooltip>
       <v-tooltip transition="fade-transition" bottom>
         <template v-slot:activator="{ on }">
-          <v-btn v-on="on" text class="icon-btn" @click="tableView=true" :disabled="!(dataset && dataset.summary)">
-            <v-icon :color="(tableView) ? 'black' : '#888'">
+          <v-btn v-on="on" text class="icon-btn" @click="listView=false" :disabled="!(dataset && dataset.summary)">
+            <v-icon :color="(!listView) ? 'black' : '#888'">
               view_module
             </v-icon>
           </v-btn>
@@ -444,16 +444,16 @@ export default {
 
 	computed: {
 
-    ...mapGetters(['currentSelection', 'hasSecondaryDatasets', 'currentCells','currentTableView','selectionType']),
+    ...mapGetters(['currentSelection', 'hasSecondaryDatasets', 'currentCells','currentListView','selectionType']),
 
     ...mapState(['nextCommand']),
 
-    tableView: {
+    listView: {
       get () {
-        return this.currentTableView
+        return this.currentListView
       },
       set (view) {
-        this.$store.commit('setTableView',view)
+        this.$store.commit('setListView',view)
       }
     },
 

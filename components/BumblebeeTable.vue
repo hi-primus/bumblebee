@@ -367,7 +367,7 @@ export default {
       selection: [],
       chunks: [],
       chunksPreview: [],
-      chunksPreviewCode: '',
+      loadedPreviewCode: '',
       columns: {}
 		}
   },
@@ -679,7 +679,11 @@ export default {
     },
 
     rowsCount() {
-      return this.currentDataset.summary.rows_count
+      try {
+        return this.currentDataset.summary.rows_count
+      } catch (error) {
+        return undefined
+      }
     },
 
     rowStyle() {
@@ -731,16 +735,21 @@ export default {
     },
 
     currentPreviewCode: {
+
+      deep: true,
+
       handler () {
-        if (this.chunksPreviewCode!==this.currentPreviewCode.code) {
-          this.chunksPreviewCode = this.currentPreviewCode.code
-          this.chunksPreview = []
-          this.updateRows()
-          this.mustCheck = true
-          this.debouncedThrottledScrollCheck()
-          return
+        if (this.loadedPreviewCode!==this.currentPreviewCode.code) {
+          this.loadedPreviewCode = this.currentPreviewCode.code
+          if (!this.currentPreviewCode.load) {
+            this.chunksPreview = []
+            this.updateRows()
+            this.mustCheck = true
+            this.debouncedThrottledScrollCheck()
+          }
         }
-      }
+      },
+
     },
 
   },

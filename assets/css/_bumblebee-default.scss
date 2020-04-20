@@ -461,6 +461,12 @@ table {
       padding: 3px 12px 4px 12px;
       line-height: 26px;
     }
+    .data-column-data {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: calc(100% - 48px)
+    }
     .columns-selected {
       display: flex;
       flex-wrap: wrap;

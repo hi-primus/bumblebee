@@ -268,7 +268,7 @@
               </template>
             </template>
           </template>
-          <OutputColumnInputs v-if="command.dialog.output_cols" :fieldLabel="command.dialog.output_cols_label" :noLabel="command.dialog.no_label" :currentCommand.sync="currentCommand"></OutputColumnInputs>
+          <OutputColumnInputs v-if="command.dialog.output_cols" :fieldLabel="command.dialog.output_cols_label" :noLabel="!command.dialog.output_labels" :currentCommand.sync="currentCommand"></OutputColumnInputs>
           <template>
             <v-alert key="error" type="error" class="mt-3" dismissible v-if="currentCommand.error"  @input="currentCommand.error=''">
               {{currentCommand.error}}
@@ -847,8 +847,8 @@ export default {
                 ...(_datasets_right[df2] || []).map(n=>({name: n, 'source': 'right', key: n+'r'}))
               ],
               _preview: 'join',
-              _previewDelay: 500,
-              _expectedColumns: -1,// () => this.currentCommand.selected_columns.filter(c=>(c.name)).length,
+              // _previewDelay: 500,
+              _expectedColumns: -1,
               _datasetPreview: true
             }
           },
@@ -1092,7 +1092,7 @@ export default {
             _init: true,
             _fileUrl: '',
             _fileUploading: false,
-            _fileInput: '',
+            _fileInput: [],
             file_type: 'csv',
             url: '',
             sep: ',',
@@ -1101,8 +1101,11 @@ export default {
             header: true,
             limit: '',
             multiline: true,
+            charset: 'UTF-8',
             _datasetName: false,
-            charset: 'UTF-8'
+            _preview: 'load',
+            // _previewDelay: 500,
+            // _datasetPreview: true
           }),
 
           code: (payload) => {
@@ -1126,10 +1129,16 @@ export default {
             else if (payload.file_type=='xls') {
               code += `, sheet_name="${payload.sheet_name}"`
             }
-            if (payload.limit>0) {
+            if (payload._requestType) {
+              var limit = 30
+              if (payload.limit>0 && payload.limit<limit) {
+                limit = payload.limit
+              }
+              code +=`, n_rows=${limit}`
+            } else if (payload.limit>0) {
               code +=`, n_rows=${payload.limit}`
             }
-            code += `, quoting=0, lineterminator=None, cache=True)`
+            code += `, quoting=0, lineterminator=None, cache=True).ext.cache()`
 
             return code
           }
@@ -2386,7 +2395,6 @@ export default {
         try {
           if (this.command && this.command.dialog && (!this.command.dialog.validate || this.command.dialog.validate(this.currentCommand))) {
             if (this.currentCommand._preview) {
-              this.getPreview()
               if (this.currentCommand.output_cols) {
                 var nameMap = {}
                 this.currentCommand.output_cols.forEach((col, i) => {
@@ -2394,6 +2402,7 @@ export default {
                 })
                 this.$store.commit('setPreviewNames',nameMap)
               }
+              this.preparePreviewCode()
             }
             if (this.currentCommand._fakePreview==='rename') {
               var nameMap = {}
@@ -2480,7 +2489,7 @@ export default {
       this.moveBar(value)
     },300),
 
-    async getPreview() {
+    async preparePreviewCode() {
 
       try {
 
@@ -2503,6 +2512,7 @@ export default {
           color: this.currentCommand._highlightColor,
           from: this.currentCommand.columns,
           datasetPreview: !!this.currentCommand._datasetPreview,
+          load: this.currentCommand._preview==='load',
           expectedColumns
         })
 

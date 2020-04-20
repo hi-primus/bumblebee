@@ -9,7 +9,7 @@ export const state = () => ({
   secondaryDatasets: [], // TODO: not tab-separated
 	databases: [],
   buffers: [],
-  tableViews: [],
+  listViews: [],
   cells: [],
   columnsPreviews: [],
   profilePreviews: [],
@@ -23,6 +23,8 @@ export const state = () => ({
   status: 'waiting',
   session: '',
   engine: 'dask',
+  tpw: 8,
+  workers: 1,
 	allTypes: [
     'int',
     'decimal',
@@ -117,11 +119,11 @@ export const mutations = {
     state.nextCommand = command
   },
 
-  setTableView(state, tableView) {
-    Vue.set(state.tableViews,state.tab,tableView)
+  setListView(state, listView) {
+    Vue.set(state.listViews,state.tab,listView)
   },
 
-	loadDataset (state, { dataset }) {
+	loadDataset (state, { dataset, preview }) {
 
     console.log("[BUMBLEBLEE] Opening dataset",dataset)
 
@@ -136,7 +138,11 @@ export const mutations = {
 
     }
 
-    dataset.blank = false
+    if (preview) {
+      dataset.preview = preview
+    } else {
+      dataset.blank = false
+    }
 
     if (state.tab>=1)
       dataset.varname = `df${state.tab}`
@@ -214,6 +220,12 @@ export const mutations = {
 
   engine (state, payload) {
     state.engine = payload
+  },
+  tpw (state, payload) {
+    state.tpw = payload
+  },
+  workers (state, payload) {
+    state.workers = payload
   },
 
   setCells (state, payload) {
@@ -371,8 +383,8 @@ export const getters = {
   currentTab (state) {
     return state.tab
   },
-  currentTableView (state) {
-    return state.tableViews[state.tab] || false
+  currentListView (state) {
+    return state.listViews[state.tab] || false
   },
   currentBuffer (state) {
     try {

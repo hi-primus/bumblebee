@@ -306,7 +306,10 @@ export default {
               var response = await this.socketPost('initialize',
               {
                 session: this.$store.state.session,
-                engine: this.$store.state.engine
+                engine: this.$store.state.engine,
+                tpw: this.$store.state.tpw,
+                workers: this.$store.state.workers,
+                reset: this.$route.query.reset
               })
 
               if (response.data.optimus) {
@@ -380,11 +383,13 @@ export default {
 		},
 		async subscribe () {
       try {
+        var tpw = this.$route.query.tpw
+        var workers = this.$route.query.workers
         if (this.$route.query.kernel=='1') {
           var login = await this.$store.dispatch('auth/login',{ username: this.inputUsername, password: this.inputPassword })
-			    this.startClient(this.inputUsername, false, this.inputEngine)
+			    this.startClient({session: this.inputUsername, engine: this.inputEngine, tpw, workers})
         } else {
-			    this.startClient(this.inputUsername, this.inputPassword, this.inputEngine)
+			    this.startClient({session: this.inputUsername, key: this.inputPassword, engine: this.inputEngine, tpw, workers})
         }
       } catch (error) {
         console.error(error)

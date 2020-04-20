@@ -65,7 +65,10 @@ export default {
             await this.startSocket ()
             var response = await this.socketPost('initialize',{
               session: this.$store.state.session,
-              engine: this.$store.state.engine
+              engine: this.$store.state.engine,
+              tpw: this.$store.state.tpw,
+              workers: this.$store.state.workers,
+              reset: this.$route.query.reset
             })
 
             if (response.status!='ok') {
@@ -205,7 +208,7 @@ export default {
 
     },
 
-		async startClient (session, key, engine) {
+		async startClient ({session, key, engine, tpw, workers}) {
 
       if (['loading','receiving'].includes(this.$store.state.status)) {
         return false
@@ -215,6 +218,8 @@ export default {
         this.$store.commit('status', 'loading')
         this.$store.commit('session', session)
         this.$store.commit('engine', engine)
+        this.$store.commit('tpw', tpw)
+        this.$store.commit('workers', workers)
         key && this.$store.commit('key', key)
 
         var client_status = await this.startSocket(session, key, engine)
