@@ -1121,9 +1121,9 @@ export default {
             }
             payload = escapeQuotesOn(payload,['sep','null_value','sheet_name','_datasetName','url'])
             var code = ''
-            code = `${this.availableVariableName} = `
-            // if (!payload._requestType) {
-            // }
+            if (!payload._requestType) {
+              code = `${this.availableVariableName} = `
+            }
             code +=`op.load.${payload.file_type}("${payload.url}"`
             if (payload.file_type=='csv') {
               code += `, sep="${payload.sep}"`

@@ -400,8 +400,8 @@ export default {
 
     rowsPreview () {
 
-      if (this.currentDatasetPreview) {
-        return this.currentDatasetPreview.value.map((row,row_i)=>{
+      if (this.currentDatasetPreview && this.currentDatasetPreview.sample) {
+        return this.currentDatasetPreview.sample.value.map((row,row_i)=>{
           var value = row.map((val, i)=>this.getCellData(i, row_i, val, true))
           return { index: row_i, value }
         })
@@ -450,7 +450,7 @@ export default {
     previewColumns () {
       try {
 
-        var datasetPreviewColumns = this.currentDatasetPreview ? this.currentDatasetPreview.columns : []
+        var datasetPreviewColumns = (this.currentDatasetPreview && this.currentDatasetPreview.sample) ? this.currentDatasetPreview.sample.columns : []
 
         var dpc = datasetPreviewColumns.length
         ? datasetPreviewColumns.map((col, index)=>({
@@ -684,14 +684,22 @@ export default {
 
         var ppd = {}
 
-        for (const colName in this.currentProfilePreview.columns) {
-          const column = this.currentProfilePreview.columns[colName]
+        var profile
+
+        if (this.currentDatasetPreview && this.currentDatasetPreview.profile) {
+          profile = this.currentDatasetPreview.profile
+        } else {
+          profile = this.currentProfilePreview
+        }
+
+        for (const colName in profile.columns) {
+          const column = profile.columns[colName]
           ppd[colName] = {
             key: colName,
             name: colName,
             missing: (column.stats.missing) ? +column.stats.missing : 0,
             mismatch: (column.stats.mismatch) ? +column.stats.mismatch : 0,
-            total: +this.currentProfilePreview.summary.rows_count,
+            total: +profile.summary.rows_count,
             count_uniques: column.stats.count_uniques,
             hist: (column.stats.hist && column.stats.hist[0]) ? column.stats.hist : undefined,
             frequency: ((column.stats.frequency) ? column.stats.frequency : undefined) || column.frequency || undefined,
@@ -711,8 +719,8 @@ export default {
 
     rowsCount() {
       try {
-        if (this.currentDatasetPreview && this.currentDatasetPreview) {
-          return this.currentDatasetPreview.value.length
+        if (this.currentDatasetPreview && this.currentDatasetPreview.sample) {
+          return this.currentDatasetPreview.sample.value.length
         }
         return this.currentDataset.summary.rows_count
       } catch (error) {

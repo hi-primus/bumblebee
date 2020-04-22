@@ -180,7 +180,7 @@
 
 <script>
 
-import { debounce, throttle } from '@/utils/functions.js'
+import { parseResponse, debounce, throttle } from '@/utils/functions.js'
 import { mapGetters } from 'vuex'
 import dataTypesMixin from '@/plugins/mixins/data-types'
 import clientMixin from '@/plugins/mixins/client'
@@ -555,19 +555,23 @@ export default {
           if (this.loadedPreviewCode!==this.currentPreviewCode.code) {
             this.loadedPreviewCode = this.currentPreviewCode.code
             if (this.currentPreviewCode.load) {
-              var varname = this.currentPreviewCode.code.split(" ")[0]
-              var code = ''
-              code += this.currentPreviewCode.code + '\n'
-              code += `${varname}.ext.set_buffer("*") \n`
-              code += `_output = ${varname}.ext.buffer_window("*").ext.to_json("*") \n`
+              var varname = 'preview_df'
+              var code = `${varname} = ${this.currentPreviewCode.code} \n`
+              code += `_output = ${varname}.ext.to_json("*") \n`
 
               var response = await this.evalCode(code)
 
-              // response.data.result.sample.columns = response.data.result.sample.columns
-              //   .map((column, index)=>({...column, index}))
+              this.$store.commit('setDatasetPreview', {sample: response.data.result.sample} )
 
-              var received = response.data.result.sample
-              this.$store.commit('setDatasetPreview', received )
+              var pCode = `_output = ${varname}.ext.profile(columns="*", output="json")`
+
+              var pResponse = await this.evalCode(pCode)
+
+              var profile = parseResponse(pResponse.data.result)
+
+              this.$store.commit('setDatasetPreview', { profile } )
+
+
             }
           }
         } catch (error) {
