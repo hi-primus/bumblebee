@@ -552,7 +552,6 @@ export default {
 
               var received = response.data.result.sample
               this.$store.commit('setDatasetPreview', received )
-              console.log({response, code})
             }
           }
         } catch (error) {
