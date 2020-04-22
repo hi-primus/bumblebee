@@ -126,7 +126,7 @@ export const mutations = {
   setHighlights (state, { matchColumns, color }) {
     var highlights = { matchColumns: matchColumns || {}, color: color || 'green' }
 
-    Vue.set( state.highlights, state.tab, highlights )
+    Vue.set( state.everyHighlights, state.tab, highlights )
   },
 
   previewDefault (state) {
