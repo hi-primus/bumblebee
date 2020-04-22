@@ -108,18 +108,14 @@
         <Descriptive :values="column.stats" />
       </div>
 
-      <!-- <div class="component-container">
-        <DataTypes :values="column.stats" />
-      </div> -->
-
       <div
-        v-if="column.stats.percentile==undefined"
+        v-if="false && column.stats.percentile==undefined && column.stats.frequency"
         class="component-container"
       >
         <TopValues
-          v-if="column.frequency"
-          :values="column.frequency"
-          :total="+column.frequency[0].count"
+          v-if="column.stats.frequency"
+          :values="column.stats.frequency"
+          :total="rowsCount"
         />
       </div>
 
@@ -192,23 +188,14 @@
 
       </template>
 
-      <div class="component-container">
-        <Frequent
-          v-if="column.frequency"
-          :uniques="column.stats.count_uniques"
-          :values="column.frequency"
-          :total="+column.frequency[0].count"
-        />
-      </div>
-
       <div
-        v-if="column.stats.percentile || column.stats.percentile===0"
+        v-if="column.stats.frequency"
         class="component-container"
       >
-        <TopValues
-          v-if="column.frequency"
-          :values="column.frequency"
-          :total="column.frequency[0].count"
+        <Frequent
+          :uniques="column.stats.count_uniques"
+          :values="column.stats.frequency"
+          :total="rowsCount"
         />
       </div>
     </div>
