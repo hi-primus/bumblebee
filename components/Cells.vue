@@ -813,7 +813,7 @@ export default {
               },
             ],
             validate: (c) => {
-              return (c.selected_columns.length && c.right_on)
+              return !!(c.selected_columns.length && c.right_on)
             }
           },
           payload: async (columns) => {
@@ -1062,7 +1062,13 @@ export default {
                 type: 'field'
               },
             ],
-            validate: (c) => (c.url!='' && (c.file_type!='csv' || c.sep))
+            validate: (c) => {
+              if (c.url==='') {
+                return 0
+              }
+              return !!(c.file_type!='csv' || c.sep)
+            }
+
           },
 
           uploadFile: async () => {
@@ -1805,7 +1811,12 @@ export default {
               },
             ],
             output_cols: true,
-            validate: (command) => (command.search.length>0 && command.output_cols.filter(e=>e!=='').length%command.columns.length===0)
+            validate: (command) => {
+              if (!command.search.length) {
+                return 0
+              }
+              return (command.output_cols.filter(e=>e!=='').length%command.columns.length===0)
+            }
           },
           payload: (columns) => ({
 						command: 'replace',
@@ -2397,7 +2408,12 @@ export default {
       deep: true,
       async handler () {
         try {
-          if (this.command && this.command.dialog && (!this.command.dialog.validate || this.command.dialog.validate(this.currentCommand))) {
+          if (this.command && this.command.dialog) {
+            var valid = (!this.command.dialog.validate) ? true : this.command.dialog.validate(this.currentCommand)
+            if (valid===0) {
+              this.restorePreview(true)
+              return
+            }
             if (this.currentCommand._preview) {
               if (this.currentCommand.output_cols) {
                 var nameMap = {}
@@ -2422,15 +2438,7 @@ export default {
               this.$store.commit('setDuplicatedColumns',duplicatedColumns.length ? duplicatedColumns : undefined)
             }
           } else {
-            if (this.currentPreviewCode) {
-              this.$store.commit('setPreviewCode',undefined)
-            }
-            if (this.currentPreviewNames) {
-              this.$store.commit('setPreviewNames',undefined)
-            }
-            if (this.currentDuplicatedColumns) {
-              this.$store.commit('setDuplicatedColumns',undefined)
-            }
+            this.restorePreview(false)
           }
         } catch (error) {
           console.error(error)
@@ -2453,6 +2461,22 @@ export default {
   },
 
   methods: {
+
+    restorePreview (restoreColumns) {
+      if (restoreColumns) {
+        this.$store.commit('previewDefault')
+        return
+      }
+      if (this.currentPreviewCode) {
+        this.$store.commit('setPreviewCode', undefined)
+      }
+      if (this.currentPreviewNames) {
+        this.$store.commit('setPreviewNames', undefined)
+      }
+      if (this.currentDuplicatedColumns) {
+        this.$store.commit('setDuplicatedColumns', undefined)
+      }
+    },
 
     clearTextSelection () {
 
