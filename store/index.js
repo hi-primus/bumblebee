@@ -1,50 +1,103 @@
 import Vue from 'vue'
 
-import { setAuthToken, resetAuthToken } from '@/utils/auth'
+const properties = [
+  {
+    name: 'PreviewColumns',
+    clear: true,
+  },
+  {
+    name: 'DatasetPreview',
+    clear: true,
+    // default: ()=>([]),
+    // defaultValue: true,
+  },
+  {
+    name: 'ProfilePreview',
+    clear: true,
+  },
+  {
+    name: 'HighlightRows',
+    clear: true,
+  },
+  {
+    name: 'Highlights',
+    clear: true,
+  },
+  {
+    name: 'PreviewCode',
+    clear: true,
+  },
+  {
+    name: 'DuplicatedColumns',
+    clear: true,
+  },
+  {
+    name: 'PreviewNames',
+    clear: true,
+  },
+  {
+    name: 'FocusedColumns',
+    clear: true,
+  },
+  {
+    name: 'Cells'
+  }
+]
 
-export const state = () => ({
-	datasets: [],
-  datasetSelection: [],
-  hasSecondaryDatasets: false,
-  secondaryDatasets: [], // TODO: not tab-separated
-	databases: [],
-  buffers: [],
-  listViews: [],
-  cells: [],
-  columnsPreviews: [],
-  profilePreviews: [],
-  previewCodes: [],
-  duplicatedColumns: [],
-  previewNames: [],
-  highlightRows: [],
-  highlights: [],
-  focusedColumns: [],
-	datasetUpdates: 0,
-  status: 'waiting',
-  session: '',
-  engine: 'dask',
-  tpw: 8,
-  workers: 1,
-	allTypes: [
-    'int',
-    'decimal',
-    'string',
-    'boolean',
-    'date',
-    'array',
-    'object',
-    'gender',
-    'ip',
-    'url',
-    'email',
-    'credit_card_number',
-    'zip_code'
-	],
-  datasetCounter: 1,
-  key: '',
-  kernel: false,
-  nextCommand: false,
-  tab: 0
+var pStates = {}
+
+properties.forEach((p)=>{
+  pStates['every'+p.name] = []
+})
+
+export const state = () => {
+  return {
+    datasets: [],
+    datasetSelection: [],
+    hasSecondaryDatasets: false,
+    secondaryDatasets: [], // TODO: not tab-separated
+    databases: [],
+    buffers: [],
+    listViews: [],
+    cells: [],
+    properties,
+    // previewColumns: [],
+    ...pStates,
+    datasetUpdates: 0,
+    status: 'waiting',
+    session: '',
+    engine: 'dask',
+    tpw: 8,
+    workers: 1,
+    allTypes: [
+      'int',
+      'decimal',
+      'string',
+      'boolean',
+      'date',
+      'array',
+      'object',
+      'gender',
+      'ip',
+      'url',
+      'email',
+      'credit_card_number',
+      'zip_code'
+    ],
+    datasetCounter: 1,
+    key: '',
+    kernel: false,
+    nextCommand: false,
+    tab: 0
+  }
+}
+
+var pSetters = {}
+
+properties.forEach((p)=>{
+  pSetters['set'+p.name] = function(state, payload) {
+    Vue.set( state['every'+p.name], state.tab, payload )
+  }
 })
 
 export const mutations = {
@@ -68,31 +121,7 @@ export const mutations = {
     state.hasSecondaryDatasets = payload
   },
 
-  setColumnsPreview (state, payload) {
-    Vue.set( state.columnsPreviews, state.tab, payload )
-  },
-
-  setPreviewNames (state, payload) {
-    Vue.set(state.previewNames,state.tab, payload )
-  },
-
-  setDuplicatedColumns (state, payload) {
-    Vue.set(state.duplicatedColumns,state.tab, payload )
-  },
-
-  setPreviewCode (state, payload) {
-    Vue.set(state.previewCodes,state.tab, payload )
-  },
-
-  setProfilePreview (state, dataset) {
-    Vue.set( state.profilePreviews, state.tab, dataset )
-  },
-
-  setHighlightRows (state, payload ) {
-    var highlightRows = payload
-
-    Vue.set( state.highlightRows, state.tab, highlightRows )
-  },
+  ...pSetters,
 
   setHighlights (state, { matchColumns, color }) {
     var highlights = { matchColumns: matchColumns || {}, color: color || 'green' }
@@ -100,19 +129,10 @@ export const mutations = {
     Vue.set( state.highlights, state.tab, highlights )
   },
 
-  setFocusedColumns (state, column) {
-    Vue.set( state.focusedColumns, state.tab, column )
-  },
-
   previewDefault (state) {
-    Vue.set(state.columnsPreviews,state.tab,false)
-    Vue.set(state.profilePreviews,state.tab,false)
-    Vue.set(state.highlights,state.tab,false)
-    Vue.set(state.highlightRows,state.tab,false)
-    Vue.set(state.focusedColumns,state.tab,false)
-    // Vue.set(state.buffers,state.tab,false)
-    Vue.set(state.previewCodes,state.tab,undefined)
-    Vue.set(state.previewNames,state.tab,undefined)
+    state.properties.filter(p=>p.clear).forEach(p=>{
+      Vue.set(state['every'+p.name], state.tab, false)
+    })
   },
 
   commandHandle(state, command) {
@@ -160,7 +180,7 @@ export const mutations = {
       _c = []
     }
 
-    if (dataset && dataset.summary.dtypes_list) {
+    if (dataset && dataset.summary && dataset.summary.dtypes_list) {
       state.typesAvailable = dataset.summary.dtypes_list
     }
 
@@ -228,15 +248,11 @@ export const mutations = {
     state.workers = payload
   },
 
-  setCells (state, payload) {
-    Vue.set(state.cells, state.tab, payload)
-  },
-
   setCellContent (state, {index, content}) {
     try {
-      var currentCells = state.cells[state.tab] || []
+      var currentCells = state.everyCells[state.tab] || []
       currentCells[index].content = content
-      Vue.set(state.cells, state.tab, currentCells)
+      Vue.set(state.everyCells, state.tab, currentCells)
     } catch (error) {
       console.error(error)
     }
@@ -264,13 +280,9 @@ export const mutations = {
     }
     if (tab!==undefined) {
 
-      Vue.set(state.columnsPreviews,tab,false)
-      Vue.set(state.profilePreviews,tab,false)
-      Vue.set(state.highlights,tab,false)
-      Vue.set(state.highlightRows,tab,false)
-      Vue.set(state.focusedColumns,tab,false)
-      Vue.set(state.previewCodes,tab,undefined)
-      Vue.set(state.previewNames,tab,undefined)
+      state.properties.filter(p=>p.clear).forEach(p=>{
+        Vue.set(state['every'+p.name], tab, false)
+      })
 
       if (clear) {
         Vue.set(state.datasetSelection,tab,{
@@ -340,12 +352,18 @@ export const actions = {
   // },
 }
 
+var pGetters = {}
+
+properties.forEach((p)=>{
+  pGetters['current'+p.name] = function(state) {
+    return state['every'+p.name][state.tab]
+    || (p.defaultC ? p.defaultC() : (p.defaultV || false))
+  }
+})
+
 export const getters = {
   currentDataset (state) {
     return state.datasets[state.tab]
-  },
-  currentCells (state) {
-    return state.cells[state.tab]
   },
   currentSecondaryDatasets (state) {
     return state.secondaryDatasets[state.tab]
@@ -356,30 +374,7 @@ export const getters = {
   currentSelection (state) {
     return state.datasetSelection[state.tab] || {}
   },
-  currentColumnsPreview (state) {
-    return state.columnsPreviews[state.tab] || false
-  },
-  currentProfilePreview (state) {
-    return state.profilePreviews[state.tab] || false
-  },
-  currentHighlightRows (state) {
-    return state.highlightRows[state.tab] || false
-  },
-  currentHighlights (state) {
-    return state.highlights[state.tab] || false
-  },
-  currentPreviewCode (state) {
-    return state.previewCodes[state.tab] || false
-  },
-  currentDuplicatedColumns (state) {
-    return state.duplicatedColumns[state.tab] || false
-  },
-  currentPreviewNames (state) {
-    return state.previewNames[state.tab] || false
-  },
-  currentFocusedColumns (state) {
-    return state.focusedColumns[state.tab] || undefined
-  },
+  ...pGetters,
   currentTab (state) {
     return state.tab
   },
