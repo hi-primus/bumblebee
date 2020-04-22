@@ -185,9 +185,9 @@ export const optimizeRanges = (inputRange, existingRanges) => {
 
 export const escapeQuotes = (str) => {
   if (typeof str === 'string' && str && str.replace ) {
-    return str.replace(/[\""]/g, '\\"')
+    return str.replace(/[\\]/g, '\\\\').replace(/[\""]/g, '\\"')
   } else if (str && str.map) {
-    str = str.map(_str=>(_str && _str.replace) ? _str.replace(/[\""]/g, '\\"') : _str)
+    str = str.map(_str=>(_str && _str.replace) ? _str.replace(/[\\]/g, '\\\\').replace(/[\""]/g, '\\"') : _str)
   }
   return str
 }
