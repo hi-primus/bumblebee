@@ -450,7 +450,6 @@ export default {
     previewColumns () {
       try {
 
-        ///
         var datasetPreviewColumns = this.currentDatasetPreview ? this.currentDatasetPreview.columns : []
 
         var dpc = datasetPreviewColumns.length
@@ -462,10 +461,6 @@ export default {
           name: col.title
         }))
         : []
-
-        ///
-
-        console.log('currentPreviewColumns',this.currentPreviewColumns)
 
         var pc = this.currentPreviewColumns.length
         ? this.currentPreviewColumns.map((col)=>({
@@ -696,7 +691,7 @@ export default {
             name: colName,
             missing: (column.stats.missing) ? +column.stats.missing : 0,
             mismatch: (column.stats.mismatch) ? +column.stats.mismatch : 0,
-            total: +this.currentProfilePreview.stats.rows_count,
+            total: +this.currentProfilePreview.summary.rows_count,
             count_uniques: column.stats.count_uniques,
             hist: (column.stats.hist && column.stats.hist[0]) ? column.stats.hist : undefined,
             frequency: ((column.stats.frequency) ? column.stats.frequency : undefined) || column.frequency || undefined,
@@ -1238,7 +1233,7 @@ export default {
 
         var cols = this.currentPreviewColumns.map(e=>escapeQuotes(e.title))
 
-        var code = `_output = df.ext.buffer_window("*")${await getPropertyAsync(previewCode) || ''}.ext.profile(["${cols.join('", "')}"], output="json")`
+        var code = `_output = df${await getPropertyAsync(previewCode) || ''}.ext.profile(["${cols.join('", "')}"], output="json")`
 
         var response = await this.evalCode(code)
 
