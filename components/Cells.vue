@@ -1114,7 +1114,11 @@ export default {
               multiline: (payload.multiline) ? `True` : `False`,
             }
             payload = escapeQuotesOn(payload,['sep','null_value','sheet_name','_datasetName','url'])
-            let code = `${this.availableVariableName} = op.load.${payload.file_type}("${payload.url}"`
+            var code = ''
+            code = `${this.availableVariableName} = `
+            // if (!payload._requestType) {
+            // }
+            code +=`op.load.${payload.file_type}("${payload.url}"`
             if (payload.file_type=='csv') {
               code += `, sep="${payload.sep}"`
               code += `, error_bad_lines=False`
@@ -1834,7 +1838,7 @@ export default {
               +( (output_cols_argument) ? `, output_cols=${output_cols_argument}` : '')
               +')'
               +( (payload._requestType==='preview') ? `.cols.find(${_argument}, sub=["${search.join('","')}"])` : '')
-              +( (payload._requestType==='preview') ? `.cols.find(${output_cols_argument}, sub=["${payload.replace}"])` : '')
+              +( (payload._requestType==='preview' && payload.replace) ? `.cols.find(${output_cols_argument}, sub=["${payload.replace}"])` : '')
           }
         },
         set: {

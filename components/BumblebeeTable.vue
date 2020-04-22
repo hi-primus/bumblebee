@@ -260,10 +260,10 @@
               :key="'p'+column.index"
               class="bb-table-cell"
               :class="[
-                ...column.classes,
+                ...(column.classes || []),
                 ...rowsPreview[rowArrayIndex].value[column.index].classes
               ]"
-              :style="{width: column.width+'px'}"
+              :style="{width: (column.width || 170)+'px'}"
               v-html="rowsPreview[rowArrayIndex].value[column.index].html"
             ></div>
           </template>
@@ -378,14 +378,15 @@ export default {
       'currentSelection',
       'currentDataset',
       'selectionType',
-      'currentColumnsPreview',
+      'currentPreviewColumns',
       'currentProfilePreview',
       'currentHighlights',
       'currentHighlightRows',
       'currentFocusedColumns',
       'currentPreviewCode',
       'currentDuplicatedColumns',
-      'currentPreviewNames'
+      'currentPreviewNames',
+      'currentDatasetPreview'
     ]),
 
     ...mapState(['allTypes']),
@@ -398,6 +399,14 @@ export default {
     },
 
     rowsPreview () {
+
+      if (this.currentDatasetPreview) {
+        return this.currentDatasetPreview.value.map((row,row_i)=>{
+          var value = row.map((val, i)=>this.getCellData(i, row_i, val, true))
+          return { index: row_i, value }
+        })
+      }
+
       var _cols = this.allColumns.map((col, i)=>({
         index: col.index,
         preview: col.preview,
@@ -440,8 +449,26 @@ export default {
 
     previewColumns () {
       try {
-        var pc = this.currentColumnsPreview.length
-        ? this.currentColumnsPreview.map((col)=>({
+
+        ///
+        var datasetPreviewColumns = this.currentDatasetPreview ? this.currentDatasetPreview.columns : []
+
+        var dpc = datasetPreviewColumns.length
+        ? datasetPreviewColumns.map((col, index)=>({
+          ...col, // title
+          index,
+          preview: true,
+          type: 'preview',
+          name: col.title
+        }))
+        : []
+
+        ///
+
+        console.log('currentPreviewColumns',this.currentPreviewColumns)
+
+        var pc = this.currentPreviewColumns.length
+        ? this.currentPreviewColumns.map((col)=>({
             ...col,
             type: 'preview',
             preview: true,
@@ -458,7 +485,7 @@ export default {
           }))
         : []
 
-        return [...pc, ...dc].map((col,index)=>({
+        return [...pc, ...dc, ...dpc].map((col,index)=>({
           ...col,
           previewIndex: index
         }))
@@ -468,6 +495,15 @@ export default {
     },
 
     allColumns () {
+
+      if (this.currentDatasetPreview && this.previewColumns.length) {
+        return this.previewColumns.map(c=>({
+          ...c,
+          classes: ['bb-preview'],
+          width: 170
+        }))
+      }
+
       var cols = []
       if (
         !this.currentPreviewCode || !this.currentPreviewCode.datasetPreview
@@ -680,6 +716,9 @@ export default {
 
     rowsCount() {
       try {
+        if (this.currentDatasetPreview && this.currentDatasetPreview) {
+          return this.currentDatasetPreview.value.length
+        }
         return this.currentDataset.summary.rows_count
       } catch (error) {
         return undefined
@@ -707,11 +746,15 @@ export default {
 
     this.scrollCheck()
 
-    this.currentDataset.columns.forEach((column, index) => {
-      this.$set(this.columns, index, {name: column.name, width: 170})
-    });
+    try {
+      this.currentDataset.columns.forEach((column, index) => {
+          this.$set(this.columns, index, {name: column.name, width: 170})
+      });
 
-    this.updateSelection(this.currentSelection)
+      this.updateSelection(this.currentSelection)
+    } catch (error) {
+      console.error(error)
+    }
   },
 
   beforeDestroy() {
@@ -730,7 +773,7 @@ export default {
       this.updateSelection(value)
     },
 
-    currentColumnsPreview (value) {
+    currentPreviewColumns (value) {
       this.focusPreview()
     },
 
@@ -872,7 +915,7 @@ export default {
             this.$store.commit('setHighlightRows', false)
           }
 
-          this.$store.commit('setColumnsPreview', previewColumns)
+          this.$store.commit('setPreviewColumns', previewColumns)
 
           this.$store.commit('setHighlights', { matchColumns, color })
 
@@ -1193,7 +1236,7 @@ export default {
 
         this.$store.commit('setProfilePreview', {code: previewCode, columns: []})
 
-        var cols = this.currentColumnsPreview.map(e=>escapeQuotes(e.title))
+        var cols = this.currentPreviewColumns.map(e=>escapeQuotes(e.title))
 
         var code = `_output = df.ext.buffer_window("*")${await getPropertyAsync(previewCode) || ''}.ext.profile(["${cols.join('", "')}"], output="json")`
 
@@ -1225,6 +1268,9 @@ export default {
     throttledScrollCheck: throttle(function(aw = true) {this.scrollCheck(aw)} , throttleScrollTime),
 
     async scrollCheck (awaited = true) {
+      if (this.currentPreviewCode.load) {
+        return false
+      }
       try {
         if (!this.fetching) {
 

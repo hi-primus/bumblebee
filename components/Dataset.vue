@@ -1,6 +1,6 @@
 <template>
 	<div class="table-container">
-    <div v-if="!(currentDataset && currentDataset.summary)" class="no-data">
+    <div v-if="!(currentDataset && currentDataset.summary) && !loadPreview" class="no-data">
       <div
         v-if="commandsDisabled || $store.state.kernel=='loading'"
         class="progress-middle title grey--text text-center"
@@ -19,7 +19,7 @@
         Use <v-icon>cloud_upload</v-icon> or <v-icon>storage</v-icon> to load some data
       </div>
     </div>
-		<div v-else-if="currentListView" class="table-view-container">
+		<div v-else-if="currentListView && !loadPreview" class="table-view-container">
 			<div class="table-controls d-flex">
 				<v-btn
           color="#888" text icon small @click="toggleColumnsSelection">
@@ -158,11 +158,11 @@
 		</div>
 		<client-only>
 			<div
-				v-show="!currentListView && currentDataset && currentDataset.summary"
+				v-show="!currentListView && (currentDataset && currentDataset.summary || loadPreview)"
 				class="the-table-container"
 			>
         <BumblebeeTable
-					v-if="!currentListView && currentDataset && currentDataset.summary"
+					v-if="!currentListView && (currentDataset && currentDataset.summary || loadPreview)"
           :bbColumns="bbColumns"
           @sort="updateSortedColumns"
           @updatedSelection="selectionEvent"
@@ -178,12 +178,14 @@
 import { debounce, throttle } from '@/utils/functions.js'
 import { mapGetters } from 'vuex'
 import dataTypesMixin from '@/plugins/mixins/data-types'
+import clientMixin from '@/plugins/mixins/client'
 import BumblebeeTable from '@/components/BumblebeeTable'
 
 export default {
 
   mixins: [
-    dataTypesMixin
+    dataTypesMixin,
+    clientMixin
   ],
 
   components: {
@@ -237,7 +239,15 @@ export default {
 
   computed: {
 
-    ...mapGetters(['currentSelection','currentDataset','currentListView','currentPreviewCode']),
+    ...mapGetters(['currentSelection','currentDataset','currentListView','currentPreviewCode', 'currentDatasetPreview']),
+
+    loadPreview () {
+      try {
+        return (this.currentPreviewCode.load && this.currentDatasetPreview)
+      } catch (error) {
+        return false
+      }
+    },
 
     customSortedColumns () {
       if (this.sortedColumns.length)
@@ -522,17 +532,34 @@ export default {
 
   watch: {
 
-    // currentPreviewCode: {
-    //   deep: true,
-    //   handler () {
-    //     if (this.loadedPreviewCode!==this.currentPreviewCode.code) {
-    //       this.loadedPreviewCode = this.currentPreviewCode.code
-    //       if (this.currentPreviewCode.load) {
-    //         console.log(this.currentPreviewCode)
-    //       }
-    //     }
-    //   },
-    // },
+    currentPreviewCode: {
+      deep: true,
+      async handler () {
+        try {
+          if (this.loadedPreviewCode!==this.currentPreviewCode.code) {
+            this.loadedPreviewCode = this.currentPreviewCode.code
+            if (this.currentPreviewCode.load) {
+              var varname = this.currentPreviewCode.code.split(" ")[0]
+              var code = ''
+              code += this.currentPreviewCode.code + '\n'
+              code += `${varname}.ext.set_buffer("*") \n`
+              code += `_output = ${varname}.ext.buffer_window("*").ext.to_json("*") \n`
+
+              var response = await this.evalCode(code)
+
+              // response.data.result.sample.columns = response.data.result.sample.columns
+              //   .map((column, index)=>({...column, index}))
+
+              var received = response.data.result.sample
+              this.$store.commit('setDatasetPreview', received )
+              console.log({response, code})
+            }
+          }
+        } catch (error) {
+          console.error(error)
+        }
+      },
+    },
 
     selectedColumns: {
       deep: true,
