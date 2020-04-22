@@ -48,6 +48,9 @@ export default {
 
       } catch (error) {
 
+        var _result = result || error || {}
+
+        console.log('"""[DEBUG][ERROR][CODE]"""', _result.code)
         printError(error)
         return error
 
