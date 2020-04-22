@@ -1,8 +1,12 @@
 <template>
 	<div class="table-container">
     <div v-if="!(currentDataset && currentDataset.summary) && !loadPreview" class="no-data">
+      <div v-if="appError" class="title grey--text text-center text-with-icons">
+        There's a problem <br/><br/>
+        <v-btn color="primary" depressed @click="reloadInit">Reload</v-btn>
+      </div>
       <div
-        v-if="commandsDisabled || $store.state.kernel=='loading'"
+        v-else-if="(commandsDisabled || $store.state.kernel=='loading')"
         class="progress-middle title grey--text text-center"
         :class="{'has-text': $store.state.kernel=='loading'}"
       >
@@ -18,6 +22,7 @@
       <div v-else class="title grey--text text-center text-with-icons">
         Use <v-icon>cloud_upload</v-icon> or <v-icon>storage</v-icon> to load some data
       </div>
+
     </div>
 		<div v-else-if="currentListView && !loadPreview" class="table-view-container">
 			<div class="table-controls d-flex">
@@ -239,7 +244,14 @@ export default {
 
   computed: {
 
-    ...mapGetters(['currentSelection','currentDataset','currentListView','currentPreviewCode', 'currentDatasetPreview']),
+    ...mapGetters([
+      'currentSelection',
+      'currentDataset',
+      'currentListView',
+      'currentPreviewCode',
+      'currentDatasetPreview',
+      'appError'
+    ]),
 
     loadPreview () {
       try {
@@ -406,6 +418,10 @@ export default {
   },
 
   methods: {
+
+    reloadInit () {
+      this.$store.commit('setAppStatus','receiving')
+    },
 
     async updateResults() {
       this.resultsColumns = this.searchText

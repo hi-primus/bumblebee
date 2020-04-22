@@ -26,7 +26,7 @@
       </v-card>
     </v-dialog>
     <v-layout row wrap class="elevation-0 d-flex flex-column align-top justify-start">
-      <template v-if="status=='waiting' || status=='loading' || statusError">
+      <template v-if="status=='waiting' || status=='loading'">
         <v-card
           :loading="(status=='loading') ? 'primary' : false"
           class="elevation-0"
@@ -76,7 +76,7 @@
               <v-btn color="primary darken-1" large depressed @click="subscribe">{{($route.query.kernel=='1') ? 'Sign in' : 'Subscribe'}}</v-btn>
               <v-spacer/>
             </v-card-actions>
-            <v-card-text v-if="statusError" class="pb-0" >
+            <v-card-text v-if="appError" class="pb-0" >
               <v-alert type="error" class="mb-2" dismissible @input="resetStatus($event)">
                 {{ status.message }}
               </v-alert>
@@ -84,7 +84,7 @@
           </v-form>
         </v-card>
       </template>
-      <template v-else-if="!statusError">
+      <template v-else>
         <template v-if="$store.state.datasets.length==0">
           <div class="center-screen-inside black--text">
             <v-progress-circular
@@ -275,23 +275,24 @@ export default {
 
 	computed: {
 
-    ...mapGetters(['currentDataset','typesAvailable']),
+    ...mapGetters(['currentDataset','typesAvailable','appError']),
 
     sampleSize () {
       return Math.min(this.currentDataset.summary.sample_size, this.currentDataset.summary.rows_count)
     },
 
-		statusError () {
-			return (!!this.$store.state.status.message)
-		},
 		status () {
-			return this.$store.state.status
+			return this.$store.state.appStatus.appStatus || this.$store.state.appStatus
+    },
+
+		appStatus () {
+			return this.$store.state.appStatus
 		}
 	},
 
 	watch: {
 
-    async status (value) {
+    async appStatus (value) {
       if (this.$route.query.kernel=='1') {
         switch (value) {
           case 'receiving back':
@@ -302,25 +303,34 @@ export default {
 							this.$store.commit('kernel','loading')
               if (!this.$store.state.datasets.length) {
 								this.$store.commit('newDataset')
-							}
-              var response = await this.socketPost('initialize',
-              {
-                session: this.$store.state.session,
-                engine: this.$store.state.engine,
-                tpw: this.$store.state.tpw,
-                workers: this.$store.state.workers,
-                reset: this.$route.query.reset
-              })
+              }
 
-              if (response.data.optimus) {
+              try {
+
+                var response = await this.socketPost('initialize',
+                {
+                  session: this.$store.state.session,
+                  engine: this.$store.state.engine,
+                  tpw: this.$store.state.tpw,
+                  workers: this.$store.state.workers,
+                  reset: this.$route.query.reset
+                })
+
+                if (!response.data.optimus) {
+                  throw response
+                }
+
                 console.log('Optimus initialized',response.data)
-								this.$store.commit('kernel','done')
-							}
-							else {
-                printError(response)
-								this.$store.commit('status','waiting')
-								this.$store.commit('status','receiving')
-							}
+                this.$store.commit('kernel','done')
+
+
+              } catch (error) {
+                console.error('Error initializing')
+                printError(error)
+                var as = new Error('Initialization error')
+                as.appStatus = 'receiving'
+								this.$store.commit('setAppStatus', as)
+              }
             break;
 
           default:
@@ -397,7 +407,7 @@ export default {
       }
 		},
 		resetStatus (closing) {
-			if (!closing) { this.$store.commit('status') }
+			if (!closing) { this.$store.commit('setAppStatus') }
 		},
 		deleteTab (i) {
 			this.$store.commit('delete', { index: i })
