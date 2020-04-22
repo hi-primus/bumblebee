@@ -1846,7 +1846,7 @@ export default {
             fields: [
               {
                 type: 'field',
-                key: 'newName',
+                key: 'output_col',
                 label: 'New column name',
               },
               {
@@ -1856,7 +1856,7 @@ export default {
 								placeholder: '1+2 or "COLUMN / ANOTHER_COLUMN"'
               },
             ],
-            validate: (command) => (command.newName!=='')
+            validate: (command) => (command.output_col!=='')
           },
           payload: (columns) => ({
             command: 'set',
@@ -1865,11 +1865,11 @@ export default {
             title: 'Create column',
             _expectedColumns: 1,
 						_preview: 'set',
-            newName: ''
+            output_col: ''
           }),
           code: (payload) => {
-            var newName = escapeQuotes(payload.newName)
-            return `.cols.set("${newName}"`
+            var output_col = escapeQuotes(payload.output_col)
+            return `.cols.set("${output_col}"`
             +( (payload.expression) ? `, ${payload.expression}` : '')
             +`)`
           }
