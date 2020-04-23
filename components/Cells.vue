@@ -2587,8 +2587,8 @@ export default {
       }
     },
 
-    codeText (n = false) {
-      if (n)
+    codeText (newOnly = false) {
+      if (newOnly)
         return (this.cells.length) ? (this.cells.filter(e=>(e.content!=='' && !e.done)).map(e=>e.content).join('\n').trim()) : ''
       else
         return (this.cells.length) ? (this.cells.filter(e=>(e.content!=='')).map(e=>e.content).join('\n').trim()) : ''
@@ -2786,7 +2786,7 @@ export default {
       this.cells = cells
 
       if (mark && this.cells)
-        this.codeDone = this.cells.map(e=>e.content).join('\n').trim()
+        this.codeDone = this.codeText(false)
       else
         this.codeDone = ''
     },
@@ -2800,7 +2800,7 @@ export default {
       this.cells = cells
 
       if (this.cells)
-        this.codeDone = this.cells.map(e=>e.content).join('\n').trim()
+        this.codeDone = this.codeText(false)
       else
         this.codeDone = ''
     },
@@ -2883,10 +2883,12 @@ export default {
       var rerun = false
 
       if (code==='') {
+        // console.log('[CODE MANAGER] nothing to run')
         return
       }
 
       if (code === codeDone) {
+        // console.log('[CODE MANAGER] nothing new to run')
         return;
       }
       else if (
@@ -2894,17 +2896,21 @@ export default {
         ||
         !this.socketAvailable
       ) {
+        // console.log('[CODE MANAGER] every cell', {force, firstRun: this.firstRun, code, codeDone, lastWrongCode: this.lastWrongCode, socketAvailable: this.socketAvailable})
         rerun = true
       }
       else {
+        // console.log('[CODE MANAGER] new cells only')
         code = this.codeText(true) // new cells only
       }
 
       if (code===this.lastWrongCode) {
+        // console.log('[CODE MANAGER] code went wrong last time')
         return;
       }
 
       if (rerun) {
+        // console.log('[CODE MANAGER] every cell is new')
 				this.markCells(false)
       }
 

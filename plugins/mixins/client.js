@@ -7,6 +7,7 @@ let socket
 let promises = {}
 
 let timestamps = 0
+let socketAvailable = false
 let secondaryDatasets = {}
 
 const api_url = process.env.API_URL || 'http://localhost:5000'
@@ -15,7 +16,6 @@ export default {
 
   data () {
     return {
-      socketAvailable: false,
     }
   },
 
@@ -23,6 +23,17 @@ export default {
     window.evalCode = async (code) => {
       var result = await this.evalCode(code)
       console.log('[DEBUG]',result)
+    }
+  },
+
+  computed: {
+    socketAvailable: {
+      set (value) {
+        socketAvailable = value
+      },
+      get () {
+        return socketAvailable
+      }
     }
   },
 
