@@ -368,7 +368,6 @@ export default {
       chunks: [],
       chunksPreview: [],
       loadedPreviewCode: '',
-      columns: {}
 		}
   },
 
@@ -390,6 +389,13 @@ export default {
     ]),
 
     ...mapState(['allTypes']),
+
+    columns () {
+      if (this.currentDataset.columns && this.currentDataset.columns.length) {
+        return this.currentDataset.columns.map(column=>({name: column.name, width: 170}))
+      }
+      return []
+    },
 
     rows () {
       return this.rowsValues.map((r,ri) => {
@@ -742,22 +748,13 @@ export default {
   },
 
   mounted() {
+
+    console.log('mounting BumblebeeTable')
+
     this.$refs['BbTableContainer'] && this.$refs['BbTableContainer'].addEventListener('scroll', this.throttledScrollCheck, {passive: true})
 
     this.$refs['BbTableContainer'] && this.$refs['BbTableContainer'].addEventListener('scroll', this.horizontalScrollCheckUp, {passive: true})
     this.$refs['BbTableTopContainer'] && this.$refs['BbTableTopContainer'].addEventListener('scroll', this.horizontalScrollCheckDown, {passive: true})
-
-    this.scrollCheck()
-
-    try {
-      this.currentDataset.columns.forEach((column, index) => {
-          this.$set(this.columns, index, {name: column.name, width: 170})
-      });
-
-      this.updateSelection(this.currentSelection)
-    } catch (error) {
-      console.error(error)
-    }
   },
 
   beforeDestroy() {
@@ -797,6 +794,13 @@ export default {
       },
 
     },
+
+    currentDataset () {
+      this.updateSelection(this.currentSelection) // TEST
+      this.chunks = []
+      // this.rowsValues = []
+      this.scrollCheck()
+    }
 
   },
 

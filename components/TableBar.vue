@@ -168,9 +168,9 @@
         </v-btn>
       </v-badge>
     </div>
+      <!-- :key="tableKey+'dataset'" -->
     <Dataset
       :commandsDisabled="commandsDisabled"
-      :key="tableKey+'dataset'"
       :sortBy.sync="sortBy"
       :sortDesc.sync="sortDesc"
       :operationsActive="operationsActive"
@@ -850,9 +850,9 @@ export default {
       },
       get () {
         try {
-          return this.currentSelection.columns || []
+          return [...this.currentSelection.columns] || []
         } catch (error) {}
-        return false
+        return []
       }
     },
 
@@ -876,6 +876,7 @@ export default {
   },
 
   mounted () {
+    console.log('mounting TableBar')
     this.isMounted = true
   },
 

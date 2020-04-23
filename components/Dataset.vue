@@ -76,7 +76,7 @@
 			<v-data-table
 				v-show="currentListView"
 				:headers="columnsTableHeaders"
-				:items="newFilteredColumns"
+				:items="filteredColumns"
 				:sort-by.sync="_sortBy"
 				:sort-desc.sync="_sortDesc"
 				:mobile-breakpoint="0"
@@ -227,11 +227,9 @@ export default {
   data () {
     return {
 
-			tableUpdate: 0,
-
 			hiddenColumns: {},
 
-      resultsColumns: [], // search
+      _resultsColumns: [], // search
       selectedColumns: {},
 
       sortedColumns: [], // table manual sorting
@@ -271,30 +269,34 @@ export default {
 
       let status
 
-			for (let i = 0; i < this.newFilteredColumns.length; i++) {
-				const column = this.newFilteredColumns[i]
-				if (status !== undefined && status === +!this.selectedColumns[column.name]) { // different from previous value
-					return -1 // indeterminate
-				}
-				status = +!!this.selectedColumns[column.name] // all or none selected
-			}
+      if (this.filteredColumns && this.filteredColumns.length) {
+        for (let i = 0; i < this.filteredColumns.length; i++) {
+          const column = this.filteredColumns[i]
+          if (status !== undefined && status === +!this.selectedColumns[column.name]) { // different from previous value
+            return -1 // indeterminate
+          }
+          status = +!!this.selectedColumns[column.name] // all or none selected
+        }
+      }
 			return +!!status
     },
 
     visibilityStatus () {
 
-			for (let i = 0; i < this.newFilteredColumns.length; i++) {
-				const column = this.newFilteredColumns[i]
-				if (this.selectedColumns[column.name] && this.hiddenColumns[column.name]) {
-					return 0 // at least one is hidden
-				}
-			}
+      if (this.filteredColumns && this.filteredColumns.length) {
+        for (let i = 0; i < this.filteredColumns.length; i++) {
+          const column = this.filteredColumns[i]
+          if (this.selectedColumns[column.name] && this.hiddenColumns[column.name]) {
+            return 0 // at least one is hidden
+          }
+        }
+      }
 			return 1
     },
 
     // affects table view only
     bbColumns () {
-      var bbColumns = this.newFilteredColumns ? [...this.newFilteredColumns.filter((column) => {
+      var bbColumns = this.filteredColumns ? [...this.filteredColumns.filter((column) => {
 				return !this.hiddenColumns[column.name]
       })] : []
 
@@ -336,41 +338,45 @@ export default {
 
     },
 
-    bbColumnsJoin () {
-      return this.bbColumns.map(e=>e.data).join('')
+    resultsColumns () {
+      return this._resultsColumns || this.customSortedColumns
     },
 
-    newFilteredColumns () {
+    filteredColumns () {
 
-      var filteredColumns
+      try {
+        var filteredColumns
 
-      if (this.typesSelected.length > 0) {
-				filteredColumns = this.resultsColumns.filter((column) => {
-					return this.typesSelected.includes(column.dtype)
-				})
-			} else {
-				filteredColumns = this.resultsColumns
-      }
+        if (this.typesSelected.length > 0) {
+          filteredColumns = this.resultsColumns.filter((column) => {
+            return this.typesSelected.includes(column.dtype)
+          })
+        } else {
+          filteredColumns = this.resultsColumns
+        }
 
-      if (filteredColumns) {
+        if (filteredColumns) {
 
-        this.$nextTick(()=>{
-          let _selected = []
+          this.$nextTick(()=>{
+            let _selected = []
 
-          if (this.currentDataset.columns) {
-            for (let i = 0; i < this.currentDataset.columns.length; i++) {
-            const column = this.currentDataset.columns[i];
-            if (this.selectedColumns[column.name]) {
-                _selected.push(i)
+            if (this.currentDataset.columns) {
+              for (let i = 0; i < this.currentDataset.columns.length; i++) {
+              const column = this.currentDataset.columns[i];
+              if (this.selectedColumns[column.name]) {
+                  _selected.push(i)
+                }
               }
             }
-          }
-          this.handleSelection( _selected, true )
-        })
+            this.handleSelection( _selected, true )
+          })
 
 
+        }
+        return filteredColumns
+      } catch (error) {
+        return []
       }
-      return filteredColumns
     },
 
     tableKey () {
@@ -407,6 +413,8 @@ export default {
 
   mounted() {
 
+    console.log('mounting Dataset.vue')
+
     try {
       this.getSelectionFromStore()
     } catch (error) {}
@@ -424,7 +432,7 @@ export default {
     },
 
     async updateResults() {
-      this.resultsColumns = this.searchText
+      this._resultsColumns = this.searchText
         ?
         await this.$search(this.searchText, this.customSortedColumns, {
           shouldSort: true,
@@ -475,8 +483,8 @@ export default {
 			if (!select) {
 				this.selectedColumns = {}
 			} else {
-				for (let i = 0; i < this.newFilteredColumns.length; i++) {
-					const column = this.newFilteredColumns[i]
+				for (let i = 0; i < this.filteredColumns.length; i++) {
+					const column = this.filteredColumns[i]
 					this.$set(this.selectedColumns, column.name, select)
 				}
 			}
@@ -520,8 +528,8 @@ export default {
 		},
 
 		invertSelection () {
-			for (let i = 0; i < this.newFilteredColumns.length; i++) {
-				const column = this.newFilteredColumns[i]
+			for (let i = 0; i < this.filteredColumns.length; i++) {
+				const column = this.filteredColumns[i]
 				if (this.selectedColumns[column.name]) {
           // this.$delete(this.cSelectedColumn, column.name)
           this.$set(this.selectedColumns, column.name, false)
@@ -533,8 +541,8 @@ export default {
 		},
 
 		toggleColumnsVisibility (value) {
-			for (let i = 0; i < this.newFilteredColumns.length; i++) {
-				const column = this.newFilteredColumns[i]
+			for (let i = 0; i < this.filteredColumns.length; i++) {
+				const column = this.filteredColumns[i]
 				if (this.selectedColumns[column.name]) {
           this.$set(this.hiddenColumns, column.name, !value)
         }
@@ -595,12 +603,6 @@ export default {
 
     currentSelection() {
       this.getSelectionFromStore()
-    },
-
-    bbColumnsJoin () {
-      this.$nextTick(()=>{
-        this.tableUpdate = this.tableUpdate + 1
-      })
     },
 
     searchText: {
