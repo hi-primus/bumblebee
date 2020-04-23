@@ -260,3 +260,19 @@ export const indicesToNames = (cols = [], datasetColumns = []) => {
     return cols
   }
 }
+
+export const capitalizeString = (str) => {
+  try {
+    return str.charAt(0).toUpperCase()+str.slice(1)
+  } catch (error) {
+    return str
+  }
+}
+
+export const decapitalizeString = (str) => {
+  try {
+    return str.charAt(0).toLowerCase()+str.slice(1)
+  } catch (error) {
+    return str
+  }
+}
