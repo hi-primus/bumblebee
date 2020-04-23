@@ -557,7 +557,7 @@ export default {
             if (this.currentPreviewCode.load) {
               var varname = 'preview_df'
               var code = `${varname} = ${this.currentPreviewCode.code} \n`
-              if (this.currentPreviewCode.currentCommand._infer) {
+              if (false && this.currentPreviewCode.currentCommand._infer) {
                 code += `_output = {**${varname}.ext.to_json("*"), **${varname}.meta.get() } \n`
               } else {
                 code += `_output = {**${varname}.ext.to_json("*")} \n`

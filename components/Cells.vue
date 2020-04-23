@@ -2558,7 +2558,7 @@ export default {
           from: this.currentCommand.columns,
           datasetPreview: !!this.currentCommand._datasetPreview,
           load: this.currentCommand._preview==='load',
-          currentCommand: this.currentCommand,
+          // currentCommand: this.currentCommand,
           expectedColumns
         })
 
