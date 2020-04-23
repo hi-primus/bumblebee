@@ -798,7 +798,7 @@ export default {
     currentDataset () {
       this.updateSelection(this.currentSelection) // TEST
       this.chunks = []
-      // this.rowsValues = []
+      this.rowsValues = []
       this.scrollCheck()
     }
 
