@@ -989,6 +989,12 @@ export default {
                 type: 'field'
               },
               {
+                condition: (c)=>c.file_type==='csv',
+                key: '_infer',
+                label: (c) => `Infer: ${c._infer ? 'Yes' : 'No'}`,
+                type: 'switch'
+              },
+              {
                 key: 'file_type',
                 label: 'File type',
                 type: 'select',
@@ -998,7 +1004,8 @@ export default {
                   { text: 'JSON', value: 'json' },
                   { text: 'Avro', value: 'avro' },
                   { text: 'Parquet', value: 'parquet' }
-                ]
+                ],
+                condition: (c)=>!c._infer
               },
               {
                 key: 'limit',
@@ -1008,25 +1015,25 @@ export default {
                 type: 'number'
               },
               {
-                condition: (c)=>c.file_type==='csv',
+                condition: (c)=>c.file_type==='csv' && !c._infer,
                 key: 'header',
                 label: (c) => `First row as Header: ${c.header ? 'Yes' : 'No'}`,
                 type: 'switch'
               },
               {
-                condition: (c)=>c.file_type==='csv',
+                condition: (c)=>c.file_type==='csv' && !c._infer,
                 key: 'null_value',
                 label: 'Null value',
                 type: 'field'
               },
               {
-                condition: (c)=>c.file_type==='csv',
+                condition: (c)=>c.file_type==='csv' && !c._infer,
                 key: 'sep',
                 label: 'Separator',
                 type: 'field'
               },
               {
-                condition: (c)=>c.file_type==='csv',
+                condition: (c)=>c.file_type==='csv' && !c._infer,
                 key: 'charset',
                 label: 'File encoding',
                 type: 'select',
@@ -1050,13 +1057,13 @@ export default {
                 ]
               },
               {
-                condition: (c)=>c.file_type==='json',
+                condition: (c)=>c.file_type==='json' && !c._infer,
                 key: 'multiline',
                 label: (c) => `Multiline: ${c.multiline ? 'Yes' : 'No'}`,
                 type: 'switch'
               },
               {
-                condition: (c)=>c.file_type==='xls',
+                condition: (c)=>c.file_type==='xls' && !c._infer,
                 key: 'sheet_name',
                 label: `Sheet name`,
                 type: 'field'
@@ -1099,6 +1106,7 @@ export default {
             _fileUrl: '',
             _fileUploading: false,
             _fileInput: [],
+            _infer: true,
             file_type: 'csv',
             url: '',
             sep: ',',
@@ -1119,24 +1127,30 @@ export default {
               header: (payload.header) ? `True` : `False`,
               multiline: (payload.multiline) ? `True` : `False`,
             }
+
             payload = escapeQuotesOn(payload,['sep','null_value','sheet_name','_datasetName','url'])
+
             var code = ''
+
             if (!payload._requestType) {
               code = `${this.availableVariableName} = `
             }
-            code +=`op.load.${payload.file_type}("${payload.url}"`
-            if (payload.file_type=='csv') {
+
+            var loadType = (payload._infer) ? 'file' : payload.file_type
+
+            code +=`op.load.${loadType}("${payload.url}"`
+            if (loadType=='csv') {
               code += `, sep="${payload.sep}"`
               code += `, error_bad_lines=False`
               code += `, header=${file.header}`
               code += `, null_value="${payload.null_value}"`
               code += `, infer_schema='true'`
-              code += `, charset="${payload.charset}"`
+              code += `, encoding="${payload.charset}"`
             }
-            else if (payload.file_type=='json') {
+            else if (loadType=='json') {
               code += `, multiline=${file.multiline}`
             }
-            else if (payload.file_type=='xls') {
+            else if (loadType=='xls') {
               code += `, sheet_name="${payload.sheet_name}"`
             }
             if (payload._requestType) {
@@ -1148,7 +1162,10 @@ export default {
             } else if (payload.limit>0) {
               code +=`, n_rows=${payload.limit}`
             }
-            code += `, quoting=0, lineterminator=None, cache=True).ext.cache()`
+            if (loadType!='file') {
+              code += `, quoting=0, lineterminator=None, cache=True`
+            }
+            code += `).ext.cache()`
 
             return code
           }
@@ -2541,6 +2558,7 @@ export default {
           from: this.currentCommand.columns,
           datasetPreview: !!this.currentCommand._datasetPreview,
           load: this.currentCommand._preview==='load',
+          currentCommand: this.currentCommand,
           expectedColumns
         })
 
