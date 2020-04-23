@@ -28,6 +28,10 @@ const properties = [
     clear: true,
   },
   {
+    name: 'LoadedPreviewCode',
+    clear: true,
+  },
+  {
     name: 'DuplicatedColumns',
     clear: true,
   },
@@ -61,7 +65,6 @@ export const state = () => {
     listViews: [],
     cells: [],
     properties,
-    // previewColumns: [],
     ...pStates,
     datasetUpdates: 0,
     appStatus: 'waiting',
@@ -339,24 +342,43 @@ export const mutations = {
 }
 
 export const actions = {
-  // async nuxtServerInit ({ dispatch }, context) {
-  //   console.log('[DEBUG] nuxtServerInit')
-  //   const cookies = this.$cookies.getAll() || {} // cookie.parse(context.req.headers.cookie || '')
-  //   if (cookies.hasOwnProperty('x-access-token')) {
-  //     try {
-  //       setAuthToken(cookies['x-access-token'])
-  //       await dispatch('auth/fetch')
-  //       return true
-  //     } catch (err) {
-  //       console.error('Provided token is invalid:', err)
-  //       resetAuthToken()
-  //       return false
-  //     }
-  //   } else {
-  //     resetAuthToken()
-  //     return false
-  //   }
-  // },
+
+  async updatePreviewCode ({state, commit}, previewCode) {
+    commit('setPreviewCode', previewCode)
+    try {
+      if (state.everyLoadedPreviewCode[state.tab]!==previewCode.code) {
+        commit('setLoadedPreviewCode', previewCode.code)
+
+        if (previewCode.load) {
+          var varname = 'preview_df'
+          var code = `${varname} = ${previewCode.code} \n`
+          if (previewCode.currentCommand._infer) {
+            code += `_output = {**${varname}.ext.to_json("*"), **${varname}.meta.get() } \n`
+          } else {
+            code += `_output = {**${varname}.ext.to_json("*")} \n`
+          }
+
+          var response = await this.evalCode(code)
+
+          console.log({response})
+
+          this.$store.commit('setDatasetPreview', {sample: response.data.result.sample} )
+
+          var pCode = `_output = ${varname}.ext.profile(columns="*", output="json")`
+
+          var pResponse = await this.evalCode(pCode)
+
+          var profile = parseResponse(pResponse.data.result)
+
+          this.$store.commit('setDatasetPreview', { profile } )
+
+
+        }
+      }
+    } catch (error) {
+      console.error(error)
+    }
+  }
 }
 
 var pGetters = {}
