@@ -876,7 +876,6 @@ export default {
   },
 
   mounted () {
-    console.log('mounting TableBar')
     this.isMounted = true
   },
 

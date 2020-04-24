@@ -258,6 +258,8 @@ const run_code = async function(code = '', sessionId = '') {
     // }
 
     // console.time('gettingResponse')
+    var startTime = new Date().getTime()
+
     var response = await request({
       uri: `${base}/bumblebee`,
       method: 'POST',
@@ -268,6 +270,8 @@ const run_code = async function(code = '', sessionId = '') {
         session_id: sessionId
       }
     })
+
+    var endTime = new Date().getTime()
     // console.timeEnd('gettingResponse')
     // console.time('responseHandling')
 
@@ -276,6 +280,12 @@ const run_code = async function(code = '', sessionId = '') {
     }
 
     response = handleResponse(response)
+
+    response._serverTime = {
+      start: startTime/1000,
+      end: endTime/1000,
+      duration: (endTime - startTime)/1000
+    }
 
     // console.timeEnd('responseHandling')
 
@@ -359,6 +369,8 @@ const createKernel = async function (sessionId, payload) {
 
   try {
 
+    var startTime = new Date().getTime()
+
     var response = await request({
       uri: `${base}/bumblebee-init`,
       method: 'POST',
@@ -370,7 +382,16 @@ const createKernel = async function (sessionId, payload) {
       }
     })
 
+    var endTime = new Date().getTime()
+
     response = handleResponse(response)
+
+    response._serverTime = {
+      start: startTime,
+      end: endTime,
+      duration: endTime - startTime
+    }
+
 
     return response
   } catch (error) {

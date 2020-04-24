@@ -42,8 +42,10 @@ export default {
     async evalCode (code) {
       try {
 
-        var _c = 'Code #'+(timestamps+1)
-        console.time(_c)
+        // var _c = 'Code #'+(timestamps+1)
+        // console.time(_c)
+
+        var startTime = new Date().getTime()
 
         var result = await this.socketPost('run', {
           code,
@@ -52,8 +54,27 @@ export default {
           timeout: 0
         })
 
+        var endTime = new Date().getTime()
+
+        result._frontTime = {
+          start: startTime/1000,
+          end: endTime/1000,
+          duration: (endTime - startTime)/1000
+        }
+
         console.log('"""[DEBUG][CODE]"""', result.code)
-        console.timeEnd(_c)
+
+        console.log('"""[DEBUG][TIMES]', {
+          a1front: result._frontTime,
+          a2server: result._serverTime,
+          a3gateway: result.data._gatewayTime,
+          t1frontServer: result._serverTime.start-result._frontTime.start,
+          t2serverGateway: result.data._gatewayTime.start-result._serverTime.start,
+          t3GatewayServer: result._serverTime.end-result.data._gatewayTime.end,
+          t4ServerFront: result._frontTime.end-result._serverTime.end,
+        }, '"""')
+
+        // console.timeEnd(_c)
 
         return result
 

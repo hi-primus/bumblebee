@@ -780,8 +780,6 @@ export default {
 
   mounted() {
 
-    console.log('mounting BumblebeeTable')
-
     this.$refs['BbTableContainer'] && this.$refs['BbTableContainer'].addEventListener('scroll', this.throttledScrollCheck, {passive: true})
 
     this.$refs['BbTableContainer'] && this.$refs['BbTableContainer'].addEventListener('scroll', this.horizontalScrollCheckUp, {passive: true})
@@ -801,7 +799,7 @@ export default {
   watch: {
 
     currentPreviewNames (value) {
-      console.log('currentPreviewNames', value)
+      // console.log('currentPreviewNames', value)
 
       var indicesInSample = {}
 
@@ -914,7 +912,7 @@ export default {
       var indicesInSample = {}
 
       columns.forEach((column, index)=>{
-        console.log(`adding ${column.title} to index ${index}`)
+        // console.log(`adding ${column.title} to index ${index}`)
         indicesInSample[column.title] = index
       })
 

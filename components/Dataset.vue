@@ -413,8 +413,6 @@ export default {
 
   mounted() {
 
-    console.log('mounting Dataset.vue')
-
     try {
       this.getSelectionFromStore()
     } catch (error) {}
@@ -572,8 +570,6 @@ export default {
               }
 
               var response = await this.evalCode(code)
-
-              // console.log({response})
 
               this.$store.commit('setDatasetPreview', {sample: response.data.result.sample} )
 
