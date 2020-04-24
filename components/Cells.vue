@@ -2487,12 +2487,12 @@ export default {
       if (this.currentPreviewCode) {
         this.$store.commit('setPreviewCode', undefined)
       }
-      if (this.currentPreviewNames) {
-        this.$store.commit('setPreviewNames', undefined)
-      }
-      if (this.currentDuplicatedColumns) {
-        this.$store.commit('setDuplicatedColumns', undefined)
-      }
+      // if (this.currentPreviewNames) {
+      //   this.$store.commit('setPreviewNames', undefined)
+      // }
+      // if (this.currentDuplicatedColumns) {
+      //   this.$store.commit('setDuplicatedColumns', undefined)
+      // }
     },
 
     clearTextSelection () {
@@ -2677,7 +2677,7 @@ export default {
       this.$emit('updateOperations', { active: (this.currentCommand._noOperations ? false : true), title: 'operations' } )
 
       this.currentCommand = false
-      this.$store.commit('previewDefault')
+      // this.$store.commit('previewDefault')
     },
 
     cancelCommand () {

@@ -228,13 +228,13 @@
           :commandsDisabled.sync="commandsDisabled"
           :dataset="dataset"
         />
-				<v-progress-linear
+				<!-- <v-progress-linear
           indeterminate
           v-if="commandsDisabled && operationsActive && operationsTitle=='operations' && $route.query.kernel=='1'"
           color="#888"
           size="64"
           style="position: absolute; left: 0; top: 34px;"
-        />
+        /> -->
       </template>
       <template v-if="detailsActive!==false && !operationsActive">
         <div class="sidebar-header">

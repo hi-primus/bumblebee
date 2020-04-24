@@ -75,6 +75,11 @@
           :id="(column.previewIndex === previewColumns.length-1) ? 'bb-table-preview-last' : false"
           style="width: 170px"
         >
+          <div
+            class="data-type"
+            :class="`type-${currentDataset.columns[column.index].dtype}`">
+            {{ dataType(currentDataset.columns[column.index].dtype) }}
+          </div>
           <div class="column-title">
             {{column.name}}
           </div>
@@ -86,6 +91,12 @@
           :id="(column.previewIndex === previewColumns.length-1) ? 'bb-table-preview-last' : false"
           style="width: 170px"
         >
+          <div
+            v-if="previewPlotsData[column.name]"
+            class="data-type"
+            :class="`type-${previewPlotsData[column.name].dtype}`">
+            {{ dataType(previewPlotsData[column.name].dtype) }}
+          </div>
           <div v-if="currentPreviewNames && currentPreviewNames[column.title]" class="column-title">
             <span>{{ currentPreviewNames[column.title] }}</span>
           </div>
@@ -113,14 +124,14 @@
           @click="selectColumn($event, column.index)"
           @dblclick="setMenu($event, column.index)"
         >
-          <div class="data-type" :class="`type-${columns[column.index].dtype}`">
+          <div class="data-type" :class="`type-${currentDataset.columns[column.index].dtype}`">
             {{ dataType(currentDataset.columns[column.index].dtype) }}
           </div>
           <div v-if="currentPreviewNames && currentPreviewNames[columns[column.index].name]" class="column-title title-preview-highlight">
             <span>{{ currentPreviewNames[columns[column.index].name] }}</span>
           </div>
           <div v-else class="column-title">
-            {{ columns[column.index].name }}
+            {{ column.title || columns[column.index].name }}
           </div>
         </div>
       </template>
@@ -255,33 +266,33 @@
         :style="{height: rowHeight+'px', top: row.index*rowHeight+'px'}"
       >
         <template v-for="(column) in allColumns">
-          <template v-if="column.type==='preview' && rowsPreview && rowsPreview[rowArrayIndex] && rowsPreview[rowArrayIndex].value[column.index]">
+          <template v-if="column.type==='preview' && rowsPreview && rowsPreview[rowArrayIndex] && rowsPreview[rowArrayIndex].value[idInSample[column.sampleName]]">
             <div
               :key="'p'+column.index"
               class="bb-table-cell"
               :class="[
                 ...(column.classes || []),
-                ...rowsPreview[rowArrayIndex].value[column.index].classes
+                ...rowsPreview[rowArrayIndex].value[idInSample[column.sampleName]].classes
               ]"
               :style="{width: (column.width || 170)+'px'}"
-              v-html="rowsPreview[rowArrayIndex].value[column.index].html"
+              v-html="rowsPreview[rowArrayIndex].value[idInSample[column.sampleName]].html"
             ></div>
           </template>
-          <template v-else-if="column.type!=='preview' && row.value[column.index]">
+          <template v-else-if="column.type!=='preview' && row.value[idInSample[column.sampleName]]">
             <div
-              :key="''+column.type+column.index"
+              :key="''+column.type+idInSample[column.sampleName]"
               class="bb-table-cell"
               :class="[
                 ...column.classes,
-                ...row.value[column.index].classes
+                ...row.value[idInSample[column.sampleName]].classes
               ]"
               :style="{
                 width: column.width+'px',
-                userSelect: (cellsSelection==[column.index, row.index].join()) ? 'text' : 'none'
+                userSelect: (cellsSelection==[idInSample[column.sampleName], row.index].join()) ? 'text' : 'none'
               }"
-              v-html="row.value[column.index].html"
-              @mousedown="clearSelection(); cellsSelection = [column.index, row.index].join()"
-              @mouseup="checkSelection(column.index,row.index)"
+              v-html="row.value[idInSample[column.sampleName]].html"
+              @mousedown="clearSelection(); cellsSelection = [idInSample[column.sampleName], row.index].join()"
+              @mouseup="checkSelection(idInSample[column.sampleName],row.index)"
             ></div>
           </template>
           <div v-else
@@ -290,7 +301,12 @@
             :class="column.classes"
             style="width: 170px"
           >
-            {{row.index}} {{column.index}} - {{row}} {{column}}
+            row.index, column.index: {{row.index}} {{column.index}}.
+            row, column: {{row}}, {{column}}.
+            idInSample[column.name]: {{idInSample[column.name]}}.
+            name: {{column.name}}.
+            idInSample[column.sampleName]: {{idInSample[column.sampleName]}}.
+            sampleName: {{column.sampleName}}.
           </div>
         </template>
       </div>
@@ -368,6 +384,8 @@ export default {
       chunks: [],
       chunksPreview: [],
       loadedPreviewCode: '',
+
+      indicesInSample: {},
 		}
   },
 
@@ -395,6 +413,10 @@ export default {
         return this.currentDataset.columns.map(column=>({name: column.name, width: 170}))
       }
       return []
+    },
+
+    idInSample () {
+      return this.indicesInSample // TODO: name mapping
     },
 
     rows () {
@@ -464,7 +486,8 @@ export default {
           index,
           preview: true,
           type: 'preview',
-          name: col.title
+          name: col.title,
+          sampleName: col.title
         }))
         : []
 
@@ -474,6 +497,7 @@ export default {
             type: 'preview',
             preview: true,
             name: col.title,
+            sampleName: col.title
           }))
         : []
 
@@ -482,6 +506,7 @@ export default {
             type: 'duplicated',
             duplicated: true,
             index: this.currentDataset.columns.findIndex(c=>c.name===col.name),
+            sampleName: col.name,
             name: col.newName,
           }))
         : []
@@ -520,7 +545,8 @@ export default {
             index,
             classes,
             width: 170,
-            name: this.currentDataset.columns[index].name
+            name: this.currentDataset.columns[index].name,
+            sampleName: this.currentDataset.columns[index].name
           }
         })
       }
@@ -559,10 +585,13 @@ export default {
 
             var insertIndex = Math.max(...namesToIndices(after,cols))+1
 
+            var column = this.previewColumns[0]
+
             cols.splice(insertIndex,0,{
-              ...this.previewColumns[0],
+              ...column,
               classes: ['bb-preview'],
-              width: 170
+              width: 170,
+              // title: (this.currentPreviewNames && this.currentPreviewNames[column.title]) || column.title || ''
             })
             pushedColumns++
 
@@ -588,7 +617,8 @@ export default {
               cols.splice(insertIndex++,0,{
                 ...pcol,
                 classes: ['bb-preview'],
-                width: 170
+                width: 170,
+                // title: (this.currentPreviewNames && this.currentPreviewNames[pcol.title]) || pcol.title || ''
               })
               pushedColumns++
             })
@@ -711,6 +741,7 @@ export default {
             frequency: ((column.stats.frequency) ? column.stats.frequency : undefined) || column.frequency || undefined,
             zeros: column.stats.zeros,
             null: column.stats.null,
+            dtype: column.dtype
             // hist_years: (column.stats.hist && column.stats.hist.years) ? column.stats.hist.years : undefined,
           }
         }
@@ -769,6 +800,18 @@ export default {
 
   watch: {
 
+    currentPreviewNames (value) {
+      console.log('currentPreviewNames', value)
+
+      var indicesInSample = {}
+
+      Object.entries(value).forEach(([previousName, newName])=>{
+        indicesInSample[newName] = this.indicesInSample[previousName]
+      })
+
+      this.indicesInSample = {...this.indicesInSample, ...indicesInSample}
+    },
+
     currentSelection (value) {
       this.updateSelection(value)
     },
@@ -798,7 +841,7 @@ export default {
     currentDataset () {
       this.updateSelection(this.currentSelection) // TEST
       this.chunks = []
-      this.rowsValues = []
+      // this.rowsValues = []
       this.scrollCheck()
     }
 
@@ -867,6 +910,16 @@ export default {
     },
 
     checkIncomingColumns (columns) {
+
+      var indicesInSample = {}
+
+      columns.forEach((column, index)=>{
+        console.log(`adding ${column.title} to index ${index}`)
+        indicesInSample[column.title] = index
+      })
+
+      this.indicesInSample = {...this.indicesInSample, ...indicesInSample}
+
       if (this.mustCheck) {
         if (columns.map(c=>c.title).join()!==this.currentDataset.columns.map(c=>c.name).join()) {
           var receivedColumns = columns
@@ -1245,7 +1298,7 @@ export default {
 
         var cols = this.currentPreviewColumns.map(e=>escapeQuotes(e.title))
 
-        var code = `_output = df${await getPropertyAsync(previewCode) || ''}.ext.profile(["${cols.join('", "')}"], output="json")`
+        var code = `_output = df.ext.buffer_window("*")${await getPropertyAsync(previewCode) || ''}.ext.profile(["${cols.join('", "')}"], output="json")`
 
         var response = await this.evalCode(code)
 

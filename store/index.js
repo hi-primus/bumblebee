@@ -224,6 +224,7 @@ export const mutations = {
 
     Vue.set(state.datasets, found, dataset)
     Vue.set(state.datasetSelection, found, {})
+    Vue.set(state.everyDatasetPreview, found, false)
 
 		state.datasetUpdates = state.datasetUpdates + 1
   },
