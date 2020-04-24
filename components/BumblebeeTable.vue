@@ -266,7 +266,8 @@
         :style="{height: rowHeight+'px', top: row.index*rowHeight+'px'}"
       >
         <template v-for="(column) in allColumns">
-          <template v-if="column.type==='preview' && rowsPreview && rowsPreview[rowArrayIndex] && rowsPreview[rowArrayIndex].value[idInSample[column.sampleName]]">
+          <!-- preview -->
+          <template v-if="column.preview && rowsPreview && rowsPreview[rowArrayIndex] && rowsPreview[rowArrayIndex].value[idInSample[column.sampleName]]">
             <div
               :key="'p'+column.index"
               class="bb-table-cell"
@@ -278,35 +279,67 @@
               v-html="rowsPreview[rowArrayIndex].value[idInSample[column.sampleName]].html"
             ></div>
           </template>
-          <template v-else-if="column.type!=='preview' && row.value[idInSample[column.sampleName]]">
+          <!-- normal auxiliar -->
+          <template v-else-if="!column.preview && rowsPreview[rowArrayIndex] && rowsPreview[rowArrayIndex].value[idInSample[column.sampleName]]">
             <div
               :key="''+column.type+idInSample[column.sampleName]"
               class="bb-table-cell"
               :class="[
                 ...column.classes,
-                ...row.value[idInSample[column.sampleName]].classes
+                ...rows[rowArrayIndex].value[idInSample[column.sampleName]].classes
               ]"
               :style="{
                 width: column.width+'px',
-                userSelect: (cellsSelection==[idInSample[column.sampleName], row.index].join()) ? 'text' : 'none'
+                userSelect: (cellsSelection==([idInSample[column.sampleName], rowsPreview[rowArrayIndex].index]).join()) ? 'text' : 'none'
               }"
-              v-html="row.value[idInSample[column.sampleName]].html"
-              @mousedown="clearSelection(); cellsSelection = [idInSample[column.sampleName], row.index].join()"
-              @mouseup="checkSelection(idInSample[column.sampleName],row.index)"
+              v-html="rowsPreview[rowArrayIndex].value[idInSample[column.sampleName]].html"
+              @mousedown="clearSelection(); cellsSelection = [idInSample[column.sampleName], rowsPreview[rowArrayIndex].index].join()"
+              @mouseup="checkSelection(idInSample[column.sampleName],rowsPreview[rowArrayIndex].index)"
+            ></div>
+          </template>
+          <!-- normal -->
+          <template v-else-if="!column.preview && row.value[idInSample[column.sampleName] || column.index]">
+            <div
+              :key="''+column.type+idInSample[column.sampleName] || column.index"
+              class="bb-table-cell"
+              :class="[
+                ...column.classes,
+                ...row.value[idInSample[column.sampleName] || column.index].classes
+              ]"
+              :style="{
+                width: column.width+'px',
+                userSelect: (cellsSelection==[idInSample[column.sampleName] || column.index, row.index].join()) ? 'text' : 'none'
+              }"
+              v-html="row.value[idInSample[column.sampleName] || column.index].html"
+              @mousedown="clearSelection(); cellsSelection = [idInSample[column.sampleName] || column.index, row.index].join()"
+              @mouseup="checkSelection(idInSample[column.sampleName] || column.index,row.index)"
+            ></div>
+          </template>
+          <!-- preview auxiliar -->
+          <template v-else-if="column.preview && rows && rows[rowArrayIndex] && rows[rowArrayIndex].value[idInSample[column.sampleName]]">
+            <div
+              :key="'p'+column.index"
+              class="bb-table-cell"
+              :class="[
+                ...(column.classes || []),
+                ...rows[rowArrayIndex].value[idInSample[column.sampleName]].classes
+              ]"
+              :style="{width: (column.width || 170)+'px'}"
+              v-html="rows[rowArrayIndex].value[idInSample[column.sampleName]].html"
             ></div>
           </template>
           <div v-else
             :key="rowArrayIndex+' '+column.index"
-            class="bb-table-cell not-available --e hidden-error"
+            class="bb-table-cell not-available --e -hidden-error"
             :class="column.classes"
             style="width: 170px"
           >
-            row.index, column.index: {{row.index}} {{column.index}}.
+            <!-- row.index, column.index: {{row.index}} {{column.index}}.
             row, column: {{row}}, {{column}}.
             idInSample[column.name]: {{idInSample[column.name]}}.
             name: {{column.name}}.
-            idInSample[column.sampleName]: {{idInSample[column.sampleName]}}.
-            sampleName: {{column.sampleName}}.
+            idInSample[column.sampleName] || column.index: {{idInSample[column.sampleName] || column.index}}.
+            sampleName: {{column.sampleName}}. -->
           </div>
         </template>
       </div>
@@ -780,6 +813,8 @@ export default {
 
   mounted() {
 
+    this.scrollCheck()
+
     this.$refs['BbTableContainer'] && this.$refs['BbTableContainer'].addEventListener('scroll', this.throttledScrollCheck, {passive: true})
 
     this.$refs['BbTableContainer'] && this.$refs['BbTableContainer'].addEventListener('scroll', this.horizontalScrollCheckUp, {passive: true})
@@ -916,7 +951,7 @@ export default {
         indicesInSample[column.title] = index
       })
 
-      this.indicesInSample = {...this.indicesInSample, ...indicesInSample}
+      this.indicesInSample = {...indicesInSample}
 
       if (this.mustCheck) {
         if (columns.map(c=>c.title).join()!==this.currentDataset.columns.map(c=>c.name).join()) {
@@ -1008,28 +1043,32 @@ export default {
 
     updateRows () {
       this.$nextTick(()=>{
-        var rows = []
-        var rowsPreview = []
-
-        this.chunksPreview.forEach(chunk => {
-            if (chunk.rows && chunk.rows.length) {
-              rowsPreview = [...rowsPreview, ...chunk.rows]
-            } else {
-              console.warn(chunk)
-            }
-        })
-        this.chunks.forEach(chunk => {
+        if (this.chunks.length) {
+          var rows = []
+          this.chunks.forEach(chunk => {
             if (chunk.rows && chunk.rows.length) {
               rows = [...rows, ...chunk.rows]
             } else {
               console.warn(chunk)
             }
-        })
-        rows.sort((a,b)=>a.index-b.index)
-        rowsPreview.sort((a,b)=>a.index-b.index)
+          })
+          rows.sort((a,b)=>a.index-b.index)
+          this.rowsValues = [...new Set(rows)]
+          this.rowsPreviewValues = []
+        }
 
-        this.rowsValues = [...new Set(rows)]
-        this.rowsPreviewValues = [...new Set(rowsPreview)]
+        if (this.chunksPreview.length) {
+          var rowsPreview = []
+          this.chunksPreview.forEach(chunk => {
+            if (chunk.rows && chunk.rows.length) {
+              rowsPreview = [...rowsPreview, ...chunk.rows]
+            } else {
+              console.warn(chunk)
+            }
+          })
+          rowsPreview.sort((a,b)=>a.index-b.index)
+          this.rowsPreviewValues = [...new Set(rowsPreview)]
+        }
 
       })
     },
