@@ -47,7 +47,7 @@
               />
 
               <v-text-field
-                v-if="$route.query.kernel=='1'"
+                v-if="useKernel"
                 v-model="inputPassword"
                 :append-icon="showPassword ? 'visibility' : 'visibility_off'"
                 :type="(showPassword) ? 'text' : 'password'"
@@ -73,7 +73,7 @@
             </v-card-text>
             <v-card-actions>
               <v-spacer/>
-              <v-btn color="primary darken-1" large depressed @click="subscribe">{{($route.query.kernel=='1') ? 'Sign in' : 'Subscribe'}}</v-btn>
+              <v-btn color="primary darken-1" large depressed @click="subscribe">{{(useKernel) ? 'Sign in' : 'Subscribe'}}</v-btn>
               <v-spacer/>
             </v-card-actions>
             <v-card-text v-if="appError" class="pb-0" >
@@ -242,6 +242,7 @@ import Layout from '@/components/Layout'
 import TableBar from '@/components/TableBar'
 import clientMixin from '@/plugins/mixins/client'
 import dataTypesMixin from '@/plugins/mixins/data-types'
+import applicationMixin from '@/plugins/mixins/application'
 import { printError } from '@/utils/functions.js'
 
 import { mapGetters } from 'vuex'
@@ -256,7 +257,7 @@ export default {
     TableBar,
 	},
 
-	mixins: [clientMixin, dataTypesMixin],
+	mixins: [clientMixin, dataTypesMixin, applicationMixin],
 
 	data () {
 		return {
@@ -293,7 +294,7 @@ export default {
 	watch: {
 
     async appStatus (value) {
-      if (this.$route.query.kernel=='1') {
+      if (this.useKernel) {
         switch (value) {
           case 'receiving back':
             this.stopClient(true)
@@ -395,7 +396,7 @@ export default {
       try {
         var tpw = this.$route.query.tpw
         var workers = this.$route.query.workers
-        if (this.$route.query.kernel=='1') {
+        if (this.useKernel) {
           var login = await this.$store.dispatch('auth/login',{ username: this.inputUsername, password: this.inputPassword })
 			    this.startClient({session: this.inputUsername, engine: this.inputEngine, tpw, workers})
         } else {

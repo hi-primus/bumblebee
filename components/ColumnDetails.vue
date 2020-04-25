@@ -6,7 +6,7 @@
         <span class="data-type" :class="`type-${column.dtype}`">{{ dataType(column.dtype) }}</span>
         <span class="data-column-name">{{ column.name }}</span>
       </div>
-      <CommandMenu v-if="$route.query.kernel=='1'" button.class="right-button-2" :disabled="commandsDisabled" @command="$emit('command',{command: $event.command, columns: [column.name]})"></CommandMenu>
+      <CommandMenu v-if="useKernel" button.class="right-button-2" :disabled="commandsDisabled" @command="$emit('command',{command: $event.command, columns: [column.name]})"></CommandMenu>
       <v-icon class="right-button flippable" :class="{'flipped': expanded}" color="black">expand_more</v-icon>
     </div>
 
@@ -212,6 +212,7 @@ import Descriptive from '@/components/Stats'
 import Histogram from '@/components/Histogram'
 import DataTypes from '@/components/DataTypes'
 import dataTypesMixin from '~/plugins/mixins/data-types'
+import applicationMixin from '~/plugins/mixins/application'
 import VegaEmbed from '@/components/VegaEmbed'
 
 export default {
@@ -227,7 +228,7 @@ export default {
     VegaEmbed
 	},
 
-  mixins: [dataTypesMixin],
+  mixins: [dataTypesMixin, applicationMixin],
 
   data () {
     return {

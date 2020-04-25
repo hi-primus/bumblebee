@@ -22,7 +22,7 @@
         <span>Table view</span>
       </v-tooltip>
       <div class="divider"/>
-      <template v-for="(element, index) in toolbarElements">
+      <template v-for="(element, index) in (toolbarElements.filter(e=>!+e.hidden))">
         <div v-if="element.divider" :key="index" class="divider"/>
         <template v-else-if="element.type=='button'">
           <v-tooltip :key="'toolbar'+index" transition="fade-transition" bottom>
@@ -84,7 +84,7 @@
             <v-list dense style="max-height: 400px; min-width: 160px;" class="scroll-y">
               <v-list-item-group color="black">
                 <v-list-item
-                  v-for="(item, i) in menuItems(element.group)"
+                  v-for="(item, i) in menuItems(element.group).filter(e=>!+e.hidden)"
                   :key="i+'mc'"
                   @click="commandHandle(item)"
                   :disabled="(item.max && selectedColumns.length>item.max) || (item.min && selectedColumns.length<item.min)"
@@ -158,7 +158,7 @@
         overlap
       >
         <v-btn
-          v-if="$route.query.kernel=='1'"
+          v-if="useKernel"
           :color="(operationsActive!=false) ? 'black' : '#888'"
           text
           class="icon-btn"
@@ -180,18 +180,18 @@
       :typesSelected="typesSelected"
       :columnsTableHeaders="columnsTableHeaders"
     />
-    <div class="sidebar-container" :class="{'bigger': (operationsActive && (bigOptions || operationsTitle=='operations'))}" v-show="detailsActive || (operationsActive && $route.query.kernel=='1')">
+    <div class="sidebar-container" :class="{'bigger': (operationsActive && (bigOptions || operationsTitle=='operations'))}" v-show="detailsActive || (operationsActive && useKernel)">
 
       <template>
-        <div class="sidebar-header" v-show="operationsActive && operationsTitle=='operations' && $route.query.kernel=='1'">
+        <div class="sidebar-header" v-show="operationsActive && operationsTitle=='operations' && useKernel">
           Operations
           <v-icon class="right-button" color="black" @click="operationsActive = false">close</v-icon>
         </div>
-        <div class="sidebar-header" v-show="operationsTitle!='operations' && operationsActive && $route.query.kernel=='1'">
+        <div class="sidebar-header" v-show="operationsTitle!='operations' && operationsActive && useKernel">
           {{operationsTitle}}
           <v-icon class="right-button" color="black" @click="cancelCommand">close</v-icon>
         </div>
-        <div v-show="operationsTitle=='operations' && operationsActive && $route.query.kernel=='1'" class="px-2 py-1">
+        <div v-show="operationsTitle=='operations' && operationsActive && useKernel" class="px-2 py-1">
           <v-tooltip transition="fade-transition" bottom color="dataprimary darken-2" v-model="copied">
             <template v-slot:activator="{on: success}">
               <v-tooltip :disabled="copied" transition="fade-transition" bottom>
@@ -218,7 +218,7 @@
           </v-tooltip>
         </div>
         <Cells
-          v-show="operationsActive && $route.query.kernel=='1'"
+          v-show="operationsActive && useKernel"
           ref="cells"
           :big.sync="bigOptions"
           :view="operationsTitle"
@@ -230,7 +230,7 @@
         />
 				<!-- <v-progress-linear
           indeterminate
-          v-if="commandsDisabled && operationsActive && operationsTitle=='operations' && $route.query.kernel=='1'"
+          v-if="commandsDisabled && operationsActive && operationsTitle=='operations' && useKernel"
           color="#888"
           size="64"
           style="position: absolute; left: 0; top: 34px;"
@@ -244,7 +244,7 @@
         <div class="sidebar-content">
 
           <div v-if="detailedColumns.length>1" class="sidebar-section pr-10 columns-selected">
-            <CommandMenu v-if="$route.query.kernel=='1'" :columnsNumber="detailedColumns.length" button.class="right-button-center" :disabled="commandsDisabled" @command="commandHandle($event)"></CommandMenu>
+            <CommandMenu v-if="useKernel" :columnsNumber="detailedColumns.length" button.class="right-button-center" :disabled="commandsDisabled" @command="commandHandle($event)"></CommandMenu>
             <div class="column-selected" v-for="(index, i) in detailedColumns" :key="index+'selc'+i">
               <span class="data-type" :class="`type-${dataset.columns[index].dtype}`">{{ dataType(dataset.columns[index].dtype) }}</span>
               <span class="data-column-name">{{ dataset.columns[index].name }}</span>
@@ -325,6 +325,7 @@ import Dataset from '@/components/Dataset'
 import VegaEmbed from '@/components/VegaEmbed'
 import clientMixin from '@/plugins/mixins/client'
 import dataTypesMixin from '@/plugins/mixins/data-types'
+import applicationMixin from '@/plugins/mixins/application'
 import { copyToClipboard, namesToIndices } from '@/utils/functions.js'
 import { mapState, mapGetters } from 'vuex';
 
@@ -339,7 +340,7 @@ export default {
     VegaEmbed
 	},
 
-	mixins: [clientMixin, dataTypesMixin],
+	mixins: [clientMixin, dataTypesMixin, applicationMixin],
 
 	props: {
 		dataset: {
@@ -397,7 +398,7 @@ export default {
 				{command: 'remove_accents', text: 'Remove accents', type: 'STRING'},
 				{command: 'remove_special_chars', text: 'Remove special chars', type: 'STRING'},
         {command: 'trim', text: 'Trim white space', type: 'STRING'},
-        {command: 'string clustering', text: 'String clustering', type: 'STRING', max: 1, min: 1},
+        {command: 'string clustering', text: 'String clustering', type: 'STRING', max: 1, min: 1, hidden: { valueOf: ()=>(this.appStable) }},
 
 				{command: 'bucketizer',       text: 'Create Bins',          type: 'PREPARE', max: 1}, // TODO: Remove limit
 				{command: 'impute',           text: 'Impute rows',          type: 'IMPUTE'},
@@ -559,7 +560,6 @@ export default {
           icons: [{ icon: 'cloud_upload' }],
           tooltip: 'Load file',
           disabled: {
-            //valueOf: ()=>!(this.dataset && this.dataset.summary)
             valueOf: ()=>(this.$store.state.kernel!='done')
           }
         },
@@ -574,7 +574,12 @@ export default {
             valueOf: ()=>!(this.dataset && this.dataset.summary)
           }
         },
-        { divider: true },
+        {
+          divider: true,
+          hidden: {
+              valueOf: ()=>(this.appStable)
+            }
+        },
         {
           type: 'button',
           onClick: () => {
@@ -584,6 +589,9 @@ export default {
           tooltip: 'Connect a database',
           disabled: {
             valueOf: ()=>(this.$store.state.kernel!='done')
+          },
+          hidden: {
+            valueOf: ()=>(this.appStable)
           }
         },
         {
@@ -598,6 +606,9 @@ export default {
           tooltip: 'Save dataset to database',
           disabled: {
             valueOf: ()=>!(this.dataset && this.dataset.summary && this.$store.state.database)
+          },
+          hidden: {
+            valueOf: ()=>(this.appStable)
           }
         },
         { divider: true },
@@ -625,7 +636,10 @@ export default {
             valueOf: ()=>!(this.dataset && this.dataset.summary && this.sortBy[0])
           },
           icons: [{icon: 'sort'},{icon: 'check', style: {marginLeft: '-8px'}}],
-          tooltip: 'Apply sorting'
+          tooltip: 'Apply sorting',
+          hidden: {
+            valueOf: ()=>(this.appStable)
+          }
         },
         { divider: true },
         {
@@ -634,8 +648,16 @@ export default {
           tooltip: 'Sampling',
           icons: [{ icon: 'blur_linear' }],
           disabled: { valueOf: ()=>!(this.selectionType=='columns' && this.dataset && this.dataset.summary) },
+          hidden: {
+            valueOf: ()=>(this.appStable)
+          }
         },
-        { divider: true },
+        {
+          divider: true,
+          hidden: {
+              valueOf: ()=>(this.appStable)
+            }
+        },
         {
           type: 'button',
           onClick: ()=>this.commandHandle({command: 'sort rows'}),
@@ -658,7 +680,10 @@ export default {
                 marginRight: '-5px'
               }
             }
-          ]
+          ],
+          hidden: {
+            valueOf: ()=>(this.appStable)
+          }
         },
         {
           type: 'button',// {toString: ()=>(this.selectionType=='columns' ? 'button' : 'menu')},
@@ -793,41 +818,61 @@ export default {
           tooltip: 'Cast',
           disabled: { valueOf: ()=>!(this.selectionType=='columns' && this.selectedColumns.length>0)}
         },
-        { divider: true },
+        {
+          divider: true,
+          hidden: {
+              valueOf: ()=>(this.appStable)
+            }
+        },
         {
           type: 'menu',
           group: 'PREPARE',
           icons: [{ icon: 'hdr_strong' }],
           tooltip: 'Prepare',
-          disabled: { valueOf: ()=>!(this.selectionType=='columns' && this.selectedColumns.length>0)}
+          disabled: { valueOf: ()=>!(this.selectionType=='columns' && this.selectedColumns.length>0)},
+          hidden: {
+            valueOf: ()=>(this.appStable)
+          }
         },
         {
           type: 'menu',
           group: 'IMPUTE',
           icons: [{ icon: 'flip_to_front' }],
           tooltip: 'Impute',
-          disabled: { valueOf: ()=>!(this.selectionType=='columns' && this.selectedColumns.length>0)}
+          disabled: { valueOf: ()=>!(this.selectionType=='columns' && this.selectedColumns.length>0)},
+          hidden: {
+            valueOf: ()=>(this.appStable)
+          }
         },
         {
           type: 'menu',
           group: 'SCALER',
           icons: [{ icon: 'crop_portrait' }],
           tooltip: 'Scaler',
-          disabled: { valueOf: ()=>!(this.selectionType=='columns' && this.selectedColumns.length>0)}
+          disabled: { valueOf: ()=>!(this.selectionType=='columns' && this.selectedColumns.length>0)},
+          hidden: {
+            valueOf: ()=>(this.appStable)
+          }
         },
         {
           type: 'menu',
           group: 'ENCODING',
           icons: [{ icon: 'exposure_zero' }],
           tooltip: 'Encoding',
-          disabled: { valueOf: ()=>!(this.selectionType=='columns' && this.selectedColumns.length>0)}
+          disabled: { valueOf: ()=>!(this.selectionType=='columns' && this.selectedColumns.length>0)},
+          hidden: {
+            valueOf: ()=>(this.appStable)
+          }
         },
         {
           type: 'button',
           disabled: {valueOf: ()=>!(this.selectionType=='columns' && this.selectedColumns.length==1)},
           icons: [{icon: 'scatter_plot'}],
           tooltip: 'Outliers',
-          onClick: ()=>this.commandHandle({command: 'outliers'})
+          onClick: ()=>this.commandHandle({command: 'outliers'}),
+          hidden: {
+            valueOf: ()=>(this.appStable)
+          }
         }
       ]
     },
