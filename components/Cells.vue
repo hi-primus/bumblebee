@@ -1063,7 +1063,11 @@ export default {
                 type: 'switch'
               },
               {
-                condition: (c)=>c.file_type==='xls' && !c._infer,
+                condition: (c)=>{
+                  return (c.file_type==='xls' && !c._infer)
+                  ||
+                  (c._infer && (c.url.endsWith('.xls') || c.url.endsWith('.xlsx')))
+                },
                 key: 'sheet_name',
                 label: `Sheet name`,
                 type: 'field'
@@ -1164,8 +1168,8 @@ export default {
             }
             if (loadType!='file') {
               code += `, quoting=0, lineterminator=None, cache=True`
-            } else {
-              code += `, sheet_name=0`
+            } else if (payload.url.endsWith('.xls') || payload.url.endsWith('.xlsx')) {
+              code += `, sheet_name="${payload.sheet_name}"`
             }
             code += `).ext.cache()`
 
