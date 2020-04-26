@@ -2,6 +2,10 @@ html:root {
 	overflow-y: auto;
 }
 
+* {
+  overscroll-behavior-x: none;
+}
+
 /* width */
 ::-webkit-scrollbar {
   width: 10px;
@@ -1281,6 +1285,7 @@ $editor-top-padding: 6px;
   padding: $editor-top-padding 12px;
   overflow-y: hidden;
   overflow-x: auto;
+  overscroll-behavior-x: contain;
   background-color: #fbfbfb;
 
   width: 100%;
@@ -1487,6 +1492,7 @@ $editor-top-padding: 6px;
 
   .bb-table-top-container {
     overflow-x: scroll;
+    overscroll-behavior-x: contain;
     overflow-y: scroll;
     min-height: 1000px;
     flex-shrink: 0;
@@ -1598,6 +1604,7 @@ $editor-top-padding: 6px;
   .bb-table-container {
     overflow-y: scroll;
     overflow-x: scroll;
+    overscroll-behavior-x: contain;
     position: relative;
     margin-top: calc(122px - 1000px);
 
