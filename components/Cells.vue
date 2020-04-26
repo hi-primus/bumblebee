@@ -972,7 +972,7 @@ export default {
                 type: 'file'
               },
               {
-                condition: (c)=>(c._fileInput && c._fileInput!==c._fileLoaded),
+                condition: (c)=>(c._fileInput && c._fileInput.toString() && c._fileInput!==c._fileLoaded),
                 type: 'action',
                 label: 'Upload',
                 loading: '_fileUploading',
@@ -1138,7 +1138,7 @@ export default {
 
             var loadType = (payload._infer) ? 'file' : payload.file_type
 
-            code +=`op.load.${loadType}("${payload.url}"`
+            code +=`op.load.${loadType}("${payload.url.trim()}"`
             if (loadType=='csv') {
               code += `, sep="${payload.sep}"`
               code += `, error_bad_lines=False`
@@ -1164,6 +1164,8 @@ export default {
             }
             if (loadType!='file') {
               code += `, quoting=0, lineterminator=None, cache=True`
+            } else {
+              code += `, sheet_name=0`
             }
             code += `).ext.cache()`
 
