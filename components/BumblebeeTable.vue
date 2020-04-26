@@ -267,8 +267,22 @@
       >
         <template v-for="(column) in allColumns">
           <!-- preview -->
-          <template v-if="column.preview && rowsPreview && rowsPreview[rowArrayIndex] && rowsPreview[rowArrayIndex].value[idInSample[column.sampleName]]">
+          <template v-if="column.preview && rowsPreview && rowsPreview[rowArrayIndex]">
             <div
+              v-if="currentDatasetPreview && rowsPreview[rowArrayIndex].value[column.index]"
+              :key="'dp'+column.index"
+              class="bb-table-cell"
+              :class="[
+                ...(column.classes || []),
+                ...rowsPreview[rowArrayIndex].value[column.index].classes
+              ]"
+              :style="{width: (column.width || 170)+'px'}"
+              v-html="rowsPreview[rowArrayIndex].value[column.index].html"
+            >
+
+            </div>
+            <div
+              v-else-if="rowsPreview[rowArrayIndex].value[idInSample[column.sampleName]]"
               :key="'p'+column.index"
               class="bb-table-cell"
               :class="[
@@ -330,16 +344,17 @@
           </template>
           <div v-else
             :key="rowArrayIndex+' '+column.index"
-            class="bb-table-cell not-available --e -hidden-error"
+            class="bb-table-cell not-available --e hidden-error"
             :class="column.classes"
             style="width: 170px"
           >
-            <!-- row.index, column.index: {{row.index}} {{column.index}}.
-            row, column: {{row}}, {{column}}.
+            row.index, column.index: {{row.index}} {{column.index}}.
+            row: {{row}}.
+            column: {{column}}.
             idInSample[column.name]: {{idInSample[column.name]}}.
             name: {{column.name}}.
             idInSample[column.sampleName] || column.index: {{idInSample[column.sampleName] || column.index}}.
-            sampleName: {{column.sampleName}}. -->
+            sampleName: {{column.sampleName}}.
           </div>
         </template>
       </div>
