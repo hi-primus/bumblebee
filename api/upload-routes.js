@@ -9,7 +9,14 @@ var storage = multer.diskStorage({
     cb(null, 'public/uploads')
   },
   filename: function (req, file, cb) {
-    cb(null, file.fieldname + '-' + Date.now())
+    var extension = file.originalname.split('.')
+    extension = extension[extension.length-1]
+    if (extension===file.originalname) {
+      extension = ''
+    } else {
+      extension = `.${extension}`
+    }
+    cb(null, `${file.fieldname}-${Date.now()}${extension}`)
   }
 })
 
