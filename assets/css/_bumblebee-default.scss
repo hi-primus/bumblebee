@@ -1062,6 +1062,9 @@ table {
     font-size: 13px;
     line-height: 1.5;
     font-family: $font-mono;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .table-font {
