@@ -137,120 +137,131 @@
       </template>
     </div>
     <div v-if="true" class="bb-table-plots">
-      <template v-for="column in allColumns">
-        <div
-          :key="'p'+column.index"
-          class="bb-table-plot bb-preview"
-          v-if="column.type=='preview' && !column.hidden"
+      <template v-for="(column, index) in allColumns">
+				<div
+          v-if="!column.hidden"
+					:key="'plot'+column.index"
           :style="{ width: column.width+'px' }"
-        >
-          <transition name="slow-fade">
-            <div v-if="previewPlotsData[column.name]">
-              <DataBar
-                :key="previewPlotsData[column.name].key+'databar'"
-                :missing="previewPlotsData[column.name].missing"
-                :total="+previewPlotsData[column.name].total"
-                :mismatch="+previewPlotsData[column.name].mismatch"
-                :nullV="+previewPlotsData[column.name].null"
-                class="table-data-bar"
-                bottom
-              />
-              <Frequent
-                v-if="previewPlotsData[column.name].frequency"
-                :key="previewPlotsData[column.name].key"
-                :uniques="previewPlotsData[column.name].count_uniques"
-                :values="previewPlotsData[column.name].frequency"
-                :total="+previewPlotsData[column.name].total || 1"
-                :columnIndex="column.index"
-                class="histfreq"
-                table
-              />
-              <Histogram
-                v-else-if="previewPlotsData[column.name].hist"
-                :key="previewPlotsData[column.name].key"
-                :uniques="previewPlotsData[column.name].count_uniques"
-                :values="previewPlotsData[column.name].hist"
-                :total="+previewPlotsData[column.name].total"
-                :columnIndex="column.index"
-                class="histfreq"
-                table
-              />
-              <Histogram
-                v-else-if="previewPlotsData[column.name].hist_years"
-                :key="previewPlotsData[column.name].key"
-                :uniques="previewPlotsData[column.name].count_uniques"
-                :values="previewPlotsData[column.name].hist_years"
-                :total="+previewPlotsData[column.name].total"
-                :columnIndex="column.index"
-                class="histfreq"
-                table
-              />
-              <div
-                v-else
-                class="hidden-error"
-                :key="column.name"
-              >
-                {{previewPlotsData[column.name]}}
-              </div>
-            </div>
-          </transition>
-        </div>
-        <div
           class="bb-table-plot"
-          v-else-if="columns[column.index]"
-          :key="''+column.type+column.index"
-          :style="{ width: column.width+'px' }"
           :class="{
-            'bb-selected': selectionMap[column.index] && column.type!=='duplicated',
-            'bb-preview': column.type==='duplicated',
+            'bb-selected': !(column.type==='duplicated' || column.preview) && selectionMap[column.index],
+            'bb-preview': column.type==='duplicated' || column.preview,
           }"
-        >
-          <div>
-            <DataBar
-              :key="plotsData[column.index].key+'databar'"
-              :missing="plotsData[column.index].missing"
-              :total="+plotsData[column.index].total || 1"
-              :mismatch="+plotsData[column.index].mismatch"
-              :nullV="+plotsData[column.index].null"
-              @clicked="clickedBar($event,column)"
-              class="table-data-bar"
-              bottom
-            />
-            <Frequent
-              v-if="plotsData[column.index].frequency"
-              :key="plotsData[column.index].key"
-              :uniques="plotsData[column.index].count_uniques"
-              :values="plotsData[column.index].frequency"
-              :total="+plotsData[column.index].total || 1"
-              :columnIndex="column.index"
-              class="histfreq"
-              selectable
-              table
-            />
-            <Histogram
-              v-else-if="plotsData[column.index].hist"
-              :key="plotsData[column.index].key"
-              :uniques="plotsData[column.index].count_uniques"
-              :values="plotsData[column.index].hist"
-              :total="+plotsData[column.index].total || 1"
-              :columnIndex="column.index"
-              class="histfreq"
-              selectable
-              table
-            />
-            <Histogram
-              v-else-if="plotsData[column.index].hist_years"
-              :key="plotsData[column.index].key"
-              :uniques="plotsData[column.index].count_uniques"
-              :values="plotsData[column.index].hist_years"
-              :total="+plotsData[column.index].total || 1"
-              :columnIndex="column.index"
-              class="histfreq"
-              selectable
-              table
-            />
-          </div>
-        </div>
+				>
+
+          <transition name="slow-fade">
+            <template v-if="lazyColumns.includes(index)">
+              <div
+                v-if="column.preview"
+                :key="'p'+column.index"
+                class="bb-table-plot-content"
+              >
+
+                  <div v-if="previewPlotsData[column.name]">
+                    <DataBar
+                      :key="previewPlotsData[column.name].key+'databar'"
+                      :missing="previewPlotsData[column.name].missing"
+                      :total="+previewPlotsData[column.name].total"
+                      :mismatch="+previewPlotsData[column.name].mismatch"
+                      :nullV="+previewPlotsData[column.name].null"
+                      class="table-data-bar"
+                      bottom
+                    />
+                    <Frequent
+                      v-if="previewPlotsData[column.name].frequency"
+                      :key="previewPlotsData[column.name].key"
+                      :uniques="previewPlotsData[column.name].count_uniques"
+                      :values="previewPlotsData[column.name].frequency"
+                      :total="+previewPlotsData[column.name].total || 1"
+                      :columnIndex="column.index"
+                      class="histfreq"
+                      table
+                    />
+                    <Histogram
+                      v-else-if="previewPlotsData[column.name].hist"
+                      :key="previewPlotsData[column.name].key"
+                      :uniques="previewPlotsData[column.name].count_uniques"
+                      :values="previewPlotsData[column.name].hist"
+                      :total="+previewPlotsData[column.name].total"
+                      :columnIndex="column.index"
+                      class="histfreq"
+                      table
+                    />
+                    <Histogram
+                      v-else-if="previewPlotsData[column.name].hist_years"
+                      :key="previewPlotsData[column.name].key"
+                      :uniques="previewPlotsData[column.name].count_uniques"
+                      :values="previewPlotsData[column.name].hist_years"
+                      :total="+previewPlotsData[column.name].total"
+                      :columnIndex="column.index"
+                      class="histfreq"
+                      table
+                    />
+                    <div
+                      v-else
+                      class="hidden-error"
+                      :key="column.name"
+                    >
+                      {{previewPlotsData[column.name]}}
+                    </div>
+                  </div>
+
+              </div>
+              <div
+                v-else-if="columns[column.index]"
+                :key="''+column.type+column.index"
+                class="bb-table-plot-content"
+              >
+                <div>
+                  <DataBar
+                    :key="plotsData[column.index].key+'databar'"
+                    :missing="plotsData[column.index].missing"
+                    :total="+plotsData[column.index].total || 1"
+                    :mismatch="+plotsData[column.index].mismatch"
+                    :nullV="+plotsData[column.index].null"
+                    @clicked="clickedBar($event,column)"
+                    class="table-data-bar"
+                    bottom
+                  />
+                  <Frequent
+                    v-if="plotsData[column.index].frequency"
+                    :key="plotsData[column.index].key"
+                    :uniques="plotsData[column.index].count_uniques"
+                    :values="plotsData[column.index].frequency"
+                    :total="+plotsData[column.index].total || 1"
+                    :columnIndex="column.index"
+                    class="histfreq"
+                    selectable
+                    table
+                  />
+                  <Histogram
+                    v-else-if="plotsData[column.index].hist"
+                    :key="plotsData[column.index].key"
+                    :uniques="plotsData[column.index].count_uniques"
+                    :values="plotsData[column.index].hist"
+                    :total="+plotsData[column.index].total || 1"
+                    :columnIndex="column.index"
+                    class="histfreq"
+                    selectable
+                    table
+                  />
+                  <Histogram
+                    v-else-if="plotsData[column.index].hist_years"
+                    :key="plotsData[column.index].key"
+                    :uniques="plotsData[column.index].count_uniques"
+                    :values="plotsData[column.index].hist_years"
+                    :total="+plotsData[column.index].total || 1"
+                    :columnIndex="column.index"
+                    class="histfreq"
+                    selectable
+                    table
+                  />
+                </div>
+              </div>
+
+            </template>
+          </transition>
+				</div>
       </template>
     </div>
   </div>
@@ -434,6 +445,8 @@ export default {
       loadedPreviewCode: '',
 
       indicesInSample: {},
+
+      lazyColumns: [],
 		}
   },
 
@@ -834,6 +847,9 @@ export default {
 
     this.$refs['BbTableContainer'] && this.$refs['BbTableContainer'].addEventListener('scroll', this.horizontalScrollCheckUp, {passive: true})
     this.$refs['BbTableTopContainer'] && this.$refs['BbTableTopContainer'].addEventListener('scroll', this.horizontalScrollCheckDown, {passive: true})
+
+    this.$refs['BbTableContainer'] && this.$refs['BbTableContainer'].addEventListener('scroll', this.checkVisibleColumns, {passive: true})
+    this.$refs['BbTableTopContainer'] && this.$refs['BbTableTopContainer'].addEventListener('scroll', this.checkVisibleColumns, {passive: true})
   },
 
   beforeDestroy() {
@@ -1323,17 +1339,41 @@ export default {
       })
     },
 
+    checkVisibleColumns: debounce(function(event) {
+      var scrollLeft = this.$refs['BbTableTopContainer'].scrollLeft
+
+      var a = scrollLeft/170
+      var b = (scrollLeft + this.$refs['BbTableTopContainer'].offsetWidth)/170
+
+      a = Math.floor((a)-0.1)
+      b = Math.ceil((b))
+
+
+      var numbers = []
+
+      for (let n = a; n <= b; n++) {
+        numbers.push(n)
+      }
+
+      this.lazyColumns = numbers
+
+    }, 90),
+
     horizontalScrollCheckUp () {
-      if (this.$refs['BbTableTopContainer'].scrollLeft != this.$refs['BbTableContainer'].scrollLeft) {
+      var topScrollLeft = this.$refs['BbTableTopContainer'].scrollLeft
+      var bottomScrollLeft = this.$refs['BbTableContainer'].scrollLeft
+      if (topScrollLeft != bottomScrollLeft) {
         this.$refs['BbTable'].style.minWidth = this.$refs['BbTableTopContainer'].scrollWidth + 'px'
-        this.$refs['BbTableTopContainer'].scrollLeft = this.$refs['BbTableContainer'].scrollLeft
+        this.$refs['BbTableTopContainer'].scrollLeft = bottomScrollLeft
       }
     },
 
     horizontalScrollCheckDown () {
-      if (this.$refs['BbTableContainer'].scrollLeft != this.$refs['BbTableTopContainer'].scrollLeft) {
+      var topScrollLeft = this.$refs['BbTableTopContainer'].scrollLeft
+      var bottomScrollLeft = this.$refs['BbTableContainer'].scrollLeft
+      if (bottomScrollLeft != topScrollLeft) {
         this.$refs['BbTable'].style.minWidth = this.$refs['BbTableTopContainer'].scrollWidth + 'px'
-        this.$refs['BbTableContainer'].scrollLeft = this.$refs['BbTableTopContainer'].scrollLeft
+        this.$refs['BbTableContainer'].scrollLeft = topScrollLeft
       }
     },
 

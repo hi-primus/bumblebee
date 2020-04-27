@@ -13,8 +13,8 @@
         @hovered="setValueIndex($event)"
       />
     </div>
-    <div v-if="currentVal" class="current-value table-font" :title="currentVal" v-html="currentVal"></div>
-    <div v-else class="current-value" :title="elementsString">{{ elementsString }}</div>
+    <div v-if="!currentVal" class="current-value" :title="elementsString">{{ elementsString }}</div>
+    <div v-else class="current-value table-font" :title="currentVal" v-html="currentVal"></div>
   </div>
 </template>
 
@@ -67,7 +67,7 @@ export default {
 		}
   },
 
-  beforeMount() {
+  created() {
     this.maxVal = (this.values.length) ? this.getMaxVal(this.calculatedValues) : 1
   },
 
