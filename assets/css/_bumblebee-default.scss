@@ -1497,7 +1497,8 @@ $editor-top-padding: 6px;
     min-height: 1000px;
     flex-shrink: 0;
     flex-basis: auto;
-    z-index: 0;
+    z-index: 1;
+    pointer-events: none;
 
     &::-webkit-scrollbar {
       opacity: 0;
@@ -1530,6 +1531,8 @@ $editor-top-padding: 6px;
     margin-bottom: -2px;
 
     .bb-table-header {
+
+      pointer-events: auto;
 
       font-size: 16px;
       font-family: $font-mono-table;
@@ -1570,6 +1573,8 @@ $editor-top-padding: 6px;
 
     .bb-table-plots {
 
+      pointer-events: auto;
+
 			user-select: none;
 
       font-family: $font-mono;
@@ -1607,6 +1612,7 @@ $editor-top-padding: 6px;
     overscroll-behavior-x: contain;
     position: relative;
     margin-top: calc(122px - 1000px);
+    z-index: 0;
 
     .bb-table {
       width: 100%;
