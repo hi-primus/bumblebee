@@ -123,13 +123,16 @@ export const mutations = {
 
   ...pSetters,
 
-  setDatasetPreview (state, {sample, profile}) {
+  setDatasetPreview (state, {sample, profile, meta}) {
     state.everyDatasetPreview[state.tab] = state.everyDatasetPreview[state.tab] || {}
     if (sample!==undefined) {
       state.everyDatasetPreview[state.tab].sample = sample
     }
     if (profile!==undefined) {
       state.everyDatasetPreview[state.tab].profile = profile
+    }
+    if (meta!==undefined) {
+      state.everyDatasetPreview[state.tab].meta = meta
     }
     Vue.set( state.everyDatasetPreview, state.tab, state.everyDatasetPreview[state.tab])
   },

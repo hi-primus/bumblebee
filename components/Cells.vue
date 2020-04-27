@@ -23,7 +23,7 @@
           </div>
           <template v-if="!currentCommand.loading && command.dialog.fields">
             <template v-for="field in command.dialog.fields.filter(f=>(!f.condition || f.condition && f.condition(currentCommand)))">
-              <template v-if="field.type=='action'">
+              <template v-if="getProperty(field.type,[currentCommand])=='action'">
                 <v-btn
                   :key="field.key"
                   depressed
@@ -38,7 +38,7 @@
                   }}
                 </v-btn>
               </template>
-              <template v-if="field.type=='text'">
+              <template v-if="getProperty(field.type,[currentCommand])=='text'">
                 <div
                   :key="field.key"
                   class="mb-6"
@@ -50,7 +50,7 @@
                   }}
                 </div>
               </template>
-              <template v-if="field.type=='file'">
+              <template v-if="getProperty(field.type,[currentCommand])=='file'">
                 <v-file-input
                   v-model="currentCommand[field.key]"
                   :key="field.key"
@@ -64,7 +64,7 @@
                   outlined
                 ></v-file-input>
               </template>
-              <template v-if="field.type=='field'">
+              <template v-if="getProperty(field.type,[currentCommand])=='field'">
                 <v-text-field
                   v-model="currentCommand[field.key]"
                   :key="field.key"
@@ -77,7 +77,7 @@
                   outlined
                 ></v-text-field>
               </template>
-              <template v-if="field.type=='chips'">
+              <template v-if="getProperty(field.type,[currentCommand])=='chips'">
                 <v-combobox
                   v-model="currentCommand[field.key]"
                   :key="field.key"
@@ -93,7 +93,7 @@
                 >
                 </v-combobox>
               </template>
-              <template v-if="field.type=='outliers-range'">
+              <template v-if="getProperty(field.type,[currentCommand])=='outliers-range'">
                 <Outliers
                   :key="field.key"
                   v-if="currentCommand[field.key]"
@@ -102,7 +102,7 @@
                   :selection.sync="currentCommand[field.selection_key]"
                 />
               </template>
-              <template v-if="field.type=='switch'">
+              <template v-if="getProperty(field.type,[currentCommand])=='switch'">
                 <v-switch
                   :key="field.key"
                   v-model="currentCommand[field.key]"
@@ -110,7 +110,7 @@
                   :label="(typeof field.label == 'function') ? field.label(currentCommand) : field.label"
                 ></v-switch>
               </template>
-              <template v-else-if="field.type=='password'">
+              <template v-else-if="getProperty(field.type,[currentCommand])=='password'">
                 <v-text-field
                   v-model="currentCommand[field.key]"
                   :key="field.key"
@@ -126,7 +126,7 @@
                   @click:append="field.show = !field.show"
                 />
               </template>
-              <template v-else-if="field.type=='number'">
+              <template v-else-if="getProperty(field.type,[currentCommand])=='number'">
                 <v-text-field
                   type="number"
                   v-model="currentCommand[field.key]"
@@ -141,7 +141,7 @@
                   outlined
                 ></v-text-field>
               </template>
-              <template v-else-if="field.type=='number_index'">
+              <template v-else-if="getProperty(field.type,[currentCommand])=='number_index'">
                 <v-text-field
                   type="number"
                   :value="(currentCommand.index>=0) ? currentCommand.index : ''"
@@ -157,7 +157,7 @@
                   outlined
                 ></v-text-field>
               </template>
-              <template v-else-if="field.type=='select' && (!field.items_key == !currentCommand[field.items_key])">
+              <template v-else-if="getProperty(field.type,[currentCommand])=='select' && (!field.items_key == !currentCommand[field.items_key])">
                 <v-select
                   :key="field.key"
                   v-model="currentCommand[field.key]"
@@ -171,7 +171,7 @@
                   outlined
                 ></v-select>
               </template>
-              <template v-else-if="field.type=='columns_filter'">
+              <template v-else-if="getProperty(field.type,[currentCommand])=='columns_filter'">
                 <v-data-table
                   :key="field.key"
                   v-model="currentCommand[field.key]"
@@ -210,7 +210,7 @@
                   </template>
                 </v-data-table>
               </template>
-              <template v-else-if="field.type=='select-foreach'">
+              <template v-else-if="getProperty(field.type,[currentCommand])=='select-foreach'">
                 <v-row :key="field.key" no-gutters class="foreach-label">
                   <template v-for="(title, i) in currentCommand.columns">
                     <v-col v-if="!field.noLabel" :key="i+'label'" class="col-12 col-sm-4 col-md-3 font-weight-bold pr-4 text-ellipsis" :title="title">
@@ -231,7 +231,7 @@
                   </template>
                 </v-row>
               </template>
-              <template v-else-if="field.type=='clusters'">
+              <template v-else-if="getProperty(field.type,[currentCommand])=='clusters'">
                 <div :key="field.key" class="clusters-table-container" style="overflow-y: auto; min-heigth: 240px;">
                   <div v-for="(cluster, i) in currentCommand[field.key]" :key="i+'label'" class="cluster" :class="{'disabled-cluster': !cluster.merge}" >
                       <v-data-table
@@ -1070,7 +1070,8 @@ export default {
                 },
                 key: 'sheet_name',
                 label: `Sheet`,
-                type: 'number'
+                items_key: '_sheet_names',
+                type: (c)=> c._sheet_names.length ? 'select' : 'number'
               },
             ],
             validate: (c) => {
@@ -1115,12 +1116,14 @@ export default {
             url: '',
             sep: ',',
             null_value: 'null',
-            sheet_name: '0',
+            sheet_name: 0,
             header: true,
             limit: '',
             multiline: true,
             charset: 'UTF-8',
+            _meta: false,
             _datasetName: false,
+            _sheet_names: 1,
             _preview: 'load',
             // _previewDelay: 500,
             // _datasetPreview: true
@@ -1155,7 +1158,11 @@ export default {
               code += `, multiline=${file.multiline}`
             }
             else if (loadType=='xls') {
-              code += `, sheet_name=${payload.sheet_name}`
+              if (payload._sheet_names.length) {
+                code += `, sheet_name="${payload.sheet_name}"`
+              } else {
+                code += `, sheet_name=${payload.sheet_name}`
+              }
             }
             if (payload._requestType) {
               var limit = 30
@@ -1169,7 +1176,11 @@ export default {
             if (loadType!='file') {
               code += `, quoting=0, lineterminator=None, cache=True`
             } else if (payload.url.endsWith('.xls') || payload.url.endsWith('.xlsx')) {
-              code += `, sheet_name=${payload.sheet_name}`
+              if (payload._sheet_names.length) {
+                code += `, sheet_name="${payload.sheet_name}"`
+              } else {
+                code += `, sheet_name=${payload.sheet_name}`
+              }
             }
             code += `).ext.cache()`
 
@@ -2347,7 +2358,7 @@ export default {
 
   computed: {
 
-    ...mapGetters(['currentSelection','currentCells','selectionType','currentTab', 'currentDuplicatedColumns', 'currentPreviewNames', 'currentSecondaryDatasets']),
+    ...mapGetters(['currentSelection','currentCells','selectionType','currentTab', 'currentDuplicatedColumns', 'currentPreviewNames', 'currentSecondaryDatasets', 'currentDatasetPreview']),
 
     cells: {
       get() {
@@ -2414,6 +2425,20 @@ export default {
   },
 
   watch: {
+
+    currentDatasetPreview ({meta}) {
+      try {
+
+        if (this.currentCommand.command==='load file' && meta && meta.sheet_names!==undefined) {
+          this.currentCommand._sheet_names = meta.sheet_names
+          if (meta.sheet_names.length && !meta.sheet_names.includes(this.currentCommand.sheet_name)) {
+            this.currentCommand.sheet_name = meta.sheet_names[0]
+          }
+        }
+      } catch (error) {
+        console.error(error)
+      }
+    },
 
     view (value) {
       if (value=='operations' || !value) {
@@ -2564,7 +2589,7 @@ export default {
           from: this.currentCommand.columns,
           datasetPreview: !!this.currentCommand._datasetPreview,
           load: this.currentCommand._preview==='load',
-          // currentCommand: this.currentCommand,
+          infer: this.currentCommand._infer,
           expectedColumns
         })
 

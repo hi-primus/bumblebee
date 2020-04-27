@@ -563,8 +563,9 @@ export default {
             if (this.currentPreviewCode.load) {
               var varname = 'preview_df'
               var code = `${varname} = ${this.currentPreviewCode.code} \n`
-              if (false && this.currentPreviewCode.currentCommand._infer) {
-                code += `_output = {**${varname}.ext.to_json("*"), **${varname}.meta.get() } \n`
+
+              if (this.currentPreviewCode.infer) {
+                code += `_output = {**${varname}.ext.to_json("*"), "meta": ${varname}.meta.get() if (${varname}.meta and ${varname}.meta.get) else {} } \n`
               } else {
                 code += `_output = {**${varname}.ext.to_json("*")} \n`
               }
@@ -572,6 +573,11 @@ export default {
               var response = await this.evalCode(code)
 
               this.$store.commit('setDatasetPreview', {sample: response.data.result.sample} )
+
+              if (response.data.result.meta) {
+                this.$store.commit('setDatasetPreview', {meta: response.data.result.meta} )
+              }
+
 
               var pCode = `_output = ${varname}.ext.profile(columns="*", output="json")`
 
