@@ -150,7 +150,7 @@
 				>
 
           <transition name="slow-fade">
-            <template v-if="lazyColumns.includes(index)">
+            <template v-if="lazyColumns[index]">
               <div
                 v-if="column.preview"
                 :key="'p'+column.index"
@@ -276,9 +276,21 @@
         :class="[getRowHighlight(rowArrayIndex)]"
         :style="{height: rowHeight+'px', top: row.index*rowHeight+'px'}"
       >
-        <template v-for="(column) in allColumns">
+        <template v-for="(column, cindex) in allColumns">
+          <!-- lazy hidden -->
+          <template v-if="!lazyColumns[cindex]">
+            <div
+              :key="'l'+column.index" :style="{width: (column.width || 170)+'px'}"
+              class="bb-table-cell"
+              :class="[
+                ...(column.classes || []),
+              ]"
+            >
+
+            </div>
+          </template>
           <!-- preview -->
-          <template v-if="column.preview && rowsPreview && rowsPreview[rowArrayIndex]">
+          <template v-else-if="column.preview && rowsPreview && rowsPreview[rowArrayIndex]">
             <div
               v-if="currentDatasetPreview && rowsPreview[rowArrayIndex].value[column.index]"
               :key="'dp'+column.index"
@@ -857,6 +869,8 @@ export default {
       this.$refs['BbTableContainer'].removeEventListener('scroll', this.throttledScrollCheck)
       this.$refs['BbTableContainer'].removeEventListener('scroll', this.horizontalScrollCheckUp)
       this.$refs['BbTableTopContainer'].removeEventListener('scroll', this.horizontalScrollCheckDown)
+      this.$refs['BbTableContainer'].removeEventListener('scroll', this.checkVisibleColumns)
+      this.$refs['BbTableTopContainer'].removeEventListener('scroll', this.checkVisibleColumns)
     } catch (err) {
       console.error(err)
     }
@@ -907,6 +921,10 @@ export default {
       this.chunks = []
       // this.rowsValues = []
       this.scrollCheck()
+    },
+
+    previewColumns () {
+      this.checkVisibleColumns()
     }
 
   },
@@ -1352,7 +1370,7 @@ export default {
       var numbers = []
 
       for (let n = a; n <= b; n++) {
-        numbers.push(n)
+        numbers[n] = true
       }
 
       this.lazyColumns = numbers
