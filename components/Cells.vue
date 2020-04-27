@@ -968,7 +968,7 @@ export default {
               {
                 key: '_fileInput',
                 label: 'File upload',
-                accept: 'text/csv, .csv, application/json, application/vnd.ms-excel, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, .avro, .parquet',
+                accept: 'text/csv, .csv, application/json, application/vnd.ms-excel, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, .xls, .xlsx, .avro, .parquet',
                 type: 'file'
               },
               {
