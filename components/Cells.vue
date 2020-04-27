@@ -1069,8 +1069,8 @@ export default {
                   (c._infer && (c.url.endsWith('.xls') || c.url.endsWith('.xlsx')))
                 },
                 key: 'sheet_name',
-                label: `Sheet name`,
-                type: 'field'
+                label: `Sheet`,
+                type: 'number'
               },
             ],
             validate: (c) => {
@@ -1155,7 +1155,7 @@ export default {
               code += `, multiline=${file.multiline}`
             }
             else if (loadType=='xls') {
-              code += `, sheet_name="${payload.sheet_name}"`
+              code += `, sheet_name=${payload.sheet_name}`
             }
             if (payload._requestType) {
               var limit = 30
@@ -1169,7 +1169,7 @@ export default {
             if (loadType!='file') {
               code += `, quoting=0, lineterminator=None, cache=True`
             } else if (payload.url.endsWith('.xls') || payload.url.endsWith('.xlsx')) {
-              code += `, sheet_name="${payload.sheet_name}"`
+              code += `, sheet_name=${payload.sheet_name}`
             }
             code += `).ext.cache()`
 
