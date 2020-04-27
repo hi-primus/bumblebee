@@ -1393,16 +1393,30 @@ export default {
             if (range) {
               var [from, to] = range
               var length = to - from
+              var realLength
+
               if (length>18) {
+                realLength = length
                 to = from + 18
                 length = to - from
               }
-              this.toFetch = [
-                [from - (length*6), to + (length*6)],
-                [from - (length*4), to + (length*4)],
-                [from - (length*2), to + (length*2)],
-                [from - 3, to + 3]
-              ]
+
+              if (realLength) {
+                this.toFetch = [
+                  [from - (length*6), to + (length*6)],
+                  [from - (length*4), to + (length*4)],
+                  [from - (length*2), to + (length*2)],
+                  [from - 3, from+realLength + 3]
+                ]
+              } else {
+                this.toFetch = [
+                  [from - (length*6), to + (length*6)],
+                  [from - (length*4), to + (length*4)],
+                  [from - (length*2), to + (length*2)],
+                  [from - 3, to + 3]
+                ]
+
+              }
 
               for (let i = this.toFetch.length - 1; i >= 0; i--) {
                 if (this.toFetch[i][0]<0 && this.toFetch[i][1]<0) {
