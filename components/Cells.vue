@@ -1173,7 +1173,7 @@ export default {
 
           payload: () => ({
             command: 'load file',
-            _init: true,
+            _noAppend: true,
             _fileUrl: '',
             _fileUploading: false,
             _fileInput: [],
@@ -1704,7 +1704,7 @@ export default {
           },
           payload: () => ({
             command: 'load from database',
-            _init: true,
+            _noAppend: true,
             driver: 'mysql',
             host: '',
 						database: '',
@@ -1800,6 +1800,7 @@ export default {
           },
           payload: () => ({
             command: 'save to server',
+            _noAppend: true,
             format: 'csv',
             file_name: ''
           }),
@@ -2928,7 +2929,7 @@ export default {
         content = payload.content
       }
 
-      if (payload._init) {
+      if (payload._noAppend) {
         return content
       }
 
