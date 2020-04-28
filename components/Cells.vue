@@ -741,6 +741,38 @@ export default {
             }
           }
         },
+        'drop duplicates': {
+          dialog: {
+            title: (command) => (command.subset.length) ? 'Drop duplicates using subset' : 'Drop duplicates',
+            fields: [
+              {
+                key: 'keep',
+                label: 'Keep',
+                type: 'select',
+                items: [
+                  { text: 'First match', value: 'first' },
+                  { text: 'Last match', value: 'last' }
+                ]
+              }
+            ]
+          },
+          payload: (columns) => ({
+            subset: columns,
+            keep: 'first',
+            _preview: 'drop duplicates',
+            _highlightColor: 'red'
+          }),
+          code: (payload) => {
+            if (payload._requestType) {
+              return `.rows.tag_duplicated(`
+              + (payload.subset.length ? `subset=["${payload.subset.join('", "')}"], ` : '')
+              + `keep="${payload.keep}", output_col="__match__")`
+            }
+            return `.rows.drop_duplicates(`
+              + (payload.subset.length ? `subset=["${payload.subset.join('", "')}"], ` : '')
+              + `keep="${payload.keep}")`
+          }
+        },
         join: {
           dialog: {
             title: 'Join datasets',
