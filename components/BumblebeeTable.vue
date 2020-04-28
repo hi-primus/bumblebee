@@ -292,7 +292,7 @@
           <!-- preview -->
           <template v-else-if="column.preview && rowsPreview && rowsPreview[rowArrayIndex]">
             <div
-              v-if="currentDatasetPreview && rowsPreview[rowArrayIndex].value[column.index]"
+              v-if="currentDatasetPreview && rowsPreview[rowArrayIndex] && rowsPreview[rowArrayIndex].value[column.index]"
               :key="'dp'+column.index"
               class="bb-table-cell"
               :class="[
@@ -305,7 +305,7 @@
 
             </div>
             <div
-              v-else-if="rowsPreview[rowArrayIndex].value[idInSample[column.sampleName]]"
+              v-else-if="rowsPreview[rowArrayIndex] && rowsPreview[rowArrayIndex].value[idInSample[column.sampleName]]"
               :key="'p'+column.index"
               class="bb-table-cell"
               :class="[
@@ -1375,7 +1375,7 @@ export default {
 
       this.lazyColumns = numbers
 
-    }, 90),
+    }, 80),
 
     horizontalScrollCheckUp () {
       var topScrollLeft = this.$refs['BbTableTopContainer'].scrollLeft
