@@ -741,6 +741,39 @@ export default {
             }
           }
         },
+        'drop empty rows': {
+          dialog: {
+            title: (command) => (command.subset.length) ? 'Drop empty rows using subset' : 'Drop empty rows',
+            fields: [
+              {
+                key: 'how',
+                label: 'Drop when',
+                type: 'select',
+                items: [
+                  { text: 'Every cell is null', value: 'all' },
+                  { text: 'Any cell is null', value: 'any' }
+                ]
+              }
+            ]
+          },
+          payload: (columns) => ({
+            subset: columns,
+            how: 'all',
+            _preview: 'drop empty rows',
+            _highlightColor: 'red'
+          }),
+          code: (payload) => {
+            if (payload._requestType) {
+              return `.rows.tag_nulls(`
+              + (payload.subset.length ? `subset=["${payload.subset.join('", "')}"], ` : '')
+              + `how="${payload.how}", output_col="__match__" )`
+              // return `.rows.find( ${this.dataset.varname}.isnull().${payload.how}(axis=1) )`
+            }
+            return  `.rows.drop_na(`
+              + (payload.subset.length ? `subset=["${payload.subset.join('", "')}"], ` : '')
+              + `how="${payload.how}")`
+          }
+        },
         'drop duplicates': {
           dialog: {
             title: (command) => (command.subset.length) ? 'Drop duplicates using subset' : 'Drop duplicates',
@@ -772,6 +805,7 @@ export default {
               + (payload.subset.length ? `subset=["${payload.subset.join('", "')}"], ` : '')
               + `keep="${payload.keep}")`
           }
+
         },
         join: {
           dialog: {
