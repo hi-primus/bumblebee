@@ -15,6 +15,9 @@ https://hi-bumblebee.com/
 
 [How to install bumblebee on digital ocean](https://medium.com/hi-bumblebee/how-to-install-bumblebee-on-digital-ocean-ef77138f1838 "Ubuntu/Digital Ocean Installation")
 
+### Windows 10
+
+[How to run Bumblebee on Windows 10](https://medium.com/hi-bumblebee/how-to-run-bumblebee-on-windows-10-aeba8c1943d0 "How to run Bumblebee on Windows 10")
 
 ## Load and explore
 Get data from CSV, JSON, parquet, Avro files, and databases. Then get histograms, frequency charts, and advance stats.
