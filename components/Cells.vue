@@ -1914,8 +1914,8 @@ export default {
           }),
           code: (payload) => {
             var output_col = escapeQuotes(payload.output_col)
-            return `.cols.set("${output_col}"`
-            +( (payload.expression) ? `, ${payload.expression}` : '')
+            return `.cols.set(output_col="${output_col}"`
+            +( (payload.expression) ? `, value="${payload.expression}"` : '')
             +`)`
           }
         },

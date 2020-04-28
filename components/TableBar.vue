@@ -73,7 +73,7 @@
                         {{icon.icon}}
                       </v-icon>
                     </template>
-                    <v-icon style="margin-right: -8px; margin-left: -4px" :color="menus[element.group] ? 'black' : '#888'">
+                    <v-icon style="margin-right: -8px; margin-left: -6px" :color="menus[element.group] ? 'black' : '#888'">
                       arrow_drop_down
                     </v-icon>
                   </v-btn>
@@ -737,7 +737,11 @@ export default {
           type: 'button',
           onClick: ()=>this.commandHandle({command: 'drop', type: 'DROP_KEEP'}),
           tooltip: { toString: ()=> 'Drop column'+ (this.selectedColumns.length!=1 ? 's' : '')},
-          icons: [{icon: 'delete'}],
+          // icons: [{icon: 'delete'}],
+          icons: [
+            { icon: 'delete' },
+            // { icon: 'menu', style: {transform: 'rotate(90deg)', marginLeft: '-6px'} }
+          ],
           disabled: {valueOf: ()=>!(this.selectionType=='columns' && this.selectedColumns.length>0)}
         },
         {

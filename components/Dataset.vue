@@ -334,7 +334,12 @@ export default {
 
       this.$emit('sort',selectColumns.map(e=>e.name))
 
-			return bbColumns.map(e=> this.currentDataset.columns.findIndex(de => de.name === e.name))
+      if (this.currentDataset.columns && this.currentDataset.columns.length) {
+        return bbColumns.map(e=>this.currentDataset.columns.findIndex(de => de.name === e.name))
+      } else {
+        return bbColumns.map((e,i)=>i)
+      }
+
 
     },
 
