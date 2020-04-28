@@ -704,6 +704,17 @@ export default {
           disabled: { valueOf: ()=>!(['values','ranges','text'].includes(this.selectionType) || this.selectedColumns.length==1) },
           icons: [{icon: 'filter_list'}]
         },
+        {
+          type: 'button',
+          onClick: ()=>this.commandHandle({command: 'drop duplicates'}),
+          tooltip: 'Drop duplicates',
+          icons: [
+            { icon: 'flip_to_back' },
+          ],
+          disabled: {
+            valueOf: ()=>!(this.dataset && this.dataset.summary && this.hasSecondaryDatasets)
+          }
+        },
         { divider: true },
         {
           type: 'button',
