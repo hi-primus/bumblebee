@@ -706,6 +706,21 @@ export default {
         },
         {
           type: 'button',
+          onClick: ()=>this.commandHandle({command: 'drop empty rows'}),
+          tooltip: 'Drop empty rows',
+          icons: [
+            { icon: 'delete' },
+            { icon: 'menu', style: {
+              marginLeft: '-6px',
+              transform: 'scaleX(0.75)'
+            } }
+          ],
+          disabled: {
+            valueOf: ()=>!(this.dataset && this.dataset.summary && this.hasSecondaryDatasets)
+          }
+        },
+        {
+          type: 'button',
           onClick: ()=>this.commandHandle({command: 'drop duplicates'}),
           tooltip: 'Drop duplicates',
           icons: [
