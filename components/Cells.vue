@@ -893,7 +893,7 @@ export default {
           payload: async (columns) => {
 
             var _datasets_right = {...this.currentSecondaryDatasets}
-            var items_with = Object.keys(_datasets_right).filter(e=>e!==this.dataset.varname)
+            var items_with = Object.keys(_datasets_right).filter(e=>(e!==this.dataset.varname && e!=='preview_df'))
 
             var df2 = items_with[0]
 
@@ -909,7 +909,7 @@ export default {
               right_on: _datasets_right[df2][0],
               items_r_on: (c)=>c._datasets_right[c.with],
               with: df2,
-              items_with: (c)=>Object.keys(c._datasets_right).filter(e=>e!==this.dataset.varname),
+              items_with: (c)=>Object.keys(c._datasets_right).filter(e=>e!==this.dataset.varname && e!=='preview_df'),
               items_selected_columns: (c)=>{
                 return [
                   ...(this.allColumns || []).map(n=>({name: n, 'source': 'left', key: n+'l'})),
