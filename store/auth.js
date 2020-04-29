@@ -14,6 +14,16 @@ export const mutations = {
 }
 
 export const actions = {
+
+  async register(context,{username,password,email,name,lastname}){
+    const response = await window.$nuxt.$auth.register({username,password,email,name,lastname,secret:'123'})
+    console.log(response)
+    return response
+
+
+
+  },
+
 	async login (context, payload) {
     const response = await window.$nuxt.$auth.login(payload)
 
