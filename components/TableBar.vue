@@ -967,7 +967,7 @@ export default {
           this.commandHandle({
             command: 'apply sort',
             columns: lastSort,
-            ignoreCell: true,
+            // ignoreCell: true,
             deleteOtherCells: true
           })
         }
