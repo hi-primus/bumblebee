@@ -97,8 +97,8 @@
             counter
             @click:append="show2 = !show2"
           ></v-text-field>
-          <v-card-text v-if="successMessage || statusError" class="pb-0" >
-              <v-alert v-if="statusError" type="error" class="mb-2" dismissible @input="resetStatus($event)">
+          <v-card-text v-if="successMessage || appError" class="pb-0" >
+              <v-alert v-if="appError" type="error" class="mb-2" dismissible @input="resetStatus($event)">
                 {{ status.message }}
               </v-alert>
                <v-alert v-if="successMessage" type="success" class="mb-2" dismissible @input="successMessage = ''">
@@ -168,8 +168,8 @@
               <v-spacer/>
              
             </v-card-actions>
-            <v-card-text v-if="successMessage || statusError" class="pb-0" >
-              <v-alert v-if="statusError" type="error" class="mb-2" dismissible @input="resetStatus($event)">
+            <v-card-text v-if="successMessage || appError" class="pb-0" >
+              <v-alert v-if="appError" type="error" class="mb-2" dismissible @input="resetStatus($event)">
                 {{ status.message }}
               </v-alert>
                <v-alert v-if="successMessage" type="success" class="mb-2" dismissible @input="successMessage = ''">
