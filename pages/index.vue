@@ -33,7 +33,92 @@
           width="100%"
           style="max-width: 700px; margin: auto"
         >
-          <v-form class="py-8 px-6" @submit="subscribe">
+        <v-form @submit.prevent="submit" v-if="typeForm==1">
+    <v-row justify="center">
+      <v-col cols="12" sm="10" md="8" lg="6" color="deep-purple accent-4">
+        
+       <v-card-title>
+              <h1 class="display-1.4 mb-4">Create your account</h1>
+            </v-card-title>
+        
+            <v-text-field
+               v-model="createName"
+                label="Name"
+                required
+                outlined
+                clearable
+            ></v-text-field>
+            <v-text-field
+               v-model="createLastname"
+                label="Lastname"
+                required
+                outlined
+                clearable
+            ></v-text-field>
+            <v-text-field
+               v-model="createUsername"
+                label="Username"
+                required
+                outlined
+                clearable
+            ></v-text-field>
+  
+    <v-text-field
+      label="E-mail"
+      v-model="email"
+      :rules="emailRules"
+       required
+                outlined
+                clearable
+
+    ></v-text-field>
+ 
+ <v-text-field
+ label="Password"
+            v-model="createPassword"
+            :append-icon="show1 ? 'mdi-eye' : 'mdi-eye-off'"
+           
+            :type="show1 ? 'text' : 'password'"
+           required
+                outlined
+                clearable
+            counter
+            @click:append="show1 = !show1"
+          ></v-text-field>
+                <v-text-field
+                label="Confirm Password"
+            v-model="ConfirmPassword"
+            :append-icon="show2 ? 'mdi-eye' : 'mdi-eye-off'"
+           
+            :type="show2 ? 'text' : 'password'"
+           required
+                outlined
+                clearable
+            counter
+            @click:append="show2 = !show2"
+          ></v-text-field>
+          <v-card-text v-if="successMessage || statusError" class="pb-0" >
+              <v-alert v-if="statusError" type="error" class="mb-2" dismissible @input="resetStatus($event)">
+                {{ status.message }}
+              </v-alert>
+               <v-alert v-if="successMessage" type="success" class="mb-2" dismissible @input="successMessage = ''">
+                 {{ successMessage }}
+                </v-alert>
+            </v-card-text>
+             <center>
+            <a href="javascript:void(0)" @click="typeForm=1" >Create your account</a>
+            <v-spacer></v-spacer>
+            <a href="javascript:void(0)" @click="typeForm=0">Login</a>
+            </center>
+            <v-card-actions>
+              <v-spacer/>
+              <v-btn color="primary" large depressed @click="register">Submit</v-btn>
+              <v-spacer/>
+            </v-card-actions>
+      </v-col>
+    </v-row>
+  </v-form>
+          <v-form class="py-8 px-6" @submit="subscribe" v-if="typeForm==0">
             <v-card-title>
               <h1 class="display-3 mb-4">Bumblebee</h1>
             </v-card-title>
@@ -71,15 +156,25 @@
                 @click:append="showPassword = !showPassword"
               />
             </v-card-text>
+            <center>
+            <a href="javascript:void(0)" @click="typeForm=1" >Create your account</a>
+            <v-spacer></v-spacer>
+            <a href="javascript:void(0)" @click="typeForm=0">Login</a>
+            </center>
             <v-card-actions>
+           
               <v-spacer/>
               <v-btn color="primary darken-1" large depressed @click="subscribe">{{(useKernel) ? 'Sign in' : 'Subscribe'}}</v-btn>
               <v-spacer/>
+             
             </v-card-actions>
-            <v-card-text v-if="appError" class="pb-0" >
-              <v-alert type="error" class="mb-2" dismissible @input="resetStatus($event)">
+            <v-card-text v-if="successMessage || statusError" class="pb-0" >
+              <v-alert v-if="statusError" type="error" class="mb-2" dismissible @input="resetStatus($event)">
                 {{ status.message }}
               </v-alert>
+               <v-alert v-if="successMessage" type="success" class="mb-2" dismissible @input="successMessage = ''">
+                 {{ successMessage }}
+                </v-alert>
             </v-card-text>
           </v-form>
         </v-card>
@@ -270,7 +365,22 @@ export default {
 			confirmDelete: -1,
 			typesSelected: [],
 			typesInput: '',
-			version: ''
+      version: '',
+      createName:'',
+      createLastname:'',
+      createUsername:'',
+      createPassword:'',
+      ConfirmPassword:'',
+      email: '',
+      emailRules: [ 
+        v => !v || /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/.test(v) || 'E-mail must be valid'
+      ],
+      show1: false,
+      show2: false,
+      typeForm:0,
+      successMessage:'',
+      errorMessage:'',
+
 		}
 	},
 
@@ -391,6 +501,22 @@ export default {
 		typesUpdated () {
       this.typesInput = ''
       this.$refs.autocomplete.loseFocus
+    },
+    async register () {
+    try{
+      var response = await this.$store.dispatch('auth/register',{username: this.createUsername,password:this.createPassword,email:this.email})
+      console.log(response)
+      this.typeForm=0
+      this.successMessage=response.data.message
+      this.$store.commit('status')
+      if(response.status>=300){
+      throw response
+       } 
+       } catch(error){
+       this.successMessage=''
+      console.log(error)
+      this.handleError(error)
+      }
 		},
 		async subscribe () {
       try {
