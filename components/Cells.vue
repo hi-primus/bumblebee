@@ -163,7 +163,7 @@
                   v-model="currentCommand[field.key]"
                   :label="field.label"
                   :placeholder="field.placeholder"
-                  :items="(field.items_key) ? getProperty(currentCommand[field.items_key],[currentCommand]) : field.items"
+                  :items="(field.items_key) ? getProperty(currentCommand[field.items_key],[currentCommand]) : getProperty(field.items,[currentCommand])"
                   @input="(field.onChange) ? field.onChange($event) : 0"
                   :disabled="!!+field.disabled"
                   dense
@@ -397,6 +397,8 @@ import {
 
 const api_url = process.env.API_URL || 'http://localhost:5000'
 
+const STRING_TYPES = ['object','string','str']
+
 export default {
 
   components: {
@@ -528,14 +530,14 @@ export default {
                 key: 'condition',
                 label: 'Condition',
                 type: 'select',
-                items: [
+                items: (c)=>[
                   { text: 'Is exactly', value: 'exactly' },
                   { text: 'Is one of', value: 'oneof' },
                   { text: 'Is not', value: 'not' },
                   { divider: true },
-                  { text: 'Less than or equal to', value: 'less' },
-                  { text: 'Greater than or equal to', value: 'greater' },
-                  { text: 'Is Between', value: 'between' },
+                  { text: 'Less than or equal to', value: 'less', disabled: c._isString },
+                  { text: 'Greater than or equal to', value: 'greater', disabled: c._isString  },
+                  { text: 'Is Between', value: 'between', disabled: c._isString  },
                   { divider: true },
                   { text: 'Contains', value: 'contains' },
                   { text: 'Starts with', value: 'startswith' },
@@ -552,7 +554,7 @@ export default {
               {
                 condition: (c)=>['exactly','not','less','greater'].includes(c.condition),
                 key: 'value',
-                placeholder: 'numeric or "string"',
+                placeholder: (c)=>(c._isString) ? 'Value' : 'numeric or "string"',
                 label: 'Value',
                 type: 'field'
               },
@@ -614,15 +616,15 @@ export default {
                 case 'not':
                 case 'less':
                 case 'greater':
-                  return (c.value!='')
+                  return (c.value.length)
                 case 'between':
-                  return (c.value!='' && c.value_2!='')
+                  return (c.value.length && c.value_2.length)
                 case 'contains':
                 case 'startswith':
                 case 'endswith':
-                  return (c.text!='')
+                  return (c.text.length)
                 case 'custom':
-                  return (c.expression!='')
+                  return (c.expression.length)
                 case 'selected':
                 case 'null':
                 case 'mismatch':
@@ -633,7 +635,7 @@ export default {
             }
           },
 
-          payload: (columns) => {
+          payload: (columns, payload = {}) => {
 
             var condition = 'exactly'
             var _selectionType, _selection
@@ -655,6 +657,7 @@ export default {
             }
 
             return {
+              _isString: payload.columnDataTypes.every(d=>STRING_TYPES.includes(d)),
               columns,
               condition,
               _selection,
@@ -684,6 +687,11 @@ export default {
               payload = escapeQuotesOn(payload,['text','selection'])
             } catch (error) {
               console.error(error)
+            }
+
+            if (payload._isString) {
+              payload.value = `"${payload.value}"`
+              payload.values = payload.values.map(v=>`"${v}"`)
             }
 
             switch (payload.condition) {
@@ -2722,7 +2730,7 @@ export default {
 
       if (_command) {
 
-        payload = (_command.payload) ? ( {...await _command.payload(columns), ...payload} ) : payload
+        payload = (_command.payload) ? ( {...await _command.payload(columns, payload), ...payload} ) : payload
 
         if (_command.dialog) {
 
