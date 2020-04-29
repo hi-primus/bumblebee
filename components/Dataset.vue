@@ -564,7 +564,7 @@ export default {
   watch: {
 
     operationsActive () {
-      this.$refs.bumblebeeTable.checkVisibleColumns()
+      this.$refs.bumblebeeTable && this.$refs.bumblebeeTable.checkVisibleColumns()
     },
 
     currentPreviewCode: {
