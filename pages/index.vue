@@ -99,7 +99,7 @@
           ></v-text-field>
           <v-card-text v-if="successMessage || appError" class="pb-0" >
               <v-alert v-if="appError" type="error" class="mb-2" dismissible @input="resetStatus($event)">
-                {{ status.message }}
+                {{ appError }}
               </v-alert>
                <v-alert v-if="successMessage" type="success" class="mb-2" dismissible @input="successMessage = ''">
                  {{ successMessage }}
@@ -170,7 +170,7 @@
             </v-card-actions>
             <v-card-text v-if="successMessage || appError" class="pb-0" >
               <v-alert v-if="appError" type="error" class="mb-2" dismissible @input="resetStatus($event)">
-                {{ status.message }}
+                {{ appError }}
               </v-alert>
                <v-alert v-if="successMessage" type="success" class="mb-2" dismissible @input="successMessage = ''">
                  {{ successMessage }}
@@ -393,7 +393,7 @@ export default {
     },
 
 		status () {
-			return this.$store.state.appStatus.appStatus || this.$store.state.appStatus
+			return this.$store.state.appStatus.status || this.$store.state.appStatus.toString()
     },
 
 		appStatus () {
@@ -403,7 +403,7 @@ export default {
 
 	watch: {
 
-    async appStatus (value) {
+    async status (value) {
       if (this.useKernel) {
         switch (value) {
           case 'receiving back':
@@ -438,9 +438,11 @@ export default {
               } catch (error) {
                 console.error('Error initializing')
                 printError(error)
-                var as = new Error('Initialization error')
-                as.appStatus = 'receiving'
-								this.$store.commit('setAppStatus', as)
+                var appStatus = {
+                  error: new Error('Initialization error'),
+                  status: 'receiving'
+                }
+								this.$store.commit('setAppStatus', appStatus)
               }
             break;
 
@@ -515,7 +517,7 @@ export default {
        } catch(error){
        this.successMessage=''
       console.log(error)
-      this.handleError(error)
+      this.handleError(error, "waiting")
       }
 		},
 		async subscribe () {
@@ -530,7 +532,7 @@ export default {
         }
       } catch (error) {
         console.error(error)
-        this.handleError(error)
+        this.handleError(error, "waiting")
       }
 		},
 		resetStatus (closing) {

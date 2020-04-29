@@ -67,7 +67,7 @@ export const state = () => {
     // previewColumns: [],
     ...pStates,
     datasetUpdates: 0,
-    appStatus: 'waiting',
+    appStatus: {status: 'waiting'},
     session: '',
     engine: 'dask',
     tpw: 8,
@@ -204,7 +204,7 @@ export const mutations = {
     Vue.set(state.datasetSelection, state.tab, state.datasetSelection[state.tab] )
     Vue.set(state.buffers, state.tab, false)
 
-		state.appStatus = 'received'
+		state.appStatus = {status: 'received'}
 
     state.datasetUpdates = state.datasetUpdates + 1
 
@@ -226,7 +226,7 @@ export const mutations = {
       blank: true
     }
 
-    state.appStatus = 'received'
+    state.appStatus = {status: 'received'}
 
     Vue.set(state.datasets, found, dataset)
     Vue.set(state.datasetSelection, found, {})
@@ -239,13 +239,13 @@ export const mutations = {
     Vue.delete(state.datasets, index)
     Vue.delete(state.datasetSelection, index)
 		if (!state.datasets.length) {
-			state.appStatus = 'receiving back'
+			state.appStatus = {status: 'receiving back'}
 		}
 		return index
 	},
 
 	setAppStatus (state, payload) {
-    state.appStatus = payload || 'waiting'
+    state.appStatus = payload || { status: 'waiting' }
   },
 
 	session (state, payload) {
@@ -413,7 +413,7 @@ export const getters = {
     return 'columns'
   },
   appError (state) {
-    return state.appStatus.message
+    return state.appStatus.error ? state.appStatus.error.message : false
   },
   typesAvailable (state) {
     try {
