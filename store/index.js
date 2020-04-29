@@ -40,6 +40,9 @@ const properties = [
     clear: true,
   },
   {
+    name: 'Buffer'
+  },
+  {
     name: 'Cells'
   }
 ]
@@ -273,10 +276,6 @@ export const mutations = {
     Vue.set(state.databases,state.tab,payload)
   },
 
-	// setBuffer (state, payload) {
-  //   Vue.set(state.buffers,state.tab,payload)
-  // },
-
   key (state, payload) {
     state.key = payload
   },
@@ -394,7 +393,7 @@ export const getters = {
   },
   currentBuffer (state) {
     try {
-      return state.buffers[state.tab] // TODO: varname
+      return state.everyBuffer[state.tab] // TODO: varname
     } catch (error) {
       return false
     }

@@ -3022,6 +3022,7 @@ export default {
       try {
 
         console.time('task')
+        this.$store.commit('setBuffer',false)
         var response = await this.socketPost('cells', {
           code,
           name: this.dataset.summary ? this.dataset.name : null,
@@ -3048,6 +3049,7 @@ export default {
         })
 
         await this.evalCode('_output = '+this.dataset.varname+'.ext.set_buffer("*")')
+        this.$store.commit('setBuffer',true)
         this.updateSecondaryDatasets()
 
         this.$forceUpdate()

@@ -476,7 +476,8 @@ export default {
       'currentPreviewCode',
       'currentDuplicatedColumns',
       'currentPreviewNames',
-      'currentDatasetPreview'
+      'currentDatasetPreview',
+      'currentBuffer'
     ]),
 
     ...mapState(['allTypes']),
@@ -930,6 +931,15 @@ export default {
   },
 
   methods: {
+
+    setBuffer: debounce(async function () {
+      try {
+        var buffer = await this.evalCode('_output = '+this.currentDataset.varname+'.ext.set_buffer("*")')
+        this.$store.commit('setBuffer',true)
+      } catch (error) {
+        console.error(error)
+      }
+    }, 300),
 
     clearSelection () {
       if (window.getSelection) {
@@ -1598,10 +1608,10 @@ export default {
 
       // chunks[index] = { from, to, preview: previewCode || '' }
 
-      // if (!this.currentBuffer) {
-      //   this.$store.commit('setBuffer',true)
-      //   var buffer = await this.evalCode('_output = '+this.currentDataset.varname+'.ext.set_buffer("*")')
-      // }
+      if (!this.currentBuffer) {
+        this.setBuffer()
+        return undefined
+      }
 
       var response = await this.evalCode(`_output = ${this.currentDataset.varname}.ext.buffer_window("*", ${from}, ${to+1})${await getPropertyAsync(previewCode, [from, to+1]) || ''}.ext.to_json("*")`)
 
