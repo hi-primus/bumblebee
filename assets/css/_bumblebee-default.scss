@@ -60,12 +60,16 @@ html:root {
 }
 
 .toolbar {
-  .theme--light.v-btn.v-btn--disabled,
-  &.disabled .theme--light.v-btn{
-    color: rgba(0, 0, 0, 0.14) !important;
+  .theme--light.v-btn {
+    color: $icon-color !important;
     .v-icon {
       color: inherit !important;
     }
+  }
+  .theme--light.v-btn.v-btn--disabled,
+  &.disabled .theme--light.v-btn{
+    color: $icon-color !important;
+    opacity: 0.5;
   }
 }
 

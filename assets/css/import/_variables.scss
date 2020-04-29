@@ -8,7 +8,7 @@ $data-pink: #E66DA7;
 $data-blue: lighten(#309ee3,10%);
 $data-yellow: #f2f255;
 
-$data-grey: #6c7680;
+$data-grey: #6b7480;
 $data-highlight-grey: lighten($data-grey,50%);
 $data-highlight: #bde2fb;
 $data-highlight-background: rgba($data-blue, 13%);
@@ -24,11 +24,13 @@ $primary-color: #1888cc;
 
 $black-opacity: 0.91;
 
-$text-color: #242a2e;
+$text-color: #24282e; // #242a2e;
 $text-color-darken: rgba(0,1,1,0.91);
 
 $line-color-1: #f5f5f5;
 $line-color-2: #e5e5e5;
+
+$icon-color: #5f6368;
 
 $table-cell-height: 23px;
 
