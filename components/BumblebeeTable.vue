@@ -855,6 +855,7 @@ export default {
   mounted() {
 
     this.scrollCheck()
+    this.checkVisibleColumns()
 
     this.$refs['BbTableContainer'] && this.$refs['BbTableContainer'].addEventListener('scroll', this.throttledScrollCheck, {passive: true})
 

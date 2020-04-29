@@ -198,6 +198,10 @@ export default {
   },
 
   props: {
+    operationsActive: {
+      type: Boolean,
+      default: false
+    },
     commandsDisabled: {
       type: Boolean,
       default: false
@@ -558,6 +562,10 @@ export default {
   },
 
   watch: {
+
+    operationsActive () {
+      this.$refs.bumblebeeTable.checkVisibleColumns()
+    },
 
     currentPreviewCode: {
       deep: true,
