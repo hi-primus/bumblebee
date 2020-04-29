@@ -176,9 +176,10 @@
       :commandsDisabled="commandsDisabled"
       :sortBy.sync="sortBy"
       :sortDesc.sync="sortDesc"
-      :operationsActive="operationsActive"
+      :operationsActive="!!operationsActive"
       :searchText="searchText"
       @selection="selectionEvent($event)"
+      @sortDrag="callSort=true"
       @sort="lastSort=$event"
       :typesSelected="typesSelected"
       :columnsTableHeaders="columnsTableHeaders"
@@ -387,6 +388,7 @@ export default {
       menus: {},
 
       lastSort: [],
+      callSort: false,
 
       commandItems: [
 
@@ -448,7 +450,7 @@ export default {
 
 	computed: {
 
-    ...mapGetters(['currentSelection', 'hasSecondaryDatasets', 'currentCells','currentListView','selectionType']),
+    ...mapGetters(['currentSelection', 'hasSecondaryDatasets', 'currentCells','currentListView','selectionType', 'currentDataset']),
 
     ...mapState(['nextCommand']),
 
@@ -958,9 +960,26 @@ export default {
   },
 
   watch: {
+    lastSort (lastSort) {
+      this.$nextTick(()=>{
+        if (this.callSort && lastSort.length) {
+          this.callSort = false
+          this.commandHandle({
+            command: 'apply sort',
+            columns: lastSort,
+            ignoreCell: true,
+            deleteOtherCells: true
+          })
+        }
+      })
+    },
+    currentDataset () {
+      this.lastSort = []
+    },
     cellsError (value) {
       if (value!='') {
-        this.operationsActive = 'operations'
+        this.operationsActive = true
+        this.operationsTitle = 'operations'
       }
     },
     nextCommand (command) {

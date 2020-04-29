@@ -233,7 +233,7 @@ export default {
 
 			hiddenColumns: {},
 
-      _resultsColumns: [], // search
+      _resultsColumns: false, // search
       selectedColumns: {},
 
       sortedColumns: [], // table manual sorting
@@ -264,9 +264,15 @@ export default {
     },
 
     customSortedColumns () {
-      if (this.sortedColumns.length)
+      if (this.sortedColumns.length && this.currentDataset && this.currentDataset.columns && this.currentDataset.columns.length) {
         return this.sortedColumns.map(i=>this.currentDataset.columns[i])
-      return this.currentDataset.columns
+      }
+      else if (this.currentDataset && this.currentDataset.columns) {
+        return this.currentDataset.columns
+      }
+      else {
+        return []
+      }
     },
 
     selectionStatus () {
@@ -304,7 +310,7 @@ export default {
 				return !this.hiddenColumns[column.name]
       })] : []
 
-      let selectColumns = [...(this.currentDataset.columns || [])]
+      let selectColumns = Array.from(this.customSortedColumns)// [...(this.customSortedColumns || [])]
 
 			if (this.sortBy[0] && bbColumns.length) {
 				if (typeof bbColumns[0][this.sortBy[0]] === 'string') {
@@ -348,7 +354,10 @@ export default {
     },
 
     resultsColumns () {
-      return this._resultsColumns || this.customSortedColumns
+      if (!this._resultsColumns || !this._resultsColumns.length)
+        return this.customSortedColumns
+      else
+        return this._resultsColumns
     },
 
     filteredColumns () {
@@ -447,10 +456,12 @@ export default {
           keys: ['name']
         })
         :
-        this.customSortedColumns
+        false
     },
 
     updateSortedColumns(event) {
+      this.$emit('sortDrag')
+      this.sortedColumns = []
       this.sortedColumns = event
       this.updateResults()
     },
@@ -461,7 +472,7 @@ export default {
 
       if (storeSelectedColumns) {
         for (let index = 0; index < storeSelectedColumns.length; index++) {
-            selectedColumns[storeSelectedColumns[index].name] = true
+          selectedColumns[storeSelectedColumns[index].name] = true
         }
       }
 
@@ -562,6 +573,10 @@ export default {
   },
 
   watch: {
+
+    currentDataset () {
+      this.sortedColumns = []
+    },
 
     operationsActive () {
       this.$refs.bumblebeeTable && this.$refs.bumblebeeTable.checkVisibleColumns()

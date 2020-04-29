@@ -341,7 +341,7 @@
           class="cell-container"
           v-for="(cell, index) in cells"
           :key="cell.id"
-          :class="{'fixed-cell': cell.fixed, 'cell-error': cell.error,'done': cell.done,'active': activeCell>=0 && activeCell==index}"
+          :class="{'fixed-cell': cell.fixed, 'cell-error': cell.error,'done': cell.done,'active': activeCell==index}"
           @click="setActiveCell(index)"
         >
           <div class="cell">
@@ -360,7 +360,7 @@
         {{codeError}}
       </v-alert>
       <div key="controls" ref="cells-controls" class="cells-controls toolbar vertical" :class="{'disabled': commandsDisabled}" @mouseover="barHovered = true" @mouseleave="barHovered = false">
-        <v-btn v-if="activeCell>=0" text class="icon-btn" color="#888" @click.stop="removeCell(activeCell)">
+        <v-btn v-if="cells.length" text class="icon-btn" color="#888" @click.stop="removeCell(activeCell)">
           <v-icon>delete</v-icon>
         </v-btn>
         <v-btn text class="icon-btn" :color="(cells.length) ? '#888' : 'primary'" @click="addCell(activeCell+1)">
@@ -2695,9 +2695,9 @@ export default {
 
     codeText (newOnly = false) {
       if (newOnly)
-        return (this.cells.length) ? (this.cells.filter(e=>(e.content!=='' && !e.done)).map(e=>e.content).join('\n').trim()) : ''
+        return (this.cells.length) ? (this.cells.filter(e=>(e.content!=='' && !e.done && !e.ignore)).map(e=>e.content).join('\n').trim()) : ''
       else
-        return (this.cells.length) ? (this.cells.filter(e=>(e.content!=='')).map(e=>e.content).join('\n').trim()) : ''
+        return (this.cells.length) ? (this.cells.filter(e=>(e.content!=='' && !e.ignore)).map(e=>e.content).join('\n').trim()) : ''
     },
 
     async commandHandle (event) {
@@ -2762,7 +2762,7 @@ export default {
             columns: payload.columns || columns,
             payload
           }
-          this.addCell(-1, event.command, this.getCode(cell,false))
+          this.addCell(-1, {...event, code: this.getCode(cell,false)})
           this.runButton = false
 
           this.clearTextSelection()
@@ -2777,7 +2777,7 @@ export default {
         this.currentCommand = await _command.onDone(this.currentCommand)
       }
       var code = this.getCode(this.currentCommand, false)
-      this.addCell(-1, this.currentCommand.command, code )
+      this.addCell(-1, { ...this.currentCommand, code } )
       this.runButton = false
 
       this.$emit('updateOperations', { active: (this.currentCommand._noOperations ? false : true), title: 'operations' } )
@@ -2808,7 +2808,7 @@ export default {
         }
       }
       else {
-        this.activeCell = -1
+        this.activeCell = 0
         this.moveBar(12)
       }
 
@@ -2953,7 +2953,9 @@ export default {
 
     },
 
-    addCell (at = -1, command = 'code', code = '') {
+    addCell (at = -1, event = {command: 'code', code: '', ignoreCell: false, deleteOtherCells: false}) {
+
+      var {command, code, ignoreCell, deleteOtherCells} = event
 
       this.$emit('update:codeError','')
 
@@ -2962,11 +2964,20 @@ export default {
 
       var cells = [...this.cells]
 
-      cells.splice(at,0, {
+      if (deleteOtherCells) {
+        for (let i = cells.length - 1; i >=0 ; i--) {
+          if (cells[i].command===command) {
+            cells.splice(i, 1)
+          }
+        }
+      }
+
+      cells.splice(at, 0, {
         command,
         content: code,
         id: Number(new Date()),
-        active: false
+        active: false,
+        ignore: ignoreCell
       })
 
       this.cells = cells
