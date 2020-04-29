@@ -27,23 +27,24 @@
         <template v-else-if="element.type=='button'">
           <v-tooltip :key="'toolbar'+index" transition="fade-transition" bottom>
             <template v-slot:activator="{ on }">
-              <v-btn
-                v-on="on"
-                text
-                class="icon-btn"
-                @click="element.onClick"
-                :disabled="!!+element.disabled"
-              >
-                <template v-for="(icon, ii) in element.icons">
-                  <v-icon
-                    :key="ii"
-                    :color="icon.color || '#888'"
-                    :style="icon.style || {}"
-                  >
-                    {{icon.icon}}
-                  </v-icon>
-                </template>
-              </v-btn>
+              <div class="icon-btn-container" v-on="on">
+                <v-btn
+                  text
+                  class="icon-btn"
+                  @click="element.onClick"
+                  :disabled="!!+element.disabled"
+                >
+                  <template v-for="(icon, ii) in element.icons">
+                    <v-icon
+                      :key="ii"
+                      :color="icon.color || '#888'"
+                      :style="icon.style || {}"
+                    >
+                      {{icon.icon}}
+                    </v-icon>
+                  </template>
+                </v-btn>
+              </div>
             </template>
             <span>{{element.tooltip}}</span>
           </v-tooltip>
@@ -57,26 +58,28 @@
             <template v-slot:activator="{ on: menu }">
               <v-tooltip :disabled="menus[element.group]" transition="fade-transition" bottom>
                 <template v-slot:activator="{ on: tooltip }">
-                  <v-btn
-                    :color="'#888'"
-                    :disabled="!!+element.disabled"
-                    class="icon-btn"
-                    text
-                    v-on="{...tooltip, ...menu}"
-                  >
-                    <template v-for="(icon, ii) in element.icons">
-                      <v-icon
-                        :key="ii"
-                        :color="icon.color || '#888'"
-                        :style="icon.style || {}"
-                      >
-                        {{icon.icon}}
+                  <div class="icon-btn-container" v-on="{...tooltip}">
+                    <v-btn
+                      :color="'#888'"
+                      :disabled="!!+element.disabled"
+                      class="icon-btn"
+                      text
+                      v-on="{...menu}"
+                    >
+                      <template v-for="(icon, ii) in element.icons">
+                        <v-icon
+                          :key="ii"
+                          :color="icon.color || '#888'"
+                          :style="icon.style || {}"
+                        >
+                          {{icon.icon}}
+                        </v-icon>
+                      </template>
+                      <v-icon style="margin-right: -8px; margin-left: -6px" :color="menus[element.group] ? 'black' : '#888'">
+                        arrow_drop_down
                       </v-icon>
-                    </template>
-                    <v-icon style="margin-right: -8px; margin-left: -6px" :color="menus[element.group] ? 'black' : '#888'">
-                      arrow_drop_down
-                    </v-icon>
-                  </v-btn>
+                    </v-btn>
+                  </div>
                 </template>
                 <span>{{element.tooltip}}</span>
               </v-tooltip>

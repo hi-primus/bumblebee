@@ -59,6 +59,16 @@ html:root {
   }
 }
 
+.toolbar {
+  .theme--light.v-btn.v-btn--disabled,
+  &.disabled .theme--light.v-btn{
+    color: rgba(0, 0, 0, 0.14) !important;
+    .v-icon {
+      color: inherit !important;
+    }
+  }
+}
+
 h3 {
   text-transform: uppercase;
   font-weight: 700;
@@ -610,7 +620,7 @@ table {
     height: $toolbar-height;
   }
   &.disabled {
-    opacity: 0.5;
+    // opacity: 0.5;
     &>* {
       pointer-events: none;
     }
