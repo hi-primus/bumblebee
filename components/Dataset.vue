@@ -444,7 +444,7 @@ export default {
   methods: {
 
     reloadInit () {
-      this.$store.commit('setAppStatus','receiving')
+      this.$store.commit('setAppStatus',{status: 'receiving'})
     },
 
     async updateResults() {

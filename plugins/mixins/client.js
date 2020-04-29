@@ -119,7 +119,7 @@ export default {
       })
     },
 
-		handleError (reason) {
+		handleError (reason, status) {
 			if (reason) {
         var reason_string = reason.toString()
 				if (reason_string.includes('OK') ||
@@ -130,9 +130,11 @@ export default {
 				) {
 					this.$store.commit('setAppStatus')
 				} else {
-          var error = new Error(reason)
-          error.appStatus = 'receiving'
-					this.$store.commit('setAppStatus', error)
+          var appStatus = {
+            error: new Error(reason),
+            status: status || this.$store.state.appStatus.status || 'receiving'
+          }
+					this.$store.commit('setAppStatus', appStatus)
 				}
 			}
 			this.stopClient()
@@ -148,7 +150,7 @@ export default {
       this.$router.replace({ query });
 
 			if (waiting) {
-				this.$store.commit('setAppStatus', 'waiting')
+				this.$store.commit('setAppStatus', {status: 'waiting'})
 			}
 
 			if (socket) {
@@ -247,12 +249,12 @@ export default {
 
 		async startClient ({session, key, engine, tpw, workers}) {
 
-      if (['loading','receiving'].includes(this.$store.state.appStatus)) {
+      if (['loading','receiving'].includes(this.$store.state.appStatus.status)) {
         return false
       }
 
       try {
-        this.$store.commit('setAppStatus', 'loading')
+        this.$store.commit('setAppStatus', {status: 'loading'})
         this.$store.commit('session', session)
         this.$store.commit('engine', engine)
         this.$store.commit('tpw', tpw)
@@ -262,7 +264,7 @@ export default {
         var client_status = await this.startSocket(session, key, engine)
 
         if (client_status=='ok')
-          this.$store.commit('setAppStatus', 'receiving')
+          this.$store.commit('setAppStatus', {status: 'receiving'})
 
       } catch (error) {
         this.handleError(error)
