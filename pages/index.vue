@@ -36,11 +36,9 @@
         <v-form @submit.prevent="submit" v-if="typeForm==1">
     <v-row justify="center">
       <v-col cols="12" sm="10" md="8" lg="6" color="deep-purple accent-4">
-        
        <v-card-title>
-              <h1 class="display-1.4 mb-4">Create your account</h1>
+              <h1 class="display-1 mb-2">Create your account</h1>
             </v-card-title>
-        
             <v-text-field
                v-model="createName"
                 label="Name"
@@ -62,7 +60,6 @@
                 outlined
                 clearable
             ></v-text-field>
-  
     <v-text-field
       label="E-mail"
       v-model="email"
@@ -70,9 +67,7 @@
        required
                 outlined
                 clearable
-
     ></v-text-field>
- 
  <v-text-field
  label="Password"
             v-model="createPassword"
@@ -97,24 +92,15 @@
             counter
             @click:append="show2 = !show2"
           ></v-text-field>
-          <v-card-text v-if="successMessage || appError" class="pb-0" >
-              <v-alert v-if="appError" type="error" class="mb-2" dismissible @input="resetStatus($event)">
-                {{ appError }}
-              </v-alert>
-               <v-alert v-if="successMessage" type="success" class="mb-2" dismissible @input="successMessage = ''">
-                 {{ successMessage }}
-                </v-alert>
-            </v-card-text>
-             <center>
-            <a href="javascript:void(0)" @click="typeForm=1" >Create your account</a>
-            <v-spacer></v-spacer>
-            <a href="javascript:void(0)" @click="typeForm=0">Login</a>
-            </center>
             <v-card-actions>
               <v-spacer/>
-              <v-btn color="primary" large depressed @click="register">Submit</v-btn>
+              <v-btn color="primary darken-1" large depressed @click="register">Sign up</v-btn>
               <v-spacer/>
             </v-card-actions>
+            <v-spacer></v-spacer>
+            <center>
+              <a class="primary--text text--darken-1" href="javascript:void(0)" @click="typeForm=0">Sign in</a>
+            </center>
       </v-col>
     </v-row>
   </v-form>
@@ -130,7 +116,6 @@
                 outlined
                 clearable
               />
-
               <v-text-field
                 v-if="useKernel"
                 v-model="inputPassword"
@@ -156,27 +141,23 @@
                 @click:append="showPassword = !showPassword"
               />
             </v-card-text>
-            <center>
-            <a href="javascript:void(0)" @click="typeForm=1" >Create your account</a>
-            <v-spacer></v-spacer>
-            <a href="javascript:void(0)" @click="typeForm=0">Login</a>
-            </center>
             <v-card-actions>
-           
               <v-spacer/>
               <v-btn color="primary darken-1" large depressed @click="subscribe">{{(useKernel) ? 'Sign in' : 'Subscribe'}}</v-btn>
               <v-spacer/>
-             
             </v-card-actions>
-            <v-card-text v-if="successMessage || appError" class="pb-0" >
-              <v-alert v-if="appError" type="error" class="mb-2" dismissible @input="resetStatus($event)">
+            <center>
+              <a class="primary--text text--darken-1" href="javascript:void(0)" @click="typeForm=1">Sign up</a>
+            </center>
+          </v-form>
+          <v-card-text v-if="successMessage || appError" class="pb-0" >
+              <v-alert  v-if="appError" type="error" class="mb-2" dismissible @input="resetStatus($event)">
                 {{ appError }}
               </v-alert>
-               <v-alert v-if="successMessage" type="success" class="mb-2" dismissible @input="successMessage = ''">
+               <v-alert v-if="successMessage" type="success" class="mb-2" @input="successMessage = ''">
                  {{ successMessage }}
                 </v-alert>
             </v-card-text>
-          </v-form>
         </v-card>
       </template>
       <template v-else>
@@ -331,6 +312,7 @@
     </v-layout>
   </Layout>
 </template>
+
 
 <script>
 import Layout from '@/components/Layout'
@@ -517,7 +499,7 @@ export default {
        } catch(error){
        this.successMessage=''
       console.log(error)
-      this.handleError(error, "waiting")
+      this.handleError(error,"waiting")
       }
 		},
 		async subscribe () {
@@ -526,7 +508,8 @@ export default {
         var workers = this.$route.query.workers
         if (this.useKernel) {
           var login = await this.$store.dispatch('auth/login',{ username: this.inputUsername, password: this.inputPassword })
-			    this.startClient({session: this.inputUsername, engine: this.inputEngine, tpw, workers})
+          this.startClient({session: this.inputUsername, engine: this.inputEngine, tpw, workers})
+          this.successMessage=''
         } else {
 			    this.startClient({session: this.inputUsername, key: this.inputPassword, engine: this.inputEngine, tpw, workers})
         }
