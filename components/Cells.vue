@@ -2606,6 +2606,15 @@ export default {
         console.error(error)
       }
     },
+    async bufferDf () {
+      // this.$store.dispatch('bufferDf')
+      try {
+        await this.evalCode('_output = '+this.dataset.varname+'.ext.set_buffer("*")')
+        this.$store.commit('setBuffer',true)
+      } catch (error) {
+        console.error(error)
+      }
+    },
 
     restorePreview (restoreColumns) {
       if (restoreColumns) {
@@ -3089,8 +3098,9 @@ export default {
           dataset
         })
 
-        await this.evalCode('_output = '+this.dataset.varname+'.ext.set_buffer("*")')
-        this.$store.commit('setBuffer',true)
+        this.optimizeDf()
+        this.bufferDf()
+
         this.updateSecondaryDatasets()
 
         this.$forceUpdate()
@@ -3099,7 +3109,7 @@ export default {
         this.$emit('update:codeError','')
         this.lastWrongCode = false
 
-        this.optimizeDf()
+
 
       } catch (error) {
         printError(error)
