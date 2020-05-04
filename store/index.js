@@ -40,6 +40,9 @@ const properties = [
     clear: true,
   },
   {
+    name: 'Optimization'
+  },
+  {
     name: 'Buffer'
   },
   {

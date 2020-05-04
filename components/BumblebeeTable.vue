@@ -150,7 +150,7 @@
 				>
 
           <transition name="slow-fade">
-            <template v-if="lazyColumns[index]">
+            <template v-if="!lazyColumns.length || lazyColumns[index]">
               <div
                 v-if="column.preview"
                 :key="'p'+column.index"
@@ -278,7 +278,7 @@
       >
         <template v-for="(column, cindex) in allColumns">
           <!-- lazy hidden -->
-          <template v-if="!lazyColumns[cindex]">
+          <template v-if="lazyColumns.length && !lazyColumns[cindex]">
             <div
               :key="'l'+column.index" :style="{width: (column.width || 170)+'px'}"
               class="bb-table-cell"
@@ -1369,22 +1369,26 @@ export default {
     },
 
     checkVisibleColumns: debounce(function(event) {
-      var scrollLeft = this.$refs['BbTableTopContainer'].scrollLeft
+      try {
+        var scrollLeft = this.$refs['BbTableTopContainer'].scrollLeft
 
-      var a = scrollLeft/170
-      var b = (scrollLeft + this.$refs['BbTableTopContainer'].offsetWidth)/170
+        var a = scrollLeft/170
+        var b = (scrollLeft + this.$refs['BbTableTopContainer'].offsetWidth)/170
 
-      a = Math.floor((a)-0.1)
-      b = Math.ceil((b))
+        a = Math.floor((a)-0.1)
+        b = Math.ceil((b))
 
 
-      var numbers = []
+        var numbers = []
 
-      for (let n = a; n <= b; n++) {
-        numbers[n] = true
+        for (let n = a; n <= b; n++) {
+          numbers[n] = true
+        }
+
+        this.lazyColumns = numbers
+      } catch (error) {
+        this.lazyColumns = []
       }
-
-      this.lazyColumns = numbers
 
     }, 80),
 

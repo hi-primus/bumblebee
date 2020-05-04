@@ -2433,7 +2433,17 @@ export default {
 
   computed: {
 
-    ...mapGetters(['currentSelection','currentCells','selectionType','currentTab', 'currentDuplicatedColumns', 'currentPreviewNames', 'currentSecondaryDatasets', 'currentDatasetPreview']),
+    ...mapGetters([
+      'currentSelection',
+      'currentOptimization',
+      'currentCells',
+      'selectionType',
+      'currentTab',
+      'currentDuplicatedColumns',
+      'currentPreviewNames',
+      'currentSecondaryDatasets',
+      'currentDatasetPreview'
+    ]),
 
     cells: {
       get() {
@@ -2584,6 +2594,27 @@ export default {
   },
 
   methods: {
+
+    async optimizeDf () {
+      // this.$store.dispatch('optimizeDf')
+      try {
+        if (!this.currentOptimization) {
+          await this.evalCode(`${this.dataset.varname} = ${this.dataset.varname}.ext.optimize()`)
+          this.$store.commit('setOptimization', true)
+        }
+      } catch (error) {
+        console.error(error)
+      }
+    },
+    async bufferDf () {
+      // this.$store.dispatch('bufferDf')
+      try {
+        await this.evalCode('_output = '+this.dataset.varname+'.ext.set_buffer("*")')
+        this.$store.commit('setBuffer',true)
+      } catch (error) {
+        console.error(error)
+      }
+    },
 
     restorePreview (restoreColumns) {
       if (restoreColumns) {
@@ -3067,8 +3098,9 @@ export default {
           dataset
         })
 
-        await this.evalCode('_output = '+this.dataset.varname+'.ext.set_buffer("*")')
-        this.$store.commit('setBuffer',true)
+        this.optimizeDf()
+        this.bufferDf()
+
         this.updateSecondaryDatasets()
 
         this.$forceUpdate()
@@ -3076,6 +3108,8 @@ export default {
 
         this.$emit('update:codeError','')
         this.lastWrongCode = false
+
+
 
       } catch (error) {
         printError(error)
