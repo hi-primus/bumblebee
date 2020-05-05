@@ -2860,9 +2860,10 @@ export default {
 
     markCellsError() {
       var cells = [...this.cells]
-      for (let i = 0; i < cells.length; i++) {
-        if (!cells[i].done && cells[i].content)
-          cells[i].error = true
+      for (let i = cells.length - 1; i >= 0; i--) {
+        if (!cells[i].done && cells[i].content) {
+          cells.splice(i,1)
+        }
       }
       this.cells = cells
 
