@@ -395,8 +395,6 @@ export default {
 				{command: 'drop rows', text: 'Drop rows', type: 'FILTER'},
         {command: 'keep rows', text: 'Keep rows', type: 'FILTER'},
 
-				{command: 'sample_n', text: 'Random', type: 'SAMPLING'},
-        {command: 'stratified_sample', text: 'Stratified', type: 'SAMPLING', min: 1, max: 1},
 
 				{command: 'lower', text: 'To lower case', type: 'STRING'},
 				{command: 'upper', text: 'To upper case', type: 'STRING'},
@@ -405,16 +403,19 @@ export default {
         {command: 'trim', text: 'Trim white space', type: 'STRING'},
         {command: 'string clustering', text: 'String clustering', type: 'STRING', max: 1, min: 1, hidden: { valueOf: ()=>(this.appStable) }},
 
-				{command: 'bucketizer',       text: 'Create Bins',          type: 'PREPARE', max: 1}, // TODO: Remove limit
-				{command: 'impute',           text: 'Impute rows',          type: 'IMPUTE'},
 				// {command: 'random_split',     teaxt: 'Split train and test', type: 'PREPARE'},
-        {command: 'z_score',          text: 'Standard',  type: 'SCALER'},
-        {command: 'min_max_scaler',   text: 'Min max',   type: 'SCALER'},
-        {command: 'max_abs_scaler',   text: 'Max abs',   type: 'SCALER'},
 
-				{command: 'values_to_cols',   text: 'Values to Columns',    type: 'ENCODING', max: 1},
-				{command: 'string_to_index',  text: 'Strings to Index',     type: 'ENCODING'},
-				{command: 'index_to_string',  text: 'Indices to Strings',     type: 'ENCODING'},
+				{command: 'sample_n', text: 'Random Sampling', type: 'ML'},
+        {command: 'stratified_sample', text: 'Stratified Sampling', type: 'ML', min: 1, max: 1},
+				{command: 'bucketizer',       text: 'Create Bins',          type: 'ML'/*'PREPARE'*/, max: 1}, // TODO: Remove limit
+				{command: 'impute',           text: 'Impute rows',          type: 'ML', min: 1},
+				{command: 'values_to_cols',   text: 'Values to Columns',    type: 'ML', max: 1},
+				{command: 'string_to_index',  text: 'Strings to Index',     type: 'ML', min: 1},
+				{command: 'index_to_string',  text: 'Indices to Strings',     type: 'ML', min: 1},
+        {command: 'z_score',          text: 'Standard Scaler',  type: 'ML', min: 1},
+        {command: 'min_max_scaler',   text: 'Min max Scaler',   type: 'ML', min: 1},
+        {command: 'max_abs_scaler',   text: 'Max abs Scaler',   type: 'ML', min: 1},
+        {command: 'outliers',   text: 'Outliers',   type: 'ML', min: 1, max: 1},
 
         {command: 'cast', dtype: 'int',     text: 'Int', type: 'CAST'},
 				{command: 'cast', dtype: 'float',   text: 'Float', type: 'CAST'},
@@ -661,22 +662,6 @@ export default {
         },
         { divider: true },
         {
-          type: 'menu',
-          group: 'SAMPLING',
-          tooltip: 'Sampling',
-          icons: [{ icon: 'blur_linear' }],
-          disabled: { valueOf: ()=>!(this.selectionType=='columns' && this.dataset && this.dataset.summary) },
-          hidden: {
-            valueOf: ()=>(this.appStable)
-          }
-        },
-        {
-          divider: true,
-          hidden: {
-              valueOf: ()=>(this.appStable)
-            }
-        },
-        {
           type: 'button',
           onClick: ()=>this.commandHandle({command: 'sort rows'}),
           tooltip: 'Sort rows',
@@ -867,61 +852,15 @@ export default {
           disabled: { valueOf: ()=>!(this.selectionType=='columns' && this.selectedColumns.length>0)}
         },
         {
-          divider: true,
-          hidden: {
-              valueOf: ()=>(this.appStable)
-            }
-        },
-        {
           type: 'menu',
-          group: 'PREPARE',
-          icons: [{ icon: 'hdr_strong' }],
-          tooltip: 'Prepare',
-          disabled: { valueOf: ()=>!(this.selectionType=='columns' && this.selectedColumns.length>0)},
+          group: 'ML',
+          icons: [{ icon: 'timeline' }],
+          tooltip: 'Machine Learning',
+          disabled: { valueOf: ()=>!(this.selectionType=='columns' && this.dataset && this.dataset.summary) }, // Sampling
           hidden: {
             valueOf: ()=>(this.appStable)
           }
         },
-        {
-          type: 'menu',
-          group: 'IMPUTE',
-          icons: [{ icon: 'flip_to_front' }],
-          tooltip: 'Impute',
-          disabled: { valueOf: ()=>!(this.selectionType=='columns' && this.selectedColumns.length>0)},
-          hidden: {
-            valueOf: ()=>(this.appStable)
-          }
-        },
-        {
-          type: 'menu',
-          group: 'SCALER',
-          icons: [{ icon: 'crop_portrait' }],
-          tooltip: 'Scaler',
-          disabled: { valueOf: ()=>!(this.selectionType=='columns' && this.selectedColumns.length>0)},
-          hidden: {
-            valueOf: ()=>(this.appStable)
-          }
-        },
-        {
-          type: 'menu',
-          group: 'ENCODING',
-          icons: [{ icon: 'exposure_zero' }],
-          tooltip: 'Encoding',
-          disabled: { valueOf: ()=>!(this.selectionType=='columns' && this.selectedColumns.length>0)},
-          hidden: {
-            valueOf: ()=>(this.appStable)
-          }
-        },
-        {
-          type: 'button',
-          disabled: {valueOf: ()=>!(this.selectionType=='columns' && this.selectedColumns.length==1)},
-          icons: [{icon: 'scatter_plot'}],
-          tooltip: 'Outliers',
-          onClick: ()=>this.commandHandle({command: 'outliers'}),
-          hidden: {
-            valueOf: ()=>(this.appStable)
-          }
-        }
       ]
     },
 
