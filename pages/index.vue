@@ -146,9 +146,9 @@
               <v-btn color="primary darken-1" large depressed @click="subscribe">{{(useKernel) ? 'Sign in' : 'Subscribe'}}</v-btn>
               <v-spacer/>
             </v-card-actions>
-            <center>
-              <a class="primary--text text--darken-1" href="javascript:void(0)" @click="typeForm=1">Sign up</a>
-            </center>
+            <v-layout align-center justify-center>
+              <a v-if="useRegister" class="primary--text text--darken-1" href="javascript:void(0)" @click="typeForm=1">{{(useRegister) ? 'Sign up' : ''}}</a>
+            </v-layout>
           </v-form>
           <v-card-text v-if="successMessage || appError" class="pb-0" >
               <v-alert  v-if="appError" type="error" class="mb-2" dismissible @input="resetStatus($event)">
