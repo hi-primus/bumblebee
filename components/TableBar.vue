@@ -407,7 +407,7 @@ export default {
 
 				{command: 'sample_n', text: 'Random Sampling', type: 'ML'},
         {command: 'stratified_sample', text: 'Stratified Sampling', type: 'ML', min: 1, max: 1},
-				{command: 'bucketizer',       text: 'Create Bins',          type: 'ML'/*'PREPARE'*/, max: 1}, // TODO: Remove limit
+				{command: 'bucketizer',       text: 'Create Bins',          type: 'ML', max: 1}, // TODO: Check limit
 				{command: 'impute',           text: 'Impute rows',          type: 'ML', min: 1},
 				{command: 'values_to_cols',   text: 'Values to Columns',    type: 'ML', max: 1},
 				{command: 'string_to_index',  text: 'Strings to Index',     type: 'ML', min: 1},
