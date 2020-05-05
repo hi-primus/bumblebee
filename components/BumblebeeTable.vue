@@ -272,6 +272,7 @@
       <div
         class="bb-table-row"
         v-for="(row, rowArrayIndex) in (rowsPreview.length ? rowsPreview : rows)"
+        :data-row="row.index+1"
         :key="'r'+row.index"
         :class="[getRowHighlight(rowArrayIndex)]"
         :style="{height: rowHeight+'px', top: row.index*rowHeight+'px'}"
