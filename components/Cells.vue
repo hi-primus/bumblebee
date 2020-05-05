@@ -964,25 +964,30 @@ export default {
               {
                 condition: (c)=>(c._fileInput && c._fileInput.toString() && c._fileInput!==c._fileLoaded),
                 type: 'action',
-                label: 'Upload',
+                label: 'Preview',
                 loading: '_fileUploading',
                 func: 'uploadFile'
               },
               {
-                type: 'separator',
-                label: 'or'
+                condition: (c)=>c.file_type==='csv',
+                key: '_more_options',
+                label: (c) => `More options: ${c._more_options ? 'Yes' : 'No'}`,
+                type: 'switch'
               },
               {
                 key: 'url',
                 label: 'File url',
                 placeholder: (c)=>`https://example.com/my_file.${c.file_type}`,
-                type: 'field'
+                type: 'field',
+                condition: (c)=>c._more_options,
               },
               {
-                condition: (c)=>c.file_type==='csv',
-                key: '_infer',
-                label: (c) => `Infer: ${c._infer ? 'Yes' : 'No'}`,
-                type: 'switch'
+                condition: (c)=>c._more_options,
+                key: 'limit',
+                label: 'Limit',
+                min: 1,
+                clearable: true,
+                type: 'number'
               },
               {
                 key: 'file_type',
@@ -995,35 +1000,28 @@ export default {
                   { text: 'Avro', value: 'avro' },
                   { text: 'Parquet', value: 'parquet' }
                 ],
-                condition: (c)=>!c._infer
+                condition: (c)=>c._more_options
               },
               {
-                key: 'limit',
-                label: 'Limit',
-                min: 1,
-                clearable: true,
-                type: 'number'
-              },
-              {
-                condition: (c)=>c.file_type==='csv' && !c._infer,
+                condition: (c)=>c.file_type==='csv' && c._more_options,
                 key: 'header',
                 label: (c) => `First row as Header: ${c.header ? 'Yes' : 'No'}`,
                 type: 'switch'
               },
               {
-                condition: (c)=>c.file_type==='csv' && !c._infer,
+                condition: (c)=>c.file_type==='csv' && c._more_options,
                 key: 'null_value',
                 label: 'Null value',
                 type: 'field'
               },
               {
-                condition: (c)=>c.file_type==='csv' && !c._infer,
+                condition: (c)=>c.file_type==='csv' && c._more_options,
                 key: 'sep',
                 label: 'Separator',
                 type: 'field'
               },
               {
-                condition: (c)=>c.file_type==='csv' && !c._infer,
+                condition: (c)=>c.file_type==='csv' && c._more_options,
                 key: 'charset',
                 label: 'File encoding',
                 type: 'select',
@@ -1047,16 +1045,16 @@ export default {
                 ]
               },
               {
-                condition: (c)=>c.file_type==='json' && !c._infer,
+                condition: (c)=>c.file_type==='json' && c._more_options,
                 key: 'multiline',
                 label: (c) => `Multiline: ${c.multiline ? 'Yes' : 'No'}`,
                 type: 'switch'
               },
               {
                 condition: (c)=>{
-                  return (c.file_type==='xls' && !c._infer)
+                  return (c.file_type==='xls' && c._more_options)
                   ||
-                  (c._infer && (c.url.endsWith('.xls') || c.url.endsWith('.xlsx')))
+                  (!c._more_options && (c.url.endsWith('.xls') || c.url.endsWith('.xlsx')))
                 },
                 key: 'sheet_name',
                 label: `Sheet`,
@@ -1101,7 +1099,7 @@ export default {
             _fileUrl: '',
             _fileUploading: false,
             _fileInput: [],
-            _infer: true,
+            _more_options: false,
             file_type: 'csv',
             url: '',
             sep: ',',
@@ -1133,7 +1131,7 @@ export default {
               code = `${this.availableVariableName} = `
             }
 
-            var loadType = (payload._infer) ? 'file' : payload.file_type
+            var loadType = (!payload._more_options) ? 'file' : payload.file_type
 
             code +=`op.load.${loadType}("${payload.url.trim()}"`
             if (loadType=='csv') {
@@ -2620,7 +2618,7 @@ export default {
           from: this.currentCommand.columns,
           datasetPreview: !!this.currentCommand._datasetPreview,
           load: this.currentCommand._preview==='load',
-          infer: this.currentCommand._infer,
+          infer: this.currentCommand._more_options===false,
           expectedColumns
         })
 
