@@ -307,6 +307,9 @@ export default {
     currentCommand: {
       required: true
     },
+    command: {
+      required: true
+    },
     field: {
       required: true
     },

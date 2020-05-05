@@ -25,12 +25,26 @@
             <template v-if="!currentCommand.loading && command.dialog.fields">
               <template v-for="field in command.dialog.fields.filter(f=>(!f.condition || f.condition && f.condition(currentCommand)))">
 
-                <OperationField v-if="getProperty(field.type,[currentCommand])!='repeat'" :key="field.key" :value.sync="currentCommand[field.key]" :field="field" :currentCommand="currentCommand"/>
+                <OperationField
+                  v-if="getProperty(field.type,[currentCommand])!='repeat'"
+                  :key="field.key"
+                  :value.sync="currentCommand[field.key]"
+                  :field="field"
+                  :command="command"
+                  :currentCommand="currentCommand"
+                />
                 <template v-else>
                   <template v-for="(fieldGroup, i) in currentCommand[field.key]">
                     <!-- <div v-if="i>0" :key="'separator'+i+field.key" class="separator"></div> -->
                     <template v-for="subfield in field.fields">
-                      <OperationField :key="field.key+i+subfield.key" :value.sync="getProperty(currentCommand[subfield.key],[currentCommand])[i]" :field="subfield" :currentCommand="currentCommand" :index="i"/>
+                      <OperationField
+                        :key="field.key+i+subfield.key"
+                        :value.sync="getProperty(currentCommand[subfield.key],[currentCommand])[i]"
+                        :field="subfield"
+                        :currentCommand="currentCommand"
+                        :command="command"
+                        :index="i"
+                      />
                     </template>
                     <v-btn depressed class="icon-btn" :key="'remove'+i+field.key" color="error" @click="field.removeOne(currentCommand, i)">
                       <v-icon>close</v-icon>
