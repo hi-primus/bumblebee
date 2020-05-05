@@ -7,7 +7,7 @@
       :command="command"
       @cancelCommand="cancelCommand"
     >
-      <v-form @submit.prevent="confirmCommand" id="command-form" class="pl-4 pr-5 pt-4 smaller-fields">
+      <v-form @submit.prevent="confirmCommand" id="command-form" class="pl-4 pr-5 pt-4 operation-form">
           <div class="body-2 mb-1" :class="{'title': command.dialog.bigText}" v-if="command.dialog.text">
             {{
               {value: command.dialog.text, args: [currentCommand]} | property
@@ -21,259 +21,42 @@
               v-if="currentCommand.loading"
             />
           </div>
-          <template v-if="!currentCommand.loading && command.dialog.fields">
-            <template v-for="field in command.dialog.fields.filter(f=>(!f.condition || f.condition && f.condition(currentCommand)))">
-              <template v-if="getProperty(field.type,[currentCommand])=='action'">
-                <v-btn
-                  :key="field.key"
-                  depressed
-                  color="primary"
-                  @click="(field.func) ? command[field.func]() : 0"
-                  class="mb-6 mx-a d-flex"
-                  :loading="currentCommand[field.loading]"
-                  :disabled="!currentCommand[field.loading] && field.validate && !field.validate(currentCommand)"
-                >
-                  {{
-                    {value: field.label, args: [currentCommand]} | property
-                  }}
-                </v-btn>
-              </template>
-              <template v-if="getProperty(field.type,[currentCommand])=='text'">
-                <div
-                  :key="field.key"
-                  class="mb-6"
-                  :class="{'title': field.big}"
-                  v-if="field.text"
-                >
-                  {{
-                    {value: field.text, args: [currentCommand]} | property
-                  }}
-                </div>
-              </template>
-              <template v-if="getProperty(field.type,[currentCommand])=='file'">
-                <v-file-input
-                  v-model="currentCommand[field.key]"
-                  :key="field.key"
-                  :label="(typeof field.label == 'function') ? field.label(currentCommand) : (field.label || '')"
-                  :placeholder="(typeof field.placeholder == 'function') ? field.placeholder(currentCommand) : (field.placeholder || '')"
-                  :clearable="field.clearable"
-                  :accept="field.accept"
-                  @input="(field.onChange) ? field.onChange($event) : 0"
-                  dense
-                  required
-                  outlined
-                ></v-file-input>
-              </template>
-              <template v-if="getProperty(field.type,[currentCommand])=='field'">
-                <v-text-field
-                  v-model="currentCommand[field.key]"
-                  :key="field.key"
-                  :label="(typeof field.label == 'function') ? field.label(currentCommand) : (field.label || '')"
-                  :placeholder="(typeof field.placeholder == 'function') ? field.placeholder(currentCommand) : (field.placeholder || '')"
-                  :clearable="field.clearable"
-                  @input="(field.onChange) ? field.onChange($event) : 0"
-                  dense
-                  required
-                  outlined
-                ></v-text-field>
-              </template>
-              <template v-if="getProperty(field.type,[currentCommand])=='chips'">
-                <v-combobox
-                  v-model="currentCommand[field.key]"
-                  :key="field.key"
-                  :label="(typeof field.label == 'function') ? field.label(currentCommand) : (field.label || '')"
-                  :placeholder="(typeof field.placeholder == 'function') ? field.placeholder(currentCommand) : (field.placeholder || '')"
-                  :clearable="field.clearable"
-                  autocomplete="off"
-                  chips
-                  deletable-chips
-                  :items="[]"
-                  class="chips-no-items"
-                  multiple
-                >
-                </v-combobox>
-              </template>
-              <template v-if="getProperty(field.type,[currentCommand])=='outliers-range'">
-                <Outliers
-                  :key="field.key"
-                  v-if="currentCommand[field.key]"
-                  :data="currentCommand[field.key]"
-                  :columnName="currentCommand.columns[0]"
-                  :selection.sync="currentCommand[field.selection_key]"
-                />
-              </template>
-              <template v-if="getProperty(field.type,[currentCommand])=='switch'">
-                <v-switch
-                  :key="field.key"
-                  v-model="currentCommand[field.key]"
-                  color="black"
-                  :label="(typeof field.label == 'function') ? field.label(currentCommand) : field.label"
-                ></v-switch>
-              </template>
-              <template v-else-if="getProperty(field.type,[currentCommand])=='password'">
-                <v-text-field
-                  v-model="currentCommand[field.key]"
-                  :key="field.key"
-                  :label="field.label"
-                  :placeholder="field.placeholder"
-                  dense
-                  required
-                  outlined
-                  :append-icon="field.showable ? (field.show ? 'visibility' : 'visibility_off') : undefined"
-                  :type="(field.show || !field.showable) ? 'text' : 'password'"
-                  :clearable="field.clearable"
-                  @input="(field.onChange) ? field.onChange($event) : 0"
-                  @click:append="field.show = !field.show"
-                />
-              </template>
-              <template v-else-if="getProperty(field.type,[currentCommand])=='number'">
-                <v-text-field
-                  type="number"
-                  v-model="currentCommand[field.key]"
-                  :key="field.key"
-                  :label="field.label"
-                  :placeholder="field.placeholder"
-                  :min="field.min"
-                  :clearable="field.clearable"
-                  @input="(field.onChange) ? field.onChange($event) : 0"
-                  dense
-                  required
-                  outlined
-                ></v-text-field>
-              </template>
-              <template v-else-if="getProperty(field.type,[currentCommand])=='number_index'">
-                <v-text-field
-                  type="number"
-                  :value="(currentCommand.index>=0) ? currentCommand.index : ''"
-                  @input="currentCommand.index = ($event>=0) ? $event : ''"
-                  :key="field.key"
-                  label="Index"
-                  :clearable="field.clearable"
-                  :max="(field.splits!=='') ? field.splits-1 : undefined"
-                  :placeholder="field.placeholder"
-                  :min="field.min"
-                  dense
-                  required
-                  outlined
-                ></v-text-field>
-              </template>
-              <template v-else-if="getProperty(field.type,[currentCommand])=='select' && (!field.items_key == !currentCommand[field.items_key])">
-                <v-select
-                  :key="field.key"
-                  v-model="currentCommand[field.key]"
-                  :label="field.label"
-                  :placeholder="field.placeholder"
-                  :items="(field.items_key) ? getProperty(currentCommand[field.items_key],[currentCommand]) : getProperty(field.items,[currentCommand])"
-                  @input="(field.onChange) ? field.onChange($event) : 0"
-                  :disabled="!!+field.disabled"
-                  dense
-                  required
-                  outlined
-                ></v-select>
-              </template>
-              <template v-else-if="getProperty(field.type,[currentCommand])=='columns_filter'">
-                <v-data-table
-                  :key="field.key"
-                  v-model="currentCommand[field.key]"
-                  show-select
-                  :headers="field.headers"
-                  :item-key="field.item_key"
-                  :items="(field.items_key) ? getProperty(currentCommand[field.items_key],[currentCommand]) : field.items"
-                  @input="(field.onChange) ? field.onChange($event) : ()=>{}"
-                  @click:row="field.onClickRow ? field.onClickRow($event) : ()=>{}"
-                  :disabled="!!+field.disabled"
-                  :items-per-page="(field.items_key) ? getProperty(currentCommand[field.items_key],[currentCommand]).length : field.items.length"
-                  class="vdf--hide-select mb-4 columns-filter"
-                  style="margin-top: -4px; max-height: 255px; overflow-y: scroll;"
-                  hide-default-footer
-                  dense
-                  required
-                  outlined
-                >
-                  <template v-slot:item.source="{ item }">
-                    <span dark class="capitalize text--darken-3" :class="[ item.source==='right' ? 'warning--text' : 'primary--text' ]">
-                      {{ item.source }}
-                    </span>
+          <div class="o-fields">
+            <template v-if="!currentCommand.loading && command.dialog.fields">
+              <template v-for="field in command.dialog.fields.filter(f=>(!f.condition || f.condition && f.condition(currentCommand)))">
+
+                <OperationField v-if="getProperty(field.type,[currentCommand])!='repeat'" :key="field.key" :value.sync="currentCommand[field.key]" :field="field" :currentCommand="currentCommand"/>
+                <template v-else>
+                  <template v-for="(fieldGroup, i) in currentCommand[field.key]">
+                    <!-- <div v-if="i>0" :key="'separator'+i+field.key" class="separator"></div> -->
+                    <template v-for="subfield in field.fields">
+                      <OperationField :key="field.key+i+subfield.key" :value.sync="getProperty(currentCommand[subfield.key],[currentCommand])[i]" :field="subfield" :currentCommand="currentCommand" :index="i"/>
+                    </template>
+                    <v-btn depressed class="icon-btn" :key="'remove'+i+field.key" color="error" @click="field.removeOne(currentCommand, i)">
+                      <v-icon>close</v-icon>
+                    </v-btn>
                   </template>
-                  <template v-slot:item.key="{ item }">
-                    <span
-                      @click.stop="field.selectKey ? field.selectKey(item) : ()=>{}"
-                      :style="{
-                        opacity: ((currentCommand.right_on===item.name && item.source==='right')||(currentCommand.left_on===item.name && item.source==='left')) ? 1 : 0.5
-                      }"
-                      style="cursor: pointer"
-                    >
-                      <v-icon>
-                        vpn_key
-                      </v-icon>
-                    </span>
-                  </template>
-                </v-data-table>
-              </template>
-              <template v-else-if="getProperty(field.type,[currentCommand])=='select-foreach'">
-                <v-row :key="field.key" no-gutters class="foreach-label">
-                  <template v-for="(title, i) in currentCommand.columns">
-                    <v-col v-if="!field.noLabel" :key="i+'label'" class="col-12 col-sm-4 col-md-3 font-weight-bold pr-4 text-ellipsis" :title="title">
-                      {{title}}
-                    </v-col>
-                    <v-col :key="i" class="col-12 oci-input-container" :class="{'col-sm-8 col-md-9': !field.noLabel}">
-                      <v-select
-                        v-model="currentCommand[field.key][i]"
-                        :key="field.key"
-                        :label="field.label===true ? title : field.label"
-                        :placeholder="field.placeholder===true ? title : field.placeholder"
-                        :items="(field.items_key) ? currentCommand[field.items_key] : field.items"
-                        dense
-                        required
-                        outlined
-                      ></v-select>
-                    </v-col>
-                  </template>
-                </v-row>
-              </template>
-              <template v-else-if="getProperty(field.type,[currentCommand])=='clusters'">
-                <div :key="field.key" class="clusters-table-container" style="overflow-y: auto; min-heigth: 240px;">
-                  <div v-for="(cluster, i) in currentCommand[field.key]" :key="i+'label'" class="cluster" :class="{'disabled-cluster': !cluster.merge}" >
-                      <v-data-table
-                        flat
-                        depressed
-                        v-model="cluster.selected"
-                        :items="cluster.values"
-                        :headers="clusterHeaders"
-                        :sort-by="'count'"
-                        sort-desc
-                        disable-pagination
-                        item-key="value"
-                        dense
-                        show-select
-                        hide-default-footer
-                      >
-                      </v-data-table>
-                      <div class="cluster-info">
-                        {{`${cluster.values.length} value${(cluster.values.length!=1 ? 's' : '')}`}} · {{`${cluster.count} row${(cluster.count!=1 ? 's' : '')}`}}
-                      </div>
-                      <v-text-field
-                        v-model="cluster.replace"
-                        class="cluster-replace-field pt-2"
-                        :label="(field.label===true ? cluster.replace : field.label) || 'New cell value'"
-                        :placeholder="field.placeholder===true ? cluster.replace : field.placeholder"
-                        :disabled="false && !cluster.selected.length"
-                        @input="clusterFieldUpdated(cluster)"
-                        dense
-                        required
-                        outlined
-                      ></v-text-field>
-                  </div>
-                </div>
+                  <v-btn
+                    :key="'addNewRepeat'+field.key"
+                    outlined
+                    rounded
+                    style="margin-left: auto; margin-right: auto; margin-top: -4px"
+                    class="icon-btn"
+                    color="primary"
+                    @click="field.addOne(currentCommand)"
+                  >
+                    <v-icon>add</v-icon>
+                  </v-btn>
+                </template>
               </template>
             </template>
-          </template>
-          <OutputColumnInputs v-if="command.dialog.output_cols" :fieldLabel="command.dialog.output_cols_label" :noLabel="!command.dialog.output_labels" :currentCommand.sync="currentCommand"></OutputColumnInputs>
-          <template>
-            <v-alert key="error" type="error" class="mt-3" dismissible v-if="currentCommand.error"  @input="currentCommand.error=''">
-              {{currentCommand.error}}
-            </v-alert>
-          </template>
+            <OutputColumnInputs v-if="command.dialog.output_cols" :fieldLabel="command.dialog.output_cols_label" :noLabel="!command.dialog.output_labels" :currentCommand.sync="currentCommand"></OutputColumnInputs>
+            <template>
+              <v-alert key="error" type="error" class="mt-3" dismissible v-if="currentCommand.error"  @input="currentCommand.error=''">
+                {{currentCommand.error}}
+              </v-alert>
+            </template>
+          </div>
           <div class="d-flex justify-end">
             <v-spacer></v-spacer>
             <v-btn
@@ -380,6 +163,7 @@ import CodeEditor from '@/components/CodeEditor'
 import CommandFormContainer from '@/components/CommandFormContainer'
 import OutputColumnInputs from '@/components/OutputColumnInputs'
 import Outliers from '@/components/Outliers'
+import OperationField from '@/components/OperationField'
 import clientMixin from '@/plugins/mixins/client'
 import { mapGetters } from 'vuex'
 import {
@@ -405,6 +189,7 @@ export default {
     CommandFormContainer,
     CodeEditor,
 		OutputColumnInputs,
+		OperationField,
 		Outliers
   },
 
@@ -880,14 +665,18 @@ export default {
                 },
                 selectKey: (item)=>{
 
-                  var on = item.source+'_on'
-                  this.currentCommand[on] = item.name
+                  try {
+                    var on = item.source+'_on'
+                    this.currentCommand[on] = item.name
+                  } catch (error) {
+                    console.error(error)
+                  }
 
                 }
               },
             ],
             validate: (c) => {
-              return !!(c.selected_columns.length && c.right_on)
+              return !!(c.selected_columns && c.selected_columns.length && c.right_on)
             }
           },
           payload: async (columns) => {
@@ -963,6 +752,119 @@ export default {
                 + `, right_on="${payload.right_on}", how="${payload.how}")${filterEnd}`
             }
 
+          }
+        },
+        'get aggregations': {
+          dialog: {
+            title: 'Get aggregations',
+            fields: [
+              {
+                type: 'autocomplete',
+                key: 'group_by',
+                label: 'Group by',
+                clearable: true,
+                items_key: 'allColumns'
+              },
+              // {
+              //   type: 'autocomplete-repeat',
+              //   key: 'input_cols',
+              //   label: 'Input columns',
+              //   clearable: true,
+              //   items_key: 'allColumns'
+              // },
+              {
+                type: 'text',
+                // big: true,
+                text: 'Aggregations'
+              },
+              {
+                type: 'repeat',
+                key: 'aggregations',
+                add: true,
+                addOne: (c)=>{
+                  this.currentCommand.input_cols.push(c.allColumns[0])
+                  this.currentCommand.aggregations.push('count')
+                  this.currentCommand.output_cols.push('')
+                },
+                removeOne: (c,i)=>{
+                  c.input_cols.splice(i,1)
+                  c.aggregations.splice(i,1)
+                  c.output_cols.splice(i,1)
+                  this.currentCommand = c
+                },
+                fields: [
+                  {
+                    type: 'select',
+                    key: 'input_cols',
+                    label: 'Column',
+                    class: 'half-with-btn',
+                    items_key: 'allColumns'
+                  },
+                  {
+                    type: 'select',
+                    class: 'half-with-btn',
+                    key: 'aggregations',
+                    label: 'Type',
+                    items: [
+                      { text: 'Count', value: 'count' },
+                      { text: 'Sum', value: 'sum' },
+                      { text: 'Mean', value: 'mean' },
+                      { text: 'Std', value: 'std' },
+                      { text: 'Min', value: 'min' },
+                      { text: 'Max', value: 'max' },
+                      { text: 'First', value: 'first' },
+                      { text: 'Last', value: 'last' },
+                    ]
+                  },
+                  // {
+                  //   type: 'field',
+                  //  // class: 'with-icon-btn',
+                  //   label: 'Rename',
+                  //   placeholder: (c,i)=>c.output_cols_default(c)[i],
+                  //   key: 'output_cols'
+                  // },
+                ]
+              }
+            ],
+            validate: (c)=>{
+              if (c.group_by.length==0) {
+                return 0
+              }
+              return (c.input_cols.length && c.aggregations.length)
+            },
+          },
+          payload: (columns) => ({
+            allColumns: this.allColumns,
+            group_by: [],
+            input_cols: columns,
+            aggregations: columns.map(e=>'count'),
+            output_cols_default: (c)=>c.aggregations.map((aggregation,i)=>`${aggregation}_${c.input_cols[i]}`),
+            output_cols: columns.map(e=>''),
+            _preview: 'get aggregations',
+            _datasetPreview: true,
+            _expectedColumns: ()=>{
+              var payload = this.currentCommand
+              var output_cols_default = payload.output_cols_default(payload)
+              var aggregations = payload.aggregations.map((oname,i)=>`"${payload.output_cols[i] || output_cols_default[i]}": {"${payload.input_cols[i]}":"${payload.aggregations[i]}"}`)
+              aggregations = [...new Set(aggregations)]
+              return aggregations.length+payload.group_by.length
+            },
+          }),
+          code: (payload) => {
+            var output_cols_default = payload.output_cols_default(payload)
+            // var code = payload._requestType ? this.dataset.varname : ''
+
+            var aggregations = payload.aggregations.map((oname,i)=>`"${payload.output_cols[i] || output_cols_default[i]}": {"${payload.input_cols[i]}":"${payload.aggregations[i]}"}`)
+
+            aggregations = [...new Set(aggregations)]
+
+            var code = ''
+
+            code += `.cols.groupby(by="${payload.group_by[0]}", agg={`
+            code += aggregations.join(', ')
+            code += `})`
+
+            return code
           }
         },
         STRING: {
@@ -2548,13 +2450,22 @@ export default {
               return
             }
             if (this.currentCommand._preview) {
+
               if (this.currentCommand.output_cols) {
+
                 var nameMap = {}
-                this.currentCommand.output_cols.forEach((col, i) => {
-                  nameMap['__preview__'+this.currentCommand.columns[i]] = col
-                })
+                if (this.currentCommand.columns) {
+                  this.currentCommand.output_cols.forEach((col, i) => {
+                    nameMap[ '__preview__'+this.currentCommand.columns[i] ] = col
+                  })
+                } else {
+                  this.currentCommand.output_cols.forEach((col, i) => {
+                    nameMap[col] = col // TODO: Check
+                  })
+                }
                 this.$store.commit('setPreviewNames',nameMap)
               }
+
               this.preparePreviewCode()
             }
             if (this.currentCommand._fakePreview==='rename') {
@@ -2700,7 +2611,7 @@ export default {
         })
 
       } catch (err) {
-        // console.error(err) // probably just a cancelled request
+        console.error(err) // probably just a cancelled request
       }
 
 
@@ -3113,6 +3024,8 @@ export default {
 
       } catch (error) {
         printError(error)
+        console.timeEnd('task')
+        console.log('"""[DEBUG][CODE][FAILED]"""',code)
         var codeError = (error.error) ? error.error : error
         if (codeError && codeError.split) codeError = codeError.split("\n")[0]
         this.$emit('update:codeError',codeError)

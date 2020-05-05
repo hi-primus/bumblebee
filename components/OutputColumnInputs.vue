@@ -1,5 +1,5 @@
 <template>
-	<v-row no-gutters class="foreach-label">
+	<v-row no-gutters class="foreach-label" style="width: 100%">
     <template v-for="(title, i) in currentCommand.columns">
       <v-col v-if="!noLabel" :key="i+'label'" class="col-12 col-sm-4 col-md-3 font-weight-bold pr-4 text-ellipsis" :title="title">
         {{title}}

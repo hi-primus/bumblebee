@@ -630,6 +630,19 @@ export default {
             valueOf: ()=>!(this.dataset && this.dataset.summary && this.hasSecondaryDatasets)
           }
         },
+        {
+          type: 'button',
+          onClick: () => {
+            this.commandHandle({command: 'get aggregations'})
+          },
+          icons: [
+            { icon: 'add' },
+          ],
+          tooltip: 'Get aggregations',
+          disabled: {
+            valueOf: ()=>!(this.dataset && this.dataset.summary)
+          }
+        },
         { divider: true },
         {
           type: 'sort'
@@ -967,7 +980,7 @@ export default {
           this.commandHandle({
             command: 'apply sort',
             columns: lastSort,
-            // ignoreCell: true,
+            ignoreCell: true,
             deleteOtherCells: true
           })
         }

@@ -319,7 +319,7 @@
           <!-- normal auxiliar -->
           <template v-else-if="!column.preview && rowsPreview[rowArrayIndex] && rowsPreview[rowArrayIndex].value[idInSample[column.sampleName]]">
             <div
-              :key="''+column.type+idInSample[column.sampleName]"
+              :key="'na'+(column.sampleName || cindex)"
               class="bb-table-cell"
               :class="[
                 ...column.classes,
@@ -337,7 +337,7 @@
           <!-- normal -->
           <template v-else-if="!column.preview && row.value[idInSample[column.sampleName] || column.index]">
             <div
-              :key="''+column.type+idInSample[column.sampleName] || column.index"
+              :key="'n'+(column.sampleName || column.index || cindex)"
               class="bb-table-cell"
               :class="[
                 ...column.classes,
@@ -355,7 +355,7 @@
           <!-- preview auxiliar -->
           <template v-else-if="column.preview && rows && rows[rowArrayIndex] && rows[rowArrayIndex].value[idInSample[column.sampleName]]">
             <div
-              :key="'p'+column.index"
+              :key="'pa'+(column.index || cindex)"
               class="bb-table-cell"
               :class="[
                 ...(column.classes || []),
@@ -366,7 +366,7 @@
             ></div>
           </template>
           <div v-else
-            :key="rowArrayIndex+' '+column.index"
+            :key="rowArrayIndex+' '+(column.index || cindex)"
             class="bb-table-cell not-available --e hidden-error"
             :class="column.classes"
             style="width: 170px"
@@ -832,6 +832,9 @@ export default {
       try {
         if (this.currentDatasetPreview && this.currentDatasetPreview.sample) {
           return this.currentDatasetPreview.sample.value.length
+        }
+        if (this.currentPreviewCode && this.currentPreviewCode.datasetPreview && this.rowsPreviewValues.length && this.rowsPreviewValues.length<this.currentDataset.summary.rows_count) {
+          return this.rowsPreviewValues.length // TODO: Check
         }
         return this.currentDataset.summary.rows_count
       } catch (error) {
