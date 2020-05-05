@@ -607,7 +607,7 @@ export default {
               }
 
 
-              var pCode = `_output = ${varname}.ext.profile(columns="*", output="json")`
+              var pCode = `_output = ${varname}.ext.profile(columns="*", infer=True, output="json")`
 
               var pResponse = await this.evalCode(pCode)
 

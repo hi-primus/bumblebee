@@ -73,7 +73,7 @@ html:root {
   }
 }
 
-h3 {
+h3, .section-title {
   text-transform: uppercase;
   font-weight: 700;
   font-size: 13px;
@@ -1898,7 +1898,34 @@ $editor-top-padding: 6px;
   }
 }
 
-.smaller-fields {
+.operation-form {
+  .o-fields {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+
+    .o-field {
+      width: 100%;
+      &.half {
+        width: calc(50% - 8px)
+      }
+      &.half-with-btn {
+        width: calc(50% - 32px)
+      }
+      &.with-btn {
+        width: calc(100% - 48px) !important;
+      }
+    }
+
+  }
+  .separator {
+    width: calc(100% - 8px);
+    border-bottom: $line-color-3 1px solid;
+    margin-top: -2px;
+    margin-bottom: 16px;
+    margin-left: auto;
+    margin-right: auto;
+  }
   .v-label, .v-input {
     // background: cyan;
     font-size: 12px;
@@ -1909,7 +1936,7 @@ $editor-top-padding: 6px;
   .v-label {
     top: 7px !important;
   }
-  .v-select__selections {
+  .v-input:not(.multiline-select) .v-select__selections {
     max-height: 34px;
   }
   .v-select__selection--comma {

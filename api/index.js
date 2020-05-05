@@ -169,7 +169,7 @@ const newSocket = function (socket, session) {
       var sessionId = payload.session
       var varname = payload.varname || 'df'
       var result = await run_code(payload.code + '\n'
-        + `_output = ${varname}.ext.profile(columns="*", output="json")`,
+        + `_output = ${varname}.ext.profile(columns="*", infer=True, output="json")`,
         sessionId
       )
       socket.emit('reply',{...result, code: payload.code, timestamp: payload.timestamp})
