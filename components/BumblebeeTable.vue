@@ -833,8 +833,11 @@ export default {
         if (this.currentDatasetPreview && this.currentDatasetPreview.sample) {
           return this.currentDatasetPreview.sample.value.length
         }
+        if (this.currentPreviewCode && this.currentProfilePreview && this.currentProfilePreview.summary && this.currentProfilePreview.summary.rows_count) {
+          return this.currentProfilePreview.summary.rows_count
+        }
         if (this.currentPreviewCode && this.currentPreviewCode.datasetPreview && this.rowsPreviewValues.length && this.rowsPreviewValues.length<this.currentDataset.summary.rows_count) {
-          return this.rowsPreviewValues.length // TODO: Check
+          return this.rowsPreviewValues.length
         }
         return this.currentDataset.summary.rows_count
       } catch (error) {
