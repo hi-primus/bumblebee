@@ -1819,6 +1819,11 @@ export default {
                 clearable: true
               },
               {
+                type: 'switch',
+                key: 'match_case',
+                label: (c)=>'Match case: ' + (c.match_case ? 'Yes' : 'No')
+              },
+              {
                 type: 'field',
                 key: 'replace',
                 label: 'Replace'
@@ -1848,6 +1853,7 @@ export default {
             replace: '',
 						search_by: 'chars',
             output_cols: columns.map(e=>e),
+            match_case: false,
             title: 'Replace in ' + (columns.length==1 ? `column` : 'columns'),
             _preview: 'replace',
             _highlightColor: {default: 'red', preview: 'green'}
@@ -1869,6 +1875,7 @@ export default {
               +`, search=["${search.join('","')}"]`
               +`, replace_by="${payload.replace}"`
               +`, search_by="${payload.search_by}"`
+              +`, ignore_case="${payload.match_case ? 'True' : 'False'}"`
               +( (output_cols_argument) ? `, output_cols=${output_cols_argument}` : '')
               +')'
               +( (payload._requestType==='preview') ? `.cols.find(${_argument}, sub=["${search.join('","')}"])` : '')
