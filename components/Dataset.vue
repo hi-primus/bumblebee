@@ -233,7 +233,7 @@ export default {
 
 			hiddenColumns: {},
 
-      _resultsColumns: false, // search
+      resultsColumnsData: false, // search
       selectedColumns: {},
 
       sortedColumns: [], // table manual sorting
@@ -354,10 +354,10 @@ export default {
     },
 
     resultsColumns () {
-      if (!this._resultsColumns || !this._resultsColumns.length)
+      if (!this.resultsColumnsData || !this.resultsColumnsData.length)
         return this.customSortedColumns
       else
-        return this._resultsColumns
+        return this.resultsColumnsData
     },
 
     filteredColumns () {
@@ -448,15 +448,16 @@ export default {
     },
 
     async updateResults() {
-      this._resultsColumns = this.searchText
-        ?
-        await this.$search(this.searchText, this.customSortedColumns, {
+
+      if (this.searchText) {
+        this.resultsColumnsData = await this.$search(this.searchText, this.customSortedColumns, {
           shouldSort: true,
           threshold: 0.1,
           keys: ['name']
         })
-        :
-        false
+      } else {
+        this.resultsColumnsData = false
+      }
     },
 
     updateSortedColumns(event) {
@@ -492,7 +493,9 @@ export default {
     watchSearchText: throttle( async function() {
       try {
         this.updateResults()
-      } catch (err) {}
+      } catch (err) {
+        // console.error(err)
+      }
     }, 1000),
 
 		toggleColumnsSelection () {
