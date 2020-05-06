@@ -1229,7 +1229,7 @@ $side-controls-width: 54px;
       .cell {
         z-index: 10;
       }
-      .editor-holder {
+      .editor-holder, .operation-hint-text {
         border-bottom-color: rgba(0,0,0,0.33);
       }
       .left-handle {
@@ -1293,7 +1293,12 @@ $side-controls-width: 54px;
 
 $editor-top-padding: 6px;
 
-.editor-holder{
+.operation-hint-text {
+  font-size: 14px !important;
+  font-family: $font-mono;
+}
+
+.operation-hint-text, .editor-holder {
   border-bottom-width: 1px;
   border-bottom-style: dashed;
   border-bottom-color: transparent;
@@ -1309,6 +1314,9 @@ $editor-top-padding: 6px;
   width: 100%;
   max-width: 100%;
   min-height: calc(23px + #{$editor-top-padding*2});
+}
+
+.editor-holder {
 
   &::-webkit-scrollbar {
     width: 8px;

@@ -184,7 +184,7 @@
       :typesSelected="typesSelected"
       :columnsTableHeaders="columnsTableHeaders"
     />
-    <div class="sidebar-container" :class="{'bigger': (operationsActive && (bigOptions || operationsTitle=='operations'))}" v-show="detailsActive || (operationsActive && useKernel)">
+    <div class="sidebar-container" :class="{'bigger': (operationsActive && bigOptions)}" v-show="detailsActive || (operationsActive && useKernel)">
 
       <template>
         <div class="sidebar-header" v-show="operationsActive && operationsTitle=='operations' && useKernel">
@@ -965,7 +965,7 @@ export default {
     copyCodeToClipboard () {
       var code = 'from optimus import Optimus\n'
       +'op = Optimus(master="local[*]", app_name="optimus", comm=True)\n' // TODO: Update
-      + this.cells.map(e=>e.content).filter(c=>c.trim()).join('\n')
+      + this.cells.map(e=>e.code).filter(c=>c.trim()).join('\n')
       copyToClipboard(code)
       this.copied = true
       setTimeout(() => {

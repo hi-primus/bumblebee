@@ -265,10 +265,10 @@ export const mutations = {
     state.workers = payload
   },
 
-  setCellContent (state, {index, content}) {
+  setCellCode (state, {index, code}) {
     try {
       var currentCells = state.everyCells[state.tab] || []
-      currentCells[index].content = content
+      currentCells[index].code = code
       Vue.set(state.everyCells, state.tab, currentCells)
     } catch (error) {
       console.error(error)

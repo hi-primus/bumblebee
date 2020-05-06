@@ -2,7 +2,7 @@
   <div class="sidebar-content">
     <CommandFormContainer
       v-if="command && command.dialog"
-      v-show="(currentCommand.command)"
+      v-show="(currentCommand.command && view!='operations')"
       :currentCommand="currentCommand"
       :command="command"
       @cancelCommand="cancelCommand"
@@ -143,13 +143,18 @@
         >
           <div class="cell">
             <div class="handle left-handle"></div>
-            <CodeEditor
-              :active="activeCell==index"
-              @update:active="setActiveCell(index)"
-              @input="$store.commit('setCellContent',{index, content: $event}); runButton = true"
-              :value="cell.content"
-            />
-            <div class="cell-type cell-type-label" v-if="cell.command && cell.command!='code'">{{cell.command}}</div>
+            <template v-if="seeCode">
+              <CodeEditor
+                :active="activeCell==index"
+                @update:active="setActiveCell(index)"
+                @input="$store.commit('setCellCode',{index, code: $event}); runButton = true"
+                :value="cell.code"
+              />
+              <div class="cell-type cell-type-label" v-if="cell.command && cell.command!='code'">{{cell.command}}</div>
+            </template>
+            <div v-else class="operation-hint-text">
+              {{cell.content || cell.code}}
+            </div>
           </div>
         </div>
       </draggable>
@@ -181,6 +186,7 @@ import OperationField from '@/components/OperationField'
 import clientMixin from '@/plugins/mixins/client'
 import { mapGetters } from 'vuex'
 import {
+  capitalizeString,
   printError,
   parseResponse,
   debounce,
@@ -249,6 +255,9 @@ export default {
       lastWrongCode: false,
       drag: false,
       currentCommand: false,
+
+      seeCode: false,
+
       firstRun: true,
       runButton: false,
 
@@ -263,13 +272,14 @@ export default {
         DROP_KEEP: {
           code: (payload) => {
             return `.cols.${payload.command}(["${payload.columns.join('", "')}"])`
-          }
+          },
+          content: (payload) => capitalizeString(payload.command)+' '+this.multipleContent(payload.columns)
         },
         'sort rows': {
           dialog: {
             title: 'Sort rows',
             text: (c) => {
-              return `Sort using ${arrayJoin(c.columns)}`
+              return `Sort rows in ${arrayJoin(c.columns)}`
             },
             fields: [
               {
@@ -294,13 +304,16 @@ export default {
               `"${payload.columns[0]}","${payload.orders[0]}"` :
               `[${payload.columns.map((e,i)=>(`("${e}","${payload.orders[i]}")`)).join(',')}]`
             return `.rows.sort( ${_argument} )`
+          },
+          content: (payload) => {
+            return `Sort rows in ${this.multipleContent(payload.columns, payload.orders)}`
           }
         },
         FILTER: {
           code: (payload) => {
             var values = this.currentSelection.ranged.values
             var ranges = this.currentSelection.ranged.ranges
-            var type = (this.currentSelection.ranged.values && this.currentSelection.ranged.values.length) ? 'values' : 'ranges'
+            var type = (values && values.length) ? 'values' : 'ranges'
             var action = payload.command=='keep rows' ? 'select' : 'drop'
             var expression
 
@@ -348,7 +361,7 @@ export default {
                   { text: 'Mismatches values', value: 'mismatch' },
                   { text: 'Null values', value: 'null' }
                 ],
-                disabled: {valueOf: ()=>['values','ranges'].includes(this.selectionType)},
+                disabled: (c)=>['values','ranges'].includes(c._selectionType),
               },
               {
                 condition: (c)=>['exactly','not','less','greater'].includes(c.condition),
@@ -406,7 +419,7 @@ export default {
             ],
             validate: (c) => {
 
-              this.currentCommand._highlightColor = (c.action==='select') ? 'green' : 'red'
+              this.currentCommand.highlightColor = (c.action==='select') ? 'green' : 'red'
 
               switch (c.condition) {
                 case 'oneof':
@@ -468,8 +481,8 @@ export default {
               expression: `${this.dataset.varname}["${columns[0]}"]`,
               action: 'select',
               _expectedColumns: 0,
-              _preview: 'filter rows',
-              _highlightColor: 'green'
+              previewType: 'filter rows',
+              highlightColor: 'green'
             }
           },
 
@@ -546,11 +559,87 @@ export default {
             } else {
               return `.rows.${payload.action}( ${expression} )` // ${varname}.rows.${payload.action}()
             }
+          },
+          content: (payload) => {
+
+            var condition
+            var value = undefined
+            var action = payload.action=='drop' ? 'Drop' : 'Keep'
+            var str = `${action} rows where ${this.multipleContent(payload.columns)} `
+
+            if (payload._selectionType==='values') {
+              condition = 'oneof'
+              value = payload._selection.values
+            } else if (payload._selectionType==='ranges') {
+              condition = 'between'
+              value = payload._selection.ranges[0].map((col, i) => payload._selection.ranges.map(row => row[i]));
+            } else {
+              condition = payload.condition
+            }
+
+            switch (condition) {
+              case 'null':
+                condition = 'is null'
+                value = false
+                break
+              case 'mismatch':
+                condition = 'is mismatch'
+                value = false
+                break
+              case 'exactly':
+                condition = 'is exactly '
+                break
+              case 'oneof':
+                condition = 'is in '
+                value = payload.values
+                break
+              case 'not':
+                condition = 'is not '
+                break
+              case 'less':
+                condition = 'is less than or equal to '
+                break
+              case 'greater':
+                condition = 'is greater than or equal to '
+                break
+              case 'contains':
+                condition = 'contains '
+                value = [payload.text]
+                break
+              case 'startswith':
+                condition = 'starts with '
+                value = [payload.text]
+                break
+              case 'endswith':
+                condition = 'ends with '
+                value = [payload.text]
+                break
+              case 'between':
+                value = value || [[payload.value],[payload.value_2]]
+                break
+              case 'custom':
+                condition = 'matches '
+                value = payload.expression
+            }
+
+            value = (value!==false) ? (value || payload.value) : false
+
+            switch (condition) {
+              case 'oneof':
+                str += 'is one of '+this.multipleContent(value || [])
+                break
+              case 'between':
+                str += 'is between '+this.multipleContent(value || [])
+                break
+              default:
+                str += condition + ( value!==false ? this.multipleContent(value || []) : '')
+            }
+            return str
           }
         },
         'drop empty rows': {
           dialog: {
-            title: (command) => (command.subset.length) ? 'Drop empty rows using subset' : 'Drop empty rows',
+            title: (command) => (command.subset.length) ? 'Drop empty rows in subset' : 'Drop empty rows',
             fields: [
               {
                 key: 'how',
@@ -566,8 +655,8 @@ export default {
           payload: (columns) => ({
             subset: columns,
             how: 'all',
-            _preview: 'drop empty rows',
-            _highlightColor: 'red'
+            previewType: 'drop empty rows',
+            highlightColor: 'red'
           }),
           code: (payload) => {
             if (payload._requestType) {
@@ -579,7 +668,12 @@ export default {
             return  `.rows.drop_na(`
               + (payload.subset.length ? `subset=["${payload.subset.join('", "')}"], ` : '')
               + `how="${payload.how}")`
+          },
+          content: (payload) => {
+            var str = payload.how==='all' ? `Drop empty rows` : `Drop rows with empty values`
+            return str+(payload.subset.length ? ` in ${this.multipleContent(payload.subset)}` : '')
           }
+
         },
         'drop duplicates': {
           dialog: {
@@ -599,8 +693,8 @@ export default {
           payload: (columns) => ({
             subset: columns,
             keep: 'first',
-            _preview: 'drop duplicates',
-            _highlightColor: 'red'
+            previewType: 'drop duplicates',
+            highlightColor: 'red'
           }),
           code: (payload) => {
             if (payload._requestType) {
@@ -611,7 +705,8 @@ export default {
             return `.rows.drop_duplicates(`
               + (payload.subset.length ? `subset=["${payload.subset.join('", "')}"], ` : '')
               + `keep="${payload.keep}")`
-          }
+          },
+          content: (payload) => `Drop duplicated rows`+(payload.subset.length ? ` in ${this.multipleContent(payload.subset)}` : '')
 
         },
         join: {
@@ -723,10 +818,10 @@ export default {
                 ...(this.allColumns || []).map(n=>({name: n, 'source': 'left', key: n+'l'})),
                 ...(_datasets_right[df2] || []).map(n=>({name: n, 'source': 'right', key: n+'r'}))
               ],
-              _preview: 'join',
+              previewType: 'join',
               // _previewDelay: 500,
               _expectedColumns: -1,
-              _datasetPreview: true
+              datasetPreview: true
             }
           },
           code: (payload) => {
@@ -846,9 +941,9 @@ export default {
             aggregations: columns.map(e=>'count'),
             output_cols_default: (c)=>c.aggregations.map((aggregation,i)=>`${aggregation}_${c.input_cols[i]}`),
             output_cols: columns.map(e=>''),
-            _preview: 'aggregations',
-            _datasetPreview: true,
-            _noBufferWindow: true,
+            previewType: 'aggregations',
+            datasetPreview: true,
+            noBufferWindow: true,
             _expectedColumns: ()=>{
               var payload = this.currentCommand
               var output_cols_default = payload.output_cols_default(payload)
@@ -876,7 +971,8 @@ export default {
             }
 
             return code
-          }
+          },
+          content: (payload) => `${this.multipleContent(payload.aggregations, payload.output_cols_default(payload))} by ${this.multipleContent(payload.group_by)}`
         },
         STRING: {
           dialog: {
@@ -886,7 +982,7 @@ export default {
           payload: (columns) => ({
             columns: columns,
             output_cols: columns.map(e=>''),
-            _preview: 'STRING'
+            previewType: 'STRING'
           }),
           code: (payload) => {
 
@@ -901,6 +997,16 @@ export default {
             return `.cols.${payload.command}(${_argument}`
             + ( output_cols_argument ? `, output_cols=${output_cols_argument}` : '')
             + `)`
+          },
+          content: (payload) => {
+            var str = {
+              trim: 'Trim white space in',
+              lower: 'Lowercase',
+              upper: 'Uppercase',
+              remove_accents: 'Remove accents in',
+              remove_special_chars: 'Remove special chars in'
+            }
+            return `${str[payload.command]} ${this.multipleContent(payload.columns)}`
           }
         },
         cast: {
@@ -910,7 +1016,8 @@ export default {
             +_argument
             +`, dtype="${payload.dtype}"`
             +')'
-          }
+          },
+          content: (payload) => `Cast ${this.multipleContent(payload.columns)} to '${payload.dtype}'`
         },
         fill_na: {
           dialog: {
@@ -934,7 +1041,7 @@ export default {
             columns: columns,
             fill: '',
             output_cols: columns.map(e=>''),
-						_preview: 'fill_na'
+						previewType: 'fill_na'
           }),
           code: (payload) => {
             var _argument = (payload.columns.length==1) ? `"${payload.columns[0]}"` : `["${payload.columns.join('", "')}"]`
@@ -945,7 +1052,8 @@ export default {
               +`, "${payload.fill}"`
               +( (output_cols_argument) ? `, output_cols=${output_cols_argument}` : '')
               +')'
-          }
+          },
+          content: (payload) => `Fill empty cells in ${this.multipleContent(payload.columns)} with '${payload.fill}'`
         },
         'load file': {
           dialog: {
@@ -1109,9 +1217,9 @@ export default {
             _meta: false,
             _datasetName: false,
             _sheet_names: 1,
-            _preview: 'load',
+            previewType: 'load',
             // _previewDelay: 500,
-            // _datasetPreview: true
+            // datasetPreview: true
           }),
 
           code: (payload) => {
@@ -1170,6 +1278,11 @@ export default {
             code += `).ext.cache()`
 
             return code
+          },
+
+          content: (payload) => {
+            var type = (!payload._moreOptions) ? '' : (payload.file_type + ' ')
+            return `Load ${type}file`
           }
         },
         'string clustering': {
@@ -1852,8 +1965,8 @@ export default {
             output_cols: columns.map(e=>e),
             match_case: false,
             title: 'Replace in ' + (columns.length==1 ? `column` : 'columns'),
-            _preview: 'replace',
-            _highlightColor: {default: 'red', preview: 'green'}
+            previewType: 'replace',
+            highlightColor: {default: 'red', preview: 'green'}
 					}),
           code: (payload) => {
             var _argument = (payload.columns.length==1) ? `"${payload.columns[0]}"` : `["${payload.columns.join('", "')}"]`
@@ -1877,7 +1990,8 @@ export default {
               +')'
               +( (payload._requestType==='preview') ? `.cols.find(${_argument}, sub=["${search.join('","')}"], ignore_case=${!payload.match_case ? 'True' : 'False'})` : '')
               +( (payload._requestType==='preview' && payload.replace) ? `.cols.find(${output_cols_argument}, sub=["${payload.replace}"])` : '')
-          }
+          },
+          content: (payload)=>`Replace ${this.multipleContent(payload.search)} with '${payload.replace} in ${this.multipleContent(payload.columns)}'`
         },
         set: {
           dialog: {
@@ -1902,7 +2016,7 @@ export default {
             expression: '', // (columns.length!=0) ? columns.map(e=>`df["${e}"]`).join(' + ') : '',
             title: 'Create column',
             _expectedColumns: 1,
-						_preview: 'set',
+						previewType: 'set',
             output_col: ''
           }),
           code: (payload) => {
@@ -1910,7 +2024,8 @@ export default {
             return `.cols.set(output_col="${output_col}"`
             +( (payload.expression) ? `, value="${payload.expression}"` : '')
             +`)`
-          }
+          },
+          content: (payload) => `Create '${payload.output_col}' with '${payload.expression}'`
         },
         rename: {
           dialog: {
@@ -1937,7 +2052,8 @@ export default {
             else {
               return `.cols.rename([${payload.columns.map((e,i)=>`("${e}", "${payload.output_cols[i]}")`)}])`
             }
-          }
+          },
+          content: (payload)=>`Rename ${this.multipleContent(payload.columns, payload.output_cols)}`
         },
         unnest: {
           dialog: {
@@ -1978,9 +2094,9 @@ export default {
               index: '',
               drop: false,
               output_cols: columns.map(e=>e),
-              _preview: 'unnest',
+              previewType: 'unnest',
               _expectedColumns: () => this.currentCommand.splits,
-              _highlightColor: 'red'
+              highlightColor: 'red'
             }
 					},
 					code: (payload) => {
@@ -1996,7 +2112,8 @@ export default {
               +( (payload._requestType==='profile' || payload.drop) ? ', drop=True' : '')
               +')'
               +( (payload._requestType==='preview') ? `.cols.find(${_argument}, sub=["${payload.separator}"])` : '')
-					}
+          },
+          content: (payload) => `Split '${payload.columns[0]}' by '${payload.separator}' in '${payload.splits}'`
 
         },
         nest: {
@@ -2023,9 +2140,9 @@ export default {
               separator: ', ',
               title: 'Nest '+(columns.length==1 ? `column` : 'columns'),
               output_col: columns.join('_'),
-              _preview: 'nest',
+              previewType: 'nest',
               _expectedColumns: 1,
-              _highlightColor: {default: 'none', preview: 'green'}
+              highlightColor: {default: 'none', preview: 'green'}
 					}
           },
 					code: (payload) => {
@@ -2037,7 +2154,8 @@ export default {
 						+( (payload.separator) ? `, separator="${payload.separator}"` : '')
             +`, output_col="${payload.output_col}")`
             +( (payload._requestType==='preview' && payload.separator) ? `.cols.find("${payload.output_col}", sub=["${payload.separator}"])` : '')
-          }
+          },
+          content: (payload) => `Merge ${this.multipleContent(payload.columns)} in '${payload.output_col}'`
         },
         duplicate: {
           dialog: {
@@ -2062,7 +2180,8 @@ export default {
               +_argument
               +( (output_cols_argument) ? `, output_cols=${output_cols_argument}` : '')
               +')'
-          }
+          },
+          content: (payload)=>`Duplicate ${this.multipleContent(payload.columns, payload.output_cols)}`
         },
         bucketizer: {
           dialog: {
@@ -2376,6 +2495,7 @@ export default {
       try {
         return this.commandsPallete[this.currentCommand.command] || this.commandsPallete[this.currentCommand.type]
       } catch (error) {
+        console.error(error)
         return undefined
       }
       // command.dialog && (currentCommand.command == key || currentCommand.type == key)
@@ -2416,7 +2536,7 @@ export default {
       }
     },
 
-    _commandsDisabled: {
+    computedCommandsDisabled: {
       get () {
         return this.commandsDisabled
       },
@@ -2425,6 +2545,10 @@ export default {
       }
     }
 
+  },
+
+  mounted () {
+    this.seeCode = this.$route.query.code=='1'
   },
 
   watch: {
@@ -2459,13 +2583,14 @@ export default {
       deep: true,
       async handler () {
         try {
-          if (this.command && this.command.dialog) {
-            var valid = (!this.command.dialog.validate) ? true : this.command.dialog.validate(this.currentCommand)
+          var command = this.commandsPallete[this.currentCommand.command] || this.commandsPallete[this.currentCommand.type]
+          if (command && command.dialog) {
+            var valid = (!command.dialog.validate) ? true : command.dialog.validate(this.currentCommand)
             if (valid===0) {
               this.restorePreview(true)
               return
             }
-            if (this.currentCommand._preview) {
+            if (this.currentCommand.previewType) {
 
               if (this.currentCommand.output_cols) {
 
@@ -2509,8 +2634,8 @@ export default {
     dataset: {
       deep: true,
       handler () {
-        if (this._commandsDisabled===undefined) {
-          this._commandsDisabled = false
+        if (this.computedCommandsDisabled===undefined) {
+          this.computedCommandsDisabled = false
           this.markCells()
           this.$emit('update:codeError','')
           this.lastWrongCode = false
@@ -2521,6 +2646,35 @@ export default {
   },
 
   methods: {
+
+    multipleContent (...arrays) {
+
+      arrays = arrays.map(array=>{
+        if (!array.join || !array.map)
+          return [array]
+        return array
+      })
+
+      var array
+      if (arrays.length===1) {
+        array = arrays[0]
+        if (array.length==1) {
+          return `'${array[0]}'`
+        } else {
+          return `['${array.join("', '")}']`
+        }
+      } else {
+        array = arrays[0].map((e,i)=>{
+          return arrays.map((arr)=>`'${arr[i]}'`).join(', ')
+        })
+        if (array.length==1) {
+          return `${array[0]}`
+        } else {
+          return `[(${array.join("), (")})]`
+        }
+      }
+
+    },
 
     async optimizeDf () {
       // this.$store.dispatch('optimizeDf')
@@ -2533,6 +2687,7 @@ export default {
         console.error(error)
       }
     },
+
     async bufferDf () {
       // this.$store.dispatch('bufferDf')
       try {
@@ -2598,13 +2753,13 @@ export default {
       this.moveBar(value)
     },300),
 
-    async preparePreviewCode() {
+    preparePreviewCode: debounce( async function() {
 
       try {
 
         var expectedColumns
 
-        // if (this.currentCommand._datasetPreview) {
+        // if (this.currentCommand.datasetPreview) {
         //   expectedColumns = -1
         // } else
         if (this.currentCommand._expectedColumns!==undefined) {
@@ -2618,12 +2773,12 @@ export default {
         this.$store.commit('setPreviewCode',{
           code: this.getCode(this.currentCommand,'preview'),
           profileCode: this.getCode(this.currentCommand,'profile'),
-          color: this.currentCommand._highlightColor,
+          color: this.currentCommand.highlightColor,
           from: this.currentCommand.columns,
-          datasetPreview: !!this.currentCommand._datasetPreview,
-          load: this.currentCommand._preview==='load',
+          datasetPreview: !!this.currentCommand.datasetPreview,
+          load: this.currentCommand.previewType==='load',
           infer: this.currentCommand._moreOptions===false,
-          noBufferWindow: this.currentCommand._noBufferWindow,
+          noBufferWindow: this.currentCommand.noBufferWindow,
           expectedColumns
         })
 
@@ -2632,7 +2787,7 @@ export default {
       }
 
 
-    },
+    }, 10),
 
     getCommandTitle() {
       try {
@@ -2654,9 +2809,9 @@ export default {
 
     codeText (newOnly = false) {
       if (newOnly)
-        return (this.cells.length) ? (this.cells.filter(e=>(e.content!=='' && !e.done && !e.ignore)).map(e=>e.content).join('\n').trim()) : ''
+        return (this.cells.length) ? (this.cells.filter(e=>(e.code!=='' && !e.done && !e.ignore)).map(e=>e.code).join('\n').trim()) : ''
       else
-        return (this.cells.length) ? (this.cells.filter(e=>(e.content!=='' && !e.ignore)).map(e=>e.content).join('\n').trim()) : ''
+        return (this.cells.length) ? (this.cells.filter(e=>(e.code!=='' && !e.ignore)).map(e=>e.code).join('\n').trim()) : ''
     },
 
     async commandHandle (event) {
@@ -2721,7 +2876,8 @@ export default {
             columns: payload.columns || columns,
             payload
           }
-          this.addCell(-1, {...event, code: this.getCode(cell,false)})
+          var content = this.getOperationContent(cell)
+          this.addCell(-1, {...event, code: this.getCode(cell,false), content})
           this.runButton = false
 
           this.clearTextSelection()
@@ -2736,10 +2892,12 @@ export default {
         this.currentCommand = await _command.onDone(this.currentCommand)
       }
       var code = this.getCode(this.currentCommand, false)
-      this.addCell(-1, { ...this.currentCommand, code } )
+      var content = this.getOperationContent(this.currentCommand)
+      this.addCell(-1, { ...this.currentCommand, code, content } )
       this.runButton = false
 
       this.$emit('updateOperations', { active: (this.currentCommand._noOperations ? false : true), title: 'operations' } )
+      this.$emit('update:big', this.seeCode)
 
       this.currentCommand = false
       // this.$store.commit('previewDefault')
@@ -2843,7 +3001,7 @@ export default {
     markCells(mark = true) {
       var cells = [...this.cells]
       for (let i = 0; i < this.cells.length; i++) {
-        if (cells[i].content) {
+        if (cells[i].code) {
           cells[i].done = mark
         }
         cells[i].error = false
@@ -2859,7 +3017,7 @@ export default {
     markCellsError() {
       var cells = [...this.cells]
       for (let i = cells.length - 1; i >= 0; i--) {
-        if (!cells[i].done && cells[i].content) {
+        if (!cells[i].done && cells[i].code) {
           cells.splice(i,1)
         }
       }
@@ -2869,6 +3027,16 @@ export default {
         this.codeDone = this.codeText(false)
       else
         this.codeDone = ''
+    },
+
+    getOperationContent (payload) {
+      var _command = this.commandsPallete[payload.command] || this.commandsPallete[payload.type]
+
+      if (!_command || !_command.content) {
+        return this.getCode(payload, false)
+      }
+
+      return _command.content(payload)
     },
 
     getCode (currentCommand, type) {
@@ -2913,9 +3081,9 @@ export default {
 
     },
 
-    addCell (at = -1, event = {command: 'code', code: '', ignoreCell: false, deleteOtherCells: false}) {
+    addCell (at = -1, event = {command: 'code', code: '', content: '', ignoreCell: false, deleteOtherCells: false}) {
 
-      var {command, code, ignoreCell, deleteOtherCells} = event
+      var {command, code, ignoreCell, deleteOtherCells, content} = event
 
       this.$emit('update:codeError','')
 
@@ -2934,7 +3102,8 @@ export default {
 
       cells.splice(at, 0, {
         command,
-        content: code,
+        code: code,
+        content: content,
         id: Number(new Date()),
         active: false,
         ignore: ignoreCell
@@ -2996,7 +3165,7 @@ export default {
 				rerun = false
 			}
 
-      this._commandsDisabled = true;
+      this.computedCommandsDisabled = true;
 
       try {
 
@@ -3015,7 +3184,7 @@ export default {
         console.timeEnd('task')
 
 
-        this._commandsDisabled = false;
+        this.computedCommandsDisabled = false;
 
         if (response.status!=='ok') {
           throw response
@@ -3050,7 +3219,7 @@ export default {
 
         this.markCellsError()
         this.lastWrongCode = code
-        this._commandsDisabled = undefined;
+        this.computedCommandsDisabled = undefined;
       }
 
       if (this.codeText() !== code) {

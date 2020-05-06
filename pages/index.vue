@@ -348,7 +348,7 @@ export default {
             command: 'load file',
             noOperations: true,
             immediate: true,
-            payload: {url: dataset_csv}
+            payload: {url: dataset_csv, file_type: 'csv', _moreOptions: true}
           })
         }
       }

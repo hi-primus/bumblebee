@@ -181,7 +181,7 @@
         :placeholder="field.placeholder"
         :items="(field.items_key) ? getPropertyField(currentCommand[field.items_key]) : getPropertyField(field.items)"
         @input="(field.onChange) ? field.onChange($event) : 0"
-        :disabled="!!+field.disabled"
+        :disabled="getPropertyField(field.disabled)"
         dense
         required
         outlined
@@ -197,7 +197,7 @@
         :items="(field.items_key) ? getPropertyField(currentCommand[field.items_key]) : field.items"
         @input="(field.onChange) ? field.onChange($event) : ()=>{}"
         @click:row="field.onClickRow ? field.onClickRow($event) : ()=>{}"
-        :disabled="!!+field.disabled"
+        :disabled="getPropertyField(field.disabled)"
         :items-per-page="(field.items_key) ? getPropertyField(currentCommand[field.items_key]).length : field.items.length"
         class="vdf--hide-select mb-4 columns-filter"
         style="margin-top: -4px; max-height: 255px; overflow-y: scroll;"
