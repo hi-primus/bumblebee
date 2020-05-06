@@ -1875,10 +1875,10 @@ export default {
               +`, search=["${search.join('","')}"]`
               +`, replace_by="${payload.replace}"`
               +`, search_by="${payload.search_by}"`
-              +`, ignore_case="${payload.match_case ? 'True' : 'False'}"`
+              +`, ignore_case=${!payload.match_case ? 'True' : 'False'}`
               +( (output_cols_argument) ? `, output_cols=${output_cols_argument}` : '')
               +')'
-              +( (payload._requestType==='preview') ? `.cols.find(${_argument}, sub=["${search.join('","')}"])` : '')
+              +( (payload._requestType==='preview') ? `.cols.find(${_argument}, sub=["${search.join('","')}"], ignore_case=${!payload.match_case ? 'True' : 'False'})` : '')
               +( (payload._requestType==='preview' && payload.replace) ? `.cols.find(${output_cols_argument}, sub=["${payload.replace}"])` : '')
           }
         },
