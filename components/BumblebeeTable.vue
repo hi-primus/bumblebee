@@ -148,15 +148,13 @@
             'bb-preview': column.type==='duplicated' || column.preview,
           }"
 				>
-
-          <transition name="slow-fade">
+          <transition name="quick-fade" appear mode="out-in">
             <template v-if="!lazyColumns.length || lazyColumns[index]">
               <div
                 v-if="column.preview"
                 :key="'p'+column.index"
                 class="bb-table-plot-content"
               >
-
                   <div v-if="previewPlotsData[column.name]">
                     <DataBar
                       :key="previewPlotsData[column.name].key+'databar'"
@@ -209,7 +207,7 @@
               </div>
               <div
                 v-else-if="columns[column.index]"
-                :key="''+column.type+column.index"
+                :key="''+column.index"
                 class="bb-table-plot-content"
               >
                 <div>
@@ -318,7 +316,7 @@
             ></div>
           </template>
           <!-- normal auxiliar -->
-          <template v-else-if="!column.preview && rowsPreview[rowArrayIndex] && rowsPreview[rowArrayIndex].value[idInSample[column.sampleName]]">
+          <template v-else-if="!datasetPreview && !column.preview && rowsPreview[rowArrayIndex] && rowsPreview[rowArrayIndex].value[idInSample[column.sampleName]]">
             <div
               :key="'na'+(column.sampleName || cindex)"
               class="bb-table-cell"
@@ -336,7 +334,7 @@
             ></div>
           </template>
           <!-- normal -->
-          <template v-else-if="!column.preview && row.value[idInSample[column.sampleName] || column.index]">
+          <template v-else-if="!datasetPreview && !column.preview && row.value[idInSample[column.sampleName] || column.index]">
             <div
               :key="'n'+(column.sampleName || column.index || cindex)"
               class="bb-table-cell"
@@ -354,7 +352,7 @@
             ></div>
           </template>
           <!-- preview auxiliar -->
-          <template v-else-if="column.preview && rows && rows[rowArrayIndex] && rows[rowArrayIndex].value[idInSample[column.sampleName]]">
+          <template v-else-if="!datasetPreview && column.preview && rows && rows[rowArrayIndex] && rows[rowArrayIndex].value[idInSample[column.sampleName]]">
             <div
               :key="'pa'+(column.index || cindex)"
               class="bb-table-cell"
@@ -445,6 +443,7 @@ export default {
       loadedRowsBottom: 1,
 
       loadingRows: [],
+      previewRowsCount: 0,
 
       newColumnName: '',
       newColumnType: 'string',
@@ -492,6 +491,10 @@ export default {
 
     idInSample () {
       return this.indicesInSample // TODO: name mapping
+    },
+
+    datasetPreview () {
+      return this.currentPreviewCode && this.currentPreviewCode.datasetPreview
     },
 
     rows () {
@@ -835,14 +838,18 @@ export default {
           return this.currentDatasetPreview.sample.value.length
         }
         if (this.currentPreviewCode && this.currentProfilePreview && this.currentProfilePreview.summary && this.currentProfilePreview.summary.rows_count) {
+          this.previewRowsCount = this.currentProfilePreview.summary.rows_count
           return this.currentProfilePreview.summary.rows_count
         }
         if (this.currentPreviewCode && this.currentPreviewCode.datasetPreview && this.rowsPreviewValues.length && this.rowsPreviewValues.length<this.currentDataset.summary.rows_count) {
           return this.rowsPreviewValues.length
         }
+        if (this.currentPreviewCode && this.currentPreviewCode.datasetPreview && this.previewRowsCount) {
+          return this.previewRowsCount
+        }
         return this.currentDataset.summary.rows_count
       } catch (error) {
-        return undefined
+        return 0
       }
     },
 

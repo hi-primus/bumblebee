@@ -1117,13 +1117,13 @@ table {
   }
 }
 
-.slow-fade-enter-active{
-  transition: opacity .04s ease-in-out;
+.quick-fade-enter-active{
+  transition: opacity .05s ease-in-out;
 }
-.slow-fade-leave-active {
-  transition: opacity .04s ease-in-out;
+.quick-fade-leave-active {
+  transition: opacity .05s ease-in-out;
 }
-.slow-fade-enter, .slow-fade-leave-to {
+.quick-fade-enter, .quick-fade-leave-to {
   opacity: 0;
 }
 .fade-enter-active, .fade-leave-active {
