@@ -1799,9 +1799,10 @@ $editor-top-padding: 6px;
 		&:not(.bb-preview) {
 			cursor: text;
     }
+    white-space: pre;
     font-size: 13px;
     height: inherit;
-    padding: 0;
+    padding: 0 6px;
 
     &.none, &.missing {
       &::after {

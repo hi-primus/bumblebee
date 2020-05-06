@@ -1245,10 +1245,10 @@ export default {
             }
           }
         }
-        return `<span class="select-none">&nbsp;</span>${value}<span class="select-none">&nbsp;</span>`
+        return `${value}`
       } catch (err) {
         if (value) {
-          return `<span class="select-none">&nbsp;</span>${value}<span class="select-none">&nbsp;</span>`
+          return `${value}`
         } else {
           return false
         }
