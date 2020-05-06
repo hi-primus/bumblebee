@@ -634,7 +634,7 @@ export default {
         {
           type: 'button',
           onClick: () => {
-            this.commandHandle({command: 'get aggregations'})
+            this.commandHandle({command: 'aggregations'})
           },
           icons: [
             { icon: 'add' },

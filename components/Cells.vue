@@ -768,7 +768,7 @@ export default {
 
           }
         },
-        'get aggregations': {
+        aggregations: {
           dialog: {
             title: 'Get aggregations',
             fields: [
@@ -779,16 +779,8 @@ export default {
                 clearable: true,
                 items_key: 'allColumns'
               },
-              // {
-              //   type: 'autocomplete-repeat',
-              //   key: 'input_cols',
-              //   label: 'Input columns',
-              //   clearable: true,
-              //   items_key: 'allColumns'
-              // },
               {
                 type: 'text',
-                // big: true,
                 text: 'Aggregations'
               },
               {
@@ -854,8 +846,9 @@ export default {
             aggregations: columns.map(e=>'count'),
             output_cols_default: (c)=>c.aggregations.map((aggregation,i)=>`${aggregation}_${c.input_cols[i]}`),
             output_cols: columns.map(e=>''),
-            _preview: 'get aggregations',
+            _preview: 'aggregations',
             _datasetPreview: true,
+            _noBufferWindow: true,
             _expectedColumns: ()=>{
               var payload = this.currentCommand
               var output_cols_default = payload.output_cols_default(payload)
@@ -877,6 +870,10 @@ export default {
             code += `.cols.groupby(by="${payload.group_by[0]}", agg={`
             code += aggregations.join(', ')
             code += `})`
+
+            if (payload._requestType=='preview') {
+              return (from, to)=>code+(from!==undefined ? `[${from}:${to}]` : '')
+            }
 
             return code
           }
@@ -970,8 +967,8 @@ export default {
               },
               {
                 condition: (c)=>c.file_type==='csv',
-                key: '_more_options',
-                label: (c) => `More options: ${c._more_options ? 'Yes' : 'No'}`,
+                key: '_moreOptions',
+                label: (c) => `More options: ${c._moreOptions ? 'Yes' : 'No'}`,
                 type: 'switch'
               },
               {
@@ -979,10 +976,10 @@ export default {
                 label: 'File url',
                 placeholder: (c)=>`https://example.com/my_file.${c.file_type}`,
                 type: 'field',
-                condition: (c)=>c._more_options,
+                condition: (c)=>c._moreOptions,
               },
               {
-                condition: (c)=>c._more_options,
+                condition: (c)=>c._moreOptions,
                 key: 'limit',
                 label: 'Limit',
                 min: 1,
@@ -1000,28 +997,28 @@ export default {
                   { text: 'Avro', value: 'avro' },
                   { text: 'Parquet', value: 'parquet' }
                 ],
-                condition: (c)=>c._more_options
+                condition: (c)=>c._moreOptions
               },
               {
-                condition: (c)=>c.file_type==='csv' && c._more_options,
+                condition: (c)=>c.file_type==='csv' && c._moreOptions,
                 key: 'header',
                 label: (c) => `First row as Header: ${c.header ? 'Yes' : 'No'}`,
                 type: 'switch'
               },
               {
-                condition: (c)=>c.file_type==='csv' && c._more_options,
+                condition: (c)=>c.file_type==='csv' && c._moreOptions,
                 key: 'null_value',
                 label: 'Null value',
                 type: 'field'
               },
               {
-                condition: (c)=>c.file_type==='csv' && c._more_options,
+                condition: (c)=>c.file_type==='csv' && c._moreOptions,
                 key: 'sep',
                 label: 'Separator',
                 type: 'field'
               },
               {
-                condition: (c)=>c.file_type==='csv' && c._more_options,
+                condition: (c)=>c.file_type==='csv' && c._moreOptions,
                 key: 'charset',
                 label: 'File encoding',
                 type: 'select',
@@ -1045,16 +1042,16 @@ export default {
                 ]
               },
               {
-                condition: (c)=>c.file_type==='json' && c._more_options,
+                condition: (c)=>c.file_type==='json' && c._moreOptions,
                 key: 'multiline',
                 label: (c) => `Multiline: ${c.multiline ? 'Yes' : 'No'}`,
                 type: 'switch'
               },
               {
                 condition: (c)=>{
-                  return (c.file_type==='xls' && c._more_options)
+                  return (c.file_type==='xls' && c._moreOptions)
                   ||
-                  (!c._more_options && (c.url.endsWith('.xls') || c.url.endsWith('.xlsx')))
+                  (!c._moreOptions && (c.url.endsWith('.xls') || c.url.endsWith('.xlsx')))
                 },
                 key: 'sheet_name',
                 label: `Sheet`,
@@ -1099,7 +1096,7 @@ export default {
             _fileUrl: '',
             _fileUploading: false,
             _fileInput: [],
-            _more_options: false,
+            _moreOptions: false,
             file_type: 'csv',
             url: '',
             sep: ',',
@@ -1131,7 +1128,7 @@ export default {
               code = `${this.availableVariableName} = `
             }
 
-            var loadType = (!payload._more_options) ? 'file' : payload.file_type
+            var loadType = (!payload._moreOptions) ? 'file' : payload.file_type
 
             code +=`op.load.${loadType}("${payload.url.trim()}"`
             if (loadType=='csv') {
@@ -2625,7 +2622,8 @@ export default {
           from: this.currentCommand.columns,
           datasetPreview: !!this.currentCommand._datasetPreview,
           load: this.currentCommand._preview==='load',
-          infer: this.currentCommand._more_options===false,
+          infer: this.currentCommand._moreOptions===false,
+          noBufferWindow: this.currentCommand._noBufferWindow,
           expectedColumns
         })
 

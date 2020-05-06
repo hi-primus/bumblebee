@@ -1616,7 +1616,13 @@ export default {
 
       var index = chunks.length
 
-      var previewCode = (this.currentPreviewCode ? this.currentPreviewCode.code : false) || ''
+      var previewCode = ''
+      var noBufferWindow = false
+
+      if (this.currentPreviewCode) {
+        previewCode = this.currentPreviewCode.code
+        noBufferWindow = this.currentPreviewCode.noBufferWindow
+      }
 
       // chunks[index] = { from, to, preview: previewCode || '' }
 
@@ -1625,7 +1631,9 @@ export default {
         return undefined
       }
 
-      var response = await this.evalCode(`_output = ${this.currentDataset.varname}.ext.buffer_window("*", ${from}, ${to+1})${await getPropertyAsync(previewCode, [from, to+1]) || ''}.ext.to_json("*")`)
+      var code = await getPropertyAsync(previewCode, [from, to+1]) || ''
+
+      var response = await this.evalCode(`_output = ${this.currentDataset.varname}.ext.buffer_window("*"${(noBufferWindow) ? '' : ', '+from+', '+(to+1)})${code}.ext.to_json("*")`)
 
       var parsed = response && response.data && response.data.result ? parseResponse(response.data.result) : undefined
 
