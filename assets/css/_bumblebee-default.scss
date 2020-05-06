@@ -1812,9 +1812,11 @@ $editor-top-padding: 6px;
     }
 
 	  &.none:after {
+      padding: 0 6px;
       content: 'None';
     }
 	  &.missing:after {
+      padding: 0 6px;
       content: 'Missing';
     }
     &.not-available {
