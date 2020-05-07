@@ -316,7 +316,7 @@
             ></div>
           </template>
           <!-- normal auxiliar -->
-          <template v-else-if="!datasetPreview && !column.preview && rowsPreview[rowArrayIndex] && rowsPreview[rowArrayIndex].value[idInSample[column.sampleName]]">
+          <template v-else-if="!datasetPreview && !column.preview && rows[rowArrayIndex] && rows[rowArrayIndex].value[idInSample[column.sampleName]]">
             <div
               :key="'na'+(column.sampleName || cindex)"
               class="bb-table-cell"
@@ -326,9 +326,9 @@
               ]"
               :style="{
                 width: column.width+'px',
-                userSelect: (cellsSelection==([idInSample[column.sampleName], rowsPreview[rowArrayIndex].index]).join()) ? 'text' : 'none'
+                userSelect: (cellsSelection==([idInSample[column.sampleName], rows[rowArrayIndex].index]).join()) ? 'text' : 'none'
               }"
-              v-html="rowsPreview[rowArrayIndex].value[idInSample[column.sampleName]].html"
+              v-html="rows[rowArrayIndex].value[idInSample[column.sampleName]].html"
               @mousedown="clearSelection(); cellsSelection = [idInSample[column.sampleName], rowsPreview[rowArrayIndex].index].join()"
               @mouseup="checkSelection(idInSample[column.sampleName],rowsPreview[rowArrayIndex].index)"
             ></div>
