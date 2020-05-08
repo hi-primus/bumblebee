@@ -1218,8 +1218,8 @@ export default {
             _datasetName: false,
             _sheet_names: 1,
             previewType: 'load',
+            datasetPreview: true
             // _previewDelay: 500,
-            // datasetPreview: true
           }),
 
           code: (payload) => {
@@ -2142,7 +2142,7 @@ export default {
               output_col: columns.join('_'),
               previewType: 'nest',
               _expectedColumns: 1,
-              highlightColor: {default: 'none', preview: 'green'}
+              highlightColor: 'green'
 					}
           },
 					code: (payload) => {

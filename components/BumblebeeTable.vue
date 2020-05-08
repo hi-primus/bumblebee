@@ -281,14 +281,28 @@
             ...(column.classes || []),
           ]"
         >
-          <template v-if="!(lazyColumns.length && !lazyColumns[cindex]) && computedColumnValues[column.name]">
-            <template v-for="value in computedColumnValues[column.name].filter((e)=>e!==undefined && e!==null)">
+          <template v-if="!(lazyColumns.length && !lazyColumns[cindex]) && computedColumnValues[column.sampleName]">
+            <template v-if="column.preview || column.duplicated">
+              <template v-for="value in computedColumnValues[column.sampleName].filter((e)=>e!==undefined && e!==null)">
+                <div
+                  :key="'c'+column.index+'r'+value.index"
+                  class="bb-table-i-cell"
+                  :data-row-index="value.index"
+                  :style="{ top: rowHeight * value.index+'px' }"
+                  v-html="value.html"
+                >
+                </div>
+              </template>
+            </template>
+            <template v-else v-for="value in computedColumnValues[column.name].filter((e)=>e!==undefined && e!==null)">
               <div
                 :key="'c'+column.index+'r'+value.index"
                 class="bb-table-i-cell"
                 :data-row-index="value.index"
                 :style="{ top: rowHeight * value.index+'px' }"
                 v-html="value.html"
+                @mousedown="clearSelection(); cellsSelection = [idInSample[column.sampleName] || column.index, value.index].join()"
+                @mouseup="checkSelection(idInSample[column.sampleName] || column.index, value.index)"
               >
               </div>
             </template>
@@ -529,27 +543,16 @@ export default {
     },
 
     computedColumnValues () {
-
-      var columnValues = {}
-
-      for (const name in this.columnValues) {
-        var array = []
-        const values = this.columnValues[name]
-        const args = [] // () ? [array, color] : []
-        const getCellHtml = this.getCellHtml // () ? this.getCellHtmlHighlight : this.getCellHtml
-
-        for (const index in values) {
-          var html = getCellHtml(...[values[index], ...args])
-          array.push({html , index: +index})
-        }
-        columnValues[name] = array
+      if (this.datasetPreview) {
+        return this.datasetPreviewColumnValues
       }
-      return columnValues
+      return this.computeColumnValues(this.columnValues, false)
     },
 
     datasetPreviewColumnValues () {
-      var columnValues = getValuesByColumns(this.currentDatasetPreview.sample.columns)
+      var columnValues = this.getValuesByColumns(this.currentDatasetPreview.sample)
       console.log('datasetPreviewColumnValues',{columnValues})
+      return this.computeColumnValues(columnValues, true)
     },
 
     idInSample () {
@@ -569,7 +572,7 @@ export default {
 
     rowsPreview () {
 
-      if (this.currentDatasetPreview && this.currentDatasetPreview.sample) {
+      if (this.datasetPreview && this.currentDatasetPreview && this.currentDatasetPreview.sample) {
         return this.currentDatasetPreview.sample.value.map((row,row_i)=>{
           var value = row.map((val, i)=>this.getCellData(i, row_i, val, true))
           return { index: row_i, value }
@@ -604,11 +607,7 @@ export default {
       var hm = {}
       try {
         this.currentHighlights.matchColumns.forEach(column => {
-          if (column.columnIndex>=0) {
-            hm[column.columnIndex] = column
-          } else {
-            hm[column.columnTitle] = column
-          }
+          hm[column.columnTitle] = column
         })
       } catch (err) {
         // console.error(err)
@@ -619,7 +618,7 @@ export default {
     previewColumns () {
       try {
 
-        var datasetPreviewColumns = (this.currentDatasetPreview && this.currentDatasetPreview.sample) ? this.currentDatasetPreview.sample.columns : []
+        var datasetPreviewColumns = (this.datasetPreview && this.currentDatasetPreview && this.currentDatasetPreview.sample) ? this.currentDatasetPreview.sample.columns : []
 
         var dpc = datasetPreviewColumns.length
         ? datasetPreviewColumns.map((col, index)=>({
@@ -897,7 +896,7 @@ export default {
 
     rowsCount() {
       try {
-        if (this.currentDatasetPreview && this.currentDatasetPreview.sample) {
+        if (this.datasetPreview && this.currentDatasetPreview && this.currentDatasetPreview.sample) {
           return this.currentDatasetPreview.sample.value.length
         }
         if (this.currentPreviewCode && this.currentProfilePreview && this.currentProfilePreview.summary && this.currentProfilePreview.summary.rows_count) {
@@ -994,7 +993,9 @@ export default {
         if (this.loadedPreviewCode!==this.currentPreviewCode.code) {
           this.loadedPreviewCode = this.currentPreviewCode.code
           if (!this.currentPreviewCode.load) {
-            this.chunksPreview = []
+            this.fetched = this.fetched.filter(e=>!e.code)
+            this.previousRange = -1
+            this.scrollCheck(true)
             this.updateRows()
             this.mustCheck = true
             this.debouncedThrottledScrollCheck()
@@ -1004,11 +1005,15 @@ export default {
 
     },
 
-    currentDataset () {
-      this.updateSelection(this.currentSelection) // TEST
-      this.chunks = []
-      // this.rowsValues = []
-      this.scrollCheck(true)
+    currentDataset: {
+      deep: true,
+      handler () {
+
+        this.updateSelection(this.currentSelection) // TEST
+        this.fetched = []
+        this.previousRange = -1
+        this.scrollCheck(true)
+      }
     },
 
     previewColumns () {
@@ -1018,6 +1023,34 @@ export default {
   },
 
   methods: {
+
+    computeColumnValues (columnValues, noHighlight = false) {
+      var cValues = {}
+
+      for (const name in columnValues) {
+        // TODO not include highlights
+        var array = []
+        const values = columnValues[name]
+        const highlight = !noHighlight && this.highlightMatches && this.highlightMatches[name] && this.highlightMatches[name].title
+        if (highlight) {
+          const hlValues = columnValues[highlight]
+          const preview = name.includes('__preview__')
+          const color = this.currentHighlights.color['default'] ? this.currentHighlights.color[preview ? 'preview' : 'default'] : this.currentHighlights.color
+          for (const index in values) {
+            var html = this.getCellHtmlHighlight(values[index], hlValues[index], color)
+            array.push({html , index: +index})
+          }
+        } else {
+          for (const index in values) {
+            var html = this.getCellHtml(values[index])
+            array.push({html , index: +index})
+          }
+        }
+
+        cValues[name] = array
+      }
+      return cValues
+    },
 
     setBuffer: debounce(async function () {
       try {
@@ -1038,7 +1071,9 @@ export default {
       this.$store.commit('selection',{ clear: true })
     },
 
-    checkSelection (ci, rai) {
+    checkSelection (ci, ri) {
+
+      var colName = this.columns[ci].name
 
       var {selectedText, selection} = getSelectedText()
 
@@ -1050,9 +1085,9 @@ export default {
       selectedText = selectedText.split('\n')[0]
 
 			if (this.cellsSelection) {
-        [ci, rai] = this.cellsSelection.split(',')
+        [ci, ri] = this.cellsSelection.split(',')
 			}
-      var cellValue = this.rowsValues[rai] ? this.rowsValues[rai].value[ci] || '': ''
+      var cellValue = this.columnValues[colName][ri]  // this.rowsValues[ri] ? this.rowsValues[ri].value[ci] || '': ''
 
       cellValue = cellValue.toString()
 
@@ -1090,7 +1125,7 @@ export default {
       return [top, bottom]
     },
 
-    getValuesByColumns (sample, clear) {
+    getValuesByColumns (sample, clear, from = 0) {
       var columnValues = []
 
       sample.columns.forEach(({title}, i) => {
@@ -1165,8 +1200,7 @@ export default {
               var columnTitle = column.title.split('__match_positions__')[0]
               return {
                 ...column,
-                columnTitle,
-                columnIndex: this.currentDataset.columns.findIndex(col=>col.name===columnTitle)
+                columnTitle
               }
             })
 
@@ -1881,7 +1915,7 @@ export default {
           to
         })
 
-        this.columnValues = getValuesByColumns(parsed.sample)
+        this.columnValues = this.getValuesByColumns(parsed.sample, false, from)
 
         return this.checkIncomingColumns(parsed.sample.columns)
 
