@@ -1502,7 +1502,7 @@ $editor-top-padding: 6px;
     align-items: flex-start;
     min-width: 100%;
 
-    padding-left: 48px;
+    // padding-left: 48px;
 
     // border-left-color: $line-color-2;
     // border-left-style: solid;
@@ -1513,10 +1513,11 @@ $editor-top-padding: 6px;
     }
   }
 
-  .bb-table-row {
+  .bb-table-row, .bb-table-i-row {
 
     &:before {
       content: attr(data-row);
+      background: white;
       position: absolute;
       left: 0;
       text-align: right;
@@ -1524,6 +1525,7 @@ $editor-top-padding: 6px;
       color: $line-color-3;
       padding-right: 12px;
       font-size: 13px;
+      height: 100%;
       width: 48px;
     }
 
@@ -2106,27 +2108,29 @@ $editor-top-padding: 6px;
 // table i
 
 .bb-table-i {
-  // display: flex;
-  // padding-left: 48px;
-  // width: fit-content;
   font-family: $font-mono-table;
   font-size: 13px;
+  padding-left: 1px;
+  .bb-table-i-rows {
+    z-index: 0;
+    position: absolute;
+    // left: -48px;
+    margin-left: -48px;
+    width: 48px;
+    .bb-table-i-row {
+      position: absolute;
+      width: 100%;
+    }
+  }
   .bb-table-i-column {
     position: relative;
-    // &:first-child { // merge?
-    //   border-left-width: 1px;
-    //   border-left-style: solid;
-    // }
-    // &:not(:first-child) { // merge
-    //   margin-left: -1px;
-    // }
-    // border-right-width: 1px;
-    // border-right-style: solid;
     .bb-table-i-cell {
       position: absolute;
-      // padding: 0 6px;
-      // white-space: pre;
-      .null-cell { // TODO
+      // &:not(:active) {
+        // user-select: none;
+        // cursor: text;
+      // }
+      .null-cell {
         user-select: none;
         opacity: 0.667;
       }

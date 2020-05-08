@@ -315,13 +315,15 @@ export const mutations = {
     }
     if (tab!==undefined) {
 
-      console.log({tab, columns, ranged, clear, text})
-      console.log({stateDatasetSelection: state.datasetSelection})
+      var current = state.datasetSelection[tab]
 
-      if (!ranged && !text && !(columns && columns.length) && !(state.datasetSelection[tab].columns && state.datasetSelection[tab].columns.length)) {
+      if (
+        !ranged && !text && !(columns && columns.length)
+        &&
+        !current.ranged && !current.text && !(current.columns && current.columns.length)
+      ) {
         return
       }
-      // console.trace()
 
       state.properties.filter(p=>p.clearOnSelection).forEach(p=>{
         Vue.set(state['every'+p.name], tab, false)
