@@ -266,7 +266,78 @@
   <div
     class="bb-table-container" ref="BbTableContainer"
   >
-    <div class="bb-table" ref="BbTable" :style="tableStyle">
+    <style>
+      .bb-table-i-cell, .bb-table-i-row {
+        height: {{rowHeight}}px;
+      }
+    </style>
+    <div class="bb-table-i" v-show="true" ref="BbTable" :style="tableIStyle">
+      <div class="bb-table-i-rows">
+        <template v-if="rowsColumn==='__match__'">
+          <div
+            v-for="value in computedColumnValues[rowsColumn]"
+            :key="'row'+value.index"
+            class="bb-table-i-row"
+            :class="[getRowHighlight(value.index)]"
+            :style="{ top: rowHeight * value.index+'px' }"
+            :data-row="value.index+1"
+          >
+          </div>
+        </template>
+        <div
+          v-else class="bb-table-i-row"
+          v-for="value in computedColumnValues[rowsColumn]"
+          :key="'row'+value.index"
+          :style="{ top: rowHeight * value.index+'px' }"
+          :data-row="value.index"
+        >
+        </div>
+        <div>
+
+        </div>
+
+      </div>
+      <template v-for="(column, cindex) in allColumns">
+        <div
+          class="bb-table-i-column"
+          :key="'column'+column.index"
+          :style="{minWidth: (column.width || 170)+'px'}"
+          :class="[
+            ...(column.classes || []),
+          ]"
+        >
+          <template v-if="!(lazyColumns.length && !lazyColumns[cindex]) && computedColumnValues[column.sampleName]">
+            <template v-if="column.preview || column.duplicated">
+              <template v-for="value in computedColumnValues[column.sampleName].filter((e)=>e!==undefined && e!==null)">
+                <div
+                  :key="'c'+column.index+'r'+value.index"
+                  class="bb-table-i-cell"
+                  :style="{ top: rowHeight * value.index+'px' }"
+                  v-html="value.html"
+                >
+                </div>
+              </template>
+            </template>
+            <template v-else v-for="value in computedColumnValues[column.name].filter((e)=>e!==undefined && e!==null)">
+              <div
+                :key="'c'+column.index+'r'+value.index"
+                class="bb-table-i-cell"
+                :style="{
+                  top: rowHeight * value.index+'px',
+                  userSelect: (cellsSelection==([idInSample[column.sampleName], value.index]).join()) ? 'text' : 'none'
+                }"
+                v-html="value.html"
+                @mousedown="clearSelection(); cellsSelection = [idInSample[column.sampleName] || column.index, value.index].join()"
+                @mouseup="checkSelection(idInSample[column.sampleName] || column.index, value.index)"
+              >
+              </div>
+            </template>
+
+          </template>
+        </div>
+      </template>
+    </div>
+    <div class="bb-table" v-if="false" ref="BbTableOld" :style="tableStyle">
       <div
         class="bb-table-row"
         v-for="(row, rowArrayIndex) in (rowsPreview.length ? rowsPreview : rows)"
@@ -329,8 +400,8 @@
                 userSelect: (cellsSelection==([idInSample[column.sampleName], rows[rowArrayIndex].index]).join()) ? 'text' : 'none'
               }"
               v-html="rows[rowArrayIndex].value[idInSample[column.sampleName]].html"
-              @mousedown="clearSelection(); cellsSelection = [idInSample[column.sampleName], rowsPreview[rowArrayIndex].index].join()"
-              @mouseup="checkSelection(idInSample[column.sampleName],rowsPreview[rowArrayIndex].index)"
+              @mousedown="clearSelection(); cellsSelection = [idInSample[column.sampleName], rows[rowArrayIndex].index].join()"
+              @mouseup="checkSelection(idInSample[column.sampleName],rows[rowArrayIndex].index)"
             ></div>
           </template>
           <!-- normal -->
@@ -401,8 +472,6 @@ import { parseResponse, arraysEqual, cancellablePromise, throttle, debounce, opt
 
 var doubleClick = false
 
-const throttleScrollTime = 100
-
 export default {
 
 	components: {
@@ -430,7 +499,11 @@ export default {
       fetching: false,
       toFetch: [],
 
+      previousRange: '',
+
       cellsSelection: '',
+
+      columnValues: {},
 
       rowsValues: [],
       rowsPreviewValues: [],
@@ -452,8 +525,13 @@ export default {
       dragging: -1,
 
       selection: [],
+
       chunks: [],
       chunksPreview: [],
+
+      fetched: [],
+      fetchedPreview: [],
+
       loadedPreviewCode: '',
 
       indicesInSample: {},
@@ -467,6 +545,7 @@ export default {
     ...mapGetters([
       'currentSelection',
       'currentDataset',
+      'currentDatasetUpdate',
       'selectionType',
       'currentPreviewColumns',
       'currentProfilePreview',
@@ -489,6 +568,27 @@ export default {
       return []
     },
 
+    rowsColumn () {
+      if (this.columnValues['__match__']) {
+        return '__match__'
+      }
+      else {
+        return Object.keys(this.columnValues)[0]
+      }
+    },
+
+    computedColumnValues () {
+      if (this.datasetPreview) {
+        return this.datasetPreviewColumnValues
+      }
+      return this.computeColumnValues(this.columnValues, false)
+    },
+
+    datasetPreviewColumnValues () {
+      var columnValues = this.getValuesByColumns(this.currentDatasetPreview.sample)
+      return this.computeColumnValues(columnValues, true)
+    },
+
     idInSample () {
       return this.indicesInSample // TODO: name mapping
     },
@@ -506,7 +606,7 @@ export default {
 
     rowsPreview () {
 
-      if (this.currentDatasetPreview && this.currentDatasetPreview.sample) {
+      if (this.datasetPreview && this.currentDatasetPreview && this.currentDatasetPreview.sample) {
         return this.currentDatasetPreview.sample.value.map((row,row_i)=>{
           var value = row.map((val, i)=>this.getCellData(i, row_i, val, true))
           return { index: row_i, value }
@@ -541,11 +641,7 @@ export default {
       var hm = {}
       try {
         this.currentHighlights.matchColumns.forEach(column => {
-          if (column.columnIndex>=0) {
-            hm[column.columnIndex] = column
-          } else {
-            hm[column.columnTitle] = column
-          }
+          hm[column.columnTitle] = column
         })
       } catch (err) {
         // console.error(err)
@@ -556,7 +652,7 @@ export default {
     previewColumns () {
       try {
 
-        var datasetPreviewColumns = (this.currentDatasetPreview && this.currentDatasetPreview.sample) ? this.currentDatasetPreview.sample.columns : []
+        var datasetPreviewColumns = (this.datasetPreview && this.currentDatasetPreview && this.currentDatasetPreview.sample) ? this.currentDatasetPreview.sample.columns : []
 
         var dpc = datasetPreviewColumns.length
         ? datasetPreviewColumns.map((col, index)=>({
@@ -834,7 +930,7 @@ export default {
 
     rowsCount() {
       try {
-        if (this.currentDatasetPreview && this.currentDatasetPreview.sample) {
+        if (this.datasetPreview && this.currentDatasetPreview && this.currentDatasetPreview.sample) {
           return this.currentDatasetPreview.sample.value.length
         }
         if (this.currentPreviewCode && this.currentProfilePreview && this.currentProfilePreview.summary && this.currentProfilePreview.summary.rows_count) {
@@ -864,11 +960,19 @@ export default {
         height: h+'px'
       }
     },
+
+    tableIStyle() {
+      var h = this.rowHeight * Math.max(this.rowsCount, (this.rowsPreviewValues || []).length)
+      return {
+        maxHeight: h+'px',
+        height: h+'px'
+      }
+
+    }
   },
 
   mounted() {
 
-    this.scrollCheck()
     this.checkVisibleColumns()
 
     this.$refs['BbTableContainer'] && this.$refs['BbTableContainer'].addEventListener('scroll', this.throttledScrollCheck, {passive: true})
@@ -895,7 +999,6 @@ export default {
   watch: {
 
     currentPreviewNames (value) {
-      // console.log('currentPreviewNames', value)
 
       var indicesInSample = {}
 
@@ -922,35 +1025,73 @@ export default {
         if (this.loadedPreviewCode!==this.currentPreviewCode.code) {
           this.loadedPreviewCode = this.currentPreviewCode.code
           if (!this.currentPreviewCode.load) {
-            this.chunksPreview = []
+            this.fetched = this.fetched.filter(e=>!e.code)
+            this.previousRange = -1
+            this.scrollCheck(true)
             this.updateRows()
             this.mustCheck = true
-            this.debouncedThrottledScrollCheck()
           }
         }
       },
 
     },
 
-    currentDataset () {
-      this.updateSelection(this.currentSelection) // TEST
-      this.chunks = []
-      // this.rowsValues = []
-      this.scrollCheck()
+    currentDatasetUpdate: {
+      immediate: true,
+      handler () {
+
+        this.updateSelection(this.currentSelection) // TEST
+        this.fetched = []
+        this.previousRange = -1
+        this.$nextTick(()=>{
+          this.scrollCheck(true)
+        })
+      }
     },
 
     previewColumns () {
       this.checkVisibleColumns()
-    }
+    },
 
   },
 
   methods: {
 
+    computeColumnValues (columnValues, noHighlight = false) {
+      var cValues = {}
+
+      for (const name in columnValues) {
+        // TODO not include highlights
+        var array = []
+        const values = columnValues[name]
+        const highlight = !noHighlight && this.highlightMatches && this.highlightMatches[name] && this.highlightMatches[name].title
+        if (highlight) {
+          const hlValues = columnValues[highlight]
+          const preview = name.includes('__preview__')
+          const color = this.currentHighlights.color['default'] ? this.currentHighlights.color[preview ? 'preview' : 'default'] : this.currentHighlights.color
+          for (const index in values) {
+            var html = this.getCellHtmlHighlight(values[index], hlValues[index], color)
+            array.push({html , index: +index})
+          }
+        } else {
+          for (const index in values) {
+            var html = this.getCellHtml(values[index])
+            array.push({html , index: +index})
+          }
+        }
+
+        cValues[name] = array
+      }
+      return cValues
+    },
+
     setBuffer: debounce(async function () {
       try {
         var buffer = await this.evalCode('_output = '+this.currentDataset.varname+'.ext.set_buffer("*")')
         this.$store.commit('setBuffer',true)
+        this.$nextTick(()=>{
+          this.debouncedThrottledScrollCheck()
+        })
       } catch (error) {
         console.error(error)
       }
@@ -966,7 +1107,9 @@ export default {
       this.$store.commit('selection',{ clear: true })
     },
 
-    checkSelection (ci, rai) {
+    checkSelection (ci, ri) {
+
+      var colName = this.columns[ci].name
 
       var {selectedText, selection} = getSelectedText()
 
@@ -978,9 +1121,9 @@ export default {
       selectedText = selectedText.split('\n')[0]
 
 			if (this.cellsSelection) {
-        [ci, rai] = this.cellsSelection.split(',')
+        [ci, ri] = this.cellsSelection.split(',')
 			}
-      var cellValue = this.rowsValues[rai] ? this.rowsValues[rai].value[ci] || '': ''
+      var cellValue = this.columnValues[colName][ri]  // this.rowsValues[ri] ? this.rowsValues[ri].value[ci] || '': ''
 
       cellValue = cellValue.toString()
 
@@ -1014,6 +1157,28 @@ export default {
       var bottom = Math.ceil(bottomPosition/this.rowHeight)
 
       return [top, bottom]
+    },
+
+    getValuesByColumns (sample, clear, from = 0) {
+      var columnValues = []
+
+      sample.columns.forEach(({title}, i) => {
+        columnValues[i] = (clear) ? [] : (this.columnValues[title] || [])
+      })
+
+      sample.value.forEach((row, i) => {
+        row.forEach((value,j)=>{
+          columnValues[j][from+i] = value
+        })
+      })
+
+      var columnValuesObject = {}
+
+      sample.columns.forEach(({title}, i) => {
+        columnValuesObject[title] = columnValues[i]
+      })
+
+      return columnValuesObject
     },
 
     checkIncomingColumns (columns) {
@@ -1069,8 +1234,7 @@ export default {
               var columnTitle = column.title.split('__match_positions__')[0]
               return {
                 ...column,
-                columnTitle,
-                columnIndex: this.currentDataset.columns.findIndex(col=>col.name===columnTitle)
+                columnTitle
               }
             })
 
@@ -1208,6 +1372,18 @@ export default {
     },
 
     getRowHighlight (row) {
+      try {
+
+        if (this.columnValues['__match__'][row]) {
+          return 'bb-highlight--'+(this.currentHighlightRows.color || 'green')
+        }
+      } catch (err) {
+        console.error(err)
+      }
+      return  ''
+    },
+
+    get_RowHighlight (row) {
       var rows = this.rowsPreviewValues
       if (rows && rows.length && rows[row]) {
         var hlCol = this.currentHighlightRows.index
@@ -1236,6 +1412,35 @@ export default {
       return {
         html: html || '',
         classes
+      }
+    },
+
+    getCellHtml (value) {
+      if (value) {
+        return value
+      } else if (value==='') {
+        return '<span class="null-cell">Empty</span>'
+      } else if (value===null) {
+        return '<span class="null-cell">None</span>'
+      }
+      return value
+    },
+
+    getCellHtmlHighlight (value, hlv = [], color = 'green') {
+      try {
+        if (hlv && hlv.length) {
+          for (let i = hlv.length - 1; i >= 0; i--) {
+            const [a,b] = hlv[i]
+            value = value.substring(0,a)+`<span class="hlt--${color}">`+value.substring(a,b)+'</span>'+value.substring(b)
+          }
+        }
+        return value
+      } catch (err) {
+        if (value) {
+          return value
+        } else {
+          return false
+        }
       }
     },
 
@@ -1464,7 +1669,7 @@ export default {
       this.throttledScrollCheck()
     }, 400),
 
-    throttledScrollCheck: throttle(function(aw = true) {this.scrollCheck(aw)} , throttleScrollTime),
+    throttledScrollCheck: throttle(function(aw = true) {this.scrollCheck(aw)} , 100),
 
     async scrollCheck (awaited = true) {
       if (this.currentPreviewCode.load) {
@@ -1473,11 +1678,24 @@ export default {
       try {
         if (!this.fetching) {
 
+          awaited = (awaited===undefined) ? true : awaited
+
+          var range = false
+
           this.fetching = true
 
           if (awaited) {
-            var range = this.getCurrentWindow()
+            range = this.getCurrentWindow()
+
             if (range) {
+
+              var rangeJoin = range.join()
+              if (rangeJoin === this.previousRange) {
+                this.fetching = false
+                return false
+              }
+              this.previousRange = rangeJoin
+
               var [from, to] = range
               var length = to - from
               var realLength
@@ -1514,19 +1732,30 @@ export default {
             }
           }
 
-          var _awaited = false
+          var awaited = false
 
-          while (!_awaited && this.toFetch.length) {
-             _awaited = await this.fetchRows()
+          while (!awaited && this.toFetch.length) {
+            range = await this.fetchRows(range)
+            awaited = (range===false)
+          }
+
+          if (!awaited) {
+            this.previousRange = -1
           }
 
           this.fetching = false
           if (this.toFetch.length) {
             this.$nextTick(()=>{
-              this.throttledScrollCheck(_awaited)
+              this.throttledScrollCheck(awaited)
             })
             return true
           }
+
+          // if (!this.fetched.length) {
+          //   this.$nextTick(()=>{
+          //     this.throttledScrollCheck(true)
+          //   })
+          // }
 
         }
         else if (this.toFetch.length) {
@@ -1548,7 +1777,85 @@ export default {
 
     },
 
-    async fetchRows () {
+    async fetchRows (_range) {
+
+      var range = (_range && _range.length) ? _range : this.getCurrentWindow()
+      var currentFrom = (range && range[0]) ? range[0] : -1
+
+      // deletes
+
+      var fetched
+
+      if (this.fetched.lenth>this.maxChunks && currentFrom>=0) {
+        var distanceMap = this.fetched.map((chunk, index)=>({distance: Math.abs(currentFrom-chunk.from), index, from: chunk.from}))
+          .filter(c=>c.from!==0)
+          .sort((a,b)=>(a.distance-b.distance))
+        var tries = 10
+
+        while (this.fetched.length>this.maxChunks && tries--) {
+          var toDelete = distanceMap.pop()
+          if (toDelete) {
+            this.fetched.splice(toDelete.index, 1)
+          }
+        }
+      }
+
+      // get the valid fetches to know what to fetch next
+
+      if (this.currentPreviewCode) {
+        fetched = this.fetched.filter(e=>e.code===this.currentPreviewCode.code)
+      } else {
+        fetched = this.fetched.filter(e=>e.update===this.currentDatasetUpdate)
+      }
+
+      var [from, to, force] = this.toFetch.pop()
+
+      if (!to) {
+        return range
+      }
+
+      from = Math.max( from, 0 )
+      to = Math.min( to, this.rowsCount - 1 )
+
+      var length = to - from
+
+      var distanceFromWindow = Math.abs(currentFrom-from)
+
+      var newRanges = optimizeRanges(
+        [from,to],
+        fetched.map(e=>[e.from,e.to])
+      )
+
+      if (!newRanges.length) {
+        return range // no chunks
+      }
+
+      var toret = true
+
+      for (let i = newRanges.length - 1; i >= 0 ; i--) {
+
+        var previewCode = (this.currentPreviewCode ? this.currentPreviewCode.profileCode : false) || ''
+        if (this.currentProfilePreview.code !== previewCode) {
+          this.setProfile(false)
+        }
+
+        var checkProfile = await this.fetchChunk(newRanges[i][0], newRanges[i][1])
+
+        this.updateRows()
+
+        if (checkProfile) {
+          toret = false
+          if (this.currentProfilePreview.code !== previewCode) {
+            await this.setProfile(previewCode)
+          }
+        }
+      }
+
+      return toret
+
+    },
+
+    async fetch_RowsPrevious () {
 
       var chunks = (this.currentPreviewCode) ? this.chunksPreview : this.chunks
 
@@ -1619,9 +1926,9 @@ export default {
 
     async fetchChunk(from, to) {
 
-      var chunks = (this.currentPreviewCode) ? this.chunksPreview : this.chunks
+      // var chunks = (this.currentPreviewCode) ? this.chunksPreview : this.chunks
 
-      var index = chunks.length
+      // var index = chunks.length
 
       var previewCode = ''
       var noBufferWindow = false
@@ -1646,12 +1953,17 @@ export default {
 
       if (parsed && parsed.sample) {
 
-        var rows = parsed.sample.value.map((value,i)=>({
-          value,
-          index: from+i
-        }))
+        var fetched = this.fetched
 
-        chunks[index] = { from, to, rows, preview: previewCode || '' }
+        fetched.push({
+          code: previewCode,
+          update: this.currentDatasetUpdate,
+          from,
+          to
+        })
+
+        this.columnValues = this.getValuesByColumns(parsed.sample, false, from)
+
         return this.checkIncomingColumns(parsed.sample.columns)
 
       } else {

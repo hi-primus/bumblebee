@@ -4,40 +4,51 @@ const properties = [
   {
     name: 'PreviewColumns',
     clear: true,
+    clearOnSelection: true,
   },
   {
     name: 'DatasetPreview',
+    setter: false,
     clear: true,
+    // clearOnLoad: true,
     // default: ()=>([]),
     // defaultValue: true,
   },
   {
     name: 'ProfilePreview',
     clear: true,
+    clearOnSelection: true,
   },
   {
     name: 'HighlightRows',
     clear: true,
+    clearOnSelection: true,
   },
   {
     name: 'Highlights',
     clear: true,
+    clearOnSelection: true,
   },
   {
     name: 'PreviewCode',
     clear: true,
+    clearOnLoad: true,
+    clearOnSelection: true,
   },
   {
     name: 'DuplicatedColumns',
     clear: true,
+    clearOnSelection: true,
   },
   {
     name: 'PreviewNames',
     clear: true,
+    clearOnSelection: true,
   },
   {
     name: 'FocusedColumns',
     clear: true,
+    clearOnSelection: true,
   },
   {
     name: 'Optimization'
@@ -47,6 +58,9 @@ const properties = [
   },
   {
     name: 'Cells'
+  },
+  {
+    name: 'DatasetUpdate'
   }
 ]
 
@@ -101,9 +115,10 @@ export const state = () => {
 var pSetters = {}
 
 properties.forEach((p)=>{
-  pSetters['set'+p.name] = function(state, payload) {
-    Vue.set( state['every'+p.name], state.tab, payload )
-  }
+  if (p.setter!==false)
+    pSetters['set'+p.name] = function(state, payload) {
+      Vue.set( state['every'+p.name], state.tab, payload )
+    }
 })
 
 export const mutations = {
@@ -194,6 +209,7 @@ export const mutations = {
     }
 
     var _c
+
     try {
       _c = state.datasetSelection[state.tab].columns
     } catch (err) {
@@ -207,8 +223,13 @@ export const mutations = {
     Vue.set(state.datasetSelection, state.tab, state.datasetSelection[state.tab] )
     Vue.set(state.buffers, state.tab, false)
 
-		state.appStatus = {status: 'received'}
+    state.appStatus = {status: 'received'}
 
+    state.properties.filter(p=>p.clearOnLoad).forEach(p=>{
+      Vue.set(state['every'+p.name], state.tab, false)
+    })
+
+    Vue.set(state.everyDatasetUpdate, state.tab, state.everyDatasetUpdate[state.tab] + 1 )
     state.datasetUpdates = state.datasetUpdates + 1
 
   },
@@ -234,6 +255,7 @@ export const mutations = {
     Vue.set(state.datasets, found, dataset)
     Vue.set(state.datasetSelection, found, {})
     Vue.set(state.everyDatasetPreview, found, false)
+    Vue.set(state.everyDatasetUpdate, found, 0 )
 
 		state.datasetUpdates = state.datasetUpdates + 1
   },
@@ -293,7 +315,17 @@ export const mutations = {
     }
     if (tab!==undefined) {
 
-      state.properties.filter(p=>p.clear).forEach(p=>{
+      var current = state.datasetSelection[tab]
+
+      if (
+        !ranged && !text && !(columns && columns.length)
+        &&
+        !current.ranged && !current.text && !(current.columns && current.columns.length)
+      ) {
+        return
+      }
+
+      state.properties.filter(p=>p.clearOnSelection).forEach(p=>{
         Vue.set(state['every'+p.name], tab, false)
       })
 
@@ -346,7 +378,6 @@ export const mutations = {
 
 export const actions = {
   // async nuxtServerInit ({ dispatch }, context) {
-  //   console.log('[DEBUG] nuxtServerInit')
   //   const cookies = this.$cookies.getAll() || {} // cookie.parse(context.req.headers.cookie || '')
   //   if (cookies.hasOwnProperty('x-access-token')) {
   //     try {

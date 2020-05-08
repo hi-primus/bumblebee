@@ -257,7 +257,7 @@ export default {
 
     loadPreview () {
       try {
-        return (this.currentPreviewCode.load && this.currentDatasetPreview)
+        return (this.currentPreviewCode.datasetPreview && this.currentDatasetPreview)
       } catch (error) {
         return false
       }
