@@ -37,7 +37,9 @@
     <v-row justify="center">
       <v-col cols="12" sm="10" md="8" lg="6" color="deep-purple accent-4">
        <v-card-title>
-              <h1 class="display-1 mb-2">Create your account</h1>
+          <v-layout align-center justify-center>
+              <h1 class="display-1 mb-1">Create your account</h1>
+          </v-layout>
             </v-card-title>
             <v-text-field
                v-model="createName"
@@ -45,13 +47,15 @@
                 required
                 outlined
                 clearable
+                dense
             ></v-text-field>
             <v-text-field
                v-model="createLastname"
-                label="Lastname"
+                label="Last name"
                 required
                 outlined
                 clearable
+                dense
             ></v-text-field>
             <v-text-field
                v-model="createUsername"
@@ -59,6 +63,7 @@
                 required
                 outlined
                 clearable
+                dense
             ></v-text-field>
     <v-text-field
       label="E-mail"
@@ -67,29 +72,29 @@
        required
                 outlined
                 clearable
+                dense
     ></v-text-field>
- <v-text-field
- label="Password"
+     <v-text-field
+            label="Password"
             v-model="createPassword"
             :append-icon="show1 ? 'mdi-eye' : 'mdi-eye-off'"
-           
             :type="show1 ? 'text' : 'password'"
-           required
-                outlined
-                clearable
+            required
+            outlined
+            clearable
             counter
+            dense
             @click:append="show1 = !show1"
           ></v-text-field>
                 <v-text-field
+                v-if="show1==false"
+                :type="show2 ? 'text' : 'password'"
                 label="Confirm Password"
-            v-model="ConfirmPassword"
-            :append-icon="show2 ? 'mdi-eye' : 'mdi-eye-off'"
-           
-            :type="show2 ? 'text' : 'password'"
-           required
+                v-model="ConfirmPassword"
+                required
                 outlined
                 clearable
-            counter
+                dense
             @click:append="show2 = !show2"
           ></v-text-field>
             <v-card-actions>
@@ -362,7 +367,6 @@ export default {
       typeForm:0,
       successMessage:'',
       errorMessage:'',
-
 		}
 	},
 
