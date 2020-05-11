@@ -2971,15 +2971,16 @@ export default {
 
       var permanentCells = ['load file', 'load from database']
 
+      if (index<0 || this.cells[index]) {
+        return
+      }
+
       if (permanentCells.includes(this.cells[index].command) && this.cells.filter(e => permanentCells.includes(e.command) ).length<=1) {
         if (this.cells.length>1) {
           return
         }
       }
 
-      if (index<0) {
-        return
-      }
       this.$emit('update:codeError','')
 
       var cells = [...this.cells]
