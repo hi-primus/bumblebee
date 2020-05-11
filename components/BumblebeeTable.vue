@@ -572,6 +572,9 @@ export default {
       if (this.columnValues['__match__']) {
         return '__match__'
       }
+      else if (this.datasetPreview) {
+        return Object.keys(this.datasetPreviewColumnValues)[0]
+      }
       else {
         return Object.keys(this.columnValues)[0]
       }
