@@ -152,8 +152,7 @@
               />
               <div class="cell-type cell-type-label" v-if="cell.command && cell.command!='code'">{{cell.command}}</div>
             </template>
-            <div v-else class="operation-hint-text">
-              {{cell.content || cell.code}}
+            <div v-else class="operation-hint-text" v-html="cell.content || cell.code">
             </div>
           </div>
         </div>
@@ -273,7 +272,7 @@ export default {
           code: (payload) => {
             return `.cols.${payload.command}(["${payload.columns.join('", "')}"])`
           },
-          content: (payload) => capitalizeString(payload.command)+' '+this.multipleContent(payload.columns)
+          content: (payload) => `<b>${capitalizeString(payload.command)}</b> ${this.multipleContent(payload.columns)}`
         },
         'sort rows': {
           dialog: {
@@ -306,7 +305,7 @@ export default {
             return `.rows.sort( ${_argument} )`
           },
           content: (payload) => {
-            return `Sort rows in ${this.multipleContent(payload.columns, payload.orders)}`
+            return `<b>Sort rows</b> in ${this.multipleContent(payload.columns, payload.orders)}`
           }
         },
         FILTER: {
@@ -565,7 +564,7 @@ export default {
             var condition
             var value = undefined
             var action = payload.action=='drop' ? 'Drop' : 'Keep'
-            var str = `${action} rows where ${this.multipleContent(payload.columns)} `
+            var str = `<b>${action}</b> rows where ${this.multipleContent(payload.columns)} `
 
             if (payload._selectionType==='values') {
               condition = 'oneof'
@@ -670,7 +669,7 @@ export default {
               + `how="${payload.how}")`
           },
           content: (payload) => {
-            var str = payload.how==='all' ? `Drop empty rows` : `Drop rows with empty values`
+            var str = payload.how==='all' ? `<b>Drop empty rows</b>` : `<b>Drop rows with empty values</b>`
             return str+(payload.subset.length ? ` in ${this.multipleContent(payload.subset)}` : '')
           }
 
@@ -706,7 +705,7 @@ export default {
               + (payload.subset.length ? `subset=["${payload.subset.join('", "')}"], ` : '')
               + `keep="${payload.keep}")`
           },
-          content: (payload) => `Drop duplicated rows`+(payload.subset.length ? ` in ${this.multipleContent(payload.subset)}` : '')
+          content: (payload) => `<b>Drop duplicated rows</b>`+(payload.subset.length ? ` in ${this.multipleContent(payload.subset)}` : '')
 
         },
         join: {
@@ -1006,7 +1005,7 @@ export default {
               remove_accents: 'Remove accents in',
               remove_special_chars: 'Remove special chars in'
             }
-            return `${str[payload.command]} ${this.multipleContent(payload.columns)}`
+            return `<b>${str[payload.command]}</b> ${this.multipleContent(payload.columns)}`
           }
         },
         cast: {
@@ -1017,7 +1016,7 @@ export default {
             +`, dtype="${payload.dtype}"`
             +')'
           },
-          content: (payload) => `Cast ${this.multipleContent(payload.columns)} to '${payload.dtype}'`
+          content: (payload) => `<b>Cast</b> ${this.multipleContent(payload.columns)} to '${payload.dtype}'`
         },
         fill_na: {
           dialog: {
@@ -1053,7 +1052,7 @@ export default {
               +( (output_cols_argument) ? `, output_cols=${output_cols_argument}` : '')
               +')'
           },
-          content: (payload) => `Fill empty cells in ${this.multipleContent(payload.columns)} with '${payload.fill}'`
+          content: (payload) => `<b>Fill empty cells</b> in ${this.multipleContent(payload.columns)} with '${payload.fill}'`
         },
         'load file': {
           dialog: {
@@ -1282,7 +1281,7 @@ export default {
 
           content: (payload) => {
             var type = (!payload._moreOptions) ? '' : (payload.file_type + ' ')
-            return `Load ${type}file`
+            return `<b>Load</b> ${type}file`
           }
         },
         'string clustering': {
@@ -1991,7 +1990,7 @@ export default {
               +( (payload._requestType==='preview') ? `.cols.find(${_argument}, sub=["${search.join('","')}"], ignore_case=${!payload.match_case ? 'True' : 'False'})` : '')
               +( (payload._requestType==='preview' && payload.replace) ? `.cols.find(${output_cols_argument}, sub=["${payload.replace}"])` : '')
           },
-          content: (payload)=>`Replace ${this.multipleContent(payload.search)} with '${payload.replace} in ${this.multipleContent(payload.columns)}'`
+          content: (payload)=>`<b>Replace</b> ${this.multipleContent(payload.search)} with '${payload.replace} in ${this.multipleContent(payload.columns)}'`
         },
         set: {
           dialog: {
@@ -2025,7 +2024,7 @@ export default {
             +( (payload.expression) ? `, value="${payload.expression}"` : '')
             +`)`
           },
-          content: (payload) => `Create '${payload.output_col}' with '${payload.expression}'`
+          content: (payload) => `<b>Create</b> '${payload.output_col}' with '${payload.expression}'`
         },
         rename: {
           dialog: {
@@ -2053,7 +2052,7 @@ export default {
               return `.cols.rename([${payload.columns.map((e,i)=>`("${e}", "${payload.output_cols[i]}")`)}])`
             }
           },
-          content: (payload)=>`Rename ${this.multipleContent(payload.columns, payload.output_cols)}`
+          content: (payload)=>`<b>Rename</b> ${this.multipleContent(payload.columns, payload.output_cols)}`
         },
         unnest: {
           dialog: {
@@ -2113,7 +2112,7 @@ export default {
               +')'
               +( (payload._requestType==='preview') ? `.cols.find(${_argument}, sub=["${payload.separator}"])` : '')
           },
-          content: (payload) => `Split '${payload.columns[0]}' by '${payload.separator}' in '${payload.splits}'`
+          content: (payload) => `<b>Split</b> '${payload.columns[0]}' by '${payload.separator}' in '${payload.splits}'`
 
         },
         nest: {
@@ -2155,7 +2154,7 @@ export default {
             +`, output_col="${payload.output_col}")`
             +( (payload._requestType==='preview' && payload.separator) ? `.cols.find("${payload.output_col}", sub=["${payload.separator}"])` : '')
           },
-          content: (payload) => `Merge ${this.multipleContent(payload.columns)} in '${payload.output_col}'`
+          content: (payload) => `<b>Merge</b> ${this.multipleContent(payload.columns)} in '${payload.output_col}'`
         },
         duplicate: {
           dialog: {
@@ -2181,7 +2180,7 @@ export default {
               +( (output_cols_argument) ? `, output_cols=${output_cols_argument}` : '')
               +')'
           },
-          content: (payload)=>`Duplicate ${this.multipleContent(payload.columns, payload.output_cols)}`
+          content: (payload)=>`<b>Duplicate</b> ${this.multipleContent(payload.columns, payload.output_cols)}`
         },
         bucketizer: {
           dialog: {
