@@ -2970,7 +2970,7 @@ export default {
 
       var permanentCells = ['load file', 'load from database']
 
-      if (index<0 || this.cells[index]) {
+      if (index<0 || !this.cells[index]) {
         return
       }
 
