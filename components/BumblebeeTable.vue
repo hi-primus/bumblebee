@@ -569,22 +569,31 @@ export default {
     },
 
     rowsColumn () {
-      if (this.columnValues['__match__']) {
-        return '__match__'
+      try {
+
+        if (this.currentHighlightRows && this.columnValues['__match__']) {
+          return '__match__'
+        }
+        else if (this.datasetPreview) {
+          return Object.keys(this.datasetPreviewColumnValues)[0]
+        }
+        else if (this.currenPreviewColumns && this.currenPreviewColumns.length) {
+          return this.currentPreviewColumns[0].title
+        }
+        else if (this.currentDataset.columns[0].name) {
+          return this.currentDataset.columns[index].name
+        }
+      } catch (err) {
+        // console.error(err)
       }
-      else if (this.datasetPreview) {
-        return Object.keys(this.datasetPreviewColumnValues)[0]
-      }
-      else {
-        return Object.keys(this.columnValues)[0]
-      }
+      return Object.keys(this.columnValues)[0]
     },
 
     computedColumnValues () {
       if (this.datasetPreview) {
         return this.datasetPreviewColumnValues
       }
-      return this.computeColumnValues(this.columnValues, false)
+      return this.computeColumnValues(this.columnValues, false, this.rowsCount)
     },
 
     datasetPreviewColumnValues () {
@@ -1060,7 +1069,7 @@ export default {
 
   methods: {
 
-    computeColumnValues (columnValues, noHighlight = false) {
+    computeColumnValues (columnValues, noHighlight = false, limit = Infinity) {
       var cValues = {}
 
       for (const name in columnValues) {
@@ -1077,11 +1086,17 @@ export default {
           const preview = name.includes('__preview__')
           const color = this.currentHighlights.color['default'] ? this.currentHighlights.color[preview ? 'preview' : 'default'] : this.currentHighlights.color
           for (const index in values) {
+            if (index>=limit) {
+              continue
+            }
             var html = this.getCellHtmlHighlight(values[index], hlValues[index], color)
             array.push({html , index: +index})
           }
         } else {
           for (const index in values) {
+            if (index>=limit) {
+              continue
+            }
             var html = this.getCellHtml(values[index])
             array.push({html , index: +index})
           }
