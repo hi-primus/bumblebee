@@ -1467,15 +1467,20 @@ export default {
       }
     },
 
-    updateSelection(value) {
-      var selectionArray = [...this.selection]
-      var newSelection = (value.columns) ? [...value.columns] : []
+    updateSelection (value) {
+      try {
 
-      selectionArray.sort()
-      newSelection.sort()
+        var selectionArray = [...this.selection]
+        var newSelection = (value.columns) ? [...value.columns] : [] // TODO: Check value
 
-      if (!arraysEqual(selectionArray,newSelection)) {
-        this.selection = value.columns.map(c=>c.index)
+        selectionArray.sort()
+        newSelection.sort()
+
+        if (!arraysEqual(selectionArray,newSelection)) {
+          this.selection = newSelection.map(c=>c.index)
+        }
+      } catch (error) {
+        console.error(error)
       }
     },
 
