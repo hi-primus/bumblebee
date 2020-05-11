@@ -2180,3 +2180,10 @@ $editor-top-padding: 6px;
     }
   }
 }
+
+
+// TODO check inline css generation nuxt
+
+.bb-table-i-cell, .bb-table-i-row {
+  height: 24px;
+}
