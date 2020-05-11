@@ -155,7 +155,11 @@
               <div class="cell-type cell-type-label" v-if="cell.command && cell.command!='code'">{{cell.command}}</div>
             </template>
             <template v-else>
-              <div class="handle operation-hint-text" v-html="cell.content || cell.code">
+              <div
+                class="handle operation-hint-text"
+                @click="editCell(cell, index)"
+                v-html="cell.content || cell.code"
+              >
               </div>
               <v-icon
                 class="right-cell-btn"
@@ -271,7 +275,7 @@ export default {
 
       cancelPromise: {},
 
-      commandsPallete: {
+      commandsHandlers: {
         'apply sort': {
           code: (payload) => {
             return `.cols.sort(["${payload.columns.join('", "')}"])`
@@ -1772,7 +1776,7 @@ export default {
             this.currentCommand.loadingTest = true
             this.currentCommand.error = ''
 
-            var fields = this.commandsPallete['load from database'].dialog.fields
+            var fields = this.commandsHandlers['load from database'].dialog.fields
 
             try {
               var driver = escapeQuotes(payload.driver)
@@ -2512,7 +2516,7 @@ export default {
 
     command () {
       try {
-        return this.commandsPallete[this.currentCommand.command] || this.commandsPallete[this.currentCommand.type]
+        return this.commandsHandlers[this.currentCommand.command] || this.commandsHandlers[this.currentCommand.type]
       } catch (error) {
         console.error(error)
         return undefined
@@ -2593,7 +2597,6 @@ export default {
               c._fileType = meta.mime_info.file_type
             }
           }
-          console.log({meta})
         }
       } catch (error) {
         console.error(error)
@@ -2618,7 +2621,7 @@ export default {
       deep: true,
       async handler () {
         try {
-          var command = this.commandsPallete[this.currentCommand.command] || this.commandsPallete[this.currentCommand.type]
+          var command = this.commandsHandlers[this.currentCommand.command] || this.commandsHandlers[this.currentCommand.type]
           if (command && command.dialog) {
             var valid = (!command.dialog.validate) ? true : command.dialog.validate(this.currentCommand)
             if (valid===0) {
@@ -2874,14 +2877,14 @@ export default {
       }
     },
 
-    codeText (newOnly = false) {
+    codeText (newOnly = false, ignoreFrom = -1) {
       if (newOnly)
-        return (this.cells.length) ? (this.cells.filter(e=>(e.code!=='' && !e.done && !e.ignore)).map(e=>e.code).join('\n').trim()) : ''
+        return (this.cells.length) ? (this.cells.filter((e,i)=>((ignoreFrom<0 || i<ignoreFrom) && e.code!=='' && !e.done && !e.ignore)).map(e=>e.code).join('\n').trim()) : ''
       else
-        return (this.cells.length) ? (this.cells.filter(e=>(e.code!=='' && !e.ignore)).map(e=>e.code).join('\n').trim()) : ''
+        return (this.cells.length) ? (this.cells.filter((e,i)=>((ignoreFrom<0 || i<ignoreFrom) && e.code!=='' && !e.ignore)).map(e=>e.code).join('\n').trim()) : ''
     },
 
-    async commandHandle (event) {
+    async commandHandle (command) {
 
       if (this.selectionType!=='text') {
         this.clearTextSelection()
@@ -2891,40 +2894,40 @@ export default {
       var columns = undefined
       var columnDataTypes = undefined
 
-      if (!event.columns || !event.columns.length) {
+      if (!command.columns || !command.columns.length) {
         columns = this.columns.map(e=>this.dataset.columns[e.index].name)
         columnDataTypes = this.columns.map(e=>this.dataset.columns[e.index].dtype)
       }
       else {
-        columns = event.columns
+        columns = command.columns
         var columnIndices = namesToIndices(columns, this.dataset.columns)
         columnDataTypes = columnIndices.map(i=>this.dataset.columns[i].dtype)
       }
 
-      var _command = this.commandsPallete[event.command] || this.commandsPallete[event.type]
+      var commandHandler = this.commandsHandlers[command.command] || this.commandsHandlers[command.type]
 
-      payload.type = event.type
-      payload.command = event.command
-      payload._noOperations = event.noOperations
+      payload.type = command.type
+      payload.command = command.command
+      payload._noOperations = command.noOperations
 
       payload.columnDataTypes = columnDataTypes
 
-      if (_command) {
+      if (commandHandler) {
 
-        payload = (_command.payload) ? ( {...await _command.payload(columns, payload), ...payload} ) : payload
+        payload = (commandHandler.payload) ? ( {...await commandHandler.payload(columns, payload), ...payload} ) : payload
 
-        if (_command.dialog) {
+        if (commandHandler.dialog) {
 
-          this.currentCommand = {...payload, ...(event.payload || {})}
+          this.currentCommand = {...payload, ...(command.payload || {})}
 
           this.$emit('updateOperations', { active: true, title: this.getCommandTitle() })
-          this.$emit('update:big',_command.dialog.big) // :max-width="command.dialog.big ? 820 : 410"
+          this.$emit('update:big',commandHandler.dialog.big) // :max-width="command.dialog.big ? 820 : 410"
 
-          if (_command.onInit) {
-            await _command.onInit()
+          if (commandHandler.onInit) {
+            await commandHandler.onInit()
           }
 
-          if (event.immediate) {
+          if (command.immediate) {
             await this.confirmCommand()
           } else {
             setTimeout(() => {
@@ -2939,12 +2942,12 @@ export default {
         } else {
 
           var cell = {
-            ...event,
+            ...command,
             columns: payload.columns || columns,
             payload
           }
           var content = this.getOperationContent(cell)
-          this.addCell(-1, {...event, code: this.getCode(cell,false), content})
+          this.addCell(-1, {...command, code: this.getCode(cell,false), content})
           this.runButton = false
 
           this.clearTextSelection()
@@ -2954,13 +2957,16 @@ export default {
 
     async confirmCommand () {
       this.clearTextSelection()
-      var _command = this.commandsPallete[this.currentCommand.command] || this.commandsPallete[this.currentCommand.type]
-      if (_command.onDone) {
-        this.currentCommand = await _command.onDone(this.currentCommand)
+      var commandHandler = this.commandsHandlers[this.currentCommand.command] || this.commandsHandlers[this.currentCommand.type]
+      if (commandHandler.onDone) {
+        this.currentCommand = await commandHandler.onDone(this.currentCommand)
       }
       var code = this.getCode(this.currentCommand, false)
       var content = this.getOperationContent(this.currentCommand)
-      this.addCell(-1, { ...this.currentCommand, code, content } )
+
+      var toCell = this.currentCommand._toCell!==undefined ? this.currentCommand._toCell : -1
+
+      this.addCell(toCell, { ...this.currentCommand, code, content }, true )
       this.runButton = false
 
       this.$emit('updateOperations', { active: (this.currentCommand._noOperations ? false : true), title: 'operations' } )
@@ -2980,6 +2986,7 @@ export default {
           title: 'operations'
         })
         this.$store.commit('previewDefault')
+        this.runCode()
 			}, 10);
     },
 
@@ -3066,9 +3073,12 @@ export default {
       this.draggableEnd()
     },
 
-    markCells(mark = true) {
+    markCells(mark = true, ignoreFrom = -1) {
       var cells = [...this.cells]
       for (let i = 0; i < this.cells.length; i++) {
+        if (ignoreFrom>=0 && i>=ignoreFrom) {
+          continue
+        }
         if (cells[i].code) {
           cells[i].done = mark
         }
@@ -3077,14 +3087,17 @@ export default {
       this.cells = cells
 
       if (mark && this.cells)
-        this.codeDone = this.codeText(false)
+        this.codeDone = this.codeText(false, ignoreFrom)
       else
         this.codeDone = ''
     },
 
-    markCellsError() {
+    markCellsError(ignoreFrom = -1) {
       var cells = [...this.cells]
       for (let i = cells.length - 1; i >= 0; i--) {
+        if (ignoreFrom>=0 && i>=ignoreFrom) {
+          continue
+        }
         if (!cells[i].done && cells[i].code) {
           cells.splice(i,1)
         }
@@ -3092,26 +3105,26 @@ export default {
       this.cells = cells
 
       if (this.cells)
-        this.codeDone = this.codeText(false)
+        this.codeDone = this.codeText(false, ignoreFrom)
       else
         this.codeDone = ''
     },
 
     getOperationContent (payload) {
-      var _command = this.commandsPallete[payload.command] || this.commandsPallete[payload.type]
+      var commandHandler = this.commandsHandlers[payload.command] || this.commandsHandlers[payload.type]
 
-      if (!_command || !_command.content) {
+      if (!commandHandler || !commandHandler.content) {
         return this.getCode(payload, false)
       }
 
-      return _command.content(payload)
+      return commandHandler.content(payload)
     },
 
     getCode (currentCommand, type) {
 
       var payload = {...currentCommand}
 
-      var content = ''
+      var code = ''
 
       if (!payload.columns || !payload.columns.length) {
         payload.columns = this.columns.map(e=>this.dataset.columns[e.index].name)
@@ -3123,40 +3136,52 @@ export default {
         }
       }
 
-      if (!payload.content) {
-        var _command = this.commandsPallete[payload.command] || this.commandsPallete[payload.type]
-        if (_command) {
-          content = _command.code ? _command.code({...payload, _requestType: type}) : ''
+      if (!payload._code) {
+        var commandHandler = this.commandsHandlers[payload.command] || this.commandsHandlers[payload.type]
+        if (commandHandler) {
+          code = commandHandler.code ? commandHandler.code({...payload, _requestType: type}) : ''
         }
       }
       else {
-        content = payload.content
+        code = payload._code
       }
 
       if (payload._noAppend) {
-        return content
+        return code
       }
 
       if (type==='preview') {
-        return content
+        return code
       } else if (type==='profile') {
-        return content
+        return code
       }
       else {
-        return `${this.dataset.varname} = ${this.dataset.varname}${content}.ext.cache()`
+        return `${this.dataset.varname} = ${this.dataset.varname}${code}.ext.cache()`
       }
 
 
     },
 
-    addCell (at = -1, event = {command: 'code', code: '', content: '', ignoreCell: false, deleteOtherCells: false}) {
+    async editCell (cell, index) {
+      this.computedCommandsDisabled = true;
+      await this.runCodeNow(true, index)
+      this.computedCommandsDisabled = false;
+      if (this.commandsHandlers[cell.command]) {
+        cell.payload._toCell = index
+        this.commandHandle(cell)
+      }
+    },
 
-      var {command, code, ignoreCell, deleteOtherCells, content} = event
+    addCell (at = -1, payload = {command: 'code', code: '', content: '', ignoreCell: false, deleteOtherCells: false}, replace = false) {
+
+      var {command, code, ignoreCell, deleteOtherCells, content} = payload
 
       this.$emit('update:codeError','')
 
-      if (at==-1)
+      if (at==-1) {
         at = this.cells.length
+        replace = false
+      }
 
       var cells = [...this.cells]
 
@@ -3168,7 +3193,8 @@ export default {
         }
       }
 
-      cells.splice(at, 0, {
+      cells.splice(at, +replace, {
+        payload: payload,
         command,
         code: code,
         content: content,
@@ -3180,19 +3206,25 @@ export default {
       this.cells = cells
 
       this.$nextTick(()=>{
-        if (this.activeCell<0)
+        if (this.activeCell<0) {
           this.setActiveCell(0)
-        if (code.length)
+        }
+        if (code.length) {
           this.runCode()
+        }
       })
 
     },
 
 
 
-    async runCodeNow (force = false) {
+    async runCodeNow (force = false, ignoreFrom = -1) {
 
-      var code = this.codeText()
+      if (ignoreFrom>=0) {
+        force = true
+      }
+
+      var code = this.codeText(false, ignoreFrom)
       var codeDone = this.codeDone.trim()
       var rerun = false
 
@@ -3215,7 +3247,7 @@ export default {
       }
       else {
         // console.log('[CODE MANAGER] new cells only')
-        code = this.codeText(true) // new cells only
+        code = this.codeText(true, ignoreFrom) // new cells only
       }
 
       if (code===this.lastWrongCode) {
@@ -3225,7 +3257,7 @@ export default {
 
       if (rerun) {
         // console.log('[CODE MANAGER] every cell is new')
-				this.markCells(false)
+				this.markCells(false, ignoreFrom)
       }
 
 			if (this.firstRun) {
@@ -3270,7 +3302,7 @@ export default {
         this.updateSecondaryDatasets()
 
         this.$forceUpdate()
-        this.markCells()
+        this.markCells(true, ignoreFrom)
 
         this.$emit('update:codeError','')
         this.lastWrongCode = false
@@ -3285,7 +3317,7 @@ export default {
         if (codeError && codeError.split) codeError = codeError.split("\n")[0]
         this.$emit('update:codeError',codeError)
 
-        this.markCellsError()
+        this.markCellsError(ignoreFrom)
         this.lastWrongCode = code
         this.computedCommandsDisabled = undefined;
       }
