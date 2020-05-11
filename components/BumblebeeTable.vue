@@ -1061,12 +1061,16 @@ export default {
       var cValues = {}
 
       for (const name in columnValues) {
-        // TODO not include highlights
+        // TODO: not include highlights
         var array = []
         const values = columnValues[name]
+        if (!values || !values.length) {
+          return cValues[name] = []
+          continue // TODO: Handling
+        }
         const highlight = !noHighlight && this.highlightMatches && this.highlightMatches[name] && this.highlightMatches[name].title
-        if (highlight) {
-          const hlValues = columnValues[highlight]
+        const hlValues = columnValues[highlight]
+        if (highlight && hlValues && hlValues.length) {
           const preview = name.includes('__preview__')
           const color = this.currentHighlights.color['default'] ? this.currentHighlights.color[preview ? 'preview' : 'default'] : this.currentHighlights.color
           for (const index in values) {
