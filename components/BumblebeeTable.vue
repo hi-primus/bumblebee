@@ -289,7 +289,7 @@
           v-for="value in computedColumnValues[rowsColumn]"
           :key="'row'+value.index"
           :style="{ top: rowHeight * value.index+'px' }"
-          :data-row="value.index"
+          :data-row="value.index+1"
         >
         </div>
         <div>
