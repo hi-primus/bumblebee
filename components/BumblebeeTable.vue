@@ -1164,25 +1164,30 @@ export default {
     },
 
     getValuesByColumns (sample, clear, from = 0) {
-      var columnValues = []
+      try {
+        var columnValues = []
 
-      sample.columns.forEach(({title}, i) => {
-        columnValues[i] = (clear) ? [] : (this.columnValues[title] || [])
-      })
-
-      sample.value.forEach((row, i) => {
-        row.forEach((value,j)=>{
-          columnValues[j][from+i] = value
+        sample.columns.forEach(({title}, i) => {
+          columnValues[i] = (clear) ? [] : (this.columnValues[title] || [])
         })
-      })
 
-      var columnValuesObject = {}
+        sample.value.forEach((row, i) => {
+          row.forEach((value,j)=>{
+            columnValues[j][from+i] = value
+          })
+        })
 
-      sample.columns.forEach(({title}, i) => {
-        columnValuesObject[title] = columnValues[i]
-      })
+        var columnValuesObject = {}
 
-      return columnValuesObject
+        sample.columns.forEach(({title}, i) => {
+          columnValuesObject[title] = columnValues[i]
+        })
+
+        return columnValuesObject
+      } catch (error) {
+        console.error(error)
+        return {}
+      }
     },
 
     checkIncomingColumns (columns) {

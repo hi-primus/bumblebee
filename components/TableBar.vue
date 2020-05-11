@@ -195,10 +195,28 @@
           {{operationsTitle}}
           <v-icon class="right-button" color="black" @click="cancelCommand">close</v-icon>
         </div>
-        <div v-show="operationsTitle=='operations' && operationsActive && useKernel" class="px-2 py-1">
+        <div class="sidebar-top" v-show="operationsTitle=='operations' && operationsActive && useKernel">
           <v-tooltip transition="fade-transition" bottom color="dataprimary darken-2" v-model="copied">
             <template v-slot:activator="{on: success}">
-              <v-tooltip :disabled="copied" transition="fade-transition" bottom>
+              <v-menu offset-y left min-width="200" >
+                <template v-slot:activator="{ on: more }">
+                  <v-icon v-on="more" class="right-button" color="black" @click.stop="">more_vert</v-icon>
+                </template>
+                <v-list flat dense style="max-height: 400px; min-width: 160px;" class="scroll-y">
+                  <v-list-item-group color="black">
+                    <v-list-item
+                      @click="copyCodeToClipboard"
+                    >
+                      <v-list-item-content>
+                        <v-list-item-title>
+                          Copy code to clipboard
+                        </v-list-item-title>
+                      </v-list-item-content>
+                    </v-list-item>
+                  </v-list-item-group>
+                </v-list>
+              </v-menu>
+              <!-- <v-tooltip :disabled="copied" transition="fade-transition" bottom>
                 <template v-slot:activator="{ on: hint }">
                   <v-btn
                     text
@@ -216,7 +234,7 @@
                 <span>
                   Copy code to clipboard
                 </span>
-              </v-tooltip>
+              </v-tooltip> -->
             </template>
             <span>Copied succesfully</span>
           </v-tooltip>
@@ -248,7 +266,6 @@
         <div class="sidebar-content">
 
           <div v-if="detailedColumns.length>1" class="sidebar-section pr-10 columns-selected">
-            <CommandMenu v-if="useKernel" :columnsNumber="detailedColumns.length" button.class="right-button-center" :disabled="commandsDisabled" @command="commandHandle($event)"></CommandMenu>
             <div class="column-selected" v-for="(index, i) in detailedColumns" :key="index+'selc'+i">
               <span class="data-type" :class="`type-${dataset.columns[index].dtype}`">{{ dataType(dataset.columns[index].dtype) }}</span>
               <span class="data-column-name">{{ dataset.columns[index].name }}</span>

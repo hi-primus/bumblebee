@@ -6,7 +6,6 @@
         <span class="data-type" :class="`type-${column.dtype}`">{{ dataType(column.dtype) }}</span>
         <span class="data-column-name">{{ column.name }}</span>
       </div>
-      <CommandMenu v-if="useKernel" button.class="right-button-2" :disabled="commandsDisabled" @command="$emit('command',{command: $event.command, columns: [column.name]})"></CommandMenu>
       <v-icon class="right-button flippable" :class="{'flipped': expanded}" color="black">expand_more</v-icon>
     </div>
 

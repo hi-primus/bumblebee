@@ -119,13 +119,13 @@
     </div> -->
     <div
       v-show="view=='operations'"
-      class="sidebar-content options-fields-container"
-      :class="{'empty': !cells.length}"
+      class="sidebar-content operations-cells-container"
+      :class="{'empty': !cells.length, 'controls': seeCode}"
       ref="cells-container"
     >
       <draggable
         tag="div"
-        class="options-fields"
+        class="operations-cells"
         :class="{ 'no-pe disabled': commandsDisabled, 'dragging': drag }"
         :list="cells"
         v-bind="dragOptions"
@@ -142,7 +142,9 @@
           @click="setActiveCell(index)"
         >
           <div class="cell">
-            <div class="handle left-handle"></div>
+            <div class="handle left-handle">
+              <v-icon>drag_indicator</v-icon>
+            </div>
             <template v-if="seeCode">
               <CodeEditor
                 :active="activeCell==index"
@@ -152,15 +154,22 @@
               />
               <div class="cell-type cell-type-label" v-if="cell.command && cell.command!='code'">{{cell.command}}</div>
             </template>
-            <div v-else class="operation-hint-text" v-html="cell.content || cell.code">
-            </div>
+            <template v-else>
+              <div class="handle operation-hint-text" v-html="cell.content || cell.code">
+              </div>
+              <v-icon
+                class="right-cell-btn"
+                small
+                @click="removeCell(index)"
+              >close</v-icon>
+            </template>
           </div>
         </div>
       </draggable>
       <v-alert key="error" type="error" class="mt-3" dismissible v-if="codeError!=''"  @input="cleanCodeError">
         {{codeError}}
       </v-alert>
-      <div key="controls" ref="cells-controls" class="cells-controls toolbar vertical" :class="{'disabled': commandsDisabled}" @mouseover="barHovered = true" @mouseleave="barHovered = false">
+      <div v-if="seeCode" key="controls" ref="cells-controls" class="cells-controls toolbar vertical" :class="{'disabled': commandsDisabled}" @mouseover="barHovered = true" @mouseleave="barHovered = false">
         <v-btn v-if="cells.length" text class="icon-btn" color="#888" @click.stop="removeCell(activeCell)">
           <v-icon>delete</v-icon>
         </v-btn>
@@ -219,7 +228,7 @@ export default {
       default: false
     },
     big: {
-      default: true
+      default: false
     },
     columns: {
       type: Array,
@@ -272,7 +281,7 @@ export default {
           code: (payload) => {
             return `.cols.${payload.command}(["${payload.columns.join('", "')}"])`
           },
-          content: (payload) => `<b>${capitalizeString(payload.command)}</b> ${this.multipleContent(payload.columns)}`
+          content: (payload) => `<b>${capitalizeString(payload.command)}</b> ${this.multipleContent([payload.columns],'hl--cols')}`
         },
         'sort rows': {
           dialog: {
@@ -305,7 +314,7 @@ export default {
             return `.rows.sort( ${_argument} )`
           },
           content: (payload) => {
-            return `<b>Sort rows</b> in ${this.multipleContent(payload.columns, payload.orders)}`
+            return `<b>Sort rows</b> in ${this.multipleContent([payload.columns, payload.orders],['hl--cols','hl--param'])}`
           }
         },
         FILTER: {
@@ -564,7 +573,7 @@ export default {
             var condition
             var value = undefined
             var action = payload.action=='drop' ? 'Drop' : 'Keep'
-            var str = `<b>${action}</b> rows where ${this.multipleContent(payload.columns)} `
+            var str = `<b>${action}</b> rows where ${this.multipleContent([payload.columns],'hl--cols')} `
 
             if (payload._selectionType==='values') {
               condition = 'oneof'
@@ -625,13 +634,13 @@ export default {
 
             switch (condition) {
               case 'oneof':
-                str += 'is one of '+this.multipleContent(value || [])
+                str += 'is one of '+this.multipleContent([value || []],'hl--param')
                 break
               case 'between':
-                str += 'is between '+this.multipleContent(value || [])
+                str += 'is between '+this.multipleContent([value || []],'hl--param')
                 break
               default:
-                str += condition + ( value!==false ? this.multipleContent(value || []) : '')
+                str += condition + ( value!==false ? this.multipleContent([value || []],'hl--param') : '')
             }
             return str
           }
@@ -670,7 +679,7 @@ export default {
           },
           content: (payload) => {
             var str = payload.how==='all' ? `<b>Drop empty rows</b>` : `<b>Drop rows with empty values</b>`
-            return str+(payload.subset.length ? ` in ${this.multipleContent(payload.subset)}` : '')
+            return str+(payload.subset.length ? ` in ${this.multipleContent([payload.subset],'hl--cols')}` : '')
           }
 
         },
@@ -705,7 +714,7 @@ export default {
               + (payload.subset.length ? `subset=["${payload.subset.join('", "')}"], ` : '')
               + `keep="${payload.keep}")`
           },
-          content: (payload) => `<b>Drop duplicated rows</b>`+(payload.subset.length ? ` in ${this.multipleContent(payload.subset)}` : '')
+          content: (payload) => `<b>Drop duplicated rows</b>`+(payload.subset.length ? ` in ${this.multipleContent([payload.subset],'hl--cols')}` : '')
 
         },
         join: {
@@ -971,7 +980,7 @@ export default {
 
             return code
           },
-          content: (payload) => `${this.multipleContent(payload.aggregations, payload.output_cols_default(payload))} by ${this.multipleContent(payload.group_by)}`
+          content: (payload) => `<b>Group by</b> ${this.multipleContent([payload.group_by],'hl--cols')} <b>aggregate</b> ${this.multipleContent([payload.input_cols, payload.aggregations],['hl--cols', 'hl--param'],', ',' using ', false, false)}`
         },
         STRING: {
           dialog: {
@@ -1005,7 +1014,7 @@ export default {
               remove_accents: 'Remove accents in',
               remove_special_chars: 'Remove special chars in'
             }
-            return `<b>${str[payload.command]}</b> ${this.multipleContent(payload.columns)}`
+            return `<b>${str[payload.command]}</b> ${this.multipleContent([payload.columns],'hl--cols')}`
           }
         },
         cast: {
@@ -1016,7 +1025,7 @@ export default {
             +`, dtype="${payload.dtype}"`
             +')'
           },
-          content: (payload) => `<b>Cast</b> ${this.multipleContent(payload.columns)} to '${payload.dtype}'`
+          content: (payload) => `<b>Cast</b> ${this.multipleContent([payload.columns],'hl--cols')} to '${payload.dtype}'`
         },
         fill_na: {
           dialog: {
@@ -1052,7 +1061,7 @@ export default {
               +( (output_cols_argument) ? `, output_cols=${output_cols_argument}` : '')
               +')'
           },
-          content: (payload) => `<b>Fill empty cells</b> in ${this.multipleContent(payload.columns)} with '${payload.fill}'`
+          content: (payload) => `<b>Fill empty cells</b> in ${this.multipleContent([payload.columns],'hl--cols')} with '${this.spanClass(payload.fill,'hl--param')}'`
         },
         'load file': {
           dialog: {
@@ -1073,7 +1082,6 @@ export default {
                 func: 'uploadFile'
               },
               {
-                condition: (c)=>c.file_type==='csv',
                 key: '_moreOptions',
                 label: (c) => `More options: ${c._moreOptions ? 'Yes' : 'No'}`,
                 type: 'switch'
@@ -1081,7 +1089,11 @@ export default {
               {
                 key: 'url',
                 label: 'File url',
-                placeholder: (c)=>`https://example.com/my_file.${c.file_type}`,
+                placeholder: (c)=>{
+                  var fileType = (c.file_type!='infer') ? c.file_type : (c._fileType)
+                  return `https://example.com/my_file`
+                  return `https://example.com/my_file.${fileType}`
+                },
                 type: 'field',
                 condition: (c)=>c._moreOptions,
               },
@@ -1098,6 +1110,7 @@ export default {
                 label: 'File type',
                 type: 'select',
                 items: [
+                  { text: 'Infer file type', value: 'file' },
                   { text: 'CSV', value: 'csv' },
                   { text: 'XLS', value: 'xls' },
                   { text: 'JSON', value: 'json' },
@@ -1158,7 +1171,7 @@ export default {
                 condition: (c)=>{
                   return (c.file_type==='xls' && c._moreOptions)
                   ||
-                  (!c._moreOptions && (c.url.endsWith('.xls') || c.url.endsWith('.xlsx')))
+                  ((!c._moreOptions || c.file_type==='file') && (c.url.endsWith('.xls') || c.url.endsWith('.xlsx')))
                 },
                 key: 'sheet_name',
                 label: `Sheet`,
@@ -1201,8 +1214,10 @@ export default {
             command: 'load file',
             _noAppend: true,
             _fileUrl: '',
+            _fileType: false,
             _fileUploading: false,
             _fileInput: [],
+            _fileName: '',
             _moreOptions: false,
             file_type: 'csv',
             url: '',
@@ -1280,8 +1295,13 @@ export default {
           },
 
           content: (payload) => {
-            var type = (!payload._moreOptions) ? '' : (payload.file_type + ' ')
-            return `<b>Load</b> ${type}file`
+            var infer = (payload.file_type==='file' || !payload._moreOptions)
+            var fileType = (infer) ? payload._fileType : payload.file_type
+            var fileName = payload._fileName
+            return `<b>Load</b>`
+            + ( fileType ? ` ${fileType}` : '')
+            + ' file'
+            + ( fileName ? spanClass(` '${fileName}'`,'hl--param') : '')
           }
         },
         'string clustering': {
@@ -1990,7 +2010,7 @@ export default {
               +( (payload._requestType==='preview') ? `.cols.find(${_argument}, sub=["${search.join('","')}"], ignore_case=${!payload.match_case ? 'True' : 'False'})` : '')
               +( (payload._requestType==='preview' && payload.replace) ? `.cols.find(${output_cols_argument}, sub=["${payload.replace}"])` : '')
           },
-          content: (payload)=>`<b>Replace</b> ${this.multipleContent(payload.search)} with '${payload.replace} in ${this.multipleContent(payload.columns)}'`
+          content: (payload)=>`<b>Replace</b> ${this.multipleContent([payload.search],'hl--param')} with '${this.spanClass(payload.replace,'hl--param')} in ${this.multipleContent([payload.columns],'hl--cols')}'`
         },
         set: {
           dialog: {
@@ -2052,7 +2072,7 @@ export default {
               return `.cols.rename([${payload.columns.map((e,i)=>`("${e}", "${payload.output_cols[i]}")`)}])`
             }
           },
-          content: (payload)=>`<b>Rename</b> ${this.multipleContent(payload.columns, payload.output_cols)}`
+          content: (payload)=>`<b>Rename</b> ${this.multipleContent([payload.columns, payload.output_cols], 'hl--cols')}`
         },
         unnest: {
           dialog: {
@@ -2154,7 +2174,7 @@ export default {
             +`, output_col="${payload.output_col}")`
             +( (payload._requestType==='preview' && payload.separator) ? `.cols.find("${payload.output_col}", sub=["${payload.separator}"])` : '')
           },
-          content: (payload) => `<b>Merge</b> ${this.multipleContent(payload.columns)} in '${payload.output_col}'`
+          content: (payload) => `<b>Merge</b> ${this.multipleContent([payload.columns],'hl--cols')} in '${this.spanClass(payload.output_col,'hl--cols')}'`
         },
         duplicate: {
           dialog: {
@@ -2180,7 +2200,7 @@ export default {
               +( (output_cols_argument) ? `, output_cols=${output_cols_argument}` : '')
               +')'
           },
-          content: (payload)=>`<b>Duplicate</b> ${this.multipleContent(payload.columns, payload.output_cols)}`
+          content: (payload)=>`<b>Duplicate</b> ${this.multipleContent([payload.columns, payload.output_cols],'hl--cols')}`
         },
         bucketizer: {
           dialog: {
@@ -2553,17 +2573,33 @@ export default {
   watch: {
 
     currentDatasetPreview ({meta}) {
-      try {
+      var c = { ...this.currentCommand }
 
-        if (this.currentCommand.command==='load file' && meta && meta.sheet_names!==undefined) {
-          this.currentCommand._sheet_names = meta.sheet_names
-          if (meta.sheet_names.length && !meta.sheet_names.includes(this.currentCommand.sheet_name)) {
-            this.currentCommand.sheet_name = meta.sheet_names[0]
+      try {
+        if (c.command==='load file' && meta) {
+          if (meta.sheet_names!==undefined) {
+            c._sheet_names = meta.sheet_names
+            if (meta.sheet_names.length && !meta.sheet_names.includes(c.sheet_name)) {
+              c.sheet_name = meta.sheet_names[0]
+            }
           }
+          if (meta.file_name) {
+            c._fileName = meta.file_name
+          } else {
+            // c._fileName = 'test.csv'
+          }
+          if (meta.mime_info) {
+            if (meta.mime_info.file_type) {
+              c._fileType = meta.mime_info.file_type
+            }
+          }
+          console.log({meta})
         }
       } catch (error) {
         console.error(error)
       }
+
+      this.currentCommand = c
     },
 
     view (value) {
@@ -2646,7 +2682,9 @@ export default {
 
   methods: {
 
-    multipleContent (...arrays) {
+    // <span class="hl--cols">
+
+    multipleContent (arrays, colors, arraySep = ', ', pairSep = ', ', brackets = true, parentheses = true) {
 
       arrays = arrays.map(array=>{
         if (!array.join || !array.map)
@@ -2654,25 +2692,55 @@ export default {
         return array
       })
 
-      var array
+      if (!colors.join || !colors.map) {
+        colors = [colors]
+      }
+
+      var array = arrays[0]
+      var str = ''
+
       if (arrays.length===1) {
-        array = arrays[0]
         if (array.length==1) {
-          return `'${array[0]}'`
+          // 'a'
+          brackets = false
+          str = this.spanClass(`'${array[0]}'`,colors[0])
         } else {
-          return `['${array.join("', '")}']`
+          // ['a', 'aa']
+          str = array.map(e=>this.spanClass(`'${e}'`,colors[0])).join(arraySep)
         }
       } else {
         array = arrays[0].map((e,i)=>{
-          return arrays.map((arr)=>`'${arr[i]}'`).join(', ')
+          return arrays.map((arr, j)=>{
+            return this.spanClass(`'${arr[i]}'`,colors[j] || colors[0])
+          }).join(pairSep)
         })
         if (array.length==1) {
-          return `${array[0]}`
+          // 'a', 'b'
+          brackets = false
+          str = `${array[0]}`
         } else {
-          return `[(${array.join("), (")})]`
+          // [('a', 'b'), ('aa', 'bb')]
+          if (parentheses) {
+            arraySep = ")"+arraySep+"("
+          }
+          str = array.join(arraySep)
+          if (parentheses) {
+            str = `(${str})`
+          }
         }
       }
+      if (brackets) {
+        return `[${str}]`
+      }
+      return str
 
+    },
+
+    spanClass (text, cls) {
+      if (!cls) {
+        return text
+      }
+      return `<span class="${cls}">${text}</span>`
     },
 
     async optimizeDf () {

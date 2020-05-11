@@ -595,11 +595,13 @@ export default {
               var varname = 'preview_df'
               var code = `${varname} = ${this.currentPreviewCode.code} \n`
 
-              if (this.currentPreviewCode.infer) {
-                code += `_output = {**${varname}.ext.to_json("*"), "meta": ${varname}.meta.get() if (${varname}.meta and ${varname}.meta.get) else {} } \n`
-              } else {
-                code += `_output = {**${varname}.ext.to_json("*")} \n`
-              }
+              code += `_output = {**${varname}.ext.to_json("*"), "meta": ${varname}.meta.get() if (${varname}.meta and ${varname}.meta.get) else {} } \n`
+
+              // if (this.currentPreviewCode.infer) {
+              //   code += `_output = {**${varname}.ext.to_json("*"), "meta": ${varname}.meta.get() if (${varname}.meta and ${varname}.meta.get) else {} } \n`
+              // } else {
+              //   code += `_output = {**${varname}.ext.to_json("*")} \n`
+              // }
 
               var response = await this.evalCode(code)
 

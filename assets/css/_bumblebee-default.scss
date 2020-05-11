@@ -427,7 +427,10 @@ table {
       color: inherit;
       text-decoration: none;
     }
-    .sidebar-section, .sidebar-header, .sidebar-subheader{
+    .sidebar-top {
+      min-height: 24px;
+    }
+    .sidebar-section, .sidebar-header, .sidebar-subheader, .sidebar-top{
       position: relative;
       .right-button {
         position: absolute;
@@ -1135,23 +1138,26 @@ table {
 
 /* pseudo notebooks */
 
-.options-fields:not(.dragging) {
-  .cell-container:hover {
-    .left-handle {
-      background-color: darken($line-color-2,5%);
-    }
-  }
-}
+// .operations-cells:not(.dragging) {
+//   .cell-container:hover {
+//     .left-handle {
+//       background-color: darken($line-color-2,5%);
+//     }
+//   }
+// }
 
 $side-controls-width: 54px;
 
-.options-fields-container {
+.operations-cells-container {
   padding-left: 12px !important;
-  padding-right: $side-controls-width + 4px !important;
   padding-bottom: 75px;
   position: relative;
   min-height: 300px;
   max-height: calc(100vh - 270px);
+  padding-right: 8px !important;
+  &.controls {
+    padding-right: $side-controls-width + 4px !important;
+  }
   &.empty .cells-controls{
     top: 12px !important;
     right: 50%;
@@ -1187,7 +1193,7 @@ $side-controls-width: 54px;
 
 }
 
-.options-fields {
+.operations-cells {
   height: auto !important;
   flex: none !important;
   overflow-x: visible;
@@ -1232,9 +1238,9 @@ $side-controls-width: 54px;
       .editor-holder, .operation-hint-text {
         border-bottom-color: rgba(0,0,0,0.33);
       }
-      .left-handle {
-        background-color: darken($line-color-2,10%) !important;
-      }
+      // .left-handle {
+      //   background-color: darken($line-color-2,10%) !important;
+      // }
       .cell-type {
         color: $primary-color;
       }
@@ -1247,21 +1253,40 @@ $side-controls-width: 54px;
       overflow: hidden;
       display: flex;
       position: relative;
-      padding: 0 0 0 12px;
+      padding: 0 0 0 14px;
     }
     &:not(.fixed-cell) .left-handle {
-      cursor: grab;
+      cursor: move;
     }
     .left-handle {
-      width: 12px;
+      width: 14px;
       height: 100%;
       top: 0;
       left: 0;
-      background-color: $line-color-2;
+      // background-color: $line-color-2;
       position: absolute;
       border-bottom-style: dashed;
       border-bottom-width: 1px;
       border-bottom-color: transparent;
+      display: flex;
+      .v-icon {
+        font-size: 18px;
+        left: -4px;
+        color: lightgrey;
+        opacity: 0;
+        transition: opacity ease .2s;
+      }
+
+    }
+    .right-cell-btn {
+      opacity: 0;
+      transition: opacity ease .2s;
+    }
+    &:hover{
+      .right-cell-btn,
+      .left-handle>.v-icon {
+        opacity: 1;
+      }
     }
     .cell-type {
       color: lighten($text-color, 18%);
@@ -1296,6 +1321,17 @@ $editor-top-padding: 6px;
 .operation-hint-text {
   font-size: 14px !important;
   font-family: $font-mono;
+  cursor: move; // TODO: editable cell
+  .hl--cols {
+    color: darken(desaturate($data-red,16%),8%);
+  }
+  .hl--param {
+    color: darken(desaturate($data-blue,5%),25%);
+  }
+}
+
+.editor-holder {
+  background-color: #fbfbfb;
 }
 
 .operation-hint-text, .editor-holder {
@@ -1309,7 +1345,6 @@ $editor-top-padding: 6px;
   overflow-y: hidden;
   overflow-x: auto;
   overscroll-behavior-x: contain;
-  background-color: #fbfbfb;
 
   width: 100%;
   max-width: 100%;
