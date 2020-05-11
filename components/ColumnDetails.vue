@@ -202,7 +202,6 @@
 </template>
 
 <script>
-import CommandMenu from '@/components/CommandMenu'
 import TopValues from '@/components/TopValues'
 import Frequent from '@/components/Frequent'
 import General from '@/components/General'
@@ -216,7 +215,6 @@ import VegaEmbed from '@/components/VegaEmbed'
 
 export default {
 	components: {
-		CommandMenu,
 		TopValues,
 		General,
 		Percentile,

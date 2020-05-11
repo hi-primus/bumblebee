@@ -339,7 +339,6 @@
 </template>
 
 <script>
-import CommandMenu from '@/components/CommandMenu'
 import ColumnDetails from '@/components/ColumnDetails'
 import Cells from '@/components/Cells'
 import Dataset from '@/components/Dataset'
@@ -354,7 +353,6 @@ const api_url = process.env.API_URL || 'http://localhost:5000'
 
 export default {
 	components: {
-    CommandMenu,
     ColumnDetails,
     Cells,
     Dataset,
