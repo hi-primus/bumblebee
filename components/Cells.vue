@@ -2701,6 +2701,27 @@ export default {
       }
     },
 
+    forceFileDownload(url, filename){
+      const link = document.createElement('a')
+      link.href = url
+      link.setAttribute('download', filename) //or any other extension
+      document.body.appendChild(link)
+      link.click()
+
+    },
+
+    async downloadDataset () {
+      try {
+        this.cancelCommand()
+        await this.runCodeNow()
+        var url = `downloads/${this.$store.state.session}`
+        await this.evalCode(`_output = ${this.dataset.varname}.save.csv("/opt/Bumblebee/api/public/${url}")`)
+        this.forceFileDownload(api_url+'/'+url+'/0.part',this.dataset.name+'.csv')
+      } catch (error) {
+        console.error(error)
+      }
+    },
+
     async bufferDf () {
       // this.$store.dispatch('bufferDf')
       try {

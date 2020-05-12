@@ -671,10 +671,10 @@ export default {
         {
           type: 'button',
           onClick: () => {
-            this.commandHandle({command: 'save to server'})
+            this.$refs.cells & this.$refs.cells.downloadDataset(event)
           },
           icons: [{ icon: 'save' }],
-          tooltip: 'Save file to server',
+          tooltip: 'Download file',
           disabled: {
             valueOf: ()=>!(this.dataset && this.dataset.summary)
           }
