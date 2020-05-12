@@ -3163,10 +3163,12 @@ export default {
     },
 
     async editCell (cell, index) {
-      this.computedCommandsDisabled = true;
-      await this.runCodeNow(true, index)
-      this.computedCommandsDisabled = false;
-      if (this.commandsHandlers[cell.command]) {
+      // console.log('[DEBUG] Editing ',{cell, index})
+      var commandHandler = this.commandsHandlers[cell.command] || this.commandsHandlers[cell.type]
+      if (commandHandler) {
+        this.computedCommandsDisabled = true;
+        await this.runCodeNow(true, index)
+        this.computedCommandsDisabled = false;
         cell.payload._toCell = index
         this.commandHandle(cell)
       }
@@ -3195,6 +3197,7 @@ export default {
 
       cells.splice(at, +replace, {
         payload: payload,
+        type: payload.type,
         command,
         code: code,
         content: content,
