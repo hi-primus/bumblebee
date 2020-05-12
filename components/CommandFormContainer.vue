@@ -1,7 +1,7 @@
 <template>
   <v-dialog
     v-if="command.dialog.dialog"
-    ref="command-form"
+    ref="operation-form"
     persistent
     :value="(currentCommand.command)"
     :max-width="820"
@@ -16,7 +16,8 @@
   </v-dialog>
   <div
     v-else
-    ref="command-form"
+    class="operation-form-container"
+    ref="operation-form"
     @keydown.esc="$emit('cancelCommand')"
   >
     <slot></slot>

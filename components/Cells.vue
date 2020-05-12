@@ -7,8 +7,8 @@
       :command="command"
       @cancelCommand="cancelCommand"
     >
-      <v-form @submit.prevent="confirmCommand" id="command-form" class="pl-4 pr-5 pt-4 operation-form">
-          <div class="body-2 mb-1" :class="{'title': command.dialog.bigText}" v-if="command.dialog.text">
+      <v-form @submit.prevent="confirmCommand" id="operation-form" class="pl-4 pr-5 pt-2 operation-form">
+          <div class="body-2 mb-1 mt-2" :class="{'title': command.dialog.bigText}" v-if="command.dialog.text">
             {{
               {value: command.dialog.text, args: [currentCommand]} | property
             }}
@@ -71,7 +71,7 @@
               </v-alert>
             </template>
           </div>
-          <div class="d-flex justify-end">
+          <div class="o-buttons">
             <v-spacer></v-spacer>
             <v-btn
               color="primary"
@@ -99,7 +99,7 @@
               :disabled="command.dialog.validate && !command.dialog.validate(currentCommand)"
               :loading="currentCommand.loadingAccept"
               type="submit"
-              form="command-form"
+              form="operation-form"
             >
               {{
                 {value: (command.dialog.acceptLabel || 'Accept'), args: [currentCommand]} | property
@@ -112,7 +112,7 @@
       persistent
       v-if="command && command.dialog"
       v-show="(currentCommand.command)"
-      ref="command-form"
+      ref="operation-form"
       @click:outside="cancelCommand"
       @keydown.esc="cancelCommand"
     >
@@ -2875,7 +2875,7 @@ export default {
             await this.confirmCommand()
           } else {
             setTimeout(() => {
-              var ref = this.$refs['command-form'] && this.$refs['command-form'][0]
+              var ref = this.$refs['operation-form'] && this.$refs['operation-form'][0]
               if (ref && ref.$el) {
                 var el = ref.$el.getElementsByTagName('input')[0]
                 if (el)

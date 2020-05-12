@@ -200,7 +200,6 @@
         :disabled="getPropertyField(field.disabled)"
         :items-per-page="(field.items_key) ? getPropertyField(currentCommand[field.items_key]).length : field.items.length"
         class="vdf--hide-select mb-4 columns-filter"
-        style="margin-top: -4px; max-height: 255px; overflow-y: scroll;"
         hide-default-footer
         dense
         required

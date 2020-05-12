@@ -420,7 +420,7 @@ table {
       padding-right: 4px;
       flex: 1;
       height: 100%;
-      overflow-y: scroll;
+      overflow-y: auto;
       overflow-x: hidden;
     }
     a {
@@ -510,6 +510,14 @@ table {
         font-size: 13px;
       }
     }
+    .operation-form-container, .operation-form {
+      height: inherit;
+    }
+    .operation-form {
+      display: flex;
+      flex-direction: column;
+    }
+
   }
 
   $sidebar-width: 420px;
@@ -1939,9 +1947,24 @@ $editor-top-padding: 6px;
 
 .operation-form {
   .o-fields {
+    flex: 1;
+    min-height: 0;
+
     display: flex;
     flex-wrap: wrap;
     justify-content: space-between;
+    align-content: flex-start;
+
+    overflow: auto;
+
+    margin-left: -24px;
+    margin-right: -20px;
+
+    padding-left: 24px;
+    padding-right: 20px;
+    padding-top: 16px;
+
+    width: calc(100% + 44px);
 
     .o-field {
       width: 100%;
@@ -1956,6 +1979,11 @@ $editor-top-padding: 6px;
       }
     }
 
+  }
+  .o-buttons {
+    display: flex;
+    justify-content: flex-end;
+    flex: 0;
   }
   .separator {
     width: calc(100% - 8px);
@@ -2031,7 +2059,11 @@ $editor-top-padding: 6px;
 }
 
 .v-data-table.columns-filter {
-  margin-left: -25px;
+  margin-left: -24px;
+  width: calc(100% + 44px);
+  margin-top: -4px;
+  overflow-y: auto;
+  flex: 0;
   tr.v-data-table__selected {
     background: initial !important;
   }
