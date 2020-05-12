@@ -173,13 +173,10 @@
                     :color="'#888'"
                     class="icon-btn"
                     text
+                    :disabled="!(currentDataset && currentDataset.summary)"
                     v-on="{...menu}"
                   >
-                    <v-icon
-                      color="#888"
-                    >
-                      search
-                    </v-icon>
+                    <v-icon color="#888">search </v-icon>
                   </v-btn>
                 </v-badge>
               </div>
@@ -247,6 +244,7 @@
           :color="(operationsActive!=false) ? 'black' : '#888'"
           text
           class="icon-btn"
+          :disabled="!(cells.length || operationsTitle!='operations')"
           @click="operationsActive = !operationsActive"
         >
           <v-icon>code</v-icon>
@@ -539,9 +537,9 @@ export default {
       sortDesc: [false],
       columnsTableHeaders: [
 				{ text: '', sortable: false, width: '1%', value: 'controls' },
-				{ hint: '#/A', text: 'Type', value: 'dtype', width: '1%' },
-				{ hint: 'ABC', text: 'Name', value: 'name', width: '3%' },
-				{ hint: '""', text: 'Missing values', width: '2%', value: 'missing' },
+				{ hint: '#/A', sortable: false, text: 'Type', value: 'dtype', width: '1%' },
+				{ hint: 'ABC', sortable: false, text: 'Name', value: 'name', width: '3%' },
+				{ hint: '""', sortable: false, text: 'Missing values', width: '2%', value: 'missing' },
 				// { hint: 'null', text: 'Null values', width: '2%', value: 'null' },
         // { hint: '0', text: 'Zeros', width: '2%', value: 'zeros' },
         // TODO: Zeros?
@@ -745,22 +743,22 @@ export default {
             valueOf: ()=>!(this.dataset && this.dataset.summary)
           }
         },
-        { divider: true },
-        {
-          type: 'sort'
-        },
-        {
-          type: 'button',
-          onClick: ()=>this.commandHandle({command: 'apply sort', columns: this.lastSort}),
-          disabled: {
-            valueOf: ()=>!(this.dataset && this.dataset.summary && this.sortBy[0])
-          },
-          icons: [{icon: 'sort'},{icon: 'check', style: {marginLeft: '-8px'}}],
-          tooltip: 'Apply sorting',
-          hidden: {
-            valueOf: ()=>(this.appStable)
-          }
-        },
+        // { divider: true },
+        // {
+        //   type: 'sort'
+        // },
+        // {
+        //   type: 'button',
+        //   onClick: ()=>this.commandHandle({command: 'apply sort', columns: this.lastSort}),
+        //   disabled: {
+        //     valueOf: ()=>!(this.dataset && this.dataset.summary && this.sortBy[0])
+        //   },
+        //   icons: [{icon: 'sort'},{icon: 'check', style: {marginLeft: '-8px'}}],
+        //   tooltip: 'Apply sorting',
+        //   hidden: {
+        //     valueOf: ()=>(this.appStable)
+        //   }
+        // },
         { divider: true },
         {
           type: 'button',
