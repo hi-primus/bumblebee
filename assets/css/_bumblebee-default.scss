@@ -1323,10 +1323,10 @@ $editor-top-padding: 6px;
   font-family: $font-mono;
   cursor: pointer;
   .hl--cols {
-    color: darken(desaturate($data-red,16%),8%);
+    color: darken(saturate($data-blue,5%),25%);
   }
   .hl--param {
-    color: darken(desaturate($data-blue,5%),25%);
+    color: darken(desaturate($data-red,16%),8%);
   }
 }
 
