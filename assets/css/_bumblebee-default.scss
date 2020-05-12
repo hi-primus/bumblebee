@@ -1786,6 +1786,10 @@ $editor-top-padding: 6px;
       border-top-style: solid;
       border-top-width: 1px;
     }
+    &:last-child {
+      border-bottom-style: solid;
+      border-bottom-width: 1px;
+    }
   }
 
   .bb-table-plot {
