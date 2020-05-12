@@ -72,6 +72,9 @@
           v-if="column.type=='duplicated'"
           :key="'d'+column.index"
           class="bb-table-h-cell bb-preview"
+          :class="[
+            ...(column.classes || []),
+          ]"
           :id="(column.previewIndex === previewColumns.length-1) ? 'bb-table-preview-last' : false"
           style="width: 170px"
         >
@@ -88,6 +91,9 @@
           v-else-if="column.type=='preview'"
           :key="'p'+column.index"
           class="bb-table-h-cell bb-preview"
+          :class="[
+            ...(column.classes || []),
+          ]"
           :id="(column.previewIndex === previewColumns.length-1) ? 'bb-table-preview-last' : false"
           style="width: 170px"
         >
@@ -109,12 +115,15 @@
           :key="column.index"
           :id="'bb-table-'+columns[column.index].name"
           class="bb-table-h-cell"
-          :class="{
-            'active-menu-column': (columnMenuIndex===column.index),
-            'bb-selected': selectionMap[column.index],
-            'bb-drag-over': (dragOver===i && dragging!==i),
-            'bb-drag-over-right': (dragOver===i && dragging<i),
-          }"
+          :class="[
+            {
+              'active-menu-column': (columnMenuIndex===column.index),
+              'bb-selected': selectionMap[column.index],
+              'bb-drag-over': (dragOver===i && dragging!==i),
+              'bb-drag-over-right': (dragOver===i && dragging<i),
+            },
+            ...(column.classes || []),
+          ]"
           :style="{ width: column.width+'px' }"
           :draggable="selectionMap[column.index]"
           @dragstart="dragStart(i, $event)"
@@ -143,10 +152,13 @@
 					:key="'plot'+column.index"
           :style="{ width: column.width+'px' }"
           class="bb-table-plot"
-          :class="{
-            'bb-selected': !(column.type==='duplicated' || column.preview) && selectionMap[column.index],
-            'bb-preview': column.type==='duplicated' || column.preview,
-          }"
+          :class="[
+            {
+              'bb-selected': !(column.type==='duplicated' || column.preview) && selectionMap[column.index],
+              'bb-preview': column.type==='duplicated' || column.preview,
+            },
+            ...(column.classes || []),
+          ]"
 				>
           <transition name="quick-fade" appear mode="out-in">
             <template v-if="!lazyColumns.length || lazyColumns[index]">
@@ -542,11 +554,24 @@ export default {
           }))
         : []
 
+
+        if (this.currentPreviewCode.joinPreview) {
+          var jp = this.currentPreviewCode.joinPreview
+          for (var index = 0; index<pc.length; index++) {
+            for (var jindex = 0; jindex<jp.length; jindex++) {
+              if (jp[jindex].indexOf(pc[index].name)>=0) {
+                pc[index].classes = ['join-'+jindex]
+              }
+            }
+          }
+        }
+
         return [...pc, ...dc, ...dpc].map((col,index)=>({
           ...col,
           previewIndex: index
         }))
       } catch (err) {
+        console.error(err)
         return []
       }
     },
@@ -556,7 +581,7 @@ export default {
       if ((this.datasetPreview || this.loadPreview) && this.previewColumns.length) {
         return this.previewColumns.map(c=>({
           ...c,
-          classes: ['bb-preview'],
+          classes: [...(c.classes || []), 'bb-preview'],
           width: 170
         }))
       }
@@ -623,7 +648,7 @@ export default {
 
             cols.splice(insertIndex,0,{
               ...column,
-              classes: ['bb-preview'],
+              classes: [...(column.classes || []), 'bb-preview'],
               width: 170,
               // title: (this.currentPreviewNames && this.currentPreviewNames[column.title]) || column.title || ''
             })
@@ -650,7 +675,7 @@ export default {
 
               cols.splice(insertIndex++,0,{
                 ...pcol,
-                classes: ['bb-preview'],
+                classes: [...(pcol.classes || []), 'bb-preview'],
                 width: 170,
                 // title: (this.currentPreviewNames && this.currentPreviewNames[pcol.title]) || pcol.title || ''
               })
@@ -1019,7 +1044,6 @@ export default {
     },
 
     getValuesByColumns (sample, clear, from = 0, preppend = '') {
-      console.log({sample, clear, from, NuxtColumnValues: this.columnValues})
       try {
         var columnValues = []
 
@@ -1429,7 +1453,7 @@ export default {
 
         var cols = this.currentPreviewColumns.map(e=>escapeQuotes(  e.title.split('__preview__').join('')  ))
 
-        var code = `_output = df.ext.buffer_window("*")${await getPropertyAsync(previewCode) || ''}.ext.profile(["${cols.join('", "')}"], output="json")`
+        var code = `_output = ${this.currentDataset.varname}.ext.buffer_window("*")${await getPropertyAsync(previewCode) || ''}.ext.profile(["${cols.join('", "')}"], output="json")`
 
         var response = await this.evalCode(code)
 
@@ -1661,6 +1685,8 @@ export default {
 
       var code = await getPropertyAsync(previewCode, [from, to+1]) || ''
 
+      var codeS = await getPropertyAsync(previewCode) || ''
+
       var response = await this.evalCode(`_output = ${this.currentDataset.varname}.ext.buffer_window("*"${(noBufferWindow) ? '' : ', '+from+', '+(to+1)})${code}.ext.to_json("*")`)
 
       var parsed = response && response.data && response.data.result ? parseResponse(response.data.result) : undefined
@@ -1670,7 +1696,7 @@ export default {
         var fetched = this.fetched
 
         fetched.push({
-          code: previewCode,
+          code: codeS,
           update: this.currentDatasetUpdate,
           from,
           to

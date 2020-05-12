@@ -826,18 +826,28 @@ export default {
               items_with: (c)=>Object.keys(c._datasets_right).filter(e=>e!==this.dataset.varname && e!=='preview_df'),
               items_selected_columns: (c)=>{
                 return [
-                  ...(this.allColumns || []).map(n=>({name: n, 'source': 'left', key: n+'l'})),
-                  ...(c._datasets_right[c.with] || []).map(n=>({name: n, 'source': 'right', key: n+'r'}))
+                  ...(this.allColumns || []).map(n=>({name: n, source: 'left', key: n+'l'})),
+                  ...(c._datasets_right[c.with] || []).map(n=>({name: n, source: 'right', key: n+'r'}))
                 ]
               },
               selected_columns: [
-                ...(this.allColumns || []).map(n=>({name: n, 'source': 'left', key: n+'l'})),
-                ...(_datasets_right[df2] || []).map(n=>({name: n, 'source': 'right', key: n+'r'}))
+                ...(this.allColumns || []).map(n=>({name: n, source: 'left', key: n+'l'})),
+                ...(_datasets_right[df2] || []).map(n=>({name: n, source: 'right', key: n+'r'}))
               ],
+              joinPreview: (c)=>{
+                // var left = c.selected_columns.filter(col=>col.source==='left' || col.name===c.left_on).map(col=>col.name)
+                // var right = c.selected_columns.filter(col=>col.source==='right' || col.name===c.right_on).map(col=>col.name)
+                // var center = left.filter(col=>right.indexOf(col)!=-1)
+                var left = c.selected_columns.filter(col=>col.source==='left' && col.name!==c.left_on).map(col=>col.name)
+                var right = c.selected_columns.filter(col=>col.source==='right' && col.name!==c.right_on).map(col=>col.name)
+                var center = [c.left_on, c.right_on, c.left_on+c.right_on, c.left_on+'_'+c.right_on]
+                return [ left, center, right ]
+              },
               previewType: 'join',
               // _previewDelay: 500,
               _expectedColumns: -1,
-              datasetPreview: true
+              datasetPreview: true,
+              // noBufferWindow: true
             }
           },
           code: (payload) => {
@@ -2798,12 +2808,14 @@ export default {
         //   expectedColumns = -1
         // } else
         if (this.currentCommand._expectedColumns!==undefined) {
-          expectedColumns = getProperty(this.currentCommand._expectedColumns)
+          expectedColumns = getProperty(this.currentCommand._expectedColumns, [this.currentCommand])
         } else if (this.currentCommand.output_cols && this.currentCommand.output_cols.length) {
           expectedColumns = this.currentCommand.output_cols.length
         } else if (this.currentCommand.columns) {
           expectedColumns = this.currentCommand.columns.length
         }
+
+        var joinPreview = getProperty(this.currentCommand.joinPreview, [this.currentCommand])
 
         this.$store.commit('setPreviewCode',{
           code: this.getCode(this.currentCommand,'preview'),
@@ -2815,8 +2827,11 @@ export default {
           load: this.currentCommand.previewType==='load',
           infer: this.currentCommand._moreOptions===false,
           noBufferWindow: this.currentCommand.noBufferWindow,
-          expectedColumns
+          expectedColumns,
+          joinPreview
         })
+
+        // TODO: Generalize
 
       } catch (err) {
         console.error(err) // probably just a cancelled request

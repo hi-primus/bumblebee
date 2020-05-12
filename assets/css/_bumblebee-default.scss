@@ -1773,6 +1773,42 @@ $editor-top-padding: 6px;
         border-right-width: 1px;
       }
     }
+    &.bb-preview.join-0 {
+      background-color: $data-join-left-background; // $data-join-left;
+      border-color: darken($data-join-left, 10%) !important;
+      & + * {
+        border-left-color: darken($data-join-left, 10%) !important;
+      }
+      &:last-child {
+        border-right-color: darken($data-join-left, 10%) !important;
+        border-right-style: solid;
+        border-right-width: 1px;
+      }
+    }
+    &.bb-preview.join-1 {
+      background-color: $data-join-center-background; // $data-join-center;
+      border-color: darken($data-join-center, 10%) !important;
+      & + * {
+        border-left-color: darken($data-join-center, 10%) !important;
+      }
+      &:last-child {
+        border-right-color: darken($data-join-center, 10%) !important;
+        border-right-style: solid;
+        border-right-width: 1px;
+      }
+    }
+    &.bb-preview.join-2 {
+      background-color: $data-join-right-background; // $data-join-right;
+      border-color: darken($data-join-right, 10%) !important;
+      & + * {
+        border-left-color: darken($data-join-right, 10%) !important;
+      }
+      &:last-child {
+        border-right-color: darken($data-join-right, 10%) !important;
+        border-right-style: solid;
+        border-right-width: 1px;
+      }
+    }
     &.bb-selected {
       background-color: $data-highlight-background; // $data-highlight;
       border-color: darken($data-highlight, 10%) !important;
@@ -2241,4 +2277,13 @@ $editor-top-padding: 6px;
 
 .bb-table-i-cell, .bb-table-i-row {
   height: 24px;
+}
+
+
+.left-join--text {
+  color: $data-join-left-text;
+}
+
+.right-join--text {
+  color: $data-join-right-text;
 }
