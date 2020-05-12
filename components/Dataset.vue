@@ -251,13 +251,13 @@ export default {
       'currentDataset',
       'currentListView',
       'currentPreviewCode',
-      'currentDatasetPreview',
+      'currentLoadPreview',
       'appError'
     ]),
 
     loadPreview () {
       try {
-        return (this.currentPreviewCode.datasetPreview && this.currentDatasetPreview)
+        return (this.currentPreviewCode.loadPreview && this.currentLoadPreview)
       } catch (error) {
         return false
       }
@@ -605,10 +605,10 @@ export default {
 
               var response = await this.evalCode(code)
 
-              this.$store.commit('setDatasetPreview', {sample: response.data.result.sample} )
+              this.$store.commit('setLoadPreview', {sample: response.data.result.sample} )
 
               if (response.data.result.meta) {
-                this.$store.commit('setDatasetPreview', {meta: response.data.result.meta} )
+                this.$store.commit('setLoadPreview', {meta: response.data.result.meta} )
               }
 
 
@@ -618,7 +618,7 @@ export default {
 
               var profile = parseResponse(pResponse.data.result)
 
-              this.$store.commit('setDatasetPreview', { profile } )
+              this.$store.commit('setLoadPreview', { profile } )
 
 
             }

@@ -2634,20 +2634,20 @@ export default {
             }
             if (this.currentCommand.previewType) {
 
-              if (this.currentCommand.output_cols) {
+              // if (this.currentCommand.output_cols) {
 
-                var nameMap = {}
-                if (this.currentCommand.columns) {
-                  this.currentCommand.output_cols.forEach((col, i) => {
-                    nameMap[ '__preview__'+this.currentCommand.columns[i] ] = col
-                  })
-                } else {
-                  this.currentCommand.output_cols.forEach((col, i) => {
-                    nameMap[col] = col // TODO: Check
-                  })
-                }
-                this.$store.commit('setPreviewNames',nameMap)
-              }
+              //   var nameMap = {}
+              //   if (this.currentCommand.columns) {
+              //     this.currentCommand.output_cols.forEach((col, i) => {
+              //       nameMap[ '__preview__'+this.currentCommand.columns[i] ] = col
+              //     })
+              //   } else {
+              //     this.currentCommand.output_cols.forEach((col, i) => {
+              //       nameMap[col] = col // TODO: Check
+              //     })
+              //   }
+              //   this.$store.commit('setPreviewNames',nameMap)
+              // }
 
               this.preparePreviewCode()
             }
@@ -3074,11 +3074,11 @@ export default {
         payload.columns = this.columns.map(e=>this.dataset.columns[e.index].name)
       }
 
-      if (type==='preview' || type==='profile') {
-        if (payload.columns) {
-          payload.output_cols = payload.columns.map(e=>'__preview__'+e)
-        }
-      }
+      // if (type==='preview' || type==='profile') {
+      //   if (payload.columns) {
+      //     payload.output_cols = payload.columns.map(e=>'__preview__'+e)
+      //   }
+      // }
 
       if (!payload._code) {
         var commandHandler = this.commandsHandlers[payload.command] || this.commandsHandlers[payload.type]

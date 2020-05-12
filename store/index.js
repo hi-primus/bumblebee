@@ -7,7 +7,7 @@ const properties = [
     clearOnSelection: true,
   },
   {
-    name: 'DatasetPreview',
+    name: 'LoadPreview',
     setter: false,
     clear: true,
     // clearOnLoad: true,
@@ -144,18 +144,18 @@ export const mutations = {
 
   ...pSetters,
 
-  setDatasetPreview (state, {sample, profile, meta}) {
-    state.everyDatasetPreview[state.tab] = state.everyDatasetPreview[state.tab] || {}
+  setLoadPreview (state, {sample, profile, meta}) {
+    state.everyLoadPreview[state.tab] = state.everyLoadPreview[state.tab] || {}
     if (sample!==undefined) {
-      state.everyDatasetPreview[state.tab].sample = sample
+      state.everyLoadPreview[state.tab].sample = sample
     }
     if (profile!==undefined) {
-      state.everyDatasetPreview[state.tab].profile = profile
+      state.everyLoadPreview[state.tab].profile = profile
     }
     if (meta!==undefined) {
-      state.everyDatasetPreview[state.tab].meta = meta
+      state.everyLoadPreview[state.tab].meta = meta
     }
-    Vue.set( state.everyDatasetPreview, state.tab, state.everyDatasetPreview[state.tab])
+    Vue.set( state.everyLoadPreview, state.tab, state.everyLoadPreview[state.tab])
   },
 
   setHighlights (state, { matchColumns, color }) {
@@ -254,8 +254,8 @@ export const mutations = {
 
     Vue.set(state.datasets, found, dataset)
     Vue.set(state.datasetSelection, found, {})
-    Vue.set(state.everyDatasetPreview, found, false)
-    Vue.set(state.everyDatasetUpdate, found, 0 )
+    Vue.set(state.everyLoadPreview, found, false)
+    Vue.set(state.everyDatasetUpdate, found, 1 )
 
 		state.datasetUpdates = state.datasetUpdates + 1
   },
