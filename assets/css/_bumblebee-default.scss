@@ -53,7 +53,7 @@ html:root {
         width: 100%;
       }
       .sidebar-container, .table-container {
-        max-height: calc(100vh - 191px);
+        max-height: calc(100vh - 126px); // 191
       }
     }
   }
@@ -402,8 +402,8 @@ table {
   }
   &>.table-view-empty {
     width: 100%;
-    height: calc(100vh - 191px);
-    max-height: calc(100vh - 191px);
+    height: calc(100vh - 126px);
+    max-height: calc(100vh - 126px);
   }
   &>.sidebar-container {
     border-left: solid 1px $line-color-1;
@@ -1496,8 +1496,8 @@ $editor-top-padding: 6px;
 }
 
 .bbt-container {
-  height: calc(100vh - 191px) !important;
-  max-height: calc(100vh - 191px) !important;
+  height: calc(100vh - 126px) !important;
+  max-height: calc(100vh - 126px) !important;
   overflow: hidden;
 
   min-width: 100%;
@@ -2068,6 +2068,9 @@ $editor-top-padding: 6px;
     cursor: pointer;
     opacity: 0;
     transition: opacity 0.05s ease-in-out;
+    &:hover {
+      opacity: 0.75 !important;
+    }
     &.key-selected {
       opacity: 1 !important;
     }
@@ -2094,6 +2097,10 @@ $editor-top-padding: 6px;
       padding-left: 7px;
       padding-right: 3px;
     }
+  }
+  .v-icon {
+    font-size: 18px;
+    transform: scale(1) rotate(0.037302deg);
   }
 }
 

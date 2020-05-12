@@ -154,6 +154,88 @@
           </v-menu>
       </template>
       <v-spacer></v-spacer>
+      <v-menu
+        v-model="searchMenu"
+        :close-on-content-click="false"
+        offset-y
+      >
+        <template v-slot:activator="{ on: menu }">
+          <v-tooltip :disabled="searchMenu" transition="fade-transition" bottom>
+            <template v-slot:activator="{ on: tooltip }">
+              <div class="icon-btn-container mr-2" v-on="{...tooltip}">
+                <v-badge
+                  :value="typesSelected.length || searchText"
+                  color="primary lighten-2"
+                  dot
+                  overlap
+                >
+                  <v-btn
+                    :color="'#888'"
+                    class="icon-btn"
+                    text
+                    v-on="{...menu}"
+                  >
+                    <v-icon
+                      color="#888"
+                    >
+                      search
+                    </v-icon>
+                  </v-btn>
+                </v-badge>
+              </div>
+            </template>
+            <span>Search / filter columns</span>
+          </v-tooltip>
+        </template>
+        <div class="controls-container text-xs-center">
+          <v-text-field
+            autocomplete="off"
+            v-model="searchText"
+            :color="'grey darken-3'"
+            clearable
+            dense
+            full-width
+            solo flat
+            class="search-filter mt-2 mr-4 elevation-0"
+            prepend-inner-icon="search"
+            label="Search column"
+            :disabled="!(currentDataset && currentDataset.summary)"
+          />
+          <div class="filter-container">
+            <v-autocomplete
+              autocomplete="off"
+              ref="autocomplete"
+              v-model="typesSelected"
+              :items="typesAvailable"
+              :append-icon="''"
+              :search-input.sync="typesInput"
+              dense
+              full-width
+              solo flat
+              chips
+              deletable-chips
+              color="grey darken-3"
+              class="placeholder-chip primary--chips capitalized--chips"
+              label="Data type"
+              hide-details
+              hide-no-data
+              hide-selected
+              multiple
+              single-line
+              :menu-props="{
+                closeOnContentClick: true
+              }"
+              @change="typesUpdated"
+              :disabled="!(currentDataset && currentDataset.summary)"
+            >
+              <template v-slot:item="{ item }">
+                <div class="data-type in-autocomplete">{{ dataType(item) }}</div> <span class="capitalize">{{ item }}</span>
+              </template>
+            </v-autocomplete>
+          </div>
+        </div>
+
+      </v-menu>
       <v-badge
         :value="cellsError!=='' || (operationsTitle && operationsTitle!='operations') && cells.length!=0"
         :color="(operationsTitle!='operations') ? 'primary lighten-2' : 'error'"
@@ -376,14 +458,17 @@ export default {
 			default: '',
 			type: String
 		},
-		typesSelected: {
-			default: () => ([]),
-			type: Array
-		}
+		// typesSelected: {
+		// 	default: () => ([]),
+		// 	type: Array
+		// }
 	},
 
 	data () {
 		return {
+
+      typesSelected: [],
+			typesInput: '',
 
       cellsError: '',
       copied: false,
@@ -394,13 +479,14 @@ export default {
 
       operationsActive: false,
       operationsTitle: 'operations',
-      bigOptions: true,
+      bigOptions: false,
       commandsDisabled: false,
       operation: undefined,
       heatMap: [],
       heatMapEncoding: {},
 
       menus: {},
+      searchMenu: false,
 
       lastSort: [],
       callSort: false,
@@ -466,7 +552,7 @@ export default {
 
 	computed: {
 
-    ...mapGetters(['currentSelection', 'hasSecondaryDatasets', 'currentCells','currentListView','selectionType', 'currentDataset']),
+    ...mapGetters(['currentSelection', 'hasSecondaryDatasets', 'currentCells','currentListView','selectionType', 'currentDataset', 'typesAvailable']),
 
     ...mapState(['nextCommand']),
 
@@ -962,6 +1048,11 @@ export default {
   },
 
   methods: {
+
+    typesUpdated () {
+      this.typesInput = ''
+      this.$refs.autocomplete.loseFocus
+		},
 
     updateOperations (event) {
       var {active, title} = event

@@ -152,60 +152,12 @@
             </v-tab>
           </v-tabs>
           <div class="bb-content">
-            <div class="controls-container text-xs-center">
-              <v-text-field
-                autocomplete="off"
-                v-model="searchText"
-                :color="'grey darken-3'"
-                clearable
-                dense
-                full-width
-                solo flat
-                class="search-filter mt-2 mr-4 elevation-0"
-                prepend-inner-icon="search"
-                label="Search column"
-                :disabled="!(currentDataset && currentDataset.summary)"
-              />
-              <div class="filter-container">
-                <v-autocomplete
-                  autocomplete="off"
-                  ref="autocomplete"
-                  v-model="typesSelected"
-                  :items="typesAvailable"
-                  :append-icon="''"
-                  :search-input.sync="typesInput"
-                  dense
-                  full-width
-                  solo flat
-                  chips
-                  deletable-chips
-                  color="grey darken-3"
-                  class="placeholder-chip primary--chips capitalized--chips"
-                  label="Data type"
-                  hide-details
-                  hide-no-data
-                  hide-selected
-                  multiple
-                  single-line
-                  :menu-props="{
-                    closeOnContentClick: true
-                  }"
-                  @change="typesUpdated"
-                  :disabled="!(currentDataset && currentDataset.summary)"
-                >
-                  <template v-slot:item="{ item }">
-                    <div class="data-type in-autocomplete">{{ dataType(item) }}</div> <span class="capitalize">{{ item }}</span>
-                  </template>
-                </v-autocomplete>
-              </div>
-            </div>
             <TableBar
               ref="tableBar"
               v-if="currentDataset"
               :dataset="currentDataset"
               :total="(currentDataset.summary) ? +currentDataset.summary.rows_count : 1"
               :searchText="searchText"
-              :types-selected="typesSelected"
             />
           </div>
 
@@ -268,15 +220,13 @@ export default {
 			searchText: '',
 			tab: undefined,
 			confirmDelete: -1,
-			typesSelected: [],
-			typesInput: '',
 			version: ''
 		}
 	},
 
 	computed: {
 
-    ...mapGetters(['currentDataset','typesAvailable','appError']),
+    ...mapGetters(['currentDataset','appError']),
 
     sampleSize () {
       return Math.min(this.currentDataset.summary.sample_size, this.currentDataset.summary.rows_count)
@@ -390,10 +340,6 @@ export default {
 
 	methods: {
 
-		typesUpdated () {
-      this.typesInput = ''
-      this.$refs.autocomplete.loseFocus
-		},
 		async subscribe () {
       try {
         var tpw = this.$route.query.tpw
