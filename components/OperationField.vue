@@ -213,10 +213,8 @@
         <template v-slot:item.key="{ item }">
           <span
             @click.stop="field.selectKey ? field.selectKey(item) : ()=>{}"
-            :style="{
-              opacity: ((currentCommand.right_on===item.name && item.source==='right')||(currentCommand.left_on===item.name && item.source==='left')) ? 1 : 0.5
-            }"
-            style="cursor: pointer"
+            :class="{'key-selected': (currentCommand.right_on===item.name && item.source==='right')||(currentCommand.left_on===item.name && item.source==='left')}"
+            class="key-select"
           >
             <v-icon>
               vpn_key

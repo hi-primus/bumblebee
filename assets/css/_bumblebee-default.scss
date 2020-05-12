@@ -10,7 +10,7 @@ html:root {
 ::-webkit-scrollbar {
   width: 10px;
   height: 10px;
-  transition: all .2s;
+  transition: all .21s ease-in-out;
 }
 
 /* Track */
@@ -22,7 +22,7 @@ html:root {
 ::-webkit-scrollbar-thumb {
   width: 6px;
   border-radius: 20px;
-  transition: all ease-in-out .4s;
+  transition: all ease-in-out .5s;
   background-color: #d0d0d0;
 }
 
@@ -1282,13 +1282,13 @@ $side-controls-width: 54px;
         left: -4px;
         color: lightgrey;
         opacity: 0;
-        transition: opacity ease .2s;
+        transition: opacity 0.21s ease-in-out;
       }
 
     }
     .right-cell-btn {
       opacity: 0;
-      transition: opacity ease .2s;
+      transition: opacity 0.21s ease-in-out;
     }
     &:hover{
       .right-cell-btn,
@@ -1365,7 +1365,7 @@ $editor-top-padding: 6px;
     width: 8px;
     height: 8px;
     padding: 4px;
-    transition: all .2s;
+    transition: all .21s ease-in-out;
   }
 
   &::-webkit-scrollbar-thumb {
@@ -2064,6 +2064,14 @@ $editor-top-padding: 6px;
   margin-top: -4px;
   overflow-y: auto;
   flex: 0;
+  .key-select {
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.05s ease-in-out;
+    &.key-selected {
+      opacity: 1 !important;
+    }
+  }
   tr.v-data-table__selected {
     background: initial !important;
   }
@@ -2071,6 +2079,10 @@ $editor-top-padding: 6px;
     cursor: pointer;
     &:hover {
       background: $data-highlight !important;
+      .key-select {
+        opacity: 0.5;
+        transition: opacity 0.21s ease-in-out;
+      }
     }
   }
   tr>td, tr>th {
