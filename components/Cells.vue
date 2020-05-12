@@ -208,7 +208,11 @@ import {
   escapeQuotes,
   escapeQuotesOn,
   getProperty,
-  namesToIndices
+  namesToIndices,
+  spanClass,
+  multipleContent,
+  hlParam,
+  hlCols
 } from '@/utils/functions.js'
 
 const api_url = process.env.API_URL || 'http://localhost:5000'
@@ -285,7 +289,7 @@ export default {
           code: (payload) => {
             return `.cols.${payload.command}(["${payload.columns.join('", "')}"])`
           },
-          content: (payload) => `<b>${capitalizeString(payload.command)}</b> ${this.multipleContent([payload.columns],'hl--cols')}`
+          content: (payload) => `<b>${capitalizeString(payload.command)}</b> ${multipleContent([payload.columns],'hl--cols')}`
         },
         'sort rows': {
           dialog: {
@@ -318,7 +322,7 @@ export default {
             return `.rows.sort( ${_argument} )`
           },
           content: (payload) => {
-            return `<b>Sort rows</b> in ${this.multipleContent([payload.columns, payload.orders],['hl--cols','hl--param'])}`
+            return `<b>Sort rows</b> in ${multipleContent([payload.columns, payload.orders],['hl--cols','hl--param'])}`
           }
         },
         FILTER: {
@@ -577,7 +581,7 @@ export default {
             var condition
             var value = undefined
             var action = payload.action=='drop' ? 'Drop' : 'Keep'
-            var str = `<b>${action}</b> rows where ${this.multipleContent([payload.columns],'hl--cols')} `
+            var str = `<b>${action}</b> rows where ${multipleContent([payload.columns],'hl--cols')} `
 
             if (payload._selectionType==='values') {
               condition = 'oneof'
@@ -638,13 +642,13 @@ export default {
 
             switch (condition) {
               case 'oneof':
-                str += 'is one of '+this.multipleContent([value || []],'hl--param')
+                str += 'is one of '+multipleContent([value || []],'hl--param')
                 break
               case 'between':
-                str += 'is between '+this.multipleContent([value || []],'hl--param')
+                str += 'is between '+multipleContent([value || []],'hl--param')
                 break
               default:
-                str += condition + ( value!==false ? this.multipleContent([value || []],'hl--param') : '')
+                str += condition + ( value!==false ? multipleContent([value || []],'hl--param') : '')
             }
             return str
           }
@@ -683,7 +687,7 @@ export default {
           },
           content: (payload) => {
             var str = payload.how==='all' ? `<b>Drop empty rows</b>` : `<b>Drop rows with empty values</b>`
-            return str+(payload.subset.length ? ` in ${this.multipleContent([payload.subset],'hl--cols')}` : '')
+            return str+(payload.subset.length ? ` in ${multipleContent([payload.subset],'hl--cols')}` : '')
           }
 
         },
@@ -718,7 +722,7 @@ export default {
               + (payload.subset.length ? `subset=["${payload.subset.join('", "')}"], ` : '')
               + `keep="${payload.keep}")`
           },
-          content: (payload) => `<b>Drop duplicated rows</b>`+(payload.subset.length ? ` in ${this.multipleContent([payload.subset],'hl--cols')}` : '')
+          content: (payload) => `<b>Drop duplicated rows</b>`+(payload.subset.length ? ` in ${multipleContent([payload.subset],'hl--cols')}` : '')
 
         },
         join: {
@@ -984,7 +988,7 @@ export default {
 
             return code
           },
-          content: (payload) => `<b>Group by</b> ${this.multipleContent([payload.group_by],'hl--cols')} <b>aggregate</b> ${this.multipleContent([payload.input_cols, payload.aggregations],['hl--cols', 'hl--param'],', ',' using ', false, false)}`
+          content: (payload) => `<b>Group by</b> ${multipleContent([payload.group_by],'hl--cols')} <b>aggregate</b> ${multipleContent([payload.input_cols, payload.aggregations],['hl--cols', 'hl--param'],', ',' using ', false, false)}`
         },
         STRING: {
           dialog: {
@@ -1018,7 +1022,7 @@ export default {
               remove_accents: 'Remove accents in',
               remove_special_chars: 'Remove special chars in'
             }
-            return `<b>${str[payload.command]}</b> ${this.multipleContent([payload.columns],'hl--cols')}`
+            return `<b>${str[payload.command]}</b> ${multipleContent([payload.columns],'hl--cols')}`
           }
         },
         cast: {
@@ -1029,7 +1033,7 @@ export default {
             +`, dtype="${payload.dtype}"`
             +')'
           },
-          content: (payload) => `<b>Cast</b> ${this.multipleContent([payload.columns],'hl--cols')} to '${payload.dtype}'`
+          content: (payload) => `<b>Cast</b> ${multipleContent([payload.columns],'hl--cols')} to ${multipleContent([payload.dtype],'hl--param')}`
         },
         fill_na: {
           dialog: {
@@ -1065,7 +1069,7 @@ export default {
               +( (output_cols_argument) ? `, output_cols=${output_cols_argument}` : '')
               +')'
           },
-          content: (payload) => `<b>Fill empty cells</b> in ${this.multipleContent([payload.columns],'hl--cols')} with '${this.spanClass(payload.fill,'hl--param')}'`
+          content: (payload) => `<b>Fill empty cells</b> in ${multipleContent([payload.columns],'hl--cols')} with ${hlParam(payload.fill)}`
         },
         'load file': {
           dialog: {
@@ -1236,7 +1240,7 @@ export default {
             _datasetName: false,
             _sheet_names: 1,
             previewType: 'load',
-            datasetPreview: true
+            loadPreview: true
             // _previewDelay: 500,
           }),
 
@@ -1305,7 +1309,7 @@ export default {
             return `<b>Load</b>`
             + ( fileType ? ` ${fileType}` : '')
             + ' file'
-            + ( fileName ? spanClass(` '${fileName}'`,'hl--param') : '')
+            + ( fileName ? ` ${hlParam(fileName)}` : '')
           }
         },
         'string clustering': {
@@ -2014,7 +2018,7 @@ export default {
               +( (payload._requestType==='preview') ? `.cols.find(${_argument}, sub=["${search.join('","')}"], ignore_case=${!payload.match_case ? 'True' : 'False'})` : '')
               +( (payload._requestType==='preview' && payload.replace) ? `.cols.find(${output_cols_argument}, sub=["${payload.replace}"])` : '')
           },
-          content: (payload)=>`<b>Replace</b> ${this.multipleContent([payload.search],'hl--param')} with '${this.spanClass(payload.replace,'hl--param')} in ${this.multipleContent([payload.columns],'hl--cols')}'`
+          content: (payload)=>`<b>Replace</b> ${multipleContent([payload.search],'hl--param')} with ${hlParam(payload.replace)} in ${multipleContent([payload.columns],'hl--cols')}`
         },
         set: {
           dialog: {
@@ -2048,7 +2052,7 @@ export default {
             +( (payload.expression) ? `, value="${payload.expression}"` : '')
             +`)`
           },
-          content: (payload) => `<b>Create</b> '${payload.output_col}' with '${payload.expression}'`
+          content: (payload) => `<b>Create</b> ${multipleContent([payload.output_col],'hl--cols')} with ${multipleContent([payload.expression],'hl--param')}`
         },
         rename: {
           dialog: {
@@ -2076,7 +2080,7 @@ export default {
               return `.cols.rename([${payload.columns.map((e,i)=>`("${e}", "${payload.output_cols[i]}")`)}])`
             }
           },
-          content: (payload)=>`<b>Rename</b> ${this.multipleContent([payload.columns, payload.output_cols], 'hl--cols')}`
+          content: (payload)=>`<b>Rename</b> ${multipleContent([payload.columns, payload.output_cols], 'hl--cols', ', ', ' to ', false, false)}`
         },
         unnest: {
           dialog: {
@@ -2136,7 +2140,7 @@ export default {
               +')'
               +( (payload._requestType==='preview') ? `.cols.find(${_argument}, sub=["${payload.separator}"])` : '')
           },
-          content: (payload) => `<b>Split</b> '${payload.columns[0]}' by '${payload.separator}' in '${payload.splits}'`
+          content: (payload) => `<b>Split</b> ${hlCols(payload.columns[0])} by ${hlParam(payload.separator)} in ${hlParam(payload.splits)}`
 
         },
         nest: {
@@ -2178,7 +2182,7 @@ export default {
             +`, output_col="${payload.output_col}")`
             +( (payload._requestType==='preview' && payload.separator) ? `.cols.find("${payload.output_col}", sub=["${payload.separator}"])` : '')
           },
-          content: (payload) => `<b>Merge</b> ${this.multipleContent([payload.columns],'hl--cols')} in '${this.spanClass(payload.output_col,'hl--cols')}'`
+          content: (payload) => `<b>Merge</b> ${multipleContent([payload.columns],'hl--cols')} in ${hlCols(payload.output_col)}`
         },
         duplicate: {
           dialog: {
@@ -2204,7 +2208,7 @@ export default {
               +( (output_cols_argument) ? `, output_cols=${output_cols_argument}` : '')
               +')'
           },
-          content: (payload)=>`<b>Duplicate</b> ${this.multipleContent([payload.columns, payload.output_cols],'hl--cols')}`
+          content: (payload)=>`<b>Duplicate</b> ${multipleContent([payload.columns, payload.output_cols],'hl--cols')}`
         },
         bucketizer: {
           dialog: {
@@ -2502,7 +2506,7 @@ export default {
       'currentDuplicatedColumns',
       'currentPreviewNames',
       'currentSecondaryDatasets',
-      'currentDatasetPreview'
+      'currentLoadPreview'
     ]),
 
     cells: {
@@ -2576,7 +2580,7 @@ export default {
 
   watch: {
 
-    currentDatasetPreview ({meta}) {
+    currentLoadPreview ({meta}) {
       var c = { ...this.currentCommand }
 
       try {
@@ -2685,67 +2689,6 @@ export default {
 
   methods: {
 
-    // <span class="hl--cols">
-
-    multipleContent (arrays, colors, arraySep = ', ', pairSep = ', ', brackets = true, parentheses = true) {
-
-      arrays = arrays.map(array=>{
-        if (!array.join || !array.map)
-          return [array]
-        return array
-      })
-
-      if (!colors.join || !colors.map) {
-        colors = [colors]
-      }
-
-      var array = arrays[0]
-      var str = ''
-
-      if (arrays.length===1) {
-        if (array.length==1) {
-          // 'a'
-          brackets = false
-          str = this.spanClass(`'${array[0]}'`,colors[0])
-        } else {
-          // ['a', 'aa']
-          str = array.map(e=>this.spanClass(`'${e}'`,colors[0])).join(arraySep)
-        }
-      } else {
-        array = arrays[0].map((e,i)=>{
-          return arrays.map((arr, j)=>{
-            return this.spanClass(`'${arr[i]}'`,colors[j] || colors[0])
-          }).join(pairSep)
-        })
-        if (array.length==1) {
-          // 'a', 'b'
-          brackets = false
-          str = `${array[0]}`
-        } else {
-          // [('a', 'b'), ('aa', 'bb')]
-          if (parentheses) {
-            arraySep = ")"+arraySep+"("
-          }
-          str = array.join(arraySep)
-          if (parentheses) {
-            str = `(${str})`
-          }
-        }
-      }
-      if (brackets) {
-        return `[${str}]`
-      }
-      return str
-
-    },
-
-    spanClass (text, cls) {
-      if (!cls) {
-        return text
-      }
-      return `<span class="${cls}">${text}</span>`
-    },
-
     async optimizeDf () {
       // this.$store.dispatch('optimizeDf')
       try {
@@ -2846,6 +2789,7 @@ export default {
           color: this.currentCommand.highlightColor,
           from: this.currentCommand.columns,
           datasetPreview: !!this.currentCommand.datasetPreview,
+          loadPreview: !!this.currentCommand.loadPreview,
           load: this.currentCommand.previewType==='load',
           infer: this.currentCommand._moreOptions===false,
           noBufferWindow: this.currentCommand.noBufferWindow,

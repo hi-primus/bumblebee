@@ -276,3 +276,71 @@ export const decapitalizeString = (str) => {
     return str
   }
 }
+
+
+export const spanClass = (text, cls) => {
+  if (!cls) {
+    return text
+  }
+  return `<span class="${cls}">${text}</span>`
+}
+
+export const hlParam = (text) => {
+  return spanClass(`'${text}'`,'hl--param')
+}
+
+export const hlCols = (text) => {
+  return spanClass(`'${text}'`,'hl--cols')
+}
+
+export const multipleContent = (arrays, colors, arraySep = ', ', pairSep = ', ', brackets = true, parentheses = true) => {
+
+  arrays = arrays.map(array=>{
+    if (!array.join || !array.map)
+      return [array]
+    return array
+  })
+
+  if (!colors.join || !colors.map) {
+    colors = [colors]
+  }
+
+  var array = arrays[0]
+  var str = ''
+
+  if (arrays.length===1) {
+    if (array.length==1) {
+      // 'a'
+      brackets = false
+      str = spanClass(`'${array[0]}'`,colors[0])
+    } else {
+      // ['a', 'aa']
+      str = array.map(e=>spanClass(`'${e}'`,colors[0])).join(arraySep)
+    }
+  } else {
+    array = arrays[0].map((e,i)=>{
+      return arrays.map((arr, j)=>{
+        return spanClass(`'${arr[i]}'`,colors[j] || colors[0])
+      }).join(pairSep)
+    })
+    if (array.length==1) {
+      // 'a', 'b'
+      brackets = false
+      str = `${array[0]}`
+    } else {
+      // [('a', 'b'), ('aa', 'bb')]
+      if (parentheses) {
+        arraySep = ")"+arraySep+"("
+      }
+      str = array.join(arraySep)
+      if (parentheses) {
+        str = `(${str})`
+      }
+    }
+  }
+  if (brackets) {
+    return `[${str}]`
+  }
+  return str
+
+}
