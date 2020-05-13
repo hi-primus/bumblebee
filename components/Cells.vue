@@ -1317,9 +1317,10 @@ export default {
             var fileType = (infer) ? payload._fileType : payload.file_type
             var fileName = payload._fileName
             return `<b>Load</b>`
-            + ( fileType ? ` ${fileType}` : '')
-            + ' file'
             + ( fileName ? ` ${hlParam(fileName)}` : '')
+            + ( (!fileName && fileType) ? ` ${fileType}` : '')
+            + ' file'
+            + ' to '+hlParam(this.availableVariableName)
           }
         },
         'string clustering': {
@@ -2967,7 +2968,7 @@ export default {
           title: 'operations'
         })
         this.$store.commit('previewDefault')
-        this.runCode()
+        this.runCodeNow()
 			}, 10);
     },
 

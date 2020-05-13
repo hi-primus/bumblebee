@@ -121,6 +121,7 @@
           <v-tabs
             :key="$store.state.datasetUpdates"
             v-model="tab"
+            :class="{'tabs-disabled': $store.state.everyPreviewCode[tab] || isOperating}"
             class="bb-tabs px-6"
             background-color="#fff"
             show-arrows
@@ -155,6 +156,7 @@
             <TableBar
               ref="tableBar"
               v-if="currentDataset"
+              :isOperating.sync="isOperating"
               :dataset="currentDataset"
               :total="(currentDataset.summary) ? +currentDataset.summary.rows_count : 1"
               :searchText="searchText"
@@ -217,7 +219,8 @@ export default {
 			inputPassword: '',
 			inputUsername: '',
 			inputEngine: 'dask',
-			searchText: '',
+      searchText: '',
+      isOperating: false,
 			tab: undefined,
 			confirmDelete: -1,
 			version: ''

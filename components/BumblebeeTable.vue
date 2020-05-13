@@ -465,8 +465,13 @@ export default {
 
     rowsColumn () {
       try {
-
-        if (this.currentHighlightRows && this.columnValues['__match__']) {
+        if (!this.currentPreviewCode) {
+          if (this.currentDataset.columns[0].name) {
+            return this.currentDataset.columns[index].name
+          }
+          return Object.keys(this.columnValues)[0]
+        }
+        else if (this.currentHighlightRows && this.columnValues['__match__']) {
           return '__match__'
         }
         else if (this.loadPreview) {
@@ -474,9 +479,6 @@ export default {
         }
         else if (this.currenPreviewColumns && this.currenPreviewColumns.length) {
           return this.currentPreviewColumns[0].title
-        }
-        else if (this.currentDataset.columns[0].name) {
-          return this.currentDataset.columns[index].name
         }
       } catch (err) {
         // console.error(err)

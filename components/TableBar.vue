@@ -251,8 +251,8 @@
         </v-btn>
       </v-badge>
     </div>
-      <!-- :key="tableKey+'dataset'" -->
     <Dataset
+      :key="'dataset'+currentTab"
       :commandsDisabled="commandsDisabled"
       :sortBy.sync="sortBy"
       :sortDesc.sync="sortDesc"
@@ -455,7 +455,11 @@ export default {
 		searchText: {
 			default: '',
 			type: String
-		},
+    },
+    isOperating: {
+      type: Boolean,
+      default: false
+    },
 		// typesSelected: {
 		// 	default: () => ([]),
 		// 	type: Array
@@ -537,7 +541,7 @@ export default {
       sortDesc: [false],
       columnsTableHeaders: [
 				{ text: '', sortable: false, width: '1%', value: 'controls' },
-				{ hint: '#/A', sortable: false, text: 'Type', value: 'dtype', width: '1%' },
+				{ hint: '#/A', sortable: false, text: 'Type', value: 'dtype', width: '1.5%' },
 				{ hint: 'ABC', sortable: false, text: 'Name', value: 'name', width: '3%' },
 				{ hint: '""', sortable: false, text: 'Missing values', width: '2%', value: 'missing' },
 				// { hint: 'null', text: 'Null values', width: '2%', value: 'null' },
@@ -550,7 +554,7 @@ export default {
 
 	computed: {
 
-    ...mapGetters(['currentSelection', 'hasSecondaryDatasets', 'currentCells','currentListView','selectionType', 'currentDataset', 'typesAvailable']),
+    ...mapGetters(['currentSelection', 'hasSecondaryDatasets', 'currentCells','currentListView','selectionType', 'currentDataset', 'typesAvailable','currentTab']),
 
     ...mapState(['nextCommand']),
 
@@ -1002,7 +1006,11 @@ export default {
 
 		sortableColumnsTableHeaders () {
 			return this.columnsTableHeaders.filter(e => e.sortable !== false)
-		},
+    },
+
+    computedIsOperating () {
+      return (this.operationsTitle!=='operations' && this.operationsActive)
+    }
 
   },
 
@@ -1023,6 +1031,9 @@ export default {
           })
         }
       })
+    },
+    computedIsOperating (value) {
+      this.$emit('update:isOperating', value)
     },
     currentDataset () {
       this.lastSort = []

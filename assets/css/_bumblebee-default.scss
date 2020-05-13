@@ -377,6 +377,11 @@ table {
       background: $data-highlight !important;
     }
   }
+
+  .data-type {
+    display: inline-block;
+    min-width: 48px;
+  }
 }
 
 .v-icon.control-button {
@@ -810,6 +815,11 @@ table {
 
 .bb-tabs {
   position: relative;
+  transition: opacity 0.21s ease-in-out;
+  &.tabs-disabled {
+    opacity: 0.5;
+    pointer-events: none;
+  }
   .bb-tab {
     display: flex;
     flex-direction: column;
@@ -1830,10 +1840,6 @@ $editor-top-padding: 6px;
       border-top-style: solid;
       border-top-width: 1px;
     }
-    &:last-child {
-      border-bottom-style: solid;
-      border-bottom-width: 1px;
-    }
   }
 
   .bb-table-plot {
@@ -1983,7 +1989,6 @@ $editor-top-padding: 6px;
 
 .operation-form {
   .o-fields {
-    flex: 1;
     min-height: 0;
 
     display: flex;
@@ -2258,6 +2263,8 @@ $editor-top-padding: 6px;
   }
   .bb-table-i-column {
     position: relative;
+    border-bottom-style: solid;
+    border-bottom-width: 1px;
     .bb-table-i-cell {
       position: absolute;
       // &:not(:active) {

@@ -263,6 +263,9 @@ export const mutations = {
 	delete (state, { index }) {
     Vue.delete(state.datasets, index)
     Vue.delete(state.datasetSelection, index)
+    state.properties.forEach(p=>{
+      Vue.delete(state['every'+p.name], index)
+    })
 		if (!state.datasets.length) {
 			state.appStatus = {status: 'receiving back'}
 		}
