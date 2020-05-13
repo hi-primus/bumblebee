@@ -1143,7 +1143,7 @@ export default {
           var color = this.currentPreviewCode.color
 
           if (matchRowsColumns[0]) {
-            this.$store.commit('setHighlightRows', { ...matchRowsColumns[0], color })
+            this.$store.commit('setHighlightRows', true)
           } else {
             this.$store.commit('setHighlightRows', false)
           }
@@ -1215,22 +1215,22 @@ export default {
       }
       if (event==='missing') {
         var payload = {
-          condition: 'null',
+          rowsType: 'missing',
           action: 'drop'
         }
         this.commandHandle({
-          command: 'filter rows',
+          command: 'REMOVE_KEEP_SET',
           columns: [ this.columns[column.index].name ],
           payload
         })
       }
       if (event==='mismatch') {
         var payload = {
-          condition: 'mismatch',
+          rowsType: 'mismatch',
           action: 'drop'
         }
         this.commandHandle({
-          command: 'filter rows',
+          command: 'REMOVE_KEEP_SET',
           columns: [ this.columns[column.index].name ],
           payload
         })
@@ -1245,7 +1245,7 @@ export default {
       try {
 
         if (this.columnValues['__match__'][row]) {
-          return 'bb-highlight--'+(this.currentHighlightRows.color || 'green')
+          return 'bb-highlight--'+(this.currentPreviewCode.color || 'green')
         }
       } catch (err) {
         console.error(err)

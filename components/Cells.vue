@@ -349,6 +349,162 @@ export default {
           }
 
         },
+        REMOVE_KEEP_SET: {
+          dialog: {
+            title: (c)=>`Filter / Set ${c.rowsLabels[c.rowsType]}`,
+            fields: [
+              {
+                key: 'action',
+                label: 'Action',
+                type: 'select',
+                items: (c) => {
+                  var rt = c.rowsLabels[c.rowsType]
+                  var al = c.actionLabels
+                  return [
+                    {text: `${al.drop} ${rt}`, value: 'drop'},
+                    {text: `${al.select} ${rt}`, value: 'select'},
+                    {text: `${al.set} ${rt}`, value: 'set'},
+                  ]
+                }
+              },
+              {
+                condition: (c)=>c.action==='set',
+                key: 'value',
+                placeholder: 'Value',
+                label: 'Value',
+                type: 'field'
+              },
+            ],
+          },
+          payload: (columns, payload = {}) => {
+
+            var rowsType = 'missing'
+
+            return {
+              columns,
+              action: 'drop',
+              value: '',
+              selection: [],
+
+              previewType: 'REMOVE_KEEP_SET',
+              highlightColor: (c)=>c.action==='select' ? 'green' : 'red',
+              _expectedColumns: () => +(this.currentCommand.action==='set'),
+              _isString: payload.columnDataTypes && payload.columnDataTypes.every(d=>STRING_TYPES.includes(d)),
+
+              rowsType: 'missing', // missing / mismatch / values / ranges
+              actionLabels: {
+                drop: 'Remove',
+                select: 'Keep',
+                set: 'Set'
+              },
+              rowsLabels: {
+                missing: 'missing rows',
+                mismatch: 'mismatch rows',
+                values: 'matching rows',
+                ranges: 'matching rows',
+              }
+            }
+          },
+          code: (payload) => {
+
+            var varname = this.dataset.varname
+
+            payload = escapeQuotesOn(payload, ['value'])
+
+            if (payload._requestType) {
+              varname = `${varname}.ext.get_buffer()`
+            }
+
+            if (payload.rowsType==='values' && payload.selection && payload.selection.map) {
+              payload.selection = payload.selection.map(v=>escapeQuotes(v))
+            }
+            if (payload._isString) {
+              payload.value = `"${payload.value}"`
+              if (payload.selection && payload.selection.map && payload.rowsType==='values') {
+                payload.selection = payload.selection.map(v=>`"${v}"`)
+              }
+            }
+
+            var expression = ''
+
+            switch (payload.rowsType) {
+              case 'missing':
+                expression = `${varname}["${payload.columns[0]}"].isnull()`
+                break
+              case 'mismatch':
+                expression = `~${varname}.cols.is_match("${payload.columns[0]}", "${payload.columnDataTypes[0]}")`
+
+                break;
+              case 'values':
+                expression = `${varname}["${payload.columns[0]}"].isin([${payload.selection.join(',')}])`
+                break
+              case 'ranges':
+                if (payload.selection.length>1) {
+                  expression = '('
+                  +payload.selection.map(range=>`(${varname}["${payload.columns[0]}"]>=${range[0]}) & (${varname}["${payload.columns[0]}"]<=${range[1]})`).join(' | ')
+                  +')'
+                } else {
+                  expression = `(${varname}["${payload.columns[0]}"]>=${payload.selection[0][0]}) & (${varname}["${payload.columns[0]}"]<=${payload.selection[0][1]})`
+                }
+                break
+              default:
+                break;
+            }
+
+            if (payload.action==='set') {
+              var output_col = payload.columns[0]
+              if (payload._requestType) {
+                output_col = 'new '+output_col
+              }
+              return `.cols.set( "${payload.columns[0]}", ${expression}, output_cols=["${output_col}"], value=${payload.value || 'None'} )`
+
+            } else {
+              if (payload._requestType==='preview') {
+                return `.rows.find( ${expression} )`
+              } else {
+                return `.rows.${payload.action}( ${expression} )`
+              }
+
+            }
+
+
+          },
+          content: (payload) => {
+
+            var values = payload.selection
+            var str = ''
+
+            var rt = payload.rowsLabels[payload.rowsType]
+            var al = payload.actionLabels[payload.action]
+            var str = `<b>${al}</b>`
+
+            var cols = multipleContent([payload.columns],'hl--cols')
+
+            switch (payload.rowsType) {
+              case 'ranges':
+                values = payload.selection[0].map((col, i) => payload.selection.map(row => row[i]))
+                str += ` rows where ${cols} is between ${multipleContent(values || [],'hl--param', ', ', ' and ', false, false)}`
+                break;
+              case 'values':
+                str += ` rows where ${cols} is one of ${multipleContent([values || []],'hl--param')}`
+                break;
+              case 'missing':
+                str += ' missing rows on '+cols
+                break;
+              case 'mismatch':
+                str += ' mismatch rows on '+cols
+                break;
+              default:
+                break;
+            }
+
+            if (payload.action==='set') {
+              str += `to ${hlParam(payload.value)}`
+            }
+
+            return str
+          }
+        },
         'filter rows': {
           dialog: {
             title: 'Filter rows',
@@ -376,8 +532,7 @@ export default {
                   { divider: true },
                   { text: 'Mismatches values', value: 'mismatch' },
                   { text: 'Null values', value: 'null' }
-                ],
-                disabled: (c)=>['values','ranges'].includes(c._selectionType),
+                ]
               },
               {
                 condition: (c)=>['exactly','not','less','greater'].includes(c.condition),
@@ -435,7 +590,7 @@ export default {
             ],
             validate: (c) => {
 
-              this.currentCommand.highlightColor = (c.action==='select') ? 'green' : 'red'
+              // this.currentCommand.highlightColor = (c.action==='select') ? 'green' : 'red'
 
               switch (c.condition) {
                 case 'oneof':
@@ -466,39 +621,22 @@ export default {
           payload: (columns, payload = {}) => {
 
             var condition = 'exactly'
-            var _selectionType, _selection
-
-
-            if (this.selectionType=='ranges') {
-              _selectionType = this.selectionType
-              _selection = { ranges: this.currentSelection.ranged.ranges }
-              condition = 'selected'
-            }
-            else if (this.selectionType=='values') {
-              _selectionType = this.selectionType
-              _selection = { values: this.currentSelection.ranged.values }
-              condition = 'selected'
-            }
-            else if (this.selectionType=='text') {
-              _selectionType = this.selectionType
-              condition = 'contains'
-            }
 
             return {
-              _isString: payload.columnDataTypes.every(d=>STRING_TYPES.includes(d)),
               columns,
               condition,
-              _selection,
-              _selectionType,
+              action: 'select',
               value: '',
               value_2: '',
               values: [],
               text: '',
               expression: `${this.dataset.varname}["${columns[0]}"]`,
-              action: 'select',
-              _expectedColumns: 0,
+
+              _isString: payload.columnDataTypes && payload.columnDataTypes.every(d=>STRING_TYPES.includes(d)),
+
               previewType: 'filter rows',
-              highlightColor: 'green'
+              highlightColor: (c)=>c.action==='select' ? 'green' : 'red',
+              _expectedColumns: 0
             }
           },
 
@@ -507,12 +645,12 @@ export default {
             var expression = payload.expression
             var varname = this.dataset.varname
 
-            if (payload._requestType==='preview') {
+            if (payload._requestType) {
               varname = `${varname}.ext.get_buffer()`
             }
 
             try {
-              payload = escapeQuotesOn(payload,['text','selection'])
+              payload = escapeQuotesOn(payload, ['text','selection'])
             } catch (error) {
               console.error(error)
             }
@@ -552,21 +690,6 @@ export default {
               case 'endswith':
                 expression = `${varname}["${payload.columns[0]}"].str.${payload.condition}("${payload.text}", na=False)`
                 break
-              case 'selected':
-                if (payload._selectionType=='ranges') {
-                  if (payload._selection.ranges.length>1) {
-
-                    expression = '('
-                    +payload._selection.ranges.map(range=>`(${varname}["${payload.columns[0]}"]>=${range[0]}) & (${varname}["${payload.columns[0]}"]<=${range[1]})`).join(' | ')
-                    +')'
-                  } else {
-                    expression = `(${varname}["${payload.columns[0]}"]>=${payload._selection.ranges[0][0]}) & (${varname}["${payload.columns[0]}"]<=${payload._selection.ranges[0][1]})`
-                  }
-                }
-                else if (payload._selectionType=='values') {
-                  payload._selection.values = payload._selection.values.map(v=>escapeQuotes(v))
-                  expression = `${varname}["${payload.columns[0]}"].isin(["${payload._selection.values.join('","')}"])`
-                }
               case 'custom':
               default:
             }
@@ -583,15 +706,7 @@ export default {
             var action = payload.action=='drop' ? 'Drop' : 'Keep'
             var str = `<b>${action}</b> rows where ${multipleContent([payload.columns],'hl--cols')} `
 
-            if (payload._selectionType==='values') {
-              condition = 'oneof'
-              value = payload._selection.values
-            } else if (payload._selectionType==='ranges') {
-              condition = 'between'
-              value = payload._selection.ranges[0].map((col, i) => payload._selection.ranges.map(row => row[i]));
-            } else {
-              condition = payload.condition
-            }
+            condition = payload.condition
 
             switch (condition) {
               case 'null':
@@ -679,7 +794,6 @@ export default {
               return `.rows.tag_nulls(`
               + (payload.subset.length ? `subset=["${payload.subset.join('", "')}"], ` : '')
               + `how="${payload.how}", output_col="__match__" )`
-              // return `.rows.find( ${this.dataset.varname}.isnull().${payload.how}(axis=1) )`
             }
             return  `.rows.drop_na(`
               + (payload.subset.length ? `subset=["${payload.subset.join('", "')}"], ` : '')
@@ -1925,34 +2039,6 @@ export default {
               +')'
           }
         },
-        'replace values': {
-          dialog: {
-            text: 'Replace row values',
-            fields: [
-              {
-                type: 'field',
-                key: 'replace',
-                label: 'Replace'
-              },
-            ],
-          },
-          payload: (columns) => ({
-						command: 'replace',
-						columns: columns,
-            search: this.currentSelection.ranged.values,
-            replace: '',
-            title: 'Replace in column',
-					}),
-          code: (payload) => {
-            payload = escapeQuotesOn(payload,['search','replace'])
-            return `.cols.replace(`
-              +`"${escapeQuotes(payload.columns[0])}"`
-              +`, search=["${payload.search.join('","')}"]`
-              +`, replace_by="${payload.replace}"`
-              +`, search_by="full"`
-              +')'
-          }
-        },
         replace: {
           dialog: {
             text: (command) => {
@@ -2446,62 +2532,6 @@ export default {
             return `.ext.sample(${payload.n})`
           },
         },
-        /*
-        random_split: {
-          dialog: {
-            title: 'Split train and test',
-            inputs: [
-              {
-                type: 'number',
-                key: 'weight1',
-                label: 'Weight 1',
-                placeholder: 0.2,
-                value: 0.2
-              },
-              {
-                type: 'number',
-                key: 'weight2',
-                label: 'Weight 2',
-                placeholder: 0.8,
-                value: 0.8
-              },
-              {
-                type: 'text',
-                key: 'seed',
-                label: 'Seed',
-                placeholder: 1,
-                value: ''
-              },
-              {
-                type: 'text',
-                key: 'new_df',
-                label: 'Seed',
-                placeholder: 1,
-                value: ''
-              }
-            ],
-            validate: (command) => {
-              if (command.weight1 && command.weight2)
-                return true
-              return false
-            }
-          },
-          payload: (columns) => {
-            return {
-              command: 'random_split',
-              columns: [],
-              self: 'df',
-              weight1: 0.2,
-              weight2: 0.8,
-              seed: 1,
-              new_df: 'splitted'
-            }
-          },
-          code: (payload) => {
-            return `${this.availableVariableName} = ${this.dataset.varname}.random_split(${payload.self}, weights=[${payload.weight1},${payload.weight2}], seed=${payload.seed})`
-          }
-        }
-        */
       }
     }
   },
@@ -2590,6 +2620,32 @@ export default {
   },
 
   watch: {
+
+    currentSelection: {
+      deep: true,
+      handler (selection) {
+
+        if (!selection || !selection.ranged || selection.ranged.index<0){
+          return
+        }
+
+        var command = { command: 'REMOVE_KEEP_SET' }
+
+        command.columns = [ this.dataset.columns[selection.ranged.index].name ]
+
+        command.payload = { rowsType: this.selectionType }
+
+        if (this.selectionType=='ranges') {
+          command.payload.selection = selection.ranged.ranges
+        } else if (this.selectionType=='values') {
+          command.payload.selection = selection.ranged.values
+        } else {
+          return
+        }
+
+        this.commandHandle( command )
+      },
+    },
 
     currentLoadPreview ({meta}) {
       var c = { ...this.currentCommand }
@@ -2817,11 +2873,12 @@ export default {
         }
 
         var joinPreview = getProperty(this.currentCommand.joinPreview, [this.currentCommand])
+        var color = getProperty(this.currentCommand.highlightColor, [this.currentCommand])
 
         this.$store.commit('setPreviewCode',{
           code: this.getCode(this.currentCommand,'preview'),
           profileCode: this.getCode(this.currentCommand,'profile'),
-          color: this.currentCommand.highlightColor,
+          color,
           from: this.currentCommand.columns,
           datasetPreview: !!this.currentCommand.datasetPreview,
           loadPreview: !!this.currentCommand.loadPreview,
@@ -2878,12 +2935,12 @@ export default {
 
       if (!command.columns || !command.columns.length) {
         columns = this.columns.map(e=>this.dataset.columns[e.index].name)
-        columnDataTypes = this.columns.map(e=>this.dataset.columns[e.index].dtype)
+        columnDataTypes = this.columns.map(e=>this.dataset.columns[e.index].stats.profiler_dtype)
       }
       else {
         columns = command.columns
         var columnIndices = namesToIndices(columns, this.dataset.columns)
-        columnDataTypes = columnIndices.map(i=>this.dataset.columns[i].dtype)
+        columnDataTypes = columnIndices.map(i=>this.dataset.columns[i].stats.profiler_dtype)
       }
 
       var commandHandler = this.commandsHandlers[command.command] || this.commandsHandlers[command.type]
@@ -2959,6 +3016,7 @@ export default {
     },
 
     cancelCommand () {
+      // TODO: Check
 			setTimeout(() => {
         // this.recoverTextSelection()
         this.clearTextSelection()

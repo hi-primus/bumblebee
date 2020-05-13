@@ -744,7 +744,7 @@ export default {
           ],
           tooltip: 'Get aggregations',
           disabled: {
-            valueOf: ()=>!(this.dataset && this.dataset.summary)
+            valueOf: ()=>!(!['values','ranges'].includes(this.selectionType) && this.dataset && this.dataset.summary)
           }
         },
         // { divider: true },
@@ -797,14 +797,21 @@ export default {
           onClick: ()=>{
             var command = { command: 'filter rows' }
             if (['values','ranges'].includes(this.selectionType) && this.currentSelection && this.currentSelection.ranged) {
+              command = { command: 'REMOVE_KEEP_SET' }
               command.columns = [ this.dataset.columns[this.currentSelection.ranged.index].name ]
+              command.payload = { rowsType: this.selectionType }
+              if (this.selectionType==='ranges') {
+                command.payload.selection = this.currentSelection.ranged.ranges
+              } else if (this.selectionType==='values') {
+                command.payload.selection = this.currentSelection.ranged.values
+              }
             } else if (this.selectionType==='text') {
               command.payload = {
                 columns: [this.currentSelection.text.column],
                 text: this.currentSelection.text.value
               }
             }
-            this.commandHandle( command )
+            this.commandHandle(command)
           },
           tooltip: 'Filter rows',
           disabled: { valueOf: ()=>!(['values','ranges','text'].includes(this.selectionType) || this.selectedColumns.length==1) },
@@ -913,9 +920,6 @@ export default {
             if (this.selectionType=='columns') {
               this.commandHandle({command: 'replace'})
             }
-            else if (this.selectionType=='values') {
-              this.commandHandle({command: 'replace values'})
-            }
             else if (this.selectionType=='text') {
               var payload = {
                 columns: [this.currentSelection.text.column],
@@ -929,16 +933,11 @@ export default {
           },
           tooltip: {
             toString: ()=>{
-              if (this.selectionType!='values')
-                return 'Replace in column'+ (this.selectedColumns.length!=1 ? 's' : '')
-              else if (this.selectionType=='values')
-                return 'Replace values'
-              else
-                return 'Replace rows'
+              return 'Replace in column'+ (this.selectedColumns.length>1 ? 's' : '')
             }
           },
           icons: [{icon: 'find_replace'}],
-          disabled: {valueOf: ()=>!(['values','text'].includes(this.selectionType) || this.selectedColumns.length>0)}
+          disabled: {valueOf: ()=>!(['text'].includes(this.selectionType) || this.selectedColumns.length>0)}
         },
         {
           type: 'menu',
