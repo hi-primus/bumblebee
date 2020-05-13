@@ -404,6 +404,8 @@ export default {
       columnMenuIndex: false,
 
       mustCheck: false,
+      mustUpdateRows: false,
+      recalculateRows: false,
 
       loadedRowsTop: 0,
       loadedRowsBottom: 1,
@@ -849,7 +851,11 @@ export default {
 
     this.checkVisibleColumns()
 
+    this.mustUpdateRows = true
+    this.updateRows()
+
     this.$refs['BbTableContainer'] && this.$refs['BbTableContainer'].addEventListener('scroll', this.throttledScrollCheck, {passive: true})
+    this.$refs['BbTableContainer'] && this.$refs['BbTableContainer'].addEventListener('scroll', this.debouncedScrollCheck, {passive: true})
 
     this.$refs['BbTableContainer'] && this.$refs['BbTableContainer'].addEventListener('scroll', this.horizontalScrollCheckUp, {passive: true})
     this.$refs['BbTableTopContainer'] && this.$refs['BbTableTopContainer'].addEventListener('scroll', this.horizontalScrollCheckDown, {passive: true})
@@ -861,6 +867,7 @@ export default {
   beforeDestroy() {
     try {
       this.$refs['BbTableContainer'].removeEventListener('scroll', this.throttledScrollCheck)
+      this.$refs['BbTableContainer'].removeEventListener('scroll', this.debouncedScrollCheck)
       this.$refs['BbTableContainer'].removeEventListener('scroll', this.horizontalScrollCheckUp)
       this.$refs['BbTableTopContainer'].removeEventListener('scroll', this.horizontalScrollCheckDown)
       this.$refs['BbTableContainer'].removeEventListener('scroll', this.checkVisibleColumns)
@@ -899,10 +906,11 @@ export default {
         if (this.loadedPreviewCode!==this.currentPreviewCode.code) {
           this.loadedPreviewCode = this.currentPreviewCode.code
           if (!this.currentPreviewCode.load) {
-            this.fetched = this.fetched.filter(e=>!e.code)
+            // this.fetched = this.fetched.filter(e=>!e.code)
             this.previousRange = -1
             this.scrollCheck(true)
-            // this.updateRows()
+            this.mustUpdateRows = true
+            this.updateRows()
             this.mustCheck = true
           }
         }
@@ -1079,7 +1087,6 @@ export default {
       var indicesInSample = {}
 
       columns.forEach((column, index)=>{
-        // console.log(`adding ${column.title} to index ${index}`)
         indicesInSample[column.title] = index
       })
 
@@ -1476,6 +1483,14 @@ export default {
       return false
     },
 
+
+    debouncedScrollCheck: debounce(function () {
+      if (this.mustUpdateRows) {
+        this.mustUpdateRows = false
+        this.updateRows()
+      }
+    }, 80),
+
     debouncedThrottledScrollCheck: debounce(function () {
       this.throttledScrollCheck()
     }, 400),
@@ -1551,7 +1566,7 @@ export default {
           }
 
           if (!awaited) {
-            this.previousRange = -1
+            this.previousRange = -1 // TODO: Check
           }
 
           this.fetching = false
@@ -1597,8 +1612,30 @@ export default {
 
       var fetched
 
-      if (this.fetched.lenth>this.maxChunks && currentFrom>=0) {
-        var distanceMap = this.fetched.map((chunk, index)=>({distance: Math.abs(currentFrom-chunk.from), index, from: chunk.from}))
+      // get the valid fetches to know what to fetch next
+
+      if (this.currentPreviewCode) {
+        fetched = this.fetched.filter(e=>e.code===this.currentPreviewCode.code)
+        if (!fetched.length) {
+          this.fetched = this.fetched.filter(e=>!e.code)
+          this.recalculateRows = true
+        }
+      } else {
+        fetched = this.fetched.filter(e=>e.update===this.currentDatasetUpdate)
+        if (!fetched.length) {
+          // this.fetched = this.fetched.filter(e=>e.update===this.currentDatasetUpdate)
+          this.fetched = []
+          this.recalculateRows = true
+        }
+      }
+
+      if (this.fetched.length>(this.maxChunks+2) && currentFrom>=0) {
+        // +2 so it doesn't calculate a distanceMap every time
+        var distanceMap = this.fetched.map((chunk, index)=>({
+          distance: Math.abs(currentFrom-chunk.from),
+          index,
+          from: chunk.from
+        }))
           .filter(c=>c.from!==0)
           .sort((a,b)=>(a.distance-b.distance))
         var tries = 10
@@ -1607,16 +1644,9 @@ export default {
           var toDelete = distanceMap.pop()
           if (toDelete) {
             this.fetched.splice(toDelete.index, 1)
+            this.recalculateRows = true
           }
         }
-      }
-
-      // get the valid fetches to know what to fetch next
-
-      if (this.currentPreviewCode) {
-        fetched = this.fetched.filter(e=>e.code===this.currentPreviewCode.code)
-      } else {
-        fetched = this.fetched.filter(e=>e.update===this.currentDatasetUpdate)
       }
 
       var [from, to, force] = this.toFetch.pop()
@@ -1641,7 +1671,7 @@ export default {
         return range // no chunks
       }
 
-      var toret = true
+      var toret = range
 
       for (let i = newRanges.length - 1; i >= 0 ; i--) {
 
@@ -1652,15 +1682,18 @@ export default {
 
         var checkProfile = await this.fetchChunk(newRanges[i][0], newRanges[i][1])
 
-        // this.updateRows()
+        this.mustUpdateRows = true
+
+        toret = (checkProfile===undefined) ? range : false
 
         if (checkProfile) {
-          toret = false
           if (this.currentProfilePreview.code !== previewCode) {
             await this.setProfile(previewCode)
           }
         }
       }
+
+      this.debouncedScrollCheck()
 
       return toret
 
@@ -1693,33 +1726,43 @@ export default {
 
       if (parsed && parsed.sample) {
 
-        var fetched = this.fetched
-
-        fetched.push({
-          code: codeS,
-          update: this.currentDatasetUpdate,
-          from,
-          to
-        })
-
         var pre = forceName ? '__preview__' : ''
 
         parsed.sample.columns = parsed.sample.columns.map(e=>({...e, title: pre+e.title}))
 
-        // if (forceName) {
-        //   nameMap = {}
-        //   parsed.sample.columns.forEach(column => {
-        //     nameMap[ '__preview__'+column.title ] = column.title
-        //   })
-        //   this.$store.commit('setPreviewNames',nameMap)
-        // }
+        // this.columnValues = this.getValuesByColumns(parsed.sample, false, from)
 
-        this.columnValues = this.getValuesByColumns(parsed.sample, false, from)
+        this.fetched.push({
+          code: codeS,
+          update: this.currentDatasetUpdate,
+          from,
+          to,
+          sample: parsed.sample,
+          inTable: false
+        })
+
+        this.mustUpdateRows = true
 
         return this.checkIncomingColumns(parsed.sample.columns)
 
       } else {
-        return undefined
+        return 0
+      }
+    },
+
+    updateRows() {
+      if (this.recalculateRows) {
+        this.recalculateRows = false
+        this.columnValues = []
+        for (const index in this.fetched) {
+          this.fetched[index].inTable = false
+        }
+      }
+      for (const index in this.fetched) {
+        if (!this.fetched[index].inTable) {
+          this.columnValues = this.getValuesByColumns(this.fetched[index].sample, false, this.fetched[index].from)
+          this.fetched[index].inTable = true
+        }
       }
     }
   }
