@@ -131,9 +131,10 @@ const newSocket = function (socket, session) {
       var sessionId = payload.session
       var result = {}
       try {
-        result = await getDatasets(sessionId)
+        result = await requestToKernel('datasets',sessionId)
       } catch (error) {
         console.error(error)
+        result = error
       }
       socket.emit('reply',{...result, timestamp: payload.timestamp})
     })
@@ -161,14 +162,14 @@ const newSocket = function (socket, session) {
 
     socket.on('run', async (payload) => {
       var sessionId = payload.session
-      var result = await run_code(`${payload.code}`,sessionId)
+      var result = await runCode(`${payload.code}`,sessionId)
       socket.emit('reply',{...result, code: payload.code, timestamp: payload.timestamp})
     })
 
     socket.on('cells', async (payload) => {
       var sessionId = payload.session
       var varname = payload.varname || 'df'
-      var result = await run_code(payload.code + '\n'
+      var result = await runCode(payload.code + '\n'
         + `_output = ${varname}.ext.profile(columns="*", infer=True, output="json")`,
         sessionId
       )
@@ -224,7 +225,7 @@ io.on('connection', async (socket) => {
 
 
 
-const run_code = async function(code = '', sessionId = '') {
+const runCode = async function(code = '', sessionId = '') {
 
   if (!sessionId) {
     return {
@@ -238,57 +239,16 @@ const run_code = async function(code = '', sessionId = '') {
   }
 
   try {
-
     if (kernels[sessionId]==undefined) {
-      const response = await request({
-        uri: `${base}/bumblebee-session`,
-        method: 'POST',
-        headers: {},
-        json: true,
-        body: {
-          secret: process.env.KERNEL_SECRET,
-          session_id: sessionId
-        }
-      })
+      const response = await requestToKernel('session',sessionId)
       kernels[sessionId] = sessionId
     }
 
-    // if (process.env.NODE_ENV !== 'production') {
-    //   console.log(code)
-    // }
-
-    // console.time('gettingResponse')
-    var startTime = new Date().getTime()
-
-    var response = await request({
-      uri: `${base}/bumblebee`,
-      method: 'POST',
-      headers: {},
-      json: true,
-      body: {
-        code,
-        session_id: sessionId
-      }
-    })
-
-    var endTime = new Date().getTime()
-    // console.timeEnd('gettingResponse')
-    // console.time('responseHandling')
+    var response = await requestToKernel('code',sessionId,code)
 
     if (response.status==='error') {
       throw response
     }
-
-    response = handleResponse(response)
-
-    response._serverTime = {
-      start: startTime/1000,
-      end: endTime/1000,
-      duration: (endTime - startTime)/1000
-    }
-
-    // console.timeEnd('responseHandling')
-
     return response
 
   } catch (err) {
@@ -299,8 +259,6 @@ const run_code = async function(code = '', sessionId = '') {
       return { status: 'error', error: 'Internal error', content: err }
     }
   }
-
-
 }
 
 const deleteKernel = async function(session) {
@@ -312,6 +270,17 @@ const deleteKernel = async function(session) {
     }
   } catch (err) {}
 }
+
+const createKernel = async function (sessionId, payload) {
+
+  try {
+    return await requestToKernel('init',sessionId, payload)
+  } catch (error) {
+    console.error(error)
+    return error
+  }
+}
+
 
 const handleResponse = function (response) {
   try {
@@ -344,60 +313,69 @@ const handleResponse = function (response) {
   }
 }
 
-const getDatasets = async function (sessionId) {
+const requestToKernel = async function (type, session_id, payload) {
+  var response = {}
+  var startTime = new Date().getTime()
 
-  try {
-    var response = await request({
-      uri: `${base}/bumblebee-datasets`,
-      method: 'POST',
-      json: true,
-      body: {
-        session_id: sessionId,
-      }
-    })
-
-    response = handleResponse(response)
-
-    return response
-  } catch (error) {
-    console.error(error)
-    return error
+  switch (type) {
+    case 'code':
+      response = await request({
+        uri: `${base}/bumblebee`,
+        method: 'POST',
+        headers: {},
+        json: true,
+        body: {
+          code: payload,
+          session_id
+        }
+      })
+      break;
+    case 'session':
+      response = await request({
+        uri: `${base}/bumblebee-session`,
+        method: 'POST',
+        headers: {},
+        json: true,
+        body: {
+          secret: process.env.KERNEL_SECRET,
+          session_id
+        }
+      })
+      break;
+    case 'datasets':
+      response = await request({
+        uri: `${base}/bumblebee-datasets`,
+        method: 'POST',
+        json: true,
+        body: {
+          session_id,
+        }
+      })
+      break;
+    case 'init':
+      response = await request({
+        uri: `${base}/bumblebee-init`,
+        method: 'POST',
+        json: true,
+        body: {
+          session_id,
+          secret: process.env.KERNEL_SECRET,
+          ...payload
+        }
+      })
   }
-}
 
-const createKernel = async function (sessionId, payload) {
+  response = handleResponse(response)
 
-  try {
+  var endTime = new Date().getTime()
 
-    var startTime = new Date().getTime()
-
-    var response = await request({
-      uri: `${base}/bumblebee-init`,
-      method: 'POST',
-      json: true,
-      body: {
-        session_id: sessionId,
-        secret: process.env.KERNEL_SECRET,
-        ...payload
-      }
-    })
-
-    var endTime = new Date().getTime()
-
-    response = handleResponse(response)
-
-    response._serverTime = {
-      start: startTime,
-      end: endTime,
-      duration: endTime - startTime
-    }
-
-
-    return response
-  } catch (error) {
-    console.error(error)
-    return error
+  response._serverTime = {
+    start: startTime/1000,
+    end: endTime/1000,
+    duration: (endTime - startTime)/1000
   }
+
+  return response
 }
 
 const startServer = async () => {
@@ -407,7 +385,6 @@ const startServer = async () => {
     console.log(`# Bumblebee-api v${version} listening on ${host}:${port}`)
   })
   _server.timeout = 10 * 60 * 1000
-
 }
 
 startServer()

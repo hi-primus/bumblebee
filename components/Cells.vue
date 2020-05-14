@@ -3354,7 +3354,6 @@ export default {
 
       } catch (error) {
         printError(error)
-        console.timeEnd('task')
         console.log('"""[DEBUG][CODE][FAILED]"""',code)
         var codeError = (error.error) ? error.error : error
         if (codeError && codeError.split) codeError = codeError.split("\n")[0]
