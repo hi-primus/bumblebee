@@ -217,7 +217,7 @@ import {
 
 const api_url = process.env.API_URL || 'http://localhost:5000'
 
-const STRING_TYPES = ['object','string','str']
+const STRING_TYPES = ['object','category','string','str']
 
 export default {
 
@@ -2540,7 +2540,6 @@ export default {
 
     ...mapGetters([
       'currentSelection',
-      'currentOptimization',
       'currentCells',
       'selectionType',
       'currentTab',
@@ -2625,25 +2624,31 @@ export default {
       deep: true,
       handler (selection) {
 
-        if (!selection || !selection.ranged || selection.ranged.index<0){
-          return
+        try {
+
+          if (!selection || !selection.ranged || selection.ranged.index<0){
+            return
+          }
+
+          var command = { command: 'REMOVE_KEEP_SET' }
+
+          command.columns = [ this.dataset.columns[selection.ranged.index].name ]
+
+          command.payload = { rowsType: this.selectionType }
+
+          if (this.selectionType=='ranges') {
+            command.payload.selection = selection.ranged.ranges
+          } else if (this.selectionType=='values') {
+            command.payload.selection = selection.ranged.values
+          } else {
+            return
+          }
+
+          this.commandHandle( command )
+
+        } catch (err) {
+          console.error(err)
         }
-
-        var command = { command: 'REMOVE_KEEP_SET' }
-
-        command.columns = [ this.dataset.columns[selection.ranged.index].name ]
-
-        command.payload = { rowsType: this.selectionType }
-
-        if (this.selectionType=='ranges') {
-          command.payload.selection = selection.ranged.ranges
-        } else if (this.selectionType=='values') {
-          command.payload.selection = selection.ranged.values
-        } else {
-          return
-        }
-
-        this.commandHandle( command )
       },
     },
 
@@ -2755,18 +2760,6 @@ export default {
   },
 
   methods: {
-
-    async optimizeDf () {
-      // this.$store.dispatch('optimizeDf')
-      try {
-        if (!this.currentOptimization) {
-          await this.evalCode(`${this.dataset.varname} = ${this.dataset.varname}.ext.optimize()`)
-          this.$store.commit('setOptimization', true)
-        }
-      } catch (error) {
-        console.error(error)
-      }
-    },
 
     forceFileDownload(url, filename){
       const link = document.createElement('a')
@@ -3339,7 +3332,7 @@ export default {
           dataset
         })
 
-        this.optimizeDf()
+        // this.optimizeDf()
         this.bufferDf()
 
         this.updateSecondaryDatasets()

@@ -1694,7 +1694,7 @@ $editor-top-padding: 6px;
   }
 
   .bb-table-h-cell {
-    overflow: visible;
+    overflow: visible !important;
     user-select: none;
     border-top-style: none;
     border-top-color: white;

@@ -51,9 +51,6 @@ const properties = [
     clearOnSelection: true,
   },
   {
-    name: 'Optimization'
-  },
-  {
     name: 'Buffer'
   },
   {
