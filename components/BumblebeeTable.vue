@@ -100,8 +100,8 @@
           <div
             v-if="previewPlotsData[column.name]"
             class="data-type"
-            :class="`type-${previewPlotsData[column.name].stats.profiler_dtype}`">
-            {{ dataType(previewPlotsData[column.name].stats.profiler_dtype) }}
+            :class="`type-${previewPlotsData[column.name].dtype}`">
+            {{ dataType(previewPlotsData[column.name].dtype) }}
           </div>
           <div v-if="currentPreviewNames && currentPreviewNames[column.title]" class="column-title">
             <span>{{ currentPreviewNames[column.title] }}</span>
@@ -804,7 +804,7 @@ export default {
             frequency: ((column.stats.frequency) ? column.stats.frequency : undefined) || column.frequency || undefined,
             zeros: column.stats.zeros,
             null: column.stats.null,
-            dtype: column.stats.profiler_dtype
+            dtype: column.stats.profiler_dtype || column.dtype
             // hist_years: (column.stats.hist && column.stats.hist.years) ? column.stats.hist.years : undefined,
           }
         }
@@ -1462,7 +1462,7 @@ export default {
 
         var cols = this.currentPreviewColumns.map(e=>escapeQuotes(  e.title.split('__preview__').join('')  ))
 
-        var code = `_output = ${this.currentDataset.varname}.ext.buffer_window("*")${await getPropertyAsync(previewCode) || ''}.ext.profile(["${cols.join('", "')}"], output="json")`
+        var code = `_output = ${this.currentDataset.varname}.ext.buffer_window("*")${await getPropertyAsync(previewCode) || ''}.ext.profile(["${cols.join('", "')}"], infer=True, output="json")`
 
         var response = await this.evalCode(code)
 
