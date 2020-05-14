@@ -907,8 +907,10 @@ export default {
       handler () {
         if (this.loadedPreviewCode!==this.currentPreviewCode.code) {
           this.loadedPreviewCode = this.currentPreviewCode.code
+          if (this.currentPreviewCode.code) { // a new code
+            this.fetched = this.fetched.filter(e=>!e.code)
+          }
           if (!this.currentPreviewCode.load) {
-            // this.fetched = this.fetched.filter(e=>!e.code)
             this.previousRange = -1
             this.scrollCheck(true)
             this.mustUpdateRows = true
