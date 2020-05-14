@@ -50,7 +50,7 @@ export default {
       case 'categorical':
         return 'cat'
 			default:
-        return (data || 'obj').substring(0,3)
+        return (data || 'und').substring(0,3)
 
 			}
 		}

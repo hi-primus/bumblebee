@@ -347,7 +347,7 @@
 
           <div v-if="detailedColumns.length>1" class="sidebar-section pr-10 columns-selected">
             <div class="column-selected" v-for="(index, i) in detailedColumns" :key="index+'selc'+i">
-              <span class="data-type" :class="`type-${dataset.columns[index].stats.profiler_dtype}`">{{ dataType(dataset.columns[index].stats.profiler_dtype) }}</span>
+              <span class="data-type" :class="`type-${dataset.columns[index].profiler_dtype}`">{{ dataType(dataset.columns[index].profiler_dtype) }}</span>
               <span class="data-column-name">{{ dataset.columns[index].name }}</span>
             </div>
           </div>
@@ -541,7 +541,7 @@ export default {
       sortDesc: [false],
       columnsTableHeaders: [
 				{ text: '', sortable: false, width: '1%', value: 'controls' },
-				{ hint: '#/A', sortable: false, text: 'Type', value: 'stats.profiler_dtype', width: '1.5%' },
+				{ hint: '#/A', sortable: false, text: 'Type', value: 'profiler_dtype', width: '1.5%' },
 				{ hint: 'ABC', sortable: false, text: 'Name', value: 'name', width: '3%' },
 				{ hint: '""', sortable: false, text: 'Missing values', width: '2%', value: 'missing' },
 				// { hint: 'null', text: 'Null values', width: '2%', value: 'null' },
@@ -582,8 +582,8 @@ export default {
 
         var plotable = selected.map( (i)=>{
           var column = this.dataset.columns[i]
-          return ['decimal','float','double','float64'].includes(column.stats.profiler_dtype) ? 'quantitative'
-            : (['int','integer','int64'].includes(column.stats.profiler_dtype) && column.stats.count_uniques>25) ? 'quantitative'
+          return ['decimal','float','double','float64'].includes(column.profiler_dtype) ? 'quantitative'
+            : (['int','integer','int64'].includes(column.profiler_dtype) && column.stats.count_uniques>25) ? 'quantitative'
             : (column.stats.count_uniques<=25) ? column.stats.count_uniques
             : false
         })

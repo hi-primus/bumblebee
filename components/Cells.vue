@@ -2928,12 +2928,12 @@ export default {
 
       if (!command.columns || !command.columns.length) {
         columns = this.columns.map(e=>this.dataset.columns[e.index].name)
-        columnDataTypes = this.columns.map(e=>this.dataset.columns[e.index].stats.profiler_dtype)
+        columnDataTypes = this.columns.map(e=>this.dataset.columns[e.index].profiler_dtype)
       }
       else {
         columns = command.columns
         var columnIndices = namesToIndices(columns, this.dataset.columns)
-        columnDataTypes = columnIndices.map(i=>this.dataset.columns[i].stats.profiler_dtype)
+        columnDataTypes = columnIndices.map(i=>this.dataset.columns[i].profiler_dtype)
       }
 
       var commandHandler = this.commandsHandlers[command.command] || this.commandsHandlers[command.type]
