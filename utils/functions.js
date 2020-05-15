@@ -214,20 +214,29 @@ export const escapeQuotesOn = (payload = {}, keys = []) => {
   return {...payload, ..._payload}
 }
 
-export const printError = (response) => {
-  // if (response.content && response.content.traceback && response.content.traceback.length) {
-  //   response.content.traceback_escaped = response.content.traceback.map(l=>
-  //     l.replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '')
-  //   )
-  //   console.error(response.content.traceback_escaped.join('\n'))
-  // }
-  if (response.traceback) {
-    console.error('[DEBUG][ERROR]\n\n',response.traceback)
-  } else if (response.message) {
-    console.error('[DEBUG][ERROR]\n',response.message)
-  } else {
-    console.error(response)
+export const printError = (payload) => {
+
+  var data = payload.data || payload
+
+  if (data.traceback && data.traceback.length) {
+    console.error('[DEBUG][ERROR][TRACEBACK]\n',data.traceback.join('\n'))
   }
+  else if (data.errorValue && data.error) {
+    console.error('[DEBUG][ERROR]\n',data.error+'\n',data.errorValue)
+    console.error(data.errorValue)
+  }
+  else if (data.error) {
+    console.error('[DEBUG][ERROR]\n',data.error)
+  }
+  if (!(data.error || data.traceback)) {
+    console.error(data)
+  }
+
+  if (payload.code) {
+    console.error('[DEBUG][ERROR][CODE]',payload.code)
+  }
+
+  return ((data.traceback && data.traceback[data.traceback.length-1]) || data.error || data.message || data).toString().split('\n')[0]
 }
 
 export const getProperty = (pof, args = []) => {

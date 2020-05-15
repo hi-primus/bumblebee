@@ -244,7 +244,7 @@
           :color="(operationsActive!=false) ? 'black' : '#888'"
           text
           class="icon-btn"
-          :disabled="!(cells.length || operationsTitle!='operations')"
+          :disabled="!(cells.length || operationsTitle!=='operations' || cellsError!=='')"
           @click="operationsActive = !operationsActive"
         >
           <v-icon>code</v-icon>

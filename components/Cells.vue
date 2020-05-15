@@ -1390,7 +1390,7 @@ export default {
               code += `, error_bad_lines=False`
               code += `, header=${file.header}`
               code += `, null_value="${payload.null_value}"`
-              code += `, infer_schema='true'`
+              code += `, infer_schema="true"`
               code += `, encoding="${payload.charset}"`
             }
             else if (loadType=='json') {
@@ -1552,15 +1552,7 @@ export default {
 
             } catch (error) {
 
-              printError(error)
-
-              var _error = error
-              if ( error.error)
-                _error = error.error
-              if ( error.content && error.content.ename )
-                _error = error.content.ename
-              if ( error.content && error.content.evalue )
-                _error += ': '+error.content.evalue
+              var _error = printError(error)
               this.currentCommand = {...this.currentCommand, error: _error, should_update: true}
             }
 
@@ -1721,15 +1713,7 @@ export default {
 
             } catch (error) {
 
-              printError(error)
-
-              var _error = error
-              if ( error.error)
-                _error = error.error
-              if (error.content && error.content.ename)
-                _error = error.content.ename
-              if (error.content && error.content.evalue)
-                _error += ': '+error.content.evalue
+              var _error = printError(error)
               this.currentCommand = {...this.currentCommand, error: _error, data: false, selection: []}
             }
 
@@ -1945,15 +1929,7 @@ export default {
 
               printError(error)
 
-              var _error = error
-
-              if ( error.error)
-                _error = error.error
-              if (error.content.ename)
-                _error = error.content.ename
-              if (error.content.evalue)
-                _error += ': '+error.content.evalue
-
+              var _error = printError(error)
               this.currentCommand = {...payload, error: _error}
               this.currentCommand.loadingTest = false
             }
@@ -3322,7 +3298,7 @@ export default {
 
         this.computedCommandsDisabled = false;
 
-        if (response.status!=='ok') {
+        if (!response.data || !response.data.result) {
           throw response
         }
 
@@ -3346,10 +3322,7 @@ export default {
 
 
       } catch (error) {
-        printError(error)
-        console.log('"""[DEBUG][CODE][FAILED]"""',code)
-        var codeError = (error.error) ? error.error : error
-        if (codeError && codeError.split) codeError = codeError.split("\n")[0]
+        var codeError = printError(error)
         this.$emit('update:codeError',codeError)
 
         this.markCellsError(ignoreFrom)

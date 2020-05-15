@@ -12,6 +12,8 @@ const app = express()
 var server = require('http').createServer(app)
 const io = new Server(server)
 
+const uuidv1 = require('uuid/v1');
+
 import { trimCharacters } from './utils/functions.js'
 
 const app_secret = process.env.APP_SECRET || '6um61e6ee'
@@ -132,38 +134,28 @@ const newSocket = function (socket, session) {
       var result = {}
       try {
         result = await requestToKernel('datasets',sessionId)
-      } catch (error) {
-        console.error(error)
-        result = error
+      } catch (err) {
+        result = err
       }
-      socket.emit('reply',{...result, timestamp: payload.timestamp})
+      socket.emit('reply',{data: result, timestamp: payload.timestamp})
     })
 
     socket.on('initialize', async (payload) => {
       var sessionId = payload.session
-
       var result = {}
-
-      var tries = 10
-      while (tries-->0) {
-        result = await createKernel(sessionId, payload)
-        if (!result || result.status==='error') {
-          console.log('"""',result,'"""')
-          console.log('# Kernel error, retrying')
-          await deleteKernel(sessionId)
-        }
-        else {
-          break
-        }
+      try {
+        result = await initializeSession(sessionId, payload)
+      } catch (err) {
+        result = err
+        result.status = 'error'
       }
-
-      socket.emit('reply',{...result, timestamp: payload.timestamp})
+      socket.emit('reply',{data: result, timestamp: payload.timestamp})
     })
 
     socket.on('run', async (payload) => {
       var sessionId = payload.session
       var result = await runCode(`${payload.code}`,sessionId)
-      socket.emit('reply',{...result, code: payload.code, timestamp: payload.timestamp})
+      socket.emit('reply',{data: result, code: payload.code, timestamp: payload.timestamp})
     })
 
     socket.on('cells', async (payload) => {
@@ -174,7 +166,7 @@ const newSocket = function (socket, session) {
         + `_output = ${varname}.ext.profile(columns="*", infer=True, output="json")`,
         sessionId
       )
-      socket.emit('reply',{...result, code: payload.code, timestamp: payload.timestamp})
+      socket.emit('reply',{data: result, code: payload.code, timestamp: payload.timestamp})
     })
   }
   else {
@@ -241,8 +233,7 @@ const runCode = async function(code = '', sessionId = '') {
 
   try {
     if (kernels[sessionId]==undefined) {
-      const response = await requestToKernel('session',sessionId)
-      kernels[sessionId] = sessionId
+      await createKernel(sessionId)
     }
 
     var response = await requestToKernel('code',sessionId,code)
@@ -253,35 +244,121 @@ const runCode = async function(code = '', sessionId = '') {
     return response
 
   } catch (err) {
-    console.error(err)
-    if (err.error && (err.error.result || err.error.output)) {
-      return { status: 'error', error: err.error.result, traceback: err.error.output }
+    // console.error(err)
+    if (err.ename || err.traceback) {
+      var traceback = err.traceback.map(l=>
+        l.replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '')
+      )
+      return { status: 'error', errorName: err.ename, error: err.evalue, traceback }
     } else {
       return { status: 'error', error: 'Internal error', content: err }
     }
   }
 }
 
-const deleteKernel = async function(session) {
+const deleteKernel = async function(sessionId) {
   try {
-    if (kernels[session] != undefined) {
-      var _id = kernels[session].kernel['id']
-      kernels[session] = undefined
-      console.log('# Deleting Session',session,_id)
+    if (kernels[sessionId] != undefined) {
+      var _id = kernels[sessionId].id
+      kernels[sessionId] = undefined
+      const kernelResponse = await request({
+        uri: `${base}/api/kernels/${_id}`,
+        method: 'DELETE',
+        headers: {}
+      })
+      console.log('Deleting Session',sessionId,_id)
     }
   } catch (err) {}
 }
 
-const createKernel = async function (sessionId, payload) {
-
+const deleteEveryKernel = async function () {
   try {
-    return await requestToKernel('init',sessionId, payload)
-  } catch (error) {
-    console.error(error)
-    return error
+
+    const response = await request({
+      uri: `${base}/api/kernels`,
+      method: 'GET',
+      headers: {},
+    })
+
+    const kernels = JSON.parse(response)
+
+    kernels.forEach(async kernel => {
+      console.log(`Deleting kernel ${kernel.id}`)
+      await request({
+        uri: `${base}/api/kernels/${kernel.id}`,
+        method: 'DELETE',
+        headers: {},
+      })
+    });
+
+  } catch (err) {
+    console.error('Error on Kernels deleting')
   }
 }
 
+const initializeSession = async function (sessionId, payload = false) {
+  var result = false
+
+  if (!payload && kernels[sessionId] && kernels[sessionId].initializationPayload) {
+    payload = kernels[sessionId].initializationPayload
+  } else if (!payload) {
+    payload = {}
+  }
+
+  var tries = 10
+  while (tries-->0) {
+    try {
+      result = await requestToKernel('init', sessionId, payload)
+    } catch (err) {
+      console.error(err)
+      break;
+      result = false
+    }
+    if (!result) {
+      console.log('Kernel error, retrying')
+      await deleteKernel(sessionId)
+    }
+    else {
+      break
+    }
+  }
+
+  if (!kernels[sessionId] || !kernels[sessionId].connection) {
+    return {}
+  }
+
+  kernels[sessionId].initialized = result
+  kernels[sessionId].initializationPayload = payload
+  return result
+}
+
+const createKernel = async function (sessionId) {
+  try {
+    var tries = 10
+    while (tries-->0) {
+      try {
+        const kernelResponse = await request({
+          uri: `${base}/api/kernels`,
+          method: 'POST',
+          headers: {},
+          json: true,
+          body: {}
+        })
+        const uuid = Buffer.from( uuidv1(), 'utf8' ).toString('hex')
+        kernels[sessionId] = { id: kernelResponse.id, uuid }
+        break
+      } catch (err) {
+        console.error('Kernel creating error, retrying', tries-10)
+        continue
+      }
+    }
+    console.log('Kernel created', sessionId)
+    return sessionId
+  } catch (err) {
+    // console.error(err)
+    return undefined
+  }
+}
 
 const handleResponse = function (response) {
   try {
@@ -311,60 +388,132 @@ const handleResponse = function (response) {
 
   } catch (error) {
     console.error(error)
+    return JSON.parse( {response} )
   }
 }
 
-const requestToKernel = async function (type, session_id, payload) {
-  var response = {}
+const WebSocketClient = require('websocket').client
+
+const createConnection = async function (sessionId) {
+  return new Promise((resolve, reject)=>{
+    kernels[sessionId] = kernels[sessionId] || {}
+    if (!kernels[sessionId].client) {
+      kernels[sessionId].client = new WebSocketClient({closeTimeout: 20 * 60 * 1000})
+    }
+    kernels[sessionId].client.connect(`${ws_kernel_base}/api/kernels/${kernels[sessionId].id}/channels`)
+    kernels[sessionId].client.on('connect',function (connection){
+      kernels[sessionId] = kernels[sessionId] || {}
+      kernels[sessionId].connection = connection
+      kernels[sessionId].connection.on('message', function (message) {
+
+        if (message.type === 'utf8'){
+          var response = JSON.parse(message.utf8Data)
+          var msg_id = response.parent_header.msg_id
+          if (response.msg_type === 'execute_result') {
+            kernels[sessionId].promises[msg_id].resolve(response.content.data['text/plain'])
+          }
+          else if (response.msg_type === 'error') {
+            console.error(response.content)
+            kernels[sessionId].promises[msg_id].reject(response.content)
+          }
+        }
+        else {
+          console.warn({status: 'error', content: 'Response from gateway is not utf8 type', error: 'Message type error', message: message}) // TODO: Resolve
+        }
+      })
+      console.log('Connection created', sessionId)
+      resolve(kernels[sessionId].connection)
+    })
+    kernels[sessionId].client.on('connectFailed', function (error) {
+      kernels[sessionId].connection = false
+      console.warn('Connection to Jupyter Kernel Gateway failed')
+      reject(error)
+    });
+
+
+  })
+}
+
+const assertSession = async function (sessionId, isInit = false) {
+  try {
+
+    if (!kernels[sessionId]) {
+      await createKernel(sessionId)
+    }
+
+    if (!kernels[sessionId]) {
+      throw 'Error on createKernel'
+    }
+
+    if (!kernels[sessionId].client || !kernels[sessionId].connection) {
+      await createConnection(sessionId)
+    }
+
+    if (!isInit && !kernels[sessionId].initialized) {
+      await initializeSession(sessionId)
+    }
+
+    return kernels[sessionId].connection
+  } catch (err) {
+    console.error('WebSocket Error')
+    return undefined
+  }
+}
+
+import kernelRoutines from './kernel-routines.js'
+
+const requestToKernel = async function (type, sessionId, payload) {
+
+  var connection = await assertSession(sessionId, type=='init')
+
+  if (!connection) {
+    throw 'Socket error'
+  }
+
   var startTime = new Date().getTime()
+
+  var code = payload
 
   switch (type) {
     case 'code':
-      response = await request({
-        uri: `${base}/bumblebee`,
-        method: 'POST',
-        headers: {},
-        json: true,
-        body: {
-          code: payload,
-          session_id
-        }
-      })
+      code = kernelRoutines.code(payload)
       break;
     case 'session':
-      response = await request({
-        uri: `${base}/bumblebee-session`,
-        method: 'POST',
-        headers: {},
-        json: true,
-        body: {
-          secret: process.env.KERNEL_SECRET,
-          session_id
-        }
-      })
+      code = kernelRoutines.init(payload)
       break;
     case 'datasets':
-      response = await request({
-        uri: `${base}/bumblebee-datasets`,
-        method: 'POST',
-        json: true,
-        body: {
-          session_id,
-        }
-      })
+      code = kernelRoutines.datasets(payload)
       break;
     case 'init':
-      response = await request({
-        uri: `${base}/bumblebee-init`,
-        method: 'POST',
-        json: true,
-        body: {
-          session_id,
-          secret: process.env.KERNEL_SECRET,
-          ...payload
-        }
-      })
+      code = kernelRoutines.init(payload)
+    break;
   }
+
+  var msg_id = kernels[sessionId].uuid + Math.random()
+
+  var hdr = {
+    'msg_id' : msg_id,
+    'session': kernels[sessionId].uuid,
+    'date': new Date().toISOString(),
+    'msg_type': 'execute_request',
+    'version' : '5.3' // TODO: check
+  }
+
+  var codeMsg = {
+    'header': hdr,
+    'parent_header': hdr,
+    'metadata': {},
+    'content': { code: code+'\n', silent: false }
+  }
+
+  if (!kernels[sessionId].promises) {
+    kernels[sessionId].promises = {}
+  }
+
+  var response = await new Promise((resolve, reject)=>{
+    kernels[sessionId].promises[msg_id] = {resolve, reject}
+    kernels[sessionId].connection.sendUTF(JSON.stringify(codeMsg))
+  })
 
   response = handleResponse(response)
 
@@ -383,7 +532,13 @@ const startServer = async () => {
   const port = process.env.PORT || 5000
   const host = process.env.HOST || '0.0.0.0'
   var _server = server.listen(port, host, async () => {
+
+    if (process.env.NODE_ENV === 'production') {
+      await deleteEveryKernel()
+    }
     console.log(`# Bumblebee-api v${version} listening on ${host}:${port}`)
+
+
   })
   _server.timeout = 10 * 60 * 1000
 }

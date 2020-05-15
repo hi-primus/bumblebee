@@ -62,29 +62,43 @@ export default {
           duration: (endTime - startTime)/1000
         }
 
+        console.log('"""[DEBUG][RESULT]"""', result)
         console.log('"""[DEBUG][CODE]"""', result.code)
 
-        console.log('"""[DEBUG][TIMES]', {
-          a1front: result._frontTime,
-          a2server: result._serverTime,
-          a3gateway: result.data._gatewayTime,
-          t1frontServer: result._serverTime.start-result._frontTime.start,
-          t2serverGateway: result.data._gatewayTime.start-result._serverTime.start,
-          t3GatewayServer: result._serverTime.end-result.data._gatewayTime.end,
-          t4ServerFront: result._frontTime.end-result._serverTime.end,
-        }, '"""')
+        try {
+          console.log(
+            '"""[DEBUG][TIMES]',
+            'front', result._frontTime,
+            'server', result._serverTime,
+            'gateway', result._gatewayTime,
+            'frontToServer', result._serverTime.start-result._frontTime.start,
+            'serverToGateway', result._gatewayTime.start-result._serverTime.start,
+            'GatewayToServer', result._serverTime.end-result._gatewayTime.end,
+            'ServerToFront', result._frontTime.end-result._serverTime.end,
+            '"""'
+          )
+        } catch (err) {
+          console.log(
+            '"""[DEBUG][TIMES]',
+            'front', result._frontTime,
+            'server', result._serverTime,
+            'gateway', result._gatewayTime,
+            '"""'
+          )
+        }
 
-        // console.timeEnd(_c)
+        if (result.data.status==='error') {
+          throw result
+        }
 
         return result
 
-      } catch (error) {
+      } catch (err) {
 
-        var _result = result || error || {}
+        console.error(err)
 
-        console.log('"""[DEBUG][ERROR][CODE]"""', _result.code)
-        printError(error)
-        return error
+        printError(err)
+        return err
 
       }
     },
@@ -106,8 +120,8 @@ export default {
               reset: this.$route.query.reset
             })
 
-            if (response.status!='ok') {
-              throw response.content
+            if (!response.data.optimus) {
+              throw response
             }
           }
           socket.emit(message,{...payload, timestamp})

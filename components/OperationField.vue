@@ -285,15 +285,6 @@
 <script>
 
 import {
-  // printError,
-  // parseResponse,
-  // debounce,
-  // newName,
-  // arrayJoin,
-  // getOutputColsArgument,
-  // escapeQuotes,
-  // escapeQuotesOn,
-  // namesToIndices
   getProperty
 } from '@/utils/functions.js'
 
