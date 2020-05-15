@@ -321,9 +321,9 @@ export default {
   },
 
   methods: {
-    getProperty(pof, args = []) {
-      return getProperty(pof, args)
-    },
+
+    getProperty,
+
     getPropertyField(pof) {
       return getProperty(pof, [this.currentCommand, this.index])
     },

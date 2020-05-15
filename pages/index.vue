@@ -296,8 +296,8 @@ export default {
 
       if (value=='receiving') {
         var dataset_csv = this.$route.query.dataset_csv
-        if (dataset_csv) {
-          this.$refs.tableBar & this.$refs.tableBar.commandHandle({
+        if (dataset_csv && this.$refs.tableBar) {
+          this.$refs.tableBar.commandHandle({
             command: 'load file',
             noOperations: true,
             immediate: true,

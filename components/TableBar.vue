@@ -22,7 +22,7 @@
         <span>Table view</span>
       </v-tooltip>
       <div class="divider"/>
-      <template v-for="(element, index) in (toolbarElements.filter(e=>!+e.hidden))">
+      <template v-for="(element, index) in (toolbarElements.filter(e=>!getProperty(e.hidden)))">
         <div v-if="element.divider" :key="index" class="divider"/>
         <template v-else-if="element.type=='button'">
           <v-tooltip :key="'toolbar'+index" transition="fade-transition" bottom>
@@ -32,7 +32,7 @@
                   text
                   class="icon-btn"
                   @click="element.onClick"
-                  :disabled="!!+element.disabled"
+                  :disabled="getProperty(element.disabled)"
                 >
                   <template v-for="(icon, ii) in element.icons">
                     <v-icon
@@ -61,7 +61,7 @@
                   <div class="icon-btn-container" v-on="{...tooltip}">
                     <v-btn
                       :color="'#888'"
-                      :disabled="!!+element.disabled"
+                      :disabled="getProperty(element.disabled)"
                       class="icon-btn"
                       text
                       v-on="{...menu}"
@@ -87,10 +87,10 @@
             <v-list dense style="max-height: 400px; min-width: 160px;" class="scroll-y">
               <v-list-item-group color="black">
                 <v-list-item
-                  v-for="(item, i) in menuItems(element.group).filter(e=>!+e.hidden)"
+                  v-for="(item, i) in menuItems(element.group).filter(e=>!getProperty(e.hidden))"
                   :key="i+'mc'"
                   @click="commandHandle(item)"
-                  :disabled="(item.max && selectedColumns.length>item.max) || (item.min && selectedColumns.length<item.min)"
+                  :disabled="!checkDataTypes(item.allowedTypes) || (item.max && selectedColumns.length>item.max) || (item.min && selectedColumns.length<item.min)"
                 >
                   <v-list-item-content>
                     <v-list-item-title>
@@ -426,7 +426,7 @@ import VegaEmbed from '@/components/VegaEmbed'
 import clientMixin from '@/plugins/mixins/client'
 import dataTypesMixin from '@/plugins/mixins/data-types'
 import applicationMixin from '@/plugins/mixins/application'
-import { copyToClipboard, namesToIndices } from '@/utils/functions.js'
+import { copyToClipboard, namesToIndices, getProperty } from '@/utils/functions.js'
 import { mapState, mapGetters } from 'vuex';
 
 const api_url = process.env.API_URL || 'http://localhost:5000'
@@ -504,7 +504,7 @@ export default {
 				{command: 'remove_accents', text: 'Remove accents', type: 'STRING'},
 				{command: 'remove_special_chars', text: 'Remove special chars', type: 'STRING'},
         {command: 'trim', text: 'Trim white space', type: 'STRING'},
-        {command: 'string clustering', text: 'String clustering', type: 'STRING', max: 1, min: 1, hidden: { valueOf: ()=>(this.appStable) }},
+        {command: 'string clustering', text: 'String clustering', type: 'STRING', max: 1, min: 1, hidden: ()=>(this.appStable) },
 
 				// {command: 'random_split',     teaxt: 'Split train and test', type: 'PREPARE'},
 
@@ -668,9 +668,7 @@ export default {
           },
           icons: [{ icon: 'cloud_upload' }],
           tooltip: 'Load file',
-          disabled: {
-            valueOf: ()=>(this.$store.state.kernel!='done')
-          }
+          disabled: ()=>(this.$store.state.kernel!='done')
         },
         {
           type: 'button',
@@ -679,15 +677,11 @@ export default {
           },
           icons: [{ icon: 'save' }],
           tooltip: 'Download file',
-          disabled: {
-            valueOf: ()=>!(this.dataset && this.dataset.summary)
-          }
+          disabled: ()=>!(this.dataset && this.dataset.summary)
         },
         {
           divider: true,
-          hidden: {
-              valueOf: ()=>(this.appStable)
-            }
+          hidden: ()=>(this.appStable)
         },
         {
           type: 'button',
@@ -696,12 +690,8 @@ export default {
           },
           icons: [{ icon: 'storage' }],
           tooltip: 'Connect a database',
-          disabled: {
-            valueOf: ()=>(this.$store.state.kernel!='done')
-          },
-          hidden: {
-            valueOf: ()=>(this.appStable)
-          }
+          disabled: ()=>(this.$store.state.kernel!='done'),
+          hidden: ()=>(this.appStable)
         },
         {
           type: 'button',
@@ -713,12 +703,8 @@ export default {
             { icon: 'check', style: {marginLeft: '-4px'} }
           ],
           tooltip: 'Save dataset to database',
-          disabled: {
-            valueOf: ()=>!(this.dataset && this.dataset.summary && this.$store.state.database)
-          },
-          hidden: {
-            valueOf: ()=>(this.appStable)
-          }
+          disabled: ()=>!(this.dataset && this.dataset.summary && this.$store.state.database),
+          hidden: ()=>(this.appStable)
         },
         { divider: true },
         {
@@ -730,9 +716,7 @@ export default {
             { icon: 'playlist_add' },
           ],
           tooltip: 'Join dataframes',
-          disabled: {
-            valueOf: ()=>!(this.dataset && this.dataset.summary && this.hasSecondaryDatasets)
-          }
+          disabled: ()=>!(this.dataset && this.dataset.summary && this.hasSecondaryDatasets)
         },
         {
           type: 'button',
@@ -743,9 +727,7 @@ export default {
             { icon: 'add' },
           ],
           tooltip: 'Get aggregations',
-          disabled: {
-            valueOf: ()=>!(!['values','ranges'].includes(this.selectionType) && this.dataset && this.dataset.summary)
-          }
+          disabled: ()=>!(!['values','ranges'].includes(this.selectionType) && this.dataset && this.dataset.summary)
         },
         // { divider: true },
         // {
@@ -754,21 +736,17 @@ export default {
         // {
         //   type: 'button',
         //   onClick: ()=>this.commandHandle({command: 'apply sort', columns: this.lastSort}),
-        //   disabled: {
-        //     valueOf: ()=>!(this.dataset && this.dataset.summary && this.sortBy[0])
-        //   },
+        //   disabled: ()=>!(this.dataset && this.dataset.summary && this.sortBy[0]),
         //   icons: [{icon: 'sort'},{icon: 'check', style: {marginLeft: '-8px'}}],
         //   tooltip: 'Apply sorting',
-        //   hidden: {
-        //     valueOf: ()=>(this.appStable)
-        //   }
+        //   hidden: ()=>(this.appStable)
         // },
         { divider: true },
         {
           type: 'button',
           onClick: ()=>this.commandHandle({command: 'sort rows'}),
           tooltip: 'Sort rows',
-          disabled: { valueOf: ()=>['values','ranges'].includes(this.selectionType) || this.selectedColumns.length<1 },
+          disabled: ()=>['values','ranges'].includes(this.selectionType) || this.selectedColumns.length<1,
           icons: [
             {
               icon: 'arrow_right_alt',
@@ -787,9 +765,7 @@ export default {
               }
             }
           ],
-          hidden: {
-            valueOf: ()=>(this.appStable)
-          }
+          hidden: ()=>(this.appStable)
         },
         {
           type: 'button',// {toString: ()=>(this.selectionType=='columns' ? 'button' : 'menu')},
@@ -814,7 +790,7 @@ export default {
             this.commandHandle(command)
           },
           tooltip: 'Filter rows',
-          disabled: { valueOf: ()=>!(['values','ranges','text'].includes(this.selectionType) || this.selectedColumns.length==1) },
+          disabled: ()=>!(['values','ranges','text'].includes(this.selectionType) || this.selectedColumns.length==1),
           icons: [{icon: 'filter_list'}]
         },
         {
@@ -828,9 +804,7 @@ export default {
               transform: 'scaleX(0.75)'
             } }
           ],
-          disabled: {
-            valueOf: ()=>!(this.dataset && this.dataset.summary && this.hasSecondaryDatasets)
-          }
+          disabled: ()=>!(this.dataset && this.dataset.summary && this.hasSecondaryDatasets)
         },
         {
           type: 'button',
@@ -839,9 +813,7 @@ export default {
           icons: [
             { icon: 'flip_to_back' },
           ],
-          disabled: {
-            valueOf: ()=>!(this.dataset && this.dataset.summary && this.hasSecondaryDatasets)
-          }
+          disabled: ()=>!(this.dataset && this.dataset.summary && this.hasSecondaryDatasets)
         },
         { divider: true },
         {
@@ -849,28 +821,28 @@ export default {
           onClick: ()=>this.commandHandle({command: 'set'}),
           tooltip: 'New column',
           icons: [{icon: 'add_box'}],
-          disabled: {valueOf: ()=>!(this.selectionType=='columns' && this.dataset && this.dataset.summary)}
+          disabled: ()=>!(this.selectionType=='columns' && this.dataset && this.dataset.summary)
         },
         {
           type: 'button',
           onClick: ()=>this.commandHandle({command: 'rename'}),
           tooltip: { toString: ()=> 'Rename column'+ (this.selectedColumns.length!=1 ? 's' : '')},
           icons: [{icon: 'edit'}],
-          disabled: {valueOf: ()=>!(this.selectionType=='columns' && this.selectedColumns.length>0)}
+          disabled: ()=> !(this.selectionType=='columns' && this.selectedColumns.length>0)
         },
         {
           type: 'button',
           onClick: ()=>this.commandHandle({command: 'duplicate'}),
           tooltip: { toString: ()=> 'Duplicate column'+ (this.selectedColumns.length!=1 ? 's' : '')},
           icons: [{icon: 'file_copy'}],
-          disabled: {valueOf: ()=>!(this.selectionType=='columns' && this.selectedColumns.length>0)}
+          disabled: ()=>!(this.selectionType=='columns' && this.selectedColumns.length>0)
         },
         {
           type: 'button',
           onClick: ()=>this.commandHandle({command: 'keep', type: 'DROP_KEEP'}),
           tooltip: { toString: ()=> 'Keep column'+ (this.selectedColumns.length!=1 ? 's' : '')},
           icons: [{icon: 'all_out'}],
-          disabled: {valueOf: ()=>!(this.selectionType=='columns' && this.selectedColumns.length>0)}
+          disabled: ()=>!(this.selectionType=='columns' && this.selectedColumns.length>0)
         },
         {
           type: 'button',
@@ -881,14 +853,14 @@ export default {
             { icon: 'delete' },
             // { icon: 'menu', style: {transform: 'rotate(90deg)', marginLeft: '-6px'} }
           ],
-          disabled: {valueOf: ()=>!(this.selectionType=='columns' && this.selectedColumns.length>0)}
+          disabled: ()=>!(this.selectionType=='columns' && this.selectedColumns.length>0)
         },
         {
           type: 'button',
           onClick: ()=>this.commandHandle({command: 'nest'}),
           tooltip: 'Nest columns',
           icons: [{icon: 'link'}],
-          disabled: {valueOf: ()=>['values','ranges'].includes(this.selectionType) || this.selectedColumns.length<=1 || !this.dataset.summary}
+          disabled: ()=>['values','ranges'].includes(this.selectionType) || this.selectedColumns.length<=1 || !this.dataset.summary
         },
         {
           type: 'button',
@@ -904,7 +876,7 @@ export default {
           },
           tooltip: { toString: ()=> 'Unnest column'+ (this.selectedColumns.length!=1 ? 's' : '')},
           icons: [{icon: 'link_off'}],
-          disabled: {valueOf: ()=>!((this.selectionType=='columns' && this.selectedColumns.length>0) || this.selectionType==='text')}
+          disabled: ()=>!((this.selectionType=='columns' && this.selectedColumns.length>0) || this.selectionType==='text')
         },
         { divider: true },
         {
@@ -912,7 +884,7 @@ export default {
           onClick: ()=>this.commandHandle({command: 'fill_na'}),
           tooltip: { toString: ()=> 'Fill column'+ (this.selectedColumns.length!=1 ? 's' : '')},
           icons: [{icon: 'brush'}],
-          disabled: {valueOf: ()=>!(this.selectionType=='columns' && this.selectedColumns.length>0)}
+          disabled: ()=>!(this.selectionType=='columns' && this.selectedColumns.length>0)
         },
         {
           type: 'button', // rows
@@ -937,31 +909,29 @@ export default {
             }
           },
           icons: [{icon: 'find_replace'}],
-          disabled: {valueOf: ()=>!(['text'].includes(this.selectionType) || this.selectedColumns.length>0)}
+          disabled: ()=>!(['text'].includes(this.selectionType) || this.selectedColumns.length>0)
         },
         {
           type: 'menu',
           group: 'STRING',
           icons: [{ icon: 'text_format' }],
           tooltip: 'String operations',
-          disabled: { valueOf: ()=>!(this.selectionType=='columns' && this.dataset && this.dataset.summary && this.selectedColumns.length>=0)}
+          disabled: ()=>!(this.checkDataTypes(['string']) && this.selectionType=='columns' && this.dataset && this.dataset.summary && this.selectedColumns.length>=0)
         },
         {
           type: 'menu',
           group: 'CAST',
           icons: [{ icon: 'category' }],
           tooltip: 'Cast',
-          disabled: { valueOf: ()=>!(this.selectionType=='columns' && this.selectedColumns.length>0)}
+          disabled: ()=>!(this.selectionType=='columns' && this.selectedColumns.length>0)
         },
         {
           type: 'menu',
           group: 'ML',
           icons: [{ icon: 'timeline' }],
           tooltip: 'Machine Learning',
-          disabled: { valueOf: ()=>!(this.selectionType=='columns' && this.dataset && this.dataset.summary) }, // Sampling
-          hidden: {
-            valueOf: ()=>(this.appStable)
-          }
+          disabled: ()=>!(this.selectionType=='columns' && this.dataset && this.dataset.summary) , // Sampling
+          hidden: ()=>(this.appStable)
         },
       ]
     },
@@ -986,6 +956,28 @@ export default {
         try {
           return [...this.currentSelection.columns] || []
         } catch (error) {}
+        return []
+      }
+    },
+
+    selectedDataTypes () {
+      try {
+        var columns = []
+        if (this.selectionType==='columns') {
+          columns = this.currentSelection.columns.map(e=>e.index)
+        }
+        else if (this.selectionType==='text') {
+          columns = [this.currentSelection.text.index]
+        }
+        else {
+          columns = [this.currentSelection.ranged.index]
+        }
+        if (!columns.length) {
+          return []
+        }
+        return [...new Set(columns.map(i=>this.currentDataset.columns[i].profiler_dtype))]
+      } catch (err) {
+        console.error(err)
         return []
       }
     },
@@ -1056,6 +1048,16 @@ export default {
   },
 
   methods: {
+
+    getProperty,
+
+    checkDataTypes (allowedTypes) {
+      if (!allowedTypes || !allowedTypes.length) {
+        return true
+      }
+
+      return this.selectedDataTypes.every(t=>allowedTypes.indexOf(t)>=0)
+    },
 
     typesUpdated () {
       this.typesInput = ''

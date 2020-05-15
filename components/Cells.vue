@@ -2778,9 +2778,7 @@ export default {
 
     },
 
-    getProperty(pof, args = []) {
-      return getProperty(pof, args)
-    },
+    getProperty,
 
     cleanCodeError () {
       this.$emit('update:codeError','')
