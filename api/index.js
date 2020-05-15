@@ -162,7 +162,7 @@ const newSocket = function (socket, session) {
       var sessionId = payload.session
       var varname = payload.varname || 'df'
       var result = await runCode(payload.code + '\n'
-        + `${varname} = ${varname}.ext.optimize()\n`
+        // + (payload.optimize ? `${varname} = ${varname}.ext.optimize()\n` : '')
         + `_output = ${varname}.ext.profile(columns="*", infer=True, output="json")`,
         sessionId
       )

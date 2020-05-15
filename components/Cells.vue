@@ -1344,7 +1344,6 @@ export default {
 
           payload: () => ({
             command: 'load file',
-            _noAppend: true,
             _fileUrl: '',
             _fileType: false,
             _fileUploading: false,
@@ -1364,7 +1363,8 @@ export default {
             _datasetName: false,
             _sheet_names: 1,
             previewType: 'load',
-            loadPreview: true
+            loadPreview: true,
+            isLoad: true
             // _previewDelay: 500,
           }),
 
@@ -1872,13 +1872,13 @@ export default {
           },
           payload: () => ({
             command: 'load from database',
-            _noAppend: true,
             driver: 'mysql',
             host: '',
 						database: '',
 						user: '',
             password: '',
-            loadingTest: false
+            loadingTest: false,
+            isLoad: true
           }),
           code: (payload) => {
             var table = escapeQuotes(payload.table)
@@ -1933,40 +1933,6 @@ export default {
               this.currentCommand = {...payload, error: _error}
               this.currentCommand.loadingTest = false
             }
-          }
-        },
-        'save to server': {
-          dialog: {
-            title: 'Save file to server',
-            fields: [
-              {
-                type: 'field',
-                key: 'file_name',
-                label: 'File name',
-                placeholder: (c)=>`my_file.${c.format}`,
-              },
-              {
-                type: 'select',
-                key: 'format',
-                label: 'Format',
-                items: [
-                  {text: 'CSV', value: 'csv'},
-                  {text: 'Parquet', value: 'parquet'},
-                  {text: 'JSON', value: 'json'}
-                ]
-              }
-            ],
-            validate: (c) => (c.file_name && c.format)
-          },
-          payload: () => ({
-            command: 'save to server',
-            _noAppend: true,
-            format: 'csv',
-            file_name: ''
-          }),
-          code: (payload) => {
-            var file_name = escapeQuotes(payload.file_name)
-            return `${this.dataset.varname}.save.${payload.format}("${file_name}")`
           }
         },
         'save to database': {
@@ -3155,16 +3121,13 @@ export default {
         code = payload._code
       }
 
-      if (payload._noAppend) {
-        return code
-      }
-
       if (type==='preview') {
         return code
       } else if (type==='profile') {
         return code
-      }
-      else {
+      } else if (payload.isLoad) {
+        return code +'\n'+`${this.dataset.varname} = ${this.dataset.varname}.ext.optimize()`
+      } else {
         return `${this.dataset.varname} = ${this.dataset.varname}${code}.ext.cache()`
       }
 
