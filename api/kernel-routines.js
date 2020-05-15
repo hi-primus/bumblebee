@@ -1,14 +1,4 @@
 const codeTraceback = (code = '') => `
-try:
-    json; date; datetime; ipython_vars; _json_default; traceback
-except Exception:
-    from optimus.helpers.functions import ipython_vars
-    from datetime import datetime, date
-    import traceback
-    import json
-    def _json_default(o):
-        if isinstance(o, (date, datetime)):
-            return o.isoformat()
 _start_time = datetime.utcnow().timestamp()
 code = """${code}"""
 res = {}
@@ -23,16 +13,6 @@ res.update({'_gatewayTime': {'start': _start_time, 'end': _end_time, 'duration':
 json.dumps(res,  default=_json_default)
 `
 const code = (code = '') => `
-try:
-    json; date; datetime; ipython_vars; _json_default; traceback
-except Exception:
-    from optimus.helpers.functions import ipython_vars
-    from datetime import datetime, date
-    import traceback
-    import json
-    def _json_default(o):
-        if isinstance(o, (date, datetime)):
-            return o.isoformat()
 _start_time = datetime.utcnow().timestamp()
 ${code}
 res.update({'result': _output})
@@ -43,16 +23,6 @@ json.dumps(res,  default=_json_default)
 
 const datasets = (payload = {}) => `
 _start_time = datetime.utcnow().timestamp()
-try:
-    json; date; datetime; ipython_vars; _json_default
-except Exception:
-    from optimus.helpers.functions import ipython_vars
-    from datetime import datetime, date
-    import json
-    def _json_default(o):
-        if isinstance(o, (date, datetime)):
-            return o.isoformat()
-
 _dfs = ipython_vars(globals(),"dask")
 _end_time = datetime.utcnow().timestamp()
 res = { _df: globals()[_df].cols.names() for (_df) in _dfs }
@@ -61,10 +31,11 @@ json.dumps(res,  default=_json_default)
 `
 const init = (payload = {}) => `
 try:
-    json; date; datetime; ipython_vars; _json_default
+    json; date; datetime; ipython_vars; _json_default; traceback
 except Exception:
     from optimus.helpers.functions import ipython_vars
     from datetime import datetime, date
+    import traceback
     import json
     def _json_default(o):
         if isinstance(o, (date, datetime)):
