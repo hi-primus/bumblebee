@@ -162,7 +162,6 @@ const newSocket = function (socket, session) {
       var sessionId = payload.session
       var varname = payload.varname || 'df'
       var result = await runCode(payload.code + '\n'
-        // + (payload.optimize ? `${varname} = ${varname}.ext.optimize()\n` : '')
         + `_output = ${varname}.ext.profile(columns="*", infer=True, output="json")`,
         sessionId
       )
@@ -310,8 +309,6 @@ const initializeSession = async function (sessionId, payload = false) {
     try {
       result = await requestToKernel('init', sessionId, payload)
     } catch (err) {
-      console.error(err)
-      break;
       result = false
     }
     if (!result) {
@@ -387,7 +384,7 @@ const handleResponse = function (response) {
     return JSON.parse( response )
 
   } catch (error) {
-    console.error(error)
+    // console.error(error)
     return JSON.parse( {response} )
   }
 }
@@ -413,7 +410,7 @@ const createConnection = async function (sessionId) {
             kernels[sessionId].promises[msg_id].resolve(response.content.data['text/plain'])
           }
           else if (response.msg_type === 'error') {
-            console.error(response.content)
+            console.error('msg_type error')
             kernels[sessionId].promises[msg_id].reject(response.content)
           }
         }
