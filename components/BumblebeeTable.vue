@@ -45,10 +45,10 @@
               v-model="newColumnType"
             >
               <template v-slot:item="{ item }">
-                <div class="data-type in-autocomplete">{{ dataType(item) }}</div> <span class="capitalize">{{ item }}</span>
+                <div class="data-type in-autocomplete">{{ dataTypeHint(item) }}</div> {{dataTypeNames[item]}}
               </template>
               <template v-slot:selection="{ item }">
-                <div class="data-type in-autocomplete mr-2">{{ dataType(item) }}</div> <span class="capitalize">{{ item }}</span>
+                <div class="data-type in-autocomplete mr-2">{{ dataTypeHint(item) }}</div> {{dataTypeNames[item]}}
               </template>
             </v-select>
           </v-list-item>
@@ -81,7 +81,7 @@
           <div
             class="data-type"
             :class="`type-${currentDataset.columns[column.index].profiler_dtype}`">
-            {{ dataType(currentDataset.columns[column.index].profiler_dtype) }}
+            {{ dataTypeHint(currentDataset.columns[column.index].profiler_dtype) }}
           </div>
           <div class="column-title">
             {{column.name}}
@@ -101,7 +101,7 @@
             v-if="previewPlotsData[column.name]"
             class="data-type"
             :class="`type-${previewPlotsData[column.name].dtype}`">
-            {{ dataType(previewPlotsData[column.name].dtype) }}
+            {{ dataTypeHint(previewPlotsData[column.name].dtype) }}
           </div>
           <div v-if="currentPreviewNames && currentPreviewNames[column.title]" class="column-title">
             <span>{{ currentPreviewNames[column.title] }}</span>
@@ -134,7 +134,7 @@
           @dblclick="setMenu($event, column.index)"
         >
           <div class="data-type" :class="`type-${currentDataset.columns[column.index].profiler_dtype}`">
-            {{ dataType(currentDataset.columns[column.index].profiler_dtype) }}
+            {{ dataTypeHint(currentDataset.columns[column.index].profiler_dtype) }}
           </div>
           <div v-if="currentPreviewNames && currentPreviewNames[columns[column.index].name]" class="column-title title-preview-highlight">
             <span>{{ currentPreviewNames[columns[column.index].name] }}</span>

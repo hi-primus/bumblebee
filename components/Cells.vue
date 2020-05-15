@@ -215,9 +215,9 @@ import {
   hlCols
 } from '@/utils/functions.js'
 
-const api_url = process.env.API_URL || 'http://localhost:5000'
+import { TYPES, STRING_TYPES } from '@/utils/constants.js'
 
-const STRING_TYPES = ['object','category','string','str']
+const api_url = process.env.API_URL || 'http://localhost:5000'
 
 export default {
 
@@ -1449,7 +1449,6 @@ export default {
                 key: 'algorithm',
                 label: 'Algorithm',
                 items: [
-                  {text: 'Levenshtein', value: 'levenshtein'},
                   {text: 'Fingerprint', value: 'fingerprint'},
                   {text: 'N-gram fingerprint', value: 'n_gram_fingerprint'}
                 ]
@@ -1461,16 +1460,10 @@ export default {
                 key: 'n_size'
               },
               {
-                condition: (c)=>c.algorithm=='levenshtein',
-                type: 'number',
-                label: 'Threshold',
-                key: 'threshold'
-              },
-              {
                 type: 'action',
                 label: 'Get clusters',
                 func: 'getClusters',
-                validate: (c)=>(c.algorithm!=c.valid.algorithm || (c.n_size!=c.valid.n_size && c.algorithm=='n_gram_fingerprint') ||(c.threshold!=c.valid.threshold && c.algorithm=='levenshtein'))
+                validate: (c)=>( c.algorithm!=c.valid.algorithm || (c.n_size!=c.valid.n_size && c.algorithm=='n_gram_fingerprint') )
               },
               {
                 type: 'clusters',
@@ -1490,14 +1483,10 @@ export default {
 
               var code
 
-              if (this.currentCommand.algorithm == 'levenshtein')
-                code = `from optimus.ml import distancecluster as dc; _output = dc.levenshtein_cluster(${this.dataset.varname}, "${this.currentCommand.columns[0]}"`
-                +(this.currentCommand.threshold!='' ? `, threshold=${this.currentCommand.threshold}` : '')
-                +`, output="json")`
-              else if (this.currentCommand.algorithm == 'fingerprint')
-                code = `from optimus.ml import keycollision as kc; _output = kc.fingerprint_cluster(${this.dataset.varname}, input_cols="${this.currentCommand.columns[0]}", output="json")`
+              if (this.currentCommand.algorithm == 'fingerprint')
+                code = `from optimus.engines.dask.ml import keycollision as kc; _output = kc.fingerprint_cluster(${this.dataset.varname}.ext.buffer_window("*"), input_cols="${this.currentCommand.columns[0]}", output="json")`
               else if (this.currentCommand.algorithm == 'n_gram_fingerprint')
-                code = `from optimus.ml import keycollision as kc; _output = kc.n_gram_fingerprint_cluster(${this.dataset.varname}, input_cols="${this.currentCommand.columns[0]}", n_size=${this.currentCommand.n_size}, output="json")`
+                code = `from optimus.engines.dask.ml import keycollision as kc; _output = kc.n_gram_fingerprint_cluster(${this.dataset.varname}.ext.buffer_window("*"), input_cols="${this.currentCommand.columns[0]}", n_size=${this.currentCommand.n_size}, output="json")`
               else
                 throw 'Invalid algorithm type input'
 
@@ -1566,7 +1555,7 @@ export default {
                 threshold: undefined
               },
               columns,
-              algorithm: 'levenshtein',
+              algorithm: 'fingerprint',
               clusters: false,
               loading: false,
               n_size: 2,

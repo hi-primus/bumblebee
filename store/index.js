@@ -67,6 +67,8 @@ properties.forEach((p)=>{
   pStates['every'+p.name] = []
 })
 
+import { ALL_TYPES } from '@/utils/constants.js'
+
 export const state = () => {
   return {
     datasets: [],
@@ -86,21 +88,7 @@ export const state = () => {
     engine: 'dask',
     tpw: 8,
     workers: 1,
-    allTypes: [
-      'int',
-      'decimal',
-      'string',
-      'boolean',
-      'date',
-      'array',
-      'object',
-      'gender',
-      'ip',
-      'url',
-      'email',
-      'credit_card_number',
-      'zip_code'
-    ],
+    allTypes: ALL_TYPES,
     datasetCounter: 1,
     key: '',
     kernel: false,
@@ -451,7 +439,8 @@ export const getters = {
   },
   typesAvailable (state) {
     try {
-      return state.datasets[state.tab].summary.dtypes_list || state.allTypes
+      return state.datasets[state.tab].columns.map(col=>col.profiler_dtype) || state.allTypes
+      // return state.datasets[state.tab].summary.dtypes_list || state.allTypes
     } catch (error) {
       return state.allTypes
     }

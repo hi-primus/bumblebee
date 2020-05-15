@@ -118,7 +118,7 @@
 					<v-tooltip transition="fade-transition" bottom>
 						<template v-slot:activator="{ on }">
 							<div class="data-type pr-4" v-on="on">
-								{{ dataType(item.profiler_dtype) }}
+								{{ dataTypeHint(item.profiler_dtype) }}
 							</div>
 						</template>
 						<span :key="'column-type-hint'" class="capitalize column-type">

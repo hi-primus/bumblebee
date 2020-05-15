@@ -226,7 +226,7 @@
               :disabled="!(currentDataset && currentDataset.summary)"
             >
               <template v-slot:item="{ item }">
-                <div class="data-type in-autocomplete">{{ dataType(item) }}</div> <span class="capitalize">{{ item }}</span>
+                <div class="data-type in-autocomplete">{{ dataTypeHint(item) }}</div> <span class="capitalize">{{ item }}</span>
               </template>
             </v-autocomplete>
           </div>
@@ -347,7 +347,7 @@
 
           <div v-if="detailedColumns.length>1" class="sidebar-section pr-10 columns-selected">
             <div class="column-selected" v-for="(index, i) in detailedColumns" :key="index+'selc'+i">
-              <span class="data-type" :class="`type-${dataset.columns[index].profiler_dtype}`">{{ dataType(dataset.columns[index].profiler_dtype) }}</span>
+              <span class="data-type" :class="`type-${dataset.columns[index].profiler_dtype}`">{{ dataTypeHint(dataset.columns[index].profiler_dtype) }}</span>
               <span class="data-column-name">{{ dataset.columns[index].name }}</span>
             </div>
           </div>
@@ -428,6 +428,8 @@ import dataTypesMixin from '@/plugins/mixins/data-types'
 import applicationMixin from '@/plugins/mixins/application'
 import { copyToClipboard, namesToIndices, getProperty } from '@/utils/functions.js'
 import { mapState, mapGetters } from 'vuex';
+
+import { TYPES_NAMES } from '@/utils/constants.js'
 
 const api_url = process.env.API_URL || 'http://localhost:5000'
 
@@ -520,21 +522,9 @@ export default {
         {command: 'max_abs_scaler',   text: 'Max abs Scaler',   type: 'ML', min: 1},
         {command: 'outliers',   text: 'Outliers',   type: 'ML', min: 1, max: 1},
 
-        {command: 'cast', dtype: 'int',     text: 'Int', type: 'CAST'},
-				{command: 'cast', dtype: 'float',   text: 'Float', type: 'CAST'},
-				{command: 'cast', dtype: 'double',  text: 'Double', type: 'CAST'},
-				{command: 'cast', dtype: 'string',  text: 'String', type: 'CAST'},
-				{command: 'cast', dtype: 'boolean', text: 'Boolean', type: 'CAST'},
-				{command: 'cast', dtype: 'struct',  text: 'Struct', type: 'CAST'},
-				{command: 'cast', dtype: 'array',   text: 'Array', type: 'CAST'},
-				{command: 'cast', dtype: 'bigint',  text: 'Big Int', type: 'CAST'},
-				{command: 'cast', dtype: 'date',    text: 'Date', type: 'CAST'},
-				{command: 'cast', dtype: 'byte',    text: 'Byte', type: 'CAST'},
-				{command: 'cast', dtype: 'short',   text: 'Short', type: 'CAST'},
-				{command: 'cast', dtype: 'datetime', text: 'Datetime', type: 'CAST'},
-				{command: 'cast', dtype: 'binary',  text: 'Binary', type: 'CAST'},
-				{command: 'cast', dtype: 'null',    text: 'Null', type: 'CAST'},
-				{command: 'cast', dtype: 'vector',  text: 'Vector', type: 'CAST'}
+        ...Object.entries(TYPES_NAMES).map(
+          ([dtype, text])=>({command: 'cast', dtype, text, type: 'CAST'})
+        )
       ],
 
       sortBy: [],
@@ -964,6 +954,9 @@ export default {
       try {
         var columns = []
         if (this.selectionType==='columns') {
+          if (!this.currentSelection.columns || !this.currentSelection.columns.length) {
+            return []
+          }
           columns = this.currentSelection.columns.map(e=>e.index)
         }
         else if (this.selectionType==='text') {

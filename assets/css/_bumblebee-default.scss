@@ -1116,8 +1116,12 @@ table {
   font-weight: 700 !important;
   opacity: $black-opacity;
   display: inline;
+  transform-origin: left center;
   &.in-autocomplete {
     width: 3em;
+  }
+  &.type-int {
+    transform: scaleX(1.25);
   }
 }
 .data-type-name {
