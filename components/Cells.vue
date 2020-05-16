@@ -1152,9 +1152,9 @@ export default {
         cast: {
           code: (payload) => {
             var _argument = (payload.columns.length==1) ? `"${payload.columns[0]}"` : `["${payload.columns.join('", "')}"]`
-            return `.cols.cast(`
+            return `.cols.profiler_dtype(`
             +_argument
-            +`, dtype="${payload.dtype}"`
+            +`, "${payload.dtype}"`
             +')'
           },
           content: (payload) => `<b>Cast</b> ${multipleContent([payload.columns],'hl--cols')} to ${multipleContent([payload.dtype],'hl--param')}`
