@@ -3130,7 +3130,7 @@ export default {
     async editCell (cell, index) {
       // console.log('[DEBUG] Editing ',{cell, index})
       var commandHandler = this.commandsHandlers[cell.command] || this.commandsHandlers[cell.type]
-      if (commandHandler) {
+      if (commandHandler.dialog) {
         this.computedCommandsDisabled = true;
         await this.runCodeNow(true, index)
         this.computedCommandsDisabled = false;
