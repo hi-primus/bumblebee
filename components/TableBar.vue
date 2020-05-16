@@ -809,9 +809,9 @@ export default {
         {
           type: 'button',
           onClick: ()=>this.commandHandle({command: 'set'}),
-          tooltip: 'New column',
+          tooltip: { toString: ()=>this.selectedColumns.length ? 'Set column' : 'New column'},
           icons: [{icon: 'add_box'}],
-          disabled: ()=>!(this.selectionType=='columns' && this.dataset && this.dataset.summary)
+          disabled: ()=>!(this.selectionType=='columns' && this.selectedColumns.length<=1 && this.dataset && this.dataset.summary)
         },
         {
           type: 'button',

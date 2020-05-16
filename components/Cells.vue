@@ -205,6 +205,7 @@ import {
   newName,
   arrayJoin,
   getOutputColsArgument,
+  parseExpression,
   escapeQuotes,
   escapeQuotesOn,
   getProperty,
@@ -2053,32 +2054,87 @@ export default {
             fields: [
               {
                 type: 'field',
-                key: 'output_col',
-                label: 'New column name',
+                key: 'value',
+                label: 'Expression or value',
+                placeholder: 'column+1'
               },
               {
                 type: 'field',
-                key: 'expression',
-								label: 'Expression',
-								placeholder: '1+2 or "COLUMN / ANOTHER_COLUMN"'
+                key: 'where',
+								label: 'Where',
+								placeholder: 'column!=None'
+              },
+              {
+                type: 'field',
+                key: 'output_col',
+                label: 'New column name',
+                condition: (c)=>!c.columns.length
               },
             ],
-            validate: (command) => (command.output_col!=='')
+            output_cols: true,
+            validate: (command) => {
+              var output_col = command.output_cols[0] || command.output_col || command.columns[0]
+              console.log({command, output_col})
+              return (
+                (command.columns[0] || command.value)
+                &&
+                (command.columns[0] || output_col)
+                &&
+                (command.value || output_col || command.where)
+              )
+            }
           },
           payload: (columns) => ({
+            allColumns: this.allColumns,
             command: 'set',
-            fromColumns: columns,
-            expression: '', // (columns.length!=0) ? columns.map(e=>`df["${e}"]`).join(' + ') : '',
-            title: 'Create column',
+            columns,
+            value: (columns[0] ? `${columns[0]}` : ''),
+            where: (columns[0] ? `${columns[0]}!=None` : ''),
+            title: (columns[0] ? `Set column` : 'Create column'),
             _expectedColumns: 1,
-						previewType: 'set',
-            output_col: ''
+            previewType: 'set',
+            output_col: '',
+            output_cols: columns.map(e=>'')
           }),
           code: (payload) => {
-            var output_col = escapeQuotes(payload.output_col)
-            return `.cols.set(output_col="${output_col}"`
-            +( (payload.expression) ? `, value="${payload.expression}"` : '')
-            +`)`
+
+            if (!payload.output_cols.length) {
+               payload.output_cols = [payload.output_col]
+            }
+            var output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (payload._requestType) ? 'new ' : '')
+
+            var varname = this.dataset.varname
+
+            var cb = (from, to) => {
+              var window = ''
+              if (from!==undefined) {
+                window = `,${from},${to}`
+              }
+              if (payload._requestType) {
+                varname += `.ext.buffer_window("*"${window})`
+              }
+
+              var where = payload.where ? parseExpression(payload.where, varname, payload.allColumns) : ''
+              var value = payload.value ? parseExpression(payload.value, varname, payload.allColumns) : ''
+
+              if (payload.columns[0] && !value) {
+                where = `~(${where})`
+                value = 'None'
+              }
+              return `.cols.set(`
+              + ( payload.columns[0] ? `"${payload.columns[0]}"` : 'None')
+              + ', ' + ( (where) ? `${where}` : 'None' )
+              + ', ' + ( (where || !value) ? `${value || 'None'}` : `'${value}'` )
+              + ', ' + output_cols_argument
+              + `)`
+            }
+
+            if (payload._requestType) {
+              return cb
+            } else {
+              return cb()
+            }
+
           },
           content: (payload) => `<b>Create</b> ${multipleContent([payload.output_col],'hl--cols')} with ${multipleContent([payload.expression],'hl--param')}`
         },
@@ -2563,7 +2619,7 @@ export default {
 
         try {
 
-          if (!selection || !selection.ranged || selection.ranged.index<0){
+          if (!selection || !selection.ranged || selection.ranged.index<0 || !this.dataset.columns[selection.ranged.index]){
             return
           }
 
@@ -3223,34 +3279,36 @@ export default {
         return;
       }
 
+      var inferProfile = true // false
+
       if (rerun) {
         // console.log('[CODE MANAGER] every cell is new')
-				this.markCells(false, ignoreFrom)
+        this.markCells(false, ignoreFrom)
+        inferProfile = true
       }
 
 			if (this.firstRun) {
 				this.firstRun = false
-				rerun = false
+        rerun = false
+        inferProfile = true
 			}
 
       this.computedCommandsDisabled = true;
 
       try {
 
-        console.time('task')
         this.$store.commit('setBuffer',false)
         var response = await this.socketPost('cells', {
           code,
           name: this.dataset.summary ? this.dataset.name : null,
           varname: this.dataset.varname,
           session: this.$store.state.session,
-          key: this.$store.state.key
+          key: this.$store.state.key,
+          inferProfile
         }, {
           timeout: 0
         })
         console.log('"""[DEBUG][CODE]"""',response.code)
-        console.timeEnd('task')
-
 
         this.computedCommandsDisabled = false;
 

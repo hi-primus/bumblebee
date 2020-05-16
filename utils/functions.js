@@ -353,3 +353,33 @@ export const multipleContent = (arrays, colors, arraySep = ', ', pairSep = ', ',
   return str
 
 }
+
+export const parseExpression = (exp, df, cols) => {
+
+  var columns = Array.from(cols)
+
+  columns.sort((a,b)=>b.length-a.length)
+
+  exp = exp.replace(/\\"/g,"_bb_QUOTE_bb_")
+
+  exp = exp.split('"')
+
+  for (let i = 0; i < exp.length; i++) {
+    if (i%2) {
+      continue
+    }
+    columns.forEach((column, cindex) => {
+      exp[i] = exp[i].replace(new RegExp(column,"g"),`_bb_BBCOLUMN${cindex}_bb_`)
+    });
+  }
+
+  exp = exp.join('"')
+
+  exp = exp.replace( new RegExp('_bb_QUOTE_bb_',"g") ,'\\"')
+
+  columns.forEach((column, cindex) => {
+    exp = exp.replace(new RegExp(`_bb_BBCOLUMN${cindex}_bb_`,"g"),`${df}["${column}"]`)
+  });
+
+  return exp
+}

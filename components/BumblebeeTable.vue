@@ -1464,7 +1464,9 @@ export default {
 
         var cols = this.currentPreviewColumns.map(e=>escapeQuotes(  e.title.split('__preview__').join('')  ))
 
-        var code = `_output = ${this.currentDataset.varname}.ext.buffer_window("*")${await getPropertyAsync(previewCode) || ''}.ext.profile(["${cols.join('", "')}"], infer=True, output="json")`
+        var inferProfile = true // false
+
+        var code = `_output = ${this.currentDataset.varname}.ext.buffer_window("*")${await getPropertyAsync(previewCode) || ''}.ext.profile(["${cols.join('", "')}"]${(inferProfile ? ', infer=True' : '')}, output="json")`
 
         var response = await this.evalCode(code)
 
