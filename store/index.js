@@ -108,6 +108,12 @@ properties.forEach((p)=>{
 
 export const mutations = {
 
+  clearDatasetProperties (state) {
+    state.properties.filter(p=>p.clear).forEach(p=>{
+      Vue.set(state['every'+p.name], state.tab, false)
+    })
+  },
+
   setTab (state, { tab }) {
     state.tab = tab
   },

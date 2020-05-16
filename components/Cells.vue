@@ -2551,6 +2551,12 @@ export default {
 
   watch: {
 
+    codeError (value) {
+      if (value && value.length) {
+        this.$store.commit('clearDatasetProperties')
+      }
+    },
+
     currentSelection: {
       deep: true,
       handler (selection) {

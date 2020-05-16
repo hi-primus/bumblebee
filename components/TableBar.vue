@@ -1016,6 +1016,11 @@ export default {
         }
       })
     },
+    socketAvailable (value) {
+      if (!value && this.commandsDisabled) {
+        this.commandsDisabled = false
+      }
+    },
     computedIsOperating (value) {
       this.$emit('update:isOperating', value)
     },

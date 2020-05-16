@@ -411,7 +411,7 @@ const createConnection = async function (sessionId) {
           }
           else if (response.msg_type === 'error') {
             console.error('msg_type error')
-            kernels[sessionId].promises[msg_id].reject(response.content)
+            kernels[sessionId].promises[msg_id].resolve({...response.content, status: 'error'})
           }
         }
         else {
