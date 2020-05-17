@@ -50,11 +50,11 @@ workers = ${payload.workers || 1}
 reset = ${payload.reset || 'False'}
 
 try:
-    if (reset):
-        raise Exception('Resetting')
     op
     op.__version__
     op.engine
+    if (reset or op.engine!=engine):
+        raise Exception('Resetting')
     res.update({'optimus': 'ok', 'dependencies': 'ok', 'optimus_version': op.__version__, 'engine': op.engine})
     try:
         df

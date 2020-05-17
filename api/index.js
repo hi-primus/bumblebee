@@ -16,7 +16,7 @@ const uuidv1 = require('uuid/v1');
 
 import { trimCharacters } from './utils/functions.js'
 
-const app_secret = process.env.APP_SECRET || '6um61e6ee'
+const app_secret = (process.env.APP_SECRET || '6um61e6ee')
 var app_url
 var app_host
 var api_url
@@ -28,19 +28,19 @@ var kernels = []
 
 function updateHost (host = 'localhost') {
 
-  var kernel_host = process.env.KERNEL_HOST || host
-  var kernel_port = process.env.KERNEL_PORT || 8888
+  var kernel_host = (process.env.KERNEL_HOST || host)
+  var kernel_port = (process.env.KERNEL_PORT || 8888)
 
   base  = 'http://'+kernel_host+':'+kernel_port
   ws_kernel_base = 'ws://'+kernel_host+':'+kernel_port
 
-  app_host = process.env.APP_HOST || host
-  var app_port = process.env.APP_PORT || 3000
+  app_host = (process.env.APP_HOST || host)
+  var app_port = (process.env.APP_PORT || 3000)
 
   app_url = `${app_host}:${app_port}`
 
-  var api_host = process.env.HOST || host
-  var api_port = process.env.PORT || 5000
+  var api_host = (process.env.HOST || host)
+  var api_port = (process.env.PORT || 5000)
 
   api_url = `${api_host}:${api_port}`
 
@@ -245,10 +245,7 @@ const runCode = async function(code = '', sessionId = '') {
   } catch (err) {
     // console.error(err)
     if (err.ename || err.traceback) {
-      var traceback = err.traceback.map(l=>
-        l.replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '')
-      )
-      return { status: 'error', errorName: err.ename, error: err.evalue, traceback }
+      return { status: 'error', errorName: err.ename, error: err.evalue, traceback: err.traceback }
     } else {
       return { status: 'error', error: 'Internal error', content: err }
     }
@@ -475,13 +472,11 @@ const requestToKernel = async function (type, sessionId, payload) {
     case 'code':
       code = kernelRoutines.code(payload)
       break;
-    case 'session':
-      code = kernelRoutines.init(payload)
-      break;
     case 'datasets':
       code = kernelRoutines.datasets(payload)
       break;
     case 'init':
+      payload.engine = payload.engine || (process.env.ENGINE || 'dask')
       code = kernelRoutines.init(payload)
     break;
   }
@@ -514,6 +509,10 @@ const requestToKernel = async function (type, sessionId, payload) {
 
   response = handleResponse(response)
 
+  response.traceback = response.traceback.map(l=>
+    l.replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '')
+  )
+
   var endTime = new Date().getTime()
 
   response._serverTime = {
@@ -526,8 +525,8 @@ const requestToKernel = async function (type, sessionId, payload) {
 }
 
 const startServer = async () => {
-  const port = process.env.PORT || 5000
-  const host = process.env.HOST || '0.0.0.0'
+  const port = (process.env.PORT || 5000)
+  const host = (process.env.HOST || '0.0.0.0')
   var _server = server.listen(port, host, async () => {
 
     if (process.env.NODE_ENV === 'production') {
