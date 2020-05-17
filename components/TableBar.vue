@@ -508,6 +508,11 @@ export default {
         {command: 'trim', text: 'Trim white space', type: 'STRING'},
         {command: 'string clustering', text: 'String clustering', type: 'STRING', max: 1, min: 1, hidden: ()=>(this.appStable) },
 
+        {command: 'set_column_format', text: 'Set column format', type: 'TIME'},
+				{command: 'transform_format', text: 'Transform format', type: 'TIME'},
+				{command: 'get_from_datetime', text: 'Get data from datetime', type: 'TIME'},
+				// {command: 'cast_date', text: 'Cast as date', type: 'TIME'},
+
 				// {command: 'random_split',     teaxt: 'Split train and test', type: 'PREPARE'},
 
 				{command: 'sample_n', text: 'Random Sampling', type: 'ML'},
@@ -908,6 +913,14 @@ export default {
           tooltip: 'String operations',
           disabled: ()=>!(this.checkDataTypes(['string']) && this.selectionType=='columns' && this.dataset && this.dataset.summary && this.selectedColumns.length>=0)
         },
+        // TODO: Datetime operations
+        // {
+        //   type: 'menu',
+        //   group: 'TIME',
+        //   icons: [{ icon: 'calendar_today' }],
+        //   tooltip: 'Datetime functions',
+        //   disabled: ()=>!(this.selectionType=='columns' && this.selectedColumns.length>0)
+        // },
         {
           type: 'menu',
           group: 'CAST',
