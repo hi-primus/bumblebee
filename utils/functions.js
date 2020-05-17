@@ -305,7 +305,7 @@ export const hlCols = (text) => {
 export const multipleContent = (arrays, colors, arraySep = ', ', pairSep = ', ', brackets = true, parentheses = true) => {
 
   arrays = arrays.map(array=>{
-    if (!array.join || !array.map)
+    if (!array || !array.join || !array.map)
       return [array]
     return array
   })
