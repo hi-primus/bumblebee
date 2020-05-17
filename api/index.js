@@ -231,7 +231,7 @@ const runCode = async function(code = '', sessionId = '') {
   }
 
   try {
-    if (kernels[sessionId]==undefined) {
+    if (!checkKernel(sessionId)) {
       await createKernel(sessionId)
     }
 
@@ -247,21 +247,25 @@ const runCode = async function(code = '', sessionId = '') {
     if (err.ename || err.traceback) {
       return { status: 'error', errorName: err.ename, error: err.evalue, traceback: err.traceback }
     } else {
-      return { status: 'error', error: 'Internal error', content: err }
+      return { status: 'error', error: 'Internal error', content: err.toString() }
     }
   }
 }
 
+const checkKernel = function (sessionId) {
+  return kernels[sessionId] && kernels[sessionId].id
+}
+
 const deleteKernel = async function(sessionId) {
   try {
-    if (kernels[sessionId] != undefined) {
+    if (!checkKernel(sessionId)) {
       var _id = kernels[sessionId].id
-      kernels[sessionId] = undefined
       const kernelResponse = await request({
         uri: `${base}/api/kernels/${_id}`,
         method: 'DELETE',
         headers: {}
       })
+      kernels[sessionId].id = false
       console.log('Deleting Session',sessionId,_id)
     }
   } catch (err) {}
@@ -306,6 +310,9 @@ const initializeSession = async function (sessionId, payload = false) {
     try {
       result = await requestToKernel('init', sessionId, payload)
     } catch (err) {
+      if (tries<=1) {
+        return {error: 'Internal Error', content: err.toString(), status: 'error'}
+      }
       result = false
     }
     if (!result) {
@@ -339,7 +346,14 @@ const createKernel = async function (sessionId) {
           body: {}
         })
         const uuid = Buffer.from( uuidv1(), 'utf8' ).toString('hex')
-        kernels[sessionId] = { id: kernelResponse.id, uuid }
+        if (!kernels[sessionId]) {
+          kernels[sessionId] = {}
+        }
+        kernels[sessionId] = {
+          ...kernels[sessionId],
+          id: kernelResponse.id,
+          uuid
+        }
         break
       } catch (err) {
         console.error('Kernel creating error, retrying', tries-10)
@@ -394,26 +408,37 @@ const createConnection = async function (sessionId) {
     if (!kernels[sessionId].client) {
       kernels[sessionId].client = new WebSocketClient({closeTimeout: 20 * 60 * 1000})
     }
+
     kernels[sessionId].client.connect(`${ws_kernel_base}/api/kernels/${kernels[sessionId].id}/channels`)
-    kernels[sessionId].client.on('connect',function (connection){
-      kernels[sessionId] = kernels[sessionId] || {}
+    kernels[sessionId].client.on('connect',function (connection) {
+
+      // kernels[sessionId] = kernels[sessionId] || {}
       kernels[sessionId].connection = connection
       kernels[sessionId].connection.on('message', function (message) {
 
-        if (message.type === 'utf8'){
-          var response = JSON.parse(message.utf8Data)
-          var msg_id = response.parent_header.msg_id
-          if (response.msg_type === 'execute_result') {
-            kernels[sessionId].promises[msg_id].resolve(response.content.data['text/plain'])
+        try {
+          if (!kernels[sessionId]) {
+            console.log(kernels[sessionId])
+            throw 'Kernel error'
           }
-          else if (response.msg_type === 'error') {
-            console.error('msg_type error')
-            kernels[sessionId].promises[msg_id].resolve({...response.content, status: 'error'})
+          if (message.type === 'utf8'){
+            var response = JSON.parse(message.utf8Data)
+            var msg_id = response.parent_header.msg_id
+            if (response.msg_type === 'execute_result') {
+              kernels[sessionId].promises[msg_id].resolve(response.content.data['text/plain'])
+            }
+            else if (response.msg_type === 'error') {
+              console.error('msg_type error')
+              kernels[sessionId].promises[msg_id].resolve({...response.content, status: 'error'})
+            }
           }
+          else {
+            console.warn({status: 'error', content: 'Response from gateway is not utf8 type', error: 'Message type error', message: message}) // TODO: Resolve
+          }
+        } catch (err) {
+          console.error(err)
         }
-        else {
-          console.warn({status: 'error', content: 'Response from gateway is not utf8 type', error: 'Message type error', message: message}) // TODO: Resolve
-        }
+
       })
       console.log('Connection created', sessionId)
       resolve(kernels[sessionId].connection)
@@ -509,9 +534,11 @@ const requestToKernel = async function (type, sessionId, payload) {
 
   response = handleResponse(response)
 
-  response.traceback = response.traceback.map(l=>
-    l.replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '')
-  )
+  if (response.traceback && response.traceback.map) {
+    response.traceback = response.traceback.map(l=>
+      l.replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '')
+    )
+  }
 
   var endTime = new Date().getTime()
 

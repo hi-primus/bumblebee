@@ -217,13 +217,13 @@ export const escapeQuotesOn = (payload = {}, keys = []) => {
 export const printError = (payload) => {
 
   var data = payload.data || payload
+  var content = data.errorValue || data.content
 
   if (data.traceback && data.traceback.length) {
     console.error('[DEBUG][ERROR][TRACEBACK]\n',data.traceback.join('\n'))
   }
-  else if (data.errorValue && data.error) {
-    console.error('[DEBUG][ERROR]\n',data.error+'\n',data.errorValue)
-    console.error(data.errorValue)
+  else if (content && data.error) {
+    console.error('[DEBUG][ERROR]\n',data.error+'\n',content)
   }
   else if (data.error) {
     console.error('[DEBUG][ERROR]\n',data.error)
