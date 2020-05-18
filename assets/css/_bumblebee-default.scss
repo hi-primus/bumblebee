@@ -2023,12 +2023,21 @@ $editor-top-padding: 6px;
         width: calc(100% - 48px) !important;
       }
     }
+    .v-input__slot {
+      min-height: 34px !important;
+    }
+    .v-label {
+      top: 7px !important;
+    }
 
   }
   .o-buttons {
     display: flex;
     justify-content: flex-end;
     flex: 0;
+  }
+  .filter-results-checkbox {
+    margin: 0;
   }
   .separator {
     width: calc(100% - 8px);
@@ -2041,12 +2050,6 @@ $editor-top-padding: 6px;
   .v-label, .v-input {
     // background: cyan;
     font-size: 12px;
-  }
-  .v-input__slot {
-    min-height: 34px !important;
-  }
-  .v-label {
-    top: 7px !important;
   }
   .v-input:not(.multiline-select) .v-select__selections {
     max-height: 34px;

@@ -283,7 +283,7 @@
         height: {{rowHeight}}px;
       }
     </style>
-    <div class="bb-table-i" v-show="true" ref="BbTable" :style="tableIStyle">
+    <div class="bb-table-i" v-show="true" ref="BbTable" :style="tableStyle">
       <div class="bb-table-i-rows">
         <template v-if="rowsColumn==='__match__'">
           <div
@@ -320,7 +320,7 @@
         >
           <template v-if="!(lazyColumns.length && !lazyColumns[cindex]) && computedColumnValues[column.sampleName]">
             <template v-if="column.preview || column.duplicated">
-              <template v-for="value in computedColumnValues[column.sampleName].filter((e)=>e!==undefined && e!==null)">
+              <template v-for="value in computedColumnValues[column.sampleName].filter((e)=>e!==undefined && e!==null && e.index<rowsCount)">
                 <div
                   :key="'c'+column.index+'r'+value.index"
                   class="bb-table-i-cell"
@@ -472,12 +472,17 @@ export default {
           return Object.keys(this.columnValues)[0]
         }
         else if (this.currentHighlightRows && this.columnValues['__match__']) {
+          if (this.currentPreviewColumns && this.currentPreviewColumns.length && this.columnValues[this.currentPreviewColumns[0].title]) {
+            if (this.columnValues[this.currentPreviewColumns[0].title].length>this.columnValues['__match__']) {
+              return this.currentPreviewColumns[0].title
+            }
+          }
           return '__match__'
         }
         else if (this.loadPreview) {
           return Object.keys(this.loadPreviewColumnValues)[0]
         }
-        else if (this.currenPreviewColumns && this.currenPreviewColumns.length) {
+        else if (this.currentPreviewColumns && this.currentPreviewColumns.length) {
           return this.currentPreviewColumns[0].title
         }
       } catch (err) {
@@ -817,17 +822,28 @@ export default {
       }
     },
 
-    rowsCount() {
+    totalRowsCount () {
+      return this.currentDataset.summary.rows_count
+    },
+
+    rowsCount () {
       try {
         if (this.loadPreview && this.currentLoadPreview && this.currentLoadPreview.sample) {
           return this.currentLoadPreview.sample.value.length
         }
-        if (this.currentPreviewCode && this.currentProfilePreview && this.currentProfilePreview.summary && this.currentProfilePreview.summary.rows_count) {
-          this.previewRowsCount = this.currentProfilePreview.summary.rows_count
-          return this.currentProfilePreview.summary.rows_count
-        }
-        if (this.currentPreviewCode && this.currentPreviewCode.datasetPreview && this.previewRowsCount) {
-          return this.previewRowsCount
+        if (this.currentPreviewCode) {
+          if (this.currentHighlightRows && typeof this.currentHighlightRows === 'number'){
+            if (this.currentPreviewCode.noBufferWindow) {
+              return this.currentHighlightRows
+            }
+          }
+          if (this.currentProfilePreview && this.currentProfilePreview.summary && this.currentProfilePreview.summary.rows_count) {
+            this.previewRowsCount = this.currentProfilePreview.summary.rows_count
+            return this.currentProfilePreview.summary.rows_count
+          }
+          if (this.currentPreviewCode.datasetPreview && this.previewRowsCount) {
+            return this.previewRowsCount
+          }
         }
         return this.currentDataset.summary.rows_count
       } catch (error) {
@@ -835,12 +851,8 @@ export default {
       }
     },
 
-    rowStyle() {
-      return { maxHeight: (this.rowHeight) + 'px' }
-    },
-
-    tableIStyle() {
-      var h = this.rowHeight * Math.max(this.rowsCount, 0)
+    tableStyle() {
+      var h = this.rowHeight * (+this.rowsCount)
       return {
         maxHeight: h+'px',
         height: h+'px'
@@ -1145,16 +1157,19 @@ export default {
           var color = this.currentPreviewCode.color
 
           if (matchRowsColumns[0]) {
-            this.$store.commit('setHighlightRows', true)
+            if (typeof this.currentHighlightRows !== 'number') {
+              this.$store.commit('setHighlightRows', true)
+            }
           } else {
             this.$store.commit('setHighlightRows', false)
           }
+
 
           this.$store.commit('setPreviewColumns', previewColumns)
 
           this.$store.commit('setHighlights', { matchColumns, color })
 
-          if (previewColumns.length) {
+          if (previewColumns.length || matchRowsColumns.length) {
             return true // must cehck
           }
 
@@ -1460,13 +1475,22 @@ export default {
 
       if (this.currentProfilePreview.code !== previewCode) {
 
+        var profile = (this.currentPreviewColumns && this.currentPreviewColumns.length)
+
+        var matches = this.currentHighlightRows
+
         this.$store.commit('setProfilePreview', {code: previewCode, columns: []})
 
         var cols = this.currentPreviewColumns.map(e=>escapeQuotes(  e.title.split('__preview__').join('')  ))
 
         var inferProfile = true // false
 
-        var code = `_output = ${this.currentDataset.varname}.ext.buffer_window("*")${await getPropertyAsync(previewCode) || ''}.ext.profile(["${cols.join('", "')}"]${(inferProfile ? ', infer=True' : '')}, output="json")`
+        var code = `_df_profile = ${this.currentDataset.varname}.ext.buffer_window("*")${await getPropertyAsync(previewCode) || ''}`
+        + `\n_output = { `
+        + (profile ? `"profile": _df_profile.ext.profile(["${cols.join('", "')}"]${(inferProfile ? ', infer=True' : '')}, output="json")` : '')
+        + (profile && matches ? `, ` : '')
+        + (matches ? `"matches_count": len(_df_profile.rows.select('df["__match__"]!=None'))` : '')
+        + `}`
 
         var response = await this.evalCode(code)
 
@@ -1474,15 +1498,25 @@ export default {
           throw response
         }
 
-        var dataset = parseResponse(response.data.result)
+        if (profile && response.data.result.profile) {
+          var dataset = parseResponse(response.data.result.profile)
 
-        if (!dataset) {
-          throw response
+          if (!dataset) {
+            throw response
+          }
+
+          dataset = { ...dataset, code: previewCode }
+
+          this.$store.commit('setProfilePreview', dataset)
         }
 
-        dataset = { ...dataset, code: previewCode }
+        if (matches && response.data.result.matches_count!==undefined) {
 
-        this.$store.commit('setProfilePreview', dataset)
+          this.$store.commit('setHighlightRows', +response.data.result.matches_count)
+
+        }
+
+
 
         return true
       }
@@ -1662,7 +1696,7 @@ export default {
       }
 
       from = Math.max( from, 0 )
-      to = Math.min( to, this.rowsCount - 1 )
+      to = Math.min( to, this.totalRowsCount - 1 )
 
       var length = to - from
 

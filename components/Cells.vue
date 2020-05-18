@@ -72,6 +72,14 @@
             </template>
           </div>
           <div class="o-buttons">
+            <template v-if="command.dialog.filteredPreview">
+              <v-checkbox
+                class="filter-results-checkbox"
+                v-model="currentCommand.filteredPreview"
+                :label="`Filter results: ${currentCommand.filteredPreview ? 'Yes' : 'No'}`"
+              ></v-checkbox>
+
+            </template>
             <v-spacer></v-spacer>
             <v-btn
               color="primary"
@@ -376,6 +384,7 @@ export default {
                 type: 'field'
               },
             ],
+            filteredPreview: true,
           },
           payload: (columns, payload = {}) => {
 
@@ -388,7 +397,10 @@ export default {
               selection: [],
 
               previewType: 'REMOVE_KEEP_SET',
+              filteredPreview: true,
+              noBufferWindow: (c)=>c.filteredPreview,
               highlightColor: (c)=>c.action==='select' ? 'green' : 'red',
+              filteredPreview: true,
               _expectedColumns: () => +(this.currentCommand.action==='set'),
               _isString: payload.columnDataTypes && payload.columnDataTypes.every(d=>STRING_TYPES.includes(d)),
 
@@ -413,7 +425,8 @@ export default {
             payload = escapeQuotesOn(payload, ['value'])
 
             if (payload._requestType) {
-              varname = `${varname}.ext.get_buffer()`
+              // varname = `${varname}.ext.get_buffer()`
+              varname = `df`
             }
 
             if (payload.rowsType==='values' && payload.selection && payload.selection.map) {
@@ -454,16 +467,33 @@ export default {
 
             if (payload.action==='set') {
               var output_col = payload.columns[0]
+              var code = ''
               if (payload._requestType) {
                 output_col = 'new '+output_col
+                code = `.rows.find( '${expression}' )`
+                if (payload.filteredPreview) {
+                  code = `.rows.select( 'df["__match__"]==True' )`
+                }
+                code = code + `.cols.set( "${payload.columns[0]}", 'df["__match__"]==True', output_cols=["${output_col}"], value=${payload.value || 'None'} )`
+                if (payload._requestType==='preview' && payload.filteredPreview) {
+                  return (from, to)=>code+(from!==undefined ? `[${from}:${to}]` : '')
+                }
+                return code
               }
-              return `.cols.set( "${payload.columns[0]}", ${expression}, output_cols=["${output_col}"], value=${payload.value || 'None'} )`
+              return code + `.cols.set( "${payload.columns[0]}", '${expression}', output_cols=["${output_col}"], value=${payload.value || 'None'} )`
 
             } else {
-              if (payload._requestType==='preview') {
-                return `.rows.find( ${expression} )`
+              if (payload._requestType) {
+                var code = `.rows.find( '${expression}' )`
+                if (payload.filteredPreview) {
+                  code += `.rows.select( 'df["__match__"]==True' )`
+                }
+                if (payload._requestType==='preview' && payload.filteredPreview) {
+                  return (from, to)=>code+(from!==undefined ? `[${from}:${to}]` : '')
+                }
+                return code
               } else {
-                return `.rows.${payload.action}( ${expression} )`
+                return `.rows.${payload.action}( '${expression}' )`
               }
 
             }
@@ -568,7 +598,7 @@ export default {
                 condition: (c)=>('custom'==c.condition),
                 key: 'expression',
                 label: 'Expression',
-                placeholder: 'df["col_name"]>=0',
+                placeholder: 'column>=0',
                 type: 'field'
               },
               {
@@ -589,6 +619,7 @@ export default {
                 ]
               }
             ],
+            filteredPreview: true,
             validate: (c) => {
 
               // this.currentCommand.highlightColor = (c.action==='select') ? 'green' : 'red'
@@ -624,6 +655,7 @@ export default {
             var condition = 'exactly'
 
             return {
+              allColumns: this.allColumns,
               columns,
               condition,
               action: 'select',
@@ -631,11 +663,13 @@ export default {
               value_2: '',
               values: [],
               text: '',
-              expression: `${this.dataset.varname}["${columns[0]}"]`,
+              expression: `${columns[0]}`,
 
               _isString: payload.columnDataTypes && payload.columnDataTypes.every(d=>STRING_TYPES.includes(d)),
 
               previewType: 'filter rows',
+              filteredPreview: true,
+              noBufferWindow: (c)=>c.filteredPreview,
               highlightColor: (c)=>c.action==='select' ? 'green' : 'red',
               _expectedColumns: 0
             }
@@ -647,8 +681,10 @@ export default {
             var varname = this.dataset.varname
 
             if (payload._requestType) {
-              varname = `${varname}.ext.get_buffer()`
+              // varname = `${varname}.ext.get_buffer()`
+              varname = `df`
             }
+            expression = parseExpression(expression, varname, payload.allColumns)
 
             try {
               payload = escapeQuotesOn(payload, ['text','selection'])
@@ -694,8 +730,16 @@ export default {
               case 'custom':
               default:
             }
-            if (payload._requestType==='preview') {
-              return `.rows.find( ${expression} )` // ${varname}.rows.${payload.action}()
+            if ( payload._requestType ) {
+              var code = `.rows.find( '${expression}' )` // ${varname}.rows.${payload.action}()
+              if (payload.filteredPreview) {
+                // code += `.rows.select( ${varname}["__match__"]==True )` // ${varname}.rows.${payload.action}()
+                code += `.rows.select( 'df["__match__"]==True' )` // ${varname}.rows.${payload.action}()
+                if (payload._requestType==='preview') {
+                  return (from, to)=>code+(from!==undefined ? `[${from}:${to}]` : '')
+                }
+              }
+              return code
             } else {
               return `.rows.${payload.action}( ${expression} )` // ${varname}.rows.${payload.action}()
             }
@@ -2103,19 +2147,19 @@ export default {
             }
             var output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (payload._requestType) ? 'new ' : '')
 
-            var varname = this.dataset.varname
+            // var varname = this.dataset.varname
 
             var cb = (from, to) => {
               var window = ''
               if (from!==undefined) {
                 window = `,${from},${to}`
               }
-              if (payload._requestType) {
-                varname += `.ext.buffer_window("*"${window})`
-              }
+              // if (payload._requestType) {
+              //   varname += `.ext.buffer_window("*"${window})`
+              // }
 
-              var where = payload.where ? parseExpression(payload.where, varname, payload.allColumns) : ''
-              var value = payload.value ? parseExpression(payload.value, varname, payload.allColumns) : ''
+              var where = payload.where ? parseExpression(payload.where, 'df', payload.allColumns) : ''
+              var value = payload.value ? parseExpression(payload.value, 'df', payload.allColumns) : ''
 
               if (payload.columns[0] && !value) {
                 where = `~(${where})`
@@ -2123,8 +2167,8 @@ export default {
               }
               return `.cols.set(`
               + ( payload.columns[0] ? `"${payload.columns[0]}"` : 'None')
-              + ', ' + ( (where) ? `${where}` : 'None' )
-              + ', ' + ( (where || !value) ? `${value || 'None'}` : `'${value}'` )
+              + ', ' + ( (where) ? `'${where}'` : 'None' )
+              + ', ' + ( (value) ? `'${value}'` : 'None' )
               + ', ' + output_cols_argument
               + `)`
             }
@@ -2868,7 +2912,7 @@ export default {
           loadPreview: !!this.currentCommand.loadPreview,
           load: this.currentCommand.previewType==='load',
           infer: this.currentCommand._moreOptions===false,
-          noBufferWindow: this.currentCommand.noBufferWindow,
+          noBufferWindow: getProperty(this.currentCommand.noBufferWindow,[this.currentCommand]),
           expectedColumns,
           joinPreview
         })
@@ -3160,6 +3204,8 @@ export default {
       //   }
       // }
 
+      var precode = ''
+
       if (!payload._code) {
         var commandHandler = this.commandsHandlers[payload.command] || this.commandsHandlers[payload.type]
         if (commandHandler) {
@@ -3174,11 +3220,18 @@ export default {
         return code
       } else if (type==='profile') {
         return code
-      } else if (payload.isLoad) {
-        return code +'\n'+`${this.dataset.varname} = ${this.dataset.varname}.ext.optimize()`
       } else {
-        return `${this.dataset.varname} = ${this.dataset.varname}${code}.ext.cache()`
+        // if (typeof code === 'object') {
+        //   precode = code.precode + '\n'
+        //   code = code.code
+        // }
+        if (payload.isLoad) {
+          return precode + code +'\n'+`${this.dataset.varname} = ${this.dataset.varname}.ext.optimize()`
+        } else {
+          return precode + `${this.dataset.varname} = ${this.dataset.varname}${code}.ext.cache()`
+        }
       }
+
 
 
     },
