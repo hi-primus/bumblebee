@@ -468,7 +468,7 @@ export default {
             }
 
             if (payload.action==='set') {
-              payload.value = parseExpression(payload.value, varname, payload.allColumns)
+              payload.value = parseExpression(payload.value, 'mask', payload.allColumns)
               var output_col = payload.columns[0]
               var code = ''
               if (payload._requestType) {
@@ -520,7 +520,11 @@ export default {
                 str += ` rows where ${cols} is between ${multipleContent(values || [],'hl--param', ', ', ' and ', false, false)}`
                 break;
               case 'values':
-                str += ` rows where ${cols} is one of ${multipleContent([values || []],'hl--param')}`
+                if (values.length>1) {
+                  str += ` rows where ${cols} is one of ${multipleContent([values || []],'hl--param')}`
+                } else  {
+                  str += ` rows where ${cols} is ${multipleContent([values || []],'hl--param')}`
+                }
                 break;
               case 'missing':
                 str += ' missing rows on '+cols
@@ -2181,17 +2185,15 @@ export default {
               // }
 
               var where = payload.where ? parseExpression(payload.where, 'df', payload.allColumns) : ''
-              var value = payload.value ? parseExpression(payload.value, 'df', payload.allColumns) : ''
-              // var input_col = false
+              var value = payload.value ? parseExpression(payload.value, 'mask', payload.allColumns) : ''
 
               if (payload.columns[0] && !value) {
                 where = `~(${where})`
                 value = 'None'
-                // input_col = payload.columns[0]
               }
+
               return `.cols.set(`
               + 'value=' + ( (value) ? `'${value}'` : "'None'" )
-              // + ( input_col ? `, input_cols="${payload.columns[0]}"` : 'None')
               + ', where=' + ( (where) ? `'${where}'` : 'None' )
               + ', output_cols=' + output_cols_argument
               + `)`
@@ -2210,7 +2212,7 @@ export default {
                payload.output_cols = [payload.output_col]
             }
 
-            action = 'Create'
+            var action = 'Create'
 
             var er = everyRatio(payload.output_cols, (col)=>payload.allColumns.indexOf(col)>=0)
 

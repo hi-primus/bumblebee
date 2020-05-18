@@ -388,7 +388,7 @@ export const everyRatio = (array,cb) => {
   if (array.length===0) {
     return 1
   }
-  count = 0
+  var count = 0
   for (let i = 0; i < array.length; i++) {
     count += cb(array[i],i) ? 1 : 0
   }
