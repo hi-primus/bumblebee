@@ -9,6 +9,7 @@
               :missing="+values.missing"
               :total="rowsCount"
               :mismatch="values.mismatch"
+              :match="values.match"
               :nullV="values.null"
               bottom
               class="rounded"

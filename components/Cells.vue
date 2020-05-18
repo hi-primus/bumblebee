@@ -221,6 +221,7 @@ import {
   spanClass,
   multipleContent,
   hlParam,
+  everyRatio,
   hlCols
 } from '@/utils/functions.js'
 
@@ -396,6 +397,8 @@ export default {
               value: '',
               selection: [],
 
+              allColumns: this.allColumns,
+
               previewType: 'REMOVE_KEEP_SET',
               filteredPreview: true,
               noBufferWindow: (c)=>c.filteredPreview,
@@ -465,6 +468,7 @@ export default {
             }
 
             if (payload.action==='set') {
+              payload.value = parseExpression(payload.value, varname, payload.allColumns)
               var output_col = payload.columns[0]
               var code = ''
               if (payload._requestType) {
@@ -473,13 +477,13 @@ export default {
                 if (payload.filteredPreview) {
                   code += `.rows.select( 'df["__match__"]==True' )`
                 }
-                code += `.cols.set( where='df["__match__"]==True', output_cols=["${output_col}"], value=${payload.value || '"None"'} )`
+                code += `.cols.set( where='df["__match__"]==True', output_cols=["${output_col}"], value="${payload.value || 'None'}" )`
                 if (payload._requestType==='preview' && payload.filteredPreview) {
                   return (from, to)=>code+(from!==undefined ? `[${from}:${to}]` : '')
                 }
                 return code
               }
-              return code + `.cols.set( where='${expression}', output_cols=["${output_col}"], value=${payload.value || '"None"'} )`
+              return code + `.cols.set( where='${expression}', output_cols=["${output_col}"], value="${payload.value || 'None'}" )`
 
             } else {
               if (payload._requestType) {
@@ -2200,7 +2204,25 @@ export default {
             }
 
           },
-          content: (payload) => `<b>Create</b> ${multipleContent([payload.output_col],'hl--cols')} with ${multipleContent([payload.expression],'hl--param')}`
+          content: (payload) => {
+
+            if (!payload.output_cols.length) {
+               payload.output_cols = [payload.output_col]
+            }
+
+            action = 'Create'
+
+            var er = everyRatio(payload.output_cols, (col)=>payload.allColumns.indexOf(col)>=0)
+
+            if (er===1) {
+              action = 'Set'
+            } else if (er>0) {
+              action = 'Set / Create'
+            }
+
+            if (payload.allColumns.indexOf())
+            `<b>Create</b> ${multipleContent([payload.output_cols],'hl--cols')} with ${multipleContent([payload.expression],'hl--param')}`
+          }
         },
         rename: {
           dialog: {
@@ -3386,6 +3408,7 @@ export default {
         }, {
           timeout: 0
         })
+        window.code = (window.code || '') + response.code + '\n'
         console.log('"""[DEBUG][CODE]"""',response.code)
 
         this.computedCommandsDisabled = false;

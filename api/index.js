@@ -137,7 +137,8 @@ const newSocket = function (socket, session) {
       } catch (err) {
         result = err
       }
-      socket.emit('reply',{data: result, timestamp: payload.timestamp})
+      var code = kernelRoutines.datasetsMin(payload)
+      socket.emit('reply',{data: result, code, timestamp: payload.timestamp})
     })
 
     socket.on('initialize', async (payload) => {
@@ -149,7 +150,8 @@ const newSocket = function (socket, session) {
         result = err
         result.status = 'error'
       }
-      socket.emit('reply',{data: result, timestamp: payload.timestamp})
+      var code = kernelRoutines.initMin(payload)
+      socket.emit('reply',{data: result, code, timestamp: payload.timestamp})
     })
 
     socket.on('run', async (payload) => {
@@ -161,11 +163,9 @@ const newSocket = function (socket, session) {
     socket.on('cells', async (payload) => {
       var sessionId = payload.session
       var varname = payload.varname || 'df'
-      var result = await runCode(payload.code + '\n'
-        + `_output = ${varname}.ext.profile(columns="*"${(payload.inferProfile ? ', infer=True' : '')}, output="json")`,
-        sessionId
-      )
-      socket.emit('reply',{data: result, code: payload.code, timestamp: payload.timestamp})
+      var code = payload.code + '\n' + `_output = ${varname}.ext.profile(columns="*"${(payload.inferProfile ? ', infer=True' : '')}, output="json")`
+      var result = await runCode(code, sessionId)
+      socket.emit('reply',{data: result, code, timestamp: payload.timestamp})
     })
   }
   else {

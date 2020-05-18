@@ -172,6 +172,7 @@
                       :key="previewPlotsData[column.name].key+'databar'"
                       :missing="previewPlotsData[column.name].missing"
                       :total="+previewPlotsData[column.name].total"
+                      :match="+previewPlotsData[column.name].match"
                       :mismatch="+previewPlotsData[column.name].mismatch"
                       :nullV="+previewPlotsData[column.name].null"
                       class="table-data-bar"
@@ -227,6 +228,7 @@
                     :key="plotsData[column.index].key+'databar'"
                     :missing="plotsData[column.index].missing"
                     :total="+plotsData[column.index].total || 1"
+                    :match="+plotsData[column.index].match"
                     :mismatch="+plotsData[column.index].mismatch"
                     :nullV="+plotsData[column.index].null"
                     @clicked="clickedBar($event,column)"
@@ -587,7 +589,7 @@ export default {
 
     allColumns () {
 
-      if ((this.datasetPreview || this.loadPreview) && this.previewColumns.length) {
+      if ((this.datasetPreview || this.loadPreview) && this.previewColumns && this.previewColumns.length) {
         return this.previewColumns.map(c=>({
           ...c,
           classes: [...(c.classes || []), 'bb-preview'],
@@ -602,7 +604,7 @@ export default {
         ||
         !wholePreview
         ||
-        (wholePreview && !this.previewColumns.length)
+        (wholePreview && !(this.previewColumns && this.previewColumns.length))
         ) {
         cols = this.bbColumns.map(index=>{
           var classes = []
@@ -620,9 +622,9 @@ export default {
       }
 
       if (
-        (this.currentPreviewCode && wholePreview && !this.previewColumns.length)
+        (this.currentPreviewCode && wholePreview && !(this.previewColumns && this.previewColumns.length))
         ||
-        (!this.currentPreviewCode && (!this.currentDuplicatedColumns || !this.currentDuplicatedColumns.length))
+        (!this.currentPreviewCode && !(this.currentDuplicatedColumns && this.currentDuplicatedColumns.length))
       ) {
         return cols
       }
@@ -771,6 +773,7 @@ export default {
           key: i,
           name: column.name,
           missing: (column.stats.missing) ? +column.stats.missing : 0,
+          match: (column.stats.match) ? +column.stats.match : 0,
           mismatch: (column.stats.mismatch) ? +column.stats.mismatch : 0,
 					count_uniques: column.stats.count_uniques,
 					hist: (column.stats.hist && column.stats.hist[0]) ? column.stats.hist : undefined,
@@ -802,6 +805,7 @@ export default {
             key: colName,
             name: colName,
             missing: (column.stats.missing) ? +column.stats.missing : 0,
+            match: (column.stats.match) ? +column.stats.match : 0,
             mismatch: (column.stats.mismatch) ? +column.stats.mismatch : 0,
             total: +profile.summary.rows_count,
             count_uniques: column.stats.count_uniques,

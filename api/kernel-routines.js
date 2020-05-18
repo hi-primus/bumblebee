@@ -15,10 +15,14 @@ json.dumps(res,  default=_json_default)
 const code = (code = '') => `
 _start_time = datetime.utcnow().timestamp()
 ${code}
-res.update({'result': _output})
+res = {'result': _output}
 _end_time = datetime.utcnow().timestamp()
 res.update({'_gatewayTime': {'start': _start_time, 'end': _end_time, 'duration': _end_time-_start_time}})
 json.dumps(res,  default=_json_default)
+`
+
+const datasetsMin = (payload = {}) => `
+{ _df: globals()[_df].cols.names() for (_df) in ipython_vars(globals(),"dask") }
 `
 
 const datasets = (payload = {}) => `
@@ -29,6 +33,11 @@ res = { _df: globals()[_df].cols.names() for (_df) in _dfs }
 res.update({'_gatewayTime': {'start': _start_time, 'end': _end_time, 'duration': _end_time-_start_time}})
 json.dumps(res,  default=_json_default)
 `
+
+const initMin = (payload = {}) => `
+op = Optimus("${payload.engine || 'dask'}", threads_per_worker=${payload.tpw || 8}, n_workers=${payload.workers || 1}, comm=True)
+`
+
 const init = (payload = {}) => `
 try:
     json; date; datetime; ipython_vars; _json_default; traceback
@@ -74,4 +83,4 @@ res.update({'_gatewayTime': {'start': _start_time, 'end': _end_time, 'duration':
 json.dumps(res,  default=_json_default)
 `
 
-export default {init, datasets, code}
+export default {init, datasets, code, datasetsMin, initMin}

@@ -47,7 +47,7 @@ export default {
 
         var startTime = new Date().getTime()
 
-        var result = await this.socketPost('run', {
+        var response = await this.socketPost('run', {
           code,
           session: this.$store.state.session
         }, {
@@ -56,42 +56,44 @@ export default {
 
         var endTime = new Date().getTime()
 
-        result._frontTime = {
+        response._frontTime = {
           start: startTime/1000,
           end: endTime/1000,
           duration: (endTime - startTime)/1000
         }
 
-        console.log('"""[DEBUG][RESULT]"""', result)
-        console.log('"""[DEBUG][CODE]"""', result.code)
+        console.log('"""[DEBUG][RESULT]"""', response)
+        console.log('"""[DEBUG][CODE]"""', response.code)
+
+        window.code = (window.code || '') + response.code + '\n'
 
         try {
           console.log(
             '"""[DEBUG][TIMES]',
-            'front', result._frontTime,
-            'server', result._serverTime,
-            'gateway', result._gatewayTime,
-            'frontToServer', result._serverTime.start-result._frontTime.start,
-            'serverToGateway', result._gatewayTime.start-result._serverTime.start,
-            'GatewayToServer', result._serverTime.end-result._gatewayTime.end,
-            'ServerToFront', result._frontTime.end-result._serverTime.end,
+            'front', response._frontTime,
+            'server', response._serverTime,
+            'gateway', response._gatewayTime,
+            'frontToServer', response._serverTime.start-response._frontTime.start,
+            'serverToGateway', response._gatewayTime.start-response._serverTime.start,
+            'GatewayToServer', response._serverTime.end-response._gatewayTime.end,
+            'ServerToFront', response._frontTime.end-response._serverTime.end,
             '"""'
           )
         } catch (err) {
           console.log(
             '"""[DEBUG][TIMES]',
-            'front', result._frontTime,
-            'server', result._serverTime,
-            'gateway', result._gatewayTime,
+            'front', response._frontTime,
+            'server', response._serverTime,
+            'gateway', response._gatewayTime,
             '"""'
           )
         }
 
-        if (result.data.status==='error') {
-          throw result
+        if (response.data.status==='error') {
+          throw response
         }
 
-        return result
+        return response
 
       } catch (err) {
 
@@ -119,6 +121,8 @@ export default {
               workers: this.$store.state.workers,
               reset: this.$route.query.reset
             })
+
+            window.code = (window.code || '') + response.code + '\n'
 
             if (!response.data.optimus) {
               throw response
@@ -288,6 +292,7 @@ export default {
     async updateSecondaryDatasets() {
       try {
         var response = await this.socketPost('datasets',{session: this.$store.state.session})
+        window.code = (window.code || '') + response.code + '\n'
         secondaryDatasets = response.data
         this.$store.commit('setHasSecondaryDatasets', (Object.keys(secondaryDatasets).length>1) )
         this.$store.commit('setSecondaryDatasets', secondaryDatasets )

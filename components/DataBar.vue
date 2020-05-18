@@ -4,7 +4,7 @@
       <template v-slot:activator="{ on }">
         <div :class="{'min-bar': matchP!=0}" :style="{'width': matchP+'%'}" class="bar teal-bar" v-on="on" @click="$emit('clicked', 'ok')"/>
       </template>
-      <span>{{ match | humanNumberInt }} match values <span class="percentage">{{ matchP }}%</span></span>
+      <span>{{ matchC | humanNumberInt }} match values <span class="percentage">{{ matchP }}%</span></span>
     </v-tooltip>
     <v-tooltip transition="fade-transition" :left="!bottom" :bottom="bottom" content-class="bar-tooltip" color="error darken-2">
       <template v-slot:activator="{ on }">
@@ -30,9 +30,8 @@ export default {
 			default: 0,
 			type: Number
 		},
-		nullV: {
-			default: 0,
-			type: Number
+		match: {
+			default: undefined,
 		},
 		mismatch: {
 			default: 0,
@@ -50,21 +49,23 @@ export default {
 
 	data () {
 		return {
-			matchP: 0,
-			missingP: 0,
-			nullP: 0,
-      match: 0,
-      mismatchP: 0
 		}
 	},
 
-	beforeMount () {
-		this.match = this.total - (this.missing + this.mismatch)
-		this.matchP = +(+((this.match * 100) / this.total)).toFixed(2) // nh
-		this.missingP = +(+((this.missing * 100) / this.total)).toFixed(2) // nh
-		this.nullP = +(+((this.nullV * 100) / this.total)).toFixed(2) // nh
-		this.mismatchP = +(+((this.mismatch * 100) / this.total)).toFixed(2) // nh
-	}
+  computed: {
+    matchC () {
+      return (this.match !== undefined) ? this.match : ( this.total - (this.missing + this.mismatch) )
+    },
+		matchP () {
+      return +(+((this.matchC * 100) / this.total)).toFixed(2)
+    },
+    mismatchP () {
+      return +(+((this.mismatch * 100) / this.total)).toFixed(2)
+    },
+    missingP () {
+      return +(+((this.missing * 100) / this.total)).toFixed(2)
+    }
+  }
 }
 </script>
 

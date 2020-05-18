@@ -270,6 +270,8 @@ export default {
                   reset: this.$route.query.reset
                 })
 
+                window.code = (window.code || '') + response.code + '\n'
+
                 if (!response.data.optimus) {
                   throw response
                 }

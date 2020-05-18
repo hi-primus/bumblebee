@@ -383,3 +383,14 @@ export const parseExpression = (exp, df, cols) => {
 
   return exp
 }
+
+export const everyRatio = (array,cb) => {
+  if (array.length===0) {
+    return 1
+  }
+  count = 0
+  for (let i = 0; i < array.length; i++) {
+    count += cb(array[i],i) ? 1 : 0
+  }
+  return count/array.length
+}
