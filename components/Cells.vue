@@ -433,7 +433,6 @@ export default {
               payload.selection = payload.selection.map(v=>escapeQuotes(v))
             }
             if (payload._isString) {
-              payload.value = `"${payload.value}"`
               if (payload.selection && payload.selection.map && payload.rowsType==='values') {
                 payload.selection = payload.selection.map(v=>`"${v}"`)
               }
@@ -474,13 +473,13 @@ export default {
                 if (payload.filteredPreview) {
                   code += `.rows.select( 'df["__match__"]==True' )`
                 }
-                code += `.cols.set( where='df["__match__"]==True', output_cols=["${output_col}"], value=${payload.value || 'None'} )`
+                code += `.cols.set( where='df["__match__"]==True', output_cols=["${output_col}"], value=${payload.value || '"None"'} )`
                 if (payload._requestType==='preview' && payload.filteredPreview) {
                   return (from, to)=>code+(from!==undefined ? `[${from}:${to}]` : '')
                 }
                 return code
               }
-              return code + `.cols.set( where='${expression}', output_cols=["${output_col}"], value=${payload.value || 'None'} )`
+              return code + `.cols.set( where='${expression}', output_cols=["${output_col}"], value=${payload.value || '"None"'} )`
 
             } else {
               if (payload._requestType) {
@@ -2138,7 +2137,6 @@ export default {
             output_cols: true,
             validate: (command) => {
               var output_col = command.output_cols[0] || command.output_col || command.columns[0]
-              console.log({command, output_col})
               return (
                 (command.columns[0] || command.value)
                 &&
