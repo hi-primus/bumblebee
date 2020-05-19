@@ -2222,7 +2222,9 @@ export default {
               action = 'Set / Create'
             }
 
-            return `<b>${action}</b> ${multipleContent([payload.output_cols],'hl--cols')} with ${multipleContent([payload.expression],'hl--param')}`
+            return
+              `<b>${action}</b> ${multipleContent([payload.output_cols],'hl--cols')} with ${multipleContent([payload.value],'hl--param')}`
+              + (payload.where ? `where ${multipleContent([payload.value],'hl--param')}` : '')
           }
         },
         rename: {
