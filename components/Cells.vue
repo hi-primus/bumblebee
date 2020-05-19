@@ -3424,7 +3424,7 @@ export default {
           throw response
         }
 
-        window.code = (window.code || []).push({code: response.code})
+        window.pushCode({code: response.code})
 
         var dataset = JSON.parse(response.data.result)
 
@@ -3447,7 +3447,7 @@ export default {
 
       } catch (error) {
         if (error.code) {
-          window.code = (window.code || []).push({code: error.code, error: true})
+          window.pushCode({code: error.code, error: true})
         }
         var codeError = printError(error)
         this.$emit('update:codeError',codeError)

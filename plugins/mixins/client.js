@@ -24,6 +24,12 @@ export default {
       var result = await this.evalCode(code)
       console.log('[DEBUG]',result)
     }
+    window.pushCode = async (code) => {
+      if (!window.code || !window.code.push) {
+        window.code = []
+      }
+      window.code.push(code)
+    }
     window.clearCode = async () => {
       window.code = []
       console.log('[CODE] Cleared')
@@ -118,14 +124,14 @@ export default {
           throw response
         }
 
-        window.code = (window.code || []).push({code: response.code})
+        window.pushCode({code: response.code})
 
         return response
 
       } catch (err) {
 
         if (err.code) {
-          window.code = (window.code || []).push({code: err.code, error: true})
+          window.pushCode({code: err.code, error: true})
         }
 
         console.error(err)
@@ -157,13 +163,13 @@ export default {
               throw response
             }
 
-            window.code = (window.code || []).push({code: response.code})
+            window.pushCode({code: response.code})
           }
           socket.emit(message,{...payload, timestamp})
           promises[timestamp] = {resolve, reject}
         } catch (error) {
           if (error.code) {
-            window.code = (window.code || []).push({code: error.code, error: true})
+            window.pushCode({code: error.code, error: true})
           }
           reject('Error '+error)
         }
@@ -326,7 +332,7 @@ export default {
     async updateSecondaryDatasets() {
       try {
         var response = await this.socketPost('datasets',{session: this.$store.state.session})
-        window.code = (window.code || []).push({code: response.code, unimportant: true})
+        window.pushCode({code: response.code, unimportant: true})
         secondaryDatasets = response.data
         this.$store.commit('setHasSecondaryDatasets', (Object.keys(secondaryDatasets).length>1) )
         this.$store.commit('setSecondaryDatasets', secondaryDatasets )
@@ -334,7 +340,7 @@ export default {
         return response.data
       } catch (error) {
         if (error.code) {
-          window.code = (window.code || []).push({code: error.code, error: true, unimportant: true})
+          window.pushCode({code: error.code, error: true, unimportant: true})
         }
         console.error(error)
         return []
