@@ -270,17 +270,20 @@ export default {
                   reset: this.$route.query.reset
                 })
 
-                window.code = (window.code || '') + response.code + '\n'
-
                 if (!response.data.optimus) {
                   throw response
                 }
+
+                window.code = (window.code || []).push({code: response.code})
 
                 console.log('Optimus initialized',response.data)
                 this.$store.commit('kernel','done')
 
 
               } catch (error) {
+                if (error.code) {
+                  window.code = (window.code || []).push({code: error.code, error: true})
+                }
                 console.error('Error initializing')
                 printError(error)
                 var appStatus = {

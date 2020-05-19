@@ -3416,7 +3416,6 @@ export default {
         }, {
           timeout: 0
         })
-        window.code = (window.code || '') + response.code + '\n'
         console.log('"""[DEBUG][CODE]"""',response.code)
 
         this.computedCommandsDisabled = false;
@@ -3424,6 +3423,8 @@ export default {
         if (!response.data || !response.data.result) {
           throw response
         }
+
+        window.code = (window.code || []).push({code: response.code})
 
         var dataset = JSON.parse(response.data.result)
 
@@ -3445,6 +3446,9 @@ export default {
 
 
       } catch (error) {
+        if (error.code) {
+          window.code = (window.code || []).push({code: error.code, error: true})
+        }
         var codeError = printError(error)
         this.$emit('update:codeError',codeError)
 

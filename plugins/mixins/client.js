@@ -24,6 +24,36 @@ export default {
       var result = await this.evalCode(code)
       console.log('[DEBUG]',result)
     }
+    window.clearCode = async () => {
+      window.code = []
+      console.log('[CODE] Cleared')
+    }
+    window.getCode = async (errors = false, unimportant = false) => {
+      if (!window.code || !window.code.length) {
+        console.log('[CODE] No code here')
+        return false
+      }
+      var code = window.code
+      if (errors===false) {
+        code = code.filter(e=>!e.error)
+      } else if (typeof errors=='number') {
+        code = code.reverse()
+        errors = Math.ceil(errors)
+        code = code.filter(e=>{
+          if (e.error && !errors) {
+            errors--
+            return false
+          }
+          return true
+        })
+        code = code.reverse()
+      }
+      if (!unimportant) {
+        code = code.filter(e=>!e.unimportant)
+      }
+      console.log('[CODE]', code.map(e=>e.code).join('\n'))
+      return true
+    }
   },
 
   computed: {
@@ -62,8 +92,6 @@ export default {
         console.log('"""[DEBUG][RESULT]"""', response)
         console.log('"""[DEBUG][CODE]"""', response.code)
 
-        window.code = (window.code || '') + response.code + '\n'
-
         try {
           console.log(
             '"""[DEBUG][TIMES]',
@@ -90,9 +118,15 @@ export default {
           throw response
         }
 
+        window.code = (window.code || []).push({code: response.code})
+
         return response
 
       } catch (err) {
+
+        if (err.code) {
+          window.code = (window.code || []).push({code: err.code, error: true})
+        }
 
         console.error(err)
 
@@ -119,15 +153,18 @@ export default {
               reset: this.$route.query.reset
             })
 
-            window.code = (window.code || '') + response.code + '\n'
-
             if (!response.data.optimus) {
               throw response
             }
+
+            window.code = (window.code || []).push({code: response.code})
           }
           socket.emit(message,{...payload, timestamp})
           promises[timestamp] = {resolve, reject}
         } catch (error) {
+          if (error.code) {
+            window.code = (window.code || []).push({code: error.code, error: true})
+          }
           reject('Error '+error)
         }
 
@@ -289,13 +326,16 @@ export default {
     async updateSecondaryDatasets() {
       try {
         var response = await this.socketPost('datasets',{session: this.$store.state.session})
-        window.code = (window.code || '') + response.code + '\n'
+        window.code = (window.code || []).push({code: response.code, unimportant: true})
         secondaryDatasets = response.data
         this.$store.commit('setHasSecondaryDatasets', (Object.keys(secondaryDatasets).length>1) )
         this.$store.commit('setSecondaryDatasets', secondaryDatasets )
 
         return response.data
       } catch (error) {
+        if (error.code) {
+          window.code = (window.code || []).push({code: error.code, error: true, unimportant: true})
+        }
         console.error(error)
         return []
       }
