@@ -193,12 +193,13 @@ export const escapeQuotes = (str) => {
 }
 
 export const getOutputColsArgument = (output_cols = [], input_cols = [], pre = '') => {
-  if (output_cols.join('').trim().length) {
+  var hasInput = input_cols.join('').trim().length
+  if (output_cols.join('').trim().length && !(hasInput && pre)) {
     return (output_cols.length===1)
     ? `"${output_cols[0]}"`
     : `[${output_cols.map((e, i)=>(e ? `"${escapeQuotes(e)}"` : (input_cols[i] ? `"${escapeQuotes(pre+input_cols[i])}"` : 'None'))).join(', ')}]`
   }
-  if (input_cols.join('').trim().length) {
+  if (hasInput) {
     return (input_cols.length===1)
       ? `"${pre}${input_cols[0]}"`
       : `[${input_cols.map((e)=>(e ? `"${escapeQuotes(pre+e)}"` : 'None')).join(', ')}]`

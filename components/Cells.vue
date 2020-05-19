@@ -2344,6 +2344,7 @@ export default {
               columns,
               separator: ', ',
               title: 'Nest '+(columns.length==1 ? `column` : 'columns'),
+              defaultOutputName: columns.join('_'),
               output_col: columns.join('_'),
               previewType: 'nest',
               _expectedColumns: 1,
@@ -2351,14 +2352,15 @@ export default {
 					}
           },
 					code: (payload) => {
-            if (!payload.output_col) {
-              payload.output_col = payload.columns.join('_')
+            var output_col = payload.output_col
+            if (!output_col || payload._requestType) {
+              output_col = payload.defaultOutputName
             }
             payload = escapeQuotesOn(payload,['separator','output_col'])
             return `.cols.nest(["${payload.columns.join('", "')}"]`
 						+( (payload.separator) ? `, separator="${payload.separator}"` : '')
-            +`, output_col="${payload.output_col}")`
-            +( (payload._requestType==='preview' && payload.separator) ? `.cols.find("${payload.output_col}", sub=["${payload.separator}"])` : '')
+            +`, output_col="${output_col}")`
+            +( (payload._requestType==='preview' && payload.separator) ? `.cols.find("${output_col}", sub=["${payload.separator}"])` : '')
           },
           content: (payload) => `<b>Merge</b> ${multipleContent([payload.columns],'hl--cols')} in ${hlCols(payload.output_col)}`
         },
@@ -2793,20 +2795,22 @@ export default {
             }
             if (this.currentCommand.previewType) {
 
-              // if (this.currentCommand.output_cols) {
+              if (this.currentCommand.output_cols || this.currentCommand.defaultOutputName) {
 
-              //   var nameMap = {}
-              //   if (this.currentCommand.columns) {
-              //     this.currentCommand.output_cols.forEach((col, i) => {
-              //       nameMap[ '__preview__'+this.currentCommand.columns[i] ] = col
-              //     })
-              //   } else {
-              //     this.currentCommand.output_cols.forEach((col, i) => {
-              //       nameMap[col] = col // TODO: Check
-              //     })
-              //   }
-              //   this.$store.commit('setPreviewNames',nameMap)
-              // }
+                // column name optimization
+                var nameMap = {}
+
+                if (this.currentCommand.columns && this.currentCommand.output_cols) {
+                  this.currentCommand.output_cols.forEach((col, i) => {
+                    nameMap[ 'new '+this.currentCommand.columns[i] ] = col
+                  })
+                }
+                if (this.currentCommand.output_col && this.currentCommand.defaultOutputName) {
+                  nameMap[this.currentCommand.defaultOutputName] = this.currentCommand.output_col
+                }
+
+                this.$store.commit('setPreviewNames',nameMap)
+              }
 
               this.preparePreviewCode()
             }
