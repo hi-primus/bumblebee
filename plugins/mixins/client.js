@@ -42,9 +42,6 @@ export default {
     async evalCode (code) {
       try {
 
-        // var _c = 'Code #'+(timestamps+1)
-        // console.time(_c)
-
         var startTime = new Date().getTime()
 
         var response = await this.socketPost('run', {
