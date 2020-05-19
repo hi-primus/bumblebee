@@ -477,13 +477,13 @@ export default {
                 if (payload.filteredPreview) {
                   code += `.rows.select( 'df["__match__"]==True' )`
                 }
-                code += `.cols.set( where='df["__match__"]==True', output_cols=["${output_col}"], value="${payload.value || 'None'}" )`
+                code += `.cols.set( value="${payload.value || 'None'}", where='df["__match__"]==True', output_cols=["${output_col}"] )`
                 if (payload._requestType==='preview' && payload.filteredPreview) {
                   return (from, to)=>code+(from!==undefined ? `[${from}:${to}]` : '')
                 }
                 return code
               }
-              return code + `.cols.set( where='${expression}', output_cols=["${output_col}"], value="${payload.value || 'None'}" )`
+              return code + `.cols.set( value="${payload.value || 'None'}", where='${expression}', output_cols=["${output_col}"] )`
 
             } else {
               if (payload._requestType) {
@@ -2184,8 +2184,8 @@ export default {
               //   varname += `.ext.buffer_window("*"${window})`
               // }
 
-              var where = payload.where ? parseExpression(payload.where, 'df', payload.allColumns) : ''
               var value = payload.value ? parseExpression(payload.value, 'mask', payload.allColumns) : ''
+              var where = payload.where ? parseExpression(payload.where, 'df', payload.allColumns) : ''
 
               if (payload.columns[0] && !value) {
                 where = `~(${where})`
@@ -2222,8 +2222,7 @@ export default {
               action = 'Set / Create'
             }
 
-            if (payload.allColumns.indexOf())
-            `<b>Create</b> ${multipleContent([payload.output_cols],'hl--cols')} with ${multipleContent([payload.expression],'hl--param')}`
+            return `<b>${action}</b> ${multipleContent([payload.output_cols],'hl--cols')} with ${multipleContent([payload.expression],'hl--param')}`
           }
         },
         rename: {
