@@ -2208,13 +2208,15 @@ export default {
           },
           content: (payload) => {
 
-            if (!payload.output_cols.length) {
-               payload.output_cols = [payload.output_col]
+            var output_cols = payload.output_cols
+
+            if (!payload.output_cols.length || (payload.output_cols.length===1 && !payload.output_cols[0])) {
+               output_cols = [payload.output_col || payload.columns[0]]
             }
 
             var action = 'Create'
 
-            var er = everyRatio(payload.output_cols, (col)=>payload.allColumns.indexOf(col)>=0)
+            var er = everyRatio(output_cols, (col)=>payload.allColumns.indexOf(col)>=0)
 
             if (er===1) {
               action = 'Set'
@@ -2222,9 +2224,8 @@ export default {
               action = 'Set / Create'
             }
 
-            return
-              `<b>${action}</b> ${multipleContent([payload.output_cols],'hl--cols')} with ${multipleContent([payload.value],'hl--param')}`
-              + (payload.where ? `where ${multipleContent([payload.value],'hl--param')}` : '')
+            return `<b>${action}</b> ${multipleContent([output_cols],'hl--cols')} with ${multipleContent([payload.value],'hl--param')}`
+              + (payload.where ? ` where ${multipleContent([payload.where],'hl--param')}` : '')
           }
         },
         rename: {

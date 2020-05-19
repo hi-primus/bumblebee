@@ -637,9 +637,11 @@ export default {
           after = this.currentPreviewCode.from || after
         }
 
-        if (!after.length && this.currentSelection.columns.length) {
+        if (!(after && after.length) && (this.currentSelection.columns && this.currentSelection.columns.length)) {
           after = this.currentSelection.columns.map(s=>s.name) || after
         }
+
+        after = after || []
 
         var expectedColumns = (this.currentDuplicatedColumns) ? this.currentDuplicatedColumns.length : this.currentPreviewCode.expectedColumns
 
