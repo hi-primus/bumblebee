@@ -180,7 +180,7 @@
 
 <script>
 
-import { parseResponse, debounce, throttle } from '@/utils/functions.js'
+import { parseResponse, debounce, throttle, getPropertyAsync } from '@/utils/functions.js'
 import { mapGetters } from 'vuex'
 import dataTypesMixin from '@/plugins/mixins/data-types'
 import clientMixin from '@/plugins/mixins/client'
@@ -589,8 +589,9 @@ export default {
       deep: true,
       async handler () {
         try {
-          if (this.loadedPreviewCode!==this.currentPreviewCode.code) {
-            this.loadedPreviewCode = this.currentPreviewCode.code
+          var currentCode = await getPropertyAsync(this.currentPreviewCode.code)
+          if (this.loadedPreviewCode!==currentCode) {
+            this.loadedPreviewCode = currentCode
             if (this.currentPreviewCode.load) {
               var varname = 'preview_df'
               var code = `${varname} = ${this.currentPreviewCode.code} \n`

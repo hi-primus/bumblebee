@@ -920,10 +920,11 @@ export default {
 
       deep: true,
 
-      handler () {
-        if (this.loadedPreviewCode!==this.currentPreviewCode.code) {
-          this.loadedPreviewCode = this.currentPreviewCode.code
-          if (this.currentPreviewCode.code) { // a new code
+      async handler () {
+        var currentCode = await getPropertyAsync(this.currentPreviewCode.code)
+        if (this.loadedPreviewCode!==currentCode) {
+          this.loadedPreviewCode = currentCode
+          if (currentCode) { // a new code
             this.fetched = this.fetched.filter(e=>!e.code)
           }
           if (!this.currentPreviewCode.load) {
