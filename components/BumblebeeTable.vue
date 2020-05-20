@@ -286,12 +286,13 @@
       }
     </style>
     <div class="bb-table-i" v-show="true" ref="BbTable" :style="tableStyle">
-      <div class="bb-table-i-rows">
+      <div class="bb-table-i-rows" v-if="computedColumnValues[rowsColumn]">
         <template v-if="computedColumnValues['__match__']">
           <div
-            v-for="(value) in computedColumnValues[rowsColumn]"
+            v-for="(value) in computedColumnValues[rowsColumn].filter((e)=>e.index<rowsCount)"
             :key="'row'+value.index"
             class="bb-table-i-row mhl"
+            :data-debug="value"
             :class="[getRowHighlight(value.index)]"
             :style="{ top: rowHeight * value.index+'px' }"
             :data-row="value.index+1"
@@ -299,9 +300,10 @@
           </div>
         </template>
         <div
-          v-else class="bb-table-i-row"
-          v-for="value in computedColumnValues[rowsColumn]"
+          v-else
+          v-for="value in computedColumnValues[rowsColumn].filter((e)=>e.index<rowsCount)"
           :key="'row'+value.index"
+          class="bb-table-i-row"
           :style="{ top: rowHeight * value.index+'px' }"
           :data-row="value.index+1"
         >
@@ -309,7 +311,6 @@
         <div>
 
         </div>
-
       </div>
       <template v-for="(column, cindex) in allColumns">
         <div
