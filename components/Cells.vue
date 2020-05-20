@@ -3012,6 +3012,8 @@ export default {
         this.clearTextSelection()
       }
 
+      this.$store.commit('setPreviewColumns',false) // TODO: Check
+
 			var payload = {}
       var columns = undefined
       var columnDataTypes = undefined

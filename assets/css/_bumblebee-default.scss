@@ -1545,7 +1545,7 @@ $editor-top-padding: 6px;
     left: 0;
     display: block;
     height: calc(100% - 10px);
-    width: calc(100% - 9px);
+    width: calc(100% - 10px);
   }
 
   .bb-table-header, .bb-table-row, .bb-table-plots, .bb-table-i {
@@ -1665,6 +1665,7 @@ $editor-top-padding: 6px;
     overscroll-behavior-x: contain;
     position: relative;
     margin-top: calc(122px - 1000px);
+    height: 100%;
     z-index: 0;
 
     .bb-table-i {
