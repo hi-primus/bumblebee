@@ -287,11 +287,11 @@
     </style>
     <div class="bb-table-i" v-show="true" ref="BbTable" :style="tableStyle">
       <div class="bb-table-i-rows">
-        <template v-if="rowsColumn==='__match__'">
+        <template v-if="computedColumnValues['__match__']">
           <div
-            v-for="value in computedColumnValues[rowsColumn]"
+            v-for="(value) in computedColumnValues[rowsColumn]"
             :key="'row'+value.index"
-            class="bb-table-i-row"
+            class="bb-table-i-row mhl"
             :class="[getRowHighlight(value.index)]"
             :style="{ top: rowHeight * value.index+'px' }"
             :data-row="value.index+1"
@@ -405,6 +405,8 @@ export default {
 
       columnMenuIndex: false,
 
+      incompleteColumns: false,
+
       mustCheck: false,
       mustUpdateRows: false,
       recalculateRows: false,
@@ -466,29 +468,33 @@ export default {
     },
 
     rowsColumn () {
+
       try {
-        if (!this.currentPreviewCode) {
-          if (this.currentDataset.columns[0].name) {
-            return this.currentDataset.columns[index].name
-          }
-          return Object.keys(this.columnValues)[0]
-        }
-        else if (this.currentHighlightRows && this.columnValues['__match__']) {
-          if (this.currentPreviewColumns && this.currentPreviewColumns.length && this.columnValues[this.currentPreviewColumns[0].title]) {
-            if (this.columnValues[this.currentPreviewColumns[0].title].length>this.columnValues['__match__']) {
-              return this.currentPreviewColumns[0].title
-            }
-          }
+
+        if (this.columnValues['__match__'] && this.columnValues['__match__'].length) {
           return '__match__'
         }
-        else if (this.loadPreview) {
-          return Object.keys(this.loadPreviewColumnValues)[0]
+
+        var columns = this.columnValues
+
+        if (this.loadPreview) {
+          columns = this.loadPreviewColumnValues
         }
-        else if (this.currentPreviewColumns && this.currentPreviewColumns.length) {
-          return this.currentPreviewColumns[0].title
+
+        var max = 0
+        var sKey = Object.keys(columns)[0]
+
+        for (var key in columns) {
+          if (columns[key].length>max) {
+            max = columns[key].length
+            sKey = key
+          }
         }
+
+        return sKey
+
       } catch (err) {
-        // console.error(err)
+        console.error(err)
       }
       return Object.keys(this.columnValues)[0]
     },
@@ -588,6 +594,8 @@ export default {
     },
 
     allColumns () {
+
+      this.incompleteColumns = false
 
       if ((this.datasetPreview || this.loadPreview) && this.previewColumns && this.previewColumns.length) {
         return this.previewColumns.map(c=>({
@@ -698,6 +706,8 @@ export default {
         }
 
         if (expectedColumns!==undefined && after && pushedColumns<expectedColumns){
+
+          this.incompleteColumns = true
 
           if (expectedColumns===1) {
 
@@ -834,27 +844,34 @@ export default {
 
     rowsCount () {
       try {
+        var value = 0
         if (this.loadPreview && this.currentLoadPreview && this.currentLoadPreview.sample) {
-          return this.currentLoadPreview.sample.value.length
+          value = this.currentLoadPreview.sample.value.length
         }
-        if (this.currentPreviewCode) {
+        if (this.currentPreviewCode && !this.incompleteColumns) {
           if (this.currentHighlightRows && typeof this.currentHighlightRows === 'number'){
             if (this.currentPreviewCode.noBufferWindow) {
-              return this.currentHighlightRows
+              value = this.currentHighlightRows
             }
           }
           if (this.currentProfilePreview && this.currentProfilePreview.summary && this.currentProfilePreview.summary.rows_count) {
             this.previewRowsCount = this.currentProfilePreview.summary.rows_count
-            return this.currentProfilePreview.summary.rows_count
+            value = Math.max(value, this.currentProfilePreview.summary.rows_count)
           }
           if (this.currentPreviewCode.datasetPreview && this.previewRowsCount) {
-            return this.previewRowsCount
+            value = Math.max(value, this.previewRowsCount)
           }
         }
-        return this.currentDataset.summary.rows_count
+        if (value<=0) {
+          value = this.currentDataset.summary.rows_count
+        }
       } catch (error) {
-        return 0
+        console.error('rowsCount',error)
+        value = this.currentDataset.summary.rows_count || 0
       }
+      console.log({value})
+      return value
+
     },
 
     tableStyle() {
@@ -1040,7 +1057,7 @@ export default {
 			}
       var cellValue = this.columnValues[colName][ri]
 
-      cellValue = cellValue.toString()
+      cellValue = cellValue ? cellValue.toString() : ''
 
       // if (selectedText.endsWith(' ') && !cellValue.endsWith(' ')) {
       //   selectedText = selectedText.substr(0,selectedText.length - 1) // remove unwanted extra space
@@ -1267,12 +1284,11 @@ export default {
 
     getRowHighlight (row) {
       try {
-
         if (this.columnValues['__match__'][row]) {
           return 'bb-highlight--'+(this.currentPreviewCode.color || 'green')
         }
       } catch (err) {
-        console.error(err)
+        // console.error(err)
       }
       return  ''
     },
@@ -1289,19 +1305,29 @@ export default {
     },
 
     getCellHtmlHighlight (value, hlv = [], color = 'green') {
+      if (value==='') {
+        return '<span class="null-cell">Empty</span>'
+      } else if (value===null) {
+        return '<span class="null-cell">None</span>'
+      } else if (!value) {
+        return value
+      }
+      var _value = value
       try {
         if (hlv && hlv.length) {
           for (let i = hlv.length - 1; i >= 0; i--) {
             const [a,b] = hlv[i]
-            value = value.substring(0,a)+`<span class="hlt--${color}">`+value.substring(a,b)+'</span>'+value.substring(b)
+            _value = value.substring(0,a)+`<span class="hlt--${color}">`+value.substring(a,b)+'</span>'+value.substring(b)
           }
         }
-        return value
+        return _value
       } catch (err) {
         if (value) {
           return value
+        } else if (_value) {
+          return _value
         } else {
-          return false
+          return '<span class="null-cell">Null</span>'
         }
       }
     },
@@ -1798,18 +1824,22 @@ export default {
     },
 
     updateRows() {
+      var columnValues = {...(this.columnValues || {})}
       if (this.recalculateRows) {
         this.recalculateRows = false
-        this.columnValues = []
+        columnValues = []
         for (const index in this.fetched) {
           this.fetched[index].inTable = false
         }
       }
       for (const index in this.fetched) {
         if (!this.fetched[index].inTable) {
-          this.columnValues = this.getValuesByColumns(this.fetched[index].sample, false, this.fetched[index].from)
+          columnValues = this.getValuesByColumns(this.fetched[index].sample, false, this.fetched[index].from)
           this.fetched[index].inTable = true
         }
+      }
+      if (Object.keys(columnValues).length) {
+        this.columnValues = columnValues
       }
     }
   }
