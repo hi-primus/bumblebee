@@ -287,7 +287,7 @@
     </style>
     <div class="bb-table-i" v-show="true" ref="BbTable" :style="tableStyle">
       <div class="bb-table-i-rows" v-if="computedColumnValues[rowsColumn]">
-        <template v-if="computedColumnValues['__match__']">
+        <template v-if="computedColumnValues['__match__'] && currentPreviewCode">
           <div
             v-for="(value) in computedColumnValues[rowsColumn].filter((e)=>e.index<rowsCount)"
             :key="'row'+value.index"
@@ -870,7 +870,6 @@ export default {
         console.error('rowsCount',error)
         value = this.currentDataset.summary.rows_count || 0
       }
-      console.log({value})
       return value
 
     },
@@ -945,6 +944,7 @@ export default {
         if (this.loadedPreviewCode!==currentCode) {
           this.loadedPreviewCode = currentCode
           if (currentCode) { // a new code
+            delete this.columnValues['__match__']
             this.fetched = this.fetched.filter(e=>!e.code)
           }
           if (!this.currentPreviewCode.load) {
