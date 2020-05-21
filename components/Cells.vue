@@ -71,6 +71,29 @@
               </v-alert>
             </template>
           </div>
+          <div class="o-results pb-2" v-if="currentPreviewInfo">
+            <div
+              v-if="typeof currentPreviewInfo.rowHighlights=='number'"
+            >
+              Matching rows: {{currentPreviewInfo.rowHighlights}}
+            </div>
+            <div
+              v-if="typeof currentPreviewInfo.newColumns=='number'"
+            >
+              New columns: {{currentPreviewInfo.newColumns}}
+            </div>
+            <v-tooltip transition="fade-transition" left content-class="bar-tooltip" color="error">
+              <template v-slot:activator="{on}">
+                <transition :duration="210" name="bounce">
+                  <v-icon class="error error-badge" v-on="on" v-if="previewError">
+                    warning
+                  </v-icon>
+                </transition>
+              </template>
+              <span>{{previewError}}</span>
+            </v-tooltip>
+
+          </div>
           <div class="o-buttons">
             <template v-if="command.dialog.filteredPreview">
               <v-checkbox
@@ -2664,6 +2687,7 @@ export default {
       'currentTab',
       'currentDuplicatedColumns',
       'currentPreviewNames',
+      'currentPreviewInfo',
       'currentSecondaryDatasets',
       'currentLoadPreview'
     ]),
@@ -2721,6 +2745,14 @@ export default {
         group: "description",
         disabled: this.commandsDisabled,
         ghostClass: "ghost"
+      }
+    },
+
+    previewError () {
+      try {
+        return this.currentPreviewInfo.error
+      } catch (err) {
+        return false
       }
     },
 
@@ -2991,6 +3023,8 @@ export default {
         } else if (this.currentCommand.columns) {
           expectedColumns = this.currentCommand.columns.length
         }
+
+        this.$store.commit('setPreviewInfo', {newColumns: expectedColumns})
 
         var joinPreview = getProperty(this.currentCommand.joinPreview, [this.currentCommand])
         var color = getProperty(this.currentCommand.highlightColor, [this.currentCommand])

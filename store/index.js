@@ -18,9 +18,13 @@ const properties = [
     name: 'ProfilePreview',
     clear: true,
     clearOnSelection: true,
+    default: ()=>({
+      rowHighlights: false,
+      newColumns: false
+    })
   },
   {
-    name: 'HighlightRows',
+    name: 'PreviewInfo',
     clear: true,
     clearOnSelection: true,
   },
@@ -303,6 +307,22 @@ export const mutations = {
     state.kernel = payload
   },
 
+  setPreviewInfo (state, {rowHighlights, newColumns, error}) {
+    if (!state.everyPreviewInfo[state.tab]) {
+      state.everyPreviewInfo[state.tab] = {}
+    }
+    if (rowHighlights!=undefined) {
+      state.everyPreviewInfo[state.tab].rowHighlights = rowHighlights
+    }
+    if (newColumns!=undefined) {
+      state.everyPreviewInfo[state.tab].newColumns = newColumns
+    }
+    if (error!=undefined) {
+      state.everyPreviewInfo[state.tab].error = error
+    }
+    Vue.set(state.everyPreviewInfo,state.tab,state.everyPreviewInfo[state.tab])
+  },
+
   selection (state, {tab, columns, ranged, clear, text} ) {
     if (tab===undefined) {
       tab = state.tab
@@ -449,6 +469,14 @@ export const getters = {
       // return state.datasets[state.tab].summary.dtypes_list || state.allTypes
     } catch (error) {
       return state.allTypes
+    }
+  },
+
+  currentRowHighlights (state) {
+    try {
+      return state.everyPreviewInfo[state.tab].rowHighlights
+    } catch (err) {
+      return false
     }
   }
 }

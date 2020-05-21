@@ -1158,6 +1158,25 @@ table {
   opacity: 0;
 }
 
+.bounce-enter-active {
+  animation: bounce-in .21s;
+}
+.bounce-leave-active {
+  animation: bounce-in .3s reverse;
+}
+@keyframes bounce-in {
+  0% {
+    transform: scale(0);
+  }
+  80% {
+    transform: scale(1.125);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+
 /* pseudo notebooks */
 
 // .operations-cells:not(.dragging) {
@@ -2050,6 +2069,20 @@ $editor-top-padding: 6px;
     }
 
   }
+  .o-results {
+    font-size: 12px;
+    // color: $text-color;
+    color: $primary-color;
+    padding-left: 2px;
+    margin-bottom: 2px;
+    position: relative;
+    min-height: 26px;
+    .error-badge {
+      position: absolute;
+      bottom: 2px;
+      right: 0;
+    }
+  }
   .o-buttons {
     display: flex;
     justify-content: flex-end;
@@ -2299,6 +2332,16 @@ $editor-top-padding: 6px;
   }
 }
 
+
+.error-badge {
+  color: rgba(255,255,255,0.91) !important;
+  height: 36px;
+  width: 36px;
+  padding: 10px 12px 14px 12px;
+  font-size: 24px;
+  border-radius: 50%;
+  background-color: $data-red;
+}
 
 // TODO check inline css generation nuxt
 

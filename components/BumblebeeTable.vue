@@ -450,7 +450,7 @@ export default {
       'currentPreviewColumns',
       'currentProfilePreview',
       'currentHighlights',
-      'currentHighlightRows',
+      'currentRowHighlights',
       'currentFocusedColumns',
       'currentPreviewCode',
       'currentDuplicatedColumns',
@@ -850,9 +850,9 @@ export default {
           value = this.currentLoadPreview.sample.value.length
         }
         if (this.currentPreviewCode && !this.incompleteColumns) {
-          if (this.currentHighlightRows && typeof this.currentHighlightRows === 'number'){
+          if (this.currentRowHighlights && typeof this.currentRowHighlights === 'number'){
             if (this.currentPreviewCode.noBufferWindow) {
-              value = this.currentHighlightRows
+              value = this.currentRowHighlights
             }
           }
           if (this.currentProfilePreview && this.currentProfilePreview.summary && this.currentProfilePreview.summary.rows_count) {
@@ -1182,12 +1182,16 @@ export default {
           var color = this.currentPreviewCode.color
 
           if (matchRowsColumns[0]) {
-            if (typeof this.currentHighlightRows !== 'number') {
-              this.$store.commit('setHighlightRows', true)
+            if (typeof this.currentRowHighlights !== 'number') {
+              // this.$store.commit('setRowHighlights', true)
+              this.$store.commit('setPreviewInfo', {rowHighlights: true})
             }
           } else {
-            this.$store.commit('setHighlightRows', false)
+            // this.$store.commit('setRowHighlights', false)
+            this.$store.commit('setPreviewInfo', {rowHighlights: false})
           }
+
+
 
 
           this.$store.commit('setPreviewColumns', previewColumns)
@@ -1511,7 +1515,7 @@ export default {
 
         var profile = (this.currentPreviewColumns && this.currentPreviewColumns.length)
 
-        var matches = this.currentHighlightRows
+        var matches = this.currentRowHighlights
 
         this.$store.commit('setProfilePreview', {code: previewCode, columns: []})
 
@@ -1523,7 +1527,7 @@ export default {
         + `\n_output = { `
         + (profile ? `"profile": _df_profile.ext.profile(["${cols.join('", "')}"]${(inferProfile ? ', infer=True' : '')}, output="json")` : '')
         + (profile && matches ? `, ` : '')
-        + (matches ? `"matches_count": len(_df_profile.rows.select('df["__match__"]!=None'))` : '')
+        + (matches ? `"matches_count": len(_df_profile.rows.select('df["__match__"]!=False'))` : '')
         + `}`
 
         var response = await this.evalCode(code)
@@ -1546,7 +1550,7 @@ export default {
 
         if (matches && response.data.result.matches_count!==undefined) {
 
-          this.$store.commit('setHighlightRows', +response.data.result.matches_count)
+          this.$store.commit('setPreviewInfo', {rowHighlights: +response.data.result.matches_count})
 
         }
 
@@ -1794,7 +1798,15 @@ export default {
 
       var codeS = await getPropertyAsync(previewCode) || ''
 
+
       var response = await this.evalCode(`_output = ${this.currentDataset.varname}.ext.buffer_window("*"${(noBufferWindow) ? '' : ', '+from+', '+(to+1)})${code}.ext.to_json("*")`)
+
+      // console.log({response})
+
+      if (response.data.status=='error') {
+        this.$store.commit('setPreviewInfo', {error: response.data.error})
+        // TODO: Error handling
+      }
 
       var parsed = response && response.data && response.data.result ? parseResponse(response.data.result) : undefined
 
