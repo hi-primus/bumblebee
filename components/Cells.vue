@@ -937,6 +937,15 @@ export default {
                     }
                   }
                   this.currentCommand.right_on = false
+
+                  this.$nextTick(()=>{
+                    this.currentCommand.selected_columns = [
+                      ...this.currentCommand.selected_columns,
+                      ...(this.currentCommand._datasets_right[this.currentCommand.with] || []).map(n=>({name: n, source: 'right', key: n+'r'}))
+                    ]
+                    var items = getProperty(this.currentCommand.items_r_on,[this.currentCommand])
+                    this.currentCommand.right_on = items ? (items[0] || false) : false
+                  })
                 }
               },
               {
@@ -1010,10 +1019,12 @@ export default {
               with: df2,
               items_with: (c)=>Object.keys(c._datasets_right).filter(e=>e!==this.dataset.varname && e!=='preview_df'),
               items_selected_columns: (c)=>{
-                return [
-                  ...(this.allColumns || []).map(n=>({name: n, source: 'left', key: n+'l'})),
-                  ...(c._datasets_right[c.with] || []).map(n=>({name: n, source: 'right', key: n+'r'}))
-                ]
+                try {
+                  return [
+                    ...(this.allColumns || []).map(n=>({name: n, source: 'left', key: n+'l'})),
+                    ...(c._datasets_right[c.with] || []).map(n=>({name: n, source: 'right', key: n+'r'}))
+                  ]
+                } catch (err) {}
               },
               selected_columns: [
                 ...(this.allColumns || []).map(n=>({name: n, source: 'left', key: n+'l'})),
@@ -1024,7 +1035,9 @@ export default {
                 // var right = c.selected_columns.filter(col=>col.source==='right' || col.name===c.right_on).map(col=>col.name)
                 // var center = left.filter(col=>right.indexOf(col)!=-1)
                 var left = c.selected_columns.filter(col=>col.source==='left' && col.name!==c.left_on).map(col=>col.name)
+                left = [...left, ...left.map(n=>n+'_x')]
                 var right = c.selected_columns.filter(col=>col.source==='right' && col.name!==c.right_on).map(col=>col.name)
+                right = [...right, ...right.map(n=>n+'_y')]
                 var center = [c.left_on, c.right_on, c.left_on+c.right_on, c.left_on+'_'+c.right_on]
                 return [ left, center, right ]
               },
@@ -1039,8 +1052,24 @@ export default {
             var columnsLeft = payload.selected_columns.filter(c=>c.source==='left').map(c=>c.name)
             var columnsRight = payload.selected_columns.filter(c=>(c.name && c.source==='right')).map(c=>c.name)
 
-            var selectedColumns = [...new Set([...columnsLeft.filter(name=>name!==payload.left_on), ...columnsRight])]
-            var filterEnd = `.cols.select(["${selectedColumns.join('", "')}"])`
+            var columnsLeftEnd = Array.from(columnsLeft)
+            var columnsRightEnd = Array.from(columnsRight)
+
+            for (const index in columnsLeftEnd) {
+              var found = columnsRightEnd.indexOf(columnsLeftEnd[index])
+              if (found<0 || (columnsLeftEnd[index]==payload.left_on && columnsRightEnd[found]==payload.right_on) ) {
+                continue
+              }
+              columnsLeftEnd[index] = columnsLeftEnd[index]+'_x'
+              columnsRightEnd[found] = columnsRightEnd[found]+'_y'
+            }
+
+            var columnsEnd = [...new Set([...columnsLeftEnd, ...columnsRightEnd])] // .filter(name=>name!==payload.left_on) ?
+
+            // columnsEnd = columnsEnd.filter(c=>( c!=payload.left_on && c!=payload.right_on)) // bug key column
+
+            var filterEnd = `.cols.select(["${columnsEnd.join('", "')}"])`
+            // var filterEnd = ``
 
             if (columnsLeft.indexOf(payload.left_on)===-1) {
               columnsLeft.push(payload.left_on)
@@ -1050,7 +1079,9 @@ export default {
             }
 
             var filterLeft = `.cols.select(["${columnsLeft.join('", "')}"])`
+            // var filterLeft = ``
             var filterRight = `.cols.select(["${columnsRight.join('", "')}"])`
+            // var filterRight = ``
 
             if (payload._requestType) {
               return async (from, to) => {
