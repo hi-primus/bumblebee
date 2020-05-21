@@ -476,13 +476,13 @@ export default {
                 if (payload.filteredPreview) {
                   code += `.rows.select( 'df["__match__"]==True' )`
                 }
-                code += `.cols.set( value="${payload.value || 'None'}", where='df["__match__"]==True', output_cols=["${output_col}"] )`
+                code += `.cols.set( value='${payload.value || 'None'}', where='df["__match__"]==True', output_cols=["${output_col}"] )`
                 if (payload._requestType==='preview' && payload.filteredPreview) {
                   return (from, to)=>code+(from!==undefined ? `[${from}:${to}]` : '')
                 }
                 return code
               }
-              return code + `.cols.set( value="${payload.value || 'None'}", where='${expression}', output_cols=["${output_col}"] )`
+              return code + `.cols.set( value='${payload.value || 'None'}', where='${expression}', output_cols=["${output_col}"] )`
 
             } else {
               if (payload._requestType) {
