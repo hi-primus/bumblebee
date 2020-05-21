@@ -1706,6 +1706,8 @@ $editor-top-padding: 6px;
     display: flex;
     flex-direction: row;
     flex-wrap: nowrap;
+    justify-content: space-between;
+    padding-right: 4px !important;
 
     border-top-width: 2px;
     &.bb-selected, &.bb-preview {
@@ -1714,14 +1716,30 @@ $editor-top-padding: 6px;
 
     .data-type {
       height: inherit;
-      flex: 1;
-      max-width: 32px;
-      margin-right: 8px;
+      width: 40px;
+      position: absolute;
+      order: 1;
+    }
+    &::before {
+			content: "";
+			min-width: 40px;
+			max-width: 52px;
+			order: 2;
+			flex-shrink: 1;
+			width: 52px;
+    }
+    &::after {
+      content: '';
+      width: 40px;
+      max-width: 40px;
+      order: 4;
+      flex-shrink: 1;
     }
     .column-title {
+      order: 3;
       height: inherit;
-      flex: 2;
-      text-align: center;
+      flex-shrink: 0;
+      max-width: calc(100% - 48px);
       width: initial;
       min-width: initial;
       overflow: hidden;
@@ -1958,7 +1976,6 @@ $editor-top-padding: 6px;
 }
 
 .the-table-container {
-  // padding-left: 9px;
   background-color: white;
 }
 
@@ -2050,7 +2067,6 @@ $editor-top-padding: 6px;
     margin-right: auto;
   }
   .v-label, .v-input {
-    // background: cyan;
     font-size: 12px;
   }
   .v-input:not(.multiline-select) .v-select__selections {
@@ -2263,7 +2279,6 @@ $editor-top-padding: 6px;
   .bb-table-i-rows {
     z-index: 0;
     position: absolute;
-    // left: -48px;
     margin-left: -48px;
     .bb-table-i-row {
       position: absolute;
@@ -2276,10 +2291,6 @@ $editor-top-padding: 6px;
     border-bottom-width: 1px;
     .bb-table-i-cell {
       position: absolute;
-      // &:not(:active) {
-        // user-select: none;
-        // cursor: text;
-      // }
       .null-cell {
         user-select: none;
         opacity: 0.667;
