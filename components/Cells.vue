@@ -1073,7 +1073,8 @@ export default {
                 + `, right_on="${payload.right_on}", how="${payload.how}")${filterEnd}`
             }
 
-          }
+          },
+          content: (payload) => `<b>Join</b> ${hlParam(this.dataset.varname)} <b>with</b> ${hlParam(payload.with)}`
         },
         aggregations: {
           dialog: {
