@@ -218,7 +218,7 @@ export default {
 			showPassword: false,
 			inputPassword: '',
 			inputUsername: '',
-			inputEngine: 'dask',
+			inputEngine: false,
       searchText: '',
       isOperating: false,
 			tab: undefined,
@@ -335,11 +335,12 @@ export default {
 	},
 
 	mounted () {
-		console.log(`Bumblebee v${version}`)
+    console.log(`Bumblebee v${version}`)
+    window.document.body.click()
 
 		// this.inputUsername = this.$route.query.username || ''
     // this.inputPassword = this.$route.query.password || ''
-    this.inputEngine = this.$route.query.engine || 'dask'
+    this.inputEngine = this.$route.query.engine
 
 		// if (this.inputUsername && this.inputPassword) {
     //   this.subscribe()
