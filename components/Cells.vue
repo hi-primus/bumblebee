@@ -1017,7 +1017,11 @@ export default {
               right_on: _datasets_right[df2][0],
               items_r_on: (c)=>c._datasets_right[c.with],
               with: df2,
-              items_with: (c)=>Object.keys(c._datasets_right).filter(e=>e!==this.dataset.varname && e!=='preview_df'),
+              items_with: (c)=>{
+                return Object.keys(c._datasets_right)
+                  .filter(e=>e!==this.dataset.varname && e!=='preview_df')
+                  .filter(e=>!e.startsWith('_'))
+              },
               items_selected_columns: (c)=>{
                 try {
                   return [
@@ -2699,7 +2703,9 @@ export default {
         return name
       }
 
-      var sd = Object.keys(this.currentSecondaryDatasets).filter(n=>n.startsWith(name+'_'))
+      var sd = Object.keys(this.currentSecondaryDatasets)
+        .filter(e=>e.startsWith(name+'_'))
+        .filter(e=>!e.startsWith('_'))
 
       name = name+'_'+sd.length
 
