@@ -2194,7 +2194,7 @@ export default {
             title: (columns[0] ? `Set column` : 'Create column'),
             _expectedColumns: 1,
             previewType: 'set',
-            output_col: '',
+            output_col: 'new_column',
             output_cols: columns.map(e=>'')
           }),
           code: (payload) => {
