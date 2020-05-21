@@ -400,10 +400,9 @@ export default {
               allColumns: this.allColumns,
 
               previewType: 'REMOVE_KEEP_SET',
-              filteredPreview: true,
+              filteredPreview: false,
               noBufferWindow: (c)=>c.filteredPreview,
               highlightColor: (c)=>c.action==='drop' ? 'red' : 'green',
-              filteredPreview: true,
               _expectedColumns: () => +(this.currentCommand.action==='set'),
               _isString: payload.columnDataTypes && payload.columnDataTypes.every(d=>STRING_TYPES.includes(d)),
 
@@ -675,7 +674,7 @@ export default {
               _isString: payload.columnDataTypes && payload.columnDataTypes.every(d=>STRING_TYPES.includes(d)),
 
               previewType: 'filter rows',
-              filteredPreview: true,
+              filteredPreview: false,
               noBufferWindow: (c)=>c.filteredPreview,
               highlightColor: (c)=>c.action==='drop' ? 'red' : 'green',
               _expectedColumns: 0
@@ -841,7 +840,7 @@ export default {
             how: 'all',
             previewType: 'drop empty rows',
             highlightColor: 'red',
-            filteredPreview: true,
+            filteredPreview: false,
             noBufferWindow: (c)=>c.filteredPreview
           }),
           code: (payload) => {
@@ -888,7 +887,7 @@ export default {
             keep: 'first',
             previewType: 'drop duplicates',
             highlightColor: 'red',
-            filteredPreview: true,
+            filteredPreview: false,
             noBufferWindow: (c)=>c.filteredPreview
           }),
           code: (payload) => {
