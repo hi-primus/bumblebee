@@ -3343,7 +3343,7 @@ export default {
       }
     },
 
-    addCell (at = -1, payload = {command: 'code', code: '', content: '', ignoreCell: false, deleteOtherCells: false}, replace = false) {
+    addCell (at = -1, payload = {command: 'code', code: '', content: '', ignoreCell: false, noCall: false, deleteOtherCells: false}, replace = false) {
 
       var {command, code, ignoreCell, deleteOtherCells, content} = payload
 
@@ -3377,14 +3377,16 @@ export default {
 
       this.cells = cells
 
-      this.$nextTick(()=>{
-        if (this.activeCell<0) {
-          this.setActiveCell(0)
-        }
-        if (code.length) {
-          this.runCode()
-        }
-      })
+      if (!payload.noCall) {
+        this.$nextTick(()=>{
+          if (this.activeCell<0) {
+            this.setActiveCell(0)
+          }
+          if (code.length) {
+            this.runCode()
+          }
+        })
+      }
 
     },
 
