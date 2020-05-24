@@ -293,6 +293,9 @@ export default {
         'apply sort': {
           code: (payload) => {
             return `.cols.sort(["${payload.columns.join('", "')}"])`
+          },
+          content: (payload) => {
+            return `<b>Reorder</b> columns`
           }
         },
         DROP_KEEP: {
