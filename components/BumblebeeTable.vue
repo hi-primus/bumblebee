@@ -136,6 +136,7 @@
           <div class="data-type" :class="`type-${currentDataset.columns[column.index].profiler_dtype}`">
             {{ dataTypeHint(currentDataset.columns[column.index].profiler_dtype) }}
           </div>
+          <div class="drag-hint"></div>
           <div v-if="currentPreviewNames && currentPreviewNames[columns[column.index].name]" class="column-title title-preview-highlight">
             <span>{{ currentPreviewNames[columns[column.index].name] }}</span>
           </div>

@@ -1747,17 +1747,16 @@ $editor-top-padding: 6px;
       white-space: nowrap;
     }
     &.bb-drag-over {
-      &::after {
-        content: '';
+      & .drag-hint {
         background-color: $data-blue;
         position: absolute;
         width: 3px;
         height: 100%;
       }
-      &.bb-drag-over-right::after {
+      &.bb-drag-over-right .drag-hint {
         right: 0 !important;
       }
-      &:not(.bb-drag-over-right)::after {
+      &:not(.bb-drag-over-right) .drag-hint {
         left: 0;
       }
     }
