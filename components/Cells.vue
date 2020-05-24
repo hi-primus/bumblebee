@@ -3321,7 +3321,7 @@ export default {
         //   code = code.code
         // }
         if (payload.isLoad) {
-          return precode + code +'\n'+`${this.dataset.varname} = ${this.dataset.varname}.ext.optimize()`
+          return precode + code // +'\n'+`${this.dataset.varname} = ${this.dataset.varname}.ext.optimize()`
         } else {
           return precode + `${this.dataset.varname} = ${this.dataset.varname}${code}.ext.cache()`
         }
@@ -3472,7 +3472,6 @@ export default {
           dataset
         })
 
-        // this.optimizeDf()
         this.bufferDf()
 
         this.updateSecondaryDatasets()
