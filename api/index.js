@@ -77,7 +77,9 @@ app.use(bodyParser.json({
   limit: '100mb',
 }))
 
-mongoose.connect('mongodb://localhost/bumblebee', { useNewUrlParser: true, useUnifiedTopology: true })
+mongoose.connect('mongodb://localhost/bumblebee', { useNewUrlParser: true, useUnifiedTopology: true }).catch((err)=>{
+  console.error(err)
+})
 
 app.use(session({
   secret: app_secret,
