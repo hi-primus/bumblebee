@@ -995,7 +995,7 @@ export default {
         const highlight = !noHighlight && this.highlightMatches && this.highlightMatches[name] && this.highlightMatches[name].title
         const hlValues = columnValues[highlight]
         if (highlight && hlValues && hlValues.length) {
-          const preview = name.includes('__preview__')
+          const preview = name.includes('__preview__') || name.includes('new ') // TODO: Check
           const color = this.currentHighlights.color['default'] ? this.currentHighlights.color[preview ? 'preview' : 'default'] : this.currentHighlights.color
           for (const index in values) {
             if (index>=limit) {
