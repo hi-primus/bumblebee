@@ -1039,9 +1039,9 @@ export default {
                 // var right = c.selected_columns.filter(col=>col.source==='right' || col.name===c.right_on).map(col=>col.name)
                 // var center = left.filter(col=>right.indexOf(col)!=-1)
                 var left = c.selected_columns.filter(col=>col.source==='left' && col.name!==c.left_on).map(col=>col.name)
-                left = [...left, ...left.map(n=>n+'_x')]
+                left = [...left, ...left.map(n=>n+'_left')]
                 var right = c.selected_columns.filter(col=>col.source==='right' && col.name!==c.right_on).map(col=>col.name)
-                right = [...right, ...right.map(n=>n+'_y')]
+                right = [...right, ...right.map(n=>n+'_right')]
                 var center = [c.left_on, c.right_on, c.left_on+c.right_on, c.left_on+'_'+c.right_on]
                 return [ left, center, right ]
               },
@@ -1064,13 +1064,11 @@ export default {
               if (found<0 || (columnsLeftEnd[index]==payload.left_on && columnsRightEnd[found]==payload.right_on) ) {
                 continue
               }
-              columnsLeftEnd[index] = columnsLeftEnd[index]+'_x'
-              columnsRightEnd[found] = columnsRightEnd[found]+'_y'
+              columnsLeftEnd[index] = columnsLeftEnd[index]+'_left'
+              columnsRightEnd[found] = columnsRightEnd[found]+'_right'
             }
 
-            var columnsEnd = [...new Set([...columnsLeftEnd, ...columnsRightEnd])] // .filter(name=>name!==payload.left_on) ?
-
-            // columnsEnd = columnsEnd.filter(c=>( c!=payload.left_on && c!=payload.right_on)) // bug key column
+            var columnsEnd = [...new Set([...columnsLeftEnd, ...columnsRightEnd])]
 
             var filterEnd = `.cols.select(["${columnsEnd.join('", "')}"])`
             // var filterEnd = ``
