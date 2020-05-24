@@ -150,7 +150,7 @@
       <template v-for="(column, index) in allColumns">
 				<div
           v-if="!column.hidden"
-					:key="'plot'+column.index"
+					:key="'plot'+column.type+column.index"
           :style="{ width: column.width+'px' }"
           class="bb-table-plot"
           :class="[
@@ -316,7 +316,7 @@
       <template v-for="(column, cindex) in allColumns">
         <div
           class="bb-table-i-column"
-          :key="'column'+column.index"
+          :key="'column'+column.type+column.index"
           :style="{minWidth: (column.width || 170)+'px'}"
           :class="[
             ...(column.classes || []),
