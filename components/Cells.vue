@@ -316,6 +316,9 @@ export default {
         'apply sort': {
           code: (payload) => {
             return `.cols.sort(["${payload.columns.join('", "')}"])`
+          },
+          content: (payload) => {
+            return `<b>Reorder</b> columns`
           }
         },
         DROP_KEEP: {
@@ -1062,9 +1065,9 @@ export default {
                 // var right = c.selected_columns.filter(col=>col.source==='right' || col.name===c.right_on).map(col=>col.name)
                 // var center = left.filter(col=>right.indexOf(col)!=-1)
                 var left = c.selected_columns.filter(col=>col.source==='left' && col.name!==c.left_on).map(col=>col.name)
-                left = [...left, ...left.map(n=>n+'_x')]
+                left = [...left, ...left.map(n=>n+'_left')]
                 var right = c.selected_columns.filter(col=>col.source==='right' && col.name!==c.right_on).map(col=>col.name)
-                right = [...right, ...right.map(n=>n+'_y')]
+                right = [...right, ...right.map(n=>n+'_right')]
                 var center = [c.left_on, c.right_on, c.left_on+c.right_on, c.left_on+'_'+c.right_on]
                 return [ left, center, right ]
               },
@@ -1087,13 +1090,11 @@ export default {
               if (found<0 || (columnsLeftEnd[index]==payload.left_on && columnsRightEnd[found]==payload.right_on) ) {
                 continue
               }
-              columnsLeftEnd[index] = columnsLeftEnd[index]+'_x'
-              columnsRightEnd[found] = columnsRightEnd[found]+'_y'
+              columnsLeftEnd[index] = columnsLeftEnd[index]+'_left'
+              columnsRightEnd[found] = columnsRightEnd[found]+'_right'
             }
 
-            var columnsEnd = [...new Set([...columnsLeftEnd, ...columnsRightEnd])] // .filter(name=>name!==payload.left_on) ?
-
-            // columnsEnd = columnsEnd.filter(c=>( c!=payload.left_on && c!=payload.right_on)) // bug key column
+            var columnsEnd = [...new Set([...columnsLeftEnd, ...columnsRightEnd])]
 
             var filterEnd = `.cols.select(["${columnsEnd.join('", "')}"])`
             // var filterEnd = ``
@@ -3354,7 +3355,7 @@ export default {
         //   code = code.code
         // }
         if (payload.isLoad) {
-          return precode + code +'\n'+`${this.dataset.varname} = ${this.dataset.varname}.ext.optimize()`
+          return precode + code +'\n'+`${this.dataset.varname} = ${this.dataset.varname}.ext.optimize()` + '\n'+`${this.dataset.varname} = ${this.dataset.varname}.ext.repartition(8).ext.cache()`
         } else {
           return precode + `${this.dataset.varname} = ${this.dataset.varname}${code}.ext.cache()`
         }
@@ -3376,7 +3377,7 @@ export default {
       }
     },
 
-    addCell (at = -1, payload = {command: 'code', code: '', content: '', ignoreCell: false, deleteOtherCells: false}, replace = false) {
+    addCell (at = -1, payload = {command: 'code', code: '', content: '', ignoreCell: false, noCall: false, deleteOtherCells: false}, replace = false) {
 
       var {command, code, ignoreCell, deleteOtherCells, content} = payload
 
@@ -3410,14 +3411,16 @@ export default {
 
       this.cells = cells
 
-      this.$nextTick(()=>{
-        if (this.activeCell<0) {
-          this.setActiveCell(0)
-        }
-        if (code.length) {
-          this.runCode()
-        }
-      })
+      if (!payload.noCall) {
+        this.$nextTick(()=>{
+          if (this.activeCell<0) {
+            this.setActiveCell(0)
+          }
+          if (code.length) {
+            this.runCode()
+          }
+        })
+      }
 
     },
 
@@ -3505,7 +3508,6 @@ export default {
           dataset
         })
 
-        // this.optimizeDf()
         this.bufferDf()
 
         this.updateSecondaryDatasets()

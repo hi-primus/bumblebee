@@ -136,6 +136,7 @@
           <div class="data-type" :class="`type-${currentDataset.columns[column.index].profiler_dtype}`">
             {{ dataTypeHint(currentDataset.columns[column.index].profiler_dtype) }}
           </div>
+          <div class="drag-hint"></div>
           <div v-if="currentPreviewNames && currentPreviewNames[columns[column.index].name]" class="column-title title-preview-highlight">
             <span>{{ currentPreviewNames[columns[column.index].name] }}</span>
           </div>
@@ -149,7 +150,7 @@
       <template v-for="(column, index) in allColumns">
 				<div
           v-if="!column.hidden"
-					:key="'plot'+column.index"
+					:key="'plot'+column.type+column.index"
           :style="{ width: column.width+'px' }"
           class="bb-table-plot"
           :class="[
@@ -315,7 +316,7 @@
       <template v-for="(column, cindex) in allColumns">
         <div
           class="bb-table-i-column"
-          :key="'column'+column.index"
+          :key="'column'+column.type+column.index"
           :style="{minWidth: (column.width || 170)+'px'}"
           :class="[
             ...(column.classes || []),
@@ -994,7 +995,7 @@ export default {
         const highlight = !noHighlight && this.highlightMatches && this.highlightMatches[name] && this.highlightMatches[name].title
         const hlValues = columnValues[highlight]
         if (highlight && hlValues && hlValues.length) {
-          const preview = name.includes('__preview__')
+          const preview = name.includes('__preview__') || name.includes('new ') // TODO: Check
           const color = this.currentHighlights.color['default'] ? this.currentHighlights.color[preview ? 'preview' : 'default'] : this.currentHighlights.color
           for (const index in values) {
             if (index>=limit) {
