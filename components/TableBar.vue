@@ -454,10 +454,6 @@ export default {
 			default: 1,
 			type: Number
 		},
-		searchText: {
-			default: '',
-			type: String
-    },
     isOperating: {
       type: Boolean,
       default: false
@@ -494,6 +490,8 @@ export default {
 
       lastSort: [],
       callSort: false,
+
+      searchText: '',
 
       commandItems: [
 
