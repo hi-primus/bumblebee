@@ -72,11 +72,16 @@
             </template>
           </div>
           <div class="o-results pb-2" v-if="currentPreviewInfo">
-            <div
+            <template
               v-if="typeof currentPreviewInfo.rowHighlights=='number'"
             >
-              Matching rows: {{currentPreviewInfo.rowHighlights}}
-            </div>
+              <div
+                :class="{'warning--text': !currentPreviewInfo.rowHighlights}"
+                class="text--darken-2"
+               >
+                Matching rows: {{currentPreviewInfo.rowHighlights}}
+              </div>
+            </template>
             <div
               v-if="typeof currentPreviewInfo.newColumns=='number' && currentPreviewInfo.newColumns"
             >
