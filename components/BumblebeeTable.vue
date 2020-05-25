@@ -1806,7 +1806,8 @@ export default {
 
       if (response.data.status=='error') {
         this.$store.commit('setPreviewInfo', {error: response.data.error})
-        // TODO: Error handling
+      } else {
+        this.$store.commit('setPreviewInfo', {error: false})
       }
 
       var parsed = response && response.data && response.data.result ? parseResponse(response.data.result) : undefined
