@@ -71,6 +71,18 @@
               </v-alert>
             </template>
           </div>
+          <div class="o-results pb-2" v-if="currentPreviewInfo">
+            <div
+              v-if="typeof currentPreviewInfo.rowHighlights=='number'"
+            >
+              Matching rows: {{currentPreviewInfo.rowHighlights}}
+            </div>
+            <div
+              v-if="typeof currentPreviewInfo.newColumns=='number' && currentPreviewInfo.newColumns"
+            >
+              New columns: {{currentPreviewInfo.newColumns}}
+            </div>
+          </div>
           <div class="o-buttons">
             <template v-if="command.dialog.filteredPreview">
               <v-checkbox
@@ -113,6 +125,18 @@
                 {value: (command.dialog.acceptLabel || 'Accept'), args: [currentCommand]} | property
               }}
             </v-btn>
+          </div>
+          <div class="o-error">
+            <v-tooltip transition="fade-transition" left content-class="bar-tooltip" color="error">
+              <template v-slot:activator="{on}">
+                <transition :duration="210" name="bounce">
+                  <v-icon class="error error-badge" v-on="on" v-if="previewError">
+                    warning
+                  </v-icon>
+                </transition>
+              </template>
+              <span>{{previewError}}</span>
+            </v-tooltip>
           </div>
       </v-form>
     </CommandFormContainer>
@@ -2665,6 +2689,7 @@ export default {
       'currentTab',
       'currentDuplicatedColumns',
       'currentPreviewNames',
+      'currentPreviewInfo',
       'currentSecondaryDatasets',
       'currentLoadPreview'
     ]),
@@ -2722,6 +2747,14 @@ export default {
         group: "description",
         disabled: this.commandsDisabled,
         ghostClass: "ghost"
+      }
+    },
+
+    previewError () {
+      try {
+        return this.currentPreviewInfo.error
+      } catch (err) {
+        return false
       }
     },
 
@@ -2844,12 +2877,24 @@ export default {
                     nameMap[ 'new '+this.currentCommand.columns[i] ] = col
                   })
                 }
+
                 if (this.currentCommand.output_col && this.currentCommand.defaultOutputName) {
                   nameMap[this.currentCommand.defaultOutputName] = this.currentCommand.output_col
                 }
 
                 this.$store.commit('setPreviewNames',nameMap)
+                var newColumns = 0
+                for (const key in nameMap) {
+                  if (nameMap[key] && 'new '+nameMap[key]!==key) {
+                    newColumns++
+                  }
+                }
+                if (this.currentCommand.defaultOutputName && !newColumns) {
+                  newColumns = 1
+                }
+                this.$store.commit('setPreviewInfo', {newColumns})
               }
+
 
               this.preparePreviewCode()
             }
@@ -2865,6 +2910,7 @@ export default {
                 duplicatedColumns.push({name: this.currentCommand.columns[i], newName: col})
               })
               this.$store.commit('setDuplicatedColumns',duplicatedColumns.length ? duplicatedColumns : undefined)
+              this.$store.commit('setPreviewInfo', {newColumns: duplicatedColumns.length || false})
             }
           } else {
             this.restorePreview(false)

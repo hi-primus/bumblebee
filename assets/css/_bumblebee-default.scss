@@ -424,7 +424,7 @@ table {
       padding-left: 4px;
       padding-right: 4px;
       flex: 1;
-      height: 100%;
+      height: calc(100% - 4px);
       overflow-y: auto;
       overflow-x: hidden;
     }
@@ -1157,6 +1157,25 @@ table {
 .fade-enter, .fade-leave-to {
   opacity: 0;
 }
+
+.bounce-enter-active {
+  animation: bounce-in .21s;
+}
+.bounce-leave-active {
+  animation: bounce-in .3s reverse;
+}
+@keyframes bounce-in {
+  0% {
+    transform: scale(0);
+  }
+  80% {
+    transform: scale(1.125);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
 
 /* pseudo notebooks */
 
@@ -2049,10 +2068,28 @@ $editor-top-padding: 6px;
     }
 
   }
+  .o-results {
+    font-size: 13px;
+    // color: $text-color;
+    color: $primary-color;
+    font-weight: 500;
+    padding-left: 2px;
+    margin-bottom: 2px;
+    position: relative;
+    min-height: 26px;
+  }
   .o-buttons {
     display: flex;
     justify-content: flex-end;
     flex: 0;
+  }
+  .o-error {
+    position: relative;
+    text-align: right;
+    .error-badge {
+      margin-left: auto;
+      margin-right: 2px;
+    }
   }
   .filter-results-checkbox {
     margin: 0;
@@ -2298,6 +2335,16 @@ $editor-top-padding: 6px;
   }
 }
 
+
+.error-badge {
+  color: rgba(255,255,255,0.91) !important;
+  height: 36px;
+  width: 36px;
+  padding: 10px 12px 14px 12px;
+  font-size: 24px;
+  border-radius: 50%;
+  background-color: $data-red;
+}
 
 // TODO check inline css generation nuxt
 
