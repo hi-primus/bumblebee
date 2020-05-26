@@ -90,7 +90,7 @@
                   v-for="(item, i) in menuItems(element.group).filter(e=>!getProperty(e.hidden))"
                   :key="i+'mc'"
                   @click="commandHandle(item)"
-                  :disabled="!checkDataTypes(item.allowedTypes) || (item.max && selectedColumns.length>item.max) || (item.min && selectedColumns.length<item.min)"
+                  :disabled="getProperty(item.disabled) || !checkDataTypes(item.allowedTypes) || (item.max && selectedColumns.length>item.max) || (item.min && selectedColumns.length<item.min)"
                 >
                   <v-list-item-content>
                     <v-list-item-title>
@@ -495,8 +495,13 @@ export default {
 
       commandItems: [
 
-				{command: 'drop rows', text: 'Drop rows', type: 'FILTER'},
-        {command: 'keep rows', text: 'Keep rows', type: 'FILTER'},
+				{command: 'load file', text: 'Add from file', type: 'DATA_SOURCE'},
+        {command: 'load from database', text: 'Add from database', type: 'DATA_SOURCE'},
+				{command: 'load from data source', text: 'Add from a loaded data source', type: 'DATA_SOURCE', hidden: true},
+        {command: 'manage data sources', text: 'Manage data sources', type: 'DATA_SOURCE', hidden: true},
+
+        {command: 'download', text: 'Download', type: 'SAVE'},
+        {command: 'keep rows', text: 'Save to database', type: 'SAVE', disabled: ()=>!(this.dataset && this.dataset.summary && this.$store.state.database)},
 
 
 				{command: 'lower', text: 'To lower case', type: 'STRING'},
@@ -655,51 +660,47 @@ export default {
     toolbarElements () {
       return [
         {
-          type: 'button',
-          onClick: () => {
-            this.commandHandle({command: 'load file', noOperations: true})
-          },
+          type: 'menu',
+          group: 'DATA_SOURCE',
           icons: [{ icon: 'cloud_upload' }],
-          tooltip: 'Load file',
+          tooltip: 'Add data source',
           disabled: ()=>(this.$store.state.kernel!='done')
         },
         {
-          type: 'button',
-          onClick: () => {
-            this.$refs.cells & this.$refs.cells.downloadDataset(event)
-          },
+          type: 'menu',
+          group: 'SAVE',
           icons: [{ icon: 'save' }],
-          tooltip: 'Download file',
+          tooltip: 'Save',
           disabled: ()=>!(this.dataset && this.dataset.summary)
         },
         {
           divider: true,
           hidden: ()=>(this.appStable)
         },
-        {
-          type: 'button',
-          onClick: () => {
-            this.commandHandle({command: 'load from database', noOperations: true})
-          },
-          icons: [{ icon: 'storage' }],
-          tooltip: 'Connect a database',
-          disabled: ()=>(this.$store.state.kernel!='done'),
-          hidden: ()=>(this.appStable)
-        },
-        {
-          type: 'button',
-          onClick: () => {
-            this.commandHandle({command: 'save to database'})
-          },
-          icons: [
-            { icon: 'storage' },
-            { icon: 'check', style: {marginLeft: '-4px'} }
-          ],
-          tooltip: 'Save dataset to database',
-          disabled: ()=>!(this.dataset && this.dataset.summary && this.$store.state.database),
-          hidden: ()=>(this.appStable)
-        },
-        { divider: true },
+        // {
+        //   type: 'button',
+        //   onClick: () => {
+        //     this.commandHandle({command: 'load from database', noOperations: true})
+        //   },
+        //   icons: [{ icon: 'storage' }],
+        //   tooltip: 'Connect a database',
+        //   disabled: ()=>(this.$store.state.kernel!='done'),
+        //   hidden: ()=>(this.appStable)
+        // },
+        // {
+        //   type: 'button',
+        //   onClick: () => {
+        //     this.commandHandle({command: 'save to database'})
+        //   },
+        //   icons: [
+        //     { icon: 'storage' },
+        //     { icon: 'check', style: {marginLeft: '-4px'} }
+        //   ],
+        //   tooltip: 'Save dataset to database',
+        //   disabled: ()=>!(this.dataset && this.dataset.summary && this.$store.state.database),
+        //   hidden: ()=>(this.appStable)
+        // },
+        // { divider: true },
         {
           type: 'button',
           onClick: () => {
@@ -1061,6 +1062,10 @@ export default {
 
     getProperty,
 
+    downloadDataset () {
+      this.$refs.cells & this.$refs.cells.downloadDataset(event)
+    },
+
     checkDataTypes (allowedTypes) {
       if (!allowedTypes || !allowedTypes.length) {
         return true
@@ -1106,6 +1111,12 @@ export default {
     },
 
     commandHandle (event) {
+
+      if (event.command==='download') {
+        this.downloadDataset()
+        return
+      }
+
       this.$nextTick(()=>{
         this.$refs.cells & this.$refs.cells.commandHandle(event)
       })
