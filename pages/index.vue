@@ -159,7 +159,6 @@
               :isOperating.sync="isOperating"
               :dataset="currentDataset"
               :total="(currentDataset.summary) ? +currentDataset.summary.rows_count : 1"
-              :searchText="searchText"
             />
           </div>
 
@@ -219,7 +218,6 @@ export default {
 			inputPassword: '',
 			inputUsername: '',
 			inputEngine: false,
-      searchText: '',
       isOperating: false,
 			tab: undefined,
 			confirmDelete: -1,
