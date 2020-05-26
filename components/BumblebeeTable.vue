@@ -1284,7 +1284,7 @@ export default {
       }
     },
 
-    commandHandle(command) {
+    commandHandle (command) {
       this.$store.commit('commandHandle',command)
     },
 
@@ -1355,7 +1355,7 @@ export default {
       }
     },
 
-    selectColumn(event, columnIndex) {
+    selectColumn (event, columnIndex) {
       setTimeout(() => {
 
         if (doubleClick) {
@@ -1411,7 +1411,7 @@ export default {
       }, 5);
     },
 
-    setMenu(event, index) {
+    setMenu (event, index) {
 
       doubleClick = true
 
@@ -1438,7 +1438,7 @@ export default {
 
     },
 
-    saveColumnData() {
+    saveColumnData () {
       var index = this.columnMenuIndex
       var prevName = this.currentDataset.columns[index].name
       var prevType = this.currentDataset.columns[index].profiler_dtype
@@ -1838,7 +1838,7 @@ export default {
       }
     },
 
-    updateRows() {
+    updateRows () {
       var columnValues = {...(this.columnValues || {})}
       if (this.recalculateRows) {
         this.recalculateRows = false

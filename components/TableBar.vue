@@ -677,30 +677,6 @@ export default {
           divider: true,
           hidden: ()=>(this.appStable)
         },
-        // {
-        //   type: 'button',
-        //   onClick: () => {
-        //     this.commandHandle({command: 'load from database', noOperations: true})
-        //   },
-        //   icons: [{ icon: 'storage' }],
-        //   tooltip: 'Connect a database',
-        //   disabled: ()=>(this.$store.state.kernel!='done'),
-        //   hidden: ()=>(this.appStable)
-        // },
-        // {
-        //   type: 'button',
-        //   onClick: () => {
-        //     this.commandHandle({command: 'save to database'})
-        //   },
-        //   icons: [
-        //     { icon: 'storage' },
-        //     { icon: 'check', style: {marginLeft: '-4px'} }
-        //   ],
-        //   tooltip: 'Save dataset to database',
-        //   disabled: ()=>!(this.dataset && this.dataset.summary && this.$store.state.database),
-        //   hidden: ()=>(this.appStable)
-        // },
-        // { divider: true },
         {
           type: 'button',
           onClick: () => {
@@ -723,18 +699,6 @@ export default {
           tooltip: 'Get aggregations',
           disabled: ()=>!(!['values','ranges'].includes(this.selectionType) && this.dataset && this.dataset.summary)
         },
-        // { divider: true },
-        // {
-        //   type: 'sort'
-        // },
-        // {
-        //   type: 'button',
-        //   onClick: ()=>this.commandHandle({command: 'apply sort', columns: this.lastSort}),
-        //   disabled: ()=>!(this.dataset && this.dataset.summary && this.sortBy[0]),
-        //   icons: [{icon: 'sort'},{icon: 'check', style: {marginLeft: '-8px'}}],
-        //   tooltip: 'Apply sorting',
-        //   hidden: ()=>(this.appStable)
-        // },
         { divider: true },
         {
           type: 'button',
