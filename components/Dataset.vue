@@ -20,7 +20,20 @@
         </template>
       </div>
       <div v-else class="title grey--text text-center text-with-icons">
-        Use <v-icon>cloud_upload</v-icon> or <v-icon>storage</v-icon> to load some data
+        <br/>
+        <v-btn
+          @click="commandHandle({command: 'load file'})"
+          color="primary"
+          class="mr-3"
+          depressed
+        >Load from file</v-btn>
+        <span> or </span>
+        <v-btn
+          @click="commandHandle({command: 'load from database'})"
+          color="primary"
+          class="ml-3"
+          depressed
+        >Load from database</v-btn>
       </div>
 
     </div>
@@ -431,6 +444,11 @@ export default {
 
   mounted() {
 
+    if (!this.currentDataset || this.currentDataset.blank) {
+      this.commandHandle({command: 'load file'})
+    }
+
+
     try {
       this.getSelectionFromStore()
     } catch (error) {}
@@ -442,6 +460,10 @@ export default {
   },
 
   methods: {
+
+    commandHandle (event) {
+      this.$store.commit('commandHandle',event)
+    },
 
     reloadInit () {
       this.$store.commit('setAppStatus',{status: 'receiving'})
@@ -577,8 +599,11 @@ export default {
 
   watch: {
 
-    currentDataset () {
-      this.sortedColumns = []
+    currentDataset: {
+      deep: true,
+      handler (value) {
+        this.sortedColumns = []
+      },
     },
 
     operationsActive () {
