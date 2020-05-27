@@ -1118,7 +1118,8 @@ table {
   display: inline;
   transform-origin: left center;
   &.in-autocomplete {
-    width: 3em;
+    min-width: 2.5em;
+    margin-right: 0.5em;
   }
   &.type-int {
     transform: scaleX(1.25);
@@ -1733,7 +1734,7 @@ $editor-top-padding: 6px;
       border-top-style: solid;
     }
 
-    .data-type {
+    &>.data-type {
       height: inherit;
       width: 40px;
       position: absolute;
@@ -1754,7 +1755,7 @@ $editor-top-padding: 6px;
       order: 4;
       flex-shrink: 1;
     }
-    .column-title {
+    &>.column-title {
       order: 3;
       height: inherit;
       flex-shrink: 0;

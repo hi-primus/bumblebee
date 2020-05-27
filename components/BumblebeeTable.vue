@@ -48,7 +48,7 @@
                 <div class="data-type in-autocomplete">{{ dataTypeHint(item) }}</div> {{dataTypeNames[item]}}
               </template>
               <template v-slot:selection="{ item }">
-                <div class="data-type in-autocomplete mr-2">{{ dataTypeHint(item) }}</div> {{dataTypeNames[item]}}
+                <div class="data-type mr-2">{{ dataTypeHint(item) }}</div> {{dataTypeNames[item]}}
               </template>
             </v-select>
           </v-list-item>
