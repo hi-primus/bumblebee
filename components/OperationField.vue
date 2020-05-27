@@ -5,7 +5,7 @@
         :key="field.key"
         depressed
         color="primary"
-        @click="(field.func) ? command[field.func]() : 0"
+        @click="(field.func) ? command[field.func](currentCommand) : 0"
         class="mb-6 mx-a d-flex"
         :loading="currentCommand[field.loading]"
         :disabled="!currentCommand[field.loading] && field.validate && !field.validate(currentCommand)"
