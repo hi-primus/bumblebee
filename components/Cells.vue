@@ -3372,7 +3372,9 @@ export default {
         //   code = code.code
         // }
         if (payload.isLoad) {
-          return precode + code +'\n'+`${this.dataset.varname} = ${this.dataset.varname}.ext.optimize()` + '\n'+`${this.dataset.varname} = ${this.dataset.varname}.ext.repartition(8).ext.cache()`
+          return precode + code +'\n'
+					// +`${this.dataset.varname} = ${this.dataset.varname}.ext.optimize()`+'\n'
+					+`${this.dataset.varname} = ${this.dataset.varname}.ext.repartition(8).ext.cache()`
         } else {
           return precode + `${this.dataset.varname} = ${this.dataset.varname}${code}.ext.cache()`
         }
@@ -3480,18 +3482,14 @@ export default {
         return;
       }
 
-      var inferProfile = true // false
-
       if (rerun) {
         // console.log('[CODE MANAGER] every cell is new')
         this.markCells(false, ignoreFrom)
-        inferProfile = true
       }
 
 			if (this.firstRun) {
 				this.firstRun = false
         rerun = false
-        inferProfile = true
 			}
 
       this.computedCommandsDisabled = true;
@@ -3504,8 +3502,7 @@ export default {
           name: this.dataset.summary ? this.dataset.name : null,
           varname: this.dataset.varname,
           session: this.$store.state.session,
-          key: this.$store.state.key,
-          inferProfile
+          key: this.$store.state.key
         }, {
           timeout: 0
         })

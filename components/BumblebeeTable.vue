@@ -1522,11 +1522,9 @@ export default {
 
         var cols = this.currentPreviewColumns.map(e=>escapeQuotes(  e.title.split('__preview__').join('')  ))
 
-        var inferProfile = true // false
-
         var code = `_df_profile = ${this.currentDataset.varname}.ext.buffer_window("*")${await getPropertyAsync(previewCode) || ''}`
         + `\n_output = { `
-        + (profile ? `"profile": _df_profile.ext.profile(["${cols.join('", "')}"]${(inferProfile ? ', infer=True' : '')}, output="json")` : '')
+        + (profile ? `"profile": _df_profile.ext.cast_and_profile(["${cols.join('", "')}"], output="json")` : '')
         + (profile && matches ? `, ` : '')
         + (matches ? `"matches_count": len(_df_profile.rows.select('df["__match__"]!=False'))` : '')
         + `}`

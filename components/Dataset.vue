@@ -637,9 +637,7 @@ export default {
                 this.$store.commit('setLoadPreview', {meta: response.data.result.meta} )
               }
 
-              var inferProfile = true // load preview
-
-              var pCode = `_output = ${varname}.ext.profile(columns="*"${(inferProfile ? ', infer=True' : '')}, output="json")`
+              var pCode = `_output = ${varname}.ext.cast_and_profile(columns="*", output="json")`
 
               var pResponse = await this.evalCode(pCode)
 
