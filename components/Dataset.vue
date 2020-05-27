@@ -444,10 +444,9 @@ export default {
 
   mounted() {
 
-    if (!this.currentDataset || this.currentDataset.blank) {
-      this.commandHandle({command: 'load file'})
-    }
-
+    // if (!this.currentDataset || this.currentDataset.blank) {
+    //   this.commandHandle({command: 'load file'})
+    // }
 
     try {
       this.getSelectionFromStore()
