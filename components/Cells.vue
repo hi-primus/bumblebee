@@ -102,17 +102,6 @@
               color="primary"
               dense
               text
-              v-if="command.onTest"
-              :loading="currentCommand.loadingTest"
-              :disabled="command.dialog.testValidate && !command.dialog.testValidate(currentCommand)"
-              @click="command.onTest(currentCommand)"
-            >
-              {{ command.dialog.testLabel || 'Test'}}
-            </v-btn>
-            <v-btn
-              color="primary"
-              dense
-              text
               @click="cancelCommand"
             >
               Cancel
@@ -1987,6 +1976,12 @@ export default {
                 label: 'Table',
                 items_key: 'tables'
               },
+              {
+                type: 'action',
+                label: 'Get tables',
+                loading: '_loadingTables',
+                func: 'getTables'
+              }
             ],
             validate: (command) => (
               command.table &&
@@ -2003,16 +1998,16 @@ export default {
 						database: '',
 						user: '',
             password: '',
-            loadingTest: false,
+            _loadingTables: false,
             isLoad: true
           }),
           code: (payload) => {
             var table = escapeQuotes(payload.table)
             return `${payload.previous_code}${'\n'}${this.availableVariableName} = db.table_to_df("${table}").ext.cache()`
           },
-          onTest: async (payload) => {
+          getTables: async (payload) => {
 
-            this.currentCommand.loadingTest = true
+            this.currentCommand._loadingTables = true
             this.currentCommand.error = ''
 
             var fields = this.commandsHandlers['load from database'].dialog.fields
@@ -2022,9 +2017,9 @@ export default {
               var code = `db = op.connect(driver="${driver}"`
 
               fields.forEach(field => {
-                if (field.key!='driver' && field.key!='oracle_type' && field.key!='table') {
+                if (!['driver','oracle_type', 'table', undefined].includes(field.key)) {
                   code += (
-                    (!field.condition || field.condition(this.currentCommand) && payload[field.key]!==undefined) ?
+                    (!field.condition || field.condition(this.currentCommand) && payload[field.key] && field.key) ?
                     `, ${field.key}="${escapeQuotes(payload[field.key])}"` : ''
                   )
                 }
@@ -2034,7 +2029,9 @@ export default {
 
               var response = await this.evalCode(code+`; _output = db.tables_names_to_json()`)
 
-              var tables = parseResponse(response.content)
+              var tables = response.data.result
+
+              // var tables = parseResponse(response.content)
               if (!tables.length) {
                 throw 'Database has no tables'
               }
@@ -2050,14 +2047,14 @@ export default {
                 validHost: payload.host,
                 validDatabase: payload.database
               }
-              this.currentCommand.loadingTest = false
+              this.currentCommand._loadingTables = false
             } catch (error) {
 
               printError(error)
 
               var _error = printError(error)
               this.currentCommand = {...payload, error: _error}
-              this.currentCommand.loadingTest = false
+              this.currentCommand._loadingTables = false
             }
           }
         },
