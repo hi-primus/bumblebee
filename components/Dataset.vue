@@ -438,11 +438,11 @@ export default {
     },
   },
 
-  beforeCreate() {
+  beforeCreate () {
     this.isMounted = false
   },
 
-  mounted() {
+  mounted () {
 
     // if (!this.currentDataset || this.currentDataset.blank) {
     //   this.commandHandle({command: 'load file'})
