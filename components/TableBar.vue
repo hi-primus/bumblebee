@@ -817,7 +817,7 @@ export default {
           type: 'button',
           onClick: ()=>this.commandHandle({command: 'nest'}),
           tooltip: 'Nest columns',
-          icons: [{icon: 'link'}],
+          icons: [{icon: 'call_merge'}],
           disabled: ()=>['values','ranges'].includes(this.selectionType) || this.selectedColumns.length<=1 || !this.dataset.summary
         },
         {
@@ -833,7 +833,7 @@ export default {
             this.commandHandle({command: 'unnest', payload})
           },
           tooltip: { toString: ()=> 'Unnest column'+ (this.selectedColumns.length!=1 ? 's' : '')},
-          icons: [{icon: 'link_off'}],
+          icons: [{icon: 'call_split'}],
           disabled: ()=>!((this.selectionType=='columns' && this.selectedColumns.length>0) || this.selectionType==='text')
         },
         { divider: true },
