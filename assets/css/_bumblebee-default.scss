@@ -32,7 +32,7 @@ html:root {
 }
 
 .v-application, .v-data-table, .v-card > .v-card__text, .v-card, .v-sheet {
-  color:black;
+  color: $text-color !important;
 }
 
 .bb-container {
@@ -2365,4 +2365,22 @@ $editor-top-padding: 6px;
 
 #chatra {
   display: none !important;
+}
+
+.register-form-fields {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  &>* {
+    width: 100%;
+    max-width: 370px !important;
+  }
+}
+
+.text-button {
+  // text-transform: uppercase;
+  cursor: pointer;
+  font-weight: 500;
+  letter-spacing: 0px;
+  font-size: 16px;
 }
