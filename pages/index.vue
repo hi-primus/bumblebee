@@ -33,7 +33,83 @@
           width="100%"
           style="max-width: 700px; margin: auto"
         >
-          <v-form class="py-8 px-6" @submit="subscribe">
+        <v-form @submit.prevent="submit" v-if="typeForm==1">
+    <v-row justify="center">
+      <v-col cols="12" sm="10" md="8" lg="6" color="deep-purple accent-4">
+       <v-card-title>
+          <v-layout align-center justify-center>
+              <h1 class="display-1 mb-1">Create your account</h1>
+          </v-layout>
+            </v-card-title>
+            <v-text-field
+               v-model="createName"
+                label="Name"
+                required
+                outlined
+                clearable
+                dense
+            ></v-text-field>
+            <v-text-field
+               v-model="createLastname"
+                label="Last name"
+                required
+                outlined
+                clearable
+                dense
+            ></v-text-field>
+            <v-text-field
+               v-model="createUsername"
+                label="Username"
+                required
+                outlined
+                clearable
+                dense
+            ></v-text-field>
+    <v-text-field
+      label="E-mail"
+      v-model="email"
+      :rules="emailRules"
+       required
+                outlined
+                clearable
+                dense
+    ></v-text-field>
+     <v-text-field
+            label="Password"
+            v-model="createPassword"
+            :append-icon="show1 ? 'mdi-eye' : 'mdi-eye-off'"
+            :type="show1 ? 'text' : 'password'"
+            required
+            outlined
+            clearable
+            counter
+            dense
+            @click:append="show1 = !show1"
+          ></v-text-field>
+                <v-text-field
+                v-if="show1==false"
+                :type="show2 ? 'text' : 'password'"
+                label="Confirm Password"
+                v-model="ConfirmPassword"
+                required
+                outlined
+                clearable
+                dense
+            @click:append="show2 = !show2"
+          ></v-text-field>
+            <v-card-actions>
+              <v-spacer/>
+              <v-btn color="primary darken-1" large depressed @click="register">Sign up</v-btn>
+              <v-spacer/>
+            </v-card-actions>
+            <v-spacer></v-spacer>
+            <center>
+              <a class="primary--text text--darken-1" href="javascript:void(0)" @click="typeForm=0">Sign in</a>
+            </center>
+      </v-col>
+    </v-row>
+  </v-form>
+          <v-form class="py-8 px-6" @submit="subscribe" v-if="typeForm==0">
             <v-card-title>
               <h1 class="display-3 mb-4">Bumblebee</h1>
             </v-card-title>
@@ -45,7 +121,6 @@
                 outlined
                 clearable
               />
-
               <v-text-field
                 v-if="useKernel"
                 v-model="inputPassword"
@@ -76,12 +151,18 @@
               <v-btn color="primary darken-1" large depressed @click="subscribe">{{(useKernel) ? 'Sign in' : 'Subscribe'}}</v-btn>
               <v-spacer/>
             </v-card-actions>
-            <v-card-text v-if="appError" class="pb-0" >
-              <v-alert v-if="appError" type="error" class="mb-2" dismissible @input="resetStatus($event)">
+            <v-layout align-center justify-center>
+              <a v-if="useRegister" class="primary--text text--darken-1" href="javascript:void(0)" @click="typeForm=1">{{(useRegister) ? 'Sign up' : ''}}</a>
+            </v-layout>
+          </v-form>
+          <v-card-text v-if="successMessage || appError" class="pb-0" >
+              <v-alert  v-if="appError" type="error" class="mb-2" dismissible @input="resetStatus($event)">
                 {{ appError }}
               </v-alert>
+               <v-alert v-if="successMessage" type="success" class="mb-2" @input="successMessage = ''">
+                 {{ successMessage }}
+                </v-alert>
             </v-card-text>
-          </v-form>
         </v-card>
       </template>
       <template v-else>
@@ -190,6 +271,7 @@
   </Layout>
 </template>
 
+
 <script>
 import Layout from '@/components/Layout'
 import TableBar from '@/components/TableBar'
@@ -221,7 +303,23 @@ export default {
       isOperating: false,
 			tab: undefined,
 			confirmDelete: -1,
-			version: ''
+			typesSelected: [],
+			typesInput: '',
+      version: '',
+      createName:'',
+      createLastname:'',
+      createUsername:'',
+      createPassword:'',
+      ConfirmPassword:'',
+      email: '',
+      emailRules: [ 
+        v => !v || /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/.test(v) || 'E-mail must be valid'
+      ],
+      show1: false,
+      show2: false,
+      typeForm:0,
+      successMessage:'',
+      errorMessage:'',
 		}
 	},
 
@@ -347,13 +445,34 @@ export default {
 
 	methods: {
 
+		typesUpdated () {
+      this.typesInput = ''
+      this.$refs.autocomplete.loseFocus
+    },
+    async register () {
+    try{
+      var response = await this.$store.dispatch('auth/register',{username: this.createUsername,password:this.createPassword,email:this.email})
+      console.log(response)
+      this.typeForm=0
+      this.successMessage=response.data.message
+      this.$store.commit('status')
+      if(response.status>=300){
+      throw response
+       } 
+       } catch(error){
+       this.successMessage=''
+      console.log(error)
+      this.handleError(error,"waiting")
+      }
+		},
 		async subscribe () {
       try {
         var tpw = this.$route.query.tpw
         var workers = this.$route.query.workers
         if (this.useKernel) {
           var login = await this.$store.dispatch('auth/login',{ username: this.inputUsername, password: this.inputPassword })
-			    this.startClient({session: this.inputUsername, engine: this.inputEngine, tpw, workers})
+          this.startClient({session: this.inputUsername, engine: this.inputEngine, tpw, workers})
+          this.successMessage=''
         } else {
 			    this.startClient({session: this.inputUsername, key: this.inputPassword, engine: this.inputEngine, tpw, workers})
         }

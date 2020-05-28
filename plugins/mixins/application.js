@@ -6,5 +6,8 @@ export default {
     appStable () {
       return this.$route.query.stable=='1'
     },
+    useRegister(){
+      return this.$route.query.authsecret!=null
+    },
   }
 }
