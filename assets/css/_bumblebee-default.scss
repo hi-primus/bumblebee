@@ -1,3 +1,9 @@
+$icon-size: 24px;
+$toolbar-height: ($icon-size*2) + 1px;
+$not-table-height: $toolbar-height + 79px;
+$table-height: calc(100vh - $not-table-height);
+
+
 html:root {
 	overflow-y: auto;
 }
@@ -53,23 +59,9 @@ html:root {
         width: 100%;
       }
       .sidebar-container, .table-container {
-        max-height: calc(100vh - 126px); // 191
+        max-height: $table-height; // 191
       }
     }
-  }
-}
-
-.toolbar {
-  .theme--light.v-btn {
-    color: $icon-color !important;
-    .v-icon {
-      color: inherit !important;
-    }
-  }
-  .theme--light.v-btn.v-btn--disabled,
-  &.disabled .theme--light.v-btn{
-    color: $icon-color !important;
-    opacity: 0.5;
   }
 }
 
@@ -407,8 +399,8 @@ table {
   }
   &>.table-view-empty {
     width: 100%;
-    height: calc(100vh - 126px);
-    max-height: calc(100vh - 126px);
+    height: $table-height;
+    max-height: $table-height;
   }
   &>.sidebar-container {
     border-left: solid 1px $line-color-1;
@@ -629,7 +621,9 @@ table {
 /* icon buttons toolbar */
 
 .toolbar {
-  $toolbar-height: 48px - 1px;
+  font-size: $icon-size;
+  display: flex;
+  align-items: center;
   &.vertical {
     flex-direction: column;
     &>*:not(:first-child) {
@@ -640,29 +634,43 @@ table {
     height: $toolbar-height;
   }
   &.disabled {
-    // opacity: 0.5;
     &>* {
       pointer-events: none;
     }
   }
-  display: flex;
-  align-items: center;
   .divider {
     width: 1px;
-    height: calc(100% - 16px);
+    // height: calc(100% - #{$icon-size});
+    height: $icon-size;
     background-color: $line-color-2;
-    margin: 0 4px;
+    margin: 0 2px;
   }
   .v-btn i {
-    max-width: 24px;
+    font-size: $icon-size;
+    max-width: $icon-size;
     overflow: hidden;
+    transform: scale(1) rotate(-0.037302deg);
   }
-}
-
-.icon-btn {
-  min-width: 32px !important;
-  padding: 0 4px !important;
-  height: 32px !important;
+  .icon-btn-container {
+    top: -1px;
+    position: relative;
+  }
+  .icon-btn {
+    min-width: ($icon-size*(4/3)) !important;
+    padding: 0 ($icon-size/6) !important;
+    height: ($icon-size*(4/3)) !important;
+  }
+  .theme--light.v-btn {
+    color: $icon-color !important;
+    .v-icon {
+      color: inherit !important;
+    }
+  }
+  .theme--light.v-btn.v-btn--disabled,
+  &.disabled .theme--light.v-btn {
+    color: $icon-color !important;
+    opacity: 0.5;
+  }
 }
 
 /* sort hints */
@@ -1530,8 +1538,8 @@ $editor-top-padding: 6px;
 }
 
 .bbt-container {
-  height: calc(100vh - 126px) !important;
-  max-height: calc(100vh - 126px) !important;
+  height: $table-height !important;
+  max-height: $table-height !important;
   overflow: hidden;
 
   min-width: 100%;
