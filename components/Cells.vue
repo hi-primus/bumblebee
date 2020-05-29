@@ -356,30 +356,6 @@ export default {
             return `<b>Sort rows</b> in ${multipleContent([payload.columns, payload.orders],['hl--cols','hl--param'])}`
           }
         },
-        FILTER: {
-          code: (payload) => {
-            var values = this.currentSelection.ranged.values
-            var ranges = this.currentSelection.ranged.ranges
-            var type = (values && values.length) ? 'values' : 'ranges'
-            var action = payload.command=='keep rows' ? 'select' : 'drop'
-            var expression
-
-            if (type=='values') {
-              values = values.map(v=>escapeQuotes(v))
-              expression = `${this.dataset.varname}.${payload.columns[0]}.isin(["${values.join('", "')}"])`
-            }
-            else {
-              if (ranges.length>1)
-                expression = '('
-                +ranges.map(range=>`(${this.dataset.varname}["${payload.columns[0]}"]>=${range[0]}) & (${this.dataset.varname}["${payload.columns[0]}"]<=${range[1]})`).join(' | ')
-                +')'
-              else
-                expression = `(${this.dataset.varname}["${payload.columns[0]}"]>=${ranges[0][0]}) & (${this.dataset.varname}["${payload.columns[0]}"]<=${ranges[0][1]})`
-            }
-            return `.rows.${action}( ${expression} )`
-          }
-
-        },
         REMOVE_KEEP_SET: {
           dialog: {
             title: (c)=>`Filter / Set ${c.rowsLabels[c.rowsType]}`,
@@ -1703,7 +1679,10 @@ export default {
               +`, search_by="full"`
               +')'
             })
-            .join('\n')
+            .join('')
+          },
+          content: (payload) => { // TODO: Test
+            return `<b>Clusterize</b> ${multipleContent([payload.clusters.map(e=>e.replace)], 'hl--param')} in ${hlCols(payload.columns[0])}`
           }
         },
         outliers: {
@@ -1864,8 +1843,11 @@ export default {
               +`, upper_bound=${selection[1]}`
               +`, invert=${payload.action=='Drop' ? 'True' : 'False'}`
               +')'
-              ).join('\n')
+              ).join('')
             }
+          },
+          content: (payload) => { // TODO: Test
+            return `<b>${payload.action} outliers</b> (between ${multipleContent(payload.selection[0],'hl--param',', ',' and ')})`
           }
         },
         'load from database': {
@@ -2085,7 +2067,8 @@ export default {
           code: (payload) => {
             var table_name = escapeQuotes(payload.table_name)
             return `db.df_to_table(${this.dataset.varname}, table="${table_name}", mode="overwrite")`
-          }
+          },
+          noAdd: true // TODO
         },
         stratified_sample: {
           dialog: {
@@ -2110,6 +2093,10 @@ export default {
               +_argument
               +( (payload.seed) ? `, seed=${payload.seed}` : '')
               +')'
+          },
+          content: (payload) => { // TODO: Test
+            return`<b>Stratified sampling</b> on ${multipleContent([payload.columns],'hl--cols')}`
+            + (payload.seed!=='' ? ` using ${hlParam(payload.seed)}` : '')
           }
         },
         replace: {
@@ -2496,6 +2483,12 @@ export default {
               + ( (output_cols_argument) ? `, output_cols=${output_cols_argument}` : '')
               + ')'
           },
+          content: (payload) => { // TODO: Test
+            return `<b>Bucketize</b> `
+            + columnsHint(payload.columns,payload.output_cols)
+            + (payload.splits ? `by ${hlParam(payload.splits)}` : '')
+          }
+
         },
         values_to_cols: {
           payload: (columns) => {
@@ -2506,6 +2499,9 @@ export default {
           },
           code: (payload) => {
             return `.cols.values_to_cols("${payload.columns[0]}")`
+          },
+          content: (payload) => { // TODO: Test
+            return `<b>Set values to columns</b> using ${hlCols(payload.columns[0])}`
           }
         },
         string_to_index: {
@@ -2536,6 +2532,10 @@ export default {
               + ( (output_cols_argument) ? `, output_cols=${output_cols_argument}` : '')
               + ')'
           },
+          content: (payload) => { // TODO: Test
+            return `<b>Set strings to indices</b> on`
+            + columnsHint(payload.columns,payload.output_cols)
+          }
         },
         index_to_string: {
           dialog: {
@@ -2565,8 +2565,12 @@ export default {
               + ( (output_cols_argument) ? `, output_cols=${output_cols_argument}` : '')
               + ')'
           },
+          content: (payload) => { // TODO: Test
+            return `<b>Set indices to strings</b> `
+            + columnsHint(payload.columns,payload.output_cols)
+          }
         },
-        SCALER: {
+        ML: { // TODO: Test
           dialog: {
             title: (command) => {
               if (command.command=='z_score')
@@ -2602,6 +2606,18 @@ export default {
               + ( (output_cols_argument) ? `, output_cols=${output_cols_argument}` : '')
               + ')'
           },
+          content: (payload) => { // TODO: Test
+            var scaler = 'scaler'
+            if (command.command=='z_score')
+              scaler = 'standard scaler'
+            if (command.command== 'min_max_scaler')
+              scaler = 'min max scaler'
+            if (command.command== 'max_abs_scaler')
+              scaler = 'max abs scaler'
+            return `<b>Apply ${scaler}</b> to`
+            + columnsHint(payload.columns,payload.output_cols)
+            + (payload.splits ? `by ${hlParam(payload.splits)}` : '')
+          }
         },
         impute: {
           dialog: {
@@ -2657,6 +2673,11 @@ export default {
               + ( (output_cols_argument) ? `, output_cols=${output_cols_argument}` : '')
               + ')'
           },
+          content: (payload) => { // TODO: Test
+            return `<b>Impute rows</b> on`
+            + columnsHint(payload.columns,payload.output_cols)
+            + (payload.strategy ? `using ${hlParam(payload.strategy)}` : '')
+          }
         },
         sample_n: {
           dialog: {
@@ -2685,6 +2706,9 @@ export default {
           code: (payload) => {
             return `.ext.sample(${payload.n})`
           },
+          content: (payload) => { // TODO: Test
+            return `<b>Sample</b> to ${hlParam(payload.n)} rows`
+          }
         },
       }
     }

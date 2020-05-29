@@ -207,6 +207,15 @@ export const getOutputColsArgument = (output_cols = [], input_cols = [], pre = '
   return false
 }
 
+export const columnsHint = (columns = [], output_cols = []) => {
+  if (output_cols.join('').length) {
+    var output_cols_argument = getOutputColsArgument(output_cols, columns, '')
+    return multipleContent([columns, output_cols_argument], 'hl--cols', ', ', ' to ', false, false)
+  } else {
+    return multipleContent([columns], 'hl--cols', ', ', ' to ', false, false)
+  }
+}
+
 export const escapeQuotesOn = (payload = {}, keys = []) => {
   var _payload = {}
   keys.forEach(key => {
