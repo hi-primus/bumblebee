@@ -1,7 +1,7 @@
 $icon-size: 24px;
 $toolbar-height: ($icon-size*2) + 1px;
 $not-table-height: $toolbar-height + 79px;
-$table-height: calc(100vh - $not-table-height);
+$table-height: calc(100vh - #{$not-table-height});
 
 
 html:root {
