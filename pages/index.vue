@@ -34,7 +34,7 @@
               <div class="register-form-fields">
 								<v-text-field
                   label="Name"
-                  v-model="createName"
+                  v-model="createFirstName"
                   required
                   outlined
                   clearable
@@ -42,15 +42,7 @@
                 ></v-text-field>
 								<v-text-field
                   label="Last name"
-                  v-model="createLastname"
-                  required
-                  outlined
-                  clearable
-                  dense
-                ></v-text-field>
-								<v-text-field
-                  label="Username"
-                  v-model="createUsername"
+                  v-model="createLastName"
                   required
                   outlined
                   clearable
@@ -66,6 +58,14 @@
 									dense
 								></v-text-field>
 								<v-text-field
+                  label="Username"
+                  v-model="createUsername"
+                  required
+                  outlined
+                  clearable
+                  dense
+                ></v-text-field>
+								<v-text-field
 									label="Password"
 									v-model="createPassword"
 									:append-icon="showCreatePassword ? 'mdi-eye' : 'mdi-eye-off'"
@@ -79,6 +79,7 @@
 								></v-text-field>
 								<v-text-field
 									v-if="showCreatePassword==false"
+                  type="password"
 									label="Confirm password"
 									v-model="confirmPassword"
 									required
@@ -300,8 +301,8 @@ export default {
 			typesSelected: [],
 			typesInput: "",
 			version: "",
-			createName: "",
-			createLastname: "",
+			createFirstName: "",
+			createLastName: "",
 			createUsername: "",
 			createPassword: "",
 			confirmPassword: "",
@@ -439,15 +440,20 @@ export default {
 	},
 
 	methods: {
-		typesUpdated() {
+		typesUpdated () {
 			this.typesInput = "";
 			this.$refs.autocomplete.loseFocus;
 		},
-		async register() {
+		async register () {
 			try {
+        if (this.confirmPassword!==this.createPassword && !this.showPassword) {
+          throw "Passwords doesn't match"
+        }
 				var response = await this.$store.dispatch("auth/register", {
 					username: this.createUsername,
-					password: this.createPassword,
+          password: this.createPassword,
+          firstName: this.createFirstName,
+          lastName: this.createLastName,
 					email: this.email
 				});
 				console.log(response);
