@@ -1490,7 +1490,8 @@ export default {
             _sheet_names: 1,
             previewType: 'load',
             loadPreview: true,
-            isLoad: true
+            isLoad: true,
+            variableName: this.availableVariableName
             // _previewDelay: 500,
           }),
 
@@ -1505,7 +1506,7 @@ export default {
             var code = ''
 
             if (!payload._requestType) {
-              code = `${this.availableVariableName} = `
+              code = `${payload.variableName} = `
             }
 
             var loadType = (!payload._moreOptions) ? 'file' : payload.file_type
@@ -1560,7 +1561,7 @@ export default {
             + ( fileName ? ` ${hlParam(fileName)}` : '')
             + ( (!fileName && fileType) ? ` ${fileType}` : '')
             + ' file'
-            + ' to '+hlParam(this.availableVariableName)
+            + ' to '+hlParam(payload.variableName)
           }
         },
         'string clustering': {
@@ -1999,11 +2000,18 @@ export default {
 						user: '',
             password: '',
             _loadingTables: false,
-            isLoad: true
+            isLoad: true,
+            variableName: this.availableVariableName
           }),
           code: (payload) => {
             var table = escapeQuotes(payload.table)
-            return `${payload.previous_code}${'\n'}${this.availableVariableName} = db.table_to_df("${table}").ext.cache()`
+            return `${payload.previous_code}${'\n'}${payload.variableName} = db.table_to_df("${table}").ext.cache()`
+          },
+          content: (payload)=>{
+            var database = ['postgres','presto','redshift','sqlserver','mysql'].includes(payload.driver)
+            return `<b>Load</b> ${hlParam(payload.table)}`
+            +(database ? ` from ${hlParam(payload.database)}` : '')
+            + ' to '+hlParam(payload.variableName)
           },
           getTables: async (payload) => {
 
