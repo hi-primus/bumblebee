@@ -33,7 +33,7 @@
               </v-card-title>
               <div class="register-form-fields">
 								<v-text-field
-                  label="Name"
+                  label="First name"
                   v-model="createFirstName"
                   required
                   outlined
@@ -446,7 +446,7 @@ export default {
 		},
 		async register () {
 			try {
-        if (this.confirmPassword!==this.createPassword && !this.showPassword) {
+        if (this.confirmPassword!==this.createPassword && !this.showCreatePassword) {
           throw "Passwords doesn't match"
         }
 				var response = await this.$store.dispatch("auth/register", {
