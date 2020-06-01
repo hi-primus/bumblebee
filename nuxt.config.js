@@ -32,7 +32,7 @@ module.exports = {
 				href: '/favicon.png'
 			},
 			// { rel: 'stylesheet', href: 'https://fonts.googleapis.com/css?family=Material+Icons|Ubuntu+Mono|Roboto+Mono' }
-			{ rel: 'stylesheet', href: 'https://fonts.googleapis.com/css?family=Material+Icons|Ubuntu+Mono|Ubuntu' },
+			{ rel: 'stylesheet', href: 'https://fonts.googleapis.com/css?family=Material+Icons+Outlined|Material+Icons|Ubuntu+Mono|Ubuntu' },
 			{ rel: 'stylesheet', href: '@mdi/font/css/materialdesignicons.css' },
 			{ rel: 'stylesheet', href: '/highlight/styles/default.css' }
     ],

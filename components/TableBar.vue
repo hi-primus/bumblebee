@@ -39,6 +39,7 @@
                       :key="ii"
                       :color="icon.color || '#888'"
                       :style="icon.style || {}"
+                      :class="icon.class || {}"
                     >
                       {{icon.icon}}
                     </v-icon>
@@ -71,11 +72,12 @@
                           :key="ii"
                           :color="icon.color || '#888'"
                           :style="icon.style || {}"
+                          :class="icon.class || {}"
                         >
                           {{icon.icon}}
                         </v-icon>
                       </template>
-                      <v-icon style="margin-right: -0.33333em; margin-left: -0.25em" :color="menus[element.group] ? 'black' : '#888'">
+                      <v-icon class="dropdown-icon" :color="menus[element.group] ? 'black' : '#888'">
                         arrow_drop_down
                       </v-icon>
                     </v-btn>
@@ -662,14 +664,14 @@ export default {
         {
           type: 'menu',
           group: 'DATA_SOURCE',
-          icons: [{ icon: 'cloud_upload' }],
+          icons: [{ icon: 'mdi-cloud-upload-outline' }],
           tooltip: 'Add data source',
           disabled: ()=>(this.$store.state.kernel!='done')
         },
         {
           type: 'menu',
           group: 'SAVE',
-          icons: [{ icon: 'save' }],
+          icons: [{ icon: 'mdi-content-save-outline' }],
           tooltip: 'Save',
           disabled: ()=>!(this.dataset && this.dataset.summary)
         },
@@ -683,7 +685,7 @@ export default {
             this.commandHandle({command: 'join'})
           },
           icons: [
-            { icon: 'mdi-set-all' },
+            { icon: 'mdi-set-center' },
           ],
           tooltip: 'Join dataframes',
           disabled: ()=>!(this.dataset && this.dataset.summary && this.hasSecondaryDatasets)
@@ -757,7 +759,7 @@ export default {
           onClick: ()=>this.commandHandle({command: 'drop empty rows'}),
           tooltip: 'Drop empty rows',
           icons: [
-            { icon: 'delete' },
+            { icon: 'mdi-delete-outline' },
             { icon: 'menu', style: {
               marginLeft: '-0.33333333em',
               transform: 'scaleX(0.75)'
@@ -770,7 +772,12 @@ export default {
           onClick: ()=>this.commandHandle({command: 'drop duplicates'}),
           tooltip: 'Drop duplicates',
           icons: [
-            { icon: 'mdi-layers-remove' },
+            // { icon: 'mdi-layers-remove' },
+            { icon: 'mdi-close-box-multiple-outline',
+              style: {
+                transform: 'scaleY(-1)'
+              }
+            },
           ],
           disabled: ()=>!(this.dataset && this.dataset.summary && this.hasSecondaryDatasets)
         },
@@ -779,14 +786,14 @@ export default {
           type: 'button',
           onClick: ()=>this.commandHandle({command: 'set'}),
           tooltip: { toString: ()=>this.selectedColumns.length ? 'Set column' : 'New column'},
-          icons: [{icon: 'add_box'}],
+          icons: [{icon: 'mdi-plus-box-outline'}],
           disabled: ()=>!(this.selectionType=='columns' && this.selectedColumns.length<=1 && this.dataset && this.dataset.summary)
         },
         {
           type: 'button',
           onClick: ()=>this.commandHandle({command: 'rename'}),
           tooltip: { toString: ()=> 'Rename column'+ (this.selectedColumns.length!=1 ? 's' : '')},
-          icons: [{icon: 'edit'}],
+          icons: [{icon: 'mdi-pencil-outline'}],
           disabled: ()=> !(this.selectionType=='columns' && this.selectedColumns.length>0)
         },
         {
@@ -807,11 +814,7 @@ export default {
           type: 'button',
           onClick: ()=>this.commandHandle({command: 'drop', type: 'DROP_KEEP'}),
           tooltip: { toString: ()=> 'Drop column'+ (this.selectedColumns.length!=1 ? 's' : '')},
-          // icons: [{icon: 'delete'}],
-          icons: [
-            { icon: 'delete' },
-            // { icon: 'menu', style: {transform: 'rotate(90deg)', marginLeft: '-6px'} }
-          ],
+          icons: [{ icon: 'mdi-delete-outline' }],
           disabled: ()=>!(this.selectionType=='columns' && this.selectedColumns.length>0)
         },
         {
@@ -842,7 +845,7 @@ export default {
           type: 'button',
           onClick: ()=>this.commandHandle({command: 'fill_na'}),
           tooltip: { toString: ()=> 'Fill column'+ (this.selectedColumns.length!=1 ? 's' : '')},
-          icons: [{icon: 'brush'}],
+          icons: [{icon: 'brush', class: 'material-icons-outlined'}],
           disabled: ()=>!(this.selectionType=='columns' && this.selectedColumns.length>0)
         },
         {
@@ -896,7 +899,7 @@ export default {
         {
           type: 'menu',
           group: 'ML',
-          icons: [{ icon: 'timeline' }],
+          icons: [{icon: 'timeline', class: 'material-icons-outlined'}],
           tooltip: 'Machine Learning',
           disabled: ()=>!(this.selectionType=='columns' && this.dataset && this.dataset.summary) , // Sampling
           hidden: ()=>(this.appStable)
