@@ -5,7 +5,7 @@
         <template v-slot:activator="{ on }">
           <v-btn v-on="on" text class="icon-btn" @click="listView=true" :disabled="!(dataset && dataset.summary)">
             <v-icon :color="(listView) ? 'black' : '#888'">
-              view_headline
+              mdi-format-list-checkbox
             </v-icon>
           </v-btn>
         </template>
@@ -15,7 +15,7 @@
         <template v-slot:activator="{ on }">
           <v-btn v-on="on" text class="icon-btn" @click="listView=false" :disabled="!(dataset && dataset.summary)">
             <v-icon :color="(!listView) ? 'black' : '#888'">
-              view_module
+              mdi-table
             </v-icon>
           </v-btn>
         </template>
@@ -39,6 +39,7 @@
                       :key="ii"
                       :color="icon.color || '#888'"
                       :style="icon.style || {}"
+                      :class="icon.class || {}"
                     >
                       {{icon.icon}}
                     </v-icon>
@@ -71,11 +72,12 @@
                           :key="ii"
                           :color="icon.color || '#888'"
                           :style="icon.style || {}"
+                          :class="icon.class || {}"
                         >
                           {{icon.icon}}
                         </v-icon>
                       </template>
-                      <v-icon style="margin-right: -8px; margin-left: -6px" :color="menus[element.group] ? 'black' : '#888'">
+                      <v-icon class="dropdown-icon" :color="menus[element.group] ? 'black' : '#888'">
                         arrow_drop_down
                       </v-icon>
                     </v-btn>
@@ -662,14 +664,14 @@ export default {
         {
           type: 'menu',
           group: 'DATA_SOURCE',
-          icons: [{ icon: 'cloud_upload' }],
+          icons: [{ icon: 'mdi-cloud-upload-outline' }],
           tooltip: 'Add data source',
           disabled: ()=>(this.$store.state.kernel!='done')
         },
         {
           type: 'menu',
           group: 'SAVE',
-          icons: [{ icon: 'save' }],
+          icons: [{ icon: 'mdi-content-save-outline' }],
           tooltip: 'Save',
           disabled: ()=>!(this.dataset && this.dataset.summary)
         },
@@ -683,7 +685,7 @@ export default {
             this.commandHandle({command: 'join'})
           },
           icons: [
-            { icon: 'playlist_add' },
+            { icon: 'mdi-set-center' },
           ],
           tooltip: 'Join dataframes',
           disabled: ()=>!(this.dataset && this.dataset.summary && this.hasSecondaryDatasets)
@@ -694,7 +696,7 @@ export default {
             this.commandHandle({command: 'aggregations'})
           },
           icons: [
-            { icon: 'add' },
+            { icon: 'mdi-set-merge' },
           ],
           tooltip: 'Get aggregations',
           disabled: ()=>!(!['values','ranges'].includes(this.selectionType) && this.dataset && this.dataset.summary)
@@ -706,22 +708,23 @@ export default {
           tooltip: 'Sort rows',
           disabled: ()=>['values','ranges'].includes(this.selectionType) || this.selectedColumns.length<1,
           icons: [
-            {
-              icon: 'arrow_right_alt',
-              style: {
-                transform: 'rotate(90deg)',
-                marginLeft: '-5px',
-                marginRight: '-7px'
-              }
-            },
-            {
-              icon: 'arrow_right_alt',
-              style: {
-                transform: 'rotate(-90deg)',
-                marginLeft: '-7px',
-                marginRight: '-5px'
-              }
-            }
+            { icon: 'mdi-sort-alphabetical-ascending' }
+            // {
+            //   icon: 'arrow_right_alt',
+            //   style: {
+            //     transform: 'rotate(90deg)',
+            //     marginLeft: '-0.20833333em',
+            //     marginRight: '-0.291666em'
+            //   }
+            // },
+            // {
+            //   icon: 'arrow_right_alt',
+            //   style: {
+            //     transform: 'rotate(-90deg)',
+            //     marginLeft: '-0.291666em',
+            //     marginRight: '-0.20833333em'
+            //   }
+            // }
           ],
           hidden: ()=>(this.appStable)
         },
@@ -749,16 +752,16 @@ export default {
           },
           tooltip: 'Filter rows',
           disabled: ()=>!(['values','ranges','text'].includes(this.selectionType) || this.selectedColumns.length==1),
-          icons: [{icon: 'filter_list'}]
+          icons: [{icon: 'mdi-filter-variant'}]
         },
         {
           type: 'button',
           onClick: ()=>this.commandHandle({command: 'drop empty rows'}),
           tooltip: 'Drop empty rows',
           icons: [
-            { icon: 'delete' },
+            { icon: 'mdi-delete-outline' },
             { icon: 'menu', style: {
-              marginLeft: '-6px',
+              marginLeft: '-0.33333333em',
               transform: 'scaleX(0.75)'
             } }
           ],
@@ -769,7 +772,12 @@ export default {
           onClick: ()=>this.commandHandle({command: 'drop duplicates'}),
           tooltip: 'Drop duplicates',
           icons: [
-            { icon: 'flip_to_back' },
+            // { icon: 'mdi-layers-remove' },
+            { icon: 'mdi-close-box-multiple-outline',
+              style: {
+                transform: 'scaleY(-1)'
+              }
+            },
           ],
           disabled: ()=>!(this.dataset && this.dataset.summary && this.hasSecondaryDatasets)
         },
@@ -778,21 +786,21 @@ export default {
           type: 'button',
           onClick: ()=>this.commandHandle({command: 'set'}),
           tooltip: { toString: ()=>this.selectedColumns.length ? 'Set column' : 'New column'},
-          icons: [{icon: 'add_box'}],
+          icons: [{icon: 'mdi-plus-box-outline'}],
           disabled: ()=>!(this.selectionType=='columns' && this.selectedColumns.length<=1 && this.dataset && this.dataset.summary)
         },
         {
           type: 'button',
           onClick: ()=>this.commandHandle({command: 'rename'}),
           tooltip: { toString: ()=> 'Rename column'+ (this.selectedColumns.length!=1 ? 's' : '')},
-          icons: [{icon: 'edit'}],
+          icons: [{icon: 'mdi-pencil-outline'}],
           disabled: ()=> !(this.selectionType=='columns' && this.selectedColumns.length>0)
         },
         {
           type: 'button',
           onClick: ()=>this.commandHandle({command: 'duplicate'}),
           tooltip: { toString: ()=> 'Duplicate column'+ (this.selectedColumns.length!=1 ? 's' : '')},
-          icons: [{icon: 'file_copy'}],
+          icons: [{icon: 'mdi-content-duplicate'}],
           disabled: ()=>!(this.selectionType=='columns' && this.selectedColumns.length>0)
         },
         {
@@ -806,18 +814,14 @@ export default {
           type: 'button',
           onClick: ()=>this.commandHandle({command: 'drop', type: 'DROP_KEEP'}),
           tooltip: { toString: ()=> 'Drop column'+ (this.selectedColumns.length!=1 ? 's' : '')},
-          // icons: [{icon: 'delete'}],
-          icons: [
-            { icon: 'delete' },
-            // { icon: 'menu', style: {transform: 'rotate(90deg)', marginLeft: '-6px'} }
-          ],
+          icons: [{ icon: 'mdi-delete-outline' }],
           disabled: ()=>!(this.selectionType=='columns' && this.selectedColumns.length>0)
         },
         {
           type: 'button',
           onClick: ()=>this.commandHandle({command: 'nest'}),
           tooltip: 'Nest columns',
-          icons: [{icon: 'call_merge'}],
+          icons: [{icon: 'mdi-table-merge-cells'}],
           disabled: ()=>['values','ranges'].includes(this.selectionType) || this.selectedColumns.length<=1 || !this.dataset.summary
         },
         {
@@ -833,7 +837,7 @@ export default {
             this.commandHandle({command: 'unnest', payload})
           },
           tooltip: { toString: ()=> 'Unnest column'+ (this.selectedColumns.length!=1 ? 's' : '')},
-          icons: [{icon: 'call_split'}],
+          icons: [{icon: 'mdi-arrow-split-vertical'}],
           disabled: ()=>!((this.selectionType=='columns' && this.selectedColumns.length>0) || this.selectionType==='text')
         },
         { divider: true },
@@ -841,7 +845,7 @@ export default {
           type: 'button',
           onClick: ()=>this.commandHandle({command: 'fill_na'}),
           tooltip: { toString: ()=> 'Fill column'+ (this.selectedColumns.length!=1 ? 's' : '')},
-          icons: [{icon: 'brush'}],
+          icons: [{icon: 'brush', class: 'material-icons-outlined'}],
           disabled: ()=>!(this.selectionType=='columns' && this.selectedColumns.length>0)
         },
         {
@@ -884,17 +888,18 @@ export default {
         //   tooltip: 'Datetime functions',
         //   disabled: ()=>!(this.selectionType=='columns' && this.selectedColumns.length>0)
         // },
-        {
-          type: 'menu',
-          group: 'CAST',
-          icons: [{ icon: 'category' }],
-          tooltip: 'Cast',
-          disabled: ()=>!(this.selectionType=='columns' && this.selectedColumns.length>0)
-        },
+        // TODO: Remove cast
+        // {
+        //   type: 'menu',
+        //   group: 'CAST',
+        //   icons: [{ icon: 'category' }],
+        //   tooltip: 'Cast',
+        //   disabled: ()=>!(this.selectionType=='columns' && this.selectedColumns.length>0)
+        // },
         {
           type: 'menu',
           group: 'ML',
-          icons: [{ icon: 'timeline' }],
+          icons: [{icon: 'timeline', class: 'material-icons-outlined'}],
           tooltip: 'Machine Learning',
           disabled: ()=>!(this.selectionType=='columns' && this.dataset && this.dataset.summary) , // Sampling
           hidden: ()=>(this.appStable)

@@ -281,11 +281,11 @@
   <div
     class="bb-table-container" ref="BbTableContainer"
   >
-    <style>
+    <!-- <style>
       .bb-table-i-cell, .bb-table-i-row {
         height: {{rowHeight}}px;
       }
-    </style>
+    </style> -->
     <div class="bb-table-i" v-show="true" ref="BbTable" :style="tableStyle">
       <div class="bb-table-i-rows" v-if="computedColumnValues[rowsColumn]">
         <template v-if="computedColumnValues['__match__'] && currentPreviewCode">
