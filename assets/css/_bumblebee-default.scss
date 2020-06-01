@@ -1103,7 +1103,7 @@ table {
   }
 
   .current-value {
-    font-size: 13px;
+    font-size: $table-font-size;
     line-height: 1.5;
     font-family: $font-mono;
     overflow: hidden;
@@ -1909,16 +1909,16 @@ $editor-top-padding: 6px;
   }
 
   .bb-table-cell {
+    font-size: $table-font-size;
+    padding: 0 4px;
+    white-space: pre;
+    height: inherit;
     &::selection {
       background: lighten($data-primary,33%);
 		}
 		&:not(.bb-preview) {
 			cursor: text;
     }
-    white-space: pre;
-    font-size: 13px;
-    height: inherit;
-    padding: 0 6px;
 
     &.none, &.missing {
       &::after {
@@ -1928,11 +1928,11 @@ $editor-top-padding: 6px;
     }
 
 	  &.none:after {
-      padding: 0 6px;
+      padding: 0 4px;
       content: 'None';
     }
 	  &.missing:after {
-      padding: 0 6px;
+      padding: 0 4px;
       content: 'Missing';
     }
     &.not-available {
@@ -2284,7 +2284,7 @@ $editor-top-padding: 6px;
 
 .bb-table-i {
   font-family: $font-mono-table;
-  font-size: 13px;
+  font-size: $table-font-size;
   padding-left: 1px;
   .bb-table-i-rows {
     width: 100%;
@@ -2303,7 +2303,7 @@ $editor-top-padding: 6px;
       font-family: $font-mono;
       color: $line-color-3;
       padding-right: 12px;
-      font-size: 13px;
+      font-size: $table-font-size;
       height: 100%;
       width: 48px;
     }
@@ -2373,4 +2373,10 @@ $editor-top-padding: 6px;
 
 #chatra {
   display: none !important;
+}
+
+.dropdown-icon {
+  margin-right: -0.33333em;
+  margin-left: -0.25em;
+  font-size: 20px !important;
 }

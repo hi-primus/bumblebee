@@ -1,7 +1,7 @@
 <template>
   <div class="bb-graphic"  v-if="values.length" @mouseleave="currentCount = false">
     <h3 v-if="!table">{{ title }}</h3>
-    <div :style="{'min-height': 62+'px'}">
+    <div :style="{'min-height': 60+'px'}">
       <BarsCanvas
         :selectable="selectable"
         :selected="selected"
@@ -9,7 +9,7 @@
         :maxVal="maxVal"
         :binMargin="1"
         :width="'auto'"
-        :height="table ? 62 : 90"
+        :height="table ? 60 : 90"
         @update:selected="updateSelected"
         @hovered="setValueIndex($event)"
       />
