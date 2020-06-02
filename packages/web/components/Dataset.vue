@@ -636,7 +636,7 @@ export default {
                 this.$store.commit('setLoadPreview', {meta: response.data.result.meta} )
               }
 
-              var pCode = `_output = ${varname}.ext.cast_and_profile(columns="*", output="json")`
+              var pCode = `_output = ${varname}.ext.profile(columns="*", output="json")`
 
               var pResponse = await this.evalCode(pCode)
 
