@@ -10,8 +10,6 @@ let timestamps = 0
 let socketAvailable = false
 let secondaryDatasets = {}
 
-const api_url = process.env.API_URL || 'http://localhost:5000'
-
 export default {
 
   data () {
@@ -245,7 +243,7 @@ export default {
 
         key = key || ''
 
-        socket = io(api_url, { query: { session, token, key } })
+        socket = io(process.env.API_URL, { query: { session, token, key } })
 
         socket.on('new-error', (reason) => {
           console.error('Socket error', reason)

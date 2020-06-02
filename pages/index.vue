@@ -279,7 +279,6 @@ import { printError } from "@/utils/functions.js";
 import { mapGetters } from "vuex";
 
 const { version } = require("@/package.json");
-const api_url = process.env.API_URL || "http://localhost:5000";
 
 export default {
 	components: {

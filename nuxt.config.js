@@ -5,8 +5,8 @@ module.exports = {
 	mode: 'universal',
 
 	server: {
-		port: process.env.PORT || 3000,
-		host: process.env.HOST || '127.0.0.1'
+		port: process.env.PORT,
+		host: process.env.HOST
 	},
 
 	head: {
@@ -82,7 +82,7 @@ module.exports = {
 
 	axios: {
     progress: false,
-    baseUrl: process.env.API_URL || 'http://localhost:5000',
+    baseUrl: process.env.API_URL
 		// proxyHeaders: false
 	},
 

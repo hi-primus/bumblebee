@@ -245,8 +245,6 @@ import {
 
 import { TYPES, STRING_TYPES } from '@/utils/constants.js'
 
-const api_url = process.env.API_URL || 'http://localhost:5000'
-
 export default {
 
   components: {
@@ -2987,7 +2985,7 @@ export default {
         await this.runCodeNow()
         var url = `downloads/${this.$store.state.session}`
         await this.evalCode(`_output = ${this.dataset.varname}.save.csv("/opt/Bumblebee/api/public/${url}")`)
-        this.forceFileDownload(api_url+'/'+url+'/0.part',this.dataset.name+'.csv')
+        this.forceFileDownload(process.env.API_URL+'/'+url+'/0.part',this.dataset.name+'.csv')
       } catch (error) {
         console.error(error)
       }

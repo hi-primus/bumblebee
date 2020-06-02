@@ -5,7 +5,7 @@ import axios from 'axios';
 
 Vue.use(VueAxios, axios)
 Vue.use(VueAuthenticate, {
-  baseUrl: process.env.API_URL || 'http://localhost:5000', // Your API domain
+  baseUrl: process.env.API_URL,
 
   providers: {
     github: {

@@ -1,4 +1,4 @@
-// import axios from 'axios'
+import axios from 'axios'
 
 export const state = () => ( {
 	token:false,
@@ -13,15 +13,23 @@ export const mutations =  {
 }
 
 export const actions =  {
-  async register(context,  {username, password, email, name, lastname}) {
+  async register(context,  payload) {
     const response = await window.$nuxt.$auth.register( {
-      username,
-      password,
-      email,
-      name,
-      lastname,
+      ...payload,
       secret:window.authSecret || '123'
     })
+    console.log({response})
+    return response
+  },
+
+  async test (context, {request, path, payload, auth}) {
+    var response
+    if (request === 'post') {
+      response = await axios[request](process.env.DEV_API_URL + path, payload, { headers: {'Authorization': auth} } )
+    } else {
+      response = await axios[request](process.env.DEV_API_URL + path, { headers: {'Authorization': auth} } )
+    }
+    console.log({response})
     return response
   },
 

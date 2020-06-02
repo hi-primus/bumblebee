@@ -433,8 +433,6 @@ import { mapState, mapGetters } from 'vuex';
 
 import { TYPES_NAMES } from '@/utils/constants.js'
 
-const api_url = process.env.API_URL || 'http://localhost:5000'
-
 export default {
 	components: {
     ColumnDetails,
