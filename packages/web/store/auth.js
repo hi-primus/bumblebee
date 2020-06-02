@@ -25,7 +25,7 @@ export const mutations =  {
 export const actions =  {
   async register(context,  payload) {
     var response
-    response = await axios.post(process.env.DEV_API_URL + '/auth/signup', payload)
+    // response = await axios.post(process.env.DEV_API_URL + '/auth/signup', payload)
     response = await window.$nuxt.$auth.register( {
       ...payload,
       secret:window.authSecret || '123'
@@ -48,7 +48,7 @@ export const actions =  {
 
     var response
 
-    response = await axios.post(process.env.DEV_API_URL + '/auth/signin', payload)
+    // response = await axios.post(process.env.DEV_API_URL + '/auth/signin', payload)
 
     response = await window.$nuxt.$auth.login(payload)
 
