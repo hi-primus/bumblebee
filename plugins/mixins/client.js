@@ -239,11 +239,11 @@ export default {
         else if (this.$store.state.key)
           key = this.$store.state.key
 
-        var token = this.$store.state.auth.token || ''
+        var accessToken = this.$store.state.auth.accessToken || ''
 
         key = key || ''
 
-        socket = io(process.env.API_URL, { query: { session, token, key } })
+        socket = io(process.env.API_URL, { query: { session, accessToken, key } })
 
         socket.on('new-error', (reason) => {
           console.error('Socket error', reason)

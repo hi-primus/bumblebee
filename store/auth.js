@@ -1,24 +1,35 @@
 import axios from 'axios'
 
+const propertiesNames = ['accessToken', 'refreshToken', 'username', 'email']
+
+var properties = {}
+propertiesNames.forEach(name => {
+  properties[name] = false
+})
+
 export const state = () => ( {
-	token:false,
-	username:false,
-	email:false
+	...properties
+})
+
+var setters = {}
+propertiesNames.forEach(name => {
+  setters[name] = function (state, payload) {
+    state[name] = payload
+  }
 })
 
 export const mutations =  {
-  tokenlogin(state, token) {
-    state.token = token
-  }
+  ...setters
 }
 
 export const actions =  {
   async register(context,  payload) {
-    const response = await window.$nuxt.$auth.register( {
+    var response
+    response = await axios.post(process.env.DEV_API_URL + '/auth/signup', payload)
+    response = await window.$nuxt.$auth.register( {
       ...payload,
       secret:window.authSecret || '123'
     })
-    console.log({response})
     return response
   },
 
@@ -34,13 +45,24 @@ export const actions =  {
   },
 
 	async login (context, payload) {
-    const response = await window.$nuxt.$auth.login(payload)
 
-    if (response.data.token) {
-      context.commit('tokenlogin', response.data.token)
+    var response
+
+    response = await axios.post(process.env.DEV_API_URL + '/auth/signin', payload)
+
+    response = await window.$nuxt.$auth.login(payload)
+
+    console.log({response})
+
+    if (response.data.accessToken) {
+      context.commit('accessToken', response.data.accessToken)
+    } else {
+      context.commit('accessToken', false)
     }
-    else {
-      context.commit('tokenlogin', false)
+    if (response.data.refreshToken) {
+      context.commit('refreshToken', response.data.refreshToken)
+    } else {
+      context.commit('refreshToken', false)
     }
   },
 
