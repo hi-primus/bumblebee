@@ -121,10 +121,10 @@
             </v-btn>
           </div>
           <div class="o-error">
-            <v-tooltip transition="fade-transition" left content-class="bar-tooltip" color="error">
+            <v-tooltip transition="fade-transition" left content-class="bar-tooltip" color="primary">
               <template v-slot:activator="{on}">
                 <transition :duration="210" name="bounce">
-                  <v-icon class="error error-badge" v-on="on" v-if="previewError">
+                  <v-icon class="primary error-badge" v-on="on" v-if="previewError">
                     warning
                   </v-icon>
                 </transition>
