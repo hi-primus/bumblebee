@@ -967,7 +967,7 @@ table {
   align-self: center;
 }
 
-.v-alert.error {
+.v-alert.error, .v-alert.success {
   color: white !important;
   .v-alert__content {
     overflow-y: scroll;
@@ -2351,6 +2351,24 @@ $editor-top-padding: 6px;
 
 #chatra {
   display: none !important;
+}
+
+.register-form-fields {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  &>* {
+    width: 100%;
+    max-width: 370px !important;
+  }
+}
+
+.text-button {
+  // text-transform: uppercase;
+  cursor: pointer;
+  font-weight: 500;
+  letter-spacing: 0px;
+  font-size: 16px;
 }
 
 .dropdown-icon {
