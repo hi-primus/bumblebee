@@ -35,11 +35,11 @@ router.route('/login')
 
       if (valid) {
 
-        var token = jwt.sign({ username: req.body.username }, process.env.TOKEN_SECRET, { expiresIn: '2h' })
+        var accessToken = jwt.sign({ username: req.body.username }, process.env.TOKEN_SECRET, { expiresIn: '2h' })
         res.status(200).json({
           status: 'ok',
           message: 'Login',
-          token
+          accessToken
         })
 
       } else {
