@@ -64,3 +64,15 @@ export const STRING_TYPES = [
   TYPES.DATE,
   TYPES.TIME
 ]
+
+export const RESPONSE_MESSAGES = {
+  'user': {
+    201: 'User account successfully created',
+    404: 'User not found',
+    500: 'Something went wrong'
+  },
+  'default': {
+    404: 'Server not found',
+    500: 'Something went wrong'
+  }
+}

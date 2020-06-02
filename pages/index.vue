@@ -163,6 +163,7 @@
 							v-if="successMessage"
 							type="success"
 							class="mb-2"
+							dismissible
 							@input="successMessage = ''"
 						>{{ successMessage }}</v-alert>
 					</v-card-text>
@@ -275,6 +276,7 @@ import clientMixin from "@/plugins/mixins/client";
 import dataTypesMixin from "@/plugins/mixins/data-types";
 import applicationMixin from "@/plugins/mixins/application";
 import { printError } from "@/utils/functions.js";
+import { RESPONSE_MESSAGES } from "@/utils/constants.js";
 
 import { mapGetters } from "vuex";
 
@@ -440,8 +442,8 @@ export default {
 
 	methods: {
 		typesUpdated () {
-			this.typesInput = "";
-			this.$refs.autocomplete.loseFocus;
+			this.typesInput = ""
+			this.$refs.autocomplete.loseFocus
 		},
 		async register () {
 			try {
@@ -455,17 +457,20 @@ export default {
           lastName: this.createLastName,
 					email: this.email
 				});
-				console.log(response);
-				this.typeForm = 0;
-				this.successMessage = response.data.message;
-				this.$store.commit("status");
+        if (response.status === 201) {
+          console.log(response)
+          this.typeForm = 0
+          this.successMessage = RESPONSE_MESSAGES['user'][201]
+          this.$store.commit("status")
+        }
 				if (response.status >= 300) {
-					throw response;
+					throw response
 				}
 			} catch (error) {
-				this.successMessage = "";
-				console.log(error);
-				this.handleError(error, "waiting");
+        this.successMessage = ""
+        var errorMessage = RESPONSE_MESSAGES['user'][error.response.status]
+				console.log(error)
+				this.handleError(error, "waiting")
 			}
 		},
 		async subscribe() {
