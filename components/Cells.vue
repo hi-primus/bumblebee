@@ -462,7 +462,7 @@ export default {
             }
 
             if (payload.action==='set') {
-              payload.value = parseExpression(payload.value, 'mask', payload.allColumns)
+              payload.value = parseExpression(payload.value, 'df', payload.allColumns)
               var output_col = payload.columns[0]
               var code = ''
               if (payload._requestType) {
@@ -2239,7 +2239,7 @@ export default {
               //   varname += `.ext.buffer_window("*"${window})`
               // }
 
-              var value = payload.value ? parseExpression(payload.value, 'mask', payload.allColumns) : ''
+              var value = payload.value ? parseExpression(payload.value, 'df', payload.allColumns) : ''
               var where = payload.where ? parseExpression(payload.where, 'df', payload.allColumns) : ''
 
               if (payload.columns[0] && !value) {

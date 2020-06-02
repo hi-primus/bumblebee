@@ -579,7 +579,7 @@ export default {
           for (var index = 0; index<pc.length; index++) {
             for (var jindex = 0; jindex<jp.length; jindex++) {
               if (jp[jindex].indexOf(pc[index].name)>=0) {
-                pc[index].classes = ['join-'+jindex]
+                pc[index].classes = ['bb-preview-join-'+jindex]
               }
             }
           }

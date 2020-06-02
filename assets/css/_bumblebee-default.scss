@@ -1802,6 +1802,50 @@ $editor-top-padding: 6px;
     border-top-style: solid;
   }
 
+  // .bb-table-cell, .bb-table-plot, .bb-table-i-column {
+  //   border-top-color: inherit !important;
+  // }
+
+  // .bb-table-cell:not(:last-child), .bb-table-h-cell {
+  //   border-bottom-color: inherit !important;
+  // }
+
+  $highlight-colors: (
+    "selected": ($data-highlight, lighten($data-highlight-background,20%)),
+    "preview": ($data-preview, $data-preview-background),
+    "preview-join-0": ($data-join-left, $data-join-left-background),
+    "preview-join-1": ($data-join-center, $data-join-center-background),
+    "preview-join-2": ($data-join-right, $data-join-right-background),
+  );
+
+  @each $name, $colors in $highlight-colors {
+    $border-color: nth($colors, 1);
+    $background-color: nth($colors, 2);
+    .bb-#{$name} {
+      &.bb-table-h-cell {
+        border-top-color: darken($border-color, 10%) !important;
+      }
+      &.bb-table-h-cell, &.bb-table-cell, &.bb-table-plot, &.bb-table-i-column {
+        border-left-color: darken($border-color, 10%) !important;
+        border-right-color: darken($border-color, 10%) !important;
+      }
+      &.bb-table-i-column {
+        border-bottom-color: darken($border-color, 10%) !important;
+      }
+      background-color: $background-color;
+      // border-color: darken($border-color, 10%) !important;
+      & + * {
+        border-left-color: darken($border-color, 10%) !important;
+      }
+      &:last-child {
+        border-right-color: darken($border-color, 10%) !important;
+        border-right-style: solid;
+        border-right-width: 1px;
+      }
+    }
+  }
+
+
   .bb-table-h-cell, .bb-table-cell, .bb-table-plot, .bb-table-i-column {
     z-index: 1;
     margin-left: 0px;
@@ -1813,75 +1857,8 @@ $editor-top-padding: 6px;
       margin-right: -1px;
     }
 
-    // &:last-child {
-      // margin-right: -1px;
-      // border-right-width: 0px;
-      // border-right-style: solid;
-    // }
-
     border-left-width: 1px;
     border-left-style: solid;
-
-    &.bb-preview {
-      background-color: $data-preview-background; // $data-preview;
-      border-color: darken($data-preview, 10%) !important;
-      & + * {
-        border-left-color: darken($data-preview, 10%) !important;
-      }
-      &:last-child {
-        border-right-color: darken($data-preview, 10%) !important;
-        border-right-style: solid;
-        border-right-width: 1px;
-      }
-    }
-    &.bb-preview.join-0 {
-      background-color: $data-join-left-background; // $data-join-left;
-      border-color: darken($data-join-left, 10%) !important;
-      & + * {
-        border-left-color: darken($data-join-left, 10%) !important;
-      }
-      &:last-child {
-        border-right-color: darken($data-join-left, 10%) !important;
-        border-right-style: solid;
-        border-right-width: 1px;
-      }
-    }
-    &.bb-preview.join-1 {
-      background-color: $data-join-center-background; // $data-join-center;
-      border-color: darken($data-join-center, 10%) !important;
-      & + * {
-        border-left-color: darken($data-join-center, 10%) !important;
-      }
-      &:last-child {
-        border-right-color: darken($data-join-center, 10%) !important;
-        border-right-style: solid;
-        border-right-width: 1px;
-      }
-    }
-    &.bb-preview.join-2 {
-      background-color: $data-join-right-background; // $data-join-right;
-      border-color: darken($data-join-right, 10%) !important;
-      & + * {
-        border-left-color: darken($data-join-right, 10%) !important;
-      }
-      &:last-child {
-        border-right-color: darken($data-join-right, 10%) !important;
-        border-right-style: solid;
-        border-right-width: 1px;
-      }
-    }
-    &.bb-selected {
-      background-color: $data-highlight-background; // $data-highlight;
-      border-color: darken($data-highlight, 10%) !important;
-      & + * {
-        border-left-color: darken($data-highlight, 10%); // !important;
-      }
-      &:last-child {
-        border-right-color: darken($data-highlight, 10%) !important;
-        border-right-style: solid;
-        border-right-width: 1px;
-      }
-    }
   }
 
   .bb-table-i-cell {
