@@ -967,7 +967,7 @@ table {
   align-self: center;
 }
 
-.v-alert.error {
+.v-alert.error, .v-alert.success {
   color: white !important;
   .v-alert__content {
     overflow-y: scroll;
