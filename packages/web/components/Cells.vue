@@ -2984,7 +2984,7 @@ export default {
         this.cancelCommand()
         await this.runCodeNow()
         var url = `downloads/${this.$store.state.session}`
-        await this.evalCode(`_output = ${this.dataset.varname}.save.csv("/opt/Bumblebee/api/public/${url}")`)
+        await this.evalCode(`_output = ${this.dataset.varname}.save.csv("/opt/Bumblebee/packages/api/public/${url}")`)
         this.forceFileDownload(process.env.API_URL+'/'+url+'/0.part',this.dataset.name+'.csv')
       } catch (error) {
         console.error(error)
