@@ -1,6 +1,9 @@
 {
   "name": "bumblebee",
   "version": "3.0.0-27",
+  "scripts": {
+    "postinstall": "cd packages/api && npm install && cd ../web && npm install"
+  },
   "private": true,
   "devDependencies": {
     "lerna": "^3.22.0"
