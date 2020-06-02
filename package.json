@@ -2,10 +2,17 @@
   "name": "bumblebee",
   "version": "3.0.0-27",
   "scripts": {
+    "web-dev": "cd packages/web && npm run dev",
+    "api-dev": "cd packages/api && npm start",
+    "web": "cd packages/web && npm run build && npm start",
+    "api": "cd packages/api && npm start",
+    "dev": "concurrently \"npm run web-dev\" \"npm run api-dev\" ",
+    "start": "concurrently \"npm run web\" \"npm run api\" ",
     "postinstall": "cd packages/api && npm install && cd ../web && npm install"
   },
   "private": true,
   "devDependencies": {
+    "concurrently": "^5.2.0",
     "lerna": "^3.22.0"
   }
 }
