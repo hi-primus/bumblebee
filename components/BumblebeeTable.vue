@@ -505,7 +505,8 @@ export default {
       if (this.loadPreview) {
         return this.loadPreviewColumnValues
       }
-      return this.computeColumnValues(this.columnValues, false, this.rowsCount)
+      var noHighlight = !this.currentPreviewCode.code
+      return this.computeColumnValues(this.columnValues, noHighlight, this.rowsCount)
     },
 
     loadPreviewColumnValues () {
