@@ -2179,15 +2179,14 @@ export default {
               {
                 type: 'field',
                 key: 'value',
-                label: 'Expression or value',
-                placeholder: 'column+1'
+                label: 'Expression or value'
               },
-              {
-                type: 'field',
-                key: 'where',
-								label: 'Where',
-								placeholder: 'column!=None'
-              },
+              // {
+              //   type: 'field',
+              //   key: 'where',
+              //   label: 'Where',
+              //   placeholder: 'column!=None'
+              // },
               {
                 type: 'field',
                 key: 'output_col',
@@ -2238,16 +2237,16 @@ export default {
               // }
 
               var value = payload.value ? parseExpression(payload.value, 'df', payload.allColumns) : ''
-              var where = payload.where ? parseExpression(payload.where, 'df', payload.allColumns) : ''
+              // var where = payload.where ? parseExpression(payload.where, 'df', payload.allColumns) : ''
 
               if (payload.columns[0] && !value) {
-                where = `~(${where})`
+                // where = `~(${where})`
                 value = 'None'
               }
 
               return `.cols.set(`
               + 'value=' + ( (value) ? `'${value}'` : "'None'" )
-              + ', where=' + ( (where) ? `'${where}'` : 'None' )
+              // + ', where=' + ( (where) ? `'${where}'` : 'None' )
               + ', output_cols=' + output_cols_argument
               + `)`
             }
