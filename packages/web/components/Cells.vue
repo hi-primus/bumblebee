@@ -419,8 +419,6 @@ export default {
 
             var varname = this.dataset.varname
 
-            payload = escapeQuotesOn(payload, ['value'])
-
             if (payload._requestType) {
               // varname = `${varname}.ext.get_buffer()`
               varname = `df`

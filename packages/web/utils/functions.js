@@ -375,7 +375,7 @@ export const parseExpression = (exp, df, cols) => {
   exp = exp.split('"')
 
   for (let i = 0; i < exp.length; i++) {
-    if (i%2) {
+    if (i%2 == 1) {
       continue
     }
     columns.forEach((column, cindex) => {
