@@ -529,7 +529,7 @@ export default {
             }
 
             if (payload.action==='set') {
-              str += `to ${hlParam(payload.value)}`
+              str += ` to ${hlParam(payload.value)}`
             }
 
             return str

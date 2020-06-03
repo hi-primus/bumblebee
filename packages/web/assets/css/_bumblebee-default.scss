@@ -820,6 +820,12 @@ table {
   display: none !important;
 }
 
+.bb-menu {
+  position: absolute !important;
+  right: 12px;
+  top: 12px;
+  z-index: 1;
+}
 
 .bb-tabs {
   position: relative;
@@ -830,12 +836,12 @@ table {
   }
   .bb-tab {
     display: flex;
-    flex-direction: column;
-    padding-right: 40px;
-    .close-icon {
-      position: absolute;
-      right: 0;
-      padding-right: 12px;
+    .tab-close {
+      padding: 0 0 0 12px;
+    }
+    .tab-content {
+      display: flex;
+      flex-direction: column;
     }
     .tab-title {
       width: 100%;
@@ -855,14 +861,14 @@ table {
 	.v-tabs-bar {
 		background: none !important;
 	}
-	.v-tabs-slider-wrapper {
-		padding: 0 4px;
-		.v-tabs-slider {
-			overflow: hidden;
-			border-top-left-radius: 2px;
-			border-top-right-radius: 2px;
-		}
-	}
+	// .v-tabs-slider-wrapper {
+	// 	padding: 0 4px;
+	// 	.v-tabs-slider {
+	// 		overflow: hidden;
+	// 		border-top-left-radius: 2px;
+	// 		border-top-right-radius: 2px;
+	// 	}
+	// }
   &:before {
 		content: '';
     position: absolute;

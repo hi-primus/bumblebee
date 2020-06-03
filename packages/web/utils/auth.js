@@ -1,11 +1,11 @@
 import crypto from 'crypto'
 import axios from 'axios'
 
-export function setAuthToken (token) {
+export function setAuthTokenAxios (token) {
   axios.defaults.headers.common.Authorization = token
 }
 
-export function resetAuthToken () {
+export function resetAuthTokenAxios () {
   delete axios.defaults.headers.common.Authorization
 }
 

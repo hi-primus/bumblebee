@@ -465,7 +465,7 @@ export default {
     },
 
     reloadInit () {
-      this.$store.commit('setAppStatus',{status: 'receiving'})
+      this.$store.commit('setAppStatus',{status: 'workspace'})
     },
 
     async updateResults() {

@@ -1,15 +1,17 @@
 <template>
   <v-app>
     Error
+    <span style="display: none">
+      {{ error }}
+    </span>
   </v-app>
 </template>
 
 <script>
 export default {
-	data () {
-		return {
-
-		}
-	}
+  props: ['error'],
+  mounted () {
+    console.error('[DEBUG][ERROR]', this.error)
+  }
 }
 </script>

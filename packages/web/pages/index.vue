@@ -1,23 +1,7 @@
 <template>
 	<Layout>
-		<v-dialog
-			v-if="$store.state.datasets[confirmDelete]"
-			:value="confirmDelete>=0"
-			max-width="290"
-			@click:outside="confirmDelete=-1"
-		>
-			<v-card>
-				<v-card-title class="title">Close tab</v-card-title>
-				<v-card-text>Close "{{ $store.state.datasets[confirmDelete].name }}"?</v-card-text>
-				<v-card-actions>
-					<div class="flex-grow-1" />
-					<v-btn color="primary" text @click="confirmDelete=-1">Cancel</v-btn>
-					<v-btn color="primary" text @click="deleteTab(confirmDelete)">Accept</v-btn>
-				</v-card-actions>
-			</v-card>
-		</v-dialog>
 		<v-layout row wrap class="elevation-0 d-flex flex-column align-top justify-start">
-			<template v-if="status=='waiting' || status=='loading'">
+			<template v-if="status=='waiting' || status=='loading'" data-name="Login/Register">
 				<v-card
 					:loading="(status=='loading') ? 'primary' : false"
 					class="elevation-0"
@@ -102,7 +86,7 @@
               </div>
             </v-card-text>
 					</v-form>
-					<v-form class="py-8 px-6" @submit="subscribe" v-if="typeForm==0">
+					<v-form class="py-8 px-6" @submit="subscribe()" v-if="typeForm==0">
 						<v-card-title>
 							<h1 class="display-3 mb-4">Bumblebee</h1>
 						</v-card-title>
@@ -145,7 +129,7 @@
 						</v-card-actions>
 						<v-layout align-center justify-center>
 							<div
-								v-if="useRegister"
+								v-if="useRegister && useKernel"
 								class="primary--text text--darken-1 text-button"
 								@click="typeForm=1"
 							>{{(useRegister) ? 'Sign up' : ''}}</div>
@@ -170,7 +154,7 @@
 				</v-card>
 			</template>
 			<template v-else>
-				<template v-if="$store.state.datasets.length==0">
+				<template v-if="$store.state.datasets.length==0" data-name="noKernel">
 					<div class="center-screen-inside black--text">
 						<v-progress-circular indeterminate color="black" class="mr-4" />
 						<span class="title">Waiting for data</span>
@@ -208,7 +192,24 @@
 					</div>
 					<v-icon class="back-btn" large color="black" @click="stopClient">arrow_back</v-icon>
 				</template>
-				<div v-else class="bb-container">
+				<div v-else class="bb-container" data-name="workspace">
+          <v-dialog
+            data-name="Confirm close"
+            v-if="$store.state.datasets[confirmDelete]"
+            :value="confirmDelete>=0"
+            max-width="290"
+            @click:outside="confirmDelete=-1"
+          >
+            <v-card>
+              <v-card-title class="title">Close tab</v-card-title>
+              <v-card-text>Close "{{ $store.state.datasets[confirmDelete].name }}"?</v-card-text>
+              <v-card-actions>
+                <div class="flex-grow-1" />
+                <v-btn color="primary" text @click="confirmDelete=-1">Cancel</v-btn>
+                <v-btn color="primary" text @click="deleteTab(confirmDelete)">Accept</v-btn>
+              </v-card-actions>
+            </v-card>
+          </v-dialog>
 					<v-tabs
 						:key="$store.state.datasetUpdates"
 						v-model="tab"
@@ -222,7 +223,7 @@
 						<v-tab v-for="(_tab, key) in $store.state.datasets" :key="key" class="bb-tab">
 							<span class="tab-title">{{ _tab.name || key+1 }}</span>
 							<span class="tab-subtitle">{{ _tab.file_name }}</span>
-							<v-hover v-slot:default="{ hover }">
+							<v-hover v-if="!noClose" v-slot:default="{ hover }">
 								<v-icon
 									:color="hover ? 'primary darken-1' : ''"
 									small
@@ -290,7 +291,7 @@ export default {
 
 	mixins: [clientMixin, dataTypesMixin, applicationMixin],
 
-	data() {
+	data () {
 		return {
 			showPassword: false,
 			inputPassword: "",
@@ -299,7 +300,6 @@ export default {
 			isOperating: false,
 			tab: undefined,
 			confirmDelete: -1,
-			typesSelected: [],
 			typesInput: "",
 			version: "",
 			createFirstName: "",
@@ -322,9 +322,13 @@ export default {
 	},
 
 	computed: {
-		...mapGetters(["currentDataset", "appError"]),
+    ...mapGetters(["currentDataset", "appError"]),
 
-		sampleSize() {
+    noClose () {
+      return (this.$store.datasets.length==1 && this.$store.datasets[0].blank)
+    },
+
+		sampleSize () {
 			return Math.min(
 				this.currentDataset.summary.sample_size,
 				this.currentDataset.summary.rows_count
@@ -347,11 +351,11 @@ export default {
 		async status(value) {
 			if (this.useKernel) {
 				switch (value) {
-					case "receiving back":
+					case "closing workspace":
 						this.stopClient(true);
 						this.$store.commit("setCells", []);
 						break;
-					case "receiving":
+					case "workspace":
 						this.$store.commit("kernel", "loading");
 						if (!this.$store.state.datasets.length) {
 							this.$store.commit("newDataset");
@@ -382,7 +386,7 @@ export default {
 							printError(error);
 							var appStatus = {
 								error: new Error("Initialization error"),
-								status: "receiving"
+								status: "workspace"
 							};
 							this.$store.commit("setAppStatus", appStatus);
 						}
@@ -393,7 +397,7 @@ export default {
 				}
 			}
 
-			if (value == "receiving") {
+			if (value == "workspace") {
 				var dataset_csv = this.$route.query.dataset_csv;
 				if (dataset_csv && this.$refs.tableBar) {
 					this.$refs.tableBar.commandHandle({
@@ -430,21 +434,10 @@ export default {
 	mounted() {
 		console.log(`Bumblebee v${version}`);
 		window.document.body.click();
-
-		// this.inputUsername = this.$route.query.username || ''
-		// this.inputPassword = this.$route.query.password || ''
 		this.inputEngine = this.$route.query.engine;
-
-		// if (this.inputUsername && this.inputPassword) {
-		//   this.subscribe()
-		// }
 	},
 
 	methods: {
-		typesUpdated () {
-			this.typesInput = ""
-			this.$refs.autocomplete.loseFocus
-		},
 		async register () {
 			try {
         if (this.confirmPassword!==this.createPassword && !this.showCreatePassword) {
@@ -475,13 +468,16 @@ export default {
 		},
 		async subscribe() {
 			try {
+        console.log('subscribe')
 				var tpw = this.$route.query.tpw;
 				var workers = this.$route.query.workers;
 				if (this.useKernel) {
+          console.log('useKnerle')
 					var login = await this.$store.dispatch("auth/login", {
 						username: this.inputUsername,
 						password: this.inputPassword
-					});
+          });
+          console.log({login})
 					this.startClient({
 						session: this.inputUsername,
 						engine: this.inputEngine,
@@ -490,6 +486,7 @@ export default {
 					});
 					this.successMessage = "";
 				} else {
+          console.log('!useKnerle')
 					this.startClient({
 						session: this.inputUsername,
 						key: this.inputPassword,

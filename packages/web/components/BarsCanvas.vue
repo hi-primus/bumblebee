@@ -78,7 +78,7 @@ export default {
     }
   },
 
-  data() {
+  data () {
     return {
       selectionRange: [],
       selectionRect: {},

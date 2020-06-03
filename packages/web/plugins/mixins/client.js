@@ -151,7 +151,7 @@ export default {
             await this.startSocket ()
             var response = await this.socketPost('initialize',{
               session: this.$store.state.session,
-              engine: this.$store.state.engine,
+              engine: this.$store.state.engine, // TODO: Remove from store
               tpw: this.$store.state.tpw,
               workers: this.$store.state.workers,
               reset: this.$route.query.reset
@@ -169,7 +169,7 @@ export default {
           if (error.code) {
             window.pushCode({code: error.code, error: true})
           }
-          reject('Error '+error)
+          reject(error)
         }
 
       })
@@ -188,7 +188,7 @@ export default {
 				} else {
           var appStatus = {
             error: new Error(reason),
-            status: status || this.$store.state.appStatus.status || 'receiving'
+            status: status || this.$store.state.appStatus.status || 'workspace'
           }
 					this.$store.commit('setAppStatus', appStatus)
 				}
@@ -226,6 +226,8 @@ export default {
     startSocket (session, key, engine) {
 
       return new Promise((resolve, reject)=>{
+
+        // TODO: session -> username ( cookie/profile )
 
         if (session)
           this.$store.commit('session', session)
@@ -305,7 +307,7 @@ export default {
 
 		async startClient ({session, key, engine, tpw, workers}) {
 
-      if (['loading','receiving'].includes(this.$store.state.appStatus.status)) {
+      if (['loading','workspace'].includes(this.$store.state.appStatus.status)) {
         return false
       }
 
@@ -319,8 +321,9 @@ export default {
 
         var client_status = await this.startSocket(session, key, engine)
 
-        if (client_status=='ok')
-          this.$store.commit('setAppStatus', {status: 'receiving'})
+        if (client_status=='ok') {
+          this.$router.push({path: 'workspace', params: {}, query: this.$route.query })
+        }
 
       } catch (error) {
         this.handleError(error)

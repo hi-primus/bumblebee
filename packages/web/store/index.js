@@ -218,8 +218,6 @@ export const mutations = {
     Vue.set(state.datasetSelection, state.tab, state.datasetSelection[state.tab] )
     Vue.set(state.buffers, state.tab, false)
 
-    state.appStatus = {status: 'received'}
-
     state.properties.filter(p=>p.clearOnLoad).forEach(p=>{
       Vue.set(state['every'+p.name], state.tab, false)
     })
@@ -245,8 +243,6 @@ export const mutations = {
       blank: true
     }
 
-    state.appStatus = {status: 'received'}
-
     Vue.set(state.datasets, found, dataset)
     Vue.set(state.datasetSelection, found, {})
     Vue.set(state.everyLoadPreview, found, false)
@@ -262,7 +258,9 @@ export const mutations = {
       Vue.delete(state['every'+p.name], index)
     })
 		if (!state.datasets.length) {
-			state.appStatus = {status: 'receiving back'}
+      this.commit('newDataset')
+      // state.appStatus = {status: 'closing workspace'}
+
 		}
 		return index
 	},
@@ -391,23 +389,9 @@ export const mutations = {
 }
 
 export const actions = {
-  // async nuxtServerInit ({ dispatch }, context) {
-  //   const cookies = this.$cookies.getAll() || {} // cookie.parse(context.req.headers.cookie || '')
-  //   if (cookies.hasOwnProperty('x-access-token')) {
-  //     try {
-  //       setAuthToken(cookies['x-access-token'])
-  //       await dispatch('auth/fetch')
-  //       return true
-  //     } catch (err) {
-  //       console.error('Provided token is invalid:', err)
-  //       resetAuthToken()
-  //       return false
-  //     }
-  //   } else {
-  //     resetAuthToken()
-  //     return false
-  //   }
-  // },
+  async nuxtServerInit ({ dispatch, commit }, context) {
+    dispatch('auth/init')
+  }
 }
 
 var pGetters = {}
