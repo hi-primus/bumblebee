@@ -467,9 +467,9 @@ export default {
                 output_col = 'new '+output_col
                 code = `.rows.find( '${expression}' )`
                 if (payload.filteredPreview) {
-                  code += `.rows.select( '__match__==True' )`
+                  code += `.rows.select( 'df["__match__"]==True' )`
                 }
-                code += `.cols.set( default="${payload.columns[0]}", value='${payload.value || 'None'}', where='__match__==True', output_cols=["${output_col}"] )`
+                code += `.cols.set( default="${payload.columns[0]}", value='${payload.value || 'None'}', where=df["__match__"]==True, output_cols=["${output_col}"] )`
                 if (payload._requestType==='preview' && payload.filteredPreview) {
                   return (from, to)=>code+(from!==undefined ? `[${from}:${to}]` : '')
                 }
@@ -481,14 +481,14 @@ export default {
               if (payload._requestType) {
                 var code = `.rows.find( '${expression}' )`
                 if (payload.filteredPreview) {
-                  code += `.rows.select( '__match__==True' )`
+                  code += `.rows.select( 'df["__match__"]==True' )`
                 }
                 if (payload._requestType==='preview' && payload.filteredPreview) {
                   return (from, to)=>code+(from!==undefined ? `[${from}:${to}]` : '')
                 }
                 return code
               } else {
-                return `.rows.${payload.action}( '${expression}' )`
+                return `.rows.${payload.action}( '${expression}' )` // rows.select rows.drop
               }
 
             }
@@ -730,17 +730,16 @@ export default {
               default:
             }
             if ( payload._requestType ) {
-              var code = `.rows.find( '${expression}' )` // ${varname}.rows.${payload.action}()
-              // code += `.rows.select( ${varname}["__match__"]==True )` // ${varname}.rows.${payload.action}()
+              var code = `.rows.find( '${expression}' )`
               if (payload.filteredPreview) {
-                code += `.rows.select( '__match__==True' )` // ${varname}.rows.${payload.action}()
+                code += `.rows.select( 'df["__match__"]==True' )`
                 if (payload._requestType==='preview') {
                   return (from, to)=>code+(from!==undefined ? `[${from}:${to}]` : '')
                 }
               }
               return code
             } else {
-              return `.rows.${payload.action}( ${expression} )` // ${varname}.rows.${payload.action}()
+              return `.rows.${payload.action}( '${expression}' )`
             }
           },
           content: (payload) => {
@@ -842,7 +841,7 @@ export default {
               + (payload.subset.length ? `subset=["${payload.subset.join('", "')}"], ` : '')
               + `how="${payload.how}", output_col="__match__" )`
               if (payload.filteredPreview) {
-                code += `.rows.select( '__match__==True' )` // ${varname}.rows.${payload.action}()
+                code += `.rows.select( 'df["__match__"]==True' )`
                 if (payload._requestType==='preview') {
                   return (from, to)=>code+(from!==undefined ? `[${from}:${to}]` : '')
                 }
@@ -889,7 +888,7 @@ export default {
               + (payload.subset.length ? `subset=["${payload.subset.join('", "')}"], ` : '')
               + `keep="${payload.keep}", output_col="__match__")`
               if (payload.filteredPreview) {
-                code += `.rows.select( '__match__==True' )` // ${varname}.rows.${payload.action}()
+                code += `.rows.select( 'df["__match__"]==True' )`
                 if (payload._requestType==='preview') {
                   return (from, to)=>code+(from!==undefined ? `[${from}:${to}]` : '')
                 }
