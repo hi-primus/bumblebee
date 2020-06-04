@@ -195,10 +195,6 @@ export default {
 		async status(value) {
 			if (this.useKernel) {
 				switch (value) {
-					case "closing workspace":
-						this.stopClient(true);
-						this.$store.commit("setCells", []);
-						break;
 					case "workspace":
             if (this.$store.state.kernel==false) {
               this.initializeWorkspace(0)
@@ -290,8 +286,10 @@ export default {
     },
 
     signOut () {
+      this.stopClient(true)
+      this.$store.commit("setCells", [])
+      this.$store.dispatch("auth/signOut")
       this.$router.push({path: 'login', params: {}, query: this.$route.query }, ()=>{
-        this.$store.commit('setAppStatus', {status: 'closing workspace'})
       })
     },
 
