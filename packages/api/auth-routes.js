@@ -62,6 +62,53 @@ router.route('/login')
     }
   })
 
+router.route('/profile')
+  .post(async function (req, res) {
+
+    try {
+
+      if (req.headers && req.headers.accessToken) {
+        jwt.verify(req.headers.accessToken, process.env.TOKEN_SECRET, function (err, decoded) {
+          if (err) {
+            res.status(500).json({error: new Error('Authentication error')})
+          } else {
+            console.log({decoded})
+            res.status(200).json({decoded})
+          }
+        })
+      } else {
+        res.status(500).json({error: new Error('Authentication error, no accessToken found')})
+      }
+
+      if (valid) {
+
+        var accessToken = jwt.sign({ username: req.body.username }, process.env.TOKEN_SECRET, { expiresIn: '2h' })
+        res.status(200).json({
+          status: 'ok',
+          message: 'Login',
+          accessToken
+        })
+
+      } else {
+
+        res.status(400).json({
+          status: 'error',
+          message: 'Login'
+        })
+
+      }
+
+    } catch (err) {
+
+      console.error(err)
+
+      res.status(400).json({
+        status: "error",
+        error: err
+      })
+    }
+  })
+
 router.route('/register')
   .post(async function (req, res) {
 

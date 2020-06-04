@@ -228,7 +228,7 @@ export default {
         if (this.confirmPassword!==this.createPassword && !this.showCreatePassword) {
           throw "Passwords doesn't match"
         }
-				var response = await this.$store.dispatch("auth/register", {
+				var response = await this.$store.dispatch("auth/signUp", {
 					username: this.createUsername,
           password: this.createPassword,
           firstName: this.createFirstName,
@@ -256,7 +256,7 @@ export default {
 				var tpw = this.$route.query.tpw;
 				var workers = this.$route.query.workers;
 				if (this.useKernel) {
-					var login = await this.$store.dispatch("auth/login", {
+					var login = await this.$store.dispatch("auth/signIn", {
 						username: this.inputUsername,
 						password: this.inputPassword
           })

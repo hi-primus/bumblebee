@@ -24,7 +24,7 @@ export const mutations =  {
 }
 
 export const actions =  {
-  async register(context,  payload) {
+  async signUp(context,  payload) {
     var response
     // response = await axios.post(process.env.DEV_API_URL + '/auth/signup', payload)
     response = await window.$nuxt.$auth.register( {
@@ -50,7 +50,7 @@ export const actions =  {
     return true // TODO: profile action
   },
 
-	async login ({commit, dispatch}, payload) {
+	async signIn ({commit, dispatch}, payload) {
 
     var response
     // response = await axios.post(process.env.DEV_API_URL + '/auth/signin', payload)
@@ -69,6 +69,15 @@ export const actions =  {
     } else {
       commit('refreshToken', false)
     }
+  },
+
+	async signOut ({commit, dispatch}, payload) {
+
+    dispatch('setTokenCookies', {})
+
+    resetAuthTokenAxios()
+    commit('accessToken', false)
+    commit('refreshToken', false)
   },
 
   async init ({dispatch, commit}, payload) {

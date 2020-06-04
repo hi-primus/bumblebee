@@ -259,8 +259,6 @@ export const mutations = {
     })
 		if (!state.datasets.length) {
       this.commit('newDataset')
-      // state.appStatus = {status: 'closing workspace'}
-
 		}
 		return index
 	},
