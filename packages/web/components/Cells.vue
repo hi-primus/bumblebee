@@ -470,7 +470,7 @@ export default {
                 if (payload.filteredPreview) {
                   code += `.rows.select( 'df["__match__"]==True' )`
                 }
-                code += `.cols.set( default="${payload.columns[0]}", value='${payload.value || 'None'}', where=df["__match__"]==True, output_cols=["${output_col}"] )`
+                code += `.cols.set( default="${payload.columns[0]}", value='${payload.value || 'None'}', where='df["__match__"]==True', output_cols=["${output_col}"] )`
                 if (payload._requestType==='preview' && payload.filteredPreview) {
                   return (from, to)=>code+(from!==undefined ? `[${from}:${to}]` : '')
                 }
