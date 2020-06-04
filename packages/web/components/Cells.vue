@@ -377,7 +377,8 @@ export default {
                 key: 'value',
                 placeholder: 'Value',
                 label: 'Value',
-                type: 'field'
+                type: 'field',
+                mono: true
               },
             ],
             filteredPreview: true,
@@ -598,7 +599,8 @@ export default {
                 key: 'expression',
                 label: 'Expression',
                 placeholder: 'column>=0',
-                type: 'field'
+                type: 'field',
+                mono: true
               },
               {
                 condition: (c)=>['contains','startswith','endswith'].includes(c.condition),
@@ -2178,7 +2180,8 @@ export default {
               {
                 type: 'field',
                 key: 'value',
-                label: 'Expression or value'
+                label: 'Expression or value',
+                mono: true
               },
               // {
               //   type: 'field',
