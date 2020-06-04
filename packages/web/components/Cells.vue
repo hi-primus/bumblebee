@@ -375,7 +375,7 @@ export default {
               {
                 condition: (c)=>c.action==='set',
                 key: 'value',
-                placeholder: 'Value',
+                placeholder: 'Expression or value',
                 label: 'Value',
                 type: 'field',
                 mono: true
