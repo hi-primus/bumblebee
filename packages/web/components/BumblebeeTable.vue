@@ -808,7 +808,7 @@ export default {
 
         var profile
 
-        if (this.currentLoadPreview && this.currentLoadPreview.profile) {
+        if (this.loadPreview && this.currentLoadPreview && this.currentLoadPreview.profile) {
           profile = this.currentLoadPreview.profile
         } else {
           profile = this.currentProfilePreview
@@ -842,7 +842,7 @@ export default {
     },
 
     totalRowsCount () {
-      return this.currentDataset.summary.rows_count
+      return Math.max(this.currentDataset.summary.rows_count, this.rowsCount)
     },
 
     rowsCount () {
@@ -850,6 +850,7 @@ export default {
         var value = 0
         if (this.loadPreview && this.currentLoadPreview && this.currentLoadPreview.sample) {
           value = this.currentLoadPreview.sample.value.length
+          return value
         }
         if (this.currentPreviewCode && !this.incompleteColumns) {
           if (this.currentRowHighlights && typeof this.currentRowHighlights === 'number'){
