@@ -2382,3 +2382,10 @@ $editor-top-padding: 6px;
   margin-left: -0.25em;
   font-size: 20px !important;
 }
+
+.mono-field input {
+  font-family: $font-mono;
+  font-size: 14px;
+  top: -1px;
+  position: relative;
+}

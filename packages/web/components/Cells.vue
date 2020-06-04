@@ -375,9 +375,10 @@ export default {
               {
                 condition: (c)=>c.action==='set',
                 key: 'value',
-                placeholder: 'Value',
+                placeholder: 'Expression or value',
                 label: 'Value',
-                type: 'field'
+                type: 'field',
+                mono: true
               },
             ],
             filteredPreview: true,
@@ -460,7 +461,7 @@ export default {
             }
 
             if (payload.action==='set') {
-              payload.value = parseExpression(payload.value, 'df', payload.allColumns)
+              // payload.value = parseExpression(payload.value, 'df', payload.allColumns)
               var output_col = payload.columns[0]
               var code = ''
               if (payload._requestType) {
@@ -469,13 +470,13 @@ export default {
                 if (payload.filteredPreview) {
                   code += `.rows.select( 'df["__match__"]==True' )`
                 }
-                code += `.cols.set( value='${payload.value || 'None'}', where='df["__match__"]==True', output_cols=["${output_col}"] )`
+                code += `.cols.set( default="${payload.columns[0]}", value='${payload.value || 'None'}', where='df["__match__"]==True', output_cols=["${output_col}"] )`
                 if (payload._requestType==='preview' && payload.filteredPreview) {
                   return (from, to)=>code+(from!==undefined ? `[${from}:${to}]` : '')
                 }
                 return code
               }
-              return code + `.cols.set( value='${payload.value || 'None'}', where='${expression}', output_cols=["${output_col}"] )`
+              return code + `.cols.set( default="${payload.columns[0]}", value='${payload.value || 'None'}', where='${expression}', output_cols=["${output_col}"] )`
 
             } else {
               if (payload._requestType) {
@@ -488,7 +489,7 @@ export default {
                 }
                 return code
               } else {
-                return `.rows.${payload.action}( '${expression}' )`
+                return `.rows.${payload.action}( '${expression}' )` // rows.select rows.drop
               }
 
             }
@@ -598,7 +599,8 @@ export default {
                 key: 'expression',
                 label: 'Expression',
                 placeholder: 'column>=0',
-                type: 'field'
+                type: 'field',
+                mono: true
               },
               {
                 condition: (c)=>['contains','startswith','endswith'].includes(c.condition),
@@ -683,7 +685,7 @@ export default {
               // varname = `${varname}.ext.get_buffer()`
               varname = `df`
             }
-            expression = parseExpression(expression, varname, payload.allColumns)
+            // expression = parseExpression(expression, varname, payload.allColumns)
 
             try {
               payload = escapeQuotesOn(payload, ['text','selection'])
@@ -730,17 +732,16 @@ export default {
               default:
             }
             if ( payload._requestType ) {
-              var code = `.rows.find( '${expression}' )` // ${varname}.rows.${payload.action}()
-              // code += `.rows.select( ${varname}["__match__"]==True )` // ${varname}.rows.${payload.action}()
+              var code = `.rows.find( '${expression}' )`
               if (payload.filteredPreview) {
-                code += `.rows.select( 'df["__match__"]==True' )` // ${varname}.rows.${payload.action}()
+                code += `.rows.select( 'df["__match__"]==True' )`
                 if (payload._requestType==='preview') {
                   return (from, to)=>code+(from!==undefined ? `[${from}:${to}]` : '')
                 }
               }
               return code
             } else {
-              return `.rows.${payload.action}( ${expression} )` // ${varname}.rows.${payload.action}()
+              return `.rows.${payload.action}( '${expression}' )`
             }
           },
           content: (payload) => {
@@ -842,7 +843,7 @@ export default {
               + (payload.subset.length ? `subset=["${payload.subset.join('", "')}"], ` : '')
               + `how="${payload.how}", output_col="__match__" )`
               if (payload.filteredPreview) {
-                code += `.rows.select( 'df["__match__"]==True' )` // ${varname}.rows.${payload.action}()
+                code += `.rows.select( 'df["__match__"]==True' )`
                 if (payload._requestType==='preview') {
                   return (from, to)=>code+(from!==undefined ? `[${from}:${to}]` : '')
                 }
@@ -889,7 +890,7 @@ export default {
               + (payload.subset.length ? `subset=["${payload.subset.join('", "')}"], ` : '')
               + `keep="${payload.keep}", output_col="__match__")`
               if (payload.filteredPreview) {
-                code += `.rows.select( 'df["__match__"]==True' )` // ${varname}.rows.${payload.action}()
+                code += `.rows.select( 'df["__match__"]==True' )`
                 if (payload._requestType==='preview') {
                   return (from, to)=>code+(from!==undefined ? `[${from}:${to}]` : '')
                 }
@@ -2179,7 +2180,8 @@ export default {
               {
                 type: 'field',
                 key: 'value',
-                label: 'Expression or value'
+                label: 'Expression or value',
+                mono: true
               },
               // {
               //   type: 'field',
@@ -2236,7 +2238,7 @@ export default {
               //   varname += `.ext.buffer_window("*"${window})`
               // }
 
-              var value = payload.value ? parseExpression(payload.value, 'df', payload.allColumns) : ''
+              var value = payload.value // payload.value ? parseExpression(payload.value, 'df', payload.allColumns) : ''
               // var where = payload.where ? parseExpression(payload.where, 'df', payload.allColumns) : ''
 
               if (payload.columns[0] && !value) {
@@ -2245,6 +2247,7 @@ export default {
               }
 
               return `.cols.set(`
+              + `default="${payload.columns[0]}", `
               + 'value=' + ( (value) ? `'${value}'` : "'None'" )
               // + ', where=' + ( (where) ? `'${where}'` : 'None' )
               + ', output_cols=' + output_cols_argument

@@ -54,6 +54,7 @@
         :label="getPropertyField(field.label)"
         :placeholder="(typeof field.placeholder == 'function') ? field.placeholder(currentCommand) : (field.placeholder || '')"
         :clearable="field.clearable"
+        :class="{'mono-field': field.mono}"
         @input="(field.onChange) ? field.onChange($event) : 0"
         dense
         required
