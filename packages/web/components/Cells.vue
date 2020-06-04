@@ -252,7 +252,7 @@ export default {
     CodeEditor,
 		OutputColumnInputs,
 		OperationField,
-		Outliers
+    Outliers
   },
 
   mixins: [clientMixin],
@@ -1464,7 +1464,7 @@ export default {
             previewType: 'load',
             loadPreview: true,
             isLoad: true,
-            variableName: this.availableVariableName
+            variableName: this.availableVariableName()
             // _previewDelay: 500,
           }),
 
@@ -1980,7 +1980,7 @@ export default {
             password: '',
             _loadingTables: false,
             isLoad: true,
-            variableName: this.availableVariableName
+            variableName: this.availableVariableName()
           }),
           code: (payload) => {
             var table = escapeQuotes(payload.table)
@@ -2749,30 +2749,6 @@ export default {
       return this.dataset.columns.map(e=>e.name)
     },
 
-    availableVariableName () {
-
-      var name = 'df'
-
-      if (this.currentTab) {
-        var name = name+this.currentTab
-      }
-
-      if (!this.dataset || this.dataset.blank) {
-        return name
-      }
-
-      var sd = Object.keys(this.currentSecondaryDatasets)
-        .filter(e=>e.startsWith(name+'_'))
-        .filter(e=>!e.startsWith('_'))
-
-      name = name+'_'+sd.length
-
-      // this.$store.commit('setSecondaryDataset',{ name })
-      this.$store.commit('setHasSecondaryDatasets', true )
-
-      return name
-    },
-
     dragOptions () {
       return {
         animation: 200,
@@ -2968,6 +2944,31 @@ export default {
   },
 
   methods: {
+
+    availableVariableName () {
+
+      var name = 'df'
+
+      if (this.currentTab) {
+        var name = name+this.currentTab
+      }
+
+      if (!this.dataset || this.dataset.blank) {
+        return name
+      }
+
+      var sd = Object.keys(this.currentSecondaryDatasets)
+        .filter(e=>e.startsWith(name+'_'))
+        .filter(e=>!e.startsWith('_'))
+
+      name = name+'_'+sd.length
+
+      // this.$store.commit('setSecondaryDataset',{ name })
+      this.$store.commit('setHasSecondaryDatasets', true )
+
+      return name
+    },
+
 
     forceFileDownload(url, filename){
       const link = document.createElement('a')
