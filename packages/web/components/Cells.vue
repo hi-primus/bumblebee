@@ -46,7 +46,7 @@
                         :index="i"
                       />
                     </template>
-                    <v-btn depressed class="icon-btn" :key="'remove'+i+field.key" color="error" @click="field.removeOne(currentCommand, i)">
+                    <v-btn depressed class="btn-squared" :key="'remove'+i+field.key" color="error" @click="field.removeOne(currentCommand, i)">
                       <v-icon>close</v-icon>
                     </v-btn>
                   </template>
@@ -55,7 +55,7 @@
                     outlined
                     rounded
                     style="margin-left: auto; margin-right: auto; margin-top: -4px"
-                    class="icon-btn"
+                    class="btn-squared"
                     color="primary"
                     @click="field.addOne(currentCommand)"
                   >
