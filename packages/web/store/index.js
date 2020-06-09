@@ -112,14 +112,14 @@ properties.forEach((p)=>{
 
 export const mutations = {
 
+  mutation (state, {mutate, payload}) {
+    state[mutate] = payload
+  },
+
   clearDatasetProperties (state) {
     state.properties.filter(p=>p.clear).forEach(p=>{
       Vue.set(state['every'+p.name], state.tab, false)
     })
-  },
-
-  setTab (state, { tab }) {
-    state.tab = tab
   },
 
   setSecondaryDatasets (state, payload) {

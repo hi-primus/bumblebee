@@ -415,11 +415,11 @@ export default {
 
 			if (value !== undefined && !dataset) {
 				this.tab = this.$store.state.datasets[0] ? 0 : undefined;
-				this.$store.commit("setTab", { tab: 0 });
+				this.$store.commit('mutation', { mutate: 'tab', payload: 0 });
 				return;
 			}
 
-			this.$store.commit("setTab", { tab: value });
+			this.$store.commit('mutation', { mutate: 'tab', payload: value });
 		},
 
 		confirmDelete(value) {
