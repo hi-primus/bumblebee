@@ -7,7 +7,6 @@
       nudge-bottom="34px"
       min-width="270px"
     >
-      <!-- attach="#tfs" -->
       <template v-slot:activator="{ on }">
         <v-text-field
           :value="value"
@@ -26,7 +25,6 @@
           required
           outlined
         ></v-text-field>
-          <!-- @keydown.down="focusList" -->
       </template>
       <v-list
         dense
@@ -173,15 +171,13 @@ export default {
 
       pos = pos || 1
 
-      var right = str.slice(pos - 1).search(/\s/);
-      var left = str.slice(0, pos).search(/\S+$/)
+      var left = str.slice(0, pos).search(/[^\s\(\)]+$/)
+      if (left<0)
+          return ['', -1]
+      var right = str.slice(pos - 1).search(/[\s\(\)]/)
+      right = Math.max(right,1)
 
-      if (left <= 0) {
-        return [str.slice(0, pos+1).trim(), 0]
-      }
-
-      return [str.slice(left, right + pos+1 ).trim(), left]
-
+      return [str.slice(left, pos+right-1).trim(), left]
     },
 
     setCaretPosition(caretPos) {
@@ -210,14 +206,18 @@ export default {
         return
       }
 
+      var inP = (this.value[this.caretPos] === ')')
+
+      // TODO: Unary operators handling (must ignore them on suggestionSearch when length>1 and startsWith(uo))
+
       var value = this.value.substring(0, this.caretWordPosition)
         + newWord.text
-        + (newWord.type==='functions' ? '()' : (newWord.type==='unary_operators' ? '' : ' '))
+        + (newWord.type==='functions' ? '() ' : (( /*newWord.type==='unary_operators' ||*/ inP) ? '' : ' '))
         + this.value.substring(this.caretWordPosition + this.caretWord.length, this.value.length)
 
       var caretPos
 
-      caretPos = this.caretWordPosition + newWord.text.length + (newWord.type!=='unary_operators' ? 1 : 0)
+      caretPos = this.caretWordPosition + newWord.text.length /*+ (newWord.type!=='unary_operators' ? 1 : 0)*/ + (inP ? 1 : 0)
 
       // this.value = value
       this.$emit('input',value)
