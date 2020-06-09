@@ -374,11 +374,12 @@ export default {
               },
               {
                 condition: (c)=>c.action==='set',
+                type: 'field-suggestions',
                 key: 'value',
-                placeholder: 'Expression or value',
-                label: 'Value',
-                type: 'field',
-                mono: true
+                placeholder: 'Expression or "value"',
+                label: 'Expression',
+                mono: true,
+                suggestions: (c) => c.allColumns
               },
             ],
             filteredPreview: true,

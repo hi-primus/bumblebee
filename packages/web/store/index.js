@@ -97,7 +97,8 @@ export const state = () => {
     key: '',
     kernel: false,
     nextCommand: false,
-    tab: 0
+    tab: 0,
+    reservedWords: {}
   }
 }
 
