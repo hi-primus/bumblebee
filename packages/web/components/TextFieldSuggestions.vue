@@ -176,8 +176,6 @@ export default {
       var right = str.slice(pos - 1).search(/\s/);
       var left = str.slice(0, pos).search(/\S+$/)
 
-      console.log({pos, str, left, right, forceClose: this.forceClose})
-
       if (left <= 0) {
         return [str.slice(0, pos+1).trim(), 0]
       }
@@ -187,7 +185,6 @@ export default {
     },
 
     setCaretPosition(caretPos) {
-      console.log({caretPos})
       const textarea = this.$refs.inputField.$el.getElementsByTagName('input')[0]
 
       if (textarea != null) {
@@ -235,9 +232,7 @@ export default {
       this.forceClose = false
       const textarea = this.$refs.inputField.$el.getElementsByTagName('input')[0]
       const newPos = textarea.selectionStart
-      console.log('change to ' + newPos+'?')
       if (newPos !== this.caretPos) {
-        console.log('change to ' + newPos)
         this.caretPos = newPos
         this.getCaretWord(this.caretPos, forceCheck)
         this.searchSuggestions()
