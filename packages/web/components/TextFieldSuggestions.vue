@@ -6,6 +6,7 @@
       :disabled="!(resultsSuggestions && resultsSuggestions.length && !forceClose)"
       nudge-bottom="34px"
       min-width="270px"
+      max-height="280px"
     >
       <template v-slot:activator="{ on }">
         <v-text-field
