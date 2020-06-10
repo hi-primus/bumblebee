@@ -80,7 +80,7 @@ export default {
 
         var response = await this.socketPost('run', {
           code,
-          session: this.$store.state.session
+          session: this.$store.state.session.session
         }, {
           timeout: 0
         })
@@ -150,10 +150,10 @@ export default {
           if (!socket) {
             await this.startSocket ()
             var response = await this.socketPost('initialize',{
-              session: this.$store.state.session,
-              engine: this.$store.state.engine, // TODO: Remove from store
-              tpw: this.$store.state.tpw,
-              workers: this.$store.state.workers,
+              session: this.$store.state.session.session,
+              engine: this.$route.query.engine,
+              tpw: this.$route.query.tpw,
+              workers: this.$route.query.workers,
               reset: this.$route.query.reset
             })
 
@@ -227,12 +227,10 @@ export default {
 
       return new Promise((resolve, reject)=>{
 
-        // TODO: session -> username ( cookie/profile )
-
         if (session)
-          this.$store.commit('session', session)
-        else if (this.$store.state.session)
-          session = this.$store.state.session
+          this.$store.commit('session/mutation', {mutate: 'session', payload: session})
+        else if (this.$store.state.session.session)
+          session = this.$store.state.session.session
         else
           throw new Error('Credentials not found')
 
@@ -241,7 +239,7 @@ export default {
         else if (this.$store.state.key)
           key = this.$store.state.key
 
-        var accessToken = this.$store.state.auth.accessToken || ''
+        var accessToken = this.$store.state.session.accessToken || ''
 
         key = key || ''
 
@@ -313,7 +311,7 @@ export default {
 
       try {
         this.$store.commit('setAppStatus', {status: 'loading'})
-        this.$store.commit('session', session)
+        this.$store.commit('session/mutation', {mutate: 'session', payload: session})
         this.$store.commit('engine', engine)
         this.$store.commit('tpw', tpw)
         this.$store.commit('workers', workers)
@@ -332,7 +330,7 @@ export default {
 
     async updateSecondaryDatasets() {
       try {
-        var response = await this.socketPost('datasets',{session: this.$store.state.session})
+        var response = await this.socketPost('datasets',{session: this.$store.state.session.session})
         window.pushCode({code: response.code, unimportant: true})
         secondaryDatasets = response.data
         this.$store.commit('setHasSecondaryDatasets', (Object.keys(secondaryDatasets).length>1) )

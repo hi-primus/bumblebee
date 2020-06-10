@@ -165,12 +165,12 @@ export default {
 			isOperating: false,
 			tab: undefined,
 			confirmDelete: -1,
-			typesInput: ""
+			typesInput: ''
 		};
 	},
 
 	computed: {
-    ...mapGetters(["currentDataset"]),
+    ...mapGetters(['currentDataset']),
 
     noClose () {
       return (this.$store.state.datasets.length==1 && this.$store.state.datasets[0].blank)
@@ -195,7 +195,7 @@ export default {
 		async status(value) {
 			if (this.useKernel) {
 				switch (value) {
-					case "workspace":
+					case 'workspace':
             if (this.$store.state.kernel==false) {
               this.initializeWorkspace(0)
             }
@@ -206,14 +206,14 @@ export default {
 				}
 			}
 
-			if (value == "workspace") {
+			if (value == 'workspace') {
 				var dataset_csv = this.$route.query.dataset_csv;
 				if (dataset_csv && this.$refs.tableBar) {
 					this.$refs.tableBar.commandHandle({
-						command: "load file",
+						command: 'load file',
 						noOperations: true,
 						immediate: true,
-						payload: { url: dataset_csv, file_type: "csv", _moreOptions: true }
+						payload: { url: dataset_csv, file_type: 'csv', _moreOptions: true }
 					});
 				}
 			}
@@ -228,11 +228,11 @@ export default {
 
 			if (value !== undefined && !dataset) {
 				this.tab = this.$store.state.datasets[0] ? 0 : undefined;
-				this.$store.commit("setTab", { tab: 0 });
+				this.$store.commit('mutation', { mutate: 'tab', payload: 0 });
 				return;
 			}
 
-			this.$store.commit("setTab", { tab: value });
+			this.$store.commit('mutation', { mutate: 'tab', payload: value });
 		},
 
 		confirmDelete(value) {
@@ -248,17 +248,17 @@ export default {
 
 	methods: {
     async initializeWorkspace () {
-      this.$store.commit("kernel", "loading");
+      this.$store.commit('kernel', 'loading');
       if (!this.$store.state.datasets.length) {
-        this.$store.commit("newDataset");
+        this.$store.commit('newDataset');
       }
 
       try {
-        var response = await this.socketPost("initialize", {
-          session: this.$store.state.session,
-          engine: this.$store.state.engine,
-          tpw: this.$store.state.tpw,
-          workers: this.$store.state.workers,
+        var response = await this.socketPost('initialize', {
+          session: this.$store.state.session.session,
+          engine: this.$route.query.engine,
+          tpw: this.$route.query.tpw,
+          workers: this.$route.query.workers,
           reset: this.$route.query.reset
         })
 
@@ -268,33 +268,33 @@ export default {
 
         window.pushCode({ code: response.code })
 
-        console.log("Optimus initialized", response.data)
-        this.$store.commit("setAppStatus", 'workspace');
-        this.$store.commit("kernel", "done")
+        console.log('Optimus initialized', response.data)
+        this.$store.commit('setAppStatus', 'workspace');
+        this.$store.commit('kernel', 'done')
       } catch (error) {
         if (error.code) {
           window.pushCode({ code: error.code, error: true })
         }
-        console.error("Error initializing");
+        console.error('Error initializing');
         printError(error)
         var appStatus = {
-          error: new Error("Initialization error"),
-          status: "workspace"
+          error: new Error('Initialization error'),
+          status: 'workspace'
         };
-        this.$store.commit("setAppStatus", appStatus)
+        this.$store.commit('setAppStatus', appStatus)
       }
     },
 
     signOut () {
       this.stopClient(true)
-      this.$store.commit("setCells", [])
-      this.$store.dispatch("auth/signOut")
+      this.$store.commit('setCells', [])
+      this.$store.dispatch('session/signOut')
       this.$router.push({path: 'login', params: {}, query: this.$route.query }, ()=>{
       })
     },
 
 		deleteTab(i) {
-			this.$store.commit("delete", { index: i });
+			this.$store.commit('delete', { index: i });
 			this.confirmDelete = -1;
 			if (!this.$store.state.datasets.length) {
 				this.tab = 0;

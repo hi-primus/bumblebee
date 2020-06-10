@@ -11,7 +11,7 @@ router.get('/', function (req, res) {
 })
 
 
-router.route('/login')
+router.route('/signin')
   .post(async function (req, res) {
 
     try {
@@ -63,39 +63,20 @@ router.route('/login')
   })
 
 router.route('/profile')
-  .post(async function (req, res) {
+  .get(async function (req, res) {
 
     try {
 
-      if (req.headers && req.headers.accessToken) {
-        jwt.verify(req.headers.accessToken, process.env.TOKEN_SECRET, function (err, decoded) {
+      if (req.headers && req.headers.authorization) {
+        jwt.verify(req.headers.authorization, process.env.TOKEN_SECRET, function (err, decoded) {
           if (err) {
             res.status(500).json({error: new Error('Authentication error')})
           } else {
-            console.log({decoded})
-            res.status(200).json({decoded})
+            res.status(200).json(decoded)
           }
         })
       } else {
-        res.status(500).json({error: new Error('Authentication error, no accessToken found')})
-      }
-
-      if (valid) {
-
-        var accessToken = jwt.sign({ username: req.body.username }, process.env.TOKEN_SECRET, { expiresIn: '2h' })
-        res.status(200).json({
-          status: 'ok',
-          message: 'Login',
-          accessToken
-        })
-
-      } else {
-
-        res.status(400).json({
-          status: 'error',
-          message: 'Login'
-        })
-
+        res.status(500).json({error: new Error('Authorization error')})
       }
 
     } catch (err) {
@@ -109,7 +90,7 @@ router.route('/profile')
     }
   })
 
-router.route('/register')
+router.route('/singup')
   .post(async function (req, res) {
 
     if (req.body.secret!==process.env.AUTH_SECRET) {

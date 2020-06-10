@@ -41,7 +41,8 @@
     "vue-fuse": "^2.2.0",
     "vue-konva": "^2.1.1",
     "vue-template-compiler": "^2.6.11",
-    "vuedraggable": "^2.23.2"
+    "vuedraggable": "^2.23.2",
+    "vuex-persistedstate": "^3.0.1"
   },
   "devDependencies": {
     "@fortawesome/fontawesome-free": "^5.12.1",

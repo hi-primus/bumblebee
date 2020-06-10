@@ -74,6 +74,8 @@ properties.forEach((p)=>{
 import { ALL_TYPES } from '@/utils/constants.js'
 
 export const state = () => {
+  console.log('setting state')
+  console.trace()
   return {
     datasets: [],
     datasetSelection: [],
@@ -87,11 +89,11 @@ export const state = () => {
     // previewColumns: [],
     ...pStates,
     datasetUpdates: 0,
+
+    //
+
     appStatus: {status: 'waiting'},
-    session: '',
-    engine: 'dask',
-    tpw: 8,
-    workers: 1,
+
     allTypes: ALL_TYPES,
     datasetCounter: 1,
     key: '',
@@ -114,7 +116,10 @@ properties.forEach((p)=>{
 export const mutations = {
 
   mutation (state, {mutate, payload}) {
+    console.log('before mutate', state[mutate])
+    console.log('mutating', mutate, payload)
     state[mutate] = payload
+    console.log('mutated', state[mutate])
   },
 
   clearDatasetProperties (state) {
@@ -268,10 +273,6 @@ export const mutations = {
     state.appStatus = payload || { status: 'waiting' }
   },
 
-	session (state, payload) {
-    state.session = payload
-  },
-
   engine (state, payload) {
     state.engine = payload
   },
@@ -389,7 +390,7 @@ export const mutations = {
 
 export const actions = {
   async nuxtServerInit ({ dispatch, commit }, context) {
-    dispatch('auth/init')
+    dispatch('session/init')
   }
 }
 

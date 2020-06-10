@@ -228,7 +228,7 @@ export default {
         if (this.confirmPassword!==this.createPassword && !this.showCreatePassword) {
           throw "Passwords doesn't match"
         }
-				var response = await this.$store.dispatch("auth/signUp", {
+				var response = await this.$store.dispatch("session/signUp", {
 					username: this.createUsername,
           password: this.createPassword,
           firstName: this.createFirstName,
@@ -253,16 +253,17 @@ export default {
 		},
 		async subscribe() {
 			try {
-				var tpw = this.$route.query.tpw;
-				var workers = this.$route.query.workers;
+        var engine = this.$route.query.engine
+				var tpw = this.$route.query.tpw
+				var workers = this.$route.query.workers
 				if (this.useKernel) {
-					var login = await this.$store.dispatch("auth/signIn", {
+					var login = await this.$store.dispatch("session/signIn", {
 						username: this.inputUsername,
 						password: this.inputPassword
           })
 					this.startClient({
 						session: this.inputUsername,
-						engine: this.inputEngine,
+						engine,
 						tpw,
 						workers
 					})
@@ -271,7 +272,7 @@ export default {
 					this.startClient({
 						session: this.inputUsername,
 						key: this.inputPassword,
-						engine: this.inputEngine,
+						engine,
 						tpw,
 						workers
 					})
