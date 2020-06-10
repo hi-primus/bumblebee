@@ -10,6 +10,7 @@
           :label="(fieldLabel===true ? title : fieldLabel) || `Output column name`"
           dense
           :placeholder="title"
+          spellcheck="false"
           required
           outlined
           clearable

@@ -56,6 +56,7 @@
         :clearable="field.clearable"
         :class="{'mono-field': field.mono}"
         @input="(field.onChange) ? field.onChange($event) : 0"
+        spellcheck="false"
         dense
         required
         outlined
@@ -148,6 +149,7 @@
         dense
         required
         outlined
+        spellcheck="false"
         :append-icon="field.showable ? (field.show ? 'visibility' : 'visibility_off') : undefined"
         :type="(field.show || !field.showable) ? 'text' : 'password'"
         :clearable="field.clearable"
@@ -281,6 +283,7 @@
             <v-text-field
               v-model="cluster.replace"
               class="cluster-replace-field pt-2"
+              spellcheck="false"
               :label="(field.label===true ? cluster.replace : field.label) || 'New cell value'"
               :placeholder="field.placeholder===true ? cluster.replace : field.placeholder"
               :disabled="false && !cluster.selected.length"
