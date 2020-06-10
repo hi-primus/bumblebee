@@ -666,7 +666,7 @@ export default {
               value_2: '',
               values: [],
               text: '',
-              expression: `${columns[0]}`,
+              expression: columns[0].includes(' ') ? `{${columns[0]}}` : columns[0],
 
               _isString: payload.columnDataTypes && payload.columnDataTypes.every(d=>STRING_TYPES.includes(d)),
 
@@ -2217,7 +2217,7 @@ export default {
             allColumns: this.allColumns,
             command: 'set',
             columns,
-            value: (columns[0] ? `${columns[0]}` : ''),
+            value: (columns[0] ? (columns[0].includes(' ') ? `{${columns[0]}}` : columns[0]) : ''),
             where: (columns[0] ? `${columns[0]}!=None` : ''),
             title: (columns[0] ? `Set column` : 'Create column'),
             _expectedColumns: 1,

@@ -21,7 +21,7 @@
           @keydown.escape="escapePressed"
           @keydown.ctrl.space="ctrlSpacePressed"
           @keydown.down="downPressed"
-          @keydown.enter.prevent="enterPressed"
+          @keydown.enter="enterPressed"
           dense
           required
           outlined
@@ -97,6 +97,7 @@ export default {
 
   data () {
     return {
+      avoidPropagation: false,
       caretPos: 0,
       caretWord: '',
       caretWordPosition: -1,
@@ -141,11 +142,12 @@ export default {
     },
 
     enterPressed (event) {
-      if (this.resultsSuggestions && this.resultsSuggestions[0]) {
-        this.useSuggestion(this.resultsSuggestions[0])
-        event.stopPropagation()
-      }
-      return event
+      this.$nextTick(()=>{
+        if (this.resultsSuggestions && this.resultsSuggestions[0] && !this.avoidPropagation) {
+          this.useSuggestion(this.resultsSuggestions[0])
+          event.stopPropagation()
+        }
+      })
     },
 
     downPressed (event) {
@@ -201,11 +203,13 @@ export default {
       }
     },
 
-    useSuggestion (newWord = {text: ''}) {
+    useSuggestion (newWord = {text: ''}, avoidPropagation = true) {
 
       if (this.caretWord === '' || this.caretWordPosition < 0 || newWord === '') {
         return
       }
+
+      this.avoidPropagation = true
 
       var inP = (this.value[this.caretPos] === ')')
 
@@ -218,12 +222,13 @@ export default {
 
       var caretPos
 
-      caretPos = this.caretWordPosition + newWord.text.length /*+ (newWord.type!=='unary_operators' ? 1 : 0)*/ + (inP ? 1 : 0)
+      caretPos = this.caretWordPosition + newWord.text.length + 1/*+ (newWord.type!=='unary_operators' ? 1 : 0)*/ + (inP ? 1 : 0)
 
       // this.value = value
       this.$emit('input',value)
 
       this.$nextTick(()=>{
+        this.avoidPropagation = false
         this.setCaretPosition(caretPos)
         this.checkCaret(undefined, true)
       })
@@ -253,7 +258,12 @@ export default {
 
     searchSuggestions: throttle( async function() {
       if (this.caretWord) {
-        var suggestions = this.suggestions.map((text)=>({type: 'columns', text, description: ''}))
+        var suggestions = this.suggestions.map((text)=>{
+          if (text.includes(' ')) {
+            text = `{${text}}`
+          }
+          return {type: 'columns', text, description: ''}
+        })
         suggestions = [...suggestions, ...this.$store.state.reservedWords]
         this.resultsSuggestions = await this.$search(this.caretWord, suggestions, {
           shouldSort: true,
