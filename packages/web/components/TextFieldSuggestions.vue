@@ -22,6 +22,7 @@
           @keydown.ctrl.space="ctrlSpacePressed"
           @keydown.down="downPressed"
           @keydown.enter="enterPressed"
+          spellcheck="false"
           dense
           required
           outlined

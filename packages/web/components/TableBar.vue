@@ -191,6 +191,7 @@
             autocomplete="off"
             v-model="searchText"
             :color="'grey darken-3'"
+            spellcheck="false"
             clearable
             dense
             full-width
