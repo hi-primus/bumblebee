@@ -18,6 +18,8 @@
               <v-text-field
                 label="First name"
                 v-model="createFirstName"
+                autocomplete="given-name"
+                spellcheck="false"
                 required
                 outlined
                 clearable
@@ -26,6 +28,8 @@
               <v-text-field
                 label="Last name"
                 v-model="createLastName"
+                autocomplete="family-name"
+                spellcheck="false"
                 required
                 outlined
                 clearable
@@ -34,6 +38,8 @@
               <v-text-field
                 label="E-mail"
                 v-model="email"
+                autocomplete="email"
+                spellcheck="false"
                 :rules="emailRules"
                 required
                 outlined
@@ -43,6 +49,8 @@
               <v-text-field
                 label="Username"
                 v-model="createUsername"
+                autocomplete="username"
+                spellcheck="false"
                 required
                 outlined
                 clearable
@@ -51,6 +59,8 @@
               <v-text-field
                 label="Password"
                 v-model="createPassword"
+                autocomplete="new-password"
+                spellcheck="false"
                 :append-icon="showCreatePassword ? 'mdi-eye' : 'mdi-eye-off'"
                 :type="showCreatePassword ? 'text' : 'password'"
                 required
@@ -65,6 +75,8 @@
                 type="password"
                 label="Confirm password"
                 v-model="confirmPassword"
+                autocomplete="new-password"
+                spellcheck="false"
                 required
                 outlined
                 clearable
@@ -90,13 +102,22 @@
             <h1 class="display-3 mb-4">Bumblebee</h1>
           </v-card-title>
           <v-card-text>
-            <v-text-field v-model="inputUsername" label="Username" required outlined clearable />
+            <v-text-field
+              v-model="inputUsername"
+              autocomplete="username"
+              spellcheck="false"
+              label="Username"
+              required
+              outlined
+              clearable
+            />
             <v-text-field
               v-if="useKernel"
               v-model="inputPassword"
+              autocomplete="new-password"
+              spellcheck="false"
               :append-icon="showPassword ? 'visibility' : 'visibility_off'"
               :type="(showPassword) ? 'text' : 'password'"
-              autocomplete="current-password"
               label="Password"
               required
               outlined
@@ -106,9 +127,10 @@
             <v-text-field
               v-else
               v-model="inputPassword"
+              autocomplete="new-password"
+              spellcheck="false"
               :append-icon="showPassword ? 'visibility' : 'visibility_off'"
               :type="(showPassword) ? 'text' : 'password'"
-              autocomplete="current-key"
               label="Key"
               required
               outlined
