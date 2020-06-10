@@ -40,10 +40,10 @@ op = Optimus("${payload.engine || 'dask'}", threads_per_worker=${payload.tpw || 
 
 const init = (payload = {}) => `
 try:
-    json; date; datetime; ipython_vars; _json_default; traceback
+    json; date; datetime; ipython_vars; _json_default; traceback;
 except Exception:
-    from optimus.helpers.functions import ipython_vars
     from datetime import datetime, date
+    from optimus.helpers.functions import ipython_vars
     import traceback
     import json
     def _json_default(o):
@@ -57,6 +57,11 @@ engine = "${payload.engine || 'dask'}"
 tpw = ${payload.tpw || 8}
 workers = ${payload.workers || 1}
 reset = ${payload.reset || 'False'}
+
+from optimus.expressions import reserved_words, Parser
+res.update({'reserved_words': reserved_words})
+
+p = Parser()
 
 try:
     op

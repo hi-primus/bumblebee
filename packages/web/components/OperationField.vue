@@ -61,6 +61,18 @@
         outlined
       ></v-text-field>
     </template>
+    <template v-else-if="getPropertyField(field.type)=='field-suggestions'">
+      <TextFieldSuggestions
+        v-model="_value"
+        :key="field.key+'tfs'"
+        :label="getPropertyField(field.label)"
+        :placeholder="(typeof field.placeholder == 'function') ? field.placeholder(currentCommand) : (field.placeholder || '')"
+        :clearable="field.clearable"
+        :mono="field.mono"
+        :suggestions="getPropertyField(field.suggestions)"
+        @input="(field.onChange) ? field.onChange($event) : 0"
+      ></TextFieldSuggestions>
+    </template>
     <template v-else-if="getPropertyField(field.type)=='chips'">
       <v-combobox
         v-model="_value"
@@ -289,8 +301,13 @@ import {
   getProperty
 } from '@/utils/functions.js'
 
+import TextFieldSuggestions from '@/components/TextFieldSuggestions'
 
 export default {
+
+  components: {
+    TextFieldSuggestions
+  },
 
   props: {
     currentCommand: {
