@@ -41,9 +41,7 @@ module.exports = {
     ],
 	},
 
-	loading: {
-		color: '#3B8070'
-	},
+	loading: false,
 
 	css: [
 		'@/assets/css/main.scss',
