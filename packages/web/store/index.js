@@ -73,34 +73,32 @@ properties.forEach((p)=>{
 
 import { ALL_TYPES } from '@/utils/constants.js'
 
-export const state = () => {
-  return {
-    datasets: [],
-    datasetSelection: [],
-    hasSecondaryDatasets: false,
-    secondaryDatasets: [], // TODO: not tab-separated
-    databases: [],
-    buffers: [],
-    listViews: [],
-    cells: [],
-    properties,
-    // previewColumns: [],
-    ...pStates,
-    datasetUpdates: 0,
-    appStatus: {status: 'waiting'},
-    session: '',
-    engine: 'dask',
-    tpw: 8,
-    workers: 1,
-    allTypes: ALL_TYPES,
-    datasetCounter: 1,
-    key: '',
-    kernel: false,
-    nextCommand: false,
-    tab: 0,
-    reservedWords: {}
-  }
-}
+export const state = () => ({
+  datasets: [],
+  datasetSelection: [],
+  hasSecondaryDatasets: false,
+  secondaryDatasets: [], // TODO: not tab-separated
+  databases: [],
+  buffers: [],
+  listViews: [],
+  cells: [],
+  properties,
+  // previewColumns: [],
+  ...pStates,
+  datasetUpdates: 0,
+
+  //
+
+  appStatus: {status: 'waiting'},
+
+  allTypes: ALL_TYPES,
+  datasetCounter: 1,
+  key: '',
+  kernel: false,
+  nextCommand: false,
+  tab: 0,
+  reservedWords: {}
+})
 
 var pSetters = {}
 
@@ -219,8 +217,6 @@ export const mutations = {
     Vue.set(state.datasetSelection, state.tab, state.datasetSelection[state.tab] )
     Vue.set(state.buffers, state.tab, false)
 
-    state.appStatus = {status: 'received'}
-
     state.properties.filter(p=>p.clearOnLoad).forEach(p=>{
       Vue.set(state['every'+p.name], state.tab, false)
     })
@@ -246,8 +242,6 @@ export const mutations = {
       blank: true
     }
 
-    state.appStatus = {status: 'received'}
-
     Vue.set(state.datasets, found, dataset)
     Vue.set(state.datasetSelection, found, {})
     Vue.set(state.everyLoadPreview, found, false)
@@ -263,17 +257,13 @@ export const mutations = {
       Vue.delete(state['every'+p.name], index)
     })
 		if (!state.datasets.length) {
-			state.appStatus = {status: 'receiving back'}
+      this.commit('newDataset')
 		}
 		return index
 	},
 
 	setAppStatus (state, payload) {
     state.appStatus = payload || { status: 'waiting' }
-  },
-
-	session (state, payload) {
-    state.session = payload
   },
 
   engine (state, payload) {
@@ -392,23 +382,9 @@ export const mutations = {
 }
 
 export const actions = {
-  // async nuxtServerInit ({ dispatch }, context) {
-  //   const cookies = this.$cookies.getAll() || {} // cookie.parse(context.req.headers.cookie || '')
-  //   if (cookies.hasOwnProperty('x-access-token')) {
-  //     try {
-  //       setAuthToken(cookies['x-access-token'])
-  //       await dispatch('auth/fetch')
-  //       return true
-  //     } catch (err) {
-  //       console.error('Provided token is invalid:', err)
-  //       resetAuthToken()
-  //       return false
-  //     }
-  //   } else {
-  //     resetAuthToken()
-  //     return false
-  //   }
-  // },
+  async nuxtServerInit ({ dispatch, commit, app }, context) {
+    await dispatch('session/serverInit')
+  }
 }
 
 var pGetters = {}

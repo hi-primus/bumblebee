@@ -178,8 +178,9 @@ const newSocket = function (socket, session) {
 }
 
 io.use(function (socket, next) {
-  if (socket.handshake.query && socket.handshake.query.accessToken) {
-    jwt.verify(socket.handshake.query.accessToken, process.env.TOKEN_SECRET, function (err, decoded) {
+  if (socket.handshake.query && socket.handshake.query.authorization) {
+    var token = socket.handshake.query.authorization
+    jwt.verify(token, process.env.TOKEN_SECRET, function (err, decoded) {
       if (err) {
         return next(new Error('Authentication error'))
       }

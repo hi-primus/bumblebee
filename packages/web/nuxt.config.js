@@ -57,11 +57,11 @@ module.exports = {
   },
 
   modules: [
-    'cookie-universal-nuxt'
   ],
 
 	buildModules: [
-		// '@nuxtjs/eslint-module',
+    // '@nuxtjs/eslint-module',
+    'cookie-universal-nuxt',
 		['@nuxtjs/google-tag-manager', { id: 'GTM-K8DTWMW' }],
 		'@nuxtjs/axios',
 		'@nuxtjs/dotenv',
@@ -71,12 +71,12 @@ module.exports = {
 
 	plugins: [
 		{ src: '@/plugins/konva.js', mode: 'client' },
+		{ src: '@/plugins/persistedstate.js' },
 		'@/plugins/draggable.js',
 		'@/plugins/components.js',
 		'@/plugins/filters.js',
 		'@/plugins/numeral.js',
 		'@/plugins/fuse.js',
-		{ src: '@/plugins/auth.js', mode: 'client'},
 		'@/plugins/varCheck.js'
 	],
 

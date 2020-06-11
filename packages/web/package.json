@@ -20,11 +20,12 @@
     "@nuxtjs/google-tag-manager": "^2.3.2",
     "acorn": "^7.1.1",
     "canvas-datagrid": "^0.22.12",
-    "cookie-universal-nuxt": "^2.1.2",
+    "cookie-universal-nuxt": "^2.1.4",
     "cross-env": "^5.2.1",
     "dotenv-defaults": "^1.1.1",
     "express": "^4.16.4",
     "fernet": "^0.3.1",
+    "js-cookie": "^2.2.1",
     "konva": "^4.1.6",
     "less": "^3.11.1",
     "less-loader": "^5.0.0",
@@ -41,7 +42,8 @@
     "vue-fuse": "^2.2.0",
     "vue-konva": "^2.1.1",
     "vue-template-compiler": "^2.6.11",
-    "vuedraggable": "^2.23.2"
+    "vuedraggable": "^2.23.2",
+    "vuex-persistedstate": "^3.0.1"
   },
   "devDependencies": {
     "@fortawesome/fontawesome-free": "^5.12.1",

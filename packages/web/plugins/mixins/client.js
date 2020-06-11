@@ -80,7 +80,7 @@ export default {
 
         var response = await this.socketPost('run', {
           code,
-          session: this.$store.state.session
+          session: this.$store.state.session.session
         }, {
           timeout: 0
         })
@@ -150,10 +150,10 @@ export default {
           if (!socket) {
             await this.startSocket ()
             var response = await this.socketPost('initialize',{
-              session: this.$store.state.session,
-              engine: this.$store.state.engine,
-              tpw: this.$store.state.tpw,
-              workers: this.$store.state.workers,
+              session: this.$store.state.session.session,
+              engine: this.$route.query.engine,
+              tpw: this.$route.query.tpw,
+              workers: this.$route.query.workers,
               reset: this.$route.query.reset
             })
 
@@ -169,7 +169,7 @@ export default {
           if (error.code) {
             window.pushCode({code: error.code, error: true})
           }
-          reject('Error '+error)
+          reject(error)
         }
 
       })
@@ -188,7 +188,7 @@ export default {
 				} else {
           var appStatus = {
             error: new Error(reason),
-            status: status || this.$store.state.appStatus.status || 'receiving'
+            status: status || this.$store.state.appStatus.status || 'workspace'
           }
 					this.$store.commit('setAppStatus', appStatus)
 				}
@@ -200,10 +200,13 @@ export default {
 
       this.socketAvailable = false
 
-      let query = Object.assign({}, this.$route.query);
-      delete query.key;
-      delete query.session;
-      this.$router.replace({ query });
+      if (this.$route.query.session || this.$route.query.key) {
+        let query = Object.assign({}, this.$route.query)
+        delete query.key
+        delete query.session
+        this.$router.replace({ query })
+      }
+
 
 			if (waiting) {
 				this.$store.commit('setAppStatus', {status: 'waiting'})
@@ -228,9 +231,9 @@ export default {
       return new Promise((resolve, reject)=>{
 
         if (session)
-          this.$store.commit('session', session)
-        else if (this.$store.state.session)
-          session = this.$store.state.session
+          this.$store.commit('session/mutation', {mutate: 'session', payload: session})
+        else if (this.$store.state.session.session)
+          session = this.$store.state.session.session
         else
           throw new Error('Credentials not found')
 
@@ -239,11 +242,11 @@ export default {
         else if (this.$store.state.key)
           key = this.$store.state.key
 
-        var accessToken = this.$store.state.auth.accessToken || ''
+        var accessToken = this.$store.state.session.accessToken || ''
 
         key = key || ''
 
-        socket = io(process.env.API_URL, { query: { session, accessToken, key } })
+        socket = io(process.env.API_URL, { query: { session, authorization: accessToken, key } })
 
         socket.on('new-error', (reason) => {
           console.error('Socket error', reason)
@@ -305,22 +308,23 @@ export default {
 
 		async startClient ({session, key, engine, tpw, workers}) {
 
-      if (['loading','receiving'].includes(this.$store.state.appStatus.status)) {
+      if (['loading','workspace'].includes(this.$store.state.appStatus.status)) {
         return false
       }
 
       try {
         this.$store.commit('setAppStatus', {status: 'loading'})
-        this.$store.commit('session', session)
-        this.$store.commit('engine', engine)
-        this.$store.commit('tpw', tpw)
-        this.$store.commit('workers', workers)
-        key && this.$store.commit('key', key)
+        this.$store.commit('session/mutation', {mutate: 'session', payload: session})
+        if (key)
+          this.$store.commit('key', key)
 
         var client_status = await this.startSocket(session, key, engine)
 
-        if (client_status=='ok')
-          this.$store.commit('setAppStatus', {status: 'receiving'})
+        if (client_status === 'ok') {
+          this.$router.push({path: 'workspace', query: this.$route.query })
+        } else {
+          throw client_status
+        }
 
       } catch (error) {
         this.handleError(error)
@@ -329,7 +333,7 @@ export default {
 
     async updateSecondaryDatasets() {
       try {
-        var response = await this.socketPost('datasets',{session: this.$store.state.session})
+        var response = await this.socketPost('datasets',{session: this.$store.state.session.session})
         window.pushCode({code: response.code, unimportant: true})
         secondaryDatasets = response.data
         this.$store.commit('setHasSecondaryDatasets', (Object.keys(secondaryDatasets).length>1) )

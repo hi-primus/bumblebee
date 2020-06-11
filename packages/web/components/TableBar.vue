@@ -299,25 +299,6 @@
                   </v-list-item-group>
                 </v-list>
               </v-menu>
-              <!-- <v-tooltip :disabled="copied" transition="fade-transition" bottom>
-                <template v-slot:activator="{ on: hint }">
-                  <v-btn
-                    text
-                    color="#888"
-                    class="icon-btn"
-                    :disabled="commandsDisabled"
-                    v-on="hint"
-                    @click="copyCodeToClipboard"
-                  >
-                    <v-icon>
-                      file_copy
-                    </v-icon>
-                  </v-btn>
-                </template>
-                <span>
-                  Copy code to clipboard
-                </span>
-              </v-tooltip> -->
             </template>
             <span>Copied succesfully</span>
           </v-tooltip>

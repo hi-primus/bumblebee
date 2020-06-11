@@ -11,7 +11,7 @@ router.get('/', function (req, res) {
 })
 
 
-router.route('/login')
+router.route('/signin')
   .post(async function (req, res) {
 
     try {
@@ -62,7 +62,37 @@ router.route('/login')
     }
   })
 
-router.route('/register')
+router.route('/profile')
+  .get(async function (req, res) {
+
+    try {
+
+      if (req.headers && req.headers.authorization) {
+        var token = req.headers.authorization
+        jwt.verify(token, process.env.TOKEN_SECRET, function (err, decoded) {
+          if (err) {
+            console.error(err)
+            res.status(500).json({error: new Error('Authorization error')})
+          } else {
+            res.status(200).json(decoded)
+          }
+        })
+      } else {
+        res.status(500).json({error: new Error('Authorization error')})
+      }
+
+    } catch (err) {
+
+      console.error(err)
+
+      res.status(400).json({
+        status: "error",
+        error: err
+      })
+    }
+  })
+
+router.route('/singup')
   .post(async function (req, res) {
 
     if (req.body.secret!==process.env.AUTH_SECRET) {
