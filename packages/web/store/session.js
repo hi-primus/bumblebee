@@ -1,25 +1,33 @@
 import axios from 'axios'
 import { setAuthTokenAxios, resetAuthTokenAxios } from '@/utils/auth.js'
 
-export const state = () => ( {
-  accessToken: '',
-  refreshToken: '',
-  username: '',
-  email: '',
-  session: ':' // TODO: -> workspace
+export const state = () => ({
+  accessToken: false,
+  refreshToken: false,
+  username: false,
+  email: false,
+  session: false // TODO: -> workspace
 })
 
 
 export const mutations =  {
   mutation (state, {mutate, payload}) {
-    console.log('before mutate', state[mutate])
-    console.log('mutating', mutate, payload)
     state[mutate] = payload
-    console.log('mutated', state[mutate])
   },
 }
 
 export const actions =  {
+
+  setAccessToken(context, payload) {
+    context.commit('mutation', {mutate: 'accessToken', payload})
+    if (payload) {
+      setAuthTokenAxios(payload)
+    } else {
+      resetAuthTokenAxios(payload)
+
+    }
+  },
+
   async signUp(context,  payload) {
     var response
     response = await axios.post(process.env.API_URL + '/auth/signup', {
@@ -42,14 +50,12 @@ export const actions =  {
   },
 
   async profile ({commit}, { auth }) {
-    var response = await axios.get(process.env.API_URL + '/auth/profile', { headers: { 'authorization': auth } } )
-    console.log('profile')
-    console.log({username: response.data.username})
+    var response = await axios.get(process.env.API_URL + '/auth/profile', { headers: { 'Authorization': auth } } )
 
     commit('mutation', { mutate: 'username', payload: response.data.username})
     commit('mutation', { mutate: 'session', payload: response.data.username})
 
-    return true // TODO: profile action
+    return true
   },
 
 	async signIn ({commit, dispatch}, payload) {
@@ -61,13 +67,11 @@ export const actions =  {
     dispatch('setTokenCookies', response.data)
 
     if (response.data.accessToken) {
-      commit('mutation', { mutate: 'username', payload: response.data.username})
-      commit('mutation', { mutate: 'accessToken', payload: response.data.accessToken})
-      dispatch('profile', { auth: response.data.authToken} )
-      setAuthTokenAxios(response.data.accessToken)
+      await dispatch('profile', { auth: response.data.accessToken} )
+      dispatch('setAccessToken', response.data.accessToken)
     } else {
       commit('mutation', { mutate: 'username', payload: false})
-      commit('mutation', { mutate: 'accessToken', payload: false})
+      dispatch('setAccessToken', false)
     }
     if (response.data.refreshToken) {
       commit('mutation', { mutate: 'refreshToken', payload: response.data.refreshToken})
@@ -79,34 +83,27 @@ export const actions =  {
 
 	async signOut ({commit, dispatch}, payload) {
 
-    dispatch('setTokenCookies', {})
-
-    resetAuthTokenAxios()
+    dispatch('setTokenCookies', {refreshToken: false, accessToken: false})
+    dispatch('setAccessToken', false)
     commit('mutation', { mutate: 'username', payload: false})
-    commit('mutation', { mutate: 'accessToken', payload: false})
     commit('mutation', { mutate: 'refreshToken', payload: false})
   },
 
-  async init ({dispatch, commit}, payload) {
+  async serverInit ({dispatch, commit, state}, payload) {
 
-    const cookies = this.$cookies.getAll() || {}
-    if (cookies.hasOwnProperty('x-access-token')) {
+    const accessToken = this.$cookies.get('x-access-token')
+    if (accessToken) {
       try {
-        const token = cookies['x-access-token']
-        setAuthTokenAxios(token)
-        commit('mutation', { mutate: 'accessToken', payload: token})
-        console.log('calling profile')
-        await dispatch('profile', { auth: cookies['x-access-token'] })
+        await dispatch('profile', { auth: accessToken })
+        dispatch('setAccessToken', accessToken)
         return true
       } catch (err) {
-        console.error('Provided token is invalid:', err)
-        commit('mutation', { mutate: 'accessToken', payload: false})
-        resetAuthTokenAxios()
+        console.error('Provided token is invalid')
+        dispatch('setAccessToken', false)
         return false
       }
     } else {
-      commit('mutation', { mutate: 'accessToken', payload: false})
-      resetAuthTokenAxios()
+      dispatch('setAccessToken', false)
       return false
     }
 
@@ -116,12 +113,12 @@ export const actions =  {
 
     if (accessToken) {
       this.$cookies.set('x-access-token', accessToken)
-    } else {
+    } else if (accessToken!==undefined) {
       this.$cookies.remove('x-access-token')
     }
     if (refreshToken) {
       this.$cookies.set('x-refresh-token', refreshToken)
-    } else {
+    } else if (refreshToken!==undefined) {
       this.$cookies.remove('x-refresh-token')
     }
 
@@ -130,6 +127,9 @@ export const actions =  {
 
 export const getters =  {
   isAuthenticated (state) {
-    return state.accessToken && state.username && state.email
-  }
+    return state.accessToken && state.username
+  },
+  isInSession (state) {
+    return state.accessToken && state.username && state.session
+  },
 }

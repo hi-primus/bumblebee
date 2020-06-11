@@ -8,8 +8,8 @@ const { version } = require("@/package.json");
 
 export default {
 
-  middleware: ({ store, redirect, route }) => {
-    if (!store.state.session.accessToken) {
+  middleware: ({ store, redirect, route, app }) => {
+    if (!store.getters['session/isAuthenticated']) {
       return redirect('/login', route.query)
     } else {
       return redirect('/workspace', route.query)

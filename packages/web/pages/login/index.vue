@@ -202,7 +202,6 @@ export default {
 			showPassword: false,
 			inputPassword: "",
 			inputUsername: "",
-			inputEngine: false,
 			confirmDelete: -1,
 			createFirstName: "",
 			createLastName: "",
@@ -239,9 +238,8 @@ export default {
 	},
 
 	mounted() {
-		console.log(`Bumblebee v${version}`);
-		window.document.body.click();
-		this.inputEngine = this.$route.query.engine;
+		console.log(`Bumblebee v${version}`)
+		window.document.body.click()
 	},
 
 	methods: {
@@ -258,7 +256,6 @@ export default {
 					email: this.email
 				});
         if (response.status === 201) {
-          console.log(response)
           this.typeForm = 0
           this.successMessage = RESPONSE_MESSAGES['user'][201]
           this.$store.commit("status")
@@ -269,7 +266,6 @@ export default {
 			} catch (error) {
         this.successMessage = ""
         var errorMessage = RESPONSE_MESSAGES['user'][error.response.status]
-				console.log(error)
 				this.handleError(error, "waiting")
 			}
 		},

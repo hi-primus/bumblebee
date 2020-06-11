@@ -73,36 +73,32 @@ properties.forEach((p)=>{
 
 import { ALL_TYPES } from '@/utils/constants.js'
 
-export const state = () => {
-  console.log('setting state')
-  console.trace()
-  return {
-    datasets: [],
-    datasetSelection: [],
-    hasSecondaryDatasets: false,
-    secondaryDatasets: [], // TODO: not tab-separated
-    databases: [],
-    buffers: [],
-    listViews: [],
-    cells: [],
-    properties,
-    // previewColumns: [],
-    ...pStates,
-    datasetUpdates: 0,
+export const state = () => ({
+  datasets: [],
+  datasetSelection: [],
+  hasSecondaryDatasets: false,
+  secondaryDatasets: [], // TODO: not tab-separated
+  databases: [],
+  buffers: [],
+  listViews: [],
+  cells: [],
+  properties,
+  // previewColumns: [],
+  ...pStates,
+  datasetUpdates: 0,
 
-    //
+  //
 
-    appStatus: {status: 'waiting'},
+  appStatus: {status: 'waiting'},
 
-    allTypes: ALL_TYPES,
-    datasetCounter: 1,
-    key: '',
-    kernel: false,
-    nextCommand: false,
-    tab: 0,
-    reservedWords: {}
-  }
-}
+  allTypes: ALL_TYPES,
+  datasetCounter: 1,
+  key: '',
+  kernel: false,
+  nextCommand: false,
+  tab: 0,
+  reservedWords: {}
+})
 
 var pSetters = {}
 
@@ -116,10 +112,7 @@ properties.forEach((p)=>{
 export const mutations = {
 
   mutation (state, {mutate, payload}) {
-    console.log('before mutate', state[mutate])
-    console.log('mutating', mutate, payload)
     state[mutate] = payload
-    console.log('mutated', state[mutate])
   },
 
   clearDatasetProperties (state) {
@@ -389,8 +382,8 @@ export const mutations = {
 }
 
 export const actions = {
-  async nuxtServerInit ({ dispatch, commit }, context) {
-    dispatch('session/init')
+  async nuxtServerInit ({ dispatch, commit, app }, context) {
+    await dispatch('session/serverInit')
   }
 }
 

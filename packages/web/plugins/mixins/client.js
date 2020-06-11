@@ -200,10 +200,13 @@ export default {
 
       this.socketAvailable = false
 
-      let query = Object.assign({}, this.$route.query);
-      delete query.key;
-      delete query.session;
-      this.$router.replace({ query });
+      if (this.$route.query.session || this.$route.query.key) {
+        let query = Object.assign({}, this.$route.query)
+        delete query.key
+        delete query.session
+        this.$router.replace({ query })
+      }
+
 
 			if (waiting) {
 				this.$store.commit('setAppStatus', {status: 'waiting'})
@@ -243,7 +246,7 @@ export default {
 
         key = key || ''
 
-        socket = io(process.env.API_URL, { query: { session, accessToken, key } })
+        socket = io(process.env.API_URL, { query: { session, authorization: accessToken, key } })
 
         socket.on('new-error', (reason) => {
           console.error('Socket error', reason)
@@ -312,15 +315,15 @@ export default {
       try {
         this.$store.commit('setAppStatus', {status: 'loading'})
         this.$store.commit('session/mutation', {mutate: 'session', payload: session})
-        this.$store.commit('engine', engine)
-        this.$store.commit('tpw', tpw)
-        this.$store.commit('workers', workers)
-        key && this.$store.commit('key', key)
+        if (key)
+          this.$store.commit('key', key)
 
         var client_status = await this.startSocket(session, key, engine)
 
-        if (client_status=='ok') {
-          this.$router.push({path: 'workspace', params: {}, query: this.$route.query })
+        if (client_status === 'ok') {
+          this.$router.push({path: 'workspace', query: this.$route.query })
+        } else {
+          throw client_status
         }
 
       } catch (error) {

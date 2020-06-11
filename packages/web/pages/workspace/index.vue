@@ -289,7 +289,7 @@ export default {
       this.stopClient(true)
       this.$store.commit('setCells', [])
       this.$store.dispatch('session/signOut')
-      this.$router.push({path: 'login', params: {}, query: this.$route.query }, ()=>{
+      this.$router.push({path: 'login', query: this.$route.query }, ()=>{
       })
     },
 

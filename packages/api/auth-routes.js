@@ -68,9 +68,11 @@ router.route('/profile')
     try {
 
       if (req.headers && req.headers.authorization) {
-        jwt.verify(req.headers.authorization, process.env.TOKEN_SECRET, function (err, decoded) {
+        var token = req.headers.authorization
+        jwt.verify(token, process.env.TOKEN_SECRET, function (err, decoded) {
           if (err) {
-            res.status(500).json({error: new Error('Authentication error')})
+            console.error(err)
+            res.status(500).json({error: new Error('Authorization error')})
           } else {
             res.status(200).json(decoded)
           }
