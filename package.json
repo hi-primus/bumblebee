@@ -1,6 +1,6 @@
 {
   "name": "bumblebee",
-  "version": "3.0.0-27",
+  "version": "3.0.0-29",
   "scripts": {
     "web-dev": "cd packages/web && npm run dev",
     "api-dev": "cd packages/api && npm start",
