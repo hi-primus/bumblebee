@@ -7,7 +7,7 @@
         width="100%"
         style="max-width: 700px; margin: auto"
       >
-        <v-form @submit.prevent="submit" v-if="typeForm==1">
+        <v-form @submit.prevent="register" v-if="typeForm==1">
           <v-card-text class="register-form">
             <v-card-title>
               <v-layout align-center justify-center>
@@ -84,7 +84,7 @@
               ></v-text-field>
               <v-card-actions>
                 <v-spacer />
-                <v-btn color="primary darken-1" large depressed @click="register">Sign up</v-btn>
+                <v-btn color="primary darken-1" large depressed type="submit">Sign up</v-btn>
                 <v-spacer />
               </v-card-actions>
               <v-spacer></v-spacer>
@@ -97,7 +97,7 @@
             </div>
           </v-card-text>
         </v-form>
-        <v-form class="py-8 px-6" @submit="subscribe()" v-if="typeForm==0">
+        <v-form class="py-8 px-6" @submit.prevent="subscribe()" v-if="typeForm==0">
           <v-card-title>
             <h1 class="display-3 mb-4">Bumblebee</h1>
           </v-card-title>
@@ -114,7 +114,7 @@
             <v-text-field
               v-if="useKernel"
               v-model="inputPassword"
-              autocomplete="new-password"
+              autocomplete="current-password"
               spellcheck="false"
               :append-icon="showPassword ? 'visibility' : 'visibility_off'"
               :type="(showPassword) ? 'text' : 'password'"
@@ -144,7 +144,7 @@
               color="primary darken-1"
               large
               depressed
-              @click="subscribe"
+              type="submit"
             >{{(useKernel) ? 'Sign in' : 'Subscribe'}}</v-btn>
             <v-spacer />
           </v-card-actions>
