@@ -37,17 +37,17 @@ export const actions =  {
     return response
   },
 
-  async test (context, {request, path, payload, auth}) {
+  // async test (context, {request, path, payload, auth}) {
 
-    var response
-    if (request === 'post') {
-      response = await axios[request](process.env.DEV_API_URL + path, payload, { headers: {'Authorization': auth} } )
-    } else {
-      response = await axios[request](process.env.DEV_API_URL + path, { headers: {'Authorization': auth} } )
-    }
-    return response
+  //   var response
+  //   if (request === 'post') {
+  //     response = await axios[request](process.env.DEV_API_URL + path, payload, { headers: {'Authorization': auth} } )
+  //   } else {
+  //     response = await axios[request](process.env.DEV_API_URL + path, { headers: {'Authorization': auth} } )
+  //   }
+  //   return response
 
-  },
+  // },
 
   async profile ({commit}, { auth }) {
     var response = await axios.get(process.env.API_URL + '/auth/profile', { headers: { 'Authorization': auth } } )
