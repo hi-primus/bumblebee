@@ -25,7 +25,7 @@
 </template>
 
 <script>
-import { throttle, reduceRanges } from '@/utils/functions.js'
+import { throttle, reduceRanges } from 'bumblebee-utils'
 
 import BarsCanvas from '@/components/BarsCanvas'
 

@@ -302,7 +302,7 @@
 
 import {
   getProperty
-} from '@/utils/functions.js'
+} from 'bumblebee-utils'
 
 import TextFieldSuggestions from '@/components/TextFieldSuggestions'
 

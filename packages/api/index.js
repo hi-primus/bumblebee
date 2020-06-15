@@ -14,7 +14,7 @@ const io = new Server(server)
 
 const uuidv1 = require('uuid/v1');
 
-import { trimCharacters } from './utils/functions.js'
+import { trimCharacters } from 'bumblebee-utils'
 
 const app_secret = (process.env.APP_SECRET || '6um61e6ee')
 var app_url

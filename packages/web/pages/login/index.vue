@@ -183,8 +183,7 @@ import Layout from "@/components/Layout";
 import clientMixin from "@/plugins/mixins/client";
 import dataTypesMixin from "@/plugins/mixins/data-types";
 import applicationMixin from "@/plugins/mixins/application";
-import { printError } from "@/utils/functions.js";
-import { RESPONSE_MESSAGES } from "@/utils/constants.js";
+import { printError, RESPONSE_MESSAGES } from 'bumblebee-utils';
 
 import { mapGetters } from "vuex";
 

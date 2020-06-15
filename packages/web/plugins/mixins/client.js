@@ -1,5 +1,5 @@
 import io from 'socket.io-client'
-import { printError } from '@/utils/functions.js'
+import { printError } from 'bumblebee-utils'
 
 // TODO: this should be a VUEX store
 

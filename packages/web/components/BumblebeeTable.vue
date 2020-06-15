@@ -368,7 +368,7 @@ import Histogram from '@/components/Histogram'
 import Frequent from '@/components/Frequent'
 import DataBar from '@/components/DataBar'
 
-import { parseResponse, arraysEqual, cancellablePromise, throttle, debounce, optimizeRanges, escapeQuotes, namesToIndices, getSelectedText, getPropertyAsync } from '@/utils/functions.js'
+import { parseResponse, arraysEqual, cancellablePromise, throttle, debounce, optimizeRanges, escapeQuotes, namesToIndices, getSelectedText, getPropertyAsync } from 'bumblebee-utils'
 
 var doubleClick = false
 

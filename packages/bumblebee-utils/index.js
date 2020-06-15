@@ -1,4 +1,5 @@
-export const throttle = (func, limit) => {
+
+const throttle = (func, limit) => {
 	let lastFunc
 	let lastRan
 	return function () {
@@ -9,7 +10,7 @@ export const throttle = (func, limit) => {
 			lastRan = Date.now()
 		} else {
 			clearTimeout(lastFunc)
-			lastFunc = setTimeout(function () {
+			lastFunc = setTimeout(() => {
 				if ((Date.now() - lastRan) >= limit) {
 					func.apply(context, args)
 					lastRan = Date.now()
@@ -19,7 +20,7 @@ export const throttle = (func, limit) => {
 	}
 }
 
-export const arrayJoin = (array,separator = ', ',final_separator = ' and ') => {
+const arrayJoin = (array,separator = ', ',final_separator = ' and ') => {
   var outStr = "";
   if (array.length === 1) {
     outStr = array[0];
@@ -31,7 +32,7 @@ export const arrayJoin = (array,separator = ', ',final_separator = ' and ') => {
   return outStr;
 }
 
-export const arraysEqual = (_arr1, _arr2) => {
+const arraysEqual = (_arr1, _arr2) => {
 
   if (!Array.isArray(_arr1) || !Array.isArray(_arr2) || _arr1.length !== _arr2.length)
     return false;
@@ -46,7 +47,7 @@ export const arraysEqual = (_arr1, _arr2) => {
   return true;
 }
 
-export const cancellablePromise = (promiseToCancel) => {
+const cancellablePromise = (promiseToCancel) => {
   let cancel
   const promise = new Promise((resolve, reject) => {
     cancel = reject
@@ -57,7 +58,7 @@ export const cancellablePromise = (promiseToCancel) => {
   return {promise, cancel}
 }
 
-export const trimCharacters = (s, c) => {
+const trimCharacters = (s, c) => {
   if (c === "]") c = "\\]";
   if (c === "\\") c = "\\\\";
   return s.replace(new RegExp(
@@ -65,7 +66,7 @@ export const trimCharacters = (s, c) => {
   ), "");
 }
 
-export const getSelectedText = () => {
+const getSelectedText = () => {
   var text = ""
   var selection
   if (typeof window.getSelection != "undefined") {
@@ -82,7 +83,7 @@ export const getSelectedText = () => {
   return {selection, selectedText: text}
 }
 
-export const parseResponse = (content) => {
+const parseResponse = (content) => {
   // console.log('[DEBUG] parsedContent',content)
   try {
     if (typeof content !== 'string') {
@@ -97,7 +98,7 @@ export const parseResponse = (content) => {
   }
 }
 
-export const newName = (name) => {
+const newName = (name) => {
 	name = name.toString()
   let matches = name.match(/\d+$/);
   if (matches) {
@@ -110,9 +111,9 @@ export const newName = (name) => {
   }
 }
 
-export const debounce = (func, delay) => {
+const debounce = (func, delay) => {
   let inDebounce
-  return function() {
+  return function () {
     const context = this
     const args = arguments
     clearTimeout(inDebounce)
@@ -120,11 +121,11 @@ export const debounce = (func, delay) => {
   }
 }
 
-export const stepify = (a, b, f = Math.round) => {
+const stepify = (a, b, f = Math.round) => {
   return f(a / b) * b;
 }
 
-export const reduceRanges = (ranges_array) => {
+const reduceRanges = (ranges_array) => {
   return ranges_array.reduce( (ranges, range) => {
     if (ranges.length==0) {
       return [range]
@@ -142,7 +143,7 @@ export const reduceRanges = (ranges_array) => {
   }, [])
 }
 
-export const copyToClipboard = (str) => {
+const copyToClipboard = (str) => {
   const el = document.createElement('textarea');
   el.value = str;
   document.body.appendChild(el);
@@ -151,7 +152,7 @@ export const copyToClipboard = (str) => {
   document.body.removeChild(el);
 };
 
-export const optimizeRanges = (inputRange, existingRanges) => {
+const optimizeRanges = (inputRange, existingRanges) => {
   var newRanges = [inputRange]
 
   for (let i = 0; i < newRanges.length; i++) {
@@ -183,7 +184,7 @@ export const optimizeRanges = (inputRange, existingRanges) => {
   return newRanges
 }
 
-export const escapeQuotes = (str) => {
+const escapeQuotes = (str) => {
   if (typeof str === 'string' && str && str.replace ) {
     return str.replace(/[\\]/g, '\\\\').replace(/[\""]/g, '\\"')
   } else if (str && str.map) {
@@ -192,7 +193,7 @@ export const escapeQuotes = (str) => {
   return str
 }
 
-export const getOutputColsArgument = (output_cols = [], input_cols = [], pre = '') => {
+const getOutputColsArgument = (output_cols = [], input_cols = [], pre = '') => {
   var hasInput = input_cols.join('').trim().length
   if (output_cols.join('').trim().length && !(hasInput && pre)) {
     return (output_cols.length===1)
@@ -207,7 +208,7 @@ export const getOutputColsArgument = (output_cols = [], input_cols = [], pre = '
   return false
 }
 
-export const columnsHint = (columns = [], output_cols = []) => {
+const columnsHint = (columns = [], output_cols = []) => {
   if (output_cols.join('').length) {
     var output_cols_argument = getOutputColsArgument(output_cols, columns, '')
     return multipleContent([columns, output_cols_argument], 'hl--cols', ', ', ' to ', false, false)
@@ -216,7 +217,7 @@ export const columnsHint = (columns = [], output_cols = []) => {
   }
 }
 
-export const escapeQuotesOn = (payload = {}, keys = []) => {
+const escapeQuotesOn = (payload = {}, keys = []) => {
   var _payload = {}
   keys.forEach(key => {
     _payload[key] = escapeQuotes(payload[key])
@@ -224,7 +225,7 @@ export const escapeQuotesOn = (payload = {}, keys = []) => {
   return {...payload, ..._payload}
 }
 
-export const printError = (payload) => {
+const printError = (payload) => {
 
   var data = payload.data || payload
   var content = data.errorValue || data.content
@@ -249,14 +250,14 @@ export const printError = (payload) => {
   return ((data.traceback && data.traceback[data.traceback.length-1]) || data.error || data.message || data).toString().split('\n')[0]
 }
 
-export const getProperty = (pof, args = []) => {
+const getProperty = (pof, args = []) => {
   if (typeof pof === 'function') {
     return pof(...args)
   } else {
     return pof
   }
 }
-export const getPropertyAsync = async (pof, args = []) => {
+const getPropertyAsync = async (pof, args = []) => {
   if (typeof pof === 'function') {
     return await pof(...args)
   } else {
@@ -264,7 +265,7 @@ export const getPropertyAsync = async (pof, args = []) => {
   }
 }
 
-export const namesToIndices = (cols = [], datasetColumns = []) => {
+const namesToIndices = (cols = [], datasetColumns = []) => {
   try {
     return cols.map(name=>datasetColumns.findIndex(column => column.name===name))
   } catch (error) {
@@ -272,7 +273,7 @@ export const namesToIndices = (cols = [], datasetColumns = []) => {
   }
 }
 
-export const indicesToNames = (cols = [], datasetColumns = []) => {
+const indicesToNames = (cols = [], datasetColumns = []) => {
   try {
     return cols.map(i=>datasetColumns[i].name)
   } catch (error) {
@@ -280,7 +281,7 @@ export const indicesToNames = (cols = [], datasetColumns = []) => {
   }
 }
 
-export const capitalizeString = (str) => {
+const capitalizeString = (str) => {
   try {
     return str.charAt(0).toUpperCase()+str.slice(1)
   } catch (error) {
@@ -288,7 +289,7 @@ export const capitalizeString = (str) => {
   }
 }
 
-export const decapitalizeString = (str) => {
+const decapitalizeString = (str) => {
   try {
     return str.charAt(0).toLowerCase()+str.slice(1)
   } catch (error) {
@@ -297,22 +298,22 @@ export const decapitalizeString = (str) => {
 }
 
 
-export const spanClass = (text, cls) => {
+const spanClass = (text, cls) => {
   if (!cls) {
     return text
   }
   return `<span class="${cls}">${text}</span>`
 }
 
-export const hlParam = (text) => {
+const hlParam = (text) => {
   return spanClass(`'${text}'`,'hl--param')
 }
 
-export const hlCols = (text) => {
+const hlCols = (text) => {
   return spanClass(`'${text}'`,'hl--cols')
 }
 
-export const multipleContent = (arrays, colors, arraySep = ', ', pairSep = ', ', brackets = true, parentheses = true) => {
+const multipleContent = (arrays, colors, arraySep = ', ', pairSep = ', ', brackets = true, parentheses = true) => {
 
   arrays = arrays.map(array=>{
     if (!array || !array.join || !array.map)
@@ -364,37 +365,7 @@ export const multipleContent = (arrays, colors, arraySep = ', ', pairSep = ', ',
 
 }
 
-export const parseExpression = (exp, df, cols) => {
-
-  var columns = Array.from(cols)
-
-  columns.sort((a,b)=>b.length-a.length)
-
-  exp = exp.replace(/\\"/g,"_bb_QUOTE_bb_")
-
-  exp = exp.split('"')
-
-  for (let i = 0; i < exp.length; i++) {
-    if (i%2 == 1) {
-      continue
-    }
-    columns.forEach((column, cindex) => {
-      exp[i] = exp[i].replace(new RegExp(column,"g"),`_bb_BBCOLUMN${cindex}_bb_`)
-    });
-  }
-
-  exp = exp.join('"')
-
-  exp = exp.replace( new RegExp('_bb_QUOTE_bb_',"g") ,'\\"')
-
-  columns.forEach((column, cindex) => {
-    exp = exp.replace(new RegExp(`_bb_BBCOLUMN${cindex}_bb_`,"g"),`${df}["${column}"]`)
-  });
-
-  return exp
-}
-
-export const everyRatio = (array,cb) => {
+const everyRatio = (array,cb) => {
   if (array.length===0) {
     return 1
   }
@@ -403,4 +374,125 @@ export const everyRatio = (array,cb) => {
     count += cb(array[i],i) ? 1 : 0
   }
   return count/array.length
+}
+
+// constants
+
+var constants = {}
+
+const TYPES = {
+  INT: "int",
+  DECIMAL: "decimal",
+  STRING: "string",
+  BOOLEAN: "boolean",
+  DATE: "date",
+  ARRAY: "array",
+  OBJECT: "object",
+  GENDER: "gender",
+  IP: "ip",
+  URL: "url",
+  EMAIL: "email",
+  CREDIT_CARD_NUMBER: "credit_card_number",
+  ZIP_CODE: "zip_code",
+  MISSING: "missing",
+  CATEGORICAL: "categorical",
+  TIME: "time"
+}
+
+const TYPES_HINTS = {
+  "int": "#",
+  "decimal": "#.##",
+  "string": "ABC",
+  "boolean": "0/1",
+  "date": "📅",
+  "array": "[ ]",
+  "object": "obj",
+  "gender": "gen",
+  "ip": "ip",
+  "url": "url",
+  "email": "a@b",
+  "credit_card_number": "####",
+  "zip_code": "zip",
+  "missing": "mis",
+  "categorical": "cat",
+  "time": "time"
+}
+
+const TYPES_NAMES = {
+  "int": "Integer",
+  "decimal": "Decimal",
+  "string": "String",
+  "boolean": "Boolean",
+  "date": "Date",
+  "array": "Array",
+  "object": "Object",
+  "gender": "Gender",
+  "ip": "IP Address",
+  "url": "URL",
+  "email": "Email",
+  "credit_card_number": "Credit Card Number",
+  "zip_code": "Zip Code",
+  "missing": "Missing",
+  "categorical": "Categorical",
+  "time": "Time"
+}
+
+const ALL_TYPES = Object.values(TYPES)
+
+const STRING_TYPES = [
+  TYPES.STRING,
+  TYPES.OBJECT,
+  TYPES.CATEGORICAL,
+  TYPES.DATE,
+  TYPES.TIME
+]
+
+const RESPONSE_MESSAGES = {
+  'user': {
+    201: 'User account successfully created',
+    404: 'User not found',
+    500: 'Something went wrong'
+  },
+  'default': {
+    404: 'Server not found',
+    500: 'Something went wrong'
+  }
+}
+
+export {
+  throttle,
+  arrayJoin,
+  arraysEqual,
+  cancellablePromise,
+  trimCharacters,
+  getSelectedText,
+  parseResponse,
+  newName,
+  debounce,
+  stepify,
+  reduceRanges,
+  copyToClipboard,
+  optimizeRanges,
+  escapeQuotes,
+  getOutputColsArgument,
+  columnsHint,
+  escapeQuotesOn,
+  printError,
+  getProperty,
+  getPropertyAsync,
+  namesToIndices,
+  indicesToNames,
+  capitalizeString,
+  decapitalizeString,
+  spanClass,
+  hlParam,
+  hlCols,
+  multipleContent,
+  everyRatio,
+  TYPES,
+  TYPES_HINTS,
+  TYPES_NAMES,
+  ALL_TYPES,
+  STRING_TYPES,
+  RESPONSE_MESSAGES
 }

@@ -1,5 +1,5 @@
 {
-  "name": "optimus-code-api",
+  "name": "bumblebee-utils",
   "version": "1.0.0",
   "description": "API for generating optimus code",
   "main": "index.js",
@@ -7,17 +7,11 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
-    "bumblebee",
-    "optimus",
-    "code",
-    "python"
+    "bumblebee"
   ],
   "author": "",
   "license": "ISC",
   "devDependencies": {
     "eslint": "^7.2.0"
-  },
-  "dependencies": {
-    "bumblebee-utils": "file:../bumblebee-utils"
   }
 }
