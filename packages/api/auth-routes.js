@@ -71,14 +71,16 @@ router.route('/profile')
         var token = req.headers.authorization
         jwt.verify(token, process.env.TOKEN_SECRET, function (err, decoded) {
           if (err) {
-            console.error(err)
-            res.status(500).json({error: new Error('Authorization error')})
+            res.status(500).json({error: err})
+            return
           } else {
             res.status(200).json(decoded)
+            return
           }
         })
       } else {
         res.status(500).json({error: new Error('Authorization error')})
+        return
       }
 
     } catch (err) {
@@ -89,7 +91,9 @@ router.route('/profile')
         status: "error",
         error: err
       })
+      return
     }
+
   })
 
 router.route('/singup')
