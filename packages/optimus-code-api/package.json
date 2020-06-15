@@ -1,0 +1,20 @@
+{
+  "name": "optimus-code-api",
+  "version": "1.0.0",
+  "description": "API for generating optimus code",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "bumblebee",
+    "optimus",
+    "code",
+    "python"
+  ],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "eslint": "^7.2.0"
+  }
+}
