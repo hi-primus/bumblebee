@@ -207,13 +207,13 @@ export default {
 			}
 
 			if (value == 'workspace') {
-				var dataset_csv = this.$route.query.dataset_csv;
-				if (dataset_csv && this.$refs.tableBar) {
+				var dataset = this.$route.query.dataset;
+				if (dataset && this.$refs.tableBar) {
 					this.$refs.tableBar.commandHandle({
-						command: 'load file',
-						noOperations: true,
+            command: 'load file',
+            noOperations: true,
 						immediate: true,
-						payload: { url: dataset_csv, file_type: 'csv', _moreOptions: true }
+						payload: { url: dataset, file_type: 'file', _moreOptions: true }
 					});
 				}
 			}
