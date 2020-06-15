@@ -46,7 +46,7 @@
                         :index="i"
                       />
                     </template>
-                    <v-btn depressed class="btn-squared" :key="'remove'+i+field.key" color="error" @click="field.removeOne(currentCommand, i)">
+                    <v-btn depressed class="btn-squared" :key="'remove'+i+field.key" color="error" @click="currentCommand = field.removeOne(currentCommand, i)">
                       <v-icon>close</v-icon>
                     </v-btn>
                   </template>
@@ -57,7 +57,7 @@
                     style="margin-left: auto; margin-right: auto; margin-top: -4px"
                     class="btn-squared"
                     color="primary"
-                    @click="field.addOne(currentCommand)"
+                    @click="currentCommand = field.addOne(currentCommand)"
                   >
                     <v-icon>add</v-icon>
                   </v-btn>
@@ -92,8 +92,8 @@
             <template v-if="command.dialog.filteredPreview">
               <v-checkbox
                 class="filter-results-checkbox"
-                v-model="currentCommand.filteredPreview"
-                :label="`Filter results: ${currentCommand.filteredPreview ? 'Yes' : 'No'}`"
+                v-model="currentCommand.preview.filteredPreview"
+                :label="`Filter results: ${currentCommand.preview.filteredPreview ? 'Yes' : 'No'}`"
               ></v-checkbox>
 
             </template>
@@ -339,7 +339,7 @@ export default {
             ],
           },
 
-          payload: (columns) => ({
+          payload: (columns, payload = {}) => ({
             columns,
             orders: columns.map(e=>'asc'),
           }),
@@ -394,14 +394,13 @@ export default {
               value: '',
               selection: [],
 
-              allColumns: this.allColumns,
-
-              previewType: 'REMOVE_KEEP_SET',
-              filteredPreview: false,
-              noBufferWindow: (c)=>c.filteredPreview,
-              highlightColor: (c)=>c.action==='drop' ? 'red' : 'green',
-              _expectedColumns: () => +(this.currentCommand.action==='set'),
-              _isString: payload.columnDataTypes && payload.columnDataTypes.every(d=>STRING_TYPES.includes(d)),
+              preview: {
+                expectedColumns: (c) => +(c.action==='set'),
+                type: 'REMOVE_KEEP_SET',
+                filteredPreview: false,
+                highlightColor: (c)=>c.action==='drop' ? 'red' : 'green',
+                noBufferWindow: (c)=>c.preview.filteredPreview,
+              },
 
               rowsType: 'missing', // missing / mismatch / values / ranges
               actionLabels: {
@@ -419,17 +418,12 @@ export default {
           },
           code: (payload) => {
 
-            var varname = this.dataset.varname
-
-            if (payload._requestType) {
-              // varname = `${varname}.ext.get_buffer()`
-              varname = `df`
-            }
+            var varname = `df`
 
             if (payload.rowsType==='values' && payload.selection && payload.selection.map) {
               payload.selection = payload.selection.map(v=>escapeQuotes(v))
             }
-            if (payload._isString) {
+            if (payload.request.isString || true) {
               if (payload.selection && payload.selection.map && payload.rowsType==='values') {
                 payload.selection = payload.selection.map(v=>`"${v}"`)
               }
@@ -466,14 +460,14 @@ export default {
               var output_col = payload.columns[0]
               var code = ''
               var value = ( (payload.value) ? `p.parse('${payload.value}')` : 'None' )
-              if (payload._requestType) {
+              if (payload.request.type !== 'final') {
                 output_col = 'new '+output_col
                 code = `.rows.find( '${expression}' )`
-                if (payload.filteredPreview) {
+                if (payload.preview.filteredPreview) {
                   code += `.rows.select( 'df["__match__"]==True' )`
                 }
                 code += `.cols.set( default="${payload.columns[0]}", value=${value}, where='df["__match__"]==True', output_cols=["${output_col}"] )`
-                if (payload._requestType==='preview' && payload.filteredPreview) {
+                if (payload.request.type === 'preview' && payload.preview.filteredPreview) {
                   return (from, to)=>code+(from!==undefined ? `[${from}:${to}]` : '')
                 }
                 return code
@@ -481,12 +475,12 @@ export default {
               return code + `.cols.set( default="${payload.columns[0]}", value=${value}, where=${expression}, output_cols=["${output_col}"] )`
 
             } else {
-              if (payload._requestType) {
+              if (payload.request.type !== 'final') {
                 var code = `.rows.find( '${expression}' )`
-                if (payload.filteredPreview) {
+                if (payload.preview.filteredPreview) {
                   code += `.rows.select( 'df["__match__"]==True' )`
                 }
-                if (payload._requestType==='preview' && payload.filteredPreview) {
+                if (payload.request.type === 'preview' && payload.preview.filteredPreview) {
                   return (from, to)=>code+(from!==undefined ? `[${from}:${to}]` : '')
                 }
                 return code
@@ -552,9 +546,9 @@ export default {
                   { text: 'Is one of', value: 'oneof' },
                   { text: 'Is not', value: 'not' },
                   { divider: true },
-                  { text: 'Less than or equal to', value: 'less', disabled: c._isString },
-                  { text: 'Greater than or equal to', value: 'greater', disabled: c._isString  },
-                  { text: 'Is Between', value: 'between', disabled: c._isString  },
+                  { text: 'Less than or equal to', value: 'less', disabled: c.request.isString },
+                  { text: 'Greater than or equal to', value: 'greater', disabled: c.request.isString  },
+                  { text: 'Is Between', value: 'between', disabled: c.request.isString  },
                   { divider: true },
                   { text: 'Contains', value: 'contains' },
                   { text: 'Starts with', value: 'startswith' },
@@ -570,7 +564,7 @@ export default {
               {
                 condition: (c)=>['exactly','not','less','greater'].includes(c.condition),
                 key: 'value',
-                placeholder: (c)=>(c._isString) ? 'Value' : 'numeric or "string"',
+                placeholder: (c)=>(c.request.isString || true) ? 'Value' : 'numeric or "string"',
                 label: 'Value',
                 type: 'field'
               },
@@ -610,7 +604,6 @@ export default {
                 label: 'Text',
                 placeholder: 'lorem ipsum',
                 type: 'field',
-                // disabled: {valueOf: ()=>['text'].includes(this.selectionType)}
               },
               {
                 key: 'action',
@@ -624,8 +617,6 @@ export default {
             ],
             filteredPreview: true,
             validate: (c) => {
-
-              // this.currentCommand.highlightColor = (c.action==='select') ? 'green' : 'red'
 
               switch (c.condition) {
                 case 'oneof':
@@ -658,7 +649,6 @@ export default {
             var condition = 'exactly'
 
             return {
-              allColumns: this.allColumns,
               columns,
               condition,
               action: 'select',
@@ -668,37 +658,34 @@ export default {
               text: '',
               expression: columns[0].includes(' ') ? `{${columns[0]}}` : columns[0],
 
-              _isString: payload.columnDataTypes && payload.columnDataTypes.every(d=>STRING_TYPES.includes(d)),
+              request: {},
 
-              previewType: 'filter rows',
-              filteredPreview: false,
-              noBufferWindow: (c)=>c.filteredPreview,
-              highlightColor: (c)=>c.action==='drop' ? 'red' : 'green',
-              _expectedColumns: 0
+              preview: {
+                filteredPreview: false,
+                noBufferWindow: (c)=>c.preview.filteredPreview,
+                highlightColor: (c)=>c.action==='drop' ? 'red' : 'green',
+                expectedColumns: 0,
+                type: 'filter rows'
+              },
             }
           },
 
           code: (payload) => {
 
             var expression = payload.expression
-            var varname = this.dataset.varname
-
-            if (payload._requestType) {
-              // varname = `${varname}.ext.get_buffer()`
-              varname = `df`
-            }
-            // expression = parseExpression(expression, varname, payload.allColumns)
+            var varname = `df`
 
             try {
-              payload = escapeQuotesOn(payload, ['text','selection'])
+              payload = escapeQuotesOn(payload, ['text',])
             } catch (error) {
               console.error(error)
             }
 
-            payload.value = `"${payload.value}"`
-            payload.value_2 = `"${payload.value_2}"`
-            payload.values = payload.values.map(v=>`"${v}"`)
-
+            if (payload.request.isString || true) {
+              payload.value = `"${payload.value}"`
+              payload.value_2 = `"${payload.value_2}"`
+              payload.values = payload.values.map(v=>`"${v}"`)
+            }
 
             switch (payload.condition) {
               case 'null':
@@ -734,11 +721,11 @@ export default {
                 expression = `'${payload.expression}'`
               default:
             }
-            if ( payload._requestType ) {
+            if (payload.request.type !== 'final') {
               var code = `.rows.find( ${expression} )`
-              if (payload.filteredPreview) {
+              if (payload.preview.filteredPreview) {
                 code += `.rows.select( 'df["__match__"]==True' )`
-                if (payload._requestType==='preview') {
+                if (payload.request.type === 'preview') {
                   return (from, to)=>code+(from!==undefined ? `[${from}:${to}]` : '')
                 }
               }
@@ -832,22 +819,25 @@ export default {
             ],
             filteredPreview: true
           },
-          payload: (columns) => ({
+          payload: (columns, payload = {}) => ({
             subset: columns,
             how: 'all',
-            previewType: 'drop empty rows',
-            highlightColor: 'red',
-            filteredPreview: false,
-            noBufferWindow: (c)=>c.filteredPreview
+            preview: {
+              filteredPreview: false,
+              type: 'drop empty rows',
+              highlightColor: 'red',
+              noBufferWindow: (c)=>c.preview.filteredPreview
+            },
+            request: {}
           }),
           code: (payload) => {
-            if (payload._requestType) {
+            if (payload.request.type !== 'final') {
               var code = `.rows.tag_nulls(`
               + (payload.subset.length ? `subset=["${payload.subset.join('", "')}"], ` : '')
               + `how="${payload.how}", output_col="__match__" )`
-              if (payload.filteredPreview) {
+              if (payload.preview.filteredPreview) {
                 code += `.rows.select( 'df["__match__"]==True' )`
-                if (payload._requestType==='preview') {
+                if (payload.request.type === 'preview') {
                   return (from, to)=>code+(from!==undefined ? `[${from}:${to}]` : '')
                 }
               }
@@ -879,22 +869,25 @@ export default {
             ],
             filteredPreview: true
           },
-          payload: (columns) => ({
+          payload: (columns, payload = {}) => ({
             subset: columns,
             keep: 'first',
-            previewType: 'drop duplicates',
-            highlightColor: 'red',
-            filteredPreview: false,
-            noBufferWindow: (c)=>c.filteredPreview
+            preview: {
+              type: 'drop duplicates',
+              highlightColor: 'red',
+              filteredPreview: false,
+              noBufferWindow: (c)=>c.preview.filteredPreview
+            },
+            request: {}
           }),
           code: (payload) => {
-            if (payload._requestType) {
+            if (payload.request.type !== 'final') {
               var code = `.rows.tag_duplicated(`
               + (payload.subset.length ? `subset=["${payload.subset.join('", "')}"], ` : '')
               + `keep="${payload.keep}", output_col="__match__")`
-              if (payload.filteredPreview) {
+              if (payload.preview.filteredPreview) {
                 code += `.rows.select( 'df["__match__"]==True' )`
-                if (payload._requestType==='preview') {
+                if (payload.request.type === 'preview') {
                   return (from, to)=>code+(from!==undefined ? `[${from}:${to}]` : '')
                 }
               }
@@ -927,22 +920,23 @@ export default {
                 label: 'Dataset (right)',
                 type: 'select',
                 items_key: 'items_with',
-                onChange: (event)=>{
-                  for (let i = this.currentCommand.selected_columns.length-1; i >= 0; i--) {
-                    if (this.currentCommand.selected_columns[i].source==='right') {
-                      this.currentCommand.selected_columns.splice(i,1)
+                onChange: (event, currentCommand)=>{
+                  for (let i = currentCommand.selected_columns.length-1; i >= 0; i--) {
+                    if (currentCommand.selected_columns[i].source==='right') {
+                      currentCommand.selected_columns.splice(i,1)
                     }
                   }
-                  this.currentCommand.right_on = false
+                  currentCommand.right_on = false
 
                   this.$nextTick(()=>{
-                    this.currentCommand.selected_columns = [
-                      ...this.currentCommand.selected_columns,
-                      ...(this.currentCommand._datasets_right[this.currentCommand.with] || []).map(n=>({name: n, source: 'right', key: n+'r'}))
+                    currentCommand.selected_columns = [
+                      ...currentCommand.selected_columns,
+                      ...(currentCommand._datasets_right[currentCommand.with] || []).map(n=>({name: n, source: 'right', key: n+'r'}))
                     ]
-                    var items = getProperty(this.currentCommand.items_r_on,[this.currentCommand])
-                    this.currentCommand.right_on = items ? (items[0] || false) : false
+                    var items = getProperty(currentCommand.items_r_on,[currentCommand])
+                    currentCommand.right_on = items ? (items[0] || false) : false
                   })
+                  return currentCommand
                 }
               },
               {
@@ -971,22 +965,25 @@ export default {
                     value: 'source'
                   }
                 ],
-                onClickRow: (item)=>{
-                  var found = this.currentCommand.selected_columns.findIndex(it=>it.key===item.key)
+                onClickRow: (item, currentCommand)=>{
+                  var found = currentCommand.selected_columns.findIndex(it=>it.key===item.key)
                   if (found===-1) {
-                    this.currentCommand.selected_columns.push(item)
+                    currentCommand.selected_columns.push(item)
                   } else {
-                    this.$delete(this.currentCommand.selected_columns, found)
+                    this.$delete(currentCommand.selected_columns, found)
                   }
+                  return currentCommand
                 },
-                selectKey: (item)=>{
+                selectKey: (item, currentCommand)=>{
 
                   try {
                     var on = item.source+'_on'
-                    this.currentCommand[on] = item.name
+                    currentCommand[on] = item.name
                   } catch (error) {
                     console.error(error)
                   }
+
+                  return currentCommand
 
                 }
               },
@@ -995,10 +992,10 @@ export default {
               return !!(c.selected_columns && c.selected_columns.length && c.right_on)
             }
           },
-          payload: async (columns) => {
+          payload: async (columns, payload = {}) => {
 
-            var _datasets_right = {...this.currentSecondaryDatasets}
-            var items_with = Object.keys(_datasets_right).filter(e=>(e!==this.dataset.varname && e!=='preview_df'))
+            var _datasets_right = {...payload.secondaryDatasets}
+            var items_with = Object.keys(_datasets_right).filter(e=>(e!==payload.varname && e!=='preview_df'))
 
             var df2 = items_with[0]
 
@@ -1009,45 +1006,57 @@ export default {
                 left: [],
                 right: []
               },
-              left_on: this.allColumns[0],
-              items_l_on: this.allColumns,
+              left_on: payload.allColumns[0],
+              items_l_on: payload.allColumns,
               right_on: _datasets_right[df2][0],
               items_r_on: (c)=>c._datasets_right[c.with],
               with: df2,
               items_with: (c)=>{
                 return Object.keys(c._datasets_right)
-                  .filter(e=>e!==this.dataset.varname && e!=='preview_df')
+                  .filter(e=>e!==payload.varname && e!=='preview_df')
                   .filter(e=>!e.startsWith('_'))
               },
               items_selected_columns: (c)=>{
                 try {
                   return [
-                    ...(this.allColumns || []).map(n=>({name: n, source: 'left', key: n+'l'})),
+                    ...(c.allColumns || []).map(n=>({name: n, source: 'left', key: n+'l'})),
                     ...(c._datasets_right[c.with] || []).map(n=>({name: n, source: 'right', key: n+'r'}))
                   ]
                 } catch (err) {}
               },
               selected_columns: [
-                ...(this.allColumns || []).map(n=>({name: n, source: 'left', key: n+'l'})),
+                ...(payload.allColumns || []).map(n=>({name: n, source: 'left', key: n+'l'})),
                 ...(_datasets_right[df2] || []).map(n=>({name: n, source: 'right', key: n+'r'}))
               ],
-              joinPreview: (c)=>{
-                // var left = c.selected_columns.filter(col=>col.source==='left' || col.name===c.left_on).map(col=>col.name)
-                // var right = c.selected_columns.filter(col=>col.source==='right' || col.name===c.right_on).map(col=>col.name)
-                // var center = left.filter(col=>right.indexOf(col)!=-1)
-                var left = c.selected_columns.filter(col=>col.source==='left' && col.name!==c.left_on).map(col=>col.name)
-                left = [...left, ...left.map(n=>n+'_left')]
-                var right = c.selected_columns.filter(col=>col.source==='right' && col.name!==c.right_on).map(col=>col.name)
-                right = [...right, ...right.map(n=>n+'_right')]
-                var center = [c.left_on, c.right_on, c.left_on+c.right_on, c.left_on+'_'+c.right_on]
-                return [ left, center, right ]
+              preview: {
+                joinPreview: (c)=>{
+                  // var left = c.selected_columns.filter(col=>col.source==='left' || col.name===c.left_on).map(col=>col.name)
+                  // var right = c.selected_columns.filter(col=>col.source==='right' || col.name===c.right_on).map(col=>col.name)
+                  // var center = left.filter(col=>right.indexOf(col)!=-1)
+                  var left = c.selected_columns.filter(col=>col.source==='left' && col.name!==c.left_on).map(col=>col.name)
+                  left = [...left, ...left.map(n=>n+'_left')]
+                  var right = c.selected_columns.filter(col=>col.source==='right' && col.name!==c.right_on).map(col=>col.name)
+                  right = [...right, ...right.map(n=>n+'_right')]
+                  var center = [c.left_on, c.right_on, c.left_on+c.right_on, c.left_on+'_'+c.right_on]
+                  return [ left, center, right ]
+                },
+                expectedColumns: -1,
+                type: 'join',
+                delay: 500,
+                datasetPreview: true,
+                // noBufferWindow: true
               },
-              previewType: 'join',
-              // _previewDelay: 500,
-              _expectedColumns: -1,
-              datasetPreview: true,
-              // noBufferWindow: true
+              request: {
+              }
             }
+          },
+          beforeGetCode: async (currentCommand) => {
+            if (!currentCommand.secondaryDatasets[currentCommand.with] || !currentCommand.secondaryDatasets[currentCommand.with].buffer) {
+              await this.evalCode('_output = '+currentCommand.with+'.ext.set_buffer("*")') // TODO: !!!
+              this.$store.commit('setSecondaryBuffer', { key: currentCommand.with, value: true})
+              currentCommand.secondaryDatasets = this.currentSecondaryDatasets
+            }
+            return currentCommand
           },
           code: (payload) => {
             var columnsLeft = payload.selected_columns.filter(c=>c.source==='left').map(c=>c.name)
@@ -1068,7 +1077,6 @@ export default {
             var columnsEnd = [...new Set([...columnsLeftEnd, ...columnsRightEnd])]
 
             var filterEnd = `.cols.select(["${columnsEnd.join('", "')}"])`
-            // var filterEnd = ``
 
             if (columnsLeft.indexOf(payload.left_on)===-1) {
               columnsLeft.push(payload.left_on)
@@ -1078,19 +1086,15 @@ export default {
             }
 
             var filterLeft = `.cols.select(["${columnsLeft.join('", "')}"])`
-            // var filterLeft = ``
             var filterRight = `.cols.select(["${columnsRight.join('", "')}"])`
-            // var filterRight = ``
 
-            if (payload._requestType) {
-              return async (from, to) => {
+            filterEnd = filterLeft = filterRight = ''
+
+            if (payload.request.type !== 'final') {
+              return (from, to) => {
                 var window = ''
                 if (from!==undefined) {
                   window = `,${from},${to}`
-                }
-                if (!this.currentSecondaryDatasets[payload.with] || !this.currentSecondaryDatasets[payload.with].buffer) {
-                  await this.evalCode('_output = '+payload.with+'.ext.set_buffer("*")') // TODO check changed
-                  this.$store.commit('setSecondaryBuffer',{ key: payload.with, value: true})
                 }
                 return `${filterLeft}.cols.join(${payload.with}.ext.buffer_window("*"${window})${filterRight}`
                 + `, left_on="${payload.left_on}"`
@@ -1103,7 +1107,7 @@ export default {
             }
 
           },
-          content: (payload) => `<b>Join</b> ${hlParam(this.dataset.varname)} <b>with</b> ${hlParam(payload.with)}`
+          content: (payload) => `<b>Join</b> ${hlParam(payload.varname)} <b>with</b> ${hlParam(payload.with)}`
         },
         aggregations: {
           dialog: {
@@ -1125,15 +1129,17 @@ export default {
                 key: 'aggregations',
                 add: true,
                 addOne: (c)=>{
-                  this.currentCommand.input_cols.push(c.allColumns[0])
-                  this.currentCommand.aggregations.push('count')
-                  this.currentCommand.output_cols.push('')
+                  c.input_cols.push(c.allColumns[0])
+                  c.aggregations.push('count')
+                  c.output_cols.push('')
+
+                  return c
                 },
                 removeOne: (c,i)=>{
                   c.input_cols.splice(i,1)
                   c.aggregations.splice(i,1)
                   c.output_cols.splice(i,1)
-                  this.currentCommand = c
+                  return c
                 },
                 fields: [
                   {
@@ -1176,27 +1182,27 @@ export default {
               return (c.input_cols.length && c.aggregations.length)
             },
           },
-          payload: (columns) => ({
-            allColumns: this.allColumns,
+          payload: (columns, payload = {}) => ({
             group_by: [],
             input_cols: columns,
             aggregations: columns.map(e=>'count'),
             output_cols_default: (c)=>c.aggregations.map((aggregation,i)=>`${aggregation}_${c.input_cols[i]}`),
             output_cols: columns.map(e=>''),
-            previewType: 'aggregations',
-            datasetPreview: true,
-            noBufferWindow: true,
-            _expectedColumns: ()=>{
-              var payload = this.currentCommand
-              var output_cols_default = payload.output_cols_default(payload)
-              var aggregations = payload.aggregations.map((oname,i)=>`"${payload.output_cols[i] || output_cols_default[i]}": {"${payload.input_cols[i]}":"${payload.aggregations[i]}"}`)
-              aggregations = [...new Set(aggregations)]
-              return aggregations.length+payload.group_by.length
+            preview: {
+              type: 'aggregations',
+              expectedColumns: (c)=>{
+                var output_cols_default = c.output_cols_default(c)
+                var aggregations = c.aggregations.map((oname,i)=>`"${c.output_cols[i] || output_cols_default[i]}": {"${c.input_cols[i]}":"${c.aggregations[i]}"}`)
+                aggregations = [...new Set(aggregations)]
+                return aggregations.length+c.group_by.length
+              },
+              datasetPreview: true,
+              noBufferWindow: true,
             },
+            request: {}
           }),
           code: (payload) => {
             var output_cols_default = payload.output_cols_default(payload)
-            // var code = payload._requestType ? this.dataset.varname : ''
 
             var aggregations = payload.aggregations.map((oname,i)=>`"${payload.output_cols[i] || output_cols_default[i]}": {"${payload.input_cols[i]}":"${payload.aggregations[i]}"}`)
 
@@ -1208,7 +1214,7 @@ export default {
             code += aggregations.join(', ')
             code += `})`
 
-            if (payload._requestType=='preview') {
+            if (payload.request.type === 'preview') {
               return (from, to)=>code+(from!==undefined ? `[${from}:${to}]` : '')
             }
 
@@ -1221,14 +1227,16 @@ export default {
             title: 'String operation',
             output_cols: true,
           },
-          payload: (columns) => ({
+          payload: (columns, payload = {}) => ({
             columns: columns,
             output_cols: columns.map(e=>''),
-            previewType: 'STRING'
+            preview: {
+              type: 'STRING'
+            }
           }),
           code: (payload) => {
 
-            var output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (payload._requestType) ? 'new ' : '')
+            var output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (payload.request.type !== 'final') ? 'new ' : '')
 
             var _argument = payload.columns.length==0
               ? `"*"`
@@ -1278,16 +1286,18 @@ export default {
             ],
             validate: (command) => (command.fill!=='')
           },
-          payload: (columns) => ({
+          payload: (columns, payload = {}) => ({
             command: 'fill_na',
             columns: columns,
             fill: '',
             output_cols: columns.map(e=>''),
-						previewType: 'fill_na'
+            preview: {
+              type: 'fill_na'
+            }
           }),
           code: (payload) => {
             var _argument = (payload.columns.length==1) ? `"${payload.columns[0]}"` : `["${payload.columns.join('", "')}"]`
-            var output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (payload._requestType) ? 'new ' : '')
+            var output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (payload.request.type !== 'final') ? 'new ' : '')
             payload = escapeQuotesOn(payload,['fill'])
             return `.cols.fill_na(`
               +_argument
@@ -1422,26 +1432,26 @@ export default {
 
           },
 
-          uploadFile: async () => {
+          uploadFile: async (currentCommand) => {
             try {
+              currentCommand._fileUploading = true
 
-              this.currentCommand._fileUploading = true
-
-              var response = await this.$store.dispatch('request/uploadFile',{file: this.currentCommand._fileInput})
+              var response = await this.$store.dispatch('request/uploadFile',{file: currentCommand._fileInput})
 
               if (response.fileType) {
-                this.currentCommand.file_type = response.fileType
+                currentCommand.file_type = response.fileType
               }
-              this.currentCommand.url = response.fileUrl
-              this.currentCommand._fileUrl = response.fileUrl
-              this.currentCommand._fileUploading = false
-              this.currentCommand._datasetName = response.datasetName || false
-              this.currentCommand._fileLoaded = this.currentCommand._fileInput
+              currentCommand.url = response.fileUrl
+              currentCommand._fileUrl = response.fileUrl
+              currentCommand._fileUploading = false
+              currentCommand._datasetName = response.datasetName || false
+              currentCommand._fileLoaded = currentCommand._fileInput
             } catch (error) {
               console.error(error)
-              this.currentCommand.error = error
-              this.currentCommand._fileUploading = false
+              currentCommand.error = error
+              currentCommand._fileUploading = false
             }
+            return currentCommand
           },
 
           payload: () => ({
@@ -1464,11 +1474,14 @@ export default {
             _meta: false,
             _datasetName: false,
             _sheet_names: 1,
-            previewType: 'load',
-            loadPreview: true,
-            isLoad: true,
-            variableName: this.availableVariableName()
-            // _previewDelay: 500,
+            preview: {
+              loadPreview: true,
+              type: 'load',
+              delay: 500,
+            },
+            request: {
+              isLoad: true,
+            }
           }),
 
           code: (payload) => {
@@ -1481,8 +1494,8 @@ export default {
 
             var code = ''
 
-            if (!payload._requestType) {
-              code = `${payload.variableName} = `
+            if (payload.request.type === 'final') {
+              code = `${payload.newVarname} = `
             }
 
             var loadType = (!payload._moreOptions) ? 'file' : payload.file_type
@@ -1506,7 +1519,7 @@ export default {
                 code += `, sheet_name=${payload.sheet_name}`
               }
             }
-            if (payload._requestType) {
+            if (payload.request.type !== 'final') {
               var limit = 35
               if (payload.limit>0 && payload.limit<limit) {
                 limit = payload.limit
@@ -1537,7 +1550,7 @@ export default {
             + ( fileName ? ` ${hlParam(fileName)}` : '')
             + ( (!fileName && fileType) ? ` ${fileType}` : '')
             + ' file'
-            + ' to '+hlParam(payload.variableName)
+            + ' to '+hlParam(payload.newVarname)
           }
         },
         'string clustering': {
@@ -1580,22 +1593,22 @@ export default {
                 return (c.clusters && c.clusters.filter(e=>e.selected.length).length)
             },
           },
-          getClusters: async () => {
+          getClusters: async (currentCommand) => {
 
             try {
 
               var code
 
-              if (this.currentCommand.algorithm == 'fingerprint')
-                code = `from optimus.engines.dask.ml import keycollision as kc; _output = kc.fingerprint_cluster(${this.dataset.varname}.ext.buffer_window("*"), input_cols="${this.currentCommand.columns[0]}", output="json")`
-              else if (this.currentCommand.algorithm == 'n_gram_fingerprint')
-                code = `from optimus.engines.dask.ml import keycollision as kc; _output = kc.n_gram_fingerprint_cluster(${this.dataset.varname}.ext.buffer_window("*"), input_cols="${this.currentCommand.columns[0]}", n_size=${this.currentCommand.n_size}, output="json")`
+              if (currentCommand.algorithm == 'fingerprint')
+                code = `from optimus.engines.dask.ml import keycollision as kc; _output = kc.fingerprint_cluster(${currentCommand.varname}.ext.buffer_window("*"), input_cols="${currentCommand.columns[0]}", output="json")`
+              else if (currentCommand.algorithm == 'n_gram_fingerprint')
+                code = `from optimus.engines.dask.ml import keycollision as kc; _output = kc.n_gram_fingerprint_cluster(${currentCommand.varname}.ext.buffer_window("*"), input_cols="${currentCommand.columns[0]}", n_size=${currentCommand.n_size}, output="json")`
               else
                 throw 'Invalid algorithm type input'
 
-              this.currentCommand.loading = true
-              this.currentCommand.clusters = false
-              this.currentCommand.error = false
+              currentCommand.loading = true
+              currentCommand.clusters = false
+              currentCommand.error = false
 
               var response = await this.evalCode(code)
 
@@ -1632,12 +1645,12 @@ export default {
                 throw 'No clusters found'
               }
 
-              this.currentCommand = {
-                ...this.currentCommand,
+              currentCommand = {
+                ...currentCommand,
                 valid: {
-                  algorithm: this.currentCommand.algorithm,
-                  threshold: this.currentCommand.threshold,
-                  n_size: this.currentCommand.n_size,
+                  algorithm: currentCommand.algorithm,
+                  threshold: currentCommand.threshold,
+                  n_size: currentCommand.n_size,
                 },
                 clusters
               }
@@ -1645,12 +1658,14 @@ export default {
             } catch (error) {
 
               var _error = printError(error)
-              this.currentCommand = {...this.currentCommand, error: _error, should_update: true}
+              currentCommand = {...currentCommand, error: _error, should_update: true}
             }
 
-            this.currentCommand.loading = false
+            currentCommand.loading = false
+
+            return currentCommand
           },
-          payload: (columns) => {
+          payload: (columns, payload = {}) => {
             return {
               valid: {
                 algorithm: undefined,
@@ -1752,24 +1767,24 @@ export default {
             ],
             validate: (c) => (c.data && (c.selection.length || ['z_score','modified_z_score'].includes(c.algorithm) ) && !c.loading)
           },
-          getOutliers: async () => {
+          getOutliers: async (currentCommand) => {
 
             try {
 
               var code
 
-              if (this.currentCommand.algorithm == 'tukey')
-                code = `outlier = ${this.dataset.varname}.outliers.tukey("${this.currentCommand.columns[0]}")`
-              else if (this.currentCommand.algorithm == 'z_score')
-                code = `outlier = ${this.dataset.varname}.outliers.z_score(columns="${this.currentCommand.columns[0]}", threshold=${this.currentCommand.threshold})`
-              else if (this.currentCommand.algorithm == 'mad')
-                code = `outlier = ${this.dataset.varname}.outliers.mad(columns="${this.currentCommand.columns[0]}", threshold=${this.currentCommand.threshold})`
-              else if (this.currentCommand.algorithm == 'modified_z_score')
-                code = `outlier = ${this.dataset.varname}.outliers.modified_z_score(columns="${this.currentCommand.columns[0]}", threshold=${this.currentCommand.threshold})`
+              if (currentCommand.algorithm == 'tukey')
+                code = `outlier = ${currentCommand.varname}.outliers.tukey("${currentCommand.columns[0]}")`
+              else if (currentCommand.algorithm == 'z_score')
+                code = `outlier = ${currentCommand.varname}.outliers.z_score(columns="${currentCommand.columns[0]}", threshold=${currentCommand.threshold})`
+              else if (currentCommand.algorithm == 'mad')
+                code = `outlier = ${currentCommand.varname}.outliers.mad(columns="${currentCommand.columns[0]}", threshold=${currentCommand.threshold})`
+              else if (currentCommand.algorithm == 'modified_z_score')
+                code = `outlier = ${currentCommand.varname}.outliers.modified_z_score(columns="${currentCommand.columns[0]}", threshold=${currentCommand.threshold})`
               else
                 throw 'Invalid algorithm type input'
 
-              this.currentCommand.loading = true
+              currentCommand.loading = true
 
               var response = await this.evalCode(`import json; ${code}; _output = json.dumps(outlier.info())`)
 
@@ -1779,26 +1794,26 @@ export default {
                 throw response
               }
 
-              if ( ['tukey','mad'].includes(this.currentCommand.algorithm) ) {
+              if ( ['tukey','mad'].includes(currentCommand.algorithm) ) {
 
-                var hist_response = await this.evalCode(`_output = outlier.hist("${this.currentCommand.columns[0]}")`)
+                var hist_response = await this.evalCode(`_output = outlier.hist("${currentCommand.columns[0]}")`)
                 var hist_data = parseResponse(hist_response.data.result)
 
                 if (!hist_data) {
                   throw hist_response
                 }
 
-                var hist = hist_data[this.currentCommand.columns[0]].hist
+                var hist = hist_data[currentCommand.columns[0]].hist
 
                 outliers_data = { ...outliers_data, hist }
 
               }
 
-              this.currentCommand = {
-                ...this.currentCommand,
+              currentCommand = {
+                ...currentCommand,
                 valid: {
-                  algorithm: this.currentCommand.algorithm,
-                  threshold: this.currentCommand.threshold,
+                  algorithm: currentCommand.algorithm,
+                  threshold: currentCommand.threshold,
                 },
                 data: outliers_data,
                 selection: [],
@@ -1809,12 +1824,14 @@ export default {
             } catch (error) {
 
               var _error = printError(error)
-              this.currentCommand = {...this.currentCommand, error: _error, data: false, selection: []}
+              currentCommand = {...currentCommand, error: _error, data: false, selection: []}
             }
 
-            this.currentCommand.loading = false
+            currentCommand.loading = false
+
+            return currentCommand
           },
-          payload: (columns) => {
+          payload: (columns, payload = {}) => {
             return {
               columns,
               algorithm: 'tukey',
@@ -1978,39 +1995,43 @@ export default {
             command: 'load from database',
             driver: 'mysql',
             host: '',
-						database: '',
-						user: '',
+            database: '',
+            user: '',
             password: '',
             _loadingTables: false,
-            isLoad: true,
-            variableName: this.availableVariableName()
+            request: {
+              isLoad: true,
+              newVarname: this.availableVariableName()
+            }
           }),
           code: (payload) => {
             var table = escapeQuotes(payload.table)
-            return `${payload.previous_code}${'\n'}${payload.variableName} = db.table_to_df("${table}").ext.cache()`
+            return `${payload.previous_code}${'\n'}${payload.newVarname} = db.table_to_df("${table}").ext.cache()`
           },
+
           content: (payload)=>{
             var database = ['postgres','presto','redshift','sqlserver','mysql'].includes(payload.driver)
             return `<b>Load</b> ${hlParam(payload.table)}`
             +(database ? ` from ${hlParam(payload.database)}` : '')
-            + ' to '+hlParam(payload.variableName)
+            + ' to '+hlParam(payload.newVarname)
           },
-          getTables: async (payload) => {
 
-            this.currentCommand._loadingTables = true
-            this.currentCommand.error = ''
+          getTables: async (currentCommand) => {
+
+            currentCommand._loadingTables = true
+            currentCommand.error = ''
 
             var fields = this.commandsHandlers['load from database'].dialog.fields
 
             try {
-              var driver = escapeQuotes(payload.driver)
+              var driver = escapeQuotes(currentCommand.driver)
               var code = `db = op.connect(driver="${driver}"`
 
               fields.forEach(field => {
                 if (!['driver','oracle_type', 'table', undefined].includes(field.key)) {
                   code += (
-                    (!field.condition || field.condition(this.currentCommand) && payload[field.key] && field.key) ?
-                    `, ${field.key}="${escapeQuotes(payload[field.key])}"` : ''
+                    (!field.condition || field.condition(currentCommand) && currentCommand[field.key] && field.key) ?
+                    `, ${field.key}="${escapeQuotes(currentCommand[field.key])}"` : ''
                   )
                 }
               });
@@ -2028,24 +2049,22 @@ export default {
 
               this.$store.commit('database',true)
 
-              this.currentCommand = {
-                ...payload,
+              currentCommand = {
+                ...currentCommand,
                 tables,
                 table: tables[0],
                 previous_code: code,
-                validDriver: payload.driver,
-                validHost: payload.host,
-                validDatabase: payload.database
+                validDriver: currentCommand.driver,
+                validHost: currentCommand.host,
+                validDatabase: currentCommand.database
               }
-              this.currentCommand._loadingTables = false
+              currentCommand._loadingTables = false
             } catch (error) {
-
-              printError(error)
-
               var _error = printError(error)
-              this.currentCommand = {...payload, error: _error}
-              this.currentCommand._loadingTables = false
+              currentCommand = {...payload, error: _error}
+              currentCommand._loadingTables = false
             }
+            return currentCommand
           }
         },
         'save to database': {
@@ -2066,7 +2085,7 @@ export default {
           }),
           code: (payload) => {
             var table_name = escapeQuotes(payload.table_name)
-            return `db.df_to_table(${this.dataset.varname}, table="${table_name}", mode="overwrite")`
+            return `db.df_to_table(${payload.varname}, table="${table_name}", mode="overwrite")`
           },
           noAdd: true // TODO
         },
@@ -2082,11 +2101,11 @@ export default {
               },
             ],
           },
-          payload: (columns) => ({
+          payload: (columns, payload = {}) => ({
             command: 'stratified_sample',
-						seed: 1,
-						columns: columns,
-					}),
+            seed: 1,
+            columns: columns,
+          }),
           code: (payload) => {
             var _argument = (payload.columns.length==1) ? `"${payload.columns[0]}"` : `["${payload.columns.join('", "')}"]`
             return `.ext.stratified_sample(`
@@ -2140,26 +2159,28 @@ export default {
               return (command.output_cols.filter(e=>e!=='').length%command.columns.length===0)
             }
           },
-          payload: (columns) => ({
-						command: 'replace',
-						columns: columns,
+          payload: (columns, payload = {}) => ({
+            command: 'replace',
+            columns: columns,
             search: [],
             replace: '',
-						search_by: 'chars',
+            search_by: 'chars',
             output_cols: columns.map(e=>e),
             match_case: false,
             title: 'Replace in ' + (columns.length==1 ? `column` : 'columns'),
-            previewType: 'replace',
-            highlightColor: {default: 'red', preview: 'green'}
-					}),
+            preview: {
+              type: 'replace',
+              highlightColor: {default: 'red', preview: 'green'}
+            },
+          }),
           code: (payload) => {
             var _argument = (payload.columns.length==1) ? `"${payload.columns[0]}"` : `["${payload.columns.join('", "')}"]`
 
-            if (payload._requestType==='preview' || payload._requestType==='profile') {
+            if (payload.request.type === 'preview' || payload.request.type === 'profile') {
               payload.output_cols = payload.output_cols.map(col=>'new '+col)
             }
 
-            var output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (payload._requestType) ? 'new ' : '')
+            var output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (payload.request.type !== 'final') ? 'new ' : '')
 
             payload = escapeQuotesOn(payload,['replace','search_by'])
             var search = payload.search.map(v=>escapeQuotes(v))
@@ -2172,8 +2193,8 @@ export default {
               +`, ignore_case=${!payload.match_case ? 'True' : 'False'}`
               +( (output_cols_argument) ? `, output_cols=${output_cols_argument}` : '')
               +')'
-              +( (payload._requestType==='preview') ? `.cols.find(${_argument}, sub=["${search.join('","')}"], ignore_case=${!payload.match_case ? 'True' : 'False'})` : '')
-              +( (payload._requestType==='preview' && payload.replace) ? `.cols.find(${output_cols_argument}, sub=["${payload.replace}"])` : '')
+              +( (payload.request.type === 'preview') ? `.cols.find(${_argument}, sub=["${search.join('","')}"], ignore_case=${!payload.match_case ? 'True' : 'False'})` : '')
+              +( (payload.request.type === 'preview' && payload.replace) ? `.cols.find(${output_cols_argument}, sub=["${payload.replace}"])` : '')
           },
           content: (payload)=>`<b>Replace</b> ${multipleContent([payload.search],'hl--param')} with ${hlParam(payload.replace)} in ${multipleContent([payload.columns],'hl--cols')}`
         },
@@ -2213,26 +2234,27 @@ export default {
               )
             }
           },
-          payload: (columns) => ({
-            allColumns: this.allColumns,
+          payload: (columns, payload = {}) => ({
             command: 'set',
             columns,
             value: (columns[0] ? (columns[0].includes(' ') ? `{${columns[0]}}` : columns[0]) : ''),
             where: (columns[0] ? `${columns[0]}!=None` : ''),
             title: (columns[0] ? `Set column` : 'Create column'),
-            _expectedColumns: 1,
-            previewType: 'set',
+            preview: {
+              expectedColumns: 1,
+              type: 'set'
+            },
             output_col: 'new_column',
             output_cols: columns.map(e=>'')
           }),
           code: (payload) => {
 
             if (!payload.output_cols.length) {
-               payload.output_cols = [payload.output_col]
+              payload.output_cols = [payload.output_col]
             }
-            var output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (payload._requestType) ? 'new ' : '')
+            var output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (payload.request.type !== 'final') ? 'new ' : '')
 
-            // var varname = this.dataset.varname
+            // var varname = payload.varname
             var value = ( (payload.value) ? `p.parse('${payload.value}')` : 'None' )
 
             var cb = (from, to) => {
@@ -2248,7 +2270,7 @@ export default {
               + `)`
             }
 
-            if (payload._requestType) {
+            if (payload.request.type !== 'final') {
               return cb
             } else {
               return cb()
@@ -2260,7 +2282,7 @@ export default {
             var output_cols = payload.output_cols
 
             if (!payload.output_cols.length || (payload.output_cols.length===1 && !payload.output_cols[0])) {
-               output_cols = [payload.output_col || payload.columns[0]]
+              output_cols = [payload.output_col || payload.columns[0]]
             }
 
             var action = 'Create'
@@ -2287,12 +2309,14 @@ export default {
               return (command.output_cols.filter(e=>e!=='').length==command.columns.length)
             }
           },
-          payload: (columns) => {
+          payload: (columns, payload = {}) => {
             return {
               command: 'rename',
               columns,
               output_cols: columns.map(e=>newName(e)),
-              _fakePreview: 'rename'
+              preview: {
+                fake: 'rename'
+              }
             }
           },
           code: (payload) => {
@@ -2335,7 +2359,7 @@ export default {
               return command.output_cols.filter(e=>e!=='').length%command.columns.length===0 && (command.splits==='' || command.splits>command.index) && command.separator!=''
             }
           },
-          payload: (columns) => {
+          payload: (columns, payload = {}) => {
             return {
               command: 'unnest',
               columns,
@@ -2344,15 +2368,17 @@ export default {
               index: '',
               drop: false,
               output_cols: columns.map(e=>e),
-              previewType: 'unnest',
-              _expectedColumns: () => this.currentCommand.splits,
-              highlightColor: 'red'
+              preview: {
+                type: 'unnest',
+                expectedColumns: (c) => c.splits,
+                highlightColor: 'red'
+              },
             }
-					},
-					code: (payload) => {
+          },
+          code: (payload) => {
             var _argument = (payload.columns.length==1) ? `"${payload.columns[0]}"` : `["${payload.columns.join('", "')}"]`
-            var output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (payload._requestType) ? 'new ' : '')
-						payload = escapeQuotesOn(payload, ['separator'])
+            var output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (payload.request.type !== 'final') ? 'new ' : '')
+            payload = escapeQuotesOn(payload, ['separator'])
 
             var code = `.cols.unnest(`
               +_argument
@@ -2360,13 +2386,13 @@ export default {
               +( (payload.splits) ? `, splits=${payload.splits}` : '')
               +( (payload.index) ? `, index=${payload.index}` : '')
               +( (output_cols_argument) ? `, output_cols=${output_cols_argument}` : '')
-              +( (payload._requestType==='profile' || payload.drop) ? ', drop=True' : '')
-							+')'
+              +( (payload.request.type === 'profile' || payload.drop) ? ', drop=True' : '')
+              +')'
 
-						if (payload._requestType==='preview') {
-							code += `.cols.find(${_argument}, sub=["${payload.separator}"])`
-						}
-						return code
+            if (payload.request.type === 'preview') {
+              code += `.cols.find(${_argument}, sub=["${payload.separator}"])`
+            }
+            return code
           },
           content: (payload) => `<b>Split</b> ${hlCols(payload.columns[0])} by ${hlParam(payload.separator)} in ${hlParam(payload.splits)}`
 
@@ -2388,7 +2414,7 @@ export default {
               },
             ]
           },
-          payload: (columns) => {
+          payload: (columns, payload = {}) => {
             return {
               command: 'nest',
               columns,
@@ -2396,21 +2422,23 @@ export default {
               title: 'Nest '+(columns.length==1 ? `column` : 'columns'),
               defaultOutputName: columns.join('_'),
               output_col: columns.join('_'),
-              previewType: 'nest',
-              _expectedColumns: 1,
-              highlightColor: 'green'
-					}
+              preview: {
+                type: 'nest',
+                expectedColumns: 1,
+                highlightColor: 'green'
+              },
+          }
           },
-					code: (payload) => {
+          code: (payload) => {
             var output_col = payload.output_col
-            if (!output_col || payload._requestType) {
+            if (!output_col || payload.request.type !== 'final') {
               output_col = payload.defaultOutputName
             }
             payload = escapeQuotesOn(payload,['separator','output_col'])
             return `.cols.nest(["${payload.columns.join('", "')}"]`
-						+( (payload.separator) ? `, separator="${payload.separator}"` : '')
+            +( (payload.separator) ? `, separator="${payload.separator}"` : '')
             +`, output_col="${output_col}")`
-            +( (payload._requestType==='preview' && payload.separator) ? `.cols.find("${output_col}", sub=["${payload.separator}"])` : '')
+            +( (payload.request.type === 'preview' && payload.separator) ? `.cols.find("${output_col}", sub=["${payload.separator}"])` : '')
           },
           content: (payload) => `<b>Merge</b> ${multipleContent([payload.columns],'hl--cols')} in ${hlCols(payload.output_col)}`
         },
@@ -2421,18 +2449,20 @@ export default {
               return (command.output_cols.filter(e=>e!=='').length==command.columns.length)
             }
           },
-          payload: (columns) => {
+          payload: (columns, payload = {}) => {
             return {
               command: 'duplicate',
               columns,
               title: 'Duplicate '+(columns.length==1 ? `column` : 'columns'),
               output_cols: columns.map(e=>newName(e)),
-              _fakePreview: 'duplicate'
+              preview: {
+                fake: 'duplicate'
+              }
             }
           },
           code: (payload) => {
             var _argument = (payload.columns.length==1) ? `"${payload.columns[0]}"` : `["${payload.columns.join('", "')}"]`
-            var output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (payload._requestType) ? 'new ' : '')
+            var output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (payload.request.type !== 'final') ? 'new ' : '')
             return `.cols.copy(`
               +_argument
               +( (output_cols_argument) ? `, output_cols=${output_cols_argument}` : '')
@@ -2456,7 +2486,7 @@ export default {
               return (command.output_cols.filter(e=>e!=='').length%command.columns.length==0) && (command.splits>0)
             }
           },
-          payload: (columns) => {
+          payload: (columns, payload = {}) => {
             return {
               command: 'bucketizer',
               columns: columns,
@@ -2467,7 +2497,7 @@ export default {
           code: (payload) => {
             // df.cols.bucketizer("id",2,"buckets_output")
             var _argument = (payload.columns.length==1) ? `"${payload.columns[0]}"` : `["${payload.columns.join('", "')}"]`
-            var output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (payload._requestType) ? 'new ' : '')
+            var output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (payload.request.type !== 'final') ? 'new ' : '')
 
             return `.cols.bucketizer(`
               + _argument
@@ -2483,7 +2513,7 @@ export default {
 
         },
         values_to_cols: {
-          payload: (columns) => {
+          payload: (columns, payload = {}) => {
             return {
               command: 'values_to_cols',
               columns: columns
@@ -2506,7 +2536,7 @@ export default {
               return false
             }
           },
-          payload: (columns) => {
+          payload: (columns, payload = {}) => {
             return {
               command: 'string_to_index',
               columns: columns,
@@ -2517,7 +2547,7 @@ export default {
             // cols.string_to_index(input_cols, output_cols=None)
             var _argument = (payload.columns.length==1) ? `"${payload.columns[0]}"` : `["${payload.columns.join('", "')}"]`
 
-            var output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (payload._requestType) ? 'new ' : '')
+            var output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (payload.request.type !== 'final') ? 'new ' : '')
 
             return `.cols.string_to_index(`
               + _argument
@@ -2539,7 +2569,7 @@ export default {
               return false
             }
           },
-          payload: (columns) => {
+          payload: (columns, payload = {}) => {
             return {
               command: 'index_to_string',
               columns: columns,
@@ -2550,7 +2580,7 @@ export default {
             // cols.index_to_string(input_cols, output_cols=None)
             var _argument = (payload.columns.length==1) ? `"${payload.columns[0]}"` : `["${payload.columns.join('", "')}"]`
 
-            var output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (payload._requestType) ? 'new ' : '')
+            var output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (payload.request.type !== 'final') ? 'new ' : '')
 
             return `.cols.index_to_string(`
               + _argument
@@ -2582,7 +2612,7 @@ export default {
               return false
             }
           },
-          payload: (columns) => {
+          payload: (columns, payload = {}) => {
             return {
               columns: columns,
               output_cols: columns.map(e=>'')
@@ -2591,7 +2621,7 @@ export default {
           code: (payload) => {
             var _argument = (payload.columns.length==1) ? `"${payload.columns[0]}"` : `["${payload.columns.join('", "')}"]`
 
-            var output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (payload._requestType) ? 'new ' : '')
+            var output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (payload.request.type !== 'final') ? 'new ' : '')
 
             return `.cols.${payload.command}(`
               + _argument
@@ -2643,7 +2673,7 @@ export default {
               return false
             }
           },
-          payload: (columns) => {
+          payload: (columns, payload = {}) => {
             return {
               command: 'impute',
               data_type: 'continuous',
@@ -2656,7 +2686,7 @@ export default {
             // df.cols.impute(input_cols, data_type="continuous", strategy="mean", output_cols=None)
             var _argument = (payload.columns.length==1) ? `"${payload.columns[0]}"` : `["${payload.columns.join('", "')}"]`
 
-            var output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (payload._requestType) ? 'new ' : '')
+            var output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (payload.request.type !== 'final') ? 'new ' : '')
 
             return `.cols.impute(`
               + _argument
@@ -2688,7 +2718,7 @@ export default {
               return false
             }
           },
-          payload: (columns) => {
+          payload: (columns, payload = {}) => {
             return {
               command: 'sample_n',
               n: 10,
@@ -2702,7 +2732,8 @@ export default {
             return `<b>Sample</b> to ${hlParam(payload.n)} rows`
           }
         },
-      }
+      },
+
     }
   },
 
@@ -2740,7 +2771,11 @@ export default {
     },
 
     allColumns () {
-      return this.dataset.columns.map(e=>e.name)
+      try {
+        return this.dataset.columns.map(e=>e.name)
+      } catch (err) {
+        return []
+      }
     },
 
     dragOptions () {
@@ -2867,7 +2902,8 @@ export default {
               this.restorePreview(true)
               return
             }
-            if (this.currentCommand.previewType) {
+
+            if (this.currentCommand.preview && (this.currentCommand.preview.type || this.currentCommand.preview.fake)) {
 
               if (this.currentCommand.output_cols || this.currentCommand.defaultOutputName) {
 
@@ -2897,16 +2933,15 @@ export default {
                 this.$store.commit('setPreviewInfo', {newColumns})
               }
 
-
               this.preparePreviewCode()
             }
-            if (this.currentCommand._fakePreview==='rename') {
+            if (this.currentCommand.preview.fake==='rename') {
               var nameMap = {}
               this.currentCommand.output_cols.forEach((col, i) => {
                 nameMap[this.currentCommand.columns[i]] = col
               })
               this.$store.commit('setPreviewNames',nameMap)
-            } else if (this.currentCommand._fakePreview==='duplicate') {
+            } else if (this.currentCommand.preview.fake==='duplicate') {
               var duplicatedColumns = []
               this.currentCommand.output_cols.forEach((col, i) => {
                 duplicatedColumns.push({name: this.currentCommand.columns[i], newName: col})
@@ -3055,32 +3090,33 @@ export default {
 
         var expectedColumns
 
-        // if (this.currentCommand.datasetPreview) {
-        //   expectedColumns = -1
-        // } else
-        if (this.currentCommand._expectedColumns!==undefined) {
-          expectedColumns = getProperty(this.currentCommand._expectedColumns, [this.currentCommand])
+        if (this.currentCommand.preview.expectedColumns!==undefined) {
+          expectedColumns = getProperty(this.currentCommand.preview.expectedColumns, [this.currentCommand])
         } else if (this.currentCommand.output_cols && this.currentCommand.output_cols.length) {
           expectedColumns = this.currentCommand.output_cols.length
         } else if (this.currentCommand.columns) {
           expectedColumns = this.currentCommand.columns.length
         }
 
-        var joinPreview = getProperty(this.currentCommand.joinPreview, [this.currentCommand])
-        var color = getProperty(this.currentCommand.highlightColor, [this.currentCommand])
+        var commandHandler = this.command
+
+        if (commandHandler && commandHandler.beforeGetCode) {
+          this.currentCommand = await commandHandler.beforeGetCode(this.currentCommand)
+        }
 
         this.$store.commit('setPreviewCode',{
-          code: this.getCode(this.currentCommand,'preview'),
-          profileCode: this.getCode(this.currentCommand,'profile'),
-          color,
+          code: this.getCode(this.currentCommand, 'preview'),
+          profileCode: this.getCode(this.currentCommand, 'profile'),
+          beforeCodeEval: this.currentCommand.beforeCodeEval ? ()=>this.currentCommand.beforeCodeEval(this.currentCommand) : false,
+          color: getProperty(this.currentCommand.preview.highlightColor, [this.currentCommand]),
           from: this.currentCommand.columns,
-          datasetPreview: !!this.currentCommand.datasetPreview,
-          loadPreview: !!this.currentCommand.loadPreview,
-          load: this.currentCommand.previewType==='load',
-          infer: this.currentCommand._moreOptions===false,
-          noBufferWindow: getProperty(this.currentCommand.noBufferWindow,[this.currentCommand]),
+          datasetPreview: !!getProperty(this.currentCommand.preview.datasetPreview, [this.currentCommand]),
+          loadPreview: !!getProperty(this.currentCommand.preview.loadPreview, [this.currentCommand]),
+          load: this.currentCommand.preview.type==='load',
+          infer: this.currentCommand._moreOptions===false, // TODO: Check
+          noBufferWindow: getProperty(this.currentCommand.preview.noBufferWindow,[this.currentCommand]),
+          joinPreview: getProperty(this.currentCommand.preview.joinPreview, [this.currentCommand]),
           expectedColumns,
-          joinPreview
         })
 
         // TODO: Generalize
@@ -3125,7 +3161,6 @@ export default {
 
       this.$store.commit('setPreviewColumns',false) // TODO: Check
 
-			var payload = {}
       var columns = undefined
       var columnDataTypes = undefined
 
@@ -3141,22 +3176,57 @@ export default {
 
       var commandHandler = this.commandsHandlers[command.command] || this.commandsHandlers[command.type]
 
-      payload.type = command.type
-      payload.command = command.command
-      payload._noOperations = command.noOperations
+      // default payload
 
-      payload.columnDataTypes = columnDataTypes
+      var payload = {
+        request: {
+          isLoad: false,
+          noOperations: command.noOperations,
+          immediate: command.immediate,
+          isString: columnDataTypes && columnDataTypes.every(d=>STRING_TYPES.includes(d)),
+        },
+        secondaryDatasets: this.currentSecondaryDatasets,
+        columnDataTypes: columnDataTypes,
+        varname: this.dataset.varname,
+        newVarname: this.availableVariableName(),
+        allColumns: this.allColumns,
+        type: command.type,
+        command: command.command,
+      }
 
       if (commandHandler) {
 
-        payload = (commandHandler.payload) ? ( {...await commandHandler.payload(columns, payload), ...payload} ) : payload
+        // default payload from commandHandler
+
+        if (commandHandler.payload) {
+          var newPayload = await commandHandler.payload(columns, payload)
+          payload = {
+            ...payload,
+            ...newPayload,
+            request: {
+              ...payload.request,
+              ...newPayload.request
+            },
+            preview: {
+              ...payload.preview,
+              ...newPayload.preview
+            }
+          }
+        }
+
+        // payload from parameters
+
+        payload = {
+          ...payload,
+          ...(command.payload || {})
+        }
 
         if (commandHandler.dialog) {
 
-          this.currentCommand = {...payload, ...(command.payload || {})}
+          this.currentCommand = payload
 
           this.$emit('updateOperations', { active: true, title: this.getCommandTitle() })
-          this.$emit('update:big',commandHandler.dialog.big) // :max-width="command.dialog.big ? 820 : 410"
+          this.$emit('update:big',commandHandler.dialog.big)
 
           if (commandHandler.onInit) {
             await commandHandler.onInit()
@@ -3178,11 +3248,11 @@ export default {
 
           var cell = {
             ...command,
-            columns: payload.columns || columns,
-            payload
+            ...payload,
+            columns: payload.columns || columns
           }
           var content = this.getOperationContent(cell)
-          this.addCell(-1, {...command, code: this.getCode(cell,false), content})
+          this.addCell(-1, {...command, code: this.getCode(cell), content})
           this.runButton = false
 
           this.clearTextSelection()
@@ -3196,7 +3266,7 @@ export default {
       if (commandHandler.onDone) {
         this.currentCommand = await commandHandler.onDone(this.currentCommand)
       }
-      var code = this.getCode(this.currentCommand, false)
+      var code = this.getCode(this.currentCommand)
       var content = this.getOperationContent(this.currentCommand)
 
       var toCell = this.currentCommand._toCell!==undefined ? this.currentCommand._toCell : -1
@@ -3204,7 +3274,7 @@ export default {
       this.addCell(toCell, { ...this.currentCommand, code, content }, true )
       this.runButton = false
 
-      this.$emit('updateOperations', { active: (this.currentCommand._noOperations ? false : true), title: 'operations' } )
+      this.$emit('updateOperations', { active: (this.currentCommand.request.noOperations ? false : true), title: 'operations' } )
       this.$emit('update:big', this.seeCode)
 
       this.currentCommand = false
@@ -3350,19 +3420,20 @@ export default {
       var commandHandler = this.commandsHandlers[payload.command] || this.commandsHandlers[payload.type]
 
       if (!commandHandler || !commandHandler.content) {
-        return this.getCode(payload, false)
+        return this.getCode(payload)
       }
 
       return commandHandler.content(payload)
     },
 
-    getCode (currentCommand, type) {
+    getCode (currentCommand, type = 'final') {
 
       var payload = {...currentCommand}
 
       var code = ''
 
       if (!payload.columns || !payload.columns.length) {
+        console.warn('Auto-filling columns')
         payload.columns = this.columns.map(e=>this.dataset.columns[e.index].name)
       }
 
@@ -3377,7 +3448,10 @@ export default {
       if (!payload._code) {
         var commandHandler = this.commandsHandlers[payload.command] || this.commandsHandlers[payload.type]
         if (commandHandler) {
-          code = commandHandler.code ? commandHandler.code({...payload, _requestType: type}) : ''
+          code = commandHandler.code ? commandHandler.code({
+            ...payload,
+            request: { ...(payload.request || {}), type }
+          }) : ''
         }
       }
       else {
@@ -3389,16 +3463,11 @@ export default {
       } else if (type==='profile') {
         return code
       } else {
-        // if (typeof code === 'object') {
-        //   precode = code.precode + '\n'
-        //   code = code.code
-        // }
-        if (payload.isLoad) {
+        if (payload.request && payload.request.isLoad) {
           return precode + code +'\n'
-					// +`${this.dataset.varname} = ${this.dataset.varname}.ext.optimize()`+'\n'
-					+`${this.dataset.varname} = ${this.dataset.varname}.ext.repartition(8).ext.cache()`
+					+`${payload.varname} = ${payload.varname}.ext.repartition(8).ext.cache()`
         } else {
-          return precode + `${this.dataset.varname} = ${this.dataset.varname}${code}.ext.cache()`
+          return precode + `${payload.varname} = ${payload.varname}${code}.ext.cache()`
         }
       }
 
