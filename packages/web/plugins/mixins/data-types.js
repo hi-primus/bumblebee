@@ -1,4 +1,6 @@
-import { TYPES_HINTS, TYPES_NAMES } from '@/utils/constants.js'
+import bbUtils from 'bumblebee-utils'
+
+const { TYPES_HINTS, TYPES_NAMES } = bbUtils
 
 export default {
 	data () {

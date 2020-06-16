@@ -14,7 +14,7 @@ const io = new Server(server)
 
 const uuidv1 = require('uuid/v1');
 
-import { trimCharacters } from './utils/functions.js'
+import { trimCharacters } from 'bumblebee-utils'
 
 const app_secret = (process.env.APP_SECRET || '6um61e6ee')
 var app_url
@@ -314,6 +314,7 @@ const initializeSession = async function (sessionId, payload = false) {
       result = await requestToKernel('init', sessionId, payload)
     } catch (err) {
       if (tries<=1) {
+        console.error(err)
         return {error: 'Internal Error', content: err.toString(), status: 'error'}
       }
       result = false

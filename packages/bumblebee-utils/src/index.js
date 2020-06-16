@@ -1,3 +1,6 @@
+import "core-js/stable"
+import "regenerator-runtime/runtime"
+
 export const throttle = (func, limit) => {
 	let lastFunc
 	let lastRan
@@ -9,7 +12,7 @@ export const throttle = (func, limit) => {
 			lastRan = Date.now()
 		} else {
 			clearTimeout(lastFunc)
-			lastFunc = setTimeout(function () {
+			lastFunc = setTimeout(() => {
 				if ((Date.now() - lastRan) >= limit) {
 					func.apply(context, args)
 					lastRan = Date.now()
@@ -112,7 +115,7 @@ export const newName = (name) => {
 
 export const debounce = (func, delay) => {
   let inDebounce
-  return function() {
+  return function () {
     const context = this
     const args = arguments
     clearTimeout(inDebounce)
@@ -256,6 +259,7 @@ export const getProperty = (pof, args = []) => {
     return pof
   }
 }
+
 export const getPropertyAsync = async (pof, args = []) => {
   if (typeof pof === 'function') {
     return await pof(...args)
@@ -364,36 +368,6 @@ export const multipleContent = (arrays, colors, arraySep = ', ', pairSep = ', ',
 
 }
 
-export const parseExpression = (exp, df, cols) => {
-
-  var columns = Array.from(cols)
-
-  columns.sort((a,b)=>b.length-a.length)
-
-  exp = exp.replace(/\\"/g,"_bb_QUOTE_bb_")
-
-  exp = exp.split('"')
-
-  for (let i = 0; i < exp.length; i++) {
-    if (i%2 == 1) {
-      continue
-    }
-    columns.forEach((column, cindex) => {
-      exp[i] = exp[i].replace(new RegExp(column,"g"),`_bb_BBCOLUMN${cindex}_bb_`)
-    });
-  }
-
-  exp = exp.join('"')
-
-  exp = exp.replace( new RegExp('_bb_QUOTE_bb_',"g") ,'\\"')
-
-  columns.forEach((column, cindex) => {
-    exp = exp.replace(new RegExp(`_bb_BBCOLUMN${cindex}_bb_`,"g"),`${df}["${column}"]`)
-  });
-
-  return exp
-}
-
 export const everyRatio = (array,cb) => {
   if (array.length===0) {
     return 1
@@ -404,3 +378,124 @@ export const everyRatio = (array,cb) => {
   }
   return count/array.length
 }
+
+// constants
+
+export const TYPES = {
+  INT: "int",
+  DECIMAL: "decimal",
+  STRING: "string",
+  BOOLEAN: "boolean",
+  DATE: "date",
+  ARRAY: "array",
+  OBJECT: "object",
+  GENDER: "gender",
+  IP: "ip",
+  URL: "url",
+  EMAIL: "email",
+  CREDIT_CARD_NUMBER: "credit_card_number",
+  ZIP_CODE: "zip_code",
+  MISSING: "missing",
+  CATEGORICAL: "categorical",
+  TIME: "time"
+}
+
+export const TYPES_HINTS = {
+  "int": "#",
+  "decimal": "#.##",
+  "string": "ABC",
+  "boolean": "0/1",
+  "date": "📅",
+  "array": "[ ]",
+  "object": "obj",
+  "gender": "gen",
+  "ip": "ip",
+  "url": "url",
+  "email": "a@b",
+  "credit_card_number": "####",
+  "zip_code": "zip",
+  "missing": "mis",
+  "categorical": "cat",
+  "time": "time"
+}
+
+export const TYPES_NAMES = {
+  "int": "Integer",
+  "decimal": "Decimal",
+  "string": "String",
+  "boolean": "Boolean",
+  "date": "Date",
+  "array": "Array",
+  "object": "Object",
+  "gender": "Gender",
+  "ip": "IP Address",
+  "url": "URL",
+  "email": "Email",
+  "credit_card_number": "Credit Card Number",
+  "zip_code": "Zip Code",
+  "missing": "Missing",
+  "categorical": "Categorical",
+  "time": "Time"
+}
+
+export const ALL_TYPES = Object.values(TYPES)
+
+export const STRING_TYPES = [
+  TYPES.STRING,
+  TYPES.OBJECT,
+  TYPES.CATEGORICAL,
+  TYPES.DATE,
+  TYPES.TIME
+]
+
+export const RESPONSE_MESSAGES = {
+  'user': {
+    201: 'User account successfully created',
+    404: 'User not found',
+    500: 'Something went wrong'
+  },
+  'default': {
+    404: 'Server not found',
+    500: 'Something went wrong'
+  }
+}
+
+export default {
+  throttle,
+  arrayJoin,
+  arraysEqual,
+  cancellablePromise,
+  trimCharacters,
+  getSelectedText,
+  parseResponse,
+  newName,
+  debounce,
+  stepify,
+  reduceRanges,
+  copyToClipboard,
+  optimizeRanges,
+  escapeQuotes,
+  getOutputColsArgument,
+  columnsHint,
+  escapeQuotesOn,
+  printError,
+  getProperty,
+  getPropertyAsync,
+  namesToIndices,
+  indicesToNames,
+  capitalizeString,
+  decapitalizeString,
+  spanClass,
+  hlParam,
+  hlCols,
+  multipleContent,
+  everyRatio,
+  TYPES,
+  TYPES_HINTS,
+  TYPES_NAMES,
+  ALL_TYPES,
+  STRING_TYPES,
+  RESPONSE_MESSAGES
+}
+
+// exports.meta = require('./package.json')

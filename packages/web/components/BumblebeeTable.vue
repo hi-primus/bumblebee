@@ -368,7 +368,13 @@ import Histogram from '@/components/Histogram'
 import Frequent from '@/components/Frequent'
 import DataBar from '@/components/DataBar'
 
-import { parseResponse, arraysEqual, cancellablePromise, throttle, debounce, optimizeRanges, escapeQuotes, namesToIndices, getSelectedText, getPropertyAsync } from '@/utils/functions.js'
+/*bu*/ import {
+  parseResponse, arraysEqual,
+  cancellablePromise, throttle,
+  debounce, optimizeRanges,
+  escapeQuotes, namesToIndices,
+  getSelectedText, getPropertyAsync
+} from 'bumblebee-utils' /*bu*/
 
 var doubleClick = false
 
@@ -1194,9 +1200,6 @@ export default {
             this.$store.commit('setPreviewInfo', {rowHighlights: false})
           }
 
-
-
-
           this.$store.commit('setPreviewColumns', previewColumns)
 
           this.$store.commit('setHighlights', { matchColumns, color })
@@ -1457,7 +1460,12 @@ export default {
           var payload = {
             output_cols: [this.newColumnName]
           }
-          this.commandHandle({command: 'rename', columns: [prevName], payload, immediate: true})
+          this.commandHandle({
+            command: 'rename',
+            columns: [prevName],
+            payload,
+            immediate: true
+          })
         }
         this.$nextTick(()=>{
           this.columnMenuIndex = false
@@ -1797,12 +1805,13 @@ export default {
 
       var code = await getPropertyAsync(previewCode, [from, to+1]) || ''
 
-      var codeS = await getPropertyAsync(previewCode) || ''
+      var referenceCode = await getPropertyAsync(previewCode) || ''
 
+      if (this.currentPreviewCode.beforeCodeEval) {
+        this.currentPreviewCode.beforeCodeEval()
+      }
 
       var response = await this.evalCode(`_output = ${this.currentDataset.varname}.ext.buffer_window("*"${(noBufferWindow) ? '' : ', '+from+', '+(to+1)})${code}.ext.to_json("*")`)
-
-      // console.log({response})
 
       if (response.data.status=='error') {
         this.$store.commit('setPreviewInfo', {error: response.data.error})
@@ -1821,7 +1830,7 @@ export default {
         // this.columnValues = this.getValuesByColumns(parsed.sample, false, from)
 
         this.fetched.push({
-          code: codeS,
+          code: referenceCode,
           update: this.currentDatasetUpdate,
           from,
           to,

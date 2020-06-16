@@ -138,17 +138,16 @@
 
 
 <script>
-import Layout from "@/components/Layout";
-import TableBar from "@/components/TableBar";
-import clientMixin from "@/plugins/mixins/client";
-import dataTypesMixin from "@/plugins/mixins/data-types";
-import applicationMixin from "@/plugins/mixins/application";
-import { printError } from "@/utils/functions.js";
-import { RESPONSE_MESSAGES } from "@/utils/constants.js";
+import Layout from "@/components/Layout"
+import TableBar from "@/components/TableBar"
+import clientMixin from "@/plugins/mixins/client"
+import dataTypesMixin from "@/plugins/mixins/data-types"
+import applicationMixin from "@/plugins/mixins/application"
+/*bu*/ import { printError, RESPONSE_MESSAGES } from 'bumblebee-utils' /*bu*/
 
-import { mapGetters } from "vuex";
+import { mapGetters } from "vuex"
 
-const { version } = require("@/package.json");
+const { version } = require("@/package.json")
 
 export default {
 	components: {
@@ -207,13 +206,13 @@ export default {
 			}
 
 			if (value == 'workspace') {
-				var dataset_csv = this.$route.query.dataset_csv;
-				if (dataset_csv && this.$refs.tableBar) {
+				var dataset = this.$route.query.dataset;
+				if (dataset && this.$refs.tableBar) {
 					this.$refs.tableBar.commandHandle({
-						command: 'load file',
-						noOperations: true,
+            command: 'load file',
+            noOperations: true,
 						immediate: true,
-						payload: { url: dataset_csv, file_type: 'csv', _moreOptions: true }
+						payload: { url: dataset, file_type: 'file', _moreOptions: true }
 					});
 				}
 			}
@@ -261,6 +260,36 @@ export default {
           workers: this.$route.query.workers,
           reset: this.$route.query.reset
         })
+
+        var reserved_words
+
+        if (response.data.reserved_words) {
+          reserved_words = response.data.reserved_words
+          reserved_words.unary_operators = reserved_words.operators.unary
+          reserved_words.binary_operators = reserved_words.operators.binary
+          delete reserved_words.operators
+        } else {
+          reserved_words = {
+            functions: [ 'MOD', 'ABS', 'EXP', 'LOG',
+              'POW', 'CEILING', 'SQRT', 'FLOOR', 'TRUNC',
+              'RANDIANS', 'DEGREES', 'SIN', 'COS', 'TAN',
+              'ASIN', 'ACOS', 'ATAN', 'SINH', 'ASINH', 'COSH',
+              'TANH', 'ACOSH', 'ATANH'
+            ],
+            unary_operators: ['|', '&', '+', '-'],
+            binary_operators: ['+', '-', '*', '/']
+          }
+        }
+
+        var reservedWords = []
+
+        Object.entries(reserved_words).forEach(([key, words])=>{
+          Object.entries(words).forEach(([word, description])=>{
+            reservedWords.push({type: key, text: word, description})
+          })
+        })
+
+        this.$store.commit('mutation', {mutate: 'reservedWords', payload: reservedWords})
 
         if (!response.data.optimus) {
           throw response
