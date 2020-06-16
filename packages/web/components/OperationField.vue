@@ -300,9 +300,7 @@
 
 <script>
 
-import {
-  getProperty
-} from 'bumblebee-utils'
+/*bu*/ import { getProperty } from 'bumblebee-utils' /*bu*/
 
 import TextFieldSuggestions from '@/components/TextFieldSuggestions'
 

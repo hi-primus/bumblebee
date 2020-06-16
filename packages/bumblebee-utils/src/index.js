@@ -1,5 +1,7 @@
+import "core-js/stable"
+import "regenerator-runtime/runtime"
 
-const throttle = (func, limit) => {
+export const throttle = (func, limit) => {
 	let lastFunc
 	let lastRan
 	return function () {
@@ -20,7 +22,7 @@ const throttle = (func, limit) => {
 	}
 }
 
-const arrayJoin = (array,separator = ', ',final_separator = ' and ') => {
+export const arrayJoin = (array,separator = ', ',final_separator = ' and ') => {
   var outStr = "";
   if (array.length === 1) {
     outStr = array[0];
@@ -32,7 +34,7 @@ const arrayJoin = (array,separator = ', ',final_separator = ' and ') => {
   return outStr;
 }
 
-const arraysEqual = (_arr1, _arr2) => {
+export const arraysEqual = (_arr1, _arr2) => {
 
   if (!Array.isArray(_arr1) || !Array.isArray(_arr2) || _arr1.length !== _arr2.length)
     return false;
@@ -47,7 +49,7 @@ const arraysEqual = (_arr1, _arr2) => {
   return true;
 }
 
-const cancellablePromise = (promiseToCancel) => {
+export const cancellablePromise = (promiseToCancel) => {
   let cancel
   const promise = new Promise((resolve, reject) => {
     cancel = reject
@@ -58,7 +60,7 @@ const cancellablePromise = (promiseToCancel) => {
   return {promise, cancel}
 }
 
-const trimCharacters = (s, c) => {
+export const trimCharacters = (s, c) => {
   if (c === "]") c = "\\]";
   if (c === "\\") c = "\\\\";
   return s.replace(new RegExp(
@@ -66,7 +68,7 @@ const trimCharacters = (s, c) => {
   ), "");
 }
 
-const getSelectedText = () => {
+export const getSelectedText = () => {
   var text = ""
   var selection
   if (typeof window.getSelection != "undefined") {
@@ -83,7 +85,7 @@ const getSelectedText = () => {
   return {selection, selectedText: text}
 }
 
-const parseResponse = (content) => {
+export const parseResponse = (content) => {
   // console.log('[DEBUG] parsedContent',content)
   try {
     if (typeof content !== 'string') {
@@ -98,7 +100,7 @@ const parseResponse = (content) => {
   }
 }
 
-const newName = (name) => {
+export const newName = (name) => {
 	name = name.toString()
   let matches = name.match(/\d+$/);
   if (matches) {
@@ -111,7 +113,7 @@ const newName = (name) => {
   }
 }
 
-const debounce = (func, delay) => {
+export const debounce = (func, delay) => {
   let inDebounce
   return function () {
     const context = this
@@ -121,11 +123,11 @@ const debounce = (func, delay) => {
   }
 }
 
-const stepify = (a, b, f = Math.round) => {
+export const stepify = (a, b, f = Math.round) => {
   return f(a / b) * b;
 }
 
-const reduceRanges = (ranges_array) => {
+export const reduceRanges = (ranges_array) => {
   return ranges_array.reduce( (ranges, range) => {
     if (ranges.length==0) {
       return [range]
@@ -143,7 +145,7 @@ const reduceRanges = (ranges_array) => {
   }, [])
 }
 
-const copyToClipboard = (str) => {
+export const copyToClipboard = (str) => {
   const el = document.createElement('textarea');
   el.value = str;
   document.body.appendChild(el);
@@ -152,7 +154,7 @@ const copyToClipboard = (str) => {
   document.body.removeChild(el);
 };
 
-const optimizeRanges = (inputRange, existingRanges) => {
+export const optimizeRanges = (inputRange, existingRanges) => {
   var newRanges = [inputRange]
 
   for (let i = 0; i < newRanges.length; i++) {
@@ -184,7 +186,7 @@ const optimizeRanges = (inputRange, existingRanges) => {
   return newRanges
 }
 
-const escapeQuotes = (str) => {
+export const escapeQuotes = (str) => {
   if (typeof str === 'string' && str && str.replace ) {
     return str.replace(/[\\]/g, '\\\\').replace(/[\""]/g, '\\"')
   } else if (str && str.map) {
@@ -193,7 +195,7 @@ const escapeQuotes = (str) => {
   return str
 }
 
-const getOutputColsArgument = (output_cols = [], input_cols = [], pre = '') => {
+export const getOutputColsArgument = (output_cols = [], input_cols = [], pre = '') => {
   var hasInput = input_cols.join('').trim().length
   if (output_cols.join('').trim().length && !(hasInput && pre)) {
     return (output_cols.length===1)
@@ -208,7 +210,7 @@ const getOutputColsArgument = (output_cols = [], input_cols = [], pre = '') => {
   return false
 }
 
-const columnsHint = (columns = [], output_cols = []) => {
+export const columnsHint = (columns = [], output_cols = []) => {
   if (output_cols.join('').length) {
     var output_cols_argument = getOutputColsArgument(output_cols, columns, '')
     return multipleContent([columns, output_cols_argument], 'hl--cols', ', ', ' to ', false, false)
@@ -217,7 +219,7 @@ const columnsHint = (columns = [], output_cols = []) => {
   }
 }
 
-const escapeQuotesOn = (payload = {}, keys = []) => {
+export const escapeQuotesOn = (payload = {}, keys = []) => {
   var _payload = {}
   keys.forEach(key => {
     _payload[key] = escapeQuotes(payload[key])
@@ -225,7 +227,7 @@ const escapeQuotesOn = (payload = {}, keys = []) => {
   return {...payload, ..._payload}
 }
 
-const printError = (payload) => {
+export const printError = (payload) => {
 
   var data = payload.data || payload
   var content = data.errorValue || data.content
@@ -250,14 +252,15 @@ const printError = (payload) => {
   return ((data.traceback && data.traceback[data.traceback.length-1]) || data.error || data.message || data).toString().split('\n')[0]
 }
 
-const getProperty = (pof, args = []) => {
+export const getProperty = (pof, args = []) => {
   if (typeof pof === 'function') {
     return pof(...args)
   } else {
     return pof
   }
 }
-const getPropertyAsync = async (pof, args = []) => {
+
+export const getPropertyAsync = async (pof, args = []) => {
   if (typeof pof === 'function') {
     return await pof(...args)
   } else {
@@ -265,7 +268,7 @@ const getPropertyAsync = async (pof, args = []) => {
   }
 }
 
-const namesToIndices = (cols = [], datasetColumns = []) => {
+export const namesToIndices = (cols = [], datasetColumns = []) => {
   try {
     return cols.map(name=>datasetColumns.findIndex(column => column.name===name))
   } catch (error) {
@@ -273,7 +276,7 @@ const namesToIndices = (cols = [], datasetColumns = []) => {
   }
 }
 
-const indicesToNames = (cols = [], datasetColumns = []) => {
+export const indicesToNames = (cols = [], datasetColumns = []) => {
   try {
     return cols.map(i=>datasetColumns[i].name)
   } catch (error) {
@@ -281,7 +284,7 @@ const indicesToNames = (cols = [], datasetColumns = []) => {
   }
 }
 
-const capitalizeString = (str) => {
+export const capitalizeString = (str) => {
   try {
     return str.charAt(0).toUpperCase()+str.slice(1)
   } catch (error) {
@@ -289,7 +292,7 @@ const capitalizeString = (str) => {
   }
 }
 
-const decapitalizeString = (str) => {
+export const decapitalizeString = (str) => {
   try {
     return str.charAt(0).toLowerCase()+str.slice(1)
   } catch (error) {
@@ -298,22 +301,22 @@ const decapitalizeString = (str) => {
 }
 
 
-const spanClass = (text, cls) => {
+export const spanClass = (text, cls) => {
   if (!cls) {
     return text
   }
   return `<span class="${cls}">${text}</span>`
 }
 
-const hlParam = (text) => {
+export const hlParam = (text) => {
   return spanClass(`'${text}'`,'hl--param')
 }
 
-const hlCols = (text) => {
+export const hlCols = (text) => {
   return spanClass(`'${text}'`,'hl--cols')
 }
 
-const multipleContent = (arrays, colors, arraySep = ', ', pairSep = ', ', brackets = true, parentheses = true) => {
+export const multipleContent = (arrays, colors, arraySep = ', ', pairSep = ', ', brackets = true, parentheses = true) => {
 
   arrays = arrays.map(array=>{
     if (!array || !array.join || !array.map)
@@ -365,7 +368,7 @@ const multipleContent = (arrays, colors, arraySep = ', ', pairSep = ', ', bracke
 
 }
 
-const everyRatio = (array,cb) => {
+export const everyRatio = (array,cb) => {
   if (array.length===0) {
     return 1
   }
@@ -378,9 +381,7 @@ const everyRatio = (array,cb) => {
 
 // constants
 
-var constants = {}
-
-const TYPES = {
+export const TYPES = {
   INT: "int",
   DECIMAL: "decimal",
   STRING: "string",
@@ -399,7 +400,7 @@ const TYPES = {
   TIME: "time"
 }
 
-const TYPES_HINTS = {
+export const TYPES_HINTS = {
   "int": "#",
   "decimal": "#.##",
   "string": "ABC",
@@ -418,7 +419,7 @@ const TYPES_HINTS = {
   "time": "time"
 }
 
-const TYPES_NAMES = {
+export const TYPES_NAMES = {
   "int": "Integer",
   "decimal": "Decimal",
   "string": "String",
@@ -437,9 +438,9 @@ const TYPES_NAMES = {
   "time": "Time"
 }
 
-const ALL_TYPES = Object.values(TYPES)
+export const ALL_TYPES = Object.values(TYPES)
 
-const STRING_TYPES = [
+export const STRING_TYPES = [
   TYPES.STRING,
   TYPES.OBJECT,
   TYPES.CATEGORICAL,
@@ -447,7 +448,7 @@ const STRING_TYPES = [
   TYPES.TIME
 ]
 
-const RESPONSE_MESSAGES = {
+export const RESPONSE_MESSAGES = {
   'user': {
     201: 'User account successfully created',
     404: 'User not found',
@@ -459,7 +460,7 @@ const RESPONSE_MESSAGES = {
   }
 }
 
-export {
+export default {
   throttle,
   arrayJoin,
   arraysEqual,
@@ -496,3 +497,5 @@ export {
   STRING_TYPES,
   RESPONSE_MESSAGES
 }
+
+// exports.meta = require('./package.json')

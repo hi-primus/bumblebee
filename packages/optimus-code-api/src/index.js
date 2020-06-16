@@ -5,11 +5,11 @@ import {
 } from 'bumblebee-utils'
 
 
-const version = function() {
+export const version = function() {
   console.log("Code api 0.0.1")
 }
 
-const codeGenerators = {
+export const codeGenerators = {
   'apply sort': (payload) => {
     return `.cols.sort(["${payload.columns.join('", "')}"])`
   },
@@ -559,12 +559,12 @@ const codeGenerators = {
 
 }
 
-const getGenerator = function(generatorName = '', payload = {}) {
+export const getGenerator = function(generatorName = '', payload = {}) {
   var generator = codeGenerators[generatorName] || codeGenerators[payload.command] || codeGenerators[payload.type] || undefined
   return generator
 }
 
-export {
+export default {
   version,
   getGenerator
 }

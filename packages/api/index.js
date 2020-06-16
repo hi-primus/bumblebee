@@ -314,6 +314,7 @@ const initializeSession = async function (sessionId, payload = false) {
       result = await requestToKernel('init', sessionId, payload)
     } catch (err) {
       if (tries<=1) {
+        console.error(err)
         return {error: 'Internal Error', content: err.toString(), status: 'error'}
       }
       result = false

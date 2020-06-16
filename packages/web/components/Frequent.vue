@@ -20,8 +20,8 @@
 
 <script>
 import BarsCanvas from '@/components/BarsCanvas'
-import { mapState, mapGetters } from 'vuex';
-import { arraysEqual } from 'bumblebee-utils'
+import { mapState, mapGetters } from 'vuex'
+/*bu*/ import { arraysEqual } from 'bumblebee-utils' /*bu*/
 
 export default {
 

@@ -71,7 +71,7 @@
 
 <script>
 
-import { debounce, throttle } from 'bumblebee-utils'
+/*bu*/ import { debounce, throttle } from 'bumblebee-utils' /*bu*/
 
 export default {
   props: {

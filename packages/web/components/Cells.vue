@@ -222,10 +222,12 @@ import OutputColumnInputs from '@/components/OutputColumnInputs'
 import Outliers from '@/components/Outliers'
 import OperationField from '@/components/OperationField'
 import clientMixin from '@/plugins/mixins/client'
-import { getGenerator } from 'optimus-code-api'
 import { mapGetters } from 'vuex'
+import OptimusApi from 'optimus-code-api'
 
-import {
+const { getGenerator } = OptimusApi
+
+/*bu*/ import {
 
   everyRatio,
   arrayJoin,
@@ -243,8 +245,7 @@ import {
 
   TYPES,
   STRING_TYPES
-
-} from 'bumblebee-utils'
+} from 'bumblebee-utils' /*bu*/
 
 export default {
 

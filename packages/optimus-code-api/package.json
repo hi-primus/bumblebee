@@ -2,8 +2,10 @@
   "name": "optimus-code-api",
   "version": "1.0.0",
   "description": "API for generating optimus code",
-  "main": "index.js",
+  "main": "dist/index.js",
   "scripts": {
+    "build": "npx babel src --out-dir dist",
+    "start": "npx babel src --watch --out-dir dist",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
@@ -15,9 +17,14 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@babel/plugin-transform-modules-commonjs": "^7.10.1",
     "eslint": "^7.2.0"
   },
   "dependencies": {
+    "@babel/cli": "^7.10.1",
+    "@babel/core": "^7.10.2",
+    "@babel/node": "^7.10.1",
+    "@babel/preset-env": "^7.10.2",
     "bumblebee-utils": "file:../bumblebee-utils"
   }
 }

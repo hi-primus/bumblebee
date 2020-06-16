@@ -138,16 +138,16 @@
 
 
 <script>
-import Layout from "@/components/Layout";
-import TableBar from "@/components/TableBar";
-import clientMixin from "@/plugins/mixins/client";
-import dataTypesMixin from "@/plugins/mixins/data-types";
-import applicationMixin from "@/plugins/mixins/application";
-import { printError, RESPONSE_MESSAGES } from 'bumblebee-utils';
+import Layout from "@/components/Layout"
+import TableBar from "@/components/TableBar"
+import clientMixin from "@/plugins/mixins/client"
+import dataTypesMixin from "@/plugins/mixins/data-types"
+import applicationMixin from "@/plugins/mixins/application"
+/*bu*/ import { printError, RESPONSE_MESSAGES } from 'bumblebee-utils' /*bu*/
 
-import { mapGetters } from "vuex";
+import { mapGetters } from "vuex"
 
-const { version } = require("@/package.json");
+const { version } = require("@/package.json")
 
 export default {
 	components: {

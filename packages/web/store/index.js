@@ -71,7 +71,7 @@ properties.forEach((p)=>{
   pStates['every'+p.name] = []
 })
 
-import { ALL_TYPES } from 'bumblebee-utils'
+/*bu*/ import { ALL_TYPES } from 'bumblebee-utils' /*bu*/
 
 export const state = () => ({
   datasets: [],

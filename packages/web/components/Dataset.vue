@@ -193,7 +193,8 @@
 
 <script>
 
-import { parseResponse, debounce, throttle, getPropertyAsync } from 'bumblebee-utils'
+/*bu*/ import { parseResponse, debounce, throttle, getPropertyAsync } from 'bumblebee-utils' /*bu*/
+
 import { mapGetters } from 'vuex'
 import dataTypesMixin from '@/plugins/mixins/data-types'
 import clientMixin from '@/plugins/mixins/client'
