@@ -410,10 +410,8 @@ import VegaEmbed from '@/components/VegaEmbed'
 import clientMixin from '@/plugins/mixins/client'
 import dataTypesMixin from '@/plugins/mixins/data-types'
 import applicationMixin from '@/plugins/mixins/application'
-import { copyToClipboard, namesToIndices, getProperty } from '@/utils/functions.js'
-import { mapState, mapGetters } from 'vuex';
-
-import { TYPES_NAMES } from '@/utils/constants.js'
+/*bu*/ import { copyToClipboard, namesToIndices, getProperty, TYPES_NAMES } from 'bumblebee-utils' /*bu*/
+import { mapState, mapGetters } from 'vuex'
 
 export default {
 	components: {

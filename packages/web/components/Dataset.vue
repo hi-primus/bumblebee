@@ -193,7 +193,8 @@
 
 <script>
 
-import { parseResponse, debounce, throttle, getPropertyAsync } from '@/utils/functions.js'
+/*bu*/ import { parseResponse, debounce, throttle, getPropertyAsync } from 'bumblebee-utils' /*bu*/
+
 import { mapGetters } from 'vuex'
 import dataTypesMixin from '@/plugins/mixins/data-types'
 import clientMixin from '@/plugins/mixins/client'
@@ -618,7 +619,8 @@ export default {
             this.loadedPreviewCode = currentCode
             if (this.currentPreviewCode.load) {
               var varname = 'preview_df'
-              var code = `${varname} = ${this.currentPreviewCode.code} \n`
+              var code = this.currentPreviewCode.code // is always static
+              code = `${varname} = ${code} \n`
 
               code += `_output = {**${varname}.ext.to_json("*"), "meta": ${varname}.meta.get() if (${varname}.meta and ${varname}.meta.get) else {} } \n`
 
@@ -630,10 +632,10 @@ export default {
 
               var response = await this.evalCode(code)
 
-              this.$store.commit('setLoadPreview', {sample: response.data.result.sample} )
+              this.$store.commit('setLoadPreview', { sample: response.data.result.sample } )
 
               if (response.data.result.meta) {
-                this.$store.commit('setLoadPreview', {meta: response.data.result.meta} )
+                this.$store.commit('setLoadPreview', { meta: response.data.result.meta } )
               }
 
               var pCode = `_output = ${varname}.ext.profile(columns="*", output="json")`

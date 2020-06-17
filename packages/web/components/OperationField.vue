@@ -1,6 +1,6 @@
 <template>
   <div class="o-field" :class="field.class || {}">
-    <template v-if="getPropertyField(field.type)=='action'">
+    <template v-if="getPropertyField(field.type)==='action'">
       <v-btn
         :key="field.key"
         depressed
@@ -41,7 +41,7 @@
         :placeholder="(typeof field.placeholder == 'function') ? field.placeholder(currentCommand) : (field.placeholder || '')"
         :clearable="field.clearable"
         :accept="field.accept"
-        @input="(field.onChange) ? field.onChange($event) : 0"
+        @input="(field.onChange) ? (currentCommand = field.onChange($event, currentCommand)) : 0"
         dense
         required
         outlined
@@ -55,7 +55,7 @@
         :placeholder="(typeof field.placeholder == 'function') ? field.placeholder(currentCommand) : (field.placeholder || '')"
         :clearable="field.clearable"
         :class="{'mono-field': field.mono}"
-        @input="(field.onChange) ? field.onChange($event) : 0"
+        @input="(field.onChange) ? (currentCommand = field.onChange($event, currentCommand)) : 0"
         spellcheck="false"
         dense
         required
@@ -71,7 +71,7 @@
         :clearable="field.clearable"
         :mono="field.mono"
         :suggestions="getPropertyField(field.suggestions)"
-        @input="(field.onChange) ? field.onChange($event) : 0"
+        @input="(field.onChange) ? (currentCommand = field.onChange($event, currentCommand)) : 0"
       ></TextFieldSuggestions>
     </template>
     <template v-else-if="getPropertyField(field.type)=='chips'">
@@ -153,7 +153,7 @@
         :append-icon="field.showable ? (field.show ? 'visibility' : 'visibility_off') : undefined"
         :type="(field.show || !field.showable) ? 'text' : 'password'"
         :clearable="field.clearable"
-        @input="(field.onChange) ? field.onChange($event) : 0"
+        @input="(field.onChange) ? (currentCommand = field.onChange($event, currentCommand)) : 0"
         @click:append="field.show = !field.show"
       />
     </template>
@@ -166,7 +166,7 @@
         :placeholder="field.placeholder"
         :min="field.min"
         :clearable="field.clearable"
-        @input="(field.onChange) ? field.onChange($event) : 0"
+        @input="(field.onChange) ? (currentCommand = field.onChange($event, currentCommand)) : 0"
         dense
         required
         outlined
@@ -195,7 +195,7 @@
         :label="field.label"
         :placeholder="field.placeholder"
         :items="(field.items_key) ? getPropertyField(currentCommand[field.items_key]) : getPropertyField(field.items)"
-        @input="(field.onChange) ? field.onChange($event) : 0"
+        @input="(field.onChange) ? (currentCommand = field.onChange($event, currentCommand)) : 0"
         :disabled="getPropertyField(field.disabled)"
         dense
         required
@@ -210,8 +210,8 @@
         :headers="field.headers"
         :item-key="field.item_key"
         :items="(field.items_key) ? getPropertyField(currentCommand[field.items_key]) : field.items"
-        @input="(field.onChange) ? field.onChange($event) : ()=>{}"
-        @click:row="field.onClickRow ? field.onClickRow($event) : ()=>{}"
+        @input="(field.onChange) ? (currentCommand = field.onChange($event, currentCommand)) : ()=>{}"
+        @click:row="field.onClickRow ? (currentCommand = field.onClickRow($event, currentCommand)) : ()=>{}"
         :disabled="getPropertyField(field.disabled)"
         :items-per-page="(field.items_key) ? getPropertyField(currentCommand[field.items_key]).length : field.items.length"
         class="vdf--hide-select mb-4 columns-filter"
@@ -227,7 +227,7 @@
         </template>
         <template v-slot:item.key="{ item }">
           <span
-            @click.stop="field.selectKey ? field.selectKey(item) : ()=>{}"
+            @click.stop="field.selectKey ? (currentCommand = field.selectKey(item, currentCommand)) : ()=>{}"
             :class="{'key-selected': (currentCommand.right_on===item.name && item.source==='right')||(currentCommand.left_on===item.name && item.source==='left')}"
             class="key-select"
           >
@@ -300,9 +300,7 @@
 
 <script>
 
-import {
-  getProperty
-} from '@/utils/functions.js'
+/*bu*/ import { getProperty } from 'bumblebee-utils' /*bu*/
 
 import TextFieldSuggestions from '@/components/TextFieldSuggestions'
 

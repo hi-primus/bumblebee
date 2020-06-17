@@ -7,6 +7,13 @@
     "web": "cd packages/web && npm run build && npm start",
     "api": "cd packages/api && npm start",
     "dev": "concurrently \"npm run web-dev\" \"npm run api-dev\" ",
+    "dev-no-web": "concurrently \"npm run api-dev\" \"npm run watch-oca\" \"npm run watch-bu\"",
+    "watch-oca": "cd packages/optimus-code-api && npm start",
+    "watch-bu": "cd packages/bumblebee-utils && npm start",
+    "watch-packages": "concurrently \"npm run watch-oca\" \"npm run watch-bu\"",
+    "build-oca": "cd packages/optimus-code-api && npm run build",
+    "build-bu": "cd packages/bumblebee-utils && npm run build",
+    "build-packages": "concurrently \"npm run build-oca\" \"npm run build-bu\"",
     "start": "concurrently \"npm run web\" \"npm run api\" ",
     "postinstall": "cd packages/api && npm install && cd ../web && npm install"
   },

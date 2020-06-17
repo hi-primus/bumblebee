@@ -116,11 +116,10 @@ module.exports = {
 		}
 	},
 
-	build   : {
-		extend (config, {
-			isDev
-		}) {
+	build: {
+		extend (config, { isDev }) {
       config.resolve.alias['vue'] = 'vue/dist/vue.common'
+      config.resolve.symlinks = false
 			if (isDev && process.client) {
 				config.module.rules.push({
 					enforce: 'pre',
