@@ -2531,7 +2531,7 @@ export default {
       this.$emit('update:codeError','')
     },
 
-    moveBarDelayed: debounce(async function(value) {
+    moveBarDelayed: debounce( async function(value) {
       this.moveBar(value)
     },300),
 
@@ -2762,7 +2762,7 @@ export default {
 
     },
 
-    moveBarDelayed: debounce(async function(value) {
+    moveBarDelayed: debounce( async function(value) {
       this.moveBar(value)
     },300),
 
@@ -3096,7 +3096,7 @@ export default {
 
     },
 
-    runCode: debounce(async function (force = false) {
+    runCode: debounce( async function (force = false) {
       await this.runCodeNow(force)
     }, 1000),
   }

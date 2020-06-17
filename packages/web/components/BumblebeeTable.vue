@@ -64,6 +64,7 @@
   </v-menu>
   <div
     class="bb-table-top-container" ref="BbTableTopContainer"
+    @scroll.passive="tableTopContainerScroll"
     v-if="columns && allColumns"
   >
     <div class="bb-table-header">
@@ -280,6 +281,7 @@
   </div>
   <div
     class="bb-table-container" ref="BbTableContainer"
+    @scroll.passive="tableContainerScroll"
   >
     <!-- <style>
       .bb-table-i-cell, .bb-table-i-row {
@@ -900,28 +902,28 @@ export default {
     this.mustUpdateRows = true
     this.updateRows()
 
-    this.$refs['BbTableContainer'] && this.$refs['BbTableContainer'].addEventListener('scroll', this.throttledScrollCheck, {passive: true})
-    this.$refs['BbTableContainer'] && this.$refs['BbTableContainer'].addEventListener('scroll', this.debouncedScrollCheck, {passive: true})
+    // this.$refs['BbTableContainer'] && this.$refs['BbTableContainer'].addEventListener('scroll', this.throttledScrollCheck, {passive: true})
+    // this.$refs['BbTableContainer'] && this.$refs['BbTableContainer'].addEventListener('scroll', this.debouncedScrollCheck, {passive: true})
 
-    this.$refs['BbTableContainer'] && this.$refs['BbTableContainer'].addEventListener('scroll', this.horizontalScrollCheckUp, {passive: true})
-    this.$refs['BbTableTopContainer'] && this.$refs['BbTableTopContainer'].addEventListener('scroll', this.horizontalScrollCheckDown, {passive: true})
+    // this.$refs['BbTableContainer'] && this.$refs['BbTableContainer'].addEventListener('scroll', this.horizontalScrollCheckUp, {passive: true})
+    // this.$refs['BbTableTopContainer'] && this.$refs['BbTableTopContainer'].addEventListener('scroll', this.horizontalScrollCheckDown, {passive: true})
 
-    this.$refs['BbTableContainer'] && this.$refs['BbTableContainer'].addEventListener('scroll', this.checkVisibleColumns, {passive: true})
-    this.$refs['BbTableTopContainer'] && this.$refs['BbTableTopContainer'].addEventListener('scroll', this.checkVisibleColumns, {passive: true})
+    // this.$refs['BbTableContainer'] && this.$refs['BbTableContainer'].addEventListener('scroll', this.checkVisibleColumns, {passive: true})
+    // this.$refs['BbTableTopContainer'] && this.$refs['BbTableTopContainer'].addEventListener('scroll', this.checkVisibleColumns, {passive: true})
   },
 
-  beforeDestroy() {
-    try {
-      this.$refs['BbTableContainer'].removeEventListener('scroll', this.throttledScrollCheck)
-      this.$refs['BbTableContainer'].removeEventListener('scroll', this.debouncedScrollCheck)
-      this.$refs['BbTableContainer'].removeEventListener('scroll', this.horizontalScrollCheckUp)
-      this.$refs['BbTableTopContainer'].removeEventListener('scroll', this.horizontalScrollCheckDown)
-      this.$refs['BbTableContainer'].removeEventListener('scroll', this.checkVisibleColumns)
-      this.$refs['BbTableTopContainer'].removeEventListener('scroll', this.checkVisibleColumns)
-    } catch (err) {
-      console.error(err)
-    }
-  },
+  // beforeDestroy() {
+  //   try {
+  //     this.$refs['BbTableContainer'].removeEventListener('scroll', this.throttledScrollCheck)
+  //     this.$refs['BbTableContainer'].removeEventListener('scroll', this.debouncedScrollCheck)
+  //     this.$refs['BbTableContainer'].removeEventListener('scroll', this.horizontalScrollCheckUp)
+  //     this.$refs['BbTableTopContainer'].removeEventListener('scroll', this.horizontalScrollCheckDown)
+  //     this.$refs['BbTableContainer'].removeEventListener('scroll', this.checkVisibleColumns)
+  //     this.$refs['BbTableTopContainer'].removeEventListener('scroll', this.checkVisibleColumns)
+  //   } catch (err) {
+  //     console.error(err)
+  //   }
+  // },
 
   watch: {
 
@@ -948,17 +950,17 @@ export default {
 
       deep: true,
 
-      async handler () {
-        var currentCode = await getPropertyAsync(this.currentPreviewCode.code)
+      async handler (currentPreviewCode) {
+        var currentCode = await getPropertyAsync(currentPreviewCode.code)
         if (this.loadedPreviewCode!==currentCode) {
           this.loadedPreviewCode = currentCode
           if (currentCode) { // a new code
             delete this.columnValues['__match__']
             this.fetched = this.fetched.filter(e=>!e.code)
           }
-          if (!this.currentPreviewCode.load) {
+          if (!currentPreviewCode.load) {
             this.previousRange = -1
-            this.scrollCheck(true)
+            await this.scrollCheck(true) // await?
             this.mustUpdateRows = true
             this.updateRows()
             this.mustCheck = true
@@ -975,7 +977,7 @@ export default {
         this.updateSelection(this.currentSelection) // TEST
         this.fetched = []
         this.previousRange = -1
-        this.$nextTick(()=>{
+        this.$nextTick(() => {
           this.scrollCheck(true)
         })
       }
@@ -988,6 +990,18 @@ export default {
   },
 
   methods: {
+
+    tableContainerScroll () {
+      this.throttledScrollCheck()
+      this.debouncedScrollCheck()
+      this.horizontalScrollCheckUp()
+      this.checkVisibleColumns()
+    },
+
+    tableTopContainerScroll () {
+      this.horizontalScrollCheckDown()
+      this.checkVisibleColumns()
+    },
 
     computeColumnValues (columnValues, noHighlight = false, limit = Infinity) {
       var cValues = {}
@@ -1027,7 +1041,7 @@ export default {
       return cValues
     },
 
-    setBuffer: debounce(async function () {
+    setBuffer: debounce( async function () {
       try {
         var buffer = await this.evalCode('_output = '+this.currentDataset.varname+'.ext.set_buffer("*")')
         this.$store.commit('setBuffer',true)
@@ -1473,7 +1487,7 @@ export default {
       })
     },
 
-    checkVisibleColumns: debounce(function(event) {
+    checkVisibleColumns: debounce( function(event) {
       try {
         var scrollLeft = this.$refs['BbTableTopContainer'].scrollLeft
 
@@ -1570,19 +1584,20 @@ export default {
       return false
     },
 
-
-    debouncedScrollCheck: debounce(function () {
+    debouncedScrollCheck: debounce( function () {
       if (this.mustUpdateRows) {
         this.mustUpdateRows = false
         this.updateRows()
       }
     }, 80),
 
-    debouncedThrottledScrollCheck: debounce(function () {
+    debouncedThrottledScrollCheck: debounce( function () {
       this.throttledScrollCheck()
     }, 400),
 
-    throttledScrollCheck: throttle(function(aw = true) {this.scrollCheck(aw)} , 100),
+    throttledScrollCheck: throttle( function (aw = true) {
+      this.scrollCheck(aw)
+    } , 100),
 
     async scrollCheck (awaited = true) {
       if (this.currentPreviewCode.load) {
@@ -1645,7 +1660,7 @@ export default {
             }
           }
 
-          var awaited = false
+          awaited = false
 
           while (!awaited && this.toFetch.length) {
             range = await this.fetchRows(range)
