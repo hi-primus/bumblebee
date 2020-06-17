@@ -479,7 +479,7 @@ export default {
 
       try {
 
-        if (this.columnValues['__match__'] && this.columnValues['__match__'].length) {
+        if (this.currentPreviewCode && this.columnValues['__match__'] && this.columnValues['__match__'].length) {
           return '__match__'
         }
 
