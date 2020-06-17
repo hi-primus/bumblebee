@@ -66,7 +66,7 @@
             </template>
             <OutputColumnInputs v-if="command.dialog.output_cols" :fieldLabel="command.dialog.output_cols_label" :noLabel="!command.dialog.output_labels" :currentCommand.sync="currentCommand"></OutputColumnInputs>
             <template>
-              <v-alert key="error" type="error" class="mt-3" dismissible v-if="currentCommand.error"  @input="currentCommand.error=''">
+              <v-alert key="error" type="error" class="mt-0" dismissible v-if="currentCommand.error"  @input="currentCommand.error=''">
                 {{currentCommand.error}}
               </v-alert>
             </template>
@@ -1168,7 +1168,7 @@ export default {
               currentCommand.error = error
               currentCommand._fileUploading = false
             }
-            return currentCommand
+            this.currentCommand = currentCommand
           },
 
           payload: () => ({
@@ -1322,7 +1322,7 @@ export default {
 
             currentCommand.loading = false
 
-            return currentCommand
+            this.currentCommand = currentCommand
           },
           payload: (columns, payload = {}) => {
             return {
@@ -1473,7 +1473,7 @@ export default {
 
             currentCommand.loading = false
 
-            return currentCommand
+            this.currentCommand = currentCommand
           },
           payload: (columns, payload = {}) => {
             return {
@@ -1663,10 +1663,13 @@ export default {
 
               var response = await this.evalCode(code+`; _output = db.tables_names_to_json()`)
 
+              if (response.data.status === 'error') {
+                throw response.data.error
+              }
+
               var tables = response.data.result
 
-              // var tables = parseResponse(response.content)
-              if (!tables.length) {
+              if (!tables || !tables.length) {
                 throw 'Database has no tables'
               }
 
@@ -1681,13 +1684,15 @@ export default {
                 validHost: currentCommand.host,
                 validDatabase: currentCommand.database
               }
-              currentCommand._loadingTables = false
             } catch (error) {
               var _error = printError(error)
-              currentCommand = {...payload, error: _error}
-              currentCommand._loadingTables = false
+              console.log({_error})
+              currentCommand = {...currentCommand, error: _error}
             }
-            return currentCommand
+
+            currentCommand._loadingTables = false
+
+            this.currentCommand = currentCommand
           }
         },
         'save to database': {

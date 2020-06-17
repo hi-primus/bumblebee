@@ -1828,7 +1828,7 @@ export default {
 
       var response = await this.evalCode(`_output = ${this.currentDataset.varname}.ext.buffer_window("*"${(noBufferWindow) ? '' : ', '+from+', '+(to+1)})${code}.ext.to_json("*")`)
 
-      if (response.data.status=='error') {
+      if (response.data.status === 'error') {
         this.$store.commit('setPreviewInfo', {error: response.data.error})
       } else {
         this.$store.commit('setPreviewInfo', {error: false})

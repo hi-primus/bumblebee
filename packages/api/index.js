@@ -240,7 +240,7 @@ const runCode = async function(code = '', sessionId = '') {
 
     var response = await requestToKernel('code',sessionId,code)
 
-    if (response.status==='error') {
+    if (response.status === 'error') {
       throw response
     }
     return response

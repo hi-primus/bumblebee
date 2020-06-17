@@ -96,7 +96,7 @@ router.route('/profile')
 
   })
 
-router.route('/singup')
+router.route('/signup')
   .post(async function (req, res) {
 
     if (req.body.secret!==process.env.AUTH_SECRET) {
