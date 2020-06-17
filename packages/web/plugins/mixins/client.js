@@ -120,7 +120,7 @@ export default {
           )
         }
 
-        if (response.data.status==='error') {
+        if (response.data.status === 'error') {
           throw response
         }
 
