@@ -278,16 +278,15 @@ export default {
 						username: this.inputUsername,
 						password: this.inputPassword
           })
-					this.startClient({
-						session: this.inputUsername,
-						engine,
-						tpw,
-						workers
-					})
+          // this.$store.commit('setAppStatus', {status: 'loading'})
+          // this.$store.commit('session/mutation', {mutate: 'workspace', payload: workspace})
+          this.$router.push({path: 'workspaces', query: this.$route.query })
+
 					this.successMessage = "";
 				} else {
 					this.startClient({
-						session: this.inputUsername,
+						username: this.inputUsername,
+						workspace: 'default',
 						key: this.inputPassword,
 						engine,
 						tpw,

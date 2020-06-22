@@ -159,6 +159,44 @@ export default {
 
   middleware: 'authenticated',
 
+    async validate ({ params, store }) {
+
+    // TO-DO: params
+
+    // var validSlug = /^[a-z](-?[a-z|\d])*$/.test(params.id)
+    // if (!validSlug) {
+    //   throw new Error('Invalid Url')
+    // }
+
+    return true
+
+  },
+
+  async fetch ({ store, params }) {
+    store.dispatch('session/mutation', {mutate: 'workspace', payload: params.id})
+  },
+
+  async asyncData ({ store, params, error }) {
+
+    var workspace = []
+
+    try {
+      let worskpace = params.id
+      let response = await store.dispatch('request',{
+        path: `/workspaces/${worskpace}`
+      })
+      console.log('response.data',response.data)
+      workspace = response.data
+    } catch (err) {
+      error(err)
+      return {}
+    }
+
+    return {
+      workspace: workspace || []
+    }
+  },
+
 	data () {
 		return {
 			isOperating: false,
@@ -166,7 +204,15 @@ export default {
 			confirmDelete: -1,
 			typesInput: ''
 		};
-	},
+  },
+
+  created () {
+
+  },
+
+  mounted () {
+    this.initializeWorkspace()
+  },
 
 	computed: {
     ...mapGetters(['currentDataset']),
@@ -239,10 +285,6 @@ export default {
         this.deleteTab(value)
       }
 		}
-  },
-
-  mounted () {
-    this.initializeWorkspace()
   },
 
 	methods: {

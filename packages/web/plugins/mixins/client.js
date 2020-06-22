@@ -82,7 +82,8 @@ export default {
 
         var response = await this.socketPost('run', {
           code,
-          session: this.$store.state.session.session
+          username: this.$store.state.session.username,
+          workspace: this.$store.state.session.workspace
         }, {
           timeout: 0
         })
@@ -152,7 +153,8 @@ export default {
           if (!socket) {
             await this.startSocket ()
             var response = await this.socketPost('initialize',{
-              session: this.$store.state.session.session,
+              username: this.$store.state.session.username,
+              workspace: this.$store.state.session.workspace,
               engine: this.$route.query.engine,
               tpw: this.$route.query.tpw,
               workers: this.$route.query.workers,
@@ -228,14 +230,14 @@ export default {
         console.warn('Socket already closed')
     },
 
-    startSocket (session, key, engine) {
+    startSocket (username, workspace, key, engine) {
 
       return new Promise((resolve, reject)=>{
 
-        if (session)
-          this.$store.commit('session/mutation', {mutate: 'session', payload: session})
-        else if (this.$store.state.session.session)
-          session = this.$store.state.session.session
+        if (workspace)
+          this.$store.commit('session/mutation', {mutate: 'workspace', payload: workspace})
+        else if (this.$store.state.session.workspace)
+          workspace = this.$store.state.session.workspace
         else
           throw new Error('Credentials not found')
 
@@ -248,7 +250,7 @@ export default {
 
         key = key || ''
 
-        socket = io(process.env.API_URL, { query: { session, authorization: accessToken, key } })
+        socket = io(process.env.API_URL, { query: { workspace, username, authorization: accessToken, key } })
 
         socket.on('new-error', (reason) => {
           console.error('Socket error', reason)
@@ -308,7 +310,7 @@ export default {
 
     },
 
-		async startClient ({session, key, engine, tpw, workers}) {
+		async startClient ({workspace, username, key, engine, tpw, workers}) {
 
       if (['loading','workspace'].includes(this.$store.state.appStatus.status)) {
         return false
@@ -316,11 +318,12 @@ export default {
 
       try {
         this.$store.commit('setAppStatus', {status: 'loading'})
-        this.$store.commit('session/mutation', {mutate: 'session', payload: session})
-        if (key)
+        this.$store.commit('session/mutation', {mutate: 'workspace', payload: workspace})
+        if (key) {
           this.$store.commit('key', key)
+        }
 
-        var client_status = await this.startSocket(session, key, engine)
+        var client_status = await this.startSocket(username, workspace, key, engine)
 
         if (client_status === 'ok') {
           this.$router.push({path: 'workspace', query: this.$route.query })
@@ -335,7 +338,10 @@ export default {
 
     async updateSecondaryDatasets() {
       try {
-        var response = await this.socketPost('datasets',{session: this.$store.state.session.session})
+        var response = await this.socketPost('datasets', {
+          username: this.$store.state.session.username,
+          workspace: this.$store.state.session.workspace
+        })
         window.pushCode({code: response.code, unimportant: true})
         secondaryDatasets = response.data
         this.$store.commit('setHasSecondaryDatasets', (Object.keys(secondaryDatasets).length>1) )

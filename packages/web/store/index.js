@@ -1,3 +1,4 @@
+import axios from 'axios'
 import Vue from 'vue'
 
 const properties = [
@@ -382,9 +383,25 @@ export const mutations = {
 }
 
 export const actions = {
+
   async nuxtServerInit ({ dispatch, commit, app }, context) {
     await dispatch('session/serverInit')
-  }
+  },
+
+  async request ({state}, {request, path, payload, accessToken}) {
+
+    if (!request) request = 'get'
+    if (!accessToken) accessToken = state.session.accessToken
+
+    var response
+    if (request === 'post') {
+      response = await axios[request](process.env.DEV_API_URL + path, payload, { headers: {'Authorization': accessToken} } )
+    } else {
+      response = await axios[request](process.env.DEV_API_URL + path, { headers: {'Authorization': accessToken} } )
+    }
+    return response
+
+  },
 }
 
 var pGetters = {}

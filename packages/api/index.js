@@ -46,7 +46,7 @@ function updateHost (host = 'localhost') {
 
 }
 
-updateHost ()
+updateHost()
 
 if (!process.env.DISABLE_CORS) {
 
@@ -125,6 +125,7 @@ app.post('/dataset', (req, res) => {
 })
 
 const newSocket = function (socket, session) {
+
   sockets[session] = socket
 
   socket.emit('success')
@@ -132,7 +133,7 @@ const newSocket = function (socket, session) {
   if (!socket.unsecure) {
 
     socket.on('datasets', async (payload) => {
-      var sessionId = payload.session
+      var sessionId = payload.username + '_' + payload.workspace
       var result = {}
       try {
         result = await requestToKernel('datasets',sessionId)
@@ -144,7 +145,7 @@ const newSocket = function (socket, session) {
     })
 
     socket.on('initialize', async (payload) => {
-      var sessionId = payload.session
+      var sessionId = payload.username + '_' + payload.workspace
       var result = {}
       try {
         result = await initializeSession(sessionId, payload)
@@ -157,13 +158,13 @@ const newSocket = function (socket, session) {
     })
 
     socket.on('run', async (payload) => {
-      var sessionId = payload.session
+      var sessionId = payload.username + '_' + payload.workspace
       var result = await runCode(`${payload.code}`,sessionId)
       socket.emit('reply',{data: result, code: payload.code, timestamp: payload.timestamp})
     })
 
     socket.on('cells', async (payload) => {
-      var sessionId = payload.session
+      var sessionId = payload.username + '_' + payload.workspace
       var varname = payload.varname || 'df'
       var code = payload.code + '\n' + `_output = ${varname}.ext.profile(columns="*", output="json")`
       var result = await runCode(code, sessionId)
@@ -180,7 +181,15 @@ const newSocket = function (socket, session) {
 io.use(function (socket, next) {
   if (socket.handshake.query && socket.handshake.query.authorization) {
     var token = socket.handshake.query.authorization
+
+    /* test TODO: Remove */
+    console.log({query: socket.handshake.query})
+    socket.decoded = { username: socket.handshake.query.session }
+    next()
+    return
+
     jwt.verify(token, process.env.TOKEN_SECRET, function (err, decoded) {
+      console.log({decoded})
       if (err) {
         return next(new Error('Authentication error'))
       }
@@ -195,7 +204,9 @@ io.use(function (socket, next) {
 
 io.on('connection', async (socket) => {
 
-  const { session } = socket.handshake.query
+  const { username, workspace } = socket.handshake.query
+
+  var session = username + '_' + workspace
 
   if (!session) {
     socket.disconnect()
@@ -347,7 +358,9 @@ const createKernel = async function (sessionId) {
           method: 'POST',
           headers: {},
           json: true,
-          body: {}
+          body: {
+            // name: 'workspace-'+sessionId
+          }
         })
         const uuid = Buffer.from( uuidv1(), 'utf8' ).toString('hex')
         if (!kernels[sessionId]) {

@@ -6,7 +6,7 @@ export const state = () => ({
   refreshToken: false,
   username: false,
   email: false,
-  session: false // TODO: -> workspace
+  workspace: false
 })
 
 
@@ -18,42 +18,32 @@ export const mutations =  {
 
 export const actions =  {
 
-  setAccessToken(context, payload) {
-    context.commit('mutation', {mutate: 'accessToken', payload})
+  setAccessToken (context, payload) {
+    context.commit('mutation', {mutate: 'accessToken', payload })
     if (payload) {
-      setAuthTokenAxios(payload)
+      // context.commit('mutation', {mutate: 'accessToken', payload: 'Bearer ' + payload })
+      setAuthTokenAxios('Bearer ' + payload)
     } else {
-      resetAuthTokenAxios(payload)
+      context.commit('mutation', {mutate: 'accessToken', payload })
+      resetAuthTokenAxios()
 
     }
   },
 
-  async signUp(context,  payload) {
+  async signUp (context,  payload) {
     var response
-    response = await axios.post(process.env.API_URL + '/auth/signup', {
+    response = await axios.post(process.env.DEV_API_URL + '/auth/signup', {
       ...payload,
       secret: window.authSecret || '123'
     })
     return response
   },
 
-  // async test (context, {request, path, payload, auth}) {
-
-  //   var response
-  //   if (request === 'post') {
-  //     response = await axios[request](process.env.DEV_API_URL + path, payload, { headers: {'Authorization': auth} } )
-  //   } else {
-  //     response = await axios[request](process.env.DEV_API_URL + path, { headers: {'Authorization': auth} } )
-  //   }
-  //   return response
-
-  // },
-
   async profile ({commit}, { auth }) {
-    var response = await axios.get(process.env.API_URL + '/auth/profile', { headers: { 'Authorization': auth } } )
+    var response = await axios.get(process.env.DEV_API_URL + '/auth/profile', { headers: { 'Authorization': auth } } )
 
     commit('mutation', { mutate: 'username', payload: response.data.username})
-    commit('mutation', { mutate: 'session', payload: response.data.username})
+    // commit('mutation', { mutate: 'workspace', payload: response.data.username})
 
     return true
   },
@@ -62,21 +52,20 @@ export const actions =  {
 
     var response
     // response = await axios.post(process.env.DEV_API_URL + '/auth/signin', payload)
-    response = await axios.post(process.env.API_URL + '/auth/signin', payload)
+    response = await axios.post(process.env.DEV_API_URL + '/auth/signin', payload)
 
-    dispatch('setTokenCookies', response.data)
+    var accessToken = response.data.accessToken ? ('Bearer ' + response.data.accessToken) : false
+    var refreshToken = response.data.refreshToken ? ('Bearer ' + response.data.refreshToken) : false
 
-    if (response.data.accessToken) {
-      await dispatch('profile', { auth: response.data.accessToken} )
-      dispatch('setAccessToken', response.data.accessToken)
+    dispatch('setTokenCookies', {accessToken, refreshToken})
+
+    dispatch('setAccessToken', accessToken)
+    commit('mutation', { mutate: 'refreshToken', payload: refreshToken})
+
+    if (accessToken) {
+      await dispatch('profile', { auth: accessToken} )
     } else {
       commit('mutation', { mutate: 'username', payload: false})
-      dispatch('setAccessToken', false)
-    }
-    if (response.data.refreshToken) {
-      commit('mutation', { mutate: 'refreshToken', payload: response.data.refreshToken})
-    } else {
-      commit('mutation', { mutate: 'refreshToken', payload: false})
     }
 
   },
@@ -129,7 +118,7 @@ export const getters =  {
   isAuthenticated (state) {
     return state.accessToken && state.username
   },
-  isInSession (state) {
-    return state.accessToken && state.username && state.session
+  isInWorkspace (state) {
+    return state.accessToken && state.username && state.workspace
   },
 }

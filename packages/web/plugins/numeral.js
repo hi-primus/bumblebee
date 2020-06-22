@@ -24,3 +24,9 @@ Vue.filter('formatNumber', function (value) {
 Vue.filter('formatNumberInt', function (value) {
 	return numeral(value).format('0,0')
 })
+
+Vue.filter('formatDate', function(value) {
+  if (value) {
+    return new Date(Date.parse(value))
+  }
+})
