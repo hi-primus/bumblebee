@@ -91,8 +91,12 @@ body{
   height: 50px;
 }
 
-.text-mono {
+.font-mono {
   font-family: $font-mono;
+}
+
+.font-table {
+  font-family: $font-mono-table;
 }
 
 .text-code {
@@ -301,6 +305,21 @@ table {
 
 /* columns list */
 
+.columns-table, .workspaces-table {
+  tbody tr {
+    cursor: pointer;
+    &:hover {
+      background: $data-highlight !important;
+    }
+  }
+}
+
+.workspaces-table {
+  .v-data-table__wrapper {
+    min-height: calc(100vh - 340px);
+  }
+}
+
 .columns-table {
 
   table {
@@ -362,12 +381,8 @@ table {
   }
 
   tbody tr{
-    cursor: pointer;
     border: none !important;
     white-space: nowrap;
-    &:hover {
-      background: $data-highlight !important;
-    }
   }
 
   .data-type {
@@ -820,6 +835,14 @@ table {
   display: none !important;
 }
 
+.bb-workspace-status {
+  position: absolute !important;
+  opacity: 0.5;
+  right: 44px;
+  top: 11px;
+  z-index: 1;
+}
+
 .bb-menu {
   position: absolute !important;
   right: 12px;
@@ -1117,10 +1140,8 @@ table {
     white-space: nowrap;
   }
 
-  .table-font {
-    font-family: $font-mono-table;
-  }
 }
+
 
 /* data types */
 
@@ -1383,6 +1404,9 @@ $editor-top-padding: 6px;
   }
   .hl--param {
     color: darken(desaturate($data-red,16%),8%);
+  }
+  &:not(.multiple-tabs) .hint--varname {
+    display: none;
   }
 }
 
@@ -2421,4 +2445,8 @@ $editor-top-padding: 6px;
   float: right;
   opacity: 0.71;
   margin-left: 1.5em;
+}
+
+.append-no-ma .v-input__append-outer {
+  margin: 0 !important
 }

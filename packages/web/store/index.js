@@ -55,12 +55,9 @@ const properties = [
     clear: true,
     clearOnSelection: true,
   },
-  {
-    name: 'Buffer'
-  },
-  {
-    name: 'Cells'
-  },
+  // {
+  //   name: 'Buffer'
+  // },
   {
     name: 'DatasetUpdate'
   }
@@ -77,8 +74,7 @@ properties.forEach((p)=>{
 export const state = () => ({
   datasets: [],
   datasetSelection: [],
-  hasSecondaryDatasets: false,
-  secondaryDatasets: [], // TODO: not tab-separated
+  secondaryDatasets: [],
   databases: [],
   buffers: [],
   listViews: [],
@@ -94,7 +90,6 @@ export const state = () => ({
 
   allTypes: ALL_TYPES,
   datasetCounter: 1,
-  key: '',
   kernel: false,
   nextCommand: false,
   tab: 0,
@@ -122,19 +117,20 @@ export const mutations = {
     })
   },
 
+  setBuffer (state, { varname, status }) {
+    // state.buffers[varname] = status
+    Vue.set(state.buffers, varname, status)
+  },
+
   setSecondaryDatasets (state, payload) {
-    Vue.set( state.secondaryDatasets, state.tab, payload)
+    state.secondaryDatasets = payload
   },
 
   setSecondaryBuffer (state, {key, value}) {
-    var datasets = {...state.secondaryDatasets[state.tab]}
+    var datasets = {...state.secondaryDatasets}
     datasets[key] = datasets[key] || {columns: [], buffer: false}
     datasets[key].buffer = value
-    Vue.set( state.secondaryDatasets, state.tab, datasets)
-  },
-
-  setHasSecondaryDatasets (state, payload) {
-    state.hasSecondaryDatasets = payload
+    state.secondaryDatasets = datasets
   },
 
   ...pSetters,
@@ -199,7 +195,7 @@ export const mutations = {
     else
       dataset.varname = 'df'
 
-    if (dataset.columns instanceof Object) {
+    if (!Array.isArray(dataset.columns)) {
       dataset.columns = Object.entries(dataset.columns).map(([key, value])=>({...value, name: key}))
     }
 
@@ -227,9 +223,10 @@ export const mutations = {
 
   },
 
-  newDataset (state, current) {
+  newDataset (state, { current, tab, dataset }) {
 
     let found = current ? state.tab : state.datasets.length
+    found = tab!==undefined ? tab : found
 
     let varname = 'df'
 
@@ -237,10 +234,11 @@ export const mutations = {
       varname = varname + found
     }
 
-    let dataset = {
+    dataset = {
       name: '(new dataset)',
       varname,
-      blank: true
+      blank: true,
+      ...(dataset || {})
     }
 
     Vue.set(state.datasets, found, dataset)
@@ -251,30 +249,20 @@ export const mutations = {
 		state.datasetUpdates = state.datasetUpdates + 1
   },
 
-	delete (state, { index }) {
+	deleteTab (state, index) {
     Vue.delete(state.datasets, index)
     Vue.delete(state.datasetSelection, index)
     state.properties.forEach(p=>{
       Vue.delete(state['every'+p.name], index)
     })
-		if (!state.datasets.length) {
-      this.commit('newDataset')
-		}
-		return index
+    if (!state.datasets.length) {
+      this.commit('newDataset', {})
+    }
+    return Math.min(index, store.datasets.length)
 	},
 
 	setAppStatus (state, payload) {
     state.appStatus = payload || { status: 'waiting' }
-  },
-
-  engine (state, payload) {
-    state.engine = payload
-  },
-  tpw (state, payload) {
-    state.tpw = payload
-  },
-  workers (state, payload) {
-    state.workers = payload
   },
 
   setCellCode (state, {index, code}) {
@@ -289,10 +277,6 @@ export const mutations = {
 
   database (state, payload) {
     Vue.set(state.databases,state.tab,payload)
-  },
-
-  key (state, payload) {
-    state.key = payload
   },
 
   kernel (state, payload) {
@@ -388,13 +372,35 @@ export const actions = {
     await dispatch('session/serverInit')
   },
 
+  async setCells ({dispatch, commit}, payload) {
+    commit('mutation', { mutate: 'cells', payload })
+    dispatch('session/uploadWorkspace')
+  },
+
+  async newDataset ({ dispatch, commit }, payload) {
+    commit('newDataset', payload || {})
+    dispatch('session/uploadWorkspace')
+  },
+
+  async loadDataset ({ dispatch, commit }, payload) {
+    commit('loadDataset', payload)
+    dispatch('session/uploadWorkspace')
+  },
+
+  async deleteTab ({dispatch, commit, state}, index) {
+    commit('deleteTab', index)
+    dispatch('session/uploadWorkspace')
+    return index
+  },
+
   async request ({state}, {request, path, payload, accessToken}) {
 
     if (!request) request = 'get'
     if (!accessToken) accessToken = state.session.accessToken
 
     var response
-    if (request === 'post') {
+
+    if (['post','put'].includes(request)) {
       response = await axios[request](process.env.DEV_API_URL + path, payload, { headers: {'Authorization': accessToken} } )
     } else {
       response = await axios[request](process.env.DEV_API_URL + path, { headers: {'Authorization': accessToken} } )
@@ -417,11 +423,15 @@ export const getters = {
   currentDataset (state) {
     return state.datasets[state.tab]
   },
+  currentCells (state) {
+    return state.cells || []
+  },
   currentSecondaryDatasets (state) {
-    return state.secondaryDatasets[state.tab]
+    return state.secondaryDatasets
   },
   hasSecondaryDatasets (state) {
-    return state.hasSecondaryDatasets
+    return Object.keys(state.secondaryDatasets || {})
+        .filter(e=>!e.startsWith('_')).length>1
   },
   currentSelection (state) {
     return state.datasetSelection[state.tab] || {}
@@ -435,7 +445,8 @@ export const getters = {
   },
   currentBuffer (state) {
     try {
-      return state.everyBuffer[state.tab] // TODO: varname
+      var varname = state.datsets[state.tab].varname
+      return state.buffer[varname] // TODO: varname
     } catch (error) {
       return false
     }

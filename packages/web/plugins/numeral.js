@@ -27,6 +27,6 @@ Vue.filter('formatNumberInt', function (value) {
 
 Vue.filter('formatDate', function(value) {
   if (value) {
-    return new Date(Date.parse(value))
+    return new Date(Date.parse(value)).toLocaleString('en-US')
   }
 })

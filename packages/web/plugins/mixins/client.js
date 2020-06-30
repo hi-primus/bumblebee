@@ -1,16 +1,9 @@
 import io from 'socket.io-client'
-import bbUtils from 'bumblebee-utils'
-
-const { printError } = bbUtils
+import { printError } from 'bumblebee-utils'
 
 // TODO: this should be a VUEX store
 
-let socket
-let promises = {}
 
-let timestamps = 0
-let socketAvailable = false
-let secondaryDatasets = {}
 
 export default {
 
@@ -20,6 +13,11 @@ export default {
   },
 
   mounted() {
+
+    window.promises = window.promises || {}
+
+    window.timestamps = window.timestamps || 0
+
     window.evalCode = async (code) => {
       var result = await this.evalCode(code)
       console.log('[DEBUG]',result)
@@ -65,10 +63,10 @@ export default {
   computed: {
     socketAvailable: {
       set (value) {
-        socketAvailable = value
+        window.socketAvailable = value
       },
       get () {
-        return socketAvailable
+        return window.socketAvailable
       }
     }
   },
@@ -78,12 +76,16 @@ export default {
     async evalCode (code) {
       try {
 
+        if (!process.client) {
+          throw new Error('SSR not allowed')
+        }
+
         var startTime = new Date().getTime()
 
         var response = await this.socketPost('run', {
           code,
           username: this.$store.state.session.username,
-          workspace: this.$store.state.session.workspace
+          workspace: this.$store.state.session.workspace._id
         }, {
           timeout: 0
         })
@@ -145,34 +147,47 @@ export default {
 
     socketPost (message, payload = {}) {
 
-      var timestamp = ++timestamps
+      if (!process.client) {
+        throw 'not client'
+      }
+
+      var timestamp = ++window.timestamps
 
       return new Promise( async (resolve, reject) => {
 
+        window.promises[timestamp] = {resolve, reject}
+
         try {
-          if (!socket) {
-            await this.startSocket ()
-            var response = await this.socketPost('initialize',{
+          if (!window.socket) {
+            var initializationPayload = {
               username: this.$store.state.session.username,
-              workspace: this.$store.state.session.workspace,
+              workspace: this.$store.state.session.workspace._id,
               engine: this.$route.query.engine,
               tpw: this.$route.query.tpw,
               workers: this.$route.query.workers,
               reset: this.$route.query.reset
-            })
-
-            if (!response.data.optimus) {
-              throw response
             }
+            await this.startSocket ()
 
-            window.pushCode({code: response.code})
+            if (message!=='initialize') {
+              console.log('[BUMBLEBEE] Reinitializing Optimus')
+              var response = await this.socketPost('initialize', initializationPayload )
+
+              if (!response.data.optimus) {
+                throw response
+              }
+
+              window.pushCode({code: response.code})
+            }
           }
-          socket.emit(message,{...payload, timestamp})
-          promises[timestamp] = {resolve, reject}
+
+          window.socket.emit(message,{...payload, timestamp})
+
         } catch (error) {
           if (error.code) {
             window.pushCode({code: error.code, error: true})
           }
+          delete window.promises[timestamp]
           reject(error)
         }
 
@@ -216,50 +231,52 @@ export default {
 				this.$store.commit('setAppStatus', {status: 'waiting'})
 			}
 
-			if (socket) {
+			if (window.socket) {
 				try {
-          socket.disconnect()
+          window.socket.disconnect()
 				} catch (error) {
           console.error(error)
 				}
-        socket = undefined;
+        window.socket = undefined;
         console.log('Socket closed')
         return
       }
-      else
+      else {
         console.warn('Socket already closed')
+      }
     },
 
-    startSocket (username, workspace, key, engine) {
+    startSocket () {
+
+      if (!process.client) {
+        throw new Error('SSR not allowed')
+      }
 
       return new Promise((resolve, reject)=>{
 
-        if (workspace)
-          this.$store.commit('session/mutation', {mutate: 'workspace', payload: workspace})
-        else if (this.$store.state.session.workspace)
-          workspace = this.$store.state.session.workspace
-        else
-          throw new Error('Credentials not found')
+        let username = this.$store.state.session.username
+        let workspace = this.$store.state.session.workspace._id
+        let key = this.$store.state.session.key
 
-        if (key)
-          this.$store.commit('key', key)
-        else if (this.$store.state.key)
-          key = this.$store.state.key
+        if (!workspace) {
+          throw new Error('Credentials not found')
+        }
+
 
         var accessToken = this.$store.state.session.accessToken || ''
 
         key = key || ''
 
-        socket = io(process.env.API_URL, { query: { workspace, username, authorization: accessToken, key } })
+        window.socket = io(process.env.API_URL, { query: { workspace, username, authorization: accessToken, key } })
 
-        socket.on('new-error', (reason) => {
+        window.socket.on('new-error', (reason) => {
           console.error('Socket error', reason)
           reject(reason)
         })
 
-        socket.on('dataset', (dataset) => {
+        window.socket.on('dataset', (dataset) => {
           try {
-            this.$store.commit('loadDataset', {
+            this.$store.dispatch('loadDataset', {
               dataset
             })
           } catch (error) {
@@ -268,65 +285,65 @@ export default {
           }
         })
 
-        socket.on('reply', (payload) => {
-          if (payload.timestamp && promises[payload.timestamp]) {
+        window.socket.on('reply', (payload) => {
+          if (payload.timestamp && window.promises[payload.timestamp]) {
             if (payload.error) {
-              promises[payload.timestamp].reject(payload)
+              window.promises[payload.timestamp].reject(payload)
             }
             else {
-              promises[payload.timestamp].resolve(payload)
+              window.promises[payload.timestamp].resolve(payload)
             }
-            delete promises[payload.timestamp]
+            delete window.promises[payload.timestamp]
           }
           else {
             console.warn('Wrong timestamp reply',payload.timestamp,payload)
           }
         })
 
-        socket.on('connect', () => {
+        window.socket.on('connect', () => {
           console.log('Connection success')
-          socket.on('success', () => {
+          window.socket.on('success', () => {
             console.log('Connection confirmed')
             this.socketAvailable = true
             resolve('ok')
           })
         })
 
-        socket.on('connection-error', (reason) => {
+        window.socket.on('connection-error', (reason) => {
           console.warn('Connection failure', reason)
           this.handleError()
           reject('Connection failure')
         })
 
-        socket.on('disconnect', (reason) => {
+        window.socket.on('disconnect', (reason) => {
           console.log('Connection lost', reason)
           this.handleError()
           reject('Connection lost')
         })
 
-
       })
-
 
     },
 
-		async startClient ({workspace, username, key, engine, tpw, workers}) {
+		async startClient ({workspace, key}) {
 
       if (['loading','workspace'].includes(this.$store.state.appStatus.status)) {
-        return false
+        return false // TO-DO Check if it's the same workspace
       }
 
       try {
-        this.$store.commit('setAppStatus', {status: 'loading'})
-        this.$store.commit('session/mutation', {mutate: 'workspace', payload: workspace})
+
+        console.log('startClient startWorkspace') // TO-DO: Check if this is neccessary
+        await this.$store.dispatch('session/startWorkspace', workspace)
+
         if (key) {
-          this.$store.commit('key', key)
+          this.$store.commit('session/mutation', {mutate: 'key', payload: key})
         }
 
-        var client_status = await this.startSocket(username, workspace, key, engine)
+        var client_status = await this.startSocket()
 
         if (client_status === 'ok') {
-          this.$router.push({path: 'workspace', query: this.$route.query })
+          return true
         } else {
           throw client_status
         }
@@ -336,16 +353,28 @@ export default {
       }
     },
 
+    async setBuffer (varname, updated = true) {
+      try {
+        if (!updated && this.$store.state.buffers[varname]) {
+          return true
+        }
+        await this.evalCode('_output = '+varname+'.ext.set_buffer("*")')
+        this.$store.commit('setBuffer', { varname, status: true })
+      } catch (error) {
+        console.error(error)
+      }
+    },
+
     async updateSecondaryDatasets() {
       try {
         var response = await this.socketPost('datasets', {
           username: this.$store.state.session.username,
-          workspace: this.$store.state.session.workspace
+          workspace: this.$store.state.session.workspace._id
         })
         window.pushCode({code: response.code, unimportant: true})
-        secondaryDatasets = response.data
-        this.$store.commit('setHasSecondaryDatasets', (Object.keys(secondaryDatasets).length>1) )
-        this.$store.commit('setSecondaryDatasets', secondaryDatasets )
+        console.log('Updating secondary datasets')
+        var datasets = Object.fromEntries( Object.entries(response.data).filter(([key, dataset])=>(key !== 'preview_df' && key[0] !== '_')) )
+        this.$store.commit('setSecondaryDatasets', datasets )
 
         return response.data
       } catch (error) {

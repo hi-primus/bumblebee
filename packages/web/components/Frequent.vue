@@ -14,7 +14,7 @@
       />
     </div>
     <div v-if="!currentVal" class="current-value" :title="elementsString">{{ elementsString }}</div>
-    <div v-else class="current-value table-font" :title="currentVal" v-html="currentVal"></div>
+    <div v-else class="current-value font-table" :title="currentVal" v-html="currentVal"></div>
   </div>
 </template>
 

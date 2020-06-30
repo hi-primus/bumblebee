@@ -217,16 +217,13 @@ export default {
 			showCreatePassword: false,
 			typeForm: 0,
 			successMessage: "",
-			errorMessage: ""
+      errorMessage: "",
+      isLoading: false
 		};
 	},
 
 	computed: {
     ...mapGetters(["appError"]),
-
-    isLoading () {
-      return this.status === 'loading'
-    },
 
 		status () {
 			return (
@@ -270,33 +267,31 @@ export default {
 		},
 		async subscribe() {
 			try {
-        var engine = this.$route.query.engine
-				var tpw = this.$route.query.tpw
-				var workers = this.$route.query.workers
+        this.isLoading = true
 				if (this.useKernel) {
 					var login = await this.$store.dispatch("session/signIn", {
 						username: this.inputUsername,
 						password: this.inputPassword
           })
-          // this.$store.commit('setAppStatus', {status: 'loading'})
-          // this.$store.commit('session/mutation', {mutate: 'workspace', payload: workspace})
-          this.$router.push({path: 'workspaces', query: this.$route.query })
+          if (this.$route.query.ws) {
+            this.$router.push({path: '/workspaces', query: this.$route.query })
+          } else {
+            this.$router.push({path: '/workspaces/default', query: this.$route.query })
+          }
 
 					this.successMessage = "";
 				} else {
-					this.startClient({
-						username: this.inputUsername,
-						workspace: 'default',
-						key: this.inputPassword,
-						engine,
-						tpw,
-						workers
-					})
+          console.log('[BUMBLEBEE] Visualization mode')
+          this.$store.commit('session/mutation', {mutate: 'username', payload: this.inputUsername})
+          this.$nextTick(()=>{
+            this.$router.push({path: '/workspaces/default', query: this.$route.query })
+          })
 				}
 			} catch (error) {
 				console.error(error);
 				this.handleError(error, "waiting");
-			}
+      }
+      this.isLoading = false
 		},
 		resetStatus(closing) {
 			if (!closing) {

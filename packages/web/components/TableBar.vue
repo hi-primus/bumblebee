@@ -633,7 +633,7 @@ export default {
         return Array.from(this.currentCells || [])
       },
       set(value) {
-        this.$store.commit('setCells', value)
+        this.$store.dispatch('setCells', value )
       }
     },
 
@@ -1008,6 +1008,10 @@ export default {
   methods: {
 
     getProperty,
+
+    async runCodeNow () {
+      return await this.$refs.cells.runCodeNow()
+    },
 
     downloadDataset () {
       this.$refs.cells & this.$refs.cells.downloadDataset(event)

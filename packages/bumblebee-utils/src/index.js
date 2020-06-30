@@ -113,6 +113,25 @@ export const newName = (name) => {
   }
 }
 
+export const asyncDebounce = (func, delay) => {
+  let inDebounce
+  return function () {
+    const context = this
+    const args = arguments
+    return new Promise((resolve, reject)=>{
+      clearTimeout(inDebounce)
+      inDebounce = setTimeout(async () => {
+        try {
+          var result = await func.apply(context, args)
+          resolve(result)
+        } catch (err) {
+          reject(err)
+        }
+      }, delay)
+    })
+  }
+}
+
 export const debounce = (func, delay) => {
   let inDebounce
   return function () {
@@ -469,6 +488,7 @@ export default {
   getSelectedText,
   parseResponse,
   newName,
+  asyncDebounce,
   debounce,
   stepify,
   reduceRanges,

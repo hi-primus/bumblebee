@@ -2,20 +2,20 @@
 	<Layout>
 		<v-layout row wrap class="elevation-0 d-flex flex-column align-top justify-start">
       <div class="bb-container" data-name="workspace">
-        <div class="bb-content">
-          {{workspaces}}
+        <MoreMenu
+          :items="moreMenu"
+        >
+        </MoreMenu>
+        <div class="bb-content pa-12">
           <WorkspacesList
-            :workspaces="workspaces"
-            @click:workspace="workspaceClicked"
+            @update:totalWorkspaces="totalWorkspaces = $event"
           />
         </div>
         <v-footer fixed="fixed" app>
           <v-layout class="px-4" row justify-space-between>
             <span />
-            <span v-if="workspaces" class="caption-2">
-              <template
-                v-if="workspaces"
-              >{{ workspaces.length | formatNumberInt }} Workspaces &emsp;</template>
+            <span v-if="typeof totalWorkspaces !== 'undefined'" class="caption-2">
+              {{ totalWorkspaces | formatNumberInt }} Workspaces &emsp;
             </span>
           </v-layout>
         </v-footer>
@@ -28,43 +28,37 @@
 <script>
 import Layout from "@/components/Layout"
 import WorkspacesList from "@/components/WorkspacesList"
+import MoreMenu from "@/components/MoreMenu"
+import clientMixin from "@/plugins/mixins/client"
 // import { printError } from "@/utils/functions.js"
 
 export default {
 	components: {
     Layout,
-    WorkspacesList
-	},
-
-  middleware: 'authenticated',
-
-  async asyncData ({ store, error }) {
-
-    var workspaces = []
-
-    try {
-      let response = await store.dispatch('request',{
-        path: `/workspaces`
-      })
-      workspaces = response.data
-    } catch (err) {
-      error(err)
-      return {}
-    }
-
-    return {
-      workspaces: workspaces || []
-    }
+    WorkspacesList,
+    MoreMenu
   },
+
+  mixins: [ clientMixin ],
+
+  // TO-DO: Check
+  // middleware: 'authenticated',
 
 	data () {
 		return {
-
+      totalWorkspaces: 0
 		}
 	},
 
 	computed: {
+    moreMenu () {
 
+      var menu = [
+        { text: 'Sign out', click: this.signOut }
+      ]
+
+      return menu
+    },
 	},
 
 	watch: {
@@ -76,9 +70,11 @@ export default {
   },
 
 	methods: {
-    workspaceClicked(workspace) {
-      this.$router.push({path: `workspaces/${workspace._id}`, query: this.$route.query }) // TO-DO: slug
-    }
+    signOut (waiting = true) {
+      this.stopClient(waiting)
+      this.$store.dispatch('session/signOut')
+      this.$router.push({path: '/login', query: this.$route.query })
+    },
 	}
 }
 </script>

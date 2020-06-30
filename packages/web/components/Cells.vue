@@ -183,6 +183,7 @@
             <template v-else>
               <div
                 class="handle operation-hint-text"
+                :class="{'multiple-tabs': hasSecondaryDatasets}"
                 @click="editCell(cell, index)"
                 v-html="cell.content || cell.code"
               >
@@ -1209,7 +1210,7 @@ export default {
             + ( fileName ? ` ${hlParam(fileName)}` : '')
             + ( (!fileName && fileType) ? ` ${fileType}` : '')
             + ' file'
-            + ' to '+hlParam(payload.newVarname)
+            // + ' to '+hlParam(payload.newVarname)
           }
         },
         'string clustering': {
@@ -2204,7 +2205,8 @@ export default {
       'currentPreviewNames',
       'currentPreviewInfo',
       'currentSecondaryDatasets',
-      'currentLoadPreview'
+      'currentLoadPreview',
+      'hasSecondaryDatasets'
     ]),
 
     cells: {
@@ -2212,7 +2214,7 @@ export default {
         return Array.from(this.currentCells || [])
       },
       set(value) {
-        this.$store.commit('setCells', value)
+        this.$store.dispatch('setCells', value )
       }
     },
 
@@ -2267,6 +2269,14 @@ export default {
   },
 
   watch: {
+
+    cells (cells) {
+      if (cells.run) {
+        delete cells.run
+        this.cells = cells
+        this.runCodeNow()
+      }
+    },
 
     codeError (value) {
       if (value && value.length) {
@@ -2446,10 +2456,11 @@ export default {
         .filter(e=>e.startsWith(name+'_'))
         .filter(e=>!e.startsWith('_'))
 
-      name = name+'_'+sd.length
+      if (sd.length) {
+        name = name+'_'+sd.length
+      }
 
-      // this.$store.commit('setSecondaryDataset',{ name })
-      this.$store.commit('setHasSecondaryDatasets', true )
+      console.log('Getting variable name', name)
 
       return name
     },
@@ -2472,16 +2483,6 @@ export default {
         var url = `downloads/${this.$store.state.session.username}`
         await this.evalCode(`_output = ${this.dataset.varname}.save.csv("/opt/Bumblebee/packages/api/public/${url}")`)
         this.forceFileDownload(process.env.API_URL+'/'+url+'/0.part',this.dataset.name+'.csv')
-      } catch (error) {
-        console.error(error)
-      }
-    },
-
-    async bufferDf () {
-      // this.$store.dispatch('bufferDf')
-      try {
-        await this.evalCode('_output = '+this.dataset.varname+'.ext.set_buffer("*")')
-        this.$store.commit('setBuffer',true)
       } catch (error) {
         console.error(error)
       }
@@ -2829,18 +2830,19 @@ export default {
       this.setActiveCell(index, true)
 
       if (this.cells.length==0)
-        this.$store.commit('newDataset', true)
+        this.$store.dispatch('newDataset', { current: true })
         this.codeDone = ''
 
       this.draggableEnd()
     },
 
-    markCells(mark = true, ignoreFrom = -1) {
+    markCells (mark = true, ignoreFrom = -1) {
       var cells = [...this.cells]
       for (let i = 0; i < this.cells.length; i++) {
         if (ignoreFrom>=0 && i>=ignoreFrom) {
           continue
         }
+        cells[i] = { ...cells[i] }
         if (cells[i].code) {
           cells[i].done = mark
         }
@@ -2854,7 +2856,7 @@ export default {
         this.codeDone = ''
     },
 
-    markCellsError(ignoreFrom = -1) {
+    markCellsError (ignoreFrom = -1) {
       var cells = [...this.cells]
       for (let i = cells.length - 1; i >= 0; i--) {
         if (ignoreFrom>=0 && i>=ignoreFrom) {
@@ -2874,12 +2876,21 @@ export default {
 
     getOperationContent (payload) {
       var commandHandler = this.commandsHandlers[payload.command] || this.commandsHandlers[payload.type]
+      var content
 
       if (!commandHandler || !commandHandler.content) {
-        return this.getCode(payload)
+        content = this.getCode(payload)
+      } else {
+        content = commandHandler.content(payload)
       }
 
-      return commandHandler.content(payload)
+      if (payload.request.isLoad) {
+        content += `<span class="hint--varname"> to ${hlParam(payload.newVarname)}</span>`
+      } else {
+        content += `<span class="hint--varname"> in ${hlParam(payload.varname)}</span>`
+      }
+
+      return content
     },
 
     getCode (currentCommand, type = 'final') {
@@ -2923,7 +2934,7 @@ export default {
       } else {
         if (payload.request && payload.request.isLoad) {
           return precode + code +'\n'
-					+`${payload.varname} = ${payload.varname}.ext.repartition(8).ext.cache()`
+					+`${payload.newVarname} = ${payload.newVarname}.ext.repartition(8).ext.cache()`
         } else {
           return precode + `${payload.varname} = ${payload.varname}${code}.ext.cache()`
         }
@@ -2992,9 +3003,9 @@ export default {
 
     },
 
-
-
     async runCodeNow (force = false, ignoreFrom = -1) {
+
+      console.log('runCodeNow in')
 
       if (ignoreFrom>=0) {
         force = true
@@ -3045,13 +3056,13 @@ export default {
 
       try {
 
-        this.$store.commit('setBuffer',false)
+        this.$store.commit('setBuffer', { varname: this.dataset.varname, status: false  })
         var response = await this.socketPost('cells', {
           code,
           name: this.dataset.summary ? this.dataset.name : null,
           varname: this.dataset.varname,
           username: this.$store.state.session.username,
-          workspace: this.$store.state.session.workspace,
+          workspace: this.$store.state.session.workspace._id,
           key: this.$store.state.key
         }, {
           timeout: 0
@@ -3068,12 +3079,11 @@ export default {
 
         var dataset = JSON.parse(response.data.result)
 
-        this.$store.commit('loadDataset', {
+        this.$store.dispatch('loadDataset', {
           dataset
         })
 
-        this.bufferDf()
-
+        this.setBuffer(this.dataset.varname)
         this.updateSecondaryDatasets()
 
         this.$forceUpdate()

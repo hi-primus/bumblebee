@@ -266,7 +266,6 @@ export default {
           return {type: 'columns', text, description: ''}
         })
         suggestions = [...(suggestions || []), ...(this.$store.state.reservedWords || [])]
-        console.log({suggestions})
         this.resultsSuggestions = await this.$search(this.caretWord, suggestions, {
           shouldSort: true,
           threshold: 0.1,

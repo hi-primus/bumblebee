@@ -6,6 +6,16 @@ export const actions = {
 
 	async uploadFile (context, {file}) {
 
+    // const aresponse = context.dispatch('request', {
+    //   request: 'post',
+    //   path: '/datasource/upload',
+    //   payload: file
+    // }, { root: true })
+
+    // console.log({aresponse})
+
+    // return;
+
     var formData = new FormData();
     formData.append('datasetFile',file)
 

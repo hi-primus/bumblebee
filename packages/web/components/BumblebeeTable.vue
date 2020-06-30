@@ -373,7 +373,7 @@ import DataBar from '@/components/DataBar'
 /*bu*/ import {
   parseResponse, arraysEqual,
   cancellablePromise, throttle,
-  debounce, optimizeRanges,
+  asyncDebounce, debounce, optimizeRanges,
   escapeQuotes, namesToIndices,
   getSelectedText, getPropertyAsync
 } from 'bumblebee-utils' /*bu*/
@@ -1041,15 +1041,18 @@ export default {
       return cValues
     },
 
-    setBuffer: debounce( async function () {
+
+    debouncedSetBuffer: asyncDebounce( async function () {
+
       try {
-        var buffer = await this.evalCode('_output = '+this.currentDataset.varname+'.ext.set_buffer("*")')
-        this.$store.commit('setBuffer',true)
+        await this.setBuffer(this.currentDataset.varname)
         this.$nextTick(()=>{
           this.debouncedThrottledScrollCheck()
         })
+        return true
       } catch (error) {
-        console.error(error)
+        // Error already handled in setBuffer
+        return false
       }
     }, 300),
 
@@ -1814,8 +1817,7 @@ export default {
       }
 
       if (!this.currentBuffer) {
-        this.setBuffer()
-        return undefined
+        await this.debouncedSetBuffer()
       }
 
       var code = await getPropertyAsync(previewCode, [from, to+1]) || ''

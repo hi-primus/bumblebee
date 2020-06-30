@@ -76,7 +76,22 @@ module.exports = {
 		'@/plugins/numeral.js',
 		'@/plugins/fuse.js',
 		'@/plugins/varCheck.js'
-	],
+  ],
+
+  // TO-DO:
+
+  // io: {
+  //   sockets: [
+  //     {
+  //       name: 'session',
+  //       url: process.env.API_URL,
+  //       default: true,
+  //       vuex: {
+  //         mutations: [{message: 'session/socketMessage'}]
+  //       }
+  //     }
+  //   ]
+  // },
 
 	axios: {
     progress: false,
