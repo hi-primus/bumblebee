@@ -618,16 +618,16 @@ export default {
           if (this.loadedPreviewCode!==currentCode) {
             this.loadedPreviewCode = currentCode
             if (this.currentPreviewCode.load) {
-              var varname = 'preview_df'
+              var dfName = 'preview_df'
               var code = this.currentPreviewCode.code // is always static
-              code = `${varname} = ${code} \n`
+              code = `${dfName} = ${code} \n`
 
-              code += `_output = {**${varname}.ext.to_json("*"), "meta": ${varname}.meta.get() if (${varname}.meta and ${varname}.meta.get) else {} } \n`
+              code += `_output = {**${dfName}.ext.to_json("*"), "meta": ${dfName}.meta.get() if (${dfName}.meta and ${dfName}.meta.get) else {} } \n`
 
               // if (this.currentPreviewCode.infer) {
-              //   code += `_output = {**${varname}.ext.to_json("*"), "meta": ${varname}.meta.get() if (${varname}.meta and ${varname}.meta.get) else {} } \n`
+              //   code += `_output = {**${dfName}.ext.to_json("*"), "meta": ${dfName}.meta.get() if (${dfName}.meta and ${dfName}.meta.get) else {} } \n`
               // } else {
-              //   code += `_output = {**${varname}.ext.to_json("*")} \n`
+              //   code += `_output = {**${dfName}.ext.to_json("*")} \n`
               // }
 
               var response = await this.evalCode(code)
@@ -638,7 +638,7 @@ export default {
                 this.$store.commit('setLoadPreview', { meta: response.data.result.meta } )
               }
 
-              var pCode = `_output = ${varname}.ext.profile(columns="*", output="json")`
+              var pCode = `_output = ${dfName}.ext.profile(columns="*", output="json")`
 
               var pResponse = await this.evalCode(pCode)
 

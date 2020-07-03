@@ -1405,7 +1405,7 @@ $editor-top-padding: 6px;
   .hl--param {
     color: darken(desaturate($data-red,16%),8%);
   }
-  &:not(.multiple-tabs) .hint--varname {
+  &:not(.multiple-tabs) .hint--df {
     display: none;
   }
 }

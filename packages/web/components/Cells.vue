@@ -812,7 +812,7 @@ export default {
           payload: async (columns, payload = {}) => {
 
             var _datasets_right = {...payload.secondaryDatasets}
-            var items_with = Object.keys(_datasets_right).filter(e=>(e!==payload.varname && e!=='preview_df'))
+            var items_with = Object.keys(_datasets_right).filter(e=>(e!==payload.dfName && e!=='preview_df'))
 
             var df2 = items_with[0]
 
@@ -830,7 +830,7 @@ export default {
               with: df2,
               items_with: (c)=>{
                 return Object.keys(c._datasets_right)
-                  .filter(e=>e!==payload.varname && e!=='preview_df')
+                  .filter(e=>e!==payload.dfName && e!=='preview_df')
                   .filter(e=>!e.startsWith('_'))
               },
               items_selected_columns: (c)=>{
@@ -875,7 +875,7 @@ export default {
             }
             return currentCommand
           },
-          content: (payload) => `<b>Join</b> ${hlParam(payload.varname)} <b>with</b> ${hlParam(payload.with)}`
+          content: (payload) => `<b>Join</b> ${hlParam(payload.dfName)} <b>with</b> ${hlParam(payload.with)}`
         },
         aggregations: {
           dialog: {
@@ -1210,7 +1210,6 @@ export default {
             + ( fileName ? ` ${hlParam(fileName)}` : '')
             + ( (!fileName && fileType) ? ` ${fileType}` : '')
             + ' file'
-            // + ' to '+hlParam(payload.newVarname)
           }
         },
         'string clustering': {
@@ -1260,9 +1259,9 @@ export default {
               var code
 
               if (currentCommand.algorithm == 'fingerprint')
-                code = `from optimus.engines.dask.ml import keycollision as kc; _output = kc.fingerprint_cluster(${currentCommand.varname}.ext.buffer_window("*"), input_cols="${currentCommand.columns[0]}", output="json")`
+                code = `from optimus.engines.dask.ml import keycollision as kc; _output = kc.fingerprint_cluster(${currentCommand.dfName}.ext.buffer_window("*"), input_cols="${currentCommand.columns[0]}", output="json")`
               else if (currentCommand.algorithm == 'n_gram_fingerprint')
-                code = `from optimus.engines.dask.ml import keycollision as kc; _output = kc.n_gram_fingerprint_cluster(${currentCommand.varname}.ext.buffer_window("*"), input_cols="${currentCommand.columns[0]}", n_size=${currentCommand.n_size}, output="json")`
+                code = `from optimus.engines.dask.ml import keycollision as kc; _output = kc.n_gram_fingerprint_cluster(${currentCommand.dfName}.ext.buffer_window("*"), input_cols="${currentCommand.columns[0]}", n_size=${currentCommand.n_size}, output="json")`
               else
                 throw 'Invalid algorithm type input'
 
@@ -1419,13 +1418,13 @@ export default {
               var code
 
               if (currentCommand.algorithm == 'tukey')
-                code = `outlier = ${currentCommand.varname}.outliers.tukey("${currentCommand.columns[0]}")`
+                code = `outlier = ${currentCommand.dfName}.outliers.tukey("${currentCommand.columns[0]}")`
               else if (currentCommand.algorithm == 'z_score')
-                code = `outlier = ${currentCommand.varname}.outliers.z_score(columns="${currentCommand.columns[0]}", threshold=${currentCommand.threshold})`
+                code = `outlier = ${currentCommand.dfName}.outliers.z_score(columns="${currentCommand.columns[0]}", threshold=${currentCommand.threshold})`
               else if (currentCommand.algorithm == 'mad')
-                code = `outlier = ${currentCommand.varname}.outliers.mad(columns="${currentCommand.columns[0]}", threshold=${currentCommand.threshold})`
+                code = `outlier = ${currentCommand.dfName}.outliers.mad(columns="${currentCommand.columns[0]}", threshold=${currentCommand.threshold})`
               else if (currentCommand.algorithm == 'modified_z_score')
-                code = `outlier = ${currentCommand.varname}.outliers.modified_z_score(columns="${currentCommand.columns[0]}", threshold=${currentCommand.threshold})`
+                code = `outlier = ${currentCommand.dfName}.outliers.modified_z_score(columns="${currentCommand.columns[0]}", threshold=${currentCommand.threshold})`
               else
                 throw 'Invalid algorithm type input'
 
@@ -2199,6 +2198,7 @@ export default {
     ...mapGetters([
       'currentSelection',
       'currentCells',
+      'dataSources',
       'selectionType',
       'currentTab',
       'currentDuplicatedColumns',
@@ -2440,24 +2440,19 @@ export default {
 
   methods: {
 
-    availableVariableName () {
+    availableDfName () {
 
       var name = 'df'
 
-      if (this.currentTab) {
-        var name = name+this.currentTab
-      }
-
-      if (!this.dataset || this.dataset.blank) {
-        return name
-      }
-
       var sd = Object.keys(this.currentSecondaryDatasets)
-        .filter(e=>e.startsWith(name+'_'))
+        .filter(e=>e.startsWith(name))
         .filter(e=>!e.startsWith('_'))
 
       if (sd.length) {
-        name = name+'_'+sd.length
+        var i = (parseInt(sd[sd.length-1].split(name)[1]) || 0)+1
+        if (i) {
+          name = name+i
+        }
       }
 
       console.log('Getting variable name', name)
@@ -2481,7 +2476,7 @@ export default {
         this.cancelCommand()
         await this.runCodeNow()
         var url = `downloads/${this.$store.state.session.username}`
-        await this.evalCode(`_output = ${this.dataset.varname}.save.csv("/opt/Bumblebee/packages/api/public/${url}")`)
+        await this.evalCode(`_output = ${this.dataset.dfName}.save.csv("/opt/Bumblebee/packages/api/public/${url}")`)
         this.forceFileDownload(process.env.API_URL+'/'+url+'/0.part',this.dataset.name+'.csv')
       } catch (error) {
         console.error(error)
@@ -2644,8 +2639,8 @@ export default {
         },
         secondaryDatasets: this.currentSecondaryDatasets,
         columnDataTypes: columnDataTypes,
-        varname: this.dataset.varname,
-        newVarname: this.availableVariableName(),
+        dfName: this.dataset.dfName,
+        newDfName: this.availableDfName(),
         allColumns: this.allColumns,
         type: command.type,
         command: command.command,
@@ -2885,9 +2880,9 @@ export default {
       }
 
       if (payload.request.isLoad) {
-        content += `<span class="hint--varname"> to ${hlParam(payload.newVarname)}</span>`
+        content += `<span class="hint--df"> to ${hlParam(payload.newDfName)}</span>`
       } else {
-        content += `<span class="hint--varname"> in ${hlParam(payload.varname)}</span>`
+        content += `<span class="hint--df"> in ${hlParam(payload.dfName)}</span>`
       }
 
       return content
@@ -2934,9 +2929,9 @@ export default {
       } else {
         if (payload.request && payload.request.isLoad) {
           return precode + code +'\n'
-					+`${payload.newVarname} = ${payload.newVarname}.ext.repartition(8).ext.cache()`
+					+`${payload.newDfName} = ${payload.newDfName}.ext.repartition(8).ext.cache()`
         } else {
-          return precode + `${payload.varname} = ${payload.varname}${code}.ext.cache()`
+          return precode + `${payload.dfName} = ${payload.dfName}${code}.ext.cache()`
         }
       }
 
@@ -3056,11 +3051,11 @@ export default {
 
       try {
 
-        this.$store.commit('setBuffer', { varname: this.dataset.varname, status: false  })
+        this.$store.commit('setBuffer', { dfName: this.dataset.dfName, status: false  })
         var response = await this.socketPost('cells', {
           code,
           name: this.dataset.summary ? this.dataset.name : null,
-          varname: this.dataset.varname,
+          dfName: this.dataset.dfName,
           username: this.$store.state.session.username,
           workspace: this.$store.state.session.workspace._id,
           key: this.$store.state.key
@@ -3083,7 +3078,7 @@ export default {
           dataset
         })
 
-        this.setBuffer(this.dataset.varname)
+        this.setBuffer(this.dataset.dfName)
         this.updateSecondaryDatasets()
 
         this.$forceUpdate()

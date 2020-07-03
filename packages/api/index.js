@@ -165,8 +165,8 @@ const newSocket = function (socket, session) {
 
     socket.on('cells', async (payload) => {
       var sessionId = payload.username + '_' + payload.workspace
-      var varname = payload.varname || 'df'
-      var code = payload.code + '\n' + `_output = ${varname}.ext.profile(columns="*", output="json")`
+      var dfName = payload.dfName || 'df'
+      var code = payload.code + '\n' + `_output = ${dfName}.ext.profile(columns="*", output="json")`
       var result = await runCode(code, sessionId)
       socket.emit('reply',{data: result, code, timestamp: payload.timestamp})
     })

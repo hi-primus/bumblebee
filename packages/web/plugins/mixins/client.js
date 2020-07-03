@@ -353,13 +353,13 @@ export default {
       }
     },
 
-    async setBuffer (varname, updated = true) {
+    async setBuffer (dfName, updated = true) {
       try {
-        if (!updated && this.$store.state.buffers[varname]) {
+        if (!updated && this.$store.state.buffers[dfName]) {
           return true
         }
-        await this.evalCode('_output = '+varname+'.ext.set_buffer("*")')
-        this.$store.commit('setBuffer', { varname, status: true })
+        await this.evalCode('_output = '+dfName+'.ext.set_buffer("*")')
+        this.$store.commit('setBuffer', { dfName, status: true })
       } catch (error) {
         console.error(error)
       }

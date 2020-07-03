@@ -1045,7 +1045,7 @@ export default {
     debouncedSetBuffer: asyncDebounce( async function () {
 
       try {
-        await this.setBuffer(this.currentDataset.varname)
+        await this.setBuffer(this.currentDataset.dfName)
         this.$nextTick(()=>{
           this.debouncedThrottledScrollCheck()
         })
@@ -1549,7 +1549,7 @@ export default {
 
         var cols = this.currentPreviewColumns.map(e=>escapeQuotes(  e.title.split('__preview__').join('')  ))
 
-        var code = `_df_profile = ${this.currentDataset.varname}.ext.buffer_window("*")${await getPropertyAsync(previewCode) || ''}`
+        var code = `_df_profile = ${this.currentDataset.dfName}.ext.buffer_window("*")${await getPropertyAsync(previewCode) || ''}`
         + `\n_output = { `
         + (profile ? `"profile": _df_profile.ext.profile(["${cols.join('", "')}"], output="json")` : '')
         + (profile && matches ? `, ` : '')
@@ -1828,7 +1828,7 @@ export default {
         this.currentPreviewCode.beforeCodeEval()
       }
 
-      var response = await this.evalCode(`_output = ${this.currentDataset.varname}.ext.buffer_window("*"${(noBufferWindow) ? '' : ', '+from+', '+(to+1)})${code}.ext.to_json("*")`)
+      var response = await this.evalCode(`_output = ${this.currentDataset.dfName}.ext.buffer_window("*"${(noBufferWindow) ? '' : ', '+from+', '+(to+1)})${code}.ext.to_json("*")`)
 
       if (response.data.status === 'error') {
         this.$store.commit('setPreviewInfo', {error: response.data.error})

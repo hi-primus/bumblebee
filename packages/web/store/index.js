@@ -79,6 +79,7 @@ export const state = () => ({
   buffers: [],
   listViews: [],
   cells: [],
+  dataSources: [],
   properties,
   // previewColumns: [],
   ...pStates,
@@ -117,9 +118,9 @@ export const mutations = {
     })
   },
 
-  setBuffer (state, { varname, status }) {
-    // state.buffers[varname] = status
-    Vue.set(state.buffers, varname, status)
+  setBuffer (state, { dfName, status }) {
+    // state.buffers[dfName] = status
+    Vue.set(state.buffers, dfName, status)
   },
 
   setSecondaryDatasets (state, payload) {
@@ -228,15 +229,15 @@ export const mutations = {
     let found = current ? state.tab : state.datasets.length
     found = tab!==undefined ? tab : found
 
-    let varname = 'df'
+    let dfName = 'df'
 
     if (found) {
-      varname = varname + found
+      dfName = dfName + found
     }
 
     dataset = {
       name: '(new dataset)',
-      varname,
+      dfName,
       blank: true,
       ...(dataset || {})
     }
@@ -445,8 +446,8 @@ export const getters = {
   },
   currentBuffer (state) {
     try {
-      var varname = state.datsets[state.tab].varname
-      return state.buffer[varname] // TODO: varname
+      var dfName = state.datsets[state.tab].dfName
+      return state.buffer[dfName] // TODO: dfName
     } catch (error) {
       return false
     }

@@ -24,7 +24,7 @@ export const codeGenerators = {
   },
   REMOVE_KEEP_SET: (payload) => {
 
-    var varname = `df`
+    var dfName = `df`
 
     if (payload.rowsType==='values' && payload.selection && payload.selection.map) {
       payload.selection = payload.selection.map(v=>escapeQuotes(v))
@@ -39,21 +39,21 @@ export const codeGenerators = {
 
     switch (payload.rowsType) {
       case 'missing':
-        expression = `${varname}["${payload.columns[0]}"].isnull()`
+        expression = `${dfName}["${payload.columns[0]}"].isnull()`
         break
       case 'mismatch':
-        expression = `~${varname}.cols.is_match("${payload.columns[0]}", "${payload.columnDataTypes[0]}")`
+        expression = `~${dfName}.cols.is_match("${payload.columns[0]}", "${payload.columnDataTypes[0]}")`
         break;
       case 'values':
-        expression = `${varname}["${payload.columns[0]}"].isin([${payload.selection.join(',')}])`
+        expression = `${dfName}["${payload.columns[0]}"].isin([${payload.selection.join(',')}])`
         break
       case 'ranges':
         if (payload.selection.length>1) {
           expression = '('
-          +payload.selection.map(range=>`(${varname}["${payload.columns[0]}"]>=${range[0]}) & (${varname}["${payload.columns[0]}"]<=${range[1]})`).join(' | ')
+          +payload.selection.map(range=>`(${dfName}["${payload.columns[0]}"]>=${range[0]}) & (${dfName}["${payload.columns[0]}"]<=${range[1]})`).join(' | ')
           +')'
         } else {
-          expression = `(${varname}["${payload.columns[0]}"]>=${payload.selection[0][0]}) & (${varname}["${payload.columns[0]}"]<=${payload.selection[0][1]})`
+          expression = `(${dfName}["${payload.columns[0]}"]>=${payload.selection[0][0]}) & (${dfName}["${payload.columns[0]}"]<=${payload.selection[0][1]})`
         }
         break
       default:
@@ -96,7 +96,7 @@ export const codeGenerators = {
   'filter rows': (payload) => {
 
     var expression = payload.expression
-    var varname = `df`
+    var dfName = `df`
 
     try {
       payload = escapeQuotesOn(payload, ['text',])
@@ -112,33 +112,33 @@ export const codeGenerators = {
 
     switch (payload.condition) {
       case 'null':
-        expression = `'${varname}["${payload.columns[0]}"].isnull()'`
+        expression = `'${dfName}["${payload.columns[0]}"].isnull()'`
         break
       case 'mismatch':
-        expression = `'~${varname}.cols.is_match("${payload.columns[0]}", "${payload.columnDataTypes[0]}")'`
+        expression = `'~${dfName}.cols.is_match("${payload.columns[0]}", "${payload.columnDataTypes[0]}")'`
         break
       case 'exactly':
-        expression = `'${varname}["${payload.columns[0]}"]==${payload.value}'`
+        expression = `'${dfName}["${payload.columns[0]}"]==${payload.value}'`
         break
       case 'oneof':
-        expression = `'${varname}.${payload.columns[0]}.isin([${payload.values.join(', ')}])'`
+        expression = `'${dfName}.${payload.columns[0]}.isin([${payload.values.join(', ')}])'`
         break
       case 'not':
-        expression = `'${varname}["${payload.columns[0]}"]!=${payload.value}'`
+        expression = `'${dfName}["${payload.columns[0]}"]!=${payload.value}'`
         break
       case 'less':
-        expression = `'${varname}["${payload.columns[0]}"]<=${payload.value}'`
+        expression = `'${dfName}["${payload.columns[0]}"]<=${payload.value}'`
         break
       case 'greater':
-        expression = `'${varname}["${payload.columns[0]}"]>=${payload.value}'`
+        expression = `'${dfName}["${payload.columns[0]}"]>=${payload.value}'`
         break
       case 'between':
-        expression = `'(${varname}["${payload.columns[0]}"]>=${payload.value}) & (${varname}["${payload.columns[0]}"]<=${payload.value_2})'`
+        expression = `'(${dfName}["${payload.columns[0]}"]>=${payload.value}) & (${dfName}["${payload.columns[0]}"]<=${payload.value_2})'`
         break
       case 'contains':
       case 'startswith':
       case 'endswith':
-        expression = `'${varname}["${payload.columns[0]}"].str.${payload.condition}("${payload.text}", na=False)'`
+        expression = `'${dfName}["${payload.columns[0]}"].str.${payload.condition}("${payload.text}", na=False)'`
         break
       case 'custom':
         expression = `'${payload.expression}'`
@@ -301,7 +301,7 @@ export const codeGenerators = {
     var code = ''
 
     if (payload.request.type === 'final') {
-      code = `${payload.newVarname} = `
+      code = `${payload.newDfName} = `
     }
 
     var loadType = (!payload._moreOptions) ? 'file' : payload.file_type
@@ -380,11 +380,11 @@ export const codeGenerators = {
   },
   'load from database': (payload) => {
     var table = escapeQuotes(payload.table)
-    return `${payload.previous_code}${'\n'}${payload.newVarname} = db.table_to_df("${table}").ext.cache()`
+    return `${payload.previous_code}${'\n'}${payload.newDfName} = db.table_to_df("${table}").ext.cache()`
   },
   'save to database': (payload) => {
     var table_name = escapeQuotes(payload.table_name)
-    return `db.df_to_table(${payload.varname}, table="${table_name}", mode="overwrite")`
+    return `db.df_to_table(${payload.dfName}, table="${table_name}", mode="overwrite")`
   },
   stratified_sample: (payload) => {
     var _argument = (payload.columns.length==1) ? `"${payload.columns[0]}"` : `["${payload.columns.join('", "')}"]`
@@ -423,7 +423,6 @@ export const codeGenerators = {
     }
     var output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (payload.request.type !== 'final') ? 'new ' : '')
 
-    // var varname = payload.varname
     var value = ( (payload.value) ? `p.parse('${payload.value}')` : 'None' )
 
     var cb = (from, to) => {
