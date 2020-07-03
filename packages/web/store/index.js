@@ -119,7 +119,6 @@ export const mutations = {
   },
 
   setBuffer (state, { dfName, status }) {
-    // state.buffers[dfName] = status
     Vue.set(state.buffers, dfName, status)
   },
 
@@ -190,11 +189,6 @@ export const mutations = {
     } else {
       dataset.blank = false
     }
-
-    if (state.tab>=1)
-      dataset.varname = `df${state.tab}`
-    else
-      dataset.varname = 'df'
 
     if (!Array.isArray(dataset.columns)) {
       dataset.columns = Object.entries(dataset.columns).map(([key, value])=>({...value, name: key}))
@@ -373,24 +367,24 @@ export const actions = {
     await dispatch('session/serverInit')
   },
 
-  async setCells ({dispatch, commit}, payload) {
-    commit('mutation', { mutate: 'cells', payload })
-    dispatch('session/uploadWorkspace')
+  async mutateAndSave ({dispatch, commit}, { mutate, payload }) {
+    commit('mutation', { mutate: mutate, payload })
+    dispatch('session/saveWorkspace')
   },
 
   async newDataset ({ dispatch, commit }, payload) {
     commit('newDataset', payload || {})
-    dispatch('session/uploadWorkspace')
+    dispatch('session/saveWorkspace')
   },
 
   async loadDataset ({ dispatch, commit }, payload) {
     commit('loadDataset', payload)
-    dispatch('session/uploadWorkspace')
+    dispatch('session/saveWorkspace')
   },
 
   async deleteTab ({dispatch, commit, state}, index) {
     commit('deleteTab', index)
-    dispatch('session/uploadWorkspace')
+    dispatch('session/saveWorkspace')
     return index
   },
 
@@ -424,8 +418,11 @@ export const getters = {
   currentDataset (state) {
     return state.datasets[state.tab]
   },
-  currentCells (state) {
+  currentCells (state) { // TO-DO: rename
     return state.cells || []
+  },
+  dataSources (state) {
+    return state.dataSources
   },
   currentSecondaryDatasets (state) {
     return state.secondaryDatasets

@@ -1628,15 +1628,17 @@ export default {
             password: '',
             _loadingTables: false,
             request: {
-              isLoad: true,
-              newVarname: this.availableVariableName()
+              isLoad: true
+            },
+            variables: {
+              ...createPool()
             }
           }),
           content: (payload)=>{
             var database = ['postgres','presto','redshift','sqlserver','mysql'].includes(payload.driver)
             return `<b>Load</b> ${hlParam(payload.table)}`
             +(database ? ` from ${hlParam(payload.database)}` : '')
-            + ' to '+hlParam(payload.newVarname)
+            + ' to '+hlParam(payload.newDfName)
           },
 
           getTables: async (currentCommand) => {
@@ -2211,12 +2213,28 @@ export default {
 
     cells: {
       get() {
-        return Array.from(this.currentCells || [])
+        return [
+          ...Array.from(this.dataSources || []),
+          ...Array.from(this.currentCells || [])
+        ]
       },
       set(value) {
-        this.$store.dispatch('setCells', value )
+        console.log('setting cells', value)
+        var cells = value.filter(e=>!(e && e.payload && e.payload.request && e.payload.request.isLoad))
+        var dataSources = value.filter(e=>e && e.payload && e.payload.request && e.payload.request.isLoad)
+        this.$store.dispatch('mutateAndSave', {mutate: 'cells', payload: cells} )
+        this.$store.dispatch('mutateAndSave', {mutate: 'dataSources', payload: dataSources} )
       }
     },
+
+    // dataSources: {
+    //   get() {
+    //     return Array.from(this.dataSources || [])
+    //   },
+    //   set(value) {
+    //     this.$store.dispatch('mutateAndSave', { mutate: payload } )
+    //   }
+    // },
 
     command () {
       try {
@@ -2269,14 +2287,6 @@ export default {
   },
 
   watch: {
-
-    cells (cells) {
-      if (cells.run) {
-        delete cells.run
-        this.cells = cells
-        this.runCodeNow()
-      }
-    },
 
     codeError (value) {
       if (value && value.length) {
@@ -2979,7 +2989,6 @@ export default {
         code: code,
         content: content,
         id: Number(new Date()),
-        active: false,
         ignore: ignoreCell
       })
 

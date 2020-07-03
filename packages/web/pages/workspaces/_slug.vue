@@ -463,7 +463,7 @@ export default {
 
     signOut (waiting = true) {
       this.stopClient(waiting)
-      this.$store.dispatch('setCells', [] )
+      this.$store.dispatch('mutateAndSave', {mutate: 'cells', payload: []} )
       this.$store.dispatch('session/signOut')
       this.$router.push({path: '/login', query: this.$route.query })
     },

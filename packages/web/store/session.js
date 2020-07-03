@@ -33,9 +33,14 @@ export const actions =  {
     }
   },
 
-  async uploadWorkspace ({dispatch, commit, state, rootState}) {
+  async saveWorkspace ({dispatch, commit, state, rootState}) {
     commit('mutation', { mutate: 'workspaceStatus', payload: 'uploading' })
     try {
+
+      var commands = rootState.cells.map(e=>{
+        var { newDfName, done, error, ...cell} = JSON.stringify(e)
+        return cell
+      })
 
       var payload = {
         tabs: rootState.datasets.map(e=>{
@@ -46,7 +51,7 @@ export const actions =  {
             profiling: JSON.stringify(profiling),
           }
         }),
-        commands: rootState.cells.map(e=>JSON.stringify(e))
+        commands
       }
 
       var response = await dispatch('request', {

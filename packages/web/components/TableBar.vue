@@ -633,7 +633,7 @@ export default {
         return Array.from(this.currentCells || [])
       },
       set(value) {
-        this.$store.dispatch('setCells', value )
+        this.$store.dispatch('mutateAndSave', {mutate: 'cells', payload: value} )
       }
     },
 
