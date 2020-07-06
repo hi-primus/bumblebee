@@ -1,6 +1,6 @@
 <template>
 	<div class="table-container">
-    <div v-if="!(currentDataset && currentDataset.summary) && !loadPreview" class="no-data">
+    <div v-if="!(currentDataset && currentDataset.summary) && !loadPreviewActive" class="no-data">
       <div v-if="appError" class="title grey--text text-center text-with-icons">
         There's a problem <br/><br/>
         <v-btn color="primary" depressed @click="reloadInit">Reload</v-btn>
@@ -37,7 +37,7 @@
       </div>
 
     </div>
-		<div v-else-if="currentListView && !loadPreview" class="table-view-container">
+		<div v-else-if="currentListView && !loadPreviewActive" class="table-view-container">
 			<div class="table-controls d-flex">
 				<v-btn
           color="#888" text icon small @click="toggleColumnsSelection">
@@ -176,11 +176,11 @@
 		</div>
 		<client-only>
 			<div
-				v-show="!currentListView && (currentDataset && currentDataset.summary || loadPreview)"
+				v-show="!currentListView && (currentDataset && currentDataset.summary || loadPreviewActive)"
 				class="the-table-container"
 			>
         <BumblebeeTable
-					v-if="!currentListView && (currentDataset && currentDataset.summary || loadPreview)"
+					v-if="!currentListView && (currentDataset && currentDataset.summary || loadPreviewActive)"
           :bbColumns="bbColumns"
           @sort="updateSortedColumns"
           @updatedSelection="selectionEvent"
@@ -264,14 +264,14 @@ export default {
       'currentSelection',
       'currentDataset',
       'currentListView',
-      'currentPreviewCode',
-      'currentLoadPreview',
+      'previewCode',
+      'loadPreview',
       'appError'
     ]),
 
-    loadPreview () {
+    loadPreviewActive () {
       try {
-        return (this.currentPreviewCode.loadPreview && this.currentLoadPreview)
+        return (this.previewCode.loadPreview && this.loadPreview)
       } catch (error) {
         return false
       }
@@ -411,10 +411,6 @@ export default {
       }
     },
 
-    tableKey () {
-			return this.$store.state.datasetUpdates * 100 + this.$store.state.tab
-		},
-
     _sortBy: {
       get () {
         return this.sortBy
@@ -444,10 +440,6 @@ export default {
   },
 
   mounted () {
-
-    // if (!this.currentDataset || this.currentDataset.blank) {
-    //   this.commandHandle({command: 'load file'})
-    // }
 
     try {
       this.getSelectionFromStore()
@@ -610,21 +602,21 @@ export default {
       this.$refs.bumblebeeTable && this.$refs.bumblebeeTable.checkVisibleColumns()
     },
 
-    currentPreviewCode: {
+    previewCode: {
       deep: true,
       async handler () {
         try {
-          var currentCode = await getPropertyAsync(this.currentPreviewCode.code)
+          var currentCode = await getPropertyAsync(this.previewCode.code)
           if (this.loadedPreviewCode!==currentCode) {
             this.loadedPreviewCode = currentCode
-            if (this.currentPreviewCode.load) {
+            if (this.previewCode.load) {
               var dfName = 'preview_df'
-              var code = this.currentPreviewCode.code // is always static
+              var code = this.previewCode.code // is always static
               code = `${dfName} = ${code} \n`
 
               code += `_output = {**${dfName}.ext.to_json("*"), "meta": ${dfName}.meta.get() if (${dfName}.meta and ${dfName}.meta.get) else {} } \n`
 
-              // if (this.currentPreviewCode.infer) {
+              // if (this.previewCode.infer) {
               //   code += `_output = {**${dfName}.ext.to_json("*"), "meta": ${dfName}.meta.get() if (${dfName}.meta and ${dfName}.meta.get) else {} } \n`
               // } else {
               //   code += `_output = {**${dfName}.ext.to_json("*")} \n`

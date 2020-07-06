@@ -38,21 +38,27 @@ export const actions =  {
     try {
 
       var commands = rootState.cells.map(e=>{
-        var { newDfName, done, error, ...cell} = JSON.stringify(e)
-        return cell
+        var { newDfName, done, error, ...cell} = e
+        return JSON.stringify(cell)
+      })
+
+      var dataSources = rootState.dataSources.map(e=>{
+        var { done, error, ...cell} = e
+        return JSON.stringify(cell)
       })
 
       var payload = {
         tabs: rootState.datasets.map(e=>{
-          var {dataSources, name, ...profiling}   = e
+          var {dataSources, name, ...profiling} = e
           return {
             name,
-            dataSources: dataSources || [],
             profiling: JSON.stringify(profiling),
           }
         }),
-        commands
+        commands: [...dataSources, ...commands]
       }
+
+      console.log
 
       var response = await dispatch('request', {
         request: 'put',
@@ -80,6 +86,9 @@ export const actions =  {
   },
 
   async startWorkspace ({commit, dispatch, state}, id) {
+
+
+    console.log('startWorkspace')
 
     var workspace = state.workspace
 
@@ -116,22 +125,23 @@ export const actions =  {
     var tab = -1
 
     tabs.forEach((dataset, index) => {
-      commit('mutation', { mutate: 'tab', payload: index }, { root: true })
+      // commit('mutation', { mutate: 'tab', payload: index }, { root: true })
       console.log('loading', { dataset })
       if (dataset.columns) {
-        commit('loadDataset', { dataset }, { root: true })
+        commit('loadDataset', { dataset, tab: index }, { root: true })
         if (tab<0) {
           tab = index
         }
       } else {
-        commit('newDataset', { dataset, current: true }, { root: true })
+        commit('newDataset', { dataset, current: true, tab: index }, { root: true })
       }
     })
 
-    commit('mutation', {mutate: 'tab', payload: tab}, { root: true })
 
     commit('mutation', { mutate: 'cells', payload: commands }, { root: true })
     commit('mutation', { mutate: 'workspace', payload: response.data })
+
+    commit('mutation', {mutate: 'tab', payload: tab}, { root: true })
 
     return response.data
 

@@ -212,20 +212,19 @@ export default {
     },
 
     async deleteWorkspace (workspace) {
-      let id = workspace._id
+      try {
+        let id = workspace._id
+        let found = this.items.findIndex(w=>w._id === id)
+        this.$delete(this.items, found)
 
-      let found = this.items.findIndex(w=>w._id === id)
-      // let item = this.items[found]
-      // item.loading = true
-      // item.deleting = true
-      // this.$set(this.items, found, item)
-      this.$delete(this.items, found)
-
-      await this.$store.dispatch('request',{
-        request: 'delete',
-        path: `/workspaces/${id}`,
-      })
-      await this.updateWorkspaces()
+        await this.$store.dispatch('request',{
+          request: 'delete',
+          path: `/workspaces/${id}`,
+        })
+        await this.updateWorkspaces()
+      } catch (err) {
+        console.error(err)
+      }
     },
 
     async createNewWorkspaceUsingForm () {
@@ -241,81 +240,91 @@ export default {
     },
 
     async createNewWorkspace (name) {
-      if (!name) {
-        return false
-      }
-
-      this.items.push({
-        name: name,
-        createdAt: false,
-        updatedAt: false,
-        loading: true,
-        _id: false
-      })
-      await this.$store.dispatch('request',{
-        request: 'post',
-        path: '/workspaces',
-        payload: {
-          name: name
+      try {
+        if (!name) {
+          return false
         }
-      })
-      await this.updateWorkspaces()
+        this.items.push({
+          name: name,
+          createdAt: false,
+          updatedAt: false,
+          loading: true,
+          _id: false
+        })
+        await this.$store.dispatch('request',{
+          request: 'post',
+          path: '/workspaces',
+          payload: { name }
+        })
+        await this.updateWorkspaces()
+      } catch (err) {
+        console.error(err)
+      }
     },
 
     async renameWorkspace (workspace) {
 
-      let input = await this.fromForm({
-        name: workspace.name,
-        placeholder: workspace.name,
-        value: workspace.name,
-        label: 'Rename',
-        text: 'Rename workspace'
-      })
+      try {
+        let input = await this.fromForm({
+          name: workspace.name,
+          placeholder: workspace.name,
+          value: workspace.name,
+          label: 'Rename',
+          text: 'Rename workspace'
+        })
 
-      if (!input) {
-        return false
+        if (!input) {
+          return false
+        }
+
+        let id = workspace._id
+
+        let found = this.items.findIndex(w=>w._id === id)
+        let item = this.items[found]
+        item.loading = true
+        item.name = input
+        this.$set(this.items, found, item)
+        // this.$delete(this.items, found)
+
+        await this.$store.dispatch('request',{
+          request: 'put',
+          path: `/workspaces/${id}`,
+          payload: {
+            name: input
+          }
+        })
+        await this.updateWorkspaces()
+      } catch (err) {
+        console.error(err)
       }
 
-      let id = workspace._id
-
-      let found = this.items.findIndex(w=>w._id === id)
-      let item = this.items[found]
-      item.loading = true
-      item.name = input
-      this.$set(this.items, found, item)
-      // this.$delete(this.items, found)
-
-      await this.$store.dispatch('request',{
-        request: 'put',
-        path: `/workspaces/${id}`,
-        payload: {
-          name: input
-        }
-      })
-      await this.updateWorkspaces()
     },
 
     async duplicateWorkspace (workspace) {
-      this.items.push({
-        ...workspace,
-        name: workspace.name+' copy',
-        createdAt: false,
-        updatedAt: false,
-        loading: true,
-        _id: false
-      })
-      await this.$store.dispatch('request',{
-        request: 'post',
-        path: '/workspaces',
-        payload: {
-          name: workspace.name+' copy', // TO-DO: copyName
-          // TO-DO: copy ok
-          // connection: workspace.connection,
-          // tabs: workspace.tabs,
-          // dataSources: workspace.dataSources
-        }
-      })
-      await this.updateWorkspaces()
+      try {
+         this.items.push({
+          ...workspace,
+          name: workspace.name+' copy',
+          createdAt: false,
+          updatedAt: false,
+          loading: true,
+          _id: false
+        })
+        await this.$store.dispatch('request',{
+          request: 'post',
+          path: '/workspaces',
+          payload: {
+            name: workspace.name+' copy', // TO-DO: copyName
+            // TO-DO: copy ok
+            // connection: workspace.connection,
+            // tabs: workspace.tabs,
+            // dataSources: workspace.dataSources
+          }
+        })
+        await this.updateWorkspaces()
+      } catch (err) {
+        console.error(err)
+      }
     },
 
     async updateWorkspaces () {
@@ -325,14 +334,18 @@ export default {
     },
 
     async getWorkspaces () {
-      this.loading = true
-      let { sortBy, sortDesc, page, itemsPerPage } = this.options
-      let response = await this.$store.dispatch('request',{
-        path: `/workspaces`
-      })
-      console.log(response.data)
-      this.loading = false
-      return {items: response.data, total: 10} // TO-DO: this
+      try {
+        this.loading = true
+        let { sortBy, sortDesc, page, itemsPerPage } = this.options
+        let response = await this.$store.dispatch('request',{
+          path: `/workspaces`
+        })
+        console.log(response.data)
+        this.loading = false
+        return {items: response.data, total: 10} // TO-DO: this
+      } catch (err) {
+        console.error(err)
+      }
     }
 
   },

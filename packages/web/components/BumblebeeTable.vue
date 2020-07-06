@@ -290,7 +290,7 @@
     </style> -->
     <div class="bb-table-i" v-show="true" ref="BbTable" :style="tableStyle">
       <div class="bb-table-i-rows" v-if="computedColumnValues[rowsColumn]">
-        <template v-if="computedColumnValues['__match__'] && currentPreviewCode">
+        <template v-if="computedColumnValues['__match__'] && previewCode">
           <div
             v-for="(value) in computedColumnValues[rowsColumn].filter((e)=>e.index<rowsCount)"
             :key="'row'+value.index"
@@ -461,10 +461,10 @@ export default {
       'currentHighlights',
       'currentRowHighlights',
       'currentFocusedColumns',
-      'currentPreviewCode',
+      'previewCode',
       'currentDuplicatedColumns',
       'currentPreviewNames',
-      'currentLoadPreview',
+      'loadPreview',
       'currentBuffer'
     ]),
 
@@ -481,13 +481,13 @@ export default {
 
       try {
 
-        if (this.currentPreviewCode && this.columnValues['__match__'] && this.columnValues['__match__'].length) {
+        if (this.previewCode && this.columnValues['__match__'] && this.columnValues['__match__'].length) {
           return '__match__'
         }
 
         var columns = this.columnValues
 
-        if (this.loadPreview) {
+        if (this.loadPreviewActive) { // || !loadPreview
           columns = this.loadPreviewColumnValues
         }
 
@@ -510,28 +510,28 @@ export default {
     },
 
     computedColumnValues () {
-      if (this.loadPreview) {
+      if (this.loadPreviewActive) {
         return this.loadPreviewColumnValues
       }
-      var noHighlight = !this.currentPreviewCode.code
+      var noHighlight = !this.previewCode.code
       return this.computeColumnValues(this.columnValues, noHighlight, this.rowsCount)
     },
 
     loadPreviewColumnValues () {
-      var columnValues = this.getValuesByColumns(this.currentLoadPreview.sample)
+      var columnValues = this.getValuesByColumns(this.loadPreview.sample)
       return this.computeColumnValues(columnValues, true)
     },
 
     idInSample () {
-      return this.indicesInSample // TODO: name mapping
+      return this.indicesInSample // TO-DO: name mapping
     },
 
-    loadPreview () {
-      return this.currentPreviewCode && this.currentPreviewCode.loadPreview
+    loadPreviewActive () {
+      return this.previewCode && this.previewCode.loadPreview && this.loadPreview
     },
 
     datasetPreview () {
-      return this.currentPreviewCode && this.currentPreviewCode.datasetPreview
+      return this.previewCode && this.previewCode.datasetPreview
     },
 
     highlightMatches () {
@@ -549,7 +549,7 @@ export default {
     previewColumns () {
       try {
 
-        var loadPreviewColumns = (this.loadPreview && this.currentLoadPreview && this.currentLoadPreview.sample) ? this.currentLoadPreview.sample.columns : []
+        var loadPreviewColumns = (this.loadPreviewActive && this.loadPreview.sample) ? this.loadPreview.sample.columns : []
 
         var dpc = loadPreviewColumns.length
         ? loadPreviewColumns.map((col, index)=>({
@@ -583,8 +583,8 @@ export default {
         : []
 
 
-        if (this.currentPreviewCode.joinPreview) {
-          var jp = this.currentPreviewCode.joinPreview
+        if (this.previewCode.joinPreview) {
+          var jp = this.previewCode.joinPreview
           for (var index = 0; index<pc.length; index++) {
             for (var jindex = 0; jindex<jp.length; jindex++) {
               if (jp[jindex].indexOf(pc[index].name)>=0) {
@@ -608,7 +608,7 @@ export default {
 
       this.incompleteColumns = false
 
-      if ((this.datasetPreview || this.loadPreview) && this.previewColumns && this.previewColumns.length) {
+      if ((this.datasetPreview || this.loadPreviewActive) && this.previewColumns && this.previewColumns.length) { // || !loadPreview
         return this.previewColumns.map(c=>({
           ...c,
           classes: [...(c.classes || []), 'bb-preview'],
@@ -617,9 +617,9 @@ export default {
       }
 
       var cols = []
-      var wholePreview = (this.currentPreviewCode.datasetPreview || this.currentPreviewCode.loadPreview)
+      var wholePreview = (this.previewCode.datasetPreview || this.previewCode.loadPreview)
       if (
-        !this.currentPreviewCode
+        !this.previewCode
         ||
         !wholePreview
         ||
@@ -641,9 +641,9 @@ export default {
       }
 
       if (
-        (this.currentPreviewCode && wholePreview && !(this.previewColumns && this.previewColumns.length))
+        (this.previewCode && wholePreview && !(this.previewColumns && this.previewColumns.length))
         ||
-        (!this.currentPreviewCode && !(this.currentDuplicatedColumns && this.currentDuplicatedColumns.length))
+        (!this.previewCode && !(this.currentDuplicatedColumns && this.currentDuplicatedColumns.length))
       ) {
         return cols
       }
@@ -652,8 +652,8 @@ export default {
 
         var after = []
 
-        if (this.currentPreviewCode.from) {
-          after = this.currentPreviewCode.from || after
+        if (this.previewCode.from) {
+          after = this.previewCode.from || after
         }
 
         if (!(after && after.length) && (this.currentSelection.columns && this.currentSelection.columns.length)) {
@@ -662,7 +662,7 @@ export default {
 
         after = after || []
 
-        var expectedColumns = (this.currentDuplicatedColumns) ? this.currentDuplicatedColumns.length : this.currentPreviewCode.expectedColumns
+        var expectedColumns = (this.currentDuplicatedColumns) ? this.currentDuplicatedColumns.length : this.previewCode.expectedColumns
 
         if (expectedColumns===0) {
           return cols
@@ -816,8 +816,8 @@ export default {
 
         var profile
 
-        if (this.loadPreview && this.currentLoadPreview && this.currentLoadPreview.profile) {
-          profile = this.currentLoadPreview.profile
+        if (this.loadPreviewActive && this.loadPreview.profile) {
+          profile = this.loadPreview.profile
         } else {
           profile = this.currentProfilePreview
         }
@@ -856,13 +856,13 @@ export default {
     rowsCount () {
       try {
         var value = 0
-        if (this.loadPreview && this.currentLoadPreview && this.currentLoadPreview.sample) {
-          value = this.currentLoadPreview.sample.value.length
+        if (this.loadPreviewActive && this.loadPreview.sample) {
+          value = this.loadPreview.sample.value.length
           return value
         }
-        if (this.currentPreviewCode && !this.incompleteColumns) {
+        if (this.previewCode && !this.incompleteColumns) {
           if (this.currentRowHighlights && typeof this.currentRowHighlights === 'number'){
-            if (this.currentPreviewCode.noBufferWindow) {
+            if (this.previewCode.noBufferWindow) {
               value = this.currentRowHighlights
             }
           }
@@ -870,7 +870,7 @@ export default {
             this.previewRowsCount = this.currentProfilePreview.summary.rows_count
             value = Math.max(value, this.currentProfilePreview.summary.rows_count)
           }
-          if (this.currentPreviewCode.datasetPreview && this.previewRowsCount) {
+          if (this.previewCode.datasetPreview && this.previewRowsCount) {
             value = Math.max(value, this.previewRowsCount)
           }
         }
@@ -946,19 +946,19 @@ export default {
       this.focusPreview()
     },
 
-    currentPreviewCode: {
+    previewCode: {
 
       deep: true,
 
-      async handler (currentPreviewCode) {
-        var currentCode = await getPropertyAsync(currentPreviewCode.code)
+      async handler (previewCode) {
+        var currentCode = await getPropertyAsync(previewCode.code)
         if (this.loadedPreviewCode!==currentCode) {
           this.loadedPreviewCode = currentCode
           if (currentCode) { // a new code
             delete this.columnValues['__match__']
             this.fetched = this.fetched.filter(e=>!e.code)
           }
-          if (!currentPreviewCode.load) {
+          if (!previewCode.load) {
             this.previousRange = -1
             await this.scrollCheck(true) // await?
             this.mustUpdateRows = true
@@ -1167,7 +1167,7 @@ export default {
 					var columnNames = this.currentDataset.columns.map(e=>e.name)
 
           var previewColumns = []
-          if (this.currentPreviewCode && this.currentPreviewCode.datasetPreview) {
+          if (this.previewCode && this.previewCode.datasetPreview) {
             previewColumns = receivedColumns
               .filter((column, index)=>(
                 !column.title.includes('__match_positions__')
@@ -1205,7 +1205,7 @@ export default {
               }
             })
 
-          var color = this.currentPreviewCode.color
+          var color = this.previewCode.color
 
           if (matchRowsColumns[0]) {
             if (typeof this.currentRowHighlights !== 'number') {
@@ -1232,7 +1232,7 @@ export default {
 
     focusPreview () {
       this.$nextTick(() => {
-        var columns = this.currentPreviewCode.from
+        var columns = this.previewCode.from
         if (columns && columns.length) {
           columns.forEach(column => {
             var af = document.getElementById("bb-table-"+column)
@@ -1313,7 +1313,7 @@ export default {
     getRowHighlight (row) {
       try {
         if (this.columnValues['__match__'][row]) {
-          return 'bb-highlight--'+(this.currentPreviewCode.color || 'green')
+          return 'bb-highlight--'+(this.previewCode.color || 'green')
         }
       } catch (err) {
         // console.error(err)
@@ -1603,7 +1603,7 @@ export default {
     } , 100),
 
     async scrollCheck (awaited = true) {
-      if (this.currentPreviewCode.load) {
+      if (this.previewCode.load) {
         return false
       }
       try {
@@ -1719,8 +1719,8 @@ export default {
 
       // get the valid fetches to know what to fetch next
 
-      if (this.currentPreviewCode) {
-        fetched = this.fetched.filter(e=>e.code===this.currentPreviewCode.code)
+      if (this.previewCode) {
+        fetched = this.fetched.filter(e=>e.code===this.previewCode.code)
         if (!fetched.length) {
           this.fetched = this.fetched.filter(e=>!e.code)
           this.recalculateRows = true
@@ -1780,7 +1780,7 @@ export default {
 
       for (let i = newRanges.length - 1; i >= 0 ; i--) {
 
-        var previewCode = (this.currentPreviewCode ? this.currentPreviewCode.profileCode : false) || ''
+        var previewCode = (this.previewCode ? this.previewCode.profileCode : false) || ''
         if (this.currentProfilePreview.code !== previewCode) {
           this.setProfile(false)
         }
@@ -1810,10 +1810,10 @@ export default {
       var noBufferWindow = false
       var forceName = false
 
-      if (this.currentPreviewCode) {
-        previewCode = this.currentPreviewCode.code
-        noBufferWindow = this.currentPreviewCode.noBufferWindow
-        forceName = !!this.currentPreviewCode.datasetPreview
+      if (this.previewCode) {
+        previewCode = this.previewCode.code
+        noBufferWindow = this.previewCode.noBufferWindow
+        forceName = !!this.previewCode.datasetPreview
       }
 
       if (!this.currentBuffer) {
@@ -1824,8 +1824,8 @@ export default {
 
       var referenceCode = await getPropertyAsync(previewCode) || ''
 
-      if (this.currentPreviewCode.beforeCodeEval) {
-        this.currentPreviewCode.beforeCodeEval()
+      if (this.previewCode.beforeCodeEval) {
+        this.previewCode.beforeCodeEval()
       }
 
       var response = await this.evalCode(`_output = ${this.currentDataset.dfName}.ext.buffer_window("*"${(noBufferWindow) ? '' : ', '+from+', '+(to+1)})${code}.ext.to_json("*")`)

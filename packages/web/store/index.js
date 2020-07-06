@@ -3,17 +3,15 @@ import Vue from 'vue'
 
 const properties = [
   {
+    name: 'loadPreview',
+    setter: false,
+    clear: true,
+  },
+  {
     name: 'PreviewColumns',
     clear: true,
     clearOnSelection: true,
-  },
-  {
-    name: 'LoadPreview',
-    setter: false,
-    clear: true,
-    // clearOnLoad: true,
-    // default: ()=>([]),
-    // defaultValue: true,
+    multiple: true,
   },
   {
     name: 'ProfilePreview',
@@ -22,54 +20,63 @@ const properties = [
     default: ()=>({
       rowHighlights: false,
       newColumns: false
-    })
+    }),
+    multiple: true,
   },
   {
     name: 'PreviewInfo',
     clear: true,
     clearOnSelection: true,
+    multiple: true,
   },
   {
     name: 'Highlights',
     clear: true,
     clearOnSelection: true,
+    multiple: true,
   },
   {
-    name: 'PreviewCode',
+    name: 'previewCode',
     clear: true,
     clearOnLoad: true,
-    clearOnSelection: true,
+    clearOnSelection: true
   },
   {
     name: 'DuplicatedColumns',
     clear: true,
     clearOnSelection: true,
+    multiple: true,
   },
   {
     name: 'PreviewNames',
     clear: true,
     clearOnSelection: true,
+    multiple: true,
   },
   {
     name: 'FocusedColumns',
     clear: true,
     clearOnSelection: true,
+    multiple: true,
   },
-  // {
-  //   name: 'Buffer'
-  // },
   {
-    name: 'DatasetUpdate'
+    name: 'DatasetUpdate',
+    multiple: true,
   }
 ]
 
 var pStates = {}
 
 properties.forEach((p)=>{
-  pStates['every'+p.name] = []
+  if (p.multiple) {
+    pStates['every'+p.name] = []
+  } else {
+    pStates[p.name] = false
+  }
 })
 
-/*bu*/ import { ALL_TYPES } from 'bumblebee-utils' /*bu*/
+
+/*bu*/ import { ALL_TYPES, capitalizeString } from 'bumblebee-utils' /*bu*/
 
 export const state = () => ({
   datasets: [],
@@ -78,12 +85,11 @@ export const state = () => ({
   databases: [],
   buffers: [],
   listViews: [],
-  cells: [],
+  commands: [],
   dataSources: [],
   properties,
-  // previewColumns: [],
-  ...pStates,
   datasetUpdates: 0,
+  ...pStates,
 
   //
 
@@ -100,21 +106,32 @@ export const state = () => ({
 var pSetters = {}
 
 properties.forEach((p)=>{
-  if (p.setter!==false)
-    pSetters['set'+p.name] = function(state, payload) {
-      Vue.set( state['every'+p.name], state.tab, payload )
+  if (p.setter!==false) {
+    if (p.multiple) {
+      pSetters['set'+capitalizeString(p.name)] = function(state, payload) {
+        Vue.set( state['every'+p.name], state.tab, payload )
+      }
+    } else {
+      pSetters['set'+capitalizeString(p.name)] = function(state, payload) {
+        state[p.name] = payload
+      }
     }
+  }
 })
 
 export const mutations = {
 
   mutation (state, {mutate, payload}) {
-    state[mutate] = payload
+    Vue.set(state, mutate, payload)
   },
 
   clearDatasetProperties (state) {
     state.properties.filter(p=>p.clear).forEach(p=>{
-      Vue.set(state['every'+p.name], state.tab, false)
+      if (p.multiple) {
+        Vue.set(state['every'+p.name], state.tab, false)
+      } else {
+        state[p.name] = false
+      }
     })
   },
 
@@ -136,17 +153,18 @@ export const mutations = {
   ...pSetters,
 
   setLoadPreview (state, {sample, profile, meta}) {
-    state.everyLoadPreview[state.tab] = state.everyLoadPreview[state.tab] || {}
-    if (sample!==undefined) {
-      state.everyLoadPreview[state.tab].sample = sample
+    state.loadPreview = state.loadPreview || {}
+
+    // TO-DO: Optimize (only one Vue.set)
+    if (sample !== undefined) {
+      Vue.set(state.loadPreview, 'sample', sample)
     }
-    if (profile!==undefined) {
-      state.everyLoadPreview[state.tab].profile = profile
+    if (profile !== undefined) {
+      Vue.set(state.loadPreview, 'profile', profile)
     }
-    if (meta!==undefined) {
-      state.everyLoadPreview[state.tab].meta = meta
+    if (meta !== undefined) {
+      Vue.set(state.loadPreview, 'meta', meta)
     }
-    Vue.set( state.everyLoadPreview, state.tab, state.everyLoadPreview[state.tab])
   },
 
   setHighlights (state, { matchColumns, color }) {
@@ -157,7 +175,11 @@ export const mutations = {
 
   previewDefault (state) {
     state.properties.filter(p=>p.clear).forEach(p=>{
-      Vue.set(state['every'+p.name], state.tab, false)
+      if (p.multiple) {
+        Vue.set(state['every'+p.name], state.tab, false)
+      } else {
+        state[p.name] = false
+      }
     })
   },
 
@@ -169,7 +191,7 @@ export const mutations = {
     Vue.set(state.listViews,state.tab,listView)
   },
 
-	loadDataset (state, { dataset, preview }) {
+	loadDataset (state, { dataset, preview, tab }) {
 
     console.log("[BUMBLEBLEE] Opening dataset",dataset)
 
@@ -196,64 +218,103 @@ export const mutations = {
 
     var _c
 
+    tab = tab || state.tab
+
     try {
-      _c = state.datasetSelection[state.tab].columns
+      _c = state.datasetSelection[tab].columns
     } catch (err) {
       _c = []
     }
 
-    Vue.set(state.datasets, state.tab, dataset)
+    var previousDataset = state.datasets[tab] || {}
 
-    state.datasetSelection[state.tab] = {} // {columns: _c} // TODO: check selection
+    if (previousDataset.dfName) {
+      dataset.dfName = previousDataset.dfName
+    }
 
-    Vue.set(state.datasetSelection, state.tab, state.datasetSelection[state.tab] )
-    Vue.set(state.buffers, state.tab, false)
+
+    Vue.set(state.datasets, tab, dataset)
+
+    state.datasetSelection[tab] = {} // {columns: _c} // TO-DO: check selection
+
+    Vue.set(state.datasetSelection, tab, state.datasetSelection[tab] )
+    Vue.set(state.buffers, tab, false)
 
     state.properties.filter(p=>p.clearOnLoad).forEach(p=>{
-      Vue.set(state['every'+p.name], state.tab, false)
+      if (p.multiple) {
+        Vue.set(state['every'+p.name], tab, false)
+      } else {
+        state[p.name] = false
+      }
     })
 
-    Vue.set(state.everyDatasetUpdate, state.tab, state.everyDatasetUpdate[state.tab] + 1 )
+    Vue.set(state.everyDatasetUpdate, tab, state.everyDatasetUpdate[tab] + 1 )
     state.datasetUpdates = state.datasetUpdates + 1
 
   },
 
-  newDataset (state, { current, tab, dataset }) {
+  newDataset (state, { current, dataset, tab }) {
+    let found = -1
 
-    let found = current ? state.tab : state.datasets.length
-    found = tab!==undefined ? tab : found
-
-    let dfName = 'df'
-
-    if (found) {
-      dfName = dfName + found
+    if (current) {
+      found = tab || state.tab
     }
+
+    if (found<0) {
+      found = state.datasets.length
+    }
+
 
     dataset = {
       name: '(new dataset)',
-      dfName,
       blank: true,
       ...(dataset || {})
     }
 
+    state.loadPreview = false
     Vue.set(state.datasets, found, dataset)
     Vue.set(state.datasetSelection, found, {})
-    Vue.set(state.everyLoadPreview, found, false)
     Vue.set(state.everyDatasetUpdate, found, 1 )
 
-		state.datasetUpdates = state.datasetUpdates + 1
+    state.datasetUpdates = state.datasetUpdates + 1
+
+    state.tab = found
+  },
+
+  setDfToTab (state, { dfName }) {
+
+    // sets to current tab if it doesn't have any dfName on it
+
+    if (!state.datasets[state.tab].dfName || state.datasets[state.tab].blank) {
+      // state.datasets[state.tab].dfName = dfName
+      // this.commit( 'newDataset', { current: true, dataset: state.datasets[state.tab] })
+      Vue.set(state.datasets[state.tab], 'dfName', dfName)
+      console.log('df to current')
+      return
+    }
+
+    // sets to a new tab
+
+    this.commit('newDataset', { dataset: { dfName } })
+    console.log('df to new')
+
+
+
+
   },
 
 	deleteTab (state, index) {
     Vue.delete(state.datasets, index)
     Vue.delete(state.datasetSelection, index)
     state.properties.forEach(p=>{
-      Vue.delete(state['every'+p.name], index)
+      if (p.multiple) {
+        Vue.delete(state['every'+p.name], index)
+      }
     })
     if (!state.datasets.length) {
       this.commit('newDataset', {})
     }
-    return Math.min(index, store.datasets.length)
+    return Math.min(index, state.datasets.length)
 	},
 
 	setAppStatus (state, payload) {
@@ -262,9 +323,9 @@ export const mutations = {
 
   setCellCode (state, {index, code}) {
     try {
-      var currentCells = state.everyCells[state.tab] || []
-      currentCells[index].code = code
-      Vue.set(state.everyCells, state.tab, currentCells)
+      var commands = state.everyCells[state.tab] || []
+      commands[index].code = code
+      Vue.set(state.everyCells, state.tab, commands)
     } catch (error) {
       console.error(error)
     }
@@ -311,7 +372,11 @@ export const mutations = {
       }
 
       state.properties.filter(p=>p.clearOnSelection).forEach(p=>{
-        Vue.set(state['every'+p.name], tab, false)
+        if (p.multiple) {
+          Vue.set(state['every'+p.name], tab, false)
+        } else {
+          state[p.name] = false
+        }
       })
 
       if (clear) {
@@ -408,9 +473,16 @@ export const actions = {
 var pGetters = {}
 
 properties.forEach((p)=>{
-  pGetters['current'+p.name] = function(state) {
-    return state['every'+p.name][state.tab]
-    || (p.defaultC ? p.defaultC() : (p.defaultV || false))
+  if (p.multiple) {
+    pGetters['current'+p.name] = function(state) {
+      return state['every'+p.name][state.tab]
+      || (p.defaultC ? p.defaultC() : (p.defaultV || false))
+    }
+  } else {
+    pGetters[p.name] = function(state) {
+      return state[p.name]
+      || (p.defaultC ? p.defaultC() : (p.defaultV || false))
+    }
   }
 })
 
@@ -418,11 +490,17 @@ export const getters = {
   currentDataset (state) {
     return state.datasets[state.tab]
   },
-  currentCells (state) { // TO-DO: rename
-    return state.cells || []
+  commands (state) {
+    return state.commands || []
   },
   dataSources (state) {
     return state.dataSources
+  },
+  loadPreview (state) {
+    return state.loadPreview
+  },
+  workspaceCells (state) {
+    return [...(state.commands || []), ...(state.dataSources || [])]
   },
   currentSecondaryDatasets (state) {
     return state.secondaryDatasets
@@ -444,7 +522,7 @@ export const getters = {
   currentBuffer (state) {
     try {
       var dfName = state.datsets[state.tab].dfName
-      return state.buffer[dfName] // TODO: dfName
+      return state.buffer[dfName] // TO-DO: dfName
     } catch (error) {
       return false
     }

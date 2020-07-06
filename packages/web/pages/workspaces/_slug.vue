@@ -77,7 +77,7 @@
           <v-tabs
             :key="$store.state.datasetUpdates"
             v-model="tab"
-            :class="{'tabs-disabled': $store.state.everyPreviewCode[tab] || isOperating}"
+            :class="{'tabs-disabled': previewCode || isOperating}"
             class="bb-tabs px-6"
             background-color="#fff"
             show-arrows
@@ -145,7 +145,6 @@
               ref="tableBar"
               v-if="currentDataset"
               :isOperating.sync="isOperating"
-              :dataset="currentDataset"
               :total="(currentDataset.summary) ? +currentDataset.summary.rows_count : 1"
             />
           </div>
@@ -242,7 +241,6 @@ export default {
 		return {
       workspacesDialog: false,
 			isOperating: false,
-			tab: undefined,
 			confirmDelete: -1,
       typesInput: ''
 		};
@@ -258,9 +256,30 @@ export default {
   },
 
 	computed: {
-    ...mapGetters(['currentDataset']),
+    ...mapGetters(['currentDataset','previewCode']),
 
     ...mapState('session',['workspace', 'workspaceStatus']),
+
+    tab: {
+      get () {
+        return this.$store.state.tab
+      },
+      set (value) {
+        if (value === undefined) {
+          return
+        }
+
+        let dataset = this.$store.state.datasets[value];
+
+        if (value !== undefined && !dataset) {
+          this.tab = this.$store.state.datasets[0] ? 0 : undefined
+          this.$store.commit('mutation', { mutate: 'tab', payload: 0 })
+          return
+        }
+
+        this.$store.commit('mutation', { mutate: 'tab', payload: value })
+      },
+    },
 
     moreMenu () {
       let menu = []
@@ -327,22 +346,6 @@ export default {
 			}
 		},
 
-		tab(value) {
-			if (value === undefined) {
-				return
-			}
-
-			let dataset = this.$store.state.datasets[value];
-
-			if (value !== undefined && !dataset) {
-				this.tab = this.$store.state.datasets[0] ? 0 : undefined
-				this.$store.commit('mutation', { mutate: 'tab', payload: 0 })
-				return
-			}
-
-			this.$store.commit('mutation', { mutate: 'tab', payload: value })
-		},
-
 		confirmDelete(value) {
 			if (value>=0 && this.$store.state.datasets[value] && this.$store.state.datasets[value].blank) {
         this.deleteTab(value)
@@ -364,7 +367,7 @@ export default {
 
       // this.startClient({ workspace: this.$route.params.slug })
 
-      console.log('intializeWorkspace')
+      console.log('initializeWorkspace')
 
       try {
 
@@ -372,28 +375,46 @@ export default {
 
         var workspacePromise = this.$store.dispatch('session/startWorkspace', this.$route.params.slug)
 
+        console.log('pre initializeOptimus')
+
         await this.initializeOptimus()
 
+        console.log('post initializeOptimus')
+
+        console.log('workspacePromise awaiting')
+
         var workspace = await workspacePromise
+          console.log('workspacePromise done')
 
         if (!this.$store.state.datasets.length && this.useKernel) {
           this.$store.dispatch('newDataset')
         }
 
+        console.log('status mutation')
+
         this.$store.commit('session/mutation', { mutate: 'workspaceStatus', payload: true })
+
+        console.log('status mutated')
 
         this.$nextTick(async ()=>{
 
-          console.log('runCodeNow')
-          await this.runCodeNow()
+          try {
 
-          this.updateSecondaryDatasets()
 
-          this.$store.commit('kernel', 'loading')
+            console.log('runCodeNow')
+            await this.runCodeNow()
 
-          this.$store.commit('setAppStatus', 'workspace')
+            this.updateSecondaryDatasets()
 
-          this.$store.commit('kernel', 'done')
+            this.$store.commit('kernel', 'loading')
+
+            this.$store.commit('setAppStatus', 'workspace')
+
+            this.$store.commit('kernel', 'done')
+          } catch (error) {
+            console.error(error)
+            throw error
+          }
 
         })
 
@@ -414,6 +435,7 @@ export default {
     },
 
     async initializeOptimus () {
+      console.log('initializeOptimus')
       var response = await this.socketPost('initialize', {
         username: this.$store.state.session.username,
         workspace: this.$store.state.session.workspace._id,

@@ -274,10 +274,6 @@ export default {
     commandsDisabled: {
       default: false
     },
-    dataset: {
-      type: Object,
-      required: true
-    },
     codeError: {
       type: String,
       default: ''
@@ -864,6 +860,7 @@ export default {
                 // noBufferWindow: true
               },
               request: {
+                // createsNew: true
               }
             }
           },
@@ -1199,6 +1196,7 @@ export default {
             },
             request: {
               isLoad: true,
+              createsNew: true
             }
           }),
 
@@ -1628,7 +1626,8 @@ export default {
             password: '',
             _loadingTables: false,
             request: {
-              isLoad: true
+              isLoad: true,
+              createsNew: true
             },
             variables: {
               ...createPool()
@@ -2199,42 +2198,30 @@ export default {
 
     ...mapGetters([
       'currentSelection',
-      'currentCells',
-      'dataSources',
+      'workspaceCells',
+      'currentDataset',
       'selectionType',
       'currentTab',
       'currentDuplicatedColumns',
       'currentPreviewNames',
       'currentPreviewInfo',
       'currentSecondaryDatasets',
-      'currentLoadPreview',
+      'loadPreview',
       'hasSecondaryDatasets'
     ]),
 
     cells: {
       get() {
-        return [
-          ...Array.from(this.dataSources || []),
-          ...Array.from(this.currentCells || [])
-        ]
+        return Array.from(this.workspaceCells)
       },
       set(value) {
         console.log('setting cells', value)
-        var cells = value.filter(e=>!(e && e.payload && e.payload.request && e.payload.request.isLoad))
-        var dataSources = value.filter(e=>e && e.payload && e.payload.request && e.payload.request.isLoad)
+        var cells = value.filter(e=>!(e && e.payload && e.payload.request && e.payload.request.createsNew))
+        var dataSources = value.filter(e=>e && e.payload && e.payload.request && e.payload.request.createsNew)
         this.$store.dispatch('mutateAndSave', {mutate: 'cells', payload: cells} )
         this.$store.dispatch('mutateAndSave', {mutate: 'dataSources', payload: dataSources} )
       }
     },
-
-    // dataSources: {
-    //   get() {
-    //     return Array.from(this.dataSources || [])
-    //   },
-    //   set(value) {
-    //     this.$store.dispatch('mutateAndSave', { mutate: payload } )
-    //   }
-    // },
 
     command () {
       try {
@@ -2248,7 +2235,7 @@ export default {
 
     allColumns () {
       try {
-        return this.dataset.columns.map(e=>e.name)
+        return this.currentDataset.columns.map(e=>e.name)
       } catch (err) {
         return []
       }
@@ -2300,13 +2287,13 @@ export default {
 
         try {
 
-          if (!selection || !selection.ranged || selection.ranged.index<0 || !this.dataset.columns[selection.ranged.index]){
+          if (!selection || !selection.ranged || selection.ranged.index<0 || !this.currentDataset.columns[selection.ranged.index]){
             return
           }
 
           var command = { command: 'REMOVE_KEEP_SET' }
 
-          command.columns = [ this.dataset.columns[selection.ranged.index].name ]
+          command.columns = [ this.currentDataset.columns[selection.ranged.index].name ]
 
           command.payload = { rowsType: this.selectionType }
 
@@ -2326,7 +2313,7 @@ export default {
       },
     },
 
-    currentLoadPreview ({meta}) {
+    loadPreview ({meta}) {
       var c = { ...this.currentCommand }
 
       try {
@@ -2434,7 +2421,7 @@ export default {
       }
     },
 
-    dataset: {
+    currentDataset: {
       deep: true,
       handler () {
         if (this.computedCommandsDisabled===undefined) {
@@ -2450,7 +2437,12 @@ export default {
 
   methods: {
 
-    availableDfName () {
+    setDfToTab (dfName) {
+      console.log('adding df to tab',{dfName})
+      this.$store.commit('setDfToTab', { dfName })
+    },
+
+    getNewDfName () {
 
       var name = 'df'
 
@@ -2464,6 +2456,10 @@ export default {
           name = name+i
         }
       }
+
+      // if (!this.currentDataset.dfName) {
+
+      // }
 
       console.log('Getting variable name', name)
 
@@ -2486,8 +2482,8 @@ export default {
         this.cancelCommand()
         await this.runCodeNow()
         var url = `downloads/${this.$store.state.session.username}`
-        await this.evalCode(`_output = ${this.dataset.dfName}.save.csv("/opt/Bumblebee/packages/api/public/${url}")`)
-        this.forceFileDownload(process.env.API_URL+'/'+url+'/0.part',this.dataset.name+'.csv')
+        await this.evalCode(`_output = ${this.currentDataset.dfName}.save.csv("/opt/Bumblebee/packages/api/public/${url}")`)
+        this.forceFileDownload(process.env.API_URL+'/'+url+'/0.part',this.currentDataset.name+'.csv')
       } catch (error) {
         console.error(error)
       }
@@ -2498,7 +2494,7 @@ export default {
         this.$store.commit('previewDefault')
         return
       }
-      if (this.currentPreviewCode) {
+      if (this.previewCode) {
         this.$store.commit('setPreviewCode', undefined)
       }
       // if (this.currentPreviewNames) {
@@ -2575,7 +2571,7 @@ export default {
           datasetPreview: !!getProperty(this.currentCommand.preview.datasetPreview, [this.currentCommand]),
           loadPreview: !!getProperty(this.currentCommand.preview.loadPreview, [this.currentCommand]),
           load: this.currentCommand.preview.type==='load',
-          infer: this.currentCommand._moreOptions===false, // TODO: Check
+          infer: this.currentCommand._moreOptions===false, // TO-DO: Check
           noBufferWindow: getProperty(this.currentCommand.preview.noBufferWindow,[this.currentCommand]),
           joinPreview: getProperty(this.currentCommand.preview.joinPreview, [this.currentCommand]),
           expectedColumns,
@@ -2621,19 +2617,19 @@ export default {
         this.clearTextSelection()
       }
 
-      this.$store.commit('setPreviewColumns',false) // TODO: Check
+      this.$store.commit('setPreviewColumns',false)
 
       var columns = undefined
       var columnDataTypes = undefined
 
       if (!command.columns || !command.columns.length) {
-        columns = this.columns.map(e=>this.dataset.columns[e.index].name)
-        columnDataTypes = this.columns.map(e=>this.dataset.columns[e.index].profiler_dtype)
+        columns = this.columns.map(e=>this.currentDataset.columns[e.index].name)
+        columnDataTypes = this.columns.map(e=>this.currentDataset.columns[e.index].profiler_dtype)
       }
       else {
         columns = command.columns
-        var columnIndices = namesToIndices(columns, this.dataset.columns)
-        columnDataTypes = columnIndices.map(i=>this.dataset.columns[i].profiler_dtype)
+        var columnIndices = namesToIndices(columns, this.currentDataset.columns)
+        columnDataTypes = columnIndices.map(i=>this.currentDataset.columns[i].profiler_dtype)
       }
 
       var commandHandler = this.commandsHandlers[command.command] || this.commandsHandlers[command.type]
@@ -2643,14 +2639,15 @@ export default {
       var payload = {
         request: {
           isLoad: false,
+          createsNew: false,
           noOperations: command.noOperations,
           immediate: command.immediate,
           isString: columnDataTypes && columnDataTypes.every(d=>STRING_TYPES.includes(d)),
         },
         secondaryDatasets: this.currentSecondaryDatasets,
         columnDataTypes: columnDataTypes,
-        dfName: this.dataset.dfName,
-        newDfName: this.availableDfName(),
+        dfName: this.currentDataset.dfName,
+        newDfName: this.getNewDfName(),
         allColumns: this.allColumns,
         type: command.type,
         command: command.command,
@@ -2728,6 +2725,11 @@ export default {
       if (commandHandler.onDone) {
         this.currentCommand = await commandHandler.onDone(this.currentCommand)
       }
+
+      if (this.currentCommand.request.createsNew) {
+        this.setDfToTab(this.currentCommand.newDfName)
+      }
+
       var code = this.getCode(this.currentCommand)
       var content = this.getOperationContent(this.currentCommand)
 
@@ -2826,7 +2828,9 @@ export default {
       this.$emit('update:codeError','')
 
       var cells = [...this.cells]
-      cells.splice(index,1)
+      var deleted = cells.splice(index,1)[0]
+
+      console.log({deleted})
       this.cells = cells
       if (this.cells.length==index) {
         index--
@@ -2889,7 +2893,7 @@ export default {
         content = commandHandler.content(payload)
       }
 
-      if (payload.request.isLoad) {
+      if (payload.request.createsNew) {
         content += `<span class="hint--df"> to ${hlParam(payload.newDfName)}</span>`
       } else {
         content += `<span class="hint--df"> in ${hlParam(payload.dfName)}</span>`
@@ -2906,7 +2910,7 @@ export default {
 
       if (!payload.columns || !payload.columns.length) {
         console.warn('Auto-filling columns')
-        payload.columns = this.columns.map(e=>this.dataset.columns[e.index].name)
+        payload.columns = this.columns.map(e=>this.currentDataset.columns[e.index].name)
       }
 
       // if (type==='preview' || type==='profile') {
@@ -2937,15 +2941,14 @@ export default {
       } else if (type==='profile') {
         return code
       } else {
-        if (payload.request && payload.request.isLoad) {
+        if (payload.request && payload.request.createsNew) {
+
           return precode + code +'\n'
 					+`${payload.newDfName} = ${payload.newDfName}.ext.repartition(8).ext.cache()`
         } else {
           return precode + `${payload.dfName} = ${payload.dfName}${code}.ext.cache()`
         }
       }
-
-
 
     },
 
@@ -2982,6 +2985,8 @@ export default {
         }
       }
 
+      delete payload.deleteOtherCells
+
       cells.splice(at, +replace, {
         payload: payload,
         type: payload.type,
@@ -3008,8 +3013,6 @@ export default {
     },
 
     async runCodeNow (force = false, ignoreFrom = -1) {
-
-      console.log('runCodeNow in')
 
       if (ignoreFrom>=0) {
         force = true
@@ -3060,11 +3063,14 @@ export default {
 
       try {
 
-        this.$store.commit('setBuffer', { dfName: this.dataset.dfName, status: false  })
+        this.$store.commit('setBuffer', { dfName: this.currentDataset.dfName, status: false  })
+
+        var dfName = this.currentDataset.dfName
+
         var response = await this.socketPost('cells', {
           code,
-          name: this.dataset.summary ? this.dataset.name : null,
-          dfName: this.dataset.dfName,
+          name: this.currentDataset.summary ? this.currentDataset.name : null,
+          dfName,
           username: this.$store.state.session.username,
           workspace: this.$store.state.session.workspace._id,
           key: this.$store.state.key
@@ -3083,11 +3089,13 @@ export default {
 
         var dataset = JSON.parse(response.data.result)
 
+        dataset.dfName = dfName
+
         this.$store.dispatch('loadDataset', {
           dataset
         })
 
-        this.setBuffer(this.dataset.dfName)
+        this.setBuffer(dfName)
         this.updateSecondaryDatasets()
 
         this.$forceUpdate()
