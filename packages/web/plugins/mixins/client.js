@@ -1,7 +1,7 @@
 import io from 'socket.io-client'
 import { printError } from 'bumblebee-utils'
 
-// TODO: this should be a VUEX store
+// TO-DO: this should be a VUEX store
 
 
 

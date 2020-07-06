@@ -869,7 +869,7 @@ export default {
           },
           beforeGetCode: async (currentCommand) => {
             if (!currentCommand.secondaryDatasets[currentCommand.with] || !currentCommand.secondaryDatasets[currentCommand.with].buffer) {
-              await this.evalCode('_output = '+currentCommand.with+'.ext.set_buffer("*")') // TODO: !!!
+              await this.evalCode('_output = '+currentCommand.with+'.ext.set_buffer("*")') // TO-DO: !!!
               this.$store.commit('setSecondaryBuffer', { key: currentCommand.with, value: true})
               currentCommand.secondaryDatasets = this.currentSecondaryDatasets
             }
@@ -1340,7 +1340,7 @@ export default {
               should_update: false
             }
           },
-          content: (payload) => { // TODO: Test
+          content: (payload) => { // TO-DO: Test
             return `<b>Clusterize</b> ${multipleContent([payload.clusters.map(e=>e.replace)], 'hl--param')} in ${hlCols(payload.columns[0])}`
           }
         },
@@ -1491,7 +1491,7 @@ export default {
               code_done: ''
             }
           },
-          content: (payload) => { // TODO: Test
+          content: (payload) => { // TO-DO: Test
             return `<b>${payload.action} outliers</b> (between ${multipleContent(payload.selection[0],'hl--param',', ',' and ')})`
           }
         },
@@ -1732,7 +1732,7 @@ export default {
             seed: 1,
             columns: columns,
           }),
-          content: (payload) => { // TODO: Test
+          content: (payload) => { // TO-DO: Test
             return`<b>Stratified sampling</b> on ${multipleContent([payload.columns],'hl--cols')}`
             + (payload.seed!=='' ? ` using ${hlParam(payload.seed)}` : '')
           }
@@ -2014,7 +2014,7 @@ export default {
               output_cols: columns.map(e=>'')
             }
           },
-          content: (payload) => { // TODO: Test
+          content: (payload) => { // TO-DO: Test
             return `<b>Bucketize</b> `
             + columnsHint(payload.columns,payload.output_cols)
             + (payload.splits ? `by ${hlParam(payload.splits)}` : '')
@@ -2028,7 +2028,7 @@ export default {
               columns: columns
             }
           },
-          content: (payload) => { // TODO: Test
+          content: (payload) => { // TO-DO: Test
             return `<b>Set values to columns</b> using ${hlCols(payload.columns[0])}`
           }
         },
@@ -2049,7 +2049,7 @@ export default {
               output_cols: columns.map(e=>'')
             }
           },
-          content: (payload) => { // TODO: Test
+          content: (payload) => { // TO-DO: Test
             return `<b>Set strings to indices</b> on`
             + columnsHint(payload.columns,payload.output_cols)
           }
@@ -2071,12 +2071,12 @@ export default {
               output_cols: columns.map(e=>'')
             }
           },
-          content: (payload) => { // TODO: Test
+          content: (payload) => { // TO-DO: Test
             return `<b>Set indices to strings</b> `
             + columnsHint(payload.columns,payload.output_cols)
           }
         },
-        ML: { // TODO: Test
+        ML: { // TO-DO: Test
           dialog: {
             title: (command) => {
               if (command.command=='z_score')
@@ -2102,7 +2102,7 @@ export default {
               output_cols: columns.map(e=>'')
             }
           },
-          content: (payload) => { // TODO: Test
+          content: (payload) => { // TO-DO: Test
             var scaler = 'scaler'
             if (command.command=='z_score')
               scaler = 'standard scaler'
@@ -2156,7 +2156,7 @@ export default {
               output_cols: columns.map(e=>'')
             }
           },
-          content: (payload) => { // TODO: Test
+          content: (payload) => { // TO-DO: Test
             return `<b>Impute rows</b> on`
             + columnsHint(payload.columns,payload.output_cols)
             + (payload.strategy ? `using ${hlParam(payload.strategy)}` : '')
@@ -2186,7 +2186,7 @@ export default {
               columns: columns,
             }
           },
-          content: (payload) => { // TODO: Test
+          content: (payload) => { // TO-DO: Test
             return `<b>Sample</b> to ${hlParam(payload.n)} rows`
           }
         },
@@ -2581,7 +2581,7 @@ export default {
           expectedColumns,
         })
 
-        // TODO: Generalize
+        // TO-DO: Generalize
 
       } catch (err) {
         console.error(err) // probably just a cancelled request
@@ -2744,7 +2744,7 @@ export default {
     },
 
     cancelCommand () {
-      // TODO: Check
+      // TO-DO: Check
 			setTimeout(() => {
         // this.recoverTextSelection()
         this.clearTextSelection()

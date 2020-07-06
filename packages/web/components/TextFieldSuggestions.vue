@@ -214,7 +214,7 @@ export default {
 
       var inP = (this.value[this.caretPos] === ')')
 
-      // TODO: Unary operators handling (must ignore them on suggestionSearch when length>1 and startsWith(uo))
+      // TO-DO: Unary operators handling (must ignore them on suggestionSearch when length>1 and startsWith(uo))
 
       var value = this.value.substring(0, this.caretWordPosition)
         + newWord.text

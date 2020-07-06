@@ -182,7 +182,7 @@ io.use(function (socket, next) {
   if (socket.handshake.query && socket.handshake.query.authorization) {
     var token = socket.handshake.query.authorization
 
-    /* test TODO: Remove */
+    /* test TO-DO: Remove */
     console.log({query: socket.handshake.query})
     socket.decoded = { username: socket.handshake.query.session }
     next()
@@ -450,7 +450,7 @@ const createConnection = async function (sessionId) {
             }
           }
           else {
-            console.warn({status: 'error', content: 'Response from gateway is not utf8 type', error: 'Message type error', message: message}) // TODO: Resolve
+            console.warn({status: 'error', content: 'Response from gateway is not utf8 type', error: 'Message type error', message: message}) // TO-DO: Resolve
           }
         } catch (err) {
           console.error(err)
@@ -530,7 +530,7 @@ const requestToKernel = async function (type, sessionId, payload) {
     'session': kernels[sessionId].uuid,
     'date': new Date().toISOString(),
     'msg_type': 'execute_request',
-    'version' : '5.3' // TODO: check
+    'version' : '5.3' // TO-DO: check
   }
 
   var codeMsg = {

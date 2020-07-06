@@ -1007,17 +1007,17 @@ export default {
       var cValues = {}
 
       for (const name in columnValues) {
-        // TODO: not include highlights
+        // TO-DO: not include highlights
         var array = []
         const values = columnValues[name]
         if (!values || !values.length) {
           return cValues[name] = []
-          continue // TODO: Handling
+          continue // TO-DO: Handling
         }
         const highlight = !noHighlight && this.highlightMatches && this.highlightMatches[name] && this.highlightMatches[name].title
         const hlValues = columnValues[highlight]
         if (highlight && hlValues && hlValues.length) {
-          const preview = name.includes('__preview__') || name.includes('new ') // TODO: Check
+          const preview = name.includes('__preview__') || name.includes('new ') // TO-DO: Check
           const color = this.currentHighlights.color['default'] ? this.currentHighlights.color[preview ? 'preview' : 'default'] : this.currentHighlights.color
           for (const index in values) {
             if (index>=limit) {
@@ -1240,7 +1240,7 @@ export default {
               af.scrollIntoView()
             }
           })
-          var lp = document.getElementById("bb-table-preview-last") // TODO: Every preview?
+          var lp = document.getElementById("bb-table-preview-last") // TO-DO: Every preview?
           if (lp) {
             lp.scrollIntoView()
           }
@@ -1364,7 +1364,7 @@ export default {
       try {
 
         var selectionArray = [...this.selection]
-        var newSelection = (value.columns) ? [...value.columns] : [] // TODO: Check value
+        var newSelection = (value.columns) ? [...value.columns] : [] // TO-DO: Check value
 
         selectionArray.sort()
         newSelection.sort()
@@ -1671,7 +1671,7 @@ export default {
           }
 
           if (!awaited) {
-            this.previousRange = -1 // TODO: Check
+            this.previousRange = -1 // TO-DO: Check
           }
 
           this.fetching = false

@@ -500,7 +500,7 @@ export default {
 
 				{command: 'sample_n', text: 'Random Sampling', type: 'ML'},
         {command: 'stratified_sample', text: 'Stratified Sampling', type: 'ML', min: 1, max: 1},
-				{command: 'bucketizer',       text: 'Create Bins',          type: 'ML', max: 1}, // TODO: Check limit
+				{command: 'bucketizer',       text: 'Create Bins',          type: 'ML', max: 1}, // TO-DO: Check limit
 				{command: 'impute',           text: 'Impute rows',          type: 'ML', min: 1},
 				{command: 'values_to_cols',   text: 'Values to Columns',    type: 'ML', max: 1},
 				{command: 'string_to_index',  text: 'Strings to Index',     type: 'ML', min: 1},
@@ -524,7 +524,7 @@ export default {
 				{ hint: '""', sortable: false, text: 'Missing values', width: '2%', value: 'missing' },
 				// { hint: 'null', text: 'Null values', width: '2%', value: 'null' },
         // { hint: '0', text: 'Zeros', width: '2%', value: 'zeros' },
-        // TODO: Zeros?
+        // TO-DO: Zeros?
 				{ text: '', sortable: false, width: '50%', value: '' }
 			]
     }
@@ -858,7 +858,7 @@ export default {
           tooltip: 'String operations',
           disabled: ()=>!(this.checkDataTypes(['string']) && this.selectionType=='columns' && this.dataset && this.dataset.summary && this.selectedColumns.length>=0)
         },
-        // TODO: Datetime operations
+        // TO-DO: Datetime operations
         // {
         //   type: 'menu',
         //   group: 'TIME',
@@ -866,7 +866,7 @@ export default {
         //   tooltip: 'Datetime functions',
         //   disabled: ()=>!(this.selectionType=='columns' && this.selectedColumns.length>0)
         // },
-        // TODO: Remove cast
+        // TO-DO: Remove cast
         // {
         //   type: 'menu',
         //   group: 'CAST',

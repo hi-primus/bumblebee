@@ -2020,7 +2020,7 @@ $editor-top-padding: 6px;
 .bb-table-h-cell {
   &:last-child {
     .v-menu__content {
-      transform: translateX(-85px); // TODO: 170px -> Ypx
+      transform: translateX(-85px); // TO-DO: 170px -> Ypx
     }
   }
   &:first-child {
