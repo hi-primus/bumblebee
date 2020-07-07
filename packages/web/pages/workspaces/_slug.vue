@@ -435,7 +435,9 @@ export default {
     },
 
     async initializeOptimus () {
+
       console.log('initializeOptimus')
+
       var response = await this.socketPost('initialize', {
         username: this.$store.state.session.username,
         workspace: this.$store.state.session.workspace._id,
@@ -444,6 +446,8 @@ export default {
         workers: this.$route.query.workers,
         reset: this.$route.query.reset
       })
+
+      console.log('initializeOptimus response')
 
       var reserved_words
 
@@ -485,7 +489,7 @@ export default {
 
     signOut (waiting = true) {
       this.stopClient(waiting)
-      this.$store.dispatch('mutateAndSave', {mutate: 'cells', payload: []} )
+      this.$store.dispatch('mutateAndSave', {mutate: 'commands', payload: []} )
       this.$store.dispatch('session/signOut')
       this.$router.push({path: '/login', query: this.$route.query })
     },

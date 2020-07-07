@@ -37,7 +37,7 @@ export const actions =  {
     commit('mutation', { mutate: 'workspaceStatus', payload: 'uploading' })
     try {
 
-      var commands = rootState.cells.map(e=>{
+      var commands = rootState.commands.map(e=>{
         var { newDfName, done, error, ...cell} = e
         return JSON.stringify(cell)
       })
@@ -58,7 +58,7 @@ export const actions =  {
         commands: [...dataSources, ...commands]
       }
 
-      console.log
+      console.log({payload})
 
       var response = await dispatch('request', {
         request: 'put',
@@ -118,9 +118,12 @@ export const actions =  {
     })
 
 
-    var commands = response.data.commands.map( e=>({ ...JSON.parse(e), done: false }) )
+    var cells = response.data.commands.map( e=>({ ...JSON.parse(e), done: false }) )
 
-    console.log({ commands, tabs })
+    var commands = cells.filter(e=>!(e && e.payload && e.payload.request && e.payload.request.createsNew))
+    var dataSources = cells.filter(e=>e && e.payload && e.payload.request && e.payload.request.createsNew)
+
+    console.log({ cells, tabs })
 
     var tab = -1
 
@@ -137,8 +140,8 @@ export const actions =  {
       }
     })
 
-
-    commit('mutation', { mutate: 'cells', payload: commands }, { root: true })
+    commit('mutation', { mutate: 'commands', payload: commands }, { root: true })
+    commit('mutation', { mutate: 'dataSources', payload: dataSources}, { root: true })
     commit('mutation', { mutate: 'workspace', payload: response.data })
 
     commit('mutation', {mutate: 'tab', payload: tab}, { root: true })
@@ -150,7 +153,7 @@ export const actions =  {
   cleanSession ({commit}) {
 
     commit('mutation', { mutate: 'tab', payload: 0 }, { root: true })
-    commit('mutation', { mutate: 'cells', payload: [] }, { root: true })
+    commit('mutation', { mutate: 'commands', payload: [] }, { root: true })
     commit('mutation', { mutate: 'workspace', payload: false }, {root: true})
     commit('mutation', { mutate: 'datasets', payload: [] }, { root: true })
     commit('mutation', { mutate: 'datasetSelection', payload: [] }, { root: true })

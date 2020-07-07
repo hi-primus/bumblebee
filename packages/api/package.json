@@ -5,6 +5,8 @@
   "main": "index.js",
   "scripts": {
     "start": "nodemon --exec babel-node index.js",
+    "debug": "nodemon --inspect --watch src --exec node_modules/.bin/babel-node index.js",
+    "build": "babel src -d dist --source-maps",
     "test": "echo \"Error: no test specified\" && exit 1",
     "lint:init": "eslint --init",
     "lint:fix": "eslint --ext .js --ignore-path .gitignore --fix ."

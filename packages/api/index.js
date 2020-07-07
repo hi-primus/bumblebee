@@ -133,6 +133,7 @@ const newSocket = function (socket, session) {
   if (!socket.unsecure) {
 
     socket.on('datasets', async (payload) => {
+      console.log('socket on datasets')
       var sessionId = payload.username + '_' + payload.workspace
       var result = {}
       try {
@@ -145,10 +146,14 @@ const newSocket = function (socket, session) {
     })
 
     socket.on('initialize', async (payload) => {
+      console.log('socket on initialize')
       var sessionId = payload.username + '_' + payload.workspace
       var result = {}
       try {
-        result = await initializeSession(sessionId, payload)
+        if (!kernels[sessionId].initialization) {
+          kernels[sessionId].initialization = initializeSession(sessionId, payload)
+        }
+        result = await kernels[sessionId].initialization
       } catch (err) {
         result = err
         result.status = 'error'
@@ -158,12 +163,14 @@ const newSocket = function (socket, session) {
     })
 
     socket.on('run', async (payload) => {
+      console.log('socket on run')
       var sessionId = payload.username + '_' + payload.workspace
       var result = await runCode(`${payload.code}`,sessionId)
       socket.emit('reply',{data: result, code: payload.code, timestamp: payload.timestamp})
     })
 
     socket.on('cells', async (payload) => {
+      console.log('socket on cells')
       var sessionId = payload.username + '_' + payload.workspace
       var dfName = payload.dfName || 'df'
       var code = payload.code + '\n' + `_output = ${dfName}.ext.profile(columns="*", output="json")`
@@ -319,8 +326,9 @@ const initializeSession = async function (sessionId, payload = false) {
     payload = {}
   }
 
-  var tries = 10
+  var tries = 2 // 10
   while (tries-->0) {
+    console.log(tries)
     try {
       result = await requestToKernel('init', sessionId, payload)
     } catch (err) {
@@ -343,6 +351,7 @@ const initializeSession = async function (sessionId, payload = false) {
     return {}
   }
 
+  kernels[sessionId].initialization = false
   kernels[sessionId].initialized = result
   kernels[sessionId].initializationPayload = payload
   return result
@@ -420,54 +429,64 @@ const handleResponse = function (response) {
 const WebSocketClient = require('websocket').client
 
 const createConnection = async function (sessionId) {
-  return new Promise((resolve, reject)=>{
-    kernels[sessionId] = kernels[sessionId] || {}
-    if (!kernels[sessionId].client) {
-      kernels[sessionId].client = new WebSocketClient({closeTimeout: 20 * 60 * 1000})
-    }
 
-    kernels[sessionId].client.connect(`${ws_kernel_base}/api/kernels/${kernels[sessionId].id}/channels`)
-    kernels[sessionId].client.on('connect',function (connection) {
+  if (!kernels[sessionId].connecting) {
+    kernels[sessionId].connecting = new Promise((resolve, reject)=>{
 
-      // kernels[sessionId] = kernels[sessionId] || {}
-      kernels[sessionId].connection = connection
-      kernels[sessionId].connection.on('message', function (message) {
+      console.log('Creating connection for',sessionId)
 
-        try {
-          if (!kernels[sessionId]) {
-            console.log(kernels[sessionId])
-            throw 'Kernel error'
-          }
-          if (message.type === 'utf8'){
-            var response = JSON.parse(message.utf8Data)
-            var msg_id = response.parent_header.msg_id
-            if (response.msg_type === 'execute_result') {
-              kernels[sessionId].promises[msg_id].resolve(response.content.data['text/plain'])
+      kernels[sessionId] = kernels[sessionId] || {}
+      if (!kernels[sessionId].client) {
+        kernels[sessionId].client = new WebSocketClient({closeTimeout: 20 * 60 * 1000})
+      }
+
+      kernels[sessionId].client.connect(`${ws_kernel_base}/api/kernels/${kernels[sessionId].id}/channels`)
+      kernels[sessionId].client.on('connect',function (connection) {
+
+        // kernels[sessionId] = kernels[sessionId] || {}
+        kernels[sessionId].connection = connection
+        kernels[sessionId].connection.on('message', function (message) {
+
+          try {
+            if (!kernels[sessionId]) {
+              console.log(kernels[sessionId])
+              throw 'Kernel error'
             }
-            else if (response.msg_type === 'error') {
-              console.error('msg_type error')
-              kernels[sessionId].promises[msg_id].resolve({...response.content, status: 'error'})
+            if (message.type === 'utf8'){
+              var response = JSON.parse(message.utf8Data)
+              var msg_id = response.parent_header.msg_id
+              if (response.msg_type === 'execute_result') {
+                kernels[sessionId].promises[msg_id].resolve(response.content.data['text/plain'])
+              }
+              else if (response.msg_type === 'error') {
+                console.error('msg_type error')
+                kernels[sessionId].promises[msg_id].resolve({...response.content, status: 'error'})
+              }
             }
+            else {
+              console.warn({status: 'error', content: 'Response from gateway is not utf8 type', error: 'Message type error', message: message}) // TO-DO: Resolve
+            }
+          } catch (err) {
+            console.error(err)
           }
-          else {
-            console.warn({status: 'error', content: 'Response from gateway is not utf8 type', error: 'Message type error', message: message}) // TO-DO: Resolve
-          }
-        } catch (err) {
-          console.error(err)
-        }
 
+        })
+        console.log('Connection created', sessionId)
+        resolve(kernels[sessionId].connection)
       })
-      console.log('Connection created', sessionId)
-      resolve(kernels[sessionId].connection)
+      kernels[sessionId].client.on('connectFailed', function (error) {
+        kernels[sessionId].connection = false
+        console.error('Connection to Jupyter Kernel Gateway failed')
+        reject(error)
+      });
+
+
     })
-    kernels[sessionId].client.on('connectFailed', function (error) {
-      kernels[sessionId].connection = false
-      console.warn('Connection to Jupyter Kernel Gateway failed')
-      reject(error)
-    });
+  } else {
+    console.log('Connection for',sessionId,'already exists')
+  }
 
-
-  })
+  return kernels[sessionId].connecting
 }
 
 const assertSession = async function (sessionId, isInit = false) {
@@ -481,17 +500,19 @@ const assertSession = async function (sessionId, isInit = false) {
       throw 'Error on createKernel'
     }
 
-    if (!kernels[sessionId].client || !kernels[sessionId].connection) {
-      await createConnection(sessionId)
-    }
+    await createConnection(sessionId)
 
     if (!isInit && !kernels[sessionId].initialized) {
-      await initializeSession(sessionId)
+      if (!kernels[sessionId].initialization) {
+        kernels[sessionId].initialization = initializeSession(sessionId)
+      }
+      await kernels[sessionId].initialization
     }
 
     return kernels[sessionId].connection
   } catch (err) {
     console.error('WebSocket Error')
+    console.error(err)
     return undefined
   }
 }
@@ -499,6 +520,8 @@ const assertSession = async function (sessionId, isInit = false) {
 import kernelRoutines from './kernel-routines.js'
 
 const requestToKernel = async function (type, sessionId, payload) {
+
+  console.log('requestToKernel')
 
   var connection = await assertSession(sessionId, type=='init')
 

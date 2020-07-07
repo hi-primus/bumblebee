@@ -151,10 +151,10 @@
     >
       <draggable
         tag="div"
-        class="operations-cells"
+        class="operations-cells data-sources-cells"
         :class="{ 'no-pe disabled': commandsDisabled, 'dragging': drag }"
-        :list="cells"
-        v-bind="dragOptions"
+        :list="computedDataSources"
+        v-bind="dragDataSourcesOptions"
         handle=".handle"
         ref="cells"
         @start="drag = true"
@@ -162,7 +162,43 @@
       >
         <div
           class="cell-container"
-          v-for="(cell, index) in cells"
+          v-for="(cell, index) in computedDataSources"
+          :key="cell.id"
+          :class="{'fixed-cell': cell.fixed, 'cell-error': cell.error,'done': cell.done}"
+        >
+          <div class="cell">
+            <div class="handle left-handle">
+              <v-icon>drag_indicator</v-icon>
+            </div>
+            <div
+              class="handle operation-hint-text"
+              :class="{'multiple-tabs': hasSecondaryDatasets}"
+              @click="editCell(cell, index)"
+              v-html="cell.content || cell.code"
+            >
+            </div>
+            <v-icon
+              class="right-cell-btn"
+              small
+              @click="removeCell(index)"
+            >close</v-icon>
+          </div>
+        </div>
+      </draggable>
+      <draggable
+        tag="div"
+        class="operations-cells commands-cells"
+        :class="{ 'no-pe disabled': commandsDisabled, 'dragging': drag }"
+        :list="computedCommands"
+        v-bind="dragCommandsOptions"
+        handle=".handle"
+        ref="cells"
+        @start="drag = true"
+        @end="drag = false; draggableEnd()"
+      >
+        <div
+          class="cell-container"
+          v-for="(cell, index) in computedCommands"
           :key="cell.id"
           :class="{'fixed-cell': cell.fixed, 'cell-error': cell.error,'done': cell.done,'active': activeCell==index}"
           @click="setActiveCell(index)"
@@ -171,29 +207,18 @@
             <div class="handle left-handle">
               <v-icon>drag_indicator</v-icon>
             </div>
-            <template v-if="seeCode">
-              <CodeEditor
-                :active="activeCell==index"
-                @update:active="setActiveCell(index)"
-                @input="$store.commit('setCellCode',{index, code: $event}); runButton = true"
-                :value="cell.code"
-              />
-              <div class="cell-type cell-type-label" v-if="cell.command && cell.command!='code'">{{cell.command}}</div>
-            </template>
-            <template v-else>
-              <div
-                class="handle operation-hint-text"
-                :class="{'multiple-tabs': hasSecondaryDatasets}"
-                @click="editCell(cell, index)"
-                v-html="cell.content || cell.code"
-              >
-              </div>
-              <v-icon
-                class="right-cell-btn"
-                small
-                @click="removeCell(index)"
-              >close</v-icon>
-            </template>
+            <div
+              class="handle operation-hint-text"
+              :class="{'multiple-tabs': hasSecondaryDatasets}"
+              @click="editCell(cell, index+dataSources.length)"
+              v-html="cell.content || cell.code"
+            >
+            </div>
+            <v-icon
+              class="right-cell-btn"
+              small
+              @click="removeCell(index+dataSources.length)"
+            >close</v-icon>
           </div>
         </div>
       </draggable>
@@ -864,7 +889,8 @@ export default {
               }
             }
           },
-          beforeGetCode: async (currentCommand) => {
+          // TO-DO: Ver si esto se guarda en el json del cell, igual no debería porque es pesado
+          beforeExecuteCode: async (currentCommand) => {
             if (!currentCommand.secondaryDatasets[currentCommand.with] || !currentCommand.secondaryDatasets[currentCommand.with].buffer) {
               await this.evalCode('_output = '+currentCommand.with+'.ext.set_buffer("*")') // TO-DO: !!!
               this.$store.commit('setSecondaryBuffer', { key: currentCommand.with, value: true})
@@ -2197,8 +2223,10 @@ export default {
   computed: {
 
     ...mapGetters([
-      'currentSelection',
+      'dataSources',
+      'commands',
       'workspaceCells',
+      'currentSelection',
       'currentDataset',
       'selectionType',
       'currentTab',
@@ -2210,22 +2238,40 @@ export default {
       'hasSecondaryDatasets'
     ]),
 
+    computedCommands: {
+      get () {
+        return Array.from(this.commands)
+      },
+      set (commands) {
+        this.$store.dispatch('mutateAndSave', {mutate: 'commands', payload: commands} )
+      }
+    },
+
+    computedDataSources: {
+      get () {
+        return Array.from(this.dataSources)
+      },
+      set (dataSources) {
+        this.$store.dispatch('mutateAndSave', {mutate: 'dataSources', payload: dataSources} )
+      }
+    },
+
     cells: {
-      get() {
+      get () {
         return Array.from(this.workspaceCells)
       },
-      set(value) {
+      set (value) {
         console.log('setting cells', value)
-        var cells = value.filter(e=>!(e && e.payload && e.payload.request && e.payload.request.createsNew))
+        var commands = value.filter(e=>!(e && e.payload && e.payload.request && e.payload.request.createsNew))
         var dataSources = value.filter(e=>e && e.payload && e.payload.request && e.payload.request.createsNew)
-        this.$store.dispatch('mutateAndSave', {mutate: 'cells', payload: cells} )
+        this.$store.dispatch('mutateAndSave', {mutate: 'commands', payload: commands} )
         this.$store.dispatch('mutateAndSave', {mutate: 'dataSources', payload: dataSources} )
       }
     },
 
     command () {
       try {
-        return this.commandsHandlers[this.currentCommand.command] || this.commandsHandlers[this.currentCommand.type]
+        return this.getCommandHandler(this.currentCommand)
       } catch (error) {
         console.error(error)
         return undefined
@@ -2241,10 +2287,19 @@ export default {
       }
     },
 
-    dragOptions () {
+    dragDataSourcesOptions () {
       return {
         animation: 200,
-        group: "description",
+        group: "dataSources",
+        disabled: this.commandsDisabled,
+        ghostClass: "ghost"
+      }
+    },
+
+    dragCommandsOptions () {
+      return {
+        animation: 200,
+        group: "commands",
         disabled: this.commandsDisabled,
         ghostClass: "ghost"
       }
@@ -2358,7 +2413,7 @@ export default {
       deep: true,
       async handler () {
         try {
-          var command = this.commandsHandlers[this.currentCommand.command] || this.commandsHandlers[this.currentCommand.type]
+          var command = this.getCommandHandler(this.currentCommand)
           if (command && command.dialog) {
             var valid = (!command.dialog.validate) ? true : command.dialog.validate(this.currentCommand)
             if (valid===0) {
@@ -2558,9 +2613,9 @@ export default {
 
         var commandHandler = this.command
 
-        if (commandHandler && commandHandler.beforeGetCode) {
-          this.currentCommand = await commandHandler.beforeGetCode(this.currentCommand)
-        }
+        // if (commandHandler && commandHandler.beforeExecuteCode) {
+        //   this.currentCommand.beforeExecuteCode = async (payload) => await commandHandler.beforeExecuteCode(payload)
+        // }
 
         this.$store.commit('setPreviewCode',{
           code: this.getCode(this.currentCommand, 'preview'),
@@ -2598,17 +2653,47 @@ export default {
       }
     },
 
+    getCommandHandler (command) {
+      return this.commandsHandlers[command.command] || this.commandsHandlers[command.type]
+    },
+
     clusterFieldUpdated(cluster) {
       if (cluster.selected.length==0) {
         cluster.selected = cluster.values
       }
     },
 
+    filterCells (newOnly = false, ignoreFrom = -1) {
+      if (newOnly) {
+        return this.cells.filter((e,i)=>((ignoreFrom<0 || i<ignoreFrom) && e.code!=='' && !e.done && !e.ignore))
+      }
+      else {
+        return this.cells.filter((e,i)=>((ignoreFrom<0 || i<ignoreFrom) && e.code!=='' && !e.ignore))
+      }
+    },
+
     codeText (newOnly = false, ignoreFrom = -1) {
-      if (newOnly)
-        return (this.cells.length) ? (this.cells.filter((e,i)=>((ignoreFrom<0 || i<ignoreFrom) && e.code!=='' && !e.done && !e.ignore)).map(e=>e.code).join('\n').trim()) : ''
-      else
-        return (this.cells.length) ? (this.cells.filter((e,i)=>((ignoreFrom<0 || i<ignoreFrom) && e.code!=='' && !e.ignore)).map(e=>e.code).join('\n').trim()) : ''
+      if (!this.cells.length) {
+        return ''
+      }
+      return this.filterCells(newOnly, ignoreFrom).map(e=>e.code).join('\n').trim()
+    },
+
+    async beforeRunCells (newOnly = false, ignoreFrom = -1) {
+
+      console.log('beforeRunCells')
+      this.filterCells(newOnly, ignoreFrom).forEach(async (cell) => {
+        if (cell.payload.request.createsNew) {
+          console.log('beforeExecuteCode', cell.payload.newDfName)
+          this.setDfToTab(cell.payload.newDfName)
+        }
+        var commandHandler = this.getCommandHandler(cell)
+        if (commandHandler.beforeExecuteCode) {
+          console.log('beforeExecuteCode')
+          cell.payload = await commandHandler.beforeExecuteCode(cell.payload)
+        }
+      })
+
     },
 
     async commandHandle (command) {
@@ -2632,7 +2717,7 @@ export default {
         columnDataTypes = columnIndices.map(i=>this.currentDataset.columns[i].profiler_dtype)
       }
 
-      var commandHandler = this.commandsHandlers[command.command] || this.commandsHandlers[command.type]
+      var commandHandler = this.getCommandHandler(command)
 
       // default payload
 
@@ -2721,13 +2806,9 @@ export default {
 
     async confirmCommand () {
       this.clearTextSelection()
-      var commandHandler = this.commandsHandlers[this.currentCommand.command] || this.commandsHandlers[this.currentCommand.type]
+      var commandHandler = this.getCommandHandler(this.currentCommand)
       if (commandHandler.onDone) {
         this.currentCommand = await commandHandler.onDone(this.currentCommand)
-      }
-
-      if (this.currentCommand.request.createsNew) {
-        this.setDfToTab(this.currentCommand.newDfName)
       }
 
       var code = this.getCode(this.currentCommand)
@@ -2764,13 +2845,15 @@ export default {
 
       if (this.cells[index]) {
         this.activeCell = index
-        if (this.$refs.cells) {
+        if (this.$refs.cells && this.seeCode) {
           this.moveBar(this.$refs.cells.$el.getElementsByClassName('cell-container')[index].offsetTop+11)
         }
       }
       else {
         this.activeCell = 0
-        this.moveBar(12)
+        if (this.seeCode) {
+          this.moveBar(12)
+        }
       }
 
     },
@@ -2819,18 +2902,34 @@ export default {
         return
       }
 
-      if (permanentCells.includes(this.cells[index].command) && this.cells.filter(e => permanentCells.includes(e.command) ).length<=1) {
-        if (this.cells.length>1) {
+      // if (permanentCells.includes(this.cells[index].command) && this.cells.filter(e => permanentCells.includes(e.command) ).length<=1) {
+
+      var currentPayload = this.cells[index].payload
+
+      var deleteTab = false
+
+      if (currentPayload.request.createsNew) {
+        var filteredCells = this.cells.filter(cell => cell.payload.dfName===currentPayload.newDfName)
+        if (filteredCells.length>0) {
           return
+        } else {
+          deleteTab = currentPayload.newDfName
         }
       }
 
       this.$emit('update:codeError','')
 
       var cells = [...this.cells]
-      var deleted = cells.splice(index,1)[0]
+      var deletedPayload = cells.splice(index,1)[0].payload
 
-      console.log({deleted})
+      if (deletedPayload.request.createsNew) {
+        var deleteDf = deletedPayload.newDfName
+        if (deleteDf) {
+          console.warn('Deleting',deleteDf)
+          this.evalCode(`del ${deleteDf}; _output = "Deleted ${deleteDf}"`)
+        }
+      }
+
       this.cells = cells
       if (this.cells.length==index) {
         index--
@@ -2838,10 +2937,15 @@ export default {
 
       this.setActiveCell(index, true)
 
-      if (this.cells.length==0)
-        this.$store.dispatch('newDataset', { current: true })
-        this.codeDone = ''
+      // if (this.cells.length==0)
+        // this.$store.dispatch('newDataset', { current: true })
 
+      if (deleteTab) {
+        console.log('deleting tab', deleteTab)
+        this.$store.dispatch('newDataset', { dfName: deleteTab, current: true })
+      }
+
+      this.codeDone = ''
       this.draggableEnd()
     },
 
@@ -2884,7 +2988,7 @@ export default {
     },
 
     getOperationContent (payload) {
-      var commandHandler = this.commandsHandlers[payload.command] || this.commandsHandlers[payload.type]
+      var commandHandler = this.getCommandHandler(payload)
       var content
 
       if (!commandHandler || !commandHandler.content) {
@@ -2924,7 +3028,7 @@ export default {
       if (!payload._code) {
         var generator = getGenerator(payload.command, payload)
         if (generator === undefined) {
-          var commandHandler = this.commandsHandlers[payload.command] || this.commandsHandlers[payload.type]
+          var commandHandler = this.getCommandHandler(payload)
           generator = commandHandler.code
         }
         code = generator ? generator({
@@ -2954,7 +3058,7 @@ export default {
 
     async editCell (cell, index) {
       // console.log('[DEBUG] Editing ',{cell, index})
-      var commandHandler = this.commandsHandlers[cell.command] || this.commandsHandlers[cell.type]
+      var commandHandler = this.getCommandHandler(cell)
       if (commandHandler.dialog) {
         this.computedCommandsDisabled = true;
         await this.runCodeNow(true, index)
@@ -3018,7 +3122,9 @@ export default {
         force = true
       }
 
-      var code = this.codeText(false, ignoreFrom)
+      var newOnly = false
+      var code = this.codeText(newOnly, ignoreFrom)
+
       var codeDone = this.codeDone.trim()
       var rerun = false
 
@@ -3041,7 +3147,8 @@ export default {
       }
       else {
         // console.log('[CODE MANAGER] new cells only')
-        code = this.codeText(true, ignoreFrom) // new cells only
+        newOnly = true
+        code = this.codeText(newOnly, ignoreFrom) // new cells only
       }
 
       if (code===this.lastWrongCode) {
@@ -3063,9 +3170,13 @@ export default {
 
       try {
 
-        this.$store.commit('setBuffer', { dfName: this.currentDataset.dfName, status: false  })
+        await this.beforeRunCells(newOnly, ignoreFrom)
 
         var dfName = this.currentDataset.dfName
+
+        if (dfName) {
+          this.$store.commit('setBuffer', { dfName, status: false  })
+        }
 
         var response = await this.socketPost('cells', {
           code,
@@ -3087,15 +3198,18 @@ export default {
 
         window.pushCode({code: response.code})
 
-        var dataset = JSON.parse(response.data.result)
+        if (dfName) {
+          var dataset = JSON.parse(response.data.result)
 
-        dataset.dfName = dfName
+          dataset.dfName = dfName
 
-        this.$store.dispatch('loadDataset', {
-          dataset
-        })
+          this.$store.dispatch('loadDataset', {
+            dataset
+          })
 
-        this.setBuffer(dfName)
+          this.setBuffer(dfName)
+        }
+
         this.updateSecondaryDatasets()
 
         this.$forceUpdate()
@@ -3103,8 +3217,6 @@ export default {
 
         this.$emit('update:codeError','')
         this.lastWrongCode = false
-
-
 
       } catch (error) {
         if (error.code) {

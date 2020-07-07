@@ -253,8 +253,15 @@ export const mutations = {
 
   },
 
-  newDataset (state, { current, dataset, tab }) {
+  newDataset (state, { current, dataset, tab, dfName }) {
     let found = -1
+
+    if (dfName) {
+      var foundIndex = state.datasets.findIndex(dataset => dataset.dfName===dfName)
+      if (foundIndex>=0) {
+        tab = foundIndex
+      }
+    }
 
     if (current) {
       found = tab || state.tab
@@ -283,6 +290,13 @@ export const mutations = {
 
   setDfToTab (state, { dfName }) {
 
+    var foundIndex = state.datasets.findIndex(dataset => dataset.dfName===dfName)
+
+    if (foundIndex>=0) {
+      console.log('df not setted (already existing)')
+      return
+    }
+
     // sets to current tab if it doesn't have any dfName on it
 
     if (!state.datasets[state.tab].dfName || state.datasets[state.tab].blank) {
@@ -297,9 +311,6 @@ export const mutations = {
 
     this.commit('newDataset', { dataset: { dfName } })
     console.log('df to new')
-
-
-
 
   },
 
@@ -323,9 +334,9 @@ export const mutations = {
 
   setCellCode (state, {index, code}) {
     try {
-      var commands = state.everyCells[state.tab] || []
+      var commands = state.commands || []
       commands[index].code = code
-      Vue.set(state.everyCells, state.tab, commands)
+      state.commands = commands
     } catch (error) {
       console.error(error)
     }
@@ -447,7 +458,7 @@ export const actions = {
     dispatch('session/saveWorkspace')
   },
 
-  async deleteTab ({dispatch, commit, state}, index) {
+  async deleteTab ({ dispatch, commit }, index) {
     commit('deleteTab', index)
     dispatch('session/saveWorkspace')
     return index
@@ -500,7 +511,10 @@ export const getters = {
     return state.loadPreview
   },
   workspaceCells (state) {
-    return [...(state.commands || []), ...(state.dataSources || [])]
+    return [
+      ...(state.dataSources || []),
+      ...(state.commands || [])
+    ]
   },
   currentSecondaryDatasets (state) {
     return state.secondaryDatasets

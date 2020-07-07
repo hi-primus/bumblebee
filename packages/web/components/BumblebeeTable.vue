@@ -885,7 +885,7 @@ export default {
 
     },
 
-    tableStyle() {
+    tableStyle () {
       var h = this.rowHeight * (+this.rowsCount)
       return {
         maxHeight: h+'px',
@@ -895,9 +895,15 @@ export default {
     }
   },
 
-  mounted() {
+  async mounted () {
 
-    this.checkVisibleColumns()
+    console.time('checkVisibleColumns')
+    await this.checkVisibleColumns()
+    console.timeEnd('checkVisibleColumns')
+
+    console.time('scrollCheck')
+    await this.scrollCheck(true)
+    console.timeEnd('scrollCheck')
 
     this.mustUpdateRows = true
     this.updateRows()
@@ -1490,7 +1496,7 @@ export default {
       })
     },
 
-    checkVisibleColumns: debounce( function(event) {
+    checkVisibleColumns: asyncDebounce( function(event) {
       try {
         var scrollLeft = this.$refs['BbTableTopContainer'].scrollLeft
 
