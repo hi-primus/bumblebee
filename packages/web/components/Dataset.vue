@@ -638,7 +638,6 @@ export default {
 
               this.$store.commit('setLoadPreview', { profile } )
 
-
             }
           }
         } catch (error) {

@@ -133,7 +133,7 @@ const newSocket = function (socket, session) {
   if (!socket.unsecure) {
 
     socket.on('datasets', async (payload) => {
-      console.log('socket on datasets')
+      // console.log('socket on datasets')
       var sessionId = payload.username + '_' + payload.workspace
       var result = {}
       try {
@@ -146,16 +146,18 @@ const newSocket = function (socket, session) {
     })
 
     socket.on('initialize', async (payload) => {
-      console.log('socket on initialize')
+      // console.log('socket on initialize', payload)
       var sessionId = payload.username + '_' + payload.workspace
       var result = {}
       try {
+        kernels[sessionId] = kernels[sessionId] || {}
         if (!kernels[sessionId].initialization) {
           kernels[sessionId].initialization = initializeSession(sessionId, payload)
         }
         result = await kernels[sessionId].initialization
       } catch (err) {
         result = err
+        console.error('[INITIALIZATION ERROR]',err)
         result.status = 'error'
       }
       var code = kernelRoutines.initMin(payload)
@@ -163,17 +165,22 @@ const newSocket = function (socket, session) {
     })
 
     socket.on('run', async (payload) => {
-      console.log('socket on run')
+      // console.log('socket on run')
+      // socket.emit('reply',{data: 'test', code: 'test', timestamp: payload.timestamp})
       var sessionId = payload.username + '_' + payload.workspace
       var result = await runCode(`${payload.code}`,sessionId)
       socket.emit('reply',{data: result, code: payload.code, timestamp: payload.timestamp})
     })
 
     socket.on('cells', async (payload) => {
-      console.log('socket on cells')
+      // console.log('socket on cells')
       var sessionId = payload.username + '_' + payload.workspace
-      var dfName = payload.dfName || 'df'
-      var code = payload.code + '\n' + `_output = ${dfName}.ext.profile(columns="*", output="json")`
+      var code = payload.code
+      if (payload.dfName) {
+        code += '\n' + `_output = ${payload.dfName}.ext.profile(columns="*", output="json")`
+      } else {
+        code += '\n' + `_output = {}`
+      }
       var result = await runCode(code, sessionId)
       socket.emit('reply',{data: result, code, timestamp: payload.timestamp})
     })
@@ -190,13 +197,13 @@ io.use(function (socket, next) {
     var token = socket.handshake.query.authorization
 
     /* test TO-DO: Remove */
-    console.log({query: socket.handshake.query})
+    // console.log({query: socket.handshake.query})
     socket.decoded = { username: socket.handshake.query.session }
     next()
     return
 
     jwt.verify(token, process.env.TOKEN_SECRET, function (err, decoded) {
-      console.log({decoded})
+      // console.log({decoded})
       if (err) {
         return next(new Error('Authentication error'))
       }
@@ -318,6 +325,9 @@ const deleteEveryKernel = async function () {
 }
 
 const initializeSession = async function (sessionId, payload = false) {
+
+  // console.log('initializeSession')
+
   var result = false
 
   if (!payload && kernels[sessionId] && kernels[sessionId].initializationPayload) {
@@ -326,9 +336,9 @@ const initializeSession = async function (sessionId, payload = false) {
     payload = {}
   }
 
-  var tries = 2 // 10
+  var tries = 10 // 10
   while (tries-->0) {
-    console.log(tries)
+    console.log(tries) // maybe this is neccessary
     try {
       result = await requestToKernel('init', sessionId, payload)
     } catch (err) {
@@ -449,7 +459,7 @@ const createConnection = async function (sessionId) {
 
           try {
             if (!kernels[sessionId]) {
-              console.log(kernels[sessionId])
+              console.error(kernels[sessionId])
               throw 'Kernel error'
             }
             if (message.type === 'utf8'){
@@ -460,7 +470,7 @@ const createConnection = async function (sessionId) {
               }
               else if (response.msg_type === 'error') {
                 console.error('msg_type error')
-                kernels[sessionId].promises[msg_id].resolve({...response.content, status: 'error'})
+                kernels[sessionId].promises[msg_id].resolve({...response.content, status: 'error', _response: response})
               }
             }
             else {
@@ -476,7 +486,7 @@ const createConnection = async function (sessionId) {
       })
       kernels[sessionId].client.on('connectFailed', function (error) {
         kernels[sessionId].connection = false
-        console.error('Connection to Jupyter Kernel Gateway failed')
+        console.error('Connection to Jupyter Kernel Gateway failed', ws_kernel_base, kernels[sessionId].id)
         reject(error)
       });
 
@@ -492,11 +502,11 @@ const createConnection = async function (sessionId) {
 const assertSession = async function (sessionId, isInit = false) {
   try {
 
-    if (!kernels[sessionId]) {
+    if (!kernels[sessionId] || !kernels[sessionId].id) {
       await createKernel(sessionId)
     }
 
-    if (!kernels[sessionId]) {
+    if (!kernels[sessionId] || !kernels[sessionId].id) {
       throw 'Error on createKernel'
     }
 

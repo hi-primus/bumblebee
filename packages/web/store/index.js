@@ -8,6 +8,10 @@ const properties = [
     clear: true,
   },
   {
+    name: 'datasetUpdates',
+    default: ()=>0
+  },
+  {
     name: 'PreviewColumns',
     clear: true,
     clearOnSelection: true,
@@ -44,6 +48,7 @@ const properties = [
   {
     name: 'DuplicatedColumns',
     clear: true,
+    clearOnLoad: true,
     clearOnSelection: true,
     multiple: true,
   },
@@ -57,10 +62,6 @@ const properties = [
     name: 'FocusedColumns',
     clear: true,
     clearOnSelection: true,
-    multiple: true,
-  },
-  {
-    name: 'DatasetUpdate',
     multiple: true,
   }
 ]
@@ -88,7 +89,6 @@ export const state = () => ({
   commands: [],
   dataSources: [],
   properties,
-  datasetUpdates: 0,
   ...pStates,
 
   //
@@ -248,7 +248,6 @@ export const mutations = {
       }
     })
 
-    Vue.set(state.everyDatasetUpdate, tab, state.everyDatasetUpdate[tab] + 1 )
     state.datasetUpdates = state.datasetUpdates + 1
 
   },
@@ -257,13 +256,14 @@ export const mutations = {
     let found = -1
 
     if (dfName) {
-      var foundIndex = state.datasets.findIndex(dataset => dataset.dfName===dfName)
-      if (foundIndex>=0) {
-        tab = foundIndex
+      found = state.datasets.findIndex(dataset => dataset.dfName===dfName)
+      if (found<0 && current) {
+        console.warn('trying to overwrite unexistenting',dfName)
+        return
       }
     }
 
-    if (current) {
+    if (current && !dfName) {
       found = tab || state.tab
     }
 
@@ -281,7 +281,6 @@ export const mutations = {
     state.loadPreview = false
     Vue.set(state.datasets, found, dataset)
     Vue.set(state.datasetSelection, found, {})
-    Vue.set(state.everyDatasetUpdate, found, 1 )
 
     state.datasetUpdates = state.datasetUpdates + 1
 
@@ -293,24 +292,22 @@ export const mutations = {
     var foundIndex = state.datasets.findIndex(dataset => dataset.dfName===dfName)
 
     if (foundIndex>=0) {
-      console.log('df not setted (already existing)')
+      // console.log('df not setted (already existing)')
       return
     }
 
     // sets to current tab if it doesn't have any dfName on it
 
     if (!state.datasets[state.tab].dfName || state.datasets[state.tab].blank) {
-      // state.datasets[state.tab].dfName = dfName
-      // this.commit( 'newDataset', { current: true, dataset: state.datasets[state.tab] })
+      // console.log('df to current')
       Vue.set(state.datasets[state.tab], 'dfName', dfName)
-      console.log('df to current')
       return
     }
 
     // sets to a new tab
 
+    // console.log('df to new')
     this.commit('newDataset', { dataset: { dfName } })
-    console.log('df to new')
 
   },
 
@@ -500,6 +497,9 @@ properties.forEach((p)=>{
 export const getters = {
   currentDataset (state) {
     return state.datasets[state.tab]
+  },
+  datasetUpdates (state) {
+    return state.datasetUpdates
   },
   commands (state) {
     return state.commands || []

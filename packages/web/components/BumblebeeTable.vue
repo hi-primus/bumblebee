@@ -454,7 +454,7 @@ export default {
     ...mapGetters([
       'currentSelection',
       'currentDataset',
-      'currentDatasetUpdate',
+      'datasetUpdates',
       'selectionType',
       'currentPreviewColumns',
       'currentProfilePreview',
@@ -609,6 +609,7 @@ export default {
       this.incompleteColumns = false
 
       if ((this.datasetPreview || this.loadPreviewActive) && this.previewColumns && this.previewColumns.length) { // || !loadPreview
+        // console.log('[COLUMNS] Only preview (dataset || load)')
         return this.previewColumns.map(c=>({
           ...c,
           classes: [...(c.classes || []), 'bb-preview'],
@@ -625,6 +626,7 @@ export default {
         ||
         (wholePreview && !(this.previewColumns && this.previewColumns.length))
         ) {
+        // console.log('[COLUMNS] Concatenating default columns (!whole || empty preview)')
         cols = this.bbColumns.map(index=>{
           var classes = []
           if (this.selectionMap[index]) {
@@ -641,14 +643,17 @@ export default {
       }
 
       if (
-        (this.previewCode && wholePreview && !(this.previewColumns && this.previewColumns.length))
+        (this.previewCode && wholePreview && !(this.previewColumns && this.previewColumns.length)) // No preview to show
         ||
-        (!this.previewCode && !(this.currentDuplicatedColumns && this.currentDuplicatedColumns.length))
+        (!this.previewCode && !(this.currentDuplicatedColumns && this.currentDuplicatedColumns.length)) // No preview needed
       ) {
+        // console.log('[COLUMNS] No preview')
         return cols
       }
 
       try {
+
+        // gets where to put the preview columns
 
         var after = []
 
@@ -662,55 +667,52 @@ export default {
 
         after = after || []
 
+        // gets how many columns are expected and returns loaded columns if there are no columns needed
+
         var expectedColumns = (this.currentDuplicatedColumns) ? this.currentDuplicatedColumns.length : this.previewCode.expectedColumns
 
-        if (expectedColumns===0) {
-          return cols
-        }
+        // if (expectedColumns===0) { console.log('[COLUMNS] No expected columns'); return cols }
 
         var pushedColumns = 0
+
+        var insertIndex
 
         if (this.previewColumns.length) {
 
           if (this.previewColumns.length===1 && after.length>1) {
 
-            var insertIndex = Math.max(...namesToIndices(after,cols))+1
+            insertIndex = Math.max(...namesToIndices(after,cols))+1
 
-            var column = this.previewColumns[0]
+            var previewColumn = this.previewColumns[0]
 
             cols.splice(insertIndex,0,{
-              ...column,
-              classes: [...(column.classes || []), 'bb-preview'],
+              ...previewColumn,
+              classes: [...(previewColumn.classes || []), 'bb-preview'],
               width: 170,
-              // title: (this.currentPreviewNames && this.currentPreviewNames[column.title]) || column.title || ''
+              // title: (this.currentPreviewNames && this.currentPreviewNames[previewColumn.title]) || previewColumn.title || ''
             })
             pushedColumns++
 
           } else {
 
             var _after = after[0]
-            var insertIndex = _after ? cols.findIndex(col=>_after===col.name)+1 : 0
+            insertIndex = _after ? cols.findIndex(col=>_after===col.name)+1 : 0
 
-            this.previewColumns.forEach((pcol, i)=>{
+            this.previewColumns.forEach((previewColumn, i)=>{
 
-              if (expectedColumns>=0 && i>=expectedColumns) {
-                return
-              }
+              if (expectedColumns>=0 && i>=expectedColumns) return
 
-              if (after[i]) {
-                insertIndex = cols.findIndex(col=>after[i]===col.name)+1
-              }
+              if (after[i]) insertIndex = cols.findIndex(col=>after[i]===col.name)+1
 
-              if (insertIndex === 0) { // previews cannot be on position 0
-                insertIndex = cols.length
-              }
+              if (insertIndex === 0) insertIndex = cols.length // previews cannot be on position 0
 
-              cols.splice(insertIndex++,0,{
-                ...pcol,
-                classes: [...(pcol.classes || []), 'bb-preview'],
+              cols.splice(insertIndex,0,{
+                ...previewColumn,
+                classes: [...(previewColumn.classes || []), 'bb-preview'],
                 width: 170,
-                // title: (this.currentPreviewNames && this.currentPreviewNames[pcol.title]) || pcol.title || ''
+                // title: (this.currentPreviewNames && this.currentPreviewNames[previewColumn.title]) || previewColumn.title || ''
               })
+              insertIndex++
               pushedColumns++
             })
           }
@@ -722,7 +724,7 @@ export default {
 
           if (expectedColumns===1) {
 
-            var insertIndex = Math.max(...after.map(colname=>cols.findIndex(col=>colname===col.name)))+1
+            insertIndex = Math.max(...after.map(colname=>cols.findIndex(col=>colname===col.name)))+1
 
             cols.splice(insertIndex, 0, {
               type: 'preview',
@@ -966,17 +968,17 @@ export default {
           }
           if (!previewCode.load) {
             this.previousRange = -1
-            await this.scrollCheck(true) // await?
             this.mustUpdateRows = true
-            this.updateRows()
             this.mustCheck = true
+            this.scrollCheck(true) // await ? no
+            this.updateRows()
           }
         }
       },
 
     },
 
-    currentDatasetUpdate: {
+    datasetUpdates: {
       immediate: true,
       handler () {
 
@@ -1166,7 +1168,9 @@ export default {
       this.indicesInSample = {...indicesInSample}
 
       if (this.mustCheck) {
+        // console.log('[COLUMNS PREVIEW] Checking')
         if (columns.map(c=>c.title).join()!==this.currentDataset.columns.map(c=>c.name).join()) {
+          // console.log('[COLUMNS PREVIEW] Different')
           var receivedColumns = columns
 						.map((column, index)=>({...column, index}))
 
@@ -1180,7 +1184,7 @@ export default {
                 &&
                 column.title!=='__match__'
               ))
-            } else {
+          } else {
             previewColumns = receivedColumns
               .filter((column, index)=>(
                 !columnNames.includes(column.title)
@@ -1211,8 +1215,6 @@ export default {
               }
             })
 
-          var color = this.previewCode.color
-
           if (matchRowsColumns[0]) {
             if (typeof this.currentRowHighlights !== 'number') {
               // this.$store.commit('setRowHighlights', true)
@@ -1225,14 +1227,17 @@ export default {
 
           this.$store.commit('setPreviewColumns', previewColumns)
 
-          this.$store.commit('setHighlights', { matchColumns, color })
+          this.$store.commit('setHighlights', { matchColumns, color: this.previewCode.color })
 
           if (previewColumns.length || matchRowsColumns.length) {
+            // console.log('[checkIncomingColumns] check = true')
             return true // must cehck
           }
 
         }
       }
+
+      // console.log('[checkIncomingColumns] check = false')
       return false // no check
     },
 
@@ -1732,9 +1737,9 @@ export default {
           this.recalculateRows = true
         }
       } else {
-        fetched = this.fetched.filter(e=>e.update===this.currentDatasetUpdate)
+        fetched = this.fetched.filter(e=>e.update===this.datasetUpdates)
         if (!fetched.length) {
-          // this.fetched = this.fetched.filter(e=>e.update===this.currentDatasetUpdate)
+          // this.fetched = this.fetched.filter(e=>e.update===this.datasetUpdates)
           this.fetched = []
           this.recalculateRows = true
         }
@@ -1787,10 +1792,13 @@ export default {
       for (let i = newRanges.length - 1; i >= 0 ; i--) {
 
         var previewCode = (this.previewCode ? this.previewCode.profileCode : false) || ''
+
         if (this.currentProfilePreview.code !== previewCode) {
-          this.setProfile(false)
+          // console.log('[REQUESTING] resetting profile')
+          await this.setProfile(false)
         }
 
+        // console.log('[REQUESTING] before fetch chunk')
         var checkProfile = await this.fetchChunk(newRanges[i][0], newRanges[i][1])
 
         this.mustUpdateRows = true
@@ -1798,7 +1806,9 @@ export default {
         toret = (checkProfile===undefined) ? range : false
 
         if (checkProfile) {
+          // console.log('[REQUESTING] profile must be checked')
           if (this.currentProfilePreview.code !== previewCode) {
+            // console.log('[REQUESTING] set profile')
             await this.setProfile(previewCode)
           }
         }
@@ -1854,7 +1864,7 @@ export default {
 
         this.fetched.push({
           code: referenceCode,
-          update: this.currentDatasetUpdate,
+          update: this.datasetUpdates,
           from,
           to,
           sample: parsed.sample,
@@ -1863,9 +1873,11 @@ export default {
 
         this.mustUpdateRows = true
 
+        // console.log('[fetchChunk] checking',parsed.sample.columns)
         return this.checkIncomingColumns(parsed.sample.columns)
 
       } else {
+        // console.log('[fetchChunk] returned 0')
         return 0
       }
     },

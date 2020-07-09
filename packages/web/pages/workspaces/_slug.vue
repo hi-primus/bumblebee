@@ -320,19 +320,6 @@ export default {
 
 	watch: {
 		async status(value) {
-			if (this.useKernel) {
-				switch (value) {
-					case 'workspace':
-            if (this.$store.state.kernel==false) {
-              this.initializeWorkspace(0)
-            }
-						break;
-
-					default:
-						break;
-				}
-			}
-
 			if (value == 'workspace') {
 				var dataset = this.$route.query.dataset;
 				if (dataset && this.$refs.tableBar) {
@@ -367,41 +354,39 @@ export default {
 
       // this.startClient({ workspace: this.$route.params.slug })
 
-      console.log('initializeWorkspace')
+      // console.log('[INITIALIZATION] initializeWorkspace')
 
       try {
 
         this.$store.commit('session/mutation', { mutate: 'workspaceStatus', payload: 'loading' })
 
-        var workspacePromise = this.$store.dispatch('session/startWorkspace', this.$route.params.slug)
-
-        console.log('pre initializeOptimus')
+        // console.log('[INITIALIZATION] pre initializeOptimus')
 
         await this.initializeOptimus()
 
-        console.log('post initializeOptimus')
+        // console.log('[INITIALIZATION] post initializeOptimus')
 
-        console.log('workspacePromise awaiting')
+        var workspacePromise = this.$store.dispatch('session/startWorkspace', this.$route.params.slug)
+
+        // console.log('[INITIALIZATION] workspacePromise awaiting')
 
         var workspace = await workspacePromise
-          console.log('workspacePromise done')
+          // console.log('[INITIALIZATION] workspacePromise done')
 
         if (!this.$store.state.datasets.length && this.useKernel) {
           this.$store.dispatch('newDataset')
         }
 
-        console.log('status mutation')
+        // console.log('[INITIALIZATION] status mutation')
 
         this.$store.commit('session/mutation', { mutate: 'workspaceStatus', payload: true })
 
-        console.log('status mutated')
+        // console.log('[INITIALIZATION] status mutated')
 
         this.$nextTick(async ()=>{
 
           try {
-
-
-            console.log('runCodeNow')
+            // console.log('[INITIALIZATION] runCodeNow')
             await this.runCodeNow()
 
             this.updateSecondaryDatasets()
@@ -436,7 +421,7 @@ export default {
 
     async initializeOptimus () {
 
-      console.log('initializeOptimus')
+      // console.log('[INITIALIZATION] initializeOptimus')
 
       var response = await this.socketPost('initialize', {
         username: this.$store.state.session.username,
@@ -447,7 +432,7 @@ export default {
         reset: this.$route.query.reset
       })
 
-      console.log('initializeOptimus response')
+      // console.log('[INITIALIZATION] initializeOptimus response', response)
 
       var reserved_words
 

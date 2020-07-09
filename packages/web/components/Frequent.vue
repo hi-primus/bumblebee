@@ -30,8 +30,7 @@ export default {
   },
 	props: {
 		values: {
-			default: ()=>[],
-			type: Array
+			default: ()=>[]
 		},
 		count: {
 			default: ()=>[],
@@ -68,7 +67,7 @@ export default {
   },
 
   created() {
-    this.maxVal = (this.values.length) ? this.getMaxVal(this.calculatedValues) : 1
+    this.maxVal = (this.cValues.length) ? this.getMaxVal(this.calculatedValues) : 1
   },
 
   computed: {
@@ -76,8 +75,18 @@ export default {
     ...mapGetters(['currentSelection']),
     ...mapState(['tab']),
 
+    cValues () {
+      if (this.values.length!==undefined) {
+        return this.values
+      } else if (this.values.values.length!==undefined) {
+        return this.values.values
+      } else {
+        return []
+      }
+    },
+
     calculatedValues() {
-      return this.values.map((e,i)=>{
+      return this.cValues.map((e,i)=>{
         return {
           value: e.value,
           count: e.count,
@@ -87,10 +96,10 @@ export default {
     },
 
     uniqueElements () {
-      return Math.max(this.values.length, this.uniques)
+      return Math.max(this.cValues.length, this.uniques)
     },
     elementsString() {
-      return `${(this.values.length!=this.uniqueElements) ? this.values.length+' of ' : '' }${this.uniqueElements} ${(this.uniqueElements===1) ? 'category' : 'categories'}`
+      return `${(this.cValues.length!=this.uniqueElements) ? this.cValues.length+' of ' : '' }${this.uniqueElements} ${(this.uniqueElements===1) ? 'category' : 'categories'}`
     }
   },
 

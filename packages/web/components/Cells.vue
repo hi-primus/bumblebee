@@ -134,35 +134,25 @@
           </div>
       </v-form>
     </CommandFormContainer>
-    <!-- <div
-      persistent
-      v-if="command && command.dialog"
-      v-show="(currentCommand.command)"
-      ref="operation-form"
-      @click:outside="cancelCommand"
-      @keydown.esc="cancelCommand"
-    >
-    </div> -->
     <div
       v-show="view=='operations'"
       class="sidebar-content operations-cells-container"
-      :class="{'empty': !cells.length, 'controls': seeCode}"
+      :class="{'empty': !cells.length}"
       ref="cells-container"
     >
       <draggable
         tag="div"
         class="operations-cells data-sources-cells"
         :class="{ 'no-pe disabled': commandsDisabled, 'dragging': drag }"
-        :list="computedDataSources"
-        v-bind="dragDataSourcesOptions"
+        :list="localDataSources"
+        v-bind="dataSourcesDragOptions"
         handle=".handle"
-        ref="cells"
         @start="drag = true"
         @end="drag = false; draggableEnd()"
       >
         <div
           class="cell-container"
-          v-for="(cell, index) in computedDataSources"
+          v-for="(cell, index) in localDataSources"
           :key="cell.id"
           :class="{'fixed-cell': cell.fixed, 'cell-error': cell.error,'done': cell.done}"
         >
@@ -180,7 +170,7 @@
             <v-icon
               class="right-cell-btn"
               small
-              @click="removeCell(index)"
+              @click="removeCell(index, true)"
             >close</v-icon>
           </div>
         </div>
@@ -189,19 +179,17 @@
         tag="div"
         class="operations-cells commands-cells"
         :class="{ 'no-pe disabled': commandsDisabled, 'dragging': drag }"
-        :list="computedCommands"
-        v-bind="dragCommandsOptions"
+        :list="localCommands"
+        v-bind="commandsDragOptions"
         handle=".handle"
-        ref="cells"
         @start="drag = true"
         @end="drag = false; draggableEnd()"
       >
         <div
           class="cell-container"
-          v-for="(cell, index) in computedCommands"
+          v-for="(cell, index) in localCommands"
           :key="cell.id"
-          :class="{'fixed-cell': cell.fixed, 'cell-error': cell.error,'done': cell.done,'active': activeCell==index}"
-          @click="setActiveCell(index)"
+          :class="{'fixed-cell': cell.fixed, 'cell-error': cell.error,'done': cell.done}"
         >
           <div class="cell">
             <div class="handle left-handle">
@@ -217,7 +205,7 @@
             <v-icon
               class="right-cell-btn"
               small
-              @click="removeCell(index+dataSources.length)"
+              @click="removeCell(index, false)"
             >close</v-icon>
           </div>
         </div>
@@ -225,17 +213,6 @@
       <v-alert key="error" type="error" class="mt-3" dismissible v-if="codeError!=''"  @input="cleanCodeError">
         {{codeError}}
       </v-alert>
-      <div v-if="seeCode" key="controls" ref="cells-controls" class="cells-controls toolbar vertical" :class="{'disabled': commandsDisabled}" @mouseover="barHovered = true" @mouseleave="barHovered = false">
-        <v-btn v-if="cells.length" text class="icon-btn" color="#888" @click.stop="removeCell(activeCell)">
-          <v-icon>delete</v-icon>
-        </v-btn>
-        <v-btn text class="icon-btn" :color="(cells.length) ? '#888' : 'primary'" @click="addCell(activeCell+1)">
-          <v-icon>add</v-icon>
-        </v-btn>
-        <v-btn v-if="runButton && cells.length" text class="icon-btn" color="#888" @click="runCode(true)">
-          <v-icon>play_arrow</v-icon>
-        </v-btn>
-      </div>
     </div>
   </div>
 </template>
@@ -255,6 +232,7 @@ const { getGenerator } = OptimusApi
 
 /*bu*/ import {
 
+  deepCopy,
   everyRatio,
   arrayJoin,
   capitalizeString,
@@ -321,11 +299,9 @@ export default {
       lastWrongCode: false,
       drag: false,
       currentCommand: false,
-
-      seeCode: false,
+      isEditing: false,
 
       firstRun: true,
-      runButton: false,
 
       cancelPromise: {},
 
@@ -889,7 +865,6 @@ export default {
               }
             }
           },
-          // TO-DO: Ver si esto se guarda en el json del cell, igual no debería porque es pesado
           beforeExecuteCode: async (currentCommand) => {
             if (!currentCommand.secondaryDatasets[currentCommand.with] || !currentCommand.secondaryDatasets[currentCommand.with].buffer) {
               await this.evalCode('_output = '+currentCommand.with+'.ext.set_buffer("*")') // TO-DO: !!!
@@ -1713,7 +1688,6 @@ export default {
               }
             } catch (error) {
               var _error = printError(error)
-              console.log({_error})
               currentCommand = {...currentCommand, error: _error}
             }
 
@@ -2229,7 +2203,6 @@ export default {
       'currentSelection',
       'currentDataset',
       'selectionType',
-      'currentTab',
       'currentDuplicatedColumns',
       'currentPreviewNames',
       'currentPreviewInfo',
@@ -2238,7 +2211,8 @@ export default {
       'hasSecondaryDatasets'
     ]),
 
-    computedCommands: {
+    localCommands: {
+      deep: true,
       get () {
         return Array.from(this.commands)
       },
@@ -2247,7 +2221,8 @@ export default {
       }
     },
 
-    computedDataSources: {
+    localDataSources: {
+      deep: true,
       get () {
         return Array.from(this.dataSources)
       },
@@ -2258,14 +2233,11 @@ export default {
 
     cells: {
       get () {
-        return Array.from(this.workspaceCells)
+        return [...this.localDataSources, ...this.localCommands]
       },
       set (value) {
-        console.log('setting cells', value)
-        var commands = value.filter(e=>!(e && e.payload && e.payload.request && e.payload.request.createsNew))
-        var dataSources = value.filter(e=>e && e.payload && e.payload.request && e.payload.request.createsNew)
-        this.$store.dispatch('mutateAndSave', {mutate: 'commands', payload: commands} )
-        this.$store.dispatch('mutateAndSave', {mutate: 'dataSources', payload: dataSources} )
+        this.localCommands = value.filter(e=>!(e && e.payload && e.payload.request && e.payload.request.isLoad))
+        this.localDataSources = value.filter(e=>e && e.payload && e.payload.request && e.payload.request.isLoad)
       }
     },
 
@@ -2287,7 +2259,7 @@ export default {
       }
     },
 
-    dragDataSourcesOptions () {
+    dataSourcesDragOptions () {
       return {
         animation: 200,
         group: "dataSources",
@@ -2296,7 +2268,7 @@ export default {
       }
     },
 
-    dragCommandsOptions () {
+    commandsDragOptions () {
       return {
         animation: 200,
         group: "commands",
@@ -2313,7 +2285,7 @@ export default {
       }
     },
 
-    computedCommandsDisabled: {
+    localCommandsDisabled: {
       get () {
         return this.commandsDisabled
       },
@@ -2322,10 +2294,6 @@ export default {
       }
     }
 
-  },
-
-  mounted () {
-    this.seeCode = this.$route.query.code=='1'
   },
 
   watch: {
@@ -2421,7 +2389,7 @@ export default {
               return
             }
 
-            if (this.currentCommand.preview && (this.currentCommand.preview.type || this.currentCommand.preview.fake)) {
+            if (this.currentCommand.preview && (this.currentCommand.preview.type)) {
 
               if (this.currentCommand.output_cols || this.currentCommand.defaultOutputName) {
 
@@ -2479,8 +2447,8 @@ export default {
     currentDataset: {
       deep: true,
       handler () {
-        if (this.computedCommandsDisabled===undefined) {
-          this.computedCommandsDisabled = false
+        if (this.localCommandsDisabled===undefined) {
+          this.localCommandsDisabled = false
           this.markCells()
           this.$emit('update:codeError','')
           this.lastWrongCode = false
@@ -2493,7 +2461,6 @@ export default {
   methods: {
 
     setDfToTab (dfName) {
-      console.log('adding df to tab',{dfName})
       this.$store.commit('setDfToTab', { dfName })
     },
 
@@ -2511,12 +2478,6 @@ export default {
           name = name+i
         }
       }
-
-      // if (!this.currentDataset.dfName) {
-
-      // }
-
-      console.log('Getting variable name', name)
 
       return name
     },
@@ -2593,10 +2554,6 @@ export default {
       this.$emit('update:codeError','')
     },
 
-    moveBarDelayed: debounce( async function(value) {
-      this.moveBar(value)
-    },300),
-
     preparePreviewCode: debounce( async function() {
 
       try {
@@ -2612,10 +2569,6 @@ export default {
         }
 
         var commandHandler = this.command
-
-        // if (commandHandler && commandHandler.beforeExecuteCode) {
-        //   this.currentCommand.beforeExecuteCode = async (payload) => await commandHandler.beforeExecuteCode(payload)
-        // }
 
         this.$store.commit('setPreviewCode',{
           code: this.getCode(this.currentCommand, 'preview'),
@@ -2681,15 +2634,15 @@ export default {
 
     async beforeRunCells (newOnly = false, ignoreFrom = -1) {
 
-      console.log('beforeRunCells')
+      // console.log('beforeRunCells')
       this.filterCells(newOnly, ignoreFrom).forEach(async (cell) => {
         if (cell.payload.request.createsNew) {
-          console.log('beforeExecuteCode', cell.payload.newDfName)
+          // console.log('beforeExecuteCode', cell.payload.newDfName)
           this.setDfToTab(cell.payload.newDfName)
         }
         var commandHandler = this.getCommandHandler(cell)
         if (commandHandler.beforeExecuteCode) {
-          console.log('beforeExecuteCode')
+          // console.log('beforeExecuteCode')
           cell.payload = await commandHandler.beforeExecuteCode(cell.payload)
         }
       })
@@ -2797,7 +2750,6 @@ export default {
           }
           var content = this.getOperationContent(cell)
           this.addCell(-1, {...command, code: this.getCode(cell), content})
-          this.runButton = false
 
           this.clearTextSelection()
         }
@@ -2805,6 +2757,7 @@ export default {
     },
 
     async confirmCommand () {
+      this.isEditing = false
       this.clearTextSelection()
       var commandHandler = this.getCommandHandler(this.currentCommand)
       if (commandHandler.onDone) {
@@ -2817,10 +2770,8 @@ export default {
       var toCell = this.currentCommand._toCell!==undefined ? this.currentCommand._toCell : -1
 
       this.addCell(toCell, { ...this.currentCommand, code, content }, true )
-      this.runButton = false
 
       this.$emit('updateOperations', { active: (this.currentCommand.request.noOperations ? false : true), title: 'operations' } )
-      this.$emit('update:big', this.seeCode)
 
       this.currentCommand = false
       // this.$store.commit('previewDefault')
@@ -2837,113 +2788,70 @@ export default {
           title: 'operations'
         })
         this.$store.commit('previewDefault')
-        this.runCodeNow()
+        this.runCodeNow(this.isEditing)
+        this.isEditing = false
 			}, 10);
     },
 
-    setActiveCell (index, delayed = false) {
-
-      if (this.cells[index]) {
-        this.activeCell = index
-        if (this.$refs.cells && this.seeCode) {
-          this.moveBar(this.$refs.cells.$el.getElementsByClassName('cell-container')[index].offsetTop+11)
-        }
-      }
-      else {
-        this.activeCell = 0
-        if (this.seeCode) {
-          this.moveBar(12)
-        }
-      }
-
-    },
-
-    moveBarDelayed: debounce( async function(value) {
-      this.moveBar(value)
-    },300),
-
-    moveBar (value) {
-      this.barTop = value;
-      if (!this.barHovered) {
-        this.moveBarNow(value)
-      }
-    },
-
-    moveBarNow(value) {
-      if (this.$refs.cells.$el) {
-        this.$refs.cells.$el.style.minHeight = value+27 + 'px'
-      }
-
-      if (this.$refs['cells-controls']) {
-        this.$refs['cells-controls'].style.top = value + 'px'
-      }
-    },
-
     draggableEnd() {
+      this.localCommands = this.localCommands
+      this.localDataSources = this.localDataSources
       if (this.codeText().trim()==='') {
-        this.runButton = false
         this.$emit('update:codeError','')
         this.runCode() // deleting every cell
         return;
       }
-      if (!this.runButton) {
-        this.runCode() // reordering or deleting
-        return;
-      }
+      this.runCode() // reordering or deleting
+      return;
     },
 
-    removeCell (index) {
+    removeCell (index, isDataSource = false) {
 
-      this.runButton = false
+      var from = isDataSource ? this.localDataSources : this.localCommands
 
-      var permanentCells = ['load file', 'load from database']
-
-      if (index<0 || !this.cells[index]) {
+      if (index<0 || !from[index]) {
         return
       }
 
-      // if (permanentCells.includes(this.cells[index].command) && this.cells.filter(e => permanentCells.includes(e.command) ).length<=1) {
-
-      var currentPayload = this.cells[index].payload
-
-      var deleteTab = false
+      var currentPayload = from[index].payload
 
       if (currentPayload.request.createsNew) {
-        var filteredCells = this.cells.filter(cell => cell.payload.dfName===currentPayload.newDfName)
+        var filteredCells = this.cells.filter(cell => cell.payload.dfName===currentPayload.newDfName && !cell.payload.request.isLoad)
         if (filteredCells.length>0) {
           return
-        } else {
-          deleteTab = currentPayload.newDfName
         }
       }
 
       this.$emit('update:codeError','')
 
-      var cells = [...this.cells]
+      var cells = [...from]
       var deletedPayload = cells.splice(index,1)[0].payload
+
+      var deleteTab = false
 
       if (deletedPayload.request.createsNew) {
         var deleteDf = deletedPayload.newDfName
         if (deleteDf) {
+          deleteTab = currentPayload.newDfName
           console.warn('Deleting',deleteDf)
           this.evalCode(`del ${deleteDf}; _output = "Deleted ${deleteDf}"`)
         }
       }
 
-      this.cells = cells
-      if (this.cells.length==index) {
-        index--
-      }
-
-      this.setActiveCell(index, true)
-
-      // if (this.cells.length==0)
-        // this.$store.dispatch('newDataset', { current: true })
-
       if (deleteTab) {
-        console.log('deleting tab', deleteTab)
         this.$store.dispatch('newDataset', { dfName: deleteTab, current: true })
       }
+
+      if (isDataSource) {
+        this.localDataSources = cells
+      } else {
+        this.localCommands = cells
+      }
+
+      // if (index>=from.length) {
+      //   index = from.length-1
+      // }
+
 
       this.codeDone = ''
       this.draggableEnd()
@@ -3058,13 +2966,18 @@ export default {
 
     async editCell (cell, index) {
       // console.log('[DEBUG] Editing ',{cell, index})
-      var commandHandler = this.getCommandHandler(cell)
+      var command = deepCopy(cell)
+
+      // TO-DO: deep copy using deepCopy
+
+      var commandHandler = this.getCommandHandler(command)
       if (commandHandler.dialog) {
-        this.computedCommandsDisabled = true;
+        this.localCommandsDisabled = true;
         await this.runCodeNow(true, index)
-        this.computedCommandsDisabled = false;
-        cell.payload._toCell = index
-        this.commandHandle(cell)
+        this.localCommandsDisabled = false;
+        command.payload._toCell = index
+        this.commandHandle(command)
+        this.isEditing = true
       }
     },
 
@@ -3105,9 +3018,6 @@ export default {
 
       if (!payload.noCall) {
         this.$nextTick(()=>{
-          if (this.activeCell<0) {
-            this.setActiveCell(0)
-          }
           if (code.length) {
             this.runCode()
           }
@@ -3125,7 +3035,7 @@ export default {
       var newOnly = false
       var code = this.codeText(newOnly, ignoreFrom)
 
-      var codeDone = this.codeDone.trim()
+      var codeDone = force ? '' : this.codeDone.trim()
       var rerun = false
 
       if (code==='') {
@@ -3166,7 +3076,7 @@ export default {
         rerun = false
 			}
 
-      this.computedCommandsDisabled = true;
+      this.localCommandsDisabled = true;
 
       try {
 
@@ -3190,7 +3100,7 @@ export default {
         })
         console.log('"""[DEBUG][CODE]"""',response.code)
 
-        this.computedCommandsDisabled = false;
+        this.localCommandsDisabled = false;
 
         if (!response.data || !response.data.result) {
           throw response
@@ -3227,7 +3137,7 @@ export default {
 
         this.markCellsError(ignoreFrom)
         this.lastWrongCode = code
-        this.computedCommandsDisabled = undefined;
+        this.localCommandsDisabled = undefined;
       }
 
       if (this.codeText() !== code) {

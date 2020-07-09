@@ -203,7 +203,6 @@ export default {
 
     acceptForm (value) {
       try {
-        console.log({...this.form})
         this.form.promise.resolve(value)
       } catch (err) {
         console.error(err)
@@ -340,7 +339,6 @@ export default {
         let response = await this.$store.dispatch('request',{
           path: `/workspaces`
         })
-        console.log(response.data)
         this.loading = false
         return {items: response.data, total: 10} // TO-DO: this
       } catch (err) {

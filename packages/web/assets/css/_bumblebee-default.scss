@@ -2126,8 +2126,7 @@ $editor-top-padding: 6px;
     max-height: 34px;
   }
   .v-select__selection--comma {
-    margin-top: 2px;
-    // margin-bottom: 5px;
+    margin-top: -1px !important;
   }
   .v-text-field__details {
     margin-bottom: 0 !important;

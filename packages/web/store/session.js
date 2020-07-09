@@ -58,7 +58,7 @@ export const actions =  {
         commands: [...dataSources, ...commands]
       }
 
-      console.log({payload})
+      // console.log('[WORKSPACE MANAGING]',{payload})
 
       var response = await dispatch('request', {
         request: 'put',
@@ -88,7 +88,7 @@ export const actions =  {
   async startWorkspace ({commit, dispatch, state}, id) {
 
 
-    console.log('startWorkspace')
+    // console.log('[WORKSPACE MANAGING] startWorkspace')
 
     var workspace = state.workspace
 
@@ -120,16 +120,16 @@ export const actions =  {
 
     var cells = response.data.commands.map( e=>({ ...JSON.parse(e), done: false }) )
 
-    var commands = cells.filter(e=>!(e && e.payload && e.payload.request && e.payload.request.createsNew))
-    var dataSources = cells.filter(e=>e && e.payload && e.payload.request && e.payload.request.createsNew)
+    var commands = cells.filter(e=>!(e && e.payload && e.payload.request && e.payload.request.isLoad))
+    var dataSources = cells.filter(e=>e && e.payload && e.payload.request && e.payload.request.isLoad)
 
-    console.log({ cells, tabs })
+    // console.log('[WORKSPACE MANAGING]',{ cells, tabs })
 
     var tab = -1
 
     tabs.forEach((dataset, index) => {
       // commit('mutation', { mutate: 'tab', payload: index }, { root: true })
-      console.log('loading', { dataset })
+      // console.log('[WORKSPACE MANAGING] loading dataset', { dataset })
       if (dataset.columns) {
         commit('loadDataset', { dataset, tab: index }, { root: true })
         if (tab<0) {
