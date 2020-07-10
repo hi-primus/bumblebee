@@ -73,6 +73,27 @@ export default {
 
 	methods: {
 
+    async loadDataset (dfName) {
+      if (!dfName) {
+        return {}
+      }
+      var response = await this.socketPost('profile', {
+        dfName,
+        username: this.$store.state.session.username,
+        workspace: this.$store.state.session.workspace._id,
+        key: this.$store.state.key
+      }, {
+        timeout: 0
+      })
+      console.log('"""[DEBUG][CODE][PROFILE]"""',response.code)
+      window.pushCode({code: response.code})
+      var dataset = JSON.parse(response.data.result)
+      dataset.dfName = dfName
+      this.$store.dispatch('setDataset', { dataset })
+      this.setBuffer(dfName)
+      return dataset
+    },
+
     async evalCode (code) {
       try {
 
@@ -181,7 +202,7 @@ export default {
             }
           }
 
-          window.socket.emit(message,{...payload, timestamp})
+          window.socket.emit('message',{message, ...payload, timestamp})
 
         } catch (error) {
           if (error.code) {
@@ -276,7 +297,7 @@ export default {
 
         window.socket.on('dataset', (dataset) => {
           try {
-            this.$store.dispatch('loadDataset', {
+            this.$store.dispatch('setDataset', {
               dataset
             })
           } catch (error) {

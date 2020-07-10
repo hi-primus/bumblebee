@@ -167,11 +167,12 @@
               v-html="cell.content || cell.code"
             >
             </div>
-            <v-icon
-              class="right-cell-btn"
-              small
-              @click="removeCell(index, true)"
-            >close</v-icon>
+            <div class="right-cell-btn">
+              <v-icon
+                small
+                @click="removeCell(index, true)"
+              >close</v-icon>
+            </div>
           </div>
         </div>
       </draggable>
@@ -2328,7 +2329,7 @@ export default {
             return
           }
 
-          this.commandHandle( command )
+          this.commandHandle(command)
 
         } catch (err) {
           console.error(err)
@@ -2470,7 +2471,6 @@ export default {
 
       var sd = Object.keys(this.currentSecondaryDatasets)
         .filter(e=>e.startsWith(name))
-        .filter(e=>!e.startsWith('_'))
 
       if (sd.length) {
         var i = (parseInt(sd[sd.length-1].split(name)[1]) || 0)+1
@@ -2636,7 +2636,7 @@ export default {
 
       // console.log('beforeRunCells')
       this.filterCells(newOnly, ignoreFrom).forEach(async (cell) => {
-        if (cell.payload.request.createsNew) {
+        if (cell.payload.request && cell.payload.request.createsNew) {
           // console.log('beforeExecuteCode', cell.payload.newDfName)
           this.setDfToTab(cell.payload.newDfName)
         }
@@ -2650,6 +2650,11 @@ export default {
     },
 
     async commandHandle (command) {
+
+      if (command.empty) {
+        this.runCodeNow()
+        return
+      }
 
       if (this.selectionType!=='text') {
         this.clearTextSelection()
@@ -2748,8 +2753,11 @@ export default {
             ...payload,
             columns: payload.columns || columns
           }
-          var content = this.getOperationContent(cell)
-          this.addCell(-1, {...command, code: this.getCode(cell), content})
+          this.addCell(-1, {
+            ...cell,
+            code: this.getCode(cell),
+            content: this.getOperationContent(cell)
+          })
 
           this.clearTextSelection()
         }
@@ -2815,9 +2823,11 @@ export default {
 
       var currentPayload = from[index].payload
 
-      if (currentPayload.request.createsNew) {
+      if (currentPayload.request && currentPayload.request.createsNew) {
+        console.log('createsNew')
         var filteredCells = this.cells.filter(cell => cell.payload.dfName===currentPayload.newDfName && !cell.payload.request.isLoad)
         if (filteredCells.length>0) {
+          console.log('there are cells using this df')
           return
         }
       }
@@ -2829,12 +2839,13 @@ export default {
 
       var deleteTab = false
 
-      if (deletedPayload.request.createsNew) {
+      if (deletedPayload.request && deletedPayload.request.createsNew) {
         var deleteDf = deletedPayload.newDfName
         if (deleteDf) {
           deleteTab = currentPayload.newDfName
           console.warn('Deleting',deleteDf)
           this.evalCode(`del ${deleteDf}; _output = "Deleted ${deleteDf}"`)
+          this.updateSecondaryDatasets()
         }
       }
 
@@ -2905,7 +2916,7 @@ export default {
         content = commandHandler.content(payload)
       }
 
-      if (payload.request.createsNew) {
+      if (payload.request && payload.request.createsNew) {
         content += `<span class="hint--df"> to ${hlParam(payload.newDfName)}</span>`
       } else {
         content += `<span class="hint--df"> in ${hlParam(payload.dfName)}</span>`
@@ -3090,15 +3101,15 @@ export default {
 
         var response = await this.socketPost('cells', {
           code,
-          name: this.currentDataset.summary ? this.currentDataset.name : null,
-          dfName,
           username: this.$store.state.session.username,
           workspace: this.$store.state.session.workspace._id,
           key: this.$store.state.key
         }, {
           timeout: 0
         })
+
         console.log('"""[DEBUG][CODE]"""',response.code)
+        window.pushCode({code: response.code})
 
         this.localCommandsDisabled = false;
 
@@ -3106,19 +3117,18 @@ export default {
           throw response
         }
 
-        window.pushCode({code: response.code})
+        var dataset = await this.loadDataset(dfName) // TEST THIS
 
-        if (dfName) {
-          var dataset = JSON.parse(response.data.result)
+        console.log({dataset, dfName})
 
-          dataset.dfName = dfName
+        // if (dfName) {
+        //   var dataset = JSON.parse(response.data.result)
+        //   dataset.dfName = dfName
 
-          this.$store.dispatch('loadDataset', {
-            dataset
-          })
+        //   this.$store.dispatch('setDataset', { dataset })
 
-          this.setBuffer(dfName)
-        }
+        //   this.setBuffer(dfName)
+        // }
 
         this.updateSecondaryDatasets()
 

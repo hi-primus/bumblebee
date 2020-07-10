@@ -131,7 +131,7 @@ export const actions =  {
       // commit('mutation', { mutate: 'tab', payload: index }, { root: true })
       // console.log('[WORKSPACE MANAGING] loading dataset', { dataset })
       if (dataset.columns) {
-        commit('loadDataset', { dataset, tab: index }, { root: true })
+        commit('setDataset', { dataset, tab: index }, { root: true })
         if (tab<0) {
           tab = index
         }

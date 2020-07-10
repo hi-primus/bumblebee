@@ -20,7 +20,16 @@
         </template>
       </div>
       <div v-else class="title grey--text text-center text-with-icons">
-        <br/>
+        <!-- {{availableDatasets}} -->
+        <div class="available-dfs mb-4">
+          Load from existing data sources:
+          <template v-for="(dfName, index) in availableDatasets">
+            <span :key="'av'+dfName">
+              <template v-if="index>0">, </template>
+              <span class="primary--text hoverable" @click="openDf(dfName)">{{dfName}}</span>
+            </span>
+          </template>
+        </div>
         <v-btn
           @click="commandHandle({command: 'load file'})"
           color="primary"
@@ -264,10 +273,28 @@ export default {
       'currentSelection',
       'currentDataset',
       'currentListView',
+      'currentSecondaryDatasets',
       'previewCode',
       'loadPreview',
       'appError'
     ]),
+
+    availableDatasets () {
+      var sds = Object.keys(this.currentSecondaryDatasets)
+        .filter(e=>e.startsWith('df'))
+
+      this.$store.state.datasets.forEach(dataset => {
+        if (!dataset.dfName) {
+          return
+        }
+        var foundIndex = sds.findIndex(sd=>sd===dataset.dfName)
+        if (foundIndex>=0) {
+          sds.splice(foundIndex,1)
+        }
+      })
+
+      return sds
+    },
 
     loadPreviewActive () {
       try {
@@ -452,6 +479,11 @@ export default {
   },
 
   methods: {
+
+    openDf (dfName) {
+      this.$store.commit('setDfToTab', { dfName })
+      this.loadDataset(dfName)
+    },
 
     commandHandle (event) {
       this.$store.commit('commandHandle',event)

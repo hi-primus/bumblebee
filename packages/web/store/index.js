@@ -191,15 +191,15 @@ export const mutations = {
     Vue.set(state.listViews,state.tab,listView)
   },
 
-	loadDataset (state, { dataset, preview, tab }) {
+	setDataset (state, { dataset, preview, tab }) {
 
     console.log("[BUMBLEBLEE] Opening dataset",dataset)
 
-    if (dataset.name===null) {
+    // if (dataset.name===null) {
+    if (!dataset.name) {
       if (dataset.file_name) {
         dataset.name = dataset.file_name.split('.')[0]
-      }
-      else {
+      } else {
         dataset.name = `Dataset${state.datasetCounter}`
         state.datasetCounter = state.datasetCounter + 1
       }
@@ -216,15 +216,15 @@ export const mutations = {
       dataset.columns = Object.entries(dataset.columns).map(([key, value])=>({...value, name: key}))
     }
 
-    var _c
 
     tab = tab || state.tab
 
-    try {
-      _c = state.datasetSelection[tab].columns
-    } catch (err) {
-      _c = []
-    }
+    // var _c
+    // try {
+    //   _c = state.datasetSelection[tab].columns
+    // } catch (err) {
+    //   _c = []
+    // }
 
     var previousDataset = state.datasets[tab] || {}
 
@@ -235,7 +235,7 @@ export const mutations = {
 
     Vue.set(state.datasets, tab, dataset)
 
-    state.datasetSelection[tab] = {} // {columns: _c} // TO-DO: check selection
+    state.datasetSelection[tab] = {} // {columns: _c} // TO-DO: Remember selection
 
     Vue.set(state.datasetSelection, tab, state.datasetSelection[tab] )
     Vue.set(state.buffers, tab, false)
@@ -289,24 +289,25 @@ export const mutations = {
 
   setDfToTab (state, { dfName }) {
 
+    // doesn't sets if there's already a dataset with the same dfName
     var foundIndex = state.datasets.findIndex(dataset => dataset.dfName===dfName)
 
     if (foundIndex>=0) {
-      // console.log('df not setted (already existing)')
+      state.tab = foundIndex
       return
     }
 
-    // sets to current tab if it doesn't have any dfName on it
+    // sets to a blank tab (starting from current tab)
+    foundIndex = state.datasets.findIndex((dataset, index) => index>=state.tab && !dataset.dfName && dataset.blank)
 
-    if (!state.datasets[state.tab].dfName || state.datasets[state.tab].blank) {
-      // console.log('df to current')
-      Vue.set(state.datasets[state.tab], 'dfName', dfName)
+    if (foundIndex>=0) {
+      console.log('setting',dfName,'to',foundIndex)
+      Vue.set(state.datasets[foundIndex], 'dfName', dfName)
+      state.tab = foundIndex
       return
     }
 
-    // sets to a new tab
-
-    // console.log('df to new')
+    // sets to a new tab otherwise
     this.commit('newDataset', { dataset: { dfName } })
 
   },
@@ -450,8 +451,12 @@ export const actions = {
     dispatch('session/saveWorkspace')
   },
 
-  async loadDataset ({ dispatch, commit }, payload) {
-    commit('loadDataset', payload)
+  async loadDataset ({dispatch, commit}, { dfName }) {
+    // TO-DO
+  },
+
+  async setDataset ({ dispatch, commit }, payload) {
+    commit('setDataset', payload)
     dispatch('session/saveWorkspace')
   },
 

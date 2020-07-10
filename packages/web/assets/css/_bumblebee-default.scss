@@ -1358,6 +1358,10 @@ $side-controls-width: 54px;
     .right-cell-btn {
       opacity: 0;
       transition: opacity 0.21s ease-in-out;
+      display: flex;
+      align-items: center;
+      position: relative;
+      left: -4px;
     }
     &:hover{
       .right-cell-btn,

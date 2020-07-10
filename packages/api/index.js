@@ -132,58 +132,62 @@ const newSocket = function (socket, session) {
 
   if (!socket.unsecure) {
 
-    socket.on('datasets', async (payload) => {
-      // console.log('socket on datasets')
-      var sessionId = payload.username + '_' + payload.workspace
-      var result = {}
-      try {
-        result = await requestToKernel('datasets',sessionId)
-      } catch (err) {
-        result = err
-      }
-      var code = kernelRoutines.datasetsMin(payload)
-      socket.emit('reply',{data: result, code, timestamp: payload.timestamp})
-    })
+    socket.on('message', async (payload) => {
+      if (payload.message=='datasets') {
 
-    socket.on('initialize', async (payload) => {
-      // console.log('socket on initialize', payload)
-      var sessionId = payload.username + '_' + payload.workspace
-      var result = {}
-      try {
-        kernels[sessionId] = kernels[sessionId] || {}
-        if (!kernels[sessionId].initialization) {
-          kernels[sessionId].initialization = initializeSession(sessionId, payload)
+        var sessionId = payload.username + '_' + payload.workspace
+        var result = {}
+        try {
+          result = await requestToKernel('datasets',sessionId)
+        } catch (err) {
+          result = err
         }
-        result = await kernels[sessionId].initialization
-      } catch (err) {
-        result = err
-        console.error('[INITIALIZATION ERROR]',err)
-        result.status = 'error'
+        var code = kernelRoutines.datasetsMin(payload)
+        socket.emit('reply',{data: result, code, timestamp: payload.timestamp})
+
+      } else if (payload.message=='initialize') {
+
+        var sessionId = payload.username + '_' + payload.workspace
+        var result = {}
+        try {
+          kernels[sessionId] = kernels[sessionId] || {}
+          if (!kernels[sessionId].initialization) {
+            kernels[sessionId].initialization = initializeSession(sessionId, payload)
+          }
+          result = await kernels[sessionId].initialization
+        } catch (err) {
+          result = err
+          console.error('[INITIALIZATION ERROR]',err)
+          result.status = 'error'
+        }
+        var code = kernelRoutines.initMin(payload)
+        socket.emit('reply',{data: result, code, timestamp: payload.timestamp})
+
+      } else if (payload.message=='run') {
+
+        var sessionId = payload.username + '_' + payload.workspace
+        var result = await runCode(`${payload.code}`,sessionId)
+        socket.emit('reply',{data: result, code: payload.code, timestamp: payload.timestamp})
+
+      } else if (payload.message=='cells') {
+
+        // console.log('socket on cells')
+        var sessionId = payload.username + '_' + payload.workspace
+        var code = payload.code
+        code += '\n' + `_output = 'ok'`
+        var result = await runCode(code, sessionId)
+        socket.emit('reply',{data: result, code, timestamp: payload.timestamp})
+
+      } else if (payload.message=='profile') {
+
+        var sessionId = payload.username + '_' + payload.workspace
+        var code = `_output = ${payload.dfName}.ext.profile(columns="*", output="json")`
+        var result = await runCode(code, sessionId)
+        socket.emit('reply',{data: result, code, timestamp: payload.timestamp})
+
       }
-      var code = kernelRoutines.initMin(payload)
-      socket.emit('reply',{data: result, code, timestamp: payload.timestamp})
     })
 
-    socket.on('run', async (payload) => {
-      // console.log('socket on run')
-      // socket.emit('reply',{data: 'test', code: 'test', timestamp: payload.timestamp})
-      var sessionId = payload.username + '_' + payload.workspace
-      var result = await runCode(`${payload.code}`,sessionId)
-      socket.emit('reply',{data: result, code: payload.code, timestamp: payload.timestamp})
-    })
-
-    socket.on('cells', async (payload) => {
-      // console.log('socket on cells')
-      var sessionId = payload.username + '_' + payload.workspace
-      var code = payload.code
-      if (payload.dfName) {
-        code += '\n' + `_output = ${payload.dfName}.ext.profile(columns="*", output="json")`
-      } else {
-        code += '\n' + `_output = {}`
-      }
-      var result = await runCode(code, sessionId)
-      socket.emit('reply',{data: result, code, timestamp: payload.timestamp})
-    })
   }
   else {
     console.log('"""Unsecure socket connection for', session,'"""')
@@ -492,8 +496,6 @@ const createConnection = async function (sessionId) {
 
 
     })
-  } else {
-    console.log('Connection for',sessionId,'already exists')
   }
 
   return kernels[sessionId].connecting
@@ -530,8 +532,6 @@ const assertSession = async function (sessionId, isInit = false) {
 import kernelRoutines from './kernel-routines.js'
 
 const requestToKernel = async function (type, sessionId, payload) {
-
-  console.log('requestToKernel')
 
   var connection = await assertSession(sessionId, type=='init')
 

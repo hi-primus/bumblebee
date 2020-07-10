@@ -396,20 +396,20 @@ export default {
             this.$store.commit('setAppStatus', 'workspace')
 
             this.$store.commit('kernel', 'done')
-          } catch (error) {
-            console.error(error)
-            throw error
+          } catch (err) {
+            console.error('Error on post-initialization',err)
+            throw err
           }
 
         })
 
-      } catch (error) {
+      } catch (err) {
 
-        if (error.code) {
-          window.pushCode({ code: error.code, error: true })
+        if (err.code) {
+          window.pushCode({ code: err.code, error: true })
         }
-        console.error('Error initializing');
-        printError(error)
+        console.error('Error initializing', err);
+        printError(err)
         var appStatus = {
           error: new Error('Initialization error'),
           status: 'workspace'
