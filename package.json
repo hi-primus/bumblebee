@@ -14,7 +14,7 @@
     "build-oca": "cd packages/optimus-code-api && npm run build",
     "build-bu": "cd packages/bumblebee-utils && npm run build",
     "build-packages": "concurrently \"npm run build-oca\" \"npm run build-bu\"",
-    "start": "concurrently \"npm run web\" \"npm run api\" ",
+    "start": "npm run build-packages && concurrently \"npm run web\" \"npm run api\" ",
     "postinstall": "cd packages/api && npm install && cd ../web && npm install"
   },
   "private": true,
