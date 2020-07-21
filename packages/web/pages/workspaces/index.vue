@@ -1,7 +1,7 @@
 <template>
 	<Layout>
 		<v-layout row wrap class="elevation-0 d-flex flex-column align-top justify-start">
-      <div class="bb-container" data-name="workspace">
+      <div class="workspace-container" data-name="workspace">
         <MoreMenu
           :items="moreMenu"
         >
