@@ -671,8 +671,6 @@ export default {
 
         var expectedColumns = (this.currentDuplicatedColumns) ? this.currentDuplicatedColumns.length : this.previewCode.expectedColumns
 
-        // if (expectedColumns===0) { console.log('[COLUMNS] No expected columns'); return cols }
-
         var pushedColumns = 0
 
         var insertIndex

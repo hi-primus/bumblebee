@@ -124,3 +124,5 @@ dist
 
 # vscode config
 .vscode
+
+packages/web/pages/tests/

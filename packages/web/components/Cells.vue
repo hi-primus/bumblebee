@@ -2764,7 +2764,8 @@ export default {
       }
     },
 
-    async confirmCommand () {
+    async confirmCommand (event) {
+      console.log('confirmCommand',{...event})
       this.isEditing = false
       this.clearTextSelection()
       var commandHandler = this.getCommandHandler(this.currentCommand)
@@ -2824,10 +2825,9 @@ export default {
       var currentPayload = from[index].payload
 
       if (currentPayload.request && currentPayload.request.createsNew) {
-        console.log('createsNew')
         var filteredCells = this.cells.filter(cell => cell.payload.dfName===currentPayload.newDfName && !cell.payload.request.isLoad)
         if (filteredCells.length>0) {
-          console.log('there are cells using this df')
+          console.warn('[CELLS] Cannot remove, there are cells using this variable as input')
           return
         }
       }
@@ -2843,7 +2843,6 @@ export default {
         var deleteDf = deletedPayload.newDfName
         if (deleteDf) {
           deleteTab = currentPayload.newDfName
-          console.warn('Deleting',deleteDf)
           this.evalCode(`del ${deleteDf}; _output = "Deleted ${deleteDf}"`)
           this.updateSecondaryDatasets()
         }
@@ -3117,9 +3116,7 @@ export default {
           throw response
         }
 
-        var dataset = await this.loadDataset(dfName) // TEST THIS
-
-        console.log({dataset, dfName})
+        var dataset = await this.loadDataset(dfName)
 
         // if (dfName) {
         //   var dataset = JSON.parse(response.data.result)

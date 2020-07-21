@@ -459,37 +459,53 @@ export default {
         reset: this.$route.query.reset
       })
 
-      // console.log('[INITIALIZATION] initializeOptimus response', response)
+      console.log('[INITIALIZATION] initializeOptimus response', response)
 
-      var reserved_words
+      var functions
 
       if (response.data.reserved_words) {
-        reserved_words = response.data.reserved_words
-        reserved_words.unary_operators = reserved_words.operators.unary
-        reserved_words.binary_operators = reserved_words.operators.binary
-        delete reserved_words.operators
-      } else {
-        reserved_words = {
-          functions: [ 'MOD', 'ABS', 'EXP', 'LOG',
-            'POW', 'CEILING', 'SQRT', 'FLOOR', 'TRUNC',
-            'RANDIANS', 'DEGREES', 'SIN', 'COS', 'TAN',
-            'ASIN', 'ACOS', 'ATAN', 'SINH', 'ASINH', 'COSH',
-            'TANH', 'ACOSH', 'ATANH'
-          ],
-          unary_operators: ['|', '&', '+', '-'],
-          binary_operators: ['+', '-', '*', '/']
-        }
+        response.data.reserved_words = JSON.parse(response.data.reserved_words) // TO-DO: remove dumps on optimus
+        functions = response.data.reserved_words.functions
       }
 
-      var reservedWords = []
+      var globalSuggestions = []
 
-      Object.entries(reserved_words).forEach(([key, words])=>{
-        Object.entries(words).forEach(([word, description])=>{
-          reservedWords.push({type: key, text: word, description})
+      if (functions) {
+        Object.entries(functions).forEach(([key, value])=>{
+          var params = [{
+            type: 'column',
+            name: 'column',
+            description: "A column's name",
+            required: true // TO-DO: required on function
+          }]
+          var description = value
+          var example = `${key}(column)`
+          if (typeof value !== "string")  {
+            if ('parameters' in value) {
+              params = value.parameters.map(param=>{
+                if (param.type==='series') {
+                  param.type = 'column'
+                }
+                if (param.name==='series') {
+                  param.name = 'column'
+                }
+                return param
+              })
+            }
+            if ('description' in value) {
+              description = value.description
+            }
+            if ('example' in value) {
+              example = value.example
+            }
+          }
+          globalSuggestions.push({type: 'function', text: key, params, description, example })
         })
-      })
+      }
 
-      this.$store.commit('mutation', {mutate: 'reservedWords', payload: reservedWords})
+      // console.log('[GLOBAL SUGGESTIONS]',JSON.stringify(globalSuggestions))
+
+      this.$store.commit('mutation', {mutate: 'globalSuggestions', payload: globalSuggestions})
 
 
       if (!response.data.optimus) {
