@@ -56,7 +56,19 @@
             <span class="title">Loading workspace</span>
           </div>
         </div>
-        <div v-show="workspaceStatus!=='loading'" class="bb-container" data-name="workspace">
+        <div
+          data-name="workspace"
+          v-show="workspaceStatus!=='loading'"
+          class="workspace-container"
+          @drop.prevent="addFile"
+          @dragover.prevent
+          @dragend.prevent="dragFile = false"
+          @dragleave.prevent="dragFile = false"
+          @dragenter="dragFile = true"
+        >
+          <div class="drop-hover" v-if="dragFile">
+            <div class="frame"></div>
+          </div>
           <v-dialog
             data-name="Confirm close"
             v-if="$store.state.datasets[confirmDelete]"
@@ -341,6 +353,14 @@ export default {
   },
 
 	methods: {
+
+    addFile (event) {
+      this.eventDebug(event)
+    },
+
+    eventDebug (event) {
+      console.log({event})
+    },
 
     showWorkspaces () {
       this.workspacesDialog = true
