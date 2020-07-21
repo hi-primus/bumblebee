@@ -20,8 +20,7 @@
         </template>
       </div>
       <div v-else class="title grey--text text-center text-with-icons">
-        <!-- {{availableDatasets}} -->
-        <div class="available-dfs mb-4">
+        <div class="available-dfs mb-4" v-if="availableDatasets && availableDatasets.length">
           Load from existing data sources:
           <template v-for="(dfName, index) in availableDatasets">
             <span :key="'av'+dfName">

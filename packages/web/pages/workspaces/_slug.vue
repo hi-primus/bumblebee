@@ -115,7 +115,7 @@
               <v-icon color="primary">add</v-icon>
             </v-tab>
           </v-tabs>
-          <div class="bb-workspace-status" v-if="$route.query.ws">
+          <div class="bb-workspace-status" v-if="$route.query.ws!=0">
             <v-progress-circular
               v-if="workspaceStatus==='uploading' || workspaceStatus==='loading'"
               indeterminate
@@ -207,7 +207,11 @@ export default {
     MoreMenu
 	},
 
-  mixins: [clientMixin, dataTypesMixin, applicationMixin],
+  mixins: [
+    clientMixin,
+    dataTypesMixin,
+    applicationMixin,
+  ],
 
   // middleware: 'authenticatedOrDefault',
 
@@ -254,7 +258,8 @@ export default {
       workspacesDialog: false,
 			isOperating: false,
 			confirmDelete: -1,
-      typesInput: ''
+      typesInput: '',
+      dragFile: false
 		};
   },
 
@@ -296,7 +301,7 @@ export default {
     moreMenu () {
       let menu = []
 
-      if (this.useKernel && (this.$route.query.ws)) {
+      if (this.useKernel && (this.$route.query.ws!=0)) {
         menu = [
           { text: 'Workspaces', click: this.showWorkspaces },
           { divider: true },
@@ -441,7 +446,9 @@ export default {
 
     async initializeOptimus () {
 
-      // console.log('[INITIALIZATION] initializeOptimus')
+      // TO-DO: store action
+
+      console.log('[INITIALIZATION] initializeOptimus')
 
       var response = await this.socketPost('initialize', {
         username: this.$store.state.session.username,

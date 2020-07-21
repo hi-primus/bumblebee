@@ -313,7 +313,7 @@ export default {
           request: 'post',
           path: '/workspaces',
           payload: {
-            name: workspace.name+' copy', // TO-DO: copyName
+            name: workspace.name+' copy', // TO-DO: copyName function
             // TO-DO: copy ok
             // connection: workspace.connection,
             // tabs: workspace.tabs,

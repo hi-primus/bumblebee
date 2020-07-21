@@ -1430,7 +1430,7 @@ export default {
 
               currentCommand.loading = true
 
-              var response = await this.evalCode(`import json; ${code}; _output = json.dumps(outlier.info())`)
+              var response = await this.evalCode(`import json; ${code}; _output = json.dumps(outlier.info(), ensure_ascii=False)`)
 
               var outliers_data = parseResponse(response.data.result)
 

@@ -273,7 +273,7 @@ export default {
 						username: this.inputUsername,
 						password: this.inputPassword
           })
-          if (this.$route.query.ws) {
+          if (this.$route.query.ws!=0) {
             this.$router.push({path: '/workspaces', query: this.$route.query })
           } else {
             this.$router.push({path: '/workspaces/default', query: this.$route.query })

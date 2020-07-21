@@ -12,7 +12,7 @@ export default {
     if (!store.getters['session/isAuthenticated']) {
       return redirect('/login', route.query)
     } else {
-      if (route.query.ws) {
+      if (route.query.ws!=0) {
         return redirect('/workspaces', route.query)
       } else {
         return redirect('/workspaces/default', route.query)

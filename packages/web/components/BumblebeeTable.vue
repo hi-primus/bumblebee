@@ -1015,7 +1015,7 @@ export default {
       var cValues = {}
 
       for (const name in columnValues) {
-        // TO-DO: not include highlights
+        // TO-DO: do not include highlights
         var array = []
         const values = columnValues[name]
         if (!values || !values.length) {
