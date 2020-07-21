@@ -206,8 +206,8 @@ io.use(function (socket, next) {
     next()
     return
 
-    jwt.verify(token, process.env.TOKEN_SECRET, function (err, decoded) {
-      // console.log({decoded})
+    jwt.verify(token, process.env.JWT_SECRET, function (err, decoded) {
+      console.log({decoded, token, secret: process.env.JWT_SECRET, err})
       if (err) {
         return next(new Error('Authentication error'))
       }
