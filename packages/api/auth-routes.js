@@ -35,7 +35,7 @@ router.route('/signin')
 
       if (valid) {
 
-        var accessToken = jwt.sign({ username: req.body.username }, process.env.TOKEN_SECRET, { expiresIn: '2h' })
+        var accessToken = jwt.sign({ username: req.body.username }, process.env.JWT_SECRET, { expiresIn: '2h' })
         res.status(200).json({
           status: 'ok',
           message: 'Login',
@@ -69,7 +69,7 @@ router.route('/profile')
 
       if (req.headers && req.headers.authorization) {
         var token = req.headers.authorization
-        jwt.verify(token, process.env.TOKEN_SECRET, function (err, decoded) {
+        jwt.verify(token, process.env.JWT_SECRET, function (err, decoded) {
           if (err) {
             res.status(500).json({error: err})
             return

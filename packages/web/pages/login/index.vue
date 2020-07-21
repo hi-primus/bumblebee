@@ -217,16 +217,13 @@ export default {
 			showCreatePassword: false,
 			typeForm: 0,
 			successMessage: "",
-			errorMessage: ""
+      errorMessage: "",
+      isLoading: false
 		};
 	},
 
 	computed: {
     ...mapGetters(["appError"]),
-
-    isLoading () {
-      return this.status === 'loading'
-    },
 
 		status () {
 			return (
@@ -270,34 +267,31 @@ export default {
 		},
 		async subscribe() {
 			try {
-        var engine = this.$route.query.engine
-				var tpw = this.$route.query.tpw
-				var workers = this.$route.query.workers
+        this.isLoading = true
 				if (this.useKernel) {
 					var login = await this.$store.dispatch("session/signIn", {
 						username: this.inputUsername,
 						password: this.inputPassword
           })
-					this.startClient({
-						session: this.inputUsername,
-						engine,
-						tpw,
-						workers
-					})
+          if (this.$route.query.ws!=0) {
+            this.$router.push({path: '/workspaces', query: this.$route.query })
+          } else {
+            this.$router.push({path: '/workspaces/default', query: this.$route.query })
+          }
+
 					this.successMessage = "";
 				} else {
-					this.startClient({
-						session: this.inputUsername,
-						key: this.inputPassword,
-						engine,
-						tpw,
-						workers
-					})
+          console.log('[BUMBLEBEE] Visualization mode')
+          this.$store.commit('session/mutation', {mutate: 'username', payload: this.inputUsername})
+          this.$nextTick(()=>{
+            this.$router.push({path: '/workspaces/default', query: this.$route.query })
+          })
 				}
 			} catch (error) {
 				console.error(error);
 				this.handleError(error, "waiting");
-			}
+      }
+      this.isLoading = false
 		},
 		resetStatus(closing) {
 			if (!closing) {

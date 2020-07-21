@@ -1,9 +1,9 @@
 <template>
   <v-app>
     Error
-    <span style="display: none">
+    <!-- <span style="display: none"> -->
       {{ error }}
-    </span>
+    <!-- </span> -->
   </v-app>
 </template>
 

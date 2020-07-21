@@ -3,7 +3,7 @@
     <div class="toolbar bb-toolbar" :class="{'disabled': commandsDisabled}">
       <v-tooltip transition="fade-transition" bottom>
         <template v-slot:activator="{ on }">
-          <v-btn v-on="on" text class="icon-btn" @click="listView=true" :disabled="!(dataset && dataset.summary)">
+          <v-btn v-on="on" text class="icon-btn" @click="listView=true" :disabled="!(currentDataset && currentDataset.summary)">
             <v-icon :color="(listView) ? 'black' : '#888'">
               mdi-format-list-checkbox
             </v-icon>
@@ -13,7 +13,7 @@
       </v-tooltip>
       <v-tooltip transition="fade-transition" bottom>
         <template v-slot:activator="{ on }">
-          <v-btn v-on="on" text class="icon-btn" @click="listView=false" :disabled="!(dataset && dataset.summary)">
+          <v-btn v-on="on" text class="icon-btn" @click="listView=false" :disabled="!(currentDataset && currentDataset.summary)">
             <v-icon :color="(!listView) ? 'black' : '#888'">
               mdi-table
             </v-icon>
@@ -110,7 +110,7 @@
                 <template v-slot:activator="{ on: tooltip }">
                   <v-btn
                     :color="sortBy[0] ? 'black' : '#888'"
-                    :disabled="!(dataset && dataset.summary)"
+                    :disabled="!(currentDataset && currentDataset.summary)"
                     class="icon-btn"
                     text
                     v-on="{...tooltip, ...menu}"
@@ -312,7 +312,6 @@
           :codeError.sync="cellsError"
           :columns="selectedColumns || []"
           :commandsDisabled.sync="commandsDisabled"
-          :dataset="dataset"
         />
 				<!-- <v-progress-linear
           indeterminate
@@ -331,8 +330,8 @@
 
           <div v-if="detailedColumns.length>1" class="sidebar-section pr-10 columns-selected">
             <div class="column-selected" v-for="(index, i) in detailedColumns" :key="index+'selc'+i">
-              <span class="data-type" :class="`type-${dataset.columns[index].profiler_dtype}`">{{ dataTypeHint(dataset.columns[index].profiler_dtype) }}</span>
-              <span class="data-column-name">{{ dataset.columns[index].name }}</span>
+              <span class="data-type" :class="`type-${currentDataset.columns[index].profiler_dtype}`">{{ dataTypeHint(currentDataset.columns[index].profiler_dtype) }}</span>
+              <span class="data-column-name">{{ currentDataset.columns[index].name }}</span>
             </div>
           </div>
           <div v-if="detailsActive['heat-map']" class="heat-map plot">
@@ -390,8 +389,8 @@
             <ColumnDetails
               :key="index+'cd'"
               :startExpanded="i==0"
-              :rowsCount="+dataset.summary.rows_count"
-              :column="dataset.columns[index]"
+              :rowsCount="+currentDataset.summary.rows_count"
+              :column="currentDataset.columns[index]"
               :commandsDisabled="commandsDisabled"
               @command="commandHandle($event)"
             ></ColumnDetails>
@@ -424,12 +423,6 @@ export default {
 	mixins: [clientMixin, dataTypesMixin, applicationMixin],
 
 	props: {
-		dataset: {
-			default: () => {
-				return {}
-			},
-			type: Object
-		},
 		total: {
 			default: 1,
 			type: Number
@@ -481,7 +474,7 @@ export default {
         {command: 'manage data sources', text: 'Manage data sources', type: 'DATA_SOURCE', hidden: true},
 
         {command: 'download', text: 'Download', type: 'SAVE'},
-        {command: 'keep rows', text: 'Save to database', type: 'SAVE', disabled: ()=>!(this.dataset && this.dataset.summary && this.$store.state.database)},
+        {command: 'keep rows', text: 'Save to database', type: 'SAVE', disabled: ()=>!(this.currentDataset && this.currentDataset.summary && this.$store.state.database)},
 
 
 				{command: 'lower', text: 'To lower case', type: 'STRING'},
@@ -500,7 +493,7 @@ export default {
 
 				{command: 'sample_n', text: 'Random Sampling', type: 'ML'},
         {command: 'stratified_sample', text: 'Stratified Sampling', type: 'ML', min: 1, max: 1},
-				{command: 'bucketizer',       text: 'Create Bins',          type: 'ML', max: 1}, // TODO: Check limit
+				{command: 'bucketizer',       text: 'Create Bins',          type: 'ML', max: 1}, // TO-DO: Check limit
 				{command: 'impute',           text: 'Impute rows',          type: 'ML', min: 1},
 				{command: 'values_to_cols',   text: 'Values to Columns',    type: 'ML', max: 1},
 				{command: 'string_to_index',  text: 'Strings to Index',     type: 'ML', min: 1},
@@ -524,7 +517,7 @@ export default {
 				{ hint: '""', sortable: false, text: 'Missing values', width: '2%', value: 'missing' },
 				// { hint: 'null', text: 'Null values', width: '2%', value: 'null' },
         // { hint: '0', text: 'Zeros', width: '2%', value: 'zeros' },
-        // TODO: Zeros?
+        // TO-DO: Zeros?
 				{ text: '', sortable: false, width: '50%', value: '' }
 			]
     }
@@ -532,7 +525,16 @@ export default {
 
 	computed: {
 
-    ...mapGetters(['currentSelection', 'hasSecondaryDatasets', 'currentCells','currentListView','selectionType', 'currentDataset', 'typesAvailable','currentTab']),
+    ...mapGetters([
+      'currentSelection',
+      'hasSecondaryDatasets',
+      'workspaceCells',
+      'currentListView',
+      'selectionType',
+      'currentDataset',
+      'typesAvailable',
+      'currentTab'
+    ]),
 
     ...mapState(['nextCommand']),
 
@@ -559,7 +561,7 @@ export default {
       if (selected.length) {
 
         var plotable = selected.map( (i)=>{
-          var column = this.dataset.columns[i]
+          var column = this.currentDataset.columns[i]
           return ['decimal','float','double','float64'].includes(column.profiler_dtype) ? 'quantitative'
             : (['int','integer','int64'].includes(column.profiler_dtype) && column.stats.count_uniques>25) ? 'quantitative'
             : (column.stats.count_uniques<=25) ? column.stats.count_uniques
@@ -577,7 +579,7 @@ export default {
             (plotable[0]==='quantitative') ? {
               x: {
                 field: 'x',
-                title: this.dataset.columns[selected[0]].name,
+                title: this.currentDataset.columns[selected[0]].name,
                 type: plotable[0],
                 bin: {
                   binned: true
@@ -590,7 +592,7 @@ export default {
             : {
               x: {
                 field: 'x',
-                title: this.dataset.columns[selected[0]].name,
+                title: this.currentDataset.columns[selected[0]].name,
                 type: 'ordinal'
               }
             }
@@ -599,7 +601,7 @@ export default {
             (plotable[1]==='quantitative') ? {
               y: {
                 field: 'y',
-                title: this.dataset.columns[selected[1]].name,
+                title: this.currentDataset.columns[selected[1]].name,
                 type: plotable[1],
                 bin: {
                   binned: true
@@ -612,7 +614,7 @@ export default {
             : {
               y: {
                 field: 'y',
-                title: this.dataset.columns[selected[1]].name,
+                title: this.currentDataset.columns[selected[1]].name,
                 type: 'ordinal'
               }
             }
@@ -630,10 +632,10 @@ export default {
 
     cells: {
       get() {
-        return Array.from(this.currentCells || [])
+        return Array.from(this.workspaceCells)
       },
       set(value) {
-        this.$store.commit('setCells', value)
+        // -
       }
     },
 
@@ -651,7 +653,7 @@ export default {
           group: 'SAVE',
           icons: [{ icon: 'mdi-content-save-outline' }],
           tooltip: 'Save',
-          disabled: ()=>!(this.dataset && this.dataset.summary)
+          disabled: ()=>!(this.currentDataset && this.currentDataset.summary)
         },
         {
           divider: true,
@@ -666,7 +668,7 @@ export default {
             { icon: 'mdi-set-center' },
           ],
           tooltip: 'Join dataframes',
-          disabled: ()=>!(this.dataset && this.dataset.summary && this.hasSecondaryDatasets)
+          disabled: ()=>!(this.currentDataset && this.currentDataset.summary && this.hasSecondaryDatasets)
         },
         {
           type: 'button',
@@ -677,7 +679,7 @@ export default {
             { icon: 'mdi-set-merge' },
           ],
           tooltip: 'Get aggregations',
-          disabled: ()=>!(!['values','ranges'].includes(this.selectionType) && this.dataset && this.dataset.summary)
+          disabled: ()=>!(!['values','ranges'].includes(this.selectionType) && this.currentDataset && this.currentDataset.summary)
         },
         { divider: true },
         {
@@ -713,7 +715,7 @@ export default {
             var command = { command: 'filter rows' }
             if (['values','ranges'].includes(this.selectionType) && this.currentSelection && this.currentSelection.ranged) {
               command = { command: 'REMOVE_KEEP_SET' }
-              command.columns = [ this.dataset.columns[this.currentSelection.ranged.index].name ]
+              command.columns = [ this.currentDataset.columns[this.currentSelection.ranged.index].name ]
               command.payload = { rowsType: this.selectionType }
               if (this.selectionType==='ranges') {
                 command.payload.selection = this.currentSelection.ranged.ranges
@@ -743,7 +745,7 @@ export default {
               transform: 'scaleX(0.75)'
             } }
           ],
-          disabled: ()=>!(this.dataset && this.dataset.summary && this.hasSecondaryDatasets)
+          disabled: ()=>!(this.currentDataset && this.currentDataset.summary && this.hasSecondaryDatasets)
         },
         {
           type: 'button',
@@ -757,7 +759,7 @@ export default {
               }
             },
           ],
-          disabled: ()=>!(this.dataset && this.dataset.summary && this.hasSecondaryDatasets)
+          disabled: ()=>!(this.currentDataset && this.currentDataset.summary && this.hasSecondaryDatasets)
         },
         { divider: true },
         {
@@ -765,7 +767,7 @@ export default {
           onClick: ()=>this.commandHandle({command: 'set'}),
           tooltip: { toString: ()=>this.selectedColumns.length ? 'Set column' : 'New column'},
           icons: [{icon: 'mdi-plus-box-outline'}],
-          disabled: ()=>!(this.selectionType=='columns' && this.selectedColumns.length<=1 && this.dataset && this.dataset.summary)
+          disabled: ()=>!(this.selectionType=='columns' && this.selectedColumns.length<=1 && this.currentDataset && this.currentDataset.summary)
         },
         {
           type: 'button',
@@ -800,7 +802,7 @@ export default {
           onClick: ()=>this.commandHandle({command: 'nest'}),
           tooltip: 'Nest columns',
           icons: [{icon: 'mdi-table-merge-cells'}],
-          disabled: ()=>['values','ranges'].includes(this.selectionType) || this.selectedColumns.length<=1 || !this.dataset.summary
+          disabled: ()=>['values','ranges'].includes(this.selectionType) || this.selectedColumns.length<=1 || !this.currentDataset.summary
         },
         {
           type: 'button',
@@ -856,9 +858,9 @@ export default {
           group: 'STRING',
           icons: [{ icon: 'text_format' }],
           tooltip: 'String operations',
-          disabled: ()=>!(this.checkDataTypes(['string']) && this.selectionType=='columns' && this.dataset && this.dataset.summary && this.selectedColumns.length>=0)
+          disabled: ()=>!(this.checkDataTypes(['string']) && this.selectionType=='columns' && this.currentDataset && this.currentDataset.summary && this.selectedColumns.length>=0)
         },
-        // TODO: Datetime operations
+        // TO-DO: Datetime operations
         // {
         //   type: 'menu',
         //   group: 'TIME',
@@ -866,7 +868,7 @@ export default {
         //   tooltip: 'Datetime functions',
         //   disabled: ()=>!(this.selectionType=='columns' && this.selectedColumns.length>0)
         // },
-        // TODO: Remove cast
+        // TO-DO: Remove cast
         // {
         //   type: 'menu',
         //   group: 'CAST',
@@ -879,7 +881,7 @@ export default {
           group: 'ML',
           icons: [{icon: 'timeline', class: 'material-icons-outlined'}],
           tooltip: 'Machine Learning',
-          disabled: ()=>!(this.selectionType=='columns' && this.dataset && this.dataset.summary) , // Sampling
+          disabled: ()=>!(this.selectionType=='columns' && this.currentDataset && this.currentDataset.summary) , // Sampling
           hidden: ()=>(this.appStable)
         },
       ]
@@ -933,10 +935,6 @@ export default {
         return []
       }
     },
-
-    tableKey () {
-			return this.$store.state.datasetUpdates * 100 + this.$store.state.tab
-		},
 
 		sortByLabel () {
 			if (this.sortBy[0]) {
@@ -1009,6 +1007,10 @@ export default {
 
     getProperty,
 
+    async runCodeNow () {
+      return await this.$refs.cells.runCodeNow()
+    },
+
     downloadDataset () {
       this.$refs.cells & this.$refs.cells.downloadDataset(event)
     },
@@ -1042,7 +1044,7 @@ export default {
 
     copyCodeToClipboard () {
       var code = 'from optimus import Optimus\n'
-      +'op = Optimus(master="local[*]", app_name="optimus", comm=True)\n' // TODO: Update
+      +'op = Optimus(master="local[*]", app_name="optimus", comm=True)\n' // TO-DO: Update
       + this.cells.map(e=>e.code).filter(c=>c.trim()).join('\n')
       copyToClipboard(code)
       this.copied = true
@@ -1090,7 +1092,7 @@ export default {
 
     calculateHeatMap (xindex,yindex,xsize,ysize) {
 
-      if (!this.dataset.sample || !this.dataset.sample.value) {
+      if (!this.currentDataset.sample || !this.currentDataset.sample.value) {
         return false
       }
 
@@ -1100,11 +1102,11 @@ export default {
       let xbinsize = (!xint) ? 25 : xsize
       let ybinsize = (!yint) ? 25 : ysize
 
-      let minX = this.dataset.columns[xindex].stats.min
-      let minY = this.dataset.columns[yindex].stats.min
+      let minX = this.currentDataset.columns[xindex].stats.min
+      let minY = this.currentDataset.columns[yindex].stats.min
 
-      let maxX = this.dataset.columns[xindex].stats.max
-      let maxY = this.dataset.columns[yindex].stats.max
+      let maxX = this.currentDataset.columns[xindex].stats.max
+      let maxY = this.currentDataset.columns[yindex].stats.max
 
       let jumpX = (maxX - minX) / xbinsize
       let jumpY = (maxY - minY) / ybinsize
@@ -1135,10 +1137,10 @@ export default {
           bin[binXIndex] = {..._binElement}
         }
 
-      for (let i = 0; i < this.dataset.sample.value.length; i++) {
+      for (let i = 0; i < this.currentDataset.sample.value.length; i++) {
 
-        let _xv = this.dataset.sample.value[i][xindex]
-        let _yv = this.dataset.sample.value[i][yindex]
+        let _xv = this.currentDataset.sample.value[i][xindex]
+        let _yv = this.currentDataset.sample.value[i][yindex]
 
         let _x = undefined
         let _y = undefined
@@ -1199,10 +1201,10 @@ export default {
      handleSelection (selected, indices = true) {
 
       if (!indices) {
-        selected = namesToIndices(selected, this.dataset.columns)
+        selected = namesToIndices(selected, this.currentDataset.columns)
       }
 
-      this.selectedColumns = selected.map(e=>({index: e, name: this.dataset.columns[e].name}))
+      this.selectedColumns = selected.map(e=>({index: e, name: this.currentDataset.columns[e].name}))
     },
   }
 

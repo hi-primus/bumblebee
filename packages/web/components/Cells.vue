@@ -134,82 +134,86 @@
           </div>
       </v-form>
     </CommandFormContainer>
-    <!-- <div
-      persistent
-      v-if="command && command.dialog"
-      v-show="(currentCommand.command)"
-      ref="operation-form"
-      @click:outside="cancelCommand"
-      @keydown.esc="cancelCommand"
-    >
-    </div> -->
     <div
       v-show="view=='operations'"
       class="sidebar-content operations-cells-container"
-      :class="{'empty': !cells.length, 'controls': seeCode}"
+      :class="{'empty': !cells.length}"
       ref="cells-container"
     >
       <draggable
         tag="div"
-        class="operations-cells"
+        class="operations-cells data-sources-cells"
         :class="{ 'no-pe disabled': commandsDisabled, 'dragging': drag }"
-        :list="cells"
-        v-bind="dragOptions"
+        :list="localDataSources"
+        v-bind="dataSourcesDragOptions"
         handle=".handle"
-        ref="cells"
         @start="drag = true"
         @end="drag = false; draggableEnd()"
       >
         <div
           class="cell-container"
-          v-for="(cell, index) in cells"
+          v-for="(cell, index) in localDataSources"
           :key="cell.id"
-          :class="{'fixed-cell': cell.fixed, 'cell-error': cell.error,'done': cell.done,'active': activeCell==index}"
-          @click="setActiveCell(index)"
+          :class="{'fixed-cell': cell.fixed, 'cell-error': cell.error,'done': cell.done}"
         >
           <div class="cell">
             <div class="handle left-handle">
               <v-icon>drag_indicator</v-icon>
             </div>
-            <template v-if="seeCode">
-              <CodeEditor
-                :active="activeCell==index"
-                @update:active="setActiveCell(index)"
-                @input="$store.commit('setCellCode',{index, code: $event}); runButton = true"
-                :value="cell.code"
-              />
-              <div class="cell-type cell-type-label" v-if="cell.command && cell.command!='code'">{{cell.command}}</div>
-            </template>
-            <template v-else>
-              <div
-                class="handle operation-hint-text"
-                @click="editCell(cell, index)"
-                v-html="cell.content || cell.code"
-              >
-              </div>
+            <div
+              class="handle operation-hint-text"
+              :class="{'multiple-tabs': hasSecondaryDatasets}"
+              @click="editCell(cell, index)"
+              v-html="cell.content || cell.code"
+            >
+            </div>
+            <div class="right-cell-btn">
               <v-icon
-                class="right-cell-btn"
                 small
-                @click="removeCell(index)"
+                @click="removeCell(index, true)"
               >close</v-icon>
-            </template>
+            </div>
+          </div>
+        </div>
+      </draggable>
+      <draggable
+        tag="div"
+        class="operations-cells commands-cells"
+        :class="{ 'no-pe disabled': commandsDisabled, 'dragging': drag }"
+        :list="localCommands"
+        v-bind="commandsDragOptions"
+        handle=".handle"
+        @start="drag = true"
+        @end="drag = false; draggableEnd()"
+      >
+        <div
+          class="cell-container"
+          v-for="(cell, index) in localCommands"
+          :key="cell.id"
+          :class="{'fixed-cell': cell.fixed, 'cell-error': cell.error,'done': cell.done}"
+        >
+          <div class="cell">
+            <div class="handle left-handle">
+              <v-icon>drag_indicator</v-icon>
+            </div>
+            <div
+              class="handle operation-hint-text"
+              :class="{'multiple-tabs': hasSecondaryDatasets}"
+              @click="editCell(cell, index+dataSources.length)"
+              v-html="cell.content || cell.code"
+            >
+            </div>
+            <v-icon
+              class="right-cell-btn"
+              small
+              @click="removeCell(index, false)"
+            >close</v-icon>
           </div>
         </div>
       </draggable>
       <v-alert key="error" type="error" class="mt-3" dismissible v-if="codeError!=''"  @input="cleanCodeError">
         {{codeError}}
       </v-alert>
-      <div v-if="seeCode" key="controls" ref="cells-controls" class="cells-controls toolbar vertical" :class="{'disabled': commandsDisabled}" @mouseover="barHovered = true" @mouseleave="barHovered = false">
-        <v-btn v-if="cells.length" text class="icon-btn" color="#888" @click.stop="removeCell(activeCell)">
-          <v-icon>delete</v-icon>
-        </v-btn>
-        <v-btn text class="icon-btn" :color="(cells.length) ? '#888' : 'primary'" @click="addCell(activeCell+1)">
-          <v-icon>add</v-icon>
-        </v-btn>
-        <v-btn v-if="runButton && cells.length" text class="icon-btn" color="#888" @click="runCode(true)">
-          <v-icon>play_arrow</v-icon>
-        </v-btn>
-      </div>
     </div>
   </div>
 </template>
@@ -229,6 +233,7 @@ const { getGenerator } = OptimusApi
 
 /*bu*/ import {
 
+  deepCopy,
   everyRatio,
   arrayJoin,
   capitalizeString,
@@ -273,10 +278,6 @@ export default {
     commandsDisabled: {
       default: false
     },
-    dataset: {
-      type: Object,
-      required: true
-    },
     codeError: {
       type: String,
       default: ''
@@ -299,11 +300,9 @@ export default {
       lastWrongCode: false,
       drag: false,
       currentCommand: false,
-
-      seeCode: false,
+      isEditing: false,
 
       firstRun: true,
-      runButton: false,
 
       cancelPromise: {},
 
@@ -811,7 +810,7 @@ export default {
           payload: async (columns, payload = {}) => {
 
             var _datasets_right = {...payload.secondaryDatasets}
-            var items_with = Object.keys(_datasets_right).filter(e=>(e!==payload.varname && e!=='preview_df'))
+            var items_with = Object.keys(_datasets_right).filter(e=>(e!==payload.dfName && e!=='preview_df'))
 
             var df2 = items_with[0]
 
@@ -829,7 +828,7 @@ export default {
               with: df2,
               items_with: (c)=>{
                 return Object.keys(c._datasets_right)
-                  .filter(e=>e!==payload.varname && e!=='preview_df')
+                  .filter(e=>e!==payload.dfName && e!=='preview_df')
                   .filter(e=>!e.startsWith('_'))
               },
               items_selected_columns: (c)=>{
@@ -863,18 +862,19 @@ export default {
                 // noBufferWindow: true
               },
               request: {
+                // createsNew: true
               }
             }
           },
-          beforeGetCode: async (currentCommand) => {
+          beforeExecuteCode: async (currentCommand) => {
             if (!currentCommand.secondaryDatasets[currentCommand.with] || !currentCommand.secondaryDatasets[currentCommand.with].buffer) {
-              await this.evalCode('_output = '+currentCommand.with+'.ext.set_buffer("*")') // TODO: !!!
+              await this.evalCode('_output = '+currentCommand.with+'.ext.set_buffer("*")') // TO-DO: !!!
               this.$store.commit('setSecondaryBuffer', { key: currentCommand.with, value: true})
               currentCommand.secondaryDatasets = this.currentSecondaryDatasets
             }
             return currentCommand
           },
-          content: (payload) => `<b>Join</b> ${hlParam(payload.varname)} <b>with</b> ${hlParam(payload.with)}`
+          content: (payload) => `<b>Join</b> ${hlParam(payload.dfName)} <b>with</b> ${hlParam(payload.with)}`
         },
         aggregations: {
           dialog: {
@@ -1198,6 +1198,7 @@ export default {
             },
             request: {
               isLoad: true,
+              createsNew: true
             }
           }),
 
@@ -1209,7 +1210,6 @@ export default {
             + ( fileName ? ` ${hlParam(fileName)}` : '')
             + ( (!fileName && fileType) ? ` ${fileType}` : '')
             + ' file'
-            + ' to '+hlParam(payload.newVarname)
           }
         },
         'string clustering': {
@@ -1259,9 +1259,9 @@ export default {
               var code
 
               if (currentCommand.algorithm == 'fingerprint')
-                code = `from optimus.engines.dask.ml import keycollision as kc; _output = kc.fingerprint_cluster(${currentCommand.varname}.ext.buffer_window("*"), input_cols="${currentCommand.columns[0]}", output="json")`
+                code = `from optimus.engines.dask.ml import keycollision as kc; _output = kc.fingerprint_cluster(${currentCommand.dfName}.ext.buffer_window("*"), input_cols="${currentCommand.columns[0]}", output="json")`
               else if (currentCommand.algorithm == 'n_gram_fingerprint')
-                code = `from optimus.engines.dask.ml import keycollision as kc; _output = kc.n_gram_fingerprint_cluster(${currentCommand.varname}.ext.buffer_window("*"), input_cols="${currentCommand.columns[0]}", n_size=${currentCommand.n_size}, output="json")`
+                code = `from optimus.engines.dask.ml import keycollision as kc; _output = kc.n_gram_fingerprint_cluster(${currentCommand.dfName}.ext.buffer_window("*"), input_cols="${currentCommand.columns[0]}", n_size=${currentCommand.n_size}, output="json")`
               else
                 throw 'Invalid algorithm type input'
 
@@ -1340,7 +1340,7 @@ export default {
               should_update: false
             }
           },
-          content: (payload) => { // TODO: Test
+          content: (payload) => { // TO-DO: Test
             return `<b>Clusterize</b> ${multipleContent([payload.clusters.map(e=>e.replace)], 'hl--param')} in ${hlCols(payload.columns[0])}`
           }
         },
@@ -1418,19 +1418,19 @@ export default {
               var code
 
               if (currentCommand.algorithm == 'tukey')
-                code = `outlier = ${currentCommand.varname}.outliers.tukey("${currentCommand.columns[0]}")`
+                code = `outlier = ${currentCommand.dfName}.outliers.tukey("${currentCommand.columns[0]}")`
               else if (currentCommand.algorithm == 'z_score')
-                code = `outlier = ${currentCommand.varname}.outliers.z_score(columns="${currentCommand.columns[0]}", threshold=${currentCommand.threshold})`
+                code = `outlier = ${currentCommand.dfName}.outliers.z_score(columns="${currentCommand.columns[0]}", threshold=${currentCommand.threshold})`
               else if (currentCommand.algorithm == 'mad')
-                code = `outlier = ${currentCommand.varname}.outliers.mad(columns="${currentCommand.columns[0]}", threshold=${currentCommand.threshold})`
+                code = `outlier = ${currentCommand.dfName}.outliers.mad(columns="${currentCommand.columns[0]}", threshold=${currentCommand.threshold})`
               else if (currentCommand.algorithm == 'modified_z_score')
-                code = `outlier = ${currentCommand.varname}.outliers.modified_z_score(columns="${currentCommand.columns[0]}", threshold=${currentCommand.threshold})`
+                code = `outlier = ${currentCommand.dfName}.outliers.modified_z_score(columns="${currentCommand.columns[0]}", threshold=${currentCommand.threshold})`
               else
                 throw 'Invalid algorithm type input'
 
               currentCommand.loading = true
 
-              var response = await this.evalCode(`import json; ${code}; _output = json.dumps(outlier.info())`)
+              var response = await this.evalCode(`import json; ${code}; _output = json.dumps(outlier.info(), ensure_ascii=False)`)
 
               var outliers_data = parseResponse(response.data.result)
 
@@ -1491,7 +1491,7 @@ export default {
               code_done: ''
             }
           },
-          content: (payload) => { // TODO: Test
+          content: (payload) => { // TO-DO: Test
             return `<b>${payload.action} outliers</b> (between ${multipleContent(payload.selection[0],'hl--param',', ',' and ')})`
           }
         },
@@ -1629,14 +1629,17 @@ export default {
             _loadingTables: false,
             request: {
               isLoad: true,
-              newVarname: this.availableVariableName()
+              createsNew: true
+            },
+            variables: {
+              ...createPool()
             }
           }),
           content: (payload)=>{
             var database = ['postgres','presto','redshift','sqlserver','mysql'].includes(payload.driver)
             return `<b>Load</b> ${hlParam(payload.table)}`
             +(database ? ` from ${hlParam(payload.database)}` : '')
-            + ' to '+hlParam(payload.newVarname)
+            + ' to '+hlParam(payload.newDfName)
           },
 
           getTables: async (currentCommand) => {
@@ -1686,7 +1689,6 @@ export default {
               }
             } catch (error) {
               var _error = printError(error)
-              console.log({_error})
               currentCommand = {...currentCommand, error: _error}
             }
 
@@ -1730,7 +1732,7 @@ export default {
             seed: 1,
             columns: columns,
           }),
-          content: (payload) => { // TODO: Test
+          content: (payload) => { // TO-DO: Test
             return`<b>Stratified sampling</b> on ${multipleContent([payload.columns],'hl--cols')}`
             + (payload.seed!=='' ? ` using ${hlParam(payload.seed)}` : '')
           }
@@ -2012,7 +2014,7 @@ export default {
               output_cols: columns.map(e=>'')
             }
           },
-          content: (payload) => { // TODO: Test
+          content: (payload) => { // TO-DO: Test
             return `<b>Bucketize</b> `
             + columnsHint(payload.columns,payload.output_cols)
             + (payload.splits ? `by ${hlParam(payload.splits)}` : '')
@@ -2026,7 +2028,7 @@ export default {
               columns: columns
             }
           },
-          content: (payload) => { // TODO: Test
+          content: (payload) => { // TO-DO: Test
             return `<b>Set values to columns</b> using ${hlCols(payload.columns[0])}`
           }
         },
@@ -2047,7 +2049,7 @@ export default {
               output_cols: columns.map(e=>'')
             }
           },
-          content: (payload) => { // TODO: Test
+          content: (payload) => { // TO-DO: Test
             return `<b>Set strings to indices</b> on`
             + columnsHint(payload.columns,payload.output_cols)
           }
@@ -2069,12 +2071,12 @@ export default {
               output_cols: columns.map(e=>'')
             }
           },
-          content: (payload) => { // TODO: Test
+          content: (payload) => { // TO-DO: Test
             return `<b>Set indices to strings</b> `
             + columnsHint(payload.columns,payload.output_cols)
           }
         },
-        ML: { // TODO: Test
+        ML: { // TO-DO: Test
           dialog: {
             title: (command) => {
               if (command.command=='z_score')
@@ -2100,7 +2102,7 @@ export default {
               output_cols: columns.map(e=>'')
             }
           },
-          content: (payload) => { // TODO: Test
+          content: (payload) => { // TO-DO: Test
             var scaler = 'scaler'
             if (command.command=='z_score')
               scaler = 'standard scaler'
@@ -2154,7 +2156,7 @@ export default {
               output_cols: columns.map(e=>'')
             }
           },
-          content: (payload) => { // TODO: Test
+          content: (payload) => { // TO-DO: Test
             return `<b>Impute rows</b> on`
             + columnsHint(payload.columns,payload.output_cols)
             + (payload.strategy ? `using ${hlParam(payload.strategy)}` : '')
@@ -2184,7 +2186,7 @@ export default {
               columns: columns,
             }
           },
-          content: (payload) => { // TODO: Test
+          content: (payload) => { // TO-DO: Test
             return `<b>Sample</b> to ${hlParam(payload.n)} rows`
           }
         },
@@ -2196,29 +2198,53 @@ export default {
   computed: {
 
     ...mapGetters([
+      'dataSources',
+      'commands',
+      'workspaceCells',
       'currentSelection',
-      'currentCells',
+      'currentDataset',
       'selectionType',
-      'currentTab',
       'currentDuplicatedColumns',
       'currentPreviewNames',
       'currentPreviewInfo',
       'currentSecondaryDatasets',
-      'currentLoadPreview'
+      'loadPreview',
+      'hasSecondaryDatasets'
     ]),
 
-    cells: {
-      get() {
-        return Array.from(this.currentCells || [])
+    localCommands: {
+      deep: true,
+      get () {
+        return Array.from(this.commands)
       },
-      set(value) {
-        this.$store.commit('setCells', value)
+      set (commands) {
+        this.$store.dispatch('mutateAndSave', {mutate: 'commands', payload: commands} )
+      }
+    },
+
+    localDataSources: {
+      deep: true,
+      get () {
+        return Array.from(this.dataSources)
+      },
+      set (dataSources) {
+        this.$store.dispatch('mutateAndSave', {mutate: 'dataSources', payload: dataSources} )
+      }
+    },
+
+    cells: {
+      get () {
+        return [...this.localDataSources, ...this.localCommands]
+      },
+      set (value) {
+        this.localCommands = value.filter(e=>!(e && e.payload && e.payload.request && e.payload.request.isLoad))
+        this.localDataSources = value.filter(e=>e && e.payload && e.payload.request && e.payload.request.isLoad)
       }
     },
 
     command () {
       try {
-        return this.commandsHandlers[this.currentCommand.command] || this.commandsHandlers[this.currentCommand.type]
+        return this.getCommandHandler(this.currentCommand)
       } catch (error) {
         console.error(error)
         return undefined
@@ -2228,16 +2254,25 @@ export default {
 
     allColumns () {
       try {
-        return this.dataset.columns.map(e=>e.name)
+        return this.currentDataset.columns.map(e=>e.name)
       } catch (err) {
         return []
       }
     },
 
-    dragOptions () {
+    dataSourcesDragOptions () {
       return {
         animation: 200,
-        group: "description",
+        group: "dataSources",
+        disabled: this.commandsDisabled,
+        ghostClass: "ghost"
+      }
+    },
+
+    commandsDragOptions () {
+      return {
+        animation: 200,
+        group: "commands",
         disabled: this.commandsDisabled,
         ghostClass: "ghost"
       }
@@ -2251,7 +2286,7 @@ export default {
       }
     },
 
-    computedCommandsDisabled: {
+    localCommandsDisabled: {
       get () {
         return this.commandsDisabled
       },
@@ -2260,10 +2295,6 @@ export default {
       }
     }
 
-  },
-
-  mounted () {
-    this.seeCode = this.$route.query.code=='1'
   },
 
   watch: {
@@ -2280,13 +2311,13 @@ export default {
 
         try {
 
-          if (!selection || !selection.ranged || selection.ranged.index<0 || !this.dataset.columns[selection.ranged.index]){
+          if (!selection || !selection.ranged || selection.ranged.index<0 || !this.currentDataset.columns[selection.ranged.index]){
             return
           }
 
           var command = { command: 'REMOVE_KEEP_SET' }
 
-          command.columns = [ this.dataset.columns[selection.ranged.index].name ]
+          command.columns = [ this.currentDataset.columns[selection.ranged.index].name ]
 
           command.payload = { rowsType: this.selectionType }
 
@@ -2298,7 +2329,7 @@ export default {
             return
           }
 
-          this.commandHandle( command )
+          this.commandHandle(command)
 
         } catch (err) {
           console.error(err)
@@ -2306,7 +2337,7 @@ export default {
       },
     },
 
-    currentLoadPreview ({meta}) {
+    loadPreview ({meta}) {
       var c = { ...this.currentCommand }
 
       try {
@@ -2351,7 +2382,7 @@ export default {
       deep: true,
       async handler () {
         try {
-          var command = this.commandsHandlers[this.currentCommand.command] || this.commandsHandlers[this.currentCommand.type]
+          var command = this.getCommandHandler(this.currentCommand)
           if (command && command.dialog) {
             var valid = (!command.dialog.validate) ? true : command.dialog.validate(this.currentCommand)
             if (valid===0) {
@@ -2359,7 +2390,7 @@ export default {
               return
             }
 
-            if (this.currentCommand.preview && (this.currentCommand.preview.type || this.currentCommand.preview.fake)) {
+            if (this.currentCommand.preview && (this.currentCommand.preview.type)) {
 
               if (this.currentCommand.output_cols || this.currentCommand.defaultOutputName) {
 
@@ -2414,11 +2445,11 @@ export default {
       }
     },
 
-    dataset: {
+    currentDataset: {
       deep: true,
       handler () {
-        if (this.computedCommandsDisabled===undefined) {
-          this.computedCommandsDisabled = false
+        if (this.localCommandsDisabled===undefined) {
+          this.localCommandsDisabled = false
           this.markCells()
           this.$emit('update:codeError','')
           this.lastWrongCode = false
@@ -2430,26 +2461,23 @@ export default {
 
   methods: {
 
-    availableVariableName () {
+    setDfToTab (dfName) {
+      this.$store.commit('setDfToTab', { dfName })
+    },
+
+    getNewDfName () {
 
       var name = 'df'
 
-      if (this.currentTab) {
-        var name = name+this.currentTab
-      }
-
-      if (!this.dataset || this.dataset.blank) {
-        return name
-      }
-
       var sd = Object.keys(this.currentSecondaryDatasets)
-        .filter(e=>e.startsWith(name+'_'))
-        .filter(e=>!e.startsWith('_'))
+        .filter(e=>e.startsWith(name))
 
-      name = name+'_'+sd.length
-
-      // this.$store.commit('setSecondaryDataset',{ name })
-      this.$store.commit('setHasSecondaryDatasets', true )
+      if (sd.length) {
+        var i = (parseInt(sd[sd.length-1].split(name)[1]) || 0)+1
+        if (i) {
+          name = name+i
+        }
+      }
 
       return name
     },
@@ -2469,19 +2497,9 @@ export default {
       try {
         this.cancelCommand()
         await this.runCodeNow()
-        var url = `downloads/${this.$store.state.session.session}`
-        await this.evalCode(`_output = ${this.dataset.varname}.save.csv("/opt/Bumblebee/packages/api/public/${url}")`)
-        this.forceFileDownload(process.env.API_URL+'/'+url+'/0.part',this.dataset.name+'.csv')
-      } catch (error) {
-        console.error(error)
-      }
-    },
-
-    async bufferDf () {
-      // this.$store.dispatch('bufferDf')
-      try {
-        await this.evalCode('_output = '+this.dataset.varname+'.ext.set_buffer("*")')
-        this.$store.commit('setBuffer',true)
+        var url = `downloads/${this.$store.state.session.username}`
+        await this.evalCode(`_output = ${this.currentDataset.dfName}.save.csv("/opt/Bumblebee/packages/api/public/${url}")`)
+        this.forceFileDownload(process.env.API_URL+'/'+url+'/0.part',this.currentDataset.name+'.csv')
       } catch (error) {
         console.error(error)
       }
@@ -2492,7 +2510,7 @@ export default {
         this.$store.commit('previewDefault')
         return
       }
-      if (this.currentPreviewCode) {
+      if (this.previewCode) {
         this.$store.commit('setPreviewCode', undefined)
       }
       // if (this.currentPreviewNames) {
@@ -2536,10 +2554,6 @@ export default {
       this.$emit('update:codeError','')
     },
 
-    moveBarDelayed: debounce( async function(value) {
-      this.moveBar(value)
-    },300),
-
     preparePreviewCode: debounce( async function() {
 
       try {
@@ -2556,10 +2570,6 @@ export default {
 
         var commandHandler = this.command
 
-        if (commandHandler && commandHandler.beforeGetCode) {
-          this.currentCommand = await commandHandler.beforeGetCode(this.currentCommand)
-        }
-
         this.$store.commit('setPreviewCode',{
           code: this.getCode(this.currentCommand, 'preview'),
           profileCode: this.getCode(this.currentCommand, 'profile'),
@@ -2569,13 +2579,13 @@ export default {
           datasetPreview: !!getProperty(this.currentCommand.preview.datasetPreview, [this.currentCommand]),
           loadPreview: !!getProperty(this.currentCommand.preview.loadPreview, [this.currentCommand]),
           load: this.currentCommand.preview.type==='load',
-          infer: this.currentCommand._moreOptions===false, // TODO: Check
+          infer: this.currentCommand._moreOptions===false, // TO-DO: Check
           noBufferWindow: getProperty(this.currentCommand.preview.noBufferWindow,[this.currentCommand]),
           joinPreview: getProperty(this.currentCommand.preview.joinPreview, [this.currentCommand]),
           expectedColumns,
         })
 
-        // TODO: Generalize
+        // TO-DO: Generalize
 
       } catch (err) {
         console.error(err) // probably just a cancelled request
@@ -2596,55 +2606,91 @@ export default {
       }
     },
 
+    getCommandHandler (command) {
+      return this.commandsHandlers[command.command] || this.commandsHandlers[command.type]
+    },
+
     clusterFieldUpdated(cluster) {
       if (cluster.selected.length==0) {
         cluster.selected = cluster.values
       }
     },
 
+    filterCells (newOnly = false, ignoreFrom = -1) {
+      if (newOnly) {
+        return this.cells.filter((e,i)=>((ignoreFrom<0 || i<ignoreFrom) && e.code!=='' && !e.done && !e.ignore))
+      }
+      else {
+        return this.cells.filter((e,i)=>((ignoreFrom<0 || i<ignoreFrom) && e.code!=='' && !e.ignore))
+      }
+    },
+
     codeText (newOnly = false, ignoreFrom = -1) {
-      if (newOnly)
-        return (this.cells.length) ? (this.cells.filter((e,i)=>((ignoreFrom<0 || i<ignoreFrom) && e.code!=='' && !e.done && !e.ignore)).map(e=>e.code).join('\n').trim()) : ''
-      else
-        return (this.cells.length) ? (this.cells.filter((e,i)=>((ignoreFrom<0 || i<ignoreFrom) && e.code!=='' && !e.ignore)).map(e=>e.code).join('\n').trim()) : ''
+      if (!this.cells.length) {
+        return ''
+      }
+      return this.filterCells(newOnly, ignoreFrom).map(e=>e.code).join('\n').trim()
+    },
+
+    async beforeRunCells (newOnly = false, ignoreFrom = -1) {
+
+      // console.log('beforeRunCells')
+      this.filterCells(newOnly, ignoreFrom).forEach(async (cell) => {
+        if (cell.payload.request && cell.payload.request.createsNew) {
+          // console.log('beforeExecuteCode', cell.payload.newDfName)
+          this.setDfToTab(cell.payload.newDfName)
+        }
+        var commandHandler = this.getCommandHandler(cell)
+        if (commandHandler.beforeExecuteCode) {
+          // console.log('beforeExecuteCode')
+          cell.payload = await commandHandler.beforeExecuteCode(cell.payload)
+        }
+      })
+
     },
 
     async commandHandle (command) {
+
+      if (command.empty) {
+        this.runCodeNow()
+        return
+      }
 
       if (this.selectionType!=='text') {
         this.clearTextSelection()
       }
 
-      this.$store.commit('setPreviewColumns',false) // TODO: Check
+      this.$store.commit('setPreviewColumns',false)
 
       var columns = undefined
       var columnDataTypes = undefined
 
       if (!command.columns || !command.columns.length) {
-        columns = this.columns.map(e=>this.dataset.columns[e.index].name)
-        columnDataTypes = this.columns.map(e=>this.dataset.columns[e.index].profiler_dtype)
+        columns = this.columns.map(e=>this.currentDataset.columns[e.index].name)
+        columnDataTypes = this.columns.map(e=>this.currentDataset.columns[e.index].profiler_dtype)
       }
       else {
         columns = command.columns
-        var columnIndices = namesToIndices(columns, this.dataset.columns)
-        columnDataTypes = columnIndices.map(i=>this.dataset.columns[i].profiler_dtype)
+        var columnIndices = namesToIndices(columns, this.currentDataset.columns)
+        columnDataTypes = columnIndices.map(i=>this.currentDataset.columns[i].profiler_dtype)
       }
 
-      var commandHandler = this.commandsHandlers[command.command] || this.commandsHandlers[command.type]
+      var commandHandler = this.getCommandHandler(command)
 
       // default payload
 
       var payload = {
         request: {
           isLoad: false,
+          createsNew: false,
           noOperations: command.noOperations,
           immediate: command.immediate,
           isString: columnDataTypes && columnDataTypes.every(d=>STRING_TYPES.includes(d)),
         },
         secondaryDatasets: this.currentSecondaryDatasets,
         columnDataTypes: columnDataTypes,
-        varname: this.dataset.varname,
-        newVarname: this.availableVariableName(),
+        dfName: this.currentDataset.dfName,
+        newDfName: this.getNewDfName(),
         allColumns: this.allColumns,
         type: command.type,
         command: command.command,
@@ -2707,38 +2753,41 @@ export default {
             ...payload,
             columns: payload.columns || columns
           }
-          var content = this.getOperationContent(cell)
-          this.addCell(-1, {...command, code: this.getCode(cell), content})
-          this.runButton = false
+          this.addCell(-1, {
+            ...cell,
+            code: this.getCode(cell),
+            content: this.getOperationContent(cell)
+          })
 
           this.clearTextSelection()
         }
       }
     },
 
-    async confirmCommand () {
+    async confirmCommand (event) {
+      console.log('confirmCommand',{...event})
+      this.isEditing = false
       this.clearTextSelection()
-      var commandHandler = this.commandsHandlers[this.currentCommand.command] || this.commandsHandlers[this.currentCommand.type]
+      var commandHandler = this.getCommandHandler(this.currentCommand)
       if (commandHandler.onDone) {
         this.currentCommand = await commandHandler.onDone(this.currentCommand)
       }
+
       var code = this.getCode(this.currentCommand)
       var content = this.getOperationContent(this.currentCommand)
 
       var toCell = this.currentCommand._toCell!==undefined ? this.currentCommand._toCell : -1
 
       this.addCell(toCell, { ...this.currentCommand, code, content }, true )
-      this.runButton = false
 
       this.$emit('updateOperations', { active: (this.currentCommand.request.noOperations ? false : true), title: 'operations' } )
-      this.$emit('update:big', this.seeCode)
 
       this.currentCommand = false
       // this.$store.commit('previewDefault')
     },
 
     cancelCommand () {
-      // TODO: Check
+      // TO-DO: Check
 			setTimeout(() => {
         // this.recoverTextSelection()
         this.clearTextSelection()
@@ -2748,99 +2797,83 @@ export default {
           title: 'operations'
         })
         this.$store.commit('previewDefault')
-        this.runCodeNow()
+        this.runCodeNow(this.isEditing)
+        this.isEditing = false
 			}, 10);
     },
 
-    setActiveCell (index, delayed = false) {
-
-      if (this.cells[index]) {
-        this.activeCell = index
-        if (this.$refs.cells) {
-          this.moveBar(this.$refs.cells.$el.getElementsByClassName('cell-container')[index].offsetTop+11)
-        }
-      }
-      else {
-        this.activeCell = 0
-        this.moveBar(12)
-      }
-
-    },
-
-    moveBarDelayed: debounce( async function(value) {
-      this.moveBar(value)
-    },300),
-
-    moveBar (value) {
-      this.barTop = value;
-      if (!this.barHovered) {
-        this.moveBarNow(value)
-      }
-    },
-
-    moveBarNow(value) {
-      if (this.$refs.cells.$el) {
-        this.$refs.cells.$el.style.minHeight = value+27 + 'px'
-      }
-
-      if (this.$refs['cells-controls']) {
-        this.$refs['cells-controls'].style.top = value + 'px'
-      }
-    },
-
     draggableEnd() {
+      this.localCommands = this.localCommands
+      this.localDataSources = this.localDataSources
       if (this.codeText().trim()==='') {
-        this.runButton = false
         this.$emit('update:codeError','')
         this.runCode() // deleting every cell
         return;
       }
-      if (!this.runButton) {
-        this.runCode() // reordering or deleting
-        return;
-      }
+      this.runCode() // reordering or deleting
+      return;
     },
 
-    removeCell (index) {
+    removeCell (index, isDataSource = false) {
 
-      this.runButton = false
+      var from = isDataSource ? this.localDataSources : this.localCommands
 
-      var permanentCells = ['load file', 'load from database']
-
-      if (index<0 || !this.cells[index]) {
+      if (index<0 || !from[index]) {
         return
       }
 
-      if (permanentCells.includes(this.cells[index].command) && this.cells.filter(e => permanentCells.includes(e.command) ).length<=1) {
-        if (this.cells.length>1) {
+      var currentPayload = from[index].payload
+
+      if (currentPayload.request && currentPayload.request.createsNew) {
+        var filteredCells = this.cells.filter(cell => cell.payload.dfName===currentPayload.newDfName && !cell.payload.request.isLoad)
+        if (filteredCells.length>0) {
+          console.warn('[CELLS] Cannot remove, there are cells using this variable as input')
           return
         }
       }
 
       this.$emit('update:codeError','')
 
-      var cells = [...this.cells]
-      cells.splice(index,1)
-      this.cells = cells
-      if (this.cells.length==index) {
-        index--
+      var cells = [...from]
+      var deletedPayload = cells.splice(index,1)[0].payload
+
+      var deleteTab = false
+
+      if (deletedPayload.request && deletedPayload.request.createsNew) {
+        var deleteDf = deletedPayload.newDfName
+        if (deleteDf) {
+          deleteTab = currentPayload.newDfName
+          this.evalCode(`del ${deleteDf}; _output = "Deleted ${deleteDf}"`)
+          this.updateSecondaryDatasets()
+        }
       }
 
-      this.setActiveCell(index, true)
+      if (deleteTab) {
+        this.$store.dispatch('newDataset', { dfName: deleteTab, current: true })
+      }
 
-      if (this.cells.length==0)
-        this.$store.commit('newDataset', true)
-        this.codeDone = ''
+      if (isDataSource) {
+        this.localDataSources = cells
+      } else {
+        this.localCommands = cells
+      }
 
+      // if (index>=from.length) {
+      //   index = from.length-1
+      // }
+
+
+      this.codeDone = ''
       this.draggableEnd()
     },
 
-    markCells(mark = true, ignoreFrom = -1) {
+    markCells (mark = true, ignoreFrom = -1) {
       var cells = [...this.cells]
       for (let i = 0; i < this.cells.length; i++) {
         if (ignoreFrom>=0 && i>=ignoreFrom) {
           continue
         }
+        cells[i] = { ...cells[i] }
         if (cells[i].code) {
           cells[i].done = mark
         }
@@ -2854,7 +2887,7 @@ export default {
         this.codeDone = ''
     },
 
-    markCellsError(ignoreFrom = -1) {
+    markCellsError (ignoreFrom = -1) {
       var cells = [...this.cells]
       for (let i = cells.length - 1; i >= 0; i--) {
         if (ignoreFrom>=0 && i>=ignoreFrom) {
@@ -2873,13 +2906,22 @@ export default {
     },
 
     getOperationContent (payload) {
-      var commandHandler = this.commandsHandlers[payload.command] || this.commandsHandlers[payload.type]
+      var commandHandler = this.getCommandHandler(payload)
+      var content
 
       if (!commandHandler || !commandHandler.content) {
-        return this.getCode(payload)
+        content = this.getCode(payload)
+      } else {
+        content = commandHandler.content(payload)
       }
 
-      return commandHandler.content(payload)
+      if (payload.request && payload.request.createsNew) {
+        content += `<span class="hint--df"> to ${hlParam(payload.newDfName)}</span>`
+      } else {
+        content += `<span class="hint--df"> in ${hlParam(payload.dfName)}</span>`
+      }
+
+      return content
     },
 
     getCode (currentCommand, type = 'final') {
@@ -2890,7 +2932,7 @@ export default {
 
       if (!payload.columns || !payload.columns.length) {
         console.warn('Auto-filling columns')
-        payload.columns = this.columns.map(e=>this.dataset.columns[e.index].name)
+        payload.columns = this.columns.map(e=>this.currentDataset.columns[e.index].name)
       }
 
       // if (type==='preview' || type==='profile') {
@@ -2904,7 +2946,7 @@ export default {
       if (!payload._code) {
         var generator = getGenerator(payload.command, payload)
         if (generator === undefined) {
-          var commandHandler = this.commandsHandlers[payload.command] || this.commandsHandlers[payload.type]
+          var commandHandler = this.getCommandHandler(payload)
           generator = commandHandler.code
         }
         code = generator ? generator({
@@ -2921,27 +2963,31 @@ export default {
       } else if (type==='profile') {
         return code
       } else {
-        if (payload.request && payload.request.isLoad) {
+        if (payload.request && payload.request.createsNew) {
+
           return precode + code +'\n'
-					+`${payload.varname} = ${payload.varname}.ext.repartition(8).ext.cache()`
+					+`${payload.newDfName} = ${payload.newDfName}.ext.repartition(8).ext.cache()`
         } else {
-          return precode + `${payload.varname} = ${payload.varname}${code}.ext.cache()`
+          return precode + `${payload.dfName} = ${payload.dfName}${code}.ext.cache()`
         }
       }
-
-
 
     },
 
     async editCell (cell, index) {
       // console.log('[DEBUG] Editing ',{cell, index})
-      var commandHandler = this.commandsHandlers[cell.command] || this.commandsHandlers[cell.type]
+      var command = deepCopy(cell)
+
+      // TO-DO: deep copy using deepCopy
+
+      var commandHandler = this.getCommandHandler(command)
       if (commandHandler.dialog) {
-        this.computedCommandsDisabled = true;
+        this.localCommandsDisabled = true;
         await this.runCodeNow(true, index)
-        this.computedCommandsDisabled = false;
-        cell.payload._toCell = index
-        this.commandHandle(cell)
+        this.localCommandsDisabled = false;
+        command.payload._toCell = index
+        this.commandHandle(command)
+        this.isEditing = true
       }
     },
 
@@ -2966,6 +3012,8 @@ export default {
         }
       }
 
+      delete payload.deleteOtherCells
+
       cells.splice(at, +replace, {
         payload: payload,
         type: payload.type,
@@ -2973,7 +3021,6 @@ export default {
         code: code,
         content: content,
         id: Number(new Date()),
-        active: false,
         ignore: ignoreCell
       })
 
@@ -2981,9 +3028,6 @@ export default {
 
       if (!payload.noCall) {
         this.$nextTick(()=>{
-          if (this.activeCell<0) {
-            this.setActiveCell(0)
-          }
           if (code.length) {
             this.runCode()
           }
@@ -2992,16 +3036,16 @@ export default {
 
     },
 
-
-
     async runCodeNow (force = false, ignoreFrom = -1) {
 
       if (ignoreFrom>=0) {
         force = true
       }
 
-      var code = this.codeText(false, ignoreFrom)
-      var codeDone = this.codeDone.trim()
+      var newOnly = false
+      var code = this.codeText(newOnly, ignoreFrom)
+
+      var codeDone = force ? '' : this.codeDone.trim()
       var rerun = false
 
       if (code==='') {
@@ -3023,7 +3067,8 @@ export default {
       }
       else {
         // console.log('[CODE MANAGER] new cells only')
-        code = this.codeText(true, ignoreFrom) // new cells only
+        newOnly = true
+        code = this.codeText(newOnly, ignoreFrom) // new cells only
       }
 
       if (code===this.lastWrongCode) {
@@ -3041,37 +3086,46 @@ export default {
         rerun = false
 			}
 
-      this.computedCommandsDisabled = true;
+      this.localCommandsDisabled = true;
 
       try {
 
-        this.$store.commit('setBuffer',false)
+        await this.beforeRunCells(newOnly, ignoreFrom)
+
+        var dfName = this.currentDataset.dfName
+
+        if (dfName) {
+          this.$store.commit('setBuffer', { dfName, status: false  })
+        }
+
         var response = await this.socketPost('cells', {
           code,
-          name: this.dataset.summary ? this.dataset.name : null,
-          varname: this.dataset.varname,
-          session: this.$store.state.session.session,
+          username: this.$store.state.session.username,
+          workspace: this.$store.state.session.workspace._id,
           key: this.$store.state.key
         }, {
           timeout: 0
         })
-        console.log('"""[DEBUG][CODE]"""',response.code)
 
-        this.computedCommandsDisabled = false;
+        console.log('"""[DEBUG][CODE]"""',response.code)
+        window.pushCode({code: response.code})
+
+        this.localCommandsDisabled = false;
 
         if (!response.data || !response.data.result) {
           throw response
         }
 
-        window.pushCode({code: response.code})
+        var dataset = await this.loadDataset(dfName)
 
-        var dataset = JSON.parse(response.data.result)
+        // if (dfName) {
+        //   var dataset = JSON.parse(response.data.result)
+        //   dataset.dfName = dfName
 
-        this.$store.commit('loadDataset', {
-          dataset
-        })
+        //   this.$store.dispatch('setDataset', { dataset })
 
-        this.bufferDf()
+        //   this.setBuffer(dfName)
+        // }
 
         this.updateSecondaryDatasets()
 
@@ -3080,8 +3134,6 @@ export default {
 
         this.$emit('update:codeError','')
         this.lastWrongCode = false
-
-
 
       } catch (error) {
         if (error.code) {
@@ -3092,7 +3144,7 @@ export default {
 
         this.markCellsError(ignoreFrom)
         this.lastWrongCode = code
-        this.computedCommandsDisabled = undefined;
+        this.localCommandsDisabled = undefined;
       }
 
       if (this.codeText() !== code) {

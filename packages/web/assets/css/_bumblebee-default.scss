@@ -41,7 +41,7 @@ html:root {
   color: $text-color !important;
 }
 
-.bb-container {
+.workspace-container {
   background-color: white;
   height: calc(100vh - 31px);
   display: flex;
@@ -91,8 +91,12 @@ body{
   height: 50px;
 }
 
-.text-mono {
+.font-mono {
   font-family: $font-mono;
+}
+
+.font-table {
+  font-family: $font-mono-table;
 }
 
 .text-code {
@@ -301,6 +305,21 @@ table {
 
 /* columns list */
 
+.columns-table, .workspaces-table {
+  tbody tr {
+    cursor: pointer;
+    &:hover {
+      background: $data-highlight !important;
+    }
+  }
+}
+
+.workspaces-table {
+  .v-data-table__wrapper {
+    min-height: calc(100vh - 340px);
+  }
+}
+
 .columns-table {
 
   table {
@@ -362,12 +381,8 @@ table {
   }
 
   tbody tr{
-    cursor: pointer;
     border: none !important;
     white-space: nowrap;
-    &:hover {
-      background: $data-highlight !important;
-    }
   }
 
   .data-type {
@@ -820,6 +835,14 @@ table {
   display: none !important;
 }
 
+.bb-workspace-status {
+  position: absolute !important;
+  opacity: 0.5;
+  right: 44px;
+  top: 11px;
+  z-index: 1;
+}
+
 .bb-menu {
   position: absolute !important;
   right: 12px;
@@ -1117,10 +1140,8 @@ table {
     white-space: nowrap;
   }
 
-  .table-font {
-    font-family: $font-mono-table;
-  }
 }
+
 
 /* data types */
 
@@ -1337,6 +1358,10 @@ $side-controls-width: 54px;
     .right-cell-btn {
       opacity: 0;
       transition: opacity 0.21s ease-in-out;
+      display: flex;
+      align-items: center;
+      position: relative;
+      left: -4px;
     }
     &:hover{
       .right-cell-btn,
@@ -1383,6 +1408,9 @@ $editor-top-padding: 6px;
   }
   .hl--param {
     color: darken(desaturate($data-red,16%),8%);
+  }
+  &:not(.multiple-tabs) .hint--df {
+    display: none;
   }
 }
 
@@ -1996,7 +2024,7 @@ $editor-top-padding: 6px;
 .bb-table-h-cell {
   &:last-child {
     .v-menu__content {
-      transform: translateX(-85px); // TODO: 170px -> Ypx
+      transform: translateX(-85px); // TO-DO: 170px -> Ypx
     }
   }
   &:first-child {
@@ -2102,8 +2130,7 @@ $editor-top-padding: 6px;
     max-height: 34px;
   }
   .v-select__selection--comma {
-    margin-top: 2px;
-    // margin-bottom: 5px;
+    margin-top: -1px !important;
   }
   .v-text-field__details {
     margin-bottom: 0 !important;
@@ -2421,4 +2448,77 @@ $editor-top-padding: 6px;
   float: right;
   opacity: 0.71;
   margin-left: 1.5em;
+}
+
+.append-no-ma .v-input__append-outer {
+  margin: 0 !important
+}
+
+.drop-hover {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  background: $data-primary;
+  opacity: 0.5;
+  z-index: 500;
+  pointer-events: none;
+  .frame {
+    border-radius: 8px;
+    border-style: dotted;
+    border-color: white;
+    border-width: 4px;
+    position: absolute;
+    $frame-padding: 32px;
+    left: $frame-padding;
+    top: $frame-padding;
+    width: calc(100% - #{$frame-padding*2});
+    height: calc(100% - #{$frame-padding*2});
+  }
+}
+
+
+.function-helper {
+  padding: 12px 16px 3px;
+  max-width: calc(100vw - 16px);
+  width: 320px;
+  .function-hint {
+    display: inline-block;
+    padding-right: 24px;
+    pointer-events: none;
+  }
+  .function-description {
+    padding-bottom: 8px;
+  }
+  .function-example {
+    // float: right;
+    // opacity: 0.71;
+    // color: rgba(0,0,0,0.54);
+    // font-weight: bold;
+    // position: relative;
+    // right: -4px;
+    font-size: 14px;
+  }
+  .function-h {
+    text-transform: uppercase;
+  }
+  .function-h, .function-parameter-name {
+    color: rgba(0,0,0,0.54);
+    font-weight: bold;
+    font-size: 14px;
+  }
+  .function-parameter-highlight {
+    font-weight: bold;
+    color: $primary-color;
+  }
+  .divider {
+    height: 2px;
+    border-radius: 2px;
+    // width: calc(100% - 8px);
+    width: 100%;
+    margin: 4px auto 0px;
+    opacity: 0.23;
+    background-color: rgba(0,0,0,0.54);
+  }
 }

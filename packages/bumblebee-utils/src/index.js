@@ -1,6 +1,26 @@
 import "core-js/stable"
 import "regenerator-runtime/runtime"
 
+export const deepCopy = (inObject) => {
+  let outObject, value, key
+
+  if (typeof inObject !== "object" || inObject === null) {
+    return inObject // Return the value if inObject is not an object
+  }
+
+  // Create an array or object to hold the values
+  outObject = Array.isArray(inObject) ? [] : {}
+
+  for (key in inObject) {
+    value = inObject[key]
+
+    // Recursively (deep) copy for nested objects, including arrays
+    outObject[key] = deepCopy(value)
+  }
+
+  return outObject
+}
+
 export const throttle = (func, limit) => {
 	let lastFunc
 	let lastRan
@@ -110,6 +130,25 @@ export const newName = (name) => {
   }
   else {
     return name+'2'
+  }
+}
+
+export const asyncDebounce = (func, delay) => {
+  let inDebounce
+  return function () {
+    const context = this
+    const args = arguments
+    return new Promise((resolve, reject)=>{
+      clearTimeout(inDebounce)
+      inDebounce = setTimeout(async () => {
+        try {
+          var result = await func.apply(context, args)
+          resolve(result)
+        } catch (err) {
+          reject(err)
+        }
+      }, delay)
+    })
   }
 }
 
@@ -228,6 +267,8 @@ export const escapeQuotesOn = (payload = {}, keys = []) => {
 }
 
 export const printError = (payload) => {
+
+  console.error('[ERROR] payload parameter', payload)
 
   var data = payload.data || payload
   var content = data.errorValue || data.content
@@ -461,6 +502,7 @@ export const RESPONSE_MESSAGES = {
 }
 
 export default {
+  deepCopy,
   throttle,
   arrayJoin,
   arraysEqual,
@@ -469,6 +511,7 @@ export default {
   getSelectedText,
   parseResponse,
   newName,
+  asyncDebounce,
   debounce,
   stepify,
   reduceRanges,

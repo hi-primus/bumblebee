@@ -1,6 +1,6 @@
 <template>
 	<div class="table-container">
-    <div v-if="!(currentDataset && currentDataset.summary) && !loadPreview" class="no-data">
+    <div v-if="!(currentDataset && currentDataset.summary) && !loadPreviewActive" class="no-data">
       <div v-if="appError" class="title grey--text text-center text-with-icons">
         There's a problem <br/><br/>
         <v-btn color="primary" depressed @click="reloadInit">Reload</v-btn>
@@ -20,7 +20,15 @@
         </template>
       </div>
       <div v-else class="title grey--text text-center text-with-icons">
-        <br/>
+        <div class="available-dfs mb-4" v-if="availableDatasets && availableDatasets.length">
+          Load from existing data sources:
+          <template v-for="(dfName, index) in availableDatasets">
+            <span :key="'av'+dfName">
+              <template v-if="index>0">, </template>
+              <span class="primary--text hoverable" @click="openDf(dfName)">{{dfName}}</span>
+            </span>
+          </template>
+        </div>
         <v-btn
           @click="commandHandle({command: 'load file'})"
           color="primary"
@@ -37,7 +45,7 @@
       </div>
 
     </div>
-		<div v-else-if="currentListView && !loadPreview" class="table-view-container">
+		<div v-else-if="currentListView && !loadPreviewActive" class="table-view-container">
 			<div class="table-controls d-flex">
 				<v-btn
           color="#888" text icon small @click="toggleColumnsSelection">
@@ -176,11 +184,11 @@
 		</div>
 		<client-only>
 			<div
-				v-show="!currentListView && (currentDataset && currentDataset.summary || loadPreview)"
+				v-show="!currentListView && (currentDataset && currentDataset.summary || loadPreviewActive)"
 				class="the-table-container"
 			>
         <BumblebeeTable
-					v-if="!currentListView && (currentDataset && currentDataset.summary || loadPreview)"
+					v-if="!currentListView && (currentDataset && currentDataset.summary || loadPreviewActive)"
           :bbColumns="bbColumns"
           @sort="updateSortedColumns"
           @updatedSelection="selectionEvent"
@@ -264,14 +272,32 @@ export default {
       'currentSelection',
       'currentDataset',
       'currentListView',
-      'currentPreviewCode',
-      'currentLoadPreview',
+      'currentSecondaryDatasets',
+      'previewCode',
+      'loadPreview',
       'appError'
     ]),
 
-    loadPreview () {
+    availableDatasets () {
+      var sds = Object.keys(this.currentSecondaryDatasets)
+        .filter(e=>e.startsWith('df'))
+
+      this.$store.state.datasets.forEach(dataset => {
+        if (!dataset.dfName) {
+          return
+        }
+        var foundIndex = sds.findIndex(sd=>sd===dataset.dfName)
+        if (foundIndex>=0) {
+          sds.splice(foundIndex,1)
+        }
+      })
+
+      return sds
+    },
+
+    loadPreviewActive () {
       try {
-        return (this.currentPreviewCode.loadPreview && this.currentLoadPreview)
+        return (this.previewCode.loadPreview && this.loadPreview)
       } catch (error) {
         return false
       }
@@ -411,10 +437,6 @@ export default {
       }
     },
 
-    tableKey () {
-			return this.$store.state.datasetUpdates * 100 + this.$store.state.tab
-		},
-
     _sortBy: {
       get () {
         return this.sortBy
@@ -445,10 +467,6 @@ export default {
 
   mounted () {
 
-    // if (!this.currentDataset || this.currentDataset.blank) {
-    //   this.commandHandle({command: 'load file'})
-    // }
-
     try {
       this.getSelectionFromStore()
     } catch (error) {}
@@ -460,6 +478,11 @@ export default {
   },
 
   methods: {
+
+    openDf (dfName) {
+      this.$store.commit('setDfToTab', { dfName })
+      this.loadDataset(dfName)
+    },
 
     commandHandle (event) {
       this.$store.commit('commandHandle',event)
@@ -610,24 +633,24 @@ export default {
       this.$refs.bumblebeeTable && this.$refs.bumblebeeTable.checkVisibleColumns()
     },
 
-    currentPreviewCode: {
+    previewCode: {
       deep: true,
       async handler () {
         try {
-          var currentCode = await getPropertyAsync(this.currentPreviewCode.code)
+          var currentCode = await getPropertyAsync(this.previewCode.code)
           if (this.loadedPreviewCode!==currentCode) {
             this.loadedPreviewCode = currentCode
-            if (this.currentPreviewCode.load) {
-              var varname = 'preview_df'
-              var code = this.currentPreviewCode.code // is always static
-              code = `${varname} = ${code} \n`
+            if (this.previewCode.load) {
+              var dfName = 'preview_df'
+              var code = this.previewCode.code // is always static
+              code = `${dfName} = ${code} \n`
 
-              code += `_output = {**${varname}.ext.to_json("*"), "meta": ${varname}.meta.get() if (${varname}.meta and ${varname}.meta.get) else {} } \n`
+              code += `_output = {**${dfName}.ext.to_json("*"), "meta": ${dfName}.meta.get() if (${dfName}.meta and ${dfName}.meta.get) else {} } \n`
 
-              // if (this.currentPreviewCode.infer) {
-              //   code += `_output = {**${varname}.ext.to_json("*"), "meta": ${varname}.meta.get() if (${varname}.meta and ${varname}.meta.get) else {} } \n`
+              // if (this.previewCode.infer) {
+              //   code += `_output = {**${dfName}.ext.to_json("*"), "meta": ${dfName}.meta.get() if (${dfName}.meta and ${dfName}.meta.get) else {} } \n`
               // } else {
-              //   code += `_output = {**${varname}.ext.to_json("*")} \n`
+              //   code += `_output = {**${dfName}.ext.to_json("*")} \n`
               // }
 
               var response = await this.evalCode(code)
@@ -638,14 +661,13 @@ export default {
                 this.$store.commit('setLoadPreview', { meta: response.data.result.meta } )
               }
 
-              var pCode = `_output = ${varname}.ext.profile(columns="*", output="json")`
+              var pCode = `_output = ${dfName}.ext.profile(columns="*", output="json")`
 
               var pResponse = await this.evalCode(pCode)
 
               var profile = parseResponse(pResponse.data.result)
 
               this.$store.commit('setLoadPreview', { profile } )
-
 
             }
           }
