@@ -10,7 +10,7 @@ except Exception as err:
 res.update({'result': _output})
 _end_time = datetime.utcnow().timestamp()
 res.update({'_gatewayTime': {'start': _start_time, 'end': _end_time, 'duration': _end_time-_start_time}})
-json.dumps(res,  default=_json_default)
+json.dumps(res,  default=_json_default, ensure_ascii=False)
 `
 const code = (code = '') => `
 _start_time = datetime.utcnow().timestamp()
@@ -18,7 +18,7 @@ ${code}
 res = {'result': _output}
 _end_time = datetime.utcnow().timestamp()
 res.update({'_gatewayTime': {'start': _start_time, 'end': _end_time, 'duration': _end_time-_start_time}})
-json.dumps(res,  default=_json_default)
+json.dumps(res,  default=_json_default, ensure_ascii=False)
 `
 
 const datasetsMin = (payload = {}) => `
@@ -31,7 +31,7 @@ _dfs = ipython_vars(globals(),"dask")
 _end_time = datetime.utcnow().timestamp()
 res = { _df: globals()[_df].cols.names() for (_df) in _dfs }
 res.update({'_gatewayTime': {'start': _start_time, 'end': _end_time, 'duration': _end_time-_start_time}})
-json.dumps(res,  default=_json_default)
+json.dumps(res,  default=_json_default, ensure_ascii=False)
 `
 
 const initMin = (payload = {}) => `
@@ -60,7 +60,6 @@ reset = ${payload.reset || 'False'}
 
 from optimus.expressions import reserved_words, Parser
 res.update({'reserved_words': reserved_words})
-
 p = Parser()
 
 try:
@@ -85,7 +84,7 @@ except Exception:
 
 _end_time = datetime.utcnow().timestamp()
 res.update({'_gatewayTime': {'start': _start_time, 'end': _end_time, 'duration': _end_time-_start_time}})
-json.dumps(res,  default=_json_default)
+json.dumps(res,  default=_json_default, ensure_ascii=False)
 `
 
 export default {init, datasets, code, datasetsMin, initMin}

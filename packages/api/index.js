@@ -430,12 +430,12 @@ const handleResponse = function (response) {
     response = response.substr(bracketIndex)
     response = trimCharacters(response,"'")
     response = response.replace(/\bNaN\b/g,null)
-    response = response.replace(/\b\\'\b/g,"'")
+    response = response.replace(/\\+\'/g,"'")
     response = response.replace(/\\\\"/g,'\\"')
     return JSON.parse( response )
 
   } catch (error) {
-    // console.error(error)
+    console.error(error.toString())
     return JSON.parse( {response} )
   }
 }
