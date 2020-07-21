@@ -3101,7 +3101,7 @@ export default {
         var response = await this.socketPost('cells', {
           code,
           username: this.$store.state.session.username,
-          workspace: this.$store.state.session.workspace._id,
+          workspace: (this.$store.state.session.workspace ? this.$store.state.session.workspace._id : undefined) || 'default',
           key: this.$store.state.key
         }, {
           timeout: 0

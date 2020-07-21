@@ -282,9 +282,9 @@ export const mutations = {
     Vue.set(state.datasets, found, dataset)
     Vue.set(state.datasetSelection, found, {})
 
-    state.datasetUpdates = state.datasetUpdates + 1
-
     state.tab = found
+
+    state.datasetUpdates = state.datasetUpdates + 1
   },
 
   setDfToTab (state, { dfName }) {
@@ -466,6 +466,10 @@ export const actions = {
   },
 
   async request ({state}, {request, path, payload, accessToken}) {
+
+    return {}
+
+    // TO-DO: API adjustments
 
     if (!request) request = 'get'
     if (!accessToken) accessToken = state.session.accessToken

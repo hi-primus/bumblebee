@@ -1,3 +1,5 @@
+const AUTH_API = process.env.API_URL // process.env.DEV_API_URL
+
 import axios from 'axios'
 import { setAuthTokenAxios, resetAuthTokenAxios } from '@/utils/auth.js'
 
@@ -78,7 +80,7 @@ export const actions =  {
 
   async signUp (context,  payload) {
     var response
-    response = await axios.post(process.env.DEV_API_URL + '/auth/signup', {
+    response = await axios.post(AUTH_API + '/auth/signup', {
       ...payload,
       secret: window.authSecret || '123'
     })
@@ -108,17 +110,20 @@ export const actions =  {
       path: `/workspaces/${id}`
     }, { root: true })
 
-    var tabs = response.data.tabs.map(e=>{
-      var profiling = JSON.parse(e.profiling)
-      return {
-        name: e.name,
-        dataSources: e.dataSources,
-        ...profiling
-      }
-    })
+    var tabs = []
+    var cells = []
 
-
-    var cells = response.data.commands.map( e=>({ ...JSON.parse(e), done: false }) )
+    if (response.data) {
+      tabs = response.data.tabs.map(e=>{
+        var profiling = JSON.parse(e.profiling)
+        return {
+          name: e.name,
+          dataSources: e.dataSources,
+          ...profiling
+        }
+      })
+      cells = response.data.commands.map( e=>({ ...JSON.parse(e), done: false }) )
+    }
 
     var commands = cells.filter(e=>!(e && e.payload && e.payload.request && e.payload.request.isLoad))
     var dataSources = cells.filter(e=>e && e.payload && e.payload.request && e.payload.request.isLoad)
@@ -139,6 +144,10 @@ export const actions =  {
         commit('newDataset', { dataset, current: true, tab: index }, { root: true })
       }
     })
+
+    if (tab<0) {
+      tab = 0
+    }
 
     commit('mutation', { mutate: 'commands', payload: commands }, { root: true })
     commit('mutation', { mutate: 'dataSources', payload: dataSources}, { root: true })
@@ -165,7 +174,7 @@ export const actions =  {
   },
 
   async profile ({commit}, { auth }) {
-    var response = await axios.get(process.env.DEV_API_URL + '/auth/profile', { headers: { 'Authorization': auth } } )
+    var response = await axios.get(AUTH_API + '/auth/profile', { headers: { 'Authorization': auth } } )
 
     commit('mutation', { mutate: 'username', payload: response.data.username})
 
@@ -175,8 +184,8 @@ export const actions =  {
 	async signIn ({commit, dispatch}, payload) {
 
     var response
-    // response = await axios.post(process.env.DEV_API_URL + '/auth/signin', payload)
-    response = await axios.post(process.env.DEV_API_URL + '/auth/signin', payload)
+    // response = await axios.post(AUTH_API + '/auth/signin', payload)
+    response = await axios.post(AUTH_API + '/auth/signin', payload)
 
     var accessToken = response.data.accessToken ? ('Bearer ' + response.data.accessToken) : false
     var refreshToken = response.data.refreshToken ? ('Bearer ' + response.data.refreshToken) : false
@@ -187,7 +196,9 @@ export const actions =  {
     commit('mutation', { mutate: 'refreshToken', payload: refreshToken})
 
     if (accessToken) {
-      await dispatch('profile', { auth: accessToken} )
+      commit('mutation', { mutate: 'username', payload: payload.username}) // TO-DO: Remove
+      // await dispatch('profile', { auth: accessToken} )
+      // TO-DO: API Adjustments
     } else {
       commit('mutation', { mutate: 'username', payload: false})
     }
@@ -204,10 +215,11 @@ export const actions =  {
 
   async serverInit ({dispatch, commit, state}, payload) {
 
-    const accessToken = this.$cookies.get('x-access-token')
+    const accessToken = this.$cookies.get('x-access-token') && false // TO-DO: API Adjustments
     if (accessToken) {
       try {
-        await dispatch('profile', { auth: accessToken })
+        // await dispatch('profile', { auth: accessToken })
+        // TO-DO: API Adjustments
         dispatch('setAccessToken', accessToken)
         return true
       } catch (err) {

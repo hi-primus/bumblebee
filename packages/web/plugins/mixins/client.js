@@ -80,7 +80,7 @@ export default {
       var response = await this.socketPost('profile', {
         dfName,
         username: this.$store.state.session.username,
-        workspace: this.$store.state.session.workspace._id,
+        workspace: (this.$store.state.session.workspace ? this.$store.state.session.workspace._id : undefined) || 'default',
         key: this.$store.state.key
       }, {
         timeout: 0
@@ -106,7 +106,7 @@ export default {
         var response = await this.socketPost('run', {
           code,
           username: this.$store.state.session.username,
-          workspace: this.$store.state.session.workspace._id
+          workspace: (this.$store.state.session.workspace ? this.$store.state.session.workspace._id : undefined) || 'default'
         }, {
           timeout: 0
         })
@@ -182,7 +182,7 @@ export default {
           if (!window.socket) {
             var initializationPayload = {
               username: this.$store.state.session.username,
-              workspace: this.$store.state.session.workspace._id,
+              workspace: (this.$store.state.session.workspace ? this.$store.state.session.workspace._id : undefined) || 'default',
               engine: this.$route.query.engine,
               tpw: this.$route.query.tpw,
               workers: this.$route.query.workers,
@@ -276,7 +276,7 @@ export default {
       return new Promise((resolve, reject)=>{
 
         let username = this.$store.state.session.username
-        let workspace = this.$store.state.session.workspace._id
+        let workspace = (this.$store.state.session.workspace ? this.$store.state.session.workspace._id : undefined) || 'default'
         let key = this.$store.state.session.key
 
         if (!workspace) {
@@ -390,7 +390,7 @@ export default {
       try {
         var response = await this.socketPost('datasets', {
           username: this.$store.state.session.username,
-          workspace: this.$store.state.session.workspace._id
+          workspace: (this.$store.state.session.workspace ? this.$store.state.session.workspace._id : undefined) || 'default'
         })
         window.pushCode({code: response.code, unimportant: true})
         console.log('Updating secondary datasets')

@@ -115,7 +115,8 @@
               <v-icon color="primary">add</v-icon>
             </v-tab>
           </v-tabs>
-          <div class="bb-workspace-status" v-if="$route.query.ws!=0">
+          <div class="bb-workspace-status" v-if="false">
+            <!-- this.$route.query.ws!=0 -->
             <v-progress-circular
               v-if="workspaceStatus==='uploading' || workspaceStatus==='loading'"
               indeterminate
@@ -228,31 +229,6 @@ export default {
 
   },
 
-  // async asyncData ({ store, params, error }) {
-
-  //   if (params.slug === 'default') {
-  //     return {}
-  //   }
-
-  //   var workspace = []
-
-  //   try {
-  //     let worskpace = params.slug
-  //     let response = await store.dispatch('request',{
-  //       path: `/workspaces/${worskpace}`
-  //     })
-  //     console.log('response.data',response.data)
-  //     workspace = response.data
-  //   } catch (err) {
-  //     error(err)
-  //     return {}
-  //   }
-
-  //   return {
-  //     workspace: workspace || {}
-  //   }
-  // },
-
 	data () {
 		return {
       workspacesDialog: false,
@@ -301,7 +277,7 @@ export default {
     moreMenu () {
       let menu = []
 
-      if (this.useKernel && (this.$route.query.ws!=0)) {
+      if (false) { // this.useKernel && (this.$route.query.ws!=0)
         menu = [
           { text: 'Workspaces', click: this.showWorkspaces },
           { divider: true },
@@ -452,7 +428,7 @@ export default {
 
       var response = await this.socketPost('initialize', {
         username: this.$store.state.session.username,
-        workspace: this.$store.state.session.workspace._id,
+        workspace: (this.$store.state.session.workspace ? this.$store.state.session.workspace._id : undefined) || 'default',
         engine: this.$route.query.engine,
         tpw: this.$route.query.tpw,
         workers: this.$route.query.workers,
