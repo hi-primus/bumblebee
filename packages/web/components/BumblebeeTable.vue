@@ -178,7 +178,6 @@
                       :mismatch="+previewPlotsData[column.name].mismatch"
                       :nullV="+previewPlotsData[column.name].null"
                       class="table-data-bar"
-                      bottom
                     />
                     <Frequent
                       v-if="previewPlotsData[column.name].frequency"
@@ -188,7 +187,6 @@
                       :total="+previewPlotsData[column.name].total || 1"
                       :columnIndex="column.index"
                       class="histfreq"
-                      table
                     />
                     <Histogram
                       v-else-if="previewPlotsData[column.name].hist"
@@ -198,7 +196,6 @@
                       :total="+previewPlotsData[column.name].total"
                       :columnIndex="column.index"
                       class="histfreq"
-                      table
                     />
                     <Histogram
                       v-else-if="previewPlotsData[column.name].hist_years"
@@ -208,7 +205,6 @@
                       :total="+previewPlotsData[column.name].total"
                       :columnIndex="column.index"
                       class="histfreq"
-                      table
                     />
                     <div
                       v-else
@@ -246,7 +242,6 @@
                     :columnIndex="column.index"
                     class="histfreq"
                     selectable
-                    table
                   />
                   <Histogram
                     v-else-if="plotsData[column.index].hist"
@@ -257,7 +252,6 @@
                     :columnIndex="column.index"
                     class="histfreq"
                     selectable
-                    table
                   />
                   <Histogram
                     v-else-if="plotsData[column.index].hist_years"
@@ -268,7 +262,6 @@
                     :columnIndex="column.index"
                     class="histfreq"
                     selectable
-                    table
                   />
                 </div>
               </div>

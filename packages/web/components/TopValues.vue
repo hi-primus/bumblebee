@@ -1,18 +1,21 @@
 <template>
-  <div>
-    <h3>Top values</h3>
-    <table class="details-table">
-      <tbody>
-        <tr v-for="(item, index) in values.slice(0,10)" :key="index">
-          <td class="top-bar" style="width:80%;">
-            <div :style="{'width': normVal(item.count)+'%' }" :title="item.value" class="bar">
-            </div>
-            <div class="value">{{ item.value | varCheck }}</div>
-          </td>
-          <td style="width:20%;" :title="item.count | varCheck">{{ item.count | varCheck }}</td>
-        </tr>
-      </tbody>
-    </table>
+  <div class="top-values">
+    <div
+      v-for="(item, index) in slice ? values.slice(0,slice) : values"
+      :key="index"
+      class="top-values-item"
+    >
+      <div :style="{'width': normVal(item.count)+'%' }" :title="item.value" class="item-bar">
+      </div>
+      <div class="item-value" :title="item.value">
+        <span>
+          {{ item.value | varCheck }}
+        </span>
+      </div>
+      <div class="item-count" :title="item.count | varCheck">
+        <span>{{ item.count | varCheck }}</span>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -26,7 +29,11 @@ export default {
 		total: {
 			type: Number,
 			default: 1
-		}
+    },
+    slice: {
+      type: Number,
+      default: 0
+    }
 	},
 
 	data () {

@@ -151,12 +151,78 @@ table.details-table {
   }
 }
 
+.top-values {
+  text-align: left;
+  width: 100%;
+  border-spacing: 0;
+  cursor: crosshair;
+
+  .top-values-item {
+    span {
+      background-color: rgba(255,255,255,0.21);
+      line-height: 28px;
+      display: inline-block;
+    }
+    .item-value span {
+      padding: 0 20px 0 8px;
+      background: linear-gradient(90deg,
+      rgba(255,255,255,0.21) calc(100% - 20px),
+      rgba(255,255,255,0) 100%
+      );
+      font-family: $font-mono;
+    }
+    .item-count span {
+      padding: 0 8px 0 20px;
+      background: linear-gradient(90deg,
+      rgba(255,255,255,0) 0,
+        rgba(255,255,255,0.21) 20px,
+      );
+    }
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: relative;
+    margin-bottom: 1px;
+    height: 28px;
+
+    .item-count {
+      text-align: right;
+    }
+    .item-value, .item-count {
+      z-index: 1;
+      font-size: 14px;
+    }
+    .item-bar {
+      position: absolute;
+      left: 0;
+      top: 0;
+      height: 100%;
+      background-color: $data-primary;
+      z-index: 0;
+    }
+    &:hover {
+      background-color: $data-highlight-grey;
+      .item-bar {
+        background-color: $data-primary-darken-bar;
+      }
+      .item-value span {
+        background: none;
+      }
+      .item-count span {
+        background: none;
+      }
+    }
+  }
+
+}
+
 .content {
 	background-color: #fff;
 }
 
 .component-container {
-	margin: 0 0 20px;
+  margin: 0 0 20px;
+  width: 385px;
 	p {
 		margin: 0;
 	}
@@ -1046,7 +1112,11 @@ table {
 
 .bb-graphic {
 
-  padding: 0 4px;
+  &:not(.histfreq) {
+    .konvajs-content {
+      margin-left: 0;
+    }
+  }
 
   .scroll-container::-webkit-scrollbar {
     width: 2px;
@@ -1708,6 +1778,7 @@ $editor-top-padding: 6px;
         }
 
         .histfreq {
+          padding: 0 4px;
           flex: 1;
           opacity: 1;
         }

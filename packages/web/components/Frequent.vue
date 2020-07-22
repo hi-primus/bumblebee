@@ -1,6 +1,6 @@
 <template>
   <div class="bb-graphic" v-if="calculatedValues.length" @mouseleave="currentVal = false">
-    <h3 v-if="!table">Frequent values</h3>
+
     <div :style="{'min-height': 60+'px'}">
       <BarsCanvas
         :selectable="selectable"
@@ -8,7 +8,7 @@
         :values="calculatedValues"
         :binMargin="1"
         :width="'auto'"
-        :height="!table ? 90 : 60"
+        :height="height"
         @update:selected="updateSelected"
         @hovered="setValueIndex($event)"
       />
@@ -44,9 +44,9 @@ export default {
 			default: 1,
 			type: Number
 		},
-		table: {
-			default: false,
-			type: Boolean
+		height: {
+			default: 60,
+			type: Number
     },
     columnIndex: {
       default: -1,

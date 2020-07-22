@@ -27,7 +27,7 @@
           class="component-container"
           style="margin-top: -16px; margin-bottom: -12px; z-index:-1"
         >
-          <VegaEmbed
+          <!-- <VegaEmbed
             :name="'box-plot'"
             ref="box-plot"
             class="box-plot-grid mb-2"
@@ -96,7 +96,7 @@
                 stroke: 'transparent'
               }
             }"
-          />
+          /> -->
         </div>
       </div>
 
@@ -111,6 +111,7 @@
         v-if="false && column.stats.percentile==undefined && column.stats.frequency"
         class="component-container"
       >
+        <h3>Top values</h3>
         <TopValues
           v-if="column.stats.frequency"
           :values="column.stats.frequency"
@@ -123,10 +124,11 @@
           v-if="column.stats.hist[0]"
           class="component-container"
         >
+          <h3>Histogram</h3>
           <Histogram
             :values="column.stats.hist"
             :total="rowsCount"
-            title="Histogram"
+            :height="90"
           />
         </div>
 
@@ -134,10 +136,11 @@
           v-if="column.stats.hist.years"
           class="component-container"
         >
+          <h3>Years Histogram</h3>
           <Histogram
             :values="column.stats.hist.years"
             :total="rowsCount"
-            title="Years Histogram"
+            :height="90"
           />
         </div>
 
@@ -145,10 +148,11 @@
           v-if="column.stats.hist.months"
           class="component-container"
         >
+          <h3>Months Histogram</h3>
           <Histogram
             :values="column.stats.hist.months"
             :total="rowsCount"
-            title="Months Histogram"
+            :height="90"
           />
         </div>
 
@@ -156,10 +160,11 @@
           v-if="column.stats.hist.weekdays"
           class="component-container"
         >
+          <h3>Week days Histogram</h3>
           <Histogram
             :values="column.stats.hist.weekdays"
             :total="rowsCount"
-            title="Week days Histogram"
+            :height="90"
           />
         </div>
 
@@ -167,10 +172,11 @@
           v-if="column.stats.hist.hours"
           class="component-container"
         >
+          <h3>Hours Histogram</h3>
           <Histogram
             :values="column.stats.hist.hours"
             :total="rowsCount"
-            title="Hours Histogram"
+            :height="90"
           />
         </div>
 
@@ -178,10 +184,11 @@
           v-if="column.stats.hist.minutes"
           class="component-container"
         >
+          <h3>Minutes Histogram</h3>
           <Histogram
             :values="column.stats.hist.minutes"
             :total="rowsCount"
-            title="Minutes Histogram"
+            :height="90"
           />
         </div>
 
@@ -191,17 +198,42 @@
         v-if="column.stats.frequency"
         class="component-container"
       >
+        <h3>Frequent values</h3>
         <Frequent
           :uniques="column.stats.count_uniques"
           :values="column.stats.frequency"
           :total="rowsCount"
+          :height="90"
         />
+      </div>
+
+      <div
+        v-if="patternsFrequency"
+        class="component-container"
+      >
+        <h3>Frequent patterns</h3>
+        <v-progress-circular
+          indeterminate
+          color="grey"
+          class="mx-auto mt-2 d-flex"
+          size="64"
+          width="4"
+          v-if="patternsFrequency==='loading'"
+        />
+        <TopValues
+          v-else
+          :values="patternsFrequency"
+          :total="rowsCount"
+        />
+        <!-- selectable -->
       </div>
     </div>
   </div>
 </template>
 
 <script>
+import { mapState, mapGetters } from 'vuex'
+
 import TopValues from '@/components/TopValues'
 import Frequent from '@/components/Frequent'
 import General from '@/components/General'
@@ -209,8 +241,11 @@ import Percentile from '@/components/PercentileStats'
 import Descriptive from '@/components/Stats'
 import Histogram from '@/components/Histogram'
 import DataTypes from '@/components/DataTypes'
+
 import dataTypesMixin from '~/plugins/mixins/data-types'
 import applicationMixin from '~/plugins/mixins/application'
+import clientMixin from '~/plugins/mixins/client'
+
 import VegaEmbed from '@/components/VegaEmbed'
 
 export default {
@@ -225,11 +260,12 @@ export default {
     VegaEmbed
 	},
 
-  mixins: [dataTypesMixin, applicationMixin],
+  mixins: [dataTypesMixin, applicationMixin, clientMixin],
 
   data () {
     return {
       expanded: false,
+      patternsFrequency: false
     }
   },
 
@@ -241,19 +277,37 @@ export default {
     column: {
       type: Object
     },
-    dataset: {
-      type: Object
-    },
     rowsCount: {
-      type: Number
-    },
-    index: {
       type: Number
     },
     startExpanded: {
       type: Boolean,
       default: false
     }
+  },
+
+  computed: {
+    ...mapGetters([
+      'currentDataset'
+    ]),
+  },
+
+  mounted () {
+    this.getPatterns()
+  },
+
+  methods: {
+    async getPatterns () {
+      try {
+        this.patternsFrequency = 'loading'
+        var response = await this.evalCode(`_output = ${this.currentDataset.dfName}.cols.patterns("${this.column.name}")`)
+        this.patternsFrequency = response.data.result[this.column.name].values
+      } catch (err) {
+        console.error(err)
+        this.patternsFrequency = false
+      }
+      // var response = await this.evalCode(`_output = ${}`)
+    },
   },
 
   watch: {
