@@ -56,15 +56,15 @@
             <span class="title">Loading workspace</span>
           </div>
         </div>
+          <!-- @drop.prevent="addFile"
+          @dragover.prevent
+          @dragend.prevent="dragFile = false"
+          @dragleave.prevent="dragFile = false"
+          @dragenter="dragFile = true" -->
         <div
           data-name="workspace"
           v-show="workspaceStatus!=='loading'"
           class="workspace-container"
-          @drop.prevent="addFile"
-          @dragover.prevent
-          @dragend.prevent="dragFile = false"
-          @dragleave.prevent="dragFile = false"
-          @dragenter="dragFile = true"
         >
           <div class="drop-hover" v-if="dragFile">
             <div class="frame"></div>
