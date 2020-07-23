@@ -261,13 +261,11 @@ export default {
 
       } else if (this.hideMenu) {
 
-        console.log('hideMenu')
         this.hideMenu = false
         this.hideSuggestions = false
 
       } else if (!this.avoidPropagation) {
 
-        console.log('noAvoidPropagation')
         this.$nextTick(()=>{
           if (this.suggestionsVisible) {
             this.useSuggestion(this.resultsSuggestions[0])

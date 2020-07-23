@@ -354,7 +354,6 @@ export default {
 
       try {
 
-        console.log('startClient startWorkspace') // TO-DO: Check if this is neccessary
         await this.$store.dispatch('session/startWorkspace', workspace)
 
         if (key) {

@@ -6,13 +6,13 @@ export const actions = {
 
 	async uploadFile (context, {file}) {
 
-    // const aresponse = context.dispatch('request', {
+    // const uploadResponse = context.dispatch('request', {
     //   request: 'post',
     //   path: '/datasource/upload',
     //   payload: file
     // }, { root: true })
 
-    // console.log({aresponse})
+    // console.log({uploadResponse})
 
     // return;
 

@@ -1221,14 +1221,14 @@ export default {
           this.$store.commit('setHighlights', { matchColumns, color: this.previewCode.color })
 
           if (previewColumns.length || matchRowsColumns.length) {
-            // console.log('[checkIncomingColumns] check = true')
+            // console.log('[DEBUG][checkIncomingColumns] check = true')
             return true // must cehck
           }
 
         }
       }
 
-      // console.log('[checkIncomingColumns] check = false')
+      // console.log('[DEBUG][checkIncomingColumns] check = false')
       return false // no check
     },
 
@@ -1864,11 +1864,11 @@ export default {
 
         this.mustUpdateRows = true
 
-        // console.log('[fetchChunk] checking',parsed.sample.columns)
+        // console.log('[DEBUG][fetchChunk] checking',parsed.sample.columns)
         return this.checkIncomingColumns(parsed.sample.columns)
 
       } else {
-        // console.log('[fetchChunk] returned 0')
+        // console.log('[DEBUG][fetchChunk] returned 0')
         return 0
       }
     },

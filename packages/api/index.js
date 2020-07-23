@@ -190,7 +190,7 @@ const newSocket = function (socket, session) {
 
   }
   else {
-    console.log('"""Unsecure socket connection for', session,'"""')
+    console.log('Unsecure socket connection:', session)
   }
 
   return socket
@@ -342,7 +342,6 @@ const initializeSession = async function (sessionId, payload = false) {
 
   var tries = 10 // 10
   while (tries-->0) {
-    console.log(tries) // maybe this is neccessary
     try {
       result = await requestToKernel('init', sessionId, payload)
     } catch (err) {

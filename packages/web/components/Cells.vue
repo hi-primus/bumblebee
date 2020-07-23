@@ -2634,15 +2634,15 @@ export default {
 
     async beforeRunCells (newOnly = false, ignoreFrom = -1) {
 
-      // console.log('beforeRunCells')
+      // console.log('[DEBUG] beforeRunCells')
       this.filterCells(newOnly, ignoreFrom).forEach(async (cell) => {
         if (cell.payload.request && cell.payload.request.createsNew) {
-          // console.log('beforeExecuteCode', cell.payload.newDfName)
+          // console.log('[DEBUG] beforeExecuteCode', cell.payload.newDfName)
           this.setDfToTab(cell.payload.newDfName)
         }
         var commandHandler = this.getCommandHandler(cell)
         if (commandHandler.beforeExecuteCode) {
-          // console.log('beforeExecuteCode')
+          // console.log('[DEBUG] beforeExecuteCode')
           cell.payload = await commandHandler.beforeExecuteCode(cell.payload)
         }
       })
@@ -2765,7 +2765,6 @@ export default {
     },
 
     async confirmCommand (event) {
-      console.log('confirmCommand',{...event})
       this.isEditing = false
       this.clearTextSelection()
       var commandHandler = this.getCommandHandler(this.currentCommand)
@@ -2975,7 +2974,7 @@ export default {
     },
 
     async editCell (cell, index) {
-      // console.log('[DEBUG] Editing ',{cell, index})
+      // console.log('[DEBUG] Editing cell',{cell, index})
       var command = deepCopy(cell)
 
       // TO-DO: deep copy using deepCopy
