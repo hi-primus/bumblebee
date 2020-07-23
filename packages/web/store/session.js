@@ -62,9 +62,11 @@ export const actions =  {
 
       // console.log('[WORKSPACE MANAGING]',{payload})
 
+      var workspaceId = state.workspace ? state.workspace._id : undefined
+
       var response = await dispatch('request', {
         request: 'put',
-        path: `/workspaces/${state.workspace._id}`,
+        path: `/workspaces/${workspaceId}`,
         payload
       }, { root: true })
 
@@ -255,6 +257,6 @@ export const getters =  {
     return state.accessToken && state.username
   },
   isInWorkspace (state) {
-    return state.accessToken && state.username && state.workspace._id
+    return state.accessToken && state.username && state.workspace && state.workspace._id
   },
 }
