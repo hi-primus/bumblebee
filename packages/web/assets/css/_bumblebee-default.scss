@@ -2593,3 +2593,64 @@ $editor-top-padding: 6px;
     background-color: rgba(0,0,0,0.54);
   }
 }
+
+
+.info-tooltip-container {
+
+  .info-tooltip-tip, .info-tooltip-content {
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.21s ease, pointer-events 0s linear 2s;
+  }
+
+  &:hover, &:active {
+    .info-tooltip-tip, .info-tooltip-content {
+      pointer-events: auto;
+      opacity: 1;
+      transition: opacity 0.21s ease;
+    }
+  }
+
+  .info-tooltip-tip {
+    &::before {
+      content: "";
+      background-color: white;
+      position: absolute;
+      height: 8px;
+      width: 8px;
+      box-shadow: -2px -2px 3px -1px rgba(0, 0, 0, 0.08);
+      top: 20px;
+      left: 4px;
+      transform: rotate(45deg);
+      z-index: 3;
+    }
+    &::after {
+      content: "";
+      position: absolute;
+      background-color: white;
+      top: 23px;
+      left: -5px;
+      width: 30px;
+      height: 6px;
+      z-index: 4;
+    }
+  }
+
+  .info-tooltip-content {
+    position: absolute;
+    top: 26px;
+    left: 0;
+    width: 100%;
+    background-color: white;
+    border-radius: 6px;
+    padding: 6px 10px;
+    font-size: 14px;
+    z-index: 2;
+  }
+}
+
+.small-label .v-label {
+  font-size: 12px;
+  margin-right: 8px;
+  font-weight: 500;
+}

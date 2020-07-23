@@ -210,22 +210,59 @@
       <div
         v-if="patternsFrequency"
         class="component-container"
+        style="position: relative;"
       >
-        <h3>Frequent patterns</h3>
-        <v-progress-circular
-          indeterminate
-          color="grey"
-          class="mx-auto mt-2 d-flex"
-          size="64"
-          width="4"
-          v-if="patternsFrequency==='loading'"
-        />
-        <TopValues
-          v-else
-          :values="patternsFrequency"
-          :total="rowsCount"
-        />
-        <!-- selectable -->
+        <div style="margin-top: -1px;">
+          <h3 class="d-inline">Frequent patterns</h3>
+          <span class="info-tooltip-container">
+            <span style="position: relative;">
+              <v-icon small color="grey" class="hoverable">
+                mdi-information-outline
+              </v-icon>
+              <div class="info-tooltip-tip elevation-3"></div>
+            </span>
+            <div class="info-tooltip-content elevation-3">
+              <span class="font-mono">c: </span>Letter<br/>
+              <span class="font-mono">U: </span>Uppercase letter<br/>
+              <span class="font-mono">l: </span>Lowercase letter<br/>
+              <span class="font-mono">*: </span>Alphanumeric digit<br/>
+              <span class="font-mono">#: </span>Numeric digit<br/>
+              <span class="font-mono">!: </span>Punctuation
+            </div>
+          </span>
+        </div>
+        <div style="min-height: 128px;" class="vertical-center">
+          <v-progress-circular
+            indeterminate
+            color="grey"
+            class="mx-auto d-flex"
+            size="64"
+            width="4"
+            v-if="patternsFrequency[patternsResolution]==='loading' || !patternsFrequency[patternsResolution]"
+          />
+          <template v-else>
+            <TopValues
+              class="align-self-start"
+              :key="patternsResolution"
+              :values="patternsFrequency[patternsResolution]"
+              :total="rowsCount"
+            />
+          </template>
+          <!-- selectable -->
+        </div>
+        <v-slider
+          class="small-label"
+          dense
+          hide-details
+          label="Detail"
+          v-model="patternsResolution"
+          min="0"
+          max="3"
+          track-color="grey"
+        >
+        </v-slider>
+        <!-- <div class="mx-auto" style="max-width: 72px">
+        </div> -->
       </div>
     </div>
   </div>
@@ -265,7 +302,8 @@ export default {
   data () {
     return {
       expanded: false,
-      patternsFrequency: false
+      patternsFrequency: [],
+      patternsResolution: 3
     }
   },
 
@@ -299,12 +337,15 @@ export default {
   methods: {
     async getPatterns () {
       try {
-        this.patternsFrequency = 'loading'
-        var response = await this.evalCode(`_output = ${this.currentDataset.dfName}.cols.patterns("${this.column.name}")`)
-        this.patternsFrequency = response.data.result[this.column.name].values
+        if (this.patternsFrequency[this.patternsResolution]) {
+          return
+        }
+        this.$set(this.patternsFrequency, this.patternsResolution, 'loading')
+        var response = await this.evalCode(`_output = ${this.currentDataset.dfName}.cols.patterns("${this.column.name}", ${3-this.patternsResolution})`)
+        this.$set(this.patternsFrequency, this.patternsResolution, response.data.result[this.column.name].values)
       } catch (err) {
         console.error(err)
-        this.patternsFrequency = false
+        this.$set(this.patternsFrequency, this.patternsResolution, false)
       }
       // var response = await this.evalCode(`_output = ${}`)
     },
@@ -317,6 +358,9 @@ export default {
         if (value)
           this.expanded = true
       }
+    },
+    patternsResolution () {
+      this.getPatterns()
     }
   }
 }
