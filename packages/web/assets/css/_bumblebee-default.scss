@@ -2531,8 +2531,7 @@ $editor-top-padding: 6px;
   height: 100%;
   top: 0;
   left: 0;
-  background: $data-primary;
-  opacity: 0.5;
+  background: rgba($data-primary, 0.75);
   z-index: 500;
   pointer-events: none;
   .frame {

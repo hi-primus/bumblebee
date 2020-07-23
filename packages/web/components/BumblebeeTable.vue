@@ -120,17 +120,17 @@
             {
               'active-menu-column': (columnMenuIndex===column.index),
               'bb-selected': selectionMap[column.index],
-              'bb-drag-over': (dragOver===i && dragging!==i),
-              'bb-drag-over-right': (dragOver===i && dragging<i),
+              'bb-drag-over': (dragOverIndex===i && dragging!==i),
+              'bb-drag-over-right': (dragOverIndex===i && dragging<i),
             },
             ...(column.classes || []),
           ]"
           :style="{ width: column.width+'px' }"
           :draggable="selectionMap[column.index]"
           @dragstart="dragStart(i, $event)"
-          @dragover.prevent="dragOver=i"
+          @dragover.prevent="dragOver(i)"
           @dragend="dragEnd"
-          @drop="dragFinish(i, $event)"
+          @drop="dragDrop(i, $event)"
           @click="selectColumn($event, column.index)"
           @dblclick="setMenu($event, column.index)"
         >
@@ -423,7 +423,7 @@ export default {
       newColumnName: '',
       newColumnType: 'string',
 
-      dragOver: -1,
+      dragOverIndex: -1,
       dragging: -1,
 
       selection: [],
@@ -1254,28 +1254,42 @@ export default {
 
     /* drag events */
 
-    dragStart(which, ev) {
+    dragOver (index) {
+      if (window.dragType=='columns') {
+        this.dragOverIndex = index
+      }
+    },
+
+    dragStart (which, ev) {
+      window.dragType = 'columns'
       this.dragging = which
     },
-    dragEnd(ev) {
-      this.dragOver = -1
+    dragEnd (ev) {
+      this.dragOverIndex = -1
       this.dragging = -1
     },
 
-    dragFinish(to, ev) {
-      var columns = this.bbColumns
-      var selection = this.currentSelection.columns.map(e=>e.index)
+    dragDrop (to, ev) {
+      try {
+        if (this.dragging && window.dragType=='columns') {
+          var columns = this.bbColumns
+          var selection = this.currentSelection.columns.map(e=>e.index)
 
-      if (this.dragging>to) {
-        to--
-      }
+          if (this.dragging>to) {
+            to--
+          }
 
-      columns = [
-        ...columns.filter((e,i)=>(i<=to && selection.indexOf(e)==-1)),
-        ...selection,
-        ...columns.filter((e,i)=>(i>to && selection.indexOf(e)==-1)),
-      ]
-      this.$emit('sort',columns)
+          columns = [
+            ...columns.filter((e,i)=>(i<=to && selection.indexOf(e)==-1)),
+            ...selection,
+            ...columns.filter((e,i)=>(i>to && selection.indexOf(e)==-1)),
+          ]
+          this.$emit('sort',columns)
+        }
+      } catch (err) {}
+      this.dragOverIndex = -1
+      this.dragging = -1
+      delete window.dragType
     },
 
     /* end of drag events */

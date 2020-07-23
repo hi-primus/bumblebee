@@ -147,8 +147,8 @@
         :list="localDataSources"
         v-bind="dataSourcesDragOptions"
         handle=".handle"
-        @start="drag = true"
-        @end="drag = false; draggableEnd()"
+        @start="draggableStart"
+        @end="draggableEnd"
       >
         <div
           class="cell-container"
@@ -183,8 +183,8 @@
         :list="localCommands"
         v-bind="commandsDragOptions"
         handle=".handle"
-        @start="drag = true"
-        @end="drag = false; draggableEnd()"
+        @start="draggableStart"
+        @end="draggableEnd"
       >
         <div
           class="cell-container"
@@ -2734,6 +2734,15 @@ export default {
             await commandHandler.onInit()
           }
 
+          if (command.execute) {
+            for (let i = 0; i < command.execute.length; i++) {
+              const element = command.execute[i];
+              if (commandHandler[element]) {
+                await commandHandler[element](this.currentCommand)
+              }
+            }
+          }
+
           if (command.immediate) {
             await this.confirmCommand()
           } else {
@@ -2801,16 +2810,24 @@ export default {
 			}, 10);
     },
 
-    draggableEnd() {
-      this.localCommands = this.localCommands
-      this.localDataSources = this.localDataSources
-      if (this.codeText().trim()==='') {
-        this.$emit('update:codeError','')
-        this.runCode() // deleting every cell
+    draggableStart () {
+      window.dragType = 'cell'
+      this.drag = true
+    },
+
+    draggableEnd () {
+      this.drag = false
+      if (window.dragType == 'cell') {
+        this.localCommands = this.localCommands
+        this.localDataSources = this.localDataSources
+        if (this.codeText().trim()==='') {
+          this.$emit('update:codeError','')
+          this.runCode() // deleting every cell
+          return;
+        }
+        this.runCode() // reordering or deleting
         return;
       }
-      this.runCode() // reordering or deleting
-      return;
     },
 
     removeCell (index, isDataSource = false) {

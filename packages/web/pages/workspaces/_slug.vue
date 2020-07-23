@@ -56,19 +56,33 @@
             <span class="title">Loading workspace</span>
           </div>
         </div>
-          <!-- @drop.prevent="addFile"
-          @dragover.prevent
-          @dragend.prevent="dragFile = false"
-          @dragleave.prevent="dragFile = false"
-          @dragenter="dragFile = true" -->
         <div
           data-name="workspace"
           v-show="workspaceStatus!=='loading'"
           class="workspace-container"
+          id="workspace-container"
+          @drop.prevent="addFile"
+          @dragend.prevent="dragLeave"
+          @dragover.prevent
+          @dragenter="dragEnter"
+          @dragleave.prevent="dragLeave"
         >
-          <div class="drop-hover" v-if="dragFile">
-            <div class="frame"></div>
-          </div>
+          <transition name="fade">
+            <div class="drop-hover" v-if="dragFile">
+              <div class="frame vertical-center flex-column">
+                <v-icon
+                  big
+                  color="white"
+                  style="font-size: 64px;"
+                >
+                  mdi-file-upload-outline
+                </v-icon>
+                <div class="title white--text text-center">
+                  Upload from file
+                </div>
+              </div>
+            </div>
+          </transition>
           <v-dialog
             data-name="Confirm close"
             v-if="$store.state.datasets[confirmDelete]"
@@ -336,11 +350,31 @@ export default {
 	methods: {
 
     addFile (event) {
-      this.eventDebug(event)
+      window.dragCount = 0
+      try {
+        var files = event.dataTransfer.files
+        if (files && files[0] && files[0].name) {
+        this.$refs.tableBar.commandHandle({command: 'load file', payload: { _fileInput: files[0] }, execute: ['uploadFile']});
+        }
+
+      } catch (err) {}
+      this.dragFile = false
     },
 
-    eventDebug (event) {
-      console.log({event})
+    dragLeave (event) {
+      window.dragCount--
+      if (window.dragCount <= 0) {
+        window.dragCount = 0
+        this.dragFile = false
+      }
+    },
+
+    dragEnter (event) {
+      if (!window.dragType) {
+        window.dragCount = window.dragCount || 0
+        window.dragCount++
+        this.dragFile = true
+      }
     },
 
     showWorkspaces () {
