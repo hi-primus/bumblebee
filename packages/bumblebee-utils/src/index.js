@@ -420,6 +420,24 @@ export const everyRatio = (array,cb) => {
   return count/array.length
 }
 
+export const propsToLocal = (array) => {
+  var oobj = array.reduce((obj, item)=>{
+    console.log(item)
+    var localName = 'local'+capitalizeString(item)
+    obj[localName] = {
+      set (value) {
+        this.$emit(`update:${item}`, value)
+      },
+      get () {
+        return this[item]
+      }
+    }
+    return obj
+  },{})
+  console.log({oobj})
+  return oobj
+}
+
 // constants
 
 export const TYPES = {
@@ -533,6 +551,7 @@ export default {
   hlCols,
   multipleContent,
   everyRatio,
+  propsToLocal,
   TYPES,
   TYPES_HINTS,
   TYPES_NAMES,
