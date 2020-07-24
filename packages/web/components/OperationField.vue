@@ -203,17 +203,24 @@
       ></v-select>
     </template>
     <template v-else-if="getPropertyField(field.type)=='columns_filter'">
-      <v-data-table
+      <ColumnsJoinSelector
         :key="field.key"
         v-model="_value"
-        show-select
         :headers="field.headers"
         :item-key="field.item_key"
         :items="(field.items_key) ? getPropertyField(currentCommand[field.items_key]) : field.items"
+        :disabled="getPropertyField(field.disabled)"
+        :right-on="currentCommand.right_on"
+        :left-on="currentCommand.left_on"
         @input="(field.onChange) ? (currentCommand = field.onChange($event, currentCommand)) : ()=>{}"
         @click:row="field.onClickRow ? (currentCommand = field.onClickRow($event, currentCommand)) : ()=>{}"
-        :disabled="getPropertyField(field.disabled)"
+        @click:item="field.selectKey ? (currentCommand = field.selectKey($event, currentCommand)) : ()=>{}"
+      >
+      </ColumnsJoinSelector>
+      <!-- <v-data-table
         :items-per-page="(field.items_key) ? getPropertyField(currentCommand[field.items_key]).length : field.items.length"
+        v-model="_value"
+        show-select
         class="vdf--hide-select mb-4 columns-filter"
         hide-default-footer
         dense
@@ -236,7 +243,7 @@
             </v-icon>
           </span>
         </template>
-      </v-data-table>
+      </v-data-table> -->
     </template>
     <template v-else-if="getPropertyField(field.type)=='select-foreach'">
       <v-row :key="field.key" no-gutters class="foreach-label">
@@ -303,11 +310,13 @@
 /*bu*/ import { getProperty } from 'bumblebee-utils' /*bu*/
 
 import TextFieldSuggestions from '@/components/TextFieldSuggestions'
+import ColumnsJoinSelector from '@/components/ColumnsJoinSelector'
 
 export default {
 
   components: {
-    TextFieldSuggestions
+    TextFieldSuggestions,
+    ColumnsJoinSelector
   },
 
   props: {
