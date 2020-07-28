@@ -148,12 +148,15 @@
             >{{(useKernel) ? 'Sign in' : 'Subscribe'}}</v-btn>
             <v-spacer />
           </v-card-actions>
-          <v-layout align-center justify-center>
+          <v-layout
+            v-if="useKernel && useApiFeatures"
+            align-center
+            justify-center
+          >
             <div
-              v-if="useRegister && useKernel"
               class="primary--text text--darken-1 text-button"
               @click="typeForm=1"
-            >{{(useRegister) ? 'Sign up' : ''}}</div>
+            >Sign up</div>
           </v-layout>
         </v-form>
         <v-card-text v-if="successMessage || appError" class="pb-0">
@@ -225,6 +228,10 @@ export default {
 	computed: {
     ...mapGetters(["appError"]),
 
+    useApiFeatures () {
+      return +process.env.API_FEATURES
+    },
+
 		status () {
 			return (
 				this.$store.state.appStatus.status ||
@@ -273,7 +280,7 @@ export default {
 						username: this.inputUsername,
 						password: this.inputPassword
           })
-          if (false) { // this.$route.query.ws!=0
+          if (this.$route.query.ws!=0 && +process.env.API_FEATURES) {
             this.$router.push({path: '/workspaces', query: this.$route.query })
           } else {
             this.$router.push({path: '/workspaces/default', query: this.$route.query })

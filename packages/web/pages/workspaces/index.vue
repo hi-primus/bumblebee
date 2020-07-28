@@ -8,14 +8,14 @@
         </MoreMenu>
         <div class="bb-content pa-12">
           <WorkspacesList
-            @update:totalWorkspaces="totalWorkspaces = $event"
+            @update:total="total = $event"
           />
         </div>
         <v-footer fixed="fixed" app>
           <v-layout class="px-4" row justify-space-between>
             <span />
-            <span v-if="typeof totalWorkspaces !== 'undefined'" class="caption-2">
-              {{ totalWorkspaces | formatNumberInt }} Workspaces &emsp;
+            <span v-if="typeof total !== 'undefined'" class="caption-2">
+              {{ total | formatNumberInt }} Workspaces &emsp;
             </span>
           </v-layout>
         </v-footer>
@@ -46,7 +46,7 @@ export default {
 
 	data () {
 		return {
-      totalWorkspaces: 0
+      total: 0
 		}
 	},
 

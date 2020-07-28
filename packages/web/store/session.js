@@ -1,7 +1,9 @@
-const AUTH_API = process.env.API_URL // process.env.DEV_API_URL
+const AUTH_API = (+process.env.API_FEATURES) ? process.env.DEV_API_URL : process.env.API_URL
 
 import axios from 'axios'
 import { setAuthTokenAxios, resetAuthTokenAxios } from '@/utils/auth.js'
+import { debounce } from 'bumblebee-utils'
+import Vue from 'vue'
 
 export const state = () => ({
   accessToken: false,
@@ -11,12 +13,13 @@ export const state = () => ({
   workspace: false,
   workspaceStatus: false,
   key: false,
-  socket: false
+  socket: false,
+  saveReady: false
 })
 
 
 export const mutations =  {
-  mutation (state, {mutate, payload}) {
+  mutation (state, { mutate, payload}) {
     state[mutate] = payload
   },
 }
@@ -24,18 +27,21 @@ export const mutations =  {
 export const actions =  {
 
   setAccessToken (context, payload) {
-    context.commit('mutation', {mutate: 'accessToken', payload })
+    context.commit('mutation', { mutate: 'accessToken', payload })
     if (payload) {
-      // context.commit('mutation', {mutate: 'accessToken', payload: 'Bearer ' + payload })
+      // context.commit('mutation', { mutate: 'accessToken', payload: 'Bearer ' + payload })
       setAuthTokenAxios('Bearer ' + payload)
     } else {
-      context.commit('mutation', {mutate: 'accessToken', payload })
+      context.commit('mutation', { mutate: 'accessToken', payload })
       resetAuthTokenAxios()
 
     }
   },
 
-  async saveWorkspace ({dispatch, commit, state, rootState}) {
+  saveWorkspace: debounce ( async function ({dispatch, commit, state, rootState}) {
+    if (!state.saveReady)  {
+      return
+    }
     commit('mutation', { mutate: 'workspaceStatus', payload: 'uploading' })
     try {
 
@@ -57,10 +63,11 @@ export const actions =  {
             profiling: JSON.stringify(profiling),
           }
         }),
-        commands: [...dataSources, ...commands]
-      }
+        commands: [...dataSources, ...commands],
+        dataSourcesCount: dataSources.length,
+        selectedTab: rootState.tab
 
-      // console.log('[WORKSPACE MANAGING]',{payload})
+      }
 
       var workspaceId = state.workspace ? state.workspace._id : undefined
 
@@ -78,7 +85,7 @@ export const actions =  {
       commit('mutation', { mutate: 'workspaceStatus', payload: 'error' })
       throw err
     }
-  },
+  },100),
 
   async signUp (context,  payload) {
     var response
@@ -91,14 +98,11 @@ export const actions =  {
 
   async startWorkspace ({commit, dispatch, state}, id) {
 
+    commit('mutation', { mutate: 'saveReady', payload: false })
 
     // console.log('[WORKSPACE MANAGING] startWorkspace')
 
     var workspace = state.workspace
-
-    // if (id && workspace && id === workspace._id) {
-    //   return workspace
-    // }
 
     if (!id) {
       if (workspace && workspace._id) {
@@ -115,7 +119,11 @@ export const actions =  {
     var tabs = []
     var cells = []
 
+    var tab = -1
+
+
     if (response.data) {
+      tab = response.data.selectedTab!==undefined ? response.data.selectedTab : tab
       tabs = response.data.tabs.map(e=>{
         var profiling = JSON.parse(e.profiling)
         return {
@@ -127,12 +135,12 @@ export const actions =  {
       cells = response.data.commands.map( e=>({ ...JSON.parse(e), done: false }) )
     }
 
+    // if (tab>=0) {
+    //   commit('mutation', { mutate: 'tab', payload: tab}, { root: true })
+    // }
+
     var commands = cells.filter(e=>!(e && e.payload && e.payload.request && e.payload.request.isLoad))
     var dataSources = cells.filter(e=>e && e.payload && e.payload.request && e.payload.request.isLoad)
-
-    // console.log('[WORKSPACE MANAGING]',{ cells, tabs })
-
-    var tab = -1
 
     tabs.forEach((dataset, index) => {
       // commit('mutation', { mutate: 'tab', payload: index }, { root: true })
@@ -155,7 +163,11 @@ export const actions =  {
     commit('mutation', { mutate: 'dataSources', payload: dataSources}, { root: true })
     commit('mutation', { mutate: 'workspace', payload: response.data })
 
-    commit('mutation', {mutate: 'tab', payload: tab}, { root: true })
+    commit('mutation', { mutate: 'tab', payload: tab}, { root: true })
+
+    commit('mutation', { mutate: 'saveReady', payload: true}) // TO-DO: fix
+
+
 
     return response.data
 
@@ -163,6 +175,7 @@ export const actions =  {
 
   cleanSession ({commit}) {
 
+    commit('mutation', { mutate: 'saveReady', payload: false})
     commit('mutation', { mutate: 'tab', payload: 0 }, { root: true })
     commit('mutation', { mutate: 'commands', payload: [] }, { root: true })
     commit('mutation', { mutate: 'workspace', payload: false }, {root: true})
@@ -177,6 +190,8 @@ export const actions =  {
 
   async profile ({commit}, { auth }) {
     var response = await axios.get(AUTH_API + '/auth/profile', { headers: { 'Authorization': auth } } )
+
+    console.log({ responseData: response.data })
 
     commit('mutation', { mutate: 'username', payload: response.data.username})
 
@@ -198,9 +213,11 @@ export const actions =  {
     commit('mutation', { mutate: 'refreshToken', payload: refreshToken})
 
     if (accessToken) {
-      commit('mutation', { mutate: 'username', payload: payload.username}) // TO-DO: Remove
-      // await dispatch('profile', { auth: accessToken} )
-      // TO-DO: API Adjustments
+      if (+process.env.API_FEATURES) {
+        await dispatch('profile', { auth: accessToken} )
+      } else {
+        commit('mutation', { mutate: 'username', payload: payload.username})
+      }
     } else {
       commit('mutation', { mutate: 'username', payload: false})
     }
@@ -217,11 +234,10 @@ export const actions =  {
 
   async serverInit ({dispatch, commit, state}, payload) {
 
-    const accessToken = this.$cookies.get('x-access-token') && false // TO-DO: API Adjustments
+    const accessToken = this.$cookies.get('x-access-token') && +process.env.API_FEATURES
     if (accessToken) {
       try {
-        // await dispatch('profile', { auth: accessToken })
-        // TO-DO: API Adjustments
+        await dispatch('profile', { auth: accessToken })
         dispatch('setAccessToken', accessToken)
         return true
       } catch (err) {

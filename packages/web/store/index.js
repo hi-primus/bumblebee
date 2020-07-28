@@ -252,7 +252,7 @@ export const mutations = {
 
   },
 
-  newDataset (state, { current, dataset, tab, dfName }) {
+  newDataset (state, { current, dataset, tab, dfName, go }) {
     let found = -1
 
     if (dfName) {
@@ -282,7 +282,10 @@ export const mutations = {
     Vue.set(state.datasets, found, dataset)
     Vue.set(state.datasetSelection, found, {})
 
-    state.tab = found
+    if (go) {
+      state.tab = found
+    }
+
 
     state.datasetUpdates = state.datasetUpdates + 1
   },
@@ -467,9 +470,9 @@ export const actions = {
 
   async request ({state}, {request, path, payload, accessToken}) {
 
-    return {}
-
-    // TO-DO: API adjustments
+    if (!+process.env.API_FEATURES) {
+      return {}
+    }
 
     if (!request) request = 'get'
     if (!accessToken) accessToken = state.session.accessToken

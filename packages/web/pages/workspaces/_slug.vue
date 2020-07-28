@@ -8,7 +8,6 @@
         @click:outside="workspacesDialog = false"
         max-width="1220"
       >
-        <!-- max-width="290" -->
         <WorkspacesList/>
       </v-dialog>
       <template v-if="$store.state.datasets.length==0 && !useKernel" data-name="noKernel">
@@ -125,11 +124,11 @@
                 </span>
               </v-hover>
             </v-tab>
-            <v-tab class="new-tab" color="primary darken-1" @click="$store.dispatch('newDataset')">
+            <v-tab class="new-tab" color="primary darken-1" @click="$store.dispatch('newDataset', { go: true })">
               <v-icon color="primary">add</v-icon>
             </v-tab>
           </v-tabs>
-          <div class="bb-workspace-status" v-if="false">
+          <div class="bb-workspace-status" v-if="useApiFeatures">
             <!-- this.$route.query.ws!=0 -->
             <v-progress-circular
               v-if="workspaceStatus==='uploading' || workspaceStatus==='loading'"
@@ -267,6 +266,10 @@ export default {
 
     ...mapState('session',['workspace', 'workspaceStatus']),
 
+    useApiFeatures () {
+      return +process.env.API_FEATURES
+    },
+
     tab: {
       get () {
         return this.$store.state.tab
@@ -291,7 +294,7 @@ export default {
     moreMenu () {
       let menu = []
 
-      if (false) { // this.useKernel && (this.$route.query.ws!=0)
+      if (this.useKernel && this.$route.query.ws!=0 && +process.env.API_FEATURES) {
         menu = [
           { text: 'Workspaces', click: this.showWorkspaces },
           { divider: true },
@@ -409,7 +412,7 @@ export default {
           // console.log('[INITIALIZATION] workspacePromise done')
 
         if (!this.$store.state.datasets.length && this.useKernel) {
-          this.$store.dispatch('newDataset')
+          this.$store.dispatch('newDataset', { go: true })
         }
 
         // console.log('[INITIALIZATION] status mutation')

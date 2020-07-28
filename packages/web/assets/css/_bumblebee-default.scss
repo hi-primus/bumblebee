@@ -380,7 +380,10 @@ table {
   }
 }
 
-.workspaces-table {
+.manager-table {
+  th {
+    white-space: nowrap;
+  }
   .v-data-table__wrapper {
     min-height: calc(100vh - 340px);
   }

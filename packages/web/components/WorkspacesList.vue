@@ -1,58 +1,26 @@
 <template>
   <v-card>
-    <v-dialog
-      v-if="form.promise"
-      :value="form.promise"
-      max-width="290"
-      @click:outside="acceptForm(false)"
-    >
-      <v-form @submit.prevent="acceptForm(form.value)">
-        <v-card>
-          <v-card-title class="title">{{form.text}}</v-card-title>
-          <v-card-text>
-            <v-text-field
-              ref="formInput"
-              outlined
-              dense
-              :label="form.label"
-              :placeholder="form.placeholder"
-              v-model="form.value"
-            />
-          </v-card-text>
-          <v-card-actions>
-            <div class="flex-grow-1" />
-            <v-btn color="primary" text @click="acceptForm(false)">Cancel</v-btn>
-            <v-btn color="primary" text :disabled="!form.value" type="submit">Accept</v-btn>
-          </v-card-actions>
-        </v-card>
-      </v-form>
-    </v-dialog>
+    <FormDialog ref="formDialog"/>
     <v-card-title>
       Workspaces
       <v-spacer></v-spacer>
-      <v-form @submit.prevent="createNewWorkspace(createName)">
-        <!-- class="append-no-ma" -->
+      <v-form @submit.prevent="createNewWorkspace({name: createName})">
         <v-text-field
           v-model="createName"
           label="New workspace"
           append-icon="add"
-          @click:append="createNewWorkspace(createName)"
+          @click:append="createNewWorkspace({name: createName})"
           outlined
           dense
           single-line
           hide-details
         >
-          <!-- <template v-slot:append-outer>
-            <v-btn type="submit" color="primary">
-              <v-icon>add</v-icon>
-            </v-btn>
-          </template> -->
         </v-text-field>
       </v-form>
       <!-- <v-text-field
         v-model="search"
         append-icon="mdi-magnify"
-        label="Search or create"
+        label="Search"
         single-line
         hide-details
       ></v-text-field> -->
@@ -62,17 +30,17 @@
       :headers="headers"
       :mobile-breakpoint="0"
       :options.sync="options"
-      :server-items-length="tableItems.length"
-      class="workspaces-table"
+      :server-items-length="total"
+      class="workspaces-table manager-table"
       :loading="loading"
       @click:row="workspaceClicked"
     >
       <!-- class="columns-table" -->
-      <template v-slot:item.active="{ item }">
+      <template v-slot:item.activeKernel="{ item }">
         <span
           :class="{
-            'primary--text': item.active,
-            'grey--text': !item.active
+            'primary--text': item.activeKernel,
+            'grey--text': !item.activeKernel
           }"
           class="pl-3"
         >●</span>
@@ -104,11 +72,11 @@
           <v-list flat dense style="max-height: 400px; min-width: 160px;" class="scroll-y">
             <v-list-item-group color="black">
               <v-list-item
-                @click="renameWorkspace(item)"
+                @click="editWorkspace(item)"
               >
                 <v-list-item-content>
                   <v-list-item-title>
-                    Rename
+                    Edit info
                   </v-list-item-title>
                 </v-list-item-content>
               </v-list-item>
@@ -150,12 +118,12 @@
 
 <script>
 
-import MoreMenu from "@/components/MoreMenu"
+import FormDialog from "@/components/FormDialog"
 
 export default {
 
   components: {
-    MoreMenu
+    FormDialog
 	},
 
   data () {
@@ -172,10 +140,11 @@ export default {
         value: false
       },
       headers: [
-        { text: 'Active', sortable: true, width: '1%', value: 'active', align: 'left' },
-        { text: 'Workspace', sortable: true, width: '10%', value: 'name' },
-        { text: 'Tabs', sortable: true, width: '5%', value: 'tabs' },
-        { text: 'Data sources', sortable: true, width: '5%', value: 'dataSources' },
+        { text: 'Active', sortable: true, width: '1%', value: 'activeKernel', align: 'left' },
+        { text: 'Workspace', sortable: true, width: '8%', value: 'name' },
+        { text: 'Description', sortable: true, width: '12%', value: 'description' },
+        { text: 'Tabs', sortable: true, width: '2%', value: 'tabs' },
+        { text: 'Data sources', sortable: true, width: '2%', value: 'dataSourcesCount' },
         { text: 'Last modification', sortable: true, width: '6%', value: 'updatedAt'},
         { text: 'Created', sortable: true, width: '6%', value: 'createdAt'},
         { text: '', sortable: false, width: '1%', value: 'menu'}
@@ -194,20 +163,8 @@ export default {
       this.$emit('click:workspace',event)
     },
 
-    fromForm (form) {
-      this.form = form
-      return new Promise((resolve, reject) => {
-        this.form = { ...this.form, promise: {resolve, reject} }
-      })
-    },
-
-    acceptForm (value) {
-      try {
-        this.form.promise.resolve(value)
-      } catch (err) {
-        console.error(err)
-      }
-      this.form = {...this.form, promise: false}
+    async fromForm (form) {
+      return await this.$refs.formDialog.fromForm(form)
     },
 
     async deleteWorkspace (workspace) {
@@ -227,24 +184,45 @@ export default {
     },
 
     async createNewWorkspaceUsingForm () {
-      let input = await this.fromForm({
-        name: '',
-        placeholder: undefined,
-        value: '',
-        label: 'New workspace',
-        text: 'Create new workspace'
+      let form = await this.fromForm({
+        text: 'Create new workspace',
+        fields: [
+          {
+            name: '',
+            placeholder: undefined,
+            value: '',
+            label: 'New workspace'
+          },
+          {
+            textarea: true,
+            name: '',
+            placeholder: undefined,
+            value: '',
+            label: 'Description'
+          },
+        ]
       })
 
-      await this.createNewWorkspace(input)
+      if (!form) {
+        return false
+      }
+
+      var payload = {
+        name: form.fields[0].value,
+        description: form.fields[1].value
+      }
+
+      await this.createNewWorkspace(payload)
     },
 
-    async createNewWorkspace (name) {
+    async createNewWorkspace (payload) {
       try {
-        if (!name) {
+        if (!payload.name) {
           return false
         }
         this.items.push({
-          name: name,
+          name: payload.name,
+          description: payload.description,
           createdAt: false,
           updatedAt: false,
           loading: true,
@@ -253,7 +231,7 @@ export default {
         await this.$store.dispatch('request',{
           request: 'post',
           path: '/workspaces',
-          payload: { name }
+          payload
         })
         await this.updateWorkspaces()
       } catch (err) {
@@ -261,19 +239,35 @@ export default {
       }
     },
 
-    async renameWorkspace (workspace) {
+    async editWorkspace (workspace) {
 
       try {
-        let input = await this.fromForm({
-          name: workspace.name,
-          placeholder: workspace.name,
-          value: workspace.name,
-          label: 'Rename',
-          text: 'Rename workspace'
+        let form = await this.fromForm({
+          text: 'Edit workspace',
+          fields: [
+            {
+              name: '',
+              placeholder: workspace.name,
+              value: workspace.name,
+              label: 'Name'
+            },
+            {
+              textarea: true,
+              name: '',
+              placeholder: undefined,
+              value: workspace.description,
+              label: 'Description'
+            },
+          ]
         })
 
-        if (!input) {
+        if (!form) {
           return false
+        }
+
+        var payload = {
+          name: form.fields[0].value,
+          description: form.fields[1].value
         }
 
         let id = workspace._id
@@ -281,16 +275,14 @@ export default {
         let found = this.items.findIndex(w=>w._id === id)
         let item = this.items[found]
         item.loading = true
-        item.name = input
+        item = {...item, ...payload}
         this.$set(this.items, found, item)
         // this.$delete(this.items, found)
 
         await this.$store.dispatch('request',{
           request: 'put',
           path: `/workspaces/${id}`,
-          payload: {
-            name: input
-          }
+          payload
         })
         await this.updateWorkspaces()
       } catch (err) {
@@ -311,13 +303,9 @@ export default {
         })
         await this.$store.dispatch('request',{
           request: 'post',
-          path: '/workspaces',
+          path: `/workspaces/copy/${workspace._id}`,
           payload: {
-            name: workspace.name+' copy', // TO-DO: copyName function
-            // TO-DO: copy ok
-            // connection: workspace.connection,
-            // tabs: workspace.tabs,
-            // dataSources: workspace.dataSources
+            name: workspace.name+' copy' // TO-DO: copyName function
           }
         })
         await this.updateWorkspaces()
@@ -336,11 +324,19 @@ export default {
       try {
         this.loading = true
         let { sortBy, sortDesc, page, itemsPerPage } = this.options
+        let sort = ''
+        if (sortBy[0]) {
+          let sort = sortBy[0]
+          if (sortDesc[0]) {
+            sort = '-'+sort
+          }
+          sort = '&sort='+sort
+        }
         let response = await this.$store.dispatch('request',{
-          path: `/workspaces`
+          path: `/workspaces?page=${page-1}&pageSize=${itemsPerPage}${sort}`
         })
         this.loading = false
-        return {items: response.data, total: 10} // TO-DO: this
+        return {items: response.data.items, total: response.data.count}
       } catch (err) {
         console.error(err)
       }
@@ -356,10 +352,10 @@ export default {
       }
       return this.items.map((w)=>({
         ...w,
-        active: !(w.tabs || []).length, // TO-DO: Pedirle a edo
+        activeKernel: w.activeKernel,
         name: w.name,
         tabs: (w.tabs || []).length,
-        dataSources: (w.dataSources || []).length,
+        dataSourcesCount: w.dataSourcesCount || 0,
         updatedAt: w.updatedAt,
         createdAt: w.createdAt
       }))

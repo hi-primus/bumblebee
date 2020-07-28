@@ -4,6 +4,7 @@
 
 
 <script>
+
 const { version } = require("@/package.json");
 
 export default {
@@ -12,7 +13,7 @@ export default {
     if (!store.getters['session/isAuthenticated']) {
       return redirect('/login', route.query)
     } else {
-      if (false) { // route.query.ws!=0
+      if (route.query.ws!=0 && +process.env.API_FEATURES) {
         return redirect('/workspaces', route.query)
       } else {
         return redirect('/workspaces/default', route.query)
