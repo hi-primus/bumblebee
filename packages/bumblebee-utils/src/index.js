@@ -422,7 +422,6 @@ export const everyRatio = (array,cb) => {
 
 export const propsToLocal = (array) => {
   var oobj = array.reduce((obj, item)=>{
-    console.log(item)
     var localName = 'local'+capitalizeString(item)
     obj[localName] = {
       set (value) {
@@ -434,7 +433,6 @@ export const propsToLocal = (array) => {
     }
     return obj
   },{})
-  console.log({oobj})
   return oobj
 }
 
