@@ -35,7 +35,9 @@ json.dumps(res,  default=_json_default, ensure_ascii=False)
 `
 
 const initMin = (payload = {}) => `
-op = Optimus("${payload.engine || 'dask'}", threads_per_worker=${payload.tpw || 8}, n_workers=${payload.workers || 1}, comm=True)
+op = Optimus("${payload.engine || 'dask'}",`
++ (payload.address ? ` address="${payload.address}",` : '')
++ ` threads_per_worker=${payload.tpw || 8}, n_workers=${payload.workers || 1}, comm=True)
 `
 
 const init = (payload = {}) => `
@@ -76,7 +78,9 @@ try:
         pass
 except Exception:
     from optimus import Optimus
-    op = Optimus(engine, threads_per_worker=tpw, n_workers=workers, comm=True)
+    op = Optimus(engine,`
+    + (payload.address ? ` address="${payload.address}",` : '')
+    + ` threads_per_worker=tpw, n_workers=workers, comm=True)
     op
     op.__version__
     op.engine

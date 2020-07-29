@@ -467,6 +467,7 @@ export default {
         username: this.$store.state.session.username,
         workspace: (this.$store.state.session.workspace ? this.$store.state.session.workspace._id : undefined) || 'default',
         engine: this.$route.query.engine,
+        address: this.$route.query.address,
         tpw: this.$route.query.tpw,
         workers: this.$route.query.workers,
         reset: this.$route.query.reset
