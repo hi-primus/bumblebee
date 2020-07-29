@@ -2656,3 +2656,25 @@ $editor-top-padding: 6px;
   margin-right: 8px;
   font-weight: 500;
 }
+
+.concat-items-set {
+  display: flex;
+  .items-slot {
+    height: 24px;
+    background: rgba(tomato,0.5);
+    margin-bottom: 4px;
+    &:empty {
+      position: relative;
+      &::after {
+        content: '';
+        position: absolute;
+        background: rgba(0,0,0,0.33);
+        width: calc(100% - 10px);
+        height: calc(100% - 6px);
+        left: 0px;
+        top: 3px;
+        border-radius: 6px;
+      }
+    }
+  }
+}
