@@ -21,6 +21,12 @@ export const deepCopy = (inObject) => {
   return outObject
 }
 
+export const transpose = (a) => {
+  return Object.keys(a[0]).map(function(c) {
+    return a.map(function(r) { return r[c]; });
+  });
+}
+
 export const throttle = (func, limit) => {
 	let lastFunc
 	let lastRan
@@ -519,6 +525,7 @@ export const RESPONSE_MESSAGES = {
 
 export default {
   deepCopy,
+  transpose,
   throttle,
   arrayJoin,
   arraysEqual,
