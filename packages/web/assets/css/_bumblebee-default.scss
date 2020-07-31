@@ -937,13 +937,17 @@ table {
     }
     .tab-title {
       width: 100%;
-			text-transform: initial;
+      text-transform: initial;
+      max-width: 150px;
+      @include ellipsis;
     }
     .tab-subtitle {
       width: 100%;
       text-transform: none;
       color: #555;
       font-size: 0.75em;
+      max-width: 150px;
+      @include ellipsis;
     }
   }
   .new-tab {
