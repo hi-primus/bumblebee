@@ -876,6 +876,73 @@ export default {
           },
           content: (payload) => `<b>Join</b> ${hlParam(payload.dfName)} <b>with</b> ${hlParam(payload.with)}`
         },
+        concat: {
+          dialog: {
+            title: 'Concat datasets',
+            fields: [
+              {
+                key: 'with',
+                label: 'Dataset (right)',
+                type: 'select',
+                items_key: 'items_with'
+              },
+              {
+                key: 'selected_columns',
+                label: 'Concat columns',
+                type: 'columns_concat'
+              },
+            ],
+            validate: (c) => {
+              return !!(c.selected_columns && c.selected_columns.length)
+            }
+          },
+          payload: async (columns, payload = {}) => {
+
+            var _datasets_right = {...payload.secondaryDatasets}
+            var items_with = Object.keys(_datasets_right).filter(e=>(e!==payload.dfName && e!=='preview_df'))
+
+            var df2 = items_with[0]
+
+            return {
+              items_with: (c)=>{
+                return Object.keys(c._datasets_right)
+                  .filter(e=>e!==payload.dfName && e!=='preview_df')
+                  .filter(e=>!e.startsWith('_'))
+              },
+              with: df2,
+              _datasets_right,
+              dataset_columns: (c)=>{
+                console.log({c})
+                return [
+                  c.allColumns.map(name=>({name})),
+                  c._datasets_right[c.with].map(name=>({name}))
+                  // c.items_with(c).map(name=>({name}))
+                ]
+              },
+
+              selected_columns: [ [],[] ],
+              // preview: {
+              //   expectedColumns: -1,
+              //   type: 'concat',
+              //   delay: 500,
+              //   datasetPreview: true,
+              //   // noBufferWindow: true
+              // },
+              request: {
+                // createsNew: true
+              }
+            }
+          },
+          beforeExecuteCode: async (currentCommand) => {
+            if (!currentCommand.secondaryDatasets[currentCommand.with] || !currentCommand.secondaryDatasets[currentCommand.with].buffer) {
+              await this.evalCode('_output = '+currentCommand.with+'.ext.set_buffer("*")') // TO-DO: !!!
+              this.$store.commit('setSecondaryBuffer', { key: currentCommand.with, value: true})
+              currentCommand.secondaryDatasets = this.currentSecondaryDatasets
+            }
+            return currentCommand
+          },
+          content: (payload) => `<b>Concat</b> ${hlParam(payload.dfName)} <b>with</b> ${hlParam(payload.with)}`
+        },
         aggregations: {
           dialog: {
             title: 'Get aggregations',
@@ -1630,9 +1697,6 @@ export default {
             request: {
               isLoad: true,
               createsNew: true
-            },
-            variables: {
-              ...createPool()
             }
           }),
           content: (payload)=>{
@@ -2472,8 +2536,11 @@ export default {
       var sd = Object.keys(this.currentSecondaryDatasets)
         .filter(e=>e.startsWith(name))
 
+      console.log({sd})
+
       if (sd.length) {
         var i = (parseInt(sd[sd.length-1].split(name)[1]) || 0)+1
+        console.log({i})
         if (i) {
           name = name+i
         }
@@ -2695,6 +2762,8 @@ export default {
         type: command.type,
         command: command.command,
       }
+
+      console.log(payload)
 
       if (commandHandler) {
 

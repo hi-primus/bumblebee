@@ -1,48 +1,68 @@
 <template>
   <div class="concat-items-component">
-    <div class="concat-items-set">
-      <div
-        v-for="(itemsSlotsGroup, groupIndex) in itemsSlotsGroups"
-        :key="'isg'+groupIndex"
-        class="items-col concat-items"
-      >
-        <template v-for="(slotArray, slotIndex) in itemsSlotsGroup">
-          <draggable
-            :key="groupIndex+''+slotIndex"
-            @start="startDrag"
-            tag="div"
-            class="items-slot"
-            :list="slotArray"
-            v-bind="{...dragOptions, group: 'items'+groupIndex}"
-            :move="checkMove"
-          >
-            <div
-              v-if="slotArray && slotArray[0]"
-              class="concat-draggable concat-item"
-              :key="slotArray[0][itemsKey]"
+    <div class="concat-items-set concat-items">
+      <div class="items-cols">
+        <div
+          v-for="(itemsSlotsGroup, groupIndex) in itemsSlotsGroups"
+          :key="'isg'+groupIndex"
+          class="items-col"
+        >
+          <template v-for="(slotArray, slotIndex) in itemsSlotsGroup">
+            <draggable
+              :key="groupIndex+''+slotIndex"
+              @start="startDrag"
+              tag="div"
+              class="items-item items-slot"
+              :list="slotArray"
+              v-bind="{...dragOptions, group: 'items'+groupIndex}"
+              :move="checkMove"
             >
-              <slot
-                name="item"
-                :item="slotArray[0]"
+              <div
+                v-if="slotArray && slotArray[0]"
+                class="concat-draggable concat-item text-ellipsis"
+                :key="slotArray[0][itemsKey]"
               >
-                {{slotArray[0]}}
-              </slot>
-            </div>
-          </draggable>
-        </template>
+                <slot
+                  name="item"
+                  :item="slotArray[0]"
+                >
+                  {{slotArray[0]}}
+                </slot>
+              </div>
+            </draggable>
+          </template>
+        </div>
+
+      </div>
+      <div class="fields-col pl-1">
+        <div
+          v-for="textField in textFields"
+          :key="textField"
+          class="items-item items-fields"
+        >
+          <v-text-field
+            :placeholder="textField"
+            :v-model="textFieldsValues[textField]"
+            dense
+            class="denser"
+            outlined
+            hide-details
+          >
+          </v-text-field>
+        </div>
       </div>
     </div>
-  ______________________
-    <div class="concat-items-set">
+    <h3 class="grey--text">Deleted</h3>
+    <div class="concat-items-set deleted-items">
       <draggable
         @start="startDrag"
         v-for="(notSelectedItems, index) in notSelected"
         :key="index"
         tag="div"
-        class="items-col deleted-items"
+        id="deleted-items-col"
+        class="items-col"
         :list="notSelectedItems"
         v-bind="{...dragOptions, group: 'items'+index}"
-        style="min-width: 50px; min-height: 50px; background-color: blue"
       >
         <template
           v-for="(item, index) in notSelectedItems"
@@ -67,24 +87,14 @@
           </div>
         </template>
       </draggable>
-
     </div>
-    <br/>
-    <br/>
-    <br/>
-    <div>
-      aja
-      {{items}}
-      {{localItems}}
-    </div>
-    {{itemsSlotsGroups}}
   </div>
 </template>
 
 
 <script>
 
-import { propsToLocal, debounce } from 'bumblebee-utils'
+import { propsToLocal, debounce, transpose } from 'bumblebee-utils'
 
 export default {
   props: {
@@ -103,7 +113,9 @@ export default {
   data () {
     return {
       itemsSlotsGroups: [],
-      notSelected: []
+      notSelected: [],
+      textFields: [],
+      textFieldsValues: {}
     }
   },
 
@@ -129,8 +141,9 @@ export default {
       array.length = length
       array.fill(false, al)
       return array.map(e=>(e ? [e] : []))
-
     })
+
+
 
     this.notSelected = this.items.map(eg=>[])
   },
@@ -152,7 +165,26 @@ export default {
         });
       }
 
-    }
+    },
+
+    localSelected () {
+      var names = transpose(this.localSelected).map(e=>{
+          e = e.filter(e=>e).map(e=>e[this.itemsKey] ? e[this.itemsKey] : e)
+          if (e.every(ee=>ee==e[0])) {
+            return e[0]
+          } else {
+            return e.join('_')
+          }
+        }
+      )
+      var textFieldsValues = {}
+      names.forEach(name=>{
+        textFieldsValues[name] = this.textFieldsValues[name] || ''
+      })
+
+      this.textFieldsValues = textFieldsValues
+      this.textFields = names
+    },
 
 
   },
@@ -164,20 +196,17 @@ export default {
       var itemsSlotsGroups = this.itemsSlotsGroups
       var found = false
 
-      for (let i = 0; i < itemsSlotsGroups[0].length - 1; i++) {
-        var row = itemsSlotsGroups.map(e=>e[i]);
-        if (row.every(e=>!e.length)) {
+      var itemsSlotsPairs = transpose(itemsSlotsGroups)
+
+      for (let i = itemsSlotsPairs.length-2; i >= 0; i--) {
+        if (itemsSlotsPairs[i].every(e=>!e.length)) {
           found = true
-          itemsSlotsGroups = itemsSlotsGroups.map(e=>{
-            e.splice(i,1);
-            return e;
-          })
-          i--
+          itemsSlotsPairs.splice(i,1)
         }
       }
 
       if (found) {
-        this.itemsSlotsGroups = itemsSlotsGroups;
+        this.itemsSlotsGroups = transpose(itemsSlotsPairs);
       }
 
       return found
@@ -191,12 +220,7 @@ export default {
 
     checkMove ($event) {
       console.log({$event})
-      return (!$event.relatedContext.list.length || $event.from === $event.to)
-      try {
-        return this.itemsSlotsGroup[groupIndex][slotIndex].length<=0
-      } catch (err) {
-        return true
-      }
+      return (!$event.relatedContext.list.length || $event.from === $event.to || $event.to.id==='deleted-items-col')
     }
   }
 

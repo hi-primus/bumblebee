@@ -202,6 +202,20 @@
         outlined
       ></v-select>
     </template>
+
+    <template v-else-if="getPropertyField(field.type)=='columns_concat'">
+      <span>
+        {{_value}}
+        <br/>
+        <ColumnsConcatSelector
+          :key="field.key"
+          v-model="_value"
+          :dataset-columns="getPropertyField(currentCommand.dataset_columns)"
+          @input="(field.onChange) ? (currentCommand = field.onChange($event, currentCommand)) : ()=>{}"
+        />
+      </span>
+    </template>
+
     <template v-else-if="getPropertyField(field.type)=='columns_filter'">
       <ColumnsJoinSelector
         :key="field.key"
@@ -311,12 +325,14 @@
 
 import TextFieldSuggestions from '@/components/TextFieldSuggestions'
 import ColumnsJoinSelector from '@/components/ColumnsJoinSelector'
+import ColumnsConcatSelector from '@/components/ColumnsConcatSelector'
 
 export default {
 
   components: {
     TextFieldSuggestions,
-    ColumnsJoinSelector
+    ColumnsJoinSelector,
+    ColumnsConcatSelector
   },
 
   props: {
