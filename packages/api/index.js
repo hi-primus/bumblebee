@@ -142,7 +142,7 @@ const newSocket = function (socket, session) {
         try {
           result = await requestToKernel('datasets',sessionId)
         } catch (err) {
-          result = err
+          result = { status: 'error', error: 'Datasets info error', error: err.toString() }
         }
         var code = kernelRoutines.datasetsMin(payload)
         socket.emit('reply',{data: result, code, timestamp: payload.timestamp})
@@ -562,7 +562,7 @@ import kernelRoutines from './kernel-routines.js'
 
 const requestToKernel = async function (type, sessionId, payload) {
 
-  var connection = await assertSession(sessionId, type=='init', payload.kernel_address)
+  var connection = await assertSession(sessionId, type=='init', payload ? payload.kernel_address : undefined)
 
   if (!connection) {
     throw 'Socket error'
