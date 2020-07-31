@@ -184,6 +184,7 @@ export default {
               username: this.$store.state.session.username,
               workspace: (this.$store.state.session.workspace ? this.$store.state.session.workspace._id : undefined) || 'default',
               engine: this.$route.query.engine,
+              kernel_address: this.$route.query.kernel_address,
               address: this.$route.query.address,
               tpw: this.$route.query.tpw,
               workers: this.$route.query.workers,
