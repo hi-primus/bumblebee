@@ -20,8 +20,8 @@ const app_secret = (process.env.APP_SECRET || '6um61e6ee')
 var app_url
 var app_host
 var api_url
-var base
-var ws_kernel_base
+var kernel_bases = []
+var ws_kernel_bases = []
 var whitelist = []
 var sockets = []
 var kernels = []
@@ -31,8 +31,10 @@ function updateHost (host = 'localhost') {
   var kernel_host = (process.env.KERNEL_HOST || host)
   var kernel_port = (process.env.KERNEL_PORT || 8888)
 
-  base  = 'http://'+kernel_host+':'+kernel_port
-  ws_kernel_base = 'ws://'+kernel_host+':'+kernel_port
+  var kernel_addresses = (process.env.KERNEL_ADDRESS || `${host}:8888`).split(',')
+
+  kernel_bases  = kernel_addresses.map(e=>'http://'+e)
+  ws_kernel_bases  = kernel_addresses.map(e=>'ws://'+e)
 
   app_host = (process.env.APP_HOST || host)
   var app_port = (process.env.APP_PORT || 3000)
@@ -149,8 +151,14 @@ const newSocket = function (socket, session) {
 
         var sessionId = payload.username + '_' + payload.workspace
         var result = {}
+
         try {
-          kernels[sessionId] = kernels[sessionId] || {}
+          if (payload.reset) {
+            await deleteKernel(sessionId)
+            kernels[sessionId] = {}
+          } else {
+            kernels[sessionId] = kernels[sessionId] || {}
+          }
           if (!kernels[sessionId].initialization) {
             kernels[sessionId].initialization = initializeSession(sessionId, payload)
           }
@@ -263,6 +271,7 @@ const runCode = async function(code = '', sessionId = '') {
   }
 
   try {
+
     if (!checkKernel(sessionId)) {
       await createKernel(sessionId)
     }
@@ -292,8 +301,9 @@ const deleteKernel = async function(sessionId) {
   try {
     if (!checkKernel(sessionId)) {
       var _id = kernels[sessionId].id
+      var ka = kernels[sessionId].kernel_address || 0
       const kernelResponse = await request({
-        uri: `${base}/api/kernels/${_id}`,
+        uri: `${kernel_bases[ka]}/api/kernels/${_id}`,
         method: 'DELETE',
         headers: {}
       })
@@ -306,22 +316,29 @@ const deleteKernel = async function(sessionId) {
 const deleteEveryKernel = async function () {
   try {
 
-    const response = await request({
-      uri: `${base}/api/kernels`,
-      method: 'GET',
-      headers: {},
-    })
+    for (let i = 0; i < kernel_bases.length; i++) {
+      try {
 
-    const kernels = JSON.parse(response)
+        const response = await request({
+          uri: `${kernel_bases[i]}/api/kernels`,
+          method: 'GET',
+          headers: {},
+        })
 
-    kernels.forEach(async kernel => {
-      console.log(`Deleting kernel ${kernel.id}`)
-      await request({
-        uri: `${base}/api/kernels/${kernel.id}`,
-        method: 'DELETE',
-        headers: {},
-      })
-    });
+        const kernels = JSON.parse(response)
+
+        kernels.forEach(async kernel => {
+          console.log(`Deleting kernel ${kernel.id}`)
+          await request({
+            uri: `${kernel_bases[i]}/api/kernels/${kernel.id}`,
+            method: 'DELETE',
+            headers: {},
+          })
+        });
+      } catch (err) {
+        console.error('Error deleting kernels on', kernel_bases[i])
+      }
+    }
 
   } catch (err) {
     console.error('Error on Kernels deleting')
@@ -341,11 +358,15 @@ const initializeSession = async function (sessionId, payload = false) {
   }
 
   var tries = 10 // 10
-  while (tries-->0) {
+  while (tries>0) {
     try {
       result = await requestToKernel('init', sessionId, payload)
     } catch (err) {
-      if (tries<=1) {
+      tries--
+      if (err.toString().includes('Error on createKernel')) {
+        tries = 0
+      }
+      if (tries<=0) {
         console.error(err)
         return {error: 'Internal Error', content: err.toString(), status: 'error'}
       }
@@ -370,13 +391,13 @@ const initializeSession = async function (sessionId, payload = false) {
   return result
 }
 
-const createKernel = async function (sessionId) {
+const createKernel = async function (sessionId, ka = 0) {
   try {
     var tries = 10
-    while (tries-->0) {
+    while (tries>0) {
       try {
         const kernelResponse = await request({
-          uri: `${base}/api/kernels`,
+          uri: `${kernel_bases[ka]}/api/kernels`,
           method: 'POST',
           headers: {},
           json: true,
@@ -390,20 +411,26 @@ const createKernel = async function (sessionId) {
         }
         kernels[sessionId] = {
           ...kernels[sessionId],
+          kernel_address: ka,
           id: kernelResponse.id,
           uuid
         }
         break
       } catch (err) {
-        console.error('Kernel creating error, retrying', tries-10)
-        continue
+        console.error('Kernel creating error, retrying', 10-tries)
+        tries--
+        if (tries>0) {
+          continue
+        }
+        console.error(err)
+        throw 'Error on createKernel'
       }
     }
-    console.log('Kernel created', sessionId)
+    console.log('Kernel created', sessionId, ka)
     return sessionId
   } catch (err) {
     // console.error(err)
-    return undefined
+    throw 'Error on createKernel'
   }
 }
 
@@ -443,17 +470,19 @@ const WebSocketClient = require('websocket').client
 
 const createConnection = async function (sessionId) {
 
+  var ka = kernels[sessionId].kernel_address || 0
+
   if (!kernels[sessionId].connecting) {
     kernels[sessionId].connecting = new Promise((resolve, reject)=>{
 
-      console.log('Creating connection for',sessionId)
+      console.log(`Creating connection for ${sessionId} on ${ws_kernel_bases[ka]}`)
 
       kernels[sessionId] = kernels[sessionId] || {}
       if (!kernels[sessionId].client) {
         kernels[sessionId].client = new WebSocketClient({closeTimeout: 20 * 60 * 1000})
       }
 
-      kernels[sessionId].client.connect(`${ws_kernel_base}/api/kernels/${kernels[sessionId].id}/channels`)
+      kernels[sessionId].client.connect(`${ws_kernel_bases[ka]}/api/kernels/${kernels[sessionId].id}/channels`)
       kernels[sessionId].client.on('connect',function (connection) {
 
         // kernels[sessionId] = kernels[sessionId] || {}
@@ -489,7 +518,7 @@ const createConnection = async function (sessionId) {
       })
       kernels[sessionId].client.on('connectFailed', function (error) {
         kernels[sessionId].connection = false
-        console.error('Connection to Jupyter Kernel Gateway failed', ws_kernel_base, kernels[sessionId].id)
+        console.error('Connection to Jupyter Kernel Gateway failed', ws_kernel_bases[ka], kernels[sessionId].id)
         reject(error)
       });
 
@@ -500,11 +529,12 @@ const createConnection = async function (sessionId) {
   return kernels[sessionId].connecting
 }
 
-const assertSession = async function (sessionId, isInit = false) {
+const assertSession = async function (sessionId, isInit = false, kernel_address = 0) {
+
   try {
 
     if (!kernels[sessionId] || !kernels[sessionId].id) {
-      await createKernel(sessionId)
+      await createKernel(sessionId, kernel_address)
     }
 
     if (!kernels[sessionId] || !kernels[sessionId].id) {
@@ -532,7 +562,7 @@ import kernelRoutines from './kernel-routines.js'
 
 const requestToKernel = async function (type, sessionId, payload) {
 
-  var connection = await assertSession(sessionId, type=='init')
+  var connection = await assertSession(sessionId, type=='init', payload.kernel_address)
 
   if (!connection) {
     throw 'Socket error'
