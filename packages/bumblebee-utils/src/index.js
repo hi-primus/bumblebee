@@ -274,8 +274,6 @@ export const escapeQuotesOn = (payload = {}, keys = []) => {
 
 export const printError = (payload) => {
 
-  console.error('[ERROR] payload parameter', payload)
-
   var data = payload.data || payload
   var content = data.errorValue || data.content
 
@@ -289,7 +287,7 @@ export const printError = (payload) => {
     console.error('[DEBUG][ERROR]\n',data.error)
   }
   if (!(data.error || data.traceback)) {
-    console.error(data)
+    console.error('[DEBUG][ERROR] (response)\n',payload)
   }
 
   if (payload.code) {
