@@ -1630,9 +1630,6 @@ export default {
             request: {
               isLoad: true,
               createsNew: true
-            },
-            variables: {
-              ...createPool()
             }
           }),
           content: (payload)=>{
