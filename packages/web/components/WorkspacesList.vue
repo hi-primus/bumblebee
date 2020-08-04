@@ -80,7 +80,7 @@
                   </v-list-item-title>
                 </v-list-item-content>
               </v-list-item>
-              <v-list-item
+              <!-- <v-list-item
                 @click="duplicateWorkspace(item)"
               >
                 <v-list-item-content>
@@ -88,7 +88,7 @@
                     Duplicate
                   </v-list-item-title>
                 </v-list-item-content>
-              </v-list-item>
+              </v-list-item> -->
               <v-list-item
                 @click="deleteWorkspace(item)"
               >
