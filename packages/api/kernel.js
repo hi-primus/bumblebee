@@ -33,7 +33,8 @@ export const initializeKernel = async function (sessionId, payload = false) {
 
   var result = false
 
-  if (payload.reset) {
+  if (+payload.reset) {
+    console.log('[INITIALIZATION] Reinitializing')
     kernels[sessionId] = await clearKernel(sessionId)
   } else {
     kernels[sessionId] = kernels[sessionId] || {}
@@ -357,18 +358,24 @@ export const setKernel = function (sessionId, kernelObject) {
 
 const deleteKernel = async function (sessionId) {
   try {
-    if (!checkKernel(sessionId)) {
+    console.log('deleting kernel', sessionId)
+    if (checkKernel(sessionId)) {
       var _id = kernels[sessionId].id
       var ka = kernels[sessionId].kernel_address || 0
+      console.log('Deleting Session',sessionId,_id,'on',ka)
       const kernelResponse = await request({
         uri: `${kernelBase(ka)}/api/kernels/${_id}`,
         method: 'DELETE',
         headers: {}
       })
       kernels[sessionId].id = false
-      console.log('Deleting Session',sessionId,_id)
+      console.log('Session deleted')
+    } else {
+      console.log('Deleting Session',sessionId,'not found')
     }
-  } catch (err) {}
+  } catch (err) {
+    console.error(err)
+  }
   return kernels[sessionId]
 }
 
