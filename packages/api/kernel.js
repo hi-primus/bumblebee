@@ -340,7 +340,7 @@ const checkKernel = function (sessionId) {
   return kernels[sessionId] && kernels[sessionId].id
 }
 
-const clearKenerl = async function (sessionId) {
+const clearKernel = async function (sessionId) {
   await deleteKernel(sessionId)
   kernels[sessionId] = {}
   return kernels[sessionId]
