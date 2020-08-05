@@ -123,7 +123,7 @@ const assertSession = async function (sessionId, isInit = false, kernel_address 
   }
 }
 
-const requestToKernel = async function (type, sessionId, payload) {
+export const requestToKernel = async function (type, sessionId, payload) {
 
   var connection = await assertSession(sessionId, type=='init', payload ? payload.kernel_address : undefined)
 
@@ -443,4 +443,4 @@ const handleResponse = function (response) {
   }
 }
 
-export default { getKernel, setKernel, runCode, initializeKernel, deleteEveryKernel }
+export default { getKernel, setKernel, runCode, initializeKernel, deleteEveryKernel, requestToKernel }

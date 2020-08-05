@@ -15,7 +15,7 @@ const app_secret = (process.env.APP_SECRET || '6um61e6ee')
 
 var sockets = []
 
-import { runCode, initializeKernel, deleteEveryKernel } from './kernel.js'
+import { runCode, initializeKernel, deleteEveryKernel, requestToKernel } from './kernel.js'
 import kernelRoutines from './kernel-routines.js'
 
 var app_host = (process.env.APP_HOST || 'localhost')
