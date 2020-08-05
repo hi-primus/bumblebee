@@ -156,9 +156,9 @@ export default {
   methods: {
 
     workspaceClicked (workspace) {
-      if (this.$route.params.slug !== workspace._id) {
+      if (this.$route.params.slug !== workspace.slug) {
         this.$store.dispatch('session/cleanSession')
-        this.$router.push({path: `/workspaces/${workspace._id}`, query: this.$route.query }) // TO-DO: slug
+        this.$router.push({path: `/workspaces/${workspace.slug}`, query: this.$route.query }) // TO-DO: slug
       }
       this.$emit('click:workspace',event)
     },
