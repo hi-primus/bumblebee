@@ -93,7 +93,8 @@
         </v-form>
         <v-form class="py-8 px-6" @submit.prevent="subscribe()" v-if="typeForm==0">
           <v-card-title>
-            <h1 class="display-3 mb-4">Bumblebee</h1>
+            <img src="~/static/logo.svg" class="display-3" alt="Bumblebee">
+            <!-- <h1 class="display-3 mb-4">Bumblebee</h1> -->
           </v-card-title>
           <v-card-text>
             <v-text-field
