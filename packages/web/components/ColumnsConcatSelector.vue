@@ -1,9 +1,10 @@
 <template>
   <DraggableConcat
-    :items="columns"
+    :items="datasetColumns"
     :selected="value"
     @update:selected="$emit('input',$event)"
     items-key="name"
+    :items-name="'columns'"
   >
     <template v-slot:item="{ item }">
       <span :title="item.name">
@@ -23,6 +24,7 @@
 </template>
 
 <script>
+import DraggableConcat from '@/components/DraggableConcat'
 import dataTypesMixin from '@/plugins/mixins/data-types'
 
 export default {
@@ -30,6 +32,11 @@ export default {
   mixins: [
     dataTypesMixin
   ],
+
+  components: {
+    DraggableConcat
+  },
+
   props: ['value','disabled','datasetColumns']
 }
 </script>

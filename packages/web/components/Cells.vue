@@ -878,7 +878,7 @@ export default {
         },
         concat: {
           dialog: {
-            title: 'Concat datasets',
+            title: 'Append datasets',
             fields: [
               {
                 key: 'with',
@@ -920,7 +920,7 @@ export default {
                 ]
               },
 
-              selected_columns: [ [],[] ],
+              selected_columns: [],
               // preview: {
               //   expectedColumns: -1,
               //   type: 'concat',
@@ -932,14 +932,6 @@ export default {
                 // createsNew: true
               }
             }
-          },
-          beforeExecuteCode: async (currentCommand) => {
-            if (!currentCommand.secondaryDatasets[currentCommand.with] || !currentCommand.secondaryDatasets[currentCommand.with].buffer) {
-              await this.evalCode('_output = '+currentCommand.with+'.ext.set_buffer("*")') // TO-DO: !!!
-              this.$store.commit('setSecondaryBuffer', { key: currentCommand.with, value: true})
-              currentCommand.secondaryDatasets = this.currentSecondaryDatasets
-            }
-            return currentCommand
           },
           content: (payload) => `<b>Concat</b> ${hlParam(payload.dfName)} <b>with</b> ${hlParam(payload.with)}`
         },

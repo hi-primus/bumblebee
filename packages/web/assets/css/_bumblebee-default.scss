@@ -2672,15 +2672,18 @@ $editor-top-padding: 6px;
   }
   &.deleted-items {
     // align-content: start;
+    .deleted-items-empty {
+      position: absolute;
+      pointer-events: none;
+    }
     .concat-item {
       background-color: rgba($data-red, 0.33);
     }
   }
   .items-cols {
     min-height: inherit;
-    min-width: inherit;
     display: flex;
-    min-width: 50px;
+    min-width: 204px;
   }
   .items-col {
     min-height: 24px;

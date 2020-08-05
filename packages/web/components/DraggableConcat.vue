@@ -42,7 +42,8 @@
         >
           <v-text-field
             :placeholder="textField"
-            :v-model="textFieldsValues[textField]"
+            :value="textFieldsValues[textField]"
+            @input="updateTextField(textField, $event)"
             dense
             class="denser"
             outlined
@@ -52,20 +53,23 @@
         </div>
       </div>
     </div>
-    <h3 class="grey--text">Deleted</h3>
+    <h3 class="grey--text">Dropped {{itemsName}}</h3>
     <div class="concat-items-set deleted-items">
+      <span class="deleted-items-empty text-caption grey--text" v-if="showEmptyDeleted">
+        Drop unwanted {{itemsName}} here
+      </span>
       <draggable
         @start="startDrag"
-        v-for="(notSelectedItems, index) in notSelected"
+        v-for="(notSelected, index) in notSelected"
         :key="index"
         tag="div"
         id="deleted-items-col"
         class="items-col"
-        :list="notSelectedItems"
+        :list="notSelected"
         v-bind="{...dragOptions, group: 'items'+index}"
       >
         <template
-          v-for="(item, index) in notSelectedItems"
+          v-for="(item, index) in notSelected"
         >
           <div
             v-if="item.empty"
@@ -105,6 +109,10 @@ export default {
       type: String,
       default: 'id'
     },
+    itemsName: {
+      type: String,
+      default: 'items'
+    },
     selected: {
       type: Array
     }
@@ -129,6 +137,13 @@ export default {
       }
     },
 
+    showEmptyDeleted () {
+      if (!this.notSelected) {
+        return true
+      }
+      return !(this.notSelected || [[]]).some(e=>e.length)
+    },
+
     ...propsToLocal(['items', 'selected']),
 
   },
@@ -150,46 +165,80 @@ export default {
 
   watch: {
     itemsSlotsGroups () {
-
       var addEmpty = this.itemsSlotsGroups.some(itemsSlotsGroup=>itemsSlotsGroup[itemsSlotsGroup.length - 1].length)
 
       var deletedEmpty = this.deleteEmptyItemsSlots()
 
       if (addEmpty) {
-        this.itemsSlotsGroups = this.itemsSlotsGroups.map(itemsSlotsGroup=>[...itemsSlotsGroup, []]);
-      } else if (!deletedEmpty){
-        this.localSelected = this.itemsSlotsGroups.map(itemSlots=>{
-          return itemSlots.map(itemArray=>{
-            return (itemArray && itemArray[0]) ? itemArray[0] : false;
-          })
-        });
-      }
 
+        this.itemsSlotsGroups = this.itemsSlotsGroups.map(itemsSlotsGroup=>[...itemsSlotsGroup, []]);
+
+      } else if (!deletedEmpty) {
+        this.updateSelection()
+      }
+    },
+
+    textFieldsValues: {
+      deep: true,
+      handler: 'updateSelection'
     },
 
     localSelected () {
-      var names = transpose(this.localSelected).map(e=>{
-          e = e.filter(e=>e).map(e=>e[this.itemsKey] ? e[this.itemsKey] : e)
-          if (e.every(ee=>ee==e[0])) {
-            return e[0]
+
+      var defaultValues = this.localSelected.map(e=>{
+          if (!e.items) {
+            return 'error'
+          }
+          e.items = e.items.filter(ee=>ee).map(ee=>ee[this.itemsKey] ? ee[this.itemsKey] : ee)
+          if (e.items.every(ee=>ee==e.items[0])) {
+            return e.items[0]
           } else {
-            return e.join('_')
+            return e.items.join('_')
           }
         }
       )
-      var textFieldsValues = {}
-      names.forEach(name=>{
-        textFieldsValues[name] = this.textFieldsValues[name] || ''
+
+      var textFieldsValues = {};
+
+      defaultValues.forEach(name=>{
+        if (name) {
+          textFieldsValues[name] = this.textFieldsValues[name] || ''
+        }
       })
 
-      this.textFieldsValues = textFieldsValues
-      this.textFields = names
+      if (JSON.stringify(this.textFieldsValues)!==JSON.stringify(textFieldsValues)) {
+        this.textFieldsValues = textFieldsValues;
+      }
+
+      this.textFields = defaultValues
     },
 
 
   },
 
   methods: {
+
+    updateTextField (field, value) {
+      this.$set(this.textFieldsValues, field, value)
+    },
+
+    updateSelection () {
+
+      var rows = transpose(this.itemsSlotsGroups.map(itemsSlots=>{
+        var items = itemsSlots.map(itemArray=>{
+          return (itemArray && itemArray[0]) ? itemArray[0] : false;
+        })
+        items.splice(items.length-1,1);
+        return items
+      })).map((items, i)=>{
+        return {
+          items,
+          value: this.textFieldsValues[this.textFields[i]] || this.textFields[i] || 'und'
+        }
+      })
+
+      this.localSelected = rows
+    },
 
     deleteEmptyItemsSlots () {
 
