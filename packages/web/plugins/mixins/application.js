@@ -1,7 +1,11 @@
 export default {
   computed: {
     useKernel () {
-      return this.$route.query.kernel=='1'
+      if (+process.env.USE_KERNEL) {
+        return this.$route.query.kernel!=='0'
+      } else {
+        return this.$route.query.kernel==='1'
+      }
     },
     appStable () {
       return this.$route.query.stable=='1'
