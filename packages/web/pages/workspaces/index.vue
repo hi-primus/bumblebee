@@ -42,7 +42,7 @@ export default {
   mixins: [ clientMixin ],
 
   // TO-DO: Check
-  // middleware: 'authenticated',
+  middleware: 'authenticated',
 
 	data () {
 		return {

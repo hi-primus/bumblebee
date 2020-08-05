@@ -96,7 +96,7 @@ export const actions =  {
     return response
   },
 
-  async startWorkspace ({commit, dispatch, state}, id) {
+  async startWorkspace ({commit, dispatch, state}, slug) {
 
     commit('mutation', { mutate: 'saveReady', payload: false })
 
@@ -104,23 +104,22 @@ export const actions =  {
 
     var workspace = state.workspace
 
-    if (!id) {
-      if (workspace && workspace._id) {
-        id = workspace._id
+    if (!slug) {
+      if (workspace && workspace.slug) {
+        slug = workspace.slug
       } else {
         return false
       }
     }
 
     var response = await dispatch('request',{
-      path: `/workspaces/${id}`
+      path: `/workspaces/slug/${slug}`
     }, { root: true })
 
     var tabs = []
     var cells = []
 
     var tab = -1
-
 
     if (response.data) {
       tab = response.data.selectedTab!==undefined ? response.data.selectedTab : tab
@@ -273,6 +272,6 @@ export const getters =  {
     return state.accessToken && state.username
   },
   isInWorkspace (state) {
-    return state.accessToken && state.username && state.workspace && state.workspace._id
+    return state.accessToken && state.username && state.workspace && state.workspace.slug
   },
 }

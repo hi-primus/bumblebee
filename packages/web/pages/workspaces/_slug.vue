@@ -229,18 +229,16 @@ export default {
 
   // middleware: 'authenticatedOrDefault',
 
-  async validate ({ params, store }) {
+  // async validate ({ params, store }) {
 
-    // TO-DO: params
+  //   // var validSlug = /^(-?[a-z|\d])*$/.test(params.slug)
+  //   // if (!validSlug) {
+  //   //   throw new Error('Invalid Url')
+  //   // }
 
-    // var validSlug = /^[a-z](-?[a-z|\d])*$/.test(params.slug)
-    // if (!validSlug) {
-    //   throw new Error('Invalid Url')
-    // }
+  //   return true
 
-    return true
-
-  },
+  // },
 
 	data () {
 		return {
@@ -390,15 +388,11 @@ export default {
 
     async initializeWorkspace () {
 
-      // this.startClient({ workspace: this.$route.params.slug })
-
       // console.log('[INITIALIZATION] initializeWorkspace')
 
       try {
 
         this.$store.commit('session/mutation', { mutate: 'workspaceStatus', payload: 'loading' })
-
-        // console.log('[INITIALIZATION] pre initializeOptimus')
 
         await this.initializeOptimus()
 
@@ -465,7 +459,7 @@ export default {
 
       var response = await this.socketPost('initialize', {
         username: this.$store.state.session.username,
-        workspace: (this.$store.state.session.workspace ? this.$store.state.session.workspace._id : undefined) || 'default',
+        workspace: (this.$store.state.session.workspace ? this.$store.state.session.workspace.slug : undefined) || 'default',
         engine: this.$route.query.engine,
         address: this.$route.query.address,
         kernel_address: this.$route.query.kernel_address,

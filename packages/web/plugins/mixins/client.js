@@ -74,13 +74,15 @@ export default {
 	methods: {
 
     async loadDataset (dfName) {
+      console.log({dfName})
       if (!dfName) {
         return {}
       }
+      console.log({workspace: this.$store.state.session.workspace})
       var response = await this.socketPost('profile', {
         dfName,
         username: this.$store.state.session.username,
-        workspace: (this.$store.state.session.workspace ? this.$store.state.session.workspace._id : undefined) || 'default',
+        workspace: (this.$store.state.session.workspace ? this.$store.state.session.workspace.slug : undefined) || 'default',
         key: this.$store.state.key
       }, {
         timeout: 0
@@ -106,7 +108,7 @@ export default {
         var response = await this.socketPost('run', {
           code,
           username: this.$store.state.session.username,
-          workspace: (this.$store.state.session.workspace ? this.$store.state.session.workspace._id : undefined) || 'default'
+          workspace: (this.$store.state.session.workspace ? this.$store.state.session.workspace.slug : undefined) || 'default'
         }, {
           timeout: 0
         })
@@ -182,7 +184,7 @@ export default {
           if (!window.socket) {
             var initializationPayload = {
               username: this.$store.state.session.username,
-              workspace: (this.$store.state.session.workspace ? this.$store.state.session.workspace._id : undefined) || 'default',
+              workspace: (this.$store.state.session.workspace ? this.$store.state.session.workspace.slug : undefined) || 'default',
               engine: this.$route.query.engine,
               kernel_address: this.$route.query.kernel_address,
               address: this.$route.query.address,
@@ -278,7 +280,7 @@ export default {
       return new Promise((resolve, reject)=>{
 
         let username = this.$store.state.session.username
-        let workspace = (this.$store.state.session.workspace ? this.$store.state.session.workspace._id : undefined) || 'default'
+        let workspace = (this.$store.state.session.workspace ? this.$store.state.session.workspace.slug : undefined) || 'default'
         let key = this.$store.state.session.key
 
         if (!workspace) {
@@ -391,7 +393,7 @@ export default {
       try {
         var response = await this.socketPost('datasets', {
           username: this.$store.state.session.username,
-          workspace: (this.$store.state.session.workspace ? this.$store.state.session.workspace._id : undefined) || 'default'
+          workspace: (this.$store.state.session.workspace ? this.$store.state.session.workspace.slug : undefined) || 'default'
         })
         window.pushCode({code: response.code, unimportant: true})
         console.log('Updating secondary datasets')

@@ -168,6 +168,7 @@
                 v-if="column.preview"
                 :key="'p'+column.index"
                 class="bb-table-plot-content"
+                :data-column="column.name"
               >
                   <div v-if="previewPlotsData[column.name]">
                     <DataBar
@@ -220,6 +221,7 @@
                 v-else-if="columns[column.index]"
                 :key="''+column.index"
                 class="bb-table-plot-content"
+                :data-column="column.index"
               >
                 <div>
                   <DataBar
@@ -316,6 +318,7 @@
           :class="[
             ...(column.classes || []),
           ]"
+          :data-column="column.sampleName+'/'+column.name"
         >
           <template v-if="!(lazyColumns.length && !lazyColumns[cindex]) && computedColumnValues[column.sampleName]">
             <template v-if="column.preview || column.duplicated">
@@ -837,8 +840,8 @@ export default {
         return ppd
 
       } catch (err) {
-        console.error(err)
-        return []
+        console.error('Error getting preview plots data', err)
+        return {}
       }
     },
 

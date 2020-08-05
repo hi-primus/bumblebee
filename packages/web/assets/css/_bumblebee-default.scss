@@ -2655,6 +2655,12 @@ $editor-top-padding: 6px;
   font-weight: 500;
 }
 
+//
+
+.mb--2 {
+  margin-bottom: -8px !important;
+}
+
 .concat-items-set {
   display: flex;
   min-width: 98px;
