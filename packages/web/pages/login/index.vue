@@ -22,7 +22,6 @@
                 spellcheck="false"
                 required
                 outlined
-                clearable
                 dense
               ></v-text-field>
               <v-text-field
@@ -32,7 +31,6 @@
                 spellcheck="false"
                 required
                 outlined
-                clearable
                 dense
               ></v-text-field>
               <v-text-field
@@ -43,7 +41,6 @@
                 :rules="emailRules"
                 required
                 outlined
-                clearable
                 dense
               ></v-text-field>
               <v-text-field
@@ -53,7 +50,6 @@
                 spellcheck="false"
                 required
                 outlined
-                clearable
                 dense
               ></v-text-field>
               <v-text-field
@@ -65,7 +61,6 @@
                 :type="showCreatePassword ? 'text' : 'password'"
                 required
                 outlined
-                clearable
                 counter
                 dense
                 @click:append="showCreatePassword = !showCreatePassword"
@@ -79,7 +74,6 @@
                 spellcheck="false"
                 required
                 outlined
-                clearable
                 dense
               ></v-text-field>
               <v-card-actions>
@@ -262,10 +256,12 @@ export default {
           this.typeForm = 0
           this.successMessage = RESPONSE_MESSAGES['user'][201]
           this.$store.commit("status")
+          return
         }
 				if (response.status >= 300) {
 					throw response
 				}
+        throw response
 			} catch (error) {
         this.successMessage = ""
         var errorMessage = RESPONSE_MESSAGES['user'][error.response.status]
