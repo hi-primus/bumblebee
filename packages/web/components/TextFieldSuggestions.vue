@@ -38,9 +38,9 @@
         v-if="functionInfo"
         class="function-helper"
       >
-        <div class="d-flex justify-space-between">
+        <div class="d-flex justify-space-between mb-2">
           <div class="font-mono function-hint" v-html="functionInfo.highlight"></div>
-          <v-icon class="flippable" :class="{'flipped': functionShow}" @click="functionShow = !functionShow" color="black">expand_more</v-icon>
+          <v-icon v-show="false" class="flippable" :class="{'flipped': functionShow}" @click="functionShow = !functionShow" color="black">expand_more</v-icon>
         </div>
         <template v-if="functionShow">
           <div class="function-description text-caption">
@@ -68,7 +68,7 @@
           </div>
           <div v-show="suggestionsVisible" class="divider"></div>
         </template>
-        <div v-show="suggestionsVisible" class="function-h pt-4">
+        <div v-show="suggestionsVisible" class="function-h pt-4 mb--2">
           Suggestions
         </div>
       </div>
