@@ -148,7 +148,7 @@
         v-bind="dataSourcesDragOptions"
         handle=".handle"
         @start="draggableStart"
-        @end="draggableEnd"
+        @end="draggableEnd(false)"
       >
         <div
           class="cell-container"
@@ -184,7 +184,7 @@
         v-bind="commandsDragOptions"
         handle=".handle"
         @start="draggableStart"
-        @end="draggableEnd"
+        @end="draggableEnd(false)"
       >
         <div
           class="cell-container"
@@ -2812,9 +2812,9 @@ export default {
       this.drag = true
     },
 
-    draggableEnd () {
+    draggableEnd (noDrag = false) {
       this.drag = false
-      if (window.dragType == 'cell') {
+      if (window.dragType == 'cell' || noDrag) {
         this.localCommands = this.localCommands
         this.localDataSources = this.localDataSources
         if (this.codeText().trim()==='') {
@@ -2875,9 +2875,8 @@ export default {
       //   index = from.length-1
       // }
 
-
       this.codeDone = ''
-      this.draggableEnd()
+      this.draggableEnd(true)
     },
 
     markCells (mark = true, ignoreFrom = -1) {
