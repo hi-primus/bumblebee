@@ -233,12 +233,21 @@
         </div>
         <div style="min-height: 128px;" class="vertical-center">
           <v-progress-circular
+            v-if="patternsFrequency[patternsResolution]==='loading' || !patternsFrequency[patternsResolution]"
             indeterminate
             color="grey"
             class="mx-auto d-flex"
             size="64"
             width="4"
-            v-if="patternsFrequency[patternsResolution]==='loading' || !patternsFrequency[patternsResolution]"
+          />
+          <v-progress-circular
+            v-else-if="patternsFrequency[patternsResolution]==='error'"
+            @click="getPatterns"
+            :value="100"
+            color="grey"
+            class="mx-auto d-flex"
+            size="64"
+            width="4"
           />
           <template v-else>
             <TopValues
@@ -337,7 +346,7 @@ export default {
   methods: {
     async getPatterns () {
       try {
-        if (this.patternsFrequency[this.patternsResolution]) {
+        if (this.patternsFrequency[this.patternsResolution] && this.patternsFrequency[this.patternsResolution]!=='error') {
           return
         }
         this.$set(this.patternsFrequency, this.patternsResolution, 'loading')
@@ -345,7 +354,7 @@ export default {
         this.$set(this.patternsFrequency, this.patternsResolution, response.data.result[this.column.name].values)
       } catch (err) {
         console.error(err)
-        this.$set(this.patternsFrequency, this.patternsResolution, false)
+        this.$set(this.patternsFrequency, this.patternsResolution, 'error')
       }
       // var response = await this.evalCode(`_output = ${}`)
     },
