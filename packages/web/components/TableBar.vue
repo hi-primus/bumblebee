@@ -287,12 +287,24 @@
                 </template>
                 <v-list flat dense style="max-height: 400px; min-width: 160px;" class="scroll-y">
                   <v-list-item-group color="black">
-                    <v-list-item
+                    <!-- <v-list-item
                       @click="copyCodeToClipboard"
                     >
                       <v-list-item-content>
                         <v-list-item-title>
                           Copy code to clipboard
+                        </v-list-item-title>
+                      </v-list-item-content>
+                    </v-list-item> -->
+                    <v-list-item
+                      v-for="engine in engines"
+                      :key="engine.name"
+                      :disabled="!engine.init"
+                      @click="copyCodeToClipboard(engine.init)"
+                    >
+                      <v-list-item-content>
+                        <v-list-item-title>
+                          Export to {{engine.prettyName}}
                         </v-list-item-title>
                       </v-list-item-content>
                     </v-list-item>
@@ -439,6 +451,14 @@ export default {
 
 	data () {
 		return {
+
+      engines: [
+        {name: 'dask', prettyName: 'Dask', init: '"dask", n_workers=1, threads_per_worker=8, processes=False, memory_limit="3G", comm=True'},
+        {name: 'cudf', prettyName: 'CUDF', init: '"cudf"'},
+        {name: 'pandas', prettyName: 'Pandas', init: '"cudf"'},
+        {name: 'dask_cudf', prettyName: 'Dask CUDF', init: '"dask_cudf", process=True'},
+        {name: 'vaex', prettyName: 'Vaex'},
+      ],
 
       typesSelected: [],
 			typesInput: '',
@@ -1053,9 +1073,11 @@ export default {
       return this.commandItems.filter(e => e.type==type)
     },
 
-    copyCodeToClipboard () {
+    copyCodeToClipboard (engineText) {
       var code = 'from optimus import Optimus\n'
-      +'op = Optimus(master="local[*]", app_name="optimus", comm=True)\n' // TO-DO: Update
+      +'from optimus.expressions import Parser'
+      +'p = Parser()'
+      +`op = Optimus(${engineText})\n`
       + this.cells.map(e=>e.code).filter(c=>c.trim()).join('\n')
       copyToClipboard(code)
       this.copied = true
