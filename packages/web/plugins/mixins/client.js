@@ -74,26 +74,38 @@ export default {
 	methods: {
 
     async loadDataset (dfName) {
-      console.log({dfName})
-      if (!dfName) {
-        return {}
+      try {
+
+        if (!dfName) {
+          return {}
+        }
+        var response = await this.socketPost('profile', {
+          dfName,
+          username: this.$store.state.session.username,
+          workspace: (this.$store.state.session.workspace ? this.$store.state.session.workspace.slug : undefined) || 'default',
+          key: this.$store.state.key
+        }, {
+          timeout: 0
+        })
+        console.log('"""[DEBUG][CODE][PROFILE]"""',response.code)
+
+        if (!response.data.result) {
+          throw response
+        }
+
+        window.pushCode({code: response.code})
+        var dataset = JSON.parse(response.data.result)
+        dataset.dfName = dfName
+        this.$store.dispatch('setDataset', { dataset })
+        this.setBuffer(dfName)
+        return dataset
+
+      } catch (err) {
+        if (err.code) {
+          window.pushCode({code: err.code, err: true})
+        }
+        throw err
       }
-      console.log({workspace: this.$store.state.session.workspace})
-      var response = await this.socketPost('profile', {
-        dfName,
-        username: this.$store.state.session.username,
-        workspace: (this.$store.state.session.workspace ? this.$store.state.session.workspace.slug : undefined) || 'default',
-        key: this.$store.state.key
-      }, {
-        timeout: 0
-      })
-      console.log('"""[DEBUG][CODE][PROFILE]"""',response.code)
-      window.pushCode({code: response.code})
-      var dataset = JSON.parse(response.data.result)
-      dataset.dfName = dfName
-      this.$store.dispatch('setDataset', { dataset })
-      this.setBuffer(dfName)
-      return dataset
     },
 
     async evalCode (code) {

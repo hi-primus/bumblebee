@@ -912,28 +912,55 @@ export default {
               with: df2,
               _datasets_right,
               dataset_columns: (c)=>{
-                console.log({c})
-                return [
-                  c.allColumns.map(name=>({name})),
-                  c._datasets_right[c.with].map(name=>({name}))
-                  // c.items_with(c).map(name=>({name}))
-                ]
+                try {
+
+                  return [
+                    c.allColumns.map(name=>({
+                      name,
+                      type: (c.types && c.types.self) ? c.types.self[name] : '  '
+                    })),
+                    c._datasets_right[c.with].map(name=>({
+                      name,
+                      type: (c.types && c.types[c.with]) ? c.types[c.with][name] : '  '
+                    }))
+                  ];
+                } catch (err) {
+                  console.error(err);
+
+                }
               },
 
               selected_columns: [],
-              // preview: {
-              //   expectedColumns: -1,
-              //   type: 'concat',
-              //   delay: 500,
-              //   datasetPreview: true,
-              //   // noBufferWindow: true
-              // },
+              preview: {
+                expectedColumns: -1,
+                type: 'concat',
+                delay: 500,
+                datasetPreview: true,
+                // noBufferWindow: true
+              },
               request: {
                 // createsNew: true
               }
             }
           },
-          content: (payload) => `<b>Concat</b> ${hlParam(payload.dfName)} <b>with</b> ${hlParam(payload.with)}`
+          content: (payload) => `<b>Concat</b> ${hlParam(payload.dfName)} <b>with</b> ${hlParam(payload.with)}`,
+
+          onInit: async (currentCommand) => {
+            try {
+
+              var command = {...currentCommand}
+              var withOther = command.items_with(command).map(df=>`"${df}": ${df}.cols.profiler_dtypes()`).join(', ')
+              const response = await this.evalCode(`_output = { "self": ${command.dfName}.cols.profiler_dtypes(), ${withOther} }`)
+              console.log('onInit response',response)
+
+              command.types = response.data.result
+              command.typesDone = true
+
+              return command
+            } catch (err) {
+              return { ...currentCommand, typesDone: true }
+            }
+          }
         },
         aggregations: {
           dialog: {
@@ -2528,11 +2555,8 @@ export default {
       var sd = Object.keys(this.currentSecondaryDatasets)
         .filter(e=>e.startsWith(name))
 
-      console.log({sd})
-
       if (sd.length) {
         var i = (parseInt(sd[sd.length-1].split(name)[1]) || 0)+1
-        console.log({i})
         if (i) {
           name = name+i
         }
@@ -2755,8 +2779,6 @@ export default {
         command: command.command,
       }
 
-      console.log(payload)
-
       if (commandHandler) {
 
         // default payload from commandHandler
@@ -2792,7 +2814,7 @@ export default {
           this.$emit('update:big',commandHandler.dialog.big)
 
           if (commandHandler.onInit) {
-            await commandHandler.onInit()
+            this.currentCommand = await commandHandler.onInit(this.currentCommand)
           }
 
           if (command.execute) {

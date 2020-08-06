@@ -11,6 +11,7 @@
             <draggable
               :key="groupIndex+''+slotIndex"
               @start="startDrag"
+              @end="endDrag"
               tag="div"
               class="items-item items-slot"
               :list="slotArray"
@@ -185,16 +186,27 @@ export default {
 
     localSelected () {
 
-      var defaultValues = this.localSelected.map(e=>{
-          if (!e.items) {
-            return 'error'
+      var defaultValues = []
+      this.localSelected.forEach(e=>{
+          var name = 'error'
+
+          if (e.items && e.items.length) {
+
+            var items = e.items.filter(ee=>ee).map(ee=>ee[this.itemsKey] ? ee[this.itemsKey] : ee)
+            if (items.every(ee=>ee==e.items[0])) {
+              name = items[0]
+            } else {
+              name = items.join('_')
+            }
+
           }
-          e.items = e.items.filter(ee=>ee).map(ee=>ee[this.itemsKey] ? ee[this.itemsKey] : ee)
-          if (e.items.every(ee=>ee==e.items[0])) {
-            return e.items[0]
-          } else {
-            return e.items.join('_')
+
+          while (defaultValues.includes(name)) {
+            name = name+' copy'
           }
+
+          defaultValues.push(name)
+
         }
       )
 
@@ -224,15 +236,17 @@ export default {
 
     updateSelection () {
 
-      var rows = transpose(this.itemsSlotsGroups.map(itemsSlots=>{
-        var items = itemsSlots.map(itemArray=>{
-          return (itemArray && itemArray[0]) ? itemArray[0] : false;
+      var columns = this.itemsSlotsGroups.map(itemsSlots=>{
+        var colItems = itemsSlots.map(itemArray=>{
+          return (itemArray && itemArray[0]) ? itemArray[0] : '_BB_EMPTY_SLOT_';
         })
-        items.splice(items.length-1,1);
-        return items
-      })).map((items, i)=>{
+        colItems.splice(colItems.length-1,1);
+        return colItems
+      })
+
+      var rows = transpose(columns).map((rowItems, i)=>{
         return {
-          items,
+          items: rowItems.map(it=>it!=='_BB_EMPTY_SLOT_' ? it : false),
           value: this.textFieldsValues[this.textFields[i]] || this.textFields[i] || 'und'
         }
       })
@@ -262,13 +276,17 @@ export default {
     },
 
     startDrag ($event) {
+      window.dragType = 'concat'
       if (!$event) {
         return false
       }
     },
 
+    endDrag (noDrag = false) {
+      window.dragType = false
+    },
+
     checkMove ($event) {
-      console.log({$event})
       return (!$event.relatedContext.list.length || $event.from === $event.to || $event.to.id==='deleted-items-col')
     }
   }

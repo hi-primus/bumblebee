@@ -190,8 +190,6 @@ export const actions =  {
   async profile ({commit}, { auth }) {
     var response = await axios.get(AUTH_API + '/auth/profile', { headers: { 'Authorization': auth } } )
 
-    console.log({ responseData: response.data })
-
     commit('mutation', { mutate: 'username', payload: response.data.username})
 
     return true

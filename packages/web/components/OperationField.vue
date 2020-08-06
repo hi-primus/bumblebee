@@ -204,16 +204,23 @@
     </template>
 
     <template v-else-if="getPropertyField(field.type)=='columns_concat'">
-      <span>
-        {{_value}}
-        <br/>
+      <div style="min-height: 80px;">
+        <v-progress-circular
+          v-if="!currentCommand.typesDone"
+          indeterminate
+          color="grey"
+          class="mx-auto d-flex"
+          size="64"
+          width="4"
+        />
         <ColumnsConcatSelector
+          v-else
           :key="field.key"
           v-model="_value"
           :dataset-columns="getPropertyField(currentCommand.dataset_columns)"
           @input="(field.onChange) ? (currentCommand = field.onChange($event, currentCommand)) : ()=>{}"
         />
-      </span>
+      </div>
     </template>
 
     <template v-else-if="getPropertyField(field.type)=='columns_filter'">
