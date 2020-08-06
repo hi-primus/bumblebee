@@ -464,7 +464,7 @@ export const codeGenerators = {
       +( (payload.splits) ? `, splits=${payload.splits}` : '')
       +( (payload.index) ? `, index=${payload.index}` : '')
       +( (output_cols_argument) ? `, output_cols=${output_cols_argument}` : '')
-      +( (payload.request.type === 'profile' || payload.drop) ? ', drop=True' : '')
+      +( (payload.drop) ? ', drop=True' : '')
       +')'
 
     if (payload.request.type === 'preview') {
