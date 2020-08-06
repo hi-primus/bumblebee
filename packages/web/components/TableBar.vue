@@ -673,6 +673,17 @@ export default {
         {
           type: 'button',
           onClick: () => {
+            this.commandHandle({command: 'concat'})
+          },
+          icons: [
+            { icon: 'mdi-table-row-plus-after' },
+          ],
+          tooltip: 'Concat dataframes',
+          disabled: ()=>!(this.currentDataset && this.currentDataset.summary && this.hasSecondaryDatasets)
+        },
+        {
+          type: 'button',
+          onClick: () => {
             this.commandHandle({command: 'aggregations'})
           },
           icons: [

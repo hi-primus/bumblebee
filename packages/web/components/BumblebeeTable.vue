@@ -893,13 +893,9 @@ export default {
 
   async mounted () {
 
-    console.time('checkVisibleColumns')
     await this.checkVisibleColumns()
-    console.timeEnd('checkVisibleColumns')
 
-    console.time('scrollCheck')
     await this.scrollCheck(true)
-    console.timeEnd('scrollCheck')
 
     this.mustUpdateRows = true
     this.updateRows()

@@ -191,6 +191,18 @@ export const codeGenerators = {
       + (payload.subset.length ? `subset=["${payload.subset.join('", "')}"], ` : '')
       + `keep="${payload.keep}")`
   },
+  concat: (payload) => {
+    console.log(payload.selected_columns);
+
+    var cols_map = payload.selected_columns.map(e=>{
+      var items = e.items.map(item=>item ? `"${item.name}"` : 'False')
+      return `"${e.value}": [${items.join(', ')}]`
+    })
+
+    cols_map = `{ ${cols_map.join(', ')} }`
+
+    return `.cols.append_df([${payload.with}], ${cols_map})`;
+  },
   join: (payload) => {
     var columnsLeft = payload.selected_columns.filter(c=>c.source==='left').map(c=>c.name)
     var columnsRight = payload.selected_columns.filter(c=>(c.name && c.source==='right')).map(c=>c.name)

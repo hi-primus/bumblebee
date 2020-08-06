@@ -876,6 +876,92 @@ export default {
           },
           content: (payload) => `<b>Join</b> ${hlParam(payload.dfName)} <b>with</b> ${hlParam(payload.with)}`
         },
+        concat: {
+          dialog: {
+            title: 'Append datasets',
+            fields: [
+              {
+                key: 'with',
+                label: 'Dataset (right)',
+                type: 'select',
+                items_key: 'items_with'
+              },
+              {
+                key: 'selected_columns',
+                label: 'Concat columns',
+                type: 'columns_concat'
+              },
+            ],
+            validate: (c) => {
+              return !!(c.selected_columns && c.selected_columns.length)
+            }
+          },
+          payload: async (columns, payload = {}) => {
+
+            var _datasets_right = {...payload.secondaryDatasets}
+            var items_with = Object.keys(_datasets_right).filter(e=>(e!==payload.dfName && e!=='preview_df'))
+
+            var df2 = items_with[0]
+
+            return {
+              items_with: (c)=>{
+                return Object.keys(c._datasets_right)
+                  .filter(e=>e!==payload.dfName && e!=='preview_df')
+                  .filter(e=>!e.startsWith('_'))
+              },
+              with: df2,
+              _datasets_right,
+              dataset_columns: (c)=>{
+                try {
+
+                  return [
+                    c.allColumns.map(name=>({
+                      name,
+                      type: (c.types && c.types.self) ? c.types.self[name] : '  '
+                    })),
+                    c._datasets_right[c.with].map(name=>({
+                      name,
+                      type: (c.types && c.types[c.with]) ? c.types[c.with][name] : '  '
+                    }))
+                  ];
+                } catch (err) {
+                  console.error(err);
+
+                }
+              },
+
+              selected_columns: [],
+              preview: {
+                expectedColumns: -1,
+                type: 'concat',
+                delay: 500,
+                datasetPreview: true,
+                // noBufferWindow: true
+              },
+              request: {
+                // createsNew: true
+              }
+            }
+          },
+          content: (payload) => `<b>Concat</b> ${hlParam(payload.dfName)} <b>with</b> ${hlParam(payload.with)}`,
+
+          onInit: async (currentCommand) => {
+            try {
+
+              var command = {...currentCommand}
+              var withOther = command.items_with(command).map(df=>`"${df}": ${df}.cols.profiler_dtypes()`).join(', ')
+              const response = await this.evalCode(`_output = { "self": ${command.dfName}.cols.profiler_dtypes(), ${withOther} }`)
+              console.log('onInit response',response)
+
+              command.types = response.data.result
+              command.typesDone = true
+
+              return command
+            } catch (err) {
+              return { ...currentCommand, typesDone: true }
+            }
+          }
+        },
         aggregations: {
           dialog: {
             title: 'Get aggregations',
@@ -2728,7 +2814,7 @@ export default {
           this.$emit('update:big',commandHandler.dialog.big)
 
           if (commandHandler.onInit) {
-            await commandHandler.onInit()
+            this.currentCommand = await commandHandler.onInit(this.currentCommand)
           }
 
           if (command.execute) {
