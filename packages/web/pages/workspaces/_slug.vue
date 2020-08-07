@@ -109,10 +109,14 @@
             center-active
             style="flex: 0;"
           >
-            <v-tab v-for="(_tab, key) in $store.state.datasets" :key="key" class="bb-tab">
+            <v-tab
+              v-for="(_tab, key) in $store.state.datasets"
+              :key="key"
+              class="bb-tab"
+            >
               <span class="tab-content">
-                <span class="tab-title">{{ _tab.name || key+1 }}</span>
-                <span class="tab-subtitle">{{ _tab.file_name }}</span>
+                <span class="tab-title" :title="[_tab.dfName,_tab.name].filter(e=>e).join(' - ')">{{[_tab.dfName,_tab.name].filter(e=>e).join(' - ')}}</span>
+                <span class="tab-subtitle" :title="_tab.file_name">{{ _tab.file_name }}</span>
               </span>
               <v-hover v-if="!noClose" v-slot:default="{ hover }">
                 <span class="tab-close">

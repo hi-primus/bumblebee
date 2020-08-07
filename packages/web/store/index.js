@@ -196,6 +196,11 @@ export const mutations = {
     console.log("[BUMBLEBLEE] Opening dataset",dataset)
 
     // if (dataset.name===null) {
+
+    if (dataset.file_name.includes('/uploads/')) {
+      dataset.file_name = dataset.file_name.split('/uploads/')[1]
+    }
+
     if (!dataset.name) {
       if (dataset.file_name) {
         dataset.name = dataset.file_name.split('.')[0]
