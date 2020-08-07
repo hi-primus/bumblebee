@@ -1075,8 +1075,8 @@ export default {
 
     copyCodeToClipboard (engineText) {
       var code = 'from optimus import Optimus\n'
-      +'from optimus.expressions import Parser'
-      +'p = Parser()'
+      +'from optimus.expressions import Parser\n'
+      +'p = Parser()\n'
       +`op = Optimus(${engineText})\n`
       + this.cells.map(e=>e.code).filter(c=>c.trim()).join('\n')
       copyToClipboard(code)
