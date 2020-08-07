@@ -867,12 +867,13 @@ export default {
             }
           },
           beforeExecuteCode: async (currentCommand) => {
-            if (!currentCommand.secondaryDatasets[currentCommand.with] || !currentCommand.secondaryDatasets[currentCommand.with].buffer) {
-              await this.evalCode('_output = '+currentCommand.with+'.ext.set_buffer("*")') // TO-DO: !!!
-              this.$store.commit('setSecondaryBuffer', { key: currentCommand.with, value: true})
-              currentCommand.secondaryDatasets = this.currentSecondaryDatasets
+            var command = { ...currentCommand }
+            if (!command.secondaryDatasets[command.with] || !command.secondaryDatasets[command.with].buffer) {
+              await this.evalCode('_output = '+command.with+'.ext.set_buffer("*")') // TO-DO: !!!
+              this.$store.commit('setSecondaryBuffer', { key: command.with, value: true})
+              command.secondaryDatasets = {...this.currentSecondaryDatasets}
             }
-            return currentCommand
+            return command
           },
           content: (payload) => `<b>Join</b> ${hlParam(payload.dfName)} <b>with</b> ${hlParam(payload.with)}`
         },
@@ -2717,15 +2718,13 @@ export default {
 
     async beforeRunCells (newOnly = false, ignoreFrom = -1) {
 
-      // console.log('[DEBUG] beforeRunCells')
       this.filterCells(newOnly, ignoreFrom).forEach(async (cell) => {
         if (cell.payload.request && cell.payload.request.createsNew) {
-          // console.log('[DEBUG] beforeExecuteCode', cell.payload.newDfName)
           this.setDfToTab(cell.payload.newDfName)
         }
         var commandHandler = this.getCommandHandler(cell)
         if (commandHandler.beforeExecuteCode) {
-          // console.log('[DEBUG] beforeExecuteCode')
+          cell = {...cell} // avoid vuex mutation
           cell.payload = await commandHandler.beforeExecuteCode(cell.payload)
         }
       })
