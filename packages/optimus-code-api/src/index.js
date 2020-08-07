@@ -201,6 +201,16 @@ export const codeGenerators = {
 
     cols_map = `{ ${cols_map.join(', ')} }`
 
+    if (payload.request.type !== 'final') {
+      return (from, to) => {
+        var window = ''
+        if (from!==undefined) {
+          window = `,${from},${to}`
+        }
+        return `.cols.append_df([${payload.with}.ext.buffer_window("*"${window})], ${cols_map})`;
+      }
+    }
+
     return `.cols.append_df([${payload.with}], ${cols_map})`;
   },
   join: (payload) => {

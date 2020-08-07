@@ -944,12 +944,18 @@ export default {
               }
             }
           },
+
           content: (payload) => `<b>Concat</b> ${hlParam(payload.dfName)} <b>with</b> ${hlParam(payload.with)}`,
 
           onInit: async (currentCommand) => {
             try {
 
               var command = {...currentCommand}
+              if (!command.secondaryDatasets[command.with] || !command.secondaryDatasets[command.with].buffer) {
+                await this.evalCode('_output = '+command.with+'.ext.set_buffer("*")') // TO-DO: !!!
+                this.$store.commit('setSecondaryBuffer', { key: command.with, value: true})
+                command.secondaryDatasets = {...this.currentSecondaryDatasets}
+              }
               var withOther = command.items_with(command).map(df=>`"${df}": ${df}.cols.profiler_dtypes()`).join(', ')
               const response = await this.evalCode(`_output = { "self": ${command.dfName}.cols.profiler_dtypes(), ${withOther} }`)
               console.log('onInit response',response)
