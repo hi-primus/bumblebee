@@ -290,13 +290,15 @@ export const mutations = {
     state.datasetUpdates = state.datasetUpdates + 1
   },
 
-  setDfToTab (state, { dfName }) {
+  setDfToTab (state, { dfName, go }) {
 
     // doesn't sets if there's already a dataset with the same dfName
     var foundIndex = state.datasets.findIndex(dataset => dataset.dfName===dfName)
 
     if (foundIndex>=0) {
-      state.tab = foundIndex
+      if (go) {
+        state.tab = foundIndex
+      }
       return
     }
 

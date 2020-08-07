@@ -484,7 +484,7 @@ export default {
   methods: {
 
     openDf (dfName) {
-      this.$store.commit('setDfToTab', { dfName })
+      this.$store.commit('setDfToTab', { dfName, go: true })
       this.loadDataset(dfName)
     },
 
