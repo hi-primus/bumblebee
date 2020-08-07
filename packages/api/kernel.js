@@ -83,7 +83,7 @@ export const initializeKernelSession = async function (sessionId, payload = fals
     }
   }
 
-  if (!kernels[sessionId] || !kernels[sessionId].connection) {
+  if (!kernels[sessionId] || !kernels[sessionId].id || !kernels[sessionId].connection) {
     return false
   }
 
@@ -107,7 +107,7 @@ const assertSession = async function (sessionId, isInit = false, kernel_address 
 
     await createConnection(sessionId)
 
-    if (!isInit && !kernels[sessionId].initialized) {
+    if (!isInit && !(kernels[sessionId].initialized || kernels[sessionId].id)) {
       if (!kernels[sessionId].initialization) {
         kernels[sessionId].initialization = initializeKernelSession(sessionId)
       }
@@ -358,7 +358,6 @@ export const setKernel = function (sessionId, kernelObject) {
 
 const deleteKernel = async function (sessionId) {
   try {
-    console.log('deleting kernel', sessionId)
     if (checkKernel(sessionId)) {
       var _id = kernels[sessionId].id
       var ka = kernels[sessionId].kernel_address || 0
@@ -374,6 +373,7 @@ const deleteKernel = async function (sessionId) {
       console.log('Deleting Session',sessionId,'not found')
     }
   } catch (err) {
+    console.log('Deleting Session',sessionId,'error')
     console.error(err)
   }
   return kernels[sessionId]
