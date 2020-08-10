@@ -8,12 +8,14 @@ import kernelRoutines from './kernel-routines.js'
 var kernels = []
 
 var kernel_addresses
+var kernel_types
 var kernel_bases
 var ws_kernel_bases
 
 const updateKernelBases = function () {
   if (!kernel_addresses) {
     kernel_addresses = (process.env.KERNEL_ADDRESS || `localhost:8888`).split(',')
+    kernel_types = (process.env.KERNEL_TYPE || `python3`).split(',')
     kernel_bases  = kernel_addresses.map(e=>'http://'+e)
     ws_kernel_bases  = kernel_addresses.map(e=>'ws://'+e)
   }
@@ -21,12 +23,17 @@ const updateKernelBases = function () {
 
 const kernelBase = function (id) {
   updateKernelBases()
-  return kernel_bases[id]
+  return kernel_bases[id] || kernel_bases[0]
+}
+
+const kernelType = function (id) {
+  updateKernelBases()
+  return kernel_types[id] || kernel_types[0]
 }
 
 const wsKernelBase = function (id) {
   updateKernelBases()
-  return ws_kernel_bases[id]
+  return ws_kernel_bases[id] || ws_kernel_bases[0]
 }
 
 export const initializeKernel = async function (sessionId, payload = false) {
@@ -304,7 +311,7 @@ const createKernel = async function (sessionId, ka = 0) {
           headers: {},
           json: true,
           body: {
-            // name: 'workspace-'+sessionId
+            name: kernelType(ka)
           }
         })
         const uuid = Buffer.from( uuidv1(), 'utf8' ).toString('hex')
