@@ -77,7 +77,7 @@ properties.forEach((p)=>{
 })
 
 
-/*bu*/ import { ALL_TYPES, capitalizeString } from 'bumblebee-utils' /*bu*/
+import { ALL_TYPES, capitalizeString } from 'bumblebee-utils'
 
 export const state = () => ({
   datasets: [],

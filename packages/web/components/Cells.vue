@@ -231,7 +231,7 @@ import OptimusApi from 'optimus-code-api'
 
 const { getGenerator } = OptimusApi
 
-/*bu*/ import {
+import {
 
   deepCopy,
   everyRatio,
@@ -250,7 +250,7 @@ const { getGenerator } = OptimusApi
 
   TYPES,
   STRING_TYPES
-} from 'bumblebee-utils' /*bu*/
+} from 'bumblebee-utils'
 
 export default {
 

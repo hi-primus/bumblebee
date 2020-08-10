@@ -1,5 +1,5 @@
 import Vue from 'vue'
-/*bu*/ import { getProperty } from 'bumblebee-utils' /*bu*/
+import { getProperty } from 'bumblebee-utils'
 
 Vue.filter('property', function ({value, args}) {
 	return getProperty(value, args)

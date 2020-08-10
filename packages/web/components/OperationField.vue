@@ -328,7 +328,7 @@
 
 <script>
 
-/*bu*/ import { getProperty } from 'bumblebee-utils' /*bu*/
+import { getProperty } from 'bumblebee-utils'
 
 import TextFieldSuggestions from '@/components/TextFieldSuggestions'
 import ColumnsJoinSelector from '@/components/ColumnsJoinSelector'

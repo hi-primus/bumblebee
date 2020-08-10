@@ -211,7 +211,7 @@ import MoreMenu from "@/components/MoreMenu"
 import clientMixin from "@/plugins/mixins/client"
 import dataTypesMixin from "@/plugins/mixins/data-types"
 import applicationMixin from "@/plugins/mixins/application"
-/*bu*/ import { printError, RESPONSE_MESSAGES } from 'bumblebee-utils' /*bu*/
+import { printError, RESPONSE_MESSAGES } from 'bumblebee-utils'
 
 import { mapGetters, mapState } from "vuex"
 

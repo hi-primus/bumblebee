@@ -181,7 +181,7 @@ import Layout from "@/components/Layout"
 import clientMixin from "@/plugins/mixins/client"
 import dataTypesMixin from "@/plugins/mixins/data-types"
 import applicationMixin from "@/plugins/mixins/application"
-/*bu*/ import { printError, RESPONSE_MESSAGES } from 'bumblebee-utils' /*bu*/
+import { printError, RESPONSE_MESSAGES } from 'bumblebee-utils'
 
 import { mapGetters } from "vuex";
 

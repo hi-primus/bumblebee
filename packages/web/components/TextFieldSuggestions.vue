@@ -116,7 +116,7 @@
 
 <script>
 
-/*bu*/ import { debounce, throttle } from 'bumblebee-utils' /*bu*/
+import { debounce, throttle } from 'bumblebee-utils'
 import autocompleteMixin from '@/plugins/mixins/autocomplete.js'
 
 export default {

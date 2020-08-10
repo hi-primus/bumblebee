@@ -21,7 +21,7 @@
 <script>
 import BarsCanvas from '@/components/BarsCanvas'
 import { mapState, mapGetters } from 'vuex'
-/*bu*/ import { arraysEqual } from 'bumblebee-utils' /*bu*/
+import { arraysEqual } from 'bumblebee-utils'
 
 export default {
 

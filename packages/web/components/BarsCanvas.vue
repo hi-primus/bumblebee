@@ -35,7 +35,7 @@
 
 <script>
 
-/*bu*/ import { stepify } from 'bumblebee-utils' /*bu*/
+import { stepify } from 'bumblebee-utils'
 
 export default {
 
