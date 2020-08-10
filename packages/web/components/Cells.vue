@@ -845,9 +845,6 @@ export default {
               ],
               preview: {
                 joinPreview: (c)=>{
-                  // var left = c.selected_columns.filter(col=>col.source==='left' || col.name===c.left_on).map(col=>col.name)
-                  // var right = c.selected_columns.filter(col=>col.source==='right' || col.name===c.right_on).map(col=>col.name)
-                  // var center = left.filter(col=>right.indexOf(col)!=-1)
                   var left = c.selected_columns.filter(col=>col.source==='left' && col.name!==c.left_on).map(col=>col.name)
                   left = [...left, ...left.map(n=>n+'_left')]
                   var right = c.selected_columns.filter(col=>col.source==='right' && col.name!==c.right_on).map(col=>col.name)
@@ -2387,6 +2384,12 @@ export default {
 
   },
 
+  mounted () {
+    window.runCells = ()=>{
+      this.runCodeNow(true)
+    }
+  },
+
   watch: {
 
     codeError (value) {
@@ -2440,8 +2443,6 @@ export default {
           }
           if (meta.file_name) {
             c._fileName = meta.file_name
-          } else {
-            // c._fileName = 'test.csv'
           }
           if (meta.mime_info) {
             if (meta.mime_info.file_type) {
@@ -2883,7 +2884,6 @@ export default {
     },
 
     cancelCommand () {
-      // TO-DO: Check
 			setTimeout(() => {
         // this.recoverTextSelection()
         this.clearTextSelection()
@@ -3038,12 +3038,6 @@ export default {
         payload.columns = this.columns.map(e=>this.currentDataset.columns[e.index].name)
       }
 
-      // if (type==='preview' || type==='profile') {
-      //   if (payload.columns) {
-      //     payload.output_cols = payload.columns.map(e=>'__preview__'+e)
-      //   }
-      // }
-
       var precode = ''
 
       if (!payload._code) {
@@ -3080,8 +3074,6 @@ export default {
     async editCell (cell, index) {
       // console.log('[DEBUG] Editing cell',{cell, index})
       var command = deepCopy(cell)
-
-      // TO-DO: deep copy using deepCopy
 
       var commandHandler = this.getCommandHandler(command)
       if (commandHandler.dialog) {
@@ -3221,15 +3213,6 @@ export default {
 
         var dataset = await this.loadDataset(dfName)
 
-        // if (dfName) {
-        //   var dataset = JSON.parse(response.data.result)
-        //   dataset.dfName = dfName
-
-        //   this.$store.dispatch('setDataset', { dataset })
-
-        //   this.setBuffer(dfName)
-        // }
-
         this.updateSecondaryDatasets()
 
         this.$forceUpdate()
@@ -3239,6 +3222,7 @@ export default {
         this.lastWrongCode = false
 
       } catch (error) {
+
         if (error.code) {
           window.pushCode({code: error.code, error: true})
         }
@@ -3248,6 +3232,7 @@ export default {
         this.markCellsError(ignoreFrom)
         this.lastWrongCode = code
         this.localCommandsDisabled = undefined;
+
       }
 
       if (this.codeText() !== code) {
