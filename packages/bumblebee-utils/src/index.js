@@ -510,8 +510,17 @@ export const STRING_TYPES = [
 ]
 
 export const RESPONSE_MESSAGES = {
+  'login': {
+    201: 'Ok',
+    401: 'Invalid credentials',
+    403: 'Unauthorized user',
+    404: 'User not found',
+    500: 'Something went wrong'
+  },
   'user': {
     201: 'User account successfully created',
+    401: 'Invalid credentials',
+    403: 'Unauthorized user',
     404: 'User not found',
     500: 'Something went wrong'
   },

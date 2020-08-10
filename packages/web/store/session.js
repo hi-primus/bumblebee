@@ -197,9 +197,7 @@ export const actions =  {
 
 	async signIn ({commit, dispatch}, payload) {
 
-    var response
-    // response = await axios.post(AUTH_API + '/auth/signin', payload)
-    response = await axios.post(AUTH_API + '/auth/signin', payload)
+    const response = await axios.post(AUTH_API + '/auth/signin', payload)
 
     var accessToken = response.data.accessToken ? ('Bearer ' + response.data.accessToken) : false
     var refreshToken = response.data.refreshToken ? ('Bearer ' + response.data.refreshToken) : false

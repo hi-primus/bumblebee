@@ -86,7 +86,10 @@
                 <span
                   class="primary--text text--darken-1 text-button"
                   @click="typeForm=0"
-                >Sign in</span>
+                >
+                  <v-icon color="primary" small class="mb-1">arrow_back</v-icon>
+                  Back to sign in
+                </span>
               </center>
             </div>
           </v-card-text>
@@ -151,7 +154,7 @@
             <div
               class="primary--text text--darken-1 text-button"
               @click="typeForm=1"
-            >Sign up</div>
+            >Sign up to bumblebee</div>
           </v-layout>
         </v-form>
         <v-card-text v-if="successMessage || appError" class="pb-0">
@@ -215,7 +218,7 @@ export default {
 			showCreatePassword: false,
 			typeForm: 0,
 			successMessage: "",
-      errorMessage: "",
+      // errorMessage: "",
       isLoading: false
 		};
 	},
@@ -246,6 +249,11 @@ export default {
         if (this.confirmPassword!==this.createPassword && !this.showCreatePassword) {
           throw "Passwords doesn't match"
         }
+
+        this.successMessage = false
+        this.resetStatus()
+        this.isLoading = true
+
 				var response = await this.$store.dispatch("session/signUp", {
 					username: this.createUsername,
           password: this.createPassword,
@@ -255,8 +263,9 @@ export default {
 				});
         if (response.status === 201) {
           this.typeForm = 0
-          this.successMessage = RESPONSE_MESSAGES['user'][201]
+          this.successMessage = RESPONSE_MESSAGES.user[201]
           this.$store.commit("status")
+          this.isLoading = false
           return
         }
 				if (response.status >= 300) {
@@ -265,12 +274,18 @@ export default {
         throw response
 			} catch (error) {
         this.successMessage = ""
-        var errorMessage = RESPONSE_MESSAGES['user'][error.response.status]
+        var status = (error && error.response) ? error.response.status : false
+        if (status) {
+          error.message = RESPONSE_MESSAGES.user[status]
+        }
 				this.handleError(error, "waiting")
-			}
+      }
+      this.isLoading = false
 		},
 		async subscribe() {
 			try {
+        this.successMessage = false
+        this.resetStatus()
         this.isLoading = true
 				if (this.useKernel) {
 					var login = await this.$store.dispatch("session/signIn", {
@@ -292,7 +307,11 @@ export default {
           })
 				}
 			} catch (error) {
-				console.error(error);
+        var status = (error && error.response) ? error.response.status : false
+        if (status) {
+          error.message = RESPONSE_MESSAGES.user[status]
+        }
+        console.error(error);
 				this.handleError(error, "waiting");
       }
       this.isLoading = false
