@@ -216,18 +216,19 @@ export default {
     },
 
     async createNewWorkspace (payload) {
+      var pushed = -1
+      if (!payload.name) {
+        return false
+      }
+      pushed = this.items.push({
+        name: payload.name,
+        description: payload.description,
+        createdAt: false,
+        updatedAt: false,
+        loading: true,
+        _id: false
+      })
       try {
-        if (!payload.name) {
-          return false
-        }
-        this.items.push({
-          name: payload.name,
-          description: payload.description,
-          createdAt: false,
-          updatedAt: false,
-          loading: true,
-          _id: false
-        })
         await this.$store.dispatch('request',{
           request: 'post',
           path: '/workspaces',
@@ -235,6 +236,9 @@ export default {
         })
         await this.updateWorkspaces()
       } catch (err) {
+        if (pushed>=0) {
+          this.$delete(this.items, pushed-1)
+        }
         console.error(err)
       }
     },
