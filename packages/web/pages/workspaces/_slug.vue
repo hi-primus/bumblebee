@@ -461,15 +461,23 @@ export default {
 
       console.log('[INITIALIZATION] initializeOptimus')
 
+      var query = this.$route.query
+
+      var parameters = {
+        engine: query.engine,
+        address: this.$route.query.address,
+        n_workers: query.n_workers || query.workers,
+        threads_per_worker: query.threads_per_worker || query.tpw,
+        reset: this.$route.query.reset,
+        kernel_address: this.$route.query.kernel_address,
+        process: this.$route.query.process,
+        processes: this.$route.query.processes
+      }
+
       var response = await this.socketPost('initialize', {
         username: this.$store.state.session.username,
         workspace: (this.$store.state.session.workspace ? this.$store.state.session.workspace.slug : undefined) || 'default',
-        engine: this.$route.query.engine,
-        address: this.$route.query.address,
-        kernel_address: this.$route.query.kernel_address,
-        tpw: this.$route.query.tpw,
-        workers: this.$route.query.workers,
-        reset: this.$route.query.reset
+        ...parameters
       })
 
       console.log('[INITIALIZATION] initializeOptimus response', response)

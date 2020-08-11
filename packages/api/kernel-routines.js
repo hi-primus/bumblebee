@@ -55,10 +55,16 @@ _start_time = datetime.utcnow().timestamp()
 
 res = { 'kernel': 'ok' }
 
-engine = "${payload.engine || 'dask'}"
-tpw = ${payload.tpw || 8}
-workers = ${payload.workers || 1}
 reset = ${payload.reset || 'False'}
+
+engine = "${payload.engine || 'dask'}"
+
+n_workers = ${payload.n_workers || 1}
+threads_per_worker = ${payload.threads_per_worker || 8}
+processes = ${payload.processes || 'False'}
+memory_limit = "${payload.memory_limit || '3G'}"
+
+process = ${payload.process || 'True'}
 
 from optimus.expressions import reserved_words, Parser
 res.update({'reserved_words': reserved_words})
@@ -78,9 +84,11 @@ try:
         pass
 except Exception:
     from optimus import Optimus
-    op = Optimus(engine,`
-    + (payload.address ? ` address="${payload.address}",` : '')
-    + ` threads_per_worker=tpw, n_workers=workers, comm=True)
+    op = Optimus(engine`
+    + ((payload.address && payload.engine.includes('dask')) ? `, address="${payload.address}",` : '')
+    + (payload.engine==='dask' ? `, n_workers=n_workers, threads_per_worker=threads_per_worker, processes=processes memory_limit=memory_limit, comm=True, ` : '')
+    + (payload.engine==='dask_cudf' ? `, process=process` : '')
+    +`)
     op
     op.__version__
     op.engine

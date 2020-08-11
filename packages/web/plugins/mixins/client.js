@@ -194,15 +194,24 @@ export default {
 
         try {
           if (!window.socket) {
+
+            var query = this.$route.query
+
+            var parameters = {
+              engine: query.engine,
+              address: this.$route.query.address,
+              n_workers: query.n_workers || query.workers,
+              threads_per_worker: query.threads_per_worker || query.tpw,
+              reset: this.$route.query.reset,
+              kernel_address: this.$route.query.kernel_address,
+              process: this.$route.query.process,
+              processes: this.$route.query.processes
+            }
+
             var initializationPayload = {
               username: this.$store.state.session.username,
               workspace: (this.$store.state.session.workspace ? this.$store.state.session.workspace.slug : undefined) || 'default',
-              engine: this.$route.query.engine,
-              kernel_address: this.$route.query.kernel_address,
-              address: this.$route.query.address,
-              tpw: this.$route.query.tpw,
-              workers: this.$route.query.workers,
-              reset: this.$route.query.reset
+              ...parameters
             }
             await this.startSocket ()
 
