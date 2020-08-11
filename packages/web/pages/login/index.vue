@@ -292,7 +292,7 @@ export default {
 						username: this.inputUsername,
 						password: this.inputPassword
           })
-          if (this.$route.query.ws!=0 && +process.env.API_FEATURES) {
+          if (this.$route.query.ws!=0 && +process.env.USE_WORKSPACES) {
             this.$router.push({path: '/workspaces', query: this.$route.query })
           } else {
             this.$router.push({path: '/workspaces/default', query: this.$route.query })

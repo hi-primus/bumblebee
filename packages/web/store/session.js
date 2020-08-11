@@ -1,5 +1,3 @@
-const AUTH_API = (+process.env.API_FEATURES) ? process.env.DEV_API_URL : process.env.API_URL
-
 import axios from 'axios'
 import { setAuthTokenAxios, resetAuthTokenAxios } from '@/utils/auth.js'
 import { debounce } from 'bumblebee-utils'
@@ -89,7 +87,7 @@ export const actions =  {
 
   async signUp (context,  payload) {
     var response
-    response = await axios.post(AUTH_API + '/auth/signup', {
+    response = await axios.post(process.env.API_URL + '/auth/signup', {
       ...payload,
       secret: window.authSecret || '123'
     })
@@ -188,7 +186,7 @@ export const actions =  {
   },
 
   async profile ({commit}, { auth }) {
-    var response = await axios.get(AUTH_API + '/auth/profile', { headers: { 'Authorization': auth } } )
+    var response = await axios.get(process.env.API_URL + '/auth/profile', { headers: { 'Authorization': auth } } )
 
     commit('mutation', { mutate: 'username', payload: response.data.username})
 
@@ -197,7 +195,7 @@ export const actions =  {
 
 	async signIn ({commit, dispatch}, payload) {
 
-    const response = await axios.post(AUTH_API + '/auth/signin', payload)
+    const response = await axios.post(process.env.API_URL + '/auth/signin', payload)
 
     var accessToken = response.data.accessToken ? ('Bearer ' + response.data.accessToken) : false
     var refreshToken = response.data.refreshToken ? ('Bearer ' + response.data.refreshToken) : false

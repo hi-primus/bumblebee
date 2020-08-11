@@ -487,9 +487,9 @@ export const actions = {
     var response
 
     if (['post','put'].includes(request)) {
-      response = await axios[request](process.env.DEV_API_URL + path, payload, { headers: {'Authorization': accessToken} } )
+      response = await axios[request](process.env.API_URL + path, payload, { headers: {'Authorization': accessToken} } )
     } else {
-      response = await axios[request](process.env.DEV_API_URL + path, { headers: {'Authorization': accessToken} } )
+      response = await axios[request](process.env.API_URL + path, { headers: {'Authorization': accessToken} } )
     }
     return response
 

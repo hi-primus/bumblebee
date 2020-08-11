@@ -6,27 +6,29 @@ export const actions = {
 
 	async uploadFile (context, {file}) {
 
-    // const uploadResponse = context.dispatch('request', {
-    //   request: 'post',
-    //   path: '/datasource/upload',
-    //   payload: file
-    // }, { root: true })
+    const uploadResponse = await context.dispatch('request', {
+      request: 'post',
+      path: '/datasource/upload',
+      payload: {
+        name: file.name,
+        size: file.size,
+        type: file.type
+      }
+    }, { root: true })
 
-    // console.log({uploadResponse})
-
-    // return;
-
-    var formData = new FormData();
-    formData.append('datasetFile',file)
-
-    const response = await axios.post(baseUrl+'/upload',
-      formData,
+    const response = await axios.post(uploadResponse.data.url,
+      file,
       {
         headers: {
-            'Content-Type': 'multipart/form-data'
+          'Content-Type': file.type,
+          "Access-Control-Allow-Origin": "*"
         }
       }
     )
+
+    // console.log({uploadResponse, response})
+
+    // TO-DO: test
 
     var path = response.data.path.split('public/').join('').replace(/\b\\\b/g,"/")
 

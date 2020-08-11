@@ -132,7 +132,7 @@
               <v-icon color="primary">add</v-icon>
             </v-tab>
           </v-tabs>
-          <div class="bb-workspace-status" v-if="useApiFeatures">
+          <div class="bb-workspace-status" v-if="useWorkspaces">
             <!-- this.$route.query.ws!=0 -->
             <v-progress-circular
               v-if="workspaceStatus==='uploading' || workspaceStatus==='loading'"
@@ -268,8 +268,8 @@ export default {
 
     ...mapState('session',['workspace', 'workspaceStatus']),
 
-    useApiFeatures () {
-      return +process.env.API_FEATURES
+    useWorkspaces () {
+      return +process.env.USE_WORKSPACES
     },
 
     tab: {
@@ -296,7 +296,7 @@ export default {
     moreMenu () {
       let menu = []
 
-      if (this.useKernel && this.$route.query.ws!=0 && +process.env.API_FEATURES) {
+      if (this.useKernel && this.$route.query.ws!=0 && +process.env.USE_WORKSPACES) {
         menu = [
           { text: 'Workspaces', click: this.showWorkspaces },
           { divider: true },

@@ -313,7 +313,7 @@ export default {
 
         key = key || ''
 
-        var socket_url = process.env.API_FEATURES ? process.env.DEV_API_URL : process.env.API_URL
+        var socket_url = process.env.API_URL
 
         window.socket = io(socket_url, {
           query: { workspace, username, authorization: accessToken, key },
