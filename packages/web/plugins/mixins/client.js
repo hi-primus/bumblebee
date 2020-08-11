@@ -313,7 +313,9 @@ export default {
 
         key = key || ''
 
-        window.socket = io(process.env.API_URL, { query: { workspace, username, authorization: accessToken, key } })
+        var socket_url = process.env.API_FEATURES ? process.env.DEV_API_URL : process.env.API_URL
+
+        window.socket = io(socket_url, { query: { workspace, username, authorization: accessToken, key } })
 
         window.socket.on('new-error', (reason) => {
           console.error('Socket error', reason)
