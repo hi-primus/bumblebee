@@ -16,7 +16,7 @@ export const actions = {
       }
     }, { root: true })
 
-    const response = await axios.post(uploadResponse.data.url,
+    const response = await axios.put(uploadResponse.data.url,
       file,
       {
         headers: {
