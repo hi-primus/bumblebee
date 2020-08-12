@@ -20,16 +20,15 @@ export class DatasourceService {
   async getPresignedUrl(user, media): Promise<string> {
     const name = media.name.split(".").slice(0, -1).join(".");
     const Key = `${user.username}/${name}-${uuidv4()}.${
-      media.type.split("/")[1]
+      media.name.split(".")[media.name.split(".").length - 1]
     }`;
     try {
       const url = await this.s3.getSignedUrlPromise("putObject", {
         Bucket: process.env.DO_BUCKET,
         ContentType: media.type,
-        // ContentType: 'image/png',
         ACL: "public-read",
         Key,
-        Expires: 60 * 2,
+        Expires: 60 * 30,
       });
       new this.dataSourceModel({
         name,
