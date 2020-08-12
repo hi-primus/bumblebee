@@ -6,48 +6,46 @@ export const actions = {
 
 	async uploadFile (context, {file}) {
 
+    var uploadPayload = {
+      name: file.name,
+      size: file.size,
+      type: file.type
+    };
+
     const uploadResponse = await context.dispatch('request', {
       request: 'post',
       path: '/datasource/upload',
-      payload: {
-        name: file.name,
-        size: file.size,
-        type: file.type
-      }
+      payload: uploadPayload
     }, { root: true })
 
-    const response = await axios.put(uploadResponse.data.url,
+    console.log({uploadPayload, uploadResponse})
+
+    var fileUrl = uploadResponse.data.url
+
+    const response = await axios.put(fileUrl,
       file,
       {
         headers: {
+          'x-amz-acl': 'public-read',
           'Content-Type': file.type
         }
       }
     )
 
-    var path = response.data.path.split('public/').join('').replace(/\b\\\b/g,"/")
-
     var fileOriginalName = file.name
-    var fileUrl = baseUrl + '/' + path
     var fileType = undefined
     var datasetName = undefined
 
     try {
-
-      var originalName = response.data.originalname
-
-      if (fileOriginalName!==originalName) {
-        console.warn('Bad file name', fileOriginalName, originalName)
-      }
-      fileType = originalName.split('.')
+      fileType = fileOriginalName.split('.')
       fileType = fileType[fileType.length - 1]
       if (!['csv','xls','json','avro','parquet'].includes(fileType)) {
         throw new Error()
       }
-      datasetName = originalName.split(fileType)[0]
+      datasetName = fileOriginalName.split(fileType)[0]
     } catch (error) {
       fileType = undefined
-      console.warn('Bad file name', originalName)
+      console.warn('Bad file name', fileOriginalName)
     }
 
     if (!fileUrl || !fileType || !datasetName) {
