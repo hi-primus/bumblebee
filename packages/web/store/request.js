@@ -27,10 +27,13 @@ export const actions = {
       {
         headers: {
           'x-amz-acl': 'public-read',
-          'Content-Type': file.type
+          'Content-Type': file.type,
+          'Authorization': undefined
         }
       }
     )
+
+    fileUrl = fileUrl.split('?')[0]
 
     var fileOriginalName = file.name
     var fileType = undefined
