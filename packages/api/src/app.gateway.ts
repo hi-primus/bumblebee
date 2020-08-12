@@ -34,7 +34,7 @@ export class AppGateway
 	}
 	handleConnection(client: Socket, ...args: any[]) {
     this.logger.log(`Client connected: ${client.id}`);
-    this.wss.emit('success',{})
+    client.emit('success', {});
 	}
 
 	@SubscribeMessage('message')
@@ -52,25 +52,25 @@ export class AppGateway
 				};
 			}
 			const code = kernelRoutines.datasetsMin(payload);
-			this.wss.emit('reply', {
+			client.emit('reply', {
 				data: result,
 				code,
 				timestamp: payload.timestamp,
 			});
 		} else if (payload.message === 'initialize') {
-			const sessionId = payload.username + '_' + payload.workspace;
+			const sessionId = payload.username + '_BBSESSION_' + payload.workspace;
 			let result;
 			try {
 				const initPayload = await initializeKernel(sessionId, payload);
 				result = initPayload.result;
-				console.log('test------', initPayload.result);
+				// console.log('[INITIALIZATION RESULT]', initPayload.result);
 			} catch (err) {
 				result = err;
 				console.error('[INITIALIZATION ERROR]', err);
 				result.status = 'error';
 			}
 			const code = kernelRoutines.initMin(payload);
-			this.wss.emit('reply', {
+			client.emit('reply', {
 				data: result,
 				code,
 				timestamp: payload.timestamp,
@@ -78,7 +78,7 @@ export class AppGateway
 		} else if (payload.message === 'run') {
 			const sessionId = payload.username + '_' + payload.workspace;
 			const result = await runCode(`${payload.code}`, sessionId);
-			this.wss.emit('reply', {
+			client.emit('reply', {
 				data: result,
 				code: payload.code,
 				timestamp: payload.timestamp,
@@ -88,7 +88,7 @@ export class AppGateway
 			let code = payload.code;
 			code += '\n' + `_output = 'ok'`;
 			const result = await runCode(code, sessionId);
-			this.wss.emit('reply', {
+			client.emit('reply', {
 				data: result,
 				code,
 				timestamp: payload.timestamp,
@@ -97,7 +97,7 @@ export class AppGateway
 			const sessionId = payload.username + '_' + payload.workspace;
 			const code = `_output = ${payload.dfName}.ext.profile(columns="*", output="json")`;
 			const result = await runCode(code, sessionId);
-			this.wss.emit('reply', {
+			client.emit('reply', {
 				data: result,
 				code,
 				timestamp: payload.timestamp,
