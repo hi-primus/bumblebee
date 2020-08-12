@@ -33,7 +33,8 @@ export class AppGateway
 		this.logger.log(`Client disconnected: ${client.id}`);
 	}
 	handleConnection(client: Socket, ...args: any[]) {
-		this.logger.log(`Client connected: ${client.id}`);
+    this.logger.log(`Client connected: ${client.id}`);
+    this.wss.emit('success',{})
 	}
 
 	@SubscribeMessage('message')
