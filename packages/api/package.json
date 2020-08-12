@@ -30,6 +30,7 @@
 		"@nestjs/platform-express": "^7.2.0",
 		"@nestjs/platform-socket.io": "^7.2.0",
 		"@nestjs/platform-ws": "^7.4.2",
+		"@nestjs/schedule": "^0.4.0",
 		"@nestjs/swagger": "^4.5.12",
 		"@nestjs/websockets": "^7.3.1",
 		"argon2": "^0.26.2",
