@@ -25,12 +25,12 @@ export const actions = {
     var blob = new Blob([file], {type: file.type});
 
     const response = await axios.put(fileUrl,
-      file,
+      blob,
       {
         headers: {
           'x-amz-acl': 'public-read',
           'Content-Type': file.type,
-          'Authorization': undefined,
+          'Authorization': '',
           'Access-Control-Allow-Origin': '*'
         }
       }
