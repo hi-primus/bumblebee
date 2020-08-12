@@ -31,11 +31,20 @@ export class AppGateway
 
 	handleDisconnect(client: Socket) {
 		this.logger.log(`Client disconnected: ${client.id}`);
-	}
+  }
+
 	handleConnection(client: Socket, ...args: any[]) {
     this.logger.log(`Client connected: ${client.id}`);
-    client.emit('success', {});
-	}
+  }
+
+  @SubscribeMessage('confirmation')
+  async HandleMessage(client: Socket, payload): Promise<any> {
+    if (payload.username) { // TO-DO: Confirmation
+      client.emit('success', {});
+    } else {
+      client.disconnect();
+    }
+  }
 
 	@SubscribeMessage('message')
 	async handleMessage(client: Socket, payload): Promise<any> {

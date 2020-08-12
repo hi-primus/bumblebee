@@ -295,84 +295,81 @@ export default {
     startSocket () {
 
       if (!process.client) {
-        throw new Error('SSR not allowed')
+        throw new Error('SSR not allowed');
       }
 
       return new Promise((resolve, reject)=>{
 
-        let username = this.$store.state.session.username
-        let workspace = (this.$store.state.session.workspace ? this.$store.state.session.workspace.slug : undefined) || 'default'
-        let key = this.$store.state.session.key
+        let username = this.$store.state.session.username;
+        let workspace = (this.$store.state.session.workspace ? this.$store.state.session.workspace.slug : undefined) || 'default';
+        let key = this.$store.state.session.key;
 
         if (!workspace) {
-          throw new Error('Credentials not found')
+          throw new Error('Credentials not found');
         }
 
+        var accessToken = this.$store.state.session.accessToken || '';
 
-        var accessToken = this.$store.state.session.accessToken || ''
+        key = key || '';
 
-        key = key || ''
+        var socket_url = process.env.API_URL;
 
-        var socket_url = process.env.API_URL
-
-        window.socket = io(socket_url, {
-          query: { workspace, username, authorization: accessToken, key },
-          transports: ['websocket']
-        })
+        window.socket = io(socket_url, { transports: ['websocket'] });
 
         window.socket.on('new-error', (reason) => {
-          console.error('Socket error', reason)
-          reject(reason)
-        })
+          console.error('Socket error', reason);
+          reject(reason);
+        });
 
         window.socket.on('dataset', (dataset) => {
           try {
             this.$store.dispatch('setDataset', {
               dataset
-            })
+            });
           } catch (error) {
-            console.error(error)
-            reject(error)
+            console.error(error);
+            reject(error);
           }
-        })
+        });
 
         window.socket.on('reply', (payload) => {
           if (payload.timestamp && window.promises[payload.timestamp]) {
             if (payload.error) {
-              window.promises[payload.timestamp].reject(payload)
+              window.promises[payload.timestamp].reject(payload);
             }
             else {
-              window.promises[payload.timestamp].resolve(payload)
+              window.promises[payload.timestamp].resolve(payload);
             }
-            delete window.promises[payload.timestamp]
+            delete window.promises[payload.timestamp];
           }
           else {
-            console.warn('Wrong timestamp reply',payload.timestamp,payload)
+            console.warn('Wrong timestamp reply',payload.timestamp,payload);
           }
-        })
+        });
 
         window.socket.on('connect', () => {
-          console.log('Connection success')
+          console.log('Connection success');
           window.socket.on('success', () => {
-            console.log('Connection confirmed')
-            this.socketAvailable = true
-            resolve('ok')
-          })
-        })
+            console.log('Connection confirmed');
+            this.socketAvailable = true;
+            resolve('ok');
+          });
+          window.socket.emit('confirmation', { workspace, username, authorization: accessToken, key });
+        });
 
         window.socket.on('connection-error', (reason) => {
-          console.warn('Connection failure', reason)
-          this.handleError()
-          reject('Connection failure')
-        })
+          console.warn('Connection failure', reason);
+          this.handleError();
+          reject('Connection failure');
+        });
 
         window.socket.on('disconnect', (reason) => {
-          console.log('Connection lost', reason)
-          this.handleError()
-          reject('Connection lost')
-        })
+          console.log('Connection lost', reason);
+          this.handleError();
+          reject('Connection lost');
+        });
 
-      })
+      });
 
     },
 
