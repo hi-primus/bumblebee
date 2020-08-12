@@ -49,7 +49,7 @@ export class AppGateway
 	@SubscribeMessage('message')
 	async handleMessage(client: Socket, payload): Promise<any> {
 		if (payload.message === 'datasets') {
-			const sessionId = payload.username + '_' + payload.workspace;
+			const sessionId = payload.username + '_BBSESSION_' + payload.workspace;
 			let result = {};
 			try {
 				result = await requestToKernel('datasets', sessionId, null);
@@ -85,7 +85,7 @@ export class AppGateway
 				timestamp: payload.timestamp,
 			});
 		} else if (payload.message === 'run') {
-			const sessionId = payload.username + '_' + payload.workspace;
+			const sessionId = payload.username + '_BBSESSION_' + payload.workspace;
 			const result = await runCode(`${payload.code}`, sessionId);
 			client.emit('reply', {
 				data: result,
@@ -93,7 +93,7 @@ export class AppGateway
 				timestamp: payload.timestamp,
 			});
 		} else if (payload.message === 'cells') {
-			const sessionId = payload.username + '_' + payload.workspace;
+			const sessionId = payload.username + '_BBSESSION_' + payload.workspace;
 			let code = payload.code;
 			code += '\n' + `_output = 'ok'`;
 			const result = await runCode(code, sessionId);
@@ -103,7 +103,7 @@ export class AppGateway
 				timestamp: payload.timestamp,
 			});
 		} else if (payload.message === 'profile') {
-			const sessionId = payload.username + '_' + payload.workspace;
+			const sessionId = payload.username + '_BBSESSION_' + payload.workspace;
 			const code = `_output = ${payload.dfName}.ext.profile(columns="*", output="json")`;
 			const result = await runCode(code, sessionId);
 			client.emit('reply', {
