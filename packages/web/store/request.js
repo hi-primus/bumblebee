@@ -28,7 +28,8 @@ export const actions = {
         headers: {
           'x-amz-acl': 'public-read',
           'Content-Type': file.type,
-          'Authorization': undefined
+          'Authorization': undefined,
+          'Access-Control-Allow-Origin': '*'
         }
       }
     )
