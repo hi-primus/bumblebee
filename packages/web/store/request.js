@@ -22,6 +22,8 @@ export const actions = {
 
     var fileUrl = uploadResponse.data.url
 
+    var blob = new Blob([file], {type: file.type});
+
     const response = await axios.put(fileUrl,
       file,
       {
