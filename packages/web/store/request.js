@@ -20,15 +20,10 @@ export const actions = {
       file,
       {
         headers: {
-          'Content-Type': file.type,
-          "Access-Control-Allow-Origin": "*"
+          'Content-Type': file.type
         }
       }
     )
-
-    // console.log({uploadResponse, response})
-
-    // TO-DO: test
 
     var path = response.data.path.split('public/').join('').replace(/\b\\\b/g,"/")
 
