@@ -351,7 +351,11 @@ export default {
         }
         this.$set(this.patternsFrequency, this.patternsResolution, 'loading')
         var response = await this.evalCode(`_output = ${this.currentDataset.dfName}.cols.pattern_counts("${this.column.name}", ${3-this.patternsResolution})`)
-        this.$set(this.patternsFrequency, this.patternsResolution, response.data.result[this.column.name].values)
+        var values = response.data.result[this.column.name]
+        if (values.values && typeof values.values !== 'function') {
+          values = values.values
+        }
+        this.$set(this.patternsFrequency, this.patternsResolution, values)
       } catch (err) {
         console.error(err)
         this.$set(this.patternsFrequency, this.patternsResolution, 'error')
