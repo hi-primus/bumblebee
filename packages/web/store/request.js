@@ -9,7 +9,8 @@ export const actions = {
     var uploadPayload = {
       name: file.name,
       size: file.size,
-      type: file.type
+      type: file.type,
+      workspace: context.rootState.session.workspace._id
     };
 
     const uploadResponse = await context.dispatch('request', {
@@ -18,30 +19,18 @@ export const actions = {
       payload: uploadPayload
     }, { root: true })
 
-    console.log({uploadPayload, uploadResponse})
-
     var fileUrl = uploadResponse.data.url
-
-    var blob = new Blob([file], {type: file.type});
-    var formData = new FormData();
-    formData.append('name',file)
 
     const config = {
       onUploadProgress(progressEvent) {
-        attachment.setProgress(progressEvent.loaded / progressEvent.total * 100);
+        attachment.setProgress((progressEvent.loaded / progressEvent.total) * 100);
       },
       headers: {
         'Content-Type': file.type,
         'x-amz-acl': 'public-read',
-        'Sec-Fetch-Dest': 'empty',
-        'Sec-Fetch-Mode': 'cors',
-        'Sec-Fetch-Site': 'cross-site',
-        'Connection': 'keep-alive',
         'Authorization': '',
       }
     }
-
-    console.log({fileUrl, file, formData, blob, config})
 
     const response = await axios.put(fileUrl,
       file,

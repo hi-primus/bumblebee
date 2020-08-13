@@ -1130,6 +1130,7 @@ export default {
                 type: 'action',
                 label: 'Preview',
                 loading: '_fileUploading',
+                loadingProgress: '_fileUploadingProgress',
                 func: 'uploadFile'
               },
               {
@@ -1245,7 +1246,7 @@ export default {
 
               var attachment = {
                 setProgress: (progress) => {
-                  currentCommand._fileUploadingProgress = progress
+                  this.$set(this.currentCommand, '_fileUploadingProgress', progress)
                 }
               }
 
