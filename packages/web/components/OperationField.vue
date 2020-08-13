@@ -13,6 +13,14 @@
         {{
           {value: field.label, args: [currentCommand]} | property
         }}
+        <template v-slot:loader>
+          <v-progress-circular
+            :indeterminate="!currentCommand[field.loadingProgress]"
+            size="24"
+            width="2"
+            :value="currentCommand[field.loadingProgress]"
+          ></v-progress-circular>
+        </template>
       </v-btn>
     </template>
     <template v-else-if="getPropertyField(field.type)=='text'">

@@ -197,8 +197,11 @@ export const mutations = {
 
     // if (dataset.name===null) {
 
-    if (dataset.file_name && dataset.file_name.includes('/uploads/')) {
-      dataset.file_name = dataset.file_name.split('/uploads/')[1]
+    var fileName = dataset.file_name
+
+    if (fileName && fileName.includes('/')) {
+      fileName = fileName.split('/')
+      dataset.file_name = fileName[fileName.length - 1]
     }
 
     if (!dataset.name) {
