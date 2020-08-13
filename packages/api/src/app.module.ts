@@ -15,14 +15,11 @@ import { ScheduleModule } from "@nestjs/schedule";
   imports: [
     ConfigModule.forRoot(),
     ScheduleModule.forRoot(),
-    MongooseModule.forRoot(
-      "mongodb+srv://bumblebee:6oF5B3omteLRPOQl@cluster0-9mqzj.mongodb.net/bumblebee?retryWrites=true&w=majority",
-      {
-        useUnifiedTopology: true,
-        useCreateIndex: true,
-        useNewUrlParser: true,
-      }
-    ),
+    MongooseModule.forRoot(process.env.DB_URL, {
+      useUnifiedTopology: true,
+      useCreateIndex: true,
+      useNewUrlParser: true,
+    }),
     AuthModule,
     UsersModule,
     WorkspaceModule,

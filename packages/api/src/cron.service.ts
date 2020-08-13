@@ -7,6 +7,6 @@ export class CronService {
 
   @Cron("* * */12 * * *")
   handleCron() {
-    this.logger.debug("Called when the current second is multiple of 5");
+    this.logger.debug("Called every 12 hours");
   }
 }
