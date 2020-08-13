@@ -22,7 +22,9 @@ async function bootstrap() {
   SwaggerModule.setup("api", app, document);
   await app.listen(process.env.PORT || 4000);
   // app.useWebSocketAdapter(new WsAdapter(app));
-  clearKernels();
+  if (process.env.NODE_ENV === "PRODUCTION") {
+    clearKernels();
+  }
 }
 
 async function clearKernels() {
