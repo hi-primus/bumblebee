@@ -1243,7 +1243,13 @@ export default {
             try {
               currentCommand._fileUploading = true
 
-              var response = await this.$store.dispatch('request/uploadFile',{file: currentCommand._fileInput})
+              var attachment = {
+                setProgress: (progress) => {
+                  currentCommand._fileUploadingProgress = progress
+                }
+              }
+
+              var response = await this.$store.dispatch('request/uploadFile',{file: currentCommand._fileInput, attachment})
 
               if (response.fileType) {
                 currentCommand.file_type = response.fileType
