@@ -969,7 +969,6 @@ export default {
               }
               var withOther = command.items_with(command).map(df=>`"${df}": ${df}.cols.profiler_dtypes()`).join(', ')
               const response = await this.evalCode(`_output = { "self": ${command.dfName}.cols.profiler_dtypes(), ${withOther} }`)
-              console.log('onInit response',response)
 
               command.types = response.data.result
               command.typesDone = true
