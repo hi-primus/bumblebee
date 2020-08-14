@@ -132,6 +132,9 @@ export const codeGenerators = {
       case 'greater':
         expression = `'${dfName}["${payload.columns[0]}"]>=${payload.value}'`
         break
+      case 'pattern':
+        expression = `'${dfName}.cols.select("${payload.columns[0]}").cols.pattern()["${payload.columns[0]}"]==${payload.value}'`
+        break
       case 'between':
         expression = `'(${dfName}["${payload.columns[0]}"]>=${payload.value}) & (${dfName}["${payload.columns[0]}"]<=${payload.value_2})'`
         break

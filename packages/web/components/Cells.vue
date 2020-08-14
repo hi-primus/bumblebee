@@ -468,6 +468,7 @@ export default {
                   { text: 'Ends with', value: 'endswith' },
                   { divider: true },
                   { text: 'Custom expression', value: 'custom' },
+                  { text: 'Pattern', value: 'pattern' },
                   { text: 'Selected', value: 'selected', disabled: true },
                   { divider: true },
                   { text: 'Mismatches values', value: 'mismatch' },
@@ -480,6 +481,14 @@ export default {
                 placeholder: (c)=>(c.request.isString || true) ? 'Value' : 'numeric or "string"',
                 label: 'Value',
                 type: 'field'
+              },
+              {
+                condition: (c)=>(c.condition === 'pattern'),
+                key: 'value',
+                placeholder: '',
+                label: 'Pattern',
+                type: 'field',
+                mono: true
               },
               {
                 condition: (c)=>('oneof'==c.condition),
@@ -538,6 +547,7 @@ export default {
                 case 'not':
                 case 'less':
                 case 'greater':
+                case 'pattern':
                   return (c.value.length)
                 case 'between':
                   return (c.value.length && c.value_2.length)
@@ -624,6 +634,10 @@ export default {
               case 'startswith':
                 condition = 'starts with '
                 value = [payload.text]
+                break
+              case 'pattern':
+                condition = 'with pattern '
+                value = [payload.value]
                 break
               case 'endswith':
                 condition = 'ends with '
