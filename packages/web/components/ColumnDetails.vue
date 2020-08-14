@@ -255,6 +255,7 @@
               :key="patternsResolution"
               :values="patternsFrequency[patternsResolution]"
               :total="rowsCount"
+              @click:item="patternClicked($event)"
             />
           </template>
           <!-- selectable -->
@@ -362,14 +363,34 @@ export default {
       }
       // var response = await this.evalCode(`_output = ${}`)
     },
+
+    patternClicked (item) {
+
+      var command = {
+        command: 'filter rows',
+        columns: [ this.column.name ],
+        payload: {
+          condition: 'pattern',
+          value: item.value,
+          columns: [ this.column.name ],
+        }
+      }
+
+      this.commandHandle(command)
+    },
+
+    commandHandle (event) {
+      this.$store.commit('commandHandle',event)
+    },
   },
 
   watch: {
     startExpanded: {
       immediate: true,
       handler (value) {
-        if (value)
+        if (value) {
           this.expanded = true
+        }
       }
     },
     patternsResolution () {

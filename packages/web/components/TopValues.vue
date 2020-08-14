@@ -4,6 +4,7 @@
       v-for="(item, index) in slice ? values.slice(0,slice) : values"
       :key="index"
       class="top-values-item"
+      @click="$emit('click:item', item)"
     >
       <div :style="{'width': normVal(item.count)+'%' }" :title="item.value" class="item-bar">
       </div>
