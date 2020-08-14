@@ -243,7 +243,6 @@
         overlap
       >
         <v-btn
-          v-if="useKernel"
           :color="(operationsActive!=false) ? 'black' : '#888'"
           text
           class="icon-btn"
@@ -267,18 +266,18 @@
       :typesSelected="typesSelected"
       :columnsTableHeaders="columnsTableHeaders"
     />
-    <div class="sidebar-container" :class="{'bigger': (operationsActive && bigOptions)}" v-show="detailsActive || (operationsActive && useKernel)">
+    <div class="sidebar-container" :class="{'bigger': (operationsActive && bigOptions)}" v-show="detailsActive || operationsActive">
 
       <template>
-        <div class="sidebar-header" v-show="operationsActive && operationsTitle=='operations' && useKernel">
+        <div class="sidebar-header" v-show="operationsActive && operationsTitle=='operations'">
           Operations
           <v-icon class="right-button" color="black" @click="operationsActive = false">close</v-icon>
         </div>
-        <div class="sidebar-header" v-show="operationsTitle!='operations' && operationsActive && useKernel">
+        <div class="sidebar-header" v-show="operationsTitle!='operations' && operationsActive">
           {{operationsTitle}}
           <v-icon class="right-button" color="black" @click="cancelCommand">close</v-icon>
         </div>
-        <div class="sidebar-top" v-show="operationsTitle=='operations' && operationsActive && useKernel">
+        <div class="sidebar-top" v-show="operationsTitle=='operations' && operationsActive">
           <v-tooltip transition="fade-transition" bottom color="dataprimary darken-2" v-model="copied">
             <template v-slot:activator="{on: success}">
               <v-menu offset-y left min-width="200" >
@@ -316,7 +315,7 @@
           </v-tooltip>
         </div>
         <Cells
-          v-show="operationsActive && useKernel"
+          v-show="operationsActive"
           ref="cells"
           :big.sync="bigOptions"
           :view="operationsTitle"
@@ -327,7 +326,7 @@
         />
 				<!-- <v-progress-linear
           indeterminate
-          v-if="commandsDisabled && operationsActive && operationsTitle=='operations' && useKernel"
+          v-if="commandsDisabled && operationsActive && operationsTitle=='operations'"
           color="#888"
           size="64"
           style="position: absolute; left: 0; top: 34px;"
@@ -502,7 +501,7 @@ export default {
 				{command: 'remove_accents', text: 'Remove accents', type: 'STRING'},
 				{command: 'remove_special_chars', text: 'Remove special chars', type: 'STRING'},
         {command: 'trim', text: 'Trim white space', type: 'STRING'},
-        {command: 'string clustering', text: 'String clustering', type: 'STRING', max: 1, min: 1, hidden: ()=>(this.appStable) },
+        {command: 'string clustering', text: 'String clustering', type: 'STRING', max: 1, min: 1, hidden: ()=>(this.hideOperations) },
 
         {command: 'set_column_format', text: 'Set column format', type: 'TIME'},
 				{command: 'transform_format', text: 'Transform format', type: 'TIME'},
@@ -677,7 +676,7 @@ export default {
         },
         {
           divider: true,
-          hidden: ()=>(this.appStable)
+          hidden: ()=>(this.hideOperations)
         },
         {
           type: 'button',
@@ -737,7 +736,7 @@ export default {
             //   }
             // }
           ],
-          hidden: ()=>(this.appStable)
+          hidden: ()=>(this.hideOperations)
         },
         {
           type: 'button',// {toString: ()=>(this.selectionType=='columns' ? 'button' : 'menu')},
@@ -913,7 +912,7 @@ export default {
           icons: [{icon: 'timeline', class: 'material-icons-outlined'}],
           tooltip: 'Machine Learning',
           disabled: ()=>!(this.selectionType=='columns' && this.currentDataset && this.currentDataset.summary) , // Sampling
-          hidden: ()=>(this.appStable)
+          hidden: ()=>(this.hideOperations)
         },
       ]
     },
