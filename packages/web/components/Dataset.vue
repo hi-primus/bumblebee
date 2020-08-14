@@ -20,7 +20,7 @@
         </template>
       </div>
       <div v-else class="title grey--text text-center text-with-icons">
-        <div class="available-dfs mb-4" v-if="useApiFeatures && availableDatasets && availableDatasets.length">
+        <div class="available-dfs mb-4" v-if="availableDatasets && availableDatasets.length">
           Load from existing data sources:
           <template v-for="(dfName, index) in availableDatasets">
             <span :key="'av'+dfName">
@@ -277,10 +277,6 @@ export default {
       'loadPreview',
       'appError'
     ]),
-
-    useApiFeatures () {
-      return +process.env.API_FEATURES
-    },
 
     availableDatasets () {
       var sds = Object.keys(this.currentSecondaryDatasets)

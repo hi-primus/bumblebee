@@ -147,7 +147,7 @@
             <v-spacer />
           </v-card-actions>
           <v-layout
-            v-if="useKernel && useApiFeatures"
+            v-if="useKernel"
             align-center
             justify-center
           >
@@ -225,10 +225,6 @@ export default {
 
 	computed: {
     ...mapGetters(["appError"]),
-
-    useApiFeatures () {
-      return +process.env.API_FEATURES
-    },
 
 		status () {
 			return (

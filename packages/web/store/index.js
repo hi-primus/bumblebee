@@ -480,10 +480,6 @@ export const actions = {
 
   async request ({state}, {request, path, payload, accessToken}) {
 
-    if (!+process.env.API_FEATURES) {
-      return {}
-    }
-
     if (!request) request = 'get'
     if (!accessToken) accessToken = state.session.accessToken
 
