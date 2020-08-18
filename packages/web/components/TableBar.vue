@@ -492,7 +492,7 @@ export default {
 				{command: 'load from data source', text: 'Add from a loaded data source', type: 'DATA_SOURCE', hidden: true},
         {command: 'manage data sources', text: 'Manage data sources', type: 'DATA_SOURCE', hidden: true},
 
-        {command: 'download', text: 'Download', type: 'SAVE'},
+        {command: 'download', text: 'Download', type: 'SAVE', disabled: ()=>true},
         {command: 'keep rows', text: 'Save to database', type: 'SAVE', disabled: ()=>!(this.currentDataset && this.currentDataset.summary && this.$store.state.database)},
 
 
