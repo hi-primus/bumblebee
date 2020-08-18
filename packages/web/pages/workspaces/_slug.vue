@@ -388,25 +388,22 @@ export default {
 
         this.$store.commit('session/mutation', { mutate: 'workspaceStatus', payload: 'loading' })
 
-        await this.initializeOptimus()
-
-        // console.log('[INITIALIZATION] post initializeOptimus')
-
         var workspacePromise = this.$store.dispatch('session/startWorkspace', this.$route.params.slug)
-
         // console.log('[INITIALIZATION] workspacePromise awaiting')
 
         var workspace = await workspacePromise
-          // console.log('[INITIALIZATION] workspacePromise done')
+        // console.log('[INITIALIZATION] workspacePromise done')
+
+        await this.initializeOptimus()
+        // console.log('[INITIALIZATION] post initializeOptimus')
+
 
         if (!this.$store.state.datasets.length) {
           this.$store.dispatch('newDataset', { go: true })
         }
 
         // console.log('[INITIALIZATION] status mutation')
-
         this.$store.commit('session/mutation', { mutate: 'workspaceStatus', payload: true })
-
         // console.log('[INITIALIZATION] status mutated')
 
         this.$nextTick(async ()=>{

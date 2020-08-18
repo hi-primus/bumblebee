@@ -3010,7 +3010,7 @@ export default {
         this.codeDone = ''
     },
 
-    markCellsError (ignoreFrom = -1) {
+    deleteCellsError (ignoreFrom = -1) {
       var cells = [...this.cells]
       for (let i = cells.length - 1; i >= 0; i--) {
         if (ignoreFrom>=0 && i>=ignoreFrom) {
@@ -3196,9 +3196,11 @@ export default {
         this.markCells(false, ignoreFrom)
       }
 
+      var firstRun = this.firstRun;
+
 			if (this.firstRun) {
-				this.firstRun = false
-        rerun = false
+				this.firstRun = false;
+        rerun = false;
 			}
 
       this.localCommandsDisabled = true;
@@ -3249,7 +3251,12 @@ export default {
         var codeError = printError(error)
         this.$emit('update:codeError',codeError)
 
-        this.markCellsError(ignoreFrom)
+        if (!firstRun) {
+          this.deleteCellsError(ignoreFrom)
+        } else {
+          console.warn('Not deleting cells')
+        }
+
         this.lastWrongCode = code
         this.localCommandsDisabled = undefined;
 
