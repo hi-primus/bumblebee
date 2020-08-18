@@ -1136,7 +1136,8 @@ export default {
                 key: '_fileInput',
                 label: 'File upload',
                 accept: 'text/csv, .csv, application/json, application/vnd.ms-excel, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, .xls, .xlsx, .avro, .parquet',
-                type: 'file'
+                type: 'file',
+                onClear: 'clearFile'
               },
               {
                 condition: (c)=>(c._fileInput && c._fileInput.toString() && c._fileInput!==c._fileLoaded),
@@ -1152,13 +1153,14 @@ export default {
                 type: 'switch'
               },
               {
-                key: 'url',
-                label: 'File url',
+                key: 'external_url',
+                label: 'External url',
                 placeholder: (c)=>{
                   var fileType = (c.file_type!='infer') ? c.file_type : (c._fileType)
-                  return `https://example.com/my_file`
-                  return `https://example.com/my_file.${fileType}`
+                  fileType = fileType ? `.${fileType}` : ''
+                  return `https://example.com/my_file${fileType}`
                 },
+                disabled: (c)=>c.url,
                 type: 'field',
                 condition: (c)=>c._moreOptions,
               },
@@ -1236,7 +1238,7 @@ export default {
                 condition: (c)=>{
                   return (c.file_type==='xls' && c._moreOptions)
                   ||
-                  ((!c._moreOptions || c.file_type==='file') && (c.url.endsWith('.xls') || c.url.endsWith('.xlsx')))
+                  ((!c._moreOptions || c.file_type==='file') && ( c.url.endsWith('.xls') || c.url.endsWith('.xlsx') || c.external_url.endsWith('.xls') || c.external_url.endsWith('.xlsx') ))
                 },
                 key: 'sheet_name',
                 label: `Sheet`,
@@ -1245,12 +1247,24 @@ export default {
               },
             ],
             validate: (c) => {
-              if (c.url==='') {
+              if (c.external_url==='' && c.url==='') {
                 return 0
               }
               return !!(c.file_type!='csv' || c.sep)
             }
 
+          },
+
+          clearFile: (currentCommand) => {
+            currentCommand._fileType = false;
+            currentCommand._fileUploading = false;
+            currentCommand._fileInput = [];
+            currentCommand._fileName = '';
+            currentCommand._meta = false;
+            currentCommand._datasetName = false;
+            currentCommand._fileLoaded = false;
+            currentCommand.error = false;
+            currentCommand.url = '';
           },
 
           uploadFile: async (currentCommand) => {
@@ -1269,7 +1283,6 @@ export default {
                 currentCommand.file_type = response.fileType
               }
               currentCommand.url = response.fileUrl
-              currentCommand._fileUrl = response.fileUrl
               currentCommand._fileUploading = false
               currentCommand._datasetName = response.datasetName || false
               currentCommand._fileLoaded = currentCommand._fileInput
@@ -1283,13 +1296,14 @@ export default {
 
           payload: () => ({
             command: 'load file',
-            _fileUrl: '',
             _fileType: false,
             _fileUploading: false,
             _fileInput: [],
             _fileName: '',
+            _fileLoaded: false,
             _moreOptions: false,
             file_type: 'csv',
+            external_url: '',
             url: '',
             sep: ',',
             null_value: 'null',

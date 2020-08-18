@@ -331,7 +331,9 @@ export const codeGenerators = {
 
     var loadType = (!payload._moreOptions) ? 'file' : payload.file_type
 
-    code +=`op.load.${loadType}("${payload.url.trim()}"`
+    var url = payload.url.trim() || payload.external_url.trim()
+
+    code +=`op.load.${loadType}("${url}"`
     if (loadType=='csv') {
       code += `, sep="${payload.sep}"`
       code += `, error_bad_lines=False`

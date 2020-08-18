@@ -50,6 +50,7 @@
         :clearable="field.clearable"
         :accept="field.accept"
         @input="(field.onChange) ? (currentCommand = field.onChange($event, currentCommand)) : 0"
+        @click:clear="(field.onClear) ? command[field.onClear](currentCommand) : 0"
         dense
         required
         outlined
