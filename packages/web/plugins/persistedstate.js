@@ -5,8 +5,8 @@ export default ({store, app}) => {
   if (process.client) {
     createPersistedState({
       paths: [
-        'session.username', 'session.email', 'session.accessToken', 'session.refreshToken', 'session.workspace',
-        'username', 'email', 'accessToken', 'refreshToken', 'workspace',
+        'session.username', 'session.email', 'session.accessToken', 'session.refreshToken',
+        'username', 'email', 'accessToken', 'refreshToken',
       ],
       // storage: {
       //   getItem: (key) => {
