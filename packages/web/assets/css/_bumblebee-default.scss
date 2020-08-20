@@ -1681,11 +1681,11 @@ $editor-top-padding: 6px;
     width: calc(100% - 10px);
   }
 
-  .bb-table-header, .bb-table-row, .bb-table-plots, .bb-table-i {
+  .bb-table-header, .bb-table-plots, .bb-table-i {
     padding-left: 48px;
     display: inline-flex;
   }
-  .bb-table-header, .bb-table-row, .bb-table-plots {
+  .bb-table-header, .bb-table-plots {
 
     display: inline-flex;
     justify-content: flex-start;
@@ -1743,7 +1743,7 @@ $editor-top-padding: 6px;
     padding-bottom: 2px;
     margin-bottom: -2px;
 
-    .bb-table-header {
+    .bb-table-header .column-header-cell {
       pointer-events: auto;
       font-size: 16px;
       font-family: $font-mono-table;
@@ -1809,91 +1809,74 @@ $editor-top-padding: 6px;
       color: $text-color;
     }
 
-    .bb-table {
-      width: 100%;
-      position: relative;
-      font-family: $font-mono-table;
-      color: $text-color;
-      margin-top: -1px;
-      .bb-table-row {
-        z-index: 0;
-        position: absolute;
-        background: white;
-        height: 23px;
-        line-height: 21px;
-        &:last-child {
-          .bb-table-cell {
-            border-bottom-width: 1px;
-            border-bottom-style: solid;
-          }
-        }
-      }
-    }
-
   }
 
-  .bb-table-h-cell {
-    overflow: visible !important;
+  .bb-table-h-cell{
     user-select: none;
+    overflow: visible !important;
     border-top-style: none;
     border-top-color: white;
-    display: flex;
-    flex-direction: row;
-    flex-wrap: nowrap;
-    justify-content: space-between;
+    border-top-width: 2px;
     padding-right: 4px !important;
 
-    border-top-width: 2px;
     &.bb-selected, &.bb-preview {
       border-top-style: solid;
     }
 
-    &>.data-type {
-      height: inherit;
-      width: 40px;
-      position: absolute;
-      order: 1;
-    }
-    &::before {
-			content: "";
-			min-width: 40px;
-			max-width: 52px;
-			order: 2;
-			flex-shrink: 1;
-			width: 52px;
-    }
-    &::after {
-      content: '';
-      width: 40px;
-      max-width: 40px;
-      order: 4;
-      flex-shrink: 1;
-    }
-    &>.column-title {
-      order: 3;
-      height: inherit;
-      flex-shrink: 0;
-      max-width: calc(100% - 48px);
-      width: initial;
-      min-width: initial;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-    &.bb-drag-over {
-      & .drag-hint {
-        background-color: $data-blue;
+    &>.column-header-cell {
+      display: flex;
+      flex-direction: row;
+      flex-wrap: nowrap;
+      justify-content: space-between;
+
+      &>.data-type {
+        height: inherit;
+        width: 40px;
         position: absolute;
-        width: 3px;
-        height: 100%;
+        order: 1;
       }
-      &.bb-drag-over-right .drag-hint {
-        right: 0 !important;
+      &::before {
+        content: "";
+        min-width: 40px;
+        max-width: 52px;
+        order: 2;
+        flex-shrink: 1;
+        width: 52px;
       }
-      &:not(.bb-drag-over-right) .drag-hint {
-        left: 0;
+      &::after {
+        content: '';
+        width: 40px;
+        max-width: 40px;
+        order: 4;
+        flex-shrink: 1;
+      }
+      &>.column-title {
+        order: 3;
+        height: inherit;
+        flex-shrink: 0;
+        max-width: calc(100% - 48px);
+        width: initial;
+        min-width: initial;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      &.bb-drag-over {
+        & .drag-hint {
+          background-color: $data-blue;
+          position: absolute;
+          width: 3px;
+          height: 100%;
+        }
+        &.bb-drag-over-right .drag-hint {
+          right: 0 !important;
+        }
+        &:not(.bb-drag-over-right) .drag-hint {
+          left: 0;
+        }
       }
     }
+
   }
 
   .bb-table-h-cell, .bb-table-plot {
@@ -1981,14 +1964,15 @@ $editor-top-padding: 6px;
     border-bottom-style: solid;
   }
 
-  .bb-table-h-cell, .bb-table-cell, .bb-table-i-cell {
-    white-space: nowrap;
-    overflow: hidden;
+  .bb-table-h-cell, .bb-table-cell, .bb-table-i-cell  {
     padding: 0 4px;
     @extend .text-ellipsis;
     white-space: nowrap;
     text-overflow: ellipsis;
     color: inherit !important;
+  }
+  .bb-table-cell, .bb-table-i-cell {
+    overflow: hidden;
   }
 
   .bb-table-cell {
@@ -2094,6 +2078,9 @@ $editor-top-padding: 6px;
 }
 
 .bb-table-h-cell {
+  .v-menu__content {
+    pointer-events: auto;
+  }
   &:last-child {
     .v-menu__content {
       transform: translateX(-85px); // TO-DO: 170px -> Ypx
