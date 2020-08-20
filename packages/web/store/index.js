@@ -552,8 +552,8 @@ export const getters = {
   },
   currentBuffer (state) {
     try {
-      var dfName = state.datsets[state.tab].dfName
-      return state.buffer[dfName] // TO-DO: dfName
+      var dfName = state.datasets[state.tab].dfName
+      return state.buffers[dfName]
     } catch (error) {
       return false
     }

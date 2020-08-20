@@ -1837,6 +1837,7 @@ export default {
       }
 
       if (!this.currentBuffer) {
+        console.warn('Fetching without buffer')
         await this.debouncedSetBuffer()
       }
 
