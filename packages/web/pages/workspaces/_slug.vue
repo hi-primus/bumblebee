@@ -388,13 +388,12 @@ export default {
 
         this.$store.commit('session/mutation', { mutate: 'workspaceStatus', payload: 'loading' })
 
-        var workspacePromise = this.$store.dispatch('session/startWorkspace', this.$route.params.slug)
-        // console.log('[INITIALIZATION] workspacePromise awaiting')
+        var slug = this.$route.params.slug;
 
-        var workspace = await workspacePromise
-        // console.log('[INITIALIZATION] workspacePromise done')
+        var workspace = await this.$store.dispatch('session/startWorkspace', slug)
+        // console.log('[INITIALIZATION] workspace done')
 
-        await this.initializeOptimus()
+        await this.initializeOptimus(slug)
         // console.log('[INITIALIZATION] post initializeOptimus')
 
 
@@ -442,7 +441,7 @@ export default {
       }
     },
 
-    async initializeOptimus () {
+    async initializeOptimus (slug) {
 
       // TO-DO: store action
 
@@ -452,22 +451,22 @@ export default {
 
       var parameters = {
         engine: query.engine,
-        address: this.$route.query.address,
+        address: query.address,
         n_workers: query.n_workers || query.workers,
         threads_per_worker: query.threads_per_worker || query.tpw,
-        reset: this.$route.query.reset,
-        kernel_address: this.$route.query.kernel_address,
-        process: this.$route.query.process,
-        processes: this.$route.query.processes
+        reset: query.reset,
+        kernel_address: query.kernel_address,
+        process: query.process,
+        processes: query.processes
       }
 
       var response = await this.socketPost('initialize', {
         username: this.$store.state.session.username,
-        workspace: (this.$store.state.session.workspace ? this.$store.state.session.workspace.slug : undefined) || 'default',
+        workspace: slug || 'default',
         ...parameters
       })
 
-      console.log('[INITIALIZATION] initializeOptimus response', response)
+      console.log('[DEBUG][INITIALIZATION] initializeOptimus response', response)
 
       var functions
 
