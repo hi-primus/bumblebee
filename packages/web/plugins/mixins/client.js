@@ -87,7 +87,7 @@ export default {
         }, {
           timeout: 0
         })
-        console.log('"""[DEBUG][CODE][PROFILE]"""',response.code)
+        console.log('[DEBUG][CODE][PROFILE]',response.code)
 
         if (!response.data.result) {
           throw response
@@ -133,28 +133,26 @@ export default {
           duration: (endTime - startTime)/1000
         }
 
-        console.log('"""[DEBUG][RESULT]"""', response)
-        console.log('"""[DEBUG][CODE]"""', response.code)
+        console.log('[DEBUG][RESULT]', response)
+        console.log('[DEBUG][CODE]', response.code)
 
         try {
           console.log(
-            '"""[DEBUG][TIMES]',
+            '[DEBUG][TIMES]',
             'front', response._frontTime,
             'server', response._serverTime,
             'gateway', response._gatewayTime,
             'frontToServer', response._serverTime.start-response._frontTime.start,
             'serverToGateway', response._gatewayTime.start-response._serverTime.start,
             'GatewayToServer', response._serverTime.end-response._gatewayTime.end,
-            'ServerToFront', response._frontTime.end-response._serverTime.end,
-            '"""'
+            'ServerToFront', response._frontTime.end-response._serverTime.end
           )
         } catch (err) {
           console.log(
-            '"""[DEBUG][TIMES]',
+            '[DEBUG][TIMES]',
             'front', response._frontTime,
             'server', response._serverTime,
-            'gateway', response._gatewayTime,
-            '"""'
+            'gateway', response._gatewayTime
           )
         }
 

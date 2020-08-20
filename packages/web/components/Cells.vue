@@ -3238,7 +3238,7 @@ export default {
           timeout: 0
         })
 
-        console.log('"""[DEBUG][CODE]"""',response.code)
+        console.log('[DEBUG][CODE]',response.code)
         window.pushCode({code: response.code})
 
         this.localCommandsDisabled = false;
