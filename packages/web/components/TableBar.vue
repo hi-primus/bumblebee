@@ -523,7 +523,7 @@ export default {
         {command: 'outliers',   text: 'Outliers',   type: 'ML', min: 1, max: 1},
 
         ...Object.entries(TYPES_NAMES).map(
-          ([dtype, text])=>({command: 'cast', dtype, text, type: 'CAST'})
+          ([dtype, text])=>({command: 'set_profiler_dtypes', dtype, text, type: 'CAST'})
         )
       ],
 
@@ -898,7 +898,7 @@ export default {
         //   tooltip: 'Datetime functions',
         //   disabled: ()=>!(this.selectionType=='columns' && this.selectedColumns.length>0)
         // },
-        // TO-DO: Remove cast
+        // TO-DO: Check cast
         // {
         //   type: 'menu',
         //   group: 'CAST',

@@ -75,6 +75,10 @@ body{
 	background-color: inherit;
 }
 
+.no-link {
+  cursor: default !important;
+}
+
 .hoverable {
 	cursor: pointer;
 }
@@ -747,6 +751,7 @@ table {
   .theme--light.v-btn {
     color: $icon-color !important;
     .v-icon {
+      overflow: visible;
       color: inherit !important;
     }
   }
@@ -1230,6 +1235,7 @@ table {
   display: inline;
   transform-origin: left center;
   &.in-autocomplete {
+    display: inline-block;
     min-width: 2.5em;
     margin-right: 0.5em;
   }
@@ -1237,6 +1243,20 @@ table {
     transform: scaleX(1.25);
   }
 }
+
+.type-menu {
+  font-size: 0.8125rem;
+
+  .v-list-item {
+    min-height: 30px;
+  }
+  .data-type-title {
+    // font-weight: 500;
+    line-height: 1rem;
+  }
+}
+
+
 
 .capitalize {
   text-transform: capitalize;
@@ -2722,4 +2742,8 @@ $editor-top-padding: 6px;
   input {
     padding: 2px 0 2px;
   }
+}
+
+.v-divider {
+  opacity: 0.5;
 }

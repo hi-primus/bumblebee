@@ -20,10 +20,10 @@
   >
     <v-card
       class="column-menu font-reset pt-2 pb-0 mb-0 elevation-0"
-      @dblclick="function(e){e.stopPropagation()}"
       @click="function(e){e.stopPropagation()}"
       style="cursor: initial"
       v-ripple="false"
+      :link="false"
     >
       <v-form
         @submit.prevent="saveColumnData"
@@ -58,55 +58,66 @@
           </v-list-item> -->
         </v-list>
 
-        <v-card-actions v-if="isRename" style="margin-top: -4px; margin-right: 8px; margin-bottom: -12px;">
+        <v-card-actions v-if="isRename" style="margin-top: -14px; margin-right: 8px; margin-bottom: 0px;">
           <v-spacer></v-spacer>
-          <v-btn small text @click="newColumnName !== currentDataset.columns[columnMenuIndex].name">Cancel</v-btn>
+          <v-btn small text @click="newColumnName = currentDataset.columns[columnMenuIndex].name">Cancel</v-btn>
           <v-btn small depressed color="primary" type="submit">Rename</v-btn>
         </v-card-actions>
       </v-form>
     </v-card>
-    <h3 class="grey--text no-pe pl-4">Type transform</h3>
-    <v-list
-      flat dense class="font-reset"
-      @dblclick="function(e){e.stopPropagation()}"
+    <h3
+      class="grey--text pl-4 no-link"
       @click="function(e){e.stopPropagation()}"
+    >Type transform</h3>
+    <v-list
+      flat dense class="font-reset type-menu"
     >
       <v-list-item-group>
         <template v-for="(type, index) in mainTypes">
-          <v-divider v-if="type==='|'" :key="index"></v-divider>
-          <v-list-item v-else :key="type">
+          <v-divider v-if="type==='|'" :key="index" @click="function(e){e.stopPropagation()}"></v-divider>
+          <v-list-item
+            v-else :key="type"
+            @click="setNewType($event, type)"
+          >
             <span>
-              <span class="data-type in-autocomplete">{{ dataTypeHint(type) }}</span> {{dataTypeNames[type]}}
+              <span class="data-type in-autocomplete">{{ dataTypeHint(type) }}</span>
+              <span class="data-type-title">
+                {{dataTypeNames[type]}}
+              </span>
             </span>
           </v-list-item>
 
         </template>
-        <v-divider></v-divider>
+        <v-divider @click="function(e){e.stopPropagation()}"></v-divider>
         <!-- <v-list-item>
           <span>
             <span class="data-type in-autocomplete">{{ dataTypeHint('decimal') }}</span> {{dataTypeNames['decimal']}}
           </span>
         </v-list-item> -->
-        <v-list-group
-          no-action
-          @click="function(e){e.stopPropagation()}"
-        >
+        <v-list-group no-action @click="function(e){e.stopPropagation()}">
           <template v-slot:activator>
-            <v-list-item>
+            <v-list-item-title>
               More types
-            </v-list-item>
+            </v-list-item-title>
           </template>
 
           <v-list-item-group>
             <template v-for="(type, index) in moreTypes">
-              <v-divider v-if="type==='|'" :key="index"></v-divider>
-              <v-list-item v-else :key="type">
+              <v-divider v-if="type==='|'" :key="index" @click="function(e){e.stopPropagation()}"></v-divider>
+              <v-list-item
+                v-else :key="type"
+                @click="setNewType($event, type)"
+              >
                 <span class="pl-6">
-                  <span class="data-type in-autocomplete">{{ dataTypeHint(type) }}</span> {{dataTypeNames[type]}}
+                  <span class="data-type in-autocomplete">{{ dataTypeHint(type) }}</span>
+                  <span class="data-type-title">
+                    {{dataTypeNames[type]}}
+                  </span>
                 </span>
               </v-list-item>
 
             </template>
+            <span id="more-types-end"></span>
             <!-- <v-list-item>
               <span class="pl-6">
                 <span class="data-type in-autocomplete">{{ dataTypeHint('email') }}</span> {{dataTypeNames['email']}}
@@ -505,7 +516,7 @@ export default {
 
       lazyColumns: [],
 
-      mainTypes: ['string', 'int', 'decimal', 'boolean', '|', 'date', 'time', '|', 'object', 'array',  '|', 'categorical', 'missing'],
+      mainTypes: ['string', 'int', 'decimal', 'boolean', '|', 'date', 'time', '|', 'object', 'array'],
 
       moreTypes: ['email', 'credit_card_number', 'gender', '|', 'zip_code', '|', 'ip', 'url']
 		}
@@ -1522,6 +1533,10 @@ export default {
 
       doubleClick = true
 
+      if (index===this.columnMenuIndex) {
+        return
+      }
+
       this.newColumnName = this.currentDataset.columns[index].name
       this.newColumnType = this.currentDataset.columns[index].profiler_dtype
 
@@ -1545,9 +1560,10 @@ export default {
 
     },
 
-    setNewType (type) {
+    setNewType (event, type) {
       this.newColumnType = type;
       this.saveColumnData();
+      event.stopPropagation();
     },
 
     saveColumnData () {
@@ -1559,7 +1575,7 @@ export default {
         var payload = {
           dtype: this.newColumnType
         }
-        this.commandHandle({command: 'cast', columns: [prevName], payload})
+        this.commandHandle({command: 'set_profiler_dtypes', columns: [prevName], payload})
       }
 
       this.$nextTick(()=>{

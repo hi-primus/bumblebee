@@ -1096,8 +1096,8 @@ export default {
             return `<b>${str[payload.command]}</b> ${multipleContent([payload.columns],'hl--cols')}`
           }
         },
-        cast: {
-          content: (payload) => `<b>Cast</b> ${multipleContent([payload.columns],'hl--cols')} to ${multipleContent([payload.dtype],'hl--param')}`
+        set_profiler_dtypes: {
+          content: (payload) => `<b>Set data type</b> ${multipleContent([payload.columns],'hl--cols')} to ${multipleContent([payload.dtype],'hl--param')}`
         },
         fill_na: {
           dialog: {

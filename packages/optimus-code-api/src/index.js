@@ -298,12 +298,11 @@ export const codeGenerators = {
     + ( output_cols_argument ? `, output_cols=${output_cols_argument}` : '')
     + `)`
   },
-  cast: (payload) => {
-    var _argument = (payload.columns.length==1) ? `"${payload.columns[0]}"` : `["${payload.columns.join('", "')}"]`
-    return `.cols.profiler_dtype(`
-    +_argument
-    +`, "${payload.dtype}"`
-    +')'
+  set_profiler_dtypes: (payload) => {
+
+    var _argument = '{' + payload.columns.map(c=>`"${c}": "${payload.dtype}"`).join(', ') + '}';
+    return `.cols.set_profiler_dtypes(${_argument})`
+
   },
   fill_na: (payload) => {
     var _argument = (payload.columns.length==1) ? `"${payload.columns[0]}"` : `["${payload.columns.join('", "')}"]`
