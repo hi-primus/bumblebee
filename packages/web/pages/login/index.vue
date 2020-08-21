@@ -94,7 +94,7 @@
             </div>
           </v-card-text>
         </v-form>
-        <v-form class="py-8 px-6" @submit.prevent="subscribe()" v-if="typeForm==0">
+        <v-form class="py-8 px-6" @submit.prevent="signin()" v-if="typeForm==0">
           <v-card-title>
             <img src="~/static/logo.svg" class="display-3" alt="Bumblebee">
             <!-- <h1 class="display-3 mb-4">Bumblebee</h1> -->
@@ -110,26 +110,12 @@
               clearable
             />
             <v-text-field
-              v-if="useKernel"
               v-model="inputPassword"
               autocomplete="current-password"
               spellcheck="false"
               :append-icon="showPassword ? 'visibility' : 'visibility_off'"
               :type="(showPassword) ? 'text' : 'password'"
               label="Password"
-              required
-              outlined
-              clearable
-              @click:append="showPassword = !showPassword"
-            />
-            <v-text-field
-              v-else
-              v-model="inputPassword"
-              autocomplete="new-password"
-              spellcheck="false"
-              :append-icon="showPassword ? 'visibility' : 'visibility_off'"
-              :type="(showPassword) ? 'text' : 'password'"
-              label="Key"
               required
               outlined
               clearable
@@ -143,11 +129,10 @@
               large
               depressed
               type="submit"
-            >{{(useKernel) ? 'Sign in' : 'Subscribe'}}</v-btn>
+            >Sign in</v-btn>
             <v-spacer />
           </v-card-actions>
           <v-layout
-            v-if="useKernel && useApiFeatures"
             align-center
             justify-center
           >
@@ -226,10 +211,6 @@ export default {
 	computed: {
     ...mapGetters(["appError"]),
 
-    useApiFeatures () {
-      return +process.env.API_FEATURES
-    },
-
 		status () {
 			return (
 				this.$store.state.appStatus.status ||
@@ -282,30 +263,18 @@ export default {
       }
       this.isLoading = false
 		},
-		async subscribe() {
+		async signin() {
 			try {
         this.successMessage = false
         this.resetStatus()
         this.isLoading = true
-				if (this.useKernel) {
-					var login = await this.$store.dispatch("session/signIn", {
-						username: this.inputUsername,
-						password: this.inputPassword
-          })
-          if (this.$route.query.ws!=0 && +process.env.USE_WORKSPACES) {
-            this.$router.push({path: '/workspaces', query: this.$route.query })
-          } else {
-            this.$router.push({path: '/workspaces/default', query: this.$route.query })
-          }
+        var login = await this.$store.dispatch("session/signIn", {
+          username: this.inputUsername,
+          password: this.inputPassword
+        })
+        this.$router.push({path: '/workspaces', query: this.$route.query })
 
-					this.successMessage = "";
-				} else {
-          console.log('[BUMBLEBEE] Visualization mode')
-          this.$store.commit('session/mutation', {mutate: 'username', payload: this.inputUsername})
-          this.$nextTick(()=>{
-            this.$router.push({path: '/workspaces/default', query: this.$route.query })
-          })
-				}
+        this.successMessage = "";
 			} catch (error) {
         var status = (error && error.response) ? error.response.status : false
         if (status) {

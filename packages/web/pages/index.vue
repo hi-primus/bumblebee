@@ -13,11 +13,7 @@ export default {
     if (!store.getters['session/isAuthenticated']) {
       return redirect('/login', route.query)
     } else {
-      if (route.query.ws!=0 && +process.env.USE_WORKSPACES) {
-        return redirect('/workspaces', route.query)
-      } else {
-        return redirect('/workspaces/default', route.query)
-      }
+      return redirect('/workspaces', route.query)
     }
   },
 

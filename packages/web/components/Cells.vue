@@ -468,6 +468,7 @@ export default {
                   { text: 'Ends with', value: 'endswith' },
                   { divider: true },
                   { text: 'Custom expression', value: 'custom' },
+                  { text: 'Pattern', value: 'pattern' },
                   { text: 'Selected', value: 'selected', disabled: true },
                   { divider: true },
                   { text: 'Mismatches values', value: 'mismatch' },
@@ -480,6 +481,14 @@ export default {
                 placeholder: (c)=>(c.request.isString || true) ? 'Value' : 'numeric or "string"',
                 label: 'Value',
                 type: 'field'
+              },
+              {
+                condition: (c)=>(c.condition === 'pattern'),
+                key: 'value',
+                placeholder: '',
+                label: 'Pattern',
+                type: 'field',
+                mono: true
               },
               {
                 condition: (c)=>('oneof'==c.condition),
@@ -538,6 +547,7 @@ export default {
                 case 'not':
                 case 'less':
                 case 'greater':
+                case 'pattern':
                   return (c.value.length)
                 case 'between':
                   return (c.value.length && c.value_2.length)
@@ -624,6 +634,10 @@ export default {
               case 'startswith':
                 condition = 'starts with '
                 value = [payload.text]
+                break
+              case 'pattern':
+                condition = 'with pattern '
+                value = [payload.value]
                 break
               case 'endswith':
                 condition = 'ends with '
@@ -955,7 +969,6 @@ export default {
               }
               var withOther = command.items_with(command).map(df=>`"${df}": ${df}.cols.profiler_dtypes()`).join(', ')
               const response = await this.evalCode(`_output = { "self": ${command.dfName}.cols.profiler_dtypes(), ${withOther} }`)
-              console.log('onInit response',response)
 
               command.types = response.data.result
               command.typesDone = true
@@ -1123,7 +1136,8 @@ export default {
                 key: '_fileInput',
                 label: 'File upload',
                 accept: 'text/csv, .csv, application/json, application/vnd.ms-excel, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, .xls, .xlsx, .avro, .parquet',
-                type: 'file'
+                type: 'file',
+                onClear: 'clearFile'
               },
               {
                 condition: (c)=>(c._fileInput && c._fileInput.toString() && c._fileInput!==c._fileLoaded),
@@ -1139,13 +1153,14 @@ export default {
                 type: 'switch'
               },
               {
-                key: 'url',
-                label: 'File url',
+                key: 'external_url',
+                label: 'External url',
                 placeholder: (c)=>{
                   var fileType = (c.file_type!='infer') ? c.file_type : (c._fileType)
-                  return `https://example.com/my_file`
-                  return `https://example.com/my_file.${fileType}`
+                  fileType = fileType ? `.${fileType}` : ''
+                  return `https://example.com/my_file${fileType}`
                 },
+                disabled: (c)=>c.url,
                 type: 'field',
                 condition: (c)=>c._moreOptions,
               },
@@ -1223,7 +1238,7 @@ export default {
                 condition: (c)=>{
                   return (c.file_type==='xls' && c._moreOptions)
                   ||
-                  ((!c._moreOptions || c.file_type==='file') && (c.url.endsWith('.xls') || c.url.endsWith('.xlsx')))
+                  ((!c._moreOptions || c.file_type==='file') && ( c.url.endsWith('.xls') || c.url.endsWith('.xlsx') || c.external_url.endsWith('.xls') || c.external_url.endsWith('.xlsx') ))
                 },
                 key: 'sheet_name',
                 label: `Sheet`,
@@ -1232,12 +1247,24 @@ export default {
               },
             ],
             validate: (c) => {
-              if (c.url==='') {
+              if (c.external_url==='' && c.url==='') {
                 return 0
               }
               return !!(c.file_type!='csv' || c.sep)
             }
 
+          },
+
+          clearFile: (currentCommand) => {
+            currentCommand._fileType = false;
+            currentCommand._fileUploading = false;
+            currentCommand._fileInput = [];
+            currentCommand._fileName = '';
+            currentCommand._meta = false;
+            currentCommand._datasetName = false;
+            currentCommand._fileLoaded = false;
+            currentCommand.error = false;
+            currentCommand.url = '';
           },
 
           uploadFile: async (currentCommand) => {
@@ -1256,7 +1283,6 @@ export default {
                 currentCommand.file_type = response.fileType
               }
               currentCommand.url = response.fileUrl
-              currentCommand._fileUrl = response.fileUrl
               currentCommand._fileUploading = false
               currentCommand._datasetName = response.datasetName || false
               currentCommand._fileLoaded = currentCommand._fileInput
@@ -1270,13 +1296,14 @@ export default {
 
           payload: () => ({
             command: 'load file',
-            _fileUrl: '',
             _fileType: false,
             _fileUploading: false,
             _fileInput: [],
             _fileName: '',
+            _fileLoaded: false,
             _moreOptions: false,
             file_type: 'csv',
+            external_url: '',
             url: '',
             sep: ',',
             null_value: 'null',
@@ -2997,7 +3024,7 @@ export default {
         this.codeDone = ''
     },
 
-    markCellsError (ignoreFrom = -1) {
+    deleteCellsError (ignoreFrom = -1) {
       var cells = [...this.cells]
       for (let i = cells.length - 1; i >= 0; i--) {
         if (ignoreFrom>=0 && i>=ignoreFrom) {
@@ -3183,9 +3210,11 @@ export default {
         this.markCells(false, ignoreFrom)
       }
 
+      var firstRun = this.firstRun;
+
 			if (this.firstRun) {
-				this.firstRun = false
-        rerun = false
+				this.firstRun = false;
+        rerun = false;
 			}
 
       this.localCommandsDisabled = true;
@@ -3209,7 +3238,7 @@ export default {
           timeout: 0
         })
 
-        console.log('"""[DEBUG][CODE]"""',response.code)
+        console.log('[DEBUG][CODE]',response.code)
         window.pushCode({code: response.code})
 
         this.localCommandsDisabled = false;
@@ -3236,7 +3265,12 @@ export default {
         var codeError = printError(error)
         this.$emit('update:codeError',codeError)
 
-        this.markCellsError(ignoreFrom)
+        if (!firstRun) {
+          this.deleteCellsError(ignoreFrom)
+        } else {
+          console.warn('Not deleting cells')
+        }
+
         this.lastWrongCode = code
         this.localCommandsDisabled = undefined;
 

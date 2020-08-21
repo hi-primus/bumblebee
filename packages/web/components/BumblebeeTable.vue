@@ -19,9 +19,11 @@
     eager
   >
     <v-card
-      class="column-menu font-reset pt-2"
+      class="column-menu font-reset pt-2 pb-0 mb-0 elevation-0"
       @dblclick="function(e){e.stopPropagation()}"
+      @click="function(e){e.stopPropagation()}"
       style="cursor: initial"
+      v-ripple="false"
     >
       <v-form
         @submit.prevent="saveColumnData"
@@ -32,17 +34,19 @@
             <v-text-field
               outlined
               dense
-              label="New column name"
+              label="Rename"
               v-model="newColumnName"
+              hide-details
             />
           </v-list-item>
-          <v-list-item>
+          <!-- <v-list-item>
             <v-select
               outlined
               dense
               :items="allTypes"
               label="New column type"
               v-model="newColumnType"
+              hide-details class="mb-6"
             >
               <template v-slot:item="{ item }">
                 <div class="data-type in-autocomplete">{{ dataTypeHint(item) }}</div> {{dataTypeNames[item]}}
@@ -51,16 +55,68 @@
                 <div class="data-type mr-2">{{ dataTypeHint(item) }}</div> {{dataTypeNames[item]}}
               </template>
             </v-select>
-          </v-list-item>
+          </v-list-item> -->
         </v-list>
 
-        <v-card-actions style="margin-top: -32px; margin-right: 8px; padding-bottom: 10px;">
+        <v-card-actions v-if="isRename" style="margin-top: -4px; margin-right: 8px; margin-bottom: -12px;">
           <v-spacer></v-spacer>
-          <v-btn small text @click="columnMenuIndex = false">Cancel</v-btn>
-          <v-btn small depressed color="primary" type="submit">Save</v-btn>
+          <v-btn small text @click="newColumnName !== currentDataset.columns[columnMenuIndex].name">Cancel</v-btn>
+          <v-btn small depressed color="primary" type="submit">Rename</v-btn>
         </v-card-actions>
       </v-form>
     </v-card>
+    <h3 class="grey--text no-pe pl-4">Type transform</h3>
+    <v-list
+      flat dense class="font-reset"
+      @dblclick="function(e){e.stopPropagation()}"
+      @click="function(e){e.stopPropagation()}"
+    >
+      <v-list-item-group>
+        <template v-for="(type, index) in mainTypes">
+          <v-divider v-if="type==='|'" :key="index"></v-divider>
+          <v-list-item v-else :key="type">
+            <span>
+              <span class="data-type in-autocomplete">{{ dataTypeHint(type) }}</span> {{dataTypeNames[type]}}
+            </span>
+          </v-list-item>
+
+        </template>
+        <v-divider></v-divider>
+        <!-- <v-list-item>
+          <span>
+            <span class="data-type in-autocomplete">{{ dataTypeHint('decimal') }}</span> {{dataTypeNames['decimal']}}
+          </span>
+        </v-list-item> -->
+        <v-list-group
+          no-action
+          @click="function(e){e.stopPropagation()}"
+        >
+          <template v-slot:activator>
+            <v-list-item>
+              More types
+            </v-list-item>
+          </template>
+
+          <v-list-item-group>
+            <template v-for="(type, index) in moreTypes">
+              <v-divider v-if="type==='|'" :key="index"></v-divider>
+              <v-list-item v-else :key="type">
+                <span class="pl-6">
+                  <span class="data-type in-autocomplete">{{ dataTypeHint(type) }}</span> {{dataTypeNames[type]}}
+                </span>
+              </v-list-item>
+
+            </template>
+            <!-- <v-list-item>
+              <span class="pl-6">
+                <span class="data-type in-autocomplete">{{ dataTypeHint('email') }}</span> {{dataTypeNames['email']}}
+              </span>
+            </v-list-item> -->
+          </v-list-item-group>
+
+        </v-list-group>
+      </v-list-item-group>
+    </v-list>
   </v-menu>
   <div
     class="bb-table-top-container" ref="BbTableTopContainer"
@@ -79,13 +135,15 @@
           :id="(column.previewIndex === previewColumns.length-1) ? 'bb-table-preview-last' : false"
           style="width: 170px"
         >
-          <div
-            class="data-type"
-            :class="`type-${currentDataset.columns[column.index].profiler_dtype}`">
-            {{ dataTypeHint(currentDataset.columns[column.index].profiler_dtype) }}
-          </div>
-          <div class="column-title">
-            {{column.name}}
+          <div class="column-header-cell">
+            <div
+              class="data-type"
+              :class="`type-${currentDataset.columns[column.index].profiler_dtype}`">
+              {{ dataTypeHint(currentDataset.columns[column.index].profiler_dtype) }}
+            </div>
+            <div class="column-title">
+              {{column.name}}
+            </div>
           </div>
         </div>
         <div
@@ -98,17 +156,19 @@
           :id="(column.previewIndex === previewColumns.length-1) ? 'bb-table-preview-last' : false"
           style="width: 170px"
         >
-          <div
-            v-if="previewPlotsData[column.name]"
-            class="data-type"
-            :class="`type-${previewPlotsData[column.name].dtype}`">
-            {{ dataTypeHint(previewPlotsData[column.name].dtype) }}
-          </div>
-          <div v-if="currentPreviewNames && currentPreviewNames[column.title]" class="column-title">
-            <span>{{ currentPreviewNames[column.title] }}</span>
-          </div>
-          <div v-else class="column-title">
-            {{ column.title ? column.title.split('__preview__').join('') : '' }}
+          <div class="column-header-cell">
+            <div
+              v-if="previewPlotsData[column.name]"
+              class="data-type"
+              :class="`type-${previewPlotsData[column.name].dtype}`">
+              {{ dataTypeHint(previewPlotsData[column.name].dtype) }}
+            </div>
+            <div v-if="currentPreviewNames && currentPreviewNames[column.title]" class="column-title">
+              <span>{{ currentPreviewNames[column.title] }}</span>
+            </div>
+            <div v-else class="column-title">
+              {{ column.title ? column.title.split('__preview__').join('') : '' }}
+            </div>
           </div>
         </div>
         <div
@@ -134,15 +194,17 @@
           @click="selectColumn($event, column.index)"
           @dblclick="setMenu($event, column.index)"
         >
-          <div class="data-type" :class="`type-${currentDataset.columns[column.index].profiler_dtype}`">
-            {{ dataTypeHint(currentDataset.columns[column.index].profiler_dtype) }}
-          </div>
-          <div class="drag-hint"></div>
-          <div v-if="currentPreviewNames && currentPreviewNames[columns[column.index].name]" class="column-title title-preview-highlight">
-            <span>{{ currentPreviewNames[columns[column.index].name] }}</span>
-          </div>
-          <div v-else class="column-title">
-            {{ column.title || columns[column.index].name }}
+          <div class="column-header-cell">
+            <div class="data-type" :class="`type-${currentDataset.columns[column.index].profiler_dtype}`">
+              {{ dataTypeHint(currentDataset.columns[column.index].profiler_dtype) }}
+            </div>
+            <div class="drag-hint"></div>
+            <div v-if="currentPreviewNames && currentPreviewNames[columns[column.index].name]" class="column-title title-preview-highlight">
+              <span>{{ currentPreviewNames[columns[column.index].name] }}</span>
+            </div>
+            <div v-else class="column-title">
+              {{ column.title || columns[column.index].name }}
+            </div>
           </div>
         </div>
       </template>
@@ -442,6 +504,10 @@ export default {
       indicesInSample: {},
 
       lazyColumns: [],
+
+      mainTypes: ['string', 'int', 'decimal', 'boolean', '|', 'date', 'time', '|', 'object', 'array',  '|', 'categorical', 'missing'],
+
+      moreTypes: ['email', 'credit_card_number', 'gender', '|', 'zip_code', '|', 'ip', 'url']
 		}
   },
 
@@ -503,6 +569,10 @@ export default {
         console.error(err)
       }
       return Object.keys(this.columnValues)[0]
+    },
+
+    isRename () {
+      return this.newColumnName !== this.currentDataset.columns[ this.columnMenuIndex].name;
     },
 
     computedColumnValues () {
@@ -1475,6 +1545,11 @@ export default {
 
     },
 
+    setNewType (type) {
+      this.newColumnType = type;
+      this.saveColumnData();
+    },
+
     saveColumnData () {
       var index = this.columnMenuIndex
       var prevName = this.currentDataset.columns[index].name
@@ -1837,6 +1912,7 @@ export default {
       }
 
       if (!this.currentBuffer) {
+        console.warn('Fetching without buffer')
         await this.debouncedSetBuffer()
       }
 

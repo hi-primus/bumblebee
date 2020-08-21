@@ -206,11 +206,7 @@ export const actions =  {
     commit('mutation', { mutate: 'refreshToken', payload: refreshToken})
 
     if (accessToken) {
-      if (+process.env.API_FEATURES) {
-        await dispatch('profile', { auth: accessToken} )
-      } else {
-        commit('mutation', { mutate: 'username', payload: payload.username})
-      }
+      await dispatch('profile', { auth: accessToken} )
     } else {
       commit('mutation', { mutate: 'username', payload: false})
     }
@@ -227,7 +223,7 @@ export const actions =  {
 
   async serverInit ({dispatch, commit, state}, payload) {
 
-    const accessToken = this.$cookies.get('x-access-token') && +process.env.API_FEATURES
+    const accessToken = this.$cookies.get('x-access-token')
     if (accessToken) {
       try {
         await dispatch('profile', { auth: accessToken })

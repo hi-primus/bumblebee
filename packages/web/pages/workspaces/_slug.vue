@@ -10,7 +10,7 @@
       >
         <WorkspacesList/>
       </v-dialog>
-      <template v-if="$store.state.datasets.length==0 && !useKernel" data-name="noKernel">
+      <template v-if="$store.state.datasets.length==0 && false" data-name="noKernel (deprecated)">
         <div class="center-screen-inside black--text">
           <v-progress-circular indeterminate color="black" class="mr-4" />
           <span class="title">Waiting for data</span>
@@ -132,7 +132,7 @@
               <v-icon color="primary">add</v-icon>
             </v-tab>
           </v-tabs>
-          <div class="bb-workspace-status" v-if="useWorkspaces">
+          <div class="bb-workspace-status">
             <!-- this.$route.query.ws!=0 -->
             <v-progress-circular
               v-if="workspaceStatus==='uploading' || workspaceStatus==='loading'"
@@ -268,10 +268,6 @@ export default {
 
     ...mapState('session',['workspace', 'workspaceStatus']),
 
-    useWorkspaces () {
-      return +process.env.USE_WORKSPACES
-    },
-
     tab: {
       get () {
         return this.$store.state.tab
@@ -296,15 +292,9 @@ export default {
     moreMenu () {
       let menu = []
 
-      if (this.useKernel && this.$route.query.ws!=0 && +process.env.USE_WORKSPACES) {
-        menu = [
-          { text: 'Workspaces', click: this.showWorkspaces },
-          { divider: true },
-        ]
-      }
-
       menu = [
-        ...menu,
+        { text: 'Workspaces', click: this.showWorkspaces },
+        { divider: true },
         { text: 'Sign out', click: this.signOut }
       ]
 
@@ -398,25 +388,21 @@ export default {
 
         this.$store.commit('session/mutation', { mutate: 'workspaceStatus', payload: 'loading' })
 
-        await this.initializeOptimus()
+        var slug = this.$route.params.slug;
 
+        var workspace = await this.$store.dispatch('session/startWorkspace', slug)
+        // console.log('[INITIALIZATION] workspace done')
+
+        await this.initializeOptimus(slug)
         // console.log('[INITIALIZATION] post initializeOptimus')
 
-        var workspacePromise = this.$store.dispatch('session/startWorkspace', this.$route.params.slug)
 
-        // console.log('[INITIALIZATION] workspacePromise awaiting')
-
-        var workspace = await workspacePromise
-          // console.log('[INITIALIZATION] workspacePromise done')
-
-        if (!this.$store.state.datasets.length && this.useKernel) {
+        if (!this.$store.state.datasets.length) {
           this.$store.dispatch('newDataset', { go: true })
         }
 
         // console.log('[INITIALIZATION] status mutation')
-
         this.$store.commit('session/mutation', { mutate: 'workspaceStatus', payload: true })
-
         // console.log('[INITIALIZATION] status mutated')
 
         this.$nextTick(async ()=>{
@@ -455,7 +441,7 @@ export default {
       }
     },
 
-    async initializeOptimus () {
+    async initializeOptimus (slug) {
 
       // TO-DO: store action
 
@@ -465,22 +451,22 @@ export default {
 
       var parameters = {
         engine: query.engine,
-        address: this.$route.query.address,
+        address: query.address,
         n_workers: query.n_workers || query.workers,
         threads_per_worker: query.threads_per_worker || query.tpw,
-        reset: this.$route.query.reset,
-        kernel_address: this.$route.query.kernel_address,
-        process: this.$route.query.process,
-        processes: this.$route.query.processes
+        reset: query.reset,
+        kernel_address: query.kernel_address,
+        process: query.process,
+        processes: query.processes
       }
 
       var response = await this.socketPost('initialize', {
         username: this.$store.state.session.username,
-        workspace: (this.$store.state.session.workspace ? this.$store.state.session.workspace.slug : undefined) || 'default',
+        workspace: slug || 'default',
         ...parameters
       })
 
-      console.log('[INITIALIZATION] initializeOptimus response', response)
+      console.log('[DEBUG][INITIALIZATION] initializeOptimus response', response)
 
       var functions
 

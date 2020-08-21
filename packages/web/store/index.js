@@ -480,10 +480,6 @@ export const actions = {
 
   async request ({state}, {request, path, payload, accessToken}) {
 
-    if (!+process.env.API_FEATURES) {
-      return {}
-    }
-
     if (!request) request = 'get'
     if (!accessToken) accessToken = state.session.accessToken
 
@@ -556,8 +552,8 @@ export const getters = {
   },
   currentBuffer (state) {
     try {
-      var dfName = state.datsets[state.tab].dfName
-      return state.buffer[dfName] // TO-DO: dfName
+      var dfName = state.datasets[state.tab].dfName
+      return state.buffers[dfName]
     } catch (error) {
       return false
     }
