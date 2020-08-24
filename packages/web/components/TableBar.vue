@@ -88,18 +88,26 @@
             </template>
             <v-list dense style="max-height: 400px; min-width: 160px;" class="scroll-y">
               <v-list-item-group color="black">
-                <v-list-item
+                <template
                   v-for="(item, i) in menuItems(element.group).filter(e=>!getProperty(e.hidden))"
-                  :key="i+'mc'"
-                  @click="commandHandle(item)"
-                  :disabled="getProperty(item.disabled) || !checkDataTypes(item.allowedTypes) || (item.max && selectedColumns.length>item.max) || (item.min && selectedColumns.length<item.min)"
                 >
-                  <v-list-item-content>
-                    <v-list-item-title>
-                      {{ item.text }}
-                    </v-list-item-title>
-                  </v-list-item-content>
-                </v-list-item>
+                  <v-divider
+                    v-if="item.divider"
+                    :key="i+'mc'"
+                  ></v-divider>
+                  <v-list-item
+                    v-else
+                    :key="i+'mc'"
+                    @click="commandHandle(item)"
+                    :disabled="getProperty(item.disabled) || !checkDataTypes(item.allowedTypes) || (item.max && selectedColumns.length>item.max) || (item.min && selectedColumns.length<item.min)"
+                  >
+                    <v-list-item-content>
+                      <v-list-item-title>
+                        {{ item.text }}
+                      </v-list-item-title>
+                    </v-list-item-content>
+                  </v-list-item>
+                </template>
               </v-list-item-group>
             </v-list>
           </v-menu>
