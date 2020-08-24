@@ -428,7 +428,7 @@ import VegaEmbed from '@/components/VegaEmbed'
 import clientMixin from '@/plugins/mixins/client'
 import dataTypesMixin from '@/plugins/mixins/data-types'
 import applicationMixin from '@/plugins/mixins/application'
-import { copyToClipboard, namesToIndices, getProperty, TYPES_NAMES } from 'bumblebee-utils'
+import { copyToClipboard, namesToIndices, getProperty, TYPES_NAMES, TIME_NAMES } from 'bumblebee-utils'
 import { mapState, mapGetters } from 'vuex'
 
 export default {
@@ -511,10 +511,14 @@ export default {
         {command: 'trim', text: 'Trim white space', type: 'STRING'},
         {command: 'string clustering', text: 'String clustering', type: 'STRING', max: 1, min: 1, hidden: ()=>(this.hideOperations) },
 
-        {command: 'set_column_format', text: 'Set column format', type: 'TIME'},
-				{command: 'transform_format', text: 'Transform format', type: 'TIME'},
-				{command: 'get_from_datetime', text: 'Get data from datetime', type: 'TIME'},
-				// {command: 'cast_date', text: 'Cast as date', type: 'TIME'},
+        // {command: 'set_column_format', text: 'Set column format', type: 'TIME'},
+        {command: 'transform_format', text: 'Transform format', type: 'TIME'},
+
+        {divider: true, type: 'TIME'},
+
+        ...Object.entries(TIME_NAMES).map(
+          ([output_type, name])=>({command: 'get_from_datetime', payload: { output_type }, text: `Get ${name}`, type: 'TIME'})
+        ),
 
 				// {command: 'random_split',     teaxt: 'Split train and test', type: 'PREPARE'},
 
@@ -531,7 +535,7 @@ export default {
         {command: 'outliers',   text: 'Outliers',   type: 'ML', min: 1, max: 1},
 
         ...Object.entries(TYPES_NAMES).map(
-          ([dtype, text])=>({command: 'set_profiler_dtypes', dtype, text, type: 'CAST'})
+          ([dtype, text])=>({command: 'set_profiler_dtypes', payload: { dtype }, text, type: 'CAST'})
         )
       ],
 
@@ -899,13 +903,13 @@ export default {
           disabled: ()=>!(this.checkDataTypes(['string']) && this.selectionType=='columns' && this.currentDataset && this.currentDataset.summary && this.selectedColumns.length>=0)
         },
         // TO-DO: Datetime operations
-        // {
-        //   type: 'menu',
-        //   group: 'TIME',
-        //   icons: [{ icon: 'calendar_today' }],
-        //   tooltip: 'Datetime functions',
-        //   disabled: ()=>!(this.selectionType=='columns' && this.selectedColumns.length>0)
-        // },
+        {
+          type: 'menu',
+          group: 'TIME',
+          icons: [{ icon: 'calendar_today' }],
+          tooltip: 'Datetime functions',
+          disabled: ()=>!(this.selectionType=='columns' && this.selectedColumns.length>0)
+        },
         // TO-DO: Check cast
         // {
         //   type: 'menu',

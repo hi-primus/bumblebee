@@ -1,8 +1,4 @@
-import {
-  escapeQuotes,
-  escapeQuotesOn,
-  getOutputColsArgument
-} from 'bumblebee-utils'
+import { escapeQuotes, escapeQuotesOn, getOutputColsArgument, transformDateFormat, TIME_VALUES } from 'bumblebee-utils'
 
 
 export const version = function() {
@@ -373,6 +369,7 @@ export const codeGenerators = {
 
     return code
   },
+
   'string clustering': (payload) => {
     return payload.clusters
     .filter(cluster=>cluster.selected.length)
@@ -387,6 +384,21 @@ export const codeGenerators = {
       +')'
     })
     .join('')
+  },
+  'transform_format': (payload) => {
+    var _argument = (payload.columns.length==1) ? `"${payload.columns[0]}"` : `["${payload.columns.join('", "')}"]`
+    var output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (payload.request.type !== 'final') ? 'new ' : '')
+    return `.cols.date_format(${_argument}, "${transformDateFormat(payload.current_format)}", "${transformDateFormat(payload.output_format)}"`
+    + ( output_cols_argument ? `, output_cols=${output_cols_argument}` : '')
+    + `)`
+  },
+  'get_from_datetime': (payload) => {
+    var _argument = (payload.columns.length==1) ? `"${payload.columns[0]}"` : `["${payload.columns.join('", "')}"]`
+    var output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (payload.request.type !== 'final') ? 'new ' : '')
+    console.log(payload, TIME_VALUES) // TO-DO: Check undefineds
+    return `.cols.date_format(${_argument}, "${transformDateFormat(payload.current_format)}", "${TIME_VALUES[payload.output_type]}"`
+    + ( output_cols_argument ? `, output_cols=${output_cols_argument}` : '')
+    + `)`
   },
   outliers: (payload) => {
     if ( ['z_score','modified_z_score'].includes(payload.algorithm) ) {

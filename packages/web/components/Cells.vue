@@ -248,6 +248,7 @@ import {
   hlCols,
   namesToIndices,
 
+  TIME_NAMES,
   TYPES,
   STRING_TYPES
 } from 'bumblebee-utils'
@@ -1467,6 +1468,71 @@ export default {
           content: (payload) => { // TO-DO: Test
             return `<b>Clusterize</b> ${multipleContent([payload.clusters.map(e=>e.replace)], 'hl--param')} in ${hlCols(payload.columns[0])}`
           }
+        },
+        'set_column_format': {
+          dialog: {
+            title: 'Set date format',
+            fields: [
+              {
+                type: 'field',
+                key: 'output_format',
+                label: 'Format'
+              }
+            ]
+          }
+
+        },
+        'transform_format': {
+          dialog: {
+            title: 'Transform date format',
+            fields: [
+              {
+                type: 'field',
+                key: 'current_format',
+                label: 'Previous format'
+              },
+              {
+                type: 'field',
+                key: 'output_format',
+                label: 'New format'
+              }
+            ],
+            validate: (c)=>c.current_format && c.output_format,
+          },
+          payload: (columns, payload = {}) => {
+            return {
+              columns,
+              current_format: payload.current_format || 'd-m-Y',
+              output_format: 'm-d-y',
+              preview: {
+                type: 'transform_format'
+              }
+            }
+          },
+          content: (payload)=>`<b>Date format transformed</b> from ${hlParam(payload.current_format)} to ${hlParam(payload.output_format)} on ${multipleContent([payload.columns],'hl--cols')}`
+
+        },
+        'get_from_datetime': {
+          dialog: {
+            title: (c)=>`Get ${TIME_NAMES[c.output_type].split(' (')[0]} from date`,
+            output_cols: true,
+          },
+          payload: (columns, payload = {}) => {
+            return {
+              columns,
+              output_cols: columns.map(e=>''),
+              current_format: payload.current_format || 'd-m-Y',
+              output_type: payload.output_type || 'year',
+              preview: {
+                type: 'TIME'
+              }
+            }
+          },
+          content: (payload)=> {
+            return `<b>Got</b> ${TIME_NAMES[payload.output_type]} from ${multipleContent([payload.columns],'hl--cols')}`
+          }
+
+
         },
         outliers: {
           dialog: {
@@ -2722,11 +2788,11 @@ export default {
     getCommandTitle() {
       try {
         if (this.command.dialog.title) {
-          return getProperty(this.command.dialog.title,[this.currentCommand])
+          return getProperty(this.command.dialog.title, [this.currentCommand])
         }
-        return this.currentCommand.title
+        return getProperty(this.currentCommand.title, [this.currentCommand])
       }
-      catch {
+      catch (err) {
         return 'Operation'
       }
     },

@@ -440,6 +440,18 @@ export const propsToLocal = (array) => {
   return oobj
 }
 
+export const objectMap = (obj, cb) => {
+  return Object.fromEntries(
+    Object.entries(obj).map(
+      ([key,value])=>[key, cb(value)]
+    )
+  )
+}
+
+export const transformDateFormat = (string) => {
+  return string.replace(/a|A|w|d|b|B|m|y|Y|H|I|p|M|S|f|z|Z|j|U|W|c|x|X|%/g,(match)=>`%${match}`)
+}
+
 // constants
 
 export const TYPES = {
@@ -509,6 +521,30 @@ export const STRING_TYPES = [
   TYPES.TIME
 ]
 
+const _TIME = {
+  year: ['year','%Y'],
+  yearShort: ['year (short)','%y'],
+  month: ['month name','%B'],
+  monthShort: ['month name (short)','%b'],
+  monthNumber: ['month as a number','%m'],
+  day: ['day of month','%d'],
+  weekday: ['weekday','%A'],
+  weekdayShort: ['weekday (short)','%a'],
+  weekdayNumber: ['weekday as a number','%w'],
+  hour: ['hour (00-12)','%I'],
+  hour24: ['hour (00-23)','%H'],
+  ampm: ['AM/PM','%p'],
+  hour: ['minute','%M'],
+  utc: ['UTC offset','%z'],
+  timezone: ['Timezone','%Z'],
+  dayNumber: ['day number of year','%S'],
+  weekNumberM: ['week number of year (Monday as 1st)','%U'],
+  weekNumberS: ['week number of year (Sunday as 1st)','%W']
+}
+
+export const TIME_NAMES = objectMap(_TIME,([name, value])=>name)
+export const TIME_VALUES = objectMap(_TIME,([name, value])=>value)
+
 export const RESPONSE_MESSAGES = {
   'login': {
     201: 'Ok',
@@ -564,9 +600,13 @@ export default {
   multipleContent,
   everyRatio,
   propsToLocal,
+  objectMap,
+  transformDateFormat,
   TYPES,
   TYPES_HINTS,
   TYPES_NAMES,
+  TIME_NAMES,
+  TIME_VALUES,
   ALL_TYPES,
   STRING_TYPES,
   RESPONSE_MESSAGES
