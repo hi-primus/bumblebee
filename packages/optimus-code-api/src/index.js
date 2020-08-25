@@ -191,7 +191,6 @@ export const codeGenerators = {
       + `keep="${payload.keep}")`
   },
   concat: (payload) => {
-    console.log(payload.selected_columns);
 
     var cols_map = payload.selected_columns.map(e=>{
       var items = e.items.map(item=>item ? `"${item.name}"` : 'False')
@@ -395,7 +394,6 @@ export const codeGenerators = {
   'get_from_datetime': (payload) => {
     var _argument = (payload.columns.length==1) ? `"${payload.columns[0]}"` : `["${payload.columns.join('", "')}"]`
     var output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (payload.request.type !== 'final') ? 'new ' : '')
-    console.log(payload, TIME_VALUES) // TO-DO: Check undefineds
     return `.cols.date_format(${_argument}, "${transformDateFormat(payload.current_format)}", "${TIME_VALUES[payload.output_type]}"`
     + ( output_cols_argument ? `, output_cols=${output_cols_argument}` : '')
     + `)`
