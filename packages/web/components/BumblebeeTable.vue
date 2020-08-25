@@ -1651,7 +1651,7 @@ export default {
 
         var matches = this.currentRowHighlights
 
-        this.$store.commit('setProfilePreview', {code: previewCode, columns: []})
+        this.$store.commit('setProfilePreview', {code: previewCode, columns: [], done: false})
 
         var cols = this.currentPreviewColumns.map(e=>escapeQuotes(  e.title.split('__preview__').join('')  ))
 
@@ -1675,7 +1675,7 @@ export default {
             throw response
           }
 
-          dataset = { ...dataset, code: previewCode }
+          dataset = { ...dataset, code: previewCode, done: true }
 
           this.$store.commit('setProfilePreview', dataset)
         }
@@ -1940,7 +1940,12 @@ export default {
         this.previewCode.beforeCodeEval()
       }
 
-      var response = await this.evalCode(`_output = ${this.currentDataset.dfName}.ext.buffer_window("*"${(noBufferWindow) ? '' : ', '+from+', '+(to+1)})${code}.ext.to_json("*")`)
+      var response
+      if (this.currentProfilePreview.done) {
+        response = await this.evalCode(`_output = _df_profile${(noBufferWindow) ? '' : '['+from+':'+(to+1)+']'}.ext.to_json("*")`)
+      } else {
+        response = await this.evalCode(`_output = ${this.currentDataset.dfName}.ext.buffer_window("*"${(noBufferWindow) ? '' : ', '+from+', '+(to+1)})${code}.ext.to_json("*")`)
+      }
 
       if (response.data.status === 'error') {
         this.$store.commit('setPreviewInfo', {error: response.data.error})
