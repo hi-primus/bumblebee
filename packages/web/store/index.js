@@ -135,8 +135,8 @@ export const mutations = {
     })
   },
 
-  setBuffer (state, { dfName, status }) {
-    Vue.set(state.buffers, dfName, status)
+  setBuffer (state, { dfName, promise }) {
+    Vue.set(state.buffers, dfName, promise)
   },
 
   setSecondaryDatasets (state, payload) {

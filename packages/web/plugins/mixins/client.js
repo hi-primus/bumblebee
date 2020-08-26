@@ -108,6 +108,20 @@ export default {
       }
     },
 
+    buffer (dfName) {
+      var promise = this.$store.state.buffers[dfName]
+      if (!promise) {
+        promise = this.evalCode('_output = '+dfName+'.ext.set_buffer("*")')
+      }
+      this.$store.commit('setBuffer', { dfName, promise })
+      return promise
+    },
+
+    unsetBuffer (dfName) {
+      this.$store.commit('setBuffer', { dfName, promise: false })
+      return false
+    },
+
     async evalCode (code) {
       try {
 

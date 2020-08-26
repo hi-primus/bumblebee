@@ -1120,21 +1120,6 @@ export default {
       return cValues
     },
 
-
-    debouncedSetBuffer: asyncDebounce( async function () {
-
-      try {
-        await this.setBuffer(this.currentDataset.dfName)
-        this.$nextTick(()=>{
-          this.debouncedThrottledScrollCheck()
-        })
-        return true
-      } catch (error) {
-        // Error already handled in setBuffer
-        return false
-      }
-    }, 300),
-
     clearSelection () {
       if (window.getSelection) {
         window.getSelection().removeAllRanges()
@@ -1638,11 +1623,14 @@ export default {
       }
     },
 
+    async unsetProfile () {
+      this.$store.commit('setProfilePreview', false )
+    },
+
     async setProfile (previewCode) {
 
       if (!previewCode) {
-        this.$store.commit('setProfilePreview', false )
-        return
+        return this.unsetProfile()
       }
 
       if (this.currentProfilePreview.code !== previewCode) {
@@ -1686,10 +1674,10 @@ export default {
 
         }
 
-
-
         return true
+
       }
+
       return false
     },
 
@@ -1890,7 +1878,7 @@ export default {
 
         if (this.currentProfilePreview.code !== previewCode) {
           // console.log('[REQUESTING] resetting profile')
-          await this.setProfile(false)
+          await this.unsetProfile()
         }
 
         // console.log('[REQUESTING] before fetch chunk')
@@ -1928,8 +1916,7 @@ export default {
       }
 
       if (!this.currentBuffer) {
-        console.warn('Fetching without buffer')
-        await this.debouncedSetBuffer()
+        await this.buffer(this.currentDataset.dfName)
       }
 
       var code = await getPropertyAsync(previewCode, [from, to+1]) || ''

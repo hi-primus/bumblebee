@@ -3292,7 +3292,7 @@ export default {
         var dfName = this.currentDataset.dfName
 
         if (dfName) {
-          this.$store.commit('setBuffer', { dfName, status: false  })
+          await this.unsetBuffer(dfName)
         }
 
         var response = await this.socketPost('cells', {
