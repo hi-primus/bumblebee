@@ -1,5 +1,10 @@
 const codeTraceback = (code = '') => `
-_start_time = datetime.utcnow().timestamp()
+
+_use_time = True
+try:
+    _start_time = datetime.utcnow().timestamp()
+except Exception:
+    _use_time = False
 code = """${code}"""
 res = {}
 try:
@@ -7,17 +12,25 @@ try:
 except Exception as err:
     res.update({'traceback': traceback.format_exc()})
     res.update({'error': str(err)})
+
 res.update({'result': _output})
-_end_time = datetime.utcnow().timestamp()
-res.update({'_gatewayTime': {'start': _start_time, 'end': _end_time, 'duration': _end_time-_start_time}})
+if _use_time:
+    _end_time = datetime.utcnow().timestamp()
+    res.update({'_gatewayTime': {'start': _start_time, 'end': _end_time, 'duration': _end_time-_start_time}})
 json.dumps(res,  default=_json_default, ensure_ascii=False)
 `;
 const code = (code = '') => `
-_start_time = datetime.utcnow().timestamp()
+
+_use_time = True
+try:
+    _start_time = datetime.utcnow().timestamp()
+except Exception:
+    _use_time = False
 ${code}
 res = {'result': _output}
-_end_time = datetime.utcnow().timestamp()
-res.update({'_gatewayTime': {'start': _start_time, 'end': _end_time, 'duration': _end_time-_start_time}})
+if _use_time:
+    _end_time = datetime.utcnow().timestamp()
+    res.update({'_gatewayTime': {'start': _start_time, 'end': _end_time, 'duration': _end_time-_start_time}})
 json.dumps(res,  default=_json_default, ensure_ascii=False)
 `;
 
@@ -26,10 +39,21 @@ const datasetsMin = (payload) => `
 `;
 
 const datasets = (payload) => `
-_start_time = datetime.utcnow().timestamp()
-_dfs = ipython_vars(globals(),"dask")
-_end_time = datetime.utcnow().timestamp()
-res = { _df: globals()[_df].cols.names() for (_df) in _dfs }
+
+_use_time = True
+try:
+    _start_time = datetime.utcnow().timestamp()
+except Exception:
+    _use_time = False
+
+if ipython_vars:
+    _dfs = ipython_vars(globals(),"dask")
+else:
+    _dfs = []
+
+if _use_time:
+    _end_time = datetime.utcnow().timestamp()
+    res = { _df: globals()[_df].cols.names() for (_df) in _dfs }
 res.update({'_gatewayTime': {'start': _start_time, 'end': _end_time, 'duration': _end_time-_start_time}})
 json.dumps(res,  default=_json_default, ensure_ascii=False)
 `;
@@ -44,29 +68,44 @@ op = Optimus("${payload?.engine || 'dask'}",` +
 `;
 
 const init = (payload) =>
-	`
+  `
+
+reset = True # ${(payload?.reset != '0') ? 'True' : 'False'}
+
 try:
     json; date; datetime; ipython_vars; _json_default; traceback;
 except Exception:
+    reset = True
     from datetime import datetime, date
-    from optimus.helpers.functions import ipython_vars
+    try:
+        from optimus.helpers.functions import ipython_vars
+    except Exception:
+        ipython_vars = False
     import traceback
     import json
     def _json_default(o):
         if isinstance(o, (date, datetime)):
             return o.isoformat()
-_start_time = datetime.utcnow().timestamp()
+
+_use_time = True
+try:
+    _start_time = datetime.utcnow().timestamp()
+except Exception:
+    _use_time = False
 
 res = { 'kernel': 'ok' }
 
 engine = "${payload.engine || 'dask'}"
 tpw = ${payload.tpw || 8}
 workers = ${payload.workers || 1}
-reset = ${payload.reset || 'False'}
 
-from optimus.expressions import reserved_words, Parser
-res.update({'reserved_words': reserved_words})
-p = Parser()
+try:
+    from optimus.expressions import reserved_words, Parser
+    res.update({'reserved_words': reserved_words})
+    p = Parser()
+except:
+    def p (a):
+        return a
 
 try:
     op
@@ -90,8 +129,9 @@ except Exception:
     op.engine
     res.update({'optimus': 'ok init', 'optimus_version': op.__version__, 'engine': op.engine, 'threads_per_worker': tpw, 'workers': workers})
 
-_end_time = datetime.utcnow().timestamp()
-res.update({'_gatewayTime': {'start': _start_time, 'end': _end_time, 'duration': _end_time-_start_time}})
+if _use_time:
+    _end_time = datetime.utcnow().timestamp()
+    res.update({'_gatewayTime': {'start': _start_time, 'end': _end_time, 'duration': _end_time-_start_time}})
 json.dumps(res,  default=_json_default, ensure_ascii=False)
 `;
 

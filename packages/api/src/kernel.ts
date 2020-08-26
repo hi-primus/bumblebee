@@ -45,7 +45,7 @@ export const trimCharacters = (s, c) => {
 export const initializeKernel = async function (sessionId, payload) {
 	let result = false;
 
-	if (payload?.reset !== '0') {
+	if (payload?.reset != '0') {
 		kernels[sessionId] = await clearKernel(sessionId);
 	} else {
 		kernels[sessionId] = kernels[sessionId] || {};
