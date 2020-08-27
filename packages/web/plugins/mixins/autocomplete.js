@@ -1,6 +1,6 @@
 const tokenizeCharacter = (type, value, input, current) => (value === input[current]) ? [1, {type, value}] : [0, null]
 
-const tokenizePattern = (type, pattern, input, current) => {
+const tokenizePattern = (type, pattern, input, current, checkValue = false) => {
   let char = input[current]
   let consumedChars = 0
   if (pattern.test(char)) {
@@ -46,7 +46,7 @@ const tokenizeNameWithSpaces = (input, current) => {
       consumedChars ++
       char = input[current + consumedChars]
     }
-    return [consumedChars + 1, { type: 'name_with_spaces', value }]
+    return [consumedChars + 1, { type: 'name', value }]
   }
   return [0, null]
 }
@@ -93,7 +93,7 @@ const tokenizer = (input, caret = 0) => {
         }
     })
     if (!tokenized) {
-      throw new TypeError('I dont know what this character is: ' + input[current])
+      throw new TypeError("I don't know what this character is: " + input[current])
     }
   }
 
@@ -248,7 +248,6 @@ function getContext (expression, caret) {
   let result = parseCode(expression,caret)
   let tree = result.parserResult
   let chain = getActiveChain(tree.body)
-
 
   let inFunction = chain.filter(node=>node.type==='function')
   inFunction = inFunction[inFunction.length - 1]
