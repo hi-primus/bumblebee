@@ -11,7 +11,7 @@
       min-width="270px"
       max-height="340px"
       :close-on-content-click="false"
-      :close-on-click="false"
+      :close-on-click="true"
     >
       <template v-slot:activator="{ on }">
         <!-- @blur="blurField" -->
@@ -421,7 +421,12 @@ export default {
       const newPos = textarea.selectionStart
       if (force || (newPos !== this.caretPos)) {
         this.caretPos = newPos
-        this.context = this.getContext(this.value,this.caretPos)
+        try {
+          var newContext = this.getContext(this.value,this.caretPos)
+          this.context = newContext
+        } catch (err) {
+          console.warn(err)
+        }
       }
     },
 
