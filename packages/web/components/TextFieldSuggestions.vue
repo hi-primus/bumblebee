@@ -153,6 +153,9 @@ export default {
     useFunctions: {
       type: Boolean
     },
+    fuzzySearch: {
+      type: Boolean
+    },
   },
 
   data () {
@@ -230,6 +233,10 @@ export default {
       var suggestions = []
 
       Object.entries(this.suggestions).forEach(([key, arr])=>{
+        if (!arr || !arr.length) {
+          return
+        }
+        console.log({arr})
         var sugg = arr.map((text)=>{
           var menuText = text
           if (text.includes(' ')) {
@@ -499,11 +506,15 @@ export default {
 
     async searchSuggestions (parameterTypes) {
       if (this.activeWord) {
-        this.resultsSuggestions = await this.$search(this.activeWord, this.allSuggestions, {
-          shouldSort: true,
-          threshold: 0.1,
-          keys: ['text']
-        })
+        if (this.fuzzySearch) {
+          this.resultsSuggestions = await this.$search(this.activeWord, this.allSuggestions, {
+            shouldSort: true,
+            threshold: 0.1,
+            keys: ['text']
+          })
+        } else {
+          this.resultsSuggestions = this.allSuggestions.filter(sugg => sugg.text.startsWith(this.activeWord))
+        }
       } else if (parameterTypes) {
         this.resultsSuggestions = this.allSuggestions.filter(sugg => parameterTypes.includes(sugg.type))
       } else if (this.suggestOnEmpty) {

@@ -79,10 +79,11 @@
         :placeholder="(typeof field.placeholder == 'function') ? field.placeholder(currentCommand) : (field.placeholder || '')"
         :clearable="field.clearable"
         :mono="field.mono"
-        :suggestions="{ 'column': getPropertyField(field.suggestions) }"
+        :suggestions="getPropertyField(field.suggestions)"
         @input="(field.onChange) ? (currentCommand = field.onChange($event, currentCommand)) : 0"
-        suggest-on-empty="column"
-        use-functions
+        :suggest-on-empty="Object.keys(getPropertyField(field.suggestions))[0]"
+        :use-functions="getPropertyField(field.useFunctions)"
+        :fuzzy-search="getPropertyField(field.fuzzySearch)"
       ></TextFieldSuggestions>
     </template>
     <template v-else-if="getPropertyField(field.type)=='chips'">

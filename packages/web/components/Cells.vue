@@ -369,7 +369,9 @@ export default {
                 placeholder: 'Expression or "value"',
                 label: 'Expression',
                 mono: true,
-                suggestions: (c) => c.allColumns
+                useFunctions: true,
+                fuzzySearch: true,
+                suggestions: (c) => ({ 'column': c.allColumns })
               },
             ],
             filteredPreview: true,
@@ -1489,21 +1491,26 @@ export default {
               {
                 type: 'field',
                 key: 'current_format',
-                label: 'Previous format'
+                label: 'Previous format',
+                mono: true
               },
               {
-                type: 'field',
+                type: 'field-suggestions',
                 key: 'output_format',
-                label: 'New format'
-              }
+                label: 'New format',
+                mono: true,
+                useFunctions: false,
+                fuzzySearch: false,
+                suggestions: (c) => ({ 'dateformat': ['d-m-Y', 'd-m-y', 'd/m/Y', 'd/m/y', 'm-d-Y', 'm-d-y', 'm/d/Y', 'm/d/y', 'Y-m-d'] })
+              },
             ],
             validate: (c)=>c.current_format && c.output_format,
           },
           payload: (columns, payload = {}) => {
             return {
               columns,
-              current_format: payload.current_format || 'd-m-Y',
-              output_format: 'm-d-y',
+              current_format: payload.current_format || 'm/d/Y',
+              output_format: 'Y-m-d',
               preview: {
                 type: 'transform_format'
               }
@@ -1990,7 +1997,9 @@ export default {
                 placeholder: 'Expression or "value"',
                 label: 'Expression',
                 mono: true,
-                suggestions: (c) => c.allColumns
+                suggestions: (c) => ({ 'column': c.allColumns }),
+                useFunctions: true,
+                fuzzySearch: true
               },
               // {
               //   type: 'field',
