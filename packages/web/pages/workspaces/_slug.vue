@@ -475,7 +475,7 @@ export default {
         functions = response.data.reserved_words.functions
       }
 
-      var globalSuggestions = []
+      var functionsSuggestions = []
 
       if (functions) {
         Object.entries(functions).forEach(([key, value])=>{
@@ -506,13 +506,13 @@ export default {
               example = value.example
             }
           }
-          globalSuggestions.push({type: 'function', text: key, params, description, example })
+          functionsSuggestions.push({type: 'function', text: key, params, description, example })
         })
       }
 
-      // console.log('[GLOBAL SUGGESTIONS]',JSON.stringify(globalSuggestions))
+      // console.log('[GLOBAL SUGGESTIONS]',JSON.stringify(functionsSuggestions))
 
-      this.$store.commit('mutation', {mutate: 'globalSuggestions', payload: globalSuggestions})
+      this.$store.commit('mutation', {mutate: 'functionsSuggestions', payload: functionsSuggestions})
 
 
       if (!response.data.optimus) {

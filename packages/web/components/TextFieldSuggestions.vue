@@ -1,12 +1,12 @@
 <template>
   <span
-    :id="'tfs'"
+    ref="tfs"
     style="position: relative;"
   >
+      <!-- :attach="$refs.tfs" -->
     <v-menu
       bottom
-      :value="(suggestionsVisible || functionInfo) && !hideMenu"
-      :disabled="!((suggestionsVisible || functionInfo) && !hideMenu)"
+      v-model="menuVisible"
       nudge-bottom="34px"
       min-width="270px"
       max-height="340px"
@@ -14,7 +14,6 @@
       :close-on-click="true"
     >
       <template v-slot:activator="{ on }">
-        <!-- @blur="blurField" -->
         <v-text-field
           :value="value"
           :label="label"
@@ -22,16 +21,16 @@
           :clearable="clearable"
           :class="{'mono-field': mono}"
           ref="inputField"
-          v-on="on"
           @input="$emit('input',$event)"
-          @focus="hideMenu = false; hideSuggestions = false"
-          @click="hideMenu = false; hideSuggestions = false"
+          @click="onClickField(true)"
+          @focus="onClickField(false)"
           @keydown="keyPressed"
           spellcheck="false"
           autocomplete="off"
           dense
           required
           outlined
+          v-on="on"
         ></v-text-field>
       </template>
       <div
@@ -97,14 +96,18 @@
               <template v-else-if="'column'===suggestion.type">
                 Column
               </template>
+              <template v-else-if="'dateformat'===suggestion.type">
+                Date format
+              </template>
               <template v-else-if="'function'===suggestion.type">
                 Function
               </template>
             </span>
           </v-list-item-title>
-          <v-list-item-icon v-if="['column','function'].includes(suggestion.type)">
+          <v-list-item-icon v-if="['column','function', 'dateformat'].includes(suggestion.type)">
             <v-icon>
               <template v-if="suggestion.type==='column'">mdi-table-column</template>
+              <template v-else-if="suggestion.type==='dateformat'">calendar_today</template>
               <template v-else-if="suggestion.type==='function'">mdi-function</template>
             </v-icon>
           </v-list-item-icon>
@@ -140,9 +143,16 @@ export default {
       type: Boolean
     },
     suggestions: {
-      type: Array,
-      default: ()=>[]
-    }
+      type: Object,
+      default: ()=>({})
+    },
+    suggestOnEmpty: {
+      type: String,
+      default: ''
+    },
+    useFunctions: {
+      type: Boolean
+    },
   },
 
   data () {
@@ -152,7 +162,7 @@ export default {
       activeWord: '',
       activeWordPosition: 0,
       resultsSuggestions: false,
-      hideMenu: false,
+      showMenu: false,
       hideSuggestions: false,
       context: {},
       functionShow: true,
@@ -160,6 +170,19 @@ export default {
   },
 
   computed: {
+
+    menuVisible: {
+      get () {
+        return (this.suggestionsVisible || this.functionInfo) && this.showMenu
+      },
+      set (v) {
+        console.log('v',v)
+        setTimeout(() => {
+          console.log('v',v)
+          this.showMenu = !!v;
+        }, 100);
+      }
+    },
 
     suggestionsVisible () {
       return this.resultsSuggestions && this.resultsSuggestions.length && !this.hideSuggestions
@@ -169,7 +192,7 @@ export default {
       if (!this.context || !this.context.inFunction) {
         return false;
       }
-      if (this.context.activeCompleteWord !== this.context.inFunction.value) {
+      if (this.context.activeCompleteWord !== this.context.inFunction.value && this.useFunctions) {
         var functionName = this.context.inFunction.value;
         var info = this.getFunctionInfo(functionName);
         if (!info) {
@@ -203,31 +226,71 @@ export default {
     },
 
     allSuggestions () {
-      var suggestions = this.suggestions.map((text)=>{
-        var menuText = text
-        if (text.includes(' ')) {
-          text = `{${text}}`
-        }
-        return {type: 'column', text, menuText, description: ''}
+
+      var suggestions = []
+
+      Object.entries(this.suggestions).forEach(([key, arr])=>{
+        var sugg = arr.map((text)=>{
+          var menuText = text
+          if (text.includes(' ')) {
+            text = `{${text}}`
+          }
+          return {type: key, text, menuText, description: ''}
+        })
+        suggestions = [ ...suggestions, ...sugg ]
       })
-      return [...(suggestions || []), ...(this.$store.state.globalSuggestions || [])]
+
+      if (this.useFunctions) {
+        suggestions = [ ...suggestions, ...(this.$store.state.functionsSuggestions || []) ]
+      }
+
+      return suggestions
     },
 
     selectionStart () {
       try {
-        return this.$refs.inputField.getElementsByTagName('input')[0].selectionStart()
+        return this.$refs.inputField.$el.getElementsByTagName('input')[0].selectionStart()
       } catch (err) {
         console.error(err)
       }
     },
   },
 
+
+  mounted () {
+    if (this.suggestOnEmpty) {
+      this.searchSuggestions(false);
+    }
+  },
+
   methods: {
 
     blurField () {
       this.$nextTick(()=>{
-        this.hideMenu = true;
+        this.showMenu = false;
       })
+    },
+
+    async onClickField (isClick) {
+      if (!this.value) {
+        this.activeWord = ''
+        await this.searchSuggestions(false);
+      }
+      if (this.menuVisible && isClick) {
+        console.log('closing', isClick, this.menuVisible, this.suggestionsVisible, this.functionInfo, this.showMenu)
+        this.showMenu = false;
+      }
+      else if (!this.menuVisible) {
+        setTimeout(() => {
+          console.log('showing', isClick)
+          this.showMenu = true;
+          this.hideSuggestions = false;
+        }, 150);
+      }
+    },
+
+    async onBlurField () {
+      this.showMenu = false;
     },
 
     keyPressed (event) {
@@ -243,14 +306,14 @@ export default {
       } else if (event.keyCode===32 && event.ctrlKey) {
         this.makeVisible()
       } else {
-        this.debouncedCheckCaret()
+        this.debouncedCheckCaret(true)
       }
 
     },
 
     escapePressed () {
-      if (!this.hideMenu) {
-        this.hideMenu = true
+      if (this.showMenu) {
+        this.showMenu = false
       }
     },
 
@@ -259,9 +322,9 @@ export default {
 
         return true
 
-      } else if (this.hideMenu) {
+      } else if (!this.showMenu) {
 
-        this.hideMenu = false
+        this.showMenu = true
         this.hideSuggestions = false
 
       } else if (!this.avoidPropagation) {
@@ -286,9 +349,9 @@ export default {
     },
 
     makeVisible () {
-      this.hideMenu = false
+      this.showMenu = true
       this.hideSuggestions = false
-      this.debouncedCheckCaret()
+      this.debouncedCheckCaret(true)
     },
 
     focusList () {
@@ -340,7 +403,10 @@ export default {
       }
 
       var splittedString
-      if (this.activeWord.length) {
+
+      this.activeWordPosition = this.activeWordPosition || 0
+
+      if (this.activeWord && this.activeWord.length) {
         splittedString = [
           this.value.substring(0, this.activeWordPosition),
           this.value.substring(this.activeWordPosition + this.activeWord.length, this.value.length)
@@ -380,11 +446,13 @@ export default {
       this.$nextTick(()=>{
         this.avoidPropagation = false
         this.setCaretPosition(caretPos)
-        this.hideMenu = false
+        this.showMenu = true
         this.hideSuggestions = false
         this.checkCaret(true)
         if (this.context && !this.context.inFunction && this.context.activeCompleteWord===this.context.activeWord) {
-          this.hideSuggestions = true
+          this.$nextTick(()=>{
+            this.hideSuggestions = true
+          })
         }
       })
     },
@@ -416,7 +484,6 @@ export default {
     }, 100),
 
     checkCaret (force = false) {
-      // this.hideMenu = false
       const textarea = this.$refs.inputField.$el.getElementsByTagName('input')[0]
       const newPos = textarea.selectionStart
       if (force || (newPos !== this.caretPos)) {
@@ -430,7 +497,7 @@ export default {
       }
     },
 
-    searchSuggestions: throttle( async function(parameterTypes) {
+    async searchSuggestions (parameterTypes) {
       if (this.activeWord) {
         this.resultsSuggestions = await this.$search(this.activeWord, this.allSuggestions, {
           shouldSort: true,
@@ -439,9 +506,15 @@ export default {
         })
       } else if (parameterTypes) {
         this.resultsSuggestions = this.allSuggestions.filter(sugg => parameterTypes.includes(sugg.type))
+      } else if (this.suggestOnEmpty) {
+        this.resultsSuggestions = this.allSuggestions.filter(sugg => sugg.type === this.suggestOnEmpty)
       } else {
         this.resultsSuggestions = false
       }
+    },
+
+    searchSuggestionsThrottled: throttle( async function(parameterTypes) {
+      await this.searchSuggestions(parameterTypes)
     }, 80 )
   },
 
@@ -473,13 +546,13 @@ export default {
             types = [types]
           }
         }
-        this.searchSuggestions(types)
+        this.searchSuggestionsThrottled(types)
       }
 
     },
     value (value) {
       this.$nextTick(()=>{
-        this.debouncedCheckCaret(true)
+        this.makeVisible()
       })
     }
   }
