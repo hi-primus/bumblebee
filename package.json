@@ -15,7 +15,7 @@
     "build-bu": "cd packages/bumblebee-utils && npm run build",
     "build-packages": "concurrently \"npm run build-oca\" \"npm run build-bu\"",
     "start": "npm run build-packages && concurrently \"npm run web\" \"npm run api\" ",
-    "postinstall": "cd packages/api && npm install && cd ../web && npm install"
+    "postinstall": "cd packages/api && npm install && cd ../web && npm install && cd ../optimus-code-api && npm install && cd ../bumblebee-utils && npm install"
   },
   "private": true,
   "devDependencies": {
