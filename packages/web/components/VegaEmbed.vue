@@ -80,12 +80,12 @@ export default {
   },
 
   async mounted () {
-    const vega = require('vega')
-    const vegaLite = require('vega-lite')
-    const VegaEmbed = require('vega-embed').default
+    // const vega = require('vega')
+    // const vegaLite = require('vega-lite')
+    // const VegaEmbed = require('vega-embed').default
 
-    this.vl = await VegaEmbed(this.$el, this.vlSpec, {});
-    this.addSignalsEmitter()
+    // this.vl = await VegaEmbed(this.$el, this.vlSpec, {});
+    // this.addSignalsEmitter()
   },
 
   methods: {
