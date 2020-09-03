@@ -1,10 +1,10 @@
-npm install -g pm2
-npm install -g concurrently
-npm install -g cross-env
-npm install --unsafe-perm
+yarn global add pm2
+yarn global add concurrently
+yarn global add cross-env
+yarn install
 pm2 stop api
 pm2 stop web
 pm2 delete api
 pm2 delete web
-pm2 start npm --name "web" -- run web
-pm2 start npm --name "api" -- run api
+pm2 start yarn --name "web" -- web
+pm2 start yarn --name "api" -- api
