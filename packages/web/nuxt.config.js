@@ -144,5 +144,8 @@ module.exports = {
 				})
 			}
 		}
-	}
+  },
+
+  telemetry: false
+
 }

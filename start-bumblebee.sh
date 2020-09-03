@@ -1,6 +1,7 @@
 npm install -g pm2
 npm install -g concurrently
-npm run build-packages
+npm install -g cross-env
+npm install --unsafe-perm
 pm2 stop api
 pm2 stop web
 pm2 delete api
