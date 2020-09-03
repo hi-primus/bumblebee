@@ -15,7 +15,7 @@ import { ScheduleModule } from "@nestjs/schedule";
   imports: [
     ConfigModule.forRoot(),
     ScheduleModule.forRoot(),
-    MongooseModule.forRoot(process.env.DB_URL, {
+    MongooseModule.forRoot(process.env.DB_URL || 'mongodb://127.0.0.1:27017', {
       useUnifiedTopology: true,
       useCreateIndex: true,
       useNewUrlParser: true,
