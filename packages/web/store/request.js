@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-const baseUrl = process.env.API_URL || 'http://localhost:5000'
+const baseUrl = process.env.API_URL || 'http://localhost:4000'
 
 export const actions = {
 
