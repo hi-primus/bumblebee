@@ -10,13 +10,14 @@ async function bootstrap() {
     .setDescription("The Bumblebee API description endpoints")
     .setVersion("0.1.0")
     .build();
-  app.enableCors({
-    origin: [
-      "http://localhost:3000",
-      "https://www.hi-bumblebee.com",
-      "https://app.hi-bumblebee.com",
-    ],
-  });
+
+  var allowOrigin = process.env.ALLOW_CORS ? process.env.ALLOW_CORS.split(",") : [];
+
+  if (allowOrigin.length > 0) {
+    app.enableCors({
+      origin: allowOrigin,
+    });
+  }
 
   const document = SwaggerModule.createDocument(app, options);
   SwaggerModule.setup("api", app, document);
