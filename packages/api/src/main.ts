@@ -13,11 +13,11 @@ async function bootstrap() {
 
   var allowOrigin = process.env.ALLOW_CORS ? process.env.ALLOW_CORS.split(",") : [];
 
-  if (allowOrigin.length > 0) {
-    app.enableCors({
-      origin: allowOrigin,
-    });
-  }
+  console.log({allowOrigin});
+
+  app.enableCors({
+    origin: allowOrigin.length > 0 ? allowOrigin : "*"
+  });
 
   const document = SwaggerModule.createDocument(app, options);
   SwaggerModule.setup("api", app, document);
