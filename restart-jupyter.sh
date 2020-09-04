@@ -1,2 +1,8 @@
+echo 'Use localhost? [y/N]'
 cd
-jupyter kernelgateway --ip=0.0.0.0 --JupyterWebsocketPersonality.list_kernels=True --KernelGatewayApp.allow_origin='*'
+if [ "$localhost" = true ]
+then
+  jupyter kernelgateway --JupyterWebsocketPersonality.list_kernels=True
+else
+  jupyter kernelgateway --ip=0.0.0.0 --JupyterWebsocketPersonality.list_kernels=True --KernelGatewayApp.allow_origin='*'
+fi
