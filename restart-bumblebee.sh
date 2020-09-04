@@ -1,4 +1,4 @@
-npm run build-packages
+yarn build-packages
 pm2 stop api
 pm2 stop web
 pm2 delete api
