@@ -34,6 +34,7 @@ export class AuthController {
 	@ApiOkResponse({ description: 'User SignUp' })
 	@ApiUnauthorizedResponse({ description: 'Invalid data' })
 	signUp(@Body() userCredentials: UserCredentialsDto): Promise<User> {
+		userCredentials.active = !process.env.USER_ACTIVATION;
 		return this.authService.signUp(userCredentials);
 	}
 

@@ -25,11 +25,7 @@ export class UsersService {
 	}
 
 	async getUsers(queryParams, user): Promise<User[]> {
-		if (
-			user.userId === '5f1a0af502f37c097f19ca4a' ||
-			user.userId === '5ed5559c1ce6121884455241' ||
-			user.userId === '5f2b227fcc7fec606debb7bd'
-		) {
+		if ( ['5f1a0af502f37c097f19ca4a', '5ed5559c1ce6121884455241', '5f2b227fcc7fec606debb7bd'].includes(user.userId) ) {
 			const query = {};
 			queryParams?.filters?.split(',').forEach((filter, index) => {
 				query[filter] = queryParams?.values?.split(',')[index];
@@ -57,11 +53,7 @@ export class UsersService {
 	}
 
 	async getUsersCount(user): Promise<any> {
-		if (
-			user.userId === '5f1a0af502f37c097f19ca4a' ||
-			user.userId === '5ed5559c1ce6121884455241' ||
-			user.userId === '5f2b227fcc7fec606debb7bd'
-		) {
+		if ( ['5f1a0af502f37c097f19ca4a', '5ed5559c1ce6121884455241', '5f2b227fcc7fec606debb7bd'].includes(user.userId) ) {
 			const count = this.userModel.countDocuments({}).exec();
 			return count;
 		} else {
