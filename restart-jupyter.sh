@@ -1,4 +1,3 @@
-echo 'Use localhost? [y/N]'
 cd
 if [ "$localhost" = true ]
 then
