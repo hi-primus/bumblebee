@@ -1416,36 +1416,46 @@ $side-controls-width: 54px;
         opacity: 0.71;
       }
     }
+    &.cell-error .cell .left-handle {
+      background-color: rgba($data-red, 0.81);
+      .v-icon {
+        color: white;
+      }
+    }
     .cell {
       width: 100%;
       overflow: hidden;
       display: flex;
       position: relative;
       padding: 0 0 0 14px;
+      margin-bottom: 2px;
     }
     &:not(.fixed-cell) .left-handle {
       cursor: move;
     }
     .left-handle {
       width: 14px;
-      height: 100%;
+      height: calc(100%);
       top: 0;
-      left: 0;
+      left: 0px;
       // background-color: $line-color-2;
       position: absolute;
+      border-top-left-radius: 4px;
+      border-bottom-left-radius: 4px;
       border-bottom-style: dashed;
       border-bottom-width: 1px;
       border-bottom-color: transparent;
       display: flex;
       .v-icon {
         font-size: 18px;
-        left: -4px;
-        color: lightgrey;
+        left: 0;
+        width: 14px;
+        color: rgba(0,0,0,0.54);
         opacity: 0;
         transition: opacity 0.21s ease-in-out;
       }
-
     }
+
     .right-cell-btn {
       opacity: 0;
       transition: opacity 0.21s ease-in-out;
@@ -1488,11 +1498,12 @@ $side-controls-width: 54px;
 
 // editor
 
-$editor-top-padding: 6px;
+$editor-top-padding: 4px;
 
 .operation-hint-text {
   font-size: 14px !important;
   font-family: $font-mono;
+  word-break: break-all;
   cursor: pointer;
   .hl--cols {
     color: darken(saturate($data-blue,5%),25%);

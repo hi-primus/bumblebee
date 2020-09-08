@@ -110,7 +110,7 @@
               color="primary"
               depressed
               dense
-              :disabled="command.dialog.validate && !command.dialog.validate(currentCommand)"
+              :disabled="(command.dialog.validate && !command.dialog.validate(currentCommand)) || (previewError && !allowError)"
               :loading="currentCommand.loadingAccept"
               type="submit"
               form="operation-form"
@@ -226,6 +226,7 @@ import OutputColumnInputs from '@/components/OutputColumnInputs'
 import Outliers from '@/components/Outliers'
 import OperationField from '@/components/OperationField'
 import clientMixin from '@/plugins/mixins/client'
+import applicationMixin from '@/plugins/mixins/application'
 import { mapGetters } from 'vuex'
 import OptimusApi from 'optimus-code-api'
 
@@ -263,7 +264,7 @@ export default {
     Outliers
   },
 
-  mixins: [clientMixin],
+  mixins: [ clientMixin, applicationMixin ],
 
   props: {
     view: {
@@ -2865,12 +2866,12 @@ export default {
 
       if (!command.columns || !command.columns.length) {
         columns = this.columns.map(e=>this.currentDataset.columns[e.index].name)
-        columnDataTypes = this.columns.map(e=>this.currentDataset.columns[e.index].profiler_dtype)
+        columnDataTypes = this.columns.map(e=>this.currentDataset.columns[e.index].profiler_dtype.dtype)
       }
       else {
         columns = command.columns
         var columnIndices = namesToIndices(columns, this.currentDataset.columns)
-        columnDataTypes = columnIndices.map(i=>this.currentDataset.columns[i].profiler_dtype)
+        columnDataTypes = columnIndices.map(i=>this.currentDataset.columns[i].profiler_dtype.dtype)
       }
 
       var commandHandler = this.getCommandHandler(command)
@@ -3117,6 +3118,26 @@ export default {
         this.codeDone = ''
     },
 
+    markCellsError (ignoreFrom = -1) {
+      var cells = [...this.cells]
+      for (let i = 0; i < this.cells.length; i++) {
+        if (ignoreFrom>=0 && i>=ignoreFrom) {
+          continue
+        }
+        cells[i] = { ...cells[i] }
+        if (cells[i].code) {
+          cells[i].error = true
+        }
+        cells[i].done = false
+      }
+      this.cells = cells
+
+      if (mark && this.cells)
+        this.codeDone = this.codeText(false, ignoreFrom)
+      else
+        this.codeDone = ''
+    },
+
     getOperationContent (payload) {
       var commandHandler = this.getCommandHandler(payload)
       var content
@@ -3327,7 +3348,14 @@ export default {
           throw response
         }
 
-        var dataset = await this.loadDataset(dfName)
+        var dataset
+
+        try {
+          dataset = await this.loadDataset(dfName)
+        } catch (err) {
+          err.message = '(Error on profiling)' + err.message
+          throw err
+        }
 
         if (firstRun) {
           this.firstRun = false;
@@ -3343,17 +3371,15 @@ export default {
 
       } catch (error) {
 
+        if (error.profilingError)
+
         if (error.code) {
           window.pushCode({code: error.code, error: true})
         }
         var codeError = printError(error)
         this.$emit('update:codeError',codeError)
 
-        if (!firstRun) {
-          this.deleteCellsError(ignoreFrom)
-        } else {
-          console.warn('Not deleting cells')
-        }
+        this.markCellsError(ignoreFrom)
 
         this.lastWrongCode = code
         this.localCommandsDisabled = undefined;
