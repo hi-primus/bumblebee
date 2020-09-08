@@ -1,10 +1,13 @@
-if [ -z "$address" ]
+if [ "$alreadyinitialized" = false ]
 then
-  echo "HOST=localhost" >> packages/api/.env
-else
-  echo "HOST='0.0.0.0'" >> packages/web/.env
-  echo "API_URL='http://$address:4000'" >> packages/web/.env
-  echo "KERNEL_ADDRESS='$address:8888'" >> packages/api/.env
+  if [ -z "$address" ]
+  then
+    echo "HOST=localhost" >> packages/api/.env
+  else
+    echo "HOST='0.0.0.0'" >> packages/web/.env
+    echo "API_URL='http://$address:4000'" >> packages/web/.env
+    echo "KERNEL_ADDRESS='$address:8888'" >> packages/api/.env
+  fi
 fi
 
 npm install yarn -g
