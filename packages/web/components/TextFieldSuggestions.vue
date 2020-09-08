@@ -179,9 +179,7 @@ export default {
         return (this.suggestionsVisible || this.functionInfo) && this.showMenu
       },
       set (v) {
-        console.log('v',v)
         setTimeout(() => {
-          console.log('v',v)
           this.showMenu = !!v;
         }, 100);
       }
@@ -236,7 +234,6 @@ export default {
         if (!arr || !arr.length) {
           return
         }
-        console.log({arr})
         var sugg = arr.map((text)=>{
           var menuText = text
           if (text.includes(' ')) {
@@ -284,12 +281,10 @@ export default {
         await this.searchSuggestions(false);
       }
       if (this.menuVisible && isClick) {
-        console.log('closing', isClick, this.menuVisible, this.suggestionsVisible, this.functionInfo, this.showMenu)
         this.showMenu = false;
       }
       else if (!this.menuVisible) {
         setTimeout(() => {
-          console.log('showing', isClick)
           this.showMenu = true;
           this.hideSuggestions = false;
         }, 150);
