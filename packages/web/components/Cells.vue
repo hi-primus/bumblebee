@@ -3231,11 +3231,17 @@ export default {
       this.cells = cells
 
       if (!payload.noCall) {
-        this.$nextTick(()=>{
+        this.$nextTick(async ()=>{
+          var run = false;
           if (code.length) {
-            this.runCode()
+            run = await this.runCodeNow();
           }
-        })
+          if (!run) {
+            this.$store.commit('previewDefault');
+          }
+        });
+      } else {
+        this.$store.commit('previewDefault');
       }
 
     },
@@ -3254,12 +3260,12 @@ export default {
 
       if (code==='') {
         // console.log('[CODE MANAGER] nothing to run')
-        return
+        return false
       }
 
       if (code === codeDone) {
         // console.log('[CODE MANAGER] nothing new to run')
-        return;
+        return false;
       }
       else if (
         ( !this.firstRun && (force || code.indexOf(codeDone)!=0 || codeDone=='' || this.lastWrongCode) )
@@ -3277,7 +3283,7 @@ export default {
 
       if (code===this.lastWrongCode) {
         // console.log('[CODE MANAGER] code went wrong last time')
-        return;
+        return false;
       }
 
       if (rerun) {
@@ -3287,8 +3293,7 @@ export default {
 
       var firstRun = this.firstRun;
 
-			if (this.firstRun) {
-				this.firstRun = false;
+			if (firstRun) {
         rerun = false;
 			}
 
@@ -3324,6 +3329,10 @@ export default {
 
         var dataset = await this.loadDataset(dfName)
 
+        if (firstRun) {
+          this.firstRun = false;
+        }
+
         this.updateSecondaryDatasets()
 
         this.$forceUpdate()
@@ -3354,6 +3363,8 @@ export default {
       if (this.codeText() !== code) {
         this.runCodeNow(false)
       }
+
+      return !this.lastWrongCode;
 
     },
 
