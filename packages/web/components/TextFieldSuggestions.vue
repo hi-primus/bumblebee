@@ -10,6 +10,7 @@
       nudge-bottom="34px"
       min-width="270px"
       max-height="340px"
+      ref="tfs-menu"
       :close-on-content-click="false"
       :close-on-click="true"
     >
@@ -81,7 +82,6 @@
         <v-list-item
           v-for="(suggestion, index) in resultsSuggestions"
           :key="index"
-          @keydown.up="(index===0) ? focusField : ()=>{}"
           @click="useSuggestion(suggestion)"
         >
           <v-list-item-title :title="suggestion.description">
@@ -556,7 +556,23 @@ export default {
       }
 
     },
+
+    menuVisible (value, previousValue) {
+      setTimeout(() => {
+        if (this.$refs['tfs-menu'].listIndex<0) {
+          this.$refs['tfs-menu'].getTiles();
+          this.$refs['tfs-menu'].nextTile();
+        }
+      }, 50);
+    },
+
     value (value) {
+      setTimeout(() => {
+        if (this.$refs['tfs-menu'].listIndex<0) {
+          this.$refs['tfs-menu'].getTiles();
+          this.$refs['tfs-menu'].nextTile();
+        }
+      }, 50);
       this.$nextTick(()=>{
         this.makeVisible()
       })
