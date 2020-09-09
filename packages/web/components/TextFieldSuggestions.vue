@@ -513,7 +513,11 @@ export default {
       } else if (parameterTypes) {
         this.resultsSuggestions = this.allSuggestions.filter(sugg => parameterTypes.includes(sugg.type))
       } else if (this.suggestOnEmpty) {
-        this.resultsSuggestions = this.allSuggestions.filter(sugg => sugg.type === this.suggestOnEmpty)
+        if (this.context && this.context.activeWord === ')') {
+          this.resultsSuggestions = false
+        } else {
+          this.resultsSuggestions = this.allSuggestions.filter(sugg => sugg.type === this.suggestOnEmpty)
+        }
       } else {
         this.resultsSuggestions = false
       }
