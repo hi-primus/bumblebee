@@ -1,4 +1,5 @@
 const tokenizeCharacter = (type, value, input, current) => (value === input[current]) ? [1, {type, value}] : [0, null]
+const tokenizeCharacterPos = (type, value, input, current) => (value === input[current]) ? [1, {type, value, pos: current}] : [0, null]
 
 const tokenizePattern = (type, pattern, input, current, checkValue = false) => {
   let char = input[current]
@@ -53,8 +54,8 @@ const tokenizeNameWithSpaces = (input, current) => {
 
 const skipWhiteSpace = (input, current) =>   (/\s/.test(input[current])) ? [1, null] : [0, null]
 
-const tokenizeParenOpen = (input, current) => tokenizeCharacter('open_paren', '(', input, current)
-const tokenizeParenClose = (input, current) => tokenizeCharacter('close_paren', ')', input, current)
+const tokenizeParenOpen = (input, current) => tokenizeCharacterPos('open_paren', '(', input, current)
+const tokenizeParenClose = (input, current) => tokenizeCharacterPos('close_paren', ')', input, current)
 const tokenizeSemiColon = (input, current) => tokenizeCharacter('semi_colon', ';', input, current)
 const tokenizeComma = (input, current) => tokenizeCharacter('comma', ',', input, current)
 const tokenizeNumber = (input, current) => tokenizePattern("number", /[0-9]/, input, current)
@@ -73,8 +74,9 @@ const tokenizers = [
 ]
 
 const tokenizer = (input, caret = 0) => {
-  let current = 0
-  let tokens = []
+  let current = 0;
+  let tokens = [];
+  input = input || '';
   while (current < input.length) {
     let tokenized = false
     tokenizers.forEach(tokenizer_fn => {
@@ -154,7 +156,8 @@ function parseFunctionCall (tokens, current) {
     active: token.active || nextToken.active,
     params: [],
   }
-  current += 1
+  let openParenPos = nextToken.pos;
+  current += 1;
   token = tokens[current];
   while (token && token.type !== 'close_paren') {
     let param;
@@ -162,6 +165,8 @@ function parseFunctionCall (tokens, current) {
     node.params.push(param);
     token = tokens[current];
   }
+  let closeParenPos = token ? token.pos : undefined;
+  node = { ...node, openParenPos, closeParenPos }
   current++;
   return [current, node];
 }
