@@ -2869,12 +2869,12 @@ export default {
       if (!command.columns || !command.columns.length) {
         columns = this.columns.map(e=>this.currentDataset.columns[e.index].name)
         columnDataTypes = this.columns.map(e=>this.currentDataset.columns[e.index].profiler_dtype.dtype)
-        columnDateFormats = this.columns.map(e=>transformDateFromPython(this.currentDataset.columns[e.index].profiler_dtype.format))
+        columnDateFormats = this.columns.map(e=>transformDateFromPython(this.currentDataset.columns[e.index].profiler_dtype.format)).filter(e=>e);
       } else {
         columns = command.columns
         var columnIndices = namesToIndices(columns, this.currentDataset.columns)
         columnDataTypes = columnIndices.map(i=>this.currentDataset.columns[i].profiler_dtype.dtype)
-        columnDateFormats = columnIndices.map(i=>transformDateFromPython(this.currentDataset.columns[i].profiler_dtype.format))
+        columnDateFormats = columnIndices.map(i=>transformDateFromPython(this.currentDataset.columns[i].profiler_dtype.format)).filter(e=>e);
       }
 
       var allColumnDateFormats = this.allColumns.map((e,i)=>transformDateFromPython(this.currentDataset.columns[i].profiler_dtype.format)).filter(e=>e);
