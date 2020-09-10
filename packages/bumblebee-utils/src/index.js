@@ -448,8 +448,12 @@ export const objectMap = (obj, cb) => {
   )
 }
 
-export const transformDateFormat = (string) => {
+export const transformDateToPython = (string) => {
   return string.replace(/a|A|w|d|b|B|m|y|Y|H|I|p|M|S|f|z|Z|j|U|W|c|x|X|%/g,(match)=>`%${match}`)
+}
+
+export const transformDateFromPython = (string) => {
+  return string.replace(/%(a|A|w|d|b|B|m|y|Y|H|I|p|M|S|f|z|Z|j|U|W|c|x|X|%)/g,(match)=>`${match.substr(1)}`)
 }
 
 // constants
@@ -601,7 +605,8 @@ export default {
   everyRatio,
   propsToLocal,
   objectMap,
-  transformDateFormat,
+  transformDateToPython,
+  transformDateFromPython,
   TYPES,
   TYPES_HINTS,
   TYPES_NAMES,

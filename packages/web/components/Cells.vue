@@ -248,6 +248,7 @@ import {
   hlParam,
   hlCols,
   namesToIndices,
+  transformDateFromPython,
 
   TIME_NAMES,
   TYPES,
@@ -1502,7 +1503,7 @@ export default {
                 mono: true,
                 useFunctions: false,
                 fuzzySearch: false,
-                suggestions: (c) => ({ 'dateformat': ['d-m-Y', 'd-m-y', 'd/m/Y', 'd/m/y', 'm-d-Y', 'm-d-y', 'm/d/Y', 'm/d/y', 'Y-m-d'] })
+                suggestions: (c) => ({ 'dateformat': [ ...new Set([...c.allColumnDateFormats, 'd-m-Y', 'd-m-y', 'd/m/Y', 'd/m/y', 'm-d-Y', 'm-d-y', 'm/d/Y', 'm/d/y', 'Y-m-d']) ] })
               },
             ],
             validate: (c)=>c.current_format && c.output_format,
@@ -1510,8 +1511,8 @@ export default {
           payload: (columns, payload = {}) => {
             return {
               columns,
-              current_format: payload.current_format || 'm/d/Y',
-              output_format: 'Y-m-d',
+              current_format: payload.columnDateFormats[0] || 'Y-m-d',
+              output_format: '',
               preview: {
                 type: 'transform_format'
               }
@@ -1529,7 +1530,7 @@ export default {
             return {
               columns,
               output_cols: columns.map(e=>''),
-              current_format: payload.current_format || 'd-m-Y',
+              current_format: payload.columnDateFormats[0] || 'Y-m-d',
               output_type: payload.output_type || 'year',
               preview: {
                 type: 'TIME'
@@ -2863,16 +2864,20 @@ export default {
 
       var columns = undefined
       var columnDataTypes = undefined
+      var columnDateFormats = undefined
 
       if (!command.columns || !command.columns.length) {
         columns = this.columns.map(e=>this.currentDataset.columns[e.index].name)
         columnDataTypes = this.columns.map(e=>this.currentDataset.columns[e.index].profiler_dtype.dtype)
-      }
-      else {
+        columnDateFormats = this.columns.map(e=>transformDateFromPython(this.currentDataset.columns[e.index].profiler_dtype.format))
+      } else {
         columns = command.columns
         var columnIndices = namesToIndices(columns, this.currentDataset.columns)
         columnDataTypes = columnIndices.map(i=>this.currentDataset.columns[i].profiler_dtype.dtype)
+        columnDateFormats = columnIndices.map(i=>transformDateFromPython(this.currentDataset.columns[i].profiler_dtype.format))
       }
+
+      var allColumnDateFormats = this.allColumns.map((e,i)=>transformDateFromPython(this.currentDataset.columns[i].profiler_dtype.format)).filter(e=>e);
 
       var commandHandler = this.getCommandHandler(command)
 
@@ -2888,6 +2893,8 @@ export default {
         },
         secondaryDatasets: this.currentSecondaryDatasets,
         columnDataTypes: columnDataTypes,
+        columnDateFormats: columnDateFormats,
+        allColumnDateFormats: allColumnDateFormats,
         dfName: this.currentDataset.dfName,
         newDfName: this.getNewDfName(),
         allColumns: this.allColumns,
