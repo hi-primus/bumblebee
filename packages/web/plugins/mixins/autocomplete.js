@@ -90,7 +90,7 @@ const tokenizer = (input, caret = 0) => {
         }
         if (token) {
             tokens.push({...token, active, startedAt: current-consumedChars, consumedChars})
-        } else if (active) {
+        } else if (active && tokens[tokens.length-1]) {
             tokens[tokens.length-1].active = true
         }
     })
@@ -156,7 +156,7 @@ function parseFunctionCall (tokens, current) {
     active: token.active || nextToken.active,
     params: [],
   }
-  let openParenPos = nextToken.pos;
+  let highlights = [nextToken.pos];
   current += 1;
   token = tokens[current];
   while (token && token.type !== 'close_paren') {
@@ -165,8 +165,10 @@ function parseFunctionCall (tokens, current) {
     node.params.push(param);
     token = tokens[current];
   }
-  let closeParenPos = token ? token.pos : undefined;
-  node = { ...node, openParenPos, closeParenPos }
+  if (token && token.pos) {
+    highlights.push(token.pos)
+  }
+  node = { ...node, highlights }
   current++;
   return [current, node];
 }
@@ -271,7 +273,9 @@ function getContext (expression, caret) {
   let activeWordPosition = result.tokenizerResult.activeWordPosition
   let activeCompleteWord = result.tokenizerResult.activeCompleteWord
 
-  return { inFunction, inName, activeWord, activeCompleteWord, activeWordPosition }
+  let highlights = inFunction ? inFunction.highlights.map(pos => ({pos, width: 1})) : [];
+
+  return { highlights, inFunction, inName, activeWord, activeCompleteWord, activeWordPosition }
 }
 
 export default {
