@@ -2758,3 +2758,25 @@ $editor-top-padding: 4px;
 .v-divider {
   opacity: 0.5;
 }
+
+.context-highlights-container {
+  position: absolute;
+  font-size: 7px;
+  width: calc(100% - 13px);
+  height: 15px;
+  top: 10px;
+  overflow: hidden;
+  .context-highlights {
+    top: 0;
+    left: 12px;
+    position: absolute;
+    .context-highlight {
+      background-color: $highlight-yellow;
+      display: inline-block;
+      position: absolute;
+      height: 4em;
+      line-height: 2em;
+      top: 0;
+    }
+  }
+}

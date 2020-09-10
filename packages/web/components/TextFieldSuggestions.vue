@@ -1,9 +1,23 @@
 <template>
-  <span
+  <div
     ref="tfs"
-    style="position: relative;"
+    style="position: relative; width: 100%;"
   >
-      <!-- :attach="$refs.tfs" -->
+    <div class="context-highlights-container">
+      <div
+        class="context-highlights"
+        ref="contextHighlights"
+      >
+        <template v-if="context.highlights && functionInfo">
+          <div
+            class="context-highlight"
+            v-for="(hl, hli) in context.highlights"
+            :key="hli"
+            :style="{left: hl.pos+'em', width: hl.width+'em'}"
+          ></div>
+        </template>
+      </div>
+    </div>
     <v-menu
       bottom
       v-model="menuVisible"
@@ -114,7 +128,7 @@
         </v-list-item>
       </v-list>
     </v-menu>
-  </span>
+  </div>
 </template>
 
 <script>
@@ -265,9 +279,18 @@ export default {
     if (this.suggestOnEmpty) {
       this.searchSuggestions(false);
     }
+    this.$refs.inputField.$el.getElementsByTagName('input')[0].addEventListener('scroll', this.inputScroll, {passive: true});
+  },
+
+  beforeDestroy () {
+    this.$refs.inputField.$el.getElementsByTagName('input')[0].removeEventListener('scroll', this.inputScroll);
   },
 
   methods: {
+
+    inputScroll (e) {
+      this.$refs.contextHighlights.style.marginLeft = -e.target.scrollLeft+'px';
+    },
 
     blurField () {
       this.$nextTick(()=>{
