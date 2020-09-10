@@ -149,8 +149,8 @@
           <div class="column-header-cell">
             <div
               class="data-type"
-              :class="`type-${currentDataset.columns[column.index].profiler_dtype}`">
-              {{ dataTypeHint(currentDataset.columns[column.index].profiler_dtype) }}
+              :class="`type-${currentDataset.columns[column.index].profiler_dtype.dtype}`">
+              {{ dataTypeHint(currentDataset.columns[column.index].profiler_dtype.dtype) }}
             </div>
             <div class="column-title">
               {{column.name}}
@@ -206,8 +206,8 @@
           @dblclick="setMenu($event, column.index)"
         >
           <div class="column-header-cell">
-            <div class="data-type" :class="`type-${currentDataset.columns[column.index].profiler_dtype}`">
-              {{ dataTypeHint(currentDataset.columns[column.index].profiler_dtype) }}
+            <div class="data-type" :class="`type-${currentDataset.columns[column.index].profiler_dtype.dtype}`">
+              {{ dataTypeHint(currentDataset.columns[column.index].profiler_dtype.dtype) }}
             </div>
             <div class="drag-hint"></div>
             <div v-if="currentPreviewNames && currentPreviewNames[columns[column.index].name]" class="column-title title-preview-highlight">
@@ -913,7 +913,7 @@ export default {
             frequency: ((column.stats.frequency) ? column.stats.frequency : undefined) || column.frequency || undefined,
             zeros: column.stats.zeros,
             null: column.stats.null,
-            dtype: column.profiler_dtype || column.dtype
+            dtype: column.profiler_dtype.dtype || column.dtype
             // hist_years: (column.stats.hist && column.stats.hist.years) ? column.stats.hist.years : undefined,
           }
         }
@@ -1523,7 +1523,7 @@ export default {
       }
 
       this.newColumnName = this.currentDataset.columns[index].name
-      this.newColumnType = this.currentDataset.columns[index].profiler_dtype
+      this.newColumnType = this.currentDataset.columns[index].profiler_dtype.dtype
 
       this.columnMenuIndex = index
 
@@ -1554,7 +1554,7 @@ export default {
     saveColumnData () {
       var index = this.columnMenuIndex
       var prevName = this.currentDataset.columns[index].name
-      var prevType = this.currentDataset.columns[index].profiler_dtype
+      var prevType = this.currentDataset.columns[index].profiler_dtype.dtype
 
       if (this.newColumnType != prevType) {
         var payload = {

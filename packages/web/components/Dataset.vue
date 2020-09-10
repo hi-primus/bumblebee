@@ -135,16 +135,16 @@
 						</v-tooltip>
 					</div>
 				</template>
-				<template v-slot:item.profiler_dtype="{ item }">
+				<template v-slot:item.profilerDtype="{ item }">
 					<v-tooltip transition="fade-transition" bottom>
 						<template v-slot:activator="{ on }">
 							<div class="data-type pr-4" v-on="on">
-								{{ dataTypeHint(item.profiler_dtype) }}
+								{{ dataTypeHint(item.profilerDtype) }}
 							</div>
 						</template>
 						<span :key="'column-type-hint'" class="capitalize column-type">
-							{{ item.profiler_dtype }}
-							<template v-if="item.profiler_dtype==='string*'">
+							{{ item.profilerDtype }}
+							<template v-if="item.profilerDtype==='string*'">
 								<br>
 								<span v-for="(subtype) in getSubTypes(item)" :key="subtype" class="subtype">
 									{{ subtype }}
@@ -407,7 +407,7 @@ export default {
 
         if (this.typesSelected.length > 0) {
           filteredColumns = this.resultsColumns.filter((column) => {
-            return this.typesSelected.includes(column.profiler_dtype)
+            return this.typesSelected.includes(column.profiler_dtype.dtype)
           })
         } else {
           filteredColumns = this.resultsColumns
@@ -431,7 +431,9 @@ export default {
 
 
         }
-        return filteredColumns
+        return filteredColumns.map(col => {
+          return { ...col, profilerDtype: col.profiler_dtype.dtype }
+        });
       } catch (error) {
         return []
       }
