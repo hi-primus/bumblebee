@@ -1,3 +1,5 @@
+import { deepCopy } from "bumblebee-utils"
+
 const tokenizeCharacter = (type, value, input, current) => (value === input[current]) ? [1, {type, value}] : [0, null]
 const tokenizeCharacterPos = (type, value, input, current) => (value === input[current]) ? [1, {type, value, pos: current}] : [0, null]
 
@@ -121,30 +123,32 @@ const tokenizer = (input, caret = 0) => {
 // parser
 
 function parseExpression (tokens, current) {
-  let token = tokens[current]
+  let token = tokens[current];
   let node = {
     type: 'expression',
     active: token.active,
     params: [],
   }
   if (token.type=='comma' || token.type=='open_paren') {
-      node.fromType = token.type
-      current++
-      token = tokens[current]
+    node.fromType = token.type;
+    current++;
+    token = tokens[current];
   }
+
   while (token && token.type !== 'close_paren' && token.type !== 'comma') {
     let param;
     [current, param] = parseToken(tokens, current);
     if (param.active) {
-        node.active = true
+      node.active = true;
     }
     node.params.push(param);
     token = tokens[current];
   }
 
-  if (node.params.length===1)
-    return [current, {...node.params[0], active: node.active}]
-  return [current, node]
+  if (node.params.length===1) {
+    return [current, {...node.params[0], active: node.active}];
+  }
+  return [current, node];
 }
 
 function parseFunctionCall (tokens, current) {
@@ -153,10 +157,13 @@ function parseFunctionCall (tokens, current) {
   let node = {
     type: 'function',
     value: token.value,
-    active: token.active || nextToken.active,
+    active: token.active || (nextToken && nextToken.active),
     params: [],
   }
-  let highlights = [nextToken.pos];
+  let highlights = []
+  if (nextToken) {
+    highlights.push(nextToken.pos);
+  }
   current += 1;
   token = tokens[current];
   while (token && token.type !== 'close_paren') {
@@ -164,6 +171,9 @@ function parseFunctionCall (tokens, current) {
     [current, param] = parseExpression(tokens, current);
     node.params.push(param);
     token = tokens[current];
+  }
+  if (token && token.type=='close_paren' && token.active && tokens[current + 1]) {
+    node.active = true;
   }
   if (token && token.pos) {
     highlights.push(token.pos)
@@ -204,9 +214,9 @@ function parseProgram (tokens) {
 }
 
 function parseCode (expression, caret) {
-    let tokenizerResult = tokenizer(expression, caret)
+    let tokenizerResult = tokenizer(expression, caret);
     let parserResult = parseProgram(tokenizerResult.tokens);
-    return { parserResult, tokenizerResult }
+    return { parserResult, tokenizerResult };
 }
 
 function getActive(params) {
@@ -239,7 +249,7 @@ function filterActive (params, root = true) {
 }
 
 function getActiveChain(inputParams) {
-    let tree = getActive(inputParams)
+    let tree = getActive(deepCopy(inputParams))
     let element = tree
     let array = []
     while (element) {
@@ -252,30 +262,34 @@ function getActiveChain(inputParams) {
 
 function getContext (expression, caret) {
 
-  let result = parseCode(expression,caret)
-  let tree = result.parserResult
-  let chain = getActiveChain(tree.body)
+  let result = parseCode(expression,caret);
+  let tree = result.parserResult;
+  let chain = getActiveChain(tree.body);
 
-  let inFunction = chain.filter(node=>node.type==='function')
-  inFunction = inFunction[inFunction.length - 1]
+  let subChain = chain.slice(0,chain.length-1);
 
-
-  let inName = chain.filter(node=>node.type==='name')
-  inName = inName[inName.length - 1]
-
-  if (inFunction) {
-    let parameterElementIndex = chain.reverse().findIndex(node=>node.type==='function')+1
-    let parameterElement = chain[chain.length-parameterElementIndex]
-    inFunction.inParameter = parameterElement ? parameterElement.index : undefined
+  if (!subChain.length) {
+    subChain = chain;
   }
 
-  let activeWord = result.tokenizerResult.activeWord
-  let activeWordPosition = result.tokenizerResult.activeWordPosition
-  let activeCompleteWord = result.tokenizerResult.activeCompleteWord
+  let inFunction = subChain.map((node, chainIndex)=>({...node, chainIndex})).filter(node=>node.type==='function').pop();
+
+  let inName = chain.filter(node=>node.type==='name');
+  inName = inName[inName.length - 1];
+
+  if (inFunction) {
+    let parameterElementIndex = inFunction.chainIndex+1;
+    let parameterElement = chain[parameterElementIndex];
+    inFunction.inParameter = parameterElement ? parameterElement.index : undefined;
+  }
+
+  let activeWord = result.tokenizerResult.activeWord;
+  let activeWordPosition = result.tokenizerResult.activeWordPosition;
+  let activeCompleteWord = result.tokenizerResult.activeCompleteWord;
 
   let highlights = inFunction ? inFunction.highlights.map(pos => ({pos, width: 1})) : [];
 
-  return { highlights, inFunction, inName, activeWord, activeCompleteWord, activeWordPosition }
+  return { highlights, inFunction, inName, activeWord, activeCompleteWord, activeWordPosition };
 }
 
 export default {

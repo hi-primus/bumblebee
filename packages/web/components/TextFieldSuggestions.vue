@@ -1,7 +1,7 @@
 <template>
   <div
     ref="tfs"
-    style="position: relative; width: 100%;"
+    class="suggestions-container"
   >
     <div class="context-highlights-container">
       <div
@@ -450,23 +450,30 @@ export default {
       var newWordText = newWord.text
 
       // gets , or ) depending on parameter
-      if (this.context && this.context.inFunction) {
-        var param = this.getParameter(this.context.inFunction.value, this.context.inFunction.inParameter+1)
+      var addChar = false;
+      if (this.context && this.context.inFunction && newWord.type!=='function') {
+        var param = this.getParameter(this.context.inFunction.value, this.context.inFunction.inParameter+1);
         if (param) {
-          newWordText += ','
+          addChar = ',';
         } else {
-          newWordText += ')'
+          addChar = ')';
+        }
+        if (splittedString[1][0]!=addChar) {
+          newWordText += addChar;
         }
       }
 
-      var value = splittedString[0]
-        + newWordText
-        + (newWord.type==='function' ? '(' : ' ')
-        + splittedString[1]
+      if (newWord.type==='function') {
+        newWordText += '(';
+      } else if (addChar!==')') {
+        newWordText += ' ';
+      }
 
-      var caretPos = this.activeWordPosition + newWordText.length + 1
+      var value = splittedString[0] + newWordText + splittedString[1];
 
-      this.$emit('input',value)
+      var caretPos = this.activeWordPosition + newWordText.length + 1;
+
+      this.$emit('input',value);
 
       this.$nextTick(()=>{
         this.avoidPropagation = false
