@@ -409,7 +409,19 @@
           ]"
           :data-column="column.sampleName+'/'+column.name"
         >
-          <template v-if="!(lazyColumns.length && !lazyColumns[cindex]) && computedColumnValues[column.sampleName]">
+          <template v-if="column.fillNone && computedColumnValues[rowsColumn]">
+            <div
+              v-for="(value) in computedColumnValues[rowsColumn].filter((e)=>e.index<rowsCount)"
+              :key="'cf'+cindex+'r'+value.index"
+              class="bb-table-i-cell"
+              :style="{ top: rowHeight * value.index+'px' }"
+            >
+              <span class="null-cell">
+                None
+              </span>
+            </div>
+          </template>
+          <template v-else-if="!(lazyColumns.length && !lazyColumns[cindex]) && computedColumnValues[column.sampleName]">
             <template v-if="column.preview || column.duplicated">
               <template v-for="value in computedColumnValues[column.sampleName].filter((e)=>e!==undefined && e!==null && e.index<rowsCount)">
                 <div
@@ -839,11 +851,13 @@ export default {
               }
 
               cols.splice(insertIndex, 0, {
+                title: 'empty',
                 type: 'preview',
                 index: -i,
                 previewIndex: -i,
                 preview: true,
                 placeholder: true,
+                fillNone: true,
                 classes: ['bb-preview', 'bb-placeholder'],
                 width: 170
               })
