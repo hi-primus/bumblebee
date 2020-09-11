@@ -152,7 +152,7 @@
               :class="`type-${currentDataset.columns[column.index].profiler_dtype.dtype}`">
               {{ dataTypeHint(currentDataset.columns[column.index].profiler_dtype.dtype) }}
             </div>
-            <div class="column-title">
+            <div class="column-title" :title="column.name">
               {{column.name}}
             </div>
           </div>
@@ -174,10 +174,18 @@
               :class="`type-${previewPlotsData[column.name].dtype}`">
               {{ dataTypeHint(previewPlotsData[column.name].dtype) }}
             </div>
-            <div v-if="currentPreviewNames && currentPreviewNames[column.title]" class="column-title">
+            <div
+              v-if="currentPreviewNames && currentPreviewNames[column.title]"
+              :title="currentPreviewNames[column.title]"
+              class="column-title"
+            >
               <span>{{ currentPreviewNames[column.title] }}</span>
             </div>
-            <div v-else class="column-title">
+            <div
+              v-else
+              class="column-title"
+              :title="column.title ? column.title.split('__preview__').join('') : ''"
+            >
               {{ column.title ? column.title.split('__preview__').join('') : '' }}
             </div>
           </div>
@@ -210,10 +218,18 @@
               {{ dataTypeHint(currentDataset.columns[column.index].profiler_dtype.dtype) }}
             </div>
             <div class="drag-hint"></div>
-            <div v-if="currentPreviewNames && currentPreviewNames[columns[column.index].name]" class="column-title title-preview-highlight">
+            <div
+              v-if="currentPreviewNames && currentPreviewNames[columns[column.index].name]"
+              :title="currentPreviewNames[columns[column.index].name]"
+              class="column-title title-preview-highlight"
+            >
               <span>{{ currentPreviewNames[columns[column.index].name] }}</span>
             </div>
-            <div v-else class="column-title">
+            <div
+              v-else
+              class="column-title"
+              :title="column.title || columns[column.index].name"
+            >
               {{ column.title || columns[column.index].name }}
             </div>
           </div>
