@@ -3139,7 +3139,7 @@ export default {
       }
       this.cells = cells
 
-      if (mark && this.cells)
+      if (this.cells)
         this.codeDone = this.codeText(false, ignoreFrom)
       else
         this.codeDone = ''
