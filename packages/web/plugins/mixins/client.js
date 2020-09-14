@@ -18,9 +18,15 @@ export default {
 
     window.timestamps = window.timestamps || 0
 
-    window.evalCode = async (code) => {
-      var result = await this.evalCode(code)
-      console.log('[DEBUG]',result)
+    window.evalCode = async (code, usePyodide) => {
+      var result;
+      if (usePyodide) {
+        await this.assertPyodide
+        result = pyodide.runPython(code)
+      } else {
+        result = await this.evalCode(code);
+      }
+      console.log('[DEBUG]',result);
     }
     window.pushCode = async (code) => {
       if (!window.code || !window.code.push) {
@@ -68,6 +74,21 @@ export default {
       get () {
         return window.socketAvailable
       }
+    },
+
+    async assertPyodide () {
+      if (!window.pyodideScript) {
+        await new Promise((resolve, reject) => {
+          var script = document.createElement('script');
+          script.onload = function () {
+            resolve(true);
+          };
+          script.src = 'https://pyodide-cdn2.iodide.io/v0.15.0/full/pyodide.js';
+          document.head.appendChild(script);
+        });
+        window.pyodideScript = 1;
+      }
+      return await languagePluginLoader
     }
   },
 
