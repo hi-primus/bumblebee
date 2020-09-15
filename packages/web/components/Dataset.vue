@@ -224,10 +224,6 @@ export default {
       type: Boolean,
       default: false
     },
-    commandsDisabled: {
-      type: Boolean,
-      default: false
-    },
     sortBy: {
       type: Array,
       default: ()=>{return []}
@@ -277,6 +273,15 @@ export default {
       'loadPreview',
       'appError'
     ]),
+
+    commandsDisabled: {
+      get () {
+        return this.$store.state.commandsDisabled
+      },
+      set (value) {
+        this.$store.commit('mutation', {mutate: 'commandsDisabled', payload: value})
+      }
+    },
 
     availableDatasets () {
       var sds = Object.keys(this.currentSecondaryDatasets)
@@ -483,7 +488,7 @@ export default {
 
     openDf (dfName) {
       this.$store.commit('setDfToTab', { dfName, go: true })
-      this.loadDataset(dfName)
+      this.getProfiling(dfName)
     },
 
     commandHandle (event) {

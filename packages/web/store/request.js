@@ -10,7 +10,7 @@ export const actions = {
       name: file.name,
       size: file.size,
       type: file.type,
-      workspace: context.rootState.session.workspace._id
+      workspace: context.rootState.workspace._id
     };
 
     const uploadResponse = await context.dispatch('request', {

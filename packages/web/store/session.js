@@ -67,7 +67,7 @@ export const actions =  {
 
       }
 
-      var workspaceId = state.workspace ? state.workspace._id : undefined
+      var workspaceId = rootState.workspace ? rootState.workspace._id : undefined
 
       var response = await dispatch('request', {
         request: 'put',
@@ -94,93 +94,23 @@ export const actions =  {
     return response
   },
 
-  async startWorkspace ({commit, dispatch, state}, slug) {
-
-    commit('mutation', { mutate: 'saveReady', payload: false })
-
-    // console.log('[WORKSPACE MANAGING] startWorkspace')
-
-    var workspace = state.workspace
-
-    if (!slug) {
-      if (workspace && workspace.slug) {
-        slug = workspace.slug
-      } else {
-        return false
-      }
-    }
-
-    var response = await dispatch('request',{
-      path: `/workspaces/slug/${slug}`
-    }, { root: true })
-
-    var tabs = []
-    var cells = []
-
-    var tab = -1
-
-    if (response.data) {
-      tab = response.data.selectedTab!==undefined ? response.data.selectedTab : tab
-      tabs = response.data.tabs.map(e=>{
-        var profiling = JSON.parse(e.profiling)
-        return {
-          name: e.name,
-          dataSources: e.dataSources,
-          ...profiling
-        }
-      })
-      cells = response.data.commands.map( e=>({ ...JSON.parse(e), done: false }) )
-    }
-
-    // if (tab>=0) {
-    //   commit('mutation', { mutate: 'tab', payload: tab}, { root: true })
-    // }
-
-    var commands = cells.filter(e=>!(e && e.payload && e.payload.request && e.payload.request.isLoad))
-    var dataSources = cells.filter(e=>e && e.payload && e.payload.request && e.payload.request.isLoad)
-
-    tabs.forEach((dataset, index) => {
-      // commit('mutation', { mutate: 'tab', payload: index }, { root: true })
-      // console.log('[WORKSPACE MANAGING] loading dataset', { dataset })
-      if (dataset.columns) {
-        commit('setDataset', { dataset, tab: index }, { root: true })
-        if (tab<0) {
-          tab = index
-        }
-      } else {
-        commit('newDataset', { dataset, current: true, tab: index }, { root: true })
-      }
-    })
-
-    if (tab<0) {
-      tab = 0
-    }
-
-    commit('mutation', { mutate: 'commands', payload: commands }, { root: true })
-    commit('mutation', { mutate: 'dataSources', payload: dataSources}, { root: true })
-    commit('mutation', { mutate: 'workspace', payload: response.data })
-
-    commit('mutation', { mutate: 'tab', payload: tab}, { root: true })
-
-    commit('mutation', { mutate: 'saveReady', payload: true}) // TO-DO: fix
-
-
-
-    return response.data
-
-  },
-
   cleanSession ({commit}) {
 
     commit('mutation', { mutate: 'saveReady', payload: false})
     commit('mutation', { mutate: 'tab', payload: 0 }, { root: true })
     commit('mutation', { mutate: 'commands', payload: [] }, { root: true })
-    commit('mutation', { mutate: 'workspace', payload: false }, {root: true})
+    commit('mutation', { mutate: 'workspace', payload: false }, { root: true })
     commit('mutation', { mutate: 'datasets', payload: [] }, { root: true })
     commit('mutation', { mutate: 'datasetSelection', payload: [] }, { root: true })
     commit('mutation', { mutate: 'secondaryDatasets', payload: [] }, { root: true })
     commit('mutation', { mutate: 'databases', payload: [] }, { root: true })
-    commit('mutation', { mutate: 'buffers', payload: [] }, { root: true })
+
+    commit('mutation', { mutate: 'workspacePromise', payload: false }, { root: true })
+    commit('mutation', { mutate: 'optimusPromise', payload: false }, { root: true })
+    commit('mutation', { mutate: 'cellsPromise', payload: false }, { root: true })
+    commit('mutation', { mutate: 'profilingPromises', payload: [] }, { root: true })
+    commit('mutation', { mutate: 'buffersPromises', payload: [] }, { root: true })
+
     commit('mutation', { mutate: 'listViews', payload: [] }, { root: true })
     commit('clearDatasetProperties', {}, { root: true })
   },
@@ -260,8 +190,5 @@ export const actions =  {
 export const getters =  {
   isAuthenticated (state) {
     return state.accessToken && state.username
-  },
-  isInWorkspace (state) {
-    return state.accessToken && state.username && state.workspace && state.workspace.slug
-  },
+  }
 }

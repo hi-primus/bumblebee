@@ -1935,69 +1935,27 @@ export default {
 
     async fetchChunk(from, to) {
 
-      var previewCode = ''
-      var noBufferWindow = false
-      var forceName = false
+      var previewCode = '';
 
       if (this.previewCode) {
-        previewCode = this.previewCode.code
-        noBufferWindow = this.previewCode.noBufferWindow
-        forceName = !!this.previewCode.datasetPreview
+        previewCode = this.previewCode.code;
       }
 
-      if (!this.currentBuffer) {
-        await this.buffer(this.currentDataset.dfName)
-      }
+      var addToFetch = await this.$store.dispatch('getBufferWindow', {
+        from,
+        to,
+        beforeCodeEval: this.previewCode.beforeCodeEval,
+        socketPost: this.socketPost,
+      });
 
-      var code = await getPropertyAsync(previewCode, [from, to+1]) || ''
-
-      var referenceCode = await getPropertyAsync(previewCode) || ''
-
-      if (this.previewCode.beforeCodeEval) {
-        this.previewCode.beforeCodeEval()
-      }
-
-      var response
-      if (this.currentProfilePreview.done) {
-        response = await this.evalCode(`_output = _df_profile${(noBufferWindow) ? '' : '['+from+':'+(to+1)+']'}.ext.to_json("*")`)
+      if (addToFetch) {
+        this.fetched.push(addToFetch);
+        this.mustUpdateRows = true;
+        return this.checkIncomingColumns(addToFetch.sample.columns);
       } else {
-        response = await this.evalCode(`_output = ${this.currentDataset.dfName}.ext.buffer_window("*"${(noBufferWindow) ? '' : ', '+from+', '+(to+1)})${code}.ext.to_json("*")`)
-      }
-
-      if (response.data.status === 'error') {
-        this.$store.commit('setPreviewInfo', {error: response.data.error})
-      } else {
-        this.$store.commit('setPreviewInfo', {error: false})
-      }
-
-      var parsed = response && response.data && response.data.result ? parseResponse(response.data.result) : undefined
-
-      if (parsed && parsed.sample) {
-
-        var pre = forceName ? '__preview__' : ''
-
-        parsed.sample.columns = parsed.sample.columns.map(e=>({...e, title: pre+e.title}))
-
-        // this.columnValues = this.getValuesByColumns(parsed.sample, false, from)
-
-        this.fetched.push({
-          code: referenceCode,
-          update: this.datasetUpdates,
-          from,
-          to,
-          sample: parsed.sample,
-          inTable: false
-        })
-
-        this.mustUpdateRows = true
-
-        // console.log('[DEBUG][fetchChunk] checking',parsed.sample.columns)
-        return this.checkIncomingColumns(parsed.sample.columns)
-
-      } else {
-        // console.log('[DEBUG][fetchChunk] returned 0')
         return 0
       }
+
     },
 
     updateRows () {

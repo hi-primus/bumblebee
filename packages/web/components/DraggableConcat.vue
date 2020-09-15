@@ -133,7 +133,7 @@ export default {
     dragOptions () {
       return {
         animation: 200,
-        deleted: this.commandsDisabled,
+        deleted: false, // this.$store.state.commandsDisabled
         ghostClass: "ghost"
       }
     },

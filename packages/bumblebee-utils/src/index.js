@@ -240,6 +240,14 @@ export const escapeQuotes = (str) => {
   return str
 }
 
+export const filterCells = (cells, newOnly, ignoreFrom) => {
+  if (newOnly) {
+    return cells.filter((e,i)=>((ignoreFrom<0 || i<ignoreFrom) && e.code!=='' && !e.done && !e.ignore));
+  } else {
+    return cells.filter((e,i)=>((ignoreFrom<0 || i<ignoreFrom) && e.code!=='' && !e.ignore));
+  }
+}
+
 export const getOutputColsArgument = (output_cols = [], input_cols = [], pre = '', forceArray = false) => {
   var hasInput = input_cols.join('').trim().length
   if (output_cols.join('').trim().length && !(hasInput && pre)) {
@@ -592,6 +600,7 @@ export default {
   copyToClipboard,
   optimizeRanges,
   escapeQuotes,
+  filterCells,
   getOutputColsArgument,
   columnsHint,
   escapeQuotesOn,

@@ -263,7 +263,6 @@
     </div>
     <Dataset
       :key="'dataset'+currentTab"
-      :commandsDisabled="commandsDisabled"
       :sortBy.sync="sortBy"
       :sortDesc.sync="sortDesc"
       :operationsActive="!!operationsActive"
@@ -330,7 +329,6 @@
           @updateOperations="updateOperations"
           :codeError.sync="cellsError"
           :columns="selectedColumns || []"
-          :commandsDisabled.sync="commandsDisabled"
         />
 				<!-- <v-progress-linear
           indeterminate
@@ -410,7 +408,6 @@
               :startExpanded="i==0"
               :rowsCount="+currentDataset.summary.rows_count"
               :column="currentDataset.columns[index]"
-              :commandsDisabled="commandsDisabled"
               @command="commandHandle($event)"
             ></ColumnDetails>
           </template>
@@ -480,7 +477,6 @@ export default {
       operationsActive: false,
       operationsTitle: 'operations',
       bigOptions: false,
-      commandsDisabled: false,
       operation: undefined,
       heatMap: [],
       heatMapEncoding: {},
@@ -568,6 +564,15 @@ export default {
     ]),
 
     ...mapState(['nextCommand']),
+
+    commandsDisabled: {
+      get () {
+        return this.$store.state.commandsDisabled
+      },
+      set (value) {
+        this.$store.commit('mutation', {mutate: 'commandsDisabled', payload: value})
+      }
+    },
 
     listView: {
       get () {

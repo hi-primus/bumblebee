@@ -211,7 +211,7 @@ import MoreMenu from "@/components/MoreMenu"
 import clientMixin from "@/plugins/mixins/client"
 import dataTypesMixin from "@/plugins/mixins/data-types"
 import applicationMixin from "@/plugins/mixins/application"
-import { printError, RESPONSE_MESSAGES } from 'bumblebee-utils'
+import { printError, INIT_PARAMETERS, RESPONSE_MESSAGES } from 'bumblebee-utils'
 
 import { mapGetters, mapState } from "vuex"
 
@@ -390,7 +390,21 @@ export default {
 
         var slug = this.$route.params.slug;
 
-        var workspace = await this.$store.dispatch('session/startWorkspace', slug)
+        var query = this.$route.query;
+
+        var parameters = {};
+
+        INIT_PARAMETERS.forEach(parameter => {
+          if (query[parameter]) {
+            parameters[parameter] = query[parameter]
+          }
+        });
+
+        var payload = { slug, parameters };
+
+        this.$store.commit('mutation', { mutate: 'workspaceConfig', payload });
+
+        var workspace = await this.$store.dispatch('startWorkspace', { slug });
         // console.log('[INITIALIZATION] workspace done')
 
         await this.initializeOptimus(slug)
@@ -443,89 +457,22 @@ export default {
 
     async initializeOptimus (slug) {
 
-      // TO-DO: store action
+      var query = this.$route.query;
 
-      console.log('[INITIALIZATION] initializeOptimus')
+      var parameters = {};
 
-      var query = this.$route.query
+      INIT_PARAMETERS.forEach(parameter => {
+        if (query[parameter]) {
+          parameters[parameter] = query[parameter]
+        }
+      });
 
-      var parameters = {
-        engine: query.engine,
-        address: query.address,
-        n_workers: query.n_workers || query.workers,
-        threads_per_worker: query.threads_per_worker || query.tpw,
-        reset: query.reset,
-        kernel_address: query.kernel_address,
-        process: query.process,
-        processes: query.processes
-      }
-
-      var response = await this.socketPost('initialize', {
-        username: this.$store.state.session.username,
-        workspace: slug || 'default',
-        ...parameters
-      })
-
-      console.log('[DEBUG][INITIALIZATION] initializeOptimus response', response)
-
-      var functions
-
-      if (response.data.reserved_words) {
-        response.data.reserved_words = JSON.parse(response.data.reserved_words) // TO-DO: remove dumps on optimus
-        functions = response.data.reserved_words.functions
-      }
-
-      var functionsSuggestions = []
-
-      if (functions) {
-        Object.entries(functions).forEach(([key, value])=>{
-          var params = [{
-            type: 'column',
-            name: 'column',
-            description: "A column's name",
-            required: true // TO-DO: required on function
-          }]
-          var description = value
-          var example = `${key}(column)`
-          if (typeof value !== "string")  {
-            if ('parameters' in value) {
-              params = value.parameters.map(param=>{
-                if (param.type==='series') {
-                  param.type = 'column'
-                }
-                if (param.name==='series') {
-                  param.name = 'column'
-                }
-                return param
-              })
-            }
-            if ('description' in value) {
-              description = value.description
-            }
-            if ('example' in value) {
-              example = value.example
-            }
-          }
-          functionsSuggestions.push({type: 'function', text: key, params, description, example })
-        })
-      }
-
-      // console.log('[GLOBAL SUGGESTIONS]',JSON.stringify(functionsSuggestions))
-
-      this.$store.commit('mutation', {mutate: 'functionsSuggestions', payload: functionsSuggestions})
-
-
-      if (!response.data.optimus) {
-        throw response
-      }
-
-      window.pushCode({ code: response.code })
+      return await this.$store.dispatch('getOptimus', { slug, parameters, socketPost: this.socketPost } )
     },
 
-    signOut (waiting = true) {
+    async signOut (waiting = true) {
       this.stopClient(waiting)
-      this.$store.dispatch('mutateAndSave', {mutate: 'commands', payload: []} )
-      this.$store.dispatch('session/signOut')
+      await this.$store.dispatch('session/signOut')
       this.$router.push({path: '/login', query: this.$route.query })
     },
 

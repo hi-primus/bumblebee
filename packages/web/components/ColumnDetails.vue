@@ -318,10 +318,6 @@ export default {
   },
 
   props: {
-    commandsDisabled: {
-      type: Boolean,
-      default: false
-    },
     column: {
       type: Object
     },
@@ -338,6 +334,15 @@ export default {
     ...mapGetters([
       'currentDataset'
     ]),
+
+    commandsDisabled: {
+      get () {
+        return this.$store.state.commandsDisabled
+      },
+      set (value) {
+        this.$store.commit('mutation', {mutate: 'commandsDisabled', payload: value})
+      }
+    }
   },
 
   mounted () {

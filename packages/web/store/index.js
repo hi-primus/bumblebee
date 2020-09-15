@@ -1,6 +1,8 @@
 import axios from 'axios'
 import Vue from 'vue'
 
+import { ALL_TYPES, capitalizeString, getPropertyAsync, filterCells, parseResponse, printError } from 'bumblebee-utils'
+
 const properties = [
   {
     name: 'loadPreview',
@@ -76,15 +78,23 @@ properties.forEach((p)=>{
   }
 })
 
-
-import { ALL_TYPES, capitalizeString } from 'bumblebee-utils'
-
 export const state = () => ({
   datasets: [],
   datasetSelection: [],
   secondaryDatasets: [],
   databases: [],
-  buffers: [],
+  cells: [],
+  commandsDisabled: false,
+  firstRun: true,
+  lastWrongCode: false,
+  codeDone: '',
+  workspace: false,
+  workspaceConfig: {},
+  workspacePromise: false,
+  optimusPromise: false,
+  cellsPromise: false,
+  profilingPromises: {},
+  buffersPromises: {},
   listViews: [],
   commands: [],
   dataSources: [],
@@ -135,8 +145,8 @@ export const mutations = {
     })
   },
 
-  setBuffer (state, { dfName, promise }) {
-    Vue.set(state.buffers, dfName, promise)
+  setBufferPromise (state, { dfName, promise }) {
+    Vue.set(state.buffersPromises, dfName, promise)
   },
 
   setSecondaryDatasets (state, payload) {
@@ -246,7 +256,7 @@ export const mutations = {
     state.datasetSelection[tab] = {} // {columns: _c} // TO-DO: Remember selection
 
     Vue.set(state.datasetSelection, tab, state.datasetSelection[tab] )
-    Vue.set(state.buffers, tab, false)
+    Vue.set(state.buffersPromises, tab, false)
 
     state.properties.filter(p=>p.clearOnLoad).forEach(p=>{
       if (p.multiple) {
@@ -266,7 +276,7 @@ export const mutations = {
     if (dfName) {
       found = state.datasets.findIndex(dataset => dataset.dfName===dfName)
       if (found<0 && current) {
-        console.warn('trying to overwrite unexistenting',dfName)
+        console.warn('[DATASET] trying to overwrite unexistenting',dfName)
         return
       }
     }
@@ -325,17 +335,22 @@ export const mutations = {
   },
 
 	deleteTab (state, index) {
-    Vue.delete(state.datasets, index)
-    Vue.delete(state.datasetSelection, index)
+    var dfName = state.datasets[index].dfName;
+
+    Vue.delete(state.profilingPromises, dfName);
+    Vue.delete(state.buffersPromises, dfName);
+
+    Vue.delete(state.datasets, index);
+    Vue.delete(state.datasetSelection, index);
     state.properties.forEach(p=>{
       if (p.multiple) {
-        Vue.delete(state['every'+p.name], index)
+        Vue.delete(state['every'+p.name], index);
       }
     })
     if (!state.datasets.length) {
-      this.commit('newDataset', {})
+      this.commit('newDataset', {});
     }
-    return Math.min(index, state.datasets.length)
+    return Math.min(index, state.datasets.length);
 	},
 
 	setAppStatus (state, payload) {
@@ -453,28 +468,611 @@ export const actions = {
     await dispatch('session/serverInit')
   },
 
+  async evalCode({ state }, {code ,socketPost}) {
+    try {
+
+      if (!process.client) {
+        throw new Error('SSR not allowed')
+      }
+
+      var startTime = new Date().getTime()
+
+      var response = await socketPost('run', {
+        code,
+        username: state.session.username,
+        workspace: (state.workspace ? state.workspace.slug : undefined) || 'default'
+      }, {
+        timeout: 0
+      })
+
+      var endTime = new Date().getTime()
+
+      response._frontTime = {
+        start: startTime/1000,
+        end: endTime/1000,
+        duration: (endTime - startTime)/1000
+      }
+
+      console.log('[DEBUG][RESULT]', response)
+      console.log('[DEBUG][CODE]', response.code)
+
+      try {
+        console.log(
+          '[DEBUG][TIMES]',
+          'front', response._frontTime,
+          'server', response._serverTime,
+          'gateway', response._gatewayTime,
+          'frontToServer', response._serverTime.start-response._frontTime.start,
+          'serverToGateway', response._gatewayTime.start-response._serverTime.start,
+          'GatewayToServer', response._serverTime.end-response._gatewayTime.end,
+          'ServerToFront', response._frontTime.end-response._serverTime.end
+        )
+      } catch (err) {
+        console.log(
+          '[DEBUG][TIMES]',
+          'front', response._frontTime,
+          'server', response._serverTime,
+          'gateway', response._gatewayTime
+        )
+      }
+
+      if (response.data.status === 'error') {
+        throw response
+      }
+
+      window.pushCode({code: response.code})
+
+      return response
+
+    } catch (err) {
+
+      if (err.code) {
+        window.pushCode({code: err.code, error: true})
+      }
+
+      console.error(err)
+
+      printError(err)
+      return err
+
+    }
+  },
+
+  getPromise({ state, dispatch, commit }, { name, action, payload, force, index } ) {
+
+    var promise;
+
+    if (!force) {
+      promise = state[name];
+      if (index!==undefined && promise) {
+        promise = promise[index]
+      }
+    }
+
+    if (!promise) {
+      promise = dispatch(action, payload);
+      if (index!==undefined) {
+        var promises = state[name];
+        promises[index] = promise;
+        commit('mutation', { mutate: name, payload: promises });
+      } else {
+        commit('mutation', { mutate: name, payload: promise });
+      }
+    }
+
+
+    return promise;
+
+  },
+
+  async getWorkspace ({ dispatch }, { slug, force }) {
+
+    var promisePayload = {
+      name: 'workspacePromise',
+      action: 'loadWorkspace',
+      payload: { slug },
+      force
+    };
+
+    var workspace = await dispatch('getPromise', promisePayload);
+
+    if (workspace.slug == slug || force) {
+      return workspace;
+    }
+
+    return await dispatch('getPromise', { ...promisePayload, force: true });
+
+  },
+
+  async loadWorkspace ({commit, dispatch, state}, { slug }) {
+
+    commit('session/mutation', { mutate: 'saveReady', payload: false })
+
+    if (!slug) {
+      var workspace = state.workspace
+      if (workspace && workspace.slug) {
+        slug = workspace.slug
+      } else {
+        return false
+      }
+    }
+    console.log('[WORKSPACE] Loading', slug)
+
+    var response = await dispatch('request',{
+      path: `/workspaces/slug/${slug}`
+    })
+
+    var tabs = []
+    var cells = []
+
+    var tab = -1
+
+    if (response.data) {
+      tab = response.data.selectedTab!==undefined ? response.data.selectedTab : tab
+      tabs = response.data.tabs.map(e=>{
+        var profiling = JSON.parse(e.profiling)
+        return {
+          name: e.name,
+          dataSources: e.dataSources,
+          ...profiling
+        }
+      })
+      cells = response.data.commands.map( e=>({ ...JSON.parse(e), done: false }) )
+    }
+
+    // if (tab>=0) {
+    //   commit('mutation', { mutate: 'tab', payload: tab})
+    // }
+
+    var commands = cells.filter(e=>!(e && e.payload && e.payload.request && e.payload.request.isLoad))
+    var dataSources = cells.filter(e=>e && e.payload && e.payload.request && e.payload.request.isLoad)
+
+    tabs.forEach((dataset, index) => {
+      // commit('mutation', { mutate: 'tab', payload: index })
+      if (dataset.columns) {
+        commit('setDataset', { dataset, tab: index })
+        if (tab<0) {
+          tab = index
+        }
+      } else {
+        commit('newDataset', { dataset, current: true, tab: index })
+      }
+    })
+
+    if (tab<0) {
+      tab = 0
+    }
+
+    commit('mutation', { mutate: 'commands', payload: commands })
+    commit('mutation', { mutate: 'dataSources', payload: dataSources})
+    commit('mutation', { mutate: 'workspace', payload: response.data })
+
+    commit('mutation', { mutate: 'tab', payload: tab})
+
+    commit('session/mutation', { mutate: 'saveReady', payload: true}) // TO-DO: fix
+
+    return response.data
+
+  },
+
+  async startWorkspace ({ dispatch }, { slug }) {
+    var result = await dispatch('getWorkspace', { slug, force: true })
+    return result;
+  },
+
+  // cells
+
+  codeText ({ getters }, { newOnly, ignoreFrom }) {
+    newOnly = newOnly || false;
+    ignoreFrom = ignoreFrom || -1;
+    if (!getters.cells.length) {
+      return '';
+    }
+    return filterCells(getters.cells, newOnly, ignoreFrom).map(e=>e.code).join('\n').trim();
+  },
+
+  async markCells ({ dispatch, state, commit }, { mark, ignoreFrom, error, splice }) {
+
+    mark = mark===undefined ? true : mark;
+    ignoreFrom = ignoreFrom || -1;
+
+    var cells = [...state.commands]
+    for (let i = 0; i < state.commands.length; i++) {
+      if (ignoreFrom>=0 && i>=ignoreFrom) {
+        continue
+      }
+      if (splice) {
+        if (!cells[i].done && cells[i].code) {
+          cells.splice(i,1)
+        }
+      } else {
+        cells[i] = { ...cells[i] }
+        if (error) {
+          if (cells[i].code) {
+            cells[i].error = true
+          }
+          cells[i].done = false
+        } else {
+          if (cells[i].code) {
+            cells[i].done = mark
+          }
+          cells[i].error = false
+        }
+      }
+    }
+
+    commit('mutation', { mutate: 'cells', payload: cells })
+
+    var newCodeDone = ''
+
+    if (mark && state.commands) {
+      newCodeDone = await dispatch('codeText', { newOnly: false, ignoreFrom });
+    }
+
+    commit('mutation', { mutate: 'codeDone', payload: newCodeDone })
+  },
+
+  beforeRunCells ( { state, commit }, { newOnly, ignoreFrom } ) {
+
+    newOnly = newOnly || false;
+    ignoreFrom = ignoreFrom || -1;
+
+    filterCells(state.commands, newOnly, ignoreFrom).forEach(async (cell) => {
+      if (cell.payload.request && cell.payload.request.createsNew) {
+        commit('setDfToTab', { dfName: cell.payload.newDfName })
+      }
+      if (window.getCommandHandler) {
+        var commandHandler = window.getCommandHandler(cell)
+        if (commandHandler.beforeExecuteCode) {
+          cell = {...cell} // avoid vuex mutation
+          cell.payload = await commandHandler.beforeExecuteCode(cell.payload)
+        }
+      } else {
+        console.warn('[COMMANDS] getCommandHandler not defined');
+      }
+    })
+  },
+
+  async loadOptimus ({commit, state, dispatch }, { slug, parameters, socketPost }) {
+
+    // var workspace = await dispatch('getWorkspace', { socketPost });
+
+    if (slug && parameters) {
+      var payload = {slug, parameters}
+      commit('mutation', { mutate: 'workspaceConfig', payload })
+    } else {
+      slug = state.workspaceConfig.slug;
+      parameters = state.workspaceConfig.parameters;
+    }
+
+    console.log('[INITIALIZATION] initializeOptimus', state.session.username, slug);
+
+    var response = await socketPost('initialize', {
+      username: state.session.username,
+      workspace: slug || 'default',
+      ...parameters
+    });
+
+    console.log('[DEBUG][INITIALIZATION] initializeOptimus response', response);
+
+    var functions;
+
+    if (response.data.reserved_words) {
+      response.data.reserved_words = JSON.parse(response.data.reserved_words); // TO-DO: remove dumps on optimus
+      functions = response.data.reserved_words.functions;
+    }
+
+    var functionsSuggestions = [];
+
+    if (functions) {
+      Object.entries(functions).forEach(([key, value])=>{
+        var params = [{
+          type: 'column',
+          name: 'column',
+          description: "A column's name",
+          required: true // TO-DO: required on function
+        }];
+        var description = value;
+        var example = `${key}(column)`;
+        if (typeof value !== "string")  {
+          if ('parameters' in value) {
+            params = value.parameters.map(param=>{
+              if (param.type==='series') {
+                param.type = 'column';
+              }
+              if (param.name==='series') {
+                param.name = 'column';
+              }
+              return param;
+            });
+          }
+          if ('description' in value) {
+            description = value.description;
+          }
+          if ('example' in value) {
+            example = value.example;
+          }
+        }
+        functionsSuggestions.push({type: 'function', text: key, params, description, example });
+      })
+    }
+
+    // console.log('[GLOBAL SUGGESTIONS]',JSON.stringify(functionsSuggestions))
+
+    commit('mutation', {mutate: 'functionsSuggestions', payload: functionsSuggestions});
+
+    if (!response.data.optimus) {
+      throw response;
+    }
+
+    window.pushCode({ code: response.code });
+
+    return response.data;
+  },
+
+  async getOptimus ({dispatch}, payload) {
+    var promisePayload = {
+      name: 'optimusPromise',
+      action: 'loadOptimus',
+      payload
+    };
+
+    return await dispatch('getPromise', promisePayload);
+  },
+
+  async loadCellsResult ({dispatch, state, getters, commit}, { force, ignoreFrom, socketPost }) {
+
+    var optimusPromise = dispatch('getOptimus', { socketPost });
+
+    var workspacePromise = dispatch('getWorkspace', { socketPost });
+
+    await Promise.all([optimusPromise, workspacePromise])
+
+    if (ignoreFrom>=0) {
+      force = true;
+    }
+
+    var newOnly = false;
+    var code = await dispatch('codeText', { newOnly, ignoreFrom });
+
+    var codeDone = force ? '' : state.codeDone.trim();
+
+    var rerun = false;
+
+    if (code==='') {
+      // console.log('[CODE MANAGER] nothing to run')
+      return false;
+    }
+
+    if (code === codeDone) {
+      // console.log('[CODE MANAGER] nothing new to run')
+      return false;
+    }
+    else if (
+      ( !state.firstRun && (force || code.indexOf(codeDone)!=0 || codeDone=='' || state.lastWrongCode) )
+      ||
+      !window.socketAvailable
+    ) {
+      // console.log('[CODE MANAGER] every cell', {force, firstRun: state.firstRun, code, codeDone, lastWrongCode: state.lastWrongCode, socketAvailable: window.socketAvailable})
+      rerun = true;
+    }
+    else {
+      // console.log('[CODE MANAGER] new cells only')
+      newOnly = true;
+      code = await dispatch('codeText', { newOnly, ignoreFrom }); // new cells only
+    }
+
+    if (code===state.lastWrongCode) {
+      // console.log('[CODE MANAGER] code went wrong last time')
+      return false;
+    }
+
+    if (rerun) {
+      // console.log('[CODE MANAGER] every cell is new')
+      await dispatch('markCells', { mark: false, ignoreFrom });
+    }
+
+    var firstRun = state.firstRun;
+
+    if (firstRun) {
+      rerun = false;
+    }
+
+    commit('mutation', { mutate: 'commandsDisabled', payload: true });
+
+    // run
+
+    await dispatch('beforeRunCells', { newOnly, ignoreFrom });
+
+    var dfName = getters.currentDataset.dfName;
+
+    if (dfName) {
+      commit('setBufferPromise', { dfName, promise: false });
+    }
+
+    var response = await socketPost('cells', {
+      code,
+      username: state.session.username,
+      workspace: (state.workspace ? state.workspace.slug : undefined) || 'default',
+      key: state.key
+    }, {
+      timeout: 0
+    });
+
+    response.originalCode = code;
+
+    console.log('[DEBUG][CODE]',response.code)
+    window.pushCode({code: response.code})
+
+    commit('mutation', { mutate: 'commandsDisabled', payload: false });
+
+    if (!response.data || !response.data.result) {
+      throw response
+    }
+
+    return response
+
+  },
+
+  async getCellsResult ({dispatch}, payload) {
+    var promisePayload = {
+      name: 'cellsPromise',
+      action: 'loadCellsResult',
+      payload
+    };
+
+    return await dispatch('getPromise', promisePayload);
+  },
+
+  async loadProfiling ({dispatch, state, getters}, {dfName, socketPost}) {
+    try {
+
+      var cellsResult = await dispatch('getCellsResult', { socketPost });
+
+      if (!dfName) {
+        // return {};
+        await dispatch('getWorkspace', { socketPost });
+        dfName = getters.currentDataset.dfName;
+      }
+      var response = await socketPost('profile', {
+        dfName,
+        username: state.session.username,
+        workspace: (state.workspace ? state.workspace.slug : undefined) || 'default',
+        key: state.key
+      }, {
+        timeout: 0
+      })
+      console.log('[DEBUG][CODE][PROFILE]',response.code)
+
+      if (!response.data.result) {
+        throw response
+      }
+
+      window.pushCode({code: response.code})
+      var dataset = JSON.parse(response.data.result)
+      dataset.dfName = dfName
+      await dispatch('setDataset', { dataset })
+      return dataset
+
+    } catch (err) {
+      if (err.code) {
+        window.pushCode({code: err.code, err: true})
+      }
+      throw err
+    }
+  },
+
+  async getProfiling ({dispatch}, { dfName, socketPost }) {
+    var promisePayload = {
+      name: 'profilingPromises',
+      action: 'loadProfiling',
+      payload: { dfName, socketPost },
+      index: dfName
+    };
+
+    return await dispatch('getPromise', promisePayload);
+  },
+
+  async loadBuffer ({ dispatch }, {dfName, socketPost}) {
+    var profiling = await dispatch('getProfiling', {dfName, socketPost});
+    return await dispatch('evalCode', {socketPost, code: '_output = '+dfName+'.ext.set_buffer("*")'})
+  },
+
+  async getBuffer ({dispatch}, { dfName, socketPost }) {
+    var promisePayload = {
+      name: 'buffersPromises',
+      action: 'loadBuffer',
+      payload: { dfName, socketPost },
+      index: dfName
+    };
+
+    return await dispatch('getPromise', promisePayload);
+  },
+
+  async getBufferWindow ({commit, dispatch, state, getters}, {from, to, slug, dfName, code, socketPost, beforeCodeEval}) {
+    slug = slug || state.workspaceConfig.slug;
+
+    var workspace = await dispatch('getWorkspace', { slug });
+
+    dfName = dfName || workspace.tabs[0].dfName;
+
+    from = from || 0;
+
+    to = to || 35; // TO-DO: 35 -> ?
+
+    //
+
+    var previewCode = '';
+    var noBufferWindow = false;
+    var forceName = false;
+
+    if (state.previewCode) {
+      previewCode = state.previewCode.code;
+      noBufferWindow = state.previewCode.noBufferWindow;
+      forceName = !!state.previewCode.datasetPreview;
+    }
+
+    var code = await getPropertyAsync(previewCode, [from, to+1]) || ''
+
+    var referenceCode = await getPropertyAsync(previewCode) || ''
+
+    await dispatch('getBuffer', { dfName: getters.currentDataset.dfName, socketPost });
+
+    if (beforeCodeEval) {
+      beforeCodeEval()
+    }
+
+    var response
+    if (getters.currentProfilePreview.done) {
+      response = await dispatch('evalCode',{ socketPost, code: `_output = _df_profile${(noBufferWindow) ? '' : '['+from+':'+(to+1)+']'}.ext.to_json("*")`})
+    } else {
+      response = await dispatch('evalCode',{ socketPost, code: `_output = ${getters.currentDataset.dfName}.ext.buffer_window("*"${(noBufferWindow) ? '' : ', '+from+', '+(to+1)})${code}.ext.to_json("*")`})
+    }
+
+    if (response.data.status === 'error') {
+      commit('setPreviewInfo', {error: response.data.error})
+    } else {
+      commit('setPreviewInfo', {error: false})
+    }
+
+    var parsed = response && response.data && response.data.result ? parseResponse(response.data.result) : undefined
+
+    var pre = forceName ? '__preview__' : ''
+    parsed.sample.columns = parsed.sample.columns.map(e=>({...e, title: pre+e.title}))
+
+    if (parsed && parsed.sample) {
+      return {
+        code: referenceCode,
+        update: getters.datasetUpdates,
+        from,
+        to,
+        sample: parsed.sample,
+        inTable: false
+      }
+    } else {
+      return false;
+    }
+
+  },
+
   async mutateAndSave ({dispatch, commit}, { mutate, payload }) {
     commit('mutation', { mutate: mutate, payload })
-    dispatch('session/saveWorkspace')
+    await dispatch('session/saveWorkspace')
   },
 
   async newDataset ({ dispatch, commit }, payload) {
     commit('newDataset', payload || {})
-    dispatch('session/saveWorkspace')
-  },
-
-  async loadDataset ({dispatch, commit}, { dfName }) {
-    // TO-DO
+    await dispatch('session/saveWorkspace')
   },
 
   async setDataset ({ dispatch, commit }, payload) {
     commit('setDataset', payload)
-    dispatch('session/saveWorkspace')
+    await dispatch('session/saveWorkspace')
   },
 
   async deleteTab ({ dispatch, commit }, index) {
     commit('deleteTab', index)
-    dispatch('session/saveWorkspace')
+    await dispatch('session/saveWorkspace')
     return index
   },
 
@@ -553,13 +1151,17 @@ export const getters = {
   currentBuffer (state) {
     try {
       var dfName = state.datasets[state.tab].dfName
-      return state.buffers[dfName]
+      return state.buffersPromises[dfName]
     } catch (error) {
       return false
     }
   },
 
-  selectionType(state) {
+  cells (state) {
+    return [...(state.dataSources || []), ...(state.commands || [])];
+  },
+
+  selectionType (state) {
     var _ds = state.datasetSelection[state.tab] || []
     if (_ds && _ds.ranged &&  _ds.ranged.values && _ds.ranged.values.length) {
       return 'values'

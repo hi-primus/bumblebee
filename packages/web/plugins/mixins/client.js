@@ -1,9 +1,5 @@
 import io from 'socket.io-client'
-import { printError } from 'bumblebee-utils'
-
-// TO-DO: this should be a VUEX store
-
-
+import { INIT_PARAMETERS } from 'bumblebee-utils'
 
 export default {
 
@@ -94,123 +90,19 @@ export default {
 
 	methods: {
 
-    async loadDataset (dfName) {
-      try {
-
-        if (!dfName) {
-          return {}
-        }
-        var response = await this.socketPost('profile', {
-          dfName,
-          username: this.$store.state.session.username,
-          workspace: (this.$store.state.session.workspace ? this.$store.state.session.workspace.slug : undefined) || 'default',
-          key: this.$store.state.key
-        }, {
-          timeout: 0
-        })
-        console.log('[DEBUG][CODE][PROFILE]',response.code)
-
-        if (!response.data.result) {
-          throw response
-        }
-
-        window.pushCode({code: response.code})
-        var dataset = JSON.parse(response.data.result)
-        dataset.dfName = dfName
-        this.$store.dispatch('setDataset', { dataset })
-        this.setBuffer(dfName)
-        return dataset
-
-      } catch (err) {
-        if (err.code) {
-          window.pushCode({code: err.code, err: true})
-        }
-        throw err
-      }
+    async getProfiling (dfName) {
+      return this.$store.dispatch('getProfiling', { dfName, socketPost: this.socketPost });
     },
 
     buffer (dfName) {
-      var promise = this.$store.state.buffers[dfName]
-      if (!promise) {
-        promise = this.evalCode('_output = '+dfName+'.ext.set_buffer("*")')
-      }
-      this.$store.commit('setBuffer', { dfName, promise })
-      return promise
-    },
-
-    unsetBuffer (dfName) {
-      this.$store.commit('setBuffer', { dfName, promise: false })
-      return false
+      return this.$store.dispatch('getBuffer', { dfName, socketPost: this.socketPost });
     },
 
     async evalCode (code) {
-      try {
-
-        if (!process.client) {
-          throw new Error('SSR not allowed')
-        }
-
-        var startTime = new Date().getTime()
-
-        var response = await this.socketPost('run', {
-          code,
-          username: this.$store.state.session.username,
-          workspace: (this.$store.state.session.workspace ? this.$store.state.session.workspace.slug : undefined) || 'default'
-        }, {
-          timeout: 0
-        })
-
-        var endTime = new Date().getTime()
-
-        response._frontTime = {
-          start: startTime/1000,
-          end: endTime/1000,
-          duration: (endTime - startTime)/1000
-        }
-
-        console.log('[DEBUG][RESULT]', response)
-        console.log('[DEBUG][CODE]', response.code)
-
-        try {
-          console.log(
-            '[DEBUG][TIMES]',
-            'front', response._frontTime,
-            'server', response._serverTime,
-            'gateway', response._gatewayTime,
-            'frontToServer', response._serverTime.start-response._frontTime.start,
-            'serverToGateway', response._gatewayTime.start-response._serverTime.start,
-            'GatewayToServer', response._serverTime.end-response._gatewayTime.end,
-            'ServerToFront', response._frontTime.end-response._serverTime.end
-          )
-        } catch (err) {
-          console.log(
-            '[DEBUG][TIMES]',
-            'front', response._frontTime,
-            'server', response._serverTime,
-            'gateway', response._gatewayTime
-          )
-        }
-
-        if (response.data.status === 'error') {
-          throw response
-        }
-
-        window.pushCode({code: response.code})
-
-        return response
-
-      } catch (err) {
-
-        if (err.code) {
-          window.pushCode({code: err.code, error: true})
-        }
-
-        console.error(err)
-
-        printError(err)
-        return err
-
-      }
+      return await this.$store.dispatch('evalCode', {
+        socketPost: this.socketPost,
+        code
+      })
     },
 
     socketPost (message, payload = {}) {
@@ -228,22 +120,19 @@ export default {
         try {
           if (!window.socket) {
 
-            var query = this.$route.query
+            var query = this.$route.query;
 
-            var parameters = {
-              engine: query.engine,
-              address: this.$route.query.address,
-              n_workers: query.n_workers || query.workers,
-              threads_per_worker: query.threads_per_worker || query.tpw,
-              reset: this.$route.query.reset,
-              kernel_address: this.$route.query.kernel_address,
-              process: this.$route.query.process,
-              processes: this.$route.query.processes
-            }
+            var parameters = {};
+
+            INIT_PARAMETERS.forEach(parameter => {
+              if (query[parameter]) {
+                parameters[parameter] = query[parameter]
+              }
+            });
 
             var initializationPayload = {
               username: this.$store.state.session.username,
-              workspace: (this.$store.state.session.workspace ? this.$store.state.session.workspace.slug : undefined) || 'default',
+              workspace: (this.$store.state.workspace ? this.$store.state.workspace.slug : undefined) || 'default',
               ...parameters
             }
             await this.startSocket ()
@@ -334,7 +223,7 @@ export default {
       return new Promise((resolve, reject)=>{
 
         let username = this.$store.state.session.username;
-        let workspace = (this.$store.state.session.workspace ? this.$store.state.session.workspace.slug : undefined) || 'default';
+        let workspace = (this.$store.state.workspace ? this.$store.state.workspace.slug : undefined) || 'default';
         let key = this.$store.state.session.key;
 
         if (!workspace) {
@@ -414,7 +303,11 @@ export default {
 
       try {
 
-        await this.$store.dispatch('session/startWorkspace', workspace)
+        var worskpacePromise = this.$store.dispatch('startWorkspace', { slug: workspace } )
+
+        commit('mutation', { mutate: 'workspacePromise', payload: worskpacePromise })
+
+        var response = await workspacePromise
 
         if (key) {
           this.$store.commit('session/mutation', {mutate: 'key', payload: key})
@@ -433,23 +326,12 @@ export default {
       }
     },
 
-    async setBuffer (dfName, updated = true) {
-      try {
-        if (!updated && this.$store.state.buffers[dfName]) {
-          return true
-        }
-        await this.evalCode('_output = '+dfName+'.ext.set_buffer("*")')
-        this.$store.commit('setBuffer', { dfName, status: true })
-      } catch (error) {
-        console.error(error)
-      }
-    },
 
     async updateSecondaryDatasets() {
       try {
         var response = await this.socketPost('datasets', {
           username: this.$store.state.session.username,
-          workspace: (this.$store.state.session.workspace ? this.$store.state.session.workspace.slug : undefined) || 'default'
+          workspace: (this.$store.state.workspace ? this.$store.state.workspace.slug : undefined) || 'default'
         })
         window.pushCode({code: response.code, unimportant: true})
         console.log('Updating secondary datasets')

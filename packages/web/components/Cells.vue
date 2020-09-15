@@ -244,6 +244,7 @@ import {
   debounce,
   newName,
   getProperty,
+  filterCells,
   multipleContent,
   hlParam,
   hlCols,
@@ -278,9 +279,6 @@ export default {
       type: Array,
       default: ()=>{return []}
     },
-    commandsDisabled: {
-      default: false
-    },
     codeError: {
       type: String,
       default: ''
@@ -299,15 +297,11 @@ export default {
       barHovered: false,
 
       activeCell: -1,
-      codeDone: '',
-      lastWrongCode: false,
       drag: false,
       currentCommand: false,
       isEditing: false,
 
-      firstRun: true,
-
-      cancelPromise: {},
+      cellsPromise: false,
 
       commandsHandlers: {
         'apply sort': {
@@ -2410,6 +2404,35 @@ export default {
       'hasSecondaryDatasets'
     ]),
 
+
+
+    lastWrongCode: {
+      get () {
+        return this.$store.state.firstRun;
+      },
+      set (value) {
+        this.$store.commit('mutation', {mutate: 'firstRun', payload: value})
+      }
+    },
+
+    firstRun: {
+      get () {
+        return this.$store.state.firstRun;
+      },
+      set (value) {
+        this.$store.commit('mutation', {mutate: 'firstRun', payload: value})
+      }
+    },
+
+    codeDone: {
+      get () {
+        return this.$store.state.codeDone;
+      },
+      set (value) {
+        this.$store.commit('mutation', {mutate: 'codeDone', payload: value})
+      }
+    },
+
     localCommands: {
       deep: true,
       get () {
@@ -2484,18 +2507,21 @@ export default {
       }
     },
 
-    localCommandsDisabled: {
+    commandsDisabled: {
       get () {
-        return this.commandsDisabled
+        return this.$store.state.commandsDisabled
       },
-      set (val) {
-        this.$emit('update:commandsDisabled',val)
+      set (value) {
+        this.$store.commit('mutation', {mutate: 'commandsDisabled', payload: value})
       }
-    }
+    },
 
   },
 
   mounted () {
+    window.getCommandHandler = (command) => {
+      this.getCommandHandler(command)
+    };
     window.runCells = ()=>{
       this.runCodeNow(true)
     }
@@ -2650,8 +2676,8 @@ export default {
     currentDataset: {
       deep: true,
       handler () {
-        if (this.localCommandsDisabled===undefined) {
-          this.localCommandsDisabled = false
+        if (this.commandsDisabled===undefined) {
+          this.commandsDisabled = false;
           this.markCells()
           this.$emit('update:codeError','')
           this.lastWrongCode = false
@@ -2662,10 +2688,6 @@ export default {
   },
 
   methods: {
-
-    setDfToTab (dfName) {
-      this.$store.commit('setDfToTab', { dfName })
-    },
 
     getNewDfName () {
 
@@ -2684,6 +2706,9 @@ export default {
       return name
     },
 
+    async runCells (force, ignoreFrom) {
+      return await this.$store.dispatch('getCellsResult', { force, ignoreFrom, socketPost: this.socketPost });
+    },
 
     forceFileDownload(url, filename){
       const link = document.createElement('a')
@@ -2819,34 +2844,15 @@ export default {
     },
 
     filterCells (newOnly = false, ignoreFrom = -1) {
-      if (newOnly) {
-        return this.cells.filter((e,i)=>((ignoreFrom<0 || i<ignoreFrom) && e.code!=='' && !e.done && !e.ignore))
-      }
-      else {
-        return this.cells.filter((e,i)=>((ignoreFrom<0 || i<ignoreFrom) && e.code!=='' && !e.ignore))
-      }
+      filterCells(this.cells, newOnly, ignoreFrom)
     },
 
-    codeText (newOnly = false, ignoreFrom = -1) {
-      if (!this.cells.length) {
-        return ''
-      }
-      return this.filterCells(newOnly, ignoreFrom).map(e=>e.code).join('\n').trim()
+    async codeText (newOnly, ignoreFrom) {
+      return await this.$store.dispatch('codeText', {newOnly, ignoreFrom});
     },
 
     async beforeRunCells (newOnly = false, ignoreFrom = -1) {
-
-      this.filterCells(newOnly, ignoreFrom).forEach(async (cell) => {
-        if (cell.payload.request && cell.payload.request.createsNew) {
-          this.setDfToTab(cell.payload.newDfName)
-        }
-        var commandHandler = this.getCommandHandler(cell)
-        if (commandHandler.beforeExecuteCode) {
-          cell = {...cell} // avoid vuex mutation
-          cell.payload = await commandHandler.beforeExecuteCode(cell.payload)
-        }
-      })
-
+      return await this.$store.dispatch('beforeRunCells', {newOnly, ignoreFrom});
     },
 
     async commandHandle (command) {
@@ -3020,12 +3026,13 @@ export default {
       this.drag = true
     },
 
-    draggableEnd (noDrag = false) {
+    async draggableEnd (noDrag = false) {
       this.drag = false
       if (window.dragType == 'cell' || noDrag) {
         this.localCommands = this.localCommands
         this.localDataSources = this.localDataSources
-        if (this.codeText().trim()==='') {
+        var codeText = await this.codeText();
+        if (codeText.trim()==='') {
           this.$emit('update:codeError','')
           this.runCode() // deleting every cell
           return;
@@ -3035,7 +3042,7 @@ export default {
       }
     },
 
-    removeCell (index, isDataSource = false) {
+    async removeCell (index, isDataSource = false) {
 
       var from = isDataSource ? this.localDataSources : this.localCommands
 
@@ -3070,7 +3077,7 @@ export default {
       }
 
       if (deleteTab) {
-        this.$store.dispatch('newDataset', { dfName: deleteTab, current: true })
+        await this.$store.dispatch('newDataset', { dfName: deleteTab, current: true })
       }
 
       if (isDataSource) {
@@ -3087,62 +3094,16 @@ export default {
       this.draggableEnd(true)
     },
 
-    markCells (mark = true, ignoreFrom = -1) {
-      var cells = [...this.cells]
-      for (let i = 0; i < this.cells.length; i++) {
-        if (ignoreFrom>=0 && i>=ignoreFrom) {
-          continue
-        }
-        cells[i] = { ...cells[i] }
-        if (cells[i].code) {
-          cells[i].done = mark
-        }
-        cells[i].error = false
-      }
-      this.cells = cells
-
-      if (mark && this.cells)
-        this.codeDone = this.codeText(false, ignoreFrom)
-      else
-        this.codeDone = ''
+    async deleteCellsError (ignoreFrom = -1) {
+      await this.$store.dispatch('markCells', { ignoreFrom, splice: true });
     },
 
-    deleteCellsError (ignoreFrom = -1) {
-      var cells = [...this.cells]
-      for (let i = cells.length - 1; i >= 0; i--) {
-        if (ignoreFrom>=0 && i>=ignoreFrom) {
-          continue
-        }
-        if (!cells[i].done && cells[i].code) {
-          cells.splice(i,1)
-        }
-      }
-      this.cells = cells
-
-      if (this.cells)
-        this.codeDone = this.codeText(false, ignoreFrom)
-      else
-        this.codeDone = ''
+    async markCells (mark, ignoreFrom) {
+      await this.$store.dispatch('markCells', { mark, ignoreFrom });
     },
 
-    markCellsError (ignoreFrom = -1) {
-      var cells = [...this.cells]
-      for (let i = 0; i < this.cells.length; i++) {
-        if (ignoreFrom>=0 && i>=ignoreFrom) {
-          continue
-        }
-        cells[i] = { ...cells[i] }
-        if (cells[i].code) {
-          cells[i].error = true
-        }
-        cells[i].done = false
-      }
-      this.cells = cells
-
-      if (this.cells)
-        this.codeDone = this.codeText(false, ignoreFrom)
-      else
-        this.codeDone = ''
+    async markCellsError (ignoreFrom = -1) {
+      await this.$store.dispatch('markCells', { ignoreFrom, error: true });
     },
 
     getOperationContent (payload) {
@@ -3214,9 +3175,9 @@ export default {
 
       var commandHandler = this.getCommandHandler(command)
       if (commandHandler.dialog) {
-        this.localCommandsDisabled = true;
+        this.commandsDisabled = true;
         await this.runCodeNow(true, index)
-        this.localCommandsDisabled = false;
+        this.commandsDisabled = false;
         command.payload._toCell = index
         this.commandHandle(command)
         this.isEditing = true
@@ -3276,95 +3237,22 @@ export default {
 
     async runCodeNow (force = false, ignoreFrom = -1) {
 
-      if (ignoreFrom>=0) {
-        force = true
-      }
-
-      var newOnly = false
-      var code = this.codeText(newOnly, ignoreFrom)
-
-      var codeDone = force ? '' : this.codeDone.trim()
-      var rerun = false
-
-      if (code==='') {
-        // console.log('[CODE MANAGER] nothing to run')
-        return false
-      }
-
-      if (code === codeDone) {
-        // console.log('[CODE MANAGER] nothing new to run')
-        return false;
-      }
-      else if (
-        ( !this.firstRun && (force || code.indexOf(codeDone)!=0 || codeDone=='' || this.lastWrongCode) )
-        ||
-        !this.socketAvailable
-      ) {
-        // console.log('[CODE MANAGER] every cell', {force, firstRun: this.firstRun, code, codeDone, lastWrongCode: this.lastWrongCode, socketAvailable: this.socketAvailable})
-        rerun = true
-      }
-      else {
-        // console.log('[CODE MANAGER] new cells only')
-        newOnly = true
-        code = this.codeText(newOnly, ignoreFrom) // new cells only
-      }
-
-      if (code===this.lastWrongCode) {
-        // console.log('[CODE MANAGER] code went wrong last time')
-        return false;
-      }
-
-      if (rerun) {
-        // console.log('[CODE MANAGER] every cell is new')
-        this.markCells(false, ignoreFrom)
-      }
-
-      var firstRun = this.firstRun;
-
-			if (firstRun) {
-        rerun = false;
-			}
-
-      this.localCommandsDisabled = true;
-
       try {
 
-        await this.beforeRunCells(newOnly, ignoreFrom)
+        var dfName = this.currentDataset.dfName;
 
-        var dfName = this.currentDataset.dfName
-
-        if (dfName) {
-          await this.unsetBuffer(dfName)
-        }
-
-        var response = await this.socketPost('cells', {
-          code,
-          username: this.$store.state.session.username,
-          workspace: (this.$store.state.session.workspace ? this.$store.state.session.workspace.slug : undefined) || 'default',
-          key: this.$store.state.key
-        }, {
-          timeout: 0
-        })
-
-        console.log('[DEBUG][CODE]',response.code)
-        window.pushCode({code: response.code})
-
-        this.localCommandsDisabled = false;
-
-        if (!response.data || !response.data.result) {
-          throw response
-        }
+        var cellsResult = await this.runCells(force, ignoreFrom)
 
         var dataset
 
         try {
-          dataset = await this.loadDataset(dfName)
+          dataset = await this.getProfiling(dfName)
         } catch (err) {
           err.message = '(Error on profiling)' + err.message
           throw err
         }
 
-        if (firstRun) {
+        if (this.firstRun) {
           this.firstRun = false;
         }
 
@@ -3378,8 +3266,6 @@ export default {
 
       } catch (error) {
 
-        if (error.profilingError)
-
         if (error.code) {
           window.pushCode({code: error.code, error: true})
         }
@@ -3389,11 +3275,15 @@ export default {
         this.markCellsError(ignoreFrom)
 
         this.lastWrongCode = code
-        this.localCommandsDisabled = undefined;
+        this.commandsDisabled = undefined;
 
       }
 
-      if (this.codeText() !== code) {
+      var codeText = await this.codeText();
+
+      var code = cellsResult.originalCode;
+
+      if (codeText !== code) {
         this.runCodeNow(false)
       }
 
