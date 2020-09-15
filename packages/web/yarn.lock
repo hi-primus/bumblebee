@@ -2528,7 +2528,8 @@ builtin-status-codes@^3.0.0:
   integrity sha1-hZgoeOIbmOHGZCXgPQF0eI9Wnug=
 
 "bumblebee-utils@link:../bumblebee-utils":
-  version "1.0.0"
+  version "0.0.0"
+  uid ""
 
 bytes@3.0.0:
   version "3.0.0"
@@ -7449,9 +7450,8 @@ optimize-css-assets-webpack-plugin@^5.0.3:
     last-call-webpack-plugin "^3.0.0"
 
 "optimus-code-api@link:../optimus-code-api":
-  version "1.0.0"
-  dependencies:
-    bumblebee-utils "link:../bumblebee-utils"
+  version "0.0.0"
+  uid ""
 
 optionator@^0.8.1, optionator@^0.8.3:
   version "0.8.3"
