@@ -470,6 +470,39 @@ export const transformDateFromPython = (string) => {
 
 // constants
 
+export const INIT_PARAMETERS = {
+  'engine': 'private',
+  'jupyter_ip': 'private',
+  'jupyter_port': 'private',
+  'reset': 'private',
+  'address': 'string', //?
+  'n_workers': 'int',
+  'processes': 'boolean',
+  'threads_per_worker': 'int',
+  'scheduler_port': 'int',
+  'silence_logs': 'int',
+  'kernel_address': 'string',
+  'process': 'string',
+  'host': 'string',
+  'dashboard_address': 'string',
+  'diagnostics_port': 'int',
+  'asynchronous': 'boolean',
+  'blocked_handlers': 'string array',
+  'service_kwargs': 'dict',
+  'Security': 'bool', // Security or bool
+  'protocol': 'string',
+  'interface': 'string',
+  'worker_class': 'Worker',
+  'worker_kwargs': 'kwargs',
+  'kwargs': 'kwargs',
+  'name': 'string',
+  'worker_memory': 'string',
+  'worker_cpu': 'int',
+  'scheduler_memory': 'string',
+  'scheduler_cpu': 'int',
+  'software': 'string'
+}
+
 export const TYPES = {
   INT: "int",
   DECIMAL: "decimal",
@@ -620,6 +653,7 @@ export default {
   objectMap,
   transformDateToPython,
   transformDateFromPython,
+  INIT_PARAMETERS,
   TYPES,
   TYPES_HINTS,
   TYPES_NAMES,

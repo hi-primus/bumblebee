@@ -1,3 +1,5 @@
+import { INIT_PARAMETERS } from 'bumblebee-utils';
+
 const codeTraceback = (code = '') => `
 
 _use_time = True
@@ -58,19 +60,77 @@ res.update({'_gatewayTime': {'start': _start_time, 'end': _end_time, 'duration':
 json.dumps(res,  default=_json_default, ensure_ascii=False)
 `;
 
-const initMin = (payload) =>
-	`
-op = Optimus("${payload?.engine || 'dask'}",` +
-	(payload.address ? ` address="${payload.address}",` : '') +
-	` threads_per_worker=${payload.tpw || 8}, n_workers=${
-		payload.workers || 1
-	}, comm=True)
-`;
+const initializationParameters = ( parameters = {} ) => {
+  let str = ''
+  Object.entries(parameters).forEach(([key, value]: [string, any])=>{
 
-const init = (payload) =>
-  `
+    if (value!==undefined) {
 
-reset = True # ${(payload?.reset != '0') ? 'True' : 'False'}
+      switch (INIT_PARAMETERS[key]) {
+        case 'int':
+          str += `, ${key}=${+value}`;
+          break;
+
+        case 'string':
+          str += `, ${key}="${value}"`;
+          break;
+
+        case 'boolean':
+          str += `, ${key}=${(value && value!=0 && value!='false') ? 'True' : 'False'}`;
+          break;
+
+        case 'int array':
+          str += `, ${key}=[${value.map(v=>+v).join(', ')}]`;
+          break;
+
+        case 'string array':
+          str += `, ${key}=["${value.join('", "')}"]`;
+          break;
+
+        case 'boolean array':
+          str += `, ${key}=["${value.map(v=>(v && v!=0 && v!='false') ? 'True' : 'False').join('", "')}"]`;
+          break;
+
+        case 'dict':
+          str += `, ${key}={${Object.entries(value).map(([key, v]: [string, string])=>`"${key}": "${v}"`).join(', ')}}`;
+          break;
+
+        case 'kwargs':
+          str += `, ${Object.entries(value).map(([key, v]: [string, string])=>`${key}="${v}"`).join(', ')}`;
+          break;
+
+      }
+
+    }
+  })
+
+  return str;
+}
+
+const getParams = payload => {
+  let params = {...payload};
+  params.engine = (params.engine !== undefined) ? params.engine : "dask"
+  params.threads_per_worker = (params.threads_per_worker !== undefined) ? params.threads_per_worker : 8
+  params.n_workers = (params.n_workers !== undefined) ? params.n_workers : 1
+
+  return { params, functionParams: initializationParameters(params) };
+}
+
+const initMin = (payload) => {
+
+  let { params, functionParams } = getParams(payload);
+
+  return  `op = Optimus("${params?.engine || 'dask'}"` +
+    (params?.address ? ` address="${params.address}",` : '') +
+    functionParams + `, comm=True)`;
+}
+
+const init = (payload) => {
+  let { params, functionParams } = getParams(payload);
+
+  return `
+
+reset = True # ${(params?.reset != '0') ? 'True' : 'False'}
 
 try:
     json; date; datetime; ipython_vars; _json_default; traceback;
@@ -95,9 +155,7 @@ except Exception:
 
 res = { 'kernel': 'ok' }
 
-engine = "${payload.engine || 'dask'}"
-tpw = ${payload.tpw || 8}
-workers = ${payload.workers || 1}
+engine = "${params.engine}"
 
 try:
     from optimus.expressions import reserved_words, Parser
@@ -121,18 +179,17 @@ try:
         pass
 except Exception:
     from optimus import Optimus
-    op = Optimus(engine,` +
-	(payload.address ? ` address="${payload.address}",` : '') +
-	` threads_per_worker=tpw, n_workers=workers, comm=True)
+    op = Optimus(engine${functionParams}, memory_limit="1G", comm=True)
     op
     op.__version__
     op.engine
-    res.update({'optimus': 'ok init', 'optimus_version': op.__version__, 'engine': op.engine, 'threads_per_worker': tpw, 'workers': workers})
+    res.update({'optimus': 'ok init', 'optimus_version': op.__version__, 'engine': op.engine})
 
 if _use_time:
     _end_time = datetime.utcnow().timestamp()
     res.update({'_gatewayTime': {'start': _start_time, 'end': _end_time, 'duration': _end_time-_start_time}})
 json.dumps(res,  default=_json_default, ensure_ascii=False)
 `;
+}
 
 export default { init, datasets, code, datasetsMin, initMin };

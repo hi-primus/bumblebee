@@ -152,10 +152,11 @@ const assertSession = async function (
 };
 
 export const requestToKernel = async function (type, sessionId, payload) {
+  var kernelAddress = payload?.jupyter_ip + payload?.jupyter_port;
 	const connection = await assertSession(
 		sessionId,
 		type == 'init',
-		payload ? payload.kernel_address : undefined,
+		kernelAddress ? kernelAddress : undefined,
 	);
 
 	if (!connection) {

@@ -394,7 +394,7 @@ export default {
 
         var parameters = {};
 
-        INIT_PARAMETERS.forEach(parameter => {
+        Object.keys(INIT_PARAMETERS).forEach(parameter => {
           if (query[parameter]) {
             parameters[parameter] = query[parameter]
           }
