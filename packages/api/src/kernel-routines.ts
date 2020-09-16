@@ -60,13 +60,13 @@ res.update({'_gatewayTime': {'start': _start_time, 'end': _end_time, 'duration':
 json.dumps(res,  default=_json_default, ensure_ascii=False)
 `;
 
-const initializationParameters = ( parameters = {} ) => {
+const initializationParameters = ( parameters: any = {} ) => {
   let str = ''
   Object.entries(parameters).forEach(([key, value]: [string, any])=>{
 
-    if (value!==undefined) {
+    if (value!==undefined && INIT_PARAMETERS[key] && (!INIT_PARAMETERS[key].engines || INIT_PARAMETERS[key].engines.includes(parameters.engine))) {
 
-      switch (INIT_PARAMETERS[key]) {
+      switch (INIT_PARAMETERS[key].type) {
         case 'int':
           str += `, ${key}=${+value}`;
           break;
@@ -100,27 +100,42 @@ const initializationParameters = ( parameters = {} ) => {
           break;
 
       }
-
     }
+
+
   })
 
   return str;
 }
 
 const getParams = payload => {
-  let params = {...payload};
+  let params = {...(payload || {})};
+
   params.engine = (params.engine !== undefined) ? params.engine : "dask"
   params.threads_per_worker = (params.threads_per_worker !== undefined) ? params.threads_per_worker : 8
   params.n_workers = (params.n_workers !== undefined) ? params.n_workers : 1
 
-  return { params, functionParams: initializationParameters(params) };
+  let functionParams = initializationParameters(params);
+
+  switch (params.engine) {
+    case 'dask_coiled':
+      params.coiled = true;
+      params.engine = 'dask';
+      break
+    case 'dask_cudf_coiled':
+      params.coiled = true;
+      params.engine = 'dask_cudf';
+      break
+  }
+
+  return { params, functionParams };
 }
 
 const initMin = (payload) => {
 
   let { params, functionParams } = getParams(payload);
 
-  return  `op = Optimus("${params?.engine || 'dask'}"` +
+  return  `op = Optimus("${params.engine}"` +
     (params?.address ? ` address="${params.address}",` : '') +
     functionParams + `, comm=True)`;
 }
