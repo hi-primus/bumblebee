@@ -414,15 +414,10 @@ export const setKernel = function (sessionId, kernelObject) {
 
 const deleteKernel = async function (sessionId) {
 	try {
-		if (!checkKernel(sessionId)) {
+		if (checkKernel(sessionId)) {
 			const _id = kernels[sessionId].id;
 			const ka = kernels[sessionId].kernel_address || 0;
-			// const kernelResponse = await request({
-			// 	uri: `${kernelBase(ka)}/api/kernels/${_id}`,
-			// 	method: 'DELETE',
-			// 	headers: {},
-			// });
-			await axios.delete(`${kernelBase(ka)}/api/kernels/${_id}`);
+			const kernelResponse = await axios.delete(`${kernelBase(ka)}/api/kernels/${_id}`);
 
 			kernels[sessionId].id = false;
 			console.log('Deleting Session', sessionId, _id);
