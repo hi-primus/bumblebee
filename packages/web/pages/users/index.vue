@@ -1,7 +1,7 @@
 <template>
 	<Layout>
 		<v-layout row wrap class="elevation-0 d-flex flex-column align-top justify-start">
-      <div class="workspace-container" data-name="workspace">
+      <div class="bb-container" data-name="users">
         <MoreMenu
           :items="moreMenu"
         >
@@ -30,7 +30,6 @@ import Layout from "@/components/Layout"
 import UsersList from "@/components/UsersList"
 import MoreMenu from "@/components/MoreMenu"
 import clientMixin from "@/plugins/mixins/client"
-// import { printError } from "@/utils/functions.js"
 
 export default {
 	components: {
