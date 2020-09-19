@@ -40,24 +40,26 @@ export default {
         return false
       }
       var code = window.code
+      var code2;
       if (errors===false) {
-        code = code.filter(e=>!e.error)
+        code2 = code.filter(e=>!e.error)
       } else if (typeof errors=='number') {
         code = code.reverse()
         errors = Math.ceil(errors)
-        code = code.filter(e=>{
+        code2 = code.filter(e=>{
           if (e.error && !errors) {
             errors--
             return false
           }
           return true
-        })
+        });
         code = code.reverse()
+        code2 = code2.reverse()
       }
       if (!unimportant) {
-        code = code.filter(e=>!e.unimportant)
+        code2 = code2.filter(e=>!e.unimportant)
       }
-      console.log('[CODE]', code.map(e=>e.code).join('\n'))
+      console.log('[CODE]', code2.map(e=>e.code).join('\n'))
       return true
     }
   },

@@ -71,6 +71,10 @@ const initializationParameters = ( parameters: any = {} ) => {
           str += `, ${key}=${+value}`;
           break;
 
+        case 'const':
+          str += `, ${key}=${value}`;
+          break;
+
         case 'string':
           str += `, ${key}="${value}"`;
           break;
@@ -81,6 +85,10 @@ const initializationParameters = ( parameters: any = {} ) => {
 
         case 'int array':
           str += `, ${key}=[${value.map(v=>+v).join(', ')}]`;
+          break;
+
+        case 'const array':
+          str += `, ${key}=[${value.map(v=>v).join(', ')}]`;
           break;
 
         case 'string array':
@@ -131,17 +139,28 @@ const getParams = payload => {
   return { params, functionParams };
 }
 
-const initMin = (payload) => {
+const init = (payload, min = false) => {
 
   let { params, functionParams } = getParams(payload);
 
-  return  `op = Optimus("${params.engine}"` +
-    (params?.address ? ` address="${params.address}",` : '') +
-    functionParams + `, comm=True)`;
-}
+  let opInit = '';
 
-const init = (payload) => {
-  let { params, functionParams } = getParams(payload);
+  if (params.coiled) {
+    opInit = 'import coiled;' +
+      // `coiled.create_software_environment(name='zarr', conda=['xarray', 'zarr','dask=2.2.23','distributed']);` +
+      `coiled.create_cluster_configuration(${functionParams.substr(2)});` +
+      `cluster = coiled.Cluster(configuration='${params.name}');` +
+      `res.update({"cluster_name": cluster.name});` +
+      `from dask.distributed import Client;` +
+      `client = Client(name=cluster.name);` +
+      `op = Optimus(engine, session=client, memory_limit="1G", comm=True)`
+  } else {
+    opInit = `op = Optimus(engine${functionParams}, memory_limit="1G", comm=True)`
+  }
+
+  if (min) {
+    return opInit;
+  }
 
   return `
 
@@ -149,6 +168,7 @@ reset = True # ${(params?.reset != '0') ? 'True' : 'False'}
 
 try:
     json; date; datetime; ipython_vars; _json_default; traceback;
+    assert (not reset)
 except Exception:
     reset = True
     from datetime import datetime, date
@@ -194,10 +214,7 @@ try:
         pass
 except Exception:
     from optimus import Optimus
-    op = Optimus(engine${functionParams}, memory_limit="1G", comm=True)
-    op
-    op.__version__
-    op.engine
+    ${opInit}
     res.update({'optimus': 'ok init', 'optimus_version': op.__version__, 'engine': op.engine})
 
 if _use_time:
@@ -207,4 +224,4 @@ json.dumps(res,  default=_json_default, ensure_ascii=False)
 `;
 }
 
-export default { init, datasets, code, datasetsMin, initMin };
+export default { init, datasets, code, datasetsMin };

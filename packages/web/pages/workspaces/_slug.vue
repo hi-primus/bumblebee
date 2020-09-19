@@ -1,14 +1,20 @@
 <template>
 	<Layout>
 		<v-layout row wrap class="elevation-0 d-flex flex-column align-top justify-start">
+      <ConfigPanel
+        v-if="windowDialog  === 'configWorkspace'"
+        @done="doneConfig"
+      />
       <v-dialog
         data-name="Workspaces"
-        v-show="workspacesDialog === true"
-        :value="workspacesDialog"
-        @click:outside="workspacesDialog = false"
+        v-else-if="windowDialog"
+        :value="windowDialog"
+        @click:outside="windowDialog = false"
         max-width="1220"
       >
-        <WorkspacesList/>
+        <WorkspacesList v-if="windowDialog  === 'workspaces'"/>
+        <ConfigsList v-else-if="windowDialog  === 'configs'"/>
+        <ClustersList v-else-if="windowDialog  === 'clusters'"/>
       </v-dialog>
       <template v-if="$store.state.datasets.length==0 && false" data-name="noKernel (deprecated)">
         <div class="center-screen-inside black--text">
@@ -58,8 +64,8 @@
         <div
           data-name="workspace"
           v-show="workspaceStatus!=='loading'"
-          class="workspace-container"
-          id="workspace-container"
+          class="bb-container"
+          id="bb-container"
           @drop.prevent="addFile"
           @dragend.prevent="dragLeave"
           @dragover.prevent
@@ -207,6 +213,9 @@
 import Layout from "@/components/Layout"
 import TableBar from "@/components/TableBar"
 import WorkspacesList from "@/components/WorkspacesList"
+import ConfigPanel from "@/components/ConfigPanel"
+import ConfigsList from "@/components/ConfigsList"
+import ClustersList from "@/components/ClustersList"
 import MoreMenu from "@/components/MoreMenu"
 import clientMixin from "@/plugins/mixins/client"
 import dataTypesMixin from "@/plugins/mixins/data-types"
@@ -222,6 +231,9 @@ export default {
 		Layout,
     TableBar,
     WorkspacesList,
+    ConfigPanel,
+    ConfigsList,
+    ClustersList,
     MoreMenu
 	},
 
@@ -246,7 +258,7 @@ export default {
 
 	data () {
 		return {
-      workspacesDialog: false,
+      windowDialog: false,
 			isOperating: false,
 			confirmDelete: -1,
       typesInput: '',
@@ -293,7 +305,10 @@ export default {
       let menu = []
 
       menu = [
-        { text: 'Workspaces', click: this.showWorkspaces },
+        { text: 'Workspaces', click: ()=>this.showWindowDialog('workspaces') },
+        { text: 'Configure Workspace', click: ()=>this.showWindowDialog('configWorkspace') },
+        // { text: 'Configs', click: ()=>this.showWindowDialog('configs') },
+        // { text: 'Clusters', click: ()=>this.showWindowDialog('clusters') },
         { divider: true },
         { text: 'Sign out', click: this.signOut }
       ]
@@ -372,12 +387,20 @@ export default {
       }
     },
 
-    showWorkspaces () {
-      this.workspacesDialog = true
+    showWindowDialog (type) {
+      this.windowDialog = type;
     },
 
     async runCodeNow () {
       return await this.$refs.tableBar.runCodeNow()
+    },
+
+    async doneConfig (values) {
+      this.windowDialog = false;
+      if (values) {
+        await this.$store.dispatch('session/cleanSession');
+        await this.initializeWorkspace();
+      }
     },
 
     async initializeWorkspace () {
@@ -390,17 +413,7 @@ export default {
 
         var slug = this.$route.params.slug;
 
-        var query = this.$route.query;
-
-        var parameters = {};
-
-        Object.keys(INIT_PARAMETERS).forEach(parameter => {
-          if (query[parameter]) {
-            parameters[parameter] = query[parameter]
-          }
-        });
-
-        var payload = { slug, parameters };
+        var payload = { slug };
 
         this.$store.commit('mutation', { mutate: 'workspaceConfig', payload });
 
@@ -457,17 +470,23 @@ export default {
 
     async initializeOptimus (slug) {
 
-      var query = this.$route.query;
+      if (!Object.keys(this.$store.state.localConfig).length) {
 
-      var parameters = {};
+        console.warn('Getting config from query parameters');
+        var query = this.$route.query;
+        var parameters = {};
+        Object.keys(INIT_PARAMETERS).forEach(parameter => {
+          if (query[parameter]) {
+            parameters[parameter] = query[parameter]
+          }
+        });
 
-      Object.keys(INIT_PARAMETERS).forEach(parameter => {
-        if (query[parameter]) {
-          parameters[parameter] = query[parameter]
-        }
-      });
+        this.$store.commit('mutation', { mutate: 'localConfig', payload: parameters });
 
-      return await this.$store.dispatch('getOptimus', { slug, parameters, socketPost: this.socketPost } )
+      }
+
+
+      return await this.$store.dispatch('getOptimus', { slug, socketPost: this.socketPost } )
     },
 
     async signOut (waiting = true) {

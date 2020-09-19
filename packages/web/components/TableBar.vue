@@ -425,7 +425,7 @@ import VegaEmbed from '@/components/VegaEmbed'
 import clientMixin from '@/plugins/mixins/client'
 import dataTypesMixin from '@/plugins/mixins/data-types'
 import applicationMixin from '@/plugins/mixins/application'
-import { copyToClipboard, namesToIndices, getProperty, TYPES_NAMES, TIME_NAMES } from 'bumblebee-utils'
+import { copyToClipboard, namesToIndices, getProperty, ENGINES, TYPES_NAMES, TIME_NAMES } from 'bumblebee-utils'
 import { mapState, mapGetters } from 'vuex'
 
 export default {
@@ -457,10 +457,10 @@ export default {
 		return {
 
       engines: [
-        {name: 'dask', prettyName: 'Dask', init: '"dask", n_workers=1, threads_per_worker=8, processes=False, memory_limit="3G", comm=True'},
-        {name: 'cudf', prettyName: 'CUDF', init: '"cudf"'},
-        {name: 'pandas', prettyName: 'Pandas', init: '"cudf"'},
-        {name: 'dask_cudf', prettyName: 'Dask CUDF', init: '"dask_cudf", process=True'},
+        {name: 'dask', prettyName: ENGINES.dask, init: '"dask", n_workers=1, threads_per_worker=8, processes=False, memory_limit="3G", comm=True'},
+        {name: 'dask_cudf', prettyName: ENGINES.dask_cudf, init: '"dask_cudf", process=True'},
+        {name: 'cudf', prettyName: ENGINES.cudf, init: '"cudf"'},
+        {name: 'pandas', prettyName: ENGINES.pandas, init: '"cudf"'},
         {name: 'vaex', prettyName: 'Vaex'},
       ],
 

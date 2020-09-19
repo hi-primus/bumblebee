@@ -78,7 +78,7 @@ export class AppGateway
 				console.error('[INITIALIZATION ERROR]', err);
 				result.status = 'error';
 			}
-			const code = kernelRoutines.initMin(payload);
+			const code = kernelRoutines.init(payload, true);
 			client.emit('reply', {
 				data: result,
 				code,

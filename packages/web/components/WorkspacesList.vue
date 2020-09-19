@@ -1,15 +1,15 @@
 <template>
   <v-card>
-    <FormDialog ref="formDialog"/>
+    <FormDialog focus ref="formDialog"/>
     <v-card-title>
       Workspaces
       <v-spacer></v-spacer>
-      <v-form @submit.prevent="createNewWorkspace({name: createName})">
+      <v-form @submit.prevent="createNewElement({name: createName})">
         <v-text-field
           v-model="createName"
           label="New workspace"
           append-icon="add"
-          @click:append="createNewWorkspace({name: createName})"
+          @click:append="createNewElement({name: createName})"
           outlined
           dense
           single-line
@@ -17,13 +17,6 @@
         >
         </v-text-field>
       </v-form>
-      <!-- <v-text-field
-        v-model="search"
-        append-icon="mdi-magnify"
-        label="Search"
-        single-line
-        hide-details
-      ></v-text-field> -->
     </v-card-title>
     <v-data-table
       :items="tableItems"
@@ -33,9 +26,8 @@
       :server-items-length="total"
       class="workspaces-table manager-table"
       :loading="loading"
-      @click:row="workspaceClicked"
+      @click:row="rowClicked"
     >
-      <!-- class="columns-table" -->
       <template v-slot:item.activeKernel="{ item }">
         <span
           :class="{
@@ -72,7 +64,7 @@
           <v-list flat dense style="max-height: 400px; min-width: 160px;" class="scroll-y">
             <v-list-item-group color="black">
               <v-list-item
-                @click="editWorkspace(item)"
+                @click="editElement(item)"
               >
                 <v-list-item-content>
                   <v-list-item-title>
@@ -81,7 +73,7 @@
                 </v-list-item-content>
               </v-list-item>
               <!-- <v-list-item
-                @click="duplicateWorkspace(item)"
+                @click="duplicateElement(item)"
               >
                 <v-list-item-content>
                   <v-list-item-title>
@@ -90,7 +82,7 @@
                 </v-list-item-content>
               </v-list-item> -->
               <v-list-item
-                @click="deleteWorkspace(item)"
+                @click="deleteElement(item)"
               >
                 <v-list-item-content>
                   <v-list-item-title color="error">
@@ -108,7 +100,7 @@
       dark
       small
       color="primary"
-      @click="createNewWorkspaceUsingForm()"
+      @click="createNewElementUsingForm()"
       style="top: calc(100% - 50px); position: absolute; left: 12px;"
     >
       <v-icon>add</v-icon>
@@ -155,7 +147,7 @@ export default {
 
   methods: {
 
-    async workspaceClicked (workspace) {
+    async rowClicked (workspace) {
       if (this.$route.params.slug !== workspace.slug) {
         await this.$store.dispatch('session/cleanSession')
         this.$router.push({path: `/workspaces/${workspace.slug}`, query: this.$route.query }) // TO-DO: slug
@@ -167,7 +159,7 @@ export default {
       return await this.$refs.formDialog.fromForm(form)
     },
 
-    async deleteWorkspace (workspace) {
+    async deleteElement (workspace) {
       try {
         let id = workspace._id
         let found = this.items.findIndex(w=>w._id === id)
@@ -177,45 +169,46 @@ export default {
           request: 'delete',
           path: `/workspaces/${id}`,
         })
-        await this.updateWorkspaces()
+        await this.updateElements()
       } catch (err) {
         console.error(err)
       }
     },
 
-    async createNewWorkspaceUsingForm () {
-      let form = await this.fromForm({
+    async createNewElementUsingForm () {
+      let values = await this.fromForm({
         text: 'Create new workspace',
         fields: [
           {
+            key: 'name',
             name: '',
-            placeholder: undefined,
             value: '',
-            label: 'New workspace'
+            props: {
+              placeholder: undefined,
+              label: 'New workspace'
+            }
           },
           {
-            textarea: true,
+            key: 'description',
+            is: 'v-textarea',
             name: '',
-            placeholder: undefined,
             value: '',
-            label: 'Description'
+            props: {
+              placeholder: undefined,
+              label: 'Description'
+            }
           },
         ]
       })
 
-      if (!form) {
+      if (!values) {
         return false
       }
 
-      var payload = {
-        name: form.fields[0].value,
-        description: form.fields[1].value
-      }
-
-      await this.createNewWorkspace(payload)
+      await this.createNewElement(values)
     },
 
-    async createNewWorkspace (payload) {
+    async createNewElement (payload) {
       var pushed = -1
       if (!payload.name) {
         return false
@@ -234,7 +227,7 @@ export default {
           path: '/workspaces',
           payload
         })
-        await this.updateWorkspaces()
+        await this.updateElements()
       } catch (err) {
         if (pushed>=0) {
           this.$delete(this.items, pushed-1)
@@ -243,35 +236,36 @@ export default {
       }
     },
 
-    async editWorkspace (workspace) {
+    async editElement (workspace) {
 
       try {
-        let form = await this.fromForm({
+        let values = await this.fromForm({
           text: 'Edit workspace',
           fields: [
             {
+              key: 'name',
               name: '',
-              placeholder: workspace.name,
               value: workspace.name,
-              label: 'Name'
+              props: {
+                placeholder: workspace.name,
+                label: 'Name'
+              }
             },
             {
-              textarea: true,
+              key: 'description',
+              is: 'v-textarea',
               name: '',
-              placeholder: undefined,
               value: workspace.description,
-              label: 'Description'
+              props: {
+                placeholder: undefined,
+                label: 'Description'
+              }
             },
           ]
         })
 
-        if (!form) {
+        if (!values) {
           return false
-        }
-
-        var payload = {
-          name: form.fields[0].value,
-          description: form.fields[1].value
         }
 
         let id = workspace._id
@@ -279,23 +273,23 @@ export default {
         let found = this.items.findIndex(w=>w._id === id)
         let item = this.items[found]
         item.loading = true
-        item = {...item, ...payload}
+        item = {...item, ...values}
         this.$set(this.items, found, item)
         // this.$delete(this.items, found)
 
         await this.$store.dispatch('request',{
           request: 'put',
           path: `/workspaces/${id}`,
-          payload
+          payload: values
         })
-        await this.updateWorkspaces()
+        await this.updateElements()
       } catch (err) {
         console.error(err)
       }
 
     },
 
-    async duplicateWorkspace (workspace) {
+    async duplicateElement (workspace) {
       try {
          this.items.push({
           ...workspace,
@@ -312,19 +306,19 @@ export default {
             name: workspace.name+' copy' // TO-DO: copyName function
           }
         })
-        await this.updateWorkspaces()
+        await this.updateElements()
       } catch (err) {
         console.error(err)
       }
     },
 
-    async updateWorkspaces () {
-      let {items, total} = await this.getWorkspaces()
+    async updateElements () {
+      let {items, total} = await this.getElements()
       this.items = items
       this.total = total
     },
 
-    async getWorkspaces () {
+    async getElements () {
       try {
         this.loading = true
         let { sortBy, sortDesc, page, itemsPerPage } = this.options
@@ -367,22 +361,6 @@ export default {
   },
 
   watch: {
-    form: {
-      deep: true,
-      handler (form) {
-        if (form.promise) {
-          setTimeout(()=>{
-            var ref = this.$refs.formInput
-            if (ref && ref.$el) {
-              var el = ref.$el.getElementsByTagName('input')[0]
-              if (el) {
-                el.focus()
-              }
-            }
-          }, 100)
-        }
-      }
-    },
     total: {
       immediate: true,
       handler (total) {
@@ -392,7 +370,7 @@ export default {
     options: {
       deep: true,
       async handler () {
-        this.updateWorkspaces()
+        this.updateElements()
       },
     },
   }

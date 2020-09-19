@@ -2,17 +2,21 @@
   <v-card>
     <FormDialog focus ref="formDialog"/>
     <v-card-title>
-      Users
+      Configurations
       <v-spacer></v-spacer>
-      <v-text-field
-        v-model="search"
-        label="Search"
-        append-icon="mdi-magnify"
-        outlined
-        dense
-        single-line
-        hide-details
-      ></v-text-field>
+      <v-form @submit.prevent="createNewElement({name: createName})">
+        <v-text-field
+          v-model="createName"
+          label="New configuration"
+          append-icon="add"
+          @click:append="createNewElement({name: createName})"
+          outlined
+          dense
+          single-line
+          hide-details
+        >
+        </v-text-field>
+      </v-form>
     </v-card-title>
     <v-data-table
       :items="tableItems"
@@ -20,18 +24,15 @@
       :mobile-breakpoint="0"
       :options.sync="options"
       :server-items-length="total"
-      item-key="_id"
-      v-model="selected"
-      show-select
-      class="users-table manager-table"
+      class="configurations-table manager-table"
       :loading="loading"
+      @click:row="rowClicked"
     >
-      <!-- class="columns-table" -->
-      <template v-slot:item.active="{ item }">
+      <template v-slot:item.activeKernel="{ item }">
         <span
           :class="{
-            'primary--text': item.active,
-            'grey--text': !item.active
+            'primary--text': item.activeKernel,
+            'grey--text': !item.activeKernel
           }"
           class="pl-3"
         >●</span>
@@ -67,10 +68,19 @@
               >
                 <v-list-item-content>
                   <v-list-item-title>
-                    Edit user info
+                    Edit info
                   </v-list-item-title>
                 </v-list-item-content>
               </v-list-item>
+              <!-- <v-list-item
+                @click="duplicateElement(item)"
+              >
+                <v-list-item-content>
+                  <v-list-item-title>
+                    Duplicate
+                  </v-list-item-title>
+                </v-list-item-content>
+              </v-list-item> -->
               <v-list-item
                 @click="deleteElement(item)"
               >
@@ -90,12 +100,10 @@
       dark
       small
       color="primary"
-      @click="activateSelected()"
-      v-show="selected.length"
+      @click="createNewElementUsingForm()"
       style="top: calc(100% - 50px); position: absolute; left: 12px;"
     >
-      <v-icon v-if="willActivate">check</v-icon>
-      <v-icon v-else>close</v-icon>
+      <v-icon>add</v-icon>
     </v-btn>
   </v-card>
 </template>
@@ -103,7 +111,6 @@
 <script>
 
 import FormDialog from "@/components/FormDialog"
-import { debounce, throttle } from 'bumblebee-utils'
 
 export default {
 
@@ -117,13 +124,19 @@ export default {
       total: undefined,
       items: [],
       // search: false,
-      search: '',
-      selected: [],
+      createName: '',
+      form: {
+        promise: false,
+        text: false,
+        label: false,
+        value: false
+      },
       headers: [
-        { value: 'data-table-select', width: '1%'},
-        { text: 'Active', sortable: true, width: '1%', value: 'active', align: 'left' },
-        { text: 'Username', sortable: true, width: '8%', value: 'username' },
-        { text: 'E-mail', sortable: true, width: '8%', value: 'email' },
+        { text: 'Active', sortable: true, width: '1%', value: 'activeKernel', align: 'left' },
+        { text: 'Configuration', sortable: true, width: '8%', value: 'name' },
+        { text: 'Description', sortable: true, width: '12%', value: 'description' },
+        { text: 'Tabs', sortable: true, width: '2%', value: 'tabs' },
+        { text: 'Data sources', sortable: true, width: '2%', value: 'dataSourcesCount' },
         { text: 'Last modification', sortable: true, width: '6%', value: 'updatedAt'},
         { text: 'Created', sortable: true, width: '6%', value: 'createdAt'},
         { text: '', sortable: false, width: '1%', value: 'menu'}
@@ -134,20 +147,24 @@ export default {
 
   methods: {
 
+    async rowClicked (configuration) {
+      // openMenu
+      this.$emit('click:configuration',configuration)
+    },
+
     async fromForm (form) {
       return await this.$refs.formDialog.fromForm(form)
     },
 
-    async deleteElement (user) {
+    async deleteElement (configuration) {
       try {
-        let id = user._id
-
+        let id = configuration._id
         let found = this.items.findIndex(w=>w._id === id)
         this.$delete(this.items, found)
 
         await this.$store.dispatch('request',{
           request: 'delete',
-          path: `/users/${id}`,
+          path: `/configurations/${id}`,
         })
         await this.updateElements()
       } catch (err) {
@@ -155,51 +172,86 @@ export default {
       }
     },
 
-    async activateSelected () {
-      var activate = this.willActivate
-      var users = this.selected.map(u=>u._id).join(',')
-      var response = await this.$store.dispatch('request',{
-        request: 'post',
-        path: `/users/${activate ? 'activate' : 'deactivate'}`,
-        payload: {
-          users
-        }
+    async createNewElementUsingForm () {
+      let values = await this.fromForm({
+        text: 'Create new configuration',
+        fields: [
+          {
+            key: 'name',
+            name: '',
+            placeholder: undefined,
+            value: '',
+            label: 'New configuration'
+          },
+          {
+            key: 'description',
+            is: 'v-textarea',
+            name: '',
+            placeholder: undefined,
+            value: '',
+            label: 'Description'
+          },
+        ]
       })
-      await this.updateElements()
-      this.selected = []
 
+      if (!values) {
+        return false
+      }
+
+      await this.createNewElement(values)
     },
 
-    async editElement (user) {
+    async createNewElement (payload) {
+      var pushed = -1
+      if (!payload.name) {
+        return false
+      }
+      pushed = this.items.push({
+        name: payload.name,
+        description: payload.description,
+        createdAt: false,
+        updatedAt: false,
+        loading: true,
+        _id: false
+      })
+      try {
+        await this.$store.dispatch('request',{
+          request: 'post',
+          path: '/configurations',
+          payload
+        })
+        await this.updateElements()
+      } catch (err) {
+        if (pushed>=0) {
+          this.$delete(this.items, pushed-1)
+        }
+        console.error(err)
+      }
+    },
+
+    async editElement (configuration) {
 
       try {
         let values = await this.fromForm({
-          text: 'Edit user',
+          text: 'Edit configuration',
           fields: [
             {
-              key: 'active',
-              type: 'checkbox',
-              value: user.active,
+              key: 'name',
+              name: '',
+              value: configuration.name,
               props: {
-                label: 'Active'
+                placeholder: configuration.name,
+                label: 'Name'
               }
             },
             {
-              key: 'username',
+              key: 'description',
+              is: 'v-textarea',
               name: '',
-              value: user.username,
+              value: configuration.description,
               props: {
-                placeholder: user.username,
-                label: 'Username'
-              }
-            },
-            {
-              key: 'email',
-              name: '',
-              value: user.email,
-              props: {
-                placeholder: user.email,
-                label: 'E-mail'
+                placeholder: undefined,
+                label: 'Description'
               }
             },
           ]
@@ -209,17 +261,18 @@ export default {
           return false
         }
 
-        let id = user._id
+        let id = configuration._id
 
         let found = this.items.findIndex(w=>w._id === id)
         let item = this.items[found]
         item.loading = true
         item = {...item, ...values}
         this.$set(this.items, found, item)
+        // this.$delete(this.items, found)
 
         await this.$store.dispatch('request',{
           request: 'put',
-          path: `/users/${id}`,
+          path: `/configurations/${id}`,
           payload: values
         })
         await this.updateElements()
@@ -227,6 +280,29 @@ export default {
         console.error(err)
       }
 
+    },
+
+    async duplicateElement (configuration) {
+      try {
+         this.items.push({
+          ...configuration,
+          name: configuration.name+' copy',
+          createdAt: false,
+          updatedAt: false,
+          loading: true,
+          _id: false
+        })
+        await this.$store.dispatch('request',{
+          request: 'post',
+          path: `/configurations/copy/${configuration._id}`,
+          payload: {
+            name: configuration.name+' copy' // TO-DO: copyName function
+          }
+        })
+        await this.updateElements()
+      } catch (err) {
+        console.error(err)
+      }
     },
 
     async updateElements () {
@@ -241,15 +317,14 @@ export default {
         let { sortBy, sortDesc, page, itemsPerPage } = this.options
         let sort = ''
         if (sortBy[0]) {
-          sort = sortBy[0]
+          let sort = sortBy[0]
           if (sortDesc[0]) {
             sort = '-'+sort
           }
           sort = '&sort='+sort
         }
-        let search = this.search ? `&filters=username,email&values=${this.search},${this.search}` : ''
         let response = await this.$store.dispatch('request',{
-          path: `/users?page=${page-1}&pageSize=${itemsPerPage}${sort}${search}`
+          path: `/configurations?page=${page-1}&pageSize=${itemsPerPage}${sort}`
         })
         this.loading = false
         return {items: response.data.items, total: response.data.count}
@@ -268,15 +343,13 @@ export default {
       }
       return this.items.map((w)=>({
         ...w,
+        activeKernel: w.activeKernel,
+        name: w.name,
+        tabs: (w.tabs || []).length,
+        dataSourcesCount: w.dataSourcesCount || 0,
         updatedAt: w.updatedAt,
         createdAt: w.createdAt
       }))
-    },
-
-    willActivate () {
-      if (this.selected.length) {
-        return this.selected.some(u=>!u.active)
-      }
     }
   },
 
@@ -293,9 +366,6 @@ export default {
         this.updateElements()
       },
     },
-    search: throttle( function () {
-      this.updateElements()
-    }, 100 )
   }
 }
 </script>

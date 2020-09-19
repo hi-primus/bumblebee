@@ -470,37 +470,151 @@ export const transformDateFromPython = (string) => {
 
 // constants
 
+export const ENGINES = {
+  'dask': 'Dask',
+  'dask_cudf': 'Dask-cuDF',
+  'pandas': 'Pandas',
+  'cudf': 'cuDF',
+  // 'dask_coiled': 'Dask (Coiled)',
+  // 'dask_cudf_coiled': 'Dask cuDF (Coiled)'
+}
+
 export const INIT_PARAMETERS = {
-  'engine': { type: 'private' },
-  'jupyter_ip': { type: 'private' },
-  'jupyter_port': { type: 'private' },
-  'reset': { type: 'private' },
-  'address': { type: 'string', engines: ['dask', 'dask_cudf'] }, //?
-  'n_workers': { type: 'int', engines: ['dask', 'dask_cudf'] },
-  'processes': { type: 'boolean', engines: ['dask', 'dask_cudf'] },
-  'threads_per_worker': { type: 'int', engines: ['dask', 'dask_cudf'] },
-  'scheduler_port': { type: 'int', engines: ['dask', 'dask_cudf'] },
-  'silence_logs': { type: 'int', engines: ['dask', 'dask_cudf'] },
-  'kernel_address': { type: 'string', engines: ['dask', 'dask_cudf'] },
-  'process': { type: 'string', engines: ['dask', 'dask_cudf'] },
-  'host': { type: 'string', engines: ['dask', 'dask_cudf'] },
-  'dashboard_address': { type: 'string', engines: ['dask', 'dask_cudf'] },
-  'diagnostics_port': { type: 'int', engines: ['dask', 'dask_cudf'] },
-  'asynchronous': { type: 'boolean', engines: ['dask', 'dask_cudf'] },
-  'blocked_handlers': { type: 'string array', engines: ['dask', 'dask_cudf'] },
-  'service_kwargs': { type: 'dict', engines: ['dask', 'dask_cudf'] },
-  'Security': { type: 'bool', engines: ['dask', 'dask_cudf'] }, // Security or bool
-  'protocol': { type: 'string', engines: ['dask', 'dask_cudf'] },
-  'interface': { type: 'string', engines: ['dask', 'dask_cudf'] },
-  'worker_class': { type: 'Worker', engines: ['dask', 'dask_cudf'] },
-  'worker_kwargs': { type: 'kwargs', engines: ['dask', 'dask_cudf'] },
-  'name': { type: 'string', engines: ['dask_coiled', 'dask_cudf_coiled'] },
-  'worker_memory': { type: 'string', engines: ['dask_coiled', 'dask_cudf_coiled'] },
-  'worker_cpu': { type: 'int', engines: ['dask_coiled', 'dask_cudf_coiled'] },
-  'scheduler_memory': { type: 'string', engines: ['dask_coiled', 'dask_cudf_coiled'] },
-  'scheduler_cpu': { type: 'int', engines: ['dask_coiled', 'dask_cudf_coiled'] },
-  'software': { type: 'string', engines: ['dask_coiled', 'dask_cudf_coiled'] },
-  'kwargs': { type: 'kwargs' }
+  'engine': {
+    type: 'private',
+    default: 'dask'
+  },
+  'jupyter_ip': {
+    type: 'private'
+  },
+  'jupyter_port': {
+    type: 'private'
+  },
+  'reset': {
+    type: 'private'
+  },
+  //?
+  // 'address': {
+  //   type: 'string',
+  //   engines: ['dask', 'dask_cudf']
+  // },
+  'n_workers': {
+    type: 'int',
+    name: 'Number of workers',
+    engines: ['dask', 'dask_cudf'],
+    default: 1
+  },
+  'processes': {
+    type: 'boolean',
+    name: 'Use processes instead of threads',
+    engines: ['dask'],
+    // defalut: true
+  },
+  'threads_per_worker': {
+    type: 'int',
+    engines: ['dask', 'dask_cudf'],
+    default: 8
+  },
+  'scheduler_port': {
+    type: 'int',
+    engines: ['dask', 'dask_cudf']
+  },
+  'silence_logs': {
+    type: 'int',
+    name: 'Logging level',
+    default: '30',
+    items: {
+      '50': 'CRITICAL',
+      '40': 'ERROR',
+      '30': 'WARNING',
+      '20': 'INFO',
+      '10': 'DEBUG',
+      '0': 'NOTSET'
+    },
+    engines: ['dask', 'dask_cudf']
+  },
+  'kernel_address': {
+    type: 'string',
+    engines: ['dask', 'dask_cudf']
+  },
+  'process': {
+    type: 'string',
+    engines: ['dask', 'dask_cudf']
+  },
+  'host': {
+    type: 'string',
+    engines: ['dask', 'dask_cudf']
+  },
+  'dashboard_address': {
+    type: 'string',
+    engines: ['dask', 'dask_cudf']
+  },
+  'diagnostics_port': {
+    type: 'int',
+    engines: ['dask', 'dask_cudf']
+  },
+  'asynchronous': {
+    type: 'boolean',
+    engines: ['dask', 'dask_cudf']
+  },
+  'blocked_handlers': {
+    type: 'string array',
+    engines: ['dask', 'dask_cudf']
+  },
+  'service_kwargs': {
+    type: 'dict',
+    engines: ['dask', 'dask_cudf']
+  },
+  // Security or bool
+  'Security': {
+    type: 'bool',
+    engines: ['dask', 'dask_cudf']
+  },
+  'protocol': {
+    type: 'string',
+    engines: ['dask', 'dask_cudf']
+  },
+  'interface': {
+    type: 'string',
+    engines: ['dask', 'dask_cudf']
+  },
+  'worker_class': {
+    type: 'Worker',
+    engines: ['dask', 'dask_cudf']
+  },
+  'worker_kwargs': {
+    type: 'kwargs',
+    engines: ['dask', 'dask_cudf']
+  },
+  'name': {
+    type: 'string',
+    default: 'bumblebee',
+    engines: ['dask_coiled', 'dask_cudf_coiled']
+  },
+  'worker_memory': {
+    type: 'string',
+    engines: ['dask_coiled', 'dask_cudf_coiled']
+  },
+  'worker_cpu': {
+    type: 'int',
+    engines: ['dask_coiled', 'dask_cudf_coiled']
+  },
+  'scheduler_memory': {
+    type: 'string',
+    engines: ['dask_coiled', 'dask_cudf_coiled']
+  },
+  'scheduler_cpu': {
+    type: 'int',
+    engines: ['dask_coiled', 'dask_cudf_coiled']
+  },
+  'software': {
+    type: 'string',
+    default: 'coiled/default',
+    engines: ['dask_coiled', 'dask_cudf_coiled']
+  },
+  // 'kwargs': {
+  //   type: 'kwargs'
+  //  }
 }
 
 export const TYPES = {
@@ -653,6 +767,7 @@ export default {
   objectMap,
   transformDateToPython,
   transformDateFromPython,
+  ENGINES,
   INIT_PARAMETERS,
   TYPES,
   TYPES_HINTS,
