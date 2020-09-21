@@ -3243,6 +3243,10 @@ export default {
 
         var cellsResult = await this.runCells(force, ignoreFrom)
 
+        if (!cellsResult) {
+          return false
+        }
+
         var dataset
 
         try {

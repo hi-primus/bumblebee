@@ -603,34 +603,39 @@ export const actions = {
     if (!slug) {
       var workspace = state.workspace
       if (workspace && workspace.slug) {
-        slug = workspace.slug
+        slug = workspace.slug;
       } else {
-        return false
+        return false;
       }
     }
-    console.log('[WORKSPACE] Loading', slug)
+
+    console.log('[WORKSPACE] Loading', slug);
 
     var response = await dispatch('request',{
       path: `/workspaces/slug/${slug}`
-    })
+    });
 
-    var tabs = []
-    var cells = []
+    var tabs = [];
+    var cells = [];
 
-    var tab = -1
+    var tab = -1;
+
+    // console.log('[WORKSPACE] Loaded', slug, response);
 
     if (response.data) {
-      tab = response.data.selectedTab!==undefined ? response.data.selectedTab : tab
+      tab = response.data.selectedTab!==undefined ? response.data.selectedTab : tab;
       tabs = response.data.tabs.map(e=>{
-        var profiling = JSON.parse(e.profiling)
+        var profiling = JSON.parse(e.profiling);
         return {
           name: e.name,
           dataSources: e.dataSources,
           ...profiling
         }
       })
-      cells = response.data.commands.map( e=>({ ...JSON.parse(e), done: false }) )
+      cells = response.data.commands.map( e=>({ ...JSON.parse(e), done: false }) );
     }
+
+    // console.log('[WORKSPACE] Obtained', { tabs, cells, tab });
 
     // if (tab>=0) {
     //   commit('mutation', { mutate: 'tab', payload: tab})
@@ -639,14 +644,18 @@ export const actions = {
     var commands = cells.filter(e=>!(e && e.payload && e.payload.request && e.payload.request.isLoad))
     var dataSources = cells.filter(e=>e && e.payload && e.payload.request && e.payload.request.isLoad)
 
+    // console.log('[WORKSPACE] Obtained', { commands, dataSources });
+
     tabs.forEach((dataset, index) => {
       // commit('mutation', { mutate: 'tab', payload: index })
       if (dataset.columns) {
+        // console.log('[WORKSPACE] Setting', { dataset, to: index });
         commit('setDataset', { dataset, tab: index })
         if (tab<0) {
           tab = index
         }
       } else {
+        // console.log('[WORKSPACE] Creating', { dataset, to: index });
         commit('newDataset', { dataset, current: true, tab: index })
       }
     })
@@ -957,8 +966,12 @@ export const actions = {
 
       if (!dfName) {
         // return {};
-        await dispatch('getWorkspace', { socketPost });
+        var workspace = await dispatch('getWorkspace', { socketPost });
         dfName = getters.currentDataset.dfName;
+        if (!dfName) {
+          console.warn('[DATA LOADING] No workspaces found')
+          return {};
+        }
       }
       var response = await socketPost('profile', {
         dfName,
@@ -1019,6 +1032,11 @@ export const actions = {
     slug = slug || state.workspaceConfig.slug;
 
     var workspace = await dispatch('getWorkspace', { slug });
+
+    if (!workspace.tabs.length) {
+      console.warn('[DATA LOADING] Requested buffer window for not existing df');
+      return false
+    }
 
     dfName = dfName || workspace.tabs[0].dfName;
 
