@@ -1120,19 +1120,27 @@ export const actions = {
     return index
   },
 
-  async request ({state}, {request, path, payload, accessToken}) {
+  async request ({state, dispatch}, {request, path, payload, accessToken}) {
 
     if (!request) request = 'get'
     if (!accessToken) accessToken = state.session.accessToken
 
     var response
 
-    if (['post','put'].includes(request)) {
-      response = await axios[request](process.env.API_URL + path, payload, { headers: {'Authorization': accessToken} } )
-    } else {
-      response = await axios[request](process.env.API_URL + path, { headers: {'Authorization': accessToken} } )
+    try {
+      if (['post','put'].includes(request)) {
+        response = await axios[request](process.env.API_URL + path, payload, { headers: {'Authorization': accessToken} } );
+      } else {
+        response = await axios[request](process.env.API_URL + path, { headers: {'Authorization': accessToken} } );
+      }
+    } catch (err) {
+      if (err && err.response && err.response.status===401) {
+        await dispatch('session/signOut');
+      }
+      throw err;
     }
-    return response
+
+    return response;
 
   },
 }

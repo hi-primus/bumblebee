@@ -1,4 +1,5 @@
 import io from 'socket.io-client'
+import { mapState } from 'vuex'
 import { INIT_PARAMETERS } from 'bumblebee-utils'
 
 export default {
@@ -65,6 +66,11 @@ export default {
   },
 
   computed: {
+
+    ...mapState({
+      currentUsername: state => state.session.username
+    }),
+
     socketAvailable: {
       set (value) {
         window.socketAvailable = value
@@ -183,7 +189,11 @@ export default {
 				}
 			}
 			this.stopClient()
-		},
+    },
+
+    async signOut () {
+      await this.$store.dispatch('session/signOut')
+    },
 
 		stopClient (waiting) {
 
@@ -349,5 +359,14 @@ export default {
         return []
       }
     },
-	}
+  },
+
+  watch: {
+    currentUsername (value) {
+      if (!value) {
+        this.stopClient(true)
+        this.$router.push({path: '/login', query: this.$route.query })
+      }
+    }
+  }
 }

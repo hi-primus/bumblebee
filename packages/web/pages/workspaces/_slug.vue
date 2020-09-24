@@ -52,7 +52,7 @@
             </v-card-text>
           </v-card>
         </div>
-        <v-icon class="back-btn" large color="black" @click="signOut(false)">arrow_back</v-icon>
+        <v-icon class="back-btn" large color="black" @click="signOut()">arrow_back</v-icon>
       </template>
       <template v-else>
         <div v-if="workspaceStatus==='loading'">
@@ -487,12 +487,6 @@ export default {
 
 
       return await this.$store.dispatch('getOptimus', { slug, socketPost: this.socketPost } )
-    },
-
-    async signOut (waiting = true) {
-      this.stopClient(waiting)
-      await this.$store.dispatch('session/signOut')
-      this.$router.push({path: '/login', query: this.$route.query })
     },
 
 		deleteTab(i) {

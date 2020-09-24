@@ -69,11 +69,7 @@ export default {
   },
 
 	methods: {
-    async signOut (waiting = true) {
-      this.stopClient(waiting)
-      await this.$store.dispatch('session/signOut')
-      this.$router.push({path: '/login', query: this.$route.query })
-    },
+
 	}
 }
 </script>
