@@ -146,16 +146,18 @@ const init = (payload, min = false) => {
   let opInit = '';
 
   if (params.coiled) {
-    opInit = 'import coiled;' +
-      // `coiled.create_software_environment(name='zarr', conda=['xarray', 'zarr','dask=2.2.23','distributed']);` +
-      `coiled.create_cluster_configuration(${functionParams.substr(2)});` +
-      `cluster = coiled.Cluster(configuration='${params.name}');` +
-      `res.update({"cluster_name": cluster.name});` +
-      `from dask.distributed import Client;` +
-      `client = Client(name=cluster.name);` +
-      `op = Optimus(engine, session=client, memory_limit="1G", comm=True)`
+    opInit = `engine = "${params.engine}"; ` +
+    'import coiled; ' +
+    // `coiled.create_software_environment(name='zarr', conda=['xarray', 'zarr','dask=2.2.23','distributed']); ` +
+    `coiled.create_cluster_configuration(${functionParams.substr(2)}); ` +
+    `cluster = coiled.Cluster(configuration='${params.name}'); ` +
+    `res.update({"cluster_name": cluster.name}); ` +
+    `from dask.distributed import Client; ` +
+    `client = Client(name=cluster.name); ` +
+    `op = Optimus(engine, session=client, memory_limit="1G", comm=True)`
   } else {
-    opInit = `op = Optimus(engine${functionParams}, memory_limit="1G", comm=True)`
+    opInit = `engine = "${params.engine}"; ` +
+    `op = Optimus(engine${functionParams}, memory_limit="1G", comm=True)`
   }
 
   if (min) {
