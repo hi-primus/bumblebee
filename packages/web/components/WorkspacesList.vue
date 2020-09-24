@@ -31,8 +31,9 @@
       <template v-slot:item.activeKernel="{ item }">
         <span
           :class="{
-            'primary--text': item.activeKernel,
-            'grey--text': !item.activeKernel
+            'green--text': item.slug===currentWorkspace,
+            'primary--text': item.slug!==currentWorkspace && item.activeKernel,
+            'grey--text': item.slug!==currentWorkspace && !item.activeKernel
           }"
           class="pl-3"
         >●</span>
@@ -169,7 +170,11 @@ export default {
           request: 'delete',
           path: `/workspaces/${id}`,
         })
-        await this.updateElements()
+        if (workspace.slug===this.currentWorkspace) {
+          await this.$router.push({path: '/workspaces', query: this.$route.query })
+        } else {
+          await this.updateElements()
+        }
       } catch (err) {
         console.error(err)
       }
@@ -343,6 +348,10 @@ export default {
   },
 
   computed: {
+
+    currentWorkspace () {
+      return this.$store.state.workspace.slug;
+    },
 
     tableItems () {
       if (!this.items || !this.items.length) {
