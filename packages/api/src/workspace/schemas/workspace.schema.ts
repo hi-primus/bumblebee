@@ -1,4 +1,4 @@
-import mongoose, { Model, Schema } from "mongoose";
+import { Model, Schema } from "mongoose";
 import * as slug from "mongoose-slug-generator";
 
 export const WorkspaceSchemaProvider = {
@@ -59,6 +59,7 @@ export const WorkspaceSchemaProvider = {
             dfName: { type: String },
           },
         ],
+        configuration: { type: Schema.Types.Mixed },
       },
       {
         timestamps: true,
