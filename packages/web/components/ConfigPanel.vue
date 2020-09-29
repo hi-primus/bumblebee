@@ -21,7 +21,7 @@ export default {
 
   async mounted () {
     let values = this.$store.state.localConfig;
-    values = await this.configParameters(values);
+    values = await this.configParameters(values, 'Workspace settings');
     if (values) {
       this.$store.commit('mutation', { mutate: 'localConfig', payload: values });
       this.$store.commit('mutation', { mutate: 'configPromise', payload: false });

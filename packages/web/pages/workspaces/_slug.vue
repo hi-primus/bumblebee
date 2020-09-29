@@ -306,7 +306,7 @@ export default {
 
       menu = [
         { text: 'Workspaces', click: ()=>this.showWindowDialog('workspaces') },
-        { text: 'Configure Workspace', click: ()=>this.showWindowDialog('configWorkspace') },
+        { text: 'Workspace settings', click: ()=>this.showWindowDialog('configWorkspace') },
         // { text: 'Configs', click: ()=>this.showWindowDialog('configs') },
         // { text: 'Clusters', click: ()=>this.showWindowDialog('clusters') },
         { divider: true },

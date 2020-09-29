@@ -10,7 +10,7 @@ module.exports = {
 	},
 
 	head: {
-		titleTemplate: '%s - Bumblebee',
+		titleTemplate: '%s',
 		title: 'Bumblebee',
 		meta: [{
 			charset: 'utf-8'
