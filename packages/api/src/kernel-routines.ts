@@ -1,4 +1,4 @@
-import { INIT_PARAMETERS } from 'bumblebee-utils';
+import { getDefaultParams, engineValid, INIT_PARAMS } from 'bumblebee-utils';
 
 const codeTraceback = (code = '') => `
 
@@ -60,13 +60,14 @@ res.update({'_gatewayTime': {'start': _start_time, 'end': _end_time, 'duration':
 json.dumps(res,  default=_json_default, ensure_ascii=False)
 `;
 
-const initializationParameters = ( parameters: any = {} ) => {
+const initializationParameters = ( params: any = {} ) => {
   let str = ''
-  Object.entries(parameters).forEach(([key, value]: [string, any])=>{
 
-    if (value!==undefined && INIT_PARAMETERS[key] && (!INIT_PARAMETERS[key].engines || INIT_PARAMETERS[key].engines.includes(parameters.engine))) {
+  Object.entries(params).forEach(([key, value]: [string, any])=>{
 
-      switch (INIT_PARAMETERS[key].type) {
+    if (value!==undefined && INIT_PARAMS[key] && engineValid(key, params.engine)) {
+
+      switch (INIT_PARAMS[key].type) {
         case 'int':
           str += `, ${key}=${+value}`;
           break;
@@ -111,7 +112,7 @@ const initializationParameters = ( parameters: any = {} ) => {
     }
 
 
-  })
+  });
 
   return str;
 }
@@ -119,9 +120,7 @@ const initializationParameters = ( parameters: any = {} ) => {
 const getParams = payload => {
   let params = {...(payload || {})};
 
-  params.engine = (params.engine !== undefined) ? params.engine : "dask"
-  params.threads_per_worker = (params.threads_per_worker !== undefined) ? params.threads_per_worker : 8
-  params.n_workers = (params.n_workers !== undefined) ? params.n_workers : 1
+  params = getDefaultParams(params)
 
   let functionParams = initializationParameters(params);
 
@@ -145,26 +144,27 @@ const init = (payload, min = false) => {
 
   let opInit = '';
 
-  if (params.coiled) {
-    opInit = `engine = "${params.engine}"; ` +
-    'import coiled; ' +
-    // `coiled.create_software_environment(name='zarr', conda=['xarray', 'zarr','dask=2.2.23','distributed']); ` +
-    `coiled.create_cluster_configuration(${functionParams.substr(2)}); ` +
-    `cluster = coiled.Cluster(configuration='${params.name}'); ` +
-    `res.update({"cluster_name": cluster.name}); ` +
-    `from dask.distributed import Client; ` +
-    `client = Client(name=cluster.name); ` +
-    `op = Optimus(engine, session=client, memory_limit="1G", comm=True)`
-  } else {
-    opInit = `engine = "${params.engine}"; ` +
-    `op = Optimus(engine${functionParams}, memory_limit="1G", comm=True)`
-  }
+  opInit = `
+engine = "${params.engine}"
+if (using_coiled):
+    coiled.create_cluster_configuration(${functionParams.substr(2)})
+    cluster = coiled.Cluster(name="${params.workspace_name}", configuration='${params.name}')
+    client = Client(cluster)
+    client_install = client.run(install)
+    op = Optimus(engine, session=client, memory_limit="1G", comm=True)
+else:
+    op = Optimus(engine${functionParams}, memory_limit="1G", comm=True)
+`
 
   if (min) {
     return opInit;
   }
 
   return `
+
+def install ():
+    from optimus import Optimus
+    return 'ok'
 
 reset = True # ${(params?.reset != '0') ? 'True' : 'False'}
 
@@ -194,6 +194,24 @@ res = { 'kernel': 'ok' }
 
 engine = "${params.engine}"
 
+using_coiled = False
+coiled_available = False
+
+# check coiled availability
+
+import cytoolz;
+
+try:
+    import coiled;
+    coiled.Cloud()
+    coiled_available = True
+    using_coiled = ${params.coiled ? 'True' : 'False'}
+except:
+    using_coiled = False
+    coiled_available = False
+
+# check optimus parser availability
+
 try:
     from optimus.expressions import reserved_words, Parser
     res.update({'reserved_words': reserved_words})
@@ -202,26 +220,19 @@ except:
     def p (a):
         return a
 
-try:
-    op
-    op.__version__
-    op.engine
-    if (reset or op.engine!=engine):
-        raise Exception('Resetting')
-    res.update({'optimus': 'ok', 'dependencies': 'ok', 'optimus_version': op.__version__, 'engine': op.engine})
-    try:
-        df
-        res.update({'dataframe': 'ok'})
-    except Exception:
-        pass
-except Exception:
-    from optimus import Optimus
-    ${opInit}
-    res.update({'optimus': 'ok init', 'optimus_version': op.__version__, 'engine': op.engine})
+# initialization
+
+from optimus import Optimus
+from dask.distributed import Client;
+${opInit}
+if (using_coiled):
+    res.update({"coiled": True, "cluster_name": cluster.name, "dashboard_link": client.dashboard_link, "client_install": client_install});
+res.update({'optimus': 'ok init', 'optimus_version': op.__version__, 'engine': op.engine, "coiled_available": coiled_available});
 
 if _use_time:
     _end_time = datetime.utcnow().timestamp()
     res.update({'_gatewayTime': {'start': _start_time, 'end': _end_time, 'duration': _end_time-_start_time}})
+
 json.dumps(res,  default=_json_default, ensure_ascii=False)
 `;
 }

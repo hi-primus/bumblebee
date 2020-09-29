@@ -448,6 +448,14 @@ export const propsToLocal = (array) => {
   return oobj
 }
 
+export const objectFilter = (obj, cb) => {
+  return Object.fromEntries(
+    Object.entries(obj).filter(
+      ([key,value])=>cb([key, value])
+    )
+  )
+}
+
 export const objectMap = (obj, cb) => {
   return Object.fromEntries(
     Object.entries(obj).map(
@@ -468,6 +476,33 @@ export const transformDateFromPython = (string) => {
   return undefined
 }
 
+
+export const engineValid = (key, engine) => {
+  return (!INIT_PARAMS[key].engines || INIT_PARAMS[key].engines.includes(engine))
+};
+
+
+export const getDefaultParams = (params) => {
+
+  Object.entries(INIT_PARAMS).forEach(([key, param])=>{
+    if (param.default !== undefined && params[key] === undefined && engineValid(key, params.engine)) {
+      params[key] = param.default;
+    }
+  });
+
+  return params;
+}
+
+export const getEngines = (coiled = false) => {
+  if (coiled) {
+    return ENGINES;
+  } else {
+    return objectFilter(ENGINES, ([key, value])=>{
+      return !key.includes('coiled');
+    });
+  }
+}
+
 // constants
 
 export const ENGINES = {
@@ -475,11 +510,11 @@ export const ENGINES = {
   'dask_cudf': 'Dask-cuDF',
   'pandas': 'Pandas',
   'cudf': 'cuDF',
-  // 'dask_coiled': 'Dask (Coiled)',
-  // 'dask_cudf_coiled': 'Dask cuDF (Coiled)'
+  'dask_coiled': 'Dask (Coiled)',
+  'dask_cudf_coiled': 'Dask cuDF (Coiled)'
 }
 
-export const INIT_PARAMETERS = {
+export const INIT_PARAMS = {
   'engine': {
     type: 'private',
     default: 'dask'
@@ -588,7 +623,7 @@ export const INIT_PARAMETERS = {
   },
   'name': {
     type: 'string',
-    default: 'bumblebee',
+    name: 'Configuration name',
     engines: ['dask_coiled', 'dask_cudf_coiled']
   },
   'worker_memory': {
@@ -609,7 +644,8 @@ export const INIT_PARAMETERS = {
   },
   'software': {
     type: 'string',
-    default: 'coiled/default',
+    name: 'Software environment',
+    default: 'optimus/default',
     engines: ['dask_coiled', 'dask_cudf_coiled']
   },
   // 'kwargs': {
@@ -764,11 +800,15 @@ export default {
   multipleContent,
   everyRatio,
   propsToLocal,
+  objectFilter,
   objectMap,
   transformDateToPython,
   transformDateFromPython,
+  getEngines,
+  getDefaultParams,
+  engineValid,
   ENGINES,
-  INIT_PARAMETERS,
+  INIT_PARAMS,
   TYPES,
   TYPES_HINTS,
   TYPES_NAMES,

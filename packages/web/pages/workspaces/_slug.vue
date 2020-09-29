@@ -220,7 +220,7 @@ import MoreMenu from "@/components/MoreMenu"
 import clientMixin from "@/plugins/mixins/client"
 import dataTypesMixin from "@/plugins/mixins/data-types"
 import applicationMixin from "@/plugins/mixins/application"
-import { printError, INIT_PARAMETERS, RESPONSE_MESSAGES } from 'bumblebee-utils'
+import { printError, getDefaultParams, INIT_PARAMS, RESPONSE_MESSAGES } from 'bumblebee-utils'
 
 import { mapGetters, mapState } from "vuex"
 
@@ -413,9 +413,9 @@ export default {
 
         var slug = this.$route.params.slug;
 
-        var payload = { slug };
-
-        this.$store.commit('mutation', { mutate: 'workspaceConfig', payload });
+        if (slug) {
+          this.$store.commit('mutation', { mutate: 'workspaceSlug', payload: slug });
+        }
 
         var workspace = await this.$store.dispatch('startWorkspace', { slug });
         // console.log('[INITIALIZATION] workspace done')
@@ -474,19 +474,27 @@ export default {
 
         console.warn('Getting config from query parameters');
         var query = this.$route.query;
-        var parameters = {};
-        Object.keys(INIT_PARAMETERS).forEach(parameter => {
+
+        var params = {};
+
+        Object.keys(INIT_PARAMS).forEach(parameter => {
           if (query[parameter]) {
-            parameters[parameter] = query[parameter]
+            params[parameter] = query[parameter]
           }
         });
 
-        this.$store.commit('mutation', { mutate: 'localConfig', payload: parameters });
+        params = getDefaultParams(params);
+
+        params.name = params.name || this.$store.state.session.username + '_' + this.$route.params.slug;
+
+        this.$store.commit('mutation', { mutate: 'localConfig', payload: params });
+        this.$store.commit('mutation', { mutate: 'configPromise', payload: false });
 
       }
 
+      var payload = { slug, socketPost: this.socketPost };
 
-      return await this.$store.dispatch('getOptimus', { slug, socketPost: this.socketPost } )
+      return await this.$store.dispatch('getOptimus', { payload } )
     },
 
 		deleteTab(i) {

@@ -1,4 +1,4 @@
-import { capitalizeString, ENGINES, INIT_PARAMETERS } from "bumblebee-utils";
+import { capitalizeString, getEngines, INIT_PARAMS } from "bumblebee-utils";
 import FormDialog from "@/components/FormDialog";
 
 export default {
@@ -15,7 +15,9 @@ export default {
 
     async configParameters (defaultValues = {}, text = 'Create new configuration' ) {
 
-      let valuesFromParameters = Object.entries(INIT_PARAMETERS).filter(([key, field])=>field.type !== 'private').map(([key, field])=>{
+      defaultValues.name = this.$store.state.session.username + '_' + this.$route.params.slug;
+
+      let valuesFromParameters = Object.entries(INIT_PARAMS).filter(([key, field])=>field.type !== 'private').map(([key, field])=>{
         return {
           key,
           value: defaultValues[key] || field.default || undefined,
@@ -30,6 +32,8 @@ export default {
         }
       });
 
+      valuesFromParameters
+
       let values = await this.fromForm({
         text,
         fields: [
@@ -38,7 +42,7 @@ export default {
             is: 'v-select',
             value: defaultValues.engine  || 'dask',
             props: {
-              items: Object.entries(ENGINES).map(([value, text])=>({text, value})),
+              items: Object.entries(getEngines(this.$store.state.coiledAvailable)).map(([value, text])=>({text, value})),
               label: 'Engine'
             }
           },

@@ -24,6 +24,7 @@ export default {
     values = await this.configParameters(values);
     if (values) {
       this.$store.commit('mutation', { mutate: 'localConfig', payload: values });
+      this.$store.commit('mutation', { mutate: 'configPromise', payload: false });
     }
     this.$emit('done',values);
   },

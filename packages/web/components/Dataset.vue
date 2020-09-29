@@ -662,7 +662,11 @@ export default {
 
               var response = await this.evalCode(code)
 
-              this.$store.commit('setLoadPreview', { sample: response.data.result.sample } )
+              if (response.data.result.sample) {
+                this.$store.commit('setLoadPreview', { sample: response.data.result.sample } )
+              } else {
+                throw response
+              }
 
               if (response.data.result.meta) {
                 this.$store.commit('setLoadPreview', { meta: response.data.result.meta } )

@@ -1,6 +1,6 @@
 import io from 'socket.io-client'
 import { mapState } from 'vuex'
-import { INIT_PARAMETERS } from 'bumblebee-utils'
+import { getDefaultParams, INIT_PARAMS } from 'bumblebee-utils'
 
 export default {
 
@@ -99,7 +99,8 @@ export default {
 	methods: {
 
     async getProfiling (dfName) {
-      return this.$store.dispatch('getProfiling', { dfName, socketPost: this.socketPost });
+      var payload = { dfName, socketPost: this.socketPost };
+      return this.$store.dispatch('getProfiling', { payload, forcePromise: true });
     },
 
     buffer (dfName) {
@@ -130,18 +131,24 @@ export default {
 
             var query = this.$route.query;
 
-            var parameters = {};
+            var params = {};
 
-            Object.keys(INIT_PARAMETERS).forEach(parameter => {
+            Object.keys(INIT_PARAMS).forEach(parameter => {
               if (query[parameter]) {
-                parameters[parameter] = query[parameter]
+                params[parameter] = query[parameter]
               }
             });
 
+            params = getDefaultParams(params);
+
+            var slug = this.$route.params.slug;
+
+            params.name = params.name || this.$store.state.session.username + '_' + slug;
+
             var initializationPayload = {
               username: this.$store.state.session.username,
-              workspace: (this.$store.state.workspace ? this.$store.state.workspace.slug : undefined) || 'default',
-              ...parameters
+              workspace: slug,
+              ...params
             }
             await this.startSocket ()
 
@@ -235,7 +242,7 @@ export default {
       return new Promise((resolve, reject)=>{
 
         let username = this.$store.state.session.username;
-        let workspace = (this.$store.state.workspace ? this.$store.state.workspace.slug : undefined) || 'default';
+        let workspace = this.$route.params.slug;
         let key = this.$store.state.session.key;
 
         if (!workspace) {
@@ -343,7 +350,7 @@ export default {
       try {
         var response = await this.socketPost('datasets', {
           username: this.$store.state.session.username,
-          workspace: (this.$store.state.workspace ? this.$store.state.workspace.slug : undefined) || 'default'
+          workspace: this.$route.params.slug
         })
         window.pushCode({code: response.code, unimportant: true})
         console.log('Updating secondary datasets')

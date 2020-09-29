@@ -2520,7 +2520,7 @@ export default {
 
   mounted () {
     window.getCommandHandler = (command) => {
-      this.getCommandHandler(command)
+      return this.getCommandHandler(command)
     };
     window.runCells = ()=>{
       this.runCodeNow(true)
@@ -2707,7 +2707,8 @@ export default {
     },
 
     async runCells (force, ignoreFrom) {
-      return await this.$store.dispatch('getCellsResult', { force, ignoreFrom, socketPost: this.socketPost });
+      var payload = { force, ignoreFrom, socketPost: this.socketPost };
+      return await this.$store.dispatch('getCellsResult', {forcePromise: true, payload });
     },
 
     forceFileDownload(url, filename){
@@ -2928,7 +2929,7 @@ export default {
           }
         }
 
-        // payload from parameters
+        // payload from params
 
         payload = {
           ...payload,
@@ -2986,6 +2987,7 @@ export default {
     },
 
     async confirmCommand (event) {
+
       this.isEditing = false
       this.clearTextSelection()
       var commandHandler = this.getCommandHandler(this.currentCommand)
@@ -3287,8 +3289,12 @@ export default {
 
       var code = cellsResult.originalCode;
 
+      console.log(codeText, code)
+
       if (codeText !== code) {
-        this.runCodeNow(false)
+        setTimeout(() => {
+          this.runCodeNow(false)
+        }, 1000);
       }
 
       return !this.lastWrongCode;

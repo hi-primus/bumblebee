@@ -1,7 +1,7 @@
 import axios from 'axios'
 import Vue from 'vue'
 
-import { ALL_TYPES, capitalizeString, getPropertyAsync, filterCells, parseResponse, printError } from 'bumblebee-utils'
+import { ALL_TYPES, capitalizeString, getPropertyAsync, filterCells, parseResponse, printError, deepCopy } from 'bumblebee-utils'
 
 const properties = [
   {
@@ -79,11 +79,11 @@ properties.forEach((p)=>{
 })
 
 const defaultState = {
+  coiledAvailable: false,
   tab: 0,
   commands: [],
   cells: [],
   workspace: false,
-  workspaceConfig: {},
   datasets: [],
   datasetSelection: [],
   secondaryDatasets: [],
@@ -106,6 +106,7 @@ export const state = () => {
 
   return {
     ...defaultState,
+    workspaceSlug: false,
     localConfig: {},
     properties,
     ...pStates,
@@ -492,7 +493,7 @@ export const actions = {
       var response = await socketPost('run', {
         code,
         username: state.session.username,
-        workspace: (state.workspace ? state.workspace.slug : undefined) || 'default'
+        workspace: state.workspaceSlug || 'default'
       }, {
         timeout: 0
       })
@@ -550,11 +551,11 @@ export const actions = {
     }
   },
 
-  getPromise({ state, dispatch, commit }, { name, action, payload, force, index } ) {
+  getPromise({ state, dispatch, commit }, { name, action, payload, forcePromise, index } ) {
 
     var promise;
 
-    if (!force) {
+    if (!forcePromise) {
       promise = state[name];
       if (index!==undefined && promise) {
         promise = promise[index]
@@ -577,22 +578,28 @@ export const actions = {
 
   },
 
-  async getWorkspace ({ dispatch }, { slug, force }) {
+  async getWorkspace ({ dispatch }, { slug, forcePromise }) {
 
     var promisePayload = {
       name: 'workspacePromise',
       action: 'loadWorkspace',
       payload: { slug },
-      force
+      forcePromise
     };
+
+    if (forcePromise) {
+      console.warn('Forced workspace loading');
+    }
 
     var workspace = await dispatch('getPromise', promisePayload);
 
-    if (workspace.slug == slug || force) {
+
+    if ((workspace.slug == slug) || !slug || forcePromise) {
       return workspace;
     }
 
-    return await dispatch('getPromise', { ...promisePayload, force: true });
+    console.warn('Forced workspace loading due to slug update', workspace.slug, slug)
+    return await dispatch('getPromise', { ...promisePayload, forcePromise: true });
 
   },
 
@@ -676,11 +683,12 @@ export const actions = {
 
   },
 
-  async loadConfig ({ state }/*, { id }*/) {
-    return state.localConfig
+  async loadConfig ({ state }, payload) {
+    return deepCopy(state.localConfig); // TO-DO: Config
   },
 
-  async getConfig ({dispatch}, payload) {
+  async getConfig ({ dispatch }, payload) {
+
     var promisePayload = {
       name: 'configPromise',
       action: 'loadConfig',
@@ -691,7 +699,7 @@ export const actions = {
   },
 
   async startWorkspace ({ dispatch }, { slug }) {
-    var result = await dispatch('getWorkspace', { slug, force: true })
+    var result = await dispatch('getWorkspace', { slug, forcePromise: true })
     return result;
   },
 
@@ -758,9 +766,11 @@ export const actions = {
       }
       if (window.getCommandHandler) {
         var commandHandler = window.getCommandHandler(cell)
-        if (commandHandler.beforeExecuteCode) {
+        if (commandHandler && commandHandler.beforeExecuteCode) {
           cell = {...cell} // avoid vuex mutation
           cell.payload = await commandHandler.beforeExecuteCode(cell.payload)
+        } else if (!commandHandler) {
+          console.warn('[COMMANDS] commandHandler not found for', cell)
         }
       } else {
         console.warn('[COMMANDS] getCommandHandler not defined');
@@ -770,14 +780,14 @@ export const actions = {
 
   async loadOptimus ({commit, state, dispatch }, { slug, socketPost }) {
 
-    var parameters = await dispatch('getConfig');
+    await Vue.nextTick();
 
-    if (slug) {
-      var payload = {slug, parameters}
-      commit('mutation', { mutate: 'workspaceConfig', payload })
-    } else {
-      slug = state.workspaceConfig.slug;
-      // parameters = state.workspaceConfig.parameters;
+    var params = await dispatch('getConfig');
+
+    if (!slug) {
+      slug = state.workspaceSlug;
+    } else if (slug) {
+      commit('mutation', { mutate: 'workspaceSlug', payload: slug })
     }
 
     console.log('[INITIALIZATION] initializeOptimus', state.session.username, slug);
@@ -785,7 +795,7 @@ export const actions = {
     var response = await socketPost('initialize', {
       username: state.session.username,
       workspace: slug || 'default',
-      ...parameters
+      ...params
     });
 
     console.log('[DEBUG][INITIALIZATION] initializeOptimus response', response);
@@ -810,8 +820,8 @@ export const actions = {
         var description = value;
         var example = `${key}(column)`;
         if (typeof value !== "string")  {
-          if ('parameters' in value) {
-            params = value.parameters.map(param=>{
+          if ('params' in value) {
+            params = value.params.map(param=>{
               if (param.type==='series') {
                 param.type = 'column';
               }
@@ -836,6 +846,10 @@ export const actions = {
 
     commit('mutation', {mutate: 'functionsSuggestions', payload: functionsSuggestions});
 
+    if (response.data.coiled_available) {
+      commit('mutation', {mutate: 'coiledAvailable', payload: true});
+    }
+
     if (!response.data.optimus) {
       throw response;
     }
@@ -845,7 +859,7 @@ export const actions = {
     return response.data;
   },
 
-  async getOptimus ({dispatch}, payload) {
+  async getOptimus ({dispatch}, {payload}) {
     var promisePayload = {
       name: 'optimusPromise',
       action: 'loadOptimus',
@@ -857,9 +871,11 @@ export const actions = {
 
   async loadCellsResult ({dispatch, state, getters, commit}, { force, ignoreFrom, socketPost }) {
 
-    var optimusPromise = dispatch('getOptimus', { socketPost });
+    await Vue.nextTick();
 
-    var workspacePromise = dispatch('getWorkspace', { socketPost });
+    var optimusPromise = dispatch('getOptimus',  { payload: {socketPost} } );
+
+    var workspacePromise = dispatch('getWorkspace',  {} );
 
     await Promise.all([optimusPromise, workspacePromise])
 
@@ -928,7 +944,7 @@ export const actions = {
     var response = await socketPost('cells', {
       code,
       username: state.session.username,
-      workspace: (state.workspace ? state.workspace.slug : undefined) || 'default',
+      workspace: state.workspaceSlug || 'default',
       key: state.key
     }, {
       timeout: 0
@@ -949,12 +965,18 @@ export const actions = {
 
   },
 
-  async getCellsResult ({dispatch}, payload) {
+  async getCellsResult ({dispatch}, { forcePromise, payload }) {
+
     var promisePayload = {
       name: 'cellsPromise',
       action: 'loadCellsResult',
-      payload
+      payload,
+      forcePromise
     };
+
+    if (forcePromise) {
+      console.warn('Forced cells loading');
+    }
 
     return await dispatch('getPromise', promisePayload);
   },
@@ -962,11 +984,13 @@ export const actions = {
   async loadProfiling ({dispatch, state, getters}, {dfName, socketPost}) {
     try {
 
-      var cellsResult = await dispatch('getCellsResult', { socketPost });
+      await Vue.nextTick();
+
+      var cellsResult = await dispatch('getCellsResult', { payload: {socketPost} } );
 
       if (!dfName) {
         // return {};
-        var workspace = await dispatch('getWorkspace', { socketPost });
+        var workspace = await dispatch('getWorkspace', {} );
         dfName = getters.currentDataset.dfName;
         if (!dfName) {
           console.warn('[DATA LOADING] No workspaces found')
@@ -976,7 +1000,7 @@ export const actions = {
       var response = await socketPost('profile', {
         dfName,
         username: state.session.username,
-        workspace: (state.workspace ? state.workspace.slug : undefined) || 'default',
+        workspace: state.workspaceSlug || 'default',
         key: state.key
       }, {
         timeout: 0
@@ -1001,19 +1025,23 @@ export const actions = {
     }
   },
 
-  async getProfiling ({dispatch}, { dfName, socketPost }) {
+  async getProfiling ({dispatch}, { forcePromise, payload }) {
     var promisePayload = {
       name: 'profilingPromises',
       action: 'loadProfiling',
-      payload: { dfName, socketPost },
-      index: dfName
+      payload,
+      index: payload.dfName,
+      forcePromise
     };
 
     return await dispatch('getPromise', promisePayload);
   },
 
   async loadBuffer ({ dispatch }, {dfName, socketPost}) {
-    var profiling = await dispatch('getProfiling', {dfName, socketPost});
+
+    await Vue.nextTick();
+    var payload = {dfName, socketPost};
+    var profiling = await dispatch('getProfiling', { payload });
     return await dispatch('evalCode', {socketPost, code: '_output = '+dfName+'.ext.set_buffer("*")'})
   },
 
@@ -1029,9 +1057,10 @@ export const actions = {
   },
 
   async getBufferWindow ({commit, dispatch, state, getters}, {from, to, slug, dfName, code, socketPost, beforeCodeEval}) {
-    slug = slug || state.workspaceConfig.slug;
 
-    var workspace = await dispatch('getWorkspace', { slug });
+    slug = slug || state.workspaceSlug || 'default';
+
+    var workspace = await dispatch('getWorkspace', { slug } );
 
     if (!workspace.tabs.length) {
       console.warn('[DATA LOADING] Requested buffer window for not existing df');
@@ -1043,8 +1072,6 @@ export const actions = {
     from = from || 0;
 
     to = to || 35; // TO-DO: 35 -> ?
-
-    //
 
     var previewCode = '';
     var noBufferWindow = false;

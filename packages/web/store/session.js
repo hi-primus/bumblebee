@@ -95,36 +95,13 @@ export const actions =  {
   },
 
   cleanSession ({commit}) {
-
-    commit('mutation', { mutate: 'saveReady', payload: false})
-
-    // commit('mutation', { mutate: 'tab', payload: 0 }, { root: true })
-    // commit('mutation', { mutate: 'commands', payload: [] }, { root: true })
-    // commit('mutation', { mutate: 'workspace', payload: false }, { root: true })
-    // commit('mutation', { mutate: 'datasets', payload: [] }, { root: true })
-    // commit('mutation', { mutate: 'datasetSelection', payload: [] }, { root: true })
-    // commit('mutation', { mutate: 'secondaryDatasets', payload: [] }, { root: true })
-    // commit('mutation', { mutate: 'databases', payload: [] }, { root: true })
-    // commit('mutation', { mutate: 'firstRun', payload: true }, { root: true })
-    // commit('mutation', { mutate: 'cells', payload: [] }, { root: true })
-    // commit('mutation', { mutate: 'lastWrongCode', payload: false }, { root: true })
-    // commit('mutation', { mutate: 'codeDone', payload: '' }, { root: true })
-    // commit('mutation', { mutate: 'configPromise', payload: false }, { root: true })
-    // commit('mutation', { mutate: 'optimusPromise', payload: false }, { root: true })
-    // commit('mutation', { mutate: 'workspacePromise', payload: false }, { root: true })
-    // commit('mutation', { mutate: 'cellsPromise', payload: false }, { root: true })
-    // commit('mutation', { mutate: 'profilingPromises', payload: {} }, { root: true })
-    // commit('mutation', { mutate: 'buffersPromises', payload: {} }, { root: true })
-    // commit('mutation', { mutate: 'listViews', payload: [] }, { root: true })
-
-    commit('clearDatasetProperties', {}, { root: true })
+    commit('mutation', { mutate: 'saveReady', payload: false});
+    commit('clearDatasetProperties', {}, { root: true });
   },
 
   async profile ({commit}, { auth }) {
     var response = await axios.get(process.env.API_URL + '/auth/profile', { headers: { 'Authorization': auth } } )
-
     commit('mutation', { mutate: 'username', payload: response.data.username})
-
     return true
   },
 

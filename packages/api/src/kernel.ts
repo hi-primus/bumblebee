@@ -175,7 +175,8 @@ export const requestToKernel = async function (type, sessionId, payload) {
 			code = kernelRoutines.datasets(payload);
 			break;
 		case 'init':
-			payload.engine = payload.engine || process.env.ENGINE || 'dask';
+      payload.engine = payload.engine || process.env.ENGINE || 'dask';
+      payload.workspace_name = payload.username + '_COILED_' + payload.workspace;
 			code = kernelRoutines.init(payload);
 			break;
 	}
@@ -307,7 +308,7 @@ export const createConnection = async function (sessionId) {
 									response.content.data['text/plain'],
 								);
 							} else if (response.msg_type === 'error') {
-								console.error('msg_type error');
+								console.error('msg_type error on', sessionId);
 								kernels[sessionId].promises[msg_id].resolve({
 									...response.content,
 									status: 'error',
