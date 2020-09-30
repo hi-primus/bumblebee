@@ -28,7 +28,7 @@ Bin columns, string clustering, one-hot encode, scaling, and split train and tes
 ![Prepare](images/ml.gif)
 
 ## Interact with code like in jupyter notebook
-Every action over your data is added as a transformation step using python code that you can modify anytime. Also, you can add any python code you want to make complex Apache Spark transformations.
+Every action over your data is added as a transformation step using python code that you can modify anytime. Also, you can add any python code you want to make complex transformations.
 
 ![Interact](images/transform.gif)
 
