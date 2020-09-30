@@ -2404,7 +2404,14 @@ export default {
       'hasSecondaryDatasets'
     ]),
 
-
+    gettingNewResults: {
+      get () {
+        return this.$store.state.gettingNewResults;
+      },
+      set (value) {
+        this.$store.commit('mutation', {mutate: 'gettingNewResults', payload: value})
+      }
+    },
 
     lastWrongCode: {
       get () {
@@ -2988,23 +2995,25 @@ export default {
 
     async confirmCommand (event) {
 
-      this.isEditing = false
-      this.clearTextSelection()
-      var commandHandler = this.getCommandHandler(this.currentCommand)
+      this.gettingNewResults = true;
+
+      this.isEditing = false;
+      this.clearTextSelection();
+      var commandHandler = this.getCommandHandler(this.currentCommand);
       if (commandHandler.onDone) {
-        this.currentCommand = await commandHandler.onDone(this.currentCommand)
+        this.currentCommand = await commandHandler.onDone(this.currentCommand);
       }
 
-      var code = this.getCode(this.currentCommand)
-      var content = this.getOperationContent(this.currentCommand)
+      var code = this.getCode(this.currentCommand);
+      var content = this.getOperationContent(this.currentCommand);
 
-      var toCell = this.currentCommand._toCell!==undefined ? this.currentCommand._toCell : -1
+      var toCell = this.currentCommand._toCell!==undefined ? this.currentCommand._toCell : -1;
 
-      this.addCell(toCell, { ...this.currentCommand, code, content }, true )
+      this.addCell(toCell, { ...this.currentCommand, code, content }, true );
 
-      this.$emit('updateOperations', { active: (this.currentCommand.request.noOperations ? false : true), title: 'operations' } )
+      this.$emit('updateOperations', { active: (this.currentCommand.request.noOperations ? false : true), title: 'operations' } );
 
-      this.currentCommand = false
+      this.currentCommand = false;
       // this.$store.commit('previewDefault')
     },
 

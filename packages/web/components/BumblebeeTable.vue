@@ -409,19 +409,7 @@
           ]"
           :data-column="column.sampleName+'/'+column.name"
         >
-          <template v-if="column.fillNone && computedColumnValues[rowsColumn]">
-            <div
-              v-for="(value) in computedColumnValues[rowsColumn].filter((e)=>e.index<rowsCount)"
-              :key="'cf'+cindex+'r'+value.index"
-              class="bb-table-i-cell"
-              :style="{ top: rowHeight * value.index+'px' }"
-            >
-              <span class="null-cell">
-                None
-              </span>
-            </div>
-          </template>
-          <template v-else-if="!(lazyColumns.length && !lazyColumns[cindex]) && computedColumnValues[column.sampleName]">
+          <template v-if="!(lazyColumns.length && !lazyColumns[cindex]) && computedColumnValues[column.sampleName] && !((previewError && column.preview) || column.fillNone)">
             <template v-if="column.preview || column.duplicated">
               <template v-for="value in computedColumnValues[column.sampleName].filter((e)=>e!==undefined && e!==null && e.index<rowsCount)">
                 <div
@@ -447,8 +435,20 @@
               >
               </div>
             </template>
-
           </template>
+          <template v-else-if="computedColumnValues[rowsColumn]">
+            <div
+              v-for="(value) in computedColumnValues[rowsColumn].filter((e)=>e.index<rowsCount)"
+              :key="'cf'+cindex+'r'+value.index"
+              class="bb-table-i-cell"
+              :style="{ top: rowHeight * value.index+'px' }"
+            >
+              <span class="null-cell">
+                None
+              </span>
+            </div>
+          </template>
+
         </div>
       </template>
     </div>
@@ -565,11 +565,20 @@ export default {
       'previewCode',
       'currentDuplicatedColumns',
       'currentPreviewNames',
+      'currentPreviewInfo',
       'loadPreview',
       'currentBuffer'
     ]),
 
-    ...mapState(['allTypes']),
+    ...mapState(['allTypes', 'gettingNewResults']),
+
+    previewError () {
+      try {
+        return this.currentPreviewInfo.error
+      } catch (err) {
+        return false
+      }
+    },
 
     columns () {
       if (this.currentDataset.columns && this.currentDataset.columns.length) {
@@ -616,10 +625,25 @@ export default {
 
     computedColumnValues () {
       if (this.loadPreviewActive) {
-        return this.loadPreviewColumnValues
+        return this.loadPreviewColumnValues;
       }
-      var noHighlight = !this.previewCode.code
-      return this.computeColumnValues(this.columnValues, noHighlight, this.rowsCount)
+      var noHighlight = !this.previewCode.code;
+
+      var columnValues = { ...this.columnValues };
+
+
+      if (this.gettingNewResults) {
+
+        this.previewColumns.forEach(column => {
+          if (column.type === 'preview' && !this.currentPreviewNames[column.name]) {
+            var name = column.name.substr(4);
+            columnValues[ name ] = columnValues[ column.name ]
+          }
+        });
+      }
+
+      return this.computeColumnValues(columnValues, noHighlight, this.rowsCount);
+
     },
 
     loadPreviewColumnValues () {
@@ -751,6 +775,8 @@ export default {
         (this.previewCode && wholePreview && !(this.previewColumns && this.previewColumns.length)) // No preview to show
         ||
         (!this.previewCode && !(this.currentDuplicatedColumns && this.currentDuplicatedColumns.length)) // No preview needed
+        ||
+        (this.gettingNewResults) // No preview needed
       ) {
         // console.log('[COLUMNS] No preview')
         return cols
@@ -1036,6 +1062,18 @@ export default {
 
   watch: {
 
+    previewError (value) {
+      if (value) {
+        var columnValues = { ...this.columnValues };
+        this.previewColumns.forEach(column => {
+          if (column.type === 'preview') {
+            delete columnValues[ column.name ]
+          }
+        });
+        this.columnValues = columnValues;
+      }
+    },
+
     currentPreviewNames (value) {
 
       var indicesInSample = {}
@@ -1118,6 +1156,7 @@ export default {
       for (const name in columnValues) {
         // TO-DO: do not include highlights
         var array = []
+
         const values = columnValues[name]
         if (!values || !values.length) {
           return cValues[name] = []
@@ -1558,7 +1597,6 @@ export default {
       this.columnMenuIndex = index
 
       this.selection = [index]
-      //this.$set(this.selection, index, !this.selection[index])
 
       setTimeout(() => {
         var ref = this.$refs['column-menu']
@@ -1715,6 +1753,7 @@ export default {
       if (this.mustUpdateRows) {
         this.mustUpdateRows = false
         this.updateRows()
+        this.$store.commit('mutation', { mutate: 'gettingNewResults', payload: false });
       }
     }, 80),
 
@@ -1912,7 +1951,15 @@ export default {
         }
 
         // console.log('[REQUESTING] before fetch chunk')
-        var checkProfile = await this.fetchChunk(newRanges[i][0], newRanges[i][1])
+        var checkProfile = await this.fetchChunk(newRanges[i][0], newRanges[i][1]);
+
+        // setTimeout(() => {
+        //   this.$store.commit('mutation', { mutate: 'gettingNewResults', payload: false });
+        // }, 85);
+
+        // this.$nextTick(()=>{
+        //   this.$store.commit('mutation', { mutate: 'gettingNewResults', payload: false });
+        // });
 
         this.mustUpdateRows = true
 

@@ -100,6 +100,7 @@ const defaultState = {
   buffersPromises: {},
   listViews: [],
   dataSources: [],
+  gettingNewResults: false
 }
 
 export const state = () => {
