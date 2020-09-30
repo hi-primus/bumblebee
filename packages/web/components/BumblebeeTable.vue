@@ -447,9 +447,9 @@
               class="bb-table-i-cell"
               :style="{ top: rowHeight * value.index+'px' }"
             >
-              <span class="null-cell">
-                None
-              </span>
+              <div class="label-placeholder">
+                <!-- None -->
+              </div>
             </div>
           </template>
 

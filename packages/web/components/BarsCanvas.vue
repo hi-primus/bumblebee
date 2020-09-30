@@ -277,6 +277,7 @@ export default {
 
 <style lang="scss">
   .konva-canvas-container {
+    overflow: hidden;
     width: 100%;
     &>* {
       margin: auto

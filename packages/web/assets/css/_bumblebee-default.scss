@@ -1653,24 +1653,23 @@ $editor-top-padding: 4px;
 %bb-table-loading {
   animation: background-animation 2.1s ease-in-out infinite;
   background-image:
-    repeating-linear-gradient(
-      to right,
-      white 0,
-      white 54px,
-      transparent 54px,
-      transparent 120px,
-      white 120px,
-      white 170px
-    ),
-    repeating-linear-gradient(
-      to bottom,
-      white 0,
-      white 7px,
-      transparent 7px,
-      transparent 16px,
-      white 16px,
-      white 23px
-  );
+  repeating-linear-gradient(
+    to right,
+    white 0,
+    white 57px,
+    transparent 57px,
+    transparent 123px,
+    white 123px,
+    white 169px
+  ),
+  repeating-linear-gradient(to bottom,
+    white 0,
+    white 8px,
+    transparent 8px,
+    transparent 17px,
+    white 17px,
+    white 23px
+  )
 }
 
 .bbt-container {
@@ -1917,18 +1916,10 @@ $editor-top-padding: 4px;
 
   // selection and preview color
 
-  .bb-table-h-cell, .bb-table-cell, .bb-table-plot {
+  .bb-table-h-cell, .bb-table-plot {
     border-top-width: 1px;
     border-top-style: solid;
   }
-
-  // .bb-table-cell, .bb-table-plot, .bb-table-i-column {
-  //   border-top-color: inherit !important;
-  // }
-
-  // .bb-table-cell:not(:last-child), .bb-table-h-cell {
-  //   border-bottom-color: inherit !important;
-  // }
 
   $highlight-colors: (
     "selected": ($data-highlight, lighten($data-highlight-background,20%)),
@@ -1945,7 +1936,7 @@ $editor-top-padding: 4px;
       &.bb-table-h-cell {
         border-top-color: darken($border-color, 10%) !important;
       }
-      &.bb-table-h-cell, &.bb-table-cell, &.bb-table-plot, &.bb-table-i-column {
+      &.bb-table-h-cell, &.bb-table-plot, &.bb-table-i-column {
         border-left-color: darken($border-color, 10%) !important;
         border-right-color: darken($border-color, 10%) !important;
       }
@@ -1966,7 +1957,7 @@ $editor-top-padding: 4px;
   }
 
 
-  .bb-table-h-cell, .bb-table-cell, .bb-table-plot, .bb-table-i-column {
+  .bb-table-h-cell, .bb-table-plot, .bb-table-i-column {
     z-index: 1;
     margin-left: 0px;
 
@@ -1995,58 +1986,15 @@ $editor-top-padding: 4px;
     border-bottom-style: solid;
   }
 
-  .bb-table-h-cell, .bb-table-cell, .bb-table-i-cell  {
+  .bb-table-h-cell, .bb-table-i-cell  {
     padding: 0 4px;
     @extend .text-ellipsis;
     white-space: nowrap;
     text-overflow: ellipsis;
     color: inherit !important;
   }
-  .bb-table-cell, .bb-table-i-cell {
+  .bb-table-i-cell {
     overflow: hidden;
-  }
-
-  .bb-table-cell {
-    font-size: $table-font-size;
-    padding: 0 4px;
-    white-space: pre;
-    height: inherit;
-    &::selection {
-      background: lighten($data-primary,33%);
-		}
-		&:not(.bb-preview) {
-			cursor: text;
-    }
-
-    &.none, &.missing {
-      &::after {
-        margin-left: -0.5em;
-        opacity: 0.667;
-      }
-    }
-
-	  &.none:after {
-      padding: 0 4px;
-      content: 'None';
-    }
-	  &.missing:after {
-      padding: 0 4px;
-      content: 'Missing';
-    }
-    &.not-available {
-      color: darken($data-red,15%) !important;
-      font-family: $font-mono;
-      position: relative;
-      &::before {
-        content: '';
-        position: absolute;
-        animation: background-animation 2.1s ease-in-out infinite;
-        left: 4px;
-        width: 64px;
-        top: 6px;
-        height: 9px;
-      }
-    }
   }
 
   .bb-table-h-cell {
@@ -2816,10 +2764,18 @@ $editor-top-padding: 4px;
     margin-bottom: 3px;
   }
   .label-placeholder {
-    position: relative;
-    width: 65px;
     left: 8px;
     top: 3px;
-    height: 8px;
+    width: 99px;
   }
 }
+
+.label-placeholder {
+  animation: background-animation 2.1s ease-in-out infinite;
+  position: relative;
+  width: 66px;
+  left: 4px;
+  top: 7px;
+  height: 9px;
+}
+
