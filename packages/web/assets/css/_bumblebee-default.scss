@@ -2086,17 +2086,14 @@ $editor-top-padding: 4px;
 @keyframes background-animation {
   0% {
     background-color: rgba(0,0,0,0.11);
-    // background-color: #e5e5e5;
   }
 
   50% {
     background-color: rgba(0,0,0,0.06);
-    // background-color: #f1f1f1;
   }
 
   100% {
     background-color: rgba(0,0,0,0.11);
-    // background-color: #e5e5e5;
   }
 }
 
@@ -2788,5 +2785,41 @@ $editor-top-padding: 4px;
       line-height: 2em;
       top: 0;
     }
+  }
+}
+
+.plot-placeholders {
+  min-height: 90px;
+  &>* {
+    animation: background-animation 2.1s ease-in-out infinite;
+  }
+  .databar-placeholder {
+    width: 100%;
+    height: 8px;
+    margin-bottom: 2px;
+  }
+  .histfreq-placeholder {
+    mask-type: alpha;
+    mask:
+      repeating-linear-gradient(
+        to right,
+        currentColor 0px,
+        currentColor 7px,
+        transparent 7px,
+        transparent 8px,
+      );
+    z-index: -5;
+    width: calc(100% - 16px);
+    margin-left: auto;
+    margin-right: auto;
+    height: 60px;
+    margin-bottom: 3px;
+  }
+  .label-placeholder {
+    position: relative;
+    width: 65px;
+    left: 8px;
+    top: 3px;
+    height: 8px;
   }
 }
