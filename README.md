@@ -2,7 +2,7 @@
 
 # Bumblebee
 
-With Bumblebee, you can easily clean and prepare bigdata using a visual interface. It is built over Optimus/Pyspark so you can handle small and big data efficiently.
+With Bumblebee, you can easily clean and prepare bigdata using a visual interface. It is built over Optimus so you can handle small and big data efficiently.
 
 For more info about Bumblebee, please go to:
 https://hi-bumblebee.com/
