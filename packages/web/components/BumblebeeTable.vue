@@ -251,118 +251,121 @@
             ...(column.classes || []),
           ]"
 				>
-          <transition name="quick-fade" appear mode="out-in">
-            <template v-if="!lazyColumns.length || lazyColumns[index]">
+          <div
+            v-if="column.preview && previewPlotsData[column.name]"
+            :key="'p'+column.index"
+            class="bb-table-plot-content"
+            :data-column="column.name"
+          >
+            <div>
+              <DataBar
+                :key="previewPlotsData[column.name].key+'databar'"
+                :missing="previewPlotsData[column.name].missing"
+                :total="+previewPlotsData[column.name].total"
+                :match="+previewPlotsData[column.name].match"
+                :mismatch="+previewPlotsData[column.name].mismatch"
+                :nullV="+previewPlotsData[column.name].null"
+                class="table-data-bar"
+              />
+              <Frequent
+                v-if="previewPlotsData[column.name].frequency"
+                :key="previewPlotsData[column.name].key"
+                :uniques="previewPlotsData[column.name].count_uniques"
+                :values="previewPlotsData[column.name].frequency"
+                :total="+previewPlotsData[column.name].total || 1"
+                :columnIndex="column.index"
+                class="histfreq"
+              />
+              <Histogram
+                v-else-if="previewPlotsData[column.name].hist"
+                :key="previewPlotsData[column.name].key"
+                :uniques="previewPlotsData[column.name].count_uniques"
+                :values="previewPlotsData[column.name].hist"
+                :total="+previewPlotsData[column.name].total"
+                :columnIndex="column.index"
+                class="histfreq"
+              />
+              <Histogram
+                v-else-if="previewPlotsData[column.name].hist_years"
+                :key="previewPlotsData[column.name].key"
+                :uniques="previewPlotsData[column.name].count_uniques"
+                :values="previewPlotsData[column.name].hist_years"
+                :total="+previewPlotsData[column.name].total"
+                :columnIndex="column.index"
+                class="histfreq"
+              />
               <div
-                v-if="column.preview"
-                :key="'p'+column.index"
-                class="bb-table-plot-content"
-                :data-column="column.name"
+                v-else
+                class="hidden-error"
+                :key="column.name"
               >
-                <div v-if="previewPlotsData[column.name]">
-                  <DataBar
-                    :key="previewPlotsData[column.name].key+'databar'"
-                    :missing="previewPlotsData[column.name].missing"
-                    :total="+previewPlotsData[column.name].total"
-                    :match="+previewPlotsData[column.name].match"
-                    :mismatch="+previewPlotsData[column.name].mismatch"
-                    :nullV="+previewPlotsData[column.name].null"
-                    class="table-data-bar"
-                  />
-                  <Frequent
-                    v-if="previewPlotsData[column.name].frequency"
-                    :key="previewPlotsData[column.name].key"
-                    :uniques="previewPlotsData[column.name].count_uniques"
-                    :values="previewPlotsData[column.name].frequency"
-                    :total="+previewPlotsData[column.name].total || 1"
-                    :columnIndex="column.index"
-                    class="histfreq"
-                  />
-                  <Histogram
-                    v-else-if="previewPlotsData[column.name].hist"
-                    :key="previewPlotsData[column.name].key"
-                    :uniques="previewPlotsData[column.name].count_uniques"
-                    :values="previewPlotsData[column.name].hist"
-                    :total="+previewPlotsData[column.name].total"
-                    :columnIndex="column.index"
-                    class="histfreq"
-                  />
-                  <Histogram
-                    v-else-if="previewPlotsData[column.name].hist_years"
-                    :key="previewPlotsData[column.name].key"
-                    :uniques="previewPlotsData[column.name].count_uniques"
-                    :values="previewPlotsData[column.name].hist_years"
-                    :total="+previewPlotsData[column.name].total"
-                    :columnIndex="column.index"
-                    class="histfreq"
-                  />
-                  <div
-                    v-else
-                    class="hidden-error"
-                    :key="column.name"
-                  >
-                    {{previewPlotsData[column.name]}}
-                  </div>
-                </div>
-                <div class="plot-placeholders" v-else>
-                  <div class="databar-placeholder"></div>
-                  <div class="histfreq-placeholder"></div>
-                  <div class="label-placeholder"></div>
-                </div>
+                {{previewPlotsData[column.name]}}
               </div>
-              <div
-                v-else-if="columns[column.index]"
-                :key="''+column.index"
-                class="bb-table-plot-content"
-                :data-column="column.index"
-              >
-                <div>
-                  <DataBar
-                    :key="plotsData[column.index].key+'databar'"
-                    :missing="plotsData[column.index].missing"
-                    :total="+plotsData[column.index].total || 1"
-                    :match="+plotsData[column.index].match"
-                    :mismatch="+plotsData[column.index].mismatch"
-                    :nullV="+plotsData[column.index].null"
-                    @clicked="clickedBar($event,column)"
-                    class="table-data-bar"
-                    bottom
-                  />
-                  <Frequent
-                    v-if="plotsData[column.index].frequency"
-                    :key="plotsData[column.index].key"
-                    :uniques="plotsData[column.index].count_uniques"
-                    :values="plotsData[column.index].frequency"
-                    :total="+plotsData[column.index].total || 1"
-                    :columnIndex="column.index"
-                    class="histfreq"
-                    selectable
-                  />
-                  <Histogram
-                    v-else-if="plotsData[column.index].hist"
-                    :key="plotsData[column.index].key"
-                    :uniques="plotsData[column.index].count_uniques"
-                    :values="plotsData[column.index].hist"
-                    :total="+plotsData[column.index].total || 1"
-                    :columnIndex="column.index"
-                    class="histfreq"
-                    selectable
-                  />
-                  <Histogram
-                    v-else-if="plotsData[column.index].hist_years"
-                    :key="plotsData[column.index].key"
-                    :uniques="plotsData[column.index].count_uniques"
-                    :values="plotsData[column.index].hist_years"
-                    :total="+plotsData[column.index].total || 1"
-                    :columnIndex="column.index"
-                    class="histfreq"
-                    selectable
-                  />
-                </div>
-              </div>
+            </div>
+          </div>
+          <div
+            v-else-if="columns[column.index] && !column.preview"
+            :key="''+column.index"
+            class="bb-table-plot-content"
+            :data-column="column.index"
 
-            </template>
-          </transition>
+          >
+            <div>
+              <DataBar
+                :key="plotsData[column.index].key+'databar'"
+                :missing="plotsData[column.index].missing"
+                :total="+plotsData[column.index].total || 1"
+                :match="+plotsData[column.index].match"
+                :mismatch="+plotsData[column.index].mismatch"
+                :nullV="+plotsData[column.index].null"
+                @clicked="clickedBar($event,column)"
+                class="table-data-bar"
+                bottom
+              />
+              <Frequent
+                v-if="plotsData[column.index].frequency"
+                :key="plotsData[column.index].key"
+                :uniques="plotsData[column.index].count_uniques"
+                :values="plotsData[column.index].frequency"
+                :total="+plotsData[column.index].total || 1"
+                :columnIndex="column.index"
+                class="histfreq"
+                selectable
+              />
+              <Histogram
+                v-else-if="plotsData[column.index].hist"
+                :key="plotsData[column.index].key"
+                :uniques="plotsData[column.index].count_uniques"
+                :values="plotsData[column.index].hist"
+                :total="+plotsData[column.index].total || 1"
+                :columnIndex="column.index"
+                class="histfreq"
+                selectable
+              />
+              <Histogram
+                v-else-if="plotsData[column.index].hist_years"
+                :key="plotsData[column.index].key"
+                :uniques="plotsData[column.index].count_uniques"
+                :values="plotsData[column.index].hist_years"
+                :total="+plotsData[column.index].total || 1"
+                :columnIndex="column.index"
+                class="histfreq"
+                selectable
+              />
+            </div>
+          </div>
+          <div
+            v-else
+            :key="'placeholder'+index"
+            class="bb-table-plot-content"
+            :data-column="column.name || column.index"
+          >
+            <div class="plot-placeholders">
+              <div class="databar-placeholder"></div>
+              <div class="histfreq-placeholder"></div>
+              <div class="label-placeholder"></div>
+            </div>
+          </div>
 				</div>
       </template>
     </div>
@@ -1055,13 +1058,7 @@ export default {
 
     previewError (value) {
       if (value) {
-        var columnValues = { ...this.columnValues };
-        this.previewColumns.forEach(column => {
-          if (column.type === 'preview') {
-            delete columnValues[ column.name ]
-          }
-        });
-        this.columnValues = columnValues;
+        this.deleteAllPreviews()
       }
     },
 
@@ -1081,6 +1078,12 @@ export default {
     },
 
     currentPreviewColumns (value) {
+      if (!value) {
+        this.$nextTick(()=>{
+          this.deleteAllPreviews();
+
+        })
+      }
       this.focusPreview()
     },
 
@@ -1128,6 +1131,14 @@ export default {
   },
 
   methods: {
+
+    deleteAllPreviews () {
+      var columnValues = {};
+      this.currentDataset.columns.forEach(column => {
+        columnValues[ column.name ] = this.columnValues[ column.name ];
+      });
+      this.columnValues = columnValues;
+    },
 
     tableContainerScroll () {
       this.throttledScrollCheck()

@@ -2730,7 +2730,7 @@ export default {
 
     async downloadDataset () {
       try {
-        this.cancelCommand()
+        await this.cancelCommand()
         await this.runCodeNow()
         var url = `downloads/${this.$store.state.session.username}`
         await this.evalCode(`_output = ${this.currentDataset.dfName}.save.csv("/opt/Bumblebee/packages/api/public/${url}")`)
@@ -2858,6 +2858,8 @@ export default {
     },
 
     async commandHandle (command) {
+
+      await this.cancelCommand();
 
       if (command.empty) {
         this.runCodeNow()
@@ -3017,18 +3019,25 @@ export default {
     },
 
     cancelCommand () {
-			setTimeout(() => {
-        // this.recoverTextSelection()
-        this.clearTextSelection()
-        this.currentCommand = false
-        this.$emit('updateOperations', {
-          active: false,
-          title: 'operations'
-        })
-        this.$store.commit('previewDefault')
-        this.runCodeNow(this.isEditing)
-        this.isEditing = false
-			}, 10);
+      return new Promise((resolve, reject)=>{
+        setTimeout(() => {
+          // this.recoverTextSelection();
+          this.clearTextSelection();
+          this.currentCommand = false;
+          this.$emit('updateOperations', {
+            active: false,
+            title: 'operations'
+          });
+          this.$store.commit('previewDefault');
+          this.runCodeNow(this.isEditing);
+          if (this.isEditing) {
+            this.isEditing = false;
+          }
+          this.$nextTick(()=>{
+            resolve(true);
+          });
+        }, 10);
+      })
     },
 
     draggableStart () {
@@ -3142,7 +3151,7 @@ export default {
       var code = ''
 
       if (!payload.columns || !payload.columns.length) {
-        console.warn('Auto-filling columns')
+        // console.warn('Auto-filling columns')
         payload.columns = this.columns.map(e=>this.currentDataset.columns[e.index].name)
       }
 
@@ -3184,6 +3193,7 @@ export default {
       var command = deepCopy(cell)
 
       var commandHandler = this.getCommandHandler(command)
+
       if (commandHandler.dialog) {
         this.commandsDisabled = true;
         await this.runCodeNow(true, index)
@@ -3236,6 +3246,7 @@ export default {
             run = await this.runCodeNow();
           }
           if (!run) {
+            console.warn('[CELLS] Nothing to run')
             this.$store.commit('previewDefault');
           }
         });
