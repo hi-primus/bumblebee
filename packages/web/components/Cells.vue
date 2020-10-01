@@ -3243,7 +3243,7 @@ export default {
         this.$nextTick(async ()=>{
           var run = false;
           if (code.length) {
-            run = await this.runCodeNow();
+            run = await this.runCodeNow(false, -1, payload.newDfName);
           }
           if (!run) {
             console.warn('[CELLS] Nothing to run')
@@ -3256,11 +3256,11 @@ export default {
 
     },
 
-    async runCodeNow (force = false, ignoreFrom = -1) {
+    async runCodeNow (force = false, ignoreFrom = -1, newDfName) {
 
       try {
 
-        var dfName = this.currentDataset.dfName;
+        var dfName = this.currentDataset.dfName || newDfName;
 
         var cellsResult = await this.runCells(force, ignoreFrom)
 
@@ -3269,6 +3269,8 @@ export default {
         }
 
         var dataset
+
+        console.log('// about to get', dfName)
 
         try {
           dataset = await this.getProfiling(dfName)
