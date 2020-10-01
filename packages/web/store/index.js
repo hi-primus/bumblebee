@@ -1141,9 +1141,9 @@ export const actions = {
     var parsed = response && response.data && response.data.result ? parseResponse(response.data.result) : undefined
 
     var pre = forceName ? '__preview__' : ''
-    parsed.sample.columns = parsed.sample.columns.map(e=>({...e, title: pre+e.title}))
 
     if (parsed && parsed.sample) {
+      parsed.sample.columns = parsed.sample.columns.map(e=>({...e, title: pre+e.title}))
       return {
         code: referenceCode,
         update: getters.datasetUpdates,
