@@ -100,7 +100,7 @@ const defaultState = {
   buffersPromises: {},
   listViews: [],
   dataSources: [],
-  gettingNewResults: false
+  gettingNewResults: ''
 }
 
 export const state = () => {
@@ -197,12 +197,15 @@ export const mutations = {
     Vue.set( state.everyHighlights, state.tab, highlights )
   },
 
-  previewDefault (state) {
+  previewDefault (state, payload) {
+    var names = payload ? payload.names : undefined;
     state.properties.filter(p=>p.clear).forEach(p=>{
-      if (p.multiple) {
-        Vue.set(state['every'+p.name], state.tab, false)
-      } else {
-        state[p.name] = false
+      if (!names || !names.length || names.includes(p.name)) {
+        if (p.multiple) {
+          Vue.set(state['every'+p.name], state.tab, false)
+        } else {
+          state[p.name] = false
+        }
       }
     })
   },
@@ -557,9 +560,10 @@ export const actions = {
     var promise;
 
     if (!forcePromise) {
-      promise = state[name];
-      if (index!==undefined && promise) {
-        promise = promise[index]
+      if (index !== undefined && typeof state[name] == "object") {
+        promise = state[name][index];
+      } else {
+        promise = state[name];
       }
     }
 
@@ -779,6 +783,15 @@ export const actions = {
     })
   },
 
+  async afterNewResults ({ commit }, payload) {
+    commit('mutation', { mutate: 'gettingNewResults', payload: '' });
+    commit('previewDefault');
+  },
+
+  async afterNewProfiling ({ commit }, payload) {
+    commit('previewDefault', { names: ['PreviewNames'] });
+  },
+
   async loadOptimus ({commit, state, dispatch }, { slug, socketPost }) {
 
     await Vue.nextTick();
@@ -987,17 +1000,18 @@ export const actions = {
 
       await Vue.nextTick();
 
-      var cellsResult = await dispatch('getCellsResult', { payload: {socketPost} } );
+      var cellsResult = await dispatch('getCellsResult', { payload: { socketPost } } );
 
       if (!dfName) {
         // return {};
         var workspace = await dispatch('getWorkspace', {} );
         dfName = getters.currentDataset.dfName;
         if (!dfName) {
-          console.warn('[DATA LOADING] No workspaces found')
+          console.warn('[DATA LOADING] No workspaces found');
           return {};
         }
       }
+
       var response = await socketPost('profile', {
         dfName,
         username: state.session.username,
@@ -1005,24 +1019,30 @@ export const actions = {
         key: state.key
       }, {
         timeout: 0
-      })
-      console.log('[DEBUG][CODE][PROFILE]',response.code)
+      });
+
+      console.log('[DEBUG][CODE][PROFILE]',response.code);
 
       if (!response.data.result) {
-        throw response
+        throw response;
       }
 
-      window.pushCode({code: response.code})
-      var dataset = JSON.parse(response.data.result)
-      dataset.dfName = dfName
-      await dispatch('setDataset', { dataset })
-      return dataset
+      window.pushCode({code: response.code});
+      var dataset = JSON.parse(response.data.result);
+      dataset.dfName = dfName;
+      await dispatch('setDataset', { dataset });
+
+      if (state.gettingNewResults) {
+        dispatch('afterNewProfiling');
+      }
+
+      return dataset;
 
     } catch (err) {
       if (err.code) {
-        window.pushCode({code: err.code, err: true})
+        window.pushCode({code: err.code, err: true});
       }
-      throw err
+      throw err;
     }
   },
 

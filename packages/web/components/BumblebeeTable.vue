@@ -574,7 +574,16 @@ export default {
       'currentBuffer'
     ]),
 
-    ...mapState(['allTypes', 'gettingNewResults']),
+    ...mapState(['allTypes']),
+
+    gettingNewResults: {
+      get () {
+        return this.$store.state.gettingNewResults;
+      },
+      set (value) {
+        this.$store.commit('mutation', {mutate: 'gettingNewResults', payload: value})
+      }
+    },
 
     previewError () {
       try {
@@ -635,8 +644,7 @@ export default {
 
       var columnValues = { ...this.columnValues };
 
-
-      if (this.gettingNewResults) {
+      if (this.gettingNewResults=='hide') {
 
         this.previewColumns.forEach(column => {
           if (column.type === 'preview' && !this.currentPreviewNames[column.name]) {
@@ -644,6 +652,7 @@ export default {
             columnValues[ name ] = columnValues[ column.name ]
           }
         });
+
       }
 
       return this.computeColumnValues(columnValues, noHighlight, this.rowsCount);
@@ -780,7 +789,7 @@ export default {
         ||
         (!this.previewCode && !(this.currentDuplicatedColumns && this.currentDuplicatedColumns.length)) // No preview needed
         ||
-        (this.gettingNewResults) // No preview needed
+        (this.gettingNewResults=='hide') // No preview needed
       ) {
         // console.log('[COLUMNS] No preview')
         return cols
@@ -1040,29 +1049,7 @@ export default {
 
     this.mustUpdateRows = true
     this.updateRows()
-
-    // this.$refs['BbTableContainer'] && this.$refs['BbTableContainer'].addEventListener('scroll', this.throttledScrollCheck, {passive: true})
-    // this.$refs['BbTableContainer'] && this.$refs['BbTableContainer'].addEventListener('scroll', this.debouncedScrollCheck, {passive: true})
-
-    // this.$refs['BbTableContainer'] && this.$refs['BbTableContainer'].addEventListener('scroll', this.horizontalScrollCheckUp, {passive: true})
-    // this.$refs['BbTableTopContainer'] && this.$refs['BbTableTopContainer'].addEventListener('scroll', this.horizontalScrollCheckDown, {passive: true})
-
-    // this.$refs['BbTableContainer'] && this.$refs['BbTableContainer'].addEventListener('scroll', this.checkVisibleColumns, {passive: true})
-    // this.$refs['BbTableTopContainer'] && this.$refs['BbTableTopContainer'].addEventListener('scroll', this.checkVisibleColumns, {passive: true})
   },
-
-  // beforeDestroy() {
-  //   try {
-  //     this.$refs['BbTableContainer'].removeEventListener('scroll', this.throttledScrollCheck)
-  //     this.$refs['BbTableContainer'].removeEventListener('scroll', this.debouncedScrollCheck)
-  //     this.$refs['BbTableContainer'].removeEventListener('scroll', this.horizontalScrollCheckUp)
-  //     this.$refs['BbTableTopContainer'].removeEventListener('scroll', this.horizontalScrollCheckDown)
-  //     this.$refs['BbTableContainer'].removeEventListener('scroll', this.checkVisibleColumns)
-  //     this.$refs['BbTableTopContainer'].removeEventListener('scroll', this.checkVisibleColumns)
-  //   } catch (err) {
-  //     console.error(err)
-  //   }
-  // },
 
   watch: {
 
@@ -1756,8 +1743,13 @@ export default {
     debouncedScrollCheck: debounce( function () {
       if (this.mustUpdateRows) {
         this.mustUpdateRows = false
-        this.updateRows()
-        this.$store.commit('mutation', { mutate: 'gettingNewResults', payload: false });
+        this.updateRows();
+        if (this.gettingNewResults) {
+          setTimeout(() => {
+            // next debouncedScrollCheck
+            this.$store.dispatch('afterNewResults');
+          }, 80);
+        }
       }
     }, 80),
 
@@ -1958,11 +1950,11 @@ export default {
         var checkProfile = await this.fetchChunk(newRanges[i][0], newRanges[i][1]);
 
         // setTimeout(() => {
-        //   this.$store.commit('mutation', { mutate: 'gettingNewResults', payload: false });
+        //   this.$store.commit('mutation', { mutate: 'gettingNewResults', payload: '' });
         // }, 85);
 
         // this.$nextTick(()=>{
-        //   this.$store.commit('mutation', { mutate: 'gettingNewResults', payload: false });
+        //   this.$store.commit('mutation', { mutate: 'gettingNewResults', payload: '' });
         // });
 
         this.mustUpdateRows = true

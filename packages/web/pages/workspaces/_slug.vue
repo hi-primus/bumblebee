@@ -472,8 +472,11 @@ export default {
 
       if (!Object.keys(this.$store.state.localConfig).length) {
 
-        console.warn('Getting config from query parameters');
         var query = this.$route.query;
+
+        if (Object.keys(query).length) {
+          console.warn('Getting config from query parameters');
+        }
 
         var params = {};
 

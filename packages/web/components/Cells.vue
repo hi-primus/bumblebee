@@ -2748,12 +2748,6 @@ export default {
       if (this.previewCode) {
         this.$store.commit('setPreviewCode', undefined)
       }
-      // if (this.currentPreviewNames) {
-      //   this.$store.commit('setPreviewNames', undefined)
-      // }
-      // if (this.currentDuplicatedColumns) {
-      //   this.$store.commit('setDuplicatedColumns', undefined)
-      // }
     },
 
     clearTextSelection () {
@@ -2995,7 +2989,13 @@ export default {
 
     async confirmCommand (event) {
 
-      this.gettingNewResults = true;
+      this.gettingNewResults = 'hide';
+
+      if (this.currentPreviewInfo) {
+        if (this.currentPreviewInfo.newColumns>0) {
+          this.gettingNewResults = 'nohide';
+        }
+      }
 
       this.isEditing = false;
       this.clearTextSelection();
@@ -3014,7 +3014,6 @@ export default {
       this.$emit('updateOperations', { active: (this.currentCommand.request.noOperations ? false : true), title: 'operations' } );
 
       this.currentCommand = false;
-      // this.$store.commit('previewDefault')
     },
 
     cancelCommand () {
