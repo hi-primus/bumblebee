@@ -562,6 +562,8 @@ export const actions = {
     if (!forcePromise) {
       if (index !== undefined && typeof state[name] == "object") {
         promise = state[name][index];
+      } else if (index !== undefined) {
+        promise = {}
       } else {
         promise = state[name];
       }
@@ -569,8 +571,11 @@ export const actions = {
 
     if (!promise) {
       promise = dispatch(action, payload);
-      if (index!==undefined) {
-        var promises = state[name];
+      if (index !== undefined) {
+        var promises = {};
+        if (typeof state[name] == "object") {
+          promises = {...state[name]};
+        }
         promises[index] = promise;
         commit('mutation', { mutate: name, payload: promises });
       } else {
@@ -988,9 +993,9 @@ export const actions = {
       forcePromise
     };
 
-    if (forcePromise) {
-      console.warn('Forced cells loading');
-    }
+    // if (forcePromise) {
+    //   console.warn('Forced cells loading');
+    // }
 
     return await dispatch('getPromise', promisePayload);
   },
@@ -1081,14 +1086,20 @@ export const actions = {
 
     slug = slug || state.workspaceSlug || 'default';
 
-    var workspace = await dispatch('getWorkspace', { slug } );
+    var workspaceLoad = await dispatch('getWorkspace', { slug } );
 
-    if (!workspace.tabs.length) {
-      console.warn('[DATA LOADING] Requested buffer window for not existing df');
-      return false
+    var tabs = workspaceLoad.tabs;
+
+    if (!tabs.length) {
+      tabs = state.datasets
     }
 
-    dfName = dfName || workspace.tabs[0].dfName;
+    if (!tabs.length) {
+      console.warn('[DATA LOADING] Requested buffer window for not existing df');
+      return false;
+    }
+
+    dfName = dfName || tabs[0].dfName;
 
     from = from || 0;
 
