@@ -1,6 +1,7 @@
 $icon-size: 24px;
 $toolbar-height: ($icon-size*2) + 1px;
 $not-table-height: $toolbar-height + 79px;
+$scrollbar-width: 12px;
 $table-height: calc(100vh - #{$not-table-height});
 
 
@@ -1696,21 +1697,6 @@ $editor-top-padding: 4px;
 
   position: relative;
 
-  &::after {
-    position: absolute;
-    content: ' ';
-    pointer-events: none;
-    // border-right-style: solid;
-    // border-right-width: 1px;
-    border-bottom-style: solid;
-    border-bottom-width: 1px;
-    top: 0;
-    left: 0;
-    display: block;
-    height: calc(100% - 10px);
-    width: calc(100% - 10px);
-  }
-
   .bb-table-header, .bb-table-plots, .bb-table-i {
     padding-left: 48px;
     display: inline-flex;
@@ -1734,9 +1720,16 @@ $editor-top-padding: 4px;
   }
 
   .bb-table-top-container {
+    @-moz-document url-prefix() {
+      margin-right: 17px !important;
+      &::after {
+        content: none !important;
+      }
+    }
     overflow-x: scroll;
-    overscroll-behavior-x: contain;
     overflow-y: scroll;
+    scrollbar-width: none;
+    overscroll-behavior-x: contain;
     min-height: 1000px;
     flex-shrink: 0;
     flex-basis: auto;
@@ -1753,11 +1746,15 @@ $editor-top-padding: 4px;
       position: absolute;
       background-color: $line-color-1;
       right: 10px;
+      @-moz-document url-prefix() {
+        content: none;
+      }
       width: 1px;
       height: 100%;
       top: 0;
       z-index: 1;
     }
+
     &::after {
       content: ' ';
       position: absolute;
@@ -1823,9 +1820,16 @@ $editor-top-padding: 4px;
     max-width: 100%;
   }
 
+  ::-webkit-scrollbar-track:horizontal {
+    border-top-style: solid;
+    border-top-width: 1px;
+    border-top-color: $line-color-1;
+  }
+
   .bb-table-container {
     overflow-y: scroll;
     overflow-x: scroll;
+    // scrollbar-width: none;
     overscroll-behavior-x: contain;
     position: relative;
     margin-top: calc(122px - 1000px);
@@ -1846,12 +1850,8 @@ $editor-top-padding: 4px;
     overflow: visible !important;
     border-top-style: none;
     border-top-color: white;
-    border-top-width: 2px;
+    border-top-width: 1px;
     padding-right: 4px !important;
-
-    &.bb-selected, &.bb-preview {
-      border-top-style: solid;
-    }
 
     &>.column-header-cell {
       display: flex;
@@ -1935,6 +1935,17 @@ $editor-top-padding: 4px;
     .bb-#{$name} {
       &.bb-table-h-cell {
         border-top-color: darken($border-color, 10%) !important;
+        border-top-style: solid;
+        &::after {
+          content: " ";
+          position: absolute;
+          background-color: darken($border-color, 10%);
+          right: -1px;
+          width: 1px;
+          height: calc(100vh - #{$not-table-height} - 12px); // TO-DO
+          top: 0;
+          z-index: 2;
+        }
       }
       &.bb-table-h-cell, &.bb-table-plot, &.bb-table-i-column {
         border-left-color: darken($border-color, 10%) !important;
@@ -1956,13 +1967,15 @@ $editor-top-padding: 4px;
     }
   }
 
-
   .bb-table-h-cell, .bb-table-plot, .bb-table-i-column {
     z-index: 1;
     margin-left: 0px;
 
-    border-right-width: 1px;
-    border-right-style: solid;
+    &:last-child {
+      border-right-width: 1px;
+      border-right-style: solid;
+    }
+
 
     &:not(:last-child) {
       margin-right: -1px;
@@ -2641,7 +2654,7 @@ $editor-top-padding: 4px;
     padding: 2px 6px;
     border-radius: 6px;
     &.ghost {
-      border-width: 2px;
+      border-width: 1px;
       padding: 0px 4px;
       border-style: solid;
       border-color: $data-primary;
