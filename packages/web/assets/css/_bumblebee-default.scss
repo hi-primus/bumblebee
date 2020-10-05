@@ -1722,9 +1722,12 @@ $editor-top-padding: 4px;
   .bb-table-top-container {
     @-moz-document url-prefix() {
       margin-right: 17px !important;
-      &::after {
-        content: none !important;
-      }
+
+       // small horizontal line
+
+      // &::after {
+      //   content: none !important;
+      // }
     }
     overflow-x: scroll;
     overflow-y: scroll;
@@ -1741,29 +1744,17 @@ $editor-top-padding: 4px;
       pointer-events: none;
     }
 
-    &::before {
-      content: ' ';
-      position: absolute;
-      background-color: $line-color-1;
-      right: 10px;
-      @-moz-document url-prefix() {
-        content: none;
-      }
-      width: 1px;
-      height: 100%;
-      top: 0;
-      z-index: 1;
-    }
+    // small horizontal line
 
-    &::after {
-      content: ' ';
-      position: absolute;
-      background-color: $line-color-1;
-      right: 0;
-      width: 10px;
-      height: 1px;
-      top: 119px;
-    }
+    // &::after {
+    //   content: ' ';
+    //   position: absolute;
+    //   background-color: $line-color-1;
+    //   right: 0;
+    //   width: 10px;
+    //   height: 1px;
+    //   top: 119px;
+    // }
 
     display: flex;
     flex-direction: column;
@@ -1815,11 +1806,39 @@ $editor-top-padding: 4px;
     }
   }
 
-  .bb-table-container, .bb-table-top-container {
-    margin-right: auto;
-    max-width: 100%;
+  .bb-table-container {
+    &::-webkit-scrollbar-track:vertical {
+
+
+      border-top-style: solid;
+      border-top-width: 1px;
+      border-top-color: $line-color-1;
+      z-index: 5;
+    }
   }
 
+  .bb-table-container, .bb-table-top-container {
+    &::-webkit-scrollbar-track:vertical {
+      border-left-style: solid;
+      border-left-width: 1px;
+      border-left-color: $line-color-1;
+      z-index: 5;
+    }
+    margin-right: auto;
+    max-width: 100%;
+    width: 100%;
+  }
+
+  ::-webkit-scrollbar:horizontal {
+    z-index: 10;
+    background: blue !important;
+  }
+  ::-webkit-scrollbar-corner {
+    border-top-style: solid;
+    border-top-width: 1px;
+    border-top-color: $line-color-1;
+    background: white !important;
+  }
   ::-webkit-scrollbar-track:horizontal {
     border-top-style: solid;
     border-top-width: 1px;
@@ -1933,30 +1952,41 @@ $editor-top-padding: 4px;
     $border-color: nth($colors, 1);
     $background-color: nth($colors, 2);
     .bb-#{$name} {
+      &:last-child {
+        border-right-width: 1px !important;
+      }
       &.bb-table-h-cell {
         border-top-color: darken($border-color, 10%) !important;
         border-top-style: solid;
-        &::after {
-          content: " ";
-          position: absolute;
-          background-color: darken($border-color, 10%);
-          right: -1px;
-          width: 1px;
-          height: calc(100vh - #{$not-table-height} - 12px); // TO-DO
-          top: 0;
-          z-index: 2;
-        }
       }
       &.bb-table-h-cell, &.bb-table-plot, &.bb-table-i-column {
         border-left-color: darken($border-color, 10%) !important;
         border-right-color: darken($border-color, 10%) !important;
+        &:last-child {
+          &::after {
+            right: 1px;
+            background-color: darken($border-color, 10%) !important;
+          }
+        }
       }
       &.bb-table-i-column {
         border-bottom-color: darken($border-color, 10%) !important;
+
       }
       background-color: $background-color;
       // border-color: darken($border-color, 10%) !important;
       & + * {
+        &::before {
+          content: " ";
+          position: absolute;
+          background-color: darken($border-color, 10%);
+          left: -1px;
+          width: 1px;
+          // height: calc(100vh - #{$not-table-height} - 12px); // TO-DO
+          height: calc(100% + 2px);
+          top: -1px;
+          z-index: 2;
+        }
         border-left-color: darken($border-color, 10%) !important;
       }
       &:last-child {
@@ -1967,19 +1997,30 @@ $editor-top-padding: 4px;
     }
   }
 
+  .bb-table-header, .bb-table-plots, .bb-table-i-row {
+  }
+
   .bb-table-h-cell, .bb-table-plot, .bb-table-i-column {
     z-index: 1;
     margin-left: 0px;
 
     &:last-child {
-      border-right-width: 1px;
+      border-right-width: 0px !important;
       border-right-style: solid;
+      &::after {
+        content: ' ';
+        display: block;
+        position: absolute;
+        right: 0px;
+        transform: scaleX(1000%);
+        top: -1px;
+        width: 0.1px;
+        height: calc(100% + 2px);
+        background-color: $line-color-1;
+      }
     }
 
-
-    &:not(:last-child) {
-      margin-right: -1px;
-    }
+    margin-right: -1px;
 
     border-left-width: 1px;
     border-left-style: solid;
@@ -2345,6 +2386,15 @@ $editor-top-padding: 4px;
   font-family: $font-mono-table;
   font-size: $table-font-size;
   padding-left: 1px;
+
+
+  &:after {
+    height: 100%;
+    width: 100%;
+    content: ' ';
+    background: white;
+  }
+
   .bb-table-i-rows {
     width: 100%;
   }
