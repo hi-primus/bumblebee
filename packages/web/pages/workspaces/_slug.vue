@@ -186,7 +186,12 @@
           </div>
 
           <v-footer fixed="fixed" app>
-            <v-layout class="px-4" row justify-space-between>
+            <v-layout class="px-4 caption-2" row justify-space-between>
+              <span
+                v-if="loadingStatus"
+              >
+                {{loadingStatus!==true ? loadingStatus : 'Updating'}}
+              </span>
               <span />
               <span v-if="currentDataset && currentDataset.summary" class="caption-2">
                 <template
@@ -278,7 +283,8 @@ export default {
 	computed: {
     ...mapGetters(['currentDataset','previewCode']),
 
-    ...mapState('session',['workspace', 'workspaceStatus']),
+    ...mapState('session', ['workspace', 'workspaceStatus']),
+    ...mapState(['loadingStatus']),
 
     tab: {
       get () {

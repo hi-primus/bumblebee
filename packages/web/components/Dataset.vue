@@ -648,6 +648,7 @@ export default {
           if (this.loadedPreviewCode!==currentCode) {
             this.loadedPreviewCode = currentCode
             if (this.previewCode.load) {
+              this.$store.commit('mutation', {mutate: 'loadingStatus', payload: 'Updating Preview' })
               var dfName = 'preview_df'
               var code = this.previewCode.code // is always static
               code = `${dfName} = ${code} \n`
@@ -679,6 +680,8 @@ export default {
               var profile = parseResponse(pResponse.data.result)
 
               this.$store.commit('setLoadPreview', { profile } )
+
+              this.$store.commit('mutation', {mutate: 'loadingStatus', payload: false })
 
             }
           }

@@ -79,6 +79,7 @@ properties.forEach((p)=>{
 })
 
 const defaultState = {
+  loadingStatus: false,
   coiledAvailable: false,
   tab: 0,
   commands: [],

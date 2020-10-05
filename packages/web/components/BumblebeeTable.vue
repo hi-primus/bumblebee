@@ -1759,6 +1759,7 @@ export default {
           setTimeout(() => {
             // next debouncedScrollCheck
             this.$store.dispatch('afterNewResults');
+            this.$store.commit('mutation', {mutate: 'loadingStatus', payload: false });
           }, 80);
         }
       }

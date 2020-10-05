@@ -2994,6 +2994,7 @@ export default {
     async confirmCommand (event) {
 
       this.gettingNewResults = 'hide';
+      this.$store.commit('mutation', {mutate: 'loadingStatus', payload: 'Updating dataset' });
 
       if (this.currentPreviewInfo) {
         if (this.currentPreviewInfo.newColumns>0) {
