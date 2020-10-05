@@ -17,6 +17,7 @@ import {
 	requestToKernel,
 } from './kernel';
 import kernelRoutines from './kernel-routines';
+import { getGenerator } from 'optimus-code-api'
 
 @WebSocketGateway()
 export class AppGateway
@@ -92,6 +93,40 @@ export class AppGateway
 				code: payload.code,
 				timestamp: payload.timestamp,
 			});
+		} else if (payload.message === 'download') {
+      const sessionId = payload.username + '_BBSESSION_' + payload.workspace;
+      const file_name = `${payload.username}-dataset-${payload.timestamp}`;
+      const file_type = `csv`;
+      const resultPayload = {
+        ...payload,
+        file_name,
+        file_type,
+        endpoint: 'ENDPOINT',
+        access_key_id: 'ACCESS_KEY_ID',
+        secret_key: 'SECRET_KEY',
+        bucket: 'BUCKET'
+      }
+      const execPayload = {
+        ...payload,
+        file_name,
+        file_type,
+        endpoint: process.env.DO_ENDPOINT,
+        access_key_id: process.env.DO_ACCESS_KEY_ID,
+        secret_key: process.env.DO_SECRET_KEY,
+        bucket: process.env.DO_BUCKET
+      }
+      const resultCode = `_output = ${payload.dfName}${getGenerator('uploadToS3',resultPayload)(resultPayload)}`;
+      const code = `_output = ${payload.dfName}${getGenerator('uploadToS3',execPayload)(execPayload)}`;
+      console.log({code});
+      const result = {
+        ...(await runCode(code, sessionId)),
+        url: `https://${process.env.DO_BUCKET}.${process.env.DO_ENDPOINT}/${payload.username}/${file_name}.${file_type}`,
+      };
+			client.emit('reply', {
+        data: result,
+				code: resultCode,
+				timestamp: payload.timestamp,
+			});
 		} else if (payload.message === 'cells') {
 			const sessionId = payload.username + '_BBSESSION_' + payload.workspace;
 			let code = payload.code;
@@ -104,7 +139,7 @@ export class AppGateway
 			});
 		} else if (payload.message === 'profile') {
 			const sessionId = payload.username + '_BBSESSION_' + payload.workspace;
-			const code = `_output = ${payload.dfName}.ext.profile(columns="*", output="json")`;
+			const code = `_output = ${payload.dfName}${getGenerator('profile',payload)(payload)}`;
 			const result = await runCode(code, sessionId);
 			client.emit('reply', {
 				data: result,

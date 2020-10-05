@@ -228,9 +228,7 @@ import OperationField from '@/components/OperationField'
 import clientMixin from '@/plugins/mixins/client'
 import applicationMixin from '@/plugins/mixins/application'
 import { mapGetters } from 'vuex'
-import OptimusApi from 'optimus-code-api'
-
-const { getGenerator } = OptimusApi
+import { getGenerator } from 'optimus-code-api'
 
 import {
 
@@ -2732,9 +2730,13 @@ export default {
       try {
         await this.cancelCommand()
         await this.runCodeNow()
-        var url = `downloads/${this.$store.state.session.username}`
-        await this.evalCode(`_output = ${this.currentDataset.dfName}.save.csv("/opt/Bumblebee/packages/api/public/${url}")`)
-        this.forceFileDownload(process.env.API_URL+'/'+url+'/0.part',this.currentDataset.name+'.csv')
+        var payload = {
+          dfName: this.currentDataset.dfName,
+          username: this.$store.state.session.username,
+          workspace: this.$route.params.slug
+        }
+        var response = await this.socketPost('download', payload )
+        this.forceFileDownload(response.data.url)
       } catch (error) {
         console.error(error)
       }
