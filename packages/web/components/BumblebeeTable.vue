@@ -1357,14 +1357,14 @@ export default {
           this.$store.commit('setHighlights', { matchColumns, color: this.previewCode.color })
 
           if (previewColumns.length || matchRowsColumns.length) {
-            // console.log('[DEBUG][checkIncomingColumns] check = true')
+            // console.debug('[DEBUG][checkIncomingColumns] check = true')
             return true // must cehck
           }
 
         }
       }
 
-      // console.log('[DEBUG][checkIncomingColumns] check = false')
+      // console.debug('[DEBUG][checkIncomingColumns] check = false')
       return false // no check
     },
 
@@ -1859,21 +1859,23 @@ export default {
           //   })
           // }
 
-        }
-        else if (this.toFetch.length) {
+        } else if (this.toFetch.length) {
           this.$nextTick(()=>{
             this.throttledScrollCheck(false)
           })
           return false
         }
       } catch (err) {
-        console.error(err)
-        this.fetching = false
+        console.error(err);
+        this.fetching = false;
+        if (err.message.includes('(Error on profiling)') || err.message.includes('(Error on cells)')) {
+          throw err;
+        }
         if (this.toFetch.length) {
           this.$nextTick(()=>{
             this.throttledScrollCheck(false)
           })
-          return false
+          return false;
         }
       }
 
@@ -1958,16 +1960,8 @@ export default {
           await this.unsetProfile()
         }
 
-        // console.log('[REQUESTING] before fetch chunk')
         var checkProfile = await this.fetchChunk(newRanges[i][0], newRanges[i][1]);
-
-        // setTimeout(() => {
-        //   this.$store.commit('mutation', { mutate: 'gettingNewResults', payload: '' });
-        // }, 85);
-
-        // this.$nextTick(()=>{
-        //   this.$store.commit('mutation', { mutate: 'gettingNewResults', payload: '' });
-        // });
+        console.debug('[FETCHING] Chunk done')
 
         this.mustUpdateRows = true
 
@@ -1976,8 +1970,8 @@ export default {
         if (checkProfile) {
           // console.log('[REQUESTING] profile must be checked')
           if (this.currentProfilePreview.code !== previewCode) {
-            // console.log('[REQUESTING] set profile')
             await this.setProfile(previewCode)
+            console.debug('[FETCHING] Profiling done')
           }
         }
       }
@@ -1996,12 +1990,18 @@ export default {
         previewCode = this.previewCode.code;
       }
 
-      var addToFetch = await this.$store.dispatch('getBufferWindow', {
-        from,
-        to,
-        beforeCodeEval: this.previewCode.beforeCodeEval,
-        socketPost: this.socketPost,
-      });
+      try {
+        var addToFetch = await this.$store.dispatch('getBufferWindow', {
+          from,
+          to,
+          beforeCodeEval: this.previewCode.beforeCodeEval,
+          socketPost: this.socketPost,
+        });
+      } catch (err) {
+        err.message = '(Error on buffer request) ' + (err.message || '')
+        throw err;
+      }
+
 
       if (addToFetch) {
         this.fetched.push(addToFetch);

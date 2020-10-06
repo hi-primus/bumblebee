@@ -79,6 +79,7 @@ properties.forEach((p)=>{
 })
 
 const defaultState = {
+  codeError: '',
   loadingStatus: false,
   coiledAvailable: false,
   tab: 0,
@@ -221,39 +222,38 @@ export const mutations = {
 
 	setDataset (state, { dataset, preview, tab }) {
 
-    console.log("[BUMBLEBLEE] Opening dataset",dataset)
+    console.log("[BUMBLEBLEE] Opening dataset",dataset);
 
     // if (dataset.name===null) {
 
-    var fileName = dataset.file_name
+    var fileName = dataset.file_name;
 
     if (fileName && fileName.includes('/')) {
-      fileName = fileName.split('/')
-      dataset.file_name = fileName[fileName.length - 1]
+      fileName = fileName.split('/');
+      dataset.file_name = fileName[fileName.length - 1];
     }
 
     if (!dataset.name) {
       if (dataset.file_name) {
-        dataset.name = dataset.file_name.split('.')[0]
+        dataset.name = dataset.file_name.split('.')[0];
       } else {
-        dataset.name = `Dataset${state.datasetCounter}`
-        state.datasetCounter = state.datasetCounter + 1
+        dataset.name = `Dataset${state.datasetCounter}`;
+        state.datasetCounter = state.datasetCounter + 1;
       }
 
     }
 
     if (preview) {
-      dataset.preview = preview
+      dataset.preview = preview;
     } else {
-      dataset.blank = false
+      dataset.blank = false;
     }
 
     if (!Array.isArray(dataset.columns)) {
-      dataset.columns = Object.entries(dataset.columns).map(([key, value])=>({...value, name: key}))
+      dataset.columns = Object.entries(dataset.columns).map(([key, value])=>({...value, name: key}));
     }
 
-
-    tab = tab || state.tab
+    tab = tab || state.tab;
 
     // var _c
     // try {
@@ -262,29 +262,31 @@ export const mutations = {
     //   _c = []
     // }
 
-    var previousDataset = state.datasets[tab] || {}
+    var previousDataset = state.datasets[tab] || {};
 
     if (previousDataset.dfName) {
-      dataset.dfName = previousDataset.dfName
+      dataset.dfName = previousDataset.dfName;
     }
 
 
-    Vue.set(state.datasets, tab, dataset)
+    Vue.set(state.datasets, tab, dataset);
 
-    state.datasetSelection[tab] = {} // {columns: _c} // TO-DO: Remember selection
+    state.datasetSelection[tab] = {}; // {columns: _c} // TO-DO: Remember selection
 
-    Vue.set(state.datasetSelection, tab, state.datasetSelection[tab] )
-    Vue.set(state.buffersPromises, tab, false)
+    Vue.set(state.datasetSelection, tab, state.datasetSelection[tab] );
+    Vue.set(state.buffersPromises, tab, false);
 
     state.properties.filter(p=>p.clearOnLoad).forEach(p=>{
       if (p.multiple) {
-        Vue.set(state['every'+p.name], tab, false)
+        Vue.set(state['every'+p.name], tab, false);
       } else {
-        state[p.name] = false
+        state[p.name] = false;
       }
-    })
+    });
 
-    state.datasetUpdates = state.datasetUpdates + 1
+    state.datasetUpdates = state.datasetUpdates + 1;
+
+    return dataset;
 
   },
 
@@ -511,11 +513,11 @@ export const actions = {
         duration: (endTime - startTime)/1000
       }
 
-      console.log('[DEBUG][RESULT]', response)
-      console.log('[DEBUG][CODE]', response.code)
+      console.debug('[DEBUG][RESULT]', response)
+      console.debug('[DEBUG][CODE]', response.code)
 
       try {
-        console.log(//time
+        console.debug(//time
           '[DEBUG][TIMES]',
           'front', response._frontTime,
           'server', response._serverTime,
@@ -526,7 +528,7 @@ export const actions = {
           'ServerToFront', response._frontTime.end-response._serverTime.end
         )
       } catch (err) {
-        console.log(//time
+        console.debug(//time
           '[DEBUG][TIMES]',
           'front', response._frontTime,
           'server', response._serverTime,
@@ -570,8 +572,9 @@ export const actions = {
       }
     }
 
-    if (!promise) {
+    if (!promise || promise.rejected) {
       promise = dispatch(action, payload);
+      promise.catch(e=>promise.rejected = true);
       if (index !== undefined) {
         var promises = {};
         if (typeof state[name] == "object") {
@@ -583,7 +586,6 @@ export const actions = {
         commit('mutation', { mutate: name, payload: promise });
       }
     }
-
 
     return promise;
 
@@ -616,7 +618,7 @@ export const actions = {
 
   async loadWorkspace ({commit, dispatch, state}, { slug }) {
 
-    commit('session/mutation', { mutate: 'saveReady', payload: false })
+    commit('session/mutation', { mutate: 'saveReady', payload: false });
 
     if (!slug) {
       var workspace = state.workspace
@@ -648,8 +650,8 @@ export const actions = {
           name: e.name,
           dataSources: e.dataSources,
           ...profiling
-        }
-      })
+        };
+      });
       cells = response.data.commands.map( e=>({ ...JSON.parse(e), done: false }) );
     }
 
@@ -659,38 +661,34 @@ export const actions = {
     //   commit('mutation', { mutate: 'tab', payload: tab})
     // }
 
-    var commands = cells.filter(e=>!(e && e.payload && e.payload.request && e.payload.request.isLoad))
-    var dataSources = cells.filter(e=>e && e.payload && e.payload.request && e.payload.request.isLoad)
+    var commands = cells.filter(e=>!(e && e.payload && e.payload.request && e.payload.request.isLoad));
+    var dataSources = cells.filter(e=>e && e.payload && e.payload.request && e.payload.request.isLoad);
 
     // console.log('[WORKSPACE] Obtained', { commands, dataSources });
 
     tabs.forEach((dataset, index) => {
       // commit('mutation', { mutate: 'tab', payload: index })
       if (dataset.columns) {
-        // console.log('[WORKSPACE] Setting', { dataset, to: index });
-        commit('setDataset', { dataset, tab: index })
+        console.debug('[DATASET] Setting', { dataset, to: index });
+        commit('setDataset', { dataset, tab: index });
         if (tab<0) {
-          tab = index
+          tab = index;
         }
       } else {
-        // console.log('[WORKSPACE] Creating', { dataset, to: index });
-        commit('newDataset', { dataset, current: true, tab: index })
+        console.debug('[DATASET] Creating', { dataset, to: index });
+        commit('newDataset', { dataset, current: true, tab: index });
       }
     })
 
     if (tab<0) {
-      tab = 0
+      tab = 0;
     }
-
-    commit('mutation', { mutate: 'commands', payload: commands })
-    commit('mutation', { mutate: 'dataSources', payload: dataSources})
-    commit('mutation', { mutate: 'workspace', payload: response.data })
-
-    commit('mutation', { mutate: 'tab', payload: tab})
-
-    commit('session/mutation', { mutate: 'saveReady', payload: true}) // TO-DO: fix
-
-    return response.data
+    commit('mutation', { mutate: 'commands', payload: commands });
+    commit('mutation', { mutate: 'dataSources', payload: dataSources});
+    commit('mutation', { mutate: 'tab', payload: tab});
+    commit('mutation', { mutate: 'workspace', payload: response.data });
+    commit('session/mutation', { mutate: 'saveReady', payload: true});
+    return response.data;
 
   },
 
@@ -818,7 +816,7 @@ export const actions = {
       ...params
     });
 
-    console.log('[DEBUG][INITIALIZATION] initializeOptimus response', response);
+    console.debug('[DEBUG][INITIALIZATION] initializeOptimus response', response);
 
     var functions;
 
@@ -890,99 +888,113 @@ export const actions = {
   },
 
   async loadCellsResult ({dispatch, state, getters, commit}, { force, ignoreFrom, socketPost }) {
+    try {
+      await Vue.nextTick();
 
-    await Vue.nextTick();
+      var optimusPromise = dispatch('getOptimus',  { payload: {socketPost} } );
 
-    var optimusPromise = dispatch('getOptimus',  { payload: {socketPost} } );
+      var workspacePromise = dispatch('getWorkspace',  {} );
 
-    var workspacePromise = dispatch('getWorkspace',  {} );
+      await Promise.all([optimusPromise, workspacePromise])
 
-    await Promise.all([optimusPromise, workspacePromise])
+      if (ignoreFrom>=0) {
+        force = true;
+      }
 
-    if (ignoreFrom>=0) {
-      force = true;
+      var newOnly = false;
+      var code = await dispatch('codeText', { newOnly, ignoreFrom });
+
+      var codeDone = force ? '' : state.codeDone.trim();
+
+      var rerun = false;
+
+      if (code==='') {
+        console.debug('%c[CODE MANAGER] Trying to run an empty string as code', 'color: yellow;');
+        return false;
+      }
+
+      if (code === codeDone) {
+        console.debug('%c[CODE MANAGER] Nothing new to run', 'color: yellow;');
+        return false;
+      }
+      else if (
+        ( !state.firstRun && (force || code.indexOf(codeDone)!=0 || codeDone=='' || state.lastWrongCode) )
+        ||
+        !window.socketAvailable
+      ) {
+        // console.log('[CODE MANAGER] every cell', {force, firstRun: state.firstRun, code, codeDone, lastWrongCode: state.lastWrongCode, socketAvailable: window.socketAvailable})
+        rerun = true;
+      }
+      else {
+        // console.log('[CODE MANAGER] new cells only')
+        newOnly = true;
+        code = await dispatch('codeText', { newOnly, ignoreFrom }); // new cells only
+      }
+
+      if (code===state.lastWrongCode) {
+        console.debug('%c[CODE MANAGER] Cells went wrong last time', 'color: yellow;');
+        return false;
+        throw new Error('Trying to run a bad code (see logs above)');
+      }
+
+      if (rerun) {
+        // console.log('[CODE MANAGER] every cell is new')
+        await dispatch('markCells', { mark: false, ignoreFrom });
+      }
+
+      var firstRun = state.firstRun;
+
+      if (firstRun) {
+        rerun = false;
+      }
+
+      commit('mutation', { mutate: 'commandsDisabled', payload: true });
+
+      // run
+
+      await dispatch('beforeRunCells', { newOnly, ignoreFrom });
+
+      var dfName = getters.currentDataset.dfName;
+
+      if (dfName) {
+        commit('setBufferPromise', { dfName, promise: false });
+      }
+
+      var response = await socketPost('cells', {
+        code,
+        username: state.session.username,
+        workspace: state.workspaceSlug || 'default',
+        key: state.key
+      }, {
+        timeout: 0
+      });
+
+      response.originalCode = code;
+
+      console.debug('[DEBUG][CODE]',response.code)
+      window.pushCode({code: response.code})
+
+      commit('mutation', { mutate: 'commandsDisabled', payload: false });
+
+      if (!response.data || !response.data.result) {
+        throw response
+      }
+
+      return response
+    } catch (err) {
+
+      if (err.code && window.pushCode) {
+        window.pushCode({code, err: true});
+      }
+      commit('mutation', { mutate: 'codeError', payload: printError(err)});
+      await dispatch('markCells', { ignoreFrom, error: true });
+      commit('mutation', { mutate: 'lastWrongCode', payload: code});
+      commit('mutation', { mutate: 'commandsDisabled', payload: undefined});
+      err.message = '(Error on cells) ' + (err.message || '')
+      // console.error(err);
+      throw err;
+
     }
-
-    var newOnly = false;
-    var code = await dispatch('codeText', { newOnly, ignoreFrom });
-
-    var codeDone = force ? '' : state.codeDone.trim();
-
-    var rerun = false;
-
-    if (code==='') {
-      // console.log('[CODE MANAGER] nothing to run')
-      return false;
-    }
-
-    if (code === codeDone) {
-      // console.log('[CODE MANAGER] nothing new to run')
-      return false;
-    }
-    else if (
-      ( !state.firstRun && (force || code.indexOf(codeDone)!=0 || codeDone=='' || state.lastWrongCode) )
-      ||
-      !window.socketAvailable
-    ) {
-      // console.log('[CODE MANAGER] every cell', {force, firstRun: state.firstRun, code, codeDone, lastWrongCode: state.lastWrongCode, socketAvailable: window.socketAvailable})
-      rerun = true;
-    }
-    else {
-      // console.log('[CODE MANAGER] new cells only')
-      newOnly = true;
-      code = await dispatch('codeText', { newOnly, ignoreFrom }); // new cells only
-    }
-
-    if (code===state.lastWrongCode) {
-      // console.log('[CODE MANAGER] code went wrong last time')
-      return false;
-    }
-
-    if (rerun) {
-      // console.log('[CODE MANAGER] every cell is new')
-      await dispatch('markCells', { mark: false, ignoreFrom });
-    }
-
-    var firstRun = state.firstRun;
-
-    if (firstRun) {
-      rerun = false;
-    }
-
-    commit('mutation', { mutate: 'commandsDisabled', payload: true });
-
-    // run
-
-    await dispatch('beforeRunCells', { newOnly, ignoreFrom });
-
-    var dfName = getters.currentDataset.dfName;
-
-    if (dfName) {
-      commit('setBufferPromise', { dfName, promise: false });
-    }
-
-    var response = await socketPost('cells', {
-      code,
-      username: state.session.username,
-      workspace: state.workspaceSlug || 'default',
-      key: state.key
-    }, {
-      timeout: 0
-    });
-
-    response.originalCode = code;
-
-    console.log('[DEBUG][CODE]',response.code)
-    window.pushCode({code: response.code})
-
-    commit('mutation', { mutate: 'commandsDisabled', payload: false });
-
-    if (!response.data || !response.data.result) {
-      throw response
-    }
-
-    return response
-
   },
 
   async getCellsResult ({dispatch}, { forcePromise, payload }) {
@@ -1001,12 +1013,12 @@ export const actions = {
     return await dispatch('getPromise', promisePayload);
   },
 
-  async loadProfiling ({dispatch, state, getters}, {dfName, socketPost}) {
+  async loadProfiling ({dispatch, state, getters, commit}, {dfName, socketPost, ignoreFrom}) {
     try {
 
       await Vue.nextTick();
 
-      var cellsResult = await dispatch('getCellsResult', { payload: { socketPost } } );
+      var cellsResult = await dispatch('getCellsResult', { payload: { socketPost, ignoreFrom } } );
 
       if (!dfName) {
         // return {};
@@ -1027,7 +1039,7 @@ export const actions = {
         timeout: 0
       });
 
-      console.log('[DEBUG][CODE][PROFILE]',response.code);
+      console.debug('[DEBUG][CODE][PROFILE]',response.code);
 
       if (!response.data.result) {
         throw response;
@@ -1036,6 +1048,7 @@ export const actions = {
       window.pushCode({code: response.code});
       var dataset = JSON.parse(response.data.result);
       dataset.dfName = dfName;
+      console.debug('[DATASET] Setting', { dataset, to: dfName });
       await dispatch('setDataset', { dataset });
 
       if (state.gettingNewResults) {
@@ -1045,9 +1058,15 @@ export const actions = {
       return dataset;
 
     } catch (err) {
-      if (err.code) {
+      if (err.code && window.pushCode) {
         window.pushCode({code: err.code, err: true});
       }
+      commit('mutation', { mutate: 'codeError', payload: printError(err)});
+      await dispatch('markCells', { ignoreFrom, error: true });
+      commit('mutation', { mutate: 'lastWrongCode', payload: code});
+      commit('mutation', { mutate: 'commandsDisabled', payload: undefined});
+      err.message = '(Error on profiling) ' + (err.message || '')
+      // console.error(err);
       throw err;
     }
   },
@@ -1066,10 +1085,15 @@ export const actions = {
 
   async loadBuffer ({ dispatch }, {dfName, socketPost}) {
 
+    if (!dfName) {
+      throw new Error('Trying to load buffer for undefined Dataframe name');
+    }
+
     await Vue.nextTick();
     var payload = {dfName, socketPost};
     var profiling = await dispatch('getProfiling', { payload });
     return await dispatch('evalCode', {socketPost, code: '_output = '+dfName+'.ext.set_buffer("*")'})
+
   },
 
   async getBuffer ({dispatch}, { dfName, socketPost }) {
@@ -1120,7 +1144,15 @@ export const actions = {
 
     var referenceCode = await getPropertyAsync(previewCode) || ''
 
-    await dispatch('getBuffer', { dfName: getters.currentDataset.dfName, socketPost });
+    var currentDataset = getters.currentDataset;
+
+    if (!currentDataset && !dfName) {
+      throw new Error('No dataset found')
+    }
+
+    var datasetDfName = currentDataset.dfName || dfName;
+
+    await dispatch('getBuffer', { dfName: datasetDfName, socketPost });
 
     if (beforeCodeEval) {
       beforeCodeEval()
@@ -1130,7 +1162,7 @@ export const actions = {
     if (getters.currentProfilePreview.done) {
       response = await dispatch('evalCode',{ socketPost, code: `_output = _df_profile${(noBufferWindow) ? '' : '['+from+':'+(to+1)+']'}.ext.to_json("*")`})
     } else {
-      response = await dispatch('evalCode',{ socketPost, code: `_output = ${getters.currentDataset.dfName}.ext.buffer_window("*"${(noBufferWindow) ? '' : ', '+from+', '+(to+1)})${code}.ext.to_json("*")`})
+      response = await dispatch('evalCode',{ socketPost, code: `_output = ${datasetDfName}.ext.buffer_window("*"${(noBufferWindow) ? '' : ', '+from+', '+(to+1)})${code}.ext.to_json("*")`})
     }
 
     if (response.data.status === 'error') {

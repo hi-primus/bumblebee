@@ -245,7 +245,7 @@
 
       </v-menu>
       <v-badge
-        :value="cellsError!=='' || (operationsTitle && operationsTitle!='operations') && cells.length!=0"
+        :value="codeError!=='' || (operationsTitle && operationsTitle!='operations') && cells.length!=0"
         :color="(operationsTitle!='operations') ? 'primary lighten-2' : 'error'"
         dot
         overlap
@@ -254,7 +254,7 @@
           :color="(operationsActive!=false) ? 'black' : '#888'"
           text
           class="icon-btn"
-          :disabled="!(cells.length || operationsTitle!=='operations' || cellsError!=='')"
+          :disabled="!(cells.length || operationsTitle!=='operations' || codeError!=='')"
           @click="operationsActive = !operationsActive"
         >
           <v-icon>code</v-icon>
@@ -327,7 +327,6 @@
           :big.sync="bigOptions"
           :view="operationsTitle"
           @updateOperations="updateOperations"
-          :codeError.sync="cellsError"
           :columns="selectedColumns || []"
         />
 				<!-- <v-progress-linear
@@ -467,7 +466,6 @@ export default {
       typesSelected: [],
 			typesInput: '',
 
-      cellsError: '',
       copied: false,
 
       file: {dialog: false},
@@ -564,6 +562,15 @@ export default {
     ]),
 
     ...mapState(['nextCommand']),
+
+    codeError: {
+      get () {
+        return this.$store.state.codeError;
+      },
+      set (value) {
+        this.$store.commit('mutation', {mutate: 'codeError', payload: value})
+      }
+    },
 
     commandsDisabled: {
       get () {
@@ -1032,7 +1039,7 @@ export default {
     currentDataset () {
       this.lastSort = []
     },
-    cellsError (value) {
+    codeError (value) {
       if (value!='') {
         this.operationsActive = true
         this.operationsTitle = 'operations'

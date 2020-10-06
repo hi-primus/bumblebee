@@ -276,8 +276,12 @@ export default {
   },
 
   mounted () {
-    this.$store.commit('session/mutation', { mutate: 'workspaceStatus', payload: 'loading' })
-    this.initializeWorkspace()
+    try {
+      this.$store.commit('session/mutation', { mutate: 'workspaceStatus', payload: 'loading' })
+      this.initializeWorkspace()
+    } catch (err) {
+      console.error(err);
+    }
   },
 
 	computed: {
@@ -424,10 +428,10 @@ export default {
         }
 
         var workspace = await this.$store.dispatch('startWorkspace', { slug });
-        // console.log('[INITIALIZATION] workspace done')
+        console.debug('[INITIALIZATION] Workspace started')
 
         await this.initializeOptimus(slug)
-        // console.log('[INITIALIZATION] post initializeOptimus')
+        console.debug('[INITIALIZATION] Optimus initialized')
 
 
         if (!this.$store.state.datasets.length) {
@@ -438,32 +442,38 @@ export default {
         this.$store.commit('session/mutation', { mutate: 'workspaceStatus', payload: true })
         // console.log('[INITIALIZATION] status mutated')
 
-        this.$nextTick(async ()=>{
+        await this.$nextTick()
 
-          try {
-            // console.log('[INITIALIZATION] runCodeNow')
-            await this.runCodeNow()
 
-            this.updateSecondaryDatasets()
+        try {
 
-            this.$store.commit('kernel', 'loading')
+          var result = await this.runCodeNow(false, -1, undefined, true);
+          console.debug('[INITIALIZATION] Cells code and profiling done', result);
 
-            this.$store.commit('setAppStatus', 'workspace')
-
-            this.$store.commit('kernel', 'done')
-          } catch (err) {
-            console.error('Error on post-initialization',err)
-            throw err
+          if (!result) {
+            throw new Error('Cells code or profiling error')
           }
 
-        })
+          this.$store.commit('kernel', 'loading');
+          this.$store.commit('setAppStatus', 'workspace');
+          this.$store.commit('kernel', 'done');
+
+          this.updateSecondaryDatasets();
+
+
+        } catch (err) {
+
+          console.error('(Error on post-initialization)');
+          throw err;
+
+        }
 
       } catch (err) {
 
         if (err.code) {
           window.pushCode({ code: err.code, error: true })
         }
-        console.error('Error initializing', err);
+        console.error('(Error on initialization)');
         printError(err)
         var appStatus = {
           error: new Error('Initialization error'),

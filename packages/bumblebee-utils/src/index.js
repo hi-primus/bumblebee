@@ -112,7 +112,7 @@ export const getSelectedText = () => {
 }
 
 export const parseResponse = (content) => {
-  // console.log('[DEBUG] parsedContent',content)
+  // console.debug('[DEBUG] parsedContent',content)
   try {
     if (typeof content !== 'string') {
       return content

@@ -488,7 +488,7 @@ export default {
 
     openDf (dfName) {
       this.$store.commit('setDfToTab', { dfName, go: true })
-      this.getProfiling(dfName)
+      this.getProfiling(dfName, ignoreFrom)
     },
 
     commandHandle (event) {
@@ -682,6 +682,23 @@ export default {
               this.$store.commit('setLoadPreview', { profile } )
 
               this.$store.commit('mutation', {mutate: 'loadingStatus', payload: false })
+         if (response.data.result.sample) {
+                this.$store.commit('setLoadPreview', { sample: response.data.result.sample } )
+              } else {
+                throw response
+              }
+
+              if (response.data.result.meta) {
+                this.$store.commit('setLoadPreview', { meta: response.data.result.meta } )
+              }
+
+              var pCode = `_output = ${dfName}.ext.profile(columns="*", output="json")`
+
+              var pResponse = await this.evalCode(pCode)
+
+              var profile = parseResponse(pResponse.data.result)
+
+              this.$store.commit('setLoadPreview', { profile } )
 
             }
           }

@@ -276,10 +276,6 @@ export default {
     columns: {
       type: Array,
       default: ()=>{return []}
-    },
-    codeError: {
-      type: String,
-      default: ''
     }
   },
 
@@ -1435,9 +1431,9 @@ export default {
                 clusters
               }
 
-            } catch (error) {
+            } catch (err) {
 
-              var _error = printError(error)
+              var _error = printError(err)
               currentCommand = {...currentCommand, error: _error, should_update: true}
             }
 
@@ -1656,9 +1652,9 @@ export default {
               }
 
 
-            } catch (error) {
+            } catch (err) {
 
-              var _error = printError(error)
+              var _error = printError(err)
               currentCommand = {...currentCommand, error: _error, data: false, selection: []}
             }
 
@@ -1875,8 +1871,8 @@ export default {
                 validHost: currentCommand.host,
                 validDatabase: currentCommand.database
               }
-            } catch (error) {
-              var _error = printError(error)
+            } catch (err) {
+              var _error = printError(err)
               currentCommand = {...currentCommand, error: _error}
             }
 
@@ -2402,6 +2398,15 @@ export default {
       'hasSecondaryDatasets'
     ]),
 
+    codeError: {
+      get () {
+        return this.$store.state.codeError;
+      },
+      set (value) {
+        this.$store.commit('mutation', {mutate: 'codeError', payload: value})
+      }
+    },
+
     gettingNewResults: {
       get () {
         return this.$store.state.gettingNewResults;
@@ -2535,9 +2540,9 @@ export default {
   watch: {
 
     codeError (value) {
-      if (value && value.length) {
-        this.$store.commit('clearDatasetProperties')
-      }
+      // if (value && value.length) {
+      //   this.$store.commit('clearDatasetProperties');
+      // }
     },
 
     currentSelection: {
@@ -2684,7 +2689,7 @@ export default {
         if (this.commandsDisabled===undefined) {
           this.commandsDisabled = false;
           this.markCells()
-          this.$emit('update:codeError','')
+          this.codeError = '';
           this.lastWrongCode = false
         }
       }
@@ -2782,7 +2787,7 @@ export default {
     getProperty,
 
     cleanCodeError () {
-      this.$emit('update:codeError','')
+      this.codeError = '';
     },
 
     preparePreviewCode: debounce( async function() {
@@ -3055,7 +3060,7 @@ export default {
         this.localDataSources = this.localDataSources
         var codeText = await this.codeText();
         if (codeText.trim()==='') {
-          this.$emit('update:codeError','')
+          this.codeError = '';
           this.runCode() // deleting every cell
           return;
         }
@@ -3082,7 +3087,7 @@ export default {
         }
       }
 
-      this.$emit('update:codeError','')
+      this.codeError = '';
 
       var cells = [...from]
       var deletedPayload = cells.splice(index,1)[0].payload
@@ -3192,7 +3197,7 @@ export default {
     },
 
     async editCell (cell, index) {
-      // console.log('[DEBUG] Editing cell',{cell, index})
+      // console.debug('[DEBUG] Editing cell',{cell, index})
       var command = deepCopy(cell)
 
       var commandHandler = this.getCommandHandler(command)
@@ -3211,7 +3216,7 @@ export default {
 
       var {command, code, ignoreCell, deleteOtherCells, content} = payload
 
-      this.$emit('update:codeError','')
+      this.codeError = '';
 
       if (at==-1) {
         at = this.cells.length
@@ -3259,69 +3264,59 @@ export default {
 
     },
 
-    async runCodeNow (force = false, ignoreFrom = -1, newDfName) {
+    async runCodeNow (force = false, ignoreFrom = -1, newDfName, noCheck = false) {
 
       try {
-
-        var dfName = this.currentDataset.dfName || newDfName;
+        var dfName = (this.currentDataset ? this.currentDataset.dfName : undefined) || newDfName;
 
         var cellsResult = await this.runCells(force, ignoreFrom)
+        console.debug('[INITIALIZATION] Cells code done', cellsResult);
 
         if (!cellsResult) {
-          return false
+          return false;
         }
 
-        var dataset
-
-        console.log('// about to get', dfName)
-
-        try {
-          dataset = await this.getProfiling(dfName)
-        } catch (err) {
-          err.message = '(Error on profiling)' + err.message
-          throw err
-        }
+        var dataset = await this.getProfiling(dfName, ignoreFrom)
+        console.debug('[INITIALIZATION] Profiling done', dataset);
 
         if (this.firstRun) {
           this.firstRun = false;
         }
 
-        this.updateSecondaryDatasets()
+        var secondaryDatasets = this.updateSecondaryDatasets()
+        console.debug('[INITIALIZATION] Secondary datasets promise', secondaryDatasets);
 
-        this.$forceUpdate()
-        this.markCells(true, ignoreFrom)
+        this.$forceUpdate();
 
-        this.$emit('update:codeError','')
+        this.markCells(true, ignoreFrom);
+
+        this.codeError = '';
         this.lastWrongCode = false
 
-      } catch (error) {
-
-        if (error.code) {
-          window.pushCode({code: error.code, error: true})
+      } catch (err) {
+        if (noCheck) {
+          throw err;
         }
-        var codeError = printError(error)
-        this.$emit('update:codeError',codeError)
-
-        this.markCellsError(ignoreFrom)
-
-        this.lastWrongCode = code
-        this.commandsDisabled = undefined;
-
+        console.error('Error running code', err);
       }
 
-      var codeText = await this.codeText();
+      if (!noCheck) {
+        var codeText = await this.codeText();
 
-      var code = cellsResult.originalCode;
+        var code = cellsResult ? cellsResult.originalCode : undefined;
 
-      console.log(codeText, code)
+        console.log(codeText, code)
 
-      if (codeText !== code) {
-        setTimeout(() => {
-          this.runCodeNow(false)
-        }, 1000);
+        if (codeText !== code) {
+          setTimeout(() => {
+            this.runCodeNow(false)
+          }, 1000);
+        }
       }
+
 
       return !this.lastWrongCode;
+
 
     },
 

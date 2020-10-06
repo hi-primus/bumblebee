@@ -1,6 +1,6 @@
 import io from 'socket.io-client'
 import { mapState } from 'vuex'
-import { getDefaultParams, INIT_PARAMS } from 'bumblebee-utils'
+import { deepCopy, getDefaultParams, INIT_PARAMS } from 'bumblebee-utils'
 
 export default {
 
@@ -18,17 +18,20 @@ export default {
     window.evalCode = async (code, usePyodide) => {
       var result;
       if (usePyodide) {
-        await this.assertPyodide
+        console.debug('[PYODIDE] Requesting')
+        await this.assertPyodide()
         result = pyodide.runPython(code)
       } else {
         result = await this.evalCode(code);
       }
-      console.log('[DEBUG]',result);
+      console.debug('[DEBUG]',result);
     }
-    window.pushCode = async (code) => {
+    window.pushCode = async (cd) => {
+      var code = deepCopy(cd);
       if (!window.code || !window.code.push) {
-        window.code = []
+        window.code = [];
       }
+      window.code = deepCopy(window.code);
       window.code.push(code)
     }
     window.clearCode = async () => {
@@ -78,10 +81,14 @@ export default {
       get () {
         return window.socketAvailable
       }
-    },
+    }
+  },
+
+	methods: {
 
     async assertPyodide () {
       if (!window.pyodideScript) {
+        console.debug('[PYODIDE] Loading')
         await new Promise((resolve, reject) => {
           var script = document.createElement('script');
           script.onload = function () {
@@ -93,14 +100,11 @@ export default {
         window.pyodideScript = 1;
       }
       return await languagePluginLoader
-    }
-  },
+    },
 
-	methods: {
-
-    async getProfiling (dfName) {
+    async getProfiling (dfName, ignoreFrom = -1) {
       var payload = { dfName, socketPost: this.socketPost };
-      return this.$store.dispatch('getProfiling', { payload, forcePromise: true });
+      return this.$store.dispatch('getProfiling', { payload, forcePromise: true, ignoreFrom });
     },
 
     buffer (dfName) {
@@ -357,7 +361,7 @@ export default {
         var datasets = Object.fromEntries( Object.entries(response.data).filter(([key, dataset])=>(key !== 'preview_df' && key[0] !== '_')) )
         this.$store.commit('setSecondaryDatasets', datasets )
 
-        return response.data
+        return datasets
       } catch (error) {
         if (error.code) {
           window.pushCode({code: error.code, error: true, unimportant: true})
