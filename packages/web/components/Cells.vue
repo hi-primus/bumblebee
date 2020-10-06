@@ -2418,10 +2418,10 @@ export default {
 
     lastWrongCode: {
       get () {
-        return this.$store.state.firstRun;
+        return this.$store.state.lastWrongCode;
       },
       set (value) {
-        this.$store.commit('mutation', {mutate: 'firstRun', payload: value})
+        this.$store.commit('mutation', {mutate: 'lastWrongCode', payload: value});
       }
     },
 
