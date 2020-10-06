@@ -2811,14 +2811,16 @@ $editor-top-padding: 4px;
   }
   .histfreq-placeholder {
     mask-type: alpha;
-    mask:
-      repeating-linear-gradient(
+    mask-image:
+      linear-gradient(
         to right,
+        transparent 0px,
         currentColor 0px,
-        currentColor 7px,
-        transparent 7px,
+        currentColor 8px,
         transparent 8px,
       );
+    mask-repeat: round round;
+    mask-size: 9px;
     z-index: -5;
     width: calc(100% - 16px);
     margin-left: auto;
