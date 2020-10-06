@@ -954,11 +954,8 @@ export const actions = {
 
       await dispatch('beforeRunCells', { newOnly, ignoreFrom });
 
-      var dfName = getters.currentDataset.dfName;
-
-      if (dfName) {
-        commit('setBufferPromise', { dfName, promise: false });
-      }
+      commit('mutation', { mutate: 'profilingPromises', payload: {} });
+      commit('mutation', { mutate: 'buffersPromises', payload: {} });
 
       var response = await socketPost('cells', {
         code,
@@ -1029,6 +1026,8 @@ export const actions = {
           return {};
         }
       }
+
+      commit('setBufferPromise', { dfName, promise: false });
 
       var response = await socketPost('profile', {
         dfName,

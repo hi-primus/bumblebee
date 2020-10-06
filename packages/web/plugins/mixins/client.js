@@ -158,7 +158,11 @@ export default {
 
             if (message!=='initialize') {
               console.log('[BUMBLEBEE] Reinitializing Optimus')
-              var response = await this.socketPost('initialize', initializationPayload )
+              var response = await this.socketPost('initialize', initializationPayload );
+
+              this.$store.commit('mutation', { mutate: 'cellsPromise', payload: false });
+              this.$store.commit('mutation', { mutate: 'profilingPromises', payload: {} });
+              this.$store.commit('mutation', { mutate: 'buffersPromises', payload: {} });
 
               if (!response.data.optimus) {
                 throw response
