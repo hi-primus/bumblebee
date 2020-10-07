@@ -152,8 +152,8 @@ export default {
       this.$emit('click:configuration',configuration)
     },
 
-    async fromForm (form) {
-      return await this.$refs.formDialog.fromForm(form)
+    fromForm (form) {
+      return this.$refs.formDialog.fromForm(form)
     },
 
     async deleteElement (configuration) {

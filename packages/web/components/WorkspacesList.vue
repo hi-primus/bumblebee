@@ -156,8 +156,8 @@ export default {
       this.$emit('click:workspace',event)
     },
 
-    async fromForm (form) {
-      return await this.$refs.formDialog.fromForm(form)
+    fromForm (form) {
+      return this.$refs.formDialog.fromForm(form)
     },
 
     async deleteElement (workspace) {

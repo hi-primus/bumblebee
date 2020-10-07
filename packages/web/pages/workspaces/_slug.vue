@@ -484,7 +484,7 @@ export default {
       }
     },
 
-    async initializeOptimus (slug) {
+    initializeOptimus (slug) {
 
       if (!Object.keys(this.$store.state.localConfig).length) {
 
@@ -513,7 +513,7 @@ export default {
 
       var payload = { slug, socketPost: this.socketPost };
 
-      return await this.$store.dispatch('getOptimus', { payload } )
+      return this.$store.dispatch('getOptimus', { payload } )
     },
 
 		deleteTab(i) {

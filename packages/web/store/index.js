@@ -606,12 +606,11 @@ export const actions = {
 
     var workspace = await dispatch('getPromise', promisePayload);
 
-
     if ((workspace.slug == slug) || !slug || forcePromise) {
       return workspace;
     }
 
-    console.warn('Forced workspace loading due to slug update', workspace.slug, slug)
+    console.debug('Forced workspace loading due to slug update', workspace.slug, slug)
     return await dispatch('getPromise', { ...promisePayload, forcePromise: true });
 
   },
@@ -688,6 +687,9 @@ export const actions = {
     commit('mutation', { mutate: 'tab', payload: tab});
     commit('mutation', { mutate: 'workspace', payload: response.data });
     commit('session/mutation', { mutate: 'saveReady', payload: true});
+
+    console.debug('[DEBUG] Loading workspace Done', slug);
+
     return response.data;
 
   },
@@ -696,7 +698,7 @@ export const actions = {
     return deepCopy(state.localConfig); // TO-DO: Config
   },
 
-  async getConfig ({ dispatch }, payload) {
+  getConfig ({ dispatch }, payload) {
 
     var promisePayload = {
       name: 'configPromise',
@@ -704,7 +706,7 @@ export const actions = {
       payload
     };
 
-    return await dispatch('getPromise', promisePayload);
+    return dispatch('getPromise', promisePayload);
   },
 
   async startWorkspace ({ dispatch }, { slug }) {
@@ -755,13 +757,14 @@ export const actions = {
 
     commit('mutation', { mutate: 'cells', payload: cells })
 
-    var newCodeDone = ''
-
-    if (mark && state.commands) {
-      newCodeDone = await dispatch('codeText', { newOnly: false, ignoreFrom });
+    if (mark && !error) {
+      var newCodeDone = '';
+      if (mark && state.commands) {
+        newCodeDone = await dispatch('codeText', { newOnly: false, ignoreFrom });
+      }
+      commit('mutation', { mutate: 'codeDone', payload: newCodeDone });
     }
 
-    commit('mutation', { mutate: 'codeDone', payload: newCodeDone })
   },
 
   beforeRunCells ( { state, commit }, { newOnly, ignoreFrom } ) {
@@ -794,7 +797,7 @@ export const actions = {
       case 'cells':
         dispatch('markCells', { mark: false });
         commit('mutation', { mutate: 'codeError', payload: ''});
-        commit('mutation', { mutate: 'lastWrongCode', payload: false});
+        commit('mutation', { mutate: 'lastWrongCode', payload: { code: '', error: false }});
         commit('mutation', { mutate: 'cellsPromise', payload: false });
       case 'profilings':
         commit('mutation', { mutate: 'profilingsPromises', payload: {} });
@@ -893,17 +896,18 @@ export const actions = {
     return response.data;
   },
 
-  async getOptimus ({dispatch}, {payload}) {
+  getOptimus ({dispatch}, {payload}) {
     var promisePayload = {
       name: 'optimusPromise',
       action: 'loadOptimus',
       payload
     };
 
-    return await dispatch('getPromise', promisePayload);
+    return dispatch('getPromise', promisePayload);
   },
 
   async loadCellsResult ({dispatch, state, getters, commit}, { force, ignoreFrom, socketPost }) {
+    console.debug('[DEBUG] Loading cells result');
     try {
       await Vue.nextTick();
 
@@ -924,6 +928,8 @@ export const actions = {
 
       var rerun = false;
 
+      var wrongCode = (state.lastWrongCode ? state.lastWrongCode.code : undefined) || ''
+
       if (code==='') {
         console.debug('%c[CODE MANAGER] Trying to run an empty string as code', 'color: yellow;');
         return false;
@@ -934,11 +940,10 @@ export const actions = {
         return false;
       }
       else if (
-        ( !state.firstRun && (force || code.indexOf(codeDone)!=0 || codeDone=='' || state.lastWrongCode) )
+        ( !state.firstRun && (force || code.indexOf(codeDone)!=0 || codeDone=='' || wrongCode) )
         ||
         !window.socketAvailable
       ) {
-        // console.log('[CODE MANAGER] every cell', {force, firstRun: state.firstRun, code, codeDone, lastWrongCode: state.lastWrongCode, socketAvailable: window.socketAvailable})
         rerun = true;
       }
       else {
@@ -947,10 +952,9 @@ export const actions = {
         code = await dispatch('codeText', { newOnly, ignoreFrom }); // new cells only
       }
 
-      if (code===state.lastWrongCode) {
+      if (code===wrongCode ) {
         console.debug('%c[CODE MANAGER] Cells went wrong last time', 'color: yellow;');
-        return false;
-        throw new Error('Trying to run a bad code (see logs above)');
+        throw state.lastWrongCode.error;
       }
 
       if (rerun) {
@@ -994,25 +998,32 @@ export const actions = {
         throw response
       }
 
+      console.debug('[DEBUG] Loading cells result Done');
       return response
     } catch (err) {
 
       if (err.code && window.pushCode) {
-        window.pushCode({code, err: true});
+        window.pushCode({code, error: true});
       }
       commit('mutation', { mutate: 'codeError', payload: printError(err)});
+
       var wrongCode = await dispatch('codeText', { newOnly, ignoreFrom });
-      commit('mutation', { mutate: 'lastWrongCode', payload: wrongCode});
+      commit('mutation', { mutate: 'lastWrongCode', payload: { code: wrongCode, error: deepCopy(err) }});
+
       await dispatch('markCells', { ignoreFrom, error: true });
-      commit('mutation', { mutate: 'commandsDisabled', payload: undefined});
-      err.message = '(Error on cells) ' + (err.message || '')
+      commit('mutation', { mutate: 'commandsDisabled', payload: undefined });
+
       // console.error(err);
+      err.message = '(Error on cells) ' + (err.message || '')
+
+      console.debug('[DEBUG] Loading cells result Error');
       throw err;
 
     }
+
   },
 
-  async getCellsResult ({dispatch}, { forcePromise, payload }) {
+  getCellsResult ({dispatch}, { forcePromise, payload }) {
 
     var promisePayload = {
       name: 'cellsPromise',
@@ -1025,15 +1036,20 @@ export const actions = {
     //   console.warn('Forced cells loading');
     // }
 
-    return await dispatch('getPromise', promisePayload);
+    return dispatch('getPromise', promisePayload);
   },
 
   async loadProfiling ({dispatch, state, getters, commit}, {dfName, socketPost, ignoreFrom}) {
+    console.debug('[DEBUG] Loading profiling', dfName);
     try {
 
       await Vue.nextTick();
 
       var cellsResult = await dispatch('getCellsResult', { payload: { socketPost, ignoreFrom } } );
+      console.log({
+        lastWrongCode: state.lastWrongCode,
+        cellsResult
+      })
 
       if (!dfName) {
         // return {};
@@ -1072,24 +1088,27 @@ export const actions = {
         dispatch('afterNewProfiling');
       }
 
+      console.debug('[DEBUG] Loading profiling Done', dfName);
+
       return dataset;
 
     } catch (err) {
       if (err.code && window.pushCode) {
-        window.pushCode({code: err.code, err: true});
+        window.pushCode({code: err.code, error: true});
       }
       commit('mutation', { mutate: 'codeError', payload: printError(err)});
       var wrongCode = await dispatch('codeText', { newOnly: true, ignoreFrom });
-      commit('mutation', { mutate: 'lastWrongCode', payload: wrongCode});
+      commit('mutation', { mutate: 'lastWrongCode', payload: { code: wrongCode, error: deepCopy(err) } });
       await dispatch('markCells', { ignoreFrom, error: true });
       commit('mutation', { mutate: 'commandsDisabled', payload: undefined});
       err.message = '(Error on profiling) ' + (err.message || '')
       // console.error(err);
+      console.debug('[DEBUG] Loading profiling Error', dfName);
       throw err;
     }
   },
 
-  async getProfiling ({dispatch}, { forcePromise, payload }) {
+  getProfiling ({dispatch}, { forcePromise, payload }) {
     var promisePayload = {
       name: 'profilingsPromises',
       action: 'loadProfiling',
@@ -1098,10 +1117,12 @@ export const actions = {
       forcePromise
     };
 
-    return await dispatch('getPromise', promisePayload);
+    return dispatch('getPromise', promisePayload);
   },
 
   async loadBuffer ({ dispatch }, {dfName, socketPost}) {
+
+    console.debug('[DEBUG] Loading buffer', dfName);
 
     if (!dfName) {
       throw new Error('Trying to load buffer for undefined Dataframe name');
@@ -1110,11 +1131,13 @@ export const actions = {
     await Vue.nextTick();
     var payload = {dfName, socketPost};
     var profiling = await dispatch('getProfiling', { payload });
-    return await dispatch('evalCode', {socketPost, code: '_output = '+dfName+'.ext.set_buffer("*")'})
+    var result = await dispatch('evalCode', {socketPost, code: '_output = '+dfName+'.ext.set_buffer("*")'})
+    console.debug('[DEBUG] Loading buffer Done', dfName);
+    return result;
 
   },
 
-  async getBuffer ({dispatch}, { dfName, socketPost }) {
+  getBuffer ({dispatch}, { dfName, socketPost }) {
     var promisePayload = {
       name: 'buffersPromises',
       action: 'loadBuffer',
@@ -1122,7 +1145,7 @@ export const actions = {
       index: dfName
     };
 
-    return await dispatch('getPromise', promisePayload);
+    return dispatch('getPromise', promisePayload);
   },
 
   async getBufferWindow ({commit, dispatch, state, getters}, {from, to, slug, dfName, code, socketPost, beforeCodeEval}) {

@@ -134,8 +134,8 @@ export default {
 
   methods: {
 
-    async fromForm (form) {
-      return await this.$refs.formDialog.fromForm(form)
+    fromForm (form) {
+      return this.$refs.formDialog.fromForm(form)
     },
 
     async deleteElement (user) {

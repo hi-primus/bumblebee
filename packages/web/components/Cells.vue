@@ -2418,9 +2418,16 @@ export default {
 
     lastWrongCode: {
       get () {
-        return this.$store.state.lastWrongCode;
+        try {
+          return this.$store.state.lastWrongCode.code;
+        } catch (err) {
+          return '';
+        }
       },
       set (value) {
+        if (!value) {
+          value = { code: '', error: false };
+        }
         this.$store.commit('mutation', {mutate: 'lastWrongCode', payload: value});
       }
     },
@@ -2713,9 +2720,9 @@ export default {
       return name
     },
 
-    async runCells (force, ignoreFrom) {
+    runCells (force, ignoreFrom) {
       var payload = { force, ignoreFrom, socketPost: this.socketPost };
-      return await this.$store.dispatch('getCellsResult', {forcePromise: true, payload });
+      return this.$store.dispatch('getCellsResult', {forcePromise: true, payload });
     },
 
     forceFileDownload(url, filename){
@@ -2853,12 +2860,12 @@ export default {
       filterCells(this.cells, newOnly, ignoreFrom)
     },
 
-    async codeText (newOnly, ignoreFrom) {
-      return await this.$store.dispatch('codeText', {newOnly, ignoreFrom});
+    codeText (newOnly, ignoreFrom) {
+      return this.$store.dispatch('codeText', {newOnly, ignoreFrom});
     },
 
-    async beforeRunCells (newOnly = false, ignoreFrom = -1) {
-      return await this.$store.dispatch('beforeRunCells', {newOnly, ignoreFrom});
+    beforeRunCells (newOnly = false, ignoreFrom = -1) {
+      return this.$store.dispatch('beforeRunCells', {newOnly, ignoreFrom});
     },
 
     async commandHandle (command) {
@@ -3262,6 +3269,8 @@ export default {
     },
 
     async runCodeNow (force = false, ignoreFrom = -1, newDfName, noCheck = false) {
+
+      console.trace();
 
       try {
         var dfName = (this.currentDataset ? this.currentDataset.dfName : undefined) || newDfName;

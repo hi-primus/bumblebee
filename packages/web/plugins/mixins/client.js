@@ -112,8 +112,8 @@ export default {
       return this.$store.dispatch('getBuffer', { dfName, socketPost: this.socketPost });
     },
 
-    async evalCode (code) {
-      return await this.$store.dispatch('evalCode', {
+    evalCode (code) {
+      return this.$store.dispatch('evalCode', {
         socketPost: this.socketPost,
         code
       })
