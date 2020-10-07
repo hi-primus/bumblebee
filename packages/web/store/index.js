@@ -802,7 +802,7 @@ export const actions = {
     })
   },
 
-  resetPromises ({ commit, dispatch }, { from }) {
+  async resetPromises ({ commit, dispatch }, { from }) {
     from = from || 'cells';
 
     console.debug('[RESET] From', from);
@@ -811,7 +811,7 @@ export const actions = {
       case 'optimus':
         commit('mutation', { mutate: 'optimusPromise', payload: false});
       case 'cells':
-        dispatch('markCells', { mark: false });
+        await dispatch('markCells', { mark: false });
         commit('mutation', { mutate: 'codeError', payload: ''});
         commit('mutation', { mutate: 'lastWrongCode', payload: { code: '', error: false }});
         commit('mutation', { mutate: 'cellsPromise', payload: false });

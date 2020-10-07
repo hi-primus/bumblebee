@@ -112,9 +112,9 @@ export const actions =  {
     var accessToken = response.data.accessToken ? ('Bearer ' + response.data.accessToken) : false
     var refreshToken = response.data.refreshToken ? ('Bearer ' + response.data.refreshToken) : false
 
-    dispatch('setTokenCookies', {accessToken, refreshToken})
+    await dispatch('setTokenCookies', {accessToken, refreshToken})
 
-    dispatch('setAccessToken', accessToken)
+    await dispatch('setAccessToken', accessToken)
     commit('mutation', { mutate: 'refreshToken', payload: refreshToken})
 
     if (accessToken) {
@@ -127,8 +127,8 @@ export const actions =  {
 
 	async signOut ({commit, dispatch}, payload) {
 
-    dispatch('setTokenCookies', {refreshToken: false, accessToken: false})
-    dispatch('setAccessToken', false)
+    await dispatch('setTokenCookies', {refreshToken: false, accessToken: false})
+    await dispatch('setAccessToken', false)
     commit('mutation', { mutate: 'username', payload: false})
     commit('mutation', { mutate: 'refreshToken', payload: false})
   },
@@ -139,15 +139,15 @@ export const actions =  {
     if (accessToken) {
       try {
         await dispatch('profile', { auth: accessToken })
-        dispatch('setAccessToken', accessToken)
+        await dispatch('setAccessToken', accessToken)
         return true
       } catch (err) {
         console.error('Provided token is invalid')
-        dispatch('setAccessToken', false)
+        await dispatch('setAccessToken', false)
         return false
       }
     } else {
-      dispatch('setAccessToken', false)
+      await dispatch('setAccessToken', false)
       return false
     }
 

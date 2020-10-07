@@ -1759,9 +1759,9 @@ export default {
         this.mustUpdateRows = false
         this.updateRows();
         if (this.gettingNewResults) {
-          setTimeout(() => {
+          setTimeout(async () => {
             // next debouncedScrollCheck
-            this.$store.dispatch('afterNewResults');
+            await this.$store.dispatch('afterNewResults');
             this.$store.commit('mutation', {mutate: 'loadingStatus', payload: false });
           }, 80);
         }
