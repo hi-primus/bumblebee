@@ -79,7 +79,6 @@ properties.forEach((p)=>{
 })
 
 const defaultState = {
-  codeError: '',
   loadingStatus: false,
   coiledAvailable: false,
   tab: 0,
@@ -93,12 +92,13 @@ const defaultState = {
   firstRun: true,
   commandsDisabled: false,
   lastWrongCode: false,
+  codeError: '',
   codeDone: '',
   configPromise: false,
   optimusPromise: false,
   workspacePromise: false,
   cellsPromise: false,
-  profilingPromises: {},
+  profilingsPromises: {},
   buffersPromises: {},
   listViews: [],
   dataSources: [],
@@ -222,7 +222,7 @@ export const mutations = {
 
 	setDataset (state, { dataset, preview, tab }) {
 
-    console.log("[BUMBLEBLEE] Opening dataset",dataset);
+    console.log("[BUMBLEBLEE] Opening dataset", dataset);
 
     // if (dataset.name===null) {
 
@@ -240,7 +240,6 @@ export const mutations = {
         dataset.name = `Dataset${state.datasetCounter}`;
         state.datasetCounter = state.datasetCounter + 1;
       }
-
     }
 
     if (preview) {
@@ -268,6 +267,7 @@ export const mutations = {
       dataset.dfName = previousDataset.dfName;
     }
 
+    console.debug("[BUMBLEBLEE] Setting dataset", dataset);
 
     Vue.set(state.datasets, tab, dataset);
 
@@ -357,7 +357,7 @@ export const mutations = {
 	deleteTab (state, index) {
     var dfName = state.datasets[index].dfName;
 
-    Vue.delete(state.profilingPromises, dfName);
+    Vue.delete(state.profilingsPromises, dfName);
     Vue.delete(state.buffersPromises, dfName);
 
     Vue.delete(state.datasets, index);
@@ -787,12 +787,28 @@ export const actions = {
     })
   },
 
-  async afterNewResults ({ commit }, payload) {
+  resetPromises ({ commit, dispatch }, { from }) {
+    from = from || 'cells';
+
+    switch (from) {
+      case 'cells':
+        dispatch('markCells', { mark: false });
+        commit('mutation', { mutate: 'codeError', payload: ''});
+        commit('mutation', { mutate: 'lastWrongCode', payload: false});
+        commit('mutation', { mutate: 'cellsPromise', payload: false });
+      case 'profilings':
+        commit('mutation', { mutate: 'profilingsPromises', payload: {} });
+      case 'buffers':
+        commit('mutation', { mutate: 'buffersPromises', payload: {} });
+    }
+  },
+
+  afterNewResults ({ commit }, payload) {
     commit('mutation', { mutate: 'gettingNewResults', payload: '' });
     commit('previewDefault');
   },
 
-  async afterNewProfiling ({ commit }, payload) {
+  afterNewProfiling ({ commit }, payload) {
     commit('previewDefault', { names: ['PreviewNames'] });
   },
 
@@ -891,9 +907,9 @@ export const actions = {
     try {
       await Vue.nextTick();
 
-      var optimusPromise = dispatch('getOptimus',  { payload: {socketPost} } );
+      var optimusPromise = dispatch('getOptimus', { payload: {socketPost} } );
 
-      var workspacePromise = dispatch('getWorkspace',  {} );
+      var workspacePromise = dispatch('getWorkspace', {} );
 
       await Promise.all([optimusPromise, workspacePromise])
 
@@ -954,8 +970,9 @@ export const actions = {
 
       await dispatch('beforeRunCells', { newOnly, ignoreFrom });
 
-      commit('mutation', { mutate: 'profilingPromises', payload: {} });
-      commit('mutation', { mutate: 'buffersPromises', payload: {} });
+      dispatch('resetPromises', { from: 'profilings' })
+
+      console.debug('[DEBUG][CODE] Sent', code);
 
       var response = await socketPost('cells', {
         code,
@@ -968,7 +985,7 @@ export const actions = {
 
       response.originalCode = code;
 
-      console.debug('[DEBUG][CODE]',response.code)
+      console.debug('[DEBUG][CODE]', response.code);
       window.pushCode({code: response.code})
 
       commit('mutation', { mutate: 'commandsDisabled', payload: false });
@@ -984,8 +1001,9 @@ export const actions = {
         window.pushCode({code, err: true});
       }
       commit('mutation', { mutate: 'codeError', payload: printError(err)});
+      var wrongCode = await dispatch('codeText', { newOnly, ignoreFrom });
+      commit('mutation', { mutate: 'lastWrongCode', payload: wrongCode});
       await dispatch('markCells', { ignoreFrom, error: true });
-      commit('mutation', { mutate: 'lastWrongCode', payload: code});
       commit('mutation', { mutate: 'commandsDisabled', payload: undefined});
       err.message = '(Error on cells) ' + (err.message || '')
       // console.error(err);
@@ -1061,8 +1079,9 @@ export const actions = {
         window.pushCode({code: err.code, err: true});
       }
       commit('mutation', { mutate: 'codeError', payload: printError(err)});
+      var wrongCode = await dispatch('codeText', { newOnly: true, ignoreFrom });
+      commit('mutation', { mutate: 'lastWrongCode', payload: wrongCode});
       await dispatch('markCells', { ignoreFrom, error: true });
-      commit('mutation', { mutate: 'lastWrongCode', payload: code});
       commit('mutation', { mutate: 'commandsDisabled', payload: undefined});
       err.message = '(Error on profiling) ' + (err.message || '')
       // console.error(err);
@@ -1072,7 +1091,7 @@ export const actions = {
 
   async getProfiling ({dispatch}, { forcePromise, payload }) {
     var promisePayload = {
-      name: 'profilingPromises',
+      name: 'profilingsPromises',
       action: 'loadProfiling',
       payload,
       index: payload.dfName,

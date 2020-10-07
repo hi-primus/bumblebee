@@ -487,16 +487,16 @@ export default {
   methods: {
 
     openDf (dfName) {
-      this.$store.commit('setDfToTab', { dfName, go: true })
+      this.$store.commit('setDfToTab', { dfName, go: true });
       this.getProfiling(dfName, ignoreFrom)
     },
 
     commandHandle (event) {
-      this.$store.commit('commandHandle',event)
+      this.$store.commit('commandHandle', event);
     },
 
     reloadInit () {
-      this.$store.commit('setAppStatus',{status: 'workspace'})
+      this.$store.commit('setAppStatus', { status: 'workspace' });
     },
 
     async updateResults() {

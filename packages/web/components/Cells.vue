@@ -2688,9 +2688,6 @@ export default {
       handler () {
         if (this.commandsDisabled===undefined) {
           this.commandsDisabled = false;
-          this.markCells()
-          this.codeError = '';
-          this.lastWrongCode = false
         }
       }
     },

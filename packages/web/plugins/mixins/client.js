@@ -103,6 +103,7 @@ export default {
     },
 
     async getProfiling (dfName, ignoreFrom = -1) {
+      console.debug('[PROFILING]',dfName);
       var payload = { dfName, socketPost: this.socketPost };
       return this.$store.dispatch('getProfiling', { payload, forcePromise: true, ignoreFrom });
     },
@@ -157,12 +158,10 @@ export default {
             await this.startSocket ()
 
             if (message!=='initialize') {
+              this.$store.dispatch('resetPromises', { from: 'cells' });
               console.log('[BUMBLEBEE] Reinitializing Optimus')
               var response = await this.socketPost('initialize', initializationPayload );
 
-              this.$store.commit('mutation', { mutate: 'cellsPromise', payload: false });
-              this.$store.commit('mutation', { mutate: 'profilingPromises', payload: {} });
-              this.$store.commit('mutation', { mutate: 'buffersPromises', payload: {} });
 
               if (!response.data.optimus) {
                 throw response
