@@ -401,8 +401,8 @@ export default {
       this.windowDialog = type;
     },
 
-    async runCodeNow () {
-      return await this.$refs.tableBar.runCodeNow()
+    runCodeNow (force = false, ignoreFrom = -1, newDfName, noCheck) {
+      return this.$refs.tableBar.runCodeNow(force, ignoreFrom, newDfName, noCheck);
     },
 
     async doneConfig (values) {

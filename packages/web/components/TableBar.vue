@@ -1061,8 +1061,8 @@ export default {
 
     getProperty,
 
-    async runCodeNow () {
-      return await this.$refs.cells.runCodeNow()
+    runCodeNow (force = false, ignoreFrom = -1, newDfName, noCheck) {
+      return this.$refs.cells.runCodeNow(force, ignoreFrom, newDfName, noCheck);
     },
 
     downloadDataset () {
