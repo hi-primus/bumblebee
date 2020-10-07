@@ -11,9 +11,11 @@ export default {
 
   mounted() {
 
-    window.promises = window.promises || {}
+    window.socket = () => window.socketPromise;
 
-    window.timestamps = window.timestamps || 0
+    window.promises = window.promises || {};
+
+    window.timestamps = window.timestamps || 0;
 
     window.evalCode = async (code, usePyodide) => {
       var result;
@@ -102,10 +104,10 @@ export default {
       return await languagePluginLoader
     },
 
-    async getProfiling (dfName, ignoreFrom = -1) {
+    async getProfiling (dfName, ignoreFrom = -1, forcePromise = false) {
       console.debug('[PROFILING]',dfName);
-      var payload = { dfName, socketPost: this.socketPost };
-      return this.$store.dispatch('getProfiling', { payload, forcePromise: true, ignoreFrom });
+      var payload = { dfName, socketPost: this.socketPost, clearPrevious: true };
+      return this.$store.dispatch('getProfiling', { payload, forcePromise, ignoreFrom });
     },
 
     buffer (dfName) {
@@ -131,37 +133,40 @@ export default {
 
         window.promises[timestamp] = {resolve, reject}
 
+        var socket = await window.socket();
+
         try {
-          if (!window.socket) {
+          if (!socket) {
 
-            var query = this.$route.query;
-
-            var params = {};
-
-            Object.keys(INIT_PARAMS).forEach(parameter => {
-              if (query[parameter]) {
-                params[parameter] = query[parameter]
-              }
-            });
-
-            params = getDefaultParams(params);
-
-            var slug = this.$route.params.slug;
-
-            params.name = params.name || this.$store.state.session.username + '_' + slug;
-
-            var initializationPayload = {
-              username: this.$store.state.session.username,
-              workspace: slug,
-              ...params
-            }
-            await this.startSocket ()
+            await this.startSocket();
 
             if (message!=='initialize') {
-              this.$store.dispatch('resetPromises', { from: 'cells' });
-              console.log('[BUMBLEBEE] Reinitializing Optimus')
-              var response = await this.socketPost('initialize', initializationPayload );
 
+              var query = this.$route.query;
+
+              var params = {};
+
+              Object.keys(INIT_PARAMS).forEach(parameter => {
+                if (query[parameter]) {
+                  params[parameter] = query[parameter]
+                }
+              });
+
+              params = getDefaultParams(params);
+
+              var slug = this.$route.params.slug;
+
+              params.name = params.name || this.$store.state.session.username + '_' + slug;
+
+              var reinitializationPayload = {
+                username: this.$store.state.session.username,
+                workspace: slug,
+                ...params
+              }
+
+              console.log('[BUMBLEBEE] Reinitializing Optimus');
+
+              var response = await this.socketPost('initialize', reinitializationPayload );
 
               if (!response.data.optimus) {
                 throw response
@@ -171,7 +176,9 @@ export default {
             }
           }
 
-          window.socket.emit('message',{message, ...payload, timestamp})
+          socket = await window.socket()
+
+          socket.emit('message', { message, ...payload, timestamp });
 
         } catch (error) {
           if (error.code) {
@@ -209,7 +216,7 @@ export default {
       await this.$store.dispatch('session/signOut')
     },
 
-		stopClient (waiting) {
+		async stopClient (waiting) {
 
       this.socketAvailable = false
 
@@ -223,15 +230,17 @@ export default {
 
 			if (waiting) {
 				this.$store.commit('setAppStatus', {status: 'waiting'})
-			}
+      }
 
-			if (window.socket) {
+      var socket = await window.socket();
+
+			if (socket) {
 				try {
-          window.socket.disconnect()
+          socket.disconnect()
 				} catch (error) {
           console.error(error)
 				}
-        window.socket = undefined;
+        window.socketPromise = undefined;
         console.log('Socket closed')
         return
       }
@@ -246,78 +255,84 @@ export default {
         throw new Error('SSR not allowed');
       }
 
-      return new Promise((resolve, reject)=>{
+      window.socketPromise = new Promise((resolve, reject)=>{
+        try {
+          let username = this.$store.state.session.username;
+          let workspace = this.$route.params.slug;
+          let key = this.$store.state.session.key;
 
-        let username = this.$store.state.session.username;
-        let workspace = this.$route.params.slug;
-        let key = this.$store.state.session.key;
-
-        if (!workspace) {
-          throw new Error('Credentials not found');
-        }
-
-        var accessToken = this.$store.state.session.accessToken || '';
-
-        key = key || '';
-
-        var socket_url = process.env.API_URL;
-
-        window.socket = io(socket_url, { transports: ['websocket'] });
-
-        window.socket.on('new-error', (reason) => {
-          console.error('Socket error', reason);
-          reject(reason);
-        });
-
-        window.socket.on('dataset', (dataset) => {
-          try {
-            this.$store.dispatch('setDataset', {
-              dataset
-            });
-          } catch (error) {
-            console.error(error);
-            reject(error);
+          if (!workspace) {
+            throw new Error('Credentials not found');
           }
-        });
 
-        window.socket.on('reply', (payload) => {
-          if (payload.timestamp && window.promises[payload.timestamp]) {
-            if (payload.error) {
-              window.promises[payload.timestamp].reject(payload);
+          var accessToken = this.$store.state.session.accessToken || '';
+
+          key = key || '';
+
+          var socket_url = process.env.API_URL;
+
+          var socket = io(socket_url, { transports: ['websocket'] });
+
+          socket.on('new-error', (reason) => {
+            console.error('Socket error', reason);
+            reject(reason);
+          });
+
+          socket.on('dataset', async (dataset) => {
+            try {
+              await this.$store.dispatch('setDataset', {
+                dataset
+              });
+            } catch (error) {
+              console.error(error);
+              reject(error);
+            }
+          });
+
+          socket.on('reply', (payload) => {
+            if (payload.timestamp && window.promises[payload.timestamp]) {
+              if (payload.error) {
+                window.promises[payload.timestamp].reject(payload);
+              }
+              else {
+                window.promises[payload.timestamp].resolve(payload);
+              }
+              delete window.promises[payload.timestamp];
             }
             else {
-              window.promises[payload.timestamp].resolve(payload);
+              console.warn('Wrong timestamp reply',payload.timestamp,payload);
             }
-            delete window.promises[payload.timestamp];
-          }
-          else {
-            console.warn('Wrong timestamp reply',payload.timestamp,payload);
-          }
-        });
-
-        window.socket.on('connect', () => {
-          console.log('Connection success');
-          window.socket.on('success', () => {
-            console.log('Connection confirmed');
-            this.socketAvailable = true;
-            resolve('ok');
           });
-          window.socket.emit('confirmation', { workspace, username, authorization: accessToken, key });
-        });
 
-        window.socket.on('connection-error', (reason) => {
-          console.warn('Connection failure', reason);
-          this.handleError();
-          reject('Connection failure');
-        });
+          socket.on('connect', () => {
+            console.log('Connection success');
+            socket.on('success', () => {
+              console.log('Connection confirmed');
+              this.socketAvailable = true;
+              resolve(socket);
+            });
+            socket.emit('confirmation', { workspace, username, authorization: accessToken, key });
+          });
 
-        window.socket.on('disconnect', (reason) => {
-          console.log('Connection lost', reason);
-          this.handleError();
-          reject('Connection lost');
-        });
+          socket.on('connection-error', (reason) => {
+            console.warn('Connection failure', reason);
+            this.handleError();
+            reject('Connection failure');
+          });
 
+          socket.on('disconnect', (reason) => {
+            console.log('Connection lost', reason);
+            this.handleError();
+            reject('Connection lost');
+          });
+        } catch (err) {
+          reject(err)
+        }
       });
+
+      window.socketPromise.catch(()=>delete window.socketPromise);
+
+      return window.socketPromise;
 
     },
 
@@ -329,26 +344,22 @@ export default {
 
       try {
 
-        var worskpacePromise = this.$store.dispatch('startWorkspace', { slug: workspace } )
-
-        commit('mutation', { mutate: 'workspacePromise', payload: worskpacePromise })
-
-        var response = await workspacePromise
+        var response = this.$store.dispatch('getWorkspace', { slug: workspace } );
 
         if (key) {
-          this.$store.commit('session/mutation', {mutate: 'key', payload: key})
+          this.$store.commit('session/mutation', {mutate: 'key', payload: key});
         }
 
-        var client_status = await this.startSocket()
+        var client_status = await this.startSocket();
 
         if (client_status === 'ok') {
-          return true
+          return true;
         } else {
-          throw client_status
+          throw client_status;
         }
 
       } catch (error) {
-        this.handleError(error)
+        this.handleError(error);
       }
     },
 

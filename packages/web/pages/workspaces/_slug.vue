@@ -362,7 +362,7 @@ export default {
 
 		confirmDelete(value) {
 			if (value>=0 && this.$store.state.datasets[value] && this.$store.state.datasets[value].blank) {
-        this.deleteTab(value)
+        return this.deleteTab(value)
       }
 		}
   },
@@ -427,23 +427,25 @@ export default {
           this.$store.commit('mutation', { mutate: 'workspaceSlug', payload: slug });
         }
 
-        var workspace = await this.$store.dispatch('startWorkspace', { slug });
-        console.debug('[INITIALIZATION] Workspace started')
+        var optimus = await this.initializeOptimus(slug);
+        console.debug('[INITIALIZATION] Optimus initialized');
 
-        await this.initializeOptimus(slug)
-        console.debug('[INITIALIZATION] Optimus initialized')
+        // await new Promise((resolve)=>{
+        //   setTimeout(() => {
+        //     resolve('ok');
+        //   }, 5000);
+        // })
 
+        var workspace = await this.$store.dispatch('getWorkspace', { slug });
+        console.debug('[INITIALIZATION] Workspace started');
 
         if (!this.$store.state.datasets.length) {
-          this.$store.dispatch('newDataset', { go: true })
+          await this.$store.dispatch('newDataset', { go: true });
         }
 
-        // console.log('[INITIALIZATION] status mutation')
-        this.$store.commit('session/mutation', { mutate: 'workspaceStatus', payload: true })
-        // console.log('[INITIALIZATION] status mutated')
+        this.$store.commit('session/mutation', { mutate: 'workspaceStatus', payload: true });
 
         await this.$nextTick()
-
 
         try {
 
@@ -516,8 +518,8 @@ export default {
       return this.$store.dispatch('getOptimus', { payload } )
     },
 
-		deleteTab(i) {
-			this.$store.dispatch('deleteTab', i);
+		async deleteTab(i) {
+			await this.$store.dispatch('deleteTab', i);
 			this.confirmDelete = -1;
 			if (!this.$store.state.datasets.length) {
 				this.tab = 0;

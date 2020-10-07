@@ -220,7 +220,7 @@ export const mutations = {
     Vue.set(state.listViews,state.tab,listView)
   },
 
-	setDataset (state, { dataset, preview, tab }) {
+	setDataset (state, { dataset, preview, tab, avoidReload }) {
 
     console.log("[BUMBLEBLEE] Opening dataset", dataset);
 
@@ -270,21 +270,20 @@ export const mutations = {
     console.debug("[BUMBLEBLEE] Setting dataset", dataset);
 
     Vue.set(state.datasets, tab, dataset);
-
-    state.datasetSelection[tab] = {}; // {columns: _c} // TO-DO: Remember selection
-
-    Vue.set(state.datasetSelection, tab, state.datasetSelection[tab] );
     Vue.set(state.buffersPromises, tab, false);
 
-    state.properties.filter(p=>p.clearOnLoad).forEach(p=>{
-      if (p.multiple) {
-        Vue.set(state['every'+p.name], tab, false);
-      } else {
-        state[p.name] = false;
-      }
-    });
-
-    state.datasetUpdates = state.datasetUpdates + 1;
+    if (!avoidReload) {
+      state.datasetSelection[tab] = {}; // {columns: _c} // TO-DO: Remember selection
+      Vue.set(state.datasetSelection, tab, state.datasetSelection[tab] );
+      state.properties.filter(p=>p.clearOnLoad).forEach(p=>{
+        if (p.multiple) {
+          Vue.set(state['every'+p.name], tab, false);
+        } else {
+          state[p.name] = false;
+        }
+      });
+      state.datasetUpdates = state.datasetUpdates + 1;
+    }
 
     return dataset;
 
@@ -558,7 +557,21 @@ export const actions = {
     }
   },
 
-  getPromise({ state, dispatch, commit }, { name, action, payload, forcePromise, index } ) {
+  getPromise({ state, dispatch, commit }, { name, action, payload, kernel, forcePromise, index } ) {
+
+    if (forcePromise) {
+      console.log('[forcePromise]');
+    }
+
+    if (kernel && window && !window.socketPromise) {
+      console.log('[forcePromise] => socket');
+      dispatch('resetPromises', { from: 'optimus' });
+      forcePromise = true;
+    }
+
+    if (forcePromise) {
+      console.log({ name, action, payload, kernel, forcePromise, index });
+    }
 
     var promise;
 
@@ -574,7 +587,9 @@ export const actions = {
 
     if (!promise || promise.rejected) {
       promise = dispatch(action, payload);
-      promise.catch(e=>promise.rejected = true);
+      promise
+        .then(()=>promise.fulfilled = true)
+        .catch(()=>promise.rejected = true);
       if (index !== undefined) {
         var promises = {};
         if (typeof state[name] == "object") {
@@ -709,11 +724,6 @@ export const actions = {
     return dispatch('getPromise', promisePayload);
   },
 
-  async startWorkspace ({ dispatch }, { slug }) {
-    var result = await dispatch('getWorkspace', { slug, forcePromise: true })
-    return result;
-  },
-
   // cells
 
   codeText ({ getters }, { newOnly, ignoreFrom }) {
@@ -763,6 +773,8 @@ export const actions = {
         newCodeDone = await dispatch('codeText', { newOnly: false, ignoreFrom });
       }
       commit('mutation', { mutate: 'codeDone', payload: newCodeDone });
+    } else if (!mark) {
+      commit('mutation', { mutate: 'codeDone', payload: '' });
     }
 
   },
@@ -793,7 +805,11 @@ export const actions = {
   resetPromises ({ commit, dispatch }, { from }) {
     from = from || 'cells';
 
+    console.debug('[RESET] From', from);
+
     switch (from) {
+      case 'optimus':
+        commit('mutation', { mutate: 'optimusPromise', payload: false});
       case 'cells':
         dispatch('markCells', { mark: false });
         commit('mutation', { mutate: 'codeError', payload: ''});
@@ -827,7 +843,7 @@ export const actions = {
       commit('mutation', { mutate: 'workspaceSlug', payload: slug })
     }
 
-    console.log('[INITIALIZATION] initializeOptimus', state.session.username, slug);
+    console.log('[BUMBLEBEE] Initializing Optimus', state.session.username, slug);
 
     var response = await socketPost('initialize', {
       username: state.session.username,
@@ -900,22 +916,23 @@ export const actions = {
     var promisePayload = {
       name: 'optimusPromise',
       action: 'loadOptimus',
+      kernel: true,
       payload
     };
 
     return dispatch('getPromise', promisePayload);
   },
 
-  async loadCellsResult ({dispatch, state, getters, commit}, { force, ignoreFrom, socketPost }) {
+  async loadCellsResult ({dispatch, state, getters, commit}, { force, ignoreFrom, socketPost, clearPrevious }) {
     console.debug('[DEBUG] Loading cells result');
     try {
-      await Vue.nextTick();
+      // await Vue.nextTick();
 
-      var optimusPromise = dispatch('getOptimus', { payload: {socketPost} } );
+      var optimus = await dispatch('getOptimus', { payload: {socketPost} } );
 
-      var workspacePromise = dispatch('getWorkspace', {} );
+      var workspace = await dispatch('getWorkspace', {} );
 
-      await Promise.all([optimusPromise, workspacePromise])
+      console.debug([optimus, workspace]);
 
       if (ignoreFrom>=0) {
         force = true;
@@ -953,7 +970,7 @@ export const actions = {
       }
 
       if (code===wrongCode ) {
-        console.debug('%c[CODE MANAGER] Cells went wrong last time', 'color: yellow;');
+        console.debug('%c[CODE MANAGER] Cells went wrong last time', 'color: yellow;'+state.lastWrongCode.error);
         throw state.lastWrongCode.error;
       }
 
@@ -972,9 +989,11 @@ export const actions = {
 
       // run
 
-      await dispatch('beforeRunCells', { newOnly, ignoreFrom });
+      if (clearPrevious) {
+        await dispatch('resetPromises', { from: 'profilings' });
+      }
 
-      dispatch('resetPromises', { from: 'profilings' })
+      await dispatch('beforeRunCells', { newOnly, ignoreFrom });
 
       console.debug('[DEBUG][CODE] Sent', code);
 
@@ -1000,6 +1019,7 @@ export const actions = {
 
       console.debug('[DEBUG] Loading cells result Done');
       return response
+
     } catch (err) {
 
       if (err.code && window.pushCode) {
@@ -1029,6 +1049,7 @@ export const actions = {
       name: 'cellsPromise',
       action: 'loadCellsResult',
       payload,
+      kernel: true,
       forcePromise
     };
 
@@ -1039,17 +1060,13 @@ export const actions = {
     return dispatch('getPromise', promisePayload);
   },
 
-  async loadProfiling ({dispatch, state, getters, commit}, {dfName, socketPost, ignoreFrom}) {
+  async loadProfiling ({ dispatch, state, getters, commit }, { dfName, socketPost, ignoreFrom, avoidReload, clearPrevious }) {
     console.debug('[DEBUG] Loading profiling', dfName);
     try {
 
       await Vue.nextTick();
 
       var cellsResult = await dispatch('getCellsResult', { payload: { socketPost, ignoreFrom } } );
-      console.log({
-        lastWrongCode: state.lastWrongCode,
-        cellsResult
-      })
 
       if (!dfName) {
         // return {};
@@ -1061,7 +1078,10 @@ export const actions = {
         }
       }
 
-      commit('setBufferPromise', { dfName, promise: false });
+      if (clearPrevious) {
+        commit('setBufferPromise', { dfName, promise: false });
+      }
+
 
       var response = await socketPost('profile', {
         dfName,
@@ -1082,10 +1102,10 @@ export const actions = {
       var dataset = JSON.parse(response.data.result);
       dataset.dfName = dfName;
       console.debug('[DATASET] Setting', { dataset, to: dfName });
-      await dispatch('setDataset', { dataset });
+      await dispatch('setDataset', { dataset, avoidReload });
 
       if (state.gettingNewResults) {
-        dispatch('afterNewProfiling');
+        await dispatch('afterNewProfiling');
       }
 
       console.debug('[DEBUG] Loading profiling Done', dfName);
@@ -1113,6 +1133,7 @@ export const actions = {
       name: 'profilingsPromises',
       action: 'loadProfiling',
       payload,
+      kernel: true,
       index: payload.dfName,
       forcePromise
     };
@@ -1142,6 +1163,7 @@ export const actions = {
       name: 'buffersPromises',
       action: 'loadBuffer',
       payload: { dfName, socketPost },
+      kernel: true,
       index: dfName
     };
 

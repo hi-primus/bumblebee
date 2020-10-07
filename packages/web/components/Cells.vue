@@ -2722,7 +2722,7 @@ export default {
 
     runCells (force, ignoreFrom) {
       var payload = { force, ignoreFrom, socketPost: this.socketPost };
-      return this.$store.dispatch('getCellsResult', {forcePromise: true, payload });
+      return this.$store.dispatch('getCellsResult', {forcePromise: true, payload, clearPrevious: true });
     },
 
     forceFileDownload(url, filename){
@@ -3269,8 +3269,6 @@ export default {
     },
 
     async runCodeNow (force = false, ignoreFrom = -1, newDfName, noCheck = false) {
-
-      console.trace();
 
       try {
         var dfName = (this.currentDataset ? this.currentDataset.dfName : undefined) || newDfName;

@@ -352,11 +352,24 @@ export default {
   methods: {
     async getPatterns () {
       try {
+
+        var payload = {
+          socketPost: this.socketPost,
+          dfName: this.currentDataset.dfName,
+          avoidReload: true,
+          clearPrevious: true
+        };
+
+        var profiling = await this.$store.dispatch('getProfiling', { payload });
+
         if (this.patternsFrequency[this.patternsResolution] && this.patternsFrequency[this.patternsResolution]!=='error') {
           return
         }
         this.$set(this.patternsFrequency, this.patternsResolution, 'loading')
         var response = await this.evalCode(`_output = ${this.currentDataset.dfName}.cols.pattern_counts("${this.column.name}", ${3-this.patternsResolution})`)
+        if (!response.data.result) {
+          throw response
+        }
         var values = response.data.result[this.column.name]
         if (values.values && typeof values.values !== 'function') {
           values = values.values

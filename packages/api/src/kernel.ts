@@ -299,7 +299,10 @@ export const createConnection = async function (sessionId) {
 						if (!kernels[sessionId]) {
 							console.error(kernels[sessionId]);
 							throw 'Kernel error';
-						}
+						} else if (!kernels[sessionId].promises){
+							console.error(kernels[sessionId].promises);
+							throw 'Kernel Promises pool error';
+            }
 						if (message.type === 'utf8') {
 							const response = JSON.parse(message.utf8Data);
 							const msg_id = response.parent_header.msg_id;
