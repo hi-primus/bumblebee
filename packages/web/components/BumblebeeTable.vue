@@ -266,6 +266,7 @@
                 :mismatch="+previewPlotsData[column.name].mismatch"
                 :nullV="+previewPlotsData[column.name].null"
                 class="table-data-bar"
+                bottom
               />
               <Frequent
                 v-if="previewPlotsData[column.name].frequency"
@@ -423,6 +424,7 @@
                   :key="'c'+column.index+'r'+value.index"
                   class="bb-table-i-cell"
                   :style="{ top: rowHeight * value.index+'px' }"
+                  :title="value.value"
                   v-html="value.html"
                 >
                 </div>
@@ -436,6 +438,7 @@
                   top: rowHeight * value.index+'px',
                   userSelect: (cellsSelection==([idInSample[column.sampleName], value.index]).join()) ? 'text' : 'none'
                 }"
+                :title="value.value"
                 v-html="value.html"
                 @mousedown="clearSelection(); cellsSelection = [idInSample[column.sampleName] || column.index, value.index].join()"
                 @mouseup="checkSelection(idInSample[column.sampleName] || column.index, value.index)"
@@ -1174,7 +1177,7 @@ export default {
               continue
             }
             var html = this.getCellHtmlHighlight(values[index], hlValues[index], color)
-            array.push({html , index: +index})
+            array.push({html , index: +index, value: values[index]})
           }
         } else {
           for (const index in values) {
@@ -1182,7 +1185,7 @@ export default {
               continue
             }
             var html = this.getCellHtml(values[index])
-            array.push({html , index: +index})
+            array.push({html , index: +index, value: values[index]})
           }
         }
 
