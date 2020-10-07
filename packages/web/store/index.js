@@ -559,18 +559,9 @@ export const actions = {
 
   getPromise({ state, dispatch, commit }, { name, action, payload, kernel, forcePromise, index } ) {
 
-    if (forcePromise) {
-      console.log('[forcePromise]');
-    }
-
     if (kernel && window && !window.socketPromise) {
-      console.log('[forcePromise] => socket');
       dispatch('resetPromises', { from: 'optimus' });
       forcePromise = true;
-    }
-
-    if (forcePromise) {
-      console.log({ name, action, payload, kernel, forcePromise, index });
     }
 
     var promise;
