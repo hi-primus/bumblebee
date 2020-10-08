@@ -117,7 +117,6 @@ export class AppGateway
       }
       const resultCode = `_output = ${payload.dfName}${getGenerator('uploadToS3',resultPayload)(resultPayload)}`;
       const code = `_output = ${payload.dfName}${getGenerator('uploadToS3',execPayload)(execPayload)}`;
-      console.log({code});
       const result = {
         ...(await runCode(code, sessionId)),
         url: `https://${process.env.DO_BUCKET}.${process.env.DO_ENDPOINT}/${payload.username}/${file_name}.${file_type}`,

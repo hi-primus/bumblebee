@@ -136,7 +136,7 @@ export default {
         { text: 'Active', sortable: true, width: '1%', value: 'activeKernel', align: 'left' },
         { text: 'Workspace', sortable: true, width: '8%', value: 'name' },
         { text: 'Description', sortable: true, width: '12%', value: 'description' },
-        { text: 'Tabs', sortable: true, width: '2%', value: 'tabs' },
+        // { text: 'Tabs', sortable: true, width: '2%', value: 'tabs' },
         { text: 'Data sources', sortable: true, width: '2%', value: 'dataSourcesCount' },
         { text: 'Last modification', sortable: true, width: '6%', value: 'updatedAt'},
         { text: 'Created', sortable: true, width: '6%', value: 'createdAt'},

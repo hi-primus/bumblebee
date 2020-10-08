@@ -1224,10 +1224,6 @@ export default {
 
       cellValue = cellValue ? cellValue.toString() : ''
 
-      // if (selectedText.endsWith(' ') && !cellValue.endsWith(' ')) {
-      //   selectedText = selectedText.substr(0,selectedText.length - 1) // remove unwanted extra space
-      // }
-
 			if (cellValue && cellValue.includes(selectedText)) {
         this.$store.commit('selection',{
           text: {
@@ -1855,12 +1851,6 @@ export default {
             })
             return true
           }
-
-          // if (!this.fetched.length) {
-          //   this.$nextTick(()=>{
-          //     this.throttledScrollCheck(true)
-          //   })
-          // }
 
         } else if (this.toFetch.length) {
           this.$nextTick(()=>{

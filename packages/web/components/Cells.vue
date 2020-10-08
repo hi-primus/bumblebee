@@ -2546,12 +2546,6 @@ export default {
 
   watch: {
 
-    codeError (value) {
-      // if (value && value.length) {
-      //   this.$store.commit('clearDatasetProperties');
-      // }
-    },
-
     currentSelection: {
       deep: true,
       handler (selection) {
@@ -3116,10 +3110,6 @@ export default {
       } else {
         this.localCommands = cells
       }
-
-      // if (index>=from.length) {
-      //   index = from.length-1
-      // }
 
       this.codeDone = ''
       this.draggableEnd(true)

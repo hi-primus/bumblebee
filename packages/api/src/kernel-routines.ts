@@ -166,7 +166,7 @@ def install ():
     from optimus import Optimus
     return 'ok'
 
-reset = True # ${(params?.reset != '0') ? 'True' : 'False'}
+reset = ${(params?.reset != '0') ? 'True' : 'False'}
 
 try:
     json; date; datetime; ipython_vars; _json_default; traceback;

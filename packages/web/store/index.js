@@ -224,8 +224,6 @@ export const mutations = {
 
     console.log("[BUMBLEBLEE] Opening dataset", dataset);
 
-    // if (dataset.name===null) {
-
     var fileName = dataset.file_name;
 
     if (fileName && fileName.includes('/')) {
@@ -660,19 +658,10 @@ export const actions = {
       cells = response.data.commands.map( e=>({ ...JSON.parse(e), done: false }) );
     }
 
-    // console.log('[WORKSPACE] Obtained', { tabs, cells, tab });
-
-    // if (tab>=0) {
-    //   commit('mutation', { mutate: 'tab', payload: tab})
-    // }
-
     var commands = cells.filter(e=>!(e && e.payload && e.payload.request && e.payload.request.isLoad));
     var dataSources = cells.filter(e=>e && e.payload && e.payload.request && e.payload.request.isLoad);
 
-    // console.log('[WORKSPACE] Obtained', { commands, dataSources });
-
     tabs.forEach((dataset, index) => {
-      // commit('mutation', { mutate: 'tab', payload: index })
       if (dataset.columns) {
         console.debug('[DATASET] Setting', { dataset, to: index });
         commit('setDataset', { dataset, tab: index });
@@ -1043,10 +1032,6 @@ export const actions = {
       kernel: true,
       forcePromise
     };
-
-    // if (forcePromise) {
-    //   console.warn('Forced cells loading');
-    // }
 
     return dispatch('getPromise', promisePayload);
   },
