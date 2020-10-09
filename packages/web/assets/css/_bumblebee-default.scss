@@ -1910,22 +1910,23 @@ $editor-top-padding: 4px;
         text-overflow: ellipsis;
         white-space: nowrap;
       }
-      &.bb-drag-over {
-        & .drag-hint {
-          background-color: $data-blue;
-          position: absolute;
-          width: 3px;
-          height: 100%;
-        }
-        &.bb-drag-over-right .drag-hint {
-          right: 0 !important;
-        }
-        &:not(.bb-drag-over-right) .drag-hint {
-          left: 0;
-        }
+    }
+    .drag-hint {
+      position: absolute;
+    }
+    &.bb-drag-over {
+      .drag-hint {
+        background-color: $data-blue;
+        width: 3px;
+        height: 100%;
+      }
+      &.bb-drag-over-right .drag-hint {
+        right: 0 !important;
+      }
+      &:not(.bb-drag-over-right) .drag-hint {
+        left: 0;
       }
     }
-
   }
 
   .bb-table-h-cell, .bb-table-plot {

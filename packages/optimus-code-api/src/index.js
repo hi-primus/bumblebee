@@ -11,7 +11,7 @@ export const codeGenerators = {
     return `.to_${payload.file_type}( filename="s3://${payload.bucket}/${payload.username}/${payload.file_name}.${payload.file_type}", single_file=True, storage_options={ "key": "${payload.access_key_id}", "secret": "${payload.secret_key}", "client_kwargs": { "endpoint_url": "https://${payload.endpoint}", }, "config_kwargs": {"s3": {"addressing_style": "virtual", "x-amz-acl": "public/read"}} } );`
   },
   'apply sort': (payload) => {
-    return `.cols.sort(["${payload.columns.join('", "')}"])`
+    return `.cols.sort(columns=["${payload.columns.join('", "')}"])`
   },
   DROP_KEEP: (payload) => {
     return `.cols.${payload.command}(["${payload.columns.join('", "')}"])`
