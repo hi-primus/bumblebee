@@ -2715,8 +2715,8 @@ export default {
     },
 
     runCells (force, ignoreFrom) {
-      var payload = { force, ignoreFrom, socketPost: this.socketPost };
-      return this.$store.dispatch('getCellsResult', {forcePromise: true, payload, clearPrevious: true });
+      var payload = { force, ignoreFrom, socketPost: this.socketPost, clearPrevious: true };
+      return this.$store.dispatch('getCellsResult', {forcePromise: true, payload });
     },
 
     forceFileDownload(url, filename){
