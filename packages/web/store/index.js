@@ -746,9 +746,9 @@ export const actions = {
       }
     }
 
-    commit('mutation', { mutate: 'cells', payload: cells })
+    commit('mutation', { mutate: 'commands', payload: cells })
 
-    if (mark && !error) {
+    if (mark && !(error || splice)) {
       var newCodeDone = '';
       if (mark && state.commands) {
         newCodeDone = await dispatch('codeText', { newOnly: false, ignoreFrom });
@@ -910,10 +910,11 @@ export const actions = {
       // await Vue.nextTick();
 
       var optimus = await dispatch('getOptimus', { payload: {socketPost} } );
-
       var workspace = await dispatch('getWorkspace', {} );
 
-      console.debug([optimus, workspace]);
+      var init = [optimus, workspace];
+
+      // console.debug(init)
 
       if (ignoreFrom>=0) {
         force = true;
@@ -960,9 +961,7 @@ export const actions = {
         await dispatch('markCells', { mark: false, ignoreFrom });
       }
 
-      var firstRun = state.firstRun;
-
-      if (firstRun) {
+      if (state.firstRun) {
         rerun = false;
       }
 
@@ -1012,6 +1011,7 @@ export const actions = {
       if (state.firstRun) {
         await dispatch('markCells', { ignoreFrom, error: true });
       } else {
+        console.debug('[CELLS] Deleting every column except', ignoreFrom);
         await dispatch('markCells', { ignoreFrom, splice: true });
       }
       commit('mutation', { mutate: 'commandsDisabled', payload: undefined });
@@ -1101,6 +1101,7 @@ export const actions = {
       if (state.firstRun) {
         await dispatch('markCells', { ignoreFrom, error: true });
       } else {
+        console.debug('[CELLS] Deleting every column except', ignoreFrom);
         await dispatch('markCells', { ignoreFrom, splice: true });
       }
       commit('mutation', { mutate: 'commandsDisabled', payload: undefined});
