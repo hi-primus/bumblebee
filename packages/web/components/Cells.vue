@@ -3263,29 +3263,26 @@ export default {
       try {
         var dfName = (this.currentDataset ? this.currentDataset.dfName : undefined) || newDfName;
 
-        var cellsResult = await this.runCells(force, ignoreFrom)
-        console.debug('[INITIALIZATION] Cells code done', cellsResult);
+        var cellsResult = await this.runCells(force, ignoreFrom);
 
         if (!cellsResult) {
           return false;
         }
 
-        var dataset = await this.getProfiling(dfName, ignoreFrom)
-        console.debug('[INITIALIZATION] Profiling done', dataset);
+        var dataset = await this.getProfiling(dfName, ignoreFrom);
 
         if (this.firstRun) {
           this.firstRun = false;
         }
 
-        var secondaryDatasets = this.updateSecondaryDatasets()
-        console.debug('[INITIALIZATION] Secondary datasets promise', secondaryDatasets);
+        var secondaryDatasets = this.updateSecondaryDatasets();
 
         this.$forceUpdate();
 
         this.markCells(true, ignoreFrom);
 
         this.codeError = '';
-        this.lastWrongCode = false
+        this.lastWrongCode = false;
 
       } catch (err) {
         if (noCheck) {
@@ -3298,8 +3295,6 @@ export default {
         var codeText = await this.codeText();
 
         var code = cellsResult ? cellsResult.originalCode : undefined;
-
-        console.log(codeText, code)
 
         if (codeText !== code) {
           setTimeout(() => {

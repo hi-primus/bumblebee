@@ -96,7 +96,7 @@ export const actions =  {
 
   cleanSession ({commit}) {
     commit('mutation', { mutate: 'saveReady', payload: false});
-    commit('clearDatasetProperties', {}, { root: true });
+    commit('clearSession', {}, { root: true });
   },
 
   async profile ({commit}, { auth }) {

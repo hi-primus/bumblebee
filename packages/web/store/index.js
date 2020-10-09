@@ -148,17 +148,18 @@ export const mutations = {
     Vue.set(state, mutate, payload)
   },
 
-  clearDatasetProperties (state) {
+  clearSession (state) {
+    console.debug('%c[DATASET] Clear','color: yellow;');
     Object.keys(defaultState).forEach(key=>{
       Vue.set(state, key, defaultState[key]);
-    })
+    });
     state.properties.filter(p=>p.clear).forEach(p=>{
       if (p.multiple) {
-        Vue.set(state['every'+p.name], state.tab, false)
+        pStates['every'+p.name] = [];
       } else {
-        state[p.name] = false
+        state[p.name] = false;
       }
-    })
+    });
   },
 
   setBufferPromise (state, { dfName, promise }) {
@@ -967,8 +968,6 @@ export const actions = {
 
       commit('mutation', { mutate: 'commandsDisabled', payload: true });
 
-      // run
-
       if (clearPrevious) {
         await dispatch('resetPromises', { from: 'profilings' });
       }
@@ -1010,13 +1009,16 @@ export const actions = {
       var wrongCode = await dispatch('codeText', { newOnly, ignoreFrom });
       commit('mutation', { mutate: 'lastWrongCode', payload: { code: wrongCode, error: deepCopy(err) }});
 
-      await dispatch('markCells', { ignoreFrom, error: true });
+      if (state.firstRun) {
+        await dispatch('markCells', { ignoreFrom, error: true });
+      } else {
+        await dispatch('markCells', { ignoreFrom, splice: true });
+      }
       commit('mutation', { mutate: 'commandsDisabled', payload: undefined });
 
-      // console.error(err);
-      err.message = '(Error on cells) ' + (err.message || '')
-
+      err.message = '(Error on cells) ' + (err.message || '');
       console.debug('[DEBUG] Loading cells result Error');
+      await dispatch('resetPromises', { from: 'profilings' });
       throw err;
 
     }
@@ -1058,7 +1060,6 @@ export const actions = {
         commit('setBufferPromise', { dfName, promise: false });
       }
 
-
       var response = await socketPost('profile', {
         dfName,
         username: state.session.username,
@@ -1093,13 +1094,20 @@ export const actions = {
         window.pushCode({code: err.code, error: true});
       }
       commit('mutation', { mutate: 'codeError', payload: printError(err)});
+
       var wrongCode = await dispatch('codeText', { newOnly: true, ignoreFrom });
       commit('mutation', { mutate: 'lastWrongCode', payload: { code: wrongCode, error: deepCopy(err) } });
-      await dispatch('markCells', { ignoreFrom, error: true });
+
+      if (state.firstRun) {
+        await dispatch('markCells', { ignoreFrom, error: true });
+      } else {
+        await dispatch('markCells', { ignoreFrom, splice: true });
+      }
       commit('mutation', { mutate: 'commandsDisabled', payload: undefined});
-      err.message = '(Error on profiling) ' + (err.message || '')
-      // console.error(err);
+
+      err.message = '(Error on profiling) ' + (err.message || '');
       console.debug('[DEBUG] Loading profiling Error', dfName);
+      await dispatch('resetPromises', { from: 'buffers' });
       throw err;
     }
   },
@@ -1126,7 +1134,7 @@ export const actions = {
     }
 
     await Vue.nextTick();
-    var payload = {dfName, socketPost};
+    var payload = { dfName, socketPost };
     var profiling = await dispatch('getProfiling', { payload });
     var result = await dispatch('evalCode', {socketPost, code: '_output = '+dfName+'.ext.set_buffer("*")'})
     console.debug('[DEBUG] Loading buffer Done', dfName);
