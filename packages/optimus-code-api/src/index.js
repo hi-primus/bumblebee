@@ -29,10 +29,8 @@ export const codeGenerators = {
     if (payload.rowsType==='values' && payload.selection && payload.selection.map) {
       payload.selection = payload.selection.map(v=>escapeQuotes(v))
     }
-    if (payload.request.isString || true) {
-      if (payload.selection && payload.selection.map && payload.rowsType==='values') {
-        payload.selection = payload.selection.map(v=>`"${v}"`)
-      }
+    if (payload.selection && payload.selection.map && payload.rowsType==='values') {
+      payload.selection = payload.selection.map(v=>`"${v}"`)
     }
 
     var expression = ''
@@ -104,7 +102,7 @@ export const codeGenerators = {
       console.error(error)
     }
 
-    if (payload.request.isString || true) {
+    if (!['less','greater','between'].includes(payload.condition)) {
       payload.value = `"${payload.value}"`
       payload.value_2 = `"${payload.value_2}"`
       payload.values = payload.values.map(v=>`"${v}"`)

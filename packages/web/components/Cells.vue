@@ -471,7 +471,7 @@ export default {
               {
                 condition: (c)=>['exactly','not','less','greater'].includes(c.condition),
                 key: 'value',
-                placeholder: (c)=>(c.request.isString || true) ? 'Value' : 'numeric or "string"',
+                placeholder: (c)=>(c.request.isString) ? 'Value' : 'numeric or "string"',
                 label: 'Value',
                 type: 'field'
               },
