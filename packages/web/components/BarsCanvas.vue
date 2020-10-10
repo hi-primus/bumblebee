@@ -229,7 +229,7 @@ export default {
         from--
       }
 
-      if (from>=0 && !this.multipleSelection && to-from<=1 && this.bins[from].selected) {
+      if (from>=0 && !this.multipleSelection && to-from<=1 && this.bins[from] && this.bins[from].selected) {
         this.bins = this.bins.map(e=>({...e, selecting: false, selected: false}))
         return;
       }
