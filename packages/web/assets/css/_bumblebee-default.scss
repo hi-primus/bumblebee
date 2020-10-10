@@ -2419,15 +2419,15 @@ $editor-top-padding: 4px;
     }
 
     &.bb-highlight--green {
-      background: rgba($highlight-green,0.88) !important;
+      background: lighten($highlight-green,0.2) !important;
     }
 
     &.bb-highlight--red {
-      background: rgba($highlight-red,0.88) !important;
+      background: lighten($highlight-red,0.2) !important;
     }
 
     &.bb-highlight--blue {
-      background: rgba($highlight-blue,0.88) !important;
+      background: lighten($highlight-blue,0.2) !important;
     }
   }
 
