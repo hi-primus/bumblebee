@@ -793,6 +793,7 @@ export const actions = {
         commit('mutation', { mutate: 'optimusPromise', payload: false});
       case 'cells':
         await dispatch('markCells', { mark: false });
+        commit('mutation', { mutate: 'codeDone', payload: ''});
         commit('mutation', { mutate: 'codeError', payload: ''});
         commit('mutation', { mutate: 'lastWrongCode', payload: { code: '', error: false }});
         commit('mutation', { mutate: 'cellsPromise', payload: false });
