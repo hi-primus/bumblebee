@@ -60,7 +60,7 @@ const tokenizeParenOpen = (input, current) => tokenizeCharacterPos('open_paren',
 const tokenizeParenClose = (input, current) => tokenizeCharacterPos('close_paren', ')', input, current)
 const tokenizeSemiColon = (input, current) => tokenizeCharacter('semi_colon', ';', input, current)
 const tokenizeComma = (input, current) => tokenizeCharacter('comma', ',', input, current)
-const tokenizeNumber = (input, current) => tokenizePattern("number", /[0-9]/, input, current)
+const tokenizeNumber = (input, current) => tokenizePattern("number", /[0-9\.]/, input, current)
 const tokenizeName = (input, current) => tokenizePattern("name", /[a-z_]/i, input, current)
 
 // Operators
