@@ -548,6 +548,8 @@ export default {
       fetched: [],
       fetchedPreview: [],
 
+      noBufferWindow: false,
+
       loadedPreviewCode: '',
 
       indicesInSample: {},
@@ -624,7 +626,7 @@ export default {
         var sKey = Object.keys(columns)[0]
 
         for (var key in columns) {
-          if (columns[key].length>max) {
+          if (columns[key] && columns[key].length>max) {
             max = columns[key].length
             sKey = key
           }
@@ -646,20 +648,19 @@ export default {
       if (this.loadPreviewActive) {
         return this.loadPreviewColumnValues;
       }
-      var noHighlight = !this.previewCode.code;
 
       var columnValues = { ...this.columnValues };
 
       if (this.gettingNewResults=='hide') {
-
         this.previewColumns.forEach(column => {
           if (column.type === 'preview' && !this.currentPreviewNames[column.name]) {
             var name = column.name.substr(4);
             columnValues[ name ] = columnValues[ column.name ]
           }
         });
-
       }
+
+      var noHighlight = !this.previewCode.code;
 
       return this.computeColumnValues(columnValues, noHighlight, this.rowsCount);
 
@@ -1095,21 +1096,40 @@ export default {
       deep: true,
 
       async handler (previewCode) {
-        var currentCode = await getPropertyAsync(previewCode.code)
-        if (this.loadedPreviewCode!==currentCode) {
-          this.loadedPreviewCode = currentCode
-          if (currentCode) { // a new code
-            delete this.columnValues['__match__']
-            this.fetched = this.fetched.filter(e=>!e.code)
-          }
-          if (!previewCode.load) {
-            this.previousRange = -1
-            this.mustUpdateRows = true
-            this.mustCheck = true
-            this.scrollCheck(true) // await ? no
-            this.updateRows()
+
+        var check = false;
+
+        if (previewCode) {
+
+          var currentCode = await getPropertyAsync(previewCode.code);
+
+          if (this.loadedPreviewCode !== currentCode) {
+            this.loadedPreviewCode = currentCode;
+            this.$delete(this.columnValues, '__match__');
+            this.fetched = this.fetched.filter(e=>!e.code);
+            if (!previewCode.load) {
+              check = true;
+            }
           }
         }
+
+        var noBufferWindow = previewCode ? previewCode.noBufferWindow : false;
+
+        if (this.noBufferWindow !== noBufferWindow) {
+          this.columnValues = {};
+          this.fetched = [];
+          check = true;
+        }
+
+        if (check) {
+          this.previousRange = -1;
+          this.mustUpdateRows = true;
+          this.mustCheck = true;
+          this.scrollCheck(true); // await ? no
+          this.updateRows();
+        }
+
+        this.noBufferWindow = noBufferWindow;
       },
 
     },
