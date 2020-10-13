@@ -488,7 +488,7 @@ export default {
 
     openDf (dfName) {
       this.$store.commit('setDfToTab', { dfName, go: true });
-      this.getProfiling(dfName, ignoreFrom)
+      this.getProfiling(dfName)
     },
 
     commandHandle (event) {
