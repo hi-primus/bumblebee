@@ -147,6 +147,7 @@ const init = (payload, min = false) => {
   opInit = `
 engine = "${params.engine}"
 if (using_coiled):
+    `+(params.coiled_token ? `dask.config.set({"coiled.token": '${params.coiled_token}'})` : '')+`
     coiled.create_cluster_configuration(${functionParams.substr(2)})
     cluster = coiled.Cluster(name="${params.workspace_name}", configuration='${params.name}')
     client = Client(cluster)
@@ -194,14 +195,18 @@ res = { 'kernel': 'ok' }
 
 engine = "${params.engine}"
 
+coiled_token = ${ params.coiled_token ? 'True' : 'False' }
 using_coiled = False
 coiled_available = False
 
-# check coiled availability
-
 import cytoolz;
 
+# check coiled availability
+
 try:
+    if coiled_token:
+        import dask;
+        dask.config.set({"coiled.token": '${params.coiled_token}'})
     import coiled;
     coiled.Cloud()
     coiled_available = True
@@ -210,11 +215,18 @@ except:
     using_coiled = False
     coiled_available = False
 
-# check optimus parser availability
+# optimus reserved words
 
 try:
-    from optimus.expressions import reserved_words, Parser
+    from optimus.expressions import reserved_words
     res.update({'reserved_words': reserved_words})
+except:
+    pass
+
+# optimus parser
+
+try:
+    from optimus.expressions import Parser
     p = Parser()
 except:
     def p (a):

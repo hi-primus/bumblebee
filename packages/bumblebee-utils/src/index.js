@@ -621,6 +621,11 @@ export const INIT_PARAMS = {
     type: 'kwargs',
     engines: ['dask', 'dask_cudf']
   },
+  'coiled_token': {
+    type: 'string',
+    name: 'Coiled token',
+    engines: ['dask_coiled', 'dask_cudf_coiled']
+  },
   'name': {
     type: 'string',
     name: 'Configuration name',

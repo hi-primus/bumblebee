@@ -42,7 +42,7 @@ export default {
             is: 'v-select',
             value: defaultValues.engine  || 'dask',
             props: {
-              items: Object.entries(getEngines(this.$store.state.coiledAvailable)).map(([value, text])=>({text, value})),
+              items: Object.entries(getEngines(true)).map(([value, text])=>({text, value})),
               label: 'Engine'
             }
           },
