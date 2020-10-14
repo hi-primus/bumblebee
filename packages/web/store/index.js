@@ -1145,13 +1145,14 @@ export const actions = {
 
   },
 
-  getBuffer ({dispatch}, { dfName, socketPost }) {
+  getBuffer ({dispatch}, { dfName, socketPost, forcePromise }) {
     var promisePayload = {
       name: 'buffersPromises',
       action: 'loadBuffer',
       payload: { dfName, socketPost },
       kernel: true,
-      index: dfName
+      index: dfName,
+      forcePromise
     };
 
     return dispatch('getPromise', promisePayload);
@@ -1208,11 +1209,27 @@ export const actions = {
       beforeCodeEval()
     }
 
-    var response
-    if (getters.currentProfilePreview.done) {
-      response = await dispatch('evalCode',{ socketPost, code: `_output = _df_profile${(noBufferWindow) ? '' : '['+from+':'+(to+1)+']'}.ext.to_json("*")`})
-    } else {
-      response = await dispatch('evalCode',{ socketPost, code: `_output = ${datasetDfName}.ext.buffer_window("*"${(noBufferWindow) ? '' : ', '+from+', '+(to+1)})${code}.ext.to_json("*")`})
+    var response;
+
+    var profilePreview = getters.currentProfilePreview.done;
+
+    if (profilePreview) {
+      try {
+        response = await dispatch('evalCode',{ socketPost, code: `_output = _df_profile${(noBufferWindow) ? '' : '['+from+':'+(to+1)+']'}.ext.to_json("*")`})
+      } catch (err) {
+        console.error(err,'Retrying without buffered profiling');
+        profilePreview = false;
+      }
+    }
+
+    if (!profilePreview) {
+      try {
+        response = await dispatch('evalCode',{ socketPost, code: `_output = ${datasetDfName}.ext.buffer_window("*"${(noBufferWindow) ? '' : ', '+from+', '+(to+1)})${code}.ext.to_json("*")`})
+      } catch (err) {
+        console.error(err,'Retrying with buffer');
+        await dispatch('getBuffer', { dfName: datasetDfName, socketPost, forcePromise: true });
+        response = await dispatch('evalCode',{ socketPost, code: `_output = ${datasetDfName}.ext.buffer_window("*"${(noBufferWindow) ? '' : ', '+from+', '+(to+1)})${code}.ext.to_json("*")`})
+      }
     }
 
     if (response.data.status === 'error') {

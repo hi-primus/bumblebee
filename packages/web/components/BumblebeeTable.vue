@@ -1741,7 +1741,7 @@ export default {
 
         var response = await this.evalCode(code)
 
-        if (!response) {
+        if (!response || !response.data.result) {
           throw response
         }
 
@@ -1758,9 +1758,7 @@ export default {
         }
 
         if (matches && response.data.result.matches_count!==undefined) {
-
           this.$store.commit('setPreviewInfo', {rowHighlights: +response.data.result.matches_count})
-
         }
 
         return true
