@@ -93,6 +93,7 @@ const defaultState = {
   commandsDisabled: false,
   lastWrongCode: false,
   codeError: '',
+  noMatch: false,
   codeDone: '',
   configPromise: false,
   optimusPromise: false,

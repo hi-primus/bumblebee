@@ -5,6 +5,7 @@
         There's a problem <br/><br/>
         <v-btn color="primary" depressed @click="reloadInit">Reload</v-btn>
       </div>
+
       <div
         v-else-if="(commandsDisabled || $store.state.kernel=='loading')"
         class="progress-middle title grey--text text-center"
@@ -185,10 +186,16 @@
 		<client-only>
 			<div
 				v-show="!currentListView && (currentDataset && currentDataset.summary || loadPreviewActive)"
-				class="the-table-container"
+				class="bumblebee-table-container"
 			>
+        <div v-if="noMatch" class="no-data">
+          <div class="title grey--text text-center text-with-icons">
+            No match
+          </div>
+        </div>
         <BumblebeeTable
 					v-if="!currentListView && (currentDataset && currentDataset.summary || loadPreviewActive)"
+          v-show="!noMatch"
           :bbColumns="bbColumns"
           @sort="updateSortedColumns"
           @updatedSelection="selectionEvent"
@@ -273,6 +280,10 @@ export default {
       'loadPreview',
       'appError'
     ]),
+
+    noMatch () {
+      return (this.resultsColumnsData && !this.resultsColumnsData.length) || !this.filteredColumns.length
+    },
 
     commandsDisabled: {
       get () {
@@ -542,13 +553,13 @@ export default {
       }
     },100),
 
-    watchSearchText: throttle( async function() {
+    watchSearchText: debounce( async function() {
       try {
         this.updateResults()
       } catch (err) {
         // console.error(err)
       }
-    }, 1000),
+    }, 800),
 
 		toggleColumnsSelection () {
 			let select = this.selectionStatus !== 1
@@ -634,6 +645,10 @@ export default {
       handler (value) {
         this.sortedColumns = []
       },
+    },
+
+    noMatch (value) {
+      this.$store.commit('mutation', { mutate: 'noMatch', payload: value });
     },
 
     operationsActive () {

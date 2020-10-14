@@ -175,7 +175,7 @@
               <div class="icon-btn-container mr-2" v-on="{...tooltip}">
                 <v-badge
                   :value="typesSelected.length || searchText"
-                  color="primary lighten-2"
+                  :color="(noMatch) ? 'error' : 'primary lighten-2'"
                   dot
                   overlap
                 >
@@ -562,6 +562,10 @@ export default {
     ]),
 
     ...mapState(['nextCommand']),
+
+    noMatch () {
+      return this.$store.state.noMatch;
+    },
 
     codeError: {
       get () {
