@@ -467,13 +467,13 @@ export const objectMap = (obj, cb) => {
 export const transformDateToPython = (string) => {
   if (string)
     return string.replace(/a|A|w|d|b|B|m|y|Y|H|I|p|M|S|f|z|Z|j|U|W|c|x|X|%/g,(match)=>`%${match}`)
-  return undefined
+  return ''
 }
 
 export const transformDateFromPython = (string) => {
   if (string)
     return string.replace(/%(a|A|w|d|b|B|m|y|Y|H|I|p|M|S|f|z|Z|j|U|W|c|x|X|%)/g,(match)=>`${match.substr(1)}`)
-  return undefined
+  return ''
 }
 
 
