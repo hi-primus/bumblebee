@@ -5,13 +5,34 @@ import { Cluster } from "./interface/cluster.interface";
 
 @Injectable()
 export class ClusterService {
-  constructor(@InjectModel("Cluster") private clusterModel: Model<Cluster>) {}
+  constructor(@InjectModel("Cluster") private itemModel: Model<Cluster>) {}
 
-  async getClusters() {}
+  async getMany(queryParams): Promise<Cluster[]> {
+    const items = await this.itemModel.find({ queryParams }).exec();
+    return items;
+  }
 
-  async createCluster() {}
+  async getManyCount(queryParams): Promise<number> {
+    const count = await this.itemModel.find({ queryParams }).getCount().exec();
+    return count;
+  }
 
-  async udpateCluster() {}
+  async getOne(params): Promise<Cluster> {
+    const item = await this.itemModel.findOne(params).exec();
+    return item;
+  }
 
-  async deleteCluster() {}
+  async createOne(newModel): Promise<Cluster> {
+    const item = new this.itemModel(newModel);
+    return item.save();
+  }
+
+  async udpateOne(itemId, data): Promise<Cluster> {
+    const item = await this.itemModel.findOneAndUpdate(itemId, data).exec();
+    return item.save();
+  }
+
+  async deleteOne(itemId) {
+    return this.itemModel.findOneAndDelete({ _id: itemId });
+  }
 }
