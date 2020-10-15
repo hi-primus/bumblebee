@@ -57,6 +57,7 @@
                 outlined
                 dense
                 v-bind="field.props"
+                :placeholder="getProperty(field.props.placeholder, [values])"
                 hide-details
                 :class="{'pt-4': index!==0}"
               />
@@ -70,7 +71,7 @@
         <v-card-actions>
           <div class="flex-grow-1" />
           <v-btn color="primary" text @click="acceptForm(false)">Cancel</v-btn>
-          <v-btn color="primary" text :disabled="form.disabled ? form.disabled() : false" type="submit">Accept</v-btn>
+          <v-btn color="primary" text :disabled="form.disabled ? form.disabled(values) : false" type="submit">Accept</v-btn>
         </v-card-actions>
       </v-card>
     </v-form>
@@ -78,6 +79,9 @@
 </template>
 
 <script>
+
+import { getProperty } from 'bumblebee-utils';
+
 export default {
 
   props: {
@@ -113,6 +117,8 @@ export default {
   },
 
   methods: {
+
+    getProperty,
 
     fromForm (form) {
       this.form = form;

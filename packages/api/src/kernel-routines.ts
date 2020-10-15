@@ -65,7 +65,7 @@ const initializationParameters = ( params: any = {} ) => {
 
   Object.entries(params).forEach(([key, value]: [string, any])=>{
 
-    if (value!==undefined && INIT_PARAMS[key] && engineValid(key, params.engine)) {
+    if (value!==undefined && INIT_PARAMS[key] && !INIT_PARAMS[key].noCode && engineValid(key, params.engine)) {
 
       switch (INIT_PARAMS[key].type) {
         case 'int':
@@ -144,18 +144,19 @@ const init = (payload, min = false) => {
 
   let opInit = '';
 
-  opInit = `
-engine = "${params.engine}"
-if (using_coiled):
-    `+(params.coiled_token ? `dask.config.set({"coiled.token": '${params.coiled_token}'})` : '')+`
-    coiled.create_cluster_configuration(${functionParams.substr(2)})
-    cluster = coiled.Cluster(name="${params.workspace_name}", configuration='${params.name}')
-    client = Client(cluster)
-    client_install = client.run(install)
-    op = Optimus(engine, session=client, memory_limit="1G", comm=True)
-else:
-    op = Optimus(engine${functionParams}, memory_limit="1G", comm=True)
-`
+  opInit = `engine = "${params.engine}"`
+  if (params.coiled_token) {
+    opInit += `
+dask.config.set({"coiled.token": '${params.coiled_token}'})
+coiled.create_cluster_configuration(${functionParams.substr(2)})
+cluster = coiled.Cluster(name="${params.workspace_name}", configuration='${params.name}')
+client = Client(cluster)
+client_install = client.run(install)
+op = Optimus(engine, session=client, memory_limit="1G", comm=True)`
+  } else {
+    opInit += `
+op = Optimus(engine${functionParams}, memory_limit="1G", comm=True)`
+  }
 
   if (min) {
     return opInit;

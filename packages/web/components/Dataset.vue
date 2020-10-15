@@ -282,7 +282,7 @@ export default {
     ]),
 
     noMatch () {
-      return (this.resultsColumnsData && !this.resultsColumnsData.length) || !this.filteredColumns.length
+      return  !this.loadPreviewActive && this.customSortedColumns && this.customSortedColumns.length && ( ( this.resultsColumnsData && !this.resultsColumnsData.length) || !this.filteredColumns.length ) ;
     },
 
     commandsDisabled: {

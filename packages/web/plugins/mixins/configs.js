@@ -20,10 +20,11 @@ export default {
       let valuesFromParameters = Object.entries(INIT_PARAMS).filter(([key, field])=>field.type !== 'private').map(([key, field])=>{
         return {
           key,
-          value: defaultValues[key] || field.default || undefined,
+          value: defaultValues[key] || undefined,
           ...(field.items ? {is: 'v-select'} : {}),
           ...(field.type === 'boolean' ? {type: 'checkbox'} : {}),
           props: {
+            placeholder: field.default,
             label: field.name || capitalizeString(key).replace(/_/g,' '),
             ...(field.type === 'int' && !field.items ? {type: 'number'} : {}),
             ...(field.items ? { items: Object.entries(field.items).map(([value, text])=>({ text, value })) } : {})
@@ -54,7 +55,13 @@ export default {
           },
           ...valuesFromParameters
 
-        ]
+        ],
+        disabled: (values)=>{
+          if (values.engine.includes('_coiled')) {
+            return !values.coiled_token;
+          }
+          return false;
+        }
       });
 
       return values;

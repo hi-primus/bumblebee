@@ -482,11 +482,17 @@ export const engineValid = (key, engine) => {
 };
 
 
-export const getDefaultParams = (params) => {
+export const getDefaultParams = (_params) => {
+
+  var params = {};
 
   Object.entries(INIT_PARAMS).forEach(([key, param])=>{
-    if (param.default !== undefined && params[key] === undefined && engineValid(key, params.engine)) {
-      params[key] = param.default;
+    if (engineValid(key, _params.engine)) {
+      if (param.default !== undefined && _params[key] === undefined) {
+        params[key] = getProperty(param.default, [params]);
+      } else if (_params[key] !== undefined) {
+        params[key] = _params[key];
+      }
     }
   });
 
@@ -537,7 +543,7 @@ export const INIT_PARAMS = {
     type: 'int',
     name: 'Number of workers',
     engines: ['dask', 'dask_cudf'],
-    default: 1
+    default: '1'
   },
   'processes': {
     type: 'boolean',
@@ -548,7 +554,7 @@ export const INIT_PARAMS = {
   'threads_per_worker': {
     type: 'int',
     engines: ['dask', 'dask_cudf'],
-    default: 8
+    default: '8'
   },
   'scheduler_port': {
     type: 'int',
@@ -602,7 +608,7 @@ export const INIT_PARAMS = {
   },
   // Security or bool
   'Security': {
-    type: 'bool',
+    type: 'boolean',
     engines: ['dask', 'dask_cudf']
   },
   'protocol': {
@@ -624,6 +630,13 @@ export const INIT_PARAMS = {
   'coiled_token': {
     type: 'string',
     name: 'Coiled token',
+    noCode: true,
+    engines: ['dask_coiled', 'dask_cudf_coiled']
+  },
+  'use_gpu': {
+    type: 'boolean',
+    name: 'Use GPU',
+    noCode: true,
     engines: ['dask_coiled', 'dask_cudf_coiled']
   },
   'name': {
@@ -650,7 +663,9 @@ export const INIT_PARAMS = {
   'software': {
     type: 'string',
     name: 'Software environment',
-    default: 'optimus/default',
+    default: (params)=>{
+      return params.use_gpu ? 'optimus/gpu' : 'optimus/default';
+    },
     engines: ['dask_coiled', 'dask_cudf_coiled']
   },
   // 'kwargs': {
