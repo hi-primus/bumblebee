@@ -838,6 +838,10 @@ export const actions = {
 
     var functions;
 
+    if (response.data.dashboard_link) {
+      console.log('%c[DEBUG] Dashboard: ' + response.data.dashboard_link, 'color: green;');
+    }
+
     if (response.data.client_install) {
       var installs = Object.values(response.data.client_install);
       if (!installs.length || installs.some(e=>!e)) {
