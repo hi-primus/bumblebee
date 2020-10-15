@@ -150,7 +150,7 @@ export const mutations = {
   },
 
   clearSession (state) {
-    console.debug('%c[DATASET] Clear','color: yellow;');
+    console.debug('%c[SESSION] Clear','color: yellow;');
     Object.keys(defaultState).forEach(key=>{
       Vue.set(state, key, defaultState[key]);
     });
@@ -837,6 +837,13 @@ export const actions = {
     console.debug('[DEBUG][INITIALIZATION] initializeOptimus response', response);
 
     var functions;
+
+    if (response.data.client_install) {
+      var installs = Object.values(response.data.client_install);
+      if (!installs.length || installs.some(e=>!e)) {
+        console.warn('Optimus installation on workers unknown');
+      }
+    }
 
     if (response.data.reserved_words) {
       response.data.reserved_words = JSON.parse(response.data.reserved_words); // TO-DO: remove dumps on optimus

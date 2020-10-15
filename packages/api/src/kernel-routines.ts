@@ -142,9 +142,8 @@ const init = (payload, min = false) => {
 
   let { params, functionParams } = getParams(payload);
 
-  let opInit = '';
+  let opInit = `engine = "${params.engine}"`;
 
-  opInit = `engine = "${params.engine}"`
   if (params.coiled_token) {
     opInit += `
 dask.config.set({"coiled.token": '${params.coiled_token}'})
@@ -152,10 +151,10 @@ coiled.create_cluster_configuration(${functionParams.substr(2)})
 cluster = coiled.Cluster(name="${params.workspace_name}", configuration='${params.name}')
 client = Client(cluster)
 client_install = client.run(install)
-op = Optimus(engine, session=client, memory_limit="1G", comm=True)`
+op = Optimus(engine, session=client, memory_limit="1G", comm=True)`;
   } else {
     opInit += `
-op = Optimus(engine${functionParams}, memory_limit="1G", comm=True)`
+op = Optimus(engine${functionParams}, memory_limit="1G", comm=True)`;
   }
 
   if (min) {
@@ -165,8 +164,9 @@ op = Optimus(engine${functionParams}, memory_limit="1G", comm=True)`
   return `
 
 def install ():
+    import pandas
     from optimus import Optimus
-    return 'ok'
+    return 'ok' if pandas.Series.ext else False
 
 reset = ${(params?.reset != '0') ? 'True' : 'False'}
 
