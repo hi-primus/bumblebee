@@ -452,7 +452,7 @@ export default {
           var result = await this.runCodeNow(false, -1, undefined, true);
           console.debug('[INITIALIZATION] Cells code and profiling done', result);
 
-          if (!result) {
+          if (!result && result !== false) {
             throw new Error('Cells code or profiling error')
           }
 
