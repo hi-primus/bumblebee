@@ -1295,7 +1295,7 @@ export default {
             _fileName: '',
             _fileLoaded: false,
             _moreOptions: false,
-            file_type: 'csv',
+            file_type: 'file',
             external_url: '',
             url: '',
             sep: ',',
