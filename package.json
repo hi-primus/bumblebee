@@ -3,9 +3,9 @@
   "version": "3.0.0",
   "scripts": {
     "dev-web": "cd packages/web && yarn run dev",
-    "dev-api": "cd packages/api && yarn start",
+    "dev-api": "cd packages/api && yarn start:dev",
     "web": "cd packages/web && yarn run build && yarn start",
-    "api": "cd packages/api && yarn start",
+    "api": "cd packages/api && yarn run build && yarn start",
     "dev": "concurrently \"yarn run dev-web\" \"yarn run dev-api\" \"yarn run watch-packages\"",
     "dev-no-web": "concurrently \"yarn run dev-api\" \"yarn run watch-packages\"",
     "watch-oca": "cd packages/optimus-code-api && yarn start",
