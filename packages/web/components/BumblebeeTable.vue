@@ -212,6 +212,7 @@
           @drop="dragDrop(i, $event)"
           @click="selectColumn($event, column.index)"
           @dblclick="setMenu($event, column.index)"
+          @click:right="setMenu($event, column.index)"
         >
           <div class="column-header-cell">
             <div class="data-type" :class="`type-${currentDataset.columns[column.index].profiler_dtype.dtype}`">
@@ -1734,7 +1735,7 @@ export default {
 
         var code = `_df_profile = ${this.currentDataset.dfName}.ext.buffer_window("*")${await getPropertyAsync(previewCode) || ''}`
         + `\n_output = { `
-        + (profile ? `"profile": _df_profile.ext.profile(["${cols.join('", "')}"], output="json")` : '')
+        + (profile ? `"profile": _df_profile.ext.profile(["${cols.join('", "')}"])` : '')
         + (profile && matches ? `, ` : '')
         + (matches ? `"matches_count": len(_df_profile.rows.select('df["__match__"]!=False'))` : '')
         + `}`

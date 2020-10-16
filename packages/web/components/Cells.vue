@@ -1376,9 +1376,9 @@ export default {
               var code
 
               if (currentCommand.algorithm == 'fingerprint')
-                code = `from optimus.engines.dask.ml import keycollision as kc; _output = kc.fingerprint_cluster(${currentCommand.dfName}.ext.buffer_window("*"), input_cols="${currentCommand.columns[0]}", output="json")`
+                code = `from optimus.engines.dask.ml import keycollision as kc; _output = kc.fingerprint_cluster(${currentCommand.dfName}.ext.buffer_window("*"), input_cols="${currentCommand.columns[0]}")`
               else if (currentCommand.algorithm == 'n_gram_fingerprint')
-                code = `from optimus.engines.dask.ml import keycollision as kc; _output = kc.n_gram_fingerprint_cluster(${currentCommand.dfName}.ext.buffer_window("*"), input_cols="${currentCommand.columns[0]}", n_size=${currentCommand.n_size}, output="json")`
+                code = `from optimus.engines.dask.ml import keycollision as kc; _output = kc.n_gram_fingerprint_cluster(${currentCommand.dfName}.ext.buffer_window("*"), input_cols="${currentCommand.columns[0]}", n_size=${currentCommand.n_size})`
               else
                 throw 'Invalid algorithm type input'
 

@@ -688,7 +688,7 @@ export default {
                 this.$store.commit('setLoadPreview', { meta: response.data.result.meta } )
               }
 
-              var pCode = `_output = ${dfName}.ext.profile(columns="*", output="json")`
+              var pCode = `_output = ${dfName}.ext.profile(columns="*")`
 
               var pResponse = await this.evalCode(pCode)
 
@@ -707,7 +707,7 @@ export default {
                 this.$store.commit('setLoadPreview', { meta: response.data.result.meta } )
               }
 
-              var pCode = `_output = ${dfName}.ext.profile(columns="*", output="json")`
+              var pCode = `_output = ${dfName}.ext.profile(columns="*")`
 
               var pResponse = await this.evalCode(pCode)
 

@@ -19,8 +19,9 @@ res.update({'result': _output})
 if _use_time:
     _end_time = datetime.utcnow().timestamp()
     res.update({'_gatewayTime': {'start': _start_time, 'end': _end_time, 'duration': _end_time-_start_time}})
-json.dumps(res,  default=_json_default, ensure_ascii=False)
+json.dumps(res,  default=json_converter, ensure_ascii=False)
 `;
+
 const code = (code = '') => `
 
 _use_time = True
@@ -33,7 +34,7 @@ res = {'result': _output}
 if _use_time:
     _end_time = datetime.utcnow().timestamp()
     res.update({'_gatewayTime': {'start': _start_time, 'end': _end_time, 'duration': _end_time-_start_time}})
-json.dumps(res,  default=_json_default, ensure_ascii=False)
+json.dumps(res,  default=json_converter, ensure_ascii=False)
 `;
 
 const datasetsMin = (payload) => `
@@ -57,7 +58,7 @@ if _use_time:
     _end_time = datetime.utcnow().timestamp()
     res = { _df: globals()[_df].cols.names() for (_df) in _dfs }
 res.update({'_gatewayTime': {'start': _start_time, 'end': _end_time, 'duration': _end_time-_start_time}})
-json.dumps(res,  default=_json_default, ensure_ascii=False)
+json.dumps(res,  default=json_converter, ensure_ascii=False)
 `;
 
 const initializationParameters = ( params: any = {} ) => {
@@ -173,7 +174,7 @@ def install ():
 reset = ${(params?.reset != '0') ? 'True' : 'False'}
 
 try:
-    json; date; datetime; ipython_vars; _json_default; traceback;
+    json; date; datetime; ipython_vars; json_converter; traceback;
     assert (not reset)
 except Exception:
     reset = True
@@ -184,9 +185,7 @@ except Exception:
         ipython_vars = False
     import traceback
     import json
-    def _json_default(o):
-        if isinstance(o, (date, datetime)):
-            return o.isoformat()
+    from optimus.helpers.json import json_converter
 
 _use_time = True
 try:
@@ -250,7 +249,7 @@ if _use_time:
     _end_time = datetime.utcnow().timestamp()
     res.update({'_gatewayTime': {'start': _start_time, 'end': _end_time, 'duration': _end_time-_start_time}})
 
-json.dumps(res,  default=_json_default, ensure_ascii=False)
+json.dumps(res,  default=json_converter, ensure_ascii=False)
 `;
 }
 

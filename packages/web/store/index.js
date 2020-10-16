@@ -1089,7 +1089,7 @@ export const actions = {
       }
 
       window.pushCode({code: response.code});
-      var dataset = JSON.parse(response.data.result);
+      var dataset = parseResponse(response.data.result);
       dataset.dfName = dfName;
       console.debug('[DATASET] Setting', { dataset, to: dfName });
       await dispatch('setDataset', { dataset, avoidReload });
