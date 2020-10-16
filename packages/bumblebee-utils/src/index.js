@@ -353,7 +353,6 @@ export const decapitalizeString = (str) => {
   }
 }
 
-
 export const spanClass = (text, cls) => {
   if (!cls) {
     return text
@@ -476,11 +475,9 @@ export const transformDateFromPython = (string) => {
   return ''
 }
 
-
 export const engineValid = (key, engine) => {
   return (!INIT_PARAMS[key].engines || INIT_PARAMS[key].engines.includes(engine))
 };
-
 
 export const getDefaultParams = (_params) => {
 
@@ -522,17 +519,17 @@ export const ENGINES = {
 
 export const INIT_PARAMS = {
   'engine': {
-    type: 'private',
+    type: 'hidden',
     default: 'dask'
   },
   'jupyter_ip': {
-    type: 'private'
+    type: 'hidden'
   },
   'jupyter_port': {
-    type: 'private'
+    type: 'hidden'
   },
   'reset': {
-    type: 'private'
+    type: 'hidden'
   },
   //?
   // 'address': {
@@ -638,6 +635,9 @@ export const INIT_PARAMS = {
     name: 'Use GPU',
     noCode: true,
     engines: ['dask_coiled', 'dask_cudf_coiled']
+  },
+  'workspace_name': {
+    type: 'hidden'
   },
   'name': {
     type: 'string',
