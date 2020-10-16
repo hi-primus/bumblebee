@@ -36,6 +36,12 @@ const properties = [
     multiple: true,
   },
   {
+    name: 'HiddenColumns',
+    clear: true,
+    clearOnLoad: true,
+    multiple: true,
+  },
+  {
     name: 'Highlights',
     clear: true,
     clearOnSelection: true,
@@ -94,6 +100,7 @@ const defaultState = {
   lastWrongCode: false,
   codeError: '',
   noMatch: false,
+  showingColumnsLength: 0,
   codeDone: '',
   configPromise: false,
   optimusPromise: false,
