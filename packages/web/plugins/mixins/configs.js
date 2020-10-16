@@ -1,4 +1,4 @@
-import { capitalizeString, getEngines, INIT_PARAMS } from "bumblebee-utils";
+import { capitalizeString, getEngines, deepCopy, INIT_PARAMS } from "bumblebee-utils";
 import FormDialog from "@/components/FormDialog";
 
 export default {
@@ -13,9 +13,11 @@ export default {
       return this.$refs.formDialog.fromForm(form)
     },
 
-    async configParameters (defaultValues = {}, text = 'Create new configuration' ) {
+    async configParameters (_defaultValues = {}, text = 'Create new configuration' ) {
 
-      defaultValues.name = this.$store.state.session.username + '_' + this.$route.params.slug;
+      var defaultValues = deepCopy(_defaultValues);
+
+      defaultValues.name = this.$store.state.session.username + '__' + this.$route.params.slug;
 
       let valuesFromParameters = Object.entries(INIT_PARAMS).filter(([key, field])=>field.type !== 'hidden').map(([key, field])=>{
         return {

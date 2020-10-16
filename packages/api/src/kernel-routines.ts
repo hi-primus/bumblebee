@@ -147,8 +147,10 @@ const init = (payload, min = false) => {
   if (params.coiled_token) {
     opInit += `
 dask.config.set({"coiled.token": '${params.coiled_token}'})
-coiled.create_cluster_configuration(${functionParams.substr(2)})
-cluster = coiled.Cluster(name="${params.workspace_name}", configuration='${params.name}')
+cluster = coiled.Cluster(${functionParams.substr(2)},
+                         worker_options={
+                          'nthreads': 8,
+                         })
 client = Client(cluster)
 client_install = client.run(install)
 op = Optimus(engine, session=client, memory_limit="1G", comm=True)`;

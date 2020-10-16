@@ -536,10 +536,28 @@ export const INIT_PARAMS = {
   //   type: 'string',
   //   engines: ['dask', 'dask_cudf']
   // },
+  'coiled_token': {
+    type: 'string',
+    name: 'Coiled token',
+    noCode: true,
+    engines: ['dask_coiled', 'dask_cudf_coiled']
+  },
+  'use_gpu': {
+    type: 'boolean',
+    name: 'Use GPU',
+    noCode: true,
+    engines: ['dask_coiled', 'dask_cudf_coiled']
+  },
+  'name': {
+    type: 'string',
+    name: 'Cluster name',
+    engines: ['dask_coiled', 'dask_cudf_coiled']
+  },
+
   'n_workers': {
     type: 'int',
     name: 'Number of workers',
-    engines: ['dask', 'dask_cudf'],
+    engines: ['dask', 'dask_cudf', 'dask_coiled', 'dask_cudf_coiled'],
     default: '1'
   },
   'processes': {
@@ -623,26 +641,6 @@ export const INIT_PARAMS = {
   'worker_kwargs': {
     type: 'kwargs',
     engines: ['dask', 'dask_cudf']
-  },
-  'coiled_token': {
-    type: 'string',
-    name: 'Coiled token',
-    noCode: true,
-    engines: ['dask_coiled', 'dask_cudf_coiled']
-  },
-  'use_gpu': {
-    type: 'boolean',
-    name: 'Use GPU',
-    noCode: true,
-    engines: ['dask_coiled', 'dask_cudf_coiled']
-  },
-  'workspace_name': {
-    type: 'hidden'
-  },
-  'name': {
-    type: 'string',
-    name: 'Configuration name',
-    engines: ['dask_coiled', 'dask_cudf_coiled']
   },
   'worker_memory': {
     type: 'string',

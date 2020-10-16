@@ -176,7 +176,6 @@ export const requestToKernel = async function (type, sessionId, payload) {
 			break;
 		case 'init':
       payload.engine = payload.engine || process.env.ENGINE || 'dask';
-      payload.workspace_name = payload.username + '_COILED_' + payload.workspace;
 			code = kernelRoutines.init(payload);
 			break;
 	}
