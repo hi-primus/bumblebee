@@ -16,8 +16,7 @@
     :min-width="(columnMenuIndex!==false ? Math.max(250,columns[columnMenuIndex].width+6) : 250) +'px'"
     width="250px"
     max-height="75vh"
-    eager
-  >
+    eager>
     <v-card
       class="column-menu font-reset pt-2 pb-0 mb-0 elevation-0"
       @click="function(e){e.stopPropagation()}"
@@ -146,7 +145,7 @@
           :id="(column.previewIndex === previewColumns.length-1) ? 'bb-table-preview-last' : false"
           style="width: 170px"
         >
-          <div class="column-header-cell">
+          <div v-if="!(lazyColumns.length && !lazyColumns[column.index])" class="column-header-cell">
             <div
               class="data-type"
               :class="`type-${currentDataset.columns[column.index].profiler_dtype.dtype}`">
@@ -167,7 +166,7 @@
           :id="(column.previewIndex === previewColumns.length-1) ? 'bb-table-preview-last' : false"
           style="width: 170px"
         >
-          <div class="column-header-cell">
+          <div v-if="!(lazyColumns.length && !lazyColumns[column.index])" class="column-header-cell">
             <div
               v-if="previewPlotsData[column.name]"
               class="data-type"
@@ -191,7 +190,7 @@
           </div>
         </div>
         <div
-          v-else-if="columns[column.index]"
+          v-else-if="!(lazyColumns.length && !lazyColumns[column.index]) && columns[column.index]"
           :key="column.index"
           :id="'bb-table-'+columns[column.index].name"
           class="bb-table-h-cell"
@@ -212,8 +211,7 @@
           @drop="dragDrop(i, $event)"
           @click="selectColumn($event, column.index)"
           @dblclick="setMenu($event, column.index)"
-          @click:right="setMenu($event, column.index)"
-        >
+          @click:right="setMenu($event, column.index)">
           <div class="column-header-cell">
             <div class="data-type" :class="`type-${currentDataset.columns[column.index].profiler_dtype.dtype}`">
               {{ dataTypeHint(currentDataset.columns[column.index].profiler_dtype.dtype) }}
@@ -235,6 +233,14 @@
             </div>
           </div>
         </div>
+        <div
+          v-else
+          :key="column.index"
+          :id="'bb-table-'+columns[column.index].name"
+          class="bb-table-h-cell"
+        >
+
+        </div>
       </template>
     </div>
     <div v-if="true" class="bb-table-plots">
@@ -253,11 +259,10 @@
           ]"
 				>
           <div
-            v-if="column.preview && previewPlotsData[column.name]"
+            v-if="!(lazyColumns.length && !lazyColumns[column.index]) && column.preview && previewPlotsData[column.name]"
             :key="'p'+column.index"
             class="bb-table-plot-content"
-            :data-column="column.name"
-          >
+            :data-column="column.name">
             <div>
               <DataBar
                 :key="previewPlotsData[column.name].key+'databar'"
@@ -306,12 +311,10 @@
             </div>
           </div>
           <div
-            v-else-if="columns[column.index] && !column.preview"
+            v-else-if="!(lazyColumns.length && !lazyColumns[column.index]) && columns[column.index] && !column.preview"
             :key="''+column.index"
             class="bb-table-plot-content"
-            :data-column="column.index"
-
-          >
+            :data-column="column.index">
             <div>
               <DataBar
                 :key="plotsData[column.index].key+'databar'"
@@ -447,7 +450,7 @@
               </div>
             </template>
           </template>
-          <template v-else-if="computedColumnValues[rowsColumn]">
+          <template v-else-if="!(lazyColumns.length && !lazyColumns[cindex]) && computedColumnValues[rowsColumn]">
             <div
               v-for="(value) in computedColumnValues[rowsColumn].filter((e)=>e.index<rowsCount)"
               :key="'cf'+cindex+'r'+value.index"
