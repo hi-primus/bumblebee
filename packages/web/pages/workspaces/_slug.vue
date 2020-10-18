@@ -195,7 +195,10 @@
               <span />
               <span v-if="currentDataset && currentDataset.summary" class="caption-2">
                 <template
-                  v-if="currentDataset.summary.total_count_dtypes"
+                  v-if="typesAvailable && typesAvailable.length"
+                >{{ typesAvailable.length | formatNumberInt }} Data types &emsp;</template>
+                <template
+                  v-else-if="currentDataset.summary.total_count_dtypes"
                 >{{ currentDataset.summary.total_count_dtypes | formatNumberInt }} Data types &emsp;</template>
                 <template v-if="sampleSize">{{ sampleSize | formatNumberInt }} of</template>
                 <template
@@ -285,7 +288,7 @@ export default {
   },
 
 	computed: {
-    ...mapGetters(['currentDataset','previewCode']),
+    ...mapGetters(['currentDataset','previewCode','typesAvailable']),
 
     ...mapState('session', ['workspace', 'workspaceStatus']),
     ...mapState(['loadingStatus']),

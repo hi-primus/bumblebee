@@ -36,6 +36,12 @@ const properties = [
     multiple: true,
   },
   {
+    name: 'HiddenColumns',
+    clear: true,
+    clearOnLoad: true,
+    multiple: true,
+  },
+  {
     name: 'Highlights',
     clear: true,
     clearOnSelection: true,
@@ -94,6 +100,7 @@ const defaultState = {
   lastWrongCode: false,
   codeError: '',
   noMatch: false,
+  showingColumnsLength: 0,
   codeDone: '',
   configPromise: false,
   optimusPromise: false,
@@ -838,6 +845,10 @@ export const actions = {
 
     var functions;
 
+    if (response.data.dashboard_link) {
+      console.log('%c[DEBUG] Dashboard: ' + response.data.dashboard_link, 'color: green;');
+    }
+
     if (response.data.client_install) {
       var installs = Object.values(response.data.client_install);
       if (!installs.length || installs.some(e=>!e)) {
@@ -1085,7 +1096,7 @@ export const actions = {
       }
 
       window.pushCode({code: response.code});
-      var dataset = JSON.parse(response.data.result);
+      var dataset = parseResponse(response.data.result);
       dataset.dfName = dfName;
       console.debug('[DATASET] Setting', { dataset, to: dfName });
       await dispatch('setDataset', { dataset, avoidReload });
@@ -1397,7 +1408,7 @@ export const getters = {
   },
   typesAvailable (state) {
     try {
-      return state.datasets[state.tab].columns.map(col=>col.profiler_dtype.dtype) || state.allTypes
+      return [...new Set(state.datasets[state.tab].columns.map(col=>col.profiler_dtype.dtype))] || state.allTypes
       // return state.datasets[state.tab].summary.dtypes_list || state.allTypes
     } catch (error) {
       return state.allTypes

@@ -353,7 +353,6 @@ export const decapitalizeString = (str) => {
   }
 }
 
-
 export const spanClass = (text, cls) => {
   if (!cls) {
     return text
@@ -476,11 +475,9 @@ export const transformDateFromPython = (string) => {
   return ''
 }
 
-
 export const engineValid = (key, engine) => {
   return (!INIT_PARAMS[key].engines || INIT_PARAMS[key].engines.includes(engine))
 };
-
 
 export const getDefaultParams = (_params) => {
 
@@ -522,27 +519,45 @@ export const ENGINES = {
 
 export const INIT_PARAMS = {
   'engine': {
-    type: 'private',
+    type: 'hidden',
     default: 'dask'
   },
   'jupyter_ip': {
-    type: 'private'
+    type: 'hidden'
   },
   'jupyter_port': {
-    type: 'private'
+    type: 'hidden'
   },
   'reset': {
-    type: 'private'
+    type: 'hidden'
   },
   //?
   // 'address': {
   //   type: 'string',
   //   engines: ['dask', 'dask_cudf']
   // },
+  'coiled_token': {
+    type: 'string',
+    name: 'Coiled token',
+    noCode: true,
+    engines: ['dask_coiled', 'dask_cudf_coiled']
+  },
+  'use_gpu': {
+    type: 'boolean',
+    name: 'Use GPU',
+    noCode: true,
+    engines: ['dask_coiled', 'dask_cudf_coiled']
+  },
+  'name': {
+    type: 'string',
+    name: 'Cluster name',
+    engines: ['dask_coiled', 'dask_cudf_coiled']
+  },
+
   'n_workers': {
     type: 'int',
     name: 'Number of workers',
-    engines: ['dask', 'dask_cudf'],
+    engines: ['dask', 'dask_cudf', 'dask_coiled', 'dask_cudf_coiled'],
     default: '1'
   },
   'processes': {
@@ -626,23 +641,6 @@ export const INIT_PARAMS = {
   'worker_kwargs': {
     type: 'kwargs',
     engines: ['dask', 'dask_cudf']
-  },
-  'coiled_token': {
-    type: 'string',
-    name: 'Coiled token',
-    noCode: true,
-    engines: ['dask_coiled', 'dask_cudf_coiled']
-  },
-  'use_gpu': {
-    type: 'boolean',
-    name: 'Use GPU',
-    noCode: true,
-    engines: ['dask_coiled', 'dask_cudf_coiled']
-  },
-  'name': {
-    type: 'string',
-    name: 'Configuration name',
-    engines: ['dask_coiled', 'dask_cudf_coiled']
   },
   'worker_memory': {
     type: 'string',

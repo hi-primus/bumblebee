@@ -256,8 +256,6 @@ export default {
   data () {
     return {
 
-			hiddenColumns: {},
-
       resultsColumnsData: false, // search
       selectedColumns: {},
 
@@ -276,13 +274,27 @@ export default {
       'currentDataset',
       'currentListView',
       'currentSecondaryDatasets',
+      'currentHiddenColumns',
       'previewCode',
       'loadPreview',
       'appError'
     ]),
 
+    hiddenColumns: {
+      get () {
+        return this.currentHiddenColumns || {};
+      },
+      set (value) {
+        this.$store.commit('setHiddenColumns', value);
+      }
+    },
+
     noMatch () {
-      return  !this.loadPreviewActive && this.customSortedColumns && this.customSortedColumns.length && ( ( this.resultsColumnsData && !this.resultsColumnsData.length) || !this.filteredColumns.length ) ;
+      return !this.loadPreviewActive && this.customSortedColumns && this.customSortedColumns.length && ( ( this.resultsColumnsData && !this.resultsColumnsData.length) || !this.bbColumns.length ) ;
+    },
+
+    showingColumnsLength () {
+      return this.bbColumns.length;
     },
 
     commandsDisabled: {
@@ -625,16 +637,20 @@ export default {
 		},
 
 		toggleColumnsVisibility (value) {
+      var hiddenColumns = {...this.hiddenColumns};
 			for (let i = 0; i < this.filteredColumns.length; i++) {
 				const column = this.filteredColumns[i]
 				if (this.selectedColumns[column.name]) {
-          this.$set(this.hiddenColumns, column.name, !value)
+          hiddenColumns[column.name] = !value
         }
-			}
+      }
+      this.hiddenColumns = hiddenColumns;
 		},
 
 		toggleColumnVisibility (colName) {
-			this.$set(this.hiddenColumns, colName, !this.hiddenColumns[colName])
+      var hiddenColumns = {...this.hiddenColumns};
+			hiddenColumns[colName] = !hiddenColumns[colName];
+      this.hiddenColumns = hiddenColumns;
     }
   },
 
@@ -649,6 +665,10 @@ export default {
 
     noMatch (value) {
       this.$store.commit('mutation', { mutate: 'noMatch', payload: value });
+    },
+
+    showingColumnsLength (value) {
+      this.$store.commit('mutation', { mutate: 'showingColumnsLength', payload: value });
     },
 
     operationsActive () {
@@ -688,7 +708,7 @@ export default {
                 this.$store.commit('setLoadPreview', { meta: response.data.result.meta } )
               }
 
-              var pCode = `_output = ${dfName}.ext.profile(columns="*", output="json")`
+              var pCode = `_output = ${dfName}.ext.profile(columns="*")`
 
               var pResponse = await this.evalCode(pCode)
 
@@ -707,7 +727,7 @@ export default {
                 this.$store.commit('setLoadPreview', { meta: response.data.result.meta } )
               }
 
-              var pCode = `_output = ${dfName}.ext.profile(columns="*", output="json")`
+              var pCode = `_output = ${dfName}.ext.profile(columns="*")`
 
               var pResponse = await this.evalCode(pCode)
 

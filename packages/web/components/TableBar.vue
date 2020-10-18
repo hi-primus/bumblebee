@@ -174,7 +174,7 @@
             <template v-slot:activator="{ on: tooltip }">
               <div class="icon-btn-container mr-2" v-on="{...tooltip}">
                 <v-badge
-                  :value="typesSelected.length || searchText"
+                  :value="!commandsDisabled && (filtersActive || noMatch)"
                   :color="(noMatch) ? 'error' : 'primary lighten-2'"
                   dot
                   overlap
@@ -241,6 +241,17 @@
               </template>
             </v-autocomplete>
           </div>
+          <div
+            v-if="currentDataset && currentDataset.columns && currentDataset.columns.length"
+            class="mr-2 pt-1 grey--text text--darken-2 text-caption">
+            {{showingColumnsLength}}/{{currentDataset.columns.length}}
+          </div>
+          <v-icon
+            v-if="filtersActive"
+            class="mr-1"
+            @click="clearFilters">
+            close
+          </v-icon>
         </div>
 
       </v-menu>
@@ -561,10 +572,10 @@ export default {
       'currentTab'
     ]),
 
-    ...mapState(['nextCommand']),
+    ...mapState(['nextCommand', 'noMatch', 'showingColumnsLength']),
 
-    noMatch () {
-      return this.$store.state.noMatch;
+    filtersActive () {
+      return this.typesSelected.length || this.searchText || (this.currentDataset && this.currentDataset.columns && this.showingColumnsLength !== this.currentDataset.columns.length);
     },
 
     codeError: {
@@ -1064,6 +1075,13 @@ export default {
   methods: {
 
     getProperty,
+
+    clearFilters () {
+      this.$store.commit('setHiddenColumns', {});
+      this.searchText = '';
+      this.typesSelected = [];
+
+    },
 
     runCodeNow (force = false, ignoreFrom = -1, newDfName, noCheck) {
       return this.$refs.cells.runCodeNow(force, ignoreFrom, newDfName, noCheck);
