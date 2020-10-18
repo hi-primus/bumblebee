@@ -12,6 +12,11 @@ export const ClusterSchemaProvider = {
       configuration: {
         type: Schema.Types.Mixed,
       },
+      creator: {
+        type: Schema.Types.ObjectId,
+        ref: "User",
+        default: null,
+      },
     });
     return ClusterSchema;
   },
