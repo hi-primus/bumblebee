@@ -10,17 +10,17 @@ import {
   UseGuards,
 } from "@nestjs/common";
 import { AuthGuard } from "@nestjs/passport";
-import { ApiTags } from "@nestjs/swagger";
 import { GetUser } from "./../auth/dto/get-user.decorator.dto";
 import { QueryParams } from "./../users/interfaces/queryParams.interface";
-import { ClusterService } from "./cluster.service";
-import { CreateClusterDTO } from "./dto/create-cluster.dto";
-import { UpdateClusterDTO } from "./dto/update-cluste.dto";
+import { ApiTags } from "@nestjs/swagger";
+import { ServiceService } from "./service.service";
+import { CreateServiceDTO } from "./dto/create-service.dto";
+import { UpdateServiceDTO } from "./dto/update-service.dto";
 
-@ApiTags("Clusters")
-@Controller("clusters")
-export class ClusterController {
-  constructor(private readonly service: ClusterService) {}
+@ApiTags("Services")
+@Controller("services")
+export class ServiceController {
+  constructor(private readonly service: ServiceService) {}
 
   @Get()
   @UseGuards(AuthGuard("jwt"))
@@ -53,7 +53,7 @@ export class ClusterController {
   @Post()
   @UseGuards(AuthGuard("jwt"))
   async createItem(
-    @Body() itemData: CreateClusterDTO,
+    @Body() itemData: CreateServiceDTO,
     @GetUser() user
   ): Promise<any> {
     const item = await this.service.createOne({
@@ -67,7 +67,7 @@ export class ClusterController {
   @UseGuards(AuthGuard("jwt"))
   async updateOneById(
     @Param("id") id: string,
-    @Body() data: UpdateClusterDTO,
+    @Body() data: UpdateServiceDTO,
     @GetUser() user
   ): Promise<any> {
     const item = await this.service.updateOneFromUser(id, user.userId, data);
