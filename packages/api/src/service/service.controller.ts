@@ -12,12 +12,13 @@ import {
 import { AuthGuard } from "@nestjs/passport";
 import { GetUser } from "./../auth/dto/get-user.decorator.dto";
 import { QueryParams } from "./../users/interfaces/queryParams.interface";
-import { ApiTags } from "@nestjs/swagger";
+import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
 import { ServiceService } from "./service.service";
 import { CreateServiceDTO } from "./dto/create-service.dto";
 import { UpdateServiceDTO } from "./dto/update-service.dto";
 
 @ApiTags("Services")
+@ApiBearerAuth()
 @Controller("services")
 export class ServiceController {
   constructor(private readonly service: ServiceService) {}

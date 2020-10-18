@@ -10,7 +10,7 @@ import {
   UseGuards,
 } from "@nestjs/common";
 import { AuthGuard } from "@nestjs/passport";
-import { ApiTags } from "@nestjs/swagger";
+import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
 import { GetUser } from "./../auth/dto/get-user.decorator.dto";
 import { QueryParams } from "./../users/interfaces/queryParams.interface";
 import { ClusterService } from "./cluster.service";
@@ -18,6 +18,7 @@ import { CreateClusterDTO } from "./dto/create-cluster.dto";
 import { UpdateClusterDTO } from "./dto/update-cluste.dto";
 
 @ApiTags("Clusters")
+@ApiBearerAuth()
 @Controller("clusters")
 export class ClusterController {
   constructor(private readonly service: ClusterService) {}

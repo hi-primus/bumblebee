@@ -9,14 +9,14 @@ async function bootstrap() {
     .setTitle("Bumblebee API")
     .setDescription("The Bumblebee API description endpoints")
     .setVersion("0.1.0")
+    .addBearerAuth()
     .build();
 
-  var allowOrigin = process.env.ALLOW_CORS ? process.env.ALLOW_CORS.split(",") : [];
-
-  console.log({allowOrigin});
-
+  var allowOrigin = process.env.ALLOW_CORS
+    ? process.env.ALLOW_CORS.split(",")
+    : [];
   app.enableCors({
-    origin: allowOrigin.length > 0 ? allowOrigin : "*"
+    origin: allowOrigin.length > 0 ? allowOrigin : "*",
   });
 
   const document = SwaggerModule.createDocument(app, options);
