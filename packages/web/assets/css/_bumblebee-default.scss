@@ -893,7 +893,11 @@ table {
 }
 
 .primary--chips {
+  padding-top: 5px !important;
+  padding-bottom: 5px !important;
   .v-chip {
+    margin-top: 2px !important;
+    margin-bottom: 2px !important;
     background-color: $primary-color !important;
     &, .v-chip__close {
       color: white !important;

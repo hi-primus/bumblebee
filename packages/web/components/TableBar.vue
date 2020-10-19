@@ -166,6 +166,9 @@
       <v-spacer></v-spacer>
       <v-menu
         v-model="searchMenu"
+        bottom
+        left
+        min-width="600px"
         :close-on-content-click="false"
         offset-y
       >
@@ -200,7 +203,6 @@
             v-model="searchText"
             :color="'grey darken-3'"
             spellcheck="false"
-            clearable
             dense
             full-width
             solo flat
@@ -243,15 +245,20 @@
           </div>
           <div
             v-if="currentDataset && currentDataset.columns && currentDataset.columns.length"
-            class="mr-2 pt-1 grey--text text--darken-2 text-caption">
+            class="mr-4 grey--text text--darken-2 text-caption"
+            style="padding-top: 2px;">
             {{showingColumnsLength}}/{{currentDataset.columns.length}}
           </div>
-          <v-icon
+          <v-btn
             v-if="filtersActive"
+            :loading="clearingFilters"
+            flat icon
             class="mr-1"
             @click="clearFilters">
-            close
-          </v-icon>
+            <v-icon>
+              close
+            </v-icon>
+          </v-btn>
         </div>
 
       </v-menu>
@@ -543,6 +550,8 @@ export default {
           ([dtype, text])=>({command: 'set_profiler_dtypes', payload: { dtype }, text, type: 'CAST'})
         )
       ],
+
+      clearingFilters: false,
 
       sortBy: [],
       sortDesc: [false],
@@ -1043,44 +1052,57 @@ export default {
         }
       })
     },
+
     socketAvailable (value) {
       if (!value && this.commandsDisabled) {
         this.commandsDisabled = false
       }
     },
+
     computedIsOperating (value) {
       this.$emit('update:isOperating', value)
     },
+
     currentDataset () {
       this.lastSort = []
     },
+
     codeError (value) {
       if (value!='') {
         this.operationsActive = true
         this.operationsTitle = 'operations'
       }
     },
+
     nextCommand (command) {
       if (command) {
         this.commandHandle(command)
       }
     },
+
     cells (cells) {
       if (cells.length==0) {
         this.operationsActive = false
       }
     },
+
+    filtersActive (value) {
+      if (value) {
+        this.clearingFilters = false;
+      }
+    }
   },
 
   methods: {
 
     getProperty,
 
-    clearFilters () {
+    async clearFilters () {
       this.$store.commit('setHiddenColumns', {});
       this.searchText = '';
       this.typesSelected = [];
-
+      await this.$nextTick();
+      this.clearingFilters = true;
     },
 
     runCodeNow (force = false, ignoreFrom = -1, newDfName, noCheck) {
