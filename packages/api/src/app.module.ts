@@ -11,6 +11,7 @@ import { AppGateway } from "./app.gateway";
 import { ConfigModule } from "@nestjs/config";
 import { ScheduleModule } from "@nestjs/schedule";
 import { ClusterModule } from './cluster/cluster.module';
+import { ServiceModule } from './service/service.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { ClusterModule } from './cluster/cluster.module';
     WorkspaceModule,
     DatasourceModule,
     ClusterModule,
+    ServiceModule,
   ],
   controllers: [AppController],
   providers: [AppService, CronService, AppGateway],

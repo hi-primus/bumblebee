@@ -1,7 +1,8 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { IsMongoId, IsString } from "class-validator";
-export class UpdateClusterDTO {
-  @ApiProperty({ example: "Cluster 1" })
+
+export class CreateServiceDTO {
+  @ApiProperty({ example: "Servicio 1" })
   @IsString()
   name: string;
   @ApiProperty({
