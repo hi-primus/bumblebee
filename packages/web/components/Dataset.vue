@@ -64,10 +64,10 @@
 							text
 							icon
 							small
-							class="visibility-btn hideable tr-o"
+							class="hideable tr-o"
 							v-on="on"
 							@click="toggleColumnsVisibility(!visibilityStatus)">
-							<v-icon>
+							<v-icon class="small-icon">
 								<template v-if="!visibilityStatus">visibility</template>
 								<template v-else>visibility_off</template>
 							</v-icon>
@@ -80,11 +80,64 @@
 					<template v-slot:activator="{ on }">
 						<v-btn
               color="#888"
+							:class="{'active': currentListView && thereAreHidden}"
+							text
+							icon
+							small
+							class="hideable tr-o"
+							v-on="on"
+							@click="restoreVisibility">
+							<v-icon style="position: absolute; left: 3px;"
+                class="smaller-icon">
+								visibility
+							</v-icon>
+							<v-icon>
+								mdi-restore
+							</v-icon>
+						</v-btn>
+					</template>
+					<span>
+            Restore visibility
+          </span>
+				</v-tooltip>
+				<v-tooltip transition="fade-transition" bottom>
+					<template v-slot:activator="{ on }">
+						<v-btn
+              color="#888"
 							:class="{'active': currentListView && selectionStatus==-1}"
 							text
 							icon
 							small
 							class="hideable tr-o"
+							v-on="on"
+							@click="toggleUnselectedColumnsVisibility">
+							<v-icon style="position: absolute"
+                class="smaller-icon">
+								visibility
+							</v-icon>
+							<v-icon>
+								mdi-select
+							</v-icon>
+						</v-btn>
+					</template>
+					<span>
+            <template v-if="everyUnselectedIsHidden">
+              Show unselected columns
+            </template>
+            <template v-else>
+              Show only selected columns
+            </template>
+          </span>
+				</v-tooltip>
+        <v-tooltip transition="fade-transition" bottom>
+					<template v-slot:activator="{ on }">
+						<v-btn
+              color="#888"
+							class="hideable tr-o pl-1"
+							:class="{'active': currentListView && selectionStatus==-1}"
+							text
+							icon
+							small
 							v-on="on"
 							@click="invertSelection">
 							<v-icon>
@@ -304,6 +357,20 @@ export default {
       set (value) {
         this.$store.commit('mutation', {mutate: 'commandsDisabled', payload: value})
       }
+    },
+
+    everyUnselectedIsHidden () {
+      for (let i = 0; i < this.filteredColumns.length; i++) {
+				const column = this.filteredColumns[i]
+				if (!this.selectedColumns[column.name] && !this.hiddenColumns[column.name]) {
+          return false;
+        }
+      }
+      return true;
+    },
+
+    thereAreHidden () {
+      return Object.values(this.hiddenColumns).some(e=>e);
     },
 
     availableDatasets () {
@@ -645,11 +712,27 @@ export default {
         }
       }
       this.hiddenColumns = hiddenColumns;
+    },
+
+		restoreVisibility (value) {
+      this.hiddenColumns = {};
 		},
 
 		toggleColumnVisibility (colName) {
       var hiddenColumns = {...this.hiddenColumns};
 			hiddenColumns[colName] = !hiddenColumns[colName];
+      this.hiddenColumns = hiddenColumns;
+    },
+
+    toggleUnselectedColumnsVisibility () {
+      var hiddenColumns = {};
+      var hidden = !this.everyUnselectedIsHidden;
+			for (let i = 0; i < this.filteredColumns.length; i++) {
+				const column = this.filteredColumns[i]
+				if (!this.selectedColumns[column.name]) {
+          hiddenColumns[column.name] = hidden
+        }
+      }
       this.hiddenColumns = hiddenColumns;
     }
   },

@@ -662,13 +662,6 @@ table {
       z-index: 3;
       height: 49px;
       padding-bottom: 1px;
-
-      .visibility-btn {
-        i {
-          font-size: 18px;
-          transform: rotate(-0.03deg);
-        }
-      }
     }
 
   }
@@ -2850,3 +2843,12 @@ $editor-top-padding: 4px;
   height: 9px;
 }
 
+.small-icon {
+  font-size: 18px !important;
+  transform: rotate(-0.03deg);
+}
+
+.smaller-icon {
+  font-size: 14px !important;
+  transform: rotate(-0.03deg);
+}
