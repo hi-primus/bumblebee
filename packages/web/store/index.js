@@ -85,6 +85,7 @@ properties.forEach((p)=>{
 })
 
 const defaultState = {
+  dashboardLink: '',
   loadingStatus: false,
   coiledAvailable: false,
   tab: 0,
@@ -799,6 +800,7 @@ export const actions = {
     switch (from) {
       case 'optimus':
         commit('mutation', { mutate: 'optimusPromise', payload: false});
+        commit('mutation', { mutate: 'dashboardLink', payload: ''});
       case 'cells':
         await dispatch('markCells', { mark: false });
         commit('mutation', { mutate: 'codeDone', payload: ''});
@@ -847,6 +849,7 @@ export const actions = {
 
     if (response.data.dashboard_link) {
       console.log('%c[DEBUG] Dashboard: ' + response.data.dashboard_link, 'color: green;');
+      commit('mutation', { mutate: 'dashboardLink', payload: response.data.dashboard_link });
     }
 
     if (response.data.client_install) {

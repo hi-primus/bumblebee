@@ -13,6 +13,18 @@
             :key="i"
           />
           <v-list-item
+            v-else-if="item.link"
+            :href="item.link"
+            target="_blank"
+            :key="i"
+          >
+            <v-list-item-content>
+              <v-list-item-title>
+                {{ item.text }}
+              </v-list-item-title>
+            </v-list-item-content>
+          </v-list-item>
+          <v-list-item
             v-else
             :key="i"
             @click="item.click"

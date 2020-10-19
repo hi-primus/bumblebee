@@ -319,12 +319,26 @@ export default {
 
       menu = [
         { text: 'Workspaces', click: ()=>this.showWindowDialog('workspaces') },
-        { text: 'Workspace settings', click: ()=>this.showWindowDialog('configWorkspace') },
+        { text: 'Workspace settings', click: ()=>this.showWindowDialog('configWorkspace') }
         // { text: 'Configs', click: ()=>this.showWindowDialog('configs') },
         // { text: 'Clusters', click: ()=>this.showWindowDialog('clusters') },
+      ];
+
+      var dashboardLink = this.$store.state.dashboardLink;
+
+      if (dashboardLink) {
+        menu = [
+          ...menu,
+          { divider: true },
+          { text: 'Open Dask Dashboard', link: dashboardLink }
+        ];
+      }
+
+      menu = [
+        ...menu,
         { divider: true },
         { text: 'Sign out', click: this.signOut }
-      ]
+      ];
 
       return menu
     },
