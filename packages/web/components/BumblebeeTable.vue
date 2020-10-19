@@ -238,6 +238,7 @@
           :key="column.index"
           :id="'bb-table-'+columns[column.index].name"
           class="bb-table-h-cell"
+          style="width: 170px"
         >
 
         </div>
