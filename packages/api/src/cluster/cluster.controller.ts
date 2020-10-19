@@ -15,7 +15,7 @@ import { GetUser } from "./../auth/dto/get-user.decorator.dto";
 import { QueryParams } from "./../users/interfaces/queryParams.interface";
 import { ClusterService } from "./cluster.service";
 import { CreateClusterDTO } from "./dto/create-cluster.dto";
-import { UpdateClusterDTO } from "./dto/update-cluste.dto";
+import { UpdateClusterDTO } from "./dto/update-cluster.dto";
 
 @ApiTags("Clusters")
 @ApiBearerAuth()
