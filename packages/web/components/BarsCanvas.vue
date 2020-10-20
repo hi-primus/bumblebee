@@ -143,8 +143,16 @@ export default {
     },
 
     fitStageIntoParentContainer () {
-      var container = this.$el
-      this.totalWidth = container.offsetWidth
+      var container = this.$el;
+      var totalWidth = container.offsetWidth
+
+      if (!totalWidth) {
+        setTimeout(() => {
+          this.fitStageIntoParentContainer()
+        }, 100);
+      } else {
+        this.totalWidth = totalWidth;
+      }
     },
 
     onMouseDown (event) {
