@@ -143,7 +143,7 @@
             ...(column.classes || []),
           ]"
           :id="(column.previewIndex === previewColumns.length-1) ? 'bb-table-preview-last' : false"
-          :style="{width: column.width+'px'}"
+          :style="{ width: column.width+'px' }"
         >
           <div v-if="!(lazyColumns.length && !lazyColumns[i])" class="column-header-cell">
             <div
@@ -165,7 +165,7 @@
             ...(column.classes || []),
           ]"
           :id="(column.previewIndex === previewColumns.length-1) ? 'bb-table-preview-last' : false"
-          :style="{width: column.width+'px'}"
+          :style="{ width: column.width+'px' }"
         >
           <div v-if="!(lazyColumns.length && !lazyColumns[i])" class="column-header-cell">
             <div
@@ -241,7 +241,7 @@
           :key="column.index"
           :id="'bb-table-'+columns[column.index].name"
           class="bb-table-h-cell"
-          :style="{width: column.width+'px'}"
+          :style="{ width: column.width+'px' }"
         >
           <!-- <div class="resize-handle" @click.stop @mousedown.prevent.stop="dragMouseDown" draggable="true"></div> -->
         </div>
@@ -252,7 +252,7 @@
 				<div
           v-if="!column.hidden"
 					:key="'plot'+column.type+column.index"
-          :style="{ width: column.width+'px' }"
+          :style="{ width: (column.width || defaultColumnWidth)+'px' }"
           class="bb-table-plot"
           :class="[
             {
@@ -419,7 +419,7 @@
         <div
           class="bb-table-i-column"
           :key="'column'+column.type+column.index"
-          :style="{minWidth: column.width+'px'}"
+          :style="{ minWidth: column.width+'px' }"
           :class="[
             ...(column.classes || []),
           ]"
@@ -567,6 +567,7 @@ export default {
       indicesInSample: {},
 
       lazyColumns: [],
+      defaultColumnWidth: 170,
 
       mainTypes: ['string', 'int', 'decimal', 'boolean', '|', 'date', 'time', '|', 'object', 'array'],
 
@@ -615,7 +616,7 @@ export default {
 
     columns () {
       if (this.currentDataset.columns && this.currentDataset.columns.length) {
-        return this.currentDataset.columns.map(column=>({name: column.name, width: this.columnWidths[column.name] || 240}))
+        return this.currentDataset.columns.map(column=>({name: column.name, width: this.columnWidths[column.name] || this.defaultColumnWidth}))
       }
       return []
     },
@@ -774,7 +775,7 @@ export default {
         return this.previewColumns.map(c=>({
           ...c,
           classes: [...(c.classes || []), 'bb-preview'],
-          width: this.columnWidths[c.name] || 172
+          width: this.columnWidths[c.name] || this.defaultColumnWidth
         }))
       }
 
@@ -798,7 +799,7 @@ export default {
             index,
             classes,
             name,
-            width: this.columnWidths[name] || 172,
+            width: this.columnWidths[name] || this.defaultColumnWidth,
             sampleName: name
           }
         })
@@ -850,7 +851,7 @@ export default {
             cols.splice(insertIndex,0,{
               ...previewColumn,
               classes: [...(previewColumn.classes || []), 'bb-preview'],
-              width: this.columnWidths[previewColumn.name] || 172,
+              width: this.columnWidths[previewColumn.name] || this.defaultColumnWidth,
               // title: (this.currentPreviewNames && this.currentPreviewNames[previewColumn.title]) || previewColumn.title || ''
             })
             pushedColumns++
@@ -871,7 +872,7 @@ export default {
               cols.splice(insertIndex,0,{
                 ...previewColumn,
                 classes: [...(previewColumn.classes || []), 'bb-preview'],
-                width: this.columnWidths[previewColumn.name] || 172,
+                width: this.columnWidths[previewColumn.name] || this.defaultColumnWidth,
                 // title: (this.currentPreviewNames && this.currentPreviewNames[previewColumn.title]) || previewColumn.title || ''
               })
               insertIndex++
@@ -895,7 +896,7 @@ export default {
               preview: true,
               placeholder: true,
               classes: ['bb-preview', 'bb-placeholder'],
-              width: 170
+              width: this.defaultColumnWidth
             })
 
           } else {
@@ -918,7 +919,7 @@ export default {
                 placeholder: true,
                 fillNone: true,
                 classes: ['bb-preview', 'bb-placeholder'],
-                width: 170
+                width: this.defaultColumnWidth
               })
             }
           }
