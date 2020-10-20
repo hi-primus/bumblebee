@@ -366,7 +366,7 @@ export default {
           return
         }
         this.$set(this.patternsFrequency, this.patternsResolution, 'loading')
-        var response = await this.evalCode(`_output = ${this.currentDataset.dfName}.cols.pattern_counts("${this.column.name}", ${3-this.patternsResolution})`)
+        var response = await this.evalCode(`_output = ${this.currentDataset.dfName}.cols.pattern_counts("${this.column.name}", n=5, mode=${3-this.patternsResolution})`)
         if (!response.data.result) {
           throw response
         }
