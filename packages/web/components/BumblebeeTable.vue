@@ -19,7 +19,7 @@
     eager>
     <v-card
       class="column-menu font-reset pt-2 pb-0 mb-0 elevation-0"
-      @click="function(e){e.stopPropagation()}"
+      @click.stop
       style="cursor: initial"
       v-ripple="false"
       :link="false"
@@ -66,14 +66,14 @@
     </v-card>
     <h3
       class="grey--text pl-4 no-link"
-      @click="function(e){e.stopPropagation()}"
+      @click.stop
     >Type transform</h3>
     <v-list
       flat dense class="font-reset type-menu"
     >
       <v-list-item-group>
         <template v-for="(type, index) in mainTypes">
-          <v-divider v-if="type==='|'" :key="index" @click="function(e){e.stopPropagation()}"></v-divider>
+          <v-divider v-if="type==='|'" :key="index" @click.stop></v-divider>
           <v-list-item
             v-else :key="type"
             @click="setNewType($event, type)"
@@ -87,13 +87,13 @@
           </v-list-item>
 
         </template>
-        <v-divider @click="function(e){e.stopPropagation()}"></v-divider>
+        <v-divider @click.stop></v-divider>
         <!-- <v-list-item>
           <span>
             <span class="data-type in-autocomplete">{{ dataTypeHint('decimal') }}</span> {{dataTypeNames['decimal']}}
           </span>
         </v-list-item> -->
-        <v-list-group no-action @click="function(e){e.stopPropagation()}">
+        <v-list-group no-action @click.stop>
           <template v-slot:activator>
             <v-list-item-title>
               More types
@@ -102,7 +102,7 @@
 
           <v-list-item-group>
             <template v-for="(type, index) in moreTypes">
-              <v-divider v-if="type==='|'" :key="index" @click="function(e){e.stopPropagation()}"></v-divider>
+              <v-divider v-if="type==='|'" :key="index" @click.stop></v-divider>
               <v-list-item
                 v-else :key="type"
                 @click="setNewType($event, type)"
@@ -155,7 +155,7 @@
               {{column.name}}
             </div>
           </div>
-          <div class="resize-handle" @click="function(e){e.stopPropagation()}" @mousedown.prevent.stop="dragMouseDown($event, i)"></div>
+          <div class="resize-handle" @click.stop @mousedown.prevent.stop="dragMouseDown($event, i)"></div>
         </div>
         <div
           v-else-if="column.type=='preview'"
@@ -189,7 +189,7 @@
               {{ column.title ? column.title.split('__preview__').join('') : '' }}
             </div>
           </div>
-          <div class="resize-handle" @click="function(e){e.stopPropagation()}" @mousedown.prevent.stop="dragMouseDown($event, i)"></div>
+          <div class="resize-handle" @click.stop @mousedown.prevent.stop="dragMouseDown($event, i)"></div>
         </div>
         <div
           v-else-if="!(lazyColumns.length && !lazyColumns[i]) && columns[column.index]"
@@ -234,7 +234,7 @@
               {{ column.title || columns[column.index].name }}
             </div>
           </div>
-          <div class="resize-handle" @click="function(e){e.stopPropagation()}" @mousedown.prevent.stop="dragMouseDown($event, i)"></div>
+          <div class="resize-handle" @contextmenu.prevent.stop @click.stop @mousedown.prevent.stop="dragMouseDown($event, i)"></div>
         </div>
         <div
           v-else
@@ -243,7 +243,7 @@
           class="bb-table-h-cell"
           :style="{width: column.width+'px'}"
         >
-          <!-- <div class="resize-handle" @click="function(e){e.stopPropagation()}" @mousedown.prevent.stop="dragMouseDown" draggable="true"></div> -->
+          <!-- <div class="resize-handle" @click.stop @mousedown.prevent.stop="dragMouseDown" draggable="true"></div> -->
         </div>
       </template>
     </div>

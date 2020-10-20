@@ -2860,8 +2860,7 @@ $editor-top-padding: 4px;
 .resize-handle {
   position: absolute;
   width: 10px;
-  // background: green;
-  height: 100vh;
+  height: calc(100vh - 138px);
   right: -5px;
   top: 0;
   z-index: 2;
