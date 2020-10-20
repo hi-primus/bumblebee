@@ -1862,6 +1862,7 @@ $editor-top-padding: 4px;
   }
 
   .bb-table-h-cell{
+    z-index: 1;
     user-select: none;
     overflow: visible !important;
     border-top-style: none;
@@ -2112,7 +2113,9 @@ $editor-top-padding: 4px;
   }
   &:last-child {
     .v-menu__content {
-      transform: translateX(-85px); // TO-DO: 170px -> Ypx
+      left: unset !important;
+      right: 8px;
+
     }
   }
   &:first-child {
@@ -2851,4 +2854,17 @@ $editor-top-padding: 4px;
 .smaller-icon {
   font-size: 14px !important;
   transform: rotate(-0.03deg);
+}
+
+
+.resize-handle {
+  position: absolute;
+  width: 10px;
+  // background: green;
+  height: 100vh;
+  right: -5px;
+  top: 0;
+  z-index: 2;
+  cursor: w-resize;
+  pointer-events: all;
 }

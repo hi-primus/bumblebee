@@ -143,9 +143,9 @@
             ...(column.classes || []),
           ]"
           :id="(column.previewIndex === previewColumns.length-1) ? 'bb-table-preview-last' : false"
-          style="width: 170px"
+          :style="{width: column.width+'px'}"
         >
-          <div v-if="!(lazyColumns.length && !lazyColumns[column.index])" class="column-header-cell">
+          <div v-if="!(lazyColumns.length && !lazyColumns[i])" class="column-header-cell">
             <div
               class="data-type"
               :class="`type-${currentDataset.columns[column.index].profiler_dtype.dtype}`">
@@ -155,6 +155,7 @@
               {{column.name}}
             </div>
           </div>
+          <div class="resize-handle" @click="function(e){e.stopPropagation()}" @mousedown.prevent.stop="dragMouseDown($event, i)"></div>
         </div>
         <div
           v-else-if="column.type=='preview'"
@@ -164,9 +165,9 @@
             ...(column.classes || []),
           ]"
           :id="(column.previewIndex === previewColumns.length-1) ? 'bb-table-preview-last' : false"
-          style="width: 170px"
+          :style="{width: column.width+'px'}"
         >
-          <div v-if="!(lazyColumns.length && !lazyColumns[column.index])" class="column-header-cell">
+          <div v-if="!(lazyColumns.length && !lazyColumns[i])" class="column-header-cell">
             <div
               v-if="previewPlotsData[column.name]"
               class="data-type"
@@ -188,9 +189,10 @@
               {{ column.title ? column.title.split('__preview__').join('') : '' }}
             </div>
           </div>
+          <div class="resize-handle" @click="function(e){e.stopPropagation()}" @mousedown.prevent.stop="dragMouseDown($event, i)"></div>
         </div>
         <div
-          v-else-if="!(lazyColumns.length && !lazyColumns[column.index]) && columns[column.index]"
+          v-else-if="!(lazyColumns.length && !lazyColumns[i]) && columns[column.index]"
           :key="column.index"
           :id="'bb-table-'+columns[column.index].name"
           class="bb-table-h-cell"
@@ -211,7 +213,7 @@
           @drop="dragDrop(i, $event)"
           @click="selectColumn($event, column.index)"
           @dblclick="setMenu($event, column.index)"
-          @click:right="setMenu($event, column.index)">
+          @contextmenu.prevent="contextMenu($event, column.index)">
           <div class="column-header-cell">
             <div class="data-type" :class="`type-${currentDataset.columns[column.index].profiler_dtype.dtype}`">
               {{ dataTypeHint(currentDataset.columns[column.index].profiler_dtype.dtype) }}
@@ -232,15 +234,16 @@
               {{ column.title || columns[column.index].name }}
             </div>
           </div>
+          <div class="resize-handle" @click="function(e){e.stopPropagation()}" @mousedown.prevent.stop="dragMouseDown($event, i)"></div>
         </div>
         <div
           v-else
           :key="column.index"
           :id="'bb-table-'+columns[column.index].name"
           class="bb-table-h-cell"
-          style="width: 170px"
+          :style="{width: column.width+'px'}"
         >
-
+          <!-- <div class="resize-handle" @click="function(e){e.stopPropagation()}" @mousedown.prevent.stop="dragMouseDown" draggable="true"></div> -->
         </div>
       </template>
     </div>
@@ -260,7 +263,7 @@
           ]"
 				>
           <div
-            v-if="!(lazyColumns.length && !lazyColumns[column.index]) && column.preview && previewPlotsData[column.name]"
+            v-if="!(lazyColumns.length && !lazyColumns[index]) && column.preview && previewPlotsData[column.name]"
             :key="'p'+column.index"
             class="bb-table-plot-content"
             :data-column="column.name">
@@ -277,7 +280,7 @@
               />
               <Frequent
                 v-if="previewPlotsData[column.name].frequency"
-                :key="previewPlotsData[column.name].key"
+                :key="previewPlotsData[column.name].key+' '+columnsReloads[index]"
                 :uniques="previewPlotsData[column.name].count_uniques"
                 :values="previewPlotsData[column.name].frequency"
                 :total="+previewPlotsData[column.name].total || 1"
@@ -286,7 +289,7 @@
               />
               <Histogram
                 v-else-if="previewPlotsData[column.name].hist"
-                :key="previewPlotsData[column.name].key"
+                :key="previewPlotsData[column.name].key+' '+columnsReloads[index]"
                 :uniques="previewPlotsData[column.name].count_uniques"
                 :values="previewPlotsData[column.name].hist"
                 :total="+previewPlotsData[column.name].total"
@@ -295,7 +298,7 @@
               />
               <Histogram
                 v-else-if="previewPlotsData[column.name].hist_years"
-                :key="previewPlotsData[column.name].key"
+                :key="previewPlotsData[column.name].key+' '+columnsReloads[index]"
                 :uniques="previewPlotsData[column.name].count_uniques"
                 :values="previewPlotsData[column.name].hist_years"
                 :total="+previewPlotsData[column.name].total"
@@ -312,7 +315,7 @@
             </div>
           </div>
           <div
-            v-else-if="!(lazyColumns.length && !lazyColumns[column.index]) && columns[column.index] && !column.preview"
+            v-else-if="!(lazyColumns.length && !lazyColumns[index]) && columns[column.index] && !column.preview"
             :key="''+column.index"
             class="bb-table-plot-content"
             :data-column="column.index">
@@ -330,7 +333,7 @@
               />
               <Frequent
                 v-if="plotsData[column.index].frequency"
-                :key="plotsData[column.index].key"
+                :key="plotsData[column.index].key+' '+columnsReloads[index]"
                 :uniques="plotsData[column.index].count_uniques"
                 :values="plotsData[column.index].frequency"
                 :total="+plotsData[column.index].total || 1"
@@ -340,7 +343,7 @@
               />
               <Histogram
                 v-else-if="plotsData[column.index].hist"
-                :key="plotsData[column.index].key"
+                :key="plotsData[column.index].key+' '+columnsReloads[index]"
                 :uniques="plotsData[column.index].count_uniques"
                 :values="plotsData[column.index].hist"
                 :total="+plotsData[column.index].total || 1"
@@ -350,7 +353,7 @@
               />
               <Histogram
                 v-else-if="plotsData[column.index].hist_years"
-                :key="plotsData[column.index].key"
+                :key="plotsData[column.index].key+' '+columnsReloads[index]"
                 :uniques="plotsData[column.index].count_uniques"
                 :values="plotsData[column.index].hist_years"
                 :total="+plotsData[column.index].total || 1"
@@ -416,7 +419,7 @@
         <div
           class="bb-table-i-column"
           :key="'column'+column.type+column.index"
-          :style="{minWidth: (column.width || 170)+'px'}"
+          :style="{minWidth: column.width+'px'}"
           :class="[
             ...(column.classes || []),
           ]"
@@ -527,6 +530,10 @@ export default {
 
       columnMenuIndex: false,
 
+      columnWidths: {},
+
+      columnsReloads: [],
+
       incompleteColumns: false,
 
       mustCheck: false,
@@ -608,7 +615,7 @@ export default {
 
     columns () {
       if (this.currentDataset.columns && this.currentDataset.columns.length) {
-        return this.currentDataset.columns.map(column=>({name: column.name, width: 170}))
+        return this.currentDataset.columns.map(column=>({name: column.name, width: this.columnWidths[column.name] || 240}))
       }
       return []
     },
@@ -767,7 +774,7 @@ export default {
         return this.previewColumns.map(c=>({
           ...c,
           classes: [...(c.classes || []), 'bb-preview'],
-          width: 170
+          width: this.columnWidths[c.name] || 172
         }))
       }
 
@@ -786,12 +793,13 @@ export default {
           if (this.selectionMap[index]) {
             classes.push('bb-selected')
           }
+          var name = this.currentDataset.columns[index].name
           return {
             index,
             classes,
-            width: 170,
-            name: this.currentDataset.columns[index].name,
-            sampleName: this.currentDataset.columns[index].name
+            name,
+            width: this.columnWidths[name] || 172,
+            sampleName: name
           }
         })
       }
@@ -842,7 +850,7 @@ export default {
             cols.splice(insertIndex,0,{
               ...previewColumn,
               classes: [...(previewColumn.classes || []), 'bb-preview'],
-              width: 170,
+              width: this.columnWidths[previewColumn.name] || 172,
               // title: (this.currentPreviewNames && this.currentPreviewNames[previewColumn.title]) || previewColumn.title || ''
             })
             pushedColumns++
@@ -863,7 +871,7 @@ export default {
               cols.splice(insertIndex,0,{
                 ...previewColumn,
                 classes: [...(previewColumn.classes || []), 'bb-preview'],
-                width: 170,
+                width: this.columnWidths[previewColumn.name] || 172,
                 // title: (this.currentPreviewNames && this.currentPreviewNames[previewColumn.title]) || previewColumn.title || ''
               })
               insertIndex++
@@ -1166,6 +1174,58 @@ export default {
         columnValues[ column.name ] = this.columnValues[ column.name ];
       });
       this.columnValues = columnValues;
+    },
+
+    dragMouseDown (e, i) {
+      e = e || window.event;
+      e.preventDefault();
+      e.stopPropagation();
+      window.startX = e.clientX;
+      window.newX = e.clientX;
+      window.currentElement = e.target;
+      window.currentElementIndex = i;
+      var name = this.allColumns[i].name;
+      window.startWidth = this.columnWidths[name] || 172;
+      document.onmouseup = this.closeDragElement;
+      document.onmousemove = this.elementDrag;
+    },
+
+    elementDrag (e) {
+      e = e || window.event;
+      e.preventDefault();
+      e.stopPropagation();
+      var pos = window.newX - e.clientX;
+      window.newX = e.clientX;
+      window.currentElement.style.left = (window.currentElement.offsetLeft - pos) + 'px'
+
+      this.setColumnWidth();
+    },
+
+    closeDragElement () {
+      this.reloadPlot(window.currentElementIndex);
+
+      window.currentElement.style.left = null;
+      document.onmouseup = null;
+      document.onmousemove = null;
+      window.newX = undefined;
+      window.startX = undefined;
+      window.currentElement = undefined;
+      window.currentElementIndex = undefined;
+    },
+
+    setColumnWidth () {
+      var grow = window.newX - window.startX;
+      var name = this.allColumns[window.currentElementIndex].name;
+      var width = window.startWidth;
+      width += grow;
+      width = Math.max(width, 150);
+
+      this.$set(this.columnWidths, name, width);
+    },
+
+    reloadPlot (index) {
+      var value = +(this.columnsReloads[index] || 0);
+      this.$set(this.columnsReloads, index, value+1);
     },
 
     tableContainerScroll () {
@@ -1609,6 +1669,12 @@ export default {
       }, 5);
     },
 
+    contextMenu (event, index) {
+      if (this.columnMenuIndex !== index) {
+        this.setMenu(event, index);
+      }
+    },
+
     setMenu (event, index) {
 
       doubleClick = true
@@ -1677,14 +1743,26 @@ export default {
 
     checkVisibleColumns: asyncDebounce( function(event) {
       try {
-        var scrollLeft = this.$refs['BbTableTopContainer'].scrollLeft
+        var scrollLeft = this.$refs['BbTableTopContainer'].scrollLeft;
+        var offsetWidth = this.$refs['BbTableTopContainer'].offsetWidth;
 
-        var a = scrollLeft/170
-        var b = (scrollLeft + this.$refs['BbTableTopContainer'].offsetWidth)/170
+        var left = 48;
+        var a = -1;
+        var b = -1;
 
-        a = Math.floor((a)-0.1)
-        b = Math.ceil((b))
+        for (let i = 0; i < this.allColumns.length; i++) {
+          left += this.allColumns[i].width;
+          if (left>=scrollLeft && a===-1) {
+            a = i;
+          }
+          if (left>=scrollLeft+offsetWidth && b===-1) {
+            b = i+1;
+          }
+        }
 
+        if (b===-1) {
+          b = this.allColumns.length;
+        }
 
         var numbers = []
 
@@ -1693,7 +1771,8 @@ export default {
         }
 
         this.lazyColumns = numbers
-      } catch (error) {
+      } catch (err) {
+        console.error(err)
         this.lazyColumns = []
       }
 
