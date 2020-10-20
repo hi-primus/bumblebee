@@ -1,10 +1,10 @@
 import "core-js/stable"
 import "regenerator-runtime/runtime"
 
-export const deepCopy = (inObject) => {
+export const deepCopy = (inObject, deep = undefined) => {
   let outObject, value, key
 
-  if (typeof inObject !== "object" || inObject === null) {
+  if (typeof inObject !== "object" || inObject === null || (deep!==undefined && deep<=0)) {
     return inObject // Return the value if inObject is not an object
   }
 
@@ -15,7 +15,7 @@ export const deepCopy = (inObject) => {
     value = inObject[key]
 
     // Recursively (deep) copy for nested objects, including arrays
-    outObject[key] = deepCopy(value)
+    outObject[key] = deepCopy(value, deep!==undefined ? deep-1 : undefined)
   }
 
   return outObject
