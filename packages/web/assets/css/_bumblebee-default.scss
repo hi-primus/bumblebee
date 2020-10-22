@@ -1646,28 +1646,32 @@ $editor-top-padding: 4px;
   display: none;
 }
 
-/* BB-TABLE */
+// /* BB-TABLE */
 
-%bb-table-loading {
+%bb-column-loading {
+  content: ' ';
+  position: absolute;
+  z-index: -5;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
   animation: background-animation 2.1s ease-in-out infinite;
-  background-image:
-  repeating-linear-gradient(
-    to right,
-    white 0,
-    white 57px,
-    transparent 57px,
-    transparent 123px,
-    white 123px,
-    white 169px
-  ),
-  repeating-linear-gradient(to bottom,
-    white 0,
-    white 8px,
+  background-image: linear-gradient( to right,
+    var(--bg-color) 0,
+    var(--bg-color) 4px,
+    transparent 4px,
+    transparent 66px,
+    var(--bg-color) 66px
+    ),
+    repeating-linear-gradient(to bottom,
+    var(--bg-color) 0,
+    var(--bg-color) 8px,
     transparent 8px,
     transparent 17px,
-    white 17px,
-    white 23px
-  )
+    var(--bg-color) 17px,
+    var(--bg-color) 23px
+  );
 }
 
 .bbt-container {
@@ -1734,6 +1738,46 @@ $editor-top-padding: 4px;
     flex-shrink: 0;
     flex-basis: auto;
     pointer-events: none;
+
+    .rows-number-space {
+      // width: 100%;
+      position: absolute;
+      // margin-left: -48px;
+      width: 49px;
+      height: 120px;
+      border-right-style: solid;
+      border-right-color: $line-color-1;
+      border-right-width: 1px;
+      // z-index: 1;
+      &::after {
+        content: ' ';
+        width: 48px;
+        display: block;
+        background: white;
+        position: absolute;
+        height: 120px;
+        z-index: 1;
+      }
+    }
+
+    // &::before, &::after {
+    //   content: ' ';
+    //   height: 120px;
+    //   left: 0;
+    //   top: 98px;
+    //   display: block;
+    //   position: fixed;
+    // }
+    // &::before {
+    //   width: 48px;
+    //   background: white;
+    //   z-index: 1;
+    // }
+    // &::after {
+    //   width: 49px;
+    //   border-right: solid 1px $line-color-1;
+    //   z-index: 0;
+    // }
 
     &::-webkit-scrollbar {
       opacity: 0;
@@ -1857,7 +1901,7 @@ $editor-top-padding: 4px;
     height: 100%;
 
     .bb-table-i {
-      width: 100%;
+      // width: 100%;
       position: relative;
       font-family: $font-mono-table;
       color: $text-color;
@@ -1931,7 +1975,7 @@ $editor-top-padding: 4px;
   }
 
   .bb-table-h-cell, .bb-table-plot {
-    background-color: white;
+    // background-color: white;
     height: 100%;
   }
 
@@ -1954,6 +1998,7 @@ $editor-top-padding: 4px;
     $border-color: nth($colors, 1);
     $background-color: nth($colors, 2);
     .bb-#{$name} {
+      --bg-color:  #{rgba-to-rgb($background-color)} !important;
       &:last-child {
         border-right-width: 1px !important;
       }
@@ -2028,6 +2073,16 @@ $editor-top-padding: 4px;
     width: 100%;
     border-color: inherit;
     overflow: hidden;
+    &::after {
+      content: ' ';
+      background: var(--bg-color);
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -2;
+    }
     .more-arrow {
       display: none;
       position: absolute;
@@ -2141,9 +2196,9 @@ $editor-top-padding: 4px;
   }
 }
 
-.bb-table, .bb-table-i {
-  @extend %bb-table-loading
-}
+// .bb-table, .bb-table-i {
+//   @extend %bb-column-loading
+// }
 
 @keyframes fadein-cell {
   0% {
@@ -2171,7 +2226,7 @@ $editor-top-padding: 4px;
 
 .bumblebee-table-container {
   height: 100%;
-  background-color: white;
+  // background-color: white;
 }
 
 .font-reset {
@@ -2443,6 +2498,8 @@ $editor-top-padding: 4px;
   font-size: $table-font-size;
   padding-left: 1px;
 
+  overflow-x: hidden;
+
 
   &:after {
     height: 100%;
@@ -2452,13 +2509,31 @@ $editor-top-padding: 4px;
   }
 
   .bb-table-i-rows {
+    // width: 100%;
+    left: 45px;
+    position: absolute;
+    margin-left: -48px;
     width: 100%;
+    height: 100%;
+    &:after {
+      content: ' ';
+      border-right-style: solid;
+      border-right-color: $line-color-1;
+      border-right-width: 1px;
+      position: absolute;
+      left: 0;
+      height: 100%;
+      width: 52px;
+    }
+    .bb-table-i-row {
+      position: absolute;
+      width: 100%;
+    }
   }
 
   .bb-table-i-row {
 
     background: white;
-
     &:before {
       content: attr(data-row);
       background: white;
@@ -2469,8 +2544,9 @@ $editor-top-padding: 4px;
       color: $line-color-3;
       padding-right: 12px;
       font-size: $table-font-size;
-      height: 100%;
-      width: 48px;
+      height: 23px;
+      width: 51px;
+      z-index: 2;
     }
 
     &.bb-highlight--green {
@@ -2486,19 +2562,18 @@ $editor-top-padding: 4px;
     }
   }
 
-  .bb-table-i-rows {
-    z-index: 0;
-    position: absolute;
-    margin-left: -48px;
-    .bb-table-i-row {
-      position: absolute;
-      width: 100%;
-    }
-  }
+
   .bb-table-i-column {
+    --bg-color: white;
     position: relative;
     border-bottom-style: solid;
     border-bottom-width: 1px;
+
+    .bb-table-column-bg {
+      @extend %bb-column-loading;
+    }
+
+
     &.has-expanded-cell {
       // z-index: 3;
     }
@@ -2523,10 +2598,8 @@ $editor-top-padding: 4px;
   background-color: $data-red;
 }
 
-// TODO check inline css generation nuxt
-
 .bb-table-i-cell, .bb-table-i-row {
-  height: 24px;
+  height: 22px;
 }
 
 

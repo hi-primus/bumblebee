@@ -133,6 +133,7 @@
     @scroll.passive="tableTopContainerScroll"
     v-if="columns && allColumns"
   >
+    <div class="rows-number-space" ref="BbTableRowsSpace"></div>
     <div class="bb-table-header">
       <template v-for="(column, i) in allColumns">
         <div
@@ -389,15 +390,14 @@
       }
     </style> -->
     <div class="bb-table-i" v-show="true" ref="BbTable" :style="tableStyle" @mouseover="checkCellsWidth">
-      <div class="bb-table-i-rows" v-if="computedColumnValues[rowsColumn]">
+      <div class="bb-table-i-rows" ref="BbTableRows" v-if="computedColumnValues[rowsColumn]">
         <template v-if="computedColumnValues['__match__'] && previewCode">
           <div
             v-for="(value) in computedColumnValues[rowsColumn].filter((e)=>e.index<rowsCount)"
             :key="'row'+value.index"
             class="bb-table-i-row mhl"
-            :data-debug="value"
             :class="[getRowHighlight(value.index)]"
-            :style="{ top: rowHeight * value.index+'px' }"
+            :style="{ top: (rowHeight * value.index + 1)+'px' }"
             :data-row="value.index+1"
           >
           </div>
@@ -425,6 +425,7 @@
           ]"
           :data-column="column.sampleName+'/'+column.name"
         >
+          <div class="bb-table-column-bg"></div>
           <template v-if="!(lazyColumns.length && !lazyColumns[cindex]) && computedColumnValues[column.sampleName] && !((previewError && column.preview) || column.fillNone)">
             <template v-if="column.preview || column.duplicated">
               <template v-for="value in computedColumnValues[column.sampleName].filter((e)=>e!==undefined && e!==null && e.index<rowsCount)">
@@ -1846,8 +1847,11 @@ export default {
     }, 80),
 
     horizontalScrollCheckUp () {
-      var topScrollLeft = this.$refs['BbTableTopContainer'].scrollLeft
-      var bottomScrollLeft = this.$refs['BbTableContainer'].scrollLeft
+      var topScrollLeft = this.$refs['BbTableTopContainer'].scrollLeft;
+      var bottomScrollLeft = this.$refs['BbTableContainer'].scrollLeft;
+      if (this.$refs['BbTableRows']) {
+        this.$refs['BbTableRows'].style.left = (45 + bottomScrollLeft) + 'px';
+      }
       if (topScrollLeft != bottomScrollLeft) {
         this.$refs['BbTable'].style.minWidth = this.$refs['BbTableTopContainer'].scrollWidth + 'px'
         this.$refs['BbTableTopContainer'].scrollLeft = bottomScrollLeft
@@ -1855,8 +1859,11 @@ export default {
     },
 
     horizontalScrollCheckDown () {
-      var topScrollLeft = this.$refs['BbTableTopContainer'].scrollLeft
-      var bottomScrollLeft = this.$refs['BbTableContainer'].scrollLeft
+      var topScrollLeft = this.$refs['BbTableTopContainer'].scrollLeft;
+      var bottomScrollLeft = this.$refs['BbTableContainer'].scrollLeft;
+      if (this.$refs['BbTableRowsSpace']) {
+        // this.$refs['BbTableRowsSpace'].style.left = (45 + topScrollLeft) + 'px';
+      }
       if (bottomScrollLeft != topScrollLeft) {
         this.$refs['BbTable'].style.minWidth = this.$refs['BbTableTopContainer'].scrollWidth + 'px'
         this.$refs['BbTableContainer'].scrollLeft = topScrollLeft
