@@ -388,7 +388,7 @@
         height: {{rowHeight}}px;
       }
     </style> -->
-    <div class="bb-table-i" v-show="true" ref="BbTable" :style="tableStyle">
+    <div class="bb-table-i" v-show="true" ref="BbTable" :style="tableStyle" @mouseover="checkCellsWidth">
       <div class="bb-table-i-rows" v-if="computedColumnValues[rowsColumn]">
         <template v-if="computedColumnValues['__match__'] && previewCode">
           <div
@@ -1059,6 +1059,24 @@ export default {
         height: h+'px'
       }
 
+    },
+
+    moreElement () {
+      if (window.moreElement) {
+        return window.moreElement;
+      }
+      window.moreElement = document.createElement('div');
+      window.moreElement.classList.add('more-arrow');
+      window.moreElement.onclick = (e)=>{
+        var cell = e.target.parentElement;
+        if (cell.classList.contains('cell-expanded')) {
+          this.restoreCell(cell);
+
+        } else {
+          this.expandCell(cell);
+        }
+      }
+      return window.moreElement
     }
   },
 
@@ -1177,6 +1195,46 @@ export default {
       this.columnValues = columnValues;
     },
 
+    expandCell (cellElement) {
+      var columnElement = cellElement.parentElement;
+      var tableElement = columnElement.parentElement;
+      tableElement.getElementsByClassName('has-expanded-cell').forEach(element=>element.classList.remove('has-expanded-cell'));
+      tableElement.getElementsByClassName('cell-expanded').forEach(element=>element.classList.remove('cell-expanded'));
+      columnElement.classList.add('has-expanded-cell');
+      cellElement.classList.add('cell-expanded');
+    },
+
+    restoreCell (cellElement) {
+      var columnElement = cellElement.parentElement;
+      cellElement.classList.remove('cell-expanded');
+      columnElement.classList.remove('has-expanded-cell');
+    },
+
+    checkCellsWidth (e) {
+      e = e || window.event;
+      var moreElement = this.moreElement;
+      try {
+        var element = e.target;
+        if (element && element.className && element.classList.contains('bb-table-i-cell')) {
+          if (element.classList.contains('cell-expanded')) {
+            element.appendChild(moreElement)
+          } else {
+            var textWidth = element.innerText.length * 7;
+            var width = element.offsetWidth - 8;
+            if (textWidth>width) {
+              element.appendChild(moreElement);
+            } else {
+              throw false;
+            }
+          }
+        }
+      } catch (err) {
+        if (moreElement && moreElement.parentElement) {
+          moreElement.parentElement.removeChild(moreElement);
+        }
+      }
+    },
+
     dragMouseDown (e, i) {
       e = e || window.event;
       e.preventDefault();
@@ -1292,34 +1350,42 @@ export default {
 
     checkSelection (ci, ri) {
 
-      var colName = this.columns[ci].name
+      try {
 
-      var {selectedText, selection} = getSelectedText()
+        var colName = this.columns[ci].name
 
-      if (!selectedText && this.selectionType==='text') {
-        this.$store.commit('selection',{ clear: true })
-        return
+        var {selectedText, selection} = getSelectedText()
+
+        if (!selectedText && this.selectionType==='text') {
+          this.$store.commit('selection',{ clear: true })
+          return
+        }
+
+        selectedText = selectedText.split('\n')[0]
+
+        if (this.cellsSelection) {
+          [ci, ri] = this.cellsSelection.split(',')
+        }
+        var cellValue = this.columnValues[colName][ri]
+
+        cellValue = cellValue ? cellValue.toString() : ''
+
+        if (cellValue && cellValue.includes(selectedText)) {
+          this.$store.commit('selection',{
+            text: {
+              column: this.columns[ci].name,
+              index: ci,
+              value: selectedText,
+              selection
+            }
+          })
+        }
+
+      } catch (err) {
+
+        console.error('Selection error', err);
+
       }
-
-      selectedText = selectedText.split('\n')[0]
-
-			if (this.cellsSelection) {
-        [ci, ri] = this.cellsSelection.split(',')
-			}
-      var cellValue = this.columnValues[colName][ri]
-
-      cellValue = cellValue ? cellValue.toString() : ''
-
-			if (cellValue && cellValue.includes(selectedText)) {
-        this.$store.commit('selection',{
-          text: {
-            column: this.columns[ci].name,
-            index: ci,
-            value: selectedText,
-            selection
-          }
-        })
-			}
     },
 
     getCurrentWindow () {
