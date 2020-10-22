@@ -295,6 +295,69 @@ export const codeGenerators = {
     + ( output_cols_argument ? `, output_cols=${output_cols_argument}` : '')
     + `)`
   },
+  SUBSTR1: (payload) => {
+
+    var output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (payload.request.type !== 'final') ? 'new ' : '');
+
+    var commands = {
+      left_string: 'left',
+      right_string: 'right'
+    };
+
+    var command = commands[payload.command];
+
+    var _argument = payload.columns.length==0
+      ? `"*"`
+      : payload.columns.length===1
+        ? `"${payload.columns[0]}"`
+        : `input_cols=["${payload.columns.join('", "')}"]`
+
+    return `.cols.${command}(${_argument}, n=${+payload.n}`
+    + ( output_cols_argument ? `, output_cols=${output_cols_argument}` : '')
+    + `)`
+  },
+  mid_string: (payload) => {
+
+    var output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (payload.request.type !== 'final') ? 'new ' : '');
+
+    var _argument = payload.columns.length==0
+      ? `"*"`
+      : payload.columns.length===1
+        ? `"${payload.columns[0]}"`
+        : `input_cols=["${payload.columns.join('", "')}"]`
+
+    return `.cols.mid(${_argument}, start=${+payload.start}, n=${+payload.n}`
+    + ( output_cols_argument ? `, output_cols=${output_cols_argument}` : '')
+    + `)`
+  },
+  pad_string: (payload) => {
+
+    var output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (payload.request.type !== 'final') ? 'new ' : '');
+
+    var _argument = payload.columns.length==0
+      ? `"*"`
+      : payload.columns.length===1
+        ? `"${payload.columns[0]}"`
+        : `input_cols=["${payload.columns.join('", "')}"]`
+
+    return `.cols.pad(${_argument}, width=${+payload.width}, side="${payload.side}", fillchar="${payload.fillchar}"`
+    + ( output_cols_argument ? `, output_cols=${output_cols_argument}` : '')
+    + `)`
+  },
+  extract: (payload) => {
+
+    var output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (payload.request.type !== 'final') ? 'new ' : '');
+
+    var _argument = payload.columns.length==0
+      ? `"*"`
+      : payload.columns.length===1
+        ? `"${payload.columns[0]}"`
+        : `input_cols=["${payload.columns.join('", "')}"]`
+
+    return `.cols.extract(${_argument}, regex="${payload.regex}"`
+    + ( output_cols_argument ? `, output_cols=${output_cols_argument}` : '')
+    + `)`
+  },
   set_profiler_dtypes: (payload) => {
 
     var _argument = '{' + payload.columns.map(c=>`"${c}": "${payload.dtype}"`).join(', ') + '}';

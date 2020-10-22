@@ -356,8 +356,8 @@ export default {
                 condition: (c)=>c.action==='set',
                 type: 'field-suggestions',
                 key: 'value',
-                placeholder: 'Expression or "value"',
-                label: 'Expression',
+                placeholder: 'Formula or "value"',
+                label: 'Formula',
                 mono: true,
                 useFunctions: true,
                 fuzzySearch: true,
@@ -1080,6 +1080,7 @@ export default {
           }),
           content: (payload) => {
             var str = {
+              proper: 'Proper',
               trim: 'Trim white space in',
               lower: 'Lowercase',
               upper: 'Uppercase',
@@ -1088,6 +1089,136 @@ export default {
             }
             return `<b>${str[payload.command]}</b> ${multipleContent([payload.columns],'hl--cols')}`
           }
+        },
+        SUBSTR1: {
+          dialog: {
+            title: 'Substring',
+            output_cols: true,
+            fields: [
+              {
+                type: 'number',
+                label: 'Characters to show',
+                key: 'n'
+              }
+            ],
+            validate: (command) => (command.n)
+          },
+          payload: (columns, payload = {}) => ({
+            columns: columns,
+            output_cols: columns.map(e=>''),
+            n: '',
+            preview: {
+              type: 'SUBSTR1'
+            }
+          }),
+          content: (payload) => {
+            var str = {
+              left_string: 'Substring (left)',
+              right_string: 'Substring (right)'
+            };
+            return `<b>${str[payload.command]}</b> ${multipleContent([payload.columns],'hl--cols')} using ${hlParam(payload.n)} characters`
+          }
+        },
+        mid_string: {
+          dialog: {
+            title: 'Substring',
+            output_cols: true,
+            fields: [
+              {
+                type: 'number',
+                label: 'Start at',
+                key: 'start'
+              },
+              {
+                type: 'number',
+                label: 'Characters to show',
+                key: 'n'
+              }
+            ],
+            validate: (command) => (command.n && command.start!=='')
+          },
+          payload: (columns, payload = {}) => ({
+            columns: columns,
+            output_cols: columns.map(e=>''),
+            start: 0,
+            n: '',
+            preview: {
+              type: 'mid_string'
+            }
+          }),
+          content: (payload) => {
+            return `<b>Substring</b> ${multipleContent([payload.columns],'hl--cols')} using ${hlParam(payload.n)} characters starting from ${hlParam(payload.start)}`
+          }
+
+        },
+        pad_string: {
+          dialog: {
+            title: 'Pad',
+            output_cols: true,
+            fields: [
+              {
+                type: 'number',
+                label: 'Minimum length',
+                key: 'width'
+              },
+              {
+                type: 'field',
+                label: 'Pad string',
+                key: 'fillchar'
+              },
+              {
+                type: 'select',
+                label: 'Side',
+                key: 'side',
+                items: [
+                  { text: 'Left', value: 'left' },
+                  { text: 'Right', value: 'right' },
+                  { text: 'Both', value: 'both' }
+                ]
+              }
+            ],
+            validate: (command) => (command.width && command.fillchar!=='')
+          },
+          payload: (columns, payload = {}) => ({
+            columns: columns,
+            output_cols: columns.map(e=>''),
+            width: 6,
+            fillchar: '0',
+            side: 'left',
+            preview: {
+              type: 'pad_string'
+            }
+          }),
+          content: (payload) => {
+            return `<b>Pad</b> ${multipleContent([payload.columns],'hl--cols')} to ${hlParam(payload.width)} characters from the ${hlParam(payload.side)} using ${hlParam(payload.fillchar)}`
+          }
+
+        },
+        extract: {
+          dialog: {
+            title: 'Extract',
+            output_cols: true,
+            fields: [
+              {
+                type: 'field',
+                label: 'Expression',
+                key: 'regex'
+              }
+            ],
+            validate: (command) => (command.regex!=='')
+          },
+          payload: (columns, payload = {}) => ({
+            columns: columns,
+            output_cols: columns.map(e=>''),
+            regex: '',
+            preview: {
+              type: 'extract'
+            }
+          }),
+          content: (payload) => {
+            return `<b>Extract</b> ${hlParam(payload.regex)} from ${multipleContent([payload.columns],'hl--cols')}`
+          }
+
         },
         set_profiler_dtypes: {
           content: (payload) => `<b>Set data type</b> ${multipleContent([payload.columns],'hl--cols')} to ${multipleContent([payload.dtype],'hl--param')}`
@@ -1984,8 +2115,8 @@ export default {
               {
                 type: 'field-suggestions',
                 key: 'value',
-                placeholder: 'Expression or "value"',
-                label: 'Expression',
+                placeholder: 'Formula or "value"',
+                label: 'Formula',
                 mono: true,
                 suggestions: (c) => ({ 'column': c.allColumns }),
                 useFunctions: true,
