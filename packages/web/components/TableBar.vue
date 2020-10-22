@@ -86,7 +86,7 @@
                 <span>{{element.tooltip}}</span>
               </v-tooltip>
             </template>
-            <v-list dense style="max-height: 400px; min-width: 160px;" class="scroll-y">
+            <v-list dense style="max-height: calc(100vh - 143px); min-width: 160px;" class="scroll-y">
               <v-list-item-group color="black">
                 <template
                   v-for="(item, i) in menuItems(element.group).filter(e=>!getProperty(e.hidden))"
@@ -252,7 +252,7 @@
           <v-btn
             v-if="filtersActive"
             :loading="clearingFilters"
-            flat icon
+            text icon
             class="mr-1"
             @click="clearFilters">
             <v-icon>
@@ -309,7 +309,7 @@
                 <template v-slot:activator="{ on: more }">
                   <v-icon v-on="more" class="right-button" color="black" @click.stop="">more_vert</v-icon>
                 </template>
-                <v-list flat dense style="max-height: 400px; min-width: 160px;" class="scroll-y">
+                <v-list flat dense style="max-height: calc(100vh - 143px); min-width: 160px;" class="scroll-y">
                   <v-list-item-group color="black">
                     <!-- <v-list-item
                       @click="copyCodeToClipboard"
@@ -507,47 +507,54 @@ export default {
 
       commandItems: [
 
-				{command: 'load file', text: 'Add from file', type: 'DATA_SOURCE'},
-        {command: 'load from database', text: 'Add from database', type: 'DATA_SOURCE'},
-				{command: 'load from data source', text: 'Add from a loaded data source', type: 'DATA_SOURCE', hidden: true},
-        {command: 'manage data sources', text: 'Manage data sources', type: 'DATA_SOURCE', hidden: true},
+				{command: 'load file', text: 'Add from file', group: 'DATA_SOURCE'},
+        {command: 'load from database', text: 'Add from database', group: 'DATA_SOURCE'},
+				{command: 'load from data source', text: 'Add from a loaded data source', group: 'DATA_SOURCE', hidden: true},
+        {command: 'manage data sources', text: 'Manage data sources', group: 'DATA_SOURCE', hidden: true},
 
-        {command: 'download', text: 'Download', type: 'SAVE', disabled: ()=>true},
-        {command: 'keep rows', text: 'Save to database', type: 'SAVE', disabled: ()=>!(this.currentDataset && this.currentDataset.summary && this.$store.state.database)},
+        {command: 'download', text: 'Download', group: 'SAVE', disabled: ()=>true},
+        {command: 'keep rows', text: 'Save to database', group: 'SAVE', disabled: ()=>!(this.currentDataset && this.currentDataset.summary && this.$store.state.database)},
 
 
-				{command: 'lower', text: 'To lower case', type: 'STRING'},
-				{command: 'upper', text: 'To upper case', type: 'STRING'},
-				{command: 'remove_accents', text: 'Remove accents', type: 'STRING'},
-				{command: 'remove_special_chars', text: 'Remove special chars', type: 'STRING'},
-        {command: 'trim', text: 'Trim white space', type: 'STRING'},
-        {command: 'string clustering', text: 'String clustering', type: 'STRING', max: 1, min: 1, hidden: ()=>(this.hideOperations) },
+				{command: 'lower', text: 'To lower case', type: 'STRING', group: 'STRING'},
+				{command: 'upper', text: 'To upper case', type: 'STRING', group: 'STRING'},
+        {command: 'proper', text: 'Proper', type: 'STRING', group: 'STRING' },
+				{command: 'remove_accents', text: 'Remove accents', type: 'STRING', group: 'STRING'},
+				{command: 'remove_special_chars', text: 'Remove special chars', type: 'STRING', group: 'STRING'},
+        {command: 'extract', text: 'Extract', group: 'STRING'},
+        {divider: true, group: 'STRING'},
+        {command: 'trim', text: 'Trim white space', type: 'STRING', group: 'STRING'},
+        {command: 'left_string', text: 'Left', type: 'SUBSTR1', group: 'STRING' },
+        {command: 'right_string', text: 'Right', type: 'SUBSTR1', group: 'STRING' },
+        {command: 'mid_string', text: 'Mid', group: 'STRING' },
+        {command: 'pad_string', text: 'Pad string', group: 'STRING'},
+        {command: 'string clustering', text: 'String clustering', type: 'STRING', group: 'STRING', max: 1, min: 1, hidden: ()=>(this.hideOperations) },
 
-        // {command: 'set_column_format', text: 'Set column format', type: 'TIME'},
-        {command: 'transform_format', text: 'Transform format', type: 'TIME'},
+        // {command: 'set_column_format', text: 'Set column format', group: 'TIME'},
+        {command: 'transform_format', text: 'Transform format', group: 'TIME'},
 
-        {divider: true, type: 'TIME'},
+        {divider: true, group: 'TIME'},
 
         ...Object.entries(TIME_NAMES).map(
-          ([output_type, name])=>({command: 'get_from_datetime', payload: { output_type }, text: `Get ${name}`, type: 'TIME'})
+          ([output_type, name])=>({command: 'get_from_datetime', payload: { output_type }, text: `Get ${name}`, group: 'TIME'})
         ),
 
 				// {command: 'random_split',     teaxt: 'Split train and test', type: 'PREPARE'},
 
-				{command: 'sample_n', text: 'Random Sampling', type: 'ML'},
-        {command: 'stratified_sample', text: 'Stratified Sampling', type: 'ML', min: 1, max: 1},
-				{command: 'bucketizer',       text: 'Create Bins',          type: 'ML', max: 1}, // TO-DO: Check limit
-				{command: 'impute',           text: 'Impute rows',          type: 'ML', min: 1},
-				{command: 'values_to_cols',   text: 'Values to Columns',    type: 'ML', max: 1},
-				{command: 'string_to_index',  text: 'Strings to Index',     type: 'ML', min: 1},
-				{command: 'index_to_string',  text: 'Indices to Strings',     type: 'ML', min: 1},
-        {command: 'z_score',          text: 'Standard Scaler',  type: 'ML', min: 1},
-        {command: 'min_max_scaler',   text: 'Min max Scaler',   type: 'ML', min: 1},
-        {command: 'max_abs_scaler',   text: 'Max abs Scaler',   type: 'ML', min: 1},
-        {command: 'outliers',   text: 'Outliers',   type: 'ML', min: 1, max: 1},
+				{command: 'sample_n', text: 'Random Sampling', group: 'ML'},
+        {command: 'stratified_sample', text: 'Stratified Sampling', group: 'ML', min: 1, max: 1},
+				{command: 'bucketizer',       text: 'Create Bins',          group: 'ML', max: 1}, // TO-DO: Check limit
+				{command: 'impute',           text: 'Impute rows',          group: 'ML', min: 1},
+				{command: 'values_to_cols',   text: 'Values to Columns',    group: 'ML', max: 1},
+				{command: 'string_to_index',  text: 'Strings to Index',     group: 'ML', min: 1},
+				{command: 'index_to_string',  text: 'Indices to Strings',     group: 'ML', min: 1},
+        {command: 'z_score',          text: 'Standard Scaler',  group: 'ML', min: 1},
+        {command: 'min_max_scaler',   text: 'Min max Scaler',   group: 'ML', min: 1},
+        {command: 'max_abs_scaler',   text: 'Max abs Scaler',   group: 'ML', min: 1},
+        {command: 'outliers',   text: 'Outliers',   group: 'ML', min: 1, max: 1},
 
         ...Object.entries(TYPES_NAMES).map(
-          ([dtype, text])=>({command: 'set_profiler_dtypes', payload: { dtype }, text, type: 'CAST'})
+          ([dtype, text])=>({command: 'set_profiler_dtypes', payload: { dtype }, text, group: 'CAST'})
         )
       ],
 
@@ -1136,8 +1143,8 @@ export default {
       this.$store.commit('selection',{ clear: true })
     },
 
-    menuItems (type) {
-      return this.commandItems.filter(e => e.type==type)
+    menuItems (group) {
+      return this.commandItems.filter(e => e.group==group)
     },
 
     copyCodeToClipboard (engineText) {
