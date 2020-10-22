@@ -11,3 +11,7 @@
 
 	@return $split-arr;
 }
+
+@function rgba-to-rgb($rgba, $background: #fff) {
+  @return mix(rgb(red($rgba), green($rgba), blue($rgba)), $background, alpha($rgba));
+}
