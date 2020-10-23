@@ -405,10 +405,12 @@
         <div
           v-else
           v-for="value in computedColumnValues[rowsColumn].filter((e)=>e.index<rowsCount)"
-          :key="'row'+value.index"
-          class="bb-table-i-row"
-          :style="{ top: rowHeight * value.index+'px' }"
+          :key="'row'+value.index+' '+rowSelection[value.index]"
+          class="bb-table-i-row row-selectable"
+          :style="{ top: (rowHeight * value.index + 1)+'px' }"
           :data-row="value.index+1"
+          :class="{'bb-highlight--blue row-selected': rowSelection[value.index]}"
+          @click="$set(rowSelection,value.index,!rowSelection[value.index])"
         >
         </div>
         <div>
@@ -534,6 +536,8 @@ export default {
       columnWidths: {},
 
       columnsReloads: [],
+
+      rowSelection: [],
 
       incompleteColumns: false,
 
@@ -1054,11 +1058,11 @@ export default {
     },
 
     tableStyle () {
-      var h = this.rowHeight * (+this.rowsCount)
+      var h = (this.rowHeight * (+this.rowsCount) + 1);
       return {
         maxHeight: h+'px',
         height: h+'px'
-      }
+      };
 
     },
 
@@ -1221,7 +1225,7 @@ export default {
             element.appendChild(moreElement)
           } else {
             var textWidth = element.innerText.length * 7;
-            var width = element.offsetWidth - 8;
+            var width = element.offsetWidth - 12;
             if (textWidth>width) {
               element.appendChild(moreElement);
             } else {
