@@ -750,8 +750,11 @@ export default {
       this.$store.commit('mutation', { mutate: 'noMatch', payload: value });
     },
 
-    showingColumnsLength (value) {
-      this.$store.commit('mutation', { mutate: 'showingColumnsLength', payload: value });
+    showingColumnsLength: {
+      immediate: true,
+      handler (value) {
+        this.$store.commit('mutation', { mutate: 'showingColumnsLength', payload: value });
+      },
     },
 
     operationsActive () {
