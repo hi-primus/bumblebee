@@ -1744,7 +1744,7 @@ $editor-top-padding: 4px;
       position: absolute;
       // margin-left: -48px;
       width: 49px;
-      height: 120px;
+      height: 121px;
       border-right-style: solid;
       border-right-color: $line-color-1;
       border-right-width: 1px;
@@ -1755,7 +1755,7 @@ $editor-top-padding: 4px;
         display: block;
         background: white;
         position: absolute;
-        height: 120px;
+        height: 100%;
         z-index: 1;
       }
     }
@@ -2011,7 +2011,7 @@ $editor-top-padding: 4px;
         border-right-color: darken($border-color, 10%) !important;
         &:last-child {
           &::after {
-            right: 1px;
+            right: 0px;
             background-color: darken($border-color, 10%) !important;
           }
         }
@@ -2048,8 +2048,9 @@ $editor-top-padding: 4px;
     margin-left: 0px;
 
     &:last-child {
-      border-right-width: 0px !important;
+      border-right-width: 1px !important;
       border-right-style: solid;
+      border-right-color: white !important;
       &::after {
         content: ' ';
         display: block;
@@ -2071,6 +2072,7 @@ $editor-top-padding: 4px;
 
   .bb-table-i-cell {
     width: 100%;
+    height: 22px;
     border-color: inherit;
     overflow: hidden;
     &::after {
@@ -2108,7 +2110,7 @@ $editor-top-padding: 4px;
         top: 0;
         width: 100%;
         height: 100%;
-        background: linear-gradient(270deg, rgba(255,255,255,1) 12px, rgba(255,255,255,0) 24px);
+        // background: linear-gradient(270deg, rgba(255,255,255,1) 12px, rgba(255,255,255,0) 24px);
       }
     }
     &.cell-expanded {
@@ -2155,11 +2157,11 @@ $editor-top-padding: 4px;
   }
 
   .bb-table-h-cell, .bb-table-i-cell  {
-    padding: 0 4px;
     color: inherit !important;
   }
 
   .bb-table-h-cell {
+    padding: 0 4px;
     @extend .text-ellipsis;
     &:not(.bb-preview) {
       cursor: pointer;
@@ -2175,13 +2177,13 @@ $editor-top-padding: 4px;
     .v-menu__content {
       pointer-events: auto;
     }
-    &:last-child {
-      .v-menu__content {
-        left: unset !important;
-        right: 8px;
+    // &:last-child {
+    //   .v-menu__content {
+    //     left: unset !important;
+    //     right: 8px;
 
-      }
-    }
+    //   }
+    // }
     &:first-child {
       .v-menu__content {
         transform: translateX(11px);
@@ -2497,7 +2499,7 @@ $editor-top-padding: 4px;
   font-family: $font-mono-table;
   font-size: $table-font-size;
   padding-left: 1px;
-
+  min-width: calc(100% + 160px);
   overflow-x: hidden;
 
 
@@ -2506,6 +2508,9 @@ $editor-top-padding: 4px;
     width: 100%;
     content: ' ';
     background: white;
+    z-index: 0;
+    position: relative;
+    left: 1px;
   }
 
   .bb-table-i-rows {
@@ -2525,15 +2530,18 @@ $editor-top-padding: 4px;
       height: 100%;
       width: 52px;
     }
-    .bb-table-i-row {
-      position: absolute;
-      width: 100%;
-    }
   }
 
   .bb-table-i-row {
-
+    position: absolute;
+    width: 100%;
     background: white;
+    height: 22px;
+    &.row-selectable {
+      &:before {
+        cursor: pointer;
+      }
+    }
     &:before {
       content: attr(data-row);
       background: white;
@@ -2547,6 +2555,13 @@ $editor-top-padding: 4px;
       height: 23px;
       width: 51px;
       z-index: 2;
+    }
+    &.row-selected {
+      &:before {
+        color: $primary-color;
+        font-weight: 700;
+      }
+
     }
 
     &.bb-highlight--green {
@@ -2578,6 +2593,7 @@ $editor-top-padding: 4px;
       // z-index: 3;
     }
     .bb-table-i-cell {
+      padding: 0 8px 0 4px;
       position: absolute;
       .null-cell {
         user-select: none;
@@ -2596,10 +2612,6 @@ $editor-top-padding: 4px;
   font-size: 24px;
   border-radius: 50%;
   background-color: $data-red;
-}
-
-.bb-table-i-cell, .bb-table-i-row {
-  height: 22px;
 }
 
 
