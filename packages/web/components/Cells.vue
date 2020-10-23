@@ -87,6 +87,11 @@
             >
               New columns: {{currentPreviewInfo.newColumns}}
             </div>
+            <div
+              v-if="typeof currentPreviewInfo.replacingColumns=='number' && currentPreviewInfo.replacingColumns"
+            >
+              Replacing columns: {{currentPreviewInfo.replacingColumns}}
+            </div>
           </div>
           <div class="o-buttons">
             <template v-if="command.dialog.filteredPreview">
@@ -2246,7 +2251,8 @@ export default {
               preview: {
                 type: 'unnest',
                 expectedColumns: (c) => c.splits,
-                highlightColor: 'red'
+                highlightColor: 'red',
+                multipleOutputs: true
               },
             }
           },
@@ -2762,6 +2768,16 @@ export default {
 
             if (this.currentCommand.preview && (this.currentCommand.preview.type)) {
 
+              var expectedColumns;
+
+              if (this.currentCommand.preview.expectedColumns!==undefined) {
+                expectedColumns = getProperty(this.currentCommand.preview.expectedColumns, [this.currentCommand])
+              } else if (this.currentCommand.output_cols && this.currentCommand.output_cols.length) {
+                expectedColumns = this.currentCommand.output_cols.length
+              } else if (this.currentCommand.columns) {
+                expectedColumns = this.currentCommand.columns.length
+              }
+
               if (this.currentCommand.output_cols || this.currentCommand.defaultOutputName) {
 
                 // column name optimization
@@ -2779,18 +2795,25 @@ export default {
 
                 this.$store.commit('setPreviewNames',nameMap)
                 var newColumns = 0
-                for (const key in nameMap) {
-                  if (nameMap[key] && 'new '+nameMap[key]!==key) {
-                    newColumns++
+                var replacingColumns = 0
+                if (this.currentCommand.preview.multipleOutputs) {
+                  newColumns = +expectedColumns;
+                } else {
+                  for (const key in nameMap) {
+                    if (nameMap[key] && 'new '+nameMap[key]!==key) {
+                      newColumns++
+                    } else if (!nameMap[key] || 'new '+nameMap[key]===key){
+                      replacingColumns++
+                    }
                   }
                 }
                 if (this.currentCommand.defaultOutputName && !newColumns) {
                   newColumns = 1
                 }
-                this.$store.commit('setPreviewInfo', {newColumns})
+                this.$store.commit('setPreviewInfo', {newColumns, replacingColumns})
               }
 
-              this.preparePreviewCode()
+              this.preparePreviewCode(expectedColumns);
             }
             if (this.currentCommand.preview.fake==='rename') {
               var nameMap = {}
@@ -2919,19 +2942,9 @@ export default {
       this.codeError = '';
     },
 
-    preparePreviewCode: debounce( async function() {
+    preparePreviewCode: debounce( async function(expectedColumns) {
 
       try {
-
-        var expectedColumns
-
-        if (this.currentCommand.preview.expectedColumns!==undefined) {
-          expectedColumns = getProperty(this.currentCommand.preview.expectedColumns, [this.currentCommand])
-        } else if (this.currentCommand.output_cols && this.currentCommand.output_cols.length) {
-          expectedColumns = this.currentCommand.output_cols.length
-        } else if (this.currentCommand.columns) {
-          expectedColumns = this.currentCommand.columns.length
-        }
 
         var commandHandler = this.command
 
