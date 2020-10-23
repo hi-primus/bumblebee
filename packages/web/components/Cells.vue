@@ -2251,7 +2251,7 @@ export default {
               output_cols: columns.map(e=>e),
               preview: {
                 type: 'unnest',
-                expectedColumns: (c) => c.splits,
+                expectedColumns: (c) => c.splits ? c.splits : -1,
                 highlightColor: 'red',
                 multipleOutputs: true
               },

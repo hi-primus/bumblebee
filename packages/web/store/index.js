@@ -404,21 +404,21 @@ export const mutations = {
 
   setPreviewInfo (state, {rowHighlights, newColumns, replacingColumns, error}) {
     if (!state.everyPreviewInfo[state.tab]) {
-      state.everyPreviewInfo[state.tab] = {}
+      state.everyPreviewInfo[state.tab] = {};
     }
     if (rowHighlights!=undefined) {
-      state.everyPreviewInfo[state.tab].rowHighlights = rowHighlights
+      state.everyPreviewInfo[state.tab].rowHighlights = rowHighlights;
     }
     if (newColumns!=undefined) {
-      state.everyPreviewInfo[state.tab].newColumns = newColumns
+      state.everyPreviewInfo[state.tab].newColumns = Math.max(0, newColumns);
     }
     if (replacingColumns!=undefined) {
-      state.everyPreviewInfo[state.tab].replacingColumns = replacingColumns
+      state.everyPreviewInfo[state.tab].replacingColumns = Math.max(0, replacingColumns);
     }
     if (error!=undefined) {
-      state.everyPreviewInfo[state.tab].error = error
+      state.everyPreviewInfo[state.tab].error = error;
     }
-    Vue.set(state.everyPreviewInfo,state.tab,state.everyPreviewInfo[state.tab])
+    Vue.set(state.everyPreviewInfo,state.tab,state.everyPreviewInfo[state.tab]);
   },
 
   selection (state, {tab, columns, ranged, clear, text} ) {
