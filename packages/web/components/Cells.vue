@@ -2970,7 +2970,7 @@ export default {
       }
 
 
-    }, 10),
+    }, 250),
 
     getCommandTitle() {
       try {
