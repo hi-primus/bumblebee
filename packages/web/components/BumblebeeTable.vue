@@ -1146,9 +1146,9 @@ export default {
           }
         }
 
-        var noBufferWindow = previewCode ? previewCode.noBufferWindow : false;
+        var noBufferWindow = (previewCode && previewCode.noBufferWindow) ? true : false;
 
-        if (this.noBufferWindow !== noBufferWindow) {
+        if (this.noBufferWindow != noBufferWindow) {
           this.columnValues = {};
           this.fetched = [];
           check = true;
