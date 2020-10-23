@@ -105,6 +105,7 @@
             <v-spacer></v-spacer>
             <v-btn
               color="primary"
+              class="mr-4"
               dense
               text
               @click="cancelCommand"
