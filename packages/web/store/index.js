@@ -402,7 +402,7 @@ export const mutations = {
     state.kernel = payload
   },
 
-  setPreviewInfo (state, {rowHighlights, newColumns, error}) {
+  setPreviewInfo (state, {rowHighlights, newColumns, replacingColumns, error}) {
     if (!state.everyPreviewInfo[state.tab]) {
       state.everyPreviewInfo[state.tab] = {}
     }
@@ -411,6 +411,9 @@ export const mutations = {
     }
     if (newColumns!=undefined) {
       state.everyPreviewInfo[state.tab].newColumns = newColumns
+    }
+    if (replacingColumns!=undefined) {
+      state.everyPreviewInfo[state.tab].replacingColumns = replacingColumns
     }
     if (error!=undefined) {
       state.everyPreviewInfo[state.tab].error = error
