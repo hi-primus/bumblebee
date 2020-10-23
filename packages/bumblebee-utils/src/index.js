@@ -755,8 +755,8 @@ const _TIME = {
   utc: ['UTC offset','%z'],
   timezone: ['Timezone','%Z'],
   dayNumber: ['day number of year','%S'],
-  weekNumberM: ['week number of year (Monday as 1st)','%U'],
-  weekNumberS: ['week number of year (Sunday as 1st)','%W']
+  weekNumberM: ['weekday of year (Mon as 1st)','%U'],
+  weekNumberS: ['weekday of year (Sun as 1st)','%W']
 }
 
 export const TIME_NAMES = objectMap(_TIME,([name, value])=>name)
