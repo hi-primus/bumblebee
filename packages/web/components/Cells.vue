@@ -254,6 +254,7 @@ import {
   hlCols,
   namesToIndices,
   transformDateFromPython,
+  objectMap,
 
   TIME_NAMES,
   TYPES,
@@ -963,17 +964,30 @@ export default {
               var command = {...currentCommand}
               if (!command.secondaryDatasets[command.with] || !command.secondaryDatasets[command.with].buffer) {
                 await this.evalCode('_output = '+command.with+'.ext.set_buffer("*")') // TO-DO: !!!
-                this.$store.commit('setSecondaryBuffer', { key: command.with, value: true})
-                command.secondaryDatasets = {...this.currentSecondaryDatasets}
+                this.$store.commit('setSecondaryBuffer', { key: command.with, value: true});
+                command.secondaryDatasets = {...this.currentSecondaryDatasets};
               }
-              var withOther = command.items_with(command).map(df=>`"${df}": ${df}.cols.profiler_dtypes()`).join(', ')
-              const response = await this.evalCode(`_output = { "self": ${command.dfName}.cols.profiler_dtypes(), ${withOther} }`)
+              var withOther = command.items_with(command).map(df=>`"${df}": ${df}.cols.profiler_dtypes()`).join(', ');
+              const response = await this.evalCode(`_output = { "self": ${command.dfName}.cols.profiler_dtypes(), ${withOther} }`);
 
-              command.types = response.data.result
-              command.typesDone = true
+              var types = response.data.result;
 
-              return command
+              types = objectMap(types, (columns) => {
+                return objectMap(columns, (type) => {
+                  if (type && typeof type === 'object') {
+                    return type.dtype || type.profiler_dtype || type;
+                  }
+                  return type;
+                });
+              });
+
+              command.types = types;
+              command.typesDone = true;
+
+              return command;
+
             } catch (err) {
+              console.error(err);
               return { ...currentCommand, typesDone: true }
             }
           }
