@@ -2071,6 +2071,14 @@ $editor-top-padding: 4px;
   }
 
   .bb-table-i-cell {
+    padding: 0 4px 0 4px;
+    position: absolute;
+
+    .null-cell {
+      user-select: none;
+      opacity: 0.667;
+    }
+
     width: 100%;
     height: 22px;
     border-color: inherit;
@@ -2090,17 +2098,13 @@ $editor-top-padding: 4px;
       position: absolute;
 
       cursor: pointer;
-      &::after {
+      &::before {
         position: absolute;
-        right: 4px;
-        top: 4px;
-        transform-origin: right center;
-        transform: rotate(-45deg) scale(0.8);
-        border: solid black;
-        border-width: 0 3px 3px 0;
+        font-size: 20px;
+        right: -4px;
+        top: -7px;
         display: inline-block;
         padding: 3px;
-        opacity: 0.5;
       }
     }
     &:not(.cell-expanded) {
@@ -2110,34 +2114,40 @@ $editor-top-padding: 4px;
         top: 0;
         width: 100%;
         height: 100%;
-        // background: linear-gradient(270deg, rgba(255,255,255,1) 12px, rgba(255,255,255,0) 24px);
       }
     }
     &.cell-expanded {
       overflow-y: auto;
       background-color: white;
       width: 28em;
+      word-break: break-all;
       height: 12em;
-      padding: 0.25em 0.5em;
+      border-style: none !important;
+      padding: 0.25em 1.25em 0.25em 0.5em !important;
       z-index: 4;
       box-shadow: 1px 1px 10px 0px rgba(0, 0, 0, 0.08);
-      margin-top: -0.25em;
+      margin-top: calc(-0.25em + 1px);
       margin-left: calc(4px - 0.5em);
-      .more-arrow {
-        right: 4px;
-        top: 6px;
+      .more-arrow.mdi {
+        right: 6px;
+        top: 4px;
         width: 16px;
         height: 16px;
-        &::after {
-          transform: rotate(135deg) scale(0.8);
+        &::before {
+          content: "\F0156" !important;
         }
       }
     }
     &:hover {
-      .more-arrow {
+      &.cell-to-expand:not(.cell-expanded) {
+        padding-right: 14px !important;
+
+      }
+      .more-arrow.mdi {
+        opacity: 0.5;
         display: block !important;
-        &::after {
-          content: ' ' !important;
+        &::before {
+          content: "\F0142";
         }
       }
     }
@@ -2589,17 +2599,6 @@ $editor-top-padding: 4px;
     }
 
 
-    &.has-expanded-cell {
-      // z-index: 3;
-    }
-    .bb-table-i-cell {
-      padding: 0 8px 0 4px;
-      position: absolute;
-      .null-cell {
-        user-select: none;
-        opacity: 0.667;
-      }
-    }
   }
 }
 

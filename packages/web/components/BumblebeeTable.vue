@@ -1070,15 +1070,21 @@ export default {
       if (window.moreElement) {
         return window.moreElement;
       }
+      var clickOutsideExpandedCell = (e) => {
+        if (!e.target.classList || !e.target.classList.contains('cell-expanded')) {
+          this.restoreCell(false)
+        }
+      };
       window.moreElement = document.createElement('div');
       window.moreElement.classList.add('more-arrow');
       window.moreElement.onclick = (e)=>{
         var cell = e.target.parentElement;
         if (cell.classList.contains('cell-expanded')) {
           this.restoreCell(cell);
-
+          document.onmousedown = null;
         } else {
           this.expandCell(cell);
+          document.onmousedown = clickOutsideExpandedCell;
         }
       }
       return window.moreElement
@@ -1207,9 +1213,11 @@ export default {
       tableElement.getElementsByClassName('cell-expanded').forEach(element=>element.classList.remove('cell-expanded'));
       columnElement.classList.add('has-expanded-cell');
       cellElement.classList.add('cell-expanded');
+      window.cellElement = cellElement
     },
 
     restoreCell (cellElement) {
+      cellElement = window.cellElement || cellElement;
       var columnElement = cellElement.parentElement;
       cellElement.classList.remove('cell-expanded');
       columnElement.classList.remove('has-expanded-cell');
@@ -1225,10 +1233,12 @@ export default {
             element.appendChild(moreElement)
           } else {
             var textWidth = element.innerText.length * 7;
-            var width = element.offsetWidth - 12;
+            var width = element.offsetWidth - 8;
             if (textWidth>width) {
+              element.classList.add('cell-to-expand');
               element.appendChild(moreElement);
             } else {
+              element.classList.remove('cell-to-expand');
               throw false;
             }
           }
