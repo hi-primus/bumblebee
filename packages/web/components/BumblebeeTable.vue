@@ -1902,7 +1902,7 @@ export default {
 
         this.$store.commit('setProfilePreview', {code: previewCode, columns: [], done: false})
 
-        var cols = this.currentPreviewColumns.map(e=>escapeQuotes(  e.title.split('__preview__').join('')  ))
+        var cols = profile ? this.currentPreviewColumns.map(e=>escapeQuotes(  e.title.split('__preview__').join('')  )) : [];
 
         var code = `_df_profile = ${this.currentDataset.dfName}.ext.buffer_window("*")${await getPropertyAsync(previewCode) || ''}`
         + `\n_output = { `
