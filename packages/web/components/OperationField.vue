@@ -250,33 +250,6 @@
         @click:item="field.selectKey ? (currentCommand = field.selectKey($event, currentCommand)) : ()=>{}"
       >
       </ColumnsJoinSelector>
-      <!-- <v-data-table
-        :items-per-page="(field.items_key) ? getPropertyField(currentCommand[field.items_key]).length : field.items.length"
-        v-model="_value"
-        show-select
-        class="vdf--hide-select mb-4 columns-filter"
-        hide-default-footer
-        dense
-        required
-        outlined
-      >
-        <template v-slot:item.source="{ item }">
-          <span dark class="capitalize text--darken-3" :class="[ item.source==='right' ? 'right-join--text' : 'left-join--text' ]">
-            {{ item.source }}
-          </span>
-        </template>
-        <template v-slot:item.key="{ item }">
-          <span
-            @click.stop="field.selectKey ? (currentCommand = field.selectKey(item, currentCommand)) : ()=>{}"
-            :class="{'key-selected': (currentCommand.right_on===item.name && item.source==='right')||(currentCommand.left_on===item.name && item.source==='left')}"
-            class="key-select"
-          >
-            <v-icon>
-              vpn_key
-            </v-icon>
-          </span>
-        </template>
-      </v-data-table> -->
     </template>
     <template v-else-if="getPropertyField(field.type)=='select-foreach'">
       <v-row :key="field.key" no-gutters class="foreach-label">

@@ -243,7 +243,7 @@ export const codeGenerators = {
     var filterLeft = `.cols.select(["${columnsLeft.join('", "')}"])`
     var filterRight = `.cols.select(["${columnsRight.join('", "')}"])`
 
-    filterEnd = filterLeft = filterRight = ''
+    // filterEnd = filterLeft = filterRight = ''
 
     if (payload.request.type !== 'final') {
       return (from, to) => {

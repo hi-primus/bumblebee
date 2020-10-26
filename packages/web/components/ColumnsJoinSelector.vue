@@ -10,7 +10,7 @@
     @click:row="$emit('click:row',$event)"
     class="vdf--hide-select mb-4 columns-filter"
     show-select
-    hide-default-footer
+    :hide-default-footer="hideFooter"
     dense
     required
     outlined
@@ -36,6 +36,16 @@
 
 <script>
 export default {
-  props: ['value','disabled','headers','itemsPerPage','items','itemKey','rightOn','leftOn']
+  props: ['value','disabled','headers','items','itemKey','rightOn','leftOn'],
+  computed: {
+
+    itemsPerPage () {
+      return (this.items.length>10) ? 10 : -1
+    },
+
+    hideFooter () {
+      return this.items.length<=10;
+    }
+  }
 }
 </script>
