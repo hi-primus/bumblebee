@@ -240,9 +240,9 @@ from optimus import Optimus
 from dask.distributed import Client;
 ${opInit}
 if (using_coiled):
-    res.update({"coiled": True, "cluster_name": cluster.name, "dashboard_link": client.dashboard_link, "client_install": client_install});
+    res.update({"coiled": True, "cluster_name": cluster.name, "dashboard_link": getattr(client, 'dashboard_link', None) if client else None, "client_install": client_install});
 else:
-    res.update({"dashboard_link": op.client.dashboard_link});
+    res.update({"dashboard_link": getattr(op.client, 'dashboard_link', None) if op.client else None});
 res.update({'optimus': 'ok init', 'optimus_version': op.__version__, 'engine': op.engine, "coiled_available": coiled_available});
 
 if _use_time:
