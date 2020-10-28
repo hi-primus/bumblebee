@@ -933,8 +933,6 @@ export default {
               .filter(e=>!e.startsWith('_'))
               .map(name=>({name}));
 
-            console.log(items_with);
-
             var df2 = items_with[0];
 
             return {
