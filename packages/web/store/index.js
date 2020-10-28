@@ -772,6 +772,19 @@ export const actions = {
 
   },
 
+  deleteErrorCells ({ state, commit }) {
+
+    var cells = [...state.commands]
+
+    for (let i = 0; i < state.commands.length; i++) {
+        if (cells[i].error && cells[i].code) {
+          cells.splice(i,1)
+        }
+    }
+
+    commit('mutation', { mutate: 'commands', payload: cells })
+  },
+
   beforeRunCells ( { state, commit }, { newOnly, ignoreFrom } ) {
 
     newOnly = newOnly || false;
@@ -806,9 +819,9 @@ export const actions = {
         commit('mutation', { mutate: 'dashboardLink', payload: ''});
       case 'cells':
         await dispatch('markCells', { mark: false });
-        commit('mutation', { mutate: 'codeDone', payload: ''});
-        commit('mutation', { mutate: 'codeError', payload: ''});
-        commit('mutation', { mutate: 'lastWrongCode', payload: { code: '', error: false }});
+        commit('mutation', { mutate: 'codeDone', payload: '' });
+        commit('mutation', { mutate: 'codeError', payload: '' });
+        commit('mutation', { mutate: 'lastWrongCode', payload: false });
         commit('mutation', { mutate: 'cellsPromise', payload: false });
       case 'profilings':
         commit('mutation', { mutate: 'profilingsPromises', payload: {} });

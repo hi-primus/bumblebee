@@ -2994,8 +2994,16 @@ export default {
 
     getProperty,
 
-    cleanCodeError () {
-      this.codeError = '';
+    async cleanCodeError () {
+      await this.$store.dispatch('deleteErrorCells');
+      await this.$store.dispatch('resetPromises', { from: 'cells' });
+      await this.$nextTick();
+      await this.$store.dispatch('getProfiling', { payload: {
+        socketPost: this.socketPost,
+        dfName: this.currentDataset.dfName,
+        avoidReload: true,
+        clearPrevious: true
+      }});
     },
 
     preparePreviewCode: debounce( async function(expectedColumns) {
