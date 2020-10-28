@@ -158,6 +158,13 @@ export default {
 
               params.name = params.name || this.$store.state.session.username + '_' + slug;
 
+              if (params.jupyter_address) {
+                params.jupyter_ip = params.jupyter_address.ip;
+                params.jupyter_port = params.jupyter_address.port;
+
+                // delete params.jupyter_address;
+              }
+
               var reinitializationPayload = {
                 username: this.$store.state.session.username,
                 workspace: slug,

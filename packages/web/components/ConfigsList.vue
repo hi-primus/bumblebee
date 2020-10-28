@@ -176,7 +176,7 @@ export default {
       values.jupyter_ip = values.jupyter_address.ip;
       values.jupyter_port = values.jupyter_address.port;
 
-      delete values.jupyter_address;
+      // delete values.jupyter_address;
 
       await this.createNewElement(values);
     },
