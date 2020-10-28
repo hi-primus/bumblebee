@@ -2142,12 +2142,6 @@ export default {
                 useFunctions: true,
                 fuzzySearch: true
               },
-              // {
-              //   type: 'field',
-              //   key: 'where',
-              //   label: 'Where',
-              //   placeholder: 'column!=None'
-              // },
               {
                 type: 'field',
                 key: 'output_col',
@@ -2163,7 +2157,7 @@ export default {
                 &&
                 (command.columns[0] || output_col)
                 &&
-                (command.value || output_col || command.where)
+                (command.value || output_col)
               )
             }
           },
@@ -2171,7 +2165,6 @@ export default {
             command: 'set',
             columns,
             value: (columns[0] ? (columns[0].includes(' ') ? `{${columns[0]}}` : columns[0]) : ''),
-            where: (columns[0] ? `${columns[0]}!=None` : ''),
             title: (columns[0] ? `Set column` : 'Create column'),
             preview: {
               expectedColumns: 1,
@@ -2198,8 +2191,7 @@ export default {
               action = 'Set / Create'
             }
 
-            return `<b>${action}</b> ${multipleContent([output_cols],'hl--cols')} with ${multipleContent([payload.value],'hl--param')}`
-              + (payload.where ? ` where ${multipleContent([payload.where],'hl--param')}` : '')
+            return `<b>${action}</b> ${multipleContent([output_cols],'hl--cols')} with ${multipleContent([payload.value],'hl--param')}`;
           }
         },
         rename: {
