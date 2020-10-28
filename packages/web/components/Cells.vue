@@ -1118,7 +1118,16 @@ export default {
         },
         STRING: {
           dialog: {
-            title: 'String operation',
+            title: (c)=>{
+              return {
+                proper: 'Convert to proper case',
+                trim: 'Trim white spaces',
+                lower: 'Convert to lowercase',
+                upper: 'Convert to uppercase',
+                remove_accents: 'Remove accents',
+                remove_special_chars: 'Remove special chars'
+              }[c.command]
+            },
             output_cols: true,
           },
           payload: (columns, payload = {}) => ({
@@ -1130,8 +1139,8 @@ export default {
           }),
           content: (payload) => {
             var str = {
-              proper: 'Proper',
-              trim: 'Trim white space in',
+              proper: 'Proper case',
+              trim: 'Trim white spaces in',
               lower: 'Lowercase',
               upper: 'Uppercase',
               remove_accents: 'Remove accents in',
@@ -1142,7 +1151,12 @@ export default {
         },
         SUBSTR1: {
           dialog: {
-            title: 'Substring',
+            title: (c)=>{
+              return {
+                left_string: 'Substring (left)',
+                right_string: 'Substring (right)'
+              }[c.command]
+            },
             output_cols: true,
             fields: [
               {
