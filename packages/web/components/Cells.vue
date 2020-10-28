@@ -2792,7 +2792,7 @@ export default {
 
                 if (this.currentCommand.columns && this.currentCommand.output_cols) {
                   this.currentCommand.output_cols.forEach((col, i) => {
-                    nameMap[ 'new '+this.currentCommand.columns[i] ] = col
+                    nameMap[ '__new__'+this.currentCommand.columns[i] ] = col
                   })
                 }
 
@@ -2807,9 +2807,9 @@ export default {
                   newColumns = +expectedColumns;
                 } else {
                   for (const key in nameMap) {
-                    if (nameMap[key] && 'new '+nameMap[key]!==key) {
+                    if (nameMap[key] && '__new__'+nameMap[key]!==key) {
                       newColumns++
-                    } else if (!nameMap[key] || 'new '+nameMap[key]===key){
+                    } else if (!nameMap[key] || '__new__'+nameMap[key]===key){
                       replacingColumns++
                     }
                   }

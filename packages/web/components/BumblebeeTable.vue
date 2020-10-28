@@ -176,18 +176,18 @@
               {{ dataTypeHint(previewPlotsData[column.name].dtype) }}
             </div>
             <div
-              v-if="currentPreviewNames && currentPreviewNames[column.title]"
-              :title="currentPreviewNames[column.title]"
+              v-if="currentPreviewNames && currentPreviewNames[column.name]"
+              :title="currentPreviewNames[column.name]"
               class="column-title"
             >
-              <span>{{ currentPreviewNames[column.title] }}</span>
+              <span>{{ currentPreviewNames[column.name] }}</span>
             </div>
             <div
               v-else
               class="column-title"
-              :title="column.title ? column.title.split('__preview__').join('') : ''"
+              :title="column.title ? column.title.split(/__preview__|__new__/).join('') : ''"
             >
-              {{ column.title ? column.title.split('__preview__').join('') : '' }}
+              {{ column.title ? column.title.split(/__preview__|__new__/).join('') : '' }}
             </div>
           </div>
           <div class="resize-handle" @click.stop @mousedown.prevent.stop="dragMouseDown($event, i)"></div>
@@ -672,7 +672,7 @@ export default {
       if (this.gettingNewResults=='hide') {
         this.previewColumns.forEach(column => {
           if (column.type === 'preview' && !this.currentPreviewNames[column.name]) {
-            var name = column.name.substr(4);
+            var name = column.name.split('__new__').join('');
             columnValues[ name ] = columnValues[ column.name ]
           }
         });
@@ -724,7 +724,7 @@ export default {
           index,
           preview: true,
           type: 'preview',
-          name: col.title.split('__preview__').join(''),
+          name: col.title.split(/__preview__/).join(''),
           sampleName: col.title
         }))
         : []
@@ -734,7 +734,7 @@ export default {
             ...col,
             type: 'preview',
             preview: true,
-            name: col.title.split('__preview__').join(''),
+            name: col.title.split(/__preview__/).join(''),
             sampleName: col.title
           }))
         : []
@@ -1330,7 +1330,7 @@ export default {
         const highlight = !noHighlight && this.highlightMatches && this.highlightMatches[name] && this.highlightMatches[name].title
         const hlValues = columnValues[highlight]
         if (highlight && hlValues && hlValues.length) {
-          const preview = name.includes('__preview__') || name.includes('new ') // TO-DO: Check
+          const preview = name.includes('__preview__') || name.includes('__new__') // TO-DO: Check
           const color = this.currentHighlights.color['default'] ? this.currentHighlights.color[preview ? 'preview' : 'default'] : this.currentHighlights.color
           for (const index in values) {
             if (index>=limit) {
@@ -1903,7 +1903,7 @@ export default {
 
         this.$store.commit('setProfilePreview', {code: previewCode, columns: [], done: false})
 
-        var cols = profile ? this.currentPreviewColumns.map(e=>escapeQuotes(  e.title.split('__preview__').join('')  )) : [];
+        var cols = profile ? this.currentPreviewColumns.map(e=>escapeQuotes(  e.title.split(/__preview__/).join('')  )) : [];
 
         var code = `_df_profile = ${this.currentDataset.dfName}.ext.buffer_window("*")${await getPropertyAsync(previewCode) || ''}`
         + `\n_output = { `

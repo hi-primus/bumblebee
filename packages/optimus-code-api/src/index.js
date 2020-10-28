@@ -283,7 +283,7 @@ export const codeGenerators = {
   },
   STRING: (payload) => {
 
-    var output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (payload.request.type !== 'final') ? 'new ' : '')
+    var output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (payload.request.type !== 'final') ? '__new__' : '')
 
     var _argument = payload.columns.length==0
       ? `"*"`
@@ -297,7 +297,7 @@ export const codeGenerators = {
   },
   SUBSTR1: (payload) => {
 
-    var output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (payload.request.type !== 'final') ? 'new ' : '');
+    var output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (payload.request.type !== 'final') ? '__new__' : '');
 
     var commands = {
       left_string: 'left',
@@ -318,7 +318,7 @@ export const codeGenerators = {
   },
   mid_string: (payload) => {
 
-    var output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (payload.request.type !== 'final') ? 'new ' : '');
+    var output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (payload.request.type !== 'final') ? '__new__' : '');
 
     var _argument = payload.columns.length==0
       ? `"*"`
@@ -332,7 +332,7 @@ export const codeGenerators = {
   },
   pad_string: (payload) => {
 
-    var output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (payload.request.type !== 'final') ? 'new ' : '');
+    var output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (payload.request.type !== 'final') ? '__new__' : '');
 
     var _argument = payload.columns.length==0
       ? `"*"`
@@ -346,7 +346,7 @@ export const codeGenerators = {
   },
   extract: (payload) => {
 
-    var output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (payload.request.type !== 'final') ? 'new ' : '');
+    var output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (payload.request.type !== 'final') ? '__new__' : '');
 
     var _argument = payload.columns.length==0
       ? `"*"`
@@ -366,7 +366,7 @@ export const codeGenerators = {
   },
   fill_na: (payload) => {
     var _argument = (payload.columns.length==1) ? `"${payload.columns[0]}"` : `["${payload.columns.join('", "')}"]`
-    var output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (payload.request.type !== 'final') ? 'new ' : '')
+    var output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (payload.request.type !== 'final') ? '__new__' : '')
     payload = escapeQuotesOn(payload,['fill'])
     return `.cols.fill_na(`
       +_argument
@@ -451,14 +451,14 @@ export const codeGenerators = {
   },
   'transform_format': (payload) => {
     var _argument = (payload.columns.length==1) ? `"${payload.columns[0]}"` : `["${payload.columns.join('", "')}"]`
-    var output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (payload.request.type !== 'final') ? 'new ' : '')
+    var output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (payload.request.type !== 'final') ? '__new__' : '')
     return `.cols.date_format(${_argument}, "${transformDateToPython(payload.current_format)}", "${transformDateToPython(payload.output_format)}"`
     + ( output_cols_argument ? `, output_cols=${output_cols_argument}` : '')
     + `)`
   },
   'get_from_datetime': (payload) => {
     var _argument = (payload.columns.length==1) ? `"${payload.columns[0]}"` : `["${payload.columns.join('", "')}"]`
-    var output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (payload.request.type !== 'final') ? 'new ' : '')
+    var output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (payload.request.type !== 'final') ? '__new__' : '')
     return `.cols.date_format(${_argument}, "${transformDateToPython(payload.current_format)}", "${TIME_VALUES[payload.output_type]}"`
     + ( output_cols_argument ? `, output_cols=${output_cols_argument}` : '')
     + `)`
@@ -498,10 +498,10 @@ export const codeGenerators = {
     var _argument = (payload.columns.length==1) ? `"${payload.columns[0]}"` : `["${payload.columns.join('", "')}"]`
 
     if (payload.request.type === 'preview' || payload.request.type === 'profile') {
-      payload.output_cols = payload.output_cols.map(col=>'new '+col)
+      payload.output_cols = payload.output_cols.map(col=>'__new__'+col)
     }
 
-    var output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (payload.request.type !== 'final') ? 'new ' : '')
+    var output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (payload.request.type !== 'final') ? '__new__' : '')
 
     payload = escapeQuotesOn(payload,['replace','search_by'])
     var search = payload.search.map(v=>escapeQuotes(v))
@@ -519,15 +519,20 @@ export const codeGenerators = {
   },
   set: (payload) => {
 
+    if (payload.request.type !== 'final') {
+      payload.output_col = '__new__' + payload.output_col;
+    }
+
     if (!payload.output_cols.length) {
       payload.output_cols = [payload.output_col]
     }
-    var output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (payload.request.type !== 'final') ? 'new ' : '')
+    var output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (payload.request.type !== 'final') ? '__new__' : '')
 
     var value = ( (payload.value) ? `p.parse('${payload.value}')` : 'None' )
 
     var cb = (from, to) => {
       var window = ''
+
       if (from!==undefined) {
         window = `,${from},${to}`
       }
@@ -556,7 +561,7 @@ export const codeGenerators = {
   },
   unnest: (payload) => {
     var _argument = (payload.columns.length==1) ? `"${payload.columns[0]}"` : `["${payload.columns.join('", "')}"]`
-    var output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (payload.request.type !== 'final') ? 'new ' : '')
+    var output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (payload.request.type !== 'final') ? '__new__' : '')
     payload = escapeQuotesOn(payload, ['separator'])
 
     var code = `.cols.unnest(`
@@ -587,7 +592,7 @@ export const codeGenerators = {
   },
   duplicate: (payload) => {
     var _argument = (payload.columns.length==1) ? `"${payload.columns[0]}"` : `["${payload.columns.join('", "')}"]`
-    var output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (payload.request.type !== 'final') ? 'new ' : '')
+    var output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (payload.request.type !== 'final') ? '__new__' : '')
     return `.cols.copy(`
       +_argument
       +( (output_cols_argument) ? `, output_cols=${output_cols_argument}` : '')
@@ -596,7 +601,7 @@ export const codeGenerators = {
   bucketizer: (payload) => {
     // df.cols.bucketizer("id",2,"buckets_output")
     var _argument = (payload.columns.length==1) ? `"${payload.columns[0]}"` : `["${payload.columns.join('", "')}"]`
-    var output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (payload.request.type !== 'final') ? 'new ' : '')
+    var output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (payload.request.type !== 'final') ? '__new__' : '')
 
     return `.cols.bucketizer(`
       + _argument
@@ -611,7 +616,7 @@ export const codeGenerators = {
     // cols.string_to_index(input_cols, output_cols=None)
     var _argument = (payload.columns.length==1) ? `"${payload.columns[0]}"` : `["${payload.columns.join('", "')}"]`
 
-    var output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (payload.request.type !== 'final') ? 'new ' : '')
+    var output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (payload.request.type !== 'final') ? '__new__' : '')
 
     return `.cols.string_to_index(`
       + _argument
@@ -622,7 +627,7 @@ export const codeGenerators = {
     // cols.index_to_string(input_cols, output_cols=None)
     var _argument = (payload.columns.length==1) ? `"${payload.columns[0]}"` : `["${payload.columns.join('", "')}"]`
 
-    var output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (payload.request.type !== 'final') ? 'new ' : '')
+    var output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (payload.request.type !== 'final') ? '__new__' : '')
 
     return `.cols.index_to_string(`
       + _argument
@@ -632,7 +637,7 @@ export const codeGenerators = {
   ML: (payload) => {
     var _argument = (payload.columns.length==1) ? `"${payload.columns[0]}"` : `["${payload.columns.join('", "')}"]`
 
-    var output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (payload.request.type !== 'final') ? 'new ' : '')
+    var output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (payload.request.type !== 'final') ? '__new__' : '')
 
     return `.cols.${payload.command}(`
       + _argument
@@ -643,7 +648,7 @@ export const codeGenerators = {
     // df.cols.impute(input_cols, data_type="continuous", strategy="mean", output_cols=None)
     var _argument = (payload.columns.length==1) ? `"${payload.columns[0]}"` : `["${payload.columns.join('", "')}"]`
 
-    var output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (payload.request.type !== 'final') ? 'new ' : '')
+    var output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (payload.request.type !== 'final') ? '__new__' : '')
 
     return `.cols.impute(`
       + _argument
