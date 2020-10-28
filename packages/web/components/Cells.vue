@@ -878,13 +878,16 @@ export default {
             }
           },
           beforeExecuteCode: async (currentCommand) => {
-            var command = { ...currentCommand }
-            if (!command.secondaryDatasets[command.with] || !command.secondaryDatasets[command.with].buffer) {
-              await this.evalCode('_output = '+command.with+'.ext.set_buffer("*")') // TO-DO: !!!
-              this.$store.commit('setSecondaryBuffer', { key: command.with, value: true})
-              command.secondaryDatasets = {...this.currentSecondaryDatasets}
+            var command = { ...currentCommand };
+            for (let i = 0; i < command.with.length; i++) {
+              const name = command.with[i].name;
+              if (!command.secondaryDatasets[name] || !command.secondaryDatasets[name].buffer) {
+                await this.evalCode('_output = '+name+'.ext.set_buffer("*")'); // TO-DO: use buffer
+                this.$store.commit('setSecondaryBuffer', { key: name, value: true});
+              }
             }
-            return command
+            command.secondaryDatasets = {...this.currentSecondaryDatasets};
+            return command;
           },
           content: (payload) => `<b>Join</b> ${hlParam(payload.dfName)} <b>with</b> ${hlParam(payload.with)}`
         },
@@ -892,11 +895,24 @@ export default {
           dialog: {
             title: 'Append datasets',
             fields: [
+              // {
+              //   key: 'with',
+              //   label: 'Dataset (right)',
+              //   type: 'select',
+              //   items_key: 'items_with'
+              // },
               {
                 key: 'with',
-                label: 'Dataset (right)',
-                type: 'select',
-                items_key: 'items_with'
+                label: 'With datasets',
+                type: 'table',
+                item_key: 'name',
+                items_key: 'items_with',
+                headers: [
+                  {
+                    text: 'Dataset',
+                    value: 'name'
+                  },
+                ]
               },
               {
                 key: 'selected_columns',
@@ -905,36 +921,47 @@ export default {
               },
             ],
             validate: (c) => {
-              return !!(c.selected_columns && c.selected_columns.length)
+              return !!(c.selected_columns && c.selected_columns.length && c.with.length)
             }
           },
           payload: async (columns, payload = {}) => {
 
-            var _datasets_right = {...payload.secondaryDatasets}
-            var items_with = Object.keys(_datasets_right).filter(e=>(e!==payload.dfName && e!=='preview_df'))
+            var _datasets_right = {...payload.secondaryDatasets};
 
-            var df2 = items_with[0]
+            var items_with = Object.keys(_datasets_right)
+              .filter(e=>(e!==payload.dfName && e!=='preview_df'))
+              .filter(e=>!e.startsWith('_'))
+              .map(name=>({name}));
+
+            console.log(items_with);
+
+            var df2 = items_with[0];
 
             return {
               items_with: (c)=>{
                 return Object.keys(c._datasets_right)
-                  .filter(e=>e!==payload.dfName && e!=='preview_df')
+                  .filter(e=>(e!==payload.dfName && e!=='preview_df'))
                   .filter(e=>!e.startsWith('_'))
+                  .map(name=>({name}));
               },
-              with: df2,
+              with: [df2],
               _datasets_right,
               dataset_columns: (c)=>{
                 try {
+
+                  var datasets = c.with.map(dataset=>{
+                    return c._datasets_right[dataset.name].map(name=>({
+                      name,
+                      type: (c.types && c.types[dataset.name]) ? c.types[dataset.name][name] : '  '
+                    }))
+                  });
 
                   return [
                     c.allColumns.map(name=>({
                       name,
                       type: (c.types && c.types.self) ? c.types.self[name] : '  '
                     })),
-                    c._datasets_right[c.with].map(name=>({
-                      name,
-                      type: (c.types && c.types[c.with]) ? c.types[c.with][name] : '  '
-                    }))
+                    ...datasets
                   ];
                 } catch (err) {
                   console.error(err);
@@ -962,12 +989,15 @@ export default {
             try {
 
               var command = {...currentCommand}
-              if (!command.secondaryDatasets[command.with] || !command.secondaryDatasets[command.with].buffer) {
-                await this.evalCode('_output = '+command.with+'.ext.set_buffer("*")') // TO-DO: !!!
-                this.$store.commit('setSecondaryBuffer', { key: command.with, value: true});
-                command.secondaryDatasets = {...this.currentSecondaryDatasets};
+              for (let i = 0; i < command.with.length; i++) {
+                const name = command.with[i].name;
+                if (!command.secondaryDatasets[name] || !command.secondaryDatasets[name].buffer) {
+                  await this.evalCode('_output = '+name+'.ext.set_buffer("*")') // TO-DO: !!!
+                  this.$store.commit('setSecondaryBuffer', { key: name, value: true});
+                }
               }
-              var withOther = command.items_with(command).map(df=>`"${df}": ${df}.cols.profiler_dtypes()`).join(', ');
+              command.secondaryDatasets = {...this.currentSecondaryDatasets};
+              var withOther = command.items_with(command).map(df=>`"${df.name}": ${df.name}.cols.profiler_dtypes()`).join(', ');
               const response = await this.evalCode(`_output = { "self": ${command.dfName}.cols.profiler_dtypes(), ${withOther} }`);
 
               var types = response.data.result;
@@ -2161,18 +2191,23 @@ export default {
               )
             }
           },
-          payload: (columns, payload = {}) => ({
-            command: 'set',
-            columns,
-            value: (columns[0] ? (columns[0].includes(' ') ? `{${columns[0]}}` : columns[0]) : ''),
-            title: (columns[0] ? `Set column` : 'Create column'),
-            preview: {
-              expectedColumns: 1,
-              type: 'set'
-            },
-            output_col: 'new_column',
-            output_cols: columns.map(e=>'')
-          }),
+          payload: (columns, payload = {}) => {
+
+            var output_col = columns.length ? '' : 'new_column';
+
+            return {
+              command: 'set',
+              columns,
+              value: (columns[0] ? (columns[0].includes(' ') ? `{${columns[0]}}` : columns[0]) : ''),
+              title: (columns[0] ? `Set column` : 'Create column'),
+              preview: {
+                expectedColumns: 1,
+                type: 'set'
+              },
+              output_col,
+              output_cols: columns.map(e=>'')
+            }
+          },
           content: (payload) => {
 
             var output_cols = payload.output_cols

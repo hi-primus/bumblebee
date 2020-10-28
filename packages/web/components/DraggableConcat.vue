@@ -121,6 +121,7 @@ export default {
 
   data () {
     return {
+      itemsLength: 0,
       itemsSlotsGroups: [],
       notSelected: [],
       textFields: [],
@@ -150,32 +151,50 @@ export default {
   },
 
   mounted () {
-    var length = Math.max(...this.items.map(eg=>eg.length))+1
-    this.itemsSlotsGroups = this.items.map(eg=>{
-      var array = Array.from(eg)
-      var al = array.length
-      array.length = length
-      array.fill(false, al)
-      return array.map(e=>(e ? [e] : []))
-    })
-
-
-
-    this.notSelected = this.items.map(eg=>[])
+    this.updateItemsSlotsGroups();
   },
 
   watch: {
-    itemsSlotsGroups () {
-      var addEmpty = this.itemsSlotsGroups.some(itemsSlotsGroup=>itemsSlotsGroup[itemsSlotsGroup.length - 1].length)
 
-      var deletedEmpty = this.deleteEmptyItemsSlots()
+    items: {
+      deep: true,
+      handler (items) {
+        if (items.length!==this.itemsLength) {
+          this.itemsLength = items.length;
+          this.updateItemsSlotsGroups();
+        }
 
-      if (addEmpty) {
+      }
+    },
 
-        this.itemsSlotsGroups = this.itemsSlotsGroups.map(itemsSlotsGroup=>[...itemsSlotsGroup, []]);
+    itemsSlotsGroups: {
+      deep: true,
+      handler (value) {
 
-      } else if (!deletedEmpty) {
-        this.updateSelection()
+        if (!value) {
+          return;
+        }
+
+        var itemsSlotsGroups = Array.from(value);
+
+        var addEmpty = itemsSlotsGroups.some(itemsSlotsGroup=>itemsSlotsGroup[itemsSlotsGroup.length - 1].length);
+
+        var deleteEmptyResults = this.deleteEmptyItemsSlots(itemsSlotsGroups);
+
+        if (deleteEmptyResults) {
+          itemsSlotsGroups = deleteEmptyResults;
+        }
+
+        if (addEmpty) {
+          itemsSlotsGroups = itemsSlotsGroups.map(group=>[...group, []]);
+        }
+
+        if (deleteEmptyResults || addEmpty) {
+          this.itemsSlotsGroups = itemsSlotsGroups;
+        } else {
+          this.updateSelection();
+        }
+
       }
     },
 
@@ -193,7 +212,7 @@ export default {
           if (e.items && e.items.length) {
 
             var items = e.items.filter(ee=>ee).map(ee=>ee[this.itemsKey] ? ee[this.itemsKey] : ee)
-            if (items.every(ee=>ee==e.items[0])) {
+            if (items.every(ee=>ee==items[0])) {
               name = items[0]
             } else {
               name = items.join('_')
@@ -230,6 +249,21 @@ export default {
 
   methods: {
 
+    updateItemsSlotsGroups () {
+
+      var length = Math.max(...this.items.map(eg=>eg.length))+1;
+
+      this.itemsSlotsGroups = this.items.map(eg=>{
+        var array = eg ? Array.from(eg) : [];
+        var al = array.length
+        array.length = length
+        array.fill(false, al)
+        return array.map(e=>(e ? [e] : []))
+      });
+
+      this.notSelected = this.items.map(eg=>[]);
+    },
+
     updateTextField (field, value) {
       this.$set(this.textFieldsValues, field, value)
     },
@@ -254,12 +288,11 @@ export default {
       this.localSelected = rows
     },
 
-    deleteEmptyItemsSlots () {
+    deleteEmptyItemsSlots (itemsSlotsGroups) {
 
-      var itemsSlotsGroups = this.itemsSlotsGroups
-      var found = false
+      var found = false;
 
-      var itemsSlotsPairs = transpose(itemsSlotsGroups)
+      var itemsSlotsPairs = transpose(itemsSlotsGroups);
 
       for (let i = itemsSlotsPairs.length-2; i >= 0; i--) {
         if (itemsSlotsPairs[i].every(e=>!e.length)) {
@@ -269,10 +302,11 @@ export default {
       }
 
       if (found) {
-        this.itemsSlotsGroups = transpose(itemsSlotsPairs);
+        itemsSlotsGroups = transpose(itemsSlotsPairs);
+        return itemsSlotsGroups;
       }
 
-      return found
+      return undefined
     },
 
     startDrag ($event) {

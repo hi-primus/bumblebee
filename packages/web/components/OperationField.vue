@@ -251,6 +251,19 @@
       >
       </ColumnsJoinSelector>
     </template>
+    <template v-else-if="getPropertyField(field.type)=='table'">
+      <ItemsSelector
+        :key="field.key"
+        v-model="_value"
+        :headers="field.headers"
+        :item-key="field.item_key"
+        :items="(field.items_key) ? getPropertyField(currentCommand[field.items_key]) : field.items"
+        :disabled="getPropertyField(field.disabled)"
+        @input="(field.onChange) ? (currentCommand = field.onChange($event, currentCommand)) : ()=>{}"
+        @click:row="field.onClickRow ? (currentCommand = field.onClickRow($event, currentCommand)) : ()=>{}"
+      >
+      </ItemsSelector>
+    </template>
     <template v-else-if="getPropertyField(field.type)=='select-foreach'">
       <v-row :key="field.key" no-gutters class="foreach-label">
         <template v-for="(title, i) in currentCommand.columns">
@@ -317,6 +330,7 @@ import { getProperty } from 'bumblebee-utils'
 
 import TextFieldSuggestions from '@/components/TextFieldSuggestions'
 import ColumnsJoinSelector from '@/components/ColumnsJoinSelector'
+import ItemsSelector from '@/components/ItemsSelector'
 import ColumnsConcatSelector from '@/components/ColumnsConcatSelector'
 
 export default {
@@ -324,6 +338,7 @@ export default {
   components: {
     TextFieldSuggestions,
     ColumnsJoinSelector,
+    ItemsSelector,
     ColumnsConcatSelector
   },
 

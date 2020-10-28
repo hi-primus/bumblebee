@@ -8,13 +8,14 @@
     :disabled="disabled"
     @input="$emit('input',$event)"
     @click:row="$emit('click:row',$event)"
-    class="vdf--hide-select mb-4 columns-filter"
+    class="vdf--hide-select mb-4 columns-filter items-selector"
     show-select
     :hide-default-footer="hideFooter"
     dense
     required
     outlined
   >
+    <slot></slot>
     <template v-slot:item.source="{ item }">
       <span dark class="capitalize text--darken-3" :class="[ item.source==='right' ? 'right-join--text' : 'left-join--text' ]">
         {{ item.source }}
