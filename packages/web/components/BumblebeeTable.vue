@@ -1077,6 +1077,7 @@ export default {
       };
       window.moreElement = document.createElement('div');
       window.moreElement.classList.add('more-arrow');
+      window.moreElement.classList.add('mdi');
       window.moreElement.onclick = (e)=>{
         var cell = e.target.parentElement;
         if (cell.classList.contains('cell-expanded')) {

@@ -2141,9 +2141,8 @@ $editor-top-padding: 4px;
     &:hover {
       &.cell-to-expand:not(.cell-expanded) {
         padding-right: 14px !important;
-
       }
-      .more-arrow.mdi {
+      .more-arrow {
         opacity: 0.5;
         display: block !important;
         &::before {
@@ -2392,7 +2391,9 @@ $editor-top-padding: 4px;
   border-color: $line-color-1 !important;
 }
 
-.v-data-table.columns-filter {
+
+
+.v-data-table.items-selector {
   margin-left: -24px;
   width: calc(100% + 44px);
   margin-top: -4px;
@@ -2806,6 +2807,8 @@ $editor-top-padding: 4px;
   display: flex;
   min-width: 98px;
   min-height: 24px;
+  font-family: $font-mono-table;
+  position: relative;
   &.concat-items {
     .concat-item {
       background-color: rgba($data-primary, 0.33);
@@ -2816,6 +2819,7 @@ $editor-top-padding: 4px;
     .deleted-items-empty {
       position: absolute;
       pointer-events: none;
+      bottom: 0;
     }
     .concat-item {
       background-color: rgba($data-red, 0.33);
@@ -2825,6 +2829,7 @@ $editor-top-padding: 4px;
     min-height: inherit;
     display: flex;
     min-width: 204px;
+    flex-shrink: 0;
   }
   .items-col {
     min-height: 24px;
@@ -2840,6 +2845,8 @@ $editor-top-padding: 4px;
     cursor: move;
     font-size: 14px;
     min-width: 98px;
+    max-width: 98px;
+    @include ellipsis;
     height: 24px;
     line-height: 20px;
     margin-bottom: 6px;
