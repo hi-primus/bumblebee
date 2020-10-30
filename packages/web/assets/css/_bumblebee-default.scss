@@ -2812,6 +2812,12 @@ $editor-top-padding: 4px;
   &.concat-items {
     .concat-item {
       background-color: rgba($data-primary, 0.33);
+      .close-button {
+        display: none;
+      }
+      &:hover .close-button {
+        display: block !important;
+      }
     }
   }
   &.deleted-items {
@@ -2819,10 +2825,13 @@ $editor-top-padding: 4px;
     .deleted-items-empty {
       position: absolute;
       pointer-events: none;
-      bottom: 0;
+      top: 4px;
     }
     .concat-item {
       background-color: rgba($data-red, 0.33);
+      .close-button {
+        display: none !important;
+      }
     }
   }
   .items-cols {
@@ -2839,20 +2848,31 @@ $editor-top-padding: 4px;
     min-width: 150px;
   }
   .items-item {
-    height: 30px;
+    height: 24px;
+    margin-bottom: 6px;
   }
   .concat-item {
+    position: relative;
     cursor: move;
     font-size: 14px;
     min-width: 98px;
     max-width: 98px;
-    @include ellipsis;
+    &>span {
+      display: block;
+      @include ellipsis;
+      max-width: 100%;
+    }
     height: 24px;
     line-height: 20px;
     margin-bottom: 6px;
     margin-right: 6px;
     padding: 2px 6px;
     border-radius: 6px;
+    .close-button {
+      right: -2px;
+      top: -1px;
+      padding-top: 0.75px !important;
+    }
     &.ghost {
       border-width: 1px;
       padding: 0px 4px;
@@ -2860,15 +2880,41 @@ $editor-top-padding: 4px;
       border-color: $data-primary;
     }
   }
-  .items-slot {
-    &:empty {
-      position: relative;
+  .items-item {
+    position: relative;
+    .items-slot {
+      height: 100%;
+      width: 100%;
+    }
+    .search-button {
+      position: absolute;
+      display: none;
+      opacity: 0;
+      left: 0;
+      top: 0;
+      width: calc(100% - 6px);
+      height: 100%;
+      cursor: pointer;
+      z-index: 5;
+      &::after {
+        content: none;
+      }
+    }
+    &.empty-slot {
+      .search-button {
+        display: inline-flex;
+      }
+      &:hover {
+        .search-button {
+          opacity: 1;
+        }
+      }
       &::after {
         content: '';
         position: absolute;
         background: rgba(darken($data-primary, 5%), 0.25);
         width: calc(100% - 6px);
-        height: calc(100% - 6px);
+        height: 100%;
         left: 0px;
         top: 0px;
         border-radius: 6px;
@@ -3013,4 +3059,11 @@ $editor-top-padding: 4px;
   z-index: 1;
   cursor: w-resize;
   pointer-events: all;
+}
+
+.circle-icon {
+  border-radius: 100%;
+  display: block;
+  padding: 1px;
+  position: absolute !important;
 }

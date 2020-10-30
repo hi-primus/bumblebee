@@ -1,5 +1,18 @@
 <template>
   <div class="concat-items-component">
+    <v-menu
+      v-if="searchSelectAttach"
+      :value="true"
+      @input="searchMenuInput"
+      :close-on-content-click="false"
+      :attach="searchSelectAttach"
+      min-width="250"
+    >
+      <SearchSelect
+        :items="searchItems"
+        @input="itemSelected"
+      />
+    </v-menu>
     <div class="concat-items-set concat-items">
       <div class="items-cols">
         <div
@@ -8,29 +21,43 @@
           class="items-col"
         >
           <template v-for="(slotArray, slotIndex) in itemsSlotsGroup">
-            <draggable
+            <div
               :key="groupIndex+''+slotIndex"
-              @start="startDrag"
-              @end="endDrag"
-              tag="div"
-              class="items-item items-slot"
-              :list="slotArray"
-              v-bind="{...dragOptions, group: 'items'+groupIndex}"
-              :move="checkMove"
+              class="items-item"
+              :class="{'empty-slot': !slotArray || !slotArray[0]}"
             >
-              <div
-                v-if="slotArray && slotArray[0]"
-                class="concat-draggable concat-item text-ellipsis"
-                :key="slotArray[0][itemsKey]"
+              <draggable
+                @start="startDrag"
+                @end="endDrag"
+                tag="div"
+                class="items-slot"
+                :list="slotArray"
+                v-bind="{...dragOptions, group: 'items'+groupIndex}"
+                :move="checkMove"
               >
-                <slot
-                  name="item"
-                  :item="slotArray[0]"
+                <div
+                  v-if="slotArray && slotArray[0]"
+                  class="concat-draggable concat-item"
+                  :key="slotArray[0][itemsKey]"
                 >
-                  {{slotArray[0]}}
-                </slot>
-              </div>
-            </draggable>
+                  <slot
+                    name="item"
+                    :item="slotArray[0]"
+                  >
+                    {{slotArray[0]}}
+                  </slot>
+                  <v-icon
+                    x-small
+                    color="white"
+                    class="circle-icon error darken-1 close-button"
+                    @click="removeItem(groupIndex, slotIndex)"
+                  >
+                    close
+                  </v-icon>
+                </div>
+              </draggable>
+              <v-icon small color="grey" :ripple="false" class="search-button" @click="triggerSearch(groupIndex, slotIndex, $event)">search</v-icon>
+            </div>
           </template>
         </div>
 
@@ -100,8 +127,13 @@
 <script>
 
 import { propsToLocal, debounce, transpose } from 'bumblebee-utils'
+import SearchSelect from '@/components/SearchSelect'
 
 export default {
+  components: {
+    SearchSelect
+  },
+
   props: {
     items: {
       type: Array
@@ -121,6 +153,9 @@ export default {
 
   data () {
     return {
+      searchPromise: false,
+      searchSelectAttach: false,
+      searchItems: [],
       itemsLength: 0,
       itemsSlotsGroups: [],
       notSelected: [],
@@ -163,7 +198,6 @@ export default {
           this.itemsLength = items.length;
           this.updateItemsSlotsGroups();
         }
-
       }
     },
 
@@ -248,6 +282,88 @@ export default {
   },
 
   methods: {
+
+    searchMenuInput (e) {
+      if (!e) {
+        this.searchSelectAttach = false;
+        this.searchItems = [];
+        if (this.searchPromise && this.searchPromise.reject) {
+          this.searchPromise.resolve(false);
+        }
+      }
+    },
+
+    itemSelected (item) {
+      if (this.searchPromise && this.searchPromise.resolve) {
+        this.searchPromise.resolve(item);
+      }
+    },
+
+    triggerSearch (groupIndex, slotIndex, event) {
+
+      setTimeout(async () => {
+        try {
+          var item = await new Promise((resolve, reject) => {
+            this.searchPromise = {resolve, reject}
+            var element = event.target.closest('.items-item');
+            this.searchSelectAttach = element;
+            this.searchItems = this.items[groupIndex];
+          })
+          if (item) {
+            this.moveItem(groupIndex, slotIndex, item);
+          }
+        } catch (err) {
+          console.error(err);
+        }
+        this.searchPromise = false;
+        this.searchSelectAttach = false;
+        this.searchItems = [];
+      }, 25);
+    },
+
+    moveItem (groupIndex, slotIndex, item) {
+
+      var previousSlotIndex = this.itemsSlotsGroups[groupIndex].findIndex(e=>e && e[0] && e[0].name == item.name)
+      var droppedSlot = false;
+
+      if (previousSlotIndex === -1) {
+        previousSlotIndex = this.notSelected[groupIndex].findIndex(e=>e && e.name == item.name)
+
+        if (previousSlotIndex >= 0) {
+          droppedSlot = true;
+        }
+      }
+
+      var itemsSlotsGroups = Array.from(this.itemsSlotsGroups);
+
+      if (droppedSlot) {
+        this.notSelected[groupIndex].splice(previousSlotIndex, 1);
+      } else {
+        itemsSlotsGroups[groupIndex][previousSlotIndex] = [];
+      }
+
+      itemsSlotsGroups[groupIndex][slotIndex][0] = item;
+
+      var deleteEmptyResults = this.deleteEmptyItemsSlots(itemsSlotsGroups);
+      if (deleteEmptyResults) {
+        itemsSlotsGroups = deleteEmptyResults;
+      }
+
+      this.itemsSlotsGroups = itemsSlotsGroups;
+
+    },
+
+    removeItem (groupIndex, slotIndex) {
+      this.notSelected[groupIndex].push(this.itemsSlotsGroups[groupIndex][slotIndex][0]);
+      var itemsSlotsGroups = Array.from(this.itemsSlotsGroups);
+      itemsSlotsGroups[groupIndex][slotIndex] = []
+      var deleteEmptyResults = this.deleteEmptyItemsSlots(itemsSlotsGroups);
+      if (deleteEmptyResults) {
+        itemsSlotsGroups = deleteEmptyResults;
+      }
+      this.itemsSlotsGroups = itemsSlotsGroups;
+
+    },
 
     updateItemsSlotsGroups () {
 
