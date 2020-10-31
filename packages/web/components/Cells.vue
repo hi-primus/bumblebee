@@ -973,7 +973,7 @@ export default {
                 type: 'concat',
                 delay: 500,
                 datasetPreview: true,
-                // noBufferWindow: true
+                noBufferWindow: true
               },
               request: {
                 // createsNew: true

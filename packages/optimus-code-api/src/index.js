@@ -208,14 +208,8 @@ export const codeGenerators = {
     var datasets = payload.with.map(({name})=>name).join(', ')
 
     if (payload.request.type !== 'final') {
-      return (from, to) => {
-        var window = ''
-        if (from!==undefined) {
-          window = `,${from},${to}`
-        }
-        datasets = payload.with.map(({name})=>`${name}.ext.buffer_window("*"${window})`).join(', ')
-        return `.cols.append_df([${datasets}], ${cols_map})`;
-      }
+      datasets = payload.with.map(({name})=>`${name}.ext.buffer_window("*", 0, 3)`).join(', ')
+      return `.cols.append_df([${datasets}], ${cols_map})`;
     }
 
     return `.cols.append_df([${datasets}], ${cols_map})`;

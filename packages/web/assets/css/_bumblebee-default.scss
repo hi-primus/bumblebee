@@ -2841,6 +2841,7 @@ $editor-top-padding: 4px;
     flex-shrink: 0;
   }
   .items-col {
+    position: relative;
     min-height: 24px;
     min-width: 104px;
   }
@@ -2944,6 +2945,14 @@ $editor-top-padding: 4px;
   }
 }
 
+.v-list.denser-list {
+  & .v-list-item {
+    min-height: 18px !important;
+    &>.v-list-item__content {
+      padding: 6px 0;
+    }
+  }
+}
 .v-list.code-suggestions {
   overflow-y: auto;
   padding: 4px 0 !important;

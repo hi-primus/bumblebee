@@ -1,18 +1,12 @@
 <template>
-  <div class="concat-items-component">
-    <v-menu
+  <div class="concat-items-component pb-5">
+    <SearchSelect
       v-if="searchSelectAttach"
-      :value="true"
-      @input="searchMenuInput"
-      :close-on-content-click="false"
       :attach="searchSelectAttach"
-      min-width="250"
-    >
-      <SearchSelect
-        :items="searchItems"
-        @input="itemSelected"
-      />
-    </v-menu>
+      :items="searchItems"
+      @input="itemSelected"
+      @menu-input="searchMenuInput"
+    />
     <div class="concat-items-set concat-items">
       <div class="items-cols">
         <div

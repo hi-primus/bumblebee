@@ -1,35 +1,46 @@
 <template>
-  <div>
-      <div class="pt-4 pb-2 px-4">
-        <v-text-field
-          autocomplete="off"
-          v-model="searchText"
-          :color="'grey darken-3'"
-          spellcheck="false"
-          dense
-          solo flat
-          outlined
-          class="search-filter elevation-0"
-          hide-details
-          append-icon="search"
-        />
-      </div>
-      <v-list dense class="pt-0" style="max-height: 330px; overflow-y: auto;">
-        <v-list-item-group
-          color="primary"
+  <v-menu
+    :value="true"
+    @input="$emit('menu-input', $event)"
+    :close-on-content-click="false"
+    :attach="attach"
+    min-width="250"
+    allow-overflow
+    @keydown.enter.stop.prevent="enterStop"
+    @submit.stop.prevent
+    >
+    <div class="pt-2" @keydown.enter="onEnter">
+      <v-text-field
+        autocomplete="off"
+        v-model="searchText"
+        ref="searchField"
+        :color="'grey darken-3'"
+        spellcheck="false"
+        dense
+        solo flat
+        outlined
+        class="search-filter px-2 elevation-0"
+        hide-details
+        append-icon="search"
+      />
+      <v-list
+        dense
+        class="pt-1 denser-list"
+
+        style="max-height: 330px; overflow-y: auto;"
         >
-          <v-list-item
-            v-for="(item, i) in filteredItems"
-            @click="$emit('input', item)"
-            :key="i"
-          >
-            <v-list-item-content>
-              <v-list-item-title v-text="item[items_key]"></v-list-item-title>
-            </v-list-item-content>
-          </v-list-item>
-        </v-list-item-group>
+        <v-list-item
+          v-for="(item, i) in filteredItems"
+          @click="itemClick(item)"
+          :key="i"
+        >
+          <v-list-item-content>
+            <v-list-item-title v-text="item[items_key]"></v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
       </v-list>
-  </div>
+    </div>
+  </v-menu>
 </template>
 
 <script>
@@ -43,7 +54,11 @@ export default {
       filteredItems: []
     }
   },
+
   props: {
+    attach: {
+      required: true
+    },
     items: {
       type: Array,
       default: []
@@ -53,10 +68,41 @@ export default {
       default: 'name'
     }
   },
+
   mounted () {
     this.updateItems();
+    this.focusField();
   },
+
   methods: {
+
+    itemClick (item) {
+      this.$emit('input', item);
+    },
+
+    async onEnter (e) {
+      if (this.filteredItems[0]) {
+        await new Promise (res => setTimeout(res, 100))
+        this.$emit('input', this.filteredItems[0]);
+      }
+    },
+
+    enterStop (e) {
+      e.stopPropagation();
+      e.preventDefault();
+    },
+
+    async focusField () {
+      try {
+        await new Promise (res => setTimeout(res, 100))
+        var el = this.$refs.searchField.$el.getElementsByTagName('input')[0];
+        if (el) {
+          el.focus();
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    },
 
     debouncedUpdateItems: debounce( function () {
       this.updateItems();
