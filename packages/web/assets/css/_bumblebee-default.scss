@@ -2257,6 +2257,13 @@ $editor-top-padding: 4px;
     margin: 0;
     left: 0;
   }
+  &.bigger-dialog {
+    min-width: calc(100vw - 120px);
+    min-height: calc(100vh - 120px);
+    .o-fields {
+      max-height: calc(100vh - 187px);
+    }
+  }
 }
 
 .operation-form {

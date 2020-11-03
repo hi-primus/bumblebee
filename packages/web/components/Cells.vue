@@ -893,6 +893,9 @@ export default {
         },
         concat: {
           dialog: {
+            dialog: true,
+            class: "bigger-dialog",
+            tall: true,
             title: 'Append datasets',
             fields: [
               // {
