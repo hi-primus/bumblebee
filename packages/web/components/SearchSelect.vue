@@ -1,7 +1,7 @@
 <template>
   <v-menu
-    :value="true"
-    @input="$emit('menu-input', $event)"
+    :value="attach || menuValue"
+    @input="$emit('menu-input', $event); menuValue = $event"
     :close-on-content-click="false"
     :attach="attach"
     min-width="250"
@@ -9,6 +9,11 @@
     @keydown.enter.stop.prevent="enterStop"
     @submit.stop.prevent
     >
+    <template v-slot:activator="{ on }">
+      <div class="sf-activator" v-on="on">
+        <slot></slot>
+      </div>
+    </template>
     <div class="pt-2" @keydown.enter="onEnter">
       <v-text-field
         autocomplete="off"
@@ -50,6 +55,7 @@ import { debounce } from 'bumblebee-utils';
 export default {
   data () {
     return {
+      menuValue: false,
       searchText: '',
       filteredItems: []
     }
@@ -57,11 +63,11 @@ export default {
 
   props: {
     attach: {
-      required: true
+      default: false
     },
     items: {
       type: Array,
-      default: []
+      default: ()=>[]
     },
     items_key: {
       type: String,
@@ -78,6 +84,7 @@ export default {
 
     itemClick (item) {
       this.$emit('input', item);
+      this.menuValue = false
     },
 
     async onEnter (e) {
@@ -95,7 +102,8 @@ export default {
     async focusField () {
       try {
         await new Promise (res => setTimeout(res, 100))
-        var el = this.$refs.searchField.$el.getElementsByTagName('input')[0];
+        var ref = this.$refs.searchField;
+        var el = ref && ref.$el.getElementsByTagName('input')[0];
         if (el) {
           el.focus();
         }
