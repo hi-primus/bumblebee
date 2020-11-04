@@ -601,10 +601,6 @@ export const INIT_PARAMS = {
     type: 'string',
     engines: ['dask', 'dask_cudf']
   },
-  'dashboard_address': {
-    type: 'string',
-    engines: ['dask', 'dask_cudf']
-  },
   'diagnostics_port': {
     type: 'int',
     engines: ['dask', 'dask_cudf']
