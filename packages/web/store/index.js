@@ -179,13 +179,6 @@ export const mutations = {
     state.secondaryDatasets = payload
   },
 
-  setSecondaryBuffer (state, {key, value}) {
-    var datasets = {...state.secondaryDatasets}
-    datasets[key] = datasets[key] || {columns: [], buffer: false}
-    datasets[key].buffer = value
-    state.secondaryDatasets = datasets
-  },
-
   ...pSetters,
 
   setLoadPreview (state, {sample, profile, meta}) {
@@ -1165,7 +1158,7 @@ export const actions = {
     return dispatch('getPromise', promisePayload);
   },
 
-  async loadBuffer ({ dispatch }, {dfName, socketPost}) {
+  async loadBuffer ({ dispatch, commit }, {dfName, socketPost}) {
 
     console.debug('[DEBUG] Loading buffer', dfName);
 
@@ -1380,10 +1373,13 @@ export const getters = {
     ]
   },
   currentSecondaryDatasets (state) {
-    return state.secondaryDatasets
+    var datasetsArray = state.dataSources.map(ds=>{
+      return ds && ds.payload && ds.payload.newDfName
+    })
+    return datasetsArray
   },
-  hasSecondaryDatasets (state) {
-    return Object.keys(state.secondaryDatasets || {})
+  hasSecondaryDatasets (state, getters) {
+    return Object.keys(getters.currentSecondaryDatasets || {})
         .filter(e=>!e.startsWith('_')).length>1
   },
   currentSelection (state) {

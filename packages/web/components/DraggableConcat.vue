@@ -41,16 +41,15 @@
                     {{slotArray[0]}}
                   </slot>
                   <v-icon
-                    x-small
-                    color="white"
-                    class="circle-icon error darken-1 close-button"
+                    small
+                    class="close-button"
                     @click="removeItem(groupIndex, slotIndex)"
                   >
                     close
                   </v-icon>
                 </div>
               </draggable>
-              <v-icon small color="grey" :ripple="false" class="search-button" @click="triggerSearch(groupIndex, slotIndex, $event)">search</v-icon>
+              <v-icon small color="primary" :ripple="false" class="search-button" @click="triggerSearch(groupIndex, slotIndex, $event)">search</v-icon>
             </div>
           </template>
         </div>

@@ -7,7 +7,7 @@
     :items-name="'columns'"
   >
     <template v-slot:item="{ item }">
-      <span :title="item.name">
+      <span class="data-item-title" :title="item.name">
         <span
           class="data-type"
           :class="`type-${item.type}`"
@@ -17,6 +17,9 @@
         <span class="data-column-name">
           {{item.name}}
         </span>
+      </span>
+      <span class="data-item-value" :title="item.value">
+        {{item.value}}
       </span>
 
     </template>

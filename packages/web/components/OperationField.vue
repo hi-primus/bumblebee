@@ -221,7 +221,7 @@
           v-if="!currentCommand.typesDone"
           indeterminate
           color="grey"
-          class="mx-auto d-flex"
+          class="mx-auto mt-4 d-flex"
           size="64"
           width="4"
         />
@@ -263,6 +263,18 @@
         @click:row="field.onClickRow ? (currentCommand = field.onClickRow($event, currentCommand)) : ()=>{}"
       >
       </ItemsSelector>
+    </template>
+    <template v-else-if="getPropertyField(field.type)=='tabs'">
+      <TitleTabs
+        :key="field.key"
+        v-model="_value"
+        :concat="field.options.concat"
+        :items-name="field.options.items_name"
+        :item-key="field.item_key"
+        :items="(field.items_key) ? getPropertyField(currentCommand[field.items_key]) : field.items"
+        :static-item="(field.static_item_key) ? getPropertyField(currentCommand[field.static_item_key]) : field.static_item_key"
+      >
+      </TitleTabs>
     </template>
     <template v-else-if="getPropertyField(field.type)=='select-foreach'">
       <v-row :key="field.key" no-gutters class="foreach-label">
@@ -331,6 +343,7 @@ import { getProperty } from 'bumblebee-utils'
 import TextFieldSuggestions from '@/components/TextFieldSuggestions'
 import ColumnsJoinSelector from '@/components/ColumnsJoinSelector'
 import ItemsSelector from '@/components/ItemsSelector'
+import TitleTabs from '@/components/TitleTabs'
 import ColumnsConcatSelector from '@/components/ColumnsConcatSelector'
 
 export default {
@@ -339,6 +352,7 @@ export default {
     TextFieldSuggestions,
     ColumnsJoinSelector,
     ItemsSelector,
+    TitleTabs,
     ColumnsConcatSelector
   },
 

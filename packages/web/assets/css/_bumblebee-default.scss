@@ -2411,7 +2411,7 @@ $editor-top-padding: 4px;
     opacity: 0;
     transition: opacity 0.05s ease-in-out;
     &:hover {
-      opacity: 0.75 !important;
+      opacity: 0.71 !important;
     }
     &.key-selected {
       opacity: 1 !important;
@@ -2813,17 +2813,23 @@ $editor-top-padding: 4px;
 .concat-items-set {
   display: flex;
   min-width: 98px;
-  min-height: 24px;
+  min-height: $concat-item-height;
   font-family: $font-mono-table;
   position: relative;
   &.concat-items {
     .concat-item {
-      background-color: rgba($data-primary, 0.33);
+      background: white;
       .close-button {
-        display: none;
+        pointer-events: none;
+        opacity: 0;
+        display: block;
       }
-      &:hover .close-button {
-        display: block !important;
+      &:hover, &.ghost {
+        background: rgba($data-primary, 0.15);
+        .close-button {
+          pointer-events: auto;
+          opacity: 1;
+        }
       }
     }
   }
@@ -2835,7 +2841,7 @@ $editor-top-padding: 4px;
       top: 4px;
     }
     .concat-item {
-      background-color: rgba($data-red, 0.33);
+      background-color: rgba($data-red, 0.1);
       .close-button {
         display: none !important;
       }
@@ -2844,48 +2850,90 @@ $editor-top-padding: 4px;
   .items-cols {
     min-height: inherit;
     display: flex;
-    min-width: 204px;
     flex-shrink: 0;
   }
   .items-col {
     position: relative;
-    min-height: 24px;
-    min-width: 104px;
+    min-height: $concat-item-height;
+    min-width: $concat-col-width;
   }
   .fields-col {
-    min-width: 150px;
+    min-width: $concat-final-col-width;
   }
   .items-item {
-    height: 24px;
+    height: $concat-item-height;
     margin-bottom: 6px;
   }
+  .items-fields {
+    .v-input {
+      position: relative;
+      top: 3px;
+    }
+  }
   .concat-item {
+    transition: background-color ease-in-out 0.1s;
     position: relative;
     cursor: move;
     font-size: 14px;
-    min-width: 98px;
-    max-width: 98px;
-    &>span {
-      display: block;
-      @include ellipsis;
-      max-width: 100%;
-    }
-    height: 24px;
+    min-width: calc(100% - 6px);
+    max-width: calc(100% - 6px);
+    height: $concat-item-height;
     line-height: 20px;
     margin-bottom: 6px;
     margin-right: 6px;
-    padding: 2px 6px;
     border-radius: 6px;
+    border-width: 1px;
+    padding: 4px 4px 0px 24px;
+    border-style: solid;
+    border-color: transparent;
+    &::before {
+      content: "drag_indicator" !important;
+      font: normal normal normal 24px/1 "Material Icons" !important;
+      transform: scale(0.6666);
+      opacity: 0.5;
+      color: rgba(0, 0, 0, 0.54);
+      transition: opacity ease-in-out 0.3s;
+      position: absolute;
+      left: -4px;
+      top: 12px;
+    }
+    &:hover, &.ghost {
+      &::before {
+        opacity: 1;
+      }
+    }
+    .data-column-name {
+      max-width: calc(#{$concat-col-width} - 90px);
+      display: inline-block;
+      @include ellipsis;
+    }
+    .data-type {
+      display: block;
+      float: left;
+      min-width: 2.75em;
+    }
+    .data-item-title {
+      display: block;
+      max-width: 100%;
+    }
+    .data-item-value {
+      position: relative;
+      top: -5px;
+      display: block;
+      @include ellipsis;
+      max-width: calc(#{$concat-col-width} - 50px);
+      opacity: 0.71;
+    }
     .close-button {
-      right: -2px;
-      top: -1px;
+      position: absolute;
+      right: 8px;
+      top: 15px;
       padding-top: 0.75px !important;
+      color: rgba(0, 0, 0, 0.54);
     }
     &.ghost {
-      border-width: 1px;
-      padding: 0px 4px;
-      border-style: solid;
-      border-color: $data-primary;
+      background: white;
+      // border-color: $data-grey;
     }
   }
   .items-item {
@@ -2917,10 +2965,22 @@ $editor-top-padding: 4px;
           opacity: 1;
         }
       }
+      &:hover::after {
+        color: rgba(0,0,0,0);
+      }
       &::after {
-        content: '';
+        content: 'No column';
         position: absolute;
-        background: rgba(darken($data-primary, 5%), 0.25);
+        opacity: 1;
+        border: grey dashed 1px;
+        color: rgba(0,0,0,0.25);
+        transition: color ease-in-out 0.3s;
+        font-family: $font-mono;
+        font-weight: 700;
+        font-size: 13px;
+        line-height: 48px;
+        text-align: center;
+        padding-right: 1px;
         width: calc(100% - 6px);
         height: 100%;
         left: 0px;
@@ -3082,4 +3142,49 @@ $editor-top-padding: 4px;
   display: block;
   padding: 1px;
   position: absolute !important;
+}
+
+.sf-activator {
+  &:empty {
+    display: none;
+  }
+  cursor: pointer;
+}
+
+.tabs-field {
+  display: flex;
+  .tab {
+    width: calc( #{$concat-col-width} - 6px);
+    min-width: calc( #{$concat-col-width} - 6px);
+    margin-right: 6px;
+    padding-right: 8px;
+    position: relative;
+    text-align: center;
+    .v-icon {
+      position: absolute;
+      right: 9px;
+      top: 4px;
+    }
+    &.static-tab {
+      padding-right: 0;
+    }
+  }
+  .sf-activator {
+    width: $concat-final-col-width;
+    min-width: $concat-final-col-width;
+    text-align: center;
+  }
+  .tabs-add-item {
+    width: 100%;
+    white-space: nowrap;
+    text-transform: uppercase;
+    font-weight: 700;
+    font-size: 13px;
+    padding-left: 10px;
+    .v-icon {
+      position: relative;
+      top: -2px;
+      left: 0;
+    }
+  }
 }

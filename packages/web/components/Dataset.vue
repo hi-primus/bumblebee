@@ -374,7 +374,7 @@ export default {
     },
 
     availableDatasets () {
-      var sds = Object.keys(this.currentSecondaryDatasets)
+      var sds = Array.from(this.currentSecondaryDatasets)
         .filter(e=>e.startsWith('df'))
 
       this.$store.state.datasets.forEach(dataset => {
