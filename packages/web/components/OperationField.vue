@@ -148,7 +148,7 @@
       <v-switch
         :key="field.key"
         v-model="_value"
-        color="black"
+        color="primary"
         :label="(typeof field.label == 'function') ? field.label(currentCommand) : field.label"
       ></v-switch>
     </template>
