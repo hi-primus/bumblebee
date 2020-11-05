@@ -345,15 +345,19 @@ export const mutations = {
     }
 
     // sets to a new tab otherwise
-    this.commit('newDataset', { dataset: { dfName } })
+    console.warn('[COMMANDS] creating tab for', dfName)
+    this.commit('newDataset', { dataset: { dfName, go: true } })
 
   },
 
 	deleteTab (state, index) {
     var dfName = state.datasets[index].dfName;
 
-    Vue.delete(state.profilingsPromises, dfName);
-    Vue.delete(state.buffersPromises, dfName);
+    if (dfName) {
+      Vue.delete(state.profilingsPromises, dfName);
+      Vue.delete(state.buffersPromises, dfName);
+    }
+
 
     Vue.delete(state.datasets, index);
     Vue.delete(state.datasetSelection, index);
