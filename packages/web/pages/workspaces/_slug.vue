@@ -533,13 +533,16 @@ export default {
     },
 
 		async deleteTab(i) {
-			await this.$store.dispatch('deleteTab', i);
-			this.confirmDelete = -1;
-			if (!this.$store.state.datasets.length) {
+      var newLength = this.$store.state.datasets.length - 1;
+      this.confirmDelete = -1;
+			if (newLength<=0) {
 				this.tab = 0;
-			} else if (this.tab >= this.$store.state.datasets.length) {
-				this.tab = this.$store.state.datasets.length - 1;
-			}
+			} else if (this.tab >= newLength) {
+        this.tab = newLength - 1;
+			} else if (this.tab>0 && i<=this.tab) {
+        this.tab = this.tab - 1;
+      }
+			await this.$store.dispatch('deleteTab', i);
 			this.$forceUpdate();
 		}
 	}

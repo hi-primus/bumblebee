@@ -317,6 +317,8 @@ export default {
   data () {
     return {
 
+      loadingDf: false,
+
       resultsColumnsData: false, // search
       selectedColumns: {},
 
@@ -584,9 +586,11 @@ export default {
 
   methods: {
 
-    openDf (dfName) {
+    async openDf (dfName) {
+      this.loadingDf = true;
       this.$store.commit('setDfToTab', { dfName, go: true });
-      this.getProfiling(dfName)
+      await this.getProfiling(dfName)
+      this.loadingDf = false;
     },
 
     commandHandle (event) {
