@@ -108,7 +108,7 @@
           <v-tabs
             :key="$store.state.datasetUpdates"
             v-model="tab"
-            :class="{'tabs-disabled': previewCode || isOperating}"
+            :class="{'tabs-disabled': $store.state.kernel=='loading' || previewCode || isOperating}"
             class="bb-tabs px-6"
             background-color="#fff"
             show-arrows
@@ -466,20 +466,17 @@ export default {
 
         try {
 
+          this.$store.commit('kernel', 'loading');
+          this.$store.commit('setAppStatus', 'workspace');
+
           var result = await this.runCodeNow(false, -1, undefined, true);
           console.debug('[INITIALIZATION] Cells code and profiling done', result);
+
+            this.$store.commit('kernel', 'done');
 
           if (!result && result !== false) {
             throw new Error('Cells code or profiling error')
           }
-
-          this.$store.commit('kernel', 'loading');
-          this.$store.commit('setAppStatus', 'workspace');
-          this.$store.commit('kernel', 'done');
-
-          this.updateSecondaryDatasets();
-
-
         } catch (err) {
 
           console.error('(Error on post-initialization)');
