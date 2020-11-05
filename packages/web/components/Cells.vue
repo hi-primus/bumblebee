@@ -823,7 +823,7 @@ export default {
           },
           payload: async (columns, payload = {}) => {
 
-            var items_with = Object.keys(secondaryDatasets).filter(e=>(e!==payload.dfName && e!=='preview_df'))
+            var items_with = Object.keys(payload.secondaryDatasets).filter(e=>(e!==payload.dfName && e!=='preview_df'))
 
             var df2 = items_with[0]
 
@@ -853,7 +853,7 @@ export default {
               },
               selected_columns: [
                 ...(payload.allColumns || []).map(n=>({name: n, source: 'left', key: n+'l'})),
-                ...(secondaryDatasets[df2].columns || []).map(n=>({name: n, source: 'right', key: n+'r'}))
+                ...(payload.secondaryDatasets[df2].columns || []).map(n=>({name: n, source: 'right', key: n+'r'}))
               ],
               preview: {
                 joinPreview: (c)=>{
@@ -2571,7 +2571,7 @@ export default {
       'currentDuplicatedColumns',
       'currentPreviewNames',
       'currentPreviewInfo',
-      'currentSecondaryDatasets',
+      'secondaryDatasets',
       'loadPreview',
       'hasSecondaryDatasets'
     ]),
@@ -2896,7 +2896,7 @@ export default {
 
       var name = 'df'
 
-      var sd = Array.from(this.currentSecondaryDatasets)
+      var sd = Array.from(this.secondaryDatasets)
         .filter(e=>e.startsWith(name))
 
       if (sd.length) {
@@ -3093,8 +3093,8 @@ export default {
 
       var secondaryDatasets = {};
 
-      for (let i = 0; i < this.currentSecondaryDatasets.length; i++) {
-        const dfName = this.currentSecondaryDatasets[i];
+      for (let i = 0; i < this.secondaryDatasets.length; i++) {
+        const dfName = this.secondaryDatasets[i];
         secondaryDatasets[dfName] = {};
       }
 
@@ -3296,13 +3296,12 @@ export default {
         var deleteDf = deletedPayload.newDfName
         if (deleteDf) {
           deleteTab = currentPayload.newDfName
-          this.evalCode(`del ${deleteDf}; _output = "Deleted ${deleteDf}"`)
-          this.updateSecondaryDatasets()
+          this.evalCode(`del ${deleteDf}; _output = "Deleted ${deleteDf}"`);
         }
       }
 
       if (deleteTab) {
-        await this.$store.dispatch('newDataset', { dfName: deleteTab, current: true })
+        await this.$store.dispatch('newDataset', { dfName: deleteTab })
       }
 
       if (isDataSource) {
@@ -3474,8 +3473,6 @@ export default {
         if (this.firstRun) {
           this.firstRun = false;
         }
-
-        var secondaryDatasets = this.updateSecondaryDatasets();
 
         this.$forceUpdate();
 

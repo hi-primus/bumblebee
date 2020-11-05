@@ -418,29 +418,7 @@ export default {
       } catch (error) {
         this.handleError(error);
       }
-    },
-
-
-    async updateSecondaryDatasets() {
-      try {
-        var response = await this.socketPost('datasets', {
-          username: this.$store.state.session.username,
-          workspace: this.$route.params.slug
-        })
-        window.pushCode({code: response.code, unimportant: true})
-        console.log('Updating secondary datasets')
-        var datasets = Object.fromEntries( Object.entries(response.data).filter(([key, dataset])=>(key !== 'preview_df' && key[0] !== '_')) )
-        this.$store.commit('setSecondaryDatasets', datasets )
-
-        return datasets
-      } catch (error) {
-        if (error.code) {
-          window.pushCode({code: error.code, error: true, unimportant: true})
-        }
-        console.error(error)
-        return []
-      }
-    },
+    }
   },
 
   watch: {

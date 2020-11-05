@@ -94,7 +94,6 @@ const defaultState = {
   workspace: false,
   datasets: [],
   datasetSelection: [],
-  secondaryDatasets: [],
   databases: [],
   firstRun: true,
   commandsDisabled: false,
@@ -173,10 +172,6 @@ export const mutations = {
 
   setBufferPromise (state, { dfName, promise }) {
     Vue.set(state.buffersPromises, dfName, promise)
-  },
-
-  setSecondaryDatasets (state, payload) {
-    state.secondaryDatasets = payload
   },
 
   ...pSetters,
@@ -1372,14 +1367,14 @@ export const getters = {
       ...(state.commands || [])
     ]
   },
-  currentSecondaryDatasets (state) {
+  secondaryDatasets (state) {
     var datasetsArray = state.dataSources.map(ds=>{
       return ds && ds.payload && ds.payload.newDfName
     })
     return datasetsArray
   },
   hasSecondaryDatasets (state, getters) {
-    return Object.keys(getters.currentSecondaryDatasets || {})
+    return Object.keys(getters.secondaryDatasets || {})
         .filter(e=>!e.startsWith('_')).length>1
   },
   currentSelection (state) {
