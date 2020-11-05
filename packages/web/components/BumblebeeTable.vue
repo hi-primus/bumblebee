@@ -1022,7 +1022,11 @@ export default {
     },
 
     totalRowsCount () {
-      return Math.max(this.currentDataset.summary.rows_count, this.rowsCount)
+      try {
+        return Math.max(this.currentDataset.summary.rows_count, this.rowsCount);
+      } catch (err) {
+        return 1;
+      }
     },
 
     rowsCount () {
