@@ -55,7 +55,7 @@
         </div>
 
       </div>
-      <div class="fields-col pl-1">
+      <div class="fields-col">
         <div
           v-for="textField in textFields"
           :key="textField"
@@ -66,7 +66,8 @@
             :value="textFieldsValues[textField]"
             @input="updateTextField(textField, $event)"
             dense
-            class="denser"
+            label="Column name"
+            clearable
             outlined
             hide-details
           >

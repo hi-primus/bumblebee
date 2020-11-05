@@ -2261,7 +2261,8 @@ $editor-top-padding: 4px;
     min-width: calc(100vw - 120px);
     min-height: calc(100vh - 120px);
     .o-fields {
-      max-height: calc(100vh - 187px);
+      max-height: calc(100vh - 250px);
+      height: calc(100vh - 250px);
     }
   }
 }
@@ -2858,7 +2859,8 @@ $editor-top-padding: 4px;
     min-width: $concat-col-width;
   }
   .fields-col {
-    min-width: $concat-final-col-width;
+    padding-left: 68px;
+    min-width: calc(#{$concat-final-col-width} + 68px);
   }
   .items-item {
     height: $concat-item-height;
@@ -2867,7 +2869,7 @@ $editor-top-padding: 4px;
   .items-fields {
     .v-input {
       position: relative;
-      top: 3px;
+      top: 1px;
     }
   }
   .concat-item {
@@ -2904,25 +2906,39 @@ $editor-top-padding: 4px;
     }
     .data-column-name {
       max-width: calc(#{$concat-col-width} - 90px);
+      width: calc(#{$concat-col-width} - 90px);
       display: inline-block;
+      text-align: center;
+      padding-right: 28px;
       @include ellipsis;
     }
     .data-type {
       display: block;
       float: left;
-      min-width: 2.75em;
+      min-width: 32px;
     }
     .data-item-title {
       display: block;
       max-width: 100%;
+      font-size: 16px;
     }
     .data-item-value {
+      // padding-left: 32px;
       position: relative;
-      top: -5px;
+      top: -4px;
       display: block;
       @include ellipsis;
       max-width: calc(#{$concat-col-width} - 50px);
-      opacity: 0.71;
+      // opacity: 0.71;
+      &::before {
+        max-width: 32px;
+        // content: 'VALUE: ';
+        font-size: 0.75em;
+        font-weight: 700;
+        text-transform: uppercase;
+        font-family: $font-mono;
+        opacity: 0.71;
+      }
     }
     .close-button {
       position: absolute;
@@ -3170,12 +3186,12 @@ $editor-top-padding: 4px;
     }
   }
   .sf-activator {
-    width: $concat-final-col-width;
-    min-width: $concat-final-col-width;
+    // width: $concat-final-col-width;
+    // min-width: $concat-final-col-width;
     text-align: center;
   }
   .tabs-add-item {
-    width: 100%;
+    // width: 100%;
     white-space: nowrap;
     text-transform: uppercase;
     font-weight: 700;

@@ -19,7 +19,7 @@
       @input="itemSelected"
       :disabled="!availableItems.length"
     >
-      <span class="primary--text text--darken-1 tabs-add-item">Add {{itemsName}}
+      <span class="primary--text text--darken-1 tabs-add-item">Add
         <v-icon
           style="display: inline-flex"
           class="add-tab"
