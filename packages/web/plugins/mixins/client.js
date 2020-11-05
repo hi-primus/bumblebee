@@ -159,7 +159,7 @@ export default {
       }
 
       const response = await this.evalCode(`_output = ${dfName}.cols.frequency("*", 1)`);
-      return response.data.result.frequency;
+      return objectMap(response.data.result.frequency, f=>f.values[0].value);
 
 
     },
