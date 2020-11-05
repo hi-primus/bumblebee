@@ -248,7 +248,14 @@ export const mutations = {
       dataset.columns = Object.entries(dataset.columns).map(([key, value])=>({...value, name: key}));
     }
 
-    tab = tab || state.tab;
+    if (!tab) {
+      var found = state.datasets.findIndex(ds => ds.dfName===dataset.dfName)
+      if (found >= 0) {
+        tab = found;
+      } else {
+        tab = state.tab;
+      }
+    }
 
     // var _c
     // try {
@@ -297,7 +304,7 @@ export const mutations = {
     }
 
     if (current && !dfName) {
-      found = tab || state.tab
+      found = (tab !== undefined) ? tab : state.tab
     }
 
     if (found<0) {
