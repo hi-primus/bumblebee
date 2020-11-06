@@ -3,6 +3,9 @@ then
   if [ -z "$address" ]
   then
     echo "HOST=localhost" >> packages/api/.env
+    echo "PORT=4000" >> packages/api/.env
+    echo "BACKEND_URL='http://localhost:4000'" >> packages/api/.env
+    echo "API_URL='http://localhost:4000'" >> packages/web/.env
   else
     echo "HOST='0.0.0.0'" >> packages/web/.env
     echo "API_URL='http://$address:4000'" >> packages/web/.env
