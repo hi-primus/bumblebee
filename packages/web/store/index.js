@@ -252,7 +252,7 @@ export const mutations = {
       var found = state.datasets.findIndex(ds => ds.dfName===dataset.dfName)
       if (found >= 0) {
         tab = found;
-      } else if (state.datasets[state.tab].blank) {
+      } else if (state.datasets[state.tab] && state.datasets[state.tab].blank) {
         tab = state.tab;
       } else {
         console.debug('%c[TAB MANAGING] Loading profiling without tab','color: yellow;');
@@ -1084,7 +1084,7 @@ export const actions = {
 
       await Vue.nextTick();
 
-      var cellsResult = await dispatch('getCellsResult', { payload: { socketPost, ignoreFrom } } );
+      var cellsResult = await dispatch('getCellsResult', { payload: { socketPost, ignoreFrom }});
 
       if (!dfName) {
         // return {};
@@ -1166,7 +1166,7 @@ export const actions = {
     return dispatch('getPromise', promisePayload);
   },
 
-  async loadBuffer ({ dispatch, commit }, {dfName, socketPost}) {
+  async loadBuffer ({ dispatch, commit, getters }, {dfName, socketPost}) {
 
     console.debug('[DEBUG] Loading buffer', dfName);
 
@@ -1175,6 +1175,10 @@ export const actions = {
     }
 
     await Vue.nextTick();
+
+    var cellsResult = await dispatch('getCellsResult', { payload: { socketPost }});
+
+    var datasets = getters.secondaryDatasets
 
     var result = await dispatch('evalCode', {socketPost, code: '_output = '+dfName+'.ext.set_buffer("*")'})
     console.debug('[DEBUG] Loading buffer Done', dfName);
