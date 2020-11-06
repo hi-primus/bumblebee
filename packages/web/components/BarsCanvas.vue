@@ -35,7 +35,7 @@
 
 <script>
 
-import { stepify } from 'bumblebee-utils'
+import { stepify, debounce } from 'bumblebee-utils'
 
 export default {
 
@@ -142,18 +142,16 @@ export default {
       document.documentElement.removeEventListener('mouseup', this.onMouseUp )
     },
 
-    fitStageIntoParentContainer () {
+    fitStageIntoParentContainer: debounce(function () {
       var container = this.$el;
       var totalWidth = container.offsetWidth
 
       if (!totalWidth) {
-        setTimeout(() => {
-          this.fitStageIntoParentContainer()
-        }, 100);
+        this.fitStageIntoParentContainer();
       } else {
         this.totalWidth = totalWidth;
       }
-    },
+    }, 100),
 
     onMouseDown (event) {
       if (!this.selectable) {
