@@ -55,13 +55,26 @@
         </div>
 
       </div>
-      <div class="fields-col">
+      <div class="output-col">
         <div
-          v-for="textField in textFields"
-          :key="textField"
-          class="items-item items-fields"
+          v-for="(item, index) in outputItems"
+          :key="item[itemsKey]"
+          class="items-item concat-item"
         >
-          <v-text-field
+          <slot
+            name="item-output"
+            :item="item"
+          >
+            {{item[itemsKey]}}
+          </slot>
+          <v-icon
+            small
+            class="close-button"
+            @click="removeOutputItem(index)"
+          >
+            close
+          </v-icon>
+          <!-- <v-text-field
             :placeholder="textField"
             :value="textFieldsValues[textField]"
             @input="updateTextField(textField, $event)"
@@ -71,7 +84,7 @@
             outlined
             hide-details
           >
-          </v-text-field>
+          </v-text-field> -->
         </div>
       </div>
     </div>
@@ -160,6 +173,25 @@ export default {
 
   computed: {
 
+    outputItems: {
+
+      get () {
+        return this.textFields.map((textFieldKey)=>{
+          var obj = {
+            type: 'string',
+            update: (value)=>{
+              this.$set(this.textFieldsValues, textFieldKey, value)
+            }
+          };
+          obj[this.itemsKey] = this.textFieldsValues[textFieldKey] || textFieldKey;
+          return obj;
+        });
+      },
+      set (v) {
+        //
+      }
+    },
+
     dragOptions () {
       return {
         animation: 200,
@@ -235,27 +267,26 @@ export default {
 
       var defaultValues = []
       this.localSelected.forEach(e=>{
-          var name = 'error'
+        var name = 'error'
 
-          if (e.items && e.items.length) {
+        if (e.items && e.items.length) {
 
-            var items = e.items.filter(ee=>ee).map(ee=>ee[this.itemsKey] ? ee[this.itemsKey] : ee)
-            if (items.every(ee=>ee==items[0])) {
-              name = items[0]
-            } else {
-              name = items.join('_')
-            }
-
+          var items = e.items.filter(ee=>ee).map(ee=>ee[this.itemsKey] ? ee[this.itemsKey] : ee)
+          if (items.every(ee=>ee==items[0])) {
+            name = items[0]
+          } else {
+            name = items.join('_')
           }
-
-          while (defaultValues.includes(name)) {
-            name = name+' copy'
-          }
-
-          defaultValues.push(name)
 
         }
-      )
+
+        while (defaultValues.includes(name)) {
+          name = name+' copy'
+        }
+
+        defaultValues.push(name)
+
+      });
 
       var textFieldsValues = {};
 
@@ -317,11 +348,11 @@ export default {
 
     moveItem (groupIndex, slotIndex, item) {
 
-      var previousSlotIndex = this.itemsSlotsGroups[groupIndex].findIndex(e=>e && e[0] && e[0].name == item.name)
+      var previousSlotIndex = this.itemsSlotsGroups[groupIndex].findIndex(e=>e && e[0] && e[0][this.itemsKey] == item[this.itemsKey])
       var droppedSlot = false;
 
       if (previousSlotIndex === -1) {
-        previousSlotIndex = this.notSelected[groupIndex].findIndex(e=>e && e.name == item.name)
+        previousSlotIndex = this.notSelected[groupIndex].findIndex(e=>e && e[this.itemsKey] == item[this.itemsKey])
 
         if (previousSlotIndex >= 0) {
           droppedSlot = true;
@@ -356,6 +387,15 @@ export default {
         itemsSlotsGroups = deleteEmptyResults;
       }
       this.itemsSlotsGroups = itemsSlotsGroups;
+    },
+
+    removeOutputItem (slotIndex) {
+
+      // return console.log({slotIndex})
+
+      this.notSelected.forEach((notSelectedGroup, groupIndex)=>{
+        this.removeItem(groupIndex, slotIndex);
+      })
 
     },
 

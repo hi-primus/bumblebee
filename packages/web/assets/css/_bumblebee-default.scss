@@ -1918,10 +1918,7 @@ $editor-top-padding: 4px;
     padding-right: 4px !important;
 
     &>.column-header-cell {
-      display: flex;
-      flex-direction: row;
-      flex-wrap: nowrap;
-      justify-content: space-between;
+      @include name-center;
 
       &>.data-type {
         height: inherit;
@@ -1929,21 +1926,7 @@ $editor-top-padding: 4px;
         position: absolute;
         order: 1;
       }
-      &::before {
-        content: "";
-        min-width: 40px;
-        max-width: 52px;
-        order: 2;
-        flex-shrink: 1;
-        width: 52px;
-      }
-      &::after {
-        content: '';
-        width: 52px;
-        max-width: 52px;
-        order: 4;
-        flex-shrink: 1;
-      }
+
       &>.column-title {
         order: 3;
         height: inherit;
@@ -2857,10 +2840,39 @@ $editor-top-padding: 4px;
     position: relative;
     min-height: $concat-item-height;
     min-width: $concat-col-width;
+    .concat-item {
+      padding-left: 24px;
+      cursor: move;
+      &::before {
+        content: "drag_indicator" !important;
+        font: normal normal normal 24px/1 "Material Icons" !important;
+        transform: scale(0.6666);
+        opacity: 0.5;
+        color: rgba(0, 0, 0, 0.54);
+        transition: opacity ease-in-out 0.3s;
+        position: absolute;
+        left: -4px;
+        top: 12px;
+      }
+      .data-item-title {
+        @include name-center;
+        max-width: calc(#{$concat-col-width} - 36px);
+      }
+    }
   }
-  .fields-col {
+  .output-col {
     padding-left: 68px;
     min-width: calc(#{$concat-final-col-width} + 68px);
+    .concat-item {
+      padding-right: 24px;
+      .data-type {
+        display: none !important; // TO-DO: Remove
+      }
+      .data-column-name {
+        position: relative;
+        left: 0px;  // TO-DO: 32px
+      }
+    }
   }
   .items-item {
     height: $concat-item-height;
@@ -2872,10 +2884,10 @@ $editor-top-padding: 4px;
       top: 1px;
     }
   }
+
   .concat-item {
     transition: background-color ease-in-out 0.1s;
     position: relative;
-    cursor: move;
     font-size: 14px;
     min-width: calc(100% - 6px);
     max-width: calc(100% - 6px);
@@ -2885,43 +2897,46 @@ $editor-top-padding: 4px;
     margin-right: 6px;
     border-radius: 6px;
     border-width: 1px;
-    padding: 4px 4px 0px 24px;
+    padding: 4px 4px 0px 16px;
     border-style: solid;
     border-color: transparent;
-    &::before {
-      content: "drag_indicator" !important;
-      font: normal normal normal 24px/1 "Material Icons" !important;
-      transform: scale(0.6666);
-      opacity: 0.5;
-      color: rgba(0, 0, 0, 0.54);
-      transition: opacity ease-in-out 0.3s;
-      position: absolute;
-      left: -4px;
-      top: 12px;
-    }
+
     &:hover, &.ghost {
       &::before {
         opacity: 1;
       }
     }
-    .data-column-name {
-      max-width: calc(#{$concat-col-width} - 90px);
-      width: calc(#{$concat-col-width} - 90px);
-      display: inline-block;
-      text-align: center;
-      padding-right: 28px;
-      @include ellipsis;
-    }
-    .data-type {
-      display: block;
-      float: left;
-      min-width: 32px;
-    }
+
     .data-item-title {
-      display: block;
+
       max-width: 100%;
       font-size: 16px;
+
+      .data-type {
+        position: absolute;
+        display: block;
+        min-width: 32px;
+      }
+      .data-column-name {
+        order: 3;
+        flex-shrink: 0;
+        display: inline-block;
+        &:not(.editable-element) {
+          max-width: calc(#{$concat-col-width} - 90px);
+          width: calc(#{$concat-col-width} - 90px);
+          text-align: center;
+          @include ellipsis;
+        }
+        &.editable-element {
+          padding-left: 4px;
+          padding-right: 4px;
+          margin-left: -4px;
+          margin-right: 36px;
+        }
+      }
     }
+
+
     .data-item-value {
       // padding-left: 32px;
       position: relative;
@@ -3203,4 +3218,8 @@ $editor-top-padding: 4px;
       left: 0;
     }
   }
+}
+
+.editable-element {
+  cursor: text;
 }
