@@ -76,7 +76,7 @@ export const initializeKernelSession = async function (sessionId, payload) {
 		payload = {};
 	}
 
-	let tries = 10; // 10
+	let tries = 3;
 	while (tries > 0) {
 		try {
 			result = await requestToKernel('init', sessionId, payload);
@@ -89,7 +89,8 @@ export const initializeKernelSession = async function (sessionId, payload) {
 				// console.error(err);
 				return {
 					error: 'Internal Error',
-					content: err.toString(),
+          content: err.toString(),
+          err,
 					status: 'error',
 				};
 			}
@@ -355,7 +356,7 @@ export const createConnection = async function (sessionId) {
 
 const createKernel = async function (sessionId, ka : any = undefined) {
 	try {
-		let tries = 10;
+		let tries = 3;
 		while (tries > 0) {
 			try {
 
@@ -385,7 +386,7 @@ const createKernel = async function (sessionId, ka : any = undefined) {
 
 			} catch (err) {
 
-				console.error('Kernel creating error, retrying', 10 - tries);
+				console.error('Kernel creating error, retrying', 3 - tries);
 				tries--;
 				if (tries > 0) {
 					continue;
