@@ -122,7 +122,7 @@ export default {
   mounted () {
     if (this.width=='auto') {
       this.$nextTick(()=>{
-        this.fitStageIntoParentContainer()
+        this.fitIntoParent()
       })
     }
   },
@@ -142,16 +142,17 @@ export default {
       document.documentElement.removeEventListener('mouseup', this.onMouseUp )
     },
 
-    fitStageIntoParentContainer: debounce(function () {
+    async fitIntoParent () {
       var container = this.$el;
       var totalWidth = container.offsetWidth
 
       if (!totalWidth) {
-        this.fitStageIntoParentContainer();
+        await new Promise(res=>setTimeout(() => res(true), 100))
+        this.fitIntoParent();
       } else {
         this.totalWidth = totalWidth;
       }
-    }, 100),
+    },
 
     onMouseDown (event) {
       if (!this.selectable) {
