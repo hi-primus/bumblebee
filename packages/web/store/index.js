@@ -252,8 +252,10 @@ export const mutations = {
       var found = state.datasets.findIndex(ds => ds.dfName===dataset.dfName)
       if (found >= 0) {
         tab = found;
-      } else {
+      } else if (state.datasets[state.tab].blank) {
         tab = state.tab;
+      } else {
+        console.debug('%c[TAB MANAGING] Loading profiling without tab','color: yellow;');
       }
     }
 
@@ -271,9 +273,9 @@ export const mutations = {
     }
 
     console.debug("[BUMBLEBLEE] Setting dataset", dataset);
-
     Vue.set(state.datasets, tab, dataset);
-    Vue.set(state.buffersPromises, tab, false);
+
+    Vue.set(state.buffersPromises, dataset.dfName, false);
 
     if (!avoidReload) {
       state.datasetSelection[tab] = {}; // {columns: _c} // TO-DO: Remember selection

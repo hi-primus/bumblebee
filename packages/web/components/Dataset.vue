@@ -590,6 +590,7 @@ export default {
       this.loadingDf = true;
       this.$store.commit('setDfToTab', { dfName, go: true });
       await this.getProfiling(dfName)
+      this.$store.commit('setDfToTab', { dfName, go: true });
       this.loadingDf = false;
     },
 
