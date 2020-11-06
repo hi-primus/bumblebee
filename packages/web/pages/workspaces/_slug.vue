@@ -447,12 +447,6 @@ export default {
         var optimus = await this.initializeOptimus(slug);
         console.debug('[INITIALIZATION] Optimus initialized');
 
-        // await new Promise((resolve)=>{
-        //   setTimeout(() => {
-        //     resolve('ok');
-        //   }, 5000);
-        // })
-
         var workspace = await this.$store.dispatch('getWorkspace', { slug });
         console.debug('[INITIALIZATION] Workspace started');
 
