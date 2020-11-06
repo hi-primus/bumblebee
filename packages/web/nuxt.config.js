@@ -1,3 +1,4 @@
+require('dotenv-defaults').config()
 require('dotenv').config()
 const colors = require('vuetify/es5/util/colors').default
 
