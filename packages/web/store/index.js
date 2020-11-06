@@ -1175,8 +1175,7 @@ export const actions = {
     }
 
     await Vue.nextTick();
-    var payload = { dfName, socketPost };
-    var profiling = await dispatch('getProfiling', { payload });
+
     var result = await dispatch('evalCode', {socketPost, code: '_output = '+dfName+'.ext.set_buffer("*")'})
     console.debug('[DEBUG] Loading buffer Done', dfName);
     return result;
