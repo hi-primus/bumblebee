@@ -35,7 +35,7 @@
 
 <script>
 
-import { stepify } from 'bumblebee-utils'
+import { stepify, debounce } from 'bumblebee-utils'
 
 export default {
 
@@ -122,7 +122,7 @@ export default {
   mounted () {
     if (this.width=='auto') {
       this.$nextTick(()=>{
-        this.fitStageIntoParentContainer()
+        this.fitIntoParent()
       })
     }
   },
@@ -142,14 +142,13 @@ export default {
       document.documentElement.removeEventListener('mouseup', this.onMouseUp )
     },
 
-    fitStageIntoParentContainer () {
+    async fitIntoParent () {
       var container = this.$el;
       var totalWidth = container.offsetWidth
 
       if (!totalWidth) {
-        setTimeout(() => {
-          this.fitStageIntoParentContainer()
-        }, 100);
+        await new Promise(res=>setTimeout(() => res(true), 100))
+        this.fitIntoParent();
       } else {
         this.totalWidth = totalWidth;
       }

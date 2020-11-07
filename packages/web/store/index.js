@@ -94,7 +94,6 @@ const defaultState = {
   workspace: false,
   datasets: [],
   datasetSelection: [],
-  secondaryDatasets: [],
   databases: [],
   firstRun: true,
   commandsDisabled: false,
@@ -175,17 +174,6 @@ export const mutations = {
     Vue.set(state.buffersPromises, dfName, promise)
   },
 
-  setSecondaryDatasets (state, payload) {
-    state.secondaryDatasets = payload
-  },
-
-  setSecondaryBuffer (state, {key, value}) {
-    var datasets = {...state.secondaryDatasets}
-    datasets[key] = datasets[key] || {columns: [], buffer: false}
-    datasets[key].buffer = value
-    state.secondaryDatasets = datasets
-  },
-
   ...pSetters,
 
   setLoadPreview (state, {sample, profile, meta}) {
@@ -260,7 +248,16 @@ export const mutations = {
       dataset.columns = Object.entries(dataset.columns).map(([key, value])=>({...value, name: key}));
     }
 
-    tab = tab || state.tab;
+    if (!tab) {
+      var found = state.datasets.findIndex(ds => ds.dfName===dataset.dfName)
+      if (found >= 0) {
+        tab = found;
+      } else if (state.datasets[state.tab] && state.datasets[state.tab].blank) {
+        tab = state.tab;
+      } else {
+        console.debug('%c[TAB MANAGING] Loading profiling without tab','color: yellow;');
+      }
+    }
 
     // var _c
     // try {
@@ -276,9 +273,9 @@ export const mutations = {
     }
 
     console.debug("[BUMBLEBLEE] Setting dataset", dataset);
-
     Vue.set(state.datasets, tab, dataset);
-    Vue.set(state.buffersPromises, tab, false);
+
+    Vue.set(state.buffersPromises, dataset.dfName, false);
 
     if (!avoidReload) {
       state.datasetSelection[tab] = {}; // {columns: _c} // TO-DO: Remember selection
@@ -309,7 +306,7 @@ export const mutations = {
     }
 
     if (current && !dfName) {
-      found = tab || state.tab
+      found = (tab !== undefined) ? tab : state.tab
     }
 
     if (found<0) {
@@ -357,15 +354,19 @@ export const mutations = {
     }
 
     // sets to a new tab otherwise
-    this.commit('newDataset', { dataset: { dfName } })
+    console.warn('[COMMANDS] creating tab for', dfName)
+    this.commit('newDataset', { dataset: { dfName, go: true } })
 
   },
 
 	deleteTab (state, index) {
     var dfName = state.datasets[index].dfName;
 
-    Vue.delete(state.profilingsPromises, dfName);
-    Vue.delete(state.buffersPromises, dfName);
+    if (dfName) {
+      Vue.delete(state.profilingsPromises, dfName);
+      Vue.delete(state.buffersPromises, dfName);
+    }
+
 
     Vue.delete(state.datasets, index);
     Vue.delete(state.datasetSelection, index);
@@ -404,21 +405,24 @@ export const mutations = {
 
   setPreviewInfo (state, {rowHighlights, newColumns, replacingColumns, error}) {
     if (!state.everyPreviewInfo[state.tab]) {
-      state.everyPreviewInfo[state.tab] = {}
+      state.everyPreviewInfo[state.tab] = {};
     }
     if (rowHighlights!=undefined) {
-      state.everyPreviewInfo[state.tab].rowHighlights = rowHighlights
+      state.everyPreviewInfo[state.tab].rowHighlights = rowHighlights;
     }
     if (newColumns!=undefined) {
-      state.everyPreviewInfo[state.tab].newColumns = newColumns
+      state.everyPreviewInfo[state.tab].newColumns = Math.max(0, newColumns);
+    }
+    if (replacingColumns!=undefined) {
+      state.everyPreviewInfo[state.tab].replacingColumns = Math.max(0, replacingColumns);
     }
     if (replacingColumns!=undefined) {
       state.everyPreviewInfo[state.tab].replacingColumns = replacingColumns
     }
     if (error!=undefined) {
-      state.everyPreviewInfo[state.tab].error = error
+      state.everyPreviewInfo[state.tab].error = error;
     }
-    Vue.set(state.everyPreviewInfo,state.tab,state.everyPreviewInfo[state.tab])
+    Vue.set(state.everyPreviewInfo,state.tab,state.everyPreviewInfo[state.tab]);
   },
 
   selection (state, {tab, columns, ranged, clear, text} ) {
@@ -772,6 +776,19 @@ export const actions = {
 
   },
 
+  deleteErrorCells ({ state, commit }) {
+
+    var cells = [...state.commands]
+
+    for (let i = 0; i < state.commands.length; i++) {
+        if (cells[i].error && cells[i].code) {
+          cells.splice(i,1)
+        }
+    }
+
+    commit('mutation', { mutate: 'commands', payload: cells })
+  },
+
   beforeRunCells ( { state, commit }, { newOnly, ignoreFrom } ) {
 
     newOnly = newOnly || false;
@@ -806,9 +823,9 @@ export const actions = {
         commit('mutation', { mutate: 'dashboardLink', payload: ''});
       case 'cells':
         await dispatch('markCells', { mark: false });
-        commit('mutation', { mutate: 'codeDone', payload: ''});
-        commit('mutation', { mutate: 'codeError', payload: ''});
-        commit('mutation', { mutate: 'lastWrongCode', payload: { code: '', error: false }});
+        commit('mutation', { mutate: 'codeDone', payload: '' });
+        commit('mutation', { mutate: 'codeError', payload: '' });
+        commit('mutation', { mutate: 'lastWrongCode', payload: false });
         commit('mutation', { mutate: 'cellsPromise', payload: false });
       case 'profilings':
         commit('mutation', { mutate: 'profilingsPromises', payload: {} });
@@ -1070,7 +1087,7 @@ export const actions = {
 
       await Vue.nextTick();
 
-      var cellsResult = await dispatch('getCellsResult', { payload: { socketPost, ignoreFrom } } );
+      var cellsResult = await dispatch('getCellsResult', { payload: { socketPost, ignoreFrom }});
 
       if (!dfName) {
         // return {};
@@ -1152,7 +1169,7 @@ export const actions = {
     return dispatch('getPromise', promisePayload);
   },
 
-  async loadBuffer ({ dispatch }, {dfName, socketPost}) {
+  async loadBuffer ({ dispatch, commit, getters }, {dfName, socketPost}) {
 
     console.debug('[DEBUG] Loading buffer', dfName);
 
@@ -1161,8 +1178,11 @@ export const actions = {
     }
 
     await Vue.nextTick();
-    var payload = { dfName, socketPost };
-    var profiling = await dispatch('getProfiling', { payload });
+
+    var cellsResult = await dispatch('getCellsResult', { payload: { socketPost }});
+
+    var datasets = getters.secondaryDatasets
+
     var result = await dispatch('evalCode', {socketPost, code: '_output = '+dfName+'.ext.set_buffer("*")'})
     console.debug('[DEBUG] Loading buffer Done', dfName);
     return result;
@@ -1366,11 +1386,14 @@ export const getters = {
       ...(state.commands || [])
     ]
   },
-  currentSecondaryDatasets (state) {
-    return state.secondaryDatasets
+  secondaryDatasets (state) {
+    var datasetsArray = state.dataSources.map(ds=>{
+      return ds && ds.payload && ds.payload.newDfName
+    })
+    return datasetsArray
   },
-  hasSecondaryDatasets (state) {
-    return Object.keys(state.secondaryDatasets || {})
+  hasSecondaryDatasets (state, getters) {
+    return Object.keys(getters.secondaryDatasets || {})
         .filter(e=>!e.startsWith('_')).length>1
   },
   currentSelection (state) {

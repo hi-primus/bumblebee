@@ -15,23 +15,23 @@ const updateKernelBases = function () {
 		kernel_addresses = (process.env.KERNEL_ADDRESS || `localhost:8888`).split(
 			',',
 		);
-		kernel_types = (process.env.KERNEL_TYPE || `python3`).split(',');
 		kernel_bases = kernel_addresses.map((e) => 'http://' + e);
 		ws_kernel_bases = kernel_addresses.map((e) => 'ws://' + e);
 	}
 };
 
-const kernelType = function (id) {
-	updateKernelBases();
-	return kernel_types[id] || kernel_types[0];
-};
-
 const kernelBase = function (id) {
+  if (typeof id === 'string') {
+    return `http://${id}`;
+  }
 	updateKernelBases();
 	return kernel_bases[id] || kernel_bases[0];
 };
 
 const wsKernelBase = function (id) {
+  if (typeof id === 'string') {
+    return `ws://${id}`;
+  }
 	updateKernelBases();
 	return ws_kernel_bases[id] || ws_kernel_bases[0];
 };
@@ -76,7 +76,7 @@ export const initializeKernelSession = async function (sessionId, payload) {
 		payload = {};
 	}
 
-	let tries = 10; // 10
+	let tries = 3;
 	while (tries > 0) {
 		try {
 			result = await requestToKernel('init', sessionId, payload);
@@ -89,7 +89,8 @@ export const initializeKernelSession = async function (sessionId, payload) {
 				// console.error(err);
 				return {
 					error: 'Internal Error',
-					content: err.toString(),
+          content: err.toString(),
+          err,
 					status: 'error',
 				};
 			}
@@ -120,7 +121,7 @@ export const initializeKernelSession = async function (sessionId, payload) {
 const assertSession = async function (
 	sessionId,
 	isInit = false,
-	kernel_address = 0,
+	kernel_address : any = undefined,
 ) {
 	try {
 		if (!kernels[sessionId] || !kernels[sessionId].id) {
@@ -152,11 +153,17 @@ const assertSession = async function (
 };
 
 export const requestToKernel = async function (type, sessionId, payload) {
-  var kernelAddress = payload?.jupyter_ip + payload?.jupyter_port;
+
+  var kernelAddress : any = kernels[sessionId].kernel_address;
+
+  if (type == 'init' && !kernelAddress && payload.jupyter_address) {
+    kernelAddress = payload.jupyter_address.ip + ':' + payload.jupyter_address.port;
+  }
+
 	const connection = await assertSession(
 		sessionId,
 		type == 'init',
-		kernelAddress ? kernelAddress : undefined,
+		kernelAddress,
 	);
 
 	if (!connection) {
@@ -285,7 +292,7 @@ export const createConnection = async function (sessionId) {
 				kernels[sessionId].client = new WebSocketClient({
 					closeTimeout: 20 * 60 * 1000,
 				});
-			}
+      }
 
 			kernels[sessionId].client.connect(
 				`${wsKernelBase(ka)}/api/kernels/${kernels[sessionId].id}/channels`,
@@ -347,45 +354,46 @@ export const createConnection = async function (sessionId) {
 	return kernels[sessionId].connecting;
 };
 
-const createKernel = async function (sessionId, ka = 0) {
+const createKernel = async function (sessionId, ka : any = undefined) {
 	try {
-		let tries = 10;
+		let tries = 3;
 		while (tries > 0) {
 			try {
-				// const kernelResponse = await request({
-				// 	uri: `${kernelBase(ka)}/api/kernels`,
-				// 	method: 'POST',
-				// 	headers: {},
-				// 	json: true,
-				// 	body: {
-				// 		// name: 'workspace-'+sessionId
-				// 		// TODO: kernel-type
-				// 	},
-				// });
-				const kernelResponse = await axios.post(
-					`${kernelBase(ka)}/api/kernels`,
-					{ name: kernelType(ka) },
-				);
 
-				const uuid = Buffer.from(uuidv1(), 'utf8').toString('hex');
-				if (!kernels[sessionId]) {
-					kernels[sessionId] = {};
-				}
+        if (!kernels[sessionId]) {
+          kernels[sessionId] = {};
+        }
+
+        if (kernels[sessionId].kernel_address && ka === undefined) {
+          ka = kernels[sessionId].kernel_address;
+        }
+
+				const kernelResponse = await axios.post(
+          `${kernelBase(ka)}/api/kernels`
+        );
+
+        const uuid = Buffer.from(uuidv1(), 'utf8').toString('hex');
+
+
 				kernels[sessionId] = {
 					...kernels[sessionId],
 					kernel_address: ka,
 					id: kernelResponse.data.id,
 					uuid,
-				};
-				break;
+        };
+
+        break;
+
 			} catch (err) {
-				console.error('Kernel creating error, retrying', 10 - tries);
+
+				console.error('Kernel creating error, retrying', 3 - tries);
 				tries--;
 				if (tries > 0) {
 					continue;
 				}
 				console.error(err);
-				throw 'Error on createKernel';
+        throw 'Error on createKernel';
+
 			}
 		}
 		// console.log('Kernel created', sessionId, ka);

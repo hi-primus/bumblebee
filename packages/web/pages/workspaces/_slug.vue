@@ -108,7 +108,7 @@
           <v-tabs
             :key="$store.state.datasetUpdates"
             v-model="tab"
-            :class="{'tabs-disabled': previewCode || isOperating}"
+            :class="{'tabs-disabled': $store.state.kernel=='loading' || previewCode || isOperating}"
             class="bb-tabs px-6"
             background-color="#fff"
             show-arrows
@@ -447,12 +447,6 @@ export default {
         var optimus = await this.initializeOptimus(slug);
         console.debug('[INITIALIZATION] Optimus initialized');
 
-        // await new Promise((resolve)=>{
-        //   setTimeout(() => {
-        //     resolve('ok');
-        //   }, 5000);
-        // })
-
         var workspace = await this.$store.dispatch('getWorkspace', { slug });
         console.debug('[INITIALIZATION] Workspace started');
 
@@ -466,20 +460,17 @@ export default {
 
         try {
 
+          this.$store.commit('kernel', 'loading');
+          this.$store.commit('setAppStatus', 'workspace');
+
           var result = await this.runCodeNow(false, -1, undefined, true);
           console.debug('[INITIALIZATION] Cells code and profiling done', result);
+
+            this.$store.commit('kernel', 'done');
 
           if (!result && result !== false) {
             throw new Error('Cells code or profiling error')
           }
-
-          this.$store.commit('kernel', 'loading');
-          this.$store.commit('setAppStatus', 'workspace');
-          this.$store.commit('kernel', 'done');
-
-          this.updateSecondaryDatasets();
-
-
         } catch (err) {
 
           console.error('(Error on post-initialization)');
@@ -536,13 +527,16 @@ export default {
     },
 
 		async deleteTab(i) {
-			await this.$store.dispatch('deleteTab', i);
-			this.confirmDelete = -1;
-			if (!this.$store.state.datasets.length) {
+      var newLength = this.$store.state.datasets.length - 1;
+      this.confirmDelete = -1;
+			if (newLength<=0) {
 				this.tab = 0;
-			} else if (this.tab >= this.$store.state.datasets.length) {
-				this.tab = this.$store.state.datasets.length - 1;
-			}
+			} else if (this.tab >= newLength) {
+        this.tab = newLength - 1;
+			} else if (this.tab>0 && i<=this.tab) {
+        this.tab = this.tab - 1;
+      }
+			await this.$store.dispatch('deleteTab', i);
 			this.$forceUpdate();
 		}
 	}

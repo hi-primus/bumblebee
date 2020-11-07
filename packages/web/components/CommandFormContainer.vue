@@ -5,9 +5,9 @@
     persistent
     :value="(currentCommand.command)"
     :max-width="820"
-    @click:outside="$emit('cancelCommand')"
-    @keydown.esc="$emit('cancelCommand')"
-    content-class="command-dialog"
+    @click:outside="$emit('cancel-command')"
+    @keydown.esc="$emit('cancel-command')"
+    :content-class="'command-dialog '+command.dialog.class"
   >
     <div class="title px-6">
       {{ {value: command.dialog.title, args: [currentCommand]} | property }}
@@ -18,7 +18,7 @@
     v-else
     class="operation-form-container"
     ref="operation-form"
-    @keydown.esc="$emit('cancelCommand')"
+    @keydown.esc="$emit('cancel-command')"
   >
     <slot></slot>
   </div>

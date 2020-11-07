@@ -1,6 +1,6 @@
 import io from 'socket.io-client'
 import { mapState } from 'vuex'
-import { deepCopy, getDefaultParams, INIT_PARAMS } from 'bumblebee-utils'
+import { deepCopy, getDefaultParams, objectMap, INIT_PARAMS } from 'bumblebee-utils'
 
 export default {
 
@@ -110,8 +110,58 @@ export default {
       return this.$store.dispatch('getProfiling', { payload, forcePromise, ignoreFrom });
     },
 
-    buffer (dfName) {
+    datasetBuffer (dfName) {
       return this.$store.dispatch('getBuffer', { dfName, socketPost: this.socketPost });
+    },
+
+    async datasetColumns (dfName) {
+
+      var dataset = this.$store.state.datasets.find(dataset => dataset.dfName===dfName)
+
+      if (dataset && dataset.columns && dataset.columns.length) {
+        return dataset.columns.map(col=>col.name)
+      }
+
+      const response = await this.evalCode(`_output = ${dfName}.cols.names()`);
+      return response.data.result;
+
+    },
+
+    async datasetTypes (dfName) {
+
+      var columns = false;
+
+      var dataset = this.$store.state.datasets.find(dataset => dataset.dfName===dfName)
+
+      if (dataset) {
+        columns = (dataset.columns && dataset.columns.length) ? Object.fromEntries(dataset.columns.map(col=>[col.name, col.profiler_dtype])) : false;
+      }
+
+      if (!columns) {
+        const response = await this.evalCode(`_output = ${dfName}.cols.profiler_dtypes()`);
+        columns = response.data.result;
+      }
+
+      return objectMap(columns, (type) => {
+        if (type && typeof type === 'object') {
+          return type.dtype || type.profiler_dtype || type;
+        }
+        return type;
+      });
+    },
+
+    async datasetSample (dfName) {
+
+      var dataset = this.$store.state.datasets.find(dataset => dataset.dfName===dfName)
+
+      if (dataset && dataset.columns && dataset.columns.length && dataset.columns.every(col=>col && col.stats && col.stats.frequency && col.stats.frequency[0] && col.stats.frequency[0].value)) {
+        return Object.fromEntries(dataset.columns.map(col=>[col.name, col.stats.frequency[0].value]))
+      }
+
+      const response = await this.evalCode(`_output = ${dfName}.cols.frequency("*", 1)`);
+      return objectMap(response.data.result.frequency, f=>f.values[0].value);
+
+
     },
 
     evalCode (code) {
@@ -157,6 +207,13 @@ export default {
               var slug = this.$route.params.slug;
 
               params.name = params.name || this.$store.state.session.username + '_' + slug;
+
+              if (params.jupyter_address) {
+                params.jupyter_ip = params.jupyter_address.ip;
+                params.jupyter_port = params.jupyter_address.port;
+
+                // delete params.jupyter_address;
+              }
 
               var reinitializationPayload = {
                 username: this.$store.state.session.username,
@@ -361,29 +418,7 @@ export default {
       } catch (error) {
         this.handleError(error);
       }
-    },
-
-
-    async updateSecondaryDatasets() {
-      try {
-        var response = await this.socketPost('datasets', {
-          username: this.$store.state.session.username,
-          workspace: this.$route.params.slug
-        })
-        window.pushCode({code: response.code, unimportant: true})
-        console.log('Updating secondary datasets')
-        var datasets = Object.fromEntries( Object.entries(response.data).filter(([key, dataset])=>(key !== 'preview_df' && key[0] !== '_')) )
-        this.$store.commit('setSecondaryDatasets', datasets )
-
-        return datasets
-      } catch (error) {
-        if (error.code) {
-          window.pushCode({code: error.code, error: true, unimportant: true})
-        }
-        console.error(error)
-        return []
-      }
-    },
+    }
   },
 
   watch: {

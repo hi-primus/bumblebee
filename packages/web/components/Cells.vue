@@ -105,6 +105,7 @@
             <v-spacer></v-spacer>
             <v-btn
               color="primary"
+              class="mr-4"
               dense
               text
               @click="cancelCommand"
@@ -253,6 +254,7 @@ import {
   hlCols,
   namesToIndices,
   transformDateFromPython,
+  objectMap,
 
   TIME_NAMES,
   TYPES,
@@ -758,7 +760,7 @@ export default {
                   this.$nextTick(()=>{
                     currentCommand.selected_columns = [
                       ...currentCommand.selected_columns,
-                      ...(currentCommand._datasets_right[currentCommand.with] || []).map(n=>({name: n, source: 'right', key: n+'r'}))
+                      ...Object.keys(currentCommand.secondaryDatasets[currentCommand.with].types || {}).map(n=>({name: n, source: 'right', key: n+'r'}))
                     ]
                     var items = getProperty(currentCommand.items_r_on,[currentCommand])
                     currentCommand.right_on = items ? (items[0] || false) : false
@@ -821,25 +823,23 @@ export default {
           },
           payload: async (columns, payload = {}) => {
 
-            var _datasets_right = {...payload.secondaryDatasets}
-            var items_with = Object.keys(_datasets_right).filter(e=>(e!==payload.dfName && e!=='preview_df'))
+            var items_with = Object.keys(payload.secondaryDatasets).filter(e=>(e!==payload.dfName && e!=='preview_df'))
 
             var df2 = items_with[0]
 
             return {
               how: 'inner',
-              _datasets_right,
               _unselect_on_change: {
                 left: [],
                 right: []
               },
               left_on: payload.allColumns[0],
               items_l_on: payload.allColumns,
-              right_on: _datasets_right[df2][0],
-              items_r_on: (c)=>c._datasets_right[c.with],
+              right_on: payload.secondaryDatasets[df2][0],
+              items_r_on: (c)=>c.secondaryDatasets[c.with].columns,
               with: df2,
               items_with: (c)=>{
-                return Object.keys(c._datasets_right)
+                return Object.keys(c.secondaryDatasets)
                   .filter(e=>e!==payload.dfName && e!=='preview_df')
                   .filter(e=>!e.startsWith('_'))
               },
@@ -847,13 +847,13 @@ export default {
                 try {
                   return [
                     ...(c.allColumns || []).map(n=>({name: n, source: 'left', key: n+'l'})),
-                    ...(c._datasets_right[c.with] || []).map(n=>({name: n, source: 'right', key: n+'r'}))
+                    ...Object.keys(currentCommand.secondaryDatasets[currentCommand.with].types || {}).map(n=>({name: n, source: 'right', key: n+'r'}))
                   ]
                 } catch (err) {}
               },
               selected_columns: [
                 ...(payload.allColumns || []).map(n=>({name: n, source: 'left', key: n+'l'})),
-                ...(_datasets_right[df2] || []).map(n=>({name: n, source: 'right', key: n+'r'}))
+                ...(payload.secondaryDatasets[df2].columns || []).map(n=>({name: n, source: 'right', key: n+'r'}))
               ],
               preview: {
                 joinPreview: (c)=>{
@@ -876,25 +876,45 @@ export default {
             }
           },
           beforeExecuteCode: async (currentCommand) => {
-            var command = { ...currentCommand }
-            if (!command.secondaryDatasets[command.with] || !command.secondaryDatasets[command.with].buffer) {
-              await this.evalCode('_output = '+command.with+'.ext.set_buffer("*")') // TO-DO: !!!
-              this.$store.commit('setSecondaryBuffer', { key: command.with, value: true})
-              command.secondaryDatasets = {...this.currentSecondaryDatasets}
+            var command = { ...currentCommand };
+
+            var dfNames = Object.keys(command.secondaryDatasets);
+
+            for (let i = 0; i < dfNames.length; i++) {
+              var dfName = dfNames[i]
+              command.secondaryDatasets[dfName].columns = await this.datasetColumns(dfName);
+              command.secondaryDatasets[dfName].buffer = await this.datasetBuffer(dfName);
             }
-            return command
+
+            return command;
           },
           content: (payload) => `<b>Join</b> ${hlParam(payload.dfName)} <b>with</b> ${hlParam(payload.with)}`
         },
         concat: {
           dialog: {
+            dialog: true,
+            class: "bigger-dialog",
+            tall: true,
             title: 'Append datasets',
             fields: [
+              // {
+              //   key: 'with',
+              //   label: 'Dataset (right)',
+              //   type: 'select',
+              //   items_key: 'items_with'
+              // },
               {
                 key: 'with',
-                label: 'Dataset (right)',
-                type: 'select',
-                items_key: 'items_with'
+                label: 'With datasets',
+                type: 'tabs',
+                item_key: 'name',
+                items_key: 'items_with',
+                static_item_key: 'dfName',
+                options: {
+                  items_name: 'dataset',
+                  value: 'name',
+                  concat: true
+                }
               },
               {
                 key: 'selected_columns',
@@ -903,36 +923,48 @@ export default {
               },
             ],
             validate: (c) => {
-              return !!(c.selected_columns && c.selected_columns.length)
+              return !!(c.selected_columns && c.selected_columns.length && c.with.length)
             }
           },
           payload: async (columns, payload = {}) => {
 
-            var _datasets_right = {...payload.secondaryDatasets}
-            var items_with = Object.keys(_datasets_right).filter(e=>(e!==payload.dfName && e!=='preview_df'))
 
-            var df2 = items_with[0]
+            var items_with = Object.keys(payload.secondaryDatasets)
+              .filter(e=>(e!==payload.dfName && e!=='preview_df'))
+              .filter(e=>!e.startsWith('_'))
+              .map(name=>({name}));
+
+            var df2 = items_with[0];
 
             return {
               items_with: (c)=>{
-                return Object.keys(c._datasets_right)
-                  .filter(e=>e!==payload.dfName && e!=='preview_df')
+                return Object.keys(c.secondaryDatasets)
+                  .filter(e=>(e!==payload.dfName && e!=='preview_df'))
                   .filter(e=>!e.startsWith('_'))
+                  .map(name=>({name}));
               },
-              with: df2,
-              _datasets_right,
+              with: [df2],
               dataset_columns: (c)=>{
                 try {
 
-                  return [
-                    c.allColumns.map(name=>({
+                  var datasets = c.with.map(dataset=>{
+                    var entries = Object.entries(c.secondaryDatasets[dataset.name].types)
+                    return entries.map(([name, type])=>({
                       name,
-                      type: (c.types && c.types.self) ? c.types.self[name] : '  '
-                    })),
-                    c._datasets_right[c.with].map(name=>({
-                      name,
-                      type: (c.types && c.types[c.with]) ? c.types[c.with][name] : '  '
+                      type,
+                      value: c.secondaryDatasets[dataset.name].sample[name]
                     }))
+                  });
+
+                  var mainEntries = Object.entries(c.secondaryDatasets[payload.dfName].types);
+
+                  return [
+                    mainEntries.map(([name, type])=>({
+                      name,
+                      type,
+                      value: c.secondaryDatasets[payload.dfName].sample[name]
+                    })),
+                    ...datasets
                   ];
                 } catch (err) {
                   console.error(err);
@@ -941,13 +973,7 @@ export default {
               },
 
               selected_columns: [],
-              preview: {
-                expectedColumns: -1,
-                type: 'concat',
-                delay: 500,
-                datasetPreview: true,
-                // noBufferWindow: true
-              },
+              preview: false,
               request: {
                 // createsNew: true
               }
@@ -959,20 +985,24 @@ export default {
           onInit: async (currentCommand) => {
             try {
 
-              var command = {...currentCommand}
-              if (!command.secondaryDatasets[command.with] || !command.secondaryDatasets[command.with].buffer) {
-                await this.evalCode('_output = '+command.with+'.ext.set_buffer("*")') // TO-DO: !!!
-                this.$store.commit('setSecondaryBuffer', { key: command.with, value: true})
-                command.secondaryDatasets = {...this.currentSecondaryDatasets}
+              var command = { ...currentCommand };
+
+              var dfNames = Object.keys(command.secondaryDatasets);
+
+              for (let i = 0; i < dfNames.length; i++) {
+                var dfName = dfNames[i]
+                command.secondaryDatasets[dfName].columns = await this.datasetColumns(dfName);
+                command.secondaryDatasets[dfName].types = await this.datasetTypes(dfName);
+                command.secondaryDatasets[dfName].sample = await this.datasetSample(dfName);
+                command.secondaryDatasets[dfName].buffer = await this.datasetBuffer(dfName);
               }
-              var withOther = command.items_with(command).map(df=>`"${df}": ${df}.cols.profiler_dtypes()`).join(', ')
-              const response = await this.evalCode(`_output = { "self": ${command.dfName}.cols.profiler_dtypes(), ${withOther} }`)
 
-              command.types = response.data.result
-              command.typesDone = true
+              command.typesDone = true;
 
-              return command
+              return command;
+
             } catch (err) {
+              console.error(err);
               return { ...currentCommand, typesDone: true }
             }
           }
@@ -1073,7 +1103,16 @@ export default {
         },
         STRING: {
           dialog: {
-            title: 'String operation',
+            title: (c)=>{
+              return {
+                proper: 'Convert to proper case',
+                trim: 'Trim white spaces',
+                lower: 'Convert to lowercase',
+                upper: 'Convert to uppercase',
+                remove_accents: 'Remove accents',
+                remove_special_chars: 'Remove special chars'
+              }[c.command]
+            },
             output_cols: true,
           },
           payload: (columns, payload = {}) => ({
@@ -1085,8 +1124,8 @@ export default {
           }),
           content: (payload) => {
             var str = {
-              proper: 'Proper',
-              trim: 'Trim white space in',
+              proper: 'Proper case',
+              trim: 'Trim white spaces in',
               lower: 'Lowercase',
               upper: 'Uppercase',
               remove_accents: 'Remove accents in',
@@ -1097,7 +1136,12 @@ export default {
         },
         SUBSTR1: {
           dialog: {
-            title: 'Substring',
+            title: (c)=>{
+              return {
+                left_string: 'Substring (left)',
+                right_string: 'Substring (right)'
+              }[c.command]
+            },
             output_cols: true,
             fields: [
               {
@@ -2127,12 +2171,6 @@ export default {
                 useFunctions: true,
                 fuzzySearch: true
               },
-              // {
-              //   type: 'field',
-              //   key: 'where',
-              //   label: 'Where',
-              //   placeholder: 'column!=None'
-              // },
               {
                 type: 'field',
                 key: 'output_col',
@@ -2148,23 +2186,27 @@ export default {
                 &&
                 (command.columns[0] || output_col)
                 &&
-                (command.value || output_col || command.where)
+                (command.value || output_col)
               )
             }
           },
-          payload: (columns, payload = {}) => ({
-            command: 'set',
-            columns,
-            value: (columns[0] ? (columns[0].includes(' ') ? `{${columns[0]}}` : columns[0]) : ''),
-            where: (columns[0] ? `${columns[0]}!=None` : ''),
-            title: (columns[0] ? `Set column` : 'Create column'),
-            preview: {
-              expectedColumns: 1,
-              type: 'set'
-            },
-            output_col: 'new_column',
-            output_cols: columns.map(e=>'')
-          }),
+          payload: (columns, payload = {}) => {
+
+            var output_col = columns.length ? '' : 'new_column';
+
+            return {
+              command: 'set',
+              columns,
+              value: (columns[0] ? (columns[0].includes(' ') ? `{${columns[0]}}` : columns[0]) : ''),
+              title: (columns[0] ? `Set column` : 'Create column'),
+              preview: {
+                expectedColumns: 1,
+                type: 'set'
+              },
+              output_col,
+              output_cols: columns.map(e=>'')
+            }
+          },
           content: (payload) => {
 
             var output_cols = payload.output_cols
@@ -2183,8 +2225,7 @@ export default {
               action = 'Set / Create'
             }
 
-            return `<b>${action}</b> ${multipleContent([output_cols],'hl--cols')} with ${multipleContent([payload.value],'hl--param')}`
-              + (payload.where ? ` where ${multipleContent([payload.where],'hl--param')}` : '')
+            return `<b>${action}</b> ${multipleContent([output_cols],'hl--cols')} with ${multipleContent([payload.value],'hl--param')}`;
           }
         },
         rename: {
@@ -2250,7 +2291,7 @@ export default {
               output_cols: columns.map(e=>e),
               preview: {
                 type: 'unnest',
-                expectedColumns: (c) => c.splits,
+                expectedColumns: (c) => c.splits ? c.splits : -1,
                 highlightColor: 'red',
                 multipleOutputs: true
               },
@@ -2530,7 +2571,7 @@ export default {
       'currentDuplicatedColumns',
       'currentPreviewNames',
       'currentPreviewInfo',
-      'currentSecondaryDatasets',
+      'secondaryDatasets',
       'loadPreview',
       'hasSecondaryDatasets'
     ]),
@@ -2785,7 +2826,7 @@ export default {
 
                 if (this.currentCommand.columns && this.currentCommand.output_cols) {
                   this.currentCommand.output_cols.forEach((col, i) => {
-                    nameMap[ 'new '+this.currentCommand.columns[i] ] = col
+                    nameMap[ '__new__'+this.currentCommand.columns[i] ] = col
                   })
                 }
 
@@ -2800,9 +2841,9 @@ export default {
                   newColumns = +expectedColumns;
                 } else {
                   for (const key in nameMap) {
-                    if (nameMap[key] && 'new '+nameMap[key]!==key) {
+                    if (nameMap[key] && '__new__'+nameMap[key]!==key) {
                       newColumns++
-                    } else if (!nameMap[key] || 'new '+nameMap[key]===key){
+                    } else if (!nameMap[key] || '__new__'+nameMap[key]===key){
                       replacingColumns++
                     }
                   }
@@ -2855,7 +2896,7 @@ export default {
 
       var name = 'df'
 
-      var sd = Object.keys(this.currentSecondaryDatasets)
+      var sd = Array.from(this.secondaryDatasets)
         .filter(e=>e.startsWith(name))
 
       if (sd.length) {
@@ -2938,8 +2979,16 @@ export default {
 
     getProperty,
 
-    cleanCodeError () {
-      this.codeError = '';
+    async cleanCodeError () {
+      await this.$store.dispatch('deleteErrorCells');
+      await this.$store.dispatch('resetPromises', { from: 'cells' });
+      await this.$nextTick();
+      await this.$store.dispatch('getProfiling', { payload: {
+        socketPost: this.socketPost,
+        dfName: this.currentDataset.dfName,
+        avoidReload: true,
+        clearPrevious: true
+      }});
     },
 
     preparePreviewCode: debounce( async function(expectedColumns) {
@@ -2970,7 +3019,7 @@ export default {
       }
 
 
-    }, 10),
+    }, 250),
 
     getCommandTitle() {
       try {
@@ -3042,6 +3091,13 @@ export default {
 
       // default payload
 
+      var secondaryDatasets = {};
+
+      for (let i = 0; i < this.secondaryDatasets.length; i++) {
+        const dfName = this.secondaryDatasets[i];
+        secondaryDatasets[dfName] = {};
+      }
+
       var payload = {
         request: {
           isLoad: false,
@@ -3050,7 +3106,7 @@ export default {
           immediate: command.immediate,
           isString: columnDataTypes && columnDataTypes.every(d=>STRING_TYPES.includes(d)),
         },
-        secondaryDatasets: this.currentSecondaryDatasets,
+        secondaryDatasets,
         columnDataTypes: columnDataTypes,
         columnDateFormats: columnDateFormats,
         allColumnDateFormats: allColumnDateFormats,
@@ -3240,13 +3296,12 @@ export default {
         var deleteDf = deletedPayload.newDfName
         if (deleteDf) {
           deleteTab = currentPayload.newDfName
-          this.evalCode(`del ${deleteDf}; _output = "Deleted ${deleteDf}"`)
-          this.updateSecondaryDatasets()
+          this.evalCode(`del ${deleteDf}; _output = "Deleted ${deleteDf}"`);
         }
       }
 
       if (deleteTab) {
-        await this.$store.dispatch('newDataset', { dfName: deleteTab, current: true })
+        await this.$store.dispatch('newDataset', { dfName: deleteTab })
       }
 
       if (isDataSource) {
@@ -3418,8 +3473,6 @@ export default {
         if (this.firstRun) {
           this.firstRun = false;
         }
-
-        var secondaryDatasets = this.updateSecondaryDatasets();
 
         this.$forceUpdate();
 

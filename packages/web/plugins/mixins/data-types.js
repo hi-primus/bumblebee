@@ -11,7 +11,7 @@ export default {
 
 	methods: {
 		dataTypeHint (data) {
-      return TYPES_HINTS[data] || (data || 'und').substring(0,3)
+      return data ? (TYPES_HINTS[data] || (data).substring(0,3)) : 'und';
 		}
 	}
 

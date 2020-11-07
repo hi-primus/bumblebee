@@ -148,7 +148,7 @@
       <v-switch
         :key="field.key"
         v-model="_value"
-        color="black"
+        color="primary"
         :label="(typeof field.label == 'function') ? field.label(currentCommand) : field.label"
       ></v-switch>
     </template>
@@ -221,7 +221,7 @@
           v-if="!currentCommand.typesDone"
           indeterminate
           color="grey"
-          class="mx-auto d-flex"
+          class="mx-auto mt-4 d-flex"
           size="64"
           width="4"
         />
@@ -250,33 +250,31 @@
         @click:item="field.selectKey ? (currentCommand = field.selectKey($event, currentCommand)) : ()=>{}"
       >
       </ColumnsJoinSelector>
-      <!-- <v-data-table
-        :items-per-page="(field.items_key) ? getPropertyField(currentCommand[field.items_key]).length : field.items.length"
+    </template>
+    <template v-else-if="getPropertyField(field.type)=='table'">
+      <ItemsSelector
+        :key="field.key"
         v-model="_value"
-        show-select
-        class="vdf--hide-select mb-4 columns-filter"
-        hide-default-footer
-        dense
-        required
-        outlined
+        :headers="field.headers"
+        :item-key="field.item_key"
+        :items="(field.items_key) ? getPropertyField(currentCommand[field.items_key]) : field.items"
+        :disabled="getPropertyField(field.disabled)"
+        @input="(field.onChange) ? (currentCommand = field.onChange($event, currentCommand)) : ()=>{}"
+        @click:row="field.onClickRow ? (currentCommand = field.onClickRow($event, currentCommand)) : ()=>{}"
       >
-        <template v-slot:item.source="{ item }">
-          <span dark class="capitalize text--darken-3" :class="[ item.source==='right' ? 'right-join--text' : 'left-join--text' ]">
-            {{ item.source }}
-          </span>
-        </template>
-        <template v-slot:item.key="{ item }">
-          <span
-            @click.stop="field.selectKey ? (currentCommand = field.selectKey(item, currentCommand)) : ()=>{}"
-            :class="{'key-selected': (currentCommand.right_on===item.name && item.source==='right')||(currentCommand.left_on===item.name && item.source==='left')}"
-            class="key-select"
-          >
-            <v-icon>
-              vpn_key
-            </v-icon>
-          </span>
-        </template>
-      </v-data-table> -->
+      </ItemsSelector>
+    </template>
+    <template v-else-if="getPropertyField(field.type)=='tabs'">
+      <TitleTabs
+        :key="field.key"
+        v-model="_value"
+        :concat="field.options.concat"
+        :items-name="field.options.items_name"
+        :item-key="field.item_key"
+        :items="(field.items_key) ? getPropertyField(currentCommand[field.items_key]) : field.items"
+        :static-item="(field.static_item_key) ? getPropertyField(currentCommand[field.static_item_key]) : field.static_item_key"
+      >
+      </TitleTabs>
     </template>
     <template v-else-if="getPropertyField(field.type)=='select-foreach'">
       <v-row :key="field.key" no-gutters class="foreach-label">
@@ -344,6 +342,8 @@ import { getProperty } from 'bumblebee-utils'
 
 import TextFieldSuggestions from '@/components/TextFieldSuggestions'
 import ColumnsJoinSelector from '@/components/ColumnsJoinSelector'
+import ItemsSelector from '@/components/ItemsSelector'
+import TitleTabs from '@/components/TitleTabs'
 import ColumnsConcatSelector from '@/components/ColumnsConcatSelector'
 
 export default {
@@ -351,6 +351,8 @@ export default {
   components: {
     TextFieldSuggestions,
     ColumnsJoinSelector,
+    ItemsSelector,
+    TitleTabs,
     ColumnsConcatSelector
   },
 

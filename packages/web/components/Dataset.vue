@@ -1,6 +1,6 @@
 <template>
 	<div class="table-container">
-    <div v-if="!(currentDataset && currentDataset.summary) && !loadPreviewActive" class="no-data">
+    <div v-if="(!(currentDataset && currentDataset.summary) && !loadPreviewActive) || $store.state.kernel=='loading'" class="no-data">
       <div v-if="appError" class="title grey--text text-center text-with-icons">
         There's a problem <br/><br/>
         <v-btn color="primary" depressed @click="reloadInit">Reload</v-btn>
@@ -21,30 +21,38 @@
         </template>
       </div>
       <div v-else class="title grey--text text-center text-with-icons">
-        <div class="available-dfs mb-4" v-if="availableDatasets && availableDatasets.length">
-          Load from existing data sources:
-          <template v-for="(dfName, index) in availableDatasets">
-            <span :key="'av'+dfName">
-              <template v-if="index>0">, </template>
-              <span class="primary--text hoverable" @click="openDf(dfName)">{{dfName}}</span>
-            </span>
-          </template>
-        </div>
-        <v-btn
-          @click="commandHandle({command: 'load file'})"
-          color="primary"
-          class="mr-3"
-          depressed
-        >Load from file</v-btn>
-        <span> or </span>
-        <v-btn
-          @click="commandHandle({command: 'load from database'})"
-          color="primary"
-          class="ml-3"
-          depressed
-        >Load from database</v-btn>
+        <v-progress-circular
+          v-if="loadingDf"
+          indeterminate
+          color="#888"
+          class="mb-10"
+          size="64"
+        />
+        <template v-else>
+          <div class="available-dfs mb-4" v-if="availableDatasets && availableDatasets.length">
+            Load from existing data sources:
+            <template v-for="(dfName, index) in availableDatasets">
+              <span :key="'av'+dfName">
+                <template v-if="index>0">, </template>
+                <span class="primary--text hoverable" @click="openDf(dfName)">{{dfName}}</span>
+              </span>
+            </template>
+          </div>
+          <v-btn
+            @click="commandHandle({command: 'load file'})"
+            color="primary"
+            class="mr-3"
+            depressed
+          >Load from file</v-btn>
+          <span> or </span>
+          <v-btn
+            @click="commandHandle({command: 'load from database'})"
+            color="primary"
+            class="ml-3"
+            depressed
+          >Load from database</v-btn>
+        </template>
       </div>
-
     </div>
 		<div v-else-if="currentListView && !loadPreviewActive" class="table-view-container">
 			<div class="table-controls d-flex">
@@ -238,7 +246,7 @@
 		</div>
 		<client-only>
 			<div
-				v-show="!currentListView && (currentDataset && currentDataset.summary || loadPreviewActive)"
+				v-show="!currentListView && (currentDataset && currentDataset.summary || loadPreviewActive) && $store.state.kernel!='loading'"
 				class="bumblebee-table-container"
 			>
         <div v-if="noMatch" class="no-data">
@@ -309,6 +317,8 @@ export default {
   data () {
     return {
 
+      loadingDf: false,
+
       resultsColumnsData: false, // search
       selectedColumns: {},
 
@@ -326,7 +336,7 @@ export default {
       'currentSelection',
       'currentDataset',
       'currentListView',
-      'currentSecondaryDatasets',
+      'secondaryDatasets',
       'currentHiddenColumns',
       'previewCode',
       'loadPreview',
@@ -374,7 +384,7 @@ export default {
     },
 
     availableDatasets () {
-      var sds = Object.keys(this.currentSecondaryDatasets)
+      var sds = Array.from(this.secondaryDatasets)
         .filter(e=>e.startsWith('df'))
 
       this.$store.state.datasets.forEach(dataset => {
@@ -576,9 +586,12 @@ export default {
 
   methods: {
 
-    openDf (dfName) {
+    async openDf (dfName) {
+      this.loadingDf = true;
       this.$store.commit('setDfToTab', { dfName, go: true });
-      this.getProfiling(dfName)
+      await this.getProfiling(dfName)
+      this.$store.commit('setDfToTab', { dfName, go: true });
+      this.loadingDf = false;
     },
 
     commandHandle (event) {

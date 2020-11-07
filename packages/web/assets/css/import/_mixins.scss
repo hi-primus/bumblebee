@@ -12,3 +12,25 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+@mixin name-center {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  justify-content: space-between;
+  &::before {
+    content: "";
+    min-width: 40px;
+    max-width: 52px;
+    order: 2;
+    flex-shrink: 1;
+    width: 52px;
+  }
+  &::after {
+    content: '';
+    width: 52px;
+    max-width: 52px;
+    order: 4;
+    flex-shrink: 1;
+  }
+}

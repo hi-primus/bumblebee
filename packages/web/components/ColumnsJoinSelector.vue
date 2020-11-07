@@ -8,13 +8,14 @@
     :disabled="disabled"
     @input="$emit('input',$event)"
     @click:row="$emit('click:row',$event)"
-    class="vdf--hide-select mb-4 columns-filter"
+    class="vdf--hide-select mb-4 columns-filter items-selector"
     show-select
-    hide-default-footer
+    :hide-default-footer="hideFooter"
     dense
     required
     outlined
   >
+    <slot></slot>
     <template v-slot:item.source="{ item }">
       <span dark class="capitalize text--darken-3" :class="[ item.source==='right' ? 'right-join--text' : 'left-join--text' ]">
         {{ item.source }}
@@ -36,6 +37,16 @@
 
 <script>
 export default {
-  props: ['value','disabled','headers','itemsPerPage','items','itemKey','rightOn','leftOn']
+  props: ['value','disabled','headers','items','itemKey','rightOn','leftOn'],
+  computed: {
+
+    itemsPerPage () {
+      return (this.items.length>10) ? 10 : -1
+    },
+
+    hideFooter () {
+      return this.items.length<=10;
+    }
+  }
 }
 </script>

@@ -1,6 +1,5 @@
 <template>
   <div v-if="column">
-
     <div class="sidebar-subheader hoverable column-title" @click="expanded = !expanded">
       <div class="data-column-data">
         <span class="data-type" :class="`type-${column.profiler_dtype.dtype}`">{{ dataTypeHint(column.profiler_dtype.dtype) }}</span>
@@ -232,22 +231,14 @@
           </span>
         </div>
         <div style="min-height: 128px;" class="vertical-center">
-          <v-progress-circular
+          <placeholder-bars
             v-if="patternsFrequency[patternsResolution]==='loading' || !patternsFrequency[patternsResolution]"
-            indeterminate
-            color="grey"
             class="mx-auto d-flex"
-            size="64"
-            width="4"
           />
-          <v-progress-circular
+          <placeholder-bars
             v-else-if="patternsFrequency[patternsResolution]==='error'"
             @click="getPatterns"
-            :value="100"
-            color="grey"
             class="mx-auto d-flex"
-            size="64"
-            width="4"
           />
           <template v-else>
             <TopValues
@@ -288,6 +279,7 @@ import Percentile from '@/components/PercentileStats'
 import Descriptive from '@/components/Stats'
 import Histogram from '@/components/Histogram'
 import DataTypes from '@/components/DataTypes'
+import PlaceholderBars from '@/components/placeholders/PlaceholderBars'
 
 import dataTypesMixin from '~/plugins/mixins/data-types'
 import applicationMixin from '~/plugins/mixins/application'
@@ -303,7 +295,8 @@ export default {
 		Descriptive,
 		Frequent,
 		Histogram,
-		DataTypes,
+    DataTypes,
+    PlaceholderBars,
     VegaEmbed
 	},
 

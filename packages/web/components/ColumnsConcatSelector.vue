@@ -7,7 +7,7 @@
     :items-name="'columns'"
   >
     <template v-slot:item="{ item }">
-      <span :title="item.name">
+      <span class="data-item-title" :title="item.name">
         <span
           class="data-type"
           :class="`type-${item.type}`"
@@ -18,6 +18,22 @@
           {{item.name}}
         </span>
       </span>
+      <span class="data-item-value" :title="item.value">
+        {{item.value}}
+      </span>
+
+    </template>
+    <template v-slot:item-output="{ item }">
+      <span class="data-item-title" :title="item.name">
+        <span
+          class="data-type"
+          :class="`type-${item.type}`"
+        >
+          {{dataTypeHint(item.type)}}
+        </span>
+        <EditableElement element="div" class="data-column-name" :title="item.name" :value="item.name" @input="item.update">
+        </EditableElement>
+      </span>
 
     </template>
   </DraggableConcat>
@@ -25,6 +41,7 @@
 
 <script>
 import DraggableConcat from '@/components/DraggableConcat'
+import EditableElement from '@/components/EditableElement'
 import dataTypesMixin from '@/plugins/mixins/data-types'
 
 export default {
@@ -34,7 +51,8 @@ export default {
   ],
 
   components: {
-    DraggableConcat
+    DraggableConcat,
+    EditableElement
   },
 
   props: ['value','disabled','datasetColumns']

@@ -943,7 +943,7 @@ export default {
           group: 'STRING',
           icons: [{ icon: 'text_format' }],
           tooltip: 'String operations',
-          disabled: ()=>!(this.checkDataTypes(['string']) && this.selectionType=='columns' && this.currentDataset && this.currentDataset.summary && this.selectedColumns.length>=0)
+          disabled: ()=>!(this.selectionType=='columns' && this.currentDataset && this.currentDataset.summary && this.selectedColumns.length>=0)
         },
         // TO-DO: Datetime operations
         {
