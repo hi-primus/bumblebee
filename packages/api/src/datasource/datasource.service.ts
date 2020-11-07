@@ -1,10 +1,10 @@
-import { Model } from "mongoose";
-import { Injectable, BadRequestException } from "@nestjs/common";
+import { BadRequestException, Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
-import { DataSource } from "./interfaces/datasoruce.interface";
+import * as AWS from "aws-sdk";
+import { Model } from "mongoose";
 import { User } from "src/users/interfaces/user.interface";
 import { v4 as uuidv4 } from "uuid";
-import * as AWS from "aws-sdk";
+import { DataSource } from "./interfaces/datasoruce.interface";
 
 @Injectable()
 export class DatasourceService {
@@ -23,22 +23,47 @@ export class DatasourceService {
       media.name.split(".")[media.name.split(".").length - 1]
     }`;
     try {
-      const url = await this.s3.getSignedUrlPromise("putObject", {
-        Bucket: process.env.DO_BUCKET,
-        ContentType: media.type,
-        ACL: "public-read",
-        Key,
-        Expires: 60 * 30,
-      });
-      new this.dataSourceModel({
-        name,
-        creator: user.userId,
-        url: url.split("?").slice(0, -1).join("?"),
-      }).save();
-      return url;
+      if (
+        !process.env.DO_BUCKET &&
+        process.env.INSTANCE === "LOCAL" &&
+        process.env.BACKEND_URL
+      ) {
+        const url = `${
+          process.env.BACKEND_URL
+        }/datasource/local/${name}-${uuidv4()}.${
+          media.name.split(".")[media.name.split(".").length - 1]
+        }`;
+        new this.dataSourceModel({
+          name,
+          creator: user.userId,
+          url,
+        }).save();
+        return url;
+      } else if (
+        process.env.DO_BUCKET &&
+        process.env.DO_ENDPOINT &&
+        process.env.DO_ACCESS_KEY_ID &&
+        process.env.DO_SECRET_KEY
+      ) {
+        const url = await this.s3.getSignedUrlPromise("putObject", {
+          Bucket: process.env.DO_BUCKET,
+          ContentType: media.type,
+          ACL: "public-read",
+          Key,
+          Expires: 60 * 30,
+        });
+        new this.dataSourceModel({
+          name,
+          creator: user.userId,
+          url: url.split("?").slice(0, -1).join("?"),
+        }).save();
+        return url;
+      } else {
+        throw new BadRequestException();
+      }
     } catch (error) {
       console.log(error);
-      throw new BadRequestException(error);
+      throw new BadRequestException();
     }
   }
 
