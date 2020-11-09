@@ -94,9 +94,7 @@ export class DatasourceController {
 
   @Get("/upload/:filename")
   getLocalFiles(@Param("filename") filename: string, @Res() res) {
-    const buffer = fs.readFileSync(
-      `src/../assets/iconfinder_maintenance_2639855-49cecba6-82bb-47ae-b15a-e6359794d867.png`
-    );
+    const buffer = fs.readFileSync(`src/../assets/${filename}`);
 
     res.set({
       "Content-Type": `application/${
