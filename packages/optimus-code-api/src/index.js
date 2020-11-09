@@ -215,8 +215,9 @@ export const codeGenerators = {
     return `.cols.append_df([${datasets}], ${cols_map})`;
   },
   join: (payload) => {
-    var columnsLeft = payload.selected_columns.filter(c=>c.source==='left').map(c=>c.name)
-    var columnsRight = payload.selected_columns.filter(c=>(c.name && c.source==='right')).map(c=>c.name)
+
+    var columnsLeft = payload.selected_columns.filter(c=>c.source==='left').map(c=>c.name);
+    var columnsRight = payload.selected_columns.filter(c=>(c.name && c.source==='right')).map(c=>c.name);
 
     var columnsLeftEnd = Array.from(columnsLeft)
     var columnsRightEnd = Array.from(columnsRight)
@@ -232,7 +233,7 @@ export const codeGenerators = {
 
     var columnsEnd = [...new Set([...columnsLeftEnd, ...columnsRightEnd])]
 
-    var filterEnd = `.cols.select(["${columnsEnd.join('", "')}"])`
+    var filterEnd = columnsEnd.length ? `.cols.select(["${columnsEnd.join('", "')}"])` : '';
 
     if (columnsLeft.indexOf(payload.left_on)===-1) {
       columnsLeft.push(payload.left_on)
@@ -241,8 +242,8 @@ export const codeGenerators = {
       columnsRight.push(payload.right_on)
     }
 
-    var filterLeft = `.cols.select(["${columnsLeft.join('", "')}"])`
-    var filterRight = `.cols.select(["${columnsRight.join('", "')}"])`
+    var filterLeft = columnsLeft.length ? `.cols.select(["${columnsLeft.join('", "')}"])` : '*';
+    var filterRight = columnsRight.length ? `.cols.select(["${columnsRight.join('", "')}"])` : '*';
 
     // filterEnd = filterLeft = filterRight = ''
 

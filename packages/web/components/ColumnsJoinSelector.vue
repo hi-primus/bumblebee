@@ -41,11 +41,11 @@ export default {
   computed: {
 
     itemsPerPage () {
-      return (this.items.length>10) ? 10 : -1
+      return (this.items && this.items.length>10) ? 10 : -1
     },
 
     hideFooter () {
-      return this.items.length<=10;
+      return this.items && this.items.length<=10;
     }
   }
 }

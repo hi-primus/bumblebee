@@ -750,21 +750,22 @@ export default {
                 type: 'select',
                 items_key: 'items_with',
                 onChange: (event, currentCommand)=>{
+
                   for (let i = currentCommand.selected_columns.length-1; i >= 0; i--) {
                     if (currentCommand.selected_columns[i].source==='right') {
                       currentCommand.selected_columns.splice(i,1)
                     }
                   }
-                  currentCommand.right_on = false
 
-                  this.$nextTick(()=>{
-                    currentCommand.selected_columns = [
-                      ...currentCommand.selected_columns,
-                      ...Object.keys(currentCommand.secondaryDatasets[currentCommand.with].types || {}).map(n=>({name: n, source: 'right', key: n+'r'}))
-                    ]
-                    var items = getProperty(currentCommand.items_r_on,[currentCommand])
-                    currentCommand.right_on = items ? (items[0] || false) : false
-                  })
+                  currentCommand.right_on = false;
+
+                  currentCommand.selected_columns = [
+                    ...currentCommand.selected_columns,
+                    ...(currentCommand.secondaryDatasets[currentCommand.with].columns || []).map(name=>({name, source: 'right', key: name+'r'}))
+                  ];
+
+                  var items = getProperty(currentCommand.items_r_on, [currentCommand]);
+                  currentCommand.right_on = items ? (items[0] || false) : false
                   return currentCommand
                 }
               },
@@ -825,7 +826,7 @@ export default {
 
             var items_with = Object.keys(payload.secondaryDatasets).filter(e=>(e!==payload.dfName && e!=='preview_df'))
 
-            var df2 = items_with[0]
+            var df2 = items_with[0];
 
             return {
               how: 'inner',
@@ -835,7 +836,8 @@ export default {
               },
               left_on: payload.allColumns[0],
               items_l_on: payload.allColumns,
-              right_on: payload.secondaryDatasets[df2][0],
+              right_on: [],
+
               items_r_on: (c)=>c.secondaryDatasets[c.with].columns,
               with: df2,
               items_with: (c)=>{
@@ -847,14 +849,11 @@ export default {
                 try {
                   return [
                     ...(c.allColumns || []).map(n=>({name: n, source: 'left', key: n+'l'})),
-                    ...Object.keys(currentCommand.secondaryDatasets[currentCommand.with].types || {}).map(n=>({name: n, source: 'right', key: n+'r'}))
+                    ...c.secondaryDatasets[c.with].columns.map(n=>({name: n, source: 'right', key: n+'r'}))
                   ]
                 } catch (err) {}
               },
-              selected_columns: [
-                ...(payload.allColumns || []).map(n=>({name: n, source: 'left', key: n+'l'})),
-                ...(payload.secondaryDatasets[df2].columns || []).map(n=>({name: n, source: 'right', key: n+'r'}))
-              ],
+              selected_columns: [],
               preview: {
                 joinPreview: (c)=>{
                   var left = c.selected_columns.filter(col=>col.source==='left' && col.name!==c.left_on).map(col=>col.name)
@@ -875,18 +874,41 @@ export default {
               }
             }
           },
-          beforeExecuteCode: async (currentCommand) => {
+          onInit: async (currentCommand) => {
+
             var command = { ...currentCommand };
 
             var dfNames = Object.keys(command.secondaryDatasets);
 
             for (let i = 0; i < dfNames.length; i++) {
-              var dfName = dfNames[i]
+              var dfName = dfNames[i];
+              command.secondaryDatasets[dfName].columns = await this.datasetColumns(dfName);
+            }
+
+            command.right_on = command.secondaryDatasets[command.with].columns[0];
+            command.selected_columns = [
+              ...(command.allColumns || []).map(name=>({name, source: 'left', key: name+'l'})),
+              ...(command.secondaryDatasets[command.with].columns || []).map(name=>({name, source: 'right', key: name+'r'}))
+            ];
+
+            return command;
+
+          },
+
+          beforeExecuteCode: async (currentCommand) => {
+
+            var command = { ...currentCommand };
+
+            var dfNames = Object.keys(command.secondaryDatasets);
+
+            for (let i = 0; i < dfNames.length; i++) {
+              var dfName = dfNames[i];
               command.secondaryDatasets[dfName].columns = await this.datasetColumns(dfName);
               command.secondaryDatasets[dfName].buffer = await this.datasetBuffer(dfName);
             }
 
             return command;
+
           },
           content: (payload) => `<b>Join</b> ${hlParam(payload.dfName)} <b>with</b> ${hlParam(payload.with)}`
         },
