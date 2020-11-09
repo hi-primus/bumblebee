@@ -1240,6 +1240,13 @@ table {
   &.type-int {
     transform: scaleX(1.25);
   }
+  &.type-decimal, &.type-credit_card_number, &.type-time {
+    transform: scaleX(0.8125);
+  }
+  &.type-date {
+    filter: saturate(0.66) contrast(1) brightness(1.2) hue-rotate(198deg);
+    opacity: 0.93;
+  }
 }
 
 .type-menu {
@@ -2794,26 +2801,64 @@ $editor-top-padding: 4px;
   margin-bottom: -8px !important;
 }
 
+.concat-items-component {
+  margin-left: -20px;
+  margin-right: -20px;
+  padding-top: 8px;
+  padding-left: 20px;
+  padding-right: 20px;
+  padding-bottom: 0 !important;
+  background: rgba($data-primary, 0.15);
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 292px);
+  height: calc(100vh - 292px);
+  & > * {
+  }
+  .concat-items {
+    overflow-y: auto;
+    min-height: 65%;
+    flex: 1;
+  }
+  .deleted-items {
+    overflow-y: auto;
+    min-height: 60px;
+  }
+}
+
 .concat-items-set {
   display: flex;
   min-width: 98px;
   min-height: $concat-item-height;
   font-family: $font-mono-table;
   position: relative;
+
   &.concat-items {
     .concat-item {
       background: white;
+      padding-left: 24px;
       .close-button {
         pointer-events: none;
         opacity: 0;
         display: block;
       }
       &:hover, &.ghost {
-        background: rgba($data-primary, 0.15);
+        // background: rgba($data-primary, 0.15);
         .close-button {
           pointer-events: auto;
           opacity: 1;
         }
+      }
+      &::before {
+        content: "drag_indicator" !important;
+        font: normal normal normal 24px/1 "Material Icons" !important;
+        transform: scale(0.6666);
+        opacity: 0.5;
+        color: rgba(0, 0, 0, 0.54);
+        transition: opacity ease-in-out 0.3s;
+        position: absolute;
+        left: -4px;
+        top: 12px;
       }
     }
   }
@@ -2825,7 +2870,7 @@ $editor-top-padding: 4px;
       top: 4px;
     }
     .concat-item {
-      background-color: rgba($data-red, 0.1);
+      background-color: $highlight-red;
       .close-button {
         display: none !important;
       }
@@ -2841,19 +2886,7 @@ $editor-top-padding: 4px;
     min-height: $concat-item-height;
     min-width: $concat-col-width;
     .concat-item {
-      padding-left: 24px;
       cursor: move;
-      &::before {
-        content: "drag_indicator" !important;
-        font: normal normal normal 24px/1 "Material Icons" !important;
-        transform: scale(0.6666);
-        opacity: 0.5;
-        color: rgba(0, 0, 0, 0.54);
-        transition: opacity ease-in-out 0.3s;
-        position: absolute;
-        left: -4px;
-        top: 12px;
-      }
       .data-item-title {
         @include name-center;
         max-width: calc(#{$concat-col-width} - 36px);
@@ -2865,12 +2898,15 @@ $editor-top-padding: 4px;
     min-width: calc(#{$concat-final-col-width} + 68px);
     .concat-item {
       padding-right: 24px;
-      .data-type {
-        display: none !important; // TO-DO: Remove
+      padding-left: 28px;
+      cursor: pointer !important;
+      &::before {
+        left: 0px;
+        content: "edit" !important;
       }
       .data-column-name {
         position: relative;
-        left: 0px;  // TO-DO: 32px
+        left: 32px;
       }
     }
   }
@@ -2900,12 +2936,6 @@ $editor-top-padding: 4px;
     padding: 4px 4px 0px 16px;
     border-style: solid;
     border-color: transparent;
-
-    &:hover, &.ghost {
-      &::before {
-        opacity: 1;
-      }
-    }
 
     .data-item-title {
 
@@ -3005,6 +3035,7 @@ $editor-top-padding: 4px;
         opacity: 1;
         border: grey dashed 1px;
         color: rgba(0,0,0,0.25);
+        background: rgba(white,.5);
         transition: color ease-in-out 0.3s;
         font-family: $font-mono;
         font-weight: 700;
@@ -3221,5 +3252,5 @@ $editor-top-padding: 4px;
 }
 
 .editable-element {
-  cursor: text;
+  // cursor: text;
 }

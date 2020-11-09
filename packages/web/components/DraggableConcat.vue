@@ -107,7 +107,7 @@
           v-for="(item, index) in notSelected"
         >
           <div
-            v-if="item.empty"
+            v-if="!item || item.empty"
             class="concat-empty concat-item"
             :key="'empty'+index"
           >
@@ -176,14 +176,29 @@ export default {
     outputItems: {
 
       get () {
-        return this.textFields.map((textFieldKey)=>{
-          var obj = {
-            type: 'string',
-            update: (value)=>{
-              this.$set(this.textFieldsValues, textFieldKey, value)
-            }
+        return this.textFields.map((textFieldKey, index)=>{
+          var obj = {};
+
+          obj.update = (value)=>{
+            this.$set(this.textFieldsValues, textFieldKey, value)
           };
+
+          //
+
+          var types = this.itemsSlotsGroups.map(e=>e[index] && e[index][0] ? e[index][0].type : undefined).filter(e=>e);
+
+          if (types.every(type=>type===types[0])) {
+            obj.type = types[0];
+          } else if (types.every(type=>['decimal','int'].includes(type))) {
+            obj.type = 'decimal';
+          } else {
+            obj.type = 'string';
+          }
+
+          //
+
           obj[this.itemsKey] = this.textFieldsValues[textFieldKey] || textFieldKey;
+
           return obj;
         });
       },
