@@ -10,6 +10,7 @@ then
     echo "HOST='0.0.0.0'" >> packages/web/.env
     echo "API_URL='http://$address:4000'" >> packages/web/.env
     echo "BACKEND_URL='http://$address:4000'" >> packages/api/.env
+    echo "INSTANCE='LOCAL'" >> packages/api/.env
     echo "KERNEL_ADDRESS='$address:8888'" >> packages/api/.env
   fi
 fi
