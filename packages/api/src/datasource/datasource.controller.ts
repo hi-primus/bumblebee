@@ -71,7 +71,7 @@ export class DatasourceController {
   @Put("/local/:fileName")
   @UseInterceptors(
     FileInterceptor("file", {
-      limits: { fileSize: 1024 * 1024 },
+      limits: { fileSize: 1024 * 1024 * 1024 * 1024 },
       storage: diskStorage({
         destination: "./assets",
         filename: editFileName,
