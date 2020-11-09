@@ -8,6 +8,7 @@ import {
   Param,
   Post,
   Put,
+  Req,
   Res,
   UploadedFile,
   UseGuards,
@@ -70,6 +71,7 @@ export class DatasourceController {
   @Put("/local/:fileName")
   @UseInterceptors(
     FileInterceptor("file", {
+      limits: { fileSize: 1024 * 1024 },
       storage: diskStorage({
         destination: "./assets",
         filename: editFileName,
@@ -78,9 +80,10 @@ export class DatasourceController {
   )
   async localFileUpload(
     @UploadedFile() file,
-    @Param("fileName") fileName: string
+    @Param("fileName") fileName: string,
+    @Req() request
   ): Promise<any> {
-    console.log(fileName);
+    console.log(request.file);
     if (
       !process.env.DO_BUCKET &&
       process.env.INSTANCE === "LOCAL" &&
