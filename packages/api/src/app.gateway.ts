@@ -104,8 +104,9 @@ export class AppGateway
         endpoint: 'ENDPOINT',
         access_key_id: 'ACCESS_KEY_ID',
         secret_key: 'SECRET_KEY',
-        bucket: 'BUCKET'
-      }
+        bucket: 'BUCKET',
+        local_address: './assets'
+      };
       const execPayload = {
         ...payload,
         file_name,
@@ -113,14 +114,29 @@ export class AppGateway
         endpoint: process.env.DO_ENDPOINT,
         access_key_id: process.env.DO_ACCESS_KEY_ID,
         secret_key: process.env.DO_SECRET_KEY,
-        bucket: process.env.DO_BUCKET
-      }
-      const resultCode = `_output = ${payload.dfName}${getGenerator('uploadToS3',resultPayload)(resultPayload)}`;
-      const code = `_output = ${payload.dfName}${getGenerator('uploadToS3',execPayload)(execPayload)}`;
-      const result = {
-        ...(await runCode(code, sessionId)),
-        url: `https://${process.env.DO_BUCKET}.${process.env.DO_ENDPOINT}/${payload.username}/${file_name}.${file_type}`,
+        bucket: process.env.DO_BUCKET,
+        // local_address: require('path').resolve('./')+'/assets'
+        local_address: require('path').resolve('./').replace(/\\/g, "/")+'/assets'
       };
+      var resultCode = ``;
+      var code = ``;
+      var result
+      if (process.env.INSTANCE === 'LOCAL') {
+        resultCode = `_output = ${payload.dfName}${getGenerator('saveToLocal',resultPayload)(resultPayload)}`;
+        code = `_output = ${payload.dfName}${getGenerator('saveToLocal',execPayload)(execPayload)}`;
+        result = {
+          ...(await runCode(code, sessionId)),
+          url: `${process.env.BACKEND_URL}/datasource/local/downloads/${payload.username}/${payload.workspace}/${file_name}.${file_type}`,
+        };
+      } else {
+        resultCode = `_output = ${payload.dfName}${getGenerator('uploadToS3',resultPayload)(resultPayload)}`;
+        code = `_output = ${payload.dfName}${getGenerator('uploadToS3',execPayload)(execPayload)}`;
+        result = {
+          ...(await runCode(code, sessionId)),
+          url: `https://${process.env.DO_BUCKET}.${process.env.DO_ENDPOINT}/${payload.username}/${file_name}.${file_type}`,
+        };
+      }
+
 			client.emit('reply', {
         data: result,
 				code: resultCode,

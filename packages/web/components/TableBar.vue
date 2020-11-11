@@ -512,7 +512,7 @@ export default {
 				{command: 'load from data source', text: 'Add from a loaded data source', group: 'DATA_SOURCE', hidden: true},
         {command: 'manage data sources', text: 'Manage data sources', group: 'DATA_SOURCE', hidden: true},
 
-        {command: 'download', text: 'Download', group: 'SAVE', disabled: ()=>true},
+        {command: 'download', text: 'Download', group: 'SAVE', disabled: ()=>process.env.INSTANCE!=='LOCAL'},
         {command: 'keep rows', text: 'Save to database', group: 'SAVE', disabled: ()=>!(this.currentDataset && this.currentDataset.summary && this.$store.state.database)},
 
 

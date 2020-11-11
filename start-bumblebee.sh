@@ -13,6 +13,8 @@ then
     echo "INSTANCE='LOCAL'" >> packages/api/.env
     echo "KERNEL_ADDRESS='$address:8888'" >> packages/api/.env
   fi
+  echo "INSTANCE='LOCAL'" >> packages/api/.env
+  echo "INSTANCE='LOCAL'" >> packages/web/.env
 fi
 
 npm install yarn -g

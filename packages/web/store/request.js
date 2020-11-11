@@ -17,9 +17,9 @@ export const actions = {
       request: 'post',
       path: '/datasource/upload',
       payload: uploadPayload
-    }, { root: true })
+    }, { root: true });
 
-    var fileUrl = uploadResponse.data.url
+    var fileUrl = uploadResponse.data.url;
 
     const config = {
       onUploadProgress(progressEvent) {
@@ -30,36 +30,42 @@ export const actions = {
         'x-amz-acl': 'public-read',
         'Authorization': '',
       }
+    };
+
+    if (fileUrl.includes(baseUrl)) {
+      let formData = new FormData();
+      formData.append('file', file);
+      file = formData;
     }
 
     const response = await axios.put(fileUrl,
       file,
       config
-    )
+    );
 
-    fileUrl = fileUrl.split('?')[0]
+    fileUrl = fileUrl.split('?')[0];
 
-    var fileOriginalName = file.name
-    var fileType = undefined
-    var datasetName = undefined
+    var fileOriginalName = file.name;
+    var fileType = undefined;
+    var datasetName = undefined;
 
     try {
-      fileType = fileOriginalName.split('.')
-      fileType = fileType[fileType.length - 1]
+      fileType = fileOriginalName.split('.');
+      fileType = fileType[fileType.length - 1];
       if (!['csv','xls','json','avro','parquet'].includes(fileType)) {
-        throw new Error()
+        throw new Error();
       }
-      datasetName = fileOriginalName.split(fileType)[0]
+      datasetName = fileOriginalName.split(fileType)[0];
     } catch (error) {
-      fileType = undefined
-      console.warn('Bad file name', fileOriginalName)
+      fileType = undefined;
+      console.warn('Bad file name', fileOriginalName);
     }
 
     if (!fileUrl || !fileType || !datasetName) {
-      console.warn('Bad file name', { fileUrl, fileType, datasetName, responseData: response.data } )
+      console.warn('Bad file name', { fileUrl, fileType, datasetName, responseData: response.data });
     }
 
-    return {fileUrl, fileType, datasetName, fileOriginalName}
+    return {fileUrl, fileType, datasetName, fileOriginalName};
 
   },
 

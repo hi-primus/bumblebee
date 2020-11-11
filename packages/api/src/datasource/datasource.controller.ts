@@ -1,5 +1,6 @@
 import {
   Body,
+  ConflictException,
   Controller,
   Delete,
   Get,
@@ -83,19 +84,21 @@ export class DatasourceController {
     @Param("fileName") fileName: string,
     @Req() request
   ): Promise<any> {
-    console.log(request.file);
     if (
       !process.env.DO_BUCKET &&
       process.env.INSTANCE === "LOCAL" &&
       process.env.BACKEND_URL
     ) {
+      if (!file) {
+        throw new ConflictException("No file uploaded")
+      }
       return { status: "File Uploaded Successfully" };
     } else {
       throw new NotFoundException();
     }
   }
 
-  @Get("/upload/:filename")
+  @Get("/local/:filename")
   getLocalFiles(@Param("filename") filename: string, @Res() res) {
     const buffer = fs.readFileSync(`src/../assets/${filename}`);
 
