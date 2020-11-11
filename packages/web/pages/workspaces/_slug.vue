@@ -251,7 +251,7 @@ export default {
     applicationMixin,
   ],
 
-  // middleware: 'authenticatedOrDefault',
+  middleware: 'authenticated',
 
   // async validate ({ params, store }) {
 
@@ -483,6 +483,11 @@ export default {
         if (err.code) {
           window.pushCode({ code: err.code, error: true })
         }
+
+        // if (err.toString().includes('server disconnect')) {
+        //   this.signOut();
+        // }
+
         console.error('(Error on initialization)');
         printError(err)
         var appStatus = {

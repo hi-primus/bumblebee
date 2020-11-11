@@ -272,9 +272,18 @@
         :items-name="field.options.items_name"
         :item-key="field.item_key"
         :items="(field.items_key) ? getPropertyField(currentCommand[field.items_key]) : field.items"
-        :static-item="(field.static_item_key) ? getPropertyField(currentCommand[field.static_item_key]) : field.static_item_key"
+        :static-items="(field.static_items_key) ? getPropertyField(currentCommand[field.static_items_key]) : field.static_items_key"
       >
       </TitleTabs>
+      <div class="tab-hints" :key="'concat'+field.key">
+        <template v-for="(item, index) in (field.info_key) ? getPropertyField(currentCommand[field.info_key]) : field.info || []" class="tab-info">
+          <div :key="index"  class="tab-hint">
+            <template v-if="item">
+              {{item}}
+            </template>
+          </div>
+        </template>
+      </div>
     </template>
     <template v-else-if="getPropertyField(field.type)=='select-foreach'">
       <v-row :key="field.key" no-gutters class="foreach-label">

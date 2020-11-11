@@ -1,5 +1,5 @@
 <template>
-  <div class="concat-items-component pb-5">
+  <div class="concat-items-component">
     <SearchSelect
       v-if="searchSelectAttach"
       :attach="searchSelectAttach"
@@ -74,33 +74,24 @@
           >
             close
           </v-icon>
-          <!-- <v-text-field
-            :placeholder="textField"
-            :value="textFieldsValues[textField]"
-            @input="updateTextField(textField, $event)"
-            dense
-            label="Column name"
-            clearable
-            outlined
-            hide-details
-          >
-          </v-text-field> -->
         </div>
       </div>
     </div>
-    <h3 class="grey--text">Dropped {{itemsName}}</h3>
+    <h3 class="concat-deleted-title grey--text pt-2">Dropped {{itemsName}}</h3>
     <div class="concat-items-set deleted-items">
       <span class="deleted-items-empty text-caption grey--text" v-if="showEmptyDeleted">
         Drop unwanted {{itemsName}} here
       </span>
       <draggable
         @start="startDrag"
+        @end="endDrag"
         v-for="(notSelected, index) in notSelected"
         :key="index"
         tag="div"
         id="deleted-items-col"
-        class="items-col"
+        class="items-col deleted-items-col"
         :list="notSelected"
+        :move="checkMove"
         v-bind="{...dragOptions, group: 'items'+index}"
       >
         <template
@@ -173,38 +164,37 @@ export default {
 
   computed: {
 
-    outputItems: {
+    outputItems () {
 
-      get () {
-        return this.textFields.map((textFieldKey, index)=>{
-          var obj = {};
+      var totalDatasets = this.itemsSlotsGroups.length;
 
-          obj.update = (value)=>{
-            this.$set(this.textFieldsValues, textFieldKey, value)
-          };
+      return this.textFields.map((textFieldKey, index)=>{
+        var obj = {};
 
-          //
+        obj.update = (value)=>{
+          this.$set(this.textFieldsValues, textFieldKey, value)
+        };
 
-          var types = this.itemsSlotsGroups.map(e=>e[index] && e[index][0] ? e[index][0].type : undefined).filter(e=>e);
-
-          if (types.every(type=>type===types[0])) {
-            obj.type = types[0];
-          } else if (types.every(type=>['decimal','int'].includes(type))) {
-            obj.type = 'decimal';
-          } else {
-            obj.type = 'string';
-          }
-
-          //
-
-          obj[this.itemsKey] = this.textFieldsValues[textFieldKey] || textFieldKey;
-
-          return obj;
-        });
-      },
-      set (v) {
         //
-      }
+
+        var types = this.itemsSlotsGroups.map(e=>e[index] && e[index][0] ? e[index][0].type : undefined).filter(e=>e);
+
+        obj.hint = `${types.length} of ${totalDatasets} columns`;
+
+        if (types.every(type=>type===types[0])) {
+          obj.type = types[0];
+        } else if (types.every(type=>['decimal','int'].includes(type))) {
+          obj.type = 'decimal';
+        } else {
+          obj.type = 'string';
+        }
+
+        //
+
+        obj[this.itemsKey] = this.textFieldsValues[textFieldKey] || textFieldKey;
+
+        return obj;
+      });
     },
 
     dragOptions () {
@@ -394,7 +384,12 @@ export default {
     },
 
     removeItem (groupIndex, slotIndex) {
-      this.notSelected[groupIndex].push(this.itemsSlotsGroups[groupIndex][slotIndex][0]);
+      if (!this.itemsSlotsGroups[groupIndex][slotIndex].length) {
+        return false;
+      }
+      this.itemsSlotsGroups[groupIndex][slotIndex].forEach(e=>{
+        this.notSelected[groupIndex].push(e);
+      })
       var itemsSlotsGroups = Array.from(this.itemsSlotsGroups);
       itemsSlotsGroups[groupIndex][slotIndex] = []
       var deleteEmptyResults = this.deleteEmptyItemsSlots(itemsSlotsGroups);
@@ -402,16 +397,27 @@ export default {
         itemsSlotsGroups = deleteEmptyResults;
       }
       this.itemsSlotsGroups = itemsSlotsGroups;
+      return true;
     },
 
     removeOutputItem (slotIndex) {
 
       // return console.log({slotIndex})
+      var itemsSlotsGroups = Array.from(this.itemsSlotsGroups);
 
-      this.notSelected.forEach((notSelectedGroup, groupIndex)=>{
-        this.removeItem(groupIndex, slotIndex);
+      this.notSelected.forEach((notSelectedGroup, groupIndex) => {
+        this.itemsSlotsGroups[groupIndex][slotIndex].forEach(e=>{
+          this.notSelected[groupIndex].push(e);
+        })
+        itemsSlotsGroups[groupIndex][slotIndex] = []
+        return true;
       })
 
+      var deleteEmptyResults = this.deleteEmptyItemsSlots(itemsSlotsGroups);
+      if (deleteEmptyResults) {
+        itemsSlotsGroups = deleteEmptyResults;
+      }
+      this.itemsSlotsGroups = itemsSlotsGroups;
     },
 
     updateItemsSlotsGroups () {
@@ -486,7 +492,7 @@ export default {
     },
 
     checkMove ($event) {
-      return (!$event.relatedContext.list.length || $event.from === $event.to || $event.to.id==='deleted-items-col')
+      return ($event.from === $event.to || !$event.relatedContext.list.length || $event.to.id==='deleted-items-col');
     }
   }
 

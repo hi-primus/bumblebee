@@ -34,6 +34,9 @@
         <EditableElement element="div" class="data-column-name" :title="item.name" :value="item.name" @input="item.update">
         </EditableElement>
       </span>
+      <span class="data-item-hint" :title="item.hint">
+        {{item.hint}}
+      </span>
 
     </template>
   </DraggableConcat>

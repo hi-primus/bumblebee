@@ -254,6 +254,7 @@ import {
   hlCols,
   namesToIndices,
   transformDateFromPython,
+  transpose,
   objectMap,
 
   TIME_NAMES,
@@ -915,7 +916,7 @@ export default {
         concat: {
           dialog: {
             dialog: true,
-            class: "bigger-dialog",
+            class: "bigger-dialog concat-dialog",
             tall: true,
             title: 'Append datasets',
             fields: [
@@ -931,7 +932,8 @@ export default {
                 type: 'tabs',
                 item_key: 'name',
                 items_key: 'items_with',
-                static_item_key: 'dfName',
+                static_items_key: 'static_items',
+                info_key: 'items_info',
                 options: {
                   items_name: 'dataset',
                   value: 'name',
@@ -950,27 +952,58 @@ export default {
           },
           payload: async (columns, payload = {}) => {
 
-
-            var items_with = Object.keys(payload.secondaryDatasets)
-              .filter(e=>(e!==payload.dfName && e!=='preview_df'))
-              .filter(e=>!e.startsWith('_'))
-              .map(name=>({name}));
-
-            var df2 = items_with[0];
+            var items_with_cb = (c)=>{
+              return Object.entries(c.secondaryDatasets)
+                .filter(([dfName, df])=>(dfName!==c.dfName && dfName!=='preview_df'))
+                .filter(([dfName, df])=>!dfName.startsWith('_'))
+                .map(([name, df])=>{
+                  var length = undefined
+                  if (df.columns) {
+                    length = df.columns.length;
+                  }
+                  return { name: name, dfName: name, columns: length };
+                });
+            }
 
             return {
-              items_with: (c)=>{
-                return Object.keys(c.secondaryDatasets)
-                  .filter(e=>(e!==payload.dfName && e!=='preview_df'))
-                  .filter(e=>!e.startsWith('_'))
-                  .map(name=>({name}));
+              items_with: items_with_cb,
+              with: [],
+              items_info: (c)=>{
+                try {
+                  var columns = transpose(c.selected_columns.map(e=>e.items)).map(columns=>columns.filter(e=>e).length);
+                  var total_columns = [
+                    ...c.static_items(c).map(e=>e.columns),
+                    ...c.items_with(c).map(e=>e.columns)
+                  ]
+                  return columns.map((e,index)=>{
+                    return `${e} of ${total_columns[index]} columns`
+                  })
+                } catch (err) {
+                  console.error(err)
+                  return []
+                }
               },
-              with: [df2],
+              static_items: (c)=>{
+
+                var df = c.secondaryDatasets[c.dfName];
+                var columns = undefined;
+
+                if (df && df.columns) {
+                  columns = df.columns.length;
+                }
+
+                return [{
+                  name: c.dfName,
+                  dfName: c.dfName,
+                  columns
+                }];
+              },
               dataset_columns: (c)=>{
                 try {
 
                   var datasets = c.with.map(dataset=>{
-                    var entries = Object.entries(c.secondaryDatasets[dataset.name].types)
+                    var types = c.secondaryDatasets[dataset.name] ? c.secondaryDatasets[dataset.name].types : {};
+                    var entries = Object.entries(types)
                     return entries.map(([name, type])=>({
                       name,
                       type,
@@ -978,7 +1011,9 @@ export default {
                     }))
                   });
 
-                  var mainEntries = Object.entries(c.secondaryDatasets[payload.dfName].types);
+                  var types = c.secondaryDatasets[payload.dfName] ? c.secondaryDatasets[payload.dfName].types : {};
+
+                  var mainEntries = Object.entries(types);
 
                   return [
                     mainEntries.map(([name, type])=>({
@@ -1018,6 +1053,12 @@ export default {
                 command.secondaryDatasets[dfName].sample = await this.datasetSample(dfName);
                 command.secondaryDatasets[dfName].buffer = await this.datasetBuffer(dfName);
               }
+
+
+
+              var items_with = command.items_with(command);
+
+              command.with = [items_with[0]];
 
               command.typesDone = true;
 

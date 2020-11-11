@@ -1,12 +1,12 @@
 <template>
   <div class="tabs-field" :class="{'concat-tabs': concat}">
 
-    <div class="tab static-tab">
-      <span class="tab-name grey--text text--darken-1" v-if="staticItem">
-        {{staticItem}}
+    <div class="tab static-tab" v-for="(item) in staticItems" :key="item[itemKey]">
+      <span class="tab-name grey--text text--darken-1">
+        {{item[itemKey]}}
       </span>
     </div>
-    <div v-for="item in value" :key="item[itemKey]" class="tab">
+    <div v-for="(item) in value" :key="item[itemKey]" class="tab">
       <span class="tab-name primary--text text--darken-1">{{item[itemKey]}}</span>
       <v-icon
         color="primary darken-1"
@@ -19,14 +19,16 @@
       @input="itemSelected"
       :disabled="!availableItems.length"
     >
-      <span class="primary--text text--darken-1 tabs-add-item">Add
-        <v-icon
-          style="display: inline-flex"
-          class="add-tab"
-          color="primary darken-1"
-          @click
-        >add</v-icon>
-      </span>
+      <v-btn
+        fab
+        dark
+        x-small
+        depressed
+        color="primary"
+        class="add-dataset-button"
+      >
+        <v-icon>add</v-icon>
+      </v-btn>
 
     </SearchSelect>
   </div>
@@ -47,13 +49,17 @@ export default {
       type: Array,
       default: ()=>([])
     },
+    valueInfo: {
+      type: Array,
+      default: ()=>([])
+    },
     concat: {
       type: Boolean,
       default: false
     },
-    staticItem: {
-      type: String,
-      defualt: false
+    staticItems: {
+      type: Array,
+      defualt: ()=>([])
     },
     value: {
       type: Array,

@@ -31,6 +31,7 @@ html:root {
   border-radius: 20px;
   transition: all ease-in-out .5s;
   background-color: #d0d0d0;
+  background-color: rgba(0,0,0,0.18);
 }
 
 /* Handle on hover */
@@ -67,9 +68,7 @@ html:root {
 }
 
 h3, .section-title {
-  text-transform: uppercase;
-  font-weight: 700;
-  font-size: 13px;
+  @include upper-small;
 }
 
 body{
@@ -591,9 +590,7 @@ table {
       padding: 8px 0;
       .plot-title {
         padding-left: 8px;
-        text-transform: uppercase;
-        font-weight: 700;
-        font-size: 13px;
+        @include upper-small;
       }
     }
     .operation-form-container, .operation-form {
@@ -1479,8 +1476,8 @@ $side-controls-width: 54px;
       color: lighten($text-color, 18%);
       font-family: $font-mono;
       font-weight: 700;
-      opacity: $black-opacity;
       text-transform: uppercase;
+      opacity: $black-opacity;
     }
     .cell-title {
       text-transform: capitalize;
@@ -2231,9 +2228,8 @@ $editor-top-padding: 4px;
 }
 
 .font-reset {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif !important;
+  @include font-reset;
 }
-
 
 .v-tab {
   letter-spacing: 0 !important;
@@ -2248,11 +2244,19 @@ $editor-top-padding: 4px;
     left: 0;
   }
   &.bigger-dialog {
-    min-width: calc(100vw - 120px);
-    min-height: calc(100vh - 120px);
+    min-width: calc(100vw - 70px);
+    min-height: calc(100vh - 70px);
     .o-fields {
-      max-height: calc(100vh - 250px);
-      height: calc(100vh - 250px);
+      // max-height: calc(100vh - 250px);
+      // height: calc(100vh - 300px);
+    }
+    .o-buttons {
+      padding-top: 20px;
+    }
+  }
+  &.concat-dialog {
+    .o-fields {
+      background: rgba($data-primary, 0.15);
     }
   }
 }
@@ -2801,26 +2805,47 @@ $editor-top-padding: 4px;
   margin-bottom: -8px !important;
 }
 
-.concat-items-component {
+.concat-tabs, .concat-items-component {
   margin-left: -20px;
   margin-right: -20px;
-  padding-top: 8px;
   padding-left: 20px;
-  padding-right: 20px;
+}
+
+.concat-items-component {
+  padding-top: 8px;
   padding-bottom: 0 !important;
-  background: rgba($data-primary, 0.15);
   display: flex;
   flex-direction: column;
-  max-height: calc(100vh - 292px);
-  height: calc(100vh - 292px);
+  max-height: calc(100vh - 270px);
+  height: calc(100vh - 270px);
   & > * {
   }
   .concat-items {
     overflow-y: auto;
     min-height: 65%;
     flex: 1;
+    padding-left: 20px;
+    margin-left: -20px;
+    border-bottom: solid 1px rgba(0,0,0,0.09);
+
+  }
+  .concat-deleted-title {
+    z-index: 2;
+    background: rgba-to-rgb-alpha(rgba($data-primary, 0.15));
+    align-self: flex-start;
+    position: relative;
+    left: -20px;
+    padding-left: 20px;
+    padding-right: 10px;
+    padding-bottom: 4px;
+    line-height: 1em;
+    min-height: 28px;
+    border-bottom-right-radius: 12px;
+    pointer-events: none;
   }
   .deleted-items {
+    margin-top: -28px;
+    padding-top: 28px;
     overflow-y: auto;
     min-height: 60px;
   }
@@ -2836,39 +2861,31 @@ $editor-top-padding: 4px;
   &.concat-items {
     .concat-item {
       background: white;
-      padding-left: 24px;
       .close-button {
         pointer-events: none;
         opacity: 0;
         display: block;
       }
       &:hover, &.ghost {
-        // background: rgba($data-primary, 0.15);
+
         .close-button {
           pointer-events: auto;
           opacity: 1;
         }
       }
-      &::before {
-        content: "drag_indicator" !important;
-        font: normal normal normal 24px/1 "Material Icons" !important;
-        transform: scale(0.6666);
-        opacity: 0.5;
-        color: rgba(0, 0, 0, 0.54);
-        transition: opacity ease-in-out 0.3s;
-        position: absolute;
-        left: -4px;
-        top: 12px;
-      }
+    }
+    .items-cols {
+      min-height: inherit;
+      display: flex;
+      flex-shrink: 0;
     }
   }
-  &.deleted-items {
-    // align-content: start;
-    .deleted-items-empty {
-      position: absolute;
-      pointer-events: none;
-      top: 4px;
-    }
+  .deleted-items-empty {
+    position: absolute;
+    pointer-events: none;
+    top: 28px;
+  }
+  .deleted-items-col {
     .concat-item {
       background-color: $highlight-red;
       .close-button {
@@ -2876,17 +2893,23 @@ $editor-top-padding: 4px;
       }
     }
   }
-  .items-cols {
-    min-height: inherit;
-    display: flex;
-    flex-shrink: 0;
-  }
+
   .items-col {
+    display: flex;
+    flex-direction: column;
     position: relative;
     min-height: $concat-item-height;
     min-width: $concat-col-width;
     .concat-item {
+      &::before {
+        @include material-icon;
+        content: 'drag_indicator';
+        position: absolute;
+        left: -4px;
+        top: 12px;
+      }
       cursor: move;
+      padding-left: 24px;
       .data-item-title {
         @include name-center;
         max-width: calc(#{$concat-col-width} - 36px);
@@ -2897,12 +2920,18 @@ $editor-top-padding: 4px;
     padding-left: 68px;
     min-width: calc(#{$concat-final-col-width} + 68px);
     .concat-item {
-      padding-right: 24px;
-      padding-left: 28px;
+      padding-right: 36px;
       cursor: pointer !important;
-      &::before {
-        left: 0px;
-        content: "edit" !important;
+      .data-item-title {
+        position: relative;
+        &::after {
+          @include material-icon;
+          position: absolute;
+          right: -16px;
+          top: -3px;
+          pointer-events: none !important;
+          content: "edit" !important;
+        }
       }
       .data-column-name {
         position: relative;
@@ -2913,6 +2942,9 @@ $editor-top-padding: 4px;
   .items-item {
     height: $concat-item-height;
     margin-bottom: 6px;
+    &:last-child {
+      flex: 1;
+    }
   }
   .items-fields {
     .v-input {
@@ -2927,6 +2959,7 @@ $editor-top-padding: 4px;
     font-size: 14px;
     min-width: calc(100% - 6px);
     max-width: calc(100% - 6px);
+    min-height: $concat-item-height;
     height: $concat-item-height;
     line-height: 20px;
     margin-bottom: 6px;
@@ -2943,6 +2976,7 @@ $editor-top-padding: 4px;
       font-size: 16px;
 
       .data-type {
+        user-select: none;
         position: absolute;
         display: block;
         min-width: 32px;
@@ -2967,13 +3001,25 @@ $editor-top-padding: 4px;
     }
 
 
-    .data-item-value {
-      // padding-left: 32px;
+    .data-item-value, .data-item-hint {
       position: relative;
-      top: -4px;
+      top: -2px;
       display: block;
       @include ellipsis;
       max-width: calc(#{$concat-col-width} - 50px);
+    }
+
+    .data-item-hint {
+      @include font-reset;
+      @include upper-small;
+      pointer-events: none !important;
+      user-select: none;
+      opacity: .667;
+    }
+
+
+    .data-item-value {
+      // padding-left: 32px;
       // opacity: 0.71;
       &::before {
         max-width: 32px;
@@ -3011,6 +3057,7 @@ $editor-top-padding: 4px;
       top: 0;
       width: calc(100% - 6px);
       height: 100%;
+      max-height: $concat-item-height;
       cursor: pointer;
       z-index: 5;
       &::after {
@@ -3045,6 +3092,7 @@ $editor-top-padding: 4px;
         padding-right: 1px;
         width: calc(100% - 6px);
         height: 100%;
+        max-height: $concat-item-height;
         left: 0px;
         top: 0px;
         border-radius: 6px;
@@ -3213,11 +3261,41 @@ $editor-top-padding: 4px;
   cursor: pointer;
 }
 
+.concat-tabs {
+  padding-top: 8px;
+  .tab {
+    // background: white;
+    // border-radius: 6px;
+    width: calc( #{$concat-col-width} - 6px);
+    min-width: calc( #{$concat-col-width} - 6px);
+    position: relative;
+  }
+  .add-dataset-button {
+    // top: calc(50% - 40px);
+    top: 40px;
+    z-index: 2;
+    position: absolute;
+    transform: translateX(15px);
+  }
+}
+
+.tab-hints {
+  display: flex;
+
+  .tab-hint {
+    width: calc( #{$concat-col-width} - 6px);
+    min-width: calc( #{$concat-col-width} - 6px);
+    max-width: calc( #{$concat-col-width} - 6px);
+    text-align: center;
+    width: 100%;
+    opacity: .71;
+    @include upper-small;
+  }
+}
+
 .tabs-field {
   display: flex;
   .tab {
-    width: calc( #{$concat-col-width} - 6px);
-    min-width: calc( #{$concat-col-width} - 6px);
     margin-right: 6px;
     padding-right: 8px;
     position: relative;
@@ -3239,9 +3317,7 @@ $editor-top-padding: 4px;
   .tabs-add-item {
     // width: 100%;
     white-space: nowrap;
-    text-transform: uppercase;
-    font-weight: 700;
-    font-size: 13px;
+    @include upper-small;
     padding-left: 10px;
     .v-icon {
       position: relative;

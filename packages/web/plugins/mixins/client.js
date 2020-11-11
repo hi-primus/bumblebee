@@ -380,7 +380,7 @@ export default {
           socket.on('disconnect', (reason) => {
             console.log('Connection lost', reason);
             this.handleError();
-            reject('Connection lost');
+            reject('Connection lost ' + reason);
           });
         } catch (err) {
           reject(err)

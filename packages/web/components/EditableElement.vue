@@ -3,6 +3,7 @@
     class="editable-element"
     :is="element"
     contenteditable
+    spellcheck="false"
     v-text="value"
     @blur="update">
   </component>
