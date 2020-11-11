@@ -416,6 +416,9 @@ export const mutations = {
     if (replacingColumns!=undefined) {
       state.everyPreviewInfo[state.tab].replacingColumns = Math.max(0, replacingColumns);
     }
+    if (replacingColumns!=undefined) {
+      state.everyPreviewInfo[state.tab].replacingColumns = replacingColumns
+    }
     if (error!=undefined) {
       state.everyPreviewInfo[state.tab].error = error;
     }

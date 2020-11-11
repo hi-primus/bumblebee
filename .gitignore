@@ -126,3 +126,4 @@ dist
 .vscode
 
 packages/web/pages/tests/
+packages/api/assets/

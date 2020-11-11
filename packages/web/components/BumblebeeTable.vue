@@ -1238,7 +1238,7 @@ export default {
             element.appendChild(moreElement)
           } else {
             var textWidth = element.innerText.length * 7;
-            var width = element.offsetWidth - 8;
+            var width = element.offsetWidth - 12;
             if (textWidth>width) {
               element.classList.add('cell-to-expand');
               element.appendChild(moreElement);

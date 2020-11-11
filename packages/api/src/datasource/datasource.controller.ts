@@ -1,22 +1,32 @@
-import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
-import { AuthGuard } from "@nestjs/passport";
 import {
-  Controller,
-  Logger,
-  Get,
-  UseGuards,
-  Post,
-  Delete,
   Body,
-  Put,
+  ConflictException,
+  Controller,
+  Delete,
+  Get,
+  Logger,
+  NotFoundException,
   Param,
+  Post,
+  Put,
+  Req,
+  Res,
+  UploadedFile,
+  UseGuards,
+  UseInterceptors,
 } from "@nestjs/common";
+import { AuthGuard } from "@nestjs/passport";
+import { FileInterceptor } from "@nestjs/platform-express";
+import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
+import { diskStorage } from "multer";
+import { GetUser } from "./../auth/dto/get-user.decorator.dto";
+import { User } from "./../users/interfaces/user.interface";
 import { DatasourceService } from "./datasource.service";
-import { GetUser } from "src/auth/dto/get-user.decorator.dto";
-import { User } from "src/users/interfaces/user.interface";
-import { DataSource } from "./interfaces/datasoruce.interface";
 import { CreateDataSourceDto } from "./dto/create-DataSource.dto";
 import { EditDataSourceDto } from "./dto/edit-DataSource.dto";
+import { DataSource } from "./interfaces/datasoruce.interface";
+import { editFileName } from "./utils/file-upload";
+import fs = require("fs");
 
 @ApiTags("Data Sources")
 @ApiBearerAuth()
@@ -57,6 +67,50 @@ export class DatasourceController {
       dataSource
     );
     return { url: presignedUrl };
+  }
+
+  @Put("/local/:fileName")
+  @UseInterceptors(
+    FileInterceptor("file", {
+      limits: { fileSize: 1024 * 1024 * 1024 * 1024 * 1024 },
+      storage: diskStorage({
+        destination: "./assets",
+        filename: editFileName,
+      }),
+    })
+  )
+  async localFileUpload(
+    @UploadedFile() file,
+    @Param("fileName") fileName: string,
+    @Req() request
+  ): Promise<any> {
+    if (
+      !process.env.DO_BUCKET &&
+      process.env.INSTANCE === "LOCAL" &&
+      process.env.BACKEND_URL
+    ) {
+      if (!file) {
+        throw new ConflictException("No file uploaded")
+      }
+      return { status: "File Uploaded Successfully" };
+    } else {
+      throw new NotFoundException();
+    }
+  }
+
+  @Get("/local/:filename")
+  getLocalFiles(@Param("filename") filename: string, @Res() res) {
+    const buffer = fs.readFileSync(`src/../assets/${filename}`);
+
+    res.set({
+      "Content-Type": `application/${
+        filename.split(".")[filename.split(".").length - 1]
+      }`,
+      "Content-Disposition": `attachment; ${filename}`,
+      "Content-Length": buffer.length,
+    });
+
+    res.end(buffer);
   }
 
   @Put()
