@@ -541,17 +541,17 @@ export default {
 
 				// {command: 'random_split',     teaxt: 'Split train and test', type: 'PREPARE'},
 
-				{command: 'sample_n', text: 'Random Sampling', group: 'ML'},
-        {command: 'stratified_sample', text: 'Stratified Sampling', group: 'ML', min: 1, max: 1},
-				{command: 'bucketizer',       text: 'Create Bins',          group: 'ML', max: 1}, // TO-DO: Check limit
-				{command: 'impute',           text: 'Impute rows',          group: 'ML', min: 1},
-				{command: 'values_to_cols',   text: 'Values to Columns',    group: 'ML', max: 1},
+				{command: 'sample_n', text: 'Random sampling', group: 'ML', hidden: ()=>(this.hideOperations)},
+        {command: 'stratified_sample', text: 'Stratified Sampling', group: 'ML', min: 1, max: 1, hidden: ()=>(this.hideOperations) },
+				{command: 'bucketizer',       text: 'Create Bins',          group: 'ML', max: 1, hidden: ()=>(this.hideOperations) }, // TO-DO: Check limit
+				{command: 'impute',           text: 'Impute rows',          group: 'ML', min: 1, hidden: ()=>(this.hideOperations) },
+				{command: 'values_to_cols',   text: 'Values to Columns',    group: 'ML', max: 1, hidden: ()=>(this.hideOperations) },
 				{command: 'string_to_index',  text: 'Strings to Index',     group: 'ML', min: 1},
 				{command: 'index_to_string',  text: 'Indices to Strings',     group: 'ML', min: 1},
-        {command: 'z_score',          text: 'Standard Scaler',  group: 'ML', min: 1},
-        {command: 'min_max_scaler',   text: 'Min max Scaler',   group: 'ML', min: 1},
-        {command: 'max_abs_scaler',   text: 'Max abs Scaler',   group: 'ML', min: 1},
-        {command: 'outliers',   text: 'Outliers',   group: 'ML', min: 1, max: 1},
+        {command: 'z_score',          text: 'Standard Scaler',  group: 'ML', min: 1, hidden: ()=>(this.hideOperations)},
+        {command: 'min_max_scaler',   text: 'Min max Scaler',   group: 'ML', min: 1, hidden: ()=>(this.hideOperations)},
+        {command: 'max_abs_scaler',   text: 'Max abs Scaler',   group: 'ML', min: 1, hidden: ()=>(this.hideOperations)},
+        {command: 'outliers',   text: 'Outliers',   group: 'ML', min: 1, max: 1, hidden: ()=>(this.hideOperations)},
 
         ...Object.entries(TYPES_NAMES).map(
           ([dtype, text])=>({command: 'set_profiler_dtypes', payload: { dtype }, text, group: 'CAST'})
@@ -730,8 +730,7 @@ export default {
           disabled: ()=>!(this.currentDataset && this.currentDataset.summary)
         },
         {
-          divider: true,
-          hidden: ()=>(this.hideOperations)
+          divider: true
         },
         {
           type: 'button',
@@ -967,7 +966,6 @@ export default {
           icons: [{icon: 'timeline', class: 'material-icons-outlined'}],
           tooltip: 'Machine Learning',
           disabled: ()=>!(this.selectionType=='columns' && this.currentDataset && this.currentDataset.summary) , // Sampling
-          hidden: ()=>(this.hideOperations)
         },
       ]
     },
