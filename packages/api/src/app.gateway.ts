@@ -96,7 +96,7 @@ export class AppGateway
 			});
 		} else if (payload.message === 'download') {
       const sessionId = payload.username + '_BBSESSION_' + payload.workspace;
-      const file_name = `${payload.username}-dataset-${uuidv4()}`;
+      const file_name = `${payload.username}-${payload.workspace}-dataset-${uuidv4()}`;
       const file_type = `csv`;
       const resultPayload = {
         ...payload,
@@ -123,18 +123,21 @@ export class AppGateway
       var code = ``;
       var result
       if (process.env.INSTANCE === 'LOCAL') {
+        var url = `${process.env.BACKEND_URL}/datasource/local/${file_name}.${file_type}`;
+        this.logger.log('Saving to '+url)
         resultCode = `_output = ${payload.dfName}${getGenerator('saveToLocal',resultPayload)(resultPayload)}`;
         code = `_output = ${payload.dfName}${getGenerator('saveToLocal',execPayload)(execPayload)}`;
         result = {
           ...(await runCode(code, sessionId)),
-          url: `${process.env.BACKEND_URL}/datasource/local/downloads/${payload.username}/${payload.workspace}/${file_name}.${file_type}`,
+          url
         };
       } else {
+        var url = `https://${process.env.DO_BUCKET}.${process.env.DO_ENDPOINT}/${payload.username}/${file_name}.${file_type}`;
         resultCode = `_output = ${payload.dfName}${getGenerator('uploadToS3',resultPayload)(resultPayload)}`;
         code = `_output = ${payload.dfName}${getGenerator('uploadToS3',execPayload)(execPayload)}`;
         result = {
           ...(await runCode(code, sessionId)),
-          url: `https://${process.env.DO_BUCKET}.${process.env.DO_ENDPOINT}/${payload.username}/${file_name}.${file_type}`,
+          url
         };
       }
 

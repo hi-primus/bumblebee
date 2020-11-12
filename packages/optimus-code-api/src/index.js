@@ -11,8 +11,8 @@ export const codeGenerators = {
     return `.to_${payload.file_type}( filename="s3://${payload.bucket}/${payload.username}/${payload.file_name}.${payload.file_type}", single_file=True, storage_options={ "key": "${payload.access_key_id}", "secret": "${payload.secret_key}", "client_kwargs": { "endpoint_url": "https://${payload.endpoint}", }, "config_kwargs": {"s3": {"addressing_style": "virtual", "x-amz-acl": "public/read"}} } );`
   },
   saveToLocal: (payload) => {
-    return `.to_${payload.file_type}( filename="${payload.local_address}/${payload.username}-${payload.workspace}-${payload.file_name}.${payload.file_type}", single_file=True );`
-    + `_output = "${payload.username}/${payload.file_name}.${payload.file_type}"`
+    return `.to_${payload.file_type}( filename="${payload.local_address}/${payload.file_name}.${payload.file_type}", single_file=True );`
+    + `_output = "${payload.file_name}.${payload.file_type}"`
   },
   'apply sort': (payload) => {
     return `.cols.sort(columns=["${payload.columns.join('", "')}"])`
