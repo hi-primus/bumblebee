@@ -9,6 +9,7 @@ import {
 } from '@nestjs/websockets';
 import { Logger } from '@nestjs/common';
 import { Socket, Server } from 'socket.io';
+import { v4 as uuidv4 } from "uuid";
 
 import {
 	runCode,
@@ -95,7 +96,7 @@ export class AppGateway
 			});
 		} else if (payload.message === 'download') {
       const sessionId = payload.username + '_BBSESSION_' + payload.workspace;
-      const file_name = `${payload.username}-dataset-${payload.timestamp}`;
+      const file_name = `${payload.username}-dataset-${uuidv4()}`;
       const file_type = `csv`;
       const resultPayload = {
         ...payload,
