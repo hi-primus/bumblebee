@@ -32,6 +32,8 @@ export const actions = {
       }
     };
 
+    var fileOriginalName = file.name;
+
     if (fileUrl.includes(baseUrl)) {
       let formData = new FormData();
       formData.append('file', file);
@@ -45,7 +47,6 @@ export const actions = {
 
     fileUrl = fileUrl.split('?')[0];
 
-    var fileOriginalName = file.name;
     var fileType = undefined;
     var datasetName = undefined;
 
