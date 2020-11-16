@@ -9,7 +9,7 @@ https://hi-bumblebee.com/
 
 ## Installation
 ### Docker
-```docker run --name <NAME> -p 3000:3000 -p 4000:4000 -e ADDRESS=<IP> ironmussa/bumblebee:latest```
+```docker run --name <NAME> -p 3000:3000 -p 4000:4000 -e ADDRESS=<IP> ironmussa/bumblebee:optimus-dataframe```
 
 ### Ubuntu/Digital Ocean
 https://medium.com/hi-bumblebee/how-to-install-bumblebee-on-digital-ocean-ef77138f1838
