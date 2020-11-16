@@ -97,4 +97,4 @@ CMD ./usr/bin/mongod --fork --logpath /var/log/mongod.log && \
 
 EXPOSE 3000:3000 4000:4000
 
-# docker run --name <NAME> -p 3000:3000 -p 4000:4000 -e ADDRESS=<IP> ironmussa/bumblebee:develop-3.0
+# docker run --name <NAME> -p 3000:3000 -p 4000:4000 -e ADDRESS=<IP> ironmussa/bumblebee:latest
