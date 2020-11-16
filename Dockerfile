@@ -59,13 +59,13 @@ RUN yarn global add pm2 && \
 
 WORKDIR "/opt"
 
-RUN echo "Version 3.0.0 - Nov 16 2020"
+RUN echo "Version 3.0.0 - Nov 16 2020 - 2"
 
 RUN pip install cytoolz && \
     pip install git+https://github.com/ironmussa/dateinfer.git && \
     pip install git+https://github.com/ironmussa/Optimus.git@optimus_dataframe
 
-RUN git clone https://github.com/ironmussa/Bumblebee.git
+RUN git clone --branch optimus-dataframe https://github.com/ironmussa/Bumblebee.git
 
 WORKDIR "/opt/Bumblebee"
 
