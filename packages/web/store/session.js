@@ -143,7 +143,7 @@ export const actions =  {
         return true
       } catch (err) {
         console.error('Provided token is invalid')
-        await dispatch('setAccessToken', false)
+        await dispatch('signOut')
         return false
       }
     } else {
