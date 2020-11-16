@@ -39,10 +39,6 @@ RUN conda install -c conda-forge jupyterlab && \
     jupyter serverextension enable dask_labextension && \
     conda install -c conda-forge jupyter_kernel_gateway
 
-RUN pip install cytoolz && \
-    pip install git+https://github.com/ironmussa/dateinfer.git && \
-    pip install git+https://github.com/ironmussa/Optimus.git@develop-3.0
-
 ENV TZ="America/New_York"
 
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone && \
@@ -77,11 +73,15 @@ WORKDIR "/"
 
 RUN mkdir -p /data/db
 
+RUN pip install cytoolz && \
+    pip install git+https://github.com/ironmussa/dateinfer.git && \
+    pip install git+https://github.com/ironmussa/Optimus.git@develop-3.0
+
 CMD ./usr/bin/mongod --fork --logpath /var/log/mongod.log && \
     cd /opt/Bumblebee && \
     echo "Initializing Bumblebee Environment" && \
-    echo "API_URL='http://$address:4000'" >> packages/web/.env && \
-    echo "BACKEND_URL='http://$address:4000'" >> packages/api/.env && \
+    echo "API_URL='http://$ADDRESS:4000'" >> packages/web/.env && \
+    echo "BACKEND_URL='http://$ADDRESS:4000'" >> packages/api/.env && \
     echo "KERNEL_ADDRESS='localhost:8888'" >> packages/api/.env && \
     pm2 stop web || true && \
     pm2 stop api || true && \
@@ -89,9 +89,9 @@ CMD ./usr/bin/mongod --fork --logpath /var/log/mongod.log && \
     pm2 delete api || true && \
     pm2 start "yarn web" --name "web" --update-env && \
     pm2 start "yarn api" --name "api" --update-env && \
-    echo "[Bumblebee] Web process at: http://$address:3000" && \
+    echo "[Bumblebee] Web process at: http://$ADDRESS:3000" && \
     jupyter kernelgateway --JupyterWebsocketPersonality.list_kernels=True --KernelGatewayApp.allow_origin='*'
 
 EXPOSE 3000:3000 4000:4000
 
-# docker run -p 8888:8888 -p 3000:3000 -p 4000:4000 -e address=<IP> ironmussa/bumblebee
+# docker run --name <NAME> -p 3000:3000 -p 4000:4000 -e ADDRESS=<IP> ironmussa/bumblebee:latest

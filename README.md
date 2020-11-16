@@ -9,7 +9,7 @@ https://hi-bumblebee.com/
 
 ## Installation
 ### Docker
-https://medium.com/hi-bumblebee/how-to-run-bumblebee-in-a-docker-container-c9da047d1ff1
+```docker run --name <NAME> -p 3000:3000 -p 4000:4000 -e ADDRESS=<IP> ironmussa/bumblebee:latest```
 
 ### Ubuntu/Digital Ocean
 https://medium.com/hi-bumblebee/how-to-install-bumblebee-on-digital-ocean-ef77138f1838
