@@ -519,7 +519,7 @@ export default {
 
         params = getDefaultParams(params);
 
-        params.name = params.name || this.$store.state.session.username + '_' + this.$route.params.slug;
+        params.name = params.name || this.currentUsername + '_' + this.$route.params.slug;
 
         this.$store.commit('mutation', { mutate: 'localConfig', payload: params });
         this.$store.commit('mutation', { mutate: 'configPromise', payload: false });

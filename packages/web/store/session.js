@@ -99,10 +99,35 @@ export const actions =  {
     commit('clearSession', {}, { root: true });
   },
 
-  async profile ({commit}, { auth }) {
-    var response = await axios.get(process.env.API_URL + '/auth/profile', { headers: { 'Authorization': auth } } )
-    commit('mutation', { mutate: 'username', payload: response.data.username})
-    return true
+  async profile ({commit, state}, payload) {
+    var auth = payload ? payload.auth : undefined;
+    auth = auth!==undefined ? auth : state.accessToken;
+    if (process.env.DOCKER && auth && !state.username) {
+      commit('mutation', { mutate: 'username', payload: true });
+      return true;
+    }
+    var username;
+    try {
+      var response = await axios.get(process.env.API_URL + '/auth/profile', { headers: { 'Authorization': auth } } )
+      username = response.data.username;
+    } catch (err) {
+      if (!err.response || err.response.status!==401) {
+        console.log(err);
+      }
+    }
+    commit('mutation', { mutate: 'username', payload: username})
+    return username
+  },
+
+  async getUsername ({ dispatch, state }, payload) {
+    if (state.username && state.username !== true) {
+      return state.username;
+    }
+    if (process.client) {
+      return await dispatch('profile');
+    } else {
+      return state.accessToken ? true : false;
+    }
   },
 
 	async signIn ({commit, dispatch}, payload) {
@@ -138,7 +163,7 @@ export const actions =  {
     const accessToken = this.$cookies.get('x-access-token')
     if (accessToken) {
       try {
-        await dispatch('profile', { auth: accessToken })
+        await dispatch('profile', { auth: accessToken });
         await dispatch('setAccessToken', accessToken)
         return true
       } catch (err) {

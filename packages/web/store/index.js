@@ -502,7 +502,7 @@ export const actions = {
     await dispatch('session/serverInit')
   },
 
-  async evalCode({ state }, {code ,socketPost}) {
+  async evalCode({ dispatch, state, getters }, {code ,socketPost}) {
     try {
 
       if (!process.client) {
@@ -513,7 +513,7 @@ export const actions = {
 
       var response = await socketPost('run', {
         code,
-        username: state.session.username,
+        username: await dispatch('session/getUsername'),
         workspace: state.workspaceSlug || 'default'
       }, {
         timeout: 0
@@ -843,7 +843,7 @@ export const actions = {
     commit('previewDefault', { names: ['PreviewNames'] });
   },
 
-  async loadOptimus ({commit, state, dispatch }, { slug, socketPost }) {
+  async loadOptimus ({commit, state, dispatch, getters}, { slug, socketPost }) {
 
     await Vue.nextTick();
 
@@ -855,10 +855,12 @@ export const actions = {
       commit('mutation', { mutate: 'workspaceSlug', payload: slug })
     }
 
-    console.log('[BUMBLEBEE] Initializing Optimus', state.session.username, slug);
+    var username = await dispatch('session/getUsername');
+
+    console.log('[BUMBLEBEE] Initializing Optimus', username, slug);
 
     var response = await socketPost('initialize', {
-      username: state.session.username,
+      username,
       workspace: slug || 'default',
       ...params
     });
@@ -1020,7 +1022,7 @@ export const actions = {
 
       var response = await socketPost('cells', {
         code,
-        username: state.session.username,
+        username: await dispatch('session/getUsername'),
         workspace: state.workspaceSlug || 'default',
         key: state.key
       }, {
@@ -1089,6 +1091,8 @@ export const actions = {
 
       var cellsResult = await dispatch('getCellsResult', { payload: { socketPost, ignoreFrom }});
 
+      var username = await dispatch('session/getUsername');
+
       if (!dfName) {
         // return {};
         var workspace = await dispatch('getWorkspace', {} );
@@ -1105,7 +1109,7 @@ export const actions = {
 
       var response = await socketPost('profile', {
         dfName,
-        username: state.session.username,
+        username,
         workspace: state.workspaceSlug || 'default',
         key: state.key
       }, {

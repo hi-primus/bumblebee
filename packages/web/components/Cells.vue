@@ -2993,7 +2993,7 @@ export default {
         await this.runCodeNow()
         var payload = {
           dfName: this.currentDataset.dfName,
-          username: this.$store.state.session.username,
+          username: this.currentUsername,
           workspace: this.$route.params.slug
         }
         var response = await this.socketPost('download', payload )
