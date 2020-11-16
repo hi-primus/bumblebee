@@ -1,0 +1,97 @@
+FROM ubuntu:20.04
+
+RUN apt-get update && yes|apt-get upgrade && \
+    apt-get install -y nano && \
+    apt-get install -y git && \
+    apt-get install -y curl
+
+RUN apt-get install -y wget bzip2
+
+RUN apt-get -y install sudo
+
+RUN apt-get update && apt-get install -y --no-install-recommends apt-utils
+
+RUN wget https://repo.anaconda.com/archive/Anaconda3-2020.07-Linux-x86_64.sh && \
+    bash Anaconda3-2020.07-Linux-x86_64.sh -b && \
+    rm Anaconda3-2020.07-Linux-x86_64.sh
+
+RUN apt-get install -y net-tools
+
+RUN sudo apt-get update --fix-missing && \
+    sudo apt-get install -y gcc && \
+    sudo apt-get clean
+
+RUN sudo rm -rf /var/lib/apt/lists/*
+
+RUN sudo apt-get -y update && sudo apt-get -y upgrade && \
+    sudo apt-get -y install g++
+
+ENV PATH="/root/anaconda3/bin:${PATH}"
+
+RUN sudo chown -R root ~/anaconda3/bin && \
+    sudo chmod -R +x ~/anaconda3/bin
+
+RUN curl -sL https://deb.nodesource.com/setup_10.x | sudo -E bash - && \
+    sudo apt-get install nodejs
+
+RUN conda install -c conda-forge jupyterlab && \
+    conda install -c conda-forge dask-labextension && \
+    jupyter serverextension enable dask_labextension && \
+    conda install -c conda-forge jupyter_kernel_gateway
+
+RUN pip install cytoolz && \
+    pip install git+https://github.com/ironmussa/dateinfer.git && \
+    pip install git+https://github.com/ironmussa/Optimus.git@develop-3.0
+
+ENV TZ="America/New_York"
+
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone && \
+    DEBIAN_FRONTEND=noninteractive apt-get -y install tzdata && \
+    sudo apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get dist-upgrade -yq && \
+    DEBIAN_FRONT=noninteractive apt-get install -yq apt-utils && \
+    dpkg-reconfigure tzdata && \
+    wget -qO - https://www.mongodb.org/static/pgp/server-4.4.asc | sudo apt-key add - && \
+    echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu focal/mongodb-org/4.4 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-4.4.list && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -yq mongodb
+
+WORKDIR "/opt"
+
+RUN git clone https://github.com/ironmussa/Bumblebee.git
+
+WORKDIR "/opt/Bumblebee"
+
+RUN npm install yarn -g
+
+RUN yarn global add pm2 && \
+    yarn global add concurrently && \
+    yarn global add cross-env
+
+RUN yarn install
+
+RUN echo "HOST='0.0.0.0'" >> packages/web/.env && \
+    echo "INSTANCE='LOCAL'" >> packages/api/.env && \
+    echo "INSTANCE='LOCAL'" >> packages/web/.env
+
+WORKDIR "/"
+
+RUN mkdir -p /data/db
+
+CMD ./usr/bin/mongod --fork --logpath /var/log/mongod.log && \
+    cd /opt/Bumblebee && \
+    echo "Initializing Bumblebee Environment" && \
+    echo "API_URL='http://$address:4000'" >> packages/web/.env && \
+    echo "BACKEND_URL='http://$address:4000'" >> packages/api/.env && \
+    echo "KERNEL_ADDRESS='localhost:8888'" >> packages/api/.env && \
+    pm2 stop web || true && \
+    pm2 stop api || true && \
+    pm2 delete web || true && \
+    pm2 delete api || true && \
+    pm2 start "yarn web" --name "web" --update-env && \
+    pm2 start "yarn api" --name "api" --update-env && \
+    echo "[Bumblebee] Web process at: http://$address:3000" && \
+    jupyter kernelgateway --JupyterWebsocketPersonality.list_kernels=True --KernelGatewayApp.allow_origin='*'
+
+EXPOSE 3000:3000 4000:4000
+
+# docker run -p 8888:8888 -p 3000:3000 -p 4000:4000 -e address=<IP> ironmussa/bumblebee
