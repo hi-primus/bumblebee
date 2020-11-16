@@ -84,6 +84,7 @@ CMD ./usr/bin/mongod --fork --logpath /var/log/mongod.log && \
     cd /opt/Bumblebee && \
     echo "Initializing Bumblebee Environment" && \
     echo "API_URL='http://$ADDRESS:4000'" >> packages/web/.env && \
+    echo "DOCKER='TRUE'" >> packages/web/.env && \
     echo "BACKEND_URL='http://$ADDRESS:4000'" >> packages/api/.env && \
     echo "KERNEL_ADDRESS='localhost:8888'" >> packages/api/.env && \
     pm2 stop web || true && \

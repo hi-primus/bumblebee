@@ -17,7 +17,7 @@ export default {
 
       var defaultValues = deepCopy(_defaultValues);
 
-      defaultValues.name = this.$store.state.session.username + '__' + this.$route.params.slug;
+      defaultValues.name = this.$store.getters['session/getUsername'] + '__' + this.$route.params.slug;
 
       let valuesFromParameters = Object.entries(INIT_PARAMS).filter(([key, field])=>field.type !== 'hidden').map(([key, field])=>{
         return {

@@ -1,15 +1,20 @@
 import io from 'socket.io-client'
-import { mapState } from 'vuex'
+import { mapGetters } from 'vuex'
 import { deepCopy, getDefaultParams, objectMap, INIT_PARAMS } from 'bumblebee-utils'
 
 export default {
 
   data () {
     return {
+      loadedUsername: false
     }
   },
 
-  mounted() {
+  mounted () {
+
+    this.$store.dispatch('session/getUsername').then(u=>{
+      this.loadedUsername = u;
+    });
 
     window.socket = () => window.socketPromise;
 
@@ -72,9 +77,9 @@ export default {
 
   computed: {
 
-    ...mapState({
-      currentUsername: state => state.session.username
-    }),
+    currentUsername () {
+      return this.loadedUsername || this.$store.state.session.username;
+    },
 
     socketAvailable: {
       set (value) {
@@ -206,7 +211,7 @@ export default {
 
               var slug = this.$route.params.slug;
 
-              params.name = params.name || this.$store.state.session.username + '_' + slug;
+              params.name = params.name || this.currentUsername + '_' + slug;
 
               if (params.jupyter_address) {
                 params.jupyter_ip = params.jupyter_address.ip;
@@ -216,7 +221,7 @@ export default {
               }
 
               var reinitializationPayload = {
-                username: this.$store.state.session.username,
+                username: this.currentUsername,
                 workspace: slug,
                 ...params
               }
@@ -314,7 +319,7 @@ export default {
 
       window.socketPromise = new Promise((resolve, reject)=>{
         try {
-          let username = this.$store.state.session.username;
+          let username = this.currentUsername;
           let workspace = this.$route.params.slug;
           let key = this.$store.state.session.key;
 
