@@ -51,17 +51,23 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone &
     echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu focal/mongodb-org/4.4 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-4.4.list && \
     DEBIAN_FRONTEND=noninteractive apt-get install -yq mongodb
 
-WORKDIR "/opt"
-
-RUN git clone https://github.com/ironmussa/Bumblebee.git
-
-WORKDIR "/opt/Bumblebee"
-
 RUN npm install yarn -g
 
 RUN yarn global add pm2 && \
     yarn global add concurrently && \
     yarn global add cross-env
+
+WORKDIR "/opt"
+
+RUN echo "Version 3.0.0 - Nov 16 2020"
+
+RUN pip install cytoolz && \
+    pip install git+https://github.com/ironmussa/dateinfer.git && \
+    pip install git+https://github.com/ironmussa/Optimus.git@optimus_dataframe
+
+RUN git clone https://github.com/ironmussa/Bumblebee.git
+
+WORKDIR "/opt/Bumblebee"
 
 RUN yarn install
 
@@ -73,9 +79,6 @@ WORKDIR "/"
 
 RUN mkdir -p /data/db
 
-RUN pip install cytoolz && \
-    pip install git+https://github.com/ironmussa/dateinfer.git && \
-    pip install git+https://github.com/ironmussa/Optimus.git@optimus_dataframe
 
 CMD ./usr/bin/mongod --fork --logpath /var/log/mongod.log && \
     cd /opt/Bumblebee && \
