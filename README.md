@@ -9,7 +9,6 @@ https://hi-bumblebee.com/
 
 ## Installation
 ### Docker
-### Docker
 To run Bumblebee on a Docker container just use:
 
 ```docker run --name <NAME> --network="host" -e ADDRESS=<IP> ironmussa/bumblebee:latest```
