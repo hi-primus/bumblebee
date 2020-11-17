@@ -12,5 +12,8 @@ else
     fi
     alreadyinitialized=true
 fi
+
+source stop-bumblebee.sh
+source install-optimus.sh
 source start-bumblebee.sh
 source start-jupyter.sh
