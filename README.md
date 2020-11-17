@@ -9,7 +9,11 @@ https://hi-bumblebee.com/
 
 ## Installation
 ### Docker
-```docker run --name <NAME> -p 3000:3000 -p 4000:4000 -e ADDRESS=<IP> ironmussa/bumblebee:optimus-dataframe```
+To run Bumblebee on a Docker container just use:
+
+```docker run --name <NAME> --network="host" -e ADDRESS=<IP> ironmussa/bumblebee:optimus-dataframe```
+
+Remember to open ports 3000 and 4000 on your host.
 
 ### Ubuntu/Digital Ocean
 https://medium.com/hi-bumblebee/how-to-install-bumblebee-on-digital-ocean-ef77138f1838
