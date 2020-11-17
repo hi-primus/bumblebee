@@ -19,7 +19,7 @@ export default {
 
       defaultValues.name = this.$store.getters['session/getUsername'] + '__' + this.$route.params.slug;
 
-      let valuesFromParameters = Object.entries(INIT_PARAMS).filter(([key, field])=>field.type !== 'hidden').map(([key, field])=>{
+      let valuesFromParameters = Object.entries(INIT_PARAMS).filter(([key, field])=>field.type !== 'hidden' && !field.noForm).map(([key, field])=>{
         return {
           key,
           value: defaultValues[key] || undefined,

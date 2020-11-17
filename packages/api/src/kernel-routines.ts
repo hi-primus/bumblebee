@@ -157,7 +157,7 @@ client_install = client.run(install)
 op = Optimus(engine, session=client, memory_limit="1G", comm=True)`;
   } else {
     opInit += `
-op = Optimus(engine${functionParams}, memory_limit="1G", comm=True)`;
+op = Optimus(engine${functionParams})`;
   }
 
   if (min) {

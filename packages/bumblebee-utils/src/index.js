@@ -511,8 +511,9 @@ export const getEngines = (coiled = false) => {
 export const ENGINES = {
   'dask': 'Dask',
   'dask_cudf': 'Dask-cuDF',
-  'pandas': 'Pandas',
   'cudf': 'cuDF',
+  'pandas': 'Pandas',
+  'spark': 'Spark',
   'dask_coiled': 'Dask (Coiled)',
   'dask_cudf_coiled': 'Dask cuDF (Coiled)'
 }
@@ -554,6 +555,12 @@ export const INIT_PARAMS = {
     engines: ['dask_coiled', 'dask_cudf_coiled']
   },
 
+  'options': {
+    type: 'string',
+    large: true,
+    engines: ['spark']
+  },
+
   'n_workers': {
     type: 'int',
     name: 'Number of workers',
@@ -589,7 +596,7 @@ export const INIT_PARAMS = {
     },
     engines: ['dask', 'dask_cudf']
   },
-  'kernel_address': {
+  'kernel_address': { // TO-DO: check
     type: 'string',
     engines: ['dask', 'dask_cudf']
   },
@@ -662,6 +669,18 @@ export const INIT_PARAMS = {
     },
     engines: ['dask_coiled', 'dask_cudf_coiled']
   },
+  'memory_limit': {
+    type: 'string',
+    default: '1G',
+    noForm: true,
+    engines: ['dask', 'dask_cudf', 'pandas', 'cudf']
+  },
+  'comm': {
+    type: 'boolean',
+    default: true,
+    noForm: true,
+    engines: ['dask', 'dask_cudf', 'pandas', 'cudf']
+  }
   // 'kwargs': {
   //   type: 'kwargs'
   //  }
