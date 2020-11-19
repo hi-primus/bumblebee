@@ -242,8 +242,11 @@ ${opInit}
 if (using_coiled):
     res.update({"coiled": True, "cluster_name": cluster.name, "dashboard_link": getattr(client, 'dashboard_link', None) if client else None, "client_install": client_install});
 else:
-    res.update({"dashboard_link": getattr(op.client, 'dashboard_link', None) if op.client else None});
-res.update({'optimus': 'ok init', 'optimus_version': op.__version__, 'engine': op.engine, "coiled_available": coiled_available});
+    client = getattr(op, 'client', None)
+    dashboard_link = getattr(op.client, 'dashboard_link', None) if client else None
+    res.update({"dashboard_link": dashboard_link});
+op_engine = getattr(op, 'engine', None)
+res.update({'optimus': 'ok init', 'optimus_version': op.__version__, 'engine': op_engine, "coiled_available": coiled_available});
 
 if _use_time:
     _end_time = datetime.utcnow().timestamp()
