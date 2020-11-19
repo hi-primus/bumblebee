@@ -27,5 +27,7 @@ yarn global add pm2
 yarn global add concurrently
 yarn global add cross-env
 yarn install
+
+yarn build-packages
 pm2 start "yarn web" --name "web" --update-env
 pm2 start "yarn api" --name "api" --update-env
