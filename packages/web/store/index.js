@@ -1272,6 +1272,7 @@ export const actions = {
 
     if (!profilePreview) {
       try {
+        commit('setProfilePreview', false);
         response = await dispatch('evalCode',{ socketPost, code: `_output = ${datasetDfName}.ext.buffer_window("*"${(noBufferWindow) ? '' : ', '+from+', '+(to+1)})${code}.ext.to_json("*")`})
       } catch (err) {
         console.error(err,'Retrying with buffer');
