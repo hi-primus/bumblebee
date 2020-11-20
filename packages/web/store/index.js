@@ -328,8 +328,11 @@ export const mutations = {
       state.tab = found
     }
 
-
     state.datasetUpdates = state.datasetUpdates + 1
+  },
+
+  unsetDf (state, { dfName }) {
+    this.commit('newDataset', { current: true, dfName })
   },
 
   setDfToTab (state, { dfName, go }) {
