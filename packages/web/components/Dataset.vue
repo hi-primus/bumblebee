@@ -587,10 +587,15 @@ export default {
   methods: {
 
     async openDf (dfName) {
-      this.loadingDf = true;
-      this.$store.commit('setDfToTab', { dfName, go: true });
-      await this.getProfiling(dfName)
-      this.$store.commit('setDfToTab', { dfName, go: true });
+      try {
+        this.loadingDf = true;
+        this.$store.commit('setDfToTab', { dfName, go: true });
+        await this.getProfiling(dfName)
+        this.$store.commit('setDfToTab', { dfName, go: true });
+      } catch (err) {
+        console.error('Error opening dataset', err);
+      }
+      this.$store.commit('unsetDf', { dfName });
       this.loadingDf = false;
     },
 
