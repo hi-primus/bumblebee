@@ -234,7 +234,7 @@ import OperationField from '@/components/OperationField'
 import clientMixin from '@/plugins/mixins/client'
 import applicationMixin from '@/plugins/mixins/application'
 import { mapGetters } from 'vuex'
-import { getGenerator } from 'optimus-code-api'
+import { generateCode } from 'optimus-code-api'
 
 import {
 
@@ -1619,9 +1619,9 @@ export default {
               var code
 
               if (currentCommand.algorithm == 'fingerprint')
-                code = `from optimus.engines.dask.ml import keycollision as kc; _output = kc.fingerprint_cluster(${currentCommand.dfName}.ext.buffer_window("*"), input_cols="${currentCommand.columns[0]}")`
+                code = `from optimus.engines.dask.ml import keycollision as kc; _output = kc.fingerprint_cluster(${currentCommand.dfName}.buffer_window("*"), input_cols="${currentCommand.columns[0]}")`
               else if (currentCommand.algorithm == 'n_gram_fingerprint')
-                code = `from optimus.engines.dask.ml import keycollision as kc; _output = kc.n_gram_fingerprint_cluster(${currentCommand.dfName}.ext.buffer_window("*"), input_cols="${currentCommand.columns[0]}", n_size=${currentCommand.n_size})`
+                code = `from optimus.engines.dask.ml import keycollision as kc; _output = kc.n_gram_fingerprint_cluster(${currentCommand.dfName}.buffer_window("*"), input_cols="${currentCommand.columns[0]}", n_size=${currentCommand.n_size})`
               else
                 throw 'Invalid algorithm type input'
 
@@ -2780,6 +2780,7 @@ export default {
     window.getCommandHandler = (command) => {
       return this.getCommandHandler(command)
     };
+
     window.runCells = ()=>{
       this.runCodeNow(true)
     }
@@ -3419,35 +3420,8 @@ export default {
         payload.columns = this.columns.map(e=>this.currentDataset.columns[e.index].name);
       }
 
-      var precode = '';
+      return generateCode(payload.command, payload, type);
 
-      if (!payload._code) {
-        var generator = getGenerator(payload.command, payload);
-        if (generator === undefined) {
-          var commandHandler = this.getCommandHandler(payload);
-          generator = commandHandler ? commandHandler.code : undefined;
-        }
-        code = generator ? generator({
-          ...payload,
-          request: { ...(payload.request || {}), type }
-        }) : '';
-      }
-      else {
-        code = payload._code;
-      }
-
-      if (type==='preview') {
-        return code;
-      } else if (type==='profile') {
-        return code;
-      } else {
-        if (payload.request && payload.request.createsNew) {
-          return precode + code +'\n'
-					+`${payload.newDfName} = ${payload.newDfName}.ext.repartition(8).ext.cache()`;
-        } else {
-          return precode + `${payload.dfName} = ${payload.dfName}${code}.ext.cache()`;
-        }
-      }
 
     },
 

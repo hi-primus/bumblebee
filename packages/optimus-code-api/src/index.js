@@ -6,7 +6,7 @@ export const version = function() {
 }
 
 export const codeGenerators = {
-  profile: () => `.ext.profile(columns="*")`,
+  profile: () => `.profile(columns="*")`,
   uploadToS3: (payload) => {
     return `.to_${payload.file_type}( filename="s3://${payload.bucket}/${payload.username}/${payload.file_name}.${payload.file_type}", single_file=True, storage_options={ "key": "${payload.access_key_id}", "secret": "${payload.secret_key}", "client_kwargs": { "endpoint_url": "https://${payload.endpoint}", }, "config_kwargs": {"s3": {"addressing_style": "virtual", "x-amz-acl": "public/read"}} } );`
   },
@@ -44,7 +44,7 @@ export const codeGenerators = {
         expression = `${dfName}["${payload.columns[0]}"].isnull()`;
         break;
       case 'mismatch':
-        expression = `~${dfName}.cols.is_match("${payload.columns[0]}", "${payload.columnDataTypes[0]}")`;
+        expression = `${dfName}.cols.mismatch("${payload.columns[0]}", "${payload.columnDataTypes[0]}")`;
         break;
       case 'values':
         expression = `${dfName}["${payload.columns[0]}"].isin([${payload.selection.join(',')}])`;
@@ -212,7 +212,7 @@ export const codeGenerators = {
     var datasets = payload.with.map(({name})=>name).join(', ')
 
     if (payload.request.type !== 'final') {
-      datasets = payload.with.map(({name})=>`${name}.ext.buffer_window("*", 0, 3)`).join(', ')
+      datasets = payload.with.map(({name})=>`${name}.buffer_window("*", 0, 3)`).join(', ')
       return `.cols.append_df([${datasets}], ${cols_map})`;
     }
 
@@ -257,7 +257,7 @@ export const codeGenerators = {
         if (from!==undefined) {
           window = `,${from},${to}`
         }
-        return `${filterLeft}.cols.join(${payload.with}.ext.buffer_window("*"${window})${filterRight}`
+        return `${filterLeft}.cols.join(${payload.with}.buffer_window("*"${window})${filterRight}`
         + `, left_on="${payload.left_on}"`
         + `, right_on="${payload.right_on}", how="${payload.how}")${filterEnd}`
       }
@@ -435,7 +435,7 @@ export const codeGenerators = {
         code += `, sheet_name=${payload.sheet_name}`
       }
     }
-    code += `).ext.cache()`
+    code += `).cache()`
 
     return code
   },
@@ -487,7 +487,7 @@ export const codeGenerators = {
   },
   'load from database': (payload) => {
     var table = escapeQuotes(payload.table)
-    return `${payload.previous_code}${'\n'}${payload.newDfName} = db.table_to_df("${table}").ext.cache()`
+    return `${payload.previous_code}${'\n'}${payload.newDfName} = db.table_to_df("${table}").cache()`
   },
   'save to database': (payload) => {
     var table_name = escapeQuotes(payload.table_name)
@@ -495,7 +495,7 @@ export const codeGenerators = {
   },
   stratified_sample: (payload) => {
     var _argument = (payload.columns.length==1) ? `"${payload.columns[0]}"` : `["${payload.columns.join('", "')}"]`
-    return `.ext.stratified_sample(`
+    return `.stratified_sample(`
       +_argument
       +( (payload.seed) ? `, seed=${payload.seed}` : '')
       +')'
@@ -664,7 +664,7 @@ export const codeGenerators = {
       + ')'
   },
   sample_n: (payload) => {
-    return `.ext.sample(${payload.n})`
+    return `.sample(${payload.n})`
   },
 
 
@@ -675,7 +675,29 @@ export const getGenerator = function(generatorName = '', payload = {}) {
   return generator
 }
 
+export const generateCode = function(command, payload = {}, type = 'final') {
+  var generator = getGenerator(command, payload);
+  code = generator ? generator({
+    ...payload,
+    request: { ...(payload.request || {}), type }
+  }) : '';
+
+  if (type==='preview') {
+    return code;
+  } else if (type==='profile') {
+    return code;
+  } else {
+    if (payload.request && payload.request.createsNew) {
+      return code +'\n'
+      +`${payload.newDfName} = ${payload.newDfName}.repartition(8).cache()`;
+    } else {
+      return `${payload.dfName} = ${payload.dfName}${code}.cache()`;
+    }
+  }
+}
+
 export default {
   version,
-  getGenerator
+  getGenerator,
+  generateCode
 }

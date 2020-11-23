@@ -792,12 +792,12 @@ export default {
               var code = this.previewCode.code // is always static
               code = `${dfName} = ${code} \n`
 
-              code += `_output = {**${dfName}.ext.to_json("*"), "meta": ${dfName}.meta.get() if (${dfName}.meta and ${dfName}.meta.get) else {} } \n`
+              code += `_output = {**${dfName}.to_json("*", format="bumblebee"), "meta": ${dfName}.meta.get() if (${dfName}.meta and ${dfName}.meta.get) else {} } \n`
 
               // if (this.previewCode.infer) {
-              //   code += `_output = {**${dfName}.ext.to_json("*"), "meta": ${dfName}.meta.get() if (${dfName}.meta and ${dfName}.meta.get) else {} } \n`
+              //   code += `_output = {**${dfName}.to_json("*", format="bumblebee"), "meta": ${dfName}.meta.get() if (${dfName}.meta and ${dfName}.meta.get) else {} } \n`
               // } else {
-              //   code += `_output = {**${dfName}.ext.to_json("*")} \n`
+              //   code += `_output = {**${dfName}.to_json("*", format="bumblebee")} \n`
               // }
 
               var response = await this.evalCode(code)
@@ -812,7 +812,7 @@ export default {
                 this.$store.commit('setLoadPreview', { meta: response.data.result.meta } )
               }
 
-              var pCode = `_output = ${dfName}.ext.profile(columns="*")`
+              var pCode = `_output = ${dfName}.profile(columns="*")`
 
               var pResponse = await this.evalCode(pCode)
 
@@ -831,7 +831,7 @@ export default {
                 this.$store.commit('setLoadPreview', { meta: response.data.result.meta } )
               }
 
-              var pCode = `_output = ${dfName}.ext.profile(columns="*")`
+              var pCode = `_output = ${dfName}.profile(columns="*")`
 
               var pResponse = await this.evalCode(pCode)
 

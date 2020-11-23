@@ -2,6 +2,7 @@ import axios from 'axios'
 import Vue from 'vue'
 
 import { ALL_TYPES, capitalizeString, getPropertyAsync, filterCells, parseResponse, printError, deepCopy } from 'bumblebee-utils'
+import { generateCode } from 'optimus-code-api'
 
 const properties = [
   {
@@ -1190,7 +1191,7 @@ export const actions = {
 
     var datasets = getters.secondaryDatasets
 
-    var result = await dispatch('evalCode', {socketPost, code: '_output = '+dfName+'.ext.set_buffer("*")'})
+    var result = await dispatch('evalCode', {socketPost, code: '_output = '+dfName+'.set_buffer("*")'})
     console.debug('[DEBUG] Loading buffer Done', dfName);
     return result;
 
@@ -1266,7 +1267,7 @@ export const actions = {
 
     if (profilePreview) {
       try {
-        response = await dispatch('evalCode',{ socketPost, code: `_output = _df_profile${(noBufferWindow) ? '' : '['+from+':'+(to+1)+']'}.ext.to_json("*")`})
+        response = await dispatch('evalCode',{ socketPost, code: `_output = _df_profile${(noBufferWindow) ? '' : '['+from+':'+(to+1)+']'}.to_json("*", format="bumblebee")`})
       } catch (err) {
         console.error(err,'Retrying without buffered profiling');
         profilePreview = false;
@@ -1276,11 +1277,11 @@ export const actions = {
     if (!profilePreview) {
       try {
         commit('setProfilePreview', false);
-        response = await dispatch('evalCode',{ socketPost, code: `_output = ${datasetDfName}.ext.buffer_window("*"${(noBufferWindow) ? '' : ', '+from+', '+(to+1)})${code}.ext.to_json("*")`})
+        response = await dispatch('evalCode',{ socketPost, code: `_output = ${datasetDfName}.buffer_window("*"${(noBufferWindow) ? '' : ', '+from+', '+(to+1)})${code}.to_json("*", format="bumblebee")`})
       } catch (err) {
         console.error(err,'Retrying with buffer');
         await dispatch('getBuffer', { dfName: datasetDfName, socketPost, forcePromise: true });
-        response = await dispatch('evalCode',{ socketPost, code: `_output = ${datasetDfName}.ext.buffer_window("*"${(noBufferWindow) ? '' : ', '+from+', '+(to+1)})${code}.ext.to_json("*")`})
+        response = await dispatch('evalCode',{ socketPost, code: `_output = ${datasetDfName}.buffer_window("*"${(noBufferWindow) ? '' : ', '+from+', '+(to+1)})${code}.to_json("*", format="bumblebee")`})
       }
     }
 

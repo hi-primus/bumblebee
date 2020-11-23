@@ -167,9 +167,8 @@ op = Optimus(engine${functionParams})`;
   return `
 
 def install ():
-    import pandas
     from optimus import Optimus
-    return 'ok' if pandas.Series.ext else False
+    return 'ok'
 
 reset = ${(params?.reset != '0') ? 'True' : 'False'}
 

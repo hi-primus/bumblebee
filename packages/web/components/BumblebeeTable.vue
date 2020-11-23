@@ -1909,9 +1909,9 @@ export default {
 
         var cols = profile ? this.currentPreviewColumns.map(e=>escapeQuotes(  e.title.split(/__preview__/).join('')  )) : [];
 
-        var code = `_df_profile = ${this.currentDataset.dfName}.ext.buffer_window("*")${await getPropertyAsync(previewCode) || ''}`
+        var code = `_df_profile = ${this.currentDataset.dfName}.buffer_window("*")${await getPropertyAsync(previewCode) || ''}`
         + `\n_output = { `
-        + (profile ? `"profile": _df_profile.ext.profile(["${cols.join('", "')}"])` : '')
+        + (profile ? `"profile": _df_profile.profile(["${cols.join('", "')}"])` : '')
         + (profile && matches ? `, ` : '')
         + (matches ? `"matches_count": len(_df_profile.rows.select('df["__match__"]!=False'))` : '')
         + `}`
