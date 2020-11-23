@@ -16,45 +16,7 @@
         <ConfigsList v-else-if="windowDialog  === 'configs'"/>
         <ClustersList v-else-if="windowDialog  === 'clusters'"/>
       </v-dialog>
-      <template v-if="$store.state.datasets.length==0 && false" data-name="noKernel (deprecated)">
-        <div class="center-screen-inside black--text">
-          <v-progress-circular indeterminate color="black" class="mr-4" />
-          <span class="title">Waiting for data</span>
-          <div class="mb-8" style="width: 100%" />
-          <v-card class="elevation-0">
-            <v-card-text class="title mb-2">Now send info from your notebook. Try something like:</v-card-text>
-            <v-card-text class="subtitle text-code">
-              <span class="comment"># Install Optimus</span>
-              <br />!pip install optimuspyspark
-              <br />
-              <br />
-              <span class="comment"># Load Optimus</span>
-              <br />
-              <span class="keyword">from</span> optimus
-              <span class="keyword">import</span> Optimus
-              <br />
-              <br />
-              <span class="comment"># Let's Optimus call Bumblebee</span>
-              <br />op = Optimus(comm=
-              <span class="keyword">True</span>)
-              <br />
-              <br />
-              <span class="comment"># Load some data</span>
-              <br />df = op.load.csv(
-              <span
-                class="string"
-              >"https://raw.githubusercontent.com/ironmussa/Optimus/master/examples/data/Meteorite_Landings.csv"</span>)
-              <br />
-              <br />
-              <span class="comment"># Visualize</span>
-              <br />df.ext.send(
-              <span class="string">"Meteorite"</span>)
-            </v-card-text>
-          </v-card>
-        </div>
-        <v-icon class="back-btn" large color="black" @click="signOut()">arrow_back</v-icon>
-      </template>
-      <template v-else>
+      <template>
         <div v-if="workspaceStatus==='loading'">
           <div class="center-screen-inside grey--text">
             <v-progress-circular indeterminate color="grey" class="mr-4" />
@@ -466,7 +428,7 @@ export default {
           var result = await this.runCodeNow(false, -1, undefined, true);
           console.debug('[INITIALIZATION] Cells code and profiling done', result);
 
-            this.$store.commit('kernel', 'done');
+          this.$store.commit('kernel', 'done');
 
           if (!result && result !== false) {
             throw new Error('Cells code or profiling error')
