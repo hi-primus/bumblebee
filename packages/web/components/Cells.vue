@@ -3410,43 +3410,42 @@ export default {
 
     getCode (currentCommand, type = 'final') {
 
-      var payload = {...currentCommand}
+      var payload = { ...currentCommand };
 
-      var code = ''
+      var code = '';
 
       if (!payload.columns || !payload.columns.length) {
-        // console.warn('Auto-filling columns')
-        payload.columns = this.columns.map(e=>this.currentDataset.columns[e.index].name)
+        // console.warn('Auto-filling columns');
+        payload.columns = this.columns.map(e=>this.currentDataset.columns[e.index].name);
       }
 
-      var precode = ''
+      var precode = '';
 
       if (!payload._code) {
-        var generator = getGenerator(payload.command, payload)
+        var generator = getGenerator(payload.command, payload);
         if (generator === undefined) {
-          var commandHandler = this.getCommandHandler(payload)
-          generator = commandHandler.code
+          var commandHandler = this.getCommandHandler(payload);
+          generator = commandHandler ? commandHandler.code : undefined;
         }
         code = generator ? generator({
           ...payload,
           request: { ...(payload.request || {}), type }
-        }) : ''
+        }) : '';
       }
       else {
-        code = payload._code
+        code = payload._code;
       }
 
       if (type==='preview') {
-        return code
+        return code;
       } else if (type==='profile') {
-        return code
+        return code;
       } else {
         if (payload.request && payload.request.createsNew) {
-
           return precode + code +'\n'
-					+`${payload.newDfName} = ${payload.newDfName}.ext.repartition(8).ext.cache()`
+					+`${payload.newDfName} = ${payload.newDfName}.ext.repartition(8).ext.cache()`;
         } else {
-          return precode + `${payload.dfName} = ${payload.dfName}${code}.ext.cache()`
+          return precode + `${payload.dfName} = ${payload.dfName}${code}.ext.cache()`;
         }
       }
 
