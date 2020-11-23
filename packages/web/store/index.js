@@ -678,6 +678,11 @@ export const actions = {
       cells = response.data.commands.map( e=>({ ...JSON.parse(e), done: false }) );
     }
 
+    cells = cells.map(cell => {
+      cell.code = generateCode(cell.command, cell.payload);
+      return cell;
+    })
+
     var commands = cells.filter(e=>!(e && e.payload && e.payload.request && e.payload.request.isLoad));
     var dataSources = cells.filter(e=>e && e.payload && e.payload.request && e.payload.request.isLoad);
 
