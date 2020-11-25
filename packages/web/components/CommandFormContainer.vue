@@ -7,7 +7,7 @@
     :max-width="820"
     @click:outside="$emit('cancel-command')"
     @keydown.esc="$emit('cancel-command')"
-    :content-class="'command-dialog '+command.dialog.class"
+    :content-class="[(command.dialog.dynamicClass ? command.dialog.dynamicClass(currentCommand) : ''), (command.dialog.class || ''), 'command-dialog'].join(' ')"
   >
     <div class="title px-6">
       {{ {value: command.dialog.title, args: [currentCommand]} | property }}

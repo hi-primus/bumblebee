@@ -52,3 +52,15 @@
   color: rgba(0, 0, 0, 0.54);
   transition: opacity ease-in-out 0.3s;
 }
+@mixin mdi-icon {
+  display: inline-block;
+  font: normal normal normal 24px/1 "Material Design Icons";
+  text-rendering: auto;
+  line-height: inherit;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transform: scale(0.6666);
+  opacity: 0.5;
+  color: rgba(0, 0, 0, 0.54);
+  transition: opacity ease-in-out 0.3s;
+}

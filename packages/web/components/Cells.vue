@@ -916,6 +916,7 @@ export default {
         concat: {
           dialog: {
             dialog: true,
+            dynamicClass: (c)=>c.showValues ? 'values-items' : '',
             class: "bigger-dialog concat-dialog",
             tall: true,
             title: 'Append datasets',
@@ -926,6 +927,13 @@ export default {
               //   type: 'select',
               //   items_key: 'items_with'
               // },
+              {
+                key: 'showValues',
+                label: 'Show values',
+                class: 'show-values-switch',
+                type: 'switch',
+                condition: (c)=>c.typesDone
+              },
               {
                 key: 'with',
                 label: 'With datasets',
@@ -938,7 +946,8 @@ export default {
                   items_name: 'dataset',
                   value: 'name',
                   concat: true
-                }
+                },
+                condition: (c)=>c.typesDone
               },
               {
                 key: 'selected_columns',
@@ -966,21 +975,26 @@ export default {
             }
 
             return {
+              showValues: false,
               items_with: items_with_cb,
               with: [],
               items_info: (c)=>{
                 try {
-                  var columns = transpose(c.selected_columns.map(e=>e.items)).map(columns=>columns.filter(e=>e).length);
+                  var rows = c.selected_columns.map(e=>e.items);
+                  if (!rows || !rows.length) {
+                    return [];
+                  }
+                  var columns = transpose(rows).map(columns=>columns.filter(e=>e).length);
                   var total_columns = [
                     ...c.static_items(c).map(e=>e.columns),
                     ...c.items_with(c).map(e=>e.columns)
                   ]
                   return columns.map((e,index)=>{
-                    return `${e} of ${total_columns[index]} columns`
+                    return `${e} of ${total_columns[index]} columns`;
                   })
                 } catch (err) {
-                  console.error(err)
-                  return []
+                  console.error(err);
+                  return [];
                 }
               },
               static_items: (c)=>{
