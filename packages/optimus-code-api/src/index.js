@@ -689,9 +689,9 @@ export const generateCode = function(command, payload = {}, type = 'final') {
   } else {
     if (payload.request && payload.request.createsNew) {
       return code +'\n'
-      +`${payload.newDfName} = ${payload.newDfName}.repartition(8).cache()`;
+      +`${payload.newDfName} = ${payload.newDfName}.repartition(8).ext.cache()`;
     } else {
-      return `${payload.dfName} = ${payload.dfName}${code}.cache()`;
+      return `${payload.dfName} = ${payload.dfName}${code}.ext.cache()`;
     }
   }
 }
