@@ -216,23 +216,22 @@
     </template>
 
     <template v-else-if="getPropertyField(field.type)=='columns_concat'">
-      <div style="min-height: 80px;">
+      <div style="min-height: 80px; height: 94%; top: 0;" class="progress-middle" :key="field.key" v-if="!currentCommand.typesDone">
         <v-progress-circular
-          v-if="!currentCommand.typesDone"
           indeterminate
           color="grey"
           class="mx-auto mt-4 d-flex"
           size="64"
           width="4"
         />
-        <ColumnsConcatSelector
-          v-else
-          :key="field.key"
-          v-model="_value"
-          :dataset-columns="getPropertyField(currentCommand.dataset_columns)"
-          @input="(field.onChange) ? (currentCommand = field.onChange($event, currentCommand)) : ()=>{}"
-        />
       </div>
+      <ColumnsConcatSelector
+        v-else
+        :key="field.key"
+        v-model="_value"
+        :dataset-columns="getPropertyField(currentCommand.dataset_columns)"
+        @input="(field.onChange) ? (currentCommand = field.onChange($event, currentCommand)) : ()=>{}"
+      />
     </template>
 
     <template v-else-if="getPropertyField(field.type)=='columns_filter'">
@@ -283,6 +282,9 @@
             </template>
           </div>
         </template>
+        <div class="tab-hint output-tab-hint" v-if="currentCommand.selected_columns && currentCommand.selected_columns.length" >
+          {{currentCommand.selected_columns.length}} columns
+        </div>
       </div>
     </template>
     <template v-else-if="getPropertyField(field.type)=='select-foreach'">

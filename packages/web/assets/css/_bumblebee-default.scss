@@ -2247,17 +2247,38 @@ $editor-top-padding: 4px;
     min-width: calc(100vw - 70px);
     min-height: calc(100vh - 70px);
     .o-fields {
-      // max-height: calc(100vh - 250px);
-      // height: calc(100vh - 300px);
+      height: calc(100vh - 202px);
+      max-height: calc(100vh - 202px);
     }
     .o-buttons {
       padding-top: 20px;
     }
   }
   &.concat-dialog {
+    --concat-item-height: 28px;
+    &.values-items {
+      --concat-item-height: #{$concat-item-height};
+      .data-item-value {
+        display: block !important;
+      }
+      .data-item-hint {
+        left: unset;
+        top: -2px;
+      }
+      .concat-item {
+        padding-top: 4px !important;
+        margin-bottom: 6px !important;
+      }
+    }
     .o-fields {
       background: rgba($data-primary, 0.15);
     }
+  }
+}
+
+.bigger-dialog {
+  .o-fields {
+    min-height: calc(100vh - 203px);
   }
 }
 
@@ -2271,6 +2292,8 @@ $editor-top-padding: 4px;
     align-content: flex-start;
 
     overflow: auto;
+
+    position: relative;
 
     margin-left: -24px;
     margin-right: -20px;
@@ -2818,17 +2841,8 @@ $editor-top-padding: 4px;
   flex-direction: column;
   max-height: calc(100vh - 270px);
   height: calc(100vh - 270px);
-  & > * {
-  }
-  .concat-items {
-    overflow-y: auto;
-    min-height: 65%;
-    flex: 1;
-    padding-left: 20px;
-    margin-left: -20px;
-    border-bottom: solid 1px rgba(0,0,0,0.09);
+  justify-content: flex-start;
 
-  }
   .concat-deleted-title {
     z-index: 2;
     background: rgba-to-rgb-alpha(rgba($data-primary, 0.15));
@@ -2839,15 +2853,41 @@ $editor-top-padding: 4px;
     padding-right: 10px;
     padding-bottom: 4px;
     line-height: 1em;
-    min-height: 28px;
     border-bottom-right-radius: 12px;
     pointer-events: none;
+    top: 2px;
+    min-height: 28px;
+  }
+  .concat-items {
+    overflow-y: auto;
+    min-height: 112px;
+    padding-left: 20px;
+    margin-left: -20px;
+    margin-bottom: -1px;
+    flex-shrink: 3;
+    flex-grow: 3;
   }
   .deleted-items {
-    margin-top: -28px;
-    padding-top: 28px;
+    flex-shrink: 3;
+    flex-grow: 2;
+    min-height: 112px;
+    background: rgba-to-rgb-alpha(rgba($data-primary, 0.15));
+    border-top: solid 1px rgba(0,0,0,0.09);
+    margin-top: -27px;
+    margin-left: -20px;
+    padding-top: 32px;
+    padding-left: 20px;
     overflow-y: auto;
-    min-height: 60px;
+    position: relative;
+  }
+  &::after {
+    content: ' ';
+    background: rgba-to-rgb-alpha(rgba($data-primary, 0.15));
+    z-index: 2;
+    width: 100%;
+    min-height: 0px;
+    height: 100%;
+    flex-shrink: 1000000000;
   }
 }
 
@@ -2856,7 +2896,6 @@ $editor-top-padding: 4px;
   min-width: 98px;
   min-height: $concat-item-height;
   font-family: $font-mono-table;
-  position: relative;
 
   &.concat-items {
     .concat-item {
@@ -2877,7 +2916,8 @@ $editor-top-padding: 4px;
     .items-cols {
       min-height: inherit;
       display: flex;
-      flex-shrink: 0;
+      flex-shrink: 1;
+      align-items: flex-start;
     }
   }
   .deleted-items-empty {
@@ -2906,7 +2946,7 @@ $editor-top-padding: 4px;
         content: 'drag_indicator';
         position: absolute;
         left: -4px;
-        top: 12px;
+        top: calc(50% - 12px);
       }
       cursor: move;
       padding-left: 24px;
@@ -2917,33 +2957,57 @@ $editor-top-padding: 4px;
     }
   }
   .output-col {
-    padding-left: 68px;
-    min-width: calc(#{$concat-final-col-width} + 68px);
+    padding-left: $concat-output-col-padding;
+    min-width: calc(#{$concat-output-col-width} + $concat-output-col-padding);
+    &::before {
+      content: ' ';
+      pointer-events: none;
+      height: 100%;
+      top: 0;
+      transform: translateX(-8px);
+      border-left: dashed 1px rgba(0,0,0,0.09);
+      position: absolute;
+    }
     .concat-item {
       padding-right: 36px;
       cursor: pointer !important;
       .data-item-title {
         position: relative;
         &::after {
-          @include material-icon;
+          @include mdi-icon;
+          content: "\F05E7" !important;
+          top: -1px;
           position: absolute;
           right: -16px;
-          top: -3px;
           pointer-events: none !important;
-          content: "edit" !important;
         }
       }
       .data-column-name {
         position: relative;
         left: 32px;
       }
+
+      &:last-child {
+        position: relative;
+        &::after {
+          pointer-events: none;
+          content: '';
+          position: absolute;
+          width: calc(100% + 2px);
+          height: calc(100% + 2px);
+          top: calc(100% + 7px);
+          left: -1px;
+          border-radius: 6px;
+          background: rgba(white, 0.5);
+        }
+      }
     }
   }
   .items-item {
-    height: $concat-item-height;
+    height: var(--concat-item-height);
     margin-bottom: 6px;
     &:last-child {
-      flex: 1;
+      // flex: 1;
     }
   }
   .items-fields {
@@ -2959,14 +3023,14 @@ $editor-top-padding: 4px;
     font-size: 14px;
     min-width: calc(100% - 6px);
     max-width: calc(100% - 6px);
-    min-height: $concat-item-height;
-    height: $concat-item-height;
+    min-height: var(--concat-item-height);
+    height: var(--concat-item-height);
     line-height: 20px;
     margin-bottom: 6px;
     margin-right: 6px;
     border-radius: 6px;
     border-width: 1px;
-    padding: 4px 4px 0px 16px;
+    padding: 2px 4px 0px 16px;
     border-style: solid;
     border-color: transparent;
 
@@ -3004,23 +3068,26 @@ $editor-top-padding: 4px;
     .data-item-value, .data-item-hint {
       position: relative;
       top: -2px;
-      display: block;
       @include ellipsis;
       max-width: calc(#{$concat-col-width} - 50px);
     }
 
     .data-item-hint {
+      display: block;
       @include font-reset;
       @include upper-small;
       pointer-events: none !important;
       user-select: none;
       opacity: .667;
+      left: calc(100% + 44px);
+      top: -20px;
     }
 
 
     .data-item-value {
       // padding-left: 32px;
       // opacity: 0.71;
+      display: none;
       &::before {
         max-width: 32px;
         // content: 'VALUE: ';
@@ -3034,7 +3101,7 @@ $editor-top-padding: 4px;
     .close-button {
       position: absolute;
       right: 8px;
-      top: 15px;
+      top: calc(50% - 8px);
       padding-top: 0.75px !important;
       color: rgba(0, 0, 0, 0.54);
     }
@@ -3057,7 +3124,7 @@ $editor-top-padding: 4px;
       top: 0;
       width: calc(100% - 6px);
       height: 100%;
-      max-height: $concat-item-height;
+      max-height: var(--concat-item-height);
       cursor: pointer;
       z-index: 5;
       &::after {
@@ -3078,21 +3145,21 @@ $editor-top-padding: 4px;
       }
       &::after {
         content: 'No column';
+        font-weight: 400;
         position: absolute;
         opacity: 1;
-        border: grey dashed 1px;
-        color: rgba(0,0,0,0.25);
+        border: rgba(0,0,0,0.2) dashed 1px;
+        color: rgba(0,0,0,0.4);
         background: rgba(white,.5);
         transition: color ease-in-out 0.3s;
         font-family: $font-mono;
-        font-weight: 700;
-        font-size: 13px;
-        line-height: 48px;
+        font-size: 16px;
+        line-height: calc(var(--concat-item-height) - 2px);
         text-align: center;
         padding-right: 1px;
         width: calc(100% - 6px);
         height: 100%;
-        max-height: $concat-item-height;
+        max-height: var(--concat-item-height);
         left: 0px;
         top: 0px;
         border-radius: 6px;
@@ -3272,7 +3339,7 @@ $editor-top-padding: 4px;
   }
   .add-dataset-button {
     // top: calc(50% - 40px);
-    top: 40px;
+    top: 30px;
     z-index: 2;
     position: absolute;
     transform: translateX(15px);
@@ -3290,6 +3357,29 @@ $editor-top-padding: 4px;
     width: 100%;
     opacity: .71;
     @include upper-small;
+    &.output-tab-hint {
+      text-align: left;
+      padding-left: $concat-output-col-padding + 28px;
+    }
+  }
+
+}
+
+.show-values-switch {
+  position: absolute;
+  right: 36px;
+  width: unset !important;
+  min-width: unset;
+  .v-label {
+    @include upper-small;
+    opacity: .71;
+    font-size: 12px;
+    margin-top: 3px;
+  }
+  .v-input--selection-controls__input {
+    order: 2;
+    margin-right: 0 !important;
+    margin-left: 8px;
   }
 }
 
@@ -3310,8 +3400,8 @@ $editor-top-padding: 4px;
     }
   }
   .sf-activator {
-    // width: $concat-final-col-width;
-    // min-width: $concat-final-col-width;
+    // width: $concat-output-col-width;
+    // min-width: $concat-output-col-width;
     text-align: center;
   }
   .tabs-add-item {
