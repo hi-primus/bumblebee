@@ -2987,8 +2987,6 @@ $editor-top-padding: 4px;
         left: 32px;
       }
 
-      // placeholder
-
       &:last-child {
         position: relative;
         &::after {
@@ -2997,7 +2995,7 @@ $editor-top-padding: 4px;
           position: absolute;
           width: calc(100% + 2px);
           height: calc(100% + 2px);
-          top: 33px;
+          top: calc(100% + 7px);
           left: -1px;
           border-radius: 6px;
           background: rgba(white, 0.5);

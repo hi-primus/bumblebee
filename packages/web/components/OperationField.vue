@@ -216,7 +216,7 @@
     </template>
 
     <template v-else-if="getPropertyField(field.type)=='columns_concat'">
-      <div style="min-height: 80px; height: 94%; top: 0;" class="progress-middle" :key="field.key" v-if="true || !currentCommand.typesDone">
+      <div style="min-height: 80px; height: 94%; top: 0;" class="progress-middle" :key="field.key" v-if="!currentCommand.typesDone">
         <v-progress-circular
           indeterminate
           color="grey"
