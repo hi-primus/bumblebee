@@ -2958,7 +2958,7 @@ $editor-top-padding: 4px;
   }
   .output-col {
     padding-left: $concat-output-col-padding;
-    min-width: calc(#{$concat-output-col-width} + $concat-output-col-padding);
+    min-width: calc(#{$concat-output-col-width} + #{$concat-output-col-padding});
     &::before {
       content: ' ';
       pointer-events: none;
