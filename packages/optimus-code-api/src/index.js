@@ -675,7 +675,29 @@ export const getGenerator = function(generatorName = '', payload = {}) {
   return generator
 }
 
+export const generateCode = function(command, payload = {}, type = 'final') {
+  var generator = getGenerator(command, payload);
+  code = generator ? generator({
+    ...payload,
+    request: { ...(payload.request || {}), type }
+  }) : '';
+
+  if (type==='preview') {
+    return code;
+  } else if (type==='profile') {
+    return code;
+  } else {
+    if (payload.request && payload.request.createsNew) {
+      return code +'\n'
+      +`${payload.newDfName} = ${payload.newDfName}.repartition(8).cache()`;
+    } else {
+      return `${payload.dfName} = ${payload.dfName}${code}.cache()`;
+    }
+  }
+}
+
 export default {
   version,
-  getGenerator
+  getGenerator,
+  generateCode
 }
