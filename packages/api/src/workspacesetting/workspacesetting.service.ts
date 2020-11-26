@@ -1,28 +1,45 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { Model } from "mongoose";
 import { InjectModel } from "@nestjs/mongoose";
+import { User } from 'src/users/interfaces/user.interface';
 import { WorkspaceSetting } from "./interface/workspacesetting.interface";
 
 @Injectable()
 export class WorkspaceSettingService {
   constructor(@InjectModel("WorkspaceSetting") private itemModel: Model<WorkspaceSetting>) {}
 
-  async getMany(queryParams): Promise<WorkspaceSetting[]> {
-    const items = await this.itemModel.find({ queryParams }).exec();
+  async getMany(user, queryParams): Promise<WorkspaceSetting[]> {
+    const query = {};
+		queryParams?.filters?.split(',').forEach((filter, index) => {
+			query[filter] = queryParams?.values?.split(',')[index] || '';
+		});
+    const items = await this.itemModel
+      .find({
+        ...query,
+        createdBy: user.userId,
+      })
+      .sort(queryParams.sort)
+      .skip(parseInt(queryParams.page) * parseInt(queryParams.pageSize))
+      .limit(parseInt(queryParams.pageSize))
+      .exec();
+
     return items;
   }
 
-  async getManyCount(queryParams): Promise<number> {
+  async getManyCount(user): Promise<number> {
     const count = await this.itemModel
-      .find({ queryParams })
-      .countDocuments()
+      .countDocuments({
+        createdBy: user.userId,
+      })
       .exec();
     return count;
   }
 
-  async getOne(params): Promise<WorkspaceSetting> {
-    const item = await this.itemModel.findOne(params).exec();
-    return item;
+  async getOne(itemId: string, user: User): Promise<WorkspaceSetting> {
+    const item = await this.itemModel
+			.findOne({ _id: itemId, user: user.id })
+			.exec();
+		return item;
   }
 
   async createOne(newModel): Promise<WorkspaceSetting> {
@@ -31,12 +48,12 @@ export class WorkspaceSettingService {
   }
 
   async updateOne(itemId, data): Promise<WorkspaceSetting> {
-    const item = await this.itemModel.findOneAndUpdate(itemId, data).exec();
+    const item = await this.itemModel.findOneAndUpdate({ _id: itemId }, data).exec();
     return item.save();
   }
 
-  async deleteOne(itemId) {
-    return this.itemModel.findOneAndDelete({ _id: itemId });
+  async deleteOne(itemId: string, user: User) {
+    return this.itemModel.findOneAndDelete({ _id: itemId, user: user.id });
   }
 
   async updateOneFromUser(itemId, creator, data): Promise<WorkspaceSetting> {

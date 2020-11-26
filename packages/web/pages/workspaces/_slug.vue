@@ -1,7 +1,7 @@
 <template>
 	<Layout>
 		<v-layout row wrap class="elevation-0 d-flex flex-column align-top justify-start">
-      <ConfigPanel
+      <SettingsPanel
         v-if="windowDialog  === 'configWorkspace'"
         @done="doneConfig"
       />
@@ -13,7 +13,7 @@
         max-width="1220"
       >
         <WorkspacesList v-if="windowDialog  === 'workspaces'"/>
-        <ConfigsList v-else-if="windowDialog  === 'configs'"/>
+        <SettingsList v-else-if="windowDialog  === 'configs'"/>
         <ClustersList v-else-if="windowDialog  === 'clusters'"/>
       </v-dialog>
       <template v-if="$store.state.datasets.length==0 && false" data-name="noKernel (deprecated)">
@@ -221,8 +221,8 @@
 import Layout from "@/components/Layout"
 import TableBar from "@/components/TableBar"
 import WorkspacesList from "@/components/WorkspacesList"
-import ConfigPanel from "@/components/ConfigPanel"
-import ConfigsList from "@/components/ConfigsList"
+import SettingsPanel from "@/components/SettingsPanel"
+import SettingsList from "@/components/SettingsList"
 import ClustersList from "@/components/ClustersList"
 import MoreMenu from "@/components/MoreMenu"
 import clientMixin from "@/plugins/mixins/client"
@@ -239,8 +239,8 @@ export default {
 		Layout,
     TableBar,
     WorkspacesList,
-    ConfigPanel,
-    ConfigsList,
+    SettingsPanel,
+    SettingsList,
     ClustersList,
     MoreMenu
 	},

@@ -2,21 +2,7 @@
   <v-card>
     <FormDialog focus ref="formDialog"/>
     <v-card-title>
-      Configurations
-      <v-spacer></v-spacer>
-      <v-form @submit.prevent="createNewElement({name: createName})">
-        <v-text-field
-          v-model="createName"
-          label="New configuration"
-          append-icon="add"
-          @click:append="createNewElement({name: createName})"
-          outlined
-          dense
-          single-line
-          hide-details
-        >
-        </v-text-field>
-      </v-form>
+      Settings
     </v-card-title>
     <v-data-table
       :items="tableItems"
@@ -24,18 +10,12 @@
       :mobile-breakpoint="0"
       :options.sync="options"
       :server-items-length="total"
-      class="configurations-table manager-table"
+      class="settings-table manager-table"
       :loading="loading"
       @click:row="rowClicked"
     >
-      <template v-slot:item.activeKernel="{ item }">
-        <span
-          :class="{
-            'primary--text': item.activeKernel,
-            'grey--text': !item.activeKernel
-          }"
-          class="pl-3"
-        >●</span>
+      <template slot="no-data">
+        <div>No settings available</div>
       </template>
       <template v-slot:item.createdAt="{ item }">
         {{item.createdAt | formatDate}}
@@ -63,7 +43,7 @@
           </template>
           <v-list flat dense style="max-height: 400px; min-width: 160px;" class="scroll-y">
             <v-list-item-group color="black">
-              <v-list-item
+              <!-- <v-list-item
                 @click="editElement(item)"
               >
                 <v-list-item-content>
@@ -71,7 +51,7 @@
                     Edit info
                   </v-list-item-title>
                 </v-list-item-content>
-              </v-list-item>
+              </v-list-item> -->
               <!-- <v-list-item
                 @click="duplicateElement(item)"
               >
@@ -110,11 +90,11 @@
 
 <script>
 
-import configMixin from "@/plugins/mixins/configs";
+import settingsMixin from "@/plugins/mixins/workspace-settings";
 
 export default {
 
-  mixins: [ configMixin ],
+  mixins: [ settingsMixin ],
 
   data () {
     return {
@@ -130,11 +110,9 @@ export default {
         value: false
       },
       headers: [
-        { text: 'Active', sortable: true, width: '1%', value: 'activeKernel', align: 'left' },
-        { text: 'Configuration', sortable: true, width: '8%', value: 'name' },
-        { text: 'Description', sortable: true, width: '12%', value: 'description' },
-        { text: 'Tabs', sortable: true, width: '2%', value: 'tabs' },
-        { text: 'Data sources', sortable: true, width: '2%', value: 'dataSourcesCount' },
+        { text: 'Name', sortable: true, width: '8%', value: 'name' },
+        { text: 'Engine', sortable: true, width: '8%', value: 'engine' },
+        // { text: 'Description', sortable: true, width: '12%', value: 'description' },
         { text: 'Last modification', sortable: true, width: '6%', value: 'updatedAt'},
         { text: 'Created', sortable: true, width: '6%', value: 'createdAt'},
         { text: '', sortable: false, width: '1%', value: 'menu'}
@@ -145,20 +123,20 @@ export default {
 
   methods: {
 
-    async rowClicked (configuration) {
+    async rowClicked (setting) {
       // openMenu
-      this.$emit('click:configuration',configuration)
+      this.$emit('click:setting',setting)
     },
 
-    async deleteElement (configuration) {
+    async deleteElement (setting) {
       try {
-        let id = configuration._id
+        let id = setting._id
         let found = this.items.findIndex(w=>w._id === id)
         this.$delete(this.items, found)
 
         await this.$store.dispatch('request',{
           request: 'delete',
-          path: `/configurations/${id}`,
+          path: `/workspacesettings/${id}`,
         })
         await this.updateElements()
       } catch (err) {
@@ -167,39 +145,35 @@ export default {
     },
 
     async createNewElementUsingForm () {
-      let values = this.configParameters()
-
+      let values = await this.settingsParameters()
       if (!values) {
         return false;
       }
-
-      values.jupyter_ip = values.jupyter_address.ip;
-      values.jupyter_port = values.jupyter_address.port;
-
-      // delete values.jupyter_address;
-
       await this.createNewElement(values);
     },
 
-    async createNewElement (payload) {
-      var pushed = -1
-      if (!payload.name) {
-        return false
-      }
+    async createNewElement (configuration) {
+
+      var pushed = -1;
+
       pushed = this.items.push({
-        name: payload.name,
-        description: payload.description,
+        name: configuration.name,
+        description: configuration.description,
         createdAt: false,
         updatedAt: false,
         loading: true,
         _id: false
-      })
+      });
+
+      var payload = { configuration };
+
       try {
-        await this.$store.dispatch('request',{
+        var response = await this.$store.dispatch('request',{
           request: 'post',
-          path: '/configurations',
+          path: '/workspacesettings',
           payload
         })
+        console.log({response})
         await this.updateElements()
       } catch (err) {
         if (pushed>=0) {
@@ -209,24 +183,28 @@ export default {
       }
     },
 
-    async editElement (configuration) {
+    async editElement (setting) {
+
+
+
+      let values = await this.settingsParameters()
 
       try {
         let values = await this.fromForm({
-          text: 'Edit configuration',
+          text: 'Edit setting',
           fields: [
             {
               name: '',
-              value: configuration.name,
+              value: setting.name,
               props: {
-                placeholder: configuration.name,
+                placeholder: setting.name,
                 label: 'Name'
               }
             },
             {
               is: 'v-textarea',
               name: '',
-              value: configuration.description,
+              value: setting.description,
               props: {
                 placeholder: undefined,
                 label: 'Description'
@@ -239,7 +217,7 @@ export default {
           return false
         }
 
-        let id = configuration._id
+        let id = setting._id
 
         let found = this.items.findIndex(w=>w._id === id)
         let item = this.items[found]
@@ -250,7 +228,7 @@ export default {
 
         await this.$store.dispatch('request',{
           request: 'put',
-          path: `/configurations/${id}`,
+          path: `/workspacesettings/${id}`,
           payload: values
         })
         await this.updateElements()
@@ -260,11 +238,11 @@ export default {
 
     },
 
-    async duplicateElement (configuration) {
+    async duplicateElement (setting) {
       try {
          this.items.push({
-          ...configuration,
-          name: configuration.name+' copy',
+          ...setting,
+          name: setting.name+' copy',
           createdAt: false,
           updatedAt: false,
           loading: true,
@@ -272,9 +250,9 @@ export default {
         })
         await this.$store.dispatch('request',{
           request: 'post',
-          path: `/configurations/copy/${configuration._id}`,
+          path: `/workspacesettings/copy/${setting._id}`,
           payload: {
-            name: configuration.name+' copy' // TO-DO: copyName function
+            name: setting.name+' copy' // TO-DO: copyName function
           }
         })
         await this.updateElements()
@@ -302,8 +280,9 @@ export default {
           sort = '&sort='+sort
         }
         let response = await this.$store.dispatch('request',{
-          path: `/configurations?page=${page-1}&pageSize=${itemsPerPage}${sort}`
+          path: `/workspacesettings`
         })
+        console.log({response});
         this.loading = false
         return {items: response.data.items, total: response.data.count}
       } catch (err) {
@@ -319,14 +298,13 @@ export default {
       if (!this.items || !this.items.length) {
         return []
       }
-      return this.items.map((w)=>({
-        ...w,
-        activeKernel: w.activeKernel,
-        name: w.name,
-        tabs: (w.tabs || []).length,
-        dataSourcesCount: w.dataSourcesCount || 0,
-        updatedAt: w.updatedAt,
-        createdAt: w.createdAt
+      console.log(this.items);
+      return this.items.map((e)=>({
+        ...e,
+        name: e.name,
+        engine: e.configuration ? e.configuration.engine : 'default',
+        updatedAt: e.updatedAt,
+        createdAt: e.createdAt
       }))
     }
   },

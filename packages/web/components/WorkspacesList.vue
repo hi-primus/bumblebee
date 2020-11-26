@@ -28,6 +28,9 @@
       :loading="loading"
       @click:row="rowClicked"
     >
+      <template slot="no-data">
+        <div>No workspaces available</div>
+      </template>
       <template v-slot:item.activeKernel="{ item }">
         <span
           :class="{

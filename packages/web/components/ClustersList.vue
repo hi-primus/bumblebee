@@ -2,12 +2,12 @@
   <v-card>
     <FormDialog focus ref="formDialog"/>
     <v-card-title>
-      Configurations
+      Clusters
       <v-spacer></v-spacer>
       <v-form @submit.prevent="createNewElement({name: createName})">
         <v-text-field
           v-model="createName"
-          label="New configuration"
+          label="New cluster"
           append-icon="add"
           @click:append="createNewElement({name: createName})"
           outlined
@@ -24,7 +24,7 @@
       :mobile-breakpoint="0"
       :options.sync="options"
       :server-items-length="total"
-      class="configurations-table manager-table"
+      class="clusters-table manager-table"
       :loading="loading"
       @click:row="rowClicked"
     >
@@ -133,7 +133,7 @@ export default {
       },
       headers: [
         { text: 'Active', sortable: true, width: '1%', value: 'activeKernel', align: 'left' },
-        { text: 'Configuration', sortable: true, width: '8%', value: 'name' },
+        { text: 'Cluster', sortable: true, width: '8%', value: 'name' },
         { text: 'Description', sortable: true, width: '12%', value: 'description' },
         { text: 'Tabs', sortable: true, width: '2%', value: 'tabs' },
         { text: 'Data sources', sortable: true, width: '2%', value: 'dataSourcesCount' },
@@ -147,24 +147,24 @@ export default {
 
   methods: {
 
-    async rowClicked (configuration) {
+    async rowClicked (cluster) {
       // openMenu
-      this.$emit('click:configuration',configuration)
+      this.$emit('click:cluster',cluster)
     },
 
     fromForm (form) {
       return this.$refs.formDialog.fromForm(form)
     },
 
-    async deleteElement (configuration) {
+    async deleteElement (cluster) {
       try {
-        let id = configuration._id
+        let id = cluster._id
         let found = this.items.findIndex(w=>w._id === id)
         this.$delete(this.items, found)
 
         await this.$store.dispatch('request',{
           request: 'delete',
-          path: `/configurations/${id}`,
+          path: `/clusters/${id}`,
         })
         await this.updateElements()
       } catch (err) {
@@ -174,14 +174,14 @@ export default {
 
     async createNewElementUsingForm () {
       let values = await this.fromForm({
-        text: 'Create new configuration',
+        text: 'Add a cluster',
         fields: [
           {
             key: 'name',
             name: '',
             placeholder: undefined,
             value: '',
-            label: 'New configuration'
+            label: 'Cluster name'
           },
           {
             key: 'description',
@@ -217,7 +217,7 @@ export default {
       try {
         await this.$store.dispatch('request',{
           request: 'post',
-          path: '/configurations',
+          path: '/clusters',
           payload
         })
         await this.updateElements()
@@ -229,18 +229,18 @@ export default {
       }
     },
 
-    async editElement (configuration) {
+    async editElement (cluster) {
 
       try {
         let values = await this.fromForm({
-          text: 'Edit configuration',
+          text: 'Edit cluster',
           fields: [
             {
               key: 'name',
               name: '',
-              value: configuration.name,
+              value: cluster.name,
               props: {
-                placeholder: configuration.name,
+                placeholder: cluster.name,
                 label: 'Name'
               }
             },
@@ -248,7 +248,7 @@ export default {
               key: 'description',
               is: 'v-textarea',
               name: '',
-              value: configuration.description,
+              value: cluster.description,
               props: {
                 placeholder: undefined,
                 label: 'Description'
@@ -261,7 +261,7 @@ export default {
           return false
         }
 
-        let id = configuration._id
+        let id = cluster._id
 
         let found = this.items.findIndex(w=>w._id === id)
         let item = this.items[found]
@@ -272,7 +272,7 @@ export default {
 
         await this.$store.dispatch('request',{
           request: 'put',
-          path: `/configurations/${id}`,
+          path: `/clusters/${id}`,
           payload: values
         })
         await this.updateElements()
@@ -282,11 +282,11 @@ export default {
 
     },
 
-    async duplicateElement (configuration) {
+    async duplicateElement (cluster) {
       try {
          this.items.push({
-          ...configuration,
-          name: configuration.name+' copy',
+          ...cluster,
+          name: cluster.name+' copy',
           createdAt: false,
           updatedAt: false,
           loading: true,
@@ -294,9 +294,9 @@ export default {
         })
         await this.$store.dispatch('request',{
           request: 'post',
-          path: `/configurations/copy/${configuration._id}`,
+          path: `/clusters/copy/${cluster._id}`,
           payload: {
-            name: configuration.name+' copy' // TO-DO: copyName function
+            name: cluster.name+' copy' // TO-DO: copyName function
           }
         })
         await this.updateElements()
@@ -324,7 +324,7 @@ export default {
           sort = '&sort='+sort
         }
         let response = await this.$store.dispatch('request',{
-          path: `/configurations?page=${page-1}&pageSize=${itemsPerPage}${sort}`
+          path: `/clusters?page=${page-1}&pageSize=${itemsPerPage}${sort}`
         })
         this.loading = false
         return {items: response.data.items, total: response.data.count}

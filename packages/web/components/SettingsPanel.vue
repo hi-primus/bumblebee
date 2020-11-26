@@ -4,11 +4,11 @@
 
 <script>
 
-import configMixin from "@/plugins/mixins/configs";
+import settingsMixin from "@/plugins/mixins/workspace-settings";
 
 export default {
 
-  mixins: [ configMixin ],
+  mixins: [ settingsMixin ],
 
   data () {
     return {
@@ -21,7 +21,7 @@ export default {
 
   async mounted () {
     let values = this.$store.state.localConfig;
-    values = await this.configParameters(values, 'Workspace settings');
+    values = await this.settingsParameters(values, 'Workspace settings');
     if (values) {
       this.$store.commit('mutation', { mutate: 'localConfig', payload: values });
       this.$store.commit('mutation', { mutate: 'configPromise', payload: false });
