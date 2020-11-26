@@ -1159,6 +1159,8 @@ export default {
               check = true;
             }
           }
+        } else {
+          this.loadedPreviewCode = false
         }
 
         var noBufferWindow = (previewCode && previewCode.noBufferWindow) ? true : false;
