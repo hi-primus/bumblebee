@@ -53,6 +53,7 @@ export default {
     moreMenu () {
 
       var menu = [
+        { text: 'Workspaces', click: ()=>this.$router.push({path: '/workspaces', query: this.$route.query }) },
         { text: 'Sign out', click: this.signOut }
       ]
 

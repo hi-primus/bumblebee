@@ -12,9 +12,9 @@
         @click:outside="windowDialog = false"
         max-width="1220"
       >
-        <WorkspacesList v-if="windowDialog  === 'workspaces'"/>
-        <SettingsList v-else-if="windowDialog  === 'configs'"/>
-        <ClustersList v-else-if="windowDialog  === 'clusters'"/>
+        <WorkspacesList is-dialog v-if="windowDialog  === 'workspaces'"/>
+        <SettingsList is-dialog v-else-if="windowDialog  === 'configs'"/>
+        <ClustersList is-dialog v-else-if="windowDialog  === 'clusters'"/>
       </v-dialog>
       <template v-if="$store.state.datasets.length==0 && false" data-name="noKernel (deprecated)">
         <div class="center-screen-inside black--text">

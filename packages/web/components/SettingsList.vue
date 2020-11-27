@@ -1,6 +1,9 @@
 <template>
   <v-card>
-    <FormDialog focus ref="formDialog"/>
+    <FormDialog :hide-overlay="isDialog" focus ref="formDialog"/>
+    <v-btn v-if="selecting" icon large color="black" class="title-button-left">
+      <v-icon>mdi-arrow-left</v-icon>
+    </v-btn>
     <v-card-title>
       Settings
     </v-card-title>
@@ -11,11 +14,21 @@
       :options.sync="options"
       :server-items-length="total"
       class="settings-table manager-table"
+      :class="{'clickable-table': selecting}"
       :loading="loading"
       @click:row="rowClicked"
     >
       <template slot="no-data">
         <div>No settings available</div>
+      </template>
+      <template v-slot:item.selectedSettings="{ item }">
+        <span
+          :class="{
+            'primary--text': item.selectedSettings,
+            'grey--text': !item.selectedSettings
+          }"
+          class="pl-3"
+        >●</span>
       </template>
       <template v-slot:item.createdAt="{ item }">
         {{item.createdAt | formatDate}}
@@ -96,6 +109,20 @@ export default {
 
   mixins: [ settingsMixin ],
 
+  props: {
+    isDialog: {
+      default: false,
+      type: Boolean
+    },
+    selecting: {
+      default: false,
+      type: Boolean
+    },
+    highlight: {
+      default: false
+    }
+  },
+
   data () {
     return {
       loading: false,
@@ -110,6 +137,7 @@ export default {
         value: false
       },
       headers: [
+        { text: 'Selected', sortable: true, width: '1%', value: 'selectedSettings', align: 'left' },
         { text: 'Name', sortable: true, width: '8%', value: 'name' },
         { text: 'Engine', sortable: true, width: '8%', value: 'engine' },
         // { text: 'Description', sortable: true, width: '12%', value: 'description' },
@@ -124,7 +152,6 @@ export default {
   methods: {
 
     async rowClicked (setting) {
-      // openMenu
       this.$emit('click:setting',setting)
     },
 
@@ -294,6 +321,20 @@ export default {
 
   computed: {
 
+    value () {
+      console.log('comparing?', this.highlight, this.tableItems);
+      if (this.highlight) {
+        var found = this.tableItems.find(e=>{
+          console.log('comparing', e._id, this.highlight);
+          return (e._id==this.highlight)
+        })
+        if (found) {
+          return [found];
+        }
+      }
+      return [];
+    },
+
     tableItems () {
       if (!this.items || !this.items.length) {
         return []
@@ -301,6 +342,7 @@ export default {
       console.log(this.items);
       return this.items.map((e)=>({
         ...e,
+        selectedSettings: e._id == this.highlight,
         name: e.name,
         engine: e.configuration ? e.configuration.engine : 'default',
         updatedAt: e.updatedAt,
