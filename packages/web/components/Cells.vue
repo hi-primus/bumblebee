@@ -306,6 +306,435 @@ export default {
       cellsPromise: false,
 
       commandsHandlers: {
+        /* load */
+        'load file': {
+          dialog: {
+            title: 'Load file',
+            acceptLabel: 'Load',
+            fields: [
+              {
+                key: '_fileInput',
+                label: 'File upload',
+                accept: 'text/csv, .csv, application/json, application/vnd.ms-excel, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, .xls, .xlsx, .avro, .parquet',
+                type: 'file',
+                onClear: 'clearFile'
+              },
+              {
+                condition: (c)=>(c._fileInput && c._fileInput.toString() && c._fileInput!==c._fileLoaded),
+                type: 'action',
+                label: 'Preview',
+                loading: '_fileUploading',
+                loadingProgress: '_fileUploadingProgress',
+                func: 'uploadFile'
+              },
+              {
+                key: '_moreOptions',
+                label: (c) => `More options: ${c._moreOptions ? 'Yes' : 'No'}`,
+                type: 'switch'
+              },
+              {
+                key: 'external_url',
+                label: 'External url',
+                placeholder: (c)=>{
+                  var fileType = (c.file_type!='infer') ? c.file_type : (c._fileType)
+                  fileType = fileType ? `.${fileType}` : ''
+                  return `https://example.com/my_file${fileType}`
+                },
+                disabled: (c)=>c.url,
+                type: 'field',
+                condition: (c)=>c._moreOptions,
+              },
+              {
+                condition: (c)=>c._moreOptions,
+                key: 'limit',
+                label: 'Limit',
+                min: 1,
+                clearable: true,
+                type: 'number'
+              },
+              {
+                key: 'file_type',
+                label: 'File type',
+                type: 'select',
+                items: [
+                  { text: 'Infer file type', value: 'file' },
+                  { text: 'CSV', value: 'csv' },
+                  { text: 'XLS', value: 'xls' },
+                  { text: 'JSON', value: 'json' },
+                  { text: 'Avro', value: 'avro' },
+                  { text: 'Parquet', value: 'parquet' }
+                ],
+                condition: (c)=>c._moreOptions
+              },
+              {
+                condition: (c)=>c.file_type==='csv' && c._moreOptions,
+                key: 'header',
+                label: (c) => `First row as Header: ${c.header ? 'Yes' : 'No'}`,
+                type: 'switch'
+              },
+              {
+                condition: (c)=>c.file_type==='csv' && c._moreOptions,
+                key: 'null_value',
+                label: 'Null value',
+                type: 'field'
+              },
+              {
+                condition: (c)=>c.file_type==='csv' && c._moreOptions,
+                key: 'sep',
+                label: 'Separator',
+                type: 'field'
+              },
+              {
+                condition: (c)=>c.file_type==='csv' && c._moreOptions,
+                key: 'charset',
+                label: 'File encoding',
+                type: 'select',
+                items: [
+                  { text: 'Unicode (UTF-8)', value: 'UTF-8'}, { text: 'English (ASCII)', value: 'ASCII'},
+                  { text: 'Baltic (ISO-8859-4)', value: 'ISO-8859-4'}, { text: 'Baltic (ISO-8859-13)', value: 'ISO-8859-13'},
+                  { text: 'Baltic (Windows-1257)', value: 'Windows-1257'}, { text: 'Celtic (ISO-8859-14)', value: 'ISO-8859-14'},
+                  { text: 'Central European (ISO-8859-2)', value: 'ISO-8859-2'}, { text: 'Central European (Windows-1250)', value: 'Windows-1250'},
+                  { text: 'Chinese Traditional (BIG5)', value: 'BIG5'}, { text: 'Chinese Simplified (GB18030)', value: 'GB18030'},
+                  { text: 'Chinese Simplified (GB2312)', value: 'GB2312'}, { text: 'Cyrillic (ISO-8859-5)', value: 'ISO-8859-5'},
+                  { text: 'Cyrillic (Windows-1251)', value: 'Windows-1251'}, { text: 'Cyrillic (KOI8-R)', value: 'KOI8-R'}, { text: 'Cyrillic (KOI8—U)', value: 'KOI8—U'},
+                  { text: 'Cyrillic (IBM866)', value: 'IBM866'}, { text: 'Greek (ISO-8859-7)', value: 'ISO-8859-7'}, { text: 'Greek (Windows-1253)', value: 'Windows-1253'},
+                  { text: 'Japanese (ISO-2022-JP)', value: 'ISO-2022-JP'}, { text: 'Japanese (Shift-JIS)', value: 'Shift-JIS'},
+                  { text: 'Japanese (EUC-JP)', value: 'EUC-JP'}, { text: 'Japanese (cp932)', value: 'cp932'},
+                  { text: 'Korean (ISO-2022-KR)', value: 'ISO-2022-KR'}, { text: 'Korean (EUC—KR)', value: 'EUC—KR'},
+                  { text: 'Latin', value: 'latin1'},
+                  { text: 'Nordic (ISO-8859-10)', value: 'ISO-8859-10'}, { text: 'Thai (ISO-8859-11)', value: 'ISO-8859-11'},
+                  { text: 'Turkish (ISO-8859-9)', value: 'ISO-8859-9'}, { text: 'Vietnamese (Windows-1258)', value: 'Windows-1258'},
+                  { text: 'Western (ISO-8859-1)', value: 'ISO-8859-1'}, { text: 'Western (ISO-8859-3)', value: 'ISO-8859-3'},
+                  { text: 'Western (Windows-1252)', value: 'Windows-1252'}
+                ]
+              },
+              {
+                condition: (c)=>c.file_type==='json' && c._moreOptions,
+                key: 'multiline',
+                label: (c) => `Multiline: ${c.multiline ? 'Yes' : 'No'}`,
+                type: 'switch'
+              },
+              {
+                condition: (c)=>{
+                  return (c.file_type==='xls' && c._moreOptions)
+                  ||
+                  ((!c._moreOptions || c.file_type==='file') && ( c.url.endsWith('.xls') || c.url.endsWith('.xlsx') || c.external_url.endsWith('.xls') || c.external_url.endsWith('.xlsx') ))
+                },
+                key: 'sheet_name',
+                label: `Sheet`,
+                items_key: '_sheet_names',
+                type: (c)=> c._sheet_names.length ? 'select' : 'number'
+              },
+            ],
+            validate: (c) => {
+              if (c.external_url==='' && c.url==='') {
+                return 0
+              }
+              return !!(c.file_type!='csv' || c.sep)
+            }
+
+          },
+
+          clearFile: (currentCommand) => {
+            currentCommand._fileType = false;
+            currentCommand._fileUploading = false;
+            currentCommand._fileInput = [];
+            currentCommand._fileName = '';
+            currentCommand._meta = false;
+            currentCommand._datasetName = false;
+            currentCommand._fileLoaded = false;
+            currentCommand.error = false;
+            currentCommand.url = '';
+          },
+
+          uploadFile: async (currentCommand) => {
+            try {
+              currentCommand._fileUploading = true
+
+              var attachment = {
+                setProgress: (progress) => {
+                  this.$set(this.currentCommand, '_fileUploadingProgress', progress)
+                }
+              }
+
+              var response = await this.$store.dispatch('request/uploadFile',{file: currentCommand._fileInput, attachment})
+
+              if (response.fileType) {
+                currentCommand.file_type = response.fileType
+              }
+              currentCommand.url = response.fileUrl
+              currentCommand._fileUploading = false
+              currentCommand._datasetName = response.datasetName || false
+              currentCommand._fileLoaded = currentCommand._fileInput
+            } catch (error) {
+              console.error(error)
+              currentCommand.error = error
+              currentCommand._fileUploading = false
+            }
+            this.currentCommand = currentCommand
+          },
+
+          payload: () => ({
+            command: 'load file',
+            _fileType: false,
+            _fileUploading: false,
+            _fileInput: [],
+            _fileName: '',
+            _fileLoaded: false,
+            _moreOptions: false,
+            file_type: 'file',
+            external_url: '',
+            url: '',
+            sep: ',',
+            null_value: 'null',
+            sheet_name: 0,
+            header: true,
+            limit: '',
+            multiline: true,
+            charset: 'UTF-8',
+            _meta: false,
+            _datasetName: false,
+            _sheet_names: 1,
+            preview: {
+              loadPreview: true,
+              type: 'load',
+              delay: 500,
+            },
+            request: {
+              isLoad: true,
+              createsNew: true
+            }
+          }),
+
+          content: (payload) => {
+            var infer = (payload.file_type==='file' || !payload._moreOptions)
+            var fileType = (infer) ? payload._fileType : payload.file_type
+            var fileName = payload._fileName
+            return `<b>Load</b>`
+            + ( fileName ? ` ${hlParam(fileName)}` : '')
+            + ( (!fileName && fileType) ? ` ${fileType}` : '')
+            + ' file'
+          }
+        },
+        'load from database': {
+          dialog: {
+            title: 'Connect a database',
+            testLabel: 'connect',
+            fields: [
+              {
+                key: 'driver',
+                type: 'select',
+                label: 'Driver',
+                items: [
+                  {text: 'MySQL', value: 'mysql'},
+                  {text: 'Oracle Database', value: 'oracle'},
+                  {text: 'PostgreSQL', value: 'postgres'},
+                  {text: 'Apache Cassandra', value: 'cassandra'},
+                  {text: 'SQLite', value: 'sqlite'},
+                  {text: 'Amazon Redshift', value: 'redshift'},
+                  {text: 'Presto', value: 'presto'},
+                  {text: 'Microsoft SQL Server', value: 'sqlserver'},
+                ]
+              },
+              {
+                condition: (c)=>c.driver=='oracle',
+                key: 'oracle_type',
+                type: 'select',
+                label: 'Type',
+                items: [
+                  {text: 'SID', value: 'oracle_sid'},
+                  {text: 'Service name', value: 'oracle_service_name'},
+                  {text: 'TNS', value: 'oracle_tns'},
+                ]
+              },
+              {
+                condition: (c)=>(c.driver=='oracle' && c.oracle_type=='oracle_sid'),
+                key: 'oracle_sid',
+                type: 'field',
+                label: 'SID'
+              },
+              {
+                condition: (c)=>(c.driver=='oracle' && c.oracle_type=='oracle_service_name'),
+                key: 'oracle_service_name',
+                type: 'field',
+                label: 'Service name'
+              },
+              {
+                condition: (c)=>(c.driver=='oracle' && c.oracle_type=='oracle_tns'),
+                key: 'oracle_tns',
+                type: 'field',
+                label: 'TNS'
+              },
+              {
+                condition: (c)=>(c.driver!='oracle' || c.oracle_type!='oracle_tns') && c.driver!='cassandra',
+                key: 'host',
+                type: 'field',
+                label: 'Host'
+              },
+              {
+                condition: (c)=>(c.driver!='oracle' || c.oracle_type!='oracle_tns') && c.driver!='cassandra',
+                key: 'port',
+                type: 'field',
+                label: 'Port'
+              },
+              {
+                condition: (c)=>(c.driver=='presto'),
+                key: 'presto_catalog',
+                type: 'field',
+                label: 'Catalog'
+              },
+              {
+                condition: (c)=>['postgres','presto','redshift','sqlserver','mysql'].includes(c.driver),
+                key: 'database',
+                type: 'field',
+                label: 'Database'
+              },
+              {
+                condition: (c)=>['postgres','redshift'].includes(c.driver),
+                key: 'schema',
+                type: 'field',
+                label: 'Schema'
+              },
+              {
+                condition: (c)=>(c.driver=='cassandra'),
+                key: 'url',
+                type: 'field',
+                label: 'Url'
+              },
+              {
+                condition: (c)=>(c.driver=='cassandra'),
+                key: 'keyspace',
+                type: 'field',
+                label: 'Keyspace'
+              },
+              {
+                key: 'user',
+                type: 'field',
+                label: 'User'
+              },
+              {
+                key: 'password',
+                type: 'password',
+                label: 'Password',
+                showable: true,
+                show: false
+              },
+              {
+                key: 'table',
+                type: 'select',
+                label: 'Table',
+                items_key: 'tables'
+              },
+              {
+                type: 'action',
+                label: 'Get tables',
+                loading: '_loadingTables',
+                func: 'getTables'
+              }
+            ],
+            validate: (command) => (
+              command.table &&
+              command.driver == command.validDriver /* &&
+              command.host == command.validHost &&
+              command.database == command.validDatabase
+              */
+            )
+          },
+          payload: () => ({
+            command: 'load from database',
+            driver: 'mysql',
+            host: '',
+            database: '',
+            user: '',
+            password: '',
+            _loadingTables: false,
+            request: {
+              isLoad: true,
+              createsNew: true
+            }
+          }),
+          content: (payload)=>{
+            var database = ['postgres','presto','redshift','sqlserver','mysql'].includes(payload.driver)
+            return `<b>Load</b> ${hlParam(payload.table)}`
+            +(database ? ` from ${hlParam(payload.database)}` : '')
+            + ' to '+hlParam(payload.newDfName)
+          },
+
+          getTables: async (currentCommand) => {
+
+            currentCommand._loadingTables = true
+            currentCommand.error = ''
+
+            var fields = this.commandsHandlers['load from database'].dialog.fields
+
+            try {
+              var driver = escapeQuotes(currentCommand.driver)
+              var code = `db = op.connect(driver="${driver}"`
+
+              fields.forEach(field => {
+                if (!['driver','oracle_type', 'table', undefined].includes(field.key)) {
+                  code += (
+                    (!field.condition || field.condition(currentCommand) && currentCommand[field.key] && field.key) ?
+                    `, ${field.key}="${escapeQuotes(currentCommand[field.key])}"` : ''
+                  )
+                }
+              });
+
+              code += ')'
+
+              var response = await this.evalCode(code+`; _output = db.tables_names_to_json()`)
+
+              if (response.data.status === 'error') {
+                throw response.data.error
+              }
+
+              var tables = response.data.result
+
+              if (!tables || !tables.length) {
+                throw 'Database has no tables'
+              }
+
+              this.$store.commit('database',true)
+
+              currentCommand = {
+                ...currentCommand,
+                tables,
+                table: tables[0],
+                previous_code: code,
+                validDriver: currentCommand.driver,
+                validHost: currentCommand.host,
+                validDatabase: currentCommand.database
+              }
+            } catch (err) {
+              var _error = printError(err)
+              currentCommand = {...currentCommand, error: _error}
+            }
+
+            currentCommand._loadingTables = false
+
+            this.currentCommand = currentCommand
+          }
+        },
+        /* save */
+        'save to database': {
+          dialog: {
+            title: 'Save dataset to database',
+            fields: [
+              {
+                type: 'field',
+                key: 'table_name',
+                label: 'Table name',
+              }
+            ],
+            validate: (c) => (c.table_name)
+          },
+          payload: () => ({
+            command: 'save to database',
+            table_name: ''
+          }),
+          noAdd: true // TODO
+        },
+        /* operations */
         'apply sort': {
           content: (payload) => {
             return `<b>Reorder</b> columns`
@@ -1377,215 +1806,6 @@ export default {
           }),
           content: (payload) => `<b>Fill empty cells</b> in ${multipleContent([payload.columns],'hl--cols')} with ${hlParam(payload.fill)}`
         },
-        'load file': {
-          dialog: {
-            title: 'Load file',
-            acceptLabel: 'Load',
-            fields: [
-              {
-                key: '_fileInput',
-                label: 'File upload',
-                accept: 'text/csv, .csv, application/json, application/vnd.ms-excel, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, .xls, .xlsx, .avro, .parquet',
-                type: 'file',
-                onClear: 'clearFile'
-              },
-              {
-                condition: (c)=>(c._fileInput && c._fileInput.toString() && c._fileInput!==c._fileLoaded),
-                type: 'action',
-                label: 'Preview',
-                loading: '_fileUploading',
-                loadingProgress: '_fileUploadingProgress',
-                func: 'uploadFile'
-              },
-              {
-                key: '_moreOptions',
-                label: (c) => `More options: ${c._moreOptions ? 'Yes' : 'No'}`,
-                type: 'switch'
-              },
-              {
-                key: 'external_url',
-                label: 'External url',
-                placeholder: (c)=>{
-                  var fileType = (c.file_type!='infer') ? c.file_type : (c._fileType)
-                  fileType = fileType ? `.${fileType}` : ''
-                  return `https://example.com/my_file${fileType}`
-                },
-                disabled: (c)=>c.url,
-                type: 'field',
-                condition: (c)=>c._moreOptions,
-              },
-              {
-                condition: (c)=>c._moreOptions,
-                key: 'limit',
-                label: 'Limit',
-                min: 1,
-                clearable: true,
-                type: 'number'
-              },
-              {
-                key: 'file_type',
-                label: 'File type',
-                type: 'select',
-                items: [
-                  { text: 'Infer file type', value: 'file' },
-                  { text: 'CSV', value: 'csv' },
-                  { text: 'XLS', value: 'xls' },
-                  { text: 'JSON', value: 'json' },
-                  { text: 'Avro', value: 'avro' },
-                  { text: 'Parquet', value: 'parquet' }
-                ],
-                condition: (c)=>c._moreOptions
-              },
-              {
-                condition: (c)=>c.file_type==='csv' && c._moreOptions,
-                key: 'header',
-                label: (c) => `First row as Header: ${c.header ? 'Yes' : 'No'}`,
-                type: 'switch'
-              },
-              {
-                condition: (c)=>c.file_type==='csv' && c._moreOptions,
-                key: 'null_value',
-                label: 'Null value',
-                type: 'field'
-              },
-              {
-                condition: (c)=>c.file_type==='csv' && c._moreOptions,
-                key: 'sep',
-                label: 'Separator',
-                type: 'field'
-              },
-              {
-                condition: (c)=>c.file_type==='csv' && c._moreOptions,
-                key: 'charset',
-                label: 'File encoding',
-                type: 'select',
-                items: [
-                  { text: 'Unicode (UTF-8)', value: 'UTF-8'}, { text: 'English (ASCII)', value: 'ASCII'},
-                  { text: 'Baltic (ISO-8859-4)', value: 'ISO-8859-4'}, { text: 'Baltic (ISO-8859-13)', value: 'ISO-8859-13'},
-                  { text: 'Baltic (Windows-1257)', value: 'Windows-1257'}, { text: 'Celtic (ISO-8859-14)', value: 'ISO-8859-14'},
-                  { text: 'Central European (ISO-8859-2)', value: 'ISO-8859-2'}, { text: 'Central European (Windows-1250)', value: 'Windows-1250'},
-                  { text: 'Chinese Traditional (BIG5)', value: 'BIG5'}, { text: 'Chinese Simplified (GB18030)', value: 'GB18030'},
-                  { text: 'Chinese Simplified (GB2312)', value: 'GB2312'}, { text: 'Cyrillic (ISO-8859-5)', value: 'ISO-8859-5'},
-                  { text: 'Cyrillic (Windows-1251)', value: 'Windows-1251'}, { text: 'Cyrillic (KOI8-R)', value: 'KOI8-R'}, { text: 'Cyrillic (KOI8—U)', value: 'KOI8—U'},
-                  { text: 'Cyrillic (IBM866)', value: 'IBM866'}, { text: 'Greek (ISO-8859-7)', value: 'ISO-8859-7'}, { text: 'Greek (Windows-1253)', value: 'Windows-1253'},
-                  { text: 'Japanese (ISO-2022-JP)', value: 'ISO-2022-JP'}, { text: 'Japanese (Shift-JIS)', value: 'Shift-JIS'},
-                  { text: 'Japanese (EUC-JP)', value: 'EUC-JP'}, { text: 'Japanese (cp932)', value: 'cp932'},
-                  { text: 'Korean (ISO-2022-KR)', value: 'ISO-2022-KR'}, { text: 'Korean (EUC—KR)', value: 'EUC—KR'},
-                  { text: 'Latin', value: 'latin1'},
-                  { text: 'Nordic (ISO-8859-10)', value: 'ISO-8859-10'}, { text: 'Thai (ISO-8859-11)', value: 'ISO-8859-11'},
-                  { text: 'Turkish (ISO-8859-9)', value: 'ISO-8859-9'}, { text: 'Vietnamese (Windows-1258)', value: 'Windows-1258'},
-                  { text: 'Western (ISO-8859-1)', value: 'ISO-8859-1'}, { text: 'Western (ISO-8859-3)', value: 'ISO-8859-3'},
-                  { text: 'Western (Windows-1252)', value: 'Windows-1252'}
-                ]
-              },
-              {
-                condition: (c)=>c.file_type==='json' && c._moreOptions,
-                key: 'multiline',
-                label: (c) => `Multiline: ${c.multiline ? 'Yes' : 'No'}`,
-                type: 'switch'
-              },
-              {
-                condition: (c)=>{
-                  return (c.file_type==='xls' && c._moreOptions)
-                  ||
-                  ((!c._moreOptions || c.file_type==='file') && ( c.url.endsWith('.xls') || c.url.endsWith('.xlsx') || c.external_url.endsWith('.xls') || c.external_url.endsWith('.xlsx') ))
-                },
-                key: 'sheet_name',
-                label: `Sheet`,
-                items_key: '_sheet_names',
-                type: (c)=> c._sheet_names.length ? 'select' : 'number'
-              },
-            ],
-            validate: (c) => {
-              if (c.external_url==='' && c.url==='') {
-                return 0
-              }
-              return !!(c.file_type!='csv' || c.sep)
-            }
-
-          },
-
-          clearFile: (currentCommand) => {
-            currentCommand._fileType = false;
-            currentCommand._fileUploading = false;
-            currentCommand._fileInput = [];
-            currentCommand._fileName = '';
-            currentCommand._meta = false;
-            currentCommand._datasetName = false;
-            currentCommand._fileLoaded = false;
-            currentCommand.error = false;
-            currentCommand.url = '';
-          },
-
-          uploadFile: async (currentCommand) => {
-            try {
-              currentCommand._fileUploading = true
-
-              var attachment = {
-                setProgress: (progress) => {
-                  this.$set(this.currentCommand, '_fileUploadingProgress', progress)
-                }
-              }
-
-              var response = await this.$store.dispatch('request/uploadFile',{file: currentCommand._fileInput, attachment})
-
-              if (response.fileType) {
-                currentCommand.file_type = response.fileType
-              }
-              currentCommand.url = response.fileUrl
-              currentCommand._fileUploading = false
-              currentCommand._datasetName = response.datasetName || false
-              currentCommand._fileLoaded = currentCommand._fileInput
-            } catch (error) {
-              console.error(error)
-              currentCommand.error = error
-              currentCommand._fileUploading = false
-            }
-            this.currentCommand = currentCommand
-          },
-
-          payload: () => ({
-            command: 'load file',
-            _fileType: false,
-            _fileUploading: false,
-            _fileInput: [],
-            _fileName: '',
-            _fileLoaded: false,
-            _moreOptions: false,
-            file_type: 'file',
-            external_url: '',
-            url: '',
-            sep: ',',
-            null_value: 'null',
-            sheet_name: 0,
-            header: true,
-            limit: '',
-            multiline: true,
-            charset: 'UTF-8',
-            _meta: false,
-            _datasetName: false,
-            _sheet_names: 1,
-            preview: {
-              loadPreview: true,
-              type: 'load',
-              delay: 500,
-            },
-            request: {
-              isLoad: true,
-              createsNew: true
-            }
-          }),
-
-          content: (payload) => {
-            var infer = (payload.file_type==='file' || !payload._moreOptions)
-            var fileType = (infer) ? payload._fileType : payload.file_type
-            var fileName = payload._fileName
-            return `<b>Load</b>`
-            + ( fileName ? ` ${hlParam(fileName)}` : '')
-            + ( (!fileName && fileType) ? ` ${fileType}` : '')
-            + ' file'
-          }
-        },
         'string clustering': {
           dialog: {
             dialog: true,
@@ -1938,223 +2158,6 @@ export default {
           content: (payload) => { // TO-DO: Test
             return `<b>${payload.action} outliers</b> (between ${multipleContent(payload.selection[0],'hl--param',', ',' and ')})`
           }
-        },
-        'load from database': {
-          dialog: {
-            title: 'Connect a database',
-            testLabel: 'connect',
-            fields: [
-              {
-                key: 'driver',
-                type: 'select',
-                label: 'Driver',
-                items: [
-                  {text: 'MySQL', value: 'mysql'},
-                  {text: 'Oracle Database', value: 'oracle'},
-                  {text: 'PostgreSQL', value: 'postgres'},
-                  {text: 'Apache Cassandra', value: 'cassandra'},
-                  {text: 'SQLite', value: 'sqlite'},
-                  {text: 'Amazon Redshift', value: 'redshift'},
-                  {text: 'Presto', value: 'presto'},
-                  {text: 'Microsoft SQL Server', value: 'sqlserver'},
-                ]
-              },
-              {
-                condition: (c)=>c.driver=='oracle',
-                key: 'oracle_type',
-                type: 'select',
-                label: 'Type',
-                items: [
-                  {text: 'SID', value: 'oracle_sid'},
-                  {text: 'Service name', value: 'oracle_service_name'},
-                  {text: 'TNS', value: 'oracle_tns'},
-                ]
-              },
-              {
-                condition: (c)=>(c.driver=='oracle' && c.oracle_type=='oracle_sid'),
-                key: 'oracle_sid',
-                type: 'field',
-                label: 'SID'
-              },
-              {
-                condition: (c)=>(c.driver=='oracle' && c.oracle_type=='oracle_service_name'),
-                key: 'oracle_service_name',
-                type: 'field',
-                label: 'Service name'
-              },
-              {
-                condition: (c)=>(c.driver=='oracle' && c.oracle_type=='oracle_tns'),
-                key: 'oracle_tns',
-                type: 'field',
-                label: 'TNS'
-              },
-              {
-                condition: (c)=>(c.driver!='oracle' || c.oracle_type!='oracle_tns') && c.driver!='cassandra',
-                key: 'host',
-                type: 'field',
-                label: 'Host'
-              },
-              {
-                condition: (c)=>(c.driver!='oracle' || c.oracle_type!='oracle_tns') && c.driver!='cassandra',
-                key: 'port',
-                type: 'field',
-                label: 'Port'
-              },
-              {
-                condition: (c)=>(c.driver=='presto'),
-                key: 'presto_catalog',
-                type: 'field',
-                label: 'Catalog'
-              },
-              {
-                condition: (c)=>['postgres','presto','redshift','sqlserver','mysql'].includes(c.driver),
-                key: 'database',
-                type: 'field',
-                label: 'Database'
-              },
-              {
-                condition: (c)=>['postgres','redshift'].includes(c.driver),
-                key: 'schema',
-                type: 'field',
-                label: 'Schema'
-              },
-              {
-                condition: (c)=>(c.driver=='cassandra'),
-                key: 'url',
-                type: 'field',
-                label: 'Url'
-              },
-              {
-                condition: (c)=>(c.driver=='cassandra'),
-                key: 'keyspace',
-                type: 'field',
-                label: 'Keyspace'
-              },
-              {
-                key: 'user',
-                type: 'field',
-                label: 'User'
-              },
-              {
-                key: 'password',
-                type: 'password',
-                label: 'Password',
-                showable: true,
-                show: false
-              },
-              {
-                key: 'table',
-                type: 'select',
-                label: 'Table',
-                items_key: 'tables'
-              },
-              {
-                type: 'action',
-                label: 'Get tables',
-                loading: '_loadingTables',
-                func: 'getTables'
-              }
-            ],
-            validate: (command) => (
-              command.table &&
-              command.driver == command.validDriver /* &&
-              command.host == command.validHost &&
-              command.database == command.validDatabase
-              */
-            )
-          },
-          payload: () => ({
-            command: 'load from database',
-            driver: 'mysql',
-            host: '',
-            database: '',
-            user: '',
-            password: '',
-            _loadingTables: false,
-            request: {
-              isLoad: true,
-              createsNew: true
-            }
-          }),
-          content: (payload)=>{
-            var database = ['postgres','presto','redshift','sqlserver','mysql'].includes(payload.driver)
-            return `<b>Load</b> ${hlParam(payload.table)}`
-            +(database ? ` from ${hlParam(payload.database)}` : '')
-            + ' to '+hlParam(payload.newDfName)
-          },
-
-          getTables: async (currentCommand) => {
-
-            currentCommand._loadingTables = true
-            currentCommand.error = ''
-
-            var fields = this.commandsHandlers['load from database'].dialog.fields
-
-            try {
-              var driver = escapeQuotes(currentCommand.driver)
-              var code = `db = op.connect(driver="${driver}"`
-
-              fields.forEach(field => {
-                if (!['driver','oracle_type', 'table', undefined].includes(field.key)) {
-                  code += (
-                    (!field.condition || field.condition(currentCommand) && currentCommand[field.key] && field.key) ?
-                    `, ${field.key}="${escapeQuotes(currentCommand[field.key])}"` : ''
-                  )
-                }
-              });
-
-              code += ')'
-
-              var response = await this.evalCode(code+`; _output = db.tables_names_to_json()`)
-
-              if (response.data.status === 'error') {
-                throw response.data.error
-              }
-
-              var tables = response.data.result
-
-              if (!tables || !tables.length) {
-                throw 'Database has no tables'
-              }
-
-              this.$store.commit('database',true)
-
-              currentCommand = {
-                ...currentCommand,
-                tables,
-                table: tables[0],
-                previous_code: code,
-                validDriver: currentCommand.driver,
-                validHost: currentCommand.host,
-                validDatabase: currentCommand.database
-              }
-            } catch (err) {
-              var _error = printError(err)
-              currentCommand = {...currentCommand, error: _error}
-            }
-
-            currentCommand._loadingTables = false
-
-            this.currentCommand = currentCommand
-          }
-        },
-        'save to database': {
-          dialog: {
-            title: 'Save dataset to database',
-            fields: [
-              {
-                type: 'field',
-                key: 'table_name',
-                label: 'Table name',
-              }
-            ],
-            validate: (c) => (c.table_name)
-          },
-          payload: () => ({
-            command: 'save to database',
-            table_name: ''
-          }),
-          noAdd: true // TODO
         },
         stratified_sample: {
           dialog: {
