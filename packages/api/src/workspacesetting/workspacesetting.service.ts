@@ -3,6 +3,7 @@ import { Model } from "mongoose";
 import { InjectModel } from "@nestjs/mongoose";
 import { User } from 'src/users/interfaces/user.interface';
 import { WorkspaceSetting } from "./interface/workspacesetting.interface";
+import { CreateWorkspaceSettingDTO } from './dto/create-workspacesetting.dto';
 
 @Injectable()
 export class WorkspaceSettingService {
@@ -42,10 +43,16 @@ export class WorkspaceSettingService {
 		return item;
   }
 
-  async createOne(newModel): Promise<WorkspaceSetting> {
-    const item = new this.itemModel(newModel);
-    return item.save();
-  }
+  async newWorkspaceSetting(
+		workspaceData: CreateWorkspaceSettingDTO,
+		user,
+	): Promise<WorkspaceSetting> {
+		const item = new this.itemModel({
+			...workspaceData,
+			createdBy: user.userId,
+		});
+		return item.save();
+	}
 
   async updateOne(itemId, data): Promise<WorkspaceSetting> {
     const item = await this.itemModel.findOneAndUpdate({ _id: itemId }, data).exec();
@@ -56,9 +63,9 @@ export class WorkspaceSettingService {
     return this.itemModel.findOneAndDelete({ _id: itemId, user: user.id });
   }
 
-  async updateOneFromUser(itemId, creator, data): Promise<WorkspaceSetting> {
+  async updateOneFromUser(itemId, createdBy, data): Promise<WorkspaceSetting> {
     const item = await this.itemModel
-      .findOneAndUpdate({ _id: itemId, creator }, data, { new: true })
+      .findOneAndUpdate({ _id: itemId, createdBy }, data, { new: true })
       .exec();
     if (item) {
       return item.save();
@@ -68,24 +75,24 @@ export class WorkspaceSettingService {
   }
 
   async deleteOneFromUser(itemId, user): Promise<WorkspaceSetting> {
-    return this.itemModel.findOneAndDelete({ _id: itemId, creator: user });
+    return this.itemModel.findOneAndDelete({ _id: itemId, createdBy: user });
   }
 
-  async getManyFromUser(creator, queryParams) {
-    const items = await this.itemModel.find({ creator, ...queryParams }).exec();
+  async getManyFromUser(createdBy, queryParams) {
+    const items = await this.itemModel.find({ createdBy, ...queryParams }).exec();
     return items;
   }
 
-  async getManyFromUserCount(creator, queryParams) {
+  async getManyFromUserCount(createdBy, queryParams) {
     const count = await this.itemModel
-      .find({ creator, ...queryParams })
+      .find({ createdBy, ...queryParams })
       .countDocuments()
       .exec();
     return count;
   }
 
-  async getByIdFromUser(creator, id) {
-    const count = await this.itemModel.findOne({ _id: id, creator }).exec();
+  async getByIdFromUser(createdBy, id) {
+    const count = await this.itemModel.findOne({ _id: id, createdBy }).exec();
     return count;
   }
 }

@@ -1,7 +1,7 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { IsMongoId, IsString } from "class-validator";
 
-export class CreateServiceDTO {
+export class CreateServiceDto {
   @ApiProperty({ example: "Servicio 1" })
   @IsString()
   name: string;
