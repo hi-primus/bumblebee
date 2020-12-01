@@ -59,14 +59,14 @@ export default {
       if (name) {
         fields = [
           {
-            key: 'name',
-            value: '',
+            key: '_ws_name',
+            value: _defaultValues._ws_name || '',
             props: {
               label: 'Name'
             }
           },
           ...fields
-        ]
+        ];
       }
 
 

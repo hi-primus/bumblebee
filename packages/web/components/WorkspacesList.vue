@@ -194,7 +194,6 @@ export default {
     async settingsPresetClicked (setting) {
       var id = this.editingWorkspaceSettings;
       var workspaceSettings = setting._id;
-      console.log(setting, this.editingWorkspaceSettings);
       await this.updateWorkspace(id, {
         workspaceSettings
       });

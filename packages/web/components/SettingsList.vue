@@ -56,15 +56,15 @@
           </template>
           <v-list flat dense style="max-height: 400px; min-width: 160px;" class="scroll-y">
             <v-list-item-group color="black">
-              <!-- <v-list-item
+              <v-list-item
                 @click="editElement(item)"
               >
                 <v-list-item-content>
                   <v-list-item-title>
-                    Edit info
+                    Edit settings
                   </v-list-item-title>
                 </v-list-item-content>
-              </v-list-item> -->
+              </v-list-item>
               <!-- <v-list-item
                 @click="duplicateElement(item)"
               >
@@ -136,15 +136,6 @@ export default {
         label: false,
         value: false
       },
-      headers: [
-        { text: 'Selected', sortable: true, width: '1%', value: 'selectedSettings', align: 'left' },
-        { text: 'Name', sortable: true, width: '8%', value: 'name' },
-        { text: 'Engine', sortable: true, width: '8%', value: 'engine' },
-        // { text: 'Description', sortable: true, width: '12%', value: 'description' },
-        { text: 'Last modification', sortable: true, width: '6%', value: 'updatedAt'},
-        { text: 'Created', sortable: true, width: '6%', value: 'createdAt'},
-        { text: '', sortable: false, width: '1%', value: 'menu'}
-      ],
       options: {}
     }
   },
@@ -157,8 +148,8 @@ export default {
 
     async deleteElement (setting) {
       try {
-        let id = setting._id
-        let found = this.items.findIndex(w=>w._id === id)
+        var id = setting._id
+        var found = this.items.findIndex(w=>w._id === id)
         this.$delete(this.items, found)
 
         await this.$store.dispatch('request',{
@@ -171,28 +162,35 @@ export default {
       }
     },
 
+    requestItem (formValues) {
+      var configuration = formValues;
+      var name = formValues._ws_name;
+      delete configuration._ws_name;
+      return {name, configuration};
+    },
+
     async createNewElementUsingForm () {
-      let values = await this.settingsParameters()
+      var values = await this.settingsParameters({},undefined,true)
       if (!values) {
         return false;
       }
       await this.createNewElement(values);
     },
 
-    async createNewElement (configuration) {
+    async createNewElement (values) {
 
       var pushed = -1;
 
+      var payload = this.requestItem(values)
+
       pushed = this.items.push({
-        name: configuration.name,
-        description: configuration.description,
+        name: payload.name,
+        configuration: payload.configuration,
         createdAt: false,
         updatedAt: false,
         loading: true,
         _id: false
       });
-
-      var payload = { configuration };
 
       try {
         var response = await this.$store.dispatch('request',{
@@ -200,7 +198,6 @@ export default {
           path: '/workspacesettings',
           payload
         })
-        console.log({response})
         await this.updateElements()
       } catch (err) {
         if (pushed>=0) {
@@ -212,51 +209,34 @@ export default {
 
     async editElement (setting) {
 
+      var params = {
+        ...setting.configuration,
+        _ws_name: setting.name
+      }
 
+      var values = await this.settingsParameters(params, 'Workspace settings', true)
 
-      let values = await this.settingsParameters()
+      if (!values) {
+        return false
+      }
+
+      var {name, configuration} = this.requestItem(values)
 
       try {
-        let values = await this.fromForm({
-          text: 'Edit setting',
-          fields: [
-            {
-              name: '',
-              value: setting.name,
-              props: {
-                placeholder: setting.name,
-                label: 'Name'
-              }
-            },
-            {
-              is: 'v-textarea',
-              name: '',
-              value: setting.description,
-              props: {
-                placeholder: undefined,
-                label: 'Description'
-              }
-            },
-          ]
-        })
 
-        if (!values) {
-          return false
-        }
+        var id = setting._id
 
-        let id = setting._id
-
-        let found = this.items.findIndex(w=>w._id === id)
-        let item = this.items[found]
+        var found = this.items.findIndex(w=>w._id === id)
+        var item = this.items[found]
         item.loading = true
-        item = {...item, ...values}
+        item = {...item, name, configuration}
         this.$set(this.items, found, item)
         // this.$delete(this.items, found)
 
         await this.$store.dispatch('request',{
           request: 'put',
           path: `/workspacesettings/${id}`,
-          payload: values
+          payload: {configuration, name}
         })
         await this.updateElements()
       } catch (err) {
@@ -289,31 +269,30 @@ export default {
     },
 
     async updateElements () {
-      let {items, total} = await this.getElements()
+      var {items, total} = await this.getElements()
       this.items = items
       this.total = total
     },
 
     async getElements () {
       try {
-        this.loading = true
-        let { sortBy, sortDesc, page, itemsPerPage } = this.options
-        let sort = ''
+        this.loading = true;
+        var { sortBy, sortDesc, page, itemsPerPage } = this.options;
+        var sort = '';
         if (sortBy[0]) {
-          let sort = sortBy[0]
+          var sort = sortBy[0];
           if (sortDesc[0]) {
-            sort = '-'+sort
+            sort = '-'+sort;
           }
-          sort = '&sort='+sort
+          sort = '&sort='+sort;
         }
-        let response = await this.$store.dispatch('request',{
+        var response = await this.$store.dispatch('request',{
           path: `/workspacesettings`
-        })
-        console.log({response});
-        this.loading = false
-        return {items: response.data.items, total: response.data.count}
+        });
+        this.loading = false;
+        return {items: response.data.items, total: response.data.count};
       } catch (err) {
-        console.error(err)
+        console.error(err);
       }
     }
 
@@ -321,25 +300,30 @@ export default {
 
   computed: {
 
-    value () {
-      console.log('comparing?', this.highlight, this.tableItems);
-      if (this.highlight) {
-        var found = this.tableItems.find(e=>{
-          console.log('comparing', e._id, this.highlight);
-          return (e._id==this.highlight)
-        })
-        if (found) {
-          return [found];
-        }
+    headers () {
+      var h = [
+        { text: 'Name', sortable: true, width: '8%', value: 'name' },
+        { text: 'Engine', sortable: true, width: '8%', value: 'engine' },
+        { text: 'Last modification', sortable: true, width: '6%', value: 'updatedAt'},
+        { text: 'Created', sortable: true, width: '6%', value: 'createdAt'},
+        { text: '', sortable: false, width: '1%', value: 'menu'}
+      ];
+
+      if (this.selecting) {
+        h = [
+          { text: 'Selected', sortable: true, width: '1%', value: 'selectedSettings', align: 'left' },
+          ...h
+        ]
       }
-      return [];
+
+      return h;
     },
 
     tableItems () {
       if (!this.items || !this.items.length) {
         return []
       }
-      console.log(this.items);
+
       return this.items.map((e)=>({
         ...e,
         selectedSettings: e._id == this.highlight,
