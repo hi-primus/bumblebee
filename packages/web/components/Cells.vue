@@ -716,6 +716,36 @@ export default {
           }
         },
         /* save */
+        'save file': {
+          dialog: {
+            title: 'Save dataset to file',
+            fields: [
+              // {
+              //   key: '_processAgain',
+              //   label: (c) => `Process again: ${c._processAgain ? 'Yes' : 'No'}`,
+              //   type: 'switch'
+              // },
+              {
+                key: 'url',
+                label: 'Url',
+                placeholder: 's3://bucket/file or hdfs://bucket/file',
+                type: 'field',
+              },
+            ],
+            validate: (c) => (c.table_name)
+          },
+          payload: () => ({
+            command: 'save file',
+            _processAgain: '',
+            url: '',
+            request: {
+              isSave: true
+            }
+          }),
+          content: (payload)=>{
+            return `<b>Saved</b><span class="hint--df">${hlParam(payload.dfName)} </span>to ${hlParam(payload.url)}`
+          },
+        },
         'save to database': {
           dialog: {
             title: 'Save dataset to database',
@@ -730,9 +760,14 @@ export default {
           },
           payload: () => ({
             command: 'save to database',
-            table_name: ''
+            table_name: '',
+            request: {
+              isSave: true
+            }
           }),
-          noAdd: true // TODO
+          content: (payload)=>{
+            return `<b>Saved</b><span class="hint--df"> ${hlParam(payload.dfName)}</span> to ${hlParam(payload.table)}`
+          },
         },
         /* operations */
         'apply sort': {
@@ -3157,16 +3192,16 @@ export default {
 
       if (!command.columns || !command.columns.length) {
         columns = this.columns.map(e=>this.currentDataset.columns[e.index].name)
-        columnDataTypes = this.columns.map(e=>this.currentDataset.columns[e.index].profiler_dtype.dtype)
-        columnDateFormats = this.columns.map(e=>transformDateFromPython(this.currentDataset.columns[e.index].profiler_dtype.format)).filter(e=>e);
+        columnDataTypes = this.columns.map(e=>this.currentDataset.columns[e.index].stats.profiler_dtype.dtype)
+        columnDateFormats = this.columns.map(e=>transformDateFromPython(this.currentDataset.columns[e.index].stats.profiler_dtype.format)).filter(e=>e);
       } else {
         columns = command.columns
         var columnIndices = namesToIndices(columns, this.currentDataset.columns)
-        columnDataTypes = columnIndices.map(i=>this.currentDataset.columns[i].profiler_dtype.dtype)
-        columnDateFormats = columnIndices.map(i=>transformDateFromPython(this.currentDataset.columns[i].profiler_dtype.format)).filter(e=>e);
+        columnDataTypes = columnIndices.map(i=>this.currentDataset.columns[i].stats.profiler_dtype.dtype)
+        columnDateFormats = columnIndices.map(i=>transformDateFromPython(this.currentDataset.columns[i].stats.profiler_dtype.format)).filter(e=>e);
       }
 
-      var allColumnDateFormats = this.allColumns.map((e,i)=>transformDateFromPython(this.currentDataset.columns[i].profiler_dtype.format)).filter(e=>e);
+      var allColumnDateFormats = this.allColumns.map((e,i)=>transformDateFromPython(this.currentDataset.columns[i].stats.profiler_dtype.format)).filter(e=>e);
 
       var commandHandler = this.getCommandHandler(command)
 
@@ -3193,6 +3228,8 @@ export default {
         allColumnDateFormats: allColumnDateFormats,
         dfName: this.currentDataset.dfName,
         newDfName: this.getNewDfName(),
+        // loadEngine: false,
+        // engineOptions: TODO:
         allColumns: this.allColumns,
         type: command.type,
         command: command.command,
@@ -3419,7 +3456,7 @@ export default {
 
       if (payload.request && payload.request.createsNew) {
         content += `<span class="hint--df"> to ${hlParam(payload.newDfName)}</span>`
-      } else {
+      } else if (!payload.request || !payload.request.isSave) {
         content += `<span class="hint--df"> in ${hlParam(payload.dfName)}</span>`
       }
 
@@ -3437,7 +3474,7 @@ export default {
         payload.columns = this.columns.map(e=>this.currentDataset.columns[e.index].name);
       }
 
-      return generateCode(payload.command, payload, type);
+      return generateCode({command: payload.command, payload}, type);
 
 
     },
@@ -3459,6 +3496,8 @@ export default {
     },
 
     addCell (at = -1, payload = {command: 'code', code: '', content: '', ignoreCell: false, noCall: false, deleteOtherCells: false}, replace = false) {
+
+      console.log({payload})
 
       var {command, code, ignoreCell, deleteOtherCells, content} = payload
 

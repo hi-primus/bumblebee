@@ -251,7 +251,10 @@
 			>
         <div v-if="noMatch" class="no-data">
           <div class="title grey--text text-center text-with-icons">
-            No match
+            No match <br/>
+            {{!this.loadPreviewActive}} &&
+            {{!!this.customSortedColumns}} && {{!!this.customSortedColumns.length}} && ( ( {{!!this.resultsColumnsData}} && {{!this.resultsColumnsData.length}} || {{!!this.bbColumns.length}} ) ;<br/>
+            return !this.loadPreviewActive && this.customSortedColumns && this.customSortedColumns.length && ( (this.resultsColumnsData && !this.resultsColumnsData.length) || !this.bbColumns.length ) ;
           </div>
         </div>
         <BumblebeeTable
@@ -353,7 +356,7 @@ export default {
     },
 
     noMatch () {
-      return !this.loadPreviewActive && this.customSortedColumns && this.customSortedColumns.length && ( ( this.resultsColumnsData && !this.resultsColumnsData.length) || !this.bbColumns.length ) ;
+      return !this.loadPreviewActive && this.customSortedColumns && this.customSortedColumns.length && ( (this.resultsColumnsData && !this.resultsColumnsData.length) || !this.bbColumns.length ) ;
     },
 
     showingColumnsLength () {
@@ -512,7 +515,7 @@ export default {
 
         if (this.typesSelected.length > 0) {
           filteredColumns = this.resultsColumns.filter((column) => {
-            return this.typesSelected.includes(column.profiler_dtype.dtype)
+            return this.typesSelected.includes(column.stats.profiler_dtype.dtype)
           })
         } else {
           filteredColumns = this.resultsColumns
@@ -537,7 +540,7 @@ export default {
 
         }
         return filteredColumns.map(col => {
-          return { ...col, profilerDtype: col.profiler_dtype.dtype }
+          return { ...col, profilerDtype: col.stats.profiler_dtype.dtype }
         });
       } catch (error) {
         return []
@@ -792,7 +795,7 @@ export default {
               var code = this.previewCode.code // is always static
               code = `${dfName} = ${code} \n`
 
-              code += `_output = {**${dfName}.to_json("*", format="bumblebee"), "meta": ${dfName}.meta.get() if (${dfName}.meta and ${dfName}.meta.get) else {} } \n`
+              code += `_output = {**${dfName}.to_json("*", format="bumblebee"), "meta": ${dfName}.meta.get(0) if (${dfName}.meta and ${dfName}.meta.get) else {} } \n`
 
               // if (this.previewCode.infer) {
               //   code += `_output = {**${dfName}.to_json("*", format="bumblebee"), "meta": ${dfName}.meta.get() if (${dfName}.meta and ${dfName}.meta.get) else {} } \n`

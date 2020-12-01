@@ -364,7 +364,7 @@
 
           <div v-if="detailedColumns.length>1" class="sidebar-section pr-10 columns-selected">
             <div class="column-selected" v-for="(index, i) in detailedColumns" :key="index+'selc'+i">
-              <span class="data-type" :class="`type-${currentDataset.columns[index].profiler_dtype.dtype}`">{{ dataTypeHint(currentDataset.columns[index].profiler_dtype.dtype) }}</span>
+              <span class="data-type" :class="`type-${currentDataset.columns[index].stats.profiler_dtype.dtype}`">{{ dataTypeHint(currentDataset.columns[index].stats.profiler_dtype.dtype) }}</span>
               <span class="data-column-name">{{ currentDataset.columns[index].name }}</span>
             </div>
           </div>
@@ -514,7 +514,8 @@ export default {
         {command: 'manage data sources', text: 'Manage data sources', group: 'DATA_SOURCE', hidden: true},
 
         {command: 'download', text: 'Download', group: 'SAVE', disabled: ()=>process.env.INSTANCE!=='LOCAL'},
-        {command: 'keep rows', text: 'Save to database', group: 'SAVE', disabled: ()=>!(this.currentDataset && this.currentDataset.summary && this.$store.state.database)},
+        // {command: 'save file', text: 'Save file', group: 'SAVE', disabled: ()=>!(this.currentDataset && this.currentDataset.summary)},
+        {command: 'save to database', text: 'Save to database', group: 'SAVE', disabled: ()=>!(this.currentDataset && this.currentDataset.summary && this.$store.state.database)},
 
 
 				{command: 'lower', text: 'To lower case', type: 'STRING', group: 'STRING'},
@@ -637,8 +638,8 @@ export default {
 
         var plotable = selected.map( (i)=>{
           var column = this.currentDataset.columns[i]
-          return ['decimal','float','double','float64'].includes(column.profiler_dtype.dtype) ? 'quantitative'
-            : (['int','integer','int64'].includes(column.profiler_dtype.dtype) && column.stats.count_uniques>25) ? 'quantitative'
+          return ['decimal','float','double','float64'].includes(column.stats.profiler_dtype.dtype) ? 'quantitative'
+            : (['int','integer','int64'].includes(column.stats.profiler_dtype.dtype) && column.stats.count_uniques>25) ? 'quantitative'
             : (column.stats.count_uniques<=25) ? column.stats.count_uniques
             : false
         })
@@ -1013,7 +1014,7 @@ export default {
         if (!columns.length) {
           return []
         }
-        return [...new Set(columns.map(i=>this.currentDataset.columns[i].profiler_dtype.dtype))]
+        return [...new Set(columns.map(i=>this.currentDataset.columns[i].stats.profiler_dtype.dtype))]
       } catch (err) {
         console.error(err)
         return []

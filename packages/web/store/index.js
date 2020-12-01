@@ -680,7 +680,7 @@ export const actions = {
     }
 
     cells = cells.map(cell => {
-      cell.code = generateCode(cell.command, cell.payload);
+      cell.code = generateCode(cell);
       return cell;
     })
 
@@ -1451,7 +1451,7 @@ export const getters = {
   },
   typesAvailable (state) {
     try {
-      return [...new Set(state.datasets[state.tab].columns.map(col=>col.profiler_dtype.dtype))] || state.allTypes
+      return [...new Set(state.datasets[state.tab].columns.map(col=>col.stats.profiler_dtype.dtype))] || state.allTypes
       // return state.datasets[state.tab].summary.dtypes_list || state.allTypes
     } catch (error) {
       return state.allTypes

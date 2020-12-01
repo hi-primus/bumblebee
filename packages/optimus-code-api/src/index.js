@@ -675,25 +675,41 @@ export const getGenerator = function(generatorName = '', payload = {}) {
   return generator
 }
 
-export const generateCode = function(command, payload = {}, type = 'final') {
-  var generator = getGenerator(command, payload);
-  code = generator ? generator({
-    ...payload,
-    request: { ...(payload.request || {}), type }
-  }) : '';
+export const generateCode = function(commands = [], type = 'final') {
 
-  if (type==='preview') {
-    return code;
-  } else if (type==='profile') {
-    return code;
-  } else {
-    if (payload.request && payload.request.createsNew) {
-      return code +'\n'
-      +`${payload.newDfName} = ${payload.newDfName}.repartition(8).cache()`;
-    } else {
-      return `${payload.dfName} = ${payload.dfName}${code}.cache()`;
-    }
+  if (!Array.isArray(commands)) {
+    commands = [commands];
   }
+
+  return commands.map(({command, payload}) => {
+
+    command = command || payload.command;
+
+    var generator = getGenerator(command, payload);
+
+    var request = payload.request || {};
+
+    code = generator ? generator({
+      ...payload,
+      request: { ...request, type }
+    }) : (command ? ('# '+command) : '');
+
+    if (
+        type==='preview' || type==='profile' ||
+        code==='' || code.startsWith('#') ||
+        request.isSave
+      ) {
+      return code;
+    } else {
+      if (request.createsNew) {
+        return code +'\n'
+        +`${payload.newDfName} = ${payload.newDfName}.repartition(8).cache()`;
+      } else {
+        return `${payload.dfName} = ${payload.dfName}${code}.cache()`;
+      }
+    }
+  }).join('\n');
+
 }
 
 export default {

@@ -149,8 +149,8 @@
           <div v-if="!(lazyColumns.length && !lazyColumns[i])" class="column-header-cell">
             <div
               class="data-type"
-              :class="`type-${currentDataset.columns[column.index].profiler_dtype.dtype}`">
-              {{ dataTypeHint(currentDataset.columns[column.index].profiler_dtype.dtype) }}
+              :class="`type-${currentDataset.columns[column.index].stats.profiler_dtype.dtype}`">
+              {{ dataTypeHint(currentDataset.columns[column.index].stats.profiler_dtype.dtype) }}
             </div>
             <div class="column-title" :title="column.name">
               {{column.name}}
@@ -216,8 +216,8 @@
           @dblclick="setMenu($event, column.index)"
           @contextmenu.prevent="contextMenu($event, column.index)">
           <div class="column-header-cell">
-            <div class="data-type" :class="`type-${currentDataset.columns[column.index].profiler_dtype.dtype}`">
-              {{ dataTypeHint(currentDataset.columns[column.index].profiler_dtype.dtype) }}
+            <div class="data-type" :class="`type-${currentDataset.columns[column.index].stats.profiler_dtype.dtype}`">
+              {{ dataTypeHint(currentDataset.columns[column.index].stats.profiler_dtype.dtype) }}
             </div>
             <div class="drag-hint"></div>
             <div
@@ -685,7 +685,7 @@ export default {
     },
 
     loadPreviewColumnValues () {
-      var columnValues = this.getValuesByColumns(this.loadPreview.sample)
+      var columnValues = this.getValuesByColumns(this.loadPreview ? this.loadPreview.sample : false)
       return this.computeColumnValues(columnValues, true)
     },
 
@@ -1008,7 +1008,7 @@ export default {
             frequency: ((column.stats.frequency) ? column.stats.frequency : undefined) || column.frequency || undefined,
             zeros: column.stats.zeros,
             null: column.stats.null,
-            dtype: column.profiler_dtype.dtype || column.dtype
+            dtype: column.stats.profiler_dtype.dtype || column.dtype
             // hist_years: (column.stats.hist && column.stats.hist.years) ? column.stats.hist.years : undefined,
           }
         }
@@ -1773,7 +1773,7 @@ export default {
       }
 
       this.newColumnName = this.currentDataset.columns[index].name
-      this.newColumnType = this.currentDataset.columns[index].profiler_dtype.dtype
+      this.newColumnType = this.currentDataset.columns[index].stats.profiler_dtype.dtype
 
       this.columnMenuIndex = index
 
@@ -1803,7 +1803,7 @@ export default {
     saveColumnData () {
       var index = this.columnMenuIndex
       var prevName = this.currentDataset.columns[index].name
-      var prevType = this.currentDataset.columns[index].profiler_dtype.dtype
+      var prevType = this.currentDataset.columns[index].stats.profiler_dtype.dtype
 
       if (this.newColumnType != prevType) {
         var payload = {
