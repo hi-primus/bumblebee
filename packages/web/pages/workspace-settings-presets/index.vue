@@ -1,13 +1,13 @@
 <template>
 	<Layout>
 		<v-layout row wrap class="elevation-0 d-flex flex-column align-top justify-start">
-      <div class="config-container" data-name="config">
+      <div class="bb-container" data-name="workspaces">
         <MoreMenu
           :items="moreMenu"
         >
         </MoreMenu>
         <div class="bb-content pa-12">
-          <ConfigsList
+          <SettingsList
             @update:total="total = $event"
           />
         </div>
@@ -15,7 +15,7 @@
           <v-layout class="px-4" row justify-space-between>
             <span />
             <span v-if="typeof total !== 'undefined'" class="caption-2">
-              {{ total | formatNumberInt }} Configuration presets &emsp;
+              {{ total | formatNumberInt }} Workspaces &emsp;
             </span>
           </v-layout>
         </v-footer>
@@ -27,21 +27,21 @@
 
 <script>
 import Layout from "@/components/Layout"
-import ConfigsList from "@/components/ConfigsList"
+import SettingsList from "@/components/SettingsList"
 import MoreMenu from "@/components/MoreMenu"
 import clientMixin from "@/plugins/mixins/client"
 
 export default {
 	components: {
     Layout,
-    ConfigsList,
+    SettingsList,
     MoreMenu
   },
 
   mixins: [ clientMixin ],
 
   // TO-DO: Check
-  // middleware: 'authenticated',
+  middleware: 'authenticated',
 
 	data () {
 		return {
@@ -53,6 +53,7 @@ export default {
     moreMenu () {
 
       var menu = [
+        { text: 'Workspaces', click: ()=>this.$router.push({path: '/workspaces', query: this.$route.query }) },
         { text: 'Sign out', click: this.signOut }
       ]
 

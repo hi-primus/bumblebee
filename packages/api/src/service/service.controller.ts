@@ -14,8 +14,8 @@ import { GetUser } from "./../auth/dto/get-user.decorator.dto";
 import { QueryParams } from "./../users/interfaces/queryParams.interface";
 import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
 import { ServiceService } from "./service.service";
-import { CreateServiceDTO } from "./dto/create-service.dto";
-import { UpdateServiceDTO } from "./dto/update-service.dto";
+import { CreateServiceDto } from "./dto/create-service.dto";
+import { UpdateServiceDto } from "./dto/update-service.dto";
 
 @ApiTags("Services")
 @ApiBearerAuth()
@@ -54,7 +54,7 @@ export class ServiceController {
   @Post()
   @UseGuards(AuthGuard("jwt"))
   async createItem(
-    @Body() itemData: CreateServiceDTO,
+    @Body() itemData: CreateServiceDto,
     @GetUser() user
   ): Promise<any> {
     const item = await this.service.createOne({
@@ -68,7 +68,7 @@ export class ServiceController {
   @UseGuards(AuthGuard("jwt"))
   async updateOneById(
     @Param("id") id: string,
-    @Body() data: UpdateServiceDTO,
+    @Body() data: UpdateServiceDto,
     @GetUser() user
   ): Promise<any> {
     const item = await this.service.updateOneFromUser(id, user.userId, data);

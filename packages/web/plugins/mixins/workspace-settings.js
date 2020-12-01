@@ -13,7 +13,7 @@ export default {
       return this.$refs.formDialog.fromForm(form)
     },
 
-    async configParameters (_defaultValues = {}, text = 'Create new configuration' ) {
+    async settingsParameters (_defaultValues = {}, text = 'Create new settings', name = false ) {
 
       var defaultValues = deepCopy(_defaultValues);
 
@@ -37,27 +37,42 @@ export default {
 
       valuesFromParameters
 
-      let values = await this.fromForm({
-        text,
-        fields: [
+      var fields = [
+        {
+          key: 'engine',
+          is: 'v-select',
+          value: defaultValues.engine  || 'dask',
+          props: {
+            items: Object.entries(getEngines(true)).map(([value, text])=>({text, value})),
+            label: 'Engine'
+          }
+        },
+        {
+          key: 'jupyter_address',
+          type: 'address',
+          value: defaultValues.jupyter_address || { ip: '', port: '' },
+          props: {}
+        },
+        ...valuesFromParameters
+      ];
+
+      if (name) {
+        fields = [
           {
-            key: 'engine',
-            is: 'v-select',
-            value: defaultValues.engine  || 'dask',
+            key: '_ws_name',
+            value: _defaultValues._ws_name || '',
             props: {
-              items: Object.entries(getEngines(true)).map(([value, text])=>({text, value})),
-              label: 'Engine'
+              label: 'Name'
             }
           },
-          {
-            key: 'jupyter_address',
-            type: 'address',
-            value: defaultValues.jupyter_address || { ip: '', port: '' },
-            props: {}
-          },
-          ...valuesFromParameters
+          ...fields
+        ];
+      }
 
-        ],
+
+      let values = await this.fromForm({
+        text,
+        fields,
         disabled: (values)=>{
           if (values.engine.includes('_coiled')) {
             return !values.coiled_token;

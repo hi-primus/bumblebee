@@ -1,22 +1,11 @@
 <template>
   <v-card>
-    <FormDialog focus ref="formDialog"/>
+    <FormDialog :hide-overlay="isDialog" focus ref="formDialog"/>
+    <v-btn v-if="selecting" icon large color="black" class="title-button-left">
+      <v-icon>mdi-arrow-left</v-icon>
+    </v-btn>
     <v-card-title>
-      Configurations
-      <v-spacer></v-spacer>
-      <v-form @submit.prevent="createNewElement({name: createName})">
-        <v-text-field
-          v-model="createName"
-          label="New configuration"
-          append-icon="add"
-          @click:append="createNewElement({name: createName})"
-          outlined
-          dense
-          single-line
-          hide-details
-        >
-        </v-text-field>
-      </v-form>
+      Settings
     </v-card-title>
     <v-data-table
       :items="tableItems"
@@ -24,15 +13,19 @@
       :mobile-breakpoint="0"
       :options.sync="options"
       :server-items-length="total"
-      class="configurations-table manager-table"
+      class="settings-table manager-table"
+      :class="{'clickable-table': selecting}"
       :loading="loading"
       @click:row="rowClicked"
     >
-      <template v-slot:item.activeKernel="{ item }">
+      <template slot="no-data">
+        <div>No settings available</div>
+      </template>
+      <template v-slot:item.selectedSettings="{ item }">
         <span
           :class="{
-            'primary--text': item.activeKernel,
-            'grey--text': !item.activeKernel
+            'primary--text': item.selectedSettings,
+            'grey--text': !item.selectedSettings
           }"
           class="pl-3"
         >●</span>
@@ -68,7 +61,7 @@
               >
                 <v-list-item-content>
                   <v-list-item-title>
-                    Edit info
+                    Edit settings
                   </v-list-item-title>
                 </v-list-item-content>
               </v-list-item>
@@ -110,11 +103,25 @@
 
 <script>
 
-import configMixin from "@/plugins/mixins/configs";
+import settingsMixin from "@/plugins/mixins/workspace-settings";
 
 export default {
 
-  mixins: [ configMixin ],
+  mixins: [ settingsMixin ],
+
+  props: {
+    isDialog: {
+      default: false,
+      type: Boolean
+    },
+    selecting: {
+      default: false,
+      type: Boolean
+    },
+    highlight: {
+      default: false
+    }
+  },
 
   data () {
     return {
@@ -129,36 +136,25 @@ export default {
         label: false,
         value: false
       },
-      headers: [
-        { text: 'Active', sortable: true, width: '1%', value: 'activeKernel', align: 'left' },
-        { text: 'Configuration', sortable: true, width: '8%', value: 'name' },
-        { text: 'Description', sortable: true, width: '12%', value: 'description' },
-        { text: 'Tabs', sortable: true, width: '2%', value: 'tabs' },
-        { text: 'Data sources', sortable: true, width: '2%', value: 'dataSourcesCount' },
-        { text: 'Last modification', sortable: true, width: '6%', value: 'updatedAt'},
-        { text: 'Created', sortable: true, width: '6%', value: 'createdAt'},
-        { text: '', sortable: false, width: '1%', value: 'menu'}
-      ],
       options: {}
     }
   },
 
   methods: {
 
-    async rowClicked (configuration) {
-      // openMenu
-      this.$emit('click:configuration',configuration)
+    async rowClicked (setting) {
+      this.$emit('click:setting',setting)
     },
 
-    async deleteElement (configuration) {
+    async deleteElement (setting) {
       try {
-        let id = configuration._id
-        let found = this.items.findIndex(w=>w._id === id)
+        var id = setting._id
+        var found = this.items.findIndex(w=>w._id === id)
         this.$delete(this.items, found)
 
         await this.$store.dispatch('request',{
           request: 'delete',
-          path: `/configurations/${id}`,
+          path: `/workspacesettings/${id}`,
         })
         await this.updateElements()
       } catch (err) {
@@ -166,38 +162,40 @@ export default {
       }
     },
 
-    async createNewElementUsingForm () {
-      let values = this.configParameters()
+    requestItem (formValues) {
+      var configuration = formValues;
+      var name = formValues._ws_name;
+      delete configuration._ws_name;
+      return {name, configuration};
+    },
 
+    async createNewElementUsingForm () {
+      var values = await this.settingsParameters({},undefined,true)
       if (!values) {
         return false;
       }
-
-      values.jupyter_ip = values.jupyter_address.ip;
-      values.jupyter_port = values.jupyter_address.port;
-
-      // delete values.jupyter_address;
-
       await this.createNewElement(values);
     },
 
-    async createNewElement (payload) {
-      var pushed = -1
-      if (!payload.name) {
-        return false
-      }
+    async createNewElement (values) {
+
+      var pushed = -1;
+
+      var payload = this.requestItem(values)
+
       pushed = this.items.push({
         name: payload.name,
-        description: payload.description,
+        configuration: payload.configuration,
         createdAt: false,
         updatedAt: false,
         loading: true,
         _id: false
-      })
+      });
+
       try {
-        await this.$store.dispatch('request',{
+        var response = await this.$store.dispatch('request',{
           request: 'post',
-          path: '/configurations',
+          path: '/workspacesettings',
           payload
         })
         await this.updateElements()
@@ -209,49 +207,36 @@ export default {
       }
     },
 
-    async editElement (configuration) {
+    async editElement (setting) {
+
+      var params = {
+        ...setting.configuration,
+        _ws_name: setting.name
+      }
+
+      var values = await this.settingsParameters(params, 'Workspace settings', true)
+
+      if (!values) {
+        return false
+      }
+
+      var {name, configuration} = this.requestItem(values)
 
       try {
-        let values = await this.fromForm({
-          text: 'Edit configuration',
-          fields: [
-            {
-              name: '',
-              value: configuration.name,
-              props: {
-                placeholder: configuration.name,
-                label: 'Name'
-              }
-            },
-            {
-              is: 'v-textarea',
-              name: '',
-              value: configuration.description,
-              props: {
-                placeholder: undefined,
-                label: 'Description'
-              }
-            },
-          ]
-        })
 
-        if (!values) {
-          return false
-        }
+        var id = setting._id
 
-        let id = configuration._id
-
-        let found = this.items.findIndex(w=>w._id === id)
-        let item = this.items[found]
+        var found = this.items.findIndex(w=>w._id === id)
+        var item = this.items[found]
         item.loading = true
-        item = {...item, ...values}
+        item = {...item, name, configuration}
         this.$set(this.items, found, item)
         // this.$delete(this.items, found)
 
         await this.$store.dispatch('request',{
           request: 'put',
-          path: `/configurations/${id}`,
-          payload: values
+          path: `/workspacesettings/${id}`,
+          payload: {configuration, name}
         })
         await this.updateElements()
       } catch (err) {
@@ -260,11 +245,11 @@ export default {
 
     },
 
-    async duplicateElement (configuration) {
+    async duplicateElement (setting) {
       try {
          this.items.push({
-          ...configuration,
-          name: configuration.name+' copy',
+          ...setting,
+          name: setting.name+' copy',
           createdAt: false,
           updatedAt: false,
           loading: true,
@@ -272,9 +257,9 @@ export default {
         })
         await this.$store.dispatch('request',{
           request: 'post',
-          path: `/configurations/copy/${configuration._id}`,
+          path: `/workspacesettings/copy/${setting._id}`,
           payload: {
-            name: configuration.name+' copy' // TO-DO: copyName function
+            name: setting.name+' copy' // TO-DO: copyName function
           }
         })
         await this.updateElements()
@@ -284,30 +269,30 @@ export default {
     },
 
     async updateElements () {
-      let {items, total} = await this.getElements()
+      var {items, total} = await this.getElements()
       this.items = items
       this.total = total
     },
 
     async getElements () {
       try {
-        this.loading = true
-        let { sortBy, sortDesc, page, itemsPerPage } = this.options
-        let sort = ''
+        this.loading = true;
+        var { sortBy, sortDesc, page, itemsPerPage } = this.options;
+        var sort = '';
         if (sortBy[0]) {
-          let sort = sortBy[0]
+          var sort = sortBy[0];
           if (sortDesc[0]) {
-            sort = '-'+sort
+            sort = '-'+sort;
           }
-          sort = '&sort='+sort
+          sort = '&sort='+sort;
         }
-        let response = await this.$store.dispatch('request',{
-          path: `/configurations?page=${page-1}&pageSize=${itemsPerPage}${sort}`
-        })
-        this.loading = false
-        return {items: response.data.items, total: response.data.count}
+        var response = await this.$store.dispatch('request',{
+          path: `/workspacesettings`
+        });
+        this.loading = false;
+        return {items: response.data.items, total: response.data.count};
       } catch (err) {
-        console.error(err)
+        console.error(err);
       }
     }
 
@@ -315,18 +300,37 @@ export default {
 
   computed: {
 
+    headers () {
+      var h = [
+        { text: 'Name', sortable: true, width: '8%', value: 'name' },
+        { text: 'Engine', sortable: true, width: '8%', value: 'engine' },
+        { text: 'Last modification', sortable: true, width: '6%', value: 'updatedAt'},
+        { text: 'Created', sortable: true, width: '6%', value: 'createdAt'},
+        { text: '', sortable: false, width: '1%', value: 'menu'}
+      ];
+
+      if (this.selecting) {
+        h = [
+          { text: 'Selected', sortable: true, width: '1%', value: 'selectedSettings', align: 'left' },
+          ...h
+        ]
+      }
+
+      return h;
+    },
+
     tableItems () {
       if (!this.items || !this.items.length) {
         return []
       }
-      return this.items.map((w)=>({
-        ...w,
-        activeKernel: w.activeKernel,
-        name: w.name,
-        tabs: (w.tabs || []).length,
-        dataSourcesCount: w.dataSourcesCount || 0,
-        updatedAt: w.updatedAt,
-        createdAt: w.createdAt
+
+      return this.items.map((e)=>({
+        ...e,
+        selectedSettings: e._id == this.highlight,
+        name: e.name,
+        engine: e.configuration ? e.configuration.engine : 'default',
+        updatedAt: e.updatedAt,
+        createdAt: e.createdAt
       }))
     }
   },

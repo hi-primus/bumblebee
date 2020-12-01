@@ -42,6 +42,13 @@ export const UserSchemaProvider = {
 						default: null,
 					},
 				],
+				workspacesettings: [
+					{
+						type: Schema.Types.ObjectId,
+						ref: 'WorkspaceSettings',
+						default: null,
+					},
+				],
 				dataSources: [
 					{
 						type: Schema.Types.ObjectId,

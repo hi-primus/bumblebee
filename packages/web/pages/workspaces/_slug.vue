@@ -1,7 +1,7 @@
 <template>
 	<Layout>
 		<v-layout row wrap class="elevation-0 d-flex flex-column align-top justify-start">
-      <ConfigPanel
+      <SettingsPanel
         v-if="windowDialog  === 'configWorkspace'"
         @done="doneConfig"
       />
@@ -12,9 +12,9 @@
         @click:outside="windowDialog = false"
         max-width="1220"
       >
-        <WorkspacesList v-if="windowDialog  === 'workspaces'"/>
-        <ConfigsList v-else-if="windowDialog  === 'configs'"/>
-        <ClustersList v-else-if="windowDialog  === 'clusters'"/>
+        <WorkspacesList is-dialog v-if="windowDialog  === 'workspaces'"/>
+        <SettingsList is-dialog v-else-if="windowDialog  === 'configs'"/>
+        <ClustersList is-dialog v-else-if="windowDialog  === 'clusters'"/>
       </v-dialog>
       <template>
         <div v-if="workspaceStatus==='loading'">
@@ -183,8 +183,8 @@
 import Layout from "@/components/Layout"
 import TableBar from "@/components/TableBar"
 import WorkspacesList from "@/components/WorkspacesList"
-import ConfigPanel from "@/components/ConfigPanel"
-import ConfigsList from "@/components/ConfigsList"
+import SettingsPanel from "@/components/SettingsPanel"
+import SettingsList from "@/components/SettingsList"
 import ClustersList from "@/components/ClustersList"
 import MoreMenu from "@/components/MoreMenu"
 import clientMixin from "@/plugins/mixins/client"
@@ -201,8 +201,8 @@ export default {
 		Layout,
     TableBar,
     WorkspacesList,
-    ConfigPanel,
-    ConfigsList,
+    SettingsPanel,
+    SettingsList,
     ClustersList,
     MoreMenu
 	},

@@ -57,10 +57,7 @@ export class WorkspaceSettingController {
     @Body() itemData: CreateWorkspaceSettingDTO,
     @GetUser() user
   ): Promise<any> {
-    const item = await this.service.createOne({
-      ...itemData,
-      creator: user.userId,
-    });
+    const item = await this.service.newWorkspaceSetting(itemData, user);
     return item;
   }
 

@@ -375,7 +375,7 @@ table {
 
 /* columns list */
 
-.columns-table, .workspaces-table {
+.columns-table, .clickable-table {
   tbody tr {
     cursor: pointer;
     &:hover {
@@ -3419,4 +3419,10 @@ $editor-top-padding: 4px;
 
 .editable-element {
   // cursor: text;
+}
+
+.title-button-left {
+  float: left;
+  top: 10px;
+  left: 12px;
 }

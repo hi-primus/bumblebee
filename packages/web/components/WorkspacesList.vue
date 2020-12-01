@@ -1,5 +1,19 @@
 <template>
   <v-card>
+     <v-dialog
+      data-name="Workspaces"
+      v-if="editingWorkspaceSettings"
+      :value="editingWorkspaceSettings"
+      @click:outside="editingWorkspaceSettings = false"
+      :hide-overlay="isDialog"
+      max-width="1220">
+      <SettingsList
+        v-if="editingWorkspaceSettings"
+        selecting
+        :highlight="selectedWorkspaceSettingsPreset"
+        @click:setting="settingsPresetClicked"
+      />
+    </v-dialog>
     <FormDialog focus ref="formDialog"/>
     <v-card-title>
       Workspaces
@@ -24,10 +38,13 @@
       :mobile-breakpoint="0"
       :options.sync="options"
       :server-items-length="total"
-      class="workspaces-table manager-table"
+      class="workspaces-table manager-table clickable-table"
       :loading="loading"
       @click:row="rowClicked"
     >
+      <template slot="no-data">
+        <div>No workspaces available</div>
+      </template>
       <template v-slot:item.activeKernel="{ item }">
         <span
           :class="{
@@ -73,6 +90,15 @@
                   </v-list-item-title>
                 </v-list-item-content>
               </v-list-item>
+              <v-list-item
+                @click="changeSettings(item)"
+              >
+                <v-list-item-content>
+                  <v-list-item-title>
+                    Settings
+                  </v-list-item-title>
+                </v-list-item-content>
+              </v-list-item>
               <!-- <v-list-item
                 @click="duplicateElement(item)"
               >
@@ -112,12 +138,21 @@
 <script>
 
 import FormDialog from "@/components/FormDialog"
+import SettingsList from "@/components/SettingsList"
 
 export default {
 
   components: {
-    FormDialog
-	},
+    FormDialog,
+    SettingsList
+  },
+
+  props: {
+    isDialog: {
+      default: false,
+      type: Boolean
+    }
+  },
 
   data () {
     return {
@@ -142,11 +177,28 @@ export default {
         { text: 'Created', sortable: true, width: '6%', value: 'createdAt'},
         { text: '', sortable: false, width: '1%', value: 'menu'}
       ],
+      editingWorkspaceSettings: false,
+      selectedWorkspaceSettingsPreset: false,
+
       options: {}
     }
   },
 
   methods: {
+
+    changeSettings (workspace) {
+      this.editingWorkspaceSettings = workspace.id;
+      this.selectedWorkspaceSettingsPreset = workspace.workspaceSettings || false;
+    },
+
+    async settingsPresetClicked (setting) {
+      var id = this.editingWorkspaceSettings;
+      var workspaceSettings = setting._id;
+      await this.updateWorkspace(id, {
+        workspaceSettings
+      });
+      this.editingWorkspaceSettings = false;
+    },
 
     async rowClicked (workspace) {
       if (this.$route.params.slug !== workspace.slug) {
@@ -269,29 +321,32 @@ export default {
           ]
         })
 
-        if (!values) {
-          return false
-        }
+        await this.updateWorkspace(workspace._id, values)
 
-        let id = workspace._id
-
-        let found = this.items.findIndex(w=>w._id === id)
-        let item = this.items[found]
-        item.loading = true
-        item = {...item, ...values}
-        this.$set(this.items, found, item)
-        // this.$delete(this.items, found)
-
-        await this.$store.dispatch('request',{
-          request: 'put',
-          path: `/workspaces/${id}`,
-          payload: values
-        })
-        await this.updateElements()
       } catch (err) {
         console.error(err)
       }
 
+    },
+
+    async updateWorkspace (id, payload) {
+      if (!payload) {
+        return false;
+      }
+
+      let found = this.items.findIndex(w=>w._id === id);
+      let item = this.items[found];
+      item.loading = true;
+      item = {...item, ...payload};
+      this.$set(this.items, found, item);
+
+      await this.$store.dispatch('request',{
+        request: 'put',
+        path: `/workspaces/${id}`,
+        payload: payload
+      });
+
+      await this.updateElements();
     },
 
     async duplicateElement (workspace) {

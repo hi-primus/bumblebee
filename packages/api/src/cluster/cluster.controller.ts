@@ -14,8 +14,8 @@ import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
 import { GetUser } from "./../auth/dto/get-user.decorator.dto";
 import { QueryParams } from "./../users/interfaces/queryParams.interface";
 import { ClusterService } from "./cluster.service";
-import { CreateClusterDTO } from "./dto/create-cluster.dto";
-import { UpdateClusterDTO } from "./dto/update-cluster.dto";
+import { CreateClusterDto } from "./dto/create-cluster.dto";
+import { UpdateClusterDto } from "./dto/update-cluster.dto";
 
 @ApiTags("Clusters")
 @ApiBearerAuth()
@@ -54,7 +54,7 @@ export class ClusterController {
   @Post()
   @UseGuards(AuthGuard("jwt"))
   async createItem(
-    @Body() itemData: CreateClusterDTO,
+    @Body() itemData: CreateClusterDto,
     @GetUser() user
   ): Promise<any> {
     const item = await this.service.createOne({
@@ -68,7 +68,7 @@ export class ClusterController {
   @UseGuards(AuthGuard("jwt"))
   async updateOneById(
     @Param("id") id: string,
-    @Body() data: UpdateClusterDTO,
+    @Body() data: UpdateClusterDto,
     @GetUser() user
   ): Promise<any> {
     const item = await this.service.updateOneFromUser(id, user.userId, data);

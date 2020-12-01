@@ -4,6 +4,8 @@ import Vue from 'vue'
 import { ALL_TYPES, capitalizeString, getPropertyAsync, filterCells, parseResponse, printError, deepCopy } from 'bumblebee-utils'
 import { generateCode } from 'optimus-code-api'
 
+import { generateCode } from 'optimus-code-api'
+
 const properties = [
   {
     name: 'loadPreview',

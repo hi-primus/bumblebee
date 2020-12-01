@@ -12,7 +12,7 @@ export const WorkspaceSettingSchemaProvider = {
       configuration: {
         type: Schema.Types.Mixed,
       },
-      creator: {
+      createdBy: {
         type: Schema.Types.ObjectId,
         ref: "User",
         default: null,
