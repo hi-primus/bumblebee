@@ -59,7 +59,11 @@ export const WorkspaceSchemaProvider = {
             dfName: { type: String },
           },
         ],
-        configuration: { type: Schema.Types.Mixed },
+        configuration: {
+          type: Schema.Types.ObjectId,
+          ref: "WorkspaceSetting",
+          default: null,
+        },
       },
       {
         timestamps: true,
