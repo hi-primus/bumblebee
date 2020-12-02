@@ -1,7 +1,7 @@
 <template>
   <v-card>
     <FormDialog :hide-overlay="isDialog" focus ref="formDialog"/>
-    <v-btn v-if="selecting" icon large color="black" class="title-button-left">
+    <v-btn v-if="selecting" icon large color="black" @click="$emit('back')" class="title-button-left">
       <v-icon>mdi-arrow-left</v-icon>
     </v-btn>
     <v-card-title>
@@ -76,6 +76,7 @@
               </v-list-item> -->
               <v-list-item
                 @click="deleteElement(item)"
+                :disabled="item._id===highlight"
               >
                 <v-list-item-content>
                   <v-list-item-title color="error">
@@ -170,7 +171,7 @@ export default {
     },
 
     async createNewElementUsingForm () {
-      var values = await this.settingsParameters({},undefined,true)
+      var values = await this.settingsParameters()
       if (!values) {
         return false;
       }
@@ -209,40 +210,45 @@ export default {
 
     async editElement (setting) {
 
-      var params = {
-        ...setting.configuration,
-        _ws_name: setting.name
+      if (setting._id === this.highlight) {
+        this.$emit('back');
+      } else {
+
+        var params = {
+          ...setting.configuration,
+          _ws_name: setting.name
+        }
+
+        var values = await this.settingsParameters(params, 'Workspace settings', true)
+
+        if (!values) {
+          return false
+        }
+
+        var {name, configuration} = this.requestItem(values)
+
+        try {
+
+          var id = setting._id
+
+          var found = this.items.findIndex(w=>w._id === id)
+          var item = this.items[found]
+          item.loading = true
+          item = {...item, name, configuration}
+          this.$set(this.items, found, item)
+          // this.$delete(this.items, found)
+
+          await this.$store.dispatch('request',{
+            request: 'put',
+            path: `/workspacesettings/${id}`,
+            payload: {configuration, name}
+          })
+          await this.updateElements()
+        } catch (err) {
+          console.error(err)
+        }
+
       }
-
-      var values = await this.settingsParameters(params, 'Workspace settings', true)
-
-      if (!values) {
-        return false
-      }
-
-      var {name, configuration} = this.requestItem(values)
-
-      try {
-
-        var id = setting._id
-
-        var found = this.items.findIndex(w=>w._id === id)
-        var item = this.items[found]
-        item.loading = true
-        item = {...item, name, configuration}
-        this.$set(this.items, found, item)
-        // this.$delete(this.items, found)
-
-        await this.$store.dispatch('request',{
-          request: 'put',
-          path: `/workspacesettings/${id}`,
-          payload: {configuration, name}
-        })
-        await this.updateElements()
-      } catch (err) {
-        console.error(err)
-      }
-
     },
 
     async duplicateElement (setting) {

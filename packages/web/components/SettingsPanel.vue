@@ -1,19 +1,5 @@
 <template>
   <FormDialog
-    :extraButtons="[
-      {
-        checkDisabled: false,
-        label: 'Select',
-        event: 'select'
-      },
-      ...(existing ? [{
-        checkDisabled: true,
-        label: 'Save as new',
-        event: 'create'
-      }] : [])
-
-    ]"
-    :accept-label="existing ? 'Save' : 'Create'"
     focus
     ref="formDialog"
     />
@@ -46,12 +32,18 @@ export default {
 
   async mounted () {
 
-    let values = deepCopy(this.$store.state.localConfig);
+    let values = deepCopy(this.$store.state.localConfig) || {};
 
     values._ws_name = this.$store.state.configurationName || this.$route.params.slug;
     values._id = this.$store.state.configurationId || undefined;
 
-    values = await this.settingsParameters(values, 'Workspace settings', true);
+    values = await this.settingsParameters(values, 'Workspace settings', this.existing, [
+      {
+        checkDisabled: false,
+        label: 'Select',
+        event: 'select'
+      },
+    ]);
     this.$emit('done',values);
 
   },

@@ -717,8 +717,42 @@ export const actions = {
 
   },
 
-  async loadConfig ({ state }, payload) {
-    return deepCopy(state.localConfig); // TO-DO: Config
+  async loadConfig ({ state, commit, dispatch }, { id, workspaceSlug }) {
+
+    console.log({workspaceSlug})
+
+    try {
+      var workspace = await dispatch('getWorkspace', { slug: workspaceSlug } );
+      id = workspace.configuration;
+    } catch (err) {
+      console.error(err)
+    }
+
+    if (!id && state.configurationId) {
+      id = state.configurationId;
+    }
+
+    var configurationPayload = deepCopy(state.localConfig)
+
+    if (id) {
+      try {
+        var response = await dispatch('request',{
+          path: `/workspacesettings/${id}`
+        });
+
+        var configurationName = response.data.name;
+        configurationPayload = response.data.configuration;
+
+        commit('mutation', {mutate: 'configurationId', payload: id});
+        commit('mutation', { mutate: 'configurationName', payload: configurationName });
+        commit('mutation', { mutate: 'localConfig', payload: configurationPayload });
+
+      } catch (err) {
+        console.warn(`Error requesting workspace-settings ${id} for ${workspaceSlug}. Using default settings.`);
+        console.error(err);
+      }
+    }
+    return configurationPayload;
   },
 
   getConfig ({ dispatch }, payload) {
@@ -829,6 +863,14 @@ export const actions = {
     console.debug('[RESET] From', from);
 
     switch (from) {
+      case 'workspace':
+        commit('session/mutation', { mutate: 'workspaceStatus', payload: 'loading' })
+        commit('session/mutation', { mutate: 'saveReady', payload: false});
+        commit('mutation', { mutate: 'workspacePromise', payload: false});
+        commit('mutation', { mutate: 'workspace', payload: false });
+      case 'config':
+        commit('mutation', { mutate: 'configPromise', payload: false});
+        commit('mutation', { mutate: 'localConfig', payload: ''});
       case 'optimus':
         commit('mutation', { mutate: 'optimusPromise', payload: false});
         commit('mutation', { mutate: 'dashboardLink', payload: ''});
@@ -858,7 +900,7 @@ export const actions = {
 
     await Vue.nextTick();
 
-    var params = await dispatch('getConfig');
+    var params = await dispatch('getConfig', { workspaceSlug: slug });
 
     if (!slug) {
       slug = state.workspaceSlug;
@@ -876,7 +918,7 @@ export const actions = {
       ...params
     });
 
-    console.debug('[DEBUG][INITIALIZATION] initializeOptimus response', response);
+    console.debug('[DEBUG][INITIALIZATION] optimus response', response);
 
     var functions;
 
@@ -963,12 +1005,11 @@ export const actions = {
   async loadCellsResult ({dispatch, state, getters, commit}, { force, ignoreFrom, socketPost, clearPrevious }) {
     console.debug('[DEBUG] Loading cells result');
     try {
-      // await Vue.nextTick();
+
 
       var optimus = await dispatch('getOptimus', { payload: {socketPost} } );
-      var workspace = await dispatch('getWorkspace', {} );
 
-      var init = [optimus, workspace];
+      var init = [optimus];
 
       // console.debug(init)
 
@@ -1105,8 +1146,6 @@ export const actions = {
       var username = await dispatch('session/getUsername');
 
       if (!dfName) {
-        // return {};
-        var workspace = await dispatch('getWorkspace', {} );
         dfName = getters.currentDataset.dfName;
         if (!dfName) {
           console.warn('[DATA LOADING] No workspaces found');
@@ -1219,7 +1258,7 @@ export const actions = {
 
   async getBufferWindow ({commit, dispatch, state, getters}, {from, to, slug, dfName, code, socketPost, beforeCodeEval}) {
 
-    slug = slug || state.workspaceSlug || 'default';
+    slug = slug || state.workspaceSlug;
 
     var workspaceLoad = await dispatch('getWorkspace', { slug } );
 

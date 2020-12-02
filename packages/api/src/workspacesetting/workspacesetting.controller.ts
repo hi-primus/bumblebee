@@ -44,11 +44,7 @@ export class WorkspaceSettingController {
     @GetUser() user
   ): Promise<any> {
     const item = await this.service.getByIdFromUser(user.userId, id);
-    return {
-      data: {
-        item,
-      },
-    };
+    return item
   }
 
   @Post()

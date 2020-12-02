@@ -13,7 +13,7 @@ export default {
       return this.$refs.formDialog.fromForm(form)
     },
 
-    async settingsParameters (_defaultValues = {}, text = 'Create new settings', name = false ) {
+    async settingsParameters (_defaultValues = {}, text = 'Create new settings', editing = false, extraButtons = [] ) {
 
       var defaultValues = deepCopy(_defaultValues);
 
@@ -39,6 +39,13 @@ export default {
 
       var fields = [
         {
+          key: '_ws_name',
+          value: _defaultValues._ws_name || '',
+          props: {
+            label: 'Name'
+          }
+        },
+        {
           key: 'engine',
           is: 'v-select',
           value: defaultValues.engine  || 'dask',
@@ -56,21 +63,13 @@ export default {
         ...valuesFromParameters
       ];
 
-      if (name) {
-        fields = [
-          {
-            key: '_ws_name',
-            value: _defaultValues._ws_name || '',
-            props: {
-              label: 'Name'
-            }
-          },
-          ...fields
-        ];
-      }
-
-
       let values = await this.fromForm({
+        acceptLabel: editing ? 'Save' : 'Create',
+        extraButtons: editing ? [...extraButtons, {
+          checkDisabled: true,
+          label: 'Create new',
+          event: 'create'
+        }] : extraButtons,
         text,
         fields,
         disabled: (values)=>{

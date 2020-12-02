@@ -251,14 +251,11 @@
 			>
         <div v-if="noMatch" class="no-data">
           <div class="title grey--text text-center text-with-icons">
-            No match <br/>
-            {{!this.loadPreviewActive}} &&
-            {{!!this.customSortedColumns}} && {{!!this.customSortedColumns.length}} && ( ( {{!!this.resultsColumnsData}} && {{!this.resultsColumnsData.length}} || {{!!this.bbColumns.length}} ) ;<br/>
-            return !this.loadPreviewActive && this.customSortedColumns && this.customSortedColumns.length && ( (this.resultsColumnsData && !this.resultsColumnsData.length) || !this.bbColumns.length ) ;
+            No match
           </div>
         </div>
         <BumblebeeTable
-					v-if="!currentListView && (currentDataset && currentDataset.summary || loadPreviewActive)"
+					v-if="$store.state.optimusPromise && $store.state.optimusPromise.fulfilled && !currentListView && (currentDataset && currentDataset.summary || loadPreviewActive)"
           v-show="!noMatch"
           :bbColumns="bbColumns"
           @sort="updateSortedColumns"

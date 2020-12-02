@@ -3,9 +3,8 @@
 		<v-layout row wrap class="elevation-0 d-flex flex-column align-top justify-start">
       <SettingsPanel
         v-if="windowDialog  === 'configWorkspace'"
-        :existing="$store.state.condigurationId"
-        @done="doneConfig"
-      />
+        :existing="$store.state.configurationId"
+        @done="doneConfig($event)"/>
       <v-dialog
         data-name="Workspaces"
         v-else-if="windowDialog"
@@ -14,7 +13,14 @@
         max-width="1220"
       >
         <WorkspacesList is-dialog v-if="windowDialog  === 'workspaces'"/>
-        <SettingsList is-dialog v-else-if="windowDialog  === 'configs'"/>
+        <SettingsList
+          is-dialog
+          selecting
+          :highlight="$store.state.configurationId"
+          @back="showWindowDialog('configWorkspace')"
+          v-else-if="windowDialog  === 'configs'"
+          @click:setting="doneConfig($event, true)"
+          />
         <ClustersList is-dialog v-else-if="windowDialog  === 'clusters'"/>
       </v-dialog>
       <template>
@@ -282,7 +288,7 @@ export default {
 
       menu = [
         { text: 'Workspaces', click: ()=>this.showWindowDialog('workspaces') },
-        { text: 'Workspace settings', click: ()=>this.configWorkspace() }
+        { text: 'Workspace settings', click: ()=>this.showWindowDialog('configWorkspace') }
         // { text: 'Configs', click: ()=>this.showWindowDialog('configs') },
         // { text: 'Clusters', click: ()=>this.showWindowDialog('clusters') },
       ];
@@ -349,10 +355,6 @@ export default {
 
 	methods: {
 
-    configWorkspace() {
-      this.showWindowDialog('configWorkspace')
-    },
-
     addFile (event) {
       window.dragCount = 0
       try {
@@ -389,7 +391,7 @@ export default {
       return this.$refs.tableBar.runCodeNow(force, ignoreFrom, newDfName, noCheck);
     },
 
-    async doneConfig (values) {
+    async doneConfig (values, select=false) {
       if (values && values._event === 'select') {
         this.showWindowDialog('configs')
       } else {
@@ -410,6 +412,10 @@ export default {
           }
 
           var name = values._ws_name;
+
+          var configurationId = values._id;
+          var configurationName = values.name;
+
           delete values._ws_name;
           delete values._id;
 
@@ -420,18 +426,19 @@ export default {
             name
           }
 
-          try {
-            var response = await this.$store.dispatch('request',{
-              request,
-              path,
-              payload
-            });
-          } catch (err) {
-            console.error(err);
+          if (!select){
+            try {
+              var response = await this.$store.dispatch('request',{
+                request,
+                path,
+                payload
+              });
+            } catch (err) {
+              console.error(err);
+            }
+            configurationId = response.data._id;
+            configurationName = response.data.name;
           }
-
-          var configurationId = response.data._id;
-          var configurationName = response.data.name;
 
           this.$store.commit('mutation', { mutate: 'configurationName', payload: configurationName });
           await this.$store.dispatch('mutateAndSave', {mutate: 'configurationId', payload: configurationId});
@@ -447,7 +454,7 @@ export default {
 
       try {
 
-        this.$store.commit('session/mutation', { mutate: 'workspaceStatus', payload: 'loading' })
+        await this.$store.dispatch('resetPromises', { from: 'workspace' });
 
         var slug = this.$route.params.slug;
 

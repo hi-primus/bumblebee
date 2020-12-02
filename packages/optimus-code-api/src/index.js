@@ -689,7 +689,7 @@ export const generateCode = function(commands = [], type = 'final') {
 
     var request = payload.request || {};
 
-    code = generator ? generator({
+    var code = generator ? generator({
       ...payload,
       request: { ...request, type }
     }) : (command ? ('# '+command) : '');

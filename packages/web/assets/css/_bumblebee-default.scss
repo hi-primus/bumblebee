@@ -385,6 +385,7 @@ table {
 }
 
 .manager-table {
+  max-height: calc(100vh - 281px);
   th {
     white-space: nowrap;
   }
@@ -1727,12 +1728,6 @@ $editor-top-padding: 4px;
   .bb-table-top-container {
     @-moz-document url-prefix() {
       margin-right: 17px !important;
-
-       // small horizontal line
-
-      // &::after {
-      //   content: none !important;
-      // }
     }
     overflow-x: scroll;
     overflow-y: scroll;

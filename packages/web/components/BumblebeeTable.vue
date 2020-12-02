@@ -1098,12 +1098,13 @@ export default {
 
   async mounted () {
 
-    await this.checkVisibleColumns()
+    setTimeout(async () => {
+      await this.checkVisibleColumns()
+      await this.scrollCheck(true)
+      this.mustUpdateRows = true
+      this.updateRows()
+    }, 1000);
 
-    await this.scrollCheck(true)
-
-    this.mustUpdateRows = true
-    this.updateRows()
   },
 
   watch: {
@@ -1185,7 +1186,7 @@ export default {
     },
 
     datasetUpdates: {
-      immediate: true,
+      // immediate: true,
       handler () {
 
         this.updateSelection(this.currentSelection) // TEST
@@ -1835,6 +1836,8 @@ export default {
         var scrollLeft = this.$refs['BbTableTopContainer'].scrollLeft;
         var offsetWidth = this.$refs['BbTableTopContainer'].offsetWidth;
 
+        console.log({scrollLeft,offsetWidth})
+
         var left = 48;
         var a = -1;
         var b = -1;
@@ -1844,7 +1847,7 @@ export default {
           if (left>=scrollLeft && a===-1) {
             a = i;
           }
-          if (left>=scrollLeft+offsetWidth && b===-1) {
+          if (left>=scrollLeft+offsetWidth && b===-1 && offsetWidth!==0) {
             b = i+1;
           }
         }
@@ -1858,6 +1861,8 @@ export default {
         for (let n = a; n <= b; n++) {
           numbers[n] = true
         }
+
+        console.log({a,b})
 
         this.lazyColumns = numbers
       } catch (err) {
@@ -1882,9 +1887,6 @@ export default {
     horizontalScrollCheckDown () {
       var topScrollLeft = this.$refs['BbTableTopContainer'].scrollLeft;
       var bottomScrollLeft = this.$refs['BbTableContainer'].scrollLeft;
-      if (this.$refs['BbTableRowsSpace']) {
-        // this.$refs['BbTableRowsSpace'].style.left = (45 + topScrollLeft) + 'px';
-      }
       if (bottomScrollLeft != topScrollLeft) {
         this.$refs['BbTable'].style.minWidth = this.$refs['BbTableTopContainer'].scrollWidth + 'px'
         this.$refs['BbTableContainer'].scrollLeft = topScrollLeft

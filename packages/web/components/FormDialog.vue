@@ -71,8 +71,10 @@
         <v-card-actions>
           <div class="flex-grow-1" />
           <v-btn color="primary" text @click="acceptForm(false)">Cancel</v-btn>
-          <template v-for="button in extraButtons">
-            <v-btn color="primary" :key="button.event" text :disabled="button.checkDisabled && form.disabled ? form.disabled(values) : false" @click="buttonEvent(button.event)">{{button.label}}</v-btn>
+          <template v-if="form.extraButtons && form.extraButtons.length">
+            <template v-for="button in form.extraButtons">
+              <v-btn color="primary" :key="button.event" text :disabled="button.checkDisabled && form.disabled ? form.disabled(values) : false" @click="buttonEvent(button.event)">{{button.label}}</v-btn>
+            </template>
           </template>
           <v-btn color="primary" :disabled="form.disabled ? form.disabled(values) : false" type="submit">{{acceptLabel}}</v-btn>
         </v-card-actions>
@@ -92,14 +94,6 @@ export default {
       type: Boolean,
       default: false
     },
-    acceptLabel: {
-      type: String,
-      default: 'Accept'
-    },
-    extraButtons: {
-      type: Array,
-      default: ()=>[]
-    }
   },
 
   data () {
@@ -111,6 +105,9 @@ export default {
   },
 
   computed: {
+    acceptLabel () {
+      return this.form.acceptLabel || 'Accept'
+    },
     filteredFields () {
         try {
           return this.form.fields.filter(field => field.condition ? field.condition(this.values) : true)
