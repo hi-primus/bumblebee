@@ -13,9 +13,10 @@ import { AuthGuard } from "@nestjs/passport";
 import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
 import { GetUser } from "./../auth/dto/get-user.decorator.dto";
 import { QueryParams } from "./../users/interfaces/queryParams.interface";
-import { WorkspaceSettingService } from "./workspacesetting.service";
 import { CreateWorkspaceSettingDTO } from "./dto/create-workspacesetting.dto";
+import { PreferedWorkspaceSettingDTO } from "./dto/prefered-workspacesetting.dto";
 import { UpdateWorkspaceSettingDTO } from "./dto/update-workspacesetting.dto";
+import { WorkspaceSettingService } from "./workspacesetting.service";
 
 @ApiTags("WorkspaceSettings")
 @ApiBearerAuth()
@@ -37,6 +38,13 @@ export class WorkspaceSettingController {
     return { items, count };
   }
 
+  @Get("/preferred")
+  @UseGuards(AuthGuard("jwt"))
+  async getPrefered(@GetUser() user): Promise<any> {
+    const data = await this.service.getPrefered(user.userId);
+    return { data };
+  }
+
   @Get("/:id")
   @UseGuards(AuthGuard("jwt"))
   async getByIdFromUser(
@@ -44,7 +52,7 @@ export class WorkspaceSettingController {
     @GetUser() user
   ): Promise<any> {
     const item = await this.service.getByIdFromUser(user.userId, id);
-    return item
+    return item;
   }
 
   @Post()
@@ -55,6 +63,18 @@ export class WorkspaceSettingController {
   ): Promise<any> {
     const item = await this.service.newWorkspaceSetting(itemData, user);
     return item;
+  }
+
+  @Put("/preferred")
+  @UseGuards(AuthGuard("jwt"))
+  async setPrefered(
+    @Body() preferedWorkspaceSettingDTO: PreferedWorkspaceSettingDTO,
+    @GetUser() user
+  ): Promise<void> {
+    await this.service.setPrefered(
+      preferedWorkspaceSettingDTO.workspaceId,
+      user.userId
+    );
   }
 
   @Put("/:id")

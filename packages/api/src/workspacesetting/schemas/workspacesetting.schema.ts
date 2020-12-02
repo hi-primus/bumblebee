@@ -1,4 +1,4 @@
-import mongoose, { Model, Schema } from "mongoose";
+import { Model, Schema } from "mongoose";
 
 export const WorkspaceSettingSchemaProvider = {
   name: "WorkspaceSetting",
@@ -16,6 +16,10 @@ export const WorkspaceSettingSchemaProvider = {
         type: Schema.Types.ObjectId,
         ref: "User",
         default: null,
+      },
+      preferred: {
+        type: Boolean,
+        default: false,
       },
     });
     return WorkspaceSettingSchema;
