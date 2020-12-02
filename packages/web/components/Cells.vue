@@ -3497,8 +3497,6 @@ export default {
 
     addCell (at = -1, payload = {command: 'code', code: '', content: '', ignoreCell: false, noCall: false, deleteOtherCells: false}, replace = false) {
 
-      console.log({payload})
-
       var {command, code, ignoreCell, deleteOtherCells, content} = payload
 
       this.codeError = '';

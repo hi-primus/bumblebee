@@ -156,7 +156,7 @@ export const requestToKernel = async function (type, sessionId, payload) {
 
   var kernelAddress : any = kernels[sessionId].kernel_address;
 
-  if (type == 'init' && !kernelAddress && payload.jupyter_address) {
+  if (type == 'init' && !kernelAddress && payload.jupyter_address && payload.jupyter_address.ip && payload.jupyter_address.port) {
     kernelAddress = payload.jupyter_address.ip + ':' + payload.jupyter_address.port;
   }
 

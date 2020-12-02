@@ -450,7 +450,7 @@ export const propsToLocal = (array) => {
 export const objectFilter = (obj, cb) => {
   return Object.fromEntries(
     Object.entries(obj).filter(
-      ([key,value])=>cb([key, value])
+      ([key,value])=>cb(value)
     )
   )
 }

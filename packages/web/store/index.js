@@ -120,6 +120,8 @@ export const state = () => {
     ...defaultState,
     workspaceSlug: false,
     localConfig: {},
+    configurationId: false,
+    configurationName: false,
     properties,
     ...pStates,
 

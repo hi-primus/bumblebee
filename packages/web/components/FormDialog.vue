@@ -71,7 +71,10 @@
         <v-card-actions>
           <div class="flex-grow-1" />
           <v-btn color="primary" text @click="acceptForm(false)">Cancel</v-btn>
-          <v-btn color="primary" text :disabled="form.disabled ? form.disabled(values) : false" type="submit">Accept</v-btn>
+          <template v-for="button in extraButtons">
+            <v-btn color="primary" :key="button.event" text :disabled="button.checkDisabled && form.disabled ? form.disabled(values) : false" @click="buttonEvent(button.event)">{{button.label}}</v-btn>
+          </template>
+          <v-btn color="primary" :disabled="form.disabled ? form.disabled(values) : false" type="submit">{{acceptLabel}}</v-btn>
         </v-card-actions>
       </v-card>
     </v-form>
@@ -88,6 +91,14 @@ export default {
     focus: {
       type: Boolean,
       default: false
+    },
+    acceptLabel: {
+      type: String,
+      default: 'Accept'
+    },
+    extraButtons: {
+      type: Array,
+      default: ()=>[]
     }
   },
 
@@ -119,6 +130,17 @@ export default {
   methods: {
 
     getProperty,
+
+    buttonEvent (e) {
+      var values = this.values
+      values._event = e;
+      try {
+        this.promise.resolve(values);
+      } catch (err) {
+        console.error(err);
+      }
+      this.promise = false;
+    },
 
     fromForm (form) {
       this.form = form;

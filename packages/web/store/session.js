@@ -53,6 +53,8 @@ export const actions =  {
         return JSON.stringify(cell)
       })
 
+      var configuration = rootState.configurationId || null;
+
       var payload = {
         tabs: rootState.datasets.map(e=>{
           var {dataSources, name, ...profiling} = e
@@ -63,6 +65,7 @@ export const actions =  {
         }),
         commands: [...dataSources, ...commands],
         dataSourcesCount: dataSources.length,
+        configuration,
         selectedTab: rootState.tab
 
       }

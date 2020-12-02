@@ -3,6 +3,7 @@
 		<v-layout row wrap class="elevation-0 d-flex flex-column align-top justify-start">
       <SettingsPanel
         v-if="windowDialog  === 'configWorkspace'"
+        :existing="$store.state.condigurationId"
         @done="doneConfig"
       />
       <v-dialog
@@ -190,7 +191,7 @@ import MoreMenu from "@/components/MoreMenu"
 import clientMixin from "@/plugins/mixins/client"
 import dataTypesMixin from "@/plugins/mixins/data-types"
 import applicationMixin from "@/plugins/mixins/application"
-import { printError, getDefaultParams, INIT_PARAMS, RESPONSE_MESSAGES } from 'bumblebee-utils'
+import { printError, getDefaultParams, objectFilter, INIT_PARAMS, RESPONSE_MESSAGES } from 'bumblebee-utils'
 
 import { mapGetters, mapState } from "vuex"
 
@@ -281,7 +282,7 @@ export default {
 
       menu = [
         { text: 'Workspaces', click: ()=>this.showWindowDialog('workspaces') },
-        { text: 'Workspace settings', click: ()=>this.showWindowDialog('configWorkspace') }
+        { text: 'Workspace settings', click: ()=>this.configWorkspace() }
         // { text: 'Configs', click: ()=>this.showWindowDialog('configs') },
         // { text: 'Clusters', click: ()=>this.showWindowDialog('clusters') },
       ];
@@ -348,6 +349,10 @@ export default {
 
 	methods: {
 
+    configWorkspace() {
+      this.showWindowDialog('configWorkspace')
+    },
+
     addFile (event) {
       window.dragCount = 0
       try {
@@ -385,10 +390,54 @@ export default {
     },
 
     async doneConfig (values) {
-      this.windowDialog = false;
-      if (values) {
-        await this.$store.dispatch('session/cleanSession');
-        await this.initializeWorkspace();
+      if (values && values._event === 'select') {
+        this.showWindowDialog('configs')
+      } else {
+        this.windowDialog = false;
+        if (values) {
+          this.$store.commit('mutation', { mutate: 'localConfig', payload: values });
+          this.$store.commit('mutation', { mutate: 'configPromise', payload: false });
+
+          var request;
+          var path;
+
+          if (values._event === 'create' || !values._id) {
+            request = 'post';
+            path = '/workspacesettings'
+          } else {
+            request = 'put';
+            path = `/workspacesettings/${values._id}`
+          }
+
+          var name = values._ws_name;
+          delete values._ws_name;
+          delete values._id;
+
+          values = objectFilter(values, (value)=>value)
+
+          var payload = {
+            configuration: values,
+            name
+          }
+
+          try {
+            var response = await this.$store.dispatch('request',{
+              request,
+              path,
+              payload
+            });
+          } catch (err) {
+            console.error(err);
+          }
+
+          var configurationId = response.data._id;
+          var configurationName = response.data.name;
+
+          this.$store.commit('mutation', { mutate: 'configurationName', payload: configurationName });
+          await this.$store.dispatch('mutateAndSave', {mutate: 'configurationId', payload: configurationId});
+          await this.$store.dispatch('session/cleanSession');
+          await this.initializeWorkspace();
+        }
       }
     },
 
