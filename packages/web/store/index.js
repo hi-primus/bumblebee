@@ -111,7 +111,10 @@ const defaultState = {
   buffersPromises: {},
   listViews: [],
   dataSources: [],
-  gettingNewResults: ''
+  gettingNewResults: '',
+  localConfig: {},
+  configurationId: false,
+  configurationName: false
 }
 
 export const state = () => {
@@ -119,9 +122,6 @@ export const state = () => {
   return {
     ...defaultState,
     workspaceSlug: false,
-    localConfig: {},
-    configurationId: false,
-    configurationName: false,
     properties,
     ...pStates,
 

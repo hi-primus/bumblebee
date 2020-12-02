@@ -2,16 +2,18 @@
   <v-card>
      <v-dialog
       data-name="Workspaces"
-      v-if="editingWorkspaceSettings"
-      :value="editingWorkspaceSettings"
-      @click:outside="editingWorkspaceSettings = false"
+      v-if="editingEngine"
+      :value="editingEngine"
+      @click:outside="editingEngine = false"
       :hide-overlay="isDialog"
       max-width="1220">
       <SettingsList
-        v-if="editingWorkspaceSettings"
+        v-if="editingEngine"
         selecting
-        :highlight="selectedWorkspaceSettingsPreset"
-        @click:setting="settingsPresetClicked"
+        back-arrow
+        :highlight="selectedEngine"
+        @back="editingEngine = false"
+        @click:engine="enginesClicked"
       />
     </v-dialog>
     <FormDialog focus ref="formDialog"/>
@@ -95,7 +97,7 @@
               >
                 <v-list-item-content>
                   <v-list-item-title>
-                    Settings
+                    Set engine
                   </v-list-item-title>
                 </v-list-item-content>
               </v-list-item>
@@ -177,8 +179,8 @@ export default {
         { text: 'Created', sortable: true, width: '6%', value: 'createdAt'},
         { text: '', sortable: false, width: '1%', value: 'menu'}
       ],
-      editingWorkspaceSettings: false,
-      selectedWorkspaceSettingsPreset: false,
+      editingEngine: false,
+      selectedEngine: false,
 
       options: {}
     }
@@ -187,17 +189,18 @@ export default {
   methods: {
 
     changeSettings (workspace) {
-      this.editingWorkspaceSettings = workspace.id;
-      this.selectedWorkspaceSettingsPreset = workspace.workspaceSettings || false;
+      console.log({workspace})
+      this.editingEngine = workspace.id;
+      this.selectedEngine = workspace.configuration || false;
     },
 
-    async settingsPresetClicked (setting) {
-      var id = this.editingWorkspaceSettings;
-      var workspaceSettings = setting._id;
+    async enginesClicked (setting) {
+      var id = this.editingEngine;
+      var configuration = setting._id;
       await this.updateWorkspace(id, {
-        workspaceSettings
+        configuration
       });
-      this.editingWorkspaceSettings = false;
+      this.editingEngine = false;
     },
 
     async rowClicked (workspace) {

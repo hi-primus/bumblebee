@@ -1199,7 +1199,7 @@ export default {
     },
 
     previewColumns () {
-      this.checkVisibleColumns()
+      return this.checkVisibleColumns()
     },
 
   },
@@ -1314,12 +1314,12 @@ export default {
       this.throttledScrollCheck()
       this.debouncedScrollCheck()
       this.horizontalScrollCheckUp()
-      this.checkVisibleColumns()
+      return this.checkVisibleColumns()
     },
 
     tableTopContainerScroll () {
       this.horizontalScrollCheckDown()
-      this.checkVisibleColumns()
+      return this.checkVisibleColumns()
     },
 
     computeColumnValues (columnValues, noHighlight = false, limit = Infinity) {

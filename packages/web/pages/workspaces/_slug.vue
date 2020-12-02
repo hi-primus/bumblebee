@@ -16,10 +16,12 @@
         <SettingsList
           is-dialog
           selecting
+          :back-edit-highlight="!$store.state.configurationId"
+          back-arrow
           :highlight="$store.state.configurationId"
-          @back="showWindowDialog('configWorkspace')"
+          @back="!$store.state.configurationId ? showWindowDialog('configWorkspace') : windowDialog = false"
           v-else-if="windowDialog  === 'configs'"
-          @click:setting="doneConfig($event, true)"
+          @click:engine="doneConfig($event, true)"
           />
         <ClustersList is-dialog v-else-if="windowDialog  === 'clusters'"/>
       </v-dialog>
@@ -287,11 +289,22 @@ export default {
       let menu = []
 
       menu = [
-        { text: 'Workspaces', click: ()=>this.showWindowDialog('workspaces') },
-        { text: 'Workspace settings', click: ()=>this.showWindowDialog('configWorkspace') }
-        // { text: 'Configs', click: ()=>this.showWindowDialog('configs') },
-        // { text: 'Clusters', click: ()=>this.showWindowDialog('clusters') },
+        { text: 'Workspaces', click: ()=>this.showWindowDialog('workspaces') }
       ];
+
+      if (this.$store.state.configurationId) {
+        menu = [
+          ...menu,
+          { text: 'Set engine', click: ()=>this.showWindowDialog('configs') }
+        ];
+      } else {
+        menu = [
+          ...menu,
+          { text: 'Configure engine', click: ()=>this.showWindowDialog('configWorkspace') }
+        ];
+      }
+
+
 
       var dashboardLink = this.$store.state.dashboardLink;
 
@@ -397,9 +410,6 @@ export default {
       } else {
         this.windowDialog = false;
         if (values) {
-          this.$store.commit('mutation', { mutate: 'localConfig', payload: values });
-          this.$store.commit('mutation', { mutate: 'configPromise', payload: false });
-
           var request;
           var path;
 
@@ -440,9 +450,12 @@ export default {
             configurationName = response.data.name;
           }
 
-          this.$store.commit('mutation', { mutate: 'configurationName', payload: configurationName });
           await this.$store.dispatch('mutateAndSave', {mutate: 'configurationId', payload: configurationId});
           await this.$store.dispatch('session/cleanSession');
+          this.$store.commit('mutation', { mutate: 'localConfig', payload: values });
+          this.$store.commit('mutation', { mutate: 'configPromise', payload: false });
+          this.$store.commit('mutation', { mutate: 'configurationName', payload: configurationName });
+          this.$store.commit('mutation', { mutate: 'configurationId', payload: configurationId });
           await this.initializeWorkspace();
         }
       }

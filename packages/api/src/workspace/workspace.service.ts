@@ -26,7 +26,7 @@ export class WorkspaceService {
 			.skip(parseInt(queryParams.page) * parseInt(queryParams.pageSize))
 			.limit(parseInt(queryParams.pageSize))
 			.select(
-				'title activeKernel dataSources name createdAt updatedAt description dataSourcesCount selectedTab tabs tabCount slug',
+				'title activeKernel dataSources name createdAt updatedAt description dataSourcesCount selectedTab tabs tabCount slug configuration',
 			)
 			.exec();
 

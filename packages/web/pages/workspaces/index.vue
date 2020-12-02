@@ -53,7 +53,7 @@ export default {
     moreMenu () {
 
       var menu = [
-        // { text: 'Workspace settings', click: ()=>this.$router.push({path: '/workspace-settings-presets', query: this.$route.query }) },
+        { text: 'Engines', click: ()=>this.$router.push({path: '/engines', query: this.$route.query }) },
         { text: 'Sign out', click: this.signOut }
       ]
 

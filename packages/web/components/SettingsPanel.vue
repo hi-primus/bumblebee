@@ -37,7 +37,7 @@ export default {
     values._ws_name = this.$store.state.configurationName || this.$route.params.slug;
     values._id = this.$store.state.configurationId || undefined;
 
-    values = await this.settingsParameters(values, 'Workspace settings', this.existing, [
+    values = await this.settingsParameters(values, 'Engines', this.existing, [
       {
         checkDisabled: false,
         label: 'Select',

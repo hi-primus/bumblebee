@@ -1,11 +1,11 @@
 <template>
   <v-card>
     <FormDialog :hide-overlay="isDialog" focus ref="formDialog"/>
-    <v-btn v-if="selecting" icon large color="black" @click="$emit('back')" class="title-button-left">
+    <v-btn v-if="backArrow" icon large color="black" @click="$emit('back')" class="title-button-left">
       <v-icon>mdi-arrow-left</v-icon>
     </v-btn>
     <v-card-title>
-      Settings
+      Engines
     </v-card-title>
     <v-data-table
       :items="tableItems"
@@ -19,7 +19,7 @@
       @click:row="rowClicked"
     >
       <template slot="no-data">
-        <div>No settings available</div>
+        <div>Create a new engine</div>
       </template>
       <template v-slot:item.selectedSettings="{ item }">
         <span
@@ -61,7 +61,7 @@
               >
                 <v-list-item-content>
                   <v-list-item-title>
-                    Edit settings
+                    Edit engine
                   </v-list-item-title>
                 </v-list-item-content>
               </v-list-item>
@@ -119,8 +119,16 @@ export default {
       default: false,
       type: Boolean
     },
+    backArrow: {
+      default: false,
+      type: Boolean
+    },
     highlight: {
       default: false
+    },
+    backEditHighlight: {
+      default: false,
+      type: Boolean
     }
   },
 
@@ -144,7 +152,7 @@ export default {
   methods: {
 
     async rowClicked (setting) {
-      this.$emit('click:setting',setting)
+      this.$emit('click:engine',setting)
     },
 
     async deleteElement (setting) {
@@ -167,6 +175,7 @@ export default {
       var configuration = formValues;
       var name = formValues._ws_name;
       delete configuration._ws_name;
+      delete configuration._event;
       return {name, configuration};
     },
 
@@ -210,7 +219,7 @@ export default {
 
     async editElement (setting) {
 
-      if (setting._id === this.highlight) {
+      if (setting._id === this.highlight && this.backEditHighlight) {
         this.$emit('back');
       } else {
 
@@ -219,34 +228,43 @@ export default {
           _ws_name: setting.name
         }
 
-        var values = await this.settingsParameters(params, 'Workspace settings', true)
+        var values = await this.settingsParameters(params, 'Engines', true)
 
         if (!values) {
           return false
         }
 
-        var {name, configuration} = this.requestItem(values)
+        if (values._event === 'create') {
 
-        try {
+          this.createNewElement(values);
 
-          var id = setting._id
+        } else {
 
-          var found = this.items.findIndex(w=>w._id === id)
-          var item = this.items[found]
-          item.loading = true
-          item = {...item, name, configuration}
-          this.$set(this.items, found, item)
-          // this.$delete(this.items, found)
+          var {name, configuration} = this.requestItem(values)
 
-          await this.$store.dispatch('request',{
-            request: 'put',
-            path: `/workspacesettings/${id}`,
-            payload: {configuration, name}
-          })
-          await this.updateElements()
-        } catch (err) {
-          console.error(err)
+          try {
+
+            var id = setting._id
+
+            var found = this.items.findIndex(w=>w._id === id)
+            var item = this.items[found]
+            item.loading = true
+            item = {...item, name, configuration}
+            this.$set(this.items, found, item)
+            // this.$delete(this.items, found)
+
+            await this.$store.dispatch('request',{
+              request: 'put',
+              path: `/workspacesettings/${id}`,
+              payload: {configuration, name}
+            })
+            await this.updateElements()
+          } catch (err) {
+            console.error(err)
+          }
+
         }
+
 
       }
     },
