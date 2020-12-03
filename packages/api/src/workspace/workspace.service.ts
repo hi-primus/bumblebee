@@ -13,7 +13,7 @@ export class WorkspaceService {
 	) {}
 
 	async getWorkspaces(user, queryParams): Promise<Workspace[]> {
-		const query = {};
+		let query: any = {};
 		queryParams?.filters?.split(',').forEach((filter, index) => {
 			query[filter] = queryParams?.values?.split(',')[index] || '';
 		});
