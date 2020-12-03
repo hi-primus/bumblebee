@@ -1836,8 +1836,6 @@ export default {
         var scrollLeft = this.$refs['BbTableTopContainer'].scrollLeft;
         var offsetWidth = this.$refs['BbTableTopContainer'].offsetWidth;
 
-        console.log({scrollLeft,offsetWidth})
-
         var left = 48;
         var a = -1;
         var b = -1;
@@ -1861,8 +1859,6 @@ export default {
         for (let n = a; n <= b; n++) {
           numbers[n] = true
         }
-
-        console.log({a,b})
 
         this.lazyColumns = numbers
       } catch (err) {

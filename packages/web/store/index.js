@@ -719,8 +719,6 @@ export const actions = {
 
   async loadConfig ({ state, commit, dispatch }, { id, workspaceSlug }) {
 
-    console.log({workspaceSlug})
-
     try {
       var workspace = await dispatch('getWorkspace', { slug: workspaceSlug } );
       id = workspace.configuration;
@@ -734,23 +732,27 @@ export const actions = {
 
     var configurationPayload = deepCopy(state.localConfig)
 
+    var path = `/workspacesettings/preferred`;
+
     if (id) {
-      try {
-        var response = await dispatch('request',{
-          path: `/workspacesettings/${id}`
-        });
+      path = `/workspacesettings/${id}`;
+    }
+    try {
+      var response = await dispatch('request',{
+        path
+      });
 
-        var configurationName = response.data.name;
-        configurationPayload = response.data.configuration;
+      id = id || response.data._id;
+      var configurationName = response.data.name;
+      configurationPayload = response.data.configuration;
 
-        commit('mutation', {mutate: 'configurationId', payload: id});
-        commit('mutation', { mutate: 'configurationName', payload: configurationName });
-        commit('mutation', { mutate: 'localConfig', payload: configurationPayload });
+      commit('mutation', {mutate: 'configurationId', payload: id});
+      commit('mutation', { mutate: 'configurationName', payload: configurationName });
+      commit('mutation', { mutate: 'localConfig', payload: configurationPayload });
 
-      } catch (err) {
-        console.warn(`Error requesting workspace-settings ${id} for ${workspaceSlug}. Using default settings.`);
-        console.error(err);
-      }
+    } catch (err) {
+      console.warn(`Error requesting workspace-settings ${id} for ${workspaceSlug}. Using default settings.`);
+      console.error(err);
     }
     return configurationPayload;
   },

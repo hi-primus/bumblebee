@@ -41,8 +41,8 @@ export class WorkspaceSettingController {
   @Get("/preferred")
   @UseGuards(AuthGuard("jwt"))
   async getPrefered(@GetUser() user): Promise<any> {
-    const data = await this.service.getPrefered(user.userId);
-    return { data };
+    const item = await this.service.getPrefered(user.userId);
+    return item;
   }
 
   @Get("/:id")

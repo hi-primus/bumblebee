@@ -8,6 +8,7 @@
         </MoreMenu>
         <div class="bb-content pa-12">
           <SettingsList
+            preferred
             @update:total="total = $event"
           />
         </div>

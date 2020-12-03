@@ -189,7 +189,6 @@ export default {
   methods: {
 
     changeSettings (workspace) {
-      console.log({workspace})
       this.editingEngine = workspace.id;
       this.selectedEngine = workspace.configuration || false;
     },

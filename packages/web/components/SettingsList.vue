@@ -30,6 +30,17 @@
           class="pl-3"
         >●</span>
       </template>
+      <template v-slot:item.preferred="{ item }">
+        <v-icon
+          active-class="no-active"
+          @click="!item.preferred && starElement(item)"
+          :class="{
+            'primary--text active': item.preferred,
+            'grey--text': !item.preferred
+          }"
+          class="ml-3 preferred-star"
+        >star</v-icon>
+      </template>
       <template v-slot:item.createdAt="{ item }">
         {{item.createdAt | formatDate}}
       </template>
@@ -62,6 +73,16 @@
                 <v-list-item-content>
                   <v-list-item-title>
                     Edit engine
+                  </v-list-item-title>
+                </v-list-item-content>
+              </v-list-item>
+              <v-list-item
+                @click="starElement(item)"
+                v-if="preferred"
+              >
+                <v-list-item-content>
+                  <v-list-item-title>
+                    Set as preferred
                   </v-list-item-title>
                 </v-list-item-content>
               </v-list-item>
@@ -116,6 +137,10 @@ export default {
       type: Boolean
     },
     selecting: {
+      default: false,
+      type: Boolean
+    },
+    preferred: {
       default: false,
       type: Boolean
     },
@@ -185,6 +210,32 @@ export default {
         return false;
       }
       await this.createNewElement(values);
+    },
+
+    async starElement (item) {
+      this.items = this.items.map(i=>{
+        if (i._id==item._id) {
+          i.preferred = true;
+          i.loading = true;
+        } else {
+          i.preferred = false;
+        }
+        return i;
+      });
+      try {
+        var response = await this.$store.dispatch('request',{
+          request: 'put',
+          path: '/workspacesettings/preferred',
+          payload: {
+            workspaceId: item._id
+          }
+        })
+      } catch (err) {
+        console.error(err)
+      }
+      await this.updateElements()
+
+
     },
 
     async createNewElement (values) {
@@ -336,6 +387,13 @@ export default {
       if (this.selecting) {
         h = [
           { text: 'Selected', sortable: true, width: '1%', value: 'selectedSettings', align: 'left' },
+          ...h
+        ]
+      }
+
+      if (this.preferred) {
+        h = [
+          { text: 'Preferred', sortable: true, width: '1%', value: 'preferred', align: 'left' },
           ...h
         ]
       }

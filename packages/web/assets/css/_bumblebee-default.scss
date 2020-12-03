@@ -385,12 +385,31 @@ table {
 }
 
 .manager-table {
-  max-height: calc(100vh - 281px);
+  // max-height: calc(100vh - 281px);
   th {
     white-space: nowrap;
   }
   .v-data-table__wrapper {
     min-height: calc(100vh - 340px);
+  }
+}
+
+.settings-table {
+  tbody tr {
+    .preferred-star {
+      opacity: 0.5;
+      &.active {
+        opacity: 1;
+      }
+      &:hover {
+        color: $data-primary !important;
+      }
+    }
+    &:hover {
+      .preferred-star {
+        opacity: 1;
+      }
+    }
   }
 }
 
@@ -3421,3 +3440,8 @@ $editor-top-padding: 4px;
   top: 10px;
   left: 12px;
 }
+
+.no-active::before {
+  opacity: 0 !important;
+}
+
