@@ -30,11 +30,8 @@ export class WorkspaceSettingController {
     @Query() queryParams: QueryParams,
     @GetUser() user
   ): Promise<any> {
-    const items = await this.service.getManyFromUser(user.userId, queryParams);
-    const count = await this.service.getManyFromUserCount(
-      user.userId,
-      queryParams
-    );
+    const items = await this.service.getWorkspaceSettings(user.userId, queryParams);
+    const count = await this.service.getWorkspaceSettingsCount(user.userId);
     return { items, count };
   }
 

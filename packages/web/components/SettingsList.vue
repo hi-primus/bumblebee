@@ -362,7 +362,7 @@ export default {
           sort = '&sort='+sort;
         }
         var response = await this.$store.dispatch('request',{
-          path: `/workspacesettings`
+          path: `/workspacesettings?page=${page-1}&pageSize=${itemsPerPage}${sort}`
         });
         this.loading = false;
         return {items: response.data.items, total: response.data.count};

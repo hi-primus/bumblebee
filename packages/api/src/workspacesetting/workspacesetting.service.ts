@@ -11,16 +11,13 @@ export class WorkspaceSettingService {
     @InjectModel("WorkspaceSetting") private itemModel: Model<WorkspaceSetting>
   ) {}
 
-  async getMany(user, queryParams): Promise<WorkspaceSetting[]> {
-    const query = {};
+  async getWorkspaceSettings(createdBy, queryParams): Promise<WorkspaceSetting[]> {
+    let query: any = {};
     queryParams?.filters?.split(",").forEach((filter, index) => {
       query[filter] = queryParams?.values?.split(",")[index] || "";
     });
     const items = await this.itemModel
-      .find({
-        ...query,
-        createdBy: user.userId,
-      })
+      .find({ createdBy, ...query })
       .sort(queryParams.sort)
       .skip(parseInt(queryParams.page) * parseInt(queryParams.pageSize))
       .limit(parseInt(queryParams.pageSize))
@@ -29,11 +26,10 @@ export class WorkspaceSettingService {
     return items;
   }
 
-  async getManyCount(user): Promise<number> {
+  async getWorkspaceSettingsCount(createdBy): Promise<number> {
     const count = await this.itemModel
-      .countDocuments({
-        createdBy: user.userId,
-      })
+      .find({ createdBy})
+      .countDocuments()
       .exec();
     return count;
   }
@@ -80,21 +76,6 @@ export class WorkspaceSettingService {
 
   async deleteOneFromUser(itemId, user): Promise<WorkspaceSetting> {
     return this.itemModel.findOneAndDelete({ _id: itemId, createdBy: user });
-  }
-
-  async getManyFromUser(createdBy, queryParams) {
-    const items = await this.itemModel
-      .find({ createdBy, ...queryParams })
-      .exec();
-    return items;
-  }
-
-  async getManyFromUserCount(createdBy, queryParams) {
-    const count = await this.itemModel
-      .find({ createdBy, ...queryParams })
-      .countDocuments()
-      .exec();
-    return count;
   }
 
   async getByIdFromUser(createdBy, id): Promise<Model<WorkspaceSetting>> {
