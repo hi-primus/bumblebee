@@ -14,6 +14,11 @@ export const codeGenerators = {
     return `.to_${payload.file_type}( filename="${payload.local_address}/${payload.file_name}.${payload.file_type}", single_file=True );`
     + `_output = "${payload.file_name}.${payload.file_type}"`
   },
+  'save file': (payload) => {
+    var file_type = payload.url.split('.');
+    file_type = file_type[file_type.length - 1];
+    return `.to_${file_type}( filename="${payload.url}", single_file=True );`;
+  },
   'apply sort': (payload) => {
     return `.cols.sort(columns=["${payload.columns.join('", "')}"])`
   },

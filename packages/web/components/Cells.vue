@@ -732,7 +732,14 @@ export default {
                 type: 'field',
               },
             ],
-            validate: (c) => (c.table_name)
+            validate: (c) => {
+              if (c.url) {
+                var file_type = c.url.split('.');
+                file_type = file_type[file_type.length - 1];
+                return ['csv','xls','json','avro','parquet'].includes(file_type);
+              }
+              return false;
+            }
           },
           payload: () => ({
             command: 'save file',
@@ -1886,6 +1893,12 @@ export default {
             try {
 
               var code
+
+              // payload = {
+              //   command: 'fingerprint',
+              //   dfName: currentCommand.dfName,
+              //   column; currentCommand.columns[0]
+              // }
 
               if (currentCommand.algorithm == 'fingerprint')
                 code = `from optimus.engines.dask.ml import keycollision as kc; _output = kc.fingerprint_cluster(${currentCommand.dfName}.buffer_window("*"), input_cols="${currentCommand.columns[0]}")`
@@ -3229,7 +3242,7 @@ export default {
         dfName: this.currentDataset.dfName,
         newDfName: this.getNewDfName(),
         // loadEngine: false,
-        // engineOptions: TODO:
+        // engineOptions: TO-DO:
         allColumns: this.allColumns,
         type: command.type,
         command: command.command,
