@@ -376,7 +376,7 @@ table {
 /* columns list */
 
 .columns-table, .clickable-table {
-  tbody tr {
+  tbody tr:not(.v-data-table__empty-wrapper) {
     cursor: pointer;
     &:hover {
       background: $data-highlight !important;
