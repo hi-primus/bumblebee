@@ -730,7 +730,7 @@ export const actions = {
       id = state.configurationId;
     }
 
-    var configurationPayload = deepCopy(state.localConfig)
+    var configurationPayload = undefined
 
     var path = `/workspacesettings/preferred`;
 
@@ -757,12 +757,13 @@ export const actions = {
     return configurationPayload;
   },
 
-  getConfig ({ dispatch }, payload) {
+  getConfig ({ dispatch, state }, payload) {
 
     var promisePayload = {
       name: 'configPromise',
       action: 'loadConfig',
-      payload
+      payload,
+      forcePromise: !state.localConfig
     };
 
     return dispatch('getPromise', promisePayload);

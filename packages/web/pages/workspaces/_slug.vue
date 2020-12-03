@@ -2,8 +2,9 @@
 	<Layout>
 		<v-layout row wrap class="elevation-0 d-flex flex-column align-top justify-start">
       <SettingsPanel
-        v-if="windowDialog  === 'configWorkspace'"
+        v-if="windowDialog  === 'configEngine'"
         :existing="$store.state.configurationId"
+        :disable-back="engineFormPromise"
         @done="doneConfig($event)"/>
       <v-dialog
         data-name="Workspaces"
@@ -15,11 +16,12 @@
         <WorkspacesList is-dialog v-if="windowDialog  === 'workspaces'"/>
         <SettingsList
           is-dialog
+          back-arrow
           selecting
           :back-edit-highlight="!$store.state.configurationId"
-          back-arrow
           :highlight="$store.state.configurationId"
-          @back="!$store.state.configurationId ? showWindowDialog('configWorkspace') : windowDialog = false"
+          :disable-back="engineFormPromise"
+          @back="!$store.state.configurationId ? showWindowDialog('configEngine') : windowDialog = false"
           v-else-if="windowDialog  === 'configs'"
           @click:engine="doneConfig($event, true)"
           />
@@ -241,7 +243,8 @@ export default {
 			isOperating: false,
 			confirmDelete: -1,
       typesInput: '',
-      dragFile: false
+      dragFile: false,
+      engineFormPromise: false
 		};
   },
 
@@ -300,7 +303,7 @@ export default {
       } else {
         menu = [
           ...menu,
-          { text: 'Configure engine', click: ()=>this.showWindowDialog('configWorkspace') }
+          { text: 'Configure engine', click: ()=>this.showWindowDialog('configEngine') }
         ];
       }
 
@@ -367,6 +370,13 @@ export default {
   },
 
 	methods: {
+
+    engineForm () {
+      return new Promise((resolve, reject)=>{
+        this.engineFormPromise = {resolve, reject};
+        this.showWindowDialog('configEngine');
+      })
+    },
 
     addFile (event) {
       window.dragCount = 0
@@ -459,6 +469,10 @@ export default {
           await this.initializeWorkspace();
         }
       }
+      if (this.engineFormPromise && this.engineFormPromise.resolve) {
+        this.engineFormPromise.resolve();
+        this.engineFormPromise = false;
+      }
     },
 
     async initializeWorkspace () {
@@ -475,11 +489,15 @@ export default {
           this.$store.commit('mutation', { mutate: 'workspaceSlug', payload: slug });
         }
 
+        var config = await this.$store.dispatch('getConfig', { workspaceSlug: slug });
+
+        if (!config) {
+          await this.engineForm();
+          return;
+        }
+
         var optimus = await this.initializeOptimus(slug);
         console.debug('[INITIALIZATION] Optimus initialized');
-
-        var workspace = await this.$store.dispatch('getWorkspace', { slug });
-        console.debug('[INITIALIZATION] Workspace started');
 
         if (!this.$store.state.datasets.length) {
           await this.$store.dispatch('newDataset', { go: true });
@@ -537,7 +555,7 @@ export default {
         var query = this.$route.query;
 
         if (Object.keys(query).length) {
-          console.warn('Getting config from query parameters');
+          console.warn('Getting config from query parameters'); // TO-DO: Remove
         }
 
         var params = {};

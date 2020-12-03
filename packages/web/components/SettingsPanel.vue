@@ -2,6 +2,7 @@
   <FormDialog
     focus
     ref="formDialog"
+    :disable-back="disableBack"
     />
 </template>
 
@@ -16,6 +17,10 @@ export default {
 
   props: {
     existing: {
+      type: Boolean,
+      default: false
+    },
+    disableBack: {
       type: Boolean,
       default: false
     }
@@ -37,13 +42,15 @@ export default {
     values._ws_name = this.$store.state.configurationName || this.$route.params.slug;
     values._id = this.$store.state.configurationId || undefined;
 
-    values = await this.settingsParameters(values, 'Engines', this.existing, [
+    var extraButtons = this.disableBack ? [] : [
       {
         checkDisabled: false,
         label: 'Select',
         event: 'select'
       },
-    ]);
+    ];
+
+    values = await this.settingsParameters(values, 'Engines', this.existing, extraButtons);
     this.$emit('done',values);
 
   },

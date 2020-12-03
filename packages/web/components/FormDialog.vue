@@ -3,10 +3,18 @@
     v-if="promise"
     :value="promise"
     :max-width="form.width || 380"
-    @click:outside="acceptForm(false)"
+    @click:outside="!disableBack && acceptForm(false)"
+    :persistent="!!disableBack"
   >
     <v-form @submit.prevent="acceptForm(true)" ref="form">
       <v-card>
+        <v-btn
+          icon large color="black"
+          @click="!disableBack && acceptForm(false)"
+          class="title-button-left"
+          v-if="!disableBack">
+          <v-icon>mdi-arrow-left</v-icon>
+        </v-btn>
         <v-card-title class="title">{{form.text}}</v-card-title>
         <v-card-text class="pb-1" style="margin-top: -6px; padding-top: 6px; max-height: 70vh; overflow-y: auto;">
           <template v-for="(field, index) in filteredFields">
@@ -70,7 +78,7 @@
         <v-select v-show="false"></v-select>
         <v-card-actions>
           <div class="flex-grow-1" />
-          <v-btn color="primary" text @click="acceptForm(false)">Cancel</v-btn>
+          <!-- <v-btn color="primary" text @click="acceptForm(false)">Cancel</v-btn> -->
           <template v-if="form.extraButtons && form.extraButtons.length">
             <template v-for="button in form.extraButtons">
               <v-btn color="primary" :key="button.event" text :disabled="button.checkDisabled && form.disabled ? form.disabled(values) : false" @click="buttonEvent(button.event)">{{button.label}}</v-btn>
@@ -94,6 +102,10 @@ export default {
       type: Boolean,
       default: false
     },
+    disableBack: {
+      type: Boolean,
+      default: false
+    }
   },
 
   data () {
