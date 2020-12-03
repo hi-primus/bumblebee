@@ -19,7 +19,12 @@
       @click:row="rowClicked"
     >
       <template slot="no-data">
-        <div>Create a new engine</div>
+        <v-btn
+            @click="createNewElementUsingForm()"
+            color="primary"
+            class="mt-4"
+            depressed
+          >Create a new engine</v-btn>
       </template>
       <template v-slot:item.selectedSettings="{ item }">
         <span

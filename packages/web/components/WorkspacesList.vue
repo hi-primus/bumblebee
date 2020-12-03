@@ -45,7 +45,12 @@
       @click:row="rowClicked"
     >
       <template slot="no-data">
-        <div>No workspaces available</div>
+        <v-btn
+          @click="createNewElementUsingForm()"
+          color="primary"
+          class="mt-4"
+          depressed
+        >Create a new workspace</v-btn>
       </template>
       <template v-slot:item.activeKernel="{ item }">
         <span
