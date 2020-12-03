@@ -2,17 +2,16 @@
   <v-card>
      <v-dialog
       data-name="Workspaces"
-      v-if="editingEngine"
-      :value="editingEngine"
-      @click:outside="editingEngine = false"
+      v-if="showEngines"
+      :value="showEngines"
+      @click:outside="showEngines = false"
       :hide-overlay="isDialog"
       max-width="1220">
       <SettingsList
-        v-if="editingEngine"
         selecting
         back-arrow
         :highlight="selectedEngine"
-        @back="editingEngine = false"
+        @back="showEngines = false"
         @click:engine="enginesClicked"
       />
     </v-dialog>
@@ -184,7 +183,7 @@ export default {
         { text: 'Created', sortable: true, width: '6%', value: 'createdAt'},
         { text: '', sortable: false, width: '1%', value: 'menu'}
       ],
-      editingEngine: false,
+      showEngines: false,
       selectedEngine: false,
 
       options: {}
@@ -194,17 +193,17 @@ export default {
   methods: {
 
     changeSettings (workspace) {
-      this.editingEngine = workspace.id;
+      this.showEngines = workspace.id;
       this.selectedEngine = workspace.configuration || false;
     },
 
     async enginesClicked (setting) {
-      var id = this.editingEngine;
+      var id = this.showEngines;
       var configuration = setting._id;
       await this.updateWorkspace(id, {
         configuration
       });
-      this.editingEngine = false;
+      this.showEngines = false;
     },
 
     async rowClicked (workspace) {

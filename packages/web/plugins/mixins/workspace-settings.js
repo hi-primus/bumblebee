@@ -64,10 +64,10 @@ export default {
       ];
 
       let values = await this.fromForm({
-        acceptLabel: editing ? 'Save' : 'Create',
+        acceptLabel: 'Save',
         extraButtons: editing ? [...extraButtons, {
           checkDisabled: true,
-          label: 'Create new',
+          label: 'Save as',
           event: 'create'
         }] : extraButtons,
         text,

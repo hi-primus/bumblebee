@@ -1,5 +1,14 @@
 <template>
 	<Layout>
+    <v-dialog
+      v-if="showEngines"
+      :value="showEngines"
+      @click:outside="showEngines = false"
+      max-width="1220">
+      <SettingsList
+        preferred
+      />
+    </v-dialog>
 		<v-layout row wrap class="elevation-0 d-flex flex-column align-top justify-start">
       <div class="bb-container" data-name="workspaces">
         <MoreMenu
@@ -28,6 +37,7 @@
 <script>
 import Layout from "@/components/Layout"
 import WorkspacesList from "@/components/WorkspacesList"
+import SettingsList from "@/components/SettingsList"
 import MoreMenu from "@/components/MoreMenu"
 import clientMixin from "@/plugins/mixins/client"
 
@@ -35,6 +45,7 @@ export default {
 	components: {
     Layout,
     WorkspacesList,
+    SettingsList,
     MoreMenu
   },
 
@@ -45,7 +56,8 @@ export default {
 
 	data () {
 		return {
-      total: 0
+      total: 0,
+      showEngines: false
 		}
 	},
 
@@ -53,7 +65,7 @@ export default {
     moreMenu () {
 
       var menu = [
-        { text: 'Engines', click: ()=>this.$router.push({path: '/engines', query: this.$route.query }) },
+        { text: 'Engines', click: ()=>{this.showEngines = true}},
         { text: 'Sign out', click: this.signOut }
       ]
 
