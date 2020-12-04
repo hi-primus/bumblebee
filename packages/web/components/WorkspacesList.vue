@@ -5,21 +5,24 @@
       v-if="showEngines"
       :value="showEngines"
       @click:outside="showEngines = false"
-      :hide-overlay="isDialog"
       max-width="1220">
       <SettingsList
         selecting
-        back-arrow
         :highlight="selectedEngine"
         @back="showEngines = false"
         @click:engine="enginesClicked"
       />
     </v-dialog>
     <FormDialog focus ref="formDialog"/>
+    <v-btn v-if="isDialog" icon large color="black" @click="$emit('back')" class="title-button-left">
+      <v-icon>mdi-arrow-left</v-icon>
+    </v-btn>
     <v-card-title>
       Workspaces
       <v-spacer></v-spacer>
-      <v-form @submit.prevent="createNewElement({name: createName})">
+      <v-form
+        style="float: right; margin-top: -4px; margin-bottom: -4px; margin-right: -12px;"
+        @submit.prevent="createNewElement({name: createName})">
         <v-text-field
           v-model="createName"
           label="New workspace"
@@ -47,7 +50,7 @@
         <v-btn
           @click="createNewElementUsingForm()"
           color="primary"
-          class="mt-4"
+          class="cto-no-data-button"
           depressed
         >Create a new workspace</v-btn>
       </template>
@@ -56,7 +59,7 @@
           :class="{
             'green--text': item.slug===currentWorkspace,
             'primary--text': item.slug!==currentWorkspace && item.activeKernel,
-            'grey--text': item.slug!==currentWorkspace && !item.activeKernel
+            'icon--text': item.slug!==currentWorkspace && !item.activeKernel
           }"
           class="pl-3"
         >●</span>
@@ -83,7 +86,7 @@
         >
           <!-- :search="search" -->
           <template v-slot:activator="{ on: more }">
-            <v-icon v-on="more" class="right-button" color="grey" @click.stop="">more_vert</v-icon>
+            <v-icon v-on="more" class="right-button" @click.stop="">more_vert</v-icon>
           </template>
           <v-list flat dense style="max-height: 400px; min-width: 160px;" class="scroll-y">
             <v-list-item-group color="black">

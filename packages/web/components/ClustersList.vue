@@ -31,8 +31,7 @@
       <template v-slot:item.activeKernel="{ item }">
         <span
           :class="{
-            'primary--text': item.activeKernel,
-            'grey--text': !item.activeKernel
+            'primary--text': item.activeKernel
           }"
           class="pl-3"
         >●</span>
@@ -59,7 +58,7 @@
         >
           <!-- :search="search" -->
           <template v-slot:activator="{ on: more }">
-            <v-icon v-on="more" class="right-button" color="grey" @click.stop="">more_vert</v-icon>
+            <v-icon v-on="more" class="right-button" @click.stop="">more_vert</v-icon>
           </template>
           <v-list flat dense style="max-height: 400px; min-width: 160px;" class="scroll-y">
             <v-list-item-group color="black">

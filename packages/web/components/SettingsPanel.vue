@@ -50,7 +50,7 @@ export default {
       },
     ];
 
-    values = await this.settingsParameters(values, 'Engines', this.existing, extraButtons);
+    values = await this.settingsParameters(values, this.existing ? 'Edit engine' : 'Create new engine', this.existing, extraButtons);
     this.$emit('done',values);
 
   },

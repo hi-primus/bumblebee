@@ -7,6 +7,8 @@
       max-width="1220">
       <SettingsList
         preferred
+        @back="showEngines = false"
+        title="Manage engines"
       />
     </v-dialog>
 		<v-layout row wrap class="elevation-0 d-flex flex-column align-top justify-start">

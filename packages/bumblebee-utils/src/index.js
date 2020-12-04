@@ -450,7 +450,7 @@ export const propsToLocal = (array) => {
 export const objectFilter = (obj, cb) => {
   return Object.fromEntries(
     Object.entries(obj).filter(
-      ([key,value])=>cb(value)
+      ([key,value])=>cb([key,value])
     )
   )
 }
@@ -476,7 +476,7 @@ export const transformDateFromPython = (string) => {
 }
 
 export const engineValid = (key, engine) => {
-  return (!INIT_PARAMS[key].engines || INIT_PARAMS[key].engines.includes(engine))
+  return !INIT_PARAMS[key] || (!INIT_PARAMS[key].engines || INIT_PARAMS[key].engines.includes(engine))
 };
 
 export const getDefaultParams = (_params) => {
@@ -565,7 +565,8 @@ export const INIT_PARAMS = {
     type: 'int',
     name: 'Number of workers',
     engines: ['dask', 'dask_cudf', 'dask_coiled', 'dask_cudf_coiled'],
-    default: '1'
+    default: '1',
+    fill: true
   },
   'processes': {
     type: 'boolean',

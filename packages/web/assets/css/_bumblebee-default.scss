@@ -386,6 +386,13 @@ table {
 
 .manager-table {
   // max-height: calc(100vh - 281px);
+  position: relative;
+  .cto-no-data-button {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -75%);
+  }
   th {
     white-space: nowrap;
   }
@@ -3445,3 +3452,6 @@ $editor-top-padding: 4px;
   opacity: 0 !important;
 }
 
+.icon--text {
+  color: rgba(0, 0, 0, 0.54);
+}

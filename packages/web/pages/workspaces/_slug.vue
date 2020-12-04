@@ -13,10 +13,12 @@
         @click:outside="windowDialog = false"
         max-width="1220"
       >
-        <WorkspacesList is-dialog v-if="windowDialog  === 'workspaces'"/>
+        <WorkspacesList
+          is-dialog
+          @back="windowDialog = false"
+          v-if="windowDialog  === 'workspaces'"/>
         <SettingsList
           is-dialog
-          back-arrow
           selecting
           :back-edit-highlight="!$store.state.configurationId"
           :highlight="$store.state.configurationId"
@@ -439,7 +441,7 @@ export default {
           delete values._ws_name;
           delete values._id;
 
-          values = objectFilter(values, (value)=>value)
+          values = objectFilter(values, ([key,value])=>value)
 
           var payload = {
             configuration: values,

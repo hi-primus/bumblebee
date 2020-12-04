@@ -1,11 +1,11 @@
 <template>
   <v-card>
-    <FormDialog :hide-overlay="isDialog" focus ref="formDialog"/>
-    <v-btn v-if="backArrow" icon large color="black" @click="$emit('back')" class="title-button-left">
+    <FormDialog focus ref="formDialog"/>
+    <v-btn v-if="isDialog" icon large color="black" @click="$emit('back')" class="title-button-left">
       <v-icon>mdi-arrow-left</v-icon>
     </v-btn>
     <v-card-title>
-      Engines
+      {{ title }}
     </v-card-title>
     <v-data-table
       :items="tableItems"
@@ -22,7 +22,7 @@
         <v-btn
             @click="createNewElementUsingForm()"
             color="primary"
-            class="mt-4"
+            class="cto-no-data-button"
             depressed
           >Create a new engine</v-btn>
       </template>
@@ -30,7 +30,7 @@
         <span
           :class="{
             'primary--text': item.selectedSettings,
-            'grey--text': !item.selectedSettings
+            'icon--text': !item.selectedSettings
           }"
           class="pl-3"
         >●</span>
@@ -41,7 +41,7 @@
           @click="!item.preferred && starElement(item)"
           :class="{
             'primary--text active': item.preferred,
-            'grey--text': !item.preferred
+            'icon--text': !item.preferred
           }"
           class="ml-3 preferred-star"
         >star</v-icon>
@@ -68,7 +68,7 @@
         >
           <!-- :search="search" -->
           <template v-slot:activator="{ on: more }">
-            <v-icon v-on="more" class="right-button" color="grey" @click.stop="">more_vert</v-icon>
+            <v-icon v-on="more" class="right-button" @click.stop="">more_vert</v-icon>
           </template>
           <v-list flat dense style="max-height: 400px; min-width: 160px;" class="scroll-y">
             <v-list-item-group color="black">
@@ -149,16 +149,16 @@ export default {
       default: false,
       type: Boolean
     },
-    backArrow: {
-      default: false,
-      type: Boolean
-    },
     highlight: {
       default: false
     },
     backEditHighlight: {
       default: false,
       type: Boolean
+    },
+    title: {
+      type: String,
+      default: 'Engines'
     }
   },
 
@@ -284,7 +284,7 @@ export default {
           _ws_name: setting.name
         }
 
-        var values = await this.settingsParameters(params, 'Engines', true)
+        var values = await this.settingsParameters(params, 'Edit engine', true)
 
         if (!values) {
           return false
@@ -384,8 +384,11 @@ export default {
       var h = [
         { text: 'Name', sortable: true, width: '8%', value: 'name' },
         { text: 'Engine', sortable: true, width: '8%', value: 'engine' },
+        { text: 'Gateway address', sortable: true, width: '8%', value: 'address' },
+        { text: 'Workers', sortable: true, width: '8%', value: 'workers' },
+        { text: 'Memory', sortable: true, width: '8%', value: 'memory' },
         { text: 'Last modification', sortable: true, width: '6%', value: 'updatedAt'},
-        { text: 'Created', sortable: true, width: '6%', value: 'createdAt'},
+        // { text: 'Created', sortable: true, width: '6%', value: 'createdAt'},
         { text: '', sortable: false, width: '1%', value: 'menu'}
       ];
 
@@ -411,14 +414,23 @@ export default {
         return []
       }
 
-      return this.items.map((e)=>({
-        ...e,
-        selectedSettings: e._id == this.highlight,
-        name: e.name,
-        engine: e.configuration ? e.configuration.engine : 'default',
-        updatedAt: e.updatedAt,
-        createdAt: e.createdAt
-      }))
+      return this.items.map((e)=>{
+        var c = e.configuration || {};
+        if (c.jupyter_address && c.jupyter_address.ip && c.jupyter_address.port) {
+          c.address = `${c.jupyter_address.ip}:${c.jupyter_address.port}`;
+        }
+        return {
+          ...e,
+          selectedSettings: e._id == this.highlight,
+          name: e.name,
+          engine: c.engine || 'default',
+          address: c.address || 'default',
+          workers: c.n_workers || 'N/A',
+          memory: c.memory_limit || 'N/A',
+          updatedAt: e.updatedAt,
+          createdAt: e.createdAt
+        }
+      })
     }
   },
 
