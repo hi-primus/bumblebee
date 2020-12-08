@@ -1,14 +1,22 @@
 <template>
 	<Layout>
     <v-dialog
-      v-if="showEngines"
-      :value="showEngines"
-      @click:outside="showEngines = false"
+      v-if="showDialog"
+      :value="showDialog"
+      @input="$event ? true : showDialog = false"
       max-width="1220">
       <SettingsList
+        v-if="showDialog === 'engines'"
+        is-dialog
         preferred
-        @back="showEngines = false"
+        @back="showDialog = false"
         title="Manage engines"
+      />
+      <ConnectionsList
+        v-else
+        is-dialog
+        @back="showDialog = false"
+        title="Manage connections"
       />
     </v-dialog>
 		<v-layout row wrap class="elevation-0 d-flex flex-column align-top justify-start">
@@ -40,6 +48,7 @@
 import Layout from "@/components/Layout"
 import WorkspacesList from "@/components/WorkspacesList"
 import SettingsList from "@/components/SettingsList"
+import ConnectionsList from "@/components/ConnectionsList"
 import MoreMenu from "@/components/MoreMenu"
 import clientMixin from "@/plugins/mixins/client"
 
@@ -48,6 +57,7 @@ export default {
     Layout,
     WorkspacesList,
     SettingsList,
+    ConnectionsList,
     MoreMenu
   },
 
@@ -59,7 +69,7 @@ export default {
 	data () {
 		return {
       total: 0,
-      showEngines: false
+      showDialog: false
 		}
 	},
 
@@ -67,7 +77,8 @@ export default {
     moreMenu () {
 
       var menu = [
-        { text: 'Engines', click: ()=>{this.showEngines = true}},
+        { text: 'Engines', click: ()=>{this.showDialog = 'engines'}},
+        { text: 'Connections', click: ()=>{this.showDialog = 'connections'}},
         { text: 'Sign out', click: this.signOut }
       ]
 
