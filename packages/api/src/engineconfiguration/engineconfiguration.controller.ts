@@ -13,16 +13,16 @@ import { AuthGuard } from "@nestjs/passport";
 import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
 import { GetUser } from "./../auth/dto/get-user.decorator.dto";
 import { QueryParams } from "./../users/interfaces/queryParams.interface";
-import { CreateWorkspaceSettingDTO } from "./dto/create-workspacesetting.dto";
-import { PreferedWorkspaceSettingDTO } from "./dto/prefered-workspacesetting.dto";
-import { UpdateWorkspaceSettingDTO } from "./dto/update-workspacesetting.dto";
-import { WorkspaceSettingService } from "./workspacesetting.service";
+import { CreateEngineConfigurationDTO } from "./dto/create-engineconfiguration.dto";
+import { PreferedEngineConfigurationDTO } from "./dto/prefered-engineconfiguration.dto";
+import { UpdateEngineConfigurationDTO } from "./dto/update-engineconfiguration.dto";
+import { EngineConfigurationService } from "./engineconfiguration.service";
 
-@ApiTags("WorkspaceSettings")
+@ApiTags("EngineConfigurations")
 @ApiBearerAuth()
-@Controller("workspacesettings")
-export class WorkspaceSettingController {
-  constructor(private readonly service: WorkspaceSettingService) {}
+@Controller("engineconfigurations")
+export class EngineConfigurationController {
+  constructor(private readonly service: EngineConfigurationService) {}
 
   @Get()
   @UseGuards(AuthGuard("jwt"))
@@ -30,8 +30,8 @@ export class WorkspaceSettingController {
     @Query() queryParams: QueryParams,
     @GetUser() user
   ): Promise<any> {
-    const items = await this.service.getWorkspaceSettings(user.userId, queryParams);
-    const count = await this.service.getWorkspaceSettingsCount(user.userId);
+    const items = await this.service.getEngineConfigurations(user.userId, queryParams);
+    const count = await this.service.getEngineConfigurationsCount(user.userId);
     return { items, count };
   }
 
@@ -55,21 +55,21 @@ export class WorkspaceSettingController {
   @Post()
   @UseGuards(AuthGuard("jwt"))
   async createItem(
-    @Body() itemData: CreateWorkspaceSettingDTO,
+    @Body() itemData: CreateEngineConfigurationDTO,
     @GetUser() user
   ): Promise<any> {
-    const item = await this.service.newWorkspaceSetting(itemData, user);
+    const item = await this.service.newEngineConfiguration(itemData, user);
     return item;
   }
 
   @Put("/preferred")
   @UseGuards(AuthGuard("jwt"))
   async setPrefered(
-    @Body() preferedWorkspaceSettingDTO: PreferedWorkspaceSettingDTO,
+    @Body() preferedEngineConfigurationDTO: PreferedEngineConfigurationDTO,
     @GetUser() user
   ): Promise<void> {
     await this.service.setPrefered(
-      preferedWorkspaceSettingDTO.workspaceId,
+      preferedEngineConfigurationDTO.workspaceId,
       user.userId
     );
   }
@@ -78,7 +78,7 @@ export class WorkspaceSettingController {
   @UseGuards(AuthGuard("jwt"))
   async updateOneById(
     @Param("id") id: string,
-    @Body() data: UpdateWorkspaceSettingDTO,
+    @Body() data: UpdateEngineConfigurationDTO,
     @GetUser() user
   ): Promise<any> {
     const item = await this.service.updateOneFromUser(id, user.userId, data);

@@ -13,7 +13,7 @@
       :mobile-breakpoint="0"
       :options.sync="options"
       :server-items-length="total"
-      class="settings-table manager-table"
+      class="engines-table manager-table"
       :class="{'clickable-table': selecting}"
       :loading="loading"
       @click:row="rowClicked"
@@ -26,11 +26,11 @@
             depressed
           >Create a new engine</v-btn>
       </template>
-      <template v-slot:item.selectedSettings="{ item }">
+      <template v-slot:item.selectedEngine="{ item }">
         <span
           :class="{
-            'primary--text': item.selectedSettings,
-            'icon--text': !item.selectedSettings
+            'primary--text': item.selectedEngine,
+            'icon--text': !item.selectedEngine
           }"
           class="pl-3"
         >●</span>
@@ -130,11 +130,11 @@
 
 <script>
 
-import settingsMixin from "@/plugins/mixins/workspace-settings";
+import enginesMixin from "@/plugins/mixins/engines";
 
 export default {
 
-  mixins: [ settingsMixin ],
+  mixins: [ enginesMixin ],
 
   props: {
     isDialog: {
@@ -181,19 +181,19 @@ export default {
 
   methods: {
 
-    async rowClicked (setting) {
-      this.$emit('click:engine',setting)
+    async rowClicked (engine) {
+      this.$emit('click:engine', engine)
     },
 
-    async deleteElement (setting) {
+    async deleteElement (engine) {
       try {
-        var id = setting._id
+        var id = engine._id
         var found = this.items.findIndex(w=>w._id === id)
         this.$delete(this.items, found)
 
         await this.$store.dispatch('request',{
           request: 'delete',
-          path: `/workspacesettings/${id}`,
+          path: `/engineconfigurations/${id}`,
         })
         await this.updateElements()
       } catch (err) {
@@ -210,7 +210,7 @@ export default {
     },
 
     async createNewElementUsingForm () {
-      var values = await this.settingsParameters()
+      var values = await this.enginesParameters()
       if (!values) {
         return false;
       }
@@ -230,7 +230,7 @@ export default {
       try {
         var response = await this.$store.dispatch('request',{
           request: 'put',
-          path: '/workspacesettings/preferred',
+          path: '/engineconfigurations/preferred',
           payload: {
             workspaceId: item._id
           }
@@ -261,7 +261,7 @@ export default {
       try {
         var response = await this.$store.dispatch('request',{
           request: 'post',
-          path: '/workspacesettings',
+          path: '/engineconfigurations',
           payload
         })
         await this.updateElements()
@@ -273,18 +273,18 @@ export default {
       }
     },
 
-    async editElement (setting) {
+    async editElement (engine) {
 
-      if (setting._id === this.highlight && this.backEditHighlight) {
+      if (engine._id === this.highlight && this.backEditHighlight) {
         this.$emit('back');
       } else {
 
         var params = {
-          ...setting.configuration,
-          _ws_name: setting.name
+          ...engine.configuration,
+          _ws_name: engine.name
         }
 
-        var values = await this.settingsParameters(params, 'Edit engine', true)
+        var values = await this.enginesParameters(params, 'Edit engine', true)
 
         if (!values) {
           return false
@@ -300,7 +300,7 @@ export default {
 
           try {
 
-            var id = setting._id
+            var id = engine._id
 
             var found = this.items.findIndex(w=>w._id === id)
             var item = this.items[found]
@@ -311,7 +311,7 @@ export default {
 
             await this.$store.dispatch('request',{
               request: 'put',
-              path: `/workspacesettings/${id}`,
+              path: `/engineconfigurations/${id}`,
               payload: {configuration, name}
             })
             await this.updateElements()
@@ -325,11 +325,11 @@ export default {
       }
     },
 
-    async duplicateElement (setting) {
+    async duplicateElement (engine) {
       try {
          this.items.push({
-          ...setting,
-          name: setting.name+' copy',
+          ...engine,
+          name: engine.name+' copy',
           createdAt: false,
           updatedAt: false,
           loading: true,
@@ -337,9 +337,9 @@ export default {
         })
         await this.$store.dispatch('request',{
           request: 'post',
-          path: `/workspacesettings/copy/${setting._id}`,
+          path: `/engineconfigurations/copy/${engine._id}`,
           payload: {
-            name: setting.name+' copy' // TO-DO: copyName function
+            name: engine.name+' copy' // TO-DO: copyName function
           }
         })
         await this.updateElements()
@@ -367,7 +367,7 @@ export default {
           sort = '&sort='+sort;
         }
         var response = await this.$store.dispatch('request',{
-          path: `/workspacesettings?page=${page-1}&pageSize=${itemsPerPage}${sort}`
+          path: `/engineconfigurations?page=${page-1}&pageSize=${itemsPerPage}${sort}`
         });
         this.loading = false;
         return {items: response.data.items, total: response.data.count};
@@ -394,7 +394,7 @@ export default {
 
       if (this.selecting) {
         h = [
-          { text: 'Selected', sortable: true, width: '1%', value: 'selectedSettings', align: 'left' },
+          { text: 'Selected', sortable: true, width: '1%', value: 'selectedEngine', align: 'left' },
           ...h
         ]
       }
@@ -421,7 +421,7 @@ export default {
         }
         return {
           ...e,
-          selectedSettings: e._id == this.highlight,
+          selectedEngine: e._id == this.highlight,
           name: e.name,
           engine: c.engine || 'default',
           address: c.address || 'default',
@@ -435,12 +435,6 @@ export default {
   },
 
   watch: {
-    total: {
-      immediate: true,
-      handler (total) {
-        this.$emit('update:total', total)
-      }
-    },
     options: {
       deep: true,
       async handler () {

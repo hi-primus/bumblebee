@@ -53,7 +53,7 @@ export const actions =  {
         return JSON.stringify(cell)
       })
 
-      var configuration = rootState.configurationId || null;
+      var configuration = rootState.engineId || null;
 
       var payload = {
         tabs: rootState.datasets.map(e=>{

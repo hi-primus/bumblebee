@@ -1,9 +1,9 @@
 import { Model, Schema } from "mongoose";
 
-export const WorkspaceSettingSchemaProvider = {
-  name: "WorkspaceSetting",
+export const EngineConfigurationSchemaProvider = {
+  name: "EngineConfiguration",
   useFactory: (): Model<any> => {
-    const WorkspaceSettingSchema = new Schema({
+    const EngineConfigurationSchema = new Schema({
       name: {
         type: String,
         trim: true,
@@ -22,6 +22,6 @@ export const WorkspaceSettingSchemaProvider = {
         default: false,
       },
     });
-    return WorkspaceSettingSchema;
+    return EngineConfigurationSchema;
   },
 };

@@ -2,16 +2,16 @@ import { Injectable, NotFoundException } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model } from "mongoose";
 import { User } from "src/users/interfaces/user.interface";
-import { CreateWorkspaceSettingDTO } from "./dto/create-workspacesetting.dto";
-import { WorkspaceSetting } from "./interface/workspacesetting.interface";
+import { CreateEngineConfigurationDTO } from "./dto/create-engineconfiguration.dto";
+import { EngineConfiguration } from "./interface/engineconfiguration.interface";
 
 @Injectable()
-export class WorkspaceSettingService {
+export class EngineConfigurationService {
   constructor(
-    @InjectModel("WorkspaceSetting") private itemModel: Model<WorkspaceSetting>
+    @InjectModel("EngineConfiguration") private itemModel: Model<EngineConfiguration>
   ) {}
 
-  async getWorkspaceSettings(createdBy, queryParams): Promise<WorkspaceSetting[]> {
+  async getEngineConfigurations(createdBy, queryParams): Promise<EngineConfiguration[]> {
     let query: any = {};
     queryParams?.filters?.split(",").forEach((filter, index) => {
       query[filter] = queryParams?.values?.split(",")[index] || "";
@@ -26,7 +26,7 @@ export class WorkspaceSettingService {
     return items;
   }
 
-  async getWorkspaceSettingsCount(createdBy): Promise<number> {
+  async getEngineConfigurationsCount(createdBy): Promise<number> {
     const count = await this.itemModel
       .find({ createdBy})
       .countDocuments()
@@ -34,17 +34,17 @@ export class WorkspaceSettingService {
     return count;
   }
 
-  async getOne(itemId: string, user: User): Promise<WorkspaceSetting> {
+  async getOne(itemId: string, user: User): Promise<EngineConfiguration> {
     const item = await this.itemModel
       .findOne({ _id: itemId, user: user.id })
       .exec();
     return item;
   }
 
-  async newWorkspaceSetting(
-    workspaceData: CreateWorkspaceSettingDTO,
+  async newEngineConfiguration(
+    workspaceData: CreateEngineConfigurationDTO,
     user
-  ): Promise<WorkspaceSetting> {
+  ): Promise<EngineConfiguration> {
     const item = new this.itemModel({
       ...workspaceData,
       createdBy: user.userId,
@@ -52,7 +52,7 @@ export class WorkspaceSettingService {
     return item.save();
   }
 
-  async updateOne(itemId, data): Promise<WorkspaceSetting> {
+  async updateOne(itemId, data): Promise<EngineConfiguration> {
     const item = await this.itemModel
       .findOneAndUpdate({ _id: itemId }, data)
       .exec();
@@ -63,44 +63,44 @@ export class WorkspaceSettingService {
     return this.itemModel.findOneAndDelete({ _id: itemId, user: user.id });
   }
 
-  async updateOneFromUser(itemId, createdBy, data): Promise<WorkspaceSetting> {
+  async updateOneFromUser(itemId, createdBy, data): Promise<EngineConfiguration> {
     const item = await this.itemModel
       .findOneAndUpdate({ _id: itemId, createdBy }, data, { new: true })
       .exec();
     if (item) {
       return item.save();
     } else {
-      throw new NotFoundException("WorkspaceSetting not found");
+      throw new NotFoundException("EngineConfiguration not found");
     }
   }
 
-  async deleteOneFromUser(itemId, user): Promise<WorkspaceSetting> {
+  async deleteOneFromUser(itemId, user): Promise<EngineConfiguration> {
     return this.itemModel.findOneAndDelete({ _id: itemId, createdBy: user });
   }
 
-  async getByIdFromUser(createdBy, id): Promise<Model<WorkspaceSetting>> {
-    const workspaceSetting = await this.itemModel
+  async getByIdFromUser(createdBy, id): Promise<Model<EngineConfiguration>> {
+    const EngineConfiguration = await this.itemModel
       .findOne({ _id: id, createdBy })
       .exec();
-    return workspaceSetting;
+    return EngineConfiguration;
   }
 
-  async setPrefered(workspaceSettingId: string, userId: string): Promise<void> {
+  async setPrefered(EngineConfigurationId: string, userId: string): Promise<void> {
     await this.itemModel
       .updateMany({ createdBy: userId }, { preferred: false })
       .exec();
     await this.itemModel
       .updateOne(
-        { _id: workspaceSettingId, createdBy: userId },
+        { _id: EngineConfigurationId, createdBy: userId },
         { preferred: true }
       )
       .exec();
   }
 
-  async getPrefered(userId: string): Promise<Model<WorkspaceSetting>> {
-    const workspaceSetting = await this.itemModel
+  async getPrefered(userId: string): Promise<Model<EngineConfiguration>> {
+    const EngineConfiguration = await this.itemModel
       .findOne({ createdBy: userId, preferred: true })
       .exec();
-    return workspaceSetting;
+    return EngineConfiguration;
   }
 }

@@ -61,7 +61,7 @@ export const WorkspaceSchemaProvider = {
         ],
         configuration: {
           type: Schema.Types.ObjectId,
-          ref: "WorkspaceSetting",
+          ref: "EngineConfiguration",
           default: null,
         },
       },

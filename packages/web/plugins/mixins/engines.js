@@ -13,7 +13,7 @@ export default {
       return this.$refs.formDialog.fromForm(form)
     },
 
-    async settingsParameters (_defaultValues = {}, text = 'Create new engine', editing = false, extraButtons = [] ) {
+    async enginesParameters (_defaultValues = {}, text = 'Create new engine', editing = false, extraButtons = [] ) {
 
       var defaultValues = deepCopy(_defaultValues);
 

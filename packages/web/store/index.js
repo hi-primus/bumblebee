@@ -103,7 +103,7 @@ const defaultState = {
   noMatch: false,
   showingColumnsLength: 0,
   codeDone: '',
-  configPromise: false,
+  enginePromise: false,
   optimusPromise: false,
   workspacePromise: false,
   cellsPromise: false,
@@ -112,9 +112,9 @@ const defaultState = {
   listViews: [],
   dataSources: [],
   gettingNewResults: '',
-  localConfig: {},
-  configurationId: false,
-  configurationName: false
+  localEngineParameters: {},
+  engineId: false,
+  engineConfigName: false
 }
 
 export const state = () => {
@@ -717,7 +717,7 @@ export const actions = {
 
   },
 
-  async loadConfig ({ state, commit, dispatch }, { id, workspaceSlug }) {
+  async loadEngine ({ state, commit, dispatch }, { id, workspaceSlug }) {
 
     try {
       var workspace = await dispatch('getWorkspace', { slug: workspaceSlug } );
@@ -726,16 +726,16 @@ export const actions = {
       console.error(err)
     }
 
-    if (!id && state.configurationId) {
-      id = state.configurationId;
+    if (!id && state.engineId) {
+      id = state.engineId;
     }
 
-    var configurationPayload = undefined
+    var enginePayload = undefined
 
-    var path = `/workspacesettings/preferred`;
+    var path = `/engineconfigurations/preferred`;
 
     if (id) {
-      path = `/workspacesettings/${id}`;
+      path = `/engineconfigurations/${id}`;
     }
     try {
       var response = await dispatch('request',{
@@ -743,27 +743,27 @@ export const actions = {
       });
 
       id = id || response.data._id;
-      var configurationName = response.data.name;
-      configurationPayload = response.data.configuration;
+      var engineConfigName = response.data.name;
+      enginePayload = response.data.configuration;
 
-      commit('mutation', {mutate: 'configurationId', payload: id});
-      commit('mutation', { mutate: 'configurationName', payload: configurationName });
-      commit('mutation', { mutate: 'localConfig', payload: configurationPayload });
+      commit('mutation', {mutate: 'engineId', payload: id});
+      commit('mutation', { mutate: 'engineConfigName', payload: engineConfigName });
+      commit('mutation', { mutate: 'localEngineParameters', payload: enginePayload });
 
     } catch (err) {
-      console.warn(`Error requesting workspace-settings ${id} for ${workspaceSlug}. Using default settings.`);
+      console.warn(`Error requesting engine item ${id} for ${workspaceSlug}. Using default settings.`);
       console.error(err);
     }
-    return configurationPayload;
+    return enginePayload;
   },
 
-  getConfig ({ dispatch, state }, payload) {
+  getEngine ({ dispatch, state }, payload) {
 
     var promisePayload = {
-      name: 'configPromise',
-      action: 'loadConfig',
+      name: 'enginePromise',
+      action: 'loadEngine',
       payload,
-      forcePromise: !state.localConfig
+      forcePromise: !state.localEngineParameters
     };
 
     return dispatch('getPromise', promisePayload);
@@ -872,8 +872,8 @@ export const actions = {
         commit('mutation', { mutate: 'workspacePromise', payload: false});
         commit('mutation', { mutate: 'workspace', payload: false });
       case 'config':
-        commit('mutation', { mutate: 'configPromise', payload: false});
-        commit('mutation', { mutate: 'localConfig', payload: ''});
+        commit('mutation', { mutate: 'enginePromise', payload: false});
+        commit('mutation', { mutate: 'localEngineParameters', payload: ''});
       case 'optimus':
         commit('mutation', { mutate: 'optimusPromise', payload: false});
         commit('mutation', { mutate: 'dashboardLink', payload: ''});
@@ -903,7 +903,7 @@ export const actions = {
 
     await Vue.nextTick();
 
-    var params = await dispatch('getConfig', { workspaceSlug: slug });
+    var params = await dispatch('getEngine', { workspaceSlug: slug });
 
     if (!slug) {
       slug = state.workspaceSlug;

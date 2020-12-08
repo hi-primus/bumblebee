@@ -8,12 +8,12 @@
 
 <script>
 
-import settingsMixin from "@/plugins/mixins/workspace-settings";
+import enginesMixin from "@/plugins/mixins/engines";
 import { deepCopy } from "bumblebee-utils"
 
 export default {
 
-  mixins: [ settingsMixin ],
+  mixins: [ enginesMixin ],
 
   props: {
     existing: {
@@ -37,10 +37,10 @@ export default {
 
   async mounted () {
 
-    let values = deepCopy(this.$store.state.localConfig) || {};
+    let values = deepCopy(this.$store.state.localEngineParameters) || {};
 
-    values._ws_name = this.$store.state.configurationName || this.$route.params.slug;
-    values._id = this.$store.state.configurationId || undefined;
+    values._ws_name = this.$store.state.engineConfigName || this.$route.params.slug;
+    values._id = this.$store.state.engineId || undefined;
 
     var extraButtons = this.disableBack ? [] : [
       {
@@ -50,7 +50,7 @@ export default {
       },
     ];
 
-    values = await this.settingsParameters(values, this.existing ? 'Edit engine' : 'Create new engine', this.existing, extraButtons);
+    values = await this.enginesParameters(values, this.existing ? 'Edit engine' : 'Create new engine', this.existing, extraButtons);
     this.$emit('done',values);
 
   },

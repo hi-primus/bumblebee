@@ -1,6 +1,6 @@
 import { IsUUID } from "class-validator";
 
-export class PreferedWorkspaceSettingDTO {
+export class PreferedEngineConfigurationDTO {
   @IsUUID()
   workspaceId: string;
 }
