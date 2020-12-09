@@ -302,36 +302,49 @@ export const createConnection = async function (sessionId) {
 				kernels[sessionId].connection = connection;
 				kernels[sessionId].connection.on('message', function (message) {
 					try {
-						if (!kernels[sessionId]) {
-							console.error(kernels[sessionId]);
-							throw 'Kernel error';
-						} else if (!kernels[sessionId].promises){
-							console.error(kernels[sessionId].promises);
-							throw 'Kernel Promises pool error';
+
+            var response;
+            var msg_id;
+
+            if (message.type === 'utf8') {
+              response = JSON.parse(message.utf8Data);
+              msg_id = response.parent_header.msg_id;
+              var result;
+              if (response.msg_type === 'execute_result') {
+                result = response.content.data['text/plain'];
+              } else if (response.msg_type === 'error') {
+                console.error('msg_type error on', sessionId);
+                result = {
+                  ...response.content,
+                  status: 'error',
+                  _response: response,
+                };
+              }
+            } else {
+              console.warn({
+                status: 'error',
+                content: 'Response from gateway is not utf8 type',
+                error: 'Message type error',
+                message: message,
+              });
+              result = message;
             }
-						if (message.type === 'utf8') {
-							const response = JSON.parse(message.utf8Data);
-							const msg_id = response.parent_header.msg_id;
-							if (response.msg_type === 'execute_result') {
-								kernels[sessionId].promises[msg_id].resolve(
-									response.content.data['text/plain'],
-								);
-							} else if (response.msg_type === 'error') {
-								console.error('msg_type error on', sessionId);
-								kernels[sessionId].promises[msg_id].resolve({
-									...response.content,
-									status: 'error',
-									_response: response,
-								});
-							}
-						} else {
-							console.warn({
-								status: 'error',
-								content: 'Response from gateway is not utf8 type',
-								error: 'Message type error',
-								message: message,
-							}); // TO-DO: Resolve
-						}
+
+						if (!kernels[sessionId]) {
+              console.log('Unresolved result (no kernel)', sessionId);
+							throw new Error('Message received without kernel session');
+						} else if (!kernels[sessionId].promises) {
+              console.log('Unresolved result (no promise pool)', sessionId);
+							throw new Error('Message received without promises pool');
+            } else if (!kernels[sessionId].promises[msg_id]) {
+              if (response.msg_type === 'execute_result') {
+                console.log('Unresolved result (wrong msg_id)', msg_id, sessionId);
+                throw new Error('Message received for unexecpected promise');
+              }
+            } else if (['execute_result', 'error'].includes(response.msg_type)) {
+              kernels[sessionId].promises[msg_id].resolve(result);
+            }
+
 					} catch (err) {
 						console.error(err);
 					}
