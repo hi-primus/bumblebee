@@ -4,7 +4,7 @@
       <SettingsPanel
         v-if="windowDialog  === 'configEngine'"
         :existing="$store.state.engineId"
-        :disable-back="engineFormPromise"
+        :disable-back="!!engineFormPromise"
         @done="doneConfig($event)"/>
       <v-dialog
         data-name="Workspaces"
@@ -22,7 +22,7 @@
           selecting
           :back-edit-highlight="!$store.state.engineId"
           :highlight="$store.state.engineId"
-          :disable-back="engineFormPromise"
+          :disable-back="!!engineFormPromise"
           @back="!$store.state.engineId ? showWindowDialog('configEngine') : windowDialog = false"
           v-else-if="windowDialog  === 'configs'"
           @click:engine="doneConfig($event, true)"
