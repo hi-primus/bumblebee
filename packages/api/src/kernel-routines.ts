@@ -154,7 +154,7 @@ cluster = coiled.Cluster(${functionParams.substr(2)},
                          })
 client = Client(cluster)
 client_install = client.run(install)
-op = Optimus(engine, session=client, memory_limit="1G", comm=True)`;
+op = Optimus(engine, session=client, memory_limit="1G")`;
   } else {
     opInit += `
 op = Optimus(engine${functionParams})`;

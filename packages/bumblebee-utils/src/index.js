@@ -676,12 +676,6 @@ export const INIT_PARAMS = {
     noForm: true,
     engines: ['dask', 'dask_cudf', 'pandas', 'cudf']
   },
-  'comm': {
-    type: 'boolean',
-    default: true,
-    noForm: true,
-    engines: ['dask', 'dask_cudf', 'pandas', 'cudf']
-  }
   // 'kwargs': {
   //   type: 'kwargs'
   //  }

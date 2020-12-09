@@ -474,11 +474,11 @@ export default {
 		return {
 
       engines: [
-        {name: 'dask', prettyName: ENGINES.dask, init: '"dask", n_workers=1, threads_per_worker=8, processes=False, memory_limit="3G", comm=True'},
+        {name: 'dask', prettyName: ENGINES.dask, init: '"dask", n_workers=1, threads_per_worker=8, processes=False, memory_limit="3G"'},
         {name: 'dask_cudf', prettyName: ENGINES.dask_cudf, init: '"dask_cudf", process=True'},
         {name: 'cudf', prettyName: ENGINES.cudf, init: '"cudf"'},
         {name: 'pandas', prettyName: ENGINES.pandas, init: '"cudf"'},
-        {name: 'spark', prettyName: ENGINES.spark, init: '"spark", n_workers=1, threads_per_worker=8, processes=False, memory_limit="3G", comm=True'},
+        {name: 'spark', prettyName: ENGINES.spark, init: '"spark", n_workers=1, threads_per_worker=8, processes=False, memory_limit="3G"'},
         {name: 'vaex', prettyName: 'Vaex'},
       ],
 
