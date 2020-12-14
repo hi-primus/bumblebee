@@ -669,20 +669,22 @@ export default {
 
             try {
               var driver = escapeQuotes(currentCommand.driver)
-              var code = `db = op.connect(driver="${driver}"`
 
-              fields.forEach(field => {
-                if (!['driver','oracle_type', 'table', undefined].includes(field.key)) {
-                  code += (
-                    (!field.condition || field.condition(currentCommand) && currentCommand[field.key] && field.key) ?
-                    `, ${field.key}="${escapeQuotes(currentCommand[field.key])}"` : ''
-                  )
-                }
-              });
+              var codePayload = [{
+                command: 'createDatabase',
+                opName: 'op',
+                varName: 'db',
+                driver,
+                parameters: fields.filter(field=>
+                  !['driver','oracle_type', 'table', undefined].includes(field.key)
+                  &&
+                  (!field.condition || field.condition(currentCommand) && currentCommand[field.key] && field.key))
+                  .map(field=>({key: field.key, value: escapeQuotes(currentCommand[field.key])}))
+              },{
+                command: 'getDatabaseTables'
+              }]
 
-              code += ')'
-
-              var response = await this.evalCode(code+`; _output = db.tables_names_to_json()`)
+              var response = await this.evalCode(codePayload)
 
               if (response.data.status === 'error') {
                 throw response.data.error
@@ -716,7 +718,7 @@ export default {
           }
         },
         /* save */
-        'save file': {
+        saveFile: {
           dialog: {
             title: 'Save dataset to file',
             fields: [
@@ -742,7 +744,7 @@ export default {
             }
           },
           payload: () => ({
-            command: 'save file',
+            command: 'saveFile',
             _processAgain: '',
             url: '',
             request: {
@@ -1848,7 +1850,7 @@ export default {
           }),
           content: (payload) => `<b>Fill empty cells</b> in ${multipleContent([payload.columns],'hl--cols')} with ${hlParam(payload.fill)}`
         },
-        'string clustering': {
+        stringClustering: {
           dialog: {
             dialog: true,
             tall: true,
@@ -1892,26 +1894,32 @@ export default {
 
             try {
 
-              var code
+              var codePayload;
 
-              // payload = {
-              //   command: 'fingerprint',
-              //   dfName: currentCommand.dfName,
-              //   column; currentCommand.columns[0]
-              // }
-
-              if (currentCommand.algorithm == 'fingerprint')
-                code = `from optimus.engines.dask.ml import keycollision as kc; _output = kc.fingerprint_cluster(${currentCommand.dfName}.buffer_window("*"), input_cols="${currentCommand.columns[0]}")`
-              else if (currentCommand.algorithm == 'n_gram_fingerprint')
-                code = `from optimus.engines.dask.ml import keycollision as kc; _output = kc.n_gram_fingerprint_cluster(${currentCommand.dfName}.buffer_window("*"), input_cols="${currentCommand.columns[0]}", n_size=${currentCommand.n_size})`
-              else
-                throw 'Invalid algorithm type input'
+              if (currentCommand.algorithm == 'fingerprint'){
+                codePayload = {
+                  command: 'fingerprint',
+                  dfName: currentCommand.dfName,
+                  columns: currentCommand.columns
+                };
+              }
+              else if (currentCommand.algorithm == 'n_gram_fingerprint'){
+                codePayload = {
+                  command: 'n_gram_fingerprint',
+                  dfName: currentCommand.dfName,
+                  columns: currentCommand.columns,
+                  n_size: currentCommand.n_size
+                };
+              }
+              else {
+                throw new Error('Invalid algorithm type input');
+              }
 
               currentCommand.loading = true
               currentCommand.clusters = false
               currentCommand.error = false
 
-              var response = await this.evalCode(code)
+              var response = await this.evalCode(codePayload)
 
               if (!response || !response.data || !response.data.result) {
                 throw response
@@ -3129,6 +3137,7 @@ export default {
         this.$store.commit('setPreviewCode',{
           code: this.getCode(this.currentCommand, 'preview'),
           profileCode: this.getCode(this.currentCommand, 'profile'),
+          codePayload: deepCopy(this.currentCommand),
           beforeCodeEval: this.currentCommand.beforeCodeEval ? ()=>this.currentCommand.beforeCodeEval(this.currentCommand) : false,
           color: getProperty(this.currentCommand.preview.highlightColor, [this.currentCommand]),
           from: this.currentCommand.columns,
@@ -3476,19 +3485,20 @@ export default {
       return content
     },
 
-    getCode (currentCommand, type = 'final') {
+    getCode (currentCommand, type = 'processing') {
 
       var payload = { ...currentCommand };
 
-      var code = '';
-
       if (!payload.columns || !payload.columns.length) {
-        // console.warn('Auto-filling columns');
         payload.columns = this.columns.map(e=>this.currentDataset.columns[e.index].name);
       }
 
-      return generateCode({command: payload.command, payload}, type);
+      var request = {
+        type,
+        dfName: this.currentDataset.dfName
+      }
 
+      return generateCode({command: payload.command, payload}, request);
 
     },
 

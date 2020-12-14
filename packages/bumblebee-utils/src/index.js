@@ -263,6 +263,20 @@ export const getOutputColsArgument = (output_cols = [], input_cols = [], pre = '
   return false
 }
 
+export const preparedColumns = function(columns, array=false) {
+  if (Array.isArray(columns) && columns.length) {
+    return `["${columns.join('", "')}"]`;
+  } else if (typeof columns === 'string') {
+    if (array) {
+      return `["${columns}"]`;
+    } else {
+      return `"${columns}"`;
+    }
+  } else {
+    return '"*"';
+  }
+}
+
 export const columnsHint = (columns = [], output_cols = []) => {
   if (output_cols.join('').length) {
     var output_cols_argument = getOutputColsArgument(output_cols, columns, '')
@@ -813,6 +827,7 @@ export default {
   escapeQuotes,
   filterCells,
   getOutputColsArgument,
+  preparedColumns,
   columnsHint,
   escapeQuotesOn,
   printError,

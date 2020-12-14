@@ -508,7 +508,7 @@ export const actions = {
     await dispatch('session/serverInit')
   },
 
-  async evalCode({ dispatch, state, getters }, {code ,socketPost}) {
+  async evalCode({ dispatch, state, getters }, { code, codePayload, socketPost }) {
     try {
 
       if (!process.client) {
@@ -519,6 +519,7 @@ export const actions = {
 
       var response = await socketPost('run', {
         code,
+        codePayload,
         username: await dispatch('session/getUsername'),
         workspace: state.workspaceSlug || 'default'
       }, {
@@ -780,6 +781,18 @@ export const actions = {
     return filterCells(getters.cells, newOnly, ignoreFrom).map(e=>e.code).join('\n').trim();
   },
 
+  codeCommands ({ getters }, { newOnly, ignoreFrom }) {
+    newOnly = newOnly || false;
+    ignoreFrom = ignoreFrom || -1;
+    if (!getters.cells.length) {
+      return [];
+    }
+    return filterCells(getters.cells, newOnly, ignoreFrom).map(e=>({
+      command: e.command,
+      payload: e.payload
+    }));
+  },
+
   async markCells ({ dispatch, state, commit }, { mark, ignoreFrom, error, splice }) {
 
     mark = mark===undefined ? true : mark;
@@ -1022,6 +1035,7 @@ export const actions = {
 
       var newOnly = false;
       var code = await dispatch('codeText', { newOnly, ignoreFrom });
+      var codePayload = await dispatch('codeCommands', { newOnly, ignoreFrom });
 
       var codeDone = force ? '' : state.codeDone.trim();
 
@@ -1077,6 +1091,7 @@ export const actions = {
 
       var response = await socketPost('cells', {
         code,
+        codePayload,
         username: await dispatch('session/getUsername'),
         workspace: state.workspaceSlug || 'default',
         key: state.key
@@ -1259,7 +1274,7 @@ export const actions = {
     return dispatch('getPromise', promisePayload);
   },
 
-  async getBufferWindow ({commit, dispatch, state, getters}, {from, to, slug, dfName, code, socketPost, beforeCodeEval}) {
+  async getBufferWindow ({commit, dispatch, state, getters}, {from, to, slug, dfName, socketPost, beforeCodeEval}) {
 
     slug = slug || state.workspaceSlug;
 
@@ -1283,16 +1298,16 @@ export const actions = {
     to = to || 35; // TO-DO: 35 -> ?
 
     var previewCode = '';
+    var codePayload  = { command: undefined };
     var noBufferWindow = false;
     var forceName = false;
 
     if (state.previewCode) {
       previewCode = state.previewCode.code;
+      codePayload = state.previewCode.codePayload;
       noBufferWindow = state.previewCode.noBufferWindow;
       forceName = !!state.previewCode.datasetPreview;
     }
-
-    var code = await getPropertyAsync(previewCode, [from, to+1]) || ''
 
     var referenceCode = await getPropertyAsync(previewCode) || ''
 
@@ -1316,7 +1331,15 @@ export const actions = {
 
     if (profilePreview) {
       try {
-        response = await dispatch('evalCode',{ socketPost, code: `_output = _df_profile${(noBufferWindow) ? '' : '['+from+':'+(to+1)+']'}.to_json("*", format="bumblebee")`})
+        var codePayload = {
+          request: {
+            type: 'preview',
+            sample: true,
+            buffer: noBufferWindow ? false : [from, to],
+            dfName: '_df_preview'
+          }
+        };
+        response = await dispatch('evalCode',{ socketPost, codePayload })
       } catch (err) {
         console.error(err,'Retrying without buffered profiling');
         profilePreview = false;
@@ -1324,13 +1347,23 @@ export const actions = {
     }
 
     if (!profilePreview) {
+      var codePayload = {
+        ...codePayload,
+        request: {
+          ...codePayload.request,
+          type: 'preview',
+          dfName: datasetDfName,
+          sample: true,
+          buffer: noBufferWindow ? true : [from, to]
+        }
+      };
       try {
         commit('setProfilePreview', false);
-        response = await dispatch('evalCode',{ socketPost, code: `_output = ${datasetDfName}.buffer_window("*"${(noBufferWindow) ? '' : ', '+from+', '+(to+1)})${code}.to_json("*", format="bumblebee")`})
+        response = await dispatch('evalCode',{ socketPost, codePayload })
       } catch (err) {
         console.error(err,'Retrying with buffer');
         await dispatch('getBuffer', { dfName: datasetDfName, socketPost, forcePromise: true });
-        response = await dispatch('evalCode',{ socketPost, code: `_output = ${datasetDfName}.buffer_window("*"${(noBufferWindow) ? '' : ', '+from+', '+(to+1)})${code}.to_json("*", format="bumblebee")`})
+        response = await dispatch('evalCode',{ socketPost, codePayload })
       }
     }
 
@@ -1340,18 +1373,18 @@ export const actions = {
       commit('setPreviewInfo', {error: false})
     }
 
-    var parsed = response && response.data && response.data.result ? parseResponse(response.data.result) : undefined
+    var sample = response && response.data && response.data.result ? parseResponse(response.data.result) : undefined
 
     var pre = forceName ? '__preview__' : ''
 
-    if (parsed && parsed.sample) {
-      parsed.sample.columns = parsed.sample.columns.map(e=>({...e, title: pre+e.title}))
+    if (sample) {
+      sample.columns = sample.columns.map(e=>({...e, title: pre+e.title}))
       return {
         code: referenceCode,
         update: getters.datasetUpdates,
         from,
         to,
-        sample: parsed.sample,
+        sample: sample,
         inTable: false
       }
     } else {

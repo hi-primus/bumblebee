@@ -127,7 +127,8 @@ export default {
         return dataset.columns.map(col=>col.name)
       }
 
-      const response = await this.evalCode(`_output = ${dfName}.cols.names()`);
+      const response = await this.evalCode({command: 'columnsNames', dfName});
+
       return response.data.result;
 
     },
@@ -143,7 +144,7 @@ export default {
       }
 
       if (!columns) {
-        const response = await this.evalCode(`_output = ${dfName}.cols.profiler_dtypes()`);
+        const response = await this.evalCode({command: 'dataTypes', dfName});
         columns = response.data.result;
       }
 
@@ -163,16 +164,24 @@ export default {
         return Object.fromEntries(dataset.columns.map(col=>[col.name, col.stats.frequency[0].value]))
       }
 
-      const response = await this.evalCode(`_output = ${dfName}.cols.frequency("*", 1)`);
+      const response = await this.evalCode({command: 'frequency', dfName, n: 1});
       return objectMap(response.data.result.frequency, f=>f.values[0].value);
 
 
     },
 
-    evalCode (code) {
+    evalCode (_code) {
+      var code = undefined;
+      var codePayload = undefined;
+      if (typeof _code === 'string') {
+        code = _code;
+      } else {
+        codePayload = _code;
+      }
       return this.$store.dispatch('evalCode', {
         socketPost: this.socketPost,
-        code
+        code,
+        codePayload
       })
     },
 

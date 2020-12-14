@@ -18,7 +18,7 @@ import {
 	requestToKernel,
 } from './kernel';
 import kernelRoutines from './kernel-routines';
-import { getGenerator } from 'optimus-code-api'
+import { getGenerator, generateCode } from 'optimus-code-api'
 
 @WebSocketGateway()
 export class AppGateway
@@ -87,11 +87,17 @@ export class AppGateway
 				timestamp: payload.timestamp,
 			});
 		} else if (payload.message === 'run') {
+      var code: string;
+      if (payload.codePayload) {
+        code = generateCode(payload.codePayload);
+      } else {
+        code = payload.code;
+      }
 			const sessionId = payload.username + '_BBSESSION_' + payload.workspace;
-			const result = await runCode(`${payload.code}`, sessionId);
+      const result = await runCode(code, sessionId);
 			client.emit('reply', {
 				data: result,
-				code: payload.code,
+				code: payload.code || code,
 				timestamp: payload.timestamp,
 			});
 		} else if (payload.message === 'download') {
@@ -147,8 +153,13 @@ export class AppGateway
 				timestamp: payload.timestamp,
 			});
 		} else if (payload.message === 'cells') {
+      var code: string;
+      if (payload.codePayload) {
+        code = generateCode(payload.codePayload);
+      } else {
+        code = payload.code;
+      }
 			const sessionId = payload.username + '_BBSESSION_' + payload.workspace;
-			let code = payload.code;
 			code += '\n' + `_output = 'ok'`;
 			const result = await runCode(code, sessionId);
 			client.emit('reply', {
@@ -158,7 +169,7 @@ export class AppGateway
 			});
 		} else if (payload.message === 'profile') {
 			const sessionId = payload.username + '_BBSESSION_' + payload.workspace;
-			const code = `_output = ${payload.dfName}${getGenerator('profile',payload)(payload)}`;
+			const code = `_output = ${payload.dfName}${getGenerator('profile', payload)(payload)}`;
 			const result = await runCode(code, sessionId);
 			client.emit('reply', {
 				data: result,

@@ -1893,7 +1893,9 @@ export default {
       this.$store.commit('setProfilePreview', false )
     },
 
-    async setProfile (previewCode) {
+    async setProfile (previewCode, previewPayload) {
+
+      console.log('previewPayload',previewPayload)
 
       if (!previewCode) {
         return this.unsetProfile()
@@ -1905,18 +1907,25 @@ export default {
 
         var matches = this.currentRowHighlights
 
-        this.$store.commit('setProfilePreview', {code: previewCode, columns: [], done: false})
+        this.$store.commit('setProfilePreview', {code: previewCode, payload: previewPayload, columns: [], done: false})
 
         var cols = profile ? this.currentPreviewColumns.map(e=>escapeQuotes(  e.title.split(/__preview__/).join('')  )) : [];
 
-        var code = `_df_profile = ${this.currentDataset.dfName}.buffer_window("*")${await getPropertyAsync(previewCode) || ''}`
-        + `\n_output = { `
-        + (profile ? `"profile": _df_profile.profile(["${cols.join('", "')}"])` : '')
-        + (profile && matches ? `, ` : '')
-        + (matches ? `"matches_count": len(_df_profile.rows.select('df["__match__"]!=False'))` : '')
-        + `}`
+        var codePayload = {
+          ...previewPayload,
+          request: {
+            ...previewPayload.request,
+            type: 'profile',
+            saveTo: '_df_preview',
+            noCache: true,
+            buffer: true,
+            profile: cols,
+            dfName: this.currentDataset.dfName,
+            matches_count: matches
+          }
+        };
 
-        var response = await this.evalCode(code)
+        var response = await this.evalCode(codePayload);
 
         if (!response || !response.data.result) {
           throw response
@@ -1929,7 +1938,7 @@ export default {
             throw response
           }
 
-          dataset = { ...dataset, code: previewCode, done: true }
+          dataset = { ...dataset, code: previewCode, payload: previewPayload, done: true }
 
           this.$store.commit('setProfilePreview', dataset)
         }
@@ -2141,7 +2150,8 @@ export default {
 
       for (let i = newRanges.length - 1; i >= 0 ; i--) {
 
-        var previewCode = (this.previewCode ? this.previewCode.profileCode : false) || ''
+        var previewCode = (this.previewCode ? this.previewCode.profileCode : false) || '';
+        var previewPayload = (this.previewCode ? this.previewCode.codePayload : false) || {};
 
         if (this.currentProfilePreview.code !== previewCode) {
           // console.log('[REQUESTING] resetting profile')
@@ -2158,7 +2168,7 @@ export default {
         if (checkProfile) {
           // console.log('[REQUESTING] profile must be checked')
           if (this.currentProfilePreview.code !== previewCode) {
-            await this.setProfile(previewCode)
+            await this.setProfile(previewCode, previewPayload)
             console.debug('[FETCHING] Profiling done')
           }
         }
@@ -2175,6 +2185,7 @@ export default {
       var previewCode = '';
 
       if (this.previewCode) {
+        console.log('fetching', this.previewCode);
         previewCode = this.previewCode.code;
       }
 

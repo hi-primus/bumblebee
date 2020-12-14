@@ -359,7 +359,17 @@ export default {
           return
         }
         this.$set(this.patternsFrequency, this.patternsResolution, 'loading')
-        var response = await this.evalCode(`_output = ${this.currentDataset.dfName}.cols.pattern_counts("${this.column.name}", n=5, mode=${3-this.patternsResolution})`)
+
+        var codePayload = {
+          command: 'patterns_count',
+          dfName: this.currentDataset.dfName,
+          column: this.column.name,
+          mode: 3-this.patternsResolution,
+          n: 5
+        }
+
+        var response = await this.evalCode(codePayload);
+
         if (!response.data.result) {
           throw response
         }
@@ -372,7 +382,6 @@ export default {
         console.error(err)
         this.$set(this.patternsFrequency, this.patternsResolution, 'error')
       }
-      // var response = await this.evalCode(`_output = ${}`)
     },
 
     patternClicked (item) {

@@ -514,7 +514,7 @@ export default {
         {command: 'manage data sources', text: 'Manage data sources', group: 'DATA_SOURCE', hidden: true},
 
         {command: 'download', text: 'Download', group: 'SAVE', disabled: ()=>process.env.INSTANCE!=='LOCAL'},
-        // {command: 'save file', text: 'Save file', group: 'SAVE', disabled: ()=>!(this.currentDataset && this.currentDataset.summary)},
+        // {command: 'saveFile', text: 'Save file', group: 'SAVE', disabled: ()=>!(this.currentDataset && this.currentDataset.summary)},
         {command: 'save to database', text: 'Save to database', group: 'SAVE', disabled: ()=>!(this.currentDataset && this.currentDataset.summary && this.$store.state.database)},
 
 
@@ -530,7 +530,7 @@ export default {
         {command: 'right_string', text: 'Right', type: 'SUBSTR1', group: 'STRING' },
         {command: 'mid_string', text: 'Mid', group: 'STRING' },
         {command: 'pad_string', text: 'Pad string', group: 'STRING'},
-        {command: 'string clustering', text: 'String clustering', type: 'STRING', group: 'STRING', max: 1, min: 1, hidden: ()=>(this.hideOperations) },
+        {command: 'stringClustering', text: 'String clustering', type: 'STRING', group: 'STRING', max: 1, min: 1, hidden: ()=>(this.hideOperations) },
 
         // {command: 'set_column_format', text: 'Set column format', group: 'TIME'},
         {command: 'transform_format', text: 'Transform format', group: 'TIME'},

@@ -299,7 +299,19 @@ export const createConnection = async function (sessionId) {
 			);
 			kernels[sessionId].client.on('connect', function (connection) {
 				// kernels[sessionId] = kernels[sessionId] || {}
-				kernels[sessionId].connection = connection;
+        kernels[sessionId].connection = connection;
+        kernels[sessionId].connection.on('close', function (message) {
+          Object.values(kernels[sessionId].promises || {}).forEach((promise: any)=>{
+            promise.reject('Socket closed '+message);
+          })
+          kernels[sessionId] = {};
+        })
+        kernels[sessionId].connection.on('error', function (message) {
+          Object.values(kernels[sessionId].promises || {}).forEach((promise: any)=>{
+            promise.reject('Socket error '+message);
+          })
+          kernels[sessionId] = {};
+        })
 				kernels[sessionId].connection.on('message', function (message) {
 					try {
 
