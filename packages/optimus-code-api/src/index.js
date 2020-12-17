@@ -7,15 +7,21 @@ export const version = function() {
 export const codeGenerators = {
   profile: () => `.profile(columns="*")`,
   uploadToS3: (payload) => {
-    return `.to_${payload.file_type}( filename="s3://${payload.bucket}/${payload.username}/${payload.file_name}.${payload.file_type}", single_file=True, storage_options={ "key": "${payload.access_key_id}", "secret": "${payload.secret_key}", "client_kwargs": { "endpoint_url": "https://${payload.endpoint}", }, "config_kwargs": {"s3": {"addressing_style": "virtual", "x-amz-acl": "public/read"}} } );`
+    return `.save.${payload.file_type}( filename="s3://${payload.bucket}/${payload.username}/${payload.file_name}.${payload.file_type}", single_file=True, storage_options={ "key": "${payload.access_key_id}", "secret": "${payload.secret_key}", "client_kwargs": { "endpoint_url": "https://${payload.endpoint}", }, "config_kwargs": {"s3": {"addressing_style": "virtual", "x-amz-acl": "public/read"}} } );`
   },
   saveToLocal: (payload) => {
-    return `.to_${payload.file_type}( filename="${payload.local_address}/${payload.file_name}.${payload.file_type}", single_file=True );`
+    return `.save.${payload.file_type}( filename="${payload.local_address}/${payload.file_name}.${payload.file_type}", single_file=True );`
   },
   saveFile: (payload) => {
     var file_type = payload.url.split('.');
     file_type = file_type[file_type.length - 1];
-    return `.to_${file_type}( filename="${payload.url}", single_file=True );`;
+    return `.save.${file_type}( filename="${payload.url}", single_file=True );`;
+  },
+  toPandas: (payload) => {
+    return `.to_optimus_pandas()`;
+  },
+  compile: (payload) => {
+    return `.compile()`;
   },
   patterns_count: (payload) => {
     return {
@@ -487,18 +493,18 @@ export const codeGenerators = {
     }
   },
   createDatabase: (payload) => {
-    var code = `${payload.varName} = ${payload.opName}.connect(driver="${payload.driver}"`
+    var code = `${payload.varName} = ${payload.opName}.connect(driver="${payload.driver}"`;
 
     payload.parameters.forEach(parameter => {
       code += `, ${parameter.key}="${parameter.value}"`;
     });
 
-    code += ')'
+    code += ')';
 
-    return code;
+    return { code, isOutput: true };
   },
   getDatabaseTables: (payload) => {
-    return { code: `_output = ${payload.varName}.tables_names_to_json()`, isOutput: true };
+    return { code: `_output = ${payload.varName}.tables()`, isOutput: true };
   },
   columnsNames: (payload) => {
     return { code: `_output = ${payload.dfName}.cols.names()`, isOutput: true };
@@ -509,9 +515,10 @@ export const codeGenerators = {
   frequency: (payload) => {
     return { code: `_output = ${payload.dfName}.cols.frequency(${preparedColumns(payload.columns)}, ${payload.n})`, isOutput: true };
   },
-  'load from database': (payload) => {
+  loadDatabaseTable: (payload) => {
     var table = escapeQuotes(payload.table)
-    return `db.table_to_df("${table}")`
+    var code = `db.table_to_df("${table}")`;
+    return code;
   },
   'save to database': (payload) => {
     var table_name = escapeQuotes(payload.table_name)
@@ -699,7 +706,7 @@ export const getGenerator = function(generatorName = '', payload = {}) {
   return generator
 }
 
-export const generateCode = function(commands = [], _request = { type: 'processing' }) {
+export const generateCode = function(commands = [], _request = { type: 'processing' }, extraPayload = false) {
 
   if (!Array.isArray(commands)) {
     commands = [commands];
@@ -744,9 +751,17 @@ export const generateCode = function(commands = [], _request = { type: 'processi
         }
       }
 
+      if (payload.extraPayload && !extraPayload) {
+        code += generateCode(payload.extraPayload, request, true);
+      }
+
+      if (payload.previousCode) {
+        code = `${payload.previousCode}${'\n'}`;
+      }
+
       if (result.isOutput) {
 
-        code = resultCode;
+        code += resultCode;
 
       } else {
 
@@ -755,10 +770,7 @@ export const generateCode = function(commands = [], _request = { type: 'processi
         var dfName = payload.dfName || request.dfName;
 
         var multiOutput = (!!request.profile +!!request.sample +!!request.matches_count +!!request.meta)>1;
-
-        if (payload.previous_code) {
-          code = `${payload.previous_code}${'\n'}`;
-        }
+        var anyOutput = (request.profile || request.sample || request.matches_count || request.meta);
 
         if (request.saveTo) {
           code += `${request.saveTo} = `;
@@ -800,16 +812,22 @@ export const generateCode = function(commands = [], _request = { type: 'processi
 
         code += resultCode;
 
+        if (request.createsNew && saving && saving !== '_df_output' && request.type==='processing' && ['spark', 'ibis'].includes(request.engine)) {
+          code += '\n'+`${saving} = ${saving}.to_optimus_pandas()`;
+        }
+
         if (request.createsNew && ['final', 'processing'].includes(request.type)) {
           code += '\n'+`${saving} = ${saving}.repartition(8)`;
         }
 
-        if ((saving !== '_df_output') && request.isLoad && !request.noCache && saving && usesVar && ['final', 'processing'].includes(request.type)) {
-          code += `.cache()`;
+        if ((saving !== '_df_output') && request.isLoad && !request.noExecute && saving && usesVar && ['final', 'processing'].includes(request.type)) {
+          code += `.execute()`;
         }
 
         if (multiOutput || saving) {
-          code += '\n_output = {}';
+          if (anyOutput) {
+            code += '\n_output = {}';
+          }
           if (request.sample) {
             code += '\n'+`_output.update({ 'sample': ${saving}.columns_sample("*") })`
           }
