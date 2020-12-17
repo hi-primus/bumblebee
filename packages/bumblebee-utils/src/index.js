@@ -190,13 +190,14 @@ export const reduceRanges = (ranges_array) => {
   }, [])
 }
 
-export const copyToClipboard = (str) => {
+export const copyToClipboard = (str, target) => {
   const el = document.createElement('textarea');
   el.value = str;
-  document.body.appendChild(el);
+  target = target || document.body;
+  target.appendChild(el);
   el.select();
   document.execCommand('copy');
-  document.body.removeChild(el);
+  target.removeChild(el);
 };
 
 export const optimizeRanges = (inputRange, existingRanges) => {
