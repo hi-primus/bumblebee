@@ -793,7 +793,7 @@ export const actions = {
     }));
   },
 
-  async finalCommands ({ dispatch }, { ignoreFrom, include, noPandas }) {
+  async finalCommands ({ dispatch, state }, { ignoreFrom, include, noPandas }) {
 
     var finalPayload = deepCopy(await dispatch('codeCommands', { newOnly: false, ignoreFrom }));
 
@@ -809,7 +809,7 @@ export const actions = {
       finalPayload.push(payload);
     });
 
-    if (!noPandas) {
+    if (!noPandas && ['spark', 'ibis'].includes(state.localEngineParameters.engine)) {
 
       var dfNames = [ ...new Set(finalPayload.filter(({payload})=>payload.request.createsNew).map(({payload})=>payload.newDfName)) ];
 
