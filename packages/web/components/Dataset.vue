@@ -792,8 +792,6 @@ export default {
               var code = this.previewCode.code // is always static
               code = `${dfName} = ${code}`
 
-              console.log('original payload', this.previewCode.codePayload)
-
               var payload = {
                 ...this.previewCode.codePayload,
                 request: {
@@ -807,8 +805,6 @@ export default {
                 }
               }
 
-              console.log('payload', payload);
-
               // if (this.previewCode.infer) {
               //   code += `_output = {**${dfName}.columns_sample("*"), "meta": ${dfName}.meta.get() if (${dfName}.meta and ${dfName}.meta.get) else {} } \n`
               // } else {
@@ -816,8 +812,6 @@ export default {
               // }
 
               var response = await this.evalCode(payload)
-
-              console.log('result',response.data.result);
 
               if (response.data.result.sample) {
                 this.$store.commit('setLoadPreview', { sample: response.data.result.sample } )

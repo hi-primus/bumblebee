@@ -62,7 +62,6 @@ export const initializeKernel = async function (sessionId, payload) {
 };
 
 export const initializeKernelSession = async function (sessionId, payload) {
-	// console.log('initializeKernelSession')
 
 	let result;
 
@@ -97,7 +96,6 @@ export const initializeKernelSession = async function (sessionId, payload) {
 			result = false;
 		}
 		if (!result) {
-			// console.log('Kernel error, retrying');
 			await deleteKernel(sessionId);
 		} else {
 			break;
@@ -282,11 +280,8 @@ export const createConnection = async function (sessionId) {
 
 	if (!kernels[sessionId].connecting) {
 		kernels[sessionId].connecting = new Promise((resolve, reject) => {
-			// console.log(
-			// 	`Creating connection for ${sessionId} on ${wsKernelBase(ka)}`,
-			// );
 
-			kernels[sessionId] = kernels[sessionId] || {};
+      kernels[sessionId] = kernels[sessionId] || {};
 
 			if (!kernels[sessionId].client) {
 				kernels[sessionId].client = new WebSocketClient({
@@ -424,8 +419,7 @@ const createKernel = async function (sessionId, ka : any = undefined) {
 		// console.log('Kernel created', sessionId, ka);
 		return sessionId;
 	} catch (err) {
-		// console.log('Deleting Session',sessionId,'error')
-		// console.error(err)
+		throw new Error('Kernel creation went wrong');
 		throw 'Error on createKernel';
 	}
 };
