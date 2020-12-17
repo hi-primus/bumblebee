@@ -793,6 +793,47 @@ export const actions = {
     }));
   },
 
+  async finalCommands ({ dispatch }, { ignoreFrom, include, noPandas }) {
+
+    var finalPayload = deepCopy(await dispatch('codeCommands', { newOnly: false, ignoreFrom }));
+
+    finalPayload = finalPayload.map(command=>{
+      command.payload.request = command.payload.request || {};
+      command.payload.request.type = 'final';
+      return command;
+    });
+
+    // console.debug('[SPECIAL PROCESSING] finalPayload (complete)', finalPayload);
+
+    (include || []).forEach((payload)=>{
+      finalPayload.push(payload);
+    });
+
+    if (!noPandas) {
+
+      var dfNames = [ ...new Set(finalPayload.filter(({payload})=>payload.request.createsNew).map(({payload})=>payload.newDfName)) ];
+
+      // console.debug('[SPECIAL PROCESSING] dfNames', dfNames)
+
+      dfNames.forEach(dfName => {
+        finalPayload.push({
+          command: 'toPandas',
+          payload: {
+            dfName,
+            request: {
+              saveTo: dfName
+            }
+          }
+        })
+      });
+
+    }
+
+
+    return finalPayload;
+
+  },
+
   async markCells ({ dispatch, state, commit }, { mark, ignoreFrom, error, splice }) {
 
     mark = mark===undefined ? true : mark;
@@ -1027,8 +1068,6 @@ export const actions = {
 
       var init = [optimus];
 
-      // console.debug(init)
-
       if (ignoreFrom>=0) {
         force = true;
       }
@@ -1089,15 +1128,71 @@ export const actions = {
 
       console.debug('[DEBUG][CODE] Sent', code);
 
-      var response = await socketPost('cells', {
-        code,
-        codePayload,
-        username: await dispatch('session/getUsername'),
-        workspace: state.workspaceSlug || 'default',
-        key: state.key
-      }, {
-        timeout: 0
-      });
+      var finalPayload = false;
+
+      var response;
+
+      if (codePayload) {
+
+        if (!Array.isArray(codePayload)) {
+          codePayload = [codePayload];
+        }
+
+        // avoids saving new files when previewing a previous point on the notebook
+
+        if (ignoreFrom>=0) {
+          codePayload.filter(({payload})=>!(payload.request && payload.request.isSave))
+        }
+
+        // checks if there's any cell that wasks to re-process everything using the original engine
+
+        var getFinal = codePayload.some(({payload})=>(payload.request && payload.request.isSave && payload._engineProcessing))
+
+        // console.debug('[SPECIAL PROCESSING] getFinal', getFinal);
+
+        if (getFinal) {
+
+          finalPayload = await dispatch('finalCommands', { ignoreFrom, include: [] });
+
+          // console.debug('[SPECIAL PROCESSING] finalPayload (with toPandas)', finalPayload);
+
+          response = await socketPost('cells', {
+            code: undefined,
+            codePayload: finalPayload,
+            username: await dispatch('session/getUsername'),
+            workspace: state.workspaceSlug || 'default',
+            key: state.key
+          }, {
+            timeout: 0
+          });
+
+        } else {
+
+          response = await socketPost('cells', {
+            code: undefined,
+            codePayload,
+            username: await dispatch('session/getUsername'),
+            workspace: state.workspaceSlug || 'default',
+            key: state.key
+          }, {
+            timeout: 0
+          });
+
+        }
+
+      } else {
+
+        response = await socketPost('cells', {
+          code,
+          codePayload: undefined,
+          username: await dispatch('session/getUsername'),
+          workspace: state.workspaceSlug || 'default',
+          key: state.key
+        }, {
+          timeout: 0
+        });
+
+      }
 
       response.originalCode = code;
 

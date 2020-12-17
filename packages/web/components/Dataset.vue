@@ -46,7 +46,7 @@
           >Load from file</v-btn>
           <span> or </span>
           <v-btn
-            @click="commandHandle({command: 'load from database'})"
+            @click="commandHandle({command: 'loadDatabaseTable'})"
             color="primary"
             class="ml-3"
             depressed

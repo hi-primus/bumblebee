@@ -1917,7 +1917,7 @@ export default {
             ...previewPayload.request,
             type: 'profile',
             saveTo: '_df_preview',
-            noCache: true,
+            noExecute: true,
             buffer: true,
             profile: cols,
             dfName: this.currentDataset.dfName,

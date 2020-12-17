@@ -312,7 +312,7 @@
                 <v-list flat dense style="max-height: calc(100vh - 143px); min-width: 160px;" class="scroll-y">
                   <v-list-item-group color="black">
                     <!-- <v-list-item
-                      @click="copyCodeToClipboard"
+                      @click="showCodeOnTextDialog"
                     >
                       <v-list-item-content>
                         <v-list-item-title>
@@ -324,7 +324,7 @@
                       v-for="engine in engines"
                       :key="engine.name"
                       :disabled="!engine.init"
-                      @click="copyCodeToClipboard(engine.init)"
+                      @click="showCodeOnTextDialog(engine.init)"
                     >
                       <v-list-item-content>
                         <v-list-item-title>
@@ -443,6 +443,7 @@ import clientMixin from '@/plugins/mixins/client'
 import dataTypesMixin from '@/plugins/mixins/data-types'
 import applicationMixin from '@/plugins/mixins/application'
 import { copyToClipboard, namesToIndices, getProperty, ENGINES, TYPES_NAMES, TIME_NAMES } from 'bumblebee-utils'
+import { generateCode } from 'optimus-code-api'
 import { mapState, mapGetters } from 'vuex'
 
 export default {
@@ -477,8 +478,9 @@ export default {
         {name: 'dask', prettyName: ENGINES.dask, init: '"dask", n_workers=1, threads_per_worker=8, processes=False, memory_limit="3G"'},
         {name: 'dask_cudf', prettyName: ENGINES.dask_cudf, init: '"dask_cudf", process=True'},
         {name: 'cudf', prettyName: ENGINES.cudf, init: '"cudf"'},
-        {name: 'pandas', prettyName: ENGINES.pandas, init: '"cudf"'},
+        {name: 'pandas', prettyName: ENGINES.pandas, init: '"pandas"'},
         {name: 'spark', prettyName: ENGINES.spark, init: '"spark", n_workers=1, threads_per_worker=8, processes=False, memory_limit="3G"'},
+        {name: 'ibis', prettyName: ENGINES.ibis, init: '"ibis"'},
         {name: 'vaex', prettyName: 'Vaex'},
       ],
 
@@ -509,13 +511,14 @@ export default {
       commandItems: [
 
 				{command: 'load file', text: 'Add from file', group: 'DATA_SOURCE'},
-        {command: 'load from database', text: 'Add from database', group: 'DATA_SOURCE'},
+        {command: 'loadDatabaseTable', text: 'Add from database', group: 'DATA_SOURCE'},
 				{command: 'load from data source', text: 'Add from a loaded data source', group: 'DATA_SOURCE', hidden: true},
         {command: 'manage data sources', text: 'Manage data sources', group: 'DATA_SOURCE', hidden: true},
 
         {command: 'download', text: 'Download', group: 'SAVE', disabled: ()=>process.env.INSTANCE!=='LOCAL'},
-        // {command: 'saveFile', text: 'Save file', group: 'SAVE', disabled: ()=>!(this.currentDataset && this.currentDataset.summary)},
+        {command: 'saveFile', text: 'Save file', group: 'SAVE', disabled: ()=>!(this.currentDataset && this.currentDataset.summary)},
         {command: 'save to database', text: 'Save to database', group: 'SAVE', disabled: ()=>!(this.currentDataset && this.currentDataset.summary && this.$store.state.database)},
+        {command: 'compile', text: 'Compile SQL', group: 'SAVE', hidden: ()=>this.$store.state.localEngineParameters.engine !== 'ibis'},
 
 
 				{command: 'lower', text: 'To lower case', type: 'STRING', group: 'STRING'},
@@ -1120,6 +1123,14 @@ export default {
       this.$refs.cells & this.$refs.cells.downloadDataset(event)
     },
 
+    compileDataset () {
+      this.$refs.cells & this.$refs.cells.compileDataset(event)
+    },
+
+    showTextDialog(text, title = 'Result') {
+      this.$refs.cells & this.$refs.cells.showTextDialog(text, title)
+    },
+
     checkDataTypes (allowedTypes) {
       if (!allowedTypes || !allowedTypes.length) {
         return true
@@ -1147,17 +1158,23 @@ export default {
       return this.commandItems.filter(e => e.group==group)
     },
 
-    copyCodeToClipboard (engineText) {
+    async showCodeOnTextDialog (engineText) {
+
+      var finalPayload = await this.$store.dispatch('finalCommands', { ignoreFrom: -1, include: [], noPandas: true });
+
       var code = 'from optimus import Optimus\n'
       +'from optimus.expressions import Parser\n'
       +'p = Parser()\n'
       +`op = Optimus(${engineText})\n`
-      + this.cells.map(e=>e.code).filter(c=>c.trim()).join('\n')
-      copyToClipboard(code)
-      this.copied = true
-      setTimeout(() => {
-        this.copied = false
-      }, 2000);
+      + generateCode(finalPayload);
+
+      code = code.trim();
+
+      this.showTextDialog(code, 'Code')
+      // this.copied = true
+      // setTimeout(() => {
+      //   this.copied = false
+      // }, 2000);
     },
 
     cancelCommand () {
@@ -1170,12 +1187,14 @@ export default {
 
       if (event.command==='download') {
         this.downloadDataset()
-        return
+      } else if (event.command==='compile') {
+        this.compileDataset()
+      } else {
+        this.$nextTick(()=>{
+          this.$refs.cells & this.$refs.cells.commandHandle(event)
+        })
       }
 
-      this.$nextTick(()=>{
-        this.$refs.cells & this.$refs.cells.commandHandle(event)
-      })
     },
 
     clickSort (by) {

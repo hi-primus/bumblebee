@@ -529,6 +529,7 @@ export const ENGINES = {
   'cudf': 'cuDF',
   'pandas': 'Pandas',
   'spark': 'Spark',
+  'ibis': 'Ibis',
   'dask_coiled': 'Dask (Coiled)',
   'dask_cudf_coiled': 'Dask cuDF (Coiled)'
 }

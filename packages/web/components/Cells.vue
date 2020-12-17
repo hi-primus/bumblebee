@@ -1,5 +1,32 @@
 <template>
   <div class="sidebar-content">
+    <v-dialog
+      v-if="textDialog"
+      :value="textDialog"
+      @input="textDialog = $event ? textDialog : false"
+      max-width="900"
+    >
+      <v-card>
+        <v-btn
+          icon large color="black"
+          @click="textDialog = false"
+          class="title-button-left">
+          <v-icon>mdi-arrow-left</v-icon>
+        </v-btn>
+        <v-card-title class="title">{{textDialog.title}}</v-card-title>
+        <v-card-text class="pb-5" style="max-height: 70vh; overflow-y: auto;">
+          <div class="copy-code-content">
+            <span>{{textDialog.text}}</span>
+            <v-tooltip transition="fade-transition" left color="dataprimary darken-2" content-class="dialog-tooltip" v-model="copied">
+              <template v-slot:activator="{on: success}">
+                <v-icon small @click.stop="clickCopy(textDialog.text, $event)">content_copy</v-icon>
+              </template>
+              <span>Copied succesfully</span>
+            </v-tooltip>
+          </div>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
     <CommandFormContainer
       v-if="command && command.dialog"
       v-show="(currentCommand.command && view!='operations')"
@@ -7,7 +34,7 @@
       :command="command"
       @cancelCommand="cancelCommand"
     >
-      <v-form @submit.prevent="confirmCommand" id="operation-form" class="pl-4 pr-5 pt-2 operation-form">
+      <v-form @submit.prevent="confirmCommand" id="operation-form" class="pl-4 pr-5 pt-2 operation-form" autocomplete="off">
           <div class="body-2 mb-1 mt-2" :class="{'title': command.dialog.bigText}" v-if="command.dialog.text">
             {{
               {value: command.dialog.text, args: [currentCommand]} | property
@@ -238,6 +265,7 @@ import { generateCode } from 'optimus-code-api'
 
 import {
 
+  copyToClipboard,
   deepCopy,
   everyRatio,
   arrayJoin,
@@ -289,6 +317,9 @@ export default {
 
   data () {
     return {
+
+      textDialog: false,
+      copied: false,
 
       clusterHeaders: [
         { text: 'Rows', value: 'count', sortable: false, class: 'rows-count' },
@@ -516,7 +547,7 @@ export default {
             + ' file'
           }
         },
-        'load from database': {
+        loadDatabaseTable: {
           dialog: {
             title: 'Connect a database',
             testLabel: 'connect',
@@ -641,7 +672,7 @@ export default {
             )
           },
           payload: () => ({
-            command: 'load from database',
+            command: 'loadDatabaseTable',
             driver: 'mysql',
             host: '',
             database: '',
@@ -665,12 +696,12 @@ export default {
             currentCommand._loadingTables = true
             currentCommand.error = ''
 
-            var fields = this.commandsHandlers['load from database'].dialog.fields
+            var fields = this.commandsHandlers['loadDatabaseTable'].dialog.fields
 
             try {
               var driver = escapeQuotes(currentCommand.driver)
 
-              var codePayload = [{
+              var connectionCode = generateCode({
                 command: 'createDatabase',
                 opName: 'op',
                 varName: 'db',
@@ -680,11 +711,14 @@ export default {
                   &&
                   (!field.condition || field.condition(currentCommand) && currentCommand[field.key] && field.key))
                   .map(field=>({key: field.key, value: escapeQuotes(currentCommand[field.key])}))
-              },{
-                command: 'getDatabaseTables'
-              }]
+              });
 
-              var response = await this.evalCode(codePayload)
+              var tablesCode = generateCode({
+                command: 'getDatabaseTables',
+                varName: 'db'
+              });
+
+              var response = await this.evalCode(`${connectionCode}\n${tablesCode}`)
 
               if (response.data.status === 'error') {
                 throw response.data.error
@@ -702,7 +736,8 @@ export default {
                 ...currentCommand,
                 tables,
                 table: tables[0],
-                previous_code: code,
+                previousCode: connectionCode,
+                // extraPayload: codePayload,
                 validDriver: currentCommand.driver,
                 validHost: currentCommand.host,
                 validDatabase: currentCommand.database
@@ -722,11 +757,12 @@ export default {
           dialog: {
             title: 'Save dataset to file',
             fields: [
-              // {
-              //   key: '_processAgain',
-              //   label: (c) => `Process again: ${c._processAgain ? 'Yes' : 'No'}`,
-              //   type: 'switch'
-              // },
+              {
+                key: '_engineProcessing',
+                label: (c) => `Process again: ${c._engineProcessing ? 'Yes' : 'No'}`,
+                type: 'switch',
+                condition: (c)=>['spark','ibis'].includes(c.request.engine)
+              },
               {
                 key: 'url',
                 label: 'Url',
@@ -745,7 +781,7 @@ export default {
           },
           payload: () => ({
             command: 'saveFile',
-            _processAgain: '',
+            _engineProcessing: false,
             url: '',
             request: {
               isSave: true
@@ -3029,6 +3065,15 @@ export default {
 
   methods: {
 
+    clickCopy(value, event) {
+      this.copied = true;
+      copyToClipboard(value, event.target);
+      event.target.focus();
+      setTimeout(() => {
+        this.copied = false;
+      }, 2000);
+    },
+
     getNewDfName () {
 
       var name = 'df'
@@ -3058,7 +3103,27 @@ export default {
       link.download = filename
       document.body.appendChild(link)
       link.click()
+    },
 
+    showTextDialog(text, title = 'Result') {
+      this.textDialog = { text, title };
+    },
+
+    async compileDataset () {
+      try {
+        await this.cancelCommand();
+        var payload = await this.$store.dispatch('finalCommands', { ignoreFrom: -1, include: [{
+          command: 'compile',
+          payload: {
+            dfName: this.currentDataset.dfName,
+            request: {}
+          }
+        }] });
+        var response = await this.evalCode(payload)
+        this.showTextDialog(response.data.result)
+      } catch (error) {
+        console.error(error)
+      }
     },
 
     async downloadDataset () {
@@ -3238,6 +3303,7 @@ export default {
 
       var payload = {
         request: {
+          engine: this.$store.state.localEngineParameters.engine,
           isLoad: false,
           createsNew: false,
           noOperations: command.noOperations,
