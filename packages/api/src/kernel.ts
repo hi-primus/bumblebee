@@ -81,7 +81,7 @@ export const initializeKernelSession = async function (sessionId, payload) {
 			result = await requestToKernel('init', sessionId, payload);
 		} catch (err) {
 			tries--;
-			if (err.toString().includes('Error on createKernel')) {
+			if (err.toString().includes('Kernel creation')) {
 				tries = 0;
 			}
 			if (tries <= 0) {
@@ -127,7 +127,7 @@ const assertSession = async function (
 		}
 
 		if (!kernels[sessionId] || !kernels[sessionId].id) {
-			throw 'Error on createKernel';
+			throw new Error('Kernel creation went wrong');
 		}
 
 		await createConnection(sessionId);
@@ -412,7 +412,7 @@ const createKernel = async function (sessionId, ka : any = undefined) {
 					continue;
 				}
 				console.error(err);
-        throw 'Error on createKernel';
+        throw new Error('Kernel creation went wrong');
 
 			}
 		}
@@ -420,7 +420,6 @@ const createKernel = async function (sessionId, ka : any = undefined) {
 		return sessionId;
 	} catch (err) {
 		throw new Error('Kernel creation went wrong');
-		throw 'Error on createKernel';
 	}
 };
 
