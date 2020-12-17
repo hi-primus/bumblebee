@@ -558,6 +558,7 @@ export default {
                 label: 'Driver',
                 items: [
                   {text: 'MySQL', value: 'mysql'},
+                  {text: 'Impala', value: 'impala'},
                   {text: 'Oracle Database', value: 'oracle'},
                   {text: 'PostgreSQL', value: 'postgres'},
                   {text: 'Apache Cassandra', value: 'cassandra'},
@@ -615,7 +616,7 @@ export default {
                 label: 'Catalog'
               },
               {
-                condition: (c)=>['postgres','presto','redshift','sqlserver','mysql'].includes(c.driver),
+                condition: (c)=>['postgres','presto','redshift','sqlserver','mysql','impala'].includes(c.driver),
                 key: 'database',
                 type: 'field',
                 label: 'Database'
