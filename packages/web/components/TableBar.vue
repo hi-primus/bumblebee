@@ -508,7 +508,44 @@ export default {
 
       searchText: '',
 
-      commandItems: [
+      clearingFilters: false,
+
+      sortBy: [],
+      sortDesc: [false],
+      columnsTableHeaders: [
+				{ text: '', sortable: false, width: '1%', value: 'controls' },
+				{ hint: '#/A', sortable: false, text: 'Type', value: 'profilerDtype', width: '1.5%' },
+				{ hint: 'ABC', sortable: false, text: 'Name', value: 'name', width: '3%' },
+				{ hint: '""', sortable: false, text: 'Missing values', width: '2%', value: 'missing' },
+				// { hint: 'null', text: 'Null values', width: '2%', value: 'null' },
+        // { hint: '0', text: 'Zeros', width: '2%', value: 'zeros' },
+        // TO-DO: Zeros?
+				{ text: '', sortable: false, width: '50%', value: '' }
+			]
+    }
+  },
+
+	computed: {
+
+    ...mapGetters([
+      'currentSelection',
+      'hasSecondaryDatasets',
+      'workspaceCells',
+      'currentListView',
+      'selectionType',
+      'currentDataset',
+      'typesAvailable',
+      'currentTab'
+    ]),
+
+    ...mapState(['nextCommand', 'noMatch', 'showingColumnsLength']),
+
+    customMenuItems () {
+      return this.$store.getters['customCommands/menuItems'];
+    },
+
+    commandItems () {
+      var commandItems = [
 
 				{command: 'load file', text: 'Add from file', group: 'DATA_SOURCE'},
         {command: 'loadDatabaseTable', text: 'Add from database', group: 'DATA_SOURCE'},
@@ -561,39 +598,11 @@ export default {
         ...Object.entries(TYPES_NAMES).map(
           ([dtype, text])=>({command: 'set_profiler_dtypes', payload: { dtype }, text, group: 'CAST'})
         )
-      ],
+      ];
 
-      clearingFilters: false,
+      return [...commandItems, ...this.customMenuItems]
 
-      sortBy: [],
-      sortDesc: [false],
-      columnsTableHeaders: [
-				{ text: '', sortable: false, width: '1%', value: 'controls' },
-				{ hint: '#/A', sortable: false, text: 'Type', value: 'profilerDtype', width: '1.5%' },
-				{ hint: 'ABC', sortable: false, text: 'Name', value: 'name', width: '3%' },
-				{ hint: '""', sortable: false, text: 'Missing values', width: '2%', value: 'missing' },
-				// { hint: 'null', text: 'Null values', width: '2%', value: 'null' },
-        // { hint: '0', text: 'Zeros', width: '2%', value: 'zeros' },
-        // TO-DO: Zeros?
-				{ text: '', sortable: false, width: '50%', value: '' }
-			]
-    }
-  },
-
-	computed: {
-
-    ...mapGetters([
-      'currentSelection',
-      'hasSecondaryDatasets',
-      'workspaceCells',
-      'currentListView',
-      'selectionType',
-      'currentDataset',
-      'typesAvailable',
-      'currentTab'
-    ]),
-
-    ...mapState(['nextCommand', 'noMatch', 'showingColumnsLength']),
+    },
 
     filtersActive () {
       return this.typesSelected.length || this.searchText || (this.currentDataset && this.currentDataset.columns && this.showingColumnsLength !== this.currentDataset.columns.length);
@@ -949,7 +958,6 @@ export default {
           tooltip: 'String operations',
           disabled: ()=>!(this.selectionType=='columns' && this.currentDataset && this.currentDataset.summary && this.selectedColumns.length>=0)
         },
-        // TO-DO: Datetime operations
         {
           type: 'menu',
           group: 'TIME',
@@ -972,6 +980,17 @@ export default {
           tooltip: 'Machine Learning',
           disabled: ()=>!(this.selectionType=='columns' && this.currentDataset && this.currentDataset.summary) , // Sampling
         },
+        {
+          divider: true,
+          hidden: ()=>!this.customMenuItems.length
+        },
+        {
+          type: 'menu',
+          group: 'CUSTOM',
+          icons: [{ icon: 'star_rate' }],
+          tooltip: 'Custom functions',
+          hidden: ()=>!this.customMenuItems.length
+        }
       ]
     },
 

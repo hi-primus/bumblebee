@@ -2749,6 +2749,10 @@ export default {
       'hasSecondaryDatasets'
     ]),
 
+    customCommandsHandlers () {
+      return this.$store.getters['customCommands/handlers'];
+    },
+
     codeError: {
       get () {
         return this.$store.state.codeError;
@@ -2833,7 +2837,10 @@ export default {
 
     command () {
       try {
-        return this.getCommandHandler(this.currentCommand)
+        if (this.currentCommand) {
+          return this.getCommandHandler(this.currentCommand)
+        }
+        return undefined;
       } catch (error) {
         console.error(error)
         return undefined
@@ -2971,9 +2978,12 @@ export default {
 
     currentCommand: {
       deep: true,
-      async handler () {
+      async handler (currentCommand) {
+        if (!currentCommand) {
+          return
+        }
         try {
-          var command = this.getCommandHandler(this.currentCommand)
+          var command = this.getCommandHandler(currentCommand)
           if (command && command.dialog) {
             var valid = (!command.dialog.validate) ? true : command.dialog.validate(this.currentCommand)
             if (valid===0) {
@@ -2981,37 +2991,37 @@ export default {
               return
             }
 
-            if (this.currentCommand.preview && (this.currentCommand.preview.type)) {
+            if (currentCommand.preview && (currentCommand.preview.type)) {
 
               var expectedColumns;
 
-              if (this.currentCommand.preview.expectedColumns!==undefined) {
-                expectedColumns = getProperty(this.currentCommand.preview.expectedColumns, [this.currentCommand])
-              } else if (this.currentCommand.output_cols && this.currentCommand.output_cols.length) {
-                expectedColumns = this.currentCommand.output_cols.length
-              } else if (this.currentCommand.columns) {
-                expectedColumns = this.currentCommand.columns.length
+              if (currentCommand.preview.expectedColumns!==undefined) {
+                expectedColumns = getProperty(currentCommand.preview.expectedColumns, [currentCommand])
+              } else if (currentCommand.output_cols && currentCommand.output_cols.length) {
+                expectedColumns = currentCommand.output_cols.length
+              } else if (currentCommand.columns) {
+                expectedColumns = currentCommand.columns.length
               }
 
-              if (this.currentCommand.output_cols || this.currentCommand.defaultOutputName) {
+              if (currentCommand.output_cols || currentCommand.defaultOutputName) {
 
                 // column name optimization
                 var nameMap = {}
 
-                if (this.currentCommand.columns && this.currentCommand.output_cols) {
-                  this.currentCommand.output_cols.forEach((col, i) => {
-                    nameMap[ '__new__'+this.currentCommand.columns[i] ] = col
+                if (currentCommand.columns && currentCommand.output_cols) {
+                  currentCommand.output_cols.forEach((col, i) => {
+                    nameMap[ '__new__'+currentCommand.columns[i] ] = col
                   })
                 }
 
-                if (this.currentCommand.output_col && this.currentCommand.defaultOutputName) {
-                  nameMap[this.currentCommand.defaultOutputName] = this.currentCommand.output_col
+                if (currentCommand.output_col && currentCommand.defaultOutputName) {
+                  nameMap[currentCommand.defaultOutputName] = currentCommand.output_col
                 }
 
                 this.$store.commit('setPreviewNames',nameMap)
                 var newColumns = 0
                 var replacingColumns = 0
-                if (this.currentCommand.preview.multipleOutputs) {
+                if (currentCommand.preview.multipleOutputs) {
                   newColumns = +expectedColumns;
                 } else {
                   for (const key in nameMap) {
@@ -3022,7 +3032,7 @@ export default {
                     }
                   }
                 }
-                if (this.currentCommand.defaultOutputName && !newColumns) {
+                if (currentCommand.defaultOutputName && !newColumns) {
                   newColumns = 1
                 }
                 this.$store.commit('setPreviewInfo', {newColumns, replacingColumns})
@@ -3030,16 +3040,16 @@ export default {
 
               this.preparePreviewCode(expectedColumns);
             }
-            if (this.currentCommand.preview.fake==='rename') {
+            if (currentCommand.preview.fake==='rename') {
               var nameMap = {}
-              this.currentCommand.output_cols.forEach((col, i) => {
-                nameMap[this.currentCommand.columns[i]] = col
+              currentCommand.output_cols.forEach((col, i) => {
+                nameMap[currentCommand.columns[i]] = col
               })
               this.$store.commit('setPreviewNames',nameMap)
-            } else if (this.currentCommand.preview.fake==='duplicate') {
+            } else if (currentCommand.preview.fake==='duplicate') {
               var duplicatedColumns = []
-              this.currentCommand.output_cols.forEach((col, i) => {
-                duplicatedColumns.push({name: this.currentCommand.columns[i], newName: col})
+              currentCommand.output_cols.forEach((col, i) => {
+                duplicatedColumns.push({name: currentCommand.columns[i], newName: col})
               })
               this.$store.commit('setDuplicatedColumns',duplicatedColumns.length ? duplicatedColumns : undefined)
               this.$store.commit('setPreviewInfo', {newColumns: duplicatedColumns.length || false})
@@ -3238,7 +3248,15 @@ export default {
     },
 
     getCommandHandler (command) {
-      return this.commandsHandlers[command.command] || this.commandsHandlers[command.type]
+
+      var commandHandler = this.commandsHandlers[command.command] || this.commandsHandlers[command.type];
+
+      if (!commandHandler) {
+        commandHandler = this.customCommandsHandlers[command.command] || this.customCommandsHandlers[command.type];
+      }
+
+      return commandHandler;
+
     },
 
     clusterFieldUpdated(cluster) {
@@ -3427,7 +3445,6 @@ export default {
       this.addCell(toCell, { ...this.currentCommand, code, content }, true );
 
       this.$emit('updateOperations', { active: (this.currentCommand.request.noOperations ? false : true), title: 'operations' } );
-
       this.currentCommand = false;
     },
 
