@@ -478,6 +478,14 @@ export const objectMap = (obj, cb) => {
   )
 }
 
+export const objectMapEntries = (obj, cb) => {
+  return Object.fromEntries(
+    Object.entries(obj).map(
+      ([key,value])=>[key, cb(key,value)]
+    )
+  )
+}
+
 export const transformDateToPython = (string) => {
   if (string)
     return string.replace(/a|A|w|d|b|B|m|y|Y|H|I|p|M|S|f|z|Z|j|U|W|c|x|X|%/g,(match)=>`%${match}`)
@@ -847,6 +855,7 @@ export default {
   propsToLocal,
   objectFilter,
   objectMap,
+  objectMapEntries,
   transformDateToPython,
   transformDateFromPython,
   getEngines,
