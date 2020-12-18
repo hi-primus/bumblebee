@@ -2185,7 +2185,6 @@ export default {
       var previewCode = '';
 
       if (this.previewCode) {
-        console.log('fetching', this.previewCode);
         previewCode = this.previewCode.code;
       }
 
