@@ -57,41 +57,7 @@ const _handler = (name, generator) => {
 }
 
 export const state = () => ({
-  generators: {
-    upperLastName: {
-      name: 'upper name',
-      fields: {
-          name: {
-              name: 'Name',
-              default: '',
-              empty: false,
-              type: 'string'
-          }
-      },
-      engine: ['spark', 'pandas', 'dask'],
-      declaration: `
-def upper_name (df, name):
-      df = df.cols.upper("name", name)
-      return df
-`,
-      code: '{{payload.dfName}} = upper_name({{payload.dfName}}, "{{payload.name}}")',
-      content: 'Created upper version of name on "{{payload.name}}"',
-    },
-    upperLastNameInline: {
-      name: 'upper name (inline)',
-      fields: {
-          name: {
-              name: 'Name',
-              default: '',
-              empty: false,
-              type: 'string'
-          }
-      },
-      engine: 'dask',
-      code: '{{payload.dfName}} = {{payload.dfName}}.cols.upper("name", "{{payload.name}}")',
-      content: 'Created upper version of name on "{{payload.name}}" (inline)',
-    }
-  }
+  generators: {}
 })
 
 
