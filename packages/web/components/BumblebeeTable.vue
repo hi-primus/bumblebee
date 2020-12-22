@@ -1895,8 +1895,6 @@ export default {
 
     async setProfile (previewCode, previewPayload) {
 
-      console.log('previewPayload',previewPayload)
-
       if (!previewCode) {
         return this.unsetProfile()
       }

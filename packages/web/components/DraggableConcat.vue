@@ -402,7 +402,6 @@ export default {
 
     removeOutputItem (slotIndex) {
 
-      // return console.log({slotIndex})
       var itemsSlotsGroups = Array.from(this.itemsSlotsGroups);
 
       this.notSelected.forEach((notSelectedGroup, groupIndex) => {
