@@ -555,7 +555,7 @@ export default {
         {command: 'download', text: 'Download', group: 'SAVE', disabled: ()=>process.env.INSTANCE!=='LOCAL'},
         {command: 'saveFile', text: 'Save file', group: 'SAVE', disabled: ()=>!(this.currentDataset && this.currentDataset.summary)},
         {command: 'save to database', text: 'Save to database', group: 'SAVE', disabled: ()=>!(this.currentDataset && this.currentDataset.summary && this.$store.state.database)},
-        {command: 'compile', text: 'Compile SQL', group: 'SAVE', hidden: ()=>this.$store.state.localEngineParameters.engine !== 'ibis'},
+        {command: 'compile', text: 'Compile SQL', group: 'SAVE', hidden: ()=>(this.$store.state.localEngineParameters || {}).engine !== 'ibis'},
 
 
 				{command: 'lower', text: 'To lower case', type: 'STRING', group: 'STRING'},

@@ -552,7 +552,7 @@ export default {
 
     initializeOptimus (slug) {
 
-      if (!Object.keys(this.$store.state.localEngineParameters).length) {
+      if (!Object.keys(this.$store.state.localEngineParameters || {}).length) {
 
         var query = this.$route.query;
 
