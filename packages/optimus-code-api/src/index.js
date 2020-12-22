@@ -702,19 +702,49 @@ export const codeGenerators = {
 }
 
 export const getGenerator = function(generatorName = '', payload = {}) {
-  var generator = codeGenerators[generatorName] || codeGenerators[payload.command] || codeGenerators[payload.type] || undefined
+  var generator;
+  if (payload && payload._custom && typeof payload._custom === 'function') {
+    generator = payload._custom;
+  } else {
+    generator = codeGenerators[generatorName] || codeGenerators[payload.command] || codeGenerators[payload.type] || undefined;
+  }
   return generator
 }
 
-export const generateCode = function(commands = [], _request = { type: 'processing' }, extraPayload = false) {
+export const generateCode = function(commands = [], _request = { type: 'processing' }, extraPayload = false, acceptStrings = true) {
 
   if (!Array.isArray(commands)) {
     commands = [commands];
   }
 
-  var lines = commands.filter(p=>p).map(_payload => {
+  var lines = [];
 
-    var {command, payload} = _payload.payload ? _payload : {command: _payload.command, payload: _payload};
+  var functionDefinitions = [];
+
+  lines.push(...commands.filter(p=>p).map(_payload => {
+
+    var customCodePayload;
+
+    var command = _payload.command;
+
+    var payload = _payload.payload || _payload;
+
+    if (typeof payload === 'string') {
+      return payload;
+    } else if (payload._custom) {
+
+      if (payload._generator && typeof payload._custom === 'function' ) {
+        customCodePayload = payload._custom(payload);
+      } else {
+        customCodePayload = payload;
+      }
+
+      if (customCodePayload.declaration && !functionDefinitions.includes(customCodePayload.declaration) && !_request._isReference) {
+        functionDefinitions.push(customCodePayload.declaration);
+        return customCodePayload.declaration+'\n'+customCodePayload.code;
+      }
+      return customCodePayload.code;
+    }
 
     command = command || payload.command;
 
@@ -759,7 +789,7 @@ export const generateCode = function(commands = [], _request = { type: 'processi
         code = `${payload.previousCode}${'\n'}`;
       }
 
-      if (result.isOutput) {
+      if (result.isOutput || customCodePayload) {
 
         code += resultCode;
 
@@ -863,7 +893,7 @@ export const generateCode = function(commands = [], _request = { type: 'processi
 
     return code;
 
-  })
+  }))
 
   return lines.join('\n');
 

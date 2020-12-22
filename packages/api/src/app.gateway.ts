@@ -155,7 +155,7 @@ export class AppGateway
 		} else if (payload.message === 'cells') {
       var code: string;
       if (payload.codePayload) {
-        code = generateCode(payload.codePayload);
+        code = generateCode(payload.codePayload, {}, false, true); // TO-DO: acceptStrings parameter depends on user permissions
       } else {
         code = payload.code;
       }

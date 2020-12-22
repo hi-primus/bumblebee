@@ -30,10 +30,9 @@ const _handler = (name, generator) => {
           return true;
       }
 
-
-
-      return { dialog: {title: generator.name, fields, validate}, payload: (columns)=>{
+      return { custom: true, dialog: {title: generator.name, fields, validate}, payload: (columns)=>{
         var payload = {
+          _custom: true,
           columns,
           command: name,
         };
@@ -48,15 +47,39 @@ const _handler = (name, generator) => {
   }
 }
 
-const _code = (generator, payload = {}) => {
-  var code = generator.code;
-  code = code.replace(/{{(payload.?(.+?))}}/g, (_,g1,g2) => payload[g2] || eval(g1))
-  return code;
-}
-
-
 export const state = () => ({
   generators: {
+    upperLastName: {
+      name: 'upper name',
+      fields: {
+          name: {
+              name: 'Name',
+              default: '',
+              empty: false,
+              type: 'string'
+          }
+      },
+      engine: ['spark', 'pandas', 'dask'],
+      declaration: `
+def upper_name (df, name):
+      df = df.cols.upper("name", name)
+      return df
+`,
+      code: '{{payload.dfName}} = upper_name({{payload.dfName}}, "{{payload.name}}")'
+    },
+    upperLastNameInline: {
+      name: 'upper name (inline)',
+      fields: {
+          name: {
+              name: 'Name',
+              default: '',
+              empty: false,
+              type: 'string'
+          }
+      },
+      engine: 'dask',
+      code: '{{payload.dfName}} = {{payload.dfName}}.cols.upper("name", "{{payload.name}}")'
+    }
   }
 })
 
@@ -78,11 +101,23 @@ export const getters =  {
   handlers (state) {
     return objectMapEntries(state.generators, (name,generator)=>_handler(name,generator))
   },
-  codeGenerators (state) {
-    return objectMap(state.generators, (generator)=>_code(generator))
+  genericCommandPayload () {
+    return (payload)=>{
+      var generator = payload._generator;
+      var code = generator.code.replace(/{{(payload.?(.+?))}}/g, (_,g1,g2) => payload[g2] || eval(g1))
+      return {code, declaration: generator.declaration, _custom: true};
+    }
   },
-  menuItems (state) {
-    return Object.entries(state.generators).map(([key, generator])=>{
+  menuItems (state, getters, rootState) {
+    return Object.entries(state.generators)
+    .filter(([key, generator])=>{
+      if (generator.engine && rootState.localEngineParameters && rootState.localEngineParameters.engine) {
+        var currentEngine = rootState.localEngineParameters.engine;
+        return ((Array.isArray(generator.engine) && generator.engine.includes(currentEngine)) || generator.engine === currentEngine)
+      }
+      return true;
+    })
+    .map(([key, generator])=>{
       return {command: key, text: generator.name, group: 'CUSTOM'};
     })
   },

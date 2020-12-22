@@ -261,7 +261,7 @@ import OperationField from '@/components/OperationField'
 import clientMixin from '@/plugins/mixins/client'
 import applicationMixin from '@/plugins/mixins/application'
 import { mapGetters } from 'vuex'
-import { generateCode } from 'optimus-code-api'
+import { generateCode, getGenerator } from 'optimus-code-api'
 
 import {
 
@@ -2983,7 +2983,7 @@ export default {
           return
         }
         try {
-          var command = this.getCommandHandler(currentCommand)
+          var command = this.getCommandHandler(currentCommand);
           if (command && command.dialog) {
             var valid = (!command.dialog.validate) ? true : command.dialog.validate(this.currentCommand)
             if (valid===0) {
@@ -3252,7 +3252,7 @@ export default {
       var commandHandler = this.commandsHandlers[command.command] || this.commandsHandlers[command.type];
 
       if (!commandHandler) {
-        commandHandler = this.customCommandsHandlers[command.command] || this.customCommandsHandlers[command.type];
+        commandHandler = deepCopy(this.customCommandsHandlers[command.command] || this.customCommandsHandlers[command.type]);
       }
 
       return commandHandler;
@@ -3322,7 +3322,7 @@ export default {
 
       var payload = {
         request: {
-          engine: this.$store.state.localEngineParameters.engine,
+          engine: (this.$store.state.localEngineParameters || {}).engine,
           isLoad: false,
           createsNew: false,
           noOperations: command.noOperations,
@@ -3433,6 +3433,12 @@ export default {
       this.isEditing = false;
       this.clearTextSelection();
       var commandHandler = this.getCommandHandler(this.currentCommand);
+
+      if (this.currentCommand._custom) {
+        this.currentCommand._generator = this.$store.state.customCommands.generators[this.currentCommand.command]
+        this.currentCommand._custom = this.$store.getters['customCommands/genericCommandPayload'];
+      }
+
       if (commandHandler.onDone) {
         this.currentCommand = await commandHandler.onDone(this.currentCommand);
       }
@@ -3579,7 +3585,8 @@ export default {
 
       var request = {
         type,
-        dfName: this.currentDataset.dfName
+        dfName: this.currentDataset.dfName,
+        _isReference: true
       }
 
       return generateCode({command: payload.command, payload}, request);
@@ -3588,9 +3595,14 @@ export default {
 
     async editCell (cell, index) {
       // console.debug('[DEBUG] Editing cell',{cell, index})
-      var command = deepCopy(cell)
+      var command = deepCopy(cell);
 
-      var commandHandler = this.getCommandHandler(command)
+      var commandHandler = this.getCommandHandler(command);
+
+      if (command.payload._custom) {
+        command.payload._generator = this.$store.state.customCommands.generators[command.command || command.payload.command]
+        command.payload._custom = this.$store.getters['customCommands/genericCommandPayload'];
+      }
 
       if (commandHandler.dialog) {
         this.commandsDisabled = true;
@@ -3604,7 +3616,11 @@ export default {
 
     addCell (at = -1, payload = {command: 'code', code: '', content: '', ignoreCell: false, noCall: false, deleteOtherCells: false}, replace = false) {
 
-      var {command, code, ignoreCell, deleteOtherCells, content} = payload
+      var {command, code, ignoreCell, deleteOtherCells, content} = payload;
+
+      if (payload._custom) {
+        code = this.getCode(payload)
+      }
 
       this.codeError = '';
 

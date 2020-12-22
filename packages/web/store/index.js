@@ -1152,33 +1152,33 @@ export const actions = {
 
         if (getFinal) {
 
-          finalPayload = await dispatch('finalCommands', { ignoreFrom, include: [] });
+          codePayload = await dispatch('finalCommands', { ignoreFrom, include: [] });
 
-          // console.debug('[SPECIAL PROCESSING] finalPayload (with toPandas)', finalPayload);
-
-          response = await socketPost('cells', {
-            code: undefined,
-            codePayload: finalPayload,
-            username: await dispatch('session/getUsername'),
-            workspace: state.workspaceSlug || 'default',
-            key: state.key
-          }, {
-            timeout: 0
-          });
+          console.debug('[SPECIAL PROCESSING] codePayload (with toPandas)', codePayload);
 
         } else {
 
-          response = await socketPost('cells', {
-            code: undefined,
-            codePayload,
-            username: await dispatch('session/getUsername'),
-            workspace: state.workspaceSlug || 'default',
-            key: state.key
-          }, {
-            timeout: 0
-          });
+          console.debug('[SPECIAL PROCESSING] codePayload', codePayload);
 
-        }
+        };
+
+        codePayload = codePayload.map((command)=>{
+          var _custom = command.payload._custom;
+          if (_custom && typeof _custom === 'function' ) {
+            return _custom(command.payload);
+          }
+          return command;
+        });
+
+        response = await socketPost('cells', {
+          code: undefined,
+          codePayload,
+          username: await dispatch('session/getUsername'),
+          workspace: state.workspaceSlug || 'default',
+          key: state.key
+        }, {
+          timeout: 0
+        });
 
       } else {
 
