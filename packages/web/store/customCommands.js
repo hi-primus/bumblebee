@@ -1,6 +1,10 @@
 import { objectMap, objectMapEntries } from 'bumblebee-utils'
 import Vue from 'vue'
 
+const _parse = (str, payload) => {
+  return str.replace(/{{(payload.?(.+?))}}/g, (_,g1,g2) => payload[g2] || eval(g1))
+}
+
 const _handler = (name, generator) => {
   if (generator.fields) {
 
@@ -20,7 +24,7 @@ const _handler = (name, generator) => {
           return field;
       })
 
-      var validate = (c)=>{
+      var validate = (c) => {
           for (const key in generator.fields) {
               const field = generator.fields[key];
               if (field.empty === false && !c[key]) {
@@ -30,7 +34,12 @@ const _handler = (name, generator) => {
           return true;
       }
 
-      return { custom: true, dialog: {title: generator.name, fields, validate}, payload: (columns)=>{
+      var content = (c) => {
+        var generator = c._generator;
+        return _parse(generator.content, c);
+      }
+
+      return { custom: true, dialog: {title: generator.name, fields, validate}, content, payload: (columns)=>{
         var payload = {
           _custom: true,
           columns,
@@ -65,7 +74,8 @@ def upper_name (df, name):
       df = df.cols.upper("name", name)
       return df
 `,
-      code: '{{payload.dfName}} = upper_name({{payload.dfName}}, "{{payload.name}}")'
+      code: '{{payload.dfName}} = upper_name({{payload.dfName}}, "{{payload.name}}")',
+      content: 'Created upper version of name on "{{payload.name}}"',
     },
     upperLastNameInline: {
       name: 'upper name (inline)',
@@ -78,7 +88,8 @@ def upper_name (df, name):
           }
       },
       engine: 'dask',
-      code: '{{payload.dfName}} = {{payload.dfName}}.cols.upper("name", "{{payload.name}}")'
+      code: '{{payload.dfName}} = {{payload.dfName}}.cols.upper("name", "{{payload.name}}")',
+      content: 'Created upper version of name on "{{payload.name}}" (inline)',
     }
   }
 })
@@ -104,7 +115,7 @@ export const getters =  {
   genericCommandPayload () {
     return (payload)=>{
       var generator = payload._generator;
-      var code = generator.code.replace(/{{(payload.?(.+?))}}/g, (_,g1,g2) => payload[g2] || eval(g1))
+      var code = _parse(generator.code, payload);
       return {code, declaration: generator.declaration, _custom: true};
     }
   },
