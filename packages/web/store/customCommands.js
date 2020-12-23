@@ -65,6 +65,9 @@ export const mutations =  {
   setGenerator (state, { key, generator }) {
     state.generators[key] = generator;
   },
+  setAllGenerators (state, { json }) {
+    state.generators = JSON.parse(json)
+  },
   deleteGenerator (state, { key }) {
     delete state.generators[key];
   },
@@ -75,6 +78,9 @@ export const actions =  {
 }
 
 export const getters =  {
+  generatorsJson (state) {
+    return JSON.stringify(state.generators);
+  },
   handlers (state) {
     return objectMapEntries(state.generators, (name,generator)=>_handler(name,generator))
   },

@@ -3557,6 +3557,7 @@ export default {
     },
 
     getOperationContent (payload) {
+
       var commandHandler = this.getCommandHandler(payload)
       var content
 

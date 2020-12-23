@@ -28,6 +28,7 @@
           @click:engine="doneConfig($event, true)"
           />
         <ConnectionsList is-dialog v-else-if="windowDialog  === 'clusters'"/>
+        <CustomOperationsManager @back="windowDialog = false" is-dialog v-else-if="windowDialog  === 'customOperations'"/>
       </v-dialog>
       <template>
         <div v-if="workspaceStatus==='loading'">
@@ -199,6 +200,7 @@ import WorkspacesList from "@/components/WorkspacesList"
 import SettingsPanel from "@/components/SettingsPanel"
 import SettingsList from "@/components/SettingsList"
 import ConnectionsList from "@/components/ConnectionsList"
+import CustomOperationsManager from "@/components/CustomOperationsManager"
 import MoreMenu from "@/components/MoreMenu"
 import clientMixin from "@/plugins/mixins/client"
 import dataTypesMixin from "@/plugins/mixins/data-types"
@@ -217,6 +219,7 @@ export default {
     SettingsPanel,
     SettingsList,
     ConnectionsList,
+    CustomOperationsManager,
     MoreMenu
 	},
 
@@ -312,6 +315,12 @@ export default {
 
 
       var dashboardLink = this.$store.state.dashboardLink;
+
+      menu = [
+        ...menu,
+        { divider: true },
+        { text: 'Manage custom operations', click: ()=>this.showWindowDialog('customOperations') }
+      ];
 
       if (dashboardLink) {
         menu = [
