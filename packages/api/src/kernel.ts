@@ -353,7 +353,7 @@ export const createConnection = async function (sessionId) {
             }
 
 					} catch (err) {
-						console.error(err);
+						console.error(err.message);
 					}
 				});
 				console.log('Connection created', sessionId);
