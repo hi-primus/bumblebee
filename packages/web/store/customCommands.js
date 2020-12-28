@@ -45,10 +45,13 @@ const _handler = (name, generator) => {
           columns,
           command: name,
         };
-        Object.entries(generator.fields).forEach(([key, field])=>{
+        Object.entries(generator.fields || {}).forEach(([key, field])=>{
           if (!field.noPayload && field.default !== undefined) {
             payload[key] = field.default;
           }
+        });
+        Object.entries(generator.payload || {}).forEach(([key, value])=>{
+          payload[key] = value;
         });
         return payload;
       } };
@@ -65,8 +68,16 @@ export const mutations =  {
   setGenerator (state, { key, generator }) {
     state.generators[key] = generator;
   },
-  setAllGenerators (state, { json }) {
-    state.generators = JSON.parse(json)
+  setAllGenerators (state, { content }) {
+    var generators = {};
+    content.split("#####").filter(a=>a).forEach(item=>{
+      var [ id, jsonString, code, declaration ] = item.split("###").map(s=>s.trim());
+      if (id && jsonString) {
+          var json = JSON.parse(jsonString)
+          generators[id] = { ...json, code, declaration };
+      }
+    })
+    state.generators = generators
   },
   deleteGenerator (state, { key }) {
     delete state.generators[key];
@@ -79,7 +90,12 @@ export const actions =  {
 
 export const getters =  {
   generatorsJson (state) {
-    return JSON.stringify(state.generators);
+    var str = "";
+    Object.entries(state.generators).forEach(([name, generator])=>{
+      var { declaration, code, ...gen } = generator;
+      str += `#####\n${name}\n###\n${JSON.stringify(gen)}\n###\n${code}\n###\n${declaration}\n`
+    });
+    return str;
   },
   handlers (state) {
     return objectMapEntries(state.generators, (name,generator)=>_handler(name,generator))

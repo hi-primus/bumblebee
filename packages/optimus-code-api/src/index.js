@@ -1,4 +1,4 @@
-import { escapeQuotes, escapeQuotesOn, getOutputColsArgument, preparedColumns, transformDateToPython, TIME_VALUES } from 'bumblebee-utils'
+import { escapeQuotes, escapeQuotesOn, getOutputColsArgument, preparedColumns, transformDateToPython, getCodePayload, TIME_VALUES } from 'bumblebee-utils'
 
 export const version = function() {
   console.log("Code api 0.0.2")
@@ -733,11 +733,7 @@ export const generateCode = function(commands = [], _request = { type: 'processi
       return payload;
     } else if (payload._custom) {
 
-      if (payload._generator && typeof payload._custom === 'function' ) {
-        customCodePayload = payload._custom(payload);
-      } else {
-        customCodePayload = payload;
-      }
+      customCodePayload = getCodePayload(payload);
 
       if (customCodePayload.declaration && !functionDefinitions.includes(customCodePayload.declaration) && !_request._isReference) {
         functionDefinitions.push(customCodePayload.declaration);
@@ -759,6 +755,8 @@ export const generateCode = function(commands = [], _request = { type: 'processi
       }
 
       var request = { ..._request, ...(payload.request || {}) };
+
+      request.type = request.type || 'processing';
 
       var result = generator ? generator({
         ...payload,
@@ -798,6 +796,10 @@ export const generateCode = function(commands = [], _request = { type: 'processi
         var saving = false;
 
         var dfName = payload.dfName || request.dfName;
+
+        if (dfName && !request.noSave) {
+          request.save = true;
+        }
 
         var multiOutput = (!!request.profile +!!request.sample +!!request.matches_count +!!request.meta)>1;
         var anyOutput = (request.profile || request.sample || request.matches_count || request.meta);

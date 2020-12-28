@@ -1468,7 +1468,7 @@ export const actions = {
       commit('setPreviewInfo', {error: false})
     }
 
-    var sample = response && response.data && response.data.result ? parseResponse(response.data.result) : undefined
+    var sample = response.data.result.sample;
 
     var pre = forceName ? '__preview__' : ''
 

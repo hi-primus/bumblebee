@@ -281,6 +281,7 @@ import {
   hlParam,
   hlCols,
   namesToIndices,
+  getCodePayload,
   transformDateFromPython,
   transpose,
   objectMap,
@@ -3127,11 +3128,33 @@ export default {
           command: 'compile',
           payload: {
             dfName: this.currentDataset.dfName,
-            request: {}
+            request: {
+              noSave: true,
+              type: 'final'
+            }
           }
         }] });
+
         var response = await this.evalCode(payload)
-        this.showTextDialog(response.data.result)
+
+        var result = response.data.result.replace(/\\n/g,'\n')
+
+        this.showTextDialog(result)
+      } catch (error) {
+        console.error(error)
+      }
+    },
+
+    async downloadResult (include) {
+      try {
+        await this.cancelCommand();
+        var payload = await this.$store.dispatch('finalCommands', { ignoreFrom: -1, include });
+
+        var response = await this.evalCode(payload)
+
+        var result = response.data.result.replace(/\\n/g,'\n')
+
+        this.showTextDialog(result)
       } catch (error) {
         console.error(error)
       }
@@ -3437,6 +3460,13 @@ export default {
       if (this.currentCommand._custom) {
         this.currentCommand._generator = this.$store.state.customCommands.generators[this.currentCommand.command]
         this.currentCommand._custom = this.$store.getters['customCommands/genericCommandPayload'];
+      }
+
+      if (this.currentCommand._output == 'download') {
+        var payload = getCodePayload(this.currentCommand);
+        payload.request = this.currentCommand.request || {};
+        this.downloadResult([{ payload }])
+        return true;
       }
 
       if (commandHandler.onDone) {

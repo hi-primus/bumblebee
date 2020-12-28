@@ -8,7 +8,7 @@
       Custom Operations
     </v-card-title>
     <v-form @submit.prevent="updateCustomOperations">
-      <v-textarea filled v-model="jsonContent" class="pt-2 px-4 font-mono">
+      <v-textarea filled v-model="content" class="pt-2 px-4 font-mono">
 
       </v-textarea>
       <v-card-actions>
@@ -40,12 +40,12 @@ export default {
 
   data () {
     return {
-      jsonContent: ''
+      content: ''
     }
   },
 
   mounted () {
-    this.jsonContent = this.$store.getters['customCommands/generatorsJson'];
+    this.content = this.$store.getters['customCommands/generatorsJson'];
   },
 
   methods: {
@@ -56,8 +56,8 @@ export default {
 
     async updateCustomOperations () {
       try {
-        this.$store.commit('customCommands/setAllGenerators', {json: this.jsonContent || '{}'})
-        this.jsonContent = this.$store.getters['customCommands/generatorsJson'];
+        this.$store.commit('customCommands/setAllGenerators', {content: this.content || '{}'})
+        this.content = this.$store.getters['customCommands/generatorsJson'];
       } catch (err) {
         console.error(err);
         return;

@@ -486,6 +486,14 @@ export const objectMapEntries = (obj, cb) => {
   )
 }
 
+export const getCodePayload = (payload) => {
+  if (payload._generator && typeof payload._custom === 'function' ) {
+    return payload._custom(payload);
+  } else {
+    return payload;
+  }
+}
+
 export const transformDateToPython = (string) => {
   if (string)
     return string.replace(/a|A|w|d|b|B|m|y|Y|H|I|p|M|S|f|z|Z|j|U|W|c|x|X|%/g,(match)=>`%${match}`)
@@ -856,6 +864,7 @@ export default {
   objectFilter,
   objectMap,
   objectMapEntries,
+  getCodePayload,
   transformDateToPython,
   transformDateFromPython,
   getEngines,
