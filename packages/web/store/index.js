@@ -1449,6 +1449,7 @@ export const actions = {
           type: 'preview',
           dfName: datasetDfName,
           sample: true,
+          noSave: true,
           buffer: noBufferWindow ? true : [from, to]
         }
       };
@@ -1468,7 +1469,7 @@ export const actions = {
       commit('setPreviewInfo', {error: false})
     }
 
-    var sample = response.data.result.sample;
+    var sample = response.data.result;
 
     var pre = forceName ? '__preview__' : ''
 
