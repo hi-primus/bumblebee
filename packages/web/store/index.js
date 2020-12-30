@@ -682,7 +682,14 @@ export const actions = {
       cells = response.data.commands.map( e=>({ ...JSON.parse(e), done: false }) );
     }
 
+    if (response.data.configuration) {
+      var localEngineParameters = await dispatch('getEngine', { id: response.data.configurations });
+    }
+
     cells = cells.map(cell => {
+      if (cell && cell.payload && cell.payload.request) {
+        cell.payload.request.engine = (state.localEngineParameters || {}).engine || cell.payload.request.engine;
+      }
       cell.code = generateCode(cell);
       return cell;
     })
@@ -721,8 +728,10 @@ export const actions = {
   async loadEngine ({ state, commit, dispatch }, { id, workspaceSlug }) {
 
     try {
-      var workspace = await dispatch('getWorkspace', { slug: workspaceSlug } );
-      id = workspace.configuration;
+      if (workspaceSlug) {
+        var workspace = await dispatch('getWorkspace', { slug: workspaceSlug } );
+        id = workspace.configuration;
+      }
     } catch (err) {
       console.error(err)
     }
