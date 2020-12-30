@@ -3462,7 +3462,7 @@ export default {
         this.currentCommand._custom = this.$store.getters['customCommands/genericCommandPayload'];
       }
 
-      if (this.currentCommand._output == 'download') {
+      if (this.currentCommand._output == 'plain-text') {
         var payload = getCodePayload(this.currentCommand);
         payload.request = this.currentCommand.request || {};
         this.downloadResult([{ payload }])
