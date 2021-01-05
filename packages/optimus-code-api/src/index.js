@@ -87,17 +87,23 @@ export const codeGenerators = {
         if (payload.preview.filteredPreview) {
           code += `.rows.select( '__match__' )`;
         }
-        code += `.cols.set( `
-          + (payload.columns[0] ? `default="${payload.columns[0]}", ` : '')
-          + `value=${value}, where='__match__', output_cols=["${output_col}"] )`;
+        code += `.cols.set(`
+        + `output_cols=["${output_col}"]`
+        + `, value=${value},`
+        + `, where='__match__', `
+        + (payload.columns[0] ? `, default="${payload.columns[0]}", ` : '')
+        + `)`;
         if (payload.request.type === 'preview' && payload.preview.filteredPreview) {
           return (from, to)=>code+(from!==undefined ? `[${from}:${to}]` : '');
         }
         return code;
       }
       return code + `.cols.set( `
-        + (payload.columns[0] ? `default="${payload.columns[0]}", ` : '')
-        +`value=${value}, where=${expression}, output_cols=["${output_col}"] )`;
+      + `output_cols=["${output_col}"]`
+      + `, value=${value}, `
+      + `, where=${expression}`
+      + (payload.columns[0] ? `, default="${payload.columns[0]}", ` : '')
+      + `)`;
 
     } else {
       if (!['final','processing'].includes(payload.request.type)) {
@@ -575,10 +581,10 @@ export const codeGenerators = {
       }
 
       return `.cols.set(`
-      + (payload.columns[0] ? `default="${payload.columns[0]}", ` : '')
-      + 'value='+value
-      + ', output_cols=' + output_cols_argument
-      + `)`
+      + `output_cols=${output_cols_argument}`
+      + `, value=+${value}`
+      + (payload.columns[0] ? `, default="${payload.columns[0]}"` : '')
+      + `)`;
     }
 
     if (!['final','processing'].includes(payload.request.type)) {
