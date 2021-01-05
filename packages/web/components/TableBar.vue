@@ -312,7 +312,7 @@
                 <v-list flat dense style="max-height: calc(100vh - 143px); min-width: 160px;" class="scroll-y">
                   <v-list-item-group color="black">
                     <!-- <v-list-item
-                      @click="copyCodeToClipboard"
+                      @click="showCodeOnTextDialog"
                     >
                       <v-list-item-content>
                         <v-list-item-title>
@@ -324,7 +324,7 @@
                       v-for="engine in engines"
                       :key="engine.name"
                       :disabled="!engine.init"
-                      @click="copyCodeToClipboard(engine.init)"
+                      @click="showCodeOnTextDialog(engine.init)"
                     >
                       <v-list-item-content>
                         <v-list-item-title>
@@ -364,7 +364,7 @@
 
           <div v-if="detailedColumns.length>1" class="sidebar-section pr-10 columns-selected">
             <div class="column-selected" v-for="(index, i) in detailedColumns" :key="index+'selc'+i">
-              <span class="data-type" :class="`type-${currentDataset.columns[index].profiler_dtype.dtype}`">{{ dataTypeHint(currentDataset.columns[index].profiler_dtype.dtype) }}</span>
+              <span class="data-type" :class="`type-${currentDataset.columns[index].stats.profiler_dtype.dtype}`">{{ dataTypeHint(currentDataset.columns[index].stats.profiler_dtype.dtype) }}</span>
               <span class="data-column-name">{{ currentDataset.columns[index].name }}</span>
             </div>
           </div>
@@ -443,6 +443,7 @@ import clientMixin from '@/plugins/mixins/client'
 import dataTypesMixin from '@/plugins/mixins/data-types'
 import applicationMixin from '@/plugins/mixins/application'
 import { copyToClipboard, namesToIndices, getProperty, ENGINES, TYPES_NAMES, TIME_NAMES } from 'bumblebee-utils'
+import { generateCode } from 'optimus-code-api'
 import { mapState, mapGetters } from 'vuex'
 
 export default {
@@ -474,10 +475,12 @@ export default {
 		return {
 
       engines: [
-        {name: 'dask', prettyName: ENGINES.dask, init: '"dask", n_workers=1, threads_per_worker=8, processes=False, memory_limit="3G", comm=True'},
+        {name: 'dask', prettyName: ENGINES.dask, init: '"dask", n_workers=1, threads_per_worker=8, processes=False, memory_limit="3G"'},
         {name: 'dask_cudf', prettyName: ENGINES.dask_cudf, init: '"dask_cudf", process=True'},
         {name: 'cudf', prettyName: ENGINES.cudf, init: '"cudf"'},
-        {name: 'pandas', prettyName: ENGINES.pandas, init: '"cudf"'},
+        {name: 'pandas', prettyName: ENGINES.pandas, init: '"pandas"'},
+        {name: 'spark', prettyName: ENGINES.spark, init: '"spark", n_workers=1, threads_per_worker=8, processes=False, memory_limit="3G"'},
+        {name: 'ibis', prettyName: ENGINES.ibis, init: '"ibis"'},
         {name: 'vaex', prettyName: 'Vaex'},
       ],
 
@@ -504,59 +507,6 @@ export default {
       callSort: false,
 
       searchText: '',
-
-      commandItems: [
-
-				{command: 'load file', text: 'Add from file', group: 'DATA_SOURCE'},
-        {command: 'load from database', text: 'Add from database', group: 'DATA_SOURCE'},
-				{command: 'load from data source', text: 'Add from a loaded data source', group: 'DATA_SOURCE', hidden: true},
-        {command: 'manage data sources', text: 'Manage data sources', group: 'DATA_SOURCE', hidden: true},
-
-        {command: 'download', text: 'Download', group: 'SAVE', disabled: ()=>process.env.INSTANCE!=='LOCAL'},
-        {command: 'keep rows', text: 'Save to database', group: 'SAVE', disabled: ()=>!(this.currentDataset && this.currentDataset.summary && this.$store.state.database)},
-
-
-				{command: 'lower', text: 'To lower case', type: 'STRING', group: 'STRING'},
-				{command: 'upper', text: 'To upper case', type: 'STRING', group: 'STRING'},
-        {command: 'proper', text: 'Proper', type: 'STRING', group: 'STRING' },
-				{command: 'remove_accents', text: 'Remove accents', type: 'STRING', group: 'STRING'},
-				{command: 'remove_special_chars', text: 'Remove special chars', type: 'STRING', group: 'STRING'},
-        {command: 'extract', text: 'Extract', group: 'STRING'},
-        {divider: true, group: 'STRING'},
-        {command: 'trim', text: 'Trim white space', type: 'STRING', group: 'STRING'},
-        {command: 'left_string', text: 'Left', type: 'SUBSTR1', group: 'STRING' },
-        {command: 'right_string', text: 'Right', type: 'SUBSTR1', group: 'STRING' },
-        {command: 'mid_string', text: 'Mid', group: 'STRING' },
-        {command: 'pad_string', text: 'Pad string', group: 'STRING'},
-        {command: 'string clustering', text: 'String clustering', type: 'STRING', group: 'STRING', max: 1, min: 1, hidden: ()=>(this.hideOperations) },
-
-        // {command: 'set_column_format', text: 'Set column format', group: 'TIME'},
-        {command: 'transform_format', text: 'Transform format', group: 'TIME'},
-
-        {divider: true, group: 'TIME'},
-
-        ...Object.entries(TIME_NAMES).map(
-          ([output_type, name])=>({command: 'get_from_datetime', payload: { output_type }, text: `Get ${name}`, group: 'TIME'})
-        ),
-
-				// {command: 'random_split',     teaxt: 'Split train and test', type: 'PREPARE'},
-
-				{command: 'sample_n', text: 'Random sampling', group: 'ML', hidden: ()=>(this.hideOperations)},
-        {command: 'stratified_sample', text: 'Stratified Sampling', group: 'ML', min: 1, max: 1, hidden: ()=>(this.hideOperations) },
-				{command: 'bucketizer',       text: 'Create Bins',          group: 'ML', max: 1, hidden: ()=>(this.hideOperations) }, // TO-DO: Check limit
-				{command: 'impute',           text: 'Impute rows',          group: 'ML', min: 1, hidden: ()=>(this.hideOperations) },
-				{command: 'values_to_cols',   text: 'Values to Columns',    group: 'ML', max: 1, hidden: ()=>(this.hideOperations) },
-				{command: 'string_to_index',  text: 'Strings to Index',     group: 'ML', min: 1},
-				{command: 'index_to_string',  text: 'Indices to Strings',     group: 'ML', min: 1},
-        {command: 'z_score',          text: 'Standard Scaler',  group: 'ML', min: 1, hidden: ()=>(this.hideOperations)},
-        {command: 'min_max_scaler',   text: 'Min max Scaler',   group: 'ML', min: 1, hidden: ()=>(this.hideOperations)},
-        {command: 'max_abs_scaler',   text: 'Max abs Scaler',   group: 'ML', min: 1, hidden: ()=>(this.hideOperations)},
-        {command: 'outliers',   text: 'Outliers',   group: 'ML', min: 1, max: 1, hidden: ()=>(this.hideOperations)},
-
-        ...Object.entries(TYPES_NAMES).map(
-          ([dtype, text])=>({command: 'set_profiler_dtypes', payload: { dtype }, text, group: 'CAST'})
-        )
-      ],
 
       clearingFilters: false,
 
@@ -589,6 +539,70 @@ export default {
     ]),
 
     ...mapState(['nextCommand', 'noMatch', 'showingColumnsLength']),
+
+    customMenuItems () {
+      return this.$store.getters['customCommands/menuItems'];
+    },
+
+    commandItems () {
+      var commandItems = [
+
+				{command: 'load file', text: 'Add from file', group: 'DATA_SOURCE'},
+        {command: 'loadDatabaseTable', text: 'Add from database', group: 'DATA_SOURCE'},
+				{command: 'load from data source', text: 'Add from a loaded data source', group: 'DATA_SOURCE', hidden: true},
+        {command: 'manage data sources', text: 'Manage data sources', group: 'DATA_SOURCE', hidden: true},
+
+        {command: 'download', text: 'Download', group: 'SAVE', disabled: ()=>process.env.INSTANCE!=='LOCAL'},
+        {command: 'saveFile', text: 'Save file', group: 'SAVE', disabled: ()=>!(this.currentDataset && this.currentDataset.summary)},
+        {command: 'save to database', text: 'Save to database', group: 'SAVE', disabled: ()=>!(this.currentDataset && this.currentDataset.summary && this.$store.state.database)},
+        {command: 'compile', text: 'Compile SQL', group: 'SAVE', hidden: ()=>(this.$store.state.localEngineParameters || {}).engine !== 'ibis'},
+
+
+				{command: 'lower', text: 'To lower case', type: 'STRING', group: 'STRING'},
+				{command: 'upper', text: 'To upper case', type: 'STRING', group: 'STRING'},
+        {command: 'proper', text: 'Proper', type: 'STRING', group: 'STRING' },
+				{command: 'remove_accents', text: 'Remove accents', type: 'STRING', group: 'STRING'},
+				{command: 'remove_special_chars', text: 'Remove special chars', type: 'STRING', group: 'STRING'},
+        {command: 'extract', text: 'Extract', group: 'STRING'},
+        {divider: true, group: 'STRING'},
+        {command: 'trim', text: 'Trim white space', type: 'STRING', group: 'STRING'},
+        {command: 'left_string', text: 'Left', type: 'SUBSTR1', group: 'STRING' },
+        {command: 'right_string', text: 'Right', type: 'SUBSTR1', group: 'STRING' },
+        {command: 'mid_string', text: 'Mid', group: 'STRING' },
+        {command: 'pad_string', text: 'Pad string', group: 'STRING'},
+        {command: 'stringClustering', text: 'String clustering', type: 'STRING', group: 'STRING', max: 1, min: 1, hidden: ()=>(this.hideOperations) },
+
+        // {command: 'set_column_format', text: 'Set column format', group: 'TIME'},
+        {command: 'transform_format', text: 'Transform format', group: 'TIME'},
+
+        {divider: true, group: 'TIME'},
+
+        ...Object.entries(TIME_NAMES).map(
+          ([output_type, name])=>({command: 'get_from_datetime', payload: { output_type }, text: `Get ${name}`, group: 'TIME'})
+        ),
+
+				// {command: 'random_split',     teaxt: 'Split train and test', type: 'PREPARE'},
+
+				{command: 'sample_n', text: 'Random sampling', group: 'ML', hidden: ()=>(this.hideOperations)},
+        {command: 'stratified_sample', text: 'Stratified Sampling', group: 'ML', min: 1, max: 1, hidden: ()=>(this.hideOperations) },
+				{command: 'bucketizer',       text: 'Create Bins',          group: 'ML', max: 1, hidden: ()=>(this.hideOperations) }, // TO-DO: Check limit
+				{command: 'impute',           text: 'Impute rows',          group: 'ML', min: 1, hidden: ()=>(this.hideOperations) },
+				{command: 'values_to_cols',   text: 'Values to Columns',    group: 'ML', max: 1, hidden: ()=>(this.hideOperations) },
+				{command: 'string_to_index',  text: 'Strings to Index',     group: 'ML', min: 1},
+				{command: 'index_to_string',  text: 'Indices to Strings',     group: 'ML', min: 1},
+        {command: 'z_score',          text: 'Standard Scaler',  group: 'ML', min: 1, hidden: ()=>(this.hideOperations)},
+        {command: 'min_max_scaler',   text: 'Min max Scaler',   group: 'ML', min: 1, hidden: ()=>(this.hideOperations)},
+        {command: 'max_abs_scaler',   text: 'Max abs Scaler',   group: 'ML', min: 1, hidden: ()=>(this.hideOperations)},
+        {command: 'outliers',   text: 'Outliers',   group: 'ML', min: 1, max: 1, hidden: ()=>(this.hideOperations)},
+
+        ...Object.entries(TYPES_NAMES).map(
+          ([dtype, text])=>({command: 'set_profiler_dtypes', payload: { dtype }, text, group: 'CAST'})
+        )
+      ];
+
+      return [...commandItems, ...this.customMenuItems]
+
+    },
 
     filtersActive () {
       return this.typesSelected.length || this.searchText || (this.currentDataset && this.currentDataset.columns && this.showingColumnsLength !== this.currentDataset.columns.length);
@@ -636,8 +650,8 @@ export default {
 
         var plotable = selected.map( (i)=>{
           var column = this.currentDataset.columns[i]
-          return ['decimal','float','double','float64'].includes(column.profiler_dtype.dtype) ? 'quantitative'
-            : (['int','integer','int64'].includes(column.profiler_dtype.dtype) && column.stats.count_uniques>25) ? 'quantitative'
+          return ['decimal','float','double','float64'].includes(column.stats.profiler_dtype.dtype) ? 'quantitative'
+            : (['int','integer','int64'].includes(column.stats.profiler_dtype.dtype) && column.stats.count_uniques>25) ? 'quantitative'
             : (column.stats.count_uniques<=25) ? column.stats.count_uniques
             : false
         })
@@ -944,7 +958,6 @@ export default {
           tooltip: 'String operations',
           disabled: ()=>!(this.selectionType=='columns' && this.currentDataset && this.currentDataset.summary && this.selectedColumns.length>=0)
         },
-        // TO-DO: Datetime operations
         {
           type: 'menu',
           group: 'TIME',
@@ -967,6 +980,17 @@ export default {
           tooltip: 'Machine Learning',
           disabled: ()=>!(this.selectionType=='columns' && this.currentDataset && this.currentDataset.summary) , // Sampling
         },
+        {
+          divider: true,
+          hidden: ()=>!this.customMenuItems.length
+        },
+        {
+          type: 'menu',
+          group: 'CUSTOM',
+          icons: [{ icon: 'star_rate' }],
+          tooltip: 'Custom functions',
+          hidden: ()=>!this.customMenuItems.length
+        }
       ]
     },
 
@@ -1012,7 +1036,7 @@ export default {
         if (!columns.length) {
           return []
         }
-        return [...new Set(columns.map(i=>this.currentDataset.columns[i].profiler_dtype.dtype))]
+        return [...new Set(columns.map(i=>this.currentDataset.columns[i].stats.profiler_dtype.dtype))]
       } catch (err) {
         console.error(err)
         return []
@@ -1118,6 +1142,14 @@ export default {
       this.$refs.cells & this.$refs.cells.downloadDataset(event)
     },
 
+    compileDataset () {
+      this.$refs.cells & this.$refs.cells.compileDataset(event)
+    },
+
+    showTextDialog(text, title = 'Result') {
+      this.$refs.cells & this.$refs.cells.showTextDialog(text, title)
+    },
+
     checkDataTypes (allowedTypes) {
       if (!allowedTypes || !allowedTypes.length) {
         return true
@@ -1145,17 +1177,23 @@ export default {
       return this.commandItems.filter(e => e.group==group)
     },
 
-    copyCodeToClipboard (engineText) {
+    async showCodeOnTextDialog (engineText) {
+
+      var finalPayload = await this.$store.dispatch('finalCommands', { ignoreFrom: -1, include: [], noPandas: true });
+
       var code = 'from optimus import Optimus\n'
       +'from optimus.expressions import Parser\n'
       +'p = Parser()\n'
       +`op = Optimus(${engineText})\n`
-      + this.cells.map(e=>e.code).filter(c=>c.trim()).join('\n')
-      copyToClipboard(code)
-      this.copied = true
-      setTimeout(() => {
-        this.copied = false
-      }, 2000);
+      + generateCode(finalPayload);
+
+      code = code.trim();
+
+      this.showTextDialog(code, 'Code')
+      // this.copied = true
+      // setTimeout(() => {
+      //   this.copied = false
+      // }, 2000);
     },
 
     cancelCommand () {
@@ -1168,12 +1206,14 @@ export default {
 
       if (event.command==='download') {
         this.downloadDataset()
-        return
+      } else if (event.command==='compile') {
+        this.compileDataset()
+      } else {
+        this.$nextTick(()=>{
+          this.$refs.cells & this.$refs.cells.commandHandle(event)
+        })
       }
 
-      this.$nextTick(()=>{
-        this.$refs.cells & this.$refs.cells.commandHandle(event)
-      })
     },
 
     clickSort (by) {

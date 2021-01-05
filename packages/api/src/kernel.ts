@@ -62,7 +62,6 @@ export const initializeKernel = async function (sessionId, payload) {
 };
 
 export const initializeKernelSession = async function (sessionId, payload) {
-	// console.log('initializeKernelSession')
 
 	let result;
 
@@ -82,7 +81,7 @@ export const initializeKernelSession = async function (sessionId, payload) {
 			result = await requestToKernel('init', sessionId, payload);
 		} catch (err) {
 			tries--;
-			if (err.toString().includes('Error on createKernel')) {
+			if (err.toString().includes('Kernel creation')) {
 				tries = 0;
 			}
 			if (tries <= 0) {
@@ -97,7 +96,6 @@ export const initializeKernelSession = async function (sessionId, payload) {
 			result = false;
 		}
 		if (!result) {
-			// console.log('Kernel error, retrying');
 			await deleteKernel(sessionId);
 		} else {
 			break;
@@ -129,7 +127,7 @@ const assertSession = async function (
 		}
 
 		if (!kernels[sessionId] || !kernels[sessionId].id) {
-			throw 'Error on createKernel';
+			throw new Error('Kernel creation went wrong');
 		}
 
 		await createConnection(sessionId);
@@ -156,7 +154,7 @@ export const requestToKernel = async function (type, sessionId, payload) {
 
   var kernelAddress : any = kernels[sessionId].kernel_address;
 
-  if (type == 'init' && !kernelAddress && payload.jupyter_address) {
+  if (type == 'init' && !kernelAddress && payload.jupyter_address && payload.jupyter_address.ip && payload.jupyter_address.port) {
     kernelAddress = payload.jupyter_address.ip + ':' + payload.jupyter_address.port;
   }
 
@@ -282,11 +280,8 @@ export const createConnection = async function (sessionId) {
 
 	if (!kernels[sessionId].connecting) {
 		kernels[sessionId].connecting = new Promise((resolve, reject) => {
-			// console.log(
-			// 	`Creating connection for ${sessionId} on ${wsKernelBase(ka)}`,
-			// );
 
-			kernels[sessionId] = kernels[sessionId] || {};
+      kernels[sessionId] = kernels[sessionId] || {};
 
 			if (!kernels[sessionId].client) {
 				kernels[sessionId].client = new WebSocketClient({
@@ -299,41 +294,66 @@ export const createConnection = async function (sessionId) {
 			);
 			kernels[sessionId].client.on('connect', function (connection) {
 				// kernels[sessionId] = kernels[sessionId] || {}
-				kernels[sessionId].connection = connection;
+        kernels[sessionId].connection = connection;
+        kernels[sessionId].connection.on('close', function (message) {
+          Object.values(kernels[sessionId].promises || {}).forEach((promise: any)=>{
+            promise.reject('Socket closed '+message);
+          })
+          kernels[sessionId] = {};
+        })
+        kernels[sessionId].connection.on('error', function (message) {
+          Object.values(kernels[sessionId].promises || {}).forEach((promise: any)=>{
+            promise.reject('Socket error '+message);
+          })
+          kernels[sessionId] = {};
+        })
 				kernels[sessionId].connection.on('message', function (message) {
 					try {
-						if (!kernels[sessionId]) {
-							console.error(kernels[sessionId]);
-							throw 'Kernel error';
-						} else if (!kernels[sessionId].promises){
-							console.error(kernels[sessionId].promises);
-							throw 'Kernel Promises pool error';
+
+            var response;
+            var msg_id;
+
+            if (message.type === 'utf8') {
+              response = JSON.parse(message.utf8Data);
+              msg_id = response.parent_header.msg_id;
+              var result;
+              if (response.msg_type === 'execute_result') {
+                result = response.content.data['text/plain'];
+              } else if (response.msg_type === 'error') {
+                console.error('msg_type error on', sessionId);
+                result = {
+                  ...response.content,
+                  status: 'error',
+                  _response: response,
+                };
+              }
+            } else {
+              console.warn({
+                status: 'error',
+                content: 'Response from gateway is not utf8 type',
+                error: 'Message type error',
+                message: message,
+              });
+              result = message;
             }
-						if (message.type === 'utf8') {
-							const response = JSON.parse(message.utf8Data);
-							const msg_id = response.parent_header.msg_id;
-							if (response.msg_type === 'execute_result') {
-								kernels[sessionId].promises[msg_id].resolve(
-									response.content.data['text/plain'],
-								);
-							} else if (response.msg_type === 'error') {
-								console.error('msg_type error on', sessionId);
-								kernels[sessionId].promises[msg_id].resolve({
-									...response.content,
-									status: 'error',
-									_response: response,
-								});
-							}
-						} else {
-							console.warn({
-								status: 'error',
-								content: 'Response from gateway is not utf8 type',
-								error: 'Message type error',
-								message: message,
-							}); // TO-DO: Resolve
-						}
+
+						if (!kernels[sessionId]) {
+              console.log('Unresolved result (no kernel)', sessionId);
+							throw new Error('Message received without kernel session');
+						} else if (!kernels[sessionId].promises) {
+              console.log('Unresolved result (no promise pool)', sessionId);
+							throw new Error('Message received without promises pool');
+            } else if (!kernels[sessionId].promises[msg_id]) {
+              if (response.msg_type === 'execute_result') {
+                console.log('Unresolved result (wrong msg_id)', msg_id, sessionId);
+                throw new Error('Message received for unexecpected promise');
+              }
+            } else if (['execute_result', 'error'].includes(response.msg_type)) {
+              kernels[sessionId].promises[msg_id].resolve(result);
+            }
+
 					} catch (err) {
-						console.error(err);
+						console.error(err.message);
 					}
 				});
 				console.log('Connection created', sessionId);
@@ -392,16 +412,14 @@ const createKernel = async function (sessionId, ka : any = undefined) {
 					continue;
 				}
 				console.error(err);
-        throw 'Error on createKernel';
+        throw new Error('Kernel creation went wrong');
 
 			}
 		}
 		// console.log('Kernel created', sessionId, ka);
 		return sessionId;
 	} catch (err) {
-		// console.log('Deleting Session',sessionId,'error')
-		// console.error(err)
-		throw 'Error on createKernel';
+		throw new Error('Kernel creation went wrong');
 	}
 };
 

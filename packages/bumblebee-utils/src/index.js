@@ -190,13 +190,14 @@ export const reduceRanges = (ranges_array) => {
   }, [])
 }
 
-export const copyToClipboard = (str) => {
+export const copyToClipboard = (str, target) => {
   const el = document.createElement('textarea');
   el.value = str;
-  document.body.appendChild(el);
+  target = target || document.body;
+  target.appendChild(el);
   el.select();
   document.execCommand('copy');
-  document.body.removeChild(el);
+  target.removeChild(el);
 };
 
 export const optimizeRanges = (inputRange, existingRanges) => {
@@ -261,6 +262,20 @@ export const getOutputColsArgument = (output_cols = [], input_cols = [], pre = '
       : `[${input_cols.map((e)=>(e ? `"${escapeQuotes(pre+e)}"` : 'None')).join(', ')}]`
   }
   return false
+}
+
+export const preparedColumns = function(columns, array=false) {
+  if (Array.isArray(columns) && columns.length) {
+    return `["${columns.join('", "')}"]`;
+  } else if (typeof columns === 'string') {
+    if (array) {
+      return `["${columns}"]`;
+    } else {
+      return `"${columns}"`;
+    }
+  } else {
+    return '"*"';
+  }
 }
 
 export const columnsHint = (columns = [], output_cols = []) => {
@@ -450,7 +465,7 @@ export const propsToLocal = (array) => {
 export const objectFilter = (obj, cb) => {
   return Object.fromEntries(
     Object.entries(obj).filter(
-      ([key,value])=>cb([key, value])
+      ([key,value])=>cb([key,value])
     )
   )
 }
@@ -461,6 +476,22 @@ export const objectMap = (obj, cb) => {
       ([key,value])=>[key, cb(value)]
     )
   )
+}
+
+export const objectMapEntries = (obj, cb) => {
+  return Object.fromEntries(
+    Object.entries(obj).map(
+      ([key,value])=>[key, cb(key,value)]
+    )
+  )
+}
+
+export const getCodePayload = (payload) => {
+  if (payload._generator && typeof payload._custom === 'function' ) {
+    return payload._custom(payload);
+  } else {
+    return payload;
+  }
 }
 
 export const transformDateToPython = (string) => {
@@ -476,7 +507,7 @@ export const transformDateFromPython = (string) => {
 }
 
 export const engineValid = (key, engine) => {
-  return (!INIT_PARAMS[key].engines || INIT_PARAMS[key].engines.includes(engine))
+  return !INIT_PARAMS[key] || (!INIT_PARAMS[key].engines || INIT_PARAMS[key].engines.includes(engine))
 };
 
 export const getDefaultParams = (_params) => {
@@ -511,8 +542,10 @@ export const getEngines = (coiled = false) => {
 export const ENGINES = {
   'dask': 'Dask',
   'dask_cudf': 'Dask-cuDF',
-  'pandas': 'Pandas',
   'cudf': 'cuDF',
+  'pandas': 'Pandas',
+  'spark': 'Spark',
+  'ibis': 'Ibis',
   'dask_coiled': 'Dask (Coiled)',
   'dask_cudf_coiled': 'Dask cuDF (Coiled)'
 }
@@ -554,11 +587,18 @@ export const INIT_PARAMS = {
     engines: ['dask_coiled', 'dask_cudf_coiled']
   },
 
+  'options': {
+    type: 'string',
+    large: true,
+    engines: ['spark']
+  },
+
   'n_workers': {
     type: 'int',
     name: 'Number of workers',
     engines: ['dask', 'dask_cudf', 'dask_coiled', 'dask_cudf_coiled'],
-    default: '1'
+    default: '1',
+    fill: true
   },
   'processes': {
     type: 'boolean',
@@ -589,7 +629,7 @@ export const INIT_PARAMS = {
     },
     engines: ['dask', 'dask_cudf']
   },
-  'kernel_address': {
+  'kernel_address': { // TO-DO: check
     type: 'string',
     engines: ['dask', 'dask_cudf']
   },
@@ -661,6 +701,12 @@ export const INIT_PARAMS = {
       return params.use_gpu ? 'optimus/gpu' : 'optimus/default';
     },
     engines: ['dask_coiled', 'dask_cudf_coiled']
+  },
+  'memory_limit': {
+    type: 'string',
+    default: '1G',
+    noForm: true,
+    engines: ['dask', 'dask_cudf', 'pandas', 'cudf']
   },
   // 'kwargs': {
   //   type: 'kwargs'
@@ -799,6 +845,7 @@ export default {
   escapeQuotes,
   filterCells,
   getOutputColsArgument,
+  preparedColumns,
   columnsHint,
   escapeQuotesOn,
   printError,
@@ -816,6 +863,8 @@ export default {
   propsToLocal,
   objectFilter,
   objectMap,
+  objectMapEntries,
+  getCodePayload,
   transformDateToPython,
   transformDateFromPython,
   getEngines,

@@ -1,6 +1,6 @@
 import axios from 'axios'
 import { setAuthTokenAxios, resetAuthTokenAxios } from '@/utils/auth.js'
-import { debounce } from 'bumblebee-utils'
+import { asyncDebounce } from 'bumblebee-utils'
 import Vue from 'vue'
 
 export const state = () => ({
@@ -36,7 +36,7 @@ export const actions =  {
     }
   },
 
-  saveWorkspace: debounce ( async function ({dispatch, commit, state, rootState}) {
+  saveWorkspace: asyncDebounce ( async function ({dispatch, commit, state, rootState}) {
     if (!state.saveReady)  {
       return
     }
@@ -53,6 +53,8 @@ export const actions =  {
         return JSON.stringify(cell)
       })
 
+      var configuration = rootState.engineId || null;
+
       var payload = {
         tabs: rootState.datasets.map(e=>{
           var {dataSources, name, ...profiling} = e
@@ -63,6 +65,7 @@ export const actions =  {
         }),
         commands: [...dataSources, ...commands],
         dataSourcesCount: dataSources.length,
+        configuration,
         selectedTab: rootState.tab
 
       }

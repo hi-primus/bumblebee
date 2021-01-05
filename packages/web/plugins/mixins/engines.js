@@ -1,4 +1,4 @@
-import { capitalizeString, getEngines, deepCopy, INIT_PARAMS } from "bumblebee-utils";
+import { capitalizeString, getEngines, deepCopy, INIT_PARAMS, objectFilter, engineValid } from "bumblebee-utils";
 import FormDialog from "@/components/FormDialog";
 
 export default {
@@ -13,16 +13,16 @@ export default {
       return this.$refs.formDialog.fromForm(form)
     },
 
-    async settingsParameters (_defaultValues = {}, text = 'Create new settings', name = false ) {
+    async enginesParameters (_defaultValues = {}, text = 'Create new engine', editing = false, extraButtons = [] ) {
 
       var defaultValues = deepCopy(_defaultValues);
 
       defaultValues.name = this.$store.getters['session/getUsername'] + '__' + this.$route.params.slug;
 
-      let valuesFromParameters = Object.entries(INIT_PARAMS).filter(([key, field])=>field.type !== 'hidden').map(([key, field])=>{
+      let valuesFromParameters = Object.entries(INIT_PARAMS).filter(([key, field])=>field.type !== 'hidden' && !field.noForm).map(([key, field])=>{
         return {
           key,
-          value: defaultValues[key] || undefined,
+          value: defaultValues[key] || field.fill ? field.default : undefined,
           ...(field.items ? {is: 'v-select'} : {}),
           ...(field.type === 'boolean' ? {type: 'checkbox'} : {}),
           props: {
@@ -38,6 +38,13 @@ export default {
       valuesFromParameters
 
       var fields = [
+        {
+          key: '_ws_name',
+          value: _defaultValues._ws_name || '',
+          props: {
+            label: 'Name'
+          }
+        },
         {
           key: 'engine',
           is: 'v-select',
@@ -56,21 +63,13 @@ export default {
         ...valuesFromParameters
       ];
 
-      if (name) {
-        fields = [
-          {
-            key: '_ws_name',
-            value: _defaultValues._ws_name || '',
-            props: {
-              label: 'Name'
-            }
-          },
-          ...fields
-        ];
-      }
-
-
       let values = await this.fromForm({
+        acceptLabel: 'Save',
+        extraButtons: editing ? [...extraButtons, {
+          checkDisabled: true,
+          label: 'Save as',
+          event: 'create'
+        }] : extraButtons,
         text,
         fields,
         disabled: (values)=>{
@@ -81,7 +80,9 @@ export default {
         }
       });
 
-      return values;
+      return objectFilter(values, ([key, value])=>{
+        return engineValid(key, values.engine) && value;
+      });
     },
   }
 }

@@ -154,10 +154,10 @@ cluster = coiled.Cluster(${functionParams.substr(2)},
                          })
 client = Client(cluster)
 client_install = client.run(install)
-op = Optimus(engine, session=client, memory_limit="1G", comm=True)`;
+op = Optimus(engine, session=client, memory_limit="1G")`;
   } else {
     opInit += `
-op = Optimus(engine${functionParams}, memory_limit="1G", comm=True)`;
+op = Optimus(engine${functionParams})`;
   }
 
   if (min) {
@@ -167,9 +167,8 @@ op = Optimus(engine${functionParams}, memory_limit="1G", comm=True)`;
   return `
 
 def install ():
-    import pandas
     from optimus import Optimus
-    return 'ok' if pandas.Series.ext else False
+    return 'ok'
 
 reset = ${(params?.reset != '0') ? 'True' : 'False'}
 
@@ -242,8 +241,11 @@ ${opInit}
 if (using_coiled):
     res.update({"coiled": True, "cluster_name": cluster.name, "dashboard_link": getattr(client, 'dashboard_link', None) if client else None, "client_install": client_install});
 else:
-    res.update({"dashboard_link": getattr(op.client, 'dashboard_link', None) if op.client else None});
-res.update({'optimus': 'ok init', 'optimus_version': op.__version__, 'engine': op.engine, "coiled_available": coiled_available});
+    client = getattr(op, 'client', None)
+    dashboard_link = getattr(op.client, 'dashboard_link', None) if client else None
+    res.update({"dashboard_link": dashboard_link});
+op_engine = getattr(op, 'engine', None)
+res.update({'optimus': 'ok init', 'optimus_version': op.__version__, 'engine': op_engine, "coiled_available": coiled_available});
 
 if _use_time:
     _end_time = datetime.utcnow().timestamp()

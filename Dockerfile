@@ -59,13 +59,13 @@ RUN yarn global add pm2 && \
 
 WORKDIR "/opt"
 
-RUN echo "Version 3.0.0 - Nov 25 2020 - 4"
+RUN echo "Version 3.0.0 - Jan 5 2021"
 
 RUN pip install cytoolz && \
     pip install git+https://github.com/ironmussa/dateinfer.git && \
-    pip install git+https://github.com/ironmussa/Optimus.git@develop-3.0
+    pip install git+https://github.com/ironmussa/Optimus.git@optimus_dataframe
 
-RUN git clone https://github.com/ironmussa/Bumblebee.git
+RUN git clone --branch optimus-dataframe https://github.com/ironmussa/Bumblebee.git
 
 WORKDIR "/opt/Bumblebee"
 
@@ -98,4 +98,4 @@ CMD ./usr/bin/mongod --fork --logpath /var/log/mongod.log && \
 
 EXPOSE 3000:3000 4000:4000
 
-# docker run --name <NAME> --network="host" -e ADDRESS=<IP> ironmussa/bumblebee:latest
+# docker run --name <NAME> --network="host" -e ADDRESS=<IP> ironmussa/bumblebee:optimus-dataframe

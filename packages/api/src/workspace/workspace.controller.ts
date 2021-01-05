@@ -68,7 +68,6 @@ export class WorkspaceController {
     @Body() createWorkspaceDto,
     @GetUser() user: User
   ): Promise<Workspace> {
-    console.log(createWorkspaceDto);
     this.logger.verbose(`Workspace created ${createWorkspaceDto.name}`);
     return this.workspaceService.newWorkspace(createWorkspaceDto, user);
   }

@@ -1,14 +1,30 @@
 <template>
-  <FormDialog focus ref="formDialog"/>
+  <FormDialog
+    focus
+    ref="formDialog"
+    :disable-back="disableBack"
+    />
 </template>
 
 <script>
 
-import settingsMixin from "@/plugins/mixins/workspace-settings";
+import enginesMixin from "@/plugins/mixins/engines";
+import { deepCopy } from "bumblebee-utils"
 
 export default {
 
-  mixins: [ settingsMixin ],
+  mixins: [ enginesMixin ],
+
+  props: {
+    existing: {
+      type: Boolean,
+      default: false
+    },
+    disableBack: {
+      type: Boolean,
+      default: false
+    }
+  },
 
   data () {
     return {
@@ -20,13 +36,23 @@ export default {
   },
 
   async mounted () {
-    let values = this.$store.state.localConfig;
-    values = await this.settingsParameters(values, 'Workspace settings');
-    if (values) {
-      this.$store.commit('mutation', { mutate: 'localConfig', payload: values });
-      this.$store.commit('mutation', { mutate: 'configPromise', payload: false });
-    }
+
+    let values = deepCopy(this.$store.state.localEngineParameters) || {};
+
+    values._ws_name = this.$store.state.engineConfigName || this.$route.params.slug;
+    values._id = this.$store.state.engineId || undefined;
+
+    var extraButtons = this.disableBack ? [] : [
+      {
+        checkDisabled: false,
+        label: 'Select',
+        event: 'select'
+      },
+    ];
+
+    values = await this.enginesParameters(values, this.existing ? 'Edit engine' : 'Create new engine', this.existing, extraButtons);
     this.$emit('done',values);
+
   },
 
   methods: {

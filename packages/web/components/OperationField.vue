@@ -60,6 +60,7 @@
       <v-text-field
         v-model="_value"
         :key="field.key"
+        :autocomplete="getPropertyField(field.autocomplete) || 'off'"
         :label="getPropertyField(field.label)"
         :placeholder="(typeof field.placeholder == 'function') ? field.placeholder(currentCommand) : (field.placeholder || '')"
         :clearable="field.clearable"

@@ -149,8 +149,8 @@
           <div v-if="!(lazyColumns.length && !lazyColumns[i])" class="column-header-cell">
             <div
               class="data-type"
-              :class="`type-${currentDataset.columns[column.index].profiler_dtype.dtype}`">
-              {{ dataTypeHint(currentDataset.columns[column.index].profiler_dtype.dtype) }}
+              :class="`type-${currentDataset.columns[column.index].stats.profiler_dtype.dtype}`">
+              {{ dataTypeHint(currentDataset.columns[column.index].stats.profiler_dtype.dtype) }}
             </div>
             <div class="column-title" :title="column.name">
               {{column.name}}
@@ -216,8 +216,8 @@
           @dblclick="setMenu($event, column.index)"
           @contextmenu.prevent="contextMenu($event, column.index)">
           <div class="column-header-cell">
-            <div class="data-type" :class="`type-${currentDataset.columns[column.index].profiler_dtype.dtype}`">
-              {{ dataTypeHint(currentDataset.columns[column.index].profiler_dtype.dtype) }}
+            <div class="data-type" :class="`type-${currentDataset.columns[column.index].stats.profiler_dtype.dtype}`">
+              {{ dataTypeHint(currentDataset.columns[column.index].stats.profiler_dtype.dtype) }}
             </div>
             <div class="drag-hint"></div>
             <div
@@ -559,6 +559,8 @@ export default {
 
       selection: [],
 
+      checkScrollAgain: false,
+
       chunks: [],
       chunksPreview: [],
 
@@ -685,7 +687,7 @@ export default {
     },
 
     loadPreviewColumnValues () {
-      var columnValues = this.getValuesByColumns(this.loadPreview.sample)
+      var columnValues = this.getValuesByColumns(this.loadPreview ? this.loadPreview.sample : false)
       return this.computeColumnValues(columnValues, true)
     },
 
@@ -1008,7 +1010,7 @@ export default {
             frequency: ((column.stats.frequency) ? column.stats.frequency : undefined) || column.frequency || undefined,
             zeros: column.stats.zeros,
             null: column.stats.null,
-            dtype: column.profiler_dtype.dtype || column.dtype
+            dtype: column.stats.profiler_dtype.dtype || column.dtype
             // hist_years: (column.stats.hist && column.stats.hist.years) ? column.stats.hist.years : undefined,
           }
         }
@@ -1098,12 +1100,13 @@ export default {
 
   async mounted () {
 
-    await this.checkVisibleColumns()
+    setTimeout(async () => {
+      await this.checkVisibleColumns()
+      await this.scrollCheck(true)
+      this.mustUpdateRows = true
+      this.updateRows()
+    }, 1000);
 
-    await this.scrollCheck(true)
-
-    this.mustUpdateRows = true
-    this.updateRows()
   },
 
   watch: {
@@ -1159,6 +1162,8 @@ export default {
               check = true;
             }
           }
+        } else {
+          this.loadedPreviewCode = false
         }
 
         var noBufferWindow = (previewCode && previewCode.noBufferWindow) ? true : false;
@@ -1183,7 +1188,7 @@ export default {
     },
 
     datasetUpdates: {
-      immediate: true,
+      // immediate: true,
       handler () {
 
         this.updateSelection(this.currentSelection) // TEST
@@ -1196,7 +1201,7 @@ export default {
     },
 
     previewColumns () {
-      this.checkVisibleColumns()
+      return this.checkVisibleColumns()
     },
 
   },
@@ -1311,12 +1316,12 @@ export default {
       this.throttledScrollCheck()
       this.debouncedScrollCheck()
       this.horizontalScrollCheckUp()
-      this.checkVisibleColumns()
+      return this.checkVisibleColumns()
     },
 
     tableTopContainerScroll () {
       this.horizontalScrollCheckDown()
-      this.checkVisibleColumns()
+      return this.checkVisibleColumns()
     },
 
     computeColumnValues (columnValues, noHighlight = false, limit = Infinity) {
@@ -1420,6 +1425,11 @@ export default {
 
       var top = Math.floor(topPosition/this.rowHeight)
       var bottom = Math.ceil(bottomPosition/this.rowHeight)
+
+      if (!top && !bottom) {
+        bottom = 32;
+        this.checkScrollAgain = true;
+      }
 
       return [top, bottom]
     },
@@ -1771,7 +1781,7 @@ export default {
       }
 
       this.newColumnName = this.currentDataset.columns[index].name
-      this.newColumnType = this.currentDataset.columns[index].profiler_dtype.dtype
+      this.newColumnType = this.currentDataset.columns[index].stats.profiler_dtype.dtype
 
       this.columnMenuIndex = index
 
@@ -1801,7 +1811,7 @@ export default {
     saveColumnData () {
       var index = this.columnMenuIndex
       var prevName = this.currentDataset.columns[index].name
-      var prevType = this.currentDataset.columns[index].profiler_dtype.dtype
+      var prevType = this.currentDataset.columns[index].stats.profiler_dtype.dtype
 
       if (this.newColumnType != prevType) {
         var payload = {
@@ -1842,7 +1852,7 @@ export default {
           if (left>=scrollLeft && a===-1) {
             a = i;
           }
-          if (left>=scrollLeft+offsetWidth && b===-1) {
+          if (left>=scrollLeft+offsetWidth && b===-1 && offsetWidth!==0) {
             b = i+1;
           }
         }
@@ -1880,9 +1890,6 @@ export default {
     horizontalScrollCheckDown () {
       var topScrollLeft = this.$refs['BbTableTopContainer'].scrollLeft;
       var bottomScrollLeft = this.$refs['BbTableContainer'].scrollLeft;
-      if (this.$refs['BbTableRowsSpace']) {
-        // this.$refs['BbTableRowsSpace'].style.left = (45 + topScrollLeft) + 'px';
-      }
       if (bottomScrollLeft != topScrollLeft) {
         this.$refs['BbTable'].style.minWidth = this.$refs['BbTableTopContainer'].scrollWidth + 'px'
         this.$refs['BbTableContainer'].scrollLeft = topScrollLeft
@@ -1893,7 +1900,7 @@ export default {
       this.$store.commit('setProfilePreview', false )
     },
 
-    async setProfile (previewCode) {
+    async setProfile (previewCode, previewPayload) {
 
       if (!previewCode) {
         return this.unsetProfile()
@@ -1905,18 +1912,25 @@ export default {
 
         var matches = this.currentRowHighlights
 
-        this.$store.commit('setProfilePreview', {code: previewCode, columns: [], done: false})
+        this.$store.commit('setProfilePreview', {code: previewCode, payload: previewPayload, columns: [], done: false})
 
         var cols = profile ? this.currentPreviewColumns.map(e=>escapeQuotes(  e.title.split(/__preview__/).join('')  )) : [];
 
-        var code = `_df_profile = ${this.currentDataset.dfName}.ext.buffer_window("*")${await getPropertyAsync(previewCode) || ''}`
-        + `\n_output = { `
-        + (profile ? `"profile": _df_profile.ext.profile(["${cols.join('", "')}"])` : '')
-        + (profile && matches ? `, ` : '')
-        + (matches ? `"matches_count": len(_df_profile.rows.select('df["__match__"]!=False'))` : '')
-        + `}`
+        var codePayload = {
+          ...previewPayload,
+          request: {
+            ...previewPayload.request,
+            type: 'profile',
+            saveTo: '_df_preview',
+            noExecute: true,
+            buffer: true,
+            profile: cols,
+            dfName: this.currentDataset.dfName,
+            matches_count: matches
+          }
+        };
 
-        var response = await this.evalCode(code)
+        var response = await this.evalCode(codePayload);
 
         if (!response || !response.data.result) {
           throw response
@@ -1929,7 +1943,7 @@ export default {
             throw response
           }
 
-          dataset = { ...dataset, code: previewCode, done: true }
+          dataset = { ...dataset, code: previewCode, payload: previewPayload, done: true }
 
           this.$store.commit('setProfilePreview', dataset)
         }
@@ -2040,14 +2054,16 @@ export default {
           }
 
           this.fetching = false
-          if (this.toFetch.length) {
+          if (this.toFetch.length || this.checkScrollAgain) {
+            this.checkScrollAgain = false;
             this.$nextTick(()=>{
               this.throttledScrollCheck(awaited)
             })
             return true
           }
 
-        } else if (this.toFetch.length) {
+        } else if (this.toFetch.length || this.checkScrollAgain) {
+          this.checkScrollAgain = false;
           this.$nextTick(()=>{
             this.throttledScrollCheck(false)
           })
@@ -2059,7 +2075,8 @@ export default {
         if (err.message.includes('(Error on profiling)') || err.message.includes('(Error on cells)')) {
           throw err;
         }
-        if (this.toFetch.length) {
+        if (this.toFetch.length || this.checkScrollAgain) {
+          this.checkScrollAgain = false;
           this.$nextTick(()=>{
             this.throttledScrollCheck(false)
           })
@@ -2141,7 +2158,8 @@ export default {
 
       for (let i = newRanges.length - 1; i >= 0 ; i--) {
 
-        var previewCode = (this.previewCode ? this.previewCode.profileCode : false) || ''
+        var previewCode = (this.previewCode ? this.previewCode.profileCode : false) || '';
+        var previewPayload = (this.previewCode ? this.previewCode.codePayload : false) || {};
 
         if (this.currentProfilePreview.code !== previewCode) {
           // console.log('[REQUESTING] resetting profile')
@@ -2158,7 +2176,7 @@ export default {
         if (checkProfile) {
           // console.log('[REQUESTING] profile must be checked')
           if (this.currentProfilePreview.code !== previewCode) {
-            await this.setProfile(previewCode)
+            await this.setProfile(previewCode, previewPayload)
             console.debug('[FETCHING] Profiling done')
           }
         }

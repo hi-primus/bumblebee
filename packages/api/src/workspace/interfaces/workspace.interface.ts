@@ -6,5 +6,6 @@ export interface Workspace extends Document {
 	readonly profiling: string;
 	readonly dataSources: Array<any>;
 	readonly slug: string;
+	readonly configuration: string;
 	tabs: Array<any>;
 }

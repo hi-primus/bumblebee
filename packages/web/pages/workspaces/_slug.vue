@@ -2,9 +2,10 @@
 	<Layout>
 		<v-layout row wrap class="elevation-0 d-flex flex-column align-top justify-start">
       <SettingsPanel
-        v-if="windowDialog  === 'configWorkspace'"
-        @done="doneConfig"
-      />
+        v-if="windowDialog  === 'configEngine'"
+        :existing="$store.state.engineId"
+        :disable-back="!!engineFormPromise"
+        @done="doneConfig($event)"/>
       <v-dialog
         data-name="Workspaces"
         v-else-if="windowDialog"
@@ -12,49 +13,24 @@
         @click:outside="windowDialog = false"
         max-width="1220"
       >
-        <WorkspacesList is-dialog v-if="windowDialog  === 'workspaces'"/>
-        <SettingsList is-dialog v-else-if="windowDialog  === 'configs'"/>
-        <ClustersList is-dialog v-else-if="windowDialog  === 'clusters'"/>
+        <WorkspacesList
+          is-dialog
+          @back="windowDialog = false"
+          v-if="windowDialog  === 'workspaces'"/>
+        <SettingsList
+          is-dialog
+          selecting
+          :back-edit-highlight="!$store.state.engineId"
+          :highlight="$store.state.engineId"
+          :disable-back="!!engineFormPromise"
+          @back="!$store.state.engineId ? showWindowDialog('configEngine') : windowDialog = false"
+          v-else-if="windowDialog  === 'configs'"
+          @click:engine="doneConfig($event, true)"
+          />
+        <ConnectionsList is-dialog v-else-if="windowDialog  === 'clusters'"/>
+        <CustomOperationsManager @back="windowDialog = false" is-dialog v-else-if="windowDialog  === 'customOperations'"/>
       </v-dialog>
-      <template v-if="$store.state.datasets.length==0 && false" data-name="noKernel (deprecated)">
-        <div class="center-screen-inside black--text">
-          <v-progress-circular indeterminate color="black" class="mr-4" />
-          <span class="title">Waiting for data</span>
-          <div class="mb-8" style="width: 100%" />
-          <v-card class="elevation-0">
-            <v-card-text class="title mb-2">Now send info from your notebook. Try something like:</v-card-text>
-            <v-card-text class="subtitle text-code">
-              <span class="comment"># Install Optimus</span>
-              <br />!pip install optimuspyspark
-              <br />
-              <br />
-              <span class="comment"># Load Optimus</span>
-              <br />
-              <span class="keyword">from</span> optimus
-              <span class="keyword">import</span> Optimus
-              <br />
-              <br />
-              <span class="comment"># Let's Optimus call Bumblebee</span>
-              <br />op = Optimus(comm=
-              <span class="keyword">True</span>)
-              <br />
-              <br />
-              <span class="comment"># Load some data</span>
-              <br />df = op.load.csv(
-              <span
-                class="string"
-              >"https://raw.githubusercontent.com/ironmussa/Optimus/master/examples/data/Meteorite_Landings.csv"</span>)
-              <br />
-              <br />
-              <span class="comment"># Visualize</span>
-              <br />df.ext.send(
-              <span class="string">"Meteorite"</span>)
-            </v-card-text>
-          </v-card>
-        </div>
-        <v-icon class="back-btn" large color="black" @click="signOut()">arrow_back</v-icon>
-      </template>
-      <template v-else>
+      <template>
         <div v-if="workspaceStatus==='loading'">
           <div class="center-screen-inside grey--text">
             <v-progress-circular indeterminate color="grey" class="mr-4" />
@@ -223,12 +199,13 @@ import TableBar from "@/components/TableBar"
 import WorkspacesList from "@/components/WorkspacesList"
 import SettingsPanel from "@/components/SettingsPanel"
 import SettingsList from "@/components/SettingsList"
-import ClustersList from "@/components/ClustersList"
+import ConnectionsList from "@/components/ConnectionsList"
+import CustomOperationsManager from "@/components/CustomOperationsManager"
 import MoreMenu from "@/components/MoreMenu"
 import clientMixin from "@/plugins/mixins/client"
 import dataTypesMixin from "@/plugins/mixins/data-types"
 import applicationMixin from "@/plugins/mixins/application"
-import { printError, getDefaultParams, INIT_PARAMS, RESPONSE_MESSAGES } from 'bumblebee-utils'
+import { printError, getDefaultParams, objectFilter, INIT_PARAMS, RESPONSE_MESSAGES } from 'bumblebee-utils'
 
 import { mapGetters, mapState } from "vuex"
 
@@ -241,7 +218,8 @@ export default {
     WorkspacesList,
     SettingsPanel,
     SettingsList,
-    ClustersList,
+    ConnectionsList,
+    CustomOperationsManager,
     MoreMenu
 	},
 
@@ -270,7 +248,8 @@ export default {
 			isOperating: false,
 			confirmDelete: -1,
       typesInput: '',
-      dragFile: false
+      dragFile: false,
+      engineFormPromise: false
 		};
   },
 
@@ -318,13 +297,30 @@ export default {
       let menu = []
 
       menu = [
-        { text: 'Workspaces', click: ()=>this.showWindowDialog('workspaces') },
-        { text: 'Workspace settings', click: ()=>this.showWindowDialog('configWorkspace') }
-        // { text: 'Configs', click: ()=>this.showWindowDialog('configs') },
-        // { text: 'Clusters', click: ()=>this.showWindowDialog('clusters') },
+        { text: 'Workspaces', click: ()=>this.showWindowDialog('workspaces') }
       ];
 
+      if (this.$store.state.engineId) {
+        menu = [
+          ...menu,
+          { text: 'Set engine', click: ()=>this.showWindowDialog('configs') }
+        ];
+      } else {
+        menu = [
+          ...menu,
+          { text: 'Configure engine', click: ()=>this.showWindowDialog('configEngine') }
+        ];
+      }
+
+
+
       var dashboardLink = this.$store.state.dashboardLink;
+
+      menu = [
+        ...menu,
+        { divider: true },
+        { text: 'Manage custom operations', click: ()=>this.showWindowDialog('customOperations') }
+      ];
 
       if (dashboardLink) {
         menu = [
@@ -386,6 +382,13 @@ export default {
 
 	methods: {
 
+    engineForm () {
+      return new Promise((resolve, reject)=>{
+        this.engineFormPromise = {resolve, reject};
+        this.showWindowDialog('configEngine');
+      })
+    },
+
     addFile (event) {
       window.dragCount = 0
       try {
@@ -422,11 +425,64 @@ export default {
       return this.$refs.tableBar.runCodeNow(force, ignoreFrom, newDfName, noCheck);
     },
 
-    async doneConfig (values) {
-      this.windowDialog = false;
-      if (values) {
-        await this.$store.dispatch('session/cleanSession');
-        await this.initializeWorkspace();
+    async doneConfig (values, select=false) {
+      if (values && values._event === 'select') {
+        this.showWindowDialog('configs')
+      } else {
+        this.windowDialog = false;
+        if (values) {
+          var request;
+          var path;
+
+          if (values._event === 'create' || !values._id) {
+            request = 'post';
+            path = '/engineconfigurations'
+          } else {
+            request = 'put';
+            path = `/engineconfigurations/${values._id}`
+          }
+
+          var name = values._ws_name;
+
+          var engineId = values._id;
+          var engineConfigName = values.name;
+
+          delete values._ws_name;
+          delete values._id;
+
+          values = objectFilter(values, ([key,value])=>value)
+
+          var payload = {
+            configuration: values,
+            name
+          }
+
+          if (!select){
+            try {
+              var response = await this.$store.dispatch('request',{
+                request,
+                path,
+                payload
+              });
+            } catch (err) {
+              console.error(err);
+            }
+            engineId = response.data._id;
+            engineConfigName = response.data.name;
+          }
+
+          await this.$store.dispatch('mutateAndSave', {mutate: 'engineId', payload: engineId});
+          await this.$store.dispatch('session/cleanSession');
+          this.$store.commit('mutation', { mutate: 'localEngineParameters', payload: values });
+          this.$store.commit('mutation', { mutate: 'enginePromise', payload: false });
+          this.$store.commit('mutation', { mutate: 'engineConfigName', payload: engineConfigName });
+          this.$store.commit('mutation', { mutate: 'engineId', payload: engineId });
+          await this.initializeWorkspace();
+        }
+      }
+      if (this.engineFormPromise && this.engineFormPromise.resolve) {
+        this.engineFormPromise.resolve();
+        this.engineFormPromise = false;
       }
     },
 
@@ -436,7 +492,7 @@ export default {
 
       try {
 
-        this.$store.commit('session/mutation', { mutate: 'workspaceStatus', payload: 'loading' })
+        await this.$store.dispatch('resetPromises', { from: 'workspace' });
 
         var slug = this.$route.params.slug;
 
@@ -444,11 +500,15 @@ export default {
           this.$store.commit('mutation', { mutate: 'workspaceSlug', payload: slug });
         }
 
+        var config = await this.$store.dispatch('getEngine', { workspaceSlug: slug });
+
+        if (!config) {
+          await this.engineForm();
+          return;
+        }
+
         var optimus = await this.initializeOptimus(slug);
         console.debug('[INITIALIZATION] Optimus initialized');
-
-        var workspace = await this.$store.dispatch('getWorkspace', { slug });
-        console.debug('[INITIALIZATION] Workspace started');
 
         if (!this.$store.state.datasets.length) {
           await this.$store.dispatch('newDataset', { go: true });
@@ -466,7 +526,7 @@ export default {
           var result = await this.runCodeNow(false, -1, undefined, true);
           console.debug('[INITIALIZATION] Cells code and profiling done', result);
 
-            this.$store.commit('kernel', 'done');
+          this.$store.commit('kernel', 'done');
 
           if (!result && result !== false) {
             throw new Error('Cells code or profiling error')
@@ -501,12 +561,12 @@ export default {
 
     initializeOptimus (slug) {
 
-      if (!Object.keys(this.$store.state.localConfig).length) {
+      if (!Object.keys(this.$store.state.localEngineParameters || {}).length) {
 
         var query = this.$route.query;
 
         if (Object.keys(query).length) {
-          console.warn('Getting config from query parameters');
+          console.warn('Getting config from query parameters'); // TO-DO: Remove
         }
 
         var params = {};
@@ -521,8 +581,8 @@ export default {
 
         params.name = params.name || this.currentUsername + '_' + this.$route.params.slug;
 
-        this.$store.commit('mutation', { mutate: 'localConfig', payload: params });
-        this.$store.commit('mutation', { mutate: 'configPromise', payload: false });
+        this.$store.commit('mutation', { mutate: 'localEngineParameters', payload: params });
+        this.$store.commit('mutation', { mutate: 'enginePromise', payload: false });
 
       }
 

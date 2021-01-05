@@ -376,7 +376,7 @@ table {
 /* columns list */
 
 .columns-table, .clickable-table {
-  tbody tr {
+  tbody tr:not(.v-data-table__empty-wrapper) {
     cursor: pointer;
     &:hover {
       background: $data-highlight !important;
@@ -385,11 +385,38 @@ table {
 }
 
 .manager-table {
+  // max-height: calc(100vh - 281px);
+  position: relative;
+  .cto-no-data-button {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -75%);
+  }
   th {
     white-space: nowrap;
   }
   .v-data-table__wrapper {
     min-height: calc(100vh - 340px);
+  }
+}
+
+.engines-table {
+  tbody tr {
+    .preferred-star {
+      opacity: 0.5;
+      &.active {
+        opacity: 1;
+      }
+      &:hover {
+        color: $data-primary !important;
+      }
+    }
+    &:hover {
+      .preferred-star {
+        opacity: 1;
+      }
+    }
   }
 }
 
@@ -1727,12 +1754,6 @@ $editor-top-padding: 4px;
   .bb-table-top-container {
     @-moz-document url-prefix() {
       margin-right: 17px !important;
-
-       // small horizontal line
-
-      // &::after {
-      //   content: none !important;
-      // }
     }
     overflow-x: scroll;
     overflow-y: scroll;
@@ -2958,7 +2979,7 @@ $editor-top-padding: 4px;
   }
   .output-col {
     padding-left: $concat-output-col-padding;
-    min-width: calc(#{$concat-output-col-width} + #{$concat-output-col-padding});
+    min-width: calc(#{$concat-output-col-width} + $concat-output-col-padding);
     &::before {
       content: ' ';
       pointer-events: none;
@@ -3425,4 +3446,36 @@ $editor-top-padding: 4px;
   float: left;
   top: 10px;
   left: 12px;
+}
+
+.no-active::before {
+  opacity: 0 !important;
+}
+
+.icon--text {
+  color: rgba(0, 0, 0, 0.54);
+}
+
+.copy-code-content {
+  position: relative;
+  font-family: $font-mono;
+  font-size: 16px;
+  background-color:rgba(0, 0, 0, 0.08);
+  display: block;
+  min-height: 8em;
+  width: 100%;
+  padding: 6px 28px 6px 12px;
+  border-radius: 3px;
+  span {
+    white-space: pre-line;
+  }
+  .v-icon {
+    position: absolute !important;
+    right: 6px;
+    bottom: 6px;
+  }
+}
+
+.dialog-tooltip {
+  z-index: 206 !important;
 }

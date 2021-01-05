@@ -2,7 +2,6 @@ import axios from 'axios'
 import Vue from 'vue'
 
 import { ALL_TYPES, capitalizeString, getPropertyAsync, filterCells, parseResponse, printError, deepCopy } from 'bumblebee-utils'
-
 import { generateCode } from 'optimus-code-api'
 
 const properties = [
@@ -104,7 +103,7 @@ const defaultState = {
   noMatch: false,
   showingColumnsLength: 0,
   codeDone: '',
-  configPromise: false,
+  enginePromise: false,
   optimusPromise: false,
   workspacePromise: false,
   cellsPromise: false,
@@ -112,7 +111,10 @@ const defaultState = {
   buffersPromises: {},
   listViews: [],
   dataSources: [],
-  gettingNewResults: ''
+  gettingNewResults: '',
+  localEngineParameters: {},
+  engineId: false,
+  engineConfigName: false
 }
 
 export const state = () => {
@@ -120,7 +122,6 @@ export const state = () => {
   return {
     ...defaultState,
     workspaceSlug: false,
-    localConfig: {},
     properties,
     ...pStates,
 
@@ -507,7 +508,7 @@ export const actions = {
     await dispatch('session/serverInit')
   },
 
-  async evalCode({ dispatch, state, getters }, {code ,socketPost}) {
+  async evalCode({ dispatch, state, getters }, { code, codePayload, socketPost }) {
     try {
 
       if (!process.client) {
@@ -518,6 +519,7 @@ export const actions = {
 
       var response = await socketPost('run', {
         code,
+        codePayload,
         username: await dispatch('session/getUsername'),
         workspace: state.workspaceSlug || 'default'
       }, {
@@ -680,8 +682,15 @@ export const actions = {
       cells = response.data.commands.map( e=>({ ...JSON.parse(e), done: false }) );
     }
 
+    if (response.data.configuration) {
+      var localEngineParameters = await dispatch('getEngine', { id: response.data.configurations });
+    }
+
     cells = cells.map(cell => {
-      cell.code = generateCode(cell.command, cell.payload);
+      if (cell && cell.payload && cell.payload.request) {
+        cell.payload.request.engine = (state.localEngineParameters || {}).engine || cell.payload.request.engine;
+      }
+      cell.code = generateCode(cell);
       return cell;
     })
 
@@ -716,16 +725,55 @@ export const actions = {
 
   },
 
-  async loadConfig ({ state }, payload) {
-    return deepCopy(state.localConfig); // TO-DO: Config
+  async loadEngine ({ state, commit, dispatch }, { id, workspaceSlug }) {
+
+    try {
+      if (workspaceSlug) {
+        var workspace = await dispatch('getWorkspace', { slug: workspaceSlug } );
+        id = workspace.configuration;
+      }
+    } catch (err) {
+      console.error(err)
+    }
+
+    if (!id && state.engineId) {
+      id = state.engineId;
+    }
+
+    var enginePayload = undefined
+
+    var path = `/engineconfigurations/preferred`;
+
+    if (id) {
+      path = `/engineconfigurations/${id}`;
+    }
+    try {
+      var response = await dispatch('request',{
+        path
+      });
+
+      id = id || response.data._id;
+      var engineConfigName = response.data.name;
+      enginePayload = response.data.configuration;
+
+      commit('mutation', {mutate: 'engineId', payload: id});
+      commit('mutation', { mutate: 'engineConfigName', payload: engineConfigName });
+      commit('mutation', { mutate: 'localEngineParameters', payload: enginePayload });
+
+    } catch (err) {
+      console.warn(`Error requesting engine item ${id} for ${workspaceSlug}. Using default settings.`);
+      console.error(err);
+    }
+    return enginePayload;
   },
 
-  getConfig ({ dispatch }, payload) {
+  getEngine ({ dispatch, state }, payload) {
 
     var promisePayload = {
-      name: 'configPromise',
-      action: 'loadConfig',
-      payload
+      name: 'enginePromise',
+      action: 'loadEngine',
+      payload,
+      forcePromise: !state.localEngineParameters
     };
 
     return dispatch('getPromise', promisePayload);
@@ -740,6 +788,59 @@ export const actions = {
       return '';
     }
     return filterCells(getters.cells, newOnly, ignoreFrom).map(e=>e.code).join('\n').trim();
+  },
+
+  codeCommands ({ getters }, { newOnly, ignoreFrom }) {
+    newOnly = newOnly || false;
+    ignoreFrom = ignoreFrom || -1;
+    if (!getters.cells.length) {
+      return [];
+    }
+    return filterCells(getters.cells, newOnly, ignoreFrom).map(e=>({
+      command: e.command,
+      payload: e.payload
+    }));
+  },
+
+  async finalCommands ({ dispatch, state }, { ignoreFrom, include, noPandas }) {
+
+    var finalPayload = deepCopy(await dispatch('codeCommands', { newOnly: false, ignoreFrom }));
+
+    finalPayload = finalPayload.map(command=>{
+      command.payload.request = command.payload.request || {};
+      command.payload.request.type = 'final';
+      return command;
+    });
+
+    // console.debug('[SPECIAL PROCESSING] finalPayload (complete)', finalPayload);
+
+    (include || []).forEach((payload)=>{
+      finalPayload.push(payload);
+    });
+
+    if (!noPandas && ['spark', 'ibis'].includes(state.localEngineParameters.engine)) {
+
+      var dfNames = [ ...new Set(finalPayload.filter(({payload})=>payload.request.createsNew).map(({payload})=>payload.newDfName)) ];
+
+      // console.debug('[SPECIAL PROCESSING] dfNames', dfNames)
+
+      dfNames.forEach(dfName => {
+        finalPayload.push({
+          command: 'toPandas',
+          payload: {
+            dfName,
+            request: {
+              saveTo: dfName
+            }
+          }
+        })
+      });
+
+    }
+
+
+    return finalPayload;
+
   },
 
   async markCells ({ dispatch, state, commit }, { mark, ignoreFrom, error, splice }) {
@@ -828,6 +929,14 @@ export const actions = {
     console.debug('[RESET] From', from);
 
     switch (from) {
+      case 'workspace':
+        commit('session/mutation', { mutate: 'workspaceStatus', payload: 'loading' })
+        commit('session/mutation', { mutate: 'saveReady', payload: false});
+        commit('mutation', { mutate: 'workspacePromise', payload: false});
+        commit('mutation', { mutate: 'workspace', payload: false });
+      case 'config':
+        commit('mutation', { mutate: 'enginePromise', payload: false});
+        commit('mutation', { mutate: 'localEngineParameters', payload: ''});
       case 'optimus':
         commit('mutation', { mutate: 'optimusPromise', payload: false});
         commit('mutation', { mutate: 'dashboardLink', payload: ''});
@@ -857,7 +966,7 @@ export const actions = {
 
     await Vue.nextTick();
 
-    var params = await dispatch('getConfig');
+    var params = await dispatch('getEngine', { workspaceSlug: slug });
 
     if (!slug) {
       slug = state.workspaceSlug;
@@ -875,7 +984,7 @@ export const actions = {
       ...params
     });
 
-    console.debug('[DEBUG][INITIALIZATION] initializeOptimus response', response);
+    console.debug('[DEBUG][INITIALIZATION] optimus response', response);
 
     var functions;
 
@@ -962,14 +1071,11 @@ export const actions = {
   async loadCellsResult ({dispatch, state, getters, commit}, { force, ignoreFrom, socketPost, clearPrevious }) {
     console.debug('[DEBUG] Loading cells result');
     try {
-      // await Vue.nextTick();
+
 
       var optimus = await dispatch('getOptimus', { payload: {socketPost} } );
-      var workspace = await dispatch('getWorkspace', {} );
 
-      var init = [optimus, workspace];
-
-      // console.debug(init)
+      var init = [optimus];
 
       if (ignoreFrom>=0) {
         force = true;
@@ -977,6 +1083,7 @@ export const actions = {
 
       var newOnly = false;
       var code = await dispatch('codeText', { newOnly, ignoreFrom });
+      var codePayload = await dispatch('codeCommands', { newOnly, ignoreFrom });
 
       var codeDone = force ? '' : state.codeDone.trim();
 
@@ -1030,14 +1137,71 @@ export const actions = {
 
       console.debug('[DEBUG][CODE] Sent', code);
 
-      var response = await socketPost('cells', {
-        code,
-        username: await dispatch('session/getUsername'),
-        workspace: state.workspaceSlug || 'default',
-        key: state.key
-      }, {
-        timeout: 0
-      });
+      var finalPayload = false;
+
+      var response;
+
+      if (codePayload) {
+
+        if (!Array.isArray(codePayload)) {
+          codePayload = [codePayload];
+        }
+
+        // avoids saving new files when previewing a previous point on the notebook
+
+        if (ignoreFrom>=0) {
+          codePayload.filter(({payload})=>!(payload.request && payload.request.isSave))
+        }
+
+        // checks if there's any cell that wasks to re-process everything using the original engine
+
+        var getFinal = codePayload.some(({payload})=>(payload.request && payload.request.isSave && payload._engineProcessing))
+
+        // console.debug('[SPECIAL PROCESSING] getFinal', getFinal);
+
+        if (getFinal) {
+
+          codePayload = await dispatch('finalCommands', { ignoreFrom, include: [] });
+
+          console.debug('[SPECIAL PROCESSING] codePayload (with toPandas)', codePayload);
+
+        } else {
+
+          console.debug('[SPECIAL PROCESSING] codePayload', codePayload);
+
+        };
+
+        codePayload = codePayload.map((command)=>{
+          var _custom = command.payload._custom;
+          if (_custom && typeof _custom === 'function' ) {
+            return _custom(command.payload);
+          }
+          return command;
+        });
+
+        response = await socketPost('cells', {
+          code: undefined,
+          codePayload,
+          username: await dispatch('session/getUsername'),
+          workspace: state.workspaceSlug || 'default',
+          key: state.key
+        }, {
+          timeout: 0
+        });
+
+      } else {
+
+        response = await socketPost('cells', {
+          code,
+          codePayload: undefined,
+          username: await dispatch('session/getUsername'),
+          workspace: state.workspaceSlug || 'default',
+          key: state.key
+        }, {
+          timeout: 0
+        });
+
+      }
 
       response.originalCode = code;
 
@@ -1104,8 +1268,6 @@ export const actions = {
       var username = await dispatch('session/getUsername');
 
       if (!dfName) {
-        // return {};
-        var workspace = await dispatch('getWorkspace', {} );
         dfName = getters.currentDataset.dfName;
         if (!dfName) {
           console.warn('[DATA LOADING] No workspaces found');
@@ -1197,7 +1359,7 @@ export const actions = {
 
     var datasets = getters.secondaryDatasets
 
-    var result = await dispatch('evalCode', {socketPost, code: '_output = '+dfName+'.ext.set_buffer("*")'})
+    var result = await dispatch('evalCode', {socketPost, code: '_output = '+dfName+'.set_buffer("*")'})
     console.debug('[DEBUG] Loading buffer Done', dfName);
     return result;
 
@@ -1216,9 +1378,9 @@ export const actions = {
     return dispatch('getPromise', promisePayload);
   },
 
-  async getBufferWindow ({commit, dispatch, state, getters}, {from, to, slug, dfName, code, socketPost, beforeCodeEval}) {
+  async getBufferWindow ({commit, dispatch, state, getters}, {from, to, slug, dfName, socketPost, beforeCodeEval}) {
 
-    slug = slug || state.workspaceSlug || 'default';
+    slug = slug || state.workspaceSlug;
 
     var workspaceLoad = await dispatch('getWorkspace', { slug } );
 
@@ -1240,16 +1402,16 @@ export const actions = {
     to = to || 35; // TO-DO: 35 -> ?
 
     var previewCode = '';
+    var codePayload  = { command: undefined };
     var noBufferWindow = false;
     var forceName = false;
 
     if (state.previewCode) {
       previewCode = state.previewCode.code;
+      codePayload = state.previewCode.codePayload;
       noBufferWindow = state.previewCode.noBufferWindow;
       forceName = !!state.previewCode.datasetPreview;
     }
-
-    var code = await getPropertyAsync(previewCode, [from, to+1]) || ''
 
     var referenceCode = await getPropertyAsync(previewCode) || ''
 
@@ -1273,7 +1435,15 @@ export const actions = {
 
     if (profilePreview) {
       try {
-        response = await dispatch('evalCode',{ socketPost, code: `_output = _df_profile${(noBufferWindow) ? '' : '['+from+':'+(to+1)+']'}.ext.to_json("*")`})
+        var codePayload = {
+          request: {
+            type: 'preview',
+            sample: true,
+            buffer: noBufferWindow ? false : [from, to],
+            dfName: '_df_preview'
+          }
+        };
+        response = await dispatch('evalCode',{ socketPost, codePayload })
       } catch (err) {
         console.error(err,'Retrying without buffered profiling');
         profilePreview = false;
@@ -1281,13 +1451,24 @@ export const actions = {
     }
 
     if (!profilePreview) {
+      var codePayload = {
+        ...codePayload,
+        request: {
+          ...codePayload.request,
+          type: 'preview',
+          dfName: datasetDfName,
+          sample: true,
+          noSave: true,
+          buffer: noBufferWindow ? true : [from, to]
+        }
+      };
       try {
         commit('setProfilePreview', false);
-        response = await dispatch('evalCode',{ socketPost, code: `_output = ${datasetDfName}.ext.buffer_window("*"${(noBufferWindow) ? '' : ', '+from+', '+(to+1)})${code}.ext.to_json("*")`})
+        response = await dispatch('evalCode',{ socketPost, codePayload })
       } catch (err) {
         console.error(err,'Retrying with buffer');
         await dispatch('getBuffer', { dfName: datasetDfName, socketPost, forcePromise: true });
-        response = await dispatch('evalCode',{ socketPost, code: `_output = ${datasetDfName}.ext.buffer_window("*"${(noBufferWindow) ? '' : ', '+from+', '+(to+1)})${code}.ext.to_json("*")`})
+        response = await dispatch('evalCode',{ socketPost, codePayload })
       }
     }
 
@@ -1297,18 +1478,18 @@ export const actions = {
       commit('setPreviewInfo', {error: false})
     }
 
-    var parsed = response && response.data && response.data.result ? parseResponse(response.data.result) : undefined
+    var sample = response.data.result;
 
     var pre = forceName ? '__preview__' : ''
 
-    if (parsed && parsed.sample) {
-      parsed.sample.columns = parsed.sample.columns.map(e=>({...e, title: pre+e.title}))
+    if (sample) {
+      sample.columns = sample.columns.map(e=>({...e, title: pre+e.title}))
       return {
         code: referenceCode,
         update: getters.datasetUpdates,
         from,
         to,
-        sample: parsed.sample,
+        sample: sample,
         inTable: false
       }
     } else {
@@ -1452,7 +1633,7 @@ export const getters = {
   },
   typesAvailable (state) {
     try {
-      return [...new Set(state.datasets[state.tab].columns.map(col=>col.profiler_dtype.dtype))] || state.allTypes
+      return [...new Set(state.datasets[state.tab].columns.map(col=>col.stats.profiler_dtype.dtype))] || state.allTypes
       // return state.datasets[state.tab].summary.dtypes_list || state.allTypes
     } catch (error) {
       return state.allTypes

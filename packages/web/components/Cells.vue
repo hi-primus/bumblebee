@@ -1,5 +1,32 @@
 <template>
   <div class="sidebar-content">
+    <v-dialog
+      v-if="textDialog"
+      :value="textDialog"
+      @input="textDialog = $event ? textDialog : false"
+      max-width="900"
+    >
+      <v-card>
+        <v-btn
+          icon large color="black"
+          @click="textDialog = false"
+          class="title-button-left">
+          <v-icon>mdi-arrow-left</v-icon>
+        </v-btn>
+        <v-card-title class="title">{{textDialog.title}}</v-card-title>
+        <v-card-text class="pb-5" style="max-height: 70vh; overflow-y: auto;">
+          <div class="copy-code-content">
+            <span>{{textDialog.text}}</span>
+            <v-tooltip transition="fade-transition" left color="dataprimary darken-2" content-class="dialog-tooltip" v-model="copied">
+              <template v-slot:activator="{on: success}">
+                <v-icon small @click.stop="clickCopy(textDialog.text, $event)">content_copy</v-icon>
+              </template>
+              <span>Copied succesfully</span>
+            </v-tooltip>
+          </div>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
     <CommandFormContainer
       v-if="command && command.dialog"
       v-show="(currentCommand.command && view!='operations')"
@@ -7,7 +34,7 @@
       :command="command"
       @cancelCommand="cancelCommand"
     >
-      <v-form @submit.prevent="confirmCommand" id="operation-form" class="pl-4 pr-5 pt-2 operation-form">
+      <v-form @submit.prevent="confirmCommand" id="operation-form" class="pl-4 pr-5 pt-2 operation-form" autocomplete="off">
           <div class="body-2 mb-1 mt-2" :class="{'title': command.dialog.bigText}" v-if="command.dialog.text">
             {{
               {value: command.dialog.text, args: [currentCommand]} | property
@@ -234,10 +261,11 @@ import OperationField from '@/components/OperationField'
 import clientMixin from '@/plugins/mixins/client'
 import applicationMixin from '@/plugins/mixins/application'
 import { mapGetters } from 'vuex'
-import { getGenerator } from 'optimus-code-api'
+import { generateCode, getGenerator } from 'optimus-code-api'
 
 import {
 
+  copyToClipboard,
   deepCopy,
   everyRatio,
   arrayJoin,
@@ -253,6 +281,7 @@ import {
   hlParam,
   hlCols,
   namesToIndices,
+  getCodePayload,
   transformDateFromPython,
   transpose,
   objectMap,
@@ -290,6 +319,9 @@ export default {
   data () {
     return {
 
+      textDialog: false,
+      copied: false,
+
       clusterHeaders: [
         { text: 'Rows', value: 'count', sortable: false, class: 'rows-count' },
         { text: 'Values', value: 'value', sortable: false }
@@ -306,6 +338,485 @@ export default {
       cellsPromise: false,
 
       commandsHandlers: {
+        /* load */
+        'load file': {
+          dialog: {
+            title: 'Load file',
+            acceptLabel: 'Load',
+            fields: [
+              {
+                key: '_fileInput',
+                label: 'File upload',
+                accept: 'text/csv, .csv, application/json, application/vnd.ms-excel, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, .xls, .xlsx, .avro, .parquet',
+                type: 'file',
+                onClear: 'clearFile'
+              },
+              {
+                condition: (c)=>(c._fileInput && c._fileInput.toString() && c._fileInput!==c._fileLoaded),
+                type: 'action',
+                label: 'Preview',
+                loading: '_fileUploading',
+                loadingProgress: '_fileUploadingProgress',
+                func: 'uploadFile'
+              },
+              {
+                key: '_moreOptions',
+                label: (c) => `More options: ${c._moreOptions ? 'Yes' : 'No'}`,
+                type: 'switch'
+              },
+              {
+                key: 'external_url',
+                label: 'External url',
+                placeholder: (c)=>{
+                  var fileType = (c.file_type!='infer') ? c.file_type : (c._fileType)
+                  fileType = fileType ? `.${fileType}` : ''
+                  return `https://example.com/my_file${fileType}`
+                },
+                disabled: (c)=>c.url,
+                type: 'field',
+                condition: (c)=>c._moreOptions,
+              },
+              {
+                condition: (c)=>c._moreOptions,
+                key: 'limit',
+                label: 'Limit',
+                min: 1,
+                clearable: true,
+                type: 'number'
+              },
+              {
+                key: 'file_type',
+                label: 'File type',
+                type: 'select',
+                items: [
+                  { text: 'Infer file type', value: 'file' },
+                  { text: 'CSV', value: 'csv' },
+                  { text: 'XLS', value: 'xls' },
+                  { text: 'JSON', value: 'json' },
+                  { text: 'Avro', value: 'avro' },
+                  { text: 'Parquet', value: 'parquet' }
+                ],
+                condition: (c)=>c._moreOptions
+              },
+              {
+                condition: (c)=>c.file_type==='csv' && c._moreOptions,
+                key: 'header',
+                label: (c) => `First row as Header: ${c.header ? 'Yes' : 'No'}`,
+                type: 'switch'
+              },
+              {
+                condition: (c)=>c.file_type==='csv' && c._moreOptions,
+                key: 'null_value',
+                label: 'Null value',
+                type: 'field'
+              },
+              {
+                condition: (c)=>c.file_type==='csv' && c._moreOptions,
+                key: 'sep',
+                label: 'Separator',
+                type: 'field'
+              },
+              {
+                condition: (c)=>c.file_type==='csv' && c._moreOptions,
+                key: 'charset',
+                label: 'File encoding',
+                type: 'select',
+                items: [
+                  { text: 'Unicode (UTF-8)', value: 'UTF-8'}, { text: 'English (ASCII)', value: 'ASCII'},
+                  { text: 'Baltic (ISO-8859-4)', value: 'ISO-8859-4'}, { text: 'Baltic (ISO-8859-13)', value: 'ISO-8859-13'},
+                  { text: 'Baltic (Windows-1257)', value: 'Windows-1257'}, { text: 'Celtic (ISO-8859-14)', value: 'ISO-8859-14'},
+                  { text: 'Central European (ISO-8859-2)', value: 'ISO-8859-2'}, { text: 'Central European (Windows-1250)', value: 'Windows-1250'},
+                  { text: 'Chinese Traditional (BIG5)', value: 'BIG5'}, { text: 'Chinese Simplified (GB18030)', value: 'GB18030'},
+                  { text: 'Chinese Simplified (GB2312)', value: 'GB2312'}, { text: 'Cyrillic (ISO-8859-5)', value: 'ISO-8859-5'},
+                  { text: 'Cyrillic (Windows-1251)', value: 'Windows-1251'}, { text: 'Cyrillic (KOI8-R)', value: 'KOI8-R'}, { text: 'Cyrillic (KOI8—U)', value: 'KOI8—U'},
+                  { text: 'Cyrillic (IBM866)', value: 'IBM866'}, { text: 'Greek (ISO-8859-7)', value: 'ISO-8859-7'}, { text: 'Greek (Windows-1253)', value: 'Windows-1253'},
+                  { text: 'Japanese (ISO-2022-JP)', value: 'ISO-2022-JP'}, { text: 'Japanese (Shift-JIS)', value: 'Shift-JIS'},
+                  { text: 'Japanese (EUC-JP)', value: 'EUC-JP'}, { text: 'Japanese (cp932)', value: 'cp932'},
+                  { text: 'Korean (ISO-2022-KR)', value: 'ISO-2022-KR'}, { text: 'Korean (EUC—KR)', value: 'EUC—KR'},
+                  { text: 'Latin', value: 'latin1'},
+                  { text: 'Nordic (ISO-8859-10)', value: 'ISO-8859-10'}, { text: 'Thai (ISO-8859-11)', value: 'ISO-8859-11'},
+                  { text: 'Turkish (ISO-8859-9)', value: 'ISO-8859-9'}, { text: 'Vietnamese (Windows-1258)', value: 'Windows-1258'},
+                  { text: 'Western (ISO-8859-1)', value: 'ISO-8859-1'}, { text: 'Western (ISO-8859-3)', value: 'ISO-8859-3'},
+                  { text: 'Western (Windows-1252)', value: 'Windows-1252'}
+                ]
+              },
+              {
+                condition: (c)=>c.file_type==='json' && c._moreOptions,
+                key: 'multiline',
+                label: (c) => `Multiline: ${c.multiline ? 'Yes' : 'No'}`,
+                type: 'switch'
+              },
+              {
+                condition: (c)=>{
+                  return (c.file_type==='xls' && c._moreOptions)
+                  ||
+                  ((!c._moreOptions || c.file_type==='file') && ( c.url.endsWith('.xls') || c.url.endsWith('.xlsx') || c.external_url.endsWith('.xls') || c.external_url.endsWith('.xlsx') ))
+                },
+                key: 'sheet_name',
+                label: `Sheet`,
+                items_key: '_sheet_names',
+                type: (c)=> c._sheet_names.length ? 'select' : 'number'
+              },
+            ],
+            validate: (c) => {
+              if (c.external_url==='' && c.url==='') {
+                return 0
+              }
+              return !!(c.file_type!='csv' || c.sep)
+            }
+
+          },
+
+          clearFile: (currentCommand) => {
+            currentCommand._fileType = false;
+            currentCommand._fileUploading = false;
+            currentCommand._fileInput = [];
+            currentCommand._fileName = '';
+            currentCommand._meta = false;
+            currentCommand._datasetName = false;
+            currentCommand._fileLoaded = false;
+            currentCommand.error = false;
+            currentCommand.url = '';
+          },
+
+          uploadFile: async (currentCommand) => {
+            try {
+              currentCommand._fileUploading = true
+
+              var attachment = {
+                setProgress: (progress) => {
+                  this.$set(this.currentCommand, '_fileUploadingProgress', progress)
+                }
+              }
+
+              var response = await this.$store.dispatch('request/uploadFile',{file: currentCommand._fileInput, attachment})
+
+              if (response.fileType) {
+                currentCommand.file_type = response.fileType
+              }
+              currentCommand.url = response.fileUrl
+              currentCommand._fileUploading = false
+              currentCommand._datasetName = response.datasetName || false
+              currentCommand._fileLoaded = currentCommand._fileInput
+            } catch (error) {
+              console.error(error)
+              currentCommand.error = error
+              currentCommand._fileUploading = false
+            }
+            this.currentCommand = currentCommand
+          },
+
+          payload: () => ({
+            command: 'load file',
+            _fileType: false,
+            _fileUploading: false,
+            _fileInput: [],
+            _fileName: '',
+            _fileLoaded: false,
+            _moreOptions: false,
+            file_type: 'file',
+            external_url: '',
+            url: '',
+            sep: ',',
+            null_value: 'null',
+            sheet_name: 0,
+            header: true,
+            limit: '',
+            multiline: true,
+            charset: 'UTF-8',
+            _meta: false,
+            _datasetName: false,
+            _sheet_names: 1,
+            preview: {
+              loadPreview: true,
+              type: 'load',
+              delay: 500,
+            },
+            request: {
+              isLoad: true,
+              createsNew: true
+            }
+          }),
+
+          content: (payload) => {
+            var infer = (payload.file_type==='file' || !payload._moreOptions)
+            var fileType = (infer) ? payload._fileType : payload.file_type
+            var fileName = payload._fileName
+            return `<b>Load</b>`
+            + ( fileName ? ` ${hlParam(fileName)}` : '')
+            + ( (!fileName && fileType) ? ` ${fileType}` : '')
+            + ' file'
+          }
+        },
+        loadDatabaseTable: {
+          dialog: {
+            title: 'Connect a database',
+            testLabel: 'connect',
+            fields: [
+              {
+                key: 'driver',
+                type: 'select',
+                label: 'Driver',
+                items: [
+                  {text: 'MySQL', value: 'mysql'},
+                  {text: 'Impala', value: 'impala'},
+                  {text: 'Oracle Database', value: 'oracle'},
+                  {text: 'PostgreSQL', value: 'postgres'},
+                  {text: 'Apache Cassandra', value: 'cassandra'},
+                  {text: 'SQLite', value: 'sqlite'},
+                  {text: 'Amazon Redshift', value: 'redshift'},
+                  {text: 'Presto', value: 'presto'},
+                  {text: 'Microsoft SQL Server', value: 'sqlserver'},
+                ]
+              },
+              {
+                condition: (c)=>c.driver=='oracle',
+                key: 'oracle_type',
+                type: 'select',
+                label: 'Type',
+                items: [
+                  {text: 'SID', value: 'oracle_sid'},
+                  {text: 'Service name', value: 'oracle_service_name'},
+                  {text: 'TNS', value: 'oracle_tns'},
+                ]
+              },
+              {
+                condition: (c)=>(c.driver=='oracle' && c.oracle_type=='oracle_sid'),
+                key: 'oracle_sid',
+                type: 'field',
+                label: 'SID'
+              },
+              {
+                condition: (c)=>(c.driver=='oracle' && c.oracle_type=='oracle_service_name'),
+                key: 'oracle_service_name',
+                type: 'field',
+                label: 'Service name'
+              },
+              {
+                condition: (c)=>(c.driver=='oracle' && c.oracle_type=='oracle_tns'),
+                key: 'oracle_tns',
+                type: 'field',
+                label: 'TNS'
+              },
+              {
+                condition: (c)=>(c.driver!='oracle' || c.oracle_type!='oracle_tns') && c.driver!='cassandra',
+                key: 'host',
+                type: 'field',
+                label: 'Host'
+              },
+              {
+                condition: (c)=>(c.driver!='oracle' || c.oracle_type!='oracle_tns') && c.driver!='cassandra',
+                key: 'port',
+                type: 'field',
+                label: 'Port'
+              },
+              {
+                condition: (c)=>(c.driver=='presto'),
+                key: 'presto_catalog',
+                type: 'field',
+                label: 'Catalog'
+              },
+              {
+                condition: (c)=>['postgres','presto','redshift','sqlserver','mysql','impala'].includes(c.driver),
+                key: 'database',
+                type: 'field',
+                label: 'Database'
+              },
+              {
+                condition: (c)=>['postgres','redshift'].includes(c.driver),
+                key: 'schema',
+                type: 'field',
+                label: 'Schema'
+              },
+              {
+                condition: (c)=>(c.driver=='cassandra'),
+                key: 'url',
+                type: 'field',
+                label: 'Url'
+              },
+              {
+                condition: (c)=>(c.driver=='cassandra'),
+                key: 'keyspace',
+                type: 'field',
+                label: 'Keyspace'
+              },
+              {
+                key: 'user',
+                type: 'field',
+                label: 'User'
+              },
+              {
+                key: 'password',
+                type: 'password',
+                label: 'Password',
+                showable: true,
+                show: false
+              },
+              {
+                key: 'table',
+                type: 'select',
+                label: 'Table',
+                items_key: 'tables'
+              },
+              {
+                type: 'action',
+                label: 'Get tables',
+                loading: '_loadingTables',
+                func: 'getTables'
+              }
+            ],
+            validate: (command) => (
+              command.table &&
+              command.driver == command.validDriver /* &&
+              command.host == command.validHost &&
+              command.database == command.validDatabase
+              */
+            )
+          },
+          payload: () => ({
+            command: 'loadDatabaseTable',
+            driver: 'mysql',
+            host: '',
+            database: '',
+            user: '',
+            password: '',
+            _loadingTables: false,
+            request: {
+              isLoad: true,
+              createsNew: true
+            }
+          }),
+          content: (payload)=>{
+            var database = ['postgres','presto','redshift','sqlserver','mysql'].includes(payload.driver)
+            return `<b>Load</b> ${hlParam(payload.table)}`
+            +(database ? ` from ${hlParam(payload.database)}` : '')
+            + ' to '+hlParam(payload.newDfName)
+          },
+
+          getTables: async (currentCommand) => {
+
+            currentCommand._loadingTables = true
+            currentCommand.error = ''
+
+            var fields = this.commandsHandlers['loadDatabaseTable'].dialog.fields
+
+            try {
+              var driver = escapeQuotes(currentCommand.driver)
+
+              var connectionCode = generateCode({
+                command: 'createDatabase',
+                opName: 'op',
+                varName: 'db',
+                driver,
+                parameters: fields.filter(field=>
+                  !['driver','oracle_type', 'table', undefined].includes(field.key)
+                  &&
+                  (!field.condition || field.condition(currentCommand) && currentCommand[field.key] && field.key))
+                  .map(field=>({key: field.key, value: escapeQuotes(currentCommand[field.key])}))
+              });
+
+              var tablesCode = generateCode({
+                command: 'getDatabaseTables',
+                varName: 'db'
+              });
+
+              var response = await this.evalCode(`${connectionCode}\n${tablesCode}`)
+
+              if (response.data.status === 'error') {
+                throw response.data.error
+              }
+
+              var tables = response.data.result
+
+              if (!tables || !tables.length) {
+                throw 'Database has no tables'
+              }
+
+              this.$store.commit('database',true)
+
+              currentCommand = {
+                ...currentCommand,
+                tables,
+                table: tables[0],
+                previousCode: connectionCode,
+                // extraPayload: codePayload,
+                validDriver: currentCommand.driver,
+                validHost: currentCommand.host,
+                validDatabase: currentCommand.database
+              }
+            } catch (err) {
+              var _error = printError(err)
+              currentCommand = {...currentCommand, error: _error}
+            }
+
+            currentCommand._loadingTables = false
+
+            this.currentCommand = currentCommand
+          }
+        },
+        /* save */
+        saveFile: {
+          dialog: {
+            title: 'Save dataset to file',
+            fields: [
+              {
+                key: '_engineProcessing',
+                label: (c) => `Process again: ${c._engineProcessing ? 'Yes' : 'No'}`,
+                type: 'switch',
+                condition: (c)=>['spark','ibis'].includes(c.request.engine)
+              },
+              {
+                key: 'url',
+                label: 'Url',
+                placeholder: 's3://bucket/file or hdfs://bucket/file',
+                type: 'field',
+              },
+            ],
+            validate: (c) => {
+              if (c.url) {
+                var file_type = c.url.split('.');
+                file_type = file_type[file_type.length - 1];
+                return ['csv','xls','json','avro','parquet'].includes(file_type);
+              }
+              return false;
+            }
+          },
+          payload: () => ({
+            command: 'saveFile',
+            _engineProcessing: false,
+            url: '',
+            request: {
+              isSave: true
+            }
+          }),
+          content: (payload)=>{
+            return `<b>Saved</b><span class="hint--df">${hlParam(payload.dfName)} </span>to ${hlParam(payload.url)}`
+          },
+        },
+        'save to database': {
+          dialog: {
+            title: 'Save dataset to database',
+            fields: [
+              {
+                type: 'field',
+                key: 'table_name',
+                label: 'Table name',
+              }
+            ],
+            validate: (c) => (c.table_name)
+          },
+          payload: () => ({
+            command: 'save to database',
+            table_name: '',
+            request: {
+              isSave: true
+            }
+          }),
+          content: (payload)=>{
+            return `<b>Saved</b><span class="hint--df"> ${hlParam(payload.dfName)}</span> to ${hlParam(payload.table)}`
+          },
+        },
+        /* operations */
         'apply sort': {
           content: (payload) => {
             return `<b>Reorder</b> columns`
@@ -1377,216 +1888,7 @@ export default {
           }),
           content: (payload) => `<b>Fill empty cells</b> in ${multipleContent([payload.columns],'hl--cols')} with ${hlParam(payload.fill)}`
         },
-        'load file': {
-          dialog: {
-            title: 'Load file',
-            acceptLabel: 'Load',
-            fields: [
-              {
-                key: '_fileInput',
-                label: 'File upload',
-                accept: 'text/csv, .csv, application/json, application/vnd.ms-excel, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, .xls, .xlsx, .avro, .parquet',
-                type: 'file',
-                onClear: 'clearFile'
-              },
-              {
-                condition: (c)=>(c._fileInput && c._fileInput.toString() && c._fileInput!==c._fileLoaded),
-                type: 'action',
-                label: 'Preview',
-                loading: '_fileUploading',
-                loadingProgress: '_fileUploadingProgress',
-                func: 'uploadFile'
-              },
-              {
-                key: '_moreOptions',
-                label: (c) => `More options: ${c._moreOptions ? 'Yes' : 'No'}`,
-                type: 'switch'
-              },
-              {
-                key: 'external_url',
-                label: 'External url',
-                placeholder: (c)=>{
-                  var fileType = (c.file_type!='infer') ? c.file_type : (c._fileType)
-                  fileType = fileType ? `.${fileType}` : ''
-                  return `https://example.com/my_file${fileType}`
-                },
-                disabled: (c)=>c.url,
-                type: 'field',
-                condition: (c)=>c._moreOptions,
-              },
-              {
-                condition: (c)=>c._moreOptions,
-                key: 'limit',
-                label: 'Limit',
-                min: 1,
-                clearable: true,
-                type: 'number'
-              },
-              {
-                key: 'file_type',
-                label: 'File type',
-                type: 'select',
-                items: [
-                  { text: 'Infer file type', value: 'file' },
-                  { text: 'CSV', value: 'csv' },
-                  { text: 'XLS', value: 'xls' },
-                  { text: 'JSON', value: 'json' },
-                  { text: 'Avro', value: 'avro' },
-                  { text: 'Parquet', value: 'parquet' }
-                ],
-                condition: (c)=>c._moreOptions
-              },
-              {
-                condition: (c)=>c.file_type==='csv' && c._moreOptions,
-                key: 'header',
-                label: (c) => `First row as Header: ${c.header ? 'Yes' : 'No'}`,
-                type: 'switch'
-              },
-              {
-                condition: (c)=>c.file_type==='csv' && c._moreOptions,
-                key: 'null_value',
-                label: 'Null value',
-                type: 'field'
-              },
-              {
-                condition: (c)=>c.file_type==='csv' && c._moreOptions,
-                key: 'sep',
-                label: 'Separator',
-                type: 'field'
-              },
-              {
-                condition: (c)=>c.file_type==='csv' && c._moreOptions,
-                key: 'charset',
-                label: 'File encoding',
-                type: 'select',
-                items: [
-                  { text: 'Unicode (UTF-8)', value: 'UTF-8'}, { text: 'English (ASCII)', value: 'ASCII'},
-                  { text: 'Baltic (ISO-8859-4)', value: 'ISO-8859-4'}, { text: 'Baltic (ISO-8859-13)', value: 'ISO-8859-13'},
-                  { text: 'Baltic (Windows-1257)', value: 'Windows-1257'}, { text: 'Celtic (ISO-8859-14)', value: 'ISO-8859-14'},
-                  { text: 'Central European (ISO-8859-2)', value: 'ISO-8859-2'}, { text: 'Central European (Windows-1250)', value: 'Windows-1250'},
-                  { text: 'Chinese Traditional (BIG5)', value: 'BIG5'}, { text: 'Chinese Simplified (GB18030)', value: 'GB18030'},
-                  { text: 'Chinese Simplified (GB2312)', value: 'GB2312'}, { text: 'Cyrillic (ISO-8859-5)', value: 'ISO-8859-5'},
-                  { text: 'Cyrillic (Windows-1251)', value: 'Windows-1251'}, { text: 'Cyrillic (KOI8-R)', value: 'KOI8-R'}, { text: 'Cyrillic (KOI8—U)', value: 'KOI8—U'},
-                  { text: 'Cyrillic (IBM866)', value: 'IBM866'}, { text: 'Greek (ISO-8859-7)', value: 'ISO-8859-7'}, { text: 'Greek (Windows-1253)', value: 'Windows-1253'},
-                  { text: 'Japanese (ISO-2022-JP)', value: 'ISO-2022-JP'}, { text: 'Japanese (Shift-JIS)', value: 'Shift-JIS'},
-                  { text: 'Japanese (EUC-JP)', value: 'EUC-JP'}, { text: 'Japanese (cp932)', value: 'cp932'},
-                  { text: 'Korean (ISO-2022-KR)', value: 'ISO-2022-KR'}, { text: 'Korean (EUC—KR)', value: 'EUC—KR'},
-                  { text: 'Latin', value: 'latin1'},
-                  { text: 'Nordic (ISO-8859-10)', value: 'ISO-8859-10'}, { text: 'Thai (ISO-8859-11)', value: 'ISO-8859-11'},
-                  { text: 'Turkish (ISO-8859-9)', value: 'ISO-8859-9'}, { text: 'Vietnamese (Windows-1258)', value: 'Windows-1258'},
-                  { text: 'Western (ISO-8859-1)', value: 'ISO-8859-1'}, { text: 'Western (ISO-8859-3)', value: 'ISO-8859-3'},
-                  { text: 'Western (Windows-1252)', value: 'Windows-1252'}
-                ]
-              },
-              {
-                condition: (c)=>c.file_type==='json' && c._moreOptions,
-                key: 'multiline',
-                label: (c) => `Multiline: ${c.multiline ? 'Yes' : 'No'}`,
-                type: 'switch'
-              },
-              {
-                condition: (c)=>{
-                  return (c.file_type==='xls' && c._moreOptions)
-                  ||
-                  ((!c._moreOptions || c.file_type==='file') && ( c.url.endsWith('.xls') || c.url.endsWith('.xlsx') || c.external_url.endsWith('.xls') || c.external_url.endsWith('.xlsx') ))
-                },
-                key: 'sheet_name',
-                label: `Sheet`,
-                items_key: '_sheet_names',
-                type: (c)=> c._sheet_names.length ? 'select' : 'number'
-              },
-            ],
-            validate: (c) => {
-              if (c.external_url==='' && c.url==='') {
-                return 0
-              }
-              return !!(c.file_type!='csv' || c.sep)
-            }
-
-          },
-
-          clearFile: (currentCommand) => {
-            currentCommand._fileType = false;
-            currentCommand._fileUploading = false;
-            currentCommand._fileInput = [];
-            currentCommand._fileName = '';
-            currentCommand._meta = false;
-            currentCommand._datasetName = false;
-            currentCommand._fileLoaded = false;
-            currentCommand.error = false;
-            currentCommand.url = '';
-          },
-
-          uploadFile: async (currentCommand) => {
-            try {
-              currentCommand._fileUploading = true
-
-              var attachment = {
-                setProgress: (progress) => {
-                  this.$set(this.currentCommand, '_fileUploadingProgress', progress)
-                }
-              }
-
-              var response = await this.$store.dispatch('request/uploadFile',{file: currentCommand._fileInput, attachment})
-
-              if (response.fileType) {
-                currentCommand.file_type = response.fileType
-              }
-              currentCommand.url = response.fileUrl
-              currentCommand._fileUploading = false
-              currentCommand._datasetName = response.datasetName || false
-              currentCommand._fileLoaded = currentCommand._fileInput
-            } catch (error) {
-              console.error(error)
-              currentCommand.error = error
-              currentCommand._fileUploading = false
-            }
-            this.currentCommand = currentCommand
-          },
-
-          payload: () => ({
-            command: 'load file',
-            _fileType: false,
-            _fileUploading: false,
-            _fileInput: [],
-            _fileName: '',
-            _fileLoaded: false,
-            _moreOptions: false,
-            file_type: 'file',
-            external_url: '',
-            url: '',
-            sep: ',',
-            null_value: 'null',
-            sheet_name: 0,
-            header: true,
-            limit: '',
-            multiline: true,
-            charset: 'UTF-8',
-            _meta: false,
-            _datasetName: false,
-            _sheet_names: 1,
-            preview: {
-              loadPreview: true,
-              type: 'load',
-              delay: 500,
-            },
-            request: {
-              isLoad: true,
-              createsNew: true
-            }
-          }),
-
-          content: (payload) => {
-            var infer = (payload.file_type==='file' || !payload._moreOptions)
-            var fileType = (infer) ? payload._fileType : payload.file_type
-            var fileName = payload._fileName
-            return `<b>Load</b>`
-            + ( fileName ? ` ${hlParam(fileName)}` : '')
-            + ( (!fileName && fileType) ? ` ${fileType}` : '')
-            + ' file'
-          }
-        },
-        'string clustering': {
+        stringClustering: {
           dialog: {
             dialog: true,
             tall: true,
@@ -1630,20 +1932,32 @@ export default {
 
             try {
 
-              var code
+              var codePayload;
 
-              if (currentCommand.algorithm == 'fingerprint')
-                code = `from optimus.engines.dask.ml import keycollision as kc; _output = kc.fingerprint_cluster(${currentCommand.dfName}.ext.buffer_window("*"), input_cols="${currentCommand.columns[0]}")`
-              else if (currentCommand.algorithm == 'n_gram_fingerprint')
-                code = `from optimus.engines.dask.ml import keycollision as kc; _output = kc.n_gram_fingerprint_cluster(${currentCommand.dfName}.ext.buffer_window("*"), input_cols="${currentCommand.columns[0]}", n_size=${currentCommand.n_size})`
-              else
-                throw 'Invalid algorithm type input'
+              if (currentCommand.algorithm == 'fingerprint'){
+                codePayload = {
+                  command: 'fingerprint',
+                  dfName: currentCommand.dfName,
+                  columns: currentCommand.columns
+                };
+              }
+              else if (currentCommand.algorithm == 'n_gram_fingerprint'){
+                codePayload = {
+                  command: 'n_gram_fingerprint',
+                  dfName: currentCommand.dfName,
+                  columns: currentCommand.columns,
+                  n_size: currentCommand.n_size
+                };
+              }
+              else {
+                throw new Error('Invalid algorithm type input');
+              }
 
               currentCommand.loading = true
               currentCommand.clusters = false
               currentCommand.error = false
 
-              var response = await this.evalCode(code)
+              var response = await this.evalCode(codePayload)
 
               if (!response || !response.data || !response.data.result) {
                 throw response
@@ -1938,223 +2252,6 @@ export default {
           content: (payload) => { // TO-DO: Test
             return `<b>${payload.action} outliers</b> (between ${multipleContent(payload.selection[0],'hl--param',', ',' and ')})`
           }
-        },
-        'load from database': {
-          dialog: {
-            title: 'Connect a database',
-            testLabel: 'connect',
-            fields: [
-              {
-                key: 'driver',
-                type: 'select',
-                label: 'Driver',
-                items: [
-                  {text: 'MySQL', value: 'mysql'},
-                  {text: 'Oracle Database', value: 'oracle'},
-                  {text: 'PostgreSQL', value: 'postgres'},
-                  {text: 'Apache Cassandra', value: 'cassandra'},
-                  {text: 'SQLite', value: 'sqlite'},
-                  {text: 'Amazon Redshift', value: 'redshift'},
-                  {text: 'Presto', value: 'presto'},
-                  {text: 'Microsoft SQL Server', value: 'sqlserver'},
-                ]
-              },
-              {
-                condition: (c)=>c.driver=='oracle',
-                key: 'oracle_type',
-                type: 'select',
-                label: 'Type',
-                items: [
-                  {text: 'SID', value: 'oracle_sid'},
-                  {text: 'Service name', value: 'oracle_service_name'},
-                  {text: 'TNS', value: 'oracle_tns'},
-                ]
-              },
-              {
-                condition: (c)=>(c.driver=='oracle' && c.oracle_type=='oracle_sid'),
-                key: 'oracle_sid',
-                type: 'field',
-                label: 'SID'
-              },
-              {
-                condition: (c)=>(c.driver=='oracle' && c.oracle_type=='oracle_service_name'),
-                key: 'oracle_service_name',
-                type: 'field',
-                label: 'Service name'
-              },
-              {
-                condition: (c)=>(c.driver=='oracle' && c.oracle_type=='oracle_tns'),
-                key: 'oracle_tns',
-                type: 'field',
-                label: 'TNS'
-              },
-              {
-                condition: (c)=>(c.driver!='oracle' || c.oracle_type!='oracle_tns') && c.driver!='cassandra',
-                key: 'host',
-                type: 'field',
-                label: 'Host'
-              },
-              {
-                condition: (c)=>(c.driver!='oracle' || c.oracle_type!='oracle_tns') && c.driver!='cassandra',
-                key: 'port',
-                type: 'field',
-                label: 'Port'
-              },
-              {
-                condition: (c)=>(c.driver=='presto'),
-                key: 'presto_catalog',
-                type: 'field',
-                label: 'Catalog'
-              },
-              {
-                condition: (c)=>['postgres','presto','redshift','sqlserver','mysql'].includes(c.driver),
-                key: 'database',
-                type: 'field',
-                label: 'Database'
-              },
-              {
-                condition: (c)=>['postgres','redshift'].includes(c.driver),
-                key: 'schema',
-                type: 'field',
-                label: 'Schema'
-              },
-              {
-                condition: (c)=>(c.driver=='cassandra'),
-                key: 'url',
-                type: 'field',
-                label: 'Url'
-              },
-              {
-                condition: (c)=>(c.driver=='cassandra'),
-                key: 'keyspace',
-                type: 'field',
-                label: 'Keyspace'
-              },
-              {
-                key: 'user',
-                type: 'field',
-                label: 'User'
-              },
-              {
-                key: 'password',
-                type: 'password',
-                label: 'Password',
-                showable: true,
-                show: false
-              },
-              {
-                key: 'table',
-                type: 'select',
-                label: 'Table',
-                items_key: 'tables'
-              },
-              {
-                type: 'action',
-                label: 'Get tables',
-                loading: '_loadingTables',
-                func: 'getTables'
-              }
-            ],
-            validate: (command) => (
-              command.table &&
-              command.driver == command.validDriver /* &&
-              command.host == command.validHost &&
-              command.database == command.validDatabase
-              */
-            )
-          },
-          payload: () => ({
-            command: 'load from database',
-            driver: 'mysql',
-            host: '',
-            database: '',
-            user: '',
-            password: '',
-            _loadingTables: false,
-            request: {
-              isLoad: true,
-              createsNew: true
-            }
-          }),
-          content: (payload)=>{
-            var database = ['postgres','presto','redshift','sqlserver','mysql'].includes(payload.driver)
-            return `<b>Load</b> ${hlParam(payload.table)}`
-            +(database ? ` from ${hlParam(payload.database)}` : '')
-            + ' to '+hlParam(payload.newDfName)
-          },
-
-          getTables: async (currentCommand) => {
-
-            currentCommand._loadingTables = true
-            currentCommand.error = ''
-
-            var fields = this.commandsHandlers['load from database'].dialog.fields
-
-            try {
-              var driver = escapeQuotes(currentCommand.driver)
-              var code = `db = op.connect(driver="${driver}"`
-
-              fields.forEach(field => {
-                if (!['driver','oracle_type', 'table', undefined].includes(field.key)) {
-                  code += (
-                    (!field.condition || field.condition(currentCommand) && currentCommand[field.key] && field.key) ?
-                    `, ${field.key}="${escapeQuotes(currentCommand[field.key])}"` : ''
-                  )
-                }
-              });
-
-              code += ')'
-
-              var response = await this.evalCode(code+`; _output = db.tables_names_to_json()`)
-
-              if (response.data.status === 'error') {
-                throw response.data.error
-              }
-
-              var tables = response.data.result
-
-              if (!tables || !tables.length) {
-                throw 'Database has no tables'
-              }
-
-              this.$store.commit('database',true)
-
-              currentCommand = {
-                ...currentCommand,
-                tables,
-                table: tables[0],
-                previous_code: code,
-                validDriver: currentCommand.driver,
-                validHost: currentCommand.host,
-                validDatabase: currentCommand.database
-              }
-            } catch (err) {
-              var _error = printError(err)
-              currentCommand = {...currentCommand, error: _error}
-            }
-
-            currentCommand._loadingTables = false
-
-            this.currentCommand = currentCommand
-          }
-        },
-        'save to database': {
-          dialog: {
-            title: 'Save dataset to database',
-            fields: [
-              {
-                type: 'field',
-                key: 'table_name',
-                label: 'Table name',
-              }
-            ],
-            validate: (c) => (c.table_name)
-          },
-          payload: () => ({
-            command: 'save to database',
-            table_name: ''
-          }),
-          noAdd: true // TODO
         },
         stratified_sample: {
           dialog: {
@@ -2653,6 +2750,10 @@ export default {
       'hasSecondaryDatasets'
     ]),
 
+    customCommandsHandlers () {
+      return this.$store.getters['customCommands/handlers'];
+    },
+
     codeError: {
       get () {
         return this.$store.state.codeError;
@@ -2737,7 +2838,10 @@ export default {
 
     command () {
       try {
-        return this.getCommandHandler(this.currentCommand)
+        if (this.currentCommand) {
+          return this.getCommandHandler(this.currentCommand)
+        }
+        return undefined;
       } catch (error) {
         console.error(error)
         return undefined
@@ -2794,6 +2898,7 @@ export default {
     window.getCommandHandler = (command) => {
       return this.getCommandHandler(command)
     };
+
     window.runCells = ()=>{
       this.runCodeNow(true)
     }
@@ -2874,9 +2979,12 @@ export default {
 
     currentCommand: {
       deep: true,
-      async handler () {
+      async handler (currentCommand) {
+        if (!currentCommand) {
+          return
+        }
         try {
-          var command = this.getCommandHandler(this.currentCommand)
+          var command = this.getCommandHandler(currentCommand);
           if (command && command.dialog) {
             var valid = (!command.dialog.validate) ? true : command.dialog.validate(this.currentCommand)
             if (valid===0) {
@@ -2884,37 +2992,37 @@ export default {
               return
             }
 
-            if (this.currentCommand.preview && (this.currentCommand.preview.type)) {
+            if (currentCommand.preview && (currentCommand.preview.type)) {
 
               var expectedColumns;
 
-              if (this.currentCommand.preview.expectedColumns!==undefined) {
-                expectedColumns = getProperty(this.currentCommand.preview.expectedColumns, [this.currentCommand])
-              } else if (this.currentCommand.output_cols && this.currentCommand.output_cols.length) {
-                expectedColumns = this.currentCommand.output_cols.length
-              } else if (this.currentCommand.columns) {
-                expectedColumns = this.currentCommand.columns.length
+              if (currentCommand.preview.expectedColumns!==undefined) {
+                expectedColumns = getProperty(currentCommand.preview.expectedColumns, [currentCommand])
+              } else if (currentCommand.output_cols && currentCommand.output_cols.length) {
+                expectedColumns = currentCommand.output_cols.length
+              } else if (currentCommand.columns) {
+                expectedColumns = currentCommand.columns.length
               }
 
-              if (this.currentCommand.output_cols || this.currentCommand.defaultOutputName) {
+              if (currentCommand.output_cols || currentCommand.defaultOutputName) {
 
                 // column name optimization
                 var nameMap = {}
 
-                if (this.currentCommand.columns && this.currentCommand.output_cols) {
-                  this.currentCommand.output_cols.forEach((col, i) => {
-                    nameMap[ '__new__'+this.currentCommand.columns[i] ] = col
+                if (currentCommand.columns && currentCommand.output_cols) {
+                  currentCommand.output_cols.forEach((col, i) => {
+                    nameMap[ '__new__'+currentCommand.columns[i] ] = col
                   })
                 }
 
-                if (this.currentCommand.output_col && this.currentCommand.defaultOutputName) {
-                  nameMap[this.currentCommand.defaultOutputName] = this.currentCommand.output_col
+                if (currentCommand.output_col && currentCommand.defaultOutputName) {
+                  nameMap[currentCommand.defaultOutputName] = currentCommand.output_col
                 }
 
                 this.$store.commit('setPreviewNames',nameMap)
                 var newColumns = 0
                 var replacingColumns = 0
-                if (this.currentCommand.preview.multipleOutputs) {
+                if (currentCommand.preview.multipleOutputs) {
                   newColumns = +expectedColumns;
                 } else {
                   for (const key in nameMap) {
@@ -2925,7 +3033,7 @@ export default {
                     }
                   }
                 }
-                if (this.currentCommand.defaultOutputName && !newColumns) {
+                if (currentCommand.defaultOutputName && !newColumns) {
                   newColumns = 1
                 }
                 this.$store.commit('setPreviewInfo', {newColumns, replacingColumns})
@@ -2933,16 +3041,16 @@ export default {
 
               this.preparePreviewCode(expectedColumns);
             }
-            if (this.currentCommand.preview.fake==='rename') {
+            if (currentCommand.preview.fake==='rename') {
               var nameMap = {}
-              this.currentCommand.output_cols.forEach((col, i) => {
-                nameMap[this.currentCommand.columns[i]] = col
+              currentCommand.output_cols.forEach((col, i) => {
+                nameMap[currentCommand.columns[i]] = col
               })
               this.$store.commit('setPreviewNames',nameMap)
-            } else if (this.currentCommand.preview.fake==='duplicate') {
+            } else if (currentCommand.preview.fake==='duplicate') {
               var duplicatedColumns = []
-              this.currentCommand.output_cols.forEach((col, i) => {
-                duplicatedColumns.push({name: this.currentCommand.columns[i], newName: col})
+              currentCommand.output_cols.forEach((col, i) => {
+                duplicatedColumns.push({name: currentCommand.columns[i], newName: col})
               })
               this.$store.commit('setDuplicatedColumns',duplicatedColumns.length ? duplicatedColumns : undefined)
               this.$store.commit('setPreviewInfo', {newColumns: duplicatedColumns.length || false})
@@ -2968,6 +3076,15 @@ export default {
   },
 
   methods: {
+
+    clickCopy(value, event) {
+      this.copied = true;
+      copyToClipboard(value, event.target);
+      event.target.focus();
+      setTimeout(() => {
+        this.copied = false;
+      }, 2000);
+    },
 
     getNewDfName () {
 
@@ -2998,7 +3115,49 @@ export default {
       link.download = filename
       document.body.appendChild(link)
       link.click()
+    },
 
+    showTextDialog(text, title = 'Result') {
+      this.textDialog = { text, title };
+    },
+
+    async compileDataset () {
+      try {
+        await this.cancelCommand();
+        var payload = await this.$store.dispatch('finalCommands', { ignoreFrom: -1, include: [{
+          command: 'compile',
+          payload: {
+            dfName: this.currentDataset.dfName,
+            request: {
+              noSave: true,
+              type: 'final'
+            }
+          }
+        }] });
+
+        var response = await this.evalCode(payload)
+
+        var result = response.data.result.replace(/\\n/g,'\n')
+
+        this.showTextDialog(result)
+      } catch (error) {
+        console.error(error)
+      }
+    },
+
+    async downloadResult (include) {
+      try {
+        await this.cancelCommand();
+        var payload = await this.$store.dispatch('finalCommands', { ignoreFrom: -1, include });
+
+        var response = await this.evalCode(payload)
+
+        var result = response.data.result.replace(/\\n/g,'\n')
+
+        this.showTextDialog(result)
+      } catch (error) {
+        console.error(error)
+      }
     },
 
     async downloadDataset () {
@@ -3077,6 +3236,7 @@ export default {
         this.$store.commit('setPreviewCode',{
           code: this.getCode(this.currentCommand, 'preview'),
           profileCode: this.getCode(this.currentCommand, 'profile'),
+          codePayload: deepCopy(this.currentCommand),
           beforeCodeEval: this.currentCommand.beforeCodeEval ? ()=>this.currentCommand.beforeCodeEval(this.currentCommand) : false,
           color: getProperty(this.currentCommand.preview.highlightColor, [this.currentCommand]),
           from: this.currentCommand.columns,
@@ -3111,7 +3271,15 @@ export default {
     },
 
     getCommandHandler (command) {
-      return this.commandsHandlers[command.command] || this.commandsHandlers[command.type]
+
+      var commandHandler = this.commandsHandlers[command.command] || this.commandsHandlers[command.type];
+
+      if (!commandHandler) {
+        commandHandler = deepCopy(this.customCommandsHandlers[command.command] || this.customCommandsHandlers[command.type]);
+      }
+
+      return commandHandler;
+
     },
 
     clusterFieldUpdated(cluster) {
@@ -3153,16 +3321,16 @@ export default {
 
       if (!command.columns || !command.columns.length) {
         columns = this.columns.map(e=>this.currentDataset.columns[e.index].name)
-        columnDataTypes = this.columns.map(e=>this.currentDataset.columns[e.index].profiler_dtype.dtype)
-        columnDateFormats = this.columns.map(e=>transformDateFromPython(this.currentDataset.columns[e.index].profiler_dtype.format)).filter(e=>e);
+        columnDataTypes = this.columns.map(e=>this.currentDataset.columns[e.index].stats.profiler_dtype.dtype)
+        columnDateFormats = this.columns.map(e=>transformDateFromPython(this.currentDataset.columns[e.index].stats.profiler_dtype.format)).filter(e=>e);
       } else {
         columns = command.columns
         var columnIndices = namesToIndices(columns, this.currentDataset.columns)
-        columnDataTypes = columnIndices.map(i=>this.currentDataset.columns[i].profiler_dtype.dtype)
-        columnDateFormats = columnIndices.map(i=>transformDateFromPython(this.currentDataset.columns[i].profiler_dtype.format)).filter(e=>e);
+        columnDataTypes = columnIndices.map(i=>this.currentDataset.columns[i].stats.profiler_dtype.dtype)
+        columnDateFormats = columnIndices.map(i=>transformDateFromPython(this.currentDataset.columns[i].stats.profiler_dtype.format)).filter(e=>e);
       }
 
-      var allColumnDateFormats = this.allColumns.map((e,i)=>transformDateFromPython(this.currentDataset.columns[i].profiler_dtype.format)).filter(e=>e);
+      var allColumnDateFormats = this.allColumns.map((e,i)=>transformDateFromPython(this.currentDataset.columns[i].stats.profiler_dtype.format)).filter(e=>e);
 
       var commandHandler = this.getCommandHandler(command)
 
@@ -3177,6 +3345,7 @@ export default {
 
       var payload = {
         request: {
+          engine: (this.$store.state.localEngineParameters || {}).engine,
           isLoad: false,
           createsNew: false,
           noOperations: command.noOperations,
@@ -3189,6 +3358,8 @@ export default {
         allColumnDateFormats: allColumnDateFormats,
         dfName: this.currentDataset.dfName,
         newDfName: this.getNewDfName(),
+        // loadEngine: false,
+        // engineOptions: TO-DO:
         allColumns: this.allColumns,
         type: command.type,
         command: command.command,
@@ -3285,6 +3456,19 @@ export default {
       this.isEditing = false;
       this.clearTextSelection();
       var commandHandler = this.getCommandHandler(this.currentCommand);
+
+      if (this.currentCommand._custom) {
+        this.currentCommand._generator = this.$store.state.customCommands.generators[this.currentCommand.command]
+        this.currentCommand._custom = this.$store.getters['customCommands/genericCommandPayload'];
+      }
+
+      if (this.currentCommand._output == 'plain-text') {
+        var payload = getCodePayload(this.currentCommand);
+        payload.request = this.currentCommand.request || {};
+        this.downloadResult([{ payload }])
+        return true;
+      }
+
       if (commandHandler.onDone) {
         this.currentCommand = await commandHandler.onDone(this.currentCommand);
       }
@@ -3297,7 +3481,6 @@ export default {
       this.addCell(toCell, { ...this.currentCommand, code, content }, true );
 
       this.$emit('updateOperations', { active: (this.currentCommand.request.noOperations ? false : true), title: 'operations' } );
-
       this.currentCommand = false;
     },
 
@@ -3404,6 +3587,7 @@ export default {
     },
 
     getOperationContent (payload) {
+
       var commandHandler = this.getCommandHandler(payload)
       var content
 
@@ -3415,61 +3599,41 @@ export default {
 
       if (payload.request && payload.request.createsNew) {
         content += `<span class="hint--df"> to ${hlParam(payload.newDfName)}</span>`
-      } else {
+      } else if (!payload.request || !payload.request.isSave) {
         content += `<span class="hint--df"> in ${hlParam(payload.dfName)}</span>`
       }
 
       return content
     },
 
-    getCode (currentCommand, type = 'final') {
+    getCode (currentCommand, type = 'processing') {
 
       var payload = { ...currentCommand };
 
-      var code = '';
-
       if (!payload.columns || !payload.columns.length) {
-        // console.warn('Auto-filling columns');
         payload.columns = this.columns.map(e=>this.currentDataset.columns[e.index].name);
       }
 
-      var precode = '';
-
-      if (!payload._code) {
-        var generator = getGenerator(payload.command, payload);
-        if (generator === undefined) {
-          var commandHandler = this.getCommandHandler(payload);
-          generator = commandHandler ? commandHandler.code : undefined;
-        }
-        code = generator ? generator({
-          ...payload,
-          request: { ...(payload.request || {}), type }
-        }) : '';
-      }
-      else {
-        code = payload._code;
+      var request = {
+        type,
+        dfName: this.currentDataset.dfName,
+        _isReference: true
       }
 
-      if (type==='preview') {
-        return code;
-      } else if (type==='profile') {
-        return code;
-      } else {
-        if (payload.request && payload.request.createsNew) {
-          return precode + code +'\n'
-					+`${payload.newDfName} = ${payload.newDfName}.ext.repartition(8).ext.cache()`;
-        } else {
-          return precode + `${payload.dfName} = ${payload.dfName}${code}.ext.cache()`;
-        }
-      }
+      return generateCode({command: payload.command, payload}, request);
 
     },
 
     async editCell (cell, index) {
       // console.debug('[DEBUG] Editing cell',{cell, index})
-      var command = deepCopy(cell)
+      var command = deepCopy(cell);
 
-      var commandHandler = this.getCommandHandler(command)
+      var commandHandler = this.getCommandHandler(command);
+
+      if (command.payload._custom) {
+        command.payload._generator = this.$store.state.customCommands.generators[command.command || command.payload.command]
+        command.payload._custom = this.$store.getters['customCommands/genericCommandPayload'];
+      }
 
       if (commandHandler.dialog) {
         this.commandsDisabled = true;
@@ -3483,7 +3647,11 @@ export default {
 
     addCell (at = -1, payload = {command: 'code', code: '', content: '', ignoreCell: false, noCall: false, deleteOtherCells: false}, replace = false) {
 
-      var {command, code, ignoreCell, deleteOtherCells, content} = payload
+      var {command, code, ignoreCell, deleteOtherCells, content} = payload;
+
+      if (payload._custom) {
+        code = this.getCode(payload)
+      }
 
       this.codeError = '';
 

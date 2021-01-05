@@ -26,7 +26,7 @@ export class UsersService {
 
 	async getUsers(queryParams, user): Promise<User[]> {
 		if ( ['5f1a0af502f37c097f19ca4a', '5ed5559c1ce6121884455241', '5f2b227fcc7fec606debb7bd'].includes(user.userId) ) {
-			const query = {};
+			let query: any = {};
 			queryParams?.filters?.split(',').forEach((filter, index) => {
 				query[filter] = queryParams?.values?.split(',')[index];
 			});
@@ -38,7 +38,7 @@ export class UsersService {
 				.exec();
 			return users;
 		} else {
-			const query = {};
+			let query: any = {};
 			queryParams?.filters?.split(',').forEach((filter, index) => {
 				query[filter] = queryParams?.values?.split(',')[index];
 			});

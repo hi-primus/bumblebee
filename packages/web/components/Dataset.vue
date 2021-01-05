@@ -46,7 +46,7 @@
           >Load from file</v-btn>
           <span> or </span>
           <v-btn
-            @click="commandHandle({command: 'load from database'})"
+            @click="commandHandle({command: 'loadDatabaseTable'})"
             color="primary"
             class="ml-3"
             depressed
@@ -255,7 +255,7 @@
           </div>
         </div>
         <BumblebeeTable
-					v-if="!currentListView && (currentDataset && currentDataset.summary || loadPreviewActive)"
+					v-if="$store.state.optimusPromise && $store.state.optimusPromise.fulfilled && !currentListView && (currentDataset && currentDataset.summary || loadPreviewActive)"
           v-show="!noMatch"
           :bbColumns="bbColumns"
           @sort="updateSortedColumns"
@@ -353,7 +353,7 @@ export default {
     },
 
     noMatch () {
-      return !this.loadPreviewActive && this.customSortedColumns && this.customSortedColumns.length && ( ( this.resultsColumnsData && !this.resultsColumnsData.length) || !this.bbColumns.length ) ;
+      return !this.loadPreviewActive && this.customSortedColumns && this.customSortedColumns.length && ( (this.resultsColumnsData && !this.resultsColumnsData.length) || !this.bbColumns.length ) ;
     },
 
     showingColumnsLength () {
@@ -512,7 +512,7 @@ export default {
 
         if (this.typesSelected.length > 0) {
           filteredColumns = this.resultsColumns.filter((column) => {
-            return this.typesSelected.includes(column.profiler_dtype.dtype)
+            return this.typesSelected.includes(column.stats.profiler_dtype.dtype)
           })
         } else {
           filteredColumns = this.resultsColumns
@@ -537,7 +537,7 @@ export default {
 
         }
         return filteredColumns.map(col => {
-          return { ...col, profilerDtype: col.profiler_dtype.dtype }
+          return { ...col, profilerDtype: col.stats.profiler_dtype.dtype }
         });
       } catch (error) {
         return []
@@ -594,8 +594,8 @@ export default {
         this.$store.commit('setDfToTab', { dfName, go: true });
       } catch (err) {
         console.error('Error opening dataset', err);
+        this.$store.commit('unsetDf', { dfName });
       }
-      this.$store.commit('unsetDf', { dfName });
       this.loadingDf = false;
     },
 
@@ -790,17 +790,28 @@ export default {
               this.$store.commit('mutation', {mutate: 'loadingStatus', payload: 'Updating Preview' })
               var dfName = 'preview_df'
               var code = this.previewCode.code // is always static
-              code = `${dfName} = ${code} \n`
+              code = `${dfName} = ${code}`
 
-              code += `_output = {**${dfName}.ext.to_json("*"), "meta": ${dfName}.meta.get() if (${dfName}.meta and ${dfName}.meta.get) else {} } \n`
+              var payload = {
+                ...this.previewCode.codePayload,
+                request: {
+                  ...this.previewCode.codePayload.request,
+                  type: 'preview',
+                  saveTo: 'preview_df',
+                  isLoad: true,
+                  createsNew: true,
+                  sample: true,
+                  meta: true,
+                }
+              }
 
               // if (this.previewCode.infer) {
-              //   code += `_output = {**${dfName}.ext.to_json("*"), "meta": ${dfName}.meta.get() if (${dfName}.meta and ${dfName}.meta.get) else {} } \n`
+              //   code += `_output = {**${dfName}.columns_sample("*"), "meta": ${dfName}.meta.get() if (${dfName}.meta and ${dfName}.meta.get) else {} } \n`
               // } else {
-              //   code += `_output = {**${dfName}.ext.to_json("*")} \n`
+              //   code += `_output = {**${dfName}.columns_sample("*")} \n`
               // }
 
-              var response = await this.evalCode(code)
+              var response = await this.evalCode(payload)
 
               if (response.data.result.sample) {
                 this.$store.commit('setLoadPreview', { sample: response.data.result.sample } )
@@ -812,16 +823,22 @@ export default {
                 this.$store.commit('setLoadPreview', { meta: response.data.result.meta } )
               }
 
-              var pCode = `_output = ${dfName}.ext.profile(columns="*")`
+              var pCodePayload = {
+                request: {
+                  dfName,
+                  profile: true
+                }
+              }
 
-              var pResponse = await this.evalCode(pCode)
+              var pResponse = await this.evalCode(pCodePayload)
 
               var profile = parseResponse(pResponse.data.result)
 
               this.$store.commit('setLoadPreview', { profile } )
 
               this.$store.commit('mutation', {mutate: 'loadingStatus', payload: false })
-         if (response.data.result.sample) {
+
+              if (response.data.result.sample) {
                 this.$store.commit('setLoadPreview', { sample: response.data.result.sample } )
               } else {
                 throw response
@@ -831,9 +848,14 @@ export default {
                 this.$store.commit('setLoadPreview', { meta: response.data.result.meta } )
               }
 
-              var pCode = `_output = ${dfName}.ext.profile(columns="*")`
+              var pCodePayload = {
+                request: {
+                  dfName,
+                  profile: true
+                }
+              }
 
-              var pResponse = await this.evalCode(pCode)
+              var pResponse = await this.evalCode(pCodePayload)
 
               var profile = parseResponse(pResponse.data.result)
 

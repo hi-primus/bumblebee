@@ -42,10 +42,10 @@ export const UserSchemaProvider = {
 						default: null,
 					},
 				],
-				workspacesettings: [
+				engineconfigurations: [
 					{
 						type: Schema.Types.ObjectId,
-						ref: 'WorkspaceSettings',
+						ref: 'EngineConfigurations',
 						default: null,
 					},
 				],

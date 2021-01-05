@@ -2,23 +2,27 @@
   <v-card>
      <v-dialog
       data-name="Workspaces"
-      v-if="editingWorkspaceSettings"
-      :value="editingWorkspaceSettings"
-      @click:outside="editingWorkspaceSettings = false"
-      :hide-overlay="isDialog"
+      v-if="showEngines"
+      :value="showEngines"
+      @click:outside="showEngines = false"
       max-width="1220">
       <SettingsList
-        v-if="editingWorkspaceSettings"
         selecting
-        :highlight="selectedWorkspaceSettingsPreset"
-        @click:setting="settingsPresetClicked"
+        :highlight="selectedEngine"
+        @back="showEngines = false"
+        @click:engine="enginesClicked"
       />
     </v-dialog>
     <FormDialog focus ref="formDialog"/>
+    <v-btn v-if="isDialog" icon large color="black" @click="$emit('back')" class="title-button-left">
+      <v-icon>mdi-arrow-left</v-icon>
+    </v-btn>
     <v-card-title>
       Workspaces
       <v-spacer></v-spacer>
-      <v-form @submit.prevent="createNewElement({name: createName})">
+      <v-form
+        style="float: right; margin-top: -4px; margin-bottom: -4px; margin-right: -12px;"
+        @submit.prevent="createNewElement({name: createName})">
         <v-text-field
           v-model="createName"
           label="New workspace"
@@ -43,14 +47,19 @@
       @click:row="rowClicked"
     >
       <template slot="no-data">
-        <div>No workspaces available</div>
+        <v-btn
+          @click="createNewElementUsingForm()"
+          color="primary"
+          class="cto-no-data-button"
+          depressed
+        >Create a new workspace</v-btn>
       </template>
       <template v-slot:item.activeKernel="{ item }">
         <span
           :class="{
             'green--text': item.slug===currentWorkspace,
             'primary--text': item.slug!==currentWorkspace && item.activeKernel,
-            'grey--text': item.slug!==currentWorkspace && !item.activeKernel
+            'icon--text': item.slug!==currentWorkspace && !item.activeKernel
           }"
           class="pl-3"
         >●</span>
@@ -77,7 +86,7 @@
         >
           <!-- :search="search" -->
           <template v-slot:activator="{ on: more }">
-            <v-icon v-on="more" class="right-button" color="grey" @click.stop="">more_vert</v-icon>
+            <v-icon v-on="more" class="right-button" @click.stop="">more_vert</v-icon>
           </template>
           <v-list flat dense style="max-height: 400px; min-width: 160px;" class="scroll-y">
             <v-list-item-group color="black">
@@ -95,7 +104,7 @@
               >
                 <v-list-item-content>
                   <v-list-item-title>
-                    Settings
+                    Set engine
                   </v-list-item-title>
                 </v-list-item-content>
               </v-list-item>
@@ -177,8 +186,8 @@ export default {
         { text: 'Created', sortable: true, width: '6%', value: 'createdAt'},
         { text: '', sortable: false, width: '1%', value: 'menu'}
       ],
-      editingWorkspaceSettings: false,
-      selectedWorkspaceSettingsPreset: false,
+      showEngines: false,
+      selectedEngine: false,
 
       options: {}
     }
@@ -187,17 +196,17 @@ export default {
   methods: {
 
     changeSettings (workspace) {
-      this.editingWorkspaceSettings = workspace.id;
-      this.selectedWorkspaceSettingsPreset = workspace.workspaceSettings || false;
+      this.showEngines = workspace.id;
+      this.selectedEngine = workspace.configuration || false;
     },
 
-    async settingsPresetClicked (setting) {
-      var id = this.editingWorkspaceSettings;
-      var workspaceSettings = setting._id;
+    async enginesClicked (setting) {
+      var id = this.showEngines;
+      var configuration = setting._id;
       await this.updateWorkspace(id, {
-        workspaceSettings
+        configuration
       });
-      this.editingWorkspaceSettings = false;
+      this.showEngines = false;
     },
 
     async rowClicked (workspace) {

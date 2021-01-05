@@ -13,7 +13,7 @@
       :mobile-breakpoint="0"
       :options.sync="options"
       :server-items-length="total"
-      class="engines-table manager-table"
+      class="connections-table manager-table"
       :class="{'clickable-table': selecting}"
       :loading="loading"
       @click:row="rowClicked"
@@ -24,27 +24,7 @@
             color="primary"
             class="cto-no-data-button"
             depressed
-          >Create a new engine</v-btn>
-      </template>
-      <template v-slot:item.selectedEngine="{ item }">
-        <span
-          :class="{
-            'primary--text': item.selectedEngine,
-            'icon--text': !item.selectedEngine
-          }"
-          class="pl-3"
-        >●</span>
-      </template>
-      <template v-slot:item.preferred="{ item }">
-        <v-icon
-          active-class="no-active"
-          @click="!item.preferred && starElement(item)"
-          :class="{
-            'primary--text active': item.preferred,
-            'icon--text': !item.preferred
-          }"
-          class="ml-3 preferred-star"
-        >star</v-icon>
+          >Create new connection</v-btn>
       </template>
       <template v-slot:item.createdAt="{ item }">
         {{item.createdAt | formatDate}}
@@ -77,29 +57,10 @@
               >
                 <v-list-item-content>
                   <v-list-item-title>
-                    Edit engine
+                    Edit connection
                   </v-list-item-title>
                 </v-list-item-content>
               </v-list-item>
-              <v-list-item
-                @click="starElement(item)"
-                v-if="preferred"
-              >
-                <v-list-item-content>
-                  <v-list-item-title>
-                    Set as preferred
-                  </v-list-item-title>
-                </v-list-item-content>
-              </v-list-item>
-              <!-- <v-list-item
-                @click="duplicateElement(item)"
-              >
-                <v-list-item-content>
-                  <v-list-item-title>
-                    Duplicate
-                  </v-list-item-title>
-                </v-list-item-content>
-              </v-list-item> -->
               <v-list-item
                 @click="deleteElement(item)"
                 :disabled="item._id===highlight"
@@ -130,11 +91,14 @@
 
 <script>
 
-import enginesMixin from "@/plugins/mixins/engines";
+import FormDialog from "@/components/FormDialog"
+import { capitalizeString, deepCopy, objectFilter } from "bumblebee-utils";
 
 export default {
 
-  mixins: [ enginesMixin ],
+  components: {
+    FormDialog
+  },
 
   props: {
     isDialog: {
@@ -142,10 +106,6 @@ export default {
       type: Boolean
     },
     selecting: {
-      default: false,
-      type: Boolean
-    },
-    preferred: {
       default: false,
       type: Boolean
     },
@@ -158,7 +118,7 @@ export default {
     },
     title: {
       type: String,
-      default: 'Engines'
+      default: 'Connections'
     }
   },
 
@@ -181,19 +141,81 @@ export default {
 
   methods: {
 
-    async rowClicked (engine) {
-      this.$emit('click:engine', engine)
+    async connectionsParameters (_defaultValues, text = 'Create new connection', editing = false, extraButtons = []) {
+
+      var fields = [
+        {
+          key: 'type',
+          is: 'v-select',
+          value: 'database',
+          props: {
+            items: [
+              {text: 'Database', value: 'database'},
+              {text: 'S3', value: 's3'},
+              {text: 'HDFS', value: 'hdfs'}
+            ],
+            label: 'Type'
+          }
+        },
+        {
+          key: 'address',
+          props: {
+            label: 'Address'
+          }
+        },
+        {
+          key: 'user',
+          props: {
+            label: 'User'
+          }
+        },
+        {
+          key: 'password',
+          props: {
+            label: 'Password',
+            type: 'password'
+          }
+        },
+      ];
+
+      var defaultValues = deepCopy(_defaultValues);
+
+      var values = await this.fromForm({
+        acceptLabel: 'Save',
+        extraButtons: editing ? [...extraButtons, {
+          checkDisabled: true,
+          label: 'Save as',
+          event: 'create'
+        }] : extraButtons,
+        text,
+        fields,
+        disabled: (values) => {
+          return false;
+        }
+      });
+
+      return objectFilter(values, ([key, value])=>{
+        return value;
+      });
     },
 
-    async deleteElement (engine) {
+    async rowClicked (connection) {
+      this.$emit('click:connection',connection)
+    },
+
+    fromForm (form) {
+      return this.$refs.formDialog.fromForm(form)
+    },
+
+    async deleteElement (connection) {
       try {
-        var id = engine._id
+        var id = connection._id
         var found = this.items.findIndex(w=>w._id === id)
         this.$delete(this.items, found)
 
         await this.$store.dispatch('request',{
           request: 'delete',
-          path: `/engineconfigurations/${id}`,
+          path: `/clusters/${id}`,
         })
         await this.updateElements()
       } catch (err) {
@@ -210,37 +232,11 @@ export default {
     },
 
     async createNewElementUsingForm () {
-      var values = await this.enginesParameters()
+      var values = await this.connectionsParameters()
       if (!values) {
         return false;
       }
       await this.createNewElement(values);
-    },
-
-    async starElement (item) {
-      this.items = this.items.map(i=>{
-        if (i._id==item._id) {
-          i.preferred = true;
-          i.loading = true;
-        } else {
-          i.preferred = false;
-        }
-        return i;
-      });
-      try {
-        var response = await this.$store.dispatch('request',{
-          request: 'put',
-          path: '/engineconfigurations/preferred',
-          payload: {
-            workspaceId: item._id
-          }
-        })
-      } catch (err) {
-        console.error(err)
-      }
-      await this.updateElements()
-
-
     },
 
     async createNewElement (values) {
@@ -261,7 +257,7 @@ export default {
       try {
         var response = await this.$store.dispatch('request',{
           request: 'post',
-          path: '/engineconfigurations',
+          path: '/clusters',
           payload
         })
         await this.updateElements()
@@ -273,18 +269,18 @@ export default {
       }
     },
 
-    async editElement (engine) {
+    async editElement (connection) {
 
-      if (engine._id === this.highlight && this.backEditHighlight) {
+      if (connection._id === this.highlight && this.backEditHighlight) {
         this.$emit('back');
       } else {
 
         var params = {
-          ...engine.configuration,
-          _ws_name: engine.name
+          ...connection.configuration,
+          _ws_name: connection.name
         }
 
-        var values = await this.enginesParameters(params, 'Edit engine', true)
+        var values = await this.connectionsParameters(params, 'Edit connection', true)
 
         if (!values) {
           return false
@@ -300,7 +296,7 @@ export default {
 
           try {
 
-            var id = engine._id
+            var id = connection._id
 
             var found = this.items.findIndex(w=>w._id === id)
             var item = this.items[found]
@@ -311,7 +307,7 @@ export default {
 
             await this.$store.dispatch('request',{
               request: 'put',
-              path: `/engineconfigurations/${id}`,
+              path: `/clusters/${id}`,
               payload: {configuration, name}
             })
             await this.updateElements()
@@ -325,11 +321,11 @@ export default {
       }
     },
 
-    async duplicateElement (engine) {
+    async duplicateElement (connection) {
       try {
          this.items.push({
-          ...engine,
-          name: engine.name+' copy',
+          ...connection,
+          name: connection.name+' copy',
           createdAt: false,
           updatedAt: false,
           loading: true,
@@ -337,9 +333,9 @@ export default {
         })
         await this.$store.dispatch('request',{
           request: 'post',
-          path: `/engineconfigurations/copy/${engine._id}`,
+          path: `/clusters/copy/${connection._id}`,
           payload: {
-            name: engine.name+' copy' // TO-DO: copyName function
+            name: connection.name+' copy' // TO-DO: copyName function
           }
         })
         await this.updateElements()
@@ -367,7 +363,7 @@ export default {
           sort = '&sort='+sort;
         }
         var response = await this.$store.dispatch('request',{
-          path: `/engineconfigurations?page=${page-1}&pageSize=${itemsPerPage}${sort}`
+          path: `/clusters?page=${page-1}&pageSize=${itemsPerPage}${sort}`
         });
         this.loading = false;
         return {items: response.data.items, total: response.data.count};
@@ -382,29 +378,12 @@ export default {
 
     headers () {
       var h = [
-        { text: 'Name', sortable: true, width: '8%', value: 'name' },
-        { text: 'Engine', sortable: true, width: '8%', value: 'engine' },
-        { text: 'Gateway address', sortable: true, width: '8%', value: 'address' },
-        { text: 'Workers', sortable: true, width: '8%', value: 'workers' },
-        { text: 'Memory', sortable: true, width: '8%', value: 'memory' },
+        { text: 'Type', sortable: true, width: '8%', value: 'type' },
+        { text: 'Address', sortable: true, width: '8%', value: 'address' },
         { text: 'Last modification', sortable: true, width: '6%', value: 'updatedAt'},
-        // { text: 'Created', sortable: true, width: '6%', value: 'createdAt'},
+        { text: 'Created', sortable: true, width: '6%', value: 'createdAt'},
         { text: '', sortable: false, width: '1%', value: 'menu'}
       ];
-
-      if (this.selecting) {
-        h = [
-          { text: 'Selected', sortable: true, width: '1%', value: 'selectedEngine', align: 'left' },
-          ...h
-        ]
-      }
-
-      if (this.preferred) {
-        h = [
-          { text: 'Preferred', sortable: true, width: '1%', value: 'preferred', align: 'left' },
-          ...h
-        ]
-      }
 
       return h;
     },
@@ -415,18 +394,11 @@ export default {
       }
 
       return this.items.map((e)=>{
-        var c = e.configuration || {};
-        if (c.jupyter_address && c.jupyter_address.ip && c.jupyter_address.port) {
-          c.address = `${c.jupyter_address.ip}:${c.jupyter_address.port}`;
-        }
         return {
           ...e,
-          selectedEngine: e._id == this.highlight,
-          name: e.name,
-          engine: c.engine || 'default',
-          address: c.address || 'default',
-          workers: c.n_workers || 'N/A',
-          memory: c.memory_limit || 'N/A',
+          type: e.type,
+          connection: e.connection,
+          address: e.address,
           updatedAt: e.updatedAt,
           createdAt: e.createdAt
         }
