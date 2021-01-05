@@ -7,15 +7,15 @@ export const version = function() {
 export const codeGenerators = {
   profile: () => `.profile(columns="*")`,
   uploadToS3: (payload) => {
-    return `.save.${payload.file_type}( filename="s3://${payload.bucket}/${payload.username}/${payload.file_name}.${payload.file_type}", single_file=True, storage_options={ "key": "${payload.access_key_id}", "secret": "${payload.secret_key}", "client_kwargs": { "endpoint_url": "https://${payload.endpoint}", }, "config_kwargs": {"s3": {"addressing_style": "virtual", "x-amz-acl": "public/read"}} } );`
+    return `.save.${payload.file_type}( filename="s3://${payload.bucket}/${payload.username}/${payload.file_name}.${payload.file_type}", storage_options={ "key": "${payload.access_key_id}", "secret": "${payload.secret_key}", "client_kwargs": { "endpoint_url": "https://${payload.endpoint}", }, "config_kwargs": {"s3": {"addressing_style": "virtual", "x-amz-acl": "public/read"}} } );`
   },
   saveToLocal: (payload) => {
-    return `.save.${payload.file_type}( filename="${payload.local_address}/${payload.file_name}.${payload.file_type}", single_file=True );`
+    return `.save.${payload.file_type}( "${payload.local_address}/${payload.file_name}.${payload.file_type}" );`
   },
   saveFile: (payload) => {
     var file_type = payload.url.split('.');
     file_type = file_type[file_type.length - 1];
-    return `.save.${file_type}( filename="${payload.url}", single_file=True );`;
+    return `.save.${file_type}( "${payload.url}" );`;
   },
   toPandas: (payload) => {
     return `.to_optimus_pandas()`;
