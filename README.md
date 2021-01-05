@@ -11,7 +11,7 @@ https://hi-bumblebee.com/
 ### Docker
 To run Bumblebee on a Docker container just use:
 
-```docker run --name <NAME> --network="host" -e ADDRESS=<IP> ironmussa/bumblebee:optimus-dataframe```
+```docker run --name <NAME> --network="host" -e ADDRESS=<IP> ironmussa/bumblebee:develop-3.0```
 
 Remember to open ports 3000 and 4000 on your host.
 

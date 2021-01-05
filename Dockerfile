@@ -63,9 +63,9 @@ RUN echo "Version 3.0.0 - Jan 5 2021"
 
 RUN pip install cytoolz && \
     pip install git+https://github.com/ironmussa/dateinfer.git && \
-    pip install git+https://github.com/ironmussa/Optimus.git@optimus_dataframe
+    pip install git+https://github.com/ironmussa/Optimus.git@develop-3.0
 
-RUN git clone --branch optimus-dataframe https://github.com/ironmussa/Bumblebee.git
+RUN git clone --branch develop-3.0 https://github.com/ironmussa/Bumblebee.git
 
 WORKDIR "/opt/Bumblebee"
 
@@ -98,4 +98,4 @@ CMD ./usr/bin/mongod --fork --logpath /var/log/mongod.log && \
 
 EXPOSE 3000:3000 4000:4000
 
-# docker run --name <NAME> --network="host" -e ADDRESS=<IP> ironmussa/bumblebee:optimus-dataframe
+# docker run --name <NAME> --network="host" -e ADDRESS=<IP> ironmussa/bumblebee:develop-3.0
