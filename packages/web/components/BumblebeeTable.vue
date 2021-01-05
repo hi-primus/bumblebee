@@ -559,6 +559,8 @@ export default {
 
       selection: [],
 
+      checkScrollAgain: false,
+
       chunks: [],
       chunksPreview: [],
 
@@ -1424,6 +1426,11 @@ export default {
       var top = Math.floor(topPosition/this.rowHeight)
       var bottom = Math.ceil(bottomPosition/this.rowHeight)
 
+      if (!top && !bottom) {
+        bottom = 32;
+        this.checkScrollAgain = true;
+      }
+
       return [top, bottom]
     },
 
@@ -2047,14 +2054,16 @@ export default {
           }
 
           this.fetching = false
-          if (this.toFetch.length) {
+          if (this.toFetch.length || this.checkScrollAgain) {
+            this.checkScrollAgain = false;
             this.$nextTick(()=>{
               this.throttledScrollCheck(awaited)
             })
             return true
           }
 
-        } else if (this.toFetch.length) {
+        } else if (this.toFetch.length || this.checkScrollAgain) {
+          this.checkScrollAgain = false;
           this.$nextTick(()=>{
             this.throttledScrollCheck(false)
           })
@@ -2066,7 +2075,8 @@ export default {
         if (err.message.includes('(Error on profiling)') || err.message.includes('(Error on cells)')) {
           throw err;
         }
-        if (this.toFetch.length) {
+        if (this.toFetch.length || this.checkScrollAgain) {
+          this.checkScrollAgain = false;
           this.$nextTick(()=>{
             this.throttledScrollCheck(false)
           })
