@@ -228,10 +228,10 @@ export const codeGenerators = {
 
     if (!['final','processing'].includes(payload.request.type)) {
       datasets = payload.with.map(({name})=>`${name}.buffer_window("*", 0, 3)`).join(', ')
-      return `.cols.append_df([${datasets}], ${cols_map})`;
+      return `.rows.append([${datasets}], ${cols_map})`;
     }
 
-    return `.cols.append_df([${datasets}], ${cols_map})`;
+    return `.rows.append([${datasets}], ${cols_map})`;
   },
   join: (payload) => {
 
