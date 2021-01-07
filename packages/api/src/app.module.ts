@@ -13,6 +13,7 @@ import { ScheduleModule } from "@nestjs/schedule";
 import { EngineConfigurationModule } from './engineconfiguration/engineconfiguration.module';
 import { ClusterModule } from './cluster/cluster.module';
 import { ServiceModule } from './service/service.module';
+import { ConnectionModule } from './connection/connection.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { ServiceModule } from './service/service.module';
     EngineConfigurationModule,
     ClusterModule,
     ServiceModule,
+    ConnectionModule,
   ],
   controllers: [AppController],
   providers: [AppService, CronService, AppGateway],

@@ -1,4 +1,4 @@
-import { capitalizeString, getEngines, deepCopy, INIT_PARAMS, objectFilter, engineValid } from "bumblebee-utils";
+import { capitalizeString, getEngines, deepCopy, nameify, INIT_PARAMS, objectFilter, engineValid } from "bumblebee-utils";
 import FormDialog from "@/components/FormDialog";
 
 export default {
@@ -15,11 +15,11 @@ export default {
 
     async enginesParameters (_defaultValues = {}, text = 'Create new engine', editing = false, extraButtons = [] ) {
 
-      var defaultValues = deepCopy(_defaultValues);
+      var defaultValues = deepCopy(_defaultValues || {});
 
       defaultValues.name = this.$store.getters['session/getUsername'] + '__' + this.$route.params.slug;
 
-      let valuesFromParameters = Object.entries(INIT_PARAMS).filter(([key, field])=>field.type !== 'hidden' && !field.noForm).map(([key, field])=>{
+      let generatedFields = Object.entries(INIT_PARAMS).filter(([key, field])=>field.type !== 'hidden' && !field.noForm).map(([key, field])=>{
         return {
           key,
           value: defaultValues[key] || field.fill ? field.default : undefined,
@@ -27,15 +27,13 @@ export default {
           ...(field.type === 'boolean' ? {type: 'checkbox'} : {}),
           props: {
             placeholder: field.default,
-            label: field.name || capitalizeString(key).replace(/_/g,' '),
+            label: field.name || nameify(key),
             ...(field.type === 'int' && !field.items ? {type: 'number'} : {}),
             ...(field.items ? { items: Object.entries(field.items).map(([value, text])=>({ text, value })) } : {})
           },
           ...( field.engines ? { condition: (values) => field.engines.includes(values.engine) } : {} )
         }
       });
-
-      valuesFromParameters
 
       var fields = [
         {
@@ -60,7 +58,7 @@ export default {
           value: defaultValues.jupyter_address || { ip: '', port: '' },
           props: {}
         },
-        ...valuesFromParameters
+        ...generatedFields
       ];
 
       let values = await this.fromForm({

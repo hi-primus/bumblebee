@@ -92,7 +92,7 @@
 <script>
 
 import FormDialog from "@/components/FormDialog"
-import { capitalizeString, deepCopy, objectFilter } from "bumblebee-utils";
+import { capitalizeString, deepCopy, nameify, objectFilter, SOURCE_TYPES, SOURCE_TYPES_FIELDS, DATABASE_TYPES, DATABASE_TYPES_FIELDS } from "bumblebee-utils";
 
 export default {
 
@@ -143,42 +143,41 @@ export default {
 
     async connectionsParameters (_defaultValues, text = 'Create new connection', editing = false, extraButtons = []) {
 
+      var defaultValues = deepCopy(_defaultValues || {});
+
+      var generatedFields = Object.entries(SOURCE_TYPES_FIELDS).filter(([key, field])=>field.type !== 'hidden' && !field.noForm).map(([key, field])=>{
+        return {
+          key,
+          value: defaultValues[key] || field.fill ? field.default : undefined,
+          ...(field.items ? {is: 'v-select'} : {}),
+          ...(field.type === 'boolean' ? {type: 'checkbox'} : {}),
+          props: {
+            placeholder: field.default,
+            label: field.name || nameify(key),
+            ...(field.type === 'int' && !field.items ? {type: 'number'} : {}),
+            ...(field.items ? { items: Object.entries(field.items).map(([value, text])=>({ text, value })) } : {})
+          },
+          ...( field.types ? { condition: (values) => field.types.includes(values.type) } : {} )
+        }
+      });
+
       var fields = [
         {
           key: 'type',
           is: 'v-select',
-          value: 'database',
+          value: 's3',
           props: {
             items: [
-              {text: 'Database', value: 'database'},
-              {text: 'S3', value: 's3'},
-              {text: 'HDFS', value: 'hdfs'}
+              ...Object.entries(SOURCE_TYPES).map(([value, text])=>({value, text})),
+              { divider: true },
+              ...Object.entries(DATABASE_TYPES).map(([value, text])=>({value, text}))
             ],
             label: 'Type'
           }
         },
-        {
-          key: 'address',
-          props: {
-            label: 'Address'
-          }
-        },
-        {
-          key: 'user',
-          props: {
-            label: 'User'
-          }
-        },
-        {
-          key: 'password',
-          props: {
-            label: 'Password',
-            type: 'password'
-          }
-        },
-      ];
+        ...generatedFields
 
-      var defaultValues = deepCopy(_defaultValues);
+      ];
 
       var values = await this.fromForm({
         acceptLabel: 'Save',
@@ -215,7 +214,7 @@ export default {
 
         await this.$store.dispatch('request',{
           request: 'delete',
-          path: `/clusters/${id}`,
+          path: `/connections/${id}`,
         })
         await this.updateElements()
       } catch (err) {
@@ -257,7 +256,7 @@ export default {
       try {
         var response = await this.$store.dispatch('request',{
           request: 'post',
-          path: '/clusters',
+          path: '/connections',
           payload
         })
         await this.updateElements()
@@ -307,7 +306,7 @@ export default {
 
             await this.$store.dispatch('request',{
               request: 'put',
-              path: `/clusters/${id}`,
+              path: `/connections/${id}`,
               payload: {configuration, name}
             })
             await this.updateElements()
@@ -333,7 +332,7 @@ export default {
         })
         await this.$store.dispatch('request',{
           request: 'post',
-          path: `/clusters/copy/${connection._id}`,
+          path: `/connections/copy/${connection._id}`,
           payload: {
             name: connection.name+' copy' // TO-DO: copyName function
           }
@@ -363,7 +362,7 @@ export default {
           sort = '&sort='+sort;
         }
         var response = await this.$store.dispatch('request',{
-          path: `/clusters?page=${page-1}&pageSize=${itemsPerPage}${sort}`
+          path: `/connections?page=${page-1}&pageSize=${itemsPerPage}${sort}`
         });
         this.loading = false;
         return {items: response.data.items, total: response.data.count};
@@ -379,7 +378,7 @@ export default {
     headers () {
       var h = [
         { text: 'Type', sortable: true, width: '8%', value: 'type' },
-        { text: 'Address', sortable: true, width: '8%', value: 'address' },
+        { text: 'Address', sortable: true, width: '8%', value: '_address' },
         { text: 'Last modification', sortable: true, width: '6%', value: 'updatedAt'},
         { text: 'Created', sortable: true, width: '6%', value: 'createdAt'},
         { text: '', sortable: false, width: '1%', value: 'menu'}
@@ -394,11 +393,11 @@ export default {
       }
 
       return this.items.map((e)=>{
+        var options = e.options || {}
         return {
           ...e,
-          type: e.type,
-          connection: e.connection,
-          address: e.address,
+          type: options.type,
+          _address: options.url || options.endpoint_url || (options.host && options.port ? `${options.host}:${options.port}` : false) || options.host || 'N/A',
           updatedAt: e.updatedAt,
           createdAt: e.createdAt
         }

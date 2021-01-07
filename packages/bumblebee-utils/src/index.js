@@ -368,6 +368,10 @@ export const decapitalizeString = (str) => {
   }
 }
 
+export const nameify = (str) => {
+  return capitalizeString(str).replace(/_/g,' ')
+}
+
 export const spanClass = (text, cls) => {
   if (!cls) {
     return text
@@ -804,6 +808,66 @@ const _TIME = {
 export const TIME_NAMES = objectMap(_TIME,([name, value])=>name)
 export const TIME_VALUES = objectMap(_TIME,([name, value])=>value)
 
+export const SOURCE_TYPES = {
+  s3: "S3",
+  hdfs: "HDFS",
+  gcs: "Google Cloud Storage",
+  adl: "Azure Data Lake",
+  abfs: "Azure Blob",
+  http: "HTTP",
+  ftp: "FTP"
+}
+
+export const ALL_SOURCE_TYPES = Object.keys(SOURCE_TYPES)
+
+export const SOURCE_TYPES_FIELDS = {
+  'endpoint_url': {
+    type: 'string',
+    types: ['s3']
+  },
+  'key': {
+    type: 'string',
+    types: ['s3']
+  },
+  'secret': {
+    type: 'string',
+    private: true,
+    types: ['s3']
+  },
+  'url': {
+    type: 'string',
+    types: ['hdfs']
+  },
+  'user': {
+    type: 'string',
+    types: ['hdfs']
+  },
+  'kerb_ticket': {
+    name: 'Path to Kerberos Ticket',
+    type: 'string',
+    private: true,
+    types: ['hdfs']
+  }
+}
+
+export const DATABASE_TYPES = {
+  mysql: 'MySQL',
+  sqlite: 'SQLite',
+  postgres: 'PostgreSQL',
+  oracle: 'Oracle',
+  microsoftsql: 'Microsoft SQL Server',
+  bigquery: 'BigQuery',
+  redshift: 'Redshift',
+  cassandra: 'Cassandra',
+  presto: 'Presto',
+  redis: 'Redis'
+}
+
+export const ALL_DATABASE_TYPES = Object.keys(SOURCE_TYPES)
+
+export const DATABASE_TYPES_FIELDS = {
+}
+
 export const RESPONSE_MESSAGES = {
   'login': {
     201: 'Ok',
@@ -855,6 +919,7 @@ export default {
   indicesToNames,
   capitalizeString,
   decapitalizeString,
+  nameify,
   spanClass,
   hlParam,
   hlCols,
@@ -879,6 +944,12 @@ export default {
   TIME_VALUES,
   ALL_TYPES,
   STRING_TYPES,
+  SOURCE_TYPES,
+  ALL_SOURCE_TYPES,
+  SOURCE_TYPES_FIELDS,
+  DATABASE_TYPES,
+  ALL_DATABASE_TYPES,
+  DATABASE_TYPES_FIELDS,
   RESPONSE_MESSAGES
 }
 

@@ -27,7 +27,7 @@
           v-else-if="windowDialog  === 'configs'"
           @click:engine="doneConfig($event, true)"
           />
-        <ConnectionsList is-dialog v-else-if="windowDialog  === 'clusters'"/>
+        <ConnectionsList is-dialog v-else-if="windowDialog  === 'connections'"/>
         <CustomOperationsManager @back="windowDialog = false" is-dialog v-else-if="windowDialog  === 'customOperations'"/>
       </v-dialog>
       <template>
@@ -312,15 +312,14 @@ export default {
         ];
       }
 
-
-
-      var dashboardLink = this.$store.state.dashboardLink;
-
       menu = [
         ...menu,
+        // { text: 'Manage source connections', click: ()=>this.showWindowDialog('connections') },
         { divider: true },
         { text: 'Manage custom operations', click: ()=>this.showWindowDialog('customOperations') }
       ];
+
+      var dashboardLink = this.$store.state.dashboardLink;
 
       if (dashboardLink) {
         menu = [
