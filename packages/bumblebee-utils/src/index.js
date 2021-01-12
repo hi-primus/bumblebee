@@ -830,6 +830,11 @@ export const SOURCE_TYPES_FIELDS = {
     type: 'string',
     types: ['s3']
   },
+  'bucket': {
+    name: 'Bucket name',
+    type: 'string',
+    types: ['s3']
+  },
   'key': {
     type: 'string',
     types: ['s3']

@@ -22,7 +22,7 @@ export default {
       let generatedFields = Object.entries(INIT_PARAMS).filter(([key, field])=>field.type !== 'hidden' && !field.noForm).map(([key, field])=>{
         return {
           key,
-          value: defaultValues[key] || field.fill ? field.default : undefined,
+          value: defaultValues[key] || (field.fill ? field.default : undefined),
           ...(field.items ? {is: 'v-select'} : {}),
           ...(field.type === 'boolean' ? {type: 'checkbox'} : {}),
           props: {
@@ -78,9 +78,14 @@ export default {
         }
       });
 
-      return objectFilter(values, ([key, value])=>{
-        return engineValid(key, values.engine) && value;
-      });
+      if (values) {
+        return objectFilter(values, ([key, value])=>{
+          return engineValid(key, values.engine) && value;
+        });
+      } else {
+        return values;
+      }
+
     },
   }
 }

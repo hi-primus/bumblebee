@@ -148,7 +148,7 @@ export default {
       var generatedFields = Object.entries(SOURCE_TYPES_FIELDS).filter(([key, field])=>field.type !== 'hidden' && !field.noForm).map(([key, field])=>{
         return {
           key,
-          value: defaultValues[key] || field.fill ? field.default : undefined,
+          value: defaultValues[key] || (field.fill ? field.default : undefined),
           ...(field.items ? {is: 'v-select'} : {}),
           ...(field.type === 'boolean' ? {type: 'checkbox'} : {}),
           props: {
@@ -193,9 +193,14 @@ export default {
         }
       });
 
-      return objectFilter(values, ([key, value])=>{
-        return value;
-      });
+      if (values) {
+        return objectFilter(values, ([key, value])=>{
+          return value;
+        });
+      } else {
+        return values;
+      }
+
     },
 
     async rowClicked (connection) {
@@ -242,7 +247,7 @@ export default {
 
       var pushed = -1;
 
-      var payload = this.requestItem(values)
+      var payload = this.requestItem(values);
 
       pushed = this.items.push({
         name: payload.name,
@@ -393,11 +398,11 @@ export default {
       }
 
       return this.items.map((e)=>{
-        var options = e.options || {}
+        var configuration = e.configuration || {}
         return {
           ...e,
-          type: options.type,
-          _address: options.url || options.endpoint_url || (options.host && options.port ? `${options.host}:${options.port}` : false) || options.host || 'N/A',
+          type: configuration.type,
+          _address: configuration.url || configuration.endpoint_url || (configuration.host && configuration.port ? `${configuration.host}:${configuration.port}` : false) || configuration.host || 'N/A',
           updatedAt: e.updatedAt,
           createdAt: e.createdAt
         }

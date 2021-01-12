@@ -790,7 +790,7 @@ export default {
             }
           }),
           content: (payload)=>{
-            return `<b>Saved</b><span class="hint--df">${hlParam(payload.dfName)} </span>to ${hlParam(payload.url)}`
+            return `<b>Saved</b> <span class="hint--df">${hlParam(payload.dfName)} </span>to ${hlParam(payload.url)}`
           },
         },
         'save to database': {
