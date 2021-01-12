@@ -814,7 +814,9 @@ export const actions = {
 
     // console.debug('[SPECIAL PROCESSING] finalPayload (complete)', finalPayload);
 
-    (include || []).forEach((payload)=>{
+    include = include || [];
+
+    include.forEach((payload)=>{
       finalPayload.push(payload);
     });
 
