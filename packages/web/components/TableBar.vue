@@ -442,7 +442,7 @@ import VegaEmbed from '@/components/VegaEmbed'
 import clientMixin from '@/plugins/mixins/client'
 import dataTypesMixin from '@/plugins/mixins/data-types'
 import applicationMixin from '@/plugins/mixins/application'
-import { copyToClipboard, namesToIndices, getProperty, ENGINES, TYPES_NAMES, TIME_NAMES } from 'bumblebee-utils'
+import { copyToClipboard, namesToIndices, getProperty, ENGINES, INCOMPATIBLE_ENGINES, TYPES_NAMES, TIME_NAMES } from 'bumblebee-utils'
 import { generateCode } from 'optimus-code-api'
 import { mapState, mapGetters } from 'vuex'
 
@@ -540,6 +540,10 @@ export default {
 
     ...mapState(['nextCommand', 'noMatch', 'showingColumnsLength']),
 
+    usingPandasTransformation () {
+      return INCOMPATIBLE_ENGINES.includes((this.$store.state.localEngineParameters || {}).engine)
+    },
+
     customMenuItems () {
       return this.$store.getters['customCommands/menuItems'];
     },
@@ -552,10 +556,12 @@ export default {
 				{command: 'load from data source', text: 'Add from a loaded data source', group: 'DATA_SOURCE', hidden: true},
         {command: 'manage data sources', text: 'Manage data sources', group: 'DATA_SOURCE', hidden: true},
 
-        {command: 'download', text: 'Download', group: 'SAVE', disabled: ()=>process.env.INSTANCE!=='LOCAL'},
+        {command: 'Download', text: 'Download', group: 'SAVE', disabled: ()=>process.env.INSTANCE!=='LOCAL', hidden: ()=>!this.usingPandasTransformation},
+        {command: 'Download', text: 'Download (from pandas preview)', group: 'SAVE', disabled: ()=>process.env.INSTANCE!=='LOCAL', hidden: ()=>this.usingPandasTransformation},
+        {command: 'Download-rerun', text: 'Download', group: 'SAVE', disabled: ()=>process.env.INSTANCE!=='LOCAL', hidden: ()=>this.usingPandasTransformation},
         {command: 'saveFile', text: 'Save file', group: 'SAVE', disabled: ()=>!(this.currentDataset && this.currentDataset.summary)},
         {command: 'save to database', text: 'Save to database', group: 'SAVE', disabled: ()=>!(this.currentDataset && this.currentDataset.summary && this.$store.state.database)},
-        {command: 'compile', text: 'Compile SQL', group: 'SAVE', hidden: ()=>(this.$store.state.localEngineParameters || {}).engine !== 'ibis'},
+        {command: 'Compile', text: 'Compile SQL', group: 'SAVE', hidden: ()=>(this.$store.state.localEngineParameters || {}).engine !== 'ibis'},
 
 
 				{command: 'lower', text: 'To lower case', type: 'STRING', group: 'STRING'},
@@ -1142,6 +1148,10 @@ export default {
       this.$refs.cells & this.$refs.cells.downloadDataset(event)
     },
 
+    downloadDatasetRerun () {
+      this.$refs.cells & this.$refs.cells.downloadDatasetRerun(event)
+    },
+
     compileDataset () {
       this.$refs.cells & this.$refs.cells.compileDataset(event)
     },
@@ -1204,9 +1214,11 @@ export default {
 
     commandHandle (event) {
 
-      if (event.command==='download') {
+      if (event.command==='Download') {
         this.downloadDataset()
-      } else if (event.command==='compile') {
+      } else if (event.command==='Download-rerun') {
+        this.downloadDatasetRerun()
+      } else if (event.command==='Compile') {
         this.compileDataset()
       } else {
         this.$nextTick(()=>{

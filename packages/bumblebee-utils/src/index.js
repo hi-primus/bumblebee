@@ -554,6 +554,11 @@ export const ENGINES = {
   'dask_cudf_coiled': 'Dask cuDF (Coiled)'
 }
 
+export const INCOMPATIBLE_ENGINES = [
+  ENGINES.spark,
+  ENGINES.ibis
+]
+
 export const INIT_PARAMS = {
   'engine': {
     type: 'hidden',
@@ -936,6 +941,7 @@ export default {
   getDefaultParams,
   engineValid,
   ENGINES,
+  INCOMPATIBLE_ENGINES,
   INIT_PARAMS,
   TYPES,
   TYPES_HINTS,

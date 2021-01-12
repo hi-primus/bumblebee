@@ -25,6 +25,7 @@
     "eslint": "^7.2.0"
   },
   "dependencies": {
-    "bumblebee-utils": "link:../bumblebee-utils"
+    "bumblebee-utils": "link:../bumblebee-utils",
+    "uuid": "^8.3.2"
   }
 }

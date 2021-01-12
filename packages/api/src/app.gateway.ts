@@ -18,7 +18,84 @@ import {
 	requestToKernel,
 } from './kernel';
 import kernelRoutines from './kernel-routines';
-import { getGenerator, generateCode } from 'optimus-code-api'
+import { getGenerator, generateCode, preparePayload } from 'optimus-code-api'
+
+const prepareExecCodePayload = function(command: any) {
+
+  var env: any = {
+    ...process.env,
+    _path: require('path').resolve('./').replace(/\\/g, "/")
+  };
+
+  return preparePayload(command, env)
+}
+
+const prepareResultCodePayload = function(command: any) {
+
+  var env: any = {
+    DO_ENDPOINT: 'ENDPOINT',
+    DO_ACCESS_KEY_ID: 'ACCESS_KEY_ID',
+    DO_SECRET_KEY: 'SECRET_KEY',
+    DO_BUCKET: 'BUCKET',
+    INSTANCE: process.env.INSTANCE,
+    _path: '.'
+  };
+
+  return preparePayload(command, env)
+}
+
+const downloadFile = async function (payload: any, local: Boolean = false) {
+  const sessionId = payload.username + '_BBSESSION_' + payload.workspace;
+  payload = {
+    ...payload,
+    file_name: `${payload.username}-${payload.workspace}-dataset-${uuidv4()}`,
+    file_type: 'csv',
+  };
+  var resultPayload = {
+    ...payload,
+    endpoint: 'ENDPOINT',
+    access_key_id: 'ACCESS_KEY_ID',
+    secret_key: 'SECRET_KEY',
+    bucket: 'BUCKET',
+    local_address: './assets'
+  };
+  if (!resultPayload.url) {
+    resultPayload.url = `${resultPayload.local_address}/${resultPayload.file_name}.${resultPayload.file_type}`;
+  }
+  var execPayload = {
+    ...payload,
+    endpoint: process.env.DO_ENDPOINT,
+    access_key_id: process.env.DO_ACCESS_KEY_ID,
+    secret_key: process.env.DO_SECRET_KEY,
+    bucket: process.env.DO_BUCKET,
+    // local_address: require('path').resolve('./')+'/assets'
+    local_address: require('path').resolve('./').replace(/\\/g, "/")+'/assets'
+  };
+  if (!execPayload.url) {
+    execPayload.url = `${execPayload.local_address}/${execPayload.file_name}.${execPayload.file_type}`;
+  }
+  var resultCode = ``;
+  var code = ``;
+  var result
+  if (local) {
+    var download_url = `${process.env.BACKEND_URL}/datasource/local/${payload.file_name}.${payload.file_type}`;
+    resultCode = generateCode({ command: 'saveFile', ...resultPayload });
+    code = generateCode({ command: 'saveFile', ...execPayload });
+    result = {
+      ...(await runCode(code, sessionId)),
+      download_url
+    };
+  } else {
+    var download_url = `https://${process.env.DO_BUCKET}.${process.env.DO_ENDPOINT}/${payload.username}/${payload.file_name}.${payload.file_type}`;
+    resultCode = generateCode({ command: 'uploadToS3', ...resultPayload });
+    code = generateCode({ command: 'uploadToS3', ...execPayload });
+    result = {
+      ...(await runCode(code, sessionId)),
+      download_url
+    };
+  }
+  return { data: result, code: resultCode };
+}
 
 @WebSocketGateway()
 export class AppGateway
@@ -50,7 +127,9 @@ export class AppGateway
 
 	@SubscribeMessage('message')
 	async handleMessage(client: Socket, payload): Promise<any> {
+
 		if (payload.message === 'datasets') {
+
 			const sessionId = payload.username + '_BBSESSION_' + payload.workspace;
 			let result = {};
 			try {
@@ -67,8 +146,10 @@ export class AppGateway
 				data: result,
 				code,
 				timestamp: payload.timestamp,
-			});
+      });
+
 		} else if (payload.message === 'initialize') {
+
 			const sessionId = payload.username + '_BBSESSION_' + payload.workspace;
 			let result;
 			try {
@@ -85,89 +166,41 @@ export class AppGateway
 				data: result,
 				code,
 				timestamp: payload.timestamp,
-			});
-		} else if (payload.message === 'run') {
-      var code: string;
+      });
+
+		} else if (payload.message === 'download') {
+
+      client.emit('reply', {
+        ...(await downloadFile(payload, process.env.INSTANCE === 'LOCAL')),
+				timestamp: payload.timestamp,
+      });
+
+		} else if (payload.message === 'cells' || payload.message === 'run') {
+
+      var execCode: string;
+      var resultCode: string;
       if (payload.codePayload) {
-        code = generateCode(payload.codePayload);
+        var execCodePayload: any = prepareExecCodePayload(payload.codePayload);
+        var resultCodePayload: any = prepareResultCodePayload(payload.codePayload);
+        execCode = generateCode(execCodePayload, {}, false, true); // TO-DO: acceptStrings parameter depends on user permissions
+        resultCode = generateCode(resultCodePayload, {}, false, true);
       } else {
-        code = payload.code;
+        execCode = payload.code;
+        resultCode = payload.code;
       }
-			const sessionId = payload.username + '_BBSESSION_' + payload.workspace;
-      const result = await runCode(code, sessionId);
+      const sessionId = payload.username + '_BBSESSION_' + payload.workspace;
+      if (!execCode.includes("_output = ")) {
+        execCode += '\n' + `_output = 'ok'`;
+      }
+			const result = await runCode(execCode, sessionId);
 			client.emit('reply', {
 				data: result,
-				code: payload.code || code,
-				timestamp: payload.timestamp,
-			});
-		} else if (payload.message === 'download') {
-      const sessionId = payload.username + '_BBSESSION_' + payload.workspace;
-      const file_name = `${payload.username}-${payload.workspace}-dataset-${uuidv4()}`;
-      const file_type = `csv`;
-      const resultPayload = {
-        ...payload,
-        file_name,
-        file_type,
-        endpoint: 'ENDPOINT',
-        access_key_id: 'ACCESS_KEY_ID',
-        secret_key: 'SECRET_KEY',
-        bucket: 'BUCKET',
-        local_address: './assets'
-      };
-      const execPayload = {
-        ...payload,
-        file_name,
-        file_type,
-        endpoint: process.env.DO_ENDPOINT,
-        access_key_id: process.env.DO_ACCESS_KEY_ID,
-        secret_key: process.env.DO_SECRET_KEY,
-        bucket: process.env.DO_BUCKET,
-        // local_address: require('path').resolve('./')+'/assets'
-        local_address: require('path').resolve('./').replace(/\\/g, "/")+'/assets'
-      };
-      var resultCode = ``;
-      var code = ``;
-      var result
-      if (process.env.INSTANCE === 'LOCAL') {
-        var url = `${process.env.BACKEND_URL}/datasource/local/${file_name}.${file_type}`;
-        this.logger.log('Saving to '+url)
-        resultCode = `_output = ${payload.dfName}${getGenerator('saveToLocal',resultPayload)(resultPayload)}`;
-        code = `_output = ${payload.dfName}${getGenerator('saveToLocal',execPayload)(execPayload)}`;
-        result = {
-          ...(await runCode(code, sessionId)),
-          url
-        };
-      } else {
-        var url = `https://${process.env.DO_BUCKET}.${process.env.DO_ENDPOINT}/${payload.username}/${file_name}.${file_type}`;
-        resultCode = `_output = ${payload.dfName}${getGenerator('uploadToS3',resultPayload)(resultPayload)}`;
-        code = `_output = ${payload.dfName}${getGenerator('uploadToS3',execPayload)(execPayload)}`;
-        result = {
-          ...(await runCode(code, sessionId)),
-          url
-        };
-      }
-
-			client.emit('reply', {
-        data: result,
 				code: resultCode,
 				timestamp: payload.timestamp,
-			});
-		} else if (payload.message === 'cells') {
-      var code: string;
-      if (payload.codePayload) {
-        code = generateCode(payload.codePayload, {}, false, true); // TO-DO: acceptStrings parameter depends on user permissions
-      } else {
-        code = payload.code;
-      }
-			const sessionId = payload.username + '_BBSESSION_' + payload.workspace;
-			code += '\n' + `_output = 'ok'`;
-			const result = await runCode(code, sessionId);
-			client.emit('reply', {
-				data: result,
-				code,
-				timestamp: payload.timestamp,
-			});
+      });
+
 		} else if (payload.message === 'profile') {
+
 			const sessionId = payload.username + '_BBSESSION_' + payload.workspace;
 			const code = `_output = ${payload.dfName}${getGenerator('profile', payload)(payload)}`;
 			const result = await runCode(code, sessionId);

@@ -3109,12 +3109,13 @@ export default {
     },
 
     forceFileDownload(url, filename){
-      const link = document.createElement('a')
-      link.href = url
-      link.setAttribute('download', filename) //or any other extension
-      link.download = filename
-      document.body.appendChild(link)
-      link.click()
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', filename); //or any other extension
+      link.download = filename;
+      link.target = "_blank";
+      document.body.appendChild(link);
+      link.click();
     },
 
     showTextDialog(text, title = 'Result') {
@@ -3160,19 +3161,40 @@ export default {
       }
     },
 
+    async downloadDatasetRerun () {
+      try {
+        await this.cancelCommand();
+        var include = [{
+          command: 'Download',
+          payload: {
+            dfName: this.currentDataset.dfName,
+            username: this.currentUsername,
+            workspace: this.$route.params.slug,
+            request: {}
+          }
+        }];
+        var payload = await this.$store.dispatch('finalCommands', { ignoreFrom: -1, include });
+        var response = await this.evalCode(payload);
+        this.forceFileDownload(response.data.result.download_url);
+      } catch (error) {
+        console.error(error)
+      }
+    },
+
     async downloadDataset () {
       try {
-        await this.cancelCommand()
-        await this.runCodeNow()
+        await this.cancelCommand();
+        await this.runCodeNow();
         var payload = {
+          command: 'Download',
           dfName: this.currentDataset.dfName,
           username: this.currentUsername,
           workspace: this.$route.params.slug
-        }
-        var response = await this.socketPost('download', payload )
-        this.forceFileDownload(response.data.url)
+        };
+        var response = await this.evalCode(payload);
+        this.forceFileDownload(response.data.result.download_url);
       } catch (error) {
-        console.error(error)
+        console.error(error);
       }
     },
 

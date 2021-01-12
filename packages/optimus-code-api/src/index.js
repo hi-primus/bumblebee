@@ -1,21 +1,94 @@
 import { escapeQuotes, escapeQuotesOn, getOutputColsArgument, preparedColumns, transformDateToPython, getCodePayload, TIME_VALUES } from 'bumblebee-utils'
 
+import { v4 as uuidv4 } from "uuid";
+
 export const version = function() {
-  console.log("Code api 0.0.2")
+  console.log("Code api 0.0.3")
+}
+
+export const payloadPreparers = {
+  Download: (codePayload, env) => {
+
+    var payload = codePayload.payload;
+
+    payload = {
+      ...payload,
+      file_name: `${payload.username}-${payload.workspace}-dataset-${uuidv4()}`,
+      file_type: 'csv',
+      endpoint: env.DO_ENDPOINT,
+      access_key_id: env.DO_ACCESS_KEY_ID,
+      secret_key: env.DO_SECRET_KEY,
+      bucket: env.DO_BUCKET,
+      local_address: env._path+'/assets'
+    };
+    if (!payload.url) {
+      payload.url = `${payload.local_address}/${payload.file_name}.${payload.file_type}`;
+    }
+    if (env.INSTANCE === 'LOCAL') {
+      return {
+        ...codePayload,
+        payload: {
+          ...payload,
+          command: 'saveFile',
+          download_url: `${env.BACKEND_URL}/datasource/local/${payload.file_name}.${payload.file_type}`
+        },
+        command: 'saveFile'
+      };
+    } else {
+      return {
+        ...codePayload,
+        payload: {
+          ...payload,
+          command: 'uploadToS3',
+          download_url: `https://${env.DO_BUCKET}.${env.DO_ENDPOINT}/${payload.username}/${payload.file_name}.${payload.file_type}`
+        },
+        command: 'uploadToS3'
+      };
+    }
+  }
 }
 
 export const codeGenerators = {
   profile: () => `.profile(columns="*")`,
   uploadToS3: (payload) => {
-    return `.save.${payload.file_type}( filename="s3://${payload.bucket}/${payload.username}/${payload.file_name}.${payload.file_type}", storage_options={ "key": "${payload.access_key_id}", "secret": "${payload.secret_key}", "client_kwargs": { "endpoint_url": "https://${payload.endpoint}", }, "config_kwargs": {"s3": {"addressing_style": "virtual", "x-amz-acl": "public/read"}} } );`
-  },
-  saveToLocal: (payload) => {
-    return `.save.${payload.file_type}( "${payload.local_address}/${payload.file_name}.${payload.file_type}" );`
+    var code = `${payload.dfName}.save.${payload.file_type}( filename="s3://${payload.bucket}/${payload.username}/${payload.file_name}.${payload.file_type}", storage_options={ "key": "${payload.access_key_id}", "secret": "${payload.secret_key}", "client_kwargs": { "endpoint_url": "https://${payload.endpoint}", }, "config_kwargs": {"s3": {"addressing_style": "virtual", "x-amz-acl": "public/read"}} } );`;
+
+    if (payload.download_url) {
+      code += `\n_output = {"download_url": "${payload.download_url}"}`;
+    } else {
+      code = `_output = ${code}`;
+    }
+
+    return {
+      code,
+      isOutput: true
+    }
   },
   saveFile: (payload) => {
-    var file_type = payload.url.split('.');
-    file_type = file_type[file_type.length - 1];
-    return `.save.${file_type}( "${payload.url}" );`;
+
+    var file_type = payload.file_type;
+
+    if (!file_type) {
+      if (payload.url) {
+        file_type = payload.url.split('.');
+        file_type = file_type[file_type.length - 1];
+      } else {
+        file_type = 'csv';
+      }
+    }
+
+    var code = `${payload.dfName}.save.${file_type}( "${payload.url}" );`
+
+    if (payload.download_url) {
+      code += `\n_output = {"download_url": "${payload.download_url}"}`;
+    } else {
+      code = `_output = ${code}`;
+    }
+
+    return {
+      code,
+      isOutput: true
+    }
   },
   toPandas: (payload) => {
     return `.to_optimus_pandas()`;
@@ -707,6 +780,23 @@ export const codeGenerators = {
 
 }
 
+export const getPreparer = function(command = '', payload = {}) {
+  return payloadPreparers[command] || payloadPreparers[payload.command] || payloadPreparers[payload.type] || undefined;
+}
+
+export const preparePayload = function(commands = [], env = {}) {
+  if (!Array.isArray(commands)) {
+    commands = [commands];
+  }
+
+  return commands.map(command => {
+    if (Object.keys(payloadPreparers).includes(command.command)) {
+      return payloadPreparers[command.command](command, env);
+    }
+    return command
+  })
+}
+
 export const getGenerator = function(generatorName = '', payload = {}) {
   var generator;
   if (payload && payload._custom && typeof payload._custom === 'function') {
@@ -909,6 +999,8 @@ export const generateCode = function(commands = [], _request = { type: 'processi
 
 export default {
   version,
+  getPreparer,
+  preparePayload,
   getGenerator,
   generateCode
 }
