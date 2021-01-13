@@ -556,9 +556,9 @@ export default {
 				{command: 'load from data source', text: 'Add from a loaded data source', group: 'DATA_SOURCE', hidden: true},
         {command: 'manage data sources', text: 'Manage data sources', group: 'DATA_SOURCE', hidden: true},
 
-        {command: 'Download', text: 'Download', group: 'SAVE', disabled: ()=>process.env.INSTANCE!=='LOCAL', hidden: ()=>!this.usingPandasTransformation},
-        {command: 'Download', text: 'Download (from pandas preview)', group: 'SAVE', disabled: ()=>process.env.INSTANCE!=='LOCAL', hidden: ()=>this.usingPandasTransformation},
-        {command: 'Download-rerun', text: 'Download', group: 'SAVE', disabled: ()=>process.env.INSTANCE!=='LOCAL', hidden: ()=>this.usingPandasTransformation},
+        {command: 'Download', text: 'Download', group: 'SAVE', disabled: ()=>process.env.INSTANCE!=='LOCAL', hidden: ()=>this.usingPandasTransformation},
+        {command: 'Download', text: 'Download (from pandas preview)', group: 'SAVE', disabled: ()=>process.env.INSTANCE!=='LOCAL', hidden: ()=>!this.usingPandasTransformation},
+        {command: 'Download-rerun', text: 'Download', group: 'SAVE', disabled: ()=>process.env.INSTANCE!=='LOCAL', hidden: ()=>!this.usingPandasTransformation},
         {command: 'saveFile', text: 'Save file', group: 'SAVE', disabled: ()=>!(this.currentDataset && this.currentDataset.summary)},
         {command: 'save to database', text: 'Save to database', group: 'SAVE', disabled: ()=>!(this.currentDataset && this.currentDataset.summary && this.$store.state.database)},
         {command: 'Compile', text: 'Compile SQL', group: 'SAVE', hidden: ()=>(this.$store.state.localEngineParameters || {}).engine !== 'ibis'},
