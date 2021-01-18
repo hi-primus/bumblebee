@@ -104,6 +104,7 @@ const defaultState = {
   showingColumnsLength: 0,
   codeDone: '',
   enginePromise: false,
+  connectionsPromise: false,
   optimusPromise: false,
   workspacePromise: false,
   cellsPromise: false,
@@ -114,7 +115,8 @@ const defaultState = {
   gettingNewResults: '',
   localEngineParameters: {},
   engineId: false,
-  engineConfigName: false
+  engineConfigName: false,
+  connections: false
 }
 
 export const state = () => {
@@ -725,6 +727,8 @@ export const actions = {
 
   },
 
+  // engine settings
+
   async loadEngine ({ state, commit, dispatch }, { id, workspaceSlug }) {
 
     try {
@@ -777,6 +781,54 @@ export const actions = {
     };
 
     return dispatch('getPromise', promisePayload);
+  },
+
+  // connections
+
+  async loadConnections ({ state, commit, dispatch }, { id, workspaceSlug }) {
+
+    // try {
+    //   if (workspaceSlug) {
+    //     var workspace = await dispatch('getWorkspace', { slug: workspaceSlug } );
+    //     id = workspace.configuration;
+    //   }
+    // } catch (err) {
+    //   console.error(err)
+    // }
+
+    // if (!id && state.engineId) {
+    //   id = state.engineId;
+    // }
+
+    try {
+      var response = await dispatch('request',{
+        path: '/connections'
+      });
+
+      commit('mutation', { mutate: 'connections', payload: response.data.items });
+      return response.data.items;
+
+    } catch (err) {
+      console.error(err);
+      return false;
+    }
+  },
+
+  getConnections ({ dispatch, state }, payload) {
+
+    var promisePayload = {
+      name: 'connectionsPromise',
+      action: 'loadConnections',
+      payload,
+      forcePromise: !state.connections
+    };
+
+    return dispatch('getPromise', promisePayload);
+  },
+
+  async getConnectionsItems ({ dispatch, getters }, payload) {
+    await dispatch('getConnections', payload);
+    return getters.connectionsItems;
   },
 
   // cells
@@ -1181,7 +1233,7 @@ export const actions = {
           return command;
         });
 
-        response = await socketPost('cells', {
+        response = await socketPost('run', {
           code: undefined,
           codePayload,
           username: await dispatch('session/getUsername'),
@@ -1193,7 +1245,7 @@ export const actions = {
 
       } else {
 
-        response = await socketPost('cells', {
+        response = await socketPost('run', {
           code,
           codePayload: undefined,
           username: await dispatch('session/getUsername'),
@@ -1281,23 +1333,33 @@ export const actions = {
         commit('setBufferPromise', { dfName, promise: false });
       }
 
-      var response = await socketPost('profile', {
-        dfName,
-        username,
-        workspace: state.workspaceSlug || 'default',
-        key: state.key
-      }, {
-        timeout: 0
+      var response = await dispatch('evalCode', {
+        socketPost,
+        codePayload: {
+          request: {
+            dfName,
+            profile: true
+          }
+        }
       });
+
+      // var response = await socketPost('profile', {
+      //   dfName,
+      //   username,
+      //   workspace: state.workspaceSlug || 'default',
+      //   key: state.key
+      // }, {
+      //   timeout: 0
+      // });
 
       console.debug('[DEBUG][CODE][PROFILE]',response.code);
 
-      if (!response.data.result) {
+      if (!response.data.result.profile) {
         throw response;
       }
 
       window.pushCode({code: response.code});
-      var dataset = parseResponse(response.data.result);
+      var dataset = parseResponse(response.data.result.profile);
       dataset.dfName = dfName;
       console.debug('[DATASET] Setting', { dataset, to: dfName });
       await dispatch('setDataset', { dataset, avoidReload });
@@ -1563,6 +1625,28 @@ properties.forEach((p)=>{
 })
 
 export const getters = {
+  connectionsItems (state) {
+    var items = [];
+    if (!state.connections || !state.connections.length) {
+      var text = (
+          !state.connectionsPromise ||
+          (state.connectionsPromise && !state.connectionsPromise.fulfilled)
+        ) ? 'Loading...' : 'No connections found';
+      items = [{ text, disabled: true }];
+    } else {
+      items = state.connections.map(connection => {
+        var configuration = connection.configuration || {};
+        var type = configuration.type;
+        var url = configuration.url || configuration.endpoint_url || (configuration.host && configuration.port ? `${configuration.host}:${configuration.port}` : false) || configuration.host || 'N/A';
+        return {
+          value: connection.id,
+          text: `${type} - ${url}`
+        }
+      });
+    }
+
+    return [...items, { divider: true }];
+  },
   currentDataset (state) {
     return state.datasets[state.tab]
   },

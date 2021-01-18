@@ -1,4 +1,4 @@
-import { escapeQuotes, escapeQuotesOn, getOutputColsArgument, preparedColumns, transformDateToPython, getCodePayload, TIME_VALUES } from 'bumblebee-utils'
+import { escapeQuotes, escapeQuotesOn, getOutputColsArgument, preparedColumns, transformDateToPython, getCodePayload, getSourceParams, pythonArguments, TIME_VALUES } from 'bumblebee-utils';
 
 import { v4 as uuidv4 } from "uuid";
 
@@ -7,9 +7,7 @@ export const version = function() {
 }
 
 export const payloadPreparers = {
-  Download: (codePayload, env) => {
-
-    var payload = codePayload.payload;
+  Download: (payload, env) => {
 
     payload = {
       ...payload,
@@ -26,32 +24,24 @@ export const payloadPreparers = {
     }
     if (env.INSTANCE === 'LOCAL') {
       return {
-        ...codePayload,
-        payload: {
-          ...payload,
-          command: 'saveFile',
-          download_url: `${env.BACKEND_URL}/datasource/local/${payload.file_name}.${payload.file_type}`
-        },
-        command: 'saveFile'
+        ...payload,
+        command: 'saveFile',
+        download_url: `${env.BACKEND_URL}/datasource/local/${payload.file_name}.${payload.file_type}`
       };
     } else {
       return {
-        ...codePayload,
-        payload: {
-          ...payload,
-          command: 'uploadToS3',
-          download_url: `https://${env.DO_BUCKET}.${env.DO_ENDPOINT}/${payload.username}/${payload.file_name}.${payload.file_type}`
-        },
-        command: 'uploadToS3'
+        ...payload,
+        command: 'uploadToS3',
+        download_url: `https://${env.DO_BUCKET}.${env.DO_ENDPOINT}/${payload.username}/${payload.file_name}.${payload.file_type}`
       };
     }
   }
 }
 
 export const codeGenerators = {
-  profile: () => `.profile(columns="*")`,
+  profile: (payload) => ({ code: `_output = ${payload.dfName}.profile(columns="*")`, isOutput: true }),
   uploadToS3: (payload) => {
-    var code = `${payload.dfName}.save.${payload.file_type}( filename="s3://${payload.bucket}/${payload.username}/${payload.file_name}.${payload.file_type}", storage_options={ "key": "${payload.access_key_id}", "secret": "${payload.secret_key}", "client_kwargs": { "endpoint_url": "https://${payload.endpoint}", }, "config_kwargs": {"s3": {"addressing_style": "virtual", "x-amz-acl": "public/read"}} } );`;
+    let code = `${payload.dfName}.save.${payload.file_type}( filename="s3://${payload.bucket}/${payload.username}/${payload.file_name}.${payload.file_type}", storage_options={ "key": "${payload.access_key_id}", "secret": "${payload.secret_key}", "client_kwargs": { "endpoint_url": "https://${payload.endpoint}", }, "config_kwargs": {"s3": {"addressing_style": "virtual", "x-amz-acl": "public/read"}} } );`;
 
     if (payload.download_url) {
       code += `\n_output = {"download_url": "${payload.download_url}"}`;
@@ -454,7 +444,14 @@ export const codeGenerators = {
       +( (output_cols_argument) ? `, output_cols=${output_cols_argument}` : '')
       +')'
   },
-  'load file': (payload) => {
+  createConnection: (payload) => {
+    let code = `${payload.varName} = op.connect.${payload.type}(`
+    code += pythonArguments(getSourceParams(payload.type), payload)
+    code += `)`;
+
+    return { code, isOutput: true };
+  },
+  loadFile: (payload) => {
     let file = {
       header: (payload.header) ? `True` : `False`,
       multiline: (payload.multiline) ? `True` : `False`,
@@ -504,6 +501,9 @@ export const codeGenerators = {
       } else {
         code += `, sheet_name=${payload.sheet_name}`
       }
+    }
+    if (payload.conn) {
+      code += `, conn=${payload.conn}`
     }
     code += `)`
 
@@ -790,6 +790,12 @@ export const preparePayload = function(commands = [], env = {}) {
   }
 
   return commands.map(command => {
+    if (!command.payload) {
+      command = {
+        payload: command,
+        command: command.command
+      };
+    }
     if (Object.keys(payloadPreparers).includes(command.command)) {
       return payloadPreparers[command.command](command, env);
     }

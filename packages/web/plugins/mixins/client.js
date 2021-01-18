@@ -249,7 +249,7 @@ export default {
 
           socket = await window.socket()
 
-          socket.emit('message', { message, ...payload, timestamp });
+          socket.emit(message, { ...payload, timestamp });
 
         } catch (error) {
           if (error.code) {
@@ -342,7 +342,16 @@ export default {
 
           var socket_url = process.env.API_URL;
 
-          var socket = io(socket_url, { transports: ['websocket'] });
+          var socket = io.connect(socket_url, {
+            transports: ['websocket'],
+            transportOptions: {
+              polling: {
+                extraHeaders: {
+                  authorization: this.$store.state.session.accessToken,
+                }
+              }
+            }
+          });
 
           socket.on('new-error', (reason) => {
             console.error('Socket error', reason);

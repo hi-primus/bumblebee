@@ -44,7 +44,7 @@
           offset-y
           left
           min-width="200"
-          :disabled="!item._id"
+          :disabled="!item.id"
         >
           <!-- :search="search" -->
           <template v-slot:activator="{ on: more }">
@@ -63,7 +63,7 @@
               </v-list-item>
               <v-list-item
                 @click="deleteElement(item)"
-                :disabled="item._id===highlight"
+                :disabled="item.id===highlight"
               >
                 <v-list-item-content>
                   <v-list-item-title color="error">
@@ -92,7 +92,7 @@
 <script>
 
 import FormDialog from "@/components/FormDialog"
-import { capitalizeString, deepCopy, nameify, objectFilter, SOURCE_TYPES, SOURCE_TYPES_FIELDS, DATABASE_TYPES, DATABASE_TYPES_FIELDS } from "bumblebee-utils";
+import { capitalizeString, deepCopy, nameify, objectFilter, CONNECTION_TYPES, CONNECTION_TYPES_PARAMS, DATABASE_TYPES, DATABASE_TYPES_FIELDS } from "bumblebee-utils";
 
 export default {
 
@@ -145,7 +145,7 @@ export default {
 
       var defaultValues = deepCopy(_defaultValues || {});
 
-      var generatedFields = Object.entries(SOURCE_TYPES_FIELDS).filter(([key, field])=>field.type !== 'hidden' && !field.noForm).map(([key, field])=>{
+      var generatedFields = Object.entries(CONNECTION_TYPES_PARAMS).filter(([key, field])=>field.type !== 'hidden' && !field.noForm).map(([key, field])=>{
         return {
           key,
           value: defaultValues[key] || (field.fill ? field.default : undefined),
@@ -168,7 +168,7 @@ export default {
           value: 's3',
           props: {
             items: [
-              ...Object.entries(SOURCE_TYPES).map(([value, text])=>({value, text})),
+              ...Object.entries(CONNECTION_TYPES).map(([value, text])=>({value, text})),
               { divider: true },
               ...Object.entries(DATABASE_TYPES).map(([value, text])=>({value, text}))
             ],
@@ -213,8 +213,8 @@ export default {
 
     async deleteElement (connection) {
       try {
-        var id = connection._id
-        var found = this.items.findIndex(w=>w._id === id)
+        var id = connection.id
+        var found = this.items.findIndex(w=>w.id === id)
         this.$delete(this.items, found)
 
         await this.$store.dispatch('request',{
@@ -275,7 +275,7 @@ export default {
 
     async editElement (connection) {
 
-      if (connection._id === this.highlight && this.backEditHighlight) {
+      if (connection.id === this.highlight && this.backEditHighlight) {
         this.$emit('back');
       } else {
 
@@ -300,9 +300,9 @@ export default {
 
           try {
 
-            var id = connection._id
+            var id = connection.id
 
-            var found = this.items.findIndex(w=>w._id === id)
+            var found = this.items.findIndex(w=>w.id === id)
             var item = this.items[found]
             item.loading = true
             item = {...item, name, configuration}
@@ -337,7 +337,7 @@ export default {
         })
         await this.$store.dispatch('request',{
           request: 'post',
-          path: `/connections/copy/${connection._id}`,
+          path: `/connections/copy/${connection.id}`,
           payload: {
             name: connection.name+' copy' // TO-DO: copyName function
           }

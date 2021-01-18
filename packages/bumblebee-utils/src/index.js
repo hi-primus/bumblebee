@@ -541,6 +541,76 @@ export const getEngines = (coiled = false) => {
   }
 }
 
+export const getSourceParams = (type) => {
+  return objectFilter(CONNECTION_TYPES_PARAMS, ([key, param])=>{
+    return !param.types || param.types.includes(type);
+  })
+}
+
+export const pythonArguments = (params, values) => {
+  var codes = [];
+
+  Object.entries(params).forEach(([key, param])=>{
+
+    let str = false;
+
+    let value = (values[key] !== undefined) ? values[key] : param.value;
+
+    if (value!==undefined && param && !param.noCode) {
+
+      switch (param.type) {
+        case 'int':
+          str = `${key}=${+value}`;
+          break;
+
+        case 'const':
+          str = `${key}=${value}`;
+          break;
+
+        case 'string':
+          str = `${key}="${value}"`;
+          break;
+
+        case 'boolean':
+          str = `${key}=${(value && value!=0 && value!='false') ? 'True' : 'False'}`;
+          break;
+
+        case 'int array':
+          str = `${key}=[${value.map(v=>+v).join(', ')}]`;
+          break;
+
+        case 'const array':
+          str = `${key}=[${value.map(v=>v).join(', ')}]`;
+          break;
+
+        case 'string array':
+          str = `${key}=["${value.join('", "')}"]`;
+          break;
+
+        case 'boolean array':
+          str = `${key}=["${value.map(v=>(v && v!=0 && v!='false') ? 'True' : 'False').join('", "')}"]`;
+          break;
+
+        case 'dict':
+          str = `${key}={${Object.entries(value).map(([key, v])=>`"${key}": "${v}"`).join(', ')}}`;
+          break;
+
+        case 'kwargs':
+          str = `${Object.entries(value).map(([k, v])=>`${k}="${v}"`).join(', ')}`;
+          break;
+      }
+
+      if (str) {
+        codes.push(str);
+      }
+
+    }
+  })
+
+  return codes.join(', ')
+
+}
+
 // constants
 
 export const ENGINES = {
@@ -813,7 +883,7 @@ const _TIME = {
 export const TIME_NAMES = objectMap(_TIME,([name, value])=>name)
 export const TIME_VALUES = objectMap(_TIME,([name, value])=>value)
 
-export const SOURCE_TYPES = {
+export const CONNECTION_TYPES = {
   s3: "S3",
   hdfs: "HDFS",
   gcs: "Google Cloud Storage",
@@ -823,9 +893,9 @@ export const SOURCE_TYPES = {
   ftp: "FTP"
 }
 
-export const ALL_SOURCE_TYPES = Object.keys(SOURCE_TYPES)
+export const ALL_CONNECTION_TYPES = Object.keys(CONNECTION_TYPES)
 
-export const SOURCE_TYPES_FIELDS = {
+export const CONNECTION_TYPES_PARAMS = {
   'endpoint_url': {
     type: 'string',
     types: ['s3']
@@ -873,10 +943,23 @@ export const DATABASE_TYPES = {
   redis: 'Redis'
 }
 
-export const ALL_DATABASE_TYPES = Object.keys(SOURCE_TYPES)
+export const ALL_DATABASE_TYPES = Object.keys(CONNECTION_TYPES)
 
-export const DATABASE_TYPES_FIELDS = {
+export const DATABASE_TYPES_PARAMS = {
+
 }
+
+export const SOURCE_TYPES = {
+  ...CONNECTION_TYPES,
+  ...DATABASE_TYPES
+}
+
+export const SOURCE_TYPES_PARAMS = {
+  ...CONNECTION_TYPES_PARAMS,
+  ...DATABASE_TYPES_PARAMS
+}
+
+export const ALL_SOURCE_TYPES = [ ...ALL_CONNECTION_TYPES, ...ALL_DATABASE_TYPES ]
 
 export const RESPONSE_MESSAGES = {
   'login': {
@@ -945,6 +1028,8 @@ export default {
   getEngines,
   getDefaultParams,
   engineValid,
+  getSourceParams,
+  pythonArguments,
   ENGINES,
   INCOMPATIBLE_ENGINES,
   INIT_PARAMS,
@@ -955,12 +1040,15 @@ export default {
   TIME_VALUES,
   ALL_TYPES,
   STRING_TYPES,
-  SOURCE_TYPES,
-  ALL_SOURCE_TYPES,
-  SOURCE_TYPES_FIELDS,
+  CONNECTION_TYPES,
+  ALL_CONNECTION_TYPES,
+  CONNECTION_TYPES_PARAMS,
   DATABASE_TYPES,
   ALL_DATABASE_TYPES,
-  DATABASE_TYPES_FIELDS,
+  DATABASE_TYPES_PARAMS,
+  SOURCE_TYPES,
+  ALL_SOURCE_TYPES,
+  SOURCE_TYPES_PARAMS,
   RESPONSE_MESSAGES
 }
 

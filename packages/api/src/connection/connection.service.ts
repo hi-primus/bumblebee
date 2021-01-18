@@ -4,12 +4,58 @@ import { Model } from "mongoose";
 import { User } from "src/users/interfaces/user.interface";
 import { CreateConnectionDTO } from "./dto/create-connection.dto";
 import { Connection } from "./interface/connection.interface";
+import { objectMapEntries, SOURCE_TYPES_PARAMS } from "bumblebee-utils"
 
 @Injectable()
 export class ConnectionService {
   constructor(
     @InjectModel("Connection") private itemModel: Model<Connection>
   ) {}
+
+  private returnConnection(item: Connection, privateValues = false, placeholderValues = false): Connection {
+
+    let configuration = item.configuration;
+
+    if (!privateValues) {
+      configuration = objectMapEntries(configuration, (key, value) => {
+        if (SOURCE_TYPES_PARAMS[key]?.private) {
+          return placeholderValues ? `<${key}>` : false;
+        }
+        return value;
+      });
+    }
+
+    return {
+      name: item.name,
+      id: item.id,
+      configuration
+    };
+  }
+
+  private returnConnections(items: Connection[], privateValues = false, placeholderValues = false): Connection[] {
+
+    if (!privateValues) {
+      return items.map(item=>{
+        let configuration = objectMapEntries(item.configuration, (key, value) => {
+          if (SOURCE_TYPES_PARAMS[key]?.private) {
+            return placeholderValues ? `<${key}>` : false;
+          }
+          return value;
+        });
+        return {
+          name: item.name,
+          id: item.id,
+          configuration
+        }
+      });
+    }
+
+    return items.map(item=>({
+      name: item.name,
+      id: item.id,
+      configuration: item.configuration
+    }));
+  }
 
   async getConnections(createdBy, queryParams): Promise<Connection[]> {
     let query: any = {};
@@ -23,22 +69,23 @@ export class ConnectionService {
       .limit(parseInt(queryParams.pageSize))
       .exec();
 
-    return items;
+    return this.returnConnections(items, false, false);
   }
 
   async getConnectionsCount(createdBy): Promise<number> {
     const count = await this.itemModel
-      .find({ createdBy})
+      .find({ createdBy })
       .countDocuments()
       .exec();
     return count;
   }
 
-  async getOne(itemId: string, user: User): Promise<Connection> {
+  async getOne(itemId: string, user: User, allFields = false, placeholderValues = false): Promise<Connection> {
     const item = await this.itemModel
-      .findOne({ _id: itemId, user: user.id })
+      .findOne({ _id: itemId, createdBy: user.id })
       .exec();
-    return item;
+
+    return this.returnConnection(item, allFields, placeholderValues);
   }
 
   async newConnection(
@@ -49,14 +96,14 @@ export class ConnectionService {
       ...workspaceData,
       createdBy: user.userId,
     });
-    return item.save();
+    return this.returnConnection(item.save());
   }
 
   async updateOne(itemId, data): Promise<Connection> {
     const item = await this.itemModel
       .findOneAndUpdate({ _id: itemId }, data)
       .exec();
-    return item.save();
+    return this.returnConnection(item.save());
   }
 
   async deleteOne(itemId: string, user: User) {
@@ -68,7 +115,7 @@ export class ConnectionService {
       .findOneAndUpdate({ _id: itemId, createdBy }, data, { new: true })
       .exec();
     if (item) {
-      return item.save();
+      return this.returnConnection(item.save());
     } else {
       throw new NotFoundException("Connection not found");
     }

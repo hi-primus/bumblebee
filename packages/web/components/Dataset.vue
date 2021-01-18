@@ -39,7 +39,7 @@
             </template>
           </div>
           <v-btn
-            @click="commandHandle({command: 'load file'})"
+            @click="commandHandle({command: 'loadFile'})"
             color="primary"
             class="mr-3"
             depressed
@@ -269,7 +269,7 @@
 
 <script>
 
-import { parseResponse, debounce, throttle, getPropertyAsync } from 'bumblebee-utils'
+import { parseResponse, debounce, throttle, getPropertyAsync, deepCopy } from 'bumblebee-utils'
 
 import { mapGetters } from 'vuex'
 import dataTypesMixin from '@/plugins/mixins/data-types'
@@ -788,30 +788,21 @@ export default {
             this.loadedPreviewCode = currentCode
             if (this.previewCode.load) {
               this.$store.commit('mutation', {mutate: 'loadingStatus', payload: 'Updating Preview' })
-              var dfName = 'preview_df'
-              var code = this.previewCode.code // is always static
-              code = `${dfName} = ${code}`
 
-              var payload = {
-                ...this.previewCode.codePayload,
-                request: {
-                  ...this.previewCode.codePayload.request,
-                  type: 'preview',
-                  saveTo: 'preview_df',
-                  isLoad: true,
-                  createsNew: true,
-                  sample: true,
-                  meta: true,
-                }
+              var dfName = 'preview_df'
+              var codePayload = deepCopy(this.previewCode.codePayload);
+
+              codePayload.request = {
+                ...this.previewCode.codePayload.request,
+                type: 'preview',
+                saveTo: dfName,
+                isLoad: true,
+                createsNew: true,
+                sample: true,
+                meta: true,
               }
 
-              // if (this.previewCode.infer) {
-              //   code += `_output = {**${dfName}.columns_sample("*"), "meta": ${dfName}.meta.get() if (${dfName}.meta and ${dfName}.meta.get) else {} } \n`
-              // } else {
-              //   code += `_output = {**${dfName}.columns_sample("*")} \n`
-              // }
-
-              var response = await this.evalCode(payload)
+              var response = await this.evalCode(codePayload);
 
               if (response.data.result.sample) {
                 this.$store.commit('setLoadPreview', { sample: response.data.result.sample } )
@@ -837,29 +828,6 @@ export default {
               this.$store.commit('setLoadPreview', { profile } )
 
               this.$store.commit('mutation', {mutate: 'loadingStatus', payload: false })
-
-              if (response.data.result.sample) {
-                this.$store.commit('setLoadPreview', { sample: response.data.result.sample } )
-              } else {
-                throw response
-              }
-
-              if (response.data.result.meta) {
-                this.$store.commit('setLoadPreview', { meta: response.data.result.meta } )
-              }
-
-              var pCodePayload = {
-                request: {
-                  dfName,
-                  profile: true
-                }
-              }
-
-              var pResponse = await this.evalCode(pCodePayload)
-
-              var profile = parseResponse(pResponse.data.result)
-
-              this.$store.commit('setLoadPreview', { profile } )
 
             }
           }

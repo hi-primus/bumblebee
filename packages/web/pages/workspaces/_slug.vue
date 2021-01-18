@@ -28,6 +28,7 @@
           @click:engine="doneConfig($event, true)"
           />
         <ConnectionsList is-dialog v-else-if="windowDialog  === 'connections'"/>
+        <ConnectionsList is-dialog selecting @click:connection="connectionClicked" v-else-if="windowDialog  === 'connections-select'"/>
         <CustomOperationsManager @back="windowDialog = false" is-dialog v-else-if="windowDialog  === 'customOperations'"/>
       </v-dialog>
       <template>
@@ -156,6 +157,7 @@
             <TableBar
               ref="tableBar"
               v-if="currentDataset"
+              @showConnections="showConnections"
               :isOperating.sync="isOperating"
               :total="(currentDataset.summary) ? +currentDataset.summary.rows_count : 1"
             />
@@ -244,6 +246,7 @@ export default {
 
 	data () {
 		return {
+      selectCallback: false,
       windowDialog: false,
 			isOperating: false,
 			confirmDelete: -1,
@@ -312,12 +315,12 @@ export default {
         ];
       }
 
-      menu = [
-        ...menu,
-        // { text: 'Manage source connections', click: ()=>this.showWindowDialog('connections') },
-        { divider: true },
-        { text: 'Manage custom operations', click: ()=>this.showWindowDialog('customOperations') }
-      ];
+      // menu = [
+      //   ...menu,
+      //   { text: 'Manage data connections', click: ()=>this.showWindowDialog('connections') },
+      //   { divider: true },
+      //   { text: 'Manage custom operations', click: ()=>this.showWindowDialog('customOperations') }
+      // ];
 
       var dashboardLink = this.$store.state.dashboardLink;
 
@@ -363,7 +366,7 @@ export default {
 				var dataset = this.$route.query.dataset;
 				if (dataset && this.$refs.tableBar) {
 					this.$refs.tableBar.commandHandle({
-            command: 'load file',
+            command: 'loadFile',
             noOperations: true,
 						immediate: true,
 						payload: { url: dataset, file_type: 'file', _moreOptions: true }
@@ -393,11 +396,24 @@ export default {
       try {
         var files = event.dataTransfer.files
         if (files && files[0] && files[0].name) {
-        this.$refs.tableBar.commandHandle({command: 'load file', payload: { _fileInput: files[0] }, execute: ['uploadFile']});
+        this.$refs.tableBar.commandHandle({command: 'loadFile', payload: { _fileInput: files[0] }, execute: ['uploadFile']});
         }
 
       } catch (err) {}
       this.dragFile = false
+    },
+
+    showConnections (event) {
+      this.showWindowDialog('connections-select');
+      this.selectCallback = event; // event.selectCallback
+    },
+
+    connectionClicked (selected) {
+      if (this.selectCallback) {
+        this.selectCallback(selected)
+      }
+      this.selectCallback = false;
+      this.windowDialog = false;
     },
 
     dragLeave (event) {

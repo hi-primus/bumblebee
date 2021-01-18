@@ -1434,7 +1434,7 @@ export default {
       return [top, bottom]
     },
 
-    getValuesByColumns (sample, clear, from = 0, preppend = '') {
+    getValuesByColumns (sample, clear, from = 0, prepend = '') {
       try {
         var columnValues = []
 
@@ -1451,7 +1451,7 @@ export default {
         var columnValuesObject = {}
 
         sample.columns.forEach(({title}, i) => {
-          columnValuesObject[preppend+title] = columnValues[i]
+          columnValuesObject[prepend+title] = columnValues[i]
         })
 
         if (clear) {

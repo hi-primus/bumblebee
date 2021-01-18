@@ -65,5 +65,30 @@ export class AuthService {
 		}
 	}
 
+  async verifyUser(bearerToken: string): Promise<User> {
+
+    const decoded = this.jwtService.verify(bearerToken, {
+      ignoreExpiration: false
+    }) as any;
+
+    const user = await this.usersService.findOne(decoded.username);
+
+		if (user) {
+			const returnUser = {
+				id: user.id,
+				role: user.role,
+				username: user.username,
+				email: user.email,
+				firstName: user.firstName,
+				lastName: user.lastName,
+				fullName: `${user.firstName} ${user.lastName}`,
+				active: user.active,
+			};
+			return returnUser;
+		} else {
+			throw new UnauthorizedException();
+		}
+	}
+
 	// async refreshToken(token: string): Promise<any> {}
 }

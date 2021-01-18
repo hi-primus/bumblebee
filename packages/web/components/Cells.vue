@@ -59,6 +59,7 @@
                   :field="field"
                   :command="command"
                   :currentCommand="currentCommand"
+                  @showConnections="$emit('showConnections', $event)"
                 />
                 <template v-else>
                   <template v-for="(fieldGroup, i) in currentCommand[field.key]">
@@ -71,6 +72,7 @@
                         :currentCommand="currentCommand"
                         :command="command"
                         :index="i"
+                        @showConnections="$emit('showConnections', $event)"
                       />
                     </template>
                     <v-btn depressed class="btn-squared" :key="'remove'+i+field.key" color="error" @click="currentCommand = field.removeOne(currentCommand, i)">
@@ -339,7 +341,7 @@ export default {
 
       commandsHandlers: {
         /* load */
-        'load file': {
+        loadFile: {
           dialog: {
             title: 'Load file',
             acceptLabel: 'Load',
@@ -364,6 +366,11 @@ export default {
                 label: (c) => `More options: ${c._moreOptions ? 'Yes' : 'No'}`,
                 type: 'switch'
               },
+              // {
+              //   key: '_connection',
+              //   type: 'connection',
+              //   condition: (c)=>c._moreOptions && !c.url
+              // },
               {
                 key: 'external_url',
                 label: 'External url',
@@ -507,7 +514,7 @@ export default {
           },
 
           payload: () => ({
-            command: 'load file',
+            command: 'loadFile',
             _fileType: false,
             _fileUploading: false,
             _fileInput: [],
@@ -2942,7 +2949,7 @@ export default {
       var c = { ...this.currentCommand }
 
       try {
-        if (c.command==='load file' && meta) {
+        if (c.command==='loadFile' && meta) {
           if (meta.sheet_names!==undefined) {
             c._sheet_names = meta.sheet_names
             if (meta.sheet_names.length && !meta.sheet_names.includes(c.sheet_name)) {
@@ -3127,12 +3134,10 @@ export default {
         await this.cancelCommand();
         var payload = await this.$store.dispatch('finalCommands', { ignoreFrom: -1, include: [{
           command: 'compile',
-          payload: {
-            dfName: this.currentDataset.dfName,
-            request: {
-              noSave: true,
-              type: 'final'
-            }
+          dfName: this.currentDataset.dfName,
+          request: {
+            noSave: true,
+            type: 'final'
           }
         }] });
 
@@ -3166,12 +3171,10 @@ export default {
         await this.cancelCommand();
         var include = [{
           command: 'Download',
-          payload: {
-            dfName: this.currentDataset.dfName,
-            username: this.currentUsername,
-            workspace: this.$route.params.slug,
-            request: {}
-          }
+          dfName: this.currentDataset.dfName,
+          username: this.currentUsername,
+          workspace: this.$route.params.slug,
+          request: {}
         }];
         var payload = await this.$store.dispatch('finalCommands', { ignoreFrom: -1, include });
         var response = await this.evalCode(payload);

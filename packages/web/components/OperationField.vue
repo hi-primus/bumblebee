@@ -215,6 +215,15 @@
         outlined
       ></v-select>
     </template>
+    <template v-else-if="getPropertyField(field.type)=='connection'">
+      <ConnectionsItemsField
+        :key="field.key"
+        v-model="_value"
+        :field="field"
+        @input="(field.onChange) ? (currentCommand = field.onChange($event, currentCommand)) : 0"
+        @showConnections="$emit('showConnections', $event)"
+      />
+    </template>
 
     <template v-else-if="getPropertyField(field.type)=='columns_concat'">
       <div style="min-height: 80px; height: 94%; top: 0;" class="progress-middle" :key="field.key" v-if="!currentCommand.typesDone">
@@ -357,6 +366,9 @@ import ColumnsJoinSelector from '@/components/ColumnsJoinSelector'
 import ItemsSelector from '@/components/ItemsSelector'
 import TitleTabs from '@/components/TitleTabs'
 import ColumnsConcatSelector from '@/components/ColumnsConcatSelector'
+import ConnectionsItemsField from '@/components/ConnectionsItemsField'
+
+import { mapGetters } from 'vuex'
 
 export default {
 
@@ -365,7 +377,8 @@ export default {
     ColumnsJoinSelector,
     ItemsSelector,
     TitleTabs,
-    ColumnsConcatSelector
+    ColumnsConcatSelector,
+    ConnectionsItemsField
   },
 
   props: {

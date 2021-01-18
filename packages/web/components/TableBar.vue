@@ -344,8 +344,9 @@
           ref="cells"
           :big.sync="bigOptions"
           :view="operationsTitle"
-          @updateOperations="updateOperations"
           :columns="selectedColumns || []"
+          @updateOperations="updateOperations"
+          @showConnections="$emit('showConnections', $event)"
         />
 				<!-- <v-progress-linear
           indeterminate
@@ -551,7 +552,7 @@ export default {
     commandItems () {
       var commandItems = [
 
-				{command: 'load file', text: 'Add from file', group: 'DATA_SOURCE'},
+				{command: 'loadFile', text: 'Add from file', group: 'DATA_SOURCE'},
         {command: 'loadDatabaseTable', text: 'Add from database', group: 'DATA_SOURCE'},
 				{command: 'load from data source', text: 'Add from a loaded data source', group: 'DATA_SOURCE', hidden: true},
         {command: 'manage data sources', text: 'Manage data sources', group: 'DATA_SOURCE', hidden: true},
