@@ -56,7 +56,7 @@ export const codeGenerators = {
   },
   saveFile: (payload) => {
 
-    var file_type = payload.file_type;
+    let file_type = payload.file_type;
 
     if (!file_type) {
       if (payload.url) {
@@ -67,7 +67,7 @@ export const codeGenerators = {
       }
     }
 
-    var code = `${payload.dfName}.save.${file_type}( "${payload.url}" );`
+    let code = `${payload.dfName}.save.${file_type}( "${payload.url}" );`
 
     if (payload.download_url) {
       code += `\n_output = {"download_url": "${payload.download_url}"}`;
@@ -99,14 +99,14 @@ export const codeGenerators = {
     return `.cols.${payload.command}(${preparedColumns(payload.columns)})`
   },
   'sort rows': (payload) => {
-    var _argument = (payload.columns.length==1) ?
+    let _argument = (payload.columns.length==1) ?
       `"${payload.columns[0]}","${payload.orders[0]}"` :
       `[${payload.columns.map((e,i)=>(`("${e}","${payload.orders[i]}")`)).join(',')}]`
     return `.rows.sort( ${_argument} )`
   },
   REMOVE_KEEP_SET: (payload) => {
 
-    var dfName = `df`;
+    let dfName = `df`;
 
     if (payload.rowsType==='values' && payload.selection && payload.selection.map) {
       payload.selection = payload.selection.map(v=>escapeQuotes(v));
@@ -115,7 +115,7 @@ export const codeGenerators = {
       payload.selection = payload.selection.map(v=>`"${v}"`);
     }
 
-    var expression = '';
+    let expression = '';
 
     switch (payload.rowsType) {
       case 'missing':
@@ -141,9 +141,9 @@ export const codeGenerators = {
     }
 
     if (payload.action==='set') {
-      var output_col = payload.columns[0];
-      var code = '';
-      var value = ( (payload.value) ? `p.parse('${payload.value}')` : 'None' );
+      let output_col = payload.columns[0];
+      let code = '';
+      let value = ( (payload.value) ? `p.parse('${payload.value}')` : 'None' );
       if (!['final','processing'].includes(payload.request.type)) {
         output_col = '__new__'+output_col;
         code = `.rows.find( expr='${expression}', output_col="__match__" )`;
@@ -170,7 +170,7 @@ export const codeGenerators = {
 
     } else {
       if (!['final','processing'].includes(payload.request.type)) {
-        var code = `.rows.find( expr='${expression}', output_col="__match__" )`
+        let code = `.rows.find( expr='${expression}', output_col="__match__" )`
         if (payload.preview.filteredPreview) {
           code += `.rows.select( '__match__' )`
         }
@@ -185,8 +185,8 @@ export const codeGenerators = {
   },
   'filter rows': (payload) => {
 
-    var expression = payload.expression
-    var dfName = `df`
+    let expression = payload.expression
+    let dfName = `df`
 
     try {
       payload = escapeQuotesOn(payload, ['text',])
@@ -238,7 +238,7 @@ export const codeGenerators = {
       default:
     }
     if (!['final','processing'].includes(payload.request.type)) {
-      var code = `.rows.find( expr='${expression}', output_col="__match__" )`
+      let code = `.rows.find( expr='${expression}', output_col="__match__" )`
       if (payload.preview.filteredPreview) {
         code += `.rows.select( '__match__' )`
         if (payload.request.type === 'preview') {
@@ -252,7 +252,7 @@ export const codeGenerators = {
   },
   'drop empty rows': (payload) => {
     if (!['final','processing'].includes(payload.request.type)) {
-      var code = `.rows.find_nulls(` // mask.nulls
+      let code = `.rows.find_nulls(` // mask.nulls
       + (payload.subset.length ? `columns=${preparedColumns(payload.subset, true)}, ` : '')
       + `how="${payload.how}", output_col="__match__" )`
       if (payload.preview.filteredPreview) {
@@ -269,7 +269,7 @@ export const codeGenerators = {
   },
   'drop duplicates': (payload) => {
     if (!['final','processing'].includes(payload.request.type)) {
-      var code = `.rows.find_duplicated(` // mask.duplicated
+      let code = `.rows.find_duplicated(` // mask.duplicated
       + (payload.subset.length ? `columns=${preparedColumns(payload.subset, true)}, ` : '')
       + `keep="${payload.keep}", output_col="__match__")`
       if (payload.preview.filteredPreview) {
@@ -286,14 +286,14 @@ export const codeGenerators = {
   },
   concat: (payload) => {
 
-    var cols_map = payload.selected_columns.map(e=>{
-      var items = e.items.map(item=>item ? `"${item.name}"` : 'False')
+    let cols_map = payload.selected_columns.map(e=>{
+      let items = e.items.map(item=>item ? `"${item.name}"` : 'False')
       return `"${e.value}": [${items.join(', ')}]`
     })
 
     cols_map = `{ ${cols_map.join(', ')} }`
 
-    var datasets = payload.with.map(({name})=>name).join(', ')
+    let datasets = payload.with.map(({name})=>name).join(', ')
 
     if (!['final','processing'].includes(payload.request.type)) {
       datasets = payload.with.map(({name})=>`${name}.buffer_window("*", 0, 3)`).join(', ')
@@ -304,14 +304,14 @@ export const codeGenerators = {
   },
   join: (payload) => {
 
-    var columnsLeft = payload.selected_columns.filter(c=>c.source==='left').map(c=>c.name);
-    var columnsRight = payload.selected_columns.filter(c=>(c.name && c.source==='right')).map(c=>c.name);
+    let columnsLeft = payload.selected_columns.filter(c=>c.source==='left').map(c=>c.name);
+    let columnsRight = payload.selected_columns.filter(c=>(c.name && c.source==='right')).map(c=>c.name);
 
-    var columnsLeftEnd = Array.from(columnsLeft)
-    var columnsRightEnd = Array.from(columnsRight)
+    let columnsLeftEnd = Array.from(columnsLeft)
+    let columnsRightEnd = Array.from(columnsRight)
 
     for (const index in columnsLeftEnd) {
-      var found = columnsRightEnd.indexOf(columnsLeftEnd[index])
+      let found = columnsRightEnd.indexOf(columnsLeftEnd[index])
       if (found<0 || (columnsLeftEnd[index]==payload.left_on && columnsRightEnd[found]==payload.right_on) ) {
         continue
       }
@@ -319,9 +319,9 @@ export const codeGenerators = {
       columnsRightEnd[found] = columnsRightEnd[found]+'_right'
     }
 
-    var columnsEnd = [...new Set([...columnsLeftEnd, ...columnsRightEnd])]
+    let columnsEnd = [...new Set([...columnsLeftEnd, ...columnsRightEnd])]
 
-    var filterEnd = columnsEnd.length ? `.cols.select(["${columnsEnd.join('", "')}"])` : '';
+    let filterEnd = columnsEnd.length ? `.cols.select(["${columnsEnd.join('", "')}"])` : '';
 
     if (columnsLeft.indexOf(payload.left_on)===-1) {
       columnsLeft.push(payload.left_on)
@@ -330,14 +330,14 @@ export const codeGenerators = {
       columnsRight.push(payload.right_on)
     }
 
-    var filterLeft = columnsLeft.length ? `.cols.select(["${columnsLeft.join('", "')}"])` : '*';
-    var filterRight = columnsRight.length ? `.cols.select(["${columnsRight.join('", "')}"])` : '*';
+    let filterLeft = columnsLeft.length ? `.cols.select(["${columnsLeft.join('", "')}"])` : '*';
+    let filterRight = columnsRight.length ? `.cols.select(["${columnsRight.join('", "')}"])` : '*';
 
     // filterEnd = filterLeft = filterRight = ''
 
     if (!['final','processing'].includes(payload.request.type)) {
       return (from, to) => {
-        var window = ''
+        let window = ''
         if (from!==undefined) {
           window = `,${from},${to}`
         }
@@ -353,13 +353,13 @@ export const codeGenerators = {
 
   },
   aggregations: (payload) => {
-    var output_cols_default = payload.output_cols_default(payload)
+    let output_cols_default = payload.output_cols_default(payload)
 
-    var aggregations = payload.aggregations.map((oname,i)=>`"${payload.output_cols[i] || output_cols_default[i]}": {"${payload.input_cols[i]}":"${payload.aggregations[i]}"}`)
+    let aggregations = payload.aggregations.map((oname,i)=>`"${payload.output_cols[i] || output_cols_default[i]}": {"${payload.input_cols[i]}":"${payload.aggregations[i]}"}`)
 
     aggregations = [...new Set(aggregations)]
 
-    var code = ''
+    let code = ''
 
     code += `.cols.groupby(by="${payload.group_by[0]}", agg={`
     code += aggregations.join(', ')
@@ -373,9 +373,9 @@ export const codeGenerators = {
   },
   STRING: (payload) => {
 
-    var output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (!['final','processing'].includes(payload.request.type)) ? '__new__' : '')
+    let output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (!['final','processing'].includes(payload.request.type)) ? '__new__' : '')
 
-    var _argument = preparedColumns(payload.columns);
+    let _argument = preparedColumns(payload.columns);
 
     return `.cols.${payload.command}(${_argument}`
     + ( output_cols_argument ? `, output_cols=${output_cols_argument}` : '')
@@ -383,16 +383,16 @@ export const codeGenerators = {
   },
   SUBSTR1: (payload) => {
 
-    var output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (!['final','processing'].includes(payload.request.type)) ? '__new__' : '');
+    let output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (!['final','processing'].includes(payload.request.type)) ? '__new__' : '');
 
-    var commands = {
+    let commands = {
       left_string: 'left',
       right_string: 'right'
     };
 
-    var command = commands[payload.command];
+    let command = commands[payload.command];
 
-    var _argument = preparedColumns(payload.columns);
+    let _argument = preparedColumns(payload.columns);
 
     return `.cols.${command}(${_argument}, n=${+payload.n}`
     + ( output_cols_argument ? `, output_cols=${output_cols_argument}` : '')
@@ -400,9 +400,9 @@ export const codeGenerators = {
   },
   mid_string: (payload) => {
 
-    var output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (!['final','processing'].includes(payload.request.type)) ? '__new__' : '');
+    let output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (!['final','processing'].includes(payload.request.type)) ? '__new__' : '');
 
-    var _argument = preparedColumns(payload.columns);
+    let _argument = preparedColumns(payload.columns);
 
     return `.cols.mid(${_argument}, start=${+payload.start}, n=${+payload.n}`
     + ( output_cols_argument ? `, output_cols=${output_cols_argument}` : '')
@@ -410,9 +410,9 @@ export const codeGenerators = {
   },
   pad_string: (payload) => {
 
-    var output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (!['final','processing'].includes(payload.request.type)) ? '__new__' : '');
+    let output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (!['final','processing'].includes(payload.request.type)) ? '__new__' : '');
 
-    var _argument = preparedColumns(payload.columns);
+    let _argument = preparedColumns(payload.columns);
 
     return `.cols.pad(${_argument}, width=${+payload.width}, side="${payload.side}", fillchar="${payload.fillchar}"`
     + ( output_cols_argument ? `, output_cols=${output_cols_argument}` : '')
@@ -420,9 +420,9 @@ export const codeGenerators = {
   },
   extract: (payload) => {
 
-    var output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (!['final','processing'].includes(payload.request.type)) ? '__new__' : '');
+    let output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (!['final','processing'].includes(payload.request.type)) ? '__new__' : '');
 
-    var _argument = preparedColumns(payload.columns);
+    let _argument = preparedColumns(payload.columns);
 
     return `.cols.extract(${_argument}, regex="${payload.regex}"`
     + ( output_cols_argument ? `, output_cols=${output_cols_argument}` : '')
@@ -430,13 +430,13 @@ export const codeGenerators = {
   },
   set_profiler_dtypes: (payload) => {
 
-    var _argument = '{' + payload.columns.map(c=>`"${c}": "${payload.dtype}"`).join(', ') + '}';
+    let _argument = '{' + payload.columns.map(c=>`"${c}": "${payload.dtype}"`).join(', ') + '}';
     return `.cols.set_profiler_dtypes(${_argument})`
 
   },
   fill_na: (payload) => {
-    var _argument = preparedColumns(payload.columns);
-    var output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (!['final','processing'].includes(payload.request.type)) ? '__new__' : '')
+    let _argument = preparedColumns(payload.columns);
+    let output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (!['final','processing'].includes(payload.request.type)) ? '__new__' : '')
     payload = escapeQuotesOn(payload,['fill'])
     return `.cols.fill_na(`
       +_argument
@@ -459,11 +459,11 @@ export const codeGenerators = {
 
     payload = escapeQuotesOn(payload,['sep','null_value','sheet_name','_datasetName','url'])
 
-    var code = ''
+    let code = ''
 
-    var loadType = (!payload._moreOptions) ? 'file' : payload.file_type
+    let loadType = (!payload._moreOptions) ? 'file' : payload.file_type
 
-    var url = payload.url.trim() || payload.external_url.trim()
+    let url = payload.url.trim() || payload.external_url.trim()
 
     code +=`op.load.${loadType}("${url}"`
     if (loadType=='csv') {
@@ -485,7 +485,7 @@ export const codeGenerators = {
       }
     }
     if (!['final','processing'].includes(payload.request.type)) {
-      var limit = 35
+      let limit = 35
       if (payload.limit>0 && payload.limit<limit) {
         limit = payload.limit
       }
@@ -530,7 +530,7 @@ export const codeGenerators = {
     return payload.clusters
     .filter(cluster=>cluster.selected.length)
     .map(cluster=>{
-      var values = cluster.selected.map(e=>escapeQuotes(e.value))
+      let values = cluster.selected.map(e=>escapeQuotes(e.value))
       replace = escapeQuotes(cluster.replace)
       return `.cols.replace(`
       +`"${payload.columns[0]}"`
@@ -542,15 +542,15 @@ export const codeGenerators = {
     .join('')
   },
   'transform_format': (payload) => {
-    var _argument = preparedColumns(payload.columns);
-    var output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (!['final','processing'].includes(payload.request.type)) ? '__new__' : '')
+    let _argument = preparedColumns(payload.columns);
+    let output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (!['final','processing'].includes(payload.request.type)) ? '__new__' : '')
     return `.cols.date_format(${_argument}, "${transformDateToPython(payload.current_format)}", "${transformDateToPython(payload.output_format)}"`
     + ( output_cols_argument ? `, output_cols=${output_cols_argument}` : '')
     + `)`
   },
   'get_from_datetime': (payload) => {
-    var _argument = preparedColumns(payload.columns);
-    var output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (!['final','processing'].includes(payload.request.type)) ? '__new__' : '')
+    let _argument = preparedColumns(payload.columns);
+    let output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (!['final','processing'].includes(payload.request.type)) ? '__new__' : '')
     return `.cols.date_format(${_argument}, "${transformDateToPython(payload.current_format)}", "${TIME_VALUES[payload.output_type]}"`
     + ( output_cols_argument ? `, output_cols=${output_cols_argument}` : '')
     + `)`
@@ -572,7 +572,7 @@ export const codeGenerators = {
     }
   },
   createDatabase: (payload) => {
-    var code = `${payload.varName} = ${payload.opName}.connect(driver="${payload.driver}"`;
+    let code = `${payload.varName} = ${payload.opName}.connect(driver="${payload.driver}"`;
 
     payload.parameters.forEach(parameter => {
       code += `, ${parameter.key}="${parameter.value}"`;
@@ -595,32 +595,32 @@ export const codeGenerators = {
     return { code: `_output = ${payload.dfName}.cols.frequency(${preparedColumns(payload.columns)}, ${payload.n})`, isOutput: true };
   },
   loadDatabaseTable: (payload) => {
-    var table = escapeQuotes(payload.table)
-    var code = `db.table_to_df("${table}")`;
+    let table = escapeQuotes(payload.table)
+    let code = `db.table_to_df("${table}")`;
     return code;
   },
   'save to database': (payload) => {
-    var table_name = escapeQuotes(payload.table_name)
+    let table_name = escapeQuotes(payload.table_name)
     return `db.df_to_table(${payload.dfName}, table="${table_name}", mode="overwrite")`
   },
   stratified_sample: (payload) => {
-    var _argument = preparedColumns(payload.columns);
+    let _argument = preparedColumns(payload.columns);
     return `.stratified_sample(`
       +_argument
       +( (payload.seed) ? `, seed=${payload.seed}` : '')
       +')'
   },
   replace: (payload) => {
-    var _argument = preparedColumns(payload.columns);
+    let _argument = preparedColumns(payload.columns);
 
     if (payload.request.type === 'preview' || payload.request.type === 'profile') {
       payload.output_cols = payload.output_cols.map(col=>'__new__'+col)
     }
 
-    var output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (!['final','processing'].includes(payload.request.type)) ? '__new__' : '')
+    let output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (!['final','processing'].includes(payload.request.type)) ? '__new__' : '')
 
     payload = escapeQuotesOn(payload,['replace','search_by'])
-    var search = payload.search.map(v=>escapeQuotes(v))
+    let search = payload.search.map(v=>escapeQuotes(v))
 
     return `.cols.replace(`
       +_argument
@@ -642,12 +642,12 @@ export const codeGenerators = {
     if (!payload.output_cols.length) {
       payload.output_cols = [payload.output_col]
     }
-    var output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (!['final','processing'].includes(payload.request.type)) ? '__new__' : '')
+    let output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (!['final','processing'].includes(payload.request.type)) ? '__new__' : '')
 
-    var value = ( (payload.value) ? `p.parse('${payload.value}')` : 'None' )
+    let value = ( (payload.value) ? `p.parse('${payload.value}')` : 'None' )
 
-    var cb = (from, to) => {
-      var window = ''
+    let cb = (from, to) => {
+      let window = ''
 
       if (from!==undefined) {
         window = `,${from},${to}`
@@ -676,11 +676,11 @@ export const codeGenerators = {
     }
   },
   unnest: (payload) => {
-    var _argument = preparedColumns(payload.columns);
-    var output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (!['final','processing'].includes(payload.request.type)) ? '__new__' : '')
+    let _argument = preparedColumns(payload.columns);
+    let output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (!['final','processing'].includes(payload.request.type)) ? '__new__' : '')
     payload = escapeQuotesOn(payload, ['separator'])
 
-    var code = `.cols.unnest(`
+    let code = `.cols.unnest(`
       +_argument
       +( (payload.separator) ? `, separator="${payload.separator}"` : '')
       +( (payload.splits) ? `, splits=${payload.splits}` : '')
@@ -696,7 +696,7 @@ export const codeGenerators = {
   },
 
   nest: (payload) => {
-    var output_col = payload.output_col
+    let output_col = payload.output_col
     if (!output_col || !['final','processing'].includes(payload.request.type)) {
       output_col = payload.defaultOutputName
     }
@@ -707,8 +707,8 @@ export const codeGenerators = {
     +( (payload.request.type === 'preview' && payload.separator) ? `.cols.find("${output_col}", sub=["${payload.separator}"])` : '')
   },
   duplicate: (payload) => {
-    var _argument = preparedColumns(payload.columns);
-    var output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (!['final','processing'].includes(payload.request.type)) ? '__new__' : '')
+    let _argument = preparedColumns(payload.columns);
+    let output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (!['final','processing'].includes(payload.request.type)) ? '__new__' : '')
     return `.cols.copy(`
       +_argument
       +( (output_cols_argument) ? `, output_cols=${output_cols_argument}` : '')
@@ -716,8 +716,8 @@ export const codeGenerators = {
   },
   bucketizer: (payload) => {
     // df.cols.bucketizer("id",2,"buckets_output")
-    var _argument = preparedColumns(payload.columns);
-    var output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (!['final','processing'].includes(payload.request.type)) ? '__new__' : '')
+    let _argument = preparedColumns(payload.columns);
+    let output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (!['final','processing'].includes(payload.request.type)) ? '__new__' : '')
 
     return `.cols.bucketizer(`
       + _argument
@@ -730,9 +730,9 @@ export const codeGenerators = {
   },
   string_to_index: (payload) => {
     // cols.string_to_index(input_cols, output_cols=None)
-    var _argument = preparedColumns(payload.columns);
+    let _argument = preparedColumns(payload.columns);
 
-    var output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (!['final','processing'].includes(payload.request.type)) ? '__new__' : '')
+    let output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (!['final','processing'].includes(payload.request.type)) ? '__new__' : '')
 
     return `.cols.string_to_index(`
       + _argument
@@ -741,9 +741,9 @@ export const codeGenerators = {
   },
   index_to_string: (payload) => {
     // cols.index_to_string(input_cols, output_cols=None)
-    var _argument = preparedColumns(payload.columns);
+    let _argument = preparedColumns(payload.columns);
 
-    var output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (!['final','processing'].includes(payload.request.type)) ? '__new__' : '')
+    let output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (!['final','processing'].includes(payload.request.type)) ? '__new__' : '')
 
     return `.cols.index_to_string(`
       + _argument
@@ -751,9 +751,9 @@ export const codeGenerators = {
       + ')'
   },
   ML: (payload) => {
-    var _argument = preparedColumns(payload.columns);
+    let _argument = preparedColumns(payload.columns);
 
-    var output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (!['final','processing'].includes(payload.request.type)) ? '__new__' : '')
+    let output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (!['final','processing'].includes(payload.request.type)) ? '__new__' : '')
 
     return `.cols.${payload.command}(`
       + _argument
@@ -762,9 +762,9 @@ export const codeGenerators = {
   },
   impute: (payload) => {
     // df.cols.impute(input_cols, data_type="continuous", strategy="mean", output_cols=None)
-    var _argument = preparedColumns(payload.columns);
+    let _argument = preparedColumns(payload.columns);
 
-    var output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (!['final','processing'].includes(payload.request.type)) ? '__new__' : '')
+    let output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (!['final','processing'].includes(payload.request.type)) ? '__new__' : '')
 
     return `.cols.impute(`
       + _argument
@@ -804,7 +804,7 @@ export const preparePayload = function(commands = [], env = {}) {
 }
 
 export const getGenerator = function(generatorName = '', payload = {}) {
-  var generator;
+  let generator;
   if (payload && payload._custom && typeof payload._custom === 'function') {
     generator = payload._custom;
   } else {
@@ -819,17 +819,17 @@ export const generateCode = function(commands = [], _request = { type: 'processi
     commands = [commands];
   }
 
-  var lines = [];
+  let lines = [];
 
-  var functionDefinitions = [];
+  let functionDefinitions = [];
 
   lines.push(...commands.filter(p=>p).map(_payload => {
 
-    var customCodePayload;
+    let customCodePayload;
 
-    var command = _payload.command;
+    let command = _payload.command;
 
-    var payload = _payload.payload || _payload;
+    let payload = _payload.payload || _payload;
 
     if (typeof payload === 'string') {
       return payload;
@@ -846,9 +846,9 @@ export const generateCode = function(commands = [], _request = { type: 'processi
 
     command = command || payload.command;
 
-    var generator = getGenerator(command, payload);
+    let generator = getGenerator(command, payload);
 
-    var code = '';
+    let code = '';
 
     if (generator || command === undefined) {
 
@@ -856,16 +856,16 @@ export const generateCode = function(commands = [], _request = { type: 'processi
         generator = false
       }
 
-      var request = { ..._request, ...(payload.request || {}) };
+      let request = { ..._request, ...(payload.request || {}) };
 
       request.type = request.type || 'processing';
 
-      var result = generator ? generator({
+      let result = generator ? generator({
         ...payload,
         request
       }) : '';
 
-      var resultCode = '';
+      let resultCode = '';
 
       if (typeof result === 'object' && result) {
         resultCode = result.code || result;
@@ -895,22 +895,22 @@ export const generateCode = function(commands = [], _request = { type: 'processi
 
       } else {
 
-        var saving = false;
+        let saving = false;
 
-        var dfName = payload.dfName || request.dfName;
+        let dfName = payload.dfName || request.dfName;
 
         if (dfName && !request.noSave) {
           request.save = true;
         }
 
-        var multiOutput = (!!request.profile +!!request.sample +!!request.matches_count +!!request.meta)>1;
-        var anyOutput = (request.profile || request.sample || request.matches_count || request.meta);
+        let multiOutput = (!!request.profile +!!request.sample +!!request.matches_count +!!request.meta)>1;
+        let anyOutput = (request.profile || request.sample || request.matches_count || request.meta);
 
         if (request.saveTo) {
           code += `${request.saveTo} = `;
           saving = request.saveTo;
         } else if (request.isLoad) {
-          var newDfName = payload.newDfName || request.newDfName;
+          let newDfName = payload.newDfName || request.newDfName;
           code += `${newDfName} = `;
           saving = newDfName;
         } else if (request.save) {
@@ -929,13 +929,13 @@ export const generateCode = function(commands = [], _request = { type: 'processi
           code += '_output = ';
         }
 
-        var usesVar = generator || (!multiOutput && ( request.buffer || request.profile || request.matches_count ))
+        let usesVar = generator || (!multiOutput && ( request.buffer || request.profile || request.matches_count ))
 
         if (!request.isLoad) {
           if (usesVar) {
             code += dfName;
             if (request.buffer) {
-              var window = '';
+              let window = '';
               if (Array.isArray(request.buffer)) {
                 window = `, ${request.buffer[0]}, ${request.buffer[1]+1}`;
               }
