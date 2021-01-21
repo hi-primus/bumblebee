@@ -785,24 +785,17 @@ export const actions = {
 
   // connections
 
-  async loadConnections ({ state, commit, dispatch }, { id, workspaceSlug }) {
-
-    // try {
-    //   if (workspaceSlug) {
-    //     var workspace = await dispatch('getWorkspace', { slug: workspaceSlug } );
-    //     id = workspace.configuration;
-    //   }
-    // } catch (err) {
-    //   console.error(err)
-    // }
-
-    // if (!id && state.engineId) {
-    //   id = state.engineId;
-    // }
+  async loadConnections ({ state, commit, dispatch }, { id, workspaceSlug, include }) {
 
     try {
-      var response = await dispatch('request',{
-        path: '/connections'
+      let query = '';
+      if (include == 'databases') {
+        query = '?filters=isDatabase&values=true';
+      } else if (include == 'remotes') {
+        query = '?filters=isDatabase&values=false';
+      }
+      let response = await dispatch('request',{
+        path: `/connections${query}`
       });
 
       commit('mutation', { mutate: 'connections', payload: response.data.items });
@@ -820,7 +813,7 @@ export const actions = {
       name: 'connectionsPromise',
       action: 'loadConnections',
       payload,
-      forcePromise: !state.connections
+      forcePromise: !state.connections || payload.forcePromise
     };
 
     return dispatch('getPromise', promisePayload);

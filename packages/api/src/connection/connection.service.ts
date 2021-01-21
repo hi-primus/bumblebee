@@ -4,7 +4,7 @@ import { Model } from "mongoose";
 import { User } from "src/users/interfaces/user.interface";
 import { CreateConnectionDTO } from "./dto/create-connection.dto";
 import { Connection } from "./interface/connection.interface";
-import { objectMapEntries, SOURCE_TYPES_PARAMS } from "bumblebee-utils"
+import { objectMapEntries, ALL_DATABASE_TYPES, SOURCE_TYPES_PARAMS } from "bumblebee-utils"
 
 @Injectable()
 export class ConnectionService {
@@ -16,7 +16,7 @@ export class ConnectionService {
 
     let configuration = item.configuration;
 
-    if (!privateValues) {
+    if (!privateValues && configuration) {
       configuration = objectMapEntries(configuration, (key, value) => {
         if (SOURCE_TYPES_PARAMS[key]?.private) {
           return placeholderValues ? `<${key}>` : false;
@@ -28,39 +28,64 @@ export class ConnectionService {
     return {
       name: item.name,
       id: item.id,
+      isDatabase: item.isDatabase,
       configuration
     };
   }
 
   private returnConnections(items: Connection[], privateValues = false, placeholderValues = false): Connection[] {
 
+    let returnItems: Connection[];
+
     if (!privateValues) {
-      return items.map(item=>{
-        let configuration = objectMapEntries(item.configuration, (key, value) => {
-          if (SOURCE_TYPES_PARAMS[key]?.private) {
-            return placeholderValues ? `<${key}>` : false;
-          }
-          return value;
-        });
+
+      returnItems = items.map(item=>{
+
+        let configuration = item.configuration;
+
+        if (configuration) {
+          configuration = objectMapEntries(configuration, (key, value) => {
+            if (SOURCE_TYPES_PARAMS[key]?.private) {
+              return placeholderValues ? `<${key}>` : false;
+            } else {
+              return value;
+            }
+          });
+        }
+
         return {
           name: item.name,
           id: item.id,
+          isDatabase: item.isDatabase,
           configuration
         }
       });
+
+    } else {
+
+      returnItems = items.map(item=>({
+        name: item.name,
+        id: item.id,
+        isDatabase: item.isDatabase,
+        configuration: item.configuration
+      }));
+
     }
 
-    return items.map(item=>({
-      name: item.name,
-      id: item.id,
-      configuration: item.configuration
-    }));
+    return returnItems;
+
   }
 
   async getConnections(createdBy, queryParams): Promise<Connection[]> {
     let query: any = {};
     queryParams?.filters?.split(",").forEach((filter, index) => {
-      query[filter] = queryParams?.values?.split(",")[index] || "";
+
+      if (["true", "false"].includes(queryParams?.values?.split(",")[index])) {
+        query[filter] = queryParams?.values?.split(",")[index]=="true";
+      } else {
+        query[filter] = queryParams?.values?.split(",")[index] || "";
+      }
+
     });
     const items = await this.itemModel
       .find({ createdBy, ...query })
@@ -89,17 +114,19 @@ export class ConnectionService {
   }
 
   async newConnection(
-    workspaceData: CreateConnectionDTO,
+    data: CreateConnectionDTO,
     user
   ): Promise<Connection> {
+    data.isDatabase =  ALL_DATABASE_TYPES.includes(data.configuration.type);
     const item = new this.itemModel({
-      ...workspaceData,
+      ...data,
       createdBy: user.userId,
     });
     return this.returnConnection(item.save());
   }
 
   async updateOne(itemId, data): Promise<Connection> {
+    data.isDatabase =  ALL_DATABASE_TYPES.includes(data.configuration.type);
     const item = await this.itemModel
       .findOneAndUpdate({ _id: itemId }, data)
       .exec();
@@ -111,6 +138,7 @@ export class ConnectionService {
   }
 
   async updateOneFromUser(itemId, createdBy, data): Promise<Connection> {
+    data.isDatabase =  ALL_DATABASE_TYPES.includes(data.configuration.type);
     const item = await this.itemModel
       .findOneAndUpdate({ _id: itemId, createdBy }, data, { new: true })
       .exec();

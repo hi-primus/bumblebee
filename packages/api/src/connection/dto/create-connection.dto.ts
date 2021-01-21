@@ -1,5 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsMongoId, IsString } from "class-validator";
+import { IsMongoId, IsString, IsBoolean } from "class-validator";
 export class CreateConnectionDTO {
   @ApiProperty({ example: "Connection 1" })
   @IsString()
@@ -10,5 +10,7 @@ export class CreateConnectionDTO {
     },
   })
   @IsMongoId()
-  configuration: object;
+  configuration: any;
+  @IsBoolean()
+  isDatabase: boolean;
 }

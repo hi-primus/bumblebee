@@ -66,20 +66,27 @@ export default {
   },
 
   mounted () {
-    this.$store.dispatch('getConnectionsItems', {});
+    this.updateConnections();
   },
 
   methods: {
 
-    connectionEvent (event) {
-      this.$emit('showConnections', (selected)=>{
-        this._value = selected.id
+    updateConnections () {
+      return this.$store.dispatch('getConnectionsItems', { include: this.field.include, forcePromise: true });
+    },
+
+    async connectionEvent (event) {
+      this.$emit('showConnections', async (selected)=>{
+        await this.updateConnections();
+        if (selected) {
+          this._value = selected.id
+        }
       })
     },
 
     debouncedCheckItems: debounce( function (value) {
       if (!value) {
-        this.$store.dispatch('getConnectionsItems', {});
+        this.updateConnections();
       }
     }, 1000),
 

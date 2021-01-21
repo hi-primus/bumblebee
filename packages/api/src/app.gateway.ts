@@ -61,6 +61,7 @@ export class AppGateway
     let connections = {};
 
     let connectionIndex = 0;
+    let databaseIndex = 0;
 
     for (let command of preparedCommands) {
 
@@ -72,26 +73,35 @@ export class AppGateway
 
         if (connection?.configuration) {
 
-          let varName = `conn${connectionIndex || ''}`;
+          let varName;
+
+          if (connection.isDatabase) {
+            varName = `db${databaseIndex || ''}`;
+            databaseIndex++;
+            command.payload.dbName = varName;
+          } else {
+            varName = `conn${connectionIndex || ''}`;
+            connectionIndex++;
+            command.payload.conn = varName;
+          }
 
           let connectionCommand = {
+            ...(connection.configuration as any),
             _id: connectionId,
-            command: 'createConnection',
-            payload: {
-              ...(connection.configuration as any),
-              varName
-            },
+            command: connection.isDatabase ? 'createDatabase' : 'createConnection',
+            varName
           };
 
-          command.payload.conn = varName;
           connections[connectionId] = connectionCommand;
-          connectionIndex++;
 
         } else {
-          this.logger.warn(`Connection with id ${connectionId} for user ${user.username} not found`)
+
+          this.logger.warn(`Connection with id ${connectionId} for user ${user.username} not found`);
+
         }
 
       }
+
     }
 
     return [

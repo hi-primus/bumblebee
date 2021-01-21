@@ -9,6 +9,10 @@ export const ConnectionSchemaProvider = {
         trim: true,
         minlength: 4,
       },
+      isDatabase: {
+        type: Boolean,
+        default: false
+      },
       configuration: {
         type: Schema.Types.Mixed,
       },
