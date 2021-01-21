@@ -7,7 +7,7 @@ export class CreateServiceDto {
   name: string;
   @ApiProperty({
     example: {
-      "Propiedad 1": "Valor 1",
+      "property": "value",
     },
   })
   @IsMongoId()
