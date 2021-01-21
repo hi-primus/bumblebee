@@ -36,7 +36,7 @@
     "nuxt-socket-io": "^1.1.4",
     "optimus-code-api": "link:../optimus-code-api",
     "pako": "^1.0.11",
-    "socket.io": "^2.3.0",
+    "socket.io": "^2.4.0",
     "uuid": "^3.4.0",
     "vega": "^5.9.2",
     "vega-embed": "^5.1.3",
