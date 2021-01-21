@@ -92,7 +92,7 @@
 <script>
 
 import FormDialog from "@/components/FormDialog"
-import { capitalizeString, deepCopy, nameify, objectFilter, CONNECTION_TYPES, CONNECTION_TYPES_PARAMS, DATABASE_TYPES, DATABASE_TYPES_FIELDS } from "bumblebee-utils";
+import { capitalizeString, deepCopy, nameify, objectFilter, CONNECTION_TYPES, SOURCE_TYPES_PARAMS, DATABASE_TYPES, DATABASE_TYPES_FIELDS } from "bumblebee-utils";
 
 export default {
 
@@ -145,7 +145,7 @@ export default {
 
       var defaultValues = deepCopy(_defaultValues || {});
 
-      var generatedFields = Object.entries(CONNECTION_TYPES_PARAMS).filter(([key, field])=>field.type !== 'hidden' && !field.noForm).map(([key, field])=>{
+      var generatedFields = Object.entries(SOURCE_TYPES_PARAMS).filter(([key, field])=>field.type !== 'hidden' && !field.noForm).map(([key, field])=>{
         return {
           key,
           value: defaultValues[key] || (field.fill ? field.default : undefined),
@@ -157,7 +157,9 @@ export default {
             ...(field.type === 'int' && !field.items ? {type: 'number'} : {}),
             ...(field.items ? { items: Object.entries(field.items).map(([value, text])=>({ text, value })) } : {})
           },
-          ...( field.types ? { condition: (values) => field.types.includes(values.type) } : {} )
+          ...( field.types && field.condition ? { condition: (values) => field.condition(values) && field.types.includes(values.type) } : {} ),
+          ...( field.types && !field.condition ? { condition: (values) => field.types.includes(values.type) } : {} ),
+          ...( !field.types && field.condition ? { condition: (values) => field.condition(values) } : {} )
         }
       });
 
@@ -165,7 +167,7 @@ export default {
         {
           key: 'type',
           is: 'v-select',
-          value: 's3',
+          value: defaultValues.type || 's3',
           props: {
             items: [
               ...Object.entries(CONNECTION_TYPES).map(([value, text])=>({value, text})),

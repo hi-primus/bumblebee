@@ -542,7 +542,7 @@ export const getEngines = (coiled = false) => {
 }
 
 export const getSourceParams = (type) => {
-  return objectFilter(CONNECTION_TYPES_PARAMS, ([key, param])=>{
+  return objectFilter(SOURCE_TYPES_PARAMS, ([key, param])=>{
     return !param.types || param.types.includes(type);
   })
 }
@@ -914,7 +914,13 @@ export const CONNECTION_TYPES_PARAMS = {
     private: true,
     types: ['s3']
   },
-  'url': {
+  'host': {
+    name: 'Server host',
+    type: 'string',
+    types: ['hdfs']
+  },
+  'port': {
+    name: 'Server port',
     type: 'string',
     types: ['hdfs']
   },
@@ -922,12 +928,51 @@ export const CONNECTION_TYPES_PARAMS = {
     type: 'string',
     types: ['hdfs']
   },
-  'kerb_ticket': {
-    name: 'Path to Kerberos Ticket',
+  'password': {
     type: 'string',
     private: true,
     types: ['hdfs']
-  }
+  },
+  'kerb_ticket': {
+    name: 'Path to Kerberos Ticket',
+    type: 'string',
+    advanced: true,
+    types: ['hdfs']
+  },
+  'base_url': {
+    name: 'Url',
+    type: 'string',
+    types: ['adl', 'abfs', 'gcs', 'http', 'ftp']
+  },
+  'tenant_id': {
+    name: 'Tenant ID',
+    type: 'string',
+    types: ['adl']
+  },
+  'client_id': {
+    name: 'Tenant ID',
+    type: 'string',
+    types: ['adl']
+  },
+  'client_secret': {
+    type: 'string',
+    private: true,
+    types: ['adl']
+  },
+  'account_name': {
+    type: 'string',
+    types: ['abfs']
+  },
+  'account_secret': {
+    type: 'string',
+    private: true,
+    types: ['abfs']
+  },
+  'token': {
+    type: 'string',
+    private: true,
+    types: ['gcs']
+  },
 }
 
 export const DATABASE_TYPES = {
@@ -935,7 +980,7 @@ export const DATABASE_TYPES = {
   sqlite: 'SQLite',
   postgres: 'PostgreSQL',
   oracle: 'Oracle',
-  microsoftsql: 'Microsoft SQL Server',
+  mssql: 'Microsoft SQL Server',
   bigquery: 'BigQuery',
   redshift: 'Redshift',
   cassandra: 'Cassandra',
@@ -943,9 +988,91 @@ export const DATABASE_TYPES = {
   redis: 'Redis'
 }
 
-export const ALL_DATABASE_TYPES = Object.keys(CONNECTION_TYPES)
+export const ALL_DATABASE_TYPES = Object.keys(DATABASE_TYPES)
 
 export const DATABASE_TYPES_PARAMS = {
+  'oracle_type': {
+    name: 'Type',
+    type: 'string',
+    noCode: true,
+    types: ['oracle'],
+    default: 'oracle_sid',
+    items: {
+      'oracle_sid': 'SID',
+      'oracle_service_name': 'Service name',
+      'oracle_tns': 'TNS',
+    }
+  },
+  'sid': {
+    name: 'SID',
+    type: 'string',
+    types: ['oracle'],
+    condition: (c)=>(c.type=='oracle' && c.oracle_type=='oracle_sid'),
+  },
+  'service_name': {
+    type: 'string',
+    types: ['oracle'],
+    condition: (c)=>(c.type=='oracle' && c.oracle_type=='oracle_service_name'),
+  },
+  'tns': {
+    name: 'TNS',
+    type: 'string',
+    types: ['oracle'],
+    condition: (c)=>(c.type=='oracle' && c.oracle_type=='oracle_tns'),
+  },
+  'project': {
+    types: ['bigquery'],
+    type: 'string',
+  },
+  'dataset': {
+    types: ['bigquery'],
+    type: 'string',
+  },
+  'keyspace': {
+    types: ['cassandra'],
+    type: 'string',
+  },
+  'table': {
+    types: ['cassandra'],
+    type: 'string',
+  },
+  'table': {
+    types: ['cassandra'],
+    type: 'string',
+  },
+  'host': {
+    name: 'Host',
+    type: 'string',
+    types: [...ALL_DATABASE_TYPES, "hdfs"],
+    condition: (c)=>(c.type!='oracle' || c.oracle_type!='oracle_tns') && c.type!='cassandra',
+  },
+  'port': {
+    name: 'Port',
+    type: 'string',
+    types: [...ALL_DATABASE_TYPES, "hdfs"],
+    condition: (c)=>(c.type!='oracle' || c.oracle_type!='oracle_tns') && c.type!='cassandra',
+  },
+  'catalog': {
+    types: ['presto'],
+    type: 'string',
+  },
+  'database': {
+    types: ALL_DATABASE_TYPES,
+    type: 'string',
+  },
+  'schema': {
+    types: ALL_DATABASE_TYPES,
+    type: 'string',
+  },
+  'user': {
+    types: [...ALL_DATABASE_TYPES, "hdfs"],
+    type: 'string'
+  },
+  'password': {
+    types: [...ALL_DATABASE_TYPES, "hdfs"],
+    type: 'string',
+    private: true
+  },
 
 }
 

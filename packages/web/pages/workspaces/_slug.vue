@@ -10,12 +10,12 @@
         data-name="Workspaces"
         v-else-if="windowDialog"
         :value="windowDialog"
-        @click:outside="windowDialog = false"
+        @click:outside="backDialogClicked"
         max-width="1220"
       >
         <WorkspacesList
           is-dialog
-          @back="windowDialog = false"
+          @back="backDialogClicked"
           v-if="windowDialog  === 'workspaces'"/>
         <SettingsList
           is-dialog
@@ -23,13 +23,13 @@
           :back-edit-highlight="!$store.state.engineId"
           :highlight="$store.state.engineId"
           :disable-back="!!engineFormPromise"
-          @back="!$store.state.engineId ? showWindowDialog('configEngine') : windowDialog = false"
+          @back="!$store.state.engineId ? showWindowDialog('configEngine') : backDialogClicked"
           v-else-if="windowDialog  === 'configs'"
           @click:engine="doneConfig($event, true)"
           />
         <ConnectionsList is-dialog v-else-if="windowDialog  === 'connections'"/>
-        <ConnectionsList is-dialog selecting @click:connection="connectionClicked" v-else-if="windowDialog  === 'connections-select'"/>
-        <CustomOperationsManager @back="windowDialog = false" is-dialog v-else-if="windowDialog  === 'customOperations'"/>
+        <ConnectionsList is-dialog selecting @click:connection="connectionClicked" @back="backDialogClicked" v-else-if="windowDialog  === 'connections-select'"/>
+        <CustomOperationsManager @back="backDialogClicked" is-dialog v-else-if="windowDialog  === 'customOperations'"/>
       </v-dialog>
       <template>
         <div v-if="workspaceStatus==='loading'">
@@ -304,23 +304,17 @@ export default {
       ];
 
       if (this.$store.state.engineId) {
-        menu = [
-          ...menu,
-          { text: 'Set engine', click: ()=>this.showWindowDialog('configs') }
-        ];
+        menu.push({ text: 'Set engine', click: ()=>this.showWindowDialog('configs') });
       } else {
-        menu = [
-          ...menu,
-          { text: 'Configure engine', click: ()=>this.showWindowDialog('configEngine') }
-        ];
+        menu.push({ text: 'Configure engine', click: ()=>this.showWindowDialog('configEngine') });
       }
 
-      // menu = [
-      //   ...menu,
-      //   { text: 'Manage data connections', click: ()=>this.showWindowDialog('connections') },
-      //   { divider: true },
-      //   { text: 'Manage custom operations', click: ()=>this.showWindowDialog('customOperations') }
-      // ];
+      menu = [
+        ...menu,
+        { text: 'Manage data connections', click: ()=>this.showWindowDialog('connections') },
+        { divider: true },
+        { text: 'Manage custom operations', click: ()=>this.showWindowDialog('customOperations') }
+      ];
 
       var dashboardLink = this.$store.state.dashboardLink;
 
@@ -383,6 +377,13 @@ export default {
   },
 
 	methods: {
+
+    backDialogClicked () {
+      if (this.windowDialog == 'connections-select') {
+        this.connectionClicked(false)
+      }
+      this.windowDialog = false
+    },
 
     engineForm () {
       return new Promise((resolve, reject)=>{

@@ -366,11 +366,12 @@ export default {
                 label: (c) => `More options: ${c._moreOptions ? 'Yes' : 'No'}`,
                 type: 'switch'
               },
-              // {
-              //   key: '_connection',
-              //   type: 'connection',
-              //   condition: (c)=>c._moreOptions && !c.url
-              // },
+              {
+                key: '_connection',
+                type: 'connection',
+                include: 'remotes',
+                condition: (c)=>c._moreOptions && !c.url
+              },
               {
                 key: 'external_url',
                 label: 'External url',
@@ -561,103 +562,9 @@ export default {
             testLabel: 'connect',
             fields: [
               {
-                key: 'driver',
-                type: 'select',
-                label: 'Driver',
-                items: [
-                  {text: 'MySQL', value: 'mysql'},
-                  {text: 'Impala', value: 'impala'},
-                  {text: 'Oracle Database', value: 'oracle'},
-                  {text: 'PostgreSQL', value: 'postgres'},
-                  {text: 'Apache Cassandra', value: 'cassandra'},
-                  {text: 'SQLite', value: 'sqlite'},
-                  {text: 'Amazon Redshift', value: 'redshift'},
-                  {text: 'Presto', value: 'presto'},
-                  {text: 'Microsoft SQL Server', value: 'sqlserver'},
-                ]
-              },
-              {
-                condition: (c)=>c.driver=='oracle',
-                key: 'oracle_type',
-                type: 'select',
-                label: 'Type',
-                items: [
-                  {text: 'SID', value: 'oracle_sid'},
-                  {text: 'Service name', value: 'oracle_service_name'},
-                  {text: 'TNS', value: 'oracle_tns'},
-                ]
-              },
-              {
-                condition: (c)=>(c.driver=='oracle' && c.oracle_type=='oracle_sid'),
-                key: 'oracle_sid',
-                type: 'field',
-                label: 'SID'
-              },
-              {
-                condition: (c)=>(c.driver=='oracle' && c.oracle_type=='oracle_service_name'),
-                key: 'oracle_service_name',
-                type: 'field',
-                label: 'Service name'
-              },
-              {
-                condition: (c)=>(c.driver=='oracle' && c.oracle_type=='oracle_tns'),
-                key: 'oracle_tns',
-                type: 'field',
-                label: 'TNS'
-              },
-              {
-                condition: (c)=>(c.driver!='oracle' || c.oracle_type!='oracle_tns') && c.driver!='cassandra',
-                key: 'host',
-                type: 'field',
-                label: 'Host'
-              },
-              {
-                condition: (c)=>(c.driver!='oracle' || c.oracle_type!='oracle_tns') && c.driver!='cassandra',
-                key: 'port',
-                type: 'field',
-                label: 'Port'
-              },
-              {
-                condition: (c)=>(c.driver=='presto'),
-                key: 'presto_catalog',
-                type: 'field',
-                label: 'Catalog'
-              },
-              {
-                condition: (c)=>['postgres','presto','redshift','sqlserver','mysql','impala'].includes(c.driver),
-                key: 'database',
-                type: 'field',
-                label: 'Database'
-              },
-              {
-                condition: (c)=>['postgres','redshift'].includes(c.driver),
-                key: 'schema',
-                type: 'field',
-                label: 'Schema'
-              },
-              {
-                condition: (c)=>(c.driver=='cassandra'),
-                key: 'url',
-                type: 'field',
-                label: 'Url'
-              },
-              {
-                condition: (c)=>(c.driver=='cassandra'),
-                key: 'keyspace',
-                type: 'field',
-                label: 'Keyspace'
-              },
-              {
-                key: 'user',
-                type: 'field',
-                label: 'User'
-              },
-              {
-                key: 'password',
-                type: 'password',
-                label: 'Password',
-                showable: true,
-                show: false
+                key: '_connection',
+                type: 'connection',
+                include: 'databases'
               },
               {
                 key: 'table',
@@ -672,21 +579,10 @@ export default {
                 func: 'getTables'
               }
             ],
-            validate: (command) => (
-              command.table &&
-              command.driver == command.validDriver /* &&
-              command.host == command.validHost &&
-              command.database == command.validDatabase
-              */
-            )
+            validate: (command) => (command._connection && command._connection==command.validConnection && command.table)
           },
           payload: () => ({
             command: 'loadDatabaseTable',
-            driver: 'mysql',
-            host: '',
-            database: '',
-            user: '',
-            password: '',
             _loadingTables: false,
             request: {
               isLoad: true,
@@ -694,7 +590,7 @@ export default {
             }
           }),
           content: (payload)=>{
-            var database = ['postgres','presto','redshift','sqlserver','mysql'].includes(payload.driver)
+            var database = ['postgres','presto','redshift','microsoftsql','mysql'].includes(payload.driver)
             return `<b>Load</b> ${hlParam(payload.table)}`
             +(database ? ` from ${hlParam(payload.database)}` : '')
             + ' to '+hlParam(payload.newDfName)
@@ -708,57 +604,43 @@ export default {
             var fields = this.commandsHandlers['loadDatabaseTable'].dialog.fields
 
             try {
-              var driver = escapeQuotes(currentCommand.driver)
 
-              var connectionCode = generateCode({
-                command: 'createDatabase',
-                opName: 'op',
-                varName: 'db',
-                driver,
-                parameters: fields.filter(field=>
-                  !['driver','oracle_type', 'table', undefined].includes(field.key)
-                  &&
-                  (!field.condition || field.condition(currentCommand) && currentCommand[field.key] && field.key))
-                  .map(field=>({key: field.key, value: escapeQuotes(currentCommand[field.key])}))
-              });
+              var driver = escapeQuotes(currentCommand.driver);
 
-              var tablesCode = generateCode({
+              var response = await this.evalCode({
                 command: 'getDatabaseTables',
-                varName: 'db'
+                _connection: currentCommand._connection
               });
-
-              var response = await this.evalCode(`${connectionCode}\n${tablesCode}`)
 
               if (response.data.status === 'error') {
-                throw response.data.error
+                throw response.data.error;
               }
 
-              var tables = response.data.result
+              var tables = response.data.result;
 
               if (!tables || !tables.length) {
-                throw 'Database has no tables'
+                throw 'Database has no tables';
               }
 
-              this.$store.commit('database',true)
+              this.$store.commit('database', true);
 
               currentCommand = {
                 ...currentCommand,
+                validConnection: currentCommand._connection,
                 tables,
-                table: tables[0],
-                previousCode: connectionCode,
-                // extraPayload: codePayload,
-                validDriver: currentCommand.driver,
-                validHost: currentCommand.host,
-                validDatabase: currentCommand.database
-              }
+                table: tables[0]
+              };
+
             } catch (err) {
-              var _error = printError(err)
-              currentCommand = {...currentCommand, error: _error}
+
+              var _error = printError(err);
+              currentCommand.error = _error;
+
             }
 
-            currentCommand._loadingTables = false
+            currentCommand._loadingTables = false;
 
-            this.currentCommand = currentCommand
+            this.currentCommand = currentCommand;
           }
         },
         /* save */

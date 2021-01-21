@@ -445,7 +445,7 @@ export const codeGenerators = {
       +')'
   },
   createConnection: (payload) => {
-    let code = `${payload.varName} = op.connect.${payload.type}(`
+    let code = `${payload.varName} = ${payload.opName || 'op'}.connect.${payload.type}(`
     code += pythonArguments(getSourceParams(payload.type), payload)
     code += `)`;
 
@@ -572,18 +572,15 @@ export const codeGenerators = {
     }
   },
   createDatabase: (payload) => {
-    let code = `${payload.varName} = ${payload.opName}.connect(driver="${payload.driver}"`;
-
-    payload.parameters.forEach(parameter => {
-      code += `, ${parameter.key}="${parameter.value}"`;
-    });
-
+    payload.password = payload.password || "";
+    let code = `${payload.varName} = ${payload.opName || 'op'}.connect.${payload.type}(`;
+    code += pythonArguments(getSourceParams(payload.type), payload);
     code += ')';
 
     return { code, isOutput: true };
   },
   getDatabaseTables: (payload) => {
-    return { code: `_output = ${payload.varName}.tables()`, isOutput: true };
+    return { code: `_output = ${payload.dbName}.tables()`, isOutput: true };
   },
   columnsNames: (payload) => {
     return { code: `_output = ${payload.dfName}.cols.names()`, isOutput: true };
@@ -596,12 +593,12 @@ export const codeGenerators = {
   },
   loadDatabaseTable: (payload) => {
     let table = escapeQuotes(payload.table)
-    let code = `db.table_to_df("${table}")`;
+    let code = `${payload.dbName}.table_to_df("${table}")`;
     return code;
   },
   'save to database': (payload) => {
     let table_name = escapeQuotes(payload.table_name)
-    return `db.df_to_table(${payload.dfName}, table="${table_name}", mode="overwrite")`
+    return `${payload.dbName}.df_to_table(${payload.dfName}, table="${table_name}", mode="overwrite")`
   },
   stratified_sample: (payload) => {
     let _argument = preparedColumns(payload.columns);
