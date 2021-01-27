@@ -655,6 +655,11 @@ export default {
                 condition: (c)=>['spark','ibis'].includes(c.request.engine)
               },
               {
+                key: '_connection',
+                type: 'connection',
+                include: 'remotes'
+              },
+              {
                 key: 'url',
                 label: 'Url',
                 placeholder: 's3://bucket/file or hdfs://bucket/file',
@@ -682,27 +687,32 @@ export default {
             return `<b>Saved</b> <span class="hint--df">${hlParam(payload.dfName)} </span>to ${hlParam(payload.url)}`
           },
         },
-        'save to database': {
+        saveDatabaseTable: {
           dialog: {
             title: 'Save dataset to database',
             fields: [
+              {
+                type: 'connection',
+                key: '_connection',
+                include: 'databases'
+              },
               {
                 type: 'field',
                 key: 'table_name',
                 label: 'Table name',
               }
             ],
-            validate: (c) => (c.table_name)
+            validate: (c) => (c.table_name && c._connection)
           },
           payload: () => ({
-            command: 'save to database',
+            command: 'saveDatabaseTable',
             table_name: '',
             request: {
               isSave: true
             }
           }),
           content: (payload)=>{
-            return `<b>Saved</b><span class="hint--df"> ${hlParam(payload.dfName)}</span> to ${hlParam(payload.table)}`
+            return `<b>Saved</b><span class="hint--df"> ${hlParam(payload.dfName)}</span> to ${hlParam(payload.table_name)}`
           },
         },
         /* operations */

@@ -67,37 +67,37 @@ export class AppGateway
 
       let connectionId = command.payload?._connection;
 
-      if (connectionId && !connections[connectionId]) {
+      if (connectionId) {
 
-        let connection = await this.connectionService.getOne(connectionId, user, !isResult, true);
+        let connectionCommand = connections[connectionId];
 
-        if (connection?.configuration) {
+        if (!connectionCommand) {
+          let connection = await this.connectionService.getOne(connectionId, user, !isResult, true);
 
           let varName;
-
-          if (connection.isDatabase) {
-            varName = `db${databaseIndex || ''}`;
-            databaseIndex++;
-            command.payload.dbName = varName;
-          } else {
-            varName = `conn${connectionIndex || ''}`;
-            connectionIndex++;
-            command.payload.conn = varName;
-          }
-
-          let connectionCommand = {
+          connectionCommand = {
             ...(connection.configuration as any),
             _id: connectionId,
-            command: connection.isDatabase ? 'createDatabase' : 'createConnection',
-            varName
           };
 
+          if (connection.isDatabase) {
+            connectionCommand.varName = `db${databaseIndex || ''}`;
+            connectionCommand.command = 'createDatabase';
+            databaseIndex++;
+          } else {
+            connectionCommand.varName = `conn${connectionIndex || ''}`;
+            connectionCommand.command = 'createConnection',
+            connectionIndex++;
+          }
+
+
           connections[connectionId] = connectionCommand;
+        }
 
-        } else {
-
-          this.logger.warn(`Connection with id ${connectionId} for user ${user.username} not found`);
-
+        if (connectionCommand.command == 'createDatabase') {
+          command.payload.dbName = connectionCommand.varName;
+        } else if (connectionCommand.command == 'createConnection') {
+          command.payload.conn = connectionCommand.varName;
         }
 
       }
@@ -198,6 +198,7 @@ export class AppGateway
       let resultCodePayload: any = await this.prepareCodePayload(payload.codePayload, true, user);
       execCode = generateCode(execCodePayload, {}, false, true); // TO-DO: acceptStrings parameter depends on user permissions
       resultCode = generateCode(resultCodePayload, {}, false, true);
+
     } else {
       execCode = payload.code;
       resultCode = payload.code;

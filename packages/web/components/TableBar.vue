@@ -561,7 +561,7 @@ export default {
         {command: 'Download', text: 'Download (from pandas preview)', group: 'SAVE', disabled: ()=>process.env.INSTANCE!=='LOCAL', hidden: ()=>!this.usingPandasTransformation},
         {command: 'Download-rerun', text: 'Download', group: 'SAVE', disabled: ()=>process.env.INSTANCE!=='LOCAL', hidden: ()=>!this.usingPandasTransformation},
         {command: 'saveFile', text: 'Save file', group: 'SAVE', disabled: ()=>!(this.currentDataset && this.currentDataset.summary)},
-        {command: 'save to database', text: 'Save to database', group: 'SAVE', disabled: ()=>!(this.currentDataset && this.currentDataset.summary && this.$store.state.database)},
+        {command: 'saveDatabaseTable', text: 'Save to database', group: 'SAVE', disabled: ()=>!(this.currentDataset && this.currentDataset.summary)},
         {command: 'Compile', text: 'Compile SQL', group: 'SAVE', hidden: ()=>(this.$store.state.localEngineParameters || {}).engine !== 'ibis'},
 
 

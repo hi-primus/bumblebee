@@ -67,7 +67,11 @@ export const codeGenerators = {
       }
     }
 
-    let code = `${payload.dfName}.save.${file_type}( "${payload.url}" );`
+    let code = `${payload.dfName}.save.${file_type}("${payload.url}"`;
+    if (payload.conn) {
+      code += `, conn=${payload.conn}`;
+    }
+    code += `)`;
 
     if (payload.download_url) {
       code += `\n_output = {"download_url": "${payload.download_url}"}`;
@@ -596,9 +600,12 @@ export const codeGenerators = {
     let code = `${payload.dbName}.table_to_df("${table}")`;
     return code;
   },
-  'save to database': (payload) => {
+  saveDatabaseTable: (payload) => {
     let table_name = escapeQuotes(payload.table_name)
-    return `${payload.dbName}.df_to_table(${payload.dfName}, table="${table_name}", mode="overwrite")`
+    return {
+      code: `_output = ${payload.dbName}.df_to_table(${payload.dfName}, table="${table_name}", mode="overwrite")`,
+      isOutput: true
+    }
   },
   stratified_sample: (payload) => {
     let _argument = preparedColumns(payload.columns);

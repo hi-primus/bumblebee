@@ -901,7 +901,7 @@ export const actions = {
         continue
       }
       if (splice) {
-        if (!cells[i].done && cells[i].code) {
+        if (!cells[i] || (!cells[i].done && cells[i].code)) {
           cells.splice(i,1)
         }
       } else {
@@ -936,12 +936,12 @@ export const actions = {
 
   deleteErrorCells ({ state, commit }) {
 
-    var cells = [...state.commands]
+    var cells = [...state.commands];
 
     for (let i = 0; i < state.commands.length; i++) {
-        if (cells[i].error && cells[i].code) {
-          cells.splice(i,1)
-        }
+      if (cells[i] && cells[i].error && cells[i].code) {
+        cells.splice(i,1);
+      }
     }
 
     commit('mutation', { mutate: 'commands', payload: cells })
@@ -1257,7 +1257,7 @@ export const actions = {
 
       commit('mutation', { mutate: 'commandsDisabled', payload: false });
 
-      if (!response.data || !response.data.result) {
+      if (!response.data) {
         throw response
       }
 
