@@ -460,24 +460,13 @@ export const deleteEveryKernel = async function () {
 	try {
 		for (let i = 0; i < kernel_bases.length; i++) {
 			try {
-				// const response = await request({
-				// 	uri: `${kernelBase(i)}/api/kernels`,
-				// 	method: 'GET',
-				// 	headers: {},
-				// });
+
 				const { data: kernels } = await axios.get(
 					`${kernelBase(i)}/api/kernels`,
 				);
 
-				// const kernels = JSON.parse(response);
-
 				kernels.forEach(async (kernel) => {
 					console.log(`Deleting kernel ${kernel.id}`);
-					// await request({
-					// 	uri: `${kernelBase(i)}/api/kernels/${kernel.id}`,
-					// 	method: 'DELETE',
-					// 	headers: {},
-					// });
 					await axios.delete(`${kernelBase(i)}/api/kernels/${kernel.id}`);
 				});
 			} catch (err) {

@@ -1336,15 +1336,6 @@ export const actions = {
         }
       });
 
-      // var response = await socketPost('profile', {
-      //   dfName,
-      //   username,
-      //   workspace: state.workspaceSlug || 'default',
-      //   key: state.key
-      // }, {
-      //   timeout: 0
-      // });
-
       console.debug('[DEBUG][CODE][PROFILE]',response.code);
 
       if (!response.data.result) {

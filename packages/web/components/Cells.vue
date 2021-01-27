@@ -1331,12 +1331,6 @@ export default {
             tall: true,
             title: 'Append datasets',
             fields: [
-              // {
-              //   key: 'with',
-              //   label: 'Dataset (right)',
-              //   type: 'select',
-              //   items_key: 'items_with'
-              // },
               {
                 key: 'showValues',
                 label: 'Show values',

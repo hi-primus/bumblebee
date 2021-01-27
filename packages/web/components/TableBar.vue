@@ -465,11 +465,7 @@ export default {
     isOperating: {
       type: Boolean,
       default: false
-    },
-		// typesSelected: {
-		// 	default: () => ([]),
-		// 	type: Array
-		// }
+    }
 	},
 
 	data () {
@@ -520,7 +516,6 @@ export default {
 				{ hint: '""', sortable: false, text: 'Missing values', width: '2%', value: 'missing' },
 				// { hint: 'null', text: 'Null values', width: '2%', value: 'null' },
         // { hint: '0', text: 'Zeros', width: '2%', value: 'zeros' },
-        // TO-DO: Zeros?
 				{ text: '', sortable: false, width: '50%', value: '' }
 			]
     }
@@ -794,22 +789,6 @@ export default {
           disabled: ()=>['values','ranges'].includes(this.selectionType) || this.selectedColumns.length<1,
           icons: [
             { icon: 'mdi-sort-alphabetical-ascending' }
-            // {
-            //   icon: 'arrow_right_alt',
-            //   style: {
-            //     transform: 'rotate(90deg)',
-            //     marginLeft: '-0.20833333em',
-            //     marginRight: '-0.291666em'
-            //   }
-            // },
-            // {
-            //   icon: 'arrow_right_alt',
-            //   style: {
-            //     transform: 'rotate(-90deg)',
-            //     marginLeft: '-0.291666em',
-            //     marginRight: '-0.20833333em'
-            //   }
-            // }
           ],
           hidden: ()=>(this.hideOperations)
         },
@@ -1201,10 +1180,6 @@ export default {
       code = code.trim();
 
       this.showTextDialog(code, 'Code')
-      // this.copied = true
-      // setTimeout(() => {
-      //   this.copied = false
-      // }, 2000);
     },
 
     cancelCommand () {

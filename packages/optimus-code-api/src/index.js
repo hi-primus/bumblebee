@@ -719,7 +719,6 @@ export const codeGenerators = {
       +')'
   },
   bucketizer: (payload) => {
-    // df.cols.bucketizer("id",2,"buckets_output")
     let _argument = preparedColumns(payload.columns);
     let output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (!['final','processing'].includes(payload.request.type)) ? '__new__' : '')
 
@@ -733,7 +732,6 @@ export const codeGenerators = {
     return `.cols.values_to_cols("${payload.columns[0]}")`
   },
   string_to_index: (payload) => {
-    // cols.string_to_index(input_cols, output_cols=None)
     let _argument = preparedColumns(payload.columns);
 
     let output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (!['final','processing'].includes(payload.request.type)) ? '__new__' : '')
@@ -744,7 +742,6 @@ export const codeGenerators = {
       + ')'
   },
   index_to_string: (payload) => {
-    // cols.index_to_string(input_cols, output_cols=None)
     let _argument = preparedColumns(payload.columns);
 
     let output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (!['final','processing'].includes(payload.request.type)) ? '__new__' : '')
@@ -765,7 +762,6 @@ export const codeGenerators = {
       + ')'
   },
   impute: (payload) => {
-    // df.cols.impute(input_cols, data_type="continuous", strategy="mean", output_cols=None)
     let _argument = preparedColumns(payload.columns);
 
     let output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (!['final','processing'].includes(payload.request.type)) ? '__new__' : '')
