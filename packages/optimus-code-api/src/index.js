@@ -903,7 +903,7 @@ export const generateCode = function(commands = [], _request = { type: 'processi
 
         let dfName = payload.dfName || request.dfName;
 
-        if (dfName && !request.noSave) {
+        if (dfName && !request.noSave && payload.command) {
           request.save = true;
         }
 

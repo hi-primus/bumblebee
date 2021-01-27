@@ -1347,12 +1347,12 @@ export const actions = {
 
       console.debug('[DEBUG][CODE][PROFILE]',response.code);
 
-      if (!response.data.result.profile) {
+      if (!response.data.result) {
         throw response;
       }
 
       window.pushCode({code: response.code});
-      var dataset = parseResponse(response.data.result.profile);
+      var dataset = parseResponse(response.data.result);
       dataset.dfName = dfName;
       console.debug('[DATASET] Setting', { dataset, to: dfName });
       await dispatch('setDataset', { dataset, avoidReload });
