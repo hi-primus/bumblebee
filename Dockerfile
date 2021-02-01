@@ -37,7 +37,8 @@ RUN curl -sL https://deb.nodesource.com/setup_10.x | sudo -E bash - && \
 RUN conda install -c conda-forge jupyterlab && \
     conda install -c conda-forge dask-labextension && \
     jupyter serverextension enable dask_labextension && \
-    conda install -c conda-forge jupyter_kernel_gateway
+    conda install -c conda-forge jupyter_kernel_gateway && \
+    conda clean -afy
 
 ENV TZ="America/New_York"
 
@@ -59,11 +60,11 @@ RUN yarn global add pm2 && \
 
 WORKDIR "/opt"
 
-RUN echo "Version 3.0.0 - Jan 27 2021"
+RUN echo "Version 3.0.0 - Feb 1 2021"
 
-RUN pip install cytoolz && \
-    pip install git+https://github.com/ironmussa/dateinfer.git && \
-    pip install git+https://github.com/ironmussa/Optimus.git@develop-3.0
+RUN pip install cytoolz --no-cache-dir && \
+    pip install git+https://github.com/ironmussa/dateinfer.git --no-cache-dir && \
+    pip install git+https://github.com/ironmussa/Optimus.git@develop-3.0 --no-cache-dir
 
 RUN git clone --branch develop-3.0 https://github.com/ironmussa/Bumblebee.git
 
