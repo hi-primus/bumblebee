@@ -43,8 +43,8 @@ RUN conda install -c conda-forge jupyterlab && \
 ENV TZ="America/New_York"
 
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone && \
-    DEBIAN_FRONTEND=noninteractive apt-get -y install tzdata && \
     sudo apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get -y install tzdata && \
     DEBIAN_FRONTEND=noninteractive apt-get dist-upgrade -yq && \
     DEBIAN_FRONT=noninteractive apt-get install -yq apt-utils && \
     dpkg-reconfigure tzdata && \
