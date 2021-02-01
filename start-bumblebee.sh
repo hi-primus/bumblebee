@@ -3,8 +3,7 @@ pm2 stop api || true
 pm2 delete web || true
 pm2 delete api || true
 
-if [ "$alreadyinitialized" = false ]
-then
+if [ "$alreadyinitialized" = false ]; then
   if [ -z "$address" ]
   then
     echo "HOST=localhost" >> packages/api/.env
