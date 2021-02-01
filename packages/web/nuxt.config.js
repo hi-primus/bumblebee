@@ -79,21 +79,6 @@ module.exports = {
 		'@/plugins/varCheck.js'
   ],
 
-  // TO-DO:
-
-  // io: {
-  //   sockets: [
-  //     {
-  //       name: 'session',
-  //       url: process.env.API_URL,
-  //       default: true,
-  //       vuex: {
-  //         mutations: [{message: 'session/socketMessage'}]
-  //       }
-  //     }
-  //   ]
-  // },
-
 	axios: {
     progress: false,
     baseUrl: process.env.API_URL
