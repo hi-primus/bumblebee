@@ -3142,25 +3142,25 @@ export default {
 
       try {
 
-        var commandHandler = this.command
+        let commandHandler = this.command;
+
+        let preview = this.currentCommand.preview || {};
 
         this.$store.commit('setPreviewCode',{
           code: this.getCode(this.currentCommand, 'preview'),
           profileCode: this.getCode(this.currentCommand, 'profile'),
           codePayload: deepCopy(this.currentCommand),
           beforeCodeEval: this.currentCommand.beforeCodeEval ? ()=>this.currentCommand.beforeCodeEval(this.currentCommand) : false,
-          color: getProperty(this.currentCommand.preview.highlightColor, [this.currentCommand]),
+          color: getProperty(preview.highlightColor, [this.currentCommand]),
           from: this.currentCommand.columns,
-          datasetPreview: !!getProperty(this.currentCommand.preview.datasetPreview, [this.currentCommand]),
-          loadPreview: !!getProperty(this.currentCommand.preview.loadPreview, [this.currentCommand]),
-          load: this.currentCommand.preview.type==='load',
+          datasetPreview: !!getProperty(preview.datasetPreview, [this.currentCommand]),
+          loadPreview: !!getProperty(preview.loadPreview, [this.currentCommand]),
+          load: preview.type==='load',
           infer: this.currentCommand._moreOptions===false, // TO-DO: Check
-          noBufferWindow: getProperty(this.currentCommand.preview.noBufferWindow,[this.currentCommand]),
-          joinPreview: getProperty(this.currentCommand.preview.joinPreview, [this.currentCommand]),
+          noBufferWindow: getProperty(preview.noBufferWindow, [this.currentCommand]),
+          joinPreview: getProperty(preview.joinPreview, [this.currentCommand]),
           expectedColumns,
         })
-
-        // TO-DO: Generalize
 
       } catch (err) {
         console.error(err) // probably just a cancelled request
@@ -3440,16 +3440,16 @@ export default {
 
     async removeCell (index, isDataSource = false) {
 
-      var from = isDataSource ? this.localDataSources : this.localCommands
+      let from = isDataSource ? this.localDataSources : this.localCommands
 
       if (index<0 || !from[index]) {
         return
       }
 
-      var currentPayload = from[index].payload
+      let currentPayload = from[index].payload
 
       if (currentPayload.request && currentPayload.request.createsNew) {
-        var filteredCells = this.cells.filter(cell => cell.payload.dfName===currentPayload.newDfName && !cell.payload.request.isLoad)
+        let filteredCells = this.cells.filter(cell => cell.payload.dfName===currentPayload.newDfName && !cell.payload.request.isLoad)
         if (filteredCells.length>0) {
           console.warn('[CELLS] Cannot remove, there are cells using this variable as input')
           return
@@ -3458,13 +3458,13 @@ export default {
 
       this.codeError = '';
 
-      var cells = [...from]
-      var deletedPayload = cells.splice(index,1)[0].payload
+      let cells = [...from]
+      let deletedPayload = cells.splice(index,1)[0].payload
 
-      var deleteTab = false
+      let deleteTab = false
 
       if (deletedPayload.request && deletedPayload.request.createsNew) {
-        var deleteDf = deletedPayload.newDfName
+        let deleteDf = deletedPayload.newDfName
         if (deleteDf) {
           deleteTab = currentPayload.newDfName
           this.evalCode(`del ${deleteDf}; _output = "Deleted ${deleteDf}"`);
@@ -3472,17 +3472,20 @@ export default {
       }
 
       if (deleteTab) {
-        await this.$store.dispatch('newDataset', { dfName: deleteTab })
+        let foundTab = this.$store.state.datasets.findIndex(dataset => dataset.dfName === deleteTab);
+        if (foundTab>0) {
+          await this.$store.dispatch('newDataset', { dfName: deleteTab });
+        }
       }
 
       if (isDataSource) {
-        this.localDataSources = cells
+        this.localDataSources = cells;
       } else {
-        this.localCommands = cells
+        this.localCommands = cells;
       }
 
-      this.codeDone = ''
-      this.draggableEnd(true)
+      this.codeDone = '';
+      this.draggableEnd(true);
     },
 
     async deleteCellsError (ignoreFrom = -1) {

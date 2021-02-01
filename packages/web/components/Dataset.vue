@@ -804,7 +804,7 @@ export default {
 
               var response = await this.evalCode(codePayload);
 
-              if (response.data.result.sample) {
+              if (response.data.result && response.data.result.sample) {
                 this.$store.commit('setLoadPreview', { sample: response.data.result.sample } )
               } else {
                 throw response
