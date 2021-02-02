@@ -15,9 +15,13 @@ To run Bumblebee on a Docker container just use:
 
 ```docker run --name <NAME> --network="host" -e ADDRESS=<IP> ironmussa/bumblebee:develop-3.0```
 
-On ```<NAME>``` you can use any name you want for your environtment and on ```<IP>``` you must input the public IP address of your machine.
+For remote servers and
 
-Remember to open ports 3000 and 4000 on your host.
+```docker run --name <NAME> -p 3000:3000 -p 4000:4000 -e ADDRESS=localhost ironmussa/bumblebee:develop-3.0```
+
+For local machines.
+
+On ```<NAME>``` you can use any name you want for your environtment and on ```<IP>``` you must input the public IP address of your server. Remember to open ports 3000 and 4000 on your host.
 
 ### Ubuntu/Digital Ocean
 https://medium.com/hi-bumblebee/how-to-install-bumblebee-on-digital-ocean-ef77138f1838
