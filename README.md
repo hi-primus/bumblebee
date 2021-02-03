@@ -11,15 +11,15 @@ https://hi-bumblebee.com/
 
 ## Installation
 ### Docker
-To run Bumblebee on a Docker container just use:
+To run Bumblebee on a Docker container just use the following commands:
 
+For remote servers:
 ```docker run --name <NAME> --network="host" -e ADDRESS=<IP> ironmussa/bumblebee:develop-3.0```
 
-For remote servers and
+For local machines:
+```docker run --name <NAME> -P -e ADDRESS=localhost ironmussa/bumblebee:develop-3.0```
 
-```docker run --name <NAME> -p 3000:3000 -p 4000:4000 -e ADDRESS=localhost ironmussa/bumblebee:develop-3.0```
-
-For local machines.
+You can also add ```-e SPARK=true``` to enable Spark support.
 
 On ```<NAME>``` you can use any name you want for your environtment and on ```<IP>``` you must input the public IP address of your server. Remember to open ports 3000 and 4000 on your host.
 

@@ -1,2 +1,78 @@
+echo 'Install spark support? [y/N]'
+read answer
+if echo "$answer" | grep -iq "^y" ;then
+  spark=true
+else
+  spark=false
+fi
+
+# TO-DO: conda
+
+coiled=false
+coiledgpu=false
+rapids=false
+
+# echo 'Install coiled support with GPU features? [y/N]'
+# read answer
+# if echo "$answer" | grep -iq "^y" ;then
+#   coiledgpu=true
+# else
+#   coiledgpu=false
+# fi
+
+# if [ "$coiledgpu" = false ]; then
+#   echo 'Install coiled support without GPU features? [y/N]'
+#   read answer
+#   if echo "$answer" | grep -iq "^y" ;then
+#     coiled=true
+#   else
+#     coiled=false
+#   fi
+# fi
+
+# echo 'Use rapids (Local GPU)? [y/N]'
+# read answer
+# if echo "$answer" | grep -iq "^y" ;then
+#   rapids=true
+# else
+#   rapids=false
+# fi
+
 cd
-pip install --upgrade --force-reinstall git+https://github.com/ironmussa/Optimus.git@develop-3.0
+
+if [ "$coiled" = true ]; then
+  echo "Getting conda env from optimus/default on Coiled"
+  coiled install optimus/default
+  conda activate coiled-optimus-default
+elif [ "$coiledgpu" = true ]; then
+  echo "Getting conda env from optimus/default on Coiled"
+  coiled install optimus/gpu
+  conda activate coiled-optimus-gpu
+elif [ "$rapids" = true ]; then
+  echo "Creating rapids conda env"
+  conda create --name rapids-0.17
+  conda activate coiled-optimus-gpu
+fi
+
+if [ "$rapids" = true ]; then
+  echo "Installing rapids"
+  conda install -c rapidsai -c nvidia -c conda-forge -c defaults rapids-blazing=0.17 python=3.7 cudatoolkit=10.2
+fi
+
+if [ "$coiled" = true ] OR [ "$coiledgpu" = true ] OR [ "$rapids" = true ]; then
+  echo "Installing optimus through conda pip"
+  conda pip install --upgrade git+https://github.com/ironmussa/Optimus.git@develop-3.0
+else
+  echo "Installing optimus through pip"
+  pip install --upgrade git+https://github.com/ironmussa/Optimus.git@develop-3.0
+fi
+
+if [ "$spark" = true ]; then
+  if [ "$coiled" = true ] OR [ "$coiledgpu" = true ] OR [ "$rapids" = true ]; then
+    echo "Installing optimus through conda pip"
+    conda pip install --upgrade git+https://github.com/ironmussa/Optimus.git@develop-3.0[spark]
+  else
+    echo "Installing optimus through pip"
+    pip install --upgrade git+https://github.com/ironmussa/Optimus.git@develop-3.0[spark]
+  fi
+fi

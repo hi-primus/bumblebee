@@ -80,9 +80,12 @@ WORKDIR "/"
 
 RUN mkdir -p /data/db
 
-
 CMD ./usr/bin/mongod --fork --logpath /var/log/mongod.log && \
     cd /opt/Bumblebee && \
+    if [[ -n "$SPARK" ]] ; then \
+      echo "Loading spark dependencies" && \
+      pip install git+https://github.com/ironmussa/Optimus.git@develop-3.0[spark] --no-cache-dir \
+    fi
     echo "Initializing Bumblebee Environment" && \
     echo "API_URL='http://$ADDRESS:4000'" >> packages/web/.env && \
     echo "DOCKER='TRUE'" >> packages/web/.env && \
@@ -100,3 +103,6 @@ CMD ./usr/bin/mongod --fork --logpath /var/log/mongod.log && \
 EXPOSE 3000:3000 4000:4000
 
 # docker run --name <NAME> --network="host" -e ADDRESS=<IP> ironmussa/bumblebee:develop-3.0
+# docker run --name <NAME> -P -e ADDRESS=localhost ironmussa/bumblebee:develop-3.0
+# docker run --name <NAME> --network="host" -e ADDRESS=<IP> -e SPARK=1 ironmussa/bumblebee:develop-3.0
+# docker run --name <NAME> -P -e ADDRESS=localhost -e SPARK=1 ironmussa/bumblebee:develop-3.0
