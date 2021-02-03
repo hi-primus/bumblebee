@@ -46,7 +46,6 @@
           min-width="200"
           :disabled="!item.id"
         >
-          <!-- :search="search" -->
           <template v-slot:activator="{ on: more }">
             <v-icon v-on="more" class="right-button" @click.stop="">more_vert</v-icon>
           </template>
@@ -127,7 +126,6 @@ export default {
       loading: false,
       total: undefined,
       items: [],
-      // search: false,
       createName: '',
       form: {
         promise: false,
@@ -309,7 +307,6 @@ export default {
             item.loading = true
             item = {...item, name, configuration}
             this.$set(this.items, found, item)
-            // this.$delete(this.items, found)
 
             await this.$store.dispatch('request',{
               request: 'put',
@@ -341,7 +338,7 @@ export default {
           request: 'post',
           path: `/connections/copy/${connection.id}`,
           payload: {
-            name: connection.name+' copy' // TO-DO: copyName function
+            name: connection.name+' copy'
           }
         })
         await this.updateElements()
