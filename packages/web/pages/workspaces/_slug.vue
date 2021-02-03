@@ -510,20 +510,26 @@ export default {
 
         await this.$store.dispatch('resetPromises', { from: 'workspace' });
 
-        var slug = this.$route.params.slug;
+        let slug = this.$route.params.slug;
 
         if (slug) {
           this.$store.commit('mutation', { mutate: 'workspaceSlug', payload: slug });
         }
 
-        var config = await this.$store.dispatch('getEngine', { workspaceSlug: slug });
+        let config = await this.$store.dispatch('getEngine', { workspaceSlug: slug });
+
+        let features = await this.$store.dispatch('getFeatures', { slug, socketPost: this.socketPost });
 
         if (!config) {
           await this.engineForm();
           return;
+        } else if (features.unavailableEngines.includes(config.engine)) {
+          console.warn('[INITIALIZATION] Unsupported engine');
+          await this.engineForm();
+          return;
         }
 
-        var optimus = await this.initializeOptimus(slug);
+        let optimus = await this.initializeOptimus(slug);
         console.debug('[INITIALIZATION] Optimus initialized');
 
         if (!this.$store.state.datasets.length) {
@@ -539,7 +545,7 @@ export default {
           this.$store.commit('kernel', 'loading');
           this.$store.commit('setAppStatus', 'workspace');
 
-          var result = await this.runCodeNow(false, -1, undefined, true);
+          let result = await this.runCodeNow(false, -1, undefined, true);
           console.debug('[INITIALIZATION] Cells code and profiling done', result);
 
           this.$store.commit('kernel', 'done');
@@ -566,7 +572,7 @@ export default {
 
         console.error('(Error on initialization)');
         printError(err)
-        var appStatus = {
+        let appStatus = {
           error: new Error('Initialization error'),
           status: 'workspace'
         };
@@ -579,13 +585,13 @@ export default {
 
       if (!Object.keys(this.$store.state.localEngineParameters || {}).length) {
 
-        var query = this.$route.query;
+        let query = this.$route.query;
 
         if (Object.keys(query).length) {
           console.warn('Getting config from query parameters'); // TO-DO: Remove
         }
 
-        var params = {};
+        let params = {};
 
         Object.keys(INIT_PARAMS).forEach(parameter => {
           if (query[parameter]) {
@@ -602,9 +608,9 @@ export default {
 
       }
 
-      var payload = { slug, socketPost: this.socketPost };
+      let payload = { slug, socketPost: this.socketPost };
 
-      return this.$store.dispatch('getOptimus', { payload } )
+      return this.$store.dispatch('getOptimus', payload );
     },
 
 		async deleteTab(i) {

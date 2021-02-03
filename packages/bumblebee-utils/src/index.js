@@ -531,14 +531,10 @@ export const getDefaultParams = (_params) => {
   return params;
 }
 
-export const getEngines = (coiled = false) => {
-  if (coiled) {
-    return ENGINES;
-  } else {
-    return objectFilter(ENGINES, ([key, value])=>{
-      return !key.includes('coiled');
-    });
-  }
+export const getEngines = (remove = []) => {
+  return objectFilter(ENGINES, ([key, value])=>{
+    return !remove.includes(key);
+  });
 }
 
 export const getSourceParams = (type) => {

@@ -1,12 +1,24 @@
 import { getDefaultParams, engineValid, INIT_PARAMS } from 'bumblebee-utils';
 
-const codeTraceback = (code = '') => `
-
+const TIME_START = `
 _use_time = True
 try:
     _start_time = datetime.utcnow().timestamp()
 except Exception:
     _use_time = False
+`;
+
+const TIME_END = `
+if _use_time:
+    _end_time = datetime.utcnow().timestamp()
+    res.update({'_gatewayTime': {'start': _start_time, 'end': _end_time, 'duration': _end_time-_start_time}})
+`;
+
+const OUTPUT_JSON = `json.dumps(res,  default=json_converter, ensure_ascii=False)`
+
+const codeTraceback = (code = '') => `
+
+${TIME_START}
 code = """${code}"""
 res = {}
 try:
@@ -16,25 +28,17 @@ except Exception as err:
     res.update({'error': str(err)})
 
 res.update({'result': _output})
-if _use_time:
-    _end_time = datetime.utcnow().timestamp()
-    res.update({'_gatewayTime': {'start': _start_time, 'end': _end_time, 'duration': _end_time-_start_time}})
-json.dumps(res,  default=json_converter, ensure_ascii=False)
+${TIME_END}
+${OUTPUT_JSON}
 `;
 
 const code = (code = '') => `
 
-_use_time = True
-try:
-    _start_time = datetime.utcnow().timestamp()
-except Exception:
-    _use_time = False
+${TIME_START}
 ${code}
 res = {'result': _output}
-if _use_time:
-    _end_time = datetime.utcnow().timestamp()
-    res.update({'_gatewayTime': {'start': _start_time, 'end': _end_time, 'duration': _end_time-_start_time}})
-json.dumps(res,  default=json_converter, ensure_ascii=False)
+${TIME_END}
+${OUTPUT_JSON}
 `;
 
 const datasetsMin = (payload) => `
@@ -43,22 +47,75 @@ const datasetsMin = (payload) => `
 
 const datasets = (payload) => `
 
-_use_time = True
-try:
-    _start_time = datetime.utcnow().timestamp()
-except Exception:
-    _use_time = False
+${TIME_START}
 
 if ipython_vars:
     _dfs = ipython_vars(globals(),"dask")
 else:
     _dfs = []
 
-if _use_time:
-    _end_time = datetime.utcnow().timestamp()
-    res = { _df: globals()[_df].cols.names() for (_df) in _dfs }
-res.update({'_gatewayTime': {'start': _start_time, 'end': _end_time, 'duration': _end_time-_start_time}})
-json.dumps(res,  default=json_converter, ensure_ascii=False)
+${TIME_END}
+
+res = { _df: globals()[_df].cols.names() for (_df) in _dfs }
+${OUTPUT_JSON}
+`;
+
+const features = (payload) => `
+
+${TIME_START}
+
+coiled_available = False
+spark_available = False
+coiled_gpu_available = False
+rapids_available = False
+
+try:
+    import pyspark
+    spark_available = True
+except:
+    spark_available = False
+
+try:
+    import coiled
+    coiled_available = True
+except:
+    coiled_available = False
+
+try:
+    import dask
+    import cudf
+    import dask_cudf
+    rapids_available = True
+except:
+    rapids_available = False
+
+coiled_gpu_available = rapids_available and coiled_available
+
+res = { "coiled_available": coiled_available, "coiled_gpu_available": coiled_gpu_available, "spark_available": spark_available, "rapids_available": rapids_available }
+
+# optimus reserved words
+
+try:
+    from optimus.expressions import reserved_words
+    res.update({'reserved_words': reserved_words})
+except:
+    pass
+
+# optimus parser
+
+try:
+    from optimus.expressions import Parser
+    p = Parser()
+    res.update({'parser_available': True})
+except:
+    res.update({'parser_available': False})
+    def p (a):
+        return a
+
+
+${TIME_END}
+
+${OUTPUT_JSON}
 `;
 
 const initializationParameters = ( params: any = {} ) => {
@@ -186,11 +243,7 @@ except Exception:
     import json
     from optimus.helpers.json import json_converter
 
-_use_time = True
-try:
-    _start_time = datetime.utcnow().timestamp()
-except Exception:
-    _use_time = False
+${TIME_START}
 
 res = { 'kernel': 'ok' }
 
@@ -202,36 +255,17 @@ coiled_available = False
 
 import cytoolz;
 
-# check coiled availability
-
 try:
     if coiled_token:
-        import dask;
+        import dask
         dask.config.set({"coiled.token": '${params.coiled_token}'})
-    import coiled;
+    import coiled
     coiled.Cloud()
     coiled_available = True
     using_coiled = ${params.coiled ? 'True' : 'False'}
 except:
     using_coiled = False
     coiled_available = False
-
-# optimus reserved words
-
-try:
-    from optimus.expressions import reserved_words
-    res.update({'reserved_words': reserved_words})
-except:
-    pass
-
-# optimus parser
-
-try:
-    from optimus.expressions import Parser
-    p = Parser()
-except:
-    def p (a):
-        return a
 
 # initialization
 
@@ -247,12 +281,10 @@ else:
 op_engine = getattr(op, 'engine', None)
 res.update({'optimus': 'ok init', 'optimus_version': op.__version__, 'engine': op_engine, "coiled_available": coiled_available});
 
-if _use_time:
-    _end_time = datetime.utcnow().timestamp()
-    res.update({'_gatewayTime': {'start': _start_time, 'end': _end_time, 'duration': _end_time-_start_time}})
+${TIME_END}
 
-json.dumps(res,  default=json_converter, ensure_ascii=False)
+${OUTPUT_JSON}
 `;
 }
 
-export default { init, datasets, code, datasetsMin };
+export default { init, datasets, features, code, datasetsMin };

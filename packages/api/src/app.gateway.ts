@@ -187,6 +187,28 @@ export class AppGateway
 
   }
 
+  @SubscribeMessage('features')
+	async handleFeatures(client: Socket, payload): Promise<any> {
+
+    const sessionId = payload.username + '_BBSESSION_' + payload.workspace;
+    let result = {};
+    try {
+      result = await requestToKernel('features', sessionId, null, false);
+    } catch (err) {
+      result = {
+        status: 'error',
+        error: 'Features info error',
+        error2: err.toString(),
+      };
+    }
+    client.emit('reply', {
+      data: result,
+      code: '',
+      timestamp: payload.timestamp,
+    });
+
+  }
+
   @SubscribeMessage('run')
 	async handleRun(client: Socket, payload): Promise<any> {
 

@@ -15,9 +15,11 @@ export default {
 
     async enginesParameters (_defaultValues = {}, text = 'Create new engine', editing = false, extraButtons = [] ) {
 
-      var defaultValues = deepCopy(_defaultValues || {});
+      let defaultValues = deepCopy(_defaultValues || {});
 
       defaultValues.name = this.$store.getters['session/getUsername'] + '__' + this.$route.params.slug;
+
+      let unavailableEngines = this.$store.state.unavailableEngines || [];
 
       let generatedFields = Object.entries(INIT_PARAMS).filter(([key, field])=>field.type !== 'hidden' && !field.noForm).map(([key, field])=>{
         return {
@@ -48,7 +50,7 @@ export default {
           is: 'v-select',
           value: defaultValues.engine  || 'dask',
           props: {
-            items: Object.entries(getEngines(true)).map(([value, text])=>({text, value})),
+            items: Object.entries(getEngines(unavailableEngines)).map(([value, text])=>({text, value})),
             label: 'Engine'
           }
         },

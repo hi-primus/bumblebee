@@ -51,7 +51,7 @@ export const initializeKernel = async function (sessionId, payload) {
 		kernels[sessionId] = kernels[sessionId] || {};
 	}
 	if (!kernels[sessionId].initialization) {
-		kernels[sessionId].initialization = initializeKernelSession(
+		kernels[sessionId].initialization = initializeOptimusSession(
 			sessionId,
 			payload,
 		);
@@ -61,7 +61,7 @@ export const initializeKernel = async function (sessionId, payload) {
 	return { kernel: kernels[sessionId], result };
 };
 
-export const initializeKernelSession = async function (sessionId, payload) {
+export const initializeOptimusSession = async function (sessionId, payload) {
 
 	let result;
 
@@ -118,8 +118,8 @@ export const initializeKernelSession = async function (sessionId, payload) {
 
 const assertSession = async function (
 	sessionId,
-	isInit = false,
-	kernel_address : any = undefined,
+	skipOptimus = false,
+  kernel_address : any = undefined
 ) {
 	try {
 		if (!kernels[sessionId] || !kernels[sessionId].id) {
@@ -132,9 +132,9 @@ const assertSession = async function (
 
 		await createConnection(sessionId);
 
-		if (!isInit && !(kernels[sessionId].initialized || kernels[sessionId].id)) {
+		if (!skipOptimus && !(kernels[sessionId].initialized || kernels[sessionId].id)) {
 			if (!kernels[sessionId].initialization) {
-				kernels[sessionId].initialization = initializeKernelSession(sessionId, {
+				kernels[sessionId].initialization = initializeOptimusSession(sessionId, {
 					payloadDefault: true,
 				});
 			}
@@ -150,7 +150,7 @@ const assertSession = async function (
 	}
 };
 
-export const requestToKernel = async function (type, sessionId, payload) {
+export const requestToKernel = async function (type, sessionId, payload, optimus = true) {
 
   var kernelAddress : any = kernels[sessionId].kernel_address;
 
@@ -160,8 +160,8 @@ export const requestToKernel = async function (type, sessionId, payload) {
 
 	const connection = await assertSession(
 		sessionId,
-		type == 'init',
-		kernelAddress,
+		type == 'init' || !optimus,
+    kernelAddress
 	);
 
 	if (!connection) {
@@ -173,16 +173,13 @@ export const requestToKernel = async function (type, sessionId, payload) {
 	let code = payload;
 
 	switch (type) {
-		case 'code':
-			code = kernelRoutines.code(payload);
-			break;
-		case 'datasets':
-			code = kernelRoutines.datasets(payload);
-			break;
-		case 'init':
+    case 'init':
       payload.engine = payload.engine || process.env.ENGINE || 'dask';
-			code = kernelRoutines.init(payload);
-			break;
+      code = kernelRoutines.init(payload);
+      break;
+    default:
+      code = kernelRoutines[type](payload);
+      break;
 	}
 
 	const msg_id = kernels[sessionId].uuid + Math.random();

@@ -105,6 +105,7 @@ const defaultState = {
   codeDone: '',
   enginePromise: false,
   connectionsPromise: false,
+  featuresPromise: false,
   optimusPromise: false,
   workspacePromise: false,
   cellsPromise: false,
@@ -135,6 +136,7 @@ export const state = () => {
     datasetCounter: 1,
     kernel: false,
     nextCommand: false,
+    unavailableEngines: [],
     functionsSuggestions: JSON.parse(`[{"type":"function","text":"MOD","params":[{"type":"column","name":"column","description":"The number to be divided to find the remainder."},{"type":"number","name":"divisor","description":"The number to divide by."}],"description":"Returns the result of the modulo operator, the remainder after a division operation.","example":"MOD(10, 4)"},{"type":"function","text":"ABS","params":[{"type":"column","name":"column","description":"The number of which to return the absolute value."}],"description":"Returns the absolute value of a number.","example":"ABS(-2)"},{"type":"function","text":"EXP","params":[{"type":"column","name":"column","description":"The number of which to return the absolute value."}],"description":"Returns Euler's number, e (~2.718) raised to a power.","example":"ABS(-2)"},{"type":"function","text":"LOG","params":[{"type":"column","name":"column","description":"The value for which to calculate the logarithm."}],"description":"Returns the logarithm of a number with respect to a base.","example":"LOG(128, 2)"},{"type":"function","text":"LN","params":[{"type":"column","name":"column","description":"The value for which to calculate the logarithm, base e."}],"description":"Returns the logarithm of a number, base e (Euler's number).","example":"LN(100)"},{"type":"function","text":"POW","params":[{"type":"column","name":"column","description":"The number to raise to the exponent power."},{"type":"number","name":"exponent","description":"The exponent to raise base to."}],"description":"Returns a number raised to a power.","example":"POW(4, 0.5)"},{"type":"function","text":"CEIL","params":[{"type":"column","name":"column","description":"The value to round up to the nearest integer multiple of factor."}],"description":"Rounds a number up to the nearest integer multiple of specified significance factor.","example":"CEILING(23.25)"},{"type":"function","text":"SQRT","params":[{"type":"column","name":"column","description":"The number for which to calculate the positive square root."}],"description":"Returns the positive square root of a positive number.","example":"SQRT(9)"},{"type":"function","text":"FLOOR","params":[{"type":"column","name":"column","description":"The value to round down to the nearest integer multiple of factor."}],"description":"Rounds a number down to the nearest integer multiple of specified significance factor.","example":"FLOOR(23.25)"},{"type":"function","text":"SIN","params":[{"type":"column","name":"column","description":"The angle to find the sine of, in radians."}],"description":"Returns the sin of an angle provided in radians.","example":"SIN(3.14)"},{"type":"function","text":"COS","params":[{"type":"column","name":"column","description":"The angle to find the cosine of, in radians."}],"description":"Returns the cosine of an angle provided in radians.","example":"COS(3.14)"},{"type":"function","text":"TAN","params":[{"type":"column","name":"column","description":"The angle to find the tangent of, in radians."}],"description":"Returns the tangent of an angle provided in radians.","example":"TAN(3.14)"},{"type":"function","text":"ASIN","params":[{"type":"column","name":"column","description":"The value for which to calculate the inverse sine. Must be between -1 and 1, inclusive."}],"description":"Returns the inverse sine of a value, in radians.","example":"ASIN(0)"},{"type":"function","text":"ACOS","params":[{"type":"column","name":"column","description":"The value for which to calculate the inverse cosine. Must be between -1 and 1, inclusive."}],"description":"Returns the inverse cosine of a value, in radians.","example":"ACOS(0)"},{"type":"function","text":"ATAN","params":[{"type":"column","name":"column","description":"The value for which to calculate the inverse tangent."}],"description":"Returns the inverse tangent of a value, in radians.","example":"ATAN(0)"},{"type":"function","text":"SINH","params":[{"type":"column","name":"column","description":"Any real value to calculate the hyperbolic sine of."}],"description":"Returns the hyperbolic sine of any real number.","example":"SINH(2)"},{"type":"function","text":"COSH","params":[{"type":"column","name":"column","description":"Any real value to calculate the hyperbolic cosine of."}],"description":"Returns the hyperbolic cosine of any real number.","example":"COSH(0.48)"},{"type":"function","text":"TANH","params":[{"type":"column","name":"column","description":"Any real value to calculate the hyperbolic tangent of."}],"description":"Returns the hyperbolic tangent of any real number.","example":"TANH(1)"},{"type":"function","text":"ASINH","params":[{"type":"column","name":"column","description":"The value for which to calculate the inverse hyperbolic sine."}],"description":"Returns the hyperbolic tangent of any real number.","example":"ASINH(0.9)"},{"type":"function","text":"ACOSH","params":[{"type":"column","name":"column","description":"The value for which to calculate the inverse hyperbolic cosine. Must be greater than or equal to 1."}],"description":"Returns the inverse hyperbolic cosine of a number.","example":"ACOSH(2)"},{"type":"function","text":"ATANH","params":[{"type":"column","name":"column","description":"The value for which to calculate the inverse hyperbolic tangent. Must be between -1 and 1, exclusive."}],"description":"Returns the inverse hyperbolic tangent of a number.","example":"ATANH(0.9)"},{"type":"function","text":"UPPER","params":[{"type":"column","name":"column","description":"Converts a specified string to uppercase."}],"description":"Returns the inverse hyperbolic tangent of a number.","example":"UPPER('lorem ipsum')"},{"type":"function","text":"LOWER","params":[{"type":"column","name":"column","description":"The string to convert to lowercase."}],"description":"Converts a specified string to lowercase.","example":"LOWER('LOREM IPSUM')"},{"type":"function","text":"PROPER","params":[{"type":"column","name":"column","description":"The text which will be returned with the first letter of each word in uppercase and all other letters in lowercase."}],"description":"Capitalizes each word in a specified string.","example":"PROPER('optimus prime')"},{"type":"function","text":"TRIM","params":[{"type":"column","name":"column","description":"The text or reference to a cell containing text to be trimmed."}],"description":"Removes leading, trailing, and repeated spaces in text.","example":"TRIM('optimus prime')"},{"type":"function","text":"REMOVE","params":[{"type":"column","name":"column","description":"A column's name","required":true}],"description":"ATANH function description","example":"REMOVE(column)"},{"type":"function","text":"LEN","params":[{"type":"column","name":"column","description":"The string whose length will be returned."}],"description":"Returns the length of a string.","example":"LEN('optimus prime')"},{"type":"function","text":"FIND","params":[{"type":"column","name":"column","description":"The string to look for."},{"type":"string","name":"text_to_search","description":"The text to search for the first occurrence of search_for."}],"description":"Returns the position at which a string is first found.","example":"LEN('optimus prime')"},{"type":"function","text":"RFIND","params":[{"type":"column","name":"column","description":"A column's name","required":true}],"description":"ATANH function description","example":"RFIND(column)"},{"type":"function","text":"LEFT","params":[{"type":"column","name":"column","description":"A column's name","required":true}],"description":"ATANH function description","example":"LEFT(column)"},{"type":"function","text":"RIGHT","params":[{"type":"column","name":"column","description":"A column's name","required":true}],"description":"ATANH function description","example":"RIGHT(column)"},{"type":"function","text":"STARTS_WITH","params":[{"type":"column","name":"column","description":"A column's name","required":true}],"description":"ATANH function description","example":"STARTS_WITH(column)"},{"type":"function","text":"ENDS_WITH","params":[{"type":"column","name":"column","description":"A column's name","required":true}],"description":"ATANH function description","example":"ENDS_WITH(column)"},{"type":"function","text":"EXACT","params":[{"type":"column","name":"column","description":"A column's name","required":true}],"description":"ATANH function description","example":"EXACT(column)"},{"type":"function","text":"YEAR","params":[{"type":"column","name":"column","description":"The date from which to extract the year."}],"description":"Returns the year specified by a given date.","example":"YEAR()"},{"type":"function","text":"MONTH","params":[{"type":"column","name":"column","description":"The date from which to extract the month."}],"description":"Returns the month of the year a specific date falls in, in numeric format.","example":"MONTH()"},{"type":"function","text":"DAY","params":[{"type":"column","name":"column","description":"The date from which to extract the day."}],"description":"Returns the day of the month that a specific date falls on, in numeric format.","example":"DAY()"},{"type":"function","text":"HOUR","params":[{"type":"column","name":"column","description":"The time from which to calculate the hour value."}],"description":"Returns the hour component of a specific time, in numeric format.","example":"HOUR()"},{"type":"function","text":"MINUTE","params":[{"type":"column","name":"column","description":"The time from which to calculate the minute value."}],"description":"Returns the minute component of a specific time, in numeric format.","example":"MINUTE()"},{"type":"function","text":"SECOND","params":[{"type":"column","name":"column","description":"The time from which to calculate the second value"}],"description":"Returns the second component of a specific time, in numeric format.","example":"SECOND()"}]`)
   }
 }
@@ -727,6 +729,99 @@ export const actions = {
 
   },
 
+  async loadFeatures ({ state, commit, dispatch }, { slug, socketPost }) {
+
+    let username = await dispatch('session/getUsername');
+
+    console.log('[BUMBLEBEE] Checking features', username, slug);
+
+    let featuresResponse = await socketPost('features', {
+      username,
+      workspace: slug || 'default'
+    });
+
+    let unavailableEngines = [];
+
+    if (!featuresResponse.data.coiled_available) {
+      unavailableEngines.push('dask_coiled');
+    }
+
+    if (!featuresResponse.data.coiled_gpu_available) {
+      unavailableEngines.push('dask_cudf_coiled');
+    }
+
+    if (!featuresResponse.data.spark_available) {
+      unavailableEngines.push('spark');
+    }
+
+    if (!featuresResponse.data.rapids_available) {
+      unavailableEngines.push('cudf');
+      unavailableEngines.push('dask_cudf');
+    }
+
+    commit('mutation', {mutate: 'unavailableEngines', payload: unavailableEngines});
+
+    let functionsSuggestions = [];
+
+    if (featuresResponse.data.reserved_words) {
+
+      featuresResponse.data.reserved_words = JSON.parse(featuresResponse.data.reserved_words); // TO-DO: remove dumps on optimus
+
+      let functions = featuresResponse.data.reserved_words.functions;
+
+      if (functions) {
+
+        Object.entries(functions).forEach(([key, value])=>{
+          let params = [{
+            type: 'column',
+            name: 'column',
+            description: "A column's name",
+            required: true // TO-DO: required on function
+          }];
+          let description = value;
+          let example = `${key}(column)`;
+          if (typeof value !== "string")  {
+            if ('params' in value) {
+              params = value.params.map(param=>{
+                if (param.type==='series') {
+                  param.type = 'column';
+                }
+                if (param.name==='series') {
+                  param.name = 'column';
+                }
+                return param;
+              });
+            }
+            if ('description' in value) {
+              description = value.description;
+            }
+            if ('example' in value) {
+              example = value.example;
+            }
+          }
+          functionsSuggestions.push({type: 'function', text: key, params, description, example });
+        })
+
+        commit('mutation', {mutate: 'functionsSuggestions', payload: functionsSuggestions});
+
+      }
+
+      return { functionsSuggestions, unavailableEngines }
+
+    }
+  },
+
+  getFeatures ({dispatch}, payload) {
+    var promisePayload = {
+      name: 'featuresPromise',
+      action: 'loadFeatures',
+      kernel: true,
+      payload
+    };
+
+    return dispatch('getPromise', promisePayload);
+  },
+
   // engine settings
 
   async loadEngine ({ state, commit, dispatch }, { id, workspaceSlug }) {
@@ -1013,7 +1108,7 @@ export const actions = {
 
     await Vue.nextTick();
 
-    var params = await dispatch('getEngine', { workspaceSlug: slug });
+    let engineParams = await dispatch('getEngine', { workspaceSlug: slug });
 
     if (!slug) {
       slug = state.workspaceSlug;
@@ -1021,19 +1116,17 @@ export const actions = {
       commit('mutation', { mutate: 'workspaceSlug', payload: slug })
     }
 
-    var username = await dispatch('session/getUsername');
+    let username = await dispatch('session/getUsername');
 
     console.log('[BUMBLEBEE] Initializing Optimus', username, slug);
 
-    var response = await socketPost('initialize', {
+    let response = await socketPost('initialize', {
       username,
       workspace: slug || 'default',
-      ...params
+      ...engineParams
     });
 
     console.debug('[DEBUG][INITIALIZATION] optimus response', response);
-
-    var functions;
 
     if (response.data.dashboard_link) {
       console.log('%c[DEBUG] Dashboard: ' + response.data.dashboard_link, 'color: green;');
@@ -1041,55 +1134,11 @@ export const actions = {
     }
 
     if (response.data.client_install) {
-      var installs = Object.values(response.data.client_install);
+      let installs = Object.values(response.data.client_install);
       if (!installs.length || installs.some(e=>!e)) {
         console.warn('Optimus installation on workers unknown');
       }
     }
-
-    if (response.data.reserved_words) {
-      response.data.reserved_words = JSON.parse(response.data.reserved_words); // TO-DO: remove dumps on optimus
-      functions = response.data.reserved_words.functions;
-    }
-
-    var functionsSuggestions = [];
-
-    if (functions) {
-      Object.entries(functions).forEach(([key, value])=>{
-        var params = [{
-          type: 'column',
-          name: 'column',
-          description: "A column's name",
-          required: true // TO-DO: required on function
-        }];
-        var description = value;
-        var example = `${key}(column)`;
-        if (typeof value !== "string")  {
-          if ('params' in value) {
-            params = value.params.map(param=>{
-              if (param.type==='series') {
-                param.type = 'column';
-              }
-              if (param.name==='series') {
-                param.name = 'column';
-              }
-              return param;
-            });
-          }
-          if ('description' in value) {
-            description = value.description;
-          }
-          if ('example' in value) {
-            example = value.example;
-          }
-        }
-        functionsSuggestions.push({type: 'function', text: key, params, description, example });
-      })
-    }
-
-    // console.log('[GLOBAL SUGGESTIONS]',JSON.stringify(functionsSuggestions))
-
-    commit('mutation', {mutate: 'functionsSuggestions', payload: functionsSuggestions});
 
     if (response.data.coiled_available) {
       commit('mutation', {mutate: 'coiledAvailable', payload: true});
@@ -1104,7 +1153,7 @@ export const actions = {
     return response.data;
   },
 
-  getOptimus ({dispatch}, {payload}) {
+  getOptimus ({dispatch}, payload) {
     var promisePayload = {
       name: 'optimusPromise',
       action: 'loadOptimus',
