@@ -6,7 +6,7 @@ else
   spark=false
 fi
 
-# TO-DO: conda
+# TO-DO: conda support on bash
 
 coiled=false
 coiledgpu=false
@@ -55,24 +55,25 @@ elif [ "$rapids" = true ]; then
 fi
 
 if [ "$rapids" = true ]; then
-  echo "Installing rapids"
+  echo "Installing rapids support"
   conda install -c rapidsai -c nvidia -c conda-forge -c defaults rapids-blazing=0.17 python=3.7 cudatoolkit=10.2
 fi
 
-if [ "$coiled" = true ] OR [ "$coiledgpu" = true ] OR [ "$rapids" = true ]; then
-  echo "Installing optimus through conda pip"
-  conda pip install --upgrade git+https://github.com/ironmussa/Optimus.git@develop-3.0
-else
-  echo "Installing optimus through pip"
-  pip install --upgrade git+https://github.com/ironmussa/Optimus.git@develop-3.0
-fi
 
 if [ "$spark" = true ]; then
   if [ "$coiled" = true ] OR [ "$coiledgpu" = true ] OR [ "$rapids" = true ]; then
-    echo "Installing optimus through conda pip"
+    echo "Installing optimus with Spark support through conda pip"
     conda pip install --upgrade git+https://github.com/ironmussa/Optimus.git@develop-3.0[spark]
   else
-    echo "Installing optimus through pip"
+    echo "Installing optimus with Spark support through pip"
     pip install --upgrade git+https://github.com/ironmussa/Optimus.git@develop-3.0[spark]
+  fi
+else
+  if [ "$coiled" = true ] OR [ "$coiledgpu" = true ] OR [ "$rapids" = true ]; then
+    echo "Installing optimus through conda pip"
+    conda pip install --upgrade git+https://github.com/ironmussa/Optimus.git@develop-3.0
+  else
+    echo "Installing optimus through pip"
+    pip install --upgrade git+https://github.com/ironmussa/Optimus.git@develop-3.0
   fi
 fi
