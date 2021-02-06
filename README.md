@@ -17,7 +17,7 @@ For remote servers:
 ```docker run --name <NAME> --network="host" -e ADDRESS=<IP> ironmussa/bumblebee:develop-3.0```
 
 For local machines:
-```docker run --name <NAME> -P -e ADDRESS=localhost ironmussa/bumblebee:develop-3.0```
+```docker run --name <NAME> -p 3000:3000 -p 4000:4000 -e ADDRESS=localhost ironmussa/bumblebee:develop-3.0```
 
 You can also add ```-e SPARK=true``` to enable Spark support.
 
