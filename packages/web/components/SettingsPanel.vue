@@ -17,7 +17,6 @@ export default {
 
   props: {
     existing: {
-      type: Boolean,
       default: false
     },
     disableBack: {
