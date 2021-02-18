@@ -18,7 +18,7 @@ export const state = () => ({
 
 export const mutations =  {
   mutation (state, { mutate, payload}) {
-    state[mutate] = payload
+    Vue.set(state, mutate, payload)
   },
 }
 
