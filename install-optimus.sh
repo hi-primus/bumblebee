@@ -61,19 +61,9 @@ fi
 
 
 if [ "$spark" = true ]; then
-  if [ "$coiled" = true ] OR [ "$coiledgpu" = true ] OR [ "$rapids" = true ]; then
-    echo "Installing optimus with Spark support through conda pip"
-    conda pip install --upgrade git+https://github.com/ironmussa/Optimus.git@develop-3.0[spark]
-  else
-    echo "Installing optimus with Spark support through pip"
-    pip install --upgrade git+https://github.com/ironmussa/Optimus.git@develop-3.0[spark]
-  fi
+  echo "Installing optimus with Spark support"
+  pip install --upgrade git+https://github.com/ironmussa/Optimus.git@develop-3.0#egg=optimuspyspark[spark]
 else
-  if [ "$coiled" = true ] OR [ "$coiledgpu" = true ] OR [ "$rapids" = true ]; then
-    echo "Installing optimus through conda pip"
-    conda pip install --upgrade git+https://github.com/ironmussa/Optimus.git@develop-3.0
-  else
-    echo "Installing optimus through pip"
-    pip install --upgrade git+https://github.com/ironmussa/Optimus.git@develop-3.0
-  fi
+  echo "Installing optimus"
+  pip install --upgrade git+https://github.com/ironmussa/Optimus.git@develop-3.0
 fi
