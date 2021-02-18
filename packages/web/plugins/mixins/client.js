@@ -77,8 +77,12 @@ export default {
 
   computed: {
 
+    storedUsername () {
+      return this.$store.state.session.username;
+    },
+
     currentUsername () {
-      return this.loadedUsername || this.$store.state.session.username;
+      return this.loadedUsername || this.storedUsername;
     },
 
     socketAvailable: {
@@ -445,7 +449,8 @@ export default {
   },
 
   watch: {
-    currentUsername (value) {
+    storedUsername (value) {
+      this.loadedUsername = value
       if (!value) {
         this.stopClient(true)
         this.$router.push({path: '/login', query: this.$route.query })
