@@ -538,28 +538,33 @@ export const actions = {
         duration: (endTime - startTime)/1000
       }
 
-      console.debug('[DEBUG][RESULT]', response)
-      console.debug('[DEBUG][CODE]', response.code)
+      if (window.verbose_responses) {
+        console.debug('[DEBUG][RESULT]', response)
+        console.debug('[DEBUG][CODE]', response.code)
 
-      try {
-        console.debug(//time
-          '[DEBUG][TIMES]',
-          'front', response._frontTime,
-          'server', response._serverTime,
-          'gateway', response._gatewayTime,
-          'frontToServer', response._serverTime.start-response._frontTime.start,
-          'serverToGateway', response._gatewayTime.start-response._serverTime.start,
-          'GatewayToServer', response._serverTime.end-response._gatewayTime.end,
-          'ServerToFront', response._frontTime.end-response._serverTime.end
-        )
-      } catch (err) {
-        console.debug(//time
-          '[DEBUG][TIMES]',
-          'front', response._frontTime,
-          'server', response._serverTime,
-          'gateway', response._gatewayTime
-        )
+        try {
+          console.debug(//time
+            '[DEBUG][TIMES]',
+            'front', response._frontTime,
+            'server', response._serverTime,
+            'gateway', response._gatewayTime,
+            'frontToServer', response._serverTime.start-response._frontTime.start,
+            'serverToGateway', response._gatewayTime.start-response._serverTime.start,
+            'GatewayToServer', response._serverTime.end-response._gatewayTime.end,
+            'ServerToFront', response._frontTime.end-response._serverTime.end
+          )
+        } catch (err) {
+          console.debug(//time
+            '[DEBUG][TIMES]',
+            'front', response._frontTime,
+            'server', response._serverTime,
+            'gateway', response._gatewayTime
+          )
+        }
+      } else {
+        console.debug('[DEBUG][RESULT]', response.code, response.data.result)
       }
+
 
       if (response.data.status === 'error') {
         throw response
@@ -1118,7 +1123,7 @@ export const actions = {
 
     let username = await dispatch('session/getUsername');
 
-    console.log('[BUMBLEBEE] Initializing Optimus', username, slug);
+    console.log('[BUMBLEBEE] Initializing Optimus', username, slug, engineParams);
 
     let response = await socketPost('initialize', {
       username,
