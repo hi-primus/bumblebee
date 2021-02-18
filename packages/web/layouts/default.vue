@@ -1,7 +1,7 @@
 <template>
   <v-app class="bb__application">
     <nuxt/>
-    <div style="position: absolute; z-index: -1000; pointer-events: none; opacity: 0; left: -1000px">
+    <div data-name="preloader" style="position: absolute; z-index: -1000; pointer-events: none; opacity: 0; left: -1000px">
       <v-icon>add</v-icon>
       <v-icon>mdi-table</v-icon>
       <v-icon class="material-icons-outlined">timeline</v-icon>
@@ -13,6 +13,7 @@
 
 <script>
 export default {
+  name: "default",
 	data () {
 		return {
 		}
