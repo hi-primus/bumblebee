@@ -100,7 +100,9 @@
               </v-alert>
             </template>
           </div>
-          <div class="o-results pb-2" v-if="currentPreviewInfo">
+          <div
+            class="o-results pb-2"
+            v-if="currentPreviewInfo && (currentPreviewInfo.rowHighlights || currentPreviewInfo.newColumns || currentPreviewInfo.replacingColumns)">
             <template
               v-if="typeof currentPreviewInfo.rowHighlights=='number'"
             >
@@ -145,7 +147,7 @@
               color="primary"
               depressed
               dense
-              :disabled="(command.dialog.validate && !command.dialog.validate(currentCommand)) || (previewError && !allowError)"
+              :disabled="(command.dialog.validate && !command.dialog.validate(currentCommand)) || (storePreviewError && !allowError)"
               :loading="currentCommand.loadingAccept"
               type="submit"
               form="operation-form"
@@ -320,6 +322,8 @@ export default {
 
   data () {
     return {
+
+      previewError: false,
 
       textDialog: false,
       copied: false,
@@ -2768,7 +2772,7 @@ export default {
       }
     },
 
-    previewError () {
+    storePreviewError () {
       try {
         return this.currentPreviewInfo.error
       } catch (err) {
@@ -2856,6 +2860,13 @@ export default {
       }
 
       this.currentCommand = c
+    },
+
+    storePreviewError (error) {
+      this.setPreviewError(error)
+      if (!error) {
+        this.previewError = false;
+      }
     },
 
     view (value) {
@@ -2978,6 +2989,10 @@ export default {
         this.copied = false;
       }, 2000);
     },
+
+    setPreviewError: debounce( function (error) {
+      this.previewError = error
+    }, 750),
 
     getNewDfName () {
 

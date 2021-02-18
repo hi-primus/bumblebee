@@ -537,20 +537,26 @@ export const getEngines = (remove = []) => {
   });
 }
 
+export const getInitParams = (engine) => {
+  return objectFilter(INIT_PARAMS, ([key, param])=>{
+    return engineValid(key, engine);
+  })
+}
+
 export const getSourceParams = (type) => {
   return objectFilter(SOURCE_TYPES_PARAMS, ([key, param])=>{
     return !param.types || param.types.includes(type);
   })
 }
 
-export const pythonArguments = (params, values) => {
+export const pythonArguments = (defaultParams, params) => {
   var codes = [];
 
-  Object.entries(params).forEach(([key, param])=>{
+  Object.entries(defaultParams).forEach(([key, param])=>{
 
     let str = false;
 
-    let value = (values[key] !== undefined) ? values[key] : param.value;
+    let value = (params[key] !== undefined) ? params[key] : param.value;
 
     if (value!==undefined && param && !param.noCode) {
 
@@ -647,7 +653,6 @@ export const INIT_PARAMS = {
   'coiled_token': {
     type: 'string',
     name: 'Coiled token',
-    noCode: true,
     engines: ['dask_coiled', 'dask_cudf_coiled']
   },
   'use_gpu': {
@@ -769,14 +774,22 @@ export const INIT_PARAMS = {
     type: 'int',
     engines: ['dask_coiled', 'dask_cudf_coiled']
   },
-  'software': {
+  'backend_region': {
     type: 'string',
-    name: 'Software environment',
-    default: (params)=>{
-      return params.use_gpu ? 'optimus/gpu' : 'optimus/default';
-    },
     engines: ['dask_coiled', 'dask_cudf_coiled']
   },
+  'idle_timeout': {
+    type: 'string',
+    engines: ['dask_coiled', 'dask_cudf_coiled']
+  },
+  // 'software': {
+  //   type: 'string',
+  //   name: 'Software environment',
+  //   default: (params)=>{
+  //     return params.use_gpu ? 'optimus/gpu' : 'optimus/default';
+  //   },
+  //   engines: ['dask_coiled', 'dask_cudf_coiled']
+  // },
   'memory_limit': {
     type: 'string',
     default: '1G',
@@ -1151,6 +1164,7 @@ export default {
   getEngines,
   getDefaultParams,
   engineValid,
+  getInitParams,
   getSourceParams,
   pythonArguments,
   ENGINES,

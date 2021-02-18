@@ -87,7 +87,7 @@ export const initializeOptimusSession = async function (sessionId, payload) {
 			if (tries <= 0) {
 				// console.error(err);
 				return {
-					error: 'Internal Error',
+					error: 'Internal error trying to create a kernel',
           content: err.toString(),
           err,
 					status: 'error',
@@ -177,10 +177,15 @@ export const requestToKernel = async function (type, sessionId, payload, optimus
       payload.engine = payload.engine || process.env.ENGINE || 'dask';
       code = kernelRoutines.init(payload);
       break;
+    case 'code':
+      code = kernelRoutines.code(payload);
+      break;
     default:
       code = kernelRoutines[type](payload);
       break;
 	}
+
+  console.log(code);
 
 	const msg_id = kernels[sessionId].uuid + Math.random();
 
@@ -208,7 +213,9 @@ export const requestToKernel = async function (type, sessionId, payload, optimus
 		kernels[sessionId].connection.sendUTF(JSON.stringify(codeMsg));
 	});
 
-	const responseHandled = handleResponse(response);
+	let responseHandled = handleResponse(response);
+
+  console.log({responseHandled});
 
 	if (responseHandled?.traceback?.map) {
 		responseHandled.traceback = responseHandled.traceback.map((l) =>
@@ -263,6 +270,7 @@ export const runCode = async function (code = '', sessionId = '') {
 				traceback: err.traceback,
 			};
 		} else {
+      console.error(err)
 			return {
 				status: 'error',
 				error: 'Internal error',

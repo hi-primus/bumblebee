@@ -140,29 +140,6 @@ export class AppGateway
     }
   }
 
-  @SubscribeMessage('datasets')
-	async handleDatasets(client: Socket, payload): Promise<any> {
-
-    const sessionId = payload.username + '_BBSESSION_' + payload.workspace;
-    let result = {};
-    try {
-      result = await requestToKernel('datasets', sessionId, null);
-    } catch (err) {
-      result = {
-        status: 'error',
-        error: 'Datasets info error',
-        error2: err.toString(),
-      };
-    }
-    const code = kernelRoutines.datasetsMin(payload);
-    client.emit('reply', {
-      data: result,
-      code,
-      timestamp: payload.timestamp,
-    });
-
-  }
-
   @SubscribeMessage('initialize')
   async handleInitialize(client: Socket, payload): Promise<any> {
 

@@ -33,7 +33,30 @@
       </v-dialog>
       <template>
         <div v-if="workspaceStatus==='loading'">
-          <div class="center-screen-inside grey--text">
+          <div
+            v-if="appError"
+            class="center-screen-inside error--text"
+            >
+            <div class="d-flex flex-column">
+              <div class="d-flex justify-center">
+                <v-progress-circular :value="100" color="error" class="mr-4" />
+                <span class="title">{{appError}}</span>
+              </div>
+              <div class="d-flex justify-center mt-2">
+                <v-btn color="primary" class="mr-2" @click="initializeWorkspace(false)" depressed>Retry</v-btn>
+                <v-btn color="primary" @click="initializeWorkspace(true)" depressed>Adjust engine settings and retry</v-btn>
+              </div>
+              <div class="d-flex justify-center mt-2">
+                <v-alert
+                  v-if="appStatusDetail"
+                  type="error"
+                  class="mb-2"
+                  dismissible
+                >{{ appStatusDetail }}</v-alert>
+              </div>
+            </div>
+          </div>
+          <div v-else class="center-screen-inside grey--text">
             <v-progress-circular indeterminate color="grey" class="mr-4" />
             <span class="title">Loading workspace</span>
           </div>
@@ -339,14 +362,30 @@ export default {
       return (this.$store.state.datasets.length==1 && this.$store.state.datasets[0].blank)
     },
 
-		sampleSize() {
+		sampleSize () {
 			return Math.min(
 				this.currentDataset.summary.sample_size,
 				this.currentDataset.summary.rows_count
 			);
 		},
 
-		status() {
+    appError () {
+      if (this.$store.state.appStatus.status == 'error') {
+        return "Unknown error"
+      } else if (this.$store.state.appStatus.error) {
+        return this.$store.state.appStatus.error.message
+      }
+      return false;
+    },
+
+    appStatusDetail () {
+      if (this.$store.state.appStatus) {
+        return this.$store.state.appStatus.detail
+      }
+      return false;
+    },
+
+		status () {
 			return (
 				this.$store.state.appStatus.status ||
 				this.$store.state.appStatus.toString()
@@ -502,9 +541,9 @@ export default {
       }
     },
 
-    async initializeWorkspace () {
+    async initializeWorkspace (error = false) {
 
-      // console.log('[INITIALIZATION] initializeWorkspace')
+      this.$store.commit('session/mutation', { mutate: 'workspaceStatus', payload: 'loading' });
 
       try {
 
@@ -516,14 +555,21 @@ export default {
           this.$store.commit('mutation', { mutate: 'workspaceSlug', payload: slug });
         }
 
-        let config = await this.$store.dispatch('getEngine', { workspaceSlug: slug });
+        let config = false;
+
+        if (!error) {
+          config = await this.$store.dispatch('getEngine', { workspaceSlug: slug });
+        }
 
         let features = await this.$store.dispatch('getFeatures', { slug, socketPost: this.socketPost });
 
+        if (!features) {
+          console.warn('[INIIALIZATION] Cannot check supported features')
+        }
         if (!config) {
           await this.engineForm();
           return;
-        } else if (features.unavailableEngines.includes(config.engine)) {
+        } else if (features && features.unavailableEngines.includes(config.engine)) {
           console.warn('[INITIALIZATION] Unsupported engine');
           await this.engineForm();
           return;
@@ -571,9 +617,10 @@ export default {
         // }
 
         console.error('(Error on initialization)');
-        printError(err)
+        let _error = printError(err)
         let appStatus = {
           error: new Error('Initialization error'),
+          detail: _error,
           status: 'workspace'
         };
         this.$store.commit('setAppStatus', appStatus)

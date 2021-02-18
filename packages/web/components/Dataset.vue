@@ -269,7 +269,7 @@
 
 <script>
 
-import { parseResponse, debounce, throttle, getPropertyAsync, deepCopy } from 'bumblebee-utils'
+import { printError, parseResponse, debounce, throttle, getPropertyAsync, deepCopy } from 'bumblebee-utils'
 
 import { mapGetters } from 'vuex'
 import dataTypesMixin from '@/plugins/mixins/data-types'
@@ -831,8 +831,9 @@ export default {
 
             }
           }
-        } catch (error) {
-          console.error(error)
+        } catch (err) {
+          let _error = printError(err);
+          this.$store.commit('setPreviewInfo', { error: _error });
         }
       },
     },
