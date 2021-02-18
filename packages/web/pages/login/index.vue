@@ -7,141 +7,147 @@
         width="100%"
         style="max-width: 700px; margin: auto"
       >
-        <v-form @submit.prevent="register" v-if="typeForm==1">
-          <v-card-text class="register-form">
+        <template v-if="firstTime!==undefined">
+
+
+          <v-form @submit.prevent="register" v-if="typeForm==1">
+            <v-card-text class="register-form">
+              <img src="~/static/logo.svg" style="max-height: 52px" alt="Bumblebee">
+              <v-card-title>
+                <v-layout align-center justify-center>
+                  <h1 class="display-1 mb-1">{{ (firstTime) ? 'Set up your administrator account' : 'Create your account' }}</h1>
+                </v-layout>
+              </v-card-title>
+              <div class="register-form-fields">
+                <v-text-field
+                  label="First name"
+                  v-model="createFirstName"
+                  autocomplete="given-name"
+                  spellcheck="false"
+                  required
+                  outlined
+                  dense
+                ></v-text-field>
+                <v-text-field
+                  label="Last name"
+                  v-model="createLastName"
+                  autocomplete="family-name"
+                  spellcheck="false"
+                  required
+                  outlined
+                  dense
+                ></v-text-field>
+                <v-text-field
+                  label="E-mail"
+                  v-model="email"
+                  autocomplete="email"
+                  spellcheck="false"
+                  :rules="emailRules"
+                  required
+                  outlined
+                  dense
+                ></v-text-field>
+                <v-text-field
+                  label="Username"
+                  v-model="createUsername"
+                  autocomplete="username"
+                  spellcheck="false"
+                  required
+                  outlined
+                  dense
+                ></v-text-field>
+                <v-text-field
+                  label="Password"
+                  v-model="createPassword"
+                  autocomplete="new-password"
+                  spellcheck="false"
+                  :append-icon="showCreatePassword ? 'mdi-eye' : 'mdi-eye-off'"
+                  :type="showCreatePassword ? 'text' : 'password'"
+                  required
+                  outlined
+                  counter
+                  dense
+                  @click:append="showCreatePassword = !showCreatePassword"
+                ></v-text-field>
+                <v-text-field
+                  v-if="showCreatePassword==false"
+                  type="password"
+                  label="Confirm password"
+                  v-model="confirmPassword"
+                  autocomplete="new-password"
+                  spellcheck="false"
+                  required
+                  outlined
+                  dense
+                ></v-text-field>
+                <v-card-actions>
+                  <v-spacer />
+                  <v-btn color="primary darken-1" large depressed type="submit">Sign up</v-btn>
+                  <v-spacer />
+                </v-card-actions>
+                <v-spacer></v-spacer>
+                <center>
+                  <span
+                    v-show="!firstTime"
+                    class="primary--text text--darken-1 text-button"
+                    @click="typeForm=0"
+                  >
+                    <v-icon color="primary" small class="mb-1">arrow_back</v-icon>
+                    Back to sign in
+                  </span>
+                </center>
+              </div>
+            </v-card-text>
+          </v-form>
+          <v-form class="py-8 px-6" @submit.prevent="signin()" v-if="typeForm==0">
             <v-card-title>
-              <v-layout align-center justify-center>
-                <h1 class="display-1 mb-1">Create your account</h1>
-              </v-layout>
+              <img src="~/static/logo.svg" class="display-3" alt="Bumblebee">
+              <!-- <h1 class="display-3 mb-4">Bumblebee</h1> -->
             </v-card-title>
-            <div class="register-form-fields">
+            <v-card-text>
               <v-text-field
-                label="First name"
-                v-model="createFirstName"
-                autocomplete="given-name"
-                spellcheck="false"
-                required
-                outlined
-                dense
-              ></v-text-field>
-              <v-text-field
-                label="Last name"
-                v-model="createLastName"
-                autocomplete="family-name"
-                spellcheck="false"
-                required
-                outlined
-                dense
-              ></v-text-field>
-              <v-text-field
-                label="E-mail"
-                v-model="email"
-                autocomplete="email"
-                spellcheck="false"
-                :rules="emailRules"
-                required
-                outlined
-                dense
-              ></v-text-field>
-              <v-text-field
-                label="Username"
-                v-model="createUsername"
+                v-model="inputUsername"
                 autocomplete="username"
                 spellcheck="false"
+                label="Username"
                 required
                 outlined
-                dense
-              ></v-text-field>
+                clearable
+              />
               <v-text-field
+                v-model="inputPassword"
+                autocomplete="current-password"
+                spellcheck="false"
+                :append-icon="showPassword ? 'visibility' : 'visibility_off'"
+                :type="(showPassword) ? 'text' : 'password'"
                 label="Password"
-                v-model="createPassword"
-                autocomplete="new-password"
-                spellcheck="false"
-                :append-icon="showCreatePassword ? 'mdi-eye' : 'mdi-eye-off'"
-                :type="showCreatePassword ? 'text' : 'password'"
                 required
                 outlined
-                counter
-                dense
-                @click:append="showCreatePassword = !showCreatePassword"
-              ></v-text-field>
-              <v-text-field
-                v-if="showCreatePassword==false"
-                type="password"
-                label="Confirm password"
-                v-model="confirmPassword"
-                autocomplete="new-password"
-                spellcheck="false"
-                required
-                outlined
-                dense
-              ></v-text-field>
-              <v-card-actions>
-                <v-spacer />
-                <v-btn color="primary darken-1" large depressed type="submit">Sign up</v-btn>
-                <v-spacer />
-              </v-card-actions>
-              <v-spacer></v-spacer>
-              <center>
-                <span
-                  class="primary--text text--darken-1 text-button"
-                  @click="typeForm=0"
-                >
-                  <v-icon color="primary" small class="mb-1">arrow_back</v-icon>
-                  Back to sign in
-                </span>
-              </center>
-            </div>
-          </v-card-text>
-        </v-form>
-        <v-form class="py-8 px-6" @submit.prevent="signin()" v-if="typeForm==0">
-          <v-card-title>
-            <img src="~/static/logo.svg" class="display-3" alt="Bumblebee">
-            <!-- <h1 class="display-3 mb-4">Bumblebee</h1> -->
-          </v-card-title>
-          <v-card-text>
-            <v-text-field
-              v-model="inputUsername"
-              autocomplete="username"
-              spellcheck="false"
-              label="Username"
-              required
-              outlined
-              clearable
-            />
-            <v-text-field
-              v-model="inputPassword"
-              autocomplete="current-password"
-              spellcheck="false"
-              :append-icon="showPassword ? 'visibility' : 'visibility_off'"
-              :type="(showPassword) ? 'text' : 'password'"
-              label="Password"
-              required
-              outlined
-              clearable
-              @click:append="showPassword = !showPassword"
-            />
-          </v-card-text>
-          <v-card-actions>
-            <v-spacer />
-            <v-btn
-              color="primary darken-1"
-              large
-              depressed
-              type="submit"
-            >Sign in</v-btn>
-            <v-spacer />
-          </v-card-actions>
-          <v-layout
-            align-center
-            justify-center
-          >
-            <div
-              class="primary--text text--darken-1 text-button"
-              @click="typeForm=1"
-            >Sign up to bumblebee</div>
-          </v-layout>
-        </v-form>
+                clearable
+                @click:append="showPassword = !showPassword"
+              />
+            </v-card-text>
+            <v-card-actions>
+              <v-spacer />
+              <v-btn
+                color="primary darken-1"
+                large
+                depressed
+                type="submit"
+              >Sign in</v-btn>
+              <v-spacer />
+            </v-card-actions>
+            <v-layout
+              align-center
+              justify-center
+            >
+              <div
+                class="primary--text text--darken-1 text-button"
+                @click="typeForm=1"
+              >Sign up to bumblebee</div>
+            </v-layout>
+          </v-form>
+        </template>
         <v-card-text v-if="successMessage || appError" class="pb-0">
           <v-alert
             v-if="appError"
@@ -204,7 +210,8 @@ export default {
 			typeForm: 0,
 			successMessage: "",
       // errorMessage: "",
-      isLoading: false
+      isLoading: false,
+      firstTime: undefined
 		};
 	},
 
@@ -222,9 +229,20 @@ export default {
 	mounted() {
 		console.log(`Bumblebee v${version}`)
 		window.document.body.click()
+    this.checkFirstTime()
 	},
 
 	methods: {
+
+    async checkFirstTime () {
+      // TO-DO: Check for users
+      this.firstTime = false;
+
+      if (this.firstTime) {
+        this.typeForm = 1;
+      }
+    },
+
 		async register () {
 			try {
         if (this.confirmPassword!==this.createPassword && !this.showCreatePassword) {
