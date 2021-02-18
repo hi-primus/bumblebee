@@ -54,7 +54,16 @@ export default {
 
       var menu = [
         { text: 'Sign out', click: this.signOut }
-      ]
+      ];
+
+      if (process.env.HELP_LINK) {
+        menu = [
+          { text: 'Help', link: process.env.HELP_LINK },
+          { divider: true },
+          ...menu
+        ];
+      }
+
 
       return menu
     },

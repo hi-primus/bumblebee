@@ -349,6 +349,14 @@ export default {
         ];
       }
 
+      if (process.env.HELP_LINK) {
+        menu = [
+          ...menu,
+          { divider: true },
+          { text: 'Help', link: process.env.HELP_LINK }
+        ];
+      }
+
       menu = [
         ...menu,
         { divider: true },

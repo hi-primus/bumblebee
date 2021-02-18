@@ -79,10 +79,23 @@ export default {
       var menu = [
         { text: 'Engines', click: ()=>{this.showDialog = 'engines'}},
         { text: 'Connections', click: ()=>{this.showDialog = 'connections'}},
-        { text: 'Sign out', click: this.signOut }
-      ]
+      ];
 
-      return menu
+      if (process.env.HELP_LINK) {
+        menu = [
+          ...menu,
+          { divider: true },
+          { text: 'Help', link: process.env.HELP_LINK }
+        ];
+      }
+
+      menu = [
+        ...menu,
+        { divider: true },
+        { text: 'Sign out', click: this.signOut }
+      ];
+
+      return menu;
     },
 	},
 
