@@ -17,7 +17,9 @@ export default {
 
       let defaultValues = deepCopy(_defaultValues || {});
 
-      defaultValues.name = this.$store.getters['session/getUsername'] + '__' + this.$route.params.slug;
+      if (!defaultValues.name && this.$store.getters['session/getUsername'] && this.$route.params.slug) {
+        defaultValues.name =  this.$store.getters['session/getUsername'] + '__' + this.$route.params.slug;
+      }
 
       let unavailableEngines = this.$store.state.unavailableEngines || [];
 

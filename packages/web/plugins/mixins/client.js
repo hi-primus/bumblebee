@@ -224,7 +224,13 @@ export default {
 
               var slug = this.$route.params.slug;
 
-              params.name = params.name || this.currentUsername + '_' + slug;
+              if (!params.name) {
+                if (this.currentUsername && slug) {
+                  params.name = this.currentUsername + '_' + slug;
+                } else {
+                  params.name = 'default';
+                }
+              }
 
               if (params.jupyter_address) {
                 params.jupyter_ip = params.jupyter_address.ip;
