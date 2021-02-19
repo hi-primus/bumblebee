@@ -185,8 +185,6 @@ export const requestToKernel = async function (type, sessionId, payload, optimus
       break;
 	}
 
-  console.log(code);
-
 	const msg_id = kernels[sessionId].uuid + Math.random();
 
 	const hdr = {
@@ -214,8 +212,6 @@ export const requestToKernel = async function (type, sessionId, payload, optimus
 	});
 
 	let responseHandled = handleResponse(response);
-
-  console.log({responseHandled});
 
 	if (responseHandled?.traceback?.map) {
 		responseHandled.traceback = responseHandled.traceback.map((l) =>
