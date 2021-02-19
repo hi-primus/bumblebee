@@ -1,6 +1,6 @@
 {
   "name": "bumblebee-utils",
-  "version": "1.0.1",
+  "version": "3.0.0-beta-1",
   "description": "Bumblebee common functions and constants",
   "main": "dist/index.js",
   "scripts": {
@@ -14,15 +14,13 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@babel/plugin-transform-modules-commonjs": "^7.10.1",
     "@babel/cli": "^7.10.1",
     "@babel/core": "^7.10.2",
     "@babel/node": "^7.10.1",
+    "@babel/plugin-transform-modules-commonjs": "^7.10.1",
     "@babel/preset-env": "^7.10.2",
     "core-js": "^3.6.5",
     "eslint": "^7.2.0",
     "regenerator-runtime": "^0.13.5"
-  },
-  "dependencies": {
   }
 }
