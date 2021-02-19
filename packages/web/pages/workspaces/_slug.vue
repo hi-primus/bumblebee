@@ -230,7 +230,7 @@ import MoreMenu from "@/components/MoreMenu"
 import clientMixin from "@/plugins/mixins/client"
 import dataTypesMixin from "@/plugins/mixins/data-types"
 import applicationMixin from "@/plugins/mixins/application"
-import { printError, getDefaultParams, objectFilter, INIT_PARAMS, RESPONSE_MESSAGES } from 'bumblebee-utils'
+import { printError, getDefaultParams, objectFilter, INIT_PARAMS, RESPONSE_MESSAGES, HELP_LINK } from 'bumblebee-utils'
 
 import { mapGetters, mapState } from "vuex"
 
@@ -349,11 +349,11 @@ export default {
         ];
       }
 
-      if (process.env.HELP_LINK) {
+      if (HELP_LINK) {
         menu = [
           ...menu,
           { divider: true },
-          { text: 'Help', link: process.env.HELP_LINK }
+          { text: 'Help', link: HELP_LINK }
         ];
       }
 

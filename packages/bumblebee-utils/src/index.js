@@ -1118,6 +1118,9 @@ export const RESPONSE_MESSAGES = {
   }
 }
 
+export const INTERCOM_APP_ID = 'evbcuhoh';
+export const HELP_LINK = false; // "https://hi-bumblebee.com";
+
 export default {
   deepCopy,
   transpose,
@@ -1186,7 +1189,9 @@ export default {
   SOURCE_TYPES,
   ALL_SOURCE_TYPES,
   SOURCE_TYPES_PARAMS,
-  RESPONSE_MESSAGES
+  RESPONSE_MESSAGES,
+  INTERCOM_APP_ID,
+  HELP_LINK
 }
 
 // exports.meta = require('./package.json')

@@ -52,6 +52,8 @@ import ConnectionsList from "@/components/ConnectionsList"
 import MoreMenu from "@/components/MoreMenu"
 import clientMixin from "@/plugins/mixins/client"
 
+import { HELP_LINK } from "bumblebee-utils"
+
 export default {
 	components: {
     Layout,
@@ -81,11 +83,11 @@ export default {
         { text: 'Connections', click: ()=>{this.showDialog = 'connections'}},
       ];
 
-      if (process.env.HELP_LINK) {
+      if (HELP_LINK) {
         menu = [
           ...menu,
           { divider: true },
-          { text: 'Help', link: process.env.HELP_LINK }
+          { text: 'Help', link: HELP_LINK }
         ];
       }
 

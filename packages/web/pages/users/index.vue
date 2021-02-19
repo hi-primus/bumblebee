@@ -31,6 +31,8 @@ import UsersList from "@/components/UsersList"
 import MoreMenu from "@/components/MoreMenu"
 import clientMixin from "@/plugins/mixins/client"
 
+import { HELP_LINK } from "bumblebee-utils"
+
 export default {
 	components: {
     Layout,
@@ -56,9 +58,9 @@ export default {
         { text: 'Sign out', click: this.signOut }
       ];
 
-      if (process.env.HELP_LINK) {
+      if (HELP_LINK) {
         menu = [
-          { text: 'Help', link: process.env.HELP_LINK },
+          { text: 'Help', link: HELP_LINK },
           { divider: true },
           ...menu
         ];
