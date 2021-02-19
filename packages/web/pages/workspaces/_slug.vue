@@ -58,7 +58,7 @@
           </div>
           <div v-else class="center-screen-inside grey--text">
             <v-progress-circular indeterminate color="grey" class="mr-4" />
-            <span class="title">Loading workspace</span>
+            <span class="title">{{ loadingMessage }}</span>
           </div>
         </div>
         <div
@@ -297,6 +297,27 @@ export default {
 
     ...mapState('session', ['workspace', 'workspaceStatus']),
     ...mapState(['loadingStatus']),
+
+    loadingMessage() {
+
+      var str = "Loading";
+
+      if (!this.$store.state.workspacePromise.fulfilled || !this.$store.state.enginePromise.fulfilled) {
+        str = 'Loading workspace';
+      } else if (!this.$store.state.optimusPromise.fulfilled) {
+        str = 'Loading engine';
+      }
+
+      if (
+        this.$store.state.localEngineParameters &&
+        this.$store.state.localEngineParameters.engine &&
+        this.$store.state.localEngineParameters.engine.includes("coiled")
+      ) {
+        str += "... This may take a while";
+      }
+
+      return str;
+    },
 
     tab: {
       get () {
@@ -637,34 +658,7 @@ export default {
     },
 
     initializeOptimus (slug) {
-
-      if (!Object.keys(this.$store.state.localEngineParameters || {}).length) {
-
-        let query = this.$route.query;
-
-        if (Object.keys(query).length) {
-          console.warn('Getting config from query parameters'); // TO-DO: Remove
-        }
-
-        let params = {};
-
-        Object.keys(INIT_PARAMS).forEach(parameter => {
-          if (query[parameter]) {
-            params[parameter] = query[parameter]
-          }
-        });
-
-        params = getDefaultParams(params);
-
-        params.name = params.name || this.currentUsername + '_' + this.$route.params.slug;
-
-        this.$store.commit('mutation', { mutate: 'localEngineParameters', payload: params });
-        this.$store.commit('mutation', { mutate: 'enginePromise', payload: false });
-
-      }
-
       let payload = { slug, socketPost: this.socketPost };
-
       return this.$store.dispatch('getOptimus', payload );
     },
 

@@ -608,10 +608,16 @@ export const actions = {
     }
 
     if (!promise || promise.rejected) {
+
       promise = dispatch(action, payload);
+      promise.fulfilled = false;
+      promise.rejected = false;
       promise
-        .then(()=>promise.fulfilled = true)
+        .then(async ()=>{
+          promise.fulfilled = true
+        })
         .catch(()=>promise.rejected = true);
+
       if (index !== undefined) {
         var promises = {};
         if (typeof state[name] == "object") {
@@ -689,10 +695,6 @@ export const actions = {
         };
       });
       cells = response.data.commands.map( e=>({ ...JSON.parse(e), done: false }) );
-    }
-
-    if (response.data.configuration) {
-      var localEngineParameters = await dispatch('getEngine', { id: response.data.configurations });
     }
 
     cells = cells.map(cell => {
@@ -858,7 +860,12 @@ export const actions = {
 
       id = id || response.data._id;
       var engineConfigName = response.data.name;
+
       enginePayload = response.data.configuration;
+
+      if (!enginePayload) {
+        throw new Error("Configuration settings null or undefined " + engineConfigName);
+      }
 
       commit('mutation', {mutate: 'engineId', payload: id});
       commit('mutation', { mutate: 'engineConfigName', payload: engineConfigName });
@@ -868,7 +875,8 @@ export const actions = {
       console.warn(`Error requesting engine item ${id} for ${workspaceSlug}. Using default settings.`);
       console.error(err);
     }
-    return enginePayload;
+
+    return enginePayload || state.localEngineParameters || {};
   },
 
   getEngine ({ dispatch, state }, payload) {
