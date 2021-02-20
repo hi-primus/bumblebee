@@ -1559,7 +1559,7 @@ export const actions = {
             type: 'preview',
             sample: true,
             buffer: noBufferWindow ? false : [from, to],
-            dfName: '_df_preview'
+            dfName: 'df_preview'
           }
         };
         response = await dispatch('evalCode',{ socketPost, codePayload })

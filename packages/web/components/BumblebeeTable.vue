@@ -1921,7 +1921,7 @@ export default {
           request: {
             ...previewPayload.request,
             type: 'profile',
-            saveTo: '_df_preview',
+            saveTo: 'df_preview',
             noExecute: true,
             buffer: true,
             profile: cols,
