@@ -879,6 +879,15 @@ export const actions = {
     return enginePayload || state.localEngineParameters || {};
   },
 
+  resetEngine ({ commit }, {}) {
+
+    commit('mutation', {mutate: 'engineId', payload: false});
+    commit('mutation', { mutate: 'engineConfigName', payload: false });
+    commit('mutation', { mutate: 'localEngineParameters', payload: {} });
+
+    return {};
+  },
+
   getEngine ({ dispatch, state }, payload) {
 
     var promisePayload = {

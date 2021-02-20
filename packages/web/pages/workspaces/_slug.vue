@@ -456,7 +456,7 @@ export default {
     engineForm () {
       return new Promise((resolve, reject)=>{
         this.engineFormPromise = {resolve, reject};
-        this.showWindowDialog('configEngine');
+        this.showWindowDialog('configs');
       })
     },
 
@@ -588,6 +588,8 @@ export default {
 
         if (!error) {
           config = await this.$store.dispatch('getEngine', { workspaceSlug: slug });
+        } else {
+          await this.$store.dispatch('resetEngine', { workspaceSlug: slug });
         }
 
         let features = await this.$store.dispatch('getFeatures', { slug, socketPost: this.socketPost });
