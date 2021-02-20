@@ -208,7 +208,7 @@ export default {
 
             await this.startSocket();
 
-            if (message!=='initialize') {
+            if (!['initialize','features'].includes(message)) {
 
               var query = this.$route.query;
 
