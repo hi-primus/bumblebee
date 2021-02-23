@@ -1558,7 +1558,8 @@ export const actions = {
           request: {
             type: 'preview',
             sample: true,
-            buffer: noBufferWindow ? false : [from, to],
+            buffer: [from, to+1],
+            noBufferWindow,
             dfName: 'df_preview'
           }
         };
@@ -1578,7 +1579,8 @@ export const actions = {
           dfName: datasetDfName,
           sample: true,
           noSave: true,
-          buffer: noBufferWindow ? true : [from, to]
+          buffer: [from, to+1],
+          noBufferWindow
         }
       };
       try {
