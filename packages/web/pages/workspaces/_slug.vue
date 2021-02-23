@@ -572,6 +572,8 @@ export default {
 
     async initializeWorkspace (error = false) {
 
+      this.$store.commit('setAppStatus');
+
       this.$store.commit('session/mutation', { mutate: 'workspaceStatus', payload: 'loading' });
 
       try {
