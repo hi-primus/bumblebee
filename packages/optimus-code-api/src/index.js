@@ -126,10 +126,10 @@ export const codeGenerators = {
         expression = `${dfName}["${payload.columns[0]}"].isnull()`;
         break;
       case 'mismatch':
-        expression = `${dfName}.cols.mismatch("${payload.columns[0]}", "${payload.columnDataTypes[0]}")`;
+        expression = `${dfName}.mask.mismatch("${payload.columns[0]}", "${payload.columnDataTypes[0]}")`;
         break;
       case 'values':
-        expression = `${dfName}["${payload.columns[0]}"].isin([${payload.selection.join(',')}])`;
+        expression = `${dfName}.mask.values_in("${payload.columns[0]}", [${payload.selection.join(',')}])`;
         break;
       case 'ranges':
         if (payload.selection.length>1) {
@@ -150,12 +150,12 @@ export const codeGenerators = {
       let value = ( (payload.value) ? `p.parse('${payload.value}')` : 'None' );
       if (!['final','processing'].includes(payload.request.type)) {
         output_col = '__new__'+output_col;
-        code = `.rows.find( expr='${expression}', output_col="__match__" )`;
+        code = `.rows.find( '${expression}', output_col="__match__" )`;
         if (payload.preview.filteredPreview) {
           code += `.rows.select( '__match__' )`;
         }
         code += `.cols.set(`
-        + `output_cols=["${output_col}"]`
+        + `"${output_col}"`
         + `, value=${value},`
         + `, where='__match__', `
         + (payload.columns[0] ? `, default="${payload.columns[0]}", ` : '')
@@ -166,7 +166,7 @@ export const codeGenerators = {
         return code;
       }
       return code + `.cols.set( `
-      + `output_cols=["${output_col}"]`
+      + `"${output_col}"`
       + `, value=${value}, `
       + `, where=${expression}`
       + (payload.columns[0] ? `, default="${payload.columns[0]}", ` : '')
@@ -174,7 +174,7 @@ export const codeGenerators = {
 
     } else {
       if (!['final','processing'].includes(payload.request.type)) {
-        let code = `.rows.find( expr='${expression}', output_col="__match__" )`
+        let code = `.rows.find( '${expression}', output_col="__match__" )`
         if (payload.preview.filteredPreview) {
           code += `.rows.select( '__match__' )`
         }
@@ -183,7 +183,7 @@ export const codeGenerators = {
         }
         return code
       } else {
-        return `.rows.${payload.action}( expr='${expression}' )` // rows.select rows.drop
+        return `.rows.${payload.action}( '${expression}' )` // rows.select rows.drop
       }
     }
   },
@@ -215,7 +215,7 @@ export const codeGenerators = {
         expression = `${dfName}["${payload.columns[0]}"]==${payload.value}`
         break
       case 'oneof':
-        expression = `${dfName}.${payload.columns[0]}.isin([${payload.values.join(', ')}])`
+        expression = `${dfName}.mask.values_in("${payload.columns[0]}", [${payload.values.join(',')}])`;
         break
       case 'not':
         expression = `${dfName}["${payload.columns[0]}"]!=${payload.value}`
@@ -233,16 +233,16 @@ export const codeGenerators = {
         expression = `(${dfName}["${payload.columns[0]}"]>=${payload.value}) & (${dfName}["${payload.columns[0]}"]<=${payload.value_2})`
         break
       case 'contains':
-      case 'startswith':
-      case 'endswith':
-        expression = `${dfName}["${payload.columns[0]}"].str.${payload.condition}("${payload.text}", na=False)`
+      case 'starts_with':
+      case 'end_swith':
+        expression = `${dfName}.mask.${payload.condition}("${payload.columns[0]}", "${payload.text}")`
         break
       case 'custom':
         expression = `${payload.expression}`
       default:
     }
     if (!['final','processing'].includes(payload.request.type)) {
-      let code = `.rows.find( expr='${expression}', output_col="__match__" )`
+      let code = `.rows.find( '${expression}', output_col="__match__" )`
       if (payload.preview.filteredPreview) {
         code += `.rows.select( '__match__' )`
         if (payload.request.type === 'preview') {
@@ -251,14 +251,15 @@ export const codeGenerators = {
       }
       return code
     } else {
-      return `.rows.${payload.action}( expr='${expression}' )`
+      return `.rows.${payload.action}( '${expression}' )`
     }
   },
   'drop empty rows': (payload) => {
     if (!['final','processing'].includes(payload.request.type)) {
-      let code = `.rows.find_nulls(` // mask.nulls
+      let code = `.rows.find('df.mask.nulls('`
       + (payload.subset.length ? `columns=${preparedColumns(payload.subset, true)}, ` : '')
-      + `how="${payload.how}", output_col="__match__" )`
+      + `how="${payload.how}"`
+      + `)', output_col="__match__")`
       if (payload.preview.filteredPreview) {
         code += `.rows.select( '__match__' )`
         if (payload.request.type === 'preview') {
@@ -273,9 +274,10 @@ export const codeGenerators = {
   },
   'drop duplicates': (payload) => {
     if (!['final','processing'].includes(payload.request.type)) {
-      let code = `.rows.find_duplicated(` // mask.duplicated
+      let code = `.rows.find('df.mask.duplicated('`
       + (payload.subset.length ? `columns=${preparedColumns(payload.subset, true)}, ` : '')
-      + `keep="${payload.keep}", output_col="__match__")`
+      + `keep="${payload.keep}"`
+      + `)', output_col="__match__")`
       if (payload.preview.filteredPreview) {
         code += `.rows.select( '__match__' )`
         if (payload.request.type === 'preview') {
@@ -658,8 +660,8 @@ export const codeGenerators = {
       }
 
       return `.cols.set(`
-      + `output_cols=${output_cols_argument}`
-      + `, value=+${value}`
+      + `${output_cols_argument}`
+      + `,${value}`
       + (payload.columns[0] ? `, default="${payload.columns[0]}"` : '')
       + `)`;
     }
@@ -936,8 +938,8 @@ export const generateCode = function(commands = [], _request = { type: 'processi
             code += dfName;
             if (request.buffer) {
               let window = '';
-              if (Array.isArray(request.buffer)) {
-                window = `, ${request.buffer[0]}, ${request.buffer[1]+1}`;
+              if (!request.noBufferWindow && Array.isArray(request.buffer)) {
+                window = `, ${request.buffer[0]}, ${request.buffer[1]}`;
               }
               code += `.buffer_window("*"${window})`;
             }

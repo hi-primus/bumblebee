@@ -879,8 +879,8 @@ export default {
                   { text: 'Is Between', value: 'between', disabled: c.request.isString  },
                   { divider: true },
                   { text: 'Contains', value: 'contains' },
-                  { text: 'Starts with', value: 'startswith' },
-                  { text: 'Ends with', value: 'endswith' },
+                  { text: 'Starts with', value: 'starts_with' },
+                  { text: 'Ends with', value: 'ends_with' },
                   { divider: true },
                   { text: 'Custom expression', value: 'custom' },
                   { text: 'Pattern', value: 'pattern' },
@@ -936,7 +936,7 @@ export default {
                 mono: true
               },
               {
-                condition: (c)=>['contains','startswith','endswith'].includes(c.condition),
+                condition: (c)=>['contains','starts_with','ends_with'].includes(c.condition),
                 key: 'text',
                 label: 'Text',
                 placeholder: 'lorem ipsum',
@@ -967,8 +967,8 @@ export default {
                 case 'between':
                   return (c.value.length && c.value_2.length)
                 case 'contains':
-                case 'startswith':
-                case 'endswith':
+                case 'starts_with':
+                case 'ends_with':
                   return (c.text.length)
                 case 'custom':
                   return (c.expression.length)
@@ -1046,7 +1046,7 @@ export default {
                 condition = 'contains '
                 value = [payload.text]
                 break
-              case 'startswith':
+              case 'starts_with':
                 condition = 'starts with '
                 value = [payload.text]
                 break
@@ -1054,7 +1054,7 @@ export default {
                 condition = 'with pattern '
                 value = [payload.value]
                 break
-              case 'endswith':
+              case 'ends_with':
                 condition = 'ends with '
                 value = [payload.text]
                 break
