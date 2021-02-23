@@ -562,7 +562,7 @@ export const actions = {
           )
         }
       } else {
-        console.debug('[DEBUG][RESULT]', response.code, response.data.result)
+        console.debug('[DEBUG][RESULT]', response.code, response.data.result || response.data)
       }
 
 
@@ -579,10 +579,15 @@ export const actions = {
       if (err.code) {
         window.pushCode({code: err.code, error: true})
       }
-
       console.error(err)
-
       printError(err)
+
+      if (err.error) {
+        if (err.error.contains("Worker holding Actor was lost")) {
+          console.debug('[ERROR] Restoring session')
+          await this.$store.dispatch('resetPromises', { from: 'workspace' });
+        }
+      }
       return err
 
     }

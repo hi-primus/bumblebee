@@ -2190,12 +2190,6 @@ export default {
 
     async fetchChunk(from, to) {
 
-      var previewCode = '';
-
-      if (this.previewCode) {
-        previewCode = this.previewCode.code;
-      }
-
       try {
         var addToFetch = await this.$store.dispatch('getBufferWindow', {
           from,

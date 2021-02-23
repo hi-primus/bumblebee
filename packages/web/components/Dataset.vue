@@ -802,6 +802,8 @@ export default {
                 meta: true,
               }
 
+              console.debug('[PREVIEW] Loading', codePayload)
+
               var response = await this.evalCode(codePayload);
 
               if (response.data.result && response.data.result.sample) {
