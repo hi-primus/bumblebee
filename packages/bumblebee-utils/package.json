@@ -1,6 +1,6 @@
 {
   "name": "bumblebee-utils",
-  "version": "3.0.0-beta-2",
+  "version": "3.0.0-beta-3",
   "description": "Bumblebee common functions and constants",
   "main": "dist/index.js",
   "scripts": {
