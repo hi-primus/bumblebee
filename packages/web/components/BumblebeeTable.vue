@@ -1908,7 +1908,7 @@ export default {
 
       if (this.currentProfilePreview.code !== previewCode) {
 
-        var profile = (this.currentPreviewColumns && this.currentPreviewColumns.length)
+        var profile = (this.currentPreviewColumns && this.currentPreviewColumns.length) || this.currentRowHighlights
 
         var matches = this.currentRowHighlights
 
