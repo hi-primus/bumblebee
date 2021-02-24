@@ -147,7 +147,7 @@ export const codeGenerators = {
     if (payload.action==='set') {
       let output_col = payload.columns[0];
       let code = '';
-      let value = ( (payload.value) ? `p.parse('${payload.value}')` : 'None' );
+      let value = ( (payload.value) ? `parse('${payload.value}')` : 'None' );
       if (!['final','processing'].includes(payload.request.type)) {
         output_col = '__new__'+output_col;
         code = `.rows.find( '${expression}', output_col="__match__" )`;
@@ -155,22 +155,22 @@ export const codeGenerators = {
           code += `.rows.select( '__match__' )`;
         }
         code += `.cols.set(`
-        + `"${output_col}"`
-        + `, value=${value},`
-        + `, where='__match__', `
-        + (payload.columns[0] ? `, default="${payload.columns[0]}", ` : '')
-        + `)`;
+        + `"${output_col}", `
+        + `value=${value}, `
+        + `where='__match__', `
+        + (payload.columns[0] ? `default="${payload.columns[0]}", ` : '')
+        + `eval_value=True)`
         if (payload.request.type === 'preview' && payload.preview.filteredPreview) {
           return (from, to)=>code+(from!==undefined ? `[${from}:${to}]` : '');
         }
         return code;
       }
-      return code + `.cols.set( `
-      + `"${output_col}"`
-      + `, value=${value}, `
-      + `, where=${expression}`
-      + (payload.columns[0] ? `, default="${payload.columns[0]}", ` : '')
-      + `)`;
+      return code + `.cols.set(`
+        + `"${output_col}", `
+        + `value=${value}, `
+        + `where=${expression}, `
+        + (payload.columns[0] ? `default="${payload.columns[0]}", ` : '')
+        + `eval_value=True)`
 
     } else {
       if (!['final','processing'].includes(payload.request.type)) {
@@ -650,7 +650,7 @@ export const codeGenerators = {
     }
     let output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (!['final','processing'].includes(payload.request.type)) ? '__new__' : '')
 
-    let value = ( (payload.value) ? `p.parse('${payload.value}')` : 'None' )
+    let value = ( (payload.value) ? `parse('${payload.value}')` : 'None' )
 
     let cb = (from, to) => {
       let window = ''
@@ -660,10 +660,10 @@ export const codeGenerators = {
       }
 
       return `.cols.set(`
-      + `${output_cols_argument}`
-      + `,${value}`
-      + (payload.columns[0] ? `, default="${payload.columns[0]}"` : '')
-      + `)`;
+      + `${output_cols_argument}, `
+      + `value=${value}, `
+      + (payload.columns[0] ? `default="${payload.columns[0]}", ` : '')
+      + `eval_value=True)`
     }
 
     if (!['final','processing'].includes(payload.request.type)) {
@@ -971,7 +971,7 @@ export const generateCode = function(commands = [], _request = { type: 'processi
             code += '\n'+`_output.update({ 'profile': ${saving}.profile(columns=${preparedColumns(request.profile)}) })`;
           }
           if (request.matches_count) {
-            code += '\n'+`_output.update({ 'matches_count': ${saving}.rows.select(${saving}["__match__"]).rows.count() })`
+            code += '\n'+`_output.update({ 'matches_count': ${saving}.rows.select("__match__").rows.count() })`
           }
           if (request.meta) {
             code += '\n'+`_output.update({ "meta": ${saving}.meta })`
@@ -984,7 +984,7 @@ export const generateCode = function(commands = [], _request = { type: 'processi
             code += `.profile(columns=${preparedColumns(request.profile)})`;
           }
           if (request.matches_count) {
-            code += `.rows.select(${saving}["__match__"]).rows.count()`;
+            code += `.rows.select("__match__").rows.count()`;
           }
           if (request.meta) {
             code += '\n'+`.meta`
