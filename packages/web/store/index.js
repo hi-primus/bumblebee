@@ -1252,13 +1252,11 @@ export const actions = {
 
       commit('mutation', { mutate: 'commandsDisabled', payload: true });
 
-      if (clearPrevious) {
+      if (clearPrevious && !state.firstRun) {
         await dispatch('resetPromises', { from: 'profilings' });
       }
 
       await dispatch('beforeRunCells', { newOnly, ignoreFrom });
-
-      console.debug('[DEBUG][CODE] Sent', code);
 
       var finalPayload = false;
 
@@ -1333,7 +1331,7 @@ export const actions = {
 
       commit('mutation', { mutate: 'commandsDisabled', payload: false });
 
-      if (!response.data) {
+      if (!response || !response.data || !response.data.result || response.data.status == "error") {
         throw response
       }
 
@@ -1341,6 +1339,8 @@ export const actions = {
       return response
 
     } catch (err) {
+
+      dispatch('resetPromises', { from: 'profilings' });
 
       if (err.code && window.pushCode) {
         window.pushCode({code, error: true});
@@ -1360,7 +1360,6 @@ export const actions = {
 
       err.message = '(Error on cells) ' + (err.message || '');
       console.debug('[DEBUG] Loading cells result Error');
-      await dispatch('resetPromises', { from: 'profilings' });
       throw err;
 
     }
@@ -1414,7 +1413,7 @@ export const actions = {
 
       console.debug('[DEBUG][CODE][PROFILE]',response.code);
 
-      if (!response.data.result) {
+      if (!response || !response.data || !response.data.result || response.data.status == "error") {
         throw response;
       }
 

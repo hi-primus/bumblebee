@@ -370,7 +370,7 @@ export default {
 
         var response = await this.evalCode(codePayload);
 
-        if (!response.data.result) {
+        if (!response || !response.data || !response.data.result || response.data.status == "error") {
           throw response
         }
         var values = response.data.result[this.column.name]
