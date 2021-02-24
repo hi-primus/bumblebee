@@ -66,17 +66,6 @@ try:
 except:
     pass
 
-# optimus parser
-
-try:
-    from optimus.expressions import Parser
-    p = Parser()
-    res.update({'parser_available': True})
-except:
-    res.update({'parser_available': False})
-    def p (a):
-        return a
-
 
 ${TIME_END}
 
@@ -101,6 +90,8 @@ const getParams = payload => {
 
   return { params, functionParams };
 }
+
+// TODO: parser should be on the features routine but that routine is running in another session
 
 const init = (payload, min = false) => {
 
@@ -127,6 +118,14 @@ except Exception:
 ${TIME_START}
 
 res = { 'kernel': 'ok' }
+
+try:
+    from optimus.expressions import parse
+    res.update({'parser_available': True})
+except:
+    res.update({'parser_available': False})
+    def parse (a):
+        return a
 
 engine = "${params.engine}"
 
