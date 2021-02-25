@@ -285,6 +285,7 @@ import {
   hlParam,
   hlCols,
   namesToIndices,
+  aggOutputCols,
   getCodePayload,
   transformDateFromPython,
   transpose,
@@ -1552,7 +1553,7 @@ export default {
                   //   type: 'field',
                   //  // class: 'with-icon-btn',
                   //   label: 'Rename',
-                  //   placeholder: (c,i)=>c.output_cols_default(c)[i],
+                  //   placeholder: (c,i)=>aggOutputCols(c)[i],
                   //   key: 'output_cols'
                   // },
                 ]
@@ -1569,12 +1570,11 @@ export default {
             group_by: [],
             input_cols: columns,
             aggregations: columns.map(e=>'count'),
-            output_cols_default: (c)=>c.aggregations.map((aggregation,i)=>`${aggregation}_${c.input_cols[i]}`),
             output_cols: columns.map(e=>''),
             preview: {
               type: 'aggregations',
               expectedColumns: (c)=>{
-                var output_cols_default = c.output_cols_default(c)
+                var output_cols_default = aggOutputCols(c)
                 var aggregations = c.aggregations.map((oname,i)=>`"${c.output_cols[i] || output_cols_default[i]}": {"${c.input_cols[i]}":"${c.aggregations[i]}"}`)
                 aggregations = [...new Set(aggregations)]
                 return aggregations.length+c.group_by.length

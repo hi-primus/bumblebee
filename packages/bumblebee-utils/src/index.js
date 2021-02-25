@@ -264,6 +264,10 @@ export const getOutputColsArgument = (output_cols = [], input_cols = [], pre = '
   return false
 }
 
+export const aggOutputCols = (payload) => {
+  return payload.aggregations.map((aggregation,i)=>`${aggregation}_${payload.input_cols[i]}`)
+}
+
 export const preparedColumns = function(columns, array=false) {
   if (Array.isArray(columns) && columns.length) {
     return `["${columns.join('", "')}"]`;
@@ -1141,6 +1145,7 @@ export default {
   escapeQuotes,
   filterCells,
   getOutputColsArgument,
+  aggOutputCols,
   preparedColumns,
   columnsHint,
   escapeQuotesOn,

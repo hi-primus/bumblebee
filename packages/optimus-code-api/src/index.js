@@ -1,4 +1,4 @@
-import { escapeQuotes, escapeQuotesOn, getOutputColsArgument, preparedColumns, transformDateToPython, getCodePayload, getSourceParams, pythonArguments, TIME_VALUES } from 'bumblebee-utils';
+import { escapeQuotes, escapeQuotesOn, getOutputColsArgument, aggOutputCols, preparedColumns, transformDateToPython, getCodePayload, getSourceParams, pythonArguments, TIME_VALUES } from 'bumblebee-utils';
 
 import { v4 as uuidv4 } from "uuid";
 
@@ -359,7 +359,7 @@ export const codeGenerators = {
 
   },
   aggregations: (payload) => {
-    let output_cols_default = payload.output_cols_default(payload)
+    let output_cols_default = aggOutputCols(payload)
 
     let aggregations = payload.aggregations.map((oname,i)=>`"${payload.output_cols[i] || output_cols_default[i]}": {"${payload.input_cols[i]}":"${payload.aggregations[i]}"}`)
 
