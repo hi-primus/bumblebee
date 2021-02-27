@@ -3630,7 +3630,7 @@ export default {
 
     },
 
-    async runCodeNow (force = false, ignoreFrom = -1, newDfName, noCheck = false) {
+    async runCodeNow (force = false, ignoreFrom = -1, newDfName, runCodeAgain = true) {
 
       try {
         var dfName = (this.currentDataset ? this.currentDataset.dfName : undefined) || newDfName;
@@ -3655,27 +3655,25 @@ export default {
         this.lastWrongCode = false;
 
       } catch (err) {
-        if (noCheck) {
+        if (!runCodeAgain) {
           throw err;
         }
-        console.error('Error running code', err);
+        console.error('Error running code, trying again', err);
       }
 
-      if (!noCheck) {
+      if (runCodeAgain) {
         var codeText = await this.codeText();
 
         var code = cellsResult ? cellsResult.originalCode : undefined;
 
         if (codeText !== code) {
           setTimeout(() => {
-            this.runCodeNow(false)
+            this.runCodeNow(false);
           }, 1000);
         }
       }
 
-
       return !this.lastWrongCode;
-
 
     },
 
