@@ -1480,15 +1480,22 @@ export const actions = {
 
     var cellsResult = await dispatch('getCellsResult', { payload: { socketPost }});
 
-    var datasets = getters.secondaryDatasets
+    var datasets = getters.secondaryDatasets;
 
-    var result = await dispatch('evalCode', {socketPost, code: '_output = '+dfName+'.set_buffer("*")'})
+    var response = await dispatch('evalCode', { socketPost, codePayload: { command: 'setBuffer', dfName }});
+
+    if (response.data.status === "error") {
+      console.warn('Loading buffer unsuccessful', dfName);
+      return false
+    }
+
     console.debug('[DEBUG] Loading buffer Done', dfName);
-    return result;
+
+    return true;
 
   },
 
-  getBuffer ({dispatch}, { dfName, socketPost, forcePromise }) {
+  getBuffer ({state, dispatch}, { dfName, socketPost, forcePromise }) {
     var promisePayload = {
       name: 'buffersPromises',
       action: 'loadBuffer',
@@ -1498,7 +1505,13 @@ export const actions = {
       forcePromise
     };
 
-    return dispatch('getPromise', promisePayload);
+    let success = dispatch('getPromise', promisePayload);
+
+    if (!success) {
+      delete buffersPromises[dfName]
+    }
+
+    return success;
   },
 
   async getBufferWindow ({commit, dispatch, state, getters}, {from, to, slug, dfName, socketPost, beforeCodeEval}) {
@@ -1561,15 +1574,18 @@ export const actions = {
         var codePayload = {
           request: {
             type: 'preview',
+            dfName: 'df_preview',
             sample: true,
             buffer: [from, to+1],
-            noBufferWindow,
-            dfName: 'df_preview'
+            noBufferWindow
           }
         };
         response = await dispatch('evalCode',{ socketPost, codePayload })
+        if (!response || !response.data || response.data.status == "error") {
+          throw response;
+        }
       } catch (err) {
-        console.error(err,'Retrying without buffered profiling');
+        console.error(err,'Retrying without dataframe from cache');
         profilePreview = false;
       }
     }
@@ -1582,23 +1598,21 @@ export const actions = {
           type: 'preview',
           dfName: datasetDfName,
           sample: true,
-          noSave: true,
           buffer: [from, to+1],
-          noBufferWindow
+          noBufferWindow,
+          noSave: true
         }
       };
-      try {
-        commit('setProfilePreview', false);
-        response = await dispatch('evalCode',{ socketPost, codePayload })
-      } catch (err) {
-        console.error(err,'Retrying with buffer');
-        await dispatch('getBuffer', { dfName: datasetDfName, socketPost, forcePromise: true });
-        response = await dispatch('evalCode',{ socketPost, codePayload })
-      }
+      commit('setProfilePreview', false);
+      response = await dispatch('evalCode',{ socketPost, codePayload })
     }
 
     if (response.data.status === 'error') {
-      commit('setPreviewInfo', {error: response.data.error})
+      if (state.previewCode) {
+        commit('setPreviewInfo', {error: response.data.error})
+      } else {
+        await dispatch('markCells', { error: true });
+      }
     } else {
       commit('setPreviewInfo', {error: false})
     }

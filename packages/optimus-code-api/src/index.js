@@ -84,6 +84,9 @@ export const codeGenerators = {
       isOutput: true
     }
   },
+  setBuffer: (payload) => {
+    return {code: '_output = '+payload.dfName+'.set_buffer("*")', isOutput: true}
+  },
   toPandas: (payload) => {
     return `.to_optimus_pandas()`;
   },
