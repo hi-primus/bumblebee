@@ -1,7 +1,7 @@
 <template>
   <v-select
     :key="field.key"
-    v-model="_value"
+    :value="value"
     :label="field.label || 'Connection'"
     :placeholder="field.placeholder"
     :items="connectionsItems"
@@ -44,16 +44,37 @@ export default {
 
   computed: {
 
-    ...mapGetters([
-      'connectionsItems'
-    ]),
+    connectionsItems () {
+
+      var items = [];
+      let connections = this.$store.state.connections;
+
+      if (!connections || !connections.length) {
+        var text = !connections ? 'Loading...' : 'No connections found';
+        items = [{ text, disabled: true }];
+      } else {
+        items = connections.map(connection => {
+          var configuration = connection.configuration || {};
+          var type = configuration.type;
+          var url = configuration.url || configuration.endpoint_url || (configuration.host && configuration.port ? `${configuration.host}:${configuration.port}` : false) || configuration.host || 'N/A';
+          return {
+            value: connection.id,
+            text: `${type} - ${url}`
+          }
+        });
+
+        items = [ { text: 'None', value: false }, ...items ]
+      }
+
+      return [...items, { divider: true }];
+    },
 
     _value: {
       get () {
-        return this.value
+        return this.value;
       },
       set (value) {
-        this.$emit('update:value',value)
+        this.$emit('input', value);
       }
     }
   },
@@ -72,16 +93,18 @@ export default {
   methods: {
 
     updateConnections () {
-      return this.$store.dispatch('getConnectionsItems', { include: this.field.include, forcePromise: true });
+      return this.$store.dispatch('updateConnectionsItems', { include: this.field.include, forcePromise: true });
     },
 
-    async connectionEvent (event) {
+    connectionEvent (event) {
+
       this.$emit('showConnections', async (selected)=>{
         await this.updateConnections();
         if (selected) {
-          this._value = selected.id
+          this._value = selected.id;
         }
-      })
+      });
+
     },
 
     debouncedCheckItems: debounce( function (value) {

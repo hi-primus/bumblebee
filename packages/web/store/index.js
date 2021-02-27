@@ -869,7 +869,7 @@ export const actions = {
       enginePayload = response.data.configuration;
 
       if (!enginePayload) {
-        throw new Error("Configuration settings null or undefined " + engineConfigName);
+        throw new Error("Engine settings null or undefined: " + engineConfigName);
       }
 
       commit('mutation', {mutate: 'engineId', payload: id});
@@ -941,9 +941,8 @@ export const actions = {
     return dispatch('getPromise', promisePayload);
   },
 
-  async getConnectionsItems ({ dispatch, getters }, payload) {
+  async updateConnectionsItems ({ dispatch, getters }, payload) {
     await dispatch('getConnections', payload);
-    return getters.connectionsItems;
   },
 
   // cells
@@ -1700,28 +1699,6 @@ properties.forEach((p)=>{
 })
 
 export const getters = {
-  connectionsItems (state) {
-    var items = [];
-    if (!state.connections || !state.connections.length) {
-      var text = (
-          !state.connectionsPromise ||
-          (state.connectionsPromise && !state.connectionsPromise.fulfilled)
-        ) ? 'Loading...' : 'No connections found';
-      items = [{ text, disabled: true }];
-    } else {
-      items = state.connections.map(connection => {
-        var configuration = connection.configuration || {};
-        var type = configuration.type;
-        var url = configuration.url || configuration.endpoint_url || (configuration.host && configuration.port ? `${configuration.host}:${configuration.port}` : false) || configuration.host || 'N/A';
-        return {
-          value: connection.id,
-          text: `${type} - ${url}`
-        }
-      });
-    }
-
-    return [...items, { divider: true }];
-  },
   currentDataset (state) {
     return state.datasets[state.tab]
   },
