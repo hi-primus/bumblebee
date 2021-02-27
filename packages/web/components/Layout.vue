@@ -16,8 +16,10 @@ export default {
     window.intercomSettings = {
       app_id: INTERCOM_APP_ID,
     };
-    window.intercomSettings["vertical_padding"] = 48;
-    window.Intercom("update");
+    setTimeout(() => {
+      window.intercomSettings["vertical_padding"] = 48;
+      window.Intercom("update");
+    }, 150);
   }
 }
 </script>

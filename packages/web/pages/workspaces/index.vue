@@ -106,7 +106,8 @@ export default {
   },
 
   mounted () {
-
+    window.intercomSettings["vertical_padding"] = 48;
+    window.Intercom("update");
   },
 
 	methods: {
