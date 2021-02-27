@@ -70,7 +70,6 @@ module.exports = {
 
 	plugins: [
 		{ src: '@/plugins/konva.js', mode: 'client' },
-		{ src: '@/plugins/intercom.js', mode: 'client' },
 		{ src: '@/plugins/persistedstate.js' },
 		'@/plugins/draggable.js',
 		'@/plugins/components.js',
