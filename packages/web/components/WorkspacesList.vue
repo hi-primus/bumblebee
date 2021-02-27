@@ -21,7 +21,7 @@
       Workspaces
       <v-spacer></v-spacer>
       <v-form
-        style="float: right; margin-top: -4px; margin-bottom: -4px; margin-right: -12px;"
+        style="float: right; margin-top: -4px; margin-bottom: -4px; margin-right: -6px;"
         @submit.prevent="createNewElement({name: createName})">
         <v-text-field
           v-model="createName"
