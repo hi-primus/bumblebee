@@ -290,8 +290,6 @@ export default {
     } catch (err) {
       console.error(err);
     }
-    window.intercomSettings["vertical_padding"] = 48;
-    window.Intercom("update")
   },
 
 	computed: {
