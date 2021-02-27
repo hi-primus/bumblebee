@@ -74,7 +74,6 @@ export class AppGateway
         if (!connectionCommand) {
           let connection = await this.connectionService.getOne(connectionId, user, !isResult, true);
 
-          let varName;
           connectionCommand = {
             ...(connection.configuration as any),
             _id: connectionId,
@@ -89,7 +88,6 @@ export class AppGateway
             connectionCommand.command = 'createConnection',
             connectionIndex++;
           }
-
 
           connections[connectionId] = connectionCommand;
         }
@@ -145,20 +143,23 @@ export class AppGateway
 
 
     const sessionId = payload.username + '_BBSESSION_' + payload.workspace;
-    let result;
+    let result: any = {};
+
     try {
       const initPayload = await initializeKernel(sessionId, payload);
       result = initPayload.result;
       // console.log('[INITIALIZATION RESULT]', initPayload.result);
     } catch (err) {
-      result = err;
-      console.error('[INITIALIZATION ERROR]', err);
+
+      console.error(err);
+      result.error = err.toString();
       result.status = 'error';
+
     }
-    const code = kernelRoutines.init(payload, true);
+    const resultCode = kernelRoutines.init(payload, true);
     client.emit('reply', {
       data: result,
-      code,
+      code: resultCode,
       timestamp: payload.timestamp,
     });
 
@@ -189,24 +190,41 @@ export class AppGateway
   @SubscribeMessage('run')
 	async handleRun(client: Socket, payload): Promise<any> {
 
-    let execCode: string;
-    let resultCode: string;
-    if (payload.codePayload) {
-      let user = this.users[client.id];
-      let execCodePayload: any = await this.prepareCodePayload(payload.codePayload, false, user);
-      let resultCodePayload: any = await this.prepareCodePayload(payload.codePayload, true, user);
-      execCode = generateCode(execCodePayload, {}, false, true); // TO-DO: acceptStrings parameter depends on user permissions
-      resultCode = generateCode(resultCodePayload, {}, false, true);
-
-    } else {
-      execCode = payload.code;
-      resultCode = payload.code;
-    }
     const sessionId = payload.username + '_BBSESSION_' + payload.workspace;
-    if (!execCode.includes("_output = ")) {
-      execCode += '\n' + `_output = 'ok'`;
+    let result: any = {};
+    let resultCode: string = "";
+
+    try {
+      let execCode: string;
+
+      if (payload.codePayload) {
+        let user = this.users[client.id];
+
+        let resultCodePayload: any = await this.prepareCodePayload(payload.codePayload, true, user);
+        resultCode = generateCode(resultCodePayload, {}, false, true);
+
+        let execCodePayload: any = await this.prepareCodePayload(payload.codePayload, false, user);
+        execCode = generateCode(execCodePayload, {}, false, true); // TO-DO: acceptStrings parameter depends on user permissions
+
+      } else {
+        execCode = payload.code;
+        resultCode = payload.code;
+      }
+
+      if (!execCode.includes("_output = ")) {
+        execCode += '\n' + `_output = 'ok'`;
+      }
+
+      result = await runCode(execCode, sessionId);
+
+    } catch (err) {
+
+      console.error(err);
+      result.error = err.toString();
+      result.status = 'error';console.log(result)
+
     }
-    const result = await runCode(execCode, sessionId);
+
     client.emit('reply', {
       data: result,
       code: resultCode,

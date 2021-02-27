@@ -302,7 +302,7 @@ export const escapeQuotesOn = (payload = {}, keys = []) => {
 export const printError = (payload) => {
 
   var data = payload.data || payload
-  var content = data.errorValue || data.content
+  var content = data.content
 
   if (data.traceback && data.traceback.length) {
     console.error('[DEBUG][ERROR][TRACEBACK]\n',data.traceback.join('\n'))

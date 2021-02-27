@@ -14,6 +14,10 @@ export class ConnectionService {
 
   private returnConnection(item: Connection, privateValues = false, placeholderValues = false): Connection {
 
+    if (!item) {
+      throw new Error('Connection not found or deleted');
+    }
+
     let configuration = item.configuration;
 
     if (!privateValues && configuration) {
