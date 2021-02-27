@@ -1052,12 +1052,12 @@ export default {
             value = Math.max(value, this.previewRowsCount)
           }
         }
-        if (value<=0) {
+        if (value<=0 && this.currentDataset && this.currentDataset.summary && this.currentDataset.summary.rows_count) {
           value = this.currentDataset.summary.rows_count
         }
       } catch (error) {
-        console.error('rowsCount',error)
-        value = this.currentDataset.summary.rows_count || 0
+        console.error('rowsCount',error);
+        value = 0;
       }
       return value
 
