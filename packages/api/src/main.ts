@@ -1,6 +1,7 @@
 import { NestFactory } from "@nestjs/core";
 import { SwaggerModule, DocumentBuilder } from "@nestjs/swagger";
 import { AppModule } from "./app.module";
+import { json, urlencoded } from 'express'
 import axios from "axios";
 
 async function bootstrap() {
@@ -18,6 +19,8 @@ async function bootstrap() {
   app.enableCors({
     origin: allowOrigin.length > 0 ? allowOrigin : "*",
   });
+  app.use(json({ limit: '50mb' }));
+  app.use(urlencoded({ extended: true, limit: '50mb' }));
 
   const document = SwaggerModule.createDocument(app, options);
   SwaggerModule.setup("api", app, document);
