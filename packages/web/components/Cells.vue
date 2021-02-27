@@ -1594,7 +1594,7 @@ export default {
                 trim: 'Trim white spaces',
                 lower: 'Convert to lowercase',
                 upper: 'Convert to uppercase',
-                remove_accents: 'Remove accents',
+                normalize_chars: 'Remove accents',
                 remove_special_chars: 'Remove special chars'
               }[c.command]
             },
@@ -1613,7 +1613,7 @@ export default {
               trim: 'Trim white spaces in',
               lower: 'Lowercase',
               upper: 'Uppercase',
-              remove_accents: 'Remove accents in',
+              normalize_chars: 'Remove accents in',
               remove_special_chars: 'Remove special chars in'
             }
             return `<b>${str[payload.command]}</b> ${multipleContent([payload.columns],'hl--cols')}`

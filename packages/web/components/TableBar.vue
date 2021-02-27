@@ -563,7 +563,7 @@ export default {
 				{command: 'lower', text: 'To lower case', type: 'STRING', group: 'STRING'},
 				{command: 'upper', text: 'To upper case', type: 'STRING', group: 'STRING'},
         {command: 'proper', text: 'Proper', type: 'STRING', group: 'STRING' },
-				{command: 'remove_accents', text: 'Remove accents', type: 'STRING', group: 'STRING'},
+				{command: 'normalize_chars', text: 'Remove accents', type: 'STRING', group: 'STRING'},
 				{command: 'remove_special_chars', text: 'Remove special chars', type: 'STRING', group: 'STRING'},
         {command: 'extract', text: 'Extract', group: 'STRING'},
         {divider: true, group: 'STRING'},
