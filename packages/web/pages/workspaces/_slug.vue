@@ -191,6 +191,7 @@
               <span
                 v-if="loadingStatus"
               >
+                <v-progress-circular indeterminate color="grey" style="margin-top: -3px; margin-right: 14px;" size="16" width="2" />
                 {{loadingStatus!==true ? loadingStatus : 'Updating'}}
               </span>
               <span />
