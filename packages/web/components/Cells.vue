@@ -3668,7 +3668,7 @@ export default {
 
         if (codeText !== code) {
           setTimeout(() => {
-            this.runCodeNow(false);
+            this.runCodeNow(false, ignoreFrom, newDfName, false);
           }, 1000);
         }
       }
