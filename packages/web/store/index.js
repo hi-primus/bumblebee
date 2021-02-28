@@ -872,13 +872,12 @@ export const actions = {
         throw new Error("Engine settings null or undefined: " + engineConfigName);
       }
 
-      commit('mutation', {mutate: 'engineId', payload: id});
+      commit('mutation', { mutate: 'engineId', payload: id });
       commit('mutation', { mutate: 'engineConfigName', payload: engineConfigName });
       commit('mutation', { mutate: 'localEngineParameters', payload: enginePayload });
 
     } catch (err) {
-      console.warn(`Error requesting engine item ${id} for ${workspaceSlug}. Using default settings.`);
-      console.error(err);
+      console.warn(`Error requesting engine item ${id} for ${workspaceSlug}. Using default settings.\n${err}`);
     }
 
     return enginePayload || state.localEngineParameters || {};
