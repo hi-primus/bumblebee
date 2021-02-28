@@ -39,7 +39,7 @@ export const payloadPreparers = {
 }
 
 export const codeGenerators = {
-  profile: (payload) => ({ code: `_output = ${payload.dfName}.profile(columns="*")`, isOutput: true }),
+  profile: (payload) => ({ code: `_output = ${payload.dfName}.execute().profile(columns="*")`, isOutput: true }),
   uploadToS3: (payload) => {
     let code = `${payload.dfName}.save.${payload.file_type}( filename="s3://${payload.bucket}/${payload.username}/${payload.file_name}.${payload.file_type}", storage_options={ "key": "${payload.access_key_id}", "secret": "${payload.secret_key}", "client_kwargs": { "endpoint_url": "https://${payload.endpoint}", }, "config_kwargs": {"s3": {"addressing_style": "virtual", "x-amz-acl": "public/read"}} } );`;
 
@@ -991,7 +991,7 @@ export const generateCode = function(commands = [], _request = { type: 'processi
             code += '\n'+`_output.update({ 'sample': ${saving}.columns_sample("*") })`
           }
           if (request.profile) {
-            code += '\n'+`_output.update({ 'profile': ${saving}.profile(columns=${preparedColumns(request.profile)}) })`;
+            code += '\n'+`_output.update({ 'profile': ${saving}.execute().profile(columns=${preparedColumns(request.profile)}) })`;
           }
           if (request.matches_count) {
             code += '\n'+`_output.update({ 'matches_count': ${saving}.rows.select("__match__").rows.count() })`
