@@ -339,7 +339,7 @@ export default {
   },
 
   mounted () {
-    this.getPatterns()
+
   },
 
   methods: {
@@ -409,12 +409,22 @@ export default {
       immediate: true,
       handler (value) {
         if (value) {
-          this.expanded = true
+          this.expanded = true;
         }
       }
     },
+
+    expanded: {
+      immediate: true,
+      handler (expanded) {
+        if (expanded) {
+          this.getPatterns();
+        }
+      }
+    },
+
     patternsResolution () {
-      this.getPatterns()
+      this.getPatterns();
     }
   }
 }
