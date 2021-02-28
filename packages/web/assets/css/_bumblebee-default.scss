@@ -353,7 +353,7 @@ table.table thead td:not(:nth-child(1)), table.table tbody td:not(:nth-child(1))
       cursor: initial;
     }
     &.min-bar {
-      min-width: 1em;
+      min-width: 1.5em;
     }
     &.rounded {
       border-radius: 0.5em;
