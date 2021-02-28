@@ -2175,8 +2175,12 @@ export default {
         replace: {
           dialog: {
             text: (command) => {
-              return `Replace "${command.search}" by "${command.replace}"`
-              + (command.columns.length==1 ? ` in ${command.columns[0]}` : '')
+              let search = command._search_by_string ? `"${command.search}"` : command.search;
+              let replace = command._replace_by_string ? `"${command.replace}"` : command.replace;
+
+              replace = replace ? replace : "None";
+
+              return `Replace ${search} by ${replace}` + (command.columns.length==1 ? ` in ${command.columns[0]}` : '');
             },
             fields: [
               {
@@ -2201,8 +2205,26 @@ export default {
                 label: 'Search by',
                 items: [
                   {text: 'Characters', value: 'chars'},
-                  {text: 'Words', value: 'words'}
-                ]
+                  {text: 'Words', value: 'words'},
+                  {text: 'Full', value: 'full'}
+                ],
+                onChange: (event, c) => {
+                  if (c.search_by !== "full" && !c._replace_by_string) {
+                    c._replace_by_string = true
+                  }
+                  return c;
+                }
+              },
+              {
+                type: 'switch',
+                key: '_search_by_string',
+                label: (c)=>'Search by string: ' + (c._search_by_string ? 'Yes' : 'No')
+              },
+              {
+                type: 'switch',
+                key: '_replace_by_string',
+                label: (c)=>'Replace by string: ' + (c._replace_by_string ? 'Yes' : 'No'),
+                condition: (c)=>c.search_by == "full",
               },
             ],
             output_cols: true,
@@ -2222,6 +2244,8 @@ export default {
             output_cols: columns.map(e=>e),
             match_case: false,
             title: 'Replace in ' + (columns.length==1 ? `column` : 'columns'),
+            _replace_by_string: true,
+            _search_by_string: true,
             preview: {
               type: 'replace',
               highlightColor: {default: 'red', preview: 'green'}
