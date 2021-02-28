@@ -1210,10 +1210,12 @@ export default {
 
     deleteAllPreviews () {
       var columnValues = {};
-      this.currentDataset.columns.forEach(column => {
-        columnValues[ column.name ] = this.columnValues[ column.name ];
-      });
-      this.columnValues = columnValues;
+      if (this.currentDataset && this.currentDataset.columns && this.currentDataset.columns.length) {
+        this.currentDataset.columns.forEach(column => {
+          columnValues[ column.name ] = this.columnValues[ column.name ];
+        });
+        this.columnValues = columnValues;
+      }
     },
 
     expandCell (cellElement) {
