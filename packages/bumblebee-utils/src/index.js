@@ -796,7 +796,7 @@ export const INIT_PARAMS = {
   // },
   'memory_limit': {
     type: 'string',
-    default: '1G',
+    default: '4 GB',
     noForm: true,
     engines: ['dask', 'dask_cudf', 'pandas', 'cudf']
   },
