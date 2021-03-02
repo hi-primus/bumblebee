@@ -22,16 +22,17 @@ export default {
 
     window.timestamps = window.timestamps || 0;
 
-    window.evalCode = async (code, usePyodide) => {
+    window.evalCode = async (code, isAsync = false, usePyodide = false) => {
       var result;
       if (usePyodide) {
         console.debug('[PYODIDE] Requesting')
         await this.assertPyodide()
         result = pyodide.runPython(code)
       } else {
-        result = await this.evalCode(code);
+        result = await this.evalCode(code, isAsync);
       }
       console.debug('[DEBUG]',result);
+      return result
     }
     window.pushCode = async (cd) => {
       var code = deepCopy(cd);
@@ -174,7 +175,7 @@ export default {
 
     },
 
-    evalCode (_code) {
+    evalCode (_code, isAsync = false) {
       var code = undefined;
       var codePayload = undefined;
       if (typeof _code === 'string') {
@@ -184,6 +185,7 @@ export default {
       }
       return this.$store.dispatch('evalCode', {
         socketPost: this.socketPost,
+        isAsync,
         code,
         codePayload
       })
@@ -199,7 +201,11 @@ export default {
 
       return new Promise( async (resolve, reject) => {
 
-        window.promises[timestamp] = {resolve, reject}
+        if (payload.isAsync) {
+          window.promises[timestamp] = {resolve, reject, isAsync: true}
+        } else {
+          window.promises[timestamp] = {resolve, reject}
+        }
 
         var socket = await window.socket();
 
@@ -380,18 +386,46 @@ export default {
           });
 
           socket.on('reply', (payload) => {
+
+            let key;
+
+            if (payload.data && payload.data.key && window.promises[payload.data.key] && window.promises[payload.data.key].isAsync) {
+              key = payload.data.key;
+            }
+
             if (payload.timestamp && window.promises[payload.timestamp]) {
-              if (payload.error) {
-                window.promises[payload.timestamp].reject(payload);
-              }
-              else {
+              key = payload.timestamp
+            }
+
+            if (!key) {
+              console.warn('Wrong timestamp reply', payload.timestamp, key);
+            }
+
+            if (payload.error || payload.status == "error" || (payload.data && payload.data.status == "error")) {
+
+              window.promises[key].reject(payload);
+              delete window.promises[key];
+
+            } else {
+
+              if (window.promises[key].isAsync) {
+
+                if (payload.data.status == "finished") {
+                  window.promises[key].resolve(payload);
+                  delete window.promises[key];
+                } else if (payload.data.status == "pending"){
+                  if (key !== payload.data.key) {
+                    window.promises[payload.data.key] = window.promises[key]
+                    delete window.promises[key]
+                  }
+                }
+
+              } else {
                 window.promises[payload.timestamp].resolve(payload);
+                delete window.promises[payload.timestamp];
               }
-              delete window.promises[payload.timestamp];
             }
-            else {
-              console.warn('Wrong timestamp reply',payload.timestamp,payload);
-            }
+
           });
 
           socket.on('connect', () => {

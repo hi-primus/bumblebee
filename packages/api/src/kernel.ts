@@ -3,6 +3,8 @@ import axios from 'axios';
 import { v1 as uuidv1 } from 'uuid';
 import kernelRoutines from './kernel-routines.js';
 
+import { handleResponse } from 'bumblebee-utils'
+
 const kernels = [];
 
 let kernel_addresses;
@@ -150,7 +152,9 @@ const assertSession = async function (
 	}
 };
 
-export const requestToKernel = async function (type, sessionId, payload, optimus = true) {
+export const requestToKernel = async function (type, sessionId, payload, optimus = true, asyncCallback = false) {
+
+  kernels[sessionId] = kernels[sessionId] || {};
 
   var kernelAddress : any = kernels[sessionId].kernel_address;
 
@@ -180,6 +184,9 @@ export const requestToKernel = async function (type, sessionId, payload, optimus
     case 'code':
       code = kernelRoutines.code(payload);
       break;
+    case 'asyncCode':
+      code = kernelRoutines.asyncCode(payload);
+      break;
     default:
       code = kernelRoutines[type](payload);
       break;
@@ -208,19 +215,13 @@ export const requestToKernel = async function (type, sessionId, payload, optimus
 
 	const response = await new Promise((resolve, reject) => {
 		kernels[sessionId].promises[msg_id] = { resolve, reject };
-		kernels[sessionId].connection.sendUTF(JSON.stringify(codeMsg));
+    if (asyncCallback) {
+      kernels[sessionId].promises[msg_id].resolveAsync = asyncCallback;
+    }
+    kernels[sessionId].connection.sendUTF(JSON.stringify(codeMsg));
 	});
 
 	let responseHandled = handleResponse(response);
-
-	if (responseHandled?.traceback?.map) {
-		responseHandled.traceback = responseHandled.traceback.map((l) =>
-			l.replace(
-				/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g,
-				'',
-			),
-		);
-	}
 
 	const endTime = new Date().getTime();
 
@@ -233,7 +234,7 @@ export const requestToKernel = async function (type, sessionId, payload, optimus
 	return responseHandled;
 };
 
-export const runCode = async function (code = '', sessionId = '') {
+export const runCode = async function (code = '', sessionId = '', asyncCallback = false) {
 	if (!sessionId) {
 		return {
 			error: {
@@ -250,7 +251,13 @@ export const runCode = async function (code = '', sessionId = '') {
 			await createKernel(sessionId);
 		}
 
-		const response = await requestToKernel('code', sessionId, code);
+    let response;
+
+    if (asyncCallback) {
+      response = await requestToKernel('asyncCode', sessionId, code, true, asyncCallback);
+    } else {
+      response = await requestToKernel('code', sessionId, code);
+    }
 
 		if (response?.status === 'error') {
 			throw response;
@@ -277,7 +284,10 @@ export const runCode = async function (code = '', sessionId = '') {
 };
 
 export const createConnection = async function (sessionId) {
-	const ka = kernels[sessionId].kernel_address || 0;
+
+  kernels[sessionId] = kernels[sessionId] || {};
+
+  const ka = kernels[sessionId].kernel_address || 0;
 
 	if (!kernels[sessionId].connecting) {
 		kernels[sessionId].connecting = new Promise((resolve, reject) => {
@@ -294,20 +304,23 @@ export const createConnection = async function (sessionId) {
 				`${wsKernelBase(ka)}/api/kernels/${kernels[sessionId].id}/channels`,
 			);
 			kernels[sessionId].client.on('connect', function (connection) {
-				// kernels[sessionId] = kernels[sessionId] || {}
+				// kernels[sessionId] = kernels[sessionId] || {};
         kernels[sessionId].connection = connection;
+
         kernels[sessionId].connection.on('close', function (message) {
           Object.values(kernels[sessionId].promises || {}).forEach((promise: any)=>{
             promise.reject('Socket closed '+message);
           })
           kernels[sessionId] = {};
         })
+
         kernels[sessionId].connection.on('error', function (message) {
           Object.values(kernels[sessionId].promises || {}).forEach((promise: any)=>{
             promise.reject('Socket error '+message);
           })
           kernels[sessionId] = {};
         })
+
 				kernels[sessionId].connection.on('message', function (message) {
 					try {
 
@@ -318,7 +331,7 @@ export const createConnection = async function (sessionId) {
               response = JSON.parse(message.utf8Data);
               msg_id = response.parent_header.msg_id;
               var result;
-              if (response.msg_type === 'execute_result') {
+              if (['execute_result', 'display_data'].includes(response.msg_type)) {
                 result = response.content.data['text/plain'];
               } else if (response.msg_type === 'error') {
                 console.error('msg_type error on', sessionId);
@@ -339,26 +352,41 @@ export const createConnection = async function (sessionId) {
             }
 
 						if (!kernels[sessionId]) {
+
               console.log('Unresolved result (no kernel)', sessionId);
 							throw new Error('Message received without kernel session');
+
 						} else if (!kernels[sessionId].promises) {
+
               console.log('Unresolved result (no promise pool)', sessionId);
 							throw new Error('Message received without promises pool');
+
             } else if (!kernels[sessionId].promises[msg_id]) {
+
               if (response.msg_type === 'execute_result') {
                 console.log('Unresolved result (wrong msg_id)', msg_id, sessionId);
                 throw new Error('Message received for unexecpected promise');
               }
+
             } else if (['execute_result', 'error'].includes(response.msg_type)) {
+
               kernels[sessionId].promises[msg_id].resolve(result);
+
+            } else if (response.msg_type == 'display_data' && kernels[sessionId].promises[msg_id].resolveAsync){
+
+              kernels[sessionId].promises[msg_id].resolveAsync(result)
+
             }
 
 					} catch (err) {
 						console.error(err.message);
 					}
 				});
+
 				console.log('Connection created', sessionId);
+
 				resolve(kernels[sessionId].connection);
+
 			});
 			kernels[sessionId].client.on('connectFailed', function (error) {
 				kernels[sessionId].connection = false;
@@ -476,40 +504,6 @@ export const deleteEveryKernel = async function () {
 		}
 	} catch (err) {
 		console.error('Error on Kernels deleting');
-	}
-};
-
-const handleResponse = function (response) {
-	try {
-		if (
-			typeof response === 'object' &&
-			!response['text/plain'] &&
-			response['status']
-		) {
-			return response;
-		} else if (typeof response === 'object' && response['text/plain']) {
-			response = response['text/plain'];
-		}
-
-		if (typeof response !== 'string') {
-			throw response;
-		}
-
-		const bracketIndex = response.indexOf('{');
-
-		if (bracketIndex < 0) {
-			throw { message: 'Invalid response format', response };
-		}
-
-		response = response.substr(bracketIndex);
-		response = trimCharacters(response, "'");
-		response = response.replace(/\bNaN\b/g, null);
-		response = response.replace(/\\+\'/g, "'");
-		response = response.replace(/\\\\"/g, '\\"');
-		return JSON.parse(response);
-	} catch (error) {
-		console.error(error.toString());
-		return JSON.parse(response);
 	}
 };
 

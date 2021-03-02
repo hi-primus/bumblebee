@@ -14,7 +14,12 @@ if _use_time:
     res.update({'_gatewayTime': {'start': _start_time, 'end': _end_time, 'duration': _end_time-_start_time}})
 `;
 
-const OUTPUT_JSON = `json.dumps(res,  default=json_converter, ensure_ascii=False)`
+const output_json = (res = 'res') => `json.dumps(${res},  default=json_converter, ensure_ascii=False)`
+
+const INIT_JSON = `
+import json
+from optimus.helpers.json import json_converter
+`
 
 const code = (code = '') => `
 
@@ -22,10 +27,22 @@ ${TIME_START}
 ${code}
 res = {'result': _output}
 ${TIME_END}
-${OUTPUT_JSON}
+${output_json('res')}
+`;
+
+const asyncCode = (code = '') => `
+
+${TIME_START}
+${code}
+_output.add_done_callback(_out_result)
+res = {'result': None, 'status': _output.status, 'key': _output.key }
+${TIME_END}
+${output_json('res')}
 `;
 
 const features = (payload) => `
+
+${INIT_JSON}
 
 ${TIME_START}
 
@@ -69,7 +86,7 @@ except:
 
 ${TIME_END}
 
-${OUTPUT_JSON}
+${output_json('res')}
 `;
 
 const getParams = payload => {
@@ -104,16 +121,26 @@ const init = (payload, min = false) => {
   }
 
   return `
+${INIT_JSON}
+
+def _out_result(fut):
+    _res = {'key': fut.key, 'status': fut.status}
+    if fut.status == "error":
+        _res.update({'error': fut.exception()})
+    elif fut.status == "finished":
+        _res.update({'result': fut.result()})
+    display(${output_json('_res')})
+
+# optimus parser
+
 reset = ${(params?.reset != '0') ? 'True' : 'False'}
 
 try:
-    json; date; datetime; json_converter;
+    date; datetime;
     assert (not reset)
 except Exception:
     reset = True
     from datetime import datetime, date
-    import json
-    from optimus.helpers.json import json_converter
 
 ${TIME_START}
 
@@ -143,8 +170,8 @@ res.update({"cluster_name": getattr(op, "cluster_name", None)});
 op_engine = getattr(op, 'engine', None)
 res.update({'optimus': 'ok init', 'optimus_version': getattr(op, '__version__', None), 'engine': op_engine});
 ${TIME_END}
-${OUTPUT_JSON}
+${output_json('res')}
 `;
 }
 
-export default { init, features, code };
+export default { init, features, code, asyncCode };

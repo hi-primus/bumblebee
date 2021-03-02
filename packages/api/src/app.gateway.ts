@@ -18,6 +18,7 @@ import {
 } from './kernel';
 import kernelRoutines from './kernel-routines';
 import { getGenerator, generateCode, preparePayload } from 'optimus-code-api'
+import { handleResponse } from 'bumblebee-utils'
 
 import { ConnectionService } from "./connection/connection.service";
 import { GetUser } from './auth/dto/get-user.decorator.dto';
@@ -173,6 +174,7 @@ export class AppGateway
     try {
       result = await requestToKernel('features', sessionId, null, false);
     } catch (err) {
+      console.error(err)
       result = {
         status: 'error',
         error: 'Features info error',
@@ -215,13 +217,28 @@ export class AppGateway
         execCode += '\n' + `_output = 'ok'`;
       }
 
-      result = await runCode(execCode, sessionId);
+      let asyncCallback = undefined;
+
+      if (payload.isAsync) {
+        asyncCallback = (response) => {
+          console.log('asyncCallback', response);
+          result = handleResponse(response);
+          client.emit('reply', {
+            data: result,
+            code: resultCode,
+            timestamp: payload.timestamp,
+            finalResult: true
+          });
+        }
+      }
+
+      result = await runCode(execCode, sessionId, asyncCallback);
 
     } catch (err) {
 
       console.error(err);
       result.error = err.toString();
-      result.status = 'error';console.log(result)
+      result.status = 'error';
 
     }
 

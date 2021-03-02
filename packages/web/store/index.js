@@ -512,7 +512,7 @@ export const actions = {
     await dispatch('session/serverInit')
   },
 
-  async evalCode({ dispatch, state, getters }, { code, codePayload, socketPost }) {
+  async evalCode({ dispatch, state, getters }, { code, codePayload, isAsync, socketPost }) {
     try {
 
       if (!process.client) {
@@ -524,6 +524,7 @@ export const actions = {
       var response = await socketPost('run', {
         code,
         codePayload,
+        isAsync,
         username: await dispatch('session/getUsername'),
         workspace: state.workspaceSlug || 'default'
       }, {

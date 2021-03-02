@@ -299,6 +299,54 @@ export const escapeQuotesOn = (payload = {}, keys = []) => {
   return {...payload, ..._payload}
 }
 
+export const handleResponse = (response) => {
+  let parsedResponse;
+	try {
+		if (
+			typeof response === 'object' &&
+			!response['text/plain'] &&
+			response['status']
+		) {
+			parsedResponse = response;
+		} else {
+      if (typeof response === 'object' && response['text/plain']) {
+        response = response['text/plain'];
+      }
+
+      if (typeof response !== 'string') {
+        throw response;
+      }
+
+      const bracketIndex = response.indexOf('{');
+
+      if (bracketIndex < 0) {
+        throw { message: 'Invalid response format', response };
+      }
+
+      response = response.substr(bracketIndex);
+      response = trimCharacters(response, "'");
+      response = response.replace(/\bNaN\b/g, null);
+      response = response.replace(/\\+\'/g, "'");
+      response = response.replace(/\\\\"/g, '\\"');
+      parsedResponse = JSON.parse(response);
+    }
+	} catch (error) {
+		console.error(error.toString());
+		parsedResponse = JSON.parse(response);
+	}
+
+  if (parsedResponse && parsedResponse.traceback && parsedResponse.traceback.map) {
+		parsedResponse.traceback = parsedResponse.traceback.map((l) =>
+			l.replace(
+				/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g,
+				'',
+			),
+		);
+	}
+
+  return parsedResponse;
+};
+
 export const printError = (payload) => {
 
   var data = payload.data || payload
@@ -1144,6 +1192,7 @@ export default {
   preparedColumns,
   columnsHint,
   escapeQuotesOn,
+  handleResponse,
   printError,
   getProperty,
   getPropertyAsync,
