@@ -33,6 +33,7 @@ export default {
             placeholder: field.default,
             label: field.name || nameify(key),
             ...(field.type === 'int' && !field.items ? {type: 'number'} : {}),
+            ...(field.private && !field.items ? {type: 'password'} : {}),
             ...(field.items ? { items: Object.entries(field.items).map(([value, text])=>({ text, value })) } : {})
           },
           ...( field.engines ? { condition: (values) => field.engines.includes(values.engine) } : {} )

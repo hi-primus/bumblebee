@@ -57,6 +57,22 @@
                 hide-details
               ></v-checkbox>
               <component
+                v-else-if="field.props && field.props.type == 'password'"
+                :is="field.is || 'v-text-field'"
+                :key="index"
+                v-model="values[field.key]"
+                ref="formInput"
+                outlined
+                dense
+                v-bind="field.props"
+                :placeholder="getProperty(field.props.placeholder, [values])"
+                hide-details
+                :class="{'pt-4': index!==0}"
+                :type="show[field.key] ? 'text' : 'password'"
+                :append-icon="show[field.key] ? 'mdi-eye' : 'mdi-eye-off'"
+                @click:append="$set(show, field.key, !show[field.key])"
+              />
+              <component
                 v-else
                 :is="field.is || 'v-text-field'"
                 :key="index"
@@ -110,6 +126,7 @@ export default {
 
   data () {
     return {
+      show: {},
       promise: false,
       form: {},
       values: {}

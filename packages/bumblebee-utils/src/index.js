@@ -656,13 +656,8 @@ export const INIT_PARAMS = {
   // },
   'coiled_token': {
     type: 'string',
+    private: true,
     name: 'Coiled token',
-    engines: ['dask_coiled', 'dask_cudf_coiled']
-  },
-  'use_gpu': {
-    type: 'boolean',
-    name: 'Use GPU',
-    noCode: true,
     engines: ['dask_coiled', 'dask_cudf_coiled']
   },
   'name': {
