@@ -1283,7 +1283,7 @@ export default {
                 type: 'join',
                 delay: 500,
                 datasetPreview: true,
-                // noBufferWindow: true
+                noBufferWindow: true
               },
               request: {
                 // createsNew: true
@@ -1292,7 +1292,7 @@ export default {
           },
           onInit: async (currentCommand) => {
 
-            var command = { ...currentCommand };
+            var command = deepCopy(currentCommand);
 
             var dfNames = Object.keys(command.secondaryDatasets);
 
@@ -1313,14 +1313,14 @@ export default {
 
           beforeExecuteCode: async (currentCommand) => {
 
-            var command = { ...currentCommand };
+            var command = deepCopy(currentCommand);
 
             var dfNames = Object.keys(command.secondaryDatasets);
 
             for (let i = 0; i < dfNames.length; i++) {
               var dfName = dfNames[i];
               command.secondaryDatasets[dfName].columns = await this.datasetColumns(dfName);
-              command.secondaryDatasets[dfName].buffer = await this.datasetBuffer(dfName);
+              // command.secondaryDatasets[dfName].buffer = await this.datasetBuffer(dfName);
             }
 
             return command;
@@ -1465,7 +1465,7 @@ export default {
           onInit: async (currentCommand) => {
             try {
 
-              var command = { ...currentCommand };
+              var command = deepCopy(currentCommand);
 
               var dfNames = Object.keys(command.secondaryDatasets);
 
@@ -1474,7 +1474,7 @@ export default {
                 command.secondaryDatasets[dfName].columns = await this.datasetColumns(dfName);
                 command.secondaryDatasets[dfName].types = await this.datasetTypes(dfName);
                 command.secondaryDatasets[dfName].sample = await this.datasetSample(dfName);
-                command.secondaryDatasets[dfName].buffer = await this.datasetBuffer(dfName);
+                // command.secondaryDatasets[dfName].buffer = await this.datasetBuffer(dfName);
               }
 
 
@@ -3128,10 +3128,9 @@ export default {
 
     restorePreview (restoreColumns) {
       if (restoreColumns) {
+        // Restores everything including previewCode
         this.$store.commit('previewDefault')
-        return
-      }
-      if (this.previewCode) {
+      } else if (this.previewCode) {
         this.$store.commit('setPreviewCode', undefined)
       }
     },

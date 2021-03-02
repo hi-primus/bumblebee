@@ -1617,9 +1617,8 @@ export const actions = {
 
     var sample = response.data.result;
 
-    var pre = forceName ? '__preview__' : ''
-
     if (sample) {
+      var pre = forceName ? '__preview__' : ''
       sample.columns = sample.columns.map(e=>({...e, title: pre+e.title}))
       return {
         code: referenceCode,

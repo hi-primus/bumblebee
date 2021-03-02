@@ -346,18 +346,19 @@ export const codeGenerators = {
 
     if (!['final','processing'].includes(payload.request.type)) {
       return (from, to) => {
-        let window = ''
+        let biggerWindow = `[0:1000]`;
+        let window = '';
         if (from!==undefined) {
-          window = `,${from},${to}`
+          window = `[${from}:${to}]`;
         }
-        return `${filterLeft}.cols.join(${payload.with}.buffer_window("*"${window})${filterRight}`
-        + `, left_on="${payload.left_on}"`
-        + `, right_on="${payload.right_on}", how="${payload.how}")${filterEnd}`
+        return `${biggerWindow}${filterLeft}.cols.join(${payload.with}${biggerWindow}${filterRight}`
+          + `, left_on="${payload.left_on}"`
+          + `, right_on="${payload.right_on}", how="${payload.how}")${window}${filterEnd}`;
       }
     } else {
       return `${filterLeft}.cols.join(${payload.with}${filterRight}`
         + `, left_on="${payload.left_on}"`
-        + `, right_on="${payload.right_on}", how="${payload.how}")${filterEnd}`
+        + `, right_on="${payload.right_on}", how="${payload.how}")${filterEnd}`;
     }
 
   },
@@ -976,7 +977,7 @@ export const generateCode = function(commands = [], _request = { type: 'processi
         }
 
         if (request.createsNew && ['final', 'processing'].includes(request.type)) {
-          code += '\n'+`${saving} = ${saving}.repartition(8)`;
+          code += '\n'+`${saving} = ${saving}.repartition("auto")`;
         }
 
         if ((saving !== '_df_output') && request.isLoad && !request.noExecute && saving && usesVar && ['final', 'processing'].includes(request.type)) {
@@ -1004,7 +1005,7 @@ export const generateCode = function(commands = [], _request = { type: 'processi
             code += '.columns_sample("*")';
           }
           if (request.profile) {
-            code += `.profile(columns=${preparedColumns(request.profile)})`;
+            code += `.execute().profile(columns=${preparedColumns(request.profile)})`;
           }
           if (request.matches_count) {
             code += `.rows.select("__match__").rows.count()`;
