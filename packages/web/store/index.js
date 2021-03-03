@@ -110,7 +110,7 @@ const defaultState = {
   workspacePromise: false,
   cellsPromise: false,
   profilingsPromises: {},
-  buffersPromises: {},
+  executePromises: {},
   listViews: [],
   dataSources: [],
   gettingNewResults: '',
@@ -175,10 +175,6 @@ export const mutations = {
         state[p.name] = false;
       }
     });
-  },
-
-  setBufferPromise (state, { dfName, promise }) {
-    Vue.set(state.buffersPromises, dfName, promise)
   },
 
   ...pSetters,
@@ -282,7 +278,7 @@ export const mutations = {
     console.debug("[BUMBLEBLEE] Setting dataset", dataset);
     Vue.set(state.datasets, tab, dataset);
 
-    Vue.set(state.buffersPromises, dataset.dfName, false);
+    Vue.set(state.executePromises, dataset.dfName, false);
 
     if (!avoidReload) {
       state.datasetSelection[tab] = {}; // {columns: _c} // TO-DO: Remember selection
@@ -374,9 +370,8 @@ export const mutations = {
 
     if (dfName) {
       Vue.delete(state.profilingsPromises, dfName);
-      Vue.delete(state.buffersPromises, dfName);
+      Vue.delete(state.executePromises, dfName);
     }
-
 
     Vue.delete(state.datasets, index);
     Vue.delete(state.datasetSelection, index);
@@ -520,6 +515,10 @@ export const actions = {
       }
 
       var startTime = new Date().getTime()
+
+      if (codePayload && codePayload.request) {
+        isAsync = isAsync || codePayload.request.isAsync;
+      }
 
       var response = await socketPost('run', {
         code,
@@ -707,7 +706,7 @@ export const actions = {
       if (cell && cell.payload && cell.payload.request) {
         cell.payload.request.engine = (state.localEngineParameters || {}).engine || cell.payload.request.engine;
       }
-      cell.code = generateCode(cell);
+      cell.code = generateCode(cell)[0];
       return cell;
     })
 
@@ -1117,7 +1116,7 @@ export const actions = {
       case 'profilings':
         commit('mutation', { mutate: 'profilingsPromises', payload: {} });
       case 'buffers':
-        commit('mutation', { mutate: 'buffersPromises', payload: {} });
+        commit('mutation', { mutate: 'executePromises', payload: {} });
     }
   },
 
@@ -1384,7 +1383,7 @@ export const actions = {
 
       await Vue.nextTick();
 
-      var cellsResult = await dispatch('getCellsResult', { payload: { socketPost, ignoreFrom }});
+      var executeResult = await dispatch('getExecute', { payload: { dfName, socketPost, ignoreFrom }});
 
       var username = await dispatch('session/getUsername');
 
@@ -1396,16 +1395,18 @@ export const actions = {
         }
       }
 
-      if (clearPrevious) {
-        commit('setBufferPromise', { dfName, promise: false });
-      }
+      // get columns
 
-      var response = await dispatch('evalCode', {
+      // let columns = state.datasets[dfName] ? Object.keys(state.datasets[dfName].columns) : [];
+
+      let response = await dispatch('evalCode', {
         socketPost,
         codePayload: {
           request: {
             dfName,
-            profile: true
+            profile: true,
+            isAsync: true,
+            // columns
           }
         }
       });
@@ -1428,9 +1429,12 @@ export const actions = {
 
       console.debug('[DEBUG] Loading profiling Done', dfName);
 
+      commit('kernel', 'done');
+
       return dataset;
 
     } catch (err) {
+
       if (err.code && window.pushCode) {
         window.pushCode({code: err.code, error: true});
       }
@@ -1467,38 +1471,38 @@ export const actions = {
     return dispatch('getPromise', promisePayload);
   },
 
-  async loadBuffer ({ dispatch, commit, getters }, {dfName, socketPost}) {
+  async loadExecute ({ dispatch, commit, getters }, {dfName, socketPost, ignoreFrom}) {
 
-    console.debug('[DEBUG] Loading buffer', dfName);
+    console.debug('[DEBUG] Executing dataset', dfName);
 
     if (!dfName) {
-      throw new Error('Trying to load buffer for undefined Dataframe name');
+      throw new Error('Trying to execute undefined Dataframe');
     }
 
     await Vue.nextTick();
 
-    var cellsResult = await dispatch('getCellsResult', { payload: { socketPost }});
+    var cellsResult = await dispatch('getCellsResult', { payload: { socketPost, ignoreFrom }});
 
     var datasets = getters.secondaryDatasets;
 
-    var response = await dispatch('evalCode', { socketPost, codePayload: { command: 'setBuffer', dfName }});
+    var response = await dispatch('evalCode', { socketPost, codePayload: { command: 'execute', dfName }});
 
     if (response.data.status === "error") {
-      console.warn('Loading buffer unsuccessful', dfName);
+      console.warn('.execute() unsuccessful', dfName);
       return false
     }
 
-    console.debug('[DEBUG] Loading buffer Done', dfName);
+    console.debug('[DEBUG] .execute() Done', dfName);
 
     return true;
 
   },
 
-  getBuffer ({state, dispatch}, { dfName, socketPost, forcePromise }) {
+  getExecute ({state, dispatch}, { dfName, socketPost, ignoreFrom, forcePromise }) {
     var promisePayload = {
-      name: 'buffersPromises',
-      action: 'loadBuffer',
-      payload: { dfName, socketPost },
+      name: 'executePromises',
+      action: 'loadExecute',
+      payload: { dfName, socketPost, ignoreFrom },
       kernel: true,
       index: dfName,
       forcePromise
@@ -1507,7 +1511,7 @@ export const actions = {
     let success = dispatch('getPromise', promisePayload);
 
     if (!success) {
-      delete buffersPromises[dfName]
+      delete executePromises[dfName]
     }
 
     return success;
@@ -1558,7 +1562,7 @@ export const actions = {
 
     var datasetDfName = currentDataset.dfName || dfName;
 
-    await dispatch('getBuffer', { dfName: datasetDfName, socketPost });
+    await dispatch('getExecute', { payload: { dfName: datasetDfName, socketPost }});
 
     if (beforeCodeEval) {
       beforeCodeEval()
@@ -1576,10 +1580,12 @@ export const actions = {
             dfName: 'df_preview',
             sample: true,
             buffer: [from, to+1],
-            noBufferWindow
+            noBufferWindow,
+            // isAsync: true
           }
         };
         response = await dispatch('evalCode',{ socketPost, codePayload })
+        // response = await dispatch('evalCode',{ socketPost, codePayload, isAsync: true })
         if (!response || !response.data || response.data.status == "error") {
           throw response;
         }
@@ -1617,6 +1623,8 @@ export const actions = {
     }
 
     var sample = response.data.result;
+
+    commit('kernel', 'done');
 
     if (sample) {
       var pre = forceName ? '__preview__' : ''
@@ -1742,7 +1750,7 @@ export const getters = {
   currentBuffer (state) {
     try {
       var dfName = state.datasets[state.tab].dfName
-      return state.buffersPromises[dfName]
+      return state.executePromises[dfName]
     } catch (error) {
       return false
     }

@@ -39,7 +39,7 @@ export const payloadPreparers = {
 }
 
 export const codeGenerators = {
-  profile: (payload) => ({ code: `_output = ${payload.dfName}.execute().profile(columns="*")`, isOutput: true }),
+  profile: (payload) => ({ code: `_output = ${payload.dfName}.profile(columns="*")`, isOutput: true }),
   uploadToS3: (payload) => {
     let code = `${payload.dfName}.save.${payload.file_type}( filename="s3://${payload.bucket}/${payload.username}/${payload.file_name}.${payload.file_type}", storage_options={ "key": "${payload.access_key_id}", "secret": "${payload.secret_key}", "client_kwargs": { "endpoint_url": "https://${payload.endpoint}", }, "config_kwargs": {"s3": {"addressing_style": "virtual", "x-amz-acl": "public/read"}} } );`;
 
@@ -86,6 +86,9 @@ export const codeGenerators = {
   },
   setBuffer: (payload) => {
     return {code: '_output = '+payload.dfName+'.set_buffer("*")', isOutput: true}
+  },
+  execute: (payload) => {
+    return {code: `${payload.dfName} = ${payload.dfName}.set_buffer("*")\n_output = "ok"`, isOutput: true}
   },
   toPandas: (payload) => {
     return `.to_optimus_pandas()`;
@@ -849,7 +852,15 @@ export const generateCode = function(commands = [], _request = { type: 'processi
 
   let functionDefinitions = [];
 
-  lines.push(...commands.filter(p=>p).map(_payload => {
+  let isAsync = undefined;
+
+  commands = commands.filter(p=>p);
+
+  if (commands.length > 1) {
+    isAsync = false;
+  }
+
+  lines.push(...commands.map(_payload => {
 
     let customCodePayload;
 
@@ -908,7 +919,7 @@ export const generateCode = function(commands = [], _request = { type: 'processi
       }
 
       if (payload.extraPayload && !extraPayload) {
-        code += generateCode(payload.extraPayload, request, true);
+        code += generateCode(payload.extraPayload, request, true)[0];
       }
 
       if (payload.previousCode) {
@@ -951,8 +962,17 @@ export const generateCode = function(commands = [], _request = { type: 'processi
           }
         }
 
+
         if (!saving) {
-          code += '_output = ';
+          if (request.isAsync && isAsync === undefined && !request.meta) {
+            isAsync = true;
+          }
+
+          if (isAsync) {
+            code += '_output = op.submit(';
+          } else {
+            code += '_output = ';
+          }
         }
 
         let usesVar = generator || (!multiOutput && ( request.buffer || request.profile || request.matches_count ))
@@ -985,6 +1005,7 @@ export const generateCode = function(commands = [], _request = { type: 'processi
         }
 
         if (multiOutput || saving) {
+
           if (anyOutput) {
             code += '\n_output = {}';
           }
@@ -992,26 +1013,44 @@ export const generateCode = function(commands = [], _request = { type: 'processi
             code += '\n'+`_output.update({ 'sample': ${saving}.columns_sample("*") })`
           }
           if (request.profile) {
-            code += '\n'+`_output.update({ 'profile': ${saving}.execute().profile(columns=${preparedColumns(request.profile)}) })`;
+            code += '\n'+`_output.update({ 'profile': ${saving}.profile(columns=${preparedColumns(request.profile)}) })`;
           }
           if (request.matches_count) {
             code += '\n'+`_output.update({ 'matches_count': ${saving}.rows.select("__match__").rows.count() })`
           }
           if (request.meta) {
-            code += '\n'+`_output.update({ "meta": ${saving}.meta })`
+            code += '\n'+`_output.update({ 'meta': ${saving}.meta })`
           }
+
         } else {
-          if (request.sample) {
-            code += '.columns_sample("*")';
-          }
-          if (request.profile) {
-            code += `.execute().profile(columns=${preparedColumns(request.profile)})`;
-          }
-          if (request.matches_count) {
-            code += `.rows.select("__match__").rows.count()`;
-          }
-          if (request.meta) {
-            code += '\n'+`.meta`
+
+          if (isAsync) {
+
+            if (request.sample) {
+              code += '.columns_sample, "*")';
+            }
+            if (request.profile) {
+              code += `.profile, ${preparedColumns(request.profile)})`;
+            }
+            if (request.matches_count) {
+              code += `.rows.select("__match__").rows.count)`;
+            }
+
+          } else {
+
+            if (request.sample) {
+              code += '.columns_sample("*")';
+            }
+            if (request.profile) {
+              code += `.profile(columns=${preparedColumns(request.profile)})`;
+            }
+            if (request.matches_count) {
+              code += `.rows.select("__match__").rows.count()`;
+            }
+            if (request.meta) {
+              code += '\n'+`.meta`
+            }
+
           }
         }
 
@@ -1025,7 +1064,7 @@ export const generateCode = function(commands = [], _request = { type: 'processi
 
   }))
 
-  return lines.join('\n');
+  return [ lines.join('\n'), isAsync ];
 
 }
 

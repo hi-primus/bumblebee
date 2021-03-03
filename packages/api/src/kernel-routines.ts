@@ -35,7 +35,8 @@ const asyncCode = (code = '') => `
 ${TIME_START}
 ${code}
 _output.add_done_callback(_out_result)
-res = {'result': None, 'status': _output.status, 'key': _output.key }
+_result = _output.result() if _output.status == "finished" else None
+res = {'result': _result, 'status': _output.status, 'key': _output.key }
 ${TIME_END}
 ${output_json('res')}
 `;

@@ -819,7 +819,8 @@ export default {
               var pCodePayload = {
                 request: {
                   dfName,
-                  profile: true
+                  profile: true,
+                  isAsync: true
                 }
               }
 

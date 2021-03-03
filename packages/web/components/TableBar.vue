@@ -1175,7 +1175,7 @@ export default {
       +'from optimus.expressions import Parser\n'
       +'p = Parser()\n'
       +`op = Optimus(${engineText})\n`
-      + generateCode(finalPayload);
+      + generateCode(finalPayload)[0];
 
       code = code.trim();
 

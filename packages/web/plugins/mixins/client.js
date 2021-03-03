@@ -120,8 +120,8 @@ export default {
       return this.$store.dispatch('getProfiling', { payload, forcePromise, ignoreFrom });
     },
 
-    datasetBuffer (dfName) {
-      return this.$store.dispatch('getBuffer', { dfName, socketPost: this.socketPost });
+    datasetExecute (dfName) {
+      return this.$store.dispatch('getExecute', { dfName, socketPost: this.socketPost });
     },
 
     async datasetColumns (dfName) {
@@ -399,6 +399,7 @@ export default {
 
             if (!key) {
               console.warn('Wrong timestamp reply', payload.timestamp, key);
+              return null;
             }
 
             if (payload.error || payload.status == "error" || (payload.data && payload.data.status == "error")) {
@@ -410,14 +411,14 @@ export default {
 
               if (window.promises[key].isAsync) {
 
-                if (payload.data.status == "finished") {
-                  window.promises[key].resolve(payload);
-                  delete window.promises[key];
-                } else if (payload.data.status == "pending"){
+                if (payload.data.status == "pending"){
                   if (key !== payload.data.key) {
                     window.promises[payload.data.key] = window.promises[key]
                     delete window.promises[key]
                   }
+                } else {
+                  window.promises[key].resolve(payload);
+                  delete window.promises[key];
                 }
 
               } else {

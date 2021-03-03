@@ -213,7 +213,7 @@ export const requestToKernel = async function (type, sessionId, payload, optimus
 		kernels[sessionId].promises = {};
 	}
 
-	const response = await new Promise((resolve, reject) => {
+	const response: any = await new Promise((resolve, reject) => {
 		kernels[sessionId].promises[msg_id] = { resolve, reject };
     if (asyncCallback) {
       kernels[sessionId].promises[msg_id].resolveAsync = asyncCallback;
@@ -221,17 +221,15 @@ export const requestToKernel = async function (type, sessionId, payload, optimus
     kernels[sessionId].connection.sendUTF(JSON.stringify(codeMsg));
 	});
 
-	let responseHandled = handleResponse(response);
-
 	const endTime = new Date().getTime();
 
-	responseHandled._serverTime = {
+	response._serverTime = {
 		start: startTime / 1000,
 		end: endTime / 1000,
 		duration: (endTime - startTime) / 1000,
 	};
 
-	return responseHandled;
+	return response;
 };
 
 export const runCode = async function (code = '', sessionId = '', asyncCallback = false) {
@@ -324,21 +322,35 @@ export const createConnection = async function (sessionId) {
 				kernels[sessionId].connection.on('message', function (message) {
 					try {
 
-            var response;
+            var message_response;
             var msg_id;
 
             if (message.type === 'utf8') {
-              response = JSON.parse(message.utf8Data);
-              msg_id = response.parent_header.msg_id;
-              var result;
-              if (['execute_result', 'display_data'].includes(response.msg_type)) {
-                result = response.content.data['text/plain'];
-              } else if (response.msg_type === 'error') {
+              message_response = JSON.parse(message.utf8Data);
+              msg_id = message_response.parent_header.msg_id;
+              var response;
+
+              if (['execute_result', 'display_data'].includes(message_response.msg_type)) {
+
+                response = message_response.content.data['text/plain'];
+                response = handleResponse(response);
+
+                let future_key = response?.key;
+
+                if (future_key && kernels[sessionId].promises[future_key]) {
+                  msg_id = future_key;
+                } else if (kernels[sessionId].promises[msg_id].resolveAsync && future_key && future_key !== msg_id) {
+                  kernels[sessionId].promises[future_key] = kernels[sessionId].promises[msg_id];
+                  delete kernels[sessionId].promises[msg_id];
+                  msg_id = future_key;
+                }
+
+              } else if (message_response.msg_type === 'error') {
                 console.error('msg_type error on', sessionId);
-                result = {
-                  ...response.content,
+                response = {
+                  ...message_response.content,
                   status: 'error',
-                  _response: response,
+                  _response: message_response,
                 };
               }
             } else {
@@ -348,33 +360,33 @@ export const createConnection = async function (sessionId) {
                 error: 'Message type error',
                 message: message,
               });
-              result = message;
+              response = message;
             }
 
 						if (!kernels[sessionId]) {
 
-              console.log('Unresolved result (no kernel)', sessionId);
+              console.log('Unresolved response (no kernel)', sessionId);
 							throw new Error('Message received without kernel session');
 
 						} else if (!kernels[sessionId].promises) {
 
-              console.log('Unresolved result (no promise pool)', sessionId);
+              console.log('Unresolved response (no promise pool)', sessionId);
 							throw new Error('Message received without promises pool');
 
             } else if (!kernels[sessionId].promises[msg_id]) {
 
-              if (response.msg_type === 'execute_result') {
-                console.log('Unresolved result (wrong msg_id)', msg_id, sessionId);
+              if (message_response.msg_type === 'execute_result') {
+                console.log('Unresolved response (wrong msg_id)', msg_id, sessionId);
                 throw new Error('Message received for unexecpected promise');
               }
 
-            } else if (['execute_result', 'error'].includes(response.msg_type)) {
+            } else if (['execute_result', 'error'].includes(message_response.msg_type)) {
 
-              kernels[sessionId].promises[msg_id].resolve(result);
+              kernels[sessionId].promises[msg_id].resolve(response);
 
-            } else if (response.msg_type == 'display_data' && kernels[sessionId].promises[msg_id].resolveAsync){
+            } else if (response?.status == "finished" && kernels[sessionId].promises[msg_id].resolveAsync) {
 
-              kernels[sessionId].promises[msg_id].resolveAsync(result)
+              kernels[sessionId].promises[msg_id].resolveAsync(response)
 
             }
 

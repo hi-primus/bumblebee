@@ -18,7 +18,6 @@ import {
 } from './kernel';
 import kernelRoutines from './kernel-routines';
 import { getGenerator, generateCode, preparePayload } from 'optimus-code-api'
-import { handleResponse } from 'bumblebee-utils'
 
 import { ConnectionService } from "./connection/connection.service";
 import { GetUser } from './auth/dto/get-user.decorator.dto';
@@ -199,14 +198,16 @@ export class AppGateway
     try {
       let execCode: string;
 
+      let isAsync: boolean = payload.isAsync;
+
       if (payload.codePayload) {
         let user = this.users[client.id];
 
         let resultCodePayload: any = await this.prepareCodePayload(payload.codePayload, true, user);
-        resultCode = generateCode(resultCodePayload, {}, false, true);
+        [resultCode, isAsync] = generateCode(resultCodePayload, {}, false, true);
 
         let execCodePayload: any = await this.prepareCodePayload(payload.codePayload, false, user);
-        execCode = generateCode(execCodePayload, {}, false, true); // TO-DO: acceptStrings parameter depends on user permissions
+        [execCode, isAsync] = generateCode(execCodePayload, {}, false, true); // TO-DO: acceptStrings parameter depends on user permissions
 
       } else {
         execCode = payload.code;
@@ -219,14 +220,14 @@ export class AppGateway
 
       let asyncCallback = undefined;
 
-      if (payload.isAsync) {
-        asyncCallback = (response) => {
-          console.log('asyncCallback', response);
-          result = handleResponse(response);
+      if (isAsync) {
+        var _resultCode = resultCode;
+        var _timestamp = payload.timestamp;
+        asyncCallback = (_result) => {
           client.emit('reply', {
-            data: result,
-            code: resultCode,
-            timestamp: payload.timestamp,
+            data: _result,
+            code: _resultCode,
+            timestamp: _timestamp,
             finalResult: true
           });
         }

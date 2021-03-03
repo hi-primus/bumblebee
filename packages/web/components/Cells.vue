@@ -3572,7 +3572,7 @@ export default {
         _isReference: true
       }
 
-      return generateCode({command: payload.command, payload}, request);
+      return generateCode({command: payload.command, payload}, request)[0];
 
     },
 
