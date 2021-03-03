@@ -148,9 +148,10 @@
         >
           <div v-if="!(lazyColumns.length && !lazyColumns[i])" class="column-header-cell">
             <div
+              v-if="plotsData[column.name]"
               class="data-type"
-              :class="`type-${currentDataset.columns[column.index].stats.profiler_dtype.dtype}`">
-              {{ dataTypeHint(currentDataset.columns[column.index].stats.profiler_dtype.dtype) }}
+              :class="`type-${plotsData[column.name].profiler_dtype}`">
+              {{ dataTypeHint(plotsData[column.name].profiler_dtype) }}
             </div>
             <div class="column-title" :title="column.name">
               {{column.name}}
@@ -172,8 +173,8 @@
             <div
               v-if="previewPlotsData[column.name]"
               class="data-type"
-              :class="`type-${previewPlotsData[column.name].dtype}`">
-              {{ dataTypeHint(previewPlotsData[column.name].dtype) }}
+              :class="`type-${previewPlotsData[column.name].profiler_dtype}`">
+              {{ dataTypeHint(previewPlotsData[column.name].profiler_dtype) }}
             </div>
             <div
               v-if="currentPreviewNames && currentPreviewNames[column.name]"
@@ -216,8 +217,11 @@
           @dblclick="setMenu($event, column.index)"
           @contextmenu.prevent="contextMenu($event, column.index)">
           <div class="column-header-cell">
-            <div class="data-type" :class="`type-${currentDataset.columns[column.index].stats.profiler_dtype.dtype}`">
-              {{ dataTypeHint(currentDataset.columns[column.index].stats.profiler_dtype.dtype) }}
+            <div
+              v-if="plotsData[column.name]"
+              class="data-type"
+              :class="`type-${plotsData[column.name].profiler_dtype}`">
+              {{ dataTypeHint(plotsData[column.name].profiler_dtype) }}
             </div>
             <div class="drag-hint"></div>
             <div
@@ -316,48 +320,48 @@
             </div>
           </div>
           <div
-            v-else-if="!(lazyColumns.length && !lazyColumns[index]) && columns[column.index] && !column.preview"
+            v-else-if="!(lazyColumns.length && !lazyColumns[index]) && columns[column.index] && !column.preview && plotsData[column.name]"
             :key="''+column.index"
             class="bb-table-plot-content"
             :data-column="column.index">
             <div>
               <DataBar
-                :key="plotsData[column.index].key+'databar'"
-                :missing="plotsData[column.index].missing"
-                :total="+plotsData[column.index].total || 1"
-                :match="+plotsData[column.index].match"
-                :mismatch="+plotsData[column.index].mismatch"
-                :nullV="+plotsData[column.index].null"
+                :key="plotsData[column.name].key+'databar'"
+                :missing="plotsData[column.name].missing"
+                :total="+plotsData[column.name].total || 1"
+                :match="+plotsData[column.name].match"
+                :mismatch="+plotsData[column.name].mismatch"
+                :nullV="+plotsData[column.name].null"
                 @clicked="clickedBar($event,column)"
                 class="table-data-bar"
                 bottom
               />
               <Frequent
-                v-if="plotsData[column.index].frequency"
-                :key="plotsData[column.index].key+' '+columnsReloads[index]"
-                :uniques="plotsData[column.index].count_uniques"
-                :values="plotsData[column.index].frequency"
-                :total="+plotsData[column.index].total || 1"
+                v-if="plotsData[column.name].frequency"
+                :key="plotsData[column.name].key+' '+columnsReloads[index]"
+                :uniques="plotsData[column.name].count_uniques"
+                :values="plotsData[column.name].frequency"
+                :total="+plotsData[column.name].total || 1"
                 :columnIndex="column.index"
                 class="histfreq"
                 selectable
               />
               <Histogram
-                v-else-if="plotsData[column.index].hist"
-                :key="plotsData[column.index].key+' '+columnsReloads[index]"
-                :uniques="plotsData[column.index].count_uniques"
-                :values="plotsData[column.index].hist"
-                :total="+plotsData[column.index].total || 1"
+                v-else-if="plotsData[column.name].hist"
+                :key="plotsData[column.name].key+' '+columnsReloads[index]"
+                :uniques="plotsData[column.name].count_uniques"
+                :values="plotsData[column.name].hist"
+                :total="+plotsData[column.name].total || 1"
                 :columnIndex="column.index"
                 class="histfreq"
                 selectable
               />
               <Histogram
-                v-else-if="plotsData[column.index].hist_years"
-                :key="plotsData[column.index].key+' '+columnsReloads[index]"
-                :uniques="plotsData[column.index].count_uniques"
-                :values="plotsData[column.index].hist_years"
-                :total="+plotsData[column.index].total || 1"
+                v-else-if="plotsData[column.name].hist_years"
+                :key="plotsData[column.name].key+' '+columnsReloads[index]"
+                :uniques="plotsData[column.name].count_uniques"
+                :values="plotsData[column.name].hist_years"
+                :total="+plotsData[column.name].total || 1"
                 :columnIndex="column.index"
                 class="histfreq"
                 selectable
@@ -599,7 +603,6 @@ export default {
       'currentPreviewNames',
       'currentPreviewInfo',
       'loadPreview',
-      'currentBuffer'
     ]),
 
     ...mapState(['allTypes']),
@@ -622,10 +625,16 @@ export default {
     },
 
     columns () {
-      if (this.currentDataset.columns && this.currentDataset.columns.length) {
-        return this.currentDataset.columns.map(column=>({name: column.name, width: this.columnWidths[column.name] || this.defaultColumnWidth}))
+      let columns = [];
+      if (this.currentDataset) {
+        if (this.currentDataset.columns) {
+          columns = this.currentDataset.columns.map(column=>({name: column.name, width: this.columnWidths[column.name] || this.defaultColumnWidth}));
+        }
+        if (this.$store.state.columns[this.currentDataset.dfName] && columns.length < this.$store.state.columns[this.currentDataset.dfName].length) {
+          columns = this.$store.state.columns[this.currentDataset.dfName].map(column=>({name: column, width: this.columnWidths[column] || this.defaultColumnWidth}));
+        }
       }
-      return []
+      return columns;
     },
 
     rowsColumn () {
@@ -661,7 +670,7 @@ export default {
     },
 
     isRename () {
-      return this.newColumnName !== this.currentDataset.columns[ this.columnMenuIndex].name;
+      return this.newColumnName !== this.columns[this.columnMenuIndex].name;
     },
 
     computedColumnValues () {
@@ -745,7 +754,7 @@ export default {
         ? this.currentDuplicatedColumns.map((col)=>({
             type: 'duplicated',
             duplicated: true,
-            index: this.currentDataset.columns.findIndex(c=>c.name===col.name),
+            index: this.columns.findIndex(c=>c.name===col.name),
             name: col.newName,
             sampleName: col.name,
           }))
@@ -801,7 +810,7 @@ export default {
           if (this.selectionMap[index]) {
             classes.push('bb-selected')
           }
-          var name = this.currentDataset.columns[index].name
+          var name = this.columns[index].name
           return {
             index,
             classes,
@@ -965,8 +974,10 @@ export default {
     },
 
     plotsData () {
-			return this.currentDataset.columns.map((column, i) => {
-				return {
+      let plotsData = {};
+
+			this.currentDataset.columns.forEach((column, i) => {
+				plotsData[column.name] = {
           key: i,
           name: column.name,
           missing: (column.stats.missing) ? +column.stats.missing : 0,
@@ -978,9 +989,12 @@ export default {
 					total: +this.currentDataset.summary.rows_count,
 					zeros: column.stats.zeros,
           null: column.stats.null,
+          profiler_dtype: column.stats.profiler_dtype.dtype
 					// hist_years: (column.stats.hist && column.stats.hist.years) ? column.stats.hist.years : undefined
-				}
-			})
+				};
+			});
+
+      return plotsData;
     },
 
     previewPlotsData () {
@@ -1010,7 +1024,7 @@ export default {
             frequency: ((column.stats.frequency) ? column.stats.frequency : undefined) || column.frequency || undefined,
             zeros: column.stats.zeros,
             null: column.stats.null,
-            dtype: column.stats.profiler_dtype.dtype || column.dtype
+            profiler_dtype: column.stats.profiler_dtype.dtype || column.dtype
             // hist_years: (column.stats.hist && column.stats.hist.years) ? column.stats.hist.years : undefined,
           }
         }
@@ -1210,8 +1224,8 @@ export default {
 
     deleteAllPreviews () {
       var columnValues = {};
-      if (this.currentDataset && this.currentDataset.columns && this.currentDataset.columns.length) {
-        this.currentDataset.columns.forEach(column => {
+      if (this.currentDataset && this.columns && this.columns.length) {
+        this.columns.forEach(column => {
           columnValues[ column.name ] = this.columnValues[ column.name ];
         });
         this.columnValues = columnValues;
@@ -1479,12 +1493,12 @@ export default {
 
       if (this.mustCheck) {
         // console.log('[COLUMNS PREVIEW] Checking')
-        if (columns.map(c=>c.title).join()!==this.currentDataset.columns.map(c=>c.name).join()) {
+        if (columns.map(c=>c.title).join()!==this.columns.map(c=>c.name).join()) {
           // console.log('[COLUMNS PREVIEW] Different')
           var receivedColumns = columns
 						.map((column, index)=>({...column, index}))
 
-					var columnNames = this.currentDataset.columns.map(e=>e.name)
+					var columnNames = this.columns.map(e=>e.name)
 
           var previewColumns = []
           if (this.previewCode && this.previewCode.datasetPreview) {

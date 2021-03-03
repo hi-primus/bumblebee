@@ -992,6 +992,15 @@ export const generateCode = function(commands = [], _request = { type: 'processi
 
         code += resultCode;
 
+        let profileColumns;
+
+        if (request.profile) {
+          profileColumns = preparedColumns(request.profile);
+          if (request.profile_partial) {
+            profileColumns = `${dfName}.cols.names("*")[0:${request.profile_partial}]`;
+          }
+        }
+
         if (request.createsNew && saving && saving !== '_df_output' && request.type==='processing' && ['spark', 'ibis'].includes(request.engine)) {
           code += '\n'+`${saving} = ${saving}.to_optimus_pandas()`;
         }
@@ -1013,7 +1022,8 @@ export const generateCode = function(commands = [], _request = { type: 'processi
             code += '\n'+`_output.update({ 'sample': ${saving}.columns_sample("*") })`
           }
           if (request.profile) {
-            code += '\n'+`_output.update({ 'profile': ${saving}.profile(columns=${preparedColumns(request.profile)}) })`;
+
+            code += '\n'+`_output.update({ 'profile': ${saving}.profile(columns=${profileColumns}) })`;
           }
           if (request.matches_count) {
             code += '\n'+`_output.update({ 'matches_count': ${saving}.rows.select("__match__").rows.count() })`
@@ -1027,14 +1037,24 @@ export const generateCode = function(commands = [], _request = { type: 'processi
           if (isAsync) {
 
             if (request.sample) {
-              code += '.columns_sample, "*")';
+              code += '.columns_sample, "*"';
             }
             if (request.profile) {
-              code += `.profile, ${preparedColumns(request.profile)})`;
+              code += `.profile, ${profileColumns}`;
             }
             if (request.matches_count) {
-              code += `.rows.select("__match__").rows.count)`;
+              code += `.rows.select("__match__").rows.count`;
             }
+
+            if (request.async_priority) {
+              code += `, priority=${request.async_priority}`;
+            }
+
+            if (!request.pure) {
+              code += `, pure=False`;
+            }
+
+            code += `)`;
 
           } else {
 
@@ -1042,7 +1062,7 @@ export const generateCode = function(commands = [], _request = { type: 'processi
               code += '.columns_sample("*")';
             }
             if (request.profile) {
-              code += `.profile(columns=${preparedColumns(request.profile)})`;
+              code += `.profile(columns=${profileColumns})`;
             }
             if (request.matches_count) {
               code += `.rows.select("__match__").rows.count()`;

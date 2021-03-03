@@ -111,6 +111,7 @@ const defaultState = {
   cellsPromise: false,
   profilingsPromises: {},
   executePromises: {},
+  columns: {},
   listViews: [],
   dataSources: [],
   gettingNewResults: '',
@@ -161,6 +162,10 @@ export const mutations = {
 
   mutation (state, {mutate, payload}) {
     Vue.set(state, mutate, payload)
+  },
+
+  setColumns (state, { dfName, columns }) {
+    Vue.set(state.columns, dfName, columns);
   },
 
   clearSession (state) {
@@ -277,8 +282,6 @@ export const mutations = {
 
     console.debug("[BUMBLEBLEE] Setting dataset", dataset);
     Vue.set(state.datasets, tab, dataset);
-
-    Vue.set(state.executePromises, dataset.dfName, false);
 
     if (!avoidReload) {
       state.datasetSelection[tab] = {}; // {columns: _c} // TO-DO: Remember selection
@@ -507,7 +510,7 @@ export const actions = {
     await dispatch('session/serverInit')
   },
 
-  async evalCode({ dispatch, state, getters }, { code, codePayload, isAsync, socketPost }) {
+  async evalCode ({ dispatch, state, getters }, { code, codePayload, isAsync, socketPost }) {
     try {
 
       if (!process.client) {
@@ -1113,10 +1116,13 @@ export const actions = {
         commit('mutation', { mutate: 'codeError', payload: '' });
         commit('mutation', { mutate: 'lastWrongCode', payload: false });
         commit('mutation', { mutate: 'cellsPromise', payload: false });
-      case 'profilings':
-        commit('mutation', { mutate: 'profilingsPromises', payload: {} });
-      case 'buffers':
-        commit('mutation', { mutate: 'executePromises', payload: {} });
+      default:
+        if (from!='executions') {
+          commit('mutation', { mutate: 'profilingsPromises', payload: {} });
+        }
+        if (from!='profilings') {
+          commit('mutation', { mutate: 'executePromises', payload: {} });
+        }
     }
   },
 
@@ -1377,7 +1383,44 @@ export const actions = {
     return dispatch('getPromise', promisePayload);
   },
 
-  async loadProfiling ({ dispatch, state, getters, commit }, { dfName, socketPost, ignoreFrom, avoidReload, clearPrevious }) {
+  async requestAndSaveProfiling ({ dispatch, state, getters, commit }, { dfName, socketPost, avoidReload, partial }) {
+    let response = await dispatch('evalCode', {
+      socketPost,
+      codePayload: {
+        request: {
+          dfName,
+          profile: true,
+          profile_partial: partial ? 10 : undefined,
+          async_priority: partial ? -5 : -10,
+          isAsync: true,
+        }
+      }
+    });
+
+    console.debug('[DEBUG][CODE][PROFILE]',response.code);
+
+    if (!response || !response.data || !response.data.result || response.data.status == "error") {
+      throw response;
+    }
+
+    window.pushCode({code: response.code});
+    var dataset = parseResponse(response.data.result);
+    dataset.dfName = dfName;
+    console.debug('[DATASET] Setting', { dataset, to: dfName });
+    await dispatch('setDataset', { dataset, avoidReload });
+
+    if (state.gettingNewResults) {
+      await dispatch('afterNewProfiling');
+    }
+
+    console.debug('[DEBUG] Loading profiling Done', dfName);
+
+    commit('kernel', 'done');
+
+    return dataset;
+  },
+
+  async loadProfiling ({ dispatch, state, getters, commit }, { dfName, socketPost, ignoreFrom, avoidReload, clearPrevious, partial }) {
     console.debug('[DEBUG] Loading profiling', dfName);
     try {
 
@@ -1395,43 +1438,11 @@ export const actions = {
         }
       }
 
-      // get columns
-
-      // let columns = state.datasets[dfName] ? Object.keys(state.datasets[dfName].columns) : [];
-
-      let response = await dispatch('evalCode', {
-        socketPost,
-        codePayload: {
-          request: {
-            dfName,
-            profile: true,
-            isAsync: true,
-            // columns
-          }
-        }
-      });
-
-      console.debug('[DEBUG][CODE][PROFILE]',response.code);
-
-      if (!response || !response.data || !response.data.result || response.data.status == "error") {
-        throw response;
+      if (partial) {
+        await dispatch('requestAndSaveProfiling', { dfName, socketPost, avoidReload, partial: true });
       }
 
-      window.pushCode({code: response.code});
-      var dataset = parseResponse(response.data.result);
-      dataset.dfName = dfName;
-      console.debug('[DATASET] Setting', { dataset, to: dfName });
-      await dispatch('setDataset', { dataset, avoidReload });
-
-      if (state.gettingNewResults) {
-        await dispatch('afterNewProfiling');
-      }
-
-      console.debug('[DEBUG] Loading profiling Done', dfName);
-
-      commit('kernel', 'done');
-
-      return dataset;
+      return await dispatch('requestAndSaveProfiling', { dfName, socketPost, avoidReload, partial: false });
 
     } catch (err) {
 
@@ -1453,7 +1464,6 @@ export const actions = {
 
       err.message = '(Error on profiling) ' + (err.message || '');
       console.debug('[DEBUG] Loading profiling Error', dfName);
-      await dispatch('resetPromises', { from: 'buffers' });
       throw err;
     }
   },
@@ -1570,6 +1580,8 @@ export const actions = {
 
     var response;
 
+    // profiled preview
+
     var profilePreview = getters.currentProfilePreview.done;
 
     if (profilePreview) {
@@ -1595,6 +1607,8 @@ export const actions = {
       }
     }
 
+    // not profiled preview or empty
+
     if (!profilePreview) {
       var codePayload = {
         ...codePayload,
@@ -1610,6 +1624,11 @@ export const actions = {
       };
       commit('setProfilePreview', false);
       response = await dispatch('evalCode',{ socketPost, codePayload })
+    }
+
+    if (!profilePreview && !codePayload.command) {
+      let colNames = response.data.result.columns.map(col=>col.title);
+      commit('setColumns', { dfName: datasetDfName, columns: colNames });
     }
 
     if (response.data.status === 'error') {
@@ -1746,14 +1765,6 @@ export const getters = {
   },
   currentListView (state) {
     return state.listViews[state.tab] || false
-  },
-  currentBuffer (state) {
-    try {
-      var dfName = state.datasets[state.tab].dfName
-      return state.executePromises[dfName]
-    } catch (error) {
-      return false
-    }
   },
 
   cells (state) {

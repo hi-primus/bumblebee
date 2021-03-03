@@ -2908,6 +2908,7 @@ export default {
     currentCommand: {
       deep: true,
       async handler (currentCommand) {
+        this.$store.commit('setPreviewInfo', {error: false})
         if (!currentCommand) {
           return
         }
@@ -3505,13 +3506,13 @@ export default {
         let deleteDf = deletedPayload.newDfName
         if (deleteDf) {
           deleteTab = currentPayload.newDfName
-          this.evalCode(`del ${deleteDf}; _output = "Deleted ${deleteDf}"`);
+          await this.evalCode(`del ${deleteDf}; _output = "Deleted ${deleteDf}"`);
         }
       }
 
       if (deleteTab) {
         let foundTab = this.$store.state.datasets.findIndex(dataset => dataset.dfName === deleteTab);
-        if (foundTab>0) {
+        if (foundTab>=0) {
           await this.$store.dispatch('newDataset', { dfName: deleteTab });
         }
       }
@@ -3655,16 +3656,18 @@ export default {
 
     async runCodeNow (force = false, ignoreFrom = -1, newDfName, runCodeAgain = true) {
 
-      try {
-        var dfName = (this.currentDataset ? this.currentDataset.dfName : undefined) || newDfName;
+      let cellsResult;
 
-        var cellsResult = await this.runCells(force, ignoreFrom);
+      try {
+        let dfName = (this.currentDataset ? this.currentDataset.dfName : undefined) || newDfName;
+
+        cellsResult = await this.runCells(force, ignoreFrom);
 
         if (!cellsResult) {
           return false;
         }
 
-        var dataset = await this.getProfiling(dfName, ignoreFrom);
+        let dataset = await this.$store.dispatch('getProfiling', { payload: { dfName, ignoreFrom, socketPost: this.socketPost, partial: true } });
 
         if (this.firstRun) {
           this.firstRun = false;
@@ -3685,9 +3688,9 @@ export default {
       }
 
       if (runCodeAgain) {
-        var codeText = await this.codeText();
+        let codeText = await this.codeText();
 
-        var code = cellsResult ? cellsResult.originalCode : undefined;
+        let code = cellsResult ? cellsResult.originalCode : undefined;
 
         if (codeText !== code) {
           setTimeout(() => {

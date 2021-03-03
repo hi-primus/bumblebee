@@ -409,11 +409,11 @@ export default {
     },
 
     customSortedColumns () {
-      if (this.sortedColumns.length && this.currentDataset && this.currentDataset.columns && this.currentDataset.columns.length) {
-        return this.sortedColumns.map(i=>this.currentDataset.columns[i])
+      if (this.sortedColumns.length && this.currentDataset && this.columns && this.columns.length) {
+        return this.sortedColumns.map(i=>this.columns[i])
       }
-      else if (this.currentDataset && this.currentDataset.columns) {
-        return this.currentDataset.columns
+      else if (this.currentDataset && this.columns) {
+        return this.columns
       }
       else {
         return []
@@ -447,6 +447,19 @@ export default {
         }
       }
 			return 1
+    },
+
+    columns () {
+      let columns = [];
+      if (this.currentDataset) {
+        if (this.currentDataset.columns) {
+          columns = this.currentDataset.columns;
+        }
+        if (this.$store.state.columns[this.currentDataset.dfName] && columns.length < this.$store.state.columns[this.currentDataset.dfName].length) {
+          columns = this.$store.state.columns[this.currentDataset.dfName].map(column=>({ name: column }));
+        }
+      }
+      return columns;
     },
 
     // affects table view only
@@ -489,8 +502,8 @@ export default {
 
       this.$emit('sort',selectColumns.map(e=>e.name))
 
-      if (this.currentDataset.columns && this.currentDataset.columns.length) {
-        return bbColumns.map(e=>this.currentDataset.columns.findIndex(de => de.name === e.name))
+      if (this.columns && this.columns.length) {
+        return bbColumns.map(e=>this.columns.findIndex(de => de.name === e.name))
       } else {
         return bbColumns.map((e,i)=>i)
       }
@@ -512,7 +525,7 @@ export default {
 
         if (this.typesSelected.length > 0) {
           filteredColumns = this.resultsColumns.filter((column) => {
-            return this.typesSelected.includes(column.stats.profiler_dtype.dtype)
+            return this.typesSelected.includes(column.stats.profiler_dtype.dtype) || !column.stats
           })
         } else {
           filteredColumns = this.resultsColumns
@@ -523,9 +536,9 @@ export default {
           this.$nextTick(()=>{
             let _selected = []
 
-            if (this.currentDataset.columns) {
-              for (let i = 0; i < this.currentDataset.columns.length; i++) {
-              const column = this.currentDataset.columns[i];
+            if (this.columns) {
+              for (let i = 0; i < this.columns.length; i++) {
+              const column = this.columns[i];
               if (this.selectedColumns[column.name]) {
                   _selected.push(i)
                 }
@@ -537,7 +550,7 @@ export default {
 
         }
         return filteredColumns.map(col => {
-          return { ...col, profilerDtype: col.stats.profiler_dtype.dtype }
+          return { ...col, profilerDtype: col.stats ? col.stats.profiler_dtype.dtype : null }
         });
       } catch (error) {
         return []
@@ -562,7 +575,7 @@ export default {
     },
 
     columnsHeader () {
-			return this.currentDataset.columns.map((e) => {
+			return this.columns.map((e) => {
 				return e.name
 			})
     },
@@ -590,7 +603,7 @@ export default {
       try {
         this.loadingDf = true;
         this.$store.commit('setDfToTab', { dfName, go: true });
-        await this.getProfiling(dfName)
+        await this.$store.dispatch('getProfiling', { payload: { dfName, socketPost: this.socketPost } });
         this.$store.commit('setDfToTab', { dfName, go: true });
       } catch (err) {
         console.error('Error opening dataset', err);

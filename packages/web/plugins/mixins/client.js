@@ -114,7 +114,7 @@ export default {
       return await languagePluginLoader
     },
 
-    async getProfiling (dfName, ignoreFrom = -1, forcePromise = false) {
+    async getProfiling (dfName, ignoreFrom = -1, forcePromise = false, partial = false) {
       console.debug('[PROFILING]',dfName);
       var payload = { dfName, socketPost: this.socketPost, clearPrevious: true };
       return this.$store.dispatch('getProfiling', { payload, forcePromise, ignoreFrom });
@@ -389,16 +389,16 @@ export default {
 
             let key;
 
-            if (payload.data && payload.data.key && window.promises[payload.data.key] && window.promises[payload.data.key].isAsync) {
+            if (payload.data && payload.data.key && window.promises[payload.data.key] && window.promises[payload.data.key]) {
               key = payload.data.key;
             }
 
-            if (payload.timestamp && window.promises[payload.timestamp]) {
+            if (!key && payload.timestamp && window.promises[payload.timestamp]) {
               key = payload.timestamp
             }
 
             if (!key) {
-              console.warn('Wrong timestamp reply', payload.timestamp, key);
+              console.warn(`Request with id ${payload.timestamp} already replied`, payload);
               return null;
             }
 
