@@ -118,10 +118,10 @@ export const initializeOptimusSession = async function (sessionId, payload) {
 	return result;
 };
 
-const assertSession = async function (
+const assertConnection = async function (
 	sessionId,
-	skipOptimus = false,
-  kernel_address : any = undefined
+  kernel_address : any = undefined,
+	assertOptimus = true
 ) {
 	try {
 		if (!kernels[sessionId] || !kernels[sessionId].id) {
@@ -134,15 +134,17 @@ const assertSession = async function (
 
 		await createConnection(sessionId);
 
-		if (!skipOptimus && !(kernels[sessionId].initialized || kernels[sessionId].id)) {
-			if (!kernels[sessionId].initialization) {
-				kernels[sessionId].initialization = initializeOptimusSession(sessionId, {
-					payloadDefault: true,
-				});
-			}
-			await kernels[sessionId].initialization;
-			kernels[sessionId].initialization = false;
-		}
+    if (assertOptimus) {
+      if (!(kernels[sessionId].initialized || kernels[sessionId].id)) {
+        if (!kernels[sessionId].initialization) {
+          kernels[sessionId].initialization = initializeOptimusSession(sessionId, {
+            payloadDefault: true,
+          });
+        }
+        await kernels[sessionId].initialization;
+        kernels[sessionId].initialization = false;
+      }
+    }
 
 		return kernels[sessionId].connection;
 	} catch (err) {
@@ -152,7 +154,7 @@ const assertSession = async function (
 	}
 };
 
-export const requestToKernel = async function (type, sessionId, payload, optimus = true, asyncCallback = false) {
+export const requestToKernel = async function (type, sessionId, payload, asyncCallback = false) {
 
   kernels[sessionId] = kernels[sessionId] || {};
 
@@ -160,12 +162,19 @@ export const requestToKernel = async function (type, sessionId, payload, optimus
 
   if (type == 'init' && !kernelAddress && payload.jupyter_address && payload.jupyter_address.ip && payload.jupyter_address.port) {
     kernelAddress = payload.jupyter_address.ip + ':' + payload.jupyter_address.port;
+    kernels[sessionId].kernel_address = kernelAddress;
   }
 
-	const connection = await assertSession(
+  let assertOptimus = true;
+
+  if (['features','init'].includes(type)) {
+    assertOptimus = false;
+  }
+
+	const connection = await assertConnection(
 		sessionId,
-		type == 'init' || !optimus,
-    kernelAddress
+    kernelAddress,
+		assertOptimus
 	);
 
 	if (!connection) {
@@ -252,7 +261,7 @@ export const runCode = async function (code = '', sessionId = '', asyncCallback 
     let response;
 
     if (asyncCallback) {
-      response = await requestToKernel('asyncCode', sessionId, code, true, asyncCallback);
+      response = await requestToKernel('asyncCode', sessionId, code, asyncCallback);
     } else {
       response = await requestToKernel('code', sessionId, code);
     }
@@ -352,6 +361,7 @@ export const createConnection = async function (sessionId) {
                   status: 'error',
                   _response: message_response,
                 };
+                response = handleResponse(response);
               }
             } else {
               console.warn({
@@ -360,7 +370,7 @@ export const createConnection = async function (sessionId) {
                 error: 'Message type error',
                 message: message,
               });
-              response = message;
+              response = handleResponse(message) ;
             }
 
 						if (!kernels[sessionId]) {
@@ -391,7 +401,7 @@ export const createConnection = async function (sessionId) {
             }
 
 					} catch (err) {
-						console.error(err.message);
+						console.error(err.message || err);
 					}
 				});
 

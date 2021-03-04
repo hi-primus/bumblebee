@@ -335,14 +335,15 @@ export const handleResponse = (response) => {
 		parsedResponse = JSON.parse(response);
 	}
 
+  const replace_traceback = (l) => l.replace(
+    /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g,
+    '',
+  );
+
   if (parsedResponse && parsedResponse.traceback && parsedResponse.traceback.map) {
-		parsedResponse.traceback = parsedResponse.traceback.map((l) =>
-			l.replace(
-				/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g,
-				'',
-			),
-		);
+		parsedResponse.traceback = parsedResponse.traceback.map(replace_traceback);
 	}
+
 
   return parsedResponse;
 };

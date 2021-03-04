@@ -171,7 +171,7 @@ export class AppGateway
     const sessionId = payload.username + '_BBSESSION_' + payload.workspace;
     let result = {};
     try {
-      result = await requestToKernel('features', sessionId, null, false);
+      result = await requestToKernel('features', sessionId, payload);
     } catch (err) {
       console.error(err)
       result = {
