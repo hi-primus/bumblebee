@@ -34,6 +34,7 @@
                   dense
                   v-bind="field.props"
                   label="Address"
+                  autocomplete="off"
                   hide-details
                 />
                 <component
@@ -46,6 +47,7 @@
                   dense
                   v-bind="field.props"
                   label="Port"
+                  autocomplete="off"
                   hide-details
                 />
               </div>
@@ -67,6 +69,7 @@
                 v-bind="field.props"
                 :placeholder="getProperty(field.props.placeholder, [values])"
                 hide-details
+                autocomplete="off"
                 :class="{'pt-4': index!==0}"
                 :type="show[field.key] ? 'text' : 'password'"
                 :append-icon="show[field.key] ? 'mdi-eye' : 'mdi-eye-off'"
@@ -83,6 +86,7 @@
                 v-bind="field.props"
                 :placeholder="getProperty(field.props.placeholder, [values])"
                 hide-details
+                autocomplete="off"
                 :class="{'pt-4': index!==0}"
               />
 
