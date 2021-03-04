@@ -230,8 +230,10 @@ export default {
 		console.log(`Bumblebee v${version}`)
 		window.document.body.click()
     this.checkFirstTime()
-    window.intercomSettings["vertical_padding"] = 20;
-    window.Intercom("update");
+    setTimeout(() => {
+      window.intercomSettings["vertical_padding"] = 20;
+      window.Intercom("update");
+    }, 200);
 	},
 
 	methods: {
