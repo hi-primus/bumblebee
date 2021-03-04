@@ -49,6 +49,9 @@
             />
           </div>
           <div class="o-fields">
+            <template  v-if="command.dialog.output_cols">
+              <OutputColumnInputs :fieldLabel="command.dialog.output_cols_label" :noLabel="!command.dialog.output_labels" :currentCommand.sync="currentCommand"></OutputColumnInputs>
+            </template>
             <template v-if="!currentCommand.loading && command.dialog.fields">
               <template v-for="field in command.dialog.fields.filter(f=>(!f.condition || f.condition && f.condition(currentCommand)))">
 
@@ -93,7 +96,7 @@
                 </template>
               </template>
             </template>
-            <OutputColumnInputs v-if="command.dialog.output_cols" :fieldLabel="command.dialog.output_cols_label" :noLabel="!command.dialog.output_labels" :currentCommand.sync="currentCommand"></OutputColumnInputs>
+
             <template>
               <v-alert key="error" type="error" class="mt-0" dismissible v-if="currentCommand.error"  @input="currentCommand.error=''">
                 {{currentCommand.error}}

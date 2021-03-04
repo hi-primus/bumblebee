@@ -12,7 +12,6 @@
           :placeholder="title"
           spellcheck="false"
           required
-          outlined
           clearable
         ></v-text-field>
       </v-col>
