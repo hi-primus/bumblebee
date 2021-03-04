@@ -493,11 +493,14 @@ export default {
             currentCommand._fileLoaded = false;
             currentCommand.error = false;
             currentCommand.url = '';
+            currentCommand._fileUploadingProgress = 0;
           },
 
           uploadFile: async (currentCommand) => {
             try {
               currentCommand._fileUploading = true
+
+              currentCommand._fileUploadingProgress = 0;
 
               var attachment = {
                 setProgress: (progress) => {
