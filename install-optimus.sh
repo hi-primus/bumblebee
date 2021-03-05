@@ -59,6 +59,8 @@ if [ "$rapids" = true ]; then
   conda install -c rapidsai -c nvidia -c conda-forge -c defaults rapids-blazing=0.17 python=3.7 cudatoolkit=10.2
 fi
 
+pip install git+https://github.com/ironmussa/dateinfer.git
+pip install cytoolz
 
 if [ "$spark" = true ]; then
   echo "Installing optimus with Spark support"
