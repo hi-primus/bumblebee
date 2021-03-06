@@ -361,11 +361,15 @@ export default {
         this.$set(this.patternsFrequency, this.patternsResolution, 'loading')
 
         var codePayload = {
-          command: 'patterns_count',
+          command: 'patterns_count_async',
           dfName: this.currentDataset.dfName,
           column: this.column.name,
           mode: 3-this.patternsResolution,
-          n: 5
+          n: 5,
+          request: {
+            isAsync: true,
+            async_priority: -20
+          }
         }
 
         var response = await this.evalCode(codePayload);

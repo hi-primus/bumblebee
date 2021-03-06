@@ -102,6 +102,13 @@ export const codeGenerators = {
       isOutput: true
     };
   },
+  patterns_count_async: (payload) => {
+    return {
+      code: `_output = op.submit(${payload.dfName}.cols.pattern_counts, "${payload.column}", n=${payload.n}, mode=${payload.mode})`,
+      isOutput: true,
+      isAsync: true
+    };
+  },
   'apply sort': (payload) => {
     return `.cols.sort(columns=${preparedColumns(payload.columns)})`
   },
@@ -942,6 +949,9 @@ export const generateCode = function(commands = [], _request = { type: 'processi
       if (result.isOutput || customCodePayload) {
 
         code += resultCode;
+        if (result.isAsync && isAsync === undefined) {
+          isAsync = true;
+        }
 
       } else {
 
