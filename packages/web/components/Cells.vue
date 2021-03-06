@@ -1614,7 +1614,6 @@ export default {
           dialog: {
             title: (c)=>c.title || c.content || c.command,
             fields: (c)=>{
-              console.log(c.parameters)
               return Object.entries(c.parameters || {}).map(([key, param])=>({
                 label: param.label,
                 key,
@@ -1642,14 +1641,14 @@ export default {
 
             let using = ""
 
-            let parameters = Object.keys(payload.parameters).map(parameter=>{
+            let parameters = Object.keys(payload.parameters || {}).map(parameter=>{
               return `${multipleContent([payload[parameter]],'hl--param')} as ${multipleContent([parameter],'hl--param')}`
             })
 
             if (parameters.length) {
               using = " using "+parameters.join(", ");
             }
-            return `<b>${payload.content || payload.command}</b> ${multipleContent([payload.columns],'hl--cols')} using ${using}`
+            return `<b>${payload.content || payload.command}</b> ${multipleContent([payload.columns],'hl--cols')}${using}`
           }
         },
         SUBSTR1: {
