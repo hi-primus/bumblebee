@@ -215,7 +215,7 @@ export class AppGateway
       }
 
       if (!execCode.includes("_output = ")) {
-        execCode += '\n' + `_output = 'ok'`;
+        execCode = `_output = 'ok'\n${execCode}`;
       }
 
       let asyncCallback = undefined;
