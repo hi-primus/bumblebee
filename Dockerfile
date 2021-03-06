@@ -98,7 +98,7 @@ CMD ./usr/bin/mongod --fork --logpath /var/log/mongod.log && \
     pm2 start "yarn web" --name "web" --update-env && \
     pm2 start "yarn api" --name "api" --update-env && \
     echo "[Bumblebee] Web process at: http://$ADDRESS:3000" && \
-    jupyter kernelgateway --JupyterWebsocketPersonality.list_kernels=True --KernelGatewayApp.allow_origin='*'
+    jupyter kernelgateway --JupyterWebsocketPersonality.list_kernels=True --KernelGatewayApp.allow_origin='*' --Application.log_level=50
 
 EXPOSE 3000:3000 4000:4000
 
