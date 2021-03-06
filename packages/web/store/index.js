@@ -267,13 +267,6 @@ export const mutations = {
       }
     }
 
-    // var _c
-    // try {
-    //   _c = state.datasetSelection[tab].columns
-    // } catch (err) {
-    //   _c = []
-    // }
-
     var previousDataset = state.datasets[tab] || {};
 
     if (previousDataset.dfName) {
@@ -284,8 +277,28 @@ export const mutations = {
     Vue.set(state.datasets, tab, dataset);
 
     if (!avoidReload) {
-      state.datasetSelection[tab] = {}; // {columns: _c} // TO-DO: Remember selection
-      Vue.set(state.datasetSelection, tab, state.datasetSelection[tab] );
+
+      var previousSelection;
+      try {
+        previousSelection = state.datasetSelection[tab].columns;
+      } catch (err) {
+        previousSelection = [];
+      }
+
+      for (let i = previousSelection.length - 1; i >= 0; i--) {
+        let col = previousSelection[i];
+        let new_index = dataset.columns.findIndex(_col=>_col.name === col.name);
+        if (new_index >= 0) {
+          previousSelection[i].index = new_index;
+        } else if (dataset.columns.length == previousSelection.length) {
+          previousSelection[i].name = dataset.columns[i].name
+        } else {
+          delete previousSelection[i];
+        }
+      }
+
+      Vue.set(state.datasetSelection, tab, { columns: previousSelection } );
+
       state.properties.filter(p=>p.clearOnLoad).forEach(p=>{
         if (p.multiple) {
           Vue.set(state['every'+p.name], tab, false);
@@ -1442,7 +1455,7 @@ export const actions = {
         await dispatch('requestAndSaveProfiling', { dfName, socketPost, avoidReload, partial: true });
       }
 
-      return await dispatch('requestAndSaveProfiling', { dfName, socketPost, avoidReload, partial: false });
+      return await dispatch('requestAndSaveProfiling', { dfName, socketPost, avoidReload: avoidReload || partial, partial: false });
 
     } catch (err) {
 
