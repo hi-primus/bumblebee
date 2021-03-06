@@ -1645,7 +1645,7 @@ export const actions = {
 
     commit('kernel', 'done');
 
-    if (sample) {
+    if (sample && sample.columns && sample.columns.map) {
       var pre = forceName ? '__preview__' : ''
       sample.columns = sample.columns.map(e=>({...e, title: pre+e.title}))
       return {
