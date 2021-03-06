@@ -560,21 +560,78 @@ export default {
         {command: 'Compile', text: 'Compile SQL', group: 'SAVE', hidden: ()=>(this.$store.state.localEngineParameters || {}).engine !== 'ibis'},
 
 
-				{command: 'lower', text: 'To lower case', type: 'STRING', group: 'STRING'},
-				{command: 'upper', text: 'To upper case', type: 'STRING', group: 'STRING'},
-        {command: 'proper', text: 'Proper', type: 'STRING', group: 'STRING' },
-				{command: 'normalize_chars', text: 'Remove accents', type: 'STRING', group: 'STRING'},
-				{command: 'remove_special_chars', text: 'Remove special chars', type: 'STRING', group: 'STRING'},
+				{command: 'lower', text: 'To lower case', type: 'GENERIC', group: 'STRING', payload: { title: 'Convert to lowercase', content: 'Lowercase' }},
+				{command: 'upper', text: 'To upper case', type: 'GENERIC', group: 'STRING', payload: { title: 'Convert to uppercase', content: 'Uppercase' }},
+        {command: 'proper', text: 'Proper', type: 'GENERIC', group: 'STRING' , payload: { title: 'Convert to proper case', content: 'Proper case' }},
+				{command: 'normalize_chars', text: 'Remove accents', type: 'GENERIC', group: 'STRING', payload: { title: 'Remove accents', content: 'Remove accents in' }},
+				{command: 'remove_special_chars', text: 'Remove special chars', type: 'GENERIC', group: 'STRING' , payload: { title: 'Remove special chars', content: 'Remove special chars in' }},
         {command: 'extract', text: 'Extract', group: 'STRING'},
         {divider: true, group: 'STRING'},
-        {command: 'trim', text: 'Trim white space', type: 'STRING', group: 'STRING'},
+        {command: 'trim', text: 'Trim white space', type: 'GENERIC', group: 'STRING', payload: { title: 'Trim white spaces', content: 'Trim white spaces in' }},
         {command: 'left_string', text: 'Left', type: 'SUBSTR1', group: 'STRING' },
         {command: 'right_string', text: 'Right', type: 'SUBSTR1', group: 'STRING' },
         {command: 'mid_string', text: 'Mid', group: 'STRING' },
         {command: 'pad_string', text: 'Pad string', group: 'STRING'},
-        {command: 'stringClustering', text: 'String clustering', type: 'STRING', group: 'STRING', max: 1, min: 1, hidden: ()=>(this.hideOperations) },
+        {command: 'stringClustering', text: 'String clustering', group: 'STRING', max: 1, min: 1 },
 
-        // {command: 'set_column_format', text: 'Set column format', group: 'TIME'},
+        {command: 'abs', text: 'Absolute value', type: 'GENERIC', group: 'MATH', payload: { content: 'Transform to absolute value' }},
+				{
+          command: 'round', text: 'Round', type: 'GENERIC', group: 'MATH',
+          payload: {
+            content: 'Round',
+            parameters: {decimals: { label: "Decimals", value: 0 }}
+          }
+        },
+        {command: 'floor', text: 'Floor', type: 'GENERIC', group: 'MATH', payload: { content: 'Round down' }},
+				{command: 'ceil', text: 'Ceil', type: 'GENERIC', group: 'MATH', payload: { content: 'Round up' }},
+
+				{
+          command: 'mod', text: 'Modulo', type: 'GENERIC', group: 'MATH',
+          payload: {
+            title: 'Get modulo', content: 'Get modulo of',
+            parameters: {divisor: { label: "Divisor", value: 2 }}
+          }
+        },
+				{
+          command: 'log', text: 'Logarithm', type: 'GENERIC', group: 'MATH',
+          payload: {
+            title: 'Get logarithm', content: 'Get logarithm of',
+            parameters: {base: { label: "Base", value: 10 }}
+          }
+        },
+				{
+          command: 'ln', text: 'Natural logarithm', type: 'GENERIC', group: 'MATH',
+          payload: {
+            title: 'Get natural logarithm', content: 'Get natural logarithm of'
+          }
+        },
+        {
+          command: 'pow', text: 'Power', type: 'GENERIC', group: 'MATH',
+          payload: {
+            title: 'Get power', content: 'Get power of',
+            parameters: {power: { label: "Power", value: 2 }}
+          }
+        },
+        {
+          command: 'sqrt', text: 'Square root', type: 'GENERIC', group: 'MATH',
+          payload: {
+            title: 'Get power', content: 'Get power of'
+          }
+        },
+
+				{command: 'sin', text: 'Get sin', type: 'GENERIC', group: 'TRIGONOMETRIC', payload: { content: 'Get sin' }},
+				{command: 'cos', text: 'Get cos', type: 'GENERIC', group: 'TRIGONOMETRIC', payload: { content: 'Get cos' }},
+				{command: 'tan', text: 'Get tan', type: 'GENERIC', group: 'TRIGONOMETRIC', payload: { content: 'Get tan' }},
+				{command: 'asin', text: 'Get asin', type: 'GENERIC', group: 'TRIGONOMETRIC', payload: { content: 'Get asin' }},
+				{command: 'acos', text: 'Get acos', type: 'GENERIC', group: 'TRIGONOMETRIC', payload: { content: 'Get acos' }},
+				{command: 'atan', text: 'Get atan', type: 'GENERIC', group: 'TRIGONOMETRIC', payload: { content: 'Get atan' }},
+				{command: 'sinh', text: 'Get sinh', type: 'GENERIC', group: 'TRIGONOMETRIC', payload: { content: 'Get sinh' }},
+				{command: 'cosh', text: 'Get cosh', type: 'GENERIC', group: 'TRIGONOMETRIC', payload: { content: 'Get cosh' }},
+				{command: 'tanh', text: 'Get tanh', type: 'GENERIC', group: 'TRIGONOMETRIC', payload: { content: 'Get tanh' }},
+				{command: 'asinh', text: 'Get asinh', type: 'GENERIC', group: 'TRIGONOMETRIC', payload: { content: 'Get asinh' }},
+				{command: 'acosh', text: 'Get acosh', type: 'GENERIC', group: 'TRIGONOMETRIC', payload: { content: 'Get acosh' }},
+				{command: 'atanh', text: 'Get atanh', type: 'GENERIC', group: 'TRIGONOMETRIC', payload: { content: 'Get atanh' }},
+
         {command: 'transform_format', text: 'Transform format', group: 'TIME'},
 
         {divider: true, group: 'TIME'},
@@ -585,17 +642,17 @@ export default {
 
 				// {command: 'random_split',     teaxt: 'Split train and test', type: 'PREPARE'},
 
-				{command: 'sample_n', text: 'Random sampling', group: 'ML', hidden: ()=>(this.hideOperations)},
-        {command: 'stratified_sample', text: 'Stratified Sampling', group: 'ML', min: 1, max: 1, hidden: ()=>(this.hideOperations) },
-				{command: 'bucketizer',       text: 'Create Bins',          group: 'ML', max: 1, hidden: ()=>(this.hideOperations) }, // TO-DO: Check limit
-				{command: 'impute',           text: 'Impute rows',          group: 'ML', min: 1, hidden: ()=>(this.hideOperations) },
-				{command: 'values_to_cols',   text: 'Values to Columns',    group: 'ML', max: 1, hidden: ()=>(this.hideOperations) },
+				{command: 'sample_n', text: 'Random sampling', group: 'ML'},
+        {command: 'stratified_sample', text: 'Stratified Sampling', group: 'ML', min: 1, max: 1 },
+				{command: 'bucketizer',       text: 'Create Bins',          group: 'ML', max: 1 }, // TO-DO: Check limit
+				{command: 'impute',           text: 'Impute rows',          group: 'ML', min: 1 },
+				{command: 'values_to_cols',   text: 'Values to Columns',    group: 'ML', max: 1 },
 				{command: 'string_to_index',  text: 'Strings to Index',     group: 'ML', min: 1},
 				{command: 'index_to_string',  text: 'Indices to Strings',     group: 'ML', min: 1},
-        {command: 'z_score',          text: 'Standard Scaler',  group: 'ML', min: 1, hidden: ()=>(this.hideOperations)},
-        {command: 'min_max_scaler',   text: 'Min max Scaler',   group: 'ML', min: 1, hidden: ()=>(this.hideOperations)},
-        {command: 'max_abs_scaler',   text: 'Max abs Scaler',   group: 'ML', min: 1, hidden: ()=>(this.hideOperations)},
-        {command: 'outliers',   text: 'Outliers',   group: 'ML', min: 1, max: 1, hidden: ()=>(this.hideOperations)},
+        {command: 'z_score',          text: 'Standard Scaler',  group: 'ML', min: 1},
+        {command: 'min_max_scaler',   text: 'Min max Scaler',   group: 'ML', min: 1},
+        {command: 'max_abs_scaler',   text: 'Max abs Scaler',   group: 'ML', min: 1},
+        {command: 'outliers',   text: 'Outliers',   group: 'ML', min: 1, max: 1},
 
         ...Object.entries(TYPES_NAMES).map(
           ([dtype, text])=>({command: 'set_profiler_dtypes', payload: { dtype }, text, group: 'CAST'})
@@ -789,8 +846,7 @@ export default {
           disabled: ()=>['values','ranges'].includes(this.selectionType) || this.selectedColumns.length<1,
           icons: [
             { icon: 'mdi-sort-alphabetical-ascending' }
-          ],
-          hidden: ()=>(this.hideOperations)
+          ]
         },
         {
           type: 'button',// {toString: ()=>(this.selectionType=='columns' ? 'button' : 'menu')},
@@ -942,6 +998,20 @@ export default {
           group: 'STRING',
           icons: [{ icon: 'text_format' }],
           tooltip: 'String operations',
+          disabled: ()=>!(this.selectionType=='columns' && this.currentDataset && this.currentDataset.summary && this.selectedColumns.length>=0)
+        },
+        {
+          type: 'menu',
+          group: 'MATH',
+          icons: [{ icon: 'mdi-numeric' }],
+          tooltip: 'Numeric operations',
+          disabled: ()=>!(this.selectionType=='columns' && this.currentDataset && this.currentDataset.summary && this.selectedColumns.length>=0)
+        },
+        {
+          type: 'menu',
+          group: 'TRIGONOMETRIC',
+          icons: [{ icon: 'mdi-pi' }],
+          tooltip: 'Trigonometric operations',
           disabled: ()=>!(this.selectionType=='columns' && this.currentDataset && this.currentDataset.summary && this.selectedColumns.length>=0)
         },
         {

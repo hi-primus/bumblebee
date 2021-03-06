@@ -602,7 +602,7 @@ export const getSourceParams = (type) => {
   })
 }
 
-export const pythonArguments = (defaultParams, params) => {
+export const pythonArguments = (defaultParams = {}, params = {}) => {
   var codes = [];
 
   Object.entries(defaultParams).forEach(([key, param])=>{
@@ -618,6 +618,7 @@ export const pythonArguments = (defaultParams, params) => {
           str = `${key}=${+value}`;
           break;
 
+        case undefined:
         case 'const':
           str = `${key}=${value}`;
           break;

@@ -384,7 +384,20 @@ export const codeGenerators = {
 
     return code
   },
-  STRING: (payload) => {
+  GENERIC: (payload) => {
+
+    let output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (!['final','processing'].includes(payload.request.type)) ? '__new__' : '')
+
+    let _argument = preparedColumns(payload.columns);
+
+    let _parameters = pythonArguments(payload.parameters || {}, payload);
+
+    return `.cols.${payload.command}(${_argument}`
+    + ( output_cols_argument ? `, output_cols=${output_cols_argument}` : '')
+    + ( _parameters ? `, ${_parameters}` : '')
+    + `)`;
+  },
+  MATH: (payload) => {
 
     let output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (!['final','processing'].includes(payload.request.type)) ? '__new__' : '')
 

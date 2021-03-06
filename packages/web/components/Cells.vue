@@ -53,7 +53,7 @@
               <OutputColumnInputs :fieldLabel="command.dialog.output_cols_label" :noLabel="!command.dialog.output_labels" :currentCommand.sync="currentCommand"></OutputColumnInputs>
             </template>
             <template v-if="!currentCommand.loading && command.dialog.fields">
-              <template v-for="field in command.dialog.fields.filter(f=>(!f.condition || f.condition && f.condition(currentCommand)))">
+              <template v-for="field in getProperty(command.dialog.fields, [currentCommand]).filter(f=>(!f.condition || f.condition && f.condition(currentCommand)))">
 
                 <OperationField
                   v-if="getProperty(field.type,[currentCommand])!='repeat'"
@@ -1592,37 +1592,64 @@ export default {
           }),
           content: (payload) => `<b>Group by</b> ${multipleContent([payload.group_by],'hl--cols')} <b>aggregate</b> ${multipleContent([payload.input_cols, payload.aggregations],['hl--cols', 'hl--param'],', ',' using ', false, false)}`
         },
-        STRING: {
+        GENERIC_OLD: {
           dialog: {
-            title: (c)=>{
-              return {
-                proper: 'Convert to proper case',
-                trim: 'Trim white spaces',
-                lower: 'Convert to lowercase',
-                upper: 'Convert to uppercase',
-                normalize_chars: 'Remove accents',
-                remove_special_chars: 'Remove special chars'
-              }[c.command]
-            },
+            title: (c)=>c.title || c.content || c.command,
             output_cols: true,
           },
           payload: (columns, payload = {}) => ({
             columns: columns,
             output_cols: columns.map(e=>''),
+            title: payload.title,
+            content: payload.content,
             preview: {
-              type: 'STRING'
+              type: 'GENERIC_OLD'
             }
           }),
           content: (payload) => {
-            var str = {
-              proper: 'Proper case',
-              trim: 'Trim white spaces in',
-              lower: 'Lowercase',
-              upper: 'Uppercase',
-              normalize_chars: 'Remove accents in',
-              remove_special_chars: 'Remove special chars in'
+            return `<b>${payload.content || payload.command}</b> ${multipleContent([payload.columns],'hl--cols')}`
+          }
+        },
+        GENERIC: {
+          dialog: {
+            title: (c)=>c.title || c.content || c.command,
+            fields: (c)=>{
+              console.log(c.parameters)
+              return Object.entries(c.parameters || {}).map(([key, param])=>({
+                label: param.label,
+                key,
+                type: param.formType || (param.type=='int' ? 'number' : 'field')
+              }));
+            },
+            output_cols: true,
+          },
+          payload: (columns, payload = {}) => {
+
+            let parameters = objectMap(payload.parameters || {}, ([name, value]) => value.value);
+
+            return {
+              ...parameters,
+              columns: columns,
+              output_cols: columns.map(e=>''),
+              title: payload.title,
+              content: payload.content,
+              preview: {
+                type: 'GENERIC'
+              }
             }
-            return `<b>${str[payload.command]}</b> ${multipleContent([payload.columns],'hl--cols')}`
+          },
+          content: (payload) => {
+
+            let using = ""
+
+            let parameters = Object.keys(payload.parameters).map(parameter=>{
+              return `${multipleContent([payload[parameter]],'hl--param')} as ${multipleContent([parameter],'hl--param')}`
+            })
+
+            if (parameters.length) {
+              using = " using "+parameters.join(", ");
+            }
+            return `<b>${payload.content || payload.command}</b> ${multipleContent([payload.columns],'hl--cols')} using ${using}`
           }
         },
         SUBSTR1: {

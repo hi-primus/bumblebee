@@ -1656,7 +1656,7 @@ export default {
     },
 
     commandHandle (command) {
-      this.$store.commit('commandHandle',command)
+      this.$store.commit('commandHandle', command);
     },
 
     getRowHighlight (row) {
