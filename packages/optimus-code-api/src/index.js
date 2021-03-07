@@ -1020,7 +1020,7 @@ export const generateCode = function(commands = [], _request = { type: 'processi
         if (request.profile) {
           profileColumns = preparedColumns(request.profile);
           if (request.profile_partial) {
-            profileColumns = `${dfName}.cols.names("*")[0:${request.profile_partial}]`;
+            profileColumns = `${dfName}.cols.names("*")[${Math.max(0,request.profile_partial-10)}:${request.profile_partial}]`;
           }
         }
 

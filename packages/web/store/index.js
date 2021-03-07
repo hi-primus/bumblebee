@@ -226,7 +226,7 @@ export const mutations = {
     Vue.set(state.listViews,state.tab,listView)
   },
 
-	setDataset (state, { dataset, preview, tab, avoidReload }) {
+	setDataset (state, { dataset, preview, tab, avoidReload, partial }) {
 
     console.log("[BUMBLEBLEE] Opening dataset", dataset);
 
@@ -252,12 +252,18 @@ export const mutations = {
       dataset.blank = false;
     }
 
+    var found = state.datasets.findIndex(ds => ds.dfName===dataset.dfName)
+
+
     if (!Array.isArray(dataset.columns)) {
-      dataset.columns = Object.entries(dataset.columns).map(([key, value])=>({...value, name: key}));
+      dataset._columns = dataset.columns;
+      if (partial && state.datasets[found] && state.datasets[found]._columns) {
+        dataset._columns = { ...state.datasets[found]._columns, ...dataset._columns };
+      }
+      dataset.columns = Object.entries(dataset._columns).map(([key, value])=>({...value, name: key}));
     }
 
     if (!tab) {
-      var found = state.datasets.findIndex(ds => ds.dfName===dataset.dfName)
       if (found >= 0) {
         tab = found;
       } else if (state.datasets[state.tab] && state.datasets[state.tab].blank) {
@@ -1409,7 +1415,7 @@ export const actions = {
         request: {
           dfName,
           profile: true,
-          profile_partial: partial ? 10 : undefined,
+          profile_partial: partial ? partial : undefined,
           async_priority: partial ? -5 : -10,
           isAsync: true,
         }
@@ -1426,7 +1432,7 @@ export const actions = {
     var dataset = parseResponse(response.data.result);
     dataset.dfName = dfName;
     console.debug('[DATASET] Setting', { dataset, to: dfName });
-    await dispatch('setDataset', { dataset, avoidReload });
+    await dispatch('setDataset', { dataset, avoidReload, partial });
 
     if (state.gettingNewResults) {
       await dispatch('afterNewProfiling');
@@ -1458,10 +1464,21 @@ export const actions = {
       }
 
       if (partial) {
-        await dispatch('requestAndSaveProfiling', { dfName, socketPost, avoidReload, partial: true });
+
+        let dataset = await dispatch('requestAndSaveProfiling', { dfName, socketPost, avoidReload, partial: 10 });
+        let columnsCount = dataset.summary.cols_count;
+        let result;
+        for (let i = 20; i < columnsCount+10; i+=10) {
+          result = await dispatch('requestAndSaveProfiling', { dfName, socketPost, avoidReload, partial: i });
+        }
+        return result;
+
+      } else {
+
+        return await dispatch('requestAndSaveProfiling', { dfName, socketPost, avoidReload: avoidReload || partial, partial: false });
+
       }
 
-      return await dispatch('requestAndSaveProfiling', { dfName, socketPost, avoidReload: avoidReload || partial, partial: false });
 
     } catch (err) {
 
