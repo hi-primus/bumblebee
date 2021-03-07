@@ -542,8 +542,6 @@ export const actions = {
         isAsync,
         username: await dispatch('session/getUsername'),
         workspace: state.workspaceSlug || 'default'
-      }, {
-        timeout: 0
       })
 
       var endTime = new Date().getTime()
@@ -757,16 +755,28 @@ export const actions = {
 
   },
 
-  async loadFeatures ({ state, commit, dispatch }, { slug, socketPost }) {
+  async loadFeatures ({ state, commit, dispatch }, { slug, socketPost, isRetry }) {
 
     let username = await dispatch('session/getUsername');
 
     console.log('[BUMBLEBEE] Checking features', username, slug);
 
-    let featuresResponse = await socketPost('features', {
-      username,
-      workspace: slug || 'default'
-    });
+    let featuresResponse;
+
+    try {
+      featuresResponse = await socketPost('features', {
+        username,
+        workspace: slug || 'default'
+      }, isRetry ? 60000 : 10000);
+    } catch (err) {
+      if (!isRetry) {
+        return dispatch('loadFeatures', { slug, socketPost, isRetry: true })
+      } else {
+        throw err;
+      }
+    }
+
+
 
     let unavailableEngines = [];
 
@@ -1323,8 +1333,6 @@ export const actions = {
           username: await dispatch('session/getUsername'),
           workspace: state.workspaceSlug || 'default',
           key: state.key
-        }, {
-          timeout: 0
         });
 
       } else {
@@ -1335,8 +1343,6 @@ export const actions = {
           username: await dispatch('session/getUsername'),
           workspace: state.workspaceSlug || 'default',
           key: state.key
-        }, {
-          timeout: 0
         });
 
       }

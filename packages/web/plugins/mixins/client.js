@@ -191,7 +191,7 @@ export default {
       })
     },
 
-    socketPost (message, payload = {}) {
+    socketPost (message, payload = {}, timeout) {
 
       if (!process.client) {
         throw 'not client'
@@ -256,6 +256,16 @@ export default {
           socket = await window.socket()
 
           socket.emit(message, { ...payload, timestamp });
+          if (timeout) {
+
+            await new Promise((res, rej) => {
+              setTimeout(() => {
+                res(true)
+              }, timeout);
+            });
+
+            reject(new Error("Timeout error"))
+          }
 
         } catch (error) {
           if (error.code) {
@@ -437,7 +447,12 @@ export default {
         }
       });
 
-      window.socketPromise.catch(()=>delete window.socketPromise);
+      window.socketPromise.catch((err)=>{
+        console.error(err);
+        delete window.socketPromise;
+      });
+
+      window.stopClient = this.stopClient;
 
       return window.socketPromise;
 
