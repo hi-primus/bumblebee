@@ -216,15 +216,7 @@ export default {
 
             if (!['initialize','features'].includes(message)) {
 
-              var query = this.$route.query;
-
               var params = {};
-
-              Object.keys(INIT_PARAMS).forEach(parameter => {
-                if (query[parameter]) {
-                  params[parameter] = query[parameter]
-                }
-              });
 
               params = getDefaultParams(params);
 
@@ -241,8 +233,6 @@ export default {
               if (params.jupyter_address) {
                 params.jupyter_ip = params.jupyter_address.ip;
                 params.jupyter_port = params.jupyter_address.port;
-
-                // delete params.jupyter_address;
               }
 
               var reinitializationPayload = {
@@ -306,14 +296,6 @@ export default {
 		async stopClient (waiting) {
 
       this.socketAvailable = false
-
-      if (this.$route.query.session || this.$route.query.key) {
-        let query = Object.assign({}, this.$route.query)
-        delete query.key
-        delete query.session
-        this.$router.replace({ query })
-      }
-
 
 			if (waiting) {
 				this.$store.commit('setAppStatus', {status: 'waiting'})

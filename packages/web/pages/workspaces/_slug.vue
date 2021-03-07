@@ -426,20 +426,6 @@ export default {
 	},
 
 	watch: {
-		async status(value) {
-			if (value == 'workspace') {
-				var dataset = this.$route.query.dataset;
-				if (dataset && this.$refs.tableBar) {
-					this.$refs.tableBar.commandHandle({
-            command: 'loadFile',
-            noOperations: true,
-						immediate: true,
-						payload: { url: dataset, file_type: 'file', _moreOptions: true }
-					});
-				}
-			}
-		},
-
 		confirmDelete(value) {
 			if (value>=0 && this.$store.state.datasets[value] && this.$store.state.datasets[value].blank) {
         return this.deleteTab(value)
