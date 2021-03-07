@@ -1445,7 +1445,7 @@ export const actions = {
 
       await Vue.nextTick();
 
-      var executeResult = await dispatch('getExecute', { payload: { dfName, socketPost, ignoreFrom }});
+      var executeResult = await dispatch('getExecute', { dfName, socketPost, ignoreFrom });
 
       var username = await dispatch('session/getUsername');
 
@@ -1500,9 +1500,9 @@ export const actions = {
     return dispatch('getPromise', promisePayload);
   },
 
-  async loadExecute ({ dispatch, commit, getters }, {dfName, socketPost, ignoreFrom}) {
+  async loadExecute ({ dispatch, commit, getters }, { dfName, socketPost, ignoreFrom }) {
 
-    console.debug('[DEBUG] Executing dataset', dfName);
+    // console.debug('[DEBUG] Executing dataset', dfName);
 
     if (!dfName) {
       throw new Error('Trying to execute undefined Dataframe');
@@ -1517,11 +1517,11 @@ export const actions = {
     var response = await dispatch('evalCode', { socketPost, codePayload: { command: 'execute', dfName }});
 
     if (response.data.status === "error") {
-      console.warn('.execute() unsuccessful', dfName);
+      console.warn('[DEBUG] Execute unsuccessful', dfName);
       return false
     }
 
-    console.debug('[DEBUG] .execute() Done', dfName);
+    console.debug('[DEBUG] Executed', dfName);
 
     return true;
 
@@ -1537,13 +1537,7 @@ export const actions = {
       forcePromise
     };
 
-    let success = dispatch('getPromise', promisePayload);
-
-    if (!success) {
-      delete executePromises[dfName]
-    }
-
-    return success;
+    return dispatch('getPromise', promisePayload);
   },
 
   async getBufferWindow ({commit, dispatch, state, getters}, {from, to, slug, dfName, socketPost, beforeCodeEval}) {
@@ -1591,7 +1585,7 @@ export const actions = {
 
     var datasetDfName = currentDataset.dfName || dfName;
 
-    await dispatch('getExecute', { payload: { dfName: datasetDfName, socketPost }});
+    let executeResult = await dispatch('getExecute', { dfName: datasetDfName, socketPost });
 
     if (beforeCodeEval) {
       beforeCodeEval()
