@@ -247,7 +247,7 @@ export const codeGenerators = {
         break
       case 'contains':
       case 'starts_with':
-      case 'end_swith':
+      case 'ends_with':
         expression = `${dfName}.mask.${payload.condition}("${payload.columns[0]}", "${payload.text}")`
         break
       case 'custom':
