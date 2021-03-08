@@ -286,7 +286,7 @@ export const mutations = {
 
       var previousSelection;
       try {
-        previousSelection = state.datasetSelection[tab].columns;
+        previousSelection = state.datasetSelection[tab].columns || [];
       } catch (err) {
         previousSelection = [];
       }
@@ -1416,7 +1416,7 @@ export const actions = {
           dfName,
           profile: true,
           profile_partial: partial ? partial : undefined,
-          async_priority: partial ? -5 : -10,
+          async_priority: partial ? (-5-partial) : -10,
           isAsync: true,
         }
       }
@@ -1467,11 +1467,13 @@ export const actions = {
 
         let dataset = await dispatch('requestAndSaveProfiling', { dfName, socketPost, avoidReload, partial: 10 });
         let columnsCount = dataset.summary.cols_count;
-        let result;
+        let promises = [];
         for (let i = 20; i < columnsCount+10; i+=10) {
-          result = await dispatch('requestAndSaveProfiling', { dfName, socketPost, avoidReload, partial: i });
+          promises.push(dispatch('requestAndSaveProfiling', { dfName, socketPost, avoidReload, partial: i }));
         }
-        return result;
+
+        let results = await Promise.all(promises);
+        return results[results.length - 1];
 
       } else {
 

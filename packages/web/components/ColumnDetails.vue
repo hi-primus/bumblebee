@@ -349,11 +349,9 @@ export default {
         var payload = {
           socketPost: this.socketPost,
           dfName: this.currentDataset.dfName,
-          avoidReload: true,
-          clearPrevious: true
         };
 
-        var profiling = await this.$store.dispatch('getProfiling', { payload });
+        var executeResult = await this.$store.dispatch('getExecute', payload );
 
         if (this.patternsFrequency[this.patternsResolution] && this.patternsFrequency[this.patternsResolution]!=='error') {
           return

@@ -3205,7 +3205,8 @@ export default {
         socketPost: this.socketPost,
         dfName: this.currentDataset.dfName,
         avoidReload: true,
-        clearPrevious: true
+        clearPrevious: true,
+        partial: true
       }});
     },
 
