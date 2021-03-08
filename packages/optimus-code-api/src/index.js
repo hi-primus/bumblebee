@@ -104,7 +104,32 @@ export const codeGenerators = {
   },
   patterns_count_async: (payload) => {
     return {
-      code: `_output = op.submit(${payload.dfName}.cols.pattern_counts, "${payload.column}", n=${payload.n}, mode=${payload.mode})`,
+      code: `_output = op.submit(${payload.dfName}.cols.pattern_counts, "${payload.column}", n=${payload.n}, mode=${payload.mode}, priority=${payload.request.priority})`,
+      isOutput: true,
+      isAsync: true
+    };
+  },
+  profile_async_partial: (payload) => {
+    let code = ""
+    code += `def _output_callback(fut):\n`
+    code += `    global ${payload.dfName}\n`
+    code += `    ${payload.dfName} = fut.result()\n`
+    code += `    return ${payload.dfName}.profile(${payload.dfName}.cols.names("*")[${payload.range.join(":")}])\n`
+    code += `_output = op.submit(${payload.dfName}.calculate_profile, ${payload.dfName}.cols.names("*")[${payload.range.join(":")}], priority=${payload.request.priority}, pure=False)\n`
+    return {
+      code,
+      isOutput: true,
+      isAsync: true
+    };
+  },
+  profile_async: (payload) => {
+    code =  `def _output_callback(fut):`
+    code += `    global ${payload.dfName}`
+    code += `    ${payload.dfName} = fut.result()`
+    code += `    return ${payload.dfName}.profile(${payload.columns})`
+    code += `_output = op.submit(${payload.dfName}.calculate_profile, ${payload.columns}, priority=${payload.priority}, pure=False)`
+    return {
+      code,
       isOutput: true,
       isAsync: true
     };

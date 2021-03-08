@@ -1408,15 +1408,16 @@ export const actions = {
     return dispatch('getPromise', promisePayload);
   },
 
-  async requestAndSaveProfiling ({ dispatch, state, getters, commit }, { dfName, socketPost, avoidReload, partial }) {
+  async requestProfiling ({ dispatch, state, getters, commit }, { dfName, socketPost, avoidReload, partial }) {
+
     let response = await dispatch('evalCode', {
       socketPost,
       codePayload: {
+        command: 'profile_async_partial',
+        range: partial ? [Math.max(0, partial-10), partial] : undefined,
+        dfName,
         request: {
-          dfName,
-          profile: true,
-          profile_partial: partial ? partial : undefined,
-          async_priority: partial ? (-5-partial) : -10,
+          priority: partial ? (-5-partial) : -10,
           isAsync: true,
         }
       }
@@ -1429,10 +1430,14 @@ export const actions = {
     }
 
     window.pushCode({code: response.code});
-    var dataset = parseResponse(response.data.result);
+    return parseResponse(response.data.result);
+  },
+
+  async setProfiling ({ dispatch, state, getters, commit }, { dfName, dataset, avoidReload, partial }) {
+
     dataset.dfName = dfName;
     console.debug('[DATASET] Setting', { dataset, to: dfName });
-    await dispatch('setDataset', { dataset, avoidReload, partial });
+    await dispatch('setDataset', { dataset, avoidReload: avoidReload || partial, partial });
 
     if (state.gettingNewResults) {
       await dispatch('afterNewProfiling');
@@ -1465,19 +1470,21 @@ export const actions = {
 
       if (partial) {
 
-        let dataset = await dispatch('requestAndSaveProfiling', { dfName, socketPost, avoidReload, partial: 10 });
-        let columnsCount = dataset.summary.cols_count;
-        let promises = [];
+        let dataset = await dispatch('requestProfiling', { dfName, socketPost, avoidReload, partial: 10 });
+        let result = await dispatch('setProfiling', { dfName, dataset, avoidReload, partial: 10 });
+        let columnsCount = result.summary.cols_count;
+        let promise = false;
         for (let i = 20; i < columnsCount+10; i+=10) {
-          promises.push(dispatch('requestAndSaveProfiling', { dfName, socketPost, avoidReload, partial: i }));
+          dataset = await dispatch('requestProfiling', { dfName, socketPost, avoidReload, partial: i });
+          await promise;
+          promise = dispatch('setProfiling', { dfName, dataset, avoidReload, partial: i });
         }
-
-        let results = await Promise.all(promises);
-        return results[results.length - 1];
+        return await promise;
 
       } else {
 
-        return await dispatch('requestAndSaveProfiling', { dfName, socketPost, avoidReload: avoidReload || partial, partial: false });
+        let dataset = await dispatch('requestProfiling', { dfName, socketPost, avoidReload: avoidReload || partial, partial: false });
+        await dispatch('setProfiling', { dfName, dataset, avoidReload: avoidReload || partial, partial: false });
 
       }
 
@@ -1568,7 +1575,7 @@ export const actions = {
     var tabs = workspaceLoad.tabs;
 
     if (!tabs.length) {
-      tabs = state.datasets
+      tabs = state.datasets;
     }
 
     if (!tabs.length) {
@@ -1599,7 +1606,7 @@ export const actions = {
     var currentDataset = getters.currentDataset;
 
     if (!currentDataset && !dfName) {
-      throw new Error('No dataset found')
+      throw new Error('No dataset found');
     }
 
     var datasetDfName = currentDataset.dfName || dfName;
@@ -1607,7 +1614,7 @@ export const actions = {
     let executeResult = await dispatch('getExecute', { dfName: datasetDfName, socketPost });
 
     if (beforeCodeEval) {
-      beforeCodeEval()
+      beforeCodeEval();
     }
 
     var response;
@@ -1625,11 +1632,9 @@ export const actions = {
             sample: true,
             buffer: [from, to+1],
             noBufferWindow,
-            // isAsync: true
           }
         };
-        response = await dispatch('evalCode',{ socketPost, codePayload })
-        // response = await dispatch('evalCode',{ socketPost, codePayload, isAsync: true })
+        response = await dispatch('evalCode',{ socketPost, codePayload });
         if (!response || !response.data || response.data.status == "error") {
           throw response;
         }

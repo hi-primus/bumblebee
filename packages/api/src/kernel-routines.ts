@@ -33,12 +33,13 @@ ${output_json('res')}
 const asyncCode = (code = '') => `
 
 ${TIME_START}
+_output_callback = None
 ${code}
 _result = None
 if _output.status == "finished":
     _result = _output.result()
 else:
-    _output.add_done_callback(_out_result)
+    _output.add_done_callback(_out_result(_output_callback))
 
 res = {'result': _result, 'status': _output.status, 'key': _output.key }
 ${TIME_END}
@@ -128,13 +129,18 @@ const init = (payload, min = false) => {
   return `
 ${INIT_JSON}
 
-def _out_result(fut):
-    _res = {'key': fut.key, 'status': fut.status}
-    if fut.status == "error":
-        _res.update({'error': fut.exception()})
-    elif fut.status == "finished":
-        _res.update({'result': fut.result()})
-    display(${output_json('_res')})
+def _out_result(_callback = None):
+    def _f(fut):
+        _res = {'key': fut.key, 'status': fut.status}
+        if fut.status == "error":
+            _res.update({'error': fut.exception()})
+        elif fut.status == "finished":
+            if _callback:
+                _res.update({'result': _callback(fut)})
+            else:
+                _res.update({'result': fut.result()})
+        display(${output_json('_res')})
+    return _f
 
 # optimus parser
 

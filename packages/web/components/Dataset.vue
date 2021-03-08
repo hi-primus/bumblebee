@@ -830,12 +830,15 @@ export default {
               }
 
               var pCodePayload = {
+                command: 'profile_async',
+                dfName,
                 request: {
-                  dfName,
-                  profile: true,
-                  isAsync: true
+                  priority: -10,
+                  isAsync: true,
                 }
               }
+
+
 
               var pResponse = await this.evalCode(pCodePayload)
 
