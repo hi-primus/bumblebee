@@ -1484,7 +1484,7 @@ export const actions = {
       } else {
 
         let dataset = await dispatch('requestProfiling', { dfName, socketPost, avoidReload: avoidReload || partial, partial: false });
-        await dispatch('setProfiling', { dfName, dataset, avoidReload: avoidReload || partial, partial: false });
+        return await dispatch('setProfiling', { dfName, dataset, avoidReload: avoidReload || partial, partial: false });
 
       }
 
