@@ -87,10 +87,10 @@ export const initializeOptimusSession = async function (sessionId, payload) {
 				tries = 0;
 			}
 			if (tries <= 0) {
-				// console.error(err);
+				let contentErr = err instanceof Error ? err.toString() : err;
 				return {
 					error: 'Internal error trying to create a kernel',
-          content: err.toString(),
+          content: contentErr,
           err,
 					status: 'error',
 				};
@@ -281,10 +281,11 @@ export const runCode = async function (code = '', sessionId = '', asyncCallback 
 			};
 		} else {
       console.error(err)
+      let contentErr = err instanceof Error ? err.toString() : err;
 			return {
 				status: 'error',
 				error: 'Internal error',
-				content: err.toString(),
+				content: contentErr,
 			};
 		}
 	}

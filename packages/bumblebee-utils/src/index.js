@@ -328,11 +328,28 @@ export const handleResponse = (response) => {
       response = response.replace(/\bNaN\b/g, null);
       response = response.replace(/\\+\'/g, "'");
       response = response.replace(/\\\\"/g, '\\"');
+      response = response.replace(/\\xa0/g, ' ');
       parsedResponse = JSON.parse(response);
     }
-	} catch (error) {
-		console.error(error.toString());
-		parsedResponse = JSON.parse(response);
+	} catch (err) {
+
+    try {
+      parsedResponse = JSON.parse(response);
+      console.error('Response handling error', err);
+      parsedResponse = {
+        ...parsedResponse,
+        error: err.toString(),
+        status: 'error'
+      };
+    } catch (err2) {
+      console.error('Response parsing error', err2);
+      parsedResponse = {
+        raw: response,
+        error: err2.toString(),
+        status: 'error'
+      };
+    }
+
 	}
 
   const replace_traceback = (l) => l.replace(
@@ -343,7 +360,6 @@ export const handleResponse = (response) => {
   if (parsedResponse && parsedResponse.traceback && parsedResponse.traceback.map) {
 		parsedResponse.traceback = parsedResponse.traceback.map(replace_traceback);
 	}
-
 
   return parsedResponse;
 };
