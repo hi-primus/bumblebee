@@ -170,7 +170,7 @@
 				fixed-header
 				@click:row="rowClicked"
 			>
-				<template v-slot:item.controls="{ item }">
+				<template v-slot:[`item.controls`]="{ item }">
 					<div class="cell-controls">
 						<v-icon class="control-button control-check" @click.stop="toggleColumnSelection(item.name)">
 							<template v-if="selectedColumns[item.name]">check_box</template>
@@ -197,7 +197,7 @@
 						</v-tooltip>
 					</div>
 				</template>
-				<template v-slot:item.profilerDtype="{ item }">
+				<template v-slot:[`item.profilerDtype`]="{ item }">
 					<v-tooltip transition="fade-transition" bottom>
 						<template v-slot:activator="{ on }">
 							<div class="data-type pr-4" v-on="on">
@@ -216,28 +216,28 @@
 					</v-tooltip>
 				</template>
 				<template
-					v-slot:item.type="{item}"
+					v-slot:[`item.type`]="{item}"
 				>
 					<div class="data-type-name">
 						{{ item.type }}
 					</div>
 				</template>
-				<template v-slot:item.name="{ item }">
+				<template v-slot:[`item.name`]="{ item }">
 					<div class="pr-4">
 						{{ item.name }}
 					</div>
 				</template>
-				<template v-slot:item.missing="{ item }">
+				<template v-slot:[`item.missing`]="{ item }">
 					<div class="pr-4">
 						{{ item.missing | formatNumberInt }}
 					</div>
 				</template>
-				<template v-slot:item.null="{ item }">
+				<template v-slot:[`item.null`]="{ item }">
 					<div class="pr-4" v-if="item.null!==undefined">
 						{{ item.null | formatNumberInt }}
 					</div>
 				</template>
-        <template v-slot:item.zeros="{ item }">
+        <template v-slot:[`item.zeros`]="{ item }">
 					<div class="pr-4" v-if="item.zeros!==undefined">
 						{{ item.zeros | formatNumberInt }}
 					</div>
