@@ -104,7 +104,7 @@ export const codeGenerators = {
   },
   patterns_count_async: (payload) => {
     return {
-      code: `_output = op.submit(${payload.dfName}.cols.pattern_counts, "${payload.column}", n=${payload.n}, mode=${payload.mode}, priority=${payload.request.priority})`,
+      code: `_output = op.submit(${payload.dfName}.cols.pattern_counts, "${payload.column}", n=${payload.n}, mode=${payload.mode}, priority=${payload.request.priority || 0})`,
       isOutput: true,
       isAsync: true
     };
@@ -115,7 +115,7 @@ export const codeGenerators = {
     code += `    global ${payload.dfName}\n`;
     code += `    ${payload.dfName} = fut.result()\n`;
     code += `    return ${payload.dfName}.profile(${payload.dfName}.cols.names("*")[${payload.range.join(":")}])\n`;
-    code += `_output = op.submit(${payload.dfName}.calculate_profile, ${payload.dfName}.cols.names("*")[${payload.range.join(":")}], priority=${payload.request.priority}, pure=False)\n`;
+    code += `_output = op.submit(${payload.dfName}.calculate_profile, ${payload.dfName}.cols.names("*")[${payload.range.join(":")}], priority=${payload.request.priority || 0}, pure=False)\n`;
     return {
       code,
       isOutput: true,
@@ -128,7 +128,7 @@ export const codeGenerators = {
     code += `    global ${payload.dfName}\n`;
     code += `    ${payload.dfName} = fut.result()\n`;
     code += `    return ${payload.dfName}.profile(${payload.columns || '"*"'})\n`;
-    code += `_output = op.submit(${payload.dfName}.calculate_profile, ${payload.columns || '"*"'}, priority=${payload.priority}, pure=False)\n`;
+    code += `_output = op.submit(${payload.dfName}.calculate_profile, ${payload.columns || '"*"'}, priority=${payload.request.priority || 0}, pure=False)\n`;
     return {
       code,
       isOutput: true,
