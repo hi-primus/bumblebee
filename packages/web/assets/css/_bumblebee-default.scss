@@ -1758,7 +1758,7 @@ $editor-top-padding: 4px;
       // margin-left: -48px;
       width: 49px;
       // height: 121px;
-      height: calc(100% - 10px);
+      height: 100%;
       border-right-style: solid;
       border-right-color: $line-color-1;
       border-right-width: 1px;
@@ -1837,12 +1837,14 @@ $editor-top-padding: 4px;
 
   .bb-table-container {
     &::-webkit-scrollbar-track:vertical {
-
-
       border-top-style: solid;
       border-top-width: 1px;
       border-top-color: $line-color-1;
       z-index: 5;
+    }
+
+    &::-webkit-scrollbar-track:horizontal {
+      margin-left: 48px;
     }
   }
 
