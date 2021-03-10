@@ -1235,6 +1235,9 @@ table {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    span {
+      opacity: 0.667;
+    }
   }
 
 }

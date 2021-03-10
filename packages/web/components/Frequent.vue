@@ -138,7 +138,11 @@ export default {
     setValueIndex(index) {
       var item = this.calculatedValues[index]
       if (item) {
-        this.currentVal = `${item.value},&nbsp;${item.count},&nbsp;${item.percentage}%`
+        let value = item.value;
+        if (value === "") {
+          value = "<span>Empty</span>"
+        }
+        this.currentVal = `${value},&nbsp;${item.count},&nbsp;${item.percentage}%`
       }
     },
     updateSelected(v) {
