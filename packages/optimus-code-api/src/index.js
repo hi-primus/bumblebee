@@ -109,6 +109,13 @@ export const codeGenerators = {
       isAsync: true
     };
   },
+  profile_partial: (payload) => {
+    return {
+      code: `_output = ${payload.dfName}.profile(${payload.dfName}.cols.names("*")[${payload.range.join(":")}])\n`,
+      isOutput: true,
+      isAsync: false
+    };
+  },
   profile_async_partial: (payload) => {
     let code = "";
     code += `def _output_callback(fut):\n`;
