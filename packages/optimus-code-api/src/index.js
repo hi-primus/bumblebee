@@ -720,7 +720,7 @@ export const codeGenerators = {
     }
 
     if (payload._replace_by_string) {
-      str += ( (payload.request.type === 'preview' && payload.replace) ? `.cols.find(${output_cols_argument}, sub=[${payload.replace}])` : '');
+      str += ( (payload.request.type === 'preview' && payload.replace) ? `.cols.find(${output_cols_argument}, sub=["${payload.replace}"])` : '');
     }
 
     return str;
