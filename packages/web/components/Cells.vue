@@ -3700,7 +3700,7 @@ export default {
           return false;
         }
 
-        let dataset = await this.$store.dispatch('getProfiling', { payload: { dfName, ignoreFrom, socketPost: this.socketPost, partial: true } });
+        let dataset = await this.$store.dispatch('getProfiling', { payload: { dfName, ignoreFrom, clearPrevious: true, socketPost: this.socketPost, partial: true } });
 
         if (this.firstRun) {
           this.firstRun = false;

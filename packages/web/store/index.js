@@ -11,8 +11,9 @@ const properties = [
     clear: true,
   },
   {
-    name: 'datasetUpdates',
-    default: ()=>0
+    name: 'DatasetUpdate',
+    default: ()=>0,
+    multiple: true
   },
   {
     name: 'PreviewColumns',
@@ -164,6 +165,10 @@ export const mutations = {
     Vue.set(state, mutate, payload)
   },
 
+  updateDataset (state, { tab }) {
+    Vue.set(state.everyDatasetUpdate, tab, (state.everyDatasetUpdate[tab] || 0) + 1);
+  },
+
   setColumns (state, { dfName, columns }) {
     Vue.set(state.columns, dfName, columns);
   },
@@ -312,7 +317,7 @@ export const mutations = {
           state[p.name] = false;
         }
       });
-      state.datasetUpdates = state.datasetUpdates + 1;
+      Vue.set(state.everyDatasetUpdate, tab, (state.everyDatasetUpdate[tab] || 0) + 1);
     }
 
     return dataset;
@@ -353,7 +358,7 @@ export const mutations = {
       state.tab = found
     }
 
-    state.datasetUpdates = state.datasetUpdates + 1
+    Vue.set(state.everyDatasetUpdate, state.tab, (state.everyDatasetUpdate[state.tab] || 0) + 1);
   },
 
   unsetDf (state, { dfName }) {
@@ -1149,13 +1154,10 @@ export const actions = {
         commit('mutation', { mutate: 'codeError', payload: '' });
         commit('mutation', { mutate: 'lastWrongCode', payload: false });
         commit('mutation', { mutate: 'cellsPromise', payload: false });
+      case 'executions':
+        commit('mutation', { mutate: 'executePromises', payload: {} });
       default:
-        if (from!='executions') {
-          commit('mutation', { mutate: 'profilingsPromises', payload: {} });
-        }
-        if (from!='profilings') {
-          commit('mutation', { mutate: 'executePromises', payload: {} });
-        }
+        commit('mutation', { mutate: 'profilingsPromises', payload: {} });
     }
   },
 
@@ -1290,7 +1292,7 @@ export const actions = {
       commit('mutation', { mutate: 'commandsDisabled', payload: true });
 
       if (clearPrevious && !state.firstRun) {
-        await dispatch('resetPromises', { from: 'profilings' });
+        await dispatch('resetPromises', { from: 'executions' });
       }
 
       await dispatch('beforeRunCells', { newOnly, ignoreFrom });
@@ -1458,6 +1460,10 @@ export const actions = {
     console.debug('[DEBUG] Loading profiling', dfName);
     try {
 
+      const MESSAGE = 'Updating dataset';
+
+      commit('mutation', {mutate: 'loadingStatus', payload: MESSAGE });
+
       await Vue.nextTick();
 
       var executeResult = await dispatch('getExecute', { dfName, socketPost, ignoreFrom });
@@ -1472,25 +1478,50 @@ export const actions = {
         }
       }
 
+      let profile;
+      let dataset;
+
+      if (partial) {
+        dataset = await dispatch('requestProfiling', { dfName, socketPost, avoidReload, partial: 10 });
+      } else {
+        dataset = await dispatch('requestProfiling', { dfName, socketPost, avoidReload, partial: false });
+      }
+
+      let found = state.datasets.findIndex(_d => _d.dfName == dfName);
+
+      if (clearPrevious && found>=0) {
+        let foundDataset = deepCopy(state.datasets[found])
+        foundDataset.columns = [];
+        foundDataset._columns = {};
+        await dispatch('setDataset', { dataset: foundDataset, avoidReload: true, partial: false });
+      }
+
       if (partial) {
 
-        let dataset = await dispatch('requestProfiling', { dfName, socketPost, avoidReload, partial: 10 });
         let result = await dispatch('setProfiling', { dfName, dataset, avoidReload, partial: 10 });
         let columnsCount = result.summary.cols_count;
         let promise = false;
         for (let i = 20; i < columnsCount+10; i+=10) {
           dataset = await dispatch('requestProfiling', { dfName, socketPost, avoidReload, partial: i });
           await promise;
-          promise = dispatch('setProfiling', { dfName, dataset, avoidReload, partial: i });
+          promise = dispatch('setProfiling', { dfName, dataset, avoidReload: true, partial: i });
         }
-        return await promise;
+        profile = await promise;
 
       } else {
 
-        let dataset = await dispatch('requestProfiling', { dfName, socketPost, avoidReload: avoidReload || partial, partial: false });
-        return await dispatch('setProfiling', { dfName, dataset, avoidReload: avoidReload || partial, partial: false });
+        profile = await dispatch('setProfiling', { dfName, dataset, avoidReload: true, partial: false });
 
       }
+
+      if ( (clearPrevious || avoidReload) && found >= 0 ) {
+        commit('updateDataset', { tab: found } );
+      }
+
+
+      commit('mutation', {mutate: 'loadingStatus', payload: false });
+
+      return profile;
 
 
     } catch (err) {
@@ -1513,6 +1544,9 @@ export const actions = {
 
       err.message = '(Error on profiling) ' + (err.message || '');
       console.debug('[DEBUG] Loading profiling Error', dfName);
+
+      commit('mutation', {mutate: 'loadingStatus', payload: false });
+
       throw err;
     }
   },
@@ -1691,7 +1725,7 @@ export const actions = {
       sample.columns = sample.columns.map(e=>({...e, title: pre+e.title}))
       return {
         code: referenceCode,
-        update: getters.datasetUpdates,
+        update: getters.currentDatasetUpdate,
         from,
         to,
         sample: sample,
@@ -1768,9 +1802,6 @@ properties.forEach((p)=>{
 export const getters = {
   currentDataset (state) {
     return state.datasets[state.tab]
-  },
-  datasetUpdates (state) {
-    return state.datasetUpdates
   },
   commands (state) {
     return state.commands || []

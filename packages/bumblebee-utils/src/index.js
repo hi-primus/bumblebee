@@ -407,9 +407,9 @@ export const getPropertyAsync = async (pof, args = []) => {
 
 export const namesToIndices = (cols = [], datasetColumns = []) => {
   try {
-    return cols.map(name=>datasetColumns.findIndex(column => column.name===name))
+    return cols.map(name=>datasetColumns.findIndex(column => column.name===name)).filter(index=>index>=0);
   } catch (error) {
-    return cols
+    return cols;
   }
 }
 

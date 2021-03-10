@@ -106,7 +106,7 @@
             </v-card>
           </v-dialog>
           <v-tabs
-            :key="$store.state.datasetUpdates"
+            :key="currentDatasetUpdate"
             v-model="tabSelected"
             :class="{'tabs-disabled': $store.state.kernel=='loading' || previewCode || isOperating}"
             class="bb-tabs px-6"
@@ -297,7 +297,7 @@ export default {
   },
 
 	computed: {
-    ...mapGetters(['currentDataset','previewCode','typesAvailable']),
+    ...mapGetters(['currentDataset','currentDatasetUpdate','previewCode','typesAvailable']),
 
     ...mapState('session', ['workspace', 'workspaceStatus']),
     ...mapState(['loadingStatus']),

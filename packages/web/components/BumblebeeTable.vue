@@ -591,7 +591,7 @@ export default {
     ...mapGetters([
       'currentSelection',
       'currentDataset',
-      'datasetUpdates',
+      'currentDatasetUpdate',
       'selectionType',
       'currentPreviewColumns',
       'currentProfilePreview',
@@ -1201,16 +1201,10 @@ export default {
 
     },
 
-    datasetUpdates: {
+    currentDatasetUpdate: {
       // immediate: true,
       handler () {
-
-        this.updateSelection(this.currentSelection) // TEST
-        this.fetched = []
-        this.previousRange = -1
-        this.$nextTick(() => {
-          this.scrollCheck(true)
-        })
+        this.refreshValues();
       }
     },
 
@@ -1221,6 +1215,16 @@ export default {
   },
 
   methods: {
+
+    refreshValues () {
+      this.updateSelection(this.currentSelection) // TEST
+      this.fetched = [];
+      this.toFetch = [];
+      this.previousRange = -1
+      this.$nextTick(() => {
+        this.scrollCheck(true)
+      })
+    },
 
     deleteAllPreviews () {
       var columnValues = {};
@@ -1792,8 +1796,8 @@ export default {
 
       doubleClick = true
 
-      if (index===this.columnMenuIndex) {
-        return
+      if (index === this.columnMenuIndex || !this.currentDataset.columns[index]) {
+        return;
       }
 
       this.newColumnName = this.currentDataset.columns[index].name
@@ -2120,9 +2124,9 @@ export default {
           this.recalculateRows = true
         }
       } else {
-        fetched = this.fetched.filter(e=>e.update===this.datasetUpdates)
+        fetched = this.fetched.filter(e=>e.update===this.currentDatasetUpdate)
         if (!fetched.length) {
-          // this.fetched = this.fetched.filter(e=>e.update===this.datasetUpdates)
+          // this.fetched = this.fetched.filter(e=>e.update===this.currentDatasetUpdate)
           this.fetched = []
           this.recalculateRows = true
         }

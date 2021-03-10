@@ -536,6 +536,19 @@ export default {
 
     ...mapState(['nextCommand', 'noMatch', 'showingColumnsLength']),
 
+    columns () {
+      let columns = [];
+      if (this.currentDataset) {
+        if (this.currentDataset.columns) {
+          columns = this.currentDataset.columns.map(column=>({name: column.name}));
+        }
+        if (this.$store.state.columns[this.currentDataset.dfName] && columns.length < this.$store.state.columns[this.currentDataset.dfName].length) {
+          columns = this.$store.state.columns[this.currentDataset.dfName].map(column=>({name: column}));
+        }
+      }
+      return columns;
+    },
+
     usingPandasTransformation () {
       return INCOMPATIBLE_ENGINES.includes((this.$store.state.localEngineParameters || {}).engine)
     },
@@ -664,7 +677,7 @@ export default {
     },
 
     filtersActive () {
-      return this.typesSelected.length || this.searchText || (this.currentDataset && this.currentDataset.columns && this.showingColumnsLength !== this.currentDataset.columns.length);
+      return this.typesSelected.length || this.searchText || (this.currentDataset && this.columns && this.showingColumnsLength !== this.columns.length);
     },
 
     codeError: {
@@ -708,12 +721,15 @@ export default {
       if (selected.length) {
 
         var plotable = selected.map( (i)=>{
-          var column = this.currentDataset.columns[i]
+          var column = this.currentDataset.columns[i];
+          if (!column) {
+            return false;
+          }
           return ['decimal','float','double','float64'].includes(column.stats.profiler_dtype.dtype) ? 'quantitative'
             : (['int','integer','int64'].includes(column.stats.profiler_dtype.dtype) && column.stats.count_uniques>25) ? 'quantitative'
             : (column.stats.count_uniques<=25) ? column.stats.count_uniques
             : false
-        })
+        }).filter(v=>v);
 
         if (plotable.length==2 && selected.length==2) {
 
@@ -726,7 +742,7 @@ export default {
             (plotable[0]==='quantitative') ? {
               x: {
                 field: 'x',
-                title: this.currentDataset.columns[selected[0]].name,
+                title: this.columns[selected[0]].name,
                 type: plotable[0],
                 bin: {
                   binned: true
@@ -739,7 +755,7 @@ export default {
             : {
               x: {
                 field: 'x',
-                title: this.currentDataset.columns[selected[0]].name,
+                title: this.columns[selected[0]].name,
                 type: 'ordinal'
               }
             }
@@ -748,7 +764,7 @@ export default {
             (plotable[1]==='quantitative') ? {
               y: {
                 field: 'y',
-                title: this.currentDataset.columns[selected[1]].name,
+                title: this.columns[selected[1]].name,
                 type: plotable[1],
                 bin: {
                   binned: true
@@ -761,7 +777,7 @@ export default {
             : {
               y: {
                 field: 'y',
-                title: this.currentDataset.columns[selected[1]].name,
+                title: this.columns[selected[1]].name,
                 type: 'ordinal'
               }
             }
@@ -855,7 +871,7 @@ export default {
             var command = { command: 'filter rows' }
             if (['values','ranges'].includes(this.selectionType) && this.currentSelection && this.currentSelection.ranged) {
               command = { command: 'REMOVE_KEEP_SET' }
-              command.columns = [ this.currentDataset.columns[this.currentSelection.ranged.index].name ]
+              command.columns = [ this.columns[this.currentSelection.ranged.index].name ]
               command.payload = { rowsType: this.selectionType }
               if (this.selectionType==='ranges') {
                 command.payload.selection = this.currentSelection.ranged.ranges
@@ -1092,7 +1108,7 @@ export default {
         if (!columns.length) {
           return []
         }
-        return [...new Set(columns.map(i=>this.currentDataset.columns[i].stats.profiler_dtype.dtype))]
+        return [...new Set(columns.map(i=>this.currentDataset.columns[i] ? this.currentDataset.columns[i].stats.profiler_dtype.dtype : false).filter(v=>v))]
       } catch (err) {
         console.error(err)
         return []
@@ -1404,10 +1420,10 @@ export default {
      handleSelection (selected, indices = true) {
 
       if (!indices) {
-        selected = namesToIndices(selected, this.currentDataset.columns)
+        selected = namesToIndices(selected, this.columns)
       }
 
-      this.selectedColumns = selected.map(e=>({index: e, name: this.currentDataset.columns[e].name}))
+      this.selectedColumns = selected.filter(e=>this.columns[e]).map(e=>({index: e, name: this.columns[e].name}))
     },
   }
 
