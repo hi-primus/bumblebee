@@ -494,7 +494,7 @@ export const setKernel = function (sessionId, kernelObject) {
 	return kernels[sessionId] || {};
 };
 
-const deleteKernel = async function (sessionId) {
+export const deleteKernel = async function (sessionId) {
 	try {
 		if (checkKernel(sessionId)) {
 			const _id = kernels[sessionId].id;
@@ -536,5 +536,6 @@ export default {
 	runCode,
 	requestToKernel,
 	initializeKernel,
-	deleteEveryKernel,
+	deleteKernel,
+	deleteEveryKernel
 };

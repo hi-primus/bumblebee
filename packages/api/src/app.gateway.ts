@@ -14,6 +14,7 @@ import { v4 as uuidv4 } from "uuid";
 import {
 	runCode,
 	initializeKernel,
+  deleteKernel,
 	requestToKernel,
 } from './kernel';
 import kernelRoutines from './kernel-routines';
@@ -115,6 +116,7 @@ export class AppGateway
 
 	handleDisconnect(client: Socket) {
 		this.logger.log(`Client disconnected: ${client.id}`);
+    deleteKernel(client.id)
   }
 
 	handleConnection(client: Socket, ...args: any[]) {
@@ -146,7 +148,7 @@ export class AppGateway
     let result: any = {};
 
     try {
-      const initPayload = await initializeKernel(sessionId, payload);
+      const initPayload = await initializeKernel(client.id, payload);
       result = initPayload.result;
       // console.log('[INITIALIZATION RESULT]', initPayload.result);
     } catch (err) {
@@ -171,7 +173,7 @@ export class AppGateway
     const sessionId = payload.username + '_BBSESSION_' + payload.workspace;
     let result = {};
     try {
-      result = await requestToKernel('features', sessionId, payload);
+      result = await requestToKernel('features', client.id, payload);
     } catch (err) {
       console.error(err)
       result = {
@@ -233,7 +235,7 @@ export class AppGateway
         }
       }
 
-      result = await runCode(execCode, sessionId, asyncCallback);
+      result = await runCode(execCode, client.id, asyncCallback);
 
     } catch (err) {
 
@@ -256,7 +258,7 @@ export class AppGateway
 
     const sessionId = payload.username + '_BBSESSION_' + payload.workspace;
     const code = `_output = ${payload.dfName}${getGenerator('profile', payload)(payload)}`;
-    const result = await runCode(code, sessionId);
+    const result = await runCode(code, client.id);
     client.emit('reply', {
       data: result,
       code,

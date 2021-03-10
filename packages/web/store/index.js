@@ -769,6 +769,10 @@ export const actions = {
 
     let featuresResponse;
 
+    if (isRetry && window.stopClient) {
+      window.stopClient();
+    }
+
     try {
       featuresResponse = await socketPost('features', {
         username,
