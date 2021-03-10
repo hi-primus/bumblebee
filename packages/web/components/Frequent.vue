@@ -142,7 +142,7 @@ export default {
         if (value === "") {
           value = "<span>Empty</span>"
         }
-        this.currentVal = `${value},&nbsp;${item.count},&nbsp;${item.percentage}%`
+        this.currentVal = `${value}, ${item.count}, ${item.percentage}%`
       }
     },
     updateSelected(v) {
