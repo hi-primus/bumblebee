@@ -107,7 +107,7 @@
           </v-dialog>
           <v-tabs
             :key="$store.state.datasetUpdates"
-            v-model="tab"
+            v-model="tabSelected"
             :class="{'tabs-disabled': $store.state.kernel=='loading' || previewCode || isOperating}"
             class="bb-tabs px-6"
             background-color="#fff"
@@ -117,7 +117,7 @@
           >
             <v-tab
               v-for="(_tab, key) in $store.state.datasets"
-              :key="key"
+              :key="+key"
               class="bb-tab"
             >
               <span class="tab-content">
@@ -276,7 +276,8 @@ export default {
 			confirmDelete: -1,
       typesInput: '',
       dragFile: false,
-      engineFormPromise: false
+      engineFormPromise: false,
+      tabSelected: 0
 		};
   },
 
@@ -327,19 +328,13 @@ export default {
         return this.$store.state.tab
       },
       set (value) {
-        if (value === undefined) {
-          return
-        }
-
         let dataset = this.$store.state.datasets[value];
 
-        if (value !== undefined && !dataset) {
-          this.tab = this.$store.state.datasets[0] ? 0 : undefined
-          this.$store.commit('mutation', { mutate: 'tab', payload: 0 })
-          return
+        if (!dataset && this.$store.state.datasets[0]) {
+          value = 0;
         }
 
-        this.$store.commit('mutation', { mutate: 'tab', payload: value })
+        this.$store.commit('mutation', { mutate: 'tab', payload: value });
       },
     },
 
@@ -426,11 +421,28 @@ export default {
 	},
 
 	watch: {
-		confirmDelete(value) {
+		confirmDelete (value) {
 			if (value>=0 && this.$store.state.datasets[value] && this.$store.state.datasets[value].blank) {
         return this.deleteTab(value)
       }
-		}
+		},
+    workspaceStatus (value, prevValue) {
+      if (value !== 'loading' && prevValue === 'loading' && this.tabSelected == 0) {
+        // tabs showing
+        setTimeout(() => {
+          this.tabSelected = 1;
+          setTimeout(() => {
+            this.tabSelected = 0;
+          }, 10);
+        }, 10);
+      }
+    },
+    tab: {
+      immediate: true,
+      handler (value) {
+        this.tabSelected = value;
+      }
+    }
   },
 
 	methods: {
