@@ -103,8 +103,14 @@ export const codeGenerators = {
     };
   },
   patterns_count_async: (payload) => {
+    let code =  "";
+    code += `def _output_callback(fut):\n`;
+    code += `    global ${payload.dfName}\n`;
+    code += `    ${payload.dfName} = fut.result()\n`;
+    code += `    return ${payload.dfName}.cols.pattern_counts("${payload.column}", n=${payload.n}, mode=${payload.mode})\n`;
+    code += `_output = op.submit(${payload.dfName}.cols.calculate_pattern_counts, "${payload.column}", n=${payload.n}, mode=${payload.mode}, priority=${payload.request.priority || 0})\n`;
     return {
-      code: `_output = op.submit(${payload.dfName}.cols.pattern_counts, "${payload.column}", n=${payload.n}, mode=${payload.mode}, priority=${payload.request.priority || 0})`,
+      code,
       isOutput: true,
       isAsync: true
     };
