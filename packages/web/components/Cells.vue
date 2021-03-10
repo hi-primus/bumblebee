@@ -2250,7 +2250,14 @@ export default {
               {
                 type: 'switch',
                 key: '_search_by_string',
-                label: (c)=>'Search by string: ' + (c._search_by_string ? 'Yes' : 'No')
+                label: (c)=>'Search by string: ' + (c._search_by_string ? 'Yes' : 'No'),
+                condition: (c)=>c.search_by == "full",
+                onChange: (event, c) => {
+                  if (c._search_by_string && !c._replace_by_string) {
+                    c._replace_by_string = true
+                  }
+                  return c;
+                }
               },
               {
                 type: 'switch',
