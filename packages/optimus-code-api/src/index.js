@@ -96,13 +96,13 @@ export const codeGenerators = {
   compile: (payload) => {
     return `.compile()`;
   },
-  patterns_count: (payload) => {
+  pattern_counts: (payload) => {
     return {
       code: `_output = ${payload.dfName}.cols.pattern_counts("${payload.column}", n=${payload.n}, mode=${payload.mode})`,
       isOutput: true
     };
   },
-  patterns_count_async: (payload) => {
+  pattern_counts_async: (payload) => {
     let code =  "";
     code += `def _output_callback(fut):\n`;
     code += `    global ${payload.dfName}\n`;
