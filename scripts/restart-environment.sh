@@ -1,3 +1,4 @@
+#!/bin/bash
 echo 'Use localhost? [y/N]'
 read answer
 if echo "$answer" | grep -iq "^y" ;then

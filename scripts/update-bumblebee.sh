@@ -1,3 +1,4 @@
+#!/bin/bash
 cd ..
 
 git reset --hard origin/develop-3.0

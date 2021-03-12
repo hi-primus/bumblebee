@@ -1,3 +1,4 @@
+#!/bin/bash
 cd ..
 
 pm2 stop web || true

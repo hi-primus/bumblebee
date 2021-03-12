@@ -1,3 +1,4 @@
+#!/bin/bash
 echo 'Install spark support? [y/N]'
 read answer
 if echo "$answer" | grep -iq "^y" ;then
