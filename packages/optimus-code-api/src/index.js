@@ -7,7 +7,9 @@ export const version = function() {
 }
 
 export const payloadPreparers = {
-  Download: (payload, env) => {
+  Download: (command, env) => {
+
+    let payload = command.payload;
 
     payload = {
       ...payload,
@@ -19,22 +21,26 @@ export const payloadPreparers = {
       bucket: env.DO_BUCKET,
       local_address: env._path+'/assets'
     };
+
     if (!payload.url) {
       payload.url = `${payload.local_address}/${payload.file_name}.${payload.file_type}`;
     }
+
     if (env.INSTANCE === 'LOCAL') {
-      return {
-        ...payload,
+      payload.download_url = `${env.BACKEND_URL}/datasource/local/${payload.file_name}.${payload.file_type}`;
+      command = {
+        payload,
         command: 'saveFile',
-        download_url: `${env.BACKEND_URL}/datasource/local/${payload.file_name}.${payload.file_type}`
       };
     } else {
-      return {
-        ...payload,
+      payload.download_url = `https://${env.DO_BUCKET}.${env.DO_ENDPOINT}/${payload.username}/${payload.file_name}.${payload.file_type}`;
+      command = {
+        payload,
         command: 'uploadToS3',
-        download_url: `https://${env.DO_BUCKET}.${env.DO_ENDPOINT}/${payload.username}/${payload.file_name}.${payload.file_type}`
       };
     }
+
+    return command;
   }
 }
 
@@ -885,9 +891,9 @@ export const preparePayload = function(commands = [], env = {}) {
       };
     }
     if (Object.keys(payloadPreparers).includes(command.command)) {
-      return payloadPreparers[command.command](command, env);
+      command = payloadPreparers[command.command](command, env);
     }
-    return command
+    return command;
   })
 }
 

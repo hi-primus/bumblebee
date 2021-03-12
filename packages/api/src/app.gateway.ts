@@ -220,6 +220,10 @@ export class AppGateway
         execCode = `_output = 'ok'\n${execCode}`;
       }
 
+      if (process.env.DEBUG) {
+        resultCode = execCode;
+      }
+
       let asyncCallback = undefined;
 
       if (isAsync) {
