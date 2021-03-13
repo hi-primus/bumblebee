@@ -421,14 +421,24 @@ export default {
     expanded: {
       immediate: true,
       handler (expanded) {
-        if (expanded) {
+        if (this.column && expanded) {
           this.getPatterns();
         }
       }
     },
 
     patternsResolution () {
-      this.getPatterns();
+      if (this.column) {
+        this.getPatterns();
+      }
+    },
+
+    column (value) {
+      if (!value) {
+        this.expanded = false;
+        this.patternsFrequency = [];
+        this.patternsResolution = 3;
+      }
     }
   }
 }
