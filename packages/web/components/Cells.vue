@@ -3292,7 +3292,7 @@ export default {
 
     async commandHandle (command) {
 
-      await this.cancelCommand();
+      await this.cancelCommand(false);
 
       if (command.empty) {
         this.runCodeNow()
@@ -3485,7 +3485,9 @@ export default {
             title: 'operations'
           });
           this.$store.commit('previewDefault');
-          this.runCodeNow(this.isEditing);
+          if (runCode) {
+            await this.runCodeNow(this.isEditing);
+          }
           if (this.isEditing) {
             this.isEditing = false;
           }
