@@ -160,11 +160,11 @@ export const codeGenerators = {
   DROP_KEEP: (payload) => {
     return `.cols.${payload.command}(${preparedColumns(payload.columns)})`
   },
-  'sort rows': (payload) => {
+  sortRows: (payload) => {
     let _argument = (payload.columns.length==1) ?
-      `"${payload.columns[0]}","${payload.orders[0]}"` :
-      `[${payload.columns.map((e,i)=>(`("${e}","${payload.orders[i]}")`)).join(',')}]`
-    return `.rows.sort( ${_argument} )`
+      `"${payload.columns[0]}", "${payload.orders[0]}"` :
+      `[${payload.columns.map((e,i)=>(`("${e}", "${payload.orders[i]}")`)).join(',')}]`;
+    return `.rows.sort( ${_argument} )`;
   },
   REMOVE_KEEP_SET: (payload) => {
 

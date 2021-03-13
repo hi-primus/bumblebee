@@ -735,7 +735,7 @@ export default {
         DROP_KEEP: {
           content: (payload) => `<b>${capitalizeString(payload.command)}</b> ${multipleContent([payload.columns],'hl--cols')}`
         },
-        'sort rows': {
+        sortRows: {
           dialog: {
             title: 'Sort rows',
             text: (c) => {
@@ -3294,7 +3294,7 @@ export default {
 
       await this.cancelCommand(false);
 
-      if (command.empty) {
+      if (!command || command.empty) {
         this.runCodeNow()
         return
       }
@@ -3470,7 +3470,7 @@ export default {
 
       await this.addCell(toCell, { ...this.currentCommand, code, content }, true );
 
-      this.$emit('updateOperations', { active: (this.currentCommand.request.noOperations ? false : true), title: 'operations' } );
+      this.$emit('updateOperations', { active: ((this.currentCommand.request && this.currentCommand.request.noOperations) ? false : true), title: 'operations' } );
       this.currentCommand = false;
     },
 

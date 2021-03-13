@@ -857,7 +857,7 @@ export default {
         { divider: true },
         {
           type: 'button',
-          onClick: ()=>this.commandHandle({command: 'sort rows'}),
+          onClick: ()=>this.commandHandle({command: 'sortRows'}),
           tooltip: 'Sort rows',
           disabled: ()=>['values','ranges'].includes(this.selectionType) || this.selectedColumns.length<1,
           icons: [
