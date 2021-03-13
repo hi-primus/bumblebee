@@ -233,7 +233,10 @@ export const mutations = {
 
 	setDataset (state, { dataset, preview, tab, avoidReload, partial }) {
 
-    console.log("[BUMBLEBLEE] Opening dataset", dataset);
+    if (!avoidReload) {
+      console.log("[BUMBLEBLEE] Opening dataset", dataset);
+    }
+
 
     var fileName = dataset.file_name;
 
@@ -284,10 +287,10 @@ export const mutations = {
       dataset.dfName = previousDataset.dfName;
     }
 
-    console.debug("[BUMBLEBLEE] Setting dataset", dataset);
     Vue.set(state.datasets, tab, dataset);
 
     if (!avoidReload) {
+      console.debug("[BUMBLEBLEE] Setting dataset", dataset);
 
       var previousSelection;
       try {
@@ -735,8 +738,8 @@ export const actions = {
       return cell;
     })
 
-    var commands = cells.filter(e=>!(e && e.payload && e.payload.request && e.payload.request.isLoad));
-    var dataSources = cells.filter(e=>e && e.payload && e.payload.request && e.payload.request.isLoad);
+    let commands = cells.filter(e=>!(e && e.payload && e.payload.request && e.payload.request.isLoad));
+    let dataSources = cells.filter(e=>e && e.payload && e.payload.request && e.payload.request.isLoad);
 
     tabs.forEach((dataset, index) => {
       if (dataset.columns) {
@@ -1056,8 +1059,8 @@ export const actions = {
     mark = mark===undefined ? true : mark;
     ignoreFrom = ignoreFrom || -1;
 
-    var cells = [...state.commands]
-    for (let i = 0; i < state.commands.length; i++) {
+    let cells = [...state.dataSources, ...state.commands];
+    for (let i = cells.length - 1; i >= 0 ; i--) {
       if (ignoreFrom>=0 && i>=ignoreFrom) {
         continue
       }
@@ -1081,10 +1084,14 @@ export const actions = {
       }
     }
 
-    commit('mutation', { mutate: 'commands', payload: cells })
+    let commands = cells.filter(e=>!(e && e.payload && e.payload.request && e.payload.request.isLoad));
+    let dataSources = cells.filter(e=>e && e.payload && e.payload.request && e.payload.request.isLoad);
+
+    commit('mutation', { mutate: 'commands', payload: commands });
+    commit('mutation', { mutate: 'dataSources', payload: dataSources});
 
     if (mark && !(error || splice)) {
-      var newCodeDone = '';
+      let newCodeDone = '';
       if (mark && state.commands) {
         newCodeDone = await dispatch('codeText', { newOnly: false, ignoreFrom });
       }
@@ -1097,15 +1104,19 @@ export const actions = {
 
   deleteErrorCells ({ state, commit }) {
 
-    var cells = [...state.commands];
+    let cells = [...state.dataSources, ...state.commands];
 
-    for (let i = 0; i < state.commands.length; i++) {
+    for (let i = cells.length - 1; i >= 0 ; i--) {
       if (cells[i] && cells[i].error && cells[i].code) {
         cells.splice(i,1);
       }
     }
 
-    commit('mutation', { mutate: 'commands', payload: cells })
+    let commands = cells.filter(e=>!(e && e.payload && e.payload.request && e.payload.request.isLoad));
+    let dataSources = cells.filter(e=>e && e.payload && e.payload.request && e.payload.request.isLoad);
+
+    commit('mutation', { mutate: 'commands', payload: commands });
+    commit('mutation', { mutate: 'dataSources', payload: dataSources});
   },
 
   beforeRunCells ( { state, commit }, { newOnly, ignoreFrom } ) {
@@ -1230,24 +1241,26 @@ export const actions = {
     return dispatch('getPromise', promisePayload);
   },
 
-  async loadCellsResult ({dispatch, state, getters, commit}, { force, ignoreFrom, socketPost, clearPrevious }) {
+  async loadCellsResult ({dispatch, state, getters, commit}, { forceAll, ignoreFrom, socketPost, clearPrevious, newOnly }) {
     console.debug('[DEBUG] Loading cells result');
     try {
-
 
       var optimus = await dispatch('getOptimus', { payload: {socketPost} } );
 
       var init = [optimus];
 
       if (ignoreFrom>=0) {
-        force = true;
+        forceAll = true;
       }
 
-      var newOnly = false;
+      // tries all the code so it can check if there's any changes in previous cells
+
+      newOnly = false;
+
       var code = await dispatch('codeText', { newOnly, ignoreFrom });
       var codePayload = await dispatch('codeCommands', { newOnly, ignoreFrom });
 
-      var codeDone = force ? '' : state.codeDone.trim();
+      var codeDone = forceAll ? '' : state.codeDone.trim();
 
       var rerun = false;
 
@@ -1263,16 +1276,19 @@ export const actions = {
         return false;
       }
       else if (
-        ( !state.firstRun && (force || code.indexOf(codeDone)!=0 || codeDone=='' || wrongCode) )
+        ( !state.firstRun && (forceAll || code.indexOf(codeDone)!=0 || codeDone=='' || wrongCode) )
         ||
         !window.socketAvailable
       ) {
         rerun = true;
       }
-      else {
-        // console.log('[CODE MANAGER] new cells only')
+      else if (!forceAll) {
+
+        // runs only the unmarked cells
+
         newOnly = true;
-        code = await dispatch('codeText', { newOnly, ignoreFrom }); // new cells only
+        code = await dispatch('codeText', { newOnly, ignoreFrom });
+        codePayload = await dispatch('codeCommands', { newOnly, ignoreFrom });
       }
 
       if (code===wrongCode ) {
@@ -1295,9 +1311,9 @@ export const actions = {
         await dispatch('resetPromises', { from: 'executions' });
       }
 
-      await dispatch('beforeRunCells', { newOnly, ignoreFrom });
+      commit('mutation', {mutate: 'loadingStatus', payload: 'Updating dataset' });
 
-      var finalPayload = false;
+      await dispatch('beforeRunCells', { newOnly, ignoreFrom });
 
       var response;
 
@@ -1310,10 +1326,10 @@ export const actions = {
         // avoids saving new files when previewing a previous point on the notebook
 
         if (ignoreFrom>=0) {
-          codePayload.filter(({payload})=>!(payload.request && payload.request.isSave))
+          codePayload = codePayload.filter(({payload})=>!(payload.request && payload.request.isSave))
         }
 
-        // checks if there's any cell that wasks to re-process everything using the original engine
+        // checks if there's any cell that asks to process again everything using the original engine
 
         var getFinal = codePayload.some(({payload})=>(payload.request && payload.request.isSave && payload._engineProcessing))
 
@@ -1359,6 +1375,8 @@ export const actions = {
 
       }
 
+      // await dispatch('markCells', { mark: true, ignoreFrom }); // this should be done after the profiling
+
       response.originalCode = code;
 
       console.debug('[DEBUG][CODE]', response.code);
@@ -1375,6 +1393,7 @@ export const actions = {
 
     } catch (err) {
 
+      commit('mutation', {mutate: 'loadingStatus', payload: false });
       dispatch('resetPromises', { from: 'profilings' });
 
       if (err.code && window.pushCode) {
@@ -1429,8 +1448,6 @@ export const actions = {
       }
     });
 
-    console.debug('[DEBUG][CODE][PROFILE]',response.code);
-
     if (!response || !response.data || !response.data.result || response.data.status == "error") {
       throw response;
     }
@@ -1460,9 +1477,7 @@ export const actions = {
     console.debug('[DEBUG] Loading profiling', dfName);
     try {
 
-      const MESSAGE = 'Updating dataset';
-
-      commit('mutation', {mutate: 'loadingStatus', payload: MESSAGE });
+      commit('mutation', {mutate: 'loadingStatus', payload: 'Updating profile' });
 
       await Vue.nextTick();
 

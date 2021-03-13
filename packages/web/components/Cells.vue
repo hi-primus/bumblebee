@@ -3075,8 +3075,8 @@ export default {
       return name
     },
 
-    runCells (force, ignoreFrom) {
-      var payload = { force, ignoreFrom, socketPost: this.socketPost, clearPrevious: true };
+    runCells (forceAll, ignoreFrom) {
+      var payload = { forceAll, ignoreFrom, socketPost: this.socketPost, clearPrevious: true };
       return this.$store.dispatch('getCellsResult', {forcePromise: true, payload });
     },
 
@@ -3421,7 +3421,7 @@ export default {
             ...payload,
             columns: payload.columns || columns
           }
-          this.addCell(-1, {
+          await this.addCell(-1, {
             ...cell,
             code: this.getCode(cell),
             content: this.getOperationContent(cell)
@@ -3468,15 +3468,15 @@ export default {
 
       var toCell = this.currentCommand._toCell!==undefined ? this.currentCommand._toCell : -1;
 
-      this.addCell(toCell, { ...this.currentCommand, code, content }, true );
+      await this.addCell(toCell, { ...this.currentCommand, code, content }, true );
 
       this.$emit('updateOperations', { active: (this.currentCommand.request.noOperations ? false : true), title: 'operations' } );
       this.currentCommand = false;
     },
 
-    cancelCommand () {
+    cancelCommand (runCode = true) {
       return new Promise((resolve, reject)=>{
-        setTimeout(() => {
+        setTimeout(async () => {
           // this.recoverTextSelection();
           this.clearTextSelection();
           this.currentCommand = false;
@@ -3640,7 +3640,7 @@ export default {
       }
     },
 
-    addCell (at = -1, payload = {command: 'code', code: '', content: '', ignoreCell: false, noCall: false, deleteOtherCells: false}, replace = false) {
+    async addCell (at = -1, payload = {command: 'code', code: '', content: '', ignoreCell: false, noCall: false, deleteOtherCells: false}, replace = false) {
 
       var {command, code, ignoreCell, deleteOtherCells, content} = payload;
 
@@ -3679,37 +3679,28 @@ export default {
 
       this.cells = cells
 
-      if (!payload.noCall) {
-        this.$nextTick(async ()=>{
-          var run = false;
-          if (code.length) {
-            run = await this.runCodeNow(false, -1, payload.newDfName);
-          }
-          if (!run) {
-            console.warn('[CELLS] Nothing to run')
-            this.$store.commit('previewDefault');
-          }
-        });
-      } else {
-        this.$store.commit('previewDefault');
+      if (!payload.noCall && this.cells.length) {
+        return this.runCodeNow(false, -1, payload.newDfName);
       }
 
     },
 
-    async runCodeNow (force = false, ignoreFrom = -1, newDfName, runCodeAgain = true) {
+    async runCodeNow (forceAll = false, ignoreFrom = -1, newDfName, runCodeAgain = true) {
 
       let cellsResult;
 
       try {
         let dfName = (this.currentDataset ? this.currentDataset.dfName : undefined) || newDfName;
 
-        cellsResult = await this.runCells(force, ignoreFrom);
+        cellsResult = await this.runCells(forceAll, ignoreFrom);
 
         if (!cellsResult) {
           return false;
         }
 
         let dataset = await this.$store.dispatch('getProfiling', { payload: { dfName, ignoreFrom, clearPrevious: true, socketPost: this.socketPost, partial: true } });
+
+        this.$store.commit('previewDefault');
 
         if (this.firstRun) {
           this.firstRun = false;
@@ -3745,8 +3736,8 @@ export default {
 
     },
 
-    runCode: debounce( async function (force = false) {
-      await this.runCodeNow(force)
+    runCode: debounce( async function (forceAll = false) {
+      await this.runCodeNow(forceAll)
     }, 1000),
   }
 }

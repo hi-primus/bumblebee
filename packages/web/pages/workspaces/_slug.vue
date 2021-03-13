@@ -506,8 +506,8 @@ export default {
       this.windowDialog = type;
     },
 
-    runCodeNow (force = false, ignoreFrom = -1, newDfName, runCodeAgain) {
-      return this.$refs.tableBar.runCodeNow(force, ignoreFrom, newDfName, runCodeAgain);
+    runCodeNow (forceAll = false, ignoreFrom = -1, newDfName, runCodeAgain) {
+      return this.$refs.tableBar.runCodeNow(forceAll, ignoreFrom, newDfName, runCodeAgain);
     },
 
     async doneConfig (values, select=false) {

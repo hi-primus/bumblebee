@@ -1206,8 +1206,8 @@ export default {
       this.clearingFilters = true;
     },
 
-    runCodeNow (force = false, ignoreFrom = -1, newDfName, runCodeAgain) {
-      return this.$refs.cells.runCodeNow(force, ignoreFrom, newDfName, runCodeAgain);
+    runCodeNow (forceAll = false, ignoreFrom = -1, newDfName, runCodeAgain) {
+      return this.$refs.cells.runCodeNow(forceAll, ignoreFrom, newDfName, runCodeAgain);
     },
 
     downloadDataset () {
