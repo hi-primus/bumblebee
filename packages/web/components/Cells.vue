@@ -1786,7 +1786,7 @@ export default {
           }
 
         },
-        set_profiler_dtypes: {
+        set_dtype: {
           content: (payload) => `<b>Set data type</b> ${multipleContent([payload.columns],'hl--cols')} to ${multipleContent([payload.dtype],'hl--param')}`
         },
         fill_na: {

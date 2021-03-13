@@ -1837,7 +1837,7 @@ export default {
         var payload = {
           dtype: this.newColumnType
         }
-        this.commandHandle({command: 'set_profiler_dtypes', columns: [prevName], payload})
+        this.commandHandle({command: 'set_dtype', columns: [prevName], payload})
       }
 
       this.$nextTick(()=>{

@@ -668,7 +668,7 @@ export default {
         {command: 'outliers',   text: 'Outliers',   group: 'ML', min: 1, max: 1},
 
         ...Object.entries(TYPES_NAMES).map(
-          ([dtype, text])=>({command: 'set_profiler_dtypes', payload: { dtype }, text, group: 'CAST'})
+          ([dtype, text])=>({command: 'set_dtype', payload: { dtype }, text, group: 'CAST'})
         )
       ];
 

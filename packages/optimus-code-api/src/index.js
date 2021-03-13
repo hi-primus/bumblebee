@@ -506,10 +506,10 @@ export const codeGenerators = {
     + ( output_cols_argument ? `, output_cols=${output_cols_argument}` : '')
     + `)`
   },
-  set_profiler_dtypes: (payload) => {
+  set_dtype: (payload) => {
 
     let _argument = '{' + payload.columns.map(c=>`"${c}": "${payload.dtype}"`).join(', ') + '}';
-    return `.cols.set_profiler_dtypes(${_argument})`
+    return `.cols.set_dtype(${_argument})`
 
   },
   fill_na: (payload) => {
