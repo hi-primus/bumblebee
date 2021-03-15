@@ -14,7 +14,7 @@
         <v-footer fixed="fixed" app>
           <v-layout class="px-4" row justify-space-between>
             <span />
-            <span v-if="typeof total !== 'undefined'" class="caption-2">
+            <span v-if="total !== undefined" class="caption-2">
               {{ total | formatNumberInt }} Workspaces &emsp;
             </span>
           </v-layout>
