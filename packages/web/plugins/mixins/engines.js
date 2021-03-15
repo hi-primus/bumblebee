@@ -49,19 +49,25 @@ export default {
           }
         },
         {
-          key: 'engine',
-          is: 'v-select',
-          value: defaultValues.engine  || 'dask',
-          props: {
-            items: Object.entries(getEngines(unavailableEngines)).map(([value, text])=>({text, value})),
-            label: 'Engine'
-          }
-        },
-        {
           key: 'jupyter_address',
           type: 'address',
           value: defaultValues.jupyter_address || { ip: '', port: '' },
           props: {}
+        },
+        {
+          key: 'engine',
+          is: 'v-select',
+          value: defaultValues.engine  || 'dask',
+          props: {
+            items: (v)=>{
+              let remove = [];
+              if (!v.jupyter_address || !v.jupyter_address.ip && !v.jupyter_address.port) {
+                remove = unavailableEngines;
+              }
+              return Object.entries(getEngines(remove)).map(([value, text])=>({text, value}));
+            },
+            label: 'Engine'
+          }
         },
         ...generatedFields
       ];

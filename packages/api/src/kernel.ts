@@ -160,15 +160,17 @@ export const requestToKernel = async function (type, sessionId, payload, asyncCa
 
   var kernelAddress : any = kernels[sessionId].kernel_address;
 
-  if (type == 'init' && !kernelAddress && payload.jupyter_address && payload.jupyter_address.ip && payload.jupyter_address.port) {
-    kernelAddress = payload.jupyter_address.ip + ':' + payload.jupyter_address.port;
-    kernels[sessionId].kernel_address = kernelAddress;
-  }
-
   let assertOptimus = true;
 
   if (['features','init'].includes(type)) {
+
     assertOptimus = false;
+
+    if (!kernelAddress && payload.jupyter_address && payload.jupyter_address.ip && payload.jupyter_address.port) {
+      kernelAddress = payload.jupyter_address.ip + ':' + payload.jupyter_address.port;
+      kernels[sessionId].kernel_address = kernelAddress;
+      console.log(`Using kernel address ${kernelAddress} on session ${sessionId}`);
+    }
   }
 
 	const connection = await assertConnection(

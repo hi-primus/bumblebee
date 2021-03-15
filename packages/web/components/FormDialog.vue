@@ -84,6 +84,7 @@
                 outlined
                 dense
                 v-bind="field.props"
+                :items="getProperty(field.props.items, [values])"
                 :placeholder="getProperty(field.props.placeholder, [values])"
                 hide-details
                 autocomplete="off"

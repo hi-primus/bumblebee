@@ -771,7 +771,7 @@ export const actions = {
 
   },
 
-  async loadFeatures ({ state, commit, dispatch }, { slug, socketPost, isRetry }) {
+  async loadFeatures ({ state, commit, dispatch }, { slug, socketPost, isRetry, jupyter_address }) {
 
     let username = await dispatch('session/getUsername');
 
@@ -786,7 +786,8 @@ export const actions = {
     try {
       featuresResponse = await socketPost('features', {
         username,
-        workspace: slug || 'default'
+        workspace: slug || 'default',
+        jupyter_address
       }, isRetry ? 60000 : 10000);
     } catch (err) {
       if (!isRetry) {
@@ -795,8 +796,6 @@ export const actions = {
         throw err;
       }
     }
-
-
 
     let unavailableEngines = [];
 

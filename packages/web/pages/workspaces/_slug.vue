@@ -561,8 +561,9 @@ export default {
       } else {
         this.windowDialog = false;
         if (values) {
-          var request;
-          var path;
+          let response = {};
+          let request;
+          let path;
 
           if (values._event === 'create' || !values._id) {
             request = 'post';
@@ -572,24 +573,24 @@ export default {
             path = `/engineconfigurations/${values._id}`
           }
 
-          var name = values._ws_name;
+          let name = values._ws_name;
 
-          var engineId = values._id;
-          var engineConfigName = values.name;
+          let engineId = values._id;
+          let engineConfigName = values.name;
 
           delete values._ws_name;
           delete values._id;
 
           values = objectFilter(values, ([key,value])=>value)
 
-          var payload = {
+          let payload = {
             configuration: values,
             name
           }
 
           if (!select){
             try {
-              var response = await this.$store.dispatch('request',{
+              response = await this.$store.dispatch('request',{
                 request,
                 path,
                 payload
@@ -611,7 +612,7 @@ export default {
         }
       }
       if (this.engineFormPromise && this.engineFormPromise.resolve) {
-        this.engineFormPromise.resolve();
+        this.engineFormPromise.resolve(response.data || {});
         this.engineFormPromise = false;
       }
     },
@@ -640,15 +641,21 @@ export default {
           await this.$store.dispatch('resetEngine', { workspaceSlug: slug });
         }
 
-        let features = await this.$store.dispatch('getFeatures', { slug, socketPost: this.socketPost });
+        let jupyter_address = config ? config.jupyter_address : undefined;
 
-        if (!features) {
-          console.warn('[INIIALIZATION] Cannot check supported features')
-        }
+        let features = await this.$store.dispatch('getFeatures', { slug, socketPost: this.socketPost, jupyter_address });
+
         if (!config) {
           await this.engineForm();
           return;
-        } else if (features && features.unavailableEngines.includes(config.engine)) {
+        }
+
+
+        if (!features) {
+          console.warn('[INITIALIZATION] Cannot check supported features')
+        }
+
+        if (features && config && features.unavailableEngines.includes(config.engine)) {
           console.warn('[INITIALIZATION] Unsupported engine');
           await this.engineForm();
           return;
