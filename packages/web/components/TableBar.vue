@@ -363,7 +363,7 @@
         </div>
         <div class="sidebar-content">
 
-          <div v-if="detailedColumns.length>1" class="sidebar-section pr-10 columns-selected">
+          <div v-if="detailedColumns.length>1 && currentDataset.columns[index]" class="sidebar-section pr-10 columns-selected">
             <div class="column-selected" v-for="(index, i) in detailedColumns" :key="index+'selc'+i">
               <span class="data-type" :class="`type-${currentDataset.columns[index].stats.profiler_dtype.dtype}`">{{ dataTypeHint(currentDataset.columns[index].stats.profiler_dtype.dtype) }}</span>
               <span class="data-column-name">{{ currentDataset.columns[index].name }}</span>
