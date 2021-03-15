@@ -362,6 +362,8 @@ export const mutations = {
     }
 
     Vue.set(state.everyDatasetUpdate, state.tab, (state.everyDatasetUpdate[state.tab] || 0) + 1);
+
+    return state.tab;
   },
 
   unsetDf (state, { dfName }) {
@@ -1311,7 +1313,7 @@ export const actions = {
         await dispatch('resetPromises', { from: 'executions' });
       }
 
-      commit('mutation', {mutate: 'loadingStatus', payload: 'Updating dataset' });
+      commit('mutation', { mutate: 'loadingStatus', payload: 'Updating workpsace' });
 
       await dispatch('beforeRunCells', { newOnly, ignoreFrom });
 
@@ -1382,6 +1384,7 @@ export const actions = {
       console.debug('[DEBUG][CODE]', response.code);
       window.pushCode({code: response.code})
 
+      commit('mutation', { mutate: 'loadingStatus', payload: false });
       commit('mutation', { mutate: 'commandsDisabled', payload: false });
 
       if (!response || !response.data || !response.data.result || response.data.status == "error") {

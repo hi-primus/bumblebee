@@ -134,9 +134,9 @@
                 </span>
               </v-hover>
             </v-tab>
-            <v-tab class="new-tab" color="primary darken-1" @click="$store.dispatch('newDataset', { go: true })">
+            <div class="v-tab new-tab" color="primary darken-1" @click="newTab">
               <v-icon color="primary">add</v-icon>
-            </v-tab>
+            </div>
           </v-tabs>
           <div class="bb-workspace-status">
             <!-- this.$route.query.ws!=0 -->
@@ -440,9 +440,21 @@ export default {
     tab: {
       immediate: true,
       handler (value) {
-        this.tabSelected = value;
+        if (this.tabSelected != value) {
+          this.tabSelected = value;
+        }
+      }
+    },
+
+    tabSelected: {
+      immediate: true,
+      handler (value) {
+        if (this.tab != value && value !== undefined) {
+          this.tab = value;
+        }
       }
     }
+
   },
 
 	methods: {
@@ -452,6 +464,10 @@ export default {
         this.connectionClicked(false)
       }
       this.windowDialog = false
+    },
+
+    async newTab () {
+      await this.$store.dispatch('newDataset', { go: true });
     },
 
     engineForm () {
