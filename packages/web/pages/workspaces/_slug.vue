@@ -107,7 +107,8 @@
           </v-dialog>
           <v-tabs
             :key="currentDatasetUpdate"
-            v-model="tabSelected"
+            :value="tab"
+            @change="tabSelected=$event"
             :class="{'tabs-disabled': $store.state.kernel=='loading' || previewCode || isOperating}"
             class="bb-tabs px-6"
             background-color="#fff"
@@ -186,7 +187,7 @@
             />
           </div>
 
-          <v-footer fixed="fixed" app>
+          <v-footer v-if="footerVisible" fixed="fixed" app>
             <v-layout class="px-4 caption-2" row justify-space-between>
               <span
                 v-if="loadingStatus"
@@ -301,6 +302,10 @@ export default {
 
     ...mapState('session', ['workspace', 'workspaceStatus']),
     ...mapState(['loadingStatus']),
+
+    footerVisible () {
+      return this.loadingStatus || (this.currentDataset && this.currentDataset.summary);
+    },
 
     loadingMessage() {
 
@@ -421,22 +426,46 @@ export default {
 	},
 
 	watch: {
+
 		confirmDelete (value) {
 			if (value>=0 && this.$store.state.datasets[value] && this.$store.state.datasets[value].blank) {
         return this.deleteTab(value)
       }
 		},
+
     workspaceStatus (value, prevValue) {
-      if (value !== 'loading' && prevValue === 'loading' && this.tabSelected == 0) {
+      if (value !== 'loading' && prevValue === 'loading') {
+
+        let tabSelected = this.tabSelected;
+
         // tabs showing
         setTimeout(() => {
-          this.tabSelected = 1;
+          this.tabSelected = tabSelected+1;
           setTimeout(() => {
-            this.tabSelected = 0;
+            this.tabSelected = tabSelected;
           }, 10);
         }, 10);
       }
     },
+
+    footerVisible (value) {
+
+      if (!window.intercomSettings) {
+        window.intercomSettings = {
+          app_id: INTERCOM_APP_ID,
+        };
+      }
+
+      if (value && (!window.intercomSettings.vertical_padding || window.intercomSettings.vertical_padding == 20)) {
+        window.intercomSettings.vertical_padding = 48;
+        window.Intercom("update");
+      } else if (!value) {
+        window.intercomSettings.vertical_padding = 20;
+        window.Intercom("update");
+      }
+
+    },
+
     tab: {
       immediate: true,
       handler (value) {
@@ -704,5 +733,8 @@ export default {
 .datasets-tabs {
 	border-radius: 4px;
 	overflow: hidden;
+}
+.intercom-lightweight-app-launcher, .intercom-launcher-frame {
+  transition: all 0.21s ease-in-out;
 }
 </style>
