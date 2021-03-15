@@ -2308,6 +2308,7 @@ $editor-top-padding: 4px;
     display: flex;
     justify-content: flex-end;
     flex: 0;
+    max-width: calc(100vw - 144px);
   }
   .o-error {
     position: relative;
