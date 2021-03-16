@@ -612,7 +612,7 @@ export default {
         }
       }
       if (this.engineFormPromise && this.engineFormPromise.resolve) {
-        this.engineFormPromise.resolve(response.data || {});
+        this.engineFormPromise.resolve( (response ? response.data : false) || {} );
         this.engineFormPromise = false;
       }
     },
