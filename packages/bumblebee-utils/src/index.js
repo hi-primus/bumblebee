@@ -234,11 +234,11 @@ export const optimizeRanges = (inputRange, existingRanges) => {
 
 export const escapeQuotes = (str) => {
   if (typeof str === 'string' && str && str.replace ) {
-    return str.replace(/[\\]/g, '\\\\').replace(/[\""]/g, '\\"')
+    str = str.replace(/[\\]/g, '\\\\').replace(/[\""]/g, '\\"');
   } else if (str && str.map) {
-    str = str.map(_str=>(_str && _str.replace) ? _str.replace(/[\\]/g, '\\\\').replace(/[\""]/g, '\\"') : _str)
+    str = str.map(_str=>(_str && _str.replace) ? _str.replace(/[\\]/g, '\\\\').replace(/[\""]/g, '\\"') : _str);
   }
-  return str
+  return str;
 }
 
 export const filterCells = (cells, newOnly, ignoreFrom) => {
@@ -250,25 +250,35 @@ export const filterCells = (cells, newOnly, ignoreFrom) => {
 }
 
 export const getOutputColsArgument = (output_cols = [], input_cols = [], pre = '', forceArray = false) => {
-  var hasInput = input_cols.join('').trim().length
+  var hasInput = input_cols.join('').trim().length;
+  let output = false;
+
   if (output_cols.join('').trim().length && !(hasInput && pre)) {
-    return (output_cols.length===1 && !forceArray)
-    ? `"${output_cols[0]}"`
-    : `[${output_cols.map((e, i)=>(e ? `"${escapeQuotes(e)}"` : (input_cols[i] ? `"${escapeQuotes(pre+input_cols[i])}"` : 'None'))).join(', ')}]`
+    if (output_cols.length===1 && !forceArray) {
+      output = `"${escapeQuotes(output_cols[0])}"`
+    } else {
+      output = `[${output_cols.map((e, i)=>(e ? `"${escapeQuotes(e)}"` : (input_cols[i] ? `"${escapeQuotes(pre+input_cols[i])}"` : 'None'))).join(', ')}]`
+    }
   }
+
   if (hasInput) {
-    return (input_cols.length===1 && !forceArray)
-      ? `"${pre}${input_cols[0]}"`
-      : `[${input_cols.map((e)=>(e ? `"${escapeQuotes(pre+e)}"` : 'None')).join(', ')}]`
+    if (input_cols.length===1 && !forceArray) {
+      output = `"${escapeQuotes(pre+input_cols[0])}"`
+    } else {
+      output = `[${input_cols.map((e)=>(e ? `"${escapeQuotes(pre+e)}"` : 'None')).join(', ')}]`
+    }
   }
-  return false
+  return output;
 }
 
 export const aggOutputCols = (payload) => {
   return payload.aggregations.map((aggregation,i)=>`${aggregation}_${payload.input_cols[i]}`)
 }
 
-export const preparedColumns = function(columns, array=false) {
+export const preparedColumns = function(columns, array=false, escape=true) {
+  if (escape) {
+    columns = escapeQuotes(columns);
+  }
   if (Array.isArray(columns) && columns.length) {
     return `["${columns.join('", "')}"]`;
   } else if (typeof columns === 'string') {

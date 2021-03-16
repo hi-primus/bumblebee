@@ -113,8 +113,8 @@ export const codeGenerators = {
     code += `def _output_callback(fut):\n`;
     code += `    global ${payload.dfName}\n`;
     code += `    ${payload.dfName} = fut.result()\n`;
-    code += `    return ${payload.dfName}.cols.pattern_counts("${payload.column}", n=${payload.n}, mode=${payload.mode})\n`;
-    code += `_output = op.submit(${payload.dfName}.cols.calculate_pattern_counts, "${payload.column}", n=${payload.n}, mode=${payload.mode}, priority=${payload.request.priority || 0})\n`;
+    code += `    return ${payload.dfName}.cols.pattern_counts("${escapeQuotes(payload.column)}", n=${payload.n}, mode=${payload.mode})\n`;
+    code += `_output = op.submit(${payload.dfName}.cols.calculate_pattern_counts, "${escapeQuotes(payload.column)}", n=${payload.n}, mode=${payload.mode}, priority=${payload.request.priority || 0})\n`;
     return {
       code,
       isOutput: true,
@@ -1063,7 +1063,7 @@ export const generateCode = function(commands = [], _request = { type: 'processi
         let profileColumns;
 
         if (request.profile) {
-          profileColumns = preparedColumns(request.profile);
+          profileColumns = preparedColumns(request.profile, false, false);
           if (request.profile_partial) {
             profileColumns = `${dfName}.cols.names("*")[${Math.max(0,request.profile_partial-10)}:${request.profile_partial}]`;
           }
