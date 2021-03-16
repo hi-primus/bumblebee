@@ -104,7 +104,7 @@ export const codeGenerators = {
   },
   pattern_counts: (payload) => {
     return {
-      code: `_output = ${payload.dfName}.cols.pattern_counts("${payload.column}", n=${payload.n}, mode=${payload.mode})`,
+      code: `_output = ${payload.dfName}.cols.pattern_counts("${escapeQuotes(payload.column)}", n=${payload.n}, mode=${payload.mode})`,
       isOutput: true
     };
   },
