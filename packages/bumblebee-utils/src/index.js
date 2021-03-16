@@ -396,7 +396,15 @@ export const printError = (payload) => {
     console.error('[DEBUG][ERROR][CODE]',payload.code)
   }
 
-  return ((data.traceback && data.traceback[data.traceback.length-1]) || data.error || data.message || data).toString().split('\n')[0]
+  let traceback = data.traceback && data.traceback[data.traceback.length-1];
+
+  if (traceback) {
+    traceback = traceback.split('\n');
+    traceback = traceback[traceback.length - 1];
+  }
+
+  return (traceback || data.error || data.message || data).toString().split('\n')[0];
+
 }
 
 export const getProperty = (pof, args = []) => {
