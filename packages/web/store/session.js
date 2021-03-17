@@ -5,6 +5,7 @@ import Vue from 'vue'
 
 export const state = () => ({
   accessToken: false,
+  validToken: false,
   refreshToken: false,
   username: false,
   email: false,
@@ -89,12 +90,7 @@ export const actions =  {
   },100),
 
   async signUp (context,  payload) {
-    var response
-    response = await axios.post(process.env.API_URL + '/auth/signup', {
-      ...payload,
-      secret: window.authSecret || '123'
-    })
-    return response
+    return await axios.post(process.env.API_URL + '/auth/signup', payload);
   },
 
   cleanSession ({commit}) {
@@ -103,12 +99,7 @@ export const actions =  {
   },
 
   async profile ({commit, state}, payload) {
-    var auth = payload ? payload.auth : undefined;
-    auth = auth!==undefined ? auth : state.accessToken;
-    if (process.env.DOCKER && auth && !state.username) {
-      commit('mutation', { mutate: 'username', payload: true });
-      return true;
-    }
+    var auth = (payload ? payload.auth : undefined) || state.accessToken;
     var username;
     try {
       var response = await axios.get(process.env.API_URL + '/auth/profile', { headers: { 'Authorization': auth } } )
@@ -118,7 +109,8 @@ export const actions =  {
         console.log(err);
       }
     }
-    commit('mutation', { mutate: 'username', payload: username})
+    commit('mutation', { mutate: 'username', payload: username});
+    commit('mutation', { mutate: 'validToken', payload: true});
     return username
   },
 
@@ -194,11 +186,23 @@ export const actions =  {
       this.$cookies.remove('x-refresh-token')
     }
 
+  },
+
+  async isAuthenticated ({ state, dispatch }) {
+    let valid = process.client ? true : state.validToken;
+    if (process.client) {
+      valid = true;
+    }
+    if (!valid) {
+      await dispatch('profile');
+      valid = true;
+    }
+    return (state.accessToken && state.username && valid);
   }
 }
 
 export const getters =  {
   isAuthenticated (state) {
-    return state.accessToken && state.username
+    return (state.accessToken && state.username);
   }
 }

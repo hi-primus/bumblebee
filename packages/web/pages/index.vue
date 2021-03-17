@@ -9,8 +9,9 @@ const { version } = require("@/package.json");
 
 export default {
 
-  middleware: ({ store, redirect, route, app }) => {
-    if (!store.getters['session/isAuthenticated']) {
+  middleware: async ({ store, redirect, route, app }) => {
+    let isAuthenticated = await store.dispatch('session/isAuthenticated');
+    if (!isAuthenticated) {
       return redirect('/login', route.query)
     } else {
       return redirect('/workspaces', route.query)

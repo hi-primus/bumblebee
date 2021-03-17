@@ -1,5 +1,6 @@
-export default function ({ store, redirect, route }) {
-  if (!store.getters['session/isAuthenticated']) {
+export default async function ({ store, redirect, route }) {
+  let isAuthenticated = await store.dispatch('session/isAuthenticated');
+  if (!isAuthenticated) {
     return redirect('/login', route.query)
   }
 }
