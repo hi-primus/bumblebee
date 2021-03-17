@@ -85,7 +85,7 @@ CMD ./usr/bin/mongod --fork --logpath /var/log/mongod.log && \
     if [[ -n "$SPARK" ]] ; then \
       echo "Loading spark dependencies" && \
       pip install git+https://github.com/ironmussa/Optimus.git@develop-3.0[spark] --no-cache-dir \
-    fi
+    fi && \
     echo "Initializing Bumblebee Environment" && \
     echo "API_URL='http://$ADDRESS:4000'" >> packages/web/.env && \
     echo "DOCKER='TRUE'" >> packages/web/.env && \
