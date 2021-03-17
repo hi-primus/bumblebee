@@ -744,4 +744,9 @@ export default {
 .intercom-lightweight-app-launcher, .intercom-launcher-frame {
   transition: all 0.21s ease-in-out;
 }
+.intercom-lightweight-app-launcher-badge, .intercom-launcher-badge-frame {
+  transition: all 0.21s ease-in-out;
+  width: 22.1px;
+  height: 22.1px;
+}
 </style>
