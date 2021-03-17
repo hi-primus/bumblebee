@@ -90,7 +90,7 @@ CMD ./usr/bin/mongod --fork --logpath /var/log/mongod.log && \
     echo "API_URL='http://$ADDRESS:4000'" >> packages/web/.env && \
     echo "DOCKER='TRUE'" >> packages/web/.env && \
     echo "BACKEND_URL='http://$ADDRESS:4000'" >> packages/api/.env && \
-    echo "KERNEL_ADDRESS='localhost:8888'" >> packages/api/.env && \
+    echo "KERNEL_ADDRESS='$ADDRESS:8888'" >> packages/api/.env && \
     pm2 stop web || true && \
     pm2 stop api || true && \
     pm2 delete web || true && \
@@ -98,9 +98,9 @@ CMD ./usr/bin/mongod --fork --logpath /var/log/mongod.log && \
     pm2 start "yarn web" --name "web" --update-env && \
     pm2 start "yarn api" --name "api" --update-env && \
     echo "[Bumblebee] Web process at: http://$ADDRESS:3000" && \
-    jupyter kernelgateway --JupyterWebsocketPersonality.list_kernels=True --KernelGatewayApp.allow_origin='*' --Application.log_level=50
+    jupyter kernelgateway --ip=0.0.0.0 --JupyterWebsocketPersonality.list_kernels=True --KernelGatewayApp.allow_origin='*' --Application.log_level=50
 
-EXPOSE 3000:3000 4000:4000
+EXPOSE 3000:3000 4000:4000 8888:8888
 
 # docker run --name <NAME> --network="host" -e ADDRESS=<IP> ironmussa/bumblebee:develop-3.0
 # docker run --name <NAME> -p 3000:3000 -p 4000:4000 -e ADDRESS=localhost ironmussa/bumblebee:develop-3.0
