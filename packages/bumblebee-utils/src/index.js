@@ -765,6 +765,8 @@ export const INIT_PARAMS = {
   },
   'processes': {
     type: 'boolean',
+    // TODO: Show more fields switch
+    noForm: true,
     name: 'Use processes instead of threads',
     engines: ['dask'],
     // defalut: true
@@ -776,10 +778,12 @@ export const INIT_PARAMS = {
   },
   'scheduler_port': {
     type: 'int',
+    noForm: true,
     engines: ['dask', 'dask_cudf']
   },
   'silence_logs': {
     type: 'int',
+    noForm: true,
     name: 'Logging level',
     default: '30',
     items: {
@@ -792,53 +796,60 @@ export const INIT_PARAMS = {
     },
     engines: ['dask', 'dask_cudf']
   },
-  'kernel_address': { // TO-DO: check
-    type: 'string',
-    engines: ['dask', 'dask_cudf']
-  },
   'process': {
     type: 'string',
+    noForm: true,
     engines: ['dask', 'dask_cudf']
   },
   'host': {
     type: 'string',
+    noForm: true,
     engines: ['dask', 'dask_cudf']
   },
   'diagnostics_port': {
     type: 'int',
+    noForm: true,
     engines: ['dask', 'dask_cudf']
   },
   'asynchronous': {
     type: 'boolean',
+    noForm: true,
     engines: ['dask', 'dask_cudf']
   },
   'blocked_handlers': {
     type: 'string array',
+    noForm: true,
     engines: ['dask', 'dask_cudf']
   },
   'service_kwargs': {
     type: 'dict',
+    noForm: true,
     engines: ['dask', 'dask_cudf']
   },
   // Security or bool
   'Security': {
     type: 'boolean',
+    noForm: true,
     engines: ['dask', 'dask_cudf']
   },
   'protocol': {
     type: 'string',
+    noForm: true,
     engines: ['dask', 'dask_cudf']
   },
   'interface': {
     type: 'string',
+    noForm: true,
     engines: ['dask', 'dask_cudf']
   },
   'worker_class': {
     type: 'Worker',
+    noForm: true,
     engines: ['dask', 'dask_cudf']
   },
   'worker_kwargs': {
     type: 'kwargs',
+    noForm: true,
     engines: ['dask', 'dask_cudf']
   },
   'worker_memory': {
@@ -865,19 +876,10 @@ export const INIT_PARAMS = {
     type: 'string',
     engines: ['dask_coiled', 'dask_cudf_coiled']
   },
-  // 'software': {
-  //   type: 'string',
-  //   name: 'Software environment',
-  //   default: (params)=>{
-  //     return params.use_gpu ? 'optimus/gpu' : 'optimus/default';
-  //   },
-  //   engines: ['dask_coiled', 'dask_cudf_coiled']
-  // },
   'memory_limit': {
     type: 'string',
     default: '4 GB',
-    noForm: true,
-    engines: ['dask', 'dask_cudf', 'pandas', 'cudf']
+    engines: ['dask', 'dask_cudf']
   },
   // 'kwargs': {
   //   type: 'kwargs'
