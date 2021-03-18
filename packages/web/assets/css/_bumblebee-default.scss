@@ -2219,6 +2219,11 @@ $editor-top-padding: 4px;
     .o-fields {
       height: calc(100vh - 202px);
       max-height: calc(100vh - 202px);
+
+      &.disabled {
+        pointer-events: none;
+        opacity: 0.71;
+      }
     }
     .o-buttons {
       padding-top: 20px;

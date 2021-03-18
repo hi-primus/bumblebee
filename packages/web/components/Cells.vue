@@ -45,14 +45,14 @@
               indeterminate
               color="#888"
               size="64"
-              v-if="currentCommand.loading"
+              v-if="currentCommand._loading == 'block'"
             />
           </div>
-          <div class="o-fields">
+          <div class="o-fields" :class="{'disabled': currentCommand._loading}">
             <template  v-if="command.dialog.output_cols">
               <OutputColumnInputs :fieldLabel="command.dialog.output_cols_label" :noLabel="!command.dialog.output_labels" :currentCommand.sync="currentCommand"></OutputColumnInputs>
             </template>
-            <template v-if="!currentCommand.loading && command.dialog.fields">
+            <template v-if="currentCommand._loading !== 'block' && command.dialog.fields">
               <template v-for="field in getProperty(command.dialog.fields, [currentCommand]).filter(f=>(!f.condition || f.condition && f.condition(currentCommand)))">
 
                 <OperationField
