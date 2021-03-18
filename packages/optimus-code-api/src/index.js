@@ -154,7 +154,7 @@ export const codeGenerators = {
       isAsync: true
     };
   },
-  'apply sort': (payload) => {
+  applySort: (payload) => {
     return `.cols.sort(columns=${preparedColumns(payload.columns)})`
   },
   DROP_KEEP: (payload) => {
@@ -245,7 +245,7 @@ export const codeGenerators = {
       }
     }
   },
-  'filter rows': (payload) => {
+  filterRows: (payload) => {
 
     let expression = payload.expression
     let dfName = `df`
@@ -312,7 +312,7 @@ export const codeGenerators = {
       return `.rows.${payload.action}( '${expression}' )`
     }
   },
-  'drop empty rows': (payload) => {
+  dropEmptyRows: (payload) => {
     if (!['final','processing'].includes(payload.request.type)) {
       let code = `.rows.find('df.mask.nulls('`
       + (payload.subset.length ? `columns=${preparedColumns(payload.subset, true)}, ` : '')
@@ -330,7 +330,7 @@ export const codeGenerators = {
       + (payload.subset.length ? `columns=${preparedColumns(payload.subset, true)}, ` : '')
       + `how="${payload.how}")`
   },
-  'drop duplicates': (payload) => {
+  dropDuplicates: (payload) => {
     if (!['final','processing'].includes(payload.request.type)) {
       let code = `.rows.find('df.mask.duplicated('`
       + (payload.subset.length ? `columns=${preparedColumns(payload.subset, true)}, ` : '')
@@ -619,14 +619,14 @@ export const codeGenerators = {
     })
     .join('')
   },
-  'transform_format': (payload) => {
+  transformFormat: (payload) => {
     let _argument = preparedColumns(payload.columns);
     let output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (!['final','processing'].includes(payload.request.type)) ? '__new__' : '')
     return `.cols.date_format(${_argument}, "${transformDateToPython(payload.current_format)}", "${transformDateToPython(payload.output_format)}"`
     + ( output_cols_argument ? `, output_cols=${output_cols_argument}` : '')
     + `)`
   },
-  'get_from_datetime': (payload) => {
+  getFromDatetime: (payload) => {
     let _argument = preparedColumns(payload.columns);
     let output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (!['final','processing'].includes(payload.request.type)) ? '__new__' : '')
     return `.cols.date_format(${_argument}, "${transformDateToPython(payload.current_format)}", "${TIME_VALUES[payload.output_type]}"`

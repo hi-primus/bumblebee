@@ -645,12 +645,12 @@ export default {
 				{command: 'acosh', text: 'Get acosh', type: 'GENERIC', group: 'TRIGONOMETRIC', payload: { content: 'Get acosh' }},
 				{command: 'atanh', text: 'Get atanh', type: 'GENERIC', group: 'TRIGONOMETRIC', payload: { content: 'Get atanh' }},
 
-        {command: 'transform_format', text: 'Transform format', group: 'TIME'},
+        {command: 'transformFormat', text: 'Transform format', group: 'TIME'},
 
         {divider: true, group: 'TIME'},
 
         ...Object.entries(TIME_NAMES).map(
-          ([output_type, name])=>({command: 'get_from_datetime', payload: { output_type }, text: `Get ${name}`, group: 'TIME'})
+          ([output_type, name])=>({command: 'getFromDatetime', payload: { output_type }, text: `Get ${name}`, group: 'TIME'})
         ),
 
 				// {command: 'random_split',     teaxt: 'Split train and test', type: 'PREPARE'},
@@ -868,7 +868,7 @@ export default {
           type: 'button',// {toString: ()=>(this.selectionType=='columns' ? 'button' : 'menu')},
           // group: 'FILTER',
           onClick: ()=>{
-            var command = { command: 'filter rows' }
+            var command = { command: 'filterRows' }
             if (['values','ranges'].includes(this.selectionType) && this.currentSelection && this.currentSelection.ranged) {
               command = { command: 'REMOVE_KEEP_SET' }
               command.columns = [ this.columns[this.currentSelection.ranged.index].name ]
@@ -892,7 +892,7 @@ export default {
         },
         {
           type: 'button',
-          onClick: ()=>this.commandHandle({command: 'drop empty rows'}),
+          onClick: ()=>this.commandHandle({command: 'dropEmptyRows'}),
           tooltip: 'Drop empty rows',
           icons: [
             { icon: 'mdi-delete-outline' },
@@ -905,7 +905,7 @@ export default {
         },
         {
           type: 'button',
-          onClick: ()=>this.commandHandle({command: 'drop duplicates'}),
+          onClick: ()=>this.commandHandle({command: 'dropDuplicates'}),
           tooltip: 'Drop duplicates',
           icons: [
             // { icon: 'mdi-layers-remove' },
@@ -1144,7 +1144,7 @@ export default {
         if (this.callSort && lastSort.length) {
           this.callSort = false
           this.commandHandle({
-            command: 'apply sort',
+            command: 'applySort',
             columns: lastSort,
             // ignoreCell: true,
             noCall: true,

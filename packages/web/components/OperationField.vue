@@ -5,7 +5,7 @@
         :key="field.key"
         depressed
         color="primary"
-        @click="(field.func) ? command[field.func](currentCommand) : 0"
+        @click="triggerAction(field)"
         class="mb-6 mx-a d-flex"
         :loading="currentCommand[field.loading]"
         :disabled="!currentCommand[field.loading] && field.validate && !field.validate(currentCommand)"
@@ -255,8 +255,8 @@
         :right-on="currentCommand.right_on"
         :left-on="currentCommand.left_on"
         @input="(field.onChange) ? (currentCommand = field.onChange($event, currentCommand)) : ()=>{}"
-        @click:row="field.onClickRow ? (currentCommand = field.onClickRow($event, currentCommand)) : ()=>{}"
-        @click:item="field.selectKey ? (currentCommand = field.selectKey($event, currentCommand)) : ()=>{}"
+        @click:row="triggerFunction(field.onClickRow, [$event])"
+        @click:item="triggerFunction(field.selectKey, [$event])"
       >
       </ColumnsJoinSelector>
     </template>
@@ -268,8 +268,8 @@
         :item-key="field.item_key"
         :items="(field.items_key) ? getPropertyField(currentCommand[field.items_key]) : field.items"
         :disabled="getPropertyField(field.disabled)"
-        @input="(field.onChange) ? (currentCommand = field.onChange($event, currentCommand)) : ()=>{}"
-        @click:row="field.onClickRow ? (currentCommand = field.onClickRow($event, currentCommand)) : ()=>{}"
+        @input="triggerFunction(field.onChange)"
+        @click:row="triggerFunction(field.onClickRow, [$event])"
       >
       </ItemsSelector>
     </template>
@@ -397,9 +397,13 @@ export default {
     index: {
       default: undefined
     },
+    commandMethods: {
+      required: true
+    }
   },
 
   computed: {
+
     _value: {
       get () {
         return this.value
@@ -417,6 +421,24 @@ export default {
     getPropertyField(pof) {
       return getProperty(pof, [this.currentCommand, this.index])
     },
+
+    async triggerAction(field) {
+      if (field.func) {
+        return this.triggerFunction(this.command[field.func])
+      }
+    },
+
+    async triggerFunction (func, args = []) {
+      if (func) {
+        this.currentCommand._loading = true;
+        try {
+          this.currentCommand = await func(this.currentCommand, args, this.commandMethods);
+        } catch (err) {
+          console.error(err);
+        }
+        this.currentCommand._loading = false;
+      }
+    }
   }
 
 

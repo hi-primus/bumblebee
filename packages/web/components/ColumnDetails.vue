@@ -391,7 +391,7 @@ export default {
     patternClicked (item) {
 
       var command = {
-        command: 'filter rows',
+        command: 'filterRows',
         columns: [ this.column.name ],
         payload: {
           condition: 'pattern',

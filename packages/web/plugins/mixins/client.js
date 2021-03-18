@@ -78,6 +78,19 @@ export default {
 
   computed: {
 
+    commandMethods () {
+      return {
+        evalCode: this.evalCode,
+        vueSet: this.$set,
+        vueDelete: this.$delete,
+        datasetColumns: this.datasetColumns,
+        datasetTypes: this.datasetTypes,
+        datasetSample: this.datasetSample,
+        storeDispatch: this.$store.dispatch,
+        storeCommit: this.$store.commit
+      }
+    },
+
     storedUsername () {
       return this.$store.state.session.username;
     },
@@ -191,15 +204,15 @@ export default {
       })
     },
 
-    socketPost (message, payload = {}, timeout) {
+    async socketPost (message, payload = {}, timeout) {
 
       if (!process.client) {
-        throw 'not client'
+        throw new Error('Trying to post from a non-client process');
       }
 
-      var timestamp = ++window.timestamps
+      let timestamp = ++window.timestamps;
 
-      return new Promise( async (resolve, reject) => {
+      let postPromise = new Promise( async (resolve, reject) => {
 
         if (payload.isAsync) {
           window.promises[timestamp] = {resolve, reject, isAsync: true}
@@ -207,7 +220,7 @@ export default {
           window.promises[timestamp] = {resolve, reject}
         }
 
-        var socket = await window.socket();
+        let socket = await window.socket();
 
         try {
           if (!socket) {
@@ -216,11 +229,11 @@ export default {
 
             if (!['initialize','features'].includes(message)) {
 
-              var params = {};
+              let params = {};
 
               params = getDefaultParams(params);
 
-              var slug = this.$route.params.slug;
+              let slug = this.$route.params.slug;
 
               if (!params.name) {
                 if (this.currentUsername && slug) {
@@ -235,7 +248,7 @@ export default {
                 params.jupyter_port = params.jupyter_address.port;
               }
 
-              var reinitializationPayload = {
+              let reinitializationPayload = {
                 username: this.currentUsername,
                 workspace: slug,
                 ...params
@@ -243,7 +256,7 @@ export default {
 
               console.log('[BUMBLEBEE] Reinitializing Optimus');
 
-              var response = await this.socketPost('initialize', reinitializationPayload );
+              let response = await this.socketPost('initialize', reinitializationPayload );
 
               if (!response.data.optimus) {
                 throw response
@@ -251,31 +264,41 @@ export default {
 
               window.pushCode({code: response.code})
             }
+
+            socket = await window.socket();
           }
 
-          socket = await window.socket()
+          if (!socket) {
+            reject(new Error("Error connecting to back-end"));
+          }
 
           socket.emit(message, { ...payload, timestamp });
-          if (timeout) {
 
+          if (timeout) {
             await new Promise((res, rej) => {
               setTimeout(() => {
                 res(true)
               }, timeout);
             });
-
             reject(new Error("Timeout error"))
           }
 
-        } catch (error) {
-          if (error.code) {
-            window.pushCode({code: error.code, error: true})
+        } catch (err) {
+          if (err.code) {
+            window.pushCode({code: err.code, error: true});
           }
-          delete window.promises[timestamp]
-          reject(error)
+          reject(err);
         }
 
-      })
+      });
+
+      try {
+        return await postPromise
+      } catch (err) {
+        delete window.promises[timestamp];
+        throw err;
+      }
+
     },
 
 		handleError (reason, status) {
