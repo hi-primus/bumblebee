@@ -19,7 +19,7 @@ For remote servers:
 For local machines:
 ```docker run --name bumblebee -p 3000:3000 -p 4000:4000 -e ADDRESS=localhost ironmussa/bumblebee:develop-3.0```
 
-You can also add ```-e SPARK=true``` to enable Spark support.
+You can also replace ```ironmussa/bumblebee:develop-3.0``` by ```ironmussa/bumblebee:develop-3.0-spark``` to enable Spark support.
 
 On ```--name bumblebee``` you can use any name you want for your environtment and on ```<IP>``` you must input the public IP address of your server. Remember to open ports 3000 and 4000 on your host.
 
