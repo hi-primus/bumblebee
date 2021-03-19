@@ -1396,7 +1396,7 @@ export const actions = {
     } catch (err) {
 
       commit('mutation', {mutate: 'loadingStatus', payload: false });
-      dispatch('resetPromises', { from: 'profilings' });
+      dispatch('resetPromises', { from: 'cells' });
 
       if (err.code && window.pushCode) {
         window.pushCode({code, error: true});
