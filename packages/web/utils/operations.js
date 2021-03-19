@@ -14,8 +14,509 @@ import {
   aggOutputCols,
   transpose,
   objectMap,
+  objectMapFromEntries,
+  TYPES_NAMES,
   TIME_NAMES,
 } from "bumblebee-utils";
+
+export const operationGroups = {
+  DATA_SOURCE: {
+    icons: [{ icon: 'mdi-cloud-upload-outline' }],
+    tooltip: 'Add data source',
+    disabled: ($nuxt)=>($nuxt.$store.state.kernel!='done')
+  },
+  SAVE: {
+    icons: [{ icon: 'mdi-content-save-outline' }],
+    tooltip: 'Save',
+    disabled: ($nuxt)=>!($nuxt.currentDataset && $nuxt.currentDataset.summary)
+  },
+  STRING: {
+    icons: [{ icon: 'text_format' }],
+    tooltip: 'String operations',
+    disabled: ($nuxt)=>!($nuxt.selectionType=='columns' && $nuxt.currentDataset && $nuxt.currentDataset.summary && $nuxt.selectedColumns.length>=0)
+  },
+  MATH: {
+    icons: [{ icon: 'mdi-numeric' }],
+    tooltip: 'Numeric operations',
+    disabled: ($nuxt)=>!($nuxt.selectionType=='columns' && $nuxt.currentDataset && $nuxt.currentDataset.summary && $nuxt.selectedColumns.length>=0)
+  },
+  TRIGONOMETRIC: {
+    icons: [{ icon: 'mdi-pi' }],
+    tooltip: 'Trigonometric operations',
+    disabled: ($nuxt)=>!($nuxt.selectionType=='columns' && $nuxt.currentDataset && $nuxt.currentDataset.summary && $nuxt.selectedColumns.length>=0)
+  },
+  TIME: {
+    icons: [{ icon: 'calendar_today' }],
+    tooltip: 'Datetime functions',
+    disabled: ($nuxt)=>!($nuxt.selectionType=='columns' && $nuxt.selectedColumns.length>0)
+  },
+  // CAST: {
+  //   icons: [{ icon: 'category' }],
+  //   tooltip: 'Cast',
+  //   disabled: ($nuxt)=>!($nuxt.selectionType=='columns' && $nuxt.selectedColumns.length>0)
+  // },
+  ML: {
+    icons: [{icon: 'timeline', class: 'material-icons-outlined'}],
+    tooltip: 'Machine Learning',
+    disabled: ($nuxt)=>!($nuxt.selectionType=='columns' && $nuxt.currentDataset && $nuxt.currentDataset.summary) , // Sampling
+  },
+  CUSTOM: {
+    icons: [{ icon: 'star_rate' }],
+    tooltip: 'Custom functions',
+    hidden: ($nuxt)=>!$nuxt.customMenuItems.length
+  }
+}
+
+export const operations = {
+
+  loadFile: {
+    text: 'Add from file',
+    path: 'LOADSAVE/DATA_SOURCE'
+  },
+  loadDatabaseTable: {
+    text: 'Add from database',
+    path: 'LOADSAVE/DATA_SOURCE'
+  },
+
+  Download: {
+    path: 'LOADSAVE/SAVE',
+    text: 'Download',
+    disabled: ($nuxt)=>process.env.INSTANCE!=='LOCAL',
+    hidden: ($nuxt)=>$nuxt.usingPandasTransformation
+  },
+  DownloadPreview: {
+    path: 'LOADSAVE/SAVE',
+    command: 'Download',
+    text: 'Download (from pandas preview)',
+    disabled: ($nuxt)=>process.env.INSTANCE!=='LOCAL',
+    hidden: ($nuxt)=>!$nuxt.usingPandasTransformation
+  },
+  DownloadFinal: {
+    path: 'LOADSAVE/SAVE',
+    command: 'Download-rerun',
+    text: 'Download',
+    disabled: ($nuxt)=>process.env.INSTANCE!=='LOCAL',
+    hidden: ($nuxt)=>!$nuxt.usingPandasTransformation
+  },
+  saveFile: {
+    path: 'LOADSAVE/SAVE',
+    text: 'Save file',
+    disabled: ($nuxt)=>!($nuxt.currentDataset && $nuxt.currentDataset.summary)
+  },
+  saveDatabaseTable: {
+    path: 'LOADSAVE/SAVE',
+    text: 'Save to database',
+    disabled: ($nuxt)=>!($nuxt.currentDataset && $nuxt.currentDataset.summary)
+  },
+  Compile: {
+    text: 'Compile SQL',
+    path: 'LOADSAVE/SAVE',
+    hidden: ($nuxt)=>($nuxt.$store.state.localEngineParameters || {}).engine !== 'ibis'
+  },
+
+  join: {
+    path: 'JOIN',
+    icons: [{ icon: 'mdi-set-center' }],
+    tooltip: 'Join dataframes',
+    disabled: ($nuxt)=>!($nuxt.currentDataset && $nuxt.currentDataset.summary && $nuxt.hasSecondaryDatasets)
+  },
+  concat: {
+    path: 'JOIN',
+    icons: [{ icon: 'mdi-table-row-plus-after' }],
+    tooltip: 'Concat dataframes',
+    disabled: ($nuxt)=>!($nuxt.currentDataset && $nuxt.currentDataset.summary && $nuxt.hasSecondaryDatasets)
+  },
+  aggregations: {
+    path: 'JOIN',
+    icons: [{ icon: 'mdi-set-merge' }],
+    tooltip: 'Get aggregations',
+    disabled: ($nuxt)=>!(!['values','ranges'].includes($nuxt.selectionType) && $nuxt.currentDataset && $nuxt.currentDataset.summary)
+  },
+
+  sortRows: {
+    path: 'ROWS',
+    tooltip: 'Sort rows',
+    disabled: ($nuxt)=>['values','ranges'].includes($nuxt.selectionType) || $nuxt.selectedColumns.length<1,
+    icons: [
+      { icon: 'mdi-sort-alphabetical-ascending' }
+    ]
+  },
+  filterRows: {
+    path: 'ROWS',
+    onClick: ($nuxt)=>{
+      var command = { command: 'filterRows' }
+      if (['values','ranges'].includes($nuxt.selectionType) && $nuxt.currentSelection && $nuxt.currentSelection.ranged) {
+        command = { command: 'REMOVE_KEEP_SET' }
+        command.columns = [ $nuxt.columns[$nuxt.currentSelection.ranged.index].name ]
+        command.payload = { rowsType: $nuxt.selectionType }
+        if ($nuxt.selectionType==='ranges') {
+          command.payload.selection = $nuxt.currentSelection.ranged.ranges
+        } else if ($nuxt.selectionType==='values') {
+          command.payload.selection = $nuxt.currentSelection.ranged.values
+        }
+      } else if ($nuxt.selectionType==='text') {
+        command.payload = {
+          columns: [$nuxt.currentSelection.text.column],
+          text: $nuxt.currentSelection.text.value
+        }
+      }
+      $nuxt.commandHandle(command)
+    },
+    tooltip: 'Filter rows',
+    disabled: ($nuxt)=>!(['values','ranges','text'].includes($nuxt.selectionType) || $nuxt.selectedColumns.length==1),
+    icons: [{icon: 'mdi-filter-variant'}]
+  },
+  dropEmptyRows: {
+    path: 'ROWS',
+    tooltip: 'Drop empty rows',
+    icons: [
+      { icon: 'mdi-delete-outline' },
+      { icon: 'menu', style: {
+        marginLeft: '-0.33333333em',
+        transform: 'scaleX(0.75)'
+      } }
+    ],
+    disabled: ($nuxt)=>!($nuxt.currentDataset && $nuxt.currentDataset.summary && $nuxt.hasSecondaryDatasets)
+  },
+  dropDuplicates: {
+    path: 'ROWS',
+    tooltip: 'Drop duplicates',
+    icons: [
+      { icon: 'mdi-close-box-multiple-outline',
+        style: {
+          transform: 'scaleY(-1)'
+        }
+      },
+    ],
+    disabled: ($nuxt)=>!($nuxt.currentDataset && $nuxt.currentDataset.summary && $nuxt.hasSecondaryDatasets)
+  },
+  set: {
+    path: 'COLUMNS',
+    tooltip: ($nuxt)=>$nuxt.selectedColumns.length ? 'Set column' : 'New column',
+    icons: [{icon: 'mdi-plus-box-outline'}],
+    disabled: ($nuxt)=>!($nuxt.selectionType=='columns' && $nuxt.selectedColumns.length<=1 && $nuxt.currentDataset && $nuxt.currentDataset.summary)
+  },
+  rename: {
+    path: 'COLUMNS',
+    tooltip: ($nuxt)=> 'Rename column'+ ($nuxt.selectedColumns.length!=1 ? 's' : ''),
+    icons: [{icon: 'mdi-pencil-outline'}],
+    disabled: ($nuxt)=> !($nuxt.selectionType=='columns' && $nuxt.selectedColumns.length>0)
+  },
+  duplicate: {
+    path: 'COLUMNS',
+    tooltip: ($nuxt)=> 'Duplicate column'+ ($nuxt.selectedColumns.length!=1 ? 's' : ''),
+    icons: [{icon: 'mdi-content-duplicate'}],
+    disabled: ($nuxt)=>!($nuxt.selectionType=='columns' && $nuxt.selectedColumns.length>0)
+  },
+  keep: {
+    path: 'COLUMNS',
+    generator: 'DROP_KEEP',
+    tooltip: ($nuxt)=> 'Keep column'+ ($nuxt.selectedColumns.length!=1 ? 's' : ''),
+    icons: [{icon: 'all_out'}],
+    disabled: ($nuxt)=>!($nuxt.selectionType=='columns' && $nuxt.selectedColumns.length>0)
+  },
+  drop: {
+    path: 'COLUMNS',
+    generator: 'DROP_KEEP',
+    tooltip: ($nuxt)=> 'Drop column'+ ($nuxt.selectedColumns.length!=1 ? 's' : ''),
+    icons: [{ icon: 'mdi-delete-outline' }],
+    disabled: ($nuxt)=>!($nuxt.selectionType=='columns' && $nuxt.selectedColumns.length>0)
+  },
+  nest: {
+    path: 'COLUMNS',
+    tooltip: 'Nest columns',
+    icons: [{icon: 'mdi-table-merge-cells'}],
+    disabled: ($nuxt)=>['values','ranges'].includes($nuxt.selectionType) || $nuxt.selectedColumns.length<=1 || !$nuxt.currentDataset.summary
+  },
+  unnest: {
+    path: 'COLUMNS',
+    onClick: ($nuxt)=>{
+      var payload = undefined
+      if ($nuxt.selectionType==='text') {
+        payload = {
+          separator: $nuxt.currentSelection.text.value,
+          columns: [ $nuxt.currentSelection.text.column]
+        }
+      }
+      $nuxt.commandHandle({command: 'unnest', payload})
+    },
+    tooltip: ($nuxt)=> 'Unnest column'+ ($nuxt.selectedColumns.length!=1 ? 's' : ''),
+    icons: [{icon: 'mdi-arrow-split-vertical'}],
+    disabled: ($nuxt)=>!(($nuxt.selectionType=='columns' && $nuxt.selectedColumns.length>0) || $nuxt.selectionType==='text')
+  },
+
+  fill_na: {
+    path: 'TRANSFORMATION',
+    tooltip: ($nuxt)=> 'Fill column'+ ($nuxt.selectedColumns.length!=1 ? 's' : ''),
+    icons: [{icon: 'brush', class: 'material-icons-outlined'}],
+    disabled: ($nuxt)=>!($nuxt.selectionType=='columns' && $nuxt.selectedColumns.length>0)
+  },
+
+  replace: {
+    path: 'TRANSFORMATION',
+    onClick: ($nuxt)=>{
+      if ($nuxt.selectionType=='columns') {
+        $nuxt.commandHandle({command: 'replace'})
+      }
+      else if ($nuxt.selectionType=='text') {
+        var payload = {
+          columns: [$nuxt.currentSelection.text.column],
+          search: [$nuxt.currentSelection.text.value]
+        }
+        $nuxt.commandHandle({command: 'replace', payload})
+      }
+      else {
+        $nuxt.commandHandle({command: 'replace'})
+      }
+    },
+    tooltip: ($nuxt)=>'Replace in column'+ ($nuxt.selectedColumns.length>1 ? 's' : ''),
+    icons: [{icon: 'find_replace'}],
+    disabled: ($nuxt)=>!(['text'].includes($nuxt.selectionType) || $nuxt.selectedColumns.length>0)
+  },
+
+  lower: {
+    text: 'To lower case', generator: 'GENERIC', path: 'TRANSFORMATION/STRING',
+    payload: { title: 'Convert to lowercase', content: 'Lowercase' }
+  },
+
+  upper: {
+    text: 'To upper case', generator: 'GENERIC', path: 'TRANSFORMATION/STRING',
+    payload: { title: 'Convert to uppercase', content: 'Uppercase' }
+  },
+
+  proper: {
+    text: 'Proper', generator: 'GENERIC', path: 'TRANSFORMATION/STRING' ,
+    payload: { title: 'Convert to proper case', content: 'Proper case' }
+  },
+
+  normalize_chars: {
+    text: 'Remove accents', generator: 'GENERIC', path: 'TRANSFORMATION/STRING',
+    payload: { title: 'Remove accents', content: 'Remove accents in' }
+  },
+
+  remove_special_chars: {
+    text: 'Remove special chars', generator: 'GENERIC', path: 'TRANSFORMATION/STRING' ,
+    payload: { title: 'Remove special chars', content: 'Remove special chars in' }
+  },
+
+  extract: { text: 'Extract', path: 'TRANSFORMATION/STRING'},
+
+  'TRANSFORMATION/STRING/divider/0': {divider: true, path: 'TRANSFORMATION/STRING'},
+
+  trim: {
+    text: 'Trim white space', generator: 'GENERIC', path: 'TRANSFORMATION/STRING',
+    payload: { title: 'Trim white spaces', content: 'Trim white spaces in' }
+  },
+
+  left_string: { text: 'Left', generator: 'SUBSTRING', path: 'TRANSFORMATION/STRING' },
+  right_string: { text: 'Right', generator: 'SUBSTRING', path: 'TRANSFORMATION/STRING' },
+  mid_string: { text: 'Mid', path: 'TRANSFORMATION/STRING' },
+  pad_string: { text: 'Pad string', path: 'TRANSFORMATION/STRING'},
+  stringClustering: { text: 'String clustering', path: 'TRANSFORMATION/STRING', max: 1, min: 1 },
+
+  abs: {
+    text: 'Absolute value', generator: 'GENERIC', path: 'TRANSFORMATION/MATH',
+    payload: { content: 'Transform to absolute value' }
+  },
+
+  round: {
+    text: 'Round', generator: 'GENERIC', path: 'TRANSFORMATION/MATH',
+    payload: {
+      content: 'Round',
+      parameters: {decimals: { label: "Decimals", value: 0 }}
+    }
+  },
+
+  floor: { text: 'Floor', generator: 'GENERIC', path: 'TRANSFORMATION/MATH', payload: { content: 'Round down' }},
+
+  ceil: { text: 'Ceil', generator: 'GENERIC', path: 'TRANSFORMATION/MATH', payload: { content: 'Round up' }},
+
+  mod: {
+    text: 'Modulo', generator: 'GENERIC', path: 'TRANSFORMATION/MATH',
+    payload: {
+      title: 'Get modulo', content: 'Get modulo of',
+      parameters: {divisor: { label: "Divisor", value: 2 }}
+    }
+  },
+
+  log: {
+    text: 'Logarithm', generator: 'GENERIC', path: 'TRANSFORMATION/MATH',
+    payload: {
+      title: 'Get logarithm', content: 'Get logarithm of',
+      parameters: {base: { label: "Base", value: 10 }}
+    }
+  },
+
+  ln: {
+    text: 'Natural logarithm', generator: 'GENERIC', path: 'TRANSFORMATION/MATH',
+    payload: {
+      title: 'Get natural logarithm', content: 'Get natural logarithm of'
+    }
+  },
+
+  pow: { text: 'Power', generator: 'GENERIC', path: 'TRANSFORMATION/MATH',
+    payload: {
+      title: 'Get power', content: 'Get power of',
+      parameters: {power: { label: "Power", value: 2 }}
+    }
+  },
+
+  sqrt: { text: 'Square root', generator: 'GENERIC', path: 'TRANSFORMATION/MATH',
+    payload: {
+      title: 'Get power', content: 'Get power of'
+    }
+  },
+
+  sin: {
+    text: 'SIN',
+    generator: 'GENERIC',
+    path: 'TRANSFORMATION/TRIGONOMETRIC',
+    payload: { content: 'Get Sine' }
+  },
+
+  cos: {
+    text: 'COS',
+    generator: 'GENERIC',
+    path: 'TRANSFORMATION/TRIGONOMETRIC',
+    payload: { content: 'Get Cosine' }
+  },
+
+  tan: {
+    text: 'TAN',
+    generator: 'GENERIC',
+    path: 'TRANSFORMATION/TRIGONOMETRIC',
+    payload: { content: 'Get Tangent' }
+  },
+
+  asin: {
+    text: 'ASIN',
+    generator: 'GENERIC',
+    path: 'TRANSFORMATION/TRIGONOMETRIC',
+    payload: { content: 'Get Inverse Sine' }
+  },
+
+  acos: {
+    text: 'ACOS',
+    generator: 'GENERIC',
+    path: 'TRANSFORMATION/TRIGONOMETRIC',
+    payload: { content: 'Get Inverse Cosine' }
+  },
+
+  atan: {
+    text: 'ATAN',
+    generator: 'GENERIC',
+    path: 'TRANSFORMATION/TRIGONOMETRIC',
+    payload: { content: 'Get Inverse Tangent' }
+  },
+
+  sinh: {
+    text: 'SINH',
+    generator: 'GENERIC',
+    path: 'TRANSFORMATION/TRIGONOMETRIC',
+    payload: { content: 'Get Hyperbolic Sine' }
+  },
+
+  cosh: {
+    text: 'COSH',
+    generator: 'GENERIC',
+    path: 'TRANSFORMATION/TRIGONOMETRIC',
+    payload: { content: 'Get Hyperbolic Cosine' }
+  },
+
+  tanh: {
+    text: 'TANH',
+    generator: 'GENERIC',
+    path: 'TRANSFORMATION/TRIGONOMETRIC',
+    payload: { content: 'Get Hyperbolic Tangent' }
+  },
+
+  asinh: {
+    text: 'ASINH',
+    generator: 'GENERIC',
+    path: 'TRANSFORMATION/TRIGONOMETRIC',
+    payload: { content: 'Get Inverse Hyperbolic Sine' }
+  },
+
+  acosh: {
+    text: 'ACOSH',
+    generator: 'GENERIC',
+    path: 'TRANSFORMATION/TRIGONOMETRIC',
+    payload: { content: 'Get Inverse Hyperbolic Cosine' }
+  },
+
+  atanh: {
+    text: 'ATANH',
+    generator: 'GENERIC',
+    path: 'TRANSFORMATION/TRIGONOMETRIC',
+    payload: { content: 'Get Inverse Hyperbolic Tangent' }
+  },
+
+  transformFormat: { text: 'Transform format', path: 'TRANSFORMATION/TIME'},
+
+  'TRANSFORMATION/TIME/divider/0': {divider: true, path: 'TRANSFORMATION/TIME'},
+
+  ...objectMapFromEntries(TIME_NAMES,(output_type, name)=>(['date_extract_'+name, { command: 'getFromDatetime', payload: { output_type }, text: `Get ${name}`, path: 'TRANSFORMATION/TIME'}])),
+
+  sample_n: {
+    text: 'Random sampling',
+    path: 'TRANSFORMATION/ML'
+  },
+  stratified_sample: {
+    text: 'Stratified Sampling',
+    path: 'TRANSFORMATION/ML',
+    min: 1,
+    max: 1
+  },
+  bucketizer: {
+    text: 'Create Bins',
+    path: 'TRANSFORMATION/ML',
+    max: 1
+  },
+  impute: {
+    text: 'Impute rows',
+    path: 'TRANSFORMATION/ML',
+    min: 1
+  },
+  values_to_cols: {
+    text: 'Values to Columns',
+    path: 'TRANSFORMATION/ML',
+    max: 1
+  },
+  string_to_index: {
+    text: 'Strings to Index',
+    path: 'TRANSFORMATION/ML',
+    min: 1
+  },
+  index_to_string: {
+    text: 'Indices to Strings',
+    path: 'TRANSFORMATION/ML',
+    min: 1
+  },
+  z_score: {
+    text: 'Standard Scaler',
+    path: 'TRANSFORMATION/ML',
+    min: 1
+  },
+  min_max_scaler: {
+    text: 'Min max Scaler',
+    path: 'TRANSFORMATION/ML',
+    min: 1
+  },
+  max_abs_scaler: {
+    text: 'Max abs Scaler',
+    path: 'TRANSFORMATION/ML',
+    min: 1
+  },
+  outliers: {
+    text: 'Outliers',
+    path: 'TRANSFORMATION/ML',
+    min: 1,
+    max: 1
+  },
+
+  // ...objectMapFromEntries(TYPES_NAMES, ([dtype, text])=>(['cast_to_'+dtype, { command: 'set_dtype', payload: { dtype }, text, path: 'TRANSFORMATION/CAST'}]))
+
+}
 
 export const commandsHandlers = {
 
@@ -1447,28 +1948,6 @@ export const commandsHandlers = {
       )}`,
   },
 
-  GENERIC_OLD: {
-    dialog: {
-      title: (c) => c.title || c.content || c.command,
-      output_cols: true,
-    },
-    payload: (columns, payload = {}) => ({
-      columns: columns,
-      output_cols: columns.map((e) => ""),
-      title: payload.title,
-      content: payload.content,
-      preview: {
-        type: "GENERIC_OLD",
-      },
-    }),
-    content: (payload) => {
-      return `<b>${payload.content || payload.command}</b> ${multipleContent(
-        [payload.columns],
-        "hl--cols"
-      )}`;
-    },
-  },
-
   GENERIC: {
     dialog: {
       title: (c) => c.title || c.content || c.command,
@@ -1520,7 +1999,7 @@ export const commandsHandlers = {
     },
   },
 
-  SUBSTR1: {
+  SUBSTRING: {
     dialog: {
       title: (c) => {
         return {
@@ -1543,7 +2022,7 @@ export const commandsHandlers = {
       output_cols: columns.map((e) => ""),
       n: "",
       preview: {
-        type: "SUBSTR1",
+        type: "SUBSTRING",
       },
     }),
     content: (payload) => {
@@ -2754,4 +3233,4 @@ export const commandsHandlers = {
   },
 };
 
-export default { commandsHandlers }
+export default { operationGroups, operations, commandsHandlers };

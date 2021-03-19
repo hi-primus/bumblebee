@@ -459,7 +459,7 @@ export const codeGenerators = {
     + ( output_cols_argument ? `, output_cols=${output_cols_argument}` : '')
     + `)`
   },
-  SUBSTR1: (payload) => {
+  SUBSTRING: (payload) => {
 
     let output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (!['final','processing'].includes(payload.request.type)) ? '__new__' : '');
 
@@ -902,7 +902,7 @@ export const getGenerator = function(generatorName = '', payload = {}) {
   if (payload && payload._custom && typeof payload._custom === 'function') {
     generator = payload._custom;
   } else {
-    generator = codeGenerators[generatorName] || codeGenerators[payload.command] || codeGenerators[payload.type] || undefined;
+    generator = codeGenerators[generatorName] || codeGenerators[payload.command] || codeGenerators[payload.generator] || undefined;
   }
   return generator
 }

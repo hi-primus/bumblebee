@@ -577,6 +577,14 @@ export const objectMapEntries = (obj, cb) => {
   )
 }
 
+export const objectMapFromEntries = (obj, cb) => {
+  return Object.fromEntries(
+    Object.entries(obj).map(
+      ([key,value])=>cb(key,value)
+    )
+  )
+}
+
 export const getCodePayload = (payload) => {
   if (payload._generator && typeof payload._custom === 'function' ) {
     return payload._custom(payload);
@@ -1248,6 +1256,7 @@ export default {
   objectFilter,
   objectMap,
   objectMapEntries,
+  objectMapFromEntries,
   getCodePayload,
   transformDateToPython,
   transformDateFromPython,

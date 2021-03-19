@@ -906,10 +906,10 @@ export default {
 
     getCommandHandler (command) {
 
-      var commandHandler = commandsHandlers[command.command] || commandsHandlers[command.type];
+      var commandHandler = commandsHandlers[command.command] || commandsHandlers[command.generator];
 
       if (!commandHandler) {
-        commandHandler = deepCopy(this.customCommandsHandlers[command.command] || this.customCommandsHandlers[command.type]);
+        commandHandler = deepCopy(this.customCommandsHandlers[command.command] || this.customCommandsHandlers[command.generator]);
       }
 
       return commandHandler;
@@ -996,6 +996,7 @@ export default {
         // engineOptions: TO-DO:
         allColumns: this.allColumns,
         type: command.type,
+        generator: command.generator,
         command: command.command,
       }
 

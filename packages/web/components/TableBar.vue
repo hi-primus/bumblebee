@@ -21,147 +21,148 @@
         </template>
         <span>Table view</span>
       </v-tooltip>
-      <div class="divider"/>
-      <template v-for="(element, index) in (toolbarElements.filter(e=>!getProperty(e.hidden)))">
-        <div v-if="element.divider" :key="index" class="divider"/>
-        <template v-else-if="element.type=='button'">
-          <v-tooltip :key="'toolbar'+index" transition="fade-transition" bottom>
-            <template v-slot:activator="{ on }">
-              <div class="icon-btn-container" v-on="on">
-                <v-btn
-                  text
-                  class="icon-btn"
-                  @click="element.onClick"
-                  :disabled="getProperty(element.disabled)"
-                >
-                  <template v-for="(icon, ii) in element.icons">
-                    <v-icon
-                      :key="ii"
-                      :color="icon.color || '#888'"
-                      :style="icon.style || {}"
-                      :class="icon.class || {}"
-                    >
-                      {{icon.icon}}
-                    </v-icon>
+      <template v-for="(elements, section) in Object.values(toolbarSectionsIcons)">
+        <div class="divider" :key="'d'+section" :data-keys="Object.keys(section).join()"/>
+        <template v-for="(element, index) in (elements.filter(e=>!getPropertyNuxt(e.hidden)))">
+          <template v-if="element.type=='button'">
+            <v-tooltip :key="'toolbar'+section+'button'+index" transition="fade-transition" bottom>
+              <template v-slot:activator="{ on }">
+                <div class="icon-btn-container" v-on="on">
+                  <v-btn
+                    text
+                    class="icon-btn"
+                    @click="elementOnClick(element)"
+                    :disabled="getPropertyNuxt(element.disabled)"
+                  >
+                    <template v-for="(icon, ii) in element.icons">
+                      <v-icon
+                        :key="ii"
+                        :color="icon.color || '#888'"
+                        :style="icon.style || {}"
+                        :class="icon.class || {}"
+                      >
+                        {{icon.icon}}
+                      </v-icon>
+                    </template>
+                  </v-btn>
+                </div>
+              </template>
+              <span>{{getPropertyNuxt(element.tooltip)}}</span>
+            </v-tooltip>
+          </template>
+          <template v-else-if="element.type=='menu'">
+            <v-menu
+              v-model="menus[element.group]"
+              offset-y
+              :key="'toolbar'+index"
+            >
+              <template v-slot:activator="{ on: menu }">
+                <v-tooltip :disabled="menus[element.group]" transition="fade-transition" bottom>
+                  <template v-slot:activator="{ on: tooltip }">
+                    <div class="icon-btn-container" v-on="{...tooltip}">
+                      <v-btn
+                        :color="'#888'"
+                        :disabled="getPropertyNuxt(element.disabled)"
+                        class="icon-btn"
+                        text
+                        v-on="{...menu}"
+                      >
+                        <template v-for="(icon, ii) in element.icons">
+                          <v-icon
+                            :key="ii"
+                            :color="icon.color || '#888'"
+                            :style="icon.style || {}"
+                            :class="icon.class || {}"
+                          >
+                            {{icon.icon}}
+                          </v-icon>
+                        </template>
+                        <v-icon class="dropdown-icon" :color="menus[element.group] ? 'black' : '#888'">
+                          arrow_drop_down
+                        </v-icon>
+                      </v-btn>
+                    </div>
                   </template>
-                </v-btn>
-              </div>
-            </template>
-            <span>{{element.tooltip}}</span>
-          </v-tooltip>
-        </template>
-        <template v-else-if="element.type=='menu'">
-          <v-menu
-            v-model="menus[element.group]"
-            offset-y
-            :key="'toolbar'+index"
-          >
+                  <span>{{getPropertyNuxt(element.tooltip)}}</span>
+                </v-tooltip>
+              </template>
+              <v-list dense style="max-height: calc(100vh - 143px); min-width: 160px;" class="scroll-y">
+                <v-list-item-group color="black">
+                  <template
+                    v-for="(item, i) in menuItems(element.group).filter(e=>!getPropertyNuxt(e.hidden))"
+                  >
+                    <v-divider
+                      v-if="item.divider"
+                      :key="i+'mc'"
+                    ></v-divider>
+                    <v-list-item
+                      v-else
+                      :key="i+'mc'"
+                      @click="commandHandle(item)"
+                      :disabled="getPropertyNuxt(item.disabled) || !checkDataTypes(item.allowedTypes) || (item.max && selectedColumns.length>item.max) || (item.min && selectedColumns.length<item.min)"
+                    >
+                      <v-list-item-content>
+                        <v-list-item-title>
+                          {{ item.text }}
+                        </v-list-item-title>
+                      </v-list-item-content>
+                    </v-list-item>
+                  </template>
+                </v-list-item-group>
+              </v-list>
+            </v-menu>
+          </template>
+          <v-menu v-else-if="element.type=='sort'" :key="index" :close-on-content-click="false" @input="menus['sort'] = $event" offset-y>
             <template v-slot:activator="{ on: menu }">
-              <v-tooltip :disabled="menus[element.group]" transition="fade-transition" bottom>
-                <template v-slot:activator="{ on: tooltip }">
-                  <div class="icon-btn-container" v-on="{...tooltip}">
+                <v-tooltip :disabled="menus['sort']" transition="fade-transition" bottom>
+                  <template v-slot:activator="{ on: tooltip }">
                     <v-btn
-                      :color="'#888'"
-                      :disabled="getProperty(element.disabled)"
+                      :color="sortBy[0] ? 'black' : '#888'"
+                      :disabled="!(currentDataset && currentDataset.summary)"
                       class="icon-btn"
                       text
-                      v-on="{...menu}"
+                      v-on="{...tooltip, ...menu}"
                     >
-                      <template v-for="(icon, ii) in element.icons">
-                        <v-icon
-                          :key="ii"
-                          :color="icon.color || '#888'"
-                          :style="icon.style || {}"
-                          :class="icon.class || {}"
-                        >
-                          {{icon.icon}}
-                        </v-icon>
-                      </template>
-                      <v-icon class="dropdown-icon" :color="menus[element.group] ? 'black' : '#888'">
-                        arrow_drop_down
+                      <v-icon>sort</v-icon>
+                      <span style="min-width: 2em; margin-left: -2px">
+                        {{ sortByLabel }}
+                      </span>
+                      <v-icon v-show="sortBy[0]" color="black" small>
+                        <template v-if="sortDesc[0]">arrow_downward</template>
+                        <template v-else>arrow_upward</template>
                       </v-icon>
                     </v-btn>
-                  </div>
-                </template>
-                <span>{{element.tooltip}}</span>
-              </v-tooltip>
-            </template>
-            <v-list dense style="max-height: calc(100vh - 143px); min-width: 160px;" class="scroll-y">
-              <v-list-item-group color="black">
-                <template
-                  v-for="(item, i) in menuItems(element.group).filter(e=>!getProperty(e.hidden))"
-                >
-                  <v-divider
-                    v-if="item.divider"
-                    :key="i+'mc'"
-                  ></v-divider>
+                  </template>
+                  <span>Sort columns</span>
+                </v-tooltip>
+              </template>
+              <v-list dense>
+                <v-list-item-group :value="sortBy[0]" color="black">
                   <v-list-item
-                    v-else
-                    :key="i+'mc'"
-                    @click="commandHandle(item)"
-                    :disabled="getProperty(item.disabled) || !checkDataTypes(item.allowedTypes) || (item.max && selectedColumns.length>item.max) || (item.min && selectedColumns.length<item.min)"
+                    v-for="(item, i) in sortableColumnsTableHeaders"
+                    :key="i+'scth'"
+                    :value="item.value"
+                    @click="clickSort(item.value)"
                   >
                     <v-list-item-content>
                       <v-list-item-title>
+                        <span class="sort-hint">
+                          {{ item.hint }}
+                        </span>
                         {{ item.text }}
                       </v-list-item-title>
                     </v-list-item-content>
+                    <v-list-item-icon>
+                      <v-icon v-show="item.value===sortBy[0]" color="black">
+                        <template v-if="sortDesc[0]">arrow_downward</template>
+                        <template v-else>arrow_upward</template>
+                      </v-icon>
+                    </v-list-item-icon>
                   </v-list-item>
-                </template>
-              </v-list-item-group>
-            </v-list>
-          </v-menu>
+                </v-list-item-group>
+              </v-list>
+            </v-menu>
         </template>
-        <v-menu v-else-if="element.type=='sort'" :key="index" :close-on-content-click="false" @input="menus['sort'] = $event" offset-y>
-          <template v-slot:activator="{ on: menu }">
-              <v-tooltip :disabled="menus['sort']" transition="fade-transition" bottom>
-                <template v-slot:activator="{ on: tooltip }">
-                  <v-btn
-                    :color="sortBy[0] ? 'black' : '#888'"
-                    :disabled="!(currentDataset && currentDataset.summary)"
-                    class="icon-btn"
-                    text
-                    v-on="{...tooltip, ...menu}"
-                  >
-                    <v-icon>sort</v-icon>
-                    <span style="min-width: 2em; margin-left: -2px">
-                      {{ sortByLabel }}
-                    </span>
-                    <v-icon v-show="sortBy[0]" color="black" small>
-                      <template v-if="sortDesc[0]">arrow_downward</template>
-                      <template v-else>arrow_upward</template>
-                    </v-icon>
-                  </v-btn>
-                </template>
-                <span>Sort columns</span>
-              </v-tooltip>
-            </template>
-            <v-list dense>
-              <v-list-item-group :value="sortBy[0]" color="black">
-                <v-list-item
-                  v-for="(item, i) in sortableColumnsTableHeaders"
-                  :key="i+'scth'"
-                  :value="item.value"
-                  @click="clickSort(item.value)"
-                >
-                  <v-list-item-content>
-                    <v-list-item-title>
-                      <span class="sort-hint">
-                        {{ item.hint }}
-                      </span>
-                      {{ item.text }}
-                    </v-list-item-title>
-                  </v-list-item-content>
-                  <v-list-item-icon>
-                    <v-icon v-show="item.value===sortBy[0]" color="black">
-                      <template v-if="sortDesc[0]">arrow_downward</template>
-                      <template v-else>arrow_upward</template>
-                    </v-icon>
-                  </v-list-item-icon>
-                </v-list-item>
-              </v-list-item-group>
-            </v-list>
-          </v-menu>
       </template>
       <v-spacer></v-spacer>
       <v-menu
@@ -443,9 +444,11 @@ import VegaEmbed from '@/components/VegaEmbed'
 import clientMixin from '@/plugins/mixins/client'
 import dataTypesMixin from '@/plugins/mixins/data-types'
 import applicationMixin from '@/plugins/mixins/application'
-import { copyToClipboard, namesToIndices, getProperty, ENGINES, INCOMPATIBLE_ENGINES, TYPES_NAMES, TIME_NAMES } from 'bumblebee-utils'
+import { objectMap, copyToClipboard, namesToIndices, getProperty, ENGINES, INCOMPATIBLE_ENGINES, TYPES_NAMES, TIME_NAMES } from 'bumblebee-utils'
 import { generateCode } from 'optimus-code-api'
 import { mapState, mapGetters } from 'vuex'
+
+import { operationGroups, operations } from '@/utils/operations'
 
 export default {
 	components: {
@@ -557,123 +560,9 @@ export default {
       return this.$store.getters['customCommands/menuItems'];
     },
 
-    commandItems () {
-      var commandItems = [
+    toolbarItems () {
 
-				{command: 'loadFile', text: 'Add from file', group: 'DATA_SOURCE'},
-        {command: 'loadDatabaseTable', text: 'Add from database', group: 'DATA_SOURCE'},
-				{command: 'load from data source', text: 'Add from a loaded data source', group: 'DATA_SOURCE', hidden: true},
-        {command: 'manage data sources', text: 'Manage data sources', group: 'DATA_SOURCE', hidden: true},
-
-        {command: 'Download', text: 'Download', group: 'SAVE', disabled: ()=>process.env.INSTANCE!=='LOCAL', hidden: ()=>this.usingPandasTransformation},
-        {command: 'Download', text: 'Download (from pandas preview)', group: 'SAVE', disabled: ()=>process.env.INSTANCE!=='LOCAL', hidden: ()=>!this.usingPandasTransformation},
-        {command: 'Download-rerun', text: 'Download', group: 'SAVE', disabled: ()=>process.env.INSTANCE!=='LOCAL', hidden: ()=>!this.usingPandasTransformation},
-        {command: 'saveFile', text: 'Save file', group: 'SAVE', disabled: ()=>!(this.currentDataset && this.currentDataset.summary)},
-        {command: 'saveDatabaseTable', text: 'Save to database', group: 'SAVE', disabled: ()=>!(this.currentDataset && this.currentDataset.summary)},
-        {command: 'Compile', text: 'Compile SQL', group: 'SAVE', hidden: ()=>(this.$store.state.localEngineParameters || {}).engine !== 'ibis'},
-
-
-				{command: 'lower', text: 'To lower case', type: 'GENERIC', group: 'STRING', payload: { title: 'Convert to lowercase', content: 'Lowercase' }},
-				{command: 'upper', text: 'To upper case', type: 'GENERIC', group: 'STRING', payload: { title: 'Convert to uppercase', content: 'Uppercase' }},
-        {command: 'proper', text: 'Proper', type: 'GENERIC', group: 'STRING' , payload: { title: 'Convert to proper case', content: 'Proper case' }},
-				{command: 'normalize_chars', text: 'Remove accents', type: 'GENERIC', group: 'STRING', payload: { title: 'Remove accents', content: 'Remove accents in' }},
-				{command: 'remove_special_chars', text: 'Remove special chars', type: 'GENERIC', group: 'STRING' , payload: { title: 'Remove special chars', content: 'Remove special chars in' }},
-        {command: 'extract', text: 'Extract', group: 'STRING'},
-        {divider: true, group: 'STRING'},
-        {command: 'trim', text: 'Trim white space', type: 'GENERIC', group: 'STRING', payload: { title: 'Trim white spaces', content: 'Trim white spaces in' }},
-        {command: 'left_string', text: 'Left', type: 'SUBSTR1', group: 'STRING' },
-        {command: 'right_string', text: 'Right', type: 'SUBSTR1', group: 'STRING' },
-        {command: 'mid_string', text: 'Mid', group: 'STRING' },
-        {command: 'pad_string', text: 'Pad string', group: 'STRING'},
-        {command: 'stringClustering', text: 'String clustering', group: 'STRING', max: 1, min: 1 },
-
-        {command: 'abs', text: 'Absolute value', type: 'GENERIC', group: 'MATH', payload: { content: 'Transform to absolute value' }},
-				{
-          command: 'round', text: 'Round', type: 'GENERIC', group: 'MATH',
-          payload: {
-            content: 'Round',
-            parameters: {decimals: { label: "Decimals", value: 0 }}
-          }
-        },
-        {command: 'floor', text: 'Floor', type: 'GENERIC', group: 'MATH', payload: { content: 'Round down' }},
-				{command: 'ceil', text: 'Ceil', type: 'GENERIC', group: 'MATH', payload: { content: 'Round up' }},
-
-				{
-          command: 'mod', text: 'Modulo', type: 'GENERIC', group: 'MATH',
-          payload: {
-            title: 'Get modulo', content: 'Get modulo of',
-            parameters: {divisor: { label: "Divisor", value: 2 }}
-          }
-        },
-				{
-          command: 'log', text: 'Logarithm', type: 'GENERIC', group: 'MATH',
-          payload: {
-            title: 'Get logarithm', content: 'Get logarithm of',
-            parameters: {base: { label: "Base", value: 10 }}
-          }
-        },
-				{
-          command: 'ln', text: 'Natural logarithm', type: 'GENERIC', group: 'MATH',
-          payload: {
-            title: 'Get natural logarithm', content: 'Get natural logarithm of'
-          }
-        },
-        {
-          command: 'pow', text: 'Power', type: 'GENERIC', group: 'MATH',
-          payload: {
-            title: 'Get power', content: 'Get power of',
-            parameters: {power: { label: "Power", value: 2 }}
-          }
-        },
-        {
-          command: 'sqrt', text: 'Square root', type: 'GENERIC', group: 'MATH',
-          payload: {
-            title: 'Get power', content: 'Get power of'
-          }
-        },
-
-				{command: 'sin', text: 'Get sin', type: 'GENERIC', group: 'TRIGONOMETRIC', payload: { content: 'Get sin' }},
-				{command: 'cos', text: 'Get cos', type: 'GENERIC', group: 'TRIGONOMETRIC', payload: { content: 'Get cos' }},
-				{command: 'tan', text: 'Get tan', type: 'GENERIC', group: 'TRIGONOMETRIC', payload: { content: 'Get tan' }},
-				{command: 'asin', text: 'Get asin', type: 'GENERIC', group: 'TRIGONOMETRIC', payload: { content: 'Get asin' }},
-				{command: 'acos', text: 'Get acos', type: 'GENERIC', group: 'TRIGONOMETRIC', payload: { content: 'Get acos' }},
-				{command: 'atan', text: 'Get atan', type: 'GENERIC', group: 'TRIGONOMETRIC', payload: { content: 'Get atan' }},
-				{command: 'sinh', text: 'Get sinh', type: 'GENERIC', group: 'TRIGONOMETRIC', payload: { content: 'Get sinh' }},
-				{command: 'cosh', text: 'Get cosh', type: 'GENERIC', group: 'TRIGONOMETRIC', payload: { content: 'Get cosh' }},
-				{command: 'tanh', text: 'Get tanh', type: 'GENERIC', group: 'TRIGONOMETRIC', payload: { content: 'Get tanh' }},
-				{command: 'asinh', text: 'Get asinh', type: 'GENERIC', group: 'TRIGONOMETRIC', payload: { content: 'Get asinh' }},
-				{command: 'acosh', text: 'Get acosh', type: 'GENERIC', group: 'TRIGONOMETRIC', payload: { content: 'Get acosh' }},
-				{command: 'atanh', text: 'Get atanh', type: 'GENERIC', group: 'TRIGONOMETRIC', payload: { content: 'Get atanh' }},
-
-        {command: 'transformFormat', text: 'Transform format', group: 'TIME'},
-
-        {divider: true, group: 'TIME'},
-
-        ...Object.entries(TIME_NAMES).map(
-          ([output_type, name])=>({command: 'getFromDatetime', payload: { output_type }, text: `Get ${name}`, group: 'TIME'})
-        ),
-
-				// {command: 'random_split',     teaxt: 'Split train and test', type: 'PREPARE'},
-
-				{command: 'sample_n', text: 'Random sampling', group: 'ML'},
-        {command: 'stratified_sample', text: 'Stratified Sampling', group: 'ML', min: 1, max: 1 },
-				{command: 'bucketizer',       text: 'Create Bins',          group: 'ML', max: 1 }, // TO-DO: Check limit
-				{command: 'impute',           text: 'Impute rows',          group: 'ML', min: 1 },
-				{command: 'values_to_cols',   text: 'Values to Columns',    group: 'ML', max: 1 },
-				{command: 'string_to_index',  text: 'Strings to Index',     group: 'ML', min: 1},
-				{command: 'index_to_string',  text: 'Indices to Strings',     group: 'ML', min: 1},
-        {command: 'z_score',          text: 'Standard Scaler',  group: 'ML', min: 1},
-        {command: 'min_max_scaler',   text: 'Min max Scaler',   group: 'ML', min: 1},
-        {command: 'max_abs_scaler',   text: 'Max abs Scaler',   group: 'ML', min: 1},
-        {command: 'outliers',   text: 'Outliers',   group: 'ML', min: 1, max: 1},
-
-        ...Object.entries(TYPES_NAMES).map(
-          ([dtype, text])=>({command: 'set_dtype', payload: { dtype }, text, group: 'CAST'})
-        )
-      ];
-
-      return [...commandItems, ...this.customMenuItems]
-
+      return [...this.toolbarOperations, ...this.customMenuItems]
     },
 
     filtersActive () {
@@ -802,268 +691,66 @@ export default {
       }
     },
 
-    toolbarElements () {
-      return [
-        {
-          type: 'menu',
-          group: 'DATA_SOURCE',
-          icons: [{ icon: 'mdi-cloud-upload-outline' }],
-          tooltip: 'Add data source',
-          disabled: ()=>(this.$store.state.kernel!='done')
-        },
-        {
-          type: 'menu',
-          group: 'SAVE',
-          icons: [{ icon: 'mdi-content-save-outline' }],
-          tooltip: 'Save',
-          disabled: ()=>!(this.currentDataset && this.currentDataset.summary)
-        },
-        {
-          divider: true
-        },
-        {
-          type: 'button',
-          onClick: () => {
-            this.commandHandle({command: 'join'})
-          },
-          icons: [
-            { icon: 'mdi-set-center' },
-          ],
-          tooltip: 'Join dataframes',
-          disabled: ()=>!(this.currentDataset && this.currentDataset.summary && this.hasSecondaryDatasets)
-        },
-        {
-          type: 'button',
-          onClick: () => {
-            this.commandHandle({command: 'concat'})
-          },
-          icons: [
-            { icon: 'mdi-table-row-plus-after' },
-          ],
-          tooltip: 'Concat dataframes',
-          disabled: ()=>!(this.currentDataset && this.currentDataset.summary && this.hasSecondaryDatasets)
-        },
-        {
-          type: 'button',
-          onClick: () => {
-            this.commandHandle({command: 'aggregations'})
-          },
-          icons: [
-            { icon: 'mdi-set-merge' },
-          ],
-          tooltip: 'Get aggregations',
-          disabled: ()=>!(!['values','ranges'].includes(this.selectionType) && this.currentDataset && this.currentDataset.summary)
-        },
-        { divider: true },
-        {
-          type: 'button',
-          onClick: ()=>this.commandHandle({command: 'sortRows'}),
-          tooltip: 'Sort rows',
-          disabled: ()=>['values','ranges'].includes(this.selectionType) || this.selectedColumns.length<1,
-          icons: [
-            { icon: 'mdi-sort-alphabetical-ascending' }
-          ]
-        },
-        {
-          type: 'button',// {toString: ()=>(this.selectionType=='columns' ? 'button' : 'menu')},
-          // group: 'FILTER',
-          onClick: ()=>{
-            var command = { command: 'filterRows' }
-            if (['values','ranges'].includes(this.selectionType) && this.currentSelection && this.currentSelection.ranged) {
-              command = { command: 'REMOVE_KEEP_SET' }
-              command.columns = [ this.columns[this.currentSelection.ranged.index].name ]
-              command.payload = { rowsType: this.selectionType }
-              if (this.selectionType==='ranges') {
-                command.payload.selection = this.currentSelection.ranged.ranges
-              } else if (this.selectionType==='values') {
-                command.payload.selection = this.currentSelection.ranged.values
-              }
-            } else if (this.selectionType==='text') {
-              command.payload = {
-                columns: [this.currentSelection.text.column],
-                text: this.currentSelection.text.value
-              }
-            }
-            this.commandHandle(command)
-          },
-          tooltip: 'Filter rows',
-          disabled: ()=>!(['values','ranges','text'].includes(this.selectionType) || this.selectedColumns.length==1),
-          icons: [{icon: 'mdi-filter-variant'}]
-        },
-        {
-          type: 'button',
-          onClick: ()=>this.commandHandle({command: 'dropEmptyRows'}),
-          tooltip: 'Drop empty rows',
-          icons: [
-            { icon: 'mdi-delete-outline' },
-            { icon: 'menu', style: {
-              marginLeft: '-0.33333333em',
-              transform: 'scaleX(0.75)'
-            } }
-          ],
-          disabled: ()=>!(this.currentDataset && this.currentDataset.summary && this.hasSecondaryDatasets)
-        },
-        {
-          type: 'button',
-          onClick: ()=>this.commandHandle({command: 'dropDuplicates'}),
-          tooltip: 'Drop duplicates',
-          icons: [
-            // { icon: 'mdi-layers-remove' },
-            { icon: 'mdi-close-box-multiple-outline',
-              style: {
-                transform: 'scaleY(-1)'
-              }
-            },
-          ],
-          disabled: ()=>!(this.currentDataset && this.currentDataset.summary && this.hasSecondaryDatasets)
-        },
-        { divider: true },
-        {
-          type: 'button',
-          onClick: ()=>this.commandHandle({command: 'set'}),
-          tooltip: { toString: ()=>this.selectedColumns.length ? 'Set column' : 'New column'},
-          icons: [{icon: 'mdi-plus-box-outline'}],
-          disabled: ()=>!(this.selectionType=='columns' && this.selectedColumns.length<=1 && this.currentDataset && this.currentDataset.summary)
-        },
-        {
-          type: 'button',
-          onClick: ()=>this.commandHandle({command: 'rename'}),
-          tooltip: { toString: ()=> 'Rename column'+ (this.selectedColumns.length!=1 ? 's' : '')},
-          icons: [{icon: 'mdi-pencil-outline'}],
-          disabled: ()=> !(this.selectionType=='columns' && this.selectedColumns.length>0)
-        },
-        {
-          type: 'button',
-          onClick: ()=>this.commandHandle({command: 'duplicate'}),
-          tooltip: { toString: ()=> 'Duplicate column'+ (this.selectedColumns.length!=1 ? 's' : '')},
-          icons: [{icon: 'mdi-content-duplicate'}],
-          disabled: ()=>!(this.selectionType=='columns' && this.selectedColumns.length>0)
-        },
-        {
-          type: 'button',
-          onClick: ()=>this.commandHandle({command: 'keep', type: 'DROP_KEEP'}),
-          tooltip: { toString: ()=> 'Keep column'+ (this.selectedColumns.length!=1 ? 's' : '')},
-          icons: [{icon: 'all_out'}],
-          disabled: ()=>!(this.selectionType=='columns' && this.selectedColumns.length>0)
-        },
-        {
-          type: 'button',
-          onClick: ()=>this.commandHandle({command: 'drop', type: 'DROP_KEEP'}),
-          tooltip: { toString: ()=> 'Drop column'+ (this.selectedColumns.length!=1 ? 's' : '')},
-          icons: [{ icon: 'mdi-delete-outline' }],
-          disabled: ()=>!(this.selectionType=='columns' && this.selectedColumns.length>0)
-        },
-        {
-          type: 'button',
-          onClick: ()=>this.commandHandle({command: 'nest'}),
-          tooltip: 'Nest columns',
-          icons: [{icon: 'mdi-table-merge-cells'}],
-          disabled: ()=>['values','ranges'].includes(this.selectionType) || this.selectedColumns.length<=1 || !this.currentDataset.summary
-        },
-        {
-          type: 'button',
-          onClick: ()=>{
-            var payload = undefined
-            if (this.selectionType==='text') {
-              payload = {
-                separator: this.currentSelection.text.value,
-                columns: [ this.currentSelection.text.column]
-              }
-            }
-            this.commandHandle({command: 'unnest', payload})
-          },
-          tooltip: { toString: ()=> 'Unnest column'+ (this.selectedColumns.length!=1 ? 's' : '')},
-          icons: [{icon: 'mdi-arrow-split-vertical'}],
-          disabled: ()=>!((this.selectionType=='columns' && this.selectedColumns.length>0) || this.selectionType==='text')
-        },
-        { divider: true },
-        {
-          type: 'button',
-          onClick: ()=>this.commandHandle({command: 'fill_na'}),
-          tooltip: { toString: ()=> 'Fill column'+ (this.selectedColumns.length!=1 ? 's' : '')},
-          icons: [{icon: 'brush', class: 'material-icons-outlined'}],
-          disabled: ()=>!(this.selectionType=='columns' && this.selectedColumns.length>0)
-        },
-        {
-          type: 'button', // rows
-          onClick: ()=>{
-            if (this.selectionType=='columns') {
-              this.commandHandle({command: 'replace'})
-            }
-            else if (this.selectionType=='text') {
-              var payload = {
-                columns: [this.currentSelection.text.column],
-                search: [this.currentSelection.text.value]
-              }
-              this.commandHandle({command: 'replace', payload})
-            }
-            else {
-              this.commandHandle({command: 'replace'})
-            }
-          },
-          tooltip: {
-            toString: ()=>{
-              return 'Replace in column'+ (this.selectedColumns.length>1 ? 's' : '')
-            }
-          },
-          icons: [{icon: 'find_replace'}],
-          disabled: ()=>!(['text'].includes(this.selectionType) || this.selectedColumns.length>0)
-        },
-        {
-          type: 'menu',
-          group: 'STRING',
-          icons: [{ icon: 'text_format' }],
-          tooltip: 'String operations',
-          disabled: ()=>!(this.selectionType=='columns' && this.currentDataset && this.currentDataset.summary && this.selectedColumns.length>=0)
-        },
-        {
-          type: 'menu',
-          group: 'MATH',
-          icons: [{ icon: 'mdi-numeric' }],
-          tooltip: 'Numeric operations',
-          disabled: ()=>!(this.selectionType=='columns' && this.currentDataset && this.currentDataset.summary && this.selectedColumns.length>=0)
-        },
-        {
-          type: 'menu',
-          group: 'TRIGONOMETRIC',
-          icons: [{ icon: 'mdi-pi' }],
-          tooltip: 'Trigonometric operations',
-          disabled: ()=>!(this.selectionType=='columns' && this.currentDataset && this.currentDataset.summary && this.selectedColumns.length>=0)
-        },
-        {
-          type: 'menu',
-          group: 'TIME',
-          icons: [{ icon: 'calendar_today' }],
-          tooltip: 'Datetime functions',
-          disabled: ()=>!(this.selectionType=='columns' && this.selectedColumns.length>0)
-        },
-        // TO-DO: Check cast
-        // {
-        //   type: 'menu',
-        //   group: 'CAST',
-        //   icons: [{ icon: 'category' }],
-        //   tooltip: 'Cast',
-        //   disabled: ()=>!(this.selectionType=='columns' && this.selectedColumns.length>0)
-        // },
-        {
-          type: 'menu',
-          group: 'ML',
-          icons: [{icon: 'timeline', class: 'material-icons-outlined'}],
-          tooltip: 'Machine Learning',
-          disabled: ()=>!(this.selectionType=='columns' && this.currentDataset && this.currentDataset.summary) , // Sampling
-        },
-        {
-          divider: true,
-          hidden: ()=>!this.customMenuItems.length
-        },
-        {
-          type: 'menu',
-          group: 'CUSTOM',
-          icons: [{ icon: 'star_rate' }],
-          tooltip: 'Custom functions',
-          hidden: ()=>!this.customMenuItems.length
+    toolbarSectionsOperations () {
+      let sections = {};
+      Object.entries(operations).forEach(([key, operation])=>{
+        let path = (operation.path || '').split('/');
+        let group = undefined;
+        if (path.length>=2) {
+          group = path[1]
         }
-      ]
+        let section = path[0];
+        if (!sections[section]) {
+          sections[section] = [];
+        }
+        sections[section].push({
+          command: operation.command || key,
+          group,
+          section,
+          ...operation
+        });
+      });
+      return sections;
+    },
+
+    toolbarOperations () {
+      return [].concat.apply([], Object.values(this.toolbarSectionsOperations));
+    },
+
+    toolbarSectionsIcons () {
+
+      console.log(this.toolbarSectionsOperations)
+
+      return objectMap(this.toolbarSectionsOperations, operations=>{
+        let elements = [];
+
+        let groupsAdded = []
+
+        operations.forEach(operation=>{
+          let groupName = operation.group;
+          if (groupName && !groupsAdded.includes(groupName)) {
+            groupsAdded.push(groupName);
+            elements.push({
+              ...operationGroups[groupName],
+              type: 'menu',
+              group: groupName
+            })
+          } else if (!groupName) {
+            if (!operation.onClick && operation.command) {
+              operation.onClick = ($nuxt)=>$nuxt.commandHandle({
+                command: operation.command,
+                generator: operation.generator
+              });
+            }
+            elements.push({
+              ...operation,
+              type: 'button'
+            });
+          }
+        });
+
+        return elements;
+      });
     },
 
     detailedColumns() {
@@ -1198,6 +885,14 @@ export default {
 
     getProperty,
 
+    getPropertyNuxt(property) {
+      return getProperty(property, [this]);
+    },
+
+    elementOnClick(element) {
+      return element.onClick(this);
+    },
+
     async clearFilters () {
       this.$store.commit('setHiddenColumns', {});
       this.searchText = '';
@@ -1250,7 +945,7 @@ export default {
     },
 
     menuItems (group) {
-      return this.commandItems.filter(e => e.group==group)
+      return this.toolbarItems.filter(e => e.group==group)
     },
 
     async showCodeOnTextDialog (engineText) {
