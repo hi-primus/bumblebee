@@ -191,6 +191,7 @@
             <v-layout class="px-4 caption-2" row justify-space-between>
               <span
                 v-if="loadingStatus"
+                id="footer-loading-status"
               >
                 <v-progress-circular indeterminate color="grey" style="margin-top: -3px; margin-right: 14px;" size="16" width="2" />
                 {{loadingStatus!==true ? loadingStatus : 'Updating'}}

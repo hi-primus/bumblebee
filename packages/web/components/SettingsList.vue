@@ -116,6 +116,7 @@
       </template>
     </v-data-table>
     <v-btn
+      id="add-btn"
       fab
       dark
       small

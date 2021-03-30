@@ -149,6 +149,7 @@
             </v-btn>
             <v-btn
               color="primary"
+              id="btn-command-submit"
               depressed
               dense
               :disabled="(command.dialog.validate && !command.dialog.validate(currentCommand)) || (storePreviewError && !allowError)"

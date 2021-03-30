@@ -1719,7 +1719,8 @@ $editor-top-padding: 4px;
 
   .bb-table-header, .bb-table-plots, .bb-table-i {
     padding-left: 48px;
-    display: inline-flex;
+    // display: inline-flex;
+    display: flex;
   }
   .bb-table-header, .bb-table-plots {
 
@@ -1894,8 +1895,9 @@ $editor-top-padding: 4px;
 
   }
 
-  .bb-table-h-cell{
+  .bb-table-h-cell {
     user-select: none;
+    pointer-events: all !important;
     overflow: visible !important;
     border-top-style: none;
     border-top-color: white;

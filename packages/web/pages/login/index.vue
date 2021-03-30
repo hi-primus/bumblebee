@@ -107,6 +107,7 @@
             <v-card-text>
               <v-text-field
                 v-model="inputUsername"
+                id="login-field-username"
                 autocomplete="username"
                 spellcheck="false"
                 label="Username"
@@ -116,6 +117,7 @@
               />
               <v-text-field
                 v-model="inputPassword"
+                id="login-field-password"
                 autocomplete="current-password"
                 spellcheck="false"
                 :append-icon="showPassword ? 'visibility' : 'visibility_off'"
@@ -131,6 +133,7 @@
               <v-spacer />
               <v-btn
                 color="primary darken-1"
+                id="login-btn-signin"
                 large
                 depressed
                 type="submit"
@@ -143,6 +146,7 @@
             >
               <div
                 class="primary--text text--darken-1 text-button"
+                id="login-btn-change-to-signup"
                 @click="typeForm=1"
               >Sign up to bumblebee</div>
             </v-layout>

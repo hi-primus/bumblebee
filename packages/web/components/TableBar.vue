@@ -27,7 +27,7 @@
           <template v-if="element.type=='button'">
             <v-tooltip :key="'toolbar'+section+'button'+index" transition="fade-transition" bottom>
               <template v-slot:activator="{ on }">
-                <div class="icon-btn-container" v-on="on">
+                <div class="icon-btn-container" :id="'btn-'+element.command" v-on="on">
                   <v-btn
                     text
                     class="icon-btn"
@@ -59,11 +59,11 @@
               <template v-slot:activator="{ on: menu }">
                 <v-tooltip :disabled="menus[element.group]" transition="fade-transition" bottom>
                   <template v-slot:activator="{ on: tooltip }">
-                    <div class="icon-btn-container" v-on="{...tooltip}">
+                    <div class="icon-btn-container" :id="'menu-'+element.group" v-on="{...tooltip}">
                       <v-btn
                         :color="'#888'"
                         :disabled="getPropertyNuxt(element.disabled)"
-                        class="icon-btn"
+                        class="icon-btn icon-btn-menu"
                         text
                         v-on="{...menu}"
                       >
@@ -99,6 +99,7 @@
                       v-else
                       :key="i+'mc'"
                       @click="commandHandle(item)"
+                      :id="'menu-item-'+item.command"
                       :disabled="getPropertyNuxt(item.disabled) || !checkDataTypes(item.allowedTypes) || (item.max && selectedColumns.length>item.max) || (item.min && selectedColumns.length<item.min)"
                     >
                       <v-list-item-content>
@@ -184,6 +185,7 @@
                   overlap
                 >
                   <v-btn
+                    id="toolbar-icon-search"
                     :color="'#888'"
                     class="icon-btn"
                     text
@@ -270,6 +272,7 @@
         overlap
       >
         <v-btn
+          id="toolbar-icon-cells"
           :color="(operationsActive!=false) ? 'black' : '#888'"
           text
           class="icon-btn"
@@ -360,7 +363,7 @@
       <template v-if="detailsActive!==false && !operationsActive">
         <div class="sidebar-header">
           Details
-          <v-icon class="right-button" color="black" @click="clearSelection">close</v-icon>
+          <v-icon class="right-button" id="details-close-btn" color="black" @click="clearSelection">close</v-icon>
         </div>
         <div class="sidebar-content">
 
@@ -448,7 +451,7 @@ import { objectMap, copyToClipboard, namesToIndices, getProperty, ENGINES, INCOM
 import { generateCode } from 'optimus-code-api'
 import { mapState, mapGetters } from 'vuex'
 
-import { operationGroups, operations } from '@/utils/operations'
+import { operationGroups, operationSections, operations } from '@/utils/operations'
 
 export default {
 	components: {
@@ -562,7 +565,7 @@ export default {
 
     toolbarItems () {
 
-      return [...this.toolbarOperations, ...this.customMenuItems]
+      return [...operations, ...this.customMenuItems]
     },
 
     filtersActive () {
@@ -691,37 +694,9 @@ export default {
       }
     },
 
-    toolbarSectionsOperations () {
-      let sections = {};
-      Object.entries(operations).forEach(([key, operation])=>{
-        let path = (operation.path || '').split('/');
-        let group = undefined;
-        if (path.length>=2) {
-          group = path[1]
-        }
-        let section = path[0];
-        if (!sections[section]) {
-          sections[section] = [];
-        }
-        sections[section].push({
-          command: operation.command || key,
-          group,
-          section,
-          ...operation
-        });
-      });
-      return sections;
-    },
-
-    toolbarOperations () {
-      return [].concat.apply([], Object.values(this.toolbarSectionsOperations));
-    },
-
     toolbarSectionsIcons () {
 
-      console.log(this.toolbarSectionsOperations)
-
-      return objectMap(this.toolbarSectionsOperations, operations=>{
+      return objectMap(operationSections, operations=>{
         let elements = [];
 
         let groupsAdded = []

@@ -65,9 +65,222 @@ export const operationGroups = {
     tooltip: 'Custom functions',
     hidden: ($nuxt)=>!$nuxt.customMenuItems.length
   }
-}
+};
 
-export const operations = {
+const TEST_DATAFRAMES = {
+  PEOPLE: {
+    id: [
+      5,
+      6,
+      10,
+      11,
+      19,
+      78
+    ],
+    firstname: [
+      "Joaquin",
+      "Howard",
+      "Melia",
+      "Angelo",
+      "Star",
+      "Beatriz"
+    ],
+    lastname: [
+      "Macclendon",
+      "Mooneyhan",
+      "Vidal",
+      "Sideris",
+      "Mendel",
+      "Bonier"
+    ],
+  },
+  PEOPLE_JOIN: [{
+    id: [
+      5,
+      6,
+      10,
+      11,
+      79,
+      100
+    ],
+    firstname: [
+      "Joaquin",
+      "Howard",
+      "Melia",
+      "Angelo",
+      "Star",
+      "Beatriz"
+    ],
+  },
+  {
+    id: [
+      5,
+      6,
+      10,
+      11,
+      19,
+      78
+    ],
+    lastname: [
+      "Macclendon",
+      "Mooneyhan",
+      "Vidal",
+      "Sideris",
+      "Kingston",
+      "Mora"
+    ],
+  }],
+  PEOPLE_CONCAT: {
+    id: [
+      79,
+      100,
+      9,
+      137,
+      138,
+      139
+    ],
+    firstname: [
+      "Ron",
+      "Jimmy",
+      "Alvaro",
+      "Lucas",
+      "Donald",
+      "Jay"
+    ],
+    lastname: [
+      "Kingston",
+      "Mora",
+      "Torres",
+      "Horne",
+      "Carter",
+      "Finch"
+    ],
+  },
+
+  UNNEST: { name: [
+    "Joaquin Macclendon",
+    "Howard Mooneyhan",
+    "Melia Vidal",
+    "Angelo Sideris",
+    "Star Mendel",
+    "Beatriz Bonier"
+  ]},
+  NULL: { string: [
+    "Joaquin",
+    null,
+    "Howard",
+    "",
+    "  ",
+    null
+  ]},
+  DUPLICATES: { string: [
+    "Joaquin",
+    "Joaquin",
+    "Melia",
+    "Angelo",
+    "Star",
+    "Angelo",
+    "Beatriz"
+  ]},
+  CASE: { string: [
+    "John",
+    "doe ",
+    " ALICE",
+    "boB"
+  ]},
+  REPLACE: { string: [
+    "Joaquin Mcclendon",
+    "HOWARD MOONEYHAN",
+    "MELIA vidal",
+    "angelo sideris",
+    "Star mendel",
+    "BEATRIZ BONIER"
+  ]},
+  NORMALIZE: { string: [
+    "Joaquín",
+    "jokūbas",
+    "lucia",
+    "MÉLIA",
+    "MÜLLER",
+    "rené"
+  ]},
+  SPECIAL: { string: [
+    "Joaquin.",
+    "--Howard",
+    "Vidal, Melia",
+    "{Angelo}",
+    "Star $",
+    "[Beatriz]"
+  ]},
+  TRIM: { string: [
+    "Joaquin ",
+    "  Howard",
+    " Vidal  Melia ",
+    "Angelo     ",
+    "    Star ",
+    "[ Beatriz ]"
+  ]},
+  STRING: { string: [
+    "Joaquin",
+    "Howard",
+    "Melia Vidal",
+    "Angelo",
+    "Star",
+    "Beatriz"
+  ]},
+  STRING_LONG: { string: [
+    "Joaquin",
+    "Howard",
+    "Melia Vidal",
+    "Angelo",
+    "Star",
+    "Beatriz",
+    "Kingston",
+    "Mora",
+    "Alvaro",
+    "Lucas",
+    "Donald",
+    "Jay"
+  ]},
+  NUMBER: { number: [
+    -27321.87,
+    -5.5,
+    -1,
+    0,
+    0.0,
+    5.2,
+    118.1,
+    12533.34
+  ]},
+  DECIMAL: { number: [
+    -27321.87,
+    -5.5,
+    -1.47,
+    0.125,
+    3.14,
+    5.2,
+    118.1,
+    12533.34
+  ]},
+  DATETIME: { dates: [
+    "6/9/1991 6:21:12 AM",
+    "13/12/1990 4:14:10 PM",
+    "23/6/1992 8:11:26 PM",
+    "28/8/1995 2:12:04 PM",
+    "17/3/1993 10:18:18 PM",
+    "6/11/1994 12:16:51 AM"
+  ]},
+  DATETIME_UTC: { dates: [
+    "6/9/1991 6:21:12 AM GMT+0200",
+    "13/12/1990 4:14:10 PM GMT-0400",
+    "23/6/1992 8:11:26 PM GMT-0300",
+    "28/8/1995 2:12:04 PM GMT+0100",
+    "17/3/1993 10:18:18 PM GMT-0300",
+    "6/11/1994 12:16:51 AM GMT+0400"
+  ]},
+};
+
+let _operations = {
 
   loadFile: {
     text: 'Add from file',
@@ -76,6 +289,12 @@ export const operations = {
   loadDatabaseTable: {
     text: 'Add from database',
     path: 'LOADSAVE/DATA_SOURCE'
+  },
+
+  createDataframe: {
+    text: 'Create dataset from object',
+    path: 'LOADSAVE/DATA_SOURCE',
+    hidden: ($nuxt)=>!window.showCreate
   },
 
   Download: {
@@ -118,13 +337,24 @@ export const operations = {
     path: 'JOIN',
     icons: [{ icon: 'mdi-set-center' }],
     tooltip: 'Join dataframes',
-    disabled: ($nuxt)=>!($nuxt.currentDataset && $nuxt.currentDataset.summary && $nuxt.hasSecondaryDatasets)
+    disabled: ($nuxt)=>!($nuxt.currentDataset && $nuxt.currentDataset.summary && $nuxt.hasSecondaryDatasets),
+    test: {
+      dataframes: TEST_DATAFRAMES.PEOPLE_JOIN,
+      payload: {
+        dataframe: 'df',
+        how: 'left',
+        with: 'df1'
+      }
+    }
   },
   concat: {
     path: 'JOIN',
     icons: [{ icon: 'mdi-table-row-plus-after' }],
     tooltip: 'Concat dataframes',
-    disabled: ($nuxt)=>!($nuxt.currentDataset && $nuxt.currentDataset.summary && $nuxt.hasSecondaryDatasets)
+    disabled: ($nuxt)=>!($nuxt.currentDataset && $nuxt.currentDataset.summary && $nuxt.hasSecondaryDatasets),
+    test: {
+      dataframes: [TEST_DATAFRAMES.PEOPLE, TEST_DATAFRAMES.PEOPLE_CONCAT],
+    }
   },
   aggregations: {
     path: 'JOIN',
@@ -139,7 +369,13 @@ export const operations = {
     disabled: ($nuxt)=>['values','ranges'].includes($nuxt.selectionType) || $nuxt.selectedColumns.length<1,
     icons: [
       { icon: 'mdi-sort-alphabetical-ascending' }
-    ]
+    ],
+    test: {
+      dataframe: TEST_DATAFRAMES.PEOPLE,
+      payload: {
+        columns: ['firstname']
+      }
+    }
   },
   filterRows: {
     path: 'ROWS',
@@ -176,7 +412,10 @@ export const operations = {
         transform: 'scaleX(0.75)'
       } }
     ],
-    disabled: ($nuxt)=>!($nuxt.currentDataset && $nuxt.currentDataset.summary && $nuxt.hasSecondaryDatasets)
+    disabled: ($nuxt)=>!($nuxt.currentDataset && $nuxt.currentDataset.summary && $nuxt.hasSecondaryDatasets),
+    test: {
+      dataframe: TEST_DATAFRAMES.NULL
+    }
   },
   dropDuplicates: {
     path: 'ROWS',
@@ -188,26 +427,51 @@ export const operations = {
         }
       },
     ],
-    disabled: ($nuxt)=>!($nuxt.currentDataset && $nuxt.currentDataset.summary && $nuxt.hasSecondaryDatasets)
+    disabled: ($nuxt)=>!($nuxt.currentDataset && $nuxt.currentDataset.summary && $nuxt.hasSecondaryDatasets),
+    test: {
+      dataframe: TEST_DATAFRAMES.DUPLICATES
+    }
   },
   set: {
     path: 'COLUMNS',
     tooltip: ($nuxt)=>$nuxt.selectedColumns.length ? 'Set column' : 'New column',
     icons: [{icon: 'mdi-plus-box-outline'}],
-    disabled: ($nuxt)=>!($nuxt.selectionType=='columns' && $nuxt.selectedColumns.length<=1 && $nuxt.currentDataset && $nuxt.currentDataset.summary)
+    disabled: ($nuxt)=>!($nuxt.selectionType=='columns' && $nuxt.selectedColumns.length<=1 && $nuxt.currentDataset && $nuxt.currentDataset.summary),
+    test: {
+      dataframe: TEST_DATAFRAMES.NUMBER,
+      payload: {
+        columns: ['number'],
+        value: '100.5 + ROUND(SQRT(number*2))'
+      }
+    }
   },
   rename: {
     path: 'COLUMNS',
     tooltip: ($nuxt)=> 'Rename column'+ ($nuxt.selectedColumns.length!=1 ? 's' : ''),
     icons: [{icon: 'mdi-pencil-outline'}],
-    disabled: ($nuxt)=> !($nuxt.selectionType=='columns' && $nuxt.selectedColumns.length>0)
+    disabled: ($nuxt)=> !($nuxt.selectionType=='columns' && $nuxt.selectedColumns.length>0),
+    test: {
+      dataframe: TEST_DATAFRAMES.PEOPLE,
+      payload: {
+        columns: ['firstname'],
+        output_cols: ['name']
+      }
+    }
   },
+
   duplicate: {
     path: 'COLUMNS',
     tooltip: ($nuxt)=> 'Duplicate column'+ ($nuxt.selectedColumns.length!=1 ? 's' : ''),
     icons: [{icon: 'mdi-content-duplicate'}],
-    disabled: ($nuxt)=>!($nuxt.selectionType=='columns' && $nuxt.selectedColumns.length>0)
+    disabled: ($nuxt)=>!($nuxt.selectionType=='columns' && $nuxt.selectedColumns.length>0),
+    test: {
+      dataframe: TEST_DATAFRAMES.PEOPLE,
+      payload: {
+        columns: ['firstname'],
+      }
+    }
   },
+
   keep: {
     path: 'COLUMNS',
     generator: 'DROP_KEEP',
@@ -215,6 +479,7 @@ export const operations = {
     icons: [{icon: 'all_out'}],
     disabled: ($nuxt)=>!($nuxt.selectionType=='columns' && $nuxt.selectedColumns.length>0)
   },
+
   drop: {
     path: 'COLUMNS',
     generator: 'DROP_KEEP',
@@ -222,12 +487,21 @@ export const operations = {
     icons: [{ icon: 'mdi-delete-outline' }],
     disabled: ($nuxt)=>!($nuxt.selectionType=='columns' && $nuxt.selectedColumns.length>0)
   },
+
   nest: {
     path: 'COLUMNS',
     tooltip: 'Nest columns',
     icons: [{icon: 'mdi-table-merge-cells'}],
-    disabled: ($nuxt)=>['values','ranges'].includes($nuxt.selectionType) || $nuxt.selectedColumns.length<=1 || !$nuxt.currentDataset.summary
+    disabled: ($nuxt)=>['values','ranges'].includes($nuxt.selectionType) || $nuxt.selectedColumns.length<=1 || !$nuxt.currentDataset.summary,
+    test: {
+      dataframe: TEST_DATAFRAMES.PEOPLE,
+      payload: {
+        columns: ['firstname', 'lastname'],
+        separator: " "
+      }
+    }
   },
+
   unnest: {
     path: 'COLUMNS',
     onClick: ($nuxt)=>{
@@ -242,14 +516,29 @@ export const operations = {
     },
     tooltip: ($nuxt)=> 'Unnest column'+ ($nuxt.selectedColumns.length!=1 ? 's' : ''),
     icons: [{icon: 'mdi-arrow-split-vertical'}],
-    disabled: ($nuxt)=>!(($nuxt.selectionType=='columns' && $nuxt.selectedColumns.length>0) || $nuxt.selectionType==='text')
+    disabled: ($nuxt)=>!(($nuxt.selectionType=='columns' && $nuxt.selectedColumns.length>0) || $nuxt.selectionType==='text'),
+    test: {
+      dataframe: TEST_DATAFRAMES.UNNEST,
+      payload: {
+        columns: ['name'],
+        separator: " "
+      }
+    }
   },
 
   fill_na: {
     path: 'TRANSFORMATION',
     tooltip: ($nuxt)=> 'Fill column'+ ($nuxt.selectedColumns.length!=1 ? 's' : ''),
     icons: [{icon: 'brush', class: 'material-icons-outlined'}],
-    disabled: ($nuxt)=>!($nuxt.selectionType=='columns' && $nuxt.selectedColumns.length>0)
+    disabled: ($nuxt)=>!($nuxt.selectionType=='columns' && $nuxt.selectedColumns.length>0),
+    test: {
+      dataframe: TEST_DATAFRAMES.NULL,
+      payload: {
+        search: ['el', 'an'],
+        replace: "foo",
+        search_by: "chars"
+      }
+    }
   },
 
   replace: {
@@ -271,32 +560,55 @@ export const operations = {
     },
     tooltip: ($nuxt)=>'Replace in column'+ ($nuxt.selectedColumns.length>1 ? 's' : ''),
     icons: [{icon: 'find_replace'}],
-    disabled: ($nuxt)=>!(['text'].includes($nuxt.selectionType) || $nuxt.selectedColumns.length>0)
+    disabled: ($nuxt)=>!(['text'].includes($nuxt.selectionType) || $nuxt.selectedColumns.length>0),
+    test: {
+      dataframe: TEST_DATAFRAMES.REPLACE,
+      payload: {
+        search: ['el', 'an'],
+        replace: "foo",
+        search_by: "chars"
+      }
+    }
   },
 
   lower: {
     text: 'To lower case', generator: 'GENERIC', path: 'TRANSFORMATION/STRING',
-    payload: { title: 'Convert to lowercase', content: 'Lowercase' }
+    payload: { title: 'Convert to lowercase', content: 'Lowercase' },
+    test: {
+      dataframe: TEST_DATAFRAMES.CASE
+    }
   },
 
   upper: {
     text: 'To upper case', generator: 'GENERIC', path: 'TRANSFORMATION/STRING',
-    payload: { title: 'Convert to uppercase', content: 'Uppercase' }
+    payload: { title: 'Convert to uppercase', content: 'Uppercase' },
+    test: {
+      dataframe: TEST_DATAFRAMES.CASE
+    }
   },
 
   proper: {
     text: 'Proper', generator: 'GENERIC', path: 'TRANSFORMATION/STRING' ,
-    payload: { title: 'Convert to proper case', content: 'Proper case' }
+    payload: { title: 'Convert to proper case', content: 'Proper case' },
+    test: {
+      dataframe: TEST_DATAFRAMES.CASE
+    }
   },
 
   normalize_chars: {
     text: 'Remove accents', generator: 'GENERIC', path: 'TRANSFORMATION/STRING',
-    payload: { title: 'Remove accents', content: 'Remove accents in' }
+    payload: { title: 'Remove accents', content: 'Remove accents in' },
+    test: {
+      dataframe: TEST_DATAFRAMES.NORMALIZE
+    }
   },
 
   remove_special_chars: {
     text: 'Remove special chars', generator: 'GENERIC', path: 'TRANSFORMATION/STRING' ,
-    payload: { title: 'Remove special chars', content: 'Remove special chars in' }
+    payload: { title: 'Remove special chars', content: 'Remove special chars in' },
+    test: {
+      dataframe: TEST_DATAFRAMES.SPECIAL
+    }
   },
 
   extract: { text: 'Extract', path: 'TRANSFORMATION/STRING'},
@@ -305,18 +617,81 @@ export const operations = {
 
   trim: {
     text: 'Trim white space', generator: 'GENERIC', path: 'TRANSFORMATION/STRING',
-    payload: { title: 'Trim white spaces', content: 'Trim white spaces in' }
+    payload: { title: 'Trim white spaces', content: 'Trim white spaces in' },
+    test: {
+      dataframe: TEST_DATAFRAMES.TRIM
+    }
   },
 
-  left_string: { text: 'Left', generator: 'SUBSTRING', path: 'TRANSFORMATION/STRING' },
-  right_string: { text: 'Right', generator: 'SUBSTRING', path: 'TRANSFORMATION/STRING' },
-  mid_string: { text: 'Mid', path: 'TRANSFORMATION/STRING' },
-  pad_string: { text: 'Pad string', path: 'TRANSFORMATION/STRING'},
-  stringClustering: { text: 'String clustering', path: 'TRANSFORMATION/STRING', max: 1, min: 1 },
+  left_string: {
+    text: 'Left',
+    generator: 'SUBSTRING',
+    path: 'TRANSFORMATION/STRING',
+    test: {
+      dataframe: TEST_DATAFRAMES.STRING,
+      payload: {
+        n: 5
+      }
+    }
+  },
+  right_string: {
+    text: 'Right',
+    generator: 'SUBSTRING',
+    path: 'TRANSFORMATION/STRING',
+    test: {
+      dataframe: TEST_DATAFRAMES.STRING,
+      payload: {
+        n: 5
+      }
+    }
+  },
+  mid_string: {
+    text: 'Mid',
+    path: 'TRANSFORMATION/STRING',
+    test: {
+      dataframe: TEST_DATAFRAMES.STRING,
+      payload: {
+        start: 2,
+        n: 4
+      }
+    }
+  },
+  pad_string: {
+    text: 'Pad string',
+    path: 'TRANSFORMATION/STRING',
+    test: {
+      dataframe: TEST_DATAFRAMES.STRING,
+      payloads: [
+        {
+          dfName: 'df',
+          width: 10,
+          fillchar: '-',
+          side: 'left',
+        },
+        {
+          dfName: 'df',
+          width: 5,
+          fillchar: '@',
+          side: 'right',
+        },
+        {
+          dfName: 'df',
+          width: 6,
+          fillchar: ' ',
+          side: 'both',
+        },
+      ]
+    }
+  },
+
+  stringClustering: {text: 'String clustering', path: 'TRANSFORMATION/STRING', max: 1, min: 1 },
 
   abs: {
     text: 'Absolute value', generator: 'GENERIC', path: 'TRANSFORMATION/MATH',
-    payload: { content: 'Transform to absolute value' }
+    payload: { content: 'Transform to absolute value' },
+    test: {
+      dataframe: TEST_DATAFRAMES.NUMBER
+    }
   },
 
   round: {
@@ -324,18 +699,40 @@ export const operations = {
     payload: {
       content: 'Round',
       parameters: {decimals: { label: "Decimals", value: 0 }}
+    },
+    test: {
+      dataframe: TEST_DATAFRAMES.DECIMAL
     }
   },
 
-  floor: { text: 'Floor', generator: 'GENERIC', path: 'TRANSFORMATION/MATH', payload: { content: 'Round down' }},
+  floor: {
+    text: 'Floor',
+    generator: 'GENERIC',
+    path: 'TRANSFORMATION/MATH',
+    payload: { content: 'Round down' },
+    test: {
+      dataframe: TEST_DATAFRAMES.DECIMAL
+    }
+  },
 
-  ceil: { text: 'Ceil', generator: 'GENERIC', path: 'TRANSFORMATION/MATH', payload: { content: 'Round up' }},
+  ceil: {
+    text: 'Ceil',
+    generator: 'GENERIC',
+    path: 'TRANSFORMATION/MATH',
+    payload: { content: 'Round up' },
+    test: {
+      dataframe: TEST_DATAFRAMES.DECIMAL
+    }
+  },
 
   mod: {
     text: 'Modulo', generator: 'GENERIC', path: 'TRANSFORMATION/MATH',
     payload: {
       title: 'Get modulo', content: 'Get modulo of',
       parameters: {divisor: { label: "Divisor", value: 2 }}
+    },
+    test: {
+      dataframe: TEST_DATAFRAMES.NUMBER
     }
   },
 
@@ -344,6 +741,9 @@ export const operations = {
     payload: {
       title: 'Get logarithm', content: 'Get logarithm of',
       parameters: {base: { label: "Base", value: 10 }}
+    },
+    test: {
+      dataframe: TEST_DATAFRAMES.NUMBER
     }
   },
 
@@ -351,6 +751,9 @@ export const operations = {
     text: 'Natural logarithm', generator: 'GENERIC', path: 'TRANSFORMATION/MATH',
     payload: {
       title: 'Get natural logarithm', content: 'Get natural logarithm of'
+    },
+    test: {
+      dataframe: TEST_DATAFRAMES.NUMBER
     }
   },
 
@@ -358,12 +761,18 @@ export const operations = {
     payload: {
       title: 'Get power', content: 'Get power of',
       parameters: {power: { label: "Power", value: 2 }}
+    },
+    test: {
+      dataframe: TEST_DATAFRAMES.NUMBER
     }
   },
 
   sqrt: { text: 'Square root', generator: 'GENERIC', path: 'TRANSFORMATION/MATH',
     payload: {
       title: 'Get power', content: 'Get power of'
+    },
+    test: {
+      dataframe: TEST_DATAFRAMES.NUMBER
     }
   },
 
@@ -371,95 +780,150 @@ export const operations = {
     text: 'SIN',
     generator: 'GENERIC',
     path: 'TRANSFORMATION/TRIGONOMETRIC',
-    payload: { content: 'Get Sine' }
+    payload: { content: 'Get Sine' },
+    test: {
+      dataframe: TEST_DATAFRAMES.NUMBER
+    }
   },
 
   cos: {
     text: 'COS',
     generator: 'GENERIC',
     path: 'TRANSFORMATION/TRIGONOMETRIC',
-    payload: { content: 'Get Cosine' }
+    payload: { content: 'Get Cosine' },
+    test: {
+      dataframe: TEST_DATAFRAMES.NUMBER
+    }
   },
 
   tan: {
     text: 'TAN',
     generator: 'GENERIC',
     path: 'TRANSFORMATION/TRIGONOMETRIC',
-    payload: { content: 'Get Tangent' }
+    payload: { content: 'Get Tangent' },
+    test: {
+      dataframe: TEST_DATAFRAMES.NUMBER
+    }
   },
 
   asin: {
     text: 'ASIN',
     generator: 'GENERIC',
     path: 'TRANSFORMATION/TRIGONOMETRIC',
-    payload: { content: 'Get Inverse Sine' }
+    payload: { content: 'Get Inverse Sine' },
+    test: {
+      dataframe: TEST_DATAFRAMES.NUMBER
+    }
   },
 
   acos: {
     text: 'ACOS',
     generator: 'GENERIC',
     path: 'TRANSFORMATION/TRIGONOMETRIC',
-    payload: { content: 'Get Inverse Cosine' }
+    payload: { content: 'Get Inverse Cosine' },
+    test: {
+      dataframe: TEST_DATAFRAMES.NUMBER
+    }
   },
 
   atan: {
     text: 'ATAN',
     generator: 'GENERIC',
     path: 'TRANSFORMATION/TRIGONOMETRIC',
-    payload: { content: 'Get Inverse Tangent' }
+    payload: { content: 'Get Inverse Tangent' },
+    test: {
+      dataframe: TEST_DATAFRAMES.NUMBER
+    }
   },
 
   sinh: {
     text: 'SINH',
     generator: 'GENERIC',
     path: 'TRANSFORMATION/TRIGONOMETRIC',
-    payload: { content: 'Get Hyperbolic Sine' }
+    payload: { content: 'Get Hyperbolic Sine' },
+    test: {
+      dataframe: TEST_DATAFRAMES.NUMBER
+    }
   },
 
   cosh: {
     text: 'COSH',
     generator: 'GENERIC',
     path: 'TRANSFORMATION/TRIGONOMETRIC',
-    payload: { content: 'Get Hyperbolic Cosine' }
+    payload: { content: 'Get Hyperbolic Cosine' },
+    test: {
+      dataframe: TEST_DATAFRAMES.NUMBER
+    }
   },
 
   tanh: {
     text: 'TANH',
     generator: 'GENERIC',
     path: 'TRANSFORMATION/TRIGONOMETRIC',
-    payload: { content: 'Get Hyperbolic Tangent' }
+    payload: { content: 'Get Hyperbolic Tangent' },
+    test: {
+      dataframe: TEST_DATAFRAMES.NUMBER
+    }
   },
 
   asinh: {
     text: 'ASINH',
     generator: 'GENERIC',
     path: 'TRANSFORMATION/TRIGONOMETRIC',
-    payload: { content: 'Get Inverse Hyperbolic Sine' }
+    payload: { content: 'Get Inverse Hyperbolic Sine' },
+    test: {
+      dataframe: TEST_DATAFRAMES.NUMBER
+    }
   },
 
   acosh: {
     text: 'ACOSH',
     generator: 'GENERIC',
     path: 'TRANSFORMATION/TRIGONOMETRIC',
-    payload: { content: 'Get Inverse Hyperbolic Cosine' }
+    payload: { content: 'Get Inverse Hyperbolic Cosine' },
+    test: {
+      dataframe: TEST_DATAFRAMES.NUMBER
+    }
   },
 
   atanh: {
     text: 'ATANH',
     generator: 'GENERIC',
     path: 'TRANSFORMATION/TRIGONOMETRIC',
-    payload: { content: 'Get Inverse Hyperbolic Tangent' }
+    payload: { content: 'Get Inverse Hyperbolic Tangent' },
+    test: {
+      dataframe: TEST_DATAFRAMES.NUMBER
+    }
   },
 
-  transformFormat: { text: 'Transform format', path: 'TRANSFORMATION/TIME'},
+  transformFormat: {
+    text: 'Transform format', path: 'TRANSFORMATION/TIME',
+    test: {
+      dataframe: TEST_DATAFRAMES.DATETIME
+    }
+  },
 
   'TRANSFORMATION/TIME/divider/0': {divider: true, path: 'TRANSFORMATION/TIME'},
 
-  ...objectMapFromEntries(TIME_NAMES,(output_type, name)=>(['date_extract_'+name, { command: 'getFromDatetime', payload: { output_type }, text: `Get ${name}`, path: 'TRANSFORMATION/TIME'}])),
+  ...objectMapFromEntries(TIME_NAMES,(output_type, name)=>(['date_extract_'+name, {
+    command: 'getFromDatetime',
+    payload: { output_type },
+    text: `Get ${name}`,
+    path: 'TRANSFORMATION/TIME',
+    test: {
+      dataframe: output_type === 'utc' ? TEST_DATAFRAMES.DATETIME_UTC : TEST_DATAFRAMES.DATETIME
+    }
+  }])),
 
   sample_n: {
     text: 'Random sampling',
-    path: 'TRANSFORMATION/ML'
+    path: 'TRANSFORMATION/ML',
+    test: {
+      dataframe: TEST_DATAFRAMES.STRING_LONG,
+      payload: {
+        n: 6
+      }
+    }
   },
   stratified_sample: {
     text: 'Stratified Sampling',
@@ -516,11 +980,73 @@ export const operations = {
 
   // ...objectMapFromEntries(TYPES_NAMES, ([dtype, text])=>(['cast_to_'+dtype, { command: 'set_dtype', payload: { dtype }, text, path: 'TRANSFORMATION/CAST'}]))
 
-}
+};
+
+export const operationSections = (() => {
+  let operationSections = {}
+
+  Object.entries(_operations).forEach(([key, operation])=>{
+
+    let path = (operation.path || '').split('/');
+
+    let group = undefined;
+
+    if (path.length>=2) {
+      group = path[1]
+    }
+
+    let section = path[0];
+
+    if (!operationSections[section]) {
+      operationSections[section] = [];
+    }
+
+    let test = operation.test;
+
+    if (test) {
+
+      if (!test.payloads || !test.payloads.length) {
+        test.payloads = [{}];
+      }
+
+      test.dataframes = test.dataframes || test.dataframe;
+
+      if (test.dataframes) {
+
+        if (!Array.isArray(test.dataframes)) {
+          test.dataframes = [test.dataframes];
+        }
+
+        test.dataframes = test.dataframes.map(dataframe => {
+
+          if (typeof dataframe !== 'string') {
+            return JSON.stringify(dataframe).replace(/\bnull\b/,"None");
+          }
+          return dataframe;
+
+        })
+      }
+
+    }
+
+    operationSections[section].push({
+      ...operation,
+      command: operation.command || key,
+      operation: key,
+      group,
+      section,
+      test
+    });
+  });
+
+  return operationSections;
+})();
+
+export const operations = [].concat.apply([], Object.values(operationSections));
 
 export const commandsHandlers = {
 
-  /* load */
+  /* load / create */
 
   loadFile: {
     dialog: {
@@ -861,6 +1387,36 @@ export const commandsHandlers = {
 
       return currentCommand;
     },
+  },
+
+  createDataframe: {
+    dialog: {
+      title: 'Create dataset',
+      acceptLabel: 'Create',
+      fields: [
+        {
+          key: "dict",
+          label: "Python dictionary",
+          placeholder: `{ "COL": ["foo", "bar", "baz"] }`,
+          type: "field"
+        }
+      ],
+      validate: (c)=>c.dict.startsWith("{") && c.dict.endsWith("}") && c.dict.length>2
+    },
+    payload: () => ({
+      command: "createDataframe",
+      dict: "{}",
+      preview: {
+        loadPreview: true,
+        type: "load",
+        delay: 500
+      },
+      request: {
+        isLoad: true,
+        createsNew: true
+      }
+    }),
+    content: (payload) => `<b>Create</b> dataset`
   },
 
   /* save */
@@ -3233,4 +3789,4 @@ export const commandsHandlers = {
   },
 };
 
-export default { operationGroups, operations, commandsHandlers };
+export default { commandsHandlers, operationGroups, operationSections, operations };

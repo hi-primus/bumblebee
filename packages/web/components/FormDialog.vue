@@ -102,10 +102,10 @@
           <!-- <v-btn color="primary" text @click="acceptForm(false)">Cancel</v-btn> -->
           <template v-if="form.extraButtons && form.extraButtons.length">
             <template v-for="button in form.extraButtons">
-              <v-btn color="primary" :key="button.event" text :disabled="button.checkDisabled && form.disabled ? form.disabled(values) : false" @click="buttonEvent(button.event)">{{button.label}}</v-btn>
+              <v-btn color="primary" :id="'btn-event-'+button.event" :key="button.event" text :disabled="button.checkDisabled && form.disabled ? form.disabled(values) : false" @click="buttonEvent(button.event)">{{button.label}}</v-btn>
             </template>
           </template>
-          <v-btn color="primary" :disabled="form.disabled ? form.disabled(values) : false" type="submit">{{acceptLabel}}</v-btn>
+          <v-btn color="primary" id="btn-accept" :disabled="form.disabled ? form.disabled(values) : false" type="submit">{{acceptLabel}}</v-btn>
         </v-card-actions>
       </v-card>
     </v-form>

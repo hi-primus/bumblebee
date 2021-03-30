@@ -3,6 +3,7 @@
     <template v-if="getPropertyField(field.type)==='action'">
       <v-btn
         :key="field.key"
+        :id="'field-'+field.key"
         depressed
         color="primary"
         @click="triggerAction(field)"
@@ -45,6 +46,7 @@
       <v-file-input
         v-model="_value"
         :key="field.key"
+        :id="'field-'+field.key"
         :label="(typeof field.label == 'function') ? field.label(currentCommand) : (field.label || '')"
         :placeholder="(typeof field.placeholder == 'function') ? field.placeholder(currentCommand) : (field.placeholder || '')"
         :clearable="field.clearable"
@@ -60,6 +62,7 @@
       <v-text-field
         v-model="_value"
         :key="field.key"
+        :id="'field-'+field.key"
         :autocomplete="getPropertyField(field.autocomplete) || 'off'"
         :label="getPropertyField(field.label)"
         :placeholder="(typeof field.placeholder == 'function') ? field.placeholder(currentCommand) : (field.placeholder || '')"
@@ -76,6 +79,7 @@
       <TextFieldSuggestions
         v-model="_value"
         :key="field.key+'tfs'"
+        :id="'field-'+field.key"
         :label="getPropertyField(field.label)"
         :placeholder="(typeof field.placeholder == 'function') ? field.placeholder(currentCommand) : (field.placeholder || '')"
         :clearable="field.clearable"
@@ -91,6 +95,7 @@
       <v-combobox
         v-model="_value"
         :key="field.key"
+        :id="'field-'+field.key"
         :label="(typeof field.label == 'function') ? field.label(currentCommand) : (field.label || '')"
         :placeholder="(typeof field.placeholder == 'function') ? field.placeholder(currentCommand) : (field.placeholder || '')"
         :clearable="field.clearable"
@@ -107,6 +112,7 @@
       <v-autocomplete
         v-model="_value"
         :key="field.key"
+        :id="'field-'+field.key"
         :label="(typeof field.label == 'function') ? field.label(currentCommand) : (field.label || '')"
         :placeholder="(typeof field.placeholder == 'function') ? field.placeholder(currentCommand) : (field.placeholder || '')"
         :clearable="field.clearable"
@@ -122,6 +128,7 @@
       <v-autocomplete
         v-model="_value"
         :key="field.key"
+        :id="'field-autocomplete-'+field.key"
         :label="(typeof field.label == 'function') ? field.label(currentCommand) : (field.label || '')"
         :placeholder="(typeof field.placeholder == 'function') ? field.placeholder(currentCommand) : (field.placeholder || '')"
         :clearable="field.clearable"
@@ -139,6 +146,7 @@
     <template v-else-if="getPropertyField(field.type)=='outliers-range'">
       <Outliers
         :key="field.key"
+        :id="'field-'+field.key"
         v-if="currentCommand[field.key]"
         :data="currentCommand[field.key]"
         :columnName="currentCommand.columns[0]"
@@ -148,6 +156,7 @@
     <template v-else-if="getPropertyField(field.type)=='switch'">
       <v-switch
         :key="field.key"
+        :id="'field-'+field.key"
         v-model="_value"
         color="primary"
         :label="(typeof field.label == 'function') ? field.label(currentCommand) : field.label"
@@ -157,6 +166,7 @@
       <v-text-field
         v-model="_value"
         :key="field.key"
+        :id="'field-'+field.key"
         :label="field.label"
         :placeholder="field.placeholder"
         dense
@@ -175,6 +185,7 @@
         type="number"
         v-model="_value"
         :key="field.key"
+        :id="'field-'+field.key"
         :label="field.label"
         :placeholder="field.placeholder"
         :min="field.min"
@@ -191,6 +202,7 @@
         :value="(currentCommand.index>=0) ? currentCommand.index : ''"
         @input="currentCommand.index = ($event>=0) ? $event : ''"
         :key="field.key"
+        :id="'field-'+field.key"
         label="Index"
         :clearable="field.clearable"
         :max="(field.splits!=='') ? field.splits-1 : undefined"
@@ -204,6 +216,7 @@
     <template v-else-if="getPropertyField(field.type)=='select' && (!field.items_key == !currentCommand[field.items_key])">
       <v-select
         :key="field.key"
+        :id="'field-'+field.key"
         v-model="_value"
         :label="field.label"
         :placeholder="field.placeholder"
@@ -213,11 +226,22 @@
         dense
         required
         outlined
-      ></v-select>
+      >
+        <template v-slot:item="{ item, on, attrs }">
+          <v-list-item  :data-value="item.value || item" v-on="on" v-bind="attrs">
+            <v-list-item-content>
+              <v-list-item-title>
+                {{item.text || item.value || item}}
+              </v-list-item-title>
+            </v-list-item-content>
+          </v-list-item>
+        </template>
+      </v-select>
     </template>
     <template v-else-if="getPropertyField(field.type)=='connection'">
       <ConnectionsItemsField
         :key="field.key"
+        :id="'field-'+field.key"
         v-model="_value"
         :field="field"
         @input="(field.onChange) ? (currentCommand = field.onChange($event, currentCommand)) : 0"
@@ -238,6 +262,7 @@
       <ColumnsConcatSelector
         v-else
         :key="field.key"
+        :id="'field-'+field.key"
         v-model="_value"
         :dataset-columns="getPropertyField(currentCommand.dataset_columns)"
         @input="(field.onChange) ? (currentCommand = field.onChange($event, currentCommand)) : ()=>{}"
@@ -247,6 +272,7 @@
     <template v-else-if="getPropertyField(field.type)=='columns_filter'">
       <ColumnsJoinSelector
         :key="field.key"
+        :id="'field-'+field.key"
         v-model="_value"
         :headers="field.headers"
         :item-key="field.item_key"
@@ -263,6 +289,7 @@
     <template v-else-if="getPropertyField(field.type)=='table'">
       <ItemsSelector
         :key="field.key"
+        :id="'field-'+field.key"
         v-model="_value"
         :headers="field.headers"
         :item-key="field.item_key"
@@ -276,6 +303,7 @@
     <template v-else-if="getPropertyField(field.type)=='tabs'">
       <TitleTabs
         :key="field.key"
+        :id="'field-'+field.key"
         v-model="_value"
         :concat="field.options.concat"
         :items-name="field.options.items_name"
@@ -284,7 +312,7 @@
         :static-items="(field.static_items_key) ? getPropertyField(currentCommand[field.static_items_key]) : field.static_items_key"
       >
       </TitleTabs>
-      <div class="tab-hints" :key="'concat'+field.key">
+      <div class="tab-hints" :id="'field-tabs-'+field.key" :key="'concat'+field.key">
         <template v-for="(item, index) in (field.info_key) ? getPropertyField(currentCommand[field.info_key]) : field.info || []" class="tab-info">
           <div :key="index"  class="tab-hint">
             <template v-if="item">
@@ -298,7 +326,7 @@
       </div>
     </template>
     <template v-else-if="getPropertyField(field.type)=='select-foreach'">
-      <v-row :key="field.key" no-gutters class="foreach-label">
+      <v-row :key="field.key" :id="'field-select-'+field.key" no-gutters class="foreach-label">
         <template v-for="(title, i) in currentCommand.columns">
           <v-col v-if="!field.noLabel" :key="i+'label'" class="col-12 col-sm-4 col-md-3 font-weight-bold pr-4 text-ellipsis" :title="title">
             {{title}}
@@ -319,7 +347,7 @@
       </v-row>
     </template>
     <template v-else-if="getPropertyField(field.type)=='clusters'">
-      <div :key="field.key" class="clusters-table-container" style="overflow-y: auto; min-heigth: 240px;">
+      <div :key="field.key" :id="'field-'+field.key" class="clusters-table-container" style="overflow-y: auto; min-heigth: 240px;">
         <div v-for="(cluster, i) in _value" :key="i+'label'" class="cluster" :class="{'disabled-cluster': !cluster.merge}" >
             <v-data-table
               flat
