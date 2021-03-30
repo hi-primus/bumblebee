@@ -4,7 +4,7 @@ import * as argon2 from 'argon2';
 
 export const UserSchemaProvider = {
 	name: 'User',
-	useFactory: (): Model<any> => {
+	useFactory: (): Schema => {
 		const UserSchema = new Schema(
 			{
 				username: {
@@ -62,8 +62,8 @@ export const UserSchemaProvider = {
 
 		UserSchema.pre('save', function (next: Function) {
 			if ((this.isModified('password'), this.isNew)) {
-				argon2.hash(this.password).then((hash) => {
-					this.password = hash;
+				argon2.hash(this.get('password')).then((hash) => {
+					this.set('password', hash);
 					next();
 				});
 			} else {
@@ -75,7 +75,7 @@ export const UserSchemaProvider = {
 			candidatePassword: string,
 		): Promise<boolean> {
 			try {
-				return await argon2.verify(this.password, candidatePassword);
+				return await argon2.verify(this.get('password'), candidatePassword);
 			} catch (e) {
 				return false;
 			}

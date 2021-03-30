@@ -3,7 +3,7 @@ import * as slug from "mongoose-slug-generator";
 
 export const WorkspaceSchemaProvider = {
   name: "Workspace",
-  useFactory: (): Model<any> => {
+  useFactory: (): Schema => {
     const WorkspaceSchema = new Schema(
       {
         name: {
@@ -77,12 +77,12 @@ export const WorkspaceSchemaProvider = {
     );
     WorkspaceSchema.plugin(slug, { separator: "-", lang: "en" });
     WorkspaceSchema.pre("save", function (next: Function) {
-      this.slug = this.slug.replace(" ", "-");
+      this.set('slug', this.get('slug').replace(" ", "-"));
       next();
     });
 
     WorkspaceSchema.virtual("tabCount").get(function () {
-      return this.tabs?.length || 0;
+      return this.get('tabs')?.length || 0;
     });
 
     return WorkspaceSchema;

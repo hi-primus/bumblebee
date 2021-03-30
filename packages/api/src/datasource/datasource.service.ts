@@ -94,13 +94,13 @@ export class DatasourceService {
     dataSourceUpdateDto: any
   ): Promise<DataSource> {
     const dataSource = await this.dataSourceModel.findOneAndUpdate(
-      dataSourceId,
+      { _id: dataSourceId },
       dataSourceUpdateDto
     );
     return dataSource;
   }
 
   async deleteDataSource(dataSourceId: string): Promise<void> {
-    const result = await this.dataSourceModel.deleteOne(dataSourceId);
+    const result = await this.dataSourceModel.deleteOne({ _id: dataSourceId });
   }
 }

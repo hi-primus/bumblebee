@@ -78,7 +78,7 @@ export class EngineConfigurationService {
     return this.itemModel.findOneAndDelete({ _id: itemId, createdBy: user });
   }
 
-  async getByIdFromUser(createdBy, id): Promise<Model<EngineConfiguration>> {
+  async getByIdFromUser(createdBy, id): Promise<EngineConfiguration> {
     const EngineConfiguration = await this.itemModel
       .findOne({ _id: id, createdBy })
       .exec();
@@ -97,7 +97,7 @@ export class EngineConfigurationService {
       .exec();
   }
 
-  async getPrefered(userId: string): Promise<Model<EngineConfiguration>> {
+  async getPrefered(userId: string): Promise<EngineConfiguration> {
     const EngineConfiguration = await this.itemModel
       .findOne({ createdBy: userId, preferred: true })
       .exec();

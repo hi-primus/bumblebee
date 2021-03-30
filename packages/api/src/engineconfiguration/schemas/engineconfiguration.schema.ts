@@ -2,7 +2,7 @@ import { Model, Schema } from "mongoose";
 
 export const EngineConfigurationSchemaProvider = {
   name: "EngineConfiguration",
-  useFactory: (): Model<any> => {
+  useFactory: (): Schema => {
     const EngineConfigurationSchema = new Schema({
       name: {
         type: String,

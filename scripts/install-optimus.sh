@@ -39,8 +39,6 @@ rapids=false
 #   rapids=false
 # fi
 
-cd
-
 if [ "$coiled" = true ]; then
   echo "Getting conda env from optimus/default on Coiled"
   coiled install optimus/default

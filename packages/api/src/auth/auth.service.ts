@@ -21,14 +21,14 @@ export class AuthService {
 		return this.usersService.newUser(userCredentials);
 	}
 
-	async signIn(userCredentials: UserCredentialsDto): Promise<SignInResponse> {
+	async signIn(userCredentials: UserCredentialsDto): Promise<any> {
 		const user = await this.usersService.findOne(userCredentials.username);
 		if (
 			user &&
 			user.active &&
 			(await user.comparePassword(userCredentials.password))
 		) {
-			const payload: Payload = { username: user.username, sub: user.id };
+			const payload = { username: user.username, sub: user.id };
 			return {
 				accessToken: this.jwtService.sign(payload, {
 					expiresIn: '7D',
@@ -46,7 +46,7 @@ export class AuthService {
 		}
 	}
 
-	async profile(userCredentials: User): Promise<User> {
+	async profile(userCredentials: User): Promise<any> {
 		const user = await this.usersService.findOne(userCredentials.username);
 		if (user) {
 			const returnUser = {
@@ -65,7 +65,7 @@ export class AuthService {
 		}
 	}
 
-  async verifyUser(bearerToken: string): Promise<User> {
+  async verifyUser(bearerToken: string): Promise<any> {
 
     const decoded = this.jwtService.verify(bearerToken, {
       ignoreExpiration: false

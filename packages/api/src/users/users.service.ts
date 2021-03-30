@@ -62,7 +62,7 @@ export class UsersService {
 		}
 	}
 
-	async activateUser(usersToActivate): Promise<User[]> {
+	async activateUser(usersToActivate): Promise<any> {
 		if (
 			usersToActivate?.users?.split(',').filter((user) => {
 				return user;
@@ -83,14 +83,14 @@ export class UsersService {
 					{ active: true },
 					{ new: true, lean: true },
 				)
-				.exec();
+				.exec()
 			return users;
 		} else {
 			throw new HttpException('Not Found', HttpStatus.NOT_FOUND);
 		}
 	}
 
-	async deactivateUser(usersToActivate): Promise<User[]> {
+	async deactivateUser(usersToActivate): Promise<any> {
 		if (
 			usersToActivate?.users?.split(',').filter((user) => {
 				return user;

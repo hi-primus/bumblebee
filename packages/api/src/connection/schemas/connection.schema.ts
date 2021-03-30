@@ -2,7 +2,7 @@ import { Model, Schema } from "mongoose";
 
 export const ConnectionSchemaProvider = {
   name: "Connection",
-  useFactory: (): Model<any> => {
+  useFactory: (): Schema => {
     const ConnectionSchema = new Schema({
       name: {
         type: String,

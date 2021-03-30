@@ -1,6 +1,6 @@
 <template>
   <v-main app>
-    <v-container fluid class="py-0 layout-container">
+    <v-container fluid class="pa-0 layout-container">
       <slot/>
     </v-container>
   </v-main>

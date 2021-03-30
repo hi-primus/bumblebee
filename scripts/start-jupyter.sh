@@ -1,5 +1,4 @@
 #!/bin/bash
-cd
 if [ -z "$address" || "$localhost" = false ]; then
   jupyter kernelgateway --JupyterWebsocketPersonality.list_kernels=True
 else
