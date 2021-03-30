@@ -127,3 +127,9 @@ dist
 
 packages/web/pages/tests/
 packages/api/assets/
+
+# Cypress
+cypress/integration/examples
+
+# documentation
+documentation
