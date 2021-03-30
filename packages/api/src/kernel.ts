@@ -345,17 +345,33 @@ export const createConnection = async function (sessionId) {
               if (['execute_result', 'display_data'].includes(message_response.msg_type)) {
 
                 response = message_response.content.data['text/plain'];
-                response = handleResponse(response);
 
-                let future_key = response?.key;
+                let future_key;
 
-                if (future_key && kernels[sessionId].promises[future_key]) {
-                  msg_id = future_key;
-                } else if (kernels[sessionId].promises[msg_id].resolveAsync && future_key && future_key !== msg_id) {
-                  kernels[sessionId].promises[future_key] = kernels[sessionId].promises[msg_id];
-                  delete kernels[sessionId].promises[msg_id];
-                  msg_id = future_key;
+                try {
+                  let handledResponse = handleResponse(response);
+                  response = handledResponse;
+                  future_key = response?.key;
+                } catch (err) {
+                  if (message_response.msg_type == 'execute_result') {
+                    throw err;
+                  }
                 }
+
+                if (future_key) {
+                  if (kernels[sessionId].promises[future_key]) {
+                    msg_id = future_key;
+                  } else if (kernels[sessionId].promises[msg_id].resolveAsync && future_key !== msg_id) {
+                    kernels[sessionId].promises[future_key] = kernels[sessionId].promises[msg_id];
+                    delete kernels[sessionId].promises[msg_id];
+                    msg_id = future_key;
+                  }
+                }
+                else if (message_response.msg_type=='display_data') {
+                  console.warn('Unknown display output', response);
+                  return;
+                }
+
 
               } else if (message_response.msg_type === 'error') {
                 console.error('msg_type error on', sessionId);

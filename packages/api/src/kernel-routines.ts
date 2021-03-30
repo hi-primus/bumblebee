@@ -131,14 +131,22 @@ ${INIT_JSON}
 
 def _out_result(_callback = None):
     def _f(fut):
-        _res = {'key': fut.key, 'status': fut.status}
-        if fut.status == "error":
-            _res.update({'error': fut.exception()})
-        elif fut.status == "finished":
-            if _callback:
-                _res.update({'result': _callback(fut)})
-            else:
-                _res.update({'result': fut.result()})
+        _res = {}
+        try:
+            _res = {'key': fut.key, 'status': fut.status}
+            if fut.status == "error":
+                _res.update({'error': fut.exception()})
+            elif fut.status == "finished":
+                if _callback:
+                    _res.update({'result': _callback(fut)})
+                else:
+                    _res.update({'result': fut.result()})
+        except Exception as callback_error:
+            # _res.update({'raw_result': fut.result()})
+            _res.update({'error': callback_error})
+            _res.update({'status': "error"})
+
+
         display(${output_json('_res')})
     return _f
 
