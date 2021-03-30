@@ -3437,3 +3437,61 @@ $editor-top-padding: 4px;
 .dialog-tooltip {
   z-index: 206 !important;
 }
+
+// tests and documentation
+
+.--highlight-btn {
+  box-shadow: $highlight-border-orange 0px 0px 0px 3px;
+  &.icon-btn.icon-btn-menu {
+    z-index: 1000;
+    padding-right: 5px !important;
+    margin-right: -1px;
+  }
+}
+
+.--highlight-menu {
+  box-shadow: $highlight-border-orange 0px 0px 0px 3px inset;
+}
+
+.bumblebee-table-container.--minimal-table {
+  width: unset !important;
+  height: fit-content !important;
+  min-width: unset !important;
+  .bbt-container {
+    width: fit-content !important;
+    max-width: fit-content;
+    min-width: fit-content;
+    height: fit-content !important;
+    max-height: fit-content;
+    min-height: fit-content;
+  }
+  .bb-table-container, .bb-table-top-container {
+    width: unset !important;
+    min-width: unset !important;
+    height: fit-content !important;
+    padding-right: 1px;
+    overflow: visible;
+    margin-right: unset !important;
+  }
+  .bb-table-top-container {
+    min-height: 122px;
+    max-width: fit-content;
+  }
+  .bb-table-container {
+    margin-top: -1px !important;
+    max-width: fit-content;
+  }
+  .bb-table-header {
+    width: fit-content !important;
+  }
+  .bb-table-i {
+    min-width: fit-content !important;
+    overflow: visible !important;
+    &::after {
+      content: none !important;
+    }
+  }
+  .bb-table-header::after {
+    content: none !important;
+  }
+}

@@ -68,6 +68,12 @@ $highlight-red: lighten($data-red,24%);
 $highlight-blue: lighten($data-primary,36%);
 $highlight-yellow: lighten($data-yellow, 8%);
 
+$highlight-border-green: lighten(desaturate($data-teal,50%),45%);
+$highlight-border-red: darken($data-red,8%);
+$highlight-border-blue: darken($data-primary,24%);
+$highlight-border-yellow: darken($data-yellow, 36%);
+$highlight-border-orange: darken($data-orange, 8%);
+
 $table-font-size: 14px;
 
 $concat-item-height: 50px;
