@@ -1898,7 +1898,7 @@ builtin-status-codes@^3.0.0:
   integrity sha1-hZgoeOIbmOHGZCXgPQF0eI9Wnug=
 
 "bumblebee-utils@link:../bumblebee-utils":
-  version "3.0.0-beta6"
+  version "3.0.0-beta7"
 
 busboy@^0.2.11:
   version "0.2.14"
@@ -5753,7 +5753,7 @@ onetime@^5.1.0:
     mimic-fn "^2.1.0"
 
 "optimus-code-api@link:../optimus-code-api":
-  version "3.0.0-beta6"
+  version "3.0.0-beta7"
   dependencies:
     bumblebee-utils "link:../bumblebee-utils"
     uuid "^8.3.2"

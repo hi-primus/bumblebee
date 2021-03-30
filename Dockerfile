@@ -60,7 +60,7 @@ RUN yarn global add pm2 && \
 
 WORKDIR "/opt"
 
-RUN echo "Version 3.0.0-beta6 3.0.0b5.1"
+RUN echo "Version 3.0.0-beta7 3.0.0b5.1"
 
 RUN pip install cytoolz --no-cache-dir && \
     pip install git+https://github.com/ironmussa/dateinfer.git --no-cache-dir && \
