@@ -1,8 +1,8 @@
-import mongoose, { Model, Schema } from "mongoose";
+import { Model, Schema } from "mongoose";
 
 export const ServiceSchemaProvider = {
   name: "Service",
-  useFactory: (): Model<any> => {
+  useFactory: (): Schema => {
     const ClusterSchema = new Schema({
       name: {
         type: String,

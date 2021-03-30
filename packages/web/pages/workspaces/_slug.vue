@@ -1,6 +1,6 @@
 <template>
 	<Layout>
-		<v-layout row wrap class="elevation-0 d-flex flex-column align-top justify-start">
+		<v-layout wrap class="elevation-0 pa-0 d-flex flex-column align-top justify-start">
       <SettingsPanel
         v-if="windowDialog  === 'configEngine'"
         :existing="$store.state.engineId"
@@ -188,7 +188,7 @@
           </div>
 
           <v-footer v-if="footerVisible" fixed="fixed" app>
-            <v-layout class="px-4 caption-2" row justify-space-between>
+            <v-layout class="px-4 caption-2" justify-space-between>
               <span
                 v-if="loadingStatus"
                 id="footer-loading-status"

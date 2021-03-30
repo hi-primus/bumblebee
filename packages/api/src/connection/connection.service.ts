@@ -12,7 +12,7 @@ export class ConnectionService {
     @InjectModel("Connection") private itemModel: Model<Connection>
   ) {}
 
-  private returnConnection(item: Connection, privateValues = false, placeholderValues = false): Connection {
+  private returnConnection(item: Connection, privateValues = false, placeholderValues = false): any {
 
     if (!item) {
       throw new Error('Connection not found or deleted');
@@ -37,9 +37,9 @@ export class ConnectionService {
     };
   }
 
-  private returnConnections(items: Connection[], privateValues = false, placeholderValues = false): Connection[] {
+  private returnConnections(items: Connection[], privateValues = false, placeholderValues = false): any[] {
 
-    let returnItems: Connection[];
+    let returnItems: any[];
 
     if (!privateValues) {
 
@@ -109,7 +109,7 @@ export class ConnectionService {
     return count;
   }
 
-  async getOne(itemId: string, user: User, allFields = false, placeholderValues = false): Promise<Connection> {
+  async getOne(itemId: string, user: User, allFields = false, placeholderValues = false): Promise<any> {
     const item = await this.itemModel
       .findOne({ _id: itemId, createdBy: user.id })
       .exec();
@@ -120,44 +120,44 @@ export class ConnectionService {
   async newConnection(
     data: CreateConnectionDTO,
     user
-  ): Promise<Connection> {
+  ): Promise<any> {
     data.isDatabase =  ALL_DATABASE_TYPES.includes(data.configuration.type);
     const item = new this.itemModel({
       ...data,
       createdBy: user.userId,
     });
-    return this.returnConnection(item.save());
+    return this.returnConnection( await item.save() );
   }
 
-  async updateOne(itemId, data): Promise<Connection> {
+  async updateOne(itemId, data): Promise<any> {
     data.isDatabase =  ALL_DATABASE_TYPES.includes(data.configuration.type);
     const item = await this.itemModel
       .findOneAndUpdate({ _id: itemId }, data)
       .exec();
-    return this.returnConnection(item.save());
+    return this.returnConnection( await item.save() );
   }
 
   async deleteOne(itemId: string, user: User) {
     return this.itemModel.findOneAndDelete({ _id: itemId, user: user.id });
   }
 
-  async updateOneFromUser(itemId, createdBy, data): Promise<Connection> {
+  async updateOneFromUser(itemId, createdBy, data): Promise<any> {
     data.isDatabase =  ALL_DATABASE_TYPES.includes(data.configuration.type);
     const item = await this.itemModel
       .findOneAndUpdate({ _id: itemId, createdBy }, data, { new: true })
       .exec();
     if (item) {
-      return this.returnConnection(item.save());
+      return this.returnConnection( await item.save() );
     } else {
       throw new NotFoundException("Connection not found");
     }
   }
 
-  async deleteOneFromUser(itemId, user): Promise<Connection> {
+  async deleteOneFromUser(itemId, user): Promise<any> {
     return this.itemModel.findOneAndDelete({ _id: itemId, createdBy: user });
   }
 
-  async getByIdFromUser(createdBy, id): Promise<Model<Connection>> {
+  async getByIdFromUser(createdBy, id): Promise<Connection> {
     const Connection = await this.itemModel
       .findOne({ _id: id, createdBy })
       .exec();

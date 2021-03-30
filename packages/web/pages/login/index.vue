@@ -1,6 +1,6 @@
 <template>
 	<Layout>
-		<v-layout row wrap class="elevation-0 d-flex flex-column align-top justify-start">
+		<v-layout wrap class="elevation-0 pa-0 d-flex flex-column align-top justify-start">
       <v-card
         :loading="isLoading ? 'primary' : false"
         class="elevation-0"

@@ -19,7 +19,7 @@
         title="Manage connections"
       />
     </v-dialog>
-		<v-layout row wrap class="elevation-0 d-flex flex-column align-top justify-start">
+		<v-layout wrap class="elevation-0 pa-0 d-flex flex-column align-top justify-start">
       <div class="bb-container" data-name="workspaces">
         <MoreMenu
           :items="moreMenu"
@@ -31,7 +31,7 @@
           />
         </div>
         <v-footer fixed="fixed" app>
-          <v-layout class="px-4" row justify-space-between>
+          <v-layout class="px-4" justify-space-between>
             <span />
             <span v-if="total !== undefined" class="caption-2">
               {{ total | formatNumberInt }} Workspaces &emsp;

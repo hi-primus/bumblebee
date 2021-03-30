@@ -33,7 +33,7 @@ export class WorkspaceService {
 		return workspaces;
 	}
 
-	async countWorkspaces(user): Promise<Workspace[]> {
+	async countWorkspaces(user): Promise<number> {
 		const count = await this.workspaceModel
 			.countDocuments({
 				createdBy: user.userId,
