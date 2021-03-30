@@ -588,6 +588,10 @@ export const codeGenerators = {
     return code
   },
 
+  createDataframe: (payload) => {
+    return `op.create.dataframe(${payload.dict})`;
+  },
+
   fingerprint: (payload) => {
     return {
       code: `from optimus.engines.dask.ml import keycollision as kc\n`
