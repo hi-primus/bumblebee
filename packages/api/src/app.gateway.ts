@@ -135,6 +135,7 @@ export class AppGateway
       if (payload?.username == user?.username) {
         client.emit('success', {});
       } else {
+        console.warn('Username not matching', payload?.username, user?.username)
         client.disconnect();
       }
     }

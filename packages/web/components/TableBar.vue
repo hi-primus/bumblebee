@@ -86,7 +86,7 @@
                   <span>{{getPropertyNuxt(element.tooltip)}}</span>
                 </v-tooltip>
               </template>
-              <v-list dense style="max-height: calc(100vh - 143px); min-width: 160px;" class="scroll-y">
+              <v-list dense style="max-height: calc(100vh - 143px); min-width: 160px;" class="scroll-y toolbar-menu">
                 <v-list-item-group color="black">
                   <template
                     v-for="(item, i) in menuItems(element.group).filter(e=>!getPropertyNuxt(e.hidden))"
@@ -276,6 +276,7 @@
           :color="(operationsActive!=false) ? 'black' : '#888'"
           text
           class="icon-btn"
+          :class="{'active': operationsActive}"
           :disabled="!(cells.length || operationsTitle!=='operations' || codeError!=='')"
           @click="operationsActive = !operationsActive"
         >

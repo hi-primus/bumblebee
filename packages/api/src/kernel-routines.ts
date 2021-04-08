@@ -14,11 +14,10 @@ if _use_time:
     res.update({'_gatewayTime': {'start': _start_time, 'end': _end_time, 'duration': _end_time-_start_time}})
 `;
 
-const output_json = (res = 'res') => `json.dumps(${res},  default=json_converter, ensure_ascii=False)`
+const output_json = (res = 'res') => `dump_json(${res}, ensure_ascii=False)`
 
 const INIT_JSON = `
-import json
-from optimus.helpers.json import json_converter
+from optimus.helpers.json import dump_json
 `
 
 const code = (code = '') => `

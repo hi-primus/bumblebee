@@ -114,7 +114,7 @@ export const codeGenerators = {
     code += `    global ${payload.dfName}\n`;
     code += `    ${payload.dfName} = fut.result()\n`;
     code += `    return ${payload.dfName}.cols.pattern_counts("${escapeQuotes(payload.column)}", n=${payload.n}, mode=${payload.mode})\n`;
-    code += `_output = op.submit(${payload.dfName}.cols.calculate_pattern_counts, "${escapeQuotes(payload.column)}", n=${payload.n}, mode=${payload.mode}, priority=${payload.request.priority || 0})\n`;
+    code += `_output = op.submit(${payload.dfName}.cols.calculate_pattern_counts, "${escapeQuotes(payload.column)}", n=${payload.n}, mode=${payload.mode}, priority=${payload.request.priority || 0}, pure=False)\n`;
     return {
       code,
       isOutput: true,
