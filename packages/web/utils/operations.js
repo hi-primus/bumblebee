@@ -341,7 +341,7 @@ let _operations = {
     test: {
       dataframes: TEST_DATAFRAMES.PEOPLE_JOIN,
       payload: {
-        dataframe: 'df',
+        dfName: 'df',
         how: 'left',
         with: 'df1'
       }
