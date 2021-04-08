@@ -25,7 +25,7 @@ export class UsersService {
 	}
 
 	async getUsers(queryParams, user): Promise<User[]> {
-		if ( ['5f1a0af502f37c097f19ca4a', '5ed5559c1ce6121884455241', '5f2b227fcc7fec606debb7bd'].includes(user.userId) ) {
+		if ( (process.env.SUPER_ADMIN_USERS || "").split(",").filter(id=>id).includes(user.userId) ) {
 			let query: any = {};
 			queryParams?.filters?.split(',').forEach((filter, index) => {
 				query[filter] = queryParams?.values?.split(',')[index];
@@ -53,7 +53,7 @@ export class UsersService {
 	}
 
 	async getUsersCount(user): Promise<any> {
-		if ( ['5f1a0af502f37c097f19ca4a', '5ed5559c1ce6121884455241', '5f2b227fcc7fec606debb7bd'].includes(user.userId) ) {
+		if ( (process.env.SUPER_ADMIN_USERS || "").split(",").filter(id=>id).includes(user.userId) ) {
 			const count = this.userModel.countDocuments({}).exec();
 			return count;
 		} else {

@@ -35,7 +35,7 @@ export class UsersController {
 	@Post('/activate')
 	@UseGuards(AuthGuard('jwt'))
 	async activateUsers(@Body() usersToActivate, @GetUser() user): Promise<any> {
-		if ( ['5ec98793d1be7d1fc3aaf9d5', '5ed5559c1ce6121884455241', '5f2b227fcc7fec606debb7bd'].includes(user.userId) ) {
+		if ( (process.env.SUPER_ADMIN_USERS || "").split(",").filter(id=>id).includes(user.userId) ) {
 			const users = await this.usersService.activateUser(usersToActivate);
 
 			return { message: 'Users activated' };
@@ -51,7 +51,7 @@ export class UsersController {
 		@GetUser() user,
 	): Promise<any> {
 		if (
-			['5ec98793d1be7d1fc3aaf9d5', '5ed5559c1ce6121884455241', '5f2b227fcc7fec606debb7bd'].includes(user.userId)
+			(process.env.SUPER_ADMIN_USERS || "").split(",").filter(id=>id).includes(user.userId)
 		) {
 			const users = await this.usersService.deactivateUser(usersToDeactivate);
 
