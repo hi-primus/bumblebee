@@ -1269,6 +1269,12 @@ table {
   }
 }
 
+.toolbar-menu {
+  .theme--light.v-list-item--active::before {
+    opacity: 0 !important;
+  }
+}
+
 .type-menu {
   font-size: 0.8125rem;
 
