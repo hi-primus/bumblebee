@@ -472,7 +472,7 @@ export const codeGenerators = {
 
     let _argument = preparedColumns(payload.columns);
 
-    return `.cols.${command}(${_argument}, n=${+payload.n}`
+    return `.cols.${command}(${_argument}, n=${payload.n}`
     + ( output_cols_argument ? `, output_cols=${output_cols_argument}` : '')
     + `)`
   },
@@ -482,7 +482,7 @@ export const codeGenerators = {
 
     let _argument = preparedColumns(payload.columns);
 
-    return `.cols.mid(${_argument}, start=${+payload.start}, n=${+payload.n}`
+    return `.cols.mid(${_argument}, start=${payload.start}, n=${payload.end}`
     + ( output_cols_argument ? `, output_cols=${output_cols_argument}` : '')
     + `)`
   },
@@ -492,7 +492,7 @@ export const codeGenerators = {
 
     let _argument = preparedColumns(payload.columns);
 
-    return `.cols.pad(${_argument}, width=${+payload.width}, side="${payload.side}", fillchar="${payload.fillchar}"`
+    return `.cols.pad(${_argument}, width=${payload.width}, side="${payload.side}", fillchar="${payload.fillchar}"`
     + ( output_cols_argument ? `, output_cols=${output_cols_argument}` : '')
     + `)`
   },
