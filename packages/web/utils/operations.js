@@ -3780,6 +3780,11 @@ export const commandsHandlers = {
         command: "sample_n",
         n: 10,
         columns: columns,
+        preview: {
+          type: "sample_n",
+          datasetPreview: true,
+          noBufferWindow: true,
+        }
       };
     },
     content: (payload) => {

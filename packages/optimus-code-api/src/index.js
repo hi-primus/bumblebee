@@ -872,7 +872,7 @@ export const codeGenerators = {
       + ')'
   },
   sample_n: (payload) => {
-    return `.sample(${payload.n})`
+    return `.sample(${payload.n-1})`
   },
 
 
