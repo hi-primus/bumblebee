@@ -2605,17 +2605,17 @@ export const commandsHandlers = {
         },
         {
           type: "number",
-          label: "Characters to show",
-          key: "n",
+          label: "End at",
+          key: "end",
         },
       ],
-      validate: (command) => command.n && command.start !== "",
+      validate: (command) => command.end && command.start,
     },
     payload: (columns, payload = {}) => ({
       columns: columns,
       output_cols: columns.map((e) => ""),
       start: 0,
-      n: "",
+      end: 3,
       preview: {
         type: "mid_string",
       },
