@@ -28,7 +28,7 @@ function getScreenshot (name, type) {
 }
 
 function createFile (name, str) {
-  fs.writeFile(`docs/markdown/${name}.md`, str, (err) => { if (err) throw err; });
+  fs.writeFile(`docs/transformations/${name}.md`, str, (err) => { if (err) throw err; });
 }
 
 const app = function () {
