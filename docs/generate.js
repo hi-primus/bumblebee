@@ -28,10 +28,20 @@ function getScreenshot (name, type) {
 }
 
 function createFile (name, str) {
-  fs.writeFile(`docs/transformations/${name}.md`, str, (err) => { if (err) throw err; });
+  let fileName = `${name}.md`;
+  fs.writeFile(`docs/${fileName}`, str, (err) => { if (err) throw err; });
+  return `./${fileName}`
+}
+
+function generateSummary (array) {
+  var text = fs.readFileSync('docs/_SUMMARY.md','utf8')
+  text = text.replace('{{transformations}}', array.join('\n'))
+  createFile(`SUMMARY`, text)
 }
 
 const app = function () {
+
+  let summary = [];
 
   docOperations.forEach(operation => {
     let str = "";
@@ -48,7 +58,7 @@ const app = function () {
     let location = getScreenshot(operation.command, 'location');
     if (location) {
       str += `\n## Location`;
-      str += `\n![${operation.command} location](../.${location})`
+      str += `\n![${doc.title} on the interface](../.${location})`
     }
 
     if (doc.fields && doc.fields.length) {
@@ -67,13 +77,16 @@ const app = function () {
       let form = getScreenshot(operation.command, 'form');
       if (form) {
         str += `\n### Fields`;
-        str += `\n![${operation.command} form](../.${form})`
+        str += `\n![${doc.title} fields](../.${form})`
       }
       str += `\n### Preview`;
-      str += `\n![${operation.command} table](../.${table})`
+      str += `\n![${doc.title} example](../.${table})`
     }
-    createFile(operation.command, str)
+    let fileName = createFile(`transformations/${operation.command}`, str);
+    summary.push(`* [${doc.title}](${fileName})`)
   });
+
+  generateSummary(summary)
 
 }
 

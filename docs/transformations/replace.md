@@ -1,7 +1,7 @@
 # Replace
 Replaces found matches from every value of the selected columns.
 ## Location
-![replace location](../../docs/screenshots/location/replace.png)
+![Replace on the interface](../../docs/screenshots/location/replace.png)
 ## Fields
 Field | Type | Description
 ----- | ---- | -----------
@@ -12,6 +12,6 @@ Replace | Text field | String to replace with
 Search by | Selection | Replace mode
 ## Example
 ### Fields
-![replace form](../../docs/screenshots/form/replace.png)
+![Replace fields](../../docs/screenshots/form/replace.png)
 ### Preview
-![replace table](../../docs/screenshots/table/replace.png)
+![Replace example](../../docs/screenshots/table/replace.png)
