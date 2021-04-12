@@ -47,7 +47,7 @@
                   </v-btn>
                 </div>
               </template>
-              <span>{{getPropertyNuxt(element.tooltip)}}</span>
+              <span>{{getPropertyNuxt(element.text)}}</span>
             </v-tooltip>
           </template>
           <template v-else-if="element.type=='menu'">
@@ -83,7 +83,7 @@
                       </v-btn>
                     </div>
                   </template>
-                  <span>{{getPropertyNuxt(element.tooltip)}}</span>
+                  <span>{{getPropertyNuxt(element.text)}}</span>
                 </v-tooltip>
               </template>
               <v-list dense style="max-height: calc(100vh - 143px); min-width: 160px;" class="scroll-y toolbar-menu">

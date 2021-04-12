@@ -17,11 +17,16 @@
     "build-bu": "cd packages/bumblebee-utils && yarn run build",
     "build-packages": "concurrently \"yarn run build-oca\" \"yarn run build-bu\"",
     "start": "yarn run build-packages && concurrently \"yarn run web\" \"yarn run api\" ",
-    "postinstall": "cd packages/bumblebee-utils && yarn install && yarn run build && cd ../optimus-code-api && yarn install && yarn run build && cd ../api && yarn install && cd ../web && yarn install"
+    "postinstall": "cd packages/bumblebee-utils && yarn install && yarn run build && cd ../optimus-code-api && yarn install && yarn run build && cd ../api && yarn install && cd ../web && yarn install",
+    "generate-docs": "node -r esm docs/generate.js"
   },
   "private": true,
   "devDependencies": {
     "concurrently": "^5.2.0",
     "lerna": "^3.22.0"
+  },
+  "dependencies": {
+    "esm": "^3.2.25",
+    "glob": "^7.1.6"
   }
 }

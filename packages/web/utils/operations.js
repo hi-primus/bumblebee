@@ -15,6 +15,7 @@ import {
   transpose,
   objectMap,
   objectMapFromEntries,
+  objectToPythonDictString,
   TYPES_NAMES,
   TIME_NAMES,
 } from "bumblebee-utils";
@@ -22,47 +23,47 @@ import {
 export const operationGroups = {
   DATA_SOURCE: {
     icons: [{ icon: 'mdi-cloud-upload-outline' }],
-    tooltip: 'Add data source',
+    text: 'Add data source',
     disabled: ($nuxt)=>($nuxt.$store.state.kernel!='done')
   },
   SAVE: {
     icons: [{ icon: 'mdi-content-save-outline' }],
-    tooltip: 'Save',
+    text: 'Save',
     disabled: ($nuxt)=>!($nuxt.currentDataset && $nuxt.currentDataset.summary)
   },
   STRING: {
     icons: [{ icon: 'text_format' }],
-    tooltip: 'String operations',
+    text: 'String operations',
     disabled: ($nuxt)=>!($nuxt.selectionType=='columns' && $nuxt.currentDataset && $nuxt.currentDataset.summary && $nuxt.selectedColumns.length>=0)
   },
   MATH: {
     icons: [{ icon: 'mdi-numeric' }],
-    tooltip: 'Numeric operations',
+    text: 'Numeric operations',
     disabled: ($nuxt)=>!($nuxt.selectionType=='columns' && $nuxt.currentDataset && $nuxt.currentDataset.summary && $nuxt.selectedColumns.length>=0)
   },
   TRIGONOMETRIC: {
     icons: [{ icon: 'mdi-pi' }],
-    tooltip: 'Trigonometric operations',
+    text: 'Trigonometric operations',
     disabled: ($nuxt)=>!($nuxt.selectionType=='columns' && $nuxt.currentDataset && $nuxt.currentDataset.summary && $nuxt.selectedColumns.length>=0)
   },
   TIME: {
     icons: [{ icon: 'calendar_today' }],
-    tooltip: 'Datetime functions',
+    text: 'Datetime functions',
     disabled: ($nuxt)=>!($nuxt.selectionType=='columns' && $nuxt.selectedColumns.length>0)
   },
   // CAST: {
   //   icons: [{ icon: 'category' }],
-  //   tooltip: 'Cast',
+  //   text: 'Cast',
   //   disabled: ($nuxt)=>!($nuxt.selectionType=='columns' && $nuxt.selectedColumns.length>0)
   // },
   ML: {
     icons: [{icon: 'timeline', class: 'material-icons-outlined'}],
-    tooltip: 'Machine Learning',
+    text: 'Machine Learning',
     disabled: ($nuxt)=>!($nuxt.selectionType=='columns' && $nuxt.currentDataset && $nuxt.currentDataset.summary) , // Sampling
   },
   CUSTOM: {
     icons: [{ icon: 'star_rate' }],
-    tooltip: 'Custom functions',
+    text: 'Custom functions',
     hidden: ($nuxt)=>!$nuxt.customMenuItems.length
   }
 };
@@ -280,6 +281,22 @@ const TEST_DATAFRAMES = {
   ]},
 };
 
+const DOC_OUTPUT_COLUMNS_FIELD = {
+  name: "Output column name(s)",
+  type: "Text field",
+  description: "Name of the output column(s), if left blank will save the result on the same column."
+}
+
+const DOC_FIELD_TYPES = {
+  'number': 'Numeric',
+  'field': 'Text field',
+  'select': 'Selection',
+  'file': 'File',
+  'connection': 'Selection',
+  'switch': 'Switch',
+  'chips': 'Multiple values',
+}
+
 let _operations = {
 
   loadFile: {
@@ -336,7 +353,7 @@ let _operations = {
   join: {
     path: 'JOIN',
     icons: [{ icon: 'mdi-set-center' }],
-    tooltip: 'Join dataframes',
+    text: 'Join dataframes',
     disabled: ($nuxt)=>!($nuxt.currentDataset && $nuxt.currentDataset.summary && $nuxt.hasSecondaryDatasets),
     test: {
       dataframes: TEST_DATAFRAMES.PEOPLE_JOIN,
@@ -345,27 +362,37 @@ let _operations = {
         how: 'left',
         with: 'df1'
       }
+    },
+    doc: {
+      description: 'Join two dataframes.'
     }
   },
   concat: {
     path: 'JOIN',
     icons: [{ icon: 'mdi-table-row-plus-after' }],
-    tooltip: 'Concat dataframes',
+    text: 'Concatenate Dataframes',
     disabled: ($nuxt)=>!($nuxt.currentDataset && $nuxt.currentDataset.summary && $nuxt.hasSecondaryDatasets),
     test: {
       dataframes: [TEST_DATAFRAMES.PEOPLE, TEST_DATAFRAMES.PEOPLE_CONCAT],
+    },
+    doc: {
+      description: 'Concatenates two or more dataframes.'
     }
   },
   aggregations: {
     path: 'JOIN',
     icons: [{ icon: 'mdi-set-merge' }],
-    tooltip: 'Get aggregations',
-    disabled: ($nuxt)=>!(!['values','ranges'].includes($nuxt.selectionType) && $nuxt.currentDataset && $nuxt.currentDataset.summary)
+    text: 'Get aggregations',
+    disabled: ($nuxt)=>!(!['values','ranges'].includes($nuxt.selectionType) && $nuxt.currentDataset && $nuxt.currentDataset.summary),
+    doc: {
+      title: 'Aggregate',
+      description: 'Groups selected column and creates aggregations and/or reductions.\nThis operation changes the whole dataset.'
+    }
   },
 
   sortRows: {
     path: 'ROWS',
-    tooltip: 'Sort rows',
+    text: 'Sort rows',
     disabled: ($nuxt)=>['values','ranges'].includes($nuxt.selectionType) || $nuxt.selectedColumns.length<1,
     icons: [
       { icon: 'mdi-sort-alphabetical-ascending' }
@@ -375,6 +402,9 @@ let _operations = {
       payload: {
         columns: ['firstname']
       }
+    },
+    doc: {
+      description: 'Sort the dataset in ascending or descending order using a subset.'
     }
   },
   filterRows: {
@@ -398,13 +428,17 @@ let _operations = {
       }
       $nuxt.commandHandle(command)
     },
-    tooltip: 'Filter rows',
+    text: 'Filter rows',
     disabled: ($nuxt)=>!(['values','ranges','text'].includes($nuxt.selectionType) || $nuxt.selectedColumns.length==1),
-    icons: [{icon: 'mdi-filter-variant'}]
+    icons: [{icon: 'mdi-filter-variant'}],
+    doc: {
+      title: 'Filter rows',
+      description: 'Remove or keep rows that matches a criteria.'
+    }
   },
   dropEmptyRows: {
     path: 'ROWS',
-    tooltip: 'Drop empty rows',
+    text: 'Drop empty rows',
     icons: [
       { icon: 'mdi-delete-outline' },
       { icon: 'menu', style: {
@@ -415,11 +449,15 @@ let _operations = {
     disabled: ($nuxt)=>!($nuxt.currentDataset && $nuxt.currentDataset.summary && $nuxt.hasSecondaryDatasets),
     test: {
       dataframe: TEST_DATAFRAMES.NULL
+    },
+    doc: {
+      title: 'Drop empty rows',
+      description: 'Remove rows with missing values in a column, a subset or the whole set of columns.'
     }
   },
   dropDuplicates: {
     path: 'ROWS',
-    tooltip: 'Drop duplicates',
+    text: 'Drop duplicates',
     icons: [
       { icon: 'mdi-close-box-multiple-outline',
         style: {
@@ -430,11 +468,15 @@ let _operations = {
     disabled: ($nuxt)=>!($nuxt.currentDataset && $nuxt.currentDataset.summary && $nuxt.hasSecondaryDatasets),
     test: {
       dataframe: TEST_DATAFRAMES.DUPLICATES
+    },
+    doc: {
+      title: 'Drop duplicates',
+      description: 'Remove rows with duplicated values in the selected column(s).'
     }
   },
   set: {
     path: 'COLUMNS',
-    tooltip: ($nuxt)=>$nuxt.selectedColumns.length ? 'Set column' : 'New column',
+    text: ($nuxt)=>$nuxt.selectedColumns.length ? 'Set column' : 'New column',
     icons: [{icon: 'mdi-plus-box-outline'}],
     disabled: ($nuxt)=>!($nuxt.selectionType=='columns' && $nuxt.selectedColumns.length<=1 && $nuxt.currentDataset && $nuxt.currentDataset.summary),
     test: {
@@ -443,11 +485,15 @@ let _operations = {
         columns: ['number'],
         value: '100.5 + ROUND(SQRT(number*2))'
       }
+    },
+    doc: {
+      title: 'Set',
+      description: 'Sets the value for the selected column(s) or creates a new one using an expression.'
     }
   },
   rename: {
     path: 'COLUMNS',
-    tooltip: ($nuxt)=> 'Rename column'+ ($nuxt.selectedColumns.length!=1 ? 's' : ''),
+    text: ($nuxt)=> 'Rename column'+ ($nuxt.selectedColumns.length!=1 ? 's' : ''),
     icons: [{icon: 'mdi-pencil-outline'}],
     disabled: ($nuxt)=> !($nuxt.selectionType=='columns' && $nuxt.selectedColumns.length>0),
     test: {
@@ -456,12 +502,16 @@ let _operations = {
         columns: ['firstname'],
         output_cols: ['name']
       }
+    },
+    doc: {
+      title: 'Rename',
+      description: 'Renames the selected column(s).'
     }
   },
 
   duplicate: {
     path: 'COLUMNS',
-    tooltip: ($nuxt)=> 'Duplicate column'+ ($nuxt.selectedColumns.length!=1 ? 's' : ''),
+    text: ($nuxt)=> 'Duplicate column'+ ($nuxt.selectedColumns.length!=1 ? 's' : ''),
     icons: [{icon: 'mdi-content-duplicate'}],
     disabled: ($nuxt)=>!($nuxt.selectionType=='columns' && $nuxt.selectedColumns.length>0),
     test: {
@@ -469,28 +519,40 @@ let _operations = {
       payload: {
         columns: ['firstname'],
       }
+    },
+    doc: {
+      title: 'Duplicate',
+      description: 'Duplicates the selected column(s).'
     }
   },
 
   keep: {
     path: 'COLUMNS',
     generator: 'DROP_KEEP',
-    tooltip: ($nuxt)=> 'Keep column'+ ($nuxt.selectedColumns.length!=1 ? 's' : ''),
+    text: ($nuxt)=> 'Keep column'+ ($nuxt.selectedColumns.length!=1 ? 's' : ''),
     icons: [{icon: 'all_out'}],
-    disabled: ($nuxt)=>!($nuxt.selectionType=='columns' && $nuxt.selectedColumns.length>0)
+    disabled: ($nuxt)=>!($nuxt.selectionType=='columns' && $nuxt.selectedColumns.length>0),
+    doc: {
+      title: 'Keep',
+      description: 'Drops every column except the selected column(s).'
+    }
   },
 
   drop: {
     path: 'COLUMNS',
     generator: 'DROP_KEEP',
-    tooltip: ($nuxt)=> 'Drop column'+ ($nuxt.selectedColumns.length!=1 ? 's' : ''),
+    text: ($nuxt)=> 'Drop column'+ ($nuxt.selectedColumns.length!=1 ? 's' : ''),
     icons: [{ icon: 'mdi-delete-outline' }],
-    disabled: ($nuxt)=>!($nuxt.selectionType=='columns' && $nuxt.selectedColumns.length>0)
+    disabled: ($nuxt)=>!($nuxt.selectionType=='columns' && $nuxt.selectedColumns.length>0),
+    doc: {
+      title: 'Drop',
+      description: 'Drops the selected column(s).'
+    }
   },
 
   nest: {
     path: 'COLUMNS',
-    tooltip: 'Nest columns',
+    text: 'Nest columns',
     icons: [{icon: 'mdi-table-merge-cells'}],
     disabled: ($nuxt)=>['values','ranges'].includes($nuxt.selectionType) || $nuxt.selectedColumns.length<=1 || !$nuxt.currentDataset.summary,
     test: {
@@ -499,6 +561,10 @@ let _operations = {
         columns: ['firstname', 'lastname'],
         separator: " "
       }
+    },
+    doc: {
+      title: 'Nest',
+      description: 'Joins the selected columns into one column using a separator.'
     }
   },
 
@@ -514,7 +580,7 @@ let _operations = {
       }
       $nuxt.commandHandle({command: 'unnest', payload})
     },
-    tooltip: ($nuxt)=> 'Unnest column'+ ($nuxt.selectedColumns.length!=1 ? 's' : ''),
+    text: ($nuxt)=> 'Unnest column'+ ($nuxt.selectedColumns.length!=1 ? 's' : ''),
     icons: [{icon: 'mdi-arrow-split-vertical'}],
     disabled: ($nuxt)=>!(($nuxt.selectionType=='columns' && $nuxt.selectedColumns.length>0) || $nuxt.selectionType==='text'),
     test: {
@@ -523,26 +589,32 @@ let _operations = {
         columns: ['name'],
         separator: " "
       }
+    },
+    doc: {
+      title: 'Unnest',
+      description: 'Splits the selected column into multiple columns using a separator.'
     }
   },
 
   fill_na: {
-    path: 'TRANSFORMATION',
-    tooltip: ($nuxt)=> 'Fill column'+ ($nuxt.selectedColumns.length!=1 ? 's' : ''),
+    path: 'TRANSFORMATIONS',
+    text: ($nuxt)=> 'Fill column'+ ($nuxt.selectedColumns.length!=1 ? 's' : ''),
     icons: [{icon: 'brush', class: 'material-icons-outlined'}],
     disabled: ($nuxt)=>!($nuxt.selectionType=='columns' && $nuxt.selectedColumns.length>0),
     test: {
       dataframe: TEST_DATAFRAMES.NULL,
       payload: {
-        search: ['el', 'an'],
-        replace: "foo",
-        search_by: "chars"
+        fill: "foo"
       }
+    },
+    doc: {
+      title: 'Fill null values',
+      description: 'Fill null values of the selected columns with a given value.'
     }
   },
 
   replace: {
-    path: 'TRANSFORMATION',
+    path: 'TRANSFORMATIONS',
     onClick: ($nuxt)=>{
       if ($nuxt.selectionType=='columns') {
         $nuxt.commandHandle({command: 'replace'})
@@ -558,7 +630,7 @@ let _operations = {
         $nuxt.commandHandle({command: 'replace'})
       }
     },
-    tooltip: ($nuxt)=>'Replace in column'+ ($nuxt.selectedColumns.length>1 ? 's' : ''),
+    text: ($nuxt)=>'Replace in column'+ ($nuxt.selectedColumns.length>1 ? 's' : ''),
     icons: [{icon: 'find_replace'}],
     disabled: ($nuxt)=>!(['text'].includes($nuxt.selectionType) || $nuxt.selectedColumns.length>0),
     test: {
@@ -568,55 +640,96 @@ let _operations = {
         replace: "foo",
         search_by: "chars"
       }
+    },
+    doc: {
+      title: 'Replace',
+      description: 'Replaces found matches from every value of the selected columns.',
+      fields: [
+        {
+          key: 'search',
+          description: 'Strings, words or values to search'
+        },
+        {
+          key: 'match_case',
+          name: 'Match case',
+          description: 'Case sensitivity'
+        },
+        {
+          key: 'replace',
+          description: 'String to replace with'
+        },
+        {
+          key: 'search_by',
+          description: 'Replace mode'
+        },
+      ]
     }
   },
 
   lower: {
-    text: 'To lower case', generator: 'GENERIC', path: 'TRANSFORMATION/STRING',
+    text: 'To lower case', generator: 'GENERIC', path: 'TRANSFORMATIONS/STRING',
     payload: { title: 'Convert to lowercase', content: 'Lowercase' },
     test: {
       dataframe: TEST_DATAFRAMES.CASE
+    },
+    doc: {
+      title: 'Lower case',
+      description: 'Converts all the alpha characters from every value of the selected columns into lower case.'
     }
   },
 
   upper: {
-    text: 'To upper case', generator: 'GENERIC', path: 'TRANSFORMATION/STRING',
+    text: 'To upper case', generator: 'GENERIC', path: 'TRANSFORMATIONS/STRING',
     payload: { title: 'Convert to uppercase', content: 'Uppercase' },
     test: {
       dataframe: TEST_DATAFRAMES.CASE
+    },
+    doc: {
+      title: 'Upper case',
+      description: 'Converts all the alpha characters from every value of the selected columns into upper case.'
     }
   },
 
   proper: {
-    text: 'Proper', generator: 'GENERIC', path: 'TRANSFORMATION/STRING' ,
+    text: 'Proper', generator: 'GENERIC', path: 'TRANSFORMATIONS/STRING' ,
     payload: { title: 'Convert to proper case', content: 'Proper case' },
     test: {
       dataframe: TEST_DATAFRAMES.CASE
+    },
+    doc: {
+      title: 'Proper case',
+      description: 'Converts all the words from every value of the selected columns into proper case.'
     }
   },
 
   normalize_chars: {
-    text: 'Remove accents', generator: 'GENERIC', path: 'TRANSFORMATION/STRING',
+    text: 'Remove accents', generator: 'GENERIC', path: 'TRANSFORMATIONS/STRING',
     payload: { title: 'Remove accents', content: 'Remove accents in' },
     test: {
       dataframe: TEST_DATAFRAMES.NORMALIZE
+    },
+    doc: {
+      description: 'Removes accents from every value of the selected columns.'
     }
   },
 
   remove_special_chars: {
-    text: 'Remove special chars', generator: 'GENERIC', path: 'TRANSFORMATION/STRING' ,
+    text: 'Remove special chars', generator: 'GENERIC', path: 'TRANSFORMATIONS/STRING' ,
     payload: { title: 'Remove special chars', content: 'Remove special chars in' },
     test: {
       dataframe: TEST_DATAFRAMES.SPECIAL
+    },
+    doc: {
+      description: 'Removes special chars from every value of the selected columns.'
     }
   },
 
-  extract: { text: 'Extract', path: 'TRANSFORMATION/STRING'},
+  extract: { text: 'Extract', path: 'TRANSFORMATIONS/STRING'},
 
-  'TRANSFORMATION/STRING/divider/0': {divider: true, path: 'TRANSFORMATION/STRING'},
+  'TRANSFORMATIONS/STRING/divider/0': {divider: true, path: 'TRANSFORMATIONS/STRING'},
 
   trim: {
-    text: 'Trim white space', generator: 'GENERIC', path: 'TRANSFORMATION/STRING',
+    text: 'Trim white space', generator: 'GENERIC', path: 'TRANSFORMATIONS/STRING',
     payload: { title: 'Trim white spaces', content: 'Trim white spaces in' },
     test: {
       dataframe: TEST_DATAFRAMES.TRIM
@@ -626,18 +739,22 @@ let _operations = {
   left_string: {
     text: 'Left',
     generator: 'SUBSTRING',
-    path: 'TRANSFORMATION/STRING',
+    path: 'TRANSFORMATIONS/STRING',
     test: {
       dataframe: TEST_DATAFRAMES.STRING,
       payload: {
         n: 5
       }
+    },
+    doc: {
+      title: 'Left (substring)',
+      description: 'Extracts a given number of characters from the values of a string and outputs the result to a new column or to the same input column.\nThis operation is useful for quickly extracting data from fixed-length values.',
     }
   },
   right_string: {
     text: 'Right',
     generator: 'SUBSTRING',
-    path: 'TRANSFORMATION/STRING',
+    path: 'TRANSFORMATIONS/STRING',
     test: {
       dataframe: TEST_DATAFRAMES.STRING,
       payload: {
@@ -647,18 +764,18 @@ let _operations = {
   },
   mid_string: {
     text: 'Mid',
-    path: 'TRANSFORMATION/STRING',
+    path: 'TRANSFORMATIONS/STRING',
     test: {
       dataframe: TEST_DATAFRAMES.STRING,
       payload: {
         start: 2,
-        n: 4
+        end: 4
       }
     }
   },
   pad_string: {
     text: 'Pad string',
-    path: 'TRANSFORMATION/STRING',
+    path: 'TRANSFORMATIONS/STRING',
     test: {
       dataframe: TEST_DATAFRAMES.STRING,
       payloads: [
@@ -684,10 +801,10 @@ let _operations = {
     }
   },
 
-  stringClustering: {text: 'String clustering', path: 'TRANSFORMATION/STRING', max: 1, min: 1 },
+  stringClustering: {text: 'String clustering', path: 'TRANSFORMATIONS/STRING', max: 1, min: 1 },
 
   abs: {
-    text: 'Absolute value', generator: 'GENERIC', path: 'TRANSFORMATION/MATH',
+    text: 'Absolute value', generator: 'GENERIC', path: 'TRANSFORMATIONS/MATH',
     payload: { content: 'Transform to absolute value' },
     test: {
       dataframe: TEST_DATAFRAMES.NUMBER
@@ -695,7 +812,7 @@ let _operations = {
   },
 
   round: {
-    text: 'Round', generator: 'GENERIC', path: 'TRANSFORMATION/MATH',
+    text: 'Round', generator: 'GENERIC', path: 'TRANSFORMATIONS/MATH',
     payload: {
       content: 'Round',
       parameters: {decimals: { label: "Decimals", value: 0 }}
@@ -708,7 +825,7 @@ let _operations = {
   floor: {
     text: 'Floor',
     generator: 'GENERIC',
-    path: 'TRANSFORMATION/MATH',
+    path: 'TRANSFORMATIONS/MATH',
     payload: { content: 'Round down' },
     test: {
       dataframe: TEST_DATAFRAMES.DECIMAL
@@ -718,7 +835,7 @@ let _operations = {
   ceil: {
     text: 'Ceil',
     generator: 'GENERIC',
-    path: 'TRANSFORMATION/MATH',
+    path: 'TRANSFORMATIONS/MATH',
     payload: { content: 'Round up' },
     test: {
       dataframe: TEST_DATAFRAMES.DECIMAL
@@ -726,7 +843,7 @@ let _operations = {
   },
 
   mod: {
-    text: 'Modulo', generator: 'GENERIC', path: 'TRANSFORMATION/MATH',
+    text: 'Modulo', generator: 'GENERIC', path: 'TRANSFORMATIONS/MATH',
     payload: {
       title: 'Get modulo', content: 'Get modulo of',
       parameters: {divisor: { label: "Divisor", value: 2 }}
@@ -737,7 +854,7 @@ let _operations = {
   },
 
   log: {
-    text: 'Logarithm', generator: 'GENERIC', path: 'TRANSFORMATION/MATH',
+    text: 'Logarithm', generator: 'GENERIC', path: 'TRANSFORMATIONS/MATH',
     payload: {
       title: 'Get logarithm', content: 'Get logarithm of',
       parameters: {base: { label: "Base", value: 10 }}
@@ -748,7 +865,7 @@ let _operations = {
   },
 
   ln: {
-    text: 'Natural logarithm', generator: 'GENERIC', path: 'TRANSFORMATION/MATH',
+    text: 'Natural logarithm', generator: 'GENERIC', path: 'TRANSFORMATIONS/MATH',
     payload: {
       title: 'Get natural logarithm', content: 'Get natural logarithm of'
     },
@@ -757,7 +874,7 @@ let _operations = {
     }
   },
 
-  pow: { text: 'Power', generator: 'GENERIC', path: 'TRANSFORMATION/MATH',
+  pow: { text: 'Power', generator: 'GENERIC', path: 'TRANSFORMATIONS/MATH',
     payload: {
       title: 'Get power', content: 'Get power of',
       parameters: {power: { label: "Power", value: 2 }}
@@ -767,7 +884,7 @@ let _operations = {
     }
   },
 
-  sqrt: { text: 'Square root', generator: 'GENERIC', path: 'TRANSFORMATION/MATH',
+  sqrt: { text: 'Square root', generator: 'GENERIC', path: 'TRANSFORMATIONS/MATH',
     payload: {
       title: 'Get power', content: 'Get power of'
     },
@@ -779,7 +896,7 @@ let _operations = {
   sin: {
     text: 'SIN',
     generator: 'GENERIC',
-    path: 'TRANSFORMATION/TRIGONOMETRIC',
+    path: 'TRANSFORMATIONS/TRIGONOMETRIC',
     payload: { content: 'Get Sine' },
     test: {
       dataframe: TEST_DATAFRAMES.NUMBER
@@ -789,7 +906,7 @@ let _operations = {
   cos: {
     text: 'COS',
     generator: 'GENERIC',
-    path: 'TRANSFORMATION/TRIGONOMETRIC',
+    path: 'TRANSFORMATIONS/TRIGONOMETRIC',
     payload: { content: 'Get Cosine' },
     test: {
       dataframe: TEST_DATAFRAMES.NUMBER
@@ -799,7 +916,7 @@ let _operations = {
   tan: {
     text: 'TAN',
     generator: 'GENERIC',
-    path: 'TRANSFORMATION/TRIGONOMETRIC',
+    path: 'TRANSFORMATIONS/TRIGONOMETRIC',
     payload: { content: 'Get Tangent' },
     test: {
       dataframe: TEST_DATAFRAMES.NUMBER
@@ -809,7 +926,7 @@ let _operations = {
   asin: {
     text: 'ASIN',
     generator: 'GENERIC',
-    path: 'TRANSFORMATION/TRIGONOMETRIC',
+    path: 'TRANSFORMATIONS/TRIGONOMETRIC',
     payload: { content: 'Get Inverse Sine' },
     test: {
       dataframe: TEST_DATAFRAMES.NUMBER
@@ -819,7 +936,7 @@ let _operations = {
   acos: {
     text: 'ACOS',
     generator: 'GENERIC',
-    path: 'TRANSFORMATION/TRIGONOMETRIC',
+    path: 'TRANSFORMATIONS/TRIGONOMETRIC',
     payload: { content: 'Get Inverse Cosine' },
     test: {
       dataframe: TEST_DATAFRAMES.NUMBER
@@ -829,7 +946,7 @@ let _operations = {
   atan: {
     text: 'ATAN',
     generator: 'GENERIC',
-    path: 'TRANSFORMATION/TRIGONOMETRIC',
+    path: 'TRANSFORMATIONS/TRIGONOMETRIC',
     payload: { content: 'Get Inverse Tangent' },
     test: {
       dataframe: TEST_DATAFRAMES.NUMBER
@@ -839,7 +956,7 @@ let _operations = {
   sinh: {
     text: 'SINH',
     generator: 'GENERIC',
-    path: 'TRANSFORMATION/TRIGONOMETRIC',
+    path: 'TRANSFORMATIONS/TRIGONOMETRIC',
     payload: { content: 'Get Hyperbolic Sine' },
     test: {
       dataframe: TEST_DATAFRAMES.NUMBER
@@ -849,7 +966,7 @@ let _operations = {
   cosh: {
     text: 'COSH',
     generator: 'GENERIC',
-    path: 'TRANSFORMATION/TRIGONOMETRIC',
+    path: 'TRANSFORMATIONS/TRIGONOMETRIC',
     payload: { content: 'Get Hyperbolic Cosine' },
     test: {
       dataframe: TEST_DATAFRAMES.NUMBER
@@ -859,7 +976,7 @@ let _operations = {
   tanh: {
     text: 'TANH',
     generator: 'GENERIC',
-    path: 'TRANSFORMATION/TRIGONOMETRIC',
+    path: 'TRANSFORMATIONS/TRIGONOMETRIC',
     payload: { content: 'Get Hyperbolic Tangent' },
     test: {
       dataframe: TEST_DATAFRAMES.NUMBER
@@ -869,7 +986,7 @@ let _operations = {
   asinh: {
     text: 'ASINH',
     generator: 'GENERIC',
-    path: 'TRANSFORMATION/TRIGONOMETRIC',
+    path: 'TRANSFORMATIONS/TRIGONOMETRIC',
     payload: { content: 'Get Inverse Hyperbolic Sine' },
     test: {
       dataframe: TEST_DATAFRAMES.NUMBER
@@ -879,7 +996,7 @@ let _operations = {
   acosh: {
     text: 'ACOSH',
     generator: 'GENERIC',
-    path: 'TRANSFORMATION/TRIGONOMETRIC',
+    path: 'TRANSFORMATIONS/TRIGONOMETRIC',
     payload: { content: 'Get Inverse Hyperbolic Cosine' },
     test: {
       dataframe: TEST_DATAFRAMES.NUMBER
@@ -889,7 +1006,7 @@ let _operations = {
   atanh: {
     text: 'ATANH',
     generator: 'GENERIC',
-    path: 'TRANSFORMATION/TRIGONOMETRIC',
+    path: 'TRANSFORMATIONS/TRIGONOMETRIC',
     payload: { content: 'Get Inverse Hyperbolic Tangent' },
     test: {
       dataframe: TEST_DATAFRAMES.NUMBER
@@ -897,19 +1014,19 @@ let _operations = {
   },
 
   transformFormat: {
-    text: 'Transform format', path: 'TRANSFORMATION/TIME',
+    text: 'Transform format', path: 'TRANSFORMATIONS/TIME',
     test: {
       dataframe: TEST_DATAFRAMES.DATETIME
     }
   },
 
-  'TRANSFORMATION/TIME/divider/0': {divider: true, path: 'TRANSFORMATION/TIME'},
+  'TRANSFORMATIONS/TIME/divider/0': {divider: true, path: 'TRANSFORMATIONS/TIME'},
 
   ...objectMapFromEntries(TIME_NAMES,(output_type, name)=>(['date_extract_'+name, {
     command: 'getFromDatetime',
     payload: { output_type },
     text: `Get ${name}`,
-    path: 'TRANSFORMATION/TIME',
+    path: 'TRANSFORMATIONS/TIME',
     test: {
       dataframe: output_type === 'utc' ? TEST_DATAFRAMES.DATETIME_UTC : TEST_DATAFRAMES.DATETIME
     }
@@ -917,7 +1034,7 @@ let _operations = {
 
   sample_n: {
     text: 'Random sampling',
-    path: 'TRANSFORMATION/ML',
+    path: 'TRANSFORMATIONS/ML',
     test: {
       dataframe: TEST_DATAFRAMES.STRING_LONG,
       payload: {
@@ -927,122 +1044,60 @@ let _operations = {
   },
   stratified_sample: {
     text: 'Stratified Sampling',
-    path: 'TRANSFORMATION/ML',
+    path: 'TRANSFORMATIONS/ML',
     min: 1,
     max: 1
   },
   bucketizer: {
     text: 'Create Bins',
-    path: 'TRANSFORMATION/ML',
+    path: 'TRANSFORMATIONS/ML',
     max: 1
   },
   impute: {
     text: 'Impute rows',
-    path: 'TRANSFORMATION/ML',
+    path: 'TRANSFORMATIONS/ML',
     min: 1
   },
   values_to_cols: {
     text: 'Values to Columns',
-    path: 'TRANSFORMATION/ML',
+    path: 'TRANSFORMATIONS/ML',
     max: 1
   },
   string_to_index: {
     text: 'Strings to Index',
-    path: 'TRANSFORMATION/ML',
+    path: 'TRANSFORMATIONS/ML',
     min: 1
   },
   index_to_string: {
     text: 'Indices to Strings',
-    path: 'TRANSFORMATION/ML',
+    path: 'TRANSFORMATIONS/ML',
     min: 1
   },
   z_score: {
     text: 'Standard Scaler',
-    path: 'TRANSFORMATION/ML',
+    path: 'TRANSFORMATIONS/ML',
     min: 1
   },
   min_max_scaler: {
     text: 'Min max Scaler',
-    path: 'TRANSFORMATION/ML',
+    path: 'TRANSFORMATIONS/ML',
     min: 1
   },
   max_abs_scaler: {
     text: 'Max abs Scaler',
-    path: 'TRANSFORMATION/ML',
+    path: 'TRANSFORMATIONS/ML',
     min: 1
   },
   outliers: {
     text: 'Outliers',
-    path: 'TRANSFORMATION/ML',
+    path: 'TRANSFORMATIONS/ML',
     min: 1,
     max: 1
   },
 
-  // ...objectMapFromEntries(TYPES_NAMES, ([dtype, text])=>(['cast_to_'+dtype, { command: 'set_dtype', payload: { dtype }, text, path: 'TRANSFORMATION/CAST'}]))
+  // ...objectMapFromEntries(TYPES_NAMES, ([dtype, text])=>(['cast_to_'+dtype, { command: 'set_dtype', payload: { dtype }, text, path: 'TRANSFORMATIONS/CAST'}]))
 
 };
-
-export const operationSections = (() => {
-  let operationSections = {}
-
-  Object.entries(_operations).forEach(([key, operation])=>{
-
-    let path = (operation.path || '').split('/');
-
-    let group = undefined;
-
-    if (path.length>=2) {
-      group = path[1]
-    }
-
-    let section = path[0];
-
-    if (!operationSections[section]) {
-      operationSections[section] = [];
-    }
-
-    let test = operation.test;
-
-    if (test) {
-
-      if (!test.payloads || !test.payloads.length) {
-        test.payloads = [{}];
-      }
-
-      test.dataframes = test.dataframes || test.dataframe;
-
-      if (test.dataframes) {
-
-        if (!Array.isArray(test.dataframes)) {
-          test.dataframes = [test.dataframes];
-        }
-
-        test.dataframes = test.dataframes.map(dataframe => {
-
-          if (typeof dataframe !== 'string') {
-            return JSON.stringify(dataframe).replace(/\bnull\b/,"None");
-          }
-          return dataframe;
-
-        })
-      }
-
-    }
-
-    operationSections[section].push({
-      ...operation,
-      command: operation.command || key,
-      operation: key,
-      group,
-      section,
-      test
-    });
-  });
-
-  return operationSections;
-})();
-
-export const operations = [].concat.apply([], Object.values(operationSections));
 
 export const commandsHandlers = {
 
@@ -2568,6 +2623,7 @@ export const commandsHandlers = {
         {
           type: "number",
           label: "Characters to show",
+          description: "The amount of characters to be shown.",
           key: "n",
         },
       ],
@@ -3793,5 +3849,183 @@ export const commandsHandlers = {
     },
   },
 };
+
+export const operationSections = (() => {
+  let operationSections = {}
+
+  Object.entries(_operations).forEach(([key, operation])=>{
+
+    let path = (operation.path || '').split('/');
+
+    let group = undefined;
+
+    if (path.length>=2) {
+      group = path[1]
+    }
+
+    let section = path[0];
+
+    if (!operationSections[section]) {
+      operationSections[section] = [];
+    }
+
+    let test = operation.test;
+
+    if (test) {
+
+      if (!test.payloads || !test.payloads.length) {
+        test.payloads = test.payload || {}
+      }
+
+      if (!Array.isArray(test.payloads)) {
+        test.payloads = [test.payloads];
+      }
+
+      test.dataframes = test.dataframes || test.dataframe;
+
+      if (test.dataframes) {
+
+        if (!Array.isArray(test.dataframes)) {
+          test.dataframes = [test.dataframes];
+        }
+
+        test.dataframes = test.dataframes.map(dataframe => {
+
+          if (typeof dataframe !== "string") {
+            return objectToPythonDictString(dataframe)
+          }
+          return dataframe;
+
+        })
+      }
+
+    }
+
+    let doc = operation.doc;
+
+    if (doc) {
+      let handler = commandsHandlers[operation.command || key] || commandsHandlers[operation.generator]
+
+      if (!doc.title) {
+        if (operation.text && typeof operation.text === "string") {
+          doc.title = operation.text;
+        } else if (handler.dialog.title && typeof handler.dialog.title === "string") {
+          doc.title = handler.dialog.title;
+        }
+      }
+
+      let dialogFields = (handler.dialog && handler.dialog.fields && typeof handler.dialog.fields !== "function") ? handler.dialog.fields : false;
+
+      if (doc.fields && doc.fields.length) {
+
+        if (handler.dialog && handler.dialog.output_cols && doc.fields[0].name !== DOC_OUTPUT_COLUMNS_FIELD.name) {
+          doc.fields = [ DOC_OUTPUT_COLUMNS_FIELD, ...doc.fields ];
+        }
+
+        doc.fields = doc.fields.map(field => {
+          if (field.key) {
+            let dialogField = dialogFields.find(f => f.key === field.key);
+            if (dialogField) {
+              field.name = field.name ? field.name : dialogField.label;
+              field.type = field.type ? field.type : DOC_FIELD_TYPES[dialogField.type];
+              field.description = field.description ? field.description : dialogField.description;
+            }
+          }
+          return field;
+        });
+
+      } else {
+        doc.fields = (handler.dialog && handler.dialog.output_cols) ? [DOC_OUTPUT_COLUMNS_FIELD] : []
+
+        if (dialogFields) {
+          doc.fields = [
+            ...doc.fields,
+            ...dialogFields.map(field => {
+              if (DOC_FIELD_TYPES[field.type]) {
+                return {
+                  type: DOC_FIELD_TYPES[field.type],
+                  name: field.label,
+                  description: field.description
+                };
+              } else {
+                return null;
+              }
+            }).filter(field => field)
+          ];
+        }
+      }
+
+    }
+
+
+
+    operationSections[section].push({
+      ...operation,
+      command: operation.command || key,
+      operation: key,
+      group,
+      section,
+      test,
+      doc
+    });
+  });
+
+  return operationSections;
+})();
+
+export const operations = [].concat.apply([], Object.values(operationSections));
+
+export const cypressOperationTests = (section, group, oepration = true, username = 'admin', password = 'admin', enableScreenshots = true) => {
+  context(`Check operations from ${section} section` + ((typeof group == 'string') ? `and ${group} group` : ''), () => {
+
+    beforeEach(() => {
+      Cypress.Cookies.preserveOnce('x-access-token')
+    })
+
+    let testOperations = operations.filter(operation => operation.test)
+
+    testOperations.filter(o => o.section == section && (group === true || o.group == group) && (oepration === true || oepration == o.operation)).forEach(operation => {
+
+      it(`${operation.operation} operation`, () => {
+
+        cy.login(username, password)
+
+        cy.wait(2000)
+
+        cy.location('pathname').then($pathname => {
+          if (!$pathname.includes('test-workspace')) {
+            cy.visit('http://localhost:3000/workspaces/test-workspace')
+          }
+        })
+
+
+        cy.location('pathname').should('not.include', 'login')
+
+        /* clean up operations */
+
+        cy.allDone({timeout: 30000})
+
+        cy.cancelCommand()
+
+        cy.clearSelection()
+
+        cy.clearCommands('commands')
+
+        cy.allDone({timeout: 30000})
+
+        cy.clearCommands('data-sources')
+
+        cy.allDone({timeout: 30000})
+
+        cy.clearTabs()
+
+        cy.testOperation(operation, enableScreenshots)
+
+      })
+
+    })
+
+  })
+}
 
 export default { commandsHandlers, operationGroups, operationSections, operations };
