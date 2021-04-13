@@ -282,9 +282,9 @@ const TEST_DATAFRAMES = {
 };
 
 const DOC_OUTPUT_COLUMNS_FIELD = {
-  name: "Output column name(s)",
+  name: "Output column name\(s\)",
   type: "Text field",
-  description: "Name of the output column(s), if left blank will save the result on the same column."
+  description: "Name of the output column\(s\), if left blank will save the result on the same column."
 }
 
 const DOC_FIELD_TYPES = {
@@ -301,22 +301,22 @@ const DOC_GENERATOR = {
   TRIGONOMETRIC: function (operation) {
     let name = operation.payload.content.substr(4);
     return  {
-      name,
-      description: `Gets the ${name.toLowerCase()} from the numeric values in the selected column(s).`
+      title: name,
+      description: `Gets the ${name.toLowerCase()} from the numeric values in the selected column\(s\).`
     }
   },
   MATH_OPERATION: function (operation) {
     let name = operation.text;
     return  {
-      name,
-      description: `Gets the ${name.toLowerCase()} from the numeric values in the selected column(s).`
+      title: name,
+      description: `Gets the ${name.toLowerCase()} from the numeric values in the selected column\(s\).`
     }
   },
   MATH: function (operation) {
     let name = operation.payload.content;
     return  {
-      name,
-      description: `Gets the ${name.toLowerCase()} from the numeric values in the selected column(s).`
+      title: name,
+      description: `Gets the ${name.toLowerCase()} from the numeric values in the selected column\(s\).`
     }
   }
 }
@@ -496,7 +496,7 @@ let _operations = {
     },
     doc: {
       title: 'Drop duplicates',
-      description: 'Remove rows with duplicated values in the selected column(s).'
+      description: 'Remove rows with duplicated values in the selected column\(s\).'
     }
   },
   set: {
@@ -513,7 +513,7 @@ let _operations = {
     },
     doc: {
       title: 'Set',
-      description: 'Sets the value for the selected column(s) or creates a new one using an expression.'
+      description: 'Sets the value for the selected column\(s\) or creates a new one using an expression.'
     }
   },
   rename: {
@@ -530,7 +530,7 @@ let _operations = {
     },
     doc: {
       title: 'Rename',
-      description: 'Renames the selected column(s).'
+      description: 'Renames the selected column\(s\).'
     }
   },
 
@@ -547,7 +547,7 @@ let _operations = {
     },
     doc: {
       title: 'Duplicate',
-      description: 'Duplicates the selected column(s).'
+      description: 'Duplicates the selected column\(s\).'
     }
   },
 
@@ -559,7 +559,7 @@ let _operations = {
     disabled: ($nuxt)=>!($nuxt.selectionType=='columns' && $nuxt.selectedColumns.length>0),
     doc: {
       title: 'Keep',
-      description: 'Drops every column except the selected column(s).'
+      description: 'Drops every column except the selected column\(s\).'
     }
   },
 
@@ -571,7 +571,7 @@ let _operations = {
     disabled: ($nuxt)=>!($nuxt.selectionType=='columns' && $nuxt.selectedColumns.length>0),
     doc: {
       title: 'Drop',
-      description: 'Drops the selected column(s).'
+      description: 'Drops the selected column\(s\).'
     }
   },
 
@@ -772,7 +772,7 @@ let _operations = {
       }
     },
     doc: {
-      title: 'Left (substring)',
+      title: 'Left \(substring\)',
       description: 'Extracts a given number of characters from the values of a string and outputs the result to a new column or to the same input column.\nThis operation is useful for quickly extracting data from fixed-length values.',
     }
   },
@@ -787,7 +787,7 @@ let _operations = {
       }
     },
     doc: {
-      title: 'Right (substring)',
+      title: 'Right \(substring\)',
       description: 'Extracts a given number of characters from the values of a string and outputs the result to a new column or to the same input column.\nThis operation is useful for quickly extracting data from fixed-length values.',
     }
   },
@@ -802,7 +802,7 @@ let _operations = {
       }
     },
     doc: {
-      title: 'Mid (substring)',
+      title: 'Mid \(substring\)',
       description: 'Extracts a given number of characters from the values of a string and outputs the result to a new column or to the same input column.\nThis operation is useful for quickly extracting data from fixed-length values.',
     }
   },
@@ -842,7 +842,7 @@ let _operations = {
     test: {
       dataframe: TEST_DATAFRAMES.NUMBER
     },
-    doc: DOC_GENERATOR.MATH
+    doc: DOC_GENERATOR.MATH_OPERATION
   },
 
   round: {
@@ -855,7 +855,7 @@ let _operations = {
       dataframe: TEST_DATAFRAMES.DECIMAL
     },
     doc: {
-      description: 'Rounds all the numeric values in the selected column(s) to the number of decimal places specified.'
+      description: 'Rounds all the numeric values in the selected column\(s\) to the number of decimal places specified.'
     }
   },
 
@@ -868,7 +868,7 @@ let _operations = {
       dataframe: TEST_DATAFRAMES.DECIMAL
     },
     doc: {
-      description: 'Rounds down all the numeric values in the selected column(s).'
+      description: 'Rounds down all the numeric values in the selected column\(s\).'
     }
   },
 
@@ -881,7 +881,7 @@ let _operations = {
       dataframe: TEST_DATAFRAMES.DECIMAL
     },
     doc: {
-      description: 'Rounds up all the numeric values in the selected column(s).'
+      description: 'Rounds up all the numeric values in the selected column\(s\).'
     }
   },
 
@@ -929,7 +929,7 @@ let _operations = {
       dataframe: TEST_DATAFRAMES.NUMBER
     },
     doc: {
-      description: 'Gets the numeric values in the selected column(s) raised to a given power.'
+      description: 'Gets the numeric values in the selected column\(s\) raised to a given power.'
     }
   },
 
@@ -1087,18 +1087,21 @@ let _operations = {
 
   'TRANSFORMATIONS/TIME/divider/0': {divider: true, path: 'TRANSFORMATIONS/TIME'},
 
-  ...objectMapFromEntries(TIME_NAMES,(output_type, name)=>(['date_extract_'+name, {
-    command: 'getFromDatetime',
-    payload: { output_type },
-    text: `Get ${name}`,
-    path: 'TRANSFORMATIONS/TIME',
-    test: {
-      dataframe: output_type === 'utc' ? TEST_DATAFRAMES.DATETIME_UTC : TEST_DATAFRAMES.DATETIME
-    },
-    doc: {
-      description: `Extracts the ${name} from date values in the selected column(s).`
-    }
-  }])),
+  ...objectMapFromEntries(TIME_NAMES,(key, name)=>{
+    return ['date_extract_'+key, {
+      command: `date_extract_${key}`,
+      generator: `getFromDatetime`,
+      payload: { key },
+      text: capitalizeString(name),
+      path: 'TRANSFORMATIONS/TIME',
+      test: {
+        dataframe: key === 'utc' ? TEST_DATAFRAMES.DATETIME_UTC : TEST_DATAFRAMES.DATETIME
+      },
+      doc: {
+        description: `Extracts the ${name} from date values in the selected column\(s\).`
+      }
+    }]
+  }),
 
   sample_n: {
     text: 'Random sampling',

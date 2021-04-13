@@ -33,7 +33,7 @@ function getScreenshot (name, type) {
 function createFile (name, str) {
   let fileName = `${name}.md`;
   fs.writeFile(`docs/${fileName}`, str, (err) => { if (err) throw err; });
-  return `./${fileName}`
+  return `${fileName}`
 }
 
 function generateSummary (array) {
@@ -69,10 +69,10 @@ const app = function () {
 
     if (doc.fields && doc.fields.length) {
       str += `\n## Fields`;
-      str += `\nField | Type | Description`;
-      str += `\n----- | ---- | -----------`;
+      str += `\n| Field | Type | Description |`;
+      str += `\n| :--- | :--- | :--- |`;
       doc.fields.forEach(field => {
-        str += `\n${field.name || ''} | ${field.type || ''} | ${field.description || ''}`;
+        str += `\n| ${field.name || ''} | ${field.type || ''} | ${field.description || ''} |`;
       });
 
     }

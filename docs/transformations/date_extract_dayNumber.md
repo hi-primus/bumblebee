@@ -1,7 +1,5 @@
-# Inverse Cosine
-Gets the inverse cosine from the numeric values in the selected column(s).
-## Location
-![Inverse Cosine on the interface](../../docs/screenshots/location/acos.png)
+# Day number of year
+Extracts the day number of year from date values in the selected column(s).
 ## Fields
 | Field | Type | Description |
 | :--- | :--- | :--- |

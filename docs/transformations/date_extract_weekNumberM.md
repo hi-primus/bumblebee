@@ -1,7 +1,5 @@
-# Inverse Cosine
-Gets the inverse cosine from the numeric values in the selected column(s).
-## Location
-![Inverse Cosine on the interface](../../docs/screenshots/location/acos.png)
+# Weekday of year (Mon as 1st)
+Extracts the weekday of year (Mon as 1st) from date values in the selected column(s).
 ## Fields
 | Field | Type | Description |
 | :--- | :--- | :--- |
