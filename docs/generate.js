@@ -7,7 +7,7 @@ const fs = require('fs');
 let docOperations = operations.filter(operation => operation.doc)
 
 function getGeneratedScreenshot (name, type) {
-  let files = glob.sync(`./docs/screenshots/*/${type}/${name}--*.png`)
+  let files = glob.sync(`./docs/screenshots/*/${type}/${name}--0.png`)
   if (files.length) {
     var dir = path.dirname(`./docs/screenshots/*`);
     let result = `${dir}/${type}/${name}.png`;
@@ -18,12 +18,15 @@ function getGeneratedScreenshot (name, type) {
 }
 
 function getScreenshot (name, type) {
-  let ready = glob.sync(`./docs/screenshots/${type}/${name}.png`);
-  if (!ready[0]) {
-    return getGeneratedScreenshot(name, type);
+  let generated = getGeneratedScreenshot(name, type);
+  if (generated) {
+    return generated;
   } else {
-    console.log(`Found ${type} screenshot for ${name}`)
-    return ready[0];
+    let ready = glob.sync(`./docs/screenshots/${type}/${name}.png`);
+    if (ready[0]) {
+      console.log(`Found ${type} screenshot for ${name}`)
+      return ready[0];
+    }
   }
 }
 
@@ -56,9 +59,12 @@ const app = function () {
     }
 
     let location = getScreenshot(operation.command, 'location');
+
     if (location) {
       str += `\n## Location`;
       str += `\n![${doc.title} on the interface](../.${location})`
+    } else {
+      console.warn(`No location screenshot found for ${operation.command}`)
     }
 
     if (doc.fields && doc.fields.length) {
@@ -72,6 +78,7 @@ const app = function () {
     }
 
     let table = getScreenshot(operation.command, 'table');
+
     if (table) {
       str += `\n## Example`;
       let form = getScreenshot(operation.command, 'form');
@@ -81,6 +88,8 @@ const app = function () {
       }
       str += `\n### Preview`;
       str += `\n![${doc.title} example](../.${table})`
+    } else {
+      console.warn(`No table screenshot found for ${operation.command}`)
     }
     let fileName = createFile(`transformations/${operation.command}`, str);
     summary.push(`* [${doc.title}](${fileName})`)

@@ -3,11 +3,13 @@ import { commandsHandlers } from '../../packages/web/utils/operations.js'
 /* page */
 
 Cypress.Commands.add('kernelDone', (options) => {
-  cy.window().its('$nuxt.$store.state.kernel',options).should('equal','done')
+  cy.window().its('$nuxt.$store.state.kernel', options).should('equal','done')
 })
 
 Cypress.Commands.add('promisesDone', (options) => {
-  cy.window().its('promises',options).should('be.empty')
+  cy.window().its('promises', options).should((options) => {
+    expect(Object.keys(options).filter(k=>k==+k)).to.have.length(0)
+  })
 })
 
 Cypress.Commands.add('allDone', (options) => {
@@ -142,7 +144,8 @@ Cypress.Commands.add('testOperation', (operation, enableScreenshots) => {
 
   let locationScreenshot = false
 
-  let dataframes = operation.test.dataframes
+  let dataframes = operation.test ? operation.test.dataframes : []
+
 
   if (dataframes.length) {
 
@@ -152,7 +155,7 @@ Cypress.Commands.add('testOperation', (operation, enableScreenshots) => {
 
     for (let i = 0; i < dataframes.length; i++) {
       cy.allDone({timeout: 30000})
-      const dataframe = dataframes[i];
+      const dataframe = dataframes[i]
       cy.get('body').then((body) => {
         let clearTab = body.find('#bb-tab-undefined')[0]
         if (clearTab) {
@@ -177,34 +180,34 @@ Cypress.Commands.add('testOperation', (operation, enableScreenshots) => {
 
   /* columns selection */
 
-  let payloads = operation.test.payloads
+  let payloads = operation.test ? operation.test.payloads : [false]
 
   let commandHandler = commandsHandlers[operation.command] || commandsHandlers[operation.generator]
 
   if (commandHandler && commandHandler.dialog && commandHandler.dialog.fields) {
 
-    for (let i = 0; i < payloads.length; i++) {
+    for (let i = 0; i < /*payloads.length*/ 1; i++) {
 
-      const payload = payloads[i];
+      const payload = payloads[i]
 
       cy.allDone({timeout: 30000})
       cy.clearSelection()
       cy.clearCommands('commands')
       cy.allDone({timeout: 30000})
 
-      let dfName = payload ? payload.dfName : false;
+      let dfName = payload ? payload.dfName : false
 
       if (dfName) {
         cy.get(`#bb-tab-${dfName}`).click()
         cy.allDone({timeout: 30000})
       }
 
-      let columns = payload ? payload.columns : false;
+      let columns = payload ? payload.columns : false
 
       let columnElements = columns ? columns.map(column => `#bb-table-${column} > .column-header-cell`) : [`.bb-table-h-cell:first-child`]
 
       for (let i = 0; i < columnElements.length; i++) {
-        const columnElement = columnElements[i];
+        const columnElement = columnElements[i]
         cy.wait(300)
         cy.get(columnElement, { timeout: 20000 })
           .click({ctrlKey: true})
@@ -261,32 +264,35 @@ Cypress.Commands.add('testOperation', (operation, enableScreenshots) => {
 
       let hasFields = false
 
-      for (const key in payload) {
-        if (Object.hasOwnProperty.call(payload, key) && key !== 'columns' && key !== 'dfName') {
-          let value = payload[key];
-          switch (key) {
-            case 'output_cols':
-              for (let j = 0; j < value.length; j++) {
-                cy.fieldField(`output-col-${j}`, value[j])
-              }
-              break;
+      if (payload) {
+        for (const key in payload) {
+          if (Object.hasOwnProperty.call(payload, key) && key !== 'columns' && key !== 'dfName') {
+            let value = payload[key]
+            switch (key) {
+              case 'output_cols':
+                for (let j = 0; j < value.length; j++) {
+                  cy.fieldField(`output-col-${j}`, value[j])
+                }
+                break
 
-            default:
-              hasFields = true
-              let field = commandHandler.dialog.fields.find((field) => field.key === key);
-              if (field) {
-                cy[`${field.type}Field`](key, value, field);
-              }
-              break;
+              default:
+                hasFields = true
+                let field = commandHandler.dialog.fields.find((field) => field.key === key)
+                if (field) {
+                  cy[`${field.type}Field`](key, value, field)
+                }
+                break
+            }
           }
         }
       }
 
 
+
       if (enableScreenshots) {
-        let preview = commandHandler.payload([""]).preview;
+        let preview = commandHandler.payload([""]).preview
         cy.wait(1000)
-        cy.get('.v-footer > .layout').click()
+        cy.get('.v-footer > .layout').click({force: true})
         if (hasFields) {
           cy.get('#operation-form')
             .invoke('css', { 'height': 'auto', 'padding-bottom': '18px' })

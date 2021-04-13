@@ -297,6 +297,31 @@ const DOC_FIELD_TYPES = {
   'chips': 'Multiple values',
 }
 
+const DOC_GENERATOR = {
+  TRIGONOMETRIC: function (operation) {
+    let name = operation.payload.content.substr(4);
+    return  {
+      name,
+      description: `Gets the ${name.toLowerCase()} from the numeric values in the selected column(s).`
+    }
+  },
+  MATH_OPERATION: function (operation) {
+    let name = operation.text;
+    return  {
+      name,
+      description: `Gets the ${name.toLowerCase()} from the numeric values in the selected column(s).`
+    }
+  },
+  MATH: function (operation) {
+    let name = operation.payload.content;
+    return  {
+      name,
+      description: `Gets the ${name.toLowerCase()} from the numeric values in the selected column(s).`
+    }
+  }
+}
+
+
 let _operations = {
 
   loadFile: {
@@ -760,6 +785,10 @@ let _operations = {
       payload: {
         n: 5
       }
+    },
+    doc: {
+      title: 'Right (substring)',
+      description: 'Extracts a given number of characters from the values of a string and outputs the result to a new column or to the same input column.\nThis operation is useful for quickly extracting data from fixed-length values.',
     }
   },
   mid_string: {
@@ -771,6 +800,10 @@ let _operations = {
         start: 2,
         end: 4
       }
+    },
+    doc: {
+      title: 'Mid (substring)',
+      description: 'Extracts a given number of characters from the values of a string and outputs the result to a new column or to the same input column.\nThis operation is useful for quickly extracting data from fixed-length values.',
     }
   },
   pad_string: {
@@ -808,7 +841,8 @@ let _operations = {
     payload: { content: 'Transform to absolute value' },
     test: {
       dataframe: TEST_DATAFRAMES.NUMBER
-    }
+    },
+    doc: DOC_GENERATOR.MATH
   },
 
   round: {
@@ -819,6 +853,9 @@ let _operations = {
     },
     test: {
       dataframe: TEST_DATAFRAMES.DECIMAL
+    },
+    doc: {
+      description: 'Rounds all the numeric values in the selected column(s) to the number of decimal places specified.'
     }
   },
 
@@ -829,6 +866,9 @@ let _operations = {
     payload: { content: 'Round down' },
     test: {
       dataframe: TEST_DATAFRAMES.DECIMAL
+    },
+    doc: {
+      description: 'Rounds down all the numeric values in the selected column(s).'
     }
   },
 
@@ -839,6 +879,9 @@ let _operations = {
     payload: { content: 'Round up' },
     test: {
       dataframe: TEST_DATAFRAMES.DECIMAL
+    },
+    doc: {
+      description: 'Rounds up all the numeric values in the selected column(s).'
     }
   },
 
@@ -850,7 +893,8 @@ let _operations = {
     },
     test: {
       dataframe: TEST_DATAFRAMES.NUMBER
-    }
+    },
+    doc: DOC_GENERATOR.MATH_OPERATION
   },
 
   log: {
@@ -861,7 +905,8 @@ let _operations = {
     },
     test: {
       dataframe: TEST_DATAFRAMES.NUMBER
-    }
+    },
+    doc: DOC_GENERATOR.MATH_OPERATION
   },
 
   ln: {
@@ -871,7 +916,8 @@ let _operations = {
     },
     test: {
       dataframe: TEST_DATAFRAMES.NUMBER
-    }
+    },
+    doc: DOC_GENERATOR.MATH_OPERATION
   },
 
   pow: { text: 'Power', generator: 'GENERIC', path: 'TRANSFORMATIONS/MATH',
@@ -881,6 +927,9 @@ let _operations = {
     },
     test: {
       dataframe: TEST_DATAFRAMES.NUMBER
+    },
+    doc: {
+      description: 'Gets the numeric values in the selected column(s) raised to a given power.'
     }
   },
 
@@ -890,7 +939,8 @@ let _operations = {
     },
     test: {
       dataframe: TEST_DATAFRAMES.NUMBER
-    }
+    },
+    doc: DOC_GENERATOR.MATH_OPERATION
   },
 
   sin: {
@@ -900,7 +950,8 @@ let _operations = {
     payload: { content: 'Get Sine' },
     test: {
       dataframe: TEST_DATAFRAMES.NUMBER
-    }
+    },
+    doc: DOC_GENERATOR.TRIGONOMETRIC
   },
 
   cos: {
@@ -910,7 +961,8 @@ let _operations = {
     payload: { content: 'Get Cosine' },
     test: {
       dataframe: TEST_DATAFRAMES.NUMBER
-    }
+    },
+    doc: DOC_GENERATOR.TRIGONOMETRIC
   },
 
   tan: {
@@ -920,7 +972,8 @@ let _operations = {
     payload: { content: 'Get Tangent' },
     test: {
       dataframe: TEST_DATAFRAMES.NUMBER
-    }
+    },
+    doc: DOC_GENERATOR.TRIGONOMETRIC
   },
 
   asin: {
@@ -930,7 +983,8 @@ let _operations = {
     payload: { content: 'Get Inverse Sine' },
     test: {
       dataframe: TEST_DATAFRAMES.NUMBER
-    }
+    },
+    doc: DOC_GENERATOR.TRIGONOMETRIC
   },
 
   acos: {
@@ -940,7 +994,8 @@ let _operations = {
     payload: { content: 'Get Inverse Cosine' },
     test: {
       dataframe: TEST_DATAFRAMES.NUMBER
-    }
+    },
+    doc: DOC_GENERATOR.TRIGONOMETRIC
   },
 
   atan: {
@@ -950,7 +1005,8 @@ let _operations = {
     payload: { content: 'Get Inverse Tangent' },
     test: {
       dataframe: TEST_DATAFRAMES.NUMBER
-    }
+    },
+    doc: DOC_GENERATOR.TRIGONOMETRIC
   },
 
   sinh: {
@@ -960,7 +1016,8 @@ let _operations = {
     payload: { content: 'Get Hyperbolic Sine' },
     test: {
       dataframe: TEST_DATAFRAMES.NUMBER
-    }
+    },
+    doc: DOC_GENERATOR.TRIGONOMETRIC
   },
 
   cosh: {
@@ -970,7 +1027,8 @@ let _operations = {
     payload: { content: 'Get Hyperbolic Cosine' },
     test: {
       dataframe: TEST_DATAFRAMES.NUMBER
-    }
+    },
+    doc: DOC_GENERATOR.TRIGONOMETRIC
   },
 
   tanh: {
@@ -980,7 +1038,8 @@ let _operations = {
     payload: { content: 'Get Hyperbolic Tangent' },
     test: {
       dataframe: TEST_DATAFRAMES.NUMBER
-    }
+    },
+    doc: DOC_GENERATOR.TRIGONOMETRIC
   },
 
   asinh: {
@@ -990,7 +1049,8 @@ let _operations = {
     payload: { content: 'Get Inverse Hyperbolic Sine' },
     test: {
       dataframe: TEST_DATAFRAMES.NUMBER
-    }
+    },
+    doc: DOC_GENERATOR.TRIGONOMETRIC
   },
 
   acosh: {
@@ -1000,7 +1060,8 @@ let _operations = {
     payload: { content: 'Get Inverse Hyperbolic Cosine' },
     test: {
       dataframe: TEST_DATAFRAMES.NUMBER
-    }
+    },
+    doc: DOC_GENERATOR.TRIGONOMETRIC
   },
 
   atanh: {
@@ -1010,13 +1071,17 @@ let _operations = {
     payload: { content: 'Get Inverse Hyperbolic Tangent' },
     test: {
       dataframe: TEST_DATAFRAMES.NUMBER
-    }
+    },
+    doc: DOC_GENERATOR.TRIGONOMETRIC
   },
 
   transformFormat: {
     text: 'Transform format', path: 'TRANSFORMATIONS/TIME',
     test: {
       dataframe: TEST_DATAFRAMES.DATETIME
+    },
+    doc: {
+      description: 'Transform the date values from a column from a date format to another.'
     }
   },
 
@@ -1029,6 +1094,9 @@ let _operations = {
     path: 'TRANSFORMATIONS/TIME',
     test: {
       dataframe: output_type === 'utc' ? TEST_DATAFRAMES.DATETIME_UTC : TEST_DATAFRAMES.DATETIME
+    },
+    doc: {
+      description: `Extracts the ${name} from date values in the selected column(s).`
     }
   }])),
 
@@ -1040,6 +1108,9 @@ let _operations = {
       payload: {
         n: 6
       }
+    },
+    doc: {
+      description: 'Gets a random sample of the dataset.'
     }
   },
   stratified_sample: {
@@ -2148,8 +2219,10 @@ export const commandsHandlers = {
       },
     },
     payload: async (columns, payload = {}) => {
-      var items_with = Object.keys(payload.secondaryDatasets).filter(
+      var items_with = Object.keys(payload.secondaryDatasets || {}).filter(
         (e) => e !== payload.dfName && e !== "preview_df"
+      ).filter(
+        (e) => !e.startsWith("_")
       );
 
       var df2 = items_with[0];
@@ -2160,14 +2233,14 @@ export const commandsHandlers = {
           left: [],
           right: [],
         },
-        left_on: payload.allColumns[0],
+        left_on: payload.allColumns ? payload.allColumns[0] : undefined,
         items_l_on: payload.allColumns,
         right_on: [],
 
         items_r_on: (c) => c.secondaryDatasets[c.with].columns,
         with: df2,
         items_with: (c) => {
-          return Object.keys(c.secondaryDatasets)
+          return Object.keys(c.secondaryDatasets || {})
             .filter((e) => e !== payload.dfName && e !== "preview_df")
             .filter((e) => !e.startsWith("_"));
         },
@@ -3903,6 +3976,10 @@ export const operationSections = (() => {
 
     let doc = operation.doc;
 
+    if (typeof doc === "function") {
+      doc = doc(operation);
+    }
+
     if (doc) {
       let handler = commandsHandlers[operation.command || key] || commandsHandlers[operation.generator]
 
@@ -3982,7 +4059,7 @@ export const cypressOperationTests = (section, group, oepration = true, username
       Cypress.Cookies.preserveOnce('x-access-token')
     })
 
-    let testOperations = operations.filter(operation => operation.test)
+    let testOperations = operations.filter(operation => operation.test || operation.doc || operation.section)
 
     testOperations.filter(o => o.section == section && (group === true || o.group == group) && (oepration === true || oepration == o.operation)).forEach(operation => {
 
@@ -4003,9 +4080,9 @@ export const cypressOperationTests = (section, group, oepration = true, username
 
         /* clean up operations */
 
-        cy.allDone({timeout: 30000})
-
         cy.cancelCommand()
+
+        cy.allDone({timeout: 30000})
 
         cy.clearSelection()
 
