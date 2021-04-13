@@ -326,24 +326,37 @@ let _operations = {
 
   loadFile: {
     text: 'Add from file',
-    path: 'LOADSAVE/DATA_SOURCE'
+    path: 'LOADSAVE/DATA_SOURCE',
+    doc: {
+      description: "Loads a dataset from a local or remote file. For remote files you may configure a remote connection.",
+      fields: false
+    }
   },
   loadDatabaseTable: {
     text: 'Add from database',
-    path: 'LOADSAVE/DATA_SOURCE'
+    path: 'LOADSAVE/DATA_SOURCE',
+    doc: {
+      description: "Loads a dataset from a table stored in a database. A remote connection is required.",
+      fields: false
+    }
   },
 
   createDataframe: {
     text: 'Create dataset from object',
     path: 'LOADSAVE/DATA_SOURCE',
-    hidden: ($nuxt)=>!window.showCreate
+    hidden: ($nuxt)=>!window.showCreate,
+    test: false
   },
 
   Download: {
     path: 'LOADSAVE/SAVE',
     text: 'Download',
     disabled: ($nuxt)=>process.env.INSTANCE!=='LOCAL',
-    hidden: ($nuxt)=>$nuxt.usingPandasTransformation
+    hidden: ($nuxt)=>$nuxt.usingPandasTransformation,
+    doc: {
+      description: "Downloads the current dataset as CSV file. If Spark or Ibis is you'll be able to choose to download a preview done using Pandas.",
+      fields: false
+    }
   },
   DownloadPreview: {
     path: 'LOADSAVE/SAVE',
@@ -362,17 +375,50 @@ let _operations = {
   saveFile: {
     path: 'LOADSAVE/SAVE',
     text: 'Save file',
-    disabled: ($nuxt)=>!($nuxt.currentDataset && $nuxt.currentDataset.summary)
+    disabled: ($nuxt)=>!($nuxt.currentDataset && $nuxt.currentDataset.summary),
+    doc: {
+      description: 'Saves the current dataset to a file. The file will be saved to the server running the current python session unless a remote connection is configured.',
+      fields: false
+    },
+    test: {
+      dataframe: TEST_DATAFRAMES.PEOPLE,
+      payload: {
+        columns: false,
+        execute: false
+      }
+    }
   },
   saveDatabaseTable: {
     path: 'LOADSAVE/SAVE',
     text: 'Save to database',
-    disabled: ($nuxt)=>!($nuxt.currentDataset && $nuxt.currentDataset.summary)
+    disabled: ($nuxt)=>!($nuxt.currentDataset && $nuxt.currentDataset.summary),
+    doc: {
+      description: 'Saves the current dataset to a previously configured database. Requires you to configuring a database.',
+      fields: false
+    },
+    test: {
+      dataframe: TEST_DATAFRAMES.PEOPLE,
+      payload: {
+        columns: false,
+        execute: false
+      }
+    }
   },
   Compile: {
     text: 'Compile SQL',
     path: 'LOADSAVE/SAVE',
-    hidden: ($nuxt)=>($nuxt.$store.state.localEngineParameters || {}).engine !== 'ibis'
+    // hidden: ($nuxt)=>($nuxt.$store.state.localEngineParameters || {}).engine !== 'ibis',
+    doc: {
+      description: 'Compiles the operations on the notebook to SQL. This command only works when using Ibis as engine.',
+      fields: false
+    },
+    test: {
+      dataframe: TEST_DATAFRAMES.PEOPLE,
+      payload: {
+        columns: false,
+        execute: false
+      }
+    }
   },
 
   join: {
@@ -3994,11 +4040,11 @@ export const operationSections = (() => {
         }
       }
 
-      let dialogFields = (handler.dialog && handler.dialog.fields && typeof handler.dialog.fields !== "function") ? handler.dialog.fields : false;
+      let dialogFields = (handler && handler.dialog && handler.dialog.fields && typeof handler.dialog.fields !== "function") ? handler.dialog.fields : false;
 
       if (doc.fields && doc.fields.length) {
 
-        if (handler.dialog && handler.dialog.output_cols && doc.fields[0].name !== DOC_OUTPUT_COLUMNS_FIELD.name) {
+        if (handler && handler.dialog && handler.dialog.output_cols && doc.fields[0].name !== DOC_OUTPUT_COLUMNS_FIELD.name) {
           doc.fields = [ DOC_OUTPUT_COLUMNS_FIELD, ...doc.fields ];
         }
 
@@ -4006,7 +4052,7 @@ export const operationSections = (() => {
           if (field.key) {
             let dialogField = dialogFields.find(f => f.key === field.key);
             if (dialogField) {
-              field.name = field.name ? field.name : dialogField.label;
+              field.name = field.name ? field.name : (typeof dialogField.label === "string" ? dialogField.label : null);
               field.type = field.type ? field.type : DOC_FIELD_TYPES[dialogField.type];
               field.description = field.description ? field.description : dialogField.description;
             }
@@ -4014,14 +4060,14 @@ export const operationSections = (() => {
           return field;
         });
 
-      } else {
-        doc.fields = (handler.dialog && handler.dialog.output_cols) ? [DOC_OUTPUT_COLUMNS_FIELD] : []
+      } else if (doc.fields !== false) {
+        doc.fields = (handler && handler.dialog && handler.dialog.output_cols) ? [DOC_OUTPUT_COLUMNS_FIELD] : []
 
         if (dialogFields) {
           doc.fields = [
             ...doc.fields,
             ...dialogFields.map(field => {
-              if (DOC_FIELD_TYPES[field.type]) {
+              if (DOC_FIELD_TYPES[field.type] && typeof field.label === "string") {
                 return {
                   type: DOC_FIELD_TYPES[field.type],
                   name: field.label,
@@ -4055,16 +4101,16 @@ export const operationSections = (() => {
 
 export const operations = [].concat.apply([], Object.values(operationSections));
 
-export const cypressOperationTests = (section, group, oepration = true, username = 'admin', password = 'admin', enableScreenshots = true) => {
+export const cypressOperationTests = (section, group, _operation = true, username = 'admin', password = 'admin', enableScreenshots = true) => {
   context(`Check operations from ${section} section` + ((typeof group == 'string') ? `and ${group} group` : ''), () => {
 
     beforeEach(() => {
       Cypress.Cookies.preserveOnce('x-access-token')
     })
 
-    let testOperations = operations.filter(operation => operation.test || operation.doc || operation.section)
+    let testOperations = operations.filter(o => o.test || o.doc || o.section)
 
-    testOperations.filter(o => o.section == section && (group === true || o.group == group) && (oepration === true || oepration == o.operation)).forEach(operation => {
+    testOperations.filter(o => o.test !== false && o.section == section && (group === true || o.group == group) && (_operation === true || _operation == o.operation)).forEach(operation => {
 
       it(`${operation.operation} operation`, () => {
 

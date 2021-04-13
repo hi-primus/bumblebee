@@ -1,4 +1,4 @@
-import { commandsHandlers } from '../../packages/web/utils/operations.js'
+import { commandsHandlers, operations } from '../../packages/web/utils/operations.js'
 
 /* page */
 
@@ -146,11 +146,10 @@ Cypress.Commands.add('testOperation', (operation, enableScreenshots) => {
 
   let dataframes = operation.test ? operation.test.dataframes : []
 
-
   if (dataframes.length) {
 
     cy.window().then((win) => {
-      win.showCreate = true
+      win.showCreate = (operation.section !== 'LOADSAVE' && operation.group !== 'SAVE')
     })
 
     for (let i = 0; i < dataframes.length; i++) {
@@ -202,9 +201,13 @@ Cypress.Commands.add('testOperation', (operation, enableScreenshots) => {
         cy.allDone({timeout: 30000})
       }
 
-      let columns = payload ? payload.columns : false
+      let columns = payload ? payload.columns : undefined
 
-      let columnElements = columns ? columns.map(column => `#bb-table-${column} > .column-header-cell`) : [`.bb-table-h-cell:first-child`]
+      let columnElements = []
+
+      if (operations.group !== 'LOAD' && columns !== false) {
+        columnElements = columns ? columns.map(column => `#bb-table-${column} > .column-header-cell`) : [`.bb-table-h-cell:first-child`];
+      }
 
       for (let i = 0; i < columnElements.length; i++) {
         const columnElement = columnElements[i]
@@ -292,7 +295,7 @@ Cypress.Commands.add('testOperation', (operation, enableScreenshots) => {
       if (enableScreenshots) {
         let preview = commandHandler.payload([""]).preview
         cy.wait(1000)
-        cy.get('.v-footer > .layout').click({force: true})
+        cy.get('.v-progress-circular').click({multiple: true, force: true})
         if (hasFields) {
           cy.get('#operation-form')
             .invoke('css', { 'height': 'auto', 'padding-bottom': '18px' })

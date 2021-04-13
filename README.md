@@ -1,53 +1,27 @@
 [![Logo Bumblebee](images/logoBumblebee.png)](https://hi-bumblebee.com) 
 
 [![built_by iron](https://img.shields.io/badge/built_by-iron-FF69A4.svg)](http://ironmussa.com)
+[![Bumblebee chat](https://img.shields.io/badge/chat-on%20slack-blue.svg?style=flat&logo=slack)](https://join.slack.com/t/hi-bumblebee/shared_invite/zt-mhab5fk7-1xwd4B~SrlJaWq~R4onCgA)
+![Docker Pulls](https://img.shields.io/docker/pulls/ironmussa/bumblebee)
 
 # Bumblebee
 
-With Bumblebee, you can easily clean and prepare bigdata using a visual interface. It is built over Optimus so you can handle small and big data efficiently.
+The easiest and most powerful tool to clean, transform, and prepare data of any size for Analysis, Visualization, Reporting, and Machine Learning; all in a spreadsheet-like interface. Built over [Optimus](https://github.com/ironmussa/Optimus) so you can handle small and big data efficiently.
 
-For more info about Bumblebee, please go to:
-https://hi-bumblebee.com/
+Bumblebee can be used to:
 
-## Installation
-### Docker
-To run Bumblebee on a Docker container just use the following commands:
+* Explore data using an ergonomic UI
+* Clean and transform datasets with more than 100 functions available
+* Prepare data for Machine Learning
+* Join and concatenate your datasets with a visual interface
 
-For remote servers:
-```docker run --name bumblebee --network="host" -e ADDRESS=<IP> ironmussa/bumblebee:develop-3.0```
+## Resources
 
-For local machines:
-```docker run --name bumblebee -p 3000:3000 -p 4000:4000 -e ADDRESS=localhost ironmussa/bumblebee:develop-3.0```
-
-You can also replace ```ironmussa/bumblebee:develop-3.0``` by ```ironmussa/bumblebee:develop-3.0-spark``` to enable Spark support.
-
-On ```--name bumblebee``` you can use any name you want for your environtment and on ```<IP>``` you must input the public IP address of your server. Remember to open ports 3000 and 4000 on your host.
-
-### Ubuntu/Digital Ocean
-https://medium.com/hi-bumblebee/how-to-install-bumblebee-on-digital-ocean-ef77138f1838
-
-
-## Load and explore
-Get data from CSV, JSON, parquet, Avro files, and databases. Then get histograms, frequency charts, and advance stats.
-![Database](images/db.gif)
-
-## Transform and Clean
-Convert unstructured data, standardize strings, unify date format, Impute data, handle outliers and create custom functions.
-![Transform](images/jupyter.gif)
-
-## Prepare for Machine Learning
-Bin columns, string clustering, one-hot encode, scaling, and split train and test data.
-![Prepare](images/ml.gif)
-
-## Interact with code like in jupyter notebook
-Every action over your data is added as a transformation step using python code that you can modify anytime. Also, you can add any python code you want to make complex transformations.
-
-![Interact](images/transform.gif)
-
-## See Bumblebee in action
-https://www.loom.com/embed/c2cfb6a2e0a549e2afeb8d484865b968
-
-
+* [Homepage](https://hi-bumblebee.com/): Bumblebee's landing page.
+* [Bumblebee Reference Documentation](https://hi-bumblebee.gitbook.io/bumblebee/): Operations and setup reference tutorials and guides.
+* [Medium page](https://medium.com/hi-bumblebee): Tutorials and articles.
+* [Bumblebee community on Slack](https://join.slack.com/t/hi-bumblebee/shared_invite/zt-mhab5fk7-1xwd4B~SrlJaWq~R4onCgA): Get help, contribute and collaborate.
+  
 ## Contributing to Bumblebee 
 Contributions go far beyond pull requests and commits. We are very happy to receive any kind of contributions including:
 
@@ -55,6 +29,6 @@ Contributions go far beyond pull requests and commits. We are very happy to rece
 * Spelling or grammar fixes.
 * README.md corrections or redesigns.
 * Adding unit, or functional tests.
-* Triaging GitHub issues -- especially determining whether an issue still persists or is reproducible.
-* Searching #hibumblebee on twitter and helping someone else who needs help.
+* Triaging GitHub issues; especially determining whether an issue still persists or is reproducible.
+* Entering our [Slack community](https://join.slack.com/t/hi-bumblebee/shared_invite/zt-mhab5fk7-1xwd4B~SrlJaWq~R4onCgA) and helping someone else who needs help.
 * Blogging, speaking about, or creating tutorials about Bumblebee and its many features.

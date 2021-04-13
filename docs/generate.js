@@ -38,7 +38,7 @@ function createFile (name, str) {
 
 function generateSummary (array) {
   var text = fs.readFileSync('docs/_SUMMARY.md','utf8')
-  text = text.replace('{{transformations}}', array.join('\n'))
+  text = text.replace('{{transformation}}', array.join('\n'))
   createFile(`SUMMARY`, text)
 }
 
@@ -62,7 +62,7 @@ const app = function () {
 
     if (location) {
       str += `\n## Location`;
-      str += `\n![${doc.title} on the interface](../.${location})`
+      str += `\n![${doc.title} on the interface](../.${location})`;
     } else {
       console.warn(`No location screenshot found for ${operation.command}`)
     }
@@ -84,15 +84,25 @@ const app = function () {
       let form = getScreenshot(operation.command, 'form');
       if (form) {
         str += `\n### Fields`;
-        str += `\n![${doc.title} fields](../.${form})`
+        str += `\n![${doc.title} fields](../.${form})`;
       }
       str += `\n### Preview`;
-      str += `\n![${doc.title} example](../.${table})`
+      str += `\n![${doc.title} example](../.${table})`;
     } else {
-      console.warn(`No table screenshot found for ${operation.command}`)
+      console.warn(`No table screenshot found for ${operation.command}`);
     }
-    let fileName = createFile(`transformations/${operation.command}`, str);
-    summary.push(`* [${doc.title}](${fileName})`)
+
+    let type = 'transformation';
+
+    if (operation.section === 'LOADSAVE') {
+      type = operation.group === 'SAVE' ? 'save' : 'load';
+    }
+
+    if (type === 'transformation') {
+      let fileName = createFile(`${type}/${operation.command}`, str);
+      summary.push(`* [${doc.title}](${fileName})`)
+    }
+
   });
 
   generateSummary(summary)
