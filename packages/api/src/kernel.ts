@@ -313,6 +313,7 @@ export const createConnection = async function (sessionId) {
 			kernels[sessionId].client.connect(
 				`${wsKernelBase(ka)}/api/kernels/${kernels[sessionId].id}/channels`,
 			);
+
 			kernels[sessionId].client.on('connect', function (connection) {
 				// kernels[sessionId] = kernels[sessionId] || {};
         kernels[sessionId].connection = connection;
@@ -424,9 +425,13 @@ export const createConnection = async function (sessionId) {
 					}
 				});
 
-				console.log('Connection created', sessionId);
+				console.log('Connection', sessionId);
 
-				resolve(kernels[sessionId].connection);
+        setTimeout(() => { //
+          console.log('Connection created', sessionId);
+          resolve(kernels[sessionId].connection);
+        }, 1000);
+
 
 			});
 			kernels[sessionId].client.on('connectFailed', function (error) {

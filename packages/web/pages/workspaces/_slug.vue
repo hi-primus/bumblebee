@@ -100,8 +100,8 @@
               <v-card-text>Close "{{ $store.state.datasets[confirmDelete].name }}"?</v-card-text>
               <v-card-actions>
                 <div class="flex-grow-1" />
-                <v-btn color="primary" text @click="confirmDelete=-1">Cancel</v-btn>
-                <v-btn color="primary" text @click="deleteTab(confirmDelete)">Accept</v-btn>
+                <v-btn :id="`btn-confirm-delete-cancel`" color="primary" text @click="confirmDelete=-1">Cancel</v-btn>
+                <v-btn :id="`btn-confirm-delete-accept`" color="primary" text @click="deleteTab(confirmDelete)">Accept</v-btn>
               </v-card-actions>
             </v-card>
           </v-dialog>
@@ -120,6 +120,7 @@
               v-for="(_tab, key) in $store.state.datasets"
               :key="+key"
               class="bb-tab"
+              :id="`bb-tab-${_tab.dfName}`"
             >
               <span class="tab-content">
                 <span class="tab-title" :title="[_tab.dfName,_tab.name].filter(e=>e).join(' - ')">{{[_tab.dfName,_tab.name].filter(e=>e).join(' - ')}}</span>

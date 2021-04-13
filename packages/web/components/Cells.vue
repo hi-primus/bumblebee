@@ -140,6 +140,7 @@
             <v-spacer></v-spacer>
             <v-btn
               color="primary"
+              id="btn-command-cancel"
               class="mr-4"
               dense
               text

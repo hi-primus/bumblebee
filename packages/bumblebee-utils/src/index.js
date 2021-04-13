@@ -657,7 +657,7 @@ export const pythonArguments = (defaultParams = {}, params = {}) => {
 
       switch (param.type) {
         case 'int':
-          str = `${key}=${+value}`;
+          str = `${key}=${+(value || 0)}`;
           break;
 
         case undefined:
@@ -707,6 +707,10 @@ export const pythonArguments = (defaultParams = {}, params = {}) => {
 
   return codes.join(', ')
 
+}
+
+export const objectToPythonDictString = (object) => {
+  return JSON.stringify(object).replace(/(\b|,|\{|\[)(null)([\b|,|\]|\}])/g,"$1None$3").replace(/(\b|,|\{|\[)(false)([\b|,|\]|\}])/g,"$1False$3").replace(/(\b|,|\{|\[)(true)([\b|,|\]|\}])/g,"$1True$3");
 }
 
 // constants
@@ -1266,6 +1270,7 @@ export default {
   getInitParams,
   getSourceParams,
   pythonArguments,
+  objectToPythonDictString,
   ENGINES,
   INCOMPATIBLE_ENGINES,
   INIT_PARAMS,
