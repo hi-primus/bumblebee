@@ -625,17 +625,21 @@ export const codeGenerators = {
   },
   transformFormat: (payload) => {
     let _argument = preparedColumns(payload.columns);
-    let output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (!['final','processing'].includes(payload.request.type)) ? '__new__' : '')
-    return `.cols.date_format(${_argument}, "${transformDateToPython(payload.current_format)}", "${transformDateToPython(payload.output_format)}"`
+    let output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (!['final','processing'].includes(payload.request.type)) ? '__new__' : '');
+    return `.cols.date_format(${_argument}`
+    + ( payload.current_format ? `, current_format="${transformDateToPython(payload.current_format)}"` : '')
+    + ( payload.output_format ? `, output_format="${transformDateToPython(payload.output_format)}"` : '')
     + ( output_cols_argument ? `, output_cols=${output_cols_argument}` : '')
-    + `)`
+    + `)`;
   },
   getFromDatetime: (payload) => {
     let _argument = preparedColumns(payload.columns);
-    let output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (!['final','processing'].includes(payload.request.type)) ? '__new__' : '')
-    return `.cols.date_format(${_argument}, "${transformDateToPython(payload.current_format)}", "${TIME_VALUES[payload.output_type]}"`
+    let output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (!['final','processing'].includes(payload.request.type)) ? '__new__' : '');
+    return `.cols.date_format(${_argument}`
+    + ( payload.current_format ? `, current_format="${transformDateToPython(payload.current_format)}"` : '')
+    + ( payload.output_format ? `, output_format="${TIME_VALUES[payload.output_type]}"` : '')
     + ( output_cols_argument ? `, output_cols=${output_cols_argument}` : '')
-    + `)`
+    + `)`;
   },
   outliers: (payload) => {
     if ( ['z_score','modified_z_score'].includes(payload.algorithm) ) {

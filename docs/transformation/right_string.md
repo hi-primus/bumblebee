@@ -9,7 +9,5 @@ This operation is useful for quickly extracting data from fixed-length values.
 | Output column name(s) | Text field | Name of the output column(s), if left blank will save the result on the same column. |
 | Characters to show | Numeric | The amount of characters to be shown. |
 ## Example
-### Fields
 ![Right (substring) fields](../../docs/screenshots/form/right_string.png)
-### Preview
 ![Right (substring) example](../../docs/screenshots/table/right_string.png)

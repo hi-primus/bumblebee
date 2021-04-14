@@ -10,5 +10,4 @@ This operation is useful for quickly extracting data from fixed-length values.
 | Start at | Numeric |  |
 | End at | Numeric |  |
 ## Example
-### Preview
 ![Mid (substring) example](../../docs/screenshots/table/mid_string.png)

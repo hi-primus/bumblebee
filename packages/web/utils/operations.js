@@ -263,7 +263,7 @@ const TEST_DATAFRAMES = {
     118.1,
     12533.34
   ]},
-  DATETIME: { dates: [
+  DATETIME: { date: [
     "6/9/1991 6:21:12 AM",
     "13/12/1990 4:14:10 PM",
     "23/6/1992 8:11:26 PM",
@@ -271,7 +271,7 @@ const TEST_DATAFRAMES = {
     "17/3/1993 10:18:18 PM",
     "6/11/1994 12:16:51 AM"
   ]},
-  DATETIME_UTC: { dates: [
+  DATETIME_UTC: { date: [
     "6/9/1991 6:21:12 AM GMT+0200",
     "13/12/1990 4:14:10 PM GMT-0400",
     "23/6/1992 8:11:26 PM GMT-0300",
@@ -554,7 +554,7 @@ let _operations = {
       dataframe: TEST_DATAFRAMES.NUMBER,
       payload: {
         columns: ['number'],
-        value: '100.5 + ROUND(SQRT(number*2))'
+        value: '100.5 + ROUND(SQRT(number*2),2)'
       }
     },
     doc: {
@@ -572,11 +572,19 @@ let _operations = {
       payload: {
         columns: ['firstname'],
         output_cols: ['name']
-      }
+      },
+      screenshotFields: true
     },
     doc: {
       title: 'Rename',
-      description: 'Renames the selected column\(s\).'
+      description: 'Renames the selected column\(s\).',
+      fields: [
+        {
+          name: 'Column name\(s\)',
+          type: 'Text field',
+          description: 'New name of the column\(s\).'
+        }
+      ]
     }
   },
 
@@ -3144,7 +3152,7 @@ export const commandsHandlers = {
     payload: (columns, payload = {}) => {
       return {
         columns,
-        current_format: payload.columnDateFormats[0] || "Y-m-d",
+        current_format: (payload.columnDateFormats ? payload.columnDateFormats[0] : undefined) || "Y-m-d",
         output_format: "",
         preview: {
           type: "transformFormat",
@@ -3169,7 +3177,7 @@ export const commandsHandlers = {
       return {
         columns,
         output_cols: columns.map((e) => ""),
-        current_format: payload.columnDateFormats[0] || "Y-m-d",
+        current_format: (payload.columnDateFormats ? payload.columnDateFormats[0] : undefined) || "Y-m-d",
         output_type: payload.output_type || "year",
         preview: {
           type: "TIME",
@@ -4035,7 +4043,7 @@ export const operationSections = (() => {
       if (!doc.title) {
         if (operation.text && typeof operation.text === "string") {
           doc.title = operation.text;
-        } else if (handler.dialog.title && typeof handler.dialog.title === "string") {
+        } else if (handler && handler.dialog && handler.dialog.title && typeof handler.dialog.title === "string") {
           doc.title = handler.dialog.title;
         }
       }
@@ -4043,10 +4051,6 @@ export const operationSections = (() => {
       let dialogFields = (handler && handler.dialog && handler.dialog.fields && typeof handler.dialog.fields !== "function") ? handler.dialog.fields : false;
 
       if (doc.fields && doc.fields.length) {
-
-        if (handler && handler.dialog && handler.dialog.output_cols && doc.fields[0].name !== DOC_OUTPUT_COLUMNS_FIELD.name) {
-          doc.fields = [ DOC_OUTPUT_COLUMNS_FIELD, ...doc.fields ];
-        }
 
         doc.fields = doc.fields.map(field => {
           if (field.key) {

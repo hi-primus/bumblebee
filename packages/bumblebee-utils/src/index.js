@@ -715,6 +715,18 @@ export const objectToPythonDictString = (object) => {
 
 // constants
 
+export const SECTION_NAMES = {
+  JOIN: 'Join',
+  ROWS: 'Rows functions',
+  COLUMNS: 'Column managing functions',
+  TRANSFORMATIONS: 'Transformation functions',
+  STRING: 'String functions',
+  MATH: 'Math functions',
+  TRIGONOMETRIC: 'Trigonometric functions',
+  TIME: 'Time and Date',
+  ML: 'Machine Learning'
+}
+
 export const ENGINES = {
   'dask': 'Dask',
   'dask_cudf': 'Dask-cuDF',

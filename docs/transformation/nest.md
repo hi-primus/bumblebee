@@ -8,7 +8,5 @@ Joins the selected columns into one column using a separator.
 | Separator | Text field |  |
 | Output column name | Text field |  |
 ## Example
-### Fields
 ![Nest fields](../../docs/screenshots/form/nest.png)
-### Preview
 ![Nest example](../../docs/screenshots/table/nest.png)

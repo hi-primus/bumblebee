@@ -7,7 +7,5 @@ Gets a random sample of the dataset.
 | :--- | :--- | :--- |
 | Number of samples | Numeric |  |
 ## Example
-### Fields
 ![Random sampling fields](../../docs/screenshots/form/sample_n.png)
-### Preview
 ![Random sampling example](../../docs/screenshots/table/sample_n.png)

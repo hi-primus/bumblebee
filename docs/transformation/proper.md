@@ -7,5 +7,4 @@ Converts all the words from every value of the selected columns into proper case
 | :--- | :--- | :--- |
 | Output column name(s) | Text field | Name of the output column(s), if left blank will save the result on the same column. |
 ## Example
-### Preview
 ![Proper case example](../../docs/screenshots/table/proper.png)
