@@ -1114,12 +1114,13 @@ export default {
 
   async mounted () {
 
+    this.fixScroll();
     setTimeout(async () => {
-      await this.checkVisibleColumns()
-      await this.scrollCheck(true)
-      this.mustUpdateRows = true
-      this.updateRows()
-    }, 1000);
+      await this.checkVisibleColumns();
+      await this.scrollCheck(true);
+      this.mustUpdateRows = true;
+      this.updateRows();
+    }, 50);
 
   },
 
@@ -1894,6 +1895,18 @@ export default {
       }
 
     }, 80),
+
+    async fixScroll () {
+      this.$refs['BbContainer'].scroll(0,0);
+      let container = this.$refs['BbTableContainer'];
+      if (container) {
+        let left = container.scrollLeft;
+        container.scroll(left+1,0);
+        setTimeout(() => {
+          container.scroll(left,0);
+        }, 50);
+      }
+    },
 
     horizontalScrollCheckUp () {
       var topScrollLeft = this.$refs['BbTableTopContainer'].scrollLeft;
