@@ -1,5 +1,5 @@
 root: ./docs/
 
 ​structure:
-    readme: ./hi-bumblebee.md
+    readme: ./README.md
     summary: ./SUMMARY.md​

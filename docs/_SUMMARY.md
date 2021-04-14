@@ -1,6 +1,6 @@
 # Table of contents
 
-* [Hi Bumblebee!](./hi-bumblebee.md)
+* [Hi Bumblebee!](./README.md)
 
 ## Install Bumblebee
 
