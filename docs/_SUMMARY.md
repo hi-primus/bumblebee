@@ -1,6 +1,6 @@
 # Table of contents
 
-* [Hi Bumblebee!](./hi-bumblebee.md)
+* [Hi Bumblebee!](./README.md)
 
 ## Install Bumblebee
 
@@ -11,6 +11,14 @@
 
 * [Setting up your first workspace](quick-start/setup-workspace.md)
 
+## Bumblebee interface
+
+* [Loading a Dataset](bumblebee-interface/loading-a-dataset.md)
+* [Saving a Dataset](bumblebee-interface/saving-a-dataset.md)
+* [Profile](bumblebee-interface/profile.md)
+* [Table](bumblebee-interface/table.md)
+* [Columns](bumblebee-interface/columns.md)
+
 ## Transformations
 
-{{transformations}}
+{{transformation}}

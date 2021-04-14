@@ -1,4 +1,4 @@
-import { commandsHandlers } from '../../packages/web/utils/operations.js'
+import { commandsHandlers, operations } from '../../packages/web/utils/operations.js'
 
 /* page */
 
@@ -27,13 +27,18 @@ Cypress.Commands.add('fieldField', (key, value, field) => {
     .clear({force: true})
     .type(value, { parseSpecialCharSequences: true, force: true })
     .should('have.value', value)
+  })
+
+  Cypress.Commands.add('field-suggestionsField', (key, value, field) => {
+  cy.fieldField(`${key} input`, value, field)
+})
+
+Cypress.Commands.add('field-suggestionsField', (key, value, field) => {
+  cy.fieldField(`${key} input`, value, field)
 })
 
 Cypress.Commands.add('numberField', (key, value, field) => {
-  cy.get('#field-'+key)
-    .clear({force: true})
-    .type(value, { parseSpecialCharSequences: true, force: true })
-    .should('have.value', value)
+  cy.fieldField(key, value, field)
 })
 
 Cypress.Commands.add('chipsField', (key, value, field) => {
@@ -72,7 +77,7 @@ Cypress.Commands.add('cancelCommand', (type = 'commands') => {
     if (!container) {
       let toolbarBtn = body.find('#toolbar-icon-cells')[0]
       if (toolbarBtn && !toolbarBtn.disabled && !toolbarBtn.classList.contains('active')) {
-        cy.get('#toolbar-icon-cells').click()
+        cy.get('#toolbar-icon-cells').click({force: true})
       }
     }
 
@@ -146,11 +151,10 @@ Cypress.Commands.add('testOperation', (operation, enableScreenshots) => {
 
   let dataframes = operation.test ? operation.test.dataframes : []
 
-
   if (dataframes.length) {
 
     cy.window().then((win) => {
-      win.showCreate = true
+      win.showCreate = (operation.section !== 'LOADSAVE' && operation.group !== 'SAVE')
     })
 
     for (let i = 0; i < dataframes.length; i++) {
@@ -184,7 +188,7 @@ Cypress.Commands.add('testOperation', (operation, enableScreenshots) => {
 
   let commandHandler = commandsHandlers[operation.command] || commandsHandlers[operation.generator]
 
-  if (commandHandler && commandHandler.dialog && commandHandler.dialog.fields) {
+  if (commandHandler && commandHandler.dialog) {
 
     for (let i = 0; i < /*payloads.length*/ 1; i++) {
 
@@ -202,9 +206,13 @@ Cypress.Commands.add('testOperation', (operation, enableScreenshots) => {
         cy.allDone({timeout: 30000})
       }
 
-      let columns = payload ? payload.columns : false
+      let columns = payload ? payload.columns : undefined
 
-      let columnElements = columns ? columns.map(column => `#bb-table-${column} > .column-header-cell`) : [`.bb-table-h-cell:first-child`]
+      let columnElements = []
+
+      if (operations.group !== 'LOAD' && columns !== false) {
+        columnElements = columns ? columns.map(column => `#bb-table-${column} > .column-header-cell`) : [`.bb-table-h-cell:first-child`];
+      }
 
       for (let i = 0; i < columnElements.length; i++) {
         const columnElement = columnElements[i]
@@ -262,7 +270,7 @@ Cypress.Commands.add('testOperation', (operation, enableScreenshots) => {
       cy.get(menuItem || toolbarItem)
         .click()
 
-      let hasFields = false
+      let hasFields = operation.test.screenshotFields;
 
       if (payload) {
         for (const key in payload) {
@@ -278,7 +286,7 @@ Cypress.Commands.add('testOperation', (operation, enableScreenshots) => {
               default:
                 hasFields = true
                 let field = commandHandler.dialog.fields.find((field) => field.key === key)
-                if (field) {
+                if (field && cy[`${field.type}Field`]) {
                   cy[`${field.type}Field`](key, value, field)
                 }
                 break
@@ -287,12 +295,11 @@ Cypress.Commands.add('testOperation', (operation, enableScreenshots) => {
         }
       }
 
-
-
       if (enableScreenshots) {
         let preview = commandHandler.payload([""]).preview
-        cy.wait(1000)
-        cy.get('.v-footer > .layout').click({force: true})
+        cy.allDone({timeout: 30000})
+        cy.get('.v-progress-circular').click({multiple: true, force: true})
+        cy.allDone({timeout: 30000})
         if (hasFields) {
           cy.get('#operation-form')
             .invoke('css', { 'height': 'auto', 'padding-bottom': '18px' })

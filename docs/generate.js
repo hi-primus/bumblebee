@@ -1,10 +1,11 @@
 import { operations } from '../packages/web/utils/operations.js'
+import { SECTION_NAMES } from '../packages/bumblebee-utils/src/index.js'
 
 const glob = require("glob")
 const path = require("path")
 const fs = require('fs');
 
-let docOperations = operations.filter(operation => operation.doc)
+let docOperations = operations.filter(operation => operation.doc);
 
 function getGeneratedScreenshot (name, type) {
   let files = glob.sync(`./docs/screenshots/*/${type}/${name}--0.png`)
@@ -36,9 +37,50 @@ function createFile (name, str) {
   return `${fileName}`
 }
 
-function generateSummary (array) {
+function _summary (obj, str = '', level = 0) {
+  if (typeof obj === "string") {
+    str += obj;
+    str += '\n';
+  } else {
+    for (const key in obj) {
+      const element = obj[key];
+      if (typeof element !== "string") {
+        for (let i = 0; i < level; i++) {
+          str += '  ';
+        }
+        str += '* ';
+        str += SECTION_NAMES[key];
+        str += '\n';
+      }
+      str = _summary(element, str, level+1);
+    }
+  }
+
+  return str
+}
+
+function generateSummary (summary) {
+
+  let str = _summary(summary);
+
+  // for (const sectionKey in summary) {
+  //   const section = summary[sectionKey];
+  //   str += `* ${sectionKey}\n`;
+  //   if (typeof section === "string") {
+  //     str += `${section}\n`;
+  //   } else {
+  //     for (const itemKey in section) {
+  //       const element = section[itemKey];
+  //       if (typeof element === "string") {
+  //         str += `${element}\n`;
+  //       } else {
+  //         for const
+  //       }
+  //     }
+  //   }
+  // }
   var text = fs.readFileSync('docs/_SUMMARY.md','utf8')
-  text = text.replace('{{transformations}}', array.join('\n'))
+  text = text.replace('{{transformation}}', str)
   createFile(`SUMMARY`, text)
 }
 
@@ -62,7 +104,7 @@ const app = function () {
 
     if (location) {
       str += `\n## Location`;
-      str += `\n![${doc.title} on the interface](../.${location})`
+      str += `\n![${doc.title} on the interface](../.${location})`;
     } else {
       console.warn(`No location screenshot found for ${operation.command}`)
     }
@@ -82,17 +124,25 @@ const app = function () {
     if (table) {
       str += `\n## Example`;
       let form = getScreenshot(operation.command, 'form');
-      if (form) {
-        str += `\n### Fields`;
-        str += `\n![${doc.title} fields](../.${form})`
+      if (form) {;
+        str += `\n![${doc.title} fields](../.${form})`;
       }
-      str += `\n### Preview`;
-      str += `\n![${doc.title} example](../.${table})`
+      str += `\n![${doc.title} example](../.${table})`;
     } else {
-      console.warn(`No table screenshot found for ${operation.command}`)
+      console.warn(`No table screenshot found for ${operation.command}`);
     }
-    let fileName = createFile(`transformations/${operation.command}`, str);
-    summary.push(`* [${doc.title}](${fileName})`)
+
+    if (operation.section !== 'LOADSAVE') {
+      let fileName = createFile(`transformation/${operation.command}`, str);
+      summary[operation.section] = summary[operation.section] || {};
+      if (operation.group) {
+        summary[operation.section][operation.group] = summary[operation.section][operation.group] || {};
+        summary[operation.section][operation.group][operation.command] = `    * [${doc.title}](${fileName})`;
+      } else {
+        summary[operation.section][operation.command] = `  * [${doc.title}](${fileName})`;
+      }
+    }
+
   });
 
   generateSummary(summary)
