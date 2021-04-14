@@ -1,9 +1,10 @@
 $icon-size: 24px;
-$toolbar-height: ($icon-size*2) + 1px;
+$toolbar-height: ($icon-size*2);
 $not-table-height: $toolbar-height + 79px;
 $scrollbar-width: 12px;
 $table-height: calc(100vh - #{$not-table-height});
 
+$plots-height: 122px;
 
 html:root {
 	overflow-y: auto;
@@ -1754,7 +1755,7 @@ $editor-top-padding: 4px;
     overflow-y: scroll;
     scrollbar-width: none;
     overscroll-behavior-x: contain;
-    min-height: 1000px;
+    min-height: $table-height;
     flex-shrink: 0;
     flex-basis: auto;
     pointer-events: none;
@@ -1889,7 +1890,7 @@ $editor-top-padding: 4px;
     // scrollbar-width: none;
     overscroll-behavior-x: contain;
     position: relative;
-    margin-top: calc(122px - 1000px);
+    margin-top: calc(#{$plots-height + $not-table-height} - 100vh);
     height: 100%;
 
     .bb-table-i {
@@ -3291,7 +3292,8 @@ $editor-top-padding: 4px;
 .resize-handle {
   position: absolute;
   width: 10px;
-  height: calc(100vh - 138px);
+  /* height */
+  height: calc(100vh - #{$not-table-height + 110px});
   right: -5px;
   top: 0;
   z-index: 1;

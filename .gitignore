@@ -133,3 +133,7 @@ cypress/integration/examples
 
 # docs
 docs/screenshots/*.*
+<<<<<<< HEAD
+
+=======
+>>>>>>> docs
