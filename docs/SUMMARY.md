@@ -47,6 +47,7 @@
     * [Proper case](transformation/proper.md)
     * [Remove accents](transformation/normalize_chars.md)
     * [Remove special chars](transformation/remove_special_chars.md)
+    * [Normalize white spaces](transformation/normalize_spaces.md)
     * [Left (substring)](transformation/left_string.md)
     * [Right (substring)](transformation/right_string.md)
     * [Mid (substring)](transformation/mid_string.md)

@@ -221,6 +221,14 @@ const TEST_DATAFRAMES = {
     "    Star ",
     "[ Beatriz ]"
   ]},
+  NORMALIZE_SPACES: { string: [
+    "Joaquin   Mcclendon",
+    " Howard      Mooneyhan  ",
+    "Melia  Vidal",
+    "Angelo   Sideris  ",
+    "   Star  Mendel    ",
+    "Beatriz  Bonier  "
+  ]},
   STRING: { string: [
     "Joaquin",
     "Howard",
@@ -815,6 +823,17 @@ let _operations = {
     }
   },
 
+  normalize_spaces: {
+    text: 'Normalize white spaces', generator: 'GENERIC', path: 'TRANSFORMATIONS/STRING',
+    payload: { title: 'Normalize white spaces', content: 'Normalize white spaces in' },
+    test: {
+      dataframe: TEST_DATAFRAMES.NORMALIZE_SPACES
+    },
+    doc: {
+      description: 'Replaces multiple spaces with a single white space in every string value of the selected column\(s\).'
+    }
+  },
+
   left_string: {
     text: 'Left',
     generator: 'SUBSTRING',
@@ -830,6 +849,7 @@ let _operations = {
       description: 'Extracts a given number of characters from the values of a string and outputs the result to a new column or to the same input column.\nThis operation is useful for quickly extracting data from fixed-length values.',
     }
   },
+
   right_string: {
     text: 'Right',
     generator: 'SUBSTRING',
@@ -845,6 +865,7 @@ let _operations = {
       description: 'Extracts a given number of characters from the values of a string and outputs the result to a new column or to the same input column.\nThis operation is useful for quickly extracting data from fixed-length values.',
     }
   },
+
   mid_string: {
     text: 'Mid',
     path: 'TRANSFORMATIONS/STRING',
@@ -860,6 +881,7 @@ let _operations = {
       description: 'Extracts a given number of characters from the values of a string and outputs the result to a new column or to the same input column.\nThis operation is useful for quickly extracting data from fixed-length values.',
     }
   },
+
   pad_string: {
     text: 'Pad string',
     path: 'TRANSFORMATIONS/STRING',

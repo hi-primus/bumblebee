@@ -2130,6 +2130,7 @@ $editor-top-padding: 4px;
     &:not(:first-child) {
       border-top-style: solid;
       border-top-width: 1px;
+      white-space: pre;
     }
     .cell-value {
       width: 28rem;
