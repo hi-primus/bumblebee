@@ -134,7 +134,7 @@ def _out_result(_callback = None):
         try:
             _res = {'key': fut.key, 'status': fut.status}
             if fut.status == "error":
-                _res.update({'error': fut.exception()})
+                _res.update({'error': str(fut.exception())})
             elif fut.status == "finished":
                 if _callback:
                     _res.update({'result': _callback(fut)})

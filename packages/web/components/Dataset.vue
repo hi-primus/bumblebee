@@ -838,9 +838,11 @@ export default {
                 }
               }
 
-
-
               var pResponse = await this.evalCode(pCodePayload)
+
+              if (pResponse.data.status === 'error') {
+                throw pResponse.data.error || new Error('Unknown error');
+              }
 
               var profile = parseResponse(pResponse.data.result)
 
@@ -853,6 +855,7 @@ export default {
         } catch (err) {
           let _error = printError(err);
           this.$store.commit('setPreviewInfo', { error: _error });
+          this.$store.commit('mutation', {mutate: 'loadingStatus', payload: false })
         }
       },
     },
