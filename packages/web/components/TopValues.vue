@@ -9,9 +9,7 @@
       <div :style="{'width': normVal(item.count)+'%' }" :title="item.value" class="item-bar">
       </div>
       <div class="item-value" :title="item.value">
-        <span>
-          {{ item.value | varCheck }}
-        </span>
+        <span>{{ item.value | varCheck }}</span>
       </div>
       <div class="item-count" :title="item.count | varCheck">
         <span>{{ item.count | varCheck }}</span>
