@@ -605,6 +605,20 @@ export const transformDateFromPython = (string) => {
   return ''
 }
 
+const tagsToReplace = {
+  '&': '&amp;',
+  '<': '&lt;',
+  '>': '&gt;'
+};
+
+const replaceTag = (tag) => {
+  return tagsToReplace[tag] || tag;
+}
+
+export const replaceTags = (string) => {
+  return string.replace(/[&<>]/g, replaceTag);
+}
+
 export const engineValid = (key, engine) => {
   return !INIT_PARAMS[key] || (!INIT_PARAMS[key].engines || INIT_PARAMS[key].engines.includes(engine))
 };
@@ -1276,6 +1290,7 @@ export default {
   getCodePayload,
   transformDateToPython,
   transformDateFromPython,
+  replaceTags,
   getEngines,
   getDefaultParams,
   engineValid,
