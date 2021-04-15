@@ -16,6 +16,8 @@ import {
   objectMap,
   objectMapFromEntries,
   objectToPythonDictString,
+  URL_FUNCTIONS,
+  EMAIL_FUNCTIONS,
   TYPES_NAMES,
   TIME_NAMES,
 } from "bumblebee-utils";
@@ -49,6 +51,11 @@ export const operationGroups = {
   TIME: {
     icons: [{ icon: 'calendar_today' }],
     text: 'Datetime functions',
+    disabled: ($nuxt)=>!($nuxt.selectionType=='columns' && $nuxt.selectedColumns.length>0)
+  },
+  URLEMAIL: {
+    icons: [{ icon: 'mdi-web' }],
+    text: 'URL and Email functions',
     disabled: ($nuxt)=>!($nuxt.selectionType=='columns' && $nuxt.selectedColumns.length>0)
   },
   // CAST: {
@@ -287,6 +294,38 @@ const TEST_DATAFRAMES = {
     "17/3/1993 10:18:18 PM GMT-0300",
     "6/11/1994 12:16:51 AM GMT+0400"
   ]},
+  EMAIL: { email: [
+    "joaquin12@enterprise.com",
+    "howard_10@mailmail.net",
+    "melia.26@hi-bumblebee.com",
+    "a4ngelo@oasis.es",
+    "star__18@lorem.org",
+    "beatriz051@linealsecurity.org"
+  ]},
+  URL: { url: [
+    "socialapp.com/settings?dark=1&theme=new",
+    "https://www.enterprise.com/community/post/833836762121994814/Welcome",
+    "https://docs.app.com/@hi-bumblebee/functions/extract#fields",
+    "meet.app.com/asc-wwpg-xbp?video=1",
+    "lorem.org",
+    "s3://linealsecurity/files"
+  ]},
+  URL_PORT: { addresses: [
+    "113.82.189.155:21",
+    "localhost:3000",
+    "6.34.34.236",
+    "86.113.152.66:80",
+    "114.70.62.68:8888",
+    "193.196.35.203"
+  ]},
+  HTML: { content: [
+    `<div>Go <a href="#">back</a></div>`,
+    `<p>In <a href="/wiki/Japan" title="Japan">Japan</a>, the Autobots are called "<b>Cybertrons</b>"</p>`,
+    `<div class="pure-u-1 pure-u-md-1-2"><h2 id="-round-install"><i class="fas fa-laptop-code" aria-hidden="true"></i> Round Install</h2></div>`,
+    `<p>You can get a minimal round installation with <strong><a href="https://round.io/miniround.html" target="_blank">Miniround</a></strong> or get the full installation with <strong><a href="https://www.fullround.com/download" target="_blank">Full Round</a></strong>.</p>`,
+    `<a href="http://ar.mauris.nec/">&#8235;العربية</a></span>     <a href="http://cs.mauris.nec/">Česky</a> <a href="http://da.mauris.nec/">Dansk</a> <a href="http://nl.mauris.nec/">Nederlands</a> <a class="zz" href="http://www.mauris.nec/">English</a>`,
+    `<h3 class="LC20lb DKV0Md">Bumblebee - Data Cleaning Platform</h3><div class="TbwUpd NJjxre"><cite class="iUh30 Zu0yb tjvcx">https://hi-bumblebee.com</cite></div>`
+  ]}
 };
 
 const DOC_OUTPUT_COLUMNS_FIELD = {
@@ -791,7 +830,7 @@ let _operations = {
 
   normalize_chars: {
     text: 'Remove accents', generator: 'GENERIC', path: 'TRANSFORMATIONS/STRING',
-    payload: { title: 'Remove accents', content: 'Remove accents in' },
+    payload: { title: 'Remove accents', content: 'Remove accents', connector: 'in' },
     test: {
       dataframe: TEST_DATAFRAMES.NORMALIZE
     },
@@ -802,7 +841,7 @@ let _operations = {
 
   remove_special_chars: {
     text: 'Remove special chars', generator: 'GENERIC', path: 'TRANSFORMATIONS/STRING' ,
-    payload: { title: 'Remove special chars', content: 'Remove special chars in' },
+    payload: { title: 'Remove special chars', content: 'Remove special chars', connector: 'in' },
     test: {
       dataframe: TEST_DATAFRAMES.SPECIAL
     },
@@ -817,7 +856,7 @@ let _operations = {
 
   trim: {
     text: 'Trim white space', generator: 'GENERIC', path: 'TRANSFORMATIONS/STRING',
-    payload: { title: 'Trim white spaces', content: 'Trim white spaces in' },
+    payload: { title: 'Trim white spaces', content: 'Trim white spaces', connector: 'in' },
     test: {
       dataframe: TEST_DATAFRAMES.TRIM
     }
@@ -825,7 +864,7 @@ let _operations = {
 
   normalize_spaces: {
     text: 'Normalize white spaces', generator: 'GENERIC', path: 'TRANSFORMATIONS/STRING',
-    payload: { title: 'Normalize white spaces', content: 'Normalize white spaces in' },
+    payload: { title: 'Normalize white spaces', content: 'Normalize white spaces', connector: 'in' },
     test: {
       dataframe: TEST_DATAFRAMES.NORMALIZE_SPACES
     },
@@ -1178,6 +1217,56 @@ let _operations = {
       }
     }]
   }),
+
+  ...objectMapFromEntries(URL_FUNCTIONS,(key, name)=>{
+    return [key, {
+      command: key,
+      generator: 'GENERIC',
+      payload: { title: `Get ${name.toLowerCase()}`, content: name },
+      text: name,
+      path: 'TRANSFORMATIONS/URLEMAIL',
+      test: {
+        dataframe: key === 'port' ? TEST_DATAFRAMES.URL_PORT : TEST_DATAFRAMES.URL
+      },
+      doc: {
+        description: `Extracts the ${name} from URL values in the selected column\(s\).`
+      }
+    }]
+  }),
+
+  'TRANSFORMATIONS/URLEMAIL/divider/0': {divider: true, path: 'TRANSFORMATIONS/URLEMAIL'},
+
+  ...objectMapFromEntries(EMAIL_FUNCTIONS,(key, name)=>{
+    return [key, {
+      command: key,
+      generator: 'GENERIC',
+      payload: { title: `Get ${name.toLowerCase()}`, content: name },
+      text: name,
+      path: 'TRANSFORMATIONS/URLEMAIL',
+      test: {
+        dataframe: TEST_DATAFRAMES.EMAIL
+      },
+      doc: {
+        description: `Extracts the ${name} from Email values in the selected column\(s\).`
+      }
+    }]
+  }),
+
+  'TRANSFORMATIONS/URLEMAIL/divider/1': {divider: true, path: 'TRANSFORMATIONS/URLEMAIL'},
+
+  strip_html: {
+    command: 'strip_html',
+    generator: 'GENERIC',
+    payload: { title: 'Strip HTML', content: 'Strip HTML', connector: 'from' },
+    text: 'Strip HTML',
+    path: 'TRANSFORMATIONS/URLEMAIL',
+    test: {
+      dataframe: TEST_DATAFRAMES.HTML
+    },
+    doc: {
+      description: 'Removes HTML tags and decode HTML entities from every string value in the selected column\(s\).'
+    }
+  },
 
   sample_n: {
     text: 'Random sampling',
@@ -1565,8 +1654,8 @@ export const commandsHandlers = {
           _connection: currentCommand._connection,
         });
 
-        if (response.data.status === "error") {
-          throw response.data.error;
+        if (!response || !response.data || response.data.status === "error") {
+          throw response.data ? (response.data.error || response.data) : response;
         }
 
         var tables = response.data.result;
@@ -2755,7 +2844,7 @@ export const commandsHandlers = {
       if (parameters.length) {
         using = " using " + parameters.join(", ");
       }
-      return `<b>${payload.content || payload.command}</b> ${multipleContent(
+      return `<b>${payload.content || payload.command}</b> ${payload.connector ? payload.connector+' ' : ''}${multipleContent(
         [payload.columns],
         "hl--cols"
       )}${using}`;
@@ -3034,12 +3123,7 @@ export const commandsHandlers = {
 
         var response = await methods.evalCode(codePayload);
 
-        if (
-          !response ||
-          !response.data ||
-          !response.data.result ||
-          response.data.status == "error"
-        ) {
+        if (!response || !response.data || !response.data.result || response.data.status == "error") {
           throw response;
         }
 
@@ -4128,7 +4212,7 @@ export const operationSections = (() => {
 export const operations = [].concat.apply([], Object.values(operationSections));
 
 export const cypressOperationTests = (section, group, _operation = true, username = 'admin', password = 'admin', enableScreenshots = true) => {
-  context(`Check operations from ${section} section` + ((typeof group == 'string') ? `and ${group} group` : ''), () => {
+  context(`Check operations from ${section} section` + ((typeof group == 'string') ? ` and ${group} group` : ''), () => {
 
     beforeEach(() => {
       Cypress.Cookies.preserveOnce('x-access-token')

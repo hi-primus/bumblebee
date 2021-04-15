@@ -738,6 +738,7 @@ export const SECTION_NAMES = {
   MATH: 'Math functions',
   TRIGONOMETRIC: 'Trigonometric functions',
   TIME: 'Time and Date',
+  URLEMAIL: 'Web related functions',
   ML: 'Machine Learning'
 }
 
@@ -1220,6 +1221,20 @@ export const SOURCE_TYPES_PARAMS = {
 
 export const ALL_SOURCE_TYPES = [ ...ALL_CONNECTION_TYPES, ...ALL_DATABASE_TYPES ]
 
+export const URL_FUNCTIONS = {
+  "domain": "Domain",
+  "subdomain": "Subdomain",
+  "url_scheme": "Url scheme",
+  "port": "Port",
+  "url_path": "Url path",
+  "url_params": "Url params"
+}
+
+export const EMAIL_FUNCTIONS = {
+  "email_domain": "Email domain",
+  "email_username": "Email username"
+}
+
 export const RESPONSE_MESSAGES = {
   'login': {
     201: 'Ok',
@@ -1316,6 +1331,8 @@ export default {
   DATABASE_TYPES_PARAMS,
   SOURCE_TYPES,
   ALL_SOURCE_TYPES,
+  URL_FUNCTIONS,
+  EMAIL_FUNCTIONS,
   SOURCE_TYPES_PARAMS,
   RESPONSE_MESSAGES,
   INTERCOM_APP_ID,

@@ -93,6 +93,16 @@
     * [Day number of year](transformation/date_extract_dayNumber.md)
     * [Weekday of year (Mon as 1st)](transformation/date_extract_weekNumberM.md)
     * [Weekday of year (Sun as 1st)](transformation/date_extract_weekNumberS.md)
+  * Web related functions
+    * [Domain](transformation/domain.md)
+    * [Subdomain](transformation/subdomain.md)
+    * [Url scheme](transformation/url_scheme.md)
+    * [Port](transformation/port.md)
+    * [Url path](transformation/url_path.md)
+    * [Url params](transformation/url_params.md)
+    * [Email domain](transformation/email_domain.md)
+    * [Email username](transformation/email_username.md)
+    * [Strip HTML](transformation/strip_html.md)
   * Machine Learning
     * [Random sampling](transformation/sample_n.md)
 
