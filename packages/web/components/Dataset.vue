@@ -840,6 +840,11 @@ export default {
 
               var pResponse = await this.evalCode(pCodePayload)
 
+              if (!pResponse || !pResponse.data) {
+                console.error(pResponse);
+                throw new Error('Unknown error');
+              }
+
               if (pResponse.data.status === 'error') {
                 throw pResponse.data.error || new Error('Unknown error');
               }

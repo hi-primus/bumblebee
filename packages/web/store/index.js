@@ -592,11 +592,10 @@ export const actions = {
           )
         }
       } else {
-        console.debug('[DEBUG][RESULT]', response.code, response.data.result || response.data)
+        console.debug('[DEBUG][RESULT]', response.code, response.data ? (response.data.result || response.data) : response)
       }
 
-
-      if (response.data.status === 'error') {
+      if (!response || !response.data || response.data.status === 'error') {
         throw response
       }
 
@@ -1597,7 +1596,7 @@ export const actions = {
 
     var response = await dispatch('evalCode', { socketPost, codePayload: { command: 'execute', dfName }});
 
-    if (response.data.status === "error") {
+    if (!response || !response.data || response.data.status === "error") {
       console.warn('[DEBUG] Execute unsuccessful', dfName);
       return false
     }

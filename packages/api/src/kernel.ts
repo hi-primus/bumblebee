@@ -414,7 +414,7 @@ export const createConnection = async function (sessionId) {
 
               kernels[sessionId].promises[msg_id].resolve(response);
 
-            } else if (kernels[sessionId].promises[msg_id].resolveAsync) {
+            } else if (['finished', 'error'].includes(response?.status) && kernels[sessionId].promises[msg_id].resolveAsync) {
 
               kernels[sessionId].promises[msg_id].resolveAsync(response)
 
