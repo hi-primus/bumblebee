@@ -166,7 +166,11 @@ table.details-table {
     span {
       background-color: rgba(255,255,255,0.21);
       line-height: 28px;
-      display: inline-block;
+      display: block;
+      white-space: pre;
+      max-width: 350px;
+      text-overflow: ellipsis;
+      overflow: hidden;
     }
     .item-value span {
       padding: 0 20px 0 8px;

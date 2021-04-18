@@ -390,7 +390,7 @@ export const createConnection = async function (sessionId) {
                 error: 'Message type error',
                 message: message,
               });
-              response = handleResponse(message) ;
+              response = handleResponse(message);
             }
 
 						if (!kernels[sessionId]) {
@@ -414,7 +414,7 @@ export const createConnection = async function (sessionId) {
 
               kernels[sessionId].promises[msg_id].resolve(response);
 
-            } else if (response?.status == "finished" && kernels[sessionId].promises[msg_id].resolveAsync) {
+            } else if (['finished', 'error'].includes(response?.status) && kernels[sessionId].promises[msg_id].resolveAsync) {
 
               kernels[sessionId].promises[msg_id].resolveAsync(response)
 

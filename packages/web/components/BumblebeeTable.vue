@@ -497,7 +497,8 @@ import {
   cancellablePromise, throttle,
   asyncDebounce, debounce, optimizeRanges,
   escapeQuotes, namesToIndices,
-  getSelectedText, getPropertyAsync
+  getSelectedText, getPropertyAsync,
+  replaceTags
 } from 'bumblebee-utils'
 
 var doubleClick = false
@@ -1677,7 +1678,7 @@ export default {
 
     getCellHtml (value) {
       if (value) {
-        return value
+        return replaceTags(value)
       } else if (value==='') {
         return '<span class="null-cell">Empty</span>'
       } else if (value===null) {
@@ -1694,12 +1695,12 @@ export default {
       } else if (!value) {
         return value
       }
-      var _value = value
+      var _value = replaceTags(value)
       try {
         if (hlv && hlv.length) {
           for (let i = hlv.length - 1; i >= 0; i--) {
             const [a,b] = hlv[i]
-            _value = value.substring(0,a)+`<span class="hlt--${color}">`+value.substring(a,b)+'</span>'+value.substring(b)
+            _value = _value.substring(0,a)+`<span class="hlt--${color}">`+value.substring(a,b)+'</span>'+value.substring(b)
           }
         }
         return _value

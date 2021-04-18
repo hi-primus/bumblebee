@@ -428,7 +428,7 @@ export default {
 
               if (window.promises[key].isAsync) {
 
-                if (payload.data.status == "pending"){
+                if (payload.data && payload.data.status == "pending"){
                   if (key !== payload.data.key) {
                     window.promises[payload.data.key] = window.promises[key]
                     delete window.promises[key]
