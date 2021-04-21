@@ -346,7 +346,7 @@ const DOC_FIELD_TYPES = {
 
 const DOC_GENERATOR = {
   TRIGONOMETRIC: function (operation) {
-    let name = operation.payload.content.substr(4);
+    let name = operation.payload.text.substr(4);
     return  {
       title: name,
       description: `Gets the ${name.toLowerCase()} from the numeric values in the selected column\(s\).`
@@ -360,7 +360,7 @@ const DOC_GENERATOR = {
     }
   },
   MATH: function (operation) {
-    let name = operation.payload.content;
+    let name = operation.payload.text;
     return  {
       title: name,
       description: `Gets the ${name.toLowerCase()} from the numeric values in the selected column\(s\).`
@@ -794,7 +794,7 @@ let _operations = {
 
   lower: {
     text: 'To lower case', generator: 'GENERIC', path: 'TRANSFORMATIONS/STRING',
-    payload: { title: 'Convert to lowercase', content: 'Lowercase' },
+    payload: { title: 'Convert to lowercase', text: 'Lowercase' },
     test: {
       dataframe: TEST_DATAFRAMES.CASE
     },
@@ -806,7 +806,7 @@ let _operations = {
 
   upper: {
     text: 'To upper case', generator: 'GENERIC', path: 'TRANSFORMATIONS/STRING',
-    payload: { title: 'Convert to uppercase', content: 'Uppercase' },
+    payload: { title: 'Convert to uppercase', text: 'Uppercase' },
     test: {
       dataframe: TEST_DATAFRAMES.CASE
     },
@@ -818,7 +818,7 @@ let _operations = {
 
   proper: {
     text: 'Proper', generator: 'GENERIC', path: 'TRANSFORMATIONS/STRING' ,
-    payload: { title: 'Convert to proper case', content: 'Proper case' },
+    payload: { title: 'Convert to proper case', text: 'Proper case' },
     test: {
       dataframe: TEST_DATAFRAMES.CASE
     },
@@ -830,7 +830,7 @@ let _operations = {
 
   normalize_chars: {
     text: 'Remove accents', generator: 'GENERIC', path: 'TRANSFORMATIONS/STRING',
-    payload: { title: 'Remove accents', content: 'Remove accents', connector: 'in' },
+    payload: { title: 'Remove accents', text: 'Remove accents', connector: 'in' },
     test: {
       dataframe: TEST_DATAFRAMES.NORMALIZE
     },
@@ -841,7 +841,7 @@ let _operations = {
 
   remove_special_chars: {
     text: 'Remove special chars', generator: 'GENERIC', path: 'TRANSFORMATIONS/STRING' ,
-    payload: { title: 'Remove special chars', content: 'Remove special chars', connector: 'in' },
+    payload: { title: 'Remove special chars', text: 'Remove special chars', connector: 'in' },
     test: {
       dataframe: TEST_DATAFRAMES.SPECIAL
     },
@@ -856,7 +856,7 @@ let _operations = {
 
   trim: {
     text: 'Trim white space', generator: 'GENERIC', path: 'TRANSFORMATIONS/STRING',
-    payload: { title: 'Trim white spaces', content: 'Trim white spaces', connector: 'in' },
+    payload: { title: 'Trim white spaces', text: 'Trim white spaces', connector: 'in' },
     test: {
       dataframe: TEST_DATAFRAMES.TRIM
     }
@@ -864,7 +864,7 @@ let _operations = {
 
   normalize_spaces: {
     text: 'Normalize white spaces', generator: 'GENERIC', path: 'TRANSFORMATIONS/STRING',
-    payload: { title: 'Normalize white spaces', content: 'Normalize white spaces', connector: 'in' },
+    payload: { title: 'Normalize white spaces', text: 'Normalize white spaces', connector: 'in' },
     test: {
       dataframe: TEST_DATAFRAMES.NORMALIZE_SPACES
     },
@@ -953,7 +953,7 @@ let _operations = {
 
   abs: {
     text: 'Absolute value', generator: 'GENERIC', path: 'TRANSFORMATIONS/MATH',
-    payload: { content: 'Transform to absolute value' },
+    payload: { text: 'Transform to absolute value' },
     test: {
       dataframe: TEST_DATAFRAMES.NUMBER
     },
@@ -963,7 +963,7 @@ let _operations = {
   round: {
     text: 'Round', generator: 'GENERIC', path: 'TRANSFORMATIONS/MATH',
     payload: {
-      content: 'Round',
+      text: 'Round',
       parameters: {decimals: { label: "Decimals", value: 0 }}
     },
     test: {
@@ -978,7 +978,7 @@ let _operations = {
     text: 'Floor',
     generator: 'GENERIC',
     path: 'TRANSFORMATIONS/MATH',
-    payload: { content: 'Round down' },
+    payload: { text: 'Round down' },
     test: {
       dataframe: TEST_DATAFRAMES.DECIMAL
     },
@@ -991,7 +991,7 @@ let _operations = {
     text: 'Ceil',
     generator: 'GENERIC',
     path: 'TRANSFORMATIONS/MATH',
-    payload: { content: 'Round up' },
+    payload: { text: 'Round up' },
     test: {
       dataframe: TEST_DATAFRAMES.DECIMAL
     },
@@ -1003,7 +1003,7 @@ let _operations = {
   mod: {
     text: 'Modulo', generator: 'GENERIC', path: 'TRANSFORMATIONS/MATH',
     payload: {
-      title: 'Get modulo', content: 'Get modulo of',
+      title: 'Get modulo', text: 'Get modulo of',
       parameters: {divisor: { label: "Divisor", value: 2 }}
     },
     test: {
@@ -1015,7 +1015,7 @@ let _operations = {
   log: {
     text: 'Logarithm', generator: 'GENERIC', path: 'TRANSFORMATIONS/MATH',
     payload: {
-      title: 'Get logarithm', content: 'Get logarithm of',
+      title: 'Get logarithm', text: 'Get logarithm of',
       parameters: {base: { label: "Base", value: 10 }}
     },
     test: {
@@ -1027,7 +1027,7 @@ let _operations = {
   ln: {
     text: 'Natural logarithm', generator: 'GENERIC', path: 'TRANSFORMATIONS/MATH',
     payload: {
-      title: 'Get natural logarithm', content: 'Get natural logarithm of'
+      title: 'Get natural logarithm', text: 'Get natural logarithm of'
     },
     test: {
       dataframe: TEST_DATAFRAMES.NUMBER
@@ -1037,7 +1037,7 @@ let _operations = {
 
   pow: { text: 'Power', generator: 'GENERIC', path: 'TRANSFORMATIONS/MATH',
     payload: {
-      title: 'Get power', content: 'Get power of',
+      title: 'Get power', text: 'Get power of',
       parameters: {power: { label: "Power", value: 2 }}
     },
     test: {
@@ -1050,7 +1050,7 @@ let _operations = {
 
   sqrt: { text: 'Square root', generator: 'GENERIC', path: 'TRANSFORMATIONS/MATH',
     payload: {
-      title: 'Get power', content: 'Get power of'
+      title: 'Get power', text: 'Get power of'
     },
     test: {
       dataframe: TEST_DATAFRAMES.NUMBER
@@ -1062,7 +1062,7 @@ let _operations = {
     text: 'SIN',
     generator: 'GENERIC',
     path: 'TRANSFORMATIONS/TRIGONOMETRIC',
-    payload: { content: 'Get Sine' },
+    payload: { text: 'Get Sine' },
     test: {
       dataframe: TEST_DATAFRAMES.NUMBER
     },
@@ -1073,7 +1073,7 @@ let _operations = {
     text: 'COS',
     generator: 'GENERIC',
     path: 'TRANSFORMATIONS/TRIGONOMETRIC',
-    payload: { content: 'Get Cosine' },
+    payload: { text: 'Get Cosine' },
     test: {
       dataframe: TEST_DATAFRAMES.NUMBER
     },
@@ -1084,7 +1084,7 @@ let _operations = {
     text: 'TAN',
     generator: 'GENERIC',
     path: 'TRANSFORMATIONS/TRIGONOMETRIC',
-    payload: { content: 'Get Tangent' },
+    payload: { text: 'Get Tangent' },
     test: {
       dataframe: TEST_DATAFRAMES.NUMBER
     },
@@ -1095,7 +1095,7 @@ let _operations = {
     text: 'ASIN',
     generator: 'GENERIC',
     path: 'TRANSFORMATIONS/TRIGONOMETRIC',
-    payload: { content: 'Get Inverse Sine' },
+    payload: { text: 'Get Inverse Sine' },
     test: {
       dataframe: TEST_DATAFRAMES.NUMBER
     },
@@ -1106,7 +1106,7 @@ let _operations = {
     text: 'ACOS',
     generator: 'GENERIC',
     path: 'TRANSFORMATIONS/TRIGONOMETRIC',
-    payload: { content: 'Get Inverse Cosine' },
+    payload: { text: 'Get Inverse Cosine' },
     test: {
       dataframe: TEST_DATAFRAMES.NUMBER
     },
@@ -1117,7 +1117,7 @@ let _operations = {
     text: 'ATAN',
     generator: 'GENERIC',
     path: 'TRANSFORMATIONS/TRIGONOMETRIC',
-    payload: { content: 'Get Inverse Tangent' },
+    payload: { text: 'Get Inverse Tangent' },
     test: {
       dataframe: TEST_DATAFRAMES.NUMBER
     },
@@ -1128,7 +1128,7 @@ let _operations = {
     text: 'SINH',
     generator: 'GENERIC',
     path: 'TRANSFORMATIONS/TRIGONOMETRIC',
-    payload: { content: 'Get Hyperbolic Sine' },
+    payload: { text: 'Get Hyperbolic Sine' },
     test: {
       dataframe: TEST_DATAFRAMES.NUMBER
     },
@@ -1139,7 +1139,7 @@ let _operations = {
     text: 'COSH',
     generator: 'GENERIC',
     path: 'TRANSFORMATIONS/TRIGONOMETRIC',
-    payload: { content: 'Get Hyperbolic Cosine' },
+    payload: { text: 'Get Hyperbolic Cosine' },
     test: {
       dataframe: TEST_DATAFRAMES.NUMBER
     },
@@ -1150,7 +1150,7 @@ let _operations = {
     text: 'TANH',
     generator: 'GENERIC',
     path: 'TRANSFORMATIONS/TRIGONOMETRIC',
-    payload: { content: 'Get Hyperbolic Tangent' },
+    payload: { text: 'Get Hyperbolic Tangent' },
     test: {
       dataframe: TEST_DATAFRAMES.NUMBER
     },
@@ -1161,7 +1161,7 @@ let _operations = {
     text: 'ASINH',
     generator: 'GENERIC',
     path: 'TRANSFORMATIONS/TRIGONOMETRIC',
-    payload: { content: 'Get Inverse Hyperbolic Sine' },
+    payload: { text: 'Get Inverse Hyperbolic Sine' },
     test: {
       dataframe: TEST_DATAFRAMES.NUMBER
     },
@@ -1172,7 +1172,7 @@ let _operations = {
     text: 'ACOSH',
     generator: 'GENERIC',
     path: 'TRANSFORMATIONS/TRIGONOMETRIC',
-    payload: { content: 'Get Inverse Hyperbolic Cosine' },
+    payload: { text: 'Get Inverse Hyperbolic Cosine' },
     test: {
       dataframe: TEST_DATAFRAMES.NUMBER
     },
@@ -1183,7 +1183,7 @@ let _operations = {
     text: 'ATANH',
     generator: 'GENERIC',
     path: 'TRANSFORMATIONS/TRIGONOMETRIC',
-    payload: { content: 'Get Inverse Hyperbolic Tangent' },
+    payload: { text: 'Get Inverse Hyperbolic Tangent' },
     test: {
       dataframe: TEST_DATAFRAMES.NUMBER
     },
@@ -1222,7 +1222,7 @@ let _operations = {
     return [key, {
       command: key,
       generator: 'GENERIC',
-      payload: { title: `Get ${name.toLowerCase()}`, content: name },
+      payload: { title: `Get ${name.toLowerCase()}`, text: name },
       text: name,
       path: 'TRANSFORMATIONS/URLEMAIL',
       test: {
@@ -1240,7 +1240,7 @@ let _operations = {
     return [key, {
       command: key,
       generator: 'GENERIC',
-      payload: { title: `Get ${name.toLowerCase()}`, content: name },
+      payload: { title: `Get ${name.toLowerCase()}`, text: name },
       text: name,
       path: 'TRANSFORMATIONS/URLEMAIL',
       test: {
@@ -1257,7 +1257,7 @@ let _operations = {
   strip_html: {
     command: 'strip_html',
     generator: 'GENERIC',
-    payload: { title: 'Strip HTML', content: 'Strip HTML', connector: 'from' },
+    payload: { title: 'Strip HTML', text: 'Strip HTML', connector: 'from' },
     text: 'Strip HTML',
     path: 'TRANSFORMATIONS/URLEMAIL',
     test: {
@@ -2872,7 +2872,7 @@ export const commandsHandlers = {
       if (parameters.length) {
         using = " using " + parameters.join(", ");
       }
-      return `<b>${payload.content || payload.command}</b> ${payload.connector ? payload.connector+' ' : ''}${multipleContent(
+      return `<b>${payload.text || payload.command}</b> ${payload.connector ? payload.connector+' ' : ''}${multipleContent(
         [payload.columns],
         "hl--cols"
       )}${using}`;
