@@ -448,7 +448,7 @@ import VegaEmbed from '@/components/VegaEmbed'
 import clientMixin from '@/plugins/mixins/client'
 import dataTypesMixin from '@/plugins/mixins/data-types'
 import applicationMixin from '@/plugins/mixins/application'
-import { objectMap, copyToClipboard, namesToIndices, getProperty, ENGINES, INCOMPATIBLE_ENGINES, TYPES_NAMES, TIME_NAMES } from 'bumblebee-utils'
+import { objectMap, copyToClipboard, namesToIndices, getProperty, ENGINES } from 'bumblebee-utils'
 import { generateCode } from 'optimus-code-api'
 import { mapState, mapGetters } from 'vuex'
 
@@ -554,10 +554,6 @@ export default {
         }
       }
       return columns;
-    },
-
-    usingPandasTransformation () {
-      return INCOMPATIBLE_ENGINES.includes((this.$store.state.localEngineParameters || {}).engine)
     },
 
     customMenuItems () {
