@@ -399,7 +399,7 @@ let _operations = {
     path: 'LOADSAVE/SAVE',
     text: 'Download',
     disabled: ($nuxt)=>process.env.INSTANCE!=='LOCAL',
-    hidden: ($nuxt)=>$nuxt.usingPandasTransformation,
+    hidden: ($nuxt)=>$nuxt.$store.getters.usingPreview,
     doc: {
       description: "Downloads the current dataset as CSV file. If Spark or Ibis is you'll be able to choose to download a preview done using Pandas.",
       fields: false
@@ -408,16 +408,16 @@ let _operations = {
   DownloadPreview: {
     path: 'LOADSAVE/SAVE',
     command: 'Download',
-    text: 'Download (from pandas preview)',
+    text: 'Download current preview',
     disabled: ($nuxt)=>process.env.INSTANCE!=='LOCAL',
-    hidden: ($nuxt)=>!$nuxt.usingPandasTransformation
+    hidden: ($nuxt)=>!$nuxt.$store.getters.usingPreview
   },
   DownloadFinal: {
     path: 'LOADSAVE/SAVE',
     command: 'Download-rerun',
     text: 'Download',
     disabled: ($nuxt)=>process.env.INSTANCE!=='LOCAL',
-    hidden: ($nuxt)=>!$nuxt.usingPandasTransformation
+    hidden: ($nuxt)=>!$nuxt.$store.getters.usingPreview
   },
   saveFile: {
     path: 'LOADSAVE/SAVE',
@@ -454,7 +454,7 @@ let _operations = {
   Compile: {
     text: 'Compile SQL',
     path: 'LOADSAVE/SAVE',
-    // hidden: ($nuxt)=>($nuxt.$store.state.localEngineParameters || {}).engine !== 'ibis',
+    hidden: ($nuxt)=>$nuxt.$store.getters.canCompileSQL,
     doc: {
       description: 'Compiles the operations on the notebook to SQL. This command only works when using Ibis as engine.',
       fields: false

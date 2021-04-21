@@ -1,7 +1,10 @@
 import axios from 'axios'
 import Vue from 'vue'
 
-import { ALL_TYPES, capitalizeString, getPropertyAsync, filterCells, parseResponse, printError, deepCopy } from 'bumblebee-utils'
+import {
+  capitalizeString, getPropertyAsync, filterCells, parseResponse, printError, deepCopy,
+  ALL_TYPES, INCOMPATIBLE_ENGINES
+ } from 'bumblebee-utils'
 import { generateCode } from 'optimus-code-api'
 
 const properties = [
@@ -110,6 +113,7 @@ const defaultState = {
   optimusPromise: false,
   workspacePromise: false,
   cellsPromise: false,
+  sampledDatasets: {},
   profilingsPromises: {},
   executePromises: {},
   columns: {},
@@ -167,6 +171,12 @@ export const mutations = {
 
   updateDataset (state, { tab }) {
     Vue.set(state.everyDatasetUpdate, tab, (state.everyDatasetUpdate[tab] || 0) + 1);
+  },
+
+  setSampledDataset (state, { df, sampled }) {
+    sampled = (sampled === undefined) ? true : sampled;
+    state.sampledDatasets[df] = false;
+    Vue.set(state.sampledDatasets, df, sampled);
   },
 
   setColumns (state, { dfName, columns }) {
@@ -1857,6 +1867,23 @@ export const getters = {
 
   cells (state) {
     return [...(state.dataSources || []), ...(state.commands || [])];
+  },
+
+  usingPandasTransformation (state) {
+    return INCOMPATIBLE_ENGINES.includes((state.localEngineParameters || {}).engine);
+  },
+
+  usingSample (state, getters) {
+    let dfName = (getters.currentDataset || {}).dfName
+    return state.sampledDatasets[dfName];
+  },
+
+  usingPreview (state, getters) {
+    return getters.usingPandasTransformation || getters.usingSample;
+  },
+
+  canCompileSQL (state) {
+    return (state.localEngineParameters || {}).engine !== 'ibis';
   },
 
   selectionType (state) {
