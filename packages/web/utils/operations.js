@@ -1367,6 +1367,20 @@ export const commandsHandlers = {
           func: "uploadFile",
         },
         {
+          key: "sampleRows",
+          label: "Sample rows",
+          placeholder: "Whole dataset",
+          clearable: true,
+          type: "field",
+        },
+        // TO-DO: Allow random sampling
+        // {
+        //   condition: (c) => c.sampleRows,
+        //   key: "randomSample",
+        //   label: (c) => `Random sample: ${c._moreOptions ? "Yes" : "No"}`,
+        //   type: "switch",
+        // },
+        {
           key: "_moreOptions",
           label: (c) => `More options: ${c._moreOptions ? "Yes" : "No"}`,
           type: "switch",
@@ -1545,6 +1559,20 @@ export const commandsHandlers = {
       return currentCommand;
     },
 
+    beforeExecuteCode: async (_payload, args, methods) => {
+      var payload = deepCopy(_payload);
+      if (payload.url && !payload.external_url) {
+        payload.external_url = payload.url;
+        payload.url = undefined;
+      }
+      if (Math.min(payload.sampleRows || Infinity, payload.n_rows || Infinity) !== Infinity) {
+        methods.storeCommit('setSampledDataset', { df: payload.newDfName });
+      } else {
+        methods.storeCommit('setSampledDataset', { df: payload.newDfName, sampled: false });
+      }
+      return payload;
+    },
+
     payload: () => ({
       command: "loadFile",
       _fileType: false,
@@ -1560,7 +1588,7 @@ export const commandsHandlers = {
       null_value: "null",
       sheet_name: 0,
       header: true,
-      limit: "",
+      n_rows: "",
       multiline: true,
       charset: "UTF-8",
       _meta: false,

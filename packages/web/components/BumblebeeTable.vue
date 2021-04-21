@@ -2230,6 +2230,7 @@ export default {
           to,
           beforeCodeEval: this.previewCode.beforeCodeEval,
           socketPost: this.socketPost,
+          methods: this.commandMethods
         });
       } catch (err) {
         err.message = '(Error on buffer request) ' + (err.message || '')

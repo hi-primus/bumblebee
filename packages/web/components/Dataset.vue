@@ -603,7 +603,7 @@ export default {
       try {
         this.loadingDf = true;
         this.$store.commit('setDfToTab', { dfName, go: true });
-        await this.$store.dispatch('getProfiling', { payload: { dfName, socketPost: this.socketPost, partial: true } });
+        await this.$store.dispatch('getProfiling', { payload: { dfName, socketPost: this.socketPost, partial: true, methods: this.commandMethods } });
         this.$store.commit('setDfToTab', { dfName, go: true });
       } catch (err) {
         console.error('Error opening dataset', err);

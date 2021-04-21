@@ -722,7 +722,7 @@ export default {
     },
 
     runCells (forceAll, ignoreFrom) {
-      var payload = { forceAll, ignoreFrom, socketPost: this.socketPost, clearPrevious: true };
+      var payload = { forceAll, ignoreFrom, socketPost: this.socketPost, clearPrevious: true, methods: this.commandMethods };
       return this.$store.dispatch('getCellsResult', {forcePromise: true, payload });
     },
 
@@ -859,7 +859,8 @@ export default {
         dfName: this.currentDataset.dfName,
         avoidReload: true,
         clearPrevious: true,
-        partial: true
+        partial: true,
+        methods: this.commandMethods
       }});
     },
 
@@ -933,7 +934,7 @@ export default {
     },
 
     beforeRunCells (newOnly = false, ignoreFrom = -1) {
-      return this.$store.dispatch('beforeRunCells', {newOnly, ignoreFrom});
+      return this.$store.dispatch('beforeRunCells', {newOnly, ignoreFrom, methods: this.commandMethods});
     },
 
     async commandHandle (command) {
@@ -1345,7 +1346,7 @@ export default {
           return false;
         }
 
-        let dataset = await this.$store.dispatch('getProfiling', { payload: { dfName, ignoreFrom, clearPrevious: true, socketPost: this.socketPost, partial: true } });
+        let dataset = await this.$store.dispatch('getProfiling', { payload: { dfName, ignoreFrom, clearPrevious: true, socketPost: this.socketPost, partial: true, methods: this.commandMethods } });
 
         this.$store.commit('previewDefault');
 

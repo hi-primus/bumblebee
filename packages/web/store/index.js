@@ -442,6 +442,34 @@ export const mutations = {
     }
   },
 
+  updateCell (state, {id, cell}) {
+    let cellArrays = ['dataSources', 'commands'];
+    for (let i = 0; i < cellArrays.length; i++) {
+      const arr = cellArrays[i];
+      for (let j = 0; j < state[arr].length; j++) {
+        const _cell = state[arr][j];
+        if (_cell.id == id) {
+          Vue.set(state[arr], j, cell);
+          return;
+        }
+      }
+    }
+  },
+
+  deleteCell (state, {id, cell}) {
+    let cellArrays = ['dataSources', 'commands'];
+    for (let i = 0; i < cellArrays.length; i++) {
+      const arr = cellArrays[i];
+      for (let j = 0; j < state[arr].length; j++) {
+        const _cell = state[arr][j];
+        if (_cell.id == id) {
+          Vue.delete(state[arr], j);
+          return;
+        }
+      }
+    }
+  },
+
   database (state, payload) {
     Vue.set(state.databases,state.tab,payload)
   },
@@ -1129,27 +1157,38 @@ export const actions = {
     commit('mutation', { mutate: 'dataSources', payload: dataSources});
   },
 
-  beforeRunCells ( { state, commit }, { newOnly, ignoreFrom } ) {
+  async beforeRunCells ( { state, commit }, { newOnly, ignoreFrom, methods } ) {
 
     newOnly = newOnly || false;
     ignoreFrom = ignoreFrom || -1;
 
-    filterCells(state.commands, newOnly, ignoreFrom).forEach(async (cell) => {
-      if (cell.payload.request && cell.payload.request.createsNew) {
+    let cells = [...(state.dataSources || []), ...(state.commands || [])];
+
+    let filteredCells = filterCells(cells, newOnly, ignoreFrom);
+
+    for (let i = 0; i < filteredCells.length; i++) {
+      const cell = filteredCells[i];
+      if (cell?.payload?.request?.createsNew) {
         commit('setDfToTab', { dfName: cell.payload.newDfName })
+      } else if (!cell?.payload) {
+        commit('deleteCell', { id: cell.id, cell });
+        continue;
       }
       if (window.getCommandHandler) {
         var commandHandler = window.getCommandHandler(cell)
         if (commandHandler && commandHandler.beforeExecuteCode) {
-          cell = {...cell} // avoid vuex mutation
-          cell.payload = await commandHandler.beforeExecuteCode(cell.payload)
+          cell = {...cell}; // avoid direct vuex mutation
+          cell.payload = await commandHandler.beforeExecuteCode(cell.payload, [], methods);
+          commit('updateCell', { id: cell.id, cell });
+          console.log('updateCell', { id: cell.id, cell });
         } else if (!commandHandler) {
-          console.warn('[COMMANDS] commandHandler not found for', cell)
+          console.warn('[COMMANDS] commandHandler not found for', cell);
         }
       } else {
         console.warn('[COMMANDS] getCommandHandler not defined');
       }
-    })
+
+    }
   },
 
   async resetPromises ({ commit, dispatch }, { from }) {
@@ -1251,8 +1290,8 @@ export const actions = {
     return dispatch('getPromise', promisePayload);
   },
 
-  async loadCellsResult ({dispatch, state, getters, commit}, { forceAll, ignoreFrom, socketPost, clearPrevious, newOnly }) {
-    console.debug('[DEBUG] Loading cells result');
+  async loadCellsResult ({dispatch, state, getters, commit}, { forceAll, ignoreFrom, socketPost, clearPrevious, newOnly, methods }) {
+    console.debug('[DEBUG] Loading cells result', methods);
     try {
 
       var optimus = await dispatch('getOptimus', { payload: {socketPost} } );
@@ -1323,7 +1362,7 @@ export const actions = {
 
       commit('mutation', { mutate: 'loadingStatus', payload: 'Updating workpsace' });
 
-      await dispatch('beforeRunCells', { newOnly, ignoreFrom });
+      await dispatch('beforeRunCells', { newOnly, ignoreFrom, methods });
 
       var response;
 
@@ -1336,12 +1375,12 @@ export const actions = {
         // avoids saving new files when previewing a previous point on the notebook
 
         if (ignoreFrom>=0) {
-          codePayload = codePayload.filter(({payload})=>!(payload.request && payload.request.isSave))
+          codePayload = codePayload.filter(({payload})=>!(payload?.request?.isSave))
         }
 
         // checks if there's any cell that asks to process again everything using the original engine
 
-        var getFinal = codePayload.some(({payload})=>(payload.request && payload.request.isSave && payload._engineProcessing))
+        var getFinal = codePayload.some(({payload})=>(payload?.request?.isSave && payload._engineProcessing))
 
         // console.debug('[SPECIAL PROCESSING] getFinal', getFinal);
 
@@ -1484,7 +1523,7 @@ export const actions = {
     return dataset;
   },
 
-  async loadProfiling ({ dispatch, state, getters, commit }, { dfName, socketPost, ignoreFrom, avoidReload, clearPrevious, partial }) {
+  async loadProfiling ({ dispatch, state, getters, commit }, { dfName, socketPost, ignoreFrom, avoidReload, clearPrevious, partial, methods }) {
     console.debug('[DEBUG] Loading profiling', dfName);
     try {
 
@@ -1492,7 +1531,7 @@ export const actions = {
 
       await Vue.nextTick();
 
-      var executeResult = await dispatch('getExecute', { dfName, socketPost, ignoreFrom });
+      var executeResult = await dispatch('getExecute', { dfName, socketPost, ignoreFrom, methods });
 
       var username = await dispatch('session/getUsername');
 
@@ -1590,7 +1629,7 @@ export const actions = {
     return dispatch('getPromise', promisePayload);
   },
 
-  async loadExecute ({ dispatch, commit, getters }, { dfName, socketPost, ignoreFrom }) {
+  async loadExecute ({ dispatch, commit, getters }, { dfName, socketPost, ignoreFrom, methods }) {
 
     // console.debug('[DEBUG] Executing dataset', dfName);
 
@@ -1600,7 +1639,7 @@ export const actions = {
 
     await Vue.nextTick();
 
-    var cellsResult = await dispatch('getCellsResult', { payload: { socketPost, ignoreFrom }});
+    var cellsResult = await dispatch('getCellsResult', { payload: { socketPost, ignoreFrom, methods }});
 
     var datasets = getters.secondaryDatasets;
 
@@ -1617,11 +1656,11 @@ export const actions = {
 
   },
 
-  getExecute ({state, dispatch}, { dfName, socketPost, ignoreFrom, forcePromise }) {
+  getExecute ({state, dispatch}, { dfName, socketPost, ignoreFrom, forcePromise, methods }) {
     var promisePayload = {
       name: 'executePromises',
       action: 'loadExecute',
-      payload: { dfName, socketPost, ignoreFrom },
+      payload: { dfName, socketPost, ignoreFrom, methods },
       kernel: true,
       index: dfName,
       forcePromise
@@ -1630,7 +1669,7 @@ export const actions = {
     return dispatch('getPromise', promisePayload);
   },
 
-  async getBufferWindow ({commit, dispatch, state, getters}, {from, to, slug, dfName, socketPost, beforeCodeEval}) {
+  async getBufferWindow ({commit, dispatch, state, getters}, {from, to, slug, dfName, socketPost, beforeCodeEval, methods}) {
 
     slug = slug || state.workspaceSlug;
 
@@ -1675,7 +1714,7 @@ export const actions = {
 
     var datasetDfName = currentDataset.dfName || dfName;
 
-    let executeResult = await dispatch('getExecute', { dfName: datasetDfName, socketPost });
+    let executeResult = await dispatch('getExecute', { dfName: datasetDfName, socketPost, methods });
 
     if (beforeCodeEval) {
       beforeCodeEval();

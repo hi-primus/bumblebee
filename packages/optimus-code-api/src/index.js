@@ -535,13 +535,13 @@ export const codeGenerators = {
       multiline: (payload.multiline) ? `True` : `False`,
     }
 
-    payload = escapeQuotesOn(payload,['sep','null_value','sheet_name','_datasetName','url'])
+    payload = escapeQuotesOn(payload,['sep','null_value','sheet_name','_datasetName','url']);
 
-    let code = ''
+    let code = '';
 
-    let loadType = (!payload._moreOptions) ? 'file' : payload.file_type
+    let loadType = (!payload._moreOptions) ? 'file' : payload.file_type;
 
-    let url = payload.url.trim() || payload.external_url.trim()
+    let url = (payload.url || '').trim() || (payload.external_url || '').trim();
 
     code +=`op.load.${loadType}("${url}"`
     if (loadType=='csv') {
@@ -562,18 +562,19 @@ export const codeGenerators = {
         code += `, sheet_name=${payload.sheet_name}`
       }
     }
+    let n_rows = payload.n_rows || Infinity;
+    if (payload.request.type !== 'final') {
+      n_rows = Math.min( n_rows, payload.sampleRows || Infinity);
+    }
     if (!['final','processing'].includes(payload.request.type)) {
-      let limit = 35
-      if (payload.limit>0 && payload.limit<limit) {
-        limit = payload.limit
-      }
-      code +=`, n_rows=${limit}`
-    } else if (payload.limit>0) {
-      code +=`, n_rows=${payload.limit}`
+      let previewLimit = Math.min(35, n_rows)
+      code +=`, n_rows=${previewLimit}`
+    } else if (n_rows !== Infinity) {
+      code +=`, n_rows=${n_rows}`
     }
     if (loadType!='file') {
       code += `, quoting=0, lineterminator=None, cache=True`
-    } else if (payload.url.endsWith('.xls') || payload.url.endsWith('.xlsx')) {
+    } else if (url.endsWith('.xls') || url.endsWith('.xlsx')) {
       if (payload._sheet_names.length) {
         code += `, sheet_name="${payload.sheet_name}"`
       } else {

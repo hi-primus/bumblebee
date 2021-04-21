@@ -349,6 +349,7 @@ export default {
         var payload = {
           socketPost: this.socketPost,
           dfName: this.currentDataset.dfName,
+          methods: this.commandMethods
         };
 
         var executeResult = await this.$store.dispatch('getExecute', payload );
