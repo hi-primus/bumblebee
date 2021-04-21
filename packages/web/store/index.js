@@ -614,7 +614,7 @@ export const actions = {
       if (err.error) {
         if (err.error.contains("Worker holding Actor was lost")) {
           console.debug('[ERROR] Restoring session')
-          await this.$store.dispatch('resetPromises', { from: 'workspace' });
+          await dispatch('resetPromises', { from: 'workspace' });
         }
       }
       return err
