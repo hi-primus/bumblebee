@@ -456,7 +456,7 @@ export const mutations = {
     }
   },
 
-  deleteCell (state, {id, cell}) {
+  deleteCell (state, {id}) {
     let cellArrays = ['dataSources', 'commands'];
     for (let i = 0; i < cellArrays.length; i++) {
       const arr = cellArrays[i];
@@ -1171,7 +1171,7 @@ export const actions = {
       if (cell?.payload?.request?.createsNew) {
         commit('setDfToTab', { dfName: cell.payload.newDfName })
       } else if (!cell?.payload) {
-        commit('deleteCell', { id: cell.id, cell });
+        // commit('deleteCell', { id: cell.id, cell });
         continue;
       }
       if (window.getCommandHandler) {
@@ -1180,7 +1180,6 @@ export const actions = {
           cell = {...cell}; // avoid direct vuex mutation
           cell.payload = await commandHandler.beforeExecuteCode(cell.payload, [], methods);
           commit('updateCell', { id: cell.id, cell });
-          console.log('updateCell', { id: cell.id, cell });
         } else if (!commandHandler) {
           console.warn('[COMMANDS] commandHandler not found for', cell);
         }
@@ -1290,7 +1289,7 @@ export const actions = {
     return dispatch('getPromise', promisePayload);
   },
 
-  async loadCellsResult ({dispatch, state, getters, commit}, { forceAll, ignoreFrom, socketPost, clearPrevious, newOnly, methods }) {
+  async loadCellsResult ({dispatch, state, getters, commit}, { forceAll, ignoreFrom, socketPost, clearPrevious, newOnly, beforeRunCells, methods }) {
     console.debug('[DEBUG] Loading cells result', methods);
     try {
 
@@ -1362,7 +1361,10 @@ export const actions = {
 
       commit('mutation', { mutate: 'loadingStatus', payload: 'Updating workpsace' });
 
-      await dispatch('beforeRunCells', { newOnly, ignoreFrom, methods });
+      if (beforeRunCells) {
+        await dispatch('beforeRunCells', { newOnly, ignoreFrom, methods });
+      }
+
 
       var response;
 
@@ -1454,7 +1456,7 @@ export const actions = {
       var wrongCode = await dispatch('codeText', { newOnly, ignoreFrom });
       commit('mutation', { mutate: 'lastWrongCode', payload: { code: wrongCode, error: deepCopy(err) }});
 
-      if (state.firstRun) {
+      if (state.firstRun || ignoreFrom < 0) {
         await dispatch('markCells', { ignoreFrom, error: true });
       } else {
         console.debug('[CELLS] Deleting every column except', ignoreFrom);
@@ -1599,7 +1601,7 @@ export const actions = {
       var wrongCode = await dispatch('codeText', { newOnly: true, ignoreFrom });
       commit('mutation', { mutate: 'lastWrongCode', payload: { code: wrongCode, error: deepCopy(err) } });
 
-      if (state.firstRun) {
+      if (state.firstRun || ignoreFrom < 0) {
         await dispatch('markCells', { ignoreFrom, error: true });
       } else {
         console.debug('[CELLS] Deleting every column except', ignoreFrom);
