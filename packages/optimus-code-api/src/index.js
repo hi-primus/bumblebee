@@ -438,7 +438,7 @@ export const codeGenerators = {
   },
   GENERIC: (payload) => {
 
-    let output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (!['final','processing'].includes(payload.request.type)) ? '__new__' : '')
+    let output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (['final','processing',undefined].includes(payload.request.type)) ? '' : '__new__')
 
     let _argument = preparedColumns(payload.columns);
 
@@ -451,7 +451,7 @@ export const codeGenerators = {
   },
   MATH: (payload) => {
 
-    let output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (!['final','processing'].includes(payload.request.type)) ? '__new__' : '')
+    let output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (['final','processing',undefined].includes(payload.request.type)) ? '' : '__new__')
 
     let _argument = preparedColumns(payload.columns);
 
@@ -461,7 +461,7 @@ export const codeGenerators = {
   },
   SUBSTRING: (payload) => {
 
-    let output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (!['final','processing'].includes(payload.request.type)) ? '__new__' : '');
+    let output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (['final','processing',undefined].includes(payload.request.type)) ? '' : '__new__');
 
     let commands = {
       left_string: 'left',
@@ -478,7 +478,7 @@ export const codeGenerators = {
   },
   mid_string: (payload) => {
 
-    let output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (!['final','processing'].includes(payload.request.type)) ? '__new__' : '');
+    let output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (['final','processing',undefined].includes(payload.request.type)) ? '' : '__new__');
 
     let _argument = preparedColumns(payload.columns);
 
@@ -488,7 +488,7 @@ export const codeGenerators = {
   },
   pad_string: (payload) => {
 
-    let output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (!['final','processing'].includes(payload.request.type)) ? '__new__' : '');
+    let output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (['final','processing',undefined].includes(payload.request.type)) ? '' : '__new__');
 
     let _argument = preparedColumns(payload.columns);
 
@@ -498,7 +498,7 @@ export const codeGenerators = {
   },
   extract: (payload) => {
 
-    let output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (!['final','processing'].includes(payload.request.type)) ? '__new__' : '');
+    let output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (['final','processing',undefined].includes(payload.request.type)) ? '' : '__new__');
 
     let _argument = preparedColumns(payload.columns);
 
@@ -514,7 +514,7 @@ export const codeGenerators = {
   },
   fill_na: (payload) => {
     let _argument = preparedColumns(payload.columns);
-    let output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (!['final','processing'].includes(payload.request.type)) ? '__new__' : '')
+    let output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (['final','processing',undefined].includes(payload.request.type)) ? '' : '__new__')
     payload = escapeQuotesOn(payload,['fill'])
     return `.cols.fill_na(`
       +_argument
@@ -626,7 +626,7 @@ export const codeGenerators = {
   },
   transformFormat: (payload) => {
     let _argument = preparedColumns(payload.columns);
-    let output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (!['final','processing'].includes(payload.request.type)) ? '__new__' : '');
+    let output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (['final','processing',undefined].includes(payload.request.type)) ? '' : '__new__');
     return `.cols.date_format(${_argument}`
     + ( payload.current_format ? `, current_format="${transformDateToPython(payload.current_format)}"` : '')
     + ( payload.output_format ? `, output_format="${transformDateToPython(payload.output_format)}"` : '')
@@ -635,7 +635,7 @@ export const codeGenerators = {
   },
   getFromDatetime: (payload) => {
     let _argument = preparedColumns(payload.columns);
-    let output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (!['final','processing'].includes(payload.request.type)) ? '__new__' : '');
+    let output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (['final','processing',undefined].includes(payload.request.type)) ? '' : '__new__');
     return `.cols.date_format(${_argument}`
     + ( payload.current_format ? `, current_format="${transformDateToPython(payload.current_format)}"` : '')
     + ( payload.output_type ? `, output_format="${TIME_VALUES[payload.output_type]}"` : '')
@@ -704,7 +704,7 @@ export const codeGenerators = {
       payload.output_cols = payload.output_cols.map(col=>'__new__'+col)
     }
 
-    let output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (!['final','processing'].includes(payload.request.type)) ? '__new__' : '')
+    let output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (['final','processing',undefined].includes(payload.request.type)) ? '' : '__new__')
 
     let replace = payload.replace;
 
@@ -749,7 +749,7 @@ export const codeGenerators = {
     if (!payload.output_cols.length) {
       payload.output_cols = [payload.output_col]
     }
-    let output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (!['final','processing'].includes(payload.request.type)) ? '__new__' : '')
+    let output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (['final','processing',undefined].includes(payload.request.type)) ? '' : '__new__')
 
     let value = ( (payload.value) ? `parse('${payload.value}')` : 'None' )
 
@@ -784,7 +784,7 @@ export const codeGenerators = {
   },
   unnest: (payload) => {
     let _argument = preparedColumns(payload.columns);
-    let output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (!['final','processing'].includes(payload.request.type)) ? '__new__' : '')
+    let output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (['final','processing',undefined].includes(payload.request.type)) ? '' : '__new__')
     payload = escapeQuotesOn(payload, ['separator'])
 
     let code = `.cols.unnest(`
@@ -815,7 +815,7 @@ export const codeGenerators = {
   },
   duplicate: (payload) => {
     let _argument = preparedColumns(payload.columns);
-    let output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (!['final','processing'].includes(payload.request.type)) ? '__new__' : '')
+    let output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (['final','processing',undefined].includes(payload.request.type)) ? '' : '__new__')
     return `.cols.copy(`
       +_argument
       +( (output_cols_argument) ? `, output_cols=${output_cols_argument}` : '')
@@ -823,7 +823,7 @@ export const codeGenerators = {
   },
   bucketizer: (payload) => {
     let _argument = preparedColumns(payload.columns);
-    let output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (!['final','processing'].includes(payload.request.type)) ? '__new__' : '')
+    let output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (['final','processing',undefined].includes(payload.request.type)) ? '' : '__new__')
 
     return `.cols.bucketizer(`
       + _argument
@@ -837,7 +837,7 @@ export const codeGenerators = {
   string_to_index: (payload) => {
     let _argument = preparedColumns(payload.columns);
 
-    let output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (!['final','processing'].includes(payload.request.type)) ? '__new__' : '')
+    let output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (['final','processing',undefined].includes(payload.request.type)) ? '' : '__new__')
 
     return `.cols.string_to_index(`
       + _argument
@@ -847,7 +847,7 @@ export const codeGenerators = {
   index_to_string: (payload) => {
     let _argument = preparedColumns(payload.columns);
 
-    let output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (!['final','processing'].includes(payload.request.type)) ? '__new__' : '')
+    let output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (['final','processing',undefined].includes(payload.request.type)) ? '' : '__new__')
 
     return `.cols.index_to_string(`
       + _argument
@@ -857,7 +857,7 @@ export const codeGenerators = {
   ML: (payload) => {
     let _argument = preparedColumns(payload.columns);
 
-    let output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (!['final','processing'].includes(payload.request.type)) ? '__new__' : '')
+    let output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (['final','processing',undefined].includes(payload.request.type)) ? '' : '__new__')
 
     return `.cols.${payload.command}(`
       + _argument
@@ -867,7 +867,7 @@ export const codeGenerators = {
   impute: (payload) => {
     let _argument = preparedColumns(payload.columns);
 
-    let output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (!['final','processing'].includes(payload.request.type)) ? '__new__' : '')
+    let output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (['final','processing',undefined].includes(payload.request.type)) ? '' : '__new__')
 
     return `.cols.impute(`
       + _argument

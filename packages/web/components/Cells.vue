@@ -721,8 +721,8 @@ export default {
       return name
     },
 
-    runCells (forceAll, ignoreFrom) {
-      var payload = { forceAll, ignoreFrom, socketPost: this.socketPost, clearPrevious: true, methods: this.commandMethods };
+    runCells (forceAll, ignoreFrom, beforeRunCells) {
+      var payload = { forceAll, ignoreFrom, socketPost: this.socketPost, clearPrevious: true, beforeRunCells, methods: this.commandMethods };
       return this.$store.dispatch('getCellsResult', {forcePromise: true, payload });
     },
 
@@ -939,6 +939,8 @@ export default {
 
     async commandHandle (command) {
 
+      let previousPayload = command.payload || {};
+
       await this.cancelCommand(false);
 
       if (!command || command.empty) {
@@ -952,24 +954,21 @@ export default {
 
       this.$store.commit('setPreviewColumns',false)
 
-      var columns = undefined
-      var columnDataTypes = undefined
-      var columnDateFormats = undefined
+      var columns = command.columns || previousPayload.columns;
+      var columnDataTypes = undefined;
+      var columnDateFormats = undefined;
 
-      if (!command.columns || !command.columns.length) {
+      if (!columns || !columns.length) {
         columns = this.columns.map(e=>this.currentDataset.columns[e.index].name)
         columnDataTypes = this.columns.map(e=>this.currentDataset.columns[e.index].stats.profiler_dtype.dtype)
         columnDateFormats = this.columns.map(e=>transformDateFromPython(this.currentDataset.columns[e.index].stats.profiler_dtype.format)).filter(e=>e);
       } else {
-        columns = command.columns
         var columnIndices = namesToIndices(columns, this.currentDataset.columns)
         columnDataTypes = columnIndices.map(i=>this.currentDataset.columns[i].stats.profiler_dtype.dtype)
         columnDateFormats = columnIndices.map(i=>transformDateFromPython(this.currentDataset.columns[i].stats.profiler_dtype.format)).filter(e=>e);
       }
 
       var allColumnDateFormats = this.allColumns.map((e,i)=>transformDateFromPython(this.currentDataset.columns[i].stats.profiler_dtype.format)).filter(e=>e);
-
-      var commandHandler = this.getCommandHandler(command)
 
       // default payload
 
@@ -981,6 +980,7 @@ export default {
       }
 
       var payload = {
+        ...previousPayload,
         request: {
           engine: (this.$store.state.localEngineParameters || {}).engine,
           isLoad: false,
@@ -993,15 +993,15 @@ export default {
         columnDataTypes: columnDataTypes,
         columnDateFormats: columnDateFormats,
         allColumnDateFormats: allColumnDateFormats,
-        dfName: this.currentDataset.dfName,
-        newDfName: this.getNewDfName(),
-        // loadEngine: false,
-        // engineOptions: TO-DO:
+        dfName: previousPayload.dfName || this.currentDataset.dfName,
+        newDfName: previousPayload.newDfName ||this.getNewDfName(),
         allColumns: this.allColumns,
         type: command.type,
-        generator: command.generator,
-        command: command.command,
+        generator: command.generator || previousPayload.generator,
+        command: command.command || previousPayload.command,
       }
+
+      var commandHandler = this.getCommandHandler(payload)
 
       if (commandHandler) {
 
@@ -1027,7 +1027,7 @@ export default {
 
         payload = {
           ...payload,
-          ...(command.payload || {})
+          ...(previousPayload || {})
         }
 
         if (commandHandler.dialog) {
@@ -1267,24 +1267,31 @@ export default {
 
     },
 
-    async editCell (cell, index) {
-      // console.debug('[DEBUG] Editing cell',{cell, index})
-      var command = deepCopy(cell);
+    async editCell (_cell, index) {
+      var cell = deepCopy(_cell);
 
-      var commandHandler = this.getCommandHandler(command);
+      var commandHandler = this.getCommandHandler(cell.payload || cell);
 
-      if (command.payload._custom) {
-        command.payload._generator = this.$store.state.customCommands.generators[command.command || command.payload.command]
-        command.payload._custom = this.$store.getters['customCommands/genericCommandPayload'];
+      // console.debug('[DEBUG] Editing cell',{cell, index, commandHandler})
+
+      if (cell?.payload?._custom) {
+        cell.payload._generator = this.$store.state.customCommands.generators[cell.payload.command]
+        cell.payload._custom = this.$store.getters['customCommands/genericCommandPayload'];
       }
 
-      if (commandHandler.dialog) {
+      if (!commandHandler?.dialog) {
+        console.error('Cannot edit', _cell);
+      } else {
+        this.$store.commit('selection',{ clear: true })
         this.commandsDisabled = true;
-        await this.runCodeNow(true, index)
-        this.commandsDisabled = false;
-        command.payload._toCell = index
-        this.commandHandle(command)
-        this.isEditing = true
+        await this.runCodeNow(true, index, undefined, true, false)
+        cell.payload._toCell = index
+        setTimeout(() => {
+          this.commandsDisabled = false;
+          this.commandHandle(cell)
+          this.isEditing = true
+
+        }, 5000);
       }
     },
 
@@ -1333,14 +1340,14 @@ export default {
 
     },
 
-    async runCodeNow (forceAll = false, ignoreFrom = -1, newDfName, runCodeAgain = true) {
+    async runCodeNow (forceAll = false, ignoreFrom = -1, newDfName, runCodeAgain = true, beforeRunCells = true) {
 
       let cellsResult;
 
       try {
         let dfName = (this.currentDataset ? this.currentDataset.dfName : undefined) || newDfName;
 
-        cellsResult = await this.runCells(forceAll, ignoreFrom);
+        cellsResult = await this.runCells(forceAll, ignoreFrom, beforeRunCells);
 
         if (!cellsResult) {
           return false;

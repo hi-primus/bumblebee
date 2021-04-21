@@ -259,9 +259,7 @@ export const getOutputColsArgument = (output_cols = [], input_cols = [], pre = '
     } else {
       output = `[${output_cols.map((e, i)=>(e ? `"${escapeQuotes(e)}"` : (input_cols[i] ? `"${escapeQuotes(pre+input_cols[i])}"` : 'None'))).join(', ')}]`
     }
-  }
-
-  if (hasInput) {
+  } else if (hasInput) {
     if (input_cols.length===1 && !forceArray) {
       output = `"${escapeQuotes(pre+input_cols[0])}"`
     } else {
