@@ -616,7 +616,10 @@ const replaceTag = (tag) => {
 }
 
 export const replaceTags = (string) => {
-  return string.replace(/[&<>]/g, replaceTag);
+  if (string && string.replace) {
+    return string.replace(/[&<>]/g, replaceTag);
+  }
+  return string;
 }
 
 export const engineValid = (key, engine) => {
