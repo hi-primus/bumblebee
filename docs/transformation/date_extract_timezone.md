@@ -1,5 +1,7 @@
 # Timezone
 Extracts the Timezone from date values in the selected column(s).
+## Location
+![Timezone on the interface](../../docs/screenshots/location/date_extract_timezone.png)
 ## Fields
 | Field | Type | Description |
 | :--- | :--- | :--- |

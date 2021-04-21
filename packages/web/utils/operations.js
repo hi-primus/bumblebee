@@ -1206,7 +1206,7 @@ let _operations = {
     return ['date_extract_'+key, {
       command: `date_extract_${key}`,
       generator: `getFromDatetime`,
-      payload: { key },
+      payload: { key, output_type: key },
       text: capitalizeString(name),
       path: 'TRANSFORMATIONS/TIME',
       test: {
@@ -3254,12 +3254,15 @@ export const commandsHandlers = {
           type: "field",
           key: "current_format",
           label: "Previous format",
+          placeholder: "auto",
+          description: "(Optional) Changes the input format.",
           mono: true,
         },
         {
           type: "field-suggestions",
           key: "output_format",
           label: "New format",
+          description: "New format applied to the selected column\(s\).",
           mono: true,
           useFunctions: false,
           fuzzySearch: false,
@@ -3286,7 +3289,7 @@ export const commandsHandlers = {
     payload: (columns, payload = {}) => {
       return {
         columns,
-        current_format: (payload.columnDateFormats ? payload.columnDateFormats[0] : undefined) || "Y-m-d",
+        current_format: (payload.columnDateFormats ? payload.columnDateFormats[0] : undefined) || "",
         output_format: "",
         preview: {
           type: "transformFormat",
@@ -3311,7 +3314,7 @@ export const commandsHandlers = {
       return {
         columns,
         output_cols: columns.map((e) => ""),
-        current_format: (payload.columnDateFormats ? payload.columnDateFormats[0] : undefined) || "Y-m-d",
+        current_format: (payload.columnDateFormats ? payload.columnDateFormats[0] : undefined) || "",
         output_type: payload.output_type || "year",
         preview: {
           type: "TIME",
@@ -3319,9 +3322,7 @@ export const commandsHandlers = {
       };
     },
     content: (payload) => {
-      return `<b>Got</b> ${
-        TIME_NAMES[payload.output_type]
-      } from ${multipleContent([payload.columns], "hl--cols")}`;
+      return `<b>Get</b> ${hlParam(TIME_NAMES[payload.output_type])} from ${multipleContent([payload.columns], "hl--cols")}`;
     },
   },
 
@@ -4248,7 +4249,7 @@ export const cypressOperationTests = (section, group, _operation = true, usernam
 
     let testOperations = operations.filter(o => o.test || o.doc || o.section)
 
-    testOperations.filter(o => o.test !== false && o.section == section && (group === true || o.group == group) && (_operation === true || _operation == o.operation)).forEach(operation => {
+    testOperations.filter(o => o.test !== false && o.section == section && (group === true || o.group == group) && (_operation === true || _operation == o.operation || _operation.includes(o.operation))).forEach(operation => {
 
       it(`${operation.operation} operation`, () => {
 

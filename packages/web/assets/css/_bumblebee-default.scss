@@ -2010,7 +2010,6 @@ $editor-top-padding: 4px;
           background-color: darken($border-color, 10%);
           left: -1px;
           width: 1px;
-          // height: calc(100vh - #{$not-table-height} - 12px); // TO-DO
           height: calc(100% + 2px);
           top: -1px;
           // z-index: 2;

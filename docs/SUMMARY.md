@@ -106,3 +106,7 @@
   * Machine Learning
     * [Random sampling](transformation/sample_n.md)
 
+
+## Help
+* [Bigger than memory data](help/bigger-than-memory-data.md)
+* [Which engine to use](help/deciding-which-engine-to-use.md)

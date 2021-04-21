@@ -638,7 +638,7 @@ export const codeGenerators = {
     let output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (!['final','processing'].includes(payload.request.type)) ? '__new__' : '');
     return `.cols.date_format(${_argument}`
     + ( payload.current_format ? `, current_format="${transformDateToPython(payload.current_format)}"` : '')
-    + ( payload.output_format ? `, output_format="${TIME_VALUES[payload.output_type]}"` : '')
+    + ( payload.output_type ? `, output_format="${TIME_VALUES[payload.output_type]}"` : '')
     + ( output_cols_argument ? `, output_cols=${output_cols_argument}` : '')
     + `)`;
   },

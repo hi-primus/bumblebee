@@ -5,4 +5,6 @@ Transform the date values from a column from a date format to another.
 ## Fields
 | Field | Type | Description |
 | :--- | :--- | :--- |
-| Previous format | Text field |  |
+| Previous format | Text field | (Optional) Changes the input format. |
+## Example
+![Transform format example](../../docs/screenshots/table/transformFormat.png)

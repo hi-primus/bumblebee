@@ -1,5 +1,7 @@
 # UTC offset
 Extracts the UTC offset from date values in the selected column(s).
+## Location
+![UTC offset on the interface](../../docs/screenshots/location/date_extract_utc.png)
 ## Fields
 | Field | Type | Description |
 | :--- | :--- | :--- |

@@ -1,5 +1,7 @@
 # Month name
 Extracts the month name from date values in the selected column(s).
+## Location
+![Month name on the interface](../../docs/screenshots/location/date_extract_month.png)
 ## Fields
 | Field | Type | Description |
 | :--- | :--- | :--- |
