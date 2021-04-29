@@ -58,7 +58,19 @@ export const codeGenerators = {
     return {
       code,
       isOutput: true
-    }
+    };
+  },
+  delete: (payload) => {
+    let code = "";
+    code += `try:\n`;
+    code += `    del ${payload.dfName}\n`;
+    code += `    _output = "Deleted ${payload.dfName}"\n`;
+    code += `except NameError:\n`;
+    code += `    _output = "${payload.dfName} not found or already deleted"`;
+    return {
+      code,
+      isOutput: true
+    };
   },
   saveFile: (payload) => {
 

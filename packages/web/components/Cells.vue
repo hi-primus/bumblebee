@@ -1193,10 +1193,13 @@ export default {
       let deleteTab = false
 
       if (deletedPayload.request && deletedPayload.request.createsNew) {
-        let deleteDf = deletedPayload.newDfName
-        if (deleteDf) {
+        let dfName = deletedPayload.newDfName
+        if (dfName) {
           deleteTab = currentPayload.newDfName
-          await this.evalCode(`del ${deleteDf}; _output = "Deleted ${deleteDf}"`);
+          await this.evalCode({
+            command: 'delete',
+            dfName
+          });
         }
       }
 
