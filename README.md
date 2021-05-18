@@ -1,7 +1,7 @@
 [![Logo Bumblebee](images/logoBumblebee.png)](https://hi-bumblebee.com) 
 
 [![built_by iron](https://img.shields.io/badge/built_by-iron-FF69A4.svg)](http://ironmussa.com)
-[![Bumblebee chat](https://img.shields.io/badge/chat-on%20slack-blue.svg?style=flat&logo=slack)](https://join.slack.com/t/hi-bumblebee/shared_invite/zt-mhab5fk7-1xwd4B~SrlJaWq~R4onCgA)
+[![Bumblebee chat](https://img.shields.io/badge/chat-on%20slack-blue.svg?style=flat&logo=slack)](https://communityinviter.com/apps/hi-bumblebee/welcome)
 ![Docker Pulls](https://img.shields.io/docker/pulls/ironmussa/bumblebee)
 
 # Bumblebee
@@ -20,7 +20,7 @@ Bumblebee can be used to:
 * [Homepage](https://hi-bumblebee.com/): Bumblebee's landing page.
 * [Bumblebee Reference Documentation](https://hi-bumblebee.gitbook.io/bumblebee/): Operations and setup reference tutorials and guides.
 * [Medium page](https://medium.com/hi-bumblebee): Tutorials and articles.
-* [Bumblebee community on Slack](https://join.slack.com/t/hi-bumblebee/shared_invite/zt-mhab5fk7-1xwd4B~SrlJaWq~R4onCgA): Get help, contribute and collaborate.
+* [Bumblebee community on Slack](https://communityinviter.com/apps/hi-bumblebee/welcome): Get help, contribute and collaborate.
   
 ## Contributing to Bumblebee 
 Contributions go far beyond pull requests and commits. We are very happy to receive any kind of contributions including:
@@ -30,5 +30,5 @@ Contributions go far beyond pull requests and commits. We are very happy to rece
 * README.md corrections or redesigns.
 * Adding unit, or functional tests.
 * Triaging GitHub issues; especially determining whether an issue still persists or is reproducible.
-* Entering our [Slack community](https://join.slack.com/t/hi-bumblebee/shared_invite/zt-mhab5fk7-1xwd4B~SrlJaWq~R4onCgA) and helping someone else who needs help.
+* Entering our [Slack community](https://communityinviter.com/apps/hi-bumblebee/welcome) and helping someone else who needs help.
 * Blogging, speaking about, or creating tutorials about Bumblebee and its many features.
