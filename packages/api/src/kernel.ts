@@ -158,7 +158,7 @@ export const requestToKernel = async function (type, sessionId, payload, asyncCa
 
   kernels[sessionId] = kernels[sessionId] || {};
 
-  var kernelAddress : any = kernels[sessionId].kernel_address;
+  let kernelAddress : any = kernels[sessionId].kernel_address;
 
   let assertOptimus = true;
 
@@ -180,7 +180,11 @@ export const requestToKernel = async function (type, sessionId, payload, asyncCa
 	);
 
 	if (!connection) {
-		throw 'Socket error';
+    if (assertOptimus) {
+      throw new Error('Assertion error when checking connection and optimus');
+    } else {
+      throw new Error('Assertion error when checking connection');
+    }
 	}
 
 	const startTime = new Date().getTime();
@@ -320,14 +324,14 @@ export const createConnection = async function (sessionId) {
 
         kernels[sessionId].connection.on('close', function (message) {
           Object.values(kernels[sessionId].promises || {}).forEach((promise: any)=>{
-            promise.reject('Socket closed '+message);
+            promise.reject(`Socket closed: "${message}"`);
           })
           kernels[sessionId] = {};
         })
 
         kernels[sessionId].connection.on('error', function (message) {
           Object.values(kernels[sessionId].promises || {}).forEach((promise: any)=>{
-            promise.reject('Socket error '+message);
+            promise.reject(`Socket error: "${message}"`);
           })
           kernels[sessionId] = {};
         })
@@ -335,13 +339,13 @@ export const createConnection = async function (sessionId) {
 				kernels[sessionId].connection.on('message', function (message) {
 					try {
 
-            var message_response;
-            var msg_id;
+            let message_response;
+            let msg_id;
+            let response;
 
             if (message.type === 'utf8') {
               message_response = JSON.parse(message.utf8Data);
               msg_id = message_response.parent_header.msg_id;
-              var response;
 
               if (['execute_result', 'display_data'].includes(message_response.msg_type)) {
 
@@ -391,6 +395,10 @@ export const createConnection = async function (sessionId) {
                 message: message,
               });
               response = handleResponse(message);
+            }
+
+            if (message_response && message_response.msg_type && response) {
+              response._type = message_response.msg_type;
             }
 
 						if (!kernels[sessionId]) {
