@@ -961,10 +961,12 @@ let _operations = {
   },
 
   round: {
-    text: 'Round', generator: 'GENERIC', path: 'TRANSFORMATIONS/MATH',
+    text: 'Round',
+    generator: 'GENERIC',
+    path: 'TRANSFORMATIONS/MATH',
     payload: {
       text: 'Round',
-      parameters: {decimals: { label: "Decimals", value: 0 }}
+      parameters: { decimals: { label: "Decimals", value: 0, type: "int" }}
     },
     test: {
       dataframe: TEST_DATAFRAMES.DECIMAL
@@ -2844,15 +2846,14 @@ export const commandsHandlers = {
     payload: (columns, payload = {}) => {
       let parameters = objectMap(
         payload.parameters || {},
-        ([name, value]) => value.value
+        value => value.value
       );
 
       return {
         ...parameters,
+        ...payload,
         columns: columns,
         output_cols: columns.map((e) => ""),
-        title: payload.title,
-        content: payload.content,
         preview: {
           type: "GENERIC",
         },
