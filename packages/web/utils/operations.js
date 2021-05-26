@@ -2830,8 +2830,9 @@ export const commandsHandlers = {
 
   GENERIC: {
     dialog: {
-      title: (c) => c.title || c.content || c.command,
+      title: (c) => c.title || c.text || c.command,
       fields: (c) => {
+        console.log(c.parameters)
         return Object.entries(c.parameters || {}).map(([key, param]) => ({
           label: param.label,
           key,
