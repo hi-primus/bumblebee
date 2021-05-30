@@ -1780,8 +1780,7 @@ bufferutil@^4.0.1:
     node-gyp-build "^4.2.0"
 
 "bumblebee-utils@link:../bumblebee-utils":
-  version "0.0.0"
-  uid ""
+  version "3.0.0-beta7"
 
 busboy@^0.2.11:
   version "0.2.14"
@@ -5229,8 +5228,10 @@ onetime@^5.1.0:
     mimic-fn "^2.1.0"
 
 "optimus-code-api@link:../optimus-code-api":
-  version "0.0.0"
-  uid ""
+  version "3.0.0-beta7"
+  dependencies:
+    bumblebee-utils "link:../bumblebee-utils"
+    uuid "^8.3.2"
 
 optional@0.1.4:
   version "0.1.4"
@@ -7307,10 +7308,15 @@ write-file-atomic@^3.0.0:
     signal-exit "^3.0.2"
     typedarray-to-buffer "^3.1.5"
 
-ws@7.4.4, ws@^7.3.1, ws@^7.4.4, ws@~7.4.2:
+ws@7.4.4:
   version "7.4.4"
   resolved "https://registry.yarnpkg.com/ws/-/ws-7.4.4.tgz#383bc9742cb202292c9077ceab6f6047b17f2d59"
   integrity sha512-Qm8k8ojNQIMx7S+Zp8u/uHOx7Qazv3Yv4q68MiWWWOJhiwG5W3x7iqmRtJo8xxrciZUY4vRxUTJCKuRnF28ZZw==
+
+ws@^7.4.4, ws@^7.4.6, ws@~7.4.2:
+  version "7.4.6"
+  resolved "https://registry.yarnpkg.com/ws/-/ws-7.4.6.tgz#5654ca8ecdeee47c33a9a4bf6d28e2be2980377c"
+  integrity sha512-YmhHDO4MzaDLB+M9ym/mDA5z0naX8j7SIlT8f8z+I0VtzsRbekxEutHSme7NPS2qE8StCYQNUnfWdXta/Yu85A==
 
 xml-name-validator@^3.0.0:
   version "3.0.0"
