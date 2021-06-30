@@ -14,8 +14,8 @@
     "code",
     "python"
   ],
-  "author": "",
-  "license": "ISC",
+  "author": "Prime",
+  "private": true,
   "devDependencies": {
     "@babel/cli": "^7.10.1",
     "@babel/core": "^7.10.2",

@@ -1,12 +1,11 @@
 [![Logo Bumblebee](images/logoBumblebee.png)](https://hi-bumblebee.com) 
 
-[![built_by iron](https://img.shields.io/badge/built_by-iron-FF69A4.svg)](http://ironmussa.com)
 [![Bumblebee chat](https://img.shields.io/badge/chat-on%20slack-blue.svg?style=flat&logo=slack)](https://communityinviter.com/apps/hi-bumblebee/welcome)
-![Docker Pulls](https://img.shields.io/docker/pulls/ironmussa/bumblebee)
+![Docker Pulls](https://img.shields.io/docker/pulls/hiprimus/bumblebee)
 
 # Bumblebee
 
-The easiest and most powerful tool to clean, transform, and prepare data of any size for Analysis, Visualization, Reporting, and Machine Learning; all in a spreadsheet-like interface. Built over [Optimus](https://github.com/ironmussa/Optimus) so you can handle small and big data efficiently.
+The easiest and most powerful tool to clean, transform, and prepare data of any size for Analysis, Visualization, Reporting, and Machine Learning; all in a spreadsheet-like interface. Built over [Optimus](https://github.com/hi-primus/optimus) so you can handle small and big data efficiently.
 
 Bumblebee can be used to:
 
@@ -18,7 +17,7 @@ Bumblebee can be used to:
 ## Resources
 
 * [Homepage](https://hi-bumblebee.com/): Bumblebee's landing page.
-* [Bumblebee Reference Documentation](https://hi-bumblebee.gitbook.io/bumblebee/): Operations and setup reference tutorials and guides.
+* [Bumblebee Reference Documentation](https://hi-primus.gitbook.io/bumblebee/): Operations and setup reference tutorials and guides.
 * [Medium page](https://medium.com/hi-bumblebee): Tutorials and articles.
 * [Bumblebee community on Slack](https://communityinviter.com/apps/hi-bumblebee/welcome): Get help, contribute and collaborate.
   

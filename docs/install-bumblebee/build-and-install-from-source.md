@@ -8,7 +8,7 @@ To install Bumblebee directly on your OS first you'll need to the following pack
 To install Bumblebee first clone the repo using:
 
 ```
-git clone https://github.com/ironmussa/Bumblebee.git
+git clone https://github.com/hi-primus/bumblebee.git
 cd Bumblebee
 ```
 
