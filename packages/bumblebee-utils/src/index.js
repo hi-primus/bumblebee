@@ -1006,7 +1006,7 @@ const _TIME = {
   hour: ['hour (00-12)','%I'],
   hour24: ['hour (00-23)','%H'],
   ampm: ['AM/PM','%p'],
-  hour: ['minute','%M'],
+  minute: ['minute','%M'],
   utc: ['UTC offset','%z'],
   timezone: ['Timezone','%Z'],
   dayNumber: ['day number of year','%S'],
