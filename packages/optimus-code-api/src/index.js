@@ -626,7 +626,7 @@ export const codeGenerators = {
     .filter(cluster=>cluster.selected.length)
     .map(cluster=>{
       let values = cluster.selected.map(e=>escapeQuotes(e.value))
-      replace = escapeQuotes(cluster.replace)
+      let replace = escapeQuotes(cluster.replace)
       return `.cols.replace(`
       +`"${payload.columns[0]}"`
       +`, search=["${values.join('","')}"]`
