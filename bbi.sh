@@ -2,6 +2,8 @@
 
 cd scripts
 
+source dependencies.sh
+
 if [[ "$1" == "start" ]]; then
 
     if [[ "$2" == "jupyter" ]]; then
