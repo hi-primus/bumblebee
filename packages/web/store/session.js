@@ -1,5 +1,3 @@
-import axios from 'axios'
-import { setAuthTokenAxios, resetAuthTokenAxios } from '@/utils/auth.js'
 import { asyncDebounce } from 'bumblebee-utils'
 import Vue from 'vue'
 
@@ -29,10 +27,10 @@ export const actions =  {
     context.commit('mutation', { mutate: 'accessToken', payload })
     if (payload) {
       // context.commit('mutation', { mutate: 'accessToken', payload: 'Bearer ' + payload })
-      setAuthTokenAxios('Bearer ' + payload)
+      this.$axios.defaults.headers.common.Authorization = 'Bearer ' + payload;
     } else {
       context.commit('mutation', { mutate: 'accessToken', payload })
-      resetAuthTokenAxios()
+      delete this.$axios.defaults.headers.common.Authorization;
 
     }
   },
@@ -90,7 +88,7 @@ export const actions =  {
   },100),
 
   async signUp (context,  payload) {
-    return await axios.post(process.env.API_URL + '/auth/signup', payload);
+    return await this.$axios.post('/auth/signup', payload);
   },
 
   cleanSession ({commit}) {
@@ -102,7 +100,7 @@ export const actions =  {
     var auth = (payload ? payload.auth : undefined) || state.accessToken;
     var username;
     try {
-      var response = await axios.get(process.env.API_URL + '/auth/profile', { headers: { 'Authorization': auth } } )
+      var response = await this.$axios.get('/auth/profile', { headers: { 'Authorization': auth } } )
       username = response.data.username;
     } catch (err) {
       if (!err.response || err.response.status!==401) {
@@ -127,7 +125,7 @@ export const actions =  {
 
 	async signIn ({commit, dispatch}, payload) {
 
-    const response = await axios.post(process.env.API_URL + '/auth/signin', payload)
+    const response = await this.$axios.post('/auth/signin', payload)
 
     var accessToken = response.data.accessToken ? ('Bearer ' + response.data.accessToken) : false
     var refreshToken = response.data.refreshToken ? ('Bearer ' + response.data.refreshToken) : false

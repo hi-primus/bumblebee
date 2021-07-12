@@ -26,6 +26,7 @@
     "lerna": "^3.22.0"
   },
   "dependencies": {
+    "dotenv-defaults": "^2.0.2",
     "esm": "^3.2.25",
     "glob": "^7.1.6"
   }

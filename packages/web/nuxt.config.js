@@ -3,8 +3,6 @@ require('dotenv').config()
 const colors = require('vuetify/es5/util/colors').default
 
 module.exports = {
-	mode: 'universal',
-
 	server: {
 		port: process.env.PORT,
 		host: process.env.HOST
@@ -56,13 +54,13 @@ module.exports = {
   },
 
   modules: [
+		'@nuxtjs/axios',
   ],
 
 	buildModules: [
     // '@nuxtjs/eslint-module',
     'cookie-universal-nuxt',
 		['@nuxtjs/google-tag-manager', { id: 'GTM-K8DTWMW' }],
-		'@nuxtjs/axios',
 		'@nuxtjs/dotenv',
 		'@nuxtjs/vuetify',
     '@nuxtjs/style-resources'

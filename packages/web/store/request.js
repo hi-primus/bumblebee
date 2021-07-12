@@ -1,5 +1,3 @@
-import axios from 'axios'
-
 const baseUrl = process.env.API_URL || 'http://localhost:4000'
 
 export const actions = {
@@ -40,7 +38,7 @@ export const actions = {
       file = formData;
     }
 
-    const response = await axios.put(fileUrl,
+    const response = await this.$axios.put(fileUrl,
       file,
       config
     );

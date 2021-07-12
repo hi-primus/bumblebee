@@ -1,4 +1,3 @@
-import axios from 'axios'
 import Vue from 'vue'
 
 import {
@@ -1834,9 +1833,9 @@ export const actions = {
 
     try {
       if (['post','put'].includes(request)) {
-        response = await axios[request](process.env.API_URL + path, payload, { headers: {'Authorization': accessToken} } );
+        response = await this.$axios[request](path, payload, { headers: {'Authorization': accessToken} } );
       } else {
-        response = await axios[request](process.env.API_URL + path, { headers: {'Authorization': accessToken} } );
+        response = await this.$axios[request](path, { headers: {'Authorization': accessToken} } );
       }
     } catch (err) {
       if (err && err.response && err.response.status===401) {
