@@ -48,9 +48,9 @@ IF "%1" == "start" (
     IF "%2" == "bumblebee" (
       CALL stop-bumblebee.bat
     ) ELSE (
-      ECHO "Unknown parameter, did you mean 'bbi stop bumblebee'?"
+      ECHO Unknown parameter, did you mean 'bbi stop bumblebee'?
     )
 
 ) ELSE (
-    ECHO "Unknown parameter, try 'bbi install environment'"
+    ECHO Unknown parameter, try 'bbi install environment'
 )
