@@ -2,6 +2,8 @@ import io from 'socket.io-client'
 import { mapGetters } from 'vuex'
 import { deepCopy, getDefaultParams, objectMap, INIT_PARAMS } from 'bumblebee-utils'
 
+const baseUrl = process.env.API_URL || 'http://localhost:4000'
+
 export default {
 
   data () {
@@ -373,9 +375,7 @@ export default {
 
           key = key || '';
 
-          var socket_url = process.env.API_URL;
-
-          var socket = io.connect(socket_url, {
+          var socket = io.connect(baseUrl, {
             transports: ['websocket'],
             transportOptions: {
               polling: {
