@@ -172,16 +172,24 @@ export class AppGateway
 	async handleFeatures(client: Socket, payload): Promise<any> {
 
     const sessionId = payload.username + '_BBSESSION_' + payload.workspace;
-    let result = {};
+    let result: any = {};
     try {
       result = await requestToKernel('features', client.id, payload);
+      if (result.status == 'error') {
+        throw result;
+      }
     } catch (err) {
       console.error(err)
-      result = {
-        status: 'error',
-        error: 'Features info error',
-        error2: err.toString(),
-      };
+      if (err instanceof Error) {
+        result = {
+          status: 'error',
+          error: 'Features info error',
+          error2: err.toString(),
+        };
+      }
+      else {
+        result = err;
+      }
     }
     client.emit('reply', {
       data: result,

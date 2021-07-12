@@ -146,15 +146,14 @@ const assertConnection = async function (
       }
     }
 
-		return kernels[sessionId].connection;
-	} catch (err) {
-		// console.error('WebSocket Error');
-		// console.error(err);
-		return undefined;
+		return { status: "ok", content: kernels[sessionId].connection};
+
+	} catch (error) {
+		return { status: "error", error };
 	}
 };
 
-export const requestToKernel = async function (type, sessionId, payload, asyncCallback = false) {
+export const requestToKernel = async function (type, sessionId, payload, asyncCallback = false): Promise<any> {
 
   kernels[sessionId] = kernels[sessionId] || {};
 
@@ -179,12 +178,13 @@ export const requestToKernel = async function (type, sessionId, payload, asyncCa
 		assertOptimus
 	);
 
-	if (!connection) {
-    if (assertOptimus) {
-      throw new Error('Assertion error when checking connection and optimus');
-    } else {
-      throw new Error('Assertion error when checking connection');
-    }
+	if (connection.status == "error" || !connection.content) {
+		if (assertOptimus) {
+			console.error('Assertion error when checking connection and optimus');
+		} else {
+			console.error('Assertion error when checking connection');
+		}
+		throw connection.error || new Error('Assertion error')
 	}
 
 	const startTime = new Date().getTime();
@@ -440,8 +440,8 @@ export const createConnection = async function (sessionId) {
           resolve(kernels[sessionId].connection);
         }, 1000);
 
-
 			});
+
 			kernels[sessionId].client.on('connectFailed', function (error) {
 				kernels[sessionId].connection = false;
 				console.error(
@@ -451,6 +451,7 @@ export const createConnection = async function (sessionId) {
 				);
 				reject(error);
 			});
+
 		});
 	}
 

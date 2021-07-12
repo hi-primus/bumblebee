@@ -816,7 +816,7 @@ export const actions = {
     let featuresResponse;
 
     if (isRetry && window.stopClient) {
-      window.stopClient();
+      await window.stopClient();
     }
 
     try {
@@ -827,7 +827,7 @@ export const actions = {
       }, isRetry ? 60000 : 10000);
     } catch (err) {
       if (!isRetry) {
-        return dispatch('loadFeatures', { slug, socketPost, isRetry: true })
+        return dispatch('loadFeatures', { slug, socketPost, isRetry: err })
       } else {
         throw err;
       }
