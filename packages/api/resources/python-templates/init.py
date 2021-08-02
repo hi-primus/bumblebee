@@ -25,7 +25,7 @@ def _out_result(_callback = None):
 
 # optimus parser
 
-reset = #{payload.params?.reset != "0" ? "True" : "False"}
+reset = #{(payload.params ? payload.params.reset != "0" : false) ? "True" : "False"}
 
 try:
     date; datetime;
