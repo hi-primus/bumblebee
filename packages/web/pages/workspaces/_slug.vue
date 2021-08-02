@@ -203,8 +203,8 @@
                   v-if="typesAvailable && typesAvailable.length"
                 >{{ typesAvailable.length | formatNumberInt }} Data types &emsp;</template>
                 <template
-                  v-else-if="currentDataset.summary.total_count_dtypes"
-                >{{ currentDataset.summary.total_count_dtypes | formatNumberInt }} Data types &emsp;</template>
+                  v-else-if="currentDataset.summary.total_count_data_types"
+                >{{ currentDataset.summary.total_count_data_types | formatNumberInt }} Data types &emsp;</template>
                 <template v-if="sampleSize">{{ sampleSize | formatNumberInt }} of</template>
                 <template
                   v-if="currentDataset.summary.rows_count"

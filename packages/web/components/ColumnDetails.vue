@@ -2,7 +2,7 @@
   <div v-if="column">
     <div class="sidebar-subheader hoverable column-title" @click="expanded = !expanded">
       <div class="data-column-data">
-        <span class="data-type" :class="`type-${column.stats.profiler_dtype.dtype}`">{{ dataTypeHint(column.stats.profiler_dtype.dtype) }}</span>
+        <span class="data-type" :class="`type-${column.stats.inferred_type.data_type}`">{{ dataTypeHint(column.stats.inferred_type.data_type) }}</span>
         <span class="data-column-name">{{ column.name }}</span>
       </div>
       <v-icon class="right-button flippable" :class="{'flipped': expanded}" color="black">expand_more</v-icon>

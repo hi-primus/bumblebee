@@ -14,10 +14,18 @@ import { v4 as uuidv4 } from "uuid";
 import {
 	runCode,
 	initializeKernel,
+  kernelHandler,
   deleteKernel,
 	requestToKernel,
 } from './kernel';
-import kernelRoutines from './kernel-routines';
+
+// import {
+// 	runCode,
+// 	initializeKernel,
+//   deleteKernel,
+// 	requestToKernel,
+// } from './optimus-api';
+
 import { getGenerator, generateCode, preparePayload } from 'optimus-code-api'
 
 import { ConnectionService } from "./connection/connection.service";
@@ -144,8 +152,6 @@ export class AppGateway
   @SubscribeMessage('initialize')
   async handleInitialize(client: Socket, payload): Promise<any> {
 
-
-    const sessionId = payload.username + '_BBSESSION_' + payload.workspace;
     let result: any = {};
 
     try {
@@ -159,6 +165,9 @@ export class AppGateway
       result.status = 'error';
 
     }
+
+    let kernelRoutines: any = kernelHandler(client.id);
+
     const resultCode = kernelRoutines.init(payload, true);
     client.emit('reply', {
       data: result,

@@ -1,7 +1,7 @@
 import { client as WebSocketClient } from 'websocket';
 import axios from 'axios';
 import { v1 as uuidv1 } from 'uuid';
-import kernelRoutines from './kernel-routines.js';
+import { KernelRoutines } from "./kernel-routines";
 
 import { handleResponse } from 'bumblebee-utils'
 
@@ -153,6 +153,15 @@ const assertConnection = async function (
 	}
 };
 
+export const kernelHandler = function (sessionId) {
+
+	if (!kernels[sessionId].kernelHandler) {
+    kernels[sessionId].kernelHandler = new KernelRoutines(false);
+  }
+
+  return kernels[sessionId].kernelHandler;
+}
+
 export const requestToKernel = async function (type, sessionId, payload, asyncCallback = false): Promise<any> {
 
   kernels[sessionId] = kernels[sessionId] || {};
@@ -161,8 +170,14 @@ export const requestToKernel = async function (type, sessionId, payload, asyncCa
 
   let assertOptimus = true;
 
+	
   if (['features','init'].includes(type)) {
-
+		
+		if (process.env.OPTIMUS_PATH) {
+			payload.optimusPath = process.env.OPTIMUS_PATH;
+			console.log("Using local Optimus", payload.optimusPath);
+		}
+		
     assertOptimus = false;
 
     if (!kernelAddress && payload.jupyter_address && payload.jupyter_address.ip && payload.jupyter_address.port) {
@@ -191,19 +206,23 @@ export const requestToKernel = async function (type, sessionId, payload, asyncCa
 
 	let code = payload;
 
+	if (!kernels[sessionId].kernelHandler) {
+    kernels[sessionId].kernelHandler = new KernelRoutines(false);
+  }
+
 	switch (type) {
     case 'init':
       payload.engine = payload.engine || process.env.ENGINE || 'dask';
-      code = kernelRoutines.init(payload);
+      code = kernels[sessionId].kernelHandler.init(payload);
       break;
     case 'code':
-      code = kernelRoutines.code(payload);
+      code = kernels[sessionId].kernelHandler.code(payload);
       break;
     case 'asyncCode':
-      code = kernelRoutines.asyncCode(payload);
+      code = kernels[sessionId].kernelHandler.asyncCode(payload);
       break;
     default:
-      code = kernelRoutines[type](payload);
+      code = kernels[sessionId].kernelHandler[type](payload);
       break;
 	}
 

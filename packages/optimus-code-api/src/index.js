@@ -45,7 +45,7 @@ export const payloadPreparers = {
 }
 
 export const codeGenerators = {
-  profile: (payload) => ({ code: `_output = ${payload.dfName}.profile(columns="*")`, isOutput: true }),
+  profile: (payload) => ({ code: `_output = ${payload.dfName}.profile(cols="*")`, isOutput: true }),
   uploadToS3: (payload) => {
     let code = `${payload.dfName}.save.${payload.file_type}( filename="s3://${payload.bucket}/${payload.username}/${payload.file_name}.${payload.file_type}", storage_options={ "key": "${payload.access_key_id}", "secret": "${payload.secret_key}", "client_kwargs": { "endpoint_url": "https://${payload.endpoint}", }, "config_kwargs": {"s3": {"addressing_style": "virtual", "x-amz-acl": "public/read"}} } );`;
 
@@ -124,7 +124,7 @@ export const codeGenerators = {
     let code =  "";
     code += `def _output_callback(fut):\n`;
     code += `    global ${payload.dfName}\n`;
-    code += `    ${payload.dfName} = fut.result()\n`;
+    code += `    ${payload.dfName} = getattr(fut, "result", fut.result)()\n`;
     code += `    return ${payload.dfName}.cols.pattern_counts("${escapeQuotes(payload.column)}", n=${payload.n}, mode=${payload.mode})\n`;
     code += `_output = op.submit(${payload.dfName}.cols.calculate_pattern_counts, "${escapeQuotes(payload.column)}", n=${payload.n}, mode=${payload.mode}, priority=${payload.request.priority || 0}, pure=False)\n`;
     return {
@@ -167,7 +167,7 @@ export const codeGenerators = {
     };
   },
   applySort: (payload) => {
-    return `.cols.sort(columns=${preparedColumns(payload.columns)})`
+    return `.cols.sort(cols=${preparedColumns(payload.columns)})`
   },
   DROP_KEEP: (payload) => {
     return `.cols.${payload.command}(${preparedColumns(payload.columns)})`
@@ -326,8 +326,8 @@ export const codeGenerators = {
   },
   dropEmptyRows: (payload) => {
     if (!['final','processing'].includes(payload.request.type)) {
-      let code = `.rows.find('df.mask.nulls('`
-      + (payload.subset.length ? `columns=${preparedColumns(payload.subset, true)}, ` : '')
+      let code = `.rows.find('df.mask.null('`
+      + (payload.subset.length ? `cols=${preparedColumns(payload.subset, true)}, ` : '')
       + `how="${payload.how}"`
       + `)', output_col="__match__")`
       if (payload.preview.filteredPreview) {
@@ -339,13 +339,13 @@ export const codeGenerators = {
       return code
     }
     return  `.rows.drop_na(` // rows.drop mask.na
-      + (payload.subset.length ? `columns=${preparedColumns(payload.subset, true)}, ` : '')
+      + (payload.subset.length ? `cols=${preparedColumns(payload.subset, true)}, ` : '')
       + `how="${payload.how}")`
   },
   dropDuplicates: (payload) => {
     if (!['final','processing'].includes(payload.request.type)) {
       let code = `.rows.find('df.mask.duplicated('`
-      + (payload.subset.length ? `columns=${preparedColumns(payload.subset, true)}, ` : '')
+      + (payload.subset.length ? `cols=${preparedColumns(payload.subset, true)}, ` : '')
       + `keep="${payload.keep}"`
       + `)', output_col="__match__")`
       if (payload.preview.filteredPreview) {
@@ -357,7 +357,7 @@ export const codeGenerators = {
       return code
     }
     return `.rows.drop_duplicates(` // rows.drop mask.duplicated
-      + (payload.subset.length ? `columns=${preparedColumns(payload.subset, true)}, ` : '')
+      + (payload.subset.length ? `cols=${preparedColumns(payload.subset, true)}, ` : '')
       + `keep="${payload.keep}")`
   },
   concat: (payload) => {
@@ -518,10 +518,10 @@ export const codeGenerators = {
     + ( output_cols_argument ? `, output_cols=${output_cols_argument}` : '')
     + `)`
   },
-  set_dtype: (payload) => {
+  set_data_type: (payload) => {
 
-    let _argument = '{' + payload.columns.map(c=>`"${c}": "${payload.dtype}"`).join(', ') + '}';
-    return `.cols.set_dtype(${_argument})`
+    let _argument = '{' + payload.columns.map(c=>`"${c}": "${payload.data_type}"`).join(', ') + '}';
+    return `.cols.set_data_type(${_argument})`
 
   },
   fill_na: (payload) => {
@@ -607,16 +607,14 @@ export const codeGenerators = {
 
   fingerprint: (payload) => {
     return {
-      code: `from optimus.engines.dask.ml import keycollision as kc\n`
-        + `_output = kc.fingerprint_cluster(${payload.dfName}.buffer_window("*"), input_cols=${preparedColumns(payload.columns)})`,
+      code: `_output = ${payload.dfName}.string_clustering(cols=${preparedColumns(payload.columns)}, algorithm="fingerprint")`,
       isOutput: true
     };
   },
 
   n_gram_fingerprint: (payload) => {
     return {
-      code: `from optimus.engines.dask.ml import keycollision as kc\n`
-        + `_output = kc.n_gram_fingerprint_cluster(${payload.dfName}.buffer_window("*"), input_cols=${preparedColumns(payload.columns)}, n_size=${payload.n_size})`,
+      code: `_output = ${payload.dfName}.string_clustering(cols=${preparedColumns(payload.columns)}, algorithm="n_gram_fingerprint", n_size=${payload.n_size})`,
       isOutput: true
     };
   },
@@ -639,7 +637,7 @@ export const codeGenerators = {
   transformFormat: (payload) => {
     let _argument = preparedColumns(payload.columns);
     let output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (['final','processing',undefined].includes(payload.request.type)) ? '' : '__new__');
-    return `.cols.date_format(${_argument}`
+    return `.cols.format_date(${_argument}`
     + ( payload.current_format ? `, current_format="${transformDateToPython(payload.current_format)}"` : '')
     + ( payload.output_format ? `, output_format="${transformDateToPython(payload.output_format)}"` : '')
     + ( output_cols_argument ? `, output_cols=${output_cols_argument}` : '')
@@ -648,7 +646,7 @@ export const codeGenerators = {
   getFromDatetime: (payload) => {
     let _argument = preparedColumns(payload.columns);
     let output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (['final','processing',undefined].includes(payload.request.type)) ? '' : '__new__');
-    return `.cols.date_format(${_argument}`
+    return `.cols.format_date(${_argument}`
     + ( payload.current_format ? `, current_format="${transformDateToPython(payload.current_format)}"` : '')
     + ( payload.output_type ? `, output_format="${TIME_VALUES[payload.output_type]}"` : '')
     + ( output_cols_argument ? `, output_cols=${output_cols_argument}` : '')
@@ -685,7 +683,7 @@ export const codeGenerators = {
     return { code: `_output = ${payload.dfName}.cols.names()`, isOutput: true };
   },
   dataTypes: (payload) => {
-    return { code: `_output = ${payload.dfName}.cols.profiler_dtypes(${preparedColumns(payload.columns)})`, isOutput: true };
+    return { code: `_output = ${payload.dfName}.cols.inferred_types(${preparedColumns(payload.columns)})`, isOutput: true };
   },
   frequency: (payload) => {
     return { code: `_output = ${payload.dfName}.cols.frequency(${preparedColumns(payload.columns)}, ${payload.n})`, isOutput: true };
@@ -1112,7 +1110,7 @@ export const generateCode = function(commands = [], _request = { type: 'processi
           }
           if (request.profile) {
 
-            code += '\n'+`_output.update({ 'profile': ${saving}.profile(columns=${profileColumns}) })`;
+            code += '\n'+`_output.update({ 'profile': ${saving}.profile(cols=${profileColumns}) })`;
           }
           if (request.matches_count) {
             code += '\n'+`_output.update({ 'matches_count': ${saving}.rows.select("__match__").rows.count() })`
@@ -1151,7 +1149,7 @@ export const generateCode = function(commands = [], _request = { type: 'processi
               code += '.columns_sample("*")';
             }
             if (request.profile) {
-              code += `.profile(columns=${profileColumns})`;
+              code += `.profile(cols=${profileColumns})`;
             }
             if (request.matches_count) {
               code += `.rows.select("__match__").rows.count()`;

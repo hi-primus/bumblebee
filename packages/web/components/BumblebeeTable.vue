@@ -150,8 +150,8 @@
             <div
               v-if="plotsData[column.name]"
               class="data-type"
-              :class="`type-${plotsData[column.name].profiler_dtype}`">
-              {{ dataTypeHint(plotsData[column.name].profiler_dtype) }}
+              :class="`type-${plotsData[column.name].inferred_type}`">
+              {{ dataTypeHint(plotsData[column.name].inferred_type) }}
             </div>
             <div class="column-title" :title="column.name">
               {{column.name}}
@@ -173,8 +173,8 @@
             <div
               v-if="previewPlotsData[column.name]"
               class="data-type"
-              :class="`type-${previewPlotsData[column.name].profiler_dtype}`">
-              {{ dataTypeHint(previewPlotsData[column.name].profiler_dtype) }}
+              :class="`type-${previewPlotsData[column.name].inferred_type}`">
+              {{ dataTypeHint(previewPlotsData[column.name].inferred_type) }}
             </div>
             <div
               v-if="currentPreviewNames && currentPreviewNames[column.name]"
@@ -220,8 +220,8 @@
             <div
               v-if="plotsData[column.name]"
               class="data-type"
-              :class="`type-${plotsData[column.name].profiler_dtype}`">
-              {{ dataTypeHint(plotsData[column.name].profiler_dtype) }}
+              :class="`type-${plotsData[column.name].inferred_type}`">
+              {{ dataTypeHint(plotsData[column.name].inferred_type) }}
             </div>
             <div class="drag-hint"></div>
             <div
@@ -990,7 +990,7 @@ export default {
 					total: +this.currentDataset.summary.rows_count,
 					zeros: column.stats.zeros,
           null: column.stats.null,
-          profiler_dtype: column.stats.profiler_dtype.dtype
+          inferred_type: column.stats.inferred_type.data_type
 					// hist_years: (column.stats.hist && column.stats.hist.years) ? column.stats.hist.years : undefined
 				};
 			});
@@ -1025,7 +1025,7 @@ export default {
             frequency: ((column.stats.frequency) ? column.stats.frequency : undefined) || column.frequency || undefined,
             zeros: column.stats.zeros,
             null: column.stats.null,
-            profiler_dtype: column.stats.profiler_dtype.dtype || column.dtype
+            inferred_type: column.stats.inferred_type.data_type || column.data_type
             // hist_years: (column.stats.hist && column.stats.hist.years) ? column.stats.hist.years : undefined,
           }
         }
@@ -1803,7 +1803,7 @@ export default {
       }
 
       this.newColumnName = this.currentDataset.columns[index].name
-      this.newColumnType = this.currentDataset.columns[index].stats.profiler_dtype.dtype
+      this.newColumnType = this.currentDataset.columns[index].stats.inferred_type.data_type
 
       this.columnMenuIndex = index
 
@@ -1833,13 +1833,13 @@ export default {
     saveColumnData () {
       var index = this.columnMenuIndex
       var prevName = this.currentDataset.columns[index].name
-      var prevType = this.currentDataset.columns[index].stats.profiler_dtype.dtype
+      var prevType = this.currentDataset.columns[index].stats.inferred_type.data_type
 
       if (this.newColumnType != prevType) {
         var payload = {
-          dtype: this.newColumnType
+          data_type: this.newColumnType
         }
-        this.commandHandle({command: 'set_dtype', columns: [prevName], payload})
+        this.commandHandle({command: 'set_data_type', columns: [prevName], payload})
       }
 
       this.$nextTick(()=>{

@@ -370,7 +370,7 @@
 
           <div v-if="detailedColumns.length>1 && currentDataset.columns[index]" class="sidebar-section pr-10 columns-selected">
             <div class="column-selected" v-for="(index, i) in detailedColumns" :key="index+'selc'+i">
-              <span class="data-type" :class="`type-${currentDataset.columns[index].stats.profiler_dtype.dtype}`">{{ dataTypeHint(currentDataset.columns[index].stats.profiler_dtype.dtype) }}</span>
+              <span class="data-type" :class="`type-${currentDataset.columns[index].stats.inferred_type.data_type}`">{{ dataTypeHint(currentDataset.columns[index].stats.inferred_type.data_type) }}</span>
               <span class="data-column-name">{{ currentDataset.columns[index].name }}</span>
             </div>
           </div>
@@ -614,8 +614,8 @@ export default {
           if (!column) {
             return false;
           }
-          return ['decimal','float','double','float64'].includes(column.stats.profiler_dtype.dtype) ? 'quantitative'
-            : (['int','integer','int64'].includes(column.stats.profiler_dtype.dtype) && column.stats.count_uniques>25) ? 'quantitative'
+          return ['decimal','float','double','float64'].includes(column.stats.inferred_type.data_type) ? 'quantitative'
+            : (['int','integer','int64'].includes(column.stats.inferred_type.data_type) && column.stats.count_uniques>25) ? 'quantitative'
             : (column.stats.count_uniques<=25) ? column.stats.count_uniques
             : false
         }).filter(v=>v);
@@ -767,7 +767,7 @@ export default {
         if (!columns.length) {
           return []
         }
-        return [...new Set(columns.map(i=>this.currentDataset.columns[i] ? this.currentDataset.columns[i].stats.profiler_dtype.dtype : false).filter(v=>v))]
+        return [...new Set(columns.map(i=>this.currentDataset.columns[i] ? this.currentDataset.columns[i].stats.inferred_type.data_type : false).filter(v=>v))]
       } catch (err) {
         console.error(err)
         return []

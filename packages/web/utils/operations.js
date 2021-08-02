@@ -1336,7 +1336,7 @@ let _operations = {
     max: 1
   },
 
-  // ...objectMapFromEntries(TYPES_NAMES, ([dtype, text])=>(['cast_to_'+dtype, { command: 'set_dtype', payload: { dtype }, text, path: 'TRANSFORMATIONS/CAST'}]))
+  // ...objectMapFromEntries(TYPES_NAMES, ([data_type, text])=>(['cast_to_'+data_type, { command: 'set_data_type', payload: { data_type }, text, path: 'TRANSFORMATIONS/CAST'}]))
 
 };
 
@@ -3034,12 +3034,12 @@ export const commandsHandlers = {
     },
   },
 
-  set_dtype: {
+  set_data_type: {
     content: (payload) =>
       `<b>Set data type</b> ${multipleContent(
         [payload.columns],
         "hl--cols"
-      )} to ${multipleContent([payload.dtype], "hl--param")}`,
+      )} to ${multipleContent([payload.data_type], "hl--param")}`,
   },
 
   fill_na: {
@@ -3409,11 +3409,11 @@ export const commandsHandlers = {
         if (currentCommand.algorithm == "tukey")
           code = `outlier = ${currentCommand.dfName}.outliers.tukey("${currentCommand.columns[0]}")`;
         else if (currentCommand.algorithm == "z_score")
-          code = `outlier = ${currentCommand.dfName}.outliers.z_score(columns="${currentCommand.columns[0]}", threshold=${currentCommand.threshold})`;
+          code = `outlier = ${currentCommand.dfName}.outliers.z_score(cols="${currentCommand.columns[0]}", threshold=${currentCommand.threshold})`;
         else if (currentCommand.algorithm == "mad")
-          code = `outlier = ${currentCommand.dfName}.outliers.mad(columns="${currentCommand.columns[0]}", threshold=${currentCommand.threshold})`;
+          code = `outlier = ${currentCommand.dfName}.outliers.mad(cols="${currentCommand.columns[0]}", threshold=${currentCommand.threshold})`;
         else if (currentCommand.algorithm == "modified_z_score")
-          code = `outlier = ${currentCommand.dfName}.outliers.modified_z_score(columns="${currentCommand.columns[0]}", threshold=${currentCommand.threshold})`;
+          code = `outlier = ${currentCommand.dfName}.outliers.modified_z_score(cols="${currentCommand.columns[0]}", threshold=${currentCommand.threshold})`;
         else throw "Invalid algorithm type input";
 
         currentCommand._loading = 'block';

@@ -1,6 +1,6 @@
 [![Logo Bumblebee](images/logoBumblebee.png)](https://hi-bumblebee.com) 
 
-[![Bumblebee chat](https://img.shields.io/badge/chat-on%20slack-blue.svg?style=flat&logo=slack)](https://communityinviter.com/apps/hi-bumblebee/welcome)
+[![Slack](https://img.shields.io/badge/chat-slack-red.svg?logo=slack&color=36c5f0)](https://communityinviter.com/apps/hi-bumblebee/welcome)
 ![Docker Pulls](https://img.shields.io/docker/pulls/hiprimus/bumblebee)
 
 # Bumblebee

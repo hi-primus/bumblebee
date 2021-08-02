@@ -1,195 +1,100 @@
-import { getDefaultParams, engineValid, getInitParams, pythonArguments, INIT_PARAMS } from 'bumblebee-utils';
+import { getDefaultParams, getInitParams, pythonArguments } from "bumblebee-utils";
 
-const TIME_START = `
-_use_time = True
-try:
-    _start_time = datetime.utcnow().timestamp()
-except Exception:
-    _use_time = False
-`;
+import { readFileSync } from "fs";
+const templateContents = {};
 
-const TIME_END = `
-if _use_time:
-    _end_time = datetime.utcnow().timestamp()
-    res.update({'_gatewayTime': {'start': _start_time, 'end': _end_time, 'duration': _end_time-_start_time}})
-`;
+export class KernelRoutines {
+  measureTime: boolean | string = false;
 
-const output_json = (res = 'res') => `dump_json(${res}, ensure_ascii=False)`
-
-const INIT_JSON = `
-from optimus.helpers.json import dump_json
-`
-
-const code = (code = '') => `
-
-${TIME_START}
-${code}
-res = {'result': _output}
-${TIME_END}
-${output_json('res')}
-`;
-
-const asyncCode = (code = '') => `
-
-${TIME_START}
-_output_callback = None
-${code}
-_result = None
-if _output.status == "finished":
-    _result = _output.result()
-else:
-    _output.add_done_callback(_out_result(_output_callback))
-
-res = {'result': _result, 'status': _output.status, 'key': _output.key }
-${TIME_END}
-${output_json('res')}
-`;
-
-const features = (payload) => `
-
-${INIT_JSON}
-
-${TIME_START}
-
-coiled_available = False
-spark_available = False
-coiled_gpu_available = False
-rapids_available = False
-
-try:
-    import pyspark
-    spark_available = True
-except:
-    spark_available = False
-
-try:
-    import coiled
-    coiled_available = True
-except:
-    coiled_available = False
-
-try:
-    import dask
-    import cudf
-    import dask_cudf
-    rapids_available = True
-except:
-    rapids_available = False
-
-coiled_gpu_available = coiled_available
-
-res = { "coiled_available": coiled_available, "coiled_gpu_available": coiled_gpu_available, "spark_available": spark_available, "rapids_available": rapids_available }
-
-# optimus reserved words
-
-try:
-    from optimus.expressions import reserved_words
-    res.update({'reserved_words': reserved_words})
-except:
-    pass
-
-
-${TIME_END}
-
-${output_json('res')}
-`;
-
-const getParams = payload => {
-  let params = {...(payload || {})};
-  params = getDefaultParams(params);
-  let functionParams = pythonArguments(getInitParams(params.engine), params);
-
-  switch (params.engine) {
-    case 'dask_coiled':
-      params.coiled = true;
-      params.engine = 'dask';
-      break
-    case 'dask_cudf_coiled':
-      params.coiled = true;
-      params.engine = 'dask_cudf';
-      break
+  constructor(measureTime) {
+    this.measureTime = measureTime;
   }
 
-  return { params, functionParams };
-}
+  private _pythonTemplate(name: string, isCallback = true) {
+    let content: string;
 
-// TODO: parser should be on the features routine but that routine is running in another session
+    if (templateContents[name]) {
+      content = templateContents[name];
+    } else {
+      content = readFileSync("./resources/python-templates/" + name, {
+        encoding: "utf8",
+        flag: "r",
+      });
+      content = content.replace(/#{/g, "${");
+      content = `\`${content}\``;
+      if (isCallback) {
+        content = `(payload) => ${content}`;
+      }
+      templateContents[name] = content;
+    }
 
-const init = (payload, min = false) => {
-
-  let { params, functionParams } = getParams(payload);
-
-  let opInit = `engine = "${params.engine}"\nop = Optimus(engine, ${functionParams})`;
-
-  if (min) {
-    return opInit;
+    return eval(content);
   }
 
-  return `
-${INIT_JSON}
+  timeStart = this._pythonTemplate("time-start.py", false);
 
-def _out_result(_callback = None):
-    def _f(fut):
-        _res = {}
-        try:
-            _res = {'key': fut.key, 'status': fut.status}
-            if fut.status == "error":
-                _res.update({'error': str(fut.exception())})
-            elif fut.status == "finished":
-                if _callback:
-                    _res.update({'result': _callback(fut)})
-                else:
-                    _res.update({'result': fut.result()})
-        except Exception as callback_error:
-            # _res.update({'raw_result': fut.result()})
-            _res.update({'error': callback_error})
-            _res.update({'status': "error"})
+  timeEnd = this._pythonTemplate("time-end.py", false);
 
+  initJSON = `from optimus.helpers.json import dump_json`;
 
-        display(${output_json('_res')})
-    return _f
+  outputJSON = (res = "res") => `dump_json(${res}, ensure_ascii=False)`;
 
-# optimus parser
+  initVariables = this._pythonTemplate("variables.py", false);
 
-reset = ${(params?.reset != '0') ? 'True' : 'False'}
+  includeVariables = `res.update({ "variables": optimus_variables() })`;
 
-try:
-    date; datetime;
-    assert (not reset)
-except Exception:
-    reset = True
-    from datetime import datetime, date
+  code = this._pythonTemplate("code.py");
 
-${TIME_START}
+  asyncCode = this._pythonTemplate("async-code.py");
 
-res = { 'kernel': 'ok' }
+  features = (payload) => {
+    if (payload.optimusPath) {
+      payload.optimusPath = `import sys; sys.path.append('${payload.optimusPath}')`;
+    } else {
+      payload.optimusPath = "";
+    }
+    return this._pythonTemplate("features.py", true)(payload);
+  }
 
-try:
-    from optimus.expressions import parse
-    res.update({'parser_available': True})
-except:
-    res.update({'parser_available': False})
-    def parse (a):
-        return a
+  getParams = (payload) => {
+    let params = { ...(payload || {}) };
+    params = getDefaultParams(params);
+    const functionParams = pythonArguments(
+      getInitParams(params.engine),
+      params
+    );
 
-engine = "${params.engine}"
+    switch (params.engine) {
+      case "dask_coiled":
+        params.coiled = true;
+        params.engine = "dask";
+        break;
+      case "dask_cudf_coiled":
+        params.coiled = true;
+        params.engine = "dask_cudf";
+        break;
+    }
 
-# initialization
+    return { params, functionParams };
+  };
 
-from optimus import Optimus
-${opInit}
+  init = (payload) => {
+    const { params, functionParams } = this.getParams(payload);
 
-res.update({"use_client": True if getattr(op, 'remote_run', None) else False });
+    payload.opInit = `engine = "${params.engine}"\nop = Optimus(engine, ${functionParams})`;
 
-client = getattr(op, 'client', None)
-dashboard_link = getattr(client, 'dashboard_link', None) if client else None
-res.update({"dashboard_link": dashboard_link});
-res.update({"cluster_name": getattr(op, "cluster_name", None)});
-op_engine = getattr(op, 'engine', None)
-res.update({'optimus': 'ok init', 'optimus_version': getattr(op, '__version__', None), 'engine': op_engine});
-${TIME_END}
-${output_json('res')}
-`;
+    payload.params = params;
+
+    if (payload.min) {
+      return payload.opInit;
+    }
+
+    if (payload.optimusPath) {
+      payload.optimusPath = `import sys; sys.path.append('${payload.optimusPath}')`;
+    } else {
+      payload.optimusPath = "";
+    }
+
+    return this._pythonTemplate("init.py", true)(payload);
+  };
 }
-
-export default { init, features, code, asyncCode };

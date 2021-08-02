@@ -63,8 +63,8 @@ pip install cytoolz
 
 if [ "$spark" = true ]; then
   echo "Installing optimus with Spark support"
-  pip install --upgrade git+https://github.com/hi-primus/optimus.git@develop-3.0#egg=pyoptimus[spark]
+  pip install --upgrade git+https://github.com/hi-primus/optimus.git@develop-21.8#egg=pyoptimus[spark]
 else
   echo "Installing optimus"
-  pip install --upgrade git+https://github.com/hi-primus/optimus.git@develop-3.0
+  pip install --upgrade git+https://github.com/hi-primus/optimus.git@develop-21.8
 fi

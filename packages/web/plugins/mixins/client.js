@@ -162,7 +162,7 @@ export default {
       var dataset = this.$store.state.datasets.find(dataset => dataset.dfName===dfName)
 
       if (dataset) {
-        columns = (dataset.columns && dataset.columns.length) ? Object.fromEntries(dataset.columns.map(col=>[col.name, col.stats.profiler_dtype])) : false;
+        columns = (dataset.columns && dataset.columns.length) ? Object.fromEntries(dataset.columns.map(col=>[col.name, col.stats.inferred_type])) : false;
       }
 
       if (!columns) {
@@ -172,7 +172,7 @@ export default {
 
       return objectMap(columns, (type) => {
         if (type && typeof type === 'object') {
-          return type.dtype || type.stats.profiler_dtype || type;
+          return type.data_type || type.stats.inferred_type || type;
         }
         return type;
       });
