@@ -27,8 +27,12 @@ export class KernelRoutines {
       }
       templateContents[name] = content;
     }
-
-    return eval(content);
+    try {
+      return eval(content);
+    } catch (err) {
+      console.error(content)
+      throw err
+    }
   }
 
   timeStart = this._pythonTemplate("time-start.py", false);
