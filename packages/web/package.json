@@ -1,6 +1,6 @@
 {
   "name": "bumblebee-web",
-  "version": "3.0.0-beta7",
+  "version": "21.8.0-beta",
   "description": "A GUI that works with Optimus to make data profiling easier",
   "author": "Prime",
   "private": true,
