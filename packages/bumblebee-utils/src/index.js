@@ -803,13 +803,13 @@ export const INIT_PARAMS = {
     default: '1',
     fill: true
   },
+  // TODO: Show more fields switch
   'processes': {
     type: 'boolean',
-    // TODO: Show more fields switch
-    noForm: true,
     name: 'Use processes instead of threads',
     engines: ['dask'],
-    // defalut: true
+    default: true,
+    // noForm: true
   },
   'threads_per_worker': {
     type: 'int',
