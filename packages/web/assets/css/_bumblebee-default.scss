@@ -2040,9 +2040,10 @@ $editor-top-padding: 4px;
         display: block;
         position: absolute;
         right: 0px;
-        transform: scaleX(1000%);
+        width: 1px;
         top: -1px;
-        width: 0.1px;
+        // transform: scaleX(1000%);
+        // width: 0.1px;
         height: calc(100% + 2px);
         background-color: $line-color-1;
       }
