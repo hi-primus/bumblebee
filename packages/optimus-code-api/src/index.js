@@ -199,7 +199,7 @@ export const codeGenerators = {
         expression = `${dfName}.mask.mismatch("${payload.columns[0]}", "${payload.columnDataTypes[0]}")`;
         break;
       case 'values':
-        expression = `${dfName}.mask.values_in("${payload.columns[0]}", [${payload.selection.join(',')}])`;
+        expression = `${dfName}.mask.value_in("${payload.columns[0]}", [${payload.selection.join(',')}])`;
         break;
       case 'ranges':
         if (payload.selection.length>1) {
@@ -220,7 +220,7 @@ export const codeGenerators = {
       let value = ( (payload.value) ? `parse('${payload.value}')` : 'None' );
       if (!['final','processing'].includes(payload.request.type)) {
         output_col = '__new__'+output_col;
-        code = `.rows.find( '${expression}', output_col="__match__" )`;
+        code = `.cols.set("__match__", '${expression}', eval_value=True)`;
         if (payload.preview.filteredPreview) {
           code += `.rows.select( '__match__' )`;
         }
@@ -244,7 +244,7 @@ export const codeGenerators = {
 
     } else {
       if (!['final','processing'].includes(payload.request.type)) {
-        let code = `.rows.find( '${expression}', output_col="__match__" )`
+        let code = `.cols.set("__match__", '${expression}', eval_value=True)`
         if (payload.preview.filteredPreview) {
           code += `.rows.select( '__match__' )`
         }
@@ -276,43 +276,43 @@ export const codeGenerators = {
 
     switch (payload.condition) {
       case 'null':
-        expression = `${dfName}["${payload.columns[0]}"].isnull()`
+        expression = `${dfName}.mask.null("${payload.columns[0]}")`
         break
       case 'mismatch':
-        expression = `~${dfName}.cols.is_match("${payload.columns[0]}", "${payload.columnDataTypes[0]}")`
+        expression = `${dfName}.mask.mismatch("${payload.columns[0]}", "${payload.columnDataTypes[0]}")`
         break
-      case 'exactly':
+      case 'equal':
         expression = `${dfName}["${payload.columns[0]}"]==${payload.value}`
         break
-      case 'oneof':
-        expression = `${dfName}.mask.values_in("${payload.columns[0]}", [${payload.values.join(',')}])`;
+      case 'value_in':
+        expression = `${dfName}.mask.value_in("${payload.columns[0]}", [${payload.values.join(',')}])`;
         break
-      case 'not':
+      case 'not_equal':
         expression = `${dfName}["${payload.columns[0]}"]!=${payload.value}`
         break
-      case 'less':
+      case 'less_than':
         expression = `${dfName}["${payload.columns[0]}"]<=${payload.value}`
         break
-      case 'greater':
+      case 'greater_than':
         expression = `${dfName}["${payload.columns[0]}"]>=${payload.value}`
         break
-      case 'pattern':
-        expression = `${dfName}.cols.select("${payload.columns[0]}").cols.pattern()["${payload.columns[0]}"]==${payload.value}`
+      case 'match_pattern':
+        expression = `${dfName}.mask.pattern("${payload.columns[0]}", ${payload.value})`
         break
       case 'between':
-        expression = `(${dfName}["${payload.columns[0]}"]>=${payload.value}) & (${dfName}["${payload.columns[0]}"]<=${payload.value_2})`
+        expression = `(${dfName}.mask.between("${payload.columns[0]}", ${payload.value}, ${payload.value_2})`
         break
       case 'contains':
       case 'starts_with':
       case 'ends_with':
         expression = `${dfName}.mask.${payload.condition}("${payload.columns[0]}", "${payload.text}")`
         break
-      case 'custom':
+      case 'set':
         expression = `${payload.expression}`
       default:
     }
     if (!['final','processing'].includes(payload.request.type)) {
-      let code = `.rows.find( '${expression}', output_col="__match__" )`
+      let code = `.cols.set( "__match__", '${expression}', eval_value=True )`
       if (payload.preview.filteredPreview) {
         code += `.rows.select( '__match__' )`
         if (payload.request.type === 'preview') {
@@ -326,10 +326,10 @@ export const codeGenerators = {
   },
   dropEmptyRows: (payload) => {
     if (!['final','processing'].includes(payload.request.type)) {
-      let code = `.rows.find('df.mask.null('`
+      let code = `.cols.set("__match__", 'df.mask.null(`
       + (payload.subset.length ? `cols=${preparedColumns(payload.subset, true)}, ` : '')
-      + `how="${payload.how}"`
-      + `)', output_col="__match__")`
+      + `how='${payload.how}'`
+      + `)', eval_value=True)`
       if (payload.preview.filteredPreview) {
         code += `.rows.select( '__match__' )`
         if (payload.request.type === 'preview') {
@@ -338,16 +338,16 @@ export const codeGenerators = {
       }
       return code
     }
-    return  `.rows.drop_na(` // rows.drop mask.na
+    return  `.rows.drop_null(` // rows.drop mask.na
       + (payload.subset.length ? `cols=${preparedColumns(payload.subset, true)}, ` : '')
       + `how="${payload.how}")`
   },
   dropDuplicates: (payload) => {
     if (!['final','processing'].includes(payload.request.type)) {
-      let code = `.rows.find('df.mask.duplicated('`
+      let code = `.cols.set("__match__", 'df.mask.duplicated(`
       + (payload.subset.length ? `cols=${preparedColumns(payload.subset, true)}, ` : '')
       + `keep="${payload.keep}"`
-      + `)', output_col="__match__")`
+      + `)', eval_value=True)`
       if (payload.preview.filteredPreview) {
         code += `.rows.select( '__match__' )`
         if (payload.request.type === 'preview') {

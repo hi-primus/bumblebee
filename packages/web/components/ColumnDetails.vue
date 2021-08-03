@@ -395,7 +395,7 @@ export default {
         command: 'filterRows',
         columns: [ this.column.name ],
         payload: {
-          condition: 'pattern',
+          condition: 'match_pattern',
           value: item.value,
           columns: [ this.column.name ],
         }

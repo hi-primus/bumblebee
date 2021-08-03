@@ -541,7 +541,8 @@ let _operations = {
       } else if ($nuxt.selectionType==='text') {
         command.payload = {
           columns: [$nuxt.currentSelection.text.column],
-          text: $nuxt.currentSelection.text.value
+          text: $nuxt.currentSelection.text.value,
+          condition: 'contains'
         }
       }
       $nuxt.commandHandle(command)
@@ -1998,18 +1999,18 @@ export const commandsHandlers = {
           label: "Condition",
           type: "select",
           items: (c) => [
-            { text: "Is exactly", value: "exactly" },
-            { text: "Is one of", value: "oneof" },
-            { text: "Is not", value: "not" },
+            { text: "Is exactly", value: "equal" },
+            { text: "Is one of", value: "value_in" },
+            { text: "Is not", value: "not_equal" },
             { divider: true },
             {
               text: "Less than or equal to",
-              value: "less",
+              value: "less_than",
               disabled: c.request.isString,
             },
             {
               text: "Greater than or equal to",
-              value: "greater",
+              value: "greater_than",
               disabled: c.request.isString,
             },
             {
@@ -2022,8 +2023,8 @@ export const commandsHandlers = {
             { text: "Starts with", value: "starts_with" },
             { text: "Ends with", value: "ends_with" },
             { divider: true },
-            { text: "Custom expression", value: "custom" },
-            { text: "Pattern", value: "pattern" },
+            { text: "Custom expression", value: "set" },
+            { text: "Pattern", value: "match_pattern" },
             { text: "Selected", value: "selected", disabled: true },
             { divider: true },
             { text: "Mismatches values", value: "mismatch" },
@@ -2032,7 +2033,7 @@ export const commandsHandlers = {
         },
         {
           condition: (c) =>
-            ["exactly", "not", "less", "greater"].includes(c.condition),
+            ["equal", "not_equal", "less_than", "greater_than"].includes(c.condition),
           key: "value",
           placeholder: (c) =>
             c.request.isString ? "Value" : 'numeric or "string"',
@@ -2040,7 +2041,7 @@ export const commandsHandlers = {
           type: "field",
         },
         {
-          condition: (c) => c.condition === "pattern",
+          condition: (c) => c.condition === "match_pattern",
           key: "value",
           placeholder: "",
           label: "Pattern",
@@ -2048,7 +2049,7 @@ export const commandsHandlers = {
           mono: true,
         },
         {
-          condition: (c) => "oneof" == c.condition,
+          condition: (c) => "value_in" == c.condition,
           key: "values",
           placeholder: "Values",
           label: "Values",
@@ -2070,8 +2071,8 @@ export const commandsHandlers = {
           type: "number",
         },
         {
-          condition: (c) => "custom" == c.condition,
-          key: "expression",
+          condition: (c) => "set" == c.condition,
+          key: "value",
           label: "Expression",
           placeholder: "column>=0",
           type: "field",
@@ -2098,13 +2099,13 @@ export const commandsHandlers = {
       filteredPreview: true,
       validate: (c) => {
         switch (c.condition) {
-          case "oneof":
+          case "value_in":
             return c.values.length;
-          case "exactly":
-          case "not":
-          case "less":
-          case "greater":
-          case "pattern":
+          case "equal":
+          case "not_equal":
+          case "less_than":
+          case "greater_than":
+          case "match_pattern":
             return c.value.length;
           case "between":
             return c.value.length && c.value_2.length;
@@ -2112,7 +2113,7 @@ export const commandsHandlers = {
           case "starts_with":
           case "ends_with":
             return c.text.length;
-          case "custom":
+          case "set":
             return c.expression.length;
           case "selected":
           case "null":
@@ -2125,11 +2126,10 @@ export const commandsHandlers = {
     },
 
     payload: (columns, payload = {}) => {
-      var condition = "exactly";
 
       return {
         columns,
-        condition,
+        condition: "equal",
         action: "select",
         value: "",
         value_2: "",
@@ -2169,20 +2169,20 @@ export const commandsHandlers = {
           condition = "is mismatch";
           value = false;
           break;
-        case "exactly":
+        case "equal":
           condition = "is exactly ";
           break;
-        case "oneof":
+        case "value_in":
           condition = "is in ";
           value = payload.values;
           break;
-        case "not":
+        case "not_equal":
           condition = "is not ";
           break;
-        case "less":
+        case "less_than":
           condition = "is less than or equal to ";
           break;
-        case "greater":
+        case "greater_than":
           condition = "is greater than or equal to ";
           break;
         case "contains":
@@ -2193,7 +2193,7 @@ export const commandsHandlers = {
           condition = "starts with ";
           value = [payload.text];
           break;
-        case "pattern":
+        case "match_pattern":
           condition = "with pattern ";
           value = [payload.value];
           break;
@@ -2204,7 +2204,7 @@ export const commandsHandlers = {
         case "between":
           value = value || [[payload.value], [payload.value_2]];
           break;
-        case "custom":
+        case "set":
           condition = "matches ";
           value = payload.expression;
       }
@@ -2212,7 +2212,7 @@ export const commandsHandlers = {
       value = value !== false ? value || payload.value : false;
 
       switch (condition) {
-        case "oneof":
+        case "value_in":
           str += "is one of " + multipleContent([value || []], "hl--param");
           break;
         case "between":
