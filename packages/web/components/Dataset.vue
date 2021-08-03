@@ -64,7 +64,7 @@
 						<template v-else>check_box_outline_blank</template>
 					</v-icon>
 				</v-btn>
-				<v-tooltip transition="fade-transition" bottom>
+				<v-tooltip transition="tooltip-fade-transition" bottom>
 					<template v-slot:activator="{ on }">
 						<v-btn
               color="#888"
@@ -84,7 +84,7 @@
 					<span v-if="!visibilityStatus">Show selected columns on table</span>
 					<span v-else>Hide selected columns on table</span>
 				</v-tooltip>
-				<v-tooltip transition="fade-transition" bottom>
+				<v-tooltip transition="tooltip-fade-transition" bottom>
 					<template v-slot:activator="{ on }">
 						<v-btn
               color="#888"
@@ -108,7 +108,7 @@
             Restore visibility
           </span>
 				</v-tooltip>
-				<v-tooltip transition="fade-transition" bottom>
+				<v-tooltip transition="tooltip-fade-transition" bottom>
 					<template v-slot:activator="{ on }">
 						<v-btn
               color="#888"
@@ -137,7 +137,7 @@
             </template>
           </span>
 				</v-tooltip>
-        <v-tooltip transition="fade-transition" bottom>
+        <v-tooltip transition="tooltip-fade-transition" bottom>
 					<template v-slot:activator="{ on }">
 						<v-btn
               color="#888"
@@ -176,7 +176,7 @@
 							<template v-if="selectedColumns[item.name]">check_box</template>
 							<template v-else>check_box_outline_blank</template>
 						</v-icon>
-						<v-tooltip transition="fade-transition" bottom>
+						<v-tooltip transition="tooltip-fade-transition" bottom>
 							<template v-slot:activator="{ on }">
 								<v-icon
 									:class="{'control-hide-hidden': hiddenColumns[item.name]}"
@@ -198,7 +198,7 @@
 					</div>
 				</template>
 				<template v-slot:[`item.profilerDtype`]="{ item }">
-					<v-tooltip transition="fade-transition" bottom>
+					<v-tooltip transition="tooltip-fade-transition" bottom>
 						<template v-slot:activator="{ on }">
 							<div class="data-type pr-4" v-on="on">
 								{{ dataTypeHint(item.profilerDtype) }}

@@ -17,7 +17,7 @@
         <v-card-text class="pb-5" style="max-height: 70vh; overflow-y: auto;">
           <div class="copy-code-content">
             <span>{{textDialog.text}}</span>
-            <v-tooltip transition="fade-transition" left color="dataprimary darken-2" content-class="dialog-tooltip" v-model="copied">
+            <v-tooltip transition="tooltip-fade-transition" left color="dataprimary darken-2" content-class="dialog-tooltip" v-model="copied">
               <template v-slot:activator="{on: success}">
                 <v-icon small @click.stop="clickCopy(textDialog.text, $event)">content_copy</v-icon>
               </template>
@@ -164,7 +164,7 @@
             </v-btn>
           </div>
           <div class="o-error" v-if="previewError">
-            <v-tooltip transition="fade-transition" left content-class="bar-tooltip" color="primary">
+            <v-tooltip transition="tooltip-fade-transition" left content-class="bar-tooltip" color="primary">
               <template v-slot:activator="{on}">
                 <transition :duration="210" name="bounce">
                   <v-icon class="primary error-badge" v-on="on">

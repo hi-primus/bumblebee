@@ -1,20 +1,20 @@
 <template>
   <div class="outliers-bar" style="font-size: 24px;">
-    <v-tooltip transition="fade-transition" bottom content-class="bar-tooltip tooltip-above-dialog" color="error darken-2">
+    <v-tooltip transition="tooltip-fade-transition" bottom content-class="bar-tooltip tooltip-above-dialog" color="error darken-2">
       <template v-slot:activator="{ on }">
         <div :class="{'min-bar': lowerW!=0}" :style="{'width': lowerW+'%'}" class="bar red-bar" v-on="on" />
       </template>
       <span>{{ lower_bound_count }} outlier{{(lower_bound_count!=1) ? 's': ''}}</span>
     </v-tooltip>
     <div :class="{'min-bar': lowerW!=0}" class="bar empty-bar default-bar"/>
-    <v-tooltip transition="fade-transition" bottom content-class="bar-tooltip tooltip-above-dialog" color="dataprimary darken-2">
+    <v-tooltip transition="tooltip-fade-transition" bottom content-class="bar-tooltip tooltip-above-dialog" color="dataprimary darken-2">
       <template v-slot:activator="{ on }">
         <div :class="{'min-bar': validW!=0}" :style="{'width': validW+'%'}" class="bar teal-bar" v-on="on" />
       </template>
       <span>{{ count_non_outliers }} not outlier{{(count_non_outliers!=1) ? 's': ''}}</span>
     </v-tooltip>
     <div :class="{'min-bar': upperW!=0}" class="bar empty-bar default-bar"/>
-    <v-tooltip transition="fade-transition" bottom content-class="bar-tooltip tooltip-above-dialog" color="error darken-2">
+    <v-tooltip transition="tooltip-fade-transition" bottom content-class="bar-tooltip tooltip-above-dialog" color="error darken-2">
       <template v-slot:activator="{ on }">
         <div :class="{'min-bar': upperW!=0}" :style="{'width': upperW+'%'}" class="bar red-bar" v-on="on" />
       </template>

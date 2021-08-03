@@ -1,18 +1,18 @@
 <template>
   <div class="data-bar">
-    <v-tooltip transition="fade-transition" :left="!bottom" :bottom="bottom" content-class="bar-tooltip" color="dataprimary darken-2">
+    <v-tooltip transition="tooltip-fade-transition" :left="!bottom" :bottom="bottom" content-class="bar-tooltip" color="dataprimary darken-2">
       <template v-slot:activator="{ on }">
         <div :class="{'min-bar': matchP!=0}" :style="{'width': matchP+'%'}" class="bar teal-bar" v-on="on" @click="$emit('clicked', 'ok')"/>
       </template>
       <span>{{ matchC | humanNumberInt }} match values <span class="percentage">{{ matchP }}%</span></span>
     </v-tooltip>
-    <v-tooltip transition="fade-transition" :left="!bottom" :bottom="bottom" content-class="bar-tooltip" color="error darken-2">
+    <v-tooltip transition="tooltip-fade-transition" :left="!bottom" :bottom="bottom" content-class="bar-tooltip" color="error darken-2">
       <template v-slot:activator="{ on }">
         <div :class="{'min-bar': mismatchP!=0}" :style="{'width': mismatchP+'%'}" class="bar red-bar" v-on="on" @click="$emit('clicked', 'mismatch')" />
       </template>
       <span>{{ mismatch | humanNumberInt }} mismatch values <span class="percentage">{{ mismatchP }}%</span></span>
     </v-tooltip>
-    <v-tooltip transition="fade-transition" :left="!bottom" :bottom="bottom" content-class="bar-tooltip" background-color="#6c7680" color="#6c7680">
+    <v-tooltip transition="tooltip-fade-transition" :left="!bottom" :bottom="bottom" content-class="bar-tooltip" background-color="#6c7680" color="#6c7680">
       <template v-slot:activator="{ on }">
         <div :class="{'min-bar': missingP!=0}" class="bar grey-bar default-bar" v-on="on" @click="$emit('clicked', 'missing')" />
       </template>

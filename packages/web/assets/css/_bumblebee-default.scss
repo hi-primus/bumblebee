@@ -271,16 +271,15 @@ table.details-table {
 }
 
 .v-tooltip__content {
-  z-index: 103 !important;
-  &.menuable__content__active{
-    opacity: 1 !important;
-    transition: all ease-in-out .3s
-  }
+  z-index: 504 !important;
   background-color: rgba(97,97,97) !important;
+  &.menuable__content__active {
+    opacity: 1 !important;
+  }
 }
 
 .tooltip-above-dialog {
-  z-index: 204 !important;
+  z-index: 704 !important;
 }
 
 table.table thead td:not(:nth-child(1)), table.table tbody td:not(:nth-child(1)), table.table thead th:not(:nth-child(1)), table.table tbody th:not(:nth-child(1)), table.table thead td:first-child, table.table tbody td:first-child, table.table thead th:first-child, table.table tbody th:first-child{
@@ -1305,20 +1304,25 @@ table {
   }
 }
 
-.quick-fade-enter-active{
-  transition: opacity .05s ease-in-out;
-}
-.quick-fade-leave-active {
-  transition: opacity .05s ease-in-out;
-}
-.quick-fade-enter, .quick-fade-leave-to {
-  opacity: 0;
-}
+
 .fade-enter-active, .fade-leave-active {
-  transition: opacity .21s ease-in-out;
+  transition: opacity 5.21s ease-in-out;
 }
 .fade-enter, .fade-leave-to {
   opacity: 0;
+}
+
+.tooltip-fade-transition {
+
+  &-enter-active {
+    transition: opacity 0.05s ease-in-out !important;
+  }
+  &-leave-active.v-tooltip__content {
+    transition: opacity 0 !important;
+  }
+  &-enter.v-tooltip__content, &-leave-to.v-tooltip__content {
+    opacity: 0 !important;
+  }
 }
 
 .bounce-enter-active {

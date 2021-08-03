@@ -1,7 +1,7 @@
 <template>
   <div class="dashboard-container">
     <div class="toolbar bb-toolbar" :class="{'disabled': commandsDisabled}">
-      <v-tooltip transition="fade-transition" bottom>
+      <v-tooltip transition="tooltip-fade-transition" bottom>
         <template v-slot:activator="{ on }">
           <v-btn v-on="on" text class="icon-btn" @click="listView=true" :disabled="!(currentDataset && currentDataset.summary)">
             <v-icon :color="(listView) ? 'black' : '#888'">
@@ -11,7 +11,7 @@
         </template>
         <span>Columns list view</span>
       </v-tooltip>
-      <v-tooltip transition="fade-transition" bottom>
+      <v-tooltip transition="tooltip-fade-transition" bottom>
         <template v-slot:activator="{ on }">
           <v-btn v-on="on" text class="icon-btn" @click="listView=false" :disabled="!(currentDataset && currentDataset.summary)">
             <v-icon :color="(!listView) ? 'black' : '#888'">
@@ -25,7 +25,7 @@
         <div class="divider" :key="'d'+section" :data-keys="Object.keys(section).join()"/>
         <template v-for="(element, index) in (elements.filter(e=>!getPropertyNuxt(e.hidden)))">
           <template v-if="element.type=='button'">
-            <v-tooltip :key="'toolbar'+section+'button'+index" transition="fade-transition" bottom>
+            <v-tooltip :key="'toolbar'+section+'button'+index" transition="tooltip-fade-transition" bottom>
               <template v-slot:activator="{ on }">
                 <div class="icon-btn-container" :id="'btn-'+element.command" v-on="on">
                   <v-btn
@@ -57,7 +57,7 @@
               :key="'toolbar'+index"
             >
               <template v-slot:activator="{ on: menu }">
-                <v-tooltip :disabled="menus[element.group]" transition="fade-transition" bottom>
+                <v-tooltip :disabled="menus[element.group]" transition="tooltip-fade-transition" bottom>
                   <template v-slot:activator="{ on: tooltip }">
                     <div class="icon-btn-container" :id="'menu-'+element.group" v-on="{...tooltip}">
                       <v-btn
@@ -115,7 +115,7 @@
           </template>
           <v-menu v-else-if="element.type=='sort'" :key="index" :close-on-content-click="false" @input="menus['sort'] = $event" offset-y>
             <template v-slot:activator="{ on: menu }">
-                <v-tooltip :disabled="menus['sort']" transition="fade-transition" bottom>
+                <v-tooltip :disabled="menus['sort']" transition="tooltip-fade-transition" bottom>
                   <template v-slot:activator="{ on: tooltip }">
                     <v-btn
                       :color="sortBy[0] ? 'black' : '#888'"
@@ -175,7 +175,7 @@
         offset-y
       >
         <template v-slot:activator="{ on: menu }">
-          <v-tooltip :disabled="searchMenu" transition="fade-transition" bottom>
+          <v-tooltip :disabled="searchMenu" transition="tooltip-fade-transition" bottom>
             <template v-slot:activator="{ on: tooltip }">
               <div class="icon-btn-container mr-2" v-on="{...tooltip}">
                 <v-badge
@@ -308,7 +308,7 @@
           <v-icon class="right-button" color="black" @click="cancelCommand">close</v-icon>
         </div>
         <div class="sidebar-top" v-show="operationsTitle=='operations' && operationsActive">
-          <v-tooltip transition="fade-transition" bottom color="dataprimary darken-2" v-model="copied">
+          <v-tooltip transition="tooltip-fade-transition" bottom color="dataprimary darken-2" v-model="copied">
             <template v-slot:activator="{on: success}">
               <v-menu offset-y left min-width="200" >
                 <template v-slot:activator="{ on: more }">
