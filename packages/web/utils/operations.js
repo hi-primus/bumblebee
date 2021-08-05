@@ -2679,10 +2679,7 @@ export const commandsHandlers = {
       };
     },
 
-    content: (payload) =>
-      `<b>Concat</b> ${hlParam(payload.dfName)} <b>with</b> ${hlParam(
-        payload.with
-      )}`,
+    content: (payload) => `<b>Concat</b> ${hlParam(payload.dfName)} <b>with</b> ${multipleContent(payload.with.map(w => w.name), "hl--param")}`,
 
     onInit: async (currentCommand, args, methods) => {
       try {
