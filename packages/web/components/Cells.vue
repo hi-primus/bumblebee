@@ -76,6 +76,7 @@
                         :currentCommand="currentCommand"
                         :command="command"
                         :index="i"
+                        :commandMethods="commandMethods"
                         @showConnections="$emit('showConnections', $event)"
                       />
                     </template>

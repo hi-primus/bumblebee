@@ -426,7 +426,7 @@ export default {
       default: undefined
     },
     commandMethods: {
-      required: true
+      required: false
     }
   },
 
@@ -460,7 +460,7 @@ export default {
       if (func) {
         this.currentCommand._loading = true;
         try {
-          this.currentCommand = await func(this.currentCommand, args, this.commandMethods);
+          this.currentCommand = await func(this.currentCommand, args, this.commandMethods || {});
         } catch (err) {
           console.error(err);
         }
