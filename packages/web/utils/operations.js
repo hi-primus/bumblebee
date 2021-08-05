@@ -1408,7 +1408,7 @@ export const commandsHandlers = {
         },
         {
           condition: (c) => c._moreOptions,
-          key: "limit",
+          key: "n_rows",
           label: "Limit",
           min: 1,
           clearable: true,
