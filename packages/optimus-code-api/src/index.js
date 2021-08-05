@@ -193,7 +193,7 @@ export const codeGenerators = {
 
     switch (payload.rowsType) {
       case 'missing':
-        expression = `${dfName}["${payload.columns[0]}"].isnull()`;
+        expression = `${dfName}.mask.null("${payload.columns[0]}")`;
         break;
       case 'mismatch':
         expression = `${dfName}.mask.mismatch("${payload.columns[0]}", "${payload.columnDataTypes[0]}")`;
@@ -418,12 +418,12 @@ export const codeGenerators = {
         if (from!==undefined) {
           window = `[${from}:${to}]`;
         }
-        return `${biggerWindow}${filterLeft}.cols.join(${payload.with}${biggerWindow}${filterRight}`
+        return `${biggerWindow}${filterLeft}.join(${payload.with}${biggerWindow}${filterRight}`
           + `, left_on="${payload.left_on}"`
           + `, right_on="${payload.right_on}", how="${payload.how}")${window}${filterEnd}`;
       }
     } else {
-      return `${filterLeft}.cols.join(${payload.with}${filterRight}`
+      return `${filterLeft}.join(${payload.with}${filterRight}`
         + `, left_on="${payload.left_on}"`
         + `, right_on="${payload.right_on}", how="${payload.how}")${filterEnd}`;
     }
@@ -887,7 +887,7 @@ export const codeGenerators = {
       + ')'
   },
   sample_n: (payload) => {
-    return `.sample(${payload.n-1})`
+    return `.sample(${payload.n})`
   },
 
 
