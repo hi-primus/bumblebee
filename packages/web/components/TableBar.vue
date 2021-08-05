@@ -925,8 +925,7 @@ export default {
       var finalPayload = await this.$store.dispatch('finalCommands', { ignoreFrom: -1, include: [], noPandas: true });
 
       var code = 'from optimus import Optimus\n'
-      +'from optimus.expressions import Parser\n'
-      +'p = Parser()\n'
+      +'from optimus.expressions import parse\n'
       +`op = Optimus(${engineText})\n`
       + generateCode(finalPayload)[0];
 
