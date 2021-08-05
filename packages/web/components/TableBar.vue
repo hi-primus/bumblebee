@@ -309,7 +309,7 @@
         </div>
         <div class="sidebar-top" v-show="operationsTitle=='operations' && operationsActive">
           <v-tooltip transition="tooltip-fade-transition" bottom color="dataprimary darken-2" v-model="copied">
-            <template v-slot:activator="{on: success}">
+            <template v-slot:activator>
               <v-menu offset-y left min-width="200" >
                 <template v-slot:activator="{ on: more }">
                   <v-icon v-on="more" class="right-button" color="black" @click.stop="">more_vert</v-icon>
