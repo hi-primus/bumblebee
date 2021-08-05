@@ -2173,7 +2173,9 @@ export default {
       }
 
       from = Math.max( from, 0 )
-      to = Math.min( to, this.totalRowsCount - 1 )
+      if (!this.previewCode) {
+        to = Math.min( to, this.totalRowsCount - 1 )
+      }
 
       var length = to - from
 
