@@ -1,3 +1,3 @@
-from optimus.helpers.functions import engines, dataframes, clusters, connections
+from optimus.helpers.functions import list_engines, list_dataframes, list_clusters, list_connections
 def optimus_variables():
-    return { "engines": engines(), "dataframes": dataframes(), "clusters": clusters(), "connections": connections() }
+    return { "engines": list_engines(), "dataframes": list_dataframes(), "clusters": list_clusters(), "connections": list_connections() }
