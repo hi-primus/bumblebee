@@ -25,7 +25,7 @@ import { DatasourceService } from "./datasource.service";
 import { CreateDataSourceDto } from "./dto/create-DataSource.dto";
 import { EditDataSourceDto } from "./dto/edit-DataSource.dto";
 import { DataSource } from "./interfaces/datasoruce.interface";
-import { editFileName } from "./utils/file-upload";
+import { editFileName, fileFilter } from "./utils/file-upload";
 import { Express } from 'express';
 import fs = require("fs");
 
@@ -92,18 +92,23 @@ export class DatasourceController {
         destination: "./assets",
         filename: editFileName,
       }),
+      fileFilter,
     })
   )
   async localFileUpload(
     @UploadedFile() file:Express.Multer.File,
     @Param("fileName") fileName: string,
-    @Req() request
+    @Req() req,
   ): Promise<any> {
     if (
       !process.env.DO_BUCKET &&
       process.env.INSTANCE === "LOCAL" &&
       process.env.BACKEND_URL
     ) {
+      console.log(req.fileValidationError);
+      if (req.fileValidationError) {
+        throw new ConflictException(req.fileValidationError)
+      }
       if (!file) {
         throw new ConflictException("No file uploaded")
       }
