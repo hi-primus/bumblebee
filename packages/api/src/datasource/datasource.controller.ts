@@ -17,7 +17,7 @@ import {
 } from "@nestjs/common";
 import { AuthGuard } from "@nestjs/passport";
 import { FileInterceptor } from "@nestjs/platform-express";
-import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
+import { ApiBearerAuth, ApiBody, ApiConsumes, ApiTags } from "@nestjs/swagger";
 import { diskStorage } from "multer";
 import { GetUser } from "./../auth/dto/get-user.decorator.dto";
 import { User } from "./../users/interfaces/user.interface";
@@ -26,6 +26,7 @@ import { CreateDataSourceDto } from "./dto/create-DataSource.dto";
 import { EditDataSourceDto } from "./dto/edit-DataSource.dto";
 import { DataSource } from "./interfaces/datasoruce.interface";
 import { editFileName } from "./utils/file-upload";
+import { Express } from 'express';
 import fs = require("fs");
 
 @ApiTags("Data Sources")
@@ -69,7 +70,19 @@ export class DatasourceController {
     return { url: presignedUrl };
   }
 
-  @Put("/local/:fileName")
+  @Post("/local/:fileName")
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary'
+        }
+      }
+    }
+  })
   @UseInterceptors(
     FileInterceptor("file", {
       limits: {
@@ -82,7 +95,7 @@ export class DatasourceController {
     })
   )
   async localFileUpload(
-    @UploadedFile() file,
+    @UploadedFile() file:Express.Multer.File,
     @Param("fileName") fileName: string,
     @Req() request
   ): Promise<any> {
