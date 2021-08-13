@@ -19,37 +19,37 @@ export class DatasourceService {
 
   async getPresignedUrl(user, media): Promise<string> {
     const name = media.name.split(".").slice(0, -1).join(".");
-    const Key = `${user.username}/${name}-${uuidv4()}.${
-      media.name.split(".")[media.name.split(".").length - 1]
-    }`;
+    const file_ext = media.name.split(".")[media.name.split(".").length - 1];
+    const file_name = `${name}-${uuidv4()}.${file_ext}`;
+    const key = `${user.username}/${file_name}`;
     try {
+
       if (
-        !process.env.DO_BUCKET &&
-        process.env.INSTANCE === "LOCAL" &&
+        (!process.env.DO_BUCKET ||
+        process.env.INSTANCE === "LOCAL") &&
         process.env.BACKEND_URL
       ) {
-        const url = `${
-          process.env.BACKEND_URL
-        }/datasource/local/${name}-${uuidv4()}.${
-          media.name.split(".")[media.name.split(".").length - 1]
-        }`;
+
+        const url = `${process.env.BACKEND_URL}/datasource/local/${file_name}`;
         new this.dataSourceModel({
           name,
           creator: user.userId,
           url,
         }).save();
         return url;
+
       } else if (
         process.env.DO_BUCKET &&
         process.env.DO_ENDPOINT &&
         process.env.DO_ACCESS_KEY_ID &&
         process.env.DO_SECRET_KEY
       ) {
+
         const url = await this.s3.getSignedUrlPromise("putObject", {
           Bucket: process.env.DO_BUCKET,
           ContentType: media.type,
           ACL: "public-read",
-          Key,
+          Key: key,
           Expires: 60 * 30,
         });
         new this.dataSourceModel({
@@ -58,6 +58,7 @@ export class DatasourceService {
           url: url.split("?").slice(0, -1).join("?"),
         }).save();
         return url;
+        
       } else {
         throw new BadRequestException();
       }

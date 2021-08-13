@@ -87,8 +87,8 @@ export class DatasourceController {
     @Req() request
   ): Promise<any> {
     if (
-      !process.env.DO_BUCKET &&
-      process.env.INSTANCE === "LOCAL" &&
+      (!process.env.DO_BUCKET ||
+      process.env.INSTANCE === "LOCAL") &&
       process.env.BACKEND_URL
     ) {
       if (!file) {
