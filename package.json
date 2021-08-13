@@ -27,6 +27,7 @@
   },
   "dependencies": {
     "dotenv-defaults": "^2.0.2",
+    "dotenv-extended": "^2.9.0",
     "esm": "^3.2.25",
     "glob": "^7.1.6"
   }
