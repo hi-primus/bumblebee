@@ -5245,8 +5245,10 @@ onetime@^5.1.0:
     mimic-fn "^2.1.0"
 
 "optimus-code-api@link:../optimus-code-api":
-  bumblebee-utils "link:../bumblebee-utils"
-  uuid "^8.3.2"
+  version "21.8.0-beta"
+  dependencies:
+    bumblebee-utils "link:../bumblebee-utils"
+    uuid "^8.3.2"
 
 optional@0.1.4:
   version "0.1.4"
