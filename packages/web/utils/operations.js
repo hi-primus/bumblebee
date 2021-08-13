@@ -3088,11 +3088,17 @@ export const commandsHandlers = {
           label: "Algorithm",
           items: [
             { text: "Fingerprint", value: "fingerprint" },
-            { text: "N-gram fingerprint", value: "n_gram_fingerprint" },
+            { text: "N-gram fingerprint", value: "ngram_fingerprint" },
+            { text: "Metaphone", value: "metaphone" },
+            { text: "Nysiis", value: "nysiis" },
+            { text: "Match Rating Approach", value: "match_rating_codex" },
+            { text: "Double Metaphone", value: "double_metaphone" },
+            { text: "Soundex", value: "soundex" },
+            { text: "Levenshtein", value: "levenshtein" },
           ],
         },
         {
-          condition: (c) => c.algorithm == "n_gram_fingerprint",
+          condition: (c) => c.algorithm == "ngram_fingerprint",
           type: "number",
           label: "N size",
           key: "n_size",
@@ -3103,7 +3109,7 @@ export const commandsHandlers = {
           func: "getClusters",
           validate: (c) =>
             c.algorithm != c.valid.algorithm ||
-            (c.n_size != c.valid.n_size && c.algorithm == "n_gram_fingerprint"),
+            (c.n_size != c.valid.n_size || c.algorithm != "ngram_fingerprint"),
         },
         {
           type: "clusters",
@@ -3111,7 +3117,7 @@ export const commandsHandlers = {
         },
       ],
       validate: (c) => {
-        if (c.algorithm == "n_gram_fingerprint")
+        if (c.algorithm == "ngram_fingerprint")
           return (
             c.clusters &&
             c.clusters.filter((e) => e.selected.length).length &&
@@ -3127,21 +3133,19 @@ export const commandsHandlers = {
       try {
         var codePayload;
 
-        if (currentCommand.algorithm == "fingerprint") {
+        if (currentCommand.algorithm == "ngram_fingerprint") {
+         codePayload = {
+           command: "ngram_fingerprint",
+           dfName: currentCommand.dfName,
+           columns: currentCommand.columns,
+           n_size: currentCommand.n_size,
+         };
+       } else {
           codePayload = {
-            command: "fingerprint",
+            command: currentCommand.algorithm,
             dfName: currentCommand.dfName,
             columns: currentCommand.columns,
           };
-        } else if (currentCommand.algorithm == "n_gram_fingerprint") {
-          codePayload = {
-            command: "n_gram_fingerprint",
-            dfName: currentCommand.dfName,
-            columns: currentCommand.columns,
-            n_size: currentCommand.n_size,
-          };
-        } else {
-          throw new Error("Invalid algorithm type input");
         }
 
         currentCommand._loading = 'block';
@@ -3154,28 +3158,25 @@ export const commandsHandlers = {
           throw response;
         }
 
-        var clusters = parseResponse(response.data.result);
+        var columnsClusters = parseResponse(response.data.result);
 
-        if (!clusters) {
+        if (!columnsClusters) {
           throw response;
         }
-
+        
+        let clusters = Object.values(columnsClusters)[0];
+        
         clusters = Object.entries(clusters).map((e) => {
           const cluster_name = e[0];
           const cluster_object = e[1];
-
-          var values = Array.isArray(cluster_object.similar)
-            ? cluster_object.similar.map((s) => ({ value: s, count: "1+" }))
-            : Object.entries(cluster_object.similar).map((s) => ({
-                value: s[0],
-                count: s[1],
-              }));
-
+          
+          const values = Array.isArray(cluster_object)
+          ? cluster_object.map((value) => ({ value, count: "1+" }))
+          : cluster_object.suggestions.map((value) => ({value, count: "1+"}));
+          
           return {
             replace: cluster_name,
-            count: Array.isArray(cluster_object.similar)
-              ? "1+"
-              : cluster_object.sum,
+            count: (Array.isArray(cluster_object) ? false : cluster_object.total_count) || "1+",
             values,
             selected: [],
           };

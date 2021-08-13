@@ -607,14 +607,56 @@ export const codeGenerators = {
 
   fingerprint: (payload) => {
     return {
-      code: `_output = ${payload.dfName}.string_clustering(cols=${preparedColumns(payload.columns)}, algorithm="fingerprint")`,
+      code: `clusters = ${payload.dfName}.string_clustering(cols=${preparedColumns(payload.columns)}, algorithm="fingerprint")\n_output = clusters.to_dict(verbose=True)`,
       isOutput: true
     };
   },
 
-  n_gram_fingerprint: (payload) => {
+  ngram_fingerprint: (payload) => {
     return {
-      code: `_output = ${payload.dfName}.string_clustering(cols=${preparedColumns(payload.columns)}, algorithm="n_gram_fingerprint", n_size=${payload.n_size})`,
+      code: `clusters = ${payload.dfName}.string_clustering(cols=${preparedColumns(payload.columns)}, algorithm="ngram_fingerprint", n_size=${payload.n_size})\n_output = clusters.to_dict(verbose=True)`,
+      isOutput: true
+    };
+  },
+
+  metaphone: (payload) => {
+    return {
+      code: `clusters = ${payload.dfName}.string_clustering(cols=${preparedColumns(payload.columns)}, algorithm="metaphone")\n_output = clusters.to_dict(verbose=True)`,
+      isOutput: true
+    };
+  },
+
+  double_metaphone: (payload) => {
+    return {
+      code: `clusters = ${payload.dfName}.string_clustering(cols=${preparedColumns(payload.columns)}, algorithm="double_metaphone")\n_output = clusters.to_dict(verbose=True)`,
+      isOutput: true
+    };
+  },
+
+  nysiis: (payload) => {
+    return {
+      code: `clusters = ${payload.dfName}.string_clustering(cols=${preparedColumns(payload.columns)}, algorithm="nysiis")\n_output = clusters.to_dict(verbose=True)`,
+      isOutput: true
+    };
+  },
+
+  match_rating_codex: (payload) => {
+    return {
+      code: `clusters = ${payload.dfName}.string_clustering(cols=${preparedColumns(payload.columns)}, algorithm="match_rating_codex")\n_output = clusters.to_dict(verbose=True)`,
+      isOutput: true
+    };
+  },
+
+  soundex: (payload) => {
+    return {
+      code: `clusters = ${payload.dfName}.string_clustering(cols=${preparedColumns(payload.columns)}, algorithm="soundex")\n_output = clusters.to_dict(verbose=True)`,
+      isOutput: true
+    };
+  },
+
+  levenshtein: (payload) => {
+    return {
+      code: `clusters = ${payload.dfName}.string_clustering(cols=${preparedColumns(payload.columns)}, algorithm="levenshtein")\n_output = clusters.to_dict(verbose=True)`,
       isOutput: true
     };
   },

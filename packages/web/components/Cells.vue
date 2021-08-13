@@ -61,7 +61,7 @@
                   :value.sync="currentCommand[field.key]"
                   :field="field"
                   :command="command"
-                  :currentCommand="currentCommand"
+                  :currentCommand.sync="currentCommand"
                   :commandMethods="commandMethods"
                   @showConnections="$emit('showConnections', $event)"
                 />
@@ -73,7 +73,7 @@
                         :key="field.key+i+subfield.key"
                         :value.sync="getProperty(currentCommand[subfield.key],[currentCommand])[i]"
                         :field="subfield"
-                        :currentCommand="currentCommand"
+                        :currentCommand.sync="currentCommand"
                         :command="command"
                         :index="i"
                         :commandMethods="commandMethods"
@@ -321,11 +321,6 @@ export default {
 
       textDialog: false,
       copied: false,
-
-      clusterHeaders: [
-        { text: 'Rows', value: 'count', sortable: false, class: 'rows-count' },
-        { text: 'Values', value: 'value', sortable: false }
-      ],
 
       barTop: 0,
       barHovered: false,
@@ -915,12 +910,6 @@ export default {
 
       return commandHandler;
 
-    },
-
-    clusterFieldUpdated(cluster) {
-      if (cluster.selected.length==0) {
-        cluster.selected = cluster.values
-      }
     },
 
     filterCells (newOnly = false, ignoreFrom = -1) {

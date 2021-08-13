@@ -349,12 +349,15 @@
     <template v-else-if="getPropertyField(field.type)=='clusters'">
       <div :key="field.key" :id="'field-'+field.key" class="clusters-table-container" style="overflow-y: auto; min-heigth: 240px;">
         <div v-for="(cluster, i) in _value" :key="i+'label'" class="cluster" :class="{'disabled-cluster': !cluster.merge}" >
+            <!-- { text: 'Rows', value: 'count', sortable: false, class: 'rows-count' }, -->
             <v-data-table
               flat
               depressed
               v-model="cluster.selected"
               :items="cluster.values"
-              :headers="clusterHeaders"
+              :headers="[
+                { text: 'Values', value: 'value', sortable: false },
+              ]"
               :sort-by="'count'"
               sort-desc
               disable-pagination
@@ -439,6 +442,15 @@ export default {
       set (value) {
         this.$emit('update:value',value)
       }
+    },
+
+    computedCurrentCommand: {
+      get () {
+        return this.currentCommand;
+      },
+      set (c) {
+        this.$emit('update:currentCommand', c);
+      }
     }
   },
 
@@ -458,15 +470,21 @@ export default {
 
     async triggerFunction (func, args = []) {
       if (func) {
-        this.currentCommand._loading = true;
+        this.computedCurrentCommand._loading = true;
         try {
-          this.currentCommand = await func(this.currentCommand, args, this.commandMethods || {});
+          this.computedCurrentCommand = await func(this.computedCurrentCommand, args, this.commandMethods || {});
         } catch (err) {
           console.error(err);
         }
-        this.currentCommand._loading = false;
+        this.computedCurrentCommand._loading = false;
       }
-    }
+    },
+
+    clusterFieldUpdated(cluster) {
+      if (cluster.selected.length==0) {
+        cluster.selected = cluster.values
+      }
+    },
   }
 
 

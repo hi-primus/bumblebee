@@ -2462,8 +2462,9 @@ $editor-top-padding: 4px;
 // FORMS
 
 .clusters-table-container {
-  margin-left: -24px;
-  margin-right: -24px;
+  margin-left: -16px;
+  width: calc(100% + 36px);
+  max-height: 330px;
   .v-data-table, table, tr, td, th {
     border: none !important;
     background: transparent !important;
@@ -2477,16 +2478,17 @@ $editor-top-padding: 4px;
   table td{
     font-family: $font-mono-table;
     font-size: 13px;
-    &:nth-child(2) {
-      font-family: $font-mono;
-      opacity: $black-opacity;
-      font-weight: 700;
-      width: 8em;
-      &::after {
-        content: ' rows';
-        vertical-align: initial;
-      }
-    }
+    // rows count
+    // &:nth-child(2) {
+    //   font-family: $font-mono;
+    //   opacity: $black-opacity;
+    //   font-weight: 700;
+    //   width: 8em;
+    //   &::after {
+    //     content: ' rows';
+    //     vertical-align: initial;
+    //   }
+    // }
   }
   th span {
     display: none;
