@@ -105,7 +105,6 @@ export class DatasourceController {
       process.env.INSTANCE === "LOCAL" &&
       process.env.BACKEND_URL
     ) {
-      console.log(req.fileValidationError);
       if (req.fileValidationError) {
         throw new ConflictException(req.fileValidationError)
       }

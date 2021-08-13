@@ -7,8 +7,8 @@ export const editFileName = (req, file, callback) => {
 
 
 export const fileFilter = (req, file, callback) => {
-  if (!file.originalname.match(/\.(csv)$/)) {
-    req.fileValidationError = "Only csv files are allowed!";
+  if (!file.originalname.match(/\.(csv|xml|json|xlsx|xltx|xltm|avro|parquet|orc|zip|hdf5|txt)$/)) {
+    req.fileValidationError = "File format not supported";
     return callback(null, false, req.fileValidationError);
   }
   callback(null, true);
