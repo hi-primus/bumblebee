@@ -1797,8 +1797,7 @@ bufferutil@^4.0.1:
     node-gyp-build "^4.2.0"
 
 "bumblebee-utils@link:../bumblebee-utils":
-  version "0.0.0"
-  uid ""
+  version "21.8.0-beta"
 
 busboy@^0.2.11:
   version "0.2.14"
@@ -5246,8 +5245,8 @@ onetime@^5.1.0:
     mimic-fn "^2.1.0"
 
 "optimus-code-api@link:../optimus-code-api":
-  version "0.0.0"
-  uid ""
+  bumblebee-utils "link:../bumblebee-utils"
+  uuid "^8.3.2"
 
 optional@0.1.4:
   version "0.1.4"
