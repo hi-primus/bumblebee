@@ -60,14 +60,14 @@ RUN yarn global add pm2 && \
 
 WORKDIR "/opt"
 
-RUN echo "Version 21.8.0-beta"
+RUN echo "Version 21.9.0-beta"
 
 RUN pip install cytoolz --no-cache-dir && \
     pip install git+https://github.com/hi-primus/dateinfer.git --no-cache-dir && \
     pip install git+https://github.com/hi-primus/url_parser.git --no-cache-dir && \
-    pip install git+https://github.com/hi-primus/optimus.git@develop-21.8 --no-cache-dir
+    pip install git+https://github.com/hi-primus/optimus.git@develop-21.9 --no-cache-dir
 
-RUN git clone --branch develop-21.8 https://github.com/hi-primus/bumblebee.git
+RUN git clone --branch develop-21.9 https://github.com/hi-primus/bumblebee.git
 
 WORKDIR "/opt/Bumblebee"
 
