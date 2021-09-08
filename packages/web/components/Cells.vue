@@ -1064,6 +1064,8 @@ export default {
 
           this.clearTextSelection()
         }
+      } else {
+        console.warn('Invalid command', {command: payload.command, generator: payload.generator})
       }
     },
 
