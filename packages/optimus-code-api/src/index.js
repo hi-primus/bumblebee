@@ -685,12 +685,22 @@ export const codeGenerators = {
     + ( output_cols_argument ? `, output_cols=${output_cols_argument}` : '')
     + `)`;
   },
-  getFromDatetime: (payload) => {
+  extractFromDatetime: (payload) => {
     let _argument = preparedColumns(payload.columns);
     let output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (['final','processing',undefined].includes(payload.request.type)) ? '' : '__new__');
     return `.cols.format_date(${_argument}`
     + ( payload.current_format ? `, current_format="${transformDateToPython(payload.current_format)}"` : '')
-    + ( payload.output_type ? `, output_format="${TIME_VALUES[payload.output_type]}"` : '')
+    + ( payload.extract_value ? `, output_format="${TIME_VALUES[payload.extract_value]}"` : '')
+    + ( output_cols_argument ? `, output_cols=${output_cols_argument}` : '')
+    + `)`;
+  },
+  betweenTimeUnits: (payload) => {
+    let _argument = preparedColumns(payload.columns);
+    let output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (['final','processing',undefined].includes(payload.request.type)) ? '' : '__new__');
+    return `.cols.${payload.unit}_between(${_argument}`
+    + ( payload.value ? `, value="${payload.value}"` : '')
+    + ( payload.date_format ? `, date_format="${transformDateToPython(payload.date_format)}"` : '')
+    + ( payload.round ? `, round="${payload.round}"` : '')
     + ( output_cols_argument ? `, output_cols=${output_cols_argument}` : '')
     + `)`;
   },

@@ -1017,6 +1017,15 @@ const _TIME = {
 export const TIME_NAMES = objectMap(_TIME,([name, value])=>name)
 export const TIME_VALUES = objectMap(_TIME,([name, value])=>value)
 
+export const TIME_BETWEEN = {
+  years: 'years',
+  months: 'months',
+  days: 'days',
+  hours: 'hours',
+  minutes: 'minutes',
+  seconds: 'seconds'
+}
+
 export const CONNECTION_TYPES = {
   s3: "S3",
   hdfs: "HDFS",
@@ -1322,6 +1331,7 @@ export default {
   TYPES_NAMES,
   TIME_NAMES,
   TIME_VALUES,
+  TIME_BETWEEN,
   ALL_TYPES,
   STRING_TYPES,
   CONNECTION_TYPES,

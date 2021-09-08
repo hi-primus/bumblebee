@@ -20,6 +20,7 @@ import {
   EMAIL_FUNCTIONS,
   TYPES_NAMES,
   TIME_NAMES,
+  TIME_BETWEEN
 } from "bumblebee-utils";
 
 export const operationGroups = {
@@ -1199,24 +1200,53 @@ let _operations = {
       dataframe: TEST_DATAFRAMES.DATETIME
     },
     doc: {
-      description: 'Transform the date values from a column from a date format to another.'
+      description: 'Transform the date/time values from a column from a date format to another.'
+    }
+  },
+  
+  // 'TRANSFORMATIONS/TIME/divider/0': {divider: true, path: 'TRANSFORMATIONS/TIME'},
+  
+  extractFromDatetime: {
+    text: 'Extract from date/time',
+    path: 'TRANSFORMATIONS/TIME',
+    test: {
+      dataframe: TEST_DATAFRAMES.DATETIME
+    },
+    doc: {
+      description: 'Extracts date or time information from date values in selected column\(s\).'
     }
   },
 
+  // ...objectMapFromEntries(TIME_NAMES,(key, name)=>{
+  //   return ['date_extract_'+key, {
+  //     command: `date_extract_${key}`,
+  //     generator: `extractFromDatetime`,
+  //     payload: { key, extract_value: key },
+  //     text: capitalizeString(name),
+  //     path: 'TRANSFORMATIONS/TIME',
+  //     test: {
+  //       dataframe: key === 'utc' ? TEST_DATAFRAMES.DATETIME_UTC : TEST_DATAFRAMES.DATETIME
+  //     },
+  //     doc: {
+  //       description: `Extracts the ${name} from date values in the selected column\(s\).`
+  //     }
+  //   }]
+  // }),
+  
   'TRANSFORMATIONS/TIME/divider/0': {divider: true, path: 'TRANSFORMATIONS/TIME'},
 
-  ...objectMapFromEntries(TIME_NAMES,(key, name)=>{
-    return ['date_extract_'+key, {
-      command: `date_extract_${key}`,
-      generator: `getFromDatetime`,
-      payload: { key, output_type: key },
-      text: capitalizeString(name),
+  ...objectMapFromEntries(TIME_BETWEEN, (key, name)=>{
+    return ['between_'+key, {
+      command: `between_${key}`,
+      generator: `betweenTimeUnits`,
+      payload: { key, unit: key, round: 'down', value: undefined },
+      text: `${capitalizeString(name)} between`,
       path: 'TRANSFORMATIONS/TIME',
       test: {
-        dataframe: key === 'utc' ? TEST_DATAFRAMES.DATETIME_UTC : TEST_DATAFRAMES.DATETIME
+        dataframe: TEST_DATAFRAMES.DATETIME
       },
       doc: {
-        description: `Extracts the ${name} from date values in the selected column\(s\).`
+        description: `Calculates the ${name} between the date/times of the selected column\(s\) and a passed date or between two time/date columns.`
       }
     }]
   }),
@@ -3305,24 +3335,80 @@ export const commandsHandlers = {
       )}`,
   },
 
-  getFromDatetime: {
+  extractFromDatetime: {
     dialog: {
-      title: (c) => `Get ${TIME_NAMES[c.output_type].split(" (")[0]} from date`,
+      title: (c) => `Extract value from date`,
       output_cols: true,
+      fields: [
+        {
+          type: "select",
+          key: "extract_value",
+          label: "Value",
+          items: (c) => Object.entries(TIME_NAMES).map(([value, text]) => ({text, value})),
+        }
+        // TODO: Advanced section with date_format fields
+      ]
     },
     payload: (columns, payload = {}) => {
       return {
         columns,
         output_cols: columns.map((e) => ""),
         current_format: (payload.columnDateFormats ? payload.columnDateFormats[0] : undefined) || "",
-        output_type: payload.output_type || "year",
+        extract_value: payload.extract_value || "year",
         preview: {
           type: "TIME",
         },
       };
     },
     content: (payload) => {
-      return `<b>Get</b> ${hlParam(TIME_NAMES[payload.output_type])} from ${multipleContent([payload.columns], "hl--cols")}`;
+      return `<b>Get</b> ${hlParam(TIME_NAMES[payload.extract_value])} from ${multipleContent([payload.columns], "hl--cols")}`;
+    },
+  },
+
+  betweenTimeUnits: {
+    dialog: {
+      title: (c) => `Get ${TIME_BETWEEN[c.unit]} between ${c.columns.length > 1 ? 'columns' : 'column'}${c.value.length ? ' and value' : ''}.`,
+      output_cols: true,
+      fields: [
+        {
+          type: "select",
+          key: "round",
+          label: "Round result",
+          items: [
+            { text: "Without rounding", value: false },
+            { text: "Round", value: "round" },
+            { text: "Floor", value: "down" },
+            { text: "Ceil", value: "up" }
+          ],
+        },
+        {
+          type: "field",
+          key: "value",
+          label: "Date/time",
+          placeholder: "Now",
+          description: "(Optional when two columns are selected) Date to calculate with."
+        }
+        // TODO: Advanced section with date_format fields
+      ]
+    },
+    payload: (columns, payload = {}) => {
+      return {
+        columns,
+        output_cols: columns.map((e) => ""),
+        date_format: (payload.columnDateFormats ? payload.columnDateFormats[0] : undefined) || "",
+        value: '',
+        round: 'down',
+        unit: payload.unit || "years",
+        preview: {
+          type: "TIME",
+        },
+      };
+    },
+    content: (payload) => {
+      let str = `<b>Get</b> ${hlParam(TIME_BETWEEN[payload.unit])} between ${multipleContent([payload.columns], "hl--cols")}`;
+      if (payload.value) {
+        str += ` and ${hlParam(payload.value)}`
+      }
     },
   },
 
@@ -4249,7 +4335,15 @@ export const cypressOperationTests = (section, group, _operation = true, usernam
 
     let testOperations = operations.filter(o => o.test || o.doc || o.section)
 
-    testOperations.filter(o => o.test !== false && o.section == section && (group === true || o.group == group) && (_operation === true || _operation == o.operation || _operation.includes(o.operation))).forEach(operation => {
+    testOperations.filter(o => {
+      let operation_valid = _operation;
+      if (typeof _operation == "string") {
+        operation_valid = (_operation == o.operation || o.operation.includes(_operation))
+      } else {
+        operation_valid = (_operation === true || _operation.includes(o.operation))
+      }
+      return o.test !== false && o.section == section && (group === true || o.group == group) && operation_valid
+    }).forEach(operation => {
 
       it(`${operation.operation} operation`, () => {
 
