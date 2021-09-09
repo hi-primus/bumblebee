@@ -3407,8 +3407,9 @@ export const commandsHandlers = {
     content: (payload) => {
       let str = `<b>Get</b> ${hlParam(TIME_BETWEEN[payload.unit])} between ${multipleContent([payload.columns], "hl--cols")}`;
       if (payload.value) {
-        str += ` and ${hlParam(payload.value)}`
+        str += ` and ${hlParam(payload.value)}`;
       }
+      return str;
     },
   },
 
