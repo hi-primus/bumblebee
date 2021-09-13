@@ -226,7 +226,7 @@ export const codeGenerators = {
         }
         code += `.cols.set(`
         + `"${output_col}", `
-        + `value=${value}, `
+        + `value_func=${value}, `
         + `where='__match__', `
         + (payload.columns[0] ? `default="${payload.columns[0]}", ` : '')
         + `eval_value=True)`
@@ -237,7 +237,7 @@ export const codeGenerators = {
       }
       return code + `.cols.set(`
         + `"${output_col}", `
-        + `value=${value}, `
+        + `value_func=${value}, `
         + `where=${expression}, `
         + (payload.columns[0] ? `default="${payload.columns[0]}", ` : '')
         + `eval_value=True)`
@@ -824,7 +824,7 @@ export const codeGenerators = {
 
       return `.cols.set(`
       + `${output_cols_argument}, `
-      + `value=${value}, `
+      + `value_func=${value}, `
       + (payload.columns[0] ? `default="${payload.columns[0]}", ` : '')
       + `eval_value=True)`
     }
