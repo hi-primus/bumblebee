@@ -916,16 +916,6 @@ export const codeGenerators = {
       + ( (output_cols_argument) ? `, output_cols=${output_cols_argument}` : '')
       + ')'
   },
-  ML: (payload) => {
-    let _argument = preparedColumns(payload.columns);
-
-    let output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (['final','processing',undefined].includes(payload.request.type)) ? '' : '__new__')
-
-    return `.cols.${payload.command}(`
-      + _argument
-      + ( (output_cols_argument) ? `, output_cols=${output_cols_argument}` : '')
-      + ')'
-  },
   impute: (payload) => {
     let _argument = preparedColumns(payload.columns);
 
@@ -933,8 +923,9 @@ export const codeGenerators = {
 
     return `.cols.impute(`
       + _argument
-      + `, "${payload.data_type}"`
-      + `, "${payload.strategy}"`
+      + `, data_type="${payload.data_type}"`
+      + `, strategy="${payload.strategy}"`
+      + (payload.fill_value && payload.strategy == 'constant' ?`, fill_value=${payload.fill_value}` : '')
       + ( (output_cols_argument) ? `, output_cols=${output_cols_argument}` : '')
       + ')'
   },

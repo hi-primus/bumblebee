@@ -12,6 +12,7 @@ import {
   hlParam,
   hlCols,
   aggOutputCols,
+  columnsHint,
   transpose,
   objectMap,
   objectMapFromEntries,
@@ -1320,21 +1321,21 @@ let _operations = {
     min: 1,
     max: 1
   },
-  bucketizer: {
-    text: 'Create Bins',
-    path: 'TRANSFORMATIONS/ML',
-    max: 1
-  },
+  // bucketizer: {
+  //   text: 'Create Bins',
+  //   path: 'TRANSFORMATIONS/ML',
+  //   max: 1
+  // },
   impute: {
-    text: 'Impute rows',
+    text: 'Impute',
     path: 'TRANSFORMATIONS/ML',
     min: 1
   },
-  values_to_cols: {
-    text: 'Values to Columns',
-    path: 'TRANSFORMATIONS/ML',
-    max: 1
-  },
+  // values_to_cols: {
+  //   text: 'Values to Columns',
+  //   path: 'TRANSFORMATIONS/ML',
+  //   max: 1
+  // },
   string_to_index: {
     text: 'Strings to Index',
     path: 'TRANSFORMATIONS/ML',
@@ -1346,17 +1347,30 @@ let _operations = {
     min: 1
   },
   z_score: {
+    text: 'Z-Score',
+    generator: 'GENERIC',
+    payload: { title:  'Z-Score', text: 'Apply Z-Score', connector: 'to' },
+    path: 'TRANSFORMATIONS/ML',
+    min: 1
+  },
+  standard_scaler: {
     text: 'Standard Scaler',
+    generator: 'GENERIC',
+    payload: { title:  'Standard Scaler', text: 'Apply Standard Scaler', connector: 'to' },
     path: 'TRANSFORMATIONS/ML',
     min: 1
   },
   min_max_scaler: {
     text: 'Min max Scaler',
+    generator: 'GENERIC',
+    payload: { title: 'Min max Scaler', text: 'Apply Min max Scaler', connector: 'to' },
     path: 'TRANSFORMATIONS/ML',
     min: 1
   },
   max_abs_scaler: {
     text: 'Max abs Scaler',
+    generator: 'GENERIC',
+    payload: { title: 'Max abs Scaler', text: 'Apply Max abs Scaler', connector: 'to' },
     path: 'TRANSFORMATIONS/ML',
     min: 1
   },
@@ -3595,6 +3609,11 @@ export const commandsHandlers = {
       command: "stratified_sample",
       seed: 1,
       columns: columns,
+      preview: {
+        type: "stratified_sample",
+        datasetPreview: true,
+        noBufferWindow: true,
+      }
     }),
     content: (payload) => {
       // TO-DO: Test
@@ -4029,6 +4048,9 @@ export const commandsHandlers = {
         command: "string_to_index",
         columns: columns,
         output_cols: columns.map((e) => ""),
+        preview: {
+          type: "string_to_index"
+        }
       };
     },
     content: (payload) => {
@@ -4059,6 +4081,9 @@ export const commandsHandlers = {
         command: "index_to_string",
         columns: columns,
         output_cols: columns.map((e) => ""),
+        preview: {
+          type: "string_to_index"
+        }
       };
     },
     content: (payload) => {
@@ -4070,63 +4095,21 @@ export const commandsHandlers = {
     },
   },
 
-  ML: {
-    // TO-DO: Test
-    dialog: {
-      title: (command) => {
-        if (command.command == "z_score") return "Standard scaler";
-        if (command.command == "min_max_scaler") return "Min max scaler";
-        if (command.command == "max_abs_scaler") return "Max abs scaler";
-      },
-      text: (command) => {
-        return `Apply to ${arrayJoin(command.columns)}`;
-      },
-      output_cols: true,
-      validate: (command) => {
-        if (
-          command.output_cols.filter((e) => e !== "").length %
-            command.columns.length ==
-          0
-        )
-          return true;
-        return false;
-      },
-    },
-    payload: (columns, payload = {}) => {
-      return {
-        columns: columns,
-        output_cols: columns.map((e) => ""),
-      };
-    },
-    content: (payload) => {
-      // TO-DO: Test
-      var scaler = "scaler";
-      if (command.command == "z_score") scaler = "standard scaler";
-      if (command.command == "min_max_scaler") scaler = "min max scaler";
-      if (command.command == "max_abs_scaler") scaler = "max abs scaler";
-      return (
-        `<b>Apply ${scaler}</b> to` +
-        columnsHint(payload.columns, payload.output_cols) +
-        (payload.splits ? `by ${hlParam(payload.splits)}` : "")
-      );
-    },
-  },
-
   impute: {
     dialog: {
-      title: "Impute rows",
+      title: "Impute",
       output_cols: true,
       fields: [
-        {
-          type: "select",
-          key: "data_type",
-          label: "Data type",
-          placeholder: "Data type",
-          items: [
-            { text: "Continuous", value: "continuous" },
-            { text: "Categorical", value: "categorical" },
-          ],
-        },
+        // {
+        //   type: "select",
+        //   key: "data_type",
+        //   label: "Data type",
+        //   placeholder: "Data type",
+        //   items: [
+        //     { text: "Continuous", value: "continuous" },
+        //     { text: "Categorical", value: "categorical" },
+        //   ],
+        // },
         {
           type: "select",
           key: "strategy",
@@ -4135,7 +4118,16 @@ export const commandsHandlers = {
           items: [
             { text: "Mean", value: "mean" },
             { text: "Median", value: "median" },
+            { text: "Most frequent value", value: "most_frequent" },
+            { text: "Constant", value: "constant" }
           ],
+        },
+        {
+          type: "field",
+          condition: (c) => c.strategy === "constant",
+          key: "fill_value",
+          placeholder: 'numeric or "string"',
+          label: "Fill value"
         },
       ],
       validate: (command) => {
@@ -4153,8 +4145,12 @@ export const commandsHandlers = {
         command: "impute",
         data_type: "continuous",
         strategy: "mean",
+        fill_value: 0,
         columns: columns,
         output_cols: columns.map((e) => ""),
+        preview: {
+          type: "impute",
+        }
       };
     },
     content: (payload) => {
