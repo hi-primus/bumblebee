@@ -62,10 +62,12 @@ WORKDIR "/opt"
 
 RUN echo "Version 21.9.0-beta"
 
-RUN pip install cytoolz --no-cache-dir && \
-    pip install git+https://github.com/hi-primus/dateinfer.git --no-cache-dir && \
-    pip install git+https://github.com/hi-primus/url_parser.git --no-cache-dir && \
-    pip install git+https://github.com/hi-primus/optimus.git@develop-21.9 --no-cache-dir
+RUN pip install cytoolz && \
+    pip install git+https://github.com/hi-primus/dateinfer.git && \
+    pip install git+https://github.com/hi-primus/url_parser.git && \
+    pip install llvmlite --ignore-installed && \
+    pip install git+https://github.com/hi-primus/optimus.git@develop-21.9#egg=pyoptimus[pandas] && \
+    pip install git+https://github.com/hi-primus/optimus.git@develop-21.9#egg=pyoptimus[dask]
 
 RUN git clone --branch develop-21.9 https://github.com/hi-primus/bumblebee.git
 
