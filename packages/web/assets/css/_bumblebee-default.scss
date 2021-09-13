@@ -2493,8 +2493,9 @@ $editor-top-padding: 4px;
     //   }
     // }
   }
-  th span {
-    display: none;
+  th>span {
+    font-family: $font-mono-table;
+    font-size: 14px;
   }
   .v-data-table-header {
     background: #f5f5f5 !important;

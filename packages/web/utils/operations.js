@@ -3193,8 +3193,6 @@ export const commandsHandlers = {
         }
 
         currentCommand._loading = 'block';
-        currentCommand.clusters = false;
-        currentCommand.error = false;
 
         var response = await methods.evalCode(codePayload);
 
@@ -3219,7 +3217,8 @@ export const commandsHandlers = {
           : cluster_object.suggestions.map((value) => ({value, count: "1+"}));
           
           return {
-            replace: cluster_name,
+            cluster_name,
+            replace: cluster_object.suggestion,
             count: (Array.isArray(cluster_object) ? false : cluster_object.total_count) || "1+",
             values,
             selected: [],
@@ -3238,6 +3237,7 @@ export const commandsHandlers = {
             n_size: currentCommand.n_size,
           },
           clusters,
+          error: false
         };
       } catch (err) {
         var _error = printError(err);
@@ -3245,6 +3245,12 @@ export const commandsHandlers = {
           ...currentCommand,
           error: _error,
           should_update: true,
+          valid: {
+            algorithm: undefined,
+            n_size: undefined,
+            threshold: undefined,
+          },
+          clusters: false          
         };
       }
 

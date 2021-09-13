@@ -356,7 +356,7 @@
               v-model="cluster.selected"
               :items="cluster.values"
               :headers="[
-                { text: 'Values', value: 'value', sortable: false },
+                { text: cluster.cluster_name, value: 'value', sortable: false },
               ]"
               :sort-by="'count'"
               sort-desc
