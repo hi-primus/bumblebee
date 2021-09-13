@@ -71,7 +71,7 @@ RUN pip install cytoolz && \
 
 RUN git clone --branch develop-21.9 https://github.com/hi-primus/bumblebee.git
 
-WORKDIR "/opt/Bumblebee"
+WORKDIR "/opt/bumblebee"
 
 RUN yarn install
 
@@ -84,7 +84,7 @@ WORKDIR "/"
 RUN mkdir -p /data/db
 
 CMD ./usr/bin/mongod --fork --logpath /var/log/mongod.log && \
-    cd /opt/Bumblebee && \
+    cd /opt/bumblebee && \
     echo "Initializing Bumblebee Environment" && \
     echo "API_URL='http://$ADDRESS:4000'" >> packages/web/.env && \
     echo "DOCKER='TRUE'" >> packages/web/.env && \
