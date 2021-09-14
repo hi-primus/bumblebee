@@ -1342,7 +1342,7 @@ let _operations = {
     min: 1
   },
   index_to_string: {
-    text: 'Indices to Strings',
+    text: 'Index to Strings',
     path: 'TRANSFORMATIONS/ML',
     min: 1
   },
@@ -4070,7 +4070,7 @@ export const commandsHandlers = {
 
   index_to_string: {
     dialog: {
-      title: "Indices to Strings",
+      title: "Index to Strings",
       output_cols: true,
       validate: (command) => {
         if (
@@ -4095,7 +4095,7 @@ export const commandsHandlers = {
     content: (payload) => {
       // TO-DO: Test
       return (
-        `<b>Set indices to strings</b> ` +
+        `<b>Set index to strings</b> ` +
         columnsHint(payload.columns, payload.output_cols)
       );
     },
