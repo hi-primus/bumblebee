@@ -1999,7 +1999,7 @@ export const commandsHandlers = {
           type: "REMOVE_KEEP_SET",
           filteredPreview: false,
           highlightColor: (c) => (c.action === "drop" ? "red" : "green"),
-          noBufferWindow: (c) => c.preview.filteredPreview,
+          lessRows: (c) => c.preview.filteredPreview,
         },
 
         rowsType: "missing", // missing / mismatch / values / ranges
@@ -2223,7 +2223,7 @@ export const commandsHandlers = {
 
         preview: {
           filteredPreview: false,
-          noBufferWindow: (c) => c.preview.filteredPreview,
+          lessRows: (c) => c.preview.filteredPreview,
           highlightColor: (c) => (c.action === "drop" ? "red" : "green"),
           expectedColumns: 0,
           type: "filterRows",
@@ -2335,7 +2335,7 @@ export const commandsHandlers = {
         filteredPreview: false,
         type: "dropEmptyRows",
         highlightColor: "red",
-        noBufferWindow: (c) => c.preview.filteredPreview,
+        lessRows: (c) => c.preview.filteredPreview,
       },
       request: {},
     }),
@@ -2379,7 +2379,7 @@ export const commandsHandlers = {
         type: "dropDuplicates",
         highlightColor: "red",
         filteredPreview: false,
-        noBufferWindow: (c) => c.preview.filteredPreview,
+        lessRows: (c) => c.preview.filteredPreview,
       },
       request: {},
     }),
@@ -2913,7 +2913,6 @@ export const commandsHandlers = {
     dialog: {
       title: (c) => c.title || c.text || c.command,
       fields: (c) => {
-        console.log(c.parameters)
         return Object.entries(c.parameters || {}).map(([key, param]) => ({
           label: param.label,
           key,

@@ -573,6 +573,7 @@ export default {
       fetchedPreview: [],
 
       noBufferWindow: false,
+      lessRows: false,
 
       loadedPreviewCode: '',
 
@@ -1055,7 +1056,7 @@ export default {
         }
         if (this.previewCode && !this.incompleteColumns) {
           if (this.currentRowHighlights && typeof this.currentRowHighlights === 'number'){
-            if (this.previewCode.noBufferWindow) {
+            if (this.previewCode.noBufferWindow) { // lessRows?
               value = this.currentRowHighlights
             }
           }
@@ -1183,8 +1184,10 @@ export default {
         }
 
         var noBufferWindow = (previewCode && previewCode.noBufferWindow) ? true : false;
+        
+        var lessRows = (previewCode && previewCode.lessRows) ? true : false;
 
-        if (this.noBufferWindow != noBufferWindow) {
+        if (this.noBufferWindow != noBufferWindow || this.lessRows != lessRows) {
           this.columnValues = {};
           this.fetched = [];
           check = true;
@@ -1199,6 +1202,7 @@ export default {
         }
 
         this.noBufferWindow = noBufferWindow;
+        this.lessRows = lessRows;
       },
 
     },
@@ -1336,7 +1340,7 @@ export default {
 
     tableContainerScroll () {
       this.throttledScrollCheck()
-      this.debouncedScrollCheck()
+      this.debouncedUpdateRows()
       this.horizontalScrollCheckUp()
       return this.checkVisibleColumns()
     },
@@ -1993,13 +1997,13 @@ export default {
       return false
     },
 
-    debouncedScrollCheck: debounce( function () {
+    debouncedUpdateRows: debounce( function () {
       if (this.mustUpdateRows) {
         this.mustUpdateRows = false
         this.updateRows();
         if (this.gettingNewResults) {
           setTimeout(async () => {
-            // next debouncedScrollCheck
+            // next debouncedUpdateRows
             await this.$store.dispatch('afterNewResults');
             this.$store.commit('mutation', {mutate: 'loadingStatus', payload: false });
           }, 80);
@@ -2022,7 +2026,8 @@ export default {
       try {
         if (!this.fetching) {
 
-          awaited = (awaited===undefined) ? true : awaited
+          // default to true
+          awaited = (awaited===undefined) ? true : awaited;
 
           var range = false
 
@@ -2122,112 +2127,124 @@ export default {
 
     async fetchRows (_range) {
 
-      var range = (_range && _range.length) ? _range : this.getCurrentWindow()
-      var currentFrom = (range && range[0]) ? range[0] : -1
+      var range = (_range && _range.length) ? _range : this.getCurrentWindow();
+      var currentFrom = (range && range[0]) ? range[0] : -1;
 
       // deletes
 
-      var fetched
+      let fetched;
 
       // get the valid fetches to know what to fetch next
 
       if (this.previewCode) {
-        fetched = this.fetched.filter(e=>e.code===this.previewCode.code)
+        fetched = this.fetched.filter(e=>e.code===this.previewCode.code);
         if (!fetched.length) {
-          this.fetched = this.fetched.filter(e=>!e.code)
-          this.recalculateRows = true
+          this.fetched = this.fetched.filter(e=>!e.code);
+          this.recalculateRows = true;
         }
       } else {
-        fetched = this.fetched.filter(e=>e.update===this.currentDatasetUpdate)
+        fetched = this.fetched.filter(e=>e.update===this.currentDatasetUpdate);
         if (!fetched.length) {
           // this.fetched = this.fetched.filter(e=>e.update===this.currentDatasetUpdate)
-          this.fetched = []
-          this.recalculateRows = true
+          this.fetched = [];
+          this.recalculateRows = true;
         }
       }
 
       if (this.fetched.length>(this.maxChunks+2) && currentFrom>=0) {
         // +2 so it doesn't calculate a distanceMap every time
-        var distanceMap = this.fetched.map((chunk, index)=>({
+        let distanceMap = this.fetched.map((chunk, index)=>({
           distance: Math.abs(currentFrom-chunk.from),
           index,
           from: chunk.from
         }))
           .filter(c=>c.from!==0)
-          .sort((a,b)=>(a.distance-b.distance))
-        var tries = 10
+          .sort((a,b)=>(a.distance-b.distance));
+        
+        let tries = 10;
 
         while (this.fetched.length>this.maxChunks && tries--) {
-          var toDelete = distanceMap.pop()
+          let toDelete = distanceMap.pop();
           if (toDelete) {
-            this.fetched.splice(toDelete.index, 1)
-            this.recalculateRows = true
+            this.fetched.splice(toDelete.index, 1);
+            this.recalculateRows = true;
           }
         }
       }
 
-      var [from, to, force] = this.toFetch.pop()
+      let [from, to, force] = this.toFetch.pop();
 
       if (!to) {
-        return range
+        return range;
       }
 
-      from = Math.max( from, 0 )
+      from = Math.max( from, 0 );
       if (!this.previewCode) {
-        to = Math.min( to, this.totalRowsCount - 1 )
+        to = Math.min( to, this.totalRowsCount - 1 );
       }
 
-      var length = to - from
+      let length = to - from;
 
-      var distanceFromWindow = Math.abs(currentFrom-from)
+      let distanceFromWindow = Math.abs(currentFrom-from);
 
-      var newRanges = optimizeRanges(
+      let newRanges = optimizeRanges(
         [from,to],
         fetched.map(e=>[e.from,e.to])
-      )
+      );
 
       if (!newRanges.length) {
-        return range // no chunks
+        return range; // no chunks
       }
 
-      var toret = range
+      let returnValue = range;
+      let forced = false;
 
       for (let i = newRanges.length - 1; i >= 0 ; i--) {
 
-        var previewCode = (this.previewCode ? this.previewCode.profileCode : false) || '';
-        var previewPayload = (this.previewCode ? this.previewCode.codePayload : false) || {};
+        let previewCode = (this.previewCode ? this.previewCode.profileCode : false) || '';
+        let previewPayload = (this.previewCode ? this.previewCode.codePayload : false) || {};
 
         if (this.currentProfilePreview.code !== previewCode) {
           // console.log('[REQUESTING] resetting profile')
-          await this.unsetProfile()
+          await this.unsetProfile();
         }
 
-        var checkProfile = await this.fetchChunk(newRanges[i][0], newRanges[i][1]);
-        console.debug('[FETCHING] Chunk done')
+        let checkProfile = await this.fetchChunk(newRanges[i][0], newRanges[i][1]);
+        console.debug('[FETCHING] Chunk done');
 
-        this.mustUpdateRows = true
+        this.mustUpdateRows = true;
 
-        toret = (checkProfile===undefined) ? range : false
+        returnValue = (checkProfile===undefined) ? range : false;
+
+        // repeats current check if neccessary
+        if (checkProfile === 'forceSample' && !forced) {
+          forced = true;
+          i++;
+        }
 
         if (checkProfile) {
           // console.log('[REQUESTING] profile must be checked')
           if (this.currentProfilePreview.code !== previewCode) {
-            await this.setProfile(previewCode, previewPayload)
-            console.debug('[FETCHING] Profiling done')
+            await this.setProfile(previewCode, previewPayload);
+            console.debug('[FETCHING] Profiling done');
           }
         }
       }
 
-      this.debouncedScrollCheck()
+      this.debouncedUpdateRows();
 
-      return toret
+      return returnValue;
 
     },
 
     async fetchChunk(from, to) {
 
+      let addToFetch;
+      let lessRowsFetched = false;
+      let checkProfile = false;
+
       try {
-        var addToFetch = await this.$store.dispatch('getBufferWindow', {
+        addToFetch = await this.$store.dispatch('getBufferWindow', {
           from,
           to,
           beforeCodeEval: this.previewCode.beforeCodeEval,
@@ -2239,14 +2256,32 @@ export default {
         throw err;
       }
 
-
       if (addToFetch) {
+        
+        // Less rows fetched
+        if (addToFetch.to - addToFetch.from != addToFetch.sample.value.length-1) {
+          lessRowsFetched = true;
+          console.warn(`Chunk result does not match its requested range`, addToFetch);
+          // No rows fetched
+          if (!addToFetch.sample.value.length) {
+            return 'forceSample';
+          }
+          addToFetch.to = addToFetch.from + addToFetch.sample.value.length-1;
+        }
+        
         this.fetched.push(addToFetch);
         this.mustUpdateRows = true;
-        return this.checkIncomingColumns(addToFetch.sample.columns);
+
+        if (lessRowsFetched) {
+          checkProfile = 'forceSample';
+        } else {
+          checkProfile = this.checkIncomingColumns(addToFetch.sample.columns);
+        }
       } else {
-        return 0
+        checkProfile = undefined;
       }
+
+      return checkProfile;
 
     },
 

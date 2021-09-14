@@ -107,15 +107,20 @@
           </div>
           <div
             class="o-results pb-2"
-            v-if="currentPreviewInfo && (currentPreviewInfo.rowHighlights || currentPreviewInfo.newColumns || currentPreviewInfo.replacingColumns)">
+            v-if="currentPreviewInfo && (typeof currentPreviewInfo.rowHighlights=='number' || command.dialog.filteredPreview || currentPreviewInfo.newColumns || currentPreviewInfo.replacingColumns)">
             <template
               v-if="typeof currentPreviewInfo.rowHighlights=='number'"
             >
-              <div
-                :class="{'warning--text': !currentPreviewInfo.rowHighlights}"
-                class="text--darken-2"
-               >
+              <div :class="{
+                  'error--text': !currentPreviewInfo.rowHighlights,
+                  'text--darken-2': currentPreviewInfo.rowHighlights
+                }">
                 Matching rows: {{currentPreviewInfo.rowHighlights}}
+              </div>
+            </template>
+            <template v-else>
+              <div class="grey--text">
+                Matching rows: loading...
               </div>
             </template>
             <div
@@ -132,6 +137,7 @@
           <div class="o-buttons">
             <template v-if="command.dialog.filteredPreview">
               <v-checkbox
+                :disabled="(!currentPreviewInfo.rowHighlights || typeof currentPreviewInfo.rowHighlights !== 'number')"
                 class="filter-results-checkbox"
                 v-model="currentCommand.preview.filteredPreview"
                 :label="`Filter results: ${currentCommand.preview.filteredPreview ? 'Yes' : 'No'}`"
@@ -145,7 +151,7 @@
               class="mr-4"
               dense
               text
-              @click="cancelCommand"
+              @click="cancelCommand(); clearSelection();"
             >
               Cancel
             </v-btn>
@@ -154,7 +160,7 @@
               id="btn-command-submit"
               depressed
               dense
-              :disabled="(command.dialog.validate && !command.dialog.validate(currentCommand)) || (storePreviewError && !allowError)"
+              :disabled="(command.dialog.validate && !command.dialog.validate(currentCommand)) || (storePreviewError && !allowError) || (command.dialog.filteredPreview && !currentPreviewInfo.rowHighlights)"
               :loading="currentCommand.loadingAccept"
               type="submit"
               form="operation-form"
@@ -833,6 +839,18 @@ export default {
 
     },
 
+    clearSelection () {
+
+      if (window.getSelection) {
+        window.getSelection().removeAllRanges();
+      }
+      else if (document.selection) {
+        document.selection.empty();
+      }
+
+      this.$store.commit('selection',{ clear: true });
+    },
+
     recoverTextSelection () {
 
       this.$nextTick(()=>{
@@ -880,6 +898,7 @@ export default {
           load: preview.type==='load',
           infer: this.currentCommand._moreOptions===false, // TO-DO: Check
           noBufferWindow: getProperty(preview.noBufferWindow, [this.currentCommand]),
+          lessRows: getProperty(preview.lessRows, [this.currentCommand]),
           joinPreview: getProperty(preview.joinPreview, [this.currentCommand]),
           expectedColumns,
         })
@@ -1115,7 +1134,7 @@ export default {
       return new Promise((resolve, reject)=>{
         setTimeout(async () => {
           // this.recoverTextSelection();
-          this.clearTextSelection();
+          // this.clearSelection();
           this.currentCommand = false;
           this.$emit('updateOperations', {
             active: false,
