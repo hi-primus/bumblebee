@@ -668,6 +668,10 @@ export const pythonArguments = (defaultParams = {}, params = {}) => {
 
     let value = (params[key] !== undefined) ? params[key] : param.value;
 
+    if (param.nullable && !value) {
+      value = undefined;
+    }
+
     if (value!==undefined && param && !param.noCode) {
 
       switch (param.type) {
