@@ -78,6 +78,32 @@ export const operationGroups = {
 };
 
 const TEST_DATAFRAMES = {
+  PRODUCTS: {
+    id: [
+      1,
+      2,
+      4,
+      5,
+      6,
+      10
+    ],
+    name: [
+      "Shirt",
+      "Shoes",
+      "Shirt",
+      "Pants",
+      "Pants",
+      "Shoes"
+    ],
+    discount: [
+      "Yes",
+      "Yes",
+      "Yes",
+      "No",
+      "Yes",
+      "Yes"
+    ],
+  },
   PEOPLE: {
     id: [
       5,
@@ -1336,6 +1362,18 @@ let _operations = {
   //   path: 'TRANSFORMATIONS/ML',
   //   max: 1
   // },
+  one_hot_encode: {
+    text: 'One-hot encode', path: 'TRANSFORMATIONS/ML',
+    test: {
+      dataframe: TEST_DATAFRAMES.PRODUCTS,
+      payload: {
+        columns: ['name', 'discount']
+      }
+    },
+    doc: {
+      description: 'Maps categorical column\(s\) to multiple binary columns with at most a single one-value.'
+    }
+  },
   string_to_index: {
     text: 'Strings to Index',
     path: 'TRANSFORMATIONS/ML',
@@ -4033,6 +4071,34 @@ export const commandsHandlers = {
       // TO-DO: Test
       return `<b>Set values to columns</b> using ${hlCols(payload.columns[0])}`;
     },
+  },
+
+  one_hot_encode: {
+    dialog: {
+      title: "One-hot encode",
+      output_cols: false,
+      fields: [
+        {
+          type: "field",
+          label: "Prefix",
+          key: "prefix",
+          placeholder: "auto",
+          description: "(Optional) Prefix of the output columns."
+        }
+      ]
+    },
+    payload: (columns, payload = {}) => {
+      return {
+        columns: columns,
+        command: "one_hot_encode",
+        prefix: "",
+        preview: {
+          expectedColumns: -1,
+          type: "one_hot_encode"
+        }
+      };
+    },
+    content: (payload) => `<b>One-hot encode</b>` + columnsHint(payload.columns)
   },
 
   string_to_index: {

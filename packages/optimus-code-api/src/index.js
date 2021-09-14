@@ -896,6 +896,14 @@ export const codeGenerators = {
   values_to_cols: (payload) => {
     return `.cols.values_to_cols("${payload.columns[0]}")`
   },
+  one_hot_encode: (payload) => {
+    let _argument = preparedColumns(payload.columns);
+
+    return `.cols.one_hot_encode(`
+      + _argument
+      + (payload.prefix ? `, prefix="${payload.prefix}"` : '')
+      + ')'
+  },
   string_to_index: (payload) => {
     let _argument = preparedColumns(payload.columns);
 
