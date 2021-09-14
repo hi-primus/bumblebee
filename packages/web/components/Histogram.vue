@@ -3,12 +3,12 @@
     <div :style="{'min-height': 60+'px'}">
       <BarsCanvas
         :selectable="selectable"
-        :selected="selected"
         :values="values"
         :maxVal="maxVal"
         :binMargin="1"
         :width="'auto'"
         :height="height"
+        :selected="computedSelected"
         @update:selected="updateSelected"
         @hovered="setValueIndex($event)"
       />
@@ -29,39 +29,38 @@ export default {
     BarsCanvas
   },
 
-	props: {
-		values: {
-			default: () => ([]),
-			type: Array
-		},
-		total: {
-			default: 1,
-			type: Number
-		},
-		height: {
-			default: 60,
-			type: Number
+  props: {
+    values: {
+      default: () => ([]),
+      type: Array
+    },
+    total: {
+      default: 1,
+      type: Number
+    },
+    height: {
+      default: 60,
+      type: Number
     },
     columnIndex: {
       default: -1,
       type: Number
     },
-		selectable: {
-			default: false,
-			type: Boolean
+    selectable: {
+      default: false,
+      type: Boolean
     },
-	},
+  },
 
-	data () {
-		return {
-			maxVal: 0,
-			currentLower: 0,
-			currentUpper: 0,
-			currentCount: false,
-			lower: '',
-      selected: [],
-      upper: '',
-		}
+  data () {
+    return {
+      maxVal: 0,
+      currentLower: 0,
+      currentUpper: 0,
+      currentCount: false,
+      lower: '',
+    upper: ''
+    }
   },
 
   computed: {
@@ -75,65 +74,50 @@ export default {
       else
         return this.$options.filters.humanNumber(this.lower) + ' - ' + this.$options.filters.humanNumber(this.upper)
     },
-  },
 
-	created () {
-		this.maxVal = this.getMaxVal(this.values)
-		this.lower = (+this.values[0].lower).toFixed(2)
-		this.upper = (+this.values[this.values.length-1].upper).toFixed(2)
-  },
+    computedSelected () {
+      let ds = this.currentSelection;
 
-  watch: {
-    currentSelection: {
-      // deep: true,
-      handler (ds) {
-        if (ds && ds.ranged) {
-          if (ds.ranged.index!=this.columnIndex && this.selected.length>0) {
-            this.selected = []
-          }
-          else if (ds.ranged.index==this.columnIndex && !arraysEqual(this.selected,ds.ranged.indices)) {
-            this.selected = ds.ranged.indices
-          }
-        }
+      if (ds && ds.ranged && ds.ranged.index == this.columnIndex) {
+        return ds.ranged.indices;
+      } else {
+        return [];
       }
     }
   },
 
-	methods: {
+  created () {
+    this.maxVal = this.getMaxVal(this.values)
+    this.lower = (+this.values[0].lower).toFixed(2)
+    this.upper = (+this.values[this.values.length-1].upper).toFixed(2)
+  },
+
+  methods: {
 
     updateSelected(v) {
 
-      v = v || []
+      v = v || [];
 
-      if (arraysEqual(this.selected,v)) {
-        return
+      if (arraysEqual(this.computedSelected, v)) {
+        return;
       }
-      else {
-        this.selected = v
-      }
-
-
+      
       var { index, ranges } = this.currentSelection.ranged || {}
 
       ranges = ranges || []
       index = index || -1
 
-      if (
-        (!ranges.length && v.length)
-        ||
-        index===this.columnIndex
-        ||
-        (v.length && index!==this.columnIndex)
-      ) {
+      if (v.length > 0 || index == this.columnIndex) {
         var newRanges = reduceRanges( v.map(index=>[this.values[index].lower, this.values[index].upper]) )
-        if (!arraysEqual(ranges,newRanges) || index!=this.columnIndex )
+        if (!arraysEqual(ranges, newRanges) || index != this.columnIndex) {
           this.$store.commit('selection',{
             ranged: {
-              index: (!!v.length) ? this.columnIndex : -1,
+              index: v.length ? this.columnIndex : -1,
               ranges: newRanges,
               indices: v
             }
-          })
+          });
+        }
       }
     },
 
@@ -143,23 +127,23 @@ export default {
         this.setValue((+item.lower).toFixed(2),(+item.upper).toFixed(2), item.count)
     },
 
-		setValue (lower, upper, count) {
-			this.currentLower = lower
-			this.currentUpper = upper
-			this.currentCount = `${count}, ${+((count/this.total)*100).toFixed(2)}%`
-		},
-
-		getMaxVal (arr) {
-			return arr.reduce(
-				(max, p) => (p.count > max ? p.count : max),
-				arr[0].count
-			)
-		},
-
-		normVal (val) {
-			return (val * 100) / this.maxVal
+    setValue (lower, upper, count) {
+      this.currentLower = lower
+      this.currentUpper = upper
+      this.currentCount = `${count}, ${+((count/this.total)*100).toFixed(2)}%`
     },
 
-	}
+    getMaxVal (arr) {
+      return arr.reduce(
+        (max, p) => (p.count > max ? p.count : max),
+        arr[0].count
+      )
+    },
+
+    normVal (val) {
+      return (val * 100) / this.maxVal
+    },
+
+  }
 }
 </script>

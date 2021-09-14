@@ -4,11 +4,11 @@
     <div :style="{'min-height': 60+'px'}">
       <BarsCanvas
         :selectable="selectable"
-        :selected="selected"
         :values="calculatedValues"
         :binMargin="1"
         :width="'auto'"
         :height="height"
+        :selected="computedSelected"
         @update:selected="updateSelected"
         @hovered="setValueIndex($event)"
       />
@@ -28,42 +28,41 @@ export default {
   components: {
     BarsCanvas
   },
-	props: {
-		values: {
-			default: ()=>[]
-		},
-		count: {
-			default: ()=>[],
-			type: Array
-		},
-		total: {
-			default: 1,
-			type: Number
-		},
-		uniques: {
-			default: 1,
-			type: Number
-		},
-		height: {
-			default: 60,
-			type: Number
+  props: {
+    values: {
+      default: ()=>[]
+    },
+    count: {
+      default: ()=>[],
+      type: Array
+    },
+    total: {
+      default: 1,
+      type: Number
+    },
+    uniques: {
+      default: 1,
+      type: Number
+    },
+    height: {
+      default: 60,
+      type: Number
     },
     columnIndex: {
       default: -1,
       type: Number
     },
     selectable: {
-			default: false,
-			type: Boolean
+      default: false,
+      type: Boolean
     },
-	},
+  },
 
-	data () {
-		return {
+  data () {
+    return {
       currentVal: false,
-      maxVal: 0,
-      selected: [],
-		}
+      maxVal: 0
+    }
   },
 
   created() {
@@ -85,6 +84,16 @@ export default {
       }
     },
 
+    computedSelected () {
+      let ds = this.currentSelection;
+
+      if (ds && ds.ranged && ds.ranged.index == this.columnIndex) {
+        return ds.ranged.indices;
+      } else {
+        return [];
+      }
+    },
+
     calculatedValues() {
       return this.cValues.map((e,i)=>{
         return {
@@ -103,37 +112,19 @@ export default {
     }
   },
 
-  watch: {
-    currentSelection: {
-      handler (ds) {
-        if (ds && ds.ranged) {
-          if (ds.ranged.index!=this.columnIndex && this.selected.length>0) {
-            this.selected = []
-          }
-          else if (ds.ranged.index==this.columnIndex && !arraysEqual(this.selected,ds.ranged.indices)) {
-            this.selected = ds.ranged.indices
-          }
-        }
-        else if (ds && ds.ranged===undefined) {
-          this.selected = []
-        }
-      }
-    }
-  },
-
-	methods: {
+  methods: {
 
     changeValue (newVal) {
-			this.currentVal = newVal
-		},
-		getMaxVal (arr) {
-			return arr.reduce(
-				(max, p) => (p.count > max ? p.count : max),
-				arr[0].count
-			)
-		},
-		normVal (val) {
-			return (val * 100) / this.maxVal
+      this.currentVal = newVal
+    },
+    getMaxVal (arr) {
+      return arr.reduce(
+        (max, p) => (p.count > max ? p.count : max),
+        arr[0].count
+      )
+    },
+    normVal (val) {
+      return (val * 100) / this.maxVal
     },
     setValueIndex(index) {
       var item = this.calculatedValues[index]
@@ -145,42 +136,33 @@ export default {
         this.currentVal = `${value}, ${item.count}, ${item.percentage}%`
       }
     },
+
     updateSelected(v) {
 
+      v = v || [];
 
-      v = v || []
-
-      if (arraysEqual(this.selected,v)) {
-        return
+      if (arraysEqual(this.computedSelected, v)) {
+        return;
       }
-      else {
-        this.selected = v
-      }
-
-
+      
       var { index, values } = this.currentSelection.ranged || {}
 
       values = values || []
       index = index || -1
 
-      if (
-        (!values.length && v.length)
-        ||
-        index===this.columnIndex
-        ||
-        (v.length && index!==this.columnIndex)
-      ) {
+      if (v.length > 0 || index == this.columnIndex) {
         var newValues = v.map(i=>this.calculatedValues[i].value)
-        if (!arraysEqual(values,newValues) || index!=this.columnIndex )
+        if (!arraysEqual(values, newValues) || index != this.columnIndex) {
           this.$store.commit('selection',{
             ranged: {
-              index: (!!v.length) ? this.columnIndex : -1,
+              index: v.length ? this.columnIndex : -1,
               values: (!!v.length) ? newValues : [],
               indices: v
             }
-          })
+          });
+        }
       }
-    }
-	}
+    },
+  }
 }
 </script>

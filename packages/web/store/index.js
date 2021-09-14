@@ -500,72 +500,76 @@ export const mutations = {
   },
 
   selection (state, {tab, columns, ranged, clear, text} ) {
-    if (tab===undefined) {
-      tab = state.tab
+
+    if (tab === undefined) {
+      tab = state.tab;
     }
-    if (tab!==undefined) {
 
-      var current = state.datasetSelection[tab]
+    if (tab === undefined) {
+      return;
+    }
 
-      if (
-        !ranged && !text && !(columns && columns.length)
-        &&
-        !current.ranged && !current.text && !(current.columns && current.columns.length)
-      ) {
-        return
+    var current = state.datasetSelection[tab]
+
+    if (
+      !ranged && !text && !(columns && columns.length)
+      &&
+      !current.ranged && !current.text && !(current.columns && current.columns.length)
+    ) {
+      return
+    }
+
+    state.properties.filter(p=>p.clearOnSelection).forEach(p=>{
+      if (p.multiple) {
+        Vue.set(state['every'+p.name], tab, false)
+      } else {
+        state[p.name] = false
       }
+    })
 
-      state.properties.filter(p=>p.clearOnSelection).forEach(p=>{
-        if (p.multiple) {
-          Vue.set(state['every'+p.name], tab, false)
-        } else {
-          state[p.name] = false
-        }
-      })
-
-      if (clear) {
-        Vue.set(state.datasetSelection,tab,{
-          columns: [],
-          ranged: undefined,
-          text: undefined
-        })
-        return
-      }
-
-      var columnsSelected = []
-      var rangedSelected = undefined
-      var textSelected = undefined
-
-      if (ranged===undefined && text===undefined) {
-        if (columns !== undefined) {
-          columnsSelected = columns
-        } else if (state.datasetSelection[tab]) {
-          columnsSelected = state.datasetSelection[tab].columns || []
-        }
-      }
-
-      if (!columnsSelected.length && text===undefined) {
-        if (ranged!==undefined) {
-          rangedSelected = ranged
-        } else if (state.datasetSelection[tab]) {
-          rangedSelected = state.datasetSelection[tab].ranged || {}
-        }
-      }
-
-      if (!columnsSelected.length && (!rangedSelected || !Object.keys(rangedSelected).length)) {
-        if (text !== undefined) {
-          textSelected = text
-        } else if (state.datasetSelection[tab]) {
-          textSelected = state.datasetSelection[tab].text || {}
-        }
-      }
-
+    if (clear) {
       Vue.set(state.datasetSelection,tab,{
-        columns: columnsSelected,
-        ranged: rangedSelected,
-        text: textSelected
+        columns: [],
+        ranged: undefined,
+        text: undefined
       })
+      return
     }
+
+    var columnsSelected = []
+    var rangedSelected = undefined
+    var textSelected = undefined
+
+    if (ranged===undefined && text===undefined) {
+      if (columns !== undefined) {
+        columnsSelected = columns
+      } else if (state.datasetSelection[tab]) {
+        columnsSelected = state.datasetSelection[tab].columns || []
+      }
+    }
+
+    if (!columnsSelected.length && text===undefined) {
+      if (ranged!==undefined) {
+        rangedSelected = ranged
+      } else if (state.datasetSelection[tab]) {
+        rangedSelected = state.datasetSelection[tab].ranged || {}
+      }
+    }
+
+    if (!columnsSelected.length && (!rangedSelected || !Object.keys(rangedSelected).length)) {
+      if (text !== undefined) {
+        textSelected = text
+      } else if (state.datasetSelection[tab]) {
+        textSelected = state.datasetSelection[tab].text || {}
+      }
+    }
+
+    Vue.set(state.datasetSelection,tab,{
+      columns: columnsSelected,
+      ranged: rangedSelected,
+      text: textSelected
+    })
+
   }
 
 }
@@ -1696,12 +1700,14 @@ export const actions = {
     var previewCode = '';
     var codePayload  = { command: undefined };
     var noBufferWindow = false;
+    var lessRows = false;
     var forceName = false;
 
     if (state.previewCode) {
       previewCode = state.previewCode.code;
       codePayload = state.previewCode.codePayload;
       noBufferWindow = state.previewCode.noBufferWindow;
+      lessRows = state.previewCode.lessRows;
       forceName = !!state.previewCode.datasetPreview;
     }
 
@@ -1736,6 +1742,7 @@ export const actions = {
             sample: true,
             buffer: [from, to+1],
             noBufferWindow,
+            lessRows
           }
         };
         response = await dispatch('evalCode',{ socketPost, codePayload });
@@ -1760,6 +1767,7 @@ export const actions = {
           sample: true,
           buffer: [from, to+1],
           noBufferWindow,
+          lessRows,
           noSave: true
         }
       };
