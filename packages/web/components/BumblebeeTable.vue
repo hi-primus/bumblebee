@@ -2209,7 +2209,7 @@ export default {
           await this.unsetProfile();
         }
 
-        let checkProfile = await this.fetchChunk(newRanges[i][0], newRanges[i][1]);
+        let checkProfile = await this.fetchChunk(newRanges[i][0], newRanges[i][1], forced);
         console.debug('[FETCHING] Chunk done');
 
         this.mustUpdateRows = true;
@@ -2237,7 +2237,7 @@ export default {
 
     },
 
-    async fetchChunk(from, to) {
+    async fetchChunk(from, to, forced = false) {
 
       let addToFetch;
       let lessRowsFetched = false;
@@ -2272,7 +2272,7 @@ export default {
         this.fetched.push(addToFetch);
         this.mustUpdateRows = true;
 
-        if (lessRowsFetched) {
+        if (lessRowsFetched && !forced) {
           checkProfile = 'forceSample';
         } else {
           checkProfile = this.checkIncomingColumns(addToFetch.sample.columns);
