@@ -118,7 +118,7 @@
                 Matching rows: {{currentPreviewInfo.rowHighlights}}
               </div>
             </template>
-            <template v-else>
+            <template v-else-if="command.dialog.filteredPreview">
               <div class="grey--text">
                 Matching rows: loading...
               </div>
@@ -1229,7 +1229,7 @@ export default {
     },
 
     async deleteCellsError (ignoreFrom = -1) {
-      await this.$store.dispatch('markCells', { ignoreFrom, splice: true });
+      await this.$store.dispatch('markCells', { ignoreFrom, splice: true, last: true });
     },
 
     async markCells (mark, ignoreFrom) {
@@ -1237,7 +1237,7 @@ export default {
     },
 
     async markCellsError (ignoreFrom = -1) {
-      await this.$store.dispatch('markCells', { ignoreFrom, error: true });
+      await this.$store.dispatch('markCells', { ignoreFrom, error: true, last: true });
     },
 
     getOperationContent (payload) {
@@ -1340,8 +1340,10 @@ export default {
         code: code,
         content: content,
         id: Number(new Date()),
-        ignore: ignoreCell
-      })
+        ignore: ignoreCell,
+        created: new Date(),
+        modified: new Date()
+      });
 
       this.cells = cells
 
