@@ -1095,14 +1095,23 @@ export const actions = {
 
   },
 
-  async markCells ({ dispatch, state, commit }, { mark, ignoreFrom, error, splice }) {
+  // marks or deletes operation cells
+  async markCells ({ dispatch, state, commit }, { mark, ignoreFrom, error, splice, last }) {
 
     mark = mark===undefined ? true : mark;
     ignoreFrom = ignoreFrom || -1;
 
     let cells = [...state.dataSources, ...state.commands];
+
+    if (last) {
+      last = cells.map(c => c.modified).reduce((a, b) => (a > b ? a : b));
+    }
+
     for (let i = cells.length - 1; i >= 0 ; i--) {
       if (ignoreFrom>=0 && i>=ignoreFrom) {
+        continue
+      }
+      if (last && cells[i].modified!=last) {
         continue
       }
       if (splice) {
@@ -1182,6 +1191,7 @@ export const actions = {
         if (commandHandler && commandHandler.beforeExecuteCode) {
           cell = {...cell}; // avoid direct vuex mutation
           cell.payload = await commandHandler.beforeExecuteCode(cell.payload, [], methods);
+          cell.modified = new Date();
           commit('updateCell', { id: cell.id, cell });
         } else if (!commandHandler) {
           console.warn('[COMMANDS] commandHandler not found for', cell);
@@ -1460,10 +1470,10 @@ export const actions = {
       commit('mutation', { mutate: 'lastWrongCode', payload: { code: wrongCode, error: deepCopy(err) }});
 
       if (state.firstRun || ignoreFrom < 0) {
-        await dispatch('markCells', { ignoreFrom, error: true });
+        await dispatch('markCells', { ignoreFrom, error: true, last: true });
       } else {
         console.debug('[CELLS] Deleting every column except', ignoreFrom);
-        await dispatch('markCells', { ignoreFrom, splice: true });
+        await dispatch('markCells', { ignoreFrom, splice: true, last: true });
       }
       commit('mutation', { mutate: 'commandsDisabled', payload: undefined });
 
@@ -1605,10 +1615,10 @@ export const actions = {
       commit('mutation', { mutate: 'lastWrongCode', payload: { code: wrongCode, error: deepCopy(err) } });
 
       if (state.firstRun || ignoreFrom < 0) {
-        await dispatch('markCells', { ignoreFrom, error: true });
+        await dispatch('markCells', { ignoreFrom, error: true, last: true });
       } else {
         console.debug('[CELLS] Deleting every column except', ignoreFrom);
-        await dispatch('markCells', { ignoreFrom, splice: true });
+        await dispatch('markCells', { ignoreFrom, splice: true, last: true });
       }
       commit('mutation', { mutate: 'commandsDisabled', payload: undefined});
 
@@ -1784,7 +1794,7 @@ export const actions = {
       if (state.previewCode) {
         commit('setPreviewInfo', {error: response.data.error})
       } else {
-        await dispatch('markCells', { error: true });
+        await dispatch('markCells', { error: true, last: true });
       }
     } else {
       commit('setPreviewInfo', {error: false})
