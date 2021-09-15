@@ -1,7 +1,7 @@
 [![Logo Bumblebee](images/logoBumblebee.png)](https://hi-bumblebee.com) 
 
 [![Slack](https://img.shields.io/badge/chat-slack-red.svg?logo=slack&color=36c5f0)](https://communityinviter.com/apps/hi-bumblebee/welcome)
-![Docker Pulls](https://img.shields.io/docker/pulls/hiprimus/bumblebee)
+[![Docker Pulls](https://img.shields.io/docker/pulls/hiprimus/bumblebee)](https://hub.docker.com/r/hiprimus/bumblebee)
 
 # Bumblebee
 
@@ -20,6 +20,14 @@ Bumblebee can be used to:
 * [Bumblebee Reference Documentation](https://hi-primus.gitbook.io/bumblebee/): Operations and setup reference tutorials and guides.
 * [Medium page](https://medium.com/hi-bumblebee): Tutorials and articles.
 * [Bumblebee community on Slack](https://communityinviter.com/apps/hi-bumblebee/welcome): Get help, contribute and collaborate.
+
+## Try Bumblebee
+
+Try Bumblebee using [this Docker image](https://hub.docker.com/r/hiprimus/bumblebee).
+
+```
+docker run --name <NAME> -p 3000:3000 -p 4000:4000 -e ADDRESS=localhost hiprimus/bumblebee:latest
+```
   
 ## Contributing to Bumblebee 
 Contributions go far beyond pull requests and commits. We are very happy to receive any kind of contributions including:
