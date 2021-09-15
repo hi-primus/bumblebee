@@ -766,7 +766,7 @@ export const INCOMPATIBLE_ENGINES = [
 export const INIT_PARAMS = {
   'engine': {
     type: 'hidden',
-    default: 'dask'
+    default: 'pandas'
   },
   'jupyter_ip': {
     type: 'hidden'

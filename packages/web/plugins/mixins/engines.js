@@ -57,7 +57,7 @@ export default {
         {
           key: 'engine',
           is: 'v-select',
-          value: defaultValues.engine  || 'dask',
+          value: defaultValues.engine  || 'pandas',
           props: {
             items: (v)=>{
               let remove = [];

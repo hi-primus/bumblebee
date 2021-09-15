@@ -212,7 +212,7 @@ export const requestToKernel = async function (type, sessionId, payload, asyncCa
 
 	switch (type) {
     case 'init':
-      payload.engine = payload.engine || process.env.ENGINE || 'dask';
+      payload.engine = payload.engine || process.env.ENGINE || 'pandas';
       code = kernels[sessionId].kernelHandler.init(payload);
       break;
     case 'code':
