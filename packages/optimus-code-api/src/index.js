@@ -238,7 +238,7 @@ export const codeGenerators = {
       return code + `.cols.set(`
         + `"${output_col}", `
         + `value_func=${value}, `
-        + `where=${expression}, `
+        + `where='${expression}', `
         + (payload.columns[0] ? `default="${payload.columns[0]}", ` : '')
         + `eval_value=True)`
 
@@ -406,8 +406,8 @@ export const codeGenerators = {
       columnsRight.push(payload.right_on)
     }
 
-    let filterLeft = columnsLeft.length ? `.cols.select(["${columnsLeft.join('", "')}"])` : '*';
-    let filterRight = columnsRight.length ? `.cols.select(["${columnsRight.join('", "')}"])` : '*';
+    let filterLeft = columnsLeft.length ? `.cols.select(["${columnsLeft.join('", "')}"])` : '';
+    let filterRight = columnsRight.length ? `.cols.select(["${columnsRight.join('", "')}"])` : '';
 
     // filterEnd = filterLeft = filterRight = ''
 
