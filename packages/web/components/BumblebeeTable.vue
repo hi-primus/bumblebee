@@ -978,23 +978,24 @@ export default {
     plotsData () {
       let plotsData = {};
 
-			this.currentDataset.columns.forEach((column, i) => {
-				plotsData[column.name] = {
-          key: i,
-          name: column.name,
-          missing: (column.stats.missing) ? +column.stats.missing : 0,
-          match: (column.stats.match) ? +column.stats.match : 0,
-          mismatch: (column.stats.mismatch) ? +column.stats.mismatch : 0,
-					count_uniques: column.stats.count_uniques,
-					hist: (column.stats.hist && column.stats.hist[0]) ? column.stats.hist : undefined,
-					frequency: ((column.stats.frequency) ? column.stats.frequency : undefined) || column.frequency || undefined,
-					total: +this.currentDataset.summary.rows_count,
-					zeros: column.stats.zeros,
-          null: column.stats.null,
-          inferred_type: column.stats.inferred_type.data_type
-					// hist_years: (column.stats.hist && column.stats.hist.years) ? column.stats.hist.years : undefined
-				};
-			});
+      this.currentDataset.columns.forEach((column, i) => {
+        if (column && column.stats) {
+          plotsData[column.name] = {
+            key: i,
+            name: column.name,
+            missing: (column.stats.missing) ? +column.stats.missing : 0,
+            match: (column.stats.match) ? +column.stats.match : 0,
+            mismatch: (column.stats.mismatch) ? +column.stats.mismatch : 0,
+            count_uniques: column.stats.count_uniques,
+            hist: (column.stats.hist && column.stats.hist[0]) ? column.stats.hist : undefined,
+            frequency: ((column.stats.frequency) ? column.stats.frequency : undefined) || column.frequency || undefined,
+            total: +this.currentDataset.summary.rows_count,
+            zeros: column.stats.zeros,
+            null: column.stats.null,
+            inferred_type: column.stats.inferred_type.data_type
+          };
+        }
+      });
 
       return plotsData;
     },
