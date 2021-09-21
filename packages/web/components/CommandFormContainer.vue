@@ -2,9 +2,10 @@
   <v-dialog
     v-if="command.dialog.dialog"
     ref="operation-form"
+    class="operation-form-dialog"
     persistent
     :value="(currentCommand.command)"
-    :max-width="820"
+    :max-width="command.dialog.dialog == 'small' ? 320 : 820"
     @click:outside="$emit('cancel-command')"
     @keydown.esc="$emit('cancel-command')"
     :content-class="[(command.dialog.dynamicClass ? command.dialog.dynamicClass(currentCommand) : ''), (command.dialog.class || ''), 'command-dialog'].join(' ')"

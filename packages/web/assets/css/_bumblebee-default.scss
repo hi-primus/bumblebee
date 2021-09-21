@@ -628,6 +628,11 @@ table {
         @include upper-small;
       }
     }
+    .operation-form-dialog {
+      .operation-body {
+        padding-left: 9px;
+      }
+    }
     .operation-form-container, .operation-form {
       height: inherit;
     }

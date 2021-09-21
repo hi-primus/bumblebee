@@ -35,7 +35,7 @@
       @cancelCommand="cancelCommand"
     >
       <v-form @submit.prevent="confirmCommand" id="operation-form" class="pl-4 pr-5 pt-2 operation-form" autocomplete="off">
-          <div class="body-2 mb-1 mt-2" :class="{'title': command.dialog.bigText}" v-if="command.dialog.text">
+          <div class="operation-body body-2 mb-1 mt-2" :class="{'title': command.dialog.bigText}" v-if="command.dialog.text">
             {{
               {value: command.dialog.text, args: [currentCommand]} | property
             }}

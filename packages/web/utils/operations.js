@@ -1914,18 +1914,31 @@ export const commandsHandlers = {
   },
 
   DROP_KEEP: {
+    dialog: {
+      dialog: 'small',
+      title: (c) => `${capitalizeString(c.command)} column${(c.columns.length)>1 ? 's' : ''}`,
+      text: (c) => {
+        return `${capitalizeString(c.command)} ${arrayJoin(c.columns.map(col => `'${col}'`))}`;
+      },
+    },
     content: (payload) =>
       `<b>${capitalizeString(payload.command)}</b> ${multipleContent(
         [payload.columns],
         "hl--cols"
       )}`,
+    payload: (columns, payload = {}) => {
+      return {
+        ...payload,
+        columns: columns
+      };
+    },
   },
 
   sortRows: {
     dialog: {
       title: "Sort rows",
       text: (c) => {
-        return `Sort rows in ${arrayJoin(c.columns)}`;
+        return `Sort rows in ${arrayJoin(c.columns.map(col => `'${col}''`))}`;
       },
       fields: [
         {
