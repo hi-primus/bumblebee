@@ -872,6 +872,7 @@ export const codeGenerators = {
     payload = escapeQuotesOn(payload,['separator','output_col'])
     return `.cols.nest(${preparedColumns(payload.columns)}`
     +( (payload.separator) ? `, separator="${payload.separator}"` : '')
+    + `, drop="${payload.keep ? 'False' : 'True'}"`
     +`, output_col="${output_col}")`
     +( (payload.request.type === 'preview' && payload.separator) ? `.cols.find("${output_col}", sub=["${payload.separator}"])` : '')
   },
@@ -902,6 +903,7 @@ export const codeGenerators = {
     return `.cols.one_hot_encode(`
       + _argument
       + (payload.prefix ? `, prefix="${payload.prefix}"` : '')
+      + `, drop="${payload.keep ? 'False' : 'True'}"`
       + ')'
   },
   string_to_index: (payload) => {

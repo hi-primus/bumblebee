@@ -3969,6 +3969,11 @@ export const commandsHandlers = {
           placeholder: (c) => c.columns.join("_"),
           clearable: true,
         },
+        {
+          type: "switch",
+          key: "keep",
+          label: (c) => `Keep input columns: ${c.keep ? "Yes" : "No"}`,
+        }
       ],
     },
     payload: (columns, payload = {}) => {
@@ -3977,6 +3982,7 @@ export const commandsHandlers = {
         columns,
         separator: ", ",
         title: "Nest " + (columns.length == 1 ? `column` : "columns"),
+        keep: false,
         defaultOutputName: columns.join("_"),
         output_col: columns.join("_"),
         preview: {
@@ -4083,6 +4089,11 @@ export const commandsHandlers = {
           key: "prefix",
           placeholder: "auto",
           description: "(Optional) Prefix of the output columns."
+        },
+        {
+          type: "switch",
+          key: "keep",
+          label: (c) => `Keep input columns: ${c.keep ? "Yes" : "No"}`
         }
       ]
     },
@@ -4091,6 +4102,7 @@ export const commandsHandlers = {
         columns: columns,
         command: "one_hot_encode",
         prefix: "",
+        keep: false,
         preview: {
           expectedColumns: -1,
           type: "one_hot_encode"
