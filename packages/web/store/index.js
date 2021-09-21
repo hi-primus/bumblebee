@@ -1101,7 +1101,7 @@ export const actions = {
     mark = mark===undefined ? true : mark;
     ignoreFrom = ignoreFrom || -1;
 
-    let cells = [...state.dataSources, ...state.commands];
+    let cells = [...state.dataSources || [], ...state.commands || []];
 
     if (last) {
       last = cells.map(c => c.modified).reduce((a, b) => (a > b ? a : b));
@@ -1154,7 +1154,7 @@ export const actions = {
 
   deleteErrorCells ({ state, commit }) {
 
-    let cells = [...state.dataSources, ...state.commands];
+    let cells = [...state.dataSources || [], ...state.commands || []];
 
     for (let i = cells.length - 1; i >= 0 ; i--) {
       if (cells[i] && cells[i].error && cells[i].code) {
