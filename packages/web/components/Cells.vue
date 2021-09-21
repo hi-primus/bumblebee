@@ -657,13 +657,13 @@ export default {
 
               this.preparePreviewCode(expectedColumns);
             }
-            if (currentCommand.preview.fake==='rename') {
+            if (currentCommand.preview && currentCommand.preview.fake==='rename') {
               var nameMap = {}
               currentCommand.output_cols.forEach((col, i) => {
                 nameMap[currentCommand.columns[i]] = col
               })
               this.$store.commit('setPreviewNames',nameMap)
-            } else if (currentCommand.preview.fake==='duplicate') {
+            } else if (currentCommand.preview && currentCommand.preview.fake==='duplicate') {
               var duplicatedColumns = []
               currentCommand.output_cols.forEach((col, i) => {
                 duplicatedColumns.push({name: currentCommand.columns[i], newName: col})
