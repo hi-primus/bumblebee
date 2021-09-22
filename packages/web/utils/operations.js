@@ -906,6 +906,7 @@ let _operations = {
     text: 'Left',
     generator: 'SUBSTRING',
     path: 'TRANSFORMATIONS/STRING',
+    payload: { n: 6 },
     test: {
       dataframe: TEST_DATAFRAMES.STRING,
       payload: {
@@ -922,6 +923,7 @@ let _operations = {
     text: 'Right',
     generator: 'SUBSTRING',
     path: 'TRANSFORMATIONS/STRING',
+    payload: { n: 6 },
     test: {
       dataframe: TEST_DATAFRAMES.STRING,
       payload: {
