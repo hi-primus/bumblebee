@@ -845,15 +845,15 @@ let _operations = {
     }
   },
 
-  proper: {
-    text: 'Proper', generator: 'GENERIC', path: 'TRANSFORMATIONS/STRING' ,
-    payload: { title: 'Convert to proper case', text: 'Proper case' },
+  capitalize: {
+    text: 'Capitalize', generator: 'GENERIC', path: 'TRANSFORMATIONS/STRING' ,
+    payload: { title: 'Capitalize text', text: 'Capitalize' },
     test: {
       dataframe: TEST_DATAFRAMES.CASE
     },
     doc: {
-      title: 'Proper case',
-      description: 'Converts all the words from every value of the selected columns into proper case.'
+      title: 'Capitalize',
+      description: 'Capitalizes all the words from every value of the selected columns.'
     }
   },
 
