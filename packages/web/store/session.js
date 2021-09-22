@@ -35,19 +35,19 @@ export const actions =  {
     }
   },
 
-  saveWorkspace: asyncDebounce ( async function ({dispatch, commit, state, rootState}) {
+  saveWorkspace: asyncDebounce ( async function ({dispatch, commit, state, rootState, rootGetters}) {
     if (!state.saveReady)  {
       return
     }
     commit('mutation', { mutate: 'workspaceStatus', payload: 'uploading' })
     try {
 
-      var commands = rootState.commands.map(e=>{
+      var transformations = rootGetters.transformations.map(e=>{
         var { newDfName, done, error, ...cell} = e
         return JSON.stringify(cell)
       })
 
-      var dataSources = rootState.dataSources.map(e=>{
+      var dataSources = rootGetters.dataSources.map(e=>{
         var { done, error, ...cell} = e
         return JSON.stringify(cell)
       })
@@ -62,7 +62,7 @@ export const actions =  {
             profiling: JSON.stringify(profiling),
           }
         }),
-        commands: [...dataSources, ...commands],
+        commands: [...dataSources, ...transformations],
         dataSourcesCount: dataSources.length,
         configuration,
         selectedTab: rootState.tab

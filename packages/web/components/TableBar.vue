@@ -266,7 +266,7 @@
 
       </v-menu>
       <v-badge
-        :value="codeError!=='' || (operationsTitle && operationsTitle!='operations') && cells.length!=0"
+        :value="errorAlerts.length || (operationsTitle && operationsTitle!='operations') && cells.length!=0"
         :color="(operationsTitle!='operations') ? 'primary lighten-2' : 'error'"
         dot
         overlap
@@ -277,7 +277,7 @@
           text
           class="icon-btn"
           :class="{'active': operationsActive}"
-          :disabled="!(cells.length || operationsTitle!=='operations' || codeError!=='')"
+          :disabled="!(cells.length || operationsTitle!=='operations' || errorAlerts.length)"
           @click="operationsActive = !operationsActive"
         >
           <v-icon>code</v-icon>
@@ -533,7 +533,6 @@ export default {
     ...mapGetters([
       'currentSelection',
       'hasSecondaryDatasets',
-      'workspaceCells',
       'currentListView',
       'selectionType',
       'currentDataset',
@@ -541,7 +540,7 @@ export default {
       'currentTab'
     ]),
 
-    ...mapState(['nextCommand', 'noMatch', 'showingColumnsLength']),
+    ...mapState(['nextCommand', 'noMatch', 'showingColumnsLength', 'errorAlerts']),
 
     columns () {
       let columns = [];
@@ -567,15 +566,6 @@ export default {
 
     filtersActive () {
       return this.typesSelected.length || this.searchText || (this.currentDataset && this.columns && this.showingColumnsLength !== this.columns.length);
-    },
-
-    codeError: {
-      get () {
-        return this.$store.state.codeError;
-      },
-      set (value) {
-        this.$store.commit('mutation', {mutate: 'codeError', payload: value})
-      }
     },
 
     commandsDisabled: {
@@ -684,7 +674,7 @@ export default {
 
     cells: {
       get() {
-        return Array.from(this.workspaceCells)
+        return Array.from(this.$store.getters.cells)
       },
       set(value) {
         // -
@@ -827,8 +817,8 @@ export default {
       this.lastSort = []
     },
 
-    codeError (value) {
-      if (value!='') {
+    errorAlerts (value) {
+      if (value.length) {
         this.operationsActive = true
         this.operationsTitle = 'operations'
       }

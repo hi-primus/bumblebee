@@ -230,7 +230,7 @@
         tag="div"
         class="operations-cells commands-cells"
         :class="{ 'no-pe disabled': commandsDisabled, 'dragging': drag }"
-        :list="localCommands"
+        :list="localTransformations"
         v-bind="commandsDragOptions"
         handle=".handle"
         @start="draggableStart"
@@ -238,7 +238,7 @@
       >
         <div
           class="cell-container"
-          v-for="(cell, index) in localCommands"
+          v-for="(cell, index) in localTransformations"
           :key="cell.id"
           :class="{'fixed-cell': cell.fixed, 'cell-error': cell.error,'done': cell.done}"
         >
@@ -261,9 +261,17 @@
           </div>
         </div>
       </draggable>
-      <v-alert key="error" type="error" class="mt-3" dismissible v-if="codeError!=''"  @input="cleanCodeError">
-        {{codeError}}
-      </v-alert>
+      <template v-if="errorAlerts.length">
+        <v-alert 
+          v-for="alert in errorAlerts"
+          :key="'error-'+alert.id"
+          type="error"
+          class="mt-3"
+          dismissible
+          @input="removeErrorAlert(alert.id)"
+          :close-icon="$store.state.cells.error == alert.id ? 'mdi-arrow-u-left-top' : 'cancel'"
+        >{{alert.content}}</v-alert>
+      </template>
     </div>
   </div>
 </template>
@@ -345,8 +353,7 @@ export default {
 
     ...mapGetters([
       'dataSources',
-      'commands',
-      'workspaceCells',
+      'transformations',
       'currentSelection',
       'currentDataset',
       'selectionType',
@@ -358,17 +365,12 @@ export default {
       'hasSecondaryDatasets'
     ]),
 
-    customCommandsHandlers () {
-      return this.$store.getters['customCommands/handlers'];
+    errorAlerts () {
+      return this.$store.state.errorAlerts;
     },
 
-    codeError: {
-      get () {
-        return this.$store.state.codeError;
-      },
-      set (value) {
-        this.$store.commit('mutation', {mutate: 'codeError', payload: value})
-      }
+    customCommandsHandlers () {
+      return this.$store.getters['customCommands/handlers'];
     },
 
     gettingNewResults: {
@@ -410,36 +412,38 @@ export default {
         return this.$store.state.codeDone;
       },
       set (value) {
-        this.$store.commit('mutation', {mutate: 'codeDone', payload: value})
+        this.$store.commit('mutation', {mutate: 'codeDone', payload: value});
       }
     },
 
-    localCommands: {
+    localTransformations: {
       deep: true,
       get () {
-        return Array.from(this.commands)
+        return Array.from(this.transformations);
       },
-      set (commands) {
-        this.$store.dispatch('mutateAndSave', {mutate: 'commands', payload: commands} )
+      set (transformations) {
+        this.$store.commit('setTransformations', transformations);
+        this.$store.dispatch('session/saveWorkspace');
       }
     },
 
     localDataSources: {
       deep: true,
       get () {
-        return Array.from(this.dataSources)
+        return Array.from(this.dataSources);
       },
       set (dataSources) {
-        this.$store.dispatch('mutateAndSave', {mutate: 'dataSources', payload: dataSources} )
+        this.$store.commit('setDataSources', dataSources);
+        this.$store.dispatch('session/saveWorkspace');
       }
     },
 
     cells: {
       get () {
-        return [...this.localDataSources, ...this.localCommands]
+        return [...this.localDataSources, ...this.localTransformations]
       },
       set (value) {
-        this.localCommands = value.filter(e=>!(e && e.payload && e.payload.request && e.payload.request.isLoad))
+        this.localTransformations = value.filter(e=>!(e && e.payload && e.payload.request && e.payload.request.isLoad))
         this.localDataSources = value.filter(e=>e && e.payload && e.payload.request && e.payload.request.isLoad)
       }
     },
@@ -496,7 +500,7 @@ export default {
         return this.$store.state.commandsDisabled
       },
       set (value) {
-        this.$store.commit('mutation', {mutate: 'commandsDisabled', payload: value})
+        this.$store.commit('mutation', {mutate: 'commandsDisabled', payload: value});
       }
     },
 
@@ -864,18 +868,31 @@ export default {
 
     getProperty,
 
-    async cleanCodeError () {
-      await this.$store.dispatch('deleteErrorCells');
-      await this.$store.dispatch('resetPromises', { from: 'cells' });
-      await this.$nextTick();
-      await this.$store.dispatch('getProfiling', { payload: {
-        socketPost: this.socketPost,
-        dfName: this.currentDataset.dfName,
-        avoidReload: true,
-        clearPrevious: true,
-        partial: true,
-        methods: this.commandMethods
-      }});
+    async undoCells () {
+      try {
+        await this.$store.dispatch('undoCells');
+        await this.$store.dispatch('resetPromises', { from: 'cells', error: false });
+        await this.$nextTick();
+        await this.$store.dispatch('getProfiling', { payload: {
+          socketPost: this.socketPost,
+          dfName: this.currentDataset.dfName,
+          avoidReload: true,
+          clearPrevious: true,
+          partial: true,
+          methods: this.commandMethods
+        }});
+      } catch (err) {
+        await this.$store.dispatch('undoCells', true);
+        console.error(err);
+      }
+    },
+
+    async removeErrorAlert (id) {
+      let cells = this.$store.state.cells
+      this.$store.commit('removeErrorAlert', id);
+      if (cells.error && cells.error == id) {
+        await this.undoCells();
+      }
     },
 
     preparePreviewCode: debounce( async function(expectedColumns) {
@@ -1162,11 +1179,11 @@ export default {
     async draggableEnd (noDrag = false) {
       this.drag = false
       if (window.dragType == 'cell' || noDrag) {
-        this.localCommands = this.localCommands
+        this.localTransformations = this.localTransformations
         this.localDataSources = this.localDataSources
         var codeText = await this.codeText();
         if (codeText.trim()==='') {
-          this.codeError = '';
+          this.removeErrorAlert("all")
           this.runCode() // deleting every cell
           return;
         }
@@ -1177,7 +1194,7 @@ export default {
 
     async removeCell (index, isDataSource = false) {
 
-      let from = isDataSource ? this.localDataSources : this.localCommands
+      let from = isDataSource ? this.localDataSources : this.localTransformations
 
       if (index<0 || !from[index]) {
         return
@@ -1193,7 +1210,7 @@ export default {
         }
       }
 
-      this.codeError = '';
+      this.removeErrorAlert("all")
 
       let cells = [...from]
       let deletedPayload = cells.splice(index,1)[0].payload
@@ -1221,7 +1238,7 @@ export default {
       if (isDataSource) {
         this.localDataSources = cells;
       } else {
-        this.localCommands = cells;
+        this.localTransformations = cells;
       }
 
       this.codeDone = '';
@@ -1314,7 +1331,7 @@ export default {
         code = this.getCode(payload)
       }
 
-      this.codeError = '';
+      this.removeErrorAlert("all")
 
       if (at==-1) {
         at = this.cells.length
@@ -1378,7 +1395,7 @@ export default {
 
         this.markCells(true, ignoreFrom);
 
-        this.codeError = '';
+        this.removeErrorAlert("all")
         this.lastWrongCode = false;
 
       } catch (err) {

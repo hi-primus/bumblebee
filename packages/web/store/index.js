@@ -1,7 +1,7 @@
 import Vue from 'vue'
 
 import {
-  capitalizeString, getPropertyAsync, filterCells, parseResponse, printError, deepCopy,
+  capitalizeString, getPropertyAsync, filterCells, parseResponse, printError, deepCopy, objectMap,
   ALL_TYPES, INCOMPATIBLE_ENGINES
  } from 'bumblebee-utils'
 import { generateCode } from 'optimus-code-api'
@@ -93,8 +93,8 @@ const defaultState = {
   loadingStatus: false,
   coiledAvailable: false,
   tab: 0,
-  commands: [],
-  cells: [],
+  cells: { dataSources: [], transformations: [], status: 'ok' },
+  lastCorrectCells: { dataSources: [], transformations: [], status: 'ok' },
   workspace: false,
   datasets: [],
   datasetSelection: [],
@@ -102,7 +102,7 @@ const defaultState = {
   firstRun: true,
   commandsDisabled: false,
   lastWrongCode: false,
-  codeError: '',
+  errorAlerts: [],
   noMatch: false,
   showingColumnsLength: 0,
   codeDone: '',
@@ -117,7 +117,6 @@ const defaultState = {
   executePromises: {},
   columns: {},
   listViews: [],
-  dataSources: [],
   gettingNewResults: '',
   localEngineParameters: {},
   engineId: false,
@@ -128,7 +127,7 @@ const defaultState = {
 export const state = () => {
 
   return {
-    ...defaultState,
+    ...objectMap(defaultState, e => deepCopy(e)),
     workspaceSlug: false,
     properties,
     ...pStates,
@@ -166,6 +165,69 @@ export const mutations = {
 
   mutation (state, {mutate, payload}) {
     Vue.set(state, mutate, payload)
+  },
+
+  copyCellsIfOk (state) {
+    if (state.cells.status == 'ok') {
+      state.lastCorrectCells = deepCopy(state.cells);
+    }
+  },
+
+  checkCellsStatus (state) {
+    let cells = [...state.cells.transformations, ...state.cells.dataSources];
+    let status = cells.some(c => c.error) ? "error" : "ok";
+    if (status != state.cells.status) {
+      let stateCells = {...state.cells};
+      stateCells.status = status;
+      if (status == "ok") {
+        stateCells.error = undefined;
+      }
+      state.cells = stateCells;
+    }
+  },
+
+  setTransformations (state, transformations) {
+    Vue.set(state.cells, 'transformations', transformations);
+    this.commit('checkCellsStatus');
+  },
+
+  setDataSources (state, dataSources) {
+    Vue.set(state.cells, 'dataSources', dataSources);
+    this.commit('checkCellsStatus');
+  },
+
+  setCells (state, cells) {
+    let dataSources = cells.filter(e=>e && e.payload && e.payload.request && e.payload.request.isLoad);
+    let transformations = cells.filter(e=>!(e && e.payload && e.payload.request && e.payload.request.isLoad));
+
+    let stateCells = {...state.cells};
+
+    stateCells.status = cells.some(c => c.error) ? "error" : "ok";
+    stateCells.dataSources = dataSources;
+    stateCells.transformations = transformations;
+    state.cells = stateCells;
+  },
+
+  appendError(state, {error, cells}) {
+    if (typeof error == "string") {
+      error = {
+        content: error,
+        id: Number(new Date())
+      }
+    }
+    Vue.set(state.errorAlerts, state.errorAlerts.length, error);
+    if (cells) {
+      state.cells = {...deepCopy(state.cells), error: error.id}
+    }
+  },
+  
+  removeErrorAlert(state, id) {
+    if (id == "all") {
+      state.errorAlerts = [];
+    } else {
+      let index = state.errorAlerts.findIndex(e => e.id==id);
+      Vue.delete(state.errorAlerts, index);
+    }
   },
 
   updateDataset (state, { tab }) {
@@ -433,22 +495,27 @@ export const mutations = {
 
   setCellCode (state, {index, code}) {
     try {
-      var commands = state.commands || []
-      commands[index].code = code
-      state.commands = commands
+      var cells = state.cells || {};
+      cells.transformations[index].code = code;
+      state.cells = cells;
     } catch (error) {
-      console.error(error)
+      console.error(error);
     }
   },
 
   updateCell (state, {id, cell}) {
-    let cellArrays = ['dataSources', 'commands'];
+
+    let cellArrays = ['dataSources', 'transformations'];
+
+    let _cells = deepCopy(state.cells);
+
     for (let i = 0; i < cellArrays.length; i++) {
       const arr = cellArrays[i];
-      for (let j = 0; j < state[arr].length; j++) {
-        const _cell = state[arr][j];
+      for (let j = 0; j < _cells[arr].length; j++) {
+        const _cell = _cells[arr][j];
         if (_cell.id == id) {
-          Vue.set(state[arr], j, cell);
+          _cells[arr][j] = cell;
+          state.cells = _cells;
           return;
         }
       }
@@ -456,13 +523,18 @@ export const mutations = {
   },
 
   deleteCell (state, {id}) {
-    let cellArrays = ['dataSources', 'commands'];
+
+    let cellArrays = ['dataSources', 'transformations'];
+
+    let _cells = deepCopy(state.cells);
+
     for (let i = 0; i < cellArrays.length; i++) {
       const arr = cellArrays[i];
-      for (let j = 0; j < state[arr].length; j++) {
-        const _cell = state[arr][j];
+      for (let j = 0; j < _cells[arr].length; j++) {
+        const _cell = _cells[arr][j];
         if (_cell.id == id) {
-          Vue.delete(state[arr], j);
+          _cells[arr].splice(j, 1);
+          state.cells = _cells;
           return;
         }
       }
@@ -663,10 +735,10 @@ export const actions = {
     }
   },
 
-  getPromise({ state, dispatch, commit }, { name, action, payload, kernel, forcePromise, index } ) {
+  async getPromise({ state, dispatch, commit }, { name, action, payload, kernel, forcePromise, index } ) {
 
     if (kernel && window && !window.socketPromise) {
-      dispatch('resetPromises', { from: 'optimus' });
+      await dispatch('resetPromises', { from: 'optimus' });
       forcePromise = true;
     }
 
@@ -738,7 +810,7 @@ export const actions = {
     commit('session/mutation', { mutate: 'saveReady', payload: false });
 
     if (!slug) {
-      var workspace = state.workspace
+      let workspace = state.workspace
       if (workspace && workspace.slug) {
         slug = workspace.slug;
       } else {
@@ -748,21 +820,21 @@ export const actions = {
 
     console.log('[WORKSPACE] Loading', slug);
 
-    var response = await dispatch('request',{
+    let response = await dispatch('request',{
       path: `/workspaces/slug/${slug}`
     });
 
-    var tabs = [];
-    var cells = [];
+    let tabs = [];
+    let cells = [];
 
-    var tab = -1;
+    let tab = -1;
 
     // console.log('[WORKSPACE] Loaded', slug, response);
 
     if (response.data) {
       tab = response.data.selectedTab!==undefined ? response.data.selectedTab : tab;
       tabs = response.data.tabs.map(e=>{
-        var profiling = JSON.parse(e.profiling);
+        let profiling = JSON.parse(e.profiling);
         return {
           name: e.name,
           dataSources: e.dataSources,
@@ -799,8 +871,12 @@ export const actions = {
     if (tab<0) {
       tab = 0;
     }
-    commit('mutation', { mutate: 'commands', payload: commands });
-    commit('mutation', { mutate: 'dataSources', payload: dataSources});
+
+    let cellsObject = state.cells;
+
+    cellsObject = { ...cellsObject, transformations: commands, dataSources }
+
+    commit('mutation', { mutate: 'cells', payload: cellsObject });
     commit('mutation', { mutate: 'tab', payload: tab});
     commit('mutation', { mutate: 'workspace', payload: response.data });
     commit('session/mutation', { mutate: 'saveReady', payload: true});
@@ -1096,12 +1172,12 @@ export const actions = {
   },
 
   // marks or deletes operation cells
-  async markCells ({ dispatch, state, commit }, { mark, ignoreFrom, error, splice, last }) {
+  async markCells ({ dispatch, state, commit, getters }, { mark, ignoreFrom, error, splice, last }) {
 
     mark = mark===undefined ? true : mark;
     ignoreFrom = ignoreFrom || -1;
 
-    let cells = [...state.dataSources || [], ...state.commands || []];
+    let cells = getters.cells;
 
     if (last) {
       last = cells.map(c => c.modified).reduce((a, b) => (a > b ? a : b));
@@ -1134,15 +1210,11 @@ export const actions = {
       }
     }
 
-    let commands = cells.filter(e=>!(e && e.payload && e.payload.request && e.payload.request.isLoad));
-    let dataSources = cells.filter(e=>e && e.payload && e.payload.request && e.payload.request.isLoad);
-
-    commit('mutation', { mutate: 'commands', payload: commands });
-    commit('mutation', { mutate: 'dataSources', payload: dataSources});
+    commit('setCells', cells);
 
     if (mark && !(error || splice)) {
       let newCodeDone = '';
-      if (mark && state.commands) {
+      if (mark && state.cells.transformations) {
         newCodeDone = await dispatch('codeText', { newOnly: false, ignoreFrom });
       }
       commit('mutation', { mutate: 'codeDone', payload: newCodeDone });
@@ -1152,29 +1224,34 @@ export const actions = {
 
   },
 
-  deleteErrorCells ({ state, commit }) {
+  async undoCells ({state, commit, dispatch}, forceDelete) {
+    if ((!state.lastCorrectCells.dataSources.length && !state.lastCorrectCells.transformations.length) || forceDelete) {
+      if (!forceDelete) {
+        console.warn('No previous state found, deleting defective cells instead.');
+      }
+      await dispatch('deleteErrorCells');
+    } else {
+      commit('mutation', {mutate: 'cells', payload: deepCopy(state.lastCorrectCells)});
+      commit('mutation', {mutate: 'lastCorrectCells', payload: deepCopy(defaultState.lastCorrectCells)});
+    }
+  },
 
-    let cells = [...state.dataSources || [], ...state.commands || []];
-
+  deleteErrorCells ({ commit, getters }) {
+    let cells = getters.cells;
     for (let i = cells.length - 1; i >= 0 ; i--) {
       if (cells[i] && cells[i].error && cells[i].code) {
         cells.splice(i,1);
       }
     }
-
-    let commands = cells.filter(e=>!(e && e.payload && e.payload.request && e.payload.request.isLoad));
-    let dataSources = cells.filter(e=>e && e.payload && e.payload.request && e.payload.request.isLoad);
-
-    commit('mutation', { mutate: 'commands', payload: commands });
-    commit('mutation', { mutate: 'dataSources', payload: dataSources});
+    commit('setCells', cells);
   },
 
-  async beforeRunCells ( { state, commit }, { newOnly, ignoreFrom, methods } ) {
+  async beforeRunCells ( { state, commit, getters }, { newOnly, ignoreFrom, methods } ) {
 
     newOnly = newOnly || false;
     ignoreFrom = ignoreFrom || -1;
 
-    let cells = [...(state.dataSources || []), ...(state.commands || [])];
+    let cells = getters.cells;
 
     let filteredCells = filterCells(cells, newOnly, ignoreFrom);
 
@@ -1203,8 +1280,9 @@ export const actions = {
     }
   },
 
-  async resetPromises ({ commit, dispatch }, { from }) {
+  async resetPromises ({ commit, dispatch }, { from, error }) {
     from = from || 'cells';
+    error = error == undefined ? true : false;
 
     console.debug('[RESET] From', from);
 
@@ -1223,8 +1301,10 @@ export const actions = {
       case 'cells':
         await dispatch('markCells', { mark: false });
         commit('mutation', { mutate: 'codeDone', payload: '' });
-        commit('mutation', { mutate: 'codeError', payload: '' });
-        commit('mutation', { mutate: 'lastWrongCode', payload: false });
+        if (error) {
+          commit('mutation', { mutate: 'errorAlerts', payload: [] });
+          commit('mutation', { mutate: 'lastWrongCode', payload: false });
+        }
         commit('mutation', { mutate: 'cellsPromise', payload: false });
       case 'executions':
         commit('mutation', { mutate: 'executePromises', payload: {} });
@@ -1453,27 +1533,26 @@ export const actions = {
         throw response
       }
 
+      commit('copyCellsIfOk')
+
       console.debug('[DEBUG] Loading cells result Done');
       return response
 
     } catch (err) {
 
       commit('mutation', {mutate: 'loadingStatus', payload: false });
-      dispatch('resetPromises', { from: 'cells' });
+      await dispatch('resetPromises', { from: 'cells' });
 
       if (err.code && window.pushCode) {
         window.pushCode({code, error: true});
       }
-      commit('mutation', { mutate: 'codeError', payload: printError(err)});
+      commit('appendError', { error: printError(err), cells: true });
 
       var wrongCode = await dispatch('codeText', { newOnly, ignoreFrom });
       commit('mutation', { mutate: 'lastWrongCode', payload: { code: wrongCode, error: deepCopy(err) }});
 
       if (state.firstRun || ignoreFrom < 0) {
         await dispatch('markCells', { ignoreFrom, error: true, last: true });
-      } else {
-        console.debug('[CELLS] Deleting every column except', ignoreFrom);
-        await dispatch('markCells', { ignoreFrom, splice: true, last: true });
       }
       commit('mutation', { mutate: 'commandsDisabled', payload: undefined });
 
@@ -1609,16 +1688,13 @@ export const actions = {
       if (err.code && window.pushCode) {
         window.pushCode({code: err.code, error: true});
       }
-      commit('mutation', { mutate: 'codeError', payload: printError(err)});
+      commit('appendError', { error: printError(err), cells: ignoreFrom < 0 });
 
       var wrongCode = await dispatch('codeText', { newOnly: true, ignoreFrom });
       commit('mutation', { mutate: 'lastWrongCode', payload: { code: wrongCode, error: deepCopy(err) } });
 
       if (state.firstRun || ignoreFrom < 0) {
         await dispatch('markCells', { ignoreFrom, error: true, last: true });
-      } else {
-        console.debug('[CELLS] Deleting every column except', ignoreFrom);
-        await dispatch('markCells', { ignoreFrom, splice: true, last: true });
       }
       commit('mutation', { mutate: 'commandsDisabled', payload: undefined});
 
@@ -1885,25 +1961,19 @@ properties.forEach((p)=>{
 
 export const getters = {
   currentDataset (state) {
-    return state.datasets[state.tab]
+    return state.datasets[state.tab];
   },
-  commands (state) {
-    return state.commands || []
+  transformations (state) {
+    return state.cells.transformations || [];
   },
   dataSources (state) {
-    return state.dataSources
+    return state.cells.dataSources || [];
   },
   loadPreview (state) {
-    return state.loadPreview
+    return state.loadPreview;
   },
-  workspaceCells (state) {
-    return [
-      ...(state.dataSources || []),
-      ...(state.commands || [])
-    ]
-  },
-  secondaryDatasets (state) {
-    var datasetsArray = state.dataSources.map(ds=>{
+  secondaryDatasets (state, getters) {
+    var datasetsArray = getters.dataSources.map(ds=>{
       return ds && ds.payload && ds.payload.newDfName
     })
     return datasetsArray
@@ -1924,7 +1994,7 @@ export const getters = {
   },
 
   cells (state) {
-    return [...(state.dataSources || []), ...(state.commands || [])];
+    return [...state.cells.dataSources || [], ...state.cells.transformations || []];
   },
 
   usingPandasTransformation (state) {
