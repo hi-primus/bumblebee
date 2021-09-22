@@ -59,13 +59,13 @@
               <template v-slot:activator="{ on: menu }">
                 <v-tooltip :disabled="menus[element.group]" transition="tooltip-fade-transition" bottom>
                   <template v-slot:activator="{ on: tooltip }">
-                    <div class="icon-btn-container" :id="'menu-'+element.group" v-on="{...tooltip}">
+                    <div class="icon-btn-container" :id="'menu-'+element.group" v-on="tooltip">
                       <v-btn
                         :color="'#888'"
                         :disabled="getPropertyNuxt(element.disabled)"
                         class="icon-btn icon-btn-menu"
                         text
-                        v-on="{...menu}"
+                        v-on="menu"
                       >
                         <template v-for="(icon, ii) in element.icons">
                           <v-icon
@@ -177,7 +177,7 @@
         <template v-slot:activator="{ on: menu }">
           <v-tooltip :disabled="searchMenu" transition="tooltip-fade-transition" bottom>
             <template v-slot:activator="{ on: tooltip }">
-              <div class="icon-btn-container mr-2" v-on="{...tooltip}">
+              <div class="icon-btn-container mr-2" v-on="tooltip">
                 <v-badge
                   :value="!commandsDisabled && (filtersActive || noMatch)"
                   :color="(noMatch) ? 'error' : 'primary lighten-2'"
@@ -190,7 +190,7 @@
                     class="icon-btn"
                     text
                     :disabled="!(currentDataset && currentDataset.summary)"
-                    v-on="{...menu}"
+                    v-on="menu"
                   >
                     <v-icon color="#888">search </v-icon>
                   </v-btn>
@@ -308,41 +308,36 @@
           <v-icon class="right-button" color="black" @click="cancelCommand">close</v-icon>
         </div>
         <div class="sidebar-top" v-show="operationsTitle=='operations' && operationsActive">
-          <v-tooltip transition="tooltip-fade-transition" bottom color="dataprimary darken-2" v-model="copied">
-            <template v-slot:activator>
-              <v-menu offset-y left min-width="200" >
-                <template v-slot:activator="{ on: more }">
-                  <v-icon v-on="more" class="right-button" color="black" @click.stop="">more_vert</v-icon>
-                </template>
-                <v-list flat dense style="max-height: calc(100vh - 143px); min-width: 160px;" class="scroll-y">
-                  <v-list-item-group color="black">
-                    <!-- <v-list-item
-                      @click="showCodeOnTextDialog"
-                    >
-                      <v-list-item-content>
-                        <v-list-item-title>
-                          Copy code to clipboard
-                        </v-list-item-title>
-                      </v-list-item-content>
-                    </v-list-item> -->
-                    <v-list-item
-                      v-for="engine in engines"
-                      :key="engine.name"
-                      :disabled="!engine.init"
-                      @click="showCodeOnTextDialog(engine.init)"
-                    >
-                      <v-list-item-content>
-                        <v-list-item-title>
-                          Export to {{engine.prettyName}}
-                        </v-list-item-title>
-                      </v-list-item-content>
-                    </v-list-item>
-                  </v-list-item-group>
-                </v-list>
-              </v-menu>
+          <v-menu offset-y left min-width="200" >
+            <template v-slot:activator="{ on: more }">
+              <v-icon v-on="more" class="right-button" color="black" @click.stop="">more_vert</v-icon>
             </template>
-            <span>Copied succesfully</span>
-          </v-tooltip>
+            <v-list flat dense style="max-height: calc(100vh - 143px); min-width: 160px;" class="scroll-y">
+              <v-list-item-group color="black">
+                <!-- <v-list-item
+                  @click="showCodeOnTextDialog"
+                >
+                  <v-list-item-content>
+                    <v-list-item-title>
+                      Copy code to clipboard
+                    </v-list-item-title>
+                  </v-list-item-content>
+                </v-list-item> -->
+                <v-list-item
+                  v-for="engine in engines"
+                  :key="engine.name"
+                  :disabled="!engine.init"
+                  @click="showCodeOnTextDialog(engine.init)"
+                >
+                  <v-list-item-content>
+                    <v-list-item-title>
+                      Export to {{engine.prettyName}}
+                    </v-list-item-title>
+                  </v-list-item-content>
+                </v-list-item>
+              </v-list-item-group>
+            </v-list>
+          </v-menu>
         </div>
         <Cells
           v-show="operationsActive"

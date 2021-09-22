@@ -18,8 +18,8 @@
           <div class="copy-code-content">
             <span>{{textDialog.text}}</span>
             <v-tooltip transition="tooltip-fade-transition" left color="dataprimary darken-2" content-class="dialog-tooltip" v-model="copied">
-              <template v-slot:activator>
-                <v-icon small @click.stop="clickCopy(textDialog.text, $event)">content_copy</v-icon>
+              <template v-slot:activator="{ on: copied }">
+                <v-icon @click.stop="clickCopy(textDialog.text, $event)">content_copy</v-icon>
               </template>
               <span>Copied succesfully</span>
             </v-tooltip>
