@@ -593,7 +593,7 @@ let _operations = {
         transform: 'scaleX(0.75)'
       } }
     ],
-    disabled: ($nuxt)=>!($nuxt.currentDataset && $nuxt.currentDataset.summary && $nuxt.hasSecondaryDatasets),
+    disabled: ($nuxt)=>!($nuxt.currentDataset && $nuxt.currentDataset.summary),
     test: {
       dataframe: TEST_DATAFRAMES.NULL
     },
@@ -612,7 +612,7 @@ let _operations = {
         }
       },
     ],
-    disabled: ($nuxt)=>!($nuxt.currentDataset && $nuxt.currentDataset.summary && $nuxt.hasSecondaryDatasets),
+    disabled: ($nuxt)=>!($nuxt.currentDataset && $nuxt.currentDataset.summary),
     test: {
       dataframe: TEST_DATAFRAMES.DUPLICATES
     },

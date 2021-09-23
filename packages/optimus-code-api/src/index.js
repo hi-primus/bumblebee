@@ -328,7 +328,7 @@ export const codeGenerators = {
     if (!['final','processing'].includes(payload.request.type)) {
       let code = `.cols.set("__match__", 'df.mask.null(`
       + (payload.subset.length ? `cols=${preparedColumns(payload.subset, true)}, ` : '')
-      + `how='${payload.how}'`
+      + `how="${payload.how}"`
       + `)', eval_value=True)`
       if (payload.preview.filteredPreview) {
         code += `.rows.select( '__match__' )`
