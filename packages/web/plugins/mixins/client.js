@@ -42,7 +42,10 @@ export default {
         window.code = [];
       }
       window.code = deepCopy(window.code);
-      window.code.push(code)
+      window.code.push(code);
+      if (window.code.length > 100) {
+        window.code = window.code.filter((c, i) => i>20);
+      }
     }
     window.clearCode = async () => {
       window.code = []
