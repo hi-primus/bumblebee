@@ -2066,6 +2066,7 @@ $editor-top-padding: 4px;
   .bb-table-i-cell {
     padding: 0 4px 0 4px;
     position: absolute;
+    cursor: text;
 
     .null-cell {
       user-select: none;
@@ -2077,7 +2078,7 @@ $editor-top-padding: 4px;
     border-color: inherit;
     overflow: hidden;
     &::after {
-      content: ' ';
+      content: '';
       background: var(--bg-color);
       position: absolute;
       top: 0;
