@@ -13,6 +13,7 @@ import {
   hlCols,
   aggOutputCols,
   columnsHint,
+  formFromParam,
   transpose,
   objectMap,
   objectMapFromEntries,
@@ -2926,14 +2927,7 @@ export const commandsHandlers = {
   GENERIC: {
     dialog: {
       title: (c) => c.title || c.text || c.command,
-      fields: (c) => {
-        return Object.entries(c.parameters || {}).map(([key, param]) => ({
-          label: param.label,
-          key,
-          type: param.formType || (param.type == "int" ? "number" : "field"),
-        }));
-        // array, array column, more
-      },
+      fields: (c) => Object.entries(c.parameters || {}).map(([key, param]) => formFromParam(key, param)),
       output_cols: true,
     },
     payload: (columns, payload = {}) => {
@@ -2945,12 +2939,11 @@ export const commandsHandlers = {
       payload.columns = payload.columns === undefined ? columns : payload.columns;
       payload.output_cols = payload.output_cols === undefined ? columns.map((e) => "") : payload.output_cols;
 
+      payload.preview = payload.preview === undefined ? { type: "GENERIC" } : payload.preview;
+
       return {
         ...parameters,
-        ...payload,
-        preview: {
-          type: "GENERIC",
-        },
+        ...payload
       };
     },
     content: (payload) => {

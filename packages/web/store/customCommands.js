@@ -1,5 +1,4 @@
-import { objectMap, objectMapEntries } from 'bumblebee-utils'
-import Vue from 'vue'
+import { objectMapEntries, deepCopy } from 'bumblebee-utils'
 
 const _parse = (str, payload) => {
   return str.replace(/{{(payload.?(.+?))}}/g, (_,g1,g2) => payload[g2] || eval(g1))
@@ -84,9 +83,6 @@ export const actions =  {
     let generators = JSON.parse(content);
 
     generators = objectMapEntries(generators, (key, generator) => {
-      if (!generator.generator) {
-        generator.generator = 'GENERIC';
-      }
       generator.command = generator.command || key;
       if (generator.command.includes(".") && !generator.accessor) {
         [generator.accessor, generator.command] = generator.command.split('.');
@@ -141,7 +137,48 @@ export const getters =  {
       return true;
     })
     .map(([key, generator]) => {
-      generator.path = 'TRANSFORMATIONS/CUSTOM';
+
+      generator = deepCopy(generator)
+
+      // set parameters
+      if (generator.parameters) {
+        generator.payload = generator.payload || {};
+        generator.payload.parameters = generator.parameters;
+        delete generator.parameters;
+      }
+      
+      // set text
+      if (generator.text) {
+        generator.payload = generator.payload || {};
+        generator.payload.text = generator.text;
+      }
+      
+      // set preview
+      if (generator.preview) {
+        generator.payload = generator.payload || {};
+        generator.payload.preview = generator.preview;
+      }
+      
+      // set accessor
+      if (generator.accessor) {
+        generator.payload = generator.payload || {};
+        generator.payload.accessor = generator.accessor;
+        delete generator.accessor;
+      }
+
+      if (!generator.columns) {
+        generator.payload.columns = false;
+        generator.payload.output_cols = false;
+      }
+
+      // set path and generator
+      if (!generator.path) {
+        generator.path = 'TRANSFORMATIONS/CUSTOM';
+      }
+      if (!generator.generator) {
+        generator.generator = 'GENERIC';
+      }
+
       return [key, generator];
     });
     return Object.fromEntries(entries)

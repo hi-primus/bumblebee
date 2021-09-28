@@ -304,6 +304,56 @@ export const columnsHint = (columns = [], output_cols = []) => {
   }
 }
 
+export const formFromParam = (key, param) => {
+
+  if (param.items) {
+    let items = param.items;
+    if (Array.isArray(items)) {
+      items = items.map(item => ({value: item, text: item}));
+    } else if (items && typeof items === 'object') {
+      items = Object.entries(items).map(([value, text]) => ({value, text}));
+    }
+    return {
+      label: param.label || key,
+      key,
+      type: "select",
+      items
+    };
+  }
+
+  if (["int", "string", "const"].includes(param.type)) {
+    return {
+      label: param.label || key,
+      key,
+      type: param.type == "int" ? "number" : "field"
+    };
+  }
+
+  if (param.type.includes("array")) {
+    return {
+      label: param.label || key,
+      key,
+      type: "chips"
+    };
+  }
+
+  if (param.type == "boolean") {
+    return {
+      label: (c) => param.label || key + ": " + (c[key] ? "Yes" : "No"),
+      key,
+      type: "switch"
+    };
+  }
+
+  return {
+    label: param.label || key,
+    key,
+    type: "field",
+    mono: true
+  };
+
+}
+
 export const escapeQuotesOn = (payload = {}, keys = []) => {
   var _payload = {}
   keys.forEach(key => {
@@ -705,12 +755,13 @@ export const pythonArguments = (defaultParams = {}, params = {}) => {
           str = `${key}=[${value.map(v=>v).join(', ')}]`;
           break;
 
+        case 'columns':
         case 'string array':
-          str = `${key}=["${value.join('", "')}"]`;
+          str = `${key}=[${value.map(v=>`"${v}"`).join(', ')}]`;
           break;
 
         case 'boolean array':
-          str = `${key}=["${value.map(v=>(v && v!=0 && v!='false') ? 'True' : 'False').join('", "')}"]`;
+          str = `${key}=[${value.map(v=>(v && v!=0 && v!='false') ? 'True' : 'False').join(', ')}]`;
           break;
 
         case 'dict':
@@ -1301,6 +1352,7 @@ export default {
   aggOutputCols,
   preparedColumns,
   columnsHint,
+  formFromParam,
   escapeQuotesOn,
   handleResponse,
   printError,
