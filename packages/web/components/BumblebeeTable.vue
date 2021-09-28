@@ -2152,24 +2152,32 @@ export default {
         }
       }
 
-      if (this.fetched.length>(this.maxChunks+2) && currentFrom>=0) {
+      fetched = Array(this.fetched);
+
+      if (fetched.length>(this.maxChunks+2) && currentFrom>=0) {
         // +2 so it doesn't calculate a distanceMap every time
-        let distanceMap = this.fetched.map((chunk, index)=>({
+        let distanceMap = fetched.map((chunk, index)=>({
           distance: Math.abs(currentFrom-chunk.from),
           index,
           from: chunk.from
         }))
           .filter(c=>c.from!==0)
           .sort((a,b)=>(a.distance-b.distance));
-        
-        let tries = 10;
 
-        while (this.fetched.length>this.maxChunks && tries--) {
-          let toDelete = distanceMap.pop();
-          if (toDelete) {
-            this.fetched.splice(toDelete.index, 1);
-            this.recalculateRows = true;
+        let chunksToDelete = distanceMap
+          .filter((d, i) => i>this.maxChunks)
+          .sort((a, b) => b.index-a.index);
+
+        chunksToDelete.forEach(c => {
+          if (c.distance<50) {
+            return;
           }
+          fetched.splice(c.index, 1);
+        });
+
+        if (chunksToDelete.length) {
+          this.fetched = fetched
+          this.recalculateRows = true;
         }
       }
 
