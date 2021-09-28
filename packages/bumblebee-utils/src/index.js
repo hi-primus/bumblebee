@@ -250,6 +250,11 @@ export const filterCells = (cells, newOnly, ignoreFrom) => {
 }
 
 export const getOutputColsArgument = (output_cols = [], input_cols = [], pre = '', forceArray = false) => {
+
+  if (input_cols === false || output_cols === false) {
+    return false;
+  }
+
   var hasInput = input_cols.join('').trim().length;
   let output = false;
 
