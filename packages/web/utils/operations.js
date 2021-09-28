@@ -1997,6 +1997,13 @@ export const commandsHandlers = {
           fuzzySearch: true,
           suggestions: (c) => ({ column: c.allColumns }),
         },
+        {
+          condition: (c) => c.action === "set",
+          type: "field",
+          key: "default",
+          placeholder: 'numeric or "string"',
+          label: "Default value",
+        }
       ],
       filteredPreview: true,
     },

@@ -236,32 +236,48 @@ export const codeGenerators = {
       let code = '';
       let value = ( (payload.value) ? `parse('${payload.value}')` : 'None' );
       if (!['final','processing'].includes(payload.request.type)) {
+        
+        if (!payload.default && payload.columns[0]) {
+          payload.default = `"${payload.columns[0]}"`;
+        }
+
         output_col = '__new__'+output_col;
-        code = `.cols.set("__match__", '${expression}', eval_value=True)`;
+        code = `.cols.set("__match__", '${expression}', `
+        + (payload.default ? `default=${payload.default}, ` : '')
+        + `eval_value=True)`;
         if (payload.preview.filteredPreview) {
           code += `.rows.select( '__match__' )`;
         }
+
+
         code += `.cols.set(`
         + `"${output_col}", `
         + `value_func=${value}, `
         + `where='__match__', `
-        + (payload.columns[0] ? `default="${payload.columns[0]}", ` : '')
+        + (payload.default ? `default=${payload.default}, ` : '')
         + `eval_value=True)`
         if (payload.request.type === 'preview' && payload.preview.filteredPreview) {
           return (from, to)=>code+(from!==undefined ? `[${from}:${to}]` : '');
         }
         return code;
       }
+
+      if (!payload.default && payload.columns[0]) {
+        payload.default = `"${payload.columns[0]}"`;
+      }
+
       return code + `.cols.set(`
         + `"${output_col}", `
         + `value_func=${value}, `
         + `where='${expression}', `
-        + (payload.columns[0] ? `default="${payload.columns[0]}", ` : '')
+        + (payload.default ? `default=${payload.default}, ` : '')
         + `eval_value=True)`
 
     } else {
       if (!['final','processing'].includes(payload.request.type)) {
-        let code = `.cols.set("__match__", '${expression}', eval_value=True)`
+        let code = `.cols.set("__match__", '${expression}', `
+        + (payload.default ? `default=${payload.default}, ` : '')
+        + `eval_value=True)`;
         if (payload.preview.filteredPreview) {
           code += `.rows.select( '__match__' )`
         }
@@ -329,7 +345,9 @@ export const codeGenerators = {
       default:
     }
     if (!['final','processing'].includes(payload.request.type)) {
-      let code = `.cols.set( "__match__", '${expression}', eval_value=True )`
+      let code = `.cols.set("__match__", '${expression}', `
+      + (payload.default ? `default=${payload.default}, ` : '')
+      + `eval_value=True)`;
       if (payload.preview.filteredPreview) {
         code += `.rows.select( '__match__' )`
         if (payload.request.type === 'preview') {
@@ -848,7 +866,6 @@ export const codeGenerators = {
       return `.cols.set(`
       + `${output_cols_argument}, `
       + `value_func=${value}, `
-      + (payload.columns[0] ? `default="${payload.columns[0]}", ` : '')
       + `eval_value=True)`
     }
 
