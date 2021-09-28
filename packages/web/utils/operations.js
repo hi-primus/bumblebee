@@ -1991,7 +1991,7 @@ export const commandsHandlers = {
           type: "field-suggestions",
           key: "value",
           placeholder: 'Formula or "value"',
-          label: "Formula",
+          label: "Replace by",
           mono: true,
           useFunctions: true,
           fuzzySearch: true,
@@ -2002,7 +2002,7 @@ export const commandsHandlers = {
           type: "field",
           key: "default",
           placeholder: 'numeric or "string"',
-          label: "Default value",
+          label: "Otherwise",
         }
       ],
       filteredPreview: true,
