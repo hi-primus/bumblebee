@@ -26,6 +26,7 @@
 
 <script>
 
+import clientMixin from '@/plugins/mixins/client'
 import FormDialog from "@/components/FormDialog"
 import { capitalizeString, deepCopy, objectFilter } from "bumblebee-utils";
 
@@ -34,6 +35,8 @@ export default {
   components: {
     FormDialog
   },
+
+  mixins: [clientMixin],
 
   props: {
   },
@@ -56,7 +59,7 @@ export default {
 
     async updateCustomOperations () {
       try {
-        this.$store.commit('customCommands/setAllGenerators', {content: this.content || '{}'})
+        this.$store.dispatch('customCommands/setAllGenerators', {content: this.content || '{}', socketPost: this.socketPost});
         this.content = this.$store.getters['customCommands/generatorsJson'];
       } catch (err) {
         console.error(err);

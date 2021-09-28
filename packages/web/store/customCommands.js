@@ -68,15 +68,7 @@ export const mutations =  {
   setGenerator (state, { key, generator }) {
     state.generators[key] = generator;
   },
-  setAllGenerators (state, { content }) {
-    var generators = {};
-    content.split("#####").filter(a=>a).forEach(item=>{
-      var [ id, jsonString, code, declaration ] = item.split("###").map(s=>s.trim());
-      if (id && jsonString) {
-          var json = JSON.parse(jsonString)
-          generators[id] = { ...json, code, declaration };
-      }
-    })
+  setGenerators (state, { generators }) {
     state.generators = generators
   },
   deleteGenerator (state, { key }) {
@@ -85,17 +77,49 @@ export const mutations =  {
 }
 
 export const actions =  {
+  async setAllGenerators ({ commit, dispatch }, { content, socketPost }) {
+    
+    console.log('[PLUGIN] setting generators')
+    
+    let generators = JSON.parse(content);
 
+    generators = objectMapEntries(generators, (key, generator) => {
+      if (!generator.generator) {
+        generator.generator = 'GENERIC';
+      }
+      generator.command = generator.command || key;
+      if (generator.command.includes(".") && !generator.accessor) {
+        [generator.accessor, generator.command] = generator.command.split('.');
+      }
+      return generator;
+    });
+
+    let generators_keys = Object.keys(generators);
+    // request injections
+    for (let i = 0; i < generators_keys.length; i++) {
+      let generator = generators[generators_keys[i]];
+
+      if (generator.definition) {
+        let response = await dispatch('evalCode', {
+          socketPost,
+          codePayload: {
+            command: 'inject',
+            definition: generator.definition,
+            functionName: generator.functionName
+          }
+        }, { root: true });
+        console.log('[PLUGIN]', generator.functionName, response);
+      }
+
+    }
+    commit('setGenerators', {generators});
+    return true;
+  }
 }
 
 export const getters =  {
   generatorsJson (state) {
-    var str = "";
-    Object.entries(state.generators).forEach(([name, generator])=>{
-      var { declaration, code, ...gen } = generator;
-      str += `#####\n${name}\n###\n${JSON.stringify(gen)}\n###\n${code}\n###\n${declaration}\n`
-    });
-    return str;
+    return JSON.stringify(state.generators);
   },
   handlers (state) {
     return objectMapEntries(state.generators, (name,generator)=>_handler(name,generator))
@@ -107,17 +131,19 @@ export const getters =  {
       return {code, declaration: generator.declaration, _custom: true};
     }
   },
-  menuItems (state, getters, rootState) {
-    return Object.entries(state.generators)
-    .filter(([key, generator])=>{
+  operations (state) {
+    let entries = Object.entries(state.generators)
+    .filter(([key, generator]) => {
       if (generator.engine && rootState.localEngineParameters && rootState.localEngineParameters.engine) {
         var currentEngine = rootState.localEngineParameters.engine;
         return ((Array.isArray(generator.engine) && generator.engine.includes(currentEngine)) || generator.engine === currentEngine)
       }
       return true;
     })
-    .map(([key, generator])=>{
-      return {command: key, text: generator.name, group: 'CUSTOM'};
-    })
-  },
+    .map(([key, generator]) => {
+      generator.path = 'TRANSFORMATIONS/CUSTOM';
+      return [key, generator];
+    });
+    return Object.fromEntries(entries)
+  }
 }

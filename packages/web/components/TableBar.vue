@@ -550,13 +550,13 @@ export default {
       return columns;
     },
 
-    customMenuItems () {
-      return this.$store.getters['customCommands/menuItems'];
+    customOperations () {
+      return this.$store.getters['customCommands/operations'];
     },
 
     toolbarItems () {
-
-      return [...operations, ...this.customMenuItems]
+      let custom = [].concat.apply([], Object.values(this.customOperations));
+      return [...operations(this.customOperations), ...custom]
     },
 
     filtersActive () {
@@ -678,12 +678,12 @@ export default {
 
     toolbarSectionsIcons () {
 
-      return objectMap(operationSections, operations=>{
+      return objectMap(operationSections(this.customOperations), ops=>{
         let elements = [];
 
         let groupsAdded = []
 
-        operations.forEach(operation=>{
+        ops.forEach(operation=>{
           let groupName = operation.group;
           if (groupName && !groupsAdded.includes(groupName)) {
             groupsAdded.push(groupName);
@@ -902,7 +902,7 @@ export default {
     },
 
     menuItems (group) {
-      return this.toolbarItems.filter(e => e.group==group)
+      return this.toolbarItems.filter(e => e && e.group == group)
     },
 
     async showCodeOnTextDialog (engineText) {

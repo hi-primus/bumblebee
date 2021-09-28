@@ -4427,9 +4427,9 @@ export const operationSections = (moreOperations) => {
   });
 
   return operationSections;
-})();
+};
 
-export const operations = [].concat.apply([], Object.values(operationSections));
+export const operations = (moreOperations) => [].concat.apply([], Object.values(operationSections(moreOperations)));
 
 export const cypressOperationTests = (section, group, _operation = true, username = 'admin', password = 'admin', enableScreenshots = true) => {
   context(`Check operations from ${section} section` + ((typeof group == 'string') ? ` and ${group} group` : ''), () => {

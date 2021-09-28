@@ -2,6 +2,58 @@
 #{this.initJSON}
 #{this.initVariables}
 
+def inject_method_to_optimus(func):
+    func_name = func.__name__
+    _func_split = func_name.split("__")
+    
+    if len(_func_split) == 3:
+        func_type, accessor, method_name = _func_split
+    elif len(_func_split) == 2:
+        func_type, method_name = _func_split
+        accessor = None
+    else:
+        raise TypeError(f"Wrong name '{func_name}', must have the form 'type__accessor__name'")
+       
+    from optimus.engines.base.basedataframe import BaseDataFrame
+    from optimus.engines.base.columns import BaseColumns
+    from optimus.engines.base.rows import BaseRows
+    
+    from optimus.engines.base.engine import BaseEngine
+    from optimus.engines.base.create import BaseCreate
+    
+    _cls = None
+    
+    if func_type == "df":
+        if accessor == "cols":
+            _cls = BaseColumns
+        elif accessor == "rows":
+            _cls = BaseRows
+        else:
+            _cls = BaseDataFrame
+            
+    elif func_type == "op":
+        if accessor == "create":
+            _cls = BaseCreate
+        else:
+            _cls = BaseEngine
+            
+    if _cls is None:
+        raise TypeError(f"Wrong name '{func_name}', must have the form 'type__accessor__name'")
+            
+    if _cls in [BaseDataFrame, BaseEngine]:
+        def binded(self, *args, **kwargs):
+            df = self
+            return func(df, *args, **kwargs)
+        
+    else:
+        def binded(self, *args, **kwargs):
+            df = self.root
+            return func(df, *args, **kwargs)
+    
+    setattr(_cls, method_name, binded)
+    return True
+
+
 def _out_result(_callback = None):
     def _f(fut):
         _res = {}

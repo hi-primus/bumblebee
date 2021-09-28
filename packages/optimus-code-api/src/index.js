@@ -60,6 +60,23 @@ export const codeGenerators = {
       isOutput: true
     };
   },
+  inject: (payload) => {
+    // get the function name if it is not passed
+    if (!payload.functionName) {
+      let match = payload.definition.match(/^def (.+__.+)\(/m);
+      if (match && match.length) {
+        payload.functionName = match[1];
+      }
+    }
+    let code = "";
+    code += `${payload.definition}\n`;
+    code += `inject_method_to_optimus(${payload.functionName})\n`;
+    code += `_output = "Injected ${payload.functionName}"`;
+    return {
+      code,
+      isOutput: true
+    };
+  },
   delete: (payload) => {
     let code = "";
     code += `try:\n`;
