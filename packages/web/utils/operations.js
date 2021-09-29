@@ -3013,8 +3013,10 @@ export const commandsHandlers = {
         using = " using " + parameters.join(", ");
       }
 
+      let cols = '';
+
       if (payload.columns && payload.columns.length) {
-        cols = `${payload.connector ? payload.connector+' ' : ''}${multipleContent(
+        cols = ` ${payload.connector ? payload.connector+' ' : ''}${multipleContent(
           [payload.columns],
           "hl--cols"
         )}`
