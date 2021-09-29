@@ -1,5 +1,5 @@
 $icon-size: 24px;
-$toolbar-height: ($icon-size*2);
+$toolbar-height: 64px; // ($icon-size*2);
 $not-table-height: $toolbar-height + 79px;
 $scrollbar-width: 12px;
 $table-height: calc(100vh - #{$not-table-height});
@@ -742,7 +742,7 @@ table {
 .toolbar {
   font-size: $icon-size;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   &.vertical {
     flex-direction: column;
     &>*:not(:first-child) {
@@ -760,9 +760,9 @@ table {
   .divider {
     width: 1px;
     // height: calc(100% - #{$icon-size});
-    height: $icon-size;
+    height: 52px;
     background-color: $line-color-2;
-    margin: 0 2px;
+    margin: 6px 2px 0px 2px;
   }
   .v-btn i {
     font-size: $icon-size;
@@ -770,14 +770,30 @@ table {
     overflow: hidden;
     transform: scale(1) rotate(-0.037302deg);
   }
-  .icon-btn-container {
-    top: -1px;
-    position: relative;
-  }
   .icon-btn {
+    top: 3px;
+    position: relative;
     min-width: ($icon-size*(4/3)) !important;
     padding: 0 ($icon-size/6) !important;
-    height: ($icon-size*(4/3)) !important;
+    // height: ($icon-size*(4/3)) !important;
+    height: 58px !important;
+    .v-btn__content {
+      flex-direction: column;
+      justify-content: start;
+      min-height: 52px;
+    }
+  }
+  .icon-btn-icons {
+    flex-basis: 24px;
+    flex-grow: 1;
+    max-height: 30px;
+  }
+  label {
+    text-transform: none;
+    letter-spacing: normal;
+    font-size: 11.25px;
+    font-weight: 300;
+    pointer-events: none;
   }
   .theme--light.v-btn {
     color: $icon-color !important;
@@ -2679,9 +2695,9 @@ $editor-top-padding: 4px;
 }
 
 .dropdown-icon {
-  margin-right: -0.33333em;
-  margin-left: -0.25em;
+  margin-left: -6px;
   font-size: 20px !important;
+  max-width: 12px !important;
 }
 
 .mono-field input {

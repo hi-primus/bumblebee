@@ -7,6 +7,7 @@
             <v-icon :color="(listView) ? 'black' : '#888'">
               mdi-format-list-checkbox
             </v-icon>
+            <label v-html="'List<br/>view'"></label>
           </v-btn>
         </template>
         <span>Columns list view</span>
@@ -17,6 +18,7 @@
             <v-icon :color="(!listView) ? 'black' : '#888'">
               mdi-table
             </v-icon>
+            <label v-html="'Table<br/>view'"></label>
           </v-btn>
         </template>
         <span>Table view</span>
@@ -33,17 +35,21 @@
                     class="icon-btn"
                     @click="elementOnClick(element)"
                     :disabled="getPropertyNuxt(element.disabled)"
+                    :id="'btn-'+element.command"
                   >
-                    <template v-for="(icon, ii) in element.icons">
-                      <v-icon
-                        :key="ii"
-                        :color="icon.color || '#888'"
-                        :style="icon.style || {}"
-                        :class="icon.class || {}"
-                      >
-                        {{icon.icon}}
-                      </v-icon>
-                    </template>
+                    <div class='icon-btn-icons'>
+                      <template v-for="(icon, ii) in element.icons">
+                        <v-icon
+                          :key="ii"
+                          :color="icon.color || '#888'"
+                          :style="icon.style || {}"
+                          :class="icon.class || {}"
+                        >
+                          {{icon.icon}}
+                        </v-icon>
+                      </template>
+                    </div>
+                    <label :for="'btn-'+element.command" v-html="getPropertyNuxt(element.label || element.text)"></label>
                   </v-btn>
                 </div>
               </template>
@@ -64,22 +70,26 @@
                         :color="'#888'"
                         :disabled="getPropertyNuxt(element.disabled)"
                         class="icon-btn icon-btn-menu"
+                        :id="'menu-btn-'+element.group"
                         text
                         v-on="menu"
                       >
-                        <template v-for="(icon, ii) in element.icons">
-                          <v-icon
-                            :key="ii"
-                            :color="icon.color || '#888'"
-                            :style="icon.style || {}"
-                            :class="icon.class || {}"
-                          >
-                            {{icon.icon}}
+                        <div class='icon-btn-icons'>
+                          <template v-for="(icon, ii) in element.icons">
+                            <v-icon
+                              :key="ii"
+                              :color="icon.color || '#888'"
+                              :style="icon.style || {}"
+                              :class="icon.class || {}"
+                            >
+                              {{icon.icon}}
+                            </v-icon>
+                          </template>
+                          <v-icon class="dropdown-icon" :color="menus[element.group] ? 'black' : '#888'">
+                            arrow_drop_down
                           </v-icon>
-                        </template>
-                        <v-icon class="dropdown-icon" :color="menus[element.group] ? 'black' : '#888'">
-                          arrow_drop_down
-                        </v-icon>
+                        </div>
+                        <label :for="'menu-btn-'+element.group" v-html="getPropertyNuxt(element.label || element.text)"></label>
                       </v-btn>
                     </div>
                   </template>
@@ -192,7 +202,8 @@
                     :disabled="!(currentDataset && currentDataset.summary)"
                     v-on="menu"
                   >
-                    <v-icon color="#888">search </v-icon>
+                    <v-icon color="#888">search</v-icon>
+                    <label v-html="'Search<br/>columns'"></label>
                   </v-btn>
                 </v-badge>
               </div>
@@ -281,6 +292,7 @@
           @click="operationsActive = !operationsActive"
         >
           <v-icon>code</v-icon>
+          <label v-html="'View<br/>operations'"></label>
         </v-btn>
       </v-badge>
     </div>

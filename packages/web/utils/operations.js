@@ -27,38 +27,69 @@ import {
 
 export const operationGroups = {
   DATA_SOURCE: {
-    icons: [{ icon: 'mdi-cloud-upload-outline' }],
+    icons: [{
+      icon: 'mdi-cloud-upload-outline',
+      style: {
+        marginRight: '1px',
+      }
+    }],
     text: 'Add data source',
+    label: 'Load',
     disabled: ($nuxt)=>($nuxt.$store.state.kernel!='done')
   },
   SAVE: {
-    icons: [{ icon: 'mdi-content-save-outline' }],
+    icons: [{
+      icon: 'mdi-content-save-outline',
+      style: {
+        marginRight: '-1px',
+      }
+    }],
     text: 'Save',
     disabled: ($nuxt)=>!($nuxt.currentDataset && $nuxt.currentDataset.summary)
   },
   STRING: {
-    icons: [{ icon: 'text_format' }],
+    icons: [{
+      icon: 'text_format',
+      style: {
+        marginRight: '-3px',
+      }
+    }],
     text: 'String operations',
+    label: 'String',
     disabled: ($nuxt)=>!($nuxt.selectionType=='columns' && $nuxt.currentDataset && $nuxt.currentDataset.summary && $nuxt.selectedColumns.length>=0)
   },
   MATH: {
-    icons: [{ icon: 'mdi-numeric' }],
+    icons: [{
+      icon: 'mdi-numeric',
+      style: {
+        marginRight: '1px',
+      }
+    }],
     text: 'Numeric operations',
+    label: 'Numeric',
     disabled: ($nuxt)=>!($nuxt.selectionType=='columns' && $nuxt.currentDataset && $nuxt.currentDataset.summary && $nuxt.selectedColumns.length>=0)
   },
   TRIGONOMETRIC: {
-    icons: [{ icon: 'mdi-pi' }],
+    icons: [{
+      icon: 'mdi-pi',
+      style: {
+        marginRight: '-3px',
+      }
+    }],
     text: 'Trigonometric operations',
+    label: 'Trig.',
     disabled: ($nuxt)=>!($nuxt.selectionType=='columns' && $nuxt.currentDataset && $nuxt.currentDataset.summary && $nuxt.selectedColumns.length>=0)
   },
   TIME: {
     icons: [{ icon: 'calendar_today' }],
     text: 'Datetime functions',
+    label: 'Date &<br/>Time',
     disabled: ($nuxt)=>!($nuxt.selectionType=='columns' && $nuxt.selectedColumns.length>0)
   },
   URLEMAIL: {
     icons: [{ icon: 'mdi-web' }],
     text: 'URL and Email functions',
+    label: 'URL &<br/>Email',
     disabled: ($nuxt)=>!($nuxt.selectionType=='columns' && $nuxt.selectedColumns.length>0)
   },
   // CAST: {
@@ -67,13 +98,21 @@ export const operationGroups = {
   //   disabled: ($nuxt)=>!($nuxt.selectionType=='columns' && $nuxt.selectedColumns.length>0)
   // },
   ML: {
-    icons: [{icon: 'timeline', class: 'material-icons-outlined'}],
+    icons: [{
+      icon: 'timeline',
+      class: 'material-icons-outlined',
+      style: {
+        marginRight: '1px'
+      }
+    }],
     text: 'Machine Learning',
+    label: 'Machine<br/>Learning',
     disabled: ($nuxt)=>!($nuxt.selectionType=='columns' && $nuxt.currentDataset && $nuxt.currentDataset.summary) , // Sampling
   },
   CUSTOM: {
     icons: [{ icon: 'star_rate' }],
-    text: 'Custom functions'
+    text: 'Custom functions',
+    label: 'User<br/>defined',
   }
 };
 
@@ -500,6 +539,7 @@ let _operations = {
     path: 'JOIN',
     icons: [{ icon: 'mdi-set-center' }],
     text: 'Join dataframes',
+    label: 'Join',
     disabled: ($nuxt)=>!($nuxt.currentDataset && $nuxt.currentDataset.summary && $nuxt.hasSecondaryDatasets),
     test: {
       dataframes: TEST_DATAFRAMES.PEOPLE_JOIN,
@@ -517,6 +557,7 @@ let _operations = {
     path: 'JOIN',
     icons: [{ icon: 'mdi-table-row-plus-after' }],
     text: 'Concatenate Dataframes',
+    label: 'Concat.',
     disabled: ($nuxt)=>!($nuxt.currentDataset && $nuxt.currentDataset.summary && $nuxt.hasSecondaryDatasets),
     test: {
       dataframes: [TEST_DATAFRAMES.PEOPLE, TEST_DATAFRAMES.PEOPLE_CONCAT],
@@ -528,6 +569,7 @@ let _operations = {
   aggregations: {
     path: 'JOIN',
     icons: [{ icon: 'mdi-set-merge' }],
+    label: 'Aggr-<br/>egate',
     text: 'Get aggregations',
     disabled: ($nuxt)=>!(!['values','ranges'].includes($nuxt.selectionType) && $nuxt.currentDataset && $nuxt.currentDataset.summary),
     doc: {
@@ -539,6 +581,7 @@ let _operations = {
   sortRows: {
     path: 'ROWS',
     text: 'Sort rows',
+    label: 'Sort<br/>rows',
     disabled: ($nuxt)=>['values','ranges'].includes($nuxt.selectionType) || $nuxt.selectedColumns.length<1,
     icons: [
       { icon: 'mdi-sort-alphabetical-ascending' }
@@ -576,6 +619,7 @@ let _operations = {
       $nuxt.commandHandle(command)
     },
     text: 'Filter rows',
+    label: 'Filter<br/>rows',
     disabled: ($nuxt)=>!(['values','ranges','text'].includes($nuxt.selectionType) || $nuxt.selectedColumns.length==1),
     icons: [{icon: 'mdi-filter-variant'}],
     doc: {
@@ -586,6 +630,7 @@ let _operations = {
   dropEmptyRows: {
     path: 'ROWS',
     text: 'Drop empty rows',
+    label: 'Drop<br/>empty',
     icons: [
       { icon: 'mdi-delete-outline' },
       { icon: 'menu', style: {
@@ -605,6 +650,7 @@ let _operations = {
   dropDuplicates: {
     path: 'ROWS',
     text: 'Drop duplicates',
+    label: 'Drop<br/>dupl.',
     icons: [
       { icon: 'mdi-close-box-multiple-outline',
         style: {
@@ -624,6 +670,7 @@ let _operations = {
   set: {
     path: 'COLUMNS',
     text: ($nuxt)=>$nuxt.selectedColumns.length ? 'Set column' : 'New column',
+    label: ($nuxt)=>$nuxt.selectedColumns.length ? 'Set<br>col.' : 'New<br/>col.',
     icons: [{icon: 'mdi-plus-box-outline'}],
     disabled: ($nuxt)=>!($nuxt.selectionType=='columns' && $nuxt.selectedColumns.length<=1 && $nuxt.currentDataset && $nuxt.currentDataset.summary),
     test: {
@@ -641,6 +688,7 @@ let _operations = {
   rename: {
     path: 'COLUMNS',
     text: ($nuxt)=> 'Rename column'+ ($nuxt.selectedColumns.length!=1 ? 's' : ''),
+    label: 'Rename<br/>col.',
     icons: [{icon: 'mdi-pencil-outline'}],
     disabled: ($nuxt)=> !($nuxt.selectionType=='columns' && $nuxt.selectedColumns.length>0),
     test: {
@@ -667,6 +715,7 @@ let _operations = {
   duplicate: {
     path: 'COLUMNS',
     text: ($nuxt)=> 'Duplicate column'+ ($nuxt.selectedColumns.length!=1 ? 's' : ''),
+    label: 'Copy<br/>col.',
     icons: [{icon: 'mdi-content-duplicate'}],
     disabled: ($nuxt)=>!($nuxt.selectionType=='columns' && $nuxt.selectedColumns.length>0),
     test: {
@@ -685,6 +734,7 @@ let _operations = {
     path: 'COLUMNS',
     generator: 'DROP_KEEP',
     text: ($nuxt)=> 'Keep column'+ ($nuxt.selectedColumns.length!=1 ? 's' : ''),
+    label: 'Keep<br/>col.',
     icons: [{icon: 'all_out'}],
     disabled: ($nuxt)=>!($nuxt.selectionType=='columns' && $nuxt.selectedColumns.length>0),
     doc: {
@@ -697,6 +747,7 @@ let _operations = {
     path: 'COLUMNS',
     generator: 'DROP_KEEP',
     text: ($nuxt)=> 'Drop column'+ ($nuxt.selectedColumns.length!=1 ? 's' : ''),
+    label: 'Drop<br/>col.',
     icons: [{ icon: 'mdi-delete-outline' }],
     disabled: ($nuxt)=>!($nuxt.selectionType=='columns' && $nuxt.selectedColumns.length>0),
     doc: {
@@ -708,6 +759,7 @@ let _operations = {
   nest: {
     path: 'COLUMNS',
     text: 'Nest columns',
+    label: 'Unsplit',
     icons: [{icon: 'mdi-table-merge-cells'}],
     disabled: ($nuxt)=>['values','ranges'].includes($nuxt.selectionType) || $nuxt.selectedColumns.length<=1 || !$nuxt.currentDataset.summary,
     test: {
@@ -736,6 +788,7 @@ let _operations = {
       $nuxt.commandHandle({command: 'unnest', payload})
     },
     text: ($nuxt)=> 'Unnest column'+ ($nuxt.selectedColumns.length!=1 ? 's' : ''),
+    label: 'Split',
     icons: [{icon: 'mdi-arrow-split-vertical'}],
     disabled: ($nuxt)=>!(($nuxt.selectionType=='columns' && $nuxt.selectedColumns.length>0) || $nuxt.selectionType==='text'),
     test: {
@@ -754,6 +807,7 @@ let _operations = {
   fill_na: {
     path: 'TRANSFORMATIONS',
     text: ($nuxt)=> 'Fill column'+ ($nuxt.selectedColumns.length!=1 ? 's' : ''),
+    label: 'Fill<br/>missing',
     icons: [{icon: 'brush', class: 'material-icons-outlined'}],
     disabled: ($nuxt)=>!($nuxt.selectionType=='columns' && $nuxt.selectedColumns.length>0),
     test: {
@@ -786,7 +840,8 @@ let _operations = {
       }
     },
     text: ($nuxt)=>'Replace in column'+ ($nuxt.selectedColumns.length>1 ? 's' : ''),
-    icons: [{icon: 'find_replace'}],
+    label: 'Replace',
+    icons: [{icon: 'search'}],
     disabled: ($nuxt)=>!(['text'].includes($nuxt.selectionType) || $nuxt.selectedColumns.length>0),
     test: {
       dataframe: TEST_DATAFRAMES.REPLACE,
