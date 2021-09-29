@@ -2956,17 +2956,6 @@ export const commandsHandlers = {
       output_cols: columns.map((e) => ""),
       preview: {
         type: "aggregations",
-        expectedColumns: (c) => {
-          var output_cols_default = aggOutputCols(c);
-          var aggregations = c.aggregations.map(
-            (oname, i) =>
-              `"${c.output_cols[i] || output_cols_default[i]}": {"${
-                c.input_cols[i]
-              }":"${c.aggregations[i]}"}`
-          );
-          aggregations = [...new Set(aggregations)];
-          return aggregations.length + c.group_by.length;
-        },
         datasetPreview: true,
         noBufferWindow: true,
       },

@@ -1947,15 +1947,26 @@ export default {
 
       if (this.currentProfilePreview.code !== previewCode) {
 
-        var profile = (this.currentPreviewColumns && this.currentPreviewColumns.length) || this.currentRowHighlights
+        let profile = (this.currentPreviewColumns && this.currentPreviewColumns.length);
 
-        var matches = this.currentRowHighlights
 
-        this.$store.commit('setProfilePreview', {code: previewCode, payload: previewPayload, columns: [], done: false})
+        // Ask for fixed columns when is a rows highlighting preview
+        profile = profile || this.currentRowHighlights;
 
-        var cols = profile ? this.currentPreviewColumns.map(e=>escapeQuotes(  e.title.split(/__preview__/).join('')  )) : [];
+        let fixedColumns = profile;
 
-        var codePayload = {
+        // Do not ask for fixed columns when is a whole preview
+        if (previewPayload.preview) {
+          fixedColumns = fixedColumns && !previewPayload.preview.datasetPreview;
+        }
+
+        let matches = this.currentRowHighlights;
+
+        this.$store.commit('setProfilePreview', {code: previewCode, payload: previewPayload, columns: [], done: false});
+
+        let cols = fixedColumns ? this.currentPreviewColumns.map(e=>escapeQuotes(  e.title.split(/__preview__/).join('')  )) : [];
+
+        let codePayload = {
           ...previewPayload,
           request: {
             ...previewPayload.request,
@@ -1969,33 +1980,33 @@ export default {
           }
         };
 
-        var response = await this.evalCode(codePayload);
+        let response = await this.evalCode(codePayload);
 
         if (!response || !response.data || !response.data.result || response.data.status == "error") {
-          throw response
+          throw response;
         }
 
         if (profile && response.data.result.profile) {
-          var dataset = parseResponse(response.data.result.profile)
+          let dataset = parseResponse(response.data.result.profile);
 
           if (!dataset) {
-            throw response
+            throw response;
           }
 
-          dataset = { ...dataset, code: previewCode, payload: previewPayload, done: true }
+          dataset = { ...dataset, code: previewCode, payload: previewPayload, done: true };
 
-          this.$store.commit('setProfilePreview', dataset)
+          this.$store.commit('setProfilePreview', dataset);
         }
 
         if (matches && response.data.result.matches_count!==undefined) {
-          this.$store.commit('setPreviewInfo', {rowHighlights: +response.data.result.matches_count})
+          this.$store.commit('setPreviewInfo', {rowHighlights: +response.data.result.matches_count});
         }
 
-        return true
+        return true;
 
       }
 
-      return false
+      return false;
     },
 
     debouncedUpdateRows: debounce( function () {
