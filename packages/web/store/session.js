@@ -54,6 +54,8 @@ export const actions =  {
 
       var configuration = rootState.engineId || null;
 
+      let customCommands = rootGetters["customCommands/generatorsJson"];
+
       var payload = {
         tabs: rootState.datasets.map(e=>{
           var {dataSources, name, ...profiling} = e
@@ -64,6 +66,7 @@ export const actions =  {
         }),
         commands: [...dataSources, ...transformations],
         dataSourcesCount: dataSources.length,
+        customCommands,
         configuration,
         selectedTab: rootState.tab
 

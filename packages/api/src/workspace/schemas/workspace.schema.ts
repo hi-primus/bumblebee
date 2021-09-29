@@ -30,6 +30,7 @@ export const WorkspaceSchemaProvider = {
         title: { type: String },
         description: { type: String },
         dataSourcesCount: { type: Number, default: 0 },
+        customCommands: { type: String, default: "{}" },
         commands: [
           {
             type: String,

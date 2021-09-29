@@ -76,40 +76,45 @@ export const mutations =  {
 }
 
 export const actions =  {
-  async setAllGenerators ({ commit, dispatch }, { content, socketPost }) {
-    
-    console.log('[PLUGIN] setting generators')
-    
-    let generators = JSON.parse(content);
+  async setAllGenerators ({ state, commit, dispatch }, { content, socketPost }) {
 
-    generators = objectMapEntries(generators, (key, generator) => {
-      generator.command = generator.command || key;
-      if (generator.command.includes(".") && !generator.accessor) {
-        [generator.accessor, generator.command] = generator.command.split('.');
-      }
-      return generator;
-    });
-
-    let generators_keys = Object.keys(generators);
-    // request injections
-    for (let i = 0; i < generators_keys.length; i++) {
-      let generator = generators[generators_keys[i]];
-
-      if (generator.definition) {
-        let response = await dispatch('evalCode', {
-          socketPost,
-          codePayload: {
-            command: 'inject',
-            definition: generator.definition,
-            functionName: generator.functionName
-          }
-        }, { root: true });
-        console.log('[PLUGIN]', generator.functionName, response);
-      }
-
+    if (content) {      
+      let generators = JSON.parse(content);
+  
+      generators = objectMapEntries(generators, (key, generator) => {
+        generator.command = generator.command || key;
+        if (generator.command.includes(".") && !generator.accessor) {
+          [generator.accessor, generator.command] = generator.command.split('.');
+        }
+        return generator;
+      });
+  
+      commit('setGenerators', {generators});
     }
-    commit('setGenerators', {generators});
-    return true;
+    
+    // request injections
+    if (socketPost) {
+      let generators = state.generators;
+      let generators_keys = Object.keys(generators);
+      for (let i = 0; i < generators_keys.length; i++) {
+        let generator = generators[generators_keys[i]];
+  
+        if (generator.definition) {
+          let response = await dispatch('evalCode', {
+            socketPost,
+            codePayload: {
+              command: 'inject',
+              definition: generator.definition,
+              functionName: generator.functionName
+            }
+          }, { root: true });
+          console.log('[PLUGIN] Injected:', generators_keys[i]);
+        }
+  
+      }
+    }
+    
+    return content || socketPost;
   }
 }
 

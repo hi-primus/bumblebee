@@ -59,8 +59,9 @@ export default {
 
     async updateCustomOperations () {
       try {
-        this.$store.dispatch('customCommands/setAllGenerators', {content: this.content || '{}', socketPost: this.socketPost});
+        await this.$store.dispatch('customCommands/setAllGenerators', {content: this.content || '{}', socketPost: this.socketPost});
         this.content = this.$store.getters['customCommands/generatorsJson'];
+        await this.$store.dispatch('session/saveWorkspace');
       } catch (err) {
         console.error(err);
         return;

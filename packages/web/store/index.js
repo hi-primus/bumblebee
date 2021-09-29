@@ -828,6 +828,7 @@ export const actions = {
     let cells = [];
 
     let tab = -1;
+    let customCommands = "{}";
 
     // console.log('[WORKSPACE] Loaded', slug, response);
 
@@ -842,6 +843,7 @@ export const actions = {
         };
       });
       cells = response.data.commands.map( e=>({ ...JSON.parse(e), done: false }) );
+      customCommands = response.data.customCommands;
     }
 
     cells = cells.map(cell => {
@@ -880,6 +882,8 @@ export const actions = {
     commit('mutation', { mutate: 'tab', payload: tab});
     commit('mutation', { mutate: 'workspace', payload: response.data });
     commit('session/mutation', { mutate: 'saveReady', payload: true});
+
+    dispatch('customCommands/setAllGenerators', { content: customCommands }, { root: true });
 
     console.debug('[DEBUG] Loading workspace Done', slug);
 
@@ -1387,8 +1391,10 @@ export const actions = {
     try {
 
       var optimus = await dispatch('getOptimus', { payload: {socketPost} } );
+      
+      let generators = await dispatch('customCommands/setAllGenerators', { socketPost }, { root: true });
 
-      var init = [optimus];
+      var init = [optimus, generators];
 
       if (ignoreFrom>=0) {
         forceAll = true;
