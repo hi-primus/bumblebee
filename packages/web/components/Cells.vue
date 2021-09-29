@@ -49,7 +49,7 @@
             />
           </div>
           <div class="o-fields" :class="{'disabled': currentCommand._loading}">
-            <template  v-if="command.dialog.output_cols">
+            <template  v-if="getProperty(command.dialog.output_cols, [currentCommand])">
               <OutputColumnInputs :fieldLabel="command.dialog.output_cols_label" :noLabel="!command.dialog.output_labels" :currentCommand.sync="currentCommand"></OutputColumnInputs>
             </template>
             <template v-if="currentCommand._loading !== 'block' && command.dialog.fields">

@@ -11,16 +11,14 @@ import {
   multipleContent,
   hlParam,
   hlCols,
-  aggOutputCols,
   columnsHint,
   formFromParam,
   transpose,
-  objectMap,
+  objectMapEntries,
   objectMapFromEntries,
   objectToPythonDictString,
   URL_FUNCTIONS,
   EMAIL_FUNCTIONS,
-  TYPES_NAMES,
   TIME_NAMES,
   TIME_BETWEEN
 } from "bumblebee-utils";
@@ -2979,12 +2977,23 @@ export const commandsHandlers = {
     dialog: {
       title: (c) => c.title || c.text || c.command,
       fields: (c) => Object.entries(c.parameters || {}).map(([key, param]) => formFromParam(key, param)),
-      output_cols: true,
+      output_cols: (c) => c.output_cols === false,
     },
     payload: (columns, payload = {}) => {
-      let parameters = objectMap(
+
+      let parameters = objectMapEntries(
         payload.parameters || {},
-        value => value.value
+        (key, value) => {
+          if (!value.value) {
+            if (value.type == "columns" && payload._columnsKey == key) {
+              return !payload.columns ? columns : payload.columns;
+            }
+            if (value.type.includes("array") || value.type == "columns") {
+              return [];
+            }
+          }
+          return value.value;
+        }
       );
 
       payload.columns = payload.columns === undefined ? columns : payload.columns;

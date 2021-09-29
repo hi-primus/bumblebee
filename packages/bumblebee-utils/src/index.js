@@ -306,6 +306,16 @@ export const columnsHint = (columns = [], output_cols = []) => {
 
 export const formFromParam = (key, param) => {
 
+  if (param.type == "columns") {
+    return {
+      type: "autocomplete",
+      key,
+      label: param.label || key,
+      clearable: true,
+      items_key: "allColumns",
+    };
+  }
+
   if (param.items) {
     let items = param.items;
     if (Array.isArray(items)) {

@@ -195,7 +195,14 @@ export const getters =  {
       if (!generator.columns) {
         generator.payload.columns = false;
         generator.payload.output_cols = false;
+      } else if (typeof generator.columns == "string") {
+        generator.payload.columns = false;
+        generator.payload.output_cols = false;
+        generator.payload._columnsKey = generator.columns;
+        generator.columns = false;
       }
+
+      delete generator.columns;
 
       // set path and generator
       if (!generator.path) {
