@@ -611,10 +611,14 @@ export default {
           if (!column) {
             return false;
           }
-          return ['decimal','float','double','float64'].includes(column.stats.inferred_type.data_type) ? 'quantitative'
-            : (['int','integer','int64'].includes(column.stats.inferred_type.data_type) && column.stats.count_uniques>25) ? 'quantitative'
-            : (column.stats.count_uniques<=25) ? column.stats.count_uniques
-            : false
+          if (column.stats.inferred_type) {
+            return ['decimal','float','double','float64'].includes(column.stats.inferred_type.data_type) ? 'quantitative'
+              : (['int','integer','int64'].includes(column.stats.inferred_type.data_type) && column.stats.count_uniques>25) ? 'quantitative'
+              : (column.stats.count_uniques<=25) ? column.stats.count_uniques
+              : false;
+          } else {
+            return column.stats.count_uniques;
+          }
         }).filter(v=>v);
 
         if (plotable.length==2 && selected.length==2) {
