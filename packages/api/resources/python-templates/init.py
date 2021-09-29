@@ -42,13 +42,13 @@ def inject_method_to_optimus(func):
             
     if _cls in [BaseDataFrame, BaseEngine]:
         def binded(self, *args, **kwargs):
-            df = self
-            return func(df, *args, **kwargs)
+            _df = self
+            return func(_df, *args, **kwargs)
         
     else:
         def binded(self, *args, **kwargs):
-            df = self.root
-            return func(df, *args, **kwargs)
+            _df = self.root
+            return func(_df, *args, **kwargs)
     
     setattr(_cls, method_name, binded)
     return True

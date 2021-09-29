@@ -154,13 +154,34 @@ export const getters =  {
       }
       
       // set preview
-      if (generator.preview) {
+      if (generator.preview !== undefined) {
+        if (typeof generator.preview == 'string') {
+          switch (generator.preview) {
+            case 'whole':
+            case 'dataset':
+              generator.preview = {
+                datasetPreview: true
+              };
+              break;
+            case 'multiple columns':
+              generator.preview = {
+                expectedColumns: -1
+              };
+              break;
+            default:
+              generator.preview = {};
+              break;
+          }
+        }
+        if (generator.preview && !generator.preview.type) {
+          generator.preview.type = generator.command;
+        }
         generator.payload = generator.payload || {};
         generator.payload.preview = generator.preview;
       }
       
       // set accessor
-      if (generator.accessor) {
+      if (generator.accessor !== undefined) {
         generator.payload = generator.payload || {};
         generator.payload.accessor = generator.accessor;
         delete generator.accessor;
