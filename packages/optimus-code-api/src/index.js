@@ -391,7 +391,7 @@ export const codeGenerators = {
       }
       return code
     }
-    return `.rows.drop_duplicates(` // rows.drop mask.duplicated
+    return `.rows.drop_duplicated(` // rows.drop mask.duplicated
       + (payload.subset.length ? `cols=${preparedColumns(payload.subset, true)}, ` : '')
       + `keep="${payload.keep}")`
   },
