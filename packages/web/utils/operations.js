@@ -2978,7 +2978,7 @@ export const commandsHandlers = {
     dialog: {
       title: (c) => c.title || c.text || c.command,
       fields: (c) => Object.entries(c.parameters || {}).map(([key, param]) => formFromParam(key, param)),
-      output_cols: (c) => c.output_cols === false,
+      output_cols: (c) => c.output_cols !== false,
     },
     payload: (columns, payload = {}) => {
 
