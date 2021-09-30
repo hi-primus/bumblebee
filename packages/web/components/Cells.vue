@@ -905,7 +905,6 @@ export default {
 
         this.$store.commit('setPreviewCode',{
           code: this.getCode(this.currentCommand, 'preview'),
-          profileCode: this.getCode(this.currentCommand, 'profile'),
           codePayload: deepCopy(this.currentCommand),
           beforeCodeEval: this.currentCommand.beforeCodeEval ? ()=>this.currentCommand.beforeCodeEval(this.currentCommand) : false,
           color: getProperty(preview.highlightColor, [this.currentCommand]),

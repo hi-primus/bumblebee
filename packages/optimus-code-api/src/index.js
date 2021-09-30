@@ -803,10 +803,6 @@ export const codeGenerators = {
   replace: (payload) => {
     let _argument = preparedColumns(payload.columns);
 
-    if (payload.request.type === 'preview' || payload.request.type === 'profile') {
-      payload.output_cols = payload.output_cols.map(col=>'__new__'+col)
-    }
-
     let output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (['final','processing',undefined].includes(payload.request.type)) ? '' : '__new__')
 
     let replace = payload.replace;

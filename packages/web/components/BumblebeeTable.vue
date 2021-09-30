@@ -2221,7 +2221,7 @@ export default {
 
       for (let i = newRanges.length - 1; i >= 0 ; i--) {
 
-        let previewCode = (this.previewCode ? this.previewCode.profileCode : false) || '';
+        let previewCode = (this.previewCode ? this.previewCode.code : false) || '';
         let previewPayload = (this.previewCode ? this.previewCode.codePayload : false) || {};
 
         if (this.currentProfilePreview.code !== previewCode) {
