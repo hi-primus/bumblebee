@@ -657,13 +657,13 @@ export const getCodePayload = (payload) => {
 }
 
 export const transformDateToPython = (string) => {
-  if (string)
+  if (string && string.replace)
     return string.replace(/a|A|w|d|b|B|m|y|Y|H|I|p|M|S|f|z|Z|j|U|W|c|x|X|%/g,(match)=>`%${match}`)
   return ''
 }
 
 export const transformDateFromPython = (string) => {
-  if (string)
+  if (string && string.replace)
     return string.replace(/%(a|A|w|d|b|B|m|y|Y|H|I|p|M|S|f|z|Z|j|U|W|c|x|X|%)/g,(match)=>`${match.substr(1)}`)
   return ''
 }
