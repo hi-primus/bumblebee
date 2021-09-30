@@ -200,36 +200,34 @@ export const copyToClipboard = (str, target) => {
   target.removeChild(el);
 };
 
-export const optimizeRanges = (inputRange, existingRanges) => {
-  var newRanges = [inputRange]
+const optimizeRange = (inputRange, existingRange) => {
+  let resultRanges = [];
 
-  for (let i = 0; i < newRanges.length; i++) {
-    existingRanges.forEach(range => {
-      if (newRanges[i][0]<=range[0] && newRanges[i][1]>=range[1]) {
-        var pushChunk = [range[1]+1, newRanges[i][1]]
-        newRanges[i] = [newRanges[i][0], range[0]-1,]
-        newRanges.push(pushChunk)
-      }
-    })
+  if (existingRange && !(existingRange[1] < inputRange[0] || existingRange[0] > inputRange[1])) {  
+    if (inputRange[0]<existingRange[0]) {
+      resultRanges.push([inputRange[0], existingRange[0]-1]);
+    }
+    if (inputRange[1]>existingRange[1]) {
+      resultRanges.push([existingRange[1]+1, inputRange[1]]);
+    }
   }
-  for (let i = 0; i < newRanges.length; i++) {
-    existingRanges.forEach(range => {
-      if (newRanges[i][0]<=range[1] && newRanges[i][0]>=range[0]) {
-        newRanges[i][0] = range[1] + 1
-      }
-    });
-    existingRanges.reverse().forEach(range => {
-      if (newRanges[i][1]>=range[0] && newRanges[i][1]<=range[1]) {
-        newRanges[i][1] = range[0] - 1
-      }
-    })
+  else {
+    resultRanges.push(inputRange);
   }
-  for (let i = newRanges.length - 1; i >= 0 ; i--) {
-		if (newRanges[i][0]>newRanges[i][1]) {
-			newRanges.splice(i, 1)
-		}
-	}
-  return newRanges
+  return resultRanges;
+}
+
+export const optimizeRanges = (inputRange, existingRanges) => {
+
+  let resultRanges = [inputRange];
+
+  existingRanges.forEach(existingRange => {
+    let resultRangesResults = resultRanges.map(range => optimizeRange(range, existingRange));
+    resultRanges = [].concat.apply([], resultRangesResults);
+  });
+
+  return resultRanges;
+
 }
 
 export const escapeQuotes = (str) => {
