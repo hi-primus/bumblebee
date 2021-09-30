@@ -111,6 +111,7 @@ export const operationGroups = {
     icons: [{ icon: 'star_rate' }],
     text: 'Custom functions',
     label: 'User<br/>defined',
+    disabled: ($nuxt)=>!($nuxt.currentDataset && $nuxt.currentDataset.summary)
   }
 };
 
