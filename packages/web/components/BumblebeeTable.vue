@@ -2209,7 +2209,7 @@ export default {
 
       let newRanges = optimizeRanges(
         [from,to],
-        fetched.map(e=>[e.from,e.to])
+        fetched.filter(e=>e.from || e.to).map(e=>[e.from,e.to])
       );
 
       if (!newRanges.length) {
