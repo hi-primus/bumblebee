@@ -608,7 +608,7 @@ export default {
 
         var plotable = selected.map( (i)=>{
           var column = this.currentDataset.columns[i];
-          if (!column) {
+          if (!column || !column.stats) {
             return false;
           }
           if (column.stats.inferred_type) {
