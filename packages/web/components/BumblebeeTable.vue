@@ -596,7 +596,6 @@ export default {
       'currentDatasetUpdate',
       'selectionType',
       'currentPreviewColumns',
-      'currentProfilePreview',
       'currentHighlights',
       'currentRowHighlights',
       'currentFocusedColumns',
@@ -607,7 +606,7 @@ export default {
       'loadPreview',
     ]),
 
-    ...mapState(['allTypes']),
+    ...mapState(['allTypes', 'profilePreview']),
 
     gettingNewResults: {
       get () {
@@ -1010,7 +1009,7 @@ export default {
         if (this.loadPreviewActive && this.loadPreview.profile) {
           profile = this.loadPreview.profile
         } else {
-          profile = this.currentProfilePreview
+          profile = this.profilePreview
         }
 
         for (const colName in profile.columns) {
@@ -1061,9 +1060,9 @@ export default {
               value = this.currentRowHighlights
             }
           }
-          if (this.currentProfilePreview && this.currentProfilePreview.summary && this.currentProfilePreview.summary.rows_count) {
-            this.previewRowsCount = this.currentProfilePreview.summary.rows_count
-            value = Math.max(value, this.currentProfilePreview.summary.rows_count)
+          if (this.profilePreview && this.profilePreview.summary && this.profilePreview.summary.rows_count) {
+            this.previewRowsCount = this.profilePreview.summary.rows_count
+            value = Math.max(value, this.profilePreview.summary.rows_count)
           }
           if (this.previewCode.datasetPreview && this.previewRowsCount) {
             value = Math.max(value, this.previewRowsCount)
@@ -1165,6 +1164,11 @@ export default {
       deep: true,
 
       async handler (previewCode) {
+
+        if (previewCode && previewCode.latePreview && !this.profilePreview?.done) {
+          console.debug('[FETCHING] Early profiling');
+          await this.setProfile(previewCode.code, previewCode.codePayload);
+        }
 
         var check = false;
 
@@ -1936,7 +1940,7 @@ export default {
     },
 
     async unsetProfile () {
-      this.$store.commit('setProfilePreview', false )
+      this.$store.commit('mutation', {mutate: 'profilePreview', payload: false} )
     },
 
     async setProfile (previewCode, previewPayload) {
@@ -1945,10 +1949,9 @@ export default {
         return this.unsetProfile()
       }
 
-      if (this.currentProfilePreview.code !== previewCode) {
+      if (this.profilePreview.code !== previewCode) {
 
         let profile = (this.currentPreviewColumns && this.currentPreviewColumns.length);
-
 
         // Ask for fixed columns when is a rows highlighting preview
         profile = profile || this.currentRowHighlights;
@@ -1962,7 +1965,8 @@ export default {
 
         let matches = this.currentRowHighlights;
 
-        this.$store.commit('setProfilePreview', {code: previewCode, payload: previewPayload, columns: [], done: false});
+        let payload = {code: previewCode, payload: previewPayload, columns: [], done: false}
+        this.$store.commit('mutation', {mutate: 'profilePreview', payload });
 
         let cols = fixedColumns ? this.currentPreviewColumns.map(e=>escapeQuotes(  e.title.split(/__preview__/).join('')  )) : [];
 
@@ -1986,7 +1990,7 @@ export default {
           throw response;
         }
 
-        if (profile && response.data.result.profile) {
+        if ((profile || this.previewCode.latePreview) && response.data.result.profile) {
           let dataset = parseResponse(response.data.result.profile);
 
           if (!dataset) {
@@ -1995,7 +1999,7 @@ export default {
 
           dataset = { ...dataset, code: previewCode, payload: previewPayload, done: true };
 
-          this.$store.commit('setProfilePreview', dataset);
+          this.$store.commit('mutation', {mutate: 'profilePreview', payload: dataset} )
         }
 
         if (matches && response.data.result.matches_count!==undefined) {
@@ -2224,8 +2228,8 @@ export default {
         let previewCode = (this.previewCode ? this.previewCode.code : false) || '';
         let previewPayload = (this.previewCode ? this.previewCode.codePayload : false) || {};
 
-        if (this.currentProfilePreview.code !== previewCode) {
-          // console.log('[REQUESTING] resetting profile')
+        if (this.profilePreview && this.profilePreview.code !== previewCode) {
+          console.log('[REQUESTING] resetting profile', this.profilePreview.code, previewCode)
           await this.unsetProfile();
         }
 
@@ -2244,7 +2248,7 @@ export default {
 
         if (checkProfile) {
           // console.log('[REQUESTING] profile must be checked')
-          if (this.currentProfilePreview.code !== previewCode) {
+          if (this.profilePreview && this.profilePreview.code !== previewCode) {
             await this.setProfile(previewCode, previewPayload);
             console.debug('[FETCHING] Profiling done');
           }

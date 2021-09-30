@@ -24,14 +24,13 @@ const properties = [
     multiple: true,
   },
   {
-    name: 'ProfilePreview',
+    name: 'profilePreview',
     clear: true,
     clearOnSelection: true,
     default: ()=>({
       rowHighlights: false,
       newColumns: false
     }),
-    multiple: true,
   },
   {
     name: 'PreviewInfo',
@@ -1794,7 +1793,6 @@ export const actions = {
     var noBufferWindow = false;
     var lessRows = false;
     var forceName = false;
-    var latePreview = false;
 
     if (state.previewCode) {
       previewCode = state.previewCode.code;
@@ -1802,7 +1800,6 @@ export const actions = {
       noBufferWindow = state.previewCode.noBufferWindow;
       lessRows = state.previewCode.lessRows;
       forceName = !!state.previewCode.datasetPreview;
-      latePreview = !!state.previewCode.latePreview;
     }
 
     var referenceCode = await getPropertyAsync(previewCode) || ''
@@ -1825,7 +1822,7 @@ export const actions = {
 
     // profiled preview
 
-    var profilePreview = getters.currentProfilePreview.done;
+    var profilePreview = state.profilePreview.done;
 
     if (profilePreview) {
       try {
@@ -1852,7 +1849,7 @@ export const actions = {
     // not profiled preview or empty
 
     if (!profilePreview) {
-      var buffer = latePreview ? false : [from, to+1]; // TODO use df_preview instead of requesting two times
+      var buffer = [from, to+1];
       var codePayload = {
         ...codePayload,
         request: {
@@ -1866,7 +1863,7 @@ export const actions = {
           noSave: true
         }
       };
-      commit('setProfilePreview', false);
+      commit('mutation', {mutate: 'profilePreview', payload: false} )
       response = await dispatch('evalCode',{ socketPost, codePayload })
     }
 
