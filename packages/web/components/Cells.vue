@@ -910,6 +910,7 @@ export default {
           beforeCodeEval: this.currentCommand.beforeCodeEval ? ()=>this.currentCommand.beforeCodeEval(this.currentCommand) : false,
           color: getProperty(preview.highlightColor, [this.currentCommand]),
           from: this.currentCommand.columns,
+          latePreview: !!getProperty(preview.latePreview, [this.currentCommand]),
           datasetPreview: !!getProperty(preview.datasetPreview, [this.currentCommand]),
           loadPreview: !!getProperty(preview.loadPreview, [this.currentCommand]),
           load: preview.type==='load',

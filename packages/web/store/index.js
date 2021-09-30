@@ -1794,6 +1794,7 @@ export const actions = {
     var noBufferWindow = false;
     var lessRows = false;
     var forceName = false;
+    var latePreview = false;
 
     if (state.previewCode) {
       previewCode = state.previewCode.code;
@@ -1801,6 +1802,7 @@ export const actions = {
       noBufferWindow = state.previewCode.noBufferWindow;
       lessRows = state.previewCode.lessRows;
       forceName = !!state.previewCode.datasetPreview;
+      latePreview = !!state.previewCode.latePreview;
     }
 
     var referenceCode = await getPropertyAsync(previewCode) || ''
@@ -1850,6 +1852,7 @@ export const actions = {
     // not profiled preview or empty
 
     if (!profilePreview) {
+      var buffer = latePreview ? false : [from, to+1]; // TODO use df_preview instead of requesting two times
       var codePayload = {
         ...codePayload,
         request: {
@@ -1857,7 +1860,7 @@ export const actions = {
           type: 'preview',
           dfName: datasetDfName,
           sample: true,
-          buffer: [from, to+1],
+          buffer,
           noBufferWindow,
           lessRows,
           noSave: true

@@ -143,77 +143,94 @@ export const getters =  {
     })
     .map(([key, generator]) => {
 
-      generator = deepCopy(generator)
-
-      // set parameters
-      if (generator.parameters) {
-        generator.payload = generator.payload || {};
-        generator.payload.parameters = generator.parameters;
-        delete generator.parameters;
-      }
-      
-      // set text
-      if (generator.text) {
-        generator.payload = generator.payload || {};
-        generator.payload.text = generator.text;
-      }
-      
-      // set preview
-      if (generator.preview !== undefined) {
-        if (typeof generator.preview == 'string') {
-          switch (generator.preview) {
-            case 'whole':
-            case 'dataset':
-              generator.preview = {
-                datasetPreview: true
-              };
-              break;
-            case 'multiple columns':
-              generator.preview = {
-                expectedColumns: -1
-              };
-              break;
-            default:
-              generator.preview = {};
-              break;
+      try {
+        generator = deepCopy(generator)
+  
+        // set parameters
+        if (generator.parameters) {
+          generator.payload = generator.payload || {};
+          generator.payload.parameters = generator.parameters;
+          delete generator.parameters;
+        }
+        
+        // set text
+        if (generator.text) {
+          generator.payload = generator.payload || {};
+          generator.payload.text = generator.text;
+        }
+        
+        // set preview
+        if (generator.preview !== undefined) {
+          if (typeof generator.preview == 'string') {
+            switch (generator.preview) {
+              case 'late':
+                generator.preview = {
+                  latePreview: true
+                };
+                break;
+              case 'dataset':
+                generator.preview = {
+                  datasetPreview: true
+                };
+                break;
+              case 'multiple columns':
+                generator.preview = {
+                  expectedColumns: -1
+                };
+                break;
+              default:
+                generator.preview = {};
+                break;
+            }
           }
+
+          if (generator.preview === true) {
+            generator.preview = {};
+          }
+
+          if (generator.preview && !generator.preview.type) {
+            generator.preview.type = generator.command;
+          }
+
+          generator.payload = generator.payload || {};
+          generator.payload.preview = generator.preview;
         }
-        if (generator.preview && !generator.preview.type) {
-          generator.preview.type = generator.command;
+        
+        // set accessor
+        if (generator.accessor !== undefined) {
+          generator.payload = generator.payload || {};
+          generator.payload.accessor = generator.accessor;
+          delete generator.accessor;
         }
-        generator.payload = generator.payload || {};
-        generator.payload.preview = generator.preview;
-      }
-      
-      // set accessor
-      if (generator.accessor !== undefined) {
-        generator.payload = generator.payload || {};
-        generator.payload.accessor = generator.accessor;
-        delete generator.accessor;
+  
+        if (!generator.columns) {
+          generator.payload.columns = false;
+          generator.payload.output_cols = false;
+        } else if (typeof generator.columns == "string") {
+          generator.payload.columns = false;
+          generator.payload.output_cols = false;
+          generator.payload._columnsKey = generator.columns;
+          generator.columns = false;
+        }
+  
+        delete generator.columns;
+  
+        // set path and generator
+        if (!generator.path) {
+          generator.path = 'TRANSFORMATIONS/CUSTOM';
+        }
+        if (!generator.generator) {
+          generator.generator = 'GENERIC';
+        }
+  
+        return [key, generator];
+      } catch (err) {
+
+        console.error(err);
+        return false;
       }
 
-      if (!generator.columns) {
-        generator.payload.columns = false;
-        generator.payload.output_cols = false;
-      } else if (typeof generator.columns == "string") {
-        generator.payload.columns = false;
-        generator.payload.output_cols = false;
-        generator.payload._columnsKey = generator.columns;
-        generator.columns = false;
-      }
-
-      delete generator.columns;
-
-      // set path and generator
-      if (!generator.path) {
-        generator.path = 'TRANSFORMATIONS/CUSTOM';
-      }
-      if (!generator.generator) {
-        generator.generator = 'GENERIC';
-      }
-
-      return [key, generator];
     });
-    return Object.fromEntries(entries)
+    return Object.fromEntries(entries.filter(e => e))
   }
 }
