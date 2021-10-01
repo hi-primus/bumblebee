@@ -2248,9 +2248,10 @@ export default {
 
         if (checkProfile) {
           // console.log('[REQUESTING] profile must be checked')
-          if (this.profilePreview && this.profilePreview.code !== previewCode) {
-            await this.setProfile(previewCode, previewPayload);
-            console.debug('[FETCHING] Profiling done');
+          if (!this.profilePreview || this.profilePreview.code !== previewCode) {
+            this.setProfile(previewCode, previewPayload).then(() => {
+              console.debug('[FETCHING] Profiling done');
+            });
           }
         }
       }
