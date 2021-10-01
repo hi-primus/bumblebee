@@ -1,7 +1,7 @@
 <template>
-  <div v-if="column">
+  <div v-if="column && column.stats">
     <div class="sidebar-subheader hoverable column-title" @click="expanded = !expanded">
-      <div class="data-column-data">
+      <div class="data-column-data" v-if="column.stats.inferred_type">
         <span class="data-type" :class="`type-${column.stats.inferred_type.data_type}`">{{ dataTypeHint(column.stats.inferred_type.data_type) }}</span>
         <span class="data-column-name">{{ column.name }}</span>
       </div>

@@ -991,7 +991,7 @@ export default {
             total: +this.currentDataset.summary.rows_count,
             zeros: column.stats.zeros,
             null: column.stats.null,
-            inferred_type: column.stats.inferred_type.data_type
+            inferred_type: column.stats.inferred_type?.data_type
           };
         }
       });
