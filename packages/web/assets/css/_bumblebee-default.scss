@@ -2267,9 +2267,17 @@ $editor-top-padding: 4px;
   background-color: white;
   padding-top: 14px;
   padding-bottom: 22px;
+  max-width: 820px;
   .v-form {
     margin: 0;
     left: 0;
+  }
+  &.smaller-dialog {
+    width: unset;
+    min-width: 320px;
+    .operation-body {
+      padding-left: 9px;
+    }
   }
   &.bigger-dialog {
     min-width: calc(100vw - 70px);

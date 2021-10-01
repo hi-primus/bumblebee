@@ -5,10 +5,10 @@
     class="operation-form-dialog"
     persistent
     :value="(currentCommand.command)"
-    :max-width="command.dialog.dialog == 'small' ? 320 : 820"
+    :max-width="'90vw'"
     @click:outside="$emit('cancel-command')"
     @keydown.esc="$emit('cancel-command')"
-    :content-class="[(command.dialog.dynamicClass ? command.dialog.dynamicClass(currentCommand) : ''), (command.dialog.class || ''), 'command-dialog'].join(' ')"
+    :content-class="commandContentClass(command)"
   >
     <div class="title px-6">
       {{ {value: command.dialog.title, args: [currentCommand]} | property }}
@@ -35,6 +35,13 @@ export default {
     command: {
       type: Object,
       required: true
+    }
+  },
+
+  methods: {
+    commandContentClass(command) {
+      let small = command.dialog.dialog == 'small' ? 'smaller-dialog' : ''
+      return [small, (command.dialog.dynamicClass ? command.dialog.dynamicClass(currentCommand) : ''), (command.dialog.class || ''), 'command-dialog'].join(' ')
     }
   }
 }
