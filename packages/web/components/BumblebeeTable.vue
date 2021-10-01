@@ -153,6 +153,9 @@
               :class="`type-${plotsData[column.name].inferred_type}`">
               {{ dataTypeHint(plotsData[column.name].inferred_type) }}
             </div>
+            <div class="preview-badge">
+              preview
+            </div>
             <div class="column-title" :title="column.name">
               {{column.name}}
             </div>
@@ -175,6 +178,9 @@
               class="data-type"
               :class="`type-${previewPlotsData[column.name].inferred_type}`">
               {{ dataTypeHint(previewPlotsData[column.name].inferred_type) }}
+            </div>
+            <div class="preview-badge">
+              preview
             </div>
             <div
               v-if="currentPreviewNames && currentPreviewNames[column.name]"

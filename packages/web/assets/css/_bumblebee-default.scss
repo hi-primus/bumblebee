@@ -2194,6 +2194,21 @@ $editor-top-padding: 4px;
     border-right-width: 1px;
     border-right-style: solid;
 
+    .preview-badge {
+      position: absolute;
+      top: -1px;
+      left: 50%;
+      transform: translate(-50%);
+      color: darken($highlight-yellow, 35%);
+      text-transform: uppercase;
+      font-size: 11px;
+      line-height: 10px;
+      padding-left: 2px;
+      padding-right: 3px;
+      border-radius: 6px;
+      z-index: -1;
+    }
+
     .v-menu__content {
       pointer-events: auto;
     }
