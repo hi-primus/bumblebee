@@ -41,7 +41,7 @@ export class KernelRoutines {
 
   initJSON = `from optimus.helpers.json import dump_json`;
 
-  outputJSON = (res = "res") => `dump_json(${res}, ensure_ascii=False)`;
+  outputJSON = (res = "res") => `dump_json(${res}, ensure_ascii=True)`;
 
   initVariables = this._pythonTemplate("variables.py", false);
 
