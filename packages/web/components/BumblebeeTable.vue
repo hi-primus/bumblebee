@@ -150,8 +150,8 @@
             <div
               v-if="plotsData[column.name]"
               class="data-type"
-              :class="`type-${plotsData[column.name].inferred_type}`">
-              {{ dataTypeHint(plotsData[column.name].inferred_type) }}
+              :class="`type-${plotsData[column.name].inferred_data_type}`">
+              {{ dataTypeHint(plotsData[column.name].inferred_data_type) }}
             </div>
             <div class="preview-badge">
               preview
@@ -176,8 +176,8 @@
             <div
               v-if="previewPlotsData[column.name]"
               class="data-type"
-              :class="`type-${previewPlotsData[column.name].inferred_type}`">
-              {{ dataTypeHint(previewPlotsData[column.name].inferred_type) }}
+              :class="`type-${previewPlotsData[column.name].inferred_data_type}`">
+              {{ dataTypeHint(previewPlotsData[column.name].inferred_data_type) }}
             </div>
             <div class="preview-badge">
               preview
@@ -226,8 +226,8 @@
             <div
               v-if="plotsData[column.name]"
               class="data-type"
-              :class="`type-${plotsData[column.name].inferred_type}`">
-              {{ dataTypeHint(plotsData[column.name].inferred_type) }}
+              :class="`type-${plotsData[column.name].inferred_data_type}`">
+              {{ dataTypeHint(plotsData[column.name].inferred_data_type) }}
             </div>
             <div class="drag-hint"></div>
             <div
@@ -997,7 +997,7 @@ export default {
             total: +this.currentDataset.summary.rows_count,
             zeros: column.stats.zeros,
             null: column.stats.null,
-            inferred_type: column.stats.inferred_type?.data_type
+            inferred_data_type: column.stats.inferred_data_type?.data_type
           };
         }
       });
@@ -1032,7 +1032,7 @@ export default {
             frequency: ((column.stats.frequency) ? column.stats.frequency : undefined) || column.frequency || undefined,
             zeros: column.stats.zeros,
             null: column.stats.null,
-            inferred_type: column.stats.inferred_type.data_type || column.data_type
+            inferred_data_type: column.stats.inferred_data_type.data_type || column.data_type
             // hist_years: (column.stats.hist && column.stats.hist.years) ? column.stats.hist.years : undefined,
           }
         }
@@ -1818,7 +1818,7 @@ export default {
       }
 
       this.newColumnName = this.currentDataset.columns[index].name
-      this.newColumnType = this.currentDataset.columns[index].stats.inferred_type.data_type
+      this.newColumnType = this.currentDataset.columns[index].stats.inferred_data_type.data_type
 
       this.columnMenuIndex = index
 
@@ -1848,7 +1848,7 @@ export default {
     saveColumnData () {
       var index = this.columnMenuIndex
       var prevName = this.currentDataset.columns[index].name
-      var prevType = this.currentDataset.columns[index].stats.inferred_type.data_type
+      var prevType = this.currentDataset.columns[index].stats.inferred_data_type.data_type
 
       if (this.newColumnType != prevType) {
         var payload = {

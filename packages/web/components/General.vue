@@ -51,10 +51,10 @@
           <td style="width:100%; text-align: right;" :title="(+values.mismatch || 0)">{{ (+values.mismatch || 0) }}</td>
           <td style="width:10%; opacity: 0.71;" :title="+pMismatch+'%'"> {{ +pMismatch.toFixed(2) }}% </td>
         </tr>
-        <tr v-if="values.inferred_type && values.inferred_type.format">
+        <tr v-if="values.inferred_data_type && values.inferred_data_type.format">
           <td style="width:45%;">Date format</td>
-          <td colspan="2" style="width:100%; text-align: right;" :title="(values.inferred_type.format)">
-          <span class="font-mono">{{ (values.inferred_type.format) }}</span>
+          <td colspan="2" style="width:100%; text-align: right;" :title="(values.inferred_data_type.format)">
+          <span class="font-mono">{{ (values.inferred_data_type.format) }}</span>
           </td>
         </tr>
       </tbody>

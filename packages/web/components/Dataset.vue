@@ -525,7 +525,7 @@ export default {
 
         if (this.typesSelected.length > 0) {
           filteredColumns = this.resultsColumns.filter((column) => {
-            return this.typesSelected.includes(column.stats.inferred_type.data_type) || !column.stats
+            return this.typesSelected.includes(column.stats.inferred_data_type.data_type) || !column.stats
           })
         } else {
           filteredColumns = this.resultsColumns
@@ -547,7 +547,7 @@ export default {
             this.handleSelection( _selected, true )
           })
           return filteredColumns.map(col => {
-            return { ...col, profilerDtype: col.stats ? col.stats.inferred_type.data_type : null }
+            return { ...col, profilerDtype: col.stats ? col.stats.inferred_data_type.data_type : null }
           });
         }
       } catch (err) {

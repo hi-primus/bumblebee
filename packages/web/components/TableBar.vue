@@ -377,7 +377,7 @@
 
           <div v-if="detailedColumns.length>1 && currentDataset.columns[index]" class="sidebar-section pr-10 columns-selected">
             <div class="column-selected" v-for="(index, i) in detailedColumns" :key="index+'selc'+i">
-              <span class="data-type" :class="`type-${currentDataset.columns[index].stats.inferred_type.data_type}`">{{ dataTypeHint(currentDataset.columns[index].stats.inferred_type.data_type) }}</span>
+              <span class="data-type" :class="`type-${currentDataset.columns[index].stats.inferred_data_type.data_type}`">{{ dataTypeHint(currentDataset.columns[index].stats.inferred_data_type.data_type) }}</span>
               <span class="data-column-name">{{ currentDataset.columns[index].name }}</span>
             </div>
           </div>
@@ -611,9 +611,9 @@ export default {
           if (!column || !column.stats) {
             return false;
           }
-          if (column.stats.inferred_type) {
-            return ['decimal','float','double','float64'].includes(column.stats.inferred_type.data_type) ? 'quantitative'
-              : (['int','integer','int64'].includes(column.stats.inferred_type.data_type) && column.stats.count_uniques>25) ? 'quantitative'
+          if (column.stats.inferred_data_type) {
+            return ['decimal','float','double','float64'].includes(column.stats.inferred_data_type.data_type) ? 'quantitative'
+              : (['int','integer','int64'].includes(column.stats.inferred_data_type.data_type) && column.stats.count_uniques>25) ? 'quantitative'
               : (column.stats.count_uniques<=25) ? column.stats.count_uniques
               : false;
           } else {
@@ -768,7 +768,7 @@ export default {
         if (!columns.length) {
           return []
         }
-        return [...new Set(columns.map(i=>this.currentDataset.columns[i] ? this.currentDataset.columns[i].stats.inferred_type.data_type : false).filter(v=>v))]
+        return [...new Set(columns.map(i=>this.currentDataset.columns[i] ? this.currentDataset.columns[i].stats.inferred_data_type.data_type : false).filter(v=>v))]
       } catch (err) {
         console.error(err)
         return []
