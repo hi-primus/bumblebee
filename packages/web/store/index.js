@@ -1501,6 +1501,13 @@ export const actions = {
           if (_custom && typeof _custom === 'function' ) {
             return _custom(command.payload);
           }
+          if (command.payload && typeof command.payload === 'object') {
+            Object.keys(command.payload).forEach(key => {
+              if (key.startsWith("_")) {
+                command.payload[key] = undefined;
+              }
+            });
+          }
           return command;
         });
 
