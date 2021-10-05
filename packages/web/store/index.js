@@ -1622,7 +1622,7 @@ export const actions = {
     let response = await dispatch('evalCode', {
       socketPost,
       codePayload: {
-        command: 'profile_async_partial',
+        command: partial ? 'profile_async_partial' : 'profile_async',
         range: partial ? [Math.max(0, partial-10), partial] : undefined,
         dfName,
         request: {

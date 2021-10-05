@@ -1388,13 +1388,13 @@ export default {
         
         this.$store.commit('previewDefault');
 
-        let profilingResponse = await this.$store.dispatch('getProfiling', { payload: { dfName, ignoreFrom, clearPrevious: true, socketPost: this.socketPost, partial: true, methods: this.commandMethods } });
+        let profilingResponse = await this.$store.dispatch('getProfiling', { payload: { dfName, ignoreFrom, clearPrevious: true, socketPost: this.socketPost, partial: false, methods: this.commandMethods } });
 
         this.$store.commit('previewDefault');
 
-        this.$store.dispatch('lateProfiling', {...profilingResponse, socketPost: this.socketPost})
+        // this.$store.dispatch('lateProfiling', {...profilingResponse, socketPost: this.socketPost})
 
-        this.$store.commit('previewDefault');
+        // this.$store.commit('previewDefault');
 
         if (this.firstRun) {
           this.firstRun = false;
