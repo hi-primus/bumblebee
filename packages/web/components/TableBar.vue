@@ -307,6 +307,7 @@
       @sort="lastSort=$event"
       :typesSelected="typesSelected"
       :columnsTableHeaders="columnsTableHeaders"
+      ref="dataset"
     />
     <div class="sidebar-container" :class="{'bigger': (operationsActive && bigOptions)}" v-show="detailsActive || operationsActive">
 
@@ -359,6 +360,7 @@
           :columns="selectedColumns || []"
           @updateOperations="updateOperations"
           @showConnections="$emit('showConnections', $event)"
+          @checkSample="checkSample"
         />
 				<!-- <v-progress-linear
           indeterminate
@@ -900,6 +902,12 @@ export default {
       }
 
       return this.selectedDataTypes.every(t=>allowedTypes.indexOf(t)>=0)
+    },
+
+    checkSample () {
+      if (this.$refs.dataset) {
+        this.$refs.dataset.checkSample();
+      }
     },
 
     typesUpdated () {

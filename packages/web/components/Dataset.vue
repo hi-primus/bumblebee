@@ -611,6 +611,12 @@ export default {
       this.loadingDf = false;
     },
 
+    checkSample () {
+      if (this.$refs.bumblebeeTable) {
+        this.$refs.bumblebeeTable.scrollCheck();
+      }
+    },
+
     commandHandle (event) {
       this.$store.commit('commandHandle', event);
     },

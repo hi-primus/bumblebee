@@ -1685,25 +1685,33 @@ export const actions = {
         await dispatch('setDataset', { dataset: foundDataset, avoidReload: true, partial: false });
       }
 
-      dispatch('afterFirstProfiling');
-
+      let profilePromise;
+      
       if (partial) {
+        
+        profile = await dispatch('setProfiling', { dfName, dataset, avoidReload, partial: 10 });
+        dispatch('afterFirstProfiling');
 
-        let result = await dispatch('setProfiling', { dfName, dataset, avoidReload, partial: 10 });
-        let columnsCount = result.summary.cols_count;
-        let promise = false;
-        for (let i = 20; i < columnsCount+10; i+=10) {
-          dataset = await dispatch('requestProfiling', { dfName, socketPost, avoidReload, partial: i });
-          await promise;
-          promise = dispatch('setProfiling', { dfName, dataset, avoidReload: true, partial: i });
-        }
-        profile = await promise;
+        const afterFirst = async () => {
+          let columnsCount = profile.summary.cols_count;
+          let promise = false;
+          for (let i = 20; i < columnsCount+10; i+=10) {
+            dataset = await dispatch('requestProfiling', { dfName, socketPost, avoidReload, partial: i });
+            await promise;
+            promise = dispatch('setProfiling', { dfName, dataset, avoidReload: true, partial: i });
+          }
+          return await promise;
+        };
+
+        afterFirst()
 
       } else {
 
         profile = await dispatch('setProfiling', { dfName, dataset, avoidReload: true, partial: false });
+        dispatch('afterFirstProfiling');
 
       }
+
 
       if ( (clearPrevious || avoidReload) && found >= 0 ) {
         commit('updateDataset', { tab: found } );

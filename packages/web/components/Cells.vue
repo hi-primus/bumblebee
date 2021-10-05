@@ -1401,6 +1401,8 @@ export default {
         this.removeErrorAlert("all")
         this.lastWrongCode = false;
 
+        this.$emit("checkSample")
+
       } catch (err) {
         if (!runCodeAgain) {
           throw err;
