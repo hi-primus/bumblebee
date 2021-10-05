@@ -1385,8 +1385,14 @@ export default {
         if (!cellsResult) {
           return false;
         }
+        
+        this.$store.commit('previewDefault');
 
-        let dataset = await this.$store.dispatch('getProfiling', { payload: { dfName, ignoreFrom, clearPrevious: true, socketPost: this.socketPost, partial: true, methods: this.commandMethods } });
+        let profilingResponse = await this.$store.dispatch('getProfiling', { payload: { dfName, ignoreFrom, clearPrevious: true, socketPost: this.socketPost, partial: true, methods: this.commandMethods } });
+
+        this.$store.commit('previewDefault');
+
+        this.$store.dispatch('lateProfiling', {...profilingResponse, socketPost: this.socketPost})
 
         this.$store.commit('previewDefault');
 
@@ -1401,7 +1407,8 @@ export default {
         this.removeErrorAlert("all")
         this.lastWrongCode = false;
 
-        this.$emit("checkSample")
+        this.$emit("checkSample");
+
 
       } catch (err) {
         if (!runCodeAgain) {

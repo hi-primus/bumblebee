@@ -1607,6 +1607,16 @@ export const actions = {
     return dispatch('getPromise', promisePayload);
   },
 
+  async lateProfiles ({dispatch}, {dfName, columnsCount, avoidReload, socketPost}) {
+    let promise = false;
+    for (let i = 20; i < columnsCount+10; i+=10) {
+      let dataset = await dispatch('requestProfiling', { dfName, socketPost, avoidReload, partial: i });
+      await promise;
+      promise = dispatch('setProfiling', { dfName, dataset, avoidReload: true, partial: i });
+    }
+    return await promise;
+  },
+
   async requestProfiling ({ dispatch, state, getters, commit }, { dfName, socketPost, avoidReload, partial }) {
 
     let response = await dispatch('evalCode', {
@@ -1684,44 +1694,25 @@ export const actions = {
         foundDataset._columns = {};
         await dispatch('setDataset', { dataset: foundDataset, avoidReload: true, partial: false });
       }
-
-      let profilePromise;
       
       if (partial) {
-        
         profile = await dispatch('setProfiling', { dfName, dataset, avoidReload, partial: 10 });
-        dispatch('afterFirstProfiling');
-
-        const afterFirst = async () => {
-          let columnsCount = profile.summary.cols_count;
-          let promise = false;
-          for (let i = 20; i < columnsCount+10; i+=10) {
-            dataset = await dispatch('requestProfiling', { dfName, socketPost, avoidReload, partial: i });
-            await promise;
-            promise = dispatch('setProfiling', { dfName, dataset, avoidReload: true, partial: i });
-          }
-          return await promise;
-        };
-
-        afterFirst()
-
       } else {
-
         profile = await dispatch('setProfiling', { dfName, dataset, avoidReload: true, partial: false });
-        dispatch('afterFirstProfiling');
-
       }
 
+      dispatch('afterFirstProfiling');
 
       if ( (clearPrevious || avoidReload) && found >= 0 ) {
         commit('updateDataset', { tab: found } );
       }
 
-
       commit('mutation', {mutate: 'loadingStatus', payload: false });
 
-      return profile;
+      let columnsCount = profile.summary.cols_count;
+        
 
+      return {profile, dfName, columnsCount, avoidReload};
 
     } catch (err) {
 
