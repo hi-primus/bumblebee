@@ -1141,10 +1141,13 @@ export default {
 
       var toCell = this.currentCommand._toCell!==undefined ? this.currentCommand._toCell : -1;
 
-      await this.addCell(toCell, { ...this.currentCommand, code, content }, true );
-
       this.$emit('updateOperations', { active: ((this.currentCommand.request && this.currentCommand.request.noOperations) ? false : true), title: 'operations' } );
+
+      let command = deepCopy(this.currentCommand)
+
       this.currentCommand = false;
+
+      await this.addCell(toCell, { ...command, code, content }, true );
     },
 
     cancelCommand (runCode = true) {
