@@ -1108,6 +1108,12 @@ export const actions = {
     await dispatch('getConnections', payload);
   },
 
+  // events
+
+  async afterFirstProfiling ({commit}) {
+    commit('previewDefault');    
+  },
+
   // cells
 
   codeText ({ getters }, { newOnly, ignoreFrom }) {
@@ -1666,6 +1672,8 @@ export const actions = {
         foundDataset._columns = {};
         await dispatch('setDataset', { dataset: foundDataset, avoidReload: true, partial: false });
       }
+
+      dispatch('afterFirstProfiling');
 
       if (partial) {
 

@@ -1472,6 +1472,12 @@ export default {
     },
 
     getValuesByColumns (sample, clear, from = 0, prepend = '') {
+
+      if (!sample || !sample.columns) {
+        console.warn("Trying to get values from empty sample", sample);
+        return {};
+      }
+
       try {
         var columnValues = []
 
