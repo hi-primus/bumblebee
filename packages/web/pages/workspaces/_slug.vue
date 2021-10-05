@@ -513,7 +513,7 @@ export default {
       try {
         var files = event.dataTransfer.files
         if (files && files[0] && files[0].name) {
-        this.$refs.tableBar.commandHandle({command: 'loadFile', payload: { _fileInput: files[0] }, execute: ['uploadFile']});
+        this.$refs.tableBar.commandHandle({command: 'loadFile', payload: { __fileInput: files[0] }, execute: ['uploadFile']});
         }
 
       } catch (err) {}

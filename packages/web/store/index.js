@@ -654,15 +654,27 @@ export const actions = {
   async evalCode ({ dispatch, state, getters }, { code, codePayload, isAsync, socketPost }) {
     try {
 
+      if (codePayload && typeof codePayload == "object") {
+        codePayload = [codePayload];
+      }
+
+      for (let i = 0; i < codePayload.length; i++) {
+        Object.keys(codePayload[i]).forEach(key => {
+          if (key.startsWith("__")) {
+            codePayload[i][key] = undefined;
+          }
+        });
+        if (codePayload[i] && codePayload[i].request) {
+          isAsync = isAsync || codePayload[i].request.isAsync;
+        }
+      }
+
+
       if (!process.client) {
         throw new Error('SSR not allowed')
       }
 
       var startTime = new Date().getTime()
-
-      if (codePayload && codePayload.request) {
-        isAsync = isAsync || codePayload.request.isAsync;
-      }
 
       var response = await socketPost('run', {
         code,
@@ -1509,7 +1521,7 @@ export const actions = {
           }
           if (command.payload && typeof command.payload === 'object') {
             Object.keys(command.payload).forEach(key => {
-              if (key.startsWith("_")) {
+              if (key.startsWith("__")) {
                 command.payload[key] = undefined;
               }
             });

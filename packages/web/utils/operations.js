@@ -1489,7 +1489,7 @@ export const commandsHandlers = {
       acceptLabel: "Load",
       fields: [
         {
-          key: "_fileInput",
+          key: "__fileInput",
           label: "File upload",
           accept:
             "text/csv, .csv, application/json, application/vnd.ms-excel, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, .xls, .xlsx, .avro, .parquet",
@@ -1498,9 +1498,9 @@ export const commandsHandlers = {
         },
         {
           condition: (c) =>
-            c._fileInput &&
-            c._fileInput.toString() &&
-            c._fileInput !== c._fileLoaded,
+            c.__fileInput &&
+            c.__fileInput.toString() &&
+            c.__fileInput !== c.__fileLoaded,
           type: "action",
           label: "Preview",
           loading: "_fileUploading",
@@ -1559,7 +1559,7 @@ export const commandsHandlers = {
           items: [
             { text: "Infer file type", value: "file" },
             { text: "CSV", value: "csv" },
-            { text: "XLS", value: "xls" },
+            { text: "Excel", value: "excel" },
             { text: "JSON", value: "json" },
             { text: "Avro", value: "avro" },
             { text: "Parquet", value: "parquet" },
@@ -1633,7 +1633,7 @@ export const commandsHandlers = {
         {
           condition: (c) => {
             return (
-              (c.file_type === "xls" && c._moreOptions) ||
+              (c.file_type === "excel" && c._moreOptions) ||
               ((!c._moreOptions || c.file_type === "file") &&
                 (c.url.endsWith(".xls") ||
                   c.url.endsWith(".xlsx") ||
@@ -1643,8 +1643,8 @@ export const commandsHandlers = {
           },
           key: "sheet_name",
           label: `Sheet`,
-          items_key: "_sheet_names",
-          type: (c) => (c._sheet_names.length ? "select" : "number"),
+          items_key: "sheet_names",
+          type: (c) => (c.sheet_names.length ? "select" : "number"),
         },
       ],
       validate: (c) => {
@@ -1658,11 +1658,11 @@ export const commandsHandlers = {
     clearFile: (currentCommand) => {
       currentCommand._fileType = false;
       currentCommand._fileUploading = false;
-      currentCommand._fileInput = [];
+      currentCommand.__fileInput = [];
       currentCommand._fileName = "";
       currentCommand._meta = false;
       currentCommand._datasetName = false;
-      currentCommand._fileLoaded = false;
+      currentCommand.__fileLoaded = false;
       currentCommand.error = false;
       currentCommand.url = "";
       currentCommand._fileUploadingProgress = 0;
@@ -1681,7 +1681,7 @@ export const commandsHandlers = {
         };
 
         var response = await methods.storeDispatch("request/uploadFile", {
-          file: currentCommand._fileInput,
+          file: currentCommand.__fileInput,
           attachment,
         });
 
@@ -1691,7 +1691,7 @@ export const commandsHandlers = {
         currentCommand.url = response.fileUrl;
         currentCommand._fileUploading = false;
         currentCommand._datasetName = response.datasetName || false;
-        currentCommand._fileLoaded = currentCommand._fileInput;
+        currentCommand.__fileLoaded = currentCommand.__fileInput;
       } catch (error) {
         console.error(error);
         currentCommand.error = error;
@@ -1718,9 +1718,9 @@ export const commandsHandlers = {
       command: "loadFile",
       _fileType: false,
       _fileUploading: false,
-      _fileInput: [],
+      __fileInput: [],
       _fileName: "",
-      _fileLoaded: false,
+      __fileLoaded: false,
       _moreOptions: false,
       file_type: "file",
       external_url: "",
@@ -1910,7 +1910,7 @@ export const commandsHandlers = {
         if (c.url) {
           var file_type = c.url.split(".");
           file_type = file_type[file_type.length - 1];
-          return ["csv", "xls", "json", "avro", "parquet"].includes(file_type);
+          return ["csv", "excel", "json", "avro", "parquet"].includes(file_type);
         }
         return false;
       },

@@ -557,7 +557,7 @@ export default {
         if (c.command==='loadFile' && meta) {
           if (meta.sheet_names!==undefined) {
             c._sheet_names = meta.sheet_names
-            if (meta.sheet_names.length && !meta.sheet_names.includes(c.sheet_name)) {
+            if (meta.sheet_names && meta.sheet_names.length && !meta.sheet_names.includes(c.sheet_name)) {
               c.sheet_name = meta.sheet_names[0]
             }
           }

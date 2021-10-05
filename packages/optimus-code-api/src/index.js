@@ -592,7 +592,7 @@ export const codeGenerators = {
 
     let code = '';
 
-    let loadType = (!payload._moreOptions) ? 'file' : payload.file_type;
+    let loadType = (payload._moreOptions && payload.file_type) ? payload.file_type : 'file';
 
     let url = (payload.url || '').trim() || (payload.external_url || '').trim();
 
@@ -608,8 +608,8 @@ export const codeGenerators = {
     else if (loadType=='json') {
       code += `, multiline=${file.multiline}`
     }
-    else if (loadType=='xls') {
-      if (payload._sheet_names.length) {
+    else if (loadType=='excel') {
+      if (payload._sheet_names && payload._sheet_names.length) {
         code += `, sheet_name="${payload.sheet_name}"`
       } else {
         code += `, sheet_name=${payload.sheet_name}`
@@ -628,7 +628,7 @@ export const codeGenerators = {
     if (loadType!='file') {
       code += `, quoting=0, lineterminator=None, cache=True`
     } else if (url.endsWith('.xls') || url.endsWith('.xlsx')) {
-      if (payload._sheet_names.length) {
+      if (payload._sheet_names && payload._sheet_names.length) {
         code += `, sheet_name="${payload.sheet_name}"`
       } else {
         code += `, sheet_name=${payload.sheet_name}`

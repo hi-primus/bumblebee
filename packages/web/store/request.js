@@ -48,20 +48,15 @@ export const actions = {
     var fileType = undefined;
     var datasetName = undefined;
 
-    try {
-      fileType = fileOriginalName.split('.');
-      fileType = fileType[fileType.length - 1];
-      if (!['csv','xls','json','avro','parquet'].includes(fileType)) {
-        throw new Error();
-      }
-      datasetName = fileOriginalName.split(fileType)[0];
-    } catch (error) {
-      fileType = undefined;
-      console.warn('Bad file name', fileOriginalName);
+    fileType = fileOriginalName.split('.');
+    fileType = fileType[fileType.length - 1];
+    if (!['csv','xls','xlsx','json','avro','parquet'].includes(fileType)) {
+      throw new Error(`Bad file name: ${fileOriginalName}`);
     }
+    datasetName = fileOriginalName.split(fileType)[0];
 
     if (!fileUrl || !fileType || !datasetName) {
-      console.warn('Bad file name', { fileUrl, fileType, datasetName, responseData: response.data });
+      console.warn('Bad file name error', { fileUrl, fileType, datasetName, responseData: response.data });
     }
 
     return {fileUrl, fileType, datasetName, fileOriginalName};
