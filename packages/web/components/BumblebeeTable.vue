@@ -1982,7 +1982,7 @@ export default {
 
         let cols = fixedColumns ? this.currentPreviewColumns.map(e=>escapeQuotes(  e.title.split(/__preview__/).join('')  )) : [];
 
-        cols = cols.length ? cols : false;
+        cols = cols.length || !this.currentRowHighlights ? cols : false;
 
         let codePayload = {
           ...previewPayload,
