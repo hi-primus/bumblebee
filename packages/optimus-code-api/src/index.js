@@ -496,7 +496,9 @@ export const codeGenerators = {
 
     let code = ''
 
-    code += `.cols.groupby(by="${payload.group_by[0]}", agg={`
+    let groupby = `[${payload.group_by.map(v=>`"${v}"`).join(", ")}]`
+
+    code += `.cols.groupby(by=${groupby}, agg={`
     code += aggregations.join(', ')
     code += `})`
 
