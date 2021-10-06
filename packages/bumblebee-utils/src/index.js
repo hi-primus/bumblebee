@@ -996,7 +996,7 @@ export const INIT_PARAMS = {
 
 export const TYPES = {
   INT: "int",
-  DECIMAL: "decimal",
+  FLOAT: "float",
   STRING: "string",
   BOOLEAN: "boolean",
   DATE: "date",
@@ -1015,7 +1015,7 @@ export const TYPES = {
 
 export const TYPES_HINTS = {
   "int": "#",
-  "decimal": "#.##",
+  "float": "#.##",
   "string": "ABC",
   "boolean": "0/1",
   "date": "📅",
@@ -1034,7 +1034,7 @@ export const TYPES_HINTS = {
 
 export const TYPES_NAMES = {
   "int": "Integer",
-  "decimal": "Decimal",
+  "float": "Decimal",
   "string": "String",
   "boolean": "Boolean",
   "date": "Date",

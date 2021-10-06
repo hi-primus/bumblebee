@@ -183,8 +183,8 @@ export default {
 
         if (types.every(type=>type===types[0])) {
           obj.type = types[0];
-        } else if (types.every(type=>['decimal','int'].includes(type))) {
-          obj.type = 'decimal';
+        } else if (types.every(type=>['float','int'].includes(type))) {
+          obj.type = 'float';
         } else {
           obj.type = 'string';
         }

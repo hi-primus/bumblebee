@@ -588,7 +588,7 @@ export default {
       lazyColumns: [],
       defaultColumnWidth: 170,
 
-      mainTypes: ['string', 'int', 'decimal', 'boolean', '|', 'date', 'time', '|', 'object', 'array'],
+      mainTypes: ['string', 'int', 'float', 'boolean', '|', 'date', 'time', '|', 'object', 'array'],
 
       moreTypes: ['email', 'credit_card_number', 'gender', '|', 'zip_code', '|', 'ip', 'url']
 		}
