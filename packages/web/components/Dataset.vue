@@ -229,7 +229,12 @@
 				</template>
 				<template v-slot:[`item.missing`]="{ item }">
 					<div class="pr-4">
-						{{ item.missing | formatNumberInt }}
+						{{ item.stats.missing | formatNumberInt }}
+					</div>
+				</template>
+				<template v-slot:[`item.mismatch`]="{ item }">
+					<div class="pr-4">
+						{{ item.stats.mismatch | formatNumberInt }}
 					</div>
 				</template>
 				<template v-slot:[`item.null`]="{ item }">

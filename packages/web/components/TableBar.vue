@@ -529,7 +529,8 @@ export default {
 				{ text: '', sortable: false, width: '1%', value: 'controls' },
 				{ hint: '#/A', sortable: false, text: 'Type', value: 'profilerDtype', width: '1.5%' },
 				{ hint: 'ABC', sortable: false, text: 'Name', value: 'name', width: '3%' },
-				{ hint: '""', sortable: false, text: 'Missing values', width: '2%', value: 'missing' },
+				{ hint: '""', sortable: false, text: 'Missing', value: 'stats.missing', width: '3%', class: 'data-table-stat' },
+				{ hint: '""', sortable: false, text: 'Mismatches', value: 'stats.mismatch', width: '3%', class: 'data-table-stat' },
 				// { hint: 'null', text: 'Null values', width: '2%', value: 'null' },
         // { hint: '0', text: 'Zeros', width: '2%', value: 'zeros' },
 				{ text: '', sortable: false, width: '50%', value: '' }
