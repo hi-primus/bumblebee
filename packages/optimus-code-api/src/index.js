@@ -199,11 +199,21 @@ export const codeGenerators = {
 
     let dfName = `df`;
 
-    if (payload.rowsType==='values' && payload.selection && payload.selection.map) {
-      payload.selection = payload.selection.map(v=>escapeQuotes(v));
-    }
     if (payload.selection && payload.selection.map && payload.rowsType==='values') {
-      payload.selection = payload.selection.map(v=>`"${v}"`);
+      payload.selection = payload.selection.map(v=>{
+        if (!payload.request.isString) {
+          if (!isNaN(v) && !isNaN(parseFloat(v))) {
+            return v;
+          }
+          if (v.toUpperCase == "TRUE") {
+            return 'True'
+          }
+          if (v.toUpperCase == "FALSE") {
+            return 'False'
+          }
+        }
+        return `"${escapeQuotes(v)}"`
+      });
     }
 
     let expression = '';
@@ -304,7 +314,20 @@ export const codeGenerators = {
     if (!['less','greater','between'].includes(payload.condition)) {
       payload.value = `"${payload.value}"`
       payload.value_2 = `"${payload.value_2}"`
-      payload.values = payload.values.map(v=>`"${v}"`)
+      payload.values = payload.values.map(v=>{
+        if (!payload.request.isString) {
+          if (!isNaN(v) && !isNaN(parseFloat(v))) {
+            return v;
+          }
+          if (v.toUpperCase == "TRUE") {
+            return 'True'
+          }
+          if (v.toUpperCase == "FALSE") {
+            return 'False'
+          }
+        }
+        return `"${escapeQuotes(v)}"`
+      });
     }
 
     switch (payload.condition) {
