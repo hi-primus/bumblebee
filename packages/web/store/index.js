@@ -1589,7 +1589,7 @@ export const actions = {
       }
       commit('mutation', { mutate: 'commandsDisabled', payload: undefined });
 
-      err.message = '(Error on cells) ' + (err.message || '');
+      err.bumblebeeType = '(Error on cells)';
       console.debug('[DEBUG] Loading cells result Error');
       throw err;
 
@@ -1732,7 +1732,7 @@ export const actions = {
       }
       commit('mutation', { mutate: 'commandsDisabled', payload: undefined});
 
-      err.message = '(Error on profiling) ' + (err.message || '');
+      err.bumblebeeType = '(Error on profiling)'
       console.debug('[DEBUG] Loading profiling Error', dfName);
 
       commit('mutation', {mutate: 'loadingStatus', payload: false });

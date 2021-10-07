@@ -2141,7 +2141,7 @@ export default {
       } catch (err) {
         console.error(err);
         this.fetching = false;
-        if (err.message.includes('(Error on profiling)') || err.message.includes('(Error on cells)')) {
+        if (err.bumblebeeType && (err.bumblebeeType.includes('(Error on profiling)') || err.bumblebeeType.includes('(Error on cells)'))) {
           throw err;
         }
         if (this.toFetch.length || this.checkScrollAgain) {
