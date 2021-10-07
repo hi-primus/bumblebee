@@ -82,13 +82,13 @@ export const operationGroups = {
     icons: [{ icon: 'calendar_today' }],
     text: 'Datetime functions',
     label: 'Date &<br/>Time',
-    disabled: ($nuxt)=>!($nuxt.selectionType=='columns' && $nuxt.selectedColumns.length>0)
+    disabled: ($nuxt)=>!($nuxt.selectionType=='columns' && $nuxt.selectedColumns.length>=0)
   },
   URLEMAIL: {
     icons: [{ icon: 'mdi-web' }],
     text: 'URL and Email functions',
     label: 'URL &<br/>Email',
-    disabled: ($nuxt)=>!($nuxt.selectionType=='columns' && $nuxt.selectedColumns.length>0)
+    disabled: ($nuxt)=>!($nuxt.selectionType=='columns' && $nuxt.selectedColumns.length>=0)
   },
   // CAST: {
   //   icons: [{ icon: 'category' }],
@@ -805,10 +805,10 @@ let _operations = {
 
   fill_na: {
     path: 'TRANSFORMATIONS',
-    text: ($nuxt)=> 'Fill column'+ ($nuxt.selectedColumns.length!=1 ? 's' : ''),
+    text: 'Fill missing values',
     label: 'Fill<br/>missing',
     icons: [{icon: 'brush', class: 'material-icons-outlined'}],
-    disabled: ($nuxt)=>!($nuxt.selectionType=='columns' && $nuxt.selectedColumns.length>0),
+    disabled: ($nuxt)=>!($nuxt.selectionType=='columns' && $nuxt.selectedColumns.length>=0),
     test: {
       dataframe: TEST_DATAFRAMES.NULL,
       payload: {
@@ -841,7 +841,7 @@ let _operations = {
     text: ($nuxt)=>'Replace in column'+ ($nuxt.selectedColumns.length>1 ? 's' : ''),
     label: 'Replace',
     icons: [{icon: 'search'}],
-    disabled: ($nuxt)=>!(['text'].includes($nuxt.selectionType) || $nuxt.selectedColumns.length>0),
+    disabled: ($nuxt)=>!(['text', 'columns'].includes($nuxt.selectionType) && $nuxt.currentDataset && $nuxt.currentDataset.summary && $nuxt.selectedColumns.length>=0),
     test: {
       dataframe: TEST_DATAFRAMES.REPLACE,
       payload: {
@@ -3454,7 +3454,7 @@ export const commandsHandlers = {
           }),
         },
       ],
-      validate: (c) => c.current_format && c.output_format,
+      validate: (c) => c.output_format,
     },
     payload: (columns, payload = {}) => {
       return {
@@ -3829,9 +3829,8 @@ export const commandsHandlers = {
           return 0;
         }
         return (
-          command.output_cols.filter((e) => e !== "").length %
-            command.columns.length ===
-          0
+          (command.output_cols.length == 0 && command.columns.length == 0)
+          || command.output_cols.filter((e) => e !== "").length % command.columns.length === 0
         );
       },
     },
@@ -4201,9 +4200,8 @@ export const commandsHandlers = {
       output_cols: true,
       validate: (command) => {
         if (
-          command.output_cols.filter((e) => e !== "").length %
-            command.columns.length ==
-          0
+          (command.output_cols.length == 0 && command.columns.length == 0)
+          || command.output_cols.filter((e) => e !== "").length % command.columns.length == 0
         )
           return true;
         return false;
@@ -4234,9 +4232,8 @@ export const commandsHandlers = {
       output_cols: true,
       validate: (command) => {
         if (
-          command.output_cols.filter((e) => e !== "").length %
-            command.columns.length ==
-          0
+          (command.output_cols.length == 0 && command.columns.length == 0)
+          || command.output_cols.filter((e) => e !== "").length % command.columns.length == 0
         )
           return true;
         return false;
@@ -4298,9 +4295,8 @@ export const commandsHandlers = {
       ],
       validate: (command) => {
         if (
-          command.output_cols.filter((e) => e !== "").length %
-            command.columns.length ==
-          0
+          (command.output_cols.length == 0 && command.columns.length == 0)
+          || command.output_cols.filter((e) => e !== "").length % command.columns.length == 0
         )
           return true;
         return false;

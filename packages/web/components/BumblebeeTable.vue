@@ -1136,7 +1136,7 @@ export default {
 
     previewError (value) {
       if (value) {
-        this.deleteAllPreviews()
+        this.removePreviewColumns()
       }
     },
 
@@ -1156,10 +1156,9 @@ export default {
     },
 
     currentPreviewColumns (value) {
-      if (!value) {
+      if (!value || !value.length) {
         this.$nextTick(()=>{
-          this.deleteAllPreviews();
-
+          this.removePreviewColumns();
         })
       }
       this.focusPreview()
@@ -1171,14 +1170,15 @@ export default {
 
       async handler (previewCode) {
 
-        if (previewCode && previewCode.latePreview && !this.profilePreview?.done) {
-          console.debug('[FETCHING] Early profiling');
-          await this.setProfile(previewCode.code, previewCode.codePayload);
-        }
 
         var check = false;
 
         if (previewCode) {
+
+          if (previewCode.latePreview && !this.profilePreview?.done) {
+            console.debug('[FETCHING] Early profiling');
+            await this.setProfile(previewCode.code, previewCode.codePayload);
+          }
 
           var currentCode = await getPropertyAsync(previewCode.code);
 
@@ -1191,7 +1191,8 @@ export default {
             }
           }
         } else {
-          this.loadedPreviewCode = false
+          this.loadedPreviewCode = false;
+          this.removePreviewChunks();
         }
 
         var noBufferWindow = (previewCode && previewCode.noBufferWindow) ? true : false;
@@ -1243,13 +1244,23 @@ export default {
       })
     },
 
-    deleteAllPreviews () {
-      var columnValues = {};
+    removePreviewColumns () {
+      let columnValues = {};
       if (this.currentDataset && this.columns && this.columns.length) {
         this.columns.forEach(column => {
           columnValues[ column.name ] = this.columnValues[ column.name ];
         });
         this.columnValues = columnValues;
+      }
+    },
+
+    removePreviewChunks () {
+      let length = this.fetched.length;
+      this.fetched = this.fetched.filter(e=>!e.code);
+      if (length !== this.fetched.length) {
+        this.mustUpdateRows = true;
+        this.recalculateRows = true;
+        this.updateRows();
       }
     },
 

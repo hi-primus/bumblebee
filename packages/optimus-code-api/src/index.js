@@ -855,11 +855,11 @@ export const codeGenerators = {
       +')';
 
     if (payload._search_by_string) {
-      str += ( (payload.request.type === 'preview') ? `.cols.find(${_argument}, sub=[${search.join(',')}], ignore_case=${!payload.match_case ? 'True' : 'False'})` : '');
+      str += ( (payload.request.type === 'preview' && _argument) ? `.cols.find(${_argument}, sub=[${search.join(',')}], ignore_case=${!payload.match_case ? 'True' : 'False'})` : '');
     }
 
     if (payload._replace_by_string) {
-      str += ( (payload.request.type === 'preview' && payload.replace) ? `.cols.find(${output_cols_argument}, sub=["${payload.replace}"])` : '');
+      str += ( (payload.request.type === 'preview' && payload.replace && output_cols_argument) ? `.cols.find(${output_cols_argument}, sub=["${payload.replace}"])` : '');
     }
 
     return str;
