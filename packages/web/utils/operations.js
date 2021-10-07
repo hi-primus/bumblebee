@@ -2083,7 +2083,7 @@ export const commandsHandlers = {
         actionLabels: {
           drop: "Remove",
           select: "Keep",
-          set: "Set",
+          set: "Replace",
         },
         rowsLabels: {
           missing: "missing rows",
@@ -2182,7 +2182,7 @@ export const commandsHandlers = {
             { text: "Starts with", value: "starts_with" },
             { text: "Ends with", value: "ends_with" },
             { divider: true },
-            { text: "Custom expression", value: "set" },
+            { text: "Custom expression", value: "where" },
             { text: "Pattern", value: "match_pattern" },
             { text: "Selected", value: "selected", disabled: true },
             { divider: true },
@@ -2230,7 +2230,7 @@ export const commandsHandlers = {
           type: "number",
         },
         {
-          condition: (c) => "set" == c.condition,
+          condition: (c) => "where" == c.condition,
           key: "value",
           label: "Expression",
           placeholder: "column>=0",
@@ -2252,7 +2252,19 @@ export const commandsHandlers = {
           items: [
             { text: "Keep matching rows", value: "select" },
             { text: "Drop matching rows", value: "drop" },
+            { text: "Replace matching rows", value: "set" },
           ],
+        },
+        {
+          condition: (c) => c.action === "set",
+          type: "field-suggestions",
+          key: "replace_value",
+          placeholder: 'Formula or "value"',
+          label: "Replace by",
+          mono: true,
+          useFunctions: true,
+          fuzzySearch: true,
+          suggestions: (c) => ({ column: c.allColumns }),
         },
       ],
       filteredPreview: true,
@@ -2272,7 +2284,7 @@ export const commandsHandlers = {
           case "starts_with":
           case "ends_with":
             return c.text.length;
-          case "set":
+          case "where":
             return c.expression.length;
           case "selected":
           case "null":
@@ -2293,17 +2305,18 @@ export const commandsHandlers = {
         value: "",
         value_2: "",
         values: [],
+        replace_value: "",
         text: "",
         expression: columns[0].includes(" ") ? `{${columns[0]}}` : columns[0],
 
         request: {},
 
         preview: {
+          expectedColumns: (c) => +(c.action === "set"),
+          type: "filterRows",
           filteredPreview: false,
           lessRows: (c) => c.preview.filteredPreview,
           highlightColor: (c) => (c.action === "drop" ? "red" : "green"),
-          expectedColumns: 0,
-          type: "filterRows",
         },
       };
     },

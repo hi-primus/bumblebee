@@ -251,7 +251,7 @@ export const codeGenerators = {
           payload.default = `"${payload.columns[0]}"`;
         }
 
-        output_col = '__new__'+output_col;
+        output_col = '__new__'+output_col; // TODO support output_cols
         code = `.cols.set("__match__", '${expression}', `
         + (payload.default ? `default=${payload.default}, ` : '')
         + `eval_value=True)`;
@@ -363,23 +363,78 @@ export const codeGenerators = {
       case 'ends_with':
         expression = `${dfName}.mask.${payload.condition}("${payload.columns[0]}", "${payload.text}")`
         break
-      case 'set':
+      case 'where':
         expression = `${payload.expression}`
       default:
     }
+
+    let output_col = payload.columns[0];
+
+    if (!payload.default && payload.columns[0]) {
+      payload.default = `"${payload.columns[0]}"`;
+    }
+
     if (!['final','processing'].includes(payload.request.type)) {
-      let code = `.cols.set("__match__", '${expression}', `
-      + (payload.default ? `default=${payload.default}, ` : '')
-      + `eval_value=True)`;
-      if (payload.preview.filteredPreview) {
-        code += `.rows.select( '__match__' )`
-        if (payload.request.type === 'preview') {
-          return (from, to)=>code+(from!==undefined ? `[${from}:${to}]` : '')
+
+      if (payload.action == 'set') {
+
+        // preview set
+
+        let code = `.cols.set("__match__", '${expression}', `
+        + `eval_value=True)`;
+
+        code += `.cols.set(`
+        + `"__new__${output_col}"` // TODO support output_cols
+        + `, value_func=${payload.replace_value || "None"}`
+        + `, where='__match__'`
+        + (payload.default ? `, default=${payload.default}` : '')
+        + `)`
+
+        if (payload.preview.filteredPreview) {
+          code += `.rows.select("__match__")`
+          if (payload.request.type === 'preview') {
+            return (from, to)=>code+(from!==undefined ? `[${from}:${to}]` : '')
+          }
         }
+        return code
+      
+      } else {
+
+        // preview filter
+        
+        let code = `.cols.set("__match__", '${expression}', `
+        + (payload.default ? `default=${payload.default}, ` : '')
+        + `eval_value=True)`;
+        if (payload.preview.filteredPreview) {
+          code += `.rows.select( '__match__' )`
+          if (payload.request.type === 'preview') {
+            return (from, to)=>code+(from!==undefined ? `[${from}:${to}]` : '')
+          }
+        }
+        return code
+
       }
-      return code
+
     } else {
-      return `.rows.${payload.action}( '${expression}' )`
+      if (payload.action == 'set') {
+
+        // final set
+
+        if (!payload.default && payload.columns[0]) {
+          payload.default = `"${payload.columns[0]}"`;
+        }
+        return `.cols.set(`
+        + `"${output_col}", `
+        + `value_func=${payload.replace_value || "None"}, `
+        + `where='${expression}', `
+        + (payload.default ? `default=${payload.default}, ` : '')
+        + `eval_value=True)`
+      } else {
+
+        // final filter
+
+        return `.rows.${payload.action}( '${expression}' )`
+      }
     }
   },
   dropEmptyRows: (payload) => {
