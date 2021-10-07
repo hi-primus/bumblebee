@@ -1173,7 +1173,6 @@ export default {
 
       async handler (previewCode) {
 
-
         var check = false;
 
         if (previewCode) {
@@ -2025,6 +2024,7 @@ export default {
             noExecute: true,
             buffer: true,
             profile: cols,
+            names: cols === false,
             dfName: this.currentDataset.dfName,
             matches_count: matches
           }
@@ -2036,7 +2036,7 @@ export default {
           throw response;
         }
 
-        if ((profile || this.previewCode.latePreview) && response.data.result.profile) {
+        if ((profile || previewCode.latePreview) && response.data.result.profile) {
           let dataset = parseResponse(response.data.result.profile);
 
           if (!dataset) {
@@ -2046,6 +2046,17 @@ export default {
           dataset = { ...dataset, code: previewCode, payload: previewPayload, done: true };
 
           this.$store.commit('mutation', {mutate: 'profilePreview', payload: dataset} )
+
+        } else if (response.data.result.names) {
+
+          let names = parseResponse(response.data.result.names);
+
+          let columns = Object.fromEntries(names.map(c=>[c.title, {}]));
+
+          let dataset = { columns, done: true, code: previewCode };
+
+          this.$store.commit('mutation', {mutate: 'profilePreview', payload: dataset, summary: {}})
+
         }
 
         if (matches && response.data.result.matches_count!==undefined) {
