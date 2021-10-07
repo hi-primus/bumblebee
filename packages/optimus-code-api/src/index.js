@@ -1147,6 +1147,10 @@ export const generateCode = function(commands = [], _request = { type: 'processi
         if (request.saveTo) {
           code += `${request.saveTo} = `;
           saving = request.saveTo;
+        } else if (request.createsNew && request.type==='processing'){
+          let newDfName = payload.newDfName || request.newDfName;
+          code += `${newDfName} = `;
+          saving = newDfName;
         } else if (request.isLoad) {
           let newDfName = payload.newDfName || request.newDfName;
           code += `${newDfName} = `;

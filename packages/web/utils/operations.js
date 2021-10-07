@@ -2059,6 +2059,7 @@ export const commandsHandlers = {
           label: "Otherwise",
         }
       ],
+      save_new: true,
       filteredPreview: true,
     },
     payload: (columns, payload = {}) => {
@@ -2573,6 +2574,7 @@ export const commandsHandlers = {
           c.right_on
         );
       },
+      save_new: true,
     },
     payload: async (columns, payload = {}) => {
       var items_with = Object.keys(payload.secondaryDatasets || {}).filter(
@@ -2731,6 +2733,7 @@ export const commandsHandlers = {
           type: "columns_concat",
         },
       ],
+      save_new: true,
       validate: (c) => {
         return !!(
           c.selected_columns &&
@@ -2941,6 +2944,7 @@ export const commandsHandlers = {
           ],
         },
       ],
+      save_new: true,
       validate: (c) => {
         if (c.group_by.length == 0) {
           return 0;
@@ -2958,7 +2962,9 @@ export const commandsHandlers = {
         datasetPreview: true,
         noBufferWindow: true,
       },
-      request: {},
+      request: {
+        createsNew: true
+      },
     }),
     content: (payload) =>
       `<b>Group by</b> ${multipleContent(

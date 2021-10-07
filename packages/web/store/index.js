@@ -463,7 +463,7 @@ export const mutations = {
 
     // sets to a new tab otherwise
     console.warn('[COMMANDS] creating tab for', dfName)
-    this.commit('newDataset', { dataset: { dfName, go: true } })
+    this.commit('newDataset', { dataset: { dfName, go } })
 
   },
 
@@ -1278,9 +1278,7 @@ export const actions = {
 
     for (let i = 0; i < filteredCells.length; i++) {
       const cell = filteredCells[i];
-      if (cell?.payload?.request?.createsNew) {
-        commit('setDfToTab', { dfName: cell.payload.newDfName })
-      } else if (!cell?.payload) {
+      if (!cell?.payload) {
         // commit('deleteCell', { id: cell.id, cell });
         continue;
       }
@@ -1299,6 +1297,10 @@ export const actions = {
       }
 
     }
+  },
+  async afterRunCells ({commit}) {
+    commit('copyCellsIfOk');
+    return true;
   },
 
   async resetPromises ({ commit, dispatch }, { from, error }) {
@@ -1563,12 +1565,13 @@ export const actions = {
         throw response
       }
 
-      commit('copyCellsIfOk')
+      await dispatch('afterRunCells', { newOnly, ignoreFrom, socketPost, methods });
 
       console.debug('[DEBUG] Loading cells result Done');
       return response
 
     } catch (err) {
+
 
       commit('mutation', {mutate: 'loadingStatus', payload: false });
       await dispatch('resetPromises', { from: 'cells' });
@@ -2005,8 +2008,11 @@ export const getters = {
     return state.loadPreview;
   },
   secondaryDatasets (state, getters) {
-    var datasetsArray = getters.dataSources.map(ds=>{
-      return ds && ds.payload && ds.payload.newDfName
+    var datasetsArray = getters.cells
+    .filter(cell => {
+      return cell?.payload?.request?.createsNew;
+    }).map(cell => {
+      return cell && cell.payload && cell.payload.newDfName
     })
     return datasetsArray
   },

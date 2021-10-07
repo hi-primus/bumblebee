@@ -98,6 +98,14 @@
                 </template>
               </template>
             </template>
+            <div class="o-field pt-4" v-if="getProperty(command.dialog.save_new, [currentCommand])">
+              <v-switch
+                v-model="currentCommand.request.createsNew"
+                :id="'field-createsNew'"
+                color="primary"
+                :label="'Create in new tab: ' + (currentCommand.request.createsNew ? 'Yes' : 'No')"
+              ></v-switch>
+            </div>
 
             <template>
               <v-alert key="error" type="error" class="mt-0" dismissible v-if="currentCommand.error"  @input="currentCommand.error=''">
@@ -1148,6 +1156,14 @@ export default {
       this.currentCommand = false;
 
       await this.addCell(toCell, { ...command, code, content }, true );
+
+      if (command.request.createsNew) {
+        let dfName = command.newDfName;
+        console.log("Create new tab", dfName);
+        this.$store.commit('setDfToTab', { dfName, go: true });
+        await this.$store.dispatch('getProfiling', { payload: { dfName, socketPost: this.socketPost, partial: true, methods: this.commandMethods } });
+        this.$store.commit('setDfToTab', { dfName, go: true });
+      }
     },
 
     cancelCommand (runCode = true) {
@@ -1206,9 +1222,9 @@ export default {
       let currentPayload = from[index].payload
 
       if (currentPayload.request && currentPayload.request.createsNew) {
-        let filteredCells = this.cells.filter(cell => cell.payload.dfName===currentPayload.newDfName && !cell.payload.request.isLoad)
+        let filteredCells = this.cells.filter(cell => cell.payload.dfName===currentPayload.newDfName && !cell.payload.request.createsNew)
         if (filteredCells.length>0) {
-          console.warn('[CELLS] Cannot remove, there are cells using this variable as input')
+          console.warn('[CELLS] Cannot remove, there are cells using this created dataset as source')
           return
         }
       }
