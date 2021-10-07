@@ -201,18 +201,11 @@ export const codeGenerators = {
 
     if (payload.selection && payload.selection.map && payload.rowsType==='values') {
       payload.selection = payload.selection.map(v=>{
-        if (!payload.request.isString) {
-          if (!isNaN(v) && !isNaN(parseFloat(v))) {
-            return v;
-          }
-          if (v.toUpperCase == "TRUE") {
-            return 'True'
-          }
-          if (v.toUpperCase == "FALSE") {
-            return 'False'
-          }
+        if (typeof v != "string") {
+          return `${v}`
+        } else {
+          return `"${escapeQuotes(v)}"`
         }
-        return `"${escapeQuotes(v)}"`
       });
     }
 
