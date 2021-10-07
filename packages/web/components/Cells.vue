@@ -1405,13 +1405,13 @@ export default {
         
         this.$store.commit('previewDefault');
 
-        let profilingResponse = await this.$store.dispatch('getProfiling', { payload: { dfName, ignoreFrom, clearPrevious: true, socketPost: this.socketPost, partial: false, methods: this.commandMethods } });
+        let partial = true;
 
-        this.$store.commit('previewDefault');
+        let profilingResponse = await this.$store.dispatch('getProfiling', { payload: { dfName, ignoreFrom, clearPrevious: true, socketPost: this.socketPost, partial, methods: this.commandMethods } });
 
-        // this.$store.dispatch('lateProfiling', {...profilingResponse, socketPost: this.socketPost})
-
-        // this.$store.commit('previewDefault');
+        if (partial) {
+          this.$store.dispatch('lateProfiles', {...profilingResponse, socketPost: this.socketPost});
+        }
 
         if (this.firstRun) {
           this.firstRun = false;
