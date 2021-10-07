@@ -817,6 +817,9 @@ export default {
           if (this.selectionMap[index]) {
             classes.push('bb-selected')
           }
+          if (!this.columns[index]) {
+            return false;
+          }
           var name = this.columns[index].name
           return {
             index,
@@ -825,7 +828,7 @@ export default {
             width: this.columnWidths[name] || this.defaultColumnWidth,
             sampleName: name
           }
-        })
+        }).filter(col => col);
       }
 
       if (

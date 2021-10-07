@@ -798,6 +798,13 @@ export default {
       },
     },
 
+    customSortedColumns: {
+      deep: true,
+      handler (value) {
+        this.updateResults();
+      }
+    },
+
     operationsActive () {
       this.$refs.bumblebeeTable && this.$refs.bumblebeeTable.checkVisibleColumns()
     },
