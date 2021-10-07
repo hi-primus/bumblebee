@@ -1275,8 +1275,10 @@ export const generateCode = function(commands = [], _request = { type: 'processi
             code += '\n'+`_output.update({ 'sample': ${saving}.columns_sample("*") })`
           }
           if (request.profile) {
-
             code += '\n'+`_output.update({ 'profile': ${saving}.profile(cols=${profileColumns}) })`;
+          }
+          if (request.names) {
+            code += '\n'+`_output.update({ 'names': ${saving}.cols.names() })`;
           }
           if (request.matches_count) {
             code += '\n'+`_output.update({ 'matches_count': ${saving}.rows.select("__match__").rows.count() })`
@@ -1294,6 +1296,9 @@ export const generateCode = function(commands = [], _request = { type: 'processi
             }
             if (request.profile) {
               code += `.profile, ${profileColumns}`;
+            }
+            if (request.names) {
+              code += `.cols.names, "*"`;
             }
             if (request.matches_count) {
               code += `.rows.select("__match__").rows.count`;
@@ -1316,6 +1321,9 @@ export const generateCode = function(commands = [], _request = { type: 'processi
             }
             if (request.profile) {
               code += `.profile(cols=${profileColumns})`;
+            }
+            if (request.names) {
+              code += `.cols.names()`;
             }
             if (request.matches_count) {
               code += `.rows.select("__match__").rows.count()`;
