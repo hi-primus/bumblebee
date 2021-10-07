@@ -1116,6 +1116,9 @@ export default {
 
     async confirmCommand (event) {
 
+      let command = deepCopy(this.currentCommand)
+      this.currentCommand = false;
+
       this.gettingNewResults = 'hide';
       this.$store.commit('mutation', {mutate: 'loadingStatus', payload: 'Updating dataset' });
 
@@ -1127,34 +1130,31 @@ export default {
 
       this.isEditing = false;
       this.clearTextSelection();
-      var commandHandler = this.getCommandHandler(this.currentCommand);
+      this.clearSelection();
+      var commandHandler = this.getCommandHandler(command);
 
-      if (this.currentCommand._custom) {
-        this.currentCommand._generator = this.$store.state.customCommands.generators[this.currentCommand.command]
-        this.currentCommand._custom = this.$store.getters['customCommands/genericCommandPayload'];
+      if (command._custom) {
+        command._generator = this.$store.state.customCommands.generators[command.command]
+        command._custom = this.$store.getters['customCommands/genericCommandPayload'];
       }
 
-      if (this.currentCommand._output == 'plain-text') {
-        var payload = getCodePayload(this.currentCommand);
-        payload.request = this.currentCommand.request || {};
+      if (command._output == 'plain-text') {
+        var payload = getCodePayload(command);
+        payload.request = command.request || {};
         this.downloadResult([{ payload }])
         return true;
       }
 
       if (commandHandler.onDone) {
-        this.currentCommand = await commandHandler.onDone(this.currentCommand);
+        command = await commandHandler.onDone(command);
       }
 
-      var code = this.getCode(this.currentCommand);
-      var content = this.getOperationContent(this.currentCommand);
+      var code = this.getCode(command);
+      var content = this.getOperationContent(command);
 
-      var toCell = this.currentCommand._toCell!==undefined ? this.currentCommand._toCell : -1;
+      var toCell = command._toCell!==undefined ? command._toCell : -1;
 
-      this.$emit('updateOperations', { active: ((this.currentCommand.request && this.currentCommand.request.noOperations) ? false : true), title: 'operations' } );
-
-      let command = deepCopy(this.currentCommand)
-
-      this.currentCommand = false;
+      this.$emit('updateOperations', { active: ((command.request && command.request.noOperations) ? false : true), title: 'operations' } );
 
       await this.addCell(toCell, { ...command, code, content }, true );
 
