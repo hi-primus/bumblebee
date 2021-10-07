@@ -2025,6 +2025,7 @@ export const commandsHandlers = {
   REMOVE_KEEP_SET: {
     dialog: {
       title: (c) => `Filter / Set ${c.rowsLabels[c.rowsType]}`,
+      output_cols: (c) => c.action == "set",
       fields: [
         {
           key: "action",
@@ -2067,12 +2068,13 @@ export const commandsHandlers = {
 
       return {
         columns,
+        output_cols: columns.map((e) => ""),
         action: "drop",
         value: "",
         selection: [],
 
         preview: {
-          expectedColumns: (c) => +(c.action === "set"),
+          expectedColumns: (c) => (c.action === "set") ? 1 : -1,
           type: "REMOVE_KEEP_SET",
           filteredPreview: false,
           highlightColor: (c) => (c.action === "drop" ? "red" : "green"),
@@ -2152,6 +2154,7 @@ export const commandsHandlers = {
     dialog: {
       title: "Filter rows",
       text: (c) => `In column "${c.columns[0]}"`,
+      output_cols: (c) => c.action == "set",
       fields: [
         {
           key: "condition",
@@ -2300,6 +2303,7 @@ export const commandsHandlers = {
 
       return {
         columns,
+        output_cols: columns.map((e) => ""),
         condition: "equal",
         action: "select",
         value: "",
@@ -2312,7 +2316,7 @@ export const commandsHandlers = {
         request: {},
 
         preview: {
-          expectedColumns: (c) => +(c.action === "set"),
+          expectedColumns: (c) => (c.action === "set") ? 1 : -1,
           type: "filterRows",
           filteredPreview: false,
           lessRows: (c) => c.preview.filteredPreview,

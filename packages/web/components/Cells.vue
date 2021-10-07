@@ -622,17 +622,17 @@ export default {
 
             if (currentCommand.preview && (currentCommand.preview.type)) {
 
-              var expectedColumns;
+              var expectedColumns = getProperty(currentCommand.preview.expectedColumns, [currentCommand]);
 
-              if (currentCommand.preview.expectedColumns!==undefined) {
-                expectedColumns = getProperty(currentCommand.preview.expectedColumns, [currentCommand])
-              } else if (currentCommand.output_cols && currentCommand.output_cols.length) {
-                expectedColumns = currentCommand.output_cols.length
-              } else if (currentCommand.columns) {
-                expectedColumns = currentCommand.columns.length
+              if (expectedColumns == undefined) {
+                if (currentCommand.output_cols && currentCommand.output_cols.length) {
+                  expectedColumns = currentCommand.output_cols.length
+                } else if (currentCommand.columns) {
+                  expectedColumns = currentCommand.columns.length
+                }
               }
 
-              if (currentCommand.output_cols || currentCommand.defaultOutputName) {
+              if (expectedColumns >= 0 && (currentCommand.output_cols || currentCommand.defaultOutputName)) {
 
                 // column name optimization
                 var nameMap = {}
@@ -669,6 +669,7 @@ export default {
 
               this.preparePreviewCode(expectedColumns);
             }
+
             if (currentCommand.preview && currentCommand.preview.fake==='rename') {
               var nameMap = {}
               currentCommand.output_cols.forEach((col, i) => {

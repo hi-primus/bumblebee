@@ -1991,7 +1991,13 @@ export default {
         let payload = {code: previewCode, payload: previewPayload, columns: [], done: false}
         this.$store.commit('mutation', {mutate: 'profilePreview', payload });
 
-        let cols = fixedColumns ? this.currentPreviewColumns.map(e=>escapeQuotes(  e.title.split(/__preview__/).join('')  )) : [];
+        let cols = [];
+
+        let expectedColumns = (this.currentDuplicatedColumns) ? this.currentDuplicatedColumns.length : this.previewCode.expectedColumns
+
+        if (fixedColumns && expectedColumns && expectedColumns>=1) {
+          cols = this.currentPreviewColumns.map(e=>escapeQuotes(  e.title.split(/__preview__/).join('')  ))
+        }
 
         cols = cols.length || !this.currentRowHighlights ? cols : false;
 
