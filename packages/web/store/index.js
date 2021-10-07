@@ -390,7 +390,10 @@ export const mutations = {
           state[p.name] = false;
         }
       });
-      Vue.set(state.everyDatasetUpdate, tab, (state.everyDatasetUpdate[tab] || 0) + 1);
+
+      if (!avoidReload) {
+        Vue.set(state.everyDatasetUpdate, tab, (state.everyDatasetUpdate[tab] || 0) + 1);
+      }
     }
 
     return dataset;
@@ -1613,14 +1616,14 @@ export const actions = {
   async lateProfiles ({dispatch}, {dfName, columnsCount, avoidReload, socketPost}) {
     let promise = false;
     for (let i = 20; i < columnsCount+10; i+=10) {
-      let dataset = await dispatch('requestProfiling', { dfName, socketPost, avoidReload, partial: i });
+      let dataset = await dispatch('requestProfiling', { dfName, socketPost, partial: i });
       await promise;
       promise = dispatch('setProfiling', { dfName, dataset, avoidReload: true, partial: i });
     }
     return await promise;
   },
 
-  async requestProfiling ({ dispatch, state, getters, commit }, { dfName, socketPost, avoidReload, partial }) {
+  async requestProfiling ({ dispatch }, { dfName, socketPost, partial }) {
 
     let response = await dispatch('evalCode', {
       socketPost,
@@ -1684,9 +1687,9 @@ export const actions = {
       let dataset;
 
       if (partial) {
-        dataset = await dispatch('requestProfiling', { dfName, socketPost, avoidReload, partial: 10 });
+        dataset = await dispatch('requestProfiling', { dfName, socketPost, partial: 10 });
       } else {
-        dataset = await dispatch('requestProfiling', { dfName, socketPost, avoidReload, partial: false });
+        dataset = await dispatch('requestProfiling', { dfName, socketPost, partial: false });
       }
 
       let found = state.datasets.findIndex(_d => _d.dfName == dfName);
