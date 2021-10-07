@@ -1565,7 +1565,7 @@ $editor-top-padding: 4px;
     color: darken(saturate($data-blue,5%),25%);
   }
   .hl--param {
-    color: darken(desaturate($data-red,16%),8%);
+    color: darken($data-green,2.5%);
   }
   &:not(.multiple-tabs) .hint--df {
     display: none;
