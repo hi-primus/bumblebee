@@ -661,16 +661,19 @@ export const actions = {
         codePayload = [codePayload];
       }
 
-      for (let i = 0; i < codePayload.length; i++) {
-        Object.keys(codePayload[i]).forEach(key => {
-          if (key.startsWith("__")) {
-            codePayload[i][key] = undefined;
+      if (codePayload && codePayload.length) {
+        for (let i = 0; i < codePayload.length; i++) {
+          Object.keys(codePayload[i]).forEach(key => {
+            if (key.startsWith("__")) {
+              codePayload[i][key] = undefined;
+            }
+          });
+          if (codePayload[i] && codePayload[i].request) {
+            isAsync = isAsync || codePayload[i].request.isAsync;
           }
-        });
-        if (codePayload[i] && codePayload[i].request) {
-          isAsync = isAsync || codePayload[i].request.isAsync;
         }
       }
+
 
 
       if (!process.client) {
