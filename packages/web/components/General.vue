@@ -11,6 +11,7 @@
               :mismatch="values.mismatch"
               :match="values.match"
               :nullV="values.null"
+              @clicked="$emit('barClicked', $event)"
               bottom
               class="rounded"
             />

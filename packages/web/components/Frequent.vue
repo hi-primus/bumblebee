@@ -49,8 +49,7 @@ export default {
       type: Number
     },
     columnIndex: {
-      default: -1,
-      type: Number
+      default: -1
     },
     selectable: {
       default: false,
@@ -137,7 +136,9 @@ export default {
       }
     },
 
-    updateSelected(v) {
+    async updateSelected(v) {
+
+      await this.$nextTick();
 
       v = v || [];
 

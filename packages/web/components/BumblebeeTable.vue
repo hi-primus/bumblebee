@@ -338,7 +338,7 @@
                 :match="+plotsData[column.name].match"
                 :mismatch="+plotsData[column.name].mismatch"
                 :nullV="+plotsData[column.name].null"
-                @clicked="clickedBar($event,column)"
+                @clicked="barClicked($event,column)"
                 class="table-data-bar"
                 bottom
               />
@@ -864,13 +864,11 @@ export default {
 
         var pushedColumns = 0
 
-        var insertIndex
+        var insertIndex = Math.max(...namesToIndices(after,cols))+1; // last position
 
         if (this.previewColumns.length) {
 
-          if (this.previewColumns.length===1 && after.length>1) {
-
-            insertIndex = Math.max(...namesToIndices(after,cols))+1
+          if (this.previewColumns.length===1 && after.length>1) { // 1 -> 2+
 
             var previewColumn = this.previewColumns[0]
 
@@ -1685,11 +1683,12 @@ export default {
 
     /* end of drag events */
 
-    clickedBar (event, column) {
-      if (column.type==='duplicated') {
+    barClicked (event, column) {
+      
+      if (column.type == 'duplicated') {
         return
       }
-      if (event==='missing') {
+      if (event == 'missing') {
         var payload = {
           rowsType: 'missing',
           action: 'drop'
@@ -1700,7 +1699,7 @@ export default {
           payload
         })
       }
-      if (event==='mismatch') {
+      if (event == 'mismatch') {
         var payload = {
           rowsType: 'mismatch',
           action: 'drop'

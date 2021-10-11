@@ -377,8 +377,8 @@
         </div>
         <div class="sidebar-content">
 
-          <div v-if="detailedColumns.length>1 && currentDataset.columns[index]" class="sidebar-section pr-10 columns-selected">
-            <div class="column-selected" v-for="(index, i) in detailedColumns" :key="index+'selc'+i">
+          <div v-for="(index, i) in detailedColumns" :key="index+'selc'+i" v-if="detailedColumns.length>1 && currentDataset.columns[index]" class="sidebar-section pr-10 columns-selected">
+            <div class="column-selected">
               <span class="data-type" :class="`type-${currentDataset.columns[index].stats.inferred_data_type.data_type}`">{{ dataTypeHint(currentDataset.columns[index].stats.inferred_data_type.data_type) }}</span>
               <span class="data-column-name">{{ currentDataset.columns[index].name }}</span>
             </div>
@@ -436,10 +436,10 @@
           </div>
           <template v-for="(index, i) in detailedColumns">
             <ColumnDetails
-              :key="index+'cd'"
+              :key="index+'cd'+i"
               :startExpanded="i==0"
               :rowsCount="+currentDataset.summary.rows_count"
-              :column="currentDataset.columns[index]"
+              :column="{...currentDataset.columns[index], index}"
               @command="commandHandle($event)"
             ></ColumnDetails>
           </template>

@@ -11,6 +11,7 @@
     <div class="sidebar-section pt-1" v-if="expanded">
       <div class="component-container">
         <General
+         @barClicked="barClicked"
          :rowsCount="rowsCount"
          :values="column.stats"
         />
@@ -128,6 +129,8 @@
             :values="column.stats.hist"
             :total="rowsCount"
             :height="90"
+            :columnIndex="column.index"
+            selectable
           />
         </div>
 
@@ -140,6 +143,8 @@
             :values="column.stats.hist.years"
             :total="rowsCount"
             :height="90"
+            :columnIndex="column.index"
+            selectable
           />
         </div>
 
@@ -152,6 +157,8 @@
             :values="column.stats.hist.months"
             :total="rowsCount"
             :height="90"
+            :columnIndex="column.index"
+            selectable
           />
         </div>
 
@@ -164,6 +171,8 @@
             :values="column.stats.hist.weekdays"
             :total="rowsCount"
             :height="90"
+            :columnIndex="column.index"
+            selectable
           />
         </div>
 
@@ -176,6 +185,8 @@
             :values="column.stats.hist.hours"
             :total="rowsCount"
             :height="90"
+            :columnIndex="column.index"
+            selectable
           />
         </div>
 
@@ -188,6 +199,8 @@
             :values="column.stats.hist.minutes"
             :total="rowsCount"
             :height="90"
+            :columnIndex="column.index"
+            selectable
           />
         </div>
 
@@ -203,6 +216,8 @@
           :values="column.stats.frequency"
           :total="rowsCount"
           :height="90"
+          :columnIndex="column.index"
+          selectable
         />
       </div>
 
@@ -402,6 +417,32 @@ export default {
       }
 
       this.commandHandle(command)
+    },
+
+    barClicked (event) {
+
+      if (event == 'missing') {
+        var payload = {
+          rowsType: 'missing',
+          action: 'drop'
+        }
+        this.commandHandle({
+          command: 'REMOVE_KEEP_SET',
+          columns: [ this.column.name ],
+          payload
+        })
+      }
+      if (event == 'mismatch') {
+        var payload = {
+          rowsType: 'mismatch',
+          action: 'drop'
+        }
+        this.commandHandle({
+          command: 'REMOVE_KEEP_SET',
+          columns: [ this.column.name ],
+          payload
+        })
+      }
     },
 
     commandHandle (event) {
