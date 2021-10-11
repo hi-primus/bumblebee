@@ -882,7 +882,7 @@ export default {
             })
             pushedColumns++
 
-          } else {
+          } else if (after.length == this.previewColumns.length) { // n -> n
 
             var _after = after[0]
             insertIndex = _after ? cols.findIndex(col=>_after===col.name)+1 : 0
@@ -894,6 +894,24 @@ export default {
               if (after[i]) insertIndex = cols.findIndex(col=>after[i]===col.name)+1
 
               if (insertIndex === 0) insertIndex = cols.length // previews cannot be on position 0
+
+              cols.splice(insertIndex,0,{
+                ...previewColumn,
+                classes: [...(previewColumn.classes || []), 'bb-preview'],
+                width: this.columnWidths[previewColumn.name] || this.defaultColumnWidth,
+                // title: (this.currentPreviewNames && this.currentPreviewNames[previewColumn.title]) || previewColumn.title || ''
+              })
+              insertIndex++
+              pushedColumns++
+            })
+
+          } else { // n -> m
+
+            if (insertIndex === 0) insertIndex = cols.length // previews cannot be on position 0
+
+            this.previewColumns.forEach((previewColumn, i)=>{
+
+              if (expectedColumns>=0 && i>=expectedColumns) return
 
               cols.splice(insertIndex,0,{
                 ...previewColumn,
