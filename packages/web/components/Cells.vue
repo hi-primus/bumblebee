@@ -277,7 +277,7 @@
           class="mt-3"
           dismissible
           @input="removeErrorAlert(alert.id)"
-          :close-icon="$store.state.cells.error == alert.id ? 'mdi-arrow-u-left-top' : 'cancel'"
+          :close-icon="($store.state.cells.error == alert.id && !firstRun) ? 'mdi-arrow-u-left-top' : 'cancel'"
         >{{alert.content}}</v-alert>
       </template>
     </div>
@@ -899,7 +899,7 @@ export default {
     async removeErrorAlert (id) {
       let cells = this.$store.state.cells
       this.$store.commit('removeErrorAlert', id);
-      if (cells.error && cells.error == id) {
+      if (cells.error && cells.error == id && !this.firstRun) {
         await this.undoCells();
       }
     },
