@@ -1039,6 +1039,10 @@ export default {
 
         for (const colName in profile.columns) {
           const column = profile.columns[colName]
+          if (!column.stats) {
+            console.error(column)
+            throw new Error(`Stats not found on column '${colName}', see log above`);
+          }
           ppd[colName] = {
             key: colName,
             name: colName,
