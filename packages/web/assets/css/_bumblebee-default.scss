@@ -851,11 +851,14 @@ table {
 
 /* layouts */
 
-.placeholder-chip:not(.v-input--is-disabled) label{
-  cursor: pointer;
-}
-
 .placeholder-chip {
+
+  &:not(.v-input--is-disabled):not(.v-input--is-focused){
+    cursor: pointer !important;
+    .v-input__slot {
+      cursor: pointer !important;
+    }
+  }
   &::after {
     content: ' ';
     position: absolute;
@@ -864,6 +867,7 @@ table {
     height: 100%;
     width: 14px;
     background: white;
+    pointer-events: none;
   }
   .v-input__slot {
     cursor: text;
@@ -881,7 +885,7 @@ table {
     position: relative;
     top: 4px !important;
     left: 4px !important;
-    pointer-events: all !important;
+    pointer-events: none;
     &::after {
       position: absolute;
       height: 16px;
