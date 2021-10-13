@@ -41,7 +41,7 @@ export default {
   methods: {
     commandContentClass(command) {
       let small = command.dialog.dialog == 'small' ? 'smaller-dialog' : ''
-      return [small, (command.dialog.dynamicClass ? command.dialog.dynamicClass(currentCommand) : ''), (command.dialog.class || ''), 'command-dialog'].join(' ')
+      return [small, (command.dialog.dynamicClass ? command.dialog.dynamicClass(this.currentCommand) : ''), (command.dialog.class || ''), 'command-dialog'].join(' ')
     }
   }
 }
