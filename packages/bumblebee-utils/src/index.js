@@ -999,7 +999,7 @@ export const TYPES = {
   FLOAT: "float",
   STRING: "string",
   BOOLEAN: "boolean",
-  DATE: "date",
+  DATETIME: "datetime",
   ARRAY: "array",
   OBJECT: "object",
   GENDER: "gender",
@@ -1018,7 +1018,7 @@ export const TYPES_HINTS = {
   "float": "#.##",
   "string": "ABC",
   "boolean": "0/1",
-  "date": "📅",
+  "datetime": "📅",
   "array": "[ ]",
   "object": "obj",
   "gender": "gen",
@@ -1037,7 +1037,7 @@ export const TYPES_NAMES = {
   "float": "Decimal",
   "string": "String",
   "boolean": "Boolean",
-  "date": "Date",
+  "datetime": "Datetime",
   "array": "Array",
   "object": "Object",
   "gender": "Gender",
@@ -1057,7 +1057,7 @@ export const STRING_TYPES = [
   TYPES.STRING,
   TYPES.OBJECT,
   TYPES.CATEGORICAL,
-  TYPES.DATE,
+  TYPES.DATETIME,
   TYPES.TIME
 ]
 
