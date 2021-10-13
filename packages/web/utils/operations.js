@@ -626,17 +626,44 @@ let _operations = {
       description: 'Remove or keep rows that matches a criteria.'
     }
   },
+  setRows: {
+    path: 'ROWS',
+    onClick: ($nuxt)=>{
+      var command = { command: 'filterRows' }
+      if (['values','ranges'].includes($nuxt.selectionType) && $nuxt.currentSelection && $nuxt.currentSelection.ranged) {
+        command = { command: 'REMOVE_KEEP_SET' }
+        command.columns = [ $nuxt.columns[$nuxt.currentSelection.ranged.index].name ]
+        command.payload = { rowsType: $nuxt.selectionType }
+        if ($nuxt.selectionType==='ranges') {
+          command.payload.selection = $nuxt.currentSelection.ranged.ranges
+        } else if ($nuxt.selectionType==='values') {
+          command.payload.selection = $nuxt.currentSelection.ranged.values
+        }
+      } else if ($nuxt.selectionType==='text') {
+        command.payload = {
+          columns: [$nuxt.currentSelection.text.column],
+          text: $nuxt.currentSelection.text.value,
+          condition: 'contains'
+        }
+      }
+      command.payload = command.payload || {};
+      command.payload.action = "set";
+      $nuxt.commandHandle(command)
+    },
+    text: 'Set rows',
+    label: 'Set<br/>rows',
+    disabled: ($nuxt)=>!(['values','ranges','text'].includes($nuxt.selectionType) || $nuxt.selectedColumns.length==1),
+    icons: [{ icon: 'mdi-playlist-edit' }],
+    doc: {
+      title: 'Set rows',
+      description: 'Replace values in rows that matches a criteria.'
+    }
+  },
   dropEmptyRows: {
     path: 'ROWS',
     text: 'Drop empty rows',
     label: 'Drop<br/>empty',
-    icons: [
-      { icon: 'mdi-delete-outline' },
-      { icon: 'menu', style: {
-        marginLeft: '-0.33333333em',
-        transform: 'scaleX(0.75)'
-      } }
-    ],
+    icons: [{ icon: 'mdi-playlist-remove' }],
     disabled: ($nuxt)=>!($nuxt.currentDataset && $nuxt.currentDataset.summary),
     test: {
       dataframe: TEST_DATAFRAMES.NULL
@@ -2152,7 +2179,7 @@ export const commandsHandlers = {
 
   filterRows: {
     dialog: {
-      title: "Filter rows",
+      title: (c) => c.action == "set" ? "Set rows" : "Filter rows",
       text: (c) => `In column "${c.columns[0]}"`,
       output_cols: (c) => c.action == "set",
       fields: [
@@ -2249,13 +2276,14 @@ export const commandsHandlers = {
           type: "field",
         },
         {
+          condition: (c) => c.action != "set",
           key: "action",
           label: "Action",
           type: "select",
           items: [
             { text: "Keep matching rows", value: "select" },
             { text: "Drop matching rows", value: "drop" },
-            { text: "Replace matching rows", value: "set" },
+            // { text: "Replace matching rows", value: "set" },
           ],
         },
         {
@@ -2269,6 +2297,13 @@ export const commandsHandlers = {
           fuzzySearch: true,
           suggestions: (c) => ({ column: c.allColumns }),
         },
+        {
+          condition: (c) => c.action === "set",
+          type: "field",
+          key: "default",
+          placeholder: 'numeric or "string"',
+          label: "Otherwise",
+        }
       ],
       filteredPreview: true,
       validate: (c) => {
@@ -2328,7 +2363,11 @@ export const commandsHandlers = {
     content: (payload) => {
       var condition;
       var value = undefined;
-      var action = payload.action == "drop" ? "Drop" : "Keep";
+      var action = {
+        drop: "Drop",
+        keep: "Keep",
+        set: "Replace"
+      }[payload.action];
       var str = `<b>${action}</b> rows where ${multipleContent(
         [payload.columns],
         "hl--cols"
