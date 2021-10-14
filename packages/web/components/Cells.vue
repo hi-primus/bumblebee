@@ -471,6 +471,23 @@ export default {
 
     allColumns () {
       try {
+        let columns = [];
+        if (this.currentDataset) {
+          if (this.currentDataset.columns) {
+            columns = this.currentDataset.columns.map(column=>column.name);
+          }
+          if (this.$store.state.columns[this.currentDataset.dfName] && columns.length < this.$store.state.columns[this.currentDataset.dfName].length) {
+            columns = this.$store.state.columns[this.currentDataset.dfName].map(column=>column);
+          }
+        }
+        return columns;
+      } catch (err) {
+        return []
+      }
+    },
+
+    profiledColumns () {
+      try {
         return this.currentDataset.columns.map(e=>e.name)
       } catch (err) {
         return []
@@ -1000,7 +1017,7 @@ export default {
         columnDateFormats = columnIndices.map(i=>transformDateFromPython(this.currentDataset.columns[i].stats.inferred_data_type.format)).filter(e=>e);
       }
 
-      var allColumnDateFormats = this.allColumns.map((e,i)=>transformDateFromPython(this.currentDataset.columns[i].stats.inferred_data_type.format)).filter(e=>e);
+      var allColumnDateFormats = this.allColumns.map((e,i)=>transformDateFromPython(this.currentDataset.columns[i]?.stats?.inferred_data_type?.format)).filter(e=>e);
 
       // default payload
 

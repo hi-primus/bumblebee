@@ -1298,6 +1298,22 @@ export default {
         await this.scrollCheck(true);
       }
     },
+    
+    async fixNotProfiledColumns () {
+      let profiledColumns = Object.keys(this.currentDataset?.columns || {}).length;
+      let totalColumns = this.currentDataset?.summary?.cols_count;
+
+      if (totalColumns !== undefined && profiledColumns < totalColumns) {
+        await this.$store.dispatch('getProfiling', { payload: {
+          socketPost: this.socketPost,
+          dfName: this.currentDataset.dfName,
+          avoidReload: true,
+          clearPrevious: true,
+          partial: true,
+          methods: this.commandMethods
+        }});
+      }
+    },
 
     expandCell (cellElement) {
       var columnElement = cellElement.parentElement;
@@ -1962,6 +1978,8 @@ export default {
         console.error(err)
         this.lazyColumns = []
       }
+
+      this.fixNotProfiledColumns()
 
     }, 80),
 
