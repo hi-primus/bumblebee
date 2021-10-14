@@ -1227,16 +1227,20 @@ export default {
           check = true;
         }
 
+        let updatePromise = false;
+
         if (check) {
           this.previousRange = -1;
           this.mustUpdateRows = true;
           this.mustCheck = true;
-          this.scrollCheck(true); // await ? no
+          updatePromise = this.scrollCheck(true); // await ? no
           this.updateRows();
         }
 
         this.noBufferWindow = noBufferWindow;
         this.lessRows = lessRows;
+        await updatePromise;
+        this.fixEmptyRows()
       },
 
     },
@@ -1283,6 +1287,15 @@ export default {
         this.mustUpdateRows = true;
         this.recalculateRows = true;
         this.updateRows();
+      }
+    },
+
+    async fixEmptyRows () {
+      if (!this.computedColumnValues || !Object.keys(this.computedColumnValues).length) {
+        this.previousRange = -1;
+        this.mustUpdateRows = true;
+        this.mustCheck = true;
+        await this.scrollCheck(true);
       }
     },
 
