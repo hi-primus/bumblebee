@@ -3272,9 +3272,14 @@ export const commandsHandlers = {
       output_cols: true,
       fields: [
         {
-          type: "field",
-          label: "Fill",
+          type: "field-suggestions",
           key: "fill",
+          placeholder: 'Formula or "value"',
+          label: "Fill",
+          mono: true,
+          useFunctions: true,
+          fuzzySearch: true,
+          suggestions: (c) => ({ column: c.allColumns }),
         },
       ],
       validate: (command) => command.fill !== "",

@@ -640,13 +640,13 @@ export const codeGenerators = {
   },
   fill_na: (payload) => {
     let _argument = preparedColumns(payload.columns);
-    let output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (['final','processing',undefined].includes(payload.request.type)) ? '' : '__new__')
-    payload = escapeQuotesOn(payload,['fill'])
+    let output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (['final','processing',undefined].includes(payload.request.type)) ? '' : '__new__');
+    let value = ( (payload.fill) ? `parse('${payload.fill}')` : '""' );
     return `.cols.fill_na(`
-      +_argument
-      +`, "${payload.fill}"`
-      +( (output_cols_argument) ? `, output_cols=${output_cols_argument}` : '')
-      +')'
+      + _argument
+      + `, ${value}`
+      + ( (output_cols_argument) ? `, output_cols=${output_cols_argument}` : '')
+      + `, eval_value=True)`;
   },
   createConnection: (payload) => {
     let code = `${payload.varName} = ${payload.opName || 'op'}.connect.${payload.type}(`
