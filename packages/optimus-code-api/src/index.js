@@ -1,4 +1,4 @@
-import { escapeQuotes, escapeQuotesOn, getOutputColsArgument, aggOutputCols, preparedColumns, transformDateToPython, getCodePayload, getSourceParams, pythonArguments, TIME_VALUES } from 'bumblebee-utils';
+import { escapeQuotes, adaptValue, escapeQuotesOn, getOutputColsArgument, aggOutputCols, preparedColumns, transformDateToPython, getCodePayload, getSourceParams, pythonArguments, TIME_VALUES } from 'bumblebee-utils';
 
 import { v4 as uuidv4 } from "uuid";
 
@@ -235,7 +235,7 @@ export const codeGenerators = {
     }
 
     if (payload.action==='set') {
-      let output_col = payload.columns[0];
+      let output_col = payload.output_cols[0] || payload.columns[0];
       let code = '';
       let value = ( (payload.value) ? `parse('${payload.value}')` : 'None' );
       if (!['final','processing'].includes(payload.request.type)) {
@@ -251,7 +251,6 @@ export const codeGenerators = {
         if (payload.preview.filteredPreview) {
           code += `.rows.select( '__match__' )`;
         }
-
 
         code += `.cols.set(`
         + `"${output_col}", `
@@ -305,22 +304,15 @@ export const codeGenerators = {
     }
 
     if (!['less','greater','between'].includes(payload.condition)) {
-      payload.value = `"${payload.value}"`
-      payload.value_2 = `"${payload.value_2}"`
-      payload.values = payload.values.map(v=>{
-        if (!payload.request.isString) {
-          if (!isNaN(v) && !isNaN(parseFloat(v))) {
-            return v;
-          }
-          if (v.toUpperCase == "TRUE") {
-            return 'True'
-          }
-          if (v.toUpperCase == "FALSE") {
-            return 'False'
-          }
-        }
-        return `"${escapeQuotes(v)}"`
-      });
+      if (payload.request.isString) {
+        payload.value = `"${escapeQuotes(trimCharacters(payload.value, '"'))}"`;
+        payload.value_2 = `"${escapeQuotes(trimCharacters(payload.value_2, '"'))}"`;
+        payload.values = payload.values.map(v=>`"${escapeQuotes(trimCharacters(v, '"'))}"`);
+      } else {
+        payload.value = adaptValue(payload.value);
+        payload.value_2 = adaptValue(payload.value_2);
+        payload.values = payload.values.map(adaptValue);
+      }
     }
 
     switch (payload.condition) {

@@ -239,6 +239,19 @@ export const escapeQuotes = (str) => {
   return str;
 }
 
+export const adaptValue = (v) => {
+  if (!isNaN(v) && !isNaN(parseFloat(v))) {
+    return v;
+  }
+  if (v.toUpperCase == "TRUE") {
+    return 'True'
+  }
+  if (v.toUpperCase == "FALSE") {
+    return 'False'
+  }
+  return `"${escapeQuotes(trimCharacters(v, '"'))}"`
+}
+
 export const filterCells = (cells, newOnly, ignoreFrom) => {
   if (newOnly) {
     return cells.filter((e,i)=>((ignoreFrom<0 || i<ignoreFrom) && e.code!=='' && !e.done && !e.ignore));
@@ -1355,6 +1368,7 @@ export default {
   copyToClipboard,
   optimizeRanges,
   escapeQuotes,
+  adaptValue,
   filterCells,
   getOutputColsArgument,
   aggOutputCols,
