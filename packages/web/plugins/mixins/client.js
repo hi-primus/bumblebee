@@ -134,12 +134,6 @@ export default {
       return await languagePluginLoader
     },
 
-    async getProfiling (dfName, ignoreFrom = -1, forcePromise = false, partial = true) {
-      console.debug('[PROFILING]',dfName);
-      var payload = { dfName, socketPost: this.socketPost, clearPrevious: true };
-      return this.$store.dispatch('getProfiling', { payload, forcePromise, ignoreFrom, partial, methods: this.commandMethods });
-    },
-
     datasetExecute (dfName) {
       return this.$store.dispatch('getExecute', { dfName, socketPost: this.socketPost, methods: this.commandMethods });
     },
