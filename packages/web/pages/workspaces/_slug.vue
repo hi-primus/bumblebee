@@ -124,7 +124,7 @@
             >
               <span class="tab-content">
                 <span class="tab-title" :title="[_tab.dfName,_tab.name].filter(e=>e).join(' - ')">{{[_tab.dfName,_tab.name].filter(e=>e).join(' - ')}}</span>
-                <span class="tab-subtitle" :title="_tab.file_name">{{ _tab.file_name }}</span>
+                <!-- <span class="tab-subtitle" :title="_tab.file_name">{{ _tab.file_name }}</span> -->
               </span>
               <v-hover v-if="!noClose" v-slot:default="{ hover }">
                 <span class="tab-close">
