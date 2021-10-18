@@ -2019,6 +2019,7 @@ export const commandsHandlers = {
 
   sortRows: {
     dialog: {
+      dialog: 'small',
       title: "Sort rows",
       text: (c) => {
         return `Sort rows in ${arrayJoin(c.columns.map(col => `'${col}''`))}`;
@@ -3002,26 +3003,36 @@ export const commandsHandlers = {
       ],
       save_new: true,
       validate: (c) => {
-        if (c.group_by.length == 0) {
+        if (c.aggregations.length == 0) {
           return 0;
         }
-        return c.input_cols.length && c.aggregations.length;
+        return c.aggregations.length;
       },
     },
-    payload: (columns, payload = {}) => ({
-      group_by: [],
-      input_cols: columns,
-      aggregations: columns.map((e) => "count"),
-      output_cols: columns.map((e) => ""),
-      preview: {
-        type: "aggregations",
-        datasetPreview: true,
-        noBufferWindow: true,
-      },
-      request: {
-        createsNew: true
-      },
-    }),
+    payload: (columns, payload = {}) => {
+
+      let group_by = [];
+      let aggregations = [];
+      
+      group_by = columns;
+
+      // TODO: selected columns -> group_by or aggregations?
+
+      return {
+        group_by,
+        input_cols: aggregations,
+        aggregations: aggregations.map((e) => "count"),
+        output_cols: aggregations.map((e) => ""),
+        preview: {
+          type: "aggregations",
+          datasetPreview: true,
+          noBufferWindow: true,
+        },
+        request: {
+          createsNew: true
+        },
+      }
+    },
     content: (payload) =>
       `<b>Group by</b> ${multipleContent(
         [payload.group_by],
