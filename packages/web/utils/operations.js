@@ -19,6 +19,7 @@ import {
   objectToPythonDictString,
   URL_FUNCTIONS,
   EMAIL_FUNCTIONS,
+  CAST_NAMES,
   TIME_NAMES,
   TIME_BETWEEN
 } from "bumblebee-utils";
@@ -90,11 +91,12 @@ export const operationGroups = {
     label: 'URL &<br/>Email',
     disabled: ($nuxt)=>!($nuxt.currentDataset && $nuxt.currentDataset.summary && $nuxt.selectionType=='columns' && $nuxt.selectedColumns.length>=0)
   },
-  // CAST: {
-  //   icons: [{ icon: 'category' }],
-  //   text: 'Cast',
-  //   disabled: ($nuxt)=>!($nuxt.selectionType=='columns' && $nuxt.selectedColumns.length>0)
-  // },
+  CAST: {
+    icons: [{ icon: 'mdi-cached' }],
+    text: 'Cast',
+    label: 'Cast',
+    disabled: ($nuxt)=>!($nuxt.selectionType=='columns' && $nuxt.selectedColumns.length>0)
+  },
   ML: {
     icons: [{
       icon: 'timeline',
@@ -1502,7 +1504,19 @@ let _operations = {
     max: 1
   },
 
-  // ...objectMapFromEntries(TYPES_NAMES, ([data_type, text])=>(['cast_to_'+data_type, { command: 'set_data_type', payload: { data_type }, text, path: 'TRANSFORMATIONS/CAST'}]))
+  ...objectMapFromEntries(CAST_NAMES || {}, (key, name)=>{
+    return ['cast_to_'+key, {
+      text: `Cast to ${name.toLowerCase()}`,
+      command: 'to_'+key,
+      generator: 'GENERIC',
+      path: 'TRANSFORMATIONS/CAST',
+      payload: { 
+        accessor: 'cols', 
+        title: `Cast to ${name.toLowerCase()}`, 
+        text: `Cast to ${name.toLowerCase()}`, 
+      },
+    }]
+  })
 
 };
 

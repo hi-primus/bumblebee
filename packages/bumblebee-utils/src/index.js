@@ -1064,6 +1064,14 @@ export const TYPES_NAMES = {
   "time": "Time"
 }
 
+export const CAST_NAMES = {
+  "float": "Decimal",
+  "integer": "Integer",
+  "string": "String",
+  "boolean": "Boolean",
+  "datetime": "Datetime"
+}
+
 export const ALL_TYPES = Object.values(TYPES)
 
 export const STRING_TYPES = [
@@ -1412,6 +1420,7 @@ export default {
   TYPES,
   TYPES_HINTS,
   TYPES_NAMES,
+  CAST_NAMES,
   TIME_NAMES,
   TIME_VALUES,
   TIME_BETWEEN,
