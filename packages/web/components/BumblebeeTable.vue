@@ -1304,7 +1304,7 @@ export default {
       let totalColumns = this.currentDataset?.summary?.cols_count;
 
       if (totalColumns !== undefined && profiledColumns < totalColumns) {
-        await this.$store.dispatch('getProfiling', { payload: {
+        let profilingResponse = await this.$store.dispatch('getProfiling', { payload: {
           socketPost: this.socketPost,
           dfName: this.currentDataset.dfName,
           avoidReload: true,
@@ -1312,6 +1312,8 @@ export default {
           partial: true,
           methods: this.commandMethods
         }});
+        
+        this.$store.dispatch('lateProfiles', {...profilingResponse, socketPost: this.socketPost});
       }
     },
 
