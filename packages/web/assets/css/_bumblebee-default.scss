@@ -1289,15 +1289,33 @@ table {
     min-width: 2.5em;
     margin-right: 0.5em;
   }
-  &.type-int {
+  
+  &.type-int .hint {
     transform: scaleX(1.25);
   }
   &.type-float, &.type-credit_card_number, &.type-time {
-    transform: scaleX(0.8125);
+    .hint {
+      transform: scaleX(0.8125);
+    }
   }
-  &.type-date {
+  .hint {
+    display: inline;
+  }
+  &.type-date .hint {
     filter: saturate(0.66) contrast(1) brightness(1.2) hue-rotate(198deg);
     opacity: 0.93;
+  }
+  &.type-not-pure {
+    &::after {
+      content: "";
+      background-color: $line-color-3;
+      width: 5px;
+      height: 5px;
+      border-radius: 3px;
+      position: absolute;
+      // right: 0;
+      top: 5px;
+    }
   }
 }
 

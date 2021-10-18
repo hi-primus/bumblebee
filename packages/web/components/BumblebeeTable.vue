@@ -79,7 +79,7 @@
             @click="setNewType($event, type)"
           >
             <span>
-              <span class="data-type in-autocomplete">{{ dataTypeHint(type) }}</span>
+              <span class="data-type in-autocomplete"><span class="hint">{{ dataTypeHint(type) }}</span></span>
               <span class="data-type-title">
                 {{dataTypeNames[type]}}
               </span>
@@ -108,7 +108,7 @@
                 @click="setNewType($event, type)"
               >
                 <span class="pl-6">
-                  <span class="data-type in-autocomplete">{{ dataTypeHint(type) }}</span>
+                  <span class="data-type in-autocomplete"><span class="hint">{{ dataTypeHint(type) }}</span></span>
                   <span class="data-type-title">
                     {{dataTypeNames[type]}}
                   </span>
@@ -147,12 +147,19 @@
           :style="{ width: column.width+'px' }"
         >
           <div v-if="!(lazyColumns.length && !lazyColumns[i])" class="column-header-cell">
-            <div
-              v-if="plotsData[column.name]"
-              class="data-type"
-              :class="`type-${plotsData[column.name].inferred_data_type}`">
-              {{ dataTypeHint(plotsData[column.name].inferred_data_type) }}
-            </div>
+            <v-tooltip v-if="plotsData[column.name]" transition="tooltip-fade-transition" bottom>
+              <template v-slot:activator="{ on }">
+                <div
+                  v-on="on"
+                  class="data-type"
+                  :class="columnDataTypeClass(column)">
+                  <div class="hint">
+                    {{ dataTypeHint(plotsData[column.name].inferred_data_type) }}
+                  </div>
+                </div>
+              </template>
+              <span>{{plotsData[column.name].full_data_type}}</span>
+            </v-tooltip>
             <div class="preview-badge">
               preview
             </div>
@@ -177,7 +184,9 @@
               v-if="previewPlotsData[column.name]"
               class="data-type"
               :class="`type-${previewPlotsData[column.name].inferred_data_type}`">
-              {{ dataTypeHint(previewPlotsData[column.name].inferred_data_type) }}
+              <div class="hint">
+                {{ dataTypeHint(previewPlotsData[column.name].inferred_data_type) }}
+              </div>
             </div>
             <div class="preview-badge">
               preview
@@ -223,12 +232,20 @@
           @dblclick="setMenu($event, column.index)"
           @contextmenu.prevent="contextMenu($event, column.index)">
           <div class="column-header-cell">
-            <div
-              v-if="plotsData[column.name]"
-              class="data-type"
-              :class="`type-${plotsData[column.name].inferred_data_type}`">
-              {{ dataTypeHint(plotsData[column.name].inferred_data_type) }}
-            </div>
+            <v-tooltip v-if="plotsData[column.name]" transition="tooltip-fade-transition" bottom>
+              <template v-slot:activator="{ on }">
+                <div
+                  v-on="on"
+                  v-if="plotsData[column.name]"
+                  class="data-type"
+                  :class="columnDataTypeClass(column)">
+                  <div class="hint">
+                    {{ dataTypeHint(plotsData[column.name].inferred_data_type) }}
+                  </div>
+                </div>
+              </template>
+              <span>{{plotsData[column.name].full_data_type}}</span>
+            </v-tooltip>
             <div class="drag-hint"></div>
             <div
               v-if="currentPreviewNames && currentPreviewNames[columns[column.index].name]"
@@ -1004,6 +1021,16 @@ export default {
 
       this.currentDataset.columns.forEach((column, i) => {
         if (column && column.stats) {
+          let inferred_data_type = column.stats.inferred_data_type?.data_type;
+          let data_type = column.data_type;
+          let pure_data_type = data_type.includes(inferred_data_type) || !["bool", "float", "int", "datetime"].includes(inferred_data_type);
+
+          let full_data_type = inferred_data_type;
+
+          if (!pure_data_type) {
+            full_data_type = `${inferred_data_type} (${data_type})`;
+          }
+
           plotsData[column.name] = {
             key: i,
             name: column.name,
@@ -1016,7 +1043,9 @@ export default {
             total: +this.currentDataset.summary.rows_count,
             zeros: column.stats.zeros,
             null: column.stats.null,
-            inferred_data_type: column.stats.inferred_data_type?.data_type
+            inferred_data_type,
+            full_data_type,
+            pure_data_type
           };
         }
       });
@@ -1749,6 +1778,15 @@ export default {
 
     commandHandle (command) {
       this.$store.commit('commandHandle', command);
+    },
+
+    columnDataTypeClass (column) {
+      let data = this.plotsData[column.name]
+      let str = `type-${data.inferred_data_type}`
+      if (data.pure_data_type === false) {
+        str += ' type-not-pure'
+      }
+      return str;
     },
 
     getRowHighlight (row) {
