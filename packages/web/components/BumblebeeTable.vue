@@ -2052,7 +2052,7 @@ export default {
           fixedColumns = fixedColumns && !previewPayload.preview.datasetPreview;
         }
 
-        let matches = this.currentRowHighlights;
+        let requestMatches = this.currentRowHighlights !== undefined && this.currentRowHighlights !== false;
 
         let payload = {code: previewCode, payload: previewPayload, columns: [], done: false}
         this.$store.commit('mutation', {mutate: 'profilePreview', payload });
@@ -2078,7 +2078,7 @@ export default {
             profile: cols,
             names: cols === false,
             dfName: this.currentDataset.dfName,
-            matches_count: matches
+            matches_count: requestMatches
           }
         };
 
@@ -2111,7 +2111,7 @@ export default {
 
         }
 
-        if (matches && response.data.result.matches_count!==undefined) {
+        if (requestMatches && response.data.result.matches_count!==undefined) {
           this.$store.commit('setPreviewInfo', {rowHighlights: +response.data.result.matches_count});
         }
 
