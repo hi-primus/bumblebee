@@ -82,13 +82,13 @@ export const operationGroups = {
     icons: [{ icon: 'calendar_today' }],
     text: 'Datetime functions',
     label: 'Date &<br/>Time',
-    disabled: ($nuxt)=>!($nuxt.selectionType=='columns' && $nuxt.selectedColumns.length>=0)
+    disabled: ($nuxt)=>!($nuxt.currentDataset && $nuxt.currentDataset.summary && $nuxt.selectionType=='columns' && $nuxt.selectedColumns.length>=0)
   },
   URLEMAIL: {
     icons: [{ icon: 'mdi-web' }],
     text: 'URL and Email functions',
     label: 'URL &<br/>Email',
-    disabled: ($nuxt)=>!($nuxt.selectionType=='columns' && $nuxt.selectedColumns.length>=0)
+    disabled: ($nuxt)=>!($nuxt.currentDataset && $nuxt.currentDataset.summary && $nuxt.selectionType=='columns' && $nuxt.selectedColumns.length>=0)
   },
   // CAST: {
   //   icons: [{ icon: 'category' }],
@@ -835,7 +835,7 @@ let _operations = {
     text: 'Fill missing values',
     label: 'Fill<br/>missing',
     icons: [{icon: 'brush', class: 'material-icons-outlined'}],
-    disabled: ($nuxt)=>!($nuxt.selectionType=='columns' && $nuxt.selectedColumns.length>=0),
+    disabled: ($nuxt)=>!($nuxt.currentDataset && $nuxt.currentDataset.summary && $nuxt.selectionType=='columns' && $nuxt.selectedColumns.length>=0),
     test: {
       dataframe: TEST_DATAFRAMES.NULL,
       payload: {
