@@ -1292,7 +1292,7 @@ table {
   &.type-int {
     transform: scaleX(1.25);
   }
-  &.type-decimal, &.type-credit_card_number, &.type-time {
+  &.type-float, &.type-credit_card_number, &.type-time {
     transform: scaleX(0.8125);
   }
   &.type-date {
