@@ -1069,7 +1069,7 @@ export const CAST_NAMES = {
   "integer": "Integer",
   "string": "String",
   "boolean": "Boolean",
-  "datetime": "Datetime"
+  // "datetime": "Datetime"
 }
 
 export const ALL_TYPES = Object.values(TYPES)
