@@ -1360,10 +1360,10 @@ export default {
         cell.payload._toCell = index
         setTimeout(() => {
           this.commandsDisabled = false;
-          this.commandHandle(cell)
           this.isEditing = true
+          this.commandHandle(cell)
 
-        }, 5000);
+        }, 50);
       }
     },
 
@@ -1466,7 +1466,7 @@ export default {
         if (codeText !== code) {
           setTimeout(() => {
             this.runCodeNow(false, ignoreFrom, newDfName, false);
-          }, 1000);
+          }, 50);
         }
       }
 
@@ -1476,7 +1476,7 @@ export default {
 
     runCode: debounce( async function (forceAll = false) {
       await this.runCodeNow(forceAll)
-    }, 1000),
+    }, 250),
   }
 }
 </script>
