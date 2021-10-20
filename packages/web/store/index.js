@@ -136,7 +136,6 @@ export const state = () => {
     appStatus: {status: 'waiting'},
 
     allTypes: ALL_TYPES,
-    datasetCounter: 1,
     kernel: false,
     nextCommand: false,
     unavailableEngines: [],
@@ -319,8 +318,7 @@ export const mutations = {
       if (dataset.file_name) {
         dataset.name = dataset.file_name.split('.')[0];
       } else {
-        dataset.name = `Dataset${state.datasetCounter}`;
-        state.datasetCounter = state.datasetCounter + 1;
+        dataset.name = `Dataset`;
       }
     }
 
