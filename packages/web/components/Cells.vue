@@ -1180,7 +1180,7 @@ export default {
 
       this.$emit('updateOperations', { active: ((command.request && command.request.noOperations) ? false : true), title: 'operations' } );
 
-      await this.addCell(toCell, { ...command, code, content }, true );
+      await this.addCell(toCell, { ...command, code, content }, true, true );
 
       if (command.request.createsNew) {
         let dfName = command.newDfName;
@@ -1367,7 +1367,7 @@ export default {
       }
     },
 
-    async addCell (at = -1, payload = {command: 'code', code: '', content: '', ignoreCell: false, noCall: false, deleteOtherCells: false}, replace = false) {
+    async addCell (at = -1, payload = {command: 'code', code: '', content: '', ignoreCell: false, noCall: false, deleteOtherCells: false}, replace = false, forceAll = false) {
 
       var {command, code, ignoreCell, deleteOtherCells, content} = payload;
 
@@ -1409,7 +1409,7 @@ export default {
       this.cells = cells
 
       if (!payload.noCall && this.cells.length) {
-        return this.runCodeNow(false, -1, payload.newDfName);
+        return this.runCodeNow(forceAll, -1, payload.newDfName);
       }
 
     },
