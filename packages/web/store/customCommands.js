@@ -1,5 +1,20 @@
 import { objectMapEntries, deepCopy } from 'bumblebee-utils'
 
+const _getGithubBaseFileUrl = (url) => {
+  let userRepo = url.split('github.com/')[1] || url;
+  let [user, repo, branch] = userRepo.split('/');  
+  return `https://raw.githubusercontent.com/${user}/${repo}/${branch || 'main'}/`;
+}
+
+const _parseJSONFromUrl = async (url) => {
+  let content = await (await fetch(url)).text()
+  return JSON.parse(content);
+}
+
+const _getTextFromUrl = async (url) => {
+  return await (await fetch(url)).text()
+}
+
 const _parse = (str, payload) => {
   return str.replace(/{{(payload.?(.+?))}}/g, (_,g1,g2) => payload[g2] || eval(g1))
 }
@@ -59,6 +74,7 @@ const _handler = (name, generator) => {
 }
 
 export const state = () => ({
+  globalGenerators: {},
   generators: {}
 })
 
@@ -73,45 +89,120 @@ export const mutations =  {
   deleteGenerator (state, { key }) {
     delete state.generators[key];
   },
+  setGlobalGenerator (state, { key, generator }) {
+    state.globalGenerators[key] = generator;
+  },
+  setGlobalGenerators (state, { generators }) {
+    state.globalGenerators = generators
+  },
+  deleteGlobalGenerator (state, { key }) {
+    delete state.globalGenerators[key];
+  }
 }
 
 export const actions =  {
-  async setAllGenerators ({ state, commit, dispatch }, { content, socketPost }) {
+
+  async setGlobalGeneratorsAndInject ({ state, commit, dispatch }, { socketPost }) {
+
+    let generators = {};
+
+    if (process.env.ADD_ONS && typeof process.env.ADD_ONS == "string") {
+      let addOnsUrls = process.env.ADD_ONS.split(',');
+      if (addOnsUrls.length) {
+        for (let i = 0; i < addOnsUrls.length; i++) {
+          const url = addOnsUrls[i];
+          let base = _getGithubBaseFileUrl(url);
+          let newGenerators = {}
+
+          try {
+            console.log(base+'index.json')
+            newGenerators = await _parseJSONFromUrl(base+'index.json')
+          } catch (err) {
+            console.error(err);
+          }
+          
+          for (const key in newGenerators) {
+            if (Object.hasOwnProperty.call(newGenerators, key)) {
+              const generator = newGenerators[key];
+
+              try {
+                let definition = generator.definition; 
+                if (!definition) {
+                  definition = await _getTextFromUrl(base+key+'.py')
+                }
+                let response = await dispatch('evalCode', {
+                  socketPost,
+                  codePayload: {
+                    command: 'inject',
+                    definition,
+                    functionName: generator.functionName
+                  }
+                }, { root: true });
+                console.log('[ADD-ON] Injected:', key);
+              } catch (err) {
+                console.error(err)
+                // delete key
+              }
+              
+            }
+          }
+
+          generators = {...generators, ...newGenerators}          
+        }
+      }
+    }
+  
+    commit('setGlobalGenerators', { generators });
+  },
+
+  async setWorkspaceGenerators ({ commit }, { content }) {
+    let generators = JSON.parse(content);
+  
+    generators = objectMapEntries(generators, (key, generator) => {
+      generator.command = generator.command || key;
+      if (generator.command.includes(".") && !generator.accessor) {
+        [generator.accessor, generator.command] = generator.command.split('.');
+      }
+      return generator;
+    });
+
+    commit('setGenerators', {generators});
+  },
+
+  async injectOperationsCode ({ state, dispatch }, { socketPost }) {
+    let generators = state.generators;
+    let generators_keys = Object.keys(generators);
+    for (let i = 0; i < generators_keys.length; i++) {
+      let generator = generators[generators_keys[i]];
+
+      if (generator.definition) {
+        let response = await dispatch('evalCode', {
+          socketPost,
+          codePayload: {
+            command: 'inject',
+            definition: generator.definition,
+            functionName: generator.functionName
+          }
+        }, { root: true });
+        console.log('[ADD-ON] Injected:', generators_keys[i]);
+      }
+
+    }
+  },
+
+  async setAllGenerators ({ dispatch }, { content, socketPost }) {
+
+    console.log("setAllGenerators");
+
+    await dispatch('setGlobalGeneratorsAndInject', { socketPost });
 
     if (content) {      
-      let generators = JSON.parse(content);
-  
-      generators = objectMapEntries(generators, (key, generator) => {
-        generator.command = generator.command || key;
-        if (generator.command.includes(".") && !generator.accessor) {
-          [generator.accessor, generator.command] = generator.command.split('.');
-        }
-        return generator;
-      });
-  
-      commit('setGenerators', {generators});
+      await dispatch('setWorkspaceGenerators', { content })
     }
     
     // request injections
     if (socketPost) {
-      let generators = state.generators;
-      let generators_keys = Object.keys(generators);
-      for (let i = 0; i < generators_keys.length; i++) {
-        let generator = generators[generators_keys[i]];
-  
-        if (generator.definition) {
-          let response = await dispatch('evalCode', {
-            socketPost,
-            codePayload: {
-              command: 'inject',
-              definition: generator.definition,
-              functionName: generator.functionName
-            }
-          }, { root: true });
-          console.log('[PLUGIN] Injected:', generators_keys[i]);
-        }
-  
-      }
+      await dispatch('injectOperationsCode', { socketPost });
     }
     
     return content || socketPost;
@@ -133,7 +224,7 @@ export const getters =  {
     }
   },
   operations (state) {
-    let entries = Object.entries(state.generators)
+    let entries = Object.entries({...state.generators, ...state.globalGenerators})
     .filter(([key, generator]) => {
       if (generator.engine && rootState.localEngineParameters && rootState.localEngineParameters.engine) {
         var currentEngine = rootState.localEngineParameters.engine;
