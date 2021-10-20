@@ -26,6 +26,9 @@
 </template>
 
 <script>
+
+import { getProperty } from 'bumblebee-utils'
+
 export default {
   props: {
     currentCommand: {
@@ -40,7 +43,8 @@ export default {
 
   methods: {
     commandContentClass(command) {
-      let small = command.dialog.dialog == 'small' ? 'smaller-dialog' : ''
+      let dialog = getProperty(command.dialog.dialog, [this.currentCommand]);
+      let small = dialog == 'small' ? 'smaller-dialog' : ''
       return [small, (command.dialog.dynamicClass ? command.dialog.dynamicClass(this.currentCommand) : ''), (command.dialog.class || ''), 'command-dialog'].join(' ')
     }
   }

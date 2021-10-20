@@ -315,6 +315,10 @@ export const getters =  {
         if (!generator.generator) {
           generator.generator = 'GENERIC';
         }
+        if (generator.dialog) {
+          generator.payload = generator.payload || {};
+          generator.payload.dialog = generator.dialog
+        }
   
         return [key, generator];
       } catch (err) {
