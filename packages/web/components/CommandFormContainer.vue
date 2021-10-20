@@ -1,6 +1,6 @@
 <template>
   <v-dialog
-    v-if="command.dialog.dialog"
+    v-if="getProperty(command.dialog.dialog, [currentCommand])"
     ref="operation-form"
     class="operation-form-dialog"
     persistent
@@ -42,6 +42,9 @@ export default {
   },
 
   methods: {
+
+    getProperty,
+
     commandContentClass(command) {
       let dialog = getProperty(command.dialog.dialog, [this.currentCommand]);
       let small = dialog == 'small' ? 'smaller-dialog' : ''
