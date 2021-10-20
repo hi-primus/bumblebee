@@ -188,10 +188,6 @@ export const actions =  {
 
   async setAllGenerators ({ state, commit, dispatch }, { content, socketPost }) {
 
-    console.log({socketPost})
-
-    console.log("setAllGenerators");
-
     await dispatch('setGlobalGeneratorsAndInject', { socketPost });
 
     if (content) {      
@@ -204,7 +200,6 @@ export const actions =  {
       commit('setUpdated', { updated: true });
     }
 
-    
     return content || socketPost;
   }
 }
