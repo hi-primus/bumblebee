@@ -1857,7 +1857,8 @@ export const actions = {
 
     // profiled preview
 
-    var profilePreview = state.profilePreview.done;
+    var firstRequest = !state.profilePreview?.done;
+    var profilePreview = state.profilePreview?.done || state.profilePreview?.payload?.preview?.latePreview;
 
     if (profilePreview) {
       try {
@@ -1902,7 +1903,7 @@ export const actions = {
       response = await dispatch('evalCode',{ socketPost, codePayload })
     }
 
-    if (!profilePreview && !codePayload.command) {
+    if (firstRequest && !profilePreview && !codePayload.command) {
       let colNames = response.data.result.columns.map(col=>col.title);
       commit('setColumns', { dfName: datasetDfName, columns: colNames });
     }

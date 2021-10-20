@@ -1228,7 +1228,7 @@ export default {
 
           if (previewCode.latePreview && !this.profilePreview?.done) {
             console.debug('[FETCHING] Early profiling');
-            await this.setProfile(previewCode.code, previewCode.codePayload);
+            await this.setProfile(previewCode.code, previewCode.codePayload, true);
           }
 
           var currentCode = await getPropertyAsync(previewCode.code);
@@ -1610,11 +1610,8 @@ export default {
       })
 
       this.indicesInSample = {...indicesInSample}
-
       if (this.mustCheck) {
-        // console.log('[COLUMNS PREVIEW] Checking')
         if (columns.map(c=>c.title).join()!==this.columns.map(c=>c.name).join()) {
-          // console.log('[COLUMNS PREVIEW] Different')
           var receivedColumns = columns
 						.map((column, index)=>({...column, index}))
 
@@ -2072,7 +2069,7 @@ export default {
       this.$store.commit('mutation', {mutate: 'profilePreview', payload: false} )
     },
 
-    async setProfile (previewCode, previewPayload) {
+    async setProfile (previewCode, previewPayload, early=false) {
 
       if (!previewCode) {
         return this.unsetProfile()
@@ -2128,7 +2125,7 @@ export default {
           throw response;
         }
 
-        if ((profile || previewCode.latePreview) && response.data.result.profile) {
+        if ((profile || previewCode.latePreview || early) && response.data.result.profile) {
           let dataset = parseResponse(response.data.result.profile);
 
           if (!dataset) {
