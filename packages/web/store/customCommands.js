@@ -75,11 +75,15 @@ const _handler = (name, generator) => {
 
 export const state = () => ({
   globalGenerators: {},
-  generators: {}
+  generators: {},
+  updated: false
 })
 
 
 export const mutations =  {
+  setUpdated (state, { updated }) {
+    state.updated = updated
+  },
   setGenerator (state, { key, generator }) {
     state.generators[key] = generator;
   },
@@ -102,7 +106,7 @@ export const mutations =  {
 
 export const actions =  {
 
-  async setGlobalGeneratorsAndInject ({ state, commit, dispatch }, { socketPost }) {
+  async setGlobalGeneratorsAndInject ({ commit }, {}) {
 
     let generators = {};
 
@@ -120,32 +124,24 @@ export const actions =  {
           } catch (err) {
             console.error(err);
           }
-          
+
           for (const key in newGenerators) {
             if (Object.hasOwnProperty.call(newGenerators, key)) {
               const generator = newGenerators[key];
-
               try {
                 let definition = generator.definition; 
                 if (!definition) {
                   definition = await _getTextFromUrl(base+key+'.py')
                 }
-                let response = await dispatch('evalCode', {
-                  socketPost,
-                  codePayload: {
-                    command: 'inject',
-                    definition,
-                    functionName: generator.functionName
-                  }
-                }, { root: true });
-                console.log('[ADD-ON] Injected:', key);
+                if (definition) {
+                  newGenerators[key].definition = definition
+                }
               } catch (err) {
                 console.error(err)
-                // delete key
               }
               
             }
-          }
+          }            
 
           generators = {...generators, ...newGenerators}          
         }
@@ -170,7 +166,7 @@ export const actions =  {
   },
 
   async injectOperationsCode ({ state, dispatch }, { socketPost }) {
-    let generators = state.generators;
+    let generators = {...state.generators, ...state.globalGenerators};
     let generators_keys = Object.keys(generators);
     for (let i = 0; i < generators_keys.length; i++) {
       let generator = generators[generators_keys[i]];
@@ -190,7 +186,9 @@ export const actions =  {
     }
   },
 
-  async setAllGenerators ({ dispatch }, { content, socketPost }) {
+  async setAllGenerators ({ state, commit, dispatch }, { content, socketPost }) {
+
+    console.log({socketPost})
 
     console.log("setAllGenerators");
 
@@ -201,9 +199,11 @@ export const actions =  {
     }
     
     // request injections
-    if (socketPost) {
+    if (socketPost && !state.updated) {
       await dispatch('injectOperationsCode', { socketPost });
+      commit('setUpdated', { updated: true });
     }
+
     
     return content || socketPost;
   }
@@ -295,9 +295,11 @@ export const getters =  {
         }
   
         if (!generator.columns) {
+          generator.payload = generator.payload || {};
           generator.payload.columns = false;
           generator.payload.output_cols = false;
         } else if (typeof generator.columns == "string") {
+          generator.payload = generator.payload || {};
           generator.payload.columns = false;
           generator.payload.output_cols = false;
           generator.payload._columnsKey = generator.columns;
