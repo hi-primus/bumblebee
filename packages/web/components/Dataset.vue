@@ -817,7 +817,7 @@ export default {
           if (this.loadedPreviewCode!==currentCode) {
             this.loadedPreviewCode = currentCode
             if (this.previewCode.load) {
-              this.$store.commit('mutation', {mutate: 'loadingStatus', payload: 'Updating Preview' })
+              this.$store.commit('mutation', {mutate: 'updatingPreview', payload: true })
 
               var dfName = 'preview_df'
               var codePayload = deepCopy(this.previewCode.codePayload);
@@ -870,14 +870,14 @@ export default {
 
               this.$store.commit('setLoadPreview', { profile } )
 
-              this.$store.commit('mutation', {mutate: 'loadingStatus', payload: false })
+              this.$store.commit('mutation', {mutate: 'updatingPreview', payload: false })
 
             }
           }
         } catch (err) {
           let _error = printError(err);
           this.$store.commit('setPreviewInfo', { error: _error });
-          this.$store.commit('mutation', {mutate: 'loadingStatus', payload: false })
+          this.$store.commit('mutation', {mutate: 'updatingPreview', payload: false })
         }
       },
     },

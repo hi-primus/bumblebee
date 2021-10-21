@@ -1,6 +1,6 @@
 <template>
   <div class="dashboard-container">
-    <div class="toolbar bb-toolbar" :class="{'disabled': commandsDisabled}">
+    <div class="toolbar bb-toolbar" :class="{'disabled': toolbarDisabled}">
       <v-tooltip transition="tooltip-fade-transition" bottom>
         <template v-slot:activator="{ on }">
           <v-btn v-on="on" text class="icon-btn" @click="listView=true" :disabled="!(currentDataset && currentDataset.summary)">
@@ -585,6 +585,10 @@ export default {
       set (value) {
         this.$store.commit('mutation', {mutate: 'commandsDisabled', payload: value})
       }
+    },
+
+    toolbarDisabled () {
+      return this.$store.state.updatingProfile || this.commandsDisabled;
     },
 
     listView: {

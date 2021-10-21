@@ -1144,7 +1144,7 @@ export default {
       this.currentCommand = false;
 
       this.gettingNewResults = 'hide';
-      this.$store.commit('mutation', {mutate: 'loadingStatus', payload: 'Updating dataset' });
+      this.$store.commit('mutation', {mutate: 'updatingDataset', payload: true });
 
       if (this.currentPreviewInfo) {
         if (this.currentPreviewInfo.newColumns>0) {
@@ -1166,6 +1166,7 @@ export default {
         var payload = getCodePayload(command);
         payload.request = command.request || {};
         this.downloadResult([{ payload }])
+        this.$store.commit('mutation', {mutate: 'updatingDataset', payload: false });
         return true;
       }
 
@@ -1189,10 +1190,13 @@ export default {
         await this.$store.dispatch('getProfiling', { payload: { dfName, socketPost: this.socketPost, partial: true, methods: this.commandMethods } });
         this.$store.commit('setDfToTab', { dfName, go: true });
       }
+
+      this.$store.commit('mutation', {mutate: 'updatingDataset', payload: false });
     },
 
-    cancelCommand (runCode = true) {
-      return new Promise((resolve, reject)=>{
+    async cancelCommand (runCode = true) {
+      this.$store.commit('mutation', {mutate: 'updatingDataset', payload: true });
+      await new Promise((resolve, reject)=>{
         setTimeout(async () => {
           // this.recoverTextSelection();
           // this.clearSelection();
@@ -1212,7 +1216,8 @@ export default {
             resolve(true);
           });
         }, 10);
-      })
+      });
+      this.$store.commit('mutation', {mutate: 'updatingDataset', payload: false });
     },
 
     draggableStart () {

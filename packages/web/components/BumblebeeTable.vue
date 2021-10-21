@@ -1333,16 +1333,21 @@ export default {
       let totalColumns = this.currentDataset?.summary?.cols_count;
 
       if (totalColumns !== undefined && profiledColumns < totalColumns) {
-        let profilingResponse = await this.$store.dispatch('getProfiling', { payload: {
-          socketPost: this.socketPost,
-          dfName: this.currentDataset.dfName,
-          avoidReload: true,
-          clearPrevious: false,
-          partial: true,
-          methods: this.commandMethods
-        }});
-        
-        this.$store.dispatch('lateProfiles', {...profilingResponse, socketPost: this.socketPost});
+        if (!this.$store.state.updatingProfile) {
+          this.$store.commit('mutation', {mutate: 'updatingProfile', payload: true })
+          let profilingResponse = await this.$store.dispatch('getProfiling', { payload: {
+            socketPost: this.socketPost,
+            dfName: this.currentDataset.dfName,
+            avoidReload: true,
+            clearPrevious: false,
+            partial: true,
+            methods: this.commandMethods
+          }});
+          
+          return this.$store.dispatch('lateProfiles', {...profilingResponse, socketPost: this.socketPost});
+        }
+      } else if (this.$store.state.updatingProfile) {
+        return this.$store.commit('mutation', {mutate: 'updatingProfile', payload: false })
       }
     },
 
@@ -2170,7 +2175,7 @@ export default {
           setTimeout(async () => {
             // next debouncedUpdateRows
             await this.$store.dispatch('afterNewResults');
-            this.$store.commit('mutation', {mutate: 'loadingStatus', payload: false });
+            this.$store.commit('mutation', {mutate: 'updatingPreview', payload: false });
           }, 80);
         }
       }
