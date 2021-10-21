@@ -1337,7 +1337,7 @@ export default {
           socketPost: this.socketPost,
           dfName: this.currentDataset.dfName,
           avoidReload: true,
-          clearPrevious: true,
+          clearPrevious: false,
           partial: true,
           methods: this.commandMethods
         }});
