@@ -300,10 +300,9 @@ export default {
   },
 
 	computed: {
-    ...mapGetters(['currentDataset','currentDatasetUpdate','previewCode','typesAvailable']),
+    ...mapGetters(['currentDataset','currentDatasetUpdate','previewCode','typesAvailable', 'loadingStatus']),
 
     ...mapState('session', ['workspace', 'workspaceStatus']),
-    ...mapState(['loadingStatus']),
 
     footerVisible () {
       return this.loadingStatus || (this.currentDataset && this.currentDataset.summary);

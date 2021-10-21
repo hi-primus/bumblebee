@@ -1,6 +1,6 @@
 <template>
   <div class="dashboard-container">
-    <div class="toolbar bb-toolbar" :class="{'disabled': commandsDisabled}">
+    <div class="toolbar bb-toolbar" :class="{'operations-disabled': toolbarDisabled}">
       <v-tooltip transition="tooltip-fade-transition" bottom>
         <template v-slot:activator="{ on }">
           <v-btn v-on="on" text class="icon-btn" @click="listView=true" :disabled="!(currentDataset && currentDataset.summary)">
@@ -29,7 +29,7 @@
           <template v-if="element.type=='button'">
             <v-tooltip :key="'toolbar'+section+'button'+index" transition="tooltip-fade-transition" bottom>
               <template v-slot:activator="{ on }">
-                <div class="icon-btn-container" :id="'btn-'+element.command" v-on="on">
+                <div class="icon-btn-container operation-btn" :id="'btn-'+element.command" v-on="on">
                   <v-btn
                     text
                     class="icon-btn"
@@ -65,7 +65,7 @@
               <template v-slot:activator="{ on: menu }">
                 <v-tooltip :disabled="menus[element.group]" transition="tooltip-fade-transition" bottom>
                   <template v-slot:activator="{ on: tooltip }">
-                    <div class="icon-btn-container" :id="'menu-'+element.group" v-on="tooltip">
+                    <div class="icon-btn-container operation-btn" :id="'menu-'+element.group" v-on="tooltip">
                       <v-btn
                         :color="'#888'"
                         :disabled="getPropertyNuxt(element.disabled)"
@@ -585,6 +585,10 @@ export default {
       set (value) {
         this.$store.commit('mutation', {mutate: 'commandsDisabled', payload: value})
       }
+    },
+
+    toolbarDisabled () {
+      return this.$store.state.updatingProfile || this.$store.state.updatingWholeProfile || this.commandsDisabled;
     },
 
     listView: {

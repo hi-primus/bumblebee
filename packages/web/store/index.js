@@ -89,7 +89,11 @@ properties.forEach((p)=>{
 
 const defaultState = {
   dashboardLink: '',
-  loadingStatus: false,
+  updatingProfile: false,
+  updatingDataset: false,
+  updatingWorkspace: false,
+  updatingPreview: false,
+  updatingWholeProfile: false,
   coiledAvailable: false,
   tab: 0,
   cells: { dataSources: [], transformations: [], status: 'ok' },
@@ -823,6 +827,7 @@ export const actions = {
   async loadWorkspace ({commit, dispatch, state}, { slug }) {
 
     commit('session/mutation', { mutate: 'saveReady', payload: false });
+    commit('mutation', { mutate: 'updatingWorkspace', payload: true });
 
     if (!slug) {
       let workspace = state.workspace
@@ -901,6 +906,8 @@ export const actions = {
     dispatch('customCommands/setAllGenerators', { content: customCommands }, { root: true });
 
     console.debug('[DEBUG] Loading workspace Done', slug);
+
+    commit('mutation', { mutate: 'updatingWorkspace', payload: false });
 
     return response.data;
 
@@ -1481,7 +1488,7 @@ export const actions = {
         await dispatch('resetPromises', { from: 'executions' });
       }
 
-      commit('mutation', { mutate: 'loadingStatus', payload: 'Updating workpsace' });
+      commit('mutation', { mutate: 'updatingWorkspace', payload: true });
 
       if (beforeRunCells) {
         await dispatch('beforeRunCells', { newOnly, ignoreFrom, methods });
@@ -1562,7 +1569,7 @@ export const actions = {
       console.debug('[DEBUG][CODE]', response.code);
       window.pushCode({code: response.code})
 
-      commit('mutation', { mutate: 'loadingStatus', payload: false });
+      commit('mutation', { mutate: 'updatingWorkspace', payload: false });
       commit('mutation', { mutate: 'commandsDisabled', payload: false });
 
       if (!response || !response.data || !response.data.result || response.data.status == "error") {
@@ -1576,8 +1583,9 @@ export const actions = {
 
     } catch (err) {
 
+      err = err || new Error("Unknown error")
 
-      commit('mutation', {mutate: 'loadingStatus', payload: false });
+      commit('mutation', {mutate: 'updatingWorkspace', payload: false });
       await dispatch('resetPromises', { from: 'cells' });
 
       if (err.code && window.pushCode) {
@@ -1614,14 +1622,17 @@ export const actions = {
     return dispatch('getPromise', promisePayload);
   },
 
-  async lateProfiles ({dispatch}, {dfName, columnsCount, avoidReload, socketPost}) {
+  async lateProfiles ({commit, dispatch}, {dfName, columnsCount, avoidReload, socketPost}) {
     let promise = false;
     for (let i = 20; i < columnsCount+10; i+=10) {
       let dataset = await dispatch('requestProfiling', { dfName, socketPost, partial: i });
       await promise;
       promise = dispatch('setProfiling', { dfName, dataset, avoidReload: true, partial: i });
     }
-    return await promise;
+    let result = await promise;
+    commit('mutation', {mutate: 'updatingProfile', payload: false });
+    commit('mutation', {mutate: 'updatingWholeProfile', payload: false });
+    return result
   },
 
   async requestProfiling ({ dispatch }, { dfName, socketPost, partial }) {
@@ -1668,7 +1679,11 @@ export const actions = {
     console.debug('[DEBUG] Loading profiling', dfName);
     try {
 
-      commit('mutation', {mutate: 'loadingStatus', payload: 'Updating profile' });
+      commit('mutation', {mutate: 'updatingProfile', payload: true });
+      
+      if (!partial) {
+        commit('mutation', {mutate: 'updatingWholeProfile', payload: true });
+      }
 
       await Vue.nextTick();
 
@@ -1714,7 +1729,11 @@ export const actions = {
         commit('updateDataset', { tab: found } );
       }
 
-      commit('mutation', {mutate: 'loadingStatus', payload: false });
+      commit('mutation', {mutate: 'updatingProfile', payload: false });
+
+      if (!partial) {
+        commit('mutation', {mutate: 'updatingWholeProfile', payload: false });
+      }
 
       let columnsCount = profile.summary.cols_count;
         
@@ -1722,6 +1741,8 @@ export const actions = {
       return {profile, dfName, columnsCount, avoidReload};
 
     } catch (err) {
+
+      err = err || new Error("Unknown error")
 
       if (err.code && window.pushCode) {
         window.pushCode({code: err.code, error: true});
@@ -1739,7 +1760,9 @@ export const actions = {
       err.bumblebeeType = '(Error on profiling)'
       console.debug('[DEBUG] Loading profiling Error', dfName);
 
-      commit('mutation', {mutate: 'loadingStatus', payload: false });
+      commit('mutation', {mutate: 'updatingProfile', payload: false });
+
+      commit('mutation', {mutate: 'updatingWholeProfile', payload: false });
 
       throw err;
     }
@@ -2000,6 +2023,19 @@ properties.forEach((p)=>{
 })
 
 export const getters = {
+  loadingStatus (state) {
+    if (state.updatingWorkspace) {
+      return "Updating workspace";
+    } else if (state.updatingPreview) {
+      return "Updating preview";
+    } else if (state.updatingProfile || state.updatingWholeProfile) {
+      return "Updating profile";
+    } else if (state.updatingDataset) {
+      return "Updating dataset";
+    } else {
+      return false
+    }    
+  },
   currentDataset (state) {
     return state.datasets[state.tab];
   },

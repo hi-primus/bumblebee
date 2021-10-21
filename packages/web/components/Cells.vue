@@ -208,7 +208,7 @@
       <draggable
         tag="div"
         class="operations-cells data-sources-cells"
-        :class="{ 'no-pe disabled': commandsDisabled, 'dragging': drag }"
+        :class="{ 'no-pe disabled': operationsDisabled, 'dragging': drag }"
         :list="localDataSources"
         v-bind="dataSourcesDragOptions"
         handle=".handle"
@@ -244,7 +244,7 @@
       <draggable
         tag="div"
         class="operations-cells commands-cells"
-        :class="{ 'no-pe disabled': commandsDisabled, 'dragging': drag }"
+        :class="{ 'no-pe disabled': operationsDisabled, 'dragging': drag }"
         :list="localTransformations"
         v-bind="commandsDragOptions"
         handle=".handle"
@@ -535,6 +535,10 @@ export default {
         this.$store.commit('mutation', {mutate: 'commandsDisabled', payload: value});
       }
     },
+
+    operationsDisabled () {
+      return this.commandsDisabled || this.$store.getters['loadingStatus']
+    }
 
   },
 
@@ -1144,7 +1148,7 @@ export default {
       this.currentCommand = false;
 
       this.gettingNewResults = 'hide';
-      this.$store.commit('mutation', {mutate: 'loadingStatus', payload: 'Updating dataset' });
+      this.$store.commit('mutation', {mutate: 'updatingDataset', payload: true });
 
       if (this.currentPreviewInfo) {
         if (this.currentPreviewInfo.newColumns>0) {
@@ -1166,6 +1170,7 @@ export default {
         var payload = getCodePayload(command);
         payload.request = command.request || {};
         this.downloadResult([{ payload }])
+        this.$store.commit('mutation', {mutate: 'updatingDataset', payload: false });
         return true;
       }
 
@@ -1189,10 +1194,13 @@ export default {
         await this.$store.dispatch('getProfiling', { payload: { dfName, socketPost: this.socketPost, partial: true, methods: this.commandMethods } });
         this.$store.commit('setDfToTab', { dfName, go: true });
       }
+
+      this.$store.commit('mutation', {mutate: 'updatingDataset', payload: false });
     },
 
-    cancelCommand (runCode = true) {
-      return new Promise((resolve, reject)=>{
+    async cancelCommand (runCode = true) {
+      this.$store.commit('mutation', {mutate: 'updatingDataset', payload: true });
+      await new Promise((resolve, reject)=>{
         setTimeout(async () => {
           // this.recoverTextSelection();
           // this.clearSelection();
@@ -1212,7 +1220,8 @@ export default {
             resolve(true);
           });
         }, 10);
-      })
+      });
+      this.$store.commit('mutation', {mutate: 'updatingDataset', payload: false });
     },
 
     draggableStart () {
@@ -1429,13 +1438,13 @@ export default {
         
         this.$store.commit('previewDefault');
 
-        let partial = true;
+        // let partial = true;
 
-        let profilingResponse = await this.$store.dispatch('getProfiling', { payload: { dfName, ignoreFrom, clearPrevious: true, socketPost: this.socketPost, partial, methods: this.commandMethods } });
+        let profilingResponse = await this.$store.dispatch('getProfiling', { payload: { dfName, ignoreFrom, clearPrevious: true, socketPost: this.socketPost, partial: true, methods: this.commandMethods } });
 
-        if (partial) {
-          this.$store.dispatch('lateProfiles', {...profilingResponse, socketPost: this.socketPost});
-        }
+        // if (partial) {
+        //   this.$store.dispatch('lateProfiles', {...profilingResponse, socketPost: this.socketPost});
+        // }
 
         if (this.firstRun) {
           this.firstRun = false;

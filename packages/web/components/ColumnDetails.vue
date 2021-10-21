@@ -130,7 +130,7 @@
             :total="rowsCount"
             :height="90"
             :columnIndex="column.index"
-            selectable
+            :selectable="selectionEnabled"
           />
         </div>
 
@@ -144,7 +144,7 @@
             :total="rowsCount"
             :height="90"
             :columnIndex="column.index"
-            selectable
+            :selectable="selectionEnabled"
           />
         </div>
 
@@ -158,7 +158,7 @@
             :total="rowsCount"
             :height="90"
             :columnIndex="column.index"
-            selectable
+            :selectable="selectionEnabled"
           />
         </div>
 
@@ -172,7 +172,7 @@
             :total="rowsCount"
             :height="90"
             :columnIndex="column.index"
-            selectable
+            :selectable="selectionEnabled"
           />
         </div>
 
@@ -186,7 +186,7 @@
             :total="rowsCount"
             :height="90"
             :columnIndex="column.index"
-            selectable
+            :selectable="selectionEnabled"
           />
         </div>
 
@@ -200,7 +200,7 @@
             :total="rowsCount"
             :height="90"
             :columnIndex="column.index"
-            selectable
+            :selectable="selectionEnabled"
           />
         </div>
 
@@ -217,7 +217,7 @@
           :total="rowsCount"
           :height="90"
           :columnIndex="column.index"
-          selectable
+          :selectable="selectionEnabled"
         />
       </div>
 
@@ -343,6 +343,10 @@ export default {
       'currentDataset'
     ]),
 
+    selectionEnabled () {
+      return !this.$store.getters.loadingStatus;
+    },
+
     commandsDisabled: {
       get () {
         return this.$store.state.commandsDisabled
@@ -406,6 +410,10 @@ export default {
 
     patternClicked (item) {
 
+      if (!this.selectionEnabled) {
+        return;
+      }
+
       var command = {
         command: 'filterRows',
         columns: [ this.column.name ],
@@ -420,6 +428,10 @@ export default {
     },
 
     barClicked (event) {
+
+      if (!this.selectionEnabled) {
+        return;
+      }
 
       if (event == 'missing') {
         var payload = {
