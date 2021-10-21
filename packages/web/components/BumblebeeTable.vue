@@ -19,6 +19,7 @@
     eager>
     <v-card
       class="column-menu font-reset pt-2 pb-0 mb-0 elevation-0"
+      :class="{'menu-disabled': !selectionEnabled}"
       @click.stop
       style="cursor: initial"
       v-ripple="false"
@@ -366,8 +367,8 @@
                 :values="plotsData[column.name].frequency"
                 :total="+plotsData[column.name].total || 1"
                 :columnIndex="column.index"
+                :selectable="selectionEnabled"
                 class="histfreq"
-                selectable
               />
               <Histogram
                 v-else-if="plotsData[column.name].hist"
@@ -376,8 +377,8 @@
                 :values="plotsData[column.name].hist"
                 :total="+plotsData[column.name].total || 1"
                 :columnIndex="column.index"
+                :selectable="selectionEnabled"
                 class="histfreq"
-                selectable
               />
               <Histogram
                 v-else-if="plotsData[column.name].hist_years"
@@ -386,8 +387,8 @@
                 :values="plotsData[column.name].hist_years"
                 :total="+plotsData[column.name].total || 1"
                 :columnIndex="column.index"
+                :selectable="selectionEnabled"
                 class="histfreq"
-                selectable
               />
             </div>
           </div>
@@ -605,7 +606,7 @@ export default {
       lazyColumns: [],
       defaultColumnWidth: 170,
 
-      mainTypes: ['string', 'int', 'float', 'boolean', '|', 'date', 'time', '|', 'object', 'array'],
+      mainTypes: ['string', 'int', 'float', 'boolean', 'datetime', '|', 'object', 'array'],
 
       moreTypes: ['email', 'credit_card_number', 'gender', '|', 'zip_code', '|', 'ip', 'url']
 		}
@@ -638,6 +639,10 @@ export default {
       set (value) {
         this.$store.commit('mutation', {mutate: 'gettingNewResults', payload: value})
       }
+    },
+
+    selectionEnabled () {
+      return !this.$store.getters.loadingStatus;
     },
 
     previewError () {
@@ -1333,8 +1338,10 @@ export default {
       let totalColumns = this.currentDataset?.summary?.cols_count;
 
       if (totalColumns !== undefined && profiledColumns < totalColumns) {
-        if (!this.$store.state.updatingProfile) {
-          this.$store.commit('mutation', {mutate: 'updatingProfile', payload: true })
+        if (!this.$store.state.updatingWholeProfile) {
+          
+          this.$store.commit('mutation', {mutate: 'updatingWholeProfile', payload: true })
+
           let profilingResponse = await this.$store.dispatch('getProfiling', { payload: {
             socketPost: this.socketPost,
             dfName: this.currentDataset.dfName,
@@ -1346,8 +1353,8 @@ export default {
           
           return this.$store.dispatch('lateProfiles', {...profilingResponse, socketPost: this.socketPost});
         }
-      } else if (this.$store.state.updatingProfile) {
-        return this.$store.commit('mutation', {mutate: 'updatingProfile', payload: false })
+      } else if (this.$store.state.updatingWholeProfile) {
+        return this.$store.commit('mutation', {mutate: 'updatingWholeProfile', payload: false })
       }
     },
 
@@ -1754,9 +1761,10 @@ export default {
 
     barClicked (event, column) {
       
-      if (column.type == 'duplicated') {
+      if (column.type == 'duplicated' || this.selectionEnabled) {
         return
       }
+
       if (event == 'missing') {
         var payload = {
           rowsType: 'missing',

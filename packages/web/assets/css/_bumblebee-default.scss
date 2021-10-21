@@ -752,11 +752,6 @@ table {
   &:not(.vertical) {
     height: $toolbar-height;
   }
-  &.disabled {
-    &>* {
-      pointer-events: none;
-    }
-  }
   .divider {
     width: 1px;
     // height: calc(100% - #{$icon-size});
@@ -803,8 +798,10 @@ table {
     }
   }
   .theme--light.v-btn.v-btn--disabled,
-  &.disabled .theme--light.v-btn {
+  &.disabled .theme--light.v-btn,
+  &.operations-disabled .operation-btn {
     color: $icon-color !important;
+    pointer-events: none;
     opacity: 0.5;
   }
 }
@@ -3592,4 +3589,16 @@ $editor-top-padding: 4px;
   .bb-table-header::after {
     content: none !important;
   }
+}
+
+
+.column-menu {
+  &.menu-disabled > *, &.menu-disabled ~ * > * {
+    pointer-events: none;
+    opacity: 0.5;
+  }
+}
+
+.bb-table-h-cell .v-menu__content {
+  cursor: default;
 }

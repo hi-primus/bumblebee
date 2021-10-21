@@ -208,7 +208,7 @@
       <draggable
         tag="div"
         class="operations-cells data-sources-cells"
-        :class="{ 'no-pe disabled': commandsDisabled, 'dragging': drag }"
+        :class="{ 'no-pe disabled': operationsDisabled, 'dragging': drag }"
         :list="localDataSources"
         v-bind="dataSourcesDragOptions"
         handle=".handle"
@@ -244,7 +244,7 @@
       <draggable
         tag="div"
         class="operations-cells commands-cells"
-        :class="{ 'no-pe disabled': commandsDisabled, 'dragging': drag }"
+        :class="{ 'no-pe disabled': operationsDisabled, 'dragging': drag }"
         :list="localTransformations"
         v-bind="commandsDragOptions"
         handle=".handle"
@@ -535,6 +535,10 @@ export default {
         this.$store.commit('mutation', {mutate: 'commandsDisabled', payload: value});
       }
     },
+
+    operationsDisabled () {
+      return this.commandsDisabled || this.$store.getters['loadingStatus']
+    }
 
   },
 

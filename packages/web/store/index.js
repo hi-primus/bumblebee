@@ -93,6 +93,7 @@ const defaultState = {
   updatingDataset: false,
   updatingWorkspace: false,
   updatingPreview: false,
+  updatingWholeProfile: false,
   coiledAvailable: false,
   tab: 0,
   cells: { dataSources: [], transformations: [], status: 'ok' },
@@ -1582,6 +1583,7 @@ export const actions = {
 
     } catch (err) {
 
+      err = err || new Error("Unknown error")
 
       commit('mutation', {mutate: 'updatingWorkspace', payload: false });
       await dispatch('resetPromises', { from: 'cells' });
@@ -1628,7 +1630,8 @@ export const actions = {
       promise = dispatch('setProfiling', { dfName, dataset, avoidReload: true, partial: i });
     }
     let result = await promise;
-    commit('mutation', {mutate: 'updatingProfiles', payload: false });
+    commit('mutation', {mutate: 'updatingProfile', payload: false });
+    commit('mutation', {mutate: 'updatingWholeProfile', payload: false });
     return result
   },
 
@@ -1677,6 +1680,10 @@ export const actions = {
     try {
 
       commit('mutation', {mutate: 'updatingProfile', payload: true });
+      
+      if (!partial) {
+        commit('mutation', {mutate: 'updatingWholeProfile', payload: true });
+      }
 
       await Vue.nextTick();
 
@@ -1722,8 +1729,10 @@ export const actions = {
         commit('updateDataset', { tab: found } );
       }
 
+      commit('mutation', {mutate: 'updatingProfile', payload: false });
+
       if (!partial) {
-        commit('mutation', {mutate: 'updatingProfile', payload: false });
+        commit('mutation', {mutate: 'updatingWholeProfile', payload: false });
       }
 
       let columnsCount = profile.summary.cols_count;
@@ -1732,6 +1741,8 @@ export const actions = {
       return {profile, dfName, columnsCount, avoidReload};
 
     } catch (err) {
+
+      err = err || new Error("Unknown error")
 
       if (err.code && window.pushCode) {
         window.pushCode({code: err.code, error: true});
@@ -1750,6 +1761,8 @@ export const actions = {
       console.debug('[DEBUG] Loading profiling Error', dfName);
 
       commit('mutation', {mutate: 'updatingProfile', payload: false });
+
+      commit('mutation', {mutate: 'updatingWholeProfile', payload: false });
 
       throw err;
     }
@@ -2014,7 +2027,7 @@ export const getters = {
       return "Updating workspace";
     } else if (state.updatingPreview) {
       return "Updating preview";
-    } else if (state.updatingProfile) {
+    } else if (state.updatingProfile || state.updatingWholeProfile) {
       return "Updating profile";
     } else if (state.updatingDataset) {
       return "Updating dataset";
