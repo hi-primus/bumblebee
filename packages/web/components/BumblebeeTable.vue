@@ -1761,7 +1761,7 @@ export default {
 
     barClicked (event, column) {
       
-      if (column.type == 'duplicated' || this.selectionEnabled) {
+      if (column.type == 'duplicated' || !this.selectionEnabled) {
         return
       }
 
