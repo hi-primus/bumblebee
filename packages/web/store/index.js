@@ -250,11 +250,11 @@ export const mutations = {
   clearSession (state) {
     console.debug('%c[SESSION] Clear','color: yellow;');
     Object.keys(defaultState).forEach(key=>{
-      Vue.set(state, key, defaultState[key]);
+      Vue.set(state, key, deepCopy(defaultState[key]));
     });
     state.properties.filter(p=>p.clear).forEach(p=>{
       if (p.multiple) {
-        pStates['every'+p.name] = [];
+        state['every'+p.name] = [];
       } else {
         state[p.name] = false;
       }
