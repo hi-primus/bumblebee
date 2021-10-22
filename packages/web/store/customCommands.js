@@ -119,7 +119,6 @@ export const actions =  {
           let newGenerators = {}
 
           try {
-            console.log(base+'index.json')
             newGenerators = await _parseJSONFromUrl(base+'index.json')
           } catch (err) {
             console.error(err);
