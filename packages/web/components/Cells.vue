@@ -357,7 +357,6 @@ export default {
       activeCell: -1,
       drag: false,
       currentCommand: false,
-      isEditing: false,
 
       cellsPromise: false
 
@@ -394,6 +393,15 @@ export default {
       },
       set (value) {
         this.$store.commit('mutation', {mutate: 'gettingNewResults', payload: value})
+      }
+    },
+
+    isEditing: {
+      get () {
+        return this.$store.state.editing;
+      },
+      set (value) {
+        this.$store.commit('mutation', {mutate: 'editing', payload: value})
       }
     },
 

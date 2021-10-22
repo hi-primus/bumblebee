@@ -94,6 +94,7 @@ const defaultState = {
   updatingWorkspace: false,
   updatingPreview: false,
   updatingWholeProfile: false,
+  editing: false,
   coiledAvailable: false,
   tab: 0,
   cells: { dataSources: [], transformations: [], status: 'ok' },

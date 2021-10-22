@@ -642,7 +642,7 @@ export default {
     },
 
     selectionEnabled () {
-      return !this.$store.getters.loadingStatus;
+      return !this.$store.getters.loadingStatus && !this.$store.state.editing;
     },
 
     previewError () {
