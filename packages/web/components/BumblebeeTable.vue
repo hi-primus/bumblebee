@@ -1835,7 +1835,7 @@ export default {
         if (hlv && hlv.length) {
           for (let i = hlv.length - 1; i >= 0; i--) {
             const [a,b] = hlv[i]
-            _value = _value.substring(0,a)+`<span class="hlt--${color}">`+value.substring(a,b)+'</span>'+value.substring(b)
+            _value = _value.substring(0,a)+`<span class="hlt--${color}">`+_value.substring(a,b)+'</span>'+_value.substring(b)
           }
         }
         return _value
