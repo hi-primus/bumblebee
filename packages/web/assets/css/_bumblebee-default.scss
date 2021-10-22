@@ -1305,10 +1305,10 @@ table {
   &.type-not-pure {
     &::after {
       content: "";
-      background-color: $line-color-3;
-      width: 5px;
-      height: 5px;
-      border-radius: 3px;
+      background-color: lighten($text-color, 10%);
+      width: 4px;
+      height: 4px;
+      border-radius: 4px;
       position: absolute;
       // right: 0;
       top: 5px;

@@ -68,7 +68,7 @@
     <h3
       class="grey--text pl-4 no-link"
       @click.stop
-    >Type transform</h3>
+    >Set data type</h3>
     <v-list
       flat dense class="font-reset type-menu"
     >
