@@ -1417,7 +1417,7 @@ export const actions = {
   },
 
   async loadCellsResult ({dispatch, state, getters, commit}, { forceAll, ignoreFrom, socketPost, clearPrevious, newOnly, beforeRunCells, methods }) {
-    console.debug('[DEBUG] Loading cells result', methods);
+    console.debug('[DEBUG] Loading cells result');
     try {
 
       var optimus = await dispatch('getOptimus', { payload: {socketPost} } );
@@ -1468,8 +1468,8 @@ export const actions = {
         codePayload = await dispatch('codeCommands', { newOnly, ignoreFrom });
       }
 
-      if (code===wrongCode ) {
-        console.debug('%c[CODE MANAGER] Cells went wrong last time', 'color: yellow;'+state.lastWrongCode.error);
+      if (wrongCode && code===wrongCode ) {
+        console.debug('%c[CODE MANAGER] Cells went wrong last time. '+state.lastWrongCode.error, 'color: yellow;');
         throw state.lastWrongCode.error;
       }
 
@@ -1493,7 +1493,6 @@ export const actions = {
       if (beforeRunCells) {
         await dispatch('beforeRunCells', { newOnly, ignoreFrom, methods });
       }
-
 
       var response;
 
@@ -1622,7 +1621,7 @@ export const actions = {
     return dispatch('getPromise', promisePayload);
   },
 
-  async lateProfiles ({commit, dispatch}, {dfName, columnsCount, avoidReload, socketPost}) {
+  async lateProfiles ({state, commit, dispatch}, {dfName, columnsCount, avoidReload, socketPost}) {
     let promise = false;
     for (let i = 20; i < columnsCount+10; i+=10) {
       let dataset = await dispatch('requestProfiling', { dfName, socketPost, partial: i });
@@ -1630,6 +1629,12 @@ export const actions = {
       promise = dispatch('setProfiling', { dfName, dataset, avoidReload: true, partial: i });
     }
     let result = await promise;
+    if (state.afterProfileCallback) {
+      if (typeof state.afterProfileCallback == "function") {
+        await state.afterProfileCallback()
+      }
+      commit('mutation', {mutate: 'afterProfileCallback', payload: false });
+    }
     commit('mutation', {mutate: 'updatingProfile', payload: false });
     commit('mutation', {mutate: 'updatingWholeProfile', payload: false });
     return result

@@ -1211,9 +1211,14 @@ export default {
           });
           this.$store.commit('previewDefault');
           if (runCode) {
-            await this.runCodeNow(this.isEditing);
+            if (this.isEditing) {
+              await this.runCodeNow(true, -1, undefined, false, true)
+            } else {
+              await this.runCodeNow(false);
+            }
           }
-          if (this.isEditing) {
+          if (this.isEditing && runCode) {
+            console.log("ed false")
             this.isEditing = false;
           }
           this.$nextTick(()=>{
@@ -1365,14 +1370,14 @@ export default {
       } else {
         this.$store.commit('selection',{ clear: true })
         this.commandsDisabled = true;
-        await this.runCodeNow(true, index, undefined, true, false)
-        cell.payload._toCell = index
-        setTimeout(() => {
+        this.isEditing = true;
+        cell.payload._toCell = index;
+        await this.runCodeNow(true, index, undefined, false, false)
+        let afterProfile = () => {
           this.commandsDisabled = false;
-          this.isEditing = true
-          this.commandHandle(cell)
-
-        }, 50);
+          this.commandHandle(cell);
+        };
+        this.$store.commit('mutation', { mutate: 'afterProfileCallback', payload: afterProfile });
       }
     },
 
@@ -1452,9 +1457,9 @@ export default {
 
         this.$forceUpdate();
 
-        this.markCells(true, ignoreFrom);
+        await this.markCells(true, ignoreFrom);
+        await this.removeErrorAlert("all");
 
-        this.removeErrorAlert("all")
         this.lastWrongCode = false;
 
         this.$emit("checkSample");

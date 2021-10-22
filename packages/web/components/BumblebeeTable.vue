@@ -1287,7 +1287,7 @@ export default {
     },
 
     previewColumns () {
-      return this.checkVisibleColumns()
+      return this.checkVisibleColumns(false)
     },
 
   },
@@ -1337,7 +1337,8 @@ export default {
       let profiledColumns = Object.keys(this.currentDataset?.columns || {}).length;
       let totalColumns = this.currentDataset?.summary?.cols_count;
 
-      if (totalColumns !== undefined && profiledColumns < totalColumns) {
+      if (totalColumns !== undefined && profiledColumns < totalColumns && !this.previewCode) {
+
         if (!this.$store.state.updatingWholeProfile) {
           
           this.$store.commit('mutation', {mutate: 'updatingWholeProfile', payload: true })
@@ -1994,7 +1995,7 @@ export default {
       })
     },
 
-    checkVisibleColumns: asyncDebounce( function(event) {
+    checkVisibleColumns: asyncDebounce( async function(fix = true) {
       try {
         var scrollLeft = this.$refs['BbTableTopContainer'].scrollLeft;
         var offsetWidth = this.$refs['BbTableTopContainer'].offsetWidth;
@@ -2029,7 +2030,7 @@ export default {
         this.lazyColumns = []
       }
 
-      this.fixNotProfiledColumns()
+      this.fixNotProfiledColumns();
 
     }, 80),
 
