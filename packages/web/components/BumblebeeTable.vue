@@ -1104,6 +1104,9 @@ export default {
 
     totalRowsCount () {
       try {
+        if (this.previewCode.datasetPreview) {
+          return this.rowsCount;
+        }
         return Math.max(this.currentDataset.summary.rows_count, this.rowsCount);
       } catch (err) {
         return 1;
@@ -1119,7 +1122,7 @@ export default {
         }
         if (this.previewCode && !this.incompleteColumns) {
           if (this.currentRowHighlights && typeof this.currentRowHighlights === 'number'){
-            if (this.previewCode.noBufferWindow) { // lessRows?
+            if (this.previewCode.lessRows) {
               value = this.currentRowHighlights
             }
           }
@@ -1325,12 +1328,14 @@ export default {
     },
 
     async fixEmptyRows () {
-      if (!this.computedColumnValues || !Object.keys(this.computedColumnValues).length) {
-        this.previousRange = -1;
-        this.mustUpdateRows = true;
-        this.mustCheck = true;
-        await this.scrollCheck(true);
-      }
+      setTimeout(() => {
+        if (!this.computedColumnValues || !Object.keys(this.computedColumnValues).length) {
+          this.previousRange = -1;
+          this.mustUpdateRows = true;
+          this.mustCheck = true;
+          this.debouncedScrollCheck(true);
+        }
+      }, 100);
     },
     
     async fixNotProfiledColumns () {
@@ -2316,18 +2321,20 @@ export default {
         fetched = this.fetched.filter(e=>e.code===this.previewCode.code);
         if (!fetched.length) {
           this.fetched = this.fetched.filter(e=>!e.code);
+          fetched = Array(...this.fetched);
           this.recalculateRows = true;
+          this.debouncedUpdateRows();
         }
       } else {
-        fetched = this.fetched.filter(e=>e.update===this.currentDatasetUpdate);
+        fetched = this.fetched.filter(e=>e.update===this.currentDatasetUpdate && !e.code);
         if (!fetched.length) {
           // this.fetched = this.fetched.filter(e=>e.update===this.currentDatasetUpdate)
           this.fetched = [];
+          fetched = [];
           this.recalculateRows = true;
+          this.debouncedUpdateRows();
         }
       }
-
-      fetched = Array(this.fetched);
 
       if (fetched.length>(this.maxChunks+2) && currentFrom>=0) {
         // +2 so it doesn't calculate a distanceMap every time
@@ -2474,14 +2481,14 @@ export default {
       var columnValues = {...(this.columnValues || {})}
       if (this.recalculateRows) {
         this.recalculateRows = false
-        columnValues = []
+        columnValues = {}
         for (const index in this.fetched) {
           this.fetched[index].inTable = false
         }
       }
       for (const index in this.fetched) {
         if (!this.fetched[index].inTable) {
-          columnValues = this.getValuesByColumns(this.fetched[index].sample, false, this.fetched[index].from)
+          columnValues = {...columnValues, ...this.getValuesByColumns(this.fetched[index].sample, false, this.fetched[index].from)}
           this.fetched[index].inTable = true
         }
       }
