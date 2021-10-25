@@ -1264,10 +1264,10 @@ export default {
           check = true;
         }
 
+        this.previousRange = -1;
         let updatePromise = false;
 
         if (check) {
-          this.previousRange = -1;
           this.mustUpdateRows = true;
           this.mustCheck = true;
           updatePromise = this.scrollCheck(true); // await ? no
@@ -1331,9 +1331,9 @@ export default {
       setTimeout(() => {
         if (!this.computedColumnValues || !Object.keys(this.computedColumnValues).length) {
           this.previousRange = -1;
-          this.mustUpdateRows = true;
+          // this.mustUpdateRows = true;
           this.mustCheck = true;
-          this.debouncedScrollCheck(true);
+          this.debouncedThrottledScrollCheck(true);
         }
       }, 100);
     },
@@ -2200,7 +2200,7 @@ export default {
       this.scrollCheck(aw)
     } , 100),
 
-    async scrollCheck (awaited = true) {
+    async scrollCheck (getCurrentWindow = true) {
       if (this.previewCode.load) {
         return false
       }
@@ -2208,18 +2208,18 @@ export default {
         if (!this.fetching) {
 
           // default to true
-          awaited = (awaited===undefined) ? true : awaited;
+          getCurrentWindow = (getCurrentWindow===undefined) ? true : getCurrentWindow;
 
           var range = false
 
           this.fetching = true
 
-          if (awaited) {
+          if (getCurrentWindow) {
             range = this.getCurrentWindow()
 
             if (range) {
 
-              var rangeJoin = range.join()
+              var rangeJoin = range.join(",")
               if (rangeJoin === this.previousRange) {
                 this.fetching = false
                 return false
@@ -2262,12 +2262,13 @@ export default {
             }
           }
 
-          awaited = false
+          let awaited = false
 
           while (!awaited && this.toFetch.length) {
             range = await this.fetchRows(range)
             awaited = (range===false)
           }
+            console.log("range", range)
 
           if (!awaited) {
             this.previousRange = -1 // TO-DO: Check
@@ -2315,13 +2316,15 @@ export default {
 
       let fetched;
 
+      let previewCode = this.previewCode?.code;
+
       // get the valid fetches to know what to fetch next
 
-      if (this.previewCode) {
-        fetched = this.fetched.filter(e=>e.code===this.previewCode.code);
+      if (previewCode) {
+        fetched = this.fetched.filter(e=>e.code && e.code===previewCode);
         if (!fetched.length) {
           this.fetched = this.fetched.filter(e=>!e.code);
-          fetched = Array(...this.fetched);
+          fetched = [];
           this.recalculateRows = true;
           this.debouncedUpdateRows();
         }
@@ -2370,9 +2373,7 @@ export default {
       }
 
       from = Math.max( from, 0 );
-      if (!this.previewCode) {
-        to = Math.min( to, this.totalRowsCount - 1 );
-      }
+      to = Math.min( to, this.totalRowsCount - 1 );
 
       let length = to - from;
 
@@ -2380,7 +2381,7 @@ export default {
 
       let newRanges = optimizeRanges(
         [from,to],
-        fetched.filter(e=>e.from || e.to).map(e=>[e.from,e.to])
+        fetched.filter(e=>(e.from || e.to)).map(e=>[e.from,e.to])
       );
 
       if (!newRanges.length) {
@@ -2486,8 +2487,9 @@ export default {
           this.fetched[index].inTable = false
         }
       }
+      columnValues = {};
       for (const index in this.fetched) {
-        if (!this.fetched[index].inTable) {
+        if (!this.fetched[index].inTable && this.fetched[index].sample) {
           columnValues = {...columnValues, ...this.getValuesByColumns(this.fetched[index].sample, false, this.fetched[index].from)}
           this.fetched[index].inTable = true
         }
