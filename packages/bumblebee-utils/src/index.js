@@ -327,6 +327,15 @@ export const formFromParam = (key, param) => {
     };
   }
 
+  if (param.type == "connection") {
+    return {
+      type: "connection",
+      key,
+      label: param.label || key,
+      include: param.include
+    };
+  }
+
   if (param.items) {
     let items = param.items;
     if (Array.isArray(items)) {
@@ -360,7 +369,7 @@ export const formFromParam = (key, param) => {
 
   if (param.type == "boolean") {
     return {
-      label: (c) => param.label || key + ": " + (c[key] ? "Yes" : "No"),
+      label: (c) => (param.label || key) + ": " + (c[key] ? "Yes" : "No"),
       key,
       type: "switch"
     };
