@@ -1951,6 +1951,7 @@ export default {
       this.columnMenuIndex = index
 
       this.selection = [index]
+      this.$emit('updatedSelection',this.selection)
 
       setTimeout(() => {
         var ref = this.$refs['column-menu']
