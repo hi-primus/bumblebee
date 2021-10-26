@@ -2268,7 +2268,6 @@ export default {
             range = await this.fetchRows(range)
             awaited = (range===false)
           }
-            console.log("range", range)
 
           if (!awaited) {
             this.previousRange = -1 // TO-DO: Check
