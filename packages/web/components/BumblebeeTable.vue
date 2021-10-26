@@ -1074,8 +1074,9 @@ export default {
         for (const colName in profile.columns) {
           const column = profile.columns[colName]
           if (!column.stats) {
-            console.error(column)
-            throw new Error(`Stats not found on column '${colName}', see log above`);
+            console.error(column);
+            console.error(`Stats not found on column '${colName}', see log above`);
+            continue;
           }
           ppd[colName] = {
             key: colName,
@@ -1217,11 +1218,14 @@ export default {
 
     currentPreviewColumns (value) {
       if (!value || !value.length) {
-        this.$nextTick(()=>{
-          this.removePreviewColumns();
-        })
+        if (!this.currentRowHighlights) {
+          this.$nextTick(()=>{
+            this.removePreviewColumns();
+          });
+        }
+      } else {
+        this.focusPreview();
       }
-      this.focusPreview()
     },
 
     previewCode: {
@@ -2479,7 +2483,10 @@ export default {
     },
 
     updateRows () {
-      var columnValues = {...(this.columnValues || {})}
+      var columnValues = {}
+      for (const colName in this.columnValues) {
+        columnValues[colName] = this.columnValues[colName];
+      }
       if (this.recalculateRows) {
         this.recalculateRows = false
         columnValues = {}
