@@ -1051,7 +1051,8 @@ export const TYPES_HINTS = {
   "zip_code": "zip",
   "missing": "mis",
   "categorical": "cat",
-  "time": "time"
+  "time": "time",
+  "null": "null"
 }
 
 export const TYPES_NAMES = {
