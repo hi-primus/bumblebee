@@ -895,11 +895,11 @@ export const codeGenerators = {
       +')';
 
     if (payload._search_by_string) {
-      str += ( (payload.request.type === 'preview' && _argument) ? `.cols.find(${_argument}, sub=[${search.join(',')}], ignore_case=${!payload.match_case ? 'True' : 'False'})` : '');
+      str += ( (['profile', 'preview'].includes(payload.request.type) && _argument) ? `.cols.find(${_argument}, sub=[${search.join(',')}], ignore_case=${!payload.match_case ? 'True' : 'False'})` : '');
     }
 
     if (payload._replace_by_string) {
-      str += ( (payload.request.type === 'preview' && payload.replace && output_cols_argument) ? `.cols.find(${output_cols_argument}, sub=["${payload.replace}"])` : '');
+      str += ( (['profile', 'preview'].includes(payload.request.type) && payload.replace && output_cols_argument) ? `.cols.find(${output_cols_argument}, sub=["${payload.replace}"])` : '');
     }
 
     return str;
