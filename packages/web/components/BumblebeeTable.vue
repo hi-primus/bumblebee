@@ -1328,14 +1328,13 @@ export default {
     },
 
     async fixEmptyRows () {
-      setTimeout(() => {
-        if (!this.computedColumnValues || !Object.keys(this.computedColumnValues).length) {
-          this.previousRange = -1;
-          // this.mustUpdateRows = true;
-          this.mustCheck = true;
-          this.debouncedThrottledScrollCheck(true);
-        }
-      }, 100);
+      await new Promise (res => setTimeout(res, 100))
+      if (!this.computedColumnValues || !Object.keys(this.computedColumnValues).length) {
+        this.previousRange = -1;
+        // this.mustUpdateRows = true;
+        this.mustCheck = true;
+        this.debouncedThrottledScrollCheck(true);
+      }
     },
     
     async fixNotProfiledColumns () {
@@ -2390,6 +2389,8 @@ export default {
       let returnValue = range;
       let forced = false;
 
+      let profilePromise = false;
+
       for (let i = newRanges.length - 1; i >= 0 ; i--) {
 
         let previewCode = (this.previewCode ? this.previewCode.code : false) || '';
@@ -2409,16 +2410,16 @@ export default {
 
         // repeats current check if neccessary
         if (checkProfile === 'forceSample' && !forced) {
+          console.debug("[FETCHING] Repeating chunk check")
           forced = true;
           i++;
         }
 
-        if (checkProfile) {
+        if (checkProfile && !profilePromise) {
           // console.log('[REQUESTING] profile must be checked')
           if (!this.profilePreview || this.profilePreview.code !== previewCode) {
-            this.setProfile(previewCode, previewPayload).then(() => {
-              console.debug('[FETCHING] Profiling done');
-            });
+            await this.setProfile(previewCode, previewPayload)
+            console.debug('[FETCHING] Profiling done');
           }
         }
       }
