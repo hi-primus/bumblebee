@@ -1,4 +1,4 @@
-import { escapeQuotes, adaptValue, escapeQuotesOn, getOutputColsArgument, aggOutputCols, preparedColumns, transformDateToPython, getCodePayload, getSourceParams, pythonArguments, TIME_VALUES } from 'bumblebee-utils';
+import { escapeQuotes, adaptValue, escapeQuotesOn, getOutputColsArgument, aggOutputCols, preparedColumns, transformDateToPython, getCodePayload, getSourceParams, pythonArguments, trimCharacters, TIME_VALUES } from 'bumblebee-utils';
 
 import { v4 as uuidv4 } from "uuid";
 
