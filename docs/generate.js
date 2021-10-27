@@ -132,7 +132,7 @@ const app = function () {
       console.warn(`No table screenshot found for ${operation.command}`);
     }
 
-    if (operation.section !== 'LOADSAVE') {
+    if (operation.section !== 'DATASET') {
       let fileName = createFile(`transformation/${operation.command}`, str);
       summary[operation.section] = summary[operation.section] || {};
       if (operation.group) {

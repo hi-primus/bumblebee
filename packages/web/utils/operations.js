@@ -441,7 +441,7 @@ let _operations = {
 
   loadFile: {
     text: 'Add from file',
-    path: 'LOADSAVE/DATA_SOURCE',
+    path: 'DATASET/DATA_SOURCE',
     doc: {
       description: "Loads a dataset from a local or remote file. For remote files you may configure a remote connection.",
       fields: false
@@ -449,7 +449,7 @@ let _operations = {
   },
   loadDatabaseTable: {
     text: 'Add from database',
-    path: 'LOADSAVE/DATA_SOURCE',
+    path: 'DATASET/DATA_SOURCE',
     doc: {
       description: "Loads a dataset from a table stored in a database. A remote connection is required.",
       fields: false
@@ -458,13 +458,13 @@ let _operations = {
 
   createDataframe: {
     text: 'Create dataset from object',
-    path: 'LOADSAVE/DATA_SOURCE',
+    path: 'DATASET/DATA_SOURCE',
     hidden: ($nuxt)=>!window.showCreate,
     test: false
   },
 
   Download: {
-    path: 'LOADSAVE/SAVE',
+    path: 'DATASET/SAVE',
     text: 'Download',
     disabled: ($nuxt)=>process.env.INSTANCE!=='LOCAL',
     hidden: ($nuxt)=>$nuxt.$store.getters.usingPreview,
@@ -474,21 +474,21 @@ let _operations = {
     }
   },
   DownloadPreview: {
-    path: 'LOADSAVE/SAVE',
+    path: 'DATASET/SAVE',
     command: 'Download',
     text: 'Download current preview',
     disabled: ($nuxt)=>process.env.INSTANCE!=='LOCAL',
     hidden: ($nuxt)=>!$nuxt.$store.getters.usingPreview
   },
   DownloadFinal: {
-    path: 'LOADSAVE/SAVE',
+    path: 'DATASET/SAVE',
     command: 'Download-rerun',
     text: 'Download',
     disabled: ($nuxt)=>process.env.INSTANCE!=='LOCAL',
     hidden: ($nuxt)=>!$nuxt.$store.getters.usingPreview
   },
   saveFile: {
-    path: 'LOADSAVE/SAVE',
+    path: 'DATASET/SAVE',
     text: 'Save file',
     disabled: ($nuxt)=>!($nuxt.currentDataset && $nuxt.currentDataset.summary),
     doc: {
@@ -504,7 +504,7 @@ let _operations = {
     }
   },
   saveDatabaseTable: {
-    path: 'LOADSAVE/SAVE',
+    path: 'DATASET/SAVE',
     text: 'Save to database',
     disabled: ($nuxt)=>!($nuxt.currentDataset && $nuxt.currentDataset.summary),
     doc: {
@@ -521,7 +521,7 @@ let _operations = {
   },
   Compile: {
     text: 'Compile SQL',
-    path: 'LOADSAVE/SAVE',
+    path: 'DATASET/SAVE',
     hidden: ($nuxt)=>$nuxt.$store.getters.canCompileSQL,
     doc: {
       description: 'Compiles the operations on the notebook to SQL. This command only works when using Ibis as engine.',

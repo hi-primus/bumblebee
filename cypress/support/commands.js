@@ -154,7 +154,7 @@ Cypress.Commands.add('testOperation', (operation, enableScreenshots) => {
   if (dataframes.length) {
 
     cy.window().then((win) => {
-      win.showCreate = (operation.section !== 'LOADSAVE' && operation.group !== 'SAVE')
+      win.showCreate = (operation.section !== 'DATASET' && operation.group !== 'SAVE')
     })
 
     for (let i = 0; i < dataframes.length; i++) {
