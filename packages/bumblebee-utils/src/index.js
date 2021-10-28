@@ -317,6 +317,10 @@ export const columnsHint = (columns = [], output_cols = []) => {
 
 export const formFromParam = (key, param) => {
 
+  if (param.hidden) {
+    return false;
+  }
+
   if (param.type == "columns") {
     return {
       type: "autocomplete",

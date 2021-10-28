@@ -3065,7 +3065,7 @@ export const commandsHandlers = {
     dialog: {
       dialog: (c) => c.dialog,
       title: (c) => c.title || c.text || c.command,
-      fields: (c) => Object.entries(c.parameters || {}).map(([key, param]) => formFromParam(key, param)),
+      fields: (c) => Object.entries(c.parameters || {}).map(([key, param]) => formFromParam(key, param)).filter(p => p),
       output_cols: (c) => c.output_cols !== false,
     },
     payload: (columns, payload = {}) => {
@@ -3098,14 +3098,14 @@ export const commandsHandlers = {
     content: (payload) => {
       let using = "";
 
-      let parameters = Object.keys(payload.parameters || {}).map(
-        (parameter) => {
-          return `${multipleContent(
-            [payload[parameter]],
-            "hl--param"
-          )} as ${multipleContent([parameter], "hl--param")}`;
-        }
-      );
+      let parameters = Object.keys(payload.parameters || {})
+      .filter(parameter => !payload.parameters[parameter].hidden)
+      .map((parameter) => {
+        return `${multipleContent(
+          [payload[parameter]],
+          "hl--param"
+        )} as ${multipleContent([parameter], "hl--param")}`;
+      });
 
       if (parameters.length) {
         using = " using " + parameters.join(", ");
