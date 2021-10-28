@@ -1,5 +1,61 @@
 <template>
   <div class="sidebar-content">
+    <div class="sidebar-top">
+      <v-tooltip bottom transition="tooltip-fade-transition">
+        <template v-slot:activator="{ on }">
+          <v-icon :class="{'hidden-icon-btn': !selectedCells.length}" @click.stop="clearSelection" v-on="on">mdi-close-box-outline</v-icon>
+        </template>
+        <span>Clear selection</span>
+      </v-tooltip>
+        
+      <v-spacer></v-spacer>
+      <v-tooltip bottom transition="tooltip-fade-transition">
+        <template v-slot:activator="{ on }">
+          <transition name="fade">
+            <v-icon :class="{'hidden-icon-btn': selectedCells.length != 1}" @click.stop="editCell(-1)" v-on="on">edit</v-icon>
+          </transition>
+        </template>
+        <span>Edit cell</span>
+      </v-tooltip>
+      <v-tooltip bottom transition="tooltip-fade-transition">
+        <template v-slot:activator="{ on }">
+          <transition name="fade">
+            <v-icon :class="{'hidden-icon-btn': !selectedCells.length}"  @click.stop="removeCells" v-on="on">delete</v-icon>
+          </transition>
+        </template>
+        <span>{{selectedCells.length > 1 ? "Remove cells" : "Remove cell"}}</span>
+      </v-tooltip>
+      <v-menu offset-y left min-width="200" >
+        <template v-slot:activator="{ on: more }">
+          <v-icon v-on="more" @click.stop="">more_vert</v-icon>
+        </template>
+        <v-list flat dense style="max-height: calc(100vh - 143px); min-width: 160px;" class="scroll-y">
+          <v-list-item-group color="black">
+            <!-- <v-list-item
+              @click="showCodeOnTextDialog"
+            >
+              <v-list-item-content>
+                <v-list-item-title>
+                  Copy code to clipboard
+                </v-list-item-title>
+              </v-list-item-content>
+            </v-list-item> -->
+            <v-list-item
+              v-for="engine in engines"
+              :key="engine.name"
+              :disabled="!engine.init"
+              @click="showCodeOnTextDialog(engine.init)"
+            >
+              <v-list-item-content>
+                <v-list-item-title>
+                  Export to {{engine.prettyName}}
+                </v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+          </v-list-item-group>
+        </v-list>
+      </v-menu>
+    </div>
     <v-dialog
       v-if="textDialog"
       :value="textDialog"
@@ -219,7 +275,12 @@
           class="cell-container"
           v-for="(cell, index) in localDataSources"
           :key="cell.id"
-          :class="{'fixed-cell': cell.fixed, 'cell-error': cell.error,'done': cell.done}"
+          :class="{
+            'cell-selected': cellsSelection[index],
+            'fixed-cell': cell.fixed, 
+            'cell-error': cell.error,
+            'done': cell.done
+          }"
         >
           <div class="cell">
             <div class="handle left-handle">
@@ -228,7 +289,7 @@
             <div
               class="handle operation-hint-text"
               :class="{'multiple-tabs': hasSecondaryDatasets}"
-              @click="editCell(cell, index)"
+              @click="selectCell(index)"
               v-html="cell.content || cell.code"
             >
             </div>
@@ -255,7 +316,12 @@
           class="cell-container"
           v-for="(cell, index) in localTransformations"
           :key="cell.id"
-          :class="{'fixed-cell': cell.fixed, 'cell-error': cell.error,'done': cell.done}"
+          :class="{
+            'cell-selected': cellsSelection[index+dataSources.length],
+            'fixed-cell': cell.fixed, 
+            'cell-error': cell.error,
+            'done': cell.done
+          }"
         >
           <div class="cell">
             <div class="handle left-handle">
@@ -264,15 +330,18 @@
             <div
               class="handle operation-hint-text"
               :class="{'multiple-tabs': hasSecondaryDatasets}"
-              @click="editCell(cell, index+dataSources.length)"
+              @click="selectCell(index+dataSources.length)"
               v-html="cell.content || cell.code"
             >
             </div>
-            <v-icon
+            <div
               class="right-cell-btn"
-              small
               @click="removeCell(index, false)"
-            >close</v-icon>
+            >
+              <v-icon
+                small
+              >close</v-icon>
+            </div>
           </div>
         </div>
       </draggable>
@@ -313,7 +382,8 @@ import {
   namesToIndices,
   getCodePayload,
   transformDateFromPython,
-  STRING_TYPES
+  STRING_TYPES,
+  ENGINES
 } from 'bumblebee-utils'
 
 import { commandsHandlers } from '@/utils/operations'
@@ -346,6 +416,16 @@ export default {
   data () {
     return {
 
+      engines: [
+        {name: 'dask', prettyName: ENGINES.dask, init: '"dask"'},
+        {name: 'dask_cudf', prettyName: ENGINES.dask_cudf, init: '"dask_cudf", process=True'},
+        {name: 'cudf', prettyName: ENGINES.cudf, init: '"cudf"'},
+        {name: 'pandas', prettyName: ENGINES.pandas, init: '"pandas"'},
+        {name: 'spark', prettyName: ENGINES.spark, init: '"spark"'},
+        {name: 'ibis', prettyName: ENGINES.ibis, init: '"ibis"'},
+        {name: 'vaex', prettyName: 'Vaex'},
+      ],
+
       previewError: false,
 
       textDialog: false,
@@ -358,7 +438,8 @@ export default {
       drag: false,
       currentCommand: false,
 
-      cellsPromise: false
+      cellsPromise: false,
+      cellsSelection: {}
 
     }
   },
@@ -378,6 +459,10 @@ export default {
       'loadPreview',
       'hasSecondaryDatasets'
     ]),
+
+    selectedCells () {
+      return Object.entries(this.cellsSelection).filter(([index, selected]) => selected).map(([index, selected]) => index)
+    },
 
     errorAlerts () {
       return this.$store.state.errorAlerts;
@@ -742,6 +827,21 @@ export default {
 
   methods: {
 
+    
+    async showCodeOnTextDialog (engineText) {
+
+      var finalPayload = await this.$store.dispatch('finalCommands', { ignoreFrom: -1, include: [], noPandas: true });
+
+      var code = 'from optimus import Optimus\n'
+      +'from optimus.expressions import parse\n'
+      +`op = Optimus(${engineText})\n`
+      + generateCode(finalPayload)[0];
+
+      code = code.trim();
+
+      this.showTextDialog(code, 'Code')
+    },
+
     clickCopy(value, event) {
       this.copied = true;
       copyToClipboard(value, event.target);
@@ -1064,6 +1164,7 @@ export default {
         dfName: previousPayload.dfName || this.currentDataset.dfName,
         newDfName: previousPayload.newDfName ||this.getNewDfName(),
         allColumns: this.allColumns,
+        workspace_name: this.$route.params.slug,
         type: command.type,
         generator: command.generator || previousPayload.generator,
         command: command.command || previousPayload.command,
@@ -1226,7 +1327,6 @@ export default {
             }
           }
           if (this.isEditing && runCode) {
-            console.log("ed false")
             this.isEditing = false;
           }
           this.$nextTick(()=>{
@@ -1256,6 +1356,18 @@ export default {
         this.runCode() // reordering or deleting
         return;
       }
+    },
+
+    async removeCells() {
+      let dataSourcesCells = this.selectedCells.filter(i => i<this.dataSources.length);
+      let transformationsCells = this.selectedCells.filter(i => i>=this.dataSources.length).map(i => i-this.dataSources.length);
+      for (let i = transformationsCells.length - 1; i >= 0; i--) {
+        await this.removeCell(transformationsCells[i], false);
+      }
+      for (let i = dataSourcesCells.length - 1; i >= 0; i--) {
+        await this.removeCell(dataSourcesCells[i], true);
+      }
+      this.clearSelection();
     },
 
     async removeCell (index, isDataSource = false) {
@@ -1361,8 +1473,32 @@ export default {
 
     },
 
-    async editCell (_cell, index) {
-      var cell = deepCopy(_cell);
+    clearSelection () {
+      this.cellsSelection = {};
+    },
+
+    selectCell (index) {
+      let cellsSelection = deepCopy(this.cellsSelection || {});
+      cellsSelection[index] = !cellsSelection[index];
+      this.cellsSelection = cellsSelection;
+    },
+
+    async editCell (index) {
+
+      if (index == -1) {
+        index = undefined;
+      }
+
+      if (index === undefined && this.selectedCells.length) {
+        index = this.selectedCells[0];
+      }
+
+      if (index === undefined || !this.cells[index]) {
+        console.error("Trying to edit unexisting cell with index", index, this.cellsSelection);
+        return;
+      }
+
+      var cell = deepCopy(this.cells[index]);
 
       var commandHandler = this.getCommandHandler(cell.payload || cell);
 

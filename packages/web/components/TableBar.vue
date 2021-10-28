@@ -320,38 +320,6 @@
           {{operationsTitle}}
           <v-icon class="right-button" color="black" @click="cancelCommand">close</v-icon>
         </div>
-        <div class="sidebar-top" v-show="operationsTitle=='operations' && operationsActive">
-          <v-menu offset-y left min-width="200" >
-            <template v-slot:activator="{ on: more }">
-              <v-icon v-on="more" class="right-button" color="black" @click.stop="">more_vert</v-icon>
-            </template>
-            <v-list flat dense style="max-height: calc(100vh - 143px); min-width: 160px;" class="scroll-y">
-              <v-list-item-group color="black">
-                <!-- <v-list-item
-                  @click="showCodeOnTextDialog"
-                >
-                  <v-list-item-content>
-                    <v-list-item-title>
-                      Copy code to clipboard
-                    </v-list-item-title>
-                  </v-list-item-content>
-                </v-list-item> -->
-                <v-list-item
-                  v-for="engine in engines"
-                  :key="engine.name"
-                  :disabled="!engine.init"
-                  @click="showCodeOnTextDialog(engine.init)"
-                >
-                  <v-list-item-content>
-                    <v-list-item-title>
-                      Export to {{engine.prettyName}}
-                    </v-list-item-title>
-                  </v-list-item-content>
-                </v-list-item>
-              </v-list-item-group>
-            </v-list>
-          </v-menu>
-        </div>
         <Cells
           v-show="operationsActive"
           ref="cells"
@@ -457,7 +425,7 @@ import VegaEmbed from '@/components/VegaEmbed'
 import clientMixin from '@/plugins/mixins/client'
 import dataTypesMixin from '@/plugins/mixins/data-types'
 import applicationMixin from '@/plugins/mixins/application'
-import { objectMap, copyToClipboard, namesToIndices, getProperty, ENGINES } from 'bumblebee-utils'
+import { objectMap, copyToClipboard, namesToIndices, getProperty } from 'bumblebee-utils'
 import { generateCode } from 'optimus-code-api'
 import { mapState, mapGetters } from 'vuex'
 
@@ -486,16 +454,6 @@ export default {
 
 	data () {
 		return {
-
-      engines: [
-        {name: 'dask', prettyName: ENGINES.dask, init: '"dask"'},
-        {name: 'dask_cudf', prettyName: ENGINES.dask_cudf, init: '"dask_cudf", process=True'},
-        {name: 'cudf', prettyName: ENGINES.cudf, init: '"cudf"'},
-        {name: 'pandas', prettyName: ENGINES.pandas, init: '"pandas"'},
-        {name: 'spark', prettyName: ENGINES.spark, init: '"spark"'},
-        {name: 'ibis', prettyName: ENGINES.ibis, init: '"ibis"'},
-        {name: 'vaex', prettyName: 'Vaex'},
-      ],
 
       typesSelected: [],
 			typesInput: '',
@@ -897,10 +855,6 @@ export default {
       this.$refs.cells & this.$refs.cells.compileDataset(event)
     },
 
-    showTextDialog(text, title = 'Result') {
-      this.$refs.cells & this.$refs.cells.showTextDialog(text, title)
-    },
-
     checkDataTypes (allowedTypes) {
       if (!allowedTypes || !allowedTypes.length) {
         return true
@@ -932,20 +886,6 @@ export default {
 
     menuItems (group) {
       return this.toolbarItems.filter(e => e && e.group == group)
-    },
-
-    async showCodeOnTextDialog (engineText) {
-
-      var finalPayload = await this.$store.dispatch('finalCommands', { ignoreFrom: -1, include: [], noPandas: true });
-
-      var code = 'from optimus import Optimus\n'
-      +'from optimus.expressions import parse\n'
-      +`op = Optimus(${engineText})\n`
-      + generateCode(finalPayload)[0];
-
-      code = code.trim();
-
-      this.showTextDialog(code, 'Code')
     },
 
     cancelCommand () {

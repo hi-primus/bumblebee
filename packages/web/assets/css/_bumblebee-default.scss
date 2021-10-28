@@ -549,6 +549,18 @@ table {
     }
     .sidebar-top {
       min-height: 24px;
+      display: flex;
+      padding: 6px 4px 2px 16px;
+      .v-icon {
+        opacity: 1;
+        transition: opacity 0.21 ease-in-out;
+        margin-left: 8px;
+        color: $icon-color;
+        &.hidden-icon-btn {
+          pointer-events: none;
+          opacity: 0;
+        }
+      }
     }
     .sidebar-section, .sidebar-header, .sidebar-subheader, .sidebar-top{
       position: relative;
@@ -1491,30 +1503,34 @@ $side-controls-width: 54px;
         opacity: 0.71;
       }
     }
-    &.cell-error .cell .left-handle {
-      background-color: rgba($data-red, 0.81);
-      .v-icon {
-        color: white;
+    &.cell-error .cell {
+      .left-handle {
+        background-color: rgba($data-red, 0.81);
+        .v-icon {
+          color: white;
+        }
       }
+      .operation-hint-text {
+        border-bottom-left-radius: 0;
+        border-bottom-right-radius: 0;
+      }
+    }
+    &.cell-selected .cell .operation-hint-text{
+      background-color: $highlight-blue;
     }
     .cell {
       width: 100%;
       overflow: hidden;
       display: flex;
       position: relative;
-      padding: 0 0 0 14px;
       margin-bottom: 2px;
     }
     &:not(.fixed-cell) .left-handle {
       cursor: move;
     }
     .left-handle {
-      width: 14px;
-      height: calc(100%);
-      top: 0;
-      left: 0px;
-      // background-color: $line-color-2;
-      position: absolute;
+      width: 16px;
+      height: 100%;
       border-top-left-radius: 4px;
       border-bottom-left-radius: 4px;
       border-bottom-style: dashed;
@@ -1537,7 +1553,9 @@ $side-controls-width: 54px;
       display: flex;
       align-items: center;
       position: relative;
-      left: -4px;
+      min-width: 20px;
+      cursor: pointer;
+      // left: -4px;
     }
     &:hover{
       .right-cell-btn,
@@ -1577,6 +1595,8 @@ $editor-top-padding: 4px;
 
 .operation-hint-text {
   font-size: 14px !important;
+  border-radius: 4px;
+  padding: 4px 4px 4px 6px;
   font-family: $font-mono;
   word-break: break-all;
   cursor: pointer;
@@ -1591,10 +1611,6 @@ $editor-top-padding: 4px;
   }
 }
 
-.editor-holder {
-  background-color: #fbfbfb;
-}
-
 .operation-hint-text, .editor-holder {
   border-bottom-width: 1px;
   border-bottom-style: dashed;
@@ -1602,17 +1618,18 @@ $editor-top-padding: 4px;
   position: relative;
   top: 0;
   overflow: auto;
-  padding: $editor-top-padding 12px;
   overflow-y: hidden;
   overflow-x: auto;
   overscroll-behavior-x: contain;
 
   width: 100%;
   max-width: 100%;
-  min-height: calc(23px + #{$editor-top-padding*2});
 }
 
 .editor-holder {
+  background-color: #fbfbfb;
+  padding: $editor-top-padding 12px;
+  min-height: calc(23px + #{$editor-top-padding*2});
 
   &::-webkit-scrollbar {
     width: 8px;
