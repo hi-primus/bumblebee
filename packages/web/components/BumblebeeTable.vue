@@ -475,11 +475,11 @@
                 class="bb-table-i-cell"
                 :style="{
                   top: rowHeight * value.index+'px',
-                  userSelect: (cellsSelection==([idInSample[column.sampleName], value.index]).join()) ? 'text' : 'none'
+                  userSelect: (tableSelection==([idInSample[column.sampleName], value.index]).join()) ? 'text' : 'none'
                 }"
                 :title="value.value"
                 v-html="value.html"
-                @mousedown="clearSelection(); cellsSelection = [idInSample[column.sampleName] || column.index, value.index].join()"
+                @mousedown="clearSelection(); tableSelection = [idInSample[column.sampleName] || column.index, value.index].join()"
                 @mouseup="checkSelection(idInSample[column.sampleName] || column.index, value.index)"
               >
               </div>
@@ -556,7 +556,7 @@ export default {
 
       previousRange: '',
 
-      cellsSelection: '',
+      tableSelection: '',
 
       columnValues: {},
 
@@ -1539,8 +1539,8 @@ export default {
 
         selectedText = selectedText.split('\n')[0]
 
-        if (this.cellsSelection) {
-          [ci, ri] = this.cellsSelection.split(',')
+        if (this.tableSelection) {
+          [ci, ri] = this.tableSelection.split(',')
         }
         var cellValue = this.columnValues[colName][ri]
 

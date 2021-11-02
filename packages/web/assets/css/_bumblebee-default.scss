@@ -560,6 +560,10 @@ table {
           pointer-events: none;
           opacity: 0;
         }
+        &.disabled-icon-btn {
+          cursor: default;
+          opacity: 0.333;
+        }
       }
     }
     .sidebar-section, .sidebar-header, .sidebar-subheader, .sidebar-top{

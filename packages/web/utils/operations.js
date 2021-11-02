@@ -114,7 +114,12 @@ export const operationGroups = {
     text: 'Custom functions',
     label: 'User<br/>defined',
     disabled: ($nuxt)=>!($nuxt.currentDataset && $nuxt.currentDataset.summary)
-  }
+  },
+  MACROS: {
+    icons: [{ icon: 'mdi-play-circle-outline' }],
+    text: 'Macros',
+    label: 'Macros'
+  },
 };
 
 const TEST_DATAFRAMES = {
@@ -1516,7 +1521,17 @@ let _operations = {
         text: `Cast to ${name.toLowerCase()}`, 
       },
     }]
-  })
+  }),
+
+  ApplyMacro: {
+    text: 'Apply or manage macros',
+    path: 'TRANSFORMATIONS/MACROS'
+  },
+  SaveAsMacro: {
+    text: 'Save selected cells as macro',
+    path: 'TRANSFORMATIONS/MACROS',
+    disabled: ($nuxt) => !$nuxt?.$refs?.cells?.selectedCells?.length
+  }
 
 };
 

@@ -1,9 +1,10 @@
 <template>
   <div class="sidebar-content">
+    <FormDialog focus ref="formDialog"/>
     <div class="sidebar-top">
       <v-tooltip bottom transition="tooltip-fade-transition">
         <template v-slot:activator="{ on }">
-          <v-icon :class="{'hidden-icon-btn': !selectedCells.length}" @click.stop="clearSelection" v-on="on">mdi-close-box-outline</v-icon>
+          <v-icon :class="{'hidden-icon-btn': !selectedCells.length}" @click.stop="clearCellsSelection" v-on="on">mdi-close-box-outline</v-icon>
         </template>
         <span>Clear selection</span>
       </v-tooltip>
@@ -12,7 +13,25 @@
       <v-tooltip bottom transition="tooltip-fade-transition">
         <template v-slot:activator="{ on }">
           <transition name="fade">
-            <v-icon :class="{'hidden-icon-btn': selectedCells.length != 1}" @click.stop="editCell(-1)" v-on="on">edit</v-icon>
+            <v-icon 
+              :class="{'hidden-icon-btn': !selectedCells.length}"
+              :disabled="selectedCells.length == 1"
+              @click.stop="saveMacro()"
+              v-on="on"
+            >mdi-content-save-outline</v-icon>
+          </transition>
+        </template>
+        <span>Save in macro</span>
+      </v-tooltip>
+      <v-tooltip bottom transition="tooltip-fade-transition">
+        <template v-slot:activator="{ on }">
+          <transition name="fade">
+            <v-icon 
+              :class="{'hidden-icon-btn': !selectedCells.length}"
+              :disabled="selectedCells.length > 1"
+              @click.stop="editCell(-1)"
+              v-on="on"
+            >edit</v-icon>
           </transition>
         </template>
         <span>Edit cell</span>
@@ -362,11 +381,11 @@
 
 <script>
 
-import CodeEditor from '@/components/CodeEditor'
 import CommandFormContainer from '@/components/CommandFormContainer'
 import OutputColumnInputs from '@/components/OutputColumnInputs'
 import Outliers from '@/components/Outliers'
 import OperationField from '@/components/OperationField'
+import FormDialog from "@/components/FormDialog"
 import clientMixin from '@/plugins/mixins/client'
 import applicationMixin from '@/plugins/mixins/application'
 import { mapGetters } from 'vuex'
@@ -391,8 +410,8 @@ import { commandsHandlers } from '@/utils/operations'
 export default {
 
   components: {
+    FormDialog,
     CommandFormContainer,
-    CodeEditor,
 		OutputColumnInputs,
 		OperationField,
     Outliers
@@ -636,6 +655,9 @@ export default {
   },
 
   mounted () {
+    window.runMacro = (macro) => {
+      return this.runMacro(macro)
+    };
     window.getCommandHandler = (command) => {
       return this.getCommandHandler(command)
     };
@@ -827,6 +849,183 @@ export default {
 
   methods: {
 
+    fromForm (form) {
+      return this.$refs.formDialog.fromForm(form)
+    },
+
+    async runMacro(payload) {
+
+      let macro = payload.macro;
+
+      let macroSourcesLength = macro.sourcesLength - macro.newSources.length;
+
+      let cellsSources = this.cells
+        .filter(cell => cell?.payload?.request?.createsNew)
+        .map(cell => cell?.payload?.newDfName);
+
+      cellsSources = [...new Set(cellsSources)];
+
+      let selectedSources = [];
+
+      if (macroSourcesLength > cellsSources.length ) {
+        console.warn("unsufficent dataframes");
+        return;
+      } else if (macroSourcesLength < cellsSources.length) {
+        // selectedSources = await selectMacroSources(macroSourcesLength)
+        selectedSources = cellsSources;
+      } else {
+        selectedSources = cellsSources;
+      }
+
+      let sources = [];
+
+      for (let i = 0; i < macro.sourcesLength; i++) {
+        if (macro.newSources.includes(i)) {
+          sources[i] = this.getNewDfName();
+        } else {
+          sources[i] = selectedSources.shift();
+        }
+      }
+
+      for (let i = 0; i < macro.cells.length; i++) {
+        const cell = macro.cells[i];
+        macro.cells[i].payload = cell.payload || {};
+        if (cell.sourceIndex !== undefined) {
+          macro.cells[i].payload.dfName = sources[cell.sourceIndex];
+        }
+        if (cell.newSourceIndex !== undefined) {
+          macro.cells[i].payload.newDfName = sources[cell.newSourceIndex];
+        }        
+      }
+
+      for (let i = 0; i < macro.cells.length; i++) {
+        const cell = macro.cells[i];
+        let noCall = (i != macro.cells.length - 1);
+        let cellToAdd = {
+          ...cell,
+          ...cell.payload,
+          columns: cell.payload.columns || cell.columns
+        };
+        cellToAdd.payload = cell.payload;
+        await this.addCell(-1, {
+          ...cellToAdd,
+          code: this.getCode(cellToAdd),
+          content: this.getOperationContent(cellToAdd)
+        }, false, noCall, noCall);
+      }
+    },
+
+    async saveMacro () {
+
+      try {
+
+        let date = new Date();
+
+        let name = "macro-"+this.$route.params.slug+"-"+date.getFullYear()+"-"+(date.getMonth() + 1)+"-"+date.getDate()+"-"+date.getHours()+"-"+date.getMinutes()+"-"+date.getSeconds();
+
+        let values = await this.fromForm({
+          text: 'Save macro',
+          acceptLabel: 'Save',
+          fields: [{
+            key: 'name',
+            name: '',
+            value: name,
+            props: {
+              placeholder: name,
+              label: 'Macro name'
+            }
+          }]
+        });
+
+        if (!values) {
+          return false;
+        }
+
+        if (values.name) {
+          name = values.name;
+        }
+
+        let cellsToMacro = deepCopy(this.selectedCells.map(index => this.cells[index]));
+        let sources = []
+        let newSources = []
+  
+        for (let i = 0; i < cellsToMacro.length; i++) {
+  
+          const cell = cellsToMacro[i];
+  
+          if (cell?.payload?.request?.createsNew && cell?.payload?.newDfName) {
+  
+            let newSourceIndex;
+  
+            if (newSources.includes(cell.payload.newDfName)) {
+              newSourceIndex = newSources.indexOf(cell.payload.newDfName);
+            } else {
+              newSources.push(cell.payload.newDfName);
+              newSourceIndex = newSources.length - 1;
+            }
+  
+            cellsToMacro[i].newSourceIndex = newSourceIndex;
+          }
+        }
+  
+        for (let i = 0; i < cellsToMacro.length; i++) {
+  
+          const cell = cellsToMacro[i];
+  
+          if (cell?.payload?.dfName) {
+  
+            let sourceIndex;
+  
+            if (sources.includes(cell.payload.dfName)) {
+              sourceIndex = sources.indexOf(cell.payload.dfName);
+            } else {
+              sources.push(cell.payload.dfName);
+              sourceIndex = sources.length - 1;
+            }
+  
+            cellsToMacro[i].sourceIndex = sourceIndex;
+          }
+  
+          delete cellsToMacro[i].code;
+          delete cellsToMacro[i].content;
+          delete cellsToMacro[i].created;
+          delete cellsToMacro[i].modified;
+          delete cellsToMacro[i].done;
+          delete cellsToMacro[i].error;
+          
+          delete cellsToMacro[i].payload.dfName;
+          delete cellsToMacro[i].payload.workspace_name;
+          delete cellsToMacro[i].payload.allColumns;
+          delete cellsToMacro[i].payload.allColumnDateFormats;
+          delete cellsToMacro[i].payload.columnDateFormats;
+          delete cellsToMacro[i].payload.columnDateTypes;
+          delete cellsToMacro[i].payload.secondaryDatasets;
+          delete cellsToMacro[i].payload.newDfName;
+        }
+  
+        let payload = {
+          name,
+          macro: {
+            cells: cellsToMacro,
+            newSources: newSources.map(source => sources.indexOf(source)),
+            newSourcesLength: newSources.length,
+            sourcesLength: sources.length
+          }
+        };
+
+        var response = await this.$store.dispatch('request',{
+          request: 'post',
+          path: `/macros`,
+          payload
+        });
+
+        this.clearCellsSelection();        
+        
+      } catch (error) {
+        console.error(error)
+      }
+
+    },
     
     async showCodeOnTextDialog (engineText) {
 
@@ -1473,7 +1672,7 @@ export default {
 
     },
 
-    clearSelection () {
+    clearCellsSelection () {
       this.cellsSelection = {};
     },
 
@@ -1525,7 +1724,7 @@ export default {
       }
     },
 
-    async addCell (at = -1, payload = {command: 'code', code: '', content: '', ignoreCell: false, noCall: false, deleteOtherCells: false}, replace = false, forceAll = false) {
+    async addCell (at = -1, payload = {command: 'code', code: '', content: '', ignoreCell: false, noCall: false, deleteOtherCells: false}, replace = false, forceAll = false, noCall = false) {
 
       var {command, code, ignoreCell, deleteOtherCells, content} = payload;
 
@@ -1566,7 +1765,7 @@ export default {
 
       this.cells = cells
 
-      if (!payload.noCall && this.cells.length) {
+      if (!payload.noCall && this.cells.length && !noCall) {
         return this.runCodeNow(forceAll, -1, payload.newDfName);
       }
 

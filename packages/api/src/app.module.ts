@@ -14,6 +14,7 @@ import { EngineConfigurationModule } from './engineconfiguration/engineconfigura
 import { ClusterModule } from './cluster/cluster.module';
 import { ServiceModule } from './service/service.module';
 import { ConnectionModule } from './connection/connection.module';
+import { MacroModule } from './macro/macro.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { ConnectionModule } from './connection/connection.module';
     ClusterModule,
     ServiceModule,
     ConnectionModule,
+    MacroModule
   ],
   controllers: [AppController],
   providers: [AppService, CronService, AppGateway],

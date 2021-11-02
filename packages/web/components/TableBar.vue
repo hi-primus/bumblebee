@@ -902,6 +902,14 @@ export default {
         this.downloadDatasetRerun()
       } else if (event.command==='Compile') {
         this.compileDataset()
+      } else if (event.command==='ApplyMacro') {
+        // disable when not available
+        if (window.setDialog) {
+          window.setDialog('macros')
+        }
+      } else if (event.command==='SaveAsMacro') {
+        // disable when nothing is selected
+        this.$refs.cells & this.$refs.cells.saveMacro()
       } else {
         this.$nextTick(()=>{
           this.$refs.cells & this.$refs.cells.commandHandle(event)
