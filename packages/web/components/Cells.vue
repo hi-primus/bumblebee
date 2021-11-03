@@ -864,7 +864,7 @@ export default {
         } else {
           label = 'Source ' + (i + 1);
         }
-        
+
         fields.push({
           key: i,
           is: 'v-select',
@@ -906,25 +906,24 @@ export default {
 
       let selectedSources = [];
 
-      if (macroSourcesLength > cellsSources.length ) {
-        console.warn("unsufficent dataframes");
-        return;
-      } else if (macroSourcesLength < cellsSources.length) {
-        selectedSources = await this.selectMacroSources(macroSourcesLength, cellsSources)
+      if (macroSourcesLength == 1 && cellsSources.length == 1) {
+        selectedSources = cellsSources;
+      } else if (macroSourcesLength > 0) {
+        selectedSources = await this.selectMacroSources(macroSourcesLength, cellsSources);
         if (!selectedSources) {
           return;
         }
-      } else {
-        selectedSources = cellsSources;
       }
 
       let sources = [];
 
-      for (let i = 0; i < macro.sourcesLength; i++) {
-        if (macro.newSources.includes(i)) {
-          sources[i] = this.getNewDfName();
-        } else {
+      let allSourcesLength = Math.max(macro.sourcesLength, macro.newSourcesLength);
+
+      for (let i = 0; i < allSourcesLength; i++) {
+        if (!macro.newSources.includes(i) && selectedSources[0]) {
           sources[i] = selectedSources.shift();
+        } else {
+          sources[i] = this.getNewDfName(sources);
         }
       }
 
@@ -1095,11 +1094,11 @@ export default {
       this.previewError = error
     }, 750),
 
-    getNewDfName () {
+    getNewDfName (datasets) {
 
       var name = 'df'
 
-      var sd = Array.from(this.secondaryDatasets)
+      var sd = [...Array.from(this.secondaryDatasets), ...(datasets || [])]
         .filter(e=>e.startsWith(name))
 
       if (sd.length) {
@@ -1607,7 +1606,7 @@ export default {
       for (let i = dataSourcesCells.length - 1; i >= 0; i--) {
         await this.removeCell(dataSourcesCells[i], true);
       }
-      this.clearSelection();
+      this.clearCellsSelection();
     },
 
     async removeCell (index, isDataSource = false) {
@@ -1731,6 +1730,7 @@ export default {
 
       if (index === undefined && this.selectedCells.length) {
         index = this.selectedCells[0];
+        this.clearCellsSelection();
       }
 
       if (index === undefined || !this.cells[index]) {
