@@ -2395,7 +2395,7 @@ export const commandsHandlers = {
       var value = undefined;
       var action = {
         drop: "Drop",
-        keep: "Keep",
+        select: "Keep",
         set: "Replace"
       }[payload.action];
       var str = `<b>${action}</b> rows where ${multipleContent(
