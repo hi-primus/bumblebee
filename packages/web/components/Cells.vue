@@ -883,8 +883,6 @@ export default {
         fields
       });
 
-      console.log(values);
-
       if (!values) {
         return false;
       }
@@ -988,6 +986,30 @@ export default {
         let cellsToMacro = deepCopy(this.selectedCells.map(index => this.cells[index]));
         let sources = []
         let newSources = []
+        
+        // sources
+  
+        for (let i = 0; i < cellsToMacro.length; i++) {
+
+          const cell = cellsToMacro[i];
+  
+          if (cell?.payload?.dfName) {
+  
+            let sourceIndex;
+  
+            sourceIndex = sources.indexOf(cell.payload.dfName);
+            
+            if (sourceIndex == -1) {
+              sources.push(cell.payload.dfName);
+              sourceIndex = sources.length - 1;
+            }
+  
+            cellsToMacro[i].sourceIndex = sourceIndex;
+          }
+  
+        }
+
+        // new sources and cleanup
   
         for (let i = 0; i < cellsToMacro.length; i++) {
   
@@ -996,34 +1018,21 @@ export default {
           if (cell?.payload?.request?.createsNew && cell?.payload?.newDfName) {
   
             let newSourceIndex;
+
+            let newDfName = cell.payload.newDfName;
   
-            if (newSources.includes(cell.payload.newDfName)) {
-              newSourceIndex = newSources.indexOf(cell.payload.newDfName);
-            } else {
-              newSources.push(cell.payload.newDfName);
-              newSourceIndex = newSources.length - 1;
+            newSourceIndex = sources.indexOf(newDfName);
+            
+            if (!newSources.includes(newDfName)) {
+              newSources.push(newDfName);
+            }
+
+            if (newSourceIndex == -1) {
+              sources.push(newDfName);
+              newSourceIndex = sources.length - 1;
             }
   
             cellsToMacro[i].newSourceIndex = newSourceIndex;
-          }
-        }
-  
-        for (let i = 0; i < cellsToMacro.length; i++) {
-  
-          const cell = cellsToMacro[i];
-  
-          if (cell?.payload?.dfName) {
-  
-            let sourceIndex;
-  
-            if (sources.includes(cell.payload.dfName)) {
-              sourceIndex = sources.indexOf(cell.payload.dfName);
-            } else {
-              sources.push(cell.payload.dfName);
-              sourceIndex = sources.length - 1;
-            }
-  
-            cellsToMacro[i].sourceIndex = sourceIndex;
           }
   
           delete cellsToMacro[i].code;
