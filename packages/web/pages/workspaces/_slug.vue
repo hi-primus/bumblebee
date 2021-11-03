@@ -13,6 +13,11 @@
         @click:outside="backDialogClicked"
         max-width="1220"
       >
+        <MacrosList
+          is-dialog
+          @click:macro="runMacro"
+          @back="backDialogClicked"
+          v-if="windowDialog  === 'macros'"/>
         <WorkspacesList
           is-dialog
           @back="backDialogClicked"
@@ -225,6 +230,7 @@
 <script>
 import Layout from "@/components/Layout"
 import TableBar from "@/components/TableBar"
+import MacrosList from "@/components/MacrosList"
 import WorkspacesList from "@/components/WorkspacesList"
 import SettingsPanel from "@/components/SettingsPanel"
 import SettingsList from "@/components/SettingsList"
@@ -244,6 +250,7 @@ export default {
 	components: {
 		Layout,
     TableBar,
+    MacrosList,
     WorkspacesList,
     SettingsPanel,
     SettingsList,
@@ -289,6 +296,9 @@ export default {
   },
 
   mounted () {
+    window.setDialog = (dialog) => {
+      this.windowDialog = dialog
+    }
     try {
       this.$store.commit('session/mutation', { mutate: 'workspaceStatus', payload: 'loading' })
       this.initializeWorkspace()
@@ -357,6 +367,13 @@ export default {
         menu.push({ text: 'Configure engine', click: ()=>this.showWindowDialog('configEngine') });
       }
 
+      // if (process.client && window && window.runMacro) {
+      //   menu = [
+      //     ...menu,
+      //     { text: 'Manage macros', click: ()=>this.showWindowDialog('macros') },
+      //   ];
+      // }
+      
       menu = [
         ...menu,
         { text: 'Manage data connections', click: ()=>this.showWindowDialog('connections') },
@@ -488,6 +505,13 @@ export default {
   },
 
 	methods: {
+
+    runMacro (macro) {
+      if (window.runMacro) {
+        window.runMacro(macro);
+      }
+      this.windowDialog = false
+    },
 
     backDialogClicked () {
       if (this.windowDialog == 'connections-select') {
