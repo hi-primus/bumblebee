@@ -238,6 +238,13 @@ export const getters =  {
           delete generator.parameters;
         }
         
+        // set isSave
+        if (generator.save) {
+          generator.payload = generator.payload || {};
+          generator.payload.request = generator.payload.request || {};
+          generator.payload.request.isSave = generator.save;
+        }
+
         // set text
         if (generator.text) {
           generator.payload = generator.payload || {};
