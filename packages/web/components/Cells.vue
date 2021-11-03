@@ -1105,19 +1105,22 @@ export default {
 
     getNewDfName (datasets) {
 
-      var name = 'df'
+      var name = 'df';
 
       var sd = [...Array.from(this.secondaryDatasets), ...(datasets || [])]
-        .filter(e=>e.startsWith(name))
+        .filter(e=>e.startsWith(name));
+      sd.sort((a,b)=>{
+        return parseInt(a.replace(name, '')) - parseInt(b.replace(name, ''));
+      });
 
       if (sd.length) {
-        var i = (parseInt(sd[sd.length-1].split(name)[1]) || 0)+1
+        var i = (parseInt(sd[sd.length-1].replace(name, '')) || 0)+1;
         if (i) {
-          name = name+i
+          name = name+i;
         }
       }
 
-      return name
+      return name;
     },
 
     runCells (forceAll, ignoreFrom, beforeRunCells) {
