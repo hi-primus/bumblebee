@@ -853,7 +853,46 @@ export default {
       return this.$refs.formDialog.fromForm(form)
     },
 
-    async runMacro(payload) {
+    async selectMacroSources (length, sources) {
+
+      let fields = [];
+      for (let i = 0; i < length; i++) {
+        
+        let label;
+        if (length == 1) {
+          label = 'Source';
+        } else {
+          label = 'Source ' + (i + 1);
+        }
+        
+        fields.push({
+          key: i,
+          is: 'v-select',
+          name: '',
+          value: sources[i],
+          props: {
+            placeholder: undefined,
+            label,
+            items: sources
+          }
+        });
+      }
+
+      let values = await this.fromForm({
+        text: 'Select sources',
+        fields
+      });
+
+      console.log(values);
+
+      if (!values) {
+        return false;
+      }
+
+      return Object.entries(values).sort((a, b) => a[0] - b[0]).map(e => e[1]);
+    },
+
+    async runMacro (payload) {
 
       let macro = payload.macro;
 
@@ -871,8 +910,10 @@ export default {
         console.warn("unsufficent dataframes");
         return;
       } else if (macroSourcesLength < cellsSources.length) {
-        // selectedSources = await selectMacroSources(macroSourcesLength)
-        selectedSources = cellsSources;
+        selectedSources = await this.selectMacroSources(macroSourcesLength, cellsSources)
+        if (!selectedSources) {
+          return;
+        }
       } else {
         selectedSources = cellsSources;
       }
