@@ -1,7 +1,7 @@
 #!/bin/bash
 cd ..
 
-git reset --hard origin/develop-21.9
+git reset --hard origin/develop-21.11
 git pull
 
 cd scripts

@@ -26,7 +26,7 @@ Bumblebee can be used to:
 Try Bumblebee using [this Docker image](https://hub.docker.com/r/hiprimus/bumblebee).
 
 ```
-docker run --name <NAME> -p 3000:3000 -p 4000:4000 -e ADDRESS=localhost hiprimus/bumblebee:latest
+docker run --name my_instance_name -p 3000:3000 -p 4000:4000 -e ADDRESS=localhost hiprimus/bumblebee:develop
 ```
   
 ## Contributing to Bumblebee 
