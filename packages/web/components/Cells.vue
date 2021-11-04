@@ -173,7 +173,7 @@
                 </template>
               </template>
             </template>
-            <div class="o-field" style="padding-top: 10px; padding-left: 6px;" v-if="getProperty(command.dialog.save_new, [currentCommand]) && command.dialog.filteredPreview">
+            <div class="o-field" style="padding-top: 10px; padding-left: 6px;" v-if="getProperty(command.dialog.save_new, [currentCommand])">
               <v-switch
                 v-model="currentCommand.request.createsNew"
                 :id="'field-createsNew'"
@@ -233,15 +233,6 @@
                 :label="`Filter results: ${currentCommand.preview.filteredPreview ? 'Yes' : 'No'}`"
               ></v-checkbox>
             </template>
-            <div class="o-field" style="padding-top: 10px; padding-left: 6px;" v-else-if="getProperty(command.dialog.save_new, [currentCommand])">
-              <v-switch
-                v-model="currentCommand.request.createsNew"
-                :id="'field-createsNew'"
-                color="primary"
-                :label="'Create in new tab: ' + (currentCommand.request.createsNew ? 'Yes' : 'No')"
-              ></v-switch>
-            </div>
-
             <v-spacer></v-spacer>
             <v-btn
               color="primary"
