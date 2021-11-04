@@ -243,6 +243,7 @@ export const getters =  {
           generator.payload = generator.payload || {};
           generator.payload.request = generator.payload.request || {};
           generator.payload.request.isSave = generator.save;
+          generator.payload.request.toCell = !generator.save;
         }
 
         // set text

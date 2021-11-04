@@ -1977,6 +1977,7 @@ export const commandsHandlers = {
       url: "",
       request: {
         isSave: true,
+        toCell: false
       },
     }),
     content: (payload) => {
@@ -2008,6 +2009,7 @@ export const commandsHandlers = {
       table_name: "",
       request: {
         isSave: true,
+        toCell: false
       },
     }),
     content: (payload) => {

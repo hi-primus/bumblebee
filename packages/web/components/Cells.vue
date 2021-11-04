@@ -181,6 +181,14 @@
                 :label="'Create in new tab: ' + (currentCommand.request.createsNew ? 'Yes' : 'No')"
               ></v-switch>
             </div>
+            <div class="o-field" style="padding-top: 10px; padding-left: 6px;" v-if="currentCommand.request.isSave">
+              <v-switch
+                v-model="currentCommand.request.toCell"
+                :id="'field-createsNew'"
+                color="primary"
+                :label="'Add cell to workspace operations: ' + (currentCommand.request.toCell ? 'Yes' : 'No')"
+              ></v-switch>
+            </div>
             <template>
               <v-alert key="error" type="error" class="mt-0" dismissible v-if="currentCommand.error"  @input="currentCommand.error=''">
                 {{currentCommand.error}}
@@ -1179,6 +1187,17 @@ export default {
       }
     },
 
+    async runCell (cell) {
+      try {
+        await this.cancelCommand();
+        await this.runCodeNow();
+        var response = await this.evalCode(cell);
+        console.debug("[DEBUG] Operation done", response);
+      } catch (error) {
+        console.error(error)
+      }
+    },
+  
     async downloadDatasetRerun () {
       try {
         await this.cancelCommand();
@@ -1489,11 +1508,16 @@ export default {
             ...payload,
             columns: payload.columns || columns
           }
-          await this.addCell(-1, {
-            ...cell,
-            code: this.getCode(cell),
-            content: this.getOperationContent(cell)
-          })
+
+          if (cell.request.toCell === false) {
+            await this.runCell(cell);
+          } else {
+            await this.addCell(-1, {
+              ...cell,
+              code: this.getCode(cell),
+              content: this.getOperationContent(cell)
+            });
+          }
 
           this.clearTextSelection()
         }
@@ -1545,7 +1569,11 @@ export default {
 
       this.$emit('updateOperations', { active: ((command.request && command.request.noOperations) ? false : true), title: 'operations' } );
 
-      await this.addCell(toCell, { ...command, code, content }, true, true );
+      if (command.request.toCell === false) {
+        await this.runCell(command);
+      } else {
+        await this.addCell(toCell, { ...command, code, content }, true, true );
+      }
 
       if (command.request.createsNew) {
         let dfName = command.newDfName;
