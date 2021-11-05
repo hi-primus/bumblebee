@@ -27,7 +27,7 @@
           v-model="createName"
           label="New workspace"
           append-icon="add"
-          @click:append="createNewElement({name: createName})"
+          @click:append="createName ? createNewElement({name: createName}) : createNewElementUsingForm()"
           outlined
           dense
           single-line
