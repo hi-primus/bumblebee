@@ -390,7 +390,7 @@ export default {
           }
         }
 
-        var response = await this.evalCode(codePayload);
+        var response = await this.evalCode(codePayload, 'info');
 
         if (!response || !response.data || !response.data.result || response.data.status == "error") {
           throw response

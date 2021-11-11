@@ -834,7 +834,7 @@ export default {
 
               console.debug('[PREVIEW] Loading', codePayload)
 
-              var response = await this.evalCode(codePayload);
+              var response = await this.evalCode(codePayload, 'profiling');
 
               if (response.data.result && response.data.result.sample) {
                 this.$store.commit('setLoadPreview', { sample: response.data.result.sample } )
@@ -855,7 +855,7 @@ export default {
                 }
               }
 
-              var pResponse = await this.evalCode(pCodePayload)
+              var pResponse = await this.evalCode(pCodePayload, 'profiling')
 
               if (!pResponse || !pResponse.data) {
                 console.error(pResponse);

@@ -657,7 +657,7 @@ export const actions = {
     await dispatch('session/serverInit')
   },
 
-  async evalCode ({ dispatch, state, getters }, { code, codePayload, isAsync, socketPost }) {
+  async evalCode ({ dispatch, state, getters }, { code, codePayload, category, isAsync, socketPost }) {
     try {
 
       if (codePayload && typeof codePayload == "object") {
@@ -688,6 +688,7 @@ export const actions = {
       var response = await socketPost('run', {
         code,
         codePayload,
+        category,
         isAsync,
         username: await dispatch('session/getUsername'),
         workspace: state.workspaceSlug || 'default'
@@ -1545,6 +1546,7 @@ export const actions = {
         response = await socketPost('run', {
           code: undefined,
           codePayload,
+          category: 'operation',
           username: await dispatch('session/getUsername'),
           workspace: state.workspaceSlug || 'default',
           key: state.key
@@ -1555,6 +1557,7 @@ export const actions = {
         response = await socketPost('run', {
           code,
           codePayload: undefined,
+          category: 'operation',
           username: await dispatch('session/getUsername'),
           workspace: state.workspaceSlug || 'default',
           key: state.key
@@ -1645,6 +1648,7 @@ export const actions = {
 
     let response = await dispatch('evalCode', {
       socketPost,
+      category: 'profiling',
       codePayload: {
         command: partial ? 'profile_async_partial' : 'profile_async',
         range: partial ? [Math.max(0, partial-10), partial] : undefined,
@@ -1801,7 +1805,7 @@ export const actions = {
 
     var datasets = getters.secondaryDatasets;
 
-    var response = await dispatch('evalCode', { socketPost, codePayload: { command: 'execute', dfName }});
+    var response = await dispatch('evalCode', { socketPost, codePayload: { command: 'execute', dfName }, category: 'requirement'});
 
     if (!response || !response.data || response.data.status === "error") {
       console.warn('[DEBUG] Execute unsuccessful', dfName);
@@ -1899,7 +1903,7 @@ export const actions = {
             lessRows
           }
         };
-        response = await dispatch('evalCode',{ socketPost, codePayload });
+        response = await dispatch('evalCode',{ socketPost, codePayload, category: 'preview_sample' });
         if (!response || !response.data || response.data.status == "error") {
           throw response;
         }
@@ -1927,7 +1931,7 @@ export const actions = {
         }
       };
       commit('mutation', {mutate: 'profilePreview', payload: false} )
-      response = await dispatch('evalCode',{ socketPost, codePayload })
+      response = await dispatch('evalCode',{ socketPost, codePayload, category: 'preview_sample' })
     }
 
     if (firstRequest && !profilePreview && !codePayload.command) {

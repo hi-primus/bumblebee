@@ -2142,7 +2142,7 @@ export default {
           }
         };
 
-        let response = await this.evalCode(codePayload);
+        let response = await this.evalCode(codePayload, 'preview_profiling');
 
         if (!response || !response.data || !response.data.result || response.data.status == "error") {
           throw response;
