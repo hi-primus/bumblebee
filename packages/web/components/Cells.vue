@@ -1284,7 +1284,7 @@ export default {
           dfName: this.currentDataset.dfName,
           avoidReload: true,
           clearPrevious: true,
-          partial: true,
+          preliminary: true,
           methods: this.commandMethods
         }});
       } catch (err) {
@@ -1570,7 +1570,7 @@ export default {
         let dfName = command.newDfName;
         console.log("Create new tab", dfName);
         this.$store.commit('setDfToTab', { dfName, go: true });
-        await this.$store.dispatch('getProfiling', { payload: { dfName, socketPost: this.socketPost, partial: true, methods: this.commandMethods } });
+        await this.$store.dispatch('getProfiling', { payload: { dfName, socketPost: this.socketPost, preliminary: true, methods: this.commandMethods } });
         this.$store.commit('setDfToTab', { dfName, go: true });
       }
 

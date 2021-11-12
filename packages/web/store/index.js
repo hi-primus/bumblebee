@@ -1624,13 +1624,22 @@ export const actions = {
 
     return dispatch('getPromise', promisePayload);
   },
-
-  async lateProfiles ({state, commit, dispatch}, {dfName, columnsCount, avoidReload, socketPost}) {
+  
+  async lateProfiles ({state, commit, dispatch}, {dfName, columnsCount, preliminary, range, low, socketPost}) {
+    commit('mutation', {mutate: 'updatingProfile', payload: true });
+    commit('mutation', {mutate: 'updatingWholeProfile', payload: true });
     let promise = false;
-    for (let i = 20; i < columnsCount+10; i+=10) {
-      let dataset = await dispatch('requestProfiling', { dfName, socketPost, partial: i });
+    let requestRange = range || [10, columnsCount]
+    for (let i = requestRange[0]; i < requestRange[1]; i+=10) {
+      let currentRange = [i, Math.min(i+10, requestRange[1])]
+      let dataset = await dispatch('requestProfiling', { dfName, socketPost, preliminary, partial: true, range: currentRange, low });
+      let update = state.everyDatasetUpdate[state.datasets.findIndex(d => d.dfName === dfName)];
+      dataset.columns = objectMap(dataset.columns || {}, (column) => {
+        column.update = update;
+        return column;
+      });
       await promise;
-      promise = dispatch('setProfiling', { dfName, dataset, avoidReload: true, partial: i });
+      promise = dispatch('setProfiling', { dfName, dataset, avoidReload: true, partial: true });
     }
     let result = await promise;
     if (state.afterProfileCallback) {
@@ -1644,17 +1653,27 @@ export const actions = {
     return result
   },
 
-  async requestProfiling ({ dispatch }, { dfName, socketPost, partial }) {
+  async requestProfiling ({ dispatch }, { dfName, partial, range, preliminary, socketPost, low }) {
+
+    range = partial ? (range || [Math.max(0, partial-10), partial]) : undefined;
+
+    let command;
+
+    command = (partial !== undefined) ? 'profile_async_partial' : 'profile_async';
+    if (preliminary) {
+      command = `preliminary_${command}`;
+    }
 
     let response = await dispatch('evalCode', {
       socketPost,
-      category: 'profiling',
+      category: low ? 'low_profiling' : 'profiling',
       codePayload: {
-        command: partial ? 'profile_async_partial' : 'profile_async',
-        range: partial ? [Math.max(0, partial-10), partial] : undefined,
+        command,
+        preliminary,
+        range,
         dfName,
         request: {
-          priority: partial ? (-5-partial) : -10,
+          priority: -10,
           isAsync: true,
         }
       }
@@ -1672,7 +1691,7 @@ export const actions = {
 
     dataset.dfName = dfName;
     console.debug('[DATASET] Setting', { dataset, to: dfName });
-    await dispatch('setDataset', { dataset, avoidReload: avoidReload || partial, partial });
+    await dispatch('setDataset', { dataset, avoidReload: avoidReload || partial !== undefined, partial: partial !== undefined });
 
     if (state.gettingNewResults) {
       await dispatch('afterNewProfiling');
@@ -1685,7 +1704,7 @@ export const actions = {
     return dataset;
   },
 
-  async loadProfiling ({ dispatch, state, getters, commit }, { dfName, socketPost, ignoreFrom, avoidReload, clearPrevious, partial, methods }) {
+  async loadProfiling ({ dispatch, state, getters, commit }, { dfName, socketPost, ignoreFrom, avoidReload, clearPrevious, partial, range, preliminary, methods }) {
     console.debug('[DEBUG] Loading profiling', dfName);
     try {
 
@@ -1712,10 +1731,12 @@ export const actions = {
       let profile;
       let dataset;
 
-      if (partial) {
-        dataset = await dispatch('requestProfiling', { dfName, socketPost, partial: 10 });
+      if (range) {
+        dataset = await dispatch('requestProfiling', { dfName, socketPost, preliminary, partial: true, range });
+      } else if (partial) {
+        dataset = await dispatch('requestProfiling', { dfName, socketPost, preliminary, partial: 10 });
       } else {
-        dataset = await dispatch('requestProfiling', { dfName, socketPost, partial: false });
+        dataset = await dispatch('requestProfiling', { dfName, socketPost, preliminary, partial: false });
       }
 
       let found = state.datasets.findIndex(_d => _d.dfName == dfName);
@@ -1726,6 +1747,17 @@ export const actions = {
         foundDataset._columns = {};
         await dispatch('setDataset', { dataset: foundDataset, avoidReload: true, partial: false });
       }
+
+      if ( (clearPrevious || avoidReload) && found >= 0 ) {
+        commit('updateDataset', { tab: found } );
+      }
+
+      let update = found >= 0 ? state.everyDatasetUpdate[found] : 0;
+
+      dataset.columns = objectMap(dataset.columns || {}, (column) => {
+        column.update = update;
+        return column;
+      });
       
       if (partial) {
         profile = await dispatch('setProfiling', { dfName, dataset, avoidReload, partial: 10 });
@@ -1734,10 +1766,6 @@ export const actions = {
       }
 
       dispatch('afterFirstProfiling');
-
-      if ( (clearPrevious || avoidReload) && found >= 0 ) {
-        commit('updateDataset', { tab: found } );
-      }
 
       commit('mutation', {mutate: 'updatingProfile', payload: false });
 

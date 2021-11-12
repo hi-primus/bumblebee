@@ -2,6 +2,26 @@
 #{this.initJSON}
 #{this.initVariables}
 
+# bumblebee specific methods
+
+def df__preliminary_profile(df, cols="*"):
+    import copy
+    body = copy.deepcopy(df.meta).get("profile", {})
+    body.update({"summary": {
+        "rows_count": df.rows.count()
+    }})
+    types = df.cols.inferred_data_type(cols, use_internal=True)
+    data_type = df.cols.data_type(cols)
+    body.update({"columns": 
+                 {col: {
+                    "data_type": data_type[col],
+                    "stats": {"inferred_data_type": {"data_type": dtype}}
+                 } for col, dtype in types.items()}
+                })
+    return body
+
+# utils
+
 def inject_method_to_optimus(func):
     func_name = func.__name__
     _func_split = func_name.split("__")
@@ -53,6 +73,7 @@ def inject_method_to_optimus(func):
     setattr(_cls, method_name, binded)
     return True
 
+inject_method_to_optimus(df__preliminary_profile)
 
 def _out_result(_callback = None):
     def _f(fut):

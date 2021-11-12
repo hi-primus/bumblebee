@@ -292,7 +292,7 @@
           ]"
 				>
           <div
-            v-if="!(lazyColumns.length && !lazyColumns[index]) && column.preview && previewPlotsData[column.name]"
+            v-if="!(lazyColumns.length && !lazyColumns[index]) && column.preview && previewPlotsData[column.name] && previewPlotsData[column.name].missing !== undefined"
             :key="'p'+column.index"
             class="bb-table-plot-content"
             :data-column="column.name">
@@ -344,7 +344,7 @@
             </div>
           </div>
           <div
-            v-else-if="!(lazyColumns.length && !lazyColumns[index]) && columns[column.index] && !column.preview && plotsData[column.name]"
+            v-else-if="!(lazyColumns.length && !lazyColumns[index]) && columns[column.index] && !column.preview && plotsData[column.name] && plotsData[column.name].missing !== undefined"
             :key="''+column.index"
             class="bb-table-plot-content"
             :data-column="column.index">
@@ -604,6 +604,7 @@ export default {
       indicesInSample: {},
 
       lazyColumns: [],
+      previousVerticalWindow: '',
       defaultColumnWidth: 170,
 
       mainTypes: ['string', 'int', 'float', 'boolean', 'datetime', '|', 'object', 'array'],
@@ -1039,9 +1040,9 @@ export default {
           plotsData[column.name] = {
             key: i,
             name: column.name,
-            missing: (column.stats.missing) ? +column.stats.missing : 0,
-            match: (column.stats.match) ? +column.stats.match : 0,
-            mismatch: (column.stats.mismatch) ? +column.stats.mismatch : 0,
+            missing: column.stats.missing,
+            match: column.stats.match,
+            mismatch: column.stats.mismatch,
             count_uniques: column.stats.count_uniques,
             hist: (column.stats.hist && column.stats.hist[0]) ? column.stats.hist : undefined,
             frequency: ((column.stats.frequency) ? column.stats.frequency : undefined) || column.frequency || undefined,
@@ -1081,9 +1082,9 @@ export default {
           ppd[colName] = {
             key: colName,
             name: colName,
-            missing: (column.stats.missing) ? +column.stats.missing : 0,
-            match: (column.stats.match) ? +column.stats.match : 0,
-            mismatch: (column.stats.mismatch) ? +column.stats.mismatch : 0,
+            missing: column.stats.missing,
+            match: column.stats.match,
+            mismatch: column.stats.mismatch,
             total: +profile.summary.rows_count,
             count_uniques: column.stats.count_uniques,
             hist: (column.stats.hist && column.stats.hist[0]) ? column.stats.hist : undefined,
@@ -1340,6 +1341,63 @@ export default {
         this.debouncedThrottledScrollCheck(true);
       }
     },
+
+    async requestProfilings () {
+
+      let visible = [[
+        this.lazyColumns.findIndex(e=>e), 
+        (this.lazyColumns.length - 1) - [...this.lazyColumns].reverse().findIndex(e=>e)
+      ]]
+        .filter(range => (range[0] != range[1]))
+        .map(range => (range[0] > range[1]) ? [range[1], range[0]] : range);
+
+      let notVisible = [
+        [0, visible[0][0]],
+        [visible[0][1], this.columns.length]
+      ]
+        .filter(range => (range[0] != range[1]))
+        .map(range => (range[0] > range[1]) ? [range[1], range[0]] : range);
+
+      let update = this.currentDatasetUpdate;
+
+      if (this.currentDataset?.columns) {
+        let done = Object.entries(this.currentDataset.columns)
+          .map(([name, value], index) => {
+            return [name, {...value, index}]
+          })
+          .filter(([name, value]) => {
+            return value.stats && value.stats.missing !== undefined && value.update === update;
+          })
+          .map(([name, value]) => {
+            return [value.index, value.index]
+          });
+
+        visible = optimizeRanges(visible[0], done).filter(range => (range[0] != range[1]));        
+        notVisible = optimizeRanges(notVisible[0], done).filter(range => (range[0] != range[1]));        
+      }
+
+      for (let i = 0; i < visible.length; i++) {
+        await this.profileColumns(visible[i], false);
+      }
+      
+      for (let i = 0; i < notVisible.length; i++) {
+        await this.profileColumns(notVisible[i], true);
+      }
+      
+    },
+      
+    async profileColumns (range, low) {
+
+      let response = await this.$store.dispatch('lateProfiles', {
+        dfName: this.currentDataset.dfName,
+        coumnsCount: this.currentDataset.summary.cols_count,
+        socketPost: this.socketPost,
+        preliminary: false,
+        range,
+        low
+      });
+
+    },
     
     async fixNotProfiledColumns () {
       let profiledColumns = Object.keys(this.currentDataset?.columns || {}).length;
@@ -1357,10 +1415,11 @@ export default {
             avoidReload: true,
             clearPrevious: false,
             partial: true,
+            preliminary: false,
             methods: this.commandMethods
           }});
           
-          return this.$store.dispatch('lateProfiles', {...profilingResponse, socketPost: this.socketPost});
+          return this.$store.dispatch('lateProfiles', {...profilingResponse, preliminary: false, socketPost: this.socketPost});
         }
       } else if (this.$store.state.updatingWholeProfile) {
         return this.$store.commit('mutation', {mutate: 'updatingWholeProfile', payload: false })
@@ -2005,7 +2064,10 @@ export default {
     },
 
     checkVisibleColumns: asyncDebounce( async function(fix = true) {
+      let previousVerticalWindow = '';
+
       try {
+
         var scrollLeft = this.$refs['BbTableTopContainer'].scrollLeft;
         var offsetWidth = this.$refs['BbTableTopContainer'].offsetWidth;
 
@@ -2027,19 +2089,31 @@ export default {
           b = this.allColumns.length;
         }
 
-        var numbers = []
+        previousVerticalWindow = `${a}, ${b}`;
 
-        for (let n = a; n <= b; n++) {
-          numbers[n] = true
-        }
+        if (this.previousVerticalWindow != previousVerticalWindow) {
+          this.previousVerticalWindow = previousVerticalWindow;
 
-        this.lazyColumns = numbers
+          let numbers = [];
+  
+          for (let n = a; n <= b; n++) {
+            numbers[n] = true;
+          }
+  
+          this.lazyColumns = numbers;
+
+          this.requestProfilings();
+          this.fixNotProfiledColumns();
+        } 
+
       } catch (err) {
+
         console.error(err)
         this.lazyColumns = []
+        this.requestProfilings();
+        this.fixNotProfiledColumns();
+      
       }
-
-      this.fixNotProfiledColumns();
 
     }, 80),
 
