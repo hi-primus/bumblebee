@@ -1666,7 +1666,7 @@ export const actions = {
 
     let response = await dispatch('evalCode', {
       socketPost,
-      category: low ? 'low_profiling' : 'profiling',
+      category: low ? 'profiling_low' : 'profiling',
       codePayload: {
         command,
         preliminary,

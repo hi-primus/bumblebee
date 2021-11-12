@@ -1372,8 +1372,12 @@ export default {
             return [value.index, value.index]
           });
 
-        visible = optimizeRanges(visible[0], done).filter(range => (range[0] != range[1]));        
-        notVisible = optimizeRanges(notVisible[0], done).filter(range => (range[0] != range[1]));        
+        visible = optimizeRanges(visible[0], done).filter(range => (range[0] != range[1]));
+
+        notVisible = [
+          ...(notVisible[0] ? optimizeRanges(notVisible[0], done).filter(range => (range[0] != range[1])): []),
+          ...(notVisible[1] ? optimizeRanges(notVisible[1], done).filter(range => (range[0] != range[1])): [])
+        ];
       }
 
       for (let i = 0; i < visible.length; i++) {
