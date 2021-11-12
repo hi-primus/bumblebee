@@ -212,12 +212,14 @@ export default {
 
       let timestamp = ++window.timestamps;
 
+      let category = message == 'run' ? payload.category : undefined;
+
       let postPromise = new Promise( async (resolve, reject) => {
 
         if (payload.isAsync) {
-          window.promises[timestamp] = {resolve, reject, isAsync: true}
+          window.promises[timestamp] = {resolve, reject, category, isAsync: true}
         } else {
-          window.promises[timestamp] = {resolve, reject}
+          window.promises[timestamp] = {resolve, reject, category}
         }
 
         let socket = await window.socket();

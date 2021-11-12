@@ -314,6 +314,33 @@ const queueRequest = function (type, sessionId, payload, category, asyncCallback
 	});
 };
 
+export const removeFromQueue = function (sessionId, category) {
+	if (!Array.isArray(category)) {
+		category = [category];
+	}
+
+	// get priorities from categories
+
+	let priorities = category.map(c => PRIORITIES[c] || DEFAULT_PRIORITY);
+
+	if (requests[sessionId]) {
+
+		// get all the tasks with the given priority
+
+		let taskIds = Object.entries(requests[sessionId]._store._priorities)
+			.filter(([, priority]) => priorities.includes(priority))
+			.map(([id]) => id);
+		
+		for (let i=0; i<taskIds.length; i++) {
+			requests[sessionId].cancel(taskIds[i]);
+		}
+
+		return taskIds.length;
+	}
+	
+	return false;
+}
+
 export const runCode = async function (code = '', sessionId = '', category = false, asyncCallback = false) {
 	if (!sessionId) {
 		return {

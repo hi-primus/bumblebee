@@ -12,11 +12,12 @@ import { Socket, Server } from 'socket.io';
 import { v4 as uuidv4 } from "uuid";
 
 import {
-	runCode,
-	initializeKernel,
+  runCode,
+  initializeKernel,
   kernelHandler,
   deleteKernel,
-	requestToKernel,
+  requestToKernel,
+  removeFromQueue
 } from './kernel';
 
 // import {
@@ -180,7 +181,6 @@ export class AppGateway
   @SubscribeMessage('features')
 	async handleFeatures(client: Socket, payload): Promise<any> {
 
-    const sessionId = payload.username + '_BBSESSION_' + payload.workspace;
     let result: any = {};
     try {
       result = await requestToKernel('features', client.id, payload);
@@ -208,10 +208,18 @@ export class AppGateway
 
   }
 
+  @SubscribeMessage('remove')
+  async handleRemove(client: Socket, payload): Promise<any> {
+    let result = await removeFromQueue(client.id, payload.category);
+    client.emit('reply', {
+      data: result,
+      timestamp: payload.timestamp,
+    });
+  }
+
   @SubscribeMessage('run')
 	async handleRun(client: Socket, payload): Promise<any> {
 
-    const sessionId = payload.username + '_BBSESSION_' + payload.workspace;
     let result: any = {};
     let resultCode: string = "";
 
@@ -280,7 +288,6 @@ export class AppGateway
   @SubscribeMessage('profile')
 	async handleProfile(client: Socket, payload): Promise<any> {
 
-    const sessionId = payload.username + '_BBSESSION_' + payload.workspace;
     const code = `_output = ${payload.dfName}${getGenerator('profile', payload)(payload)}`;
     const result = await runCode(code, client.id);
     client.emit('reply', {

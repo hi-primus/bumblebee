@@ -1342,12 +1342,14 @@ export default {
       }
     },
 
-    async requestProfilings () {
+    async requestProfilings (range) {
 
-      let visible = [[
+      range = range || [
         this.lazyColumns.findIndex(e=>e), 
         (this.lazyColumns.length - 1) - [...this.lazyColumns].reverse().findIndex(e=>e)
-      ]]
+      ];
+
+      let visible = [range]
         .filter(range => (range[0] != range[1]))
         .map(range => (range[0] > range[1]) ? [range[1], range[0]] : range);
 
@@ -1380,16 +1382,34 @@ export default {
         ];
       }
 
-      for (let i = 0; i < visible.length; i++) {
-        await this.profileColumns(visible[i], false);
-      }
-      
-      for (let i = 0; i < notVisible.length; i++) {
-        await this.profileColumns(notVisible[i], true);
-      }
+      this.clearProfilingRequests().then(async ()=>{
+        await this.datasetExecute(this.currentDataset.dfName);
+  
+        for (let i = 0; i < visible.length; i++) {
+          await this.profileColumns(visible[i], false);
+        }
+        
+        for (let i = 0; i < notVisible.length; i++) {
+          await this.profileColumns(notVisible[i], true);
+        }
+      });
       
     },
-      
+
+    async clearProfilingRequests () {
+      let categories = ['profiling', 'profiling_low'];
+      for (let ts in window.promises) {
+        if (categories.includes(window.promises[ts].category)) {
+          window.promises[ts].reject(false);
+        }
+      }
+      let response = await this.socketPost('remove', {
+        category: categories,
+        username: await this.$store.dispatch('session/getUsername'),
+        workspace: this.$route.params.slug || 'default'
+      })
+    },
+
     async profileColumns (range, low) {
 
       let response = await this.$store.dispatch('lateProfiles', {
@@ -1403,33 +1423,6 @@ export default {
 
     },
     
-    async fixNotProfiledColumns () {
-      let profiledColumns = Object.keys(this.currentDataset?.columns || {}).length;
-      let totalColumns = this.currentDataset?.summary?.cols_count;
-
-      if (totalColumns !== undefined && profiledColumns < totalColumns && !this.previewCode) {
-
-        if (!this.$store.state.updatingWholeProfile) {
-          
-          this.$store.commit('mutation', {mutate: 'updatingWholeProfile', payload: true })
-
-          let profilingResponse = await this.$store.dispatch('getProfiling', { payload: {
-            socketPost: this.socketPost,
-            dfName: this.currentDataset.dfName,
-            avoidReload: true,
-            clearPrevious: false,
-            partial: true,
-            preliminary: false,
-            methods: this.commandMethods
-          }});
-          
-          return this.$store.dispatch('lateProfiles', {...profilingResponse, preliminary: false, socketPost: this.socketPost});
-        }
-      } else if (this.$store.state.updatingWholeProfile) {
-        return this.$store.commit('mutation', {mutate: 'updatingWholeProfile', payload: false })
-      }
-    },
-
     expandCell (cellElement) {
       var columnElement = cellElement.parentElement;
       var tableElement = columnElement.parentElement;
@@ -2105,18 +2098,14 @@ export default {
           }
   
           this.lazyColumns = numbers;
-
-          this.requestProfilings();
-          this.fixNotProfiledColumns();
+          this.requestProfilings([a,b]);
         } 
 
       } catch (err) {
 
         console.error(err)
-        this.lazyColumns = []
-        this.requestProfilings();
-        this.fixNotProfiledColumns();
-      
+        this.lazyColumns = [];
+        this.requestProfilings();    
       }
 
     }, 80),
