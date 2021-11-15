@@ -1382,37 +1382,43 @@ export default {
         ];
       }
 
-      this.clearProfilingRequests().then(async ()=>{
+      this.cancelProfilingRequests().then(async ()=>{
         await this.datasetExecute(this.currentDataset.dfName);
   
         for (let i = 0; i < visible.length; i++) {
           await this.profileColumns(visible[i], false);
         }
+
+        notVisible = notVisible.map(range => {
+          let chunks = [];
+          for (let i = range[0]; i <= range[1]; i += 10) {
+            chunks.push([i, Math.min(i + 10, range[1])]);
+          }
+          return chunks;
+        }).flat();
+
+        notVisible = notVisible.map(r => {
+          return [...r, Math.abs(r[1] - range[1])];
+        }).sort((a, b) => a[2] - b[2]);
         
         for (let i = 0; i < notVisible.length; i++) {
-          await this.profileColumns(notVisible[i], true);
+          await this.profileColumns([notVisible[i][0], notVisible[i][1]], true);
         }
       });
       
     },
 
-    async clearProfilingRequests () {
-      let categories = ['profiling', 'profiling_low'];
-      for (let ts in window.promises) {
-        if (categories.includes(window.promises[ts].category)) {
-          window.promises[ts].reject(false);
-        }
-      }
-      let response = await this.socketPost('remove', {
-        category: categories,
-        username: await this.$store.dispatch('session/getUsername'),
-        workspace: this.$route.params.slug || 'default'
-      })
+    async cancelProfilingRequests () {
+      return await this.$store.dispatch('cancelProfilingRequests', {
+        socketPost: this.socketPost,
+        categories: ['profiling', 'profiling_low'],
+        workspace: this.$route.params.slug
+      });
     },
 
     async profileColumns (range, low) {
 
-      let response = await this.$store.dispatch('lateProfiles', {
+      return await this.$store.dispatch('lateProfiles', {
         dfName: this.currentDataset.dfName,
         coumnsCount: this.currentDataset.summary.cols_count,
         socketPost: this.socketPost,

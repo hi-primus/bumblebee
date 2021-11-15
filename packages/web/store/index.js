@@ -739,6 +739,10 @@ export const actions = {
 
     } catch (err) {
 
+      if (err === false) {
+        return false;
+      }
+
       if (err.code) {
         window.pushCode({code: err.code, error: true})
       }
@@ -1624,14 +1628,45 @@ export const actions = {
 
     return dispatch('getPromise', promisePayload);
   },
+
+  async cancelProfilingRequests({dispatch}, {username, workspace, categories, socketPost}) {
+    for (let ts in window.promises) {
+      if (categories.includes(window.promises[ts].category)) {
+        window.promises[ts].reject(false);
+      }
+    }
+
+    if (!workspace || !username) {
+      return false;
+    }
+
+    return await socketPost('remove', {
+      categories,
+      username: username || await dispatch('session/getUsername'),
+      workspace
+    })
+  },
   
   async lateProfiles ({state, commit, dispatch}, {dfName, columnsCount, preliminary, range, low, socketPost}) {
+    
     commit('mutation', {mutate: 'updatingProfile', payload: true });
     commit('mutation', {mutate: 'updatingWholeProfile', payload: true });
+    
     let promise = false;
-    let requestRange = range || [10, columnsCount]
-    for (let i = requestRange[0]; i < requestRange[1]; i+=10) {
-      let currentRange = [i, Math.min(i+10, requestRange[1])]
+    let requestRange = range || [10, columnsCount];
+    let ranges = [];
+
+    if (requestRange[1] - requestRange[0] < 15) {
+      // uses a single request if the range is small
+      ranges = [requestRange];
+    } else {
+      // uses multiple requests if the range is big
+      for (let i = requestRange[0]; i < requestRange[1]; i+=10) {
+        ranges.push([i, Math.min(i+10, requestRange[1])]);
+      }
+    }
+
+    for (let currentRange of ranges) {
       let dataset = await dispatch('requestProfiling', { dfName, socketPost, preliminary, partial: true, range: currentRange, low });
       let update = state.everyDatasetUpdate[state.datasets.findIndex(d => d.dfName === dfName)];
       dataset.columns = objectMap(dataset.columns || {}, (column) => {
@@ -1641,16 +1676,19 @@ export const actions = {
       await promise;
       promise = dispatch('setProfiling', { dfName, dataset, avoidReload: true, partial: true });
     }
+
     let result = await promise;
     if (state.afterProfileCallback) {
       if (typeof state.afterProfileCallback == "function") {
-        await state.afterProfileCallback()
+        await state.afterProfileCallback();
       }
       commit('mutation', {mutate: 'afterProfileCallback', payload: false });
     }
+    
     commit('mutation', {mutate: 'updatingProfile', payload: false });
     commit('mutation', {mutate: 'updatingWholeProfile', payload: false });
-    return result
+    
+    return result;
   },
 
   async requestProfiling ({ dispatch }, { dfName, partial, range, preliminary, socketPost, low }) {
