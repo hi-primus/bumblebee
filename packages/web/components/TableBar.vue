@@ -297,7 +297,7 @@
       </v-badge>
     </div>
     <Dataset
-      :key="'dataset'+currentTab"
+      :key="'dataset'+tab"
       :sortBy.sync="sortBy"
       :sortDesc.sync="sortDesc"
       :operationsActive="!!operationsActive"
@@ -504,11 +504,10 @@ export default {
       'currentListView',
       'selectionType',
       'currentDataset',
-      'typesAvailable',
-      'currentTab'
+      'typesAvailable'
     ]),
 
-    ...mapState(['nextCommand', 'noMatch', 'showingColumnsLength', 'errorAlerts']),
+    ...mapState(['nextCommand', 'noMatch', 'showingColumnsLength', 'errorAlerts', 'tab']),
 
     columns () {
       let columns = [];

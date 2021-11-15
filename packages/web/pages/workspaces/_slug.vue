@@ -113,7 +113,7 @@
           <v-tabs
             :key="currentDatasetUpdate"
             :value="tab"
-            @change="tabSelected=$event"
+            @change="clickTab"
             :class="{'tabs-disabled': $store.state.kernel=='loading' || previewCode || isOperating}"
             class="bb-tabs px-6"
             background-color="#fff"
@@ -505,6 +505,10 @@ export default {
   },
 
 	methods: {
+
+    clickTab (index) {
+      this.tabSelected = index;
+    },
 
     runMacro (macro) {
       if (window.runMacro) {
