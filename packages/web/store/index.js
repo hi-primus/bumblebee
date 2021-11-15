@@ -2141,9 +2141,6 @@ export const getters = {
     return state.datasetSelection[state.tab] || {}
   },
   ...pGetters,
-  currentTab (state) {
-    return state.tab
-  },
   currentListView (state) {
     return state.listViews[state.tab] || false
   },
