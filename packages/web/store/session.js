@@ -199,6 +199,23 @@ export const actions =  {
       valid = true;
     }
     return (state.accessToken && state.username && valid);
+  },
+
+  async dummyLogin ({ state, dispatch }, { username }) {
+    if (process.env.QUICK_USER_AUTH) {
+      await dispatch('signOut');
+      try {
+        await dispatch('signUp', { 
+          username,
+          password: username + process.env.QUICK_USER_AUTH,
+          firstName: username,
+          lastName: username,
+          email: username + '@dummy.com'
+        });
+      } catch (err) {}
+      return await dispatch('signIn', { username, password: username + process.env.QUICK_USER_AUTH });
+    }
+    return false;
   }
 }
 

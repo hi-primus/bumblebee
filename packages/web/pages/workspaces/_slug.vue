@@ -357,9 +357,11 @@ export default {
     moreMenu () {
       let menu = []
 
-      menu = [
-        { text: 'Workspaces', click: ()=>this.showWindowDialog('workspaces') }
-      ];
+      menu = [];
+
+      if (!process.env.QUICK_WORKSPACE_CREATION) {
+        menu.push({ text: 'Workspaces', click: ()=>this.showWindowDialog('workspaces') })
+      }        
 
       if (this.$store.state.engineId) {
         menu.push({ text: 'Set engine', click: ()=>this.showWindowDialog('configs') });
@@ -399,11 +401,11 @@ export default {
         ];
       }
 
-      menu = [
-        ...menu,
-        { divider: true },
-        { text: 'Sign out', click: this.signOut }
-      ];
+
+      if (!process.env.QUICK_USER_AUTH) {
+        menu.push({ divider: true });
+        menu.push({ text: 'Sign out', click: this.signOut });
+      }
 
       return menu
     },

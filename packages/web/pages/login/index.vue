@@ -1,5 +1,5 @@
 <template>
-	<Layout>
+	<Layout v-show="showLogin">
 		<v-layout wrap class="elevation-0 pa-0 d-flex flex-column align-top justify-start">
       <v-card
         :loading="isLoading ? 'primary' : false"
@@ -215,7 +215,8 @@ export default {
 			successMessage: "",
       // errorMessage: "",
       isLoading: false,
-      firstTime: undefined
+      firstTime: undefined,
+      showLogin: !process.env.QUICK_USER_AUTH
 		};
 	},
 
@@ -233,11 +234,15 @@ export default {
 	mounted() {
 		console.log(`Bumblebee v${version}`)
 		window.document.body.click()
+    this.checkDummyLogin()
     this.checkFirstTime()
     setTimeout(() => {
       window.intercomSettings["vertical_padding"] = 20;
       window.Intercom("update");
     }, 200);
+    setTimeout(() => {
+      this.showLogin = true;
+    }, 3000);
 	},
 
 	methods: {
@@ -248,6 +253,18 @@ export default {
 
       if (this.firstTime) {
         this.typeForm = 1;
+      }
+    },
+
+    async checkDummyLogin () {      
+      let isAuthenticated = await this.$store.dispatch('session/isAuthenticated');
+
+      if (!isAuthenticated && this.$route.query.username) {
+        await this.$store.dispatch('session/dummyLogin', { username: this.$route.query.username });
+        isAuthenticated = await this.$store.dispatch('session/isAuthenticated');
+      }
+      if (isAuthenticated) {
+        this.$router.push({ path: '/workspaces', query: this.$route.query });
       }
     },
 
