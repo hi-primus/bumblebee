@@ -350,9 +350,9 @@ export default {
     },
 
     async updateElements () {
-      var {items, total} = await this.getElements()
-      this.items = items
-      this.total = total
+      var response = await this.getElements();
+      this.items = response?.items || [];
+      this.total = response?.total || undefined;
     },
 
     async getElements () {
