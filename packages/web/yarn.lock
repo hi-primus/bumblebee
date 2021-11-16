@@ -3733,7 +3733,8 @@ builtin-status-codes@^3.0.0:
   integrity sha1-hZgoeOIbmOHGZCXgPQF0eI9Wnug=
 
 "bumblebee-utils@link:../bumblebee-utils":
-  version "21.11.0-beta"
+  version "0.0.0"
+  uid ""
 
 bytes@3.0.0:
   version "3.0.0"
@@ -7789,10 +7790,10 @@ klona@^2.0.4:
   resolved "https://registry.yarnpkg.com/klona/-/klona-2.0.4.tgz#7bb1e3affb0cb8624547ef7e8f6708ea2e39dfc0"
   integrity sha512-ZRbnvdg/NxqzC7L9Uyqzf4psi1OM4Cuc+sJAkQPjO6XkQIJTNbfK2Rsmbw8fx1p2mkZdp2FZYo2+LwXYY/uwIA==
 
-konva@^4.1.6:
-  version "4.2.2"
-  resolved "https://registry.yarnpkg.com/konva/-/konva-4.2.2.tgz#0f1799dbe0275bb8218a03549ce931e9006a696d"
-  integrity sha512-5vq/rKy35/gdMLipjcxgFz/LhJ/S8Ct/e1XntQmH1MSwN4rMP97Oera2PzxDh3DZPsrV6TETTKHNb1G7Jb6Z5A==
+konva@^8.2.4:
+  version "8.2.4"
+  resolved "https://registry.yarnpkg.com/konva/-/konva-8.2.4.tgz#9a2965954ab4b736cf445058d8310958e1de1e3e"
+  integrity sha512-ZbmyyRhv/RXFSPIfrdAWgSozEItMx4Co5BNVKAu+g185aHriVg3XdfvHxw0ig5TvyHX15TwYs3VyH/T0HQcAag==
 
 last-call-webpack-plugin@^3.0.0:
   version "3.0.0"
@@ -8866,10 +8867,8 @@ optimize-css-assets-webpack-plugin@^5.0.4:
     last-call-webpack-plugin "^3.0.0"
 
 "optimus-code-api@link:../optimus-code-api":
-  version "21.11.0-beta"
-  dependencies:
-    bumblebee-utils "link:../bumblebee-utils"
-    uuid "^8.3.2"
+  version "0.0.0"
+  uid ""
 
 optionator@^0.8.1, optionator@^0.8.3:
   version "0.8.3"
@@ -12732,7 +12731,7 @@ vue-hot-reload-api@^2.3.0:
   resolved "https://registry.yarnpkg.com/vue-hot-reload-api/-/vue-hot-reload-api-2.3.4.tgz#532955cc1eb208a3d990b3a9f9a70574657e08f2"
   integrity sha512-BXq3jwIagosjgNVae6tkHzzIk6a8MHFtzAdwhnV5VlvPTFxDCvIttgSiHWjdGoTJvXtmRu5HacExfdarRcFhog==
 
-vue-konva@^2.1.1:
+vue-konva@^2.1.7:
   version "2.1.7"
   resolved "https://registry.yarnpkg.com/vue-konva/-/vue-konva-2.1.7.tgz#1d94471e0b6a3d4139e118a22b4c907f4a091f9c"
   integrity sha512-uKFp1/tGbt9HAcTXukk/PuPtCMfCSmNyU3Feo3Av4XVfcoBgVQA69+H9r2VQMX+Vwphez1qSfGf7ZNstM3nYRw==

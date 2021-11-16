@@ -27,7 +27,7 @@
     "express": "^4.16.4",
     "fernet": "^0.3.1",
     "js-cookie": "^2.2.1",
-    "konva": "^4.1.6",
+    "konva": "^8.2.4",
     "less": "^3.11.1",
     "less-loader": "^5.0.0",
     "minimist": "^1.2.5",
@@ -42,7 +42,7 @@
     "vega-embed": "^5.1.3",
     "vega-lite": "^4.12.0",
     "vue-fuse": "^2.2.0",
-    "vue-konva": "^2.1.1",
+    "vue-konva": "^2.1.7",
     "vue-template-compiler": "^2.6.11",
     "vuedraggable": "^2.23.2",
     "vuex-persistedstate": "^3.0.1"
