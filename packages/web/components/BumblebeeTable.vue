@@ -292,7 +292,7 @@
           ]"
 				>
           <div
-            v-if="!(lazyColumns.length && !lazyColumns[index]) && column.preview && previewPlotsData[column.name] && previewPlotsData[column.name].missing !== undefined"
+            v-if="lazyColumns[index] && column.preview && previewPlotsData[column.name] && previewPlotsData[column.name].missing !== undefined"
             :key="'p'+column.index"
             class="bb-table-plot-content"
             :data-column="column.name">
@@ -344,7 +344,7 @@
             </div>
           </div>
           <div
-            v-else-if="!(lazyColumns.length && !lazyColumns[index]) && columns[column.index] && !column.preview && plotsData[column.name] && plotsData[column.name].missing !== undefined"
+            v-else-if="lazyColumns[index] && columns[column.index] && !column.preview && plotsData[column.name] && plotsData[column.name].missing !== undefined"
             :key="''+column.index"
             class="bb-table-plot-content"
             :data-column="column.index">
@@ -456,7 +456,7 @@
           :data-column="column.sampleName+'/'+column.name"
         >
           <div class="bb-table-column-bg"></div>
-          <template v-if="!(lazyColumns.length && !lazyColumns[cindex]) && computedColumnValues[column.sampleName] && !((previewError && column.preview) || column.fillNone)">
+          <template v-if="lazyColumns[cindex] && computedColumnValues[column.sampleName] && !((previewError && column.preview) || column.fillNone)">
             <template v-if="column.preview || column.duplicated">
               <template v-for="value in computedColumnValues[column.sampleName].filter((e)=>e!==undefined && e!==null && e.index<rowsCount)">
                 <div

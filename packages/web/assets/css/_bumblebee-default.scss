@@ -1796,11 +1796,16 @@ $editor-top-padding: 4px;
 
   position: relative;
 
+  .bb-table-header {
+    min-height: 29px;
+  }
+
   .bb-table-header, .bb-table-plots, .bb-table-i {
     padding-left: 48px;
     // display: inline-flex;
     display: flex;
   }
+
   .bb-table-header, .bb-table-plots {
 
     display: inline-flex;
