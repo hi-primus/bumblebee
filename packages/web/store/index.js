@@ -305,12 +305,11 @@ export const mutations = {
     Vue.set(state.listViews,state.tab,listView)
   },
 
-	setDataset (state, { dataset, preview, tab, avoidReload, partial }) {
+	setDataset (state, { dataset, preview, tab, avoidReload, avoidNew, partial }) {
 
     if (!avoidReload) {
       console.log("[BUMBLEBLEE] Opening dataset", dataset);
     }
-
 
     var fileName = dataset.file_name;
 
@@ -335,7 +334,6 @@ export const mutations = {
 
     var found = state.datasets.findIndex(ds => ds.dfName===dataset.dfName)
 
-
     if (!Array.isArray(dataset.columns)) {
       dataset._columns = dataset.columns;
       if (partial && state.datasets[found] && state.datasets[found]._columns) {
@@ -347,10 +345,11 @@ export const mutations = {
     if (!tab) {
       if (found >= 0) {
         tab = found;
-      } else if (state.datasets[state.tab] && state.datasets[state.tab].blank) {
+      } else if (state.datasets[state.tab] && state.datasets[state.tab].blank && !avoidNew) {
         tab = state.tab;
       } else {
         console.debug('%c[TAB MANAGING] Loading profiling without tab','color: yellow;');
+        return dataset;
       }
     }
 
@@ -1629,22 +1628,29 @@ export const actions = {
     return dispatch('getPromise', promisePayload);
   },
 
-  async cancelProfilingRequests({dispatch}, {username, workspace, categories, socketPost}) {
+  async cancelProfilingRequests ({ commit, dispatch }, { socketPost, immediate }) {
+    console.debug('[DEBUG] Cancelling profiling requests');
+    let categories = ['profiling', 'profiling_low'];
+    let response = await dispatch('cancelRequests', { categories, socketPost, immediate })
+    commit('mutation', {mutate: 'updatingProfile', payload: false });
+    commit('mutation', {mutate: 'updatingWholeProfile', payload: false });
+    return response;
+  },
+
+  async cancelRequests (store, {categories, socketPost, immediate}) {
+    let promise = socketPost('remove', { categories });
     for (let ts in window.promises) {
       if (categories.includes(window.promises[ts].category)) {
-        window.promises[ts].reject(false);
+        if (immediate) {
+          window.promises[ts]?.reject(false);
+        } else {
+          setTimeout(() => {
+            window.promises[ts]?.reject(false);
+          }, 3000);
+        }
       }
     }
-
-    if (!workspace || !username) {
-      return false;
-    }
-
-    return await socketPost('remove', {
-      categories,
-      username: username || await dispatch('session/getUsername'),
-      workspace
-    })
+    return await promise;
   },
   
   async lateProfiles ({state, commit, dispatch}, {dfName, columnsCount, preliminary, range, low, socketPost}) {
@@ -1653,7 +1659,7 @@ export const actions = {
     commit('mutation', {mutate: 'updatingWholeProfile', payload: true });
     
     let promise = false;
-    let requestRange = range || [10, columnsCount];
+    let requestRange = range || [10, columnsCount || 20];
     let ranges = [];
 
     if (requestRange[1] - requestRange[0] < 15) {
@@ -1674,7 +1680,7 @@ export const actions = {
         return column;
       });
       await promise;
-      promise = dispatch('setProfiling', { dfName, dataset, avoidReload: true, partial: true });
+      promise = dispatch('setProfiling', { dfName, dataset, avoidReload: true, avoidNew: true, partial: true });
     }
 
     let result = await promise;
@@ -1725,11 +1731,11 @@ export const actions = {
     return parseResponse(response.data.result);
   },
 
-  async setProfiling ({ dispatch, state, getters, commit }, { dfName, dataset, avoidReload, partial }) {
+  async setProfiling ({ dispatch, state, getters, commit }, { dfName, dataset, avoidReload, avoidNew, partial }) {
 
     dataset.dfName = dfName;
     console.debug('[DATASET] Setting', { dataset, to: dfName });
-    await dispatch('setDataset', { dataset, avoidReload: avoidReload || partial !== undefined, partial: partial !== undefined });
+    await dispatch('setDataset', { dataset, avoidReload: avoidReload || partial !== undefined, avoidNew, partial: partial !== undefined });
 
     if (state.gettingNewResults) {
       await dispatch('afterNewProfiling');

@@ -1342,7 +1342,7 @@ export default {
       }
     },
 
-    async requestProfilings (range) {
+    requestProfilings (range) {
 
       range = range || [
         this.lazyColumns.findIndex(e=>e), 
@@ -1382,11 +1382,15 @@ export default {
         ];
       }
 
-      this.cancelProfilingRequests().then(async ()=>{
+      return this.cancelProfilingRequests().then(async ()=>{
         await this.datasetExecute(this.currentDataset.dfName);
   
         for (let i = 0; i < visible.length; i++) {
-          await this.profileColumns(visible[i], false);
+          let response = await this.profileColumns(visible[i], false);
+
+          if (!response) {
+            return false;
+          }
         }
 
         notVisible = notVisible.map(range => {
@@ -1402,25 +1406,32 @@ export default {
         }).sort((a, b) => a[2] - b[2]);
         
         for (let i = 0; i < notVisible.length; i++) {
-          await this.profileColumns([notVisible[i][0], notVisible[i][1]], true);
+          let response = await this.profileColumns([notVisible[i][0], notVisible[i][1]], true);
+          
+          if (!response) {
+            return false;
+          }
         }
+        return true;
       });
       
     },
 
-    async cancelProfilingRequests () {
-      return await this.$store.dispatch('cancelProfilingRequests', {
+    cancelProfilingRequests (immediate) {
+      return this.$store.dispatch('cancelProfilingRequests', {
         socketPost: this.socketPost,
-        categories: ['profiling', 'profiling_low'],
-        workspace: this.$route.params.slug
+        immediate
       });
     },
 
     async profileColumns (range, low) {
 
+      if (!this.currentDataset.dfName) {
+        return false;
+      }
+
       return await this.$store.dispatch('lateProfiles', {
         dfName: this.currentDataset.dfName,
-        coumnsCount: this.currentDataset.summary.cols_count,
         socketPost: this.socketPost,
         preliminary: false,
         range,
