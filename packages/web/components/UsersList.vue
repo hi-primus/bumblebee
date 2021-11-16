@@ -231,9 +231,9 @@ export default {
     },
 
     async updateElements () {
-      let {items, total} = await this.getElements()
-      this.items = items
-      this.total = total
+      let response = await this.getElements();
+      this.items = response?.items || [];
+      this.total = response?.total || undefined;
     },
 
     async getElements () {
