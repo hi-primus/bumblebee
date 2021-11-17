@@ -83,15 +83,19 @@ WORKDIR "/"
 
 RUN mkdir -p /data/db
 
+ENV PORT=3000 API_PORT=4000 ADDRESS=localhost
+
 CMD ./usr/bin/mongod --fork --logpath /var/log/mongod.log && \
     cd /opt/bumblebee && \
     echo "Initializing Bumblebee Environment" && \
     echo "ADD_ONS='$ADD_ONS'" >> packages/web/.env && \
     echo "QUICK_USER_AUTH=$QUICK_USER_AUTH" >> packages/web/.env && \
     echo "QUICK_WORKSPACE_CREATION=$QUICK_WORKSPACE_CREATION" >> packages/web/.env && \
-    echo "API_URL='http://$ADDRESS:4000'" >> packages/web/.env && \
+    echo "API_URL='http://$ADDRESS:$API_PORT'" >> packages/web/.env && \
     echo "DOCKER='TRUE'" >> packages/web/.env && \
-    echo "BACKEND_URL='http://$ADDRESS:4000'" >> packages/api/.env && \
+    echo "BACKEND_URL='http://$ADDRESS:$API_PORT'" >> packages/api/.env && \
+    echo "PORT=$API_PORT'" >> packages/api/.env && \
+    echo "PORT=$PORT'" >> packages/web/.env && \
     echo "KERNEL_ADDRESS='$ADDRESS:8888'" >> packages/api/.env && \
     pm2 stop web || true && \
     pm2 stop api || true && \
@@ -99,7 +103,7 @@ CMD ./usr/bin/mongod --fork --logpath /var/log/mongod.log && \
     pm2 delete api || true && \
     pm2 start "yarn web" --name "web" --update-env && \
     pm2 start "yarn api" --name "api" --update-env && \
-    echo "[Bumblebee] Web process at: http://$ADDRESS:3000" && \
+    echo "[Bumblebee] Web process at: http://$ADDRESS:$PORT" && \
     jupyter kernelgateway --ip=0.0.0.0 --JupyterWebsocketPersonality.list_kernels=True --KernelGatewayApp.allow_origin='*' --Application.log_level=50
 
 EXPOSE 3000:3000 4000:4000 8888:8888
