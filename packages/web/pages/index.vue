@@ -10,9 +10,9 @@ const { version } = require("@/package.json");
 export default {
 
   middleware: async ({ store, redirect, route, app }) => {
-    
-    if (route.query.username) {
-      await store.dispatch('session/dummyLogin', { username: route.query.username });
+
+    if (process.env.QUICK_USER_AUTH && (route.query.username || route.query.email)) {
+      await store.dispatch('session/signOut');
     }
     
     let isAuthenticated = await store.dispatch('session/isAuthenticated');
