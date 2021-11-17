@@ -201,16 +201,19 @@ export const actions =  {
     return (state.accessToken && state.username && valid);
   },
 
-  async dummyLogin ({ state, dispatch }, { username }) {
+  async dummyLogin ({ state, dispatch }, { username, email }) {
     if (process.env.QUICK_USER_AUTH) {
       await dispatch('signOut');
       try {
+        if (!username && email) {
+          username = email.replace(/[^a-zA-Z0-9]/g, '_');
+        }
         await dispatch('signUp', { 
           username,
           password: username + process.env.QUICK_USER_AUTH,
           firstName: username,
           lastName: username,
-          email: username + '@dummy.com'
+          email: email || username + '@dummy.com'
         });
       } catch (err) {}
       return await dispatch('signIn', { username, password: username + process.env.QUICK_USER_AUTH });

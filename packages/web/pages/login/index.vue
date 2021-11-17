@@ -256,15 +256,18 @@ export default {
       }
     },
 
-    async checkDummyLogin () {      
-      let isAuthenticated = await this.$store.dispatch('session/isAuthenticated');
+    async checkDummyLogin () {
+      
+      if (process.env.QUICK_USER_AUTH && (this.$route.query.username || this.$route.query.email)) {
 
-      if (!isAuthenticated && this.$route.query.username) {
-        await this.$store.dispatch('session/dummyLogin', { username: this.$route.query.username });
-        isAuthenticated = await this.$store.dispatch('session/isAuthenticated');
-      }
-      if (isAuthenticated) {
-        this.$router.push({ path: '/workspaces', query: this.$route.query });
+        await this.$store.dispatch('session/dummyLogin', { username: this.$route.query.username, email: this.$route.query.email });
+
+        let isAuthenticated = await this.$store.dispatch('session/isAuthenticated');
+  
+        if (isAuthenticated) {
+          this.$router.push({ path: '/workspaces', query: this.$route.query });
+        }
+
       }
     },
 

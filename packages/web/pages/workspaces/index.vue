@@ -67,14 +67,23 @@ export default {
 
   // TO-DO: Check
   middleware: ['authenticated', ({store, redirect, route, app}) => {
-    let query = route.query;
-    let workspace = query.workspace;
-    let username = query.username || store.state.session.username;
-    if (workspace && username && process.env.QUICK_WORKSPACE_CREATION) {
-      delete query.username;
-      delete query.workspace;
-      workspace = `${username}-${workspace}`
-      redirect({ path: '/workspaces/' + workspace, query });
+    if (process.env.QUICK_WORKSPACE_CREATION) {
+      let query = route.query;
+      let workspace = query.workspace;
+      let username = query.username || store.state.session.username;
+  
+      if (!username) {
+        let email = query.email || '';
+        username = email.replace(/[^a-zA-Z0-9]/g, '_');
+      }
+  
+      if (workspace && username) {
+        delete query.username;
+        delete query.email;
+        delete query.workspace;
+        workspace = `${username}-${workspace}`
+        redirect({ path: '/workspaces/' + workspace, query });
+      }
     }
   }],
 
