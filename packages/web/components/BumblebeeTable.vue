@@ -1371,7 +1371,7 @@ export default {
             return value.stats && value.stats.missing !== undefined && value.update === update;
           })
           .map(([name, value]) => {
-            return [value.index, value.index]
+            return [value.index, value.index+1]
           });
 
         visible = optimizeRanges(visible[0], done).filter(range => (range[0] != range[1]));
