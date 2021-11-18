@@ -205,10 +205,10 @@ const optimizeRange = (inputRange, existingRange) => {
 
   if (existingRange && !(existingRange[1] < inputRange[0] || existingRange[0] > inputRange[1])) {  
     if (inputRange[0]<existingRange[0]) {
-      resultRanges.push([inputRange[0], existingRange[0]-1]);
+      resultRanges.push([inputRange[0], existingRange[0]]);
     }
     if (inputRange[1]>existingRange[1]) {
-      resultRanges.push([existingRange[1]+1, inputRange[1]]);
+      resultRanges.push([existingRange[1], inputRange[1]]);
     }
   }
   else {
