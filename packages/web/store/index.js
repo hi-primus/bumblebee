@@ -1638,26 +1638,20 @@ export const actions = {
     return dispatch('getPromise', promisePayload);
   },
 
-  async cancelProfilingRequests ({ commit, dispatch }, { socketPost, immediate }) {
+  async cancelProfilingRequests ({ commit, dispatch }, { socketPost }) {
     console.debug('[DEBUG] Cancelling profiling requests');
     let categories = ['profiling', 'profiling_low'];
-    let response = await dispatch('cancelRequests', { categories, socketPost, immediate })
+    let response = await dispatch('cancelRequests', { categories, socketPost })
     commit('mutation', {mutate: 'updatingProfile', payload: false });
     commit('mutation', {mutate: 'updatingWholeProfile', payload: false });
     return response;
   },
 
-  async cancelRequests (store, {categories, socketPost, immediate}) {
+  async cancelRequests (store, {categories, socketPost}) {
     let promise = socketPost('remove', { categories });
     for (let ts in window.promises) {
       if (categories.includes(window.promises[ts].category)) {
-        if (immediate) {
-          window.promises[ts]?.reject(false);
-        } else {
-          setTimeout(() => {
-            window.promises[ts]?.reject(false);
-          }, 3000);
-        }
+        window.promises[ts]?.reject(false);
       }
     }
     return await promise;

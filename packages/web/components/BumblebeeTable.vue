@@ -1417,10 +1417,9 @@ export default {
       
     },
 
-    cancelProfilingRequests (immediate) {
+    cancelProfilingRequests () {
       return this.$store.dispatch('cancelProfilingRequests', {
-        socketPost: this.socketPost,
-        immediate
+        socketPost: this.socketPost
       });
     },
 

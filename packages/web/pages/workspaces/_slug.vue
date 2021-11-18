@@ -757,8 +757,7 @@ export default {
 		async deleteTab(i) {
       if (this.$store.datasets && this.$store.datasets[i]?.dfName == this.currentDataset?.dfName) {
         this.$store.dispatch('cancelProfilingRequests', {
-          socketPost: this.socketPost,
-          immediate: true
+          socketPost: this.socketPost
         });
       }
       var newLength = this.$store.state.datasets.length - 1;
