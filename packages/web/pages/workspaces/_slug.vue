@@ -122,7 +122,7 @@
             style="flex: 0;"
           >
             <v-tab
-              v-for="(_tab, key) in $store.state.datasets"
+              v-for="(_tab, key) in $store.state.datasets.filter(e => e)"
               :key="+key"
               class="bb-tab"
               :id="`bb-tab-${_tab.dfName}`"
@@ -583,7 +583,11 @@ export default {
     },
 
     runCodeNow (forceAll = false, ignoreFrom = -1, newDfName, runCodeAgain) {
-      return this.$refs.tableBar.runCodeNow(forceAll, ignoreFrom, newDfName, runCodeAgain);
+      try {
+        return this.$refs.tableBar.runCodeNow(forceAll, ignoreFrom, newDfName, runCodeAgain);
+      } catch (err) {
+        console.error(err);
+      }
     },
 
     async doneConfig (values, select=false) {
