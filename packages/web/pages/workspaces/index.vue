@@ -81,7 +81,6 @@ export default {
         delete query.username;
         delete query.email;
         delete query.workspace;
-        workspace = `${username}-${workspace}`
         redirect({ path: '/workspaces/' + workspace, query });
       }
     }
