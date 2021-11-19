@@ -83,33 +83,24 @@ WORKDIR "/"
 
 RUN mkdir -p /data/db
 
-ENV ADDRESS=localhost
-ENV WEB_ADDRESS=$ADDRESS
-ENV API_ADDRESS=$ADDRESS
-ENV WEB_PORT=3000
-ENV API_PORT=4000
-
 CMD ./usr/bin/mongod --fork --logpath /var/log/mongod.log && \
     cd /opt/bumblebee && \
     echo "Initializing Bumblebee Environment" && \
-    echo "HOST=$WEB_ADDRESS'" >> packages/web/.env && \
-    echo "PORT=$WEB_PORT'" >> packages/web/.env && \
+    echo "API_URL='$PROTOCOL://$ADDRESS'" >> packages/web/.env && \
+    echo "DOCKER='TRUE'" >> packages/web/.env && \
+    echo "BACKEND_URL='$PROTOCOL://$ADDRESS'" >> packages/api/.env && \
+    echo "PORT='$BACK_PORT'" >> packages/api/.env && \
+    echo "KERNEL_ADDRESS='localhost:8888'" >> packages/api/.env && \
     echo "ADD_ONS='$ADD_ONS'" >> packages/web/.env && \
     echo "QUICK_USER_AUTH=$QUICK_USER_AUTH" >> packages/web/.env && \
     echo "QUICK_WORKSPACE_CREATION=$QUICK_WORKSPACE_CREATION" >> packages/web/.env && \
-    echo "API_URL='http://$API_ADDRESS:$API_PORT'" >> packages/web/.env && \
-    echo "DOCKER='TRUE'" >> packages/web/.env && \
-    echo "BACKEND_URL='http://$API_ADDRESS:$API_PORT'" >> packages/api/.env && \
-    echo "HOST=$API_ADDRESS'" >> packages/api/.env && \
-    echo "PORT=$API_PORT'" >> packages/api/.env && \
-    echo "KERNEL_ADDRESS='localhost:8888'" >> packages/api/.env && \
     pm2 stop web || true && \
     pm2 stop api || true && \
     pm2 delete web || true && \
     pm2 delete api || true && \
     pm2 start "yarn web" --name "web" --update-env && \
     pm2 start "yarn api" --name "api" --update-env && \
-    echo "[Bumblebee] Web process at: http://$ADDRESS:$WEB_PORT" && \
+    echo "[Bumblebee] Web process at: http://localhost:3000" && \
     jupyter kernelgateway --ip=0.0.0.0 --JupyterWebsocketPersonality.list_kernels=True --KernelGatewayApp.allow_origin='*' --Application.log_level=50
 
 EXPOSE 3000:3000 4000:4000 8888:8888
