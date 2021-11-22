@@ -344,7 +344,7 @@ export const mutations = {
       dataset.columns = Object.entries(dataset._columns).map(([key, value])=>({...value, name: key}));
     }
 
-    if (!tab) {
+    if (tab === undefined) {
       if (found >= 0) {
         tab = found;
       } else if (state.datasets[state.tab] && state.datasets[state.tab].blank) {
