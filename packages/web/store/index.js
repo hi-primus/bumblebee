@@ -841,6 +841,16 @@ export const actions = {
 
     console.log('[WORKSPACE] Loading', slug);
 
+    if (process.env.QUICK_WORKSPACE_CREATION) {
+      try {
+        await dispatch('request',{
+          request: 'post',
+          path: '/workspaces',
+          payload: { name: slug }
+        })
+      } catch (err) {}
+    }
+
     let response = await dispatch('request',{
       path: `/workspaces/slug/${slug}`
     });

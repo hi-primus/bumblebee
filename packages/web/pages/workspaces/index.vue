@@ -1,5 +1,5 @@
 <template>
-	<Layout>
+	<Layout v-show="showWorkspaces">
     <v-dialog
       v-if="showDialog"
       :value="showDialog"
@@ -66,12 +66,23 @@ export default {
   mixins: [ clientMixin ],
 
   // TO-DO: Check
-  middleware: 'authenticated',
+  middleware: ['authenticated', ({store, redirect, route, app}) => {
+    let query = route.query;
+    let workspace = query.workspace;
+    let username = query.username || store.state.session.username;
+    if (workspace && username && process.env.QUICK_WORKSPACE_CREATION) {
+      delete query.username;
+      delete query.workspace;
+      workspace = `${username}-${workspace}`
+      redirect({ path: '/workspaces/' + workspace, query });
+    }
+  }],
 
 	data () {
 		return {
       total: 0,
-      showDialog: false
+      showDialog: false,
+      showWorkspaces: !process.env.QUICK_WORKSPACE_CREATION
 		}
 	},
 
@@ -91,11 +102,11 @@ export default {
         ];
       }
 
-      menu = [
-        ...menu,
-        { divider: true },
-        { text: 'Sign out', click: this.signOut }
-      ];
+
+      if (!process.env.QUICK_USER_AUTH) {
+        menu.push({ divider: true });
+        menu.push({ text: 'Sign out', click: this.signOut });
+      }
 
       return menu;
     },
@@ -108,6 +119,9 @@ export default {
   mounted () {
     window.intercomSettings["vertical_padding"] = 48;
     window.Intercom("update");
+    setTimeout(() => {
+      this.showWorkspaces = true;
+    }, 3000);
   },
 
 	methods: {
