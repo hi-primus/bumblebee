@@ -56,21 +56,27 @@ export const actions =  {
 
       let customCommands = rootGetters["customCommands/generatorsJson"];
 
+      let tabs = [];
+      
+      for (let i = 0; i < rootState.datasets.length; i++) {
+        const tab = rootState.datasets[i];
+        if (tab) {
+          let {dataSources, name, ...profiling} = tab;
+          tabs.push({
+            name,
+            profiling: JSON.stringify(profiling),
+          });
+        } else {
+          tabs.push({
+            name: '(new dataset)',
+            profiling: JSON.stringify({blank: true})
+          });
+        }
+        
+      }
+
       var payload = {
-        tabs: rootState.datasets.map(e=>{
-          if (e) {
-            var {dataSources, name, ...profiling} = e
-            return {
-              name,
-              profiling: JSON.stringify(profiling),
-            }
-          } else {
-            return {
-              name: '(new dataset)',
-              profiling: JSON.stringify({blank: true})
-            }
-          }
-        }),
+        tabs,
         commands: [...dataSources, ...transformations],
         dataSourcesCount: dataSources.length,
         customCommands,
