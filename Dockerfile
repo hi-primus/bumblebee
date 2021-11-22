@@ -69,7 +69,7 @@ RUN pip install cytoolz && \
     pip install git+https://github.com/hi-primus/optimus.git@develop-21.11#egg=pyoptimus[pandas] && \
     pip install git+https://github.com/hi-primus/optimus.git@develop-21.11#egg=pyoptimus[dask]
 
-RUN git clone --branch develop-21.11 https://github.com/hi-primus/bumblebee.git
+RUN git clone --branch develop https://github.com/hi-primus/bumblebee.git
 
 WORKDIR "/opt/bumblebee"
 
@@ -83,21 +83,30 @@ WORKDIR "/"
 
 RUN mkdir -p /data/db
 
+ENV PROTOCOL=https
+ENV ADDRESS=localhost
+ENV FRONT_PORT=3000
+ENV BACK_PORT=4000
+
 CMD ./usr/bin/mongod --fork --logpath /var/log/mongod.log && \
     cd /opt/bumblebee && \
     echo "Initializing Bumblebee Environment" && \
-    echo "ADD_ONS='$ADD_ONS'" >> packages/web/.env && \
-    echo "API_URL='http://$ADDRESS:4000'" >> packages/web/.env && \
+    echo "API_URL='$PROTOCOL://$ADDRESS'" >> packages/web/.env && \
     echo "DOCKER='TRUE'" >> packages/web/.env && \
-    echo "BACKEND_URL='http://$ADDRESS:4000'" >> packages/api/.env && \
-    echo "KERNEL_ADDRESS='$ADDRESS:8888'" >> packages/api/.env && \
+    echo "BACKEND_URL='$PROTOCOL://$ADDRESS'" >> packages/api/.env && \
+    echo "PORT='$FRONT_PORT'" >> packages/web/.env && \
+    echo "PORT='$BACK_PORT'" >> packages/api/.env && \
+    echo "KERNEL_ADDRESS='localhost:8888'" >> packages/api/.env && \
+    echo "ADD_ONS='$ADD_ONS'" >> packages/web/.env && \
+    echo "QUICK_USER_AUTH=$QUICK_USER_AUTH" >> packages/web/.env && \
+    echo "QUICK_WORKSPACE_CREATION=$QUICK_WORKSPACE_CREATION" >> packages/web/.env && \
     pm2 stop web || true && \
     pm2 stop api || true && \
     pm2 delete web || true && \
     pm2 delete api || true && \
     pm2 start "yarn web" --name "web" --update-env && \
     pm2 start "yarn api" --name "api" --update-env && \
-    echo "[Bumblebee] Web process at: http://$ADDRESS:3000" && \
+    echo "[Bumblebee] Web process at: http://localhost:$FRONT_PORT" && \
     jupyter kernelgateway --ip=0.0.0.0 --JupyterWebsocketPersonality.list_kernels=True --KernelGatewayApp.allow_origin='*' --Application.log_level=50
 
 EXPOSE 3000:3000 4000:4000 8888:8888
