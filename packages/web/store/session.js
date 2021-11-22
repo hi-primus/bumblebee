@@ -58,10 +58,17 @@ export const actions =  {
 
       var payload = {
         tabs: rootState.datasets.map(e=>{
-          var {dataSources, name, ...profiling} = e
-          return {
-            name,
-            profiling: JSON.stringify(profiling),
+          if (e) {
+            var {dataSources, name, ...profiling} = e
+            return {
+              name,
+              profiling: JSON.stringify(profiling),
+            }
+          } else {
+            return {
+              name: '(new dataset)',
+              profiling: JSON.stringify({blank: true})
+            }
           }
         }),
         commands: [...dataSources, ...transformations],

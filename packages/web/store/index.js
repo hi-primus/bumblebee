@@ -866,12 +866,19 @@ export const actions = {
     if (response.data) {
       tab = response.data.selectedTab!==undefined ? response.data.selectedTab : tab;
       tabs = response.data.tabs.map(e=>{
-        let profiling = JSON.parse(e.profiling);
-        return {
-          name: e.name,
-          dataSources: e.dataSources,
-          ...profiling
-        };
+        if (e) {
+          let profiling = JSON.parse(e.profiling || "{}");
+          return {
+            name: e.name,
+            dataSources: e.dataSources,
+            ...profiling
+          };
+        } else {
+          return {
+            name: '(new dataset)',
+            dataSources: []
+          }
+        }
       });
       cells = response.data.commands.map( e=>({ ...JSON.parse(e), done: false }) );
       customCommands = response.data.customCommands;
