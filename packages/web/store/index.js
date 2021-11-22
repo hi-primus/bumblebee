@@ -1435,6 +1435,9 @@ export const actions = {
   },
 
   async loadCellsResult ({dispatch, state, getters, commit}, { forceAll, ignoreFrom, socketPost, clearPrevious, newOnly, beforeRunCells, methods }) {
+    
+    commit('mutation', { mutate: 'updatingWorkspace', payload: false });
+    
     console.debug('[DEBUG] Loading cells result');
     try {
 
