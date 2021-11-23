@@ -11,13 +11,20 @@
 import { INTERCOM_APP_ID } from 'bumblebee-utils'
 
 export default {
+
+  data () {
+    return {
+      intercomEnabled: process.env.DISABLE_INTERCOM
+    }
+  },
+
   mounted () {
     this.enableIntercom()
   },
 
   methods: {
     enableIntercom () {
-      if (INTERCOM_APP_ID && !process.env.DISABLE_INTERCOM) {
+      if (INTERCOM_APP_ID && !this.intercomEnabled) {
         window.intercomSettings = {
           app_id: INTERCOM_APP_ID
         };
