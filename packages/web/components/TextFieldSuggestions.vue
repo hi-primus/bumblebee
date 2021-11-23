@@ -259,7 +259,7 @@ export default {
       })
 
       if (this.useFunctions) {
-        suggestions = [ ...suggestions, ...(this.$store.state.functionsSuggestions || []) ]
+        suggestions = [ ...suggestions, ...(this.$store.getters.functionsSuggestions || []) ]
       }
 
       return suggestions
