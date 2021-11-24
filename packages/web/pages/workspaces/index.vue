@@ -90,7 +90,8 @@ export default {
 		return {
       total: 0,
       showDialog: false,
-      showWorkspaces: !process.env.QUICK_WORKSPACE_CREATION
+      showWorkspaces: !process.env.QUICK_WORKSPACE_CREATION,
+      showAuth: !process.env.QUICK_USER_AUTH
 		}
 	},
 
@@ -111,7 +112,7 @@ export default {
       }
 
 
-      if (!process.env.QUICK_USER_AUTH) {
+      if (this.showAuth) {
         menu.push({ divider: true });
         menu.push({ text: 'Sign out', click: this.signOut });
       }

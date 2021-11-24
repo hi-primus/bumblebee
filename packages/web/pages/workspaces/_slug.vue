@@ -287,7 +287,9 @@ export default {
       typesInput: '',
       dragFile: false,
       engineFormPromise: false,
-      tabSelected: 0
+      tabSelected: 0,
+      showAuth: !process.env.QUICK_USER_AUTH,
+      showWorkspaces: !process.env.QUICK_WORKSPACE_CREATION
 		};
   },
 
@@ -359,7 +361,7 @@ export default {
 
       menu = [];
 
-      if (!process.env.QUICK_WORKSPACE_CREATION) {
+      if (this.showWorkspaces) {
         menu.push({ text: 'Workspaces', click: ()=>this.showWindowDialog('workspaces') })
       }        
 
@@ -402,7 +404,7 @@ export default {
       }
 
 
-      if (!process.env.QUICK_USER_AUTH) {
+      if (this.showAuth) {
         menu.push({ divider: true });
         menu.push({ text: 'Sign out', click: this.signOut });
       }

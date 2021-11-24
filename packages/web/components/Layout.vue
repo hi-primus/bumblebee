@@ -14,7 +14,7 @@ export default {
 
   data () {
     return {
-      intercomEnabled: process.env.DISABLE_INTERCOM
+      intercomEnabled: !process.env.DISABLE_INTERCOM
     }
   },
 

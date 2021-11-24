@@ -216,7 +216,8 @@ export default {
       // errorMessage: "",
       isLoading: false,
       firstTime: undefined,
-      showLogin: !process.env.QUICK_USER_AUTH
+      showLogin: !process.env.QUICK_USER_AUTH,
+      quickAuth: process.env.QUICK_USER_AUTH
 		};
 	},
 
@@ -258,7 +259,7 @@ export default {
 
     async checkDummyLogin () {
       
-      if (process.env.QUICK_USER_AUTH && (this.$route.query.username || this.$route.query.email)) {
+      if (this.quickAuth && (this.$route.query.username || this.$route.query.email)) {
 
         await this.$store.dispatch('session/dummyLogin', { username: this.$route.query.username, email: this.$route.query.email });
 
