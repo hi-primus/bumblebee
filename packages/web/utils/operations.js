@@ -471,7 +471,6 @@ let _operations = {
   Download: {
     path: 'DATASET/SAVE',
     text: 'Download',
-    disabled: ($nuxt)=>process.env.INSTANCE!=='LOCAL',
     hidden: ($nuxt)=>$nuxt.$store.getters.usingPreview,
     doc: {
       description: "Downloads the current dataset as CSV file. If Spark or Ibis is you'll be able to choose to download a preview done using Pandas.",
@@ -482,14 +481,12 @@ let _operations = {
     path: 'DATASET/SAVE',
     command: 'Download',
     text: 'Download current preview',
-    disabled: ($nuxt)=>process.env.INSTANCE!=='LOCAL',
     hidden: ($nuxt)=>!$nuxt.$store.getters.usingPreview
   },
   DownloadFinal: {
     path: 'DATASET/SAVE',
     command: 'Download-rerun',
     text: 'Download',
-    disabled: ($nuxt)=>process.env.INSTANCE!=='LOCAL',
     hidden: ($nuxt)=>!$nuxt.$store.getters.usingPreview
   },
   saveFile: {
