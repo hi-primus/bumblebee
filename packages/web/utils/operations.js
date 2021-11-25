@@ -21,7 +21,8 @@ import {
   EMAIL_FUNCTIONS,
   CAST_NAMES,
   TIME_NAMES,
-  TIME_BETWEEN
+  TIME_BETWEEN,
+  AUTO_UPLOAD_LIMIT
 } from "bumblebee-utils";
 
 export const operationGroups = {
@@ -1548,14 +1549,16 @@ export const commandsHandlers = {
             "text/csv, .csv, application/json, application/vnd.ms-excel, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, .xls, .xlsx, .avro, .parquet",
           type: "file",
           onClear: "clearFile",
+          onChange: "changeFile"
         },
         {
           condition: (c) =>
             c.__fileInput &&
             c.__fileInput.toString() &&
-            c.__fileInput !== c.__fileLoaded,
+            c.__fileInput !== c.__fileLoaded &&
+            !c._hideUploadButton,
           type: "action",
-          label: "Preview",
+          label: "Upload",
           loading: "_fileUploading",
           loadingProgress: "_fileUploadingProgress",
           func: "uploadFile",
@@ -1722,9 +1725,24 @@ export const commandsHandlers = {
       currentCommand.error = false;
       currentCommand.url = "";
       currentCommand._fileUploadingProgress = 0;
+      return currentCommand;
     },
 
-    uploadFile: async (currentCommand, args, methods) => {
+    changeFile: async (event, currentCommand, methods, command) => {
+      currentCommand._sheet_names = false;
+      currentCommand.sheet_name = false;
+      currentCommand._fileName = false;
+      currentCommand._fileType = false;
+      if (currentCommand.__fileInput.size < AUTO_UPLOAD_LIMIT) {
+        currentCommand._hideUploadButton = true;
+        currentCommand = await command["uploadFile"](event, currentCommand, methods, command);
+      } else {
+        currentCommand._hideUploadButton = false;
+      }
+      return currentCommand;
+    },
+
+    uploadFile: async (event, currentCommand, methods) => {
       try {
         currentCommand._fileUploading = true;
 
@@ -1772,6 +1790,7 @@ export const commandsHandlers = {
 
     payload: () => ({
       command: "loadFile",
+      _hideUploadButton: false,
       _fileType: false,
       _fileUploading: false,
       __fileInput: [],

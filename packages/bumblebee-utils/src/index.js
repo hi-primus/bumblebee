@@ -1372,6 +1372,8 @@ export const RESPONSE_MESSAGES = {
 export const INTERCOM_APP_ID = 'evbcuhoh';
 export const HELP_LINK = false; // "https://hi-bumblebee.com";
 
+export const AUTO_UPLOAD_LIMIT = 104857600; // 100 MiB = 100*1024*1024
+
 export default {
   deepCopy,
   transpose,
@@ -1453,7 +1455,8 @@ export default {
   SOURCE_TYPES_PARAMS,
   RESPONSE_MESSAGES,
   INTERCOM_APP_ID,
-  HELP_LINK
+  HELP_LINK,
+  AUTO_UPLOAD_LIMIT
 }
 
 // exports.meta = require('./package.json')
