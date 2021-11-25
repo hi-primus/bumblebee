@@ -1708,7 +1708,7 @@ export const commandsHandlers = {
       },
     },
 
-    clearFile: (currentCommand) => {
+    clearFile: (event, currentCommand) => {
       currentCommand._fileType = false;
       currentCommand._fileUploading = false;
       currentCommand.__fileInput = [];
@@ -1753,7 +1753,7 @@ export const commandsHandlers = {
       return currentCommand;
     },
 
-    beforeExecuteCode: async (_payload, args, methods) => {
+    beforeExecuteCode: async (_payload, methods) => {
       var payload = deepCopy(_payload);
       if (payload.url && !payload.external_url) {
         payload.external_url = payload.url;
@@ -1864,7 +1864,7 @@ export const commandsHandlers = {
       );
     },
 
-    getTables: async (currentCommand, args, methods) => {
+    getTables: async (event, currentCommand, methods) => {
       currentCommand._loadingTables = true;
       currentCommand.error = "";
 
@@ -2626,8 +2626,8 @@ export const commandsHandlers = {
               value: "source",
             },
           ],
-          onClickRow: (currentCommand, args, methods) => {
-            let item = args[0];
+          onClickRow: (event, currentCommand, methods) => {
+            let item = event;
             let found = currentCommand.selected_columns.findIndex(
               (it) => it.key === item.key
             );
@@ -2638,8 +2638,8 @@ export const commandsHandlers = {
             }
             return currentCommand;
           },
-          selectKey: (currentCommand, args, methods) => {
-            let item = args[0];
+          selectKey: (event, currentCommand, methods) => {
+            let item = event;
 
             try {
               let on = item.source + "_on";
@@ -2735,7 +2735,7 @@ export const commandsHandlers = {
         },
       };
     },
-    onInit: async (currentCommand, args, methods) => {
+    onInit: async (event, currentCommand, methods) => {
       var command = deepCopy(currentCommand);
 
       var dfNames = Object.keys(command.secondaryDatasets);
@@ -2762,7 +2762,7 @@ export const commandsHandlers = {
       return command;
     },
 
-    beforeExecuteCode: async (currentCommand, args, methods) => {
+    beforeExecuteCode: async (currentCommand, methods) => {
       var command = deepCopy(currentCommand);
 
       var dfNames = Object.keys(command.secondaryDatasets);
@@ -2927,7 +2927,7 @@ export const commandsHandlers = {
 
     content: (payload) => `<b>Concat</b> ${hlParam(payload.dfName)} <b>with</b> ${multipleContent(payload.with.map(w => w.name), "hl--param")}`,
 
-    onInit: async (currentCommand, args, methods) => {
+    onInit: async (event, currentCommand, methods) => {
       try {
         let command = deepCopy(currentCommand);
 
@@ -3394,7 +3394,7 @@ export const commandsHandlers = {
           );
       },
     },
-    getClusters: async (currentCommand, args, methods) => {
+    getClusters: async (event, currentCommand, methods) => {
       try {
         var codePayload;
 
@@ -3728,7 +3728,7 @@ export const commandsHandlers = {
           ["z_score", "modified_z_score"].includes(c.algorithm)) &&
         !c._loading,
     },
-    getOutliers: async (currentCommand, args, methods) => {
+    getOutliers: async (event, currentCommand, methods) => {
       try {
         var code;
 

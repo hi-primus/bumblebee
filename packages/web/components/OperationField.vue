@@ -6,7 +6,7 @@
         :id="'field-'+field.key"
         depressed
         color="primary"
-        @click="triggerAction(field)"
+        @click="triggerFunction(field.func, $event)"
         class="mb-6 mx-a d-flex"
         :loading="currentCommand[field.loading]"
         :disabled="!currentCommand[field.loading] && field.validate && !field.validate(currentCommand)"
@@ -51,8 +51,8 @@
         :placeholder="(typeof field.placeholder == 'function') ? field.placeholder(currentCommand) : (field.placeholder || '')"
         :clearable="field.clearable"
         :accept="field.accept"
-        @input="(field.onChange) ? (currentCommand = field.onChange($event, currentCommand)) : 0"
-        @click:clear="(field.onClear) ? command[field.onClear](currentCommand) : 0"
+        @change="triggerFunction(field.onChange, $event)"
+        @click:clear="triggerFunction(field.onClear, $event)"
         dense
         required
         outlined
@@ -68,7 +68,7 @@
         :placeholder="(typeof field.placeholder == 'function') ? field.placeholder(currentCommand) : (field.placeholder || '')"
         :clearable="field.clearable"
         :class="{'mono-field': field.mono}"
-        @input="(field.onChange) ? (currentCommand = field.onChange($event, currentCommand)) : 0"
+        @input="triggerFunction(field.onChange, $event)"
         spellcheck="false"
         dense
         required
@@ -85,7 +85,7 @@
         :clearable="field.clearable"
         :mono="field.mono"
         :suggestions="getPropertyField(field.suggestions)"
-        @input="(field.onChange) ? (currentCommand = field.onChange($event, currentCommand)) : 0"
+        @input="triggerFunction(field.onChange, $event)"
         :suggest-on-empty="Object.keys(getPropertyField(field.suggestions))[0]"
         :use-functions="getPropertyField(field.useFunctions)"
         :fuzzy-search="getPropertyField(field.fuzzySearch)"
@@ -176,7 +176,7 @@
         :append-icon="field.showable ? (field.show ? 'visibility' : 'visibility_off') : undefined"
         :type="(field.show || !field.showable) ? 'text' : 'password'"
         :clearable="field.clearable"
-        @input="(field.onChange) ? (currentCommand = field.onChange($event, currentCommand)) : 0"
+        @input="triggerFunction(field.onChange, $event)"
         @click:append="field.show = !field.show"
       />
     </template>
@@ -190,7 +190,7 @@
         :placeholder="field.placeholder"
         :min="field.min"
         :clearable="field.clearable"
-        @input="(field.onChange) ? (currentCommand = field.onChange($event, currentCommand)) : 0"
+        @input="triggerFunction(field.onChange, $event)"
         dense
         required
         outlined
@@ -221,7 +221,7 @@
         :label="field.label"
         :placeholder="field.placeholder"
         :items="(field.items_key) ? getPropertyField(currentCommand[field.items_key]) : getPropertyField(field.items)"
-        @input="(field.onChange) ? (currentCommand = field.onChange($event, currentCommand)) : 0"
+        @input="triggerFunction(field.onChange, $event)"
         :disabled="getPropertyField(field.disabled)"
         dense
         required
@@ -244,7 +244,7 @@
         :id="'field-'+field.key"
         v-model="_value"
         :field="field"
-        @input="(field.onChange) ? (currentCommand = field.onChange($event, currentCommand)) : 0"
+        @input="triggerFunction(field.onChange, $event)"
         @showConnections="$emit('showConnections', $event)"
       />
     </template>
@@ -265,7 +265,7 @@
         :id="'field-'+field.key"
         v-model="_value"
         :dataset-columns="getPropertyField(currentCommand.dataset_columns)"
-        @input="(field.onChange) ? (currentCommand = field.onChange($event, currentCommand)) : ()=>{}"
+        @input="triggerFunction(field.onChange, $event)"
       />
     </template>
 
@@ -280,9 +280,9 @@
         :disabled="getPropertyField(field.disabled)"
         :right-on="currentCommand.right_on"
         :left-on="currentCommand.left_on"
-        @input="(field.onChange) ? (currentCommand = field.onChange($event, currentCommand)) : ()=>{}"
-        @click:row="triggerFunction(field.onClickRow, [$event])"
-        @click:item="triggerFunction(field.selectKey, [$event])"
+        @input="triggerFunction(field.onChange, $event)"
+        @click:row="triggerFunction(field.onClickRow, $event)"
+        @click:item="triggerFunction(field.selectKey, $event)"
       >
       </ColumnsJoinSelector>
     </template>
@@ -295,8 +295,8 @@
         :item-key="field.item_key"
         :items="(field.items_key) ? getPropertyField(currentCommand[field.items_key]) : field.items"
         :disabled="getPropertyField(field.disabled)"
-        @input="triggerFunction(field.onChange)"
-        @click:row="triggerFunction(field.onClickRow, [$event])"
+        @input="triggerFunction(field.onChange, $event)"
+        @click:row="triggerFunction(field.onClickRow, $event)"
       >
       </ItemsSelector>
     </template>
@@ -462,17 +462,20 @@ export default {
       return getProperty(pof, [this.currentCommand, this.index])
     },
 
-    async triggerAction(field) {
-      if (field.func) {
-        return this.triggerFunction(this.command[field.func])
-      }
-    },
+    async triggerFunction (key_callback, event) {
 
-    async triggerFunction (func, args = []) {
+      let func = false;
+
+      if (typeof key_callback === 'function') {
+        func = key_callback
+      } else if (key_callback in this.command && typeof this.command[key_callback] === 'function') {
+        func = this.command[key_callback]
+      }
+
       if (func) {
         this.computedCurrentCommand._loading = true;
         try {
-          this.computedCurrentCommand = await func(this.computedCurrentCommand, args, this.commandMethods || {});
+          this.computedCurrentCommand = await func(event, this.computedCurrentCommand, this.commandMethods || {}, this.command);
         } catch (err) {
           console.error(err);
         }
