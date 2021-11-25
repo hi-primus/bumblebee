@@ -1733,7 +1733,7 @@ export const commandsHandlers = {
       currentCommand.sheet_name = false;
       currentCommand._fileName = false;
       currentCommand._fileType = false;
-      if (currentCommand.__fileInput.size < AUTO_UPLOAD_LIMIT) {
+      if (currentCommand.__fileInput && currentCommand.__fileInput.size < AUTO_UPLOAD_LIMIT) {
         currentCommand._hideUploadButton = true;
         currentCommand = await command["uploadFile"](event, currentCommand, methods, command);
       } else {
