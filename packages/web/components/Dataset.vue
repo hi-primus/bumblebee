@@ -775,6 +775,26 @@ export default {
         }
       }
       this.hiddenColumns = hiddenColumns;
+    },
+
+    commandListener__loading_profile_preview (response) {
+
+      if (!response || !response.data) {
+        console.error(response);
+        throw new Error('Unknown error');
+      }
+
+      if (response.data.status === 'error') {
+        throw response.data.error || new Error('Unknown error');
+      }
+
+      let profile = parseResponse(response.data.result)
+
+      this.$store.commit('setLoadPreview', { profile } )
+
+      this.$store.commit('mutation', {mutate: 'updatingPreview', payload: false })
+
+      return profile;
     }
   },
 
@@ -851,26 +871,11 @@ export default {
                 dfName,
                 request: {
                   priority: -10,
-                  isAsync: true,
+                  isAsync: true
                 }
               }
 
-              var pResponse = await this.evalCode(pCodePayload)
-
-              if (!pResponse || !pResponse.data) {
-                console.error(pResponse);
-                throw new Error('Unknown error');
-              }
-
-              if (pResponse.data.status === 'error') {
-                throw pResponse.data.error || new Error('Unknown error');
-              }
-
-              var profile = parseResponse(pResponse.data.result)
-
-              this.$store.commit('setLoadPreview', { profile } )
-
-              this.$store.commit('mutation', {mutate: 'updatingPreview', payload: false })
+              this.evalCode(pCodePayload, 'loading_profile_preview')
 
             }
           }

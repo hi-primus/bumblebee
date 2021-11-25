@@ -657,8 +657,10 @@ export const actions = {
     await dispatch('session/serverInit')
   },
 
-  async evalCode ({ dispatch, state, getters }, { code, codePayload, isAsync, socketPost }) {
+  async evalCode ({ dispatch, state, getters }, { code, codePayload, reply, isAsync, socketPost }) {
     try {
+
+      reply = reply || 'await';
 
       if (codePayload && typeof codePayload == "object") {
         codePayload = [codePayload];
@@ -677,64 +679,66 @@ export const actions = {
         }
       }
 
-
-
       if (!process.client) {
         throw new Error('SSR not allowed')
       }
 
-      var startTime = new Date().getTime()
+      let startTime = new Date().getTime()
 
-      var response = await socketPost('run', {
+      let promise = socketPost('run', {
         code,
         codePayload,
+        reply,
         isAsync,
         username: await dispatch('session/getUsername'),
         workspace: state.workspaceSlug || 'default'
       })
 
-      var endTime = new Date().getTime()
-
-      response._frontTime = {
-        start: startTime/1000,
-        end: endTime/1000,
-        duration: (endTime - startTime)/1000
-      }
-
-      if (window.verbose_responses) {
-        console.debug('[DEBUG][RESULT]', response)
-        console.debug('[DEBUG][CODE]', response.code)
-
-        try {
-          console.debug(//time
-            '[DEBUG][TIMES]',
-            'front', response._frontTime,
-            'server', response._serverTime,
-            'gateway', response._gatewayTime,
-            'frontToServer', response._serverTime.start-response._frontTime.start,
-            'serverToGateway', response._gatewayTime.start-response._serverTime.start,
-            'GatewayToServer', response._serverTime.end-response._gatewayTime.end,
-            'ServerToFront', response._frontTime.end-response._serverTime.end
-          )
-        } catch (err) {
-          console.debug(//time
-            '[DEBUG][TIMES]',
-            'front', response._frontTime,
-            'server', response._serverTime,
-            'gateway', response._gatewayTime
-          )
+      if (reply == 'await') {
+        let response = await promise;
+        let endTime = new Date().getTime()
+  
+        response._frontTime = {
+          start: startTime/1000,
+          end: endTime/1000,
+          duration: (endTime - startTime)/1000
         }
-      } else {
-        console.debug('[DEBUG][RESULT]', response.code, response.data ? (response.data.result || response.data) : response)
+  
+        if (window.verbose_responses) {
+          console.debug('[DEBUG][RESULT]', response)
+          console.debug('[DEBUG][CODE]', response.code)
+  
+          try {
+            console.debug(//time
+              '[DEBUG][TIMES]',
+              'front', response._frontTime,
+              'server', response._serverTime,
+              'gateway', response._gatewayTime,
+              'frontToServer', response._serverTime.start-response._frontTime.start,
+              'serverToGateway', response._gatewayTime.start-response._serverTime.start,
+              'GatewayToServer', response._serverTime.end-response._gatewayTime.end,
+              'ServerToFront', response._frontTime.end-response._serverTime.end
+            )
+          } catch (err) {
+            console.debug(//time
+              '[DEBUG][TIMES]',
+              'front', response._frontTime,
+              'server', response._serverTime,
+              'gateway', response._gatewayTime
+            )
+          }
+        } else {
+          console.debug('[DEBUG][RESULT]', response.code, response.data ? (response.data.result || response.data) : response)
+        }
+  
+        if (!response || !response.data || response.data.status === 'error') {
+          throw response
+        }
+  
+        window.pushCode({code: response.code})
+  
+        return response
       }
-
-      if (!response || !response.data || response.data.status === 'error') {
-        throw response
-      }
-
-      window.pushCode({code: response.code})
-
-      return response
 
     } catch (err) {
 
