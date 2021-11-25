@@ -659,6 +659,15 @@ export const codeGenerators = {
 
     let loadType = (payload._moreOptions && payload.file_type) ? payload.file_type : 'file';
 
+    let loadTypes = {
+      "xlsx": "excel",
+      "xls": "excel"
+    }
+
+    if (loadType in loadTypes) {
+      loadType = loadTypes[loadType];
+    }
+
     let url = (payload.url || '').trim() || (payload.external_url || '').trim();
 
     code +=`op.load.${loadType}("${url}"`
@@ -690,9 +699,7 @@ export const codeGenerators = {
     } else if (n_rows !== Infinity) {
       code +=`, n_rows=${n_rows}`
     }
-    if (loadType!='file') {
-      code += `, quoting=0, lineterminator=None, cache=True`
-    } else if (url.endsWith('.xls') || url.endsWith('.xlsx')) {
+    if (loadType == 'file' && (url.endsWith('.xls') || url.endsWith('.xlsx'))) {
       if (payload._sheet_names && payload._sheet_names.length) {
         code += `, sheet_name="${payload.sheet_name}"`
       } else {

@@ -1700,7 +1700,7 @@ export const commandsHandlers = {
           key: "sheet_name",
           label: `Sheet`,
           items_key: "sheet_names",
-          type: (c) => (c.sheet_names.length ? "select" : "number"),
+          type: (c) => (c.sheet_names?.length ? "select" : "number"),
         },
       ],
       validate: (c) => {
@@ -1729,8 +1729,8 @@ export const commandsHandlers = {
     },
 
     changeFile: async (event, currentCommand, methods, command) => {
-      currentCommand._sheet_names = false;
-      currentCommand.sheet_name = false;
+      currentCommand._sheet_names = 1;
+      currentCommand.sheet_name = 0;
       currentCommand._fileName = false;
       currentCommand._fileType = false;
       if (currentCommand.__fileInput && currentCommand.__fileInput.size < AUTO_UPLOAD_LIMIT) {
