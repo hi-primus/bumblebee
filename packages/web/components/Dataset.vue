@@ -777,24 +777,33 @@ export default {
       this.hiddenColumns = hiddenColumns;
     },
 
-    commandListener__loading_profile_preview (response) {
+    async commandListener__loading_profile_preview (response) {
 
-      if (!response || !response.data) {
-        console.error(response);
-        throw new Error('Unknown error');
+      if (this.previewCode.load && this.previewCode.code) {
+
+        var currentCode = await getPropertyAsync(this.previewCode.code);
+
+        if (currentCode !== response.reply.currentCode) {
+          throw new Error('Code changed while loading profile preview');
+        }
+    
+        if (!response || !response.data) {
+          console.error(response);
+          throw new Error('Unknown error');
+        }
+
+        if (response.data.status === 'error') {
+          throw response.data.error || new Error('Unknown error');
+        }
+
+        let profile = parseResponse(response.data.result)
+
+        this.$store.commit('setLoadPreview', { profile } )
+
+        this.$store.commit('mutation', {mutate: 'updatingPreview', payload: false })
+
+        return profile;
       }
-
-      if (response.data.status === 'error') {
-        throw response.data.error || new Error('Unknown error');
-      }
-
-      let profile = parseResponse(response.data.result)
-
-      this.$store.commit('setLoadPreview', { profile } )
-
-      this.$store.commit('mutation', {mutate: 'updatingPreview', payload: false })
-
-      return profile;
     }
   },
 
@@ -832,16 +841,22 @@ export default {
     previewCode: {
       deep: true,
       async handler () {
-        try {
-          var currentCode = await getPropertyAsync(this.previewCode.code)
-          if (this.loadedPreviewCode!==currentCode) {
-            this.loadedPreviewCode = currentCode
-            if (this.previewCode.load) {
-              this.$store.commit('mutation', {mutate: 'updatingPreview', payload: true })
 
+        try {
+
+          if (this.previewCode.load && this.previewCode.code) {
+            
+            var currentCode = await getPropertyAsync(this.previewCode.code);
+  
+            if (this.loadedPreviewCode!==currentCode) {
+  
+              this.loadedPreviewCode = currentCode;
+  
+              this.$store.commit('mutation', {mutate: 'updatingPreview', payload: true })
+  
               var dfName = 'preview_df'
               var codePayload = deepCopy(this.previewCode.codePayload);
-
+  
               codePayload.request = {
                 ...this.previewCode.codePayload.request,
                 type: 'preview',
@@ -851,21 +866,21 @@ export default {
                 sample: true,
                 meta: true,
               }
-
+  
               console.debug('[PREVIEW] Loading', codePayload)
-
+  
               var response = await this.evalCode(codePayload);
-
+  
               if (response.data.result && response.data.result.sample) {
                 this.$store.commit('setLoadPreview', { sample: response.data.result.sample } )
               } else {
                 throw response
               }
-
+  
               if (response.data.result.meta) {
                 this.$store.commit('setLoadPreview', { meta: response.data.result.meta } )
               }
-
+  
               var pCodePayload = {
                 command: 'profile_async',
                 dfName,
@@ -873,12 +888,14 @@ export default {
                   priority: -10,
                   isAsync: true
                 }
-              }
-
-              this.evalCode(pCodePayload, 'loading_profile_preview')
-
+              };
+  
+              this.evalCode(pCodePayload, { command: "loading_profile_preview", currentCode });
+  
             }
+
           }
+
         } catch (err) {
           let _error = printError(err);
           this.$store.commit('setPreviewInfo', { error: _error });

@@ -560,9 +560,12 @@ export default {
     },
 
     async receiveCommandLocal (command, payload) {
+
+      let commandString = (command && typeof command == 'object') ? command.command : command;
+
       let listeners = Object.entries(this)
         .filter(([k,v])=>typeof v=='function' && k.startsWith('commandListener'))
-        .filter(([k,v])=>k.split("__").includes(command))
+        .filter(([k,v])=>k.split("__").includes(commandString))
         .map(([k,v])=>v);
 
       let results = []
