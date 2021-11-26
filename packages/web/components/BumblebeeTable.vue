@@ -1301,6 +1301,52 @@ export default {
 
   methods: {
 
+    commandListener__profile_preview (response) {
+
+      console.log("commandListener__profile_preview", response);
+
+      let code = response.reply.code;
+
+      if (this.profilePreview.code !== code) {
+        throw new Error(`Profile preview code changed, ${code} -> ${this.profilePreview.code}`);
+      }
+
+      if (!response || !response.data || !response.data.result || response.data.status == "error") {
+        throw response;
+      }
+
+      let { profile, latePreview, early } = response.reply;
+
+      if ((profile || latePreview || early) && response.data.result.profile) {
+        let dataset = parseResponse(response.data.result.profile);
+
+        if (!dataset) {
+          throw response;
+        }
+
+        dataset = { ...dataset, done: true, code };
+
+        this.$store.commit('mutation', {mutate: 'profilePreview', payload: dataset} )
+
+      } else if (response.data.result.names) {
+
+        let names = parseResponse(response.data.result.names);
+
+        let columns = Object.fromEntries(names.map(c=>[c.title, {}]));
+
+        let dataset = { columns, done: true, code };
+
+        this.$store.commit('mutation', {mutate: 'profilePreview', payload: dataset, summary: {}})
+
+      }
+
+      if (response.data.result.matches_count!==undefined) {
+        this.$store.commit('setPreviewInfo', {rowHighlights: +response.data.result.matches_count});
+      }
+
+      return true;
+    },
+
     refreshValues () {
       this.updateSelection(this.currentSelection) // TEST
       this.fetched = [];
@@ -2142,40 +2188,13 @@ export default {
           }
         };
 
-        let response = await this.evalCode(codePayload);
-
-        if (!response || !response.data || !response.data.result || response.data.status == "error") {
-          throw response;
-        }
-
-        if ((profile || previewCode.latePreview || early) && response.data.result.profile) {
-          let dataset = parseResponse(response.data.result.profile);
-
-          if (!dataset) {
-            throw response;
-          }
-
-          dataset = { ...dataset, code: previewCode, payload: previewPayload, done: true };
-
-          this.$store.commit('mutation', {mutate: 'profilePreview', payload: dataset} )
-
-        } else if (response.data.result.names) {
-
-          let names = parseResponse(response.data.result.names);
-
-          let columns = Object.fromEntries(names.map(c=>[c.title, {}]));
-
-          let dataset = { columns, done: true, code: previewCode };
-
-          this.$store.commit('mutation', {mutate: 'profilePreview', payload: dataset, summary: {}})
-
-        }
-
-        if (requestMatches && response.data.result.matches_count!==undefined) {
-          this.$store.commit('setPreviewInfo', {rowHighlights: +response.data.result.matches_count});
-        }
-
-        return true;
+        this.evalCode(codePayload, { 
+          command: 'profile_preview',
+          code: previewCode,
+          profile,
+          latePreview: previewCode.latePreview,
+          early
+        });
 
       }
 

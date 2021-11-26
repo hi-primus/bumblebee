@@ -79,6 +79,16 @@ export default {
       console.log('[CODE]', code2.map(e=>e.code).join('\n'))
       return true
     }
+
+    this.initializeReceiver();
+
+    window.receive = (command, payload) => {
+      return this.receiveCommand(command, payload);
+    }
+  },
+
+  beforeDestroy () {
+    delete window.receivers[this._uid]
   },
 
   computed: {
@@ -113,6 +123,10 @@ export default {
       get () {
         return window.socketAvailable
       }
+    },
+
+    receivers () {
+      return Object.values(window.receivers);
     }
   },
 
@@ -189,7 +203,7 @@ export default {
 
     },
 
-    evalCode (_code, isAsync = false) {
+    evalCode (_code, reply = 'await', isAsync = false) {
       var code = undefined;
       var codePayload = undefined;
       if (typeof _code === 'string') {
@@ -199,10 +213,60 @@ export default {
       }
       return this.$store.dispatch('evalCode', {
         socketPost: this.socketPost,
+        reply,
         isAsync,
         code,
         codePayload
       })
+    },
+
+    async assureSocket (socket, message) {
+      if (!socket) {
+
+        await this.startSocket();
+
+        if (!['initialize','features'].includes(message)) {
+
+          let params = {};
+
+          params = getDefaultParams(params);
+
+          let slug = this.$route.params.slug;
+
+          if (!params.name) {
+            if (this.currentUsername && slug) {
+              params.name = this.currentUsername + '_' + slug;
+            } else {
+              params.name = 'default';
+            }
+          }
+
+          if (params.jupyter_address) {
+            params.jupyter_ip = params.jupyter_address.ip;
+            params.jupyter_port = params.jupyter_address.port;
+          }
+
+          let reinitializationPayload = {
+            username: this.currentUsername,
+            workspace: slug,
+            ...params
+          }
+
+          console.log('[BUMBLEBEE] Reinitializing Optimus');
+
+          let response = await this.socketPost('initialize', reinitializationPayload );
+
+          if (!response.data.optimus) {
+            throw response
+          }
+
+          window.pushCode({code: response.code})
+        }
+
+        socket = await window.socket();
+      }
+
+      return socket;
     },
 
     async socketPost (message, payload = {}, timeout) {
@@ -215,59 +279,18 @@ export default {
 
       let postPromise = new Promise( async (resolve, reject) => {
 
-        if (payload.isAsync) {
-          window.promises[timestamp] = {resolve, reject, isAsync: true}
-        } else {
-          window.promises[timestamp] = {resolve, reject}
+        if (!payload.reply || payload.reply == 'await') {
+          if (payload.isAsync) {
+            window.promises[timestamp] = {resolve, reject, isAsync: true}
+          } else {
+            window.promises[timestamp] = {resolve, reject}
+          }
         }
 
         let socket = await window.socket();
 
         try {
-          if (!socket) {
-
-            await this.startSocket();
-
-            if (!['initialize','features'].includes(message)) {
-
-              let params = {};
-
-              params = getDefaultParams(params);
-
-              let slug = this.$route.params.slug;
-
-              if (!params.name) {
-                if (this.currentUsername && slug) {
-                  params.name = this.currentUsername + '_' + slug;
-                } else {
-                  params.name = 'default';
-                }
-              }
-
-              if (params.jupyter_address) {
-                params.jupyter_ip = params.jupyter_address.ip;
-                params.jupyter_port = params.jupyter_address.port;
-              }
-
-              let reinitializationPayload = {
-                username: this.currentUsername,
-                workspace: slug,
-                ...params
-              }
-
-              console.log('[BUMBLEBEE] Reinitializing Optimus');
-
-              let response = await this.socketPost('initialize', reinitializationPayload );
-
-              if (!response.data.optimus) {
-                throw response
-              }
-
-              window.pushCode({code: response.code})
-            }
-
-            socket = await window.socket();
-          }
+          socket = await this.assureSocket(socket, message)
 
           if (!socket) {
             reject(new Error("Error connecting to back-end"));
@@ -401,43 +424,48 @@ export default {
 
           socket.on('reply', (payload) => {
 
-            let key;
+            let handler;
+
+            if (payload.reply && payload.reply !== 'await') {
+              handler = {
+                resolve: (p)=>window.receive(p.reply, p),
+                reject: (p)=>window.receive(p.reply, p)
+              }
+            }
 
             if (payload.data && payload.data.key && window.promises[payload.data.key] && window.promises[payload.data.key]) {
-              key = payload.data.key;
+              handler = window.promises[payload.data.key];
+              delete window.promises[payload.data.key];
+            }
+            
+            if (!handler && payload.timestamp && window.promises[payload.timestamp]) {
+              handler = window.promises[payload.timestamp];
+              delete window.promises[payload.timestamp];
             }
 
-            if (!key && payload.timestamp && window.promises[payload.timestamp]) {
-              key = payload.timestamp
-            }
-
-            if (!key) {
+            if (!handler) {
               console.warn(`Request with id ${payload.timestamp} already replied`, payload);
               return null;
             }
 
             if (payload.error || payload.status == "error" || (payload.data && payload.data.status == "error")) {
 
-              window.promises[key].reject(payload);
-              delete window.promises[key];
+              handler.reject(payload);
 
             } else {
 
-              if (window.promises[key].isAsync) {
+              if (handler.isAsync) {
 
                 if (payload.data && payload.data.status == "pending"){
                   if (key !== payload.data.key) {
-                    window.promises[payload.data.key] = window.promises[key]
-                    delete window.promises[key]
+                    window.promises[payload.data.key] = handler;
                   }
                 } else {
-                  window.promises[key].resolve(payload);
-                  delete window.promises[key];
+                  handler.resolve(payload);
                 }
 
               } else {
-                window.promises[payload.timestamp].resolve(payload);
-                delete window.promises[payload.timestamp];
+                handler.resolve(payload);
               }
             }
 
@@ -505,6 +533,56 @@ export default {
       } catch (error) {
         this.handleError(error);
       }
+    },
+
+    // open responses handling
+
+    initializeReceiver () {
+      window.receivers = window.receivers || {};
+      window.receivers[this._uid] = (command, payload) => this.receiveCommandLocal(command, payload);
+    },
+
+    async receiveCommand (command, payload) {
+      let receivers = Object.values(window.receivers);
+      let resultGroups = [];
+      for (let i = 0; i < receivers.length; i++) {
+        const receiver = receivers[i];
+        let resultGroup;
+        try {
+          resultGroup = await receiver(command, payload);
+        } catch (err) {
+          console.error(err);
+          resultGroup = err
+        }
+        resultGroups.push(resultGroup);
+      }
+      return resultGroups.flat(1);
+    },
+
+    async receiveCommandLocal (command, payload) {
+
+      let commandString = (command && typeof command == 'object') ? command.command : command;
+
+      let listeners = Object.entries(this)
+        .filter(([k,v])=>typeof v=='function' && k.startsWith('commandListener'))
+        .filter(([k,v])=>k.split("__").includes(commandString))
+        .map(([k,v])=>v);
+
+      let results = []
+
+      for (let i = 0; i < listeners.length; i++) {
+        const listener = listeners[i];
+        let result;
+        try {
+          result = await listener(payload);
+        } catch (err) {
+          console.error(err);
+          result = err
+        }
+        results.push(result);
+      }
+
+      return results;
     }
   },
 

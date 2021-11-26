@@ -271,6 +271,7 @@ export class AppGateway
       data: result,
       code: resultCode,
       timestamp: payload.timestamp,
+      reply: payload.reply
     });
 
   }
