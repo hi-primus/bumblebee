@@ -777,13 +777,48 @@ export default {
       this.hiddenColumns = hiddenColumns;
     },
 
+    async commandListener__loading_preview (response) {
+
+      
+      if (this.previewCode.load && this.previewCode.code) {
+        
+        let currentCode = response.reply.code;
+
+        if (currentCode !== this.loadedPreviewCode) {
+          throw new Error('Code changed while loading profile preview');
+        }
+    
+        if (response.data.result && response.data.result.sample) {
+          this.$store.commit('setLoadPreview', { sample: response.data.result.sample } )
+        } else {
+          throw response
+        }
+
+        if (response.data.result.meta) {
+          this.$store.commit('setLoadPreview', { meta: response.data.result.meta } )
+        }
+
+        var codePayload = {
+          command: 'profile_async',
+          dfName,
+          request: {
+            priority: -10,
+            isAsync: true
+          }
+        };
+
+        this.evalCode(codePayload, { command: "loading_profile_preview", code: currentCode });
+
+      }
+    },
+
     async commandListener__loading_profile_preview (response) {
 
       if (this.previewCode.load && this.previewCode.code) {
 
-        var currentCode = await getPropertyAsync(this.previewCode.code);
+        let currentCode = response.reply.code;
 
-        if (currentCode !== response.reply.currentCode) {
+        if (currentCode !== this.loadedPreviewCode) {
           throw new Error('Code changed while loading profile preview');
         }
     
@@ -868,29 +903,8 @@ export default {
               }
   
               console.debug('[PREVIEW] Loading', codePayload)
-  
-              var response = await this.evalCode(codePayload);
-  
-              if (response.data.result && response.data.result.sample) {
-                this.$store.commit('setLoadPreview', { sample: response.data.result.sample } )
-              } else {
-                throw response
-              }
-  
-              if (response.data.result.meta) {
-                this.$store.commit('setLoadPreview', { meta: response.data.result.meta } )
-              }
-  
-              var pCodePayload = {
-                command: 'profile_async',
-                dfName,
-                request: {
-                  priority: -10,
-                  isAsync: true
-                }
-              };
-  
-              this.evalCode(pCodePayload, { command: "loading_profile_preview", currentCode });
+    
+              this.evalCode(codePayload, { command: "loading_preview", code: currentCode });
   
             }
 
