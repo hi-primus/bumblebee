@@ -257,7 +257,9 @@ export class AppGateway
         }
       }
 
-      result = await runCode(execCode, client.id, asyncCallback);
+      let category = payload?.category;
+
+      result = await runCode(execCode, client.id, category, asyncCallback);
 
     } catch (err) {
 

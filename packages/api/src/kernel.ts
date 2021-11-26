@@ -5,7 +5,10 @@ import { KernelRoutines } from "./kernel-routines";
 
 import { handleResponse } from 'bumblebee-utils'
 
+let Queue = require('better-queue');
+
 const kernels = [];
+const requests = {};
 
 let kernel_addresses;
 let kernel_types;
@@ -266,7 +269,50 @@ export const requestToKernel = async function (type, sessionId, payload, asyncCa
 	return response;
 };
 
-export const runCode = async function (code = '', sessionId = '', asyncCallback = false) {
+const priorities = {
+	requirement: 9,
+	preview_sample: 8,
+	sample: 7,
+	preview_profiling: 6,
+	operation: 5,
+	after_update: 4,
+	profiling: 3,
+	info: 2,
+	profiling_low: 1
+}
+
+const newQueue = function (sessionId) {
+	return new Queue(async (task, cb)=>{
+		console.log(task);
+		requestToKernel(task.type, sessionId, task.payload, task.asyncCallback).then(cb);
+	}, {
+		id: 'id',
+		priority: (task, cb) => {
+			let priority = priorities[task.category]
+			if (!priority) {
+				console.warn(`Unknown category ${task.category} using highest priority`);
+				priority = 100;
+			}
+			return cb(null, priority);
+		}
+	});
+}
+
+const queueRequest = function (type, sessionId, payload, category, asyncCallback = false) {
+	return new Promise((res, rej) => {
+		try {
+			requests[sessionId] = requests[sessionId] || newQueue(sessionId);
+			const id = Buffer.from(uuidv1(), 'utf8').toString('hex');
+			requests[sessionId].push({
+				id, type, payload, category, asyncCallback
+			}, res);
+		} catch (err) {
+			rej(err);
+		}
+	});
+};
+
+export const runCode = async function (code = '', sessionId = '', category = false, asyncCallback = false) {
 	if (!sessionId) {
 		return {
 			error: {
@@ -286,9 +332,9 @@ export const runCode = async function (code = '', sessionId = '', asyncCallback 
     let response;
 
     if (asyncCallback) {
-      response = await requestToKernel('asyncCode', sessionId, code, asyncCallback);
+			response = await queueRequest('asyncCode', sessionId, code, category, asyncCallback);
     } else {
-      response = await requestToKernel('code', sessionId, code);
+      response = await queueRequest('code', sessionId, code, category);
     }
 
 		if (response?.status === 'error') {
