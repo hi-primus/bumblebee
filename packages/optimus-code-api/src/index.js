@@ -150,20 +150,52 @@ export const codeGenerators = {
       isAsync: true
     };
   },
-  profile_partial: (payload) => {
+  preliminary_profile_partial: (payload) => {
     return {
-      code: `_output = ${payload.dfName}.profile(${payload.dfName}.cols.names("*")[${payload.range.join(":")}])\n`,
+      code: `_output = ${payload.dfName}.preliminary_profile(${payload.dfName}.cols.names("*")[${payload.range.join(":")}])\n`,
+      isOutput: true,
+      isAsync: false
+    };
+  },
+  preliminary_profile_async_partial: (payload) => {
+    let selection = payload.range ? `[${payload.range.join(":")}]` : '';
+    let code = "";
+    code += `def _output_callback(fut):\n`;
+    code += `    return fut.result()\n`;
+    code += `_output = op.submit(${payload.dfName}.preliminary_profile, ${payload.dfName}.cols.names("*")${selection}, priority=${payload.request.priority || 0}, pure=False)\n`;
+    return {
+      code,
+      isOutput: true,
+      isAsync: true
+    };
+  },
+  preliminary_profile_async: (payload) => {
+    let code =  "";
+    code += `def _output_callback(fut):\n`;
+    code += `    return fut.result()\n`;
+    code += `_output = op.submit(${payload.dfName}.preliminary_profile, ${payload.columns || '"*"'}, priority=${payload.request.priority || 0}, pure=False)\n`;
+    return {
+      code,
+      isOutput: true,
+      isAsync: true
+    };
+  },
+  profile_partial: (payload) => {
+    let selection = payload.range ? `[${payload.range.join(":")}]` : '';
+    return {
+      code: `_output = ${payload.dfName}.profile(${payload.dfName}.cols.names("*")${selection})\n`,
       isOutput: true,
       isAsync: false
     };
   },
   profile_async_partial: (payload) => {
+    let selection = payload.range ? `[${payload.range.join(":")}]` : '';
     let code = "";
     code += `def _output_callback(fut):\n`;
     code += `    global ${payload.dfName}\n`;
     code += `    ${payload.dfName} = fut.result()\n`;
-    code += `    return ${payload.dfName}.profile(${payload.dfName}.cols.names("*")[${payload.range.join(":")}])\n`;
-    code += `_output = op.submit(${payload.dfName}.calculate_profile, ${payload.dfName}.cols.names("*")[${payload.range.join(":")}], priority=${payload.request.priority || 0}, pure=False)\n`;
+    code += `    return ${payload.dfName}.profile(${payload.dfName}.cols.names("*")${selection})\n`;
+    code += `_output = op.submit(${payload.dfName}.calculate_profile, ${payload.dfName}.cols.names("*")${selection}, priority=${payload.request.priority || 0}, pure=False)\n`;
     return {
       code,
       isOutput: true,
