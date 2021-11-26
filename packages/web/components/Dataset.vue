@@ -807,7 +807,7 @@ export default {
           }
         };
 
-        this.evalCode(codePayload, { command: "loading_profile_preview", code: currentCode });
+        this.evalCode(codePayload, { command: "loading_profile_preview", code: currentCode }, 'profiling');
 
       }
     },
@@ -904,7 +904,7 @@ export default {
   
               console.debug('[PREVIEW] Loading', codePayload)
     
-              this.evalCode(codePayload, { command: "loading_preview", code: currentCode });
+              this.evalCode(codePayload, { command: "loading_preview", code: currentCode }, 'profiling');
   
             }
 

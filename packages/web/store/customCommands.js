@@ -173,6 +173,7 @@ export const actions =  {
       if (generator.definition) {
         let response = await dispatch('evalCode', {
           socketPost,
+          category: 'requirement',
           codePayload: {
             command: 'inject',
             definition: generator.definition,

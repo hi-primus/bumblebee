@@ -2194,7 +2194,7 @@ export default {
           profile,
           latePreview: previewCode.latePreview,
           early
-        });
+        }, 'preview_profiling');
 
       }
 

@@ -1153,7 +1153,7 @@ export default {
           }
         }] });
 
-        var response = await this.evalCode(payload)
+        var response = await this.evalCode(payload, 'await', 'requirement')
 
         var result = response.data.result.replace(/\\n/g,'\n')
 
@@ -1168,7 +1168,7 @@ export default {
         await this.cancelCommand();
         var payload = await this.$store.dispatch('finalCommands', { ignoreFrom: -1, include });
 
-        var response = await this.evalCode(payload)
+        var response = await this.evalCode(payload, 'await', 'requirement')
 
         var result = response.data.result.replace(/\\n/g,'\n')
 
@@ -1182,7 +1182,7 @@ export default {
       try {
         await this.cancelCommand();
         await this.runCodeNow();
-        var response = await this.evalCode(cell);
+        var response = await this.evalCode(cell, 'await', 'requirement');
         console.debug("[DEBUG] Operation done", response);
       } catch (error) {
         console.error(error)
@@ -1200,7 +1200,7 @@ export default {
           request: {}
         }];
         var payload = await this.$store.dispatch('finalCommands', { ignoreFrom: -1, include });
-        var response = await this.evalCode(payload);
+        var response = await this.evalCode(payload, 'await', 'after_update');
         this.forceFileDownload(response.data.result.download_url);
       } catch (error) {
         console.error(error)
@@ -1217,7 +1217,7 @@ export default {
           username: this.currentUsername,
           workspace: this.$route.params.slug
         };
-        var response = await this.evalCode(payload);
+        var response = await this.evalCode(payload, 'await', 'after_update');
         this.forceFileDownload(response.data.result.download_url);
       } catch (error) {
         console.error(error);
@@ -1672,7 +1672,7 @@ export default {
           await this.evalCode({
             command: 'delete',
             dfName
-          });
+          }, 'await', 'after_update');
         }
       }
 

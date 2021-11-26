@@ -1896,7 +1896,7 @@ export const commandsHandlers = {
         var response = await methods.evalCode({
           command: "getDatabaseTables",
           _connection: currentCommand._connection,
-        });
+        }, 'await', 'requirement');
 
         if (!response || !response.data || response.data.status === "error") {
           throw response.data ? (response.data.error || response.data) : response;
@@ -3437,7 +3437,7 @@ export const commandsHandlers = {
 
         currentCommand._loading = 'block';
 
-        var response = await methods.evalCode(codePayload);
+        var response = await methods.evalCode(codePayload, 'await', 'requirement');
 
         if (!response || !response.data || !response.data.result || response.data.status == "error") {
           throw response;
@@ -3767,7 +3767,8 @@ export const commandsHandlers = {
         currentCommand._loading = 'block';
 
         var response = await methods.evalCode(
-          `import json; ${code}; _output = json.dumps(outlier.info(), ensure_ascii=False)`
+          `import json; ${code}; _output = json.dumps(outlier.info(), ensure_ascii=False)`,
+          'await', 'requirement'
         );
 
         var outliers_data = parseResponse(response.data.result);
@@ -3778,7 +3779,8 @@ export const commandsHandlers = {
 
         if (["tukey", "mad"].includes(currentCommand.algorithm)) {
           var hist_response = await methods.evalCode(
-            `_output = outlier.hist("${currentCommand.columns[0]}")`
+            `_output = outlier.hist("${currentCommand.columns[0]}")`,
+            'await', 'requirement'
           );
           var hist_data = parseResponse(hist_response.data.result);
 
