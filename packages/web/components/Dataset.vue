@@ -781,9 +781,9 @@ export default {
 
       if (this.previewCode.load && this.previewCode.code) {
         
-        let currentCode = response.reply.code;
+        let { code, dfName } = response.reply;
 
-        if (currentCode !== this.loadedPreviewCode) {
+        if (code !== this.loadedPreviewCode) {
           throw new Error('Code changed while loading profile preview');
         }
     
@@ -806,7 +806,7 @@ export default {
           }
         };
 
-        this.evalCode(codePayload, { command: "loading_profile_preview", code: currentCode }, 'profiling');
+        this.evalCode(codePayload, { command: "loading_profile_preview", code }, 'profiling');
 
       }
     },
@@ -815,9 +815,9 @@ export default {
 
       if (this.previewCode.load && this.previewCode.code) {
 
-        let currentCode = response.reply.code;
+        let code = response.reply.code;
 
-        if (currentCode !== this.loadedPreviewCode) {
+        if (code !== this.loadedPreviewCode) {
           throw new Error('Code changed while loading profile preview');
         }
     
@@ -903,7 +903,7 @@ export default {
   
               console.debug('[PREVIEW] Loading', codePayload)
     
-              this.evalCode(codePayload, { command: "loading_preview", code: currentCode }, 'profiling');
+              this.evalCode(codePayload, { command: "loading_preview", code: currentCode, dfName }, 'profiling');
   
             }
 
