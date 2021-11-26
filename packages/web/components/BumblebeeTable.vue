@@ -1303,8 +1303,6 @@ export default {
 
     commandListener__profile_preview (response) {
 
-      console.log("commandListener__profile_preview", response);
-
       let code = response.reply.code;
 
       if (this.profilePreview.code !== code) {

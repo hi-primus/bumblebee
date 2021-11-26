@@ -779,7 +779,6 @@ export default {
 
     async commandListener__loading_preview (response) {
 
-      
       if (this.previewCode.load && this.previewCode.code) {
         
         let currentCode = response.reply.code;
