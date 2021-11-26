@@ -1195,6 +1195,15 @@ export default {
 
   watch: {
 
+    columnWidths: {
+      deep: true,
+      immediate: true,
+      handler (widths) {
+        this.horizontalScrollCheckDown();
+        return this.checkVisibleColumns();
+      }
+    },
+
     previewError (value) {
       if (value) {
         this.removePreviewColumns()
@@ -2104,31 +2113,39 @@ export default {
     },
 
     horizontalScrollCheckUp () {
-      try {
-        var topScrollLeft = this.$refs['BbTableTopContainer'].scrollLeft;
-        var bottomScrollLeft = this.$refs['BbTableContainer'].scrollLeft;
-        if (this.$refs['BbTableRows']) {
-          this.$refs['BbTableRows'].style.left = (45 + bottomScrollLeft) + 'px';
+      if (this.$refs['BbTableTopContainer'] && this.$refs['BbTableContainer']) {
+        try {
+          let topScrollLeft = this.$refs['BbTableTopContainer'].scrollLeft;
+          let bottomScrollLeft = this.$refs['BbTableContainer'].scrollLeft;
+          let topScrollWidth = this.$refs['BbTableTopContainer'].scrollWidth;
+          let bottomScrollWidth = this.$refs['BbTableContainer'].scrollWidth;
+          if (this.$refs['BbTableRows']) {
+            this.$refs['BbTableRows'].style.left = (45 + bottomScrollLeft) + 'px';
+          }
+          if (topScrollLeft != bottomScrollLeft || topScrollWidth != bottomScrollWidth) {
+            this.$refs['BbTable'].style.minWidth = this.$refs['BbTableTopContainer'].scrollWidth + 'px'
+            this.$refs['BbTableTopContainer'].scrollLeft = bottomScrollLeft
+          }
+        } catch (err) {
+          console.error(err);
         }
-        if (topScrollLeft != bottomScrollLeft) {
-          this.$refs['BbTable'].style.minWidth = this.$refs['BbTableTopContainer'].scrollWidth + 'px'
-          this.$refs['BbTableTopContainer'].scrollLeft = bottomScrollLeft
-        }
-      } catch (err) {
-        console.error(err);
       }
     },
 
     horizontalScrollCheckDown () {
-      try {
-        var topScrollLeft = this.$refs['BbTableTopContainer'].scrollLeft;
-        var bottomScrollLeft = this.$refs['BbTableContainer'].scrollLeft;
-        if (bottomScrollLeft != topScrollLeft) {
-          this.$refs['BbTable'].style.minWidth = this.$refs['BbTableTopContainer'].scrollWidth + 'px'
-          this.$refs['BbTableContainer'].scrollLeft = topScrollLeft
+      if (this.$refs['BbTableTopContainer'] && this.$refs['BbTableContainer']) {
+        try {
+          let topScrollLeft = this.$refs['BbTableTopContainer'].scrollLeft;
+          let bottomScrollLeft = this.$refs['BbTableContainer'].scrollLeft;
+          let topScrollWidth = this.$refs['BbTableTopContainer'].scrollWidth;
+          let bottomScrollWidth = this.$refs['BbTableContainer'].scrollWidth;
+          if (bottomScrollLeft != topScrollLeft || topScrollWidth != bottomScrollWidth) {
+            this.$refs['BbTable'].style.minWidth = this.$refs['BbTableTopContainer'].scrollWidth + 'px'
+            this.$refs['BbTableContainer'].scrollLeft = topScrollLeft
+          }
+        } catch (err) {
+          console.error(err);
         }
-      } catch (err) {
-        console.error(err);
       }
     },
 
