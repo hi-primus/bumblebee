@@ -7,8 +7,10 @@ import { handleResponse } from 'bumblebee-utils'
 
 let Queue = require('better-queue');
 
+const DEFAULT_PRIORITY = 100;
+
 const kernels = [];
-const requests = {};
+const requests: { [fieldName: string]: typeof Queue } = {};
 
 let kernel_addresses;
 let kernel_types;
@@ -269,7 +271,7 @@ export const requestToKernel = async function (type, sessionId, payload, asyncCa
 	return response;
 };
 
-const priorities = {
+const PRIORITIES = {
 	requirement: 9,
 	preview_sample: 8,
 	sample: 7,
@@ -283,15 +285,15 @@ const priorities = {
 
 const newQueue = function (sessionId) {
 	return new Queue(async (task, cb)=>{
-		console.log(task);
 		requestToKernel(task.type, sessionId, task.payload, task.asyncCallback).then(cb);
 	}, {
 		id: 'id',
+		filo: true,
 		priority: (task, cb) => {
-			let priority = priorities[task.category]
+			let priority = PRIORITIES[task.category]
 			if (!priority) {
 				console.warn(`Unknown category ${task.category} using highest priority`);
-				priority = 100;
+				priority = DEFAULT_PRIORITY;
 			}
 			return cb(null, priority);
 		}

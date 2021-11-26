@@ -1625,11 +1625,11 @@ export const actions = {
     return result
   },
 
-  async requestProfiling ({ dispatch }, { dfName, socketPost, partial }) {
+  async requestProfiling ({ dispatch }, { dfName, socketPost, partial, low }) {
 
     let response = await dispatch('evalCode', {
       socketPost,
-      category: 'profiling',
+      category: low ? 'profiling_low' : 'profiling',
       codePayload: {
         command: partial ? 'profile_async_partial' : 'profile_async',
         range: partial ? [Math.max(0, partial-10), partial] : undefined,
