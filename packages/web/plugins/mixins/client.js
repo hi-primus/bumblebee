@@ -551,6 +551,7 @@ export default {
         try {
           resultGroup = await receiver(command, payload);
         } catch (err) {
+          console.error(err);
           resultGroup = err
         }
         resultGroups.push(resultGroup);
@@ -575,6 +576,7 @@ export default {
         try {
           result = await listener(payload);
         } catch (err) {
+          console.error(err);
           result = err
         }
         results.push(result);
