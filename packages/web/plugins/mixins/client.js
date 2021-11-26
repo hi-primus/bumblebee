@@ -538,7 +538,6 @@ export default {
     // open responses handling
 
     initializeReceiver () {
-      console.log('this',this)
       window.receivers = window.receivers || {};
       window.receivers[this._uid] = (command, payload) => this.receiveCommandLocal(command, payload);
     },
