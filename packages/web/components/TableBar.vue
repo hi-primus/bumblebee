@@ -344,8 +344,7 @@
           <v-icon class="right-button" id="details-close-btn" color="black" @click="clearSelection">close</v-icon>
         </div>
         <div class="sidebar-content">
-
-          <div v-for="(index, i) in detailedColumns" :key="index+'selc'+i" v-if="detailedColumns.length>1 && currentDataset.columns[index]" class="sidebar-section pr-10 columns-selected">
+          <div v-for="(index, i) in detailedColumns.filter(index => detailedColumns.length>1 && currentDataset.columns[index])" :key="index+'selc'+i" class="sidebar-section pr-10 columns-selected">
             <div class="column-selected">
               <span class="data-type" :class="`type-${currentDataset.columns[index].stats.inferred_data_type.data_type}`">{{ dataTypeHint(currentDataset.columns[index].stats.inferred_data_type.data_type) }}</span>
               <span class="data-column-name">{{ currentDataset.columns[index].name }}</span>
@@ -407,7 +406,7 @@
               :key="index+'cd'+i"
               :startExpanded="i==0"
               :rowsCount="+currentDataset.summary.rows_count"
-              :column="{...currentDataset.columns[index], index}"
+              :column="columnDetailsData(index)"
               @command="commandHandle($event)"
             ></ColumnDetails>
           </template>
@@ -836,6 +835,14 @@ export default {
       this.typesSelected = [];
       await this.$nextTick();
       this.clearingFilters = true;
+    },
+
+    columnDetailsData (index) {
+      return {
+        ...this.columns[index],
+        ...this.currentDataset.columns[index],
+        index
+      };
     },
 
     runCodeNow (forceAll = false, ignoreFrom = -1, newDfName, runCodeAgain) {
