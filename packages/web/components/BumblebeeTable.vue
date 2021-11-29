@@ -1395,10 +1395,10 @@ export default {
     },
     
     async fixNotProfiledColumns () {
-      let profiledColumns = Object.keys(this.currentDataset?.columns || {}).length;
-      let totalColumns = this.currentDataset?.summary?.cols_count;
+      let columns = Math.max((this.currentDataset?.columns || []).length, this.currentDataset?.summary?.cols_count || 0);
+      let doneColumns = (this.currentDataset?.columns?.filter(c => c.stats.missing !== undefined) || []).length;
 
-      if (totalColumns !== undefined && profiledColumns < totalColumns && !this.previewCode) {
+      if (doneColumns < columns && !this.previewCode) {
 
         if (!this.$store.state.updatingWholeProfile) {
           
