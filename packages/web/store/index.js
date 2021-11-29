@@ -1642,7 +1642,7 @@ export const actions = {
       socketPost,
       category: low ? 'profiling_low' : 'profiling',
       codePayload: {
-        command: partial ? 'profile_async_partial' : 'profile_async',
+        command: 'profile_async',
         range: partial ? [Math.max(0, partial-10), partial] : undefined,
         dfName,
         request: {

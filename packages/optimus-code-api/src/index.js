@@ -45,7 +45,60 @@ export const payloadPreparers = {
 }
 
 export const codeGenerators = {
-  profile: (payload) => ({ code: `_output = ${payload.dfName}.profile(cols="*")`, isOutput: true }),
+  profile: (payload) => {
+    let cols = `"*"`;
+    if (payload.columns) {
+      cols = preparedColumns(payload.columns);
+    } else if (payload.range) {
+      cols = `${payload.dfName}.cols.names("*")[${payload.range.join(":")}]`;
+    }
+    return { code: `_output = ${payload.dfName}.profile(cols=${cols})`, isOutput: true }
+  },
+  profile_async: (payload) => {
+    let cols = `"*"`;
+    if (payload.columns) {
+      cols = preparedColumns(payload.columns);
+    } else if (payload.range) {
+      cols = `${payload.dfName}.cols.names("*")[${payload.range.join(":")}]`;
+    }
+    let code =  "";
+    code += `def _output_callback(fut):\n`;
+    code += `    global ${payload.dfName}\n`;
+    code += `    ${payload.dfName} = fut.result()\n`;
+    code += `    return ${payload.dfName}.profile(${cols})\n`;
+    code += `_output = op.submit(${payload.dfName}.calculate_profile, ${cols}, priority=${payload.request.priority || 0}, pure=False)\n`;
+    return {
+      code,
+      isOutput: true,
+      isAsync: true
+    };
+  },
+  preliminary_profile: (payload) => {
+    let cols = `"*"`;
+    if (payload.columns) {
+      cols = preparedColumns(payload.columns);
+    } else if (payload.range) {
+      cols = `${payload.dfName}.cols.names("*")[${payload.range.join(":")}]`;
+    }
+    return { code: `_output = ${payload.dfName}.preliminary_profile(cols=${cols})`, isOutput: true }
+  },
+  preliminary_profile_async: (payload) => {
+    let cols = `"*"`;
+    if (payload.columns) {
+      cols = preparedColumns(payload.columns);
+    } else if (payload.range) {
+      cols = `${payload.dfName}.cols.names("*")[${payload.range.join(":")}]`;
+    }
+    let code =  "";
+    code += `def _output_callback(fut):\n`;
+    code += `    return fut.result()\n`;
+    code += `_output = op.submit(${payload.dfName}.preliminary_profile, ${cols}, priority=${payload.request.priority || 0}, pure=False)\n`;
+    return {
+      code,
+      isOutput: true,
+      isAsync: true
+    };
+  },
   uploadToS3: (payload) => {
     let code = `${payload.dfName}.save.${payload.file_type}( filename="s3://${payload.bucket}/${payload.username}/${payload.file_name}.${payload.file_type}", storage_options={ "key": "${payload.access_key_id}", "secret": "${payload.secret_key}", "client_kwargs": { "endpoint_url": "https://${payload.endpoint}", }, "config_kwargs": {"s3": {"addressing_style": "virtual", "x-amz-acl": "public/read"}} } );`;
 
@@ -144,71 +197,6 @@ export const codeGenerators = {
     code += `    ${payload.dfName} = getattr(fut, "result", fut.result)()\n`;
     code += `    return ${payload.dfName}.cols.pattern_counts("${escapeQuotes(payload.column)}", n=${payload.n}, mode=${payload.mode})\n`;
     code += `_output = op.submit(${payload.dfName}.cols.calculate_pattern_counts, "${escapeQuotes(payload.column)}", n=${payload.n}, mode=${payload.mode}, priority=${payload.request.priority || 0}, pure=False)\n`;
-    return {
-      code,
-      isOutput: true,
-      isAsync: true
-    };
-  },
-  preliminary_profile_partial: (payload) => {
-    return {
-      code: `_output = ${payload.dfName}.preliminary_profile(${payload.dfName}.cols.names("*")[${payload.range.join(":")}])\n`,
-      isOutput: true,
-      isAsync: false
-    };
-  },
-  preliminary_profile_async_partial: (payload) => {
-    let selection = payload.range ? `[${payload.range.join(":")}]` : '';
-    let code = "";
-    code += `def _output_callback(fut):\n`;
-    code += `    return fut.result()\n`;
-    code += `_output = op.submit(${payload.dfName}.preliminary_profile, ${payload.dfName}.cols.names("*")${selection}, priority=${payload.request.priority || 0}, pure=False)\n`;
-    return {
-      code,
-      isOutput: true,
-      isAsync: true
-    };
-  },
-  preliminary_profile_async: (payload) => {
-    let code =  "";
-    code += `def _output_callback(fut):\n`;
-    code += `    return fut.result()\n`;
-    code += `_output = op.submit(${payload.dfName}.preliminary_profile, ${payload.columns || '"*"'}, priority=${payload.request.priority || 0}, pure=False)\n`;
-    return {
-      code,
-      isOutput: true,
-      isAsync: true
-    };
-  },
-  profile_partial: (payload) => {
-    let selection = payload.range ? `[${payload.range.join(":")}]` : '';
-    return {
-      code: `_output = ${payload.dfName}.profile(${payload.dfName}.cols.names("*")${selection})\n`,
-      isOutput: true,
-      isAsync: false
-    };
-  },
-  profile_async_partial: (payload) => {
-    let selection = payload.range ? `[${payload.range.join(":")}]` : '';
-    let code = "";
-    code += `def _output_callback(fut):\n`;
-    code += `    global ${payload.dfName}\n`;
-    code += `    ${payload.dfName} = fut.result()\n`;
-    code += `    return ${payload.dfName}.profile(${payload.dfName}.cols.names("*")${selection})\n`;
-    code += `_output = op.submit(${payload.dfName}.calculate_profile, ${payload.dfName}.cols.names("*")${selection}, priority=${payload.request.priority || 0}, pure=False)\n`;
-    return {
-      code,
-      isOutput: true,
-      isAsync: true
-    };
-  },
-  profile_async: (payload) => {
-    let code =  "";
-    code += `def _output_callback(fut):\n`;
-    code += `    global ${payload.dfName}\n`;
-    code += `    ${payload.dfName} = fut.result()\n`;
-    code += `    return ${payload.dfName}.profile(${payload.columns || '"*"'})\n`;
-    code += `_output = op.submit(${payload.dfName}.calculate_profile, ${payload.columns || '"*"'}, priority=${payload.request.priority || 0}, pure=False)\n`;
     return {
       code,
       isOutput: true,

@@ -1310,6 +1310,30 @@ export default {
 
   methods: {
 
+    commandListener__profile (response) {
+
+      let {dfName, update, partial} = response.reply;
+
+      if (update !== this.currentDatasetUpdate) {
+        throw new Error('Profile update mismatch');
+      }
+
+      if (dfName !== this.currentDataset.dfName) {
+        throw new Error('Dataframe variable name mismatch');
+      }
+
+      let dataset = parseResponse(response.data.result);
+
+      this.$store.dispatch('setProfiling', {
+        dfName,
+        dataset,
+        avoidReolad: true,
+        partial
+      });
+
+      this.checkProfilingStatus();
+    },
+
     commandListener__profile_preview (response) {
 
       let code = response.reply.code;
@@ -1384,6 +1408,30 @@ export default {
       }
     },
 
+    requestProfile(columns, low) {
+
+      let codePayload = {
+        command: 'profile_async',
+        columns,
+        dfName: this.currentDataset.dfName,
+        request: {
+          priority: -10,
+          isAsync: true,
+        }
+      }
+
+      let reply = {
+        command: 'profile',
+        dfName: this.currentDataset.dfName,
+        partial: true,
+        update: this.currentDatasetUpdate
+      }
+
+      let category = low ? 'profiling_low' : 'profiling';
+
+      return this.evalCode(codePayload, reply, category)
+    },
+
     async fixEmptyRows () {
       await new Promise (res => setTimeout(res, 100))
       if (!this.computedColumnValues || !Object.keys(this.computedColumnValues).length) {
@@ -1393,6 +1441,15 @@ export default {
         this.debouncedThrottledScrollCheck(true);
       }
     },
+
+    checkProfilingStatus: debounce( function () {
+      let columns = Math.max((this.currentDataset?.columns || []).length, this.currentDataset?.summary?.cols_count || 0);
+      let doneColumns = (this.currentDataset?.columns?.filter(c => c.stats.missing !== undefined) || []).length;
+
+      if (columns == doneColumns && this.$store.state.updatingWholeProfile) {
+        return this.$store.commit('mutation', {mutate: 'updatingWholeProfile', payload: false })
+      }
+    }, 300),
     
     async fixNotProfiledColumns () {
       let columns = Math.max((this.currentDataset?.columns || []).length, this.currentDataset?.summary?.cols_count || 0);
@@ -1401,19 +1458,26 @@ export default {
       if (doneColumns < columns && !this.previewCode) {
 
         if (!this.$store.state.updatingWholeProfile) {
-          
-          this.$store.commit('mutation', {mutate: 'updatingWholeProfile', payload: true })
 
-          let profilingResponse = await this.$store.dispatch('getProfiling', { payload: {
-            socketPost: this.socketPost,
-            dfName: this.currentDataset.dfName,
-            avoidReload: true,
-            clearPrevious: false,
-            partial: true,
-            methods: this.commandMethods
-          }});
+          let pendingColumns = this.currentDataset?.columns?.filter(c => c.stats.missing == undefined)
+
+          this.$store.commit('mutation', {mutate: 'updatingWholeProfile', payload: true });
           
-          return this.$store.dispatch('lateProfiles', {...profilingResponse, socketPost: this.socketPost});
+          if (!pendingColumns || !pendingColumns.length) {
+            let preliminary = await this.$store.dispatch('getProfiling', { payload: {
+              socketPost: this.socketPost,
+              dfName: this.currentDataset.dfName,
+              avoidReload: true,
+              clearPrevious: false,
+              preliminary: true,
+              methods: this.commandMethods
+            }});
+
+            console.log('preliminary', preliminary);
+          }
+
+          return this.requestProfile("*", true);
+          
         }
       } else if (this.$store.state.updatingWholeProfile) {
         return this.$store.commit('mutation', {mutate: 'updatingWholeProfile', payload: false })
