@@ -1704,7 +1704,7 @@ export const commandsHandlers = {
         },
       ],
       validate: (c) => {
-        if (c.__fileLoaded !== c.__fileInput) {
+        if (c.__fileLoaded && c.__fileInput && c.__fileLoaded !== c.__fileInput) {
           return 0;
         }
         if (c.external_url === "" && c.url === "") {
