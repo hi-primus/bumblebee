@@ -341,7 +341,7 @@ const queueRequest = function (type, sessionId, payload, category, asyncCallback
 	});
 };
 
-export const removeFromQueue = function (sessionId, category) {
+export const removeFromQueue = function (sessionId, category, cancel=false) {
 	if (!Array.isArray(category)) {
 		category = [category];
 	}
@@ -354,9 +354,16 @@ export const removeFromQueue = function (sessionId, category) {
 
 		// get all the tasks with the given priority
 
-		let taskIds = Object.entries(requests[sessionId]._store._priorities)
+		let taskIds: string[] = Object.entries(requests[sessionId]._store._priorities)
 			.filter(([, priority]) => priorities.includes(priority))
 			.map(([id]) => id);
+
+		let runningIds: string[] = Object.values(requests[sessionId]._store._running)
+			.map(locks => Object.keys(locks)).flat();
+
+		if (!cancel) {
+			taskIds = taskIds.filter((id) => !runningIds.includes(id));
+		}
 		
 		for (let i=0; i<taskIds.length; i++) {
 			requests[sessionId].cancel(taskIds[i]);

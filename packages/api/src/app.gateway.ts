@@ -227,7 +227,7 @@ export class AppGateway
 
   @SubscribeMessage('remove')
   async handleRemove(client: Socket, payload): Promise<any> {
-    let result = await removeFromQueue(client.id, payload.category);
+    let result = await removeFromQueue(client.id, payload.category, payload.cancel);
     client.emit('reply', {
       data: result,
       timestamp: payload.timestamp,
