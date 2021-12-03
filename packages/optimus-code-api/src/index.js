@@ -266,8 +266,8 @@ export const codeGenerators = {
         break;
     }
 
-    if (payload.action==='set') {
-      let output_col = payload.output_cols[0] || payload.columns[0];
+    if (payload.action == 'set') {
+      let output_col = (payload.output_cols ? payload.output_cols[0] : false) || payload.columns[0];
       let code = '';
       let value = ( (payload.value) ? `parse('${payload.value}')` : 'None' );
       if (!['final','processing'].includes(payload.request.type)) {
