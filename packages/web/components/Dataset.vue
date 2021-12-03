@@ -779,38 +779,46 @@ export default {
 
     commandListener__loading_preview (response) {
 
-      // TODO: handle error
+      try {
 
-      if (this.previewCode.load && this.previewCode.code) {
-        
-        let { code, dfName } = response.reply;
-
-        if (code !== this.loadedPreviewCode) {
-          throw new Error('Code changed while loading profile preview');
-        }
-    
-        if (response.data.result && response.data.result.sample) {
-          this.$store.commit('setLoadPreview', { sample: response.data.result.sample } )
-        } else {
-          throw response
-        }
-
-        if (response.data.result.meta) {
-          this.$store.commit('setLoadPreview', { meta: response.data.result.meta } )
-        }
-
-        var codePayload = {
-          command: 'profile_async',
-          dfName,
-          request: {
-            priority: -10,
-            isAsync: true
+        if (this.previewCode.load && this.previewCode.code) {
+          
+          let { code, dfName } = response.reply;
+  
+          if (code !== this.loadedPreviewCode) {
+            throw new Error('Code changed while loading profile preview');
           }
-        };
+      
+          if (response.data.result && response.data.result.sample) {
+            this.$store.commit('setLoadPreview', { sample: response.data.result.sample } )
+          } else {
+            throw response
+          }
+  
+          if (response.data.result.meta) {
+            this.$store.commit('setLoadPreview', { meta: response.data.result.meta } )
+          }
+  
+          var codePayload = {
+            command: 'profile_async',
+            dfName,
+            request: {
+              priority: -10,
+              isAsync: true
+            }
+          };
+  
+          return this.evalCode(codePayload, { command: "loading_profile_preview", code }, 'profiling');
+        }
 
-        return this.evalCode(codePayload, { command: "loading_profile_preview", code }, 'profiling');
+      } catch (err) {
+          
+          let _error = printError(err);
+          this.$store.commit('setPreviewInfo', { error: _error });
+          this.$store.commit('mutation', {mutate: 'updatingPreview', payload: false });
 
       }
+
     },
 
     async commandListener__loading_profile_preview (response) {
