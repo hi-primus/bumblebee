@@ -1774,7 +1774,7 @@ export const commandsHandlers = {
       return currentCommand;
     },
 
-    beforeExecuteCode: async (_payload, methods) => {
+    beforeRunCells: async (_payload, methods) => {
       var payload = deepCopy(_payload);
       if (payload.url && !payload.external_url) {
         payload.external_url = payload.url;
@@ -2784,7 +2784,7 @@ export const commandsHandlers = {
       return command;
     },
 
-    beforeExecuteCode: async (currentCommand, methods) => {
+    beforeRunCells: async (currentCommand, methods) => {
       var command = deepCopy(currentCommand);
 
       var dfNames = Object.keys(command.secondaryDatasets);

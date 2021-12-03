@@ -1281,9 +1281,9 @@ export const actions = {
       }
       if (window.getCommandHandler) {
         var commandHandler = window.getCommandHandler(cell)
-        if (commandHandler && commandHandler.beforeExecuteCode) {
+        if (commandHandler && commandHandler.beforeRunCells) {
           cell = {...cell}; // avoid direct vuex mutation
-          cell.payload = await commandHandler.beforeExecuteCode(cell.payload, methods);
+          cell.payload = await commandHandler.beforeRunCells(cell.payload, methods);
           cell.modified = new Date();
           commit('updateCell', { id: cell.id, cell });
         } else if (!commandHandler) {
