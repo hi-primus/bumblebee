@@ -3113,6 +3113,9 @@ export const commandsHandlers = {
             if (value.type == "columns" && payload._columnsKey == key) {
               return !payload.columns ? columns : payload.columns;
             }
+            if (value.query) {
+              return payload.query[value.query];
+            }
             if (value.type.includes("array") || value.type == "columns") {
               return [];
             }

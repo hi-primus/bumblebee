@@ -1426,6 +1426,7 @@ export default {
         newDfName: previousPayload.newDfName ||this.getNewDfName(),
         allColumns: this.allColumns,
         workspace_name: this.$route.params.slug,
+        query: this.$route.query,
         type: command.type,
         generator: command.generator || previousPayload.generator,
         command: command.command || previousPayload.command,
@@ -1459,6 +1460,8 @@ export default {
           ...payload,
           ...(previousPayload || {})
         }
+
+        delete payload.query;
 
         if (commandHandler.dialog) {
 
