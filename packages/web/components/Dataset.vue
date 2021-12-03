@@ -552,7 +552,7 @@ export default {
             this.handleSelection( _selected, true )
           })
           return filteredColumns.map(col => {
-            return { ...col, profilerDtype: col.stats ? col.stats.inferred_data_type.data_type : null }
+            return { ...col, profilerDtype: col.stats && col.stats.inferred_data_type ? col.stats.inferred_data_type.data_type : null }
           });
         }
       } catch (err) {
