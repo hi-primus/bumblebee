@@ -890,12 +890,18 @@ export const actions = {
     }
 
     cells = cells.map(cell => {
-      if (cell && cell.payload && cell.payload.request) {
-        cell.payload.request.engine = (state.localEngineParameters || {}).engine || cell.payload.request.engine;
+      try {
+
+        if (cell && cell.payload && cell.payload.request) {
+          cell.payload.request.engine = (state.localEngineParameters || {}).engine || cell.payload.request.engine;
+        }
+        cell.code = generateCode(cell)[0];
+        return cell;
+      } catch (err) {
+        console.error('Error generating code', err);
+        return false
       }
-      cell.code = generateCode(cell)[0];
-      return cell;
-    })
+    }).filter(cell => cell);
 
     let commands = cells.filter(e=>!(e && e.payload && e.payload.request && e.payload.request.isLoad));
     let dataSources = cells.filter(e=>e && e.payload && e.payload.request && e.payload.request.isLoad);
