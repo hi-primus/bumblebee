@@ -1313,30 +1313,39 @@ export default {
 
     commandListener__profile (response) {
 
-      let { dfName, update, partial } = response.reply;
+      try {
 
-      if (update !== this.currentDatasetUpdate) {
-        throw new Error('Profile update mismatch', update, this.currentDatasetUpdate);
+        let { dfName, update, partial } = response.reply;
+  
+        if (update !== this.currentDatasetUpdate) {
+          throw new Error('Profile update mismatch', update, this.currentDatasetUpdate);
+        }
+  
+        if (dfName !== this.currentDataset.dfName) {
+          throw new Error('Dataframe variable name mismatch', dfName, this.currentDataset.dfName);
+        }
+  
+        let dataset = parseResponse(response.data.result);
+  
+        if (!response.data.result || !dataset) {
+          throw new Error('Profile result missing', response.data);
+        }
+  
+        this.$store.dispatch('setProfiling', {
+          dfName,
+          dataset,
+          avoidReolad: true,
+          partial
+        });
+  
+        this.checkProfilingStatus();
+
+      } catch (err) {
+        console.error('[PROFILE]', err);
+        this.$store.commit('mutation', { mutate: 'commandsDisabled', payload: undefined});
+        this.$store.commit('mutation', {mutate: 'updatingProfile', payload: false });
       }
 
-      if (dfName !== this.currentDataset.dfName) {
-        throw new Error('Dataframe variable name mismatch', dfName, this.currentDataset.dfName);
-      }
-
-      let dataset = parseResponse(response.data.result);
-
-      if (!response.data.result || !dataset) {
-        throw new Error('Profile result missing', response.data);
-      }
-
-      this.$store.dispatch('setProfiling', {
-        dfName,
-        dataset,
-        avoidReolad: true,
-        partial
-      });
-
-      this.checkProfilingStatus();
     },
 
     commandListener__profile_preview (response) {
