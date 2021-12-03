@@ -2784,20 +2784,6 @@ export const commandsHandlers = {
       return command;
     },
 
-    beforeRunCells: async (currentCommand, methods) => {
-      var command = deepCopy(currentCommand);
-
-      var dfNames = Object.keys(command.secondaryDatasets);
-
-      for (let i = 0; i < dfNames.length; i++) {
-        var dfName = dfNames[i];
-        command.secondaryDatasets[
-          dfName
-        ].columns = await methods.datasetColumns(dfName);
-      }
-
-      return command;
-    },
     content: (payload) =>
       `<b>Join</b> ${hlParam(payload.dfName)} <b>with</b> ${hlParam(
         payload.with
