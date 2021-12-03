@@ -102,7 +102,6 @@ export default {
         datasetTypes: this.datasetTypes,
         datasetSample: this.datasetSample,
         datasetExecute: this.datasetExecute,
-        datasetColumns: this.datasetColumns,
         storeDispatch: this.$store.dispatch,
         storeCommit: this.$store.commit,
       }
