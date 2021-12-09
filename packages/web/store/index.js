@@ -1358,6 +1358,10 @@ export const actions = {
 
     console.log('[BUMBLEBEE] Initializing Optimus', username, slug, engineParams);
 
+    if (typeof socketPost !== 'function') {
+      throw new Error('Cannot connect to Optimus, socketPost is not a function');
+    }
+
     let response = await socketPost('initialize', {
       username,
       workspace: slug || 'default',
@@ -1407,9 +1411,10 @@ export const actions = {
     commit('mutation', { mutate: 'updatingWorkspace', payload: false });
     
     console.debug('[DEBUG] Loading cells result');
+    
     try {
 
-      var optimus = await dispatch('getOptimus', { payload: {socketPost} } );
+      var optimus = await dispatch('getOptimus', { payload: { socketPost }} );
       
       let generators = await dispatch('customCommands/setAllGenerators', { socketPost }, { root: true });
 
