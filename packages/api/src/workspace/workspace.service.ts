@@ -91,14 +91,26 @@ export class WorkspaceService {
 	}
 
 	async copyWorkspace(user, workspaceId: string, data: any): Promise<any> {
-		const workspaceToCopy = await this.workspaceModel.findById(workspaceId);
+		let result: any = await this.workspaceModel
+			.findOne({ _id: workspaceId, user: user.id })
+			.exec();
+
+		let workspaceToCopy = result._doc;
+		
+		workspaceToCopy.name = workspaceToCopy.name + ' Copy';
+		workspaceToCopy.slug = workspaceToCopy.slug + '-copy';
+
+		delete workspaceToCopy.createdAt;
+		delete workspaceToCopy.updatedAt;
+		delete workspaceToCopy.id;
+		delete workspaceToCopy._id;
+		
 		const workspace = new this.workspaceModel({
 			...workspaceToCopy,
-			commands: workspaceToCopy.commands,
-			tabs: workspaceToCopy.tabs,
 			...data,
-			user: user.userId,
+			createdBy: user.userId
 		});
+		
 		return workspace.save();
 	}
 }
