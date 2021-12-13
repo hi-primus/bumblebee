@@ -233,7 +233,7 @@ export default {
 	},
 
 	mounted() {
-		console.log(`Bumblebee v${version}`)
+		console.log(`Bumblebee v${version}-c000`)
 		window.document.body.click()
     this.checkDummyLogin()
     this.checkFirstTime()

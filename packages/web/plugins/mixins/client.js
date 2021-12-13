@@ -280,9 +280,9 @@ export default {
 
         if (!payload.reply || payload.reply == 'await') {
           if (payload.isAsync) {
-            window.promises[timestamp] = {resolve, reject, isAsync: true}
+            window.promises[timestamp] = { resolve, reject, payload, isAsync: true };
           } else {
-            window.promises[timestamp] = {resolve, reject}
+            window.promises[timestamp] = { resolve, reject, payload };
           }
         }
 

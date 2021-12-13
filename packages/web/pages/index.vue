@@ -30,7 +30,7 @@ export default {
 	},
 
 	mounted() {
-		console.log(`Bumblebee v${version}`);
+		console.log(`Bumblebee v${version}-c000`);
 	},
 
 };
