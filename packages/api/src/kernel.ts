@@ -254,10 +254,14 @@ export const requestToKernel = async function (type, sessionId, payload, asyncCa
 
 	const response: any = await new Promise((resolve, reject) => {
 		kernels[sessionId].promises[msg_id] = { resolve, reject };
-    if (asyncCallback) {
-      kernels[sessionId].promises[msg_id].resolveAsync = asyncCallback;
-    }
-    kernels[sessionId].connection.sendUTF(JSON.stringify(codeMsg));
+		try {
+			if (asyncCallback) {
+				kernels[sessionId].promises[msg_id].resolveAsync = asyncCallback;
+			}
+			kernels[sessionId].connection.sendUTF(JSON.stringify(codeMsg));
+		} catch (err) {
+			reject(err);
+		}
 	});
 
 	const endTime = new Date().getTime();
@@ -285,7 +289,17 @@ const PRIORITIES = {
 
 const newQueue = function (sessionId) {
 	return new Queue(async (task, cb)=>{
-		requestToKernel(task.type, sessionId, task.payload, task.asyncCallback).then(cb);
+		let response;
+		try {
+			response = await requestToKernel(task.type, sessionId, task.payload, task.asyncCallback);
+		} catch (err) {
+			response = {
+				error: 'Internal error',
+				err,
+				status: 'error',
+			};
+		}
+		cb(response);
 	}, {
 		id: 'id',
 		filo: true,
