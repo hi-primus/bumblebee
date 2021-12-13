@@ -130,6 +130,13 @@ export class AppGateway
 
 	handleConnection(client: Socket, ...args: any[]) {
     this.logger.log(`Client connected: ${client.id}`);
+
+    client.on('disconnect', (err) => {
+      if (err) {
+        this.logger.warn(`Client disconnected: ${err}`);
+      }
+    });
+
   }
 
   @SubscribeMessage('confirmation')
