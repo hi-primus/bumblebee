@@ -662,7 +662,7 @@ export const actions = {
 
       reply = reply || 'await';
 
-      if (codePayload && typeof codePayload == "object") {
+      if (codePayload && typeof codePayload == "object" && !Array.isArray(codePayload)) {
         codePayload = [codePayload];
       }
 
