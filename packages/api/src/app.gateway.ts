@@ -17,7 +17,8 @@ import {
   kernelHandler,
   deleteKernel,
   requestToKernel,
-  removeFromQueue
+  removeFromQueue,
+  createSession
 } from './kernel';
 
 // import {
@@ -125,7 +126,7 @@ export class AppGateway
 
 	handleDisconnect(client: Socket) {
 		this.logger.log(`Client disconnected: ${client.id}`);
-    deleteKernel(client.id)
+    deleteKernel(client.id, 20000)
   }
 
 	handleConnection(client: Socket, ...args: any[]) {
@@ -135,6 +136,14 @@ export class AppGateway
       if (err) {
         this.logger.warn(`Client disconnected: ${err}`);
       }
+    });
+
+    client.on("reconnection_attempt", () => {
+      this.logger.log(`Attempting reconnection: ${client.id}`);
+    });
+    
+    client.on("reconnect", () => {
+      this.logger.log(`Reconnected: ${client.id}`);
     });
 
   }
@@ -149,6 +158,7 @@ export class AppGateway
       this.users[client.id] = user;
 
       if (payload?.username == user?.username) {
+        createSession(client.id, payload.previousSessionId);
         client.emit('success', {});
       } else {
         console.warn('Username not matching', payload?.username, user?.username)

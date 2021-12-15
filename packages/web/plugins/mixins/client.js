@@ -219,10 +219,10 @@ export default {
       })
     },
 
-    async assureSocket (socket, message) {
+    async assureSocket (socket, message, id = undefined) {
       if (!socket) {
 
-        await this.startSocket();
+        await this.startSocket(id);
 
         if (!['initialize','features'].includes(message)) {
 
@@ -248,12 +248,14 @@ export default {
           let reinitializationPayload = {
             username: this.currentUsername,
             workspace: slug,
-            ...params
+            id: window.sessionId,
+            ...params,
+            reset: false
           }
 
           console.log('[BUMBLEBEE] Reinitializing Optimus');
 
-          let response = await this.socketPost('initialize', reinitializationPayload );
+          let response = await this.socketPost('initialize', reinitializationPayload);
 
           if (!response.data.optimus) {
             throw response
@@ -289,7 +291,14 @@ export default {
         let socket = await window.socket();
 
         try {
-          socket = await this.assureSocket(socket, message)
+
+          let id;
+
+          if (message == 'initialize' && payload.id) {
+            id = payload.id;
+          }
+
+          socket = await this.assureSocket(socket, message, id)
 
           if (!socket) {
             reject(new Error("Error connecting to back-end"));
@@ -342,14 +351,14 @@ export default {
 					this.$store.commit('setAppStatus', appStatus)
 				}
 			}
-			this.stopClient()
+			this.stopClient(false, true)
     },
 
     async signOut () {
       await this.$store.dispatch('session/signOut')
     },
 
-		async stopClient (waiting) {
+		async stopClient (waiting, error) {
 
       this.socketAvailable = false
 
@@ -358,6 +367,10 @@ export default {
       }
 
       var socket = await window.socket();
+
+      if (!error) {
+        window.sessionId = undefined;
+      }
 
 			if (socket) {
 				try {
@@ -374,7 +387,7 @@ export default {
       }
     },
 
-    startSocket () {
+    startSocket (previousSessionId) {
 
       if (!process.client) {
         throw new Error('SSR not allowed');
@@ -475,9 +488,10 @@ export default {
             socket.on('success', () => {
               console.log('Connection confirmed');
               this.socketAvailable = true;
+              window.sessionId = socket.id;
               resolve(socket);
             });
-            socket.emit('confirmation', { workspace, username, authorization: accessToken, key });
+            socket.emit('confirmation', { workspace, username, authorization: accessToken, key, previousSessionId });
           });
 
           socket.on('connection-error', (reason) => {
@@ -486,10 +500,18 @@ export default {
             reject('Connection failure');
           });
 
-          socket.on('disconnect', (reason) => {
+          socket.on('disconnect', async (reason) => {
             console.log('Connection lost', reason);
-            this.handleError();
-            reject('Connection lost ' + reason);
+            if (reason == "transport close") {
+              socket = await this.assureSocket(socket, 'features', socket.id);
+            }
+
+            if (socket && socket.connected && !socket.disconnected) {
+              resolve(socket);
+            } else {
+              this.handleError();
+              reject('Connection lost ' + reason);
+            }
           });
         } catch (err) {
           reject(err)
@@ -505,33 +527,6 @@ export default {
 
       return window.socketPromise;
 
-    },
-
-		async startClient ({workspace, key}) {
-
-      if (['loading','workspace'].includes(this.$store.state.appStatus.status)) {
-        return false // TO-DO Check if it's the same workspace
-      }
-
-      try {
-
-        var response = this.$store.dispatch('getWorkspace', { slug: workspace } );
-
-        if (key) {
-          this.$store.commit('session/mutation', {mutate: 'key', payload: key});
-        }
-
-        var client_status = await this.startSocket();
-
-        if (client_status === 'ok') {
-          return true;
-        } else {
-          throw client_status;
-        }
-
-      } catch (error) {
-        this.handleError(error);
-      }
     },
 
     // open responses handling

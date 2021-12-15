@@ -10,6 +10,7 @@ let Queue = require('better-queue');
 const DEFAULT_PRIORITY = 100;
 
 const kernels = [];
+const aliases = {};
 const requests: { [fieldName: string]: typeof Queue } = {};
 
 let kernel_addresses;
@@ -49,23 +50,35 @@ export const trimCharacters = (s, c) => {
 	return s.replace(new RegExp('^[' + c + ']+|[' + c + ']+$', 'g'), '');
 };
 
+export const createSession = async function (clientId, sessionId) {
+	if (sessionId && kernels[sessionId]) {
+		aliases[clientId] = sessionId;
+	} else if (clientId) {
+		kernels[getKernelId(clientId)] = kernels[getKernelId(clientId)] || {};
+	}
+	
+	kernels[getKernelId(clientId)].removeKernel = false;
+	
+	return kernels[getKernelId(clientId)];
+};
+
 export const initializeKernel = async function (sessionId, payload) {
 	let result = false;
 
-	if (payload?.reset != '0') {
-		kernels[sessionId] = await clearKernel(sessionId);
+	if (payload?.reset !== false) {
+		kernels[getKernelId(sessionId)] = await clearKernel(sessionId);
 	} else {
-		kernels[sessionId] = kernels[sessionId] || {};
+		kernels[getKernelId(sessionId)] = kernels[getKernelId(sessionId)] || {};
 	}
-	if (!kernels[sessionId].initialization) {
-		kernels[sessionId].initialization = initializeOptimusSession(
+	if (!kernels[getKernelId(sessionId)].initialization) {
+		kernels[getKernelId(sessionId)].initialization = initializeOptimusSession(
 			sessionId,
 			payload,
 		);
-		result = await kernels[sessionId].initialization;
+		result = await kernels[getKernelId(sessionId)].initialization;
 	}
-	kernels[sessionId].initialization = false;
-	return { kernel: kernels[sessionId], result };
+	kernels[getKernelId(sessionId)].initialization = false;
+	return { kernel: kernels[getKernelId(sessionId)], result };
 };
 
 export const initializeOptimusSession = async function (sessionId, payload) {
@@ -74,10 +87,10 @@ export const initializeOptimusSession = async function (sessionId, payload) {
 
 	if (
 		!payload &&
-		kernels[sessionId] &&
-		kernels[sessionId].initializationPayload
+		kernels[getKernelId(sessionId)] &&
+		kernels[getKernelId(sessionId)].initializationPayload
 	) {
-		payload = kernels[sessionId].initializationPayload;
+		payload = kernels[getKernelId(sessionId)].initializationPayload;
 	} else if (!payload) {
 		payload = {};
 	}
@@ -110,15 +123,15 @@ export const initializeOptimusSession = async function (sessionId, payload) {
 	}
 
 	if (
-		!kernels[sessionId] ||
-		!kernels[sessionId].id ||
-		!kernels[sessionId].connection
+		!kernels[getKernelId(sessionId)] ||
+		!kernels[getKernelId(sessionId)].id ||
+		!kernels[getKernelId(sessionId)].connection
 	) {
 		return false;
 	}
 
-	kernels[sessionId].initialized = result;
-	kernels[sessionId].initializationPayload = payload;
+	kernels[getKernelId(sessionId)].initialized = result;
+	kernels[getKernelId(sessionId)].initializationPayload = payload;
 
 	return result;
 };
@@ -129,29 +142,29 @@ const assertConnection = async function (
 	assertOptimus = true
 ) {
 	try {
-		if (!kernels[sessionId] || !kernels[sessionId].id) {
+		if (!kernels[getKernelId(sessionId)] || !kernels[getKernelId(sessionId)].id) {
 			await createKernel(sessionId, kernel_address);
 		}
 
-		if (!kernels[sessionId] || !kernels[sessionId].id) {
+		if (!kernels[getKernelId(sessionId)] || !kernels[getKernelId(sessionId)].id) {
 			throw new Error('Kernel creation went wrong');
 		}
 
 		await createConnection(sessionId);
 
     if (assertOptimus) {
-      if (!(kernels[sessionId].initialized || kernels[sessionId].id)) {
-        if (!kernels[sessionId].initialization) {
-          kernels[sessionId].initialization = initializeOptimusSession(sessionId, {
+      if (!(kernels[getKernelId(sessionId)].initialized || kernels[getKernelId(sessionId)].id)) {
+        if (!kernels[getKernelId(sessionId)].initialization) {
+          kernels[getKernelId(sessionId)].initialization = initializeOptimusSession(sessionId, {
             payloadDefault: true,
           });
         }
-        await kernels[sessionId].initialization;
-        kernels[sessionId].initialization = false;
+        await kernels[getKernelId(sessionId)].initialization;
+        kernels[getKernelId(sessionId)].initialization = false;
       }
     }
 
-		return { status: "ok", content: kernels[sessionId].connection};
+		return { status: "ok", content: kernels[getKernelId(sessionId)].connection};
 
 	} catch (error) {
 		return { status: "error", error };
@@ -160,18 +173,18 @@ const assertConnection = async function (
 
 export const kernelHandler = function (sessionId) {
 
-	if (!kernels[sessionId].kernelHandler) {
-    kernels[sessionId].kernelHandler = new KernelRoutines(false);
+	if (!kernels[getKernelId(sessionId)].kernelHandler) {
+    kernels[getKernelId(sessionId)].kernelHandler = new KernelRoutines(false);
   }
 
-  return kernels[sessionId].kernelHandler;
+  return kernels[getKernelId(sessionId)].kernelHandler;
 }
 
 export const requestToKernel = async function (type, sessionId, payload, asyncCallback = false): Promise<any> {
 
-  kernels[sessionId] = kernels[sessionId] || {};
+  kernels[getKernelId(sessionId)] = kernels[getKernelId(sessionId)] || {};
 
-  let kernelAddress : any = kernels[sessionId].kernel_address;
+  let kernelAddress : any = kernels[getKernelId(sessionId)].kernel_address;
 
   let assertOptimus = true;
 
@@ -187,7 +200,7 @@ export const requestToKernel = async function (type, sessionId, payload, asyncCa
 
     if (!kernelAddress && payload.jupyter_address && payload.jupyter_address.ip && payload.jupyter_address.port) {
       kernelAddress = payload.jupyter_address.ip + ':' + payload.jupyter_address.port;
-      kernels[sessionId].kernel_address = kernelAddress;
+      kernels[getKernelId(sessionId)].kernel_address = kernelAddress;
       console.log(`Using kernel address ${kernelAddress} on session ${sessionId}`);
     }
   }
@@ -211,31 +224,31 @@ export const requestToKernel = async function (type, sessionId, payload, asyncCa
 
 	let code = payload;
 
-	if (!kernels[sessionId].kernelHandler) {
-    kernels[sessionId].kernelHandler = new KernelRoutines(false);
+	if (!kernels[getKernelId(sessionId)].kernelHandler) {
+    kernels[getKernelId(sessionId)].kernelHandler = new KernelRoutines(false);
   }
 
 	switch (type) {
     case 'init':
       payload.engine = payload.engine || process.env.ENGINE || 'pandas';
-      code = kernels[sessionId].kernelHandler.init(payload);
+      code = kernels[getKernelId(sessionId)].kernelHandler.init(payload);
       break;
     case 'code':
-      code = kernels[sessionId].kernelHandler.code(payload);
+      code = kernels[getKernelId(sessionId)].kernelHandler.code(payload);
       break;
     case 'asyncCode':
-      code = kernels[sessionId].kernelHandler.asyncCode(payload);
+      code = kernels[getKernelId(sessionId)].kernelHandler.asyncCode(payload);
       break;
     default:
-      code = kernels[sessionId].kernelHandler[type](payload);
+      code = kernels[getKernelId(sessionId)].kernelHandler[type](payload);
       break;
 	}
 
-	const msg_id = kernels[sessionId].uuid + Math.random();
+	const msg_id = kernels[getKernelId(sessionId)].uuid + Math.random();
 
 	const hdr = {
 		msg_id: msg_id,
-		session: kernels[sessionId].uuid,
+		session: kernels[getKernelId(sessionId)].uuid,
 		date: new Date().toISOString(),
 		msg_type: 'execute_request',
 		version: '5.3', // TO-DO: check
@@ -248,17 +261,17 @@ export const requestToKernel = async function (type, sessionId, payload, asyncCa
 		content: { code: code + '\n', silent: false },
 	};
 
-	if (!kernels[sessionId].promises) {
-		kernels[sessionId].promises = {};
+	if (!kernels[getKernelId(sessionId)].promises) {
+		kernels[getKernelId(sessionId)].promises = {};
 	}
 
 	const response: any = await new Promise((resolve, reject) => {
-		kernels[sessionId].promises[msg_id] = { resolve, reject };
+		kernels[getKernelId(sessionId)].promises[msg_id] = { resolve, reject };
 		try {
 			if (asyncCallback) {
-				kernels[sessionId].promises[msg_id].resolveAsync = asyncCallback;
+				kernels[getKernelId(sessionId)].promises[msg_id].resolveAsync = asyncCallback;
 			}
-			kernels[sessionId].connection.sendUTF(JSON.stringify(codeMsg));
+			kernels[getKernelId(sessionId)].connection.sendUTF(JSON.stringify(codeMsg));
 		} catch (err) {
 			reject(err);
 		}
@@ -407,44 +420,44 @@ export const runCode = async function (code = '', sessionId = '', category = fal
 
 export const createConnection = async function (sessionId) {
 
-  kernels[sessionId] = kernels[sessionId] || {};
+  kernels[getKernelId(sessionId)] = kernels[getKernelId(sessionId)] || {};
 
-  const ka = kernels[sessionId].kernel_address || 0;
+  const ka = kernels[getKernelId(sessionId)].kernel_address || 0;
 
-	if (!kernels[sessionId].connecting) {
-		kernels[sessionId].connecting = new Promise((resolve, reject) => {
+	if (!kernels[getKernelId(sessionId)].connecting) {
+		kernels[getKernelId(sessionId)].connecting = new Promise((resolve, reject) => {
 
-      kernels[sessionId] = kernels[sessionId] || {};
+      kernels[getKernelId(sessionId)] = kernels[getKernelId(sessionId)] || {};
 
-			if (!kernels[sessionId].client) {
-				kernels[sessionId].client = new WebSocketClient({
+			if (!kernels[getKernelId(sessionId)].client) {
+				kernels[getKernelId(sessionId)].client = new WebSocketClient({
 					closeTimeout: 20 * 60 * 1000,
 				});
       }
 
-			kernels[sessionId].client.connect(
-				`${wsKernelBase(ka)}/api/kernels/${kernels[sessionId].id}/channels`,
+			kernels[getKernelId(sessionId)].client.connect(
+				`${wsKernelBase(ka)}/api/kernels/${kernels[getKernelId(sessionId)].id}/channels`,
 			);
 
-			kernels[sessionId].client.on('connect', function (connection) {
-				// kernels[sessionId] = kernels[sessionId] || {};
-        kernels[sessionId].connection = connection;
+			kernels[getKernelId(sessionId)].client.on('connect', function (connection) {
+				// kernels[getKernelId(sessionId)] = kernels[getKernelId(sessionId)] || {};
+        kernels[getKernelId(sessionId)].connection = connection;
 
-        kernels[sessionId].connection.on('close', function (message) {
-          Object.values(kernels[sessionId].promises || {}).forEach((promise: any)=>{
+        kernels[getKernelId(sessionId)].connection.on('close', function (message) {
+          Object.values(kernels[getKernelId(sessionId)].promises || {}).forEach((promise: any)=>{
             promise.reject(`Socket closed: "${message}"`);
           })
-          kernels[sessionId] = {};
+          kernels[getKernelId(sessionId)] = {};
         })
 
-        kernels[sessionId].connection.on('error', function (message) {
-          Object.values(kernels[sessionId].promises || {}).forEach((promise: any)=>{
+        kernels[getKernelId(sessionId)].connection.on('error', function (message) {
+          Object.values(kernels[getKernelId(sessionId)].promises || {}).forEach((promise: any)=>{
             promise.reject(`Socket error: "${message}"`);
           })
-          kernels[sessionId] = {};
+          kernels[getKernelId(sessionId)] = {};
         })
 
-				kernels[sessionId].connection.on('message', function (message) {
+				kernels[getKernelId(sessionId)].connection.on('message', function (message) {
 					try {
 
             let message_response;
@@ -472,11 +485,11 @@ export const createConnection = async function (sessionId) {
                 }
 
                 if (future_key) {
-                  if (kernels[sessionId].promises[future_key]) {
+                  if (kernels[getKernelId(sessionId)].promises[future_key]) {
                     msg_id = future_key;
-                  } else if (kernels[sessionId].promises[msg_id].resolveAsync && future_key !== msg_id) {
-                    kernels[sessionId].promises[future_key] = kernels[sessionId].promises[msg_id];
-                    delete kernels[sessionId].promises[msg_id];
+                  } else if (kernels[getKernelId(sessionId)].promises[msg_id].resolveAsync && future_key !== msg_id) {
+                    kernels[getKernelId(sessionId)].promises[future_key] = kernels[getKernelId(sessionId)].promises[msg_id];
+                    delete kernels[getKernelId(sessionId)].promises[msg_id];
                     msg_id = future_key;
                   }
                 }
@@ -509,17 +522,17 @@ export const createConnection = async function (sessionId) {
               response._type = message_response.msg_type;
             }
 
-						if (!kernels[sessionId]) {
+						if (!kernels[getKernelId(sessionId)]) {
 
               console.log('Unresolved response (no kernel)', sessionId);
 							throw new Error('Message received without kernel session');
 
-						} else if (!kernels[sessionId].promises) {
+						} else if (!kernels[getKernelId(sessionId)].promises) {
 
               console.log('Unresolved response (no promise pool)', sessionId);
 							throw new Error('Message received without promises pool');
 
-            } else if (!kernels[sessionId].promises[msg_id]) {
+            } else if (!kernels[getKernelId(sessionId)].promises[msg_id]) {
 
               if (message_response.msg_type === 'execute_result') {
                 console.log('Unresolved response (wrong msg_id)', msg_id, sessionId);
@@ -528,11 +541,11 @@ export const createConnection = async function (sessionId) {
 
             } else if (['execute_result', 'error'].includes(message_response.msg_type)) {
 
-              kernels[sessionId].promises[msg_id].resolve(response);
+              kernels[getKernelId(sessionId)].promises[msg_id].resolve(response);
 
-            } else if (['finished', 'error'].includes(response?.status) && kernels[sessionId].promises[msg_id].resolveAsync) {
+            } else if (['finished', 'error'].includes(response?.status) && kernels[getKernelId(sessionId)].promises[msg_id].resolveAsync) {
 
-              kernels[sessionId].promises[msg_id].resolveAsync(response)
+              kernels[getKernelId(sessionId)].promises[msg_id].resolveAsync(response)
 
             }
 
@@ -545,17 +558,17 @@ export const createConnection = async function (sessionId) {
 
         setTimeout(() => { //
           console.log('Connection created', sessionId);
-          resolve(kernels[sessionId].connection);
+          resolve(kernels[getKernelId(sessionId)].connection);
         }, 1000);
 
 			});
 
-			kernels[sessionId].client.on('connectFailed', function (error) {
-				kernels[sessionId].connection = false;
+			kernels[getKernelId(sessionId)].client.on('connectFailed', function (error) {
+				kernels[getKernelId(sessionId)].connection = false;
 				console.error(
 					'Connection to Jupyter Kernel Gateway failed',
 					wsKernelBase(ka),
-					kernels[sessionId].id,
+					kernels[getKernelId(sessionId)].id,
 				);
 				reject(error);
 			});
@@ -563,7 +576,7 @@ export const createConnection = async function (sessionId) {
 		});
 	}
 
-	return kernels[sessionId].connecting;
+	return kernels[getKernelId(sessionId)].connecting;
 };
 
 const createKernel = async function (sessionId, ka : any = undefined) {
@@ -572,12 +585,12 @@ const createKernel = async function (sessionId, ka : any = undefined) {
 		while (tries > 0) {
 			try {
 
-        if (!kernels[sessionId]) {
-          kernels[sessionId] = {};
+        if (!kernels[getKernelId(sessionId)]) {
+          kernels[getKernelId(sessionId)] = {};
         }
 
-        if (kernels[sessionId].kernel_address && ka === undefined) {
-          ka = kernels[sessionId].kernel_address;
+        if (kernels[getKernelId(sessionId)].kernel_address && ka === undefined) {
+          ka = kernels[getKernelId(sessionId)].kernel_address;
         }
 
 				const kernelResponse = await axios.post(
@@ -587,8 +600,8 @@ const createKernel = async function (sessionId, ka : any = undefined) {
         const uuid = Buffer.from(uuidv1(), 'utf8').toString('hex');
 
 
-				kernels[sessionId] = {
-					...kernels[sessionId],
+				kernels[getKernelId(sessionId)] = {
+					...kernels[getKernelId(sessionId)],
 					kernel_address: ka,
 					id: kernelResponse.data.id,
 					uuid,
@@ -616,36 +629,56 @@ const createKernel = async function (sessionId, ka : any = undefined) {
 };
 
 const checkKernel = function (sessionId) {
-	return kernels[sessionId] && kernels[sessionId].id;
+	return kernels[getKernelId(sessionId)] && kernels[getKernelId(sessionId)].id;
 };
 
 const clearKernel = async function (sessionId) {
 	await deleteKernel(sessionId);
-	kernels[sessionId] = {};
-	return kernels[sessionId];
+	kernels[getKernelId(sessionId)] = {};
+	return kernels[getKernelId(sessionId)];
+};
+
+export const getKernelId = function (id) {
+	if (!kernels[id]) {
+		return aliases[id];
+	}
+	return id;
 };
 
 export const getKernel = function (sessionId) {
-	return kernels[sessionId];
+	return kernels[getKernelId(sessionId)];
 };
 
 export const setKernel = function (sessionId, kernelObject) {
-	kernels[sessionId] = kernelObject || {};
-	return kernels[sessionId] || {};
+	kernels[getKernelId(sessionId)] = kernelObject || {};
+	return kernels[getKernelId(sessionId)] || {};
 };
 
-export const deleteKernel = async function (sessionId) {
-	try {
-		if (checkKernel(sessionId)) {
-			const _id = kernels[sessionId].id;
-			const ka = kernels[sessionId].kernel_address || 0;
-			const kernelResponse = await axios.delete(`${kernelBase(ka)}/api/kernels/${_id}`);
+export const deleteKernel = async function (sessionId, t = 0) {
+	kernels[getKernelId(sessionId)].removeKernel = true;
 
-			kernels[sessionId].id = false;
-			console.log('Deleting Session', sessionId, _id);
+	return new Promise((res, rej) => {
+		let _delete = async () => {
+			try {
+				if (kernels[getKernelId(sessionId)].removeKernel && checkKernel(sessionId)) {
+					const _id = kernels[getKernelId(sessionId)].id;
+					const ka = kernels[getKernelId(sessionId)].kernel_address || 0;
+					const kernelResponse = await axios.delete(`${kernelBase(ka)}/api/kernels/${_id}`);
+		
+					kernels[getKernelId(sessionId)].id = false;
+					console.log('Deleting Session', getKernelId(sessionId), _id);
+				}
+			} catch (err) {}
+			res(kernels[getKernelId(sessionId)]);
 		}
-	} catch (err) {}
-	return kernels[sessionId];
+		
+		if (t>0) {
+			setTimeout(_delete, t);
+		} else {
+			_delete();
+		}
+
+	})
 };
 
 export const deleteEveryKernel = async function () {
