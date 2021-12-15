@@ -164,26 +164,29 @@ export const actions =  {
     commit('setGenerators', {generators});
   },
 
-  async injectOperationsCode ({ state, dispatch }, { socketPost }) {
+  injectOperationsCode ({ state, dispatch }, { socketPost }) {
     let generators = {...state.generators, ...state.globalGenerators};
     let generators_keys = Object.keys(generators);
+
+    let codePayload = [];
+
     for (let i = 0; i < generators_keys.length; i++) {
       let generator = generators[generators_keys[i]];
 
       if (generator.definition) {
-        let response = await dispatch('evalCode', {
-          socketPost,
-          category: 'requirement',
-          codePayload: {
-            command: 'inject',
-            definition: generator.definition,
-            functionName: generator.functionName
-          }
-        }, { root: true });
-        console.log('[ADD-ON] Injected:', generators_keys[i]);
+        codePayload.push({
+          command: 'inject',
+          definition: generator.definition,
+          functionName: generator.functionName
+        });
       }
-
     }
+
+    return dispatch('evalCode', {
+      socketPost,
+      category: 'requirement',
+      codePayload
+    }, {root: true});
   },
 
   async setAllGenerators ({ state, commit, dispatch }, { content, socketPost }) {
