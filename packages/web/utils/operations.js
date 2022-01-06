@@ -4305,7 +4305,7 @@ export const commandsHandlers = {
         }
       };
     },
-    content: (payload) => `<b>One-hot encode</b>` + columnsHint(payload.columns)
+    content: (payload) => `<b>One-hot encode</b> ` + columnsHint(payload.columns)
   },
 
   string_to_index: {
@@ -4334,7 +4334,7 @@ export const commandsHandlers = {
     content: (payload) => {
       // TO-DO: Test
       return (
-        `<b>Set strings to indices</b> on` +
+        `<b>Set strings to indices</b> on ` +
         columnsHint(payload.columns, payload.output_cols)
       );
     },
