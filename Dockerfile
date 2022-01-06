@@ -31,7 +31,7 @@ ENV PATH="/root/anaconda3/bin:${PATH}"
 RUN sudo chown -R root ~/anaconda3/bin && \
     sudo chmod -R +x ~/anaconda3/bin
 
-RUN curl -sL https://deb.nodesource.com/setup_10.x | sudo -E bash - && \
+RUN curl -sL https://deb.nodesource.com/setup_16.x | sudo -E bash - && \
     sudo apt-get install nodejs
 
 RUN conda install -c conda-forge jupyterlab && \
