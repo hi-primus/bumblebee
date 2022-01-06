@@ -284,9 +284,9 @@ export default {
 
         if (!payload.reply || payload.reply == 'await') {
           if (payload.isAsync) {
-            window.promises[timestamp] = {resolve, reject, category, isAsync: true}
+            window.promises[timestamp] = {resolve, reject, payload, category, isAsync: true}
           } else {
-            window.promises[timestamp] = {resolve, reject, category}
+            window.promises[timestamp] = {resolve, reject, payload, category}
           }
         }
 
