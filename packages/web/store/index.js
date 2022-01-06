@@ -286,6 +286,7 @@ export const mutations = {
 
   previewDefault (state, payload) {
     var names = payload ? payload.names : undefined;
+    this.commit('mutation', {mutate: 'updatingPreview', payload: false });
     state.properties.filter(p=>p.clear).forEach(p=>{
       if (!names || !names.length || names.includes(p.name)) {
         if (p.multiple) {
@@ -1617,53 +1618,38 @@ export const actions = {
     return dispatch('getPromise', promisePayload);
   },
 
-  async lateProfiles ({state, commit, dispatch}, {dfName, columnsCount, avoidReload, socketPost}) {
-    let promise = false;
-    for (let i = 20; i < columnsCount+10; i+=10) {
-      let dataset = await dispatch('requestProfiling', { dfName, socketPost, partial: i });
-      await promise;
-      promise = dispatch('setProfiling', { dfName, dataset, avoidReload: true, partial: i });
-    }
-    let result = await promise;
-    if (state.afterProfileCallback) {
-      if (typeof state.afterProfileCallback == "function") {
-        await state.afterProfileCallback()
-      }
-      commit('mutation', {mutate: 'afterProfileCallback', payload: false });
-    }
+  async cancelProfilingRequests ({ commit, dispatch }, { socketPost }) {
+    console.debug('[DEBUG] Removing profiling requests');
+    let category = ['profiling', 'profiling_low'];
+    let response = await dispatch('cancelRequests', { category, cancel: false, socketPost })
     commit('mutation', {mutate: 'updatingProfile', payload: false });
     commit('mutation', {mutate: 'updatingWholeProfile', payload: false });
-    return result
+    return response;
   },
 
-  async requestProfiling ({ dispatch }, { dfName, socketPost, partial, low }) {
-
-    let response = await dispatch('evalCode', {
-      socketPost,
-      category: low ? 'profiling_low' : 'profiling',
-      codePayload: {
-        command: 'profile_async',
-        range: partial ? [Math.max(0, partial-10), partial] : undefined,
-        dfName,
-        request: {
-          priority: partial ? (-5-partial) : -10,
-          isAsync: true,
-        }
+  async cancelRequests (store, {category, cancel, socketPost}) {
+    category = [category].flat();
+    let promise = socketPost('remove', { category, cancel });
+    for (let ts in window.promises) {
+      if (category.includes(window.promises[ts].category)) {
+        window.promises[ts]?.reject(false);
       }
-    });
-
-    if (!response || !response.data || !response.data.result || response.data.status == "error") {
-      throw response;
     }
-
-    window.pushCode({code: response.code});
-    return parseResponse(response.data.result);
+    return await promise;
   },
 
   async setProfiling ({ dispatch, state, getters, commit }, { dfName, dataset, avoidReload, partial }) {
 
     dataset.dfName = dfName;
     console.debug('[DATASET] Setting', { dataset, to: dfName });
+
+    let update = state.everyDatasetUpdate[state.datasets.findIndex(d => d.dfName === dfName)];
+    
+    dataset.columns = objectMap(dataset.columns || {}, (column) => {
+      column.update = update;
+      return column;
+    });
+
     await dispatch('setDataset', { dataset, avoidReload: avoidReload || partial, partial });
 
     if (state.gettingNewResults) {
@@ -1677,16 +1663,12 @@ export const actions = {
     return dataset;
   },
 
-  async loadProfiling ({ dispatch, state, getters, commit }, { dfName, socketPost, ignoreFrom, avoidReload, clearPrevious, partial, methods }) {
+  async loadPreliminaryProfile ({ dispatch, state, getters, commit }, { dfName, socketPost, ignoreFrom, avoidReload, clearPrevious, methods }) {
     console.debug('[DEBUG] Loading profiling', dfName);
     try {
 
       commit('mutation', {mutate: 'updatingProfile', payload: true });
       
-      if (!partial) {
-        commit('mutation', {mutate: 'updatingWholeProfile', payload: true });
-      }
-
       await Vue.nextTick();
 
       var executeResult = await dispatch('getExecute', { dfName, socketPost, ignoreFrom, methods });
@@ -1701,14 +1683,22 @@ export const actions = {
         }
       }
 
-      let profile;
-      let dataset;
-
-      if (partial) {
-        dataset = await dispatch('requestProfiling', { dfName, socketPost, partial: 10 });
-      } else {
-        dataset = await dispatch('requestProfiling', { dfName, socketPost, partial: false });
+      let response = await dispatch('evalCode', {
+        socketPost,
+        category: 'requirement',
+        codePayload: {
+          command: 'preliminary_profile',
+          dfName
+        }
+      });
+  
+      if (!response || !response.data || !response.data.result || response.data.status == "error") {
+        throw response;
       }
+  
+      window.pushCode({code: response.code});
+      
+      let dataset = parseResponse(response.data.result);
 
       let found = state.datasets.findIndex(_d => _d.dfName == dfName);
 
@@ -1719,11 +1709,7 @@ export const actions = {
         await dispatch('setDataset', { dataset: foundDataset, avoidReload: true, partial: false });
       }
       
-      if (partial) {
-        profile = await dispatch('setProfiling', { dfName, dataset, avoidReload, partial: 10 });
-      } else {
-        profile = await dispatch('setProfiling', { dfName, dataset, avoidReload: true, partial: false });
-      }
+      let profile = await dispatch('setProfiling', { dfName, dataset, avoidReload, partial: false });
 
       dispatch('afterFirstProfiling');
 
@@ -1733,14 +1719,9 @@ export const actions = {
 
       commit('mutation', {mutate: 'updatingProfile', payload: false });
 
-      if (!partial) {
-        commit('mutation', {mutate: 'updatingWholeProfile', payload: false });
-      }
-
       let columnsCount = profile.summary.cols_count;
-        
 
-      return {profile, dfName, columnsCount, avoidReload};
+      return profile;
 
     } catch (err) {
 
@@ -1764,16 +1745,14 @@ export const actions = {
 
       commit('mutation', {mutate: 'updatingProfile', payload: false });
 
-      commit('mutation', {mutate: 'updatingWholeProfile', payload: false });
-
       throw err;
     }
   },
 
-  getProfiling ({dispatch}, { forcePromise, payload }) {
+  getPreliminaryProfile ({dispatch}, { forcePromise, payload }) {
     var promisePayload = {
       name: 'profilingsPromises',
-      action: 'loadProfiling',
+      action: 'loadPreliminaryProfile',
       payload,
       kernel: true,
       index: payload.dfName,

@@ -519,7 +519,8 @@ import DataBar from '@/components/DataBar'
 import {
   parseResponse, arraysEqual,
   cancellablePromise, throttle,
-  asyncDebounce, debounce, optimizeRanges,
+  asyncDebounce, debounce,
+  chunkize, optimizeRanges,
   escapeQuotes, namesToIndices,
   getSelectedText, getPropertyAsync,
   replaceTags
@@ -1312,17 +1313,21 @@ export default {
 
     commandListener__profile (response) {
 
-      let {dfName, update, partial} = response.reply;
+      let { dfName, update, partial } = response.reply;
 
       if (update !== this.currentDatasetUpdate) {
-        throw new Error('Profile update mismatch');
+        throw new Error('Profile update mismatch', update, this.currentDatasetUpdate);
       }
 
       if (dfName !== this.currentDataset.dfName) {
-        throw new Error('Dataframe variable name mismatch');
+        throw new Error('Dataframe variable name mismatch', dfName, this.currentDataset.dfName);
       }
 
       let dataset = parseResponse(response.data.result);
+
+      if (!response.data.result || !dataset) {
+        throw new Error('Profile result missing', response.data);
+      }
 
       this.$store.dispatch('setProfiling', {
         dfName,
@@ -1378,6 +1383,32 @@ export default {
       return true;
     },
 
+    async updatedProfile () {
+
+      if (!this.currentDataset) {
+        return false;
+      }
+
+      let columns = Math.max((this.currentDataset.columns || []).length, this.currentDataset.summary?.cols_count || 0);
+
+      if (!columns) {
+
+        let preliminary = await this.$store.dispatch('getPreliminaryProfile', { payload: {
+          socketPost: this.socketPost,
+          dfName: this.currentDataset.dfName,
+          avoidReload: true,
+          clearPrevious: false,
+          methods: this.commandMethods
+        }});
+
+        columns = preliminary.columns.length;
+      }
+
+      let doneColumns = (this.currentDataset?.columns?.filter(c => c.stats.missing !== undefined) || []).length;
+      
+      return columns == doneColumns;
+    },
+
     refreshValues () {
       this.updateSelection(this.currentSelection) // TEST
       this.fetched = [];
@@ -1406,6 +1437,90 @@ export default {
         this.recalculateRows = true;
         this.updateRows();
       }
+    },
+
+    cancelProfilingRequests () {
+      return this.$store.dispatch('cancelProfilingRequests', {
+        socketPost: this.socketPost
+      });
+    },
+
+    async requestProfiles (from, to) {
+
+      if (this.profilePreview || !this.currentDataset?.columns) {
+        return false;
+      }
+
+      let preliminary = await this.$store.dispatch('getPreliminaryProfile', { payload: {
+        socketPost: this.socketPost,
+        dfName: this.currentDataset.dfName,
+        avoidReload: true,
+        clearPrevious: false,
+        methods: this.commandMethods
+      }});
+
+      let update = this.currentDatasetUpdate;
+
+      let profiledColumns = this.currentDataset.columns
+        .filter(c => c.stats && c.stats.missing !== undefined && c.update === update)
+        .map(c => c.name);
+
+      let currentColumns = preliminary.columns;
+
+      if (currentColumns && currentColumns.length && profiledColumns.length == currentColumns.length) {
+        return;
+      }
+
+      await this.cancelProfilingRequests();
+
+      this.$store.commit('mutation', {mutate: 'updatingWholeProfile', payload: true })
+
+      let allColumns = this.allColumns
+        .map((c, index) => ({name: c.name, index}));
+      
+      let visibleColumns = allColumns
+        .splice(from, to+1)
+        .filter(c => !profiledColumns.includes(c.name));
+      
+      let leftColumns = allColumns
+        .splice(undefined, Math.min(from-1, 0))
+        .filter(c => !profiledColumns.includes(c.name));
+      let rightColumns = allColumns
+        .splice(to+2, allColumns.length)
+        .filter(c => !profiledColumns.includes(c.name));
+      
+      let hiddenColumns = this.columns
+        .map(c => c.name)
+        .filter(name => !visibleColumns.find(e => e.name === name))
+        .filter(e => !profiledColumns.includes(e));
+
+      let visibleRequests = chunkize(visibleColumns, 10, 15);
+      let notVisibleRequests = [
+        ...chunkize(leftColumns, 10, 15),
+        ...chunkize(rightColumns, 10, 15)
+      ];
+      let hiddenRequests = chunkize(hiddenColumns, 10, 15);
+
+      notVisibleRequests = notVisibleRequests.filter(c => c.length).map(chunk => {
+        let distance = Math.abs(chunk[chunk.length - 1].index - to);
+        return {chunk, distance};
+      });
+
+      notVisibleRequests = notVisibleRequests.sort((a, b) => a.distance - b.distance).map(e => e.chunk);
+
+      visibleRequests.filter(chunk => chunk.length).forEach(chunk => {
+        this.requestProfile(chunk.map(c => c.name), true);
+      });
+
+      notVisibleRequests.filter(chunk => chunk.length).forEach(chunk => {
+        this.requestProfile(chunk.map(c => c.name), false);
+      });
+
+      hiddenRequests.filter(chunk => chunk.length).forEach(chunk => {
+        this.requestProfile(chunk, false);
+      });
+
+      return [...visibleRequests, ...notVisibleRequests, ...hiddenRequests].filter(c => c.length);
     },
 
     requestProfile(columns, low) {
@@ -1442,48 +1557,12 @@ export default {
       }
     },
 
-    checkProfilingStatus: debounce( function () {
-      let columns = Math.max((this.currentDataset?.columns || []).length, this.currentDataset?.summary?.cols_count || 0);
-      let doneColumns = (this.currentDataset?.columns?.filter(c => c.stats.missing !== undefined) || []).length;
-
-      if (columns == doneColumns && this.$store.state.updatingWholeProfile) {
+    checkProfilingStatus: debounce( async function () {
+      if (await this.updatedProfile()) {
         return this.$store.commit('mutation', {mutate: 'updatingWholeProfile', payload: false })
       }
     }, 300),
     
-    async fixNotProfiledColumns () {
-      let columns = Math.max((this.currentDataset?.columns || []).length, this.currentDataset?.summary?.cols_count || 0);
-      let doneColumns = (this.currentDataset?.columns?.filter(c => c.stats.missing !== undefined) || []).length;
-
-      if (doneColumns < columns && !this.previewCode) {
-
-        if (!this.$store.state.updatingWholeProfile) {
-
-          let pendingColumns = this.currentDataset?.columns?.filter(c => c.stats.missing == undefined)
-
-          this.$store.commit('mutation', {mutate: 'updatingWholeProfile', payload: true });
-          
-          if (!pendingColumns || !pendingColumns.length) {
-            let preliminary = await this.$store.dispatch('getProfiling', { payload: {
-              socketPost: this.socketPost,
-              dfName: this.currentDataset.dfName,
-              avoidReload: true,
-              clearPrevious: false,
-              preliminary: true,
-              methods: this.commandMethods
-            }});
-
-            console.log('preliminary', preliminary);
-          }
-
-          return this.requestProfile("*", true);
-          
-        }
-      } else if (this.$store.state.updatingWholeProfile) {
-        return this.$store.commit('mutation', {mutate: 'updatingWholeProfile', payload: false })
-      }
-    },
-
     expandCell (cellElement) {
       var columnElement = cellElement.parentElement;
       var tableElement = columnElement.parentElement;
@@ -2150,13 +2229,14 @@ export default {
           numbers[n] = true
         }
 
-        this.lazyColumns = numbers
+        this.lazyColumns = numbers;
+
+        this.requestProfiles(a, b);
+
       } catch (err) {
         console.error(err)
         this.lazyColumns = []
       }
-
-      this.fixNotProfiledColumns();
 
     }, 80),
 

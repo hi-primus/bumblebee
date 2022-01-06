@@ -278,13 +278,15 @@ export default {
 
       let timestamp = ++window.timestamps;
 
+      let category = message == 'run' ? payload.category : undefined;
+
       let postPromise = new Promise( async (resolve, reject) => {
 
         if (!payload.reply || payload.reply == 'await') {
           if (payload.isAsync) {
-            window.promises[timestamp] = { resolve, reject, payload, isAsync: true };
+            window.promises[timestamp] = {resolve, reject, category, isAsync: true}
           } else {
-            window.promises[timestamp] = { resolve, reject, payload };
+            window.promises[timestamp] = {resolve, reject, category}
           }
         }
 

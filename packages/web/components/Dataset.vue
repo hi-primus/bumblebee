@@ -607,7 +607,7 @@ export default {
       try {
         this.loadingDf = true;
         this.$store.commit('setDfToTab', { dfName, go: true });
-        await this.$store.dispatch('getProfiling', { payload: { dfName, socketPost: this.socketPost, partial: true, methods: this.commandMethods } });
+        await this.$store.dispatch('getPreliminaryProfile', { payload: { dfName, socketPost: this.socketPost, methods: this.commandMethods } });
         this.$store.commit('setDfToTab', { dfName, go: true });
       } catch (err) {
         console.error('Error opening dataset', err);
@@ -777,7 +777,9 @@ export default {
       this.hiddenColumns = hiddenColumns;
     },
 
-    async commandListener__loading_preview (response) {
+    commandListener__loading_preview (response) {
+
+      // TODO: handle error
 
       if (this.previewCode.load && this.previewCode.code) {
         
@@ -806,12 +808,14 @@ export default {
           }
         };
 
-        this.evalCode(codePayload, { command: "loading_profile_preview", code }, 'profiling');
+        return this.evalCode(codePayload, { command: "loading_profile_preview", code }, 'profiling');
 
       }
     },
 
     async commandListener__loading_profile_preview (response) {
+
+      // TODO: handle error
 
       if (this.previewCode.load && this.previewCode.code) {
 
@@ -830,11 +834,11 @@ export default {
           throw response.data.error || new Error('Unknown error');
         }
 
-        let profile = parseResponse(response.data.result)
+        let profile = parseResponse(response.data.result);
 
-        this.$store.commit('setLoadPreview', { profile } )
+        this.$store.commit('setLoadPreview', { profile });
 
-        this.$store.commit('mutation', {mutate: 'updatingPreview', payload: false })
+        this.$store.commit('mutation', {mutate: 'updatingPreview', payload: false });
 
         return profile;
       }
@@ -901,7 +905,11 @@ export default {
                 meta: true,
               }
   
-              console.debug('[PREVIEW] Loading', codePayload)
+              console.debug('[PREVIEW] Loading', codePayload);
+
+              await this.$store.dispatch('cancelProfilingRequests', {
+                socketPost: this.socketPost
+              });
     
               this.evalCode(codePayload, { command: "loading_preview", code: currentCode, dfName }, 'profiling');
   

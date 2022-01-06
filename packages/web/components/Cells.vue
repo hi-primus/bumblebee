@@ -1279,12 +1279,11 @@ export default {
         await this.$store.dispatch('undoCells');
         await this.$store.dispatch('resetPromises', { from: 'cells', error: false });
         await this.$nextTick();
-        await this.$store.dispatch('getProfiling', { payload: {
+        await this.$store.dispatch('getPreliminaryProfile', { payload: {
           socketPost: this.socketPost,
           dfName: this.currentDataset.dfName,
           avoidReload: true,
           clearPrevious: true,
-          partial: true,
           methods: this.commandMethods
         }});
       } catch (err) {
@@ -1573,7 +1572,7 @@ export default {
         let dfName = command.newDfName;
         console.log("Create new tab", dfName);
         this.$store.commit('setDfToTab', { dfName, go: true });
-        await this.$store.dispatch('getProfiling', { payload: { dfName, socketPost: this.socketPost, partial: true, methods: this.commandMethods } });
+        await this.$store.dispatch('getPreliminaryProfile', { payload: { dfName, socketPost: this.socketPost, methods: this.commandMethods } });
         this.$store.commit('setDfToTab', { dfName, go: true });
       }
 
@@ -1861,13 +1860,7 @@ export default {
         
         this.$store.commit('previewDefault');
 
-        // let partial = true;
-
-        let profilingResponse = await this.$store.dispatch('getProfiling', { payload: { dfName, ignoreFrom, clearPrevious: true, socketPost: this.socketPost, partial: true, methods: this.commandMethods } });
-
-        // if (partial) {
-        //   this.$store.dispatch('lateProfiles', {...profilingResponse, socketPost: this.socketPost});
-        // }
+        let profilingResponse = await this.$store.dispatch('getPreliminaryProfile', { payload: { dfName, ignoreFrom, clearPrevious: true, socketPost: this.socketPost, methods: this.commandMethods } });
 
         if (this.firstRun) {
           this.firstRun = false;

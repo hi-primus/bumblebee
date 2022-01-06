@@ -230,6 +230,22 @@ export const optimizeRanges = (inputRange, existingRanges) => {
 
 }
 
+export const chunkize = (array, chunkSize = 10, maxChunkSize = undefined) => {
+  
+  if (maxChunkSize && array.length < maxChunkSize) {
+    return [array]
+  }
+
+  let chunks = [];
+
+  for (let i = 0; i < array.length; i += chunkSize) {
+    chunks.push(array.slice(i, i + chunkSize));
+  }
+
+  return chunks;
+
+}
+
 export const escapeQuotes = (str) => {
   if (typeof str === 'string' && str && str.replace ) {
     str = str.replace(/[\\]/g, '\\\\').replace(/[\""]/g, '\\"');
@@ -1391,6 +1407,7 @@ export default {
   reduceRanges,
   copyToClipboard,
   optimizeRanges,
+  chunkize,
   escapeQuotes,
   adaptValue,
   filterCells,
