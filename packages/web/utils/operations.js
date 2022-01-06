@@ -2760,7 +2760,7 @@ export const commandsHandlers = {
     onInit: async (event, currentCommand, methods) => {
       var command = deepCopy(currentCommand);
 
-      var dfNames = Object.keys(command.secondaryDatasets);
+      var dfNames = Object.keys(command.secondaryDatasets || {});
 
       for (let i = 0; i < dfNames.length; i++) {
         var dfName = dfNames[i];
@@ -2939,7 +2939,7 @@ export const commandsHandlers = {
       try {
         let command = deepCopy(currentCommand);
 
-        let dfNames = Object.keys(command.secondaryDatasets);
+        let dfNames = Object.keys(command.secondaryDatasets || {});
 
         for (let i = 0; i < dfNames.length; i++) {
           let dfName = dfNames[i];
