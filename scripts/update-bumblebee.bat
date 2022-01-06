@@ -1,6 +1,6 @@
 cd ..
 
-git reset --hard origin/develop-21.11
+git reset --hard origin/develop-22.1
 git pull
 
 cd scripts

@@ -60,14 +60,14 @@ RUN yarn global add pm2 && \
 
 WORKDIR "/opt"
 
-RUN echo "Version 21.11.0-beta"
+RUN echo "Version 22.1.0-beta"
 
 RUN pip install cytoolz && \
     pip install git+https://github.com/hi-primus/dateinfer.git && \
     pip install git+https://github.com/hi-primus/url_parser.git && \
     pip install llvmlite --ignore-installed && \
-    pip install git+https://github.com/hi-primus/optimus.git@develop-21.11#egg=pyoptimus[pandas] && \
-    pip install git+https://github.com/hi-primus/optimus.git@develop-21.11#egg=pyoptimus[dask]
+    pip install git+https://github.com/hi-primus/optimus.git@develop-22.1#egg=pyoptimus[pandas] && \
+    pip install git+https://github.com/hi-primus/optimus.git@develop-22.1#egg=pyoptimus[dask]
 
 RUN git clone --branch develop https://github.com/hi-primus/bumblebee.git
 
