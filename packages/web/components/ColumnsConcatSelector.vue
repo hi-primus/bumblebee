@@ -12,7 +12,7 @@
           class="data-type"
           :class="`type-${item.type}`"
         >
-          {{dataTypeHint(item.type)}}
+          <span class="hint">{{dataTypeHint(item.type)}}</span>
         </span>
         <span class="data-column-name">
           {{item.name}}
@@ -29,7 +29,7 @@
           class="data-type"
           :class="`type-${item.type}`"
         >
-          {{dataTypeHint(item.type)}}
+          <span class="hint">{{dataTypeHint(item.type)}}</span>
         </span>
         <EditableElement element="div" class="data-column-name" :title="item.name" :value="item.name" @input="item.update">
         </EditableElement>
