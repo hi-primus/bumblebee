@@ -684,6 +684,7 @@ export const setKernel = function (sessionId, kernelObject) {
 };
 
 export const deleteKernel = async function (sessionId, t = 0) {
+	kernels[getKernelId(sessionId)] = kernels[getKernelId(sessionId)] || {};
 	kernels[getKernelId(sessionId)].removeKernel = true;
 
 	return new Promise((res, rej) => {
