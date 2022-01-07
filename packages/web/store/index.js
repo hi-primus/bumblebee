@@ -713,17 +713,21 @@ export const actions = {
             console.debug(//time
               '[DEBUG][TIMES]',
               'front', response._frontTime,
+              'queue', response.data._queueTime,
               'server', response.data._serverTime,
               'gateway', response.data._gatewayTime,
-              'frontToServer', response.data._serverTime.start-response._frontTime.start,
+              'frontToQueue', response.data._queueTime.start-response._frontTime.start,
+              'queueToServer', response.data._serverTime.start-response.data._queueTime.start,
               'serverToGateway', response.data._gatewayTime.start-response.data._serverTime.start,
-              'GatewayToServer', response.data._serverTime.end-response.data._gatewayTime.end,
-              'ServerToFront', response._frontTime.end-response.data._serverTime.end
+              'gatewayToServer', response.data._serverTime.end-response.data._gatewayTime.end,
+              'serverToQueue', response.data._queueTime.end-response.data._serverTime.end,
+              'queueToFront', response._frontTime.end-response.data._queueTime.end
             )
           } catch (err) {
             console.debug(//time
               '[DEBUG][TIMES]',
               'front', response._frontTime,
+              'queue', response.data._queueTime,
               'server', response.data._serverTime,
               'gateway', response.data._gatewayTime
             )

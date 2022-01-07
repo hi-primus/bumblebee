@@ -385,6 +385,14 @@ export const runCode = async function (code = '', sessionId = '', category = fal
 			await createKernel(sessionId);
 		}
 
+		let queueLength;
+		let startTime
+		
+		if (process.env.MEASURE_TIME) {
+			startTime = new Date().getTime();
+			queueLength = requests[sessionId] ? Object.keys(requests[sessionId]._store._priorities).length : -1;
+		}
+
     let response;
 
     if (asyncCallback) {
@@ -392,6 +400,18 @@ export const runCode = async function (code = '', sessionId = '', category = fal
     } else {
       response = await queueRequest('code', sessionId, code, category);
     }
+
+		if (process.env.MEASURE_TIME) {
+			const endTime = new Date().getTime();
+			response._queueTime = {
+				start: startTime / 1000,
+				end: endTime / 1000,
+				duration: (endTime - startTime) / 1000,
+				length: queueLength
+			};
+			response._queueTime.lengthAfter = requests[sessionId] ? Object.keys(requests[sessionId]._store._priorities).length : -1;
+		}
+
 
 		if (response?.status === 'error') {
 			throw response;
