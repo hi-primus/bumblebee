@@ -104,6 +104,7 @@ export const initializeOptimusSession = async function (sessionId, payload) {
 			}
 			if (tries <= 0) {
 				let contentErr = err instanceof Error ? err.toString() : err;
+				deleteKernel(sessionId);
 				return {
 					error: 'Internal error trying to create a kernel',
           content: contentErr,
