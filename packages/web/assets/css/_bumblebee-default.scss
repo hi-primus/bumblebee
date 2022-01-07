@@ -1292,11 +1292,9 @@ table {
 
 .data-type {
   font-family: $font-mono;
-  transform-origin: 8px center;
   font-weight: 700 !important;
   opacity: $black-opacity;
   display: inline;
-  transform-origin: left center;
   &.in-autocomplete {
     display: inline-block;
     min-width: 2.5em;
@@ -1312,7 +1310,8 @@ table {
     }
   }
   .hint {
-    display: inline;
+    transform-origin: left center;
+    display: inline-block;
   }
   &.type-date .hint {
     filter: saturate(0.66) contrast(1) brightness(1.2) hue-rotate(198deg);

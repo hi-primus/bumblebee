@@ -7,8 +7,6 @@ import { handleResponse } from 'bumblebee-utils'
 
 let Queue = require('better-queue');
 
-const DEFAULT_PRIORITY = 100;
-
 const kernels = [];
 const aliases = {};
 const requests: { [fieldName: string]: typeof Queue } = {};
@@ -174,7 +172,7 @@ const assertConnection = async function (
 export const kernelHandler = function (sessionId) {
 
 	if (!kernels[getKernelId(sessionId)].kernelHandler) {
-    kernels[getKernelId(sessionId)].kernelHandler = new KernelRoutines(false);
+    kernels[getKernelId(sessionId)].kernelHandler = new KernelRoutines(process.env.MEASURE_TIME);
   }
 
   return kernels[getKernelId(sessionId)].kernelHandler;
@@ -225,7 +223,7 @@ export const requestToKernel = async function (type, sessionId, payload, asyncCa
 	let code = payload;
 
 	if (!kernels[getKernelId(sessionId)].kernelHandler) {
-    kernels[getKernelId(sessionId)].kernelHandler = new KernelRoutines(false);
+    kernels[getKernelId(sessionId)].kernelHandler = new KernelRoutines(process.env.MEASURE_TIME);
   }
 
 	switch (type) {
@@ -288,6 +286,8 @@ export const requestToKernel = async function (type, sessionId, payload, asyncCa
 	return response;
 };
 
+const DEFAULT_PRIORITY = 100;
+
 const PRIORITIES = {
 	requirement: 9,
 	preview_sample: 8,
@@ -304,7 +304,12 @@ const newQueue = function (sessionId) {
 	return new Queue(async (task, cb)=>{
 		let response;
 		try {
-			response = await requestToKernel(task.type, sessionId, task.payload, task.asyncCallback);
+			let promise = requestToKernel(task.type, sessionId, task.payload, task.asyncCallback);
+			if (task.immediate) {
+				response = promise;
+			} else {
+				response = await promise;
+			}
 		} catch (err) {
 			response = {
 				error: 'Internal error',
@@ -317,7 +322,7 @@ const newQueue = function (sessionId) {
 		id: 'id',
 		filo: true,
 		priority: (task, cb) => {
-			let priority = PRIORITIES[task.category]
+			let priority =  task.immediate ? DEFAULT_PRIORITY : PRIORITIES[task.category]
 			if (!priority) {
 				console.warn(`Unknown category ${task.category} using highest priority`);
 				priority = DEFAULT_PRIORITY;
@@ -327,13 +332,13 @@ const newQueue = function (sessionId) {
 	});
 }
 
-const queueRequest = function (type, sessionId, payload, category, asyncCallback = false) {
+const queueRequest = function (type, sessionId, payload, category, asyncCallback = false, immediate = false) {
 	return new Promise((res, rej) => {
 		try {
 			requests[sessionId] = requests[sessionId] || newQueue(sessionId);
 			const id = Buffer.from(uuidv1(), 'utf8').toString('hex');
 			requests[sessionId].push({
-				id, type, payload, category, asyncCallback
+				id, type, payload, category, asyncCallback, immediate
 			}, res);
 		} catch (err) {
 			rej(err);
@@ -375,7 +380,7 @@ export const removeFromQueue = function (sessionId, category, cancel=false) {
 	return false;
 }
 
-export const runCode = async function (code = '', sessionId = '', category = false, asyncCallback = false) {
+export const runCode = async function (code = '', sessionId = '', category = false, asyncCallback = false, immediate = false) {
 	if (!sessionId) {
 		return {
 			error: {
@@ -392,13 +397,37 @@ export const runCode = async function (code = '', sessionId = '', category = fal
 			await createKernel(sessionId);
 		}
 
+		let queueLength;
+		let startTime
+		
+		if (process.env.MEASURE_TIME) {
+			startTime = new Date().getTime();
+			queueLength = requests[sessionId] ? Object.keys(requests[sessionId]._store._priorities).length : -1;
+		}
+
     let response;
 
     if (asyncCallback) {
-			response = await queueRequest('asyncCode', sessionId, code, category, asyncCallback);
+			response = await queueRequest('asyncCode', sessionId, code, category, asyncCallback, immediate);
     } else {
-      response = await queueRequest('code', sessionId, code, category);
+      response = await queueRequest('code', sessionId, code, category, undefined, immediate);
     }
+
+		if (response.constructor == Promise) {
+			response = await response;
+		}
+
+		if (process.env.MEASURE_TIME) {
+			const endTime = new Date().getTime();
+			response._queueTime = {
+				start: startTime / 1000,
+				end: endTime / 1000,
+				duration: (endTime - startTime) / 1000,
+				length: queueLength
+			};
+			response._queueTime.lengthAfter = requests[sessionId] ? Object.keys(requests[sessionId]._store._priorities).length : -1;
+		}
+
 
 		if (response?.status === 'error') {
 			throw response;

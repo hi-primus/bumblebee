@@ -1470,7 +1470,7 @@ export default {
           this.$emit('update:big',commandHandler.dialog.big)
 
           if (commandHandler.onInit) {
-            this.currentCommand = await commandHandler.onInit(this.currentCommand, [], this.commandMethods)
+            this.currentCommand = await commandHandler.onInit({}, this.currentCommand, this.commandMethods)
           }
 
           if (command.execute) {
