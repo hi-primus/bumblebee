@@ -304,7 +304,12 @@ const newQueue = function (sessionId) {
 	return new Queue(async (task, cb)=>{
 		let response;
 		try {
-			response = await requestToKernel(task.type, sessionId, task.payload, task.asyncCallback);
+			let promise = requestToKernel(task.type, sessionId, task.payload, task.asyncCallback);
+			if (task.immediate) {
+				response = promise;
+			} else {
+				response = await promise;
+			}
 		} catch (err) {
 			response = {
 				error: 'Internal error',
@@ -317,7 +322,7 @@ const newQueue = function (sessionId) {
 		id: 'id',
 		filo: true,
 		priority: (task, cb) => {
-			let priority = PRIORITIES[task.category]
+			let priority =  task.immediate ? DEFAULT_PRIORITY : PRIORITIES[task.category]
 			if (!priority) {
 				console.warn(`Unknown category ${task.category} using highest priority`);
 				priority = DEFAULT_PRIORITY;
@@ -327,13 +332,13 @@ const newQueue = function (sessionId) {
 	});
 }
 
-const queueRequest = function (type, sessionId, payload, category, asyncCallback = false) {
+const queueRequest = function (type, sessionId, payload, category, asyncCallback = false, immediate = false) {
 	return new Promise((res, rej) => {
 		try {
 			requests[sessionId] = requests[sessionId] || newQueue(sessionId);
 			const id = Buffer.from(uuidv1(), 'utf8').toString('hex');
 			requests[sessionId].push({
-				id, type, payload, category, asyncCallback
+				id, type, payload, category, asyncCallback, immediate
 			}, res);
 		} catch (err) {
 			rej(err);
@@ -368,7 +373,7 @@ export const removeFromQueue = function (sessionId, category) {
 	return false;
 }
 
-export const runCode = async function (code = '', sessionId = '', category = false, asyncCallback = false) {
+export const runCode = async function (code = '', sessionId = '', category = false, asyncCallback = false, immediate = false) {
 	if (!sessionId) {
 		return {
 			error: {
@@ -396,10 +401,14 @@ export const runCode = async function (code = '', sessionId = '', category = fal
     let response;
 
     if (asyncCallback) {
-			response = await queueRequest('asyncCode', sessionId, code, category, asyncCallback);
+			response = await queueRequest('asyncCode', sessionId, code, category, asyncCallback, immediate);
     } else {
-      response = await queueRequest('code', sessionId, code, category);
+      response = await queueRequest('code', sessionId, code, category, undefined, immediate);
     }
+
+		if (response.constructor == Promise) {
+			response = await response;
+		}
 
 		if (process.env.MEASURE_TIME) {
 			const endTime = new Date().getTime();
