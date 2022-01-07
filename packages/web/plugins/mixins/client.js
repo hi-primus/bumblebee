@@ -1,6 +1,6 @@
-import io from 'socket.io-client'
-import { mapGetters } from 'vuex'
-import { deepCopy, getDefaultParams, objectMap, INIT_PARAMS } from 'bumblebee-utils'
+const { io } = require("socket.io-client");
+
+import { deepCopy, getDefaultParams, objectMap } from 'bumblebee-utils'
 
 const baseUrl = process.env.API_URL || 'http://localhost:4000'
 
@@ -407,15 +407,16 @@ export default {
 
           key = key || '';
 
-          var socket = io.connect(baseUrl, {
-            transports: ['websocket'],
-            transportOptions: {
-              polling: {
-                extraHeaders: {
-                  authorization: this.$store.state.session.accessToken,
-                }
-              }
-            }
+          var socket = io(baseUrl, { transports: ['websocket'] });
+
+          socket.on("connect_error", (err) => {
+            console.error('Connect error', err);
+            reject(err);
+          });
+
+          socket.on("connect_timeout", (err) => {
+            console.error('Connect timeout', err);
+            reject(err);
           });
 
           socket.on('new-error', (reason) => {
@@ -485,13 +486,19 @@ export default {
 
           socket.on('connect', () => {
             console.log('Connection success');
-            socket.on('success', () => {
+            socket.on('confirmation-success', () => {
               console.log('Connection confirmed');
               this.socketAvailable = true;
               window.sessionId = socket.id;
               resolve(socket);
             });
             socket.emit('confirmation', { workspace, username, authorization: accessToken, key, previousSessionId });
+          });
+
+          socket.on('confirmation-error', (reason) => {
+            console.warn('Confirmation failure', reason);
+            this.handleError();
+            reject('Confirmation failure');
           });
 
           socket.on('connection-error', (reason) => {

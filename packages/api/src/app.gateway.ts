@@ -9,7 +9,6 @@ import {
 } from '@nestjs/websockets';
 import { Logger } from '@nestjs/common';
 import { Socket, Server } from 'socket.io';
-import { v4 as uuidv4 } from "uuid";
 
 import {
   runCode,
@@ -121,7 +120,7 @@ export class AppGateway
 
 	afterInit(server: Server) {
 		this.logger.log('Initialized socket server');
-		this.wss.clients;
+		// this.wss.clients;
 	}
 
 	handleDisconnect(client: Socket) {
@@ -151,20 +150,29 @@ export class AppGateway
   @SubscribeMessage('confirmation')
   async handleConfirmation(client: Socket, payload): Promise<any> {
 
-    if (client) {
-      const bearerToken = payload.authorization.split(' ')[1];
+    try {
 
-      let user = await this.authService.verifyUser(bearerToken);
-      this.users[client.id] = user;
-
-      if (payload?.username == user?.username) {
-        createSession(client.id, payload.previousSessionId);
-        client.emit('success', {});
-      } else {
-        console.warn('Username not matching', payload?.username, user?.username)
-        client.disconnect();
+      if (client) {
+        const bearerToken = payload.authorization.split(' ')[1];
+  
+        let user = await this.authService.verifyUser(bearerToken);
+        this.users[client.id] = user;
+  
+        if (payload?.username == user?.username) {
+          createSession(client.id, payload.previousSessionId);
+          client.emit('confirmation-success', {});
+        } else {
+          client.emit('confirmation-error', { message: 'Username not matching' });
+          console.warn('Username not matching', payload?.username, user?.username)
+          client.disconnect();
+        }
       }
+    } catch (err) {
+      console.error(err);
+      client.emit('confirmation-error', { message: err.toString() });
+      client.disconnect();
     }
+
   }
 
   @SubscribeMessage('initialize')
