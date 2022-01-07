@@ -312,7 +312,7 @@ export default {
                 res(true)
               }, timeout);
             });
-            reject(new Error("Timeout error"))
+            reject(new Error("Timeout error: exceeded " + timeout + "ms without receiving a response"));
           }
 
         } catch (err) {
