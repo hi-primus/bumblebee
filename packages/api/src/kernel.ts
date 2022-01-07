@@ -174,7 +174,7 @@ const assertConnection = async function (
 export const kernelHandler = function (sessionId) {
 
 	if (!kernels[getKernelId(sessionId)].kernelHandler) {
-    kernels[getKernelId(sessionId)].kernelHandler = new KernelRoutines(false);
+    kernels[getKernelId(sessionId)].kernelHandler = new KernelRoutines(process.env.MEASURE_TIME);
   }
 
   return kernels[getKernelId(sessionId)].kernelHandler;
@@ -225,7 +225,7 @@ export const requestToKernel = async function (type, sessionId, payload, asyncCa
 	let code = payload;
 
 	if (!kernels[getKernelId(sessionId)].kernelHandler) {
-    kernels[getKernelId(sessionId)].kernelHandler = new KernelRoutines(false);
+    kernels[getKernelId(sessionId)].kernelHandler = new KernelRoutines(process.env.MEASURE_TIME);
   }
 
 	switch (type) {

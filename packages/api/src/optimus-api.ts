@@ -31,7 +31,7 @@ export const requestToKernel = async function (type, sessionId, payload, asyncCa
   let assertOptimus = !['features','init'].includes(type);
 
 	if (!sessions[sessionId].kernelHandler) {
-    sessions[sessionId].kernelHandler = new KernelRoutines(false);
+    sessions[sessionId].kernelHandler = new KernelRoutines(process.env.MEASURE_TIME);
   }
 
 	switch (type) {
