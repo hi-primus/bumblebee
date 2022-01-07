@@ -7,8 +7,6 @@ import { handleResponse } from 'bumblebee-utils'
 
 let Queue = require('better-queue');
 
-const DEFAULT_PRIORITY = 100;
-
 const kernels = [];
 const aliases = {};
 const requests: { [fieldName: string]: typeof Queue } = {};
@@ -287,6 +285,8 @@ export const requestToKernel = async function (type, sessionId, payload, asyncCa
 
 	return response;
 };
+
+const DEFAULT_PRIORITY = 100;
 
 const PRIORITIES = {
 	requirement: 9,
