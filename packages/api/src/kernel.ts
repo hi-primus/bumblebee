@@ -465,6 +465,8 @@ export const createConnection = async function (sessionId) {
 				});
       }
 
+			console.log(`Connecting to kernel ${wsKernelBase(ka)} (${getKernelId(sessionId)})`);
+
 			kernels[getKernelId(sessionId)].client.connect(
 				`${wsKernelBase(ka)}/api/kernels/${kernels[getKernelId(sessionId)].id}/channels`,
 			);
@@ -623,9 +625,13 @@ const createKernel = async function (sessionId, ka : any = undefined) {
           ka = kernels[getKernelId(sessionId)].kernel_address;
         }
 
+				console.log(`Creating a kernel for ${sessionId} on ${kernelBase(ka)}...`);
+
 				const kernelResponse = await axios.post(
           `${kernelBase(ka)}/api/kernels`
         );
+
+				console.log(`Kernel created for ${sessionId} on ${kernelBase(ka)}`, kernelResponse.data);
 
         const uuid = Buffer.from(uuidv1(), 'utf8').toString('hex');
 
