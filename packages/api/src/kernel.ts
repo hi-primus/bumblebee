@@ -631,7 +631,7 @@ const createKernel = async function (sessionId, ka : any = undefined) {
           `${kernelBase(ka)}/api/kernels`
         );
 
-				console.log(`Kernel created for ${sessionId} on ${kernelBase(ka)}`, kernelResponse.data);
+				console.log(`Kernel created for ${sessionId} on ${kernelBase(ka)}:`, kernelResponse.data.id);
 
         const uuid = Buffer.from(uuidv1(), 'utf8').toString('hex');
 
