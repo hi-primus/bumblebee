@@ -1949,17 +1949,18 @@ export const actions = {
       commit('setColumns', { dfName: datasetDfName, columns: colNames });
     }
 
+    var sample = response.data.result;
+
     if (response.data.status === 'error') {
       if (state.previewCode) {
         commit('setPreviewInfo', {error: response.data.error})
       } else {
         await dispatch('markCells', { error: true, last: true });
       }
-    } else {
+    } else if (sample.value.length) {
       commit('setPreviewInfo', {error: false})
     }
 
-    var sample = response.data.result;
 
     commit('kernel', 'done');
 

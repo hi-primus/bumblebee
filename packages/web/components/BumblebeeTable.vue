@@ -2239,7 +2239,7 @@ export default {
     } , 100),
 
     async scrollCheck (getCurrentWindow = true) {
-      if (this.previewCode.load) {
+      if (this.previewCode.load || this.previewError) {
         return false
       }
       try {
@@ -2441,6 +2441,7 @@ export default {
         }
 
         let checkProfile = await this.fetchChunk(newRanges[i][0], newRanges[i][1], forced);
+        forced = false;
         console.debug('[FETCHING] Chunk done');
 
         this.mustUpdateRows = true;
@@ -2471,6 +2472,10 @@ export default {
 
     async fetchChunk(from, to, forced = false) {
 
+      if (this.previewError) {
+        throw this.previewError;
+      }
+
       let addToFetch;
       let lessRowsFetched = false;
       let checkProfile = false;
@@ -2496,6 +2501,11 @@ export default {
           console.warn(`Chunk result does not match its requested range`, addToFetch);
           // No rows fetched
           if (!addToFetch.sample.value.length) {
+            if (forced) {
+              const error = new Error('No rows found');
+              this.$store.commit('setPreviewInfo', { error })
+              throw error;
+            }
             return 'forceSample';
           }
           addToFetch.to = addToFetch.from + addToFetch.sample.value.length-1;
