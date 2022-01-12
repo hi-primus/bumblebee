@@ -1940,7 +1940,6 @@ export const actions = {
           noSave: true
         }
       };
-      commit('mutation', {mutate: 'profilePreview', payload: false} )
       response = await dispatch('evalCode',{ socketPost, codePayload, category: 'preview_sample' })
     }
 
