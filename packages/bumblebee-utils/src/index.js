@@ -426,6 +426,7 @@ export const handleResponse = (response) => {
       response = response.replace(/\\+\'/g, "'");
       response = response.replace(/\\\\"/g, '\\"');
       response = response.replace(/\\\\u([\d\w]{4})/gi, (match, grp) => String.fromCharCode(parseInt(grp, 16)));
+      response = response.replace(/[^\x20-\x7E]/g, '');
       response = response.replace(/\\xa0/g, ' ');
       parsedResponse = JSON.parse(response);
     }
