@@ -705,7 +705,6 @@ export const codeGenerators = {
     code +=`op.load.${loadType}("${url}"`
     if (loadType=='csv') {
       code += `, sep="${payload.sep}"`
-      code += `, error_bad_lines=False`
       code += `, header=${file.header}`
       code += `, null_value="${payload.null_value}"`
       code += `, infer_schema="true"`
