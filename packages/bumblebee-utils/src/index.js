@@ -131,7 +131,7 @@ export const newName = (name) => {
   let matches = name.match(/\d+$/);
   if (matches) {
     let number = matches[0]
-    let prefix = name.substr(0,matches.index)
+    let prefix = name.substring(0,matches.index)
     return prefix + (+number+1)
   }
   else {
@@ -420,7 +420,7 @@ export const handleResponse = (response) => {
         throw { message: 'Invalid response format', response };
       }
 
-      response = response.substr(bracketIndex);
+      response = response.substring(bracketIndex);
       response = trimCharacters(response, "'");
       response = response.replace(/\bNaN\b/g, null);
       response = response.replace(/\\+\'/g, "'");
@@ -690,7 +690,7 @@ export const transformDateToPython = (string) => {
 
 export const transformDateFromPython = (string) => {
   if (string && string.replace)
-    return string.replace(/%(a|A|w|d|b|B|m|y|Y|H|I|p|M|S|f|z|Z|j|U|W|c|x|X|%)/g,(match)=>`${match.substr(1)}`)
+    return string.replace(/%(a|A|w|d|b|B|m|y|Y|H|I|p|M|S|f|z|Z|j|U|W|c|x|X|%)/g,(match)=>`${match.substring(1)}`)
   return ''
 }
 

@@ -420,7 +420,7 @@ const DOC_FIELD_TYPES = {
 
 const DOC_GENERATOR = {
   TRIGONOMETRIC: function (operation) {
-    let name = operation.payload.text.substr(4);
+    let name = operation.payload.text.substring(4);
     return  {
       title: name,
       description: `Gets the ${name.toLowerCase()} from the numeric values in the selected column\(s\).`

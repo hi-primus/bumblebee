@@ -111,7 +111,7 @@ const tokenizer = (input, caret = 0) => {
         activeCompleteWord = token.value
         var ssl = caret-token.startedAt
         activeWordPosition = token.startedAt
-        activeWord = token.value.substr(0,ssl)
+        activeWord = token.value.substring(0,ssl)
     }
 
   }
