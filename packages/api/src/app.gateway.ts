@@ -125,7 +125,7 @@ export class AppGateway
 
 	handleDisconnect(client: Socket) {
 		this.logger.log(`Client disconnected: ${client.id}`);
-    deleteKernel(client.id, 20000)
+    deleteKernel(client.id, 20000, true)
   }
 
 	handleConnection(client: Socket, ...args: any[]) {

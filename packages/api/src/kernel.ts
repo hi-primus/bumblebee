@@ -690,24 +690,40 @@ export const setKernel = function (sessionId, kernelObject) {
 	return kernels[getKernelId(sessionId)] || {};
 };
 
-export const deleteKernel = async function (sessionId, t = 0) {
+export const deleteKernel = async function (sessionId, t = 0, immediateIfStarting = false) {
 	kernels[getKernelId(sessionId)] = kernels[getKernelId(sessionId)] || {};
 	kernels[getKernelId(sessionId)].removeKernel = true;
 
-	return new Promise((res, rej) => {
+	let id = kernels[getKernelId(sessionId)].id;
+	let ka = kernels[getKernelId(sessionId)].kernel_address || 0;
+
+	try {
+		if (immediateIfStarting && t>0) {
+			let kernelResponse = await axios.get(`${kernelBase(ka)}/api/kernels/${id}`);
+		
+			if (kernelResponse.data.execution_state === 'starting') {
+				console.log('Kernel to remove stuck starting, deleting immediately');
+				t = 0;
+			}
+		}
+	} catch (err) {
+		console.log({err})
+	}
+
+
+	return new Promise(async (res, rej) => {
 		let _delete = async () => {
 			try {
 				if (kernels[getKernelId(sessionId)].removeKernel && checkKernel(sessionId)) {
-					const _id = kernels[getKernelId(sessionId)].id;
-					const ka = kernels[getKernelId(sessionId)].kernel_address || 0;
-					const kernelResponse = await axios.delete(`${kernelBase(ka)}/api/kernels/${_id}`);
+					let kernelResponse = await axios.delete(`${kernelBase(ka)}/api/kernels/${id}`);
 		
 					kernels[getKernelId(sessionId)].id = false;
-					console.log('Deleting Session', getKernelId(sessionId), _id);
+					console.log('Deleting Session', getKernelId(sessionId), id);
 				}
 			} catch (err) {}
 			res(kernels[getKernelId(sessionId)]);
 		}
+
 		
 		if (t>0) {
 			setTimeout(_delete, t);
