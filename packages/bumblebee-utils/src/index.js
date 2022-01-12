@@ -363,7 +363,7 @@ export const formFromParam = (key, param) => {
     };
   }
 
-  if (param.type.includes("array")) {
+  if (param.type && param.type.includes("array")) {
     return {
       label: param.label || key,
       key,
