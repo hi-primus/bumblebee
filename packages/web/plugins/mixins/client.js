@@ -255,6 +255,8 @@ export default {
 
           console.log('[BUMBLEBEE] Reinitializing Optimus');
 
+          await this.$store.dispatch('checkSocketPost', this.socketPost);
+
           let response = await this.socketPost('initialize', reinitializationPayload);
 
           if (!response.data.optimus) {
@@ -584,6 +586,14 @@ export default {
       }
 
       return results;
+    },
+
+    reloadPage () {
+      try {
+        window.location.reload();
+      } catch (err) {
+        console.error(err);
+      }
     }
   },
 

@@ -106,6 +106,7 @@ const defaultState = {
   firstRun: true,
   commandsDisabled: false,
   lastWrongCode: false,
+  enableReload: false,
   errorAlerts: [],
   noMatch: false,
   showingColumnsLength: 0,
@@ -657,6 +658,15 @@ export const actions = {
     await dispatch('session/serverInit')
   },
 
+  checkSocketPost ({ commit }, socketPost) {
+    if (typeof socketPost !== 'function') {
+      commit('mutation', { mutate: 'enableReload', payload: true });
+      throw new Error('Error connecting to Optimus');
+    } else {
+      commit('mutation', { mutate: 'enableReload', payload: false });
+    }
+  },
+
   async evalCode ({ dispatch, state, getters }, { code, codePayload, reply, category, isAsync, socketPost }) {
     try {
 
@@ -683,7 +693,9 @@ export const actions = {
         throw new Error('SSR not allowed')
       }
 
-      let startTime = new Date().getTime()
+      let startTime = new Date().getTime();
+
+      await dispatch('checkSocketPost', socketPost);
 
       let promise = socketPost('run', {
         code,
@@ -693,7 +705,7 @@ export const actions = {
         isAsync,
         username: await dispatch('session/getUsername'),
         workspace: state.workspaceSlug || 'default'
-      })
+      });
 
       if (reply == 'await') {
         let response = await promise;
@@ -957,6 +969,8 @@ export const actions = {
     if (isRetry && window.stopClient) {
       await window.stopClient();
     }
+
+    await dispatch('checkSocketPost', socketPost);
 
     try {
       featuresResponse = await socketPost('features', {
@@ -1362,9 +1376,7 @@ export const actions = {
 
     console.log('[BUMBLEBEE] Initializing Optimus', username, slug, engineParams);
 
-    if (typeof socketPost !== 'function') {
-      throw new Error('Cannot connect to Optimus, socketPost is not a function');
-    }
+    await dispatch('checkSocketPost', socketPost);
 
     let response = await socketPost('initialize', {
       username,
@@ -1415,6 +1427,8 @@ export const actions = {
     commit('mutation', { mutate: 'updatingWorkspace', payload: false });
     
     console.debug('[DEBUG] Loading cells result');
+
+    await dispatch('checkSocketPost', socketPost);
     
     try {
 

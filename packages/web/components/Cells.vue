@@ -373,6 +373,15 @@
           @input="removeErrorAlert(alert.id)"
           :close-icon="($store.state.cells.error == alert.id && !firstRun) ? 'mdi-arrow-u-left-top' : 'cancel'"
         >{{alert.content}}</v-alert>
+        <v-btn
+          v-if="$store.state.enableReload"
+          color="primary"
+          class="mx-a d-block"
+          @click="reloadPage"
+          depressed
+        >Reload page<v-icon>refresh</v-icon></v-btn>
+        <div style="width: 100%">
+        </div>
       </template>
     </div>
   </div>
