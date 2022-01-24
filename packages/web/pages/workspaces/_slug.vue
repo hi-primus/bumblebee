@@ -593,12 +593,13 @@ export default {
     },
 
     async doneConfig (values, select=false) {
+      let response;
       if (values && values._event === 'select') {
         this.showWindowDialog('configs')
       } else {
         this.windowDialog = false;
         if (values) {
-          let response = {};
+          response = {};
           let request;
           let path;
 
@@ -680,7 +681,7 @@ export default {
 
         let jupyter_address = config ? config.jupyter_address : undefined;
 
-        let features = await this.$store.dispatch('getFeatures', { slug, socketPost: this.socketPost, jupyter_address });
+        let features = await this.$store.dispatch('getFeatures', { slug, socketPost: this.socketPost, jupyter_address, ...config });
 
         if (!config) {
           await this.engineForm();

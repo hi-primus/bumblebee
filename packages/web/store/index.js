@@ -958,7 +958,9 @@ export const actions = {
 
   },
 
-  async loadFeatures ({ state, commit, dispatch, getters }, { slug, socketPost, isRetry, jupyter_address }) {
+  async loadFeatures ({ state, commit, dispatch, getters }, payload) {
+
+    let { slug, socketPost, isRetry, jupyter_address, ...config } = payload
 
     let username = await dispatch('session/getUsername');
 
@@ -976,7 +978,8 @@ export const actions = {
       featuresResponse = await socketPost('features', {
         username,
         workspace: slug || 'default',
-        jupyter_address
+        jupyter_address,
+        ...config
       }, isRetry ? 60000 : 10000);
     } catch (err) {
       if (!isRetry) {

@@ -1268,7 +1268,9 @@ export const generateCode = function(commands = [], _request = { type: 'processi
               if (!request.noBufferWindow && Array.isArray(request.buffer)) {
                 window = `, ${request.buffer[0]}, ${request.buffer[1]}`;
               }
-              code += `.buffer_window("*"${window})`;
+              if (window) {
+                code += `.buffer_window("*"${window})`;
+              }
             }
           }
         }

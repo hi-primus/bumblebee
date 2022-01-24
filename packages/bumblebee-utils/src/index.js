@@ -1016,6 +1016,10 @@ export const INIT_PARAMS = {
     default: '4 GB',
     engines: ['dask', 'dask_cudf']
   },
+  'optimusPath': {
+    name: 'Optimus installation path',
+    type: 'string'
+  },
   // 'kwargs': {
   //   type: 'kwargs'
   //  }

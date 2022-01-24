@@ -200,7 +200,7 @@ export const requestToKernel = async function (type, sessionId, payload, asyncCa
 		
     assertOptimus = false;
 
-    if (!kernelAddress && payload.jupyter_address && payload.jupyter_address.ip && payload.jupyter_address.port) {
+    if (payload.jupyter_address && payload.jupyter_address.ip && payload.jupyter_address.port) {
       kernelAddress = payload.jupyter_address.ip + ':' + payload.jupyter_address.port;
       kernels[getKernelId(sessionId)].kernel_address = kernelAddress;
       console.log(`Using kernel address ${kernelAddress} on session ${sessionId}`);
