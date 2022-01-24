@@ -190,8 +190,11 @@ export const requestToKernel = async function (type, sessionId, payload, asyncCa
 	
   if (['features','init'].includes(type)) {
 		
-		if (process.env.OPTIMUS_PATH) {
+		if (process.env.OPTIMUS_PATH && !payload.optimusPath) {
 			payload.optimusPath = process.env.OPTIMUS_PATH;
+		}
+
+		if (payload.optimusPath) {
 			console.log("Using local Optimus", payload.optimusPath);
 		}
 		
