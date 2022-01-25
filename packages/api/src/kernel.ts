@@ -592,7 +592,9 @@ export const createConnection = async function (sessionId) {
 				console.log('Connection', sessionId);
 
         setTimeout(() => { //
-          console.log('Connection created', sessionId);
+          console.log('Connection created', sessionId, getKernelId(sessionId));
+          console.log('Total connections:', Object.keys(kernels).length);
+					clearUnusedKernels(0, 1000, [getKernelId(sessionId)]);
           resolve(kernels[getKernelId(sessionId)].connection);
         }, 1000);
 
@@ -678,7 +680,7 @@ const clearKernel = async function (sessionId) {
 };
 
 export const getKernelId = function (id) {
-	if (!kernels[id]) {
+	if (!kernels[id] && aliases[id]) {
 		return aliases[id];
 	}
 	return id;
@@ -692,6 +694,28 @@ export const setKernel = function (sessionId, kernelObject) {
 	kernels[getKernelId(sessionId)] = kernelObject || {};
 	return kernels[getKernelId(sessionId)] || {};
 };
+
+export const clearUnusedKernels = async function (kernelAddress, t = 0, ignore = []) {
+	const response = await axios.get(
+		`${kernelBase(kernelAddress)}/api/kernels`,
+	);
+
+	ignore = ignore.map(sessionId => kernels[getKernelId(sessionId)]?.id).filter(id => id);
+
+	response.data.forEach(async (kernel) => {
+		if (kernel.connections > 0 || ignore.includes(kernel.id)) {
+			return;
+		}
+		let toDelete = Object.entries(kernels).find(([key, value]) => value.id === kernel.id)
+		if (toDelete){
+			toDelete = toDelete.map(([key, value]) => key)[0];
+		} else {
+			toDelete = kernel.id
+			kernels[kernel.id] = { id: kernel.id, kernel_address: kernelAddress };
+		}
+		deleteKernel(toDelete, t);
+	});
+}
 
 export const deleteKernel = async function (sessionId, t = 0, immediateIfStarting = false) {
 	kernels[getKernelId(sessionId)] = kernels[getKernelId(sessionId)] || {};
@@ -713,7 +737,6 @@ export const deleteKernel = async function (sessionId, t = 0, immediateIfStartin
 		console.log({err})
 	}
 
-
 	return new Promise(async (res, rej) => {
 		let _delete = async () => {
 			try {
@@ -722,6 +745,7 @@ export const deleteKernel = async function (sessionId, t = 0, immediateIfStartin
 		
 					kernels[getKernelId(sessionId)].id = false;
 					console.log('Deleting Session', getKernelId(sessionId), id);
+					delete kernels[getKernelId(sessionId)];
 				}
 			} catch (err) {}
 			res(kernels[getKernelId(sessionId)]);
