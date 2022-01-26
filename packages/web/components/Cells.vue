@@ -1425,6 +1425,7 @@ export default {
           createsNew: false,
           noOperations: command.noOperations,
           immediate: command.immediate,
+          retry: 0, /* amount of retries for a failed preview request, used in Join operation */
           isString: columnDataTypes && columnDataTypes.every(d=>STRING_TYPES.includes(d)),
         },
         secondaryDatasets,

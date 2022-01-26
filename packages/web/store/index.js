@@ -224,6 +224,19 @@ export const mutations = {
       state.cells = {...deepCopy(state.cells), error: error.id}
     }
   },
+
+  setRetry (state, retry) {
+    if (state.previewCode?.codePayload?.request) {
+      state.previewCode.codePayload.request.retry = retry;
+      
+      // updates the code
+      let request = state.previewCode.codePayload.request;
+      let command = state.previewCode.codePayload.command;
+      let payload = state.previewCode.codePayload;
+      state.previewCode.code = generateCode({ command, payload }, request)[0];
+
+    }
+  },
   
   removeErrorAlert(state, id) {
     if (id == "all") {

@@ -543,7 +543,7 @@ export const codeGenerators = {
 
     if (!['final','processing'].includes(payload.request.type)) {
       return (from, to) => {
-        let biggerWindow = `[0:1000]`;
+        let biggerWindow = `[0:${1000*((payload.request.retry || 0) + 1)}]`;
         let window = '';
         if (from!==undefined) {
           window = `[${from}:${to}]`;

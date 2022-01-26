@@ -2428,19 +2428,26 @@ export default {
       let returnValue = range;
       let forced = false;
 
-      let profilePromise = false;
-
       for (let i = newRanges.length - 1; i >= 0 ; i--) {
-
-        let previewCode = (this.previewCode ? this.previewCode.code : false) || '';
-        let previewPayload = (this.previewCode ? this.previewCode.codePayload : false) || {};
 
         if (this.profilePreview && this.profilePreview.code !== previewCode) {
           console.log('[REQUESTING] resetting profile', this.profilePreview.code, previewCode)
           await this.unsetProfile();
         }
 
-        let checkProfile = await this.fetchChunk(newRanges[i][0], newRanges[i][1], forced);
+        let checkProfile;
+        let retries = 0;
+
+        while (retries < 10) {
+          checkProfile = await this.fetchChunk(newRanges[i][0], newRanges[i][1], forced);
+          retries += 1;
+          if (checkProfile != 'retry') break;
+        }
+
+        if (checkProfile == 'retry') {
+          checkProfile = 'forceSample';
+        }
+
         forced = false;
         console.debug('[FETCHING] Chunk done');
 
@@ -2450,14 +2457,19 @@ export default {
 
         // repeats current check if neccessary
         if (checkProfile === 'forceSample' && !forced) {
-          console.debug("[FETCHING] Repeating chunk check")
+          console.debug("[FETCHING] Repeating chunk check");
+          let retry = (this.previewCode?.codePayload?.request?.retry || 0) + 1;
+          this.$store.commit('setRetry', retry);
           forced = true;
           i++;
         }
 
-        if (checkProfile && !profilePromise) {
+
+        if (checkProfile) {
+          let previewCode = (this.previewCode ? this.previewCode.code : false) || '';  
           // console.log('[REQUESTING] profile must be checked')
           if (!this.profilePreview || this.profilePreview.code !== previewCode) {
+            let previewPayload = (this.previewCode ? this.previewCode.codePayload : false) || {};
             await this.setProfile(previewCode, previewPayload)
             console.debug('[FETCHING] Profiling done');
           }
@@ -2472,7 +2484,9 @@ export default {
 
     async fetchChunk(from, to, forced = false) {
 
-      if (this.previewError) {
+      let retryRequest = this.previewCode?.codePayload?.request?.retryRequest;
+
+      if (this.previewError && !retryRequest) {
         throw this.previewError;
       }
 
@@ -2501,12 +2515,26 @@ export default {
           console.warn(`Chunk result does not match its requested range`, addToFetch);
           // No rows fetched
           if (!addToFetch.sample.value.length) {
-            if (forced) {
-              const error = new Error('No rows found');
-              this.$store.commit('setPreviewInfo', { error })
+            if (!forced) {
+              return 'forceSample';
+            }
+
+            let errMsg = this.previewCode?.codePayload?.preview?.noRowsError || 'No rows found';
+
+            if (retryRequest) {
+              errMsg += ', retrying...';
+              let retry = (this.previewCode?.codePayload?.request?.retry || 0) + 1;
+              this.$store.commit('setRetry', retry);
+            }
+
+            const error = new Error(errMsg);
+            this.$store.commit('setPreviewInfo', { error });
+
+            if (retryRequest) {
+              return 'retry';
+            } else {
               throw error;
             }
-            return 'forceSample';
           }
           addToFetch.to = addToFetch.from + addToFetch.sample.value.length-1;
         }

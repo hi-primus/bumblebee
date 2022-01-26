@@ -2752,8 +2752,10 @@ export const commandsHandlers = {
           delay: 500,
           datasetPreview: true,
           noBufferWindow: true,
+          noRowsError: 'No match found in sample'
         },
         request: {
+          retryRequest: true
           // createsNew: true
         },
       };
