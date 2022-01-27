@@ -367,6 +367,33 @@ export default {
   },
 
   methods: {
+    async commandListener__patterns_count (response) {
+      try {
+
+        if (response.reply.column !== this.column.name) {
+          return;
+        }
+
+        if (!response || !response.data || !response.data.result || response.data.status == "error") {
+          throw response
+        }
+
+        var values = response.data.result;
+        
+        if (values) {
+          if (values.values && typeof values.values !== 'function') {
+            values = values.values
+          }
+          this.$set(this.patternsFrequency, this.patternsResolution, values)
+          this.requestPatterns(response.reply.sample[1], response.reply.sample[1]+200, false);
+        }
+
+      } catch (err) {
+        console.error(err)
+        this.$set(this.patternsFrequency, this.patternsResolution, 'error')
+      }
+    },
+
     async getPatterns () {
       try {
 
@@ -382,12 +409,28 @@ export default {
           return
         }
         this.$set(this.patternsFrequency, this.patternsResolution, 'loading')
+        this.requestPatterns(0, 200, true);
 
-        var codePayload = {
-          command: 'pattern_counts_async',
-          dfName: this.currentDataset.dfName,
-          column: this.column.name,
-          mode: 3-this.patternsResolution,
+
+      } catch (err) {
+        console.error(err)
+        this.$set(this.patternsFrequency, this.patternsResolution, 'error')
+      }
+    },
+
+    async requestPatterns (from, to, clearPrevious=false) {
+        let dfName = this.currentDataset.dfName;
+        let column = this.column.name;
+        let mode = 3-this.patternsResolution;
+        console.log({dfName, column, mode, from, to, clearPrevious})
+        let codePayload = {
+          command: 'pattern_counts_cache',
+          sample: [from, to],
+          dfName,
+          column,
+          mode,
+          clearPrevious,
+          cache_key: `pattern_counts_${dfName}_${column}_${mode}`,
           n: 5,
           request: {
             isAsync: true,
@@ -395,22 +438,12 @@ export default {
           }
         }
 
-        var response = await this.evalCode(codePayload, 'await', 'info');
-
-        if (!response || !response.data || !response.data.result || response.data.status == "error") {
-          throw response
-        }
-        var values = response.data.result[this.column.name]
-        if (values) {
-          if (values.values && typeof values.values !== 'function') {
-            values = values.values
-          }
-          this.$set(this.patternsFrequency, this.patternsResolution, values)
-        }
-      } catch (err) {
-        console.error(err)
-        this.$set(this.patternsFrequency, this.patternsResolution, 'error')
-      }
+        this.evalCode(codePayload, { 
+          command: 'patterns_count',
+          sample: [from, to],
+          n: 5,
+          column
+        }, 'info');
     },
 
     patternClicked (item) {

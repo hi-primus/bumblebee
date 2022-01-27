@@ -20,6 +20,31 @@ def df__preliminary_profile(df, cols="*"):
                 })
     return body
 
+
+def add_to_table(table, add, limit=None):
+    import copy
+    table = copy.deepcopy(table) if table is not None else { "values": [] }
+    
+    for value in add["values"]:
+        index = None
+        for i, x in enumerate(table["values"]):
+            if x["value"] == value["value"]:
+                index = i
+                break
+
+        if index is None:
+            table["values"].append(value)
+
+        else:
+            table["values"][index]["count"] += value["count"]
+            
+    table["values"].sort(key=lambda x: x.get('count'), reverse=True)
+
+    if limit is not None:
+        table["values"] = table["values"][:limit]
+
+    return table
+
 # utils
 
 def inject_method_to_optimus(func):
@@ -97,6 +122,8 @@ def _out_result(_callback = None):
     return _f
 
 # optimus parser
+
+cache = {}
 
 reset = #{(payload.params ? payload.params.reset != "0" : false) ? "True" : "False"}
 

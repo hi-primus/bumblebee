@@ -131,6 +131,31 @@ export const codeGenerators = {
   compile: (payload) => {
     return `.compile()`;
   },
+  pattern_counts_cache: (payload) => {
+    let df = payload.dfName;
+    if (payload.sample) {
+      df = `${df}[${payload.sample.join(":")}]`;
+    }
+    let column = escapeQuotes(payload.column);
+    let code =  "";
+    if (payload.clearPrevious) {
+      code += `cache["${payload.cache_key}"] = None\n`;
+    } else {
+      code += `cache["${payload.cache_key}"] = cache.get("${payload.cache_key}")\n`;
+    }
+    code += `def _output_callback(fut):\n`;
+    code += `    result = getattr(fut, "result", fut.result)()["${column}"]\n`;
+    code += `    table = cache["${payload.cache_key}"]\n`;
+    code += `    cache["${payload.cache_key}"] = add_to_table(cache["${payload.cache_key}"], result, None)\n`;
+    code += `    table = add_to_table(table, result, ${payload.n})\n`;
+    code += `    return table\n`;
+    code += `_output = op.submit(${df}.cols.pattern_counts, "${column}", n=None, mode=${payload.mode}, priority=${payload.request.priority || 0}, pure=False)\n`;
+    return {
+      code,
+      isOutput: true,
+      isAsync: true
+    };
+  },
   pattern_counts: (payload) => {
     return {
       code: `_output = ${payload.dfName}.cols.pattern_counts("${escapeQuotes(payload.column)}", n=${payload.n}, mode=${payload.mode})`,
