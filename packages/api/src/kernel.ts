@@ -595,7 +595,12 @@ export const createConnection = async function (sessionId) {
           console.log('Connection created', sessionId, getKernelId(sessionId));
           console.log('Total connections:', Object.keys(kernels).length);
 					clearUnusedKernels(0, 1000, [getKernelId(sessionId)]);
-          resolve(kernels[getKernelId(sessionId)].connection);
+					let connection = kernels[getKernelId(sessionId)]?.connection
+					if (connection) {
+						resolve(connection);
+					} else {
+						reject(new Error(`Connection not created for ${sessionId}`));
+					}
         }, 1000);
 
 			});
@@ -702,6 +707,8 @@ export const clearUnusedKernels = async function (kernelAddress, t = 0, ignore =
 
 	ignore = ignore.map(sessionId => kernels[getKernelId(sessionId)]?.id).filter(id => id);
 
+	// delete kernels that are in the response and has no connections
+
 	response.data.forEach(async (kernel) => {
 		if (kernel.connections > 0 || ignore.includes(kernel.id)) {
 			return;
@@ -710,11 +717,26 @@ export const clearUnusedKernels = async function (kernelAddress, t = 0, ignore =
 		if (toDelete){
 			toDelete = toDelete.map(([key, value]) => key)[0];
 		} else {
-			toDelete = kernel.id
+			toDelete = kernel.id;
 			kernels[kernel.id] = { id: kernel.id, kernel_address: kernelAddress };
 		}
 		deleteKernel(toDelete, t);
 	});
+
+	// delete kernels that are not in the response
+
+	Object.entries(kernels).forEach(([key, value]) => {
+		if (value.id && !response.data.find((kernel) => kernel.id === value.id)) {
+			if (value.kernel_address === kernelAddress) {
+				delete kernels[key];
+			}
+		}
+	});
+
+	setTimeout(() => {
+		console.log('Total connections:', Object.keys(kernels).length);
+	}, t + 100);
+
 }
 
 export const deleteKernel = async function (sessionId, t = 0, immediateIfStarting = false) {
