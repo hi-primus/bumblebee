@@ -249,6 +249,14 @@
               <span class="font-mono">!: </span>Punctuation
             </div>
           </span>
+          <v-progress-circular
+            v-if="patternsLoading"
+            class="progress-small"
+            indeterminate
+            color="#AAA"
+            width="2"
+            size="14"
+          />
         </div>
         <div style="min-height: 128px;" class="vertical-center">
           <placeholder-bars
@@ -327,6 +335,7 @@ export default {
       expanded: false,
       patternsFrequency: [],
       patternsResolution: 3,
+      patternsLoading: false,
       sampleSize: 200
     }
   },
@@ -368,6 +377,7 @@ export default {
   },
 
   methods: {
+
     async commandListener__patterns_count (response) {
       try {
 
@@ -385,16 +395,19 @@ export default {
           if (values.values && typeof values.values !== 'function') {
             values = values.values
           }
-          this.$set(this.patternsFrequency, this.patternsResolution, values)
+          this.$set(this.patternsFrequency, this.patternsResolution, values);
           if (response.reply.sample[1] < this.rowsCount) {
             this.sampleSize = this.sampleSize * 2;
             this.requestPatterns(response.reply.sample[1], response.reply.sample[1]+this.sampleSize, false);
+          } else {
+            this.patternsLoading = false;
           }
         }
 
       } catch (err) {
         console.error(err)
         this.$set(this.patternsFrequency, this.patternsResolution, 'error')
+        this.patternsLoading = false;
       }
     },
 
@@ -413,13 +426,14 @@ export default {
           return
         }
         this.$set(this.patternsFrequency, this.patternsResolution, 'loading')
-        this.requestPatterns(0, 200, true);
+        this.patternsLoading = true;
         this.requestPatterns(0, this.sampleSize, true);
 
 
       } catch (err) {
         console.error(err)
         this.$set(this.patternsFrequency, this.patternsResolution, 'error')
+        this.patternsLoading = false;
       }
     },
 
