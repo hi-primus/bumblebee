@@ -145,10 +145,9 @@ export const codeGenerators = {
     }
     code += `def _output_callback(fut):\n`;
     code += `    result = getattr(fut, "result", fut.result)()["${column}"]\n`;
-    code += `    table = cache["${payload.cache_key}"]\n`;
-    code += `    cache["${payload.cache_key}"] = add_to_table(cache["${payload.cache_key}"], result, None)\n`;
-    code += `    table = add_to_table(table, result, ${payload.n})\n`;
-    code += `    return table\n`;
+    code += `    result = table_to_pandas(result)\n`;
+    code += `    cache["${payload.cache_key}"] = add_to_table(cache["${payload.cache_key}"], result)\n`;
+    code += `    return output_table(cache["${payload.cache_key}"], ${payload.n})\n`;
     code += `_output = op.submit(${df}.cols.pattern_counts, "${column}", n=None, mode=${payload.mode}, priority=${payload.request.priority || 0}, pure=False)\n`;
     return {
       code,
