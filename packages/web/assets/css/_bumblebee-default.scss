@@ -211,6 +211,7 @@ table.details-table {
       height: 100%;
       background-color: $data-primary;
       z-index: 0;
+      transition: width 0.4s cubic-bezier(0.4, 0, 1, 1) 0s;
     }
     &:hover {
       background-color: $data-highlight-grey;
@@ -2862,6 +2863,8 @@ $editor-top-padding: 4px;
 
 .info-tooltip-container {
 
+  display: inline-block;
+
   .info-tooltip-tip, .info-tooltip-content {
     pointer-events: none;
     opacity: 0;
@@ -3616,6 +3619,9 @@ $editor-top-padding: 4px;
   }
 }
 
+.progress-small {
+  display: inline;
+}
 
 .column-menu {
   &.menu-disabled > *, &.menu-disabled ~ * > * {

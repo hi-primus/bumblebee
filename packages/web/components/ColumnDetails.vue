@@ -249,6 +249,14 @@
               <span class="font-mono">!: </span>Punctuation
             </div>
           </span>
+          <v-progress-circular
+            v-if="patternsLoading"
+            class="progress-small"
+            indeterminate
+            color="#AAA"
+            width="2"
+            size="14"
+          />
         </div>
         <div style="min-height: 128px;" class="vertical-center">
           <placeholder-bars
@@ -326,7 +334,9 @@ export default {
     return {
       expanded: false,
       patternsFrequency: [],
-      patternsResolution: 3
+      patternsResolution: 3,
+      patternsLoading: false,
+      sampleSize: 200
     }
   },
 
@@ -367,6 +377,40 @@ export default {
   },
 
   methods: {
+
+    async commandListener__patterns_count (response) {
+      try {
+
+        if (response.reply.column !== this.column.name) {
+          return;
+        }
+
+        if (!response || !response.data || !response.data.result || response.data.status == "error") {
+          throw response
+        }
+
+        var values = response.data.result;
+        
+        if (values) {
+          if (values.values && typeof values.values !== 'function') {
+            values = values.values
+          }
+          this.$set(this.patternsFrequency, this.patternsResolution, values);
+          if (response.reply.sample[1] < this.rowsCount) {
+            this.sampleSize = this.sampleSize * 2;
+            this.requestPatterns(response.reply.sample[1], response.reply.sample[1]+this.sampleSize, false);
+          } else {
+            this.patternsLoading = false;
+          }
+        }
+
+      } catch (err) {
+        console.error(err)
+        this.$set(this.patternsFrequency, this.patternsResolution, 'error')
+        this.patternsLoading = false;
+      }
+    },
+
     async getPatterns () {
       try {
 
@@ -382,12 +426,29 @@ export default {
           return
         }
         this.$set(this.patternsFrequency, this.patternsResolution, 'loading')
+        this.patternsLoading = true;
+        this.requestPatterns(0, this.sampleSize, true);
 
-        var codePayload = {
-          command: 'pattern_counts_async',
-          dfName: this.currentDataset.dfName,
-          column: this.column.name,
-          mode: 3-this.patternsResolution,
+
+      } catch (err) {
+        console.error(err)
+        this.$set(this.patternsFrequency, this.patternsResolution, 'error')
+        this.patternsLoading = false;
+      }
+    },
+
+    async requestPatterns (from, to, clearPrevious=false) {
+        let dfName = this.currentDataset.dfName;
+        let column = this.column.name;
+        let mode = 3-this.patternsResolution;
+        let codePayload = {
+          command: 'pattern_counts_cache',
+          sample: [from, to],
+          dfName,
+          column,
+          mode,
+          clearPrevious,
+          cache_key: `pattern_counts_${dfName}_${column}_${mode}`,
           n: 5,
           request: {
             isAsync: true,
@@ -395,22 +456,12 @@ export default {
           }
         }
 
-        var response = await this.evalCode(codePayload, 'await', 'info');
-
-        if (!response || !response.data || !response.data.result || response.data.status == "error") {
-          throw response
-        }
-        var values = response.data.result[this.column.name]
-        if (values) {
-          if (values.values && typeof values.values !== 'function') {
-            values = values.values
-          }
-          this.$set(this.patternsFrequency, this.patternsResolution, values)
-        }
-      } catch (err) {
-        console.error(err)
-        this.$set(this.patternsFrequency, this.patternsResolution, 'error')
-      }
+        this.evalCode(codePayload, { 
+          command: 'patterns_count',
+          sample: [from, to],
+          n: 5,
+          column
+        }, 'info');
     },
 
     patternClicked (item) {

@@ -20,6 +20,24 @@ def df__preliminary_profile(df, cols="*"):
                 })
     return body
 
+
+def add_to_table(table, add):
+    table = table.add(add, fill_value=0) if table is not None else add
+    table["count"] = table["count"].astype("int64")
+    return table
+    
+
+def output_table(table, limit=None):
+    table = table.sort_values(by="count", ascending=False).reset_index()
+    if limit is not None:
+        table = table[0:limit]
+    return {"values": table.to_dict('records')}
+
+
+def table_to_pandas(table):
+    import pandas as pd
+    return pd.DataFrame.from_dict(table["values"]).set_index("value")
+
 # utils
 
 def inject_method_to_optimus(func):
@@ -97,6 +115,8 @@ def _out_result(_callback = None):
     return _f
 
 # optimus parser
+
+cache = {}
 
 reset = #{(payload.params ? payload.params.reset != "0" : false) ? "True" : "False"}
 
