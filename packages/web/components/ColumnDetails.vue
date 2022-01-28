@@ -326,7 +326,8 @@ export default {
     return {
       expanded: false,
       patternsFrequency: [],
-      patternsResolution: 3
+      patternsResolution: 3,
+      sampleSize: 200
     }
   },
 
@@ -385,7 +386,10 @@ export default {
             values = values.values
           }
           this.$set(this.patternsFrequency, this.patternsResolution, values)
-          this.requestPatterns(response.reply.sample[1], response.reply.sample[1]+200, false);
+          if (response.reply.sample[1] < this.rowsCount) {
+            this.sampleSize = this.sampleSize * 2;
+            this.requestPatterns(response.reply.sample[1], response.reply.sample[1]+this.sampleSize, false);
+          }
         }
 
       } catch (err) {
@@ -410,6 +414,7 @@ export default {
         }
         this.$set(this.patternsFrequency, this.patternsResolution, 'loading')
         this.requestPatterns(0, 200, true);
+        this.requestPatterns(0, this.sampleSize, true);
 
 
       } catch (err) {
@@ -422,7 +427,6 @@ export default {
         let dfName = this.currentDataset.dfName;
         let column = this.column.name;
         let mode = 3-this.patternsResolution;
-        console.log({dfName, column, mode, from, to, clearPrevious})
         let codePayload = {
           command: 'pattern_counts_cache',
           sample: [from, to],
