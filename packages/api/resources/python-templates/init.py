@@ -38,6 +38,16 @@ def table_to_pandas(table):
     import pandas as pd
     return pd.DataFrame.from_dict(table["values"]).set_index("value")
 
+def df__pattern_counts_df(df, cols="*", n=10, mode=0, flush=False):
+    df.cols.pattern_counts(cols, n=n, mode=mode, flush=flush)
+    return df
+
+from optimus.profiler.constants import MAX_BUCKETS
+
+def df__profile_df(df, cols="*", bins: int = MAX_BUCKETS, flush: bool = False):
+    df.profile(cols, bins=bins, flush=flush)
+    return df
+
 # utils
 
 def inject_method_to_optimus(func):
@@ -92,6 +102,8 @@ def inject_method_to_optimus(func):
     return True
 
 inject_method_to_optimus(df__preliminary_profile)
+inject_method_to_optimus(df__pattern_counts_df)
+inject_method_to_optimus(df__profile_df)
 
 def _out_result(_callback = None):
     def _f(fut):

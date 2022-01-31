@@ -167,7 +167,7 @@ export const codeGenerators = {
     code += `    global ${payload.dfName}\n`;
     code += `    ${payload.dfName} = getattr(fut, "result", fut.result)()\n`;
     code += `    return ${payload.dfName}.cols.pattern_counts("${escapeQuotes(payload.column)}", n=${payload.n}, mode=${payload.mode})\n`;
-    code += `_output = op.submit(${payload.dfName}.cols.calculate_pattern_counts, "${escapeQuotes(payload.column)}", n=${payload.n}, mode=${payload.mode}, priority=${payload.request.priority || 0}, pure=False)\n`;
+    code += `_output = op.submit(${payload.dfName}.pattern_counts_df, "${escapeQuotes(payload.column)}", n=${payload.n}, mode=${payload.mode}, priority=${payload.request.priority || 0}, pure=False)\n`;
     return {
       code,
       isOutput: true,
@@ -219,7 +219,7 @@ export const codeGenerators = {
     code += `    global ${payload.dfName}\n`;
     code += `    ${payload.dfName} = fut.result()\n`;
     code += `    return ${payload.dfName}.profile(${payload.dfName}.cols.names("*")${selection})\n`;
-    code += `_output = op.submit(${payload.dfName}.calculate_profile, ${payload.dfName}.cols.names("*")${selection}, priority=${payload.request.priority || 0}, pure=False)\n`;
+    code += `_output = op.submit(${payload.dfName}.profile_df, ${payload.dfName}.cols.names("*")${selection}, priority=${payload.request.priority || 0}, pure=False)\n`;
     return {
       code,
       isOutput: true,
@@ -232,7 +232,7 @@ export const codeGenerators = {
     code += `    global ${payload.dfName}\n`;
     code += `    ${payload.dfName} = fut.result()\n`;
     code += `    return ${payload.dfName}.profile(${payload.columns || '"*"'})\n`;
-    code += `_output = op.submit(${payload.dfName}.calculate_profile, ${payload.columns || '"*"'}, priority=${payload.request.priority || 0}, pure=False)\n`;
+    code += `_output = op.submit(${payload.dfName}.profile_df, ${payload.columns || '"*"'}, priority=${payload.request.priority || 0}, pure=False)\n`;
     return {
       code,
       isOutput: true,
