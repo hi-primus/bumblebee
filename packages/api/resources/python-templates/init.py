@@ -38,6 +38,36 @@ def table_to_pandas(table):
     import pandas as pd
     return pd.DataFrame.from_dict(table["values"]).set_index("value")
 
+
+def set_patterns_meta(df, column_name, result, n=10):
+    from optimus.engines.base.meta import Meta
+    import time
+    more = False
+    if not isinstance(result, dict):
+        more = len(result) > n
+        result = output_table(result, n)
+    result.update({"more": more, "updated": time.time()})
+    df.meta = Meta.set(df.meta, f"profile.columns.{column_name}.patterns", result)
+    return df
+
+
+def df__pattern_counts_cache(df, column_name, n=10, mode=0, sample=None, last_sample=False):
+    from optimus.engines.base.meta import Meta
+    from_meta = False
+    patterns = Meta.get(df.meta, f"profile.columns.{column_name}.patterns")
+
+    has_patterns = patterns is not None and (n is None or n <= len(patterns["values"]) or not patterns["more"])
+
+    if has_patterns:
+        complete = True
+        patterns = df.cols.pattern_counts(column_name, n=None, mode=mode)
+    else:
+        complete = False
+        sample_df = df if sample is None else df[sample[0]:sample[1]]
+        patterns = sample_df.cols.pattern_counts(column_name, n=None, mode=mode)
+    return {"complete": complete, "patterns": patterns}
+
+
 def df__pattern_counts_df(df, cols="*", n=10, mode=0, flush=False):
     df.cols.pattern_counts(cols, n=n, mode=mode, flush=flush)
     return df
@@ -102,6 +132,7 @@ def inject_method_to_optimus(func):
     return True
 
 inject_method_to_optimus(df__preliminary_profile)
+inject_method_to_optimus(df__pattern_counts_cache)
 inject_method_to_optimus(df__pattern_counts_df)
 inject_method_to_optimus(df__profile_df)
 
