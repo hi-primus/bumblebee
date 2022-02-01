@@ -389,14 +389,15 @@ export default {
           throw response
         }
 
-        var values = response.data.result;
+        var values = response.data.result.patterns;
+        var complete = response.data.result.complete;
         
         if (values) {
           if (values.values && typeof values.values !== 'function') {
             values = values.values
           }
           this.$set(this.patternsFrequency, this.patternsResolution, values);
-          if (response.reply.sample[1] < this.rowsCount) {
+          if (!complete && response.reply.sample[1] < this.rowsCount) {
             this.sampleSize = this.sampleSize * 2;
             this.requestPatterns(response.reply.sample[1], response.reply.sample[1]+this.sampleSize, false);
           } else {
@@ -448,6 +449,7 @@ export default {
           column,
           mode,
           clearPrevious,
+          lastSample: to>=this.rowsCount,
           cache_key: `pattern_counts_${dfName}_${column}_${mode}`,
           n: 5,
           request: {

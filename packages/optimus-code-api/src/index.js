@@ -133,22 +133,29 @@ export const codeGenerators = {
   },
   pattern_counts_cache: (payload) => {
     let df = payload.dfName;
-    if (payload.sample) {
-      df = `${df}[${payload.sample.join(":")}]`;
-    }
     let column = escapeQuotes(payload.column);
     let code =  "";
+    code += `last_sample = ${payload.lastSample ? 'True' : 'False'}\n`;
     if (payload.clearPrevious) {
       code += `cache["${payload.cache_key}"] = None\n`;
     } else {
       code += `cache["${payload.cache_key}"] = cache.get("${payload.cache_key}")\n`;
     }
     code += `def _output_callback(fut):\n`;
-    code += `    result = getattr(fut, "result", fut.result)()["${column}"]\n`;
-    code += `    result = table_to_pandas(result)\n`;
-    code += `    cache["${payload.cache_key}"] = add_to_table(cache["${payload.cache_key}"], result)\n`;
-    code += `    return output_table(cache["${payload.cache_key}"], ${payload.n})\n`;
-    code += `_output = op.submit(${df}.cols.pattern_counts, "${column}", n=None, mode=${payload.mode}, priority=${payload.request.priority || 0}, pure=False)\n`;
+    code += `    result = getattr(fut, "result", fut.result)()\n`;
+    code += `    values = result["patterns"]["${column}"]\n`;
+    code += `    is_complete = result["complete"]\n`;
+    code += `    values = table_to_pandas(values)\n`;
+    code += `    if is_complete:\n`;
+    code += `        cache["${payload.cache_key}"] = values\n`;
+    code += `    else:\n`;
+    code += `        cache["${payload.cache_key}"] = add_to_table(cache["${payload.cache_key}"], values)\n`;
+    code += `    if is_complete or last_sample:\n`;
+    code += `        global ${df}\n`;
+    code += `        ${df} = set_patterns_meta(${df}, "${column}", cache["${payload.cache_key}"], ${payload.n})\n`;
+    code += `    result["patterns"] = output_table(cache["${payload.cache_key}"], ${payload.n})\n`;
+    code += `    return result\n`;
+    code += `_output = op.submit(${df}.pattern_counts_cache, "${column}", n=None, mode=${payload.mode}, sample=[${payload.sample.join(", ")}], last_sample=last_sample, priority=${payload.request.priority || 0}, pure=False)\n`;
     return {
       code,
       isOutput: true,
