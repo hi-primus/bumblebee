@@ -2195,7 +2195,7 @@ export default {
             type: 'profile',
             saveTo: 'df_preview',
             noExecute: true,
-            buffer: true,
+            window: true,
             profile: cols,
             names: cols === false,
             dfName: this.currentDataset.dfName,
@@ -2503,7 +2503,7 @@ export default {
           methods: this.commandMethods
         });
       } catch (err) {
-        err.message = '(Error on buffer request) ' + (err.message || '')
+        err.message = '(Error on window request) ' + (err.message || '')
         throw err;
       }
 

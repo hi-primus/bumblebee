@@ -119,9 +119,6 @@ export const codeGenerators = {
       isOutput: true
     }
   },
-  setBuffer: (payload) => {
-    return {code: '_output = '+payload.dfName+'.set_buffer("*")', isOutput: true}
-  },
   execute: (payload) => {
     return {code: `${payload.dfName} = ${payload.dfName}.execute()\n_output = "ok"`, isOutput: true}
   },
@@ -533,7 +530,7 @@ export const codeGenerators = {
     let datasets = payload.with.map(({name})=>name).join(', ')
 
     if (!['final','processing'].includes(payload.request.type)) {
-      datasets = payload.with.map(({name})=>`${name}.buffer_window("*", 0, 3)`).join(', ')
+      datasets = payload.with.map(({name})=>`${name}.iloc("*", 0, 3)`).join(', ')
       return `.rows.append([${datasets}], ${cols_map})`;
     }
 
@@ -1218,8 +1215,8 @@ export const generateCode = function(commands = [], _request = { type: 'processi
       }
 
       if (typeof resultCode === 'function') {
-        if (request.buffer && request.buffer.length) {
-          resultCode = resultCode(request.buffer[0], request.buffer[1]);
+        if (request.window && request.window.length) {
+          resultCode = resultCode(request.window[0], request.window[1]);
         } else {
           resultCode = resultCode()
         }
@@ -1268,7 +1265,7 @@ export const generateCode = function(commands = [], _request = { type: 'processi
           code += `${dfName} = `;
           saving = dfName;
         } else if (multiOutput) {
-          if (generator || request.buffer) {
+          if (generator || request.window) {
             code += '_df_output = ';
             saving = '_df_output';
           } else {
@@ -1289,18 +1286,18 @@ export const generateCode = function(commands = [], _request = { type: 'processi
           }
         }
 
-        let usesVar = generator || (!multiOutput && ( request.buffer || request.profile || request.matches_count ))
+        let usesVar = generator || (!multiOutput && ( request.window || request.profile || request.matches_count ))
 
         if (!request.isLoad) {
           if (usesVar) {
             code += dfName;
-            if (request.buffer) {
+            if (request.window) {
               let window = '';
-              if (!request.noBufferWindow && Array.isArray(request.buffer)) {
-                window = `, ${request.buffer[0]}, ${request.buffer[1]}`;
+              if (!request.noBufferWindow && Array.isArray(request.window)) {
+                window = `, ${request.window[0]}, ${request.window[1]}`;
               }
               if (window) {
-                code += `.buffer_window("*"${window})`;
+                code += `.iloc("*"${window})`;
               }
             }
           }

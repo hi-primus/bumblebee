@@ -1870,7 +1870,7 @@ export const actions = {
     }
 
     if (!tabs.length) {
-      console.warn('[DATA LOADING] Requested buffer window for not existing df');
+      console.warn('[DATA LOADING] Requested window for not existing df');
       return false;
     }
 
@@ -1924,7 +1924,7 @@ export const actions = {
             type: 'preview',
             dfName: 'df_preview',
             sample: true,
-            buffer: [from, to+1],
+            window: [from, to+1],
             noBufferWindow,
             lessRows
           }
@@ -1942,7 +1942,7 @@ export const actions = {
     // not profiled preview or empty
 
     if (!profilePreview) {
-      var buffer = [from, to+1];
+      var window = [from, to+1];
       var codePayload = {
         ...codePayload,
         request: {
@@ -1950,7 +1950,7 @@ export const actions = {
           type: 'preview',
           dfName: datasetDfName,
           sample: true,
-          buffer,
+          window,
           noBufferWindow,
           lessRows,
           noSave: true
