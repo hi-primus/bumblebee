@@ -45,6 +45,10 @@ export class KernelRoutines {
 
   initVariables = this._pythonTemplate("variables.py", false);
 
+  initUtils = this._pythonTemplate("init-utils.py", false);
+  
+  initFunctions = this._pythonTemplate("init-functions.py", false);
+
   includeVariables = `res.update({ "variables": optimus_variables() })`;
 
   code = this._pythonTemplate("code.py");
