@@ -152,7 +152,7 @@ export const codeGenerators = {
     code += `        ${df} = set_patterns_meta(${df}, "${column}", cache["${payload.cache_key}"], ${payload.n})\n`;
     code += `    result["patterns"] = output_table(cache["${payload.cache_key}"], ${payload.n})\n`;
     code += `    return result\n`;
-    code += `_output = op.submit(${df}.pattern_counts_cache, "${column}", n=None, mode=${payload.mode}, sample=[${payload.sample.join(", ")}], last_sample=last_sample, priority=${payload.request.priority || 0}, pure=False)\n`;
+    code += `_output = op.submit(${df}.pattern_counts_cache, "${column}", n=None, mode=${payload.mode}, sample=[${payload.sample.join(", ")}], priority=${payload.request.priority || 0}, pure=False)\n`;
     return {
       code,
       isOutput: true,
