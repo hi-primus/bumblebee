@@ -1,3 +1,9 @@
+def one_dict_to_val(val):
+    if isinstance(val, dict) and len(val) == 1:
+        return list(val.values())[0]
+    return val
+
+
 def add_to_table(table, add):
     table = table.add(add, fill_value=0) if table is not None else add
     table["count"] = table["count"].astype("int64")
@@ -11,9 +17,9 @@ def output_table(table, limit=None):
     return {"values": table.to_dict('records')}
 
 
-def table_to_pandas(table):
+def table_to_pandas(table, index="value"):
     import pandas as pd
-    return pd.DataFrame.from_dict(table["values"]).set_index("value")
+    return pd.DataFrame.from_dict(table).set_index(index)
 
 
 def set_patterns_meta(df, column_name, result, n=10):
