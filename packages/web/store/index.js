@@ -342,6 +342,8 @@ export const mutations = {
       } else {
         dataset.name = `Dataset`;
       }
+    } else {
+      dataset.name = dataset.name.replace(/%20/g, " ").replace(/\.(csv|xls|xlsx|avro|json|parquet)$/i, "");
     }
 
     if (preview) {
