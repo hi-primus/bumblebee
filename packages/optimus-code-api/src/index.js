@@ -131,32 +131,17 @@ export const codeGenerators = {
   pattern_counts_cache: (payload) => {
     let df = payload.dfName;
     let column = escapeQuotes(payload.column);
-    let code =  "";
-    code += `last_sample = ${payload.lastSample ? 'True' : 'False'}\n`;
-    if (payload.clearPrevious) {
-      code += `cache["${payload.cache_key}"] = None\n`;
-    } else {
-      code += `cache["${payload.cache_key}"] = cache.get("${payload.cache_key}")\n`;
-    }
-    code += `def _output_callback(fut):\n`;
-    code += `    result = getattr(fut, "result", fut.result)()\n`;
-    code += `    values = result["patterns"]["${column}"]\n`;
-    code += `    is_complete = result["complete"]\n`;
-    code += `    values = table_to_pandas(values)\n`;
-    code += `    if is_complete:\n`;
-    code += `        cache["${payload.cache_key}"] = values\n`;
-    code += `    else:\n`;
-    code += `        cache["${payload.cache_key}"] = add_to_table(cache["${payload.cache_key}"], values)\n`;
-    code += `    if is_complete or last_sample:\n`;
-    code += `        global ${df}\n`;
-    code += `        ${df} = set_patterns_meta(${df}, "${column}", cache["${payload.cache_key}"], ${payload.n})\n`;
-    code += `    result["patterns"] = output_table(cache["${payload.cache_key}"], ${payload.n})\n`;
-    code += `    return result\n`;
-    code += `_output = op.submit(${df}.pattern_counts_cache, "${column}", n=None, mode=${payload.mode}, sample=[${payload.sample.join(", ")}], priority=${payload.request.priority || 0}, pure=False)\n`;
+    let code =  `_output = ${df}.pattern_counts_cache("${column}", `
+    code += `n=${payload.n}, `;
+    code += `mode=${payload.mode}, `;
+    code += `sample=[${payload.sample.join(", ")}], `;
+    code += `last_sample=${payload.lastSample ? 'True' : 'False'}, `;
+    code += `flush=${payload.clearPrevious ? 'True' : 'False'}`;
+    code += `)\n`;
     return {
       code,
       isOutput: true,
-      isAsync: true
+      isAsync: false
     };
   },
   pattern_counts: (payload) => {

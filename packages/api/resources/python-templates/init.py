@@ -28,8 +28,6 @@ def _out_result(_callback = None):
 
 # optimus parser
 
-cache = {}
-
 reset = #{(payload.params ? payload.params.reset != "0" : false) ? "True" : "False"}
 
 try:

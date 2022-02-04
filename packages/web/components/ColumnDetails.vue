@@ -389,14 +389,14 @@ export default {
           throw response
         }
 
-        var values = response.data.result.patterns;
-        var complete = response.data.result.complete;
+        var result = response.data.result;
+        var complete = result?.complete;
         
-        if (values) {
-          if (values.values && typeof values.values !== 'function') {
-            values = values.values
+        if (result) {
+          if (result.values && typeof result.values !== 'function') {
+            result = result.values
           }
-          this.$set(this.patternsFrequency, this.patternsResolution, values);
+          this.$set(this.patternsFrequency, this.patternsResolution, result);
           if (!complete && response.reply.sample[1] < this.rowsCount) {
             this.sampleSize = this.sampleSize * 2;
             this.requestPatterns(response.reply.sample[1], response.reply.sample[1]+this.sampleSize, false);
