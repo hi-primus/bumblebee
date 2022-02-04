@@ -730,6 +730,8 @@ export const codeGenerators = {
 
     let url = (payload.url || '').trim() || (payload.external_url || '').trim();
 
+    url = url.replace(/ /g, '%20');
+
     code +=`op.load.${loadType}("${url}"`
     if (loadType=='csv') {
       code += `, sep="${payload.sep}"`

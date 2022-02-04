@@ -1826,6 +1826,13 @@ export const commandsHandlers = {
       var infer = payload.file_type === "file" || !payload._moreOptions;
       var fileType = infer ? payload._fileType : payload.file_type;
       var fileName = payload._fileName;
+
+      fileName = fileName.replace(/%20/g, " ");
+      
+      if (payload.url) {
+        fileName = fileName.split('/').pop();
+      }
+
       return (
         `<b>Load</b>` +
         (fileName ? ` ${hlParam(fileName)}` : "") +

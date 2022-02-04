@@ -325,13 +325,16 @@ export const mutations = {
       console.log("[BUMBLEBLEE] Opening dataset", dataset);
     }
 
-
     var fileName = dataset.file_name;
 
     if (fileName && fileName.includes('/')) {
       fileName = fileName.split('/');
       dataset.file_name = fileName[fileName.length - 1];
     }
+
+    if (dataset.file_name) {
+      dataset.file_name = dataset.file_name.replace(/%20/g, " ");
+    }    
 
     if (!dataset.name) {
       if (dataset.file_name) {
