@@ -713,9 +713,10 @@ export const clearUnusedKernels = async function (kernelAddress, t = 0, ignore =
 		if (kernel.connections > 0 || ignore.includes(kernel.id)) {
 			return;
 		}
-		let toDelete = Object.entries(kernels).find(([key, value]) => value.id === kernel.id)
-		if (toDelete && toDelete[0]) {
-			toDelete = toDelete.map(([key, value]) => key)[0];
+		let toDeleteEntry: [string, any] = Object.entries(kernels).find(([key, value]) => value.id === kernel.id);
+		let toDelete: string;
+		if (toDeleteEntry && toDeleteEntry[0]) {
+			toDelete = toDeleteEntry[0];
 		} else {
 			toDelete = kernel.id;
 			kernels[kernel.id] = { id: kernel.id, kernel_address: kernelAddress };
