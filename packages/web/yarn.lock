@@ -3590,8 +3590,7 @@ builtin-status-codes@^3.0.0:
   integrity sha1-hZgoeOIbmOHGZCXgPQF0eI9Wnug=
 
 "bumblebee-utils@link:../bumblebee-utils":
-  version "0.0.0"
-  uid ""
+  version "22.2.0-beta"
 
 bytes@3.0.0:
   version "3.0.0"
@@ -8641,8 +8640,10 @@ optimize-css-assets-webpack-plugin@^5.0.4:
     last-call-webpack-plugin "^3.0.0"
 
 "optimus-code-api@link:../optimus-code-api":
-  version "0.0.0"
-  uid ""
+  version "22.2.0-beta"
+  dependencies:
+    bumblebee-utils "link:../bumblebee-utils"
+    uuid "^8.3.2"
 
 optionator@^0.8.1, optionator@^0.8.3:
   version "0.8.3"
@@ -11635,9 +11636,9 @@ tr46@^1.0.1:
     punycode "^2.1.0"
 
 trim-off-newlines@^1.0.1:
-  version "1.0.1"
-  resolved "https://registry.yarnpkg.com/trim-off-newlines/-/trim-off-newlines-1.0.1.tgz#9f9ba9d9efa8764c387698bcbfeb2c848f11adb3"
-  integrity sha1-n5up2e+odkw4dpi8v+sshI8RrbM=
+  version "1.0.3"
+  resolved "https://registry.yarnpkg.com/trim-off-newlines/-/trim-off-newlines-1.0.3.tgz#8df24847fcb821b0ab27d58ab6efec9f2fe961a1"
+  integrity sha512-kh6Tu6GbeSNMGfrrZh6Bb/4ZEHV1QlB4xNDBeog8Y9/QwFlKTRyWvY3Fs9tRDAMZliVUwieMgEdIeL/FtqjkJg==
 
 ts-pnp@^1.1.6:
   version "1.2.0"
