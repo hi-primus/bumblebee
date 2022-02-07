@@ -1,7 +1,42 @@
+import copy
+
+from optimus.helpers.constants import ProfilerDataTypes    
+
+
 def one_dict_to_val(val):
     if isinstance(val, dict) and len(val) == 1:
         return list(val.values())[0]
     return val
+
+
+def replace_data_type(a, b):
+    data_types = ProfilerDataTypes.list()
+    a_index = [i for i, dt in enumerate(data_types) if dt == a][0] or len(data_types)
+    b_index = [i for i, dt in enumerate(data_types) if dt == b][0] or len(data_types)
+    index = min(a_index, b_index)
+    return data_types[index] if index < len(data_types) else None
+
+
+def add_profile(a, b):
+    a = copy.deepcopy(a)
+
+    if b is None:
+        return a
+    
+    for col in a["columns"].keys():
+        a["columns"][col]["stats"]["match"] += b["columns"][col]["stats"]["match"]
+        a["columns"][col]["stats"]["missing"] += b["columns"][col]["stats"]["missing"]
+        a["columns"][col]["stats"]["mismatch"] += b["columns"][col]["stats"]["mismatch"]
+        a_data_type = a["columns"][col]["stats"]["inferred_data_type"]["data_type"]
+        b_data_type = b["columns"][col]["stats"]["inferred_data_type"]["data_type"]
+        a["columns"][col]["stats"]["inferred_data_type"]["data_type"] = replace_data_type(a_data_type, b_data_type)
+        
+    a["summary"]["rows_count"] += b["summary"]["rows_count"]
+    a["summary"]["data_types_list"] = list(set(a["summary"]["data_types_list"] + b["summary"]["data_types_list"]))
+    a["summary"]["total_count_data_types"] = len(a["summary"]["data_types_list"])
+    a["summary"]["missing_count"] += b["summary"]["missing_count"]
+    a["summary"]["p_missing"] = a["summary"]["missing_count"] / a["summary"]["rows_count"]
+    return a
 
 
 def add_to_table(table, add):
@@ -17,9 +52,19 @@ def output_table(table, limit=None):
     return {"values": table.to_dict('records')}
 
 
+def output_hist(hist, limit=None):
+    hist = hist.reset_index()
+    return hist.to_dict('records')
+
+
 def table_to_pandas(table, index="value"):
     import pandas as pd
     return pd.DataFrame.from_dict(table).set_index(index)
+
+
+def hist_to_pandas(hist, indices=["lower", "upper"]):
+    import pandas as pd
+    return pd.DataFrame.from_dict(hist).set_index(indices)
 
 
 def set_patterns_meta(df, column_name, result, n=10):
@@ -32,6 +77,7 @@ def set_patterns_meta(df, column_name, result, n=10):
     result.update({"more": more, "updated": time.time()})
     df.meta = Meta.set(df.meta, f"profile.columns.{column_name}.patterns", result)
     return df
+
 
 def inject_method_to_optimus(func):
     func_name = func.__name__

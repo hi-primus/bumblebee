@@ -201,6 +201,33 @@ export const codeGenerators = {
       isAsync: false
     };
   },
+  profile_cache: (payload) => {
+    let code =  `_output = ${payload.dfName}.profile_cache(${preparedColumns(payload.columns)}, `
+    code += payload.n ? `bins=${payload.n}, ` : '';
+    code += `sample=[${payload.sample.join(", ")}], `;
+    code += `last_sample=${payload.lastSample ? 'True' : 'False'}, `;
+    code += `flush=${payload.clearPrevious ? 'True' : 'False'}`;
+    code += `)\n`;
+    return {
+      code,
+      isOutput: true,
+      isAsync: false
+    };
+  },
+  profile_cache_partial: (payload) => {
+    let selection = payload.range ? `[${payload.range.join(":")}]` : '';
+    let code =  `_output = ${payload.dfName}.profile_cache(${payload.dfName}.cols.names("*")${selection}, `
+    code += payload.n ? `bins=${payload.n}, ` : '';
+    code += `sample=[${payload.sample.join(", ")}], `;
+    code += `last_sample=${payload.lastSample ? 'True' : 'False'}, `;
+    code += `flush=${payload.clearPrevious ? 'True' : 'False'}`;
+    code += `)\n`;
+    return {
+      code,
+      isOutput: true,
+      isAsync: false
+    };
+  },
   profile_async_partial: (payload) => {
     let selection = payload.range ? `[${payload.range.join(":")}]` : '';
     let code = "";
