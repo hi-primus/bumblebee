@@ -344,19 +344,24 @@ export default {
         return false;
       }
 
-      let found = this.items.findIndex(w=>w._id === id);
-      let item = this.items[found];
-      item.loading = true;
-      item = {...item, ...payload};
-      this.$set(this.items, found, item);
-
-      await this.$store.dispatch('request',{
-        request: 'put',
-        path: `/workspaces/${id}`,
-        payload: payload
-      });
-
-      await this.updateElements();
+      try {
+        let found = this.items.findIndex(w=>w._id === id);
+        let item = this.items[found];
+        item.loading = true;
+        item = {...item, ...payload};
+        this.$set(this.items, found, item);
+  
+        await this.$store.dispatch('request',{
+          request: 'put',
+          path: `/workspaces/${id}`,
+          payload: payload
+        });
+  
+        return await this.updateElements();
+      } catch (err) {
+        console.error(err)
+        return false;
+      }
     },
 
     async duplicateElement (workspace) {
