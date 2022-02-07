@@ -390,6 +390,13 @@
                 :selectable="selectionEnabled"
                 class="histfreq"
               />
+              <div
+                v-else
+                class="hidden-error"
+                :key="column.name"
+              >
+                {{plotsData[column.name]}}
+              </div>
             </div>
           </div>
           <div
@@ -1036,6 +1043,8 @@ export default {
             full_data_type = `${inferred_data_type} (${data_type})`;
           }
 
+          console.log({column})
+
           plotsData[column.name] = {
             key: i,
             name: column.name,
@@ -1043,7 +1052,7 @@ export default {
             match: column.stats.match,
             mismatch: column.stats.mismatch,
             count_uniques: column.stats.count_uniques,
-            hist: (column.stats.hist && column.stats.hist[0]) ? column.stats.hist : undefined,
+            hist: ((column.stats.hist && column.stats.hist[0]) ? column.stats.hist : undefined) || column.hist || undefined,
             frequency: ((column.stats.frequency) ? column.stats.frequency : undefined) || column.frequency || undefined,
             total: +this.currentDataset.summary.rows_count,
             zeros: column.stats.zeros,
@@ -1413,7 +1422,7 @@ export default {
             methods: this.commandMethods
           }});
           
-          return this.$store.dispatch('lateProfiles', {...profilingResponse, socketPost: this.socketPost});
+          // return this.$store.dispatch('lateProfiles', {...profilingResponse, socketPost: this.socketPost, cached: true});
         }
       } else if (this.$store.state.updatingWholeProfile) {
         return this.$store.commit('mutation', {mutate: 'updatingWholeProfile', payload: false })
