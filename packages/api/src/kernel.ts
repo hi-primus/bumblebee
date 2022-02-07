@@ -479,14 +479,14 @@ export const createConnection = async function (sessionId) {
         kernels[getKernelId(sessionId)].connection = connection;
 
         kernels[getKernelId(sessionId)].connection.on('close', function (message) {
-          Object.values(kernels[getKernelId(sessionId)].promises || {}).forEach((promise: any)=>{
+          Object.values(kernels[getKernelId(sessionId)]?.promises || {}).forEach((promise: any)=>{
             promise.reject(`Socket closed: "${message}"`);
           })
           kernels[getKernelId(sessionId)] = {};
         })
 
         kernels[getKernelId(sessionId)].connection.on('error', function (message) {
-          Object.values(kernels[getKernelId(sessionId)].promises || {}).forEach((promise: any)=>{
+          Object.values(kernels[getKernelId(sessionId)]?.promises || {}).forEach((promise: any)=>{
             promise.reject(`Socket error: "${message}"`);
           })
           kernels[getKernelId(sessionId)] = {};
