@@ -1536,7 +1536,7 @@ export default {
     
     async requestWholeProfiling () {
       let columns = Math.max((this.currentDataset?.columns || []).length, this.currentDataset?.summary?.cols_count || 0);
-      let doneColumns = (this.currentDataset?.columns?.filter(c => c.stats.done) || []).length;
+      let doneColumns = (this.currentDataset?.columns?.filter(c => c.done) || []).length;
 
 
       if (doneColumns < columns && !this.previewCode) {
