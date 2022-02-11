@@ -1656,40 +1656,13 @@ export const actions = {
     return dispatch('getPromise', promisePayload);
   },
 
-  async lateProfiles ({state, commit, dispatch}, {dfName, columnsCount, avoidReload, socketPost}) {
-    let promise = false;
-    for (let i = 20; i < columnsCount+10; i+=10) {
-      let dataset = await dispatch('requestProfiling', { dfName, socketPost, partial: i });
-      await promise;
-      promise = dispatch('setProfiling', { dfName, dataset, avoidReload: true, partial: i });
-    }
-    let result = await promise;
-    if (state.afterProfileCallback) {
-      if (typeof state.afterProfileCallback == "function") {
-        await state.afterProfileCallback()
-      }
-      commit('mutation', {mutate: 'afterProfileCallback', payload: false });
-    }
-    commit('mutation', {mutate: 'updatingProfile', payload: false });
-    commit('mutation', {mutate: 'updatingWholeProfile', payload: false });
-    return result
-  },
+  async requestPreliminaryProfiling ({ dispatch }, { dfName, socketPost }) {
+    let codePayload = {
+      dfName,
+      command: 'preliminary_profile'
+    };
 
-  async requestProfiling ({ dispatch }, { dfName, socketPost, partial, low }) {
-
-    let response = await dispatch('evalCode', {
-      socketPost,
-      category: low ? 'profiling_low' : 'profiling',
-      codePayload: {
-        command: partial ? 'profile_async_partial' : 'profile_async',
-        range: partial ? [Math.max(0, partial-10), partial] : undefined,
-        dfName,
-        request: {
-          priority: partial ? (-5-partial) : -10,
-          isAsync: true,
-        }
-      }
-    });
+    let response = await dispatch('evalCode', { codePayload, category: 'profiling', socketPost });
 
     if (!response || !response.data || !response.data.result || response.data.status == "error") {
       throw response;
@@ -1716,15 +1689,11 @@ export const actions = {
     return dataset;
   },
 
-  async loadProfiling ({ dispatch, state, getters, commit }, { dfName, socketPost, ignoreFrom, avoidReload, clearPrevious, partial, methods }) {
+  async loadProfiling ({ dispatch, state, getters, commit }, { dfName, socketPost, ignoreFrom, avoidReload, clearPrevious, methods }) {
     console.debug('[DEBUG] Loading profiling', dfName);
     try {
 
       commit('mutation', {mutate: 'updatingProfile', payload: true });
-      
-      if (!partial) {
-        commit('mutation', {mutate: 'updatingWholeProfile', payload: true });
-      }
 
       await Vue.nextTick();
 
@@ -1743,11 +1712,7 @@ export const actions = {
       let profile;
       let dataset;
 
-      if (partial) {
-        dataset = await dispatch('requestProfiling', { dfName, socketPost, partial: 10 });
-      } else {
-        dataset = await dispatch('requestProfiling', { dfName, socketPost, partial: false });
-      }
+      dataset = await dispatch('requestPreliminaryProfiling', { dfName, socketPost });
 
       let found = state.datasets.findIndex(_d => _d.dfName == dfName);
 
@@ -1755,14 +1720,10 @@ export const actions = {
         let foundDataset = deepCopy(state.datasets[found])
         foundDataset.columns = [];
         foundDataset._columns = {};
-        await dispatch('setDataset', { dataset: foundDataset, avoidReload: true, partial: false });
+        await dispatch('setDataset', { dataset: foundDataset, avoidReload: true });
       }
       
-      if (partial) {
-        profile = await dispatch('setProfiling', { dfName, dataset, avoidReload, partial: 10 });
-      } else {
-        profile = await dispatch('setProfiling', { dfName, dataset, avoidReload: true, partial: false });
-      }
+      profile = await dispatch('setProfiling', { dfName, dataset, avoidReload: true });
 
       dispatch('afterFirstProfiling');
 
@@ -1772,13 +1733,8 @@ export const actions = {
 
       commit('mutation', {mutate: 'updatingProfile', payload: false });
 
-      if (!partial) {
-        commit('mutation', {mutate: 'updatingWholeProfile', payload: false });
-      }
-
       let columnsCount = profile.summary.cols_count;
-        
-
+      
       return {profile, dfName, columnsCount, avoidReload};
 
     } catch (err) {
@@ -1802,8 +1758,6 @@ export const actions = {
       console.debug('[DEBUG] Loading profiling Error', dfName);
 
       commit('mutation', {mutate: 'updatingProfile', payload: false });
-
-      commit('mutation', {mutate: 'updatingWholeProfile', payload: false });
 
       throw err;
     }
