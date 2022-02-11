@@ -526,13 +526,15 @@ import DataBar from '@/components/DataBar'
 import {
   parseResponse, arraysEqual,
   cancellablePromise, throttle,
-  asyncDebounce, debounce, optimizeRanges,
-  escapeQuotes, namesToIndices,
-  getSelectedText, getPropertyAsync,
-  replaceTags
+  asyncDebounce, debounce, objectMap,
+  optimizeRanges, escapeQuotes,
+  namesToIndices, getSelectedText,
+  getPropertyAsync, replaceTags
 } from 'bumblebee-utils'
 
 var doubleClick = false
+const INITIAL_SAMPLE_SIZE = 200;
+const SAMPLE_SIZE_FACTOR = 2;
 
 export default {
 
@@ -576,6 +578,7 @@ export default {
       rowSelection: [],
 
       incompleteColumns: false,
+      sampleSize: INITIAL_SAMPLE_SIZE,
 
       mustCheck: false,
       mustUpdateRows: false,
@@ -1043,8 +1046,6 @@ export default {
             full_data_type = `${inferred_data_type} (${data_type})`;
           }
 
-          console.log({column})
-
           plotsData[column.name] = {
             key: i,
             name: column.name,
@@ -1363,6 +1364,90 @@ export default {
       return true;
     },
 
+    commandListener__profiling (response) {
+
+      try {
+
+        let { dfName, range, columnsCount, sample, update } = response.reply;
+
+        let currentIndex = this.$store.state.datasets.findIndex(e=>e.dfName == dfName);
+
+        let currentUpdate = this.$store.state.everyDatasetUpdate[currentIndex];
+  
+        if (currentUpdate !== update) {
+          throw new Error(`Dataset updated, ${currentUpdate} -> ${update}`);
+        }
+
+        this.$store.commit('mutation', {mutate: 'updatingWholeProfile', payload: false });
+  
+        if (!response || !response.data || !response.data.result || response.data.status == "error") {
+          throw response;
+        }
+  
+        let previousLastSample = response.reply.lastSample
+        let dataset = parseResponse(response.data.result);
+
+        if (dataset && previousLastSample) {
+          dataset.columns = objectMap(dataset.columns, c => ({...c, done: true}));
+        }
+
+        // use rows_count from store
+
+        let rowsCount = this.$store.getters.currentDataset?.summary?.rows_count || dataset.summary.rows_count;
+        dataset.summary.rows_count = rowsCount;
+
+        this.$store.dispatch('setProfiling', { dfName, dataset, avoidReload: true, partial: range[0] });
+
+        let secondSample = false;
+
+        if (sample[0] == 0) {
+
+          // sideways on first sample
+          range = range.map(e=>e+10); 
+
+          if (range[0] >= columnsCount) {
+            // out of first sample
+            range = [0, 10];
+            secondSample = true;
+          }
+        }
+
+        if (sample[0] > 0 || secondSample) {
+
+          // down to next sample
+          this.sampleSize *= SAMPLE_SIZE_FACTOR;
+          sample = [sample[1], sample[1] + this.sampleSize];
+          
+          if (sample[0] >= rowsCount) {
+            range = range.map(e=>e+10);
+            this.sampleSize = INITIAL_SAMPLE_SIZE*SAMPLE_SIZE_FACTOR;
+            sample = [INITIAL_SAMPLE_SIZE, INITIAL_SAMPLE_SIZE+this.sampleSize];
+          }
+
+        }
+
+        if (range[0] < columnsCount) {
+          let lastSample = range[1] >= columnsCount && sample[1] >= rowsCount;
+          let promise = this.requestCachedProfiling({dfName, columnsCount, update}, range, sample, lastSample);
+          if (!promise) {
+            this.$store.commit('mutation', {mutate: 'updatingWholeProfile', payload: false });
+          }
+        } else {
+          console.debug('[PROFILE] Profiling done', dfName);
+          this.$store.commit('mutation', {mutate: 'updatingWholeProfile', payload: false });
+        }
+
+
+      } catch (err) {
+
+        console.error('[PROFILE] error', err);
+        this.$store.commit('mutation', {mutate: 'updatingWholeProfile', payload: false });
+
+      }
+  
+    
+    },
+
     refreshValues () {
       this.updateSelection(this.currentSelection) // TEST
       this.fetched = [];
@@ -1402,30 +1487,67 @@ export default {
         this.debouncedThrottledScrollCheck(true);
       }
     },
+
+    requestCachedProfiling (dataset, range = false, sample = false, lastSample = false, low = false) {
+
+      this.$store.commit('mutation', {mutate: 'updatingWholeProfile', payload: true });
+      
+      let dfName = dataset.dfName;
+      let columnsCount = Math.max((this.currentDataset?.columns || []).length, this.currentDataset?.summary?.cols_count || 0);
+
+      if (!range) {
+        range = [0, 10];
+      }
+
+      if (!sample) {
+        this.sampleSize = INITIAL_SAMPLE_SIZE;
+        sample = [0, this.sampleSize];
+      }
+
+
+      if (range[0] > columnsCount || range[0] < 0 || range[1] < 0 || sample[0] >= this.rowsCount) {
+        return null;
+      }
+
+      let clearPrevious = range[0] === 0 && sample[0] === 0;
+
+      if (clearPrevious) {
+        this.sampleSize = INITIAL_SAMPLE_SIZE;
+      }
+
+      return this.evalCode({
+        command: 'profile_cache_partial',
+        dfName,
+        columnsCount,
+        sample,
+        lastSample,
+        clearPrevious,
+        range
+      }, {
+        update: dataset.update,
+        command: low ? 'profiling_low' : 'profiling',
+        dfName,
+        columnsCount,
+        sample,
+        lastSample,
+        range
+      }, 'profiling');
+    },
     
-    async fixNotProfiledColumns () {
+    async requestWholeProfiling () {
       let columns = Math.max((this.currentDataset?.columns || []).length, this.currentDataset?.summary?.cols_count || 0);
-      let doneColumns = (this.currentDataset?.columns?.filter(c => c.stats.missing !== undefined) || []).length;
+      let doneColumns = (this.currentDataset?.columns?.filter(c => c.stats.done) || []).length;
+
 
       if (doneColumns < columns && !this.previewCode) {
-
         if (!this.$store.state.updatingWholeProfile) {
-          
-          this.$store.commit('mutation', {mutate: 'updatingWholeProfile', payload: true })
+          this.$store.commit('mutation', {mutate: 'updatingWholeProfile', payload: true });
 
-          let profilingResponse = await this.$store.dispatch('getProfiling', { payload: {
-            socketPost: this.socketPost,
-            dfName: this.currentDataset.dfName,
-            avoidReload: true,
-            clearPrevious: false,
-            partial: true,
-            methods: this.commandMethods
-          }});
-          
-          // return this.$store.dispatch('lateProfiles', {...profilingResponse, socketPost: this.socketPost, cached: true});
+          let dataset = { ...this.currentDataset, update: this.currentDatasetUpdate };
+
+          this.requestCachedProfiling(dataset);
+
         }
-      } else if (this.$store.state.updatingWholeProfile) {
-        return this.$store.commit('mutation', {mutate: 'updatingWholeProfile', payload: false })
       }
     },
 
@@ -2101,7 +2223,7 @@ export default {
         this.lazyColumns = []
       }
 
-      this.fixNotProfiledColumns();
+      this.requestWholeProfiling();
 
     }, 80),
 
