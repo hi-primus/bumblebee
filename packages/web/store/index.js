@@ -126,7 +126,8 @@ const defaultState = {
   localEngineParameters: {},
   engineId: false,
   engineConfigName: false,
-  connections: false
+  connections: false,
+  enableIncrementalProfiling: true
 }
 
 export const state = () => {
@@ -1953,6 +1954,12 @@ export const actions = {
       return false;
     }
 
+  },
+
+  async changeTab ({commit}, value) {
+    commit('mutation', { mutate: 'tab', payload: value });
+    commit('mutation', { mutate: 'updatingProfile', payload: false });
+    commit('mutation', { mutate: 'updatingWholeProfile', payload: false });
   },
 
   async mutateAndSave ({dispatch, commit}, { mutate, payload }) {

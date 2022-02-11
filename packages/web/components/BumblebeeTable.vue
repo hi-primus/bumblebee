@@ -637,10 +637,9 @@ export default {
       'currentDuplicatedColumns',
       'currentPreviewNames',
       'currentPreviewInfo',
-      'loadPreview',
     ]),
 
-    ...mapState(['allTypes', 'profilePreview']),
+    ...mapState(['allTypes', 'profilePreview', 'enableIncrementalProfiling']),
 
     gettingNewResults: {
       get () {
@@ -1368,6 +1367,14 @@ export default {
 
       try {
 
+        if (!this.enableIncrementalProfiling) {
+          throw new Error('Profiling response received while disabled');
+        }
+
+        if (this.previewCode) {
+          throw new Error('Profiling response received while a preview is active');
+        }
+
         let { dfName, range, columnsCount, sample, update } = response.reply;
 
         let currentIndex = this.$store.state.datasets.findIndex(e=>e.dfName == dfName);
@@ -1440,7 +1447,7 @@ export default {
 
       } catch (err) {
 
-        console.error('[PROFILE] error', err);
+        console.warn('[PROFILE]', err);
         this.$store.commit('mutation', {mutate: 'updatingWholeProfile', payload: false });
 
       }
@@ -1489,6 +1496,11 @@ export default {
     },
 
     requestCachedProfiling (dataset, range = false, sample = false, lastSample = false, low = false) {
+
+      if (this.currentDataset.dfName !== dataset.dfName || !this.enableIncrementalProfiling) {
+        this.$store.commit('mutation', {mutate: 'updatingWholeProfile', payload: false });
+        return null;
+      }
 
       this.$store.commit('mutation', {mutate: 'updatingWholeProfile', payload: true });
       

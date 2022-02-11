@@ -352,7 +352,7 @@ export default {
           value = 0;
         }
 
-        this.$store.commit('mutation', { mutate: 'tab', payload: value });
+        this.$store.dispatch('changeTab', value)
       },
     },
 

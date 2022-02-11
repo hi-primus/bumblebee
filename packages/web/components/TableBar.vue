@@ -544,7 +544,7 @@ export default {
     },
 
     toolbarDisabled () {
-      return this.$store.state.updatingProfile || this.$store.state.updatingWholeProfile || this.commandsDisabled;
+      return this.$store.state.updatingProfile || this.commandsDisabled;
     },
 
     listView: {
