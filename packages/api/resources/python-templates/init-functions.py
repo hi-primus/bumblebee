@@ -79,13 +79,13 @@ def df__profile_stats_cache(df, cols="*", sample=None, last_sample=False, flush=
     cols = df.cols.names(cols)
     cache_key = "profile.stats"
     
-    _meta_key = f"profile"
+    meta_key = f"profile"
         
     if force_cached:
-        return Meta.get(df.cache, _cache_key)
+        return Meta.get(df.cache, cache_key)
 
     if flush:
-        df.cache = Meta.set(df.cache, _cache_key, None)
+        df.cache = Meta.set(df.cache, cache_key, None)
 
     sample_df = df if sample is None else df[sample[0]:sample[1]]
     stats = sample_df.profile(cols, bins=0)
@@ -93,6 +93,10 @@ def df__profile_stats_cache(df, cols="*", sample=None, last_sample=False, flush=
     cached = Meta.get(df.cache, cache_key)
     
     stats = add_profile(stats, cached)
+    
+    columns_list = df.cols.names()
+
+    stats["columns"] = {col: stats["columns"][col] for col in columns_list if col in stats["columns"]}
 
     df.cache = Meta.set(df.cache, cache_key, stats)
     
@@ -105,6 +109,17 @@ def df__profile_stats_cache(df, cols="*", sample=None, last_sample=False, flush=
 def df__profile_frequency_cache(df, cols="*", n=MAX_BUCKETS, sample=None, last_sample=False, flush=False, force_cached=False):
     cols = df.cols.names(cols)
     result = {}
+    
+    cached_freqs = Meta.get(df.cache, "frequency") or {}
+    
+    for column_name in cached_freqs:
+        pd_frequency = cached_freqs[column_name]
+        frequency = output_table(pd_frequency, n)
+        frequency.update({"count_uniques": len(pd_frequency)})
+        frequency.update({"complete": False})
+        result.update({column_name: frequency})    
+        
+    cols = cols or {}
     
     for column_name in cols:
         
@@ -121,7 +136,7 @@ def df__profile_frequency_cache(df, cols="*", n=MAX_BUCKETS, sample=None, last_s
         
         frequency = Meta.get(df.meta, _meta_key)
 
-        has_freq = frequency is not None and (n is None or n <= len(frequency["values"]) or not frequency["more"])
+        has_freq = frequency is not None and (n is None or n <= len(frequency["values"]) or not frequency.get("more"))
 
         if has_freq:
             complete = True
@@ -161,6 +176,13 @@ def df__profile_frequency_cache(df, cols="*", n=MAX_BUCKETS, sample=None, last_s
 def df__profile_hist_cache(df, cols="*", buckets=MAX_BUCKETS, sample=None, last_sample=False, flush=False, force_cached=False):
     cols = df.cols.names(cols)
     result = {}
+    
+    cached_hists = Meta.get(df.cache, f"hist.{buckets}") or {}
+    
+    for column_name in cached_hists:
+        result.update({column_name: output_hist(cached_hists[column_name], buckets)})
+        
+    cols = cols or {}
     
     for column_name in cols:
         
@@ -239,11 +261,18 @@ def df__profile_cache(df, cols="*", bins: int = MAX_BUCKETS, sample=None, last_s
     
     if freqs:
         for key in freqs:
-            stats["columns"][key].update({"frequency": freqs[key]})
+            if key in stats["columns"]:
+                stats["columns"][key].update({"frequency": freqs[key]})
             
     if hists:
         for key in hists:
-            stats["columns"][key].update({"hist": hists[key]})
+            if key in stats["columns"]:
+                stats["columns"][key].update({"hist": hists[key]})
+
+    if last_sample:
+        for key in cols:
+            if key in stats["columns"]:
+                stats["columns"][key].update({"done": True})
     
     return stats
 

@@ -23,19 +23,24 @@ def add_profile(a, b):
     if b is None:
         return a
     
-    for col in a["columns"].keys():
-        a["columns"][col]["stats"]["match"] += b["columns"][col]["stats"]["match"]
-        a["columns"][col]["stats"]["missing"] += b["columns"][col]["stats"]["missing"]
-        a["columns"][col]["stats"]["mismatch"] += b["columns"][col]["stats"]["mismatch"]
-        a_data_type = a["columns"][col]["stats"]["inferred_data_type"]["data_type"]
-        b_data_type = b["columns"][col]["stats"]["inferred_data_type"]["data_type"]
-        a["columns"][col]["stats"]["inferred_data_type"]["data_type"] = replace_data_type(a_data_type, b_data_type)
-        
-    a["summary"]["rows_count"] += b["summary"]["rows_count"]
+    columns_keys = set(list(a["columns"].keys()) + list(b["columns"].keys()))
+    
+    for col in columns_keys:
+        if col in a["columns"] and col in b["columns"]:
+            a["columns"][col]["stats"]["match"] += b["columns"][col]["stats"]["match"]
+            a["columns"][col]["stats"]["missing"] += b["columns"][col]["stats"]["missing"]
+            a["columns"][col]["stats"]["mismatch"] += b["columns"][col]["stats"]["mismatch"]
+            a_data_type = a["columns"][col]["stats"]["inferred_data_type"]["data_type"]
+            b_data_type = b["columns"][col]["stats"]["inferred_data_type"]["data_type"]
+            a["columns"][col]["stats"]["inferred_data_type"]["data_type"] = replace_data_type(a_data_type, b_data_type)
+        if col in b["columns"] and col not in a["columns"]:
+            a["columns"].update({col: b["columns"][col]})
+    
+    del a["summary"]["rows_count"]
+    del a["summary"]["missing_count"]
     a["summary"]["data_types_list"] = list(set(a["summary"]["data_types_list"] + b["summary"]["data_types_list"]))
     a["summary"]["total_count_data_types"] = len(a["summary"]["data_types_list"])
-    a["summary"]["missing_count"] += b["summary"]["missing_count"]
-    a["summary"]["p_missing"] = a["summary"]["missing_count"] / a["summary"]["rows_count"]
+    del a["summary"]["p_missing"]
     return a
 
 
