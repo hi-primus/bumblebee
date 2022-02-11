@@ -1676,7 +1676,7 @@ export const actions = {
 
     dataset.dfName = dfName;
     console.debug('[DATASET] Setting', { dataset, to: dfName });
-    await dispatch('setDataset', { dataset, avoidReload: avoidReload || partial, partial });
+    await dispatch('setDataset', { dataset, avoidReload: avoidReload || partial || partial===0, partial: partial || partial===0 });
 
     if (state.gettingNewResults) {
       await dispatch('afterNewProfiling');
