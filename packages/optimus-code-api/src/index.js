@@ -193,6 +193,16 @@ export const codeGenerators = {
       isAsync: true
     };
   },
+  preliminary_profile: (payload) => {
+    let code =  `_output = ${payload.dfName}.preliminary_profile(${preparedColumns(payload.columns)}`;
+    code += payload.n ? `, bins=${payload.n}` : '';
+    code += `)\n`;
+    return {
+      code,
+      isOutput: true,
+      isAsync: false
+    };
+  },
   profile_partial: (payload) => {
     let selection = payload.range ? `[${payload.range.join(":")}]` : '';
     return {
