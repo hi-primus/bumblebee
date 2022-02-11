@@ -1237,7 +1237,7 @@ export const actions = {
     let cells = getters.cells;
 
     if (last) {
-      last = cells.map(c => c.modified).reduce((a, b) => (a > b ? a : b));
+      last = cells.map(c => c.modified).reduce((a, b) => (a > b ? a : b), -1);
     }
 
     for (let i = cells.length - 1; i >= 0 ; i--) {
