@@ -74,28 +74,48 @@ def df__pattern_counts_cache(df, cols="*", n=10, mode=0, sample=None, last_sampl
     return one_dict_to_val(result)
 
 
-def df__profile_stats_cache(df, cols="*", sample=None, last_sample=False, flush=False, force_cached=False):
-    
+def df__profile_stats_cache(df, cols="*", sample=None, last_sample=False, flush=False, force_cached=False) -> [dict, list]:
+    """
+    Return a dict with the profile stats of the dataframe and a list of the updated cols.
+    """
     cols = df.cols.names(cols)
     cache_key = "profile.stats"
     
-    meta_key = f"profile"
+    meta_key = "profile"
         
     if force_cached:
-        return Meta.get(df.cache, cache_key)
+        return Meta.get(df.cache, cache_key), []
 
     if flush:
         df.cache = Meta.set(df.cache, cache_key, None)
 
-    sample_df = df if sample is None else df[sample[0]:sample[1]]
-    stats = sample_df.profile(cols, bins=0)
+    cached = Meta.get(df.cache, cache_key) or {}
+    already_updated_cols = []
+
+    # avoid profiling already profiled columns
+
+    for col in cached.get("columns", []):
+        if cached["columns"][col]["last_sampled_row"] == sample[1]:
+            already_updated_cols.append(col)
+
+    profile_cols = [col for col in cols if col not in already_updated_cols]
     
-    cached = Meta.get(df.cache, cache_key)
-    
+    sample_df = df if sample is None else df[sample[0]:sample[1]]    
+    stats = sample_df.profile(profile_cols, bins=0)
+
+    for col in already_updated_cols:
+        stats["columns"].update({col: cached["columns"][col]})
+
+    # annotate the profile stats with the last sampled row
+
+    for col in stats.get("columns", []):
+        stats["columns"][col]["last_sampled_row"] = sample[1]
+   
     stats = add_profile(stats, cached)
     
-    columns_list = df.cols.names()
+    # sort columns
 
+    columns_list = df.cols.names()
     stats["columns"] = {col: stats["columns"][col] for col in columns_list if col in stats["columns"]}
 
     df.cache = Meta.set(df.cache, cache_key, stats)
@@ -103,7 +123,7 @@ def df__profile_stats_cache(df, cols="*", sample=None, last_sample=False, flush=
     if last_sample:
         df.meta = Meta.set(df.meta, meta_key, stats)
     
-    return stats
+    return stats, profile_cols
 
 
 def df__profile_frequency_cache(df, cols="*", n=MAX_BUCKETS, sample=None, last_sample=False, flush=False, force_cached=False):
@@ -251,7 +271,10 @@ def df__profile_hist_cache(df, cols="*", buckets=MAX_BUCKETS, sample=None, last_
 def df__profile_cache(df, cols="*", bins: int = MAX_BUCKETS, sample=None, last_sample=False, flush=False, force_cached=False):
     
     cols = df.cols.names(cols)
-    stats = df.profile_stats_cache(cols, sample, last_sample, flush, force_cached)
+    print("cols")
+    print(cols)
+    stats, cols = df.profile_stats_cache(cols, sample, last_sample, flush, force_cached)
+    print(cols)
     
     hist_cols = [col for col in cols if df.cols.data_type(col) in df.constants.NUMERIC_INTERNAL_TYPES]
     freq_cols = [col for col in cols if col not in hist_cols]

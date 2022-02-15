@@ -20,13 +20,21 @@ def replace_data_type(a, b):
 def add_profile(a, b):
     a = copy.deepcopy(a)
 
-    if b is None:
+    if b is None or len(b) == 0:
         return a
+
+    if "columns" not in a:
+        a.update({"columns": {}})
+    
+    if "columns" not in b:
+        b.update({"columns": {}})
     
     columns_keys = set(list(a["columns"].keys()) + list(b["columns"].keys()))
     
     for col in columns_keys:
         if col in a["columns"] and col in b["columns"]:
+            if b["columns"][col].get("last_sampled_row", 0) >= a["columns"][col].get("last_sampled_row", -1):
+                continue
             a["columns"][col]["stats"]["match"] += b["columns"][col]["stats"]["match"]
             a["columns"][col]["stats"]["missing"] += b["columns"][col]["stats"]["missing"]
             a["columns"][col]["stats"]["mismatch"] += b["columns"][col]["stats"]["mismatch"]
@@ -38,9 +46,9 @@ def add_profile(a, b):
     
     del a["summary"]["rows_count"]
     del a["summary"]["missing_count"]
+    del a["summary"]["p_missing"]
     a["summary"]["data_types_list"] = list(set(a["summary"]["data_types_list"] + b["summary"]["data_types_list"]))
     a["summary"]["total_count_data_types"] = len(a["summary"]["data_types_list"])
-    del a["summary"]["p_missing"]
     return a
 
 

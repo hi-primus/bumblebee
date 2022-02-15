@@ -524,8 +524,8 @@ import Frequent from '@/components/Frequent'
 import DataBar from '@/components/DataBar'
 
 import {
-  parseResponse, arraysEqual,
-  cancellablePromise, throttle,
+  parseResponse, arraysEqual, 
+  getColumnsRange, throttle,
   asyncDebounce, debounce, objectMap,
   optimizeRanges, escapeQuotes,
   namesToIndices, getSelectedText,
@@ -612,9 +612,16 @@ export default {
       loadedPreviewCode: '',
 
       indicesInSample: {},
+      
+      defaultColumnWidth: 170,
+
+      // profiling loading
 
       lazyColumns: [],
-      defaultColumnWidth: 170,
+      windowRoot: 0,
+      windowSize: 10,
+
+      // types
 
       mainTypes: ['string', 'int', 'float', 'boolean', 'datetime', '|', 'object', 'array'],
 
@@ -673,6 +680,14 @@ export default {
         }
       }
       return columns;
+    },
+
+    visibleColumnNames () {
+      return this.allColumns.map(column=>column.name);
+    },
+
+    notVisibleColumnNames () {
+      return this.columns.map(column=>column.name).filter(column=>!this.visibleColumnNames.includes(column));
     },
 
     rowsColumn () {
@@ -1375,7 +1390,7 @@ export default {
           throw new Error('Profiling response received while a preview is active');
         }
 
-        let { dfName, range, columnsCount, sample, update } = response.reply;
+        let { dfName, range, group, columnsCount, sample, update } = response.reply;
 
         let currentIndex = this.$store.state.datasets.findIndex(e=>e.dfName == dfName);
 
@@ -1407,15 +1422,21 @@ export default {
 
         let secondSample = false;
 
+        let updatedColumns = dataset.columns.filter(c => c.last_sampled_row==sample[1]).map(c=>c.name);
+
         if (sample[0] == 0) {
+          
 
           // sideways on first sample
-          range = range.map(e=>e+10); 
+          group += 1;
+          [range, group] = this.getColumnRange(group);
 
-          if (range[0] >= columnsCount) {
+          if (updatedColumns.length >= columnsCount) {
             // out of first sample
-            range = [0, 10];
+            group = 0;
+            [range, group] = this.getColumnRange(group);
             secondSample = true;
+            updatedColumns = [];
           }
         }
 
@@ -1424,26 +1445,29 @@ export default {
           // down to next sample
           this.sampleSize *= SAMPLE_SIZE_FACTOR;
           sample = [sample[1], sample[1] + this.sampleSize];
-          
-          if (sample[0] >= rowsCount) {
-            range = range.map(e=>e+10);
+
+          // if sample is out of range, we are done, go to the next group if available
+          if (sample[0] >= rowsCount && updatedColumns.length < columnsCount) {
+            group += 1;
+            [range, group] = this.getColumnRange(group);
             this.sampleSize = INITIAL_SAMPLE_SIZE*SAMPLE_SIZE_FACTOR;
             sample = [INITIAL_SAMPLE_SIZE, INITIAL_SAMPLE_SIZE+this.sampleSize];
           }
 
         }
 
-        if (range[0] < columnsCount) {
-          let lastSample = range[1] >= columnsCount && sample[1] >= rowsCount;
-          let promise = this.requestCachedProfiling({dfName, columnsCount, update}, range, sample, lastSample);
+        if (updatedColumns.length >= columnsCount && sample[0] >= rowsCount) {
+          // if every column is done, and we're trying to  we are done
+          console.debug('[PROFILE] Profiling done', dfName);
+          this.$store.commit('mutation', {mutate: 'updatingWholeProfile', payload: false });
+        } else {
+          // if not, we need to continue profiling
+          let lastSample = sample[1] >= rowsCount;
+          let promise = this.requestCachedProfiling({dfName, columnsCount, update}, group, sample, lastSample);
           if (!promise) {
             this.$store.commit('mutation', {mutate: 'updatingWholeProfile', payload: false });
           }
-        } else {
-          console.debug('[PROFILE] Profiling done', dfName);
-          this.$store.commit('mutation', {mutate: 'updatingWholeProfile', payload: false });
         }
-
 
       } catch (err) {
 
@@ -1453,6 +1477,20 @@ export default {
       }
   
     
+    },
+
+    getColumnRange (group) {
+      let range;
+      while (true) {
+        range = getColumnsRange(group, this.windowRoot, 10, this.windowSize);
+        if (!range || (range[0]<0 && range[1]<0)) {
+          group += 1;
+          continue;
+        } else {
+          break;
+        }
+      }
+      return [range, group];
     },
 
     refreshValues () {
@@ -1495,33 +1533,35 @@ export default {
       }
     },
 
-    requestCachedProfiling (dataset, range = false, sample = false, lastSample = false, low = false) {
+    requestCachedProfiling (dataset, group = 0, sample = false, lastSample = false, low = false) {
 
       if (this.currentDataset.dfName !== dataset.dfName || !this.enableIncrementalProfiling) {
         this.$store.commit('mutation', {mutate: 'updatingWholeProfile', payload: false });
         return null;
       }
 
+
       this.$store.commit('mutation', {mutate: 'updatingWholeProfile', payload: true });
       
       let dfName = dataset.dfName;
       let columnsCount = Math.max((this.currentDataset?.columns || []).length, this.currentDataset?.summary?.cols_count || 0);
 
-      if (!range) {
-        range = [0, 10];
-      }
+      let range;
+
+      [range, group] = this.getColumnRange(group);
+
+      let columns = this.allColumns.filter((e, i)=>range[0] <= i && i <= range[1]).map(e=>e.name);
 
       if (!sample) {
         this.sampleSize = INITIAL_SAMPLE_SIZE;
         sample = [0, this.sampleSize];
       }
 
-
-      if (range[0] > columnsCount || range[0] < 0 || range[1] < 0 || sample[0] >= this.rowsCount) {
+      if (range[0] > columnsCount || range[0] < 0 || range[1] < 0 || sample[0] >= this.rowsCount || !columns.length) {
         return null;
       }
 
-      let clearPrevious = range[0] === 0 && sample[0] === 0;
+      let clearPrevious = group === 0 && sample[0] === 0;
 
       if (clearPrevious) {
         this.sampleSize = INITIAL_SAMPLE_SIZE;
@@ -1542,14 +1582,21 @@ export default {
         columnsCount,
         sample,
         lastSample,
-        range
+        range,
+        group
       }, 'profiling');
     },
     
     async requestWholeProfiling () {
+
+      let root = this.lazyColumns.findIndex(e=>e);
+      let end = this.lazyColumns.length - this.lazyColumns.slice().reverse().findIndex(e=>e);
+      
+      this.windowRoot = root;
+      this.windowSize = end - root;
+
       let columns = Math.max((this.currentDataset?.columns || []).length, this.currentDataset?.summary?.cols_count || 0);
       let doneColumns = (this.currentDataset?.columns?.filter(c => c.done) || []).length;
-
 
       if (doneColumns < columns && !this.previewCode) {
         if (!this.$store.state.updatingWholeProfile) {
@@ -1557,7 +1604,7 @@ export default {
 
           let dataset = { ...this.currentDataset, update: this.currentDatasetUpdate };
 
-          this.requestCachedProfiling(dataset);
+          this.requestCachedProfiling(dataset, 0);
 
         }
       }
