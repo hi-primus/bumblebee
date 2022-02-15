@@ -1463,6 +1463,14 @@ export default {
         } else {
           // if not, we need to continue profiling
           let lastSample = sample[1] >= rowsCount;
+
+          let filteredColumns = this.allColumns.map(e=>e.name);
+          let filteredOutColumns = this.notVisibleColumnNames;
+
+          if (!filteredColumns.slice(range[0], range[1]).length && filteredOutColumns.length) {
+            group = -1;
+          }
+
           let promise = this.requestCachedProfiling({dfName, columnsCount, update}, group, sample, lastSample);
           if (!promise) {
             this.$store.commit('mutation', {mutate: 'updatingWholeProfile', payload: false });
@@ -1540,24 +1548,31 @@ export default {
         return null;
       }
 
-
       this.$store.commit('mutation', {mutate: 'updatingWholeProfile', payload: true });
       
       let dfName = dataset.dfName;
       let columnsCount = Math.max((this.currentDataset?.columns || []).length, this.currentDataset?.summary?.cols_count || 0);
 
-      let range;
+      let range = false;
 
-      [range, group] = this.getColumnRange(group);
+      let filteredColumns = this.allColumns.map(e=>e.name);
+      let filteredOutColumns = this.notVisibleColumnNames;
+      let columns;
 
-      let columns = this.allColumns.filter((e, i)=>range[0] <= i && i <= range[1]).map(e=>e.name);
+      if (group>=0) {
+        [range, group] = this.getColumnRange(group);
+        columns = filteredColumns.filter((e, i)=>range[0] <= i && i <= range[1]);
+      } else {
+        range = -1;
+        columns = filteredOutColumns;
+      }
 
       if (!sample) {
         this.sampleSize = INITIAL_SAMPLE_SIZE;
         sample = [0, this.sampleSize];
       }
 
-      if (range[0] > columnsCount || range[0] < 0 || range[1] < 0 || sample[0] >= this.rowsCount || !columns.length) {
+      if (range[0] > columnsCount || sample[0] >= this.rowsCount || !columns.length) {
         return null;
       }
 
@@ -1568,13 +1583,13 @@ export default {
       }
 
       return this.evalCode({
-        command: 'profile_cache_partial',
+        command: 'profile_cache',
         dfName,
         columnsCount,
         sample,
         lastSample,
         clearPrevious,
-        range
+        columns
       }, {
         update: dataset.update,
         command: low ? 'profiling_low' : 'profiling',
