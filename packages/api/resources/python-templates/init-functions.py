@@ -298,11 +298,14 @@ def df__profile_cache(df, cols="*", bins: int = MAX_BUCKETS, sample=None, last_s
     cols = df.cols.names(cols)
     stats, cols = df.profile_stats_cache(cols, sample, last_sample, flush, force_cached)
 
-    plot_type = Meta.get(df.meta, "plot_type")
+    if "plot_type" not in df.meta:
+        df.preliminary_profile()
+
+    plot_type = Meta.get(df.meta, "plot_type") or {}
     
-    hist_cols = [col for col in cols if plot_type[col] == "hist"]
-    freq_cols = [col for col in cols if plot_type[col] == "freq"]
-    big_freq_cols = [col for col in cols if plot_type[col] == "big freq"]
+    hist_cols = [col for col in cols if plot_type.get(col) == "hist"]
+    freq_cols = [col for col in cols if plot_type.get(col) == "freq"]
+    big_freq_cols = [col for col in cols if plot_type.get(col) == "big freq"]
     
     hists = df.profile_hist_cache(hist_cols, buckets=bins, sample=sample, last_sample=last_sample, flush=flush, force_cached=force_cached)
     freqs = df.profile_frequency_cache(freq_cols, n=bins, sample=sample, last_sample=last_sample, flush=flush, force_cached=force_cached)
