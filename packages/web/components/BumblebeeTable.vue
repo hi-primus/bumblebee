@@ -646,7 +646,7 @@ export default {
       'currentPreviewInfo',
     ]),
 
-    ...mapState(['allTypes', 'profilePreview', 'enableIncrementalProfiling']),
+    ...mapState(['allTypes', 'profilePreview', 'loadPreview', 'enableIncrementalProfiling']),
 
     gettingNewResults: {
       get () {
