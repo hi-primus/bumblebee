@@ -339,6 +339,7 @@ table.table thead td:not(:nth-child(1)), table.table tbody td:not(:nth-child(1))
   .bar {
     height: 100%;
     width: 0;
+    transition: width 0.4s cubic-bezier(0.4, 0, 1, 1) 0s;
     &.teal-bar {
       background-color: $data-primary;
     }
@@ -355,6 +356,9 @@ table.table thead td:not(:nth-child(1)), table.table tbody td:not(:nth-child(1))
       background-color: $data-grey;
     }
     &.default-bar {
+      background-color: lighten($data-grey, 45%);
+      background-color: rgba(0,0,0,0.06);
+      cursor: initial;
       flex: 1;
     }
     &.empty-bar {
