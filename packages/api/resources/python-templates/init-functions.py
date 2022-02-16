@@ -3,15 +3,40 @@ import copy
 from optimus.engines.base.meta import Meta
 from optimus.profiler.constants import MAX_BUCKETS
 
+MAX_SAMPLE_SIZE = 10000
+
 def df__preliminary_profile(df, cols="*"):
     body = copy.deepcopy(df.meta).get("profile", {})
+    rows_count = df.rows.count()
     body.update({"summary": {
-        "rows_count": df.rows.count()
+        "rows_count": rows_count
     }})
-    types = df.cols.inferred_data_type(cols, use_internal=True)
-    data_type = df.cols.data_type(cols)
+
+    count_uniques = {}
+
+    if rows_count > MAX_SAMPLE_SIZE:
+        count_uniques = df.sample(MAX_SAMPLE_SIZE).cols.count_uniques(cols, tidy=False)["count_uniques"]
+    else:
+        count_uniques = df.cols.count_uniques(cols, tidy=False)["count_uniques"]
+
+    data_type = df.cols.data_type(cols, tidy=False)["data_type"]
+
+    plot_type = {}
+
+    for col in count_uniques:
+        if data_type[col] in df.constants.NUMERIC_INTERNAL_TYPES and count_uniques[col] > 80:
+            plot_type[col] = "hist"
+        elif count_uniques[col] > 2000:
+            plot_type[col] = "big freq"
+        else:
+            plot_type[col] = "freq"
+        df.meta = Meta.set(df.meta, f"plot_type.{col}", plot_type[col])
+
+    types = df.cols.inferred_data_type(cols, use_internal=True, tidy=False)["inferred_data_type"]
+
     body.update({"columns": 
                  {col: {
+                    "plot_type": plot_type[col],
                     "data_type": data_type[col],
                     "stats": {"inferred_data_type": {"data_type": dtype}}
                  } for col, dtype in types.items()}
@@ -273,17 +298,24 @@ def df__profile_cache(df, cols="*", bins: int = MAX_BUCKETS, sample=None, last_s
     cols = df.cols.names(cols)
     stats, cols = df.profile_stats_cache(cols, sample, last_sample, flush, force_cached)
 
+    plot_type = Meta.get(df.meta, "plot_type")
     
-    hist_cols = [col for col in cols if df.cols.data_type(col) in df.constants.NUMERIC_INTERNAL_TYPES]
-    freq_cols = [col for col in cols if col not in hist_cols]
+    hist_cols = [col for col in cols if plot_type[col] == "hist"]
+    freq_cols = [col for col in cols if plot_type[col] == "freq"]
+    big_freq_cols = [col for col in cols if plot_type[col] == "big freq"]
     
-    freqs = df.profile_frequency_cache(freq_cols, n=bins, sample=sample, last_sample=last_sample, flush=flush, force_cached=force_cached)
     hists = df.profile_hist_cache(hist_cols, buckets=bins, sample=sample, last_sample=last_sample, flush=flush, force_cached=force_cached)
+    freqs = df.profile_frequency_cache(freq_cols, n=bins, sample=sample, last_sample=last_sample, flush=flush, force_cached=force_cached)
+    big_freqs = df.profile_frequency_cache(big_freq_cols, n=bins, last_sample=True, flush=False, force_cached=False)
+
+    freqs.update(big_freqs)
     
     if freqs:
         for key in freqs:
             if key in stats["columns"]:
                 stats["columns"][key].update({"frequency": freqs[key]})
+                if key in big_freqs:
+                    stats["columns"][key].update({"done": True})
             
     if hists:
         for key in hists:
