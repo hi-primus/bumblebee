@@ -454,7 +454,9 @@ export const mutations = {
     Vue.set(state.datasetSelection, found, {})
 
     if (go) {
-      state.tab = found
+      state.tab = found;
+      state.updatingProfile = false;
+      state.updatingWholeProfile = false;
     }
 
     Vue.set(state.everyDatasetUpdate, state.tab, (state.everyDatasetUpdate[state.tab] || 0) + 1);
@@ -473,7 +475,9 @@ export const mutations = {
 
     if (foundIndex>=0) {
       if (go) {
-        state.tab = foundIndex
+        state.tab = foundIndex;
+        state.updatingProfile = false;
+        state.updatingWholeProfile = false;
       }
       return
     }
@@ -483,7 +487,9 @@ export const mutations = {
 
     if (foundIndex>=0) {
       Vue.set(state.datasets[foundIndex], 'dfName', dfName)
-      state.tab = foundIndex
+      state.tab = foundIndex;
+      state.updatingProfile = false;
+      state.updatingWholeProfile = false;
       return
     }
 
