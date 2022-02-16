@@ -271,10 +271,8 @@ def df__profile_hist_cache(df, cols="*", buckets=MAX_BUCKETS, sample=None, last_
 def df__profile_cache(df, cols="*", bins: int = MAX_BUCKETS, sample=None, last_sample=False, flush=False, force_cached=False):
     
     cols = df.cols.names(cols)
-    print("cols")
-    print(cols)
     stats, cols = df.profile_stats_cache(cols, sample, last_sample, flush, force_cached)
-    print(cols)
+
     
     hist_cols = [col for col in cols if df.cols.data_type(col) in df.constants.NUMERIC_INTERNAL_TYPES]
     freq_cols = [col for col in cols if col not in hist_cols]

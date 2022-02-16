@@ -1471,7 +1471,7 @@ export default {
             group = -1;
           }
 
-          let promise = this.requestCachedProfiling({dfName, columnsCount, update}, group, sample, lastSample);
+          let promise = this.requestCachedProfiling(dfName, group, sample, lastSample);
           if (!promise) {
             this.$store.commit('mutation', {mutate: 'updatingWholeProfile', payload: false });
           }
@@ -1541,16 +1541,15 @@ export default {
       }
     },
 
-    requestCachedProfiling (dataset, group = 0, sample = false, lastSample = false, low = false) {
+    requestCachedProfiling (dfName, group = 0, sample = false, lastSample = false, low = false) {
 
-      if (this.currentDataset.dfName !== dataset.dfName || !this.enableIncrementalProfiling) {
+      if (this.currentDataset.dfName !== dfName || !this.enableIncrementalProfiling) {
         this.$store.commit('mutation', {mutate: 'updatingWholeProfile', payload: false });
         return null;
       }
 
       this.$store.commit('mutation', {mutate: 'updatingWholeProfile', payload: true });
       
-      let dfName = dataset.dfName;
       let columnsCount = Math.max((this.currentDataset?.columns || []).length, this.currentDataset?.summary?.cols_count || 0);
 
       let range = false;
@@ -1591,7 +1590,7 @@ export default {
         clearPrevious,
         columns
       }, {
-        update: dataset.update,
+        update: this.currentDatasetUpdate,
         command: low ? 'profiling_low' : 'profiling',
         dfName,
         columnsCount,
@@ -1617,9 +1616,7 @@ export default {
         if (!this.$store.state.updatingWholeProfile) {
           this.$store.commit('mutation', {mutate: 'updatingWholeProfile', payload: true });
 
-          let dataset = { ...this.currentDataset, update: this.currentDatasetUpdate };
-
-          this.requestCachedProfiling(dataset, 0);
+          this.requestCachedProfiling(this.currentDataset.dfName, 0);
 
         }
       }
