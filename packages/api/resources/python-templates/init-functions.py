@@ -306,7 +306,7 @@ def df__profile_cache(df, cols="*", bins: int = MAX_BUCKETS, sample=None, last_s
     
     hists = df.profile_hist_cache(hist_cols, buckets=bins, sample=sample, last_sample=last_sample, flush=flush, force_cached=force_cached)
     freqs = df.profile_frequency_cache(freq_cols, n=bins, sample=sample, last_sample=last_sample, flush=flush, force_cached=force_cached)
-    big_freqs = df.profile_frequency_cache(big_freq_cols, n=bins, last_sample=True, flush=False, force_cached=False)
+    big_freqs = df.cols.frequency(big_freq_cols, n=bins)["frequency"] if big_freq_cols and len(big_freq_cols) > 0 else {}
 
     freqs.update(big_freqs)
     
