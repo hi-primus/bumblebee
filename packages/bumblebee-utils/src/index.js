@@ -230,6 +230,21 @@ export const optimizeRanges = (inputRange, existingRanges) => {
 
 }
 
+export const getColumnsRange = function(group, root = 0, size = 10, rootSize = 10) {
+  let sign = group%2 ? 1 : -1;
+  let d = Math.round(group/2)
+  let s = sign < 0 ? (d*size) : ((d-1)*size + rootSize);
+  let a = root + s*sign
+  let b = a + (group ? size : rootSize);
+  if (a<=0 && b<=0) {
+    return [-1, -1]
+  } else if (a<0 && b>=0) {
+    a = 0;
+  } 
+  return [a, b]
+}
+
+
 export const escapeQuotes = (str) => {
   if (typeof str === 'string' && str && str.replace ) {
     str = str.replace(/[\\]/g, '\\\\').replace(/[\""]/g, '\\"');
@@ -1396,6 +1411,7 @@ export default {
   reduceRanges,
   copyToClipboard,
   optimizeRanges,
+  getColumnsRange,
   escapeQuotes,
   adaptValue,
   filterCells,
