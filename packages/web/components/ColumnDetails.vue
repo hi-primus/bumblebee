@@ -336,7 +336,7 @@ export default {
       patternsFrequency: [],
       patternsResolution: 3,
       patternsLoading: false,
-      sampleSize: 200
+      sampleSize: 100000
     }
   },
 
@@ -398,7 +398,8 @@ export default {
           }
           this.$set(this.patternsFrequency, this.patternsResolution, result);
           if (!complete && response.reply.sample[1] < this.rowsCount) {
-            this.sampleSize = this.sampleSize * 2;
+            this.sampleSize = this.sampleSize * 4;
+            this.sampleSize = Math.min(this.sampleSize, 2000000);
             this.requestPatterns(response.reply.sample[1], response.reply.sample[1]+this.sampleSize, false);
           } else {
             this.patternsLoading = false;

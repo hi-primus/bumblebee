@@ -533,8 +533,8 @@ import {
 } from 'bumblebee-utils'
 
 var doubleClick = false
-const INITIAL_SAMPLE_SIZE = 200;
-const SAMPLE_SIZE_FACTOR = 2;
+const INITIAL_SAMPLE_SIZE = 200000;
+const SAMPLE_SIZE_FACTOR = 4;
 
 export default {
 
