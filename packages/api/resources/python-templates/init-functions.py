@@ -221,7 +221,7 @@ def df__profile_frequency_cache(df, cols="*", n=MAX_BUCKETS, sample=None, last_s
                 
             if last_sample:
                 cf = copy.deepcopy(frequency)
-                df.meta = Meta.set(df.meta, f"{_meta_key}.frequency", cf["frequency"])
+                df.meta = Meta.set(df.meta, f"{_meta_key}.frequency", cf["values"])
                 df.meta = Meta.set(df.meta, f"{_meta_key}.count_uniques", cf["count_uniques"])
             
             frequency.update({"complete": complete})

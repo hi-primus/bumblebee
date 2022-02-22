@@ -1422,7 +1422,7 @@ export default {
 
         let secondSample = false;
 
-        let updatedColumns = dataset.columns.filter(c => c.last_sampled_row==sample[1]).map(c=>c.name);
+        let updatedColumns = dataset.columns.filter(c => [sample[1], -1].includes(c.last_sampled_row)).map(c=>c.name);
 
         if (sample[0] == 0) {
           
@@ -1467,8 +1467,8 @@ export default {
           let filteredColumns = this.allColumns.map(e=>e.name);
           let filteredOutColumns = this.notVisibleColumnNames;
 
-          if (!filteredColumns.slice(range[0], range[1]).length && filteredOutColumns.length) {
-            group = -1;
+          if (!filteredColumns.slice(range[0], range[1]).length) {
+            group = filteredOutColumns.length ? -1 : 0;
           }
 
           let promise = this.requestCachedProfiling(dfName, group, sample, lastSample);
