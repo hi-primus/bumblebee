@@ -80,7 +80,7 @@ def hist_to_pandas(hist, indices=["lower", "upper"]):
     return pd.DataFrame.from_dict(hist).set_index(indices)
 
 
-def set_patterns_meta(df, column_name, result, n=10):
+def set_patterns_meta(meta, column_name, result, n=10):
     from optimus.engines.base.meta import Meta
     import time
     more = False
@@ -88,8 +88,7 @@ def set_patterns_meta(df, column_name, result, n=10):
         more = len(result) > n
         result = output_table(result, n)
     result.update({"more": more, "updated": time.time()})
-    df.meta = Meta.set(df.meta, f"profile.columns.{column_name}.patterns", result)
-    return df
+    return Meta.set(meta, f"profile.columns.{column_name}.patterns", result)
 
 
 def inject_method_to_optimus(func):

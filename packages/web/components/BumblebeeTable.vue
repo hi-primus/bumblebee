@@ -1422,7 +1422,7 @@ export default {
 
         let secondSample = false;
 
-        let updatedColumns = dataset.columns.filter(c => [sample[1], -1].includes(c.last_sampled_row)).map(c=>c.name);
+        let updatedColumns = dataset.columns.filter(c => [sample[1], -1].includes(c.last_sampled_row) || c.done).map(c=>c.name);
 
         if (sample[0] == 0) {
           
@@ -1610,13 +1610,15 @@ export default {
       this.windowSize = end - root;
 
       let columns = Math.max((this.currentDataset?.columns || []).length, this.currentDataset?.summary?.cols_count || 0);
-      let doneColumns = (this.currentDataset?.columns?.filter(c => c.done) || []).length;
+      let doneColumns = (this.currentDataset?.columns?.filter(c => c.done || c.last_sampled_row == -1 || c.last_sampled_row > this.rowsCount) || []).length;
 
       if (doneColumns < columns && !this.previewCode) {
         if (!this.$store.state.updatingWholeProfile) {
           this.$store.commit('mutation', {mutate: 'updatingWholeProfile', payload: true });
 
-          this.requestCachedProfiling(this.currentDataset.dfName, 0);
+          let rowsCount = this.$store.getters.currentDataset?.summary?.rows_count;
+          let lastSample = (INITIAL_SAMPLE_SIZE > rowsCount)
+          this.requestCachedProfiling(this.currentDataset.dfName, 0, false, lastSample);
 
         }
       }

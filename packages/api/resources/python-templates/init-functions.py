@@ -86,7 +86,7 @@ def df__pattern_counts_cache(df, cols="*", n=10, mode=0, sample=None, last_sampl
                 df.cache = Meta.set(df.cache, _cache_key, pd_patterns)
 
             if last_sample:
-                df = set_patterns_meta(df, column_name, pd_patterns, n)
+                df.meta = set_patterns_meta(df.meta, column_name, pd_patterns, n)
 
             patterns = output_table(pd_patterns, n)
             patterns.update({"complete": complete})
@@ -145,7 +145,7 @@ def df__profile_stats_cache(df, cols="*", sample=None, last_sample=False, flush=
         stats["columns"][col]["last_sampled_row"] = sample[1]
    
     stats = add_profile(stats, cached)
-    
+
     for col in complete_stats_cols:
         complete_stats_cols[col]["last_sampled_row"] = -1
     
@@ -157,9 +157,23 @@ def df__profile_stats_cache(df, cols="*", sample=None, last_sample=False, flush=
     stats["columns"] = {col: stats["columns"][col] for col in columns_list if col in stats["columns"]}
 
     df.cache = Meta.set(df.cache, cache_key, stats)
-    
+
     if last_sample:
-        df.meta = Meta.set(df.meta, meta_key, stats)
+        meta_keys = ["summary.data_types_list", "summary.total_count_data_types"]
+        col_meta_keys = ["stats.match", "stats.missing", "stats.mismatch", "stats.inferred_data_type"]
+        
+        for _m in meta_keys:
+            _v = Meta.get(stats, _m)
+            if _v:
+                df.meta = Meta.set(df.meta, f"{meta_key}.{_m}", _v)
+
+        for col in columns_list:
+            for _m in col_meta_keys:
+                _v = Meta.get(stats, f"columns.{col}.{_m}")
+                if _v:
+                    df.meta = Meta.set(df.meta, f"{meta_key}.columns.{col}.{_m}", _v)
+
+        # df.meta = Meta.set(df.meta, meta_key, stats)
     
     return stats, profile_cols
 
@@ -307,7 +321,6 @@ def df__profile_hist_cache(df, cols="*", buckets=MAX_BUCKETS, sample=None, last_
     return result # one_dict_to_val(result)
 
 
-
 def df__profile_cache(df, cols="*", bins: int = MAX_BUCKETS, sample=None, last_sample=False, flush=False, force_cached=False):
     
     cols = df.cols.names(cols)
@@ -323,7 +336,7 @@ def df__profile_cache(df, cols="*", bins: int = MAX_BUCKETS, sample=None, last_s
     
     big_freqs_profile = df.profile(big_freq_cols, bins=bins) if big_freq_cols and len(big_freq_cols) > 0 else {}
 
-    stats, cols = df.profile_stats_cache(cols, sample, last_sample, flush, force_cached)
+    stats, cols = df.profile_stats_cache(cols, sample=sample, last_sample=last_sample, flush=flush, force_cached=force_cached)
     
     hists = df.profile_hist_cache(hist_cols, buckets=bins, sample=sample, last_sample=last_sample, flush=flush, force_cached=force_cached)
     freqs = df.profile_frequency_cache(freq_cols, n=bins, sample=sample, last_sample=last_sample, flush=flush, force_cached=force_cached)
