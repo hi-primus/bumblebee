@@ -1590,7 +1590,7 @@ export default {
         clearPrevious,
         columns
       }, {
-        update: this.currentDatasetUpdate,
+        update: +this.currentDatasetUpdate,
         command: low ? 'profiling_low' : 'profiling',
         dfName,
         columnsCount,

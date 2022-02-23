@@ -111,7 +111,7 @@
             </v-card>
           </v-dialog>
           <v-tabs
-            :key="currentDatasetUpdate"
+            :key="`${tab}-${currentDatasetUpdate}`"
             :value="tab"
             @change="clickTab"
             :class="{'tabs-disabled': $store.state.kernel=='loading' || previewCode || isOperating}"
