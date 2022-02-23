@@ -1170,13 +1170,13 @@ export const getGenerator = function(generatorName = '', payload = {}) {
   return generator
 }
 
-export const generateCode = function(commands = [], _request = { type: 'processing' }, extraPayload = false, acceptStrings = true) {
+export const generateCode = function(commands = [], _request = { type: 'processing' }, extraPayload = false, acceptStrings = true, template = false) {
 
   if (!Array.isArray(commands)) {
     commands = [commands];
   }
 
-  let lines = [];
+  let payloads = [];
 
   let functionDefinitions = [];
 
@@ -1188,7 +1188,7 @@ export const generateCode = function(commands = [], _request = { type: 'processi
     isAsync = false;
   }
 
-  lines.push(...commands.map(_payload => {
+  commands.forEach(_payload => {
 
     let customCodePayload;
 
@@ -1197,16 +1197,24 @@ export const generateCode = function(commands = [], _request = { type: 'processi
     let payload = _payload.payload || _payload;
 
     if (typeof payload === 'string') {
-      return payload;
+      if (acceptStrings) {
+        return { code: payload }
+      } else {
+        return { error: 'String payloads are not accepted' }
+      }
     } else if (payload._custom) {
 
       customCodePayload = getCodePayload(payload);
 
+      let code;
+
       if (customCodePayload.declaration && !functionDefinitions.includes(customCodePayload.declaration) && !_request._isReference) {
         functionDefinitions.push(customCodePayload.declaration);
-        return customCodePayload.declaration+'\n'+customCodePayload.code;
+        code = customCodePayload.declaration+'\n'+customCodePayload.code;
+      } else {
+        code = customCodePayload.code;
       }
-      return customCodePayload.code;
+      return { code };
     }
 
     command = command || payload.command;
@@ -1214,6 +1222,8 @@ export const generateCode = function(commands = [], _request = { type: 'processi
     let generator = getGenerator(command, payload);
 
     let code = '';
+    let saving;
+    let dfName;
 
     if (generator || command === undefined) {
 
@@ -1263,9 +1273,8 @@ export const generateCode = function(commands = [], _request = { type: 'processi
 
       } else {
 
-        let saving = false;
-
-        let dfName = payload.dfName || request.dfName;
+        saving = false;
+        dfName = payload.dfName || request.dfName;
 
         if (dfName && !request.noSave && payload.command) {
           request.save = true;
@@ -1277,7 +1286,7 @@ export const generateCode = function(commands = [], _request = { type: 'processi
         if (request.saveTo) {
           code += `${request.saveTo} = `;
           saving = request.saveTo;
-        } else if (request.createsNew && request.type==='processing'){
+        } else if (request.createsNew && request.type==='processing') {
           let newDfName = payload.newDfName || request.newDfName;
           code += `${newDfName} = `;
           saving = newDfName;
@@ -1352,6 +1361,8 @@ export const generateCode = function(commands = [], _request = { type: 'processi
 
         if (multiOutput || saving) {
 
+          // TODO: use multiple outputs and return using one_list_to_val
+
           if (anyOutput) {
             code += '\n_output = {}';
           }
@@ -1419,17 +1430,39 @@ export const generateCode = function(commands = [], _request = { type: 'processi
           }
         }
 
+        // TODO: move to `end` template section
         if (saving === '_df_output') {
           code += '\ndel _df_output'
         }
       }
     }
 
-    return code;
+    payloads.push({...payload, target: saving, source: dfName, code});
 
-  }))
+  });
 
-  return [ lines.join('\n'), isAsync ];
+  let defaultTemplate = {
+    start: payloads => '',
+    body: payloads => payloads.map(payload => payload.code).join('\n'),
+    end: payloads => ''
+  };
+
+  if (!template || typeof template !== 'object') {
+    template = defaultTemplate;
+  } else {
+    template = {
+      ...defaultTemplate,
+      ...template
+    }
+  }
+
+  let start = template.start(payloads);
+  let body = template.body(payloads);
+  let end = template.end(payloads);
+
+  let content = [start, body, end].join('\n');
+
+  return [ content, isAsync ];
 
 }
 
