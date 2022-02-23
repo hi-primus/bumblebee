@@ -1,5 +1,6 @@
 #{payload.optimusPath}
 #{this.initJSON}
+#{this.initPrefect}
 #{this.initVariables}
 #{this.measureTime ? this.timeStart : ""}
 
@@ -7,6 +8,12 @@ coiled_available = False
 spark_available = False
 coiled_gpu_available = False
 rapids_available = False
+
+try:
+    import prefect
+    prefect_available = True
+except:
+    prefect_available = False
 
 try:
     import pyspark
@@ -30,7 +37,13 @@ except:
 
 coiled_gpu_available = coiled_available
 
-res = { "coiled_available": coiled_available, "coiled_gpu_available": coiled_gpu_available, "spark_available": spark_available, "rapids_available": rapids_available }
+res = {
+    "coiled_available": coiled_available,
+    "coiled_gpu_available": coiled_gpu_available,
+    "spark_available": spark_available,
+    "rapids_available": rapids_available,
+    "prefect_available": prefect_available
+}
 
 # optimus reserved words
 

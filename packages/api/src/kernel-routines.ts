@@ -43,6 +43,8 @@ export class KernelRoutines {
 
   outputJSON = (res = "res") => `dump_json(${res}, ensure_ascii=True)`;
 
+  initPrefect = this._pythonTemplate("init-prefect.py", false);
+
   initVariables = this._pythonTemplate("variables.py", false);
 
   initUtils = this._pythonTemplate("init-utils.py", false);
