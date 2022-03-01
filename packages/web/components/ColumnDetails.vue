@@ -111,25 +111,25 @@
         </div>
 
         <div
-          v-if="false && column.stats.percentile==undefined && column.stats.frequency"
+          v-if="false && column.stats.percentile==undefined && frequency"
           class="component-container"
         >
           <h3>Top values</h3>
           <TopValues
-            v-if="column.stats.frequency"
-            :values="column.stats.frequency"
+            v-if="frequency"
+            :values="frequency"
             :total="rowsCount"
           />
         </div>
 
-        <template v-if="column.stats.hist">
+        <template v-if="hist">
           <div
-            v-if="column.stats.hist[0]"
+            v-if="hist[0]"
             class="component-container"
           >
             <h3>Histogram</h3>
             <Histogram
-              :values="column.stats.hist"
+              :values="hist"
               :total="rowsCount"
               :height="90"
               :columnIndex="column.index"
@@ -138,12 +138,12 @@
           </div>
 
           <div
-            v-if="column.stats.hist.years"
+            v-if="hist.years"
             class="component-container"
           >
             <h3>Years Histogram</h3>
             <Histogram
-              :values="column.stats.hist.years"
+              :values="hist.years"
               :total="rowsCount"
               :height="90"
               :columnIndex="column.index"
@@ -152,12 +152,12 @@
           </div>
 
           <div
-            v-if="column.stats.hist.months"
+            v-if="hist.months"
             class="component-container"
           >
             <h3>Months Histogram</h3>
             <Histogram
-              :values="column.stats.hist.months"
+              :values="hist.months"
               :total="rowsCount"
               :height="90"
               :columnIndex="column.index"
@@ -166,12 +166,12 @@
           </div>
 
           <div
-            v-if="column.stats.hist.weekdays"
+            v-if="hist.weekdays"
             class="component-container"
           >
             <h3>Week days Histogram</h3>
             <Histogram
-              :values="column.stats.hist.weekdays"
+              :values="hist.weekdays"
               :total="rowsCount"
               :height="90"
               :columnIndex="column.index"
@@ -180,12 +180,12 @@
           </div>
 
           <div
-            v-if="column.stats.hist.hours"
+            v-if="hist.hours"
             class="component-container"
           >
             <h3>Hours Histogram</h3>
             <Histogram
-              :values="column.stats.hist.hours"
+              :values="hist.hours"
               :total="rowsCount"
               :height="90"
               :columnIndex="column.index"
@@ -194,12 +194,12 @@
           </div>
 
           <div
-            v-if="column.stats.hist.minutes"
+            v-if="hist.minutes"
             class="component-container"
           >
             <h3>Minutes Histogram</h3>
             <Histogram
-              :values="column.stats.hist.minutes"
+              :values="hist.minutes"
               :total="rowsCount"
               :height="90"
               :columnIndex="column.index"
@@ -210,13 +210,13 @@
         </template>
 
         <div
-          v-if="column.stats.frequency"
+          v-if="frequency"
           class="component-container"
         >
           <h3>Frequent values</h3>
           <Frequent
             :uniques="column.stats.count_uniques"
-            :values="column.stats.frequency"
+            :values="frequency"
             :total="rowsCount"
             :height="90"
             :columnIndex="column.index"
@@ -360,6 +360,14 @@ export default {
 
     selectionEnabled () {
       return !this.$store.getters.loadingStatus && !this.$store.state.editing;
+    },
+
+    hist () {
+      return this.column.stats.hist || this.column.hist;
+    },
+    
+    frequency () {
+      return this.column.stats.frequency || this.column.frequency;
     },
 
     commandsDisabled: {
