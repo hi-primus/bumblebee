@@ -2,6 +2,7 @@
 #{this.initJSON}
 #{this.initVariables}
 
+#{this.initPrefect}
 #{this.initUtils}
 #{this.initFunctions}
 

@@ -10,7 +10,7 @@ coiled_gpu_available = False
 rapids_available = False
 
 try:
-    import prefect
+    from prefect import flow, task
     prefect_available = True
 except:
     prefect_available = False

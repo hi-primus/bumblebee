@@ -1,6 +1,7 @@
 use_prefect = True
 
 try:
+    import prefect
     from prefect import flow, task
 except:
     use_prefect = False
