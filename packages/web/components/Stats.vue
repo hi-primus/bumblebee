@@ -1,48 +1,14 @@
 <template>
-  <div v-if="values.stddev!=undefined" class="component-container">
+  <div v-if="valuesHasStats" class="component-container">
     <h3>Statistics</h3>
     <table class="details-table">
       <tbody>
 
-        <tr>
-          <td style="width:50%;">Standard deviation</td>
-          <td style="width:50%;" :title="(+values.stddev)">{{ +(+values.stddev).toFixed(2) }}</td>
+        <tr v-for="key in statsKeys.filter(key => values[key] !== undefined)" :key="key">
+          <td style="width:50%;">{{stats[key]}}</td>
+          <td style="width:50%;" :title="(+values[key])">{{ +(+values[key]).toFixed(2) }}</td>
         </tr>
-
-        <tr>
-          <td style="width:50%;">Coef of variation</td>
-          <td style="width:50%;" :title="(+values.coef_variation)">{{ +(+values.coef_variation).toFixed(2) }}</td>
-        </tr>
-
-        <tr>
-          <td style="width:50%;">Kurtosis</td>
-          <td style="width:50%;" :title="(+values.kurtosis)">{{ +(+values.kurtosis).toFixed(2) }}</td>
-        </tr>
-
-        <tr>
-          <td style="width:50%;">Mean</td>
-          <td style="width:50%;" :title="(+values.mean)">{{ +(+values.mean).toFixed(2) }}</td>
-        </tr>
-
-        <tr>
-          <td style="width:50%;">MAD</td>
-          <td style="width:50%;" :title="(+values.mad)">{{ +(+values.mad).toFixed(2) }}</td>
-        </tr>
-
-        <tr>
-          <td style="width:50%;">Skewness</td>
-          <td style="width:50%;" :title="(+values.skewness)">{{ +(+values.skewness).toFixed(2) }}</td>
-        </tr>
-
-        <tr>
-          <td style="width:50%;">Sum</td>
-          <td style="width:50%;" :title="(+values.variance)">{{ +(+values.variance).toFixed(2) }}</td>
-        </tr>
-
-        <tr>
-          <td style="width:50%;">Variance</td>
-          <td style="width:50%;" :title="(+values.range)">{{ +(+values.range).toFixed(2) }}</td>
-        </tr>
+        
       </tbody>
     </table>
   </div>
@@ -55,7 +21,35 @@ export default {
 			default: {},
 			type: Object
 		}
-	}
+	},
+
+  data () {
+    return {
+      stats: {
+        'stddev': 'Standard deviation',
+        'coef_variation': 'Coef of variation',
+        'kurtosis': 'Kurtosis',
+        'mean': 'Mean',
+        'mad': 'MAD',
+        'skewness': 'Skewness',
+        'sum': "Sum",
+        'variance': 'Variance',
+        'range': 'Range'
+      }
+    }
+  },
+
+  computed: {
+    statsKeys () {
+      return Object.keys(this.stats);
+    },
+
+    valuesHasStats () {
+      return this.statsKeys.some((key) => {
+        return this.values[key] !== undefined;
+      });
+    }
+  },
 }
 </script>
 
