@@ -1,6 +1,8 @@
 #{this.measureTime ? this.timeStart : ""}
+_output = None
+res = {}
 #{payload}
-res = {'result': _output}
+res.update({'result': _output})
 #{this.measureTime ? this.timeEnd : ""}
 #{this.includeVariables}
 #{this.outputJSON("res")}
