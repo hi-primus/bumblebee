@@ -827,7 +827,10 @@ export default {
         }
 
         if (response.data.status === 'error') {
-          throw response.data.error || new Error('Unknown error');
+          let err_msg = response.data.error || 'Unknown error';
+          let err = new Error(err_msg);
+          err.response = response;
+          throw err;
         }
 
         let profile = parseResponse(response.data.result)

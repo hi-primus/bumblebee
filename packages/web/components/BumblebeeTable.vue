@@ -1343,7 +1343,9 @@ export default {
       }
 
       if (!response || !response.data || !response.data.result || response.data.status == "error") {
-        throw response;
+        let err = new Error(`Bad response`)
+        err.response = response;
+        throw err;
       }
 
       let { profile, latePreview, early } = response.reply;
@@ -1352,7 +1354,9 @@ export default {
         let dataset = parseResponse(response.data.result.profile);
 
         if (!dataset) {
-          throw response;
+          let err = new Error(`Invalid dataset`)
+          err.response = response;
+          throw err;
         }
 
         dataset = { ...dataset, done: true, code };
