@@ -184,7 +184,7 @@ export const requestToKernel = async function (type, sessionId, payload, asyncCa
 
   kernels[getKernelId(sessionId)] = kernels[getKernelId(sessionId)] || {};
 
-  let kernelAddress : any = kernels[getKernelId(sessionId)].kernel_address;
+  let kernelAddress : any = configKernel(sessionId).kernel_address;
 
   let assertOptimus = true;
 
@@ -203,7 +203,7 @@ export const requestToKernel = async function (type, sessionId, payload, asyncCa
 
     if (payload.jupyter_address && payload.jupyter_address.ip && payload.jupyter_address.port) {
       kernelAddress = payload.jupyter_address.ip + ':' + payload.jupyter_address.port;
-      kernels[getKernelId(sessionId)].kernel_address = kernelAddress;
+			configKernel(sessionId, { kernel_address: kernelAddress });
       console.log(`Using kernel address ${kernelAddress} on session ${sessionId}`);
     }
 
@@ -473,7 +473,7 @@ export const createConnection = async function (sessionId) {
 
   kernels[getKernelId(sessionId)] = kernels[getKernelId(sessionId)] || {};
 
-  const ka = kernels[getKernelId(sessionId)].kernel_address || 0;
+  const ka = configKernel(sessionId).kernel_address || 0;
 
 	if (!kernels[getKernelId(sessionId)].connecting) {
 		kernels[getKernelId(sessionId)].connecting = new Promise((resolve, reject) => {
@@ -651,8 +651,8 @@ const createKernel = async function (sessionId, ka : any = undefined) {
           kernels[getKernelId(sessionId)] = {};
         }
 
-        if (kernels[getKernelId(sessionId)].kernel_address && ka === undefined) {
-          ka = kernels[getKernelId(sessionId)].kernel_address;
+        if (configKernel(sessionId).kernel_address && ka === undefined) {
+          ka = configKernel(sessionId).kernel_address;
         }
 
 				console.log(`Creating a kernel for ${sessionId} on ${kernelBase(ka)}...`);
@@ -668,10 +668,11 @@ const createKernel = async function (sessionId, ka : any = undefined) {
 
 				kernels[getKernelId(sessionId)] = {
 					...kernels[getKernelId(sessionId)],
-					kernel_address: ka,
 					id: kernelResponse.data.id,
 					uuid,
         };
+
+				configKernel(sessionId, {kernel_address: ka});
 
         break;
 
@@ -721,38 +722,44 @@ export const setKernel = function (sessionId, kernelObject) {
 };
 
 export const clearUnusedKernels = async function (kernelAddress, t = 0, ignore = []) {
-	const response = await axios.get(
-		`${kernelBase(kernelAddress)}/api/kernels`,
-	);
-
-	ignore = ignore.map(sessionId => kernels[getKernelId(sessionId)]?.id).filter(id => id);
-
-	// delete kernels that are in the response and has no connections
-
-	response.data.forEach(async (kernel) => {
-		if (kernel.connections > 0 || ignore.includes(kernel.id)) {
-			return;
-		}
-		let toDeleteEntry: [string, any] = Object.entries(kernels).find(([key, value]) => value.id === kernel.id);
-		let toDelete: string;
-		if (toDeleteEntry && toDeleteEntry[0]) {
-			toDelete = toDeleteEntry[0];
-		} else {
-			toDelete = kernel.id;
-			kernels[kernel.id] = { id: kernel.id, kernel_address: kernelAddress };
-		}
-		deleteKernel(toDelete, t);
-	});
-
-	// delete kernels that are not in the response
-
-	Object.entries(kernels).forEach(([key, value]) => {
-		if (value.id && !response.data.find((kernel) => kernel.id === value.id)) {
-			if (value.kernel_address === kernelAddress) {
-				delete kernels[key];
+	try {
+		const response = await axios.get(
+			`${kernelBase(kernelAddress)}/api/kernels`,
+		);
+	
+		ignore = ignore.map(sessionId => kernels[getKernelId(sessionId)]?.id).filter(id => id);
+	
+		// delete kernels that are in the response and has no connections
+	
+		response.data.forEach(async (kernel) => {
+			if (kernel.connections > 0 || ignore.includes(kernel.id)) {
+				return;
 			}
-		}
-	});
+			let toDeleteEntry: [string, any] = Object.entries(kernels).find(([key, value]) => value.id === kernel.id);
+			let toDelete: string;
+			if (toDeleteEntry && toDeleteEntry[0]) {
+				toDelete = toDeleteEntry[0];
+			} else {
+				toDelete = kernel.id;
+				kernels[kernel.id] = { id: kernel.id };
+				configKernel(kernel.id, { kernel_address: kernelAddress });
+			}
+			deleteKernel(toDelete, t);
+		});
+	
+		// delete kernels that are not in the response
+	
+		Object.entries(kernels).forEach(([key, value]) => {
+			if (value.id && !response.data.find((kernel) => kernel.id === value.id)) {
+				if (value.kernel_address === kernelAddress) {
+					delete kernels[key];
+				}
+			}
+		});
+	} catch (err) {
+		console.error(err);
+	}
+
 
 	setTimeout(() => {
 		console.log('Total connections:', Object.keys(kernels).length);
@@ -765,7 +772,7 @@ export const deleteKernel = async function (sessionId, t = 0, immediateIfStartin
 	kernels[getKernelId(sessionId)].removeKernel = true;
 
 	let id = kernels[getKernelId(sessionId)].id;
-	let ka = kernels[getKernelId(sessionId)].kernel_address || 0;
+	let ka = configKernel(sessionId).kernel_address || 0;
 
 	try {
 		if (immediateIfStarting && t>0) {
