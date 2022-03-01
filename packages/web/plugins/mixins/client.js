@@ -274,6 +274,18 @@ export default {
 
     async socketPost (message, payload = {}, timeout) {
 
+      if (message == 'features') {
+        if (Object.keys(payload).length) {
+          window.featuresPayload = payload;
+        } else {
+          payload = window.featuresPayload || {};
+        }
+
+        if (!Object.keys(payload).length) {
+          console.warn("[BUMBLEBEE] No features payload provided");
+        }
+      } 
+
       if (!process.client) {
         throw new Error('Trying to post from a non-client process');
       }
@@ -579,7 +591,7 @@ export default {
         try {
           result = await listener(payload);
         } catch (err) {
-          console.error(err);
+          console.error(err, err.response);
           result = err
         }
         results.push(result);

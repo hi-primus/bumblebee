@@ -1004,7 +1004,7 @@ export const actions = {
       }, isRetry ? 60000 : 10000);
     } catch (err) {
       if (!isRetry) {
-        return dispatch('loadFeatures', { slug, socketPost, isRetry: err })
+        return dispatch('loadFeatures', { ...payload, isRetry: err })
       } else {
         throw err;
       }
