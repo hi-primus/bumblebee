@@ -8,6 +8,7 @@ import { handleResponse } from 'bumblebee-utils'
 let Queue = require('better-queue');
 
 const kernels = [];
+const configs = {};
 const aliases = {};
 const requests: { [fieldName: string]: typeof Queue } = {};
 
@@ -205,6 +206,8 @@ export const requestToKernel = async function (type, sessionId, payload, asyncCa
       kernels[getKernelId(sessionId)].kernel_address = kernelAddress;
       console.log(`Using kernel address ${kernelAddress} on session ${sessionId}`);
     }
+
+		configKernel(sessionId, { usePrefect: payload.usePrefect });
   }
 
 	const connection = await assertConnection(
@@ -289,6 +292,21 @@ export const requestToKernel = async function (type, sessionId, payload, asyncCa
 
 	return response;
 };
+
+export const configKernel = function (sessionId, payload = {}) {
+
+	if (!configs[getKernelId(sessionId)]) {
+		configs[getKernelId(sessionId)] = {};
+	}
+
+  configs[getKernelId(sessionId)] = {
+		...configs[getKernelId(sessionId)],
+		...payload
+	};
+
+	return configs[getKernelId(sessionId)];
+
+}
 
 const DEFAULT_PRIORITY = 100;
 
@@ -476,6 +494,7 @@ export const createConnection = async function (sessionId) {
 
 			kernels[getKernelId(sessionId)].client.on('connect', function (connection) {
 				// kernels[getKernelId(sessionId)] = kernels[getKernelId(sessionId)] || {};
+        kernels[getKernelId(sessionId)] = kernels[getKernelId(sessionId)] || {};
         kernels[getKernelId(sessionId)].connection = connection;
 
         kernels[getKernelId(sessionId)].connection.on('close', function (message) {
@@ -606,6 +625,7 @@ export const createConnection = async function (sessionId) {
 			});
 
 			kernels[getKernelId(sessionId)].client.on('connectFailed', function (error) {
+				kernels[getKernelId(sessionId)] = kernels[getKernelId(sessionId)] || {};
 				kernels[getKernelId(sessionId)].connection = false;
 				console.error(
 					'Connection to Jupyter Kernel Gateway failed',

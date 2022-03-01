@@ -2762,6 +2762,7 @@ export const commandsHandlers = {
           noRowsError: 'No match found in sample'
         },
         request: {
+          areSources: ["with"],
           retryRequest: true
           // createsNew: true
         },
@@ -2938,6 +2939,7 @@ export const commandsHandlers = {
         selected_columns: [],
         preview: false,
         request: {
+          areSources: ["with"],
           // createsNew: true
         },
       };

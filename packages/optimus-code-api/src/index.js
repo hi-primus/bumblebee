@@ -6,6 +6,57 @@ export const version = function() {
   console.log("Code api 0.0.3")
 }
 
+export const defaultTemplate = {
+  start: payloads => '',
+  body: payloads => {
+    return payloads.map(payload => payload.code).join('\n')
+  },
+  end: payloads => ''
+};
+
+export const prefectTemplate = {
+  start: payloads => {
+    let globalVarNames = payloads.map(payload => [payload.target, payload.saving, ...(payload.sources || [])]).flat(1).filter(c => c);
+    globalVarNames = [...new Set(globalVarNames)];
+
+    if (payloads.some(payload => payload.isAsync)) {
+      globalVarNames.push('_output_callback');
+    }
+
+    globalVarNames.push('states');
+
+    return `
+states = []
+@flow
+def operations_flow():
+    global ${globalVarNames.join(', ')}
+    `
+  },
+  body: payloads => {
+    return payloads.map((payload, index) => {
+      if (payload.isAsync) {
+        return '\n' + payload.code.split('\n').map(line => `    ${line}`).join('\n')
+             + '\n    states.append(None)';
+      }
+      let dfNames = (payload.sources || []).filter(c => c);
+      let toReturn = [payload.target, payload.saving, ...(payload.sources || [])].filter(c => c);
+      toReturn = [...new Set(toReturn)];
+      let code = '\n' + payload.code.split('\n').map(line => `        ${line}`).join('\n');
+      return `
+    @task
+    def task_${index}(${dfNames.join(', ')}):
+        ${code}
+        return ${toReturn.join(', ')}
+
+    future = task_${index}(${dfNames.join(', ')})
+    states.append(future.get_state().type.value)
+    ${toReturn.join(', ')} = prefect_result(future)
+    `
+    }).join('\n')
+  },
+  end: payloads => `run_flow_on_jupyter(operations_flow); res.update({'states': states})`
+}
+
 export const payloadPreparers = {
   Download: (command, env) => {
 
@@ -1223,7 +1274,9 @@ export const generateCode = function(commands = [], _request = { type: 'processi
 
     let code = '';
     let saving;
+    let output;
     let dfName;
+    let sources = [];
 
     if (generator || command === undefined) {
 
@@ -1264,17 +1317,27 @@ export const generateCode = function(commands = [], _request = { type: 'processi
         code = `${payload.previousCode}${'\n'}`;
       }
 
+      if (request.areSources) {
+        request.areSources.forEach(name => {
+          sources.push(payload[name]);
+          sources = sources.flat();
+        });
+      }
+
+      saving = false;
+      dfName = payload.dfName || request.dfName;
+
       if (result.isOutput || customCodePayload) {
 
         code += resultCode;
+
         if (result.isAsync && isAsync === undefined) {
           isAsync = true;
         }
 
-      } else {
+        output = '_output';
 
-        saving = false;
-        dfName = payload.dfName || request.dfName;
+      } else {
 
         if (dfName && !request.noSave && payload.command) {
           request.save = true;
@@ -1317,6 +1380,8 @@ export const generateCode = function(commands = [], _request = { type: 'processi
           } else {
             code += '_output = ';
           }
+
+          output = '_output';
         }
 
         let usesVar = generator || (!multiOutput && ( request.window || request.profile || request.matches_count ))
@@ -1362,6 +1427,8 @@ export const generateCode = function(commands = [], _request = { type: 'processi
         if (multiOutput || saving) {
 
           // TODO: use multiple outputs and return using one_list_to_val
+
+          output = '_output';
 
           if (anyOutput) {
             code += '\n_output = {}';
@@ -1433,27 +1500,22 @@ export const generateCode = function(commands = [], _request = { type: 'processi
         // TODO: move to `end` template section
         if (saving === '_df_output') {
           code += '\ndel _df_output'
+          saving = false;
         }
       }
     }
 
-    payloads.push({...payload, target: saving, source: dfName, code});
+    payloads.push({...payload, target: output || saving || '_output', saving, sources: [dfName, ...sources], isAsync, code});
 
   });
 
-  let defaultTemplate = {
-    start: payloads => '',
-    body: payloads => payloads.map(payload => payload.code).join('\n'),
-    end: payloads => ''
-  };
-
-  if (!template || typeof template !== 'object') {
-    template = defaultTemplate;
-  } else {
+  if (template && typeof template == 'object') {
     template = {
       ...defaultTemplate,
       ...template
     }
+  } else {
+    template = defaultTemplate;
   }
 
   let start = template.start(payloads);

@@ -16,6 +16,7 @@ import {
   kernelHandler,
   deleteKernel,
   requestToKernel,
+  configKernel,
   removeFromQueue,
   createSession
 } from './kernel';
@@ -27,7 +28,7 @@ import {
 // 	requestToKernel,
 // } from './optimus-api';
 
-import { getGenerator, generateCode, preparePayload } from 'optimus-code-api'
+import { getGenerator, generateCode, preparePayload, prefectTemplate } from 'optimus-code-api'
 
 import { ConnectionService } from "./connection/connection.service";
 import { GetUser } from './auth/dto/get-user.decorator.dto';
@@ -225,6 +226,9 @@ export class AppGateway
         result = err;
       }
     }
+    
+    configKernel(client.id, { prefectAvailable: result?.prefect_available });
+
     client.emit('reply', {
       data: result,
       code: '',
@@ -260,7 +264,9 @@ export class AppGateway
         [resultCode, isAsync] = generateCode(resultCodePayload, {}, false, true);
 
         let execCodePayload: any = await this.prepareCodePayload(payload.codePayload, false, user);
-        [execCode, isAsync] = generateCode(execCodePayload, {}, false, true); // TO-DO: acceptStrings parameter depends on user permissions
+        let config = configKernel(client.id);
+        let template = (config.usePrefect && config.prefectAvailable) ? prefectTemplate : false;
+        [execCode, isAsync] = generateCode(execCodePayload, {}, false, true, template); // TO-DO: acceptStrings parameter depends on user permissions
 
       } else {
         execCode = payload.code;
