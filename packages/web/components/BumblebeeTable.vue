@@ -1051,7 +1051,7 @@ export default {
       this.currentDataset.columns.forEach((column, i) => {
         if (column && column.stats) {
           let inferred_data_type = column.stats.inferred_data_type?.data_type;
-          let data_type = column.data_type;
+          let data_type = column.data_type || '';
           let pure_data_type = data_type.includes(inferred_data_type) || !["bool", "float", "int", "datetime"].includes(inferred_data_type);
 
           let full_data_type = inferred_data_type;
