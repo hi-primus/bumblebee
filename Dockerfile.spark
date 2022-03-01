@@ -60,7 +60,7 @@ RUN yarn global add pm2 && \
 
 WORKDIR "/opt"
 
-RUN echo "Version 22.2.0-beta"
+RUN echo "Version 22.3.0-beta"
 
 RUN pip install cytoolz && \
     pip install git+https://github.com/hi-primus/dateinfer.git && \
@@ -70,7 +70,7 @@ RUN pip install cytoolz && \
     pip install git+https://github.com/hi-primus/optimus.git@develop-22.2#egg=pyoptimus[dask] && \
     pip install git+https://github.com/hi-primus/optimus.git@develop-22.2#egg=pyoptimus[spark]
 
-RUN git clone --branch develop-22.2 https://github.com/hi-primus/bumblebee.git
+RUN git clone --branch develop-22.3 https://github.com/hi-primus/bumblebee.git
 
 WORKDIR "/opt/bumblebee"
 
