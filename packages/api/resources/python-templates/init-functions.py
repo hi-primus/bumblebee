@@ -164,13 +164,13 @@ def df__profile_stats_cache(df, cols="*", sample=None, last_sample=False, flush=
         
         for _m in meta_keys:
             _v = Meta.get(stats, _m)
-            if _v:
+            if _v is not None:
                 df.meta = Meta.set(df.meta, f"{meta_key}.{_m}", _v)
 
         for col in columns_list:
             for _m in col_meta_keys:
                 _v = Meta.get(stats, f"columns.{col}.{_m}")
-                if _v:
+                if _v is not None:
                     df.meta = Meta.set(df.meta, f"{meta_key}.columns.{col}.{_m}", _v)
 
         # df.meta = Meta.set(df.meta, meta_key, stats)
