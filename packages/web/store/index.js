@@ -1922,7 +1922,7 @@ export const actions = {
     }
 
     if (firstRequest && !profilePreview && !codePayload.command) {
-      let colNames = response.data.result.columns.map(col=>col.title);
+      let colNames = response.data.result?.columns?.map(col=>col.title);
       commit('setColumns', { dfName: datasetDfName, columns: colNames });
     }
 
