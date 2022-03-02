@@ -593,18 +593,18 @@ export const codeGenerators = {
   },
   advancedEditRows: (payload) => {
 
-    let content = payload.content || 'return row';
-    let func_name = content.match(/def (\w+)\(/);
+    let funcDefinition = payload.funcDefinition || 'return row';
+    let func_name = funcDefinition.match(/def (\w+)\(/);
     if (func_name) {
       func_name = func_name[1];
     } else {
       func_name = 'func';
-      content = content.split('\n').map(line => '    '+line).join('\n');
-      content = `def ${func_name}(row):\n${content}`;
+      funcDefinition = funcDefinition.split('\n').map(line => '    '+line).join('\n');
+      funcDefinition = `def ${func_name}(row):\n${funcDefinition}`;
     }
 
     return {
-      preCode: content,
+      preCode: funcDefinition,
       code: `.rows.apply(${func_name}, mode="map")`
     }
 

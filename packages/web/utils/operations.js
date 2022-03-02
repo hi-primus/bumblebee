@@ -706,9 +706,6 @@ let _operations = {
       { icon: 'mdi-file-document-edit-outline' },
     ],
     disabled: ($nuxt)=>!($nuxt.currentDataset && $nuxt.currentDataset.summary),
-    test: {
-      dataframe: TEST_DATAFRAMES.DUPLICATES
-    },
     doc: {
       title: 'Edit rows (advanced)',
       description: 'Edit rows with a custom function.'
@@ -2605,7 +2602,7 @@ export const commandsHandlers = {
       width: 'big',
       fields: [
         {
-          key: "content",
+          key: "funcDefinition",
           label: "Function definition",
           type: "code-editor",
           height: 400,
@@ -2614,7 +2611,7 @@ export const commandsHandlers = {
     },
     payload: (columns, payload = {}) => ({
       subset: columns,
-      content: "return row",
+      funcDefinition: "return row",
       preview: {
         type: "advancedEditRows",
         lessRows: true,
