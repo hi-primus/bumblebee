@@ -779,67 +779,90 @@ export default {
 
     async commandListener__loading_preview (response) {
 
-      if (this.previewCode.load && this.previewCode.code) {
-        
-        let { code, dfName } = response.reply;
+      try {
 
-        if (code !== this.loadedPreviewCode) {
-          throw new Error('Code changed while loading profile preview');
-        }
-    
-        if (response.data.result && response.data.result.sample) {
-          this.$store.commit('setLoadPreview', { sample: response.data.result.sample } )
-        } else {
-          throw response
-        }
-
-        if (response.data.result.meta) {
-          this.$store.commit('setLoadPreview', { meta: response.data.result.meta } )
-        }
-
-        var codePayload = {
-          command: 'profile_async',
-          dfName,
-          request: {
-            priority: -10,
-            isAsync: true
+        if (this.previewCode.load && this.previewCode.code) {
+          
+          let { code, dfName } = response.reply;
+  
+          if (code !== this.loadedPreviewCode) {
+            throw new Error('Code changed while loading profile preview');
           }
-        };
 
-        this.evalCode(codePayload, { command: "loading_profile_preview", code }, 'profiling');
+          if (!response || !response.data) {
+            let err = new Error('Unknown error');
+            err.response = response;
+            throw err;
+          }
+      
+          if (response.data.result && response.data.result.sample) {
+            this.$store.commit('setLoadPreview', { sample: response.data.result.sample });
+          } else {
+            let err_msg = response.data.error || 'Unknown error';
+            let err = new Error(err_msg);
+            err.response = response;
+            throw err;
+          }
+  
+          if (response.data.result.meta) {
+            this.$store.commit('setLoadPreview', { meta: response.data.result.meta } )
+          }
+  
+          var codePayload = {
+            command: 'profile_async',
+            dfName,
+            request: {
+              priority: -10,
+              isAsync: true
+            }
+          };
+  
+          this.evalCode(codePayload, { command: "loading_profile_preview", code }, 'profiling');
+  
+        }
 
+      } catch (err) {
+        console.error('Error loading preview', err, err.response);
+
+        this.$store.commit('setPreviewInfo', { error: err });
       }
+
     },
 
     async commandListener__loading_profile_preview (response) {
 
-      if (this.previewCode.load && this.previewCode.code) {
+      try {
+        if (this.previewCode.load && this.previewCode.code) {
 
-        let code = response.reply.code;
+          let code = response.reply.code;
 
-        if (code !== this.loadedPreviewCode) {
-          throw new Error('Code changed while loading profile preview');
+          if (code !== this.loadedPreviewCode) {
+            throw new Error('Code changed while loading profile preview');
+          }
+      
+          if (!response || !response.data) {
+            throw new Error('Unknown error');
+          }
+
+          if (response.data.status === 'error') {
+            let err_msg = response.data.error || 'Unknown error';
+            let err = new Error(err_msg);
+            err.response = response;
+            throw err;
+          }
+
+          let profile = parseResponse(response.data.result)
+
+          this.$store.commit('setLoadPreview', { profile } )
+
+          this.$store.commit('mutation', {mutate: 'updatingPreview', payload: false })
+
+          return profile;
         }
-    
-        if (!response || !response.data) {
-          console.error(response);
-          throw new Error('Unknown error');
-        }
+      } catch (err) {
+        console.error('Error loading preview profiling', err, err.response);
 
-        if (response.data.status === 'error') {
-          let err_msg = response.data.error || 'Unknown error';
-          let err = new Error(err_msg);
-          err.response = response;
-          throw err;
-        }
-
-        let profile = parseResponse(response.data.result)
-
-        this.$store.commit('setLoadPreview', { profile } )
-
-        this.$store.commit('mutation', {mutate: 'updatingPreview', payload: false })
-
-        return profile;
+        this.$store.commit('setPreviewInfo', { error: err });
       }
     }
   },

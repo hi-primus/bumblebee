@@ -592,8 +592,11 @@ export const mutations = {
     if (replacingColumns!=undefined) {
       state.everyPreviewInfo[state.tab].replacingColumns = replacingColumns
     }
-    if (error!=undefined) {
-      state.everyPreviewInfo[state.tab].error = error;
+    if (error !== undefined) {
+      if (error.data) {
+        error = error.data;
+      }
+      state.everyPreviewInfo[state.tab].error = error.error || error.message || error;
     }
     Vue.set(state.everyPreviewInfo,state.tab,state.everyPreviewInfo[state.tab]);
   },
