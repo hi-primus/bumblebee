@@ -595,6 +595,10 @@ export const codeGenerators = {
 
     let funcDefinition = payload.funcDefinition || 'return row';
     let func_name = funcDefinition.match(/def (\w+)\(/);
+    let biggerWindow = '';
+    if (payload.request.retry) {
+      biggerWindow = `[0:${1000*((payload.request.retry))}]`;
+    }
     if (func_name) {
       func_name = func_name[1];
     } else {
@@ -605,7 +609,7 @@ export const codeGenerators = {
 
     return {
       preCode: funcDefinition,
-      code: `.rows.apply(${func_name}, mode="map")`
+      code: `${biggerWindow}.rows.apply(${func_name}, mode="map")`
     }
 
   },
@@ -1413,6 +1417,11 @@ export const generateCode = function(commands = [], _request = { type: 'processi
             code += dfName;
             if (request.window) {
               let window = '';
+
+              if (request.noBufferWindow === 'retry' && !request.retry) {
+                request.noBufferWindow = false;
+              }
+
               if (!request.noBufferWindow && Array.isArray(request.window)) {
                 window = `, ${request.window[0]}, ${request.window[1]}`;
               }

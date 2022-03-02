@@ -1336,50 +1336,57 @@ export default {
 
     commandListener__profile_preview (response) {
 
-      let code = response.reply.code;
+      try {
 
-      if (this.profilePreview.code !== code) {
-        throw new Error(`Profile preview code changed, ${code} -> ${this.profilePreview.code}`);
-      }
+        let code = response.reply.code;
 
-      if (!response || !response.data || !response.data.result || response.data.status == "error") {
-        let err = new Error(`Bad response`)
-        err.response = response;
-        throw err;
-      }
+        if (this.profilePreview.code !== code) {
+          throw new Error(`Profile preview code changed, ${code} -> ${this.profilePreview.code}`);
+        }
 
-      let { profile, latePreview, early } = response.reply;
-
-      if ((profile || latePreview || early) && response.data.result.profile) {
-        let dataset = parseResponse(response.data.result.profile);
-
-        if (!dataset) {
-          let err = new Error(`Invalid dataset`)
+        if (!response || !response.data || !response.data.result || response.data.status == "error") {
+          let err = new Error(`Bad response`)
           err.response = response;
           throw err;
         }
 
-        dataset = { ...dataset, done: true, code };
+        let { profile, latePreview, early } = response.reply;
 
-        this.$store.commit('mutation', {mutate: 'profilePreview', payload: dataset} )
+        if ((profile || latePreview || early) && response.data.result.profile) {
+          let dataset = parseResponse(response.data.result.profile);
 
-      } else if (response.data.result.names) {
+          if (!dataset) {
+            let err = new Error(`Invalid dataset`)
+            err.response = response;
+            throw err;
+          }
 
-        let names = parseResponse(response.data.result.names);
+          dataset = { ...dataset, done: true, code };
 
-        let columns = Object.fromEntries(names.map(c=>[c.title, {}]));
+          this.$store.commit('mutation', {mutate: 'profilePreview', payload: dataset} )
 
-        let dataset = { columns, done: true, code };
+        } else if (response.data.result.names) {
 
-        this.$store.commit('mutation', {mutate: 'profilePreview', payload: dataset, summary: {}})
+          let names = parseResponse(response.data.result.names);
 
+          let columns = Object.fromEntries(names.map(c=>[c.title, {}]));
+
+          let dataset = { columns, done: true, code };
+
+          this.$store.commit('mutation', {mutate: 'profilePreview', payload: dataset, summary: {}})
+
+        }
+
+        if (response.data.result.matches_count!==undefined) {
+          this.$store.commit('setPreviewInfo', {rowHighlights: +response.data.result.matches_count});
+        }
+
+        return true;
+      } catch (err) {
+        console.error(err);
+        this.$store.commit('setPreviewInfo', { error: err });
+        return false;
       }
-
-      if (response.data.result.matches_count!==undefined) {
-        this.$store.commit('setPreviewInfo', {rowHighlights: +response.data.result.matches_count});
-      }
-
-      return true;
     },
 
     commandListener__profiling (response) {

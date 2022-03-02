@@ -2614,7 +2614,11 @@ export const commandsHandlers = {
       funcDefinition: "return row",
       preview: {
         type: "advancedEditRows",
-        lessRows: true,
+        delay: 500,
+        expectedColumns: -1,
+        datasetPreview: true,
+        noBufferWindow: "retry",
+        noRowsError: "No rows returned"
       },
       request: {},
     }),
