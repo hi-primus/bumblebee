@@ -1383,6 +1383,7 @@ export default {
 
       if (!command || command.empty) {
         this.runCodeNow()
+        this.$emit('update:dialogProperties', {});
         return
       }
 
@@ -1598,6 +1599,7 @@ export default {
           // this.recoverTextSelection();
           // this.clearSelection();
           this.currentCommand = false;
+          this.$emit('update:dialogProperties', {});
           this.$emit('updateOperations', {
             active: false,
             title: 'operations'
