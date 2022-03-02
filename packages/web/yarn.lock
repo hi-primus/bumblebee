@@ -3432,6 +3432,11 @@ brace-expansion@^1.1.7:
     balanced-match "^1.0.0"
     concat-map "0.0.1"
 
+brace@^0.11.1:
+  version "0.11.1"
+  resolved "https://registry.yarnpkg.com/brace/-/brace-0.11.1.tgz#4896fcc9d544eef45f4bb7660db320d3b379fe58"
+  integrity sha1-SJb8ydVE7vRfS7dmDbMg07N5/lg=
+
 braces@^2.3.1, braces@^2.3.2:
   version "2.3.2"
   resolved "https://registry.yarnpkg.com/braces/-/braces-2.3.2.tgz#5979fd3f14cd531565e5fa2df1abfff1dfaee729"
@@ -3590,7 +3595,8 @@ builtin-status-codes@^3.0.0:
   integrity sha1-hZgoeOIbmOHGZCXgPQF0eI9Wnug=
 
 "bumblebee-utils@link:../bumblebee-utils":
-  version "22.3.0-beta"
+  version "0.0.0"
+  uid ""
 
 bytes@3.0.0:
   version "3.0.0"
@@ -8640,10 +8646,8 @@ optimize-css-assets-webpack-plugin@^5.0.4:
     last-call-webpack-plugin "^3.0.0"
 
 "optimus-code-api@link:../optimus-code-api":
-  version "22.3.0-beta"
-  dependencies:
-    bumblebee-utils "link:../bumblebee-utils"
-    uuid "^8.3.2"
+  version "0.0.0"
+  uid ""
 
 optionator@^0.8.1, optionator@^0.8.3:
   version "0.8.3"

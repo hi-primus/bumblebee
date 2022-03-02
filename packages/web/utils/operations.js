@@ -698,6 +698,22 @@ let _operations = {
       description: 'Remove rows with duplicated values in the selected column\(s\).'
     }
   },
+  advancedEditRows: {
+    path: 'ROWS',
+    text: 'Edit rows',
+    label: 'Edit<br/>rows',
+    icons: [
+      { icon: 'mdi-file-document-edit-outline' },
+    ],
+    disabled: ($nuxt)=>!($nuxt.currentDataset && $nuxt.currentDataset.summary),
+    test: {
+      dataframe: TEST_DATAFRAMES.DUPLICATES
+    },
+    doc: {
+      title: 'Edit rows (advanced)',
+      description: 'Edit rows with a custom function.'
+    }
+  },
   set: {
     path: 'COLUMNS',
     text: ($nuxt)=>$nuxt.selectedColumns.length ? 'Set column' : 'New column',
@@ -2580,6 +2596,32 @@ export const commandsHandlers = {
       (payload.subset.length
         ? ` in ${multipleContent([payload.subset], "hl--cols")}`
         : ""),
+  },
+
+  advancedEditRows: {
+    dialog: {
+      title: "Edit rows (advanced)",
+      resizable: true,
+      width: 'big',
+      fields: [
+        {
+          key: "content",
+          label: "Function definition",
+          type: "code-editor",
+          height: 400,
+        },
+      ],
+    },
+    payload: (columns, payload = {}) => ({
+      subset: columns,
+      content: "return row",
+      preview: {
+        type: "advancedEditRows",
+        lessRows: true,
+      },
+      request: {},
+    }),
+    content: (payload) => `<b>Map function to rows</b>`
   },
 
   join: {

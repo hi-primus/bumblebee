@@ -96,6 +96,19 @@ body{
   height: 50px;
 }
 
+.ace-editor-container {
+  margin-top: -8px;
+  .ace_editor {
+    font-family: $font-mono;
+    line-height: normal;
+    font-size: 14px !important;
+    margin-bottom: 16px;
+    border: rgba(0, 0, 0, 0.08) 1px solid;
+    border-radius: 4px;
+  }
+}
+
+
 .font-mono {
   font-family: $font-mono;
 }
@@ -665,16 +678,16 @@ table {
   }
 
   $sidebar-width: 420px;
-  $sidebar-width-bigger: 780px;
+  $sidebar-width-bigger: calc(50vw - 80px);
   $sidebar-max-width: 65vw;
 
   .sidebar-container {
+    min-width: $sidebar-width;
     width: $sidebar-width;
   }
 
   .sidebar-container.bigger {
     width: $sidebar-width-bigger;
-    min-width: $sidebar-width;
     max-width: $sidebar-max-width;
   }
 }
@@ -2780,7 +2793,7 @@ $editor-top-padding: 4px;
   max-width: 12px !important;
 }
 
-.mono-field input {
+.mono-field input, .mono-field textarea {
   font-family: $font-mono;
   font-size: 14px;
   top: -1px;

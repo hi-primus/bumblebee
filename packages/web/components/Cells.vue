@@ -431,7 +431,7 @@ export default {
     view: {
       default: false
     },
-    big: {
+    dialogProperties: {
       default: false
     },
     columns: {
@@ -1473,12 +1473,13 @@ export default {
 
         delete payload.query;
 
+        this.$emit('update:dialogProperties', commandHandler.dialog);
+
         if (commandHandler.dialog) {
 
           this.currentCommand = payload
 
           this.$emit('updateOperations', { active: true, title: this.getCommandTitle() })
-          this.$emit('update:big',commandHandler.dialog.big)
 
           if (commandHandler.onInit) {
             this.currentCommand = await commandHandler.onInit({}, this.currentCommand, this.commandMethods)

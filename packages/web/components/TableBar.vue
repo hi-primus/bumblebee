@@ -309,8 +309,12 @@
       :columnsTableHeaders="columnsTableHeaders"
       ref="dataset"
     />
-    <div class="sidebar-container" :class="{'bigger': (operationsActive && bigOptions)}" v-show="detailsActive || operationsActive">
-
+    <div
+      class="sidebar-container"
+      :class="{'bigger': (operationsActive && dialogProperties && dialogProperties.width == 'big')}"
+      :style="dialogProperties && dialogProperties.width != 'big' ? {'width': dialogProperties.width} : {}"
+      v-show="detailsActive || operationsActive"
+    >
       <template>
         <div class="sidebar-header" v-show="operationsActive && operationsTitle=='operations'">
           Operations
@@ -323,7 +327,7 @@
         <Cells
           v-show="operationsActive"
           ref="cells"
-          :big.sync="bigOptions"
+          :dialogProperties.sync="dialogProperties"
           :view="operationsTitle"
           :columns="selectedColumns || []"
           @updateOperations="updateOperations"
@@ -465,7 +469,7 @@ export default {
 
       operationsActive: false,
       operationsTitle: 'operations',
-      bigOptions: false,
+      dialogProperties: false,
       operation: undefined,
       heatMap: [],
       heatMapEncoding: {},

@@ -591,6 +591,24 @@ export const codeGenerators = {
       + (payload.subset.length ? `cols=${preparedColumns(payload.subset, true)}, ` : '')
       + `keep="${payload.keep}")`
   },
+  advancedEditRows: (payload) => {
+
+    let content = payload.content || 'return row';
+    let func_name = content.match(/def (\w+)\(/);
+    if (func_name) {
+      func_name = func_name[1];
+    } else {
+      func_name = 'func';
+      content = content.split('\n').map(line => '    '+line).join('\n');
+      content = `def ${func_name}(row):\n${content}`;
+    }
+
+    return {
+      preCode: content,
+      code: `.rows.apply(${func_name}, mode="map")`
+    }
+
+  },
   concat: (payload) => {
 
     let cols_map = payload.selected_columns.map(e=>{
@@ -1315,6 +1333,10 @@ export const generateCode = function(commands = [], _request = { type: 'processi
 
       if (payload.previousCode) {
         code = `${payload.previousCode}${'\n'}`;
+      }
+
+      if (result.preCode) {
+        code += result.preCode + '\n';
       }
 
       if (request.areSources) {

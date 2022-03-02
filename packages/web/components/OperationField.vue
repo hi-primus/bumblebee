@@ -75,6 +75,44 @@
         outlined
       ></v-text-field>
     </template>
+    <template v-else-if="getPropertyField(field.type)=='text-area'">
+      <v-textarea
+        v-model="_value"
+        :key="field.key"
+        :id="'field-'+field.key"
+        :autocomplete="getPropertyField(field.autocomplete) || 'off'"
+        :label="getPropertyField(field.label)"
+        :placeholder="(typeof field.placeholder == 'function') ? field.placeholder(currentCommand) : (field.placeholder || '')"
+        :clearable="field.clearable"
+        :class="{'mono-field': field.mono}"
+        :heigth="field.height || 'auto'"
+        :style="{'height': field.height || 'auto'}"
+        @input="triggerFunction(field.onChange, $event)"
+        spellcheck="false"
+        dense
+        required
+        outlined
+      ></v-textarea>
+    </template>
+    <template v-else-if="getPropertyField(field.type)=='code-editor'">
+      <AceEditor
+        v-model="_value"
+        :key="field.key+'ace-editor'"
+        :id="'field-'+field.key"
+        @input="triggerFunction(field.onChange, $event)"
+        :height="field.height || '200px'"
+        width="100%"
+        :label="getPropertyField(field.label)"
+        lang="python"
+        :options="{
+          highlightActiveLine: true,
+          showLineNumbers: true,
+          tabSize: 4,
+          showPrintMargin: false,
+          showGutter: false,
+        }"
+      />
+    </template>
     <template v-else-if="getPropertyField(field.type)=='field-suggestions'">
       <TextFieldSuggestions
         v-model="_value"
@@ -393,6 +431,7 @@
 import { getProperty } from 'bumblebee-utils'
 
 import TextFieldSuggestions from '@/components/TextFieldSuggestions'
+import AceEditor from '@/components/AceEditor'
 import ColumnsJoinSelector from '@/components/ColumnsJoinSelector'
 import ItemsSelector from '@/components/ItemsSelector'
 import TitleTabs from '@/components/TitleTabs'
@@ -409,7 +448,8 @@ export default {
     ItemsSelector,
     TitleTabs,
     ColumnsConcatSelector,
-    ConnectionsItemsField
+    ConnectionsItemsField,
+    AceEditor
   },
 
   props: {
