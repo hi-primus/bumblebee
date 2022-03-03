@@ -672,7 +672,7 @@ table {
         padding-left: 9px;
       }
     }
-    .operation-form-container, .operation-form {
+    .operation-form-container {
       height: inherit;
     }
     .operation-form {
@@ -2378,6 +2378,15 @@ $editor-top-padding: 4px;
         margin-bottom: 6px !important;
       }
     }
+    .o-field:not(.show-values-switch)>.v-input--switch {
+      padding: 0;
+      .v-input__slot {
+        margin-bottom: 0;
+      }
+      .v-messages {
+        display: none;
+      }
+    }
     .o-fields {
       background: rgba($data-primary, 0.15);
     }
@@ -2388,11 +2397,13 @@ $editor-top-padding: 4px;
   .o-fields {
     min-height: calc(100vh - 203px);
   }
+  .o-buttons:last-child, .o-error:last-child {
+    margin-bottom: 0 !important;
+  }
 }
 
 .operation-form {
   .o-fields {
-    min-height: 0;
 
     display: flex;
     flex-wrap: wrap;
@@ -2408,7 +2419,7 @@ $editor-top-padding: 4px;
 
     padding-left: 24px;
     padding-right: 20px;
-    padding-top: 16px;
+    padding-top: 6px;
 
     width: calc(100% + 44px);
 
@@ -2456,6 +2467,9 @@ $editor-top-padding: 4px;
       margin-left: auto;
       margin-right: 2px;
     }
+  }
+  .o-buttons:last-child, .o-error:last-child {
+    margin-bottom: 82px;
   }
   .filter-results-checkbox {
     margin: 0;
@@ -2963,7 +2977,7 @@ $editor-top-padding: 4px;
   display: flex;
   flex-direction: column;
   max-height: calc(100vh - 270px);
-  height: calc(100vh - 270px);
+  height: calc(100vh - 300px);
   justify-content: flex-start;
 
   .concat-deleted-title {
