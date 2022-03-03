@@ -2617,8 +2617,6 @@ export const commandsHandlers = {
         delay: 500,
         expectedColumns: -1,
         datasetPreview: true,
-        noBufferWindow: "retry",
-        noRowsError: "No rows returned"
       },
       request: {},
     }),

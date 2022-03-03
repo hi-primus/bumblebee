@@ -595,10 +595,6 @@ export const codeGenerators = {
 
     let funcDefinition = payload.funcDefinition || 'return row';
     let func_name = funcDefinition.match(/def (\w+)\(/);
-    let biggerWindow = '';
-    if (payload.request.retry) {
-      biggerWindow = `[0:${1000*((payload.request.retry))}]`;
-    }
     if (func_name) {
       func_name = func_name[1];
     } else {
@@ -609,7 +605,7 @@ export const codeGenerators = {
 
     return {
       preCode: funcDefinition,
-      code: `${biggerWindow}.rows.apply(${func_name}, mode="map")`
+      code: `.rows.apply(${func_name}, mode="map")`
     }
 
   },
