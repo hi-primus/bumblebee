@@ -1964,6 +1964,8 @@ export default {
             return true // must cehck
           }
 
+        } else {
+          this.$store.commit('setPreviewColumns', false)
         }
       }
 
