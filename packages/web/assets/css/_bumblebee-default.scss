@@ -97,8 +97,13 @@ body{
 }
 
 .ace-editor-container {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 400px);
+  min-height: 150px;
   margin-top: -8px;
   .ace_editor {
+    flex: 1;
     font-family: $font-mono;
     line-height: normal;
     font-size: 14px !important;
