@@ -14,7 +14,7 @@
     </v-tooltip>
     <v-tooltip transition="tooltip-fade-transition" :left="!bottom" :bottom="bottom" content-class="bar-tooltip" background-color="#6c7680" color="#6c7680">
       <template v-slot:activator="{ on }">
-        <div :class="{'min-bar': missingP!=0}" class="bar grey-bar" v-on="on" @click="$emit('clicked', 'missing')" />
+        <div :class="{'min-bar': missingP!=0}" :style="{'width': missingP+'%'}" class="bar grey-bar" v-on="on" @click="$emit('clicked', 'missing')" />
       </template>
       <span>
         {{ missing | humanNumberInt }} missing values <span class="percentage">{{ missingP }}%</span><br/>
