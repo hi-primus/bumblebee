@@ -621,6 +621,8 @@ export default {
       windowRoot: 0,
       windowSize: 10,
 
+      previousLessRows: [],
+
       // types
 
       mainTypes: ['string', 'int', 'float', 'boolean', 'datetime', '|', 'object', 'array'],
@@ -2738,11 +2740,23 @@ export default {
       if (addToFetch) {
         
         // Less rows fetched
-        if (addToFetch.to - addToFetch.from != addToFetch.sample.value.length-1) {
-          lessRowsFetched = true;
-          console.warn(`Chunk result does not match its requested range`, addToFetch);
+
+        let sampleLength = addToFetch.sample.value.length;
+
+        if (addToFetch.to - addToFetch.from != sampleLength-1) {
+
+          // check if the last chunk is the same as the last fetched chunk to avoid infinite retries
+
+          let lessRows = [addToFetch.from, addToFetch.to, sampleLength];
+          
+          if (lessRows.join() !== this.previousLessRows.join() || !sampleLength || !addToFetch.from) {
+            this.previousLessRows = lessRows;
+            lessRowsFetched = true;
+            console.warn(`Chunk result does not match its requested range`, addToFetch);
+          }
+          
           // No rows fetched
-          if (!addToFetch.sample.value.length) {
+          if (!sampleLength) {
             if (!forced) {
               return 'forceSample';
             }
@@ -2764,7 +2778,7 @@ export default {
               throw error;
             }
           }
-          addToFetch.to = addToFetch.from + addToFetch.sample.value.length-1;
+          addToFetch.to = addToFetch.from + sampleLength-1;
         }
         
         this.fetched.push(addToFetch);
