@@ -1,6 +1,6 @@
 <template>
   <div class="ace-editor-container" :height="cHeight" :style="{height}">
-    <label for="editor" class="v-label theme--light">{{label}}</label>
+    <label for="editor" class="v-label theme--light pt-1">{{label}}</label>
     <div id="editor" :width="width" :height="cHeight" :style="{width, height: cHeight}"></div>
   </div>
 </template>
