@@ -2063,6 +2063,17 @@ export default {
           payload
         })
       }
+      if (event == 'match') {
+        var payload = {
+          rowsType: 'match',
+          action: 'select'
+        }
+        this.commandHandle({
+          command: 'REMOVE_KEEP_SET',
+          columns: [ this.columns[column.index].name ],
+          payload
+        })
+      }
     },
 
     commandHandle (command) {

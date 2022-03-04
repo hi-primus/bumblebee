@@ -522,6 +522,17 @@ export default {
           payload
         })
       }
+      if (event == 'match') {
+        var payload = {
+          rowsType: 'match',
+          action: 'select'
+        }
+        this.commandHandle({
+          command: 'REMOVE_KEEP_SET',
+          columns: [ this.column.name ],
+          payload
+        })
+      }
     },
 
     commandHandle (event) {

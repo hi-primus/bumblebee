@@ -2195,6 +2195,7 @@ export const commandsHandlers = {
           set: "Replace",
         },
         rowsLabels: {
+          match: "matching rows",
           missing: "missing rows",
           mismatch: "mismatch rows",
           values: "matching rows",

@@ -345,6 +345,9 @@ export const codeGenerators = {
     let expression = '';
 
     switch (payload.rowsType) {
+      case 'match':
+        expression = `${dfName}.mask.match("${payload.columns[0]}", "${payload.columnDataTypes[0]}")`;
+        break;
       case 'missing':
         expression = `${dfName}.mask.null("${payload.columns[0]}")`;
         break;

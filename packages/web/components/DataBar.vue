@@ -2,7 +2,7 @@
   <div class="data-bar">
     <v-tooltip transition="tooltip-fade-transition" :left="!bottom" :bottom="bottom" content-class="bar-tooltip" color="dataprimary darken-2">
       <template v-slot:activator="{ on }">
-        <div :class="{'min-bar': matchP!=0}" :style="{'width': matchP+'%'}" class="bar teal-bar" v-on="on" @click="$emit('clicked', 'ok')"/>
+        <div :class="{'min-bar': matchP!=0}" :style="{'width': matchP+'%'}" class="bar teal-bar" v-on="on" @click="$emit('clicked', 'match')"/>
       </template>
       <span>{{ matchC | humanNumberInt }} match values <span class="percentage">{{ matchP }}%</span></span>
     </v-tooltip>
