@@ -1080,6 +1080,8 @@ let _operations = {
   },
 
   stringClustering: {text: 'String clustering', path: 'TRANSFORMATIONS/STRING', max: 1, min: 1 },
+  
+  removeStopWords: {text: 'Remove stop words', path: 'TRANSFORMATIONS/STRING' },
 
   abs: {
     text: 'Absolute value', generator: 'GENERIC', path: 'TRANSFORMATIONS/MATH',
@@ -3575,6 +3577,30 @@ export const commandsHandlers = {
         "hl--param"
       )} in ${hlCols(payload.columns[0])}`;
     },
+  },
+
+  removeStopWords: {
+    dialog: {
+      title: "Remove stop words",
+      fields: [
+        {
+          type: "select",
+          key: "language",
+          label: "Language",
+          items: (c, index, self) => self.$store.state.stopWordsLanguages.map(e => ({ text: capitalizeString(e), value: e })),
+        },
+      ],
+      validate: (c) => c.language
+    },
+    payload (columns, payload = {}) {
+      return {
+        columns,
+        language: "english",
+        preview: {
+          type: "removeStopWords"
+        }
+      }
+    }
   },
 
   setFormat: {

@@ -499,7 +499,7 @@ export default {
     getProperty,
 
     getPropertyField(pof) {
-      return getProperty(pof, [this.currentCommand, this.index])
+      return getProperty(pof, [this.currentCommand, this.index, this])
     },
 
     async triggerFunction (key_callback, event) {

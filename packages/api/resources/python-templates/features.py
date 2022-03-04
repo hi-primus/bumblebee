@@ -48,6 +48,12 @@ res = {
 # optimus reserved words
 
 try:
+    from nltk.corpus import stopwords
+    res.update({'stop_words_languages': stopwords.fileids()})
+except:
+    pass
+    
+try:
     from optimus.expressions import reserved_words
     res.update({'reserved_words': reserved_words})
 except:

@@ -944,6 +944,16 @@ export const codeGenerators = {
     })
     .join('')
   },
+  
+  removeStopWords: (payload) => {
+    let _argument = preparedColumns(payload.columns);
+    let output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (['final','processing',undefined].includes(payload.request.type)) ? '' : '__new__');
+    return `.cols.remove_stopwords(${_argument}`
+    +`, language="${payload.language}"`
+    + ( output_cols_argument ? `, output_cols=${output_cols_argument}` : '')
+    +')'
+  },
+
   transformFormat: (payload) => {
     let _argument = preparedColumns(payload.columns);
     let output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (['final','processing',undefined].includes(payload.request.type)) ? '' : '__new__');
