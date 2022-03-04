@@ -2,6 +2,7 @@
 <div
   class="bbt-container"
   :class="{'range--selected': ['values','ranges'].includes(selectionType)}"
+  :style="{'--indices-width': indicesWidth + 'px'}"
   ref="BbContainer"
 >
   <v-menu
@@ -1170,6 +1171,15 @@ export default {
       }
       return value
 
+    },
+
+    indicesWidth () {
+      let rows = this.rowsCount;
+      if (!rows || rows <= 999) {
+        rows = 999;
+      }
+      let chars = rows.toString().length - 3;
+      return 45 + chars * 7;
     },
 
     tableStyle () {
@@ -2350,7 +2360,7 @@ export default {
           let topScrollWidth = this.$refs['BbTableTopContainer'].scrollWidth;
           let bottomScrollWidth = this.$refs['BbTableContainer'].scrollWidth;
           if (this.$refs['BbTableRows']) {
-            this.$refs['BbTableRows'].style.left = (45 + bottomScrollLeft) + 'px';
+            this.$refs['BbTableRows'].style.left = (this.indicesWidth + bottomScrollLeft) + 'px';
           }
           if (topScrollLeft != bottomScrollLeft || topScrollWidth != bottomScrollWidth) {
             this.$refs['BbTable'].style.minWidth = this.$refs['BbTableTopContainer'].scrollWidth + 'px'
@@ -2748,7 +2758,7 @@ export default {
           // check if the last chunk is the same as the last fetched chunk to avoid infinite retries
 
           let lessRows = [addToFetch.from, addToFetch.to, sampleLength];
-          
+
           if (lessRows.join() !== this.previousLessRows.join() || !sampleLength || !addToFetch.from) {
             this.previousLessRows = lessRows;
             lessRowsFetched = true;
