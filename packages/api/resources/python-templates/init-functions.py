@@ -34,6 +34,9 @@ def df__preliminary_profile(df, cols="*"):
 
     types = df.cols.inferred_data_type(cols, use_internal=True, tidy=False)["inferred_data_type"]
 
+    body.update({"name": df.meta.get("name")})
+    body.update({"file_name": df.meta.get("file_name")})
+
     body.update({"columns": 
                  {col: {
                     "plot_type": plot_type[col],
@@ -361,6 +364,9 @@ def df__profile_cache(df, cols="*", bins: int = MAX_BUCKETS, sample=None, last_s
         for key in cols:
             if key in stats["columns"]:
                 stats["columns"][key].update({"done": True})
+
+    stats.update({"name": df.meta.get("name")})
+    stats.update({"file_name": df.meta.get("file_name")})
     
     return stats
 

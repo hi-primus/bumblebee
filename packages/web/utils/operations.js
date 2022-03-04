@@ -1837,8 +1837,16 @@ export const commandsHandlers = {
 
     content: (payload) => {
       var infer = payload.file_type === "file" || !payload._moreOptions;
-      var fileType = infer ? payload._fileType : payload.file_type;
-      var fileName = payload._fileName;
+      var fileType = (infer ? payload._fileType : payload.file_type) || '';
+      var fileName = payload._fileName || '';
+      
+      if (Array.isArray(fileName)) {
+        fileName = fileName[fileName.length - 1];
+      }
+
+      if (typeof fileName !== 'string') {
+        fileName = '';
+      }
 
       fileName = fileName.replace(/%20/g, " ");
       

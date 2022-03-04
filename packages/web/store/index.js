@@ -328,18 +328,24 @@ export const mutations = {
 
     var fileName = dataset.file_name;
 
-    if (fileName && fileName.includes('/')) {
-      fileName = fileName.split('/');
-      dataset.file_name = fileName[fileName.length - 1];
+    if (Array.isArray(fileName)) {
+      fileName = fileName[fileName.length-1];
     }
 
-    if (dataset.file_name) {
-      dataset.file_name = dataset.file_name.replace(/%20/g, " ");
-    }    
+    if (fileName && fileName.includes('/')) {
+      fileName = fileName.split('/');
+      fileName = fileName[fileName.length - 1];
+    }
+
+    if (fileName) {
+      fileName = fileName.replace(/%20/g, " ");
+    }
+
+    dataset.file_name = fileName
 
     if (!dataset.name) {
       if (dataset.file_name) {
-        dataset.name = dataset.file_name.split('.')[0];
+        dataset.name = dataset.file_name.replace(/\.[^/.]+$/, "");
       } else {
         dataset.name = `Dataset`;
       }
