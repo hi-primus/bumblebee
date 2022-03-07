@@ -990,7 +990,8 @@ export default {
               width: this.defaultColumnWidth
             })
 
-          } else {
+          } else if (!this.profilePreview || this.profilePreview && !Object.keys(this.profilePreview.columns || {}).length) {
+
             for (let i = 0; i < expectedColumns-pushedColumns; i++) {
 
               if (after[i]) {
