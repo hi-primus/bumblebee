@@ -95,6 +95,7 @@ const defaultState = {
   updatingPreview: false,
   updatingWholeProfile: false,
   editing: false,
+  afterProfileCallback: false,
   coiledAvailable: false,
   tab: 0,
   cells: { dataSources: [], transformations: [], status: 'ok' },
@@ -1175,7 +1176,11 @@ export const actions = {
 
   // events
 
-  async afterFirstProfiling ({commit}) {
+  async afterFirstProfiling ({state, commit}) {
+    if (state.afterProfileCallback && typeof state.afterProfileCallback === 'function') {
+      await state.afterProfileCallback();
+      commit('mutation', { mutate: 'afterProfileCallback', payload: false });
+    }
     commit('previewDefault');    
   },
 
@@ -1577,6 +1582,7 @@ export const actions = {
         };
 
         codePayload = codePayload.map((command)=>{
+          command = deepCopy(command)
           var _custom = command.payload._custom;
           if (_custom && typeof _custom === 'function' ) {
             return _custom(command.payload);

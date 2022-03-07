@@ -1821,12 +1821,12 @@ export default {
         this.commandsDisabled = true;
         this.isEditing = true;
         cell.payload._toCell = index;
-        await this.runCodeNow(true, index, undefined, false, false)
         let afterProfile = () => {
           this.commandsDisabled = false;
           this.commandHandle(cell);
         };
         this.$store.commit('mutation', { mutate: 'afterProfileCallback', payload: afterProfile });
+        await this.runCodeNow(true, index, undefined, false, false)
       }
     },
 
