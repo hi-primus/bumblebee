@@ -3583,6 +3583,7 @@ export const commandsHandlers = {
   removeStopWords: {
     dialog: {
       title: "Remove stop words",
+      output_cols: true,
       fields: [
         {
           type: "select",
