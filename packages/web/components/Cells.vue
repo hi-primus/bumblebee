@@ -1,7 +1,7 @@
 <template>
   <div class="sidebar-content">
     <FormDialog focus ref="formDialog"/>
-    <div class="sidebar-top">
+    <div class="sidebar-top" v-show="(!currentCommand.command || view=='operations')">
       <v-tooltip bottom transition="tooltip-fade-transition">
         <template v-slot:activator="{ on }">
           <v-icon :class="{'hidden-icon-btn': !selectedCells.length}" @click.stop="clearCellsSelection" v-on="on">mdi-close-box-outline</v-icon>
