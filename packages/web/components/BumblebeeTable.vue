@@ -1406,10 +1406,12 @@ export default {
       try {
 
         if (!this.enableIncrementalProfiling) {
+          this.throttledScrollCheck();
           throw new Error('Profiling response received while disabled');
         }
 
         if (this.previewCode) {
+          this.throttledScrollCheck();
           throw new Error('Profiling response received while a preview is active');
         }
 
@@ -1417,9 +1419,10 @@ export default {
 
         let currentIndex = this.$store.state.datasets.findIndex(e=>e.dfName == dfName);
 
-        let currentUpdate = this.$store.state.everyDatasetUpdate[currentIndex];
+        let currentUpdate = this.$store.state.everyDatasetUpdate[currentIndex] || 0;
   
         if (currentUpdate !== update) {
+          this.throttledScrollCheck();
           throw new Error(`Dataset updated, ${currentUpdate} -> ${update}`);
         }
 
@@ -1613,7 +1616,7 @@ export default {
         clearPrevious,
         columns
       }, {
-        update: +this.currentDatasetUpdate,
+        update: this.currentDatasetUpdate || 0,
         command: low ? 'profiling_low' : 'profiling',
         dfName,
         columnsCount,
