@@ -1360,7 +1360,9 @@ export const ALL_SOURCE_TYPES = [ ...ALL_CONNECTION_TYPES, ...ALL_DATABASE_TYPES
 export const URL_FUNCTIONS = {
   "domain": "Domain",
   "sub_domain": "Subdomain",
+  "top_domain": "Top-level domain",
   "url_scheme": "Url scheme",
+  "host": "Host",
   "port": "Port",
   "url_path": "Url path",
   "url_params": "Url params"
