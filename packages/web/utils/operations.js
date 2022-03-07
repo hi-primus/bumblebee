@@ -698,19 +698,6 @@ let _operations = {
       description: 'Remove rows with duplicated values in the selected column\(s\).'
     }
   },
-  advancedEditRows: {
-    path: 'ROWS',
-    text: 'Edit rows',
-    label: 'Edit<br/>rows',
-    icons: [
-      { icon: 'mdi-file-document-edit-outline' },
-    ],
-    disabled: ($nuxt)=>!($nuxt.currentDataset && $nuxt.currentDataset.summary),
-    doc: {
-      title: 'Edit rows (advanced)',
-      description: 'Edit rows with a custom function.'
-    }
-  },
   set: {
     path: 'COLUMNS',
     text: ($nuxt)=>$nuxt.selectedColumns.length ? 'Set column' : 'New column',
@@ -1535,6 +1522,20 @@ let _operations = {
       },
     }]
   }),
+
+  advancedEditRows: {
+    path: 'TRANSFORMATIONS',
+    text: 'Apply script to rows',
+    label: 'Apply<br/>script',
+    icons: [
+      { icon: 'mdi-file-document-edit-outline' },
+    ],
+    disabled: ($nuxt)=>!($nuxt.currentDataset && $nuxt.currentDataset.summary),
+    doc: {
+      title: 'Apply script to rows (advanced)',
+      description: 'Edit rows using a custom Python script.'
+    }
+  },
 
   ApplyMacro: {
     text: 'Apply or manage macros',
