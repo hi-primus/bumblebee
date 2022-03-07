@@ -1427,6 +1427,12 @@ export const generateCode = function(commands = [], _request = { type: 'processi
             if (request.window) {
               let window = '';
 
+              // set filtered preview request as not windowed operations
+
+              if (payload?.preview?.filteredPreview && !request.noBufferWindow) {
+                request.noBufferWindow = 'retry';
+              }
+
               if (request.noBufferWindow === 'retry' && !request.retry) {
                 request.noBufferWindow = false;
               }
@@ -1434,6 +1440,7 @@ export const generateCode = function(commands = [], _request = { type: 'processi
               if (!request.noBufferWindow && Array.isArray(request.window)) {
                 window = `, ${request.window[0]}, ${request.window[1]}`;
               }
+              
               if (window) {
                 code += `.iloc("*"${window})`;
               }
