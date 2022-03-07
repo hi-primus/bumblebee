@@ -583,6 +583,10 @@ export default {
       }
     },
 
+    previewCodeDelay () {
+      return this.currentCommand?.preview?.delay || 250;
+    },
+
     command () {
       try {
         if (this.currentCommand) {
@@ -771,70 +775,8 @@ export default {
               return
             }
 
-            if (currentCommand.preview && (currentCommand.preview.type)) {
+            this.setPreviewPlaceholders(this.currentCommand);
 
-              var expectedColumns = getProperty(currentCommand.preview.expectedColumns, [currentCommand]);
-
-              if (expectedColumns == undefined) {
-                if (currentCommand.output_cols && currentCommand.output_cols.length) {
-                  expectedColumns = currentCommand.output_cols.length
-                } else if (currentCommand.columns) {
-                  expectedColumns = currentCommand.columns.length
-                }
-              }
-
-              if (expectedColumns >= 0 && (currentCommand.output_cols || currentCommand.defaultOutputName)) {
-
-                // column name optimization
-                var nameMap = {}
-
-                if (currentCommand.columns && currentCommand.output_cols) {
-                  currentCommand.output_cols.forEach((col, i) => {
-                    nameMap[ '__new__'+currentCommand.columns[i] ] = col
-                  })
-                }
-
-                if (currentCommand.output_col && currentCommand.defaultOutputName) {
-                  nameMap[currentCommand.defaultOutputName] = currentCommand.output_col
-                }
-
-                this.$store.commit('setPreviewNames',nameMap)
-                var newColumns = 0
-                var replacingColumns = 0
-                if (currentCommand.preview.multipleOutputs) {
-                  newColumns = +expectedColumns;
-                } else {
-                  for (const key in nameMap) {
-                    if (nameMap[key] && '__new__'+nameMap[key]!==key) {
-                      newColumns++
-                    } else if (!nameMap[key] || '__new__'+nameMap[key]===key){
-                      replacingColumns++
-                    }
-                  }
-                }
-                if (currentCommand.defaultOutputName && !newColumns) {
-                  newColumns = 1
-                }
-                this.$store.commit('setPreviewInfo', {newColumns, replacingColumns})
-              }
-
-              this.preparePreviewCode(expectedColumns);
-            }
-
-            if (currentCommand.preview && currentCommand.preview.fake==='rename') {
-              var nameMap = {}
-              currentCommand.output_cols.forEach((col, i) => {
-                nameMap[currentCommand.columns[i]] = col
-              })
-              this.$store.commit('setPreviewNames',nameMap)
-            } else if (currentCommand.preview && currentCommand.preview.fake==='duplicate') {
-              var duplicatedColumns = []
-              currentCommand.output_cols.forEach((col, i) => {
-                duplicatedColumns.push({name: currentCommand.columns[i], newName: col})
-              })
-              this.$store.commit('setDuplicatedColumns',duplicatedColumns.length ? duplicatedColumns : undefined)
-              this.$store.commit('setPreviewInfo', {newColumns: duplicatedColumns.length || false})
-            }
           } else {
             this.restorePreview(false)
           }
@@ -1107,6 +1049,82 @@ export default {
       }, 2000);
     },
 
+    setPreviewPlaceholders (currentCommand) {
+
+      if (!currentCommand?.preview) {
+        return;
+      }
+
+      if (currentCommand.preview.type) {
+
+        var expectedColumns = getProperty(currentCommand.preview.expectedColumns, [currentCommand]);
+
+        if (expectedColumns == undefined) {
+          if (currentCommand.output_cols && currentCommand.output_cols.length) {
+            expectedColumns = currentCommand.output_cols.length
+          } else if (currentCommand.columns) {
+            expectedColumns = currentCommand.columns.length
+          }
+        }
+
+        if (expectedColumns >= 0 && (currentCommand.output_cols || currentCommand.defaultOutputName)) {
+
+          // column name optimization
+          var nameMap = {}
+
+          if (currentCommand.columns && currentCommand.output_cols) {
+            currentCommand.output_cols.forEach((col, i) => {
+              nameMap[ '__new__'+currentCommand.columns[i] ] = col
+            })
+          }
+
+          if (currentCommand.output_col && currentCommand.defaultOutputName) {
+            nameMap[currentCommand.defaultOutputName] = currentCommand.output_col
+          }
+
+          this.$store.commit('setPreviewNames',nameMap)
+          var newColumns = 0
+          var replacingColumns = 0
+          if (currentCommand.preview.multipleOutputs) {
+            newColumns = +expectedColumns;
+          } else {
+            for (const key in nameMap) {
+              if (nameMap[key] && '__new__'+nameMap[key]!==key) {
+                newColumns++
+              } else if (!nameMap[key] || '__new__'+nameMap[key]===key){
+                replacingColumns++
+              }
+            }
+          }
+          if (currentCommand.defaultOutputName && !newColumns) {
+            newColumns = 1
+          }
+          this.$store.commit('setPreviewInfo', {newColumns, replacingColumns})
+        }
+
+        this.preparePreviewCode(expectedColumns);
+      }
+
+      if (currentCommand.preview.fake==='rename') {
+
+        var nameMap = {}
+        currentCommand.output_cols.forEach((col, i) => {
+          nameMap[currentCommand.columns[i]] = col
+        })
+        this.$store.commit('setPreviewNames',nameMap)
+
+      } else if (currentCommand.preview.fake==='duplicate') {
+
+        var duplicatedColumns = []
+        currentCommand.output_cols.forEach((col, i) => {
+          duplicatedColumns.push({name: currentCommand.columns[i], newName: col})
+        })
+        this.$store.commit('setDuplicatedColumns', duplicatedColumns.length ? duplicatedColumns : undefined)
+        this.$store.commit('setPreviewInfo', {newColumns: duplicatedColumns.length || false})
+
+      }
+    },
+
     setPreviewError: debounce( function (error) {
       this.previewError = error
     }, 750),
@@ -1340,7 +1358,7 @@ export default {
       }
 
 
-    }, 250),
+    }, function () {console.log(this); return this.previewCodeDelay || 250} ),
 
     getCommandTitle() {
       try {

@@ -31,8 +31,9 @@ export const throttle = (func, limit) => {
 	let lastFunc
 	let lastRan
 	return function () {
-		const context = this
+    const context = this
 		const args = arguments
+    limit = typeof limit === 'function' ? limit.apply(context, args) : limit
 		if (!lastRan) {
 			func.apply(context, args)
 			lastRan = Date.now()
@@ -144,6 +145,7 @@ export const asyncDebounce = (func, delay) => {
   return function () {
     const context = this
     const args = arguments
+    delay = typeof delay === 'function' ? delay.apply(context, args) : delay
     return new Promise((resolve, reject)=>{
       clearTimeout(inDebounce)
       inDebounce = setTimeout(async () => {
@@ -163,6 +165,7 @@ export const debounce = (func, delay) => {
   return function () {
     const context = this
     const args = arguments
+    delay = typeof delay === 'function' ? delay.apply(context, args) : delay
     clearTimeout(inDebounce)
     inDebounce = setTimeout(() => func.apply(context, args), delay)
   }

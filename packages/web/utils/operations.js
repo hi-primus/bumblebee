@@ -2626,7 +2626,7 @@ export const commandsHandlers = {
       funcDefinition: "return row",
       preview: {
         type: "advancedEditRows",
-        delay: 500,
+        delay: 800,
         expectedColumns: -1,
         datasetPreview: true,
       },
@@ -2809,7 +2809,7 @@ export const commandsHandlers = {
           },
           expectedColumns: -1,
           type: "join",
-          delay: 500,
+          delay: 800,
           datasetPreview: true,
           noBufferWindow: true,
           noRowsError: 'No match found in sample'
