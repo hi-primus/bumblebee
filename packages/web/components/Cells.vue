@@ -1358,7 +1358,7 @@ export default {
       }
 
 
-    }, function () {console.log(this); return this.previewCodeDelay || 250} ),
+    }, function () {return this.previewCodeDelay || 250} ),
 
     getCommandTitle() {
       try {
