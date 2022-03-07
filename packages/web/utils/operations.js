@@ -4391,6 +4391,7 @@ export const commandsHandlers = {
         keep: false,
         preview: {
           expectedColumns: -1,
+          latePreview: true,
           type: "one_hot_encode"
         }
       };
