@@ -3597,12 +3597,18 @@ export const commandsHandlers = {
     payload (columns, payload = {}) {
       return {
         columns,
+        output_cols: columns.map((e) => ""),
         language: "english",
         preview: {
           type: "removeStopWords"
         }
       }
-    }
+    },
+    content: (payload) =>
+    `<b>Remove stop words</b> in ${multipleContent(
+      [payload.columns],
+      "hl--cols"
+    )} using ${hlParam(payload.language)}`,
   },
 
   setFormat: {
