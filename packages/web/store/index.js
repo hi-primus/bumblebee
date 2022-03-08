@@ -1174,14 +1174,36 @@ export const actions = {
     await dispatch('getConnections', payload);
   },
 
+  async afterWholeProfiling ({ state, commit, dispatch }, {error = false} = {} ) {
+    commit('mutation', {mutate: 'updatingWholeProfile', payload: false });
+    await dispatch('runAfterProfileCallback', {error, type: 'final'});
+  },
+
   // events
 
-  async afterFirstProfiling ({state, commit}) {
+  async afterPreliminaryProfiling ({state, commit, dispatch}) {
+    commit('previewDefault');
+    await dispatch('runAfterProfileCallback', {type: 'preliminary'});
+  },
+  
+  async runAfterProfileCallback ({state, commit}, {error = false, type = false} = {}) {
+    let result = true;
     if (state.afterProfileCallback && typeof state.afterProfileCallback === 'function') {
-      await state.afterProfileCallback();
+      result = await state.afterProfileCallback(type, error);
+    }
+    if (result || result === undefined) {
       commit('mutation', { mutate: 'afterProfileCallback', payload: false });
     }
-    commit('previewDefault');    
+  },
+
+  afterNewResults ({ commit }, payload) {
+    commit('mutation', { mutate: 'gettingNewResults', payload: '' });
+    commit('previewDefault');
+  },
+
+  async afterProfiling ({ commit, dispatch }, payload) {
+    commit('previewDefault', { names: ['PreviewNames'] });
+    await dispatch('runAfterProfileCallback');
   },
 
   // cells
@@ -1392,15 +1414,6 @@ export const actions = {
       default:
         commit('mutation', { mutate: 'profilingsPromises', payload: {} });
     }
-  },
-
-  afterNewResults ({ commit }, payload) {
-    commit('mutation', { mutate: 'gettingNewResults', payload: '' });
-    commit('previewDefault');
-  },
-
-  afterNewProfiling ({ commit }, payload) {
-    commit('previewDefault', { names: ['PreviewNames'] });
   },
 
   async loadOptimus ({commit, state, dispatch, getters}, { slug, socketPost }) {
@@ -1702,7 +1715,7 @@ export const actions = {
     await dispatch('setDataset', { dataset, avoidReload: avoidReload || partial || partial===0, partial: partial || partial===0 });
 
     if (state.gettingNewResults) {
-      await dispatch('afterNewProfiling');
+      await dispatch('afterProfiling');
     }
 
     console.debug('[DEBUG] Loading profiling Done', dfName);
@@ -1748,7 +1761,7 @@ export const actions = {
       
       profile = await dispatch('setProfiling', { dfName, dataset, avoidReload: true });
 
-      dispatch('afterFirstProfiling');
+      dispatch('afterPreliminaryProfiling');
 
       if ( (clearPrevious || avoidReload) && found >= 0 ) {
         commit('updateDataset', { tab: found } );
