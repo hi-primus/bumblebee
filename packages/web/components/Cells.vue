@@ -155,18 +155,18 @@
                         @showConnections="$emit('showConnections', $event)"
                       />
                     </template>
-                    <v-btn depressed class="btn-squared" :key="'remove'+i+field.key" color="error" @click="currentCommand = field.removeOne(currentCommand, i)">
+                    <v-btn depressed class="btn-squared" :key="'remove'+i+field.key" color="error" @click="currentCommand = (field.removeOne || defaultRemoveOne(field.key))(currentCommand, i)">
                       <v-icon>close</v-icon>
                     </v-btn>
                   </template>
                   <v-btn
-                    :key="'addNewRepeat'+field.key"
+                    :key="'addNewRepeat-'+field.key"
                     outlined
                     rounded
-                    style="margin-left: auto; margin-right: auto; margin-top: -4px"
+                    style="margin-left: auto; margin-right: auto; margin-top: -4px; margin-bottom: 14px;"
                     class="btn-squared"
                     color="primary"
-                    @click="currentCommand = field.addOne(currentCommand)"
+                    @click="currentCommand = (field.addOne || defaultAddOne(field.key))(currentCommand)"
                   >
                     <v-icon>add</v-icon>
                   </v-btn>
@@ -1152,6 +1152,20 @@ export default {
     runCells (forceAll, ignoreFrom, beforeRunCells) {
       var payload = { forceAll, ignoreFrom, socketPost: this.socketPost, clearPrevious: true, beforeRunCells, methods: this.commandMethods };
       return this.$store.dispatch('getCellsResult', { forcePromise: true, payload });
+    },
+
+    defaultAddOne(key) {
+      return (c) => {
+        c[key].push("");
+        return c;
+      }
+    },
+
+    defaultRemoveOne(key) {
+      return (c, i) => {
+        c[key].splice(i, 1);
+        return c;
+      }
     },
 
     forceFileDownload(url, filename){
