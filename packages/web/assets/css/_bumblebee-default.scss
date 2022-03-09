@@ -996,6 +996,12 @@ table {
   }
 }
 
+.o-field {
+  .v-chip.v-size--default {
+    font-size: 13px;
+  }
+}
+
 .chips-no-items .v-input__append-inner:last-of-type {
   display: none !important;
 }
