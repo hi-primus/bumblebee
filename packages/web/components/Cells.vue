@@ -1416,9 +1416,9 @@ export default {
       var columnDateFormats = undefined;
 
       if (!columns || !columns.length) {
-        columns = this.columns.map(e=>this.currentDataset.columns[e.index].name)
-        columnDataTypes = this.columns.map(e=>this.currentDataset.columns[e.index].stats.inferred_data_type.data_type)
-        columnDateFormats = this.columns.map(e=>transformDateFromPython(this.currentDataset.columns[e.index].stats.inferred_data_type.format)).filter(e=>e);
+        columns = this.columns.map(e=>this.currentDataset.columns[e.index]?.name)
+        columnDataTypes = this.columns.map(e=>this.currentDataset.columns[e.index]?.stats?.inferred_data_type.data_type)
+        columnDateFormats = this.columns.map(e=>transformDateFromPython(this.currentDataset.columns[e.index]?.stats?.inferred_data_type.format)).filter(e=>e);
       } else {
         var columnIndices = namesToIndices(columns, this.currentDataset.columns)
         columnDataTypes = columnIndices.map(i=>this.currentDataset.columns[i].stats.inferred_data_type.data_type)
