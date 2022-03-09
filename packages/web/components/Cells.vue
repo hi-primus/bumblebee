@@ -899,7 +899,7 @@ export default {
           ...cellToAdd,
           code: this.getCode(cellToAdd),
           content: this.getOperationContent(cellToAdd)
-        }, false, noCall, noCall);
+        }, false, false, noCall);
       }
     },
 
@@ -1540,7 +1540,7 @@ export default {
               ...cell,
               code: this.getCode(cell),
               content: this.getOperationContent(cell)
-            });
+            }, false, false);
           }
 
           this.clearTextSelection()
@@ -1596,7 +1596,7 @@ export default {
       if (command.request.toCell === false) {
         await this.runCell(command);
       } else {
-        await this.addCell(toCell, { ...command, code, content }, true, true );
+        await this.addCell(toCell, { ...command, code, content }, true, false );
       }
 
       if (command.request.createsNew) {
@@ -1625,7 +1625,7 @@ export default {
           this.$store.commit('previewDefault');
           if (runCode) {
             if (this.isEditing) {
-              await this.runCodeNow(true, -1, undefined, false, true)
+              await this.runCodeNow(true, -1, undefined, false, true);
             } else {
               await this.runCodeNow(false);
             }
@@ -1654,10 +1654,10 @@ export default {
         var codeText = await this.codeText();
         if (codeText.trim()==='') {
           this.removeErrorAlert("all")
-          this.runCode() // deleting every cell
+          this.runCode(true) // deleting every cell
           return;
         }
-        this.runCode() // reordering or deleting
+        this.runCode(true) // reordering or deleting
         return;
       }
     },

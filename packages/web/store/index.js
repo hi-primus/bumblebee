@@ -1478,29 +1478,51 @@ export const actions = {
     return dispatch('getPromise', promisePayload);
   },
 
-  async loadCellsResult ({dispatch, state, getters, commit}, { forceAll, ignoreFrom, socketPost, clearPrevious, newOnly, beforeRunCells, methods }) {
-    
-    commit('mutation', { mutate: 'updatingWorkspace', payload: false });
-    
+  async loadCellsResult ({dispatch, state, getters, commit}, { forceAll = false, ignoreFrom = -1, socketPost, clearPrevious = true, beforeRunCells, methods } = {}) {
+
     console.debug('[DEBUG] Loading cells result');
 
-    await dispatch('checkSocketPost', socketPost);
+    commit('mutation', { mutate: 'updatingWorkspace', payload: false });
     
     try {
 
-      var optimus = await dispatch('getOptimus', { payload: { socketPost }} );
-      
-      let generators = await dispatch('customCommands/setAllGenerators', { socketPost }, { root: true });
+      // prerequisites
 
+      await dispatch('checkSocketPost', socketPost);
+      var optimus = await dispatch('getOptimus', { payload: { socketPost }} );
+      let generators = await dispatch('customCommands/setAllGenerators', { socketPost }, { root: true });
       var init = [optimus, generators];
 
-      if (ignoreFrom>=0) {
-        forceAll = true;
+      let firstPendingOperation = 0;
+
+      if (forceAll) {
+        await dispatch('markCells', { mark: false, ignoreFrom: -1 });
+      } else {
+        firstPendingOperation = getters.cells.findIndex(operation => !operation.done);
       }
 
-      // tries all the code so it can check if there's any changes in previous cells
+      if (ignoreFrom >= 0) {
 
-      newOnly = false;
+        if (ignoreFrom < firstPendingOperation) {
+          forceAll = true;
+          await dispatch('markCells', { mark: false, ignoreFrom: -1 });
+          firstPendingOperation = 0;
+        } else {
+          await dispatch('markCells', { mark: false, ignoreFrom });
+        }
+      }
+
+      let toRunOperations = getters.cells
+
+      if (ignoreFrom>=0) {
+        toRunOperations = toRunOperations.filter((operation, index) => index < ignoreFrom);
+      }
+
+      toRunOperations = toRunOperations.filter((operation, index) => index >= firstPendingOperation);
+
+      let newOnly = !forceAll;
+
+      // tries all the code so it can check if there's any changes in previous cells
 
       var code = await dispatch('codeText', { newOnly, ignoreFrom });
       var codePayload = await dispatch('codeCommands', { newOnly, ignoreFrom });
@@ -1528,10 +1550,6 @@ export const actions = {
         rerun = true;
       }
       else if (!forceAll) {
-
-        // runs only the unmarked cells
-
-        newOnly = true;
         code = await dispatch('codeText', { newOnly, ignoreFrom });
         codePayload = await dispatch('codeCommands', { newOnly, ignoreFrom });
       }
