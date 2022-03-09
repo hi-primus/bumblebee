@@ -580,7 +580,7 @@ export const hlCols = (text) => {
   return spanClass(`'${text}'`,'hl--cols')
 }
 
-export const multipleContent = (arrays, colors, arraySep = ', ', pairSep = ', ', brackets = true, parentheses = true) => {
+export const multipleContent = (arrays, colors, arraySep = null, pairSep = ', ', brackets = true, parentheses = true) => {
 
   arrays = arrays.map(array=>{
     if (!array || !array.join || !array.map)
@@ -592,8 +592,28 @@ export const multipleContent = (arrays, colors, arraySep = ', ', pairSep = ', ',
     colors = [colors]
   }
 
-  var array = arrays[0]
-  var str = ''
+  let array = arrays[0]
+  let str = ''
+
+  let joinArray;
+
+  if (typeof arraySep == 'string') {
+    joinArray = (a) => a.join(arraySep)
+  } else if (typeof arraySep == 'function') {
+    joinArray = arraySep
+  } else {
+    joinArray = arrayJoin
+  }
+  
+  let joinPair;
+
+  if (typeof pairSep == 'string') {
+    joinPair = (a) => a.join(pairSep)
+  } else if (typeof pairSep == 'function') {
+    joinPair = pairSep
+  } else {
+    joinPair = arrayJoin
+  }
 
   if (arrays.length===1) {
     if (array.length==1) {
@@ -602,13 +622,13 @@ export const multipleContent = (arrays, colors, arraySep = ', ', pairSep = ', ',
       str = spanClass(`'${array[0]}'`,colors[0])
     } else {
       // ['a', 'aa']
-      str = array.map(e=>spanClass(`'${e}'`,colors[0])).join(arraySep)
+      str = joinPair(array.map(e=>spanClass(`'${e}'`,colors[0])))
     }
   } else {
     array = arrays[0].map((e,i)=>{
-      return arrays.map((arr, j)=>{
-        return spanClass(`'${arr[i]}'`,colors[j] || colors[0])
-      }).join(pairSep)
+      return joinPair(arrays.map((arr, j)=>{
+        return joinArray([arr[i]].flat(1).map(e=>spanClass(`'${e}'`,colors[j] || colors[0])))
+      }))
     })
     if (array.length==1) {
       // 'a', 'b'
@@ -617,11 +637,9 @@ export const multipleContent = (arrays, colors, arraySep = ', ', pairSep = ', ',
     } else {
       // [('a', 'b'), ('aa', 'bb')]
       if (parentheses) {
-        arraySep = ")"+arraySep+"("
-      }
-      str = array.join(arraySep)
-      if (parentheses) {
-        str = `(${str})`
+        str = joinArray(array.map(e => `(${e})`))
+      } else {
+        str = joinArray(array)
       }
     }
   }
