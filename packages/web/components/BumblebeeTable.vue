@@ -649,7 +649,7 @@ export default {
       'currentPreviewInfo',
     ]),
 
-    ...mapState(['allTypes', 'profilePreview', 'loadPreview', 'enableIncrementalProfiling']),
+    ...mapState(['allTypes', 'profilePreview', 'loadPreview', 'enableIncrementalProfiling', 'updatingProfile']),
 
     gettingNewResults: {
       get () {
@@ -1347,9 +1347,11 @@ export default {
       return this.checkVisibleColumns(false);
     },
 
-    // allColumns (columns) {
-    //   this.checkVisibleColumns(false);
-    // },
+    updatingProfile (value) {
+      if (!value) {
+        return this.checkVisibleColumns(false);
+      }
+    },
 
   },
 
