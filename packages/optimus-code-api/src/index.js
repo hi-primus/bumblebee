@@ -1042,37 +1042,37 @@ export const codeGenerators = {
 
     let output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (['final','processing',undefined].includes(payload.request.type)) ? '' : '__new__')
 
-    let replace = payload.replace;
+    let replaces = payload.replace;
 
     if (payload._replace_by_string) {
-      replace = `"${escapeQuotes(replace)}"`;
+      replaces = replaces.map(replace=>`"${escapeQuotes(replace)}"`);
     }
 
-    if (!replace) {
-      replace = "None";
-    }
+    replaces = replaces.map(replace=>replace ? replace : 'None');
 
-    let search = payload.search
+    let searchs = payload.search
 
     if (payload._search_by_string) {
-      search = search.map(v=>`"${escapeQuotes(v)}"`);
+      searchs = searchs.map(search=>'['+search.map(v=>`"${escapeQuotes(v)}"`).join(', ')+']');
     }
+
+    searchs = searchs.map((search, i) => `(${search}, ${replaces[i]})`);
+
     let str = `.cols.replace(`
       +_argument
-      +`, search=[${search.join(',')}]`
-      +`, replace_by=${replace}`
+      +`, search=[${searchs.join(', ')}]`
       +`, search_by="${payload.search_by}"`
       +`, ignore_case=${!payload.match_case ? 'True' : 'False'}`
       +( (output_cols_argument) ? `, output_cols=${output_cols_argument}` : '')
       +')';
 
-    if (payload._search_by_string) {
-      str += ( (['profile', 'preview'].includes(payload.request.type) && _argument) ? `.cols.find(${_argument}, sub=[${search.join(',')}], ignore_case=${!payload.match_case ? 'True' : 'False'})` : '');
-    }
+    // if (payload._search_by_string) {
+    //   str += ( (['profile', 'preview'].includes(payload.request.type) && _argument) ? `.cols.find(${_argument}, sub=[${search.join(',')}], ignore_case=${!payload.match_case ? 'True' : 'False'})` : '');
+    // }
 
-    if (payload._replace_by_string) {
-      str += ( (['profile', 'preview'].includes(payload.request.type) && payload.replace && output_cols_argument) ? `.cols.find(${output_cols_argument}, sub=["${payload.replace}"])` : '');
-    }
+    // if (payload._replace_by_string) {
+    //   str += ( (['profile', 'preview'].includes(payload.request.type) && payload.replace && output_cols_argument) ? `.cols.find(${output_cols_argument}, sub=["${payload.replace}"])` : '');
+    // }
 
     return str;
   },

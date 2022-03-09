@@ -3055,6 +3055,7 @@ export const commandsHandlers = {
           type: "repeat",
           key: "aggregations",
           add: true,
+          row: true,
           addOne: (c) => {
             c.input_cols.push(c.allColumns[0]);
             c.aggregations.push("count");
@@ -3981,20 +3982,41 @@ export const commandsHandlers = {
       },
       fields: [
         {
-          type: "chips",
-          key: "search",
-          label: "Find",
-          clearable: true,
+          type: "text",
+          text: "Replaces",
+        },
+        {
+          type: "repeat",
+          key: "replace",
+          add: true,
+          addOne: (c) => {
+            c.search.push([]);
+            c.replace.push("");
+            return c;
+          },
+          removeOne: (c, i) => {
+            c.search.splice(i, 1);
+            c.replace.splice(i, 1);
+            return c;
+          },
+          fields: [
+            {
+              type: "chips",
+              key: "search",
+              label: "Find",
+              clearable: true,
+            },
+            {
+              type: "field",
+              key: "replace",
+              label: "Replace",
+            },
+          ]
         },
         {
           type: "switch",
           key: "match_case",
           label: (c) => "Match case: " + (c.match_case ? "Yes" : "No"),
-        },
-        {
-          type: "field",
-          key: "replace",
-          label: "Replace",
         },
         {
           type: "select",
@@ -4035,7 +4057,7 @@ export const commandsHandlers = {
       ],
       output_cols: true,
       validate: (command) => {
-        if (!command.search.length) {
+        if (!command.search.some(e => !e.length)) {
           return 0;
         }
         return (
@@ -4047,8 +4069,8 @@ export const commandsHandlers = {
     payload: (columns, payload = {}) => ({
       command: "replace",
       columns: columns,
-      search: [],
-      replace: "",
+      search: [[]],
+      replace: [""],
       search_by: "chars",
       output_cols: columns.map((e) => e),
       match_case: false,
@@ -4060,14 +4082,15 @@ export const commandsHandlers = {
         highlightColor: { default: "red", preview: "green" },
       },
     }),
-    content: (payload) =>
-      `<b>Replace</b> ${multipleContent(
-        [payload.search],
-        "hl--param"
-      )} with ${hlParam(payload.replace)} in ${multipleContent(
-        [payload.columns],
-        "hl--cols"
-      )}`,
+    content: (payload) => `<b>Replace</b> ${multipleContent(
+      [payload.search, payload.replace],
+      "hl--param",
+      null, " with ",
+      false, false
+    )} in ${multipleContent(
+      [payload.columns],
+      "hl--cols"
+    )}`,
   },
 
   set: {

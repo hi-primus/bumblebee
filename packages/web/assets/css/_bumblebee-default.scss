@@ -2429,7 +2429,26 @@ $editor-top-padding: 4px;
     padding-top: 6px;
 
     width: calc(100% + 44px);
-
+    .field-group {
+      width: 100%;
+      position: relative;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-content: flex-start;
+            
+      .btn-repeat {
+        position: absolute;
+        top: 2px;
+        right: -2px;
+        height: 18px;
+        min-width: 18px;
+        padding: 0;
+        i {
+          font-size: 16px;
+        }
+      }
+    }
     .o-field {
       width: 100%;
       &.half {
@@ -2829,6 +2848,7 @@ $editor-top-padding: 4px;
   min-width: 36px !important;
   padding: 0 !important;
 }
+
 
 .append-no-ma .v-input__append-outer {
   margin: 0 !important
