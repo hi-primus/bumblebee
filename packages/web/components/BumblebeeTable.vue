@@ -1421,11 +1421,6 @@ export default {
           throw new Error('Profiling response received while disabled');
         }
 
-        if (this.previewCode) {
-          this.throttledScrollCheck();
-          throw new Error('Profiling response received while a preview is active');
-        }
-
         let { dfName, range, group, columnsCount, sample, update } = response.reply;
 
         let currentIndex = this.$store.state.datasets.findIndex(e=>e.dfName == dfName);
@@ -1593,7 +1588,7 @@ export default {
 
       let range = false;
 
-      let filteredColumns = this.allColumns.map(e=>e.name);
+      let filteredColumns = this.allColumns.filter(e=>!e.preview).map(e=>e.name);
       let filteredOutColumns = this.notVisibleColumnNames;
       let columns;
 
