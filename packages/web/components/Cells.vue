@@ -1821,8 +1821,8 @@ export default {
         this.commandsDisabled = true;
         this.isEditing = true;
         cell.payload._toCell = index;
+
         let afterProfile = (type, error) => {
-          console.log("afterProfile", type, error)
           if (error) {
             return false;
           }
@@ -1830,6 +1830,7 @@ export default {
           this.commandHandle(cell);
           return true;
         };
+
         this.$store.commit('mutation', { mutate: 'afterProfileCallback', payload: afterProfile });
         await this.runCodeNow(true, index, undefined, false, false)
       }
