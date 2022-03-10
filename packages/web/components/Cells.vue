@@ -313,11 +313,17 @@
               v-html="cell.content || cell.code"
             >
             </div>
-            <div class="right-cell-btn">
+            <div class="right-cell-section">
               <v-icon
+                class="close-btn"
                 small
                 @click="removeCell(index, true)"
               >close</v-icon>
+              <v-icon
+                class="edit-btn"
+                small
+                @click="editCell(index)"
+              >edit</v-icon>
             </div>
           </div>
         </div>
@@ -355,12 +361,18 @@
             >
             </div>
             <div
-              class="right-cell-btn"
-              @click="removeCell(index, false)"
+              class="right-cell-section"
             >
               <v-icon
+                class="close-btn"
                 small
+                @click="removeCell(index, false)"
               >close</v-icon>
+              <v-icon
+                class="edit-btn"
+                small
+                @click="editCell(index)"
+              >edit</v-icon>
             </div>
           </div>
         </div>

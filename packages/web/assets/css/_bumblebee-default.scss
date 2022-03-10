@@ -1551,6 +1551,7 @@ $side-controls-width: 54px;
       background-color: $highlight-blue;
     }
     .cell {
+      min-height: 32px;
       width: 100%;
       overflow: hidden;
       display: flex;
@@ -1579,18 +1580,20 @@ $side-controls-width: 54px;
       }
     }
 
-    .right-cell-btn {
+    .right-cell-section {
       opacity: 0;
       transition: opacity 0.3s ease-in-out;
       display: flex;
+      flex-direction: column;
       align-items: center;
+      justify-content: space-evenly;
       position: relative;
       min-width: 20px;
       cursor: pointer;
       // left: -4px;
     }
     &:hover{
-      .right-cell-btn,
+      .right-cell-section,
       .left-handle>.v-icon {
         opacity: 1;
       }
@@ -1629,6 +1632,7 @@ $editor-top-padding: 4px;
   font-size: 14px !important;
   border-radius: 4px;
   padding: 4px 4px 4px 6px;
+  line-height: 22px;
   font-family: $font-mono;
   word-break: break-all;
   cursor: pointer;

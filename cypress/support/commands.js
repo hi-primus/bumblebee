@@ -102,7 +102,7 @@ Cypress.Commands.add('clearCommands', (type = 'commands') => {
       let elements = body.find(`.${type}-cells > .cell-container`)
       for (let i = 0; i < elements.length; i++) {
         cy.wait(100)
-        cy.get(`.${type}-cells > .cell-container:last-child > .cell > .right-cell-btn`).click()
+        cy.get(`.${type}-cells > .cell-container:last-child > .cell > .right-cell-section > .close-btn`).click()
       }
       btn = body.find('#toolbar-icon-cells:not(.active)')[0]
       if (btn && !btn.disabled) {
