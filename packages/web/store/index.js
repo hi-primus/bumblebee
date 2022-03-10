@@ -94,6 +94,7 @@ const defaultState = {
   updatingWorkspace: false,
   updatingPreview: false,
   updatingWholeProfile: false,
+  updatingPreviewProfile: false,
   editing: false,
   afterProfileCallback: false,
   coiledAvailable: false,
@@ -465,6 +466,7 @@ export const mutations = {
       state.tab = found;
       state.updatingProfile = false;
       state.updatingWholeProfile = false;
+      state.updatingPreviewProfile = false;
     }
 
     Vue.set(state.everyDatasetUpdate, state.tab, (state.everyDatasetUpdate[state.tab] || 0) + 1);
@@ -609,7 +611,7 @@ export const mutations = {
     Vue.set(state.everyPreviewInfo,state.tab,state.everyPreviewInfo[state.tab]);
   },
 
-  selection (state, {tab, columns, ranged, clear, text} ) {
+  selection (state, {tab, columns, ranged, clear, text} = {} ) {
 
     if (tab === undefined) {
       tab = state.tab;
@@ -628,14 +630,6 @@ export const mutations = {
     ) {
       return
     }
-
-    state.properties.filter(p=>p.clearOnSelection).forEach(p=>{
-      if (p.multiple) {
-        Vue.set(state['every'+p.name], tab, false)
-      } else {
-        state[p.name] = false
-      }
-    })
 
     if (clear) {
       Vue.set(state.datasetSelection,tab,{
@@ -680,6 +674,17 @@ export const mutations = {
       text: textSelected
     })
 
+  },
+
+  clearSelectionProperties (state) {
+    let tab = state.tab;
+    state.properties.filter(p=>p.clearOnSelection).forEach(p=>{
+      if (p.multiple) {
+        Vue.set(state['every'+p.name], tab, false)
+      } else {
+        state[p.name] = false
+      }
+    })
   }
 
 }
@@ -1179,10 +1184,14 @@ export const actions = {
     await dispatch('runAfterProfileCallback', {error, type: 'final'});
   },
 
+  async afterPreviewProfiling ({ state, commit, dispatch }, {error = false} = {} ) {
+    commit('mutation', {mutate: 'updatingPreviewProfile', payload: false });
+    await dispatch('runAfterProfileCallback', {error, type: 'preview'});
+  },
+
   // events
 
   async afterPreliminaryProfiling ({state, commit, dispatch}) {
-    commit('previewDefault');
     await dispatch('runAfterProfileCallback', {type: 'preliminary'});
   },
   
@@ -1729,14 +1738,11 @@ export const actions = {
   async setProfiling ({ dispatch, state, getters, commit }, { dfName, dataset, avoidReload, partial }) {
 
     dataset.dfName = dfName;
-    console.debug('[DATASET] Setting', { dataset, to: dfName });
     await dispatch('setDataset', { dataset, avoidReload: avoidReload || partial || partial===0, partial: partial || partial===0 });
 
     if (state.gettingNewResults) {
       await dispatch('afterProfiling');
     }
-
-    console.debug('[DEBUG] Loading profiling Done', dfName);
 
     commit('kernel', 'done');
 
@@ -1935,7 +1941,7 @@ export const actions = {
         var codePayload = {
           request: {
             type: 'preview',
-            dfName: 'df_preview',
+            dfName: 'preview_df',
             sample: true,
             window: [from, to+1],
             noBufferWindow,
@@ -2013,6 +2019,7 @@ export const actions = {
     commit('mutation', { mutate: 'tab', payload: value });
     commit('mutation', { mutate: 'updatingProfile', payload: false });
     commit('mutation', { mutate: 'updatingWholeProfile', payload: false });
+    commit('mutation', { mutate: 'updatingPreviewProfile', payload: false });
   },
 
   async mutateAndSave ({dispatch, commit}, { mutate, payload }) {
@@ -2081,7 +2088,7 @@ export const getters = {
   loadingStatus (state) {
     if (state.updatingWorkspace) {
       return "Updating workspace";
-    } else if (state.updatingPreview) {
+    } else if (state.updatingPreview || state.updatingPreviewProfile) {
       return "Updating preview";
     } else if (state.updatingProfile || state.updatingWholeProfile) {
       return "Updating profile";

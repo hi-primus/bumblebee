@@ -1851,7 +1851,7 @@ export default {
         cell.payload._toCell = index;
 
         let afterProfile = (type, error) => {
-          if (error) {
+          if (error || type == 'preview') {
             return false;
           }
           this.commandsDisabled = false;

@@ -528,7 +528,8 @@ import {
   ErrorWithResponse,
   parseResponse, arraysEqual, 
   getColumnsRange, throttle,
-  asyncDebounce, debounce, objectMap,
+  asyncDebounce, debounce, 
+  objectFilter, objectMap,
   optimizeRanges, escapeQuotes,
   namesToIndices, getSelectedText,
   getPropertyAsync, replaceTags
@@ -1119,7 +1120,7 @@ export default {
             mismatch: column.stats.mismatch,
             total: +profile.summary.rows_count,
             count_uniques: column.stats.count_uniques,
-            hist: (column.stats.hist && column.stats.hist[0]) ? column.stats.hist : undefined,
+            hist: ((column.stats.hist && column.stats.hist[0]) ? column.stats.hist : undefined) || column.hist || undefined,
             frequency: ((column.stats.frequency) ? column.stats.frequency : undefined) || column.frequency || undefined,
             zeros: column.stats.zeros,
             null: column.stats.null,
@@ -1391,15 +1392,17 @@ export default {
 
           let columns = Object.fromEntries(names.map(c=>[c.title, {}]));
 
-          let dataset = { columns, done: true, code };
+          let dataset = { columns, done: true, code, summary: {} };
 
-          this.$store.commit('mutation', {mutate: 'profilePreview', payload: dataset, summary: {}})
+          this.$store.commit('mutation', {mutate: 'profilePreview', payload: dataset })
 
         }
 
         if (response.data.result.matches_count!==undefined) {
           this.$store.commit('setPreviewInfo', {rowHighlights: +response.data.result.matches_count});
         }
+
+        this.checkVisibleColumns();
 
         return true;
       } catch (err) {
@@ -1411,6 +1414,8 @@ export default {
 
     async commandListener__profiling (response) {
 
+      let preview;
+
       try {
 
         if (!this.enableIncrementalProfiling) {
@@ -1418,17 +1423,32 @@ export default {
           throw new Error('Profiling response received while disabled');
         }
 
-        let { dfName, range, group, columnsCount, sample, update } = response.reply;
+        let { dfName, range, group, columnsCount, sample, update, code, preview: _preview } = response.reply;
+
+        preview = _preview;
+
+        // override columnsCount on preview requests
+        
+        if (preview) {
+          columnsCount = this.allColumns.filter(e=>e.preview).length; 
+        }
 
         let currentIndex = this.$store.state.datasets.findIndex(e=>e.dfName == dfName);
 
-        let currentUpdate = this.$store.state.everyDatasetUpdate[currentIndex] || 0;
-  
-        if (currentUpdate !== update) {
-          this.throttledScrollCheck();
-          throw new Error(`Dataset updated, ${currentUpdate} -> ${update}`);
+        if (preview) {
+          let currentCode = this.profilePreview.code;
+          if (currentCode !== code) {
+            this.throttledScrollCheck();
+            throw new ErrorWithResponse(`Profile preview code changed, ${currentCode} -> ${code}`, response);
+          }
+        } else {
+          let currentUpdate = this.$store.state.everyDatasetUpdate[currentIndex] || 0;
+          if (currentUpdate !== update) {
+            this.throttledScrollCheck();
+            throw new ErrorWithResponse(`Dataset updated, ${currentUpdate} -> ${update}`, response);
+          }
         }
-  
+
         if (!response || !response.data || !response.data.result || response.data.status == "error") {
           throw new ErrorWithResponse(`Bad response`, response)
         }
@@ -1443,27 +1463,46 @@ export default {
         // use rows_count from store
 
         let rowsCount = this.$store.getters.currentDataset?.summary?.rows_count || dataset.summary.rows_count;
+        
+        if (preview) {
+          rowsCount = this.profilePreview?.summary?.rows_count || rowsCount;
+        }
+
         dataset.summary.rows_count = rowsCount;
 
-        this.$store.dispatch('setProfiling', { dfName, dataset, avoidReload: true, partial: range[0] });
+        if (preview) {
+          // filter out non-preview columns          
+          let previewColumnNames = this.allColumns.filter(e=>e.preview).map(e=>e.name);
+          dataset.columns = objectFilter(dataset.columns, ([k, c]) => previewColumnNames.includes(k));
+          dataset.code = code;
 
+          this.$store.commit('mutation', {mutate: 'profilePreview', payload: dataset });
+        } else {
+          this.$store.dispatch('setProfiling', { dfName, dataset, avoidReload: true, partial: range[0] });
+        }
+
+        let datasetColumns = dataset.columns;
+
+        // transform columns object to array
+        if (typeof datasetColumns === 'object') {
+          datasetColumns = Object.entries(datasetColumns).map(([name, column]) => ({...column, name}));
+        }
+
+        let updatedColumns = datasetColumns.filter(c=>c => c.done || c.last_sampled_row == -1 || c.last_sampled_row >= sample[1]);
+        
         let secondSample = false;
-
-        let updatedColumns = dataset.columns.filter(c => [sample[1], -1].includes(c.last_sampled_row) || c.done).map(c=>c.name);
 
         if (sample[0] == 0) {
           
-
           // sideways on first sample
           group += 1;
-          [range, group] = this.getColumnRange(group);
+          [range, group] = this.getColumnRange(group, !preview);
 
           if (updatedColumns.length >= columnsCount) {
             // out of first sample
             group = 0;
-            [range, group] = this.getColumnRange(group);
+            [range, group] = this.getColumnRange(group, !preview);
             secondSample = true;
-            updatedColumns = [];
           }
         }
 
@@ -1473,10 +1512,12 @@ export default {
           this.sampleSize *= SAMPLE_SIZE_FACTOR;
           sample = [sample[1], sample[1] + this.sampleSize];
 
+          updatedColumns = datasetColumns.filter(c=>c => c.done || c.last_sampled_row == -1 || c.last_sampled_row >= sample[1]);
+
           // if sample is out of range, we are done, go to the next group if available
           if (sample[0] >= rowsCount && updatedColumns.length < columnsCount) {
             group += 1;
-            [range, group] = this.getColumnRange(group);
+            [range, group] = this.getColumnRange(group, !preview);
             this.sampleSize = INITIAL_SAMPLE_SIZE*SAMPLE_SIZE_FACTOR;
             sample = [INITIAL_SAMPLE_SIZE, INITIAL_SAMPLE_SIZE+this.sampleSize];
           }
@@ -1486,39 +1527,51 @@ export default {
         if (updatedColumns.length >= columnsCount && sample[0] >= rowsCount) {
           // if every column is done, and we're trying to  we are done
           console.debug('[PROFILE] Profiling done', dfName);
-          await this.$store.dispatch('afterWholeProfiling');
+          if (preview) {
+            this.$store.dispatch('afterPreviewProfiling')
+          } else {
+            this.$store.dispatch('afterWholeProfiling');
+          }
         } else {
           // if not, we need to continue profiling
           let lastSample = sample[1] >= rowsCount;
 
-          let filteredColumns = this.allColumns.map(e=>e.name);
-          let filteredOutColumns = this.notVisibleColumnNames;
+          let filteredColumns = (preview ? this.allColumns.filter(e=>e.preview) : this.allColumns).map(e=>e.name);
+          let filteredOutColumns = preview ? [] : this.notVisibleColumnNames;
 
           if (!filteredColumns.slice(range[0], range[1]).length) {
             group = filteredOutColumns.length ? -1 : 0;
           }
 
-          let promise = this.requestCachedProfiling(dfName, group, sample, lastSample);
+          let promise = this.requestCachedProfiling(dfName, group, sample, lastSample, preview);
 
           if (!promise || !promise.then) {
-            this.$store.dispatch('afterWholeProfiling');
+            if (preview) {
+              this.$store.dispatch('afterPreviewProfiling')
+            } else {
+              this.$store.dispatch('afterWholeProfiling');
+            }
           }
         }
 
       } catch (err) {
         
-        console.warn('[PROFILE]', err);
-        await this.$store.dispatch('afterWholeProfiling', {error: true});
+        console.warn('[PROFILE]', err, err.response);
+        if (preview) {
+          this.$store.dispatch('afterPreviewProfiling', {error: true})
+        } else {
+          this.$store.dispatch('afterWholeProfiling', {error: true});
+        }
 
       }
   
     
     },
 
-    getColumnRange (group) {
+    getColumnRange (group, useWindow = true) {
       let range;
       while (true) {
-        range = getColumnsRange(group, this.windowRoot, 10, this.windowSize);
+        range = getColumnsRange(group, useWindow ? this.windowRoot : 0, 10, useWindow ? this.windowSize : 0);
         if (!range || (range[0]<0 && range[1]<0)) {
           group += 1;
           continue;
@@ -1569,28 +1622,32 @@ export default {
       }
     },
 
-    requestCachedProfiling (dfName, group = 0, sample = false, lastSample = false, low = false) {
+    requestCachedProfiling (dfName, group = 0, sample = false, lastSample = false, preview = false, low = false) {
 
-      if (this.currentDataset.dfName !== dfName) {
-        throw new Error('Dataset changed');
+      if (this.currentDataset.dfName !== dfName && !preview) {
+        throw new Error(`Dataset changed, ${currentDfName} -> ${dfName}`);
       }
 
       if (!this.enableIncrementalProfiling) {
         throw new Error('Incremental profiling not enabled');
       }
 
-      this.$store.commit('mutation', {mutate: 'updatingWholeProfile', payload: true });
+      this.$store.commit('mutation', {mutate: preview ? 'updatingPreviewProfile' : 'updatingWholeProfile', payload: true });
       
       let columnsCount = Math.max((this.currentDataset?.columns || []).length, this.currentDataset?.summary?.cols_count || 0);
 
       let range = false;
 
-      let filteredColumns = this.allColumns.filter(e=>!e.preview).map(e=>e.name);
-      let filteredOutColumns = this.notVisibleColumnNames;
+      let filteredColumns = preview ? this.allColumns.filter(e=>e.preview) : this.allColumns.filter(e=>!e.preview);
+
+      filteredColumns = filteredColumns.map(e=>e.name);
+
+      let filteredOutColumns = preview ? [] : this.notVisibleColumnNames;
+
       let columns;
 
       if (group>=0) {
-        [range, group] = this.getColumnRange(group);
+        [range, group] = this.getColumnRange(group, !preview);
         columns = filteredColumns.filter((e, i)=>range[0] <= i && i <= range[1]);
       } else {
         range = -1;
@@ -1620,16 +1677,18 @@ export default {
 
       return this.evalCode({
         command: 'profile_cache',
-        dfName,
+        dfName: preview ? 'preview_df' : dfName,
         columnsCount,
         sample,
         lastSample,
         clearPrevious,
         columns
       }, {
-        update: this.currentDatasetUpdate || 0,
+        update: preview ? null : this.currentDatasetUpdate || 0,
+        code: preview ? this.profilePreview?.code : null,
         command: low ? 'profiling_low' : 'profiling',
-        dfName,
+        preview,
+        dfName: preview ? 'preview_df' : dfName,
         columnsCount,
         sample,
         lastSample,
@@ -1650,17 +1709,38 @@ export default {
         let columns = Math.max((this.currentDataset?.columns || []).length, this.currentDataset?.summary?.cols_count || 0);
         let doneColumns = (this.currentDataset?.columns?.filter(c => c.done || c.last_sampled_row == -1 || c.last_sampled_row > this.rowsCount) || []).length;
   
-        if (doneColumns < columns && !this.previewCode) {
-          if (!this.$store.state.updatingWholeProfile) {
-            this.$store.commit('mutation', {mutate: 'updatingWholeProfile', payload: true });
-  
-            let rowsCount = this.$store.getters.currentDataset?.summary?.rows_count;
-            let lastSample = (INITIAL_SAMPLE_SIZE > rowsCount);
+        if (doneColumns < columns && !this.previewCode && !this.$store.state.updatingWholeProfile) {
+          this.$store.commit('mutation', {mutate: 'updatingWholeProfile', payload: true });
 
-            let promise = this.requestCachedProfiling(this.currentDataset.dfName, 0, false, lastSample);
+          let rowsCount = this.$store.getters.currentDataset?.summary?.rows_count;
+          let lastSample = (INITIAL_SAMPLE_SIZE > rowsCount);
+
+          let promise = this.requestCachedProfiling(this.currentDataset.dfName, 0, false, lastSample);
+          
+          if (!promise || !promise.then) {
+            this.$store.dispatch('afterWholeProfiling');
+          }
+        }
+
+        if (this.previewCode && this.profilePreview?.summary?.rows_count) {
+
+          if (!this.$store.state.updatingPreviewProfile) {
+
+            let rowsCount = this.profilePreview?.summary?.rows_count;
+            let previewColumns = this.allColumns.filter(e=>e.preview).length;
+            let donePreviewColumns = Object.values(this.profilePreview.columns || {});
+            donePreviewColumns = donePreviewColumns.filter(c => c.done || c.last_sampled_row == -1 || c.last_sampled_row > rowsCount).length;
             
-            if (!promise || !promise.then) {
-              this.$store.dispatch('afterWholeProfiling');
+            if (donePreviewColumns < previewColumns) {
+              this.$store.commit('mutation', {mutate: 'updatingPreviewProfile', payload: true });
+              let rowsCount = this.profilePreview.summary.rows_count;
+              let lastSample = (INITIAL_SAMPLE_SIZE > rowsCount);
+
+              let promise = this.requestCachedProfiling(this.currentDataset.dfName, 0, false, lastSample, true);
+              
+              if (!promise || !promise.then) {
+                this.$store.dispatch('afterPreviewProfile');
+              }
             }
           }
         }
@@ -2200,6 +2280,10 @@ export default {
           return
         }
 
+        if (this.previewCode) {
+          this.$store.commit('clearSelectionProperties');
+        }
+
         var indexInSelection = this.selection.findIndex(e=>e==columnIndex)
 
         if (event.shiftKey) {
@@ -2457,7 +2541,7 @@ export default {
           request: {
             ...previewPayload.request,
             type: 'profile',
-            saveTo: 'df_preview',
+            saveTo: 'preview_df',
             noExecute: true,
             window: true,
             profile: cols,
@@ -2735,7 +2819,6 @@ export default {
           if (!this.profilePreview || this.profilePreview.code !== previewCode) {
             let previewPayload = (this.previewCode ? this.previewCode.codePayload : false) || {};
             await this.setProfile(previewCode, previewPayload)
-            console.debug('[FETCHING] Profiling done');
           }
         }
       }

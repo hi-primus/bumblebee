@@ -1484,7 +1484,7 @@ export const generateCode = function(commands = [], _request = { type: 'processi
             code += '\n'+`_output.update({ 'sample': ${saving}.columns_sample("*") })`
           }
           if (request.profile) {
-            code += '\n'+`_output.update({ 'profile': ${saving}.profile(cols=${profileColumns}) })`;
+            code += '\n'+`_output.update({ 'profile': ${saving}.preliminary_profile(cols=${profileColumns}) })`;
           }
           if (request.names) {
             code += '\n'+`_output.update({ 'names': ${saving}.cols.names() })`;
