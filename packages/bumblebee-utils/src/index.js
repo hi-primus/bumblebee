@@ -1,6 +1,14 @@
 import "core-js/stable"
 import "regenerator-runtime/runtime"
 
+// export class
+export class ErrorWithResponse extends Error {
+  constructor(message, response = {}) {
+    super(message)
+    this.response = response
+  }
+}
+
 export const deepCopy = (inObject, deep = undefined) => {
   let outObject, value, key
 
@@ -1418,6 +1426,7 @@ export const HELP_LINK = false; // "https://hi-bumblebee.com";
 export const AUTO_UPLOAD_LIMIT = 104857600; // 100 MiB = 100*1024*1024
 
 export default {
+  ErrorWithResponse,
   deepCopy,
   transpose,
   throttle,

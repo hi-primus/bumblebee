@@ -525,6 +525,7 @@ import Frequent from '@/components/Frequent'
 import DataBar from '@/components/DataBar'
 
 import {
+  ErrorWithResponse,
   parseResponse, arraysEqual, 
   getColumnsRange, throttle,
   asyncDebounce, debounce, objectMap,
@@ -1364,13 +1365,11 @@ export default {
         let code = response.reply.code;
 
         if (this.profilePreview.code !== code) {
-          throw new Error(`Profile preview code changed, ${code} -> ${this.profilePreview.code}`);
+          throw new ErrorWithResponse(`Profile preview code changed, ${code} -> ${this.profilePreview.code}`, response);
         }
 
         if (!response || !response.data || !response.data.result || response.data.status == "error") {
-          let err = new Error(`Bad response`)
-          err.response = response;
-          throw err;
+          throw new ErrorWithResponse(`Bad response`, response)
         }
 
         let { profile, latePreview, early } = response.reply;
@@ -1379,9 +1378,7 @@ export default {
           let dataset = parseResponse(response.data.result.profile);
 
           if (!dataset) {
-            let err = new Error(`Invalid dataset`)
-            err.response = response;
-            throw err;
+            throw new ErrorWithResponse(`Invalid dataset`, response)
           }
 
           dataset = { ...dataset, done: true, code };
@@ -1406,7 +1403,7 @@ export default {
 
         return true;
       } catch (err) {
-        console.error(err);
+        console.error(err, err.response);
         this.$store.commit('setPreviewInfo', { error: err });
         return false;
       }
@@ -1433,7 +1430,7 @@ export default {
         }
   
         if (!response || !response.data || !response.data.result || response.data.status == "error") {
-          throw response;
+          throw new ErrorWithResponse(`Bad response`, response)
         }
   
         let previousLastSample = response.reply.lastSample
