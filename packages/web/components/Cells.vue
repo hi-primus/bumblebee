@@ -371,7 +371,7 @@
               <v-icon
                 class="edit-btn"
                 small
-                @click="editCell(index)"
+                @click="editCell(index+dataSources.length)"
               >edit</v-icon>
             </div>
           </div>
