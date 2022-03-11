@@ -414,6 +414,8 @@ import { mapGetters } from 'vuex'
 import { generateCode } from 'optimus-code-api'
 
 import {
+  ErrorWithResponse,
+  printError,
   copyToClipboard,
   deepCopy,
   debounce,
@@ -1238,9 +1240,12 @@ export default {
         await this.cancelCommand();
         await this.runCodeNow();
         var response = await this.evalCode(cell, 'await', 'requirement');
+        if (response.data.status == 'error') {
+          throw new ErrorWithResponse(response.data.error, response)
+        }
         console.debug("[DEBUG] Operation done", response);
-      } catch (error) {
-        console.error(error)
+      } catch (err) {
+        this.$store.commit('appendError', { error: printError(err.response), cells: false });
       }
     },
   
