@@ -339,10 +339,18 @@ def df__profile_cache(df, cols="*", bins: int = MAX_BUCKETS, sample=None, last_s
     
     big_freqs_profile = df.profile(big_freq_cols, bins=bins) if big_freq_cols and len(big_freq_cols) > 0 else {}
 
-    stats, cols = df.profile_stats_cache(cols, sample=sample, last_sample=last_sample, flush=flush, force_cached=force_cached)
+    if flush:
+        df.cache = Meta.set(df.cache, "profile", {})
+        df.cache = Meta.set(df.cache, "frequency", {})
+        df.cache = Meta.set(df.cache, "hist", {})
+        df.cache = Meta.set(df.cache, "min", {})
+        df.cache = Meta.set(df.cache, "max", {})
+        df.meta = Meta.set(df.meta, "profile", {})
+
+    stats, cols = df.profile_stats_cache(cols, sample=sample, last_sample=last_sample, flush=False, force_cached=force_cached)
     
-    hists = df.profile_hist_cache(hist_cols, buckets=bins, sample=sample, last_sample=last_sample, flush=flush, force_cached=force_cached)
-    freqs = df.profile_frequency_cache(freq_cols, n=bins, sample=sample, last_sample=last_sample, flush=flush, force_cached=force_cached)
+    hists = df.profile_hist_cache(hist_cols, buckets=bins, sample=sample, last_sample=last_sample, flush=False, force_cached=force_cached)
+    freqs = df.profile_frequency_cache(freq_cols, n=bins, sample=sample, last_sample=last_sample, flush=False, force_cached=force_cached)
 
     big_freqs = {col: {"values": Meta.get(big_freqs_profile, f"columns.{col}.stats.frequency")} for col in big_freq_cols}
 
