@@ -1619,7 +1619,7 @@ export default {
 
       var toCell = command._toCell!==undefined ? command._toCell : -1;
 
-      this.$emit('updateOperations', { active: ((command.request && command.request.noOperations) ? false : true), title: 'operations' } );
+      this.$emit('updateOperations', { active: !command.request?.noOperations, title: 'operations' });
 
       if (command.request.toCell === false) {
         await this.runCell(command);
