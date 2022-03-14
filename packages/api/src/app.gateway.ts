@@ -17,6 +17,7 @@ import {
   deleteKernel,
   requestToKernel,
   configKernel,
+  interruptRequest,
   removeFromQueue,
   createSession
 } from './kernel';
@@ -237,13 +238,31 @@ export class AppGateway
 
   }
 
-  @SubscribeMessage('remove')
-  async handleRemove(client: Socket, payload): Promise<any> {
-    let result = await removeFromQueue(client.id, payload.category);
+  @SubscribeMessage('interrupt')
+  async handleInterrupt(client: Socket, payload): Promise<any> {
+    let result = await interruptRequest(client.id, payload.id);
     client.emit('reply', {
       data: result,
       timestamp: payload.timestamp,
     });
+  }
+
+  @SubscribeMessage('remove')
+  async handleRemove(client: Socket, payload): Promise<any> {
+    
+    let removed = await removeFromQueue(client.id, payload.category);
+    let result = { removed };
+
+    if (payload.interrupt) {
+      let interruptResult = await interruptRequest(client.id, payload)
+      result = { ...result, ...interruptResult };
+    }
+
+    client.emit('reply', {
+      data: result,
+      timestamp: payload.timestamp,
+    });
+
   }
 
   @SubscribeMessage('run')

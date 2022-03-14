@@ -11,6 +11,9 @@ const kernels = [];
 const configs = {};
 const aliases = {};
 const requests: { [fieldName: string]: typeof Queue } = {};
+const toInterrupt = [];
+
+let runningTask;
 
 let kernel_addresses;
 let kernel_types;
@@ -273,6 +276,10 @@ export const requestToKernel = async function (type, sessionId, payload, options
 	const response: any = await new Promise((resolve, reject) => {
 		kernels[getKernelId(sessionId)].promises[msg_id] = { resolve, reject };
 		try {
+			if (toInterrupt.includes(options.timestamp)) {
+				throw new Error("Request interrupted early by user");
+			}
+			runningTask = {id: options.timestamp, type: options.category, msgId: msg_id};
 			if (asyncCallback) {
 				kernels[getKernelId(sessionId)].promises[msg_id].resolveAsync = asyncCallback;
 			}
@@ -292,6 +299,37 @@ export const requestToKernel = async function (type, sessionId, payload, options
 
 	return response;
 };
+
+
+export const interruptRequest = async function (sessionId, taskIdOrType) {
+	kernels[getKernelId(sessionId)] = kernels[getKernelId(sessionId)] || {};
+
+	let responseBody = {interrupt: false, reject: false, queueId: false};
+
+  if (taskIdOrType && [runningTask?.id, runningTask?.type].includes(taskIdOrType)) {
+
+		let latePromise = kernels[getKernelId(sessionId)]?.promises[runningTask.msgId];
+		let id = kernels[getKernelId(sessionId)].id;
+		let ka = configKernel(sessionId).kernel_address || 0;
+		let response = await axios.post(`${kernelBase(ka)}/api/kernels/${id}/interrupt`);
+		
+		responseBody.interrupt = true;
+		
+		if (latePromise?.reject) {
+			latePromise.reject(new Error("Request interrupted by user"));
+			responseBody.reject = true;
+		}
+		
+		runningTask = null;
+	}
+	
+	if (!responseBody.interrupt && typeof taskIdOrType === 'number') {
+		toInterrupt.push(taskIdOrType);
+		responseBody.queueId = true;
+	}
+
+	return responseBody;
+}
 
 export const configKernel = function (sessionId, payload = {}) {
 
@@ -838,6 +876,7 @@ export default {
 	setKernel,
 	runCode,
 	requestToKernel,
+	interruptRequest,
 	initializeKernel,
 	deleteKernel,
 	deleteEveryKernel
