@@ -180,7 +180,7 @@ export const kernelHandler = function (sessionId) {
   return kernels[getKernelId(sessionId)].kernelHandler;
 }
 
-export const requestToKernel = async function (type, sessionId, payload, asyncCallback = false): Promise<any> {
+export const requestToKernel = async function (type, sessionId, payload, options : any = {}, asyncCallback = false): Promise<any> {
 
   kernels[getKernelId(sessionId)] = kernels[getKernelId(sessionId)] || {};
 
@@ -326,8 +326,8 @@ const newQueue = function (sessionId) {
 	return new Queue(async (task, cb)=>{
 		let response;
 		try {
-			let promise = requestToKernel(task.type, sessionId, task.payload, task.asyncCallback);
-			if (task.immediate) {
+			let promise = requestToKernel(task.type, sessionId, task.code, task.options, task.asyncCallback);
+			if (task.options?.immediate) {
 				response = promise;
 			} else {
 				response = await promise;
@@ -344,9 +344,9 @@ const newQueue = function (sessionId) {
 		id: 'id',
 		filo: true,
 		priority: (task, cb) => {
-			let priority =  task.immediate ? DEFAULT_PRIORITY : PRIORITIES[task.category]
+			let priority =  task.options?.immediate ? DEFAULT_PRIORITY : PRIORITIES[task.options?.category];
 			if (!priority) {
-				console.warn(`Unknown category ${task.category} using highest priority`);
+				console.warn(`Unknown category ${task.options?.category} using highest priority`);
 				priority = DEFAULT_PRIORITY;
 			}
 			return cb(null, priority);
@@ -354,13 +354,13 @@ const newQueue = function (sessionId) {
 	});
 }
 
-const queueRequest = function (type, sessionId, payload, category, asyncCallback = false, immediate = false) {
+const queueRequest = function (type, sessionId, code, options = {immediate: false}, asyncCallback = false) {
 	return new Promise((res, rej) => {
 		try {
 			requests[sessionId] = requests[sessionId] || newQueue(sessionId);
 			const id = Buffer.from(uuidv1(), 'utf8').toString('hex');
 			requests[sessionId].push({
-				id, type, payload, category, asyncCallback, immediate
+				id, type, code, options, asyncCallback
 			}, res);
 		} catch (err) {
 			rej(err);
@@ -395,7 +395,7 @@ export const removeFromQueue = function (sessionId, category) {
 	return false;
 }
 
-export const runCode = async function (code = '', sessionId = '', category = false, asyncCallback = false, immediate = false) {
+export const runCode = async function (code = '', sessionId = '', options = {category: false, immediate: false}, asyncCallback = false) {
 	if (!sessionId) {
 		return {
 			error: {
@@ -423,9 +423,9 @@ export const runCode = async function (code = '', sessionId = '', category = fal
     let response;
 
     if (asyncCallback) {
-			response = await queueRequest('asyncCode', sessionId, code, category, asyncCallback, immediate);
+			response = await queueRequest('asyncCode', sessionId, code, options, asyncCallback);
     } else {
-      response = await queueRequest('code', sessionId, code, category, undefined, immediate);
+      response = await queueRequest('code', sessionId, code, options, undefined);
     }
 
 		if (response.constructor == Promise) {

@@ -296,7 +296,7 @@ export class AppGateway
         }
       }
 
-      result = await runCode(execCode, client.id, payload?.category, asyncCallback, payload?.immediate);
+      result = await runCode(execCode, client.id, payload, asyncCallback);
 
     } catch (err) {
 
