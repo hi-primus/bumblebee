@@ -1491,6 +1491,8 @@ export const actions = {
 
     console.debug('[DEBUG] Loading cells result');
 
+    let newOnly;
+
     commit('mutation', { mutate: 'updatingWorkspace', payload: false });
     
     try {
@@ -1529,7 +1531,7 @@ export const actions = {
 
       toRunOperations = toRunOperations.filter((operation, index) => index >= firstPendingOperation);
 
-      let newOnly = !forceAll;
+      newOnly = !forceAll;
 
       // tries all the code so it can check if there's any changes in previous cells
 
