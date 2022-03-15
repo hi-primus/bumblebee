@@ -301,34 +301,47 @@ export const requestToKernel = async function (type, sessionId, payload, options
 };
 
 
-export const interruptRequest = async function (sessionId, taskIdOrType) {
+export const interruptRequest = async function (sessionId, taskIdsOrTypes : (string | number)[] | string | number) {
+
+	taskIdsOrTypes = [taskIdsOrTypes].flat(1);
 	kernels[getKernelId(sessionId)] = kernels[getKernelId(sessionId)] || {};
 
-	let responseBody = {interrupt: false, reject: false, queueId: false};
+	let responseBodies = [];
 
-  if (taskIdOrType && [runningTask?.id, runningTask?.type].includes(taskIdOrType)) {
-
-		let latePromise = kernels[getKernelId(sessionId)]?.promises[runningTask.msgId];
-		let id = kernels[getKernelId(sessionId)].id;
-		let ka = configKernel(sessionId).kernel_address || 0;
-		let response = await axios.post(`${kernelBase(ka)}/api/kernels/${id}/interrupt`);
+	for (let taskIdOrType of taskIdsOrTypes) {
 		
-		responseBody.interrupt = true;
+		let responseBody = {interrupt: false, reject: false, queueId: false};
 		
-		if (latePromise?.reject) {
-			latePromise.reject(new Error("Request interrupted by user"));
-			responseBody.reject = true;
+		if (taskIdOrType && runningTask && [runningTask.id, runningTask.type].includes(taskIdOrType)) {
+	
+			const latePromise = kernels[getKernelId(sessionId)]?.promises[runningTask.msgId];
+			const id = kernels[getKernelId(sessionId)].id;
+			const ka = configKernel(sessionId).kernel_address || 0;
+			let response = await axios.post(`${kernelBase(ka)}/api/kernels/${id}/interrupt`);
+			
+			responseBody.interrupt = true;
+			
+			if (latePromise?.reject) {
+				latePromise.reject(new Error("Request interrupted by user"));
+				responseBody.reject = true;
+			}
+			
+			runningTask = null;
 		}
 		
-		runningTask = null;
-	}
-	
-	if (!responseBody.interrupt && typeof taskIdOrType === 'number') {
-		toInterrupt.push(taskIdOrType);
-		responseBody.queueId = true;
+		if (!responseBody.interrupt && typeof taskIdOrType === 'number') {
+			toInterrupt.push(taskIdOrType);
+			responseBody.queueId = true;
+		}
+		
+		responseBodies.push(responseBody);
+
+		if (!responseBody.interrupt) {
+			console.warn(`Could not interrupt task ${taskIdOrType}, ${typeof taskIdOrType}`, runningTask);
+		}
 	}
 
-	return responseBody;
+	return responseBodies.length === 1 ? responseBodies[0] : responseBodies;
 }
 
 export const configKernel = function (sessionId, payload = {}) {

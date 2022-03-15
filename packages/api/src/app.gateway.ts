@@ -240,7 +240,7 @@ export class AppGateway
 
   @SubscribeMessage('interrupt')
   async handleInterrupt(client: Socket, payload): Promise<any> {
-    let result = await interruptRequest(client.id, payload.id);
+    let result = await interruptRequest(client.id, payload.ids || payload.id);
     client.emit('reply', {
       data: result,
       timestamp: payload.timestamp,
