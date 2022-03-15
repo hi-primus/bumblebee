@@ -351,7 +351,8 @@ export default {
         if (!dataset && this.$store.state.datasets[0]) {
           value = 0;
         }
-
+        
+        this.interrupt({handler: 'profile_cache'});
         this.$store.dispatch('changeTab', value)
       },
     },

@@ -1288,6 +1288,9 @@ export default {
 
         var check = false;
 
+        let sampleInterruptResult = await this.interrupt({category: 'preview_sample'});
+        let profilingInterruptResult = await this.interrupt({category: 'preview_profiling'});
+
         if (previewCode) {
 
           if (previewCode.latePreview && !this.profilePreview?.done) {
@@ -1719,7 +1722,7 @@ export default {
         lastSample,
         range,
         group
-      }, 'profiling');
+      }, preview ? 'preview_profiling' : 'profiling');
     },
     
     async requestWholeProfiling () {
@@ -2524,6 +2527,8 @@ export default {
 
     async unsetProfile () {
       this.$store.commit('mutation', {mutate: 'profilePreview', payload: false} )
+      await this.interrupt({category: 'preview_sample'});
+      await this.interrupt({category: 'preview_profiling'});
     },
 
     async setProfile (previewCode, previewPayload, early=false) {

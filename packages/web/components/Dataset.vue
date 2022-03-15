@@ -929,7 +929,7 @@ export default {
   
               console.debug('[PREVIEW] Loading', codePayload)
     
-              this.evalCode(codePayload, { command: "loading_preview", code: currentCode, dfName }, 'profiling');
+              this.evalCode(codePayload, { command: "loading_preview", code: currentCode, dfName }, 'preview_profiling');
   
             }
 

@@ -467,6 +467,8 @@ export default {
           }
         }
 
+        await this.interrupt({handler: 'patterns_count'});
+
         this.evalCode(codePayload, { 
           command: 'patterns_count',
           sample: [from, to],
