@@ -201,7 +201,7 @@ export default {
 
     },
 
-    async interrupt ({id, handler, command} = {}) {
+    async interrupt ({id, handler, command, category} = {}) {
       let ids = [];
       if (id !== undefined) {
         ids = [id];
@@ -212,6 +212,9 @@ export default {
         }
         if (handler) {
           payloads = payloads.filter(p=>p.reply?.command === handler);
+        }
+        if (category) {
+          payloads = payloads.filter(p=>p.category === category);
         }
         ids = payloads.map(p=>p.id);
       }
