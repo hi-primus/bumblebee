@@ -1,6 +1,6 @@
 const { io } = require("socket.io-client");
 
-import { deepCopy, getDefaultParams, objectMap } from 'bumblebee-utils'
+import { deepCopy, getDefaultParams, objectFilter, objectMap } from 'bumblebee-utils'
 
 const baseUrl = process.env.API_URL || 'http://localhost:4000'
 
@@ -201,6 +201,28 @@ export default {
 
     },
 
+    async interrupt ({id, handler, command} = {}) {
+      let ids = [];
+      if (id !== undefined) {
+        ids = [id];
+      } else {
+        let payloads = Object.entries(window.promises).map(([id, body]) => ({...body.payload, id: +id}))
+        if (command) {
+          payloads = payloads.filter(p=>(p.codePayload?.command || p.codePayload[0].command) === command);
+        }
+        if (handler) {
+          payloads = payloads.filter(p=>p.reply?.command === handler);
+        }
+        ids = payloads.map(p=>p.id);
+      }
+      if (!ids.length) {
+        console.warn('[INTERRUPT] No ids to interrupt')
+        return false;
+      }
+      const response = await this.socketPost('interrupt', { ids });
+      console.log(`[INTERRUPT] Success`, response);
+    },
+
     evalCode (_code, reply = 'await', category = 'requirement', isAsync = false) {
       var code = undefined;
       var codePayload = undefined;
@@ -295,11 +317,10 @@ export default {
       let postPromise = new Promise( async (resolve, reject) => {
 
         if (!payload.reply || payload.reply == 'await') {
-          if (payload.isAsync) {
-            window.promises[timestamp] = { resolve, reject, payload, isAsync: true };
-          } else {
-            window.promises[timestamp] = { resolve, reject, payload };
-          }
+          window.promises[timestamp] = { resolve, reject, payload, isAsync: payload.isAsync };
+        } else {
+          window.promises[timestamp] = { payload, isAsync: true };
+          console.log('Included without resolve and reject', {payload})
         }
 
         let socket = await window.socket();
@@ -576,7 +597,11 @@ export default {
 
     async receiveCommandLocal (command, payload) {
 
-      let commandString = (command && typeof command == 'object') ? command.command : command;
+      const commandString = (command && typeof command == 'object') ? command.command : command;
+
+      window.promises = objectFilter(window.promises, ([, body]) => {
+        return body?.payload?.reply?.command !== commandString;
+      });
 
       let listeners = Object.entries(this)
         .filter(([k,v])=>typeof v=='function' && k.startsWith('commandListener'))
