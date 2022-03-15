@@ -394,7 +394,7 @@ export default {
         }
 
         if (!response || !response.data || !response.data.result || response.data.status == "error") {
-          throw response
+          throw new ErrorWithResponse('Bad response', response);
         }
 
         var result = response.data.result;

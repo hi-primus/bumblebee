@@ -9,6 +9,13 @@ export class ErrorWithResponse extends Error {
   }
 }
 
+export class InterruptError extends Error {
+  constructor(message, interrupt = true) {
+    super(message)
+    this.interrupt = interrupt
+  }
+}
+
 export const deepCopy = (inObject, deep = undefined) => {
   let outObject, value, key
 
@@ -437,13 +444,13 @@ export const handleResponse = (response) => {
       }
 
       if (typeof response !== 'string') {
-        throw response;
+        throw new ErrorWithResponse('Response is not a string', response);
       }
 
       const bracketIndex = response.indexOf('{');
 
       if (bracketIndex < 0) {
-        throw { message: 'Invalid response format', response };
+        throw new ErrorWithResponse('Invalid response format', response);
       }
 
       response = response.substring(bracketIndex);

@@ -219,7 +219,6 @@ export default {
         ids = payloads.map(p=>p.id);
       }
       if (!ids.length) {
-        console.warn('[INTERRUPT] No ids to interrupt')
         return false;
       }
       const response = await this.socketPost('interrupt', { ids });
@@ -285,7 +284,7 @@ export default {
           let response = await this.socketPost('initialize', reinitializationPayload);
 
           if (!response.data.optimus) {
-            throw response
+            throw new ErrorWithResponse('Optimus initialization error', response);
           }
 
           window.pushCode({code: response.code})

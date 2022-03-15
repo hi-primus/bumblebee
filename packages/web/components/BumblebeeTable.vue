@@ -1406,7 +1406,20 @@ export default {
 
         return true;
       } catch (err) {
+
+        let errString = (err?.response || err)?.data?.content?.error ||
+                        (err?.response || err)?.data?.error ||
+                        (err?.response || err)?.data?.errorName ||
+                        err?.message ||
+                        err.toString() ||
+                        '';
+        if (errString.includes("interrupted") || errString == "KerboardInterrupt") {
+          console.warn("Interruption");
+          return false;
+        }
+        
         console.error(err, err.response);
+
         this.$store.commit('setPreviewInfo', { error: err });
         return false;
       }
@@ -1557,6 +1570,18 @@ export default {
       } catch (err) {
         
         console.warn('[PROFILE]', err, err.response);
+
+        let errString = (err?.response || err)?.data?.content?.error ||
+                        (err?.response || err)?.data?.error ||
+                        (err?.response || err)?.data?.errorName ||
+                        err?.message ||
+                        err.toString() ||
+                        '';
+        if (errString.includes("interrupted") || errString == "KerboardInterrupt") {
+          console.warn("Interruption");
+          return false;
+        }
+
         if (preview) {
           this.$store.dispatch('afterPreviewProfiling', {error: true})
         } else {
@@ -2676,7 +2701,20 @@ export default {
           return false
         }
       } catch (err) {
-        console.error(err);
+        let errString = (err?.response || err)?.data?.content?.error ||
+                        (err?.response || err)?.data?.error ||
+                        (err?.response || err)?.data?.errorName ||
+                        err?.message ||
+                        err.toString() ||
+                        '';
+        if (errString.includes("interrupted") || errString == "KerboardInterrupt") {
+          console.warn("Interruption");
+          this.$nextTick(()=>{
+            this.throttledScrollCheck(false)
+          })
+          return false;
+        }
+        console.error(err, err.response, err.bumblebeeType);
         this.fetching = false;
         if (err.bumblebeeType && (err.bumblebeeType.includes('(Error on profiling)') || err.bumblebeeType.includes('(Error on cells)'))) {
           throw err;

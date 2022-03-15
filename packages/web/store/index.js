@@ -1,6 +1,7 @@
 import Vue from 'vue'
 
 import {
+  ErrorWithResponse,
   capitalizeString, getPropertyAsync, filterCells, parseResponse, printError, deepCopy, objectMap,
   ALL_TYPES, INCOMPATIBLE_ENGINES
  } from 'bumblebee-utils'
@@ -786,7 +787,7 @@ export const actions = {
         }
   
         if (!response || !response.data || response.data.status === 'error') {
-          throw response
+          throw new ErrorWithResponse('Bad response', response); 
         }
   
         window.pushCode({code: response.code})
@@ -795,6 +796,17 @@ export const actions = {
       }
 
     } catch (err) {
+
+      let errString = (err?.response || err)?.data?.content?.error ||
+                      (err?.response || err)?.data?.error ||
+                      (err?.response || err)?.data?.errorName ||
+                      err?.message ||
+                      err.toString() ||
+                      '';
+      if (errString.includes("interrupted") || errString == "KerboardInterrupt") {
+        console.warn("Interruption");
+        return false;
+      }
 
       if (err.code) {
         window.pushCode({code: err.code, error: true})
@@ -1468,7 +1480,7 @@ export const actions = {
     }
 
     if (!response.data.optimus) {
-      throw response;
+      throw new ErrorWithResponse('Optimus error', response);
     }
 
     window.pushCode({ code: response.code });
@@ -1567,7 +1579,7 @@ export const actions = {
 
       if (wrongCode && code===wrongCode ) {
         console.debug('%c[CODE MANAGER] Cells went wrong last time. '+state.lastWrongCode.error, 'color: yellow;');
-        throw state.lastWrongCode.error;
+        throw new ErrorWithResponse('Potential Error', state.lastWrongCode.error);
       }
 
       if (rerun) {
@@ -1672,7 +1684,7 @@ export const actions = {
       commit('mutation', { mutate: 'commandsDisabled', payload: false });
 
       if (!response || !response.data || !response.data.result || response.data.status == "error") {
-        throw response
+        throw new ErrorWithResponse('Bad response', response);
       }
 
       await dispatch('afterRunCells', { newOnly, ignoreFrom, socketPost, methods });
@@ -1687,10 +1699,10 @@ export const actions = {
       commit('mutation', {mutate: 'updatingWorkspace', payload: false });
       await dispatch('resetPromises', { from: 'cells' });
 
-      if (err.code && window.pushCode) {
+      if (err?.response?.code && window.pushCode) {
         window.pushCode({code, error: true});
       }
-      commit('appendError', { error: printError(err), cells: true });
+      commit('appendError', { error: printError(err?.response), cells: true });
 
       var wrongCode = await dispatch('codeText', { newOnly, ignoreFrom });
       commit('mutation', { mutate: 'lastWrongCode', payload: { code: wrongCode, error: deepCopy(err) }});
@@ -1730,7 +1742,7 @@ export const actions = {
     let response = await dispatch('evalCode', { codePayload, category: 'profiling', socketPost });
 
     if (!response || !response.data || !response.data.result || response.data.status == "error") {
-      throw response;
+      throw new ErrorWithResponse('Bad response', response);
     }
 
     window.pushCode({code: response.code});
@@ -1952,10 +1964,10 @@ export const actions = {
         };
         response = await dispatch('evalCode',{ socketPost, codePayload, category: 'preview_sample' });
         if (!response || !response.data || response.data.status == "error") {
-          throw response;
+          throw new ErrorWithResponse('Bad response', response);
         }
       } catch (err) {
-        console.error(err,'Retrying without dataframe from cache');
+        console.error(err, err.response, 'Retrying without dataframe from cache');
         profilePreview = false;
       }
     }

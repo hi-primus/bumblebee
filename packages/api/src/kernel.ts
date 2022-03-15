@@ -3,7 +3,7 @@ import axios from 'axios';
 import { v1 as uuidv1 } from 'uuid';
 import { KernelRoutines } from "./kernel-routines";
 
-import { handleResponse } from 'bumblebee-utils'
+import { InterruptError, handleResponse } from 'bumblebee-utils'
 
 let Queue = require('better-queue');
 
@@ -277,7 +277,7 @@ export const requestToKernel = async function (type, sessionId, payload, options
 		kernels[getKernelId(sessionId)].promises[msg_id] = { resolve, reject };
 		try {
 			if (toInterrupt.includes(options.timestamp)) {
-				throw new Error("Request interrupted early by user");
+				throw new InterruptError("Request interrupted early by user");
 			}
 			runningTask = {id: options.timestamp, type: options.category, msgId: msg_id};
 			if (asyncCallback) {
@@ -322,7 +322,7 @@ export const interruptRequest = async function (sessionId, taskIdsOrTypes : (str
 			responseBody.interrupt = true;
 			
 			if (latePromise?.reject) {
-				latePromise.reject(new Error("Request interrupted by user"));
+				latePromise.reject(new InterruptError("Request interrupted by user"));
 				responseBody.reject = true;
 			}
 			
@@ -384,11 +384,19 @@ const newQueue = function (sessionId) {
 				response = await promise;
 			}
 		} catch (err) {
-			response = {
-				error: 'Internal error',
-				err,
-				status: 'error',
-			};
+			if (err.interrupt) {
+				response = {
+					error: err.message,
+					status: 'error',
+					interrupt: true,
+				};
+			} else {
+				response = {
+					error: 'Internal error',
+					err,
+					status: 'error',
+				};
+			}
 		}
 		cb(response);
 	}, {
@@ -508,9 +516,19 @@ export const runCode = async function (code = '', sessionId = '', options = {cat
 				error: err.evalue,
 				traceback: err.traceback,
 			};
+		}
+
+		console.error("err", err)
+
+		let contentErr = err instanceof Error ? err.toString() : err;
+		
+		if (err.interrupt) {
+			return {
+				status: 'error',
+				error: err.message || err.error,
+				interrupt: true,
+			};
 		} else {
-      console.error(err)
-      let contentErr = err instanceof Error ? err.toString() : err;
 			return {
 				status: 'error',
 				error: 'Internal error',

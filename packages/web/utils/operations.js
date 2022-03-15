@@ -1931,7 +1931,7 @@ export const commandsHandlers = {
         }, 'await', 'requirement');
 
         if (!response || !response.data || response.data.status === "error") {
-          throw response.data ? (response.data.error || response.data) : response;
+          throw response.data ? new Error(response.data.error || response.data) : new ErrorWithResponse('Bad response', response);;
         }
 
         var tables = response.data.result;
@@ -3495,13 +3495,13 @@ export const commandsHandlers = {
         var response = await methods.evalCode(codePayload, 'await', 'requirement');
 
         if (!response || !response.data || !response.data.result || response.data.status == "error") {
-          throw response;
+          throw new ErrorWithResponse('Bad response', response);
         }
 
         var columnsClusters = parseResponse(response.data.result);
 
         if (!columnsClusters) {
-          throw response;
+          throw new ErrorWithResponse('Bad response', response);
         }
         
         let clusters = Object.values(columnsClusters)[0];
@@ -3860,7 +3860,7 @@ export const commandsHandlers = {
         var outliers_data = parseResponse(response.data.result);
 
         if (!outliers_data) {
-          throw response;
+          throw new ErrorWithResponse('Bad response', response);
         }
 
         if (["tukey", "mad"].includes(currentCommand.algorithm)) {
