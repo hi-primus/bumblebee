@@ -24,6 +24,16 @@ export default {
 
     window.timestamps = window.timestamps || 0;
 
+    window.removeFromQueue = async (type, interrupt = true) => {
+      let response = await this.socketPost('remove', { category: type, interrupt })
+      console.log(`[DEBUG] Remove/interrupt`, response);
+    }
+    
+    window.interrupt = async (id) => {
+      let response = await this.socketPost('interrupt', { id });
+      console.log(`[DEBUG] Interrupt`, response);
+    }
+
     window.evalCode = async (code, isAsync = false, usePyodide = false) => {
       var result;
       if (usePyodide) {
