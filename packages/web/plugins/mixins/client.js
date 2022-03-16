@@ -332,7 +332,6 @@ export default {
           window.promises[timestamp] = { resolve, reject, payload, isAsync: payload.isAsync };
         } else {
           window.promises[timestamp] = { payload, isAsync: true };
-          console.log('Included without resolve and reject', {payload})
         }
 
         let socket = await window.socket();
