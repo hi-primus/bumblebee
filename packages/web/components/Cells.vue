@@ -326,6 +326,11 @@
               >edit</v-icon>
             </div>
           </div>
+          <div
+            @click="rollbackToCell(index)"
+            class="state-helper"
+            :class="{'active': index === toCell}"
+          ></div>
         </div>
       </draggable>
       <draggable
@@ -375,7 +380,16 @@
               >edit</v-icon>
             </div>
           </div>
+          <div
+            @click="rollbackToCell(index+dataSources.length)"
+            class="state-helper"
+            :class="{'active': index+dataSources.length === toCell}"
+          ></div>
         </div>
+        <div
+          @click="rollbackToCell()"
+          class="state-helper end-state-helper"
+        ></div>
       </draggable>
       <template v-if="errorAlerts.length">
         <v-alert 
@@ -482,7 +496,9 @@ export default {
       currentCommand: false,
 
       cellsPromise: false,
-      cellsSelection: {}
+      cellsSelection: {},
+
+      toCell: false
 
     }
   },
@@ -1848,7 +1864,7 @@ export default {
       }
 
       if (!commandHandler?.dialog) {
-        console.error('Cannot edit', _cell);
+        console.error('Cannot edit', cell);
       } else {
         this.$store.commit('selection',{ clear: true })
         this.commandsDisabled = true;
@@ -1869,6 +1885,29 @@ export default {
       }
     },
 
+    async rollbackToCell (index) {
+
+      if (index == -1) {
+        index = undefined;
+      }
+
+      if (index !== undefined && !this.cells[index]) {
+        console.error("Trying to rollback to unexisting cell with index", index);
+        return;
+      }
+
+      let cell = this.cells[index];
+      if (cell) {
+        console.debug('[DEBUG] Rolling back to cell', {cell, index})
+      }
+
+      this.$store.commit('selection', { clear: true }) // should save it and try to reset it after rollback?
+      this.toCell = index;
+
+      await this.runCodeNow(true, index === undefined ? -1 : index, undefined, false, false);
+
+    },
+
     async addCell (at = -1, payload = {command: 'code', code: '', content: '', ignoreCell: false, noCall: false, deleteOtherCells: false}, replace = false, forceAll = false, noCall = false) {
 
       var {command, code, ignoreCell, deleteOtherCells, content} = payload;
@@ -1879,9 +1918,10 @@ export default {
 
       this.removeErrorAlert("all")
 
-      if (at==-1) {
-        at = this.cells.length
-        replace = false
+      if (at === -1) {
+        at = this.toCell || this.cells.length;
+        this.toCell = this.toCell + 1;
+        replace = false;
       }
 
       var cells = [...this.cells]
@@ -1911,7 +1951,7 @@ export default {
       this.cells = cells
 
       if (!payload.noCall && this.cells.length && !noCall) {
-        return this.runCodeNow(forceAll, -1, payload.newDfName);
+        return this.runCodeNow(forceAll, this.toCell ? this.toCell + 1 : -1, payload.newDfName);
       }
 
     },

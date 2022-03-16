@@ -1487,7 +1487,6 @@ $side-controls-width: 54px;
   position: relative;
   transition: all ease 0.6s 0.305s;
 
-
   &, &>span{
     display: block;
     width: 100%;
@@ -1505,17 +1504,82 @@ $side-controls-width: 54px;
     opacity: 0.71;
   }
 
+  .state-helper {
+    opacity: 0;
+    position: absolute;
+    height: 6px;
+    top: 0px;
+    margin-top: -2px;
+    width: 100%;
+    // background-color: tomato;
+    color: $line-color-3;
+    transition: all 0.12s ease-in-out;
+    cursor: pointer;
+    .state-helper {
+      
+    }
+
+    &.end-state-helper {
+      position: relative;
+      // background-color: red;
+      height: 18px;
+      top: unset;
+      &:hover {
+        opacity: 0.66;
+      }
+      &::after {
+        content: " ";
+      }
+    }
+
+    &.active {
+      opacity: 0.5;
+      &::after {
+        border-bottom: dashed 2px $primary-color;
+      }
+    }
+    
+    &:hover {
+      opacity: 0.66;
+      &::after {
+        border-bottom: dashed 2px $primary-color;
+      }
+    }
+    
+    &::after {
+      transition: all 0.12s ease-in-out;
+      content: " ";
+      position: absolute;
+      top: 2px;
+      left: 20px;
+      width: calc(100% - 40px);
+      height: 0px;
+      z-index: 1;
+      border-bottom: dashed 2px currentColor;
+      pointer-events: none;
+    }
+
+
+    // color: $primary-color;
+  }
 
   .cell-container {
     overflow: hidden;
     display: flex;
     position: relative;
     width: 100%;
+    padding-top: 4px;
+
 
     &:hover {
       .editor-holder {
         border-bottom-color: rgba(0,0,0,0.19);
       }
+      // & + .cell-container {
+      //   .state-helper {
+      //     opacity: 0.66;
+      //   }
+      // }
     }
 
     &.active, &.ghost {
@@ -1556,7 +1620,6 @@ $side-controls-width: 54px;
       overflow: hidden;
       display: flex;
       position: relative;
-      margin-bottom: 2px;
     }
     &:not(.fixed-cell) .left-handle {
       cursor: move;

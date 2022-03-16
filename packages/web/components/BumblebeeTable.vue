@@ -1586,10 +1586,12 @@ export default {
         }
 
         if (preview) {
-          this.$store.dispatch('afterPreviewProfiling', {error: true})
+          await this.$store.dispatch('afterPreviewProfiling', {error: true})
         } else {
-          this.$store.dispatch('afterWholeProfiling', {error: true});
+          await this.$store.dispatch('afterWholeProfiling', {error: true});
         }
+        
+        await this.checkVisibleColumns();
 
       }
   
