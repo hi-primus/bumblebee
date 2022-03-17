@@ -790,7 +790,7 @@ let _operations = {
   nest: {
     path: 'COLUMNS',
     text: 'Nest columns',
-    label: 'Unsplit',
+    label: 'Merge',
     icons: [{icon: 'mdi-table-merge-cells'}],
     disabled: ($nuxt)=>['values','ranges'].includes($nuxt.selectionType) || $nuxt.selectedColumns.length<=1 || !$nuxt.currentDataset.summary,
     test: {
