@@ -311,8 +311,8 @@
               <Frequent
                 v-if="previewPlotsData[column.name].frequency"
                 :key="previewPlotsData[column.name].key+' '+columnsReloads[index]"
-                :uniques="previewPlotsData[column.name].count_uniques"
-                :values="previewPlotsData[column.name].frequency"
+                :uniques="previewPlotsData[column.name].frequency.count_uniques"
+                :values="previewPlotsData[column.name].frequency.values"
                 :total="+previewPlotsData[column.name].total || 1"
                 :columnIndex="column.index"
                 class="histfreq"
@@ -320,7 +320,6 @@
               <Histogram
                 v-else-if="previewPlotsData[column.name].hist"
                 :key="previewPlotsData[column.name].key+' '+columnsReloads[index]"
-                :uniques="previewPlotsData[column.name].count_uniques"
                 :values="previewPlotsData[column.name].hist"
                 :total="+previewPlotsData[column.name].total"
                 :columnIndex="column.index"
@@ -329,7 +328,6 @@
               <Histogram
                 v-else-if="previewPlotsData[column.name].hist_years"
                 :key="previewPlotsData[column.name].key+' '+columnsReloads[index]"
-                :uniques="previewPlotsData[column.name].count_uniques"
                 :values="previewPlotsData[column.name].hist_years"
                 :total="+previewPlotsData[column.name].total"
                 :columnIndex="column.index"
@@ -364,8 +362,8 @@
               <Frequent
                 v-if="plotsData[column.name].frequency"
                 :key="plotsData[column.name].key+' '+columnsReloads[index]"
-                :uniques="plotsData[column.name].count_uniques"
-                :values="plotsData[column.name].frequency"
+                :uniques="plotsData[column.name].frequency.count_uniques || plotsData[column.name].count_uniques"
+                :values="plotsData[column.name].frequency.values || plotsData[column.name].frequency"
                 :total="+plotsData[column.name].total || 1"
                 :columnIndex="column.index"
                 :selectable="selectionEnabled"
@@ -374,7 +372,6 @@
               <Histogram
                 v-else-if="plotsData[column.name].hist"
                 :key="plotsData[column.name].key+' '+columnsReloads[index]"
-                :uniques="plotsData[column.name].count_uniques"
                 :values="plotsData[column.name].hist"
                 :total="+plotsData[column.name].total || 1"
                 :columnIndex="column.index"
@@ -384,7 +381,6 @@
               <Histogram
                 v-else-if="plotsData[column.name].hist_years"
                 :key="plotsData[column.name].key+' '+columnsReloads[index]"
-                :uniques="plotsData[column.name].count_uniques"
                 :values="plotsData[column.name].hist_years"
                 :total="+plotsData[column.name].total || 1"
                 :columnIndex="column.index"

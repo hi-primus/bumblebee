@@ -215,8 +215,8 @@
         >
           <h3>Frequent values</h3>
           <Frequent
-            :uniques="column.stats.count_uniques"
-            :values="frequency"
+            :uniques="frequency.count_uniques"
+            :values="frequency.values"
             :total="rowsCount"
             :height="90"
             :columnIndex="column.index"
