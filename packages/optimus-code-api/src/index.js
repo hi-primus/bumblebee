@@ -96,6 +96,13 @@ export const payloadPreparers = {
 }
 
 export const codeGenerators = {
+  get: (payload) => {
+    let source = payload.source;
+    if (payload.toString) {
+      source = `str(${source})`
+    }
+    return { code: `_output = ${source}`, isOutput: true }
+  },
   profile: (payload) => ({ code: `_output = ${payload.dfName}.profile(cols="*")`, isOutput: true }),
   uploadToS3: (payload) => {
     let code = `${payload.dfName}.save.${payload.file_type}( filename="s3://${payload.bucket}/${payload.username}/${payload.file_name}.${payload.file_type}", storage_options={ "key": "${payload.access_key_id}", "secret": "${payload.secret_key}", "client_kwargs": { "endpoint_url": "https://${payload.endpoint}", }, "config_kwargs": {"s3": {"addressing_style": "virtual", "x-amz-acl": "public/read"}} } );`;

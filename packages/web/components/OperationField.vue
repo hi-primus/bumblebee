@@ -100,6 +100,7 @@
         :key="field.key+'ace-editor'"
         :id="'field-'+field.key"
         @input="triggerFunction(field.onChange, $event)"
+        @selection="triggerFunction(field.onSelection, $event)"
         :height="field.height || '200px'"
         width="100%"
         :label="getPropertyField(field.label)"
@@ -112,6 +113,25 @@
           showGutter: false,
         }"
       />
+    </template>
+    <template v-else-if="getPropertyField(field.type)=='debug-value'">
+      <template
+      >
+        <div
+          v-if="_value && _value.source"
+          :key="field.key+(_value ? _value.source : '')"
+          class="debug-value"
+          :class="{'debug-value-error': _value.error}"
+          :id="'field-'+field.key+(_value ? _value.source : '')"
+        >{{_value.source}}:<br/>{{_value.result}}</div>
+        <div
+          v-else
+          :key="'e'+field.key+(_value ? _value.source : '')"
+          class="hidden-error"
+        >
+          {{_value}}
+        </div>
+      </template>
     </template>
     <template v-else-if="getPropertyField(field.type)=='field-suggestions'">
       <TextFieldSuggestions
@@ -428,7 +448,7 @@
 
 <script>
 
-import { getProperty } from 'bumblebee-utils'
+import { getProperty, debounce, throttle } from 'bumblebee-utils'
 
 import TextFieldSuggestions from '@/components/TextFieldSuggestions'
 import AceEditor from '@/components/AceEditor'
@@ -502,24 +522,53 @@ export default {
       return getProperty(pof, [this.currentCommand, this.index, this])
     },
 
-    async triggerFunction (key_callback, event) {
+    async triggerFunction (keyCallback, event) {
 
       let func = false;
+      let debounceFunc = false;
+      let throttleFunc = false;
 
-      if (typeof key_callback === 'function') {
-        func = key_callback
-      } else if (key_callback in this.command && typeof this.command[key_callback] === 'function') {
-        func = this.command[key_callback]
+      if (keyCallback && typeof keyCallback === 'object') {
+        debounceFunc = keyCallback.debounce;
+        throttleFunc = keyCallback.throttle;
+        keyCallback = keyCallback.callback || keyCallback.key;
+      }
+
+      if (typeof keyCallback === 'function') {
+        func = keyCallback
+      } else if (keyCallback in this.command && typeof this.command[keyCallback] === 'function') {
+        func = this.command[keyCallback]
       }
 
       if (func) {
+
         this.computedCurrentCommand._loading = true;
-        try {
-          this.computedCurrentCommand = await func(event, this.computedCurrentCommand, this.commandMethods || {}, this.command);
-        } catch (err) {
-          console.error(err);
+
+        let trueFunc = async function () {
+          try {
+            let result = await func(event, this.computedCurrentCommand, this.commandMethods || {}, this.command);
+            console.log({result});
+            if (result) {
+              this.computedCurrentCommand = result;
+            }
+          } catch (err) {
+            console.error(err);
+          }
+          this.computedCurrentCommand._loading = false;
+        };
+
+        trueFunc = trueFunc.bind(this);
+
+        if (debounceFunc) {
+          trueFunc = debounce(trueFunc, debounceFunc);
         }
-        this.computedCurrentCommand._loading = false;
+
+        if (throttleFunc) {
+          trueFunc = throttle(trueFunc, throttleFunc);
+        }
+
+        trueFunc();
+
       }
     },
 

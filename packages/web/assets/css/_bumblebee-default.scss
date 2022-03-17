@@ -113,6 +113,21 @@ body{
   }
 }
 
+.debug-value {
+  font-family: $font-mono;
+  font-size: 14px !important;
+  line-height: normal;
+  margin-bottom: 16px;
+  padding: 4px 4px;
+  color: $text-color;
+  border: rgba(0, 0, 0, 0.08) 1px solid;
+  border-radius: 4px;
+  white-space: pre-wrap;
+  &.debug-value-error {
+    color: $text-red-color;
+  }
+}
+
 
 .font-mono {
   font-family: $font-mono;

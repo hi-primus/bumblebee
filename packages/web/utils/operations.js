@@ -2618,7 +2618,68 @@ export const commandsHandlers = {
           label: "Function definition",
           type: "code-editor",
           height: 400,
+          onSelection: {
+            callback: async (event, currentCommand, methods) => {
+
+              let {selected: source, editor} = event;
+
+              let selected = editor.getSelectedText();
+
+              if (!source || selected !== source) {
+                return null;
+              }
+
+              if (source.match(/^\d/) || source.includes("\n")) {
+                methods.vueSet(currentCommand, 'debug', {
+                  source: undefined,
+                  result: undefined,
+                  error: false
+                });
+                return currentCommand;
+              }
+
+              let response = await methods.evalCode({
+                source,
+                command: "get",
+                toString: true
+              }, "await", "requirement");
+
+              let debug;
+
+              if (response.data?.result) {
+                debug = {
+                  source,
+                  result: response.data.result.replace(/\\n/g, '\n'),
+                  error: false
+                };
+              } else {
+                if (response.data?.errorName == "NameError") {
+                  debug = {
+                    source,
+                    result: capitalizeString(response.data?.error),
+                    error: true
+                  };
+                } else {
+                  debug = {
+                    source: false,
+                    result: false,
+                    error: true
+                  };
+                }
+              }
+
+              methods.vueSet(currentCommand, 'debug', debug);
+
+              return currentCommand;
+            },
+            debounce: 250
+          }
         },
+        {
+          key: "debug",
+          label: "Debug",
+          type: "debug-value"
+        }
       ],
     },
     payload: (columns, payload = {}) => ({

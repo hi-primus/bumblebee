@@ -91,6 +91,14 @@ export default {
           this.$emit("input", content);
           this.oldValue = content;
         });
+
+        editor.on("changeSelection", () => {
+          let selected = editor.getSelectedText();
+          if (selected) {
+            this.$emit("selection", {editor, selected});
+          }
+        });
+        
         this.editor = editor;
       }
     } catch (err) {
