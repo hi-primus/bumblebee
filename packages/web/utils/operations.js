@@ -2629,7 +2629,8 @@ export const commandsHandlers = {
                 return null;
               }
 
-              if (source.match(/^\d/) || source.includes("\n")) {
+              // if source is not a valid variable name, remove any debug info
+              if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(source)) {
                 methods.vueSet(currentCommand, 'debug', {
                   source: undefined,
                   result: undefined,
