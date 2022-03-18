@@ -4119,7 +4119,7 @@ export const commandsHandlers = {
       ],
       output_cols: true,
       validate: (command) => {
-        if (!command.search.some(e => !e.length)) {
+        if (command.search.some(e => !e.length)) {
           return 0;
         }
         return (
