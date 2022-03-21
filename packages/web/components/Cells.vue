@@ -1860,6 +1860,15 @@ export default {
 
       var cell = deepCopy(this.cells[index]);
 
+      let dfName = cell.payload.dfName || cell.payload.newDfName;
+
+      if (dfName) {
+        let foundTab = this.$store.state.datasets.findIndex(dataset => dataset.dfName === dfName);
+        if (foundTab>=0) {
+          await this.$store.dispatch('changeTab', foundTab);
+        }
+      }
+
       var commandHandler = this.getCommandHandler(cell.payload || cell);
 
       // console.debug('[DEBUG] Editing cell',{cell, index, commandHandler})
