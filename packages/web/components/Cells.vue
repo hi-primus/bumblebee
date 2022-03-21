@@ -308,7 +308,10 @@
             </div>
             <div
               class="handle operation-hint-text"
-              :class="{'multiple-tabs': hasSecondaryDatasets}"
+              :class="{
+                'multiple-tabs': hasSecondaryDatasets,
+                'disabled-cell': toCell && index+dataSources.length >= toCell
+              }"
               @click="selectCell(index)"
               v-html="cell.content || cell.code"
             >
@@ -360,7 +363,10 @@
             </div>
             <div
               class="handle operation-hint-text"
-              :class="{'multiple-tabs': hasSecondaryDatasets}"
+              :class="{
+                'multiple-tabs': hasSecondaryDatasets,
+                'disabled-cell': toCell && index+dataSources.length >= toCell
+              }"
               @click="selectCell(index+dataSources.length)"
               v-html="cell.content || cell.code"
             >

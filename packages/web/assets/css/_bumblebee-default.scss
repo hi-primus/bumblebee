@@ -1635,6 +1635,9 @@ $side-controls-width: 54px;
       overflow: hidden;
       display: flex;
       position: relative;
+      .disabled-cell {
+        opacity: 0.667;
+      }
     }
     &:not(.fixed-cell) .left-handle {
       cursor: move;
