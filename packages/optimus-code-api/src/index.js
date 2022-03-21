@@ -1020,7 +1020,7 @@ export const codeGenerators = {
     return { code: `_output = ${payload.dfName}.cols.names()`, isOutput: true };
   },
   dataTypes: (payload) => {
-    return { code: `_output = ${payload.dfName}.cols.inferred_types(${preparedColumns(payload.columns)})`, isOutput: true };
+    return { code: `_output = ${payload.dfName}.cols.inferred_data_type(${preparedColumns(payload.columns)}, use_internal=True, tidy=False)["inferred_data_type"]`, isOutput: true };
   },
   frequency: (payload) => {
     return { code: `_output = ${payload.dfName}.cols.frequency(${preparedColumns(payload.columns)}, ${payload.n})`, isOutput: true };
