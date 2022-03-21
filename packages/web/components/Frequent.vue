@@ -76,11 +76,12 @@ export default {
     cValues () {
       if (this.values.length!==undefined) {
         return this.values
-      } else if (this.values.values.length!==undefined) {
-        return this.values.values
-      } else {
-        return []
       }
+      if (this.values.values.length!==undefined) {
+        return this.values.values
+      }
+      console.warn("Frequent values not set", this.values);
+      return [];
     },
 
     computedSelected () {
