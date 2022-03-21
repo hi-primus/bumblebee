@@ -130,7 +130,8 @@ const defaultState = {
   engineId: false,
   engineConfigName: false,
   connections: false,
-  enableIncrementalProfiling: true
+  enableIncrementalProfiling: true,
+  cache: {},
 }
 
 export const state = () => {

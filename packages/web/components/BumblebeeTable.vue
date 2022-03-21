@@ -310,7 +310,7 @@
               />
               <Frequent
                 v-if="previewPlotsData[column.name].frequency"
-                :key="previewPlotsData[column.name].key+' '+columnsReloads[index]"
+                :key="previewPlotsData[column.name].key+' '+columnsReloads[column.name]"
                 :uniques="previewPlotsData[column.name].frequency.count_uniques"
                 :values="previewPlotsData[column.name].frequency.values"
                 :total="+previewPlotsData[column.name].total || 1"
@@ -319,7 +319,7 @@
               />
               <Histogram
                 v-else-if="previewPlotsData[column.name].hist"
-                :key="previewPlotsData[column.name].key+' '+columnsReloads[index]"
+                :key="previewPlotsData[column.name].key+' '+columnsReloads[column.name]"
                 :values="previewPlotsData[column.name].hist"
                 :total="+previewPlotsData[column.name].total"
                 :columnIndex="column.index"
@@ -327,7 +327,7 @@
               />
               <Histogram
                 v-else-if="previewPlotsData[column.name].hist_years"
-                :key="previewPlotsData[column.name].key+' '+columnsReloads[index]"
+                :key="previewPlotsData[column.name].key+' '+columnsReloads[column.name]"
                 :values="previewPlotsData[column.name].hist_years"
                 :total="+previewPlotsData[column.name].total"
                 :columnIndex="column.index"
@@ -361,7 +361,7 @@
               />
               <Frequent
                 v-if="plotsData[column.name].frequency"
-                :key="plotsData[column.name].key+' '+columnsReloads[index]"
+                :key="plotsData[column.name].key+' '+columnsReloads[column.name]"
                 :uniques="plotsData[column.name].frequency.count_uniques || plotsData[column.name].count_uniques"
                 :values="plotsData[column.name].frequency.values || plotsData[column.name].frequency"
                 :total="+plotsData[column.name].total || 1"
@@ -371,7 +371,7 @@
               />
               <Histogram
                 v-else-if="plotsData[column.name].hist"
-                :key="plotsData[column.name].key+' '+columnsReloads[index]"
+                :key="plotsData[column.name].key+' '+columnsReloads[column.name]"
                 :values="plotsData[column.name].hist"
                 :total="+plotsData[column.name].total || 1"
                 :columnIndex="column.index"
@@ -380,7 +380,7 @@
               />
               <Histogram
                 v-else-if="plotsData[column.name].hist_years"
-                :key="plotsData[column.name].key+' '+columnsReloads[index]"
+                :key="plotsData[column.name].key+' '+columnsReloads[column.name]"
                 :values="plotsData[column.name].hist_years"
                 :total="+plotsData[column.name].total || 1"
                 :columnIndex="column.index"
@@ -522,13 +522,9 @@ import DataBar from '@/components/DataBar'
 
 import {
   ErrorWithResponse,
-  parseResponse, arraysEqual, 
-  getColumnsRange, throttle,
-  asyncDebounce, debounce, 
-  objectFilter, objectMap,
-  optimizeRanges, escapeQuotes,
-  namesToIndices, getSelectedText,
-  getPropertyAsync, replaceTags
+  deepCopy, parseResponse, arraysEqual, getColumnsRange, throttle, asyncDebounce,
+  debounce, objectFilter, objectMap, optimizeRanges, escapeQuotes, namesToIndices,
+  getSelectedText, getPropertyAsync, replaceTags
 } from 'bumblebee-utils'
 
 var doubleClick = false
@@ -605,6 +601,10 @@ export default {
       fetched: [],
       fetchedPreview: [],
 
+      rowsRange: [],
+      verticalScroll: -1,
+      horizontalScroll: -1,
+
       noBufferWindow: false,
       lessRows: false,
 
@@ -648,6 +648,19 @@ export default {
     ]),
 
     ...mapState(['allTypes', 'profilePreview', 'loadPreview', 'enableIncrementalProfiling', 'updatingProfile']),
+
+    currentCache: {
+      get () {
+        if (this.currentDataset?.dfName && this.$store.state.cache) {
+          return this.$store.state.cache[this.currentDataset.dfName];
+        }
+      },
+      set (value) {
+        let cache = deepCopy(this.$store.state.cache || {});
+        cache[this.currentDataset.dfName] = value;
+        this.$store.commit('mutation', {mutate: 'cache', payload: cache});
+      }
+    },
 
     gettingNewResults: {
       get () {
@@ -1222,7 +1235,12 @@ export default {
 
   async mounted () {
 
-    this.fixScroll();
+    this.loadCache();
+
+    let topScroll = this.currentCache?.verticalScroll || 0;   
+
+    this.fixScroll(topScroll);
+
     setTimeout(async () => {
       await this.checkVisibleColumns();
       await this.scrollCheck(true);
@@ -1594,6 +1612,60 @@ export default {
     
     },
 
+    saveCacheThrottled: throttle(async function() {
+      await this.saveCache();
+    }, 100),
+
+    saveCache () {
+
+      // TODO: activate chunks saving to cache
+
+      // let chunks = this.fetched.filter(chunk => (
+      //   chunk.update === this.currentDatasetUpdate && 
+      //   chunk.to >= this.rowsRange[0] &&
+      //   chunk.from <= this.rowsRange[1]
+      // ));
+
+      this.currentCache = {
+        rowsRange: deepCopy(this.rowsRange),
+        verticalScroll: this.verticalScroll,
+        horizontalScroll: this.horizontalScroll,
+        columnWidths: deepCopy(this.columnWidths),
+        // chunks: deepCopy(chunks)
+      }
+    },
+
+    loadCache () {
+
+      // TODO: load cached chunks
+
+      if (!this.currentCache) {
+        return;
+      }
+
+      let currentCache = deepCopy(this.currentCache || {});
+
+      this.$refs['BbTableContainer'].scrollTop = currentCache.verticalScroll || 0;
+      this.$refs['BbTableContainer'].scrollLeft = currentCache.horizontalScroll || 0;
+
+      // this.fetched = currentCache.chunks?.map(chunk => ({ ...chunk, inTable: false })) || [];
+      // this.mustUpdateRows = true;
+      // this.recalculateRows = true;
+      
+      let widths = currentCache.columnWidths || {};
+
+      for (const key in widths) {
+        if (widths.hasOwnProperty(key)) {
+          if (this.columnWidths[key] !== widths[key]) {
+            this.$set(this.columnWidths, key, widths[key]);
+            this.reloadPlot(key);
+          }
+        }
+      }
+
+      return true;
+    },
+
     getColumnRange (group, useWindow = true) {
       let range;
       while (true) {
@@ -1828,8 +1900,8 @@ export default {
       window.startX = e.clientX;
       window.newX = e.clientX;
       window.currentElement = e.target;
-      window.currentElementIndex = i;
       var name = this.allColumns[i].name;
+      window.currentElementName = name;
       window.startWidth = this.columnWidths[name] || 172;
       document.onmouseup = this.closeDragElement;
       document.onmousemove = this.elementDrag;
@@ -1847,7 +1919,7 @@ export default {
     },
 
     closeDragElement () {
-      this.reloadPlot(window.currentElementIndex);
+      this.reloadPlot(window.currentElementName);
 
       window.currentElement.style.left = null;
       document.onmouseup = null;
@@ -1855,22 +1927,24 @@ export default {
       window.newX = undefined;
       window.startX = undefined;
       window.currentElement = undefined;
-      window.currentElementIndex = undefined;
+      window.currentElementName = undefined;
+
+      this.saveCacheThrottled();
     },
 
     setColumnWidth () {
-      var grow = window.newX - window.startX;
-      var name = this.allColumns[window.currentElementIndex].name;
-      var width = window.startWidth;
+      let grow = window.newX - window.startX;
+      let name = window.currentElementName;
+      let width = window.startWidth;
       width += grow;
       width = Math.max(width, 150);
 
       this.$set(this.columnWidths, name, width);
     },
 
-    reloadPlot (index) {
-      var value = +(this.columnsReloads[index] || 0);
-      this.$set(this.columnsReloads, index, value+1);
+    reloadPlot (columnIndex) {
+      var value = +(this.columnsReloads[columnIndex] || 0);
+      this.$set(this.columnsReloads, columnIndex, value+1);
     },
 
     tableContainerScroll () {
@@ -1975,24 +2049,26 @@ export default {
     },
 
     getCurrentWindow () {
-      var element = this.$refs['BbTableContainer']
+      let element = this.$refs['BbTableContainer'];
 
       if (!element) {
-        return false
+        return false;
       }
 
-      var topPosition = element.scrollTop
-      var bottomPosition = topPosition + element.clientHeight
+      let topPosition = element.scrollTop;
+      let bottomPosition = topPosition + element.clientHeight;
 
-      var top = Math.floor(topPosition/this.rowHeight)
-      var bottom = Math.ceil(bottomPosition/this.rowHeight)
+      this.verticalScroll = topPosition;
+
+      let top = Math.floor(topPosition/this.rowHeight);
+      let bottom = Math.ceil(bottomPosition/this.rowHeight);
 
       if (!top && !bottom) {
         bottom = 32;
         this.checkScrollAgain = true;
       }
 
-      return [top, bottom]
+      return [top, bottom];
     },
 
     getValuesByColumns (sample, clear, from = 0, prepend = '') {
@@ -2433,12 +2509,14 @@ export default {
 
     checkVisibleColumns: asyncDebounce( async function(fix = true) {
       try {
-        var scrollLeft = this.$refs['BbTableTopContainer'].scrollLeft;
-        var offsetWidth = this.$refs['BbTableTopContainer'].offsetWidth;
+        let scrollLeft = this.$refs['BbTableTopContainer'].scrollLeft;
+        let offsetWidth = this.$refs['BbTableTopContainer'].offsetWidth;
 
-        var left = 48;
-        var a = -1;
-        var b = -1;
+        this.horizontalScroll = scrollLeft;
+
+        let left = 48;
+        let a = -1;
+        let b = -1;
 
         for (let i = 0; i < this.allColumns.length; i++) {
           left += this.allColumns[i].width;
@@ -2454,7 +2532,7 @@ export default {
           b = this.allColumns.length;
         }
 
-        var numbers = []
+        let numbers = []
 
         for (let n = a; n <= b; n++) {
           numbers[n] = true
@@ -2466,20 +2544,24 @@ export default {
         this.lazyColumns = []
       }
 
+      this.saveCacheThrottled();
       this.requestWholeProfiling();
 
     }, 80),
 
-    async fixScroll () {
+    fixScroll (topScroll) {
       try {
-        this.$refs['BbContainer'].scroll(0,0);
+        this.$refs['BbContainer'].scroll(0,topScroll);
         let container = this.$refs['BbTableContainer'];
         if (container) {
           let left = container.scrollLeft;
-          container.scroll(left+1,0);
-          setTimeout(() => {
-            container.scroll(left,0);
-          }, 50);
+          container.scroll(left+1,topScroll);
+          return new Promise(resolve => {
+            setTimeout(()=>{
+              container.scroll(left,topScroll);
+              resolve();
+            }, 50)
+          })
         }
       } catch (err) {
         console.error(err);
@@ -2678,16 +2760,22 @@ export default {
 
           let awaited = false
 
+          let fetchedRange = range;
+
           while (!awaited && this.toFetch.length) {
-            range = await this.fetchRows(range)
-            awaited = (range===false)
+            let fetchedRange = await this.fetchRows(fetchedRange)
+            awaited = (fetchedRange===false)
           }
+
+          this.rowsRange = range;
+          this.saveCacheThrottled();
 
           if (!awaited) {
             this.previousRange = -1 // TO-DO: Check
           }
 
-          this.fetching = false
+          this.fetching = false;
+
           if (this.toFetch.length || this.checkScrollAgain) {
             this.checkScrollAgain = false;
             this.$nextTick(()=>{
