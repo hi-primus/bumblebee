@@ -310,7 +310,7 @@
               class="handle operation-hint-text"
               :class="{
                 'multiple-tabs': hasSecondaryDatasets,
-                'disabled-cell': toCell && index+dataSources.length >= toCell
+                'disabled-cell': toCell && index >= toCell
               }"
               @click="selectCell(index)"
               v-html="cell.content || cell.code"
