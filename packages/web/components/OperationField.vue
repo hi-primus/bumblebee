@@ -547,7 +547,6 @@ export default {
         let trueFunc = async function () {
           try {
             let result = await func(event, this.computedCurrentCommand, this.commandMethods || {}, this.command);
-            console.log({result});
             if (result) {
               this.computedCurrentCommand = result;
             }
