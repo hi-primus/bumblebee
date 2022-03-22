@@ -497,8 +497,8 @@ export const handleResponse = (response) => {
 
 export const printError = (payload) => {
 
-  var data = payload.data || payload
-  var content = data.content
+  let data = payload?.data || payload || 'Unknown error';
+  let content = data?.content;
 
   if (data.traceback && data.traceback.length) {
     console.error('[DEBUG][ERROR][TRACEBACK]\n',data.traceback.join('\n'))
@@ -513,8 +513,8 @@ export const printError = (payload) => {
     console.error('[DEBUG][ERROR] (response)\n',payload)
   }
 
-  if (payload.code) {
-    console.error('[DEBUG][ERROR][CODE]',payload.code)
+  if (payload?.code) {
+    console.error('[DEBUG][ERROR][CODE]',payload?.code)
   }
 
   let traceback = data.traceback && data.traceback[data.traceback.length-1];
