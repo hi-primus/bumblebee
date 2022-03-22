@@ -59,9 +59,9 @@ export class KernelRoutines {
 
   features = (payload) => {
     if (payload.optimusPath) {
-      payload.optimusPath = `import sys; sys.path.append('${payload.optimusPath}')`;
+      payload.optimusImport = `import sys; sys.path.append('${payload.optimusPath}')`;
     } else {
-      payload.optimusPath = "";
+      payload.optimusImport = "";
     }
     return this._pythonTemplate("features.py", true)(payload);
   }
@@ -100,9 +100,9 @@ export class KernelRoutines {
     }
 
     if (payload.optimusPath) {
-      payload.optimusPath = `import sys; sys.path.append('${payload.optimusPath}')`;
+      payload.optimusImport = `import sys; sys.path.append('${payload.optimusPath}')`;
     } else {
-      payload.optimusPath = "";
+      payload.optimusImport = "";
     }
 
     return this._pythonTemplate("init.py", true)(payload);

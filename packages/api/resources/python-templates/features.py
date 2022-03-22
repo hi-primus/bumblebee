@@ -1,4 +1,4 @@
-#{payload.optimusPath}
+#{payload.optimusImport}
 #{this.initJSON}
 #{this.initPrefect}
 #{this.initVariables}
