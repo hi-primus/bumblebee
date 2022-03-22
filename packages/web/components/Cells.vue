@@ -1903,10 +1903,10 @@ export default {
     async rollbackToCell (index) {
 
       if (index == -1) {
-        index = undefined;
+        index = false;
       }
 
-      if (index !== undefined && !this.cells[index]) {
+      if (index !== false && !this.cells[index]) {
         console.error("Trying to rollback to unexisting cell with index", index);
         return;
       }
@@ -1919,7 +1919,7 @@ export default {
       this.$store.commit('selection', { clear: true }) // should save it and try to reset it after rollback?
       this.toCell = index;
 
-      await this.runCodeNow(true, index === undefined ? -1 : index, undefined, false, false);
+      await this.runCodeNow(true, index === false ? -1 : index, undefined, false, false);
 
     },
 
@@ -1934,8 +1934,12 @@ export default {
       this.removeErrorAlert("all")
 
       if (at === -1) {
-        at = this.toCell || this.cells.length;
-        this.toCell = this.toCell + 1;
+        if (this.toCell !== false) {
+          at = this.toCell;
+          this.toCell = this.toCell + 1;
+        } else {
+           at = this.cells.length;
+        }
         replace = false;
       }
 
@@ -1966,7 +1970,7 @@ export default {
       this.cells = cells
 
       if (!payload.noCall && this.cells.length && !noCall) {
-        return this.runCodeNow(forceAll, this.toCell ? this.toCell + 1 : -1, payload.newDfName);
+        return this.runCodeNow(forceAll, this.toCell !== false ? this.toCell + 1 : -1, payload.newDfName);
       }
 
     },
