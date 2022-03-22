@@ -513,6 +513,8 @@
 
 import { mapState, mapGetters } from 'vuex';
 
+import { diffChars } from 'diff';
+
 import dataTypesMixin from '@/plugins/mixins/data-types'
 import clientMixin from '@/plugins/mixins/client'
 
@@ -1962,6 +1964,12 @@ export default {
     computeColumnValues (columnValues, noHighlight = false, limit = Infinity) {
       var cValues = {}
 
+      const highlightDiff = this.previewCode.highlightDiff;
+      const highlightValue = this.previewCode.highlightValue;
+      const highlightMatch = this.previewCode.highlightMatch;
+
+      const colors = this.currentHighlights?.color;
+
       for (const name in columnValues) {
         // TO-DO: do not include highlights
         var array = []
@@ -1971,24 +1979,86 @@ export default {
           return cValues[name] = []
           continue // TO-DO: Handling
         }
-        const highlight = !noHighlight && this.highlightMatches && this.highlightMatches[name] && this.highlightMatches[name].title
-        const hlValues = columnValues[highlight]
-        if (highlight && hlValues && hlValues.length) {
-          const preview = name.includes('__preview__') || name.includes('__new__') // TO-DO: Check
-          const color = this.currentHighlights.color['default'] ? this.currentHighlights.color[preview ? 'preview' : 'default'] : this.currentHighlights.color
+        
+        const preview = name.includes('__preview__') || name.includes('__new__');  // TO-DO: Check __preview__
+        const otherName = preview ? name.replace('__new__', '') : `__new__${name}`;
+
+        let otherValues = columnValues[otherName];
+
+        if (!otherValues || !otherValues.length) {
+          otherValues = false;
+        }
+
+        const color = colors?.default ? colors[preview ? 'preview' : 'default'] : colors;
+
+        const enableHighlight = color === false ? false : !noHighlight;
+
+        const highlight = this.highlightMatches && this.highlightMatches[name] && this.highlightMatches[name].title;
+        const hlValues = columnValues[highlight];        
+
+        if (enableHighlight && highlight && hlValues && hlValues.length) {
+          // custom highlight
+
           for (const index in values) {
             if (index>=limit) {
               continue
             }
-            var html = this.getCellHtmlHighlight(values[index], hlValues[index], color)
+            const html = this.getCellHtmlHighlight(values[index], hlValues[index], color)
             array.push({html , index: +index, value: values[index]})
           }
-        } else {
+        } else if (enableHighlight && highlightDiff && otherValues) {
+          // highlight differences between new and old (replace)
+          const color = this.currentHighlights.color?.default ? this.currentHighlights.color[preview ? 'preview' : 'default'] : this.currentHighlights.color
+          
           for (const index in values) {
             if (index>=limit) {
               continue
             }
-            var html = this.getCellHtml(values[index])
+            const html = this.getCellHtmlHighlightDiff(values[index], otherValues[index], color)
+            array.push({html , index: +index, value: values[index]})
+          }
+        } else if (enableHighlight && highlightValue && (preview || otherValues)) {
+          // highlight a value from the arguments (split, merge)
+          const color = this.currentHighlights.color?.default ? this.currentHighlights.color[preview ? 'preview' : 'default'] : this.currentHighlights.color
+          const stringToHighlight = this.previewCode?.codePayload ? this.previewCode?.codePayload[highlightValue] : null;
+          if (stringToHighlight) {
+            for (const index in values) {
+              if (index>=limit) {
+                continue
+              }
+              const html = this.getCellHtmlHighlightValue(values[index], stringToHighlight, color)
+              array.push({html , index: +index, value: values[index]})
+            }
+          }
+        } else if (enableHighlight && highlightMatch && preview) {
+          // highlight a value from other column
+          const color = this.currentHighlights.color?.default ? this.currentHighlights.color[preview ? 'preview' : 'default'] : this.currentHighlights.color
+          const highlightValues = columnValues[highlightMatch];
+          if (highlightValues && highlightValues.length) {
+            for (const index in values) {
+              if (index>=limit) {
+                continue
+              }
+              const html = this.getCellHtmlHighlightValue(values[index], highlightValues[index], color)
+              array.push({html , index: +index, value: values[index]})
+            }
+          } else {
+            // default
+            for (const index in values) {
+              if (index>=limit) {
+                continue
+              }
+              const html = this.getCellHtml(values[index])
+              array.push({html , index: +index, value: values[index]})
+            }
+          }
+        } else {
+          // default
+          for (const index in values) {
+            if (index>=limit) {
+              continue
+            }
+            const html = this.getCellHtml(values[index])
             array.push({html , index: +index, value: values[index]})
           }
         }
@@ -2175,7 +2245,7 @@ export default {
 
           this.$store.commit('setPreviewColumns', previewColumns)
 
-          this.$store.commit('setHighlights', { matchColumns, color: this.previewCode.color })
+          this.$store.commit('setHighlights', { matchColumns, color: this.previewCode.highlightColor })
 
           if (previewColumns.length || matchRowsColumns.length) {
             // console.debug('[DEBUG][checkIncomingColumns] check = true')
@@ -2310,7 +2380,7 @@ export default {
     getRowHighlight (row) {
       try {
         if (this.columnValues['__match__'][row]) {
-          return 'bb-highlight--'+(this.previewCode.color || 'green')
+          return 'bb-highlight--'+(this.previewCode.highlightColor || 'green')
         }
       } catch (err) {
         // console.error(err)
@@ -2347,6 +2417,73 @@ export default {
         }
         return _value
       } catch (err) {
+        if (value) {
+          return value
+        } else if (_value) {
+          return _value
+        } else {
+          return '<span class="null-cell">Null</span>'
+        }
+      }
+    },
+
+    getCellHtmlHighlightDiff (value, other = null, color = 'green') {
+      
+      if (value==='') {
+        return '<span class="null-cell">Empty</span>'
+      } else if (value===null) {
+        return '<span class="null-cell">None</span>'
+      } else if (!value) {
+        return value
+      }
+
+      let _value = replaceTags(value)
+
+      try {
+        if (other !== null) {
+          const diff = diffChars(value, other);
+
+          _value = diff.map(part => {
+            if (part.added) {
+              return '';
+            }
+            return part.removed ? `<span class="hlt--${color}">${part.value}</span>` : part.value;
+          }).join('');
+        }
+        return _value
+      } catch (err) {
+        console.error(err);
+        if (value) {
+          return value
+        } else if (_value) {
+          return _value
+        } else {
+          return '<span class="null-cell">Null</span>'
+        }
+      }
+    },
+
+    getCellHtmlHighlightValue (value, other = null, color = 'green') {
+      
+      if (value==='') {
+        return '<span class="null-cell">Empty</span>'
+      } else if (value===null) {
+        return '<span class="null-cell">None</span>'
+      } else if (!value) {
+        return value
+      }
+
+      let _value = replaceTags(value)
+
+      try {
+        if (other !== null) {
+          _value = value
+            .split(other)
+            .join(`<span class="hlt--${color}">${other}</span>`);
+        }
+        return _value
+      } catch (err) {
+        console.error(err);
         if (value) {
           return value
         } else if (_value) {

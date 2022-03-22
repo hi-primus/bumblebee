@@ -1138,9 +1138,9 @@ export const codeGenerators = {
       +( (payload.drop) ? ', drop=True' : '')
       +')'
 
-    if (payload.request.type === 'preview') {
-      code += `.cols.find(${_argument}, sub=["${payload.separator}"])`
-    }
+    // if (payload.request.type === 'preview') {
+    //   code += `.cols.find(${_argument}, sub=["${payload.separator}"])`
+    // }
     return code
   },
 

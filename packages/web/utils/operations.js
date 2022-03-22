@@ -4141,6 +4141,7 @@ export const commandsHandlers = {
       _search_by_string: true,
       preview: {
         type: "replace",
+        highlightDiff: true,
         highlightColor: { default: "red", preview: "green" },
       },
     }),
@@ -4320,7 +4321,11 @@ export const commandsHandlers = {
         preview: {
           type: "unnest",
           expectedColumns: (c) => (c.splits ? c.splits : -1),
-          highlightColor: "red",
+          highlightValue: "separator",
+          highlightColor: {
+            default: "red",
+            preview: false
+          },
           multipleOutputs: true,
         },
       };

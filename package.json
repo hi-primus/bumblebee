@@ -26,6 +26,7 @@
     "lerna": "^3.22.0"
   },
   "dependencies": {
+    "diff": "^5.0.0",
     "dotenv-defaults": "^2.0.2",
     "dotenv-extended": "^2.9.0",
     "esm": "^3.2.25",
