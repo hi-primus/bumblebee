@@ -30,7 +30,8 @@ export default {
   },
   props: {
     values: {
-      default: ()=>[]
+      default: ()=>[],
+      type: Array
     },
     count: {
       default: ()=>[],
@@ -65,7 +66,7 @@ export default {
   },
 
   created() {
-    this.maxVal = (this.cValues.length) ? this.getMaxVal(this.calculatedValues) : 1
+    this.maxVal = (this.calculatedValues.length) ? this.getMaxVal(this.calculatedValues) : 1
   },
 
   computed: {
@@ -74,14 +75,7 @@ export default {
     ...mapState(['tab']),
 
     cValues () {
-      if (this.values.length!==undefined) {
-        return this.values
-      }
-      if (this.values.values.length!==undefined) {
-        return this.values.values
-      }
-      console.warn("Frequent values not set", this.values);
-      return [];
+      
     },
 
     computedSelected () {
@@ -95,7 +89,19 @@ export default {
     },
 
     calculatedValues() {
-      return this.cValues.map((e,i)=>{
+      let frequentValues;
+      if (Array.isArray(this.values)) {
+        frequentValues = this.values;
+      }
+      if (Array.isArray(this.values.values)) {
+        frequentValues = this.values.values;
+      }
+      if (!frequentValues) {
+        console.warn("Frequent values not set", this.values);
+        return [];
+      }
+      console.log({frequentValues});
+      return frequentValues.map((e,i)=>{
         return {
           value: e.value,
           count: e.count,
@@ -105,10 +111,10 @@ export default {
     },
 
     uniqueElements () {
-      return Math.max(this.cValues.length, this.uniques)
+      return Math.max(this.calculatedValues.length, this.uniques)
     },
     elementsString() {
-      return `${(this.cValues.length!=this.uniqueElements) ? this.cValues.length+' of ' : '' }${this.uniqueElements} ${(this.uniqueElements===1) ? 'category' : 'categories'}`
+      return `${(this.calculatedValues.length!=this.uniqueElements) ? this.calculatedValues.length+' of ' : '' }${this.uniqueElements} ${(this.uniqueElements===1) ? 'category' : 'categories'}`
     }
   },
 

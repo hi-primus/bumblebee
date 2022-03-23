@@ -215,8 +215,8 @@
         >
           <h3>Frequent values</h3>
           <Frequent
-            :uniques="frequency.count_uniques"
-            :values="frequency.values"
+            :uniques="frequency.count_uniques || countUniques"
+            :values="frequency"
             :total="rowsCount"
             :height="90"
             :columnIndex="column.index"
@@ -368,6 +368,10 @@ export default {
     
     frequency () {
       return this.column.stats.frequency || this.column.frequency;
+    },
+
+    countUniques () {
+      return this.column.stats.count_uniques || this.column.count_uniques;
     },
 
     commandsDisabled: {
