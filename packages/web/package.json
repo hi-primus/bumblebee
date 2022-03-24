@@ -31,7 +31,7 @@
     "konva": "^8.2.4",
     "less": "^3.11.1",
     "less-loader": "^5.0.0",
-    "minimist": "^1.2.5",
+    "minimist": "^1.2.6",
     "numeral": "^2.0.6",
     "nuxt": "^2.15.3",
     "nuxt-socket-io": "^2.0.0",

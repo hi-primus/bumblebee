@@ -3595,8 +3595,7 @@ builtin-status-codes@^3.0.0:
   integrity sha1-hZgoeOIbmOHGZCXgPQF0eI9Wnug=
 
 "bumblebee-utils@link:../bumblebee-utils":
-  version "0.0.0"
-  uid ""
+  version "22.3.4-beta"
 
 bytes@3.0.0:
   version "3.0.0"
@@ -8130,10 +8129,10 @@ minimatch@^3.0.4:
   dependencies:
     brace-expansion "^1.1.7"
 
-minimist@^1.2.0, minimist@^1.2.5:
-  version "1.2.5"
-  resolved "https://registry.yarnpkg.com/minimist/-/minimist-1.2.5.tgz#67d66014b66a6a8aaa0c083c5fd58df4e4e97602"
-  integrity sha512-FM9nNUYrRBAELZQT3xeZQ7fmMOBg6nWNmJKTcgsJeaLstP/UODVpGsr5OhXhhXg6f+qtJ8uiZ+PUxkDWcgIXLw==
+minimist@^1.2.0, minimist@^1.2.5, minimist@^1.2.6:
+  version "1.2.6"
+  resolved "https://registry.yarnpkg.com/minimist/-/minimist-1.2.6.tgz#8637a5b759ea0d6e98702cfb3a9283323c93af44"
+  integrity sha512-Jsjnk4bw3YJqYzbdyBiNsPWHPfO++UGG749Cxs6peCu5Xg4nrena6OVxOYxrQTqww0Jmwt+Ref8rggumkTLz9Q==
 
 minipass-collect@^1.0.2:
   version "1.0.2"
@@ -8646,8 +8645,10 @@ optimize-css-assets-webpack-plugin@^5.0.4:
     last-call-webpack-plugin "^3.0.0"
 
 "optimus-code-api@link:../optimus-code-api":
-  version "0.0.0"
-  uid ""
+  version "22.3.4-beta"
+  dependencies:
+    bumblebee-utils "link:../bumblebee-utils"
+    uuid "^8.3.2"
 
 optionator@^0.8.1, optionator@^0.8.3:
   version "0.8.3"
