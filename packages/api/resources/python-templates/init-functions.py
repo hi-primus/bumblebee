@@ -24,9 +24,14 @@ def df__preliminary_profile(df, cols="*"):
     plot_type = {}
 
     for col in count_uniques:
-        if data_type[col] in df.constants.NUMERIC_INTERNAL_TYPES and count_uniques[col] > 80:
+        _count_uniques = count_uniques[col]
+
+        if isinstance(_count_uniques, list):
+            _count_uniques = _count_uniques[0]
+
+        if data_type[col] in df.constants.NUMERIC_INTERNAL_TYPES and _count_uniques > 80:
             plot_type[col] = "hist"
-        elif count_uniques[col] > 2000:
+        elif _count_uniques > 2000:
             plot_type[col] = "big freq"
         else:
             plot_type[col] = "freq"
