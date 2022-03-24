@@ -31,7 +31,7 @@ export default {
   props: {
     values: {
       default: ()=>[],
-      type: Array
+      type: [Array, Object]
     },
     count: {
       default: ()=>[],
@@ -100,7 +100,6 @@ export default {
         console.warn("Frequent values not set", this.values);
         return [];
       }
-      console.log({frequentValues});
       return frequentValues.map((e,i)=>{
         return {
           value: e.value,

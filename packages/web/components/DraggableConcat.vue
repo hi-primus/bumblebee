@@ -124,7 +124,7 @@
 
 <script>
 
-import { propsToLocal, debounce, transpose } from 'bumblebee-utils'
+import { propsToLocal, deepCopy, incrementVarName, debounce, transpose } from 'bumblebee-utils'
 import SearchSelect from '@/components/SearchSelect'
 
 export default {
@@ -209,7 +209,7 @@ export default {
       if (!this.notSelected) {
         return true
       }
-      return !(this.notSelected || [[]]).some(e=>e.length)
+      return !(this.notSelected || [[]]).some(e=>e && e.length)
     },
 
     ...propsToLocal(['items', 'selected']),
@@ -217,7 +217,8 @@ export default {
   },
 
   mounted () {
-    this.updateItemsSlotsGroups();
+    console.log('selected', deepCopy(this.selected));
+    this.resetItemsSlotsGroups(false);
   },
 
   watch: {
@@ -227,7 +228,7 @@ export default {
       handler (items) {
         if (items.length!==this.itemsLength) {
           this.itemsLength = items.length;
-          this.updateItemsSlotsGroups();
+          this.resetItemsSlotsGroups(false);
         }
       }
     },
@@ -269,43 +270,7 @@ export default {
     },
 
     localSelected () {
-
-      var defaultValues = []
-      this.localSelected.forEach(e=>{
-        var name = 'error'
-
-        if (e.items && e.items.length) {
-
-          var items = e.items.filter(ee=>ee).map(ee=>ee[this.itemsKey] ? ee[this.itemsKey] : ee)
-          if (items.every(ee=>ee==items[0])) {
-            name = items[0]
-          } else {
-            name = items.join('_')
-          }
-
-        }
-
-        while (defaultValues.includes(name)) {
-          name = name+' copy'
-        }
-
-        defaultValues.push(name)
-
-      });
-
-      var textFieldsValues = {};
-
-      defaultValues.forEach(name=>{
-        if (name) {
-          textFieldsValues[name] = this.textFieldsValues[name] || ''
-        }
-      })
-
-      if (JSON.stringify(this.textFieldsValues)!==JSON.stringify(textFieldsValues)) {
-        this.textFieldsValues = textFieldsValues;
-      }
-
-      this.textFields = defaultValues
+      this.updateTextFields()
     },
 
 
@@ -419,19 +384,74 @@ export default {
       this.itemsSlotsGroups = itemsSlotsGroups;
     },
 
-    updateItemsSlotsGroups () {
+    updateTextFields () {
+      let defaultValues = [];
+      let textFieldsValues = {};
 
-      var length = Math.max(...this.items.map(eg=>eg.length))+1;
+      this.localSelected.forEach(row=>{
+        let name = 'error';
 
-      this.itemsSlotsGroups = this.items.map(eg=>{
-        var array = eg ? Array.from(eg) : [];
-        var al = array.length
+        if (row.items && row.items.length) {
+
+          let items = row.items.filter(col=>col).map(col=>col[this.itemsKey] ? col[this.itemsKey] : col)
+          if (items.every(col=>col==items[0])) {
+            name = items[0];
+          } else {
+            name = items.join('_');
+          }
+
+        }
+
+        let fieldName = incrementVarName(name, defaultValues);
+        name = incrementVarName(name, Object.values(textFieldsValues));
+
+        defaultValues.push(fieldName);
+        textFieldsValues[fieldName] = row.value || this.textFieldsValues[fieldName] || name || '';
+
+      });
+
+      if (JSON.stringify(this.textFieldsValues)!==JSON.stringify(textFieldsValues)) {
+        this.textFieldsValues = textFieldsValues;
+      }
+
+      this.textFields = defaultValues;
+    },
+
+    resetItemsSlotsGroups (reset = false) {
+
+      let length = Math.max(...this.items.map(col=>col.length))+1;
+      let itemsSlotsGroups;
+
+      if (reset) {
+        itemsSlotsGroups = this.items;
+      } else {
+        itemsSlotsGroups = transpose(this.selected.map(row => row.items));
+      }
+
+      this.itemsSlotsGroups = itemsSlotsGroups.map(col => {
+        let array = col ? Array.from(col) : [];
+        let al = array.length
         array.length = length
         array.fill(false, al)
         return array.map(e=>(e ? [e] : []))
       });
 
-      this.notSelected = this.items.map(eg=>[]);
+      this.updateTextFields();
+
+      if (reset) {
+        this.notSelected = this.items.map(col=>[]);
+      } else {
+        this.notSelected = this.items.map((col, colIndex) => {
+          let array = [];
+          col.forEach(e => {
+            if (e && e.name && !this.itemsSlotsGroups[colIndex].find(ie => ie && ie.length && ie[0].name === e.name)) {
+              array.push(e);
+            }
+          });
+          return array;
+        });
+      }
+
     },
 
     updateTextField (field, value) {
@@ -449,9 +469,10 @@ export default {
       })
 
       var rows = transpose(columns).map((rowItems, i)=>{
+        let items = rowItems.map(it=>it!=='_BB_EMPTY_SLOT_' ? it : false);
         return {
-          items: rowItems.map(it=>it!=='_BB_EMPTY_SLOT_' ? it : false),
-          value: this.textFieldsValues[this.textFields[i]] || this.textFields[i] || 'und'
+          items,
+          value: this.textFieldsValues[this.textFields[i]] || this.textFields[i] || items[0] || ''
         }
       })
 

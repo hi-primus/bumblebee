@@ -2978,9 +2978,13 @@ export const commandsHandlers = {
       };
 
       return {
-        showValues: false,
+        showValues: payload.showValues || false,
+        with: payload.with || [],
+        selected_columns: payload.selected_columns || [],
+
+        ...payload,
+
         items_with: items_with_cb,
-        with: [],
         items_info: (c) => {
           try {
             var rows = c.selected_columns.map((e) => e.items);
@@ -3051,7 +3055,6 @@ export const commandsHandlers = {
           }
         },
 
-        selected_columns: [],
         preview: false,
         request: {
           areSources: ["with"],
@@ -3064,21 +3067,29 @@ export const commandsHandlers = {
 
     onInit: async (event, currentCommand, methods) => {
       try {
+        if (currentCommand.typesDone) {
+          return currentCommand;
+        }
+
         let command = deepCopy(currentCommand);
 
         let dfNames = Object.keys(command.secondaryDatasets || {});
 
         for (let i = 0; i < dfNames.length; i++) {
           let dfName = dfNames[i];
+          
           command.secondaryDatasets[
             dfName
           ].execute = await methods.datasetExecute(dfName);
+          
           command.secondaryDatasets[
             dfName
           ].columns = await methods.datasetColumns(dfName);
-          command.secondaryDatasets[dfName].types = await methods.datasetTypes(
+          
+          command.secondaryDatasets[
             dfName
-          );
+          ].types = await methods.datasetTypes(dfName);
+
           command.secondaryDatasets[
             dfName
           ].sample = await methods.datasetSample(dfName);
