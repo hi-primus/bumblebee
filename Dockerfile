@@ -97,6 +97,7 @@ CMD ./usr/bin/mongod --fork --logpath /var/log/mongod.log && \
     echo "PORT='$FRONT_PORT'" >> packages/web/.env && \
     echo "PORT='$BACK_PORT'" >> packages/api/.env && \
     echo "KERNEL_ADDRESS='localhost:8888'" >> packages/api/.env && \
+    echo "DB_URL='$DB_URL'" >> packages/api/.env && \
     echo "ADD_ONS='$ADD_ONS'" >> packages/web/.env && \
     echo "QUICK_USER_AUTH=$QUICK_USER_AUTH" >> packages/web/.env && \
     echo "QUICK_WORKSPACE_CREATION=$QUICK_WORKSPACE_CREATION" >> packages/web/.env && \
