@@ -218,12 +218,12 @@
             <div
               v-if="typeof currentPreviewInfo.newColumns=='number' && currentPreviewInfo.newColumns"
             >
-              New columns: {{currentPreviewInfo.newColumns}}
+              Creating {{currentPreviewInfo.newColumns}} new column{{currentPreviewInfo.newColumns !== 1 ? '' : 's'}}
             </div>
             <div
               v-if="typeof currentPreviewInfo.replacingColumns=='number' && currentPreviewInfo.replacingColumns"
             >
-              Replacing columns: {{currentPreviewInfo.replacingColumns}}
+              Replacing {{currentPreviewInfo.replacingColumns}} column{{currentPreviewInfo.replacingColumns !== 1 ? '' : 's'}}
             </div>
           </div>
           <div class="o-buttons">
