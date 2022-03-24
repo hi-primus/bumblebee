@@ -319,12 +319,10 @@
             <div class="right-cell-section">
               <v-icon
                 class="close-btn"
-                small
                 @click="removeCell(index, true)"
               >close</v-icon>
               <v-icon
                 class="edit-btn"
-                small
                 @click="editCell(index)"
               >edit</v-icon>
             </div>
@@ -376,12 +374,10 @@
             >
               <v-icon
                 class="close-btn"
-                small
                 @click="removeCell(index, false)"
               >close</v-icon>
               <v-icon
                 class="edit-btn"
-                small
                 @click="editCell(index+dataSources.length)"
               >edit</v-icon>
             </div>
