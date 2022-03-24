@@ -393,7 +393,7 @@
           ></div>
         </div>
         <div
-          @click="rollbackToCell()"
+          @click="rollbackToCell(-1)"
           class="state-helper end-state-helper"
         ></div>
       </draggable>
