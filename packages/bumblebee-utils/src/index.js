@@ -560,6 +560,22 @@ export const indicesToNames = (cols = [], datasetColumns = []) => {
   }
 }
 
+export const incrementVarName = (prefix, vars = [], sep = '') => {
+  vars = vars.filter(e=>e && e.startsWith(prefix));
+  vars.sort((a,b)=>{
+    return parseInt(a.replace(prefix, '')) - parseInt(b.replace(prefix, ''));
+  });
+
+  if (vars.length) {
+    let i = (parseInt(vars[vars.length-1].replace(prefix, '')) || 0) + 1;
+    if (i) {
+      prefix = `${prefix}${sep}${i}`;
+    }
+  }
+
+  return prefix;
+}
+
 export const capitalizeString = (str) => {
   try {
     return str.charAt(0).toUpperCase()+str.slice(1)
@@ -1466,6 +1482,7 @@ export default {
   getPropertyAsync,
   namesToIndices,
   indicesToNames,
+  incrementVarName,
   capitalizeString,
   decapitalizeString,
   nameify,
