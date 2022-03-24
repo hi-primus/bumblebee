@@ -1667,11 +1667,25 @@ $side-controls-width: 54px;
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: space-evenly;
+      padding-top: 8px;
+      padding-bottom: 8px;
+      justify-content: flex-start;
       position: relative;
-      min-width: 20px;
+      min-width: 18px;
       cursor: pointer;
       // left: -4px;
+      .v-icon {
+        height: 18px;
+        width: 18px;
+      }
+      .edit-btn {
+        font-size: 16px !important;
+        margin-top: -1px;
+        margin-bottom: -1px;
+      }
+      .close-btn {
+        font-size: 18px !important;
+      }
     }
     &:hover{
       .right-cell-section,
