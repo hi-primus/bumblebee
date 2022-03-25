@@ -333,7 +333,7 @@
               <v-icon
                 class="close-btn"
                 @click="removeCell(index, true)"
-              >close</v-icon>
+              >delete</v-icon>
               <v-icon
                 class="edit-btn"
                 @click="editCell(index)"
@@ -388,7 +388,7 @@
               <v-icon
                 class="close-btn"
                 @click="removeCell(index, false)"
-              >close</v-icon>
+              >delete</v-icon>
               <v-icon
                 class="edit-btn"
                 @click="editCell(index+dataSources.length)"

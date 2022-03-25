@@ -1665,13 +1665,14 @@ $side-controls-width: 54px;
       opacity: 0;
       transition: opacity 0.3s ease-in-out;
       display: flex;
-      flex-direction: column;
+      flex-direction: row-reverse;
+      margin-left: -6px;
       align-items: center;
       padding-top: 8px;
       padding-bottom: 8px;
       justify-content: flex-start;
       position: relative;
-      min-width: 18px;
+      width: 36px;
       cursor: pointer;
       // left: -4px;
       .v-icon {
@@ -1684,7 +1685,7 @@ $side-controls-width: 54px;
         margin-bottom: -1px;
       }
       .close-btn {
-        font-size: 18px !important;
+        font-size: 16px !important;
       }
     }
     &:hover{
