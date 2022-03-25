@@ -315,6 +315,8 @@ import clientMixin from '~/plugins/mixins/client'
 
 import VegaEmbed from '@/components/VegaEmbed'
 
+import { ErrorWithResponse } from 'bumblebee-utils'
+
 export default {
 	components: {
 		TopValues,

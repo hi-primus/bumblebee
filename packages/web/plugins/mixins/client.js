@@ -1,6 +1,6 @@
 const { io } = require("socket.io-client");
 
-import { deepCopy, getDefaultParams, objectFilter, objectMap } from 'bumblebee-utils'
+import { ErrorWithResponse, deepCopy, getDefaultParams, objectFilter, objectMap } from 'bumblebee-utils'
 
 const baseUrl = process.env.API_URL || 'http://localhost:4000'
 

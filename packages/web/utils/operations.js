@@ -1,4 +1,5 @@
 import {
+  ErrorWithResponse,
   deepCopy,
   everyRatio,
   arrayJoin,
