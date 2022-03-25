@@ -273,7 +273,7 @@ export const escapeQuotes = (str) => {
 }
 
 export const adaptValue = (v) => {
-  if (!isNaN(v) && !isNaN(parseFloat(v))) {
+  if (!v || !isNaN(v) && !isNaN(parseFloat(v))) {
     return v;
   }
   if (v.toUpperCase == "TRUE") {
