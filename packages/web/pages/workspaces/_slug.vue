@@ -145,41 +145,6 @@
               <v-icon color="primary">add</v-icon>
             </div>
           </v-tabs>
-          <div class="bb-workspace-status">
-            <!-- this.$route.query.ws!=0 -->
-            <v-progress-circular
-              v-if="workspaceStatus==='uploading' || workspaceStatus==='loading'"
-              indeterminate
-              color="grey"
-              size="20"
-              width="3"
-            >
-            </v-progress-circular>
-            <v-progress-circular
-              v-else-if="workspaceStatus==='ok'"
-              :value="100"
-              color="success"
-              size="20"
-              width="3"
-            >
-            </v-progress-circular>
-            <v-progress-circular
-              v-else-if="workspaceStatus==='error'"
-              :value="100"
-              color="error"
-              size="20"
-              width="3"
-            >
-            </v-progress-circular>
-            <v-progress-circular
-              v-else
-              :value="100"
-              color="grey"
-              size="20"
-              width="3"
-            >
-            </v-progress-circular>
-          </div>
           <MoreMenu
             :items="moreMenu"
           ></MoreMenu>
