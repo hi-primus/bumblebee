@@ -1,4 +1,4 @@
-import { escapeQuotes, adaptValue, escapeQuotesOn, getOutputColsArgument, aggOutputCols, preparedColumns, transformDateToPython, getCodePayload, getSourceParams, pythonArguments, trimCharacters, TIME_VALUES } from 'bumblebee-utils';
+import { deepCopy, escapeQuotes, adaptValue, escapeQuotesOn, getOutputColsArgument, aggOutputCols, preparedColumns, transformDateToPython, getCodePayload, getSourceParams, pythonArguments, trimCharacters, TIME_VALUES } from 'bumblebee-utils';
 
 import { v4 as uuidv4 } from "uuid";
 
@@ -392,7 +392,7 @@ export const codeGenerators = {
         + (payload.default ? `default=${payload.default}, ` : '')
         + `eval_value=True)`;
         if (payload.preview.filteredPreview) {
-          code += `.rows.select( '__match__' )`;
+          code += `.rows.null("__match__", drop=True)`;
         }
 
         code += `.cols.set(`
@@ -424,7 +424,7 @@ export const codeGenerators = {
         + (payload.default ? `default=${payload.default}, ` : '')
         + `eval_value=True)`;
         if (payload.preview.filteredPreview) {
-          code += `.rows.select( '__match__' )`
+          code += `.rows.null("__match__", drop=True)`
         }
         if (payload.request.type === 'preview' && payload.preview.filteredPreview) {
           return (from, to)=>code+(from!==undefined ? `[${from}:${to}]` : '')
@@ -440,61 +440,68 @@ export const codeGenerators = {
     let expression = payload.expression
     let dfName = `df`
 
-    try {
-      payload = escapeQuotesOn(payload, ['text',])
-    } catch (error) {
-      console.error(error)
-    }
+    payload = deepCopy(payload);
 
-    if (!['less','greater','between'].includes(payload.condition)) {
-      if (payload.request.isString) {
-        payload.value = `"${escapeQuotes(trimCharacters(payload.value, '"'))}"`;
-        payload.value_2 = `"${escapeQuotes(trimCharacters(payload.value_2, '"'))}"`;
-        payload.values = payload.values.map(v=>`"${escapeQuotes(trimCharacters(v, '"'))}"`);
-      } else {
-        payload.value = adaptValue(payload.value);
-        payload.value_2 = adaptValue(payload.value_2);
-        payload.values = payload.values.map(adaptValue);
+    let expressions = payload.expression.map((_, index) => {
+        
+      try {
+        payload = escapeQuotesOn(payload, ['text']);
+      } catch (error) {
+        console.error(error);
       }
-    }
 
-    switch (payload.condition) {
-      case 'null':
-        expression = `${dfName}.mask.null("${payload.columns[0]}")`
-        break
-      case 'mismatch':
-        expression = `${dfName}.mask.mismatch("${payload.columns[0]}", "${payload.columnDataTypes[0]}")`
-        break
-      case 'equal':
-        expression = `${dfName}["${payload.columns[0]}"]==${payload.value}`
-        break
-      case 'value_in':
-        expression = `${dfName}.mask.value_in("${payload.columns[0]}", [${payload.values.join(',')}])`;
-        break
-      case 'not_equal':
-        expression = `${dfName}["${payload.columns[0]}"]!=${payload.value}`
-        break
-      case 'less_than':
-        expression = `${dfName}["${payload.columns[0]}"]<=${payload.value}`
-        break
-      case 'greater_than':
-        expression = `${dfName}["${payload.columns[0]}"]>=${payload.value}`
-        break
-      case 'match_pattern':
-        expression = `${dfName}.mask.pattern("${payload.columns[0]}", ${payload.value})`
-        break
-      case 'between':
-        expression = `(${dfName}.mask.between("${payload.columns[0]}", ${payload.value}, ${payload.value_2})`
-        break
-      case 'contains':
-      case 'starts_with':
-      case 'ends_with':
-        expression = `${dfName}.mask.${payload.condition}("${payload.columns[0]}", "${payload.text}")`
-        break
-      case 'where':
-        expression = `${payload.expression}`
-      default:
-    }
+      if (!['less','greater','between'].includes(payload.condition[index])) {
+        if (payload.request.isString) {
+          payload.value[index] = `"${escapeQuotes(trimCharacters(payload.value[index], '"'))}"`;
+          payload.value_2[index] = `"${escapeQuotes(trimCharacters(payload.value_2[index], '"'))}"`;
+          payload.values[index] = (payload.values[index] || []).map(v=>`"${escapeQuotes(trimCharacters(v, '"'))}"`);
+        } else {
+          payload.value[index] = adaptValue(payload.value[index]);
+          payload.value_2[index] = adaptValue(payload.value_2[index]);
+          payload.values[index] = (payload.values[index] || []).map(adaptValue);
+        }
+      }
+
+      switch (payload.condition[index]) {
+        case 'null':
+          expression = `${dfName}.mask.null("${payload.columns[0]}")`
+          break
+        case 'mismatch':
+          expression = `${dfName}.mask.mismatch("${payload.columns[0]}", "${payload.columnDataTypes[0]}")`
+          break
+        case 'equal':
+          expression = `${dfName}["${payload.columns[0]}"]==${payload.value[index]}`
+          break
+        case 'value_in':
+          expression = `${dfName}.mask.value_in("${payload.columns[0]}", [${payload.values[index].join(',')}])`;
+          break
+        case 'not_equal':
+          expression = `${dfName}["${payload.columns[0]}"]!=${payload.value[index]}`
+          break
+        case 'less_than':
+          expression = `${dfName}["${payload.columns[0]}"]<=${payload.value[index]}`
+          break
+        case 'greater_than':
+          expression = `${dfName}["${payload.columns[0]}"]>=${payload.value[index]}`
+          break
+        case 'match_pattern':
+          expression = `${dfName}.mask.pattern("${payload.columns[0]}", ${payload.value[index]})`
+          break
+        case 'between':
+          expression = `(${dfName}.mask.between("${payload.columns[0]}", ${payload.value[index]}, ${payload.value_2[index]})`
+          break
+        case 'contains':
+        case 'starts_with':
+        case 'ends_with':
+          expression = `${dfName}.mask.${payload.condition[index]}("${payload.columns[0]}", "${payload.text[index]}")`
+          break
+        case 'where':
+          expression = `${payload.expression[index]}`
+        default:
+      }
+      return `'${expression}'`;
+    });
+
 
     let output_col = payload.columns[0];
 
@@ -508,18 +515,21 @@ export const codeGenerators = {
 
         // preview set
 
-        let code = `.cols.set("__match__", '${expression}', `
-        + `eval_value=True)`;
+        let code = `.cols.set("__match__"`
+        + `, where=[${expressions.join(", ")}]`
+        + `, value_func=[${payload.replace_value.map((_, i) => i+1).join(", ")}]`
+        + `, eval_value=True, default=False)`;
 
         code += `.cols.set(`
         + `"__new__${output_col}"` // TODO support output_cols
-        + `, value_func=${payload.replace_value || "None"}`
-        + `, where='__match__'`
+        + `, where=[${expressions.map((_, i) => `'df["__match__"]==${i+1}'`).join(", ")}]`
+        + `, value_func=[${payload.replace_value.map(v => v==undefined ? "None" : v).join(", ")}]`
+        + `, eval_value=True`
         + (payload.default ? `, default=${payload.default}` : '')
         + `)`
 
         if (payload.preview.filteredPreview) {
-          code += `.rows.select("__match__")`
+          code += `.rows.null("__match__", drop=True)`
           if (payload.request.type === 'preview') {
             return (from, to)=>code+(from!==undefined ? `[${from}:${to}]` : '')
           }
@@ -530,11 +540,10 @@ export const codeGenerators = {
 
         // preview filter
         
-        let code = `.cols.set("__match__", '${expression}', `
-        + (payload.default ? `default=${payload.default}, ` : '')
-        + `eval_value=True)`;
+        let code = `.cols.set("__match__", value_func=[${expressions.join(", ")}], `
+        + `default=False, eval_value=True)`;
         if (payload.preview.filteredPreview) {
-          code += `.rows.select( '__match__' )`
+          code += `.rows.null("__match__", drop=True)`
           if (payload.request.type === 'preview') {
             return (from, to)=>code+(from!==undefined ? `[${from}:${to}]` : '')
           }
@@ -553,15 +562,14 @@ export const codeGenerators = {
         }
         return `.cols.set(`
         + `"${output_col}", `
-        + `value_func=${payload.replace_value || "None"}, `
-        + `where='${expression}', `
+        + `value_func=[${expressions.join(", ")}], `
         + (payload.default ? `default=${payload.default}, ` : '')
         + `eval_value=True)`
       } else {
 
         // final filter
 
-        return `.rows.${payload.action}( '${expression}' )`
+        return `.rows.${payload.action}( [${expressions.join(", ")}] )`
       }
     }
   },
@@ -572,7 +580,7 @@ export const codeGenerators = {
       + `how="${payload.how}"`
       + `)', eval_value=True)`
       if (payload.preview.filteredPreview) {
-        code += `.rows.select( '__match__' )`
+        code += `.rows.null("__match__", drop=True)`
         if (payload.request.type === 'preview') {
           return (from, to)=>code+(from!==undefined ? `[${from}:${to}]` : '')
         }
@@ -590,7 +598,7 @@ export const codeGenerators = {
       + `keep="${payload.keep}"`
       + `)', eval_value=True)`
       if (payload.preview.filteredPreview) {
-        code += `.rows.select( '__match__' )`
+        code += `.rows.null("__match__", drop=True)`
         if (payload.request.type === 'preview') {
           return (from, to)=>code+(from!==undefined ? `[${from}:${to}]` : '')
         }
@@ -1497,7 +1505,7 @@ export const generateCode = function(commands = [], _request = { type: 'processi
             code += '\n'+`_output.update({ 'names': ${saving}.cols.names() })`;
           }
           if (request.matches_count) {
-            code += '\n'+`_output.update({ 'matches_count': ${saving}.rows.select("__match__").rows.count() })`
+            code += '\n'+`_output.update({ 'matches_count': ${saving}.rows.null("__match__", drop=True).rows.count() })`
           }
           if (request.meta) {
             code += '\n'+`_output.update({ 'meta': ${saving}.meta })`
@@ -1517,7 +1525,7 @@ export const generateCode = function(commands = [], _request = { type: 'processi
               code += `.cols.names, "*"`;
             }
             if (request.matches_count) {
-              code += `.rows.select("__match__").rows.count`;
+              code += `.rows.null("__match__", drop=True).rows.count`;
             }
 
             if (request.async_priority) {
@@ -1542,7 +1550,7 @@ export const generateCode = function(commands = [], _request = { type: 'processi
               code += `.cols.names()`;
             }
             if (request.matches_count) {
-              code += `.rows.select("__match__").rows.count()`;
+              code += `.rows.null("__match__", drop=True).rows.count()`;
             }
             if (request.meta) {
               code += '\n'+`.meta`

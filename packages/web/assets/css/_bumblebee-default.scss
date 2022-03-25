@@ -2528,6 +2528,7 @@ $editor-top-padding: 4px;
     padding-top: 6px;
 
     width: calc(100% + 44px);
+
     .field-group {
       width: 100%;
       position: relative;
@@ -2535,19 +2536,41 @@ $editor-top-padding: 4px;
       flex-wrap: wrap;
       justify-content: space-between;
       align-content: flex-start;
-            
-      .btn-repeat {
-        position: absolute;
-        top: 2px;
-        right: -2px;
-        height: 18px;
-        min-width: 18px;
-        padding: 0;
-        i {
-          font-size: 16px;
+      
+      &.close-btn-top-right {
+        padding-top: 16px;
+        margin-bottom: -8px;
+        .btn-repeat {
+          position: absolute;
+          top: -6px;
+          right: 0;
+          height: 18px;
+          min-width: 18px;
+          padding: 0;
+          i {
+            font-size: 16px;
+          }
+        }
+      } 
+      
+      &.close-btn-inside {
+        padding-top: 0;
+        margin-bottom: -10px;
+        .btn-repeat {
+          top: 6px;
+          right: -2px;
         }
       }
+
     }
+    
+    .repeat-btn-add {
+      margin-left: auto;
+      margin-right: auto;
+      margin-bottom: 14px;
+      margin-top: 4px;
+    }
+
     .o-field {
       width: 100%;
       &.half {

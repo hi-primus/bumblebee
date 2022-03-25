@@ -128,7 +128,7 @@
               <OutputColumnInputs :fieldLabel="command.dialog.output_cols_label" :noLabel="!command.dialog.output_labels" :currentCommand.sync="currentCommand"></OutputColumnInputs>
             </template>
             <template v-if="currentCommand._loading !== 'block' && command.dialog.fields">
-              <template v-for="field in getProperty(command.dialog.fields, [currentCommand]).filter(f=>(!f.condition || f.condition && f.condition(currentCommand)))">
+              <template v-for="(field, fieldIndex) in getProperty(command.dialog.fields, [currentCommand]).filter(f=>(!f.condition || f.condition && f.condition(currentCommand)))">
 
                 <OperationField
                   v-if="getProperty(field.type,[currentCommand])!='repeat'"
@@ -141,32 +141,45 @@
                   @showConnections="$emit('showConnections', $event)"
                 />
                 <template v-else>
-                    <template v-for="(fieldGroup, i) in currentCommand[field.key]">
-                      <div :key="`field-group-${field.key}-${i}`" class="field-group">
-                        <!-- <div v-if="i>0" :key="'separator'+i+field.key" class="separator"></div> -->
-                        <template v-for="subfield in field.fields">
-                          <OperationField
-                            :key="field.key+i+subfield.key"
-                            :value.sync="getProperty(currentCommand[subfield.key],[currentCommand])[i]"
-                            :field="subfield"
-                            :currentCommand.sync="currentCommand"
-                            :command="command"
-                            :index="i"
-                            :commandMethods="commandMethods"
-                            @showConnections="$emit('showConnections', $event)"
-                          />
-                        </template>
-                        <v-btn depressed :class="{'btn-squared': field.row, 'btn-repeat': !field.row}" :key="'remove'+i+field.key" color="error" @click="currentCommand = (field.removeOne || defaultRemoveOne(field.key))(currentCommand, i)">
-                          <v-icon>close</v-icon>
-                        </v-btn>
-                      </div>
-                    </template>
+                  <template v-for="(fieldGroup, i) in currentCommand[field.key]">
+                    <div
+                      :key="`field-group-${field.key}-${i}`"
+                      class="field-group"
+                      :class="{
+                        'close-btn-top-right': field.repeatType=='top-right',
+                        'close-btn-top-right close-btn-inside': field.repeatType=='top-right-inside'
+                      }"
+                    >
+                      <!-- <div v-if="i>0" :key="'separator'+i+field.key" class="separator"></div> -->
+                      <template v-for="subfield in command.dialog.fields[fieldIndex].fields.filter(f => !f.condition || f.condition && f.condition(currentCommand, i))">
+                        <OperationField
+                          :key="field.key+i+subfield.key"
+                          :value.sync="getProperty(currentCommand[subfield.key],[currentCommand])[i]"
+                          :field="subfield"
+                          :currentCommand.sync="currentCommand"
+                          :command="command"
+                          :index="i"
+                          :commandMethods="commandMethods"
+                          @showConnections="$emit('showConnections', $event)"
+                        />
+                      </template>
+                      <v-btn 
+                        depressed 
+                        class="btn-repeat"
+                        :class="{'btn-squared': field.repeatType=='row'}"
+                        :key="'remove'+i+field.key"
+                        color="error"
+                        @click="currentCommand = (field.removeOne || defaultRemoveOne(field.key))(currentCommand, i)"
+                      >
+                        <v-icon>close</v-icon>
+                      </v-btn>
+                    </div>
+                  </template>
                   <v-btn
                     :key="'addNewRepeat-'+field.key"
                     outlined
                     rounded
-                    style="margin-left: auto; margin-right: auto; margin-top: -4px; margin-bottom: 14px;"
-                    class="btn-squared"
+                    class="repeat-btn-add btn-squared"
                     color="primary"
                     @click="currentCommand = (field.addOne || defaultAddOne(field.key))(currentCommand)"
                   >

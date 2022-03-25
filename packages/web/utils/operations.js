@@ -2270,96 +2270,151 @@ export const commandsHandlers = {
       fields: [
         {
           key: "condition",
-          label: "Condition",
-          type: "select",
-          items: (c) => [
-            { text: "Is exactly", value: "equal" },
-            { text: "Is one of", value: "value_in" },
-            { text: "Is not", value: "not_equal" },
-            { divider: true },
+          type: "repeat",
+          add: true,
+          repeatType: "top-right",
+          addOne: (c) => {
+            try {
+              c.expression.push("");
+              c.condition.push("equal");
+              c.value.push("");
+              c.value_2.push("");
+              c.values.push([]);
+              c.replace_value.push("");
+              c.text.push("");
+              c.expression.push("");
+              return c;
+
+            } catch (e) {
+              console.error(e);
+            }
+          },
+          removeOne: (c, i) => {
+            try {
+              c.expression.splice(i, 1);
+              c.condition.splice(i, 1);
+              c.value.splice(i, 1);
+              c.value_2.splice(i, 1);
+              c.values.splice(i, 1);
+              c.replace_value.splice(i, 1);
+              c.text.splice(i, 1);
+              c.expression.splice(i, 1);
+              return c;
+
+            } catch (e) {
+              console.error(e);
+            }
+          },
+          fields: [
             {
-              text: "Less than or equal to",
-              value: "less_than",
-              disabled: c.request.isString,
+              key: "condition",
+              label: "Condition",
+              type: "select",
+              items: (c) => [
+                { text: "Is exactly", value: "equal" },
+                { text: "Is one of", value: "value_in" },
+                { text: "Is not", value: "not_equal" },
+                { divider: true },
+                {
+                  text: "Less than or equal to",
+                  value: "less_than",
+                  disabled: c.request.isString,
+                },
+                {
+                  text: "Greater than or equal to",
+                  value: "greater_than",
+                  disabled: c.request.isString,
+                },
+                {
+                  text: "Is Between",
+                  value: "between",
+                  disabled: c.request.isString,
+                },
+                { divider: true },
+                { text: "Contains", value: "contains" },
+                { text: "Starts with", value: "starts_with" },
+                { text: "Ends with", value: "ends_with" },
+                { divider: true },
+                { text: "Custom expression", value: "where" },
+                { text: "Pattern", value: "match_pattern" },
+                { text: "Selected", value: "selected", disabled: true },
+                { divider: true },
+                { text: "Mismatches values", value: "mismatch" },
+                { text: "Null values", value: "null" },
+              ],
             },
             {
-              text: "Greater than or equal to",
-              value: "greater_than",
-              disabled: c.request.isString,
+              condition: (c, index) =>
+                ["equal", "not_equal", "less_than", "greater_than"].includes(c.condition[index]),
+              key: "value",
+              placeholder: (c) =>
+                c.request.isString ? "Value" : 'numeric or "string"',
+              label: "Value",
+              type: "field",
             },
             {
-              text: "Is Between",
-              value: "between",
-              disabled: c.request.isString,
+              condition: (c, index) => c.condition[index] === "match_pattern",
+              key: "value",
+              placeholder: "",
+              label: "Pattern",
+              type: "field",
+              mono: true,
             },
-            { divider: true },
-            { text: "Contains", value: "contains" },
-            { text: "Starts with", value: "starts_with" },
-            { text: "Ends with", value: "ends_with" },
-            { divider: true },
-            { text: "Custom expression", value: "where" },
-            { text: "Pattern", value: "match_pattern" },
-            { text: "Selected", value: "selected", disabled: true },
-            { divider: true },
-            { text: "Mismatches values", value: "mismatch" },
-            { text: "Null values", value: "null" },
-          ],
+            {
+              condition: (c, index) => "value_in" == c.condition[index],
+              key: "values",
+              placeholder: "Values",
+              label: "Values",
+              type: "chips",
+              clearable: true,
+            },
+            {
+              condition: (c, index) => {
+                console.log({c, index});
+                return "between" == c.condition[index]
+              },
+              key: "value",
+              label: "Min value",
+              placeholder: "0",
+              type: "number",
+            },
+            {
+              condition: (c, index) => "between" == c.condition[index],
+              key: "value_2",
+              label: "Max value",
+              placeholder: "1",
+              type: "number",
+            },
+            {
+              condition: (c, index) => "where" == c.condition[index],
+              key: "value",
+              label: "Expression",
+              placeholder: "column>=0",
+              type: "field",
+              mono: true,
+            },
+            {
+              condition: (c, index) =>
+                ["contains", "starts_with", "ends_with"].includes(c.condition[index]),
+              key: "text",
+              label: "Text",
+              placeholder: "lorem ipsum",
+              type: "field",
+            },
+            {
+              condition: (c) => c.action === "set",
+              type: "field-suggestions",
+              key: "replace_value",
+              placeholder: 'Formula or "value"',
+              label: "Replace by",
+              mono: true,
+              useFunctions: true,
+              fuzzySearch: true,
+              suggestions: (c) => ({ column: c.allColumns }),
+            },
+          ]
         },
-        {
-          condition: (c) =>
-            ["equal", "not_equal", "less_than", "greater_than"].includes(c.condition),
-          key: "value",
-          placeholder: (c) =>
-            c.request.isString ? "Value" : 'numeric or "string"',
-          label: "Value",
-          type: "field",
-        },
-        {
-          condition: (c) => c.condition === "match_pattern",
-          key: "value",
-          placeholder: "",
-          label: "Pattern",
-          type: "field",
-          mono: true,
-        },
-        {
-          condition: (c) => "value_in" == c.condition,
-          key: "values",
-          placeholder: "Values",
-          label: "Values",
-          type: "chips",
-          clearable: true,
-        },
-        {
-          condition: (c) => "between" == c.condition,
-          key: "value",
-          label: "Min value",
-          placeholder: "0",
-          type: "number",
-        },
-        {
-          condition: (c) => "between" == c.condition,
-          key: "value_2",
-          label: "Max value",
-          placeholder: "1",
-          type: "number",
-        },
-        {
-          condition: (c) => "where" == c.condition,
-          key: "value",
-          label: "Expression",
-          placeholder: "column>=0",
-          type: "field",
-          mono: true,
-        },
-        {
-          condition: (c) =>
-            ["contains", "starts_with", "ends_with"].includes(c.condition),
-          key: "text",
-          label: "Text",
-          placeholder: "lorem ipsum",
-          type: "field",
-        },
+
         {
           condition: (c) => c.action != "set",
           key: "action",
@@ -2371,17 +2426,7 @@ export const commandsHandlers = {
             // { text: "Replace matching rows", value: "set" },
           ],
         },
-        {
-          condition: (c) => c.action === "set",
-          type: "field-suggestions",
-          key: "replace_value",
-          placeholder: 'Formula or "value"',
-          label: "Replace by",
-          mono: true,
-          useFunctions: true,
-          fuzzySearch: true,
-          suggestions: (c) => ({ column: c.allColumns }),
-        },
+
         {
           condition: (c) => c.action === "set",
           type: "field",
@@ -2392,29 +2437,37 @@ export const commandsHandlers = {
       ],
       filteredPreview: true,
       validate: (c) => {
-        switch (c.condition) {
-          case "value_in":
-            return c.values.length;
-          case "equal":
-          case "not_equal":
-          case "less_than":
-          case "greater_than":
-          case "match_pattern":
-            return c.value.length;
-          case "between":
-            return c.value.length && c.value_2.length;
-          case "contains":
-          case "starts_with":
-          case "ends_with":
-            return c.text.length;
-          case "where":
-            return c.expression.length;
-          case "selected":
-          case "null":
-          case "mismatch":
-            return true;
-          default:
-            return false;
+        try {
+          
+          c.expression.every((_,i) => {
+            switch (c.condition[i]) {
+              case "value_in":
+                return c.values[i].length;
+              case "equal":
+              case "not_equal":
+              case "less_than":
+              case "greater_than":
+              case "match_pattern":
+                return c.value[i].length;
+              case "between":
+                return c.value[i].length && c.value_2[i].length;
+              case "contains":
+              case "starts_with":
+              case "ends_with":
+                return c.text[i].length;
+              case "where":
+                return c.expression[i].length;
+              case "selected":
+              case "null":
+              case "mismatch":
+                return true;
+              default:
+                return false;
+            }
+          })
+        } catch (e) {
+          console.error(e)
+          console.log(c)
         }
       },
     },
@@ -2424,14 +2477,15 @@ export const commandsHandlers = {
       return {
         columns,
         output_cols: columns.map((e) => ""),
-        condition: "equal",
         action: "select",
-        value: "",
-        value_2: "",
-        values: [],
-        replace_value: "",
-        text: "",
-        expression: columns[0].includes(" ") ? `{${columns[0]}}` : columns[0],
+        default: "",
+        condition: ["equal"],
+        value: [""],
+        value_2: [""],
+        values: [[]],
+        replace_value: [""],
+        text: [""],
+        expression: [columns[0].includes(" ") ? `{${columns[0]}}` : columns[0]],
 
         request: {},
 
@@ -3129,7 +3183,7 @@ export const commandsHandlers = {
           type: "repeat",
           key: "aggregations",
           add: true,
-          row: true,
+          repeatType: "row",
           addOne: (c) => {
             c.input_cols.push(c.allColumns[0]);
             c.aggregations.push("count");
@@ -4062,6 +4116,7 @@ export const commandsHandlers = {
         {
           type: "repeat",
           key: "replace",
+          repeatType: "top-right-inside",
           add: true,
           addOne: (c) => {
             c.search.push([]);
