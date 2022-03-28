@@ -421,7 +421,7 @@ export default {
         }
 
       } catch (err) {
-        console.error(err)
+        console.error(err, err.response)
         this.$set(this.patternsFrequency, this.patternsResolution, 'error')
         this.patternsLoading = false;
       }

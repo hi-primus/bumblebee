@@ -232,7 +232,9 @@ export default {
         return false;
       }
       const response = await this.socketPost('interrupt', { ids });
-      console.log(`[INTERRUPT] Success`, response);
+      if (response.data && response.data.length) {
+        console.log(`[INTERRUPT] Success`, response);
+      }
     },
 
     evalCode (_code, reply = 'await', category = 'requirement', isAsync = false) {
