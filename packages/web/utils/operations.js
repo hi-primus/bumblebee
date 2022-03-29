@@ -2370,7 +2370,6 @@ export const commandsHandlers = {
             },
             {
               condition: (c, index) => {
-                console.log({c, index});
                 return "between" == c.condition[index]
               },
               key: "value",
