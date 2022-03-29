@@ -1852,7 +1852,7 @@ export default {
               let rowsCount = this.profilePreview.summary.rows_count;
               let lastSample = (INITIAL_SAMPLE_SIZE > rowsCount);
 
-              let promise = this.requestCachedProfiling(this.currentDataset.dfName, 0, false, lastSample, false, true);
+              let promise = this.requestCachedProfiling(this.currentDataset.dfName, 0, false, lastSample, true, true);
               
               if (!promise || !promise.then) {
                 this.$store.dispatch('afterPreviewProfile');
