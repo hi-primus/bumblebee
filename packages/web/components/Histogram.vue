@@ -87,14 +87,22 @@ export default {
   },
 
   created () {
-    this.maxVal = this.getMaxVal(this.values)
-    this.lower = (+this.values[0].lower).toFixed(2)
-    this.upper = (+this.values[this.values.length-1].upper).toFixed(2)
+    this.updateValues();
+  },
+
+  watch: {
+    values: 'updateValues'
   },
 
   methods: {
 
-    updateSelected(v) {
+    updateValues () {
+      this.maxVal = this.getMaxVal(this.values)
+      this.lower = (+this.values[0].lower).toFixed(2)
+      this.upper = (+this.values[this.values.length-1].upper).toFixed(2)
+    },
+
+    updateSelected (v) {
 
       v = v || [];
 
