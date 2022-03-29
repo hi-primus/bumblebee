@@ -124,14 +124,17 @@ def df__profile_stats_cache(df, cols="*", sample=None, last_sample=False, flush=
 
     cached = Meta.get(df.cache, cache_key) or {}
     already_updated_cols = []
+    needs_update_cols = []
 
     # avoid profiling already profiled columns
 
     for col in cached.get("columns", []):
-        if cached["columns"][col]["last_sampled_row"] == sample[1]:
+        if cached["columns"][col]["last_sampled_row"] >= sample[1] or cached["columns"][col]["last_sampled_row"] == -1:
             already_updated_cols.append(col)
+        elif cached["columns"][col]["last_sampled_row"] != sample[0]:
+            needs_update_cols.append(col)
 
-    profile_cols = [col for col in cols if col not in already_updated_cols]
+    profile_cols = [col for col in cols if col not in already_updated_cols + needs_update_cols]
     
     sample_df = df if sample is None else df[sample[0]:sample[1]]
 
@@ -151,6 +154,10 @@ def df__profile_stats_cache(df, cols="*", sample=None, last_sample=False, flush=
 
     for col in stats.get("columns", []):
         stats["columns"][col]["last_sampled_row"] = sample[1]
+
+    for col in needs_update_cols:
+        stats["columns"].update({col: cached["columns"][col]})
+        stats["columns"][col]["needs_previous_range"] = True
    
     stats = add_profile(stats, cached)
 
@@ -175,7 +182,7 @@ def df__profile_stats_cache(df, cols="*", sample=None, last_sample=False, flush=
             if _v is not None:
                 df.meta = Meta.set(df.meta, f"{meta_key}.{_m}", _v)
 
-        for col in columns_list:
+        for col in cols:
             for _m in col_meta_keys:
                 _v = Meta.get(stats, f"columns.{col}.{_m}")
                 if _v is not None:

@@ -618,6 +618,8 @@ export default {
 
       // profiling loading
 
+      resetNextProfile: false,
+
       lazyColumns: [],
       windowRoot: 0,
       windowSize: 10,
@@ -1488,13 +1490,15 @@ export default {
         let previousLastSample = response.reply.lastSample
         let dataset = parseResponse(response.data.result);
 
-        if (dataset && previousLastSample) {
-          dataset.columns = objectMap(dataset.columns, c => ({...c, done: true}));
-        }
-
         // use rows_count from store
 
         let rowsCount = this.$store.getters.currentDataset?.summary?.rows_count || dataset.summary.rows_count;
+
+        if (dataset && previousLastSample) {
+          dataset.columns = objectMap(dataset.columns, c => {
+            return (c.done || c.last_sampled_row == -1 || c.last_sampled_row >= rowsCount) ? {...c, done: true} : c;
+          });
+        }
         
         if (preview) {
           rowsCount = this.profilePreview?.summary?.rows_count || rowsCount;
@@ -1520,7 +1524,7 @@ export default {
           datasetColumns = Object.entries(datasetColumns).map(([name, column]) => ({...column, name}));
         }
 
-        let updatedColumns = datasetColumns.filter(c=>c => c.done || c.last_sampled_row == -1 || c.last_sampled_row >= sample[1]);
+        let updatedColumns = datasetColumns.filter(c => c.done || c.last_sampled_row == -1 || c.last_sampled_row >= sample[1]);
         
         let secondSample = false;
 
@@ -1544,7 +1548,7 @@ export default {
           this.sampleSize *= SAMPLE_SIZE_FACTOR;
           sample = [sample[1], sample[1] + this.sampleSize];
 
-          updatedColumns = datasetColumns.filter(c=>c => c.done || c.last_sampled_row == -1 || c.last_sampled_row >= sample[1]);
+          updatedColumns = datasetColumns.filter(c => c.done || c.last_sampled_row == -1 || c.last_sampled_row >= sample[1]);
 
           // if sample is out of range, we are done, go to the next group if available
           if (sample[0] >= rowsCount && updatedColumns.length < columnsCount) {
@@ -1556,7 +1560,14 @@ export default {
 
         }
 
-        if (updatedColumns.length >= columnsCount && sample[0] >= rowsCount) {
+        if (this.resetNextProfile) {
+
+          this.resetNextProfile = false;
+          group = 0;
+          this.sampleSize = INITIAL_SAMPLE_SIZE;
+          sample = [0, this.sampleSize];
+
+        } else if (updatedColumns.length >= columnsCount && sample[0] >= rowsCount) {
           // if every column is done, and we're trying to  we are done
           console.debug('[PROFILE] Profiling done', dfName);
           if (preview) {
@@ -1564,9 +1575,9 @@ export default {
           } else {
             this.$store.dispatch('afterWholeProfiling');
           }
+          return;
         } else {
           // if not, we need to continue profiling
-          let lastSample = sample[1] >= rowsCount;
 
           let filteredColumns = (preview ? this.allColumns.filter(e=>e.preview) : this.allColumns).map(e=>e.name);
           let filteredOutColumns = preview ? [] : this.notVisibleColumnNames;
@@ -1575,14 +1586,16 @@ export default {
             group = filteredOutColumns.length ? -1 : 0;
           }
 
-          let promise = this.requestCachedProfiling(dfName, group, sample, lastSample, preview);
+        }
+        
+        let lastSample = sample[1] >= rowsCount;
+        let promise = this.requestCachedProfiling(dfName, group, sample, lastSample, preview);
 
-          if (!promise || !promise.then) {
-            if (preview) {
-              this.$store.dispatch('afterPreviewProfiling')
-            } else {
-              this.$store.dispatch('afterWholeProfiling');
-            }
+        if (!promise || !promise.then) {
+          if (preview) {
+            this.$store.dispatch('afterPreviewProfiling')
+          } else {
+            this.$store.dispatch('afterWholeProfiling');
           }
         }
 
@@ -1611,7 +1624,6 @@ export default {
 
       }
   
-    
     },
 
     saveCacheThrottled: throttle(async function() {
@@ -1670,14 +1682,12 @@ export default {
 
     getColumnRange (group, useWindow = true) {
       let range;
-      while (true) {
+      let filteredColumns = useWindow ? this.allColumns.filter(e=>!e.preview) : this.allColumns.filter(e=>e.preview);
+      let filteredColumnsLength = filteredColumns.length;
+      range = getColumnsRange(group, useWindow ? this.windowRoot : 0, 10, useWindow ? this.windowSize : 0);
+      if (!range || (range[0]<0 && range[1]<0) || (range[0]>=filteredColumnsLength && range[1]>=filteredColumnsLength)) {
+        group += 1;
         range = getColumnsRange(group, useWindow ? this.windowRoot : 0, 10, useWindow ? this.windowSize : 0);
-        if (!range || (range[0]<0 && range[1]<0)) {
-          group += 1;
-          continue;
-        } else {
-          break;
-        }
       }
       return [range, group];
     },
@@ -1722,7 +1732,7 @@ export default {
       }
     },
 
-    requestCachedProfiling (dfName, group = 0, sample = false, lastSample = false, preview = false, low = false) {
+    requestCachedProfiling (dfName, group = 0, sample = false, lastSample = false, preview = false, clearPrevious = undefined, low = false) {
 
       if (this.currentDataset.dfName !== dfName && !preview) {
         throw new Error(`Dataset changed, ${currentDfName} -> ${dfName}`);
@@ -1769,7 +1779,9 @@ export default {
         return 'Sample out of range';
       }
 
-      let clearPrevious = group === 0 && sample[0] === 0;
+      if (clearPrevious === undefined) {
+        clearPrevious = group === 0 && sample[0] === 0;
+      }
 
       if (clearPrevious) {
         this.sampleSize = INITIAL_SAMPLE_SIZE;
@@ -1809,17 +1821,21 @@ export default {
         let columns = Math.max((this.currentDataset?.columns || []).length, this.currentDataset?.summary?.cols_count || 0);
         let doneColumns = (this.currentDataset?.columns?.filter(c => c.done || c.last_sampled_row == -1 || c.last_sampled_row > this.rowsCount) || []).length;
   
-        if (doneColumns < columns && !this.previewCode && !this.$store.state.updatingWholeProfile) {
-          this.$store.commit('mutation', {mutate: 'updatingWholeProfile', payload: true });
+        if (doneColumns < columns && !this.previewCode) {
 
-          let rowsCount = this.$store.getters.currentDataset?.summary?.rows_count;
-          let lastSample = (INITIAL_SAMPLE_SIZE > rowsCount);
+          if (this.$store.state.updatingWholeProfile) {
+            this.resetNextProfile = true;
+          } else {
+            this.$store.commit('mutation', {mutate: 'updatingWholeProfile', payload: true });
+            let rowsCount = this.$store.getters.currentDataset?.summary?.rows_count;
+            let lastSample = (INITIAL_SAMPLE_SIZE > rowsCount);
 
-          let promise = this.requestCachedProfiling(this.currentDataset.dfName, 0, false, lastSample);
+            let promise = this.requestCachedProfiling(this.currentDataset.dfName, 0, false, lastSample, false, false);
+            if (!promise || !promise.then) {
+              this.$store.dispatch('afterWholeProfiling');
+            }
+          }        
           
-          if (!promise || !promise.then) {
-            this.$store.dispatch('afterWholeProfiling');
-          }
         }
 
         if (this.previewCode && this.profilePreview?.summary?.rows_count) {
@@ -1836,7 +1852,7 @@ export default {
               let rowsCount = this.profilePreview.summary.rows_count;
               let lastSample = (INITIAL_SAMPLE_SIZE > rowsCount);
 
-              let promise = this.requestCachedProfiling(this.currentDataset.dfName, 0, false, lastSample, true);
+              let promise = this.requestCachedProfiling(this.currentDataset.dfName, 0, false, lastSample, false, true);
               
               if (!promise || !promise.then) {
                 this.$store.dispatch('afterPreviewProfile');
