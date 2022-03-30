@@ -401,6 +401,90 @@ def df__profile_df(df, cols="*", bins: int = MAX_BUCKETS, flush: bool = False):
     return df
 
 
+def df__deck_map(df, position="*", alpha=None, text=None, iframe_height=295):
+    """
+    Get a map from a dataframe.
+    :param df: Optimus dataframe
+    :param position: column or columns with latitude and longitude for each object
+    :param alpha: alpha value for each object
+    :param text: text for each object
+    """
+    position = df.cols.names(position)
+
+    if len(position) == 1:
+        # TODO: array and string support
+        position = position[0]
+
+        def split_coordinates(row):
+            row["X"] = row[position][0]
+            row["Y"] = row[position][1]
+            return row
+
+        df_geo = df.rows.apply(split_coordinates, mode="map")
+        position = ["X", "Y"]
+
+    else:
+        df_geo = df
+
+    color = [48, 158, 227]
+
+    if alpha is not None:
+        if df_geo.cols.data_type(alpha, names=True) == "bool":
+            df_geo = df_geo.cols.set('alpha', value_func=255, where=df_geo[alpha], default=102)
+        else:
+            df_geo['alpha'] = 102 + (df_geo[alpha] * (255 - 102) / df_geo.cols.max(alpha)).cols.to_integer()
+        
+        color = "[48, 158, 227, +alpha]"
+
+    import pydeck as pdk
+
+    # Define a layer to display on a map
+    layer = pdk.Layer(
+        "ScatterplotLayer",
+        df_geo.data,
+        pickable=True,
+        opacity=0.75,
+        stroked=True,
+        filled=True,
+        radius_scale=20,
+        radius_min_pixels=4,
+        radius_max_pixels=16,
+        line_width_scale=0,
+        get_position=position,
+        get_radius=6,
+        get_fill_color=color,
+        get_line_color=color
+    )
+
+
+    # Set the viewport location
+    _min = df_geo.cols.min(position)
+    _max = df_geo.cols.max(position)
+
+    x_distance = _max[position[0]] - _min[position[0]]
+    y_distance = _max[position[1]] - _min[position[1]]
+    x_mid = (_max[position[0]] + _min[position[0]]) / 2
+    y_mid = (_max[position[1]] + _min[position[1]]) / 2
+
+    distance = max(x_distance, y_distance)
+    zoom = 5.5*(distance-0.18)**-0.41
+
+    zoom -= abs(y_mid) ** 3 / 250000
+    zoom = max(min(zoom, 12), -2)
+
+    view_state = pdk.ViewState(latitude=y_mid, longitude=x_mid, zoom=zoom, bearing=0, pitch=0)
+
+    # Render
+    r = pdk.Deck(
+        layers=[layer],
+        initial_view_state=view_state,
+        map_style=pdk.map_styles.LIGHT,
+        height=295,
+        **({"tooltip": {"text": text}} if text else {})
+    )
+
+    return r.to_html(iframe_height=iframe_height).data
+
 inject_method_to_optimus(df__preliminary_profile)
 inject_method_to_optimus(df__pattern_counts_cache)
 inject_method_to_optimus(df__profile_stats_cache)
@@ -409,3 +493,4 @@ inject_method_to_optimus(df__profile_frequency_cache)
 inject_method_to_optimus(df__profile_cache)
 inject_method_to_optimus(df__pattern_counts_df)
 inject_method_to_optimus(df__profile_df)
+inject_method_to_optimus(df__deck_map)

@@ -354,6 +354,12 @@
               <span class="data-column-name">{{ currentDataset.columns[index].name }}</span>
             </div>
           </div>
+          <DeckMap
+            v-if="selectedColumnsNames && selectedColumnsNames.length>1"
+            class="sidebar-section"
+            :columns="selectedColumnsNames"
+            :currentDataset="currentDataset"
+          />
           <div v-if="detailsActive['heat-map']" class="heat-map plot">
             <div class="plot-title" v-if="heatMap">
               Heat Map
@@ -425,6 +431,7 @@ import ColumnDetails from '@/components/ColumnDetails'
 import Cells from '@/components/Cells'
 import Dataset from '@/components/Dataset'
 import VegaEmbed from '@/components/VegaEmbed'
+import DeckMap from '@/components/DeckMap'
 import clientMixin from '@/plugins/mixins/client'
 import dataTypesMixin from '@/plugins/mixins/data-types'
 import applicationMixin from '@/plugins/mixins/application'
@@ -439,7 +446,8 @@ export default {
     ColumnDetails,
     Cells,
     Dataset,
-    VegaEmbed
+    VegaEmbed,
+    DeckMap
 	},
 
 	mixins: [clientMixin, dataTypesMixin, applicationMixin],
@@ -511,6 +519,10 @@ export default {
     ]),
 
     ...mapState(['nextCommand', 'noMatch', 'showingColumnsLength', 'errorAlerts', 'tab']),
+
+    selectedColumnsNames () {
+      return this.selectedColumns.map(col => col.name);
+    },
 
     columns () {
       let columns = [];

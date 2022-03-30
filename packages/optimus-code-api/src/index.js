@@ -186,6 +186,14 @@ export const codeGenerators = {
   compile: (payload) => {
     return `.compile()`;
   },
+  deck_map: (payload) => {
+    let df = payload.dfName;
+    return {
+      code: `_output = ${df}.deck_map(${preparedColumns(payload.columns)})\n`,
+      isOutput: true,
+      isAsync: false
+    };
+  },
   pattern_counts_cache: (payload) => {
     let df = payload.dfName;
     let column = escapeQuotes(payload.column);

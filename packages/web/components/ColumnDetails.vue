@@ -226,6 +226,12 @@
 
       </template>
 
+      <DeckMap
+        :columns="[column.name]"
+        :currentDataset="currentDataset"
+        class="component-container"
+      />
+
       <div
         v-if="patternsFrequency"
         class="component-container"
@@ -307,6 +313,7 @@ import Percentile from '@/components/PercentileStats'
 import Descriptive from '@/components/Stats'
 import Histogram from '@/components/Histogram'
 import DataTypes from '@/components/DataTypes'
+import DeckMap from '@/components/DeckMap'
 import PlaceholderBars from '@/components/placeholders/PlaceholderBars'
 
 import dataTypesMixin from '~/plugins/mixins/data-types'
@@ -326,6 +333,7 @@ export default {
 		Frequent,
 		Histogram,
     DataTypes,
+    DeckMap,
     PlaceholderBars,
     VegaEmbed
 	},
@@ -338,7 +346,8 @@ export default {
       patternsFrequency: [],
       patternsResolution: 3,
       patternsLoading: false,
-      sampleSize: 100000
+      sampleSize: 100000,
+      deckMap: false
     }
   },
 
@@ -395,7 +404,7 @@ export default {
     async commandListener__patterns_count (response) {
       try {
 
-        if (response.reply.column !== this.column.name) {
+        if (response.reply.column !== this.column.name || response.reply.dfName !== this.currentDataset.dfName) {
           return;
         }
 
@@ -403,8 +412,8 @@ export default {
           throw new ErrorWithResponse('Bad response', response);
         }
 
-        var result = response.data.result;
-        var complete = result?.complete;
+        let result = response.data.result;
+        let complete = result?.complete;
         
         if (result) {
           if (result.values && typeof result.values !== 'function') {
@@ -421,7 +430,7 @@ export default {
         }
 
       } catch (err) {
-        console.error(err, err.response)
+        console.error(err, err.response);
         this.$set(this.patternsFrequency, this.patternsResolution, 'error')
         this.patternsLoading = false;
       }
@@ -430,13 +439,13 @@ export default {
     async getPatterns () {
       try {
 
-        var payload = {
+        let payload = {
           socketPost: this.socketPost,
           dfName: this.currentDataset.dfName,
           methods: this.commandMethods
         };
 
-        var executeResult = await this.$store.dispatch('getExecute', payload );
+        let executeResult = await this.$store.dispatch('getExecute', payload );
 
         if (this.patternsFrequency[this.patternsResolution] && this.patternsFrequency[this.patternsResolution]!=='error') {
           return
@@ -445,9 +454,8 @@ export default {
         this.patternsLoading = true;
         this.requestPatterns(0, this.sampleSize, true);
 
-
       } catch (err) {
-        console.error(err)
+        console.error(err, err.response);
         this.$set(this.patternsFrequency, this.patternsResolution, 'error')
         this.patternsLoading = false;
       }
@@ -471,16 +479,18 @@ export default {
             isAsync: true,
             async_priority: -20
           }
-        }
-
-        await this.interrupt({handler: 'patterns_count'});
-
-        this.evalCode(codePayload, { 
+        };
+        let replyPayload = { 
           command: 'patterns_count',
           sample: [from, to],
           n: 5,
+          dfName,
           column
-        }, 'info');
+        };
+
+        await this.interrupt({handler: 'patterns_count'});
+
+        this.evalCode(codePayload, replyPayload, 'info');
     },
 
     patternClicked (item) {
