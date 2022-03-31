@@ -175,7 +175,7 @@ def df__profile_stats_cache(df, cols="*", sample=None, last_sample=False, flush=
 
     if last_sample:
         meta_keys = ["summary.data_types_list", "summary.total_count_data_types"]
-        col_meta_keys = ["stats.match", "stats.missing", "stats.mismatch", "stats.inferred_data_type"]
+        col_meta_keys = ["stats.match", "stats.missing", "stats.mismatch", "stats.inferred_data_type", "data_type"]
         
         for _m in meta_keys:
             _v = Meta.get(stats, _m)
