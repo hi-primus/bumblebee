@@ -629,22 +629,22 @@ export default {
       let deletingTimestamp = false;
 
       if (matchingPromisesKeys.length > 1) {
-        deletingTimestamp = body?.payload?.timestamp;
+        deletingTimestamp = payload?.timestamp;
       }
 
       if (deletingTimestamp !== false) {
-        window.promises = objectFilter(window.promises, ([key, body]) => {
-          return key !== deletingTimestamp;
-        });
+        if (window.promises.hasOwnProperty(deletingTimestamp)) {
+          delete window.promises[deletingTimestamp]
+        }
       } else  {
         window.promises = objectFilter(window.promises, ([, body]) => {
           return body?.payload?.reply?.command !== commandString;
         });
       }
 
-      windowPromises = objectFilter(window.promises, ([, body]) => {
-        return body?.payload?.reply?.command === commandString;
-      });
+      if (payload?.data?.interrupt) {
+        return [];
+      }
 
       let listeners = Object.entries(this)
         .filter(([k,v])=>typeof v=='function' && k.startsWith('commandListener'))
