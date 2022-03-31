@@ -1732,7 +1732,7 @@ export default {
       }
     },
 
-    requestCachedProfiling (dfName, group = 0, sample = false, lastSample = false, preview = false, clearPrevious = undefined, low = false) {
+    async requestCachedProfiling (dfName, group = 0, sample = false, lastSample = false, preview = false, clearPrevious = undefined, low = false) {
 
       if (this.currentDataset.dfName !== dfName && !preview) {
         throw new Error(`Dataset changed, ${currentDfName} -> ${dfName}`);
@@ -1741,6 +1741,12 @@ export default {
       if (!this.enableIncrementalProfiling) {
         throw new Error('Incremental profiling not enabled');
       }
+
+      let executeResult = await this.$store.dispatch('getExecute', {
+        dfName,
+        socketPost: this.socketPost,
+        methods: this.commandMethods
+      });
 
       this.$store.commit('mutation', {mutate: preview ? 'updatingPreviewProfile' : 'updatingWholeProfile', payload: true });
       
