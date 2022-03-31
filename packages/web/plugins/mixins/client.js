@@ -620,8 +620,30 @@ export default {
 
       const commandString = (command && typeof command == 'object') ? command.command : command;
 
-      window.promises = objectFilter(window.promises, ([, body]) => {
-        return body?.payload?.reply?.command !== commandString;
+      let matchingPromises = objectFilter(window.promises, ([, body]) => {
+        return body?.payload?.reply?.command === commandString;
+      });
+
+      let matchingPromisesKeys = Object.keys(matchingPromises);
+
+      let deletingTimestamp = false;
+
+      if (matchingPromisesKeys.length > 1) {
+        deletingTimestamp = body?.payload?.timestamp;
+      }
+
+      if (deletingTimestamp !== false) {
+        window.promises = objectFilter(window.promises, ([key, body]) => {
+          return key !== deletingTimestamp;
+        });
+      } else  {
+        window.promises = objectFilter(window.promises, ([, body]) => {
+          return body?.payload?.reply?.command !== commandString;
+        });
+      }
+
+      windowPromises = objectFilter(window.promises, ([, body]) => {
+        return body?.payload?.reply?.command === commandString;
       });
 
       let listeners = Object.entries(this)
