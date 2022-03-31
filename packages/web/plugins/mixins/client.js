@@ -212,7 +212,6 @@ export default {
     },
 
     async interrupt ({id, handler, command, category} = {}) {
-      return false;
       let ids = [];
       if (id !== undefined) {
         ids = [id];
@@ -232,7 +231,15 @@ export default {
       if (!ids.length) {
         return false;
       }
-      const response = await this.socketPost('interrupt', { ids });
+
+      window.interruptPromises = window.interruptPromises || [];
+      const promise = this.socketPost('interrupt', { ids });
+      const dateNow = Date.now();
+      window.interruptPromises[dateNow] = promise;
+      await Promise.all(window.interruptPromises);
+      delete window.interruptPromises[dateNow];
+      const response = await promise;
+
       if (response.data && response.data.length) {
         console.log(`[INTERRUPT] Success`, response);
       }

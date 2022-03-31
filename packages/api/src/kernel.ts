@@ -11,9 +11,6 @@ const kernels = [];
 const configs = {};
 const aliases = {};
 const requests: { [fieldName: string]: typeof Queue } = {};
-const toInterrupt = [];
-
-let runningTask;
 
 let kernel_addresses;
 let kernel_types;
@@ -276,10 +273,12 @@ export const requestToKernel = async function (type, sessionId, payload, options
 	const response: any = await new Promise((resolve, reject) => {
 		kernels[getKernelId(sessionId)].promises[msg_id] = { resolve, reject };
 		try {
+			let toInterrupt = kernels[getKernelId(sessionId)].toInterrupt || [];
 			if (toInterrupt.includes(options.timestamp)) {
+				kernels[getKernelId(sessionId)].toInterrupt = toInterrupt.filter((t) => t !== options.timestamp);
 				throw new InterruptError(`Request ${options.timestamp} interrupted early by user`);
 			}
-			runningTask = {id: options.timestamp, type: options.category, msgId: msg_id};
+			kernels[getKernelId(sessionId)].runningTask = {id: options.timestamp, type: options.category, msgId: msg_id};
 			if (asyncCallback) {
 				kernels[getKernelId(sessionId)].promises[msg_id].resolveAsync = asyncCallback;
 			}
@@ -311,6 +310,7 @@ export const interruptRequest = async function (sessionId, taskIdsOrTypes : (str
 	for (let taskIdOrType of taskIdsOrTypes) {
 		
 		let responseBody = {interrupt: false, reject: false, queueId: false};
+		let runningTask = kernels[getKernelId(sessionId)].runningTask;
 		
 		if (taskIdOrType && runningTask && [runningTask.id, runningTask.type].includes(taskIdOrType)) {
 	
@@ -327,10 +327,12 @@ export const interruptRequest = async function (sessionId, taskIdsOrTypes : (str
 			}
 			
 			runningTask = null;
+			kernels[getKernelId(sessionId)].runningTask = null;
 		}
 		
 		if (!responseBody.interrupt && typeof taskIdOrType === 'number') {
-			toInterrupt.push(taskIdOrType);
+			kernels[getKernelId(sessionId)].toInterrupt = kernels[getKernelId(sessionId)].toInterrupt || [];
+			kernels[getKernelId(sessionId)].toInterrupt.push(taskIdOrType);
 			responseBody.queueId = true;
 		}
 		
