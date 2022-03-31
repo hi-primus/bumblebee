@@ -103,7 +103,7 @@ export default {
         columns,
       }
 
-      // await this.interrupt({handler: 'deck_map'});
+      await this.interrupt({handler: 'deck_map'});
 
       this.evalCode(codePayload, replyPayload, 'info');
     },

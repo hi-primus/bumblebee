@@ -488,7 +488,7 @@ export default {
           column
         };
 
-        // await this.interrupt({handler: 'patterns_count'});
+        await this.interrupt({handler: 'patterns_count'});
 
         this.evalCode(codePayload, replyPayload, 'info');
     },
