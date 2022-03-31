@@ -277,7 +277,7 @@ export const requestToKernel = async function (type, sessionId, payload, options
 		kernels[getKernelId(sessionId)].promises[msg_id] = { resolve, reject };
 		try {
 			if (toInterrupt.includes(options.timestamp)) {
-				throw new InterruptError("Request interrupted early by user");
+				throw new InterruptError(`Request ${options.timestamp} interrupted early by user`);
 			}
 			runningTask = {id: options.timestamp, type: options.category, msgId: msg_id};
 			if (asyncCallback) {
@@ -337,7 +337,7 @@ export const interruptRequest = async function (sessionId, taskIdsOrTypes : (str
 		responseBodies.push(responseBody);
 
 		if (!responseBody.interrupt) {
-			console.warn(`Could not interrupt task ${taskIdOrType}, ${typeof taskIdOrType}`, runningTask);
+			console.warn(`Could not interrupt task ${taskIdOrType} with type ${typeof taskIdOrType}`, runningTask);
 		}
 	}
 
