@@ -188,8 +188,11 @@ export const codeGenerators = {
   },
   deck_map: (payload) => {
     let df = payload.dfName;
+    let code = `_output = ${df}.deck_map(${preparedColumns(payload.columns)}`
+    + ( payload.alpha ? `, alpha="${payload.alpha}"` : '')
+    code += `)\n`
     return {
-      code: `_output = ${df}.deck_map(${preparedColumns(payload.columns)})\n`,
+      code,
       isOutput: true,
       isAsync: false
     };

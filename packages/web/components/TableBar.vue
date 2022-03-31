@@ -355,9 +355,9 @@
             </div>
           </div>
           <DeckMap
-            v-if="selectedColumnsNames && selectedColumnsNames.length>1"
+            v-if="selectedColumns && selectedColumns.length>1"
             class="sidebar-section"
-            :columns="selectedColumnsNames"
+            :columns="selectedColumns"
             :currentDataset="currentDataset"
           />
           <div v-if="detailsActive['heat-map']" class="heat-map plot">

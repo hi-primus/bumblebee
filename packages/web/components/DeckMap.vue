@@ -15,7 +15,7 @@
 
 import clientMixin from '@/plugins/mixins/client';
 
-import { ErrorWithResponse } from 'bumblebee-utils';
+import { ErrorWithResponse, debounce } from 'bumblebee-utils';
 
 export default {
   
@@ -32,6 +32,7 @@ export default {
 
   data () {
     return {
+      requestedColumns: false,
       deckMap: false,
       deckMapError: false,
       deckMapLoading: false
@@ -43,7 +44,7 @@ export default {
     async commandListener__deck_map (response) {
       try {
 
-        if (response.reply.columns.join() !== this.columns.join() || response.reply.dfName !== this.currentDataset.dfName) {
+        if (response.reply.columns.join() !== this.columns.map(col => col.name).join() || response.reply.dfName !== this.currentDataset.dfName) {
           return;
         }
 
@@ -87,21 +88,26 @@ export default {
 
     async requestDeckMap () {
       let dfName = this.currentDataset.dfName;
-      let columns = this.columns;
+
+      let columns = this.columns.map(col => col.name);
+      let position_columns = columns.slice(0,2);
+      let alpha_column = columns[2];
+
       let codePayload = {
         command: 'deck_map',
         dfName,
-        columns,
+        columns: position_columns,
+        alpha: alpha_column,
         request: {
           isAsync: true,
           async_priority: -30
         }
-      }
+      };
       let replyPayload = {
         command: 'deck_map',
         dfName,
         columns,
-      }
+      };
 
       await this.interrupt({handler: 'deck_map'});
 
@@ -111,7 +117,13 @@ export default {
   },
 
   watch: {
-    columns: 'getDeckMap'
+    columns: debounce(function() {
+      let columns = this.columns.map(col => col.name).join(", ");
+      if (this.requestedColumns != columns) {
+        this.requestedColumns = columns;
+        this.getDeckMap();
+      }
+    }, 200)
   }
 }
 </script>

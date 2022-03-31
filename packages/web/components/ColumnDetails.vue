@@ -227,7 +227,7 @@
       </template>
 
       <DeckMap
-        :columns="[column.name]"
+        :columns="[column]"
         :currentDataset="currentDataset"
         class="component-container"
       />
