@@ -212,6 +212,7 @@ export default {
     },
 
     async interrupt ({id, handler, command, category} = {}) {
+      return false;
       let ids = [];
       if (id !== undefined) {
         ids = [id];
