@@ -53,7 +53,15 @@ def add_profile(a, b):
 
 
 def add_to_table(table, add):
-    table = table.add(add, fill_value=0) if table is not None else add
+    try:
+        table = table.add(add, fill_value=0) if table is not None else add
+    except TypeError:
+        if table is not None:
+            table.index = pd.Series(table.index).apply(frozenset)
+        add.index = pd.Series(add.index).apply(frozenset)
+        table = table.add(add, fill_value=0) if table is not None else add
+        table.index = pd.Series(table.index).apply(list)
+
     table["count"] = table["count"].astype("int64")
     return table
     
