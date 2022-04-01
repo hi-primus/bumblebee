@@ -340,6 +340,9 @@ def df__profile_cache(df, cols="*", bins: int = MAX_BUCKETS, sample=None, last_s
     
     cols = df.cols.names(cols)
 
+    if cols is None:
+        return None
+
     if "plot_type" not in df.meta:
         df.preliminary_profile()
 
