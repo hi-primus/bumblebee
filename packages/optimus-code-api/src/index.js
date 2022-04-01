@@ -650,7 +650,7 @@ export const codeGenerators = {
     let datasets = payload.with.map(({name})=>name).join(', ')
 
     if (!['final','processing'].includes(payload.request.type)) {
-      datasets = payload.with.map(({name})=>`${name}.iloc("*", 0, 3)`).join(', ')
+      datasets = payload.with.map(({name})=>`${name}.iloc(0, 3)`).join(', ')
       return `.rows.append([${datasets}], ${cols_map})`;
     }
 
@@ -1468,7 +1468,7 @@ export const generateCode = function(commands = [], _request = { type: 'processi
               }
               
               if (window) {
-                code += `.iloc("*"${window})`;
+                code += `.iloc(${window})`;
               }
             }
           }
