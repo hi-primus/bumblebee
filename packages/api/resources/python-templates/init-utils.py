@@ -1,5 +1,5 @@
 import copy
-
+import pandas as pd
 from optimus.helpers.constants import ProfilerDataTypes    
 
 
@@ -56,11 +56,22 @@ def add_to_table(table, add):
     try:
         table = table.add(add, fill_value=0) if table is not None else add
     except TypeError:
+        def to_hashable(value):
+            if isinstance(value, dict):
+                return tuple(sorted(value.items()))
+            if isinstance(value, list):
+                return frozenset(value)
+            return value
+
+        def from_hashable(value):
+            if isinstance(value, frozenset):
+                return list(value)
+            return value
         if table is not None:
-            table.index = pd.Series(table.index).apply(frozenset)
-        add.index = pd.Series(add.index).apply(frozenset)
+            table.index = pd.Series(table.index).apply(to_hashable)
+        add.index = pd.Series(add.index).apply(to_hashable)
         table = table.add(add, fill_value=0) if table is not None else add
-        table.index = pd.Series(table.index).apply(list)
+        table.index = pd.Series(table.index).apply(from_hashable)
 
     table["count"] = table["count"].astype("int64")
     return table
