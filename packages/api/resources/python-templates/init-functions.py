@@ -80,7 +80,7 @@ def df__pattern_counts_cache(df, cols="*", n=10, mode=0, sample=None, last_sampl
             patterns = df.cols.pattern_counts(column_name, n=None, mode=mode)[column_name]["values"]
         else:
             complete = False
-            sample_df = df if sample is None else df[sample[0]:sample[1]]
+            sample_df = df if sample is None else df.iloc(lower_bound=sample[0], upper_bound=sample[1], copy=False)
             patterns = sample_df.cols.pattern_counts(column_name, n=None, mode=mode)[column_name]["values"]
         
         if patterns is not None:
@@ -136,7 +136,7 @@ def df__profile_stats_cache(df, cols="*", sample=None, last_sample=False, flush=
 
     profile_cols = [col for col in cols if col not in already_updated_cols + needs_update_cols]
     
-    sample_df = df if sample is None else df[sample[0]:sample[1]]
+    sample_df = df if sample is None else df.iloc(lower_bound=sample[0], upper_bound=sample[1], copy=False)
 
     complete_stats_cols = Meta.get(df.meta, "profile.columns") or {}
 
@@ -230,7 +230,7 @@ def df__profile_frequency_cache(df, cols="*", n=MAX_BUCKETS, sample=None, last_s
             _result = { "values": stats["frequency"], "count_uniques": stats["count_uniques"] }
         else:
             complete = False
-            sample_df = df if sample is None else df[sample[0]:sample[1]]
+            sample_df = df if sample is None else df.iloc(lower_bound=sample[0], upper_bound=sample[1], copy=False)
             _result = sample_df.cols.frequency(column_name, n=None)["frequency"][column_name]
         
         frequency = _result["values"] if "values" in _result else None
@@ -310,7 +310,7 @@ def df__profile_hist_cache(df, cols="*", buckets=MAX_BUCKETS, sample=None, last_
             hist = df.cols.hist(column_name, buckets=buckets, range=_range)["hist"][column_name]
         else:
             complete = False
-            sample_df = df if sample is None else df[sample[0]:sample[1]]
+            sample_df = df if sample is None else df.iloc(lower_bound=sample[0], upper_bound=sample[1], copy=False)
             hist = sample_df.cols.hist(column_name, buckets=buckets, range=_range)["hist"][column_name]
         
         if hist is not None:
