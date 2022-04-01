@@ -1464,7 +1464,7 @@ export const generateCode = function(commands = [], _request = { type: 'processi
               }
 
               if (!request.noBufferWindow && Array.isArray(request.window)) {
-                window = `, ${request.window[0]}, ${request.window[1]}`;
+                window = `${request.window[0]}, ${request.window[1]}`;
               }
               
               if (window) {
