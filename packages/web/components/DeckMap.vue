@@ -59,13 +59,16 @@ export default {
 
         html = html.replace(/\\n/g,'\n').replace(/\\t/g,'\t');
 
+        this.deckMapLoading = false;
+        this.deckMapError = false;
         this.deckMap = html;
-        this.$emit('error', false);
+
       } catch (err) {
-        this.$emit('error', err);
+        console.warn('Data not compatible', err);
+        this.deckMapLoading = false;
         this.deckMapError = err.response;
         this.deckMap = 'error';
-        this.deckMapLoading = false;
+        this.$emit('error', err);
       }
     },
 
@@ -84,10 +87,11 @@ export default {
         this.requestDeckMap();
 
       } catch (err) {
-        this.$emit('error', err);
+        console.warn('Data not compatible', err);
+        this.deckMapLoading = false;
         this.deckMapError = err.response;
         this.deckMap = 'error';
-        this.deckMapLoading = false;
+        this.$emit('error', err);
       }
     },
 
