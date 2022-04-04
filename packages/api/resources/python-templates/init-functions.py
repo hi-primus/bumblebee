@@ -404,30 +404,52 @@ def df__profile_df(df, cols="*", bins: int = MAX_BUCKETS, flush: bool = False):
     return df
 
 
-def df__deck_map(df, position="*", alpha=None, text=None, iframe_height=295):
+def df__deck_map(df, cols="*", text=None, iframe_height=295):
     """
     Get a map from a dataframe.
     :param df: Optimus dataframe
-    :param position: column or columns with latitude and longitude for each object
-    :param alpha: alpha value for each object
+    :param cols: column or columns with latitude and longitude for each object and an optional extra column with the alpha value
     :param text: text for each object
     """
-    position = df.cols.names(position)
+    cols = df.cols.names(cols)
+    cols_types = {}
+    for col in cols:
+        col_type = df.cols.inferred_data_type(col) or df.cols.inferred_data_type(col, use_internal=True)
+        cols_types.update({col: col_type})
+
+    if len(cols) == 1:
+        position = cols
+        alpha = None
+    elif len(cols) > 2:
+        position = cols[:2]
+        alpha = cols[2]
+    elif len(cols) == 2:
+        if cols_types[cols[0]] == "float" and cols_types[cols[1]] == "float":
+            position = cols
+            alpha = None
+        else:
+            position = cols[:1]
+            alpha = cols[1]
 
     if len(position) == 1:
-        # TODO: array and string support
         position = position[0]
 
-        def split_coordinates(row):
-            row["X"] = row[position][0]
-            row["Y"] = row[position][1]
-            return row
+        if cols_types[position] == "str":
+            df_geo = df.cols.strip(position, "[] ")
+            df_geo = df_geo.cols.unnest(position, ",", output_cols=[position+"_X", position+"_Y"])
+            df_geo = df_geo.cols.to_float([position+"_X", position+"_Y"])
+            position = [position+"_X", position+"_Y"]
+        
+        else: # elif cols_types[position] == "array":
+            def split_coordinates(row):
+                row[position+"_X"] = row[position][0]
+                row[position+"_Y"] = row[position][1]
+                return row
 
-        df_geo = df.rows.apply(split_coordinates, mode="map")
-        position = ["X", "Y"]
-
+            df_geo = df.rows.apply(split_coordinates, mode="map")
+            position = [position+"_X", position+"_Y"]
     else:
-        df_geo = df
+        df_geo = df.cols.to_float(position)
 
     color = [48, 158, 227]
 
@@ -470,8 +492,7 @@ def df__deck_map(df, position="*", alpha=None, text=None, iframe_height=295):
     y_mid = (_max[position[1]] + _min[position[1]]) / 2
 
     distance = max(x_distance, y_distance)
-    zoom = 5.5*(distance-0.18)**-0.41
-
+    zoom = 5.5*max(0.01, distance-0.18)**-0.41
     zoom -= abs(y_mid) ** 3 / 250000
     zoom = max(min(zoom, 12), -2)
 
