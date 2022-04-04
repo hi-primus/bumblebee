@@ -226,11 +226,11 @@
 
       </template>
 
-      <DeckMap
+      <!-- <DeckMap
         :columns="[column]"
         :currentDataset="currentDataset"
         class="component-container"
-      />
+      /> -->
 
       <div
         v-if="patternsFrequency"

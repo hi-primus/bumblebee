@@ -348,18 +348,45 @@
           <v-icon class="right-button" id="details-close-btn" color="black" @click="clearSelection">close</v-icon>
         </div>
         <div class="sidebar-content">
-          <div v-for="(index, i) in detailedColumns.filter(index => detailedColumns.length>1 && currentDataset.columns[index])" :key="index+'selc'+i" class="sidebar-section pr-10 columns-selected">
+          <!-- <div v-for="(index, i) in detailedColumns.filter(index => detailedColumns.length>1 && currentDataset.columns[index])" :key="index+'selc'+i" class="sidebar-section pr-10 columns-selected">
             <div class="column-selected">
               <span class="data-type" :class="`type-${currentDataset.columns[index].stats.inferred_data_type.data_type}`">{{ dataTypeHint(currentDataset.columns[index].stats.inferred_data_type.data_type) }}</span>
               <span class="data-column-name">{{ currentDataset.columns[index].name }}</span>
             </div>
-          </div>
-          <DeckMap
-            v-if="selectedColumns && selectedColumns.length>1"
+          </div> -->
+          <div
+            v-if="selectedColumns && selectedColumns.length>0"
             class="sidebar-section"
-            :columns="selectedColumns"
-            :currentDataset="currentDataset"
-          />
+          >
+            <DeckMap
+              v-if="mapEnabled && mapEnabled != 'disabled'"
+              @error="mapEnabled = 'disabled'"
+              :columns="selectedColumns"
+              :currentDataset="currentDataset"
+            />
+            <v-tooltip
+              v-else
+              bottom
+              transition="tooltip-fade-transition"
+            >
+              <template v-slot:activator="{ on }">
+                <div v-on="on" class="my-3 d-inline-block">
+                  <v-btn
+                    @click="mapEnabled = true"
+                    :disabled="mapEnabled == 'disabled'"
+                    class="map-btn"
+                    color="primary"
+                    depressed
+                    small
+                  >
+                    Show map
+                  </v-btn>
+                </div>
+              </template>
+              <span v-if="mapEnabled == 'disabled'">Data not compatible</span>
+              <span v-else>Show location on map</span>
+            </v-tooltip>
+          </div>
           <div v-if="detailsActive['heat-map']" class="heat-map plot">
             <div class="plot-title" v-if="heatMap">
               Heat Map
@@ -414,7 +441,7 @@
           <template v-for="(index, i) in detailedColumns">
             <ColumnDetails
               :key="index+'cd'+i"
-              :startExpanded="i==0"
+              :startExpanded="i==0 && detailedColumns.length==1"
               :rowsCount="+currentDataset.summary.rows_count"
               :column="columnDetailsData(index)"
               @command="commandHandle($event)"
@@ -479,6 +506,9 @@ export default {
       operationsTitle: 'operations',
       dialogProperties: false,
       operation: undefined,
+
+      mapEnabled: false,
+
       heatMap: [],
       heatMapEncoding: {},
 
@@ -778,6 +808,14 @@ export default {
   },
 
   watch: {
+
+    selectedColumns: {
+      handler (c) {
+        this.mapEnabled = false;
+      },
+      deep: true
+    },
+
     lastSort (lastSort) {
       this.$nextTick(()=>{
         if (this.callSort && lastSort.length) {

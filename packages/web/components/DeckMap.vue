@@ -1,14 +1,17 @@
 <template>
-  <div class="deck-map plot" v-if="deckMap && deckMap!=='error'">
+  <div class="deck-map plot" v-if="!deckMapLoading && deckMap && deckMap!=='error'">
     <h3>Map</h3>
     <div
       style="min-height: 128px"
       v-html="deckMap"
     ></div>
   </div>
-  <div v-else class="hidden-error" style="display: none">
-    {{deckMapError}}
-  </div>
+  <v-progress-circular
+    class="my-2"
+    v-else 
+    indeterminate
+    color="grey"
+  />
 </template>
 
 <script>
@@ -57,8 +60,9 @@ export default {
         html = html.replace(/\\n/g,'\n').replace(/\\t/g,'\t');
 
         this.deckMap = html;
-
+        this.$emit('error', false);
       } catch (err) {
+        this.$emit('error', err);
         this.deckMapError = err.response;
         this.deckMap = 'error';
         this.deckMapLoading = false;
@@ -80,6 +84,7 @@ export default {
         this.requestDeckMap();
 
       } catch (err) {
+        this.$emit('error', err);
         this.deckMapError = err.response;
         this.deckMap = 'error';
         this.deckMapLoading = false;
@@ -117,13 +122,16 @@ export default {
   },
 
   watch: {
-    columns: debounce(function() {
-      let columns = this.columns.map(col => col.name).join(", ");
-      if (this.requestedColumns != columns) {
-        this.requestedColumns = columns;
-        this.getDeckMap();
-      }
-    }, 200)
+    columns: {
+      handler: debounce(function() {
+        let columns = this.columns.map(col => col.name).join(", ");
+        if (this.requestedColumns != columns) {
+          this.requestedColumns = columns;
+          this.getDeckMap();
+        }
+      }, 200),
+      immediate: true
+    }
   }
 }
 </script>
