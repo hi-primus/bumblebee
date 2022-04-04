@@ -270,6 +270,11 @@ export const requestToKernel = async function (type, sessionId, payload, options
 		kernels[getKernelId(sessionId)].promises = {};
 	}
 
+	// if (kernels[getKernelId(sessionId)].runningTask === null) {
+	// 	kernels[getKernelId(sessionId)].runningTask = false;
+	// 	await new Promise((resolve) => setTimeout(resolve, 500));
+	// }
+
 	const response: any = await new Promise((resolve, reject) => {
 		kernels[getKernelId(sessionId)].promises[msg_id] = { resolve, reject };
 		try {
@@ -278,7 +283,7 @@ export const requestToKernel = async function (type, sessionId, payload, options
 				kernels[getKernelId(sessionId)].toInterrupt = toInterrupt.filter((t) => t !== options.timestamp);
 				throw new InterruptError(`Request ${options.timestamp} interrupted early by user`);
 			}
-			kernels[getKernelId(sessionId)].runningTask = {id: options.timestamp, type: options.category, msgId: msg_id};
+			// kernels[getKernelId(sessionId)].runningTask = {id: options.timestamp, type: options.category, msgId: msg_id};
 			if (asyncCallback) {
 				kernels[getKernelId(sessionId)].promises[msg_id].resolveAsync = asyncCallback;
 			}
@@ -310,27 +315,31 @@ export const interruptRequest = async function (sessionId, taskIdsOrTypes : (str
 	for (let taskIdOrType of taskIdsOrTypes) {
 		
 		let responseBody = {interrupt: false, reject: false, queueId: false};
-		let runningTask = kernels[getKernelId(sessionId)].runningTask;
+		// let runningTask = kernels[getKernelId(sessionId)].runningTask;
 		
-		if (taskIdOrType && runningTask && [runningTask.id, runningTask.type].includes(taskIdOrType)) {
+		// if (taskIdOrType && runningTask && [runningTask.id, runningTask.type].includes(taskIdOrType)) {
+
+		// 	console.debug(`Request to interrupt now: ${taskIdOrType}. Running task: ${runningTask.id}`);
 	
-			const latePromise = kernels[getKernelId(sessionId)]?.promises[runningTask.msgId];
-			const id = kernels[getKernelId(sessionId)].id;
-			const ka = configKernel(sessionId).kernel_address || 0;
-			let response = await axios.post(`${kernelBase(ka)}/api/kernels/${id}/interrupt`);
+		// 	const latePromise = kernels[getKernelId(sessionId)]?.promises[runningTask.msgId];
 			
-			responseBody.interrupt = true;
+		// 	if (latePromise?.reject) {
+		// 		console.debug(`Rejecting: ${taskIdOrType}`);
+		// 		latePromise.reject(new InterruptError(`Request ${taskIdOrType} interrupted by user`));
+		// 		responseBody.reject = true;
+		// 	}
 			
-			if (latePromise?.reject) {
-				latePromise.reject(new InterruptError("Request interrupted by user"));
-				responseBody.reject = true;
-			}
-			
-			runningTask = null;
-			kernels[getKernelId(sessionId)].runningTask = null;
-		}
+		// 	const id = kernels[getKernelId(sessionId)].id;
+		// 	const ka = configKernel(sessionId).kernel_address || 0;
+		// 	await axios.post(`${kernelBase(ka)}/api/kernels/${id}/interrupt`);
+						
+		// 	runningTask = null;
+		// 	kernels[getKernelId(sessionId)].runningTask = null;
+		// 	responseBody.interrupt = true;
+		// }
 		
 		if (!responseBody.interrupt && typeof taskIdOrType === 'number') {
+			// console.debug(`Request to interrupt later: ${taskIdOrType}`);
 			kernels[getKernelId(sessionId)].toInterrupt = kernels[getKernelId(sessionId)].toInterrupt || [];
 			kernels[getKernelId(sessionId)].toInterrupt.push(taskIdOrType);
 			responseBody.queueId = true;
@@ -338,9 +347,9 @@ export const interruptRequest = async function (sessionId, taskIdsOrTypes : (str
 		
 		responseBodies.push(responseBody);
 
-		if (!responseBody.interrupt) {
-			console.warn(`Could not interrupt task ${taskIdOrType} with type ${typeof taskIdOrType}`, runningTask);
-		}
+		// if (!responseBody.interrupt && !responseBody.queueId) {
+		// 	console.warn(`Could not interrupt task ${taskIdOrType} with type ${typeof taskIdOrType}. Currently running: ${runningTask?.id}`);
+		// }
 	}
 
 	return responseBodies.length === 1 ? responseBodies[0] : responseBodies;
