@@ -2316,13 +2316,23 @@ export const commandsHandlers = {
                 { text: "Is not", value: "not_equal" },
                 { divider: true },
                 {
-                  text: "Less than or equal to",
+                  text: "Less than",
                   value: "less_than",
                   disabled: c.request.isString,
                 },
                 {
-                  text: "Greater than or equal to",
+                  text: "Less than or equal to",
+                  value: "less_than_equal",
+                  disabled: c.request.isString,
+                },
+                {
+                  text: "Greater than",
                   value: "greater_than",
+                  disabled: c.request.isString,
+                },
+                {
+                  text: "Greater than or equal to",
+                  value: "greater_than_equal",
                   disabled: c.request.isString,
                 },
                 {
@@ -2345,7 +2355,7 @@ export const commandsHandlers = {
             },
             {
               condition: (c, index) =>
-                ["equal", "not_equal", "less_than", "greater_than"].includes(c.condition[index]),
+                ["equal", "not_equal", "less_than", "less_than_equal", "greater_than", "greater_than_equal"].includes(c.condition[index]),
               key: "value",
               placeholder: (c) =>
                 c.request.isString ? "Value" : 'numeric or "string"',
@@ -2445,7 +2455,9 @@ export const commandsHandlers = {
               case "equal":
               case "not_equal":
               case "less_than":
+              case "less_than_equal":
               case "greater_than":
+              case "greater_than_equal":
               case "match_pattern":
                 return c.value[i].length;
               case "between":
@@ -2533,9 +2545,15 @@ export const commandsHandlers = {
           condition = "is not ";
           break;
         case "less_than":
+          condition = "is less than";
+          break;
+        case "less_than_equal":
           condition = "is less than or equal to ";
           break;
         case "greater_than":
+          condition = "is greater than ";
+          break;
+        case "greater_than_equal":
           condition = "is greater than or equal to ";
           break;
         case "contains":

@@ -490,9 +490,15 @@ export const codeGenerators = {
           expression = `${dfName}["${payload.columns[0]}"]!=${payload.value[index]}`
           break
         case 'less_than':
+          expression = `${dfName}["${payload.columns[0]}"]<${payload.value[index]}`
+          break
+        case 'less_than_equal':
           expression = `${dfName}["${payload.columns[0]}"]<=${payload.value[index]}`
           break
         case 'greater_than':
+          expression = `${dfName}["${payload.columns[0]}"]>${payload.value[index]}`
+          break
+        case 'greater_than_equal':
           expression = `${dfName}["${payload.columns[0]}"]>=${payload.value[index]}`
           break
         case 'match_pattern':
