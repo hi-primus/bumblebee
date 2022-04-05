@@ -44,11 +44,19 @@ def add_profile(a, b):
         if col in b["columns"] and col not in a["columns"]:
             a["columns"].update({col: b["columns"][col]})
     
-    del a["summary"]["rows_count"]
-    del a["summary"]["missing_count"]
-    del a["summary"]["p_missing"]
-    a["summary"]["data_types_list"] = list(set(a["summary"]["data_types_list"] + b["summary"]["data_types_list"]))
-    a["summary"]["total_count_data_types"] = len(a["summary"]["data_types_list"])
+    if "rows_count" in a["summary"]:
+        del a["summary"]["rows_count"]
+
+    if "missing_count" in a["summary"]:
+        del a["summary"]["missing_count"]
+
+    if "p_missing" in a["summary"]:
+        del a["summary"]["p_missing"]
+
+    if "data_types_list" in a["summary"]:
+        a["summary"]["data_types_list"] = list(set(a["summary"]["data_types_list"] + b["summary"]["data_types_list"]))
+        a["summary"]["total_count_data_types"] = len(a["summary"]["data_types_list"])
+
     return a
 
 
