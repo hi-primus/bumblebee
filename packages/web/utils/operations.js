@@ -722,7 +722,7 @@ let _operations = {
     text: ($nuxt)=> 'Rename column'+ ($nuxt.selectedColumns.length!=1 ? 's' : ''),
     label: 'Rename<br/>col.',
     icons: [{icon: 'mdi-pencil-outline'}],
-    disabled: ($nuxt)=> !($nuxt.selectionType=='columns' && $nuxt.selectedColumns.length>0),
+    // disabled: ($nuxt)=> !($nuxt.selectionType=='columns' && $nuxt.selectedColumns.length>0),
     test: {
       dataframe: TEST_DATAFRAMES.PEOPLE,
       payload: {
@@ -4318,10 +4318,18 @@ export const commandsHandlers = {
       },
     },
     payload: (columns, payload = {}) => {
+      let output_cols = [];
+      if (columns.length) {
+        output_cols = columns.map((e) => newName(e));
+      }
+      if (!columns.length) {
+        columns = deepCopy(payload.allColumns);
+        output_cols = deepCopy(payload.allColumns);
+      }
       return {
         command: "rename",
         columns,
-        output_cols: columns.map((e) => newName(e)),
+        output_cols,
         preview: {
           fake: "rename",
         },
