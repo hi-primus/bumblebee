@@ -2448,7 +2448,7 @@ export const commandsHandlers = {
       validate: (c) => {
         try {
           
-          c.expression.every((_,i) => {
+          return c.expression.every((_,i) => {
             switch (c.condition[i]) {
               case "value_in":
                 return c.values[i].length;

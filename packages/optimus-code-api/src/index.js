@@ -540,7 +540,7 @@ export const codeGenerators = {
         code += `.cols.set(`
         + `"__new__${output_col}"` // TODO support output_cols
         + `, where=[${expressions.map((_, i) => `'df["__match__"]==${i+1}'`).join(", ")}]`
-        + `, value_func=[${payload.replace_value.map(v => v==undefined ? "None" : v).join(", ")}]`
+        + `, value_func=[${payload.replace_value.map(v => v ? `parse('${v}')` : 'None').join(", ")}]`
         + `, eval_value=True`
         + (payload.default ? `, default=${payload.default}` : '')
         + `)`
@@ -577,9 +577,13 @@ export const codeGenerators = {
         if (!payload.default && payload.columns[0]) {
           payload.default = `"${payload.columns[0]}"`;
         }
+
+        output_col = payload.output_cols[0] || output_col;
+
         return `.cols.set(`
         + `"${output_col}", `
-        + `value_func=[${expressions.join(", ")}], `
+        + `where=[${expressions.join(", ")}], `
+        + `value_func=[${payload.replace_value.map(v => v ? `parse('${v}')` : 'None').join(", ")}], `
         + (payload.default ? `default=${payload.default}, ` : '')
         + `eval_value=True)`
       } else {
@@ -819,7 +823,7 @@ export const codeGenerators = {
   fill_na: (payload) => {
     let _argument = preparedColumns(payload.columns);
     let output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (['final','processing',undefined].includes(payload.request.type)) ? '' : '__new__');
-    let value = ( (payload.fill) ? `parse('${payload.fill}')` : '""' );
+    let value = payload.fill ? `parse('${payload.fill}')` : '""';
     return `.cols.fill_na(`
       + _argument
       + `, ${value}`
@@ -1119,7 +1123,7 @@ export const codeGenerators = {
     }
     let output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (['final','processing',undefined].includes(payload.request.type)) ? '' : '__new__')
 
-    let value = ( (payload.value) ? `parse('${payload.value}')` : 'None' )
+    let value = payload.value ? `parse('${payload.value}')` : 'None';
 
     let cb = (from, to) => {
       let window = ''
