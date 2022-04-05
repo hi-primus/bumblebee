@@ -823,7 +823,7 @@ export default {
 
       } catch (err) {
         console.error('Error loading preview', err, err.response);
-
+        this.$store.commit('mutation', {mutate: 'updatingPreview', payload: false });
         this.$store.commit('setPreviewInfo', { error: err });
       }
 
@@ -861,7 +861,7 @@ export default {
         }
       } catch (err) {
         console.error('Error loading preview profiling', err, err.response);
-
+        this.$store.commit('mutation', {mutate: 'updatingPreview', payload: false });
         this.$store.commit('setPreviewInfo', { error: err });
       }
     }
