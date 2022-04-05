@@ -4353,15 +4353,25 @@ export const commandsHandlers = {
         },
       };
     },
-    content: (payload) =>
-      `<b>Rename</b> ${multipleContent(
-        [payload.columns, payload.output_cols],
+    content: (payload) => {
+
+      let columns = payload.columns.map((e, i) => ({
+        column: e,
+        output_col: payload.output_cols[i],
+      })).filter((e) => e.column && e.output_col && e.column !== e.output_col);
+
+      let output_cols = columns.map((e) => e.output_col);
+      columns = columns.map((e) => e.column);
+      
+      return `<b>Rename</b> ${multipleContent(
+        [columns, output_cols],
         "hl--cols",
         ", ",
         " to ",
         false,
         false
-      )}`,
+      )}`
+    },
   },
 
   unnest: {
