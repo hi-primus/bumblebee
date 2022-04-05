@@ -29,12 +29,14 @@ def df__preliminary_profile(df, cols="*"):
         if isinstance(_count_uniques, list):
             _count_uniques = _count_uniques[0]
 
-        if data_type[col] in df.constants.NUMERIC_INTERNAL_TYPES and _count_uniques > 80:
+        if ((data_type[col] in df.constants.INT_INTERNAL_TYPES and _count_uniques > 80) or
+            (data_type[col] in df.constants.FLOAT_INTERNAL_TYPES and _count_uniques > 1)):
             plot_type[col] = "hist"
         elif _count_uniques > 2000:
-            plot_type[col] = "big freq"
+            plot_type[col] = "complete"
         else:
             plot_type[col] = "freq"
+
         df.meta = Meta.set(df.meta, f"plot_type.{col}", plot_type[col])
 
     types = df.cols.inferred_data_type(cols, use_internal=True, tidy=False)["inferred_data_type"]
@@ -350,9 +352,9 @@ def df__profile_cache(df, cols="*", bins: int = MAX_BUCKETS, sample=None, last_s
 
     hist_cols = [col for col in cols if plot_type.get(col) == "hist"]
     freq_cols = [col for col in cols if plot_type.get(col) == "freq"]
-    big_freq_cols = [col for col in cols if plot_type.get(col) == "big freq"]
+    complete_stats_cols = [col for col in cols if plot_type.get(col) == "complete"]
     
-    big_freqs_profile = df.profile(big_freq_cols, bins=bins) if big_freq_cols and len(big_freq_cols) > 0 else {}
+    complete_stats_profile = df.profile(complete_stats_cols, bins=bins) if complete_stats_cols and len(complete_stats_cols) > 0 else {}
 
     if flush:
         df.cache = Meta.set(df.cache, "profile", {})
@@ -367,21 +369,27 @@ def df__profile_cache(df, cols="*", bins: int = MAX_BUCKETS, sample=None, last_s
     hists = df.profile_hist_cache(hist_cols, buckets=bins, sample=sample, last_sample=last_sample, flush=False, force_cached=force_cached)
     freqs = df.profile_frequency_cache(freq_cols, n=bins, sample=sample, last_sample=last_sample, flush=False, force_cached=force_cached)
 
-    big_freqs = {col: {"values": Meta.get(big_freqs_profile, f"columns.{col}.stats.frequency")} for col in big_freq_cols}
+    complete_stats = {col: {"values": Meta.get(complete_stats_profile, f"columns.{col}.stats.frequency")} for col in complete_stats_cols}
 
-    freqs.update(big_freqs)
+    freqs.update(complete_stats)
     
     if freqs:
         for key in freqs:
             if key in stats["columns"]:
-                stats["columns"][key].update({"frequency": freqs[key]})
-                if key in big_freqs:
+                if "stats" not in stats["columns"][key]:
+                    stats["columns"][key].update({"stats": {}})
+                stats["columns"][key]["stats"].update({"frequency": freqs[key]})
+                if key in complete_stats:
                     stats["columns"][key].update({"done": True})
             
     if hists:
         for key in hists:
             if key in stats["columns"]:
-                stats["columns"][key].update({"hist": hists[key]})
+                if "stats" not in stats["columns"][key]:
+                    stats["columns"][key].update({"stats": {}})
+                stats["columns"][key]["stats"].update({"hist": hists[key]})
+                if key in complete_stats:
+                    stats["columns"][key].update({"done": True})
 
     if last_sample:
         for key in cols:
