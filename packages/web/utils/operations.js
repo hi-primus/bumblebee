@@ -4201,7 +4201,7 @@ export const commandsHandlers = {
       replace: [""],
       search_by: "chars",
       output_cols: columns.map((e) => e),
-      match_case: false,
+      match_case: true,
       title: "Replace in " + (columns.length == 1 ? `column` : "columns"),
       _replace_by_string: true,
       _search_by_string: true,
