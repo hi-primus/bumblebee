@@ -99,7 +99,7 @@ export const codeGenerators = {
   get: (payload) => {
     let source = payload.source;
     if (payload.toString) {
-      source = `str(${source})`
+      source = `str(${source})[:1001]`
     }
     return { code: `_output = ${source}`, isOutput: true }
   },

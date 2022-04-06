@@ -2727,9 +2727,15 @@ export const commandsHandlers = {
                 toString: true
               }, "await", "requirement");
 
+              let result = response.data?.result;
+
+              if (result && result.length > 1000) {
+                result = result.substr(0, 1000) + "...";
+              }
+              
               let debug;
 
-              if (response.data?.result) {
+              if (result) {
                 debug = {
                   source,
                   result: response.data.result.replace(/\\n/g, '\n'),
