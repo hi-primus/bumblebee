@@ -7,8 +7,10 @@ MAX_SAMPLE_SIZE = 10000
 
 def df__preliminary_profile(df, cols="*"):
     body = copy.deepcopy(df.meta).get("profile", {})
+    cols_count = df.cols.count()
     rows_count = df.rows.count()
     body.update({"summary": {
+        "cols_count": cols_count,
         "rows_count": rows_count
     }})
 
