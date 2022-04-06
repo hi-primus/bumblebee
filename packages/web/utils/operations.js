@@ -122,6 +122,12 @@ export const operationGroups = {
     text: 'Macros',
     label: 'Macros'
   },
+  SCRIPTS: {
+    icons: [{ icon: 'mdi-file-document-edit-outline' }],
+    text: 'Apply script',
+    label: 'Apply<br/>script',
+    disabled: ($nuxt)=>!($nuxt.currentDataset && $nuxt.currentDataset.summary),
+  },
 };
 
 const TEST_DATAFRAMES = {
@@ -1524,14 +1530,17 @@ let _operations = {
     }]
   }),
 
+  applyScript: {
+    path: 'TRANSFORMATIONS/SCRIPTS',
+    text: 'Apply script',
+    doc: {
+      title: 'Apply script to rows (advanced)',
+      description: 'Edit rows using a custom Python script.'
+    }
+  },
   advancedEditRows: {
-    path: 'TRANSFORMATIONS',
-    text: 'Apply script to rows',
-    label: 'Apply<br/>script',
-    icons: [
-      { icon: 'mdi-file-document-edit-outline' },
-    ],
-    disabled: ($nuxt)=>!($nuxt.currentDataset && $nuxt.currentDataset.summary),
+    path: 'TRANSFORMATIONS/SCRIPTS',
+    text: 'Apply function to rows',
     doc: {
       title: 'Apply script to rows (advanced)',
       description: 'Edit rows using a custom Python script.'
@@ -2517,9 +2526,9 @@ export const commandsHandlers = {
       var action = {
         drop: "Drop",
         select: "Keep",
-        set: "Replace"
+        set: "Set"
       }[payload.action];
-      var str = `<b>${action}</b> rows where ${multipleContent(
+      var str = `<b>${action}</b> rows in ${multipleContent(
         [payload.columns],
         "hl--cols"
       )} `;
@@ -2768,6 +2777,95 @@ export const commandsHandlers = {
       request: {},
     }),
     content: (payload) => `<b>Map function to rows</b>`
+  },
+
+  applyScript: {
+    dialog: {
+      title: "Apply script (advanced)",
+      resizable: true,
+      width: 'big',
+      fields: [
+        {
+          key: "codeToApply",
+          label: "Code to apply",
+          type: "code-editor",
+          height: 400,
+          onSelection: {
+            callback: async (event, currentCommand, methods) => {
+
+              let {selected: source, editor} = event;
+
+              let selected = editor.getSelectedText();
+
+              if (!source || selected !== source) {
+                return null;
+              }
+
+              // if source is not a valid variable name, remove any debug info
+              if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(source)) {
+                methods.vueSet(currentCommand, 'debug', {
+                  source: undefined,
+                  result: undefined,
+                  error: false
+                });
+                return currentCommand;
+              }
+
+              let response = await methods.evalCode({
+                source,
+                command: "get",
+                toString: true
+              }, "await", "requirement");
+
+              let debug;
+
+              if (response.data?.result) {
+                debug = {
+                  source,
+                  result: response.data.result.replace(/\\n/g, '\n'),
+                  error: false
+                };
+              } else {
+                if (response.data?.errorName == "NameError") {
+                  debug = {
+                    source,
+                    result: capitalizeString(response.data?.error),
+                    error: true
+                  };
+                } else {
+                  debug = {
+                    source: false,
+                    result: false,
+                    error: true
+                  };
+                }
+              }
+
+              methods.vueSet(currentCommand, 'debug', debug);
+
+              return currentCommand;
+            },
+            debounce: 250
+          }
+        },
+        {
+          key: "debug",
+          label: "Debug",
+          type: "debug-value"
+        }
+      ],
+    },
+    payload: (columns, payload = {}) => ({
+      codeToApply: `${payload.dfName} = ${payload.dfName}`,
+      preview: {
+        type: "applyScript",
+        delay: 800,
+        expectedColumns: -1,
+        datasetPreview: true,
+      },
+      request: {},
+    }),
+    content: (payload) => `<b>Apply script</b>`
   },
 
   join: {

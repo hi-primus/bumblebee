@@ -630,6 +630,14 @@ export const codeGenerators = {
       + (payload.subset.length ? `cols=${preparedColumns(payload.subset, true)}, ` : '')
       + `keep="${payload.keep}")`
   },
+  applyScript: (payload) => {
+    
+    return {
+      preCode: payload.codeToApply || '',
+      code: `.execute()`
+    }
+
+  },
   advancedEditRows: (payload) => {
 
     let funcDefinition = payload.funcDefinition || 'return row';
