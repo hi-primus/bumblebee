@@ -590,7 +590,7 @@ export default {
     },
 
     toolbarDisabled () {
-      return this.$store.state.updatingProfile || this.commandsDisabled;
+      return this.commandsDisabled;
     },
 
     listView: {
