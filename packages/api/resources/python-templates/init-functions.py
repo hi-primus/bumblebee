@@ -362,7 +362,13 @@ def df__profile_cache(df, cols="*", bins: int = MAX_BUCKETS, sample=None, last_s
         df.cache = Meta.set(df.cache, "hist", {})
         df.cache = Meta.set(df.cache, "min", {})
         df.cache = Meta.set(df.cache, "max", {})
-        df.meta = Meta.set(df.meta, "profile", {})
+
+        columns = Meta.get(df.meta, "profile.columns") or {}
+        to_flush = df._cols_to_profile("*")
+        
+        columns = {col: value for col, value in columns.items() if col not in to_flush}
+        
+        df.meta = Meta.set(df.meta, "profile.columns", columns)
 
     stats, cols = df.profile_stats_cache(cols, sample=sample, last_sample=last_sample, flush=False, force_cached=force_cached)
     

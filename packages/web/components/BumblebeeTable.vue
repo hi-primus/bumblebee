@@ -1836,7 +1836,7 @@ export default {
             let rowsCount = this.$store.getters.currentDataset?.summary?.rows_count;
             let lastSample = (INITIAL_SAMPLE_SIZE > rowsCount);
 
-            let promise = this.requestCachedProfiling(this.currentDataset.dfName, 0, false, lastSample, false, false);
+            let promise = this.requestCachedProfiling(this.currentDataset.dfName, 0, false, lastSample, false, undefined);
             if (!promise || !promise.then) {
               this.$store.dispatch('afterWholeProfiling');
             }
