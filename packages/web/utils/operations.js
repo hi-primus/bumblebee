@@ -722,7 +722,7 @@ let _operations = {
     text: ($nuxt)=> 'Rename column'+ ($nuxt.selectedColumns.length!=1 ? 's' : ''),
     label: 'Rename<br/>col.',
     icons: [{icon: 'mdi-pencil-outline'}],
-    // disabled: ($nuxt)=> !($nuxt.selectionType=='columns' && $nuxt.selectedColumns.length>0),
+    disabled: ($nuxt)=> !($nuxt.currentDataset && $nuxt.currentDataset.summary),
     test: {
       dataframe: TEST_DATAFRAMES.PEOPLE,
       payload: {
