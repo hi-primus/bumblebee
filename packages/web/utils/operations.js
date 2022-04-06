@@ -2081,7 +2081,8 @@ export const commandsHandlers = {
 
   DROP_KEEP: {
     dialog: {
-      dialog: 'small',
+      // dialog: 'small',
+      save_new: true,
       title: (c) => `${capitalizeString(c.command)} column${(c.columns.length)>1 ? 's' : ''}`,
       text: (c) => {
         return `${capitalizeString(c.command)} ${arrayJoin(c.columns.map(col => `'${col}'`))}`;
