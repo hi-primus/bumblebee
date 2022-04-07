@@ -2286,8 +2286,12 @@ export const commandsHandlers = {
           repeatType: "top-right",
           addOne: (c) => {
             try {
+              let defaultCondition = !c.columns.length ? "where" : "equal";
+              if (c.condition.length) {
+                defaultCondition = !c.columns.length ? "where" : c.condition[c.condition.length - 1];
+              }
               c.expression.push("");
-              c.condition.push("equal");
+              c.condition.push(defaultCondition);
               c.value.push("");
               c.value_2.push("");
               c.values.push([]);
