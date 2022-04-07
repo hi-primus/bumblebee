@@ -2274,6 +2274,7 @@ export const commandsHandlers = {
 
   filterRows: {
     dialog: {
+      save_new: true,
       title: (c) => c.action == "set" ? "Set rows" : "Filter rows",
       text: (c) => `In column "${c.columns[0]}"`,
       output_cols: (c) => c.action == "set",
