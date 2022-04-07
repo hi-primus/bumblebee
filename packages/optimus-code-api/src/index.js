@@ -505,7 +505,7 @@ export const codeGenerators = {
           expression = `${dfName}.mask.pattern("${payload.columns[0]}", ${payload.value[index]})`
           break
         case 'between':
-          expression = `(${dfName}.mask.between("${payload.columns[0]}", ${payload.value[index]}, ${payload.value_2[index]})`
+          expression = `${dfName}.mask.between("${payload.columns[0]}", ${payload.value[index]}, ${payload.value_2[index]})`
           break
         case 'contains':
         case 'starts_with':
