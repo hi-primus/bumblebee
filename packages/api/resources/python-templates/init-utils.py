@@ -98,6 +98,11 @@ def output_hist(hist, limit=None):
 
 
 def table_to_pandas(table, index="value"):
+    """
+    Convert a table to a pandas dataframe
+    :param table: table to convert with the form {"value": value, "count": count}
+    :param index: index to use, defaults to "value"
+    """
     import pandas as pd
     return pd.DataFrame.from_dict(table).set_index(index)
 
