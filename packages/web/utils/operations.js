@@ -631,7 +631,7 @@ let _operations = {
     },
     text: 'Filter rows',
     label: 'Filter<br/>rows',
-    disabled: ($nuxt)=>!(['values','ranges','text'].includes($nuxt.selectionType) || $nuxt.selectedColumns.length==1),
+    disabled: ($nuxt)=>!(['values','ranges','text'].includes($nuxt.selectionType) || $nuxt.selectedColumns.length<=1),
     icons: [{icon: 'mdi-filter-variant'}],
     doc: {
       title: 'Filter rows',
@@ -2319,45 +2319,45 @@ export const commandsHandlers = {
               label: "Condition",
               type: "select",
               items: (c) => [
-                { text: "Is exactly", value: "equal" },
-                { text: "Is one of", value: "value_in" },
-                { text: "Is not", value: "not_equal" },
+                { text: "Is exactly", value: "equal", disabled: c.selectionIsEmpty },
+                { text: "Is one of", value: "value_in", disabled: c.selectionIsEmpty },
+                { text: "Is not", value: "not_equal", disabled: c.selectionIsEmpty },
                 { divider: true },
                 {
                   text: "Less than",
                   value: "less_than",
-                  disabled: c.request.isString,
+                  disabled: c.request.isString || c.selectionIsEmpty,
                 },
                 {
                   text: "Less than or equal to",
                   value: "less_than_equal",
-                  disabled: c.request.isString,
+                  disabled: c.request.isString || c.selectionIsEmpty,
                 },
                 {
                   text: "Greater than",
                   value: "greater_than",
-                  disabled: c.request.isString,
+                  disabled: c.request.isString || c.selectionIsEmpty,
                 },
                 {
                   text: "Greater than or equal to",
                   value: "greater_than_equal",
-                  disabled: c.request.isString,
+                  disabled: c.request.isString || c.selectionIsEmpty,
                 },
                 {
                   text: "Is Between",
                   value: "between",
-                  disabled: c.request.isString,
+                  disabled: c.request.isString || c.selectionIsEmpty,
                 },
                 { divider: true },
-                { text: "Contains", value: "contains" },
-                { text: "Starts with", value: "starts_with" },
-                { text: "Ends with", value: "ends_with" },
+                { text: "Contains", value: "contains", disabled: c.selectionIsEmpty },
+                { text: "Starts with", value: "starts_with", disabled: c.selectionIsEmpty },
+                { text: "Ends with", value: "ends_with", disabled: c.selectionIsEmpty },
                 { divider: true },
                 { text: "Custom expression", value: "where" },
-                { text: "Pattern", value: "match_pattern" },
+                { text: "Pattern", value: "match_pattern", disabled: c.selectionIsEmpty },
                 { text: "Selected", value: "selected", disabled: true },
                 { divider: true },
-                { text: "Mismatches values", value: "mismatch" },
+                { text: "Mismatches values", value: "mismatch", disabled: c.selectionIsEmpty },
                 { text: "Null values", value: "null" },
               ],
             },
@@ -2492,18 +2492,21 @@ export const commandsHandlers = {
 
     payload: (columns, payload = {}) => {
 
+      let selectionIsEmpty = !columns.length;
+
       return {
         columns,
         output_cols: columns.map((e) => ""),
+        selectionIsEmpty,
         action: "select",
         default: "",
-        condition: ["equal"],
+        condition: selectionIsEmpty ? ["where"] : ["equal"],
         value: [""],
         value_2: [""],
         values: [[]],
         replace_value: [""],
         text: [""],
-        expression: [columns[0].includes(" ") ? `{${columns[0]}}` : columns[0]],
+        expression: [''],
 
         request: {},
 
