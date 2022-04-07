@@ -2467,6 +2467,7 @@ export const commandsHandlers = {
               case "greater_than":
               case "greater_than_equal":
               case "match_pattern":
+              case "where":
                 return c.value[i].length;
               case "between":
                 return c.value[i].length && c.value_2[i].length;
@@ -2474,8 +2475,6 @@ export const commandsHandlers = {
               case "starts_with":
               case "ends_with":
                 return c.text[i].length;
-              case "where":
-                return c.expression[i].length;
               case "selected":
               case "null":
               case "mismatch":
@@ -2583,9 +2582,9 @@ export const commandsHandlers = {
         case "between":
           value = value || [[payload.value], [payload.value_2]];
           break;
-        case "set":
+        case "where":
           condition = "matches ";
-          value = payload.expression;
+          value = payload.value;
       }
 
       value = value !== false ? value || payload.value : false;

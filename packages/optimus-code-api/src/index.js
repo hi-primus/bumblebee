@@ -461,7 +461,7 @@ export const codeGenerators = {
         console.error(error);
       }
 
-      if (!['less','greater','between'].includes(payload.condition[index])) {
+      if (!['less','greater','between','where'].includes(payload.condition[index])) {
         if (payload.request.isString) {
           payload.value[index] = `"${escapeQuotes(trimCharacters(payload.value[index], '"'))}"`;
           payload.value_2[index] = `"${escapeQuotes(trimCharacters(payload.value_2[index], '"'))}"`;
@@ -513,7 +513,7 @@ export const codeGenerators = {
           expression = `${dfName}.mask.${payload.condition[index]}("${payload.columns[0]}", "${payload.text[index]}")`
           break
         case 'where':
-          expression = `${payload.expression[index]}`
+          return `parse('${payload.value[index]}')`
         default:
       }
       return `'${expression}'`;
@@ -558,9 +558,9 @@ export const codeGenerators = {
         // preview filter
         
         let code = `.cols.set("__match__", value_func=[${expressions.join(", ")}], `
-        + `default=False, eval_value=True)`;
+        + `default=None, eval_value=True)`;
         if (payload.preview.filteredPreview) {
-          code += `.rows.null("__match__", drop=True)`
+          code += `.rows.select("__match__")`
           if (payload.request.type === 'preview') {
             return (from, to)=>code+(from!==undefined ? `[${from}:${to}]` : '')
           }
