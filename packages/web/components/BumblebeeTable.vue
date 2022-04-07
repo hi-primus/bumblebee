@@ -473,7 +473,7 @@
                 </div>
               </template>
             </template>
-            <template v-else v-for="value in computedColumnValues[column.name].filter((e)=>e!==undefined && e!==null)">
+            <template v-else v-for="value in (computedColumnValues[column.name] || []).filter((e)=>e!==undefined && e!==null)">
               <div
                 :key="'c'+column.index+'r'+value.index"
                 class="bb-table-i-cell"
@@ -491,7 +491,7 @@
           </template>
           <template v-else-if="!(lazyColumns.length && !lazyColumns[cindex]) && computedColumnValues[rowsColumn]">
             <div
-              v-for="(value) in computedColumnValues[rowsColumn].filter((e)=>e.index<rowsCount)"
+              v-for="(value) in (computedColumnValues[rowsColumn] || []).filter((e)=>e.index<rowsCount)"
               :key="'cf'+cindex+'r'+value.index"
               class="bb-table-i-cell"
               :style="{ top: rowHeight * value.index+'px' }"
@@ -1998,7 +1998,7 @@ export default {
 
         const values = columnValues[name]
         if (!values || !values.length) {
-          return cValues[name] = []
+          cValues[name] = []
           continue // TO-DO: Handling
         }
         

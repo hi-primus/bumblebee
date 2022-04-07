@@ -2292,7 +2292,6 @@ export const commandsHandlers = {
               c.values.push([]);
               c.replace_value.push("");
               c.text.push("");
-              c.expression.push("");
               return c;
 
             } catch (e) {
@@ -2308,7 +2307,6 @@ export const commandsHandlers = {
               c.values.splice(i, 1);
               c.replace_value.splice(i, 1);
               c.text.splice(i, 1);
-              c.expression.splice(i, 1);
               return c;
 
             } catch (e) {

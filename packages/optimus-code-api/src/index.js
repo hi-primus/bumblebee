@@ -535,7 +535,7 @@ export const codeGenerators = {
         let code = `.cols.set("__match__"`
         + `, where=[${expressions.join(", ")}]`
         + `, value_func=[${payload.replace_value.map((_, i) => i+1).join(", ")}]`
-        + `, eval_value=True, default=False)`;
+        + `, eval_value=True, default=None)`;
 
         code += `.cols.set(`
         + `"__new__${output_col}"` // TODO support output_cols
