@@ -2205,7 +2205,7 @@ export const commandsHandlers = {
         rowsType: "missing", // missing / mismatch / values / ranges
         actionLabels: {
           drop: "Remove",
-          select: "Keep",
+          select: "Filter",
           set: "Replace",
         },
         rowsLabels: {
@@ -2445,7 +2445,7 @@ export const commandsHandlers = {
           label: "Action",
           type: "select",
           items: [
-            { text: "Keep matching rows", value: "select" },
+            { text: "Filter matching rows", value: "select" },
             { text: "Drop matching rows", value: "drop" },
             // { text: "Replace matching rows", value: "set" },
           ],
@@ -2532,7 +2532,7 @@ export const commandsHandlers = {
       var value = undefined;
       var action = {
         drop: "Drop",
-        select: "Keep",
+        select: "Filter",
         set: "Set"
       }[payload.action];
       var str = `<b>${action}</b> rows in ${multipleContent(
@@ -2668,7 +2668,7 @@ export const commandsHandlers = {
       fields: [
         {
           key: "keep",
-          label: "Keep",
+          label: "Filter",
           type: "select",
           items: [
             { text: "First match", value: "first" },
@@ -4062,7 +4062,7 @@ export const commandsHandlers = {
           label: "Action",
           items: [
             { text: "Drop", value: "Drop" },
-            { text: "Keep", value: "Keep" },
+            { text: "Filter", value: "Filter" },
             // { text: 'Replace', value: 'replace' }
           ],
         },
