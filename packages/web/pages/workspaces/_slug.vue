@@ -122,7 +122,7 @@
             style="flex: 0;"
           >
             <v-tab
-              v-for="(_tab, key) in $store.state.datasets.filter(e => e)"
+              v-for="(_tab, key) in activeDatasets"
               :key="+key"
               class="bb-tab"
               :id="`bb-tab-${_tab.dfName}`"
@@ -280,6 +280,22 @@ export default {
     ...mapGetters(['currentDataset','currentDatasetUpdate','previewCode','typesAvailable', 'loadingStatus']),
 
     ...mapState('session', ['workspace', 'workspaceStatus']),
+
+    activeDatasets () {
+      let secondaryDatasets = this.$store.getters['secondaryDatasets']
+      return this.$store.state.datasets
+        .filter(e => e)
+        .map(dataset => {
+          if (dataset.dfName && !secondaryDatasets.includes(dataset.dfName)) {
+            return {
+              blank: false,
+              dfName: dataset.dfName,
+              name: dataset.name
+            };
+          }
+          return dataset;
+        })
+    },
 
     footerVisible () {
       return this.loadingStatus || (this.currentDataset && this.currentDataset.summary);

@@ -113,6 +113,7 @@ const defaultState = {
   errorAlerts: [],
   noMatch: false,
   showingColumnsLength: 0,
+  limitToCell: false,
   codeDone: '',
   enginePromise: false,
   connectionsPromise: false,
@@ -2113,8 +2114,17 @@ export const getters = {
       return false
     }    
   },
-  currentDataset (state) {
-    return state.datasets[state.tab];
+  currentDataset (state, getters) {
+    let dataset = state.datasets[state.tab];
+    if (dataset && dataset.dfName && !getters['secondaryDatasets'].includes(dataset.dfName)) {
+      return {
+        dfName: dataset.dfName,
+        name: dataset.name,
+        blank: true,
+        locked: true
+      };
+    }
+    return dataset;
   },
   transformations (state) {
     return state.cells.transformations || [];
@@ -2126,9 +2136,9 @@ export const getters = {
     return state.loadPreview;
   },
   secondaryDatasets (state, getters) {
-    var datasetsArray = getters.cells
-    .filter(cell => {
-      return cell?.payload?.request?.createsNew;
+    let datasetsArray = getters.cells
+    .filter((cell, index) => {
+      return (state.limitToCell === false || index < state.limitToCell) && cell?.payload?.request?.createsNew;
     }).map(cell => {
       return cell && cell.payload && cell.payload.newDfName
     })

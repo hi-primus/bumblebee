@@ -323,7 +323,7 @@
               class="handle operation-hint-text"
               :class="{
                 'multiple-tabs': hasSecondaryDatasets,
-                'disabled-cell': toCell && index >= toCell
+                'disabled-cell': limitToCell && index >= limitToCell
               }"
               @click="selectCell(index)"
               v-html="cell.content || cell.code"
@@ -343,7 +343,7 @@
           <div
             @click="rollbackToCell(index)"
             class="state-helper"
-            :class="{'active': index === toCell}"
+            :class="{'active': index === limitToCell}"
           ></div>
         </div>
       </draggable>
@@ -376,7 +376,7 @@
               class="handle operation-hint-text"
               :class="{
                 'multiple-tabs': hasSecondaryDatasets,
-                'disabled-cell': toCell && index+dataSources.length >= toCell
+                'disabled-cell': limitToCell && index+dataSources.length >= limitToCell
               }"
               @click="selectCell(index+dataSources.length)"
               v-html="cell.content || cell.code"
@@ -398,7 +398,7 @@
           <div
             @click="rollbackToCell(index+dataSources.length)"
             class="state-helper"
-            :class="{'active': index+dataSources.length === toCell}"
+            :class="{'active': index+dataSources.length === limitToCell}"
           ></div>
         </div>
         <div
@@ -514,8 +514,6 @@ export default {
       cellsPromise: false,
       cellsSelection: {},
 
-      toCell: false
-
     }
   },
 
@@ -545,6 +543,15 @@ export default {
 
     customCommandsHandlers () {
       return this.$store.getters['customCommands/handlers'];
+    },
+
+    limitToCell: {
+      get () {
+        return this.$store.state.limitToCell;
+      },
+      set (value) {
+        this.$store.commit('mutation', {mutate: 'limitToCell', payload: value});
+      }
     },
 
     gettingNewResults: {
@@ -1646,14 +1653,14 @@ export default {
       var code = this.getCode(command);
       var content = this.getOperationContent(command);
 
-      var toCell = command._toCell!==undefined ? command._toCell : -1;
+      var limitToCell = command._toCell!==undefined ? command._toCell : -1;
 
       this.$emit('updateOperations', { active: !command.request?.noOperations, title: 'operations' });
 
       if (command.request.toCell === false) {
         await this.runCell(command);
       } else {
-        await this.addCell(toCell, { ...command, code, content }, true, false );
+        await this.addCell(limitToCell, { ...command, code, content }, true, false );
       }
 
       if (command.request.createsNew) {
@@ -1919,7 +1926,7 @@ export default {
       }
 
       this.$store.commit('selection', { clear: true }) // should save it and try to reset it after rollback?
-      this.toCell = index;
+      this.limitToCell = index;
 
       await this.runCodeNow(true, index === false ? -1 : index, undefined, false, false);
 
@@ -1936,9 +1943,9 @@ export default {
       this.removeErrorAlert("all")
 
       if (at === -1) {
-        if (this.toCell !== false) {
-          at = this.toCell;
-          this.toCell = this.toCell + 1;
+        if (this.limitToCell !== false) {
+          at = this.limitToCell;
+          this.limitToCell = this.limitToCell + 1;
         } else {
            at = this.cells.length;
         }
@@ -1972,7 +1979,7 @@ export default {
       this.cells = cells
 
       if (!payload.noCall && this.cells.length && !noCall) {
-        return this.runCodeNow(forceAll, this.toCell !== false ? this.toCell + 1 : -1, payload.newDfName);
+        return this.runCodeNow(forceAll, this.limitToCell !== false ? this.limitToCell + 1 : -1, payload.newDfName);
       }
 
     },
