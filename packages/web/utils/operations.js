@@ -631,7 +631,7 @@ let _operations = {
     },
     text: 'Filter rows',
     label: 'Filter<br/>rows',
-    disabled: ($nuxt)=>!(['values','ranges','text'].includes($nuxt.selectionType) || $nuxt.selectedColumns.length<=1),
+    disabled: ($nuxt)=>!($nuxt.currentDataset && $nuxt.currentDataset.summary && (['values','ranges','text'].includes($nuxt.selectionType) || $nuxt.selectedColumns.length<=1)),
     icons: [{icon: 'mdi-filter-variant'}],
     doc: {
       title: 'Filter rows',
