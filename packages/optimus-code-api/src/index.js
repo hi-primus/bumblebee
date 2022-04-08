@@ -1122,35 +1122,18 @@ export const codeGenerators = {
   },
   set: (payload) => {
 
-    if (!['final','processing'].includes(payload.request.type)) {
-      payload.output_col = '__new__' + payload.output_col;
-    }
+    // if (!['final','processing'].includes(payload.request.type)) {
+    //   payload.output_cols = payload.output_cols.map(col => '__new__' + col);
+    // }
 
-    if (!payload.output_cols.length) {
-      payload.output_cols = [payload.output_col]
-    }
     let output_cols_argument = getOutputColsArgument(payload.output_cols, payload.columns, (['final','processing',undefined].includes(payload.request.type)) ? '' : '__new__')
 
-    let value = payload.value ? `parse('${payload.value}')` : 'None';
+    let values = payload.values.map(v => v ? `parse('${v}')` : 'None');
 
-    let cb = (from, to) => {
-      let window = ''
-
-      if (from!==undefined) {
-        window = `,${from},${to}`
-      }
-
-      return `.cols.set(`
-      + `${output_cols_argument}, `
-      + `value_func=${value}, `
-      + `eval_value=True)`
-    }
-
-    if (!['final','processing'].includes(payload.request.type)) {
-      return cb
-    } else {
-      return cb()
-    }
+    return `.cols.set(`
+    + `${output_cols_argument}, `
+    + `value_func=[${values.join(", ")}], `
+    + `eval_value=True)`;
 
   },
   rename: (payload) => {

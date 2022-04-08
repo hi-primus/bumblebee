@@ -4354,51 +4354,65 @@ export const commandsHandlers = {
     dialog: {
       fields: [
         {
-          type: "field-suggestions",
-          key: "value",
-          placeholder: 'Formula or "value"',
-          label: "Formula",
-          mono: true,
-          suggestions: (c) => ({ column: c.allColumns }),
-          useFunctions: true,
-          fuzzySearch: true,
-        },
-        {
-          type: "field",
-          key: "output_col",
-          label: "Output column",
-          condition: (c) => !c.columns.length,
-        },
+          type: "repeat",
+          key: "output_cols",
+          add: (c) => !c.columns.length,
+          repeatType: "top-right",
+          addOne: (c) => {
+            c.output_cols.push("");
+            c.values.push("");
+            return c;
+          },
+          removeOne: (c, i) => {
+            c.output_cols.splice(i, 1);
+            c.values.splice(i, 1);
+            return c;
+          },
+          fields: [
+            {
+              type: "field",
+              key: "output_cols",
+              label: "Output column",
+            },
+            {
+              type: "field-suggestions",
+              key: "values",
+              placeholder: 'Formula or "value"',
+              label: "Formula",
+              mono: true,
+              suggestions: (c) => ({ column: c.allColumns }),
+              useFunctions: true,
+              fuzzySearch: true,
+            },
+          ]
+        }
+
       ],
       output_cols: true,
       validate: (command) => {
-        var output_col =
-          command.output_cols[0] || command.output_col || command.columns[0];
+        var output_cols =
+          command.output_cols[0] || command.columns[0];
         return (
-          (command.columns[0] || command.value) &&
-          (command.columns[0] || output_col) &&
-          (command.value || output_col)
+          (command.columns[0] || command.values) &&
+          (command.columns[0] || output_cols) &&
+          (command.values || output_cols)
         );
       },
     },
     payload: (columns, payload = {}) => {
-      var output_col = columns.length ? "" : "new_column";
+      let output_cols = columns.length ? columns.map(col => "") : ["new_column"];
+      let values = columns.length ? columns.map(col => col.includes(" ") ? `{${col}}` : col) : [""];
 
       return {
         command: "set",
         columns,
-        value: columns[0]
-          ? columns[0].includes(" ")
-            ? `{${columns[0]}}`
-            : columns[0]
-          : "",
-        title: columns[0] ? `Set column` : "Create column",
+        values,
+        title: columns.length ? (columns.length>1 ? `Set columns` : `Set column`) : "Create columns",
         preview: {
-          expectedColumns: 1,
+          expectedColumns: (c) => c.values.length,
           type: "set",
         },
-        output_col,
-        output_cols: columns.map((e) => ""),
+        output_cols,
       };
     },
     content: (payload) => {
@@ -4427,7 +4441,7 @@ export const commandsHandlers = {
       return `<b>${action}</b> ${multipleContent(
         [output_cols],
         "hl--cols"
-      )} with ${multipleContent([payload.value], "hl--param")}`;
+      )} with ${multipleContent([payload.values], "hl--param")}`;
     },
   },
 
