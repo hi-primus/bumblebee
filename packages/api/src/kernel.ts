@@ -1,4 +1,143 @@
-import { client as WebSocketClient } from 'websocket';
+import { KernelConnection, ServerConnection, KernelAPI, KernelMessage } from "@jupyterlab/services";
+
+async function executeCode(sessionId: string, code: string) {
+
+	const connection: KernelConnection = kernels[getKernelId(sessionId)].connection;
+	
+	let request = connection.requestExecute({
+		code,
+		store_history: false,
+		allow_stdin: false,
+		stop_on_error: false
+	}, true);
+
+	// let outputs: string[] | null = [];
+
+	let response: any = {};
+
+	request.onIOPub = (msg: KernelMessage.IIOPubMessage) => {
+		if ( ["execute_result", "display_data"].includes(msg.header.msg_type) ) {
+			
+			const data = (msg as KernelMessage.IExecuteResultMsg).content.data['text/plain'] as string;
+			
+			if (msg.header.msg_type == "execute_result") {
+				response = handleResponse(data);
+			}
+
+			// if (Array.isArray(outputs)) {
+			// 	outputs.push(data);
+			// } else {
+			// 	console.log("unhandled", {data, msg_type: msg.header.msg_type});
+			// }
+
+		}
+	};
+
+	const statusResponse = await request.done;
+	
+	if (statusResponse.content.status === "error") {
+
+		response = {
+			...statusResponse.content,
+			status: "error",
+			_response: statusResponse
+		},
+		response = handleResponse(response);
+
+		if (response.ename || response.traceback) {
+			return {
+				status: 'error',
+				errorName: response.ename,
+				error: response.evalue,
+				traceback: response.traceback
+			};
+		} else {
+			if (response.interrupt) {
+				return {
+					status: 'error',
+					error: response.message || response.error,
+					interrupt: true
+				};
+			}
+			return {
+				status: 'error',
+				error: 'Unknown error',
+				content: response
+			};
+		}
+
+	} else {
+		response = {
+			...response,
+			_response: statusResponse
+		}
+	}
+
+	return response;
+}
+
+async function _createConnection (sessionId: string, kernelAddress: string) {
+
+	let serverSettings = ServerConnection.makeSettings({
+		baseUrl: kernelAddress,
+	});
+
+	let kernel = await KernelAPI.startNew({}, serverSettings)
+
+	let model = await KernelAPI.getKernelModel(kernel.id, serverSettings)
+	
+	let connection = new KernelConnection({
+		model,
+		serverSettings
+	});
+
+	connection.iopubMessage.connect((sender: KernelConnection, msg: KernelMessage.IIOPubMessage) => {
+
+		if ( ["execute_result", "display_data"].includes(msg.header.msg_type) ) {
+
+			let isAsyncOut = false;
+			let responseBody;
+			
+			try {
+				let data = (msg as KernelMessage.IExecuteResultMsg).content.data['text/plain'] as string;
+				let response = handleResponse(data);
+
+				isAsyncOut = response?.async_out && response?.key;
+
+				if (isAsyncOut && ['finished', 'error'].includes(response?.status)) {
+					responseBody = response;
+				}
+				
+				
+			} catch (err) {
+				if (msg.header.msg_type == 'execute_result' && isAsyncOut) {
+					responseBody = {
+						status: 'error',
+						error: err.message
+					}
+				}
+			}
+
+			let asyncReply = kernels[getKernelId(sessionId)].asyncReply || (a => console.warn(`Warning, async reply callback is not defined. ${a}`));
+			
+			if (asyncReply && responseBody) {
+				asyncReply(responseBody);
+			}
+		}
+
+	});
+
+	kernels[getKernelId(sessionId)] = {
+		...kernels[getKernelId(sessionId)],
+		kernel,
+		serverSettings,
+		model,
+		connection
+	}
+
+	return sessionId;
+}	
+
 import axios from 'axios';
 import { v1 as uuidv1 } from 'uuid';
 import { KernelRoutines } from "./kernel-routines";
@@ -65,10 +204,14 @@ export const initializeKernel = async function (sessionId, payload) {
 	let result = false;
 
 	if (payload?.reset !== false) {
-		kernels[getKernelId(sessionId)] = await clearKernel(sessionId);
+		// blank kernel
+		kernels[getKernelId(sessionId)] = await resetKernel(sessionId);
 	} else {
+		// default kernel
 		kernels[getKernelId(sessionId)] = kernels[getKernelId(sessionId)] || {};
 	}
+
+	// Create initialization payload
 	if (!kernels[getKernelId(sessionId)].initialization) {
 		kernels[getKernelId(sessionId)].initialization = initializeOptimusSession(
 			sessionId,
@@ -124,7 +267,7 @@ export const initializeOptimusSession = async function (sessionId, payload) {
 
 	if (
 		!kernels[getKernelId(sessionId)] ||
-		!kernels[getKernelId(sessionId)].id ||
+		!kernels[getKernelId(sessionId)].kernel ||
 		!kernels[getKernelId(sessionId)].connection
 	) {
 		return false;
@@ -132,7 +275,8 @@ export const initializeOptimusSession = async function (sessionId, payload) {
 
 	kernels[getKernelId(sessionId)].initialized = result;
 	kernels[getKernelId(sessionId)].initializationPayload = payload;
-
+	kernels[getKernelId(sessionId)].asyncReply = payload.asyncReply;
+	
 	return result;
 };
 
@@ -142,18 +286,16 @@ const assertConnection = async function (
 	assertOptimus = true
 ) {
 	try {
-		if (!kernels[getKernelId(sessionId)] || !kernels[getKernelId(sessionId)].id) {
-			await createKernel(sessionId, kernel_address);
+		if (!kernels[getKernelId(sessionId)] || !kernels[getKernelId(sessionId)].kernel) {
+			await createKernelConnection(sessionId, kernel_address);
 		}
 
-		if (!kernels[getKernelId(sessionId)] || !kernels[getKernelId(sessionId)].id) {
+		if (!kernels[getKernelId(sessionId)] || !kernels[getKernelId(sessionId)].kernel) {
 			throw new Error('Kernel creation went wrong');
 		}
 
-		await createConnection(sessionId);
-
     if (assertOptimus) {
-      if (!(kernels[getKernelId(sessionId)].initialized || kernels[getKernelId(sessionId)].id)) {
+      if (!(kernels[getKernelId(sessionId)].initialized || kernels[getKernelId(sessionId)].kernel)) {
         if (!kernels[getKernelId(sessionId)].initialization) {
           kernels[getKernelId(sessionId)].initialization = initializeOptimusSession(sessionId, {
             payloadDefault: true,
@@ -164,10 +306,10 @@ const assertConnection = async function (
       }
     }
 
-		return { status: "ok", content: kernels[getKernelId(sessionId)].connection};
+		return { status: "ok", connection: kernels[getKernelId(sessionId)].connection, error: false};
 
 	} catch (error) {
-		return { status: "error", error };
+		return { status: "error", connection: false, error };
 	}
 };
 
@@ -210,19 +352,19 @@ export const requestToKernel = async function (type, sessionId, payload, options
 		configKernel(sessionId, { usePrefect: payload.usePrefect });
   }
 
-	const connection = await assertConnection(
+	const connectionAssertion = await assertConnection(
 		sessionId,
     kernelAddress,
 		assertOptimus
 	);
 
-	if (connection.status == "error" || !connection.content) {
+	if (connectionAssertion.status == "error" || !connectionAssertion.connection) {
 		if (assertOptimus) {
 			console.error('Assertion error when checking connection and optimus');
 		} else {
 			console.error('Assertion error when checking connection');
 		}
-		throw connection.error || new Error('Assertion error')
+		throw connectionAssertion.error || new Error('Assertion error')
 	}
 
 	const startTime = new Date().getTime();
@@ -249,48 +391,19 @@ export const requestToKernel = async function (type, sessionId, payload, options
       break;
 	}
 
-	const msg_id = kernels[getKernelId(sessionId)].uuid + Math.random();
+	let response;
 
-	const hdr = {
-		msg_id: msg_id,
-		session: kernels[getKernelId(sessionId)].uuid,
-		date: new Date().toISOString(),
-		msg_type: 'execute_request',
-		version: '5.3', // TO-DO: check
-	};
-
-	const codeMsg = {
-		header: hdr,
-		parent_header: hdr,
-		metadata: {},
-		content: { code: code + '\n', silent: false },
-	};
-
-	if (!kernels[getKernelId(sessionId)].promises) {
-		kernels[getKernelId(sessionId)].promises = {};
-	}
-
-	// if (kernels[getKernelId(sessionId)].runningTask === null) {
-	// 	kernels[getKernelId(sessionId)].runningTask = false;
-	// 	await new Promise((resolve) => setTimeout(resolve, 500));
-	// }
-
-	const response: any = await new Promise((resolve, reject) => {
-		kernels[getKernelId(sessionId)].promises[msg_id] = { resolve, reject };
-		try {
-			let toInterrupt = kernels[getKernelId(sessionId)].toInterrupt || [];
-			if (toInterrupt.includes(options.timestamp)) {
-				kernels[getKernelId(sessionId)].toInterrupt = toInterrupt.filter((t) => t !== options.timestamp);
-				throw new InterruptError(`Request ${options.timestamp} interrupted early by user`);
-			}
-			// kernels[getKernelId(sessionId)].runningTask = {id: options.timestamp, type: options.category, msgId: msg_id};
-			if (asyncCallback) {
-				kernels[getKernelId(sessionId)].promises[msg_id].resolveAsync = asyncCallback;
-			}
-			kernels[getKernelId(sessionId)].connection.sendUTF(JSON.stringify(codeMsg));
-		} catch (err) {
-			reject(err);
+	try {
+		let toInterrupt = kernels[getKernelId(sessionId)].toInterrupt || [];
+		if (toInterrupt.includes(options.timestamp)) {
+			kernels[getKernelId(sessionId)].toInterrupt = toInterrupt.filter((t) => t !== options.timestamp);
+			throw new InterruptError(`Request ${options.timestamp} interrupted early by user`);
 		}
+		response = await executeCode(sessionId, code);
+		
+	} catch (err) {
+		response = err;
+	}
 	});
 
 	const endTime = new Date().getTime();
@@ -314,7 +427,7 @@ export const interruptRequest = async function (sessionId, taskIdsOrTypes : (str
 
 	for (let taskIdOrType of taskIdsOrTypes) {
 		
-		let responseBody = {interrupt: false, reject: false, queueId: false};
+		let responseBody = { interrupt: false, reject: false, queueId: false };
 		// let runningTask = kernels[getKernelId(sessionId)].runningTask;
 		
 		// if (taskIdOrType && runningTask && [runningTask.id, runningTask.type].includes(taskIdOrType)) {
@@ -328,7 +441,8 @@ export const interruptRequest = async function (sessionId, taskIdsOrTypes : (str
 		// 		latePromise.reject(new InterruptError(`Request ${taskIdOrType} interrupted by user`));
 		// 		responseBody.reject = true;
 		// 	}
-			
+		
+		// // TODO: Use jupyter services to interrupt
 		// 	const id = kernels[getKernelId(sessionId)].id;
 		// 	const ka = configKernel(sessionId).kernel_address || 0;
 		// 	await axios.post(`${kernelBase(ka)}/api/kernels/${id}/interrupt`);
@@ -478,8 +592,8 @@ export const runCode = async function (code = '', sessionId = '', options = {cat
 	}
 
 	try {
-		if (!checkKernel(sessionId)) {
-			await createKernel(sessionId);
+		if (!checkKernelConnection(sessionId)) {
+			await createKernelConnection(sessionId);
 		}
 
 		let queueLength;
@@ -523,8 +637,8 @@ export const runCode = async function (code = '', sessionId = '', options = {cat
 		if (err.ename || err.traceback) {
 			return {
 				status: 'error',
-				errorName: err.ename,
-				error: err.evalue,
+				errorName: err.errorName || err.ename,
+				error: err.error || err.evalue,
 				traceback: err.traceback,
 			};
 		}
@@ -549,179 +663,7 @@ export const runCode = async function (code = '', sessionId = '', options = {cat
 	}
 };
 
-export const createConnection = async function (sessionId) {
-
-  kernels[getKernelId(sessionId)] = kernels[getKernelId(sessionId)] || {};
-
-  const ka = configKernel(sessionId).kernel_address || 0;
-
-	if (!kernels[getKernelId(sessionId)].connecting) {
-		kernels[getKernelId(sessionId)].connecting = new Promise((resolve, reject) => {
-
-      kernels[getKernelId(sessionId)] = kernels[getKernelId(sessionId)] || {};
-
-			if (!kernels[getKernelId(sessionId)].client) {
-				kernels[getKernelId(sessionId)].client = new WebSocketClient({
-					closeTimeout: 20 * 60 * 1000,
-				});
-      }
-
-			console.log(`Connecting to kernel ${wsKernelBase(ka)} (${getKernelId(sessionId)})`);
-
-			kernels[getKernelId(sessionId)].client.connect(
-				`${wsKernelBase(ka)}/api/kernels/${kernels[getKernelId(sessionId)].id}/channels`,
-			);
-
-			kernels[getKernelId(sessionId)].client.on('connect', function (connection) {
-				// kernels[getKernelId(sessionId)] = kernels[getKernelId(sessionId)] || {};
-        kernels[getKernelId(sessionId)] = kernels[getKernelId(sessionId)] || {};
-        kernels[getKernelId(sessionId)].connection = connection;
-
-        kernels[getKernelId(sessionId)].connection.on('close', function (message) {
-          Object.values(kernels[getKernelId(sessionId)]?.promises || {}).forEach((promise: any)=>{
-            promise.reject(`Socket closed: "${message}"`);
-          })
-          kernels[getKernelId(sessionId)] = {};
-        })
-
-        kernels[getKernelId(sessionId)].connection.on('error', function (message) {
-          Object.values(kernels[getKernelId(sessionId)]?.promises || {}).forEach((promise: any)=>{
-            promise.reject(`Socket error: "${message}"`);
-          })
-          kernels[getKernelId(sessionId)] = {};
-        })
-
-				kernels[getKernelId(sessionId)].connection.on('message', function (message) {
-					try {
-
-            let message_response;
-            let msg_id;
-            let response;
-
-            if (message.type === 'utf8') {
-              message_response = JSON.parse(message.utf8Data);
-              msg_id = message_response.parent_header.msg_id;
-
-              if (['execute_result', 'display_data'].includes(message_response.msg_type)) {
-
-                response = message_response.content.data['text/plain'];
-
-                let future_key;
-
-                try {
-                  let handledResponse = handleResponse(response);
-                  response = handledResponse;
-                  future_key = response?.key;
-                } catch (err) {
-                  if (message_response.msg_type == 'execute_result') {
-                    throw err;
-                  }
-                }
-
-                if (future_key) {
-                  if (kernels[getKernelId(sessionId)].promises[future_key]) {
-                    msg_id = future_key;
-                  } else if (kernels[getKernelId(sessionId)].promises[msg_id].resolveAsync && future_key !== msg_id) {
-                    kernels[getKernelId(sessionId)].promises[future_key] = kernels[getKernelId(sessionId)].promises[msg_id];
-                    delete kernels[getKernelId(sessionId)].promises[msg_id];
-                    msg_id = future_key;
-                  }
-                }
-                else if (message_response.msg_type=='display_data') {
-                  console.warn('Unknown display output', response);
-                  return;
-                }
-
-
-              } else if (message_response.msg_type === 'error') {
-                console.error('msg_type error on', sessionId);
-                response = {
-                  ...message_response.content,
-                  status: 'error',
-                  _response: message_response,
-                };
-                response = handleResponse(response);
-              }
-            } else {
-              console.warn({
-                status: 'error',
-                content: 'Response from gateway is not utf8 type',
-                error: 'Message type error',
-                message: message,
-              });
-              response = handleResponse(message);
-            }
-
-            if (message_response && message_response.msg_type && response) {
-              response._type = message_response.msg_type;
-            }
-
-						if (!kernels[getKernelId(sessionId)]) {
-
-              console.log('Unresolved response (no kernel)', sessionId);
-							throw new Error('Message received without kernel session');
-
-						} else if (!kernels[getKernelId(sessionId)].promises) {
-
-              console.log('Unresolved response (no promise pool)', sessionId);
-							throw new Error('Message received without promises pool');
-
-            } else if (!kernels[getKernelId(sessionId)].promises[msg_id]) {
-
-              if (message_response.msg_type === 'execute_result') {
-                console.log('Unresolved response (wrong msg_id)', msg_id, sessionId);
-                throw new Error('Message received for unexecpected promise');
-              }
-
-            } else if (['execute_result', 'error'].includes(message_response.msg_type)) {
-
-              kernels[getKernelId(sessionId)].promises[msg_id].resolve(response);
-
-            } else if (['finished', 'error'].includes(response?.status) && kernels[getKernelId(sessionId)].promises[msg_id].resolveAsync) {
-
-              kernels[getKernelId(sessionId)].promises[msg_id].resolveAsync(response)
-
-            }
-
-					} catch (err) {
-						console.error(err.message || err);
-					}
-				});
-
-				console.log('Connection', sessionId);
-
-        setTimeout(() => { //
-          console.log('Connection created', sessionId, getKernelId(sessionId));
-          console.log('Total connections:', Object.keys(kernels).length);
-					clearUnusedKernels(0, 1000, [getKernelId(sessionId)]);
-					let connection = kernels[getKernelId(sessionId)]?.connection
-					if (connection) {
-						resolve(connection);
-					} else {
-						reject(new Error(`Connection not created for ${sessionId}`));
-					}
-        }, 1000);
-
-			});
-
-			kernels[getKernelId(sessionId)].client.on('connectFailed', function (error) {
-				kernels[getKernelId(sessionId)] = kernels[getKernelId(sessionId)] || {};
-				kernels[getKernelId(sessionId)].connection = false;
-				console.error(
-					'Connection to Jupyter Kernel Gateway failed',
-					wsKernelBase(ka),
-					kernels[getKernelId(sessionId)].id,
-				);
-				reject(error);
-			});
-
-		});
-	}
-
-	return kernels[getKernelId(sessionId)].connecting;
-};
-
-const createKernel = async function (sessionId, ka : any = undefined) {
+const createKernelConnection = async function (sessionId, kernelAddress : any = undefined) {
 	try {
 		let tries = 3;
 		while (tries > 0) {
@@ -731,28 +673,13 @@ const createKernel = async function (sessionId, ka : any = undefined) {
           kernels[getKernelId(sessionId)] = {};
         }
 
-        if (configKernel(sessionId).kernel_address && ka === undefined) {
-          ka = configKernel(sessionId).kernel_address;
+        if (configKernel(sessionId).kernel_address && kernelAddress === undefined) {
+          kernelAddress = configKernel(sessionId).kernel_address;
         }
 
-				console.log(`Creating a kernel for ${sessionId} on ${kernelBase(ka)}...`);
+				await _createConnection(sessionId, kernelBase(kernelAddress));
 
-				const kernelResponse = await axios.post(
-          `${kernelBase(ka)}/api/kernels`
-        );
-
-				console.log(`Kernel created for ${sessionId} on ${kernelBase(ka)}:`, kernelResponse.data.id);
-
-        const uuid = Buffer.from(uuidv1(), 'utf8').toString('hex');
-
-
-				kernels[getKernelId(sessionId)] = {
-					...kernels[getKernelId(sessionId)],
-					id: kernelResponse.data.id,
-					uuid,
-        };
-
-				configKernel(sessionId, {kernel_address: ka});
+				configKernel(sessionId, {kernel_address: kernelAddress});			
 
         break;
 
@@ -775,11 +702,11 @@ const createKernel = async function (sessionId, ka : any = undefined) {
 	}
 };
 
-const checkKernel = function (sessionId) {
-	return kernels[getKernelId(sessionId)] && kernels[getKernelId(sessionId)].id;
+const checkKernelConnection = function (sessionId) {
+	return kernels[getKernelId(sessionId)] && kernels[getKernelId(sessionId)].kernel;
 };
 
-const clearKernel = async function (sessionId) {
+const resetKernel = async function (sessionId) {
 	await deleteKernel(sessionId);
 	kernels[getKernelId(sessionId)] = {};
 	return kernels[getKernelId(sessionId)];
@@ -851,7 +778,9 @@ export const deleteKernel = async function (sessionId, t = 0, immediateIfStartin
 	kernels[getKernelId(sessionId)] = kernels[getKernelId(sessionId)] || {};
 	kernels[getKernelId(sessionId)].removeKernel = true;
 
-	let id = kernels[getKernelId(sessionId)].id;
+	// TO-DO: use jupyter service to delete kernel
+
+	let id = kernels[getKernelId(sessionId)].kernel?.id;
 	let ka = configKernel(sessionId).kernel_address || 0;
 
 	try {
@@ -870,10 +799,15 @@ export const deleteKernel = async function (sessionId, t = 0, immediateIfStartin
 	return new Promise(async (res, rej) => {
 		let _delete = async () => {
 			try {
-				if (kernels[getKernelId(sessionId)].removeKernel && checkKernel(sessionId)) {
+				if (kernels[getKernelId(sessionId)].removeKernel && checkKernelConnection(sessionId)) {
 					let kernelResponse = await axios.delete(`${kernelBase(ka)}/api/kernels/${id}`);
 		
-					kernels[getKernelId(sessionId)].id = false;
+					kernels[getKernelId(sessionId)].kernel = false;
+					kernels[getKernelId(sessionId)].model = false;
+					kernels[getKernelId(sessionId)].serverSettings = false;
+					kernels[getKernelId(sessionId)].connection = false;
+					kernels[getKernelId(sessionId)].initialized = false;
+					kernels[getKernelId(sessionId)].initialization = false;
 					console.log('Deleting Session', getKernelId(sessionId), id);
 					delete kernels[getKernelId(sessionId)];
 				}

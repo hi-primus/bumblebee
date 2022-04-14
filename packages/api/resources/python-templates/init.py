@@ -10,7 +10,7 @@ def _out_result(_callback = None):
     def _f(fut):
         _res = {}
         try:
-            _res = {'key': fut.key, 'status': fut.status}
+            _res = {'async_out': True, 'key': fut.key, 'status': fut.status}
             if fut.status == "error":
                 _res.update({'error': str(fut.exception())})
             elif fut.status == "finished":

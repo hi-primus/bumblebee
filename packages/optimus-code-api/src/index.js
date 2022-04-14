@@ -314,7 +314,7 @@ export const codeGenerators = {
     code += `    global ${payload.dfName}\n`;
     code += `    ${payload.dfName} = fut.result()\n`;
     code += `    return ${payload.dfName}.profile(${payload.dfName}.cols.names("*")${selection})\n`;
-    code += `_output = op.submit(${payload.dfName}.profile_df, ${payload.dfName}.cols.names("*")${selection}, priority=${payload.request.priority || 0}, pure=False)\n`;
+    code += `_output = op.submit(${payload.dfName}.profile._calculate, ${payload.dfName}.cols.names("*")${selection}, priority=${payload.request.priority || 0}, pure=False)\n`;
     return {
       code,
       isOutput: true,
@@ -327,7 +327,7 @@ export const codeGenerators = {
     code += `    global ${payload.dfName}\n`;
     code += `    ${payload.dfName} = fut.result()\n`;
     code += `    return ${payload.dfName}.profile(${payload.columns || '"*"'})\n`;
-    code += `_output = op.submit(${payload.dfName}.profile_df, ${payload.columns || '"*"'}, priority=${payload.request.priority || 0}, pure=False)\n`;
+    code += `_output = op.submit(${payload.dfName}.profile._calculate, ${payload.columns || '"*"'}, priority=${payload.request.priority || 0}, pure=False)\n`;
     return {
       code,
       isOutput: true,
