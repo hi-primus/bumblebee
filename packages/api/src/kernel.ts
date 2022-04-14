@@ -34,7 +34,7 @@ async function executeCode(sessionId: string, code: string) {
 	};
 
 	const statusResponse = await request.done;
-	
+
 	if (statusResponse.content.status === "error") {
 
 		response = {
@@ -404,7 +404,7 @@ export const requestToKernel = async function (type, sessionId, payload, options
 	} catch (err) {
 		response = err;
 	}
-	});
+
 
 	const endTime = new Date().getTime();
 
