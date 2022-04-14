@@ -809,12 +809,8 @@ export default {
           }
   
           var codePayload = {
-            command: 'profile_async',
-            dfName,
-            request: {
-              priority: -10,
-              isAsync: true
-            }
+            command: 'profile',
+            dfName
           };
   
           this.evalCode(codePayload, { command: "loading_profile_preview", code }, 'profiling');

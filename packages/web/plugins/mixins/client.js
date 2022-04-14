@@ -493,6 +493,7 @@ export default {
 
           socket.on('reply', (payload) => {
 
+            let handlerKey;
             let handler;
 
             if (payload.reply && payload.reply !== 'await') {
@@ -502,12 +503,14 @@ export default {
               }
             }
 
-            if (payload.data && payload.data.key && window.promises[payload.data.key] && window.promises[payload.data.key]) {
+            if (payload.data && payload.data.key && window.promises[payload.data.key]) {
+              handlerKey = payload.data.key;
               handler = window.promises[payload.data.key];
               delete window.promises[payload.data.key];
             }
             
             if (!handler && payload.timestamp && window.promises[payload.timestamp]) {
+              handlerKey = payload.timestamp;
               handler = window.promises[payload.timestamp];
               delete window.promises[payload.timestamp];
             }
@@ -523,10 +526,10 @@ export default {
 
             } else {
 
-              if (handler.isAsync) {
+              if (payload.data && payload.data.async) {
 
-                if (payload.data && payload.data.status == "pending"){
-                  if (key !== payload.data.key) {
+                if (payload.data.status == "pending") {
+                  if (handlerKey !== payload.data.key) {
                     window.promises[payload.data.key] = handler;
                   }
                 } else {

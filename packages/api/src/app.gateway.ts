@@ -22,13 +22,6 @@ import {
   createSession
 } from './kernel';
 
-// import {
-// 	runCode,
-// 	initializeKernel,
-//   deleteKernel,
-// 	requestToKernel,
-// } from './optimus-api';
-
 import { getGenerator, generateCode, preparePayload, prefectTemplate } from 'optimus-code-api'
 
 import { ConnectionService } from "./connection/connection.service";
@@ -183,6 +176,15 @@ export class AppGateway
     let result: any = {};
 
     try {
+      payload.asyncReply = (data) => {
+        if (!data.key) {
+          return;
+        }
+        client.emit('reply', {
+          data,
+          timestamp: data.key
+        });
+      };
       const initPayload = await initializeKernel(client.id, payload);
       result = initPayload.result;
       // console.log('[INITIALIZATION RESULT]', initPayload.result);
@@ -310,7 +312,6 @@ export class AppGateway
             data: _result,
             code: _resultCode,
             timestamp: _timestamp,
-            finalResult: true
           });
         }
       }
@@ -329,7 +330,8 @@ export class AppGateway
       data: result,
       code: resultCode,
       timestamp: payload.timestamp,
-      reply: payload.reply
+      reply: payload.reply,
+      test: true
     });
 
   }

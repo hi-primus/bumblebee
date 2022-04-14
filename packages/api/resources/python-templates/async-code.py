@@ -5,7 +5,9 @@ res = {}
 #{payload}
 _result = None
 
-if hasattr(_output, '__name__') and 'Future' in _output.__name__ and callable(_output_callback):
+name = _output.__name__ if hasattr(_output, "__name__") else _output.__class__.__name__ if hasattr(_output, "__class__") else "unknown"
+
+if 'Future' in name and callable(_output_callback):
 
     if _output.status == "finished":
         _result = _output_callback(_output)
@@ -17,10 +19,13 @@ if hasattr(_output, '__name__') and 'Future' in _output.__name__ and callable(_o
 else:
 
     async_error = ""
+
     if not callable(_output_callback):
         async_error += " _output_callback is not callable."
-    if not hasattr(_output, '__name__') or 'Future' not in _output.__name__:
+    
+    if 'Future' not in name:
         async_error += f" _output is not a Future, received '{str(type(_output))}' instead."
+
     res.update({'result': _output, 'async': False, 'async_error':  async_error})
     
 #{this.measureTime ? this.timeEnd : ""}
