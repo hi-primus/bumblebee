@@ -172,4 +172,4 @@ def inject_method_to_optimus(func):
             return func(_df, *args, **kwargs)
     
     setattr(_cls, method_name, binded)
-    return True
+    return hasattr(_cls, method_name)
