@@ -2898,6 +2898,11 @@ export const commandsHandlers = {
       title: "Load and apply model",
       fields: [
         {
+          type: "field",
+          key: "output_col",
+          label: "Output column name"
+        },
+        {
           key: "external_url",
           label: "Url",
           placeholder: "https://example.com/model.pl",
@@ -2907,6 +2912,7 @@ export const commandsHandlers = {
     },
     payload: (columns, payload = {}) => ({
       external_url: payload.external_url || "",
+      output_col: "new_col",
       preview: {
         type: "applyModel",
         delay: 800,
