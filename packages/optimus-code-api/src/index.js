@@ -1,4 +1,4 @@
-import { deepCopy, escapeQuotes, adaptValue, escapeQuotesOn, getOutputColsArgument, aggOutputCols, preparedColumns, transformDateToPython, getCodePayload, getSourceParams, pythonArguments, trimCharacters, TIME_VALUES } from 'bumblebee-utils';
+import { deepCopy, escapeQuotes, adaptValue, escapeQuotesOn, getVariableNames, getOutputColsArgument, aggOutputCols, preparedColumns, transformDateToPython, getCodePayload, getSourceParams, pythonArguments, trimCharacters, TIME_VALUES } from 'bumblebee-utils';
 
 import { v4 as uuidv4 } from "uuid";
 
@@ -917,6 +917,19 @@ export const codeGenerators = {
     return `op.create.dataframe(${payload.dict})`;
   },
 
+  loadModel: (payload) => {
+    let url = (payload.url || '').trim() || (payload.external_url || '').trim();
+    return `op.load.model("${url}")`;
+  },
+
+  applyModel: (payload) => {
+    // TODO: Use models from a mongo collection
+    let preCode = `model = op.load.model("${payload.external_url}")`;
+    let {source, target} = getVariableNames(payload);
+    let code = `${target} = model.predict_proba(${source})\n_output = "model applied"`;
+    return { preCode, code, isOutput: true };    
+  },
+
   fingerprint: (payload) => {
     return {
       code: `clusters = ${payload.dfName}.string_clustering(cols=${preparedColumns(payload.columns)}, algorithm="fingerprint")\n_output = clusters.to_dict(verbose=True)`,
@@ -1412,11 +1425,11 @@ export const generateCode = function(commands = [], _request = { type: 'processi
           code += `${request.saveTo} = `;
           saving = request.saveTo;
         } else if (request.createsNew && request.type==='processing') {
-          let newDfName = payload.newDfName || request.newDfName;
+          let newDfName = payload.newDfName;
           code += `${newDfName} = `;
           saving = newDfName;
         } else if (request.isLoad) {
-          let newDfName = payload.newDfName || request.newDfName;
+          let newDfName = payload.newDfName;
           code += `${newDfName} = `;
           saving = newDfName;
         } else if (request.save) {

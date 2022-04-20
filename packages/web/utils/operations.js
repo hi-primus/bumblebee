@@ -1424,6 +1424,17 @@ let _operations = {
       description: 'Removes HTML tags and decode HTML entities from every string value in the selected column\(s\).'
     }
   },
+  
+  applyModel: {
+    path: 'TRANSFORMATIONS/ML',
+    text: 'Apply model',
+    doc: {
+      title: 'Apply model',
+      description: 'Apply a Machine Learning Model.'
+    }
+  },
+
+  'TRANSFORMATIONS/ML/divider/1': {divider: true, path: 'TRANSFORMATIONS/ML'},
 
   sample_n: {
     text: 'Random sampling',
@@ -1529,6 +1540,7 @@ let _operations = {
       },
     }]
   }),
+
 
   applyScript: {
     path: 'TRANSFORMATIONS/SCRIPTS',
@@ -2879,6 +2891,30 @@ export const commandsHandlers = {
       request: {},
     }),
     content: (payload) => `<b>Apply script</b>`
+  },
+
+  applyModel: {
+    dialog: {
+      title: "Load and apply model",
+      fields: [
+        {
+          key: "external_url",
+          label: "Url",
+          placeholder: "https://example.com/model.pl",
+          type: "field",
+        },
+      ]
+    },
+    payload: (columns, payload = {}) => ({
+      external_url: payload.external_url || "",
+      preview: {
+        type: "applyModel",
+        delay: 800,
+        expectedColumns: 1,
+        datasetPreview: true,
+      }
+    }),
+    content: (payload) => `<b>Load and apply model</b>`
   },
 
   join: {
