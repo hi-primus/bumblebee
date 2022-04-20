@@ -293,6 +293,15 @@ export const filterCells = (cells, newOnly, ignoreFrom) => {
   }
 }
 
+export const getVariableNames = (payload) => {
+  let source = payload.dfName;
+  let target = payload.request.saveTo || source;
+  if (payload.request.createsNew && payload.request.type==='processing') {
+    target = payload.newDfName;
+  }
+  return { source, target };
+}
+
 export const getOutputColsArgument = (output_cols = [], input_cols = [], pre = '', forceArray = false) => {
 
   if (input_cols === false || output_cols === false) {
