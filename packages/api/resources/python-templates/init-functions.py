@@ -1,5 +1,7 @@
 import copy
 
+import glom
+
 from optimus.engines.base.meta import Meta
 from optimus.profiler.constants import MAX_BUCKETS
 
@@ -68,12 +70,12 @@ def df__pattern_counts_cache(df, cols="*", n=10, mode=0, sample=None, last_sampl
         _meta_key = f"profile.columns.{column_name}.patterns"
         
         if force_cached:
-            cached = Meta.get(df.cache, _cache_key)
+            cached = glom.glom(df.cache, _cache_key, default=None)
             result.update({column_name: output_table(cached, n)})
             continue
         
         if flush:
-            df.cache = Meta.set(df.cache, _cache_key, None)
+            df.cache = glom.assign(df.cache, _cache_key, None, missing=dict)
         
         patterns = Meta.get(df.meta, _meta_key)
 
@@ -91,11 +93,11 @@ def df__pattern_counts_cache(df, cols="*", n=10, mode=0, sample=None, last_sampl
             pd_patterns = table_to_pandas(patterns)
 
             if complete:
-                df.cache = Meta.set(df.cache, _cache_key, pd_patterns)
+                df.cache = glom.assign(df.cache, _cache_key, pd_patterns, missing=dict)
             else:
-                cached = Meta.get(df.cache, _cache_key)            
+                cached = glom.glom(df.cache, _cache_key, default=None)            
                 pd_patterns = add_to_table(cached, pd_patterns)
-                df.cache = Meta.set(df.cache, _cache_key, pd_patterns)
+                df.cache = glom.assign(df.cache, _cache_key, pd_patterns, missing=dict)
 
             if last_sample:
                 df.meta = set_patterns_meta(df.meta, column_name, pd_patterns, n)
@@ -121,12 +123,12 @@ def df__profile_stats_cache(df, cols="*", sample=None, last_sample=False, flush=
     meta_key = "profile"
         
     if force_cached:
-        return Meta.get(df.cache, cache_key), []
+        return glom.glom(df.cache, cache_key, default=None), []
 
     if flush:
-        df.cache = Meta.set(df.cache, cache_key, None)
+        df.cache = glom.assign(df.cache, cache_key, None, missing=dict)
 
-    cached = Meta.get(df.cache, cache_key) or {}
+    cached = glom.glom(df.cache, cache_key, default=None) or {}
     already_updated_cols = []
     needs_update_cols = []
 
@@ -175,20 +177,20 @@ def df__profile_stats_cache(df, cols="*", sample=None, last_sample=False, flush=
     columns_list = df.cols.names()
     stats["columns"] = {col: stats["columns"][col] for col in columns_list if col in stats["columns"]}
 
-    df.cache = Meta.set(df.cache, cache_key, stats)
+    df.cache = glom.assign(df.cache, cache_key, stats, missing=dict)
 
     if last_sample:
         meta_keys = ["summary.data_types_list", "summary.total_count_data_types"]
         col_meta_keys = ["stats.match", "stats.missing", "stats.mismatch", "stats.inferred_data_type", "data_type"]
         
         for _m in meta_keys:
-            _v = Meta.get(stats, _m)
+            _v = glom.glom(stats, _m, default=None)
             if _v is not None:
                 df.meta = Meta.set(df.meta, f"{meta_key}.{_m}", _v)
 
         for col in cols:
             for _m in col_meta_keys:
-                _v = Meta.get(stats, f"columns.{col}.{_m}")
+                _v = glom.glom(stats, f"columns.{col}.{_m}", default=None)
                 if _v is not None:
                     df.meta = Meta.set(df.meta, f"{meta_key}.columns.{col}.{_m}", _v)
 
@@ -201,7 +203,7 @@ def df__profile_frequency_cache(df, cols="*", n=MAX_BUCKETS, sample=None, last_s
     cols = df.cols.names(cols)
     result = {}
     
-    cached_freqs = Meta.get(df.cache, "frequency") or {}
+    cached_freqs = glom.glom(df.cache, "frequency", default=None) or {}
     
     for column_name in cached_freqs:
         pd_frequency = cached_freqs[column_name]
@@ -218,12 +220,12 @@ def df__profile_frequency_cache(df, cols="*", n=MAX_BUCKETS, sample=None, last_s
         _meta_key = f"profile.columns.{column_name}.stats"
         
         if force_cached:
-            cached = Meta.get(df.cache, _cache_key)
+            cached = glom.glom(df.cache, _cache_key, default=None)
             result.update({column_name: output_table(cached, n)})
             continue
         
         if flush:
-            df.cache = Meta.set(df.cache, _cache_key, None)
+            df.cache = glom.assign(df.cache, _cache_key, None, missing=dict)
         
         stats = Meta.get(df.meta, _meta_key)
 
@@ -243,11 +245,11 @@ def df__profile_frequency_cache(df, cols="*", n=MAX_BUCKETS, sample=None, last_s
             pd_frequency = table_to_pandas(frequency)
 
             if complete:
-                df.cache = Meta.set(df.cache, _cache_key, pd_frequency)
+                df.cache = glom.assign(df.cache, _cache_key, pd_frequency, missing=dict)
             else:
-                cached = Meta.get(df.cache, _cache_key)            
+                cached = glom.glom(df.cache, _cache_key, default=None)            
                 pd_frequency = add_to_table(cached, pd_frequency)
-                df.cache = Meta.set(df.cache, _cache_key, pd_frequency)
+                df.cache = glom.assign(df.cache, _cache_key, pd_frequency, missing=dict)
 
             frequency = output_table(pd_frequency, n)
             frequency.update({"count_uniques": len(pd_frequency)})
@@ -270,7 +272,7 @@ def df__profile_hist_cache(df, cols="*", buckets=MAX_BUCKETS, sample=None, last_
     cols = df.cols.names(cols)
     result = {}
     
-    cached_hists = Meta.get(df.cache, f"hist.{buckets}") or {}
+    cached_hists = glom.glom(df.cache, f"hist.{buckets}", default=None) or {}
     
     for column_name in cached_hists:
         result.update({column_name: output_hist(cached_hists[column_name], buckets)})
@@ -285,25 +287,25 @@ def df__profile_hist_cache(df, cols="*", buckets=MAX_BUCKETS, sample=None, last_
         _meta_key = f"profile.columns.{column_name}.stats.hist"
         
         if force_cached:
-            cached = Meta.get(df.cache, _cache_key)
+            cached = glom.glom(df.cache, _cache_key, default=None)
             result.update({column_name: output_table(cached, buckets)})
             continue
             
-        _min = Meta.get(df.cache, _min_cache_key)
-        _max = Meta.get(df.cache, _max_cache_key)
+        _min = glom.glom(df.cache, _min_cache_key, default=None)
+        _max = glom.glom(df.cache, _max_cache_key, default=None)
         
         if _min is None:
             _min = df.cols.min(column_name)
-            df.cache = Meta.set(df.cache, _min_cache_key, _min)
+            df.cache = glom.assign(df.cache, _min_cache_key, _min, missing=dict)
             
         if _max is None:
             _max = df.cols.max(column_name)
-            df.cache = Meta.set(df.cache, _max_cache_key, _max)
+            df.cache = glom.assign(df.cache, _max_cache_key, _max, missing=dict)
             
         _range = (_min, _max)
         
         if flush:
-            df.cache = Meta.set(df.cache, _cache_key, None)
+            df.cache = glom.assign(df.cache, _cache_key, None, missing=dict)
         
         hist = Meta.get(df.meta, _meta_key)
 
@@ -321,11 +323,11 @@ def df__profile_hist_cache(df, cols="*", buckets=MAX_BUCKETS, sample=None, last_
             pd_hist = hist_to_pandas(hist)
 
             if complete:
-                df.cache = Meta.set(df.cache, _cache_key, pd_hist)
+                df.cache = glom.assign(df.cache, _cache_key, pd_hist, missing=dict)
             else:
-                cached = Meta.get(df.cache, _cache_key)            
+                cached = glom.glom(df.cache, _cache_key, default=None)            
                 pd_hist = add_to_table(cached, pd_hist)
-                df.cache = Meta.set(df.cache, _cache_key, pd_hist)
+                df.cache = glom.assign(df.cache, _cache_key, pd_hist, missing=dict)
 
             hist = output_hist(pd_hist, buckets)
                 
@@ -359,11 +361,11 @@ def df__profile_cache(df, cols="*", bins: int = MAX_BUCKETS, sample=None, last_s
     complete_stats_profile = df.profile(complete_stats_cols, bins=bins) if complete_stats_cols and len(complete_stats_cols) > 0 else {}
 
     if flush:
-        df.cache = Meta.set(df.cache, "profile", {})
-        df.cache = Meta.set(df.cache, "frequency", {})
-        df.cache = Meta.set(df.cache, "hist", {})
-        df.cache = Meta.set(df.cache, "min", {})
-        df.cache = Meta.set(df.cache, "max", {})
+        df.cache = glom.assign(df.cache, "profile", {}, missing=dict)
+        df.cache = glom.assign(df.cache, "frequency", {}, missing=dict)
+        df.cache = glom.assign(df.cache, "hist", {}, missing=dict)
+        df.cache = glom.assign(df.cache, "min", {}, missing=dict)
+        df.cache = glom.assign(df.cache, "max", {}, missing=dict)
 
         columns = Meta.get(df.meta, "profile.columns") or {}
         to_flush = df._cols_to_profile("*")
@@ -403,6 +405,9 @@ def df__profile_cache(df, cols="*", bins: int = MAX_BUCKETS, sample=None, last_s
         for key in cols:
             if key in stats["columns"]:
                 stats["columns"][key].update({"done": True})
+
+    # TODO: return only the columns that are requested (and combine them in the frontend)
+    # stats["columns"] = {key: value for key, value in stats["columns"].items() if key in cols}
 
     stats.update({"name": df.meta.get("name")})
     stats.update({"file_name": df.meta.get("file_name")})
