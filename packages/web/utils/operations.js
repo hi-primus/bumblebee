@@ -2920,7 +2920,7 @@ export const commandsHandlers = {
         datasetPreview: true,
       }
     }),
-    content: (payload) => `<b>Load and apply model</b>`
+    content: (payload) => `<b>Apply model</b> to ${hlParam(payload.output_col || "new_col")}`
   },
 
   join: {
