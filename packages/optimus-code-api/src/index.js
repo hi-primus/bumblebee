@@ -926,7 +926,8 @@ export const codeGenerators = {
     // TODO: Use models from a mongo collection
     let preCode = `model = op.load.model("${payload.external_url}")`;
     let {source, target} = getVariableNames(payload);
-    let code = `${target} = model.predict_proba(${source}, output_col="${payload.output_col || "new_col"}")\n_output = "model applied"`;
+    let selectedSource = (payload.subset && payload.subset.length) ? `${source}.cols.select(["${payload.subset.join('", "')}"])` : source;
+    let code = `${target} = model.predict_proba(${selectedSource}, output_col="${payload.output_col || "new_col"}")\n_output = "model applied"`;
     return { preCode, code, isOutput: true };    
   },
 

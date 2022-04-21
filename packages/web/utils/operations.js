@@ -2912,6 +2912,7 @@ export const commandsHandlers = {
     },
     payload: (columns, payload = {}) => ({
       external_url: payload.external_url || "",
+      subset: columns,
       output_col: "new_col",
       preview: {
         type: "applyModel",
