@@ -1741,6 +1741,25 @@ $editor-top-padding: 4px;
   &:not(.multiple-tabs) .hint--df {
     display: none;
   }
+  .index {
+    color: $data-grey;
+    font-size: 12px;
+    font-weight: 700;
+    opacity: 0.75;
+  }
+}
+
+.hide-cell-indices {
+  .index {
+    display: none;
+  }
+}
+
+.right-inline-icon {
+  position: absolute !important;
+  right: 10px;
+  font-size: 20px !important;
+  margin-top: -1px;
 }
 
 .operation-hint-text, .editor-holder {

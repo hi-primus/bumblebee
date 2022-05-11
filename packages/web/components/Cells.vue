@@ -72,6 +72,28 @@
               </v-list-item-content>
             </v-list-item>
           </v-list-item-group>
+          <v-divider></v-divider>
+          <v-list-item-group color="black">
+            <!-- <v-list-item
+              @click="showCodeOnTextDialog"
+            >
+              <v-list-item-content>
+                <v-list-item-title>
+                  Copy code to clipboard
+                </v-list-item-title>
+              </v-list-item-content>
+            </v-list-item> -->
+            <v-list-item
+              @click="showCellIndices = !showCellIndices"
+            >
+              <v-list-item-content>
+                <v-list-item-title>
+                  Show cell indices
+                  <v-icon v-show="showCellIndices" class="right-inline-icon">check</v-icon>
+                </v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+          </v-list-item-group>
         </v-list>
       </v-menu>
     </div>
@@ -291,7 +313,7 @@
     <div
       v-show="view=='operations'"
       class="sidebar-content operations-cells-container"
-      :class="{'empty': !cells.length}"
+      :class="{'empty': !cells.length, 'hide-cell-indices': !showCellIndices}"
       ref="cells-container"
     >
       <draggable
@@ -326,8 +348,9 @@
                 'disabled-cell': limitToCell && index >= limitToCell
               }"
               @click="selectCell(index)"
-              v-html="cell.content || cell.code"
             >
+              <span class="index">{{1+index}}</span>
+              <span class="content" v-html="cell.content || cell.code"></span>
             </div>
             <div class="right-cell-section">
               <v-icon
@@ -379,8 +402,9 @@
                 'disabled-cell': limitToCell && index+dataSources.length >= limitToCell
               }"
               @click="selectCell(index+dataSources.length)"
-              v-html="cell.content || cell.code"
             >
+              <span class="index">{{1+index+dataSources.length}}</span>
+              <span class="content" v-html="cell.content || cell.code"></span>
             </div>
             <div
               class="right-cell-section"
@@ -513,6 +537,8 @@ export default {
 
       cellsPromise: false,
       cellsSelection: {},
+
+      showCellIndices: true,
 
     }
   },
