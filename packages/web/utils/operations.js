@@ -2895,6 +2895,7 @@ export const commandsHandlers = {
 
   applyModel: {
     dialog: {
+      save_new: true,
       title: "Load and apply model",
       fields: [
         {
