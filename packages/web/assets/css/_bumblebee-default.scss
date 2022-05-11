@@ -1072,6 +1072,7 @@ table {
   }
 	.v-tabs-bar {
 		background: none !important;
+    max-width: calc(100vw - 64px);
 	}
   &:before {
 		content: '';
