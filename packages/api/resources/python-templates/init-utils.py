@@ -11,8 +11,10 @@ def one_dict_to_val(val):
 
 def replace_data_type(a, b):
     data_types = ProfilerDataTypes.list()
-    a_index = [i for i, dt in enumerate(data_types) if dt == a][0] or len(data_types)
-    b_index = [i for i, dt in enumerate(data_types) if dt == b][0] or len(data_types)
+    a_index_array = [i for i, dt in enumerate(data_types) if dt == a]
+    b_index_array = [i for i, dt in enumerate(data_types) if dt == b]
+    a_index = a_index_array[0] if len(a_index_array) else len(data_types)
+    b_index = b_index_array[0] if len(b_index_array) else len(data_types)
     index = min(a_index, b_index)
     return data_types[index] if index < len(data_types) else None
 
