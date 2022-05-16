@@ -60,7 +60,7 @@ RUN yarn global add pm2 && \
 
 WORKDIR "/opt"
 
-RUN echo "Version 22.4.5-beta"
+RUN echo "Version 22.4.6-beta"
 
 RUN pip install cytoolz && \
     pip install git+https://github.com/hi-primus/dateinfer.git && \
