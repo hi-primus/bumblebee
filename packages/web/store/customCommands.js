@@ -325,6 +325,11 @@ export const getters =  {
           generator.payload = generator.payload || {};
           generator.payload.dialog = generator.dialog
         }
+        if (generator.enable) {
+          if (generator.enable.query) {
+            generator.disabled = ($nuxt) => !$nuxt.$route.query[generator.enable.query];
+          }
+        }
   
         return [key, generator];
       } catch (err) {
