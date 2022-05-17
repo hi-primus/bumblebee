@@ -25,7 +25,7 @@
       </v-tooltip>
       <template v-for="(elements, section) in Object.values(toolbarSectionsIcons)">
         <div class="divider" :key="'d'+section" :data-keys="Object.keys(section).join()"/>
-        <template v-for="(element, index) in (elements.filter(e=>!getPropertyNuxt(e.hidden)))">
+        <template v-for="(element, index) in (elements.filter(e=>e && !getPropertyNuxt(e.hidden)))">
           <template v-if="element.type=='button'">
             <v-tooltip :key="'toolbar'+section+'button'+index" transition="tooltip-fade-transition" bottom>
               <template v-slot:activator="{ on }">
@@ -99,7 +99,7 @@
               <v-list dense style="max-height: calc(100vh - 143px); min-width: 160px;" class="scroll-y toolbar-menu">
                 <v-list-item-group color="black">
                   <template
-                    v-for="(item, i) in menuItems(element.group).filter(e=>!getPropertyNuxt(e.hidden))"
+                    v-for="(item, i) in menuItems(element.group).filter(e=>e && !getPropertyNuxt(e.hidden))"
                   >
                     <v-divider
                       v-if="item.divider"
