@@ -945,7 +945,13 @@ export default {
     },
 
     menuItems (group) {
-      return this.toolbarItems.filter(e => e && e.group == group)
+      return this.toolbarItems
+        .filter(e => e && e.group == group)
+        .map((e, index) => {
+          e._order = e.order ? (e.order - 1.5) : index
+          return e
+        })
+        .sort((a, b) => a._order - b._order)
     },
 
     cancelCommand () {
