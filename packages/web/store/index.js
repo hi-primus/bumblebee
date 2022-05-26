@@ -1532,8 +1532,6 @@ export const actions = {
           forceAll = true;
           await dispatch('markCells', { mark: false, ignoreFrom: -1 });
           firstPendingOperation = 0;
-        } else {
-          await dispatch('markCells', { mark: false, ignoreFrom });
         }
       }
 
@@ -1563,12 +1561,14 @@ export const actions = {
         return false;
       }
 
+      var codeAlreadyDone = code && codeDone && code.indexOf(codeDone)>=0
+
       if (code === codeDone) {
         console.debug('%c[CODE MANAGER] Nothing new to run', 'color: yellow;');
         return false;
       }
       else if (
-        ( !state.firstRun && (forceAll || code.indexOf(codeDone)!=0 || codeDone=='' || wrongCode) )
+        ( !state.firstRun && (forceAll || codeAlreadyDone || wrongCode) )
         ||
         !window.socketAvailable
       ) {

@@ -1942,15 +1942,19 @@ export default {
         return;
       }
 
-      let cell = this.cells[index];
+      const cell = this.cells[index];
+
       if (cell) {
         console.debug('[DEBUG] Rolling back to cell', {cell, index})
       }
 
       this.$store.commit('selection', { clear: true }) // should save it and try to reset it after rollback?
-      this.limitToCell = index;
+      
+      const forceAll = (index || this.cells.length) <= (this.limitToCell || this.cells.length + 1)
+      
+      this.limitToCell = index
 
-      await this.runCodeNow(true, index === false ? -1 : index, undefined, false, false);
+      await this.runCodeNow(forceAll, index === false ? -1 : index, undefined, false, false);
 
     },
 
