@@ -30,9 +30,6 @@ module.exports = {
 				type: 'image/png',
 				href: '/favicon.png'
 			},
-			// { rel: 'stylesheet', href: 'https://fonts.googleapis.com/css?family=Material+Icons|Ubuntu+Mono|Roboto+Mono' }
-			{ rel: 'stylesheet', href: 'https://fonts.googleapis.com/css?family=Material+Icons+Outlined|Material+Icons|Ubuntu+Mono|Ubuntu' },
-			{ rel: 'stylesheet', href: '@mdi/font/css/materialdesignicons.css' },
 			{ rel: 'stylesheet', href: '/highlight/styles/default.css' }
     ],
     script: [
@@ -44,7 +41,8 @@ module.exports = {
 
 	css: [
 		'@/assets/css/main.scss',
-		'@fortawesome/fontawesome-free/css/all.css'
+		'@/assets/css/fonts.css',
+		'@mdi/font/css/materialdesignicons.min.css'
 	],
 
 	styleResources: {
@@ -55,6 +53,7 @@ module.exports = {
 
   modules: [
 		'@nuxtjs/axios',
+		'nuxt-material-design-icons',
   ],
 
 	buildModules: [

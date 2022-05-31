@@ -50,7 +50,7 @@
   },
   "devDependencies": {
     "@fortawesome/fontawesome-free": "^5.12.1",
-    "@mdi/font": "^5.3.45",
+    "@mdi/font": "^6.7.96",
     "@nuxtjs/eslint-config": "^2.0.2",
     "@nuxtjs/eslint-module": "^0.2.1",
     "@nuxtjs/style-resources": "^1.0.0",
