@@ -110,16 +110,18 @@ export const actions =  {
 
     let generators = {};
 
-    if (process.env.ADD_ONS && typeof process.env.ADD_ONS == "string") {
-      let addOnsUrls = process.env.ADD_ONS.split(',');
+    const addOns = await _parseJSONFromUrl(`${process.env.API_URL}/addons`)
+    const apiUrl = process.env.API_URL
+
+    if (apiUrl && addOns && addOns.length) {
+      let addOnsUrls = addOns.map(url => `${process.env.API_URL}/addons/${url}`)
       if (addOnsUrls.length) {
         for (let i = 0; i < addOnsUrls.length; i++) {
-          const url = addOnsUrls[i];
-          let base = _getGithubBaseFileUrl(url);
+          const base = addOnsUrls[i];
           let newGenerators = {}
 
           try {
-            newGenerators = await _parseJSONFromUrl(base+'index.json')
+            newGenerators = await _parseJSONFromUrl(`${base}/index.json`)
           } catch (err) {
             console.error(err);
           }
@@ -130,7 +132,7 @@ export const actions =  {
               try {
                 let definition = generator.definition; 
                 if (!definition) {
-                  definition = await _getTextFromUrl(base+key+'.py')
+                  definition = await _getTextFromUrl(`${base}/${key}.py`)
                 }
                 if (definition) {
                   newGenerators[key].definition = definition

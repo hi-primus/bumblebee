@@ -89,8 +89,13 @@ ENV FRONT_PORT=3000
 ENV BACK_PORT=4000
 
 CMD ./usr/bin/mongod --fork --logpath /var/log/mongod.log && \
-    cd /opt/bumblebee && \
     echo "Initializing Bumblebee Environment" && \
+    mkdir -p /packages/api/assets/addons && \
+    cd /packages/api/assets/addons && \
+    for add_on in $ADD_ONS; do \
+        git clone "$add_on"; \
+    done && \
+    cd /opt/bumblebee && \
     echo "API_URL='$PROTOCOL://$ADDRESS'" >> packages/web/.env && \
     echo "DOCKER='TRUE'" >> packages/web/.env && \
     echo "BACKEND_URL='$PROTOCOL://$ADDRESS'" >> packages/api/.env && \
