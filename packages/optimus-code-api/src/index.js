@@ -403,7 +403,7 @@ export const codeGenerators = {
         + (payload.default ? `default=${payload.default}, ` : '')
         + `eval_value=True)`;
         if (payload.preview.filteredPreview) {
-          code += `.rows.null("__match__", drop=True)`;
+          code += `.rows.select("__match__")`;
         }
 
         code += `.cols.set(`
@@ -435,7 +435,7 @@ export const codeGenerators = {
         + (payload.default ? `default=${payload.default}, ` : '')
         + `eval_value=True)`;
         if (payload.preview.filteredPreview) {
-          code += `.rows.null("__match__", drop=True)`
+          code += `.rows.select("__match__")`
         }
         if (payload.request.type === 'preview' && payload.preview.filteredPreview) {
           return (from, to)=>code+(from!==undefined ? `[${from}:${to}]` : '')
@@ -546,7 +546,7 @@ export const codeGenerators = {
         + `)`
 
         if (payload.preview.filteredPreview) {
-          code += `.rows.null("__match__", drop=True)`
+          code += `.rows.select("__match__")`
           if (payload.request.type === 'preview') {
             return (from, to)=>code+(from!==undefined ? `[${from}:${to}]` : '')
           }
@@ -601,7 +601,7 @@ export const codeGenerators = {
       + `how="${payload.how}"`
       + `)', eval_value=True)`
       if (payload.preview.filteredPreview) {
-        code += `.rows.null("__match__", drop=True)`
+        code += `.rows.select("__match__")`
         if (payload.request.type === 'preview') {
           return (from, to)=>code+(from!==undefined ? `[${from}:${to}]` : '')
         }
@@ -619,7 +619,7 @@ export const codeGenerators = {
       + `keep="${payload.keep}"`
       + `)', eval_value=True)`
       if (payload.preview.filteredPreview) {
-        code += `.rows.null("__match__", drop=True)`
+        code += `.rows.select("__match__")`
         if (payload.request.type === 'preview') {
           return (from, to)=>code+(from!==undefined ? `[${from}:${to}]` : '')
         }
@@ -1531,7 +1531,7 @@ export const generateCode = function(commands = [], _request = { type: 'processi
             code += '\n'+`_output.update({ 'names': ${saving}.cols.names() })`;
           }
           if (request.matches_count) {
-            code += '\n'+`_output.update({ 'matches_count': ${saving}.rows.null("__match__", drop=True).rows.count() })`
+            code += '\n'+`_output.update({ 'matches_count': ${saving}.rows.select("__match__").rows.count() })`
           }
           if (request.meta) {
             code += '\n'+`_output.update({ 'meta': ${saving}.meta })`
@@ -1551,7 +1551,7 @@ export const generateCode = function(commands = [], _request = { type: 'processi
               code += `.cols.names, "*"`;
             }
             if (request.matches_count) {
-              code += `.rows.null("__match__", drop=True).rows.count`;
+              code += `.rows.select("__match__").rows.count`;
             }
 
             if (request.async_priority) {
@@ -1576,7 +1576,7 @@ export const generateCode = function(commands = [], _request = { type: 'processi
               code += `.cols.names()`;
             }
             if (request.matches_count) {
-              code += `.rows.null("__match__", drop=True).rows.count()`;
+              code += `.rows.select("__match__").rows.count()`;
             }
             if (request.meta) {
               code += '\n'+`.meta`
