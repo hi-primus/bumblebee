@@ -626,6 +626,8 @@ export default {
 
       previousLessRows: [],
 
+      lastProfilingError: {},
+
       // types
 
       mainTypes: ['string', 'int', 'float', 'boolean', 'datetime', '|', 'object', 'array'],
@@ -1568,6 +1570,7 @@ export default {
           sample = [0, this.sampleSize];
 
         } else if (updatedColumns.length >= columnsCount && sample[0] >= rowsCount) {
+
           // if every column is done, and we're trying to  we are done
           console.debug('[PROFILE] Profiling done', dfName);
           if (preview) {
@@ -1576,7 +1579,9 @@ export default {
             this.$store.dispatch('afterWholeProfiling');
           }
           return;
+
         } else {
+
           // if not, we need to continue profiling
 
           let filteredColumns = (preview ? this.allColumns.filter(e=>e.preview) : this.allColumns).map(e=>e.name);
@@ -1601,17 +1606,31 @@ export default {
 
       } catch (err) {
         
-        console.warn('[PROFILE]', err, err.response);
-
+        let code = err.response?.code || '';
         let errString = (err?.response || err)?.data?.content?.error ||
                         (err?.response || err)?.data?.error ||
                         (err?.response || err)?.data?.errorName ||
                         err?.message ||
                         err.toString() ||
                         '';
+        
+        let errMsg = err?.message || '';
+
+        let profilingError = `${code}, ${errString}, ${errMsg}`
+
+        if (code && errString && profilingError === this.lastProfilingError) {
+          console.error('[PROFILE]', err, err.response);
+          this.$store.commit('appendError', { error: errString, cells: false });
+          return;
+        } else {
+          console.warn('[PROFILE]', err, err.response);
+        }
+
         if (errString.includes("interrupted") || errString == "KerboardInterrupt") {
           console.warn("Interruption");
           return false;
+        } else {
+          this.lastProfilingError = profilingError
         }
 
         if (preview) {
