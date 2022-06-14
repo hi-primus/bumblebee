@@ -2985,9 +2985,9 @@ export default {
         }
         console.error(err, err.response, err.bumblebeeType);
         this.fetching = false;
-        if (err.bumblebeeType && (err.bumblebeeType.includes('(Error on profiling)') || err.bumblebeeType.includes('(Error on cells)'))) {
-          throw err;
-        }
+        // if (err.bumblebeeType && (err.bumblebeeType.includes('(Error on profiling)') || err.bumblebeeType.includes('(Error on cells)'))) {
+        //   // throw err;
+        // }
         if (this.toFetch.length || this.checkScrollAgain) {
           this.checkScrollAgain = false;
           this.$nextTick(()=>{
