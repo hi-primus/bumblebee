@@ -11,9 +11,9 @@ RUN apt-get -y install sudo
 
 RUN apt-get update && apt-get install -y --no-install-recommends apt-utils
 
-RUN wget https://repo.anaconda.com/archive/Anaconda3-2020.07-Linux-x86_64.sh && \
-    bash Anaconda3-2020.07-Linux-x86_64.sh -b && \
-    rm Anaconda3-2020.07-Linux-x86_64.sh
+RUN wget https://repo.anaconda.com/miniconda/Miniconda3-py38_4.12.0-Linux-x86_64.sh && \
+    bash Miniconda3-py38_4.12.0-Linux-x86_64.sh -b && \
+    rm Miniconda3-py38_4.12.0-Linux-x86_64.sh
 
 RUN apt-get install -y net-tools
 
@@ -26,10 +26,10 @@ RUN sudo rm -rf /var/lib/apt/lists/*
 RUN sudo apt-get -y update && sudo apt-get -y upgrade && \
     sudo apt-get -y install g++
 
-ENV PATH="/root/anaconda3/bin:${PATH}"
+ENV PATH="/root/miniconda3/bin:${PATH}"
 
-RUN sudo chown -R root ~/anaconda3/bin && \
-    sudo chmod -R +x ~/anaconda3/bin
+RUN sudo chown -R root ~/miniconda3/bin && \
+    sudo chmod -R +x ~/miniconda3/bin
 
 RUN curl -sL https://deb.nodesource.com/setup_16.x | sudo -E bash - && \
     sudo apt-get install nodejs
