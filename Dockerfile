@@ -90,8 +90,8 @@ ENV BACK_PORT=4000
 
 CMD ./usr/bin/mongod --fork --logpath /var/log/mongod.log && \
     echo "Initializing Bumblebee Environment" && \
-    mkdir -p /packages/api/assets/addons && \
-    cd /packages/api/assets/addons && \
+    mkdir -p /opt/bumblebee/packages/api/assets/addons && \
+    cd /opt/bumblebee/packages/api/assets/addons && \
     for add_on in $ADD_ONS; do \
         git clone "$add_on"; \
     done && \
