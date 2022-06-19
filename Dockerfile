@@ -63,8 +63,6 @@ WORKDIR "/opt"
 RUN echo "Version 22.6.3-beta"
 
 RUN pip install cytoolz && \
-    pip install git+https://github.com/hi-primus/dateinfer.git && \
-    pip install git+https://github.com/hi-primus/url_parser.git && \
     pip install llvmlite --ignore-installed && \
     pip install git+https://github.com/hi-primus/optimus.git@develop-22.2#egg=pyoptimus[pandas] && \
     pip install git+https://github.com/hi-primus/optimus.git@develop-22.2#egg=pyoptimus[dask]
