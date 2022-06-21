@@ -411,6 +411,7 @@ def df__profile_cache(df, cols="*", bins: int = MAX_BUCKETS, sample=None, last_s
 
     stats.update({"name": df.meta.get("name")})
     stats.update({"file_name": df.meta.get("file_name")})
+    stats.update({"cols_count": df.cols.count()})
     
     return stats
 

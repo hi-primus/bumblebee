@@ -1463,12 +1463,6 @@ export default {
 
         preview = _preview;
 
-        // override columnsCount on preview requests
-        
-        if (preview) {
-          columnsCount = this.allColumns.filter(e=>e.preview).length; 
-        }
-
         let currentIndex = this.$store.state.datasets.findIndex(e=>e.dfName == dfName);
 
         if (preview) {
@@ -1491,6 +1485,16 @@ export default {
   
         let previousLastSample = response.reply.lastSample
         let dataset = parseResponse(response.data.result);
+
+        // get columnsCount from response if provided
+
+        columnsCount = dataset.cols_count || columnsCount;
+
+        // override columnsCount on preview requests
+        
+        if (preview) {
+          columnsCount = this.allColumns.filter(e=>e.preview).length; 
+        }
 
         // use rows_count from store
 
@@ -1837,6 +1841,7 @@ export default {
     async requestWholeProfiling () {
 
       try {
+
         let root = this.lazyColumns.findIndex(e=>e);
         let end = this.lazyColumns.length - this.lazyColumns.slice().reverse().findIndex(e=>e);
         
