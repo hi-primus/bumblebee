@@ -210,7 +210,7 @@
         </template>
 
         <div
-          v-if="frequency"
+          v-if="frequency && frequency.values !== null"
           class="component-container"
         >
           <h3>Frequent values</h3>

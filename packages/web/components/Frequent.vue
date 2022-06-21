@@ -97,7 +97,7 @@ export default {
         frequentValues = this.values.values;
       }
       if (!frequentValues) {
-        console.warn("Frequent values not set", this.values);
+        console.warn("Frequent values not set", this.columnIndex, this.values);
         return [];
       }
       return frequentValues.map((e,i)=>{

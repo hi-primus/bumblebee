@@ -309,7 +309,7 @@
                 bottom
               />
               <Frequent
-                v-if="previewPlotsData[column.name].frequency"
+                v-if="previewPlotsData[column.name].frequency && previewPlotsData[column.name].frequency.values!==null"
                 :key="previewPlotsData[column.name].key+' '+columnsReloads[column.name]"
                 :uniques="previewPlotsData[column.name].frequency.count_uniques || previewPlotsData[column.name].count_uniques"
                 :values="previewPlotsData[column.name].frequency"
@@ -360,7 +360,7 @@
                 bottom
               />
               <Frequent
-                v-if="plotsData[column.name].frequency"
+                v-if="plotsData[column.name].frequency && plotsData[column.name].frequency.values!==null"
                 :key="plotsData[column.name].key+' '+columnsReloads[column.name]"
                 :uniques="plotsData[column.name].frequency.count_uniques || plotsData[column.name].count_uniques"
                 :values="plotsData[column.name].frequency"
