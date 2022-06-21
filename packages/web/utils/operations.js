@@ -82,7 +82,7 @@ export const operationGroups = {
     disabled: ($nuxt)=>!($nuxt.selectionType=='columns' && $nuxt.currentDataset && $nuxt.currentDataset.summary && $nuxt.selectedColumns.length>=0)
   },
   TIME: {
-    icons: [{ icon: 'calendar_today' }],
+    icons: [{ icon: 'today' }],
     text: 'Datetime functions',
     label: 'Date &<br/>Time',
     disabled: ($nuxt)=>!($nuxt.currentDataset && $nuxt.currentDataset.summary && $nuxt.selectionType=='columns' && $nuxt.selectedColumns.length>=0)
