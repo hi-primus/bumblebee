@@ -1,5 +1,5 @@
 <template>
-  <v-main app>
+  <v-main app style="padding: 0">
     <v-container fluid class="pa-0 layout-container">
       <slot/>
     </v-container>
