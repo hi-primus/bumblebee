@@ -506,24 +506,24 @@ export const handleResponse = (response) => {
 
 export const printError = (payload) => {
 
-  let data = payload?.data || payload || 'Unknown error';
-  let content = data?.content;
+  let data = payload?.data || payload || {};
+  let content = data.content;
 
-  if (data.traceback && data.traceback.length) {
-    console.error('[DEBUG][ERROR][TRACEBACK]\n',data.traceback.join('\n'))
+  if (data.traceback?.length) {
+    console.error('[DEBUG][ERROR][TRACEBACK]\n', data.traceback.join('\n'))
   }
   else if (content && data.error) {
-    console.error('[DEBUG][ERROR]\n',data.error+'\n',content)
+    console.error('[DEBUG][ERROR]\n', data.error+'\n',content)
   }
   else if (data.error) {
-    console.error('[DEBUG][ERROR]\n',data.error)
+    console.error('[DEBUG][ERROR]\n', data.error)
   }
-  if (!(data.error || data.traceback)) {
-    console.error('[DEBUG][ERROR] (response)\n',payload)
+  if (!(data.error || data.traceback) && payload) {
+    console.error('[DEBUG][ERROR] (response)\n', payload)
   }
 
   if (payload?.code) {
-    console.error('[DEBUG][ERROR][CODE]',payload?.code)
+    console.error('[DEBUG][ERROR][CODE]', payload?.code)
   }
 
   let traceback = data.traceback && data.traceback[data.traceback.length-1];
@@ -533,7 +533,18 @@ export const printError = (payload) => {
     traceback = traceback[traceback.length - 1];
   }
 
-  return (traceback || data.error || data.message || data).toString().split('\n')[0];
+  let error = [traceback, data.error, data.message, data, traceback?.toString(), data?.error?.toString(), data.message?.toString(), data?.toString()].filter(e => e && typeof e == 'string')[0]
+
+  error = error.split('\n')[0];
+
+  if (error == '[object Object]' || !error) {
+    error = 'Unknown error'
+    console.trace()
+  } else {
+    console.log("Known error above", error)
+  }
+
+  return error;
 
 }
 

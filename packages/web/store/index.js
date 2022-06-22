@@ -227,6 +227,11 @@ export const mutations = {
       }
     }
     Vue.set(state.errorAlerts, state.errorAlerts.length, error);
+    if (state.errorAlerts.filter(e => e.content !== 'Unknown error').length) {
+      state.errorAlerts = state.errorAlerts.filter(e => e.content !== 'Unknown error')
+    } else {
+      state.errorAlerts = [state.errorAlerts[state.errorAlerts.length - 1]]
+    }
     if (cells) {
       state.cells = {...deepCopy(state.cells), error: error.id}
     }
@@ -1581,7 +1586,7 @@ export const actions = {
 
       if (wrongCode && code===wrongCode ) {
         console.debug('%c[CODE MANAGER] Cells went wrong last time. '+state.lastWrongCode.error, 'color: yellow;');
-        throw new ErrorWithResponse('Potential Error', state.lastWrongCode.error);
+        throw state.lastWrongCode.error;
       }
 
       if (rerun) {
@@ -1699,7 +1704,7 @@ export const actions = {
       err = err || new Error("Unknown error")
 
       commit('mutation', {mutate: 'updatingWorkspace', payload: false });
-      await dispatch('resetPromises', { from: 'cells' });
+      await dispatch('resetPromises', { from: 'cells', error: false });
 
       if (err?.response?.code && window.pushCode) {
         window.pushCode({code, error: true});

@@ -723,13 +723,14 @@ export default {
         // }
 
         console.error('(Error on initialization)');
-        let _error = printError(err)
+        let errorString = printError(err)
         let appStatus = {
           error: new Error('Initialization error'),
-          detail: _error,
+          detail: errorString,
           status: 'workspace'
         };
         this.$store.commit('setAppStatus', appStatus)
+        this.$store.commit('appendError', { error: errorString, cells: false });
 
       }
     },
