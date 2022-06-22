@@ -226,6 +226,18 @@ export default {
       try {
         let id = workspace._id
         let found = this.items.findIndex(w=>w._id === id)
+
+        let confirmation = await this.fromForm({
+          title: 'Delete workspace',
+          text: `Are you sure you want to delete this workspace?<br/>"${workspace.name}"`,
+          showBack: false,
+          showCancel: true,
+        })
+
+        if (!confirmation) {
+          return;
+        }
+
         this.$delete(this.items, found)
 
         await this.$store.dispatch('request',{

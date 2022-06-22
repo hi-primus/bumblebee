@@ -12,11 +12,12 @@
           icon large color="black"
           @click="!disableBack && acceptForm(false)"
           class="title-button-left"
-          v-if="!disableBack">
+          v-if="!disableBack && showBack">
           <v-icon>mdi-arrow-left</v-icon>
         </v-btn>
-        <v-card-title class="title">{{form.text}}</v-card-title>
+        <v-card-title class="title" v-html="title || ''"></v-card-title>
         <v-card-text class="pb-1" style="margin-top: -6px; padding-top: 6px; max-height: 70vh; overflow-y: auto;">
+          <span v-if="text" v-html="text || ''"></span>
           <template v-for="(field, index) in filteredFields">
             <template>
               <div
@@ -99,7 +100,7 @@
         <v-select v-show="false"></v-select>
         <v-card-actions>
           <div class="flex-grow-1" />
-          <!-- <v-btn color="primary" text @click="acceptForm(false)">Cancel</v-btn> -->
+          <v-btn v-if="showCancel" color="primary" text @click="acceptForm(false)">Cancel</v-btn>
           <template v-if="form.extraButtons && form.extraButtons.length">
             <template v-for="button in form.extraButtons">
               <v-btn color="primary" :id="'btn-event-'+button.event" :key="button.event" text :disabled="button.checkDisabled && form.disabled ? form.disabled(values) : false" @click="buttonEvent(button.event)">{{button.label}}</v-btn>
@@ -143,13 +144,31 @@ export default {
       return this.form.acceptLabel || 'Accept'
     },
     filteredFields () {
-        try {
-          return this.form.fields.filter(field => field.condition ? field.condition(this.values) : true)
-        } catch (err) {
-          console.error(err)
-          return  []
-        }
+      try {
+        return this.form.fields.filter(field => field.condition ? field.condition(this.values) : true)
+      } catch (err) {
+        console.error(err)
+        return  []
       }
+    },
+    title () {
+      if (this.form.title) {
+        return this.form.title
+      }
+      return this.form.text.length < 24 ? this.form.text : false;
+    },
+    text () {
+      if (this.form.title) {
+        return this.form.text
+      }
+      return this.form.text.length < 24 ? false : this.form.text;
+    },
+    showBack () {
+      return this.form.showBack !== false;
+    },
+    showCancel () {
+      return this.form.showCancel === true;
+    }
   },
 
   mounted () {
@@ -176,10 +195,13 @@ export default {
     fromForm (form) {
       this.form = form;
       let values = {}
-      this.form.fields.forEach(field => {
-        values[field.key] = field.value;
-      });
+      if (this.form.fields && this.form.fields.length) {
+        this.form.fields.forEach(field => {
+          values[field.key] = field.value;
+        });
+      }
       this.values = values;
+      
       return new Promise((resolve, reject) => {
         this.promise = { resolve, reject }
       })
