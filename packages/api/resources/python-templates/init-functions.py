@@ -1,6 +1,7 @@
 import copy
 
 import glom
+from glom import Path
 
 from optimus.engines.base.meta import Meta
 from optimus.profiler.constants import MAX_BUCKETS
@@ -41,7 +42,7 @@ def df__preliminary_profile(df, cols="*"):
         else:
             plot_type[col] = "freq"
 
-        df.meta = Meta.set(df.meta, f"plot_type.{col}", plot_type[col])
+        df.meta = Meta.set(df.meta, Path("plot_type", col), plot_type[col])
 
     types = df.cols.inferred_data_type(cols, use_internal=True, tidy=False)["inferred_data_type"]
 
@@ -62,22 +63,22 @@ def df__pattern_counts_cache(df, cols="*", n=10, mode=0, sample=None, last_sampl
     cols = df.cols.names(cols)
     result = {}
     
-    cache_key = f"pattern_counts.{mode}"
+    cache_key = ["pattern_counts", mode]
     
     for column_name in cols:
         
-        _cache_key = f"{cache_key}.{column_name}"
-        _meta_key = f"profile.columns.{column_name}.patterns"
+        _cache_key = cache_key + [column_name]
+        _meta_key = ["profile", "columns", column_name, "patterns"]
         
         if force_cached:
-            cached = glom.glom(df.cache, _cache_key, default=None)
+            cached = glom.glom(df.cache, Path(*_cache_key), default=None)
             result.update({column_name: output_table(cached, n)})
             continue
         
         if flush:
-            df.cache = glom.assign(df.cache, _cache_key, None, missing=dict)
+            df.cache = glom.assign(df.cache, Path(*_cache_key), None, missing=dict)
         
-        patterns = Meta.get(df.meta, _meta_key)
+        patterns = Meta.get(df.meta, Path(*_meta_key))
 
         has_patterns = patterns is not None and (n is None or n <= len(patterns["values"]) or not patterns["more"])
 
@@ -93,11 +94,11 @@ def df__pattern_counts_cache(df, cols="*", n=10, mode=0, sample=None, last_sampl
             pd_patterns = table_to_pandas(patterns)
 
             if complete:
-                df.cache = glom.assign(df.cache, _cache_key, pd_patterns, missing=dict)
+                df.cache = glom.assign(df.cache, Path(*_cache_key), pd_patterns, missing=dict)
             else:
-                cached = glom.glom(df.cache, _cache_key, default=None)            
+                cached = glom.glom(df.cache, Path(*_cache_key), default=None)            
                 pd_patterns = add_to_table(cached, pd_patterns)
-                df.cache = glom.assign(df.cache, _cache_key, pd_patterns, missing=dict)
+                df.cache = glom.assign(df.cache, Path(*_cache_key), pd_patterns, missing=dict)
 
             if last_sample:
                 df.meta = set_patterns_meta(df.meta, column_name, pd_patterns, n)
@@ -118,17 +119,17 @@ def df__profile_stats_cache(df, cols="*", sample=None, last_sample=False, flush=
     Return a dict with the profile stats of the dataframe and a list of the updated cols.
     """
     cols = df.cols.names(cols)
-    cache_key = "profile.stats"
+    cache_key = ["profile", "stats"]
     
-    meta_key = "profile"
+    meta_key = ["profile"]
         
     if force_cached:
-        return glom.glom(df.cache, cache_key, default=None), []
+        return glom.glom(df.cache, Path(*cache_key), default=None), []
 
     if flush:
-        df.cache = glom.assign(df.cache, cache_key, None, missing=dict)
+        df.cache = glom.assign(df.cache, Path(*cache_key), None, missing=dict)
 
-    cached = glom.glom(df.cache, cache_key, default=None) or {}
+    cached = glom.glom(df.cache, Path(*cache_key), default=None) or {}
     already_updated_cols = []
     needs_update_cols = []
 
@@ -177,22 +178,25 @@ def df__profile_stats_cache(df, cols="*", sample=None, last_sample=False, flush=
     columns_list = df.cols.names()
     stats["columns"] = {col: stats["columns"][col] for col in columns_list if col in stats["columns"]}
 
-    df.cache = glom.assign(df.cache, cache_key, stats, missing=dict)
+    df.cache = glom.assign(df.cache, Path(*cache_key), stats, missing=dict)
 
     if last_sample:
-        meta_keys = ["summary.data_types_list", "summary.total_count_data_types"]
-        col_meta_keys = ["stats.match", "stats.missing", "stats.mismatch", "stats.inferred_data_type", "data_type"]
+        meta_keys = [["summary", "data_types_list"], ["summary", "total_count_data_types"]]
+        col_meta_keys = [["stats", "match"], ["stats", "missing"], ["stats", "mismatch"], ["stats", "inferred_data_type"], ["data_type"]]
         
         for _m in meta_keys:
-            _v = glom.glom(stats, _m, default=None)
+            _v = glom.glom(stats, Path(*_m), default=None)
             if _v is not None:
-                df.meta = Meta.set(df.meta, f"{meta_key}.{_m}", _v)
+                path = meta_key + _m
+                df.meta = Meta.set(df.meta, Path(*path), _v)
 
         for col in cols:
             for _m in col_meta_keys:
-                _v = glom.glom(stats, f"columns.{col}.{_m}", default=None)
+                path = ["columns", col] + _m
+                _v = glom.glom(stats, Path(*path), default=None)
                 if _v is not None:
-                    df.meta = Meta.set(df.meta, f"{meta_key}.columns.{col}.{_m}", _v)
+                    path = [meta_key, "columns", col] + _m
+                    df.meta = Meta.set(df.meta, Path(*path), _v)
 
         # df.meta = Meta.set(df.meta, meta_key, stats)
     
@@ -216,18 +220,18 @@ def df__profile_frequency_cache(df, cols="*", n=MAX_BUCKETS, sample=None, last_s
     
     for column_name in cols:
         
-        _cache_key = f"frequency.{column_name}"
-        _meta_key = f"profile.columns.{column_name}.stats"
+        _cache_key = ["frequency", column_name]
+        _meta_key = ["profile", "columns", column_name, "stats"]
         
         if force_cached:
-            cached = glom.glom(df.cache, _cache_key, default=None)
+            cached = glom.glom(df.cache, Path(*_cache_key), default=None)
             result.update({column_name: output_table(cached, n)})
             continue
         
         if flush:
-            df.cache = glom.assign(df.cache, _cache_key, None, missing=dict)
+            df.cache = glom.assign(df.cache, Path(*_cache_key), None, missing=dict)
         
-        stats = Meta.get(df.meta, _meta_key)
+        stats = Meta.get(df.meta, Path(*_meta_key))
 
         has_freq = stats is not None and "frequency" in stats and (n is None or n <= len(stats["frequency"]) or not stats.get("more"))
 
@@ -245,19 +249,19 @@ def df__profile_frequency_cache(df, cols="*", n=MAX_BUCKETS, sample=None, last_s
             pd_frequency = table_to_pandas(frequency)
 
             if complete:
-                df.cache = glom.assign(df.cache, _cache_key, pd_frequency, missing=dict)
+                df.cache = glom.assign(df.cache, Path(*_cache_key), pd_frequency, missing=dict)
             else:
-                cached = glom.glom(df.cache, _cache_key, default=None)            
+                cached = glom.glom(df.cache, Path(*_cache_key), default=None)            
                 pd_frequency = add_to_table(cached, pd_frequency)
-                df.cache = glom.assign(df.cache, _cache_key, pd_frequency, missing=dict)
+                df.cache = glom.assign(df.cache, Path(*_cache_key), pd_frequency, missing=dict)
 
             frequency = output_table(pd_frequency, n)
             frequency.update({"count_uniques": len(pd_frequency)})
                 
             if last_sample:
                 cf = copy.deepcopy(frequency)
-                df.meta = Meta.set(df.meta, f"{_meta_key}.frequency", cf["values"])
-                df.meta = Meta.set(df.meta, f"{_meta_key}.count_uniques", cf["count_uniques"])
+                df.meta = Meta.set(df.meta, Path(_meta_key, "frequency"), cf["values"])
+                df.meta = Meta.set(df.meta, Path(_meta_key, "count_uniques"), cf["count_uniques"])
             
             frequency.update({"complete": complete})
             result.update({column_name: frequency})
@@ -272,7 +276,7 @@ def df__profile_hist_cache(df, cols="*", buckets=MAX_BUCKETS, sample=None, last_
     cols = df.cols.names(cols)
     result = {}
     
-    cached_hists = glom.glom(df.cache, f"hist.{buckets}", default=None) or {}
+    cached_hists = glom.glom(df.cache, Path("hist", buckets), default=None) or {}
     
     for column_name in cached_hists:
         result.update({column_name: output_hist(cached_hists[column_name], buckets)})
@@ -281,33 +285,33 @@ def df__profile_hist_cache(df, cols="*", buckets=MAX_BUCKETS, sample=None, last_
     
     for column_name in cols:
         
-        _cache_key = f"hist.{buckets}.{column_name}"
-        _min_cache_key = f"min.{column_name}"
-        _max_cache_key = f"max.{column_name}"
-        _meta_key = f"profile.columns.{column_name}.stats.hist"
+        _cache_key = ["hist", buckets, column_name]
+        _min_cache_key = ["min" , column_name]
+        _max_cache_key = ["max" , column_name]
+        _meta_key = ["profile", "columns", column_name, "stats", "hist"]
         
         if force_cached:
-            cached = glom.glom(df.cache, _cache_key, default=None)
+            cached = glom.glom(df.cache, Path(*_cache_key), default=None)
             result.update({column_name: output_table(cached, buckets)})
             continue
             
-        _min = glom.glom(df.cache, _min_cache_key, default=None)
-        _max = glom.glom(df.cache, _max_cache_key, default=None)
+        _min = glom.glom(df.cache, Path(*_min_cache_key), default=None)
+        _max = glom.glom(df.cache, Path(*_max_cache_key), default=None)
         
         if _min is None:
             _min = df.cols.min(column_name)
-            df.cache = glom.assign(df.cache, _min_cache_key, _min, missing=dict)
+            df.cache = glom.assign(df.cache, Path(*_min_cache_key), _min, missing=dict)
             
         if _max is None:
             _max = df.cols.max(column_name)
-            df.cache = glom.assign(df.cache, _max_cache_key, _max, missing=dict)
+            df.cache = glom.assign(df.cache, Path(*_max_cache_key), _max, missing=dict)
             
         _range = (_min, _max)
         
         if flush:
-            df.cache = glom.assign(df.cache, _cache_key, None, missing=dict)
+            df.cache = glom.assign(df.cache, Path(*_cache_key), None, missing=dict)
         
-        hist = Meta.get(df.meta, _meta_key)
+        hist = Meta.get(df.meta, Path(*_meta_key))
 
         has_hist = hist is not None and (buckets is None or buckets != len(hist))
 
@@ -323,16 +327,16 @@ def df__profile_hist_cache(df, cols="*", buckets=MAX_BUCKETS, sample=None, last_
             pd_hist = hist_to_pandas(hist)
 
             if complete:
-                df.cache = glom.assign(df.cache, _cache_key, pd_hist, missing=dict)
+                df.cache = glom.assign(df.cache, Path(*_cache_key), pd_hist, missing=dict)
             else:
-                cached = glom.glom(df.cache, _cache_key, default=None)            
+                cached = glom.glom(df.cache, Path(*_cache_key), default=None)            
                 pd_hist = add_to_table(cached, pd_hist)
-                df.cache = glom.assign(df.cache, _cache_key, pd_hist, missing=dict)
+                df.cache = glom.assign(df.cache, Path(*_cache_key), pd_hist, missing=dict)
 
             hist = output_hist(pd_hist, buckets)
                 
             if last_sample:
-                df.meta = Meta.set(df.meta, _meta_key, hist)
+                df.meta = Meta.set(df.meta, Path(*_meta_key), hist)
             
             result.update({column_name: hist})
             
@@ -379,7 +383,7 @@ def df__profile_cache(df, cols="*", bins: int = MAX_BUCKETS, sample=None, last_s
     hists = df.profile_hist_cache(hist_cols, buckets=bins, sample=sample, last_sample=last_sample, flush=False, force_cached=force_cached)
     freqs = df.profile_frequency_cache(freq_cols, n=bins, sample=sample, last_sample=last_sample, flush=False, force_cached=force_cached)
 
-    complete_stats = {col: {"values": Meta.get(complete_stats_profile, f"columns.{col}.stats.frequency")} for col in complete_stats_cols}
+    complete_stats = {col: {"values": Meta.get(complete_stats_profile, Path("columns", col, "stats", "frequency"))} for col in complete_stats_cols}
 
     freqs.update(complete_stats)
     
