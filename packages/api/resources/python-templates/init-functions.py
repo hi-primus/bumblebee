@@ -195,7 +195,7 @@ def df__profile_stats_cache(df, cols="*", sample=None, last_sample=False, flush=
                 path = ["columns", col] + _m
                 _v = glom.glom(stats, Path(*path), default=None)
                 if _v is not None:
-                    path = [meta_key, "columns", col] + _m
+                    path = meta_key + ["columns", col] + _m
                     df.meta = Meta.set(df.meta, Path(*path), _v)
 
         # df.meta = Meta.set(df.meta, meta_key, stats)
@@ -260,8 +260,8 @@ def df__profile_frequency_cache(df, cols="*", n=MAX_BUCKETS, sample=None, last_s
                 
             if last_sample:
                 cf = copy.deepcopy(frequency)
-                df.meta = Meta.set(df.meta, Path(_meta_key, "frequency"), cf["values"])
-                df.meta = Meta.set(df.meta, Path(_meta_key, "count_uniques"), cf["count_uniques"])
+                df.meta = Meta.set(df.meta, Path(*_meta_key, "frequency"), cf["values"])
+                df.meta = Meta.set(df.meta, Path(*_meta_key, "count_uniques"), cf["count_uniques"])
             
             frequency.update({"complete": complete})
             result.update({column_name: frequency})
