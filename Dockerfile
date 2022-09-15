@@ -60,7 +60,7 @@ RUN yarn global add pm2 && \
 
 WORKDIR "/opt"
 
-RUN echo "Version 22.6.9-beta"
+RUN echo "Version 22.6.10-beta"
 
 RUN pip install cytoolz && \
     pip install llvmlite --ignore-installed && \
