@@ -90,7 +90,7 @@ def df__pattern_counts_cache(df, cols="*", n=10, mode=0, sample=None, last_sampl
             sample_df = df if sample is None else df.iloc(lower_bound=sample[0], upper_bound=sample[1], copy=False)
             patterns = sample_df.cols.pattern_counts(column_name, n=None, mode=mode)[column_name]["values"]
         
-        if patterns is not None:
+        if patterns is not None and len(patterns):
             pd_patterns = table_to_pandas(patterns)
 
             if complete:
@@ -245,7 +245,7 @@ def df__profile_frequency_cache(df, cols="*", n=MAX_BUCKETS, sample=None, last_s
         
         frequency = _result["values"] if "values" in _result else None
         
-        if frequency is not None:
+        if frequency is not None and len(frequency):
             pd_frequency = table_to_pandas(frequency)
 
             if complete:
