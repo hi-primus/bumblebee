@@ -3595,8 +3595,7 @@ builtin-status-codes@^3.0.0:
   integrity sha1-hZgoeOIbmOHGZCXgPQF0eI9Wnug=
 
 "bumblebee-utils@link:../bumblebee-utils":
-  version "0.0.0"
-  uid ""
+  version "22.9.0-beta"
 
 bytes@3.0.0:
   version "3.0.0"
@@ -8646,8 +8645,10 @@ optimize-css-assets-webpack-plugin@^5.0.4:
     last-call-webpack-plugin "^3.0.0"
 
 "optimus-code-api@link:../optimus-code-api":
-  version "0.0.0"
-  uid ""
+  version "22.9.0-beta"
+  dependencies:
+    bumblebee-utils "link:../bumblebee-utils"
+    uuid "^8.3.2"
 
 optionator@^0.8.1, optionator@^0.8.3:
   version "0.8.3"
@@ -12560,9 +12561,9 @@ vuetify-loader@^1.6.0:
     loader-utils "^2.0.0"
 
 vuetify@^2.4.2:
-  version "2.4.8"
-  resolved "https://registry.yarnpkg.com/vuetify/-/vuetify-2.4.8.tgz#c6e883a9b2560f9906bd8b9f9eb58b001200aeef"
-  integrity sha512-rJYyzSO4Qsm/Q79W4FAUedgIDzUvx2uXzXXQ7OB2z9kAAkVOpTdMFY0CnpBcvlYbXOYy/mJ81/yUCV1ZAvJ3FQ==
+  version "2.6.10"
+  resolved "https://registry.yarnpkg.com/vuetify/-/vuetify-2.6.10.tgz#b86cd7a97bf8cd3828a72c349795b5b3c539ebc2"
+  integrity sha512-fgUeRDDCwYkwu6WGEEKGe7IdfzOsXJCZGrqkn1pcS2ycuoDL8mR2/dejH5iFNnBY6MnsT365PAGn0J+9otjfQg==
 
 vuex-persistedstate@^3.0.1:
   version "3.2.0"
