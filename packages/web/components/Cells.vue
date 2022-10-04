@@ -1638,62 +1638,66 @@ export default {
 
     async confirmCommand (event) {
 
-      let command = deepCopy(this.currentCommand)
-      this.currentCommand = false;
-
-      this.gettingNewResults = 'hide';
-      this.$store.commit('mutation', {mutate: 'updatingDataset', payload: true });
-
-      if (this.currentPreviewInfo) {
-        if (this.currentPreviewInfo.newColumns>0) {
-          this.gettingNewResults = 'nohide';
+      try {
+        let command = deepCopy(this.currentCommand)
+        this.currentCommand = false;
+  
+        this.gettingNewResults = 'hide';
+        this.$store.commit('mutation', {mutate: 'updatingDataset', payload: true });
+  
+        if (this.currentPreviewInfo) {
+          if (this.currentPreviewInfo.newColumns>0) {
+            this.gettingNewResults = 'nohide';
+          }
         }
-      }
-
-      this.isEditing = false;
-      this.clearTextSelection();
-      this.clearSelection();
-      var commandHandler = this.getCommandHandler(command);
-
-      if (command._custom) {
-        command._generator = this.$store.state.customCommands.generators[command.command]
-        command._custom = this.$store.getters['customCommands/genericCommandPayload'];
-      }
-
-      if (command._output == 'plain-text') {
-        var payload = getCodePayload(command);
-        payload.request = command.request || {};
-        this.downloadResult([{ payload }])
+  
+        this.isEditing = false;
+        this.clearTextSelection();
+        this.clearSelection();
+        var commandHandler = this.getCommandHandler(command);
+  
+        if (command._custom) {
+          command._generator = this.$store.state.customCommands.generators[command.command]
+          command._custom = this.$store.getters['customCommands/genericCommandPayload'];
+        }
+  
+        if (command._output == 'plain-text') {
+          var payload = getCodePayload(command);
+          payload.request = command.request || {};
+          this.downloadResult([{ payload }])
+          this.$store.commit('mutation', {mutate: 'updatingDataset', payload: false });
+          return true;
+        }
+  
+        if (commandHandler.onDone) {
+          command = await commandHandler.onDone(command);
+        }
+  
+        var code = this.getCode(command);
+        var content = this.getOperationContent(command);
+  
+        var limitToCell = command._toCell!==undefined ? command._toCell : -1;
+  
+        this.$emit('updateOperations', { active: !command.request?.noOperations, title: 'operations' });
+  
+        if (command.request.toCell === false) {
+          await this.runCell(command);
+        } else {
+          await this.addCell(limitToCell, { ...command, code, content }, true, false );
+        }
+  
+        if (command.request.createsNew) {
+          let dfName = command.newDfName;
+          console.log("Create new tab", dfName);
+          this.$store.commit('setDfToTab', { dfName, go: true });
+          await this.$store.dispatch('getProfiling', { payload: { dfName, socketPost: this.socketPost, preliminary: true, methods: this.commandMethods } });
+          this.$store.commit('setDfToTab', { dfName, go: true });
+        }
+  
         this.$store.commit('mutation', {mutate: 'updatingDataset', payload: false });
-        return true;
+      } catch (err) {
+        this.$store.commit('appendError', { error: printError(err?.response || err), cells: false });
       }
-
-      if (commandHandler.onDone) {
-        command = await commandHandler.onDone(command);
-      }
-
-      var code = this.getCode(command);
-      var content = this.getOperationContent(command);
-
-      var limitToCell = command._toCell!==undefined ? command._toCell : -1;
-
-      this.$emit('updateOperations', { active: !command.request?.noOperations, title: 'operations' });
-
-      if (command.request.toCell === false) {
-        await this.runCell(command);
-      } else {
-        await this.addCell(limitToCell, { ...command, code, content }, true, false );
-      }
-
-      if (command.request.createsNew) {
-        let dfName = command.newDfName;
-        console.log("Create new tab", dfName);
-        this.$store.commit('setDfToTab', { dfName, go: true });
-        await this.$store.dispatch('getProfiling', { payload: { dfName, socketPost: this.socketPost, preliminary: true, methods: this.commandMethods } });
-        this.$store.commit('setDfToTab', { dfName, go: true });
-      }
-
-      this.$store.commit('mutation', {mutate: 'updatingDataset', payload: false });
     },
 
     async cancelCommand (runCode = true) {
