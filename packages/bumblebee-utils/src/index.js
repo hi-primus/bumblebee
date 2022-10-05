@@ -363,11 +363,22 @@ export const formFromParam = (key, param) => {
     return false;
   }
 
+  if (param.type == "column") {
+    return {
+      type: "autocomplete",
+      key,
+      label: param.label || key || "Column",
+      multiple: false,
+      clearable: true,
+      items_key: "allColumns",
+    };
+  }
+
   if (param.type == "columns") {
     return {
       type: "autocomplete",
       key,
-      label: param.label || key,
+      label: param.label || key || "Columns",
       multiple: true,
       clearable: true,
       items_key: "allColumns",
@@ -862,6 +873,7 @@ export const pythonArguments = (defaultParams = {}, params = {}) => {
           str = `${key}=${value}`;
           break;
 
+        case 'column':
         case 'string':
           str = `${key}="${value}"`;
           break;
