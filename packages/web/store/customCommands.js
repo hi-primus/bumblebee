@@ -137,8 +137,8 @@ export const actions =  {
                 if (definition) {
                   newGenerators[key].definition = definition
                 }
-              } catch (err) {
-                console.error(err)
+              } catch (error) {
+                console.error(`Error defining ${key}`, { generator, error });
               }
               
             }
