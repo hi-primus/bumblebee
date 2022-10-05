@@ -368,6 +368,7 @@ export const formFromParam = (key, param) => {
       type: "autocomplete",
       key,
       label: param.label || key,
+      multiple: true,
       clearable: true,
       items_key: "allColumns",
     };

@@ -177,7 +177,7 @@
         chips
         deletable-chips
         :items="(field.items_key ? getPropertyField(currentCommand[field.items_key]) : getPropertyField(field.items)) || []"
-        multiple
+        :multiple="defaultTrue(getPropertyField(field.multiple))"
         class="multiline-select"
       >
       </v-autocomplete>
@@ -520,6 +520,13 @@ export default {
 
     getPropertyField(pof) {
       return getProperty(pof, [this.currentCommand, this.index, this])
+    },
+
+    defaultTrue(value) {
+      if (value === undefined) {
+        return true;
+      }
+      return value;
     },
 
     async triggerFunction (keyCallback, event) {

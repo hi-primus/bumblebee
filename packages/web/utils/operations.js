@@ -3346,6 +3346,7 @@ export const commandsHandlers = {
           key: "group_by",
           label: "Group by",
           clearable: true,
+          multiple: true,
           items_key: "allColumns",
         },
         {
