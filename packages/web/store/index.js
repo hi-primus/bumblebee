@@ -226,7 +226,15 @@ export const mutations = {
         id: Number(new Date())
       }
     }
-    Vue.set(state.errorAlerts, state.errorAlerts.length, error);
+
+    let foundError = state.errorAlerts.findIndex(e => e.content === error.content);
+
+    if (foundError < 0) {
+      foundError = state.errorAlerts.length;
+    }
+
+    Vue.set(state.errorAlerts, foundError, error);
+    
     if (state.errorAlerts.filter(e => e.content !== 'Unknown error').length) {
       state.errorAlerts = state.errorAlerts.filter(e => e.content !== 'Unknown error')
     } else {
