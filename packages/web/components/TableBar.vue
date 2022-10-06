@@ -899,8 +899,8 @@ export default {
       };
     },
 
-    runCodeNow (forceAll = false, ignoreFrom = -1, newDfName, runCodeAgain) {
-      return this.$refs.cells.runCodeNow(forceAll, ignoreFrom, newDfName, runCodeAgain);
+    runCodeNow (payload) {
+      return this.$refs.cells.runCodeNow(payload);
     },
 
     downloadDataset () {

@@ -566,9 +566,9 @@ export default {
       this.windowDialog = type;
     },
 
-    runCodeNow (forceAll = false, ignoreFrom = -1, newDfName, runCodeAgain) {
+    runCodeNow (payload) {
       try {
-        return this.$refs.tableBar.runCodeNow(forceAll, ignoreFrom, newDfName, runCodeAgain);
+        return this.$refs.tableBar.runCodeNow(payload);
       } catch (err) {
         console.error(err);
       }
@@ -697,7 +697,7 @@ export default {
           this.$store.commit('kernel', 'loading');
           this.$store.commit('setAppStatus', 'workspace');
 
-          let result = await this.runCodeNow(false, -1, undefined, false);
+          let result = await this.runCodeNow({ runCodeAgain: false, isInit: true });
           console.debug('[INITIALIZATION] Cells code and profiling done', result);
 
           this.$store.commit('kernel', 'done');

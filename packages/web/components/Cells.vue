@@ -752,7 +752,7 @@ export default {
     };
 
     window.runCells = ()=>{
-      this.runCodeNow(true)
+      this.runCodeNow({forceAll: true})
     }
   },
 
@@ -1715,9 +1715,9 @@ export default {
           this.$store.commit('previewDefault');
           if (runCode) {
             if (this.isEditing) {
-              await this.runCodeNow(true, -1, undefined, false, true);
+              await this.runCodeNow({forceAll: true, runCodeAgain: false});
             } else {
-              await this.runCodeNow(false);
+              await this.runCodeNow();
             }
           }
           if (this.isEditing && runCode) {
@@ -1931,7 +1931,7 @@ export default {
         };
 
         this.$store.commit('mutation', { mutate: 'afterProfileCallback', payload: afterProfile });
-        await this.runCodeNow(true, index, undefined, false, false)
+        await this.runCodeNow({forceAll: true, ignoreFrom: index, runCodeAgain: false, beforeRunCells: false})
       }
     },
 
@@ -1962,7 +1962,7 @@ export default {
 
     },
 
-    async addCell (at = -1, payload = {command: 'code', code: '', content: '', ignoreCell: false, noCall: false, deleteOtherCells: false}, replace = false, forceAll = false, noCall = false) {
+    async addCell (at = -1, payload = {command: 'code', code: '', content: '', ignoreCell: false, noCall: false, deleteOtherCells: false, skipAtInit: false}, replace = false, forceAll = false, noCall = false) {
 
       var {command, code, ignoreCell, deleteOtherCells, content} = payload;
 
@@ -2002,6 +2002,7 @@ export default {
         content: content,
         id: Number(new Date()),
         ignore: ignoreCell,
+        skipAtInit: payload.skipAtInit,
         created: new Date(),
         modified: new Date()
       });
@@ -2009,12 +2010,22 @@ export default {
       this.cells = cells
 
       if (!payload.noCall && this.cells.length && !noCall) {
-        return this.runCodeNow(forceAll, this.limitToCell !== false ? this.limitToCell + 1 : -1, payload.newDfName);
+        let ignoreFrom = this.limitToCell !== false ? this.limitToCell + 1 : -1;
+        return this.runCodeNow({forceAll, ignoreFrom, newDfName: payload.newDfName});
+        
       }
 
     },
 
-    async runCodeNow (forceAll = false, ignoreFrom = -1, newDfName, runCodeAgain = true, beforeRunCells = true) {
+    async runCodeNow (payload = {}) {
+      let {
+        forceAll = false,
+        ignoreFrom = -1,
+        newDfName = undefined,
+        runCodeAgain = true,
+        beforeRunCells = true,
+        isInit = false
+      } = payload;
 
       let cellsResult;
 
@@ -2061,7 +2072,7 @@ export default {
 
         if (codeText !== code) {
           setTimeout(() => {
-            this.runCodeNow(false, ignoreFrom, newDfName, false);
+            this.runCodeNow({ignoreFrom, newDfName, runCodeAgain: false});
           }, 50);
         }
       }
@@ -2071,7 +2082,7 @@ export default {
     },
 
     runCode: debounce( async function (forceAll = false) {
-      await this.runCodeNow(forceAll)
+      await this.runCodeNow({forceAll})
     }, 250),
   }
 }
