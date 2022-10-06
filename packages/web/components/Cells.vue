@@ -1215,8 +1215,8 @@ export default {
       return incrementVarName(name, sd);
     },
 
-    runCells (forceAll, ignoreFrom, beforeRunCells) {
-      var payload = { forceAll, ignoreFrom, socketPost: this.socketPost, clearPrevious: true, beforeRunCells, methods: this.commandMethods };
+    runCells (forceAll, ignoreFrom, beforeRunCells, isInit) {
+      var payload = { forceAll, ignoreFrom, socketPost: this.socketPost, clearPrevious: true, beforeRunCells, methods: this.commandMethods, isInit };
       return this.$store.dispatch('getCellsResult', { forcePromise: true, payload });
     },
 
@@ -2032,7 +2032,7 @@ export default {
       try {
         let dfName = (this.currentDataset ? this.currentDataset.dfName : undefined) || newDfName;
 
-        cellsResult = await this.runCells(forceAll, ignoreFrom, beforeRunCells);
+        cellsResult = await this.runCells(forceAll, ignoreFrom, beforeRunCells, isInit);
 
         if (!cellsResult) {
           return false;

@@ -1514,7 +1514,7 @@ export const actions = {
     return dispatch('getPromise', promisePayload);
   },
 
-  async loadCellsResult ({dispatch, state, getters, commit}, { forceAll = false, ignoreFrom = -1, socketPost, clearPrevious = true, beforeRunCells, methods } = {}) {
+  async loadCellsResult ({dispatch, state, getters, commit}, { forceAll = false, ignoreFrom = -1, socketPost, clearPrevious = true, beforeRunCells, methods, isInit = false } = {}) {
 
     console.debug('[DEBUG] Loading cells result');
 
@@ -1547,14 +1547,6 @@ export const actions = {
           firstPendingOperation = 0;
         }
       }
-
-      let toRunOperations = getters.cells
-
-      if (ignoreFrom>=0) {
-        toRunOperations = toRunOperations.filter((operation, index) => index < ignoreFrom);
-      }
-
-      toRunOperations = toRunOperations.filter((operation, index) => index >= firstPendingOperation);
 
       newOnly = !forceAll;
 
@@ -1649,6 +1641,10 @@ export const actions = {
           console.debug('[SPECIAL PROCESSING] codePayload', codePayload);
 
         };
+
+        if (isInit) {
+          codePayload = codePayload.filter(({payload})=>!(payload?.skipAtInit))
+        }
 
         codePayload = codePayload.map((command)=>{
           command = deepCopy(command)
