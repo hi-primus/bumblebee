@@ -1709,7 +1709,7 @@ export const actions = {
       if (err?.response?.code && window.pushCode) {
         window.pushCode({code, error: true});
       }
-      commit('appendError', { error: printError(err?.response), cells: true });
+      commit('appendError', { error: printError(err?.response || err), cells: true });
 
       var wrongCode = await dispatch('codeText', { newOnly, ignoreFrom });
       commit('mutation', { mutate: 'lastWrongCode', payload: { code: wrongCode, error: deepCopy(err) }});
@@ -1825,7 +1825,7 @@ export const actions = {
       if (err.code && window.pushCode) {
         window.pushCode({code: err.code, error: true});
       }
-      commit('appendError', { error: printError(err), cells: ignoreFrom < 0 });
+      commit('appendError', { error: printError(err?.response || err), cells: ignoreFrom < 0 });
 
       var wrongCode = await dispatch('codeText', { newOnly: true, ignoreFrom });
       commit('mutation', { mutate: 'lastWrongCode', payload: { code: wrongCode, error: deepCopy(err) } });

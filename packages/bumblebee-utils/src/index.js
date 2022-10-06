@@ -551,7 +551,7 @@ export const printError = (payload) => {
 
   if (error == '[object Object]' || !error) {
     error = 'Unknown error'
-    console.trace()
+    console.error("Unknown error for payload", payload)
   } else {
     console.log("Known error above", error)
   }

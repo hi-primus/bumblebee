@@ -1295,7 +1295,7 @@ export default {
         }
         console.debug("[DEBUG] Operation done", response);
       } catch (err) {
-        this.$store.commit('appendError', { error: printError(err.response), cells: false });
+        this.$store.commit('appendError', { error: printError(err?.response || err), cells: false });
       }
     },
   
