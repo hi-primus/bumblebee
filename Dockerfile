@@ -60,14 +60,14 @@ RUN yarn global add pm2 && \
 
 WORKDIR "/opt"
 
-RUN echo "Version 22.10.2-beta"
+RUN echo "Version 22.10.3-beta"
 
 RUN pip install cytoolz && \
     pip install llvmlite --ignore-installed && \
     pip install git+https://github.com/hi-primus/optimus.git@v22.9.0-beta#egg=pyoptimus[pandas] && \
     pip install git+https://github.com/hi-primus/optimus.git@v22.9.0-beta#egg=pyoptimus[dask]
 
-RUN git clone --branch develop https://github.com/hi-primus/bumblebee.git@v22.10.2
+RUN git clone --branch develop https://github.com/hi-primus/bumblebee.git@v22.10.3
 
 WORKDIR "/opt/bumblebee"
 
