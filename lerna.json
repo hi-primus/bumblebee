@@ -2,5 +2,5 @@
   "packages": [
     "packages/*"
   ],
-  "version": "22.10.3-beta"
+  "version": "22.10.4-beta"
 }
