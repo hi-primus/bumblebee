@@ -115,8 +115,8 @@ CMD ./usr/bin/mongod --fork --logpath /var/log/mongod.log && \
     echo "[Bumblebee] Api address:    $PROTOCOL://$ADDRESS    Api port: $BACK_PORT" && \
     echo "[Bumblebee] Kernel address: $PROTOCOL://localhost:8888" && \
     echo "[Bumblebee] Add-ons used:   $ADD_ONS" && \
-    echo "[Bumblebee] Quick used authentication used: $QUICK_USER_AUTH" >> packages/web/.env && \
-    echo "[Bumblebee] Quick workspace creation used:  $QUICK_WORKSPACE_CREATION" >> packages/web/.env && \
+    echo "[Bumblebee] Quick used authentication used: $QUICK_USER_AUTH" && \
+    echo "[Bumblebee] Quick workspace creation used:  $QUICK_WORKSPACE_CREATION" && \
     jupyter kernelgateway --ip=0.0.0.0 --JupyterWebsocketPersonality.list_kernels=True --KernelGatewayApp.allow_origin=* --Application.log_level=50
 
 EXPOSE 3000:3000 4000:4000 8888:8888
