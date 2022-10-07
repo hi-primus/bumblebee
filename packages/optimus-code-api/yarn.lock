@@ -1073,7 +1073,7 @@ buffer-from@^1.0.0:
   integrity sha512-MQcXEUbCKtEo7bhqEs6560Hyd4XaovZlO/k9V3hjVUF/zwW7KBVdSK4gIt/bzwS9MbR5qob+F5jusZsb0YQK2A==
 
 "bumblebee-utils@link:../bumblebee-utils":
-  version "22.10.1-beta"
+  version "22.10.2-beta"
 
 cache-base@^1.0.1:
   version "1.0.1"
