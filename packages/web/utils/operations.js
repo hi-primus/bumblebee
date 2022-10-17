@@ -2540,92 +2540,92 @@ export const commandsHandlers = {
     },
 
     content: (payload) => {
-      var condition;
-      var value = undefined;
-      var action = {
+      let action = {
         drop: "Drop",
         select: "Filter",
         set: "Set"
       }[payload.action];
-      var str = `<b>${action}</b> rows in ${multipleContent(
+
+      let str = `<b>${action}</b> rows in ${multipleContent(
         [payload.columns],
         "hl--cols"
       )} `;
 
-      condition = payload.condition;
+      const conditionStrings = payload.condition.map((condition, index) => {
 
-      switch (condition) {
-        case "null":
-          condition = "is null";
-          value = false;
-          break;
-        case "mismatch":
-          condition = "is mismatch";
-          value = false;
-          break;
-        case "equal":
-          condition = "is exactly ";
-          break;
-        case "value_in":
-          condition = "is in ";
-          value = payload.values;
-          break;
-        case "not_equal":
-          condition = "is not ";
-          break;
-        case "less_than":
-          condition = "is less than";
-          break;
-        case "less_than_equal":
-          condition = "is less than or equal to ";
-          break;
-        case "greater_than":
-          condition = "is greater than ";
-          break;
-        case "greater_than_equal":
-          condition = "is greater than or equal to ";
-          break;
-        case "contains":
-          condition = "contains ";
-          value = [payload.text];
-          break;
-        case "starts_with":
-          condition = "starts with ";
-          value = [payload.text];
-          break;
-        case "match_pattern":
-          condition = "with pattern ";
-          value = [payload.value];
-          break;
-        case "ends_with":
-          condition = "ends with ";
-          value = [payload.text];
-          break;
-        case "between":
-          value = value || [[payload.value], [payload.value_2]];
-          break;
-        case "where":
-          condition = "matches ";
-          value = payload.value;
-      }
+        let value = undefined;
 
-      value = value !== false ? value || payload.value : false;
+        switch (condition) {
+          case "null":
+            condition = "is null";
+            value = false;
+            break;
+          case "mismatch":
+            condition = "is mismatch";
+            value = false;
+            break;
+          case "equal":
+            condition = "is exactly ";
+            break;
+          case "value_in":
+            condition = "is in ";
+            value = payload.values[index];
+            break;
+          case "not_equal":
+            condition = "is not ";
+            break;
+          case "less_than":
+            condition = "is less than";
+            break;
+          case "less_than_equal":
+            condition = "is less than or equal to ";
+            break;
+          case "greater_than":
+            condition = "is greater than ";
+            break;
+          case "greater_than_equal":
+            condition = "is greater than or equal to ";
+            break;
+          case "contains":
+            condition = "contains ";
+            value = [payload.text[index]];
+            break;
+          case "starts_with":
+            condition = "starts with ";
+            value = [payload.text[index]];
+            break;
+          case "match_pattern":
+            condition = "with pattern ";
+            value = [payload.value[index]];
+            break;
+          case "ends_with":
+            condition = "ends with ";
+            value = [payload.text[index]];
+            break;
+          case "between":
+            value = value || [[payload.value[index]], [payload.value_2[index]]];
+            break;
+          case "where":
+            condition = "matches ";
+            value = payload.value[index];
+        }
+  
+        value = value !== false ? value || payload.value[index] : false;
+  
+        switch (condition) {
+          case "value_in":
+            return "is one of " + multipleContent([value || []], "hl--param");
+          case "between":
+            return "is between " + multipleContent([value || []], "hl--param", );
+          default:
+            return condition +
+              (value !== false
+                ? multipleContent([value || []], "hl--param")
+                : "");
+        }
+      });
 
-      switch (condition) {
-        case "value_in":
-          str += "is one of " + multipleContent([value || []], "hl--param");
-          break;
-        case "between":
-          str += "is between " + multipleContent([value || []], "hl--param");
-          break;
-        default:
-          str +=
-            condition +
-            (value !== false
-              ? multipleContent([value || []], "hl--param")
-              : "");
-      }
-      return str;
+      return str + conditionStrings.join(", ");
     },
   },
 
