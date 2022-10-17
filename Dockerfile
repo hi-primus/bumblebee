@@ -64,8 +64,8 @@ RUN echo "Version 22.10.4-beta"
 
 RUN pip install cytoolz && \
     pip install llvmlite --ignore-installed && \
-    pip install git+https://github.com/hi-primus/optimus.git@v22.9.0-beta#egg=pyoptimus[pandas] && \
-    pip install git+https://github.com/hi-primus/optimus.git@v22.9.0-beta#egg=pyoptimus[dask]
+    pip install git+https://github.com/hi-primus/optimus.git@v22.10.0-beta#egg=pyoptimus[pandas] && \
+    pip install git+https://github.com/hi-primus/optimus.git@v22.10.0-beta#egg=pyoptimus[dask]
 
 RUN git clone --depth 1 --branch v22.10.4 https://github.com/hi-primus/bumblebee.git
 
