@@ -1738,8 +1738,8 @@ export const commandsHandlers = {
           },
           key: "sheet_name",
           label: `Sheet`,
-          items_key: "sheet_names",
-          type: (c) => (c.sheet_names?.length ? "select" : "number"),
+          items_key: "_sheet_names",
+          type: (c) => (c._sheet_names?.length ? "select" : "number"),
         },
       ],
       validate: (c) => {
