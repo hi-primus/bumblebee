@@ -1,0 +1,6 @@
+{
+  "trailingComma": [
+    "error",
+    "only-multiline"
+  ]
+}

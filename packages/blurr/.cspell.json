@@ -1,0 +1,22 @@
+{
+  "version": "0.2",
+  "$schema": "https://raw.githubusercontent.com/streetsidesoftware/cspell/master/cspell.schema.json",
+  "language": "en",
+  "words": [
+    "blurr",
+    "pyodide",
+    "micropip",
+    "pyimport",
+    "duckdb",
+    "sqlalchemy"
+  ],
+  "flagWords": [],
+  "ignorePaths": [
+    "package.json",
+    "package-lock.json",
+    "yarn.lock",
+    "tsconfig.json",
+    "node_modules/**",
+    "*.md"
+  ]
+}
