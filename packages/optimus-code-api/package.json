@@ -1,6 +1,6 @@
 {
   "name": "optimus-code-api",
-  "version": "22.10.5-beta",
+  "version": "22.10.6-beta",
   "description": "API for generating optimus code",
   "main": "dist/index.js",
   "scripts": {
