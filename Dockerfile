@@ -95,9 +95,9 @@ CMD ./usr/bin/mongod --fork --logpath /var/log/mongod.log && \
         git clone "$add_on"; \
     done && \
     cd /opt/bumblebee && \
-    echo "API_URL='$PROTOCOL://$ADDRESS'" >> packages/web/.env && \
+    echo "API_URL='$PROTOCOL://$ADDRESS:$BACK_PORT'" >> packages/web/.env && \
     echo "DOCKER='TRUE'" >> packages/web/.env && \
-    echo "BACKEND_URL='$PROTOCOL://$ADDRESS'" >> packages/api/.env && \
+    echo "BACKEND_URL='$PROTOCOL://$ADDRESS:$BACK_PORT'" >> packages/api/.env && \
     echo "PORT='$FRONT_PORT'" >> packages/web/.env && \
     echo "PORT='$BACK_PORT'" >> packages/api/.env && \
     echo "KERNEL_ADDRESS='localhost:8888'" >> packages/api/.env && \
@@ -111,8 +111,8 @@ CMD ./usr/bin/mongod --fork --logpath /var/log/mongod.log && \
     pm2 delete api || true && \
     pm2 start "yarn web" --name "web" --update-env && \
     pm2 start "yarn api" --name "api" --update-env && \
-    echo "[Bumblebee] Web address:    $PROTOCOL://localhost:$FRONT_PORT" && \
-    echo "[Bumblebee] Api address:    $PROTOCOL://$ADDRESS    Api port: $BACK_PORT" && \
+    echo "[Bumblebee] Web address:    $PROTOCOL://$ADDRESS:$FRONT_PORT" && \
+    echo "[Bumblebee] Api address:    $PROTOCOL://$ADDRESS:$BACK_PORT" && \
     echo "[Bumblebee] Kernel address: $PROTOCOL://localhost:8888" && \
     echo "[Bumblebee] Add-ons used:   $ADD_ONS" && \
     echo "[Bumblebee] Quick used authentication used: $QUICK_USER_AUTH" && \
