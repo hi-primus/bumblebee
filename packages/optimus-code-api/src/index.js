@@ -197,6 +197,16 @@ export const codeGenerators = {
       isAsync: false
     };
   },
+  stats_cache: (payload) => {
+    let df = payload.dfName;
+    let column = escapeQuotes(payload.column);
+    let code =  `_output = ${df}.stats_cache("${column}")\n`;
+    return {
+      code,
+      isOutput: true,
+      isAsync: false
+    };
+  },
   pattern_counts_cache: (payload) => {
     let df = payload.dfName;
     let column = escapeQuotes(payload.column);

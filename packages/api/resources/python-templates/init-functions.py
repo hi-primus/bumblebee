@@ -420,6 +420,32 @@ def df__profile_cache(df, cols="*", bins: int = MAX_BUCKETS, sample=None, last_s
     return stats
 
 
+def df__stats_cache(df, cols="*", flush=False):
+    
+    cols = df.cols.names(cols)
+
+    if cols is None:
+        return None
+
+    if flush:
+        df.cache = glom.assign(df.cache, "stats_cache", {}, missing=dict)
+
+    stats = {}
+    
+    for col in cols:
+        
+        cached = glom.glom(df.cache, Path("stats_cache", col), default=None)
+        
+        if cached is not None:
+            stats.update({col, cached})
+        else:
+            stats.update({col: df.data[col].describe().to_dict()})
+            df.cache = glom.assign(df.cache, Path("stats_cache", col), stats[col], missing=dict)
+        
+    
+    return stats
+
+
 def df__pattern_counts_df(df, cols="*", n=10, mode=0, flush=False):
     df.cols.pattern_counts(cols, n=n, mode=mode, flush=flush)
     return df
@@ -541,6 +567,7 @@ inject_method_to_optimus(df__profile_stats_cache)
 inject_method_to_optimus(df__profile_hist_cache)
 inject_method_to_optimus(df__profile_frequency_cache)
 inject_method_to_optimus(df__profile_cache)
+inject_method_to_optimus(df__stats_cache)
 inject_method_to_optimus(df__pattern_counts_df)
 inject_method_to_optimus(df__profile_df)
 inject_method_to_optimus(df__deck_map)

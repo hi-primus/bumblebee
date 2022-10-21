@@ -232,6 +232,11 @@
         class="component-container"
       /> -->
 
+      <DescriptiveStats
+        v-if="statsData"
+        :values="statsData"
+      />
+
       <div
         v-if="patternsFrequency"
         class="component-container"
@@ -315,6 +320,7 @@ import Histogram from '@/components/Histogram'
 import DataTypes from '@/components/DataTypes'
 import DeckMap from '@/components/DeckMap'
 import PlaceholderBars from '@/components/placeholders/PlaceholderBars'
+import DescriptiveStats from '@/components/DescriptiveStats'
 
 import dataTypesMixin from '~/plugins/mixins/data-types'
 import applicationMixin from '~/plugins/mixins/application'
@@ -335,6 +341,7 @@ export default {
     DataTypes,
     DeckMap,
     PlaceholderBars,
+    DescriptiveStats,
     VegaEmbed
 	},
 
@@ -344,6 +351,7 @@ export default {
     return {
       expanded: false,
       patternsFrequency: [],
+      statsData: false,
       patternsResolution: 3,
       patternsLoading: false,
       sampleSize: 100000,
@@ -401,6 +409,31 @@ export default {
 
   methods: {
 
+    async commandListener__descriptive_stats (response) {
+      try {
+
+        console.log({response})
+
+        if (response.reply.column !== this.column.name || response.reply.dfName !== this.currentDataset.dfName) {
+          return;
+        }
+
+        if (!response || !response.data || !response.data.result || response.data.status == "error") {
+          throw new ErrorWithResponse('Bad response', response);
+        }
+
+        let result = response.data.result[this.column.name];
+        
+        if (result) {
+          this.statsData = result;
+        }
+
+      } catch (err) {
+        console.error(err, err.response);
+        this.statsData = 'error';
+      }
+    },
+
     async commandListener__patterns_count (response) {
       try {
 
@@ -436,6 +469,29 @@ export default {
       }
     },
 
+    async getDescriptiveStats () {
+      try {
+        let payload = {
+          socketPost: this.socketPost,
+          dfName: this.currentDataset.dfName,
+          methods: this.commandMethods,
+        }
+
+        let executeResult = await this.$store.dispatch('getExecute', payload);
+
+        if (this.statsData && this.statsData !== 'error') {
+          return;
+        }
+
+        this.statsData = 'loading'
+
+        this.requestStatsData()
+      } catch (err) {
+        console.error(err, err.response);
+        this.statsData = 'error';
+      }
+    },
+
     async getPatterns () {
       try {
 
@@ -459,6 +515,31 @@ export default {
         this.$set(this.patternsFrequency, this.patternsResolution, 'error')
         this.patternsLoading = false;
       }
+    },
+
+    async requestStatsData () {
+      let dfName = this.currentDataset.dfName;
+      let column = this.column.name;
+      let codePayload = {
+        command: 'stats_cache',
+        dfName,
+        column,
+        cache_key: `descriptive_stats_${dfName}_${column}`,
+        request: {
+          isAsync: true,
+          async_priority: -20
+        }
+      };
+      let replyPayload = { 
+        command: 'descriptive_stats',
+        n: 5,
+        dfName,
+        column
+      };
+
+      await this.interrupt({handler: 'descriptive_stats'});
+
+      this.evalCode(codePayload, replyPayload, 'info');
     },
 
     async requestPatterns (from, to, clearPrevious=false) {
@@ -573,6 +654,7 @@ export default {
       handler (expanded) {
         if (this.column && expanded) {
           this.getPatterns();
+          this.getDescriptiveStats();
         }
       }
     },
