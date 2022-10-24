@@ -27,7 +27,15 @@ async function loadPyodide(options: PyodideBackendOptions) {
 }
 
 function BlurrServerPyodide(server: Server, options: PyodideBackendOptions) {
-  server.backendPromise = loadPyodide(options);
+  server.backendPromise = loadPyodide(options).then(async (pyodide) => {
+    await pyodide.loadPackage('micropip');
+    const micropip = pyodide.pyimport('micropip');
+
+    await micropip.install('ibis-framework');
+    await micropip.install('ibis-framework[duckdb]');
+    await micropip.install('sqlalchemy');
+    return pyodide;
+  });
 
   server.backendPromise.then((pyodide) => {
     server.pyodide = server.backend = pyodide;

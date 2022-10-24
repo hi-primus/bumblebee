@@ -6,10 +6,9 @@ from js import fetch
 async def file_from_url(url, path=None):
     original_file_name = url.split("/")[-1]
     path = path if path else f"/{original_file_name}"
-    response = await fetch(url)
-    js_buffer = await response.arrayBuffer()
+    file = await fetch(url)
 
-    return await file_from_js_buffer(js_buffer, path)
+    return await file_from_js(file, path)
 
 
 async def file_from_js(file, path):
