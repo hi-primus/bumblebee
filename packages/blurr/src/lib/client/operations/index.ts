@@ -52,3 +52,7 @@ export async function callOperation(
   }
   return operationResult;
 }
+
+export function Operation(operationCreator: Operation) {
+  return operationCreator;
+}

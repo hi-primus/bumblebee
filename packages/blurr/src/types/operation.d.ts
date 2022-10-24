@@ -1,6 +1,10 @@
 export {};
 
 declare global {
+  type OperationFunction = (
+    kwargs?: Record<string, OperationCompatible>,
+    args?: Array<OperationCompatible>
+  ) => Promise<OperationCompatible>;
   interface Operation {
     sourceType?: 'dataframe' | 'variable' | 'none';
     targetType?: 'dataframe' | 'value' | 'void';

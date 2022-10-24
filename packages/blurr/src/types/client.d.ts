@@ -1,13 +1,17 @@
+import { operations } from '../lib/client/operations';
+
 export {};
 
 declare global {
   interface ClientOptions {
     server?: Server;
   }
-  interface Client {
+
+  type ClientFunctions = Partial<
+    Record<keyof typeof operations, OperationFunction>
+  >;
+  interface Client extends ClientFunctions {
     backendServer: Server;
-    [key: string]: unknown;
+    run?: (string) => Promise<PythonCompatible>;
   }
 }
-
-// export declare function BlurrClient(options?: ClientOptions): number;

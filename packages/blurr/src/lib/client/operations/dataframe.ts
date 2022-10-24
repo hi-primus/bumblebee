@@ -1,7 +1,9 @@
 // TODO: should we use an array instead and search using regex (to handle aliases)?
 
-export const operations: Record<string, Operation> = {
-  count: {
+import { Operation } from '.';
+
+export const operations = {
+  count: Operation({
     sourceType: 'dataframe',
     name: 'count',
     callback: function (server: Server, kwargs: { source: string }) {
@@ -10,8 +12,8 @@ export const operations: Record<string, Operation> = {
       // return server.run(`len("${kwargs.source}")`);
       return server.run(`${kwargs.source}.count().execute()`);
     },
-  },
-  columns: {
+  }),
+  columns: Operation({
     sourceType: 'dataframe',
     name: 'columns|cols',
     initialization: function (server: Server) {
@@ -23,8 +25,8 @@ export const operations: Record<string, Operation> = {
     callback: function (server: Server, kwargs: { source: string }) {
       return server.run(`cols(${kwargs.source})`);
     },
-  },
-  get_sample: {
+  }),
+  get_sample: Operation({
     sourceType: 'dataframe',
     name: 'get_sample',
     initialization: function (server: Server) {
@@ -41,8 +43,8 @@ export const operations: Record<string, Operation> = {
         `get_sample(${kwargs.source}, ${kwargs.start}), ${kwargs.stop})`
       );
     },
-  },
-  readCsv: {
+  }),
+  readCsv: Operation({
     sourceType: 'none',
     targetType: 'dataframe',
     name: 'readCsv',
@@ -89,5 +91,5 @@ export const operations: Record<string, Operation> = {
         `${kwargs.target} = await load_and_connect_csv('${kwargs.url}')`
       );
     },
-  },
+  }),
 };
