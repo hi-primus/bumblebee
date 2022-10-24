@@ -8,7 +8,9 @@
     "micropip",
     "pyimport",
     "duckdb",
-    "sqlalchemy"
+    "sqlalchemy",
+    "dataframe",
+    "kwargs"
   ],
   "flagWords": [],
   "ignorePaths": [

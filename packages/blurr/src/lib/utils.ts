@@ -1,4 +1,14 @@
 /*
+ * Generates a unique variable name using a prefix
+ */
+
+import ShortUniqueId from 'short-unique-id';
+
+export function generateUniqueVariableName(prefix = '') {
+  return prefix + new ShortUniqueId({ length: 8 });
+}
+
+/*
  * Loads a script to the DOM, used to workaround pyodide issues
  */
 

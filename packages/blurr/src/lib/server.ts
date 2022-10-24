@@ -33,6 +33,11 @@ function BlurrServerPyodide(server: Server, options: PyodideBackendOptions) {
     server.pyodide = server.backend = pyodide;
     server.backendLoaded = true;
   });
+
+  server.run = async (code: string) => {
+    await server.backendPromise;
+    return await server.backend.runPythonAsync(code);
+  };
 }
 
 /**
@@ -50,7 +55,7 @@ function BlurrServerPyodide(server: Server, options: PyodideBackendOptions) {
  */
 
 export function BlurrServer(options: BackendOptions = { backend: 'pyodide' }) {
-  const server: Server = { backendLoaded: false };
+  let server: Server = { backendLoaded: false };
 
   if (options.backend === 'pyodide') {
     delete options.backend;
