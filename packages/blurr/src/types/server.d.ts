@@ -6,13 +6,12 @@ type Backend = 'pyodide' | 'kernel-gateway';
 declare global {
   type LoadPyodideType = typeof originalLoadPyodide;
   type BackendInterface = PyodideInterface;
-  // eslint-disable-next-line functional/no-mixed-type
   type Server = {
     pyodide?: PyodideInterface;
     backend?: BackendInterface;
     backendPromise?: Promise<BackendInterface>;
     backendLoaded: boolean;
-    run?: (string) => Promise<unknown>;
+    run?: (string) => Promise<PythonCompatible>;
   };
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   type KernelGatewayBackendOptions = any;

@@ -4,14 +4,11 @@ import { operations } from './operations';
 
 export function BlurrClient(options: ClientOptions = {}) {
   const backendServer = options.server ? options.server : BlurrServer();
-  console.log('running client', options, operations);
 
   const operationCaller: OperationCaller = async (
     name = null,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    kwargs: Record<string, any> = {},
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    args: Array<any> = []
+    kwargs: Record<string, PythonCompatible> = {},
+    args: Array<PythonCompatible> = []
   ) => {
     // await backendServer.backendPromise;
     if (name in operations) {
@@ -19,7 +16,7 @@ export function BlurrClient(options: ClientOptions = {}) {
         operations[name].initialization(backendServer);
       return operations[name].callback(backendServer, kwargs, args);
     }
-    return new Error(`'${name}' operation not found.`);
+    throw new Error(`'${name}' operation not found.`);
   };
 
   const client: Client = new Proxy(

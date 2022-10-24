@@ -1,12 +1,14 @@
 export {};
 
 declare global {
-  // eslint-disable-next-line functional/no-mixed-type
   interface Operation {
     sourceType?: 'dataframe' | 'variable' | 'none';
     name: string;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    initialization?: (server: Server) => Promise<any>;
-    callback: (server: Server, kwargs: any, args: any) => Promise<any>;
+    initialization?: (server: Server) => Promise<PythonCompatible>;
+    callback: (
+      server: Server,
+      kwargs: Record<string, PythonCompatible>,
+      args: Array<PythonCompatible>
+    ) => Promise<PythonCompatible>;
   }
 }
