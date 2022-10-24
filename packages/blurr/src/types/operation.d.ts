@@ -3,7 +3,7 @@ export {};
 declare global {
   // eslint-disable-next-line functional/no-mixed-type
   interface Operation {
-    sourceType?: 'dataframe' | 'variable';
+    sourceType?: 'dataframe' | 'variable' | 'none';
     name: string;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     initialization?: (server: Server) => Promise<any>;

@@ -15,6 +15,8 @@ export function BlurrClient(options: ClientOptions = {}) {
   ) => {
     // await backendServer.backendPromise;
     if (name in operations) {
+      operations[name].initialization &&
+        operations[name].initialization(backendServer);
       return operations[name].callback(backendServer, kwargs, args);
     }
     return new Error(`'${name}' operation not found.`);
