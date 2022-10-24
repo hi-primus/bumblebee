@@ -6,13 +6,9 @@ declare global {
   }
   type OperationCaller = (
     name: string,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    kwargs?: Record<string, any>,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    args?: Array<any>
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  ) => Promise<any>;
-  // eslint-disable-next-line functional/no-mixed-type
+    kwargs?: Record<string, PythonCompatible>,
+    args?: Array<PythonCompatible>
+  ) => Promise<PythonCompatible>;
   interface Client {
     operationCaller: OperationCaller;
     backendServer: Server;
