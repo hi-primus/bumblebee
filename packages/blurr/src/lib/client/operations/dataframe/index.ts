@@ -1,5 +1,3 @@
-// TODO: should we use an array instead and search using regex (to handle aliases)?
-
 import { BlurrOperation } from '../factory';
 
 export const operations = {
