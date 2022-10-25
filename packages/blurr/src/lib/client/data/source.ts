@@ -50,9 +50,9 @@ export function Source(name?: string, client?: RunsCode): Source {
         ...(kwargs || {}),
         source: source.name,
       };
-      return operation.run(source, kwargs, args);
+      return operation.run(client, kwargs, args);
     };
   }) as SourceFunctions;
 
-  return { ...source, ...sourceFunctions };
+  return { ...source, ...sourceFunctions, _blurrMember: 'source' };
 }
