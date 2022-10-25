@@ -23,21 +23,17 @@ export const operations = {
       return client.run(`cols(${kwargs.source})`);
     },
   }),
-  get_sample: BlurrOperation<OperationCompatible>({
+  columnsSample: BlurrOperation<OperationCompatible>({
     sourceType: 'dataframe',
-    name: 'get_sample',
-    initialize: function (client: RunsCode) {
-      return client.run(`
-        def get_sample(df, start = 0, stop = 10):
-          return list(df[start: stop])
-        `);
-    },
-    run: function (
-      client: RunsCode,
-      kwargs: { source: string; start: number; stop: number }
-    ) {
-      return client.run(
-        `get_sample(${kwargs.source}, ${kwargs.start}), ${kwargs.stop})`
+    name: 'columnsSample',
+    getCode: function (kwargs: {
+      source: string;
+      start: number;
+      stop: number;
+    }) {
+      return (
+        `list(${kwargs.source}[${kwargs.start || 0}: ${kwargs.stop || 10}]` +
+        `.execute().to_dict(orient="records"))`
       );
     },
   }),
