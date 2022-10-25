@@ -45,7 +45,7 @@ export function BlurrOperation<T = OperationCompatible>(
     _run = operationCreator.run;
   }
   let initialize: (client: RunsCode) => Promise<PythonCompatible>;
-  if (operationCreator.getCode) {
+  if (operationCreator.getInitializationCode) {
     initialize = async (client: RunsCode) => {
       return await client.run(operationCreator.getInitializationCode());
     };
