@@ -4,8 +4,10 @@
 
 import ShortUniqueId from 'short-unique-id';
 
+const uid = new ShortUniqueId({ length: 8 });
+
 export function generateUniqueVariableName(prefix = '') {
-  return prefix + new ShortUniqueId({ length: 8 });
+  return prefix + uid.sequentialUUID();
 }
 
 /**
