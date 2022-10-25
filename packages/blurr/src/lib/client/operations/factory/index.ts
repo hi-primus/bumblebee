@@ -2,7 +2,7 @@ import { generateUniqueVariableName } from '../../../utils';
 
 import { removeSource, Source } from './../../data/source';
 
-let initialized: string[] = [];
+const initialized: string[] = [];
 
 async function callOperation<T = OperationCompatible>(
   client: RunsCode,
