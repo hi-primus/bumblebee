@@ -49,7 +49,12 @@ function BlurrServerPyodide(options: PyodideBackendOptions): Server {
     run: async (code: string) => {
       await server.donePromise;
       const result = await server.backend.runPythonAsync(code);
-      return result;
+      try {
+        return typeof result?.toJs === 'function' ? result.toJs() : result;
+      } catch (error) {
+        console.warn('Error converting to JS', code, error);
+        return result;
+      }
     },
   };
 
