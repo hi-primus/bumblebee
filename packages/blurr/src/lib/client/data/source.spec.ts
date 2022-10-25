@@ -1,16 +1,17 @@
 import test from 'ava';
 
-import { BlurrClient } from './client';
+import { BlurrClient } from '../../client';
 
-test('client', async (t) => {
+test('unique-name', async (t) => {
   const client = BlurrClient();
 
   const df = await client.readCsv({
     url: 'https://raw.githubusercontent.com/hi-primus/optimus/develop/examples/data/foo.csv',
-    target: 'df',
   });
 
-  t.deepEqual(await client.columns({ source: df }), [
+  t.log('Name:', df.name);
+
+  t.deepEqual(await df.columns(), [
     'id',
     'firstName',
     'lastName',
@@ -21,5 +22,7 @@ test('client', async (t) => {
     'dummyCol',
   ]);
 
-  t.is(await client.count({ source: 'df' }), 19);
+  t.is(await df.count(), 19);
+
+  t.log(await df.columnsSample());
 });
