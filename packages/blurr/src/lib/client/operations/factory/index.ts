@@ -2,6 +2,8 @@ import { generateUniqueVariableName } from '../../../utils';
 
 import { removeSource, Source } from './../../data/source';
 
+let initialized: string[] = [];
+
 async function callOperation<T = OperationCompatible>(
   client: RunsCode,
   operation: Operation<T> = null,
@@ -10,8 +12,9 @@ async function callOperation<T = OperationCompatible>(
 ): Promise<OperationCompatible> {
   await client.donePromise;
 
-  if (operation.initialize) {
-    operation.initialize(client); // TODO: execute once
+  if (operation.initialize && !initialized.includes(operation.name)) {
+    initialized.push(operation.name);
+    operation.initialize(client);
   }
 
   if (!kwargs.target) {
