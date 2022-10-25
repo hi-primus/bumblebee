@@ -7,7 +7,7 @@ test('server-script-fallback', async (t) => {
   // const server = BlurrServer({
   //   backend: 'pyodide',
   // });
-  // // const pyodide = await server.backendPromise;
+  // // const pyodide = await server.donePromise;
 
   // // const result = await pyodide.runPythonAsync('1+1');
 
@@ -19,7 +19,7 @@ test('server-script-fallback', async (t) => {
 test('server-packages', async (t) => {
   t.is(2, 2);
   // const server = BlurrServer();
-  // const pyodide = await server.backendPromise;
+  // const pyodideDone = await server.donePromise; // ...
 
   // await pyodide.loadPackage('micropip');
   // const micropip = pyodide.pyimport('micropip');

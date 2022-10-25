@@ -1,21 +1,22 @@
 import { BlurrServer } from '../server';
+import { objectMap } from '../utils';
 
-import { callOperation, getOperation } from './operations';
+import { operations } from './operations';
 
-export function BlurrClient(options: ClientOptions = {}) {
+export function BlurrClient(options: ClientOptions = {}): Client {
   const backendServer = options.server ? options.server : BlurrServer();
 
-  const client: Client = { backendServer };
+  const client = {
+    backendServer,
+    run: backendServer.run,
+    donePromise: backendServer.donePromise,
+  };
 
-  return new Proxy(client, {
-    get(client: Client, name: string) {
-      const operation = name !== 'valueOf' && getOperation(null, name);
-      if (operation) {
-        return (kwargs, args) => {
-          return callOperation(client, operation, kwargs, args);
-        };
-      }
-      return client[name];
-    },
-  });
+  const clientFunctions = objectMap(operations, (operation) => {
+    return (kwargs, args) => {
+      return operation.run(client, kwargs, args);
+    };
+  }) as ClientFunctions;
+
+  return { ...client, ...clientFunctions };
 }

@@ -28,9 +28,9 @@ export async function loadPyodide() {
     scriptURL: 'https://cdn.jsdelivr.net/pyodide/v0.21.3/full/pyodide.js',
   });
 
-  pyodidePromise = server.backendPromise;
+  await server.donePromise;
 
-  const pyodide: any = await pyodidePromise;
+  const pyodide: any = server.pyodide;
 
   await pyodide.loadPackage('micropip');
   const micropip = pyodide.pyimport('micropip');

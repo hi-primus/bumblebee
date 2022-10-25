@@ -26,8 +26,8 @@ async function loadPyodide(options: PyodideBackendOptions) {
   return pyodide;
 }
 
-function BlurrServerPyodide(server: Server, options: PyodideBackendOptions) {
-  server.backendPromise = loadPyodide(options).then(async (pyodide) => {
+function BlurrServerPyodide(options: PyodideBackendOptions): Server {
+  const pyodidePromise = loadPyodide(options).then(async (pyodide) => {
     await pyodide.loadPackage('micropip');
     const micropip = pyodide.pyimport('micropip');
 
@@ -37,16 +37,23 @@ function BlurrServerPyodide(server: Server, options: PyodideBackendOptions) {
     return pyodide;
   });
 
-  server.backendPromise.then((pyodide) => {
-    server.pyodide = server.backend = pyodide;
-    server.backendLoaded = true;
-  });
-
-  server.run = async (code: string) => {
-    await server.backendPromise;
-    const result = await server.backend.runPythonAsync(code);
-    return result;
+  const server = {
+    pyodide: null,
+    backend: null,
+    backendLoaded: false,
+    donePromise: pyodidePromise.then((pyodide) => {
+      server.pyodide = server.backend = pyodide;
+      server.backendLoaded = true;
+      return true;
+    }),
+    run: async (code: string) => {
+      await server.donePromise;
+      const result = await server.backend.runPythonAsync(code);
+      return result;
+    },
   };
+
+  return server;
 }
 
 /**
@@ -55,7 +62,8 @@ function BlurrServerPyodide(server: Server, options: PyodideBackendOptions) {
  * ```js
  * import { BlurrServer } from 'blurr'
  * const server = BlurrServer({ backend: 'pyodide' });
- * const pyodide = await server.backendPromise;
+ * const pyodide = await server.donePromise;
+ * // TODO: Update docstring
  * ```
  *
  * @param options - options to initialize, passed to loadPyodide, etc...
@@ -63,13 +71,13 @@ function BlurrServerPyodide(server: Server, options: PyodideBackendOptions) {
  * @param options.scriptURL - (Pyodide on front-end) Replaces the installed version of pyodide
  */
 
-export function BlurrServer(options: BackendOptions = { backend: 'pyodide' }) {
-  const server: Server = { backendLoaded: false };
-
+export function BlurrServer(
+  options: BackendOptions = { backend: 'pyodide' }
+): Server {
   if (options.backend === 'pyodide') {
     delete options.backend;
-    BlurrServerPyodide(server, options);
+    return BlurrServerPyodide(options);
   }
 
-  return server;
+  throw new Error('Cannot initialize a server without a backend');
 }

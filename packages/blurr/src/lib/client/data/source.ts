@@ -1,5 +1,5 @@
 import { generateUniqueVariableName, isObject, objectMap } from '../../utils';
-import { callOperation, getOperation } from '../operations';
+import { operations } from '../operations/dataframe';
 
 export function removeSource(value: OperationCompatible) {
   if (isSource(value)) {
@@ -19,7 +19,7 @@ export function isSource(value): value is Source {
   );
 }
 
-export function Source(name?: string, client?: Client): Source {
+export function Source(name?: string, client?: RunsCode): Source {
   if (!client) {
     throw new Error('A source can only be initialized using a client');
   }
@@ -27,26 +27,32 @@ export function Source(name?: string, client?: Client): Source {
     name = generateUniqueVariableName('source');
   }
 
-  const source: Source = {
+  const source = {
     name,
     client,
     _blurrMember: 'source',
     toString: () => name,
   };
 
-  return new Proxy(source, {
-    get(source: Source, name: string) {
-      const operation = name !== 'valueOf' && getOperation('dataframe', name);
-      if (operation) {
-        return (kwargs, args) => {
-          kwargs = {
-            ...(kwargs || {}),
-            source: source.name,
-          };
-          return callOperation(source.client, operation, kwargs, args);
-        };
-      }
-      return source[name];
-    },
-  });
+  for (const key in operations) {
+    source[key as keyof typeof operations] = (kwargs, args) => {
+      kwargs = {
+        ...(kwargs || {}),
+        source: source.name,
+      };
+      return operations[key].run(client, kwargs, args);
+    };
+  }
+
+  const sourceFunctions = objectMap(operations, (operation) => {
+    return (kwargs, args) => {
+      kwargs = {
+        ...(kwargs || {}),
+        source: source.name,
+      };
+      return operation.run(source, kwargs, args);
+    };
+  }) as SourceFunctions;
+
+  return { ...source, ...sourceFunctions };
 }

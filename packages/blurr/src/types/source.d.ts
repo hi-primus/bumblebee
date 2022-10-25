@@ -1,12 +1,14 @@
 import { operations as dataframeOperations } from '../lib/client/operations/dataframe';
 
 declare global {
-  type DataframeFunctions = Partial<
-    Record<keyof typeof dataframeOperations, OperationFunction>
-  >;
-  interface Source extends DataframeFunctions {
+  type SourceFunctions = {
+    [key in keyof typeof dataframeOperations]: OmitFirstArg<
+      PropType<typeof dataframeOperations[key], 'run'>
+    >;
+  };
+  interface Source extends SourceFunctions {
     name: string;
-    client: Client;
+    client: RunsCode;
     _blurrMember: 'source';
     toString: () => string;
   }

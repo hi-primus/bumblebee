@@ -1,55 +1,52 @@
 // TODO: should we use an array instead and search using regex (to handle aliases)?
 
-import { Operation } from '.';
+import { BlurrOperation } from '../factory';
 
 export const operations = {
-  count: Operation({
+  count: BlurrOperation({
     sourceType: 'dataframe',
     name: 'count',
-    callback: function (server: Server, kwargs: { source: string }) {
-      // return `${kwargs.source}.cols.count()`
-      // columns = await runScript(`list(${kwargs.source}.columns)`);
-      // return server.run(`len("${kwargs.source}")`);
-      return server.run(`${kwargs.source}.count().execute()`);
+    run: function (client: RunsCode, kwargs: { source: string }) {
+      return client.run(`${kwargs.source}.count().execute()`);
     },
   }),
-  columns: Operation({
+  columns: BlurrOperation({
     sourceType: 'dataframe',
     name: 'columns|cols',
-    initialization: function (server: Server) {
-      return server.run(`
+    initialize: function (client: RunsCode) {
+      return client.run(`
         def cols(df):
           return list(df.columns)
         `);
     },
-    callback: function (server: Server, kwargs: { source: string }) {
-      return server.run(`cols(${kwargs.source})`);
+    run: function (client: RunsCode, kwargs: { source: string }) {
+      return client.run(`cols(${kwargs.source})`);
     },
   }),
-  get_sample: Operation({
+  get_sample: BlurrOperation<OperationCompatible>({
     sourceType: 'dataframe',
     name: 'get_sample',
-    initialization: function (server: Server) {
-      return server.run(`
+    initialize: function (client: RunsCode) {
+      return client.run(`
         def get_sample(df, start = 0, stop = 10):
           return list(df[start: stop])
         `);
     },
-    callback: function (
-      server: Server,
+    run: function (
+      client: RunsCode,
       kwargs: { source: string; start: number; stop: number }
     ) {
-      return server.run(
+      return client.run(
         `get_sample(${kwargs.source}, ${kwargs.start}), ${kwargs.stop})`
       );
     },
   }),
-  readCsv: Operation({
+  readCsv: BlurrOperation<Source>({
     sourceType: 'none',
     targetType: 'dataframe',
     name: 'readCsv',
-    initialization: function (server: Server) {
-      return server.run(`
+    initialize: function (client: RunsCode) {
+      return client.run(`
         import ibis
         import pandas as pd
 
@@ -82,12 +79,9 @@ export const operations = {
             return conn.table(table_name)
       `);
     },
-    callback: function (
-      server: Server,
-      kwargs: { target: string; url: string }
-    ) {
+    run: function (client: RunsCode, kwargs: { target: string; url: string }) {
       // TODO: support file
-      return server.run(
+      return client.run(
         `${kwargs.target} = await load_and_connect_csv('${kwargs.url}')`
       );
     },

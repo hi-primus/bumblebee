@@ -4,15 +4,17 @@ import type { PyodideInterface } from 'pyodide/pyodide';
 type Backend = 'pyodide' | 'kernel-gateway';
 
 declare global {
+  interface RunsCode {
+    run?: (string) => Promise<PythonCompatible>;
+    donePromise: Promise<boolean>;
+  }
   type LoadPyodideType = typeof originalLoadPyodide;
   type BackendInterface = PyodideInterface;
-  type Server = {
+  interface Server extends RunsCode {
     pyodide?: PyodideInterface;
     backend?: BackendInterface;
-    backendPromise?: Promise<BackendInterface>;
     backendLoaded: boolean;
-    run?: (string) => Promise<PythonCompatible>;
-  };
+  }
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   type KernelGatewayBackendOptions = any;
   type PyodideOptions = ArgumentTypes<LoadPyodideType>[0];

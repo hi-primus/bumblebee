@@ -34,7 +34,7 @@ export function objectMap<T, U extends T[keyof T], V>(
   return Object.keys(object).reduce(function (result, key) {
     result[key] = cb(object[key]);
     return result;
-  }, {});
+  }, {} as { [key in keyof T]: V });
 }
 
 /*
