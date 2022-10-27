@@ -1,8 +1,36 @@
-import { generateUniqueVariableName } from '../../../utils';
+import {
+  generateUniqueVariableName,
+  isObject,
+  objectMap,
+} from '../../../utils';
 
-import { removeSource, Source } from './../../data/source';
+import { isSource, Source } from './../../data/source';
 
 const initialized: string[] = [];
+
+function makePythonCompatible(client: RunsCode, value: OperationCompatible) {
+  if (isSource(value)) {
+    return value.toString();
+  } else if (value instanceof File) {
+    if (!client.supports('files')) {
+      console.warn('Files not supported on this kind of server');
+      return null;
+    }
+    const name = generateUniqueVariableName('file');
+    client.setGlobal(name, value);
+    return name;
+  } else if (Array.isArray(value)) {
+    return value.map((v: OperationCompatible) =>
+      makePythonCompatible(client, v)
+    );
+  } else if (isObject(value)) {
+    return objectMap(value, (v: OperationCompatible) =>
+      makePythonCompatible(client, v)
+    );
+  } else {
+    return value;
+  }
+}
 
 async function callOperation<T = OperationCompatible>(
   client: RunsCode,
@@ -27,8 +55,8 @@ async function callOperation<T = OperationCompatible>(
 
   const operationResult = await operation._run(
     client,
-    removeSource(kwargs),
-    removeSource(args)
+    makePythonCompatible(client, kwargs),
+    makePythonCompatible(client, args)
   );
   if (operation.targetType == 'dataframe') {
     return Source(kwargs.target.toString(), client);

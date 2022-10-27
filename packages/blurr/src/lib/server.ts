@@ -56,6 +56,17 @@ function BlurrServerPyodide(options: PyodideBackendOptions): Server {
         return result;
       }
     },
+    _features: ['files'],
+    supports: (features: string | Array<string>) => {
+      if (typeof features === 'string') {
+        features = [features];
+      }
+      return features.every((feature) => server._features.includes(feature));
+    },
+    setGlobal: async (name: string, value: unknown) => {
+      await server.donePromise;
+      server.pyodide.globals.set(name, value);
+    },
   };
 
   return server;

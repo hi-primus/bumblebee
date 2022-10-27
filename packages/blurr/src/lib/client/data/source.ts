@@ -1,18 +1,6 @@
 import { generateUniqueVariableName, isObject, objectMap } from '../../utils';
 import { operations } from '../operations/dataframe';
 
-export function removeSource(value: OperationCompatible) {
-  if (isSource(value)) {
-    return value.name;
-  } else if (Array.isArray(value)) {
-    return value.map(removeSource);
-  } else if (isObject(value)) {
-    return objectMap(value, removeSource);
-  } else {
-    return value;
-  }
-}
-
 export function isSource(value): value is Source {
   return (
     isObject(value) && '_blurrMember' in value && value._blurrMember == 'source'

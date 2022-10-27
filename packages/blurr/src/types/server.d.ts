@@ -5,8 +5,10 @@ type Backend = 'pyodide' | 'kernel-gateway';
 
 declare global {
   interface RunsCode {
-    run?: (string) => Promise<PythonCompatible>;
     donePromise: Promise<boolean>;
+    supports: (string) => boolean;
+    run: (string) => Promise<PythonCompatible>;
+    setGlobal: (string, any) => void;
   }
   type LoadPyodideType = typeof originalLoadPyodide;
   type BackendInterface = PyodideInterface;

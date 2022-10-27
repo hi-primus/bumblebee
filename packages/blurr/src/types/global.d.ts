@@ -4,7 +4,7 @@ type PythonCompatible =
   | R<PythonCompatible>
   | Array<PythonCompatible>;
 
-type BasicOperationCompatible = BasicPythonCompatible | Source;
+type BasicOperationCompatible = BasicPythonCompatible | File | Source;
 
 type OperationCompatible =
   | BasicOperationCompatible
