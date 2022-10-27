@@ -73,10 +73,14 @@ export const operations = {
             return conn.table(table_name)
       `);
     },
-    run: function (client: RunsCode, kwargs: { target: string; url: string }) {
+    run: function (
+      client: RunsCode,
+      kwargs: { target: string; url: string; file: string }
+    ) {
       // TODO: support file
+      const args = kwargs.url ? `'${kwargs.url}'` : kwargs.file;
       return client.run(
-        `${kwargs.target} = await load_and_connect_csv('${kwargs.url}')`
+        `${kwargs.target} = await load_and_connect_csv(${args})`
       );
     },
   }),
