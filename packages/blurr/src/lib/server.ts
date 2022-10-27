@@ -1,5 +1,5 @@
 import fetch from 'cross-fetch';
-import { loadPyodide as originalLoadPyodide } from 'pyodide';
+import * as pyodidePackage from 'pyodide';
 
 import { loadScript } from './utils';
 
@@ -15,11 +15,13 @@ async function loadPyodide(options: PyodideBackendOptions) {
   delete options.scriptURL;
 
   if (!globalThis?.loadPyodide) {
-    console.warn('not found in globalThis, this may break');
+    console.warn(
+      'loadPyodide function not found in globalThis, this may break'
+    );
   }
 
   const _loadPyodide: LoadPyodideType =
-    globalThis?.loadPyodide || originalLoadPyodide;
+    globalThis?.loadPyodide || pyodidePackage?.loadPyodide;
 
   const pyodide = await _loadPyodide(options);
 
