@@ -34,16 +34,6 @@ export function Source(name?: string, client?: RunsCode): Source {
     toString: () => name,
   };
 
-  for (const key in operations) {
-    source[key as keyof typeof operations] = (kwargs, args) => {
-      kwargs = {
-        ...(kwargs || {}),
-        source: source.name,
-      };
-      return operations[key].run(client, kwargs, args);
-    };
-  }
-
   const sourceFunctions = objectMap(operations, (operation) => {
     return (kwargs, args) => {
       kwargs = {
