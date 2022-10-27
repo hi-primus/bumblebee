@@ -5,6 +5,7 @@ export {};
 declare global {
   interface ClientOptions {
     server?: Server;
+    serverOptions?: BackendOptions;
   }
 
   type ClientFunctions = {
