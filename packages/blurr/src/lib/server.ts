@@ -87,9 +87,10 @@ function BlurrServerPyodide(options: PyodideBackendOptions): Server {
  * @param options.scriptURL - (Pyodide on front-end) Replaces the installed version of pyodide
  */
 
-export function BlurrServer(
-  options: BackendOptions = { backend: 'pyodide' }
-): Server {
+const defaultOptions = { backend: 'pyodide' };
+
+export function BlurrServer(options: BackendOptions = defaultOptions): Server {
+  options = Object.assign(defaultOptions, options);
   if (options.backend === 'pyodide') {
     delete options.backend;
     return BlurrServerPyodide(options);
