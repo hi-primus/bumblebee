@@ -1,18 +1,17 @@
-
-export function loadScript (url: string){
+export function loadScript(url: string) {
   return new Promise((resolve, reject) => {
     try {
       let scriptTag = document.createElement('script');
       scriptTag.src = url;
-    
+
       scriptTag.onload = resolve;
-    
+
       document.body.appendChild(scriptTag);
     } catch (err) {
-      reject(err)
+      reject(err);
     }
-  })
-};
+  });
+}
 
 export function throttle(func: Function, limit: number | Function): Function {
   var lastFunc: ReturnType<typeof setTimeout>;
@@ -20,7 +19,10 @@ export function throttle(func: Function, limit: number | Function): Function {
   return function () {
     var context = this as any;
     var args = arguments;
-    limit = typeof limit === 'function' ? limit.apply(context, args) as number : limit;
+    limit =
+      typeof limit === 'function'
+        ? (limit.apply(context, args) as number)
+        : limit;
 
     if (!lastRan) {
       func.apply(context, args);
@@ -35,33 +37,42 @@ export function throttle(func: Function, limit: number | Function): Function {
       }, limit - (Date.now() - lastRan));
     }
   };
-};
+}
 
-const optimizeRange = (inputRange: number[], existingRange: number[]): number[][] => {
+const optimizeRange = (
+  inputRange: number[],
+  existingRange: number[]
+): number[][] => {
   let resultRanges = [];
 
-  if (existingRange && !(existingRange[1] < inputRange[0] || existingRange[0] > inputRange[1])) {  
-    if (inputRange[0]<existingRange[0]) {
+  if (
+    existingRange &&
+    !(existingRange[1] < inputRange[0] || existingRange[0] > inputRange[1])
+  ) {
+    if (inputRange[0] < existingRange[0]) {
       resultRanges.push([inputRange[0], existingRange[0]]);
     }
-    if (inputRange[1]>existingRange[1]) {
+    if (inputRange[1] > existingRange[1]) {
       resultRanges.push([existingRange[1], inputRange[1]]);
     }
-  }
-  else {
+  } else {
     resultRanges.push(inputRange);
   }
   return resultRanges;
-}
+};
 
-export const optimizeRanges = (inputRange: number[], existingRanges: number[][]): number[][] => {
+export const optimizeRanges = (
+  inputRange: number[],
+  existingRanges: number[][]
+): number[][] => {
   let resultRanges: number[][] = [inputRange];
 
-  existingRanges.forEach(existingRange => {
-    let resultRangesResults: number[][][] = resultRanges.map(range => optimizeRange(range, existingRange));
+  existingRanges.forEach((existingRange) => {
+    let resultRangesResults: number[][][] = resultRanges.map((range) =>
+      optimizeRange(range, existingRange)
+    );
     resultRanges = resultRangesResults.flat(1);
   });
 
   return resultRanges;
-
-}
+};

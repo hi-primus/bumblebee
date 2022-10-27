@@ -1,9 +1,9 @@
 <script lang="ts">
-  export let title: string;
+export let title: string;
 </script>
 
 <div class="column">
-  <div class="title">{ title }</div>
+  <div class="title">{title}</div>
   <div class="cells">
     <slot />
   </div>
@@ -27,6 +27,5 @@
     padding: 0.25rem;
     position: relative;
   }
-
 }
 </style>
