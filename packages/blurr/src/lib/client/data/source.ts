@@ -38,7 +38,7 @@ export function Source(name?: string, client?: RunsCode): Source {
     return (kwargs, args) => {
       kwargs = {
         ...(kwargs || {}),
-        source: source.name,
+        source: source.toString(),
       };
       return operation.run(client, kwargs, args);
     };
