@@ -1,10 +1,12 @@
+import { Operation, OperationCreator } from '../../../../types/operation';
+import { RunsCode } from '../../../../types/server';
 import {
   generateUniqueVariableName,
   isObject,
   objectMap,
 } from '../../../utils';
 
-import { isSource, Source } from './../../data/source';
+import { isSource, BlurrSource } from './../../data/source';
 
 const initialized: string[] = [];
 
@@ -59,7 +61,7 @@ async function callOperation<T = OperationCompatible>(
     makePythonCompatible(client, args)
   );
   if (operation.targetType == 'dataframe') {
-    return Source(kwargs.target.toString(), client);
+    return BlurrSource(client, kwargs.target.toString());
   }
   return operationResult;
 }

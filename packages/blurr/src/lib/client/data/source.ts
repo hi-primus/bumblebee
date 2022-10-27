@@ -1,3 +1,6 @@
+import { Source } from '../../../types/source';
+import { RunsCode } from '../../../types/server';
+import { SourceFunctions } from '../../../types/source';
 import { generateUniqueVariableName, isObject, objectMap } from '../../utils';
 import { operations } from '../operations/dataframe';
 
@@ -7,7 +10,7 @@ export function isSource(value): value is Source {
   );
 }
 
-export function Source(name?: string, client?: RunsCode): Source {
+export function BlurrSource(client: RunsCode, name?: string): Source {
   if (!client) {
     throw new Error('A source can only be initialized using a client');
   }
@@ -34,3 +37,5 @@ export function Source(name?: string, client?: RunsCode): Source {
 
   return { ...source, ...sourceFunctions, _blurrMember: 'source' };
 }
+
+export type { Source };

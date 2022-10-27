@@ -1,5 +1,8 @@
 import fetch from 'cross-fetch';
 import * as pyodidePackage from 'pyodide';
+import { Server } from '../types/server';
+import { LoadPyodideType, PyodideBackendOptions } from '../types/pyodide';
+import { BackendOptions } from '../types/server';
 
 import { loadScript } from './utils';
 

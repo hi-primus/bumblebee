@@ -1,12 +1,13 @@
 <script lang="ts">
   import { BlurrClient } from 'blurr';
+  import type { Client, Source } from 'blurr';
   import { throttle, optimizeRanges } from '$lib/utils';
   import { onMount } from 'svelte';
   import Column from './Column.svelte';
   import Cell from './Cell.svelte';
   import { browser } from '$app/environment';
 
-  let client;
+  let client: Client;
 
   onMount(async () => {
     client = BlurrClient({
@@ -37,7 +38,7 @@
   let files: FileList;
   let target: string = 'df';
 
-  let df: any; // Source type
+  let df: Source;
   let columns: string[];
   let dfLength: number;
 
@@ -64,7 +65,7 @@
       columns = await df.columns();
       dfLength = await df.count();
       rowsList = new Array(dfLength);
-      console.log({ dfLength, rowsList });
+      console.log('(Table demo)', { dfLength, rowsList });
       getChunk();
     }
   }
