@@ -1,0 +1,59 @@
+Arguments: 
+  C:\Program Files\nodejs\node.exe C:\Users\Eddy\AppData\Roaming\npm\node_modules\yarn\bin\yarn.js add -D eslint
+
+PATH: 
+  C:\Users\Eddy\anaconda3;C:\Users\Eddy\anaconda3\Library\mingw-w64\bin;C:\Users\Eddy\anaconda3\Library\usr\bin;C:\Users\Eddy\anaconda3\Library\bin;C:\Users\Eddy\anaconda3\Scripts;C:\Users\Eddy\anaconda3\bin;C:\Users\Eddy\anaconda3\condabin;D:\ProgramFiles\EclipseAdoptium\jdk-11.0.14.101-hotspot\bin;C:\Python310\Scripts;C:\Python310;D:\ProgramFiles\AdoptOpenJDK\jdk-8.0.282.8-hotspot\bin;C:\Program Files\ImageMagick;C:\Python38\Scripts;C:\Python38;C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;C:\WINDOWS\System32\WindowsPowerShell\v1.0;C:\WINDOWS\System32\OpenSSH;C:\ProgramData\chocolatey\bin;D:\ProgramFiles\ffmpeg\bin;D:\ProgramFiles\CMake\bin;C:\Program Files\Git\cmd;C:\Users\Eddy\AppData\Roaming\nvm;C:\Program Files\nodejs;C:\Program Files\PuTTY;C:\Program Files\Go\bin;C:\Users\Eddy\.cargo\bin;C:\Users\Eddy\.local\share\solana\install\active_release\bin;C:\Users\Eddy\AppData\Local\Microsoft\WindowsApps;C:\Users\Eddy\AppData\Local\Programs\Microsoft VS Code\bin;C:\Program Files (x86)\Microsoft Visual Studio\Installer;C:\Users\Eddy\anaconda3;C:\Users\Eddy\anaconda3\Scripts;C:\Users\Eddy\anaconda3\Library\bin;D:\ProgramFiles\LOVE;D:\ProgramFiles\MongoDB\Server\4.4\bin;D:\ProgramFiles\jq;C:\Users\Eddy\AppData\Roaming\npm;C:\Users\Eddy\AppData\Roaming\nvm;C:\Program Files\nodejs;D:\Android\sdk\tools;D:\Android\sdk\tools\bin;D:\Android\sdk\platform-tools;D:\flutter\bin;C:\Users\Eddy\AppData\Local\gitkraken\bin;C:\Users\Eddy\go\bin;C:\Program Files\PostgreSQL\14\bin;.;C:\Users\Eddy\AppData\Roaming\Python\Python38\site-packages\pywin32_system32
+
+Yarn version: 
+  1.22.17
+
+Node version: 
+  16.14.0
+
+Platform: 
+  win32 x64
+
+Trace: 
+  Error: EPERM: operation not permitted, unlink 'D:\projects\bumblebee\prototype\packages\bumblebee-beetle\node_modules\esbuild-windows-64\esbuild.exe'
+
+npm manifest: 
+  {
+  	"name": "bumblebee-beetle",
+  	"version": "0.0.1",
+  	"private": true,
+  	"scripts": {
+  		"dev": "vite dev",
+  		"build": "vite build",
+  		"preview": "vite preview",
+  		"test": "playwright test",
+  		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+  		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
+  		"lint": "prettier --plugin-search-dir . --check . && eslint .",
+  		"format": "prettier --plugin-search-dir . --write ."
+  	},
+  	"devDependencies": {
+  		"@playwright/test": "^1.25.0",
+  		"@sveltejs/adapter-auto": "next",
+  		"@sveltejs/kit": "next",
+  		"@typescript-eslint/eslint-plugin": "^5.27.0",
+  		"@typescript-eslint/parser": "^5.27.0",
+  		"eslint": "^8.16.0",
+  		"eslint-config-prettier": "^8.3.0",
+  		"eslint-plugin-svelte3": "^4.0.0",
+  		"prettier": "^2.7.1",
+  		"prettier-plugin-svelte": "^2.8.0",
+  		"svelte": "^3.44.0",
+  		"svelte-check": "^2.7.1",
+  		"svelte-preprocess": "^4.10.6",
+  		"tslib": "^2.3.1",
+  		"typescript": "^4.7.4",
+  		"vite": "^3.1.0"
+  	},
+  	"type": "module"
+  }
+
+yarn manifest: 
+  No manifest
+
+Lockfile: 
+  No lockfile
