@@ -1,20 +1,10 @@
 <script lang="ts">
-  import Tab, { Label } from '@smui/tab';
-  import TabBar from '@smui/tab-bar';
-
-  let tabs = ['page 1', 'page 2'];
-  let active = tabs[0];
+  import Tabs from '$lib/components/Tabs.svelte';
 </script>
 
 <!-- <div class="flex flex-col h-screen"> -->
 <div class="workspace">
-  <section class="tabs">
-    <TabBar {tabs} let:tab bind:active>
-      <Tab {tab} minWidth>
-        {tab}
-      </Tab>
-    </TabBar>
-  </section>
+  <Tabs tabs={['page1', 'page2']} />
   <section>[BAR]</section>
   <section class="w-full row-span-5">
     <div class="flex">
