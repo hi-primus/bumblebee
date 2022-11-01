@@ -5,7 +5,7 @@
   "main": "build/main/index.js",
   "typings": "build/main/index.d.ts",
   "module": "build/module/index.js",
-  "repository": "https://github.com/luis11011/blurr",
+  "repository": "https://github.com/hi-primus/blurr",
   "license": "MIT",
   "keywords": [],
   "scripts": {
