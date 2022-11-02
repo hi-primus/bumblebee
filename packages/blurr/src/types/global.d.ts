@@ -9,7 +9,7 @@ declare global {
     | R<PythonCompatible>
     | Array<PythonCompatible>;
 
-  type BasicOperationCompatible = BasicPythonCompatible | File | Source;
+  type BasicOperationCompatible = BasicPythonCompatible | ArrayBuffer | Source;
 
   type OperationCompatible =
     | BasicOperationCompatible

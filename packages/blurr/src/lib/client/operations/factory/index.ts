@@ -13,7 +13,7 @@ const initialized: string[] = [];
 function makePythonCompatible(client: RunsCode, value: OperationCompatible) {
   if (isSource(value)) {
     return value.toString();
-  } else if (value instanceof File) {
+  } else if (value instanceof ArrayBuffer) {
     if (!client.supports('files')) {
       console.warn('Files not supported on this kind of server');
       return null;
