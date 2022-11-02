@@ -12,6 +12,7 @@ async function loadPyodide(options: PyodideBackendOptions) {
   // Check if it uses another script
 
   if (options?.scriptURL) {
+    console.log("Loading pyodide from script", options.scriptURL)
     await loadScript(options.scriptURL);
   }
 
