@@ -95,7 +95,7 @@ function BlurrServerPyodide(options: PyodideBackendOptions): Server {
 const defaultOptions = { backend: 'pyodide' };
 
 export function BlurrServer(options: BackendOptions = defaultOptions): Server {
-  options = Object.assign(defaultOptions, options);
+  options = Object.assign({...defaultOptions}, options);
   if (options.backend === 'pyodide') {
     delete options.backend;
     return BlurrServerPyodide(options);
