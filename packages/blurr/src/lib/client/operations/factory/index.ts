@@ -6,7 +6,7 @@ import {
   objectMap,
 } from '../../../utils';
 
-import { isSource, BlurrSource } from './../../data/source';
+import { BlurrSource, isSource } from './../../data/source';
 
 const initialized: string[] = [];
 

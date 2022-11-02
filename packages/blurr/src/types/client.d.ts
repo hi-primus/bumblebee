@@ -1,5 +1,6 @@
 import { operations } from '../lib/client/operations';
-import { Server, BackendOptions, RunsCode } from './server';
+
+import { BackendOptions, RunsCode, Server } from './server';
 export interface ClientOptions {
   server?: Server;
   serverOptions?: BackendOptions;

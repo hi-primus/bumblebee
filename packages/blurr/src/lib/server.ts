@@ -1,7 +1,8 @@
 import fetch from 'cross-fetch';
 import * as pyodidePackage from 'pyodide';
-import { Server } from '../types/server';
+
 import { LoadPyodideType, PyodideBackendOptions } from '../types/pyodide';
+import { Server } from '../types/server';
 import { BackendOptions } from '../types/server';
 
 import { loadScript } from './utils';
@@ -12,7 +13,7 @@ async function loadPyodide(options: PyodideBackendOptions) {
   // Check if it uses another script
 
   if (options?.scriptURL) {
-    console.log("Loading pyodide from script", options.scriptURL)
+    console.log('Loading pyodide from script', options.scriptURL);
     await loadScript(options.scriptURL);
   }
 
@@ -96,7 +97,7 @@ function BlurrServerPyodide(options: PyodideBackendOptions): Server {
 const defaultOptions = { backend: 'pyodide' };
 
 export function BlurrServer(options: BackendOptions = defaultOptions): Server {
-  options = Object.assign({...defaultOptions}, options);
+  options = Object.assign({ ...defaultOptions }, options);
   if (options.backend === 'pyodide') {
     delete options.backend;
     return BlurrServerPyodide(options);
