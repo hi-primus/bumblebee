@@ -7,6 +7,23 @@
   </NuxtLayout>
 </template>
 
+<script setup lang="ts">
+
+const { $blurr } = useNuxtApp();
+
+onMounted(async () => {
+  // const { BlurrClient } = $blurr;
+  window.blurr = $blurr;
+  // const client = BlurrClient({ scriptURL: "https://cdn.jsdelivr.net/pyodide/v0.21.3/full/pyodide.js" });
+  // window.client = client;
+  // const df = await client.readCsv({
+  //   url: 'https://raw.githubusercontent.com/hi-primus/optimus/develop/examples/data/foo.csv',
+  // });
+  // console.log(df);
+})
+
+</script>
+
 <style lang="scss">
 .workspace-container {
   height: 100vh;
