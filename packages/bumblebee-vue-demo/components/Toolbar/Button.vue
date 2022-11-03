@@ -11,7 +11,6 @@
 <script setup lang="ts">
 import { PropType } from 'vue';
 import { ToolData } from './ToolData';
-import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 
 const props = defineProps({
   tool: {
