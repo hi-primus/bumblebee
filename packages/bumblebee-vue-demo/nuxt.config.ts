@@ -19,5 +19,8 @@ export default defineNuxtConfig({
       "@headlessui/vue",
     ],
   },
-  css: ['@/assets/css/tailwind.css']
+  css: [
+    '@/assets/css/tailwind.css',
+    '@/assets/css/fonts.css',
+  ]
 });
