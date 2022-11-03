@@ -3,6 +3,7 @@
     <ul class="h-12 flex">
       <li
         v-for="tab in tabs"
+        :key="tab?.label"
         class="h-12 max-w-[22rem] px-2 flex gap-2 items-center cursor-pointer border-b-2 border-sky-500"
       >
         <div class="ellipsis">
