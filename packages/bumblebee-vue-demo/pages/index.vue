@@ -47,15 +47,12 @@
 }
 .workspace-table {
   grid-area: table;
-  background-color: lighten(green, 65%);
 }
 aside {
   grid-area: operations;
-  background-color: lighten(yellow, 45%);
 }
 footer {
   height: 48px;
   grid-area: footer;
-  background-color: lighten(purple, 65%);
 }
 </style>
