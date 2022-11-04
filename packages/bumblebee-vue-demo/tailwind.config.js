@@ -49,6 +49,7 @@ module.exports = {
     },
     extend: {
       fontFamily: {
+        'sans': ['Roboto', 'sans-serif'],
         'mono': ['Ubuntu Mono', 'monospace'],
         'mono-table': ['Ubuntu Mono Table', 'Ubuntu Mono', 'monospace']
       },
