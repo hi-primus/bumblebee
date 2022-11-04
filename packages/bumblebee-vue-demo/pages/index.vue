@@ -1,7 +1,7 @@
 <template>
   <NuxtLayout>
     <div class="workspace-container">
-      <Tabs :tabs="[{ label: 'Dataset 1' }, {}, {}, {}]" />
+      <Tabs :tabs="[{ label: '(dataset long name)' }, {}, {}, {}]" />
       <WorkspaceDataframeLayout />
     </div>
   </NuxtLayout>
@@ -48,10 +48,10 @@
 .workspace-table {
   grid-area: table;
 }
-.workspace-aside {
+aside {
   grid-area: operations;
 }
-.workspace-footer {
+footer {
   height: 48px;
   grid-area: footer;
 }
