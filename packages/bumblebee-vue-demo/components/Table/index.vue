@@ -50,18 +50,24 @@
           >
             <div
               class="
+                column-title
                 border-line-light border-b
-                font-bold
+                text-[16px]
                 py-1
                 px-3
                 text-center
+                flex
+                align-center
               "
             >
               <Icon
                 :path="mdiTableColumn"
-                class="inline text-primary mr-[2px]"
+                class="left-icon inline text-text/90 mr-[2px]"
               />
-              {{column.name}}
+              <span class="flex-1">
+                {{column.name}}
+              </span>
+              <div class="flex-1 max-w-[24px] right-icon"></div>
             </div>
             <div class="italic px-3 py-4">
               [-------------][--]
