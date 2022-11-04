@@ -1,12 +1,12 @@
 <template>
   <button
     class="
-      h-12
-      w-12
+      h-[56px]
+      px-1
+      pt-1
       cursor-pointer
       flex
       flex-col
-      justify-center
       items-center
       rounded-md
       text-text
@@ -16,10 +16,10 @@
   >
     <Icon
       :path="tool?.icon"
-      class="h-5 w-5 text-text/75"
+      class="text-text/75"
     >
     </Icon>
-    <div class="font-200 text-xs h-5 leading-none atracking-tighter lign-middle uppercase text-text/75" v-html="tool?.label"></div>
+    <div class="font-300 text-[11.25px] h-5 leading-[normal] atracking-none text-text/75" v-html="tool?.label"></div>
   </button>
 </template>
 

@@ -1,6 +1,6 @@
 <template>
-  <section class="w-full px-6 overflow-hidden h-full">
-    <ul class="h-full flex gap-2 items-center">
+  <section class="w-full px-5 overflow-hidden h-full">
+    <ul class="h-full flex items-center">
       <li
         v-for="(tool, index) in tools"
         :key="tool?.name"

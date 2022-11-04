@@ -1,6 +1,6 @@
 <template>
   <div
-    class="workspace-toolbar bg-white border-line border-solid border-b min-h-[64px]"
+    class="workspace-toolbar bg-white border-line-light border-solid border-b min-h-[64px]"
   >
     <Toolbar
       :tools="toolbarButtons"
@@ -18,7 +18,7 @@ const toolbarButtons = [
   },
   {
     name: 'Unnest columns',
-    label: 'Unnest\ncols.',
+    label: 'Unnest<br/>cols.',
     icon: mdiArrowSplitVertical
   }
 ]
