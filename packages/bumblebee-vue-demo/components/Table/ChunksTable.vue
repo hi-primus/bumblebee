@@ -7,9 +7,11 @@
 </template>
 
 <script setup lang="ts">
+import { PropType } from 'vue';
+
   const { chunks } = defineProps({
     chunks: {
-      type: Array // Object
+      type: Array as PropType<Array<object>>
     },
     header: {
       type: Array
