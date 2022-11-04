@@ -1,7 +1,7 @@
 <template>
   <NuxtLayout>
     <div class="workspace-container">
-      <Tabs :tabs="[{ label: '(dataset long name)' }, {}, {}, {}]" />
+      <Tabs :tabs="[{ label: 'Dataset 1' }, {}, {}, {}]" />
       <WorkspaceDataframeLayout />
     </div>
   </NuxtLayout>
