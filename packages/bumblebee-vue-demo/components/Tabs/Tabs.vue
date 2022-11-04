@@ -6,19 +6,35 @@
       w-full
       px-6
       overflow-hidden
-      bg-white border-line-light border-b
+      text-text-light
+      bg-white border-line border-b
+      text-sm
+      font-sans
+      font-medium
     "
   >
-    <ul class="h-12 flex">
+    <ul class="h-12 absolute flex">
       <li
         v-for="tab in tabs"
         :key="tab?.label"
-        class="h-12 max-w-[22rem] px-2 flex gap-2 items-center cursor-pointer first:border-b-2 border-primary"
+        class="
+          h-12
+          max-w-[22rem]
+          pt-1
+          px-4
+          flex
+          gap-2
+          items-center
+          cursor-pointer
+          first:border-b-2
+          first:text-primary
+          border-primary
+        "
       >
         <div class="ellipsis">
           {{ tab?.label || defaultLabel }}
         </div>
-        <Icon class="w-4 h-4 text-text-light mr-[-2px]" :path="mdiClose" />
+        <Icon class="w-4 h-4 mr-[-2px]" :path="mdiClose" />
       </li>
     </ul>
   </section>
