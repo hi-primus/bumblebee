@@ -1,3 +1,4 @@
 <template>
-  <aside>[OPERATIONS]</aside>
+  <aside class="bg-white border-line border-solid border-l">
+  </aside>
 </template>

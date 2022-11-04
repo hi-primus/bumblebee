@@ -9,17 +9,17 @@
 
 <script setup lang="ts">
 
-const { $blurr } = useNuxtApp();
+// const { $blurr } = useNuxtApp();
 
-onMounted(async () => {
-  const { BlurrClient } = $blurr;
-  const client = BlurrClient({serverOptions: { scriptURL: "https://cdn.jsdelivr.net/pyodide/v0.21.3/full/pyodide.js" }});
-  window.client = client;
-  const df = await client.readCsv({
-    url: 'https://raw.githubusercontent.com/hi-primus/optimus/develop/examples/data/foo.csv',
-  });
-  console.log(df);
-})
+// onMounted(async () => {
+//   const { BlurrClient } = $blurr;
+//   const client = BlurrClient({serverOptions: { scriptURL: "https://cdn.jsdelivr.net/pyodide/v0.21.3/full/pyodide.js" }});
+//   window.client = client;
+//   const df = await client.readCsv({
+//     url: 'https://raw.githubusercontent.com/hi-primus/optimus/develop/examples/data/foo.csv',
+//   });
+//   console.log(df);
+// })
 
 </script>
 
@@ -40,14 +40,10 @@ onMounted(async () => {
 }
 
 .bumblebee-tabs {
-  height: 48px;
   grid-area: tabs;
-  background-color: lighten(red, 45%);
 }
 .workspace-toolbar {
-  height: 64px;
   grid-area: toolbar;
-  background-color: lighten(blue, 45%);
 }
 .workspace-table {
   grid-area: table;

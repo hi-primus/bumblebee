@@ -1,21 +1,31 @@
 <template>
-  <section class="bumblebee-tabs w-full px-6 overflow-hidden">
+  <section
+    class="
+      bumblebee-tabs
+      min-h-[48px]
+      w-full
+      px-6
+      overflow-hidden
+      bg-white border-line-light border-b
+    "
+  >
     <ul class="h-12 flex">
       <li
         v-for="tab in tabs"
         :key="tab?.label"
-        class="h-12 max-w-[22rem] px-2 flex gap-2 items-center cursor-pointer border-b-2 border-sky-500"
+        class="h-12 max-w-[22rem] px-2 flex gap-2 items-center cursor-pointer first:border-b-2 border-primary"
       >
         <div class="ellipsis">
           {{ tab?.label || defaultLabel }}
         </div>
-        <div class="tab-icon">(X)</div>
+        <Icon class="w-4 h-4 text-text-light mr-[-2px]" :path="mdiClose" />
       </li>
     </ul>
   </section>
 </template>
 
 <script setup lang="ts">
+import { mdiClose } from '@mdi/js';
 import { PropType } from 'vue';
 
 const props = defineProps({

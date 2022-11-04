@@ -9,6 +9,9 @@ module.exports = {
   ],
   theme: {
     colors: {
+      transparent: 'transparent',
+      current: 'currentColor',
+      white: '#ffffff',
       primary: {
         900: '#205a98',
         dark: '#277abb',
@@ -39,6 +42,10 @@ module.exports = {
         light: '#656970',
         lighter: '#a3a7af',
       },
+      line: {
+        DEFAULT: '#e5e5e5',
+        light: '#f5f5f5'
+      }
     },
     extend: {
       fontFamily: {
