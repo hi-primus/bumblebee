@@ -48,10 +48,10 @@
 .workspace-table {
   grid-area: table;
 }
-aside {
+.workspace-aside {
   grid-area: operations;
 }
-footer {
+.workspace-footer {
   height: 48px;
   grid-area: footer;
 }

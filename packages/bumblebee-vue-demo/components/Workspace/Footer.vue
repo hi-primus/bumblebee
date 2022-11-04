@@ -1,3 +1,3 @@
 <template>
-  <footer class="bg-white border-line border-solid border-t"></footer>
+  <footer class="workspace-footer bg-white border-line border-solid border-t"></footer>
 </template>
