@@ -1,7 +1,8 @@
 <template>
   <WorkspaceToolbar />
-  <section class="workspace-table">
+  <section class="workspace-table overflow-hidden">
     <TableChunksTable
+      class="overflow-auto"
       :header="header"
       :chunks="chunks"
     />
