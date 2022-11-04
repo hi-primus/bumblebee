@@ -6,7 +6,7 @@
       name=""
       id=""
       rows="3"
-      class="w-full focus:outline-none"
+      class="w-full focus:outline-none p-2"
     >
     </textarea>
   </li>

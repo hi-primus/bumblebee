@@ -25,7 +25,6 @@
       <OperationsOperation
         v-for="(operation, index) in operations"
         :key="index"
-        :class="{'mt-2': index !== 0}"
       />
     </ul>
   </aside>
