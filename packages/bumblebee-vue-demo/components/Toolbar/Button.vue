@@ -1,10 +1,25 @@
 <template>
   <button
-    class="h-12 w-12 cursor-pointer flex justify-center items-center border rounded-sm bg-white hover:bg-slate-100"
-    :class="{'bg-slate-100': tool?.name === active?.name}"
-    v-on:click="() => setSelected"
+    class="
+      h-12
+      w-12
+      cursor-pointer
+      flex
+      flex-col
+      justify-center
+      items-center
+      rounded-md
+      text-text
+      bg-white
+    "
+    :class="{ 'bg-primary-50': active }"
   >
-    {{ tool?.icon }}
+    <Icon
+      :path="tool?.icon"
+      class="h-5 w-5 text-text/75"
+    >
+    </Icon>
+    <div class="font-200 text-xs h-5 leading-none atracking-tighter lign-middle uppercase text-text/75" v-html="tool?.label"></div>
   </button>
 </template>
 
@@ -18,11 +33,9 @@ const props = defineProps({
     default: {}
   },
   active: {
-    type: Object as PropType<ToolData>,
-    default: {}
-  },
-  setSelected: {
-    type: Function
+    type: Boolean,
+    default: false
   }
 });
+
 </script>
