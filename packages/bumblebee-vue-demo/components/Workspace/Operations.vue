@@ -21,10 +21,11 @@
     >
       <h3>Operations</h3>
     </div>
-    <ul class="p-4">
+    <ul class="p-4 flex flex-col gap-2">
       <OperationsOperation
         v-for="(operation, index) in operations"
         :key="index"
+        :index="index"
       />
     </ul>
   </aside>
