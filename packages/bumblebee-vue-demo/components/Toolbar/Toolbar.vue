@@ -17,11 +17,11 @@
 
 <script setup lang="ts">
 import { PropType, computed, ref } from 'vue';
-import { ToolData } from './ToolData';
+import { ToolButton } from 'types/workspace';
 
 const props = defineProps({
   tools: {
-    type: Array as PropType<Array<ToolData>>,
+    type: Array as PropType<ToolButton[]>,
     default: () => []
   }
 });

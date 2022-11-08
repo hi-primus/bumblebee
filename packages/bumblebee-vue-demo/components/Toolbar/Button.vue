@@ -25,11 +25,11 @@
 
 <script setup lang="ts">
 import { PropType } from 'vue';
-import { ToolData } from './ToolData';
+import { ToolButton } from 'types/workspace';
 
 const props = defineProps({
   tool: {
-    type: Object as PropType<ToolData>,
+    type: Object as PropType<ToolButton>,
     default: {}
   },
   active: {

@@ -43,17 +43,14 @@
 <script setup lang="ts">
 import { mdiClose } from '@mdi/js';
 import { PropType } from 'vue';
+import { Tab } from 'types/workspace'
 
 const props = defineProps({
   tabs: {
-    type: Array as PropType<Array<TabData>>,
+    type: Array as PropType<Tab[]>,
     default: () => []
   }
 });
-
-interface TabData {
-  label?: string;
-}
 
 let defaultLabel = '(new dataset)';
 

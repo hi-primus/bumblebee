@@ -4,6 +4,10 @@
   "lib": ["ES2019"],
   "compilerOptions": {
     "types": ["@pinia/nuxt"],
-    "allowJs": true
+    "allowJs": true,
+    "paths": {
+      "@/*": ["*"],
+      "types/*": ["types/*"]
+    }
   }
 }
