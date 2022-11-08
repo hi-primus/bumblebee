@@ -33,6 +33,14 @@ async function loadPyodide(options: PyodideBackendOptions) {
   return pyodide;
 }
 
+function _mapToObject(map: Map<string, unknown>): Record<string, unknown> {
+  const obj = {};
+  for (const [key, value] of map) {
+    obj[key] = value;
+  }
+  return obj;
+}
+
 function BlurrServerPyodide(options: PyodideBackendOptions): Server {
   const pyodidePromise = loadPyodide(options).then(async (pyodide) => {
     await pyodide.loadPackage('micropip');
@@ -57,7 +65,9 @@ function BlurrServerPyodide(options: PyodideBackendOptions): Server {
       await server.donePromise;
       const result = await server.backend.runPythonAsync(code);
       try {
-        return typeof result?.toJs === 'function' ? result.toJs() : result;
+        return typeof result?.toJs === 'function'
+          ? result.toJs({ dict_converter: _mapToObject })
+          : result;
       } catch (error) {
         console.warn('Error converting to JS', code, error);
         return result;
