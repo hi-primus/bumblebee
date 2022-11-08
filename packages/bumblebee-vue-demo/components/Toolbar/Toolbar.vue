@@ -25,7 +25,4 @@ const props = defineProps({
 
 let selected = ref(props.tools.length > 0 ? 0 : null);
 
-const active = computed(() => {
-  return selected ? props.tools[selected.value] : null;
-});
 </script>
