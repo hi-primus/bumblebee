@@ -8,7 +8,6 @@
 </template>
 
 <script setup lang="ts">
-
 // const { $blurr } = useNuxtApp();
 
 // onMounted(async () => {
@@ -20,7 +19,6 @@
 //   });
 //   console.log(df);
 // })
-
 </script>
 
 <style lang="scss">
