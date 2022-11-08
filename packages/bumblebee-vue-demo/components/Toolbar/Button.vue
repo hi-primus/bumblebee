@@ -12,7 +12,7 @@
       text-text
       bg-white
     "
-    :class="{ 'bg-primary-50': active }"
+    :class="[{ 'bg-primary-50': active }, tool?.class || '']"
   >
     <Icon
       :path="tool?.icon"

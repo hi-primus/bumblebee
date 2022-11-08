@@ -1,16 +1,13 @@
 <template>
   <section class="w-full px-5 overflow-hidden h-full">
     <ul class="h-full flex items-center">
-      <li
+      <ToolbarButton
         v-for="(tool, index) in tools"
         :key="tool?.name"
-      >
-        <ToolbarButton
-          @click="() => selected = index"
-          :active="selected==index"
-          :tool="tool"
-        />
-      </li>
+        @click="() => selected = index"
+        :active="selected==index"
+        :tool="tool"
+      />
     </ul>
   </section>
 </template>
