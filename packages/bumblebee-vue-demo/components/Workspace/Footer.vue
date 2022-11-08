@@ -1,7 +1,5 @@
 <template>
-  <footer
-    class="workspace-footer bg-white border-line border-solid border-t"
-  >
+  <footer class="workspace-footer bg-white border-line border-solid border-t">
     <div class="flex h-full justify-end items-center gap-8 mx-8 font-mono">
       <span>{{ props.dataTypes }} Data types</span>
       <span>{{ props.rowsLoaded }} of {{ props.rowsTotal }} rows</span>
@@ -10,7 +8,6 @@
   </footer>
 </template>
 <script setup lang="ts">
-
 const props = defineProps({
   columns: {
     type: Number,
@@ -27,7 +24,6 @@ const props = defineProps({
   dataTypes: {
     type: Number,
     default: 0
-  },
+  }
 });
-
 </script>

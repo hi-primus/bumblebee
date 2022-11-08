@@ -1,3 +1,1 @@
-export interface OperationData {
-  
-}
+export interface OperationData {}

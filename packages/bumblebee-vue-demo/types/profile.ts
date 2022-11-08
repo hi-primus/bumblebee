@@ -1,9 +1,9 @@
 export interface ColumnStats {
-  match: number,
-  missing: number,
-  mismatch: number,
-  frequency?: object[],
-  hist?: object[],
+  match: number;
+  missing: number;
+  mismatch: number;
+  frequency?: object[];
+  hist?: object[];
 }
 
 export interface KeyedColumn {

@@ -22,4 +22,4 @@ export function throttle(func, limit: number | Function): typeof func {
       }, limit - (Date.now() - lastRan));
     }
   };
-};
+}

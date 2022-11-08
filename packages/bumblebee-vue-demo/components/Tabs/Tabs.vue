@@ -1,35 +1,12 @@
 <template>
   <section
-    class="
-      bumblebee-tabs
-      min-h-[48px]
-      w-full
-      px-6
-      overflow-hidden
-      text-text-light
-      bg-white border-line border-b
-      text-sm
-      font-sans
-      font-medium
-    "
+    class="bumblebee-tabs min-h-[48px] w-full px-6 overflow-hidden text-text-light bg-white border-line border-b text-sm font-sans font-medium"
   >
     <ul class="h-12 absolute flex">
       <li
         v-for="tab in tabs"
         :key="tab?.label"
-        class="
-          h-12
-          max-w-[22rem]
-          pt-1
-          px-4
-          flex
-          gap-2
-          items-center
-          cursor-pointer
-          first:border-b-2
-          first:text-primary
-          border-primary
-        "
+        class="h-12 max-w-[22rem] pt-1 px-4 flex gap-2 items-center cursor-pointer first:border-b-2 first:text-primary border-primary"
       >
         <div class="ellipsis">
           {{ tab?.label || defaultLabel }}
@@ -43,7 +20,7 @@
 <script setup lang="ts">
 import { mdiClose } from '@mdi/js';
 import { PropType } from 'vue';
-import { Tab } from 'types/workspace'
+import { Tab } from 'types/workspace';
 
 const props = defineProps({
   tabs: {

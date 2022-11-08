@@ -1,5 +1,5 @@
 export interface Chunk {
-  start: number,
-  stop: number,
-  data: object[]
+  start: number;
+  stop: number;
+  data: object[];
 }

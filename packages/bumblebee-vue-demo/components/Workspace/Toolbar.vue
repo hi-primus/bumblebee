@@ -2,14 +2,17 @@
   <div
     class="workspace-toolbar bg-white border-line-light border-solid border-b min-h-[64px]"
   >
-    <Toolbar
-      :tools="toolbarButtons"
-    />
+    <Toolbar :tools="toolbarButtons" />
   </div>
 </template>
 
 <script setup lang="ts">
-import { mdiUpload, mdiArrowSplitVertical, mdiCodeTags, mdiMagnify } from '@mdi/js';
+import {
+  mdiUpload,
+  mdiArrowSplitVertical,
+  mdiCodeTags,
+  mdiMagnify
+} from '@mdi/js';
 const toolbarButtons = [
   {
     name: 'Load',
@@ -30,7 +33,7 @@ const toolbarButtons = [
   {
     name: 'View operations',
     label: 'View<br/>operations',
-    icon: mdiCodeTags,
+    icon: mdiCodeTags
   }
-]
+];
 </script>

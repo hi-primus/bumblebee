@@ -4,8 +4,8 @@
       <ToolbarButton
         v-for="(tool, index) in tools"
         :key="tool?.name"
-        @click="() => selected = index"
-        :active="selected==index"
+        @click="() => (selected = index)"
+        :active="selected == index"
         :tool="tool"
       />
     </ul>
@@ -24,5 +24,4 @@ const props = defineProps({
 });
 
 let selected = ref(props.tools.length > 0 ? 0 : null);
-
 </script>

@@ -9,7 +9,7 @@
     "build": "nuxi build",
     "start": "node .output/server/index.mjs",
     "chromatic": "npx chromatic --force-rebuild",
-    "lint": "prettier --plugin-search-dir . --check . && eslint .",
+    "lint": "prettier --plugin-search-dir . --check . && eslint --ext .ts,.js,.vue .",
     "format": "prettier --plugin-search-dir . --write ."
   },
   "devDependencies": {

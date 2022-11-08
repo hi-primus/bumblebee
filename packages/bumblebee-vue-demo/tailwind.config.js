@@ -5,7 +5,7 @@ module.exports = {
     './layouts/**/*.vue',
     './pages/**/*.vue',
     './plugins/**/*.{js,ts}',
-    './nuxt.config.{js,ts}',
+    './nuxt.config.{js,ts}'
   ],
   theme: {
     colors: {
@@ -30,17 +30,17 @@ module.exports = {
       error: {
         dark: '#d53134',
         DEFAULT: '#f15555',
-        light: '#f99290',
+        light: '#f99290'
       },
       warn: {
         dark: '#e0a019',
         DEFAULT: '#e3ce30',
-        light: '#f0ef9a',
+        light: '#f0ef9a'
       },
       text: {
         DEFAULT: '#24282e',
         light: '#656970',
-        lighter: '#a3a7af',
+        lighter: '#a3a7af'
       },
       line: {
         DEFAULT: '#e5e5e5',
@@ -49,13 +49,11 @@ module.exports = {
     },
     extend: {
       fontFamily: {
-        'sans': ['Roboto', 'sans-serif'],
-        'mono': ['Ubuntu Mono', 'monospace'],
+        sans: ['Roboto', 'sans-serif'],
+        mono: ['Ubuntu Mono', 'monospace'],
         'mono-table': ['Ubuntu Mono Table', 'Ubuntu Mono', 'monospace']
-      },
-    },
+      }
+    }
   },
-  plugins: [],
-}
-
-
+  plugins: []
+};
