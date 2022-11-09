@@ -1,0 +1,13 @@
+{
+  // https://v3.nuxtjs.org/concepts/typescript
+  "extends": "./.nuxt/tsconfig.json",
+  "lib": ["ES2019"],
+  "compilerOptions": {
+    "types": ["@pinia/nuxt"],
+    "allowJs": true,
+    "paths": {
+      "@/*": ["*"],
+      "types/*": ["types/*"]
+    }
+  }
+}

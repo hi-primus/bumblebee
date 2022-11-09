@@ -1,0 +1,33 @@
+{
+  "root": true,
+  "parserOptions": {
+    "project": "./tsconfig.json",
+    "ecmaVersion": 2020,
+    "sourceType": "module"
+  },
+  "env": { "es6": true },
+  "ignorePatterns": ["node_modules", "build", "coverage"],
+  "plugins": ["import", "@typescript-eslint"],
+  "extends": [
+    "eslint:recommended",
+    "@nuxtjs/eslint-config-typescript",
+    "plugin:nuxt/recommended",
+    "plugin:@typescript-eslint/recommended",
+    "plugin:import/typescript",
+    "plugin:vue/vue3-recommended"
+  ],
+  "rules": {
+    "comma-dangle": ["error", "only-multiline"],
+    "@typescript-eslint/comma-dangle": ["error", "only-multiline"],
+    "vue/script-setup-no-uses-vars": "off",
+    "vue/no-v-html": "off",
+    "import/order": [
+      "error",
+      { "newlines-between": "always", "alphabetize": { "order": "asc" } }
+    ],
+    "sort-imports": [
+      "error",
+      { "ignoreDeclarationSort": true, "ignoreCase": true }
+    ]
+  }
+}
