@@ -46,9 +46,14 @@ function BlurrServerPyodide(options: PyodideBackendOptions): Server {
     await pyodide.loadPackage('micropip');
     const micropip = pyodide.pyimport('micropip');
 
-    await micropip.install('ibis-framework');
-    await micropip.install('ibis-framework[duckdb]');
-    await micropip.install('sqlalchemy');
+    await micropip.install(
+      'https://test-files.pythonhosted.org/packages/4b/41/a3e8331bd09ffcca4834715b4c269fc2cfa5acdfa4fb080f02a3c0acf688/pyoptimus-0.1.40212-py3-none-any.whl'
+    );
+    pyodide.runPythonAsync(`
+      from optimus import Optimus
+      from io import BytesIO
+      op = Optimus("pyscript")
+    `);
     return pyodide;
   });
 
