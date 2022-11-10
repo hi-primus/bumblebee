@@ -7,10 +7,16 @@ import { BackendOptions } from '../types/server';
 
 import { loadScript } from './utils';
 
+const defaultPyodideOptions: PyodideBackendOptions = {
+  scriptURL: 'https://cdn.jsdelivr.net/pyodide/v0.21.3/full/pyodide.js',
+};
+
 async function loadPyodide(options: PyodideBackendOptions) {
   globalThis.fetch = globalThis?.fetch || fetch;
 
   // Check if it uses another script
+
+  options = Object.assign({ ...defaultPyodideOptions }, options);
 
   if (options?.scriptURL) {
     console.log('Loading pyodide from script', options.scriptURL);
