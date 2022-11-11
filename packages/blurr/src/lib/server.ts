@@ -12,9 +12,12 @@ const defaultPyodideOptions: PyodideBackendOptions = {
 };
 
 async function loadPyodide(options: PyodideBackendOptions) {
-  globalThis.fetch = globalThis?.fetch || fetch;
+  if (globalThis.loadedPyodide) {
+    console.log('Pyodide was already loaded');
+    return globalThis.loadedPyodide;
+  }
 
-  // Check if it uses another script
+  globalThis.fetch = globalThis?.fetch || fetch;
 
   options = Object.assign({ ...defaultPyodideOptions }, options);
 
@@ -35,6 +38,8 @@ async function loadPyodide(options: PyodideBackendOptions) {
     globalThis?.loadPyodide || pyodidePackage?.loadPyodide;
 
   const pyodide = await _loadPyodide(options);
+
+  globalThis.loadedPyodide = pyodide;
 
   return pyodide;
 }
