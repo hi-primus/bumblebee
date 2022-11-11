@@ -9,5 +9,8 @@
       "@/*": ["*"],
       "types/*": ["types/*"]
     }
+  },
+  "parserOptions": {
+    "extraFileExtensions": [".vue"]
   }
 }
