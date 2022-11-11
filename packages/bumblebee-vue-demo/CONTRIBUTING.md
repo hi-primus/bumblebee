@@ -1,5 +1,15 @@
 # Contributing to this demo
 
+## Use `const` to define methods
+
+```vue
+<script setup lang="ts">
+const myMethod = async function () {
+  return await asyncMethod(...);
+}
+</script>
+```
+
 ## Using typed component emits
 
 https://vuejs.org/guide/typescript/composition-api.html#typing-component-emits
@@ -7,13 +17,15 @@ https://vuejs.org/guide/typescript/composition-api.html#typing-component-emits
 ```vue
 <script setup lang="ts">
 // runtime
-const emit = defineEmits(['change', 'update'])
+const emit = defineEmits(['change', 'update']);
 
 // type-based
-const emit = defineEmits<{
-  (e: 'change', id: number): void
-  (e: 'update', value: string): void
-}>()
+type Emits = {
+  (e: 'change', id: number): void;
+  (e: 'update', value: string): void;
+  (e: 'updateWindow', start: number, stop: number): void;
+};
+const emit = defineEmits<Emits>();
 </script>
 ```
 
@@ -33,7 +45,7 @@ const props = defineProps({
   deleted: {
     type: Array as PropType<Custom[]>
   }
-})
+});
 </script>
 ```
 
