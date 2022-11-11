@@ -47,7 +47,7 @@ async function callOperation<T = OperationCompatible>(
     operation.initialize(client);
   }
 
-  if (!kwargs.target) {
+  if (!kwargs.target && operation.targetType === 'dataframe') {
     if (operation.targetType === operation.sourceType) {
       kwargs.target = kwargs.source;
     } else {
