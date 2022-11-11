@@ -3,7 +3,8 @@
   "parserOptions": {
     "project": "./tsconfig.json",
     "ecmaVersion": 2020,
-    "sourceType": "module"
+    "sourceType": "module",
+    "extraFileExtensions": [".vue"]
   },
   "env": { "es6": true },
   "ignorePatterns": ["node_modules", "build", "coverage"],
@@ -18,9 +19,12 @@
   ],
   "rules": {
     "comma-dangle": ["error", "only-multiline"],
+    "semi": ["error", "always"],
+    "no-console": "off",
     "@typescript-eslint/comma-dangle": ["error", "only-multiline"],
     "vue/script-setup-no-uses-vars": "off",
     "vue/no-v-html": "off",
+    "vue/require-default-prop": "off",
     "import/order": [
       "error",
       { "newlines-between": "always", "alphabetize": { "order": "asc" } }
