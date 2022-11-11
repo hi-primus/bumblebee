@@ -16,5 +16,5 @@
 </template>
 
 <script setup lang="ts">
-let operations: Array<Object> = [{}, {}, {}, {}];
+let operations: Object[] = [];
 </script>

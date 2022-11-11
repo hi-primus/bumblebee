@@ -39,6 +39,7 @@ module.exports = {
       },
       text: {
         DEFAULT: '#24282e',
+        alpha: '#01040ada',
         light: '#656970',
         lighter: '#a3a7af'
       },
