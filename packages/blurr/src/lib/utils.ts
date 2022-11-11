@@ -33,7 +33,7 @@ export function objectMap<T, U extends T[keyof T], V>(
   object: T,
   cb: (elem: U) => V
 ) {
-  return Object.keys(object).reduce(function (result, key) {
+  return Object.keys(object).reduce(function(result, key) {
     result[key] = cb(object[key]);
     return result;
   }, {} as { [key in keyof T]: V });
@@ -62,3 +62,17 @@ export function loadScript(url: string) {
     }
   });
 }
+
+export const pythonArguments = (params: Record<string, PythonCompatible>) => {
+  const _params = {...params}
+  if ('source' in _params) {
+    delete _params.source;
+  }
+  const codes = [];
+  for (const key in _params) {
+    const param = _params[key];
+    codes.push(`${key}=${JSON.stringify(param)}`);
+  }
+
+  return codes.join(', ');
+};
