@@ -102,7 +102,7 @@ export function BlurrOperation<
     _run = async (server, kwargs) => {
       const code = operationCreator.getCode(kwargs);
       // console.log('[CODE FROM GENERATOR]', code, { kwargs, operationArgs });
-      return await server.run(operationCreator.getCode(kwargs));
+      return await server.run(code);
     };
   } else if (operationCreator.run) {
     _run = async (server, kwargs) => {
