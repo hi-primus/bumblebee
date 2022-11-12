@@ -23,6 +23,7 @@
     "no-console": "off",
     "@typescript-eslint/comma-dangle": ["error", "only-multiline"],
     "vue/script-setup-no-uses-vars": "off",
+    "vue/multi-word-component-names": "off",
     "vue/no-v-html": "off",
     "vue/require-default-prop": "off",
     "import/order": [
