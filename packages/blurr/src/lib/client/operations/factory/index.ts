@@ -1,8 +1,15 @@
-import { Operation, OperationCreator } from '../../../../types/operation';
+import {
+  ArgsType,
+  Operation,
+  OperationArgument,
+  OperationCreator,
+} from '../../../../types/operation';
 import { RunsCode } from '../../../../types/server';
 import {
+  adaptKwargs,
   generateUniqueVariableName,
   isObject,
+  isStringArray,
   objectMap,
   pythonArguments,
 } from '../../../utils';
@@ -11,24 +18,24 @@ import { BlurrSource, isSource } from './../../data/source';
 
 const initialized: string[] = [];
 
-function makePythonCompatible(client: RunsCode, value: OperationCompatible) {
+function makePythonCompatible(server: RunsCode, value: OperationCompatible) {
   if (isSource(value)) {
     return value.toString();
   } else if (value instanceof ArrayBuffer) {
-    if (!client.supports('files')) {
+    if (!server.supports('files')) {
       console.warn('Files not supported on this kind of server');
       return null;
     }
     const name = generateUniqueVariableName('file');
-    client.setGlobal(name, value);
+    server.setGlobal(name, value);
     return name;
   } else if (Array.isArray(value)) {
     return value.map((v: OperationCompatible) =>
-      makePythonCompatible(client, v)
+      makePythonCompatible(server, v)
     );
   } else if (isObject(value)) {
     return objectMap(value, (v: OperationCompatible) =>
-      makePythonCompatible(client, v)
+      makePythonCompatible(server, v)
     );
   } else {
     return value;
@@ -46,12 +53,12 @@ function isKwargs(
 }
 
 async function callOperation<
-  TA = OperationArgs<OperationCompatible>,
-  TR = OperationCompatible
+  TA extends OperationArgs<OperationCompatible> = OperationArgs<OperationCompatible>,
+  TR extends OperationCompatible = OperationCompatible
 >(
   client: RunsCode,
   operation: Operation<TA, TR> = null,
-  kwargs: Record<string, OperationCompatible> = {}
+  args: InputArgs = {}
 ): Promise<OperationCompatible> {
   await client.donePromise;
 
@@ -60,7 +67,11 @@ async function callOperation<
     operation.initialize(client);
   }
 
-  if (!kwargs.target && operation.targetType === 'dataframe') {
+  const operationArgs = operation.args || [];
+
+  const kwargs = adaptKwargs(args, operationArgs);
+
+  if (!('target' in kwargs) && operation.targetType === 'dataframe') {
     if (operation.targetType === operation.sourceType) {
       kwargs.target = kwargs.source;
     } else {
@@ -79,40 +90,65 @@ async function callOperation<
 }
 
 export function BlurrOperation<
-  TA = OperationArgs<OperationCompatible>,
-  TR = OperationCompatible
->(operationCreator: OperationCreator): Operation<TA, TR> {
-  let _run: (client: RunsCode, kwargs) => Promise<PythonCompatible>;
+  TA extends ArgsType = ArgsType,
+  TR extends OperationCompatible = OperationCompatible
+>(operationCreator: OperationCreator) {
+  let _run: (
+    client: RunsCode,
+    kwargs: Record<string, PythonCompatible>
+  ) => Promise<PythonCompatible>;
+
   if (operationCreator.getCode) {
-    _run = async (client: RunsCode, kwargs) => {
-      return await client.run(operationCreator.getCode(kwargs));
+    _run = async (server, kwargs) => {
+      const code = operationCreator.getCode(kwargs);
+      // console.log('[CODE FROM GENERATOR]', code, { kwargs, operationArgs });
+      return await server.run(operationCreator.getCode(kwargs));
     };
   } else if (operationCreator.run) {
-    _run = operationCreator.run;
+    _run = async (server, kwargs) => {
+      // console.log('[ARGUMENTS]', kwargs);
+      return operationCreator.run(server, kwargs);
+    };
   } else {
-    _run = async (client: RunsCode, kwargs) => {
-      let source = kwargs.source || operationCreator.defaultSource;
-      if (source) {
-        source = `${source}.`;
-      }
-      return await client.run(
-        `${source}${operationCreator.name}(${pythonArguments(kwargs)})`
-      );
+    _run = async (server, kwargs) => {
+      const source = kwargs.source || operationCreator.defaultSource;
+      const code =
+        (source ? `${source}.` : '') +
+        operationCreator.name +
+        `(${pythonArguments(kwargs)})`;
+      // console.log('[CODE FROM DEFAULT GENERATOR]', code);
+      return await server.run(code);
     };
   }
-  let initialize: (client: RunsCode) => Promise<PythonCompatible>;
+  let initialize: (server: RunsCode) => Promise<PythonCompatible>;
   if (operationCreator.getInitializationCode) {
-    initialize = async (client: RunsCode) => {
-      return await client.run(operationCreator.getInitializationCode());
+    initialize = async (server: RunsCode) => {
+      return await server.run(operationCreator.getInitializationCode());
     };
   } else if (operationCreator.initialize) {
     initialize = operationCreator.initialize;
+  }
+
+  const _operationArgs = operationCreator.args;
+
+  let operationArgs: OperationArgument[];
+
+  if (isObject(_operationArgs)) {
+    operationArgs = Object.keys(_operationArgs).map((key) => ({
+      name: key,
+      default: _operationArgs[key],
+    }));
+  } else if (isStringArray(_operationArgs)) {
+    operationArgs = _operationArgs.map((name) => ({ name }));
+  } else {
+    operationArgs = _operationArgs;
   }
 
   const operation: Operation<TA, TR> = {
     name: operationCreator.name,
     sourceType: operationCreator.sourceType,
     targetType: operationCreator.targetType,
+    args: operationArgs,
     initialize,
     _run,
     run: async function (client, kwargs: TA): Promise<TR> {
@@ -120,8 +156,9 @@ export function BlurrOperation<
         const result = (await callOperation(client, operation, kwargs)) as TR;
         return result;
       }
-      console.error(kwargs);
-      throw new Error('kwargs must be an object with string keys');
+      throw new Error(
+        `kwargs must be an object with string keys, type received: ${typeof kwargs}`
+      );
     },
     _blurrMember: 'operation',
   };

@@ -9,7 +9,7 @@ test('unique-name', async (t) => {
     url: 'https://raw.githubusercontent.com/hi-primus/optimus/develop/examples/data/foo.csv',
   });
 
-  t.log('Name:', df.name);
+  t.log('Unique name:', df.name);
 
   t.deepEqual(await df.columns(), [
     'id',
@@ -22,7 +22,16 @@ test('unique-name', async (t) => {
     'dummyCol',
   ]);
 
-  t.is(await df.count(), 19);
+  const countResult = await df.count();
 
-  t.log(await df.columnsSample());
+  t.is(countResult, 19);
+
+  t.log('Rows count:', countResult);
+
+  const kwargsResult = await df.columnsSample({ start: 1, stop: 5 });
+  const argsResult = await df.columnsSample(1, 5);
+
+  t.deepEqual(kwargsResult, argsResult);
+
+  t.log('Content of the first 5 rows:', kwargsResult);
 });

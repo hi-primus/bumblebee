@@ -1,6 +1,6 @@
 import { Client, ClientFunctions, ClientOptions } from '../../types/client';
 import { BlurrServer } from '../server';
-import { objectMap } from '../utils';
+import { adaptKwargs, isStringRecord, objectMap } from '../utils';
 
 import { operations } from './operations';
 
@@ -14,6 +14,7 @@ export function BlurrClient(options: ClientOptions = {}): Client {
 
   const client = {
     backendServer,
+    // run: (params: Record<string, OperationCompatible>) => backendServer.run(params), // TODO: use this
     run: backendServer.run,
     supports: backendServer.supports,
     setGlobal: backendServer.setGlobal,
@@ -21,7 +22,14 @@ export function BlurrClient(options: ClientOptions = {}): Client {
   };
 
   const clientFunctions = objectMap(operations, (operation) => {
-    return (kwargs) => {
+    return (...args) => {
+      let _args: InputArgs;
+      if (args.length === 1 && isStringRecord(args[0])) {
+        _args = args[0] as InputArgs;
+      } else {
+        _args = args;
+      }
+      const kwargs = adaptKwargs(_args, operation.args);
       return operation.run(client, kwargs);
     };
   }) as ClientFunctions;

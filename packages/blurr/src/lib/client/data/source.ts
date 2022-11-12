@@ -1,7 +1,12 @@
 import { RunsCode } from '../../../types/server';
 import { Source } from '../../../types/source';
 import { SourceFunctions } from '../../../types/source';
-import { generateUniqueVariableName, isObject, objectMap } from '../../utils';
+import {
+  adaptKwargs,
+  generateUniqueVariableName,
+  isObject,
+  objectMap,
+} from '../../utils';
 import { operations } from '../operations/dataframe';
 
 export function isSource(value): value is Source {
@@ -21,12 +26,18 @@ export function BlurrSource(client: RunsCode, name?: string): Source {
   const source = {
     name,
     client,
-    _blurrMember: 'source',
     toString: () => name,
   };
 
   const sourceFunctions = objectMap(operations, (operation) => {
-    return (kwargs) => {
+    return (...args) => {
+      let _args: InputArgs;
+      if (args.length === 1 && isObject(args[0])) {
+        _args = args[0] as InputArgs;
+      } else {
+        _args = args;
+      }
+      let kwargs = adaptKwargs(_args, operation.args);
       kwargs = {
         ...(kwargs || {}),
         source: source.toString(),

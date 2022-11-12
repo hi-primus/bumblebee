@@ -1,11 +1,12 @@
-import type { Cols, EmptyArgs } from '../../../../types/arguments';
+import type { Cols, NoArgs } from '../../../../types/arguments';
+import { ArgsType, OperationCreator } from '../../../../types/operation';
 import { pythonArguments } from '../../../utils';
 import { BlurrOperation } from '../factory';
 
 function DataframeOperation<
-  TA = OperationArgs<OperationCompatible>,
-  TR = OperationCompatible
->(operationCreator) {
+  TA extends ArgsType = ArgsType,
+  TR extends OperationCompatible = OperationCompatible
+>(operationCreator: OperationCreator) {
   return BlurrOperation<TA, TR>({
     ...operationCreator,
     sourceType: 'dataframe',
@@ -13,15 +14,15 @@ function DataframeOperation<
 }
 
 export const operations = {
-  frequency: DataframeOperation<{ cols: Cols }, object>({
-    targetType: 'value',
+  frequency: DataframeOperation<{ cols: Cols }>({
+    targetType: 'value' as const,
     name: 'cols.frequency',
     getCode: function (kwargs: { source: string; cols: Cols }) {
       kwargs = Object.assign({ cols: '*' }, kwargs);
       return `${kwargs.source}.cols.frequency(${pythonArguments(kwargs)})`;
     },
   }),
-  histogram: DataframeOperation<{ cols: Cols; buckets: number }, object>({
+  histogram: DataframeOperation<{ cols: Cols; buckets: number }>({
     targetType: 'value',
     name: 'histogram',
     getCode: function (kwargs: {
@@ -33,23 +34,23 @@ export const operations = {
       return `${kwargs.source}.cols.hist(${pythonArguments(kwargs)})`;
     },
   }),
-  count: DataframeOperation<EmptyArgs, number>({
+  count: DataframeOperation<NoArgs, number>({
     name: 'count',
     getCode: function (kwargs: { source: string }) {
       return `${kwargs.source}.rows.count()`;
     },
   }),
-  columns: DataframeOperation<EmptyArgs, string[]>({
+  columns: DataframeOperation<NoArgs, string[]>({
     name: 'cols.names',
   }),
-  columnsSample: DataframeOperation({
+  columnsSample: DataframeOperation<{ start: number; stop: number }>({
     targetType: 'value',
     name: 'columnsSample',
-    getCode: function (kwargs: {
-      source: string;
-      start: number;
-      stop: number;
-    }) {
+    args: {
+      start: 0,
+      stop: 10,
+    },
+    getCode: function (kwargs) {
       return (
         `${kwargs.source}[${kwargs.start}: ${kwargs.stop}]` +
         `.columns_sample("*")`

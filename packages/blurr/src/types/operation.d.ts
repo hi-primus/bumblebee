@@ -2,9 +2,20 @@ import { RunsCode } from './server';
 
 export {};
 
+export interface OperationArgument {
+  name: string;
+  required?: boolean;
+  default?: PythonCompatible;
+}
+
+type OperationArgumentArray = OperationArgument[];
+type OperationArgumentRecord = Record<string, PythonCompatible>;
+
 export interface OperationCreator {
   // the default variable name for the source
   name: string;
+  // the arguments for the operation
+  args?: OperationArgumentArray | OperationArgumentRecord | string[];
   // dataframe is for operations that take a dataframe as input
   // variable is for operations that take a variable as input
   // none is for operations that don't take any input
@@ -16,12 +27,12 @@ export interface OperationCreator {
   // the name of the operation
   defaultSource?: string;
   // will be run on the server before the operation is run
-  initialize?: (client: RunsCode) => Promise<PythonCompatible>;
+  initialize?: (server: RunsCode) => Promise<PythonCompatible>;
   // generates the code that will be run on the server before the operation is run, replaces `initialize` if provided
   getInitializationCode?: () => string;
   // will be run on the server, replaces default operation if provided
   run?: (
-    client: RunsCode,
+    server: RunsCode,
     kwargs?: Record<string, PythonCompatible>
   ) => Promise<PythonCompatible>;
   // generates the code that will be run on the server when the operation is run, replaces `run` if provided
@@ -32,13 +43,25 @@ type OperationInterface = Pick<
   OperationCreator,
   'name' | 'sourceType' | 'targetType' | 'initialize'
 >;
+
+export type ArgsType = OperationArgs<OperationCompatible>;
+
+type RecordToArray<T> = T extends Record<string, infer R> ? R[] : [];
+
+type RunArgs<T extends ArgsType> =
+  | RecordToArray<T>
+  | [T]
+  | [Record<string, OperationCompatible>?];
+
 export interface Operation<
-  TA = OperationArgs<OperationCompatible>,
-  TR = OperationCompatible
+  TA extends ArgsType = ArgsType,
+  TR extends OperationCompatible = OperationCompatible
 > extends OperationInterface {
-  run: (client: RunsCode, kwargs?: TA) => Promise<TR>;
+  args?: OperationArgument[];
+  run: (server: RunsCode, ...args: RunArgs<TA>) => Promise<TR>;
+  // | ((server: RunsCode, kwargs?: TA) => Promise<TR>);
   _run: (
-    client: RunsCode,
+    server: RunsCode,
     kwargs?: Record<string, PythonCompatible>
   ) => Promise<PythonCompatible>;
   _blurrMember: 'operation';

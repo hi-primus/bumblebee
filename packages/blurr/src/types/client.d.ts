@@ -7,8 +7,8 @@ export interface ClientOptions {
 }
 
 export type ClientFunctions = {
-  [key in keyof typeof operations]: OmitFirstArg<
-    PropType<typeof operations[key], 'run'>
+  [key in keyof typeof operations]: OmitFirstArgOnIntersection<
+    typeof operations[key]['run']
   >;
 };
 export interface Client extends ClientFunctions, RunsCode {

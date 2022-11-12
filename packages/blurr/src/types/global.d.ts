@@ -1,4 +1,6 @@
-import { Source } from './source';
+interface PseudoSource {
+  name: string;
+}
 
 export {};
 
@@ -9,12 +11,17 @@ declare global {
     | R<PythonCompatible>
     | Array<PythonCompatible>;
 
-  type BasicOperationCompatible = BasicPythonCompatible | ArrayBuffer | Source;
+  type BasicOperationCompatible =
+    | BasicPythonCompatible
+    | ArrayBuffer
+    | PseudoSource;
 
   type OperationCompatible =
     | BasicOperationCompatible
     | R<OperationCompatible>
     | Array<OperationCompatible>;
+
+  type InputArgs = Record<string, OperationCompatible> | OperationCompatible[];
 
   interface R<T> {
     [key: number | string]: T;
@@ -22,7 +29,7 @@ declare global {
 
   type PropType<TObj, TProp extends keyof TObj> = TObj[TProp];
 
-  type OperationArgs<T> = Record<string, T>; // [{Record<string, T>}] | [T];
+  type OperationArgs<T> = Record<string, T>;
 
   // eslint-disable-next-line @typescript-eslint/ban-types
   type ArgumentTypes<F extends Function> = F extends (
@@ -33,6 +40,10 @@ declare global {
 
   type OmitFirstArg<F> = F extends (x: unknown, ...args: infer P) => infer R
     ? (...args: P) => R
+    : never;
+
+  type OmitFirstArgOnIntersection<T> = T extends infer U1 | infer U2
+    ? OmitFirstArg<U1> | OmitFirstArg<U2>
     : never;
 
   type RequireOnlyOne<T, Keys extends keyof T = keyof T> = Pick<
