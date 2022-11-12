@@ -24,15 +24,17 @@ export const operations = {
   }),
   histogram: DataframeOperation<{ cols: Cols; buckets: number }>({
     targetType: 'value',
-    name: 'histogram',
-    getCode: function (kwargs: {
-      source: string;
-      cols: Cols;
-      buckets: number;
-    }) {
-      kwargs = Object.assign({ cols: '*', buckets: 10 }, kwargs);
-      return `${kwargs.source}.cols.hist(${pythonArguments(kwargs)})`;
-    },
+    name: 'cols.hist',
+    args: [
+      {
+        name: 'cols',
+        default: '*',
+      },
+      {
+        name: 'buckets',
+        default: 10,
+      },
+    ],
   }),
   count: DataframeOperation<NoArgs, number>({
     name: 'count',
