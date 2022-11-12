@@ -1,10 +1,14 @@
-import { operations as dataframeOperations } from './dataframe';
 import { Source } from '../../../types/source';
+
+import { operations as dataframeOperations } from './dataframe';
 import { BlurrOperation } from './factory';
 
 export const operations = {
   ...dataframeOperations,
-  readCsv: BlurrOperation<Source>({
+  readCsv: BlurrOperation<
+    { target?: string; url?: string; buffer?: string },
+    Source
+  >({
     sourceType: 'none',
     targetType: 'dataframe',
     name: 'readCsv',

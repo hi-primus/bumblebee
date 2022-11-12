@@ -26,12 +26,12 @@ export function BlurrSource(client: RunsCode, name?: string): Source {
   };
 
   const sourceFunctions = objectMap(operations, (operation) => {
-    return (kwargs, args) => {
+    return (kwargs) => {
       kwargs = {
         ...(kwargs || {}),
         source: source.toString(),
       };
-      return operation.run(client, kwargs, args);
+      return operation.run(client, kwargs);
     };
   }) as SourceFunctions;
 

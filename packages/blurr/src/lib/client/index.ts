@@ -21,8 +21,8 @@ export function BlurrClient(options: ClientOptions = {}): Client {
   };
 
   const clientFunctions = objectMap(operations, (operation) => {
-    return (kwargs, args) => {
-      return operation.run(client, kwargs, args);
+    return (kwargs) => {
+      return operation.run(client, kwargs);
     };
   }) as ClientFunctions;
 

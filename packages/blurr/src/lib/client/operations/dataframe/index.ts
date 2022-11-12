@@ -1,54 +1,51 @@
-import { BlurrOperation } from '../factory';
+import type { Cols, EmptyArgs } from '../../../../types/arguments';
 import { pythonArguments } from '../../../utils';
-import { Cols } from '../../../../types/arguments';
+import { BlurrOperation } from '../factory';
 
-function DataframeOperation<T = OperationCompatible>(operationCreator) {
-  return BlurrOperation<T>({
+function DataframeOperation<
+  TA = OperationArgs<OperationCompatible>,
+  TR = OperationCompatible
+>(operationCreator) {
+  return BlurrOperation<TA, TR>({
     ...operationCreator,
-    sourceType: 'dataframe'
+    sourceType: 'dataframe',
   });
 }
 
 export const operations = {
-  frequency: DataframeOperation({
+  frequency: DataframeOperation<{ cols: Cols }, object>({
     targetType: 'value',
     name: 'cols.frequency',
-    getCode: function(kwargs: {
-      source: string;
-      cols: Cols;
-    }) {
+    getCode: function (kwargs: { source: string; cols: Cols }) {
       kwargs = Object.assign({ cols: '*' }, kwargs);
       return `${kwargs.source}.cols.frequency(${pythonArguments(kwargs)})`;
-    }
+    },
   }),
-  histogram: DataframeOperation({
+  histogram: DataframeOperation<{ cols: Cols; buckets: number }, object>({
     targetType: 'value',
     name: 'histogram',
-    getCode: function(kwargs: {
+    getCode: function (kwargs: {
       source: string;
       cols: Cols;
       buckets: number;
     }) {
       kwargs = Object.assign({ cols: '*', buckets: 10 }, kwargs);
       return `${kwargs.source}.cols.hist(${pythonArguments(kwargs)})`;
-    }
+    },
   }),
-  count: DataframeOperation({
+  count: DataframeOperation<EmptyArgs, number>({
     name: 'count',
-    getCode: function(kwargs: { source: string }) {
+    getCode: function (kwargs: { source: string }) {
       return `${kwargs.source}.rows.count()`;
-    }
+    },
   }),
-  columns: DataframeOperation({
+  columns: DataframeOperation<EmptyArgs, string[]>({
     name: 'cols.names',
-    getCode: function(kwargs: { source: string }) {
-      return `${kwargs.source}.cols.names()`;
-    }
   }),
   columnsSample: DataframeOperation({
     targetType: 'value',
     name: 'columnsSample',
-    getCode: function(kwargs: {
+    getCode: function (kwargs: {
       source: string;
       start: number;
       stop: number;
@@ -57,7 +54,7 @@ export const operations = {
         `${kwargs.source}[${kwargs.start}: ${kwargs.stop}]` +
         `.columns_sample("*")`
       );
-    }
+    },
   }),
   // hist: DataframeOperation({
   //   targetType: 'value',

@@ -22,6 +22,8 @@ declare global {
 
   type PropType<TObj, TProp extends keyof TObj> = TObj[TProp];
 
+  type OperationArgs<T> = Record<string, T>; // [{Record<string, T>}] | [T];
+
   // eslint-disable-next-line @typescript-eslint/ban-types
   type ArgumentTypes<F extends Function> = F extends (
     ...args: infer A

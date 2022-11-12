@@ -4,6 +4,7 @@ import {
   generateUniqueVariableName,
   isObject,
   objectMap,
+  pythonArguments,
 } from '../../../utils';
 
 import { BlurrSource, isSource } from './../../data/source';
@@ -34,11 +35,23 @@ function makePythonCompatible(client: RunsCode, value: OperationCompatible) {
   }
 }
 
-async function callOperation<T = OperationCompatible>(
+function isKwargs(
+  kwargs: unknown
+): kwargs is Record<string, OperationCompatible> {
+  return (
+    kwargs &&
+    typeof kwargs === 'object' &&
+    Object.keys(kwargs).every((key) => typeof key === 'string')
+  );
+}
+
+async function callOperation<
+  TA = OperationArgs<OperationCompatible>,
+  TR = OperationCompatible
+>(
   client: RunsCode,
-  operation: Operation<T> = null,
-  kwargs: Record<string, OperationCompatible> = {},
-  args: Array<OperationCompatible> = []
+  operation: Operation<TA, TR> = null,
+  kwargs: Record<string, OperationCompatible> = {}
 ): Promise<OperationCompatible> {
   await client.donePromise;
 
@@ -57,8 +70,7 @@ async function callOperation<T = OperationCompatible>(
 
   const operationResult = await operation._run(
     client,
-    makePythonCompatible(client, kwargs),
-    makePythonCompatible(client, args)
+    makePythonCompatible(client, kwargs)
   );
   if (operation.targetType == 'dataframe') {
     return BlurrSource(client, kwargs.target.toString());
@@ -66,16 +78,27 @@ async function callOperation<T = OperationCompatible>(
   return operationResult;
 }
 
-export function BlurrOperation<T = OperationCompatible>(
-  operationCreator: OperationCreator
-): Operation<T> {
-  let _run: (client: RunsCode, kwargs, args) => Promise<PythonCompatible>;
+export function BlurrOperation<
+  TA = OperationArgs<OperationCompatible>,
+  TR = OperationCompatible
+>(operationCreator: OperationCreator): Operation<TA, TR> {
+  let _run: (client: RunsCode, kwargs) => Promise<PythonCompatible>;
   if (operationCreator.getCode) {
-    _run = async (client: RunsCode, kwargs, args) => {
-      return await client.run(operationCreator.getCode(kwargs, args));
+    _run = async (client: RunsCode, kwargs) => {
+      return await client.run(operationCreator.getCode(kwargs));
     };
   } else if (operationCreator.run) {
     _run = operationCreator.run;
+  } else {
+    _run = async (client: RunsCode, kwargs) => {
+      let source = kwargs.source || operationCreator.defaultSource;
+      if (source) {
+        source = `${source}.`;
+      }
+      return await client.run(
+        `${source}${operationCreator.name}(${pythonArguments(kwargs)})`
+      );
+    };
   }
   let initialize: (client: RunsCode) => Promise<PythonCompatible>;
   if (operationCreator.getInitializationCode) {
@@ -86,34 +109,22 @@ export function BlurrOperation<T = OperationCompatible>(
     initialize = operationCreator.initialize;
   }
 
-  const operation: Operation<T> = {
+  const operation: Operation<TA, TR> = {
     name: operationCreator.name,
     sourceType: operationCreator.sourceType,
     targetType: operationCreator.targetType,
     initialize,
     _run,
-    run: async function (client, kwargs, args): Promise<T> {
-      const result = (await callOperation(
-        client,
-        operation,
-        kwargs,
-        args
-      )) as T;
-      return result;
+    run: async function (client, kwargs: TA): Promise<TR> {
+      if (isKwargs(kwargs)) {
+        const result = (await callOperation(client, operation, kwargs)) as TR;
+        return result;
+      }
+      console.error(kwargs);
+      throw new Error('kwargs must be an object with string keys');
     },
     _blurrMember: 'operation',
   };
 
-  return {
-    ...operation,
-    run: async function (client, kwargs, args): Promise<T> {
-      const result = (await callOperation(
-        client,
-        operation,
-        kwargs,
-        args
-      )) as T;
-      return result;
-    },
-  };
+  return operation;
 }
