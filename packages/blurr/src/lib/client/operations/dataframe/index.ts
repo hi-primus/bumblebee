@@ -1,4 +1,5 @@
 import type {
+  CallbackFunction,
   Cols,
   NoArgs,
   Source,
@@ -166,146 +167,176 @@ export const operations = {
     args: [
       {
         name: 'cols',
-        default: '*'
-      }]
+        default: '*',
+      },
+    ],
   }),
   // TODO:Support UDF
-  set: DataframeOperation<{ cols: Cols, valueFunc, where: string, args, default, evalValue, each }>({
+  set: DataframeOperation<{
+    cols: Cols;
+    valueFunc: CallbackFunction | PythonCompatible;
+    where: string;
+    args;
+    default;
+    evalValue;
+    each;
+  }>({
     targetType: 'dataframe',
     name: 'cols.set',
     args: [
       {
         name: 'cols',
-        default: '*'
+        default: '*',
       },
       {
         name: 'valueFunc',
-        default: null
+        default: null,
       },
       {
         name: 'where',
-        default: null
+        default: null,
       },
       {
         name: 'args',
-        default: null
+        default: null,
       },
       {
         name: 'default',
-        default: null
+        default: null,
       },
       {
         name: 'evalValue',
-        default: false
+        default: false,
       },
       {
         name: 'each',
-        default: true
-      }]
+        default: true,
+      },
+    ],
   }),
   // TODO: Support functions
-  rename: DataframeOperation<{ cols: Cols, outputCols: Cols, func }>({
+  rename: DataframeOperation<{
+    cols: Cols;
+    outputCols: Cols;
+    func: CallbackFunction;
+  }>({
     targetType: 'dataframe',
     name: 'cols.rename',
     args: [
       {
         name: 'cols',
-        default: '*'
+        default: '*',
       },
       {
         name: 'outputCols',
-        default: null
-      }]
+        default: null,
+      },
+    ],
   }),
   parseInferredTypes: DataframeOperation<{ colDataType }>({
     targetType: 'value',
     name: 'cols.parseInferredTypes',
     args: [
       {
-        name: 'colDataType'
-      }]
+        name: 'colDataType',
+      },
+    ],
   }),
-  inferredDataType: DataframeOperation<{ cols: Cols, useInternal: boolean, calculate: boolean, tidy: boolean }>({
+  inferredDataType: DataframeOperation<{
+    cols: Cols;
+    useInternal: boolean;
+    calculate: boolean;
+    tidy: boolean;
+  }>({
     targetType: 'value',
     name: 'cols.inferred_data_type',
     args: [
       {
         name: 'cols',
-        default: '*'
+        default: '*',
       },
       {
-        name: 'useInternal'
+        name: 'useInternal',
       },
       {
-        name: 'calculate'
+        name: 'calculate',
       },
       {
         name: 'tidy',
-        default: true
-      }]
+        default: true,
+      },
+    ],
   }),
-  setDataType: DataframeOperation<{ cols: Cols, dataTypes: string, inferred: boolean }>({
+  setDataType: DataframeOperation<{
+    cols: Cols;
+    dataTypes: string;
+    inferred: boolean;
+  }>({
     targetType: 'dataframe',
     name: 'cols.setDataType',
     args: [
       {
         name: 'cols',
-        default: '*'
+        default: '*',
       },
       {
         name: 'dataTypes',
-        default: null
+        default: null,
       },
       {
         name: 'inferred',
-        default: false
-      }]
+        default: false,
+      },
+    ],
   }),
   frequency: DataframeOperation<{ cols: Cols }>({
     targetType: 'value' as const,
     name: 'cols.frequency',
-    getCode: function(kwargs: { source: string; cols: Cols }) {
+    getCode: function (kwargs: { source: string; cols: Cols }) {
       kwargs = Object.assign({ cols: '*' }, kwargs);
       return `${kwargs.source}.cols.frequency(${pythonArguments(kwargs)})`;
-    }
+    },
   }),
-  histogram: DataframeOperation<{ cols: Cols; buckets: number }>({
+  histogram: DataframeOperation<{
+    cols: Cols;
+    buckets: number;
+  }>({
     targetType: 'value',
     name: 'cols.hist',
     args: [
       {
         name: 'cols',
-        default: '*'
+        default: '*',
       },
       {
         name: 'buckets',
-        default: 10
-      }
-    ]
+        default: 10,
+      },
+    ],
   }),
   count: DataframeOperation<NoArgs, number>({
     name: 'count',
-    getCode: function(kwargs: { source: string }) {
+    getCode: function (kwargs: { source: string }) {
       return `${kwargs.source}.rows.count()`;
-    }
+    },
   }),
   columns: DataframeOperation<NoArgs, string[]>({
-    name: 'cols.names'
+    name: 'cols.names',
   }),
   columnsSample: DataframeOperation<{ start: number; stop: number }>({
     targetType: 'value',
     name: 'columnsSample',
     args: {
       start: 0,
-      stop: 10
+      stop: 10,
     },
-    getCode: function(kwargs) {
+    getCode: function (kwargs) {
       return (
         `${kwargs.source}[${kwargs.start}: ${kwargs.stop}]` +
         `.columns_sample("*")`
       );
-    }
-  })
+    },
+  }),
   // hist: DataframeOperation({
   //   targetType: 'value',
   //   name: 'hist',
