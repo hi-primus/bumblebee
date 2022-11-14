@@ -1,147 +1,164 @@
-import type { Cols, NoArgs } from '../../../../types/arguments';
+import type {
+  Cols,
+  NoArgs,
+  Source,
+} from '../../../../types/arguments';
 import { ArgsType, OperationCreator } from '../../../../types/operation';
 import { pythonArguments } from '../../../utils';
 import { BlurrOperation } from '../factory';
 
-
-function DataframeOperation<TA extends ArgsType = ArgsType,
-  TR extends OperationCompatible = OperationCompatible>(operationCreator: OperationCreator) {
+function DataframeOperation<
+  TA extends ArgsType = ArgsType,
+  TR extends OperationCompatible = OperationCompatible
+>(operationCreator: OperationCreator) {
   return BlurrOperation<TA, TR>({
     ...operationCreator,
-    sourceType: 'dataframe'
+    sourceType: 'dataframe',
   });
 }
 
 export const operations = {
-  append: DataframeOperation<{ dfs: Source; buckets: number }>({
+  append: DataframeOperation<{ dfs: Source[]; buckets: number }>({
     targetType: 'dataframe',
     name: 'cols.append',
     args: [
       {
         name: 'dfs',
-        required: true
-      }
-    ]
+        required: true,
+      },
+    ],
   }),
-  concat: DataframeOperation<{ dfs: Source }>({
+  concat: DataframeOperation<{ dfs: Source[] }>({
     targetType: 'dataframe',
     name: 'cols.concat',
     args: [
       {
         name: 'dfs',
-        required: true
-      }]
+        required: true,
+      },
+    ],
   }),
-  join: DataframeOperation<{ dfs: Source; on: string; how: string, left_on: Cols, right_on: Cols, key_middle: boolean }>({
+  join: DataframeOperation<{
+    dfs: Source[];
+    on: string;
+    how: string;
+    left_on: Cols;
+    right_on: Cols;
+    key_middle: boolean;
+  }>({
     targetType: 'dataframe',
     name: 'cols.join',
     args: [
       {
-        name: 'dfs'
+        name: 'dfs',
       },
       {
         name: 'how',
-        default: 'left'
+        default: 'left',
       },
       {
         name: 'on',
-        default: null
+        default: null,
       },
       {
         name: 'left_on',
-        default: null
+        default: null,
       },
       {
         name: 'right_on',
-        default: null
+        default: null,
       },
       {
         name: 'key_middle',
-        default: false
-      }
-    ]
-  }),
-  select: DataframeOperation<{ cols: Cols }>({
-    targetType: 'dataframe',
-    name: 'cols.select',
-    args: [
-      {
-        name: 'cols',
-        default: '*'
-      }, {
-        name: 'regex',
-        default: null
+        default: false,
       },
-      {
-        name: 'data_type',
-        default: null
-      }, {
-        name: 'invert',
-        default: false
-      },
-      {
-        name: 'accepts_missing_cols',
-        default: false
-      }
-
-    ]
+    ],
   }),
-  copy: DataframeOperation<{ cols: Cols, outputCols: Cols }>({
+  // select: DataframeOperation<{ cols: Cols }>({
+  //   targetType: 'dataframe',
+  //   name: 'cols.select',
+  //   args: [
+  //     {
+  //       name: 'cols',
+  //       default: '*',
+  //     },
+  //     {
+  //       name: 'regex',
+  //       default: null,
+  //     },
+  //     {
+  //       name: 'data_type',
+  //       default: null,
+  //     },
+  //     {
+  //       name: 'invert',
+  //       default: false,
+  //     },
+  //     {
+  //       name: 'accepts_missing_cols',
+  //       default: false,
+  //     },
+  //   ],
+  // }),
+  copy: DataframeOperation<{ cols: Cols; outputCols: Cols }>({
     targetType: 'dataframe',
     name: 'cols.copy',
     args: [
       {
         name: 'cols',
-        default: '*'
-      }, {
+        default: '*',
+      },
+      {
         name: 'outputCols',
-        default: null
-      }]
+        default: null,
+      },
+    ],
   }),
-  drop: DataframeOperation<{ cols: Cols, regex: string, data_type: string }>({
+  drop: DataframeOperation<{ cols: Cols; regex: string; data_type: string }>({
     targetType: 'dataframe',
     name: 'cols.drop',
     args: [
       {
         name: 'cols',
-        default: '*'
+        default: '*',
       },
       {
         name: 'regex',
-        default: null
+        default: null,
       },
       {
         name: 'data_type',
-        default: null
-      }
-    ]
+        default: null,
+      },
+    ],
   }),
-  keep: DataframeOperation<{ cols: Cols, regex: string }>({
+  keep: DataframeOperation<{ cols: Cols; regex: string }>({
     targetType: 'dataframe',
     name: 'cols.keep',
     args: [
       {
         name: 'cols',
-        default: '*'
+        default: '*',
       },
       {
         name: 'regex',
-        default: null
-      }]
+        default: null,
+      },
+    ],
   }),
-  toTimeStamp: DataframeOperation<{ cols: Cols, format: string }>({
+  toTimeStamp: DataframeOperation<{ cols: Cols; format: string }>({
     targetType: 'dataframe',
     name: 'cols.toTimeStamp',
     args: [
       {
         name: 'cols',
-        default: '*'
+        default: '*',
       },
       {
         name: 'format',
-        default: null
-      }
-    ]
+        default: null,
+      },
+    ],
   }),
   toList: DataframeOperation<{ cols: Cols }>({
     targetType: 'value',

@@ -1,6 +1,4 @@
-interface PseudoSource {
-  name: string;
-}
+import { CallbackFunction, Source } from './arguments';
 
 export {};
 
@@ -14,9 +12,8 @@ declare global {
   type BasicOperationCompatible =
     | BasicPythonCompatible
     | ArrayBuffer
-    // eslint-disable-next-line @typescript-eslint/ban-types
-    | Function
-    | PseudoSource;
+    | CallbackFunction
+    | Source;
 
   type OperationCompatible =
     | BasicOperationCompatible
