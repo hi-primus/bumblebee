@@ -140,7 +140,7 @@ export const adaptKwargs = (
   };
 };
 
-export const pythonString = (param: PythonCompatible) => {
+export const pythonString = (param: PythonCompatible): string => {
   switch (typeof param) {
     case 'string':
     case 'number':
@@ -163,6 +163,8 @@ export const pythonString = (param: PythonCompatible) => {
       } else {
         return 'None';
       }
+    default:
+      return 'None';
   }
 };
 
@@ -176,8 +178,10 @@ export const pythonArguments = (params: Record<string, PythonCompatible>) => {
   }
   const codes = [];
   for (const key in _params) {
-    const param = pythonString(_params[key]);
-    codes.push(`${key}=${param}`);
+    if (_params[key] !== undefined) {
+      const param = pythonString(_params[key]);
+      codes.push(`${key}=${param}`);
+    }
   }
 
   return codes.join(', ');
