@@ -1,9 +1,16 @@
-import { CallbackFunction, Source } from './arguments';
+import { CallbackFunction, Name, Source } from './arguments';
 
 export {};
 
 declare global {
-  type BasicPythonCompatible = number | string | boolean | null;
+  type BasicPythonCompatible =
+    | number
+    | string
+    | boolean
+    | null
+    | undefined
+    | Name;
+
   type PythonCompatible =
     | BasicPythonCompatible
     | R<PythonCompatible>

@@ -7,3 +7,9 @@ export interface Source {
   _blurrMember: 'source';
   toString: () => string;
 }
+
+export interface Name {
+  name: string;
+  _blurrMember: 'name';
+  toString: () => string;
+}

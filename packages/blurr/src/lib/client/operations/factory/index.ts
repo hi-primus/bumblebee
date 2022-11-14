@@ -11,6 +11,7 @@ import {
   generateUniqueVariableName,
   isObject,
   isStringArray,
+  Name,
   objectMap,
   pythonArguments,
 } from '../../../utils';
@@ -21,7 +22,7 @@ const initialized: string[] = [];
 
 function makePythonCompatible(server: RunsCode, value: OperationCompatible) {
   if (isSource(value)) {
-    return value.toString();
+    return Name(value.toString());
   } else if (value instanceof ArrayBuffer) {
     if (!server.supports('buffers')) {
       console.warn('Files not supported on this kind of server');
@@ -29,7 +30,7 @@ function makePythonCompatible(server: RunsCode, value: OperationCompatible) {
     }
     const name = generateUniqueVariableName('file');
     server.setGlobal(name, value);
-    return name;
+    return Name(name);
   } else if (value instanceof Function) {
     if (!server.supports('callbacks')) {
       console.warn(
@@ -39,7 +40,7 @@ function makePythonCompatible(server: RunsCode, value: OperationCompatible) {
     }
     const name = generateUniqueVariableName('func');
     server.setGlobal(name, value);
-    return name;
+    return Name(name);
   } else if (Array.isArray(value)) {
     return value.map((v: OperationCompatible) =>
       makePythonCompatible(server, v)
@@ -112,12 +113,12 @@ export function BlurrOperation<
   if (operationCreator.getCode) {
     _run = async (server, kwargs) => {
       const code = operationCreator.getCode(kwargs);
-      // console.log('[CODE FROM GENERATOR]', code, { kwargs, operationArgs });
+      console.log('[CODE FROM GENERATOR]', code, { kwargs, operationArgs });
       return await server.run(code);
     };
   } else if (operationCreator.run) {
     _run = async (server, kwargs) => {
-      // console.log('[ARGUMENTS]', kwargs);
+      console.log('[ARGUMENTS]', kwargs);
       return operationCreator.run(server, kwargs);
     };
   } else {
@@ -127,7 +128,7 @@ export function BlurrOperation<
         (source ? `${source}.` : '') +
         camelToSnake(operationCreator.name) +
         `(${pythonArguments(kwargs)})`;
-      // console.log('[CODE FROM DEFAULT GENERATOR]', code);
+      console.log('[CODE FROM DEFAULT GENERATOR]', code);
       return await server.run(code);
     };
   }

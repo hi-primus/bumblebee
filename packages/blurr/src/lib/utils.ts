@@ -1,4 +1,5 @@
 import ShortUniqueId from 'short-unique-id';
+import { Name } from '../types/arguments';
 
 import { OperationArgument } from '../types/operation';
 
@@ -37,6 +38,20 @@ export function isStringRecord(
 
 export function isStringArray(value: unknown): value is string[] {
   return Array.isArray(value) && value.every((v) => typeof v === 'string');
+}
+
+export function Name(name: string): Name {
+  return {
+    name,
+    toString: () => name,
+    _blurrMember: 'name',
+  };
+}
+
+export function isName(value): value is Name {
+  return (
+    isObject(value) && '_blurrMember' in value && value._blurrMember == 'name'
+  );
 }
 
 /**
@@ -125,15 +140,44 @@ export const adaptKwargs = (
   };
 };
 
+export const pythonString = (param: PythonCompatible) => {
+  switch (typeof param) {
+    case 'string':
+    case 'number':
+      return JSON.stringify(param);
+    case 'boolean':
+      return param ? 'True' : 'False';
+    case 'object':
+      if (isName(param)) {
+        return param.toString();
+      } else if (Array.isArray(param)) {
+        return '[' + param.map((p) => pythonString(p)).join(', ') + ']';
+      } else if (isObject(param)) {
+        return (
+          '{' +
+          Object.keys(param)
+            .map((k) => `"${k}": ${pythonString(param[k])}`)
+            .join(', ') +
+          '}'
+        );
+      } else {
+        return 'None';
+      }
+  }
+};
+
 export const pythonArguments = (params: Record<string, PythonCompatible>) => {
   const _params = { ...params };
   if ('source' in _params) {
     delete _params.source;
   }
+  if ('target' in _params) {
+    delete _params.target;
+  }
   const codes = [];
   for (const key in _params) {
-    const param = _params[key];
-    codes.push(`${key}=${JSON.stringify(param)}`);
+    const param = pythonString(_params[key]);
+    codes.push(`${key}=${param}`);
   }
 
   return codes.join(', ');
