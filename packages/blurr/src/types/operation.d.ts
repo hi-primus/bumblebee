@@ -3,8 +3,13 @@ import { RunsCode } from './server';
 export {};
 
 export interface OperationArgument {
+  // name of the argument
   name: string;
+  // name of the argument in python
+  argName?: string;
+  // whether the argument is required
   required?: boolean;
+  // default value of the argument
   default?: PythonCompatible;
 }
 

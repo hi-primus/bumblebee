@@ -7,6 +7,7 @@ import {
 import { RunsCode } from '../../../../types/server';
 import {
   adaptKwargs,
+  camelToSnake,
   generateUniqueVariableName,
   isObject,
   isStringArray,
@@ -124,7 +125,7 @@ export function BlurrOperation<
       const source = kwargs.source || operationCreator.defaultSource;
       const code =
         (source ? `${source}.` : '') +
-        operationCreator.name +
+        camelToSnake(operationCreator.name) +
         `(${pythonArguments(kwargs)})`;
       // console.log('[CODE FROM DEFAULT GENERATOR]', code);
       return await server.run(code);

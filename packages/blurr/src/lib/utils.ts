@@ -80,6 +80,16 @@ export function loadScript(url: string) {
   });
 }
 
+export const camelToSnake = (value) => {
+  return value
+    .replace(/([A-Z])/g, (match) => `_${match.toLowerCase()}`)
+    .replace(/^_/, '');
+};
+
+const argName = (arg: OperationArgument) => {
+  return arg.argName || camelToSnake(arg.name);
+};
+
 export const adaptKwargs = (
   args: InputArgs,
   operationArgs: OperationArgument[] | null
@@ -92,17 +102,18 @@ export const adaptKwargs = (
   // positional arguments
   if (Array.isArray(args)) {
     return operationArgs.reduce((acc, arg, index) => {
-      acc[arg.name] = args[index] === undefined ? arg.default : args[index];
+      acc[argName(arg)] = args[index] === undefined ? arg.default : args[index];
       return acc;
     }, {} as Record<string, OperationCompatible>);
   }
 
   // named arguments
   const argsWithDefaults = operationArgs.reduce((acc, arg) => {
-    if (args[arg.name] !== undefined) {
-      acc[arg.name] = args[arg.name];
+    const name = argName(arg);
+    if (args[name] !== undefined) {
+      acc[name] = args[name];
     } else if (arg.default !== undefined) {
-      acc[arg.name] = arg.default;
+      acc[name] = arg.default;
     }
     return acc;
   }, {});
