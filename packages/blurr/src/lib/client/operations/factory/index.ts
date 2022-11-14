@@ -125,6 +125,7 @@ export function BlurrOperation<
     _run = async (server, kwargs) => {
       const source = kwargs.source || operationCreator.defaultSource;
       const code =
+        (kwargs.target ? `${kwargs.target} = ` : '') +
         (source ? `${source}.` : '') +
         camelToSnake(operationCreator.name) +
         `(${pythonArguments(kwargs)})`;
