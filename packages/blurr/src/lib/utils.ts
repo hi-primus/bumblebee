@@ -95,7 +95,7 @@ export function loadScript(url: string) {
   });
 }
 
-export const camelToSnake = (value) => {
+export const camelToSnake = (value: string): string => {
   return value
     .replace(/([A-Z])/g, (match) => `_${match.toLowerCase()}`)
     .replace(/^_/, '');
