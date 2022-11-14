@@ -22,11 +22,21 @@ function makePythonCompatible(server: RunsCode, value: OperationCompatible) {
   if (isSource(value)) {
     return value.toString();
   } else if (value instanceof ArrayBuffer) {
-    if (!server.supports('files')) {
+    if (!server.supports('buffers')) {
       console.warn('Files not supported on this kind of server');
       return null;
     }
     const name = generateUniqueVariableName('file');
+    server.setGlobal(name, value);
+    return name;
+  } else if (value instanceof Function) {
+    if (!server.supports('callbacks')) {
+      console.warn(
+        'Callbacks not supported as parameters on this kind of server'
+      );
+      return null;
+    }
+    const name = generateUniqueVariableName('func');
     server.setGlobal(name, value);
     return name;
   } else if (Array.isArray(value)) {

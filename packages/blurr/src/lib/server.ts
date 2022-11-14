@@ -89,7 +89,7 @@ function BlurrServerPyodide(options: PyodideBackendOptions): Server {
         return result;
       }
     },
-    _features: ['files'],
+    _features: ['buffers', 'callbacks'],
     supports: (features: string | Array<string>) => {
       if (typeof features === 'string') {
         features = [features];
