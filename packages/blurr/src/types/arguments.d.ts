@@ -1,5 +1,6 @@
 export type NoArgs = Record<string, OperationCompatible>;
 export type Cols = string | string[] | number | number[] | undefined;
+export type ColsResult<T> = T | Record<string, T>;
 export type SearchBy = 'full' | 'words' | 'chars' | 'values';
 export type CallbackFunction = (v: PythonCompatible) => PythonCompatible;
 
