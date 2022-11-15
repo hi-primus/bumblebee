@@ -21,10 +21,13 @@ function DataframeOperation<
   });
 }
 
-function AggregationOperation<TA extends ArgsType = ArgsType>(
-  operationCreator: OperationCreator
+function AggregationOperation<TA extends ArgsType = NoArgs>(
+  operationCreator: Pick<OperationCreator, 'name' | 'args'>
 ) {
-  type Args = { cols: Cols } & TA;
+  type Args = { cols: Cols } & TA & { tidy: boolean; compute: boolean };
+
+  operationCreator = Object.assign({ args: [] }, operationCreator);
+
   return DataframeOperation<Args, PythonCompatible>({
     targetType: 'value',
     name: operationCreator.name,
@@ -34,6 +37,14 @@ function AggregationOperation<TA extends ArgsType = ArgsType>(
         default: '*',
       },
       ...operationCreator.args,
+      {
+        name: 'tidy',
+        default: true,
+      },
+      {
+        name: 'compute',
+        default: true,
+      },
     ],
   });
 }
@@ -88,7 +99,7 @@ function StandardDataframeOperation(name: string) {
   });
 }
 
-function MulDataframeOperation(name: string) {
+function ColsMathOperation(name: string) {
   return DataframeOperation<{ cols: Cols; outputCols: Cols }>({
     targetType: 'dataframe',
     name,
@@ -469,30 +480,14 @@ export const operations = {
       },
     ],
   }),
-  correlation: DataframeOperation<{
-    cols: Cols;
+  correlation: AggregationOperation<{
     method: string;
-    compute: boolean;
-    tidy: boolean;
   }>({
-    targetType: 'dataframe',
     name: 'cols.correlation',
     args: [
       {
-        name: 'cols',
-        default: '*',
-      },
-      {
         name: 'method',
         default: 'pearson',
-      },
-      {
-        name: 'compute',
-        default: true,
-      },
-      {
-        name: 'tidy',
-        default: true,
       },
     ],
   }),
@@ -626,126 +621,50 @@ export const operations = {
     ],
   }),
 
-  mad: DataframeOperation<{
-    cols: Cols;
+  mad: AggregationOperation<{
     relativeError: boolean;
     more: boolean;
     estimate: boolean;
-    compute: boolean;
-    tidy: boolean;
   }>({
-    targetType: 'value',
     name: 'cols.mad',
     args: [
-      {
-        name: 'cols',
-        default: '*',
-      },
       {
         name: 'relativeError',
         default: RELATIVE_ERROR,
       },
     ],
   }),
-  min: AggregationOperation<{
-    numeric: boolean;
-    tidy: boolean;
-    compute: boolean;
-  }>({
+  min: AggregationOperation<{ numeric: boolean }>({
     name: 'cols.min',
     args: [
       {
         name: 'numeric',
         default: null,
       },
-      {
-        name: 'tidy',
-        default: true,
-      },
-      {
-        name: 'compute',
-        default: true,
-      },
     ],
   }),
-  max: DataframeOperation<{
-    cols: Cols;
-    numeric: boolean;
-    tidy: boolean;
-    compute: boolean;
-  }>({
-    targetType: 'value',
+  max: AggregationOperation<{ numeric: boolean }>({
     name: 'cols.max',
     args: [
-      {
-        name: 'cols',
-        default: '*',
-      },
       {
         name: 'numeric',
         default: null,
       },
-      {
-        name: 'tidy',
-        default: true,
-      },
-      {
-        name: 'compute',
-        default: true,
-      },
     ],
   }),
-  mode: DataframeOperation<{ cols: Cols; tidy: boolean; compute: boolean }>({
-    targetType: 'value',
+  mode: AggregationOperation({
     name: 'cols.mode',
-    args: [
-      {
-        name: 'cols',
-        default: '*',
-      },
-      {
-        name: 'tidy',
-        default: true,
-      },
-      {
-        name: 'compute',
-        default: true,
-      },
-    ],
   }),
-  range: DataframeOperation<{ cols: Cols; tidy: boolean; compute: boolean }>({
-    targetType: 'value',
+  range: AggregationOperation({
     name: 'cols.range',
-    args: [
-      {
-        name: 'cols',
-        default: '*',
-      },
-      {
-        name: 'tidy',
-        default: true,
-      },
-      {
-        name: 'compute',
-        default: true,
-      },
-    ],
   }),
-  percentile: DataframeOperation<{
-    cols: Cols;
+  percentile: AggregationOperation<{
     values: number;
     relativeError: number;
     estimate: boolean;
-    tidy: boolean;
-    compute: boolean;
   }>({
-    targetType: 'value',
     name: 'cols.percentile',
     args: [
-      {
-        name: 'cols',
-        default: '*',
-      },
       {
         name: 'values',
         default: null,
@@ -758,130 +677,33 @@ export const operations = {
         name: 'estimate',
         default: true,
       },
-      {
-        name: 'tidy',
-        default: true,
-      },
     ],
   }),
-  median: DataframeOperation<{
-    cols: Cols;
+  median: AggregationOperation<{
     relativeError: number;
-    tidy: boolean;
-    compute: boolean;
   }>({
-    targetType: 'value',
     name: 'cols.median',
     args: [
-      {
-        name: 'cols',
-        default: '*',
-      },
       {
         name: 'relativeError',
         default: RELATIVE_ERROR,
       },
-      {
-        name: 'tidy',
-        default: true,
-      },
-      {
-        name: 'compute',
-        default: true,
-      },
     ],
   }),
-  kurtosis: DataframeOperation<{ cols: Cols; tidy: boolean; compute: boolean }>(
-    {
-      targetType: 'value',
-      name: 'cols.kurtosis',
-      args: [
-        {
-          name: 'cols',
-          default: '*',
-        },
-        {
-          name: 'tidy',
-          default: true,
-        },
-        {
-          name: 'compute',
-          default: true,
-        },
-      ],
-    }
-  ),
-  skew: DataframeOperation<{ cols: Cols; tidy: boolean; compute: boolean }>({
-    targetType: 'value',
+  kurtosis: AggregationOperation({
+    name: 'cols.kurtosis',
+  }),
+  skew: AggregationOperation({
     name: 'cols.skew',
-    args: [
-      {
-        name: 'cols',
-        default: '*',
-      },
-      {
-        name: 'tidy',
-        default: true,
-      },
-      {
-        name: 'compute',
-        default: true,
-      },
-    ],
   }),
-  mean: DataframeOperation<{ cols: Cols; tidy: boolean; compute: boolean }>({
-    targetType: 'value',
+  mean: AggregationOperation({
     name: 'cols.mean',
-    args: [
-      {
-        name: 'cols',
-        default: '*',
-      },
-      {
-        name: 'tidy',
-        default: true,
-      },
-      {
-        name: 'compute',
-        default: true,
-      },
-    ],
   }),
-  sum: DataframeOperation<{ cols: Cols; tidy: boolean; compute: boolean }>({
-    targetType: 'value',
+  sum: AggregationOperation({
     name: 'cols.sum',
-    args: [
-      {
-        name: 'cols',
-        default: '*',
-      },
-      {
-        name: 'tidy',
-        default: true,
-      },
-      {
-        name: 'compute',
-        default: true,
-      },
-    ],
   }),
-  prod: DataframeOperation<{ cols: Cols; tidy: boolean; compute: boolean }>({
-    targetType: 'value',
+  prod: AggregationOperation({
     name: 'cols.prod',
-    args: [
-      {
-        name: 'cols',
-        default: '*',
-      },
-      {
-        name: 'tidy',
-        default: true,
-      },
-      {
-        name: 'compute',
-        default: true,
-      },
-    ],
   }),
   cumSum: DataframeOperation<{ cols: Cols; outputCols: Cols }>({
     targetType: 'dataframe',
@@ -939,43 +761,11 @@ export const operations = {
       },
     ],
   }),
-  variance: DataframeOperation<{ cols: Cols; tidy: boolean; compute: boolean }>(
-    {
-      targetType: 'value',
-      name: 'cols.var',
-      args: [
-        {
-          name: 'cols',
-          default: '*',
-        },
-        {
-          name: 'tidy',
-          default: true,
-        },
-        {
-          name: 'compute',
-          default: true,
-        },
-      ],
-    }
-  ),
-  std: DataframeOperation<{ cols: Cols; tidy: boolean; compute: boolean }>({
-    targetType: 'value',
+  variance: AggregationOperation({
+    name: 'cols.var',
+  }),
+  std: AggregationOperation({
     name: 'cols.std',
-    args: [
-      {
-        name: 'cols',
-        default: '*',
-      },
-      {
-        name: 'tidy',
-        default: true,
-      },
-      {
-        name: 'compute',
-        default: true,
-      },
-    ],
   }),
   dateFormat: DataframeOperation<{
     cols: Cols;
@@ -2127,66 +1917,34 @@ export const operations = {
     targetType: 'value',
     name: 'cols.count',
   }),
-  uniqueValues: DataframeOperation<{
-    cols: Cols;
+  uniqueValues: AggregationOperation<{
     estimate: boolean;
-    compute: boolean;
-    tidy: boolean;
   }>({
-    targetType: 'value',
     name: 'cols.uniqueValues',
     args: [
       {
-        name: 'cols',
-        default: '*',
-      },
-      {
         name: 'estimate',
         default: false,
-      },
-      {
-        name: 'compute',
-        default: false,
-      },
-      {
-        name: 'tidy',
-        default: true,
       },
     ],
   }),
-  countUniques: DataframeOperation<{
-    cols: Cols;
+  countUniques: AggregationOperation<{
     estimate: boolean;
-    compute: boolean;
-    tidy: boolean;
   }>({
-    targetType: 'value',
     name: 'cols.countUniques',
     args: [
       {
-        name: 'cols',
-        default: '*',
-      },
-      {
         name: 'estimate',
         default: false,
-      },
-      {
-        name: 'compute',
-        default: true,
-      },
-      {
-        name: 'tidy',
-        default: true,
       },
     ],
   }),
 
-  add: MulDataframeOperation('cols.add'),
-  sub: MulDataframeOperation('cols.sub'),
-  mul: MulDataframeOperation('cols.mul'),
-  div: MulDataframeOperation('cols.div'),
-  rdiv: MulDataframeOperation('cols.rdiv'),
+  add: ColsMathOperation('cols.add'),
+  sub: ColsMathOperation('cols.sub'),
+  mul: ColsMathOperation('cols.mul'),
+  div: ColsMathOperation('cols.div'),
+  rdiv: ColsMathOperation('cols.rdiv'),
   zScore: DataframeOperation<{ cols: Cols; outputCols: Cols }>({
     targetType: 'dataframe',
     name: 'cols.zScore',
@@ -2465,22 +2223,14 @@ export const operations = {
       },
     ],
   }),
-  frequency: DataframeOperation<{
-    cols: Cols;
+  frequency: AggregationOperation<{
     top: number;
     percentage: boolean;
     totalRows: boolean;
     countUniques: boolean;
-    compute: boolean;
-    tidy: boolean;
   }>({
-    targetType: 'value',
     name: 'cols.frequency',
     args: [
-      {
-        name: 'cols',
-        default: '*',
-      },
       {
         name: 'top',
         default: 10,
@@ -2496,14 +2246,6 @@ export const operations = {
       {
         name: 'countUniques',
         default: false,
-      },
-      {
-        name: 'compute',
-        default: true,
-      },
-      {
-        name: 'tidy',
-        default: true,
       },
     ],
   }),

@@ -1,16 +1,22 @@
-import type { Cols, ColsResult } from '../../../../../types/arguments';
+import type { Cols, ColsResult, NoArgs } from '../../../../../types/arguments';
 import { ArgsType, OperationCreator } from '../../../../../types/operation';
 import { BlurrOperation } from '../../factory';
 
 function MaskColsOperation<
   TA extends ArgsType = ArgsType,
   TR extends PythonCompatible = PythonCompatible
->(operationCreator: OperationCreator, noCols = false, noInverse = false) {
+>(
+  operationCreator: Pick<OperationCreator, 'name' | 'args'>,
+  noCols = false,
+  noInverse = false
+) {
   type Args = { cols: Cols } & TA & {
       inverse: boolean;
       tidy: boolean;
       compute: boolean;
     };
+
+  operationCreator = Object.assign({ args: [] }, operationCreator);
 
   const args1 = noCols
     ? []
@@ -47,18 +53,28 @@ function MaskColsOperation<
   });
 }
 
-function AnyOperation<TA extends ArgsType = ArgsType>(
+function AnyOperation<TA extends ArgsType = NoArgs>(
   operationCreator: OperationCreator,
-  noCols = false
+  noCols = false,
+  noInverse = false
 ) {
-  return MaskColsOperation<TA, ColsResult<boolean>>(operationCreator, noCols);
+  return MaskColsOperation<TA, ColsResult<boolean>>(
+    operationCreator,
+    noCols,
+    noInverse
+  );
 }
 
-function CountOperation<TA extends ArgsType = ArgsType>(
+function CountOperation<TA extends ArgsType = NoArgs>(
   operationCreator: OperationCreator,
-  noCols = false
+  noCols = false,
+  noInverse = false
 ) {
-  return MaskColsOperation<TA, ColsResult<number>>(operationCreator, noCols);
+  return MaskColsOperation<TA, ColsResult<number>>(
+    operationCreator,
+    noCols,
+    noInverse
+  );
 }
 
 export const operations = {
