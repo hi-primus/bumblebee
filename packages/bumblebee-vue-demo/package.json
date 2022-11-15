@@ -42,6 +42,7 @@
     "@pinia/nuxt": "^0.4.3",
     "@vue/cli-plugin-babel": "^5.0.8",
     "pinia": "^2.0.23",
+    "vee-validate": "^4.7.2",
     "vue-toasted": "^1.1.28",
     "vue3-carousel": "^0.1.40",
     "vue3-popper": "^1.5.0",

@@ -1907,7 +1907,7 @@
     "@vue/compiler-dom" "3.2.41"
     "@vue/shared" "3.2.41"
 
-"@vue/devtools-api@^6.4.4", "@vue/devtools-api@^6.4.5":
+"@vue/devtools-api@^6.1.4", "@vue/devtools-api@^6.4.4", "@vue/devtools-api@^6.4.5":
   version "6.4.5"
   resolved "https://registry.yarnpkg.com/@vue/devtools-api/-/devtools-api-6.4.5.tgz#d54e844c1adbb1e677c81c665ecef1a2b4bb8380"
   integrity sha512-JD5fcdIuFxU4fQyXUu3w2KpAJHzTVdN+p4iOX2lMWSHMOoQdMAcpFLZzm9Z/2nmsoZ1a96QEhZ26e50xLBsgOQ==
@@ -7726,6 +7726,13 @@ vary@^1.1.2:
   version "1.1.2"
   resolved "https://registry.yarnpkg.com/vary/-/vary-1.1.2.tgz#2299f02c6ded30d4a5961b0b9f74524a18f634fc"
   integrity sha512-BNGbWLfd0eUPabhkXUVm0j8uuvREyTh5ovRa/dyow/BqAbZJyC+5fU+IzQOzmAKzYqYRAISoRhdQr3eIZ/PXqg==
+
+vee-validate@^4.7.2:
+  version "4.7.2"
+  resolved "https://registry.yarnpkg.com/vee-validate/-/vee-validate-4.7.2.tgz#7739ab2ae0d55893a6f45faf551e0ada2dfeca6d"
+  integrity sha512-SbrL1HUzpu6D6Og/Q+BFx0LN6B48Z7OrkvQCXwaRyoELEeWPO6SOx1v5t1Sg3OszNtiLH7Q6BgKj/7pzTK1wIw==
+  dependencies:
+    "@vue/devtools-api" "^6.1.4"
 
 vite-node@^0.24.5:
   version "0.24.5"
