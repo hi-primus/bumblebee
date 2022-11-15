@@ -357,7 +357,7 @@ export const operations = {
         default: 0
       }]
   }),
-  assign: DataframeOperation<{ cols: Cols, value: anys }>({
+  assign: DataframeOperation<{ cols: Cols, value, [k: string]: PythonCompatible }>({
     targetType: 'dataframe',
     name: 'cols.assign',
     args: [
@@ -442,7 +442,7 @@ export const operations = {
       }
     ]
   }),
-  move: DataframeOperation<{ cols: Cols, position: string, refCol: string }>({
+  move: DataframeOperation<{ cols: Cols, position: string | number, refCol: string }>({
     targetType: 'dataframe',
     name: 'cols.move',
     args: [
@@ -828,14 +828,1249 @@ export const operations = {
       ]
     }
   ),
-
-  frequency: DataframeOperation<{ cols: Cols }>({
-    targetType: 'value' as const,
-    name: 'cols.frequency',
-    getCode: function(kwargs: { source: string; cols: Cols }) {
-      kwargs = Object.assign({ cols: '*' }, kwargs);
-      return `${kwargs.source}.cols.frequency(${pythonArguments(kwargs)})`;
+  dateFormat: DataframeOperation<{
+    cols: Cols, tidy: boolean, compute: boolean, cached: boolean, [k: string]: PythonCompatible
+  }>({
+      targetType: 'dataframe',
+      name: 'cols.dateFormat',
+      args: [
+        {
+          name: 'cols',
+          default: '*'
+        },
+        {
+          name: 'tidy',
+          default: true
+        },
+        {
+          name: 'compute',
+          default: true
+        },
+        {
+          name: 'cached',
+          default: null
+        }
+      ]
     }
+  ),
+  item: DataframeOperation<{ col: Cols, index: number, outputCols: Cols }>({
+      targetType: 'dataframe',
+      name: 'cols.item',
+      args: [
+        {
+          name: 'col',
+          default: '*'
+        },
+        {
+          name: 'index',
+          default: 0
+        },
+        {
+          name: 'outputCols',
+          default: null
+        }]
+    }
+  ),
+  get: DataframeOperation<{ col: Cols, keys: number, outputCols: Cols }>({
+      targetType: 'dataframe',
+      name: 'cols.get',
+      args: [
+        {
+          name: 'col',
+          default: '*'
+        },
+        {
+          name: 'keys',
+          default: null
+        },
+        {
+          name: 'outputCols',
+          default: null
+        }]
+    }
+  ),
+  abs: DataframeOperation<{ cols: Cols, outputCols: Cols }>({
+      targetType: 'dataframe',
+      name: 'cols.abs',
+      args: [
+        {
+          name: 'cols',
+          default: '*'
+        },
+        {
+          name: 'outputCols',
+          default: null
+        }
+      ]
+    }
+  ),
+  exp: DataframeOperation<{ cols: Cols, outputCols: Cols }>({
+      targetType: 'dataframe',
+      name: 'cols.exp',
+      args: [
+        {
+          name: 'cols',
+          default: '*'
+        },
+        {
+          name: 'outputCols',
+          default: null
+        }
+      ]
+    }
+  ),
+  log: DataframeOperation<{ cols: Cols, outputCols: Cols }>({
+      targetType: 'dataframe',
+      name: 'cols.log',
+      args: [
+        {
+          name: 'cols',
+          default: '*'
+        },
+        {
+          name: 'outputCols',
+          default: null
+        }]
+    }
+  ),
+  ln: DataframeOperation<{ cols: Cols, outputCols: Cols }>({
+      targetType: 'dataframe',
+      name: 'cols.ln',
+      args: [
+        {
+          name: 'cols',
+          default: '*'
+        },
+        {
+          name: 'outputCols',
+          default: null
+        }]
+
+    }
+  ),
+  pow: DataframeOperation<{ cols: Cols, outputCols: Cols, power: number }>({
+      targetType: 'dataframe',
+      name: 'cols.pow',
+      args: [
+        {
+          name: 'cols',
+          default: '*'
+        },
+        {
+          name: 'outputCols',
+          default: null
+        }]
+    }
+  ),
+  sqrt: DataframeOperation<{ cols: Cols, outputCols: Cols }>({
+      targetType: 'dataframe',
+      name: 'cols.sqrt',
+      args: [
+        {
+          name: 'cols',
+          default: '*'
+        },
+        {
+          name: 'outputCols',
+          default: null
+        }]
+    }
+  ),
+  reciprocal: DataframeOperation<{ cols: Cols, outputCols: Cols }>({
+      targetType: 'dataframe',
+      name: 'cols.reciprocal',
+      args: [
+        {
+          name: 'cols',
+          default: '*'
+        },
+        {
+          name: 'outputCols',
+          default: null
+        }]
+    }
+  ),
+  round: DataframeOperation<{ cols: Cols, outputCols: Cols, decimals: number }>({
+      targetType: 'dataframe',
+      name: 'cols.round',
+      args: [
+        {
+          name: 'cols',
+          default: '*'
+        },
+        {
+          name: 'outputCols',
+          default: null
+        }]
+    }
+  ),
+  floor: DataframeOperation<{ cols: Cols, outputCols: Cols }>({
+      targetType: 'dataframe',
+      name: 'cols.floor',
+      args: [
+        {
+          name: 'cols',
+          default: '*'
+        },
+        {
+          name: 'outputCols',
+          default: null
+        }]
+    }
+  ),
+  ceil: DataframeOperation<{ cols: Cols, outputCols: Cols }>({
+      targetType: 'dataframe',
+      name: 'cols.ceil',
+      args: [
+        {
+          name: 'cols',
+          default: '*'
+        },
+        {
+          name: 'outputCols',
+          default: null
+        }]
+    }
+  ),
+  // TODO: Could we add multiple operations in one go? sin, cos, tan
+  substring: DataframeOperation<{ cols: Cols, start: number, end: number, outputCols: Cols }>({
+      targetType: 'dataframe',
+      name: 'cols.substring',
+      args: [
+        {
+          name: 'cols',
+          default: '*'
+        },
+        {
+          name: 'start',
+          default: null
+        },
+        {
+          name: 'end',
+          default: null
+        },
+        {
+          name: 'outputCols',
+          default: null
+        }]
+    }
+  ),
+  extract: DataframeOperation<{ cols: Cols, regex: string, outputCols: Cols }>({
+      targetType: 'dataframe',
+      name: 'cols.extract',
+      args: [
+        {
+          name: 'cols',
+          default: '*'
+        },
+        {
+          name: 'regex',
+          default: null
+        },
+        {
+          name: 'outputCols',
+          default: null
+        }]
+    }
+  ),
+  slice: DataframeOperation<{ cols: Cols, start: number, stop: number, step: number, outputCols: Cols }>({
+      targetType: 'dataframe',
+      name: 'cols.slice',
+      args: [
+        {
+          name: 'cols',
+          default: '*'
+        },
+        {
+          name: 'start',
+          default: null
+        },
+        {
+          name: 'stop',
+          default: null
+        },
+        {
+          name: 'step',
+          default: null
+        },
+        {
+          name: 'outputCols',
+          default: null
+        }]
+    }
+  ),
+  left: DataframeOperation<{ cols: Cols, n: number, outputCols: Cols }>({
+      targetType: 'dataframe',
+      name: 'cols.left',
+      args: [
+        {
+          name: 'cols',
+          default: '*'
+        },
+        {
+          name: 'n',
+          default: null
+        },
+        {
+          name: 'outputCols',
+          default: null
+
+        }]
+
+    }
+  ),
+  right: DataframeOperation<{ cols: Cols, n: number, outputCols: Cols }>({
+      targetType: 'dataframe',
+      name: 'cols.right',
+      args: [
+        {
+          name: 'cols',
+          default: '*'
+        },
+        {
+          name: 'n',
+          default: null
+        },
+        {
+          name: 'outputCols',
+          default: null
+
+        }]
+
+    }
+  ),
+  mid: DataframeOperation<{ cols: Cols, start: number, end: number, n: number, outputCols: Cols }>({
+      targetType: 'dataframe',
+      name: 'cols.mid',
+      args: [
+        {
+          name: 'cols',
+          default: '*'
+        },
+        {
+          name: 'start',
+          default: 0
+        },
+        {
+          name: 'end',
+          default: null
+        },
+        {
+          name: 'n',
+          default: null
+        },
+        {
+          name: 'outputCols',
+          default: null
+        }]
+    }
+  ),
+  toFloat: DataframeOperation<{ cols: Cols, outputCols: Cols }>({
+      targetType: 'dataframe',
+      name: 'cols.toFloat',
+      args: [
+        {
+          name: 'cols',
+          default: '*'
+        },
+        {
+          name: 'outputCols',
+          default: null
+        }]
+    }
+  ),
+  toNumeric: DataframeOperation<{ cols: Cols, outputCols: Cols }>({
+      targetType: 'dataframe',
+      name: 'cols.toNumeric',
+      args: [
+        {
+          name: 'cols',
+          default: '*'
+        },
+        {
+          name: 'outputCols',
+          default: null
+        }]
+
+    }
+  ),
+  toInteger: DataframeOperation<{ cols: Cols, outputCols: Cols }>({
+      targetType: 'dataframe',
+      name: 'cols.toInteger',
+      args: [
+        {
+          name: 'cols',
+          default: '*'
+        },
+        {
+          name: 'outputCols',
+          default: null
+        }]
+    }
+  ),
+
+  toBoolean: DataframeOperation<{ cols: Cols, outputCols: Cols }>({
+    targetType: 'dataframe',
+    name: 'cols.toBoolean',
+    args: [
+      {
+        name: 'cols',
+        default: '*'
+      },
+      {
+        name: 'outputCols',
+        default: null
+      }]
+  }),
+  toString: DataframeOperation<{ cols: Cols, outputCols: Cols }>({
+    targetType: 'dataframe',
+    name: 'cols.toString',
+    args: [
+      {
+        name: 'cols',
+        default: '*'
+      },
+      {
+        name: 'outputCols',
+        default: null
+      }]
+  }),
+  dateFormats: DataframeOperation<{ cols: Cols, outputCols: Cols }>({
+    targetType: 'dataframe',
+    name: 'cols.dateFormats',
+    args: [
+      {
+        name: 'cols',
+        default: '*'
+      },
+      {
+        name: 'outputCols',
+        default: null
+      }]
+  }),
+  // TODO: lower, upper, title, capitalize all in one go?
+  lower: DataframeOperation<{ cols: Cols, outputCols: Cols }>({
+    targetType: 'dataframe',
+    name: 'cols.lower',
+    args: [
+      {
+        name: 'cols',
+        default: '*'
+      },
+      {
+        name: 'outputCols',
+        default: null
+      }]
+  }),
+  pad: DataframeOperation<{ cols: Cols, width: number, side: 'left' | 'right', fillChar: string, outputCols: Cols }>({
+    targetType: 'dataframe',
+    name: 'cols.pad',
+    args: [
+      {
+        name: 'cols',
+        default: '*'
+      },
+      {
+        name: 'width',
+        default: null
+      },
+      {
+        name: 'side',
+        default: 'left'
+      },
+      {
+        name: 'fillChar',
+        default: ' '
+      },
+      {
+        name: 'outputCols',
+        default: null
+      }]
+  }),
+  trim: DataframeOperation<{ cols: Cols, width: number, fillChar: string, side: string, outputCols }>({
+      targetType: 'dataframe',
+      name: 'cols.trim',
+      args: [
+        {
+          name: 'cols',
+          default: '*'
+        },
+        {
+          name: 'width',
+          default: null
+        },
+        {
+          name: 'fillChar',
+          default: ' '
+        },
+        {
+          name: 'side',
+          default: 'left'
+        },
+        {
+          name: 'outputCols',
+          default: null
+        }]
+
+    }
+  ),
+  strip: DataframeOperation<{ cols: Cols, chars: string, side: string, outputCols: Cols }>({
+    targetType: 'dataframe',
+    name: 'cols.strip',
+    args: [
+      {
+        name: 'cols',
+        default: '*'
+      },
+      {
+        name: 'chars',
+        default: null
+      },
+      {
+        name: 'side',
+        default: 'left'
+      },
+      {
+        name: 'outputCols',
+        default: null
+      }]
+  }),
+  strip_html: DataframeOperation<{ cols: Cols, outputCols: Cols }>({
+    targetType: 'dataframe',
+    name: 'cols.strip_html',
+    args: [
+      {
+        name: 'cols',
+        default: '*'
+      },
+      {
+        name: 'outputCols',
+        default: null
+      }]
+  }),
+  formatDate: DataframeOperation<{ cols: Cols, currentFormat: string, outputFormat: string, outputCols: Cols }>({
+      targetType: 'dataframe',
+      name: 'cols.formatDate',
+      args: [
+        {
+          name: 'cols',
+          default: '*'
+        },
+        {
+          name: 'currentFormat',
+          default: null
+        },
+        {
+          name: 'outputFormat',
+          default: null
+        },
+        {
+          name: 'outputCols',
+          default: null
+        }]
+    }
+  ),
+  wordTokenize: DataframeOperation<{ cols: Cols, outputCols: Cols }>({
+    targetType: 'dataframe',
+    name: 'cols.wordTokenize',
+    args: [
+      {
+        name: 'cols',
+        default: '*'
+      },
+      {
+        name: 'outputCols',
+        default: null
+      }]
+  }),
+  wordCount: DataframeOperation<{ cols: Cols, outputCols: Cols }>({
+    targetType: 'dataframe',
+    name: 'cols.wordCount',
+    args: [
+      {
+        name: 'cols',
+        default: '*'
+      },
+      {
+        name: 'outputCols',
+        default: null
+      }]
+  }),
+  len: DataframeOperation<{ cols: Cols, outputCols: Cols }>({
+    targetType: 'dataframe',
+    name: 'cols.len',
+    args: [
+      {
+        name: 'cols',
+        default: '*'
+      },
+      {
+        name: 'outputCols',
+        default: null
+      }]
+  }),
+  expandContractedWords: DataframeOperation<{ cols: Cols, outputCols: Cols }>({
+    targetType: 'dataframe',
+    name: 'cols.expandContractedWords',
+    args: [
+      {
+        name: 'cols',
+        default: '*'
+      },
+      {
+        name: 'outputCols',
+        default: null
+      }]
+  }),
+  reverse: DataframeOperation<{ cols: Cols, outputCols: Cols }>({
+    targetType: 'dataframe',
+    name: 'cols.reverse',
+    args: [
+      {
+        name: 'cols',
+        default: '*'
+
+      },
+      {
+        name: 'outputCols',
+        default: null
+      }]
+  }),
+  // TODO: Should we define somethig like enum
+  remove: DataframeOperation<{ cols: Cols, search: string, searchBy: string, outputCols: Cols }>({
+    targetType: 'dataframe',
+    name: 'cols.remove',
+    args: [
+
+      {
+        name: 'cols',
+        default: '*'
+      },
+      {
+        name: 'search',
+        default: null
+      },
+      {
+        name: 'searchBy',
+        default: 'word'
+      },
+      {
+        name: 'outputCols',
+        default: null
+      }]
+  }),
+  normalizeChars: DataframeOperation<{ cols: Cols, outputCols: Cols }>({
+    targetType: 'dataframe',
+    name: 'cols.normalizeChars',
+    args: [
+      {
+        name: 'cols',
+        default: '*'
+      },
+      {
+        name: 'outputCols',
+        default: null
+      }]
+  }),
+  removeNumbers: DataframeOperation<{ cols: Cols, outputCols: Cols }>({
+    targetType: 'dataframe',
+    name: 'cols.removeNumbers',
+    args: [
+      {
+        name: 'cols',
+        default: '*'
+      },
+      {
+        name: 'outputCols',
+        default: null
+      }]
+  }),
+  removeWhiteSpaces: DataframeOperation<{ cols: Cols, outputCols: Cols }>({
+    targetType: 'dataframe',
+    name: 'cols.removeWhiteSpaces',
+    args: [
+      {
+        name: 'cols',
+        default: '*'
+      },
+      {
+        name: 'outputCols',
+        default: null
+      }]
+  }),
+  removeStopWords: DataframeOperation<{ cols: Cols, language: string, outputCols: Cols }>({
+    targetType: 'dataframe',
+    name: 'cols.removeStopWords',
+    args: [
+      {
+        name: 'cols',
+        default: '*'
+      },
+      {
+        name: 'language',
+        default: 'english'
+      },
+      {
+        name: 'outputCols',
+        default: null
+      }]
+  }),
+  removeURLS: DataframeOperation<{ cols: Cols, outputCols: Cols }>({
+    targetType: 'dataframe',
+    name: 'cols.removeURLS',
+    args: [
+      {
+        name: 'cols',
+        default: '*'
+      },
+      {
+
+        name: 'outputCols',
+        default: null
+      }]
+  }),
+  normalizeSpaces: DataframeOperation<{ cols: Cols, outputCols: Cols }>({
+    targetType: 'dataframe',
+    name: 'cols.normalizeSpaces',
+    args: [
+      {
+        name: 'cols',
+        default: '*'
+      },
+      {
+        name: 'outputCols',
+        default: null
+      }]
+  }),
+  removeSpecialChars: DataframeOperation<{ cols: Cols, outputCols: Cols }>({
+    targetType: 'dataframe',
+    name: 'cols.removeSpecialChars',
+    args: [
+      {
+        name: 'cols',
+        default: '*'
+      },
+      {
+        name: 'outputCols',
+        default: null
+      }]
+  }),
+  toDateTime: DataframeOperation<{ cols: Cols, currentFormat: string, outputCols: Cols, outputFormat: string }>({
+    targetType: 'dataframe',
+    name: 'cols.toDateTime',
+    args: [
+      {
+        name: 'cols',
+        default: '*'
+      },
+      {
+        name: 'currentFormat',
+        default: null
+      },
+      {
+        name: 'outputCols',
+        default: null
+      },
+      {
+        name: 'outputFormat',
+        default: null
+      }]
+  }),
+  year: DataframeOperation<{ cols: Cols, format: string, outputCols: Cols }>({
+    targetType: 'dataframe',
+    name: 'cols.year',
+    args: [
+      {
+        name: 'cols',
+        default: '*'
+      },
+      {
+        name: 'format',
+        default: null
+      }]
+  }),
+  month: DataframeOperation<{ cols: Cols, format: string, outputCols: Cols }>({
+    targetType: 'dataframe',
+    name: 'cols.month',
+    args: [
+      {
+        name: 'cols',
+        default: '*'
+      }
+      , {
+        name: 'format',
+        default: null
+      },
+      {
+        name: 'outputCols',
+        default: null
+
+      }]
+  }),
+  day: DataframeOperation<{ cols: Cols, format: string, outputCols: Cols }>({
+    targetType: 'dataframe',
+    name: 'cols.day',
+    args: [
+      {
+        name: 'cols',
+        default: '*'
+      },
+      {
+        name: 'format',
+        default: null
+      }]
+  }),
+  hour: DataframeOperation<{ cols: Cols, format: string, outputCols: Cols }>({
+    targetType: 'dataframe',
+    name: 'cols.hour',
+    args: [
+      {
+        name: 'cols',
+        default: '*'
+      },
+      {
+        name: 'format',
+        default: null
+      }]
+  }),
+  minute: DataframeOperation<{ cols: Cols, format: string, outputCols: Cols }>({
+    targetType: 'dataframe',
+    name: 'cols.minute',
+    args: [
+      {
+        name: 'cols',
+        default: '*'
+      },
+      {
+        name: 'format',
+        default: null
+      }]
+  }),
+  second: DataframeOperation<{ cols: Cols, format: string, outputCols: Cols }>({
+    targetType: 'dataframe',
+    name: 'cols.second',
+    args: [
+      {
+        name: 'cols',
+        default: '*'
+      },
+      {
+        name: 'format',
+        default: null
+      }]
+  }),
+  weekday: DataframeOperation<{ cols: Cols, format: string, outputCols: Cols }>({
+    targetType: 'dataframe',
+    name: 'cols.weekday',
+    args: [
+      {
+        name: 'cols',
+        default: '*'
+      },
+      {
+        name: 'format',
+        default: null
+      }]
+  }), //TODO: years_between, motnhs_between, days_between, hours_between, minutes_between, seconds_between
+  timeBetween: DataframeOperation<{ cols: Cols, value, dateFormat, round, outputCols: Cols, func }>({
+    targetType: 'dataframe',
+    name: 'cols.timeBetween',
+    args: [
+      {
+        name: 'cols',
+        default: '*'
+      },
+      {
+        name: 'value',
+        default: null
+      },
+      {
+        name: 'dateFormat',
+        default: null
+      },
+      {
+        name: 'round',
+        default: null
+      },
+      {
+        name: 'outputCols',
+        default: null
+      },
+      {
+        name: 'func',
+        default: null
+      }]
+  }),
+  // TODO: use Enum in searchBy?
+  replace: DataframeOperation<{ cols: Cols, search, replaceBy: string, searchBy: string, ignoreCase: boolean, outputCols: Cols }>({
+    targetType: 'dataframe',
+    name: 'cols.replace',
+    args: [
+      {
+        name: 'cols',
+        default: '*'
+      },
+      {
+        name: 'search',
+        default: null
+      },
+      {
+        name: 'replaceBy',
+        default: null
+      },
+      {
+        name: 'searchBy',
+        default: null
+      },
+      {
+        name: 'ignoreCase',
+        default: false
+      }]
+  }),
+  replaceRegex: DataframeOperation<{ cols: Cols, search, replaceBy: string, searchBy: string, ignoreCase: boolean, outputCols: Cols }>({
+    targetType: 'dataframe',
+    name: 'cols.replaceRegex',
+    args: [
+      {
+        name: 'cols',
+        default: '*'
+      },
+      {
+        name: 'search',
+        default: null
+      },
+      {
+        name: 'replaceBy',
+        default: null
+      },
+      {
+        name: 'searchBy',
+        default: null
+      },
+      {
+        name: 'ignoreCase',
+        default: false
+      },
+      {
+        name: 'outputCols',
+        default: null
+      }]
+  }),
+  numToWords: DataframeOperation<{ cols: Cols, language: string, outputCols: Cols }>({
+    targetType: 'dataframe',
+    name: 'cols.numToWords',
+    args: [
+      {
+        name: 'cols',
+        default: '*'
+      },
+      {
+        name: 'language',
+        default: 'en'
+      },
+      {
+        name: 'outputCols',
+        default: null
+      }]
+  }),
+  lemmatizeVerbs: DataframeOperation<{ cols: Cols, language: string, outputCols: Cols }>({
+    targetType: 'dataframe',
+    name: 'cols.lemmatizeVerbs',
+    args: [
+      {
+        name: 'cols',
+        default: '*'
+      },
+      {
+        name: 'language',
+        default: 'en'
+      },
+      {
+        name: 'outputCols',
+        default: null
+      }]
+  }),
+  stemVerbs: DataframeOperation<{ cols: Cols, outputCols: Cols }>({
+    targetType: 'dataframe',
+    name: 'cols.stemVerbs',
+    args: [
+      {
+        name: 'cols',
+        default: '*'
+      },
+      {
+        name: 'outputCols',
+        default: null
+      }]
+  }),
+  impute: DataframeOperation<{ cols: Cols, dataType: string, strategy: string, fillValue, outputCols: Cols }>({
+    targetType: 'dataframe',
+    name: 'cols.impute',
+    args: [
+      {
+        name: 'cols',
+        default: '*'
+      },
+      {
+        name: 'dataType',
+        default: 'auto'
+      },
+      {
+        name: 'strategy',
+        default: 'auto'
+      },
+      {
+        name: 'fillValue',
+        default: null
+      }]
+  }),
+  fillNA: DataframeOperation<{ cols: Cols, value, outputCols: Cols, evalValue }>({
+    targetType: 'dataframe',
+    name: 'cols.fillNA',
+    args: [
+      {
+        name: 'cols',
+        default: '*'
+      },
+      {
+        name: 'value',
+        default: null
+      },
+      {
+        name: 'outputCols',
+        default: null
+      },
+      {
+        name: 'evalValue',
+        default: false
+      }]
+  }),
+  count:
+    DataframeOperation<NoArgs, number>({
+      targetType: 'value',
+      name: 'cols.count'
+    }),
+  uniqueValues: DataframeOperation<{ cols: Cols, estimate: boolean, compute: boolean, tidy: boolean }>({
+    targetType: 'value',
+    name: 'cols.uniqueValues',
+    args: [
+      {
+        name: 'cols',
+        default: '*'
+      },
+      {
+        name: 'estimate',
+        default: false
+      },
+      {
+        name: 'compute',
+        default: false
+      },
+      {
+        name: 'tidy',
+        default: true
+      }]
+
+  }),
+  countUniques: DataframeOperation<{ cols: Cols, estimate: boolean, compute: boolean, tidy: boolean }>({
+    targetType: 'value',
+    name: 'cols.countUniques',
+    args: [
+      {
+        name: 'cols',
+        default: '*'
+      },
+      {
+        name: 'estimate',
+        default: false
+      },
+      {
+        name: 'compute',
+        default: true
+      },
+      {
+        name: 'tidy',
+        default: true
+      }]
+  }),
+  //TODO: add, sub, mul, div, rdiv,
+  add: DataframeOperation<{ cols: Cols, outputCols: Cols }>({
+    targetType: 'dataframe',
+    name: 'cols.add',
+    args: [
+      {
+        name: 'cols',
+        default: '*'
+      },
+      {
+        name: 'outputCols',
+        default: null
+      }]
+  }),
+  zScore: DataframeOperation<{ cols: Cols, outputCols: Cols }>({
+    targetType: 'dataframe',
+    name: 'cols.zScore',
+    args: [
+      {
+        name: 'cols',
+        default: '*'
+      },
+      {
+        name: 'outputCols',
+        default: null
+      }]
+  }),
+  modifiedZScore: DataframeOperation<{ cols: Cols, estimate: boolean, outputCols: Cols }>({
+    targetType: 'dataframe',
+    name: 'cols.modifiedZScore',
+    args: [
+      {
+        name: 'cols',
+        default: '*'
+      },
+      {
+        name: 'estimate',
+        default: true
+      },
+      {
+        name: 'outputCols',
+        default: null
+      }]
+  }),
+  standardScaler: DataframeOperation<{ cols: Cols, outputCols: Cols }>({
+    targetType: 'dataframe',
+    name: 'cols.standardScaler',
+    args: [
+      {
+        name: 'cols',
+        default: '*'
+      },
+      {
+        name: 'outputCols',
+        default: null
+      }]
+  }),
+  maxAbsScaler: DataframeOperation<{ cols: Cols, outputCols: Cols }>({
+    targetType: 'dataframe',
+    name: 'cols.maxAbsScaler',
+    args: [
+      {
+        name: 'cols',
+        default: '*'
+      },
+      {
+        name: 'outputCols',
+        default: null
+      }]
+  }),
+  minMaxScaler: DataframeOperation<{ cols: Cols, outputCols: Cols }>({
+    targetType: 'dataframe',
+    name: 'cols.minMaxScaler',
+    args: [
+      {
+        name: 'cols',
+        default: '*'
+      },
+      {
+        name: 'outputCols',
+        default: null
+      }]
+  }),
+  iqr: DataframeOperation<{ cols: Cols, more: boolean, estimate: boolean }>({
+    targetType: 'value',
+    name: 'cols.iqr',
+    args: [
+      {
+        name: 'cols',
+        default: '*'
+      },
+      {
+        name: 'more',
+        default: false
+      },
+      {
+        name: 'estimate',
+        default: true
+      }]
+  }),
+  nest: DataframeOperation<{ cols: Cols, outputCol: string, drop: boolean, shape: string }>({
+    targetType: 'dataframe',
+    name: 'cols.nest',
+    args: [
+      {
+        name: 'cols',
+        default: '*'
+      },
+      {
+        name: 'outputCol',
+        default: null
+      },
+      {
+        name: 'drop',
+        default: true
+      },
+      {
+        name: 'shape',
+        default: 'string'
+      }]
+  }),
+  unnest: DataframeOperation<{ cols: Cols, separator: string, splits: number, index: number, outputCols: Cols, drop: boolean, mode: string }>({
+    targetType: 'dataframe',
+    name: 'cols.unnest',
+    args: [
+      {
+        name: 'cols',
+        default: '*'
+      },
+      {
+        name: 'separator',
+        default: null
+      },
+      {
+        name: 'splits',
+        default: 2
+      },
+      {
+        name: 'index',
+        default: null
+      },
+      {
+        name: 'outputCols',
+        default: null
+      },
+      {
+        name: 'drop',
+        default: false
+      },
+      {
+        name: 'mode',
+        default: 'string'
+      }]
+  }),
+  heatMap: DataframeOperation<{ colX: Cols, colsY: Cols, binX: number, binY: number, compute: boolean }>({
+    targetType: 'dataframe',
+    name: 'cols.heatMap',
+    args: [
+      {
+        name: 'colX',
+        default: '*'
+      },
+      {
+        name: 'colsY',
+        default: '*'
+      },
+      {
+        name: 'binX',
+        default: 10
+      },
+      {
+        name: 'binY',
+        default: 10
+      },
+      {
+        name: 'compute',
+        default: true
+      }]
   }),
   histogram: DataframeOperation<{
     cols: Cols;
@@ -854,38 +2089,286 @@ export const operations = {
       }
     ]
   }),
-  count: DataframeOperation<NoArgs, number>({
-    name: 'count',
-    getCode: function(kwargs: { source: string }) {
-      return `${kwargs.source}.rows.count()`;
-    }
+  quality: DataframeOperation<{ cols: Cols, flush: boolean, compute: boolean }>({
+    targetType: 'value',
+    name: 'cols.quality',
+    args: [
+      {
+        name: 'cols',
+        default: '*'
+      },
+      {
+        name: 'flush',
+        default: false
+      },
+      {
+        name: 'compute',
+        default: true
+      }]
   }),
+  inferType: DataframeOperation<{ cols: Cols, sampleCount: number, tidy: boolean }>({
+    targetType: 'dataframe',
+    name: 'cols.inferType',
+    args: [
+      {
+        name: 'cols',
+        default: '*'
+      },
+      {
+        name: 'sampleCount',
+        default: null
+      },
+      {
+        name: 'tidy',
+        default: true
+      }]
+  }),
+  inferDateFormats: DataframeOperation<{ cols: Cols, sample: number, tidy: boolean }>({
+    targetType: 'dataframe',
+    name: 'cols.inferDateFormats',
+    args: [
+      {
+        name: 'cols',
+        default: '*'
+      },
+      {
+        name: 'sample',
+        default: 200
+      },
+      {
+        name: 'tidy',
+        default: true
+      }]
+  }),
+  frequency: DataframeOperation<{ cols: Cols, top: number, percentage: boolean, totalRows: boolean, countUniques: boolean, compute: boolean, tidy: boolean }>({
+    targetType: 'value',
+    name: 'cols.frequency',
+    args: [
+      {
+        name: 'cols',
+        default: '*'
+      },
+      {
+        name: 'top',
+        default: 10
+      },
+      {
+        name: 'percentage',
+        default: false
+      },
+      {
+        name: 'totalRows',
+        default: null
+      },
+      {
+        name: 'countUniques',
+        default: false
+      },
+      {
+        name: 'compute',
+        default: true
+      },
+      {
+        name: 'tidy',
+        default: true
+      }]
+  }),
+  boxPlot: DataframeOperation<{ cols: Cols }>({
+    targetType: 'value',
+    name: 'cols.boxPlot',
+    args: [
+      {
+        name: 'cols',
+        default: '*'
+      }
+    ]
+  }),
+  names: DataframeOperation<{ cols: Cols, dataTypes: string, invert: boolean, isRegex: boolean }>({
+    targetType: 'value',
+    name: 'cols.names',
+    args: [
+      {
+        name: 'cols',
+        default: '*'
+      },
+      {
+        name: 'dataTypes',
+        default: null
+      },
+      {
+        name: 'invert',
+        default: false
+      },
+      {
+        name: 'isRegex',
+        default: null
+      }]
+  }),
+  countZeros: DataframeOperation<{ cols: Cols, tidy: boolean }>({
+    targetType: 'value',
+    name: 'cols.countZeros',
+    args: [
+      {
+        name: 'cols',
+        default: '*'
+      },
+      {
+        name: 'tidy',
+        default: true
+      }]
+  }),
+  qcut: DataframeOperation<{ cols: Cols, quantiles: number, outputCol: Cols }>({
+    targetType: 'dataframe',
+    name: 'cols.qcut',
+    args: [
+      {
+        name: 'cols',
+        default: '*'
+      },
+      {
+        name: 'quantiles',
+        default: null
+      },
+      {
+        name: 'outputCol',
+        default: null
+      }]
+  }),
+  cut: DataframeOperation<{ cols: Cols, bins: number, labels: [] | false, default, outputCol: Cols }>({
+    targetType: 'dataframe',
+    name: 'cols.cut',
+    args: [
+      {
+        name: 'cols',
+        default: '*'
+      },
+      {
+        name: 'bins',
+        default: null
+      },
+      {
+        name: 'labels',
+        default: null
+      },
+      {
+        name: 'default',
+        default: null
+      },
+      {
+        name: 'outputCol',
+        default: null
+      }]
+  }),
+  clip: DataframeOperation<{ cols: Cols, lower_bound: number, upper_bound: number, outputCol: Cols }>({
+    targetType: 'dataframe',
+    name: 'cols.clip',
+    args: [
+      {
+        name: 'cols',
+        default: '*'
+      },
+      {
+        name: 'lower_bound',
+        default: null
+      },
+      {
+        name: 'upper_bound',
+        default: null
+      },
+      {
+        name: 'outputCol',
+        default: null
+      }
+    ]
+  }),
+  oneHotEncode: DataframeOperation<{ cols: Cols, prefix: string, drop: boolean, outputCol: Cols, [k: string]: PythonCompatible }>({
+    targetType: 'dataframe',
+    name: 'cols.oneHotEncode',
+    args: [
+      {
+        name: 'cols',
+        default: '*'
+      },
+      {
+        name: 'prefix',
+        default: null
+      },
+      {
+        name: 'drop',
+        default: true
+      }]
+  }),
+  stringToIndex: DataframeOperation<{ cols: Cols, outputCol: Cols }>({
+    targetType: 'dataframe',
+    name: 'cols.stringToIndex',
+    args: [
+      {
+        name: 'cols',
+        default: '*'
+      },
+      {
+        name: 'outputCol',
+        default: null
+      }
+    ]
+  }),
+
+  indexToString: DataframeOperation<{ cols: Cols, outputCol: Cols }>({
+    targetType: 'dataframe',
+    name: 'cols.indexToString',
+    args: [
+      {
+        name: 'cols',
+        default: '*'
+      },
+      {
+        name: 'outputCol',
+        default: null
+      }]
+  }),
+  //TODO: domain, top_domain, sub_domain, url_schema, url_path,url_file,url_query,url_frament,host,
+  // port,email_username,email_domain.
+  domain: DataframeOperation<{ cols: Cols, outputCols: Cols }>({
+    targetType: 'dataframe',
+    name: 'cols.domain',
+    args: [
+      {
+        name: 'cols',
+        default: '*'
+      },
+      {
+        name: 'outputCols',
+        default: null
+      }]
+  }),
+// TODO: handle any and count functions
   columns: DataframeOperation<NoArgs, string[]>({
     name: 'cols.names'
   }),
-  columnsSample: DataframeOperation<{ start: number; stop: number }>({
-    targetType: 'value',
-    name: 'columnsSample',
-    args: {
-      start: 0,
-      stop: 10
-    },
-    getCode: function(kwargs) {
-      return (
-        `${kwargs.source}[${kwargs.start}: ${kwargs.stop}]` +
-        `.columns_sample("*")`
-      );
-    }
-  })
-  // hist: DataframeOperation({
-  //   targetType: 'value',
-  //   name: 'hist',
-  //   getCode: function(kwargs: { source: string; cols: string | string[] }) {
-  //     kwargs = Object.assign({ cols: '*' }, kwargs);
-  //     if (Array.isArray(kwargs.cols)) {
-  //       return `${kwargs.source}.cols.hist(["${kwargs.cols.join('", "')}"])`;
-  //     }
-  //     return `${kwargs.source}.cols.hist("${kwargs.cols}")`;
-  //   }
-  // })
+  columnsSample:
+    DataframeOperation<{ start: number; stop: number }>({
+      targetType: 'value',
+      name: 'columnsSample',
+      args: {
+        start: 0,
+        stop: 10
+      },
+      getCode: function(kwargs) {
+        return (
+          `${kwargs.source}[${kwargs.start}: ${kwargs.stop}]` +
+          `.columns_sample("*")`
+        );
+      }
+    })
+// hist: DataframeOperation({
+//   targetType: 'value',
+//   name: 'hist',
+//   getCode: function(kwargs: { source: string; cols: string | string[] }) {
+//     kwargs = Object.assign({ cols: '*' }, kwargs);
+//     if (Array.isArray(kwargs.cols)) {
+//       return `${kwargs.source}.cols.hist(["${kwargs.cols.join('", "')}"])`;
+//     }
+//     return `${kwargs.source}.cols.hist("${kwargs.cols}")`;
+//   }
+// })
 };
