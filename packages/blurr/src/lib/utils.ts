@@ -1,6 +1,6 @@
 import ShortUniqueId from 'short-unique-id';
-import { Name } from '../types/arguments';
 
+import { Name } from '../types/arguments';
 import { OperationArgument } from '../types/operation';
 
 export const RELATIVE_ERROR = 10_000;
@@ -45,7 +45,7 @@ export function Name(name: string): Name {
   return {
     name,
     toString: () => name,
-    _blurrMember: 'name'
+    _blurrMember: 'name',
   };
 }
 
@@ -66,7 +66,7 @@ export function objectMap<T, U extends T[keyof T], V>(
   object: T,
   cb: (elem: U) => V
 ) {
-  return Object.keys(object).reduce(function(result, key) {
+  return Object.keys(object).reduce(function (result, key) {
     result[key] = cb(object[key]);
     return result;
   }, {} as { [key in keyof T]: V });
@@ -137,7 +137,7 @@ export const adaptKwargs = (
   // include extra arguments
   return {
     ...argsWithDefaults,
-    ...args
+    ...args,
   };
 };
 
