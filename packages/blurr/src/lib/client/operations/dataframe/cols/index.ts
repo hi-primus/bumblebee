@@ -109,7 +109,7 @@ function ColsMathOperation(name: string) {
         default: '*',
       },
       {
-        name: 'outputCols',
+        name: 'outputCol',
         default: null,
       },
     ],
