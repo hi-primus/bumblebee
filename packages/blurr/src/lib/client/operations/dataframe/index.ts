@@ -1110,7 +1110,18 @@ export const operations = {
         }]
     }
   ),
-  // TODO: Could we add multiple operations in one go? sin, cos, tan
+  sin: StandardDataframeOperation('cols.sin'),
+  cos: StandardDataframeOperation('cols.cos'),
+  tan: StandardDataframeOperation('cols.tan'),
+  asin: StandardDataframeOperation('cols.asin'),
+  acos: StandardDataframeOperation('cols.acos'),
+  atan: StandardDataframeOperation('cols.atan'),
+  sinh: StandardDataframeOperation('cols.sinh'),
+  cosh: StandardDataframeOperation('cols.cosh'),
+  tanh: StandardDataframeOperation('cols.tanh'),
+  asinh: StandardDataframeOperation('cols.asinh'),
+  acosh: StandardDataframeOperation('cols.acosh'),
+  atanh: StandardDataframeOperation('cols.atanh'),
   substring: DataframeOperation<{ cols: Cols, start: number, end: number, outputCols: Cols }>({
       targetType: 'dataframe',
       name: 'cols.substring',
