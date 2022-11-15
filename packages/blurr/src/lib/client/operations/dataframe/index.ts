@@ -1,18 +1,21 @@
 import type {
   CallbackFunction,
   Cols,
-  NoArgs, SearchBy,
-  Source
+  NoArgs,
+  SearchBy,
+  Source,
 } from '../../../../types/arguments';
 import { ArgsType, OperationCreator } from '../../../../types/operation';
-import { BlurrOperation } from '../factory';
 import { RELATIVE_ERROR } from '../../../utils';
+import { BlurrOperation } from '../factory';
 
-function DataframeOperation<TA extends ArgsType = ArgsType,
-  TR extends OperationCompatible = Source>(operationCreator: OperationCreator) {
+function DataframeOperation<
+  TA extends ArgsType = ArgsType,
+  TR extends OperationCompatible = Source
+>(operationCreator: OperationCreator) {
   return BlurrOperation<TA, TR>({
     ...operationCreator,
-    sourceType: 'dataframe'
+    sourceType: 'dataframe',
   });
 }
 
@@ -34,66 +37,69 @@ function AggregationOperation<TA extends ArgsType = ArgsType>(
 }
 
 function DateDataframeOperation(name: string) {
-  return DataframeOperation<{ cols: Cols, outputCols: Cols }>({
+  return DataframeOperation<{ cols: Cols; outputCols: Cols }>({
     targetType: 'dataframe',
     name,
     args: [
       {
         name: 'cols',
-        default: '*'
+        default: '*',
       },
       {
         name: 'value',
-        default: null
+        default: null,
       },
       {
         name: 'dateFormat',
-        default: null
+        default: null,
       },
       {
         name: 'round',
-        default: null
+        default: null,
       },
       {
         name: 'outputCols',
-        default: null
+        default: null,
       },
       {
         name: 'func',
-        default: null
-      }]
+        default: null,
+      },
+    ],
   });
 }
 
 function StandardDataframeOperation(name: string) {
-  return DataframeOperation<{ cols: Cols, outputCols: Cols }>({
+  return DataframeOperation<{ cols: Cols; outputCols: Cols }>({
     targetType: 'dataframe',
     name,
     args: [
       {
         name: 'cols',
-        default: '*'
+        default: '*',
       },
       {
         name: 'outputCols',
-        default: null
-      }]
+        default: null,
+      },
+    ],
   });
 }
 
 function MulDataframeOperation(name: string) {
-  return DataframeOperation<{ cols: Cols, outputCols: Cols }>({
+  return DataframeOperation<{ cols: Cols; outputCols: Cols }>({
     targetType: 'dataframe',
     name,
     args: [
       {
         name: 'cols',
-        default: '*'
+        default: '*',
       },
       {
         name: 'outputCols',
-        default: null
-      }]
+        default: null,
+      },
+    ],
   });
 }
 
@@ -104,9 +110,9 @@ export const operations = {
     args: [
       {
         name: 'dfs',
-        required: true
-      }
-    ]
+        required: true,
+      },
+    ],
   }),
   concat: DataframeOperation<{ dfs: Source[] }>({
     targetType: 'dataframe',
@@ -114,9 +120,9 @@ export const operations = {
     args: [
       {
         name: 'dfs',
-        required: true
-      }
-    ]
+        required: true,
+      },
+    ],
   }),
   join: DataframeOperation<{
     dfs: Source[];
@@ -130,29 +136,29 @@ export const operations = {
     name: 'cols.join',
     args: [
       {
-        name: 'dfs'
+        name: 'dfs',
       },
       {
         name: 'how',
-        default: 'left'
+        default: 'left',
       },
       {
         name: 'on',
-        default: null
+        default: null,
       },
       {
         name: 'left_on',
-        default: null
+        default: null,
       },
       {
         name: 'right_on',
-        default: null
+        default: null,
       },
       {
         name: 'key_middle',
-        default: false
-      }
-    ]
+        default: false,
+      },
+    ],
   }),
   // select: DataframeOperation<{ cols: Cols }>({
   //   targetType: 'dataframe',
@@ -186,13 +192,13 @@ export const operations = {
     args: [
       {
         name: 'cols',
-        default: '*'
+        default: '*',
       },
       {
         name: 'outputCols',
-        default: null
-      }
-    ]
+        default: null,
+      },
+    ],
   }),
   drop: DataframeOperation<{ cols: Cols; regex: string; data_type: string }>({
     targetType: 'dataframe',
@@ -200,17 +206,17 @@ export const operations = {
     args: [
       {
         name: 'cols',
-        default: '*'
+        default: '*',
       },
       {
         name: 'regex',
-        default: null
+        default: null,
       },
       {
         name: 'data_type',
-        default: null
-      }
-    ]
+        default: null,
+      },
+    ],
   }),
   keep: DataframeOperation<{ cols: Cols; regex: string }>({
     targetType: 'dataframe',
@@ -218,13 +224,13 @@ export const operations = {
     args: [
       {
         name: 'cols',
-        default: '*'
+        default: '*',
       },
       {
         name: 'regex',
-        default: null
-      }
-    ]
+        default: null,
+      },
+    ],
   }),
   toTimeStamp: DataframeOperation<{ cols: Cols; format: string }>({
     targetType: 'dataframe',
@@ -232,13 +238,13 @@ export const operations = {
     args: [
       {
         name: 'cols',
-        default: '*'
+        default: '*',
       },
       {
         name: 'format',
-        default: null
-      }
-    ]
+        default: null,
+      },
+    ],
   }),
   toList: DataframeOperation<{ cols: Cols }>({
     targetType: 'value',
@@ -246,9 +252,9 @@ export const operations = {
     args: [
       {
         name: 'cols',
-        default: '*'
-      }
-    ]
+        default: '*',
+      },
+    ],
   }),
   // TODO:Support UDF
   set: DataframeOperation<{
@@ -265,33 +271,33 @@ export const operations = {
     args: [
       {
         name: 'cols',
-        default: '*'
+        default: '*',
       },
       {
         name: 'valueFunc',
-        default: null
+        default: null,
       },
       {
         name: 'where',
-        default: null
+        default: null,
       },
       {
         name: 'args',
-        default: null
+        default: null,
       },
       {
         name: 'default',
-        default: null
+        default: null,
       },
       {
         name: 'evalValue',
-        default: false
+        default: false,
       },
       {
         name: 'each',
-        default: true
-      }
-    ]
+        default: true,
+      },
+    ],
   }),
   // TODO: Support functions
   rename: DataframeOperation<{
@@ -304,22 +310,22 @@ export const operations = {
     args: [
       {
         name: 'cols',
-        default: '*'
+        default: '*',
       },
       {
         name: 'outputCols',
-        default: null
-      }
-    ]
+        default: null,
+      },
+    ],
   }),
   parseInferredTypes: DataframeOperation<{ colDataType }>({
     targetType: 'value',
     name: 'cols.parseInferredTypes',
     args: [
       {
-        name: 'colDataType'
-      }
-    ]
+        name: 'colDataType',
+      },
+    ],
   }),
   inferredDataType: DataframeOperation<{
     cols: Cols;
@@ -332,19 +338,19 @@ export const operations = {
     args: [
       {
         name: 'cols',
-        default: '*'
+        default: '*',
       },
       {
-        name: 'useInternal'
+        name: 'useInternal',
       },
       {
-        name: 'calculate'
+        name: 'calculate',
       },
       {
         name: 'tidy',
-        default: true
-      }
-    ]
+        default: true,
+      },
+    ],
   }),
   setDataType: DataframeOperation<{
     cols: Cols;
@@ -356,17 +362,17 @@ export const operations = {
     args: [
       {
         name: 'cols',
-        default: '*'
+        default: '*',
       },
       {
         name: 'dataTypes',
-        default: null
+        default: null,
       },
       {
         name: 'inferred',
-        default: false
-      }
-    ]
+        default: false,
+      },
+    ],
   }),
   unSetDateType: DataframeOperation<{ cols: Cols }>({
     targetType: 'dataframe',
@@ -374,8 +380,9 @@ export const operations = {
     args: [
       {
         name: 'cols',
-        default: '*'
-      }]
+        default: '*',
+      },
+    ],
   }),
   // TODO: implement set_date_format and unset_date_format
   // setDateFormat: DataframeOperation<{ cols: Cols, format: string }>({
@@ -387,214 +394,255 @@ export const operations = {
   //       default: '*'
   //     }]
   // }),
-  cast: DataframeOperation<{ cols: Cols, dataType: string, outputCols: Cols }>({
+  cast: DataframeOperation<{ cols: Cols; dataType: string; outputCols: Cols }>({
     targetType: 'dataframe',
     name: 'cols.cast',
     args: [
       {
         name: 'cols',
-        default: '*'
+        default: '*',
       },
       {
         name: 'dataType',
-        default: null
+        default: null,
       },
       {
         name: 'outputCols',
-        default: null
-      }]
+        default: null,
+      },
+    ],
   }),
-  profile: DataframeOperation<{ cols: Cols, bins: number, flush: boolean }>({
+  profile: DataframeOperation<{ cols: Cols; bins: number; flush: boolean }>({
     targetType: 'value',
     name: 'cols.profile',
     args: [
       {
         name: 'cols',
-        default: '*'
+        default: '*',
       },
       {
         name: 'bins',
-        default: 10
+        default: 10,
       },
       {
         name: 'flush',
-        default: false
-      }]
+        default: false,
+      },
+    ],
   }),
-  pattern: DataframeOperation<{ cols: Cols, outputCols: Cols, mode: number }>({
+  pattern: DataframeOperation<{ cols: Cols; outputCols: Cols; mode: number }>({
     targetType: 'dataframe',
     name: 'cols.pattern',
     args: [
       {
         name: 'cols',
-        default: '*'
+        default: '*',
       },
       {
         name: 'outputCols',
-        default: null
+        default: null,
       },
       {
         name: 'mode',
-        default: 0
-      }]
+        default: 0,
+      },
+    ],
   }),
-  assign: DataframeOperation<{ cols: Cols, value, [k: string]: PythonCompatible }>({
+  assign: DataframeOperation<{
+    cols: Cols;
+    value;
+    [k: string]: PythonCompatible;
+  }>({
     targetType: 'dataframe',
     name: 'cols.assign',
     args: [
       {
         name: 'cols',
-        default: '*'
+        default: '*',
       },
       {
         name: 'value',
-        default: null
-      }]
+        default: null,
+      },
+    ],
   }),
-  correlation: DataframeOperation<{ cols: Cols, method: string, compute: boolean, tidy: boolean }>({
+  correlation: DataframeOperation<{
+    cols: Cols;
+    method: string;
+    compute: boolean;
+    tidy: boolean;
+  }>({
     targetType: 'dataframe',
     name: 'cols.correlation',
     args: [
       {
         name: 'cols',
-        default: '*'
+        default: '*',
       },
       {
         name: 'method',
-        default: 'pearson'
+        default: 'pearson',
       },
       {
         name: 'compute',
-        default: true
+        default: true,
       },
       {
         name: 'tidy',
-        default: true
-      }]
+        default: true,
+      },
+    ],
   }),
-  crossTab: DataframeOperation<{ colX: Cols, colY: Cols, output: string, compute }>({
+  crossTab: DataframeOperation<{
+    colX: Cols;
+    colY: Cols;
+    output: string;
+    compute;
+  }>({
     targetType: 'dataframe',
     name: 'cols.crossTab',
     args: [
       {
-        name: 'colX'
+        name: 'colX',
       },
       {
-        name: 'colY'
+        name: 'colY',
       },
       {
-        name: 'output'
+        name: 'output',
       },
       {
         name: 'compute',
-        default: true
-      }]
+        default: true,
+      },
+    ],
   }),
-  patternCounts: DataframeOperation<{ cols: Cols, n: number, mode: number, flush: boolean }>({
+  patternCounts: DataframeOperation<{
+    cols: Cols;
+    n: number;
+    mode: number;
+    flush: boolean;
+  }>({
     targetType: 'dataframe',
     name: 'cols.patternCounts',
     args: [
       {
         name: 'cols',
-        default: '*'
+        default: '*',
       },
       {
         name: 'n',
-        default: 10
+        default: 10,
       },
       {
         name: 'mode',
-        default: 0
+        default: 0,
       },
       {
         name: 'flush',
-        default: false
-      }]
+        default: false,
+      },
+    ],
   }),
-  groupBy: DataframeOperation<{ by: Cols, agg: string }>({
+  groupBy: DataframeOperation<{ by: Cols; agg: string }>({
     targetType: 'dataframe',
     name: 'cols.groupBy',
     args: [
       {
-        name: 'by'
+        name: 'by',
       },
       {
-        name: 'agg'
-      }
-    ]
+        name: 'agg',
+      },
+    ],
   }),
-  move: DataframeOperation<{ cols: Cols, position: string | number, refCol: string }>({
+  move: DataframeOperation<{
+    cols: Cols;
+    position: string | number;
+    refCol: string;
+  }>({
     targetType: 'dataframe',
     name: 'cols.move',
     args: [
       {
         name: 'cols',
-        default: '*'
+        default: '*',
       },
       {
         name: 'position',
-        default: 'after'
+        default: 'after',
       },
       {
         name: 'refCol',
-        default: null
-      }]
+        default: null,
+      },
+    ],
   }),
-  sort: DataframeOperation<{ order: string, cols: Cols }>({
+  sort: DataframeOperation<{ order: string; cols: Cols }>({
     targetType: 'dataframe',
     name: 'cols.sort',
     args: [
       {
         name: 'order',
-        default: 'ascending'
+        default: 'ascending',
       },
       {
-        name: 'cols'
-      }]
+        name: 'cols',
+      },
+    ],
   }),
-  dataType: DataframeOperation<{ cols: Cols, names: string, tidy: boolean }>({
+  dataType: DataframeOperation<{ cols: Cols; names: string; tidy: boolean }>({
     targetType: 'value',
     name: 'cols.dataType',
     args: [
       {
-        name: 'cols'
+        name: 'cols',
       },
       {
         name: 'names',
-        default: false
+        default: false,
       },
       {
         name: 'tidy',
-        default: true
-      }]
+        default: true,
+      },
+    ],
   }),
-  schemaDataType: DataframeOperation<{ cols: Cols, tidy: boolean }>({
+  schemaDataType: DataframeOperation<{ cols: Cols; tidy: boolean }>({
     targetType: 'value',
     name: 'cols.schemaDataType',
     args: [
       {
         name: 'cols',
-        default: '*'
+        default: '*',
       },
       {
         name: 'tidy',
-        default: true
-      }]
+        default: true,
+      },
+    ],
   }),
 
-  mad: DataframeOperation<{ cols: Cols, relativeError: boolean, more: boolean, estimate: boolean, compute: boolean, tidy: boolean }>({
+  mad: DataframeOperation<{
+    cols: Cols;
+    relativeError: boolean;
+    more: boolean;
+    estimate: boolean;
+    compute: boolean;
+    tidy: boolean;
+  }>({
     targetType: 'value',
     name: 'cols.mad',
     args: [
       {
         name: 'cols',
-        default: '*'
+        default: '*',
       },
       {
         name: 'relativeError',
-        default: RELATIVE_ERROR
-      }]
-
+        default: RELATIVE_ERROR,
+      },
+    ],
   }),
   min: AggregationOperation<{
     numeric: boolean;
@@ -617,483 +665,491 @@ export const operations = {
       },
     ],
   }),
-  max: DataframeOperation<{ cols: Cols, numeric: boolean, tidy: boolean, compute: boolean }>({
+  max: DataframeOperation<{
+    cols: Cols;
+    numeric: boolean;
+    tidy: boolean;
+    compute: boolean;
+  }>({
     targetType: 'value',
     name: 'cols.max',
     args: [
       {
         name: 'cols',
-        default: '*'
+        default: '*',
       },
       {
         name: 'numeric',
-        default: null
+        default: null,
       },
       {
         name: 'tidy',
-        default: true
+        default: true,
       },
       {
         name: 'compute',
-        default: true
-      }]
+        default: true,
+      },
+    ],
   }),
-  mode: DataframeOperation<{ cols: Cols, tidy: boolean, compute: boolean }>({
+  mode: DataframeOperation<{ cols: Cols; tidy: boolean; compute: boolean }>({
     targetType: 'value',
     name: 'cols.mode',
     args: [
       {
         name: 'cols',
-        default: '*'
+        default: '*',
       },
       {
         name: 'tidy',
-        default: true
+        default: true,
       },
       {
         name: 'compute',
-        default: true
-      }]
+        default: true,
+      },
+    ],
   }),
-  range: DataframeOperation<{ cols: Cols, tidy: boolean, compute: boolean }>({
+  range: DataframeOperation<{ cols: Cols; tidy: boolean; compute: boolean }>({
     targetType: 'value',
     name: 'cols.range',
     args: [
       {
         name: 'cols',
-        default: '*'
+        default: '*',
       },
       {
         name: 'tidy',
-        default: true
+        default: true,
       },
       {
         name: 'compute',
-        default: true
-      }]
+        default: true,
+      },
+    ],
   }),
-  percentile: DataframeOperation<{ cols: Cols, values: number, relativeError: number, estimate: boolean, tidy: boolean, compute: boolean }>({
+  percentile: DataframeOperation<{
+    cols: Cols;
+    values: number;
+    relativeError: number;
+    estimate: boolean;
+    tidy: boolean;
+    compute: boolean;
+  }>({
     targetType: 'value',
     name: 'cols.percentile',
     args: [
       {
         name: 'cols',
-        default: '*'
+        default: '*',
       },
       {
         name: 'values',
-        default: null
+        default: null,
       },
       {
         name: 'relativeError',
-        default: RELATIVE_ERROR
+        default: RELATIVE_ERROR,
       },
       {
         name: 'estimate',
-        default: true
+        default: true,
       },
       {
         name: 'tidy',
-        default: true
-      }]
-
+        default: true,
+      },
+    ],
   }),
-  median: DataframeOperation<{ cols: Cols, relativeError: number, tidy: boolean, compute: boolean }>({
+  median: DataframeOperation<{
+    cols: Cols;
+    relativeError: number;
+    tidy: boolean;
+    compute: boolean;
+  }>({
     targetType: 'value',
     name: 'cols.median',
     args: [
       {
         name: 'cols',
-        default: '*'
+        default: '*',
       },
       {
         name: 'relativeError',
-        default: RELATIVE_ERROR
+        default: RELATIVE_ERROR,
       },
       {
         name: 'tidy',
-        default: true
-
+        default: true,
       },
       {
         name: 'compute',
-        default: true
-      }]
-  }),
-  kurtosis: DataframeOperation<{ cols: Cols, tidy: boolean, compute: boolean }>({
-    targetType: 'value',
-    name: 'cols.kurtosis',
-    args: [
-      {
-        name: 'cols',
-        default: '*'
+        default: true,
       },
-      {
-        name: 'tidy',
-        default: true
-      },
-      {
-        name: 'compute',
-        default: true
-      }
-    ]
+    ],
   }),
-  skew: DataframeOperation<{ cols: Cols, tidy: boolean, compute: boolean }>({
+  kurtosis: DataframeOperation<{ cols: Cols; tidy: boolean; compute: boolean }>(
+    {
       targetType: 'value',
-      name: 'cols.skew',
+      name: 'cols.kurtosis',
       args: [
         {
           name: 'cols',
-          default: '*'
+          default: '*',
         },
         {
           name: 'tidy',
-          default: true
+          default: true,
         },
         {
           name: 'compute',
-          default: true
-        }
-      ]
+          default: true,
+        },
+      ],
     }
   ),
-  mean: DataframeOperation<{ cols: Cols, tidy: boolean, compute: boolean }>({
+  skew: DataframeOperation<{ cols: Cols; tidy: boolean; compute: boolean }>({
+    targetType: 'value',
+    name: 'cols.skew',
+    args: [
+      {
+        name: 'cols',
+        default: '*',
+      },
+      {
+        name: 'tidy',
+        default: true,
+      },
+      {
+        name: 'compute',
+        default: true,
+      },
+    ],
+  }),
+  mean: DataframeOperation<{ cols: Cols; tidy: boolean; compute: boolean }>({
     targetType: 'value',
     name: 'cols.mean',
     args: [
       {
         name: 'cols',
-        default: '*'
+        default: '*',
       },
       {
         name: 'tidy',
-        default: true
+        default: true,
       },
       {
         name: 'compute',
-        default: true
-      }]
+        default: true,
+      },
+    ],
   }),
-  sum: DataframeOperation<{ cols: Cols, tidy: boolean, compute: boolean }>({
-      targetType: 'value',
-      name: 'cols.sum',
-      args: [
-        {
-          name: 'cols',
-          default: '*'
-        },
-        {
-          name: 'tidy',
-          default: true
-        },
-        {
-          name: 'compute',
-          default: true
-        }]
-
-    }
-  ),
-  prod: DataframeOperation<{ cols: Cols, tidy: boolean, compute: boolean }>({
+  sum: DataframeOperation<{ cols: Cols; tidy: boolean; compute: boolean }>({
+    targetType: 'value',
+    name: 'cols.sum',
+    args: [
+      {
+        name: 'cols',
+        default: '*',
+      },
+      {
+        name: 'tidy',
+        default: true,
+      },
+      {
+        name: 'compute',
+        default: true,
+      },
+    ],
+  }),
+  prod: DataframeOperation<{ cols: Cols; tidy: boolean; compute: boolean }>({
     targetType: 'value',
     name: 'cols.prod',
     args: [
       {
         name: 'cols',
-        default: '*'
+        default: '*',
       },
       {
         name: 'tidy',
-        default: true
+        default: true,
       },
       {
         name: 'compute',
-        default: true
-      }]
+        default: true,
+      },
+    ],
   }),
-  cumSum: DataframeOperation<{ cols: Cols, outputCols: Cols }>({
-      targetType: 'dataframe',
-      name: 'cols.cumSum',
-      args: [
-        {
-          name: 'cols',
-          default: '*'
-        },
-        {
-          name: 'outputCols',
-          default: null
-        }]
-    }
-  ),
-  cumProd: DataframeOperation<{ cols: Cols, outputCols: Cols }>({
-      targetType: 'dataframe',
-      name: 'cols.cumProd',
-      args: [
-        {
-          name: 'cols',
-          default: '*'
-        },
-        {
-          name: 'outputCols',
-          default: null
-        }]
-    }
-  ),
-  cumMax: DataframeOperation<{ cols: Cols, outputCols: Cols }>({
-      targetType: 'dataframe',
-      name: 'cols.cumMax',
-      args: [
-        {
-          name: 'cols',
-          default: '*'
-        },
-        {
-          name: 'outputCols',
-          default: null
-        }]
-    }
-  ),
-  cumMin: DataframeOperation<{ cols: Cols, outputCols: Cols }>({
-      targetType: 'dataframe',
-      name: 'cols.cumMin',
-      args: [
-        {
-          name: 'cols',
-          default: '*'
-        },
-        {
-          name: 'outputCols',
-          default: null
-        }]
-    }
-  ),
-  variance: DataframeOperation<{ cols: Cols, tidy: boolean, compute: boolean }>({
+  cumSum: DataframeOperation<{ cols: Cols; outputCols: Cols }>({
+    targetType: 'dataframe',
+    name: 'cols.cumSum',
+    args: [
+      {
+        name: 'cols',
+        default: '*',
+      },
+      {
+        name: 'outputCols',
+        default: null,
+      },
+    ],
+  }),
+  cumProd: DataframeOperation<{ cols: Cols; outputCols: Cols }>({
+    targetType: 'dataframe',
+    name: 'cols.cumProd',
+    args: [
+      {
+        name: 'cols',
+        default: '*',
+      },
+      {
+        name: 'outputCols',
+        default: null,
+      },
+    ],
+  }),
+  cumMax: DataframeOperation<{ cols: Cols; outputCols: Cols }>({
+    targetType: 'dataframe',
+    name: 'cols.cumMax',
+    args: [
+      {
+        name: 'cols',
+        default: '*',
+      },
+      {
+        name: 'outputCols',
+        default: null,
+      },
+    ],
+  }),
+  cumMin: DataframeOperation<{ cols: Cols; outputCols: Cols }>({
+    targetType: 'dataframe',
+    name: 'cols.cumMin',
+    args: [
+      {
+        name: 'cols',
+        default: '*',
+      },
+      {
+        name: 'outputCols',
+        default: null,
+      },
+    ],
+  }),
+  variance: DataframeOperation<{ cols: Cols; tidy: boolean; compute: boolean }>(
+    {
       targetType: 'value',
       name: 'cols.var',
       args: [
         {
           name: 'cols',
-          default: '*'
+          default: '*',
         },
         {
           name: 'tidy',
-          default: true
-
+          default: true,
         },
         {
           name: 'compute',
-          default: true
-        }
-      ]
+          default: true,
+        },
+      ],
     }
   ),
-  std: DataframeOperation<{ cols: Cols, tidy: boolean, compute: boolean }>({
-      targetType: 'value',
-      name: 'cols.std',
-      args: [
-        {
-          name: 'cols',
-          default: '*'
-        },
-        {
-          name: 'tidy',
-          default: true
-
-        },
-        {
-          name: 'compute',
-          default: true
-        }
-      ]
-    }
-  ),
+  std: DataframeOperation<{ cols: Cols; tidy: boolean; compute: boolean }>({
+    targetType: 'value',
+    name: 'cols.std',
+    args: [
+      {
+        name: 'cols',
+        default: '*',
+      },
+      {
+        name: 'tidy',
+        default: true,
+      },
+      {
+        name: 'compute',
+        default: true,
+      },
+    ],
+  }),
   dateFormat: DataframeOperation<{
-    cols: Cols, tidy: boolean, compute: boolean, cached: boolean, [k: string]: PythonCompatible
+    cols: Cols;
+    tidy: boolean;
+    compute: boolean;
+    cached: boolean;
+    [k: string]: PythonCompatible;
   }>({
-      targetType: 'dataframe',
-      name: 'cols.dateFormat',
-      args: [
-        {
-          name: 'cols',
-          default: '*'
-        },
-        {
-          name: 'tidy',
-          default: true
-        },
-        {
-          name: 'compute',
-          default: true
-        },
-        {
-          name: 'cached',
-          default: null
-        }
-      ]
-    }
-  ),
-  item: DataframeOperation<{ col: Cols, index: number, outputCols: Cols }>({
-      targetType: 'dataframe',
-      name: 'cols.item',
-      args: [
-        {
-          name: 'col',
-          default: '*'
-        },
-        {
-          name: 'index',
-          default: 0
-        },
-        {
-          name: 'outputCols',
-          default: null
-        }]
-    }
-  ),
-  get: DataframeOperation<{ col: Cols, keys: number, outputCols: Cols }>({
-      targetType: 'dataframe',
-      name: 'cols.get',
-      args: [
-        {
-          name: 'col',
-          default: '*'
-        },
-        {
-          name: 'keys',
-          default: null
-        },
-        {
-          name: 'outputCols',
-          default: null
-        }]
-    }
-  ),
-  abs: DataframeOperation<{ cols: Cols, outputCols: Cols }>({
-      targetType: 'dataframe',
-      name: 'cols.abs',
-      args: [
-        {
-          name: 'cols',
-          default: '*'
-        },
-        {
-          name: 'outputCols',
-          default: null
-        }
-      ]
-    }
-  ),
-  exp: DataframeOperation<{ cols: Cols, outputCols: Cols }>({
-      targetType: 'dataframe',
-      name: 'cols.exp',
-      args: [
-        {
-          name: 'cols',
-          default: '*'
-        },
-        {
-          name: 'outputCols',
-          default: null
-        }
-      ]
-    }
-  ),
-  log: DataframeOperation<{ cols: Cols, outputCols: Cols }>({
-      targetType: 'dataframe',
-      name: 'cols.log',
-      args: [
-        {
-          name: 'cols',
-          default: '*'
-        },
-        {
-          name: 'outputCols',
-          default: null
-        }]
-    }
-  ),
-  ln: DataframeOperation<{ cols: Cols, outputCols: Cols }>({
-      targetType: 'dataframe',
-      name: 'cols.ln',
-      args: [
-        {
-          name: 'cols',
-          default: '*'
-        },
-        {
-          name: 'outputCols',
-          default: null
-        }]
-
-    }
-  ),
-  pow: DataframeOperation<{ cols: Cols, outputCols: Cols, power: number }>({
-      targetType: 'dataframe',
-      name: 'cols.pow',
-      args: [
-        {
-          name: 'cols',
-          default: '*'
-        },
-        {
-          name: 'outputCols',
-          default: null
-        }]
-    }
-  ),
-  sqrt: DataframeOperation<{ cols: Cols, outputCols: Cols }>({
-      targetType: 'dataframe',
-      name: 'cols.sqrt',
-      args: [
-        {
-          name: 'cols',
-          default: '*'
-        },
-        {
-          name: 'outputCols',
-          default: null
-        }]
-    }
-  ),
-  reciprocal: DataframeOperation<{ cols: Cols, outputCols: Cols }>({
-      targetType: 'dataframe',
-      name: 'cols.reciprocal',
-      args: [
-        {
-          name: 'cols',
-          default: '*'
-        },
-        {
-          name: 'outputCols',
-          default: null
-        }]
-    }
-  ),
-  round: DataframeOperation<{ cols: Cols, outputCols: Cols, decimals: number }>({
+    targetType: 'dataframe',
+    name: 'cols.dateFormat',
+    args: [
+      {
+        name: 'cols',
+        default: '*',
+      },
+      {
+        name: 'tidy',
+        default: true,
+      },
+      {
+        name: 'compute',
+        default: true,
+      },
+      {
+        name: 'cached',
+        default: null,
+      },
+    ],
+  }),
+  item: DataframeOperation<{ col: Cols; index: number; outputCols: Cols }>({
+    targetType: 'dataframe',
+    name: 'cols.item',
+    args: [
+      {
+        name: 'col',
+        default: '*',
+      },
+      {
+        name: 'index',
+        default: 0,
+      },
+      {
+        name: 'outputCols',
+        default: null,
+      },
+    ],
+  }),
+  get: DataframeOperation<{ col: Cols; keys: number; outputCols: Cols }>({
+    targetType: 'dataframe',
+    name: 'cols.get',
+    args: [
+      {
+        name: 'col',
+        default: '*',
+      },
+      {
+        name: 'keys',
+        default: null,
+      },
+      {
+        name: 'outputCols',
+        default: null,
+      },
+    ],
+  }),
+  abs: DataframeOperation<{ cols: Cols; outputCols: Cols }>({
+    targetType: 'dataframe',
+    name: 'cols.abs',
+    args: [
+      {
+        name: 'cols',
+        default: '*',
+      },
+      {
+        name: 'outputCols',
+        default: null,
+      },
+    ],
+  }),
+  exp: DataframeOperation<{ cols: Cols; outputCols: Cols }>({
+    targetType: 'dataframe',
+    name: 'cols.exp',
+    args: [
+      {
+        name: 'cols',
+        default: '*',
+      },
+      {
+        name: 'outputCols',
+        default: null,
+      },
+    ],
+  }),
+  log: DataframeOperation<{ cols: Cols; outputCols: Cols }>({
+    targetType: 'dataframe',
+    name: 'cols.log',
+    args: [
+      {
+        name: 'cols',
+        default: '*',
+      },
+      {
+        name: 'outputCols',
+        default: null,
+      },
+    ],
+  }),
+  ln: DataframeOperation<{ cols: Cols; outputCols: Cols }>({
+    targetType: 'dataframe',
+    name: 'cols.ln',
+    args: [
+      {
+        name: 'cols',
+        default: '*',
+      },
+      {
+        name: 'outputCols',
+        default: null,
+      },
+    ],
+  }),
+  pow: DataframeOperation<{ cols: Cols; outputCols: Cols; power: number }>({
+    targetType: 'dataframe',
+    name: 'cols.pow',
+    args: [
+      {
+        name: 'cols',
+        default: '*',
+      },
+      {
+        name: 'outputCols',
+        default: null,
+      },
+    ],
+  }),
+  sqrt: DataframeOperation<{ cols: Cols; outputCols: Cols }>({
+    targetType: 'dataframe',
+    name: 'cols.sqrt',
+    args: [
+      {
+        name: 'cols',
+        default: '*',
+      },
+      {
+        name: 'outputCols',
+        default: null,
+      },
+    ],
+  }),
+  reciprocal: DataframeOperation<{ cols: Cols; outputCols: Cols }>({
+    targetType: 'dataframe',
+    name: 'cols.reciprocal',
+    args: [
+      {
+        name: 'cols',
+        default: '*',
+      },
+      {
+        name: 'outputCols',
+        default: null,
+      },
+    ],
+  }),
+  round: DataframeOperation<{ cols: Cols; outputCols: Cols; decimals: number }>(
+    {
       targetType: 'dataframe',
       name: 'cols.round',
       args: [
         {
           name: 'cols',
-          default: '*'
+          default: '*',
         },
         {
           name: 'outputCols',
-          default: null
-        }]
-    }
-  ),
-  floor: DataframeOperation<{ cols: Cols, outputCols: Cols }>({
-      targetType: 'dataframe',
-      name: 'cols.floor',
-      args: [
-        {
-          name: 'cols',
-          default: '*'
+          default: null,
         },
-        {
-          name: 'outputCols',
-          default: null
-        }]
+      ],
     }
   ),
   ceil: DataframeOperation<{ cols: Cols, outputCols: Cols }>({
@@ -1204,229 +1260,157 @@ export const operations = {
           name: 'outputCols',
           default: null
 
-        }]
-
-    }
-  ),
-  right: DataframeOperation<{ cols: Cols, n: number, outputCols: Cols }>({
-      targetType: 'dataframe',
-      name: 'cols.right',
-      args: [
-        {
-          name: 'cols',
-          default: '*'
-        },
-        {
-          name: 'n',
-          default: null
-        },
-        {
-          name: 'outputCols',
-          default: null
-
-        }]
-
-    }
-  ),
-  mid: DataframeOperation<{ cols: Cols, start: number, end: number, n: number, outputCols: Cols }>({
-      targetType: 'dataframe',
-      name: 'cols.mid',
-      args: [
-        {
-          name: 'cols',
-          default: '*'
-        },
-        {
-          name: 'start',
-          default: 0
-        },
-        {
-          name: 'end',
-          default: null
-        },
-        {
-          name: 'n',
-          default: null
-        },
-        {
-          name: 'outputCols',
-          default: null
-        }]
-    }
-  ),
-  toFloat: DataframeOperation<{ cols: Cols, outputCols: Cols }>({
-      targetType: 'dataframe',
-      name: 'cols.toFloat',
-      args: [
-        {
-          name: 'cols',
-          default: '*'
-        },
-        {
-          name: 'outputCols',
-          default: null
-        }]
-    }
-  ),
-  toNumeric: DataframeOperation<{ cols: Cols, outputCols: Cols }>({
-      targetType: 'dataframe',
-      name: 'cols.toNumeric',
-      args: [
-        {
-          name: 'cols',
-          default: '*'
-        },
-        {
-          name: 'outputCols',
-          default: null
-        }]
-
-    }
-  ),
-  toInteger: DataframeOperation<{ cols: Cols, outputCols: Cols }>({
-      targetType: 'dataframe',
-      name: 'cols.toInteger',
-      args: [
-        {
-          name: 'cols',
-          default: '*'
-        },
-        {
-          name: 'outputCols',
-          default: null
-        }]
-    }
-  ),
-
-  toBoolean: DataframeOperation<{ cols: Cols, outputCols: Cols }>({
+  toBoolean: DataframeOperation<{ cols: Cols; outputCols: Cols }>({
     targetType: 'dataframe',
     name: 'cols.toBoolean',
     args: [
       {
         name: 'cols',
-        default: '*'
+        default: '*',
       },
       {
         name: 'outputCols',
-        default: null
-      }]
+        default: null,
+      },
+    ],
   }),
-  toString: DataframeOperation<{ cols: Cols, outputCols: Cols }>({
+  toString: DataframeOperation<{ cols: Cols; outputCols: Cols }>({
     targetType: 'dataframe',
     name: 'cols.toString',
     args: [
       {
         name: 'cols',
-        default: '*'
+        default: '*',
       },
       {
         name: 'outputCols',
-        default: null
-      }]
+        default: null,
+      },
+    ],
   }),
-  dateFormats: DataframeOperation<{ cols: Cols, outputCols: Cols }>({
+  dateFormats: DataframeOperation<{ cols: Cols; outputCols: Cols }>({
     targetType: 'dataframe',
     name: 'cols.dateFormats',
     args: [
       {
         name: 'cols',
-        default: '*'
+        default: '*',
       },
       {
         name: 'outputCols',
-        default: null
-      }]
+        default: null,
+      },
+    ],
   }),
 
   lower: StandardDataframeOperation('cols.lower'),
   upper: StandardDataframeOperation('cols.upper'),
   title: StandardDataframeOperation('cols.title'),
   capitalize: StandardDataframeOperation('cols.capitalize'),
-  pad: DataframeOperation<{ cols: Cols, width: number, side: 'left' | 'right', fillChar: string, outputCols: Cols }>({
+  pad: DataframeOperation<{
+    cols: Cols;
+    width: number;
+    side: 'left' | 'right';
+    fillChar: string;
+    outputCols: Cols;
+  }>({
     targetType: 'dataframe',
     name: 'cols.pad',
     args: [
       {
         name: 'cols',
-        default: '*'
+        default: '*',
       },
       {
         name: 'width',
-        default: null
+        default: null,
       },
       {
         name: 'side',
-        default: 'left'
+        default: 'left',
       },
       {
         name: 'fillChar',
-        default: ' '
+        default: ' ',
       },
       {
         name: 'outputCols',
-        default: null
-      }]
+        default: null,
+      },
+    ],
   }),
-  trim: DataframeOperation<{ cols: Cols, width: number, fillChar: string, side: string, outputCols }>({
-      targetType: 'dataframe',
-      name: 'cols.trim',
-      args: [
-        {
-          name: 'cols',
-          default: '*'
-        },
-        {
-          name: 'width',
-          default: null
-        },
-        {
-          name: 'fillChar',
-          default: ' '
-        },
-        {
-          name: 'side',
-          default: 'left'
-        },
-        {
-          name: 'outputCols',
-          default: null
-        }]
-
-    }
-  ),
-  strip: DataframeOperation<{ cols: Cols, chars: string, side: string, outputCols: Cols }>({
+  trim: DataframeOperation<{
+    cols: Cols;
+    width: number;
+    fillChar: string;
+    side: string;
+    outputCols;
+  }>({
+    targetType: 'dataframe',
+    name: 'cols.trim',
+    args: [
+      {
+        name: 'cols',
+        default: '*',
+      },
+      {
+        name: 'width',
+        default: null,
+      },
+      {
+        name: 'fillChar',
+        default: ' ',
+      },
+      {
+        name: 'side',
+        default: 'left',
+      },
+      {
+        name: 'outputCols',
+        default: null,
+      },
+    ],
+  }),
+  strip: DataframeOperation<{
+    cols: Cols;
+    chars: string;
+    side: string;
+    outputCols: Cols;
+  }>({
     targetType: 'dataframe',
     name: 'cols.strip',
     args: [
       {
         name: 'cols',
-        default: '*'
+        default: '*',
       },
       {
         name: 'chars',
-        default: null
+        default: null,
       },
       {
         name: 'side',
-        default: 'left'
+        default: 'left',
       },
       {
         name: 'outputCols',
-        default: null
-      }]
+        default: null,
+      },
+    ],
   }),
-  strip_html: DataframeOperation<{ cols: Cols, outputCols: Cols }>({
+  strip_html: DataframeOperation<{ cols: Cols; outputCols: Cols }>({
     targetType: 'dataframe',
     name: 'cols.strip_html',
     args: [
       {
         name: 'cols',
-        default: '*'
+        default: '*',
       },
       {
         name: 'outputCols',
-        default: null
-      }]
+        default: null,
+      },
+    ],
   }),
   formatDate: DataframeOperation<{
     cols: Cols;
@@ -1434,92 +1418,96 @@ export const operations = {
     outputFormat: string;
     outputCols: Cols;
   }>({
-      targetType: 'dataframe',
-      name: 'cols.formatDate',
-      args: [
-        {
-          name: 'cols',
-          default: '*'
-        },
-        {
-          name: 'currentFormat',
-          default: null
-        },
-        {
-          name: 'outputFormat',
-          default: null
-        },
-        {
-          name: 'outputCols',
-          default: null
-        }]
-    }
-  ),
-  wordTokenize: DataframeOperation<{ cols: Cols, outputCols: Cols }>({
+    targetType: 'dataframe',
+    name: 'cols.formatDate',
+    args: [
+      {
+        name: 'cols',
+        default: '*',
+      },
+      {
+        name: 'currentFormat',
+        default: null,
+      },
+      {
+        name: 'outputFormat',
+        default: null,
+      },
+      {
+        name: 'outputCols',
+        default: null,
+      },
+    ],
+  }),
+  wordTokenize: DataframeOperation<{ cols: Cols; outputCols: Cols }>({
     targetType: 'dataframe',
     name: 'cols.wordTokenize',
     args: [
       {
         name: 'cols',
-        default: '*'
+        default: '*',
       },
       {
         name: 'outputCols',
-        default: null
-      }]
+        default: null,
+      },
+    ],
   }),
-  wordCount: DataframeOperation<{ cols: Cols, outputCols: Cols }>({
+  wordCount: DataframeOperation<{ cols: Cols; outputCols: Cols }>({
     targetType: 'dataframe',
     name: 'cols.wordCount',
     args: [
       {
         name: 'cols',
-        default: '*'
+        default: '*',
       },
       {
         name: 'outputCols',
-        default: null
-      }]
+        default: null,
+      },
+    ],
   }),
-  len: DataframeOperation<{ cols: Cols, outputCols: Cols }>({
+  len: DataframeOperation<{ cols: Cols; outputCols: Cols }>({
     targetType: 'dataframe',
     name: 'cols.len',
     args: [
       {
         name: 'cols',
-        default: '*'
+        default: '*',
       },
       {
         name: 'outputCols',
-        default: null
-      }]
+        default: null,
+      },
+    ],
   }),
-  expandContractedWords: DataframeOperation<{ cols: Cols, outputCols: Cols }>({
+  expandContractedWords: DataframeOperation<{ cols: Cols; outputCols: Cols }>({
     targetType: 'dataframe',
     name: 'cols.expandContractedWords',
     args: [
       {
         name: 'cols',
-        default: '*'
+        default: '*',
       },
       {
         name: 'outputCols',
-        default: null
-      }]
+        default: null,
+      },
+    ],
   }),
-  reverse: DataframeOperation<{ cols: Cols, outputCols: Cols }>({
+  reverse: DataframeOperation<{ cols: Cols; outputCols: Cols }>({
     targetType: 'dataframe',
     name: 'cols.reverse',
     args: [
       {
         name: 'cols',
-        default: '*'
-
+        default: '*',
       },
       {
         name: 'outputCols',
-        default: null
-      }]
+        default: null,
+      },
+    ],
   }),
   remove: DataframeOperation<{
     cols: Cols;
@@ -1532,269 +1520,301 @@ export const operations = {
     args: [
       {
         name: 'cols',
-        default: '*'
+        default: '*',
       },
       {
         name: 'search',
-        default: null
+        default: null,
       },
       {
         name: 'searchBy',
-        default: 'word'
+        default: 'word',
       },
       {
         name: 'outputCols',
-        default: null
-      }
-    ]
+        default: null,
+      },
+    ],
   }),
-  normalizeChars: DataframeOperation<{ cols: Cols, outputCols: Cols }>({
+  normalizeChars: DataframeOperation<{ cols: Cols; outputCols: Cols }>({
     targetType: 'dataframe',
     name: 'cols.normalizeChars',
     args: [
       {
         name: 'cols',
-        default: '*'
+        default: '*',
       },
       {
         name: 'outputCols',
-        default: null
-      }]
+        default: null,
+      },
+    ],
   }),
-  removeNumbers: DataframeOperation<{ cols: Cols, outputCols: Cols }>({
+  removeNumbers: DataframeOperation<{ cols: Cols; outputCols: Cols }>({
     targetType: 'dataframe',
     name: 'cols.removeNumbers',
     args: [
       {
         name: 'cols',
-        default: '*'
+        default: '*',
       },
       {
         name: 'outputCols',
-        default: null
-      }]
+        default: null,
+      },
+    ],
   }),
-  removeWhiteSpaces: DataframeOperation<{ cols: Cols, outputCols: Cols }>({
+  removeWhiteSpaces: DataframeOperation<{ cols: Cols; outputCols: Cols }>({
     targetType: 'dataframe',
     name: 'cols.removeWhiteSpaces',
     args: [
       {
         name: 'cols',
-        default: '*'
+        default: '*',
       },
       {
         name: 'outputCols',
-        default: null
-      }]
+        default: null,
+      },
+    ],
   }),
-  removeStopWords: DataframeOperation<{ cols: Cols, language: string, outputCols: Cols }>({
+  removeStopWords: DataframeOperation<{
+    cols: Cols;
+    language: string;
+    outputCols: Cols;
+  }>({
     targetType: 'dataframe',
     name: 'cols.removeStopWords',
     args: [
       {
         name: 'cols',
-        default: '*'
+        default: '*',
       },
       {
         name: 'language',
-        default: 'english'
+        default: 'english',
       },
       {
         name: 'outputCols',
-        default: null
-      }]
+        default: null,
+      },
+    ],
   }),
-  removeURLS: DataframeOperation<{ cols: Cols, outputCols: Cols }>({
+  removeURLS: DataframeOperation<{ cols: Cols; outputCols: Cols }>({
     targetType: 'dataframe',
     name: 'cols.removeURLS',
     args: [
       {
         name: 'cols',
-        default: '*'
+        default: '*',
       },
       {
-
         name: 'outputCols',
-        default: null
-      }]
+        default: null,
+      },
+    ],
   }),
-  normalizeSpaces: DataframeOperation<{ cols: Cols, outputCols: Cols }>({
+  normalizeSpaces: DataframeOperation<{ cols: Cols; outputCols: Cols }>({
     targetType: 'dataframe',
     name: 'cols.normalizeSpaces',
     args: [
       {
         name: 'cols',
-        default: '*'
+        default: '*',
       },
       {
         name: 'outputCols',
-        default: null
-      }]
+        default: null,
+      },
+    ],
   }),
-  removeSpecialChars: DataframeOperation<{ cols: Cols, outputCols: Cols }>({
+  removeSpecialChars: DataframeOperation<{ cols: Cols; outputCols: Cols }>({
     targetType: 'dataframe',
     name: 'cols.removeSpecialChars',
     args: [
       {
         name: 'cols',
-        default: '*'
+        default: '*',
       },
       {
         name: 'outputCols',
-        default: null
-      }]
+        default: null,
+      },
+    ],
   }),
-  toDateTime: DataframeOperation<{ cols: Cols, currentFormat: string, outputCols: Cols, outputFormat: string }>({
+  toDateTime: DataframeOperation<{
+    cols: Cols;
+    currentFormat: string;
+    outputCols: Cols;
+    outputFormat: string;
+  }>({
     targetType: 'dataframe',
     name: 'cols.toDateTime',
     args: [
       {
         name: 'cols',
-        default: '*'
+        default: '*',
       },
       {
         name: 'currentFormat',
-        default: null
+        default: null,
       },
       {
         name: 'outputCols',
-        default: null
+        default: null,
       },
       {
         name: 'outputFormat',
-        default: null
-      }]
+        default: null,
+      },
+    ],
   }),
-  year: DataframeOperation<{ cols: Cols, format: string, outputCols: Cols }>({
+  year: DataframeOperation<{ cols: Cols; format: string; outputCols: Cols }>({
     targetType: 'dataframe',
     name: 'cols.year',
     args: [
       {
         name: 'cols',
-        default: '*'
+        default: '*',
       },
       {
         name: 'format',
-        default: null
-      }]
+        default: null,
+      },
+    ],
   }),
-  month: DataframeOperation<{ cols: Cols, format: string, outputCols: Cols }>({
+  month: DataframeOperation<{ cols: Cols; format: string; outputCols: Cols }>({
     targetType: 'dataframe',
     name: 'cols.month',
     args: [
       {
         name: 'cols',
-        default: '*'
-      }
-      , {
+        default: '*',
+      },
+      {
         name: 'format',
-        default: null
+        default: null,
       },
       {
         name: 'outputCols',
-        default: null
-
-      }]
+        default: null,
+      },
+    ],
   }),
-  day: DataframeOperation<{ cols: Cols, format: string, outputCols: Cols }>({
+  day: DataframeOperation<{ cols: Cols; format: string; outputCols: Cols }>({
     targetType: 'dataframe',
     name: 'cols.day',
     args: [
       {
         name: 'cols',
-        default: '*'
+        default: '*',
       },
       {
         name: 'format',
-        default: null
-      }]
+        default: null,
+      },
+    ],
   }),
-  hour: DataframeOperation<{ cols: Cols, format: string, outputCols: Cols }>({
+  hour: DataframeOperation<{ cols: Cols; format: string; outputCols: Cols }>({
     targetType: 'dataframe',
     name: 'cols.hour',
     args: [
       {
         name: 'cols',
-        default: '*'
+        default: '*',
       },
       {
         name: 'format',
-        default: null
-      }]
+        default: null,
+      },
+    ],
   }),
-  minute: DataframeOperation<{ cols: Cols, format: string, outputCols: Cols }>({
+  minute: DataframeOperation<{ cols: Cols; format: string; outputCols: Cols }>({
     targetType: 'dataframe',
     name: 'cols.minute',
     args: [
       {
         name: 'cols',
-        default: '*'
+        default: '*',
       },
       {
         name: 'format',
-        default: null
-      }]
+        default: null,
+      },
+    ],
   }),
-  second: DataframeOperation<{ cols: Cols, format: string, outputCols: Cols }>({
+  second: DataframeOperation<{ cols: Cols; format: string; outputCols: Cols }>({
     targetType: 'dataframe',
     name: 'cols.second',
     args: [
       {
         name: 'cols',
-        default: '*'
+        default: '*',
       },
       {
         name: 'format',
-        default: null
-      }]
-  }),
-  weekday: DataframeOperation<{ cols: Cols, format: string, outputCols: Cols }>({
-    targetType: 'dataframe',
-    name: 'cols.weekday',
-    args: [
-      {
-        name: 'cols',
-        default: '*'
+        default: null,
       },
-      {
-        name: 'format',
-        default: null
-      }]
+    ],
   }),
+  weekday: DataframeOperation<{ cols: Cols; format: string; outputCols: Cols }>(
+    {
+      targetType: 'dataframe',
+      name: 'cols.weekday',
+      args: [
+        {
+          name: 'cols',
+          default: '*',
+        },
+        {
+          name: 'format',
+          default: null,
+        },
+      ],
+    }
+  ),
   yearsBetween: DateDataframeOperation('cols.yearsBetween'),
   monthsBetween: DateDataframeOperation('cols.monthsBetween'),
   daysBetween: DateDataframeOperation('cols.daysBetween'),
   hoursBetween: DateDataframeOperation('cols.hoursBetween'),
   minutesBetween: DateDataframeOperation('cols.minutesBetween'),
   secondsBetween: DateDataframeOperation('cols.secondsBetween'),
-  timeBetween: DataframeOperation<{ cols: Cols, value, dateFormat, round, outputCols: Cols, func }>({
+  timeBetween: DataframeOperation<{
+    cols: Cols;
+    value;
+    dateFormat;
+    round;
+    outputCols: Cols;
+    func;
+  }>({
     targetType: 'dataframe',
     name: 'cols.timeBetween',
     args: [
       {
         name: 'cols',
-        default: '*'
+        default: '*',
       },
       {
         name: 'value',
-        default: null
+        default: null,
       },
       {
         name: 'dateFormat',
-        default: null
+        default: null,
       },
       {
         name: 'round',
-        default: null
+        default: null,
       },
       {
         name: 'outputCols',
-        default: null
+        default: null,
       },
       {
         name: 'func',
-        default: null
-      }]
+        default: null,
+      },
+    ],
   }),
 
   replace: DataframeOperation<{
@@ -1810,190 +1830,233 @@ export const operations = {
     args: [
       {
         name: 'cols',
-        default: '*'
+        default: '*',
       },
       {
         name: 'search',
-        default: null
+        default: null,
       },
       {
         name: 'replaceBy',
-        default: null
+        default: null,
       },
       {
         name: 'searchBy',
-        default: null
+        default: null,
       },
       {
         name: 'ignoreCase',
-        default: false
-      }]
+        default: false,
+      },
+    ],
   }),
-  replaceRegex: DataframeOperation<{ cols: Cols, search, replaceBy: string, searchBy: string, ignoreCase: boolean, outputCols: Cols }>({
+  replaceRegex: DataframeOperation<{
+    cols: Cols;
+    search;
+    replaceBy: string;
+    searchBy: string;
+    ignoreCase: boolean;
+    outputCols: Cols;
+  }>({
     targetType: 'dataframe',
     name: 'cols.replaceRegex',
     args: [
       {
         name: 'cols',
-        default: '*'
+        default: '*',
       },
       {
         name: 'search',
-        default: null
+        default: null,
       },
       {
         name: 'replaceBy',
-        default: null
+        default: null,
       },
       {
         name: 'searchBy',
-        default: null
+        default: null,
       },
       {
         name: 'ignoreCase',
-        default: false
+        default: false,
       },
       {
         name: 'outputCols',
-        default: null
-      }]
+        default: null,
+      },
+    ],
   }),
-  numToWords: DataframeOperation<{ cols: Cols, language: string, outputCols: Cols }>({
+  numToWords: DataframeOperation<{
+    cols: Cols;
+    language: string;
+    outputCols: Cols;
+  }>({
     targetType: 'dataframe',
     name: 'cols.numToWords',
     args: [
       {
         name: 'cols',
-        default: '*'
+        default: '*',
       },
       {
         name: 'language',
-        default: 'en'
+        default: 'en',
       },
       {
         name: 'outputCols',
-        default: null
-      }]
+        default: null,
+      },
+    ],
   }),
-  lemmatizeVerbs: DataframeOperation<{ cols: Cols, language: string, outputCols: Cols }>({
+  lemmatizeVerbs: DataframeOperation<{
+    cols: Cols;
+    language: string;
+    outputCols: Cols;
+  }>({
     targetType: 'dataframe',
     name: 'cols.lemmatizeVerbs',
     args: [
       {
         name: 'cols',
-        default: '*'
+        default: '*',
       },
       {
         name: 'language',
-        default: 'en'
+        default: 'en',
       },
       {
         name: 'outputCols',
-        default: null
-      }]
+        default: null,
+      },
+    ],
   }),
-  stemVerbs: DataframeOperation<{ cols: Cols, outputCols: Cols }>({
+  stemVerbs: DataframeOperation<{ cols: Cols; outputCols: Cols }>({
     targetType: 'dataframe',
     name: 'cols.stemVerbs',
     args: [
       {
         name: 'cols',
-        default: '*'
+        default: '*',
       },
       {
         name: 'outputCols',
-        default: null
-      }]
+        default: null,
+      },
+    ],
   }),
-  impute: DataframeOperation<{ cols: Cols, dataType: string, strategy: string, fillValue, outputCols: Cols }>({
+  impute: DataframeOperation<{
+    cols: Cols;
+    dataType: string;
+    strategy: string;
+    fillValue;
+    outputCols: Cols;
+  }>({
     targetType: 'dataframe',
     name: 'cols.impute',
     args: [
       {
         name: 'cols',
-        default: '*'
+        default: '*',
       },
       {
         name: 'dataType',
-        default: 'auto'
+        default: 'auto',
       },
       {
         name: 'strategy',
-        default: 'auto'
+        default: 'auto',
       },
       {
         name: 'fillValue',
-        default: null
-      }]
+        default: null,
+      },
+    ],
   }),
-  fillNA: DataframeOperation<{ cols: Cols, value, outputCols: Cols, evalValue }>({
+  fillNA: DataframeOperation<{
+    cols: Cols;
+    value;
+    outputCols: Cols;
+    evalValue;
+  }>({
     targetType: 'dataframe',
     name: 'cols.fillNA',
     args: [
       {
         name: 'cols',
-        default: '*'
+        default: '*',
       },
       {
         name: 'value',
-        default: null
+        default: null,
       },
       {
         name: 'outputCols',
-        default: null
+        default: null,
       },
       {
         name: 'evalValue',
-        default: false
-      }]
+        default: false,
+      },
+    ],
   }),
-  count:
-    DataframeOperation<NoArgs, number>({
-      targetType: 'value',
-      name: 'cols.count'
-    }),
-  uniqueValues: DataframeOperation<{ cols: Cols, estimate: boolean, compute: boolean, tidy: boolean }>({
+  count: DataframeOperation<NoArgs, number>({
+    targetType: 'value',
+    name: 'cols.count',
+  }),
+  uniqueValues: DataframeOperation<{
+    cols: Cols;
+    estimate: boolean;
+    compute: boolean;
+    tidy: boolean;
+  }>({
     targetType: 'value',
     name: 'cols.uniqueValues',
     args: [
       {
         name: 'cols',
-        default: '*'
+        default: '*',
       },
       {
         name: 'estimate',
-        default: false
+        default: false,
       },
       {
         name: 'compute',
-        default: false
+        default: false,
       },
       {
         name: 'tidy',
-        default: true
-      }]
-
+        default: true,
+      },
+    ],
   }),
-  countUniques: DataframeOperation<{ cols: Cols, estimate: boolean, compute: boolean, tidy: boolean }>({
+  countUniques: DataframeOperation<{
+    cols: Cols;
+    estimate: boolean;
+    compute: boolean;
+    tidy: boolean;
+  }>({
     targetType: 'value',
     name: 'cols.countUniques',
     args: [
       {
         name: 'cols',
-        default: '*'
+        default: '*',
       },
       {
         name: 'estimate',
-        default: false
+        default: false,
       },
       {
         name: 'compute',
-        default: true
+        default: true,
       },
       {
         name: 'tidy',
-        default: true
-      }]
+        default: true,
+      },
+    ],
   }),
 
   add: MulDataframeOperation('cols.add'),
@@ -2001,170 +2064,202 @@ export const operations = {
   mul: MulDataframeOperation('cols.mul'),
   div: MulDataframeOperation('cols.div'),
   rdiv: MulDataframeOperation('cols.rdiv'),
-  zScore: DataframeOperation<{ cols: Cols, outputCols: Cols }>({
+  zScore: DataframeOperation<{ cols: Cols; outputCols: Cols }>({
     targetType: 'dataframe',
     name: 'cols.zScore',
     args: [
       {
         name: 'cols',
-        default: '*'
+        default: '*',
       },
       {
         name: 'outputCols',
-        default: null
-      }]
+        default: null,
+      },
+    ],
   }),
-  modifiedZScore: DataframeOperation<{ cols: Cols, estimate: boolean, outputCols: Cols }>({
+  modifiedZScore: DataframeOperation<{
+    cols: Cols;
+    estimate: boolean;
+    outputCols: Cols;
+  }>({
     targetType: 'dataframe',
     name: 'cols.modifiedZScore',
     args: [
       {
         name: 'cols',
-        default: '*'
+        default: '*',
       },
       {
         name: 'estimate',
-        default: true
+        default: true,
       },
       {
         name: 'outputCols',
-        default: null
-      }]
+        default: null,
+      },
+    ],
   }),
-  standardScaler: DataframeOperation<{ cols: Cols, outputCols: Cols }>({
+  standardScaler: DataframeOperation<{ cols: Cols; outputCols: Cols }>({
     targetType: 'dataframe',
     name: 'cols.standardScaler',
     args: [
       {
         name: 'cols',
-        default: '*'
+        default: '*',
       },
       {
         name: 'outputCols',
-        default: null
-      }]
+        default: null,
+      },
+    ],
   }),
-  maxAbsScaler: DataframeOperation<{ cols: Cols, outputCols: Cols }>({
+  maxAbsScaler: DataframeOperation<{ cols: Cols; outputCols: Cols }>({
     targetType: 'dataframe',
     name: 'cols.maxAbsScaler',
     args: [
       {
         name: 'cols',
-        default: '*'
+        default: '*',
       },
       {
         name: 'outputCols',
-        default: null
-      }]
+        default: null,
+      },
+    ],
   }),
-  minMaxScaler: DataframeOperation<{ cols: Cols, outputCols: Cols }>({
+  minMaxScaler: DataframeOperation<{ cols: Cols; outputCols: Cols }>({
     targetType: 'dataframe',
     name: 'cols.minMaxScaler',
     args: [
       {
         name: 'cols',
-        default: '*'
+        default: '*',
       },
       {
         name: 'outputCols',
-        default: null
-      }]
+        default: null,
+      },
+    ],
   }),
-  iqr: DataframeOperation<{ cols: Cols, more: boolean, estimate: boolean }>({
+  iqr: DataframeOperation<{ cols: Cols; more: boolean; estimate: boolean }>({
     targetType: 'value',
     name: 'cols.iqr',
     args: [
       {
         name: 'cols',
-        default: '*'
+        default: '*',
       },
       {
         name: 'more',
-        default: false
+        default: false,
       },
       {
         name: 'estimate',
-        default: true
-      }]
+        default: true,
+      },
+    ],
   }),
-  nest: DataframeOperation<{ cols: Cols, outputCol: string, drop: boolean, shape: string }>({
+  nest: DataframeOperation<{
+    cols: Cols;
+    outputCol: string;
+    drop: boolean;
+    shape: string;
+  }>({
     targetType: 'dataframe',
     name: 'cols.nest',
     args: [
       {
         name: 'cols',
-        default: '*'
+        default: '*',
       },
       {
         name: 'outputCol',
-        default: null
+        default: null,
       },
       {
         name: 'drop',
-        default: true
+        default: true,
       },
       {
         name: 'shape',
-        default: 'string'
-      }]
+        default: 'string',
+      },
+    ],
   }),
-  unnest: DataframeOperation<{ cols: Cols, separator: string, splits: number, index: number, outputCols: Cols, drop: boolean, mode: string }>({
+  unnest: DataframeOperation<{
+    cols: Cols;
+    separator: string;
+    splits: number;
+    index: number;
+    outputCols: Cols;
+    drop: boolean;
+    mode: string;
+  }>({
     targetType: 'dataframe',
     name: 'cols.unnest',
     args: [
       {
         name: 'cols',
-        default: '*'
+        default: '*',
       },
       {
         name: 'separator',
-        default: null
+        default: null,
       },
       {
         name: 'splits',
-        default: 2
+        default: 2,
       },
       {
         name: 'index',
-        default: null
+        default: null,
       },
       {
         name: 'outputCols',
-        default: null
+        default: null,
       },
       {
         name: 'drop',
-        default: false
+        default: false,
       },
       {
         name: 'mode',
-        default: 'string'
-      }]
+        default: 'string',
+      },
+    ],
   }),
-  heatMap: DataframeOperation<{ colX: Cols, colsY: Cols, binX: number, binY: number, compute: boolean }>({
+  heatMap: DataframeOperation<{
+    colX: Cols;
+    colsY: Cols;
+    binX: number;
+    binY: number;
+    compute: boolean;
+  }>({
     targetType: 'dataframe',
     name: 'cols.heatMap',
     args: [
       {
         name: 'colX',
-        default: '*'
+        default: '*',
       },
       {
         name: 'colsY',
-        default: '*'
+        default: '*',
       },
       {
         name: 'binX',
-        default: 10
+        default: 10,
       },
       {
         name: 'binY',
-        default: 10
+        default: 10,
       },
       {
         name: 'compute',
-        default: true
-      }]
+        default: true,
+      },
+    ],
   }),
   histogram: DataframeOperation<{
     cols: Cols;
@@ -2175,97 +2270,119 @@ export const operations = {
     args: [
       {
         name: 'cols',
-        default: '*'
+        default: '*',
       },
       {
         name: 'buckets',
-        default: 10
-      }
-    ]
-  }),
-  quality: DataframeOperation<{ cols: Cols, flush: boolean, compute: boolean }>({
-    targetType: 'value',
-    name: 'cols.quality',
-    args: [
-      {
-        name: 'cols',
-        default: '*'
+        default: 10,
       },
-      {
-        name: 'flush',
-        default: false
-      },
-      {
-        name: 'compute',
-        default: true
-      }]
+    ],
   }),
-  inferType: DataframeOperation<{ cols: Cols, sampleCount: number, tidy: boolean }>({
+  quality: DataframeOperation<{ cols: Cols; flush: boolean; compute: boolean }>(
+    {
+      targetType: 'value',
+      name: 'cols.quality',
+      args: [
+        {
+          name: 'cols',
+          default: '*',
+        },
+        {
+          name: 'flush',
+          default: false,
+        },
+        {
+          name: 'compute',
+          default: true,
+        },
+      ],
+    }
+  ),
+  inferType: DataframeOperation<{
+    cols: Cols;
+    sampleCount: number;
+    tidy: boolean;
+  }>({
     targetType: 'dataframe',
     name: 'cols.inferType',
     args: [
       {
         name: 'cols',
-        default: '*'
+        default: '*',
       },
       {
         name: 'sampleCount',
-        default: null
+        default: null,
       },
       {
         name: 'tidy',
-        default: true
-      }]
+        default: true,
+      },
+    ],
   }),
-  inferDateFormats: DataframeOperation<{ cols: Cols, sample: number, tidy: boolean }>({
+  inferDateFormats: DataframeOperation<{
+    cols: Cols;
+    sample: number;
+    tidy: boolean;
+  }>({
     targetType: 'dataframe',
     name: 'cols.inferDateFormats',
     args: [
       {
         name: 'cols',
-        default: '*'
+        default: '*',
       },
       {
         name: 'sample',
-        default: 200
+        default: 200,
       },
       {
         name: 'tidy',
-        default: true
-      }]
+        default: true,
+      },
+    ],
   }),
-  frequency: DataframeOperation<{ cols: Cols, top: number, percentage: boolean, totalRows: boolean, countUniques: boolean, compute: boolean, tidy: boolean }>({
+  frequency: DataframeOperation<{
+    cols: Cols;
+    top: number;
+    percentage: boolean;
+    totalRows: boolean;
+    countUniques: boolean;
+    compute: boolean;
+    tidy: boolean;
+  }>({
     targetType: 'value',
     name: 'cols.frequency',
     args: [
       {
         name: 'cols',
-        default: '*'
+        default: '*',
       },
       {
         name: 'top',
-        default: 10
+        default: 10,
       },
       {
         name: 'percentage',
-        default: false
+        default: false,
       },
       {
         name: 'totalRows',
-        default: null
+        default: null,
       },
       {
         name: 'countUniques',
-        default: false
+        default: false,
       },
       {
         name: 'compute',
-        default: true
+        default: true,
       },
       {
         name: 'tidy',
-        default: true
-      }]
+        default: true,
+      },
+    ],
   }),
   boxPlot: DataframeOperation<{ cols: Cols }>({
     targetType: 'value',
@@ -2273,152 +2390,180 @@ export const operations = {
     args: [
       {
         name: 'cols',
-        default: '*'
-      }
-    ]
+        default: '*',
+      },
+    ],
   }),
-  names: DataframeOperation<{ cols: Cols, dataTypes: string, invert: boolean, isRegex: boolean }>({
+  names: DataframeOperation<{
+    cols: Cols;
+    dataTypes: string;
+    invert: boolean;
+    isRegex: boolean;
+  }>({
     targetType: 'value',
     name: 'cols.names',
     args: [
       {
         name: 'cols',
-        default: '*'
+        default: '*',
       },
       {
         name: 'dataTypes',
-        default: null
+        default: null,
       },
       {
         name: 'invert',
-        default: false
+        default: false,
       },
       {
         name: 'isRegex',
-        default: null
-      }]
+        default: null,
+      },
+    ],
   }),
-  countZeros: DataframeOperation<{ cols: Cols, tidy: boolean }>({
+  countZeros: DataframeOperation<{ cols: Cols; tidy: boolean }>({
     targetType: 'value',
     name: 'cols.countZeros',
     args: [
       {
         name: 'cols',
-        default: '*'
+        default: '*',
       },
       {
         name: 'tidy',
-        default: true
-      }]
+        default: true,
+      },
+    ],
   }),
-  qcut: DataframeOperation<{ cols: Cols, quantiles: number, outputCol: Cols }>({
+  qcut: DataframeOperation<{ cols: Cols; quantiles: number; outputCol: Cols }>({
     targetType: 'dataframe',
     name: 'cols.qcut',
     args: [
       {
         name: 'cols',
-        default: '*'
+        default: '*',
       },
       {
         name: 'quantiles',
-        default: null
+        default: null,
       },
       {
         name: 'outputCol',
-        default: null
-      }]
+        default: null,
+      },
+    ],
   }),
-  cut: DataframeOperation<{ cols: Cols, bins: number, labels: [] | false, default, outputCol: Cols }>({
+  cut: DataframeOperation<{
+    cols: Cols;
+    bins: number;
+    labels: [] | false;
+    default;
+    outputCol: Cols;
+  }>({
     targetType: 'dataframe',
     name: 'cols.cut',
     args: [
       {
         name: 'cols',
-        default: '*'
+        default: '*',
       },
       {
         name: 'bins',
-        default: null
+        default: null,
       },
       {
         name: 'labels',
-        default: null
+        default: null,
       },
       {
         name: 'default',
-        default: null
+        default: null,
       },
       {
         name: 'outputCol',
-        default: null
-      }]
+        default: null,
+      },
+    ],
   }),
-  clip: DataframeOperation<{ cols: Cols, lower_bound: number, upper_bound: number, outputCol: Cols }>({
+  clip: DataframeOperation<{
+    cols: Cols;
+    lower_bound: number;
+    upper_bound: number;
+    outputCol: Cols;
+  }>({
     targetType: 'dataframe',
     name: 'cols.clip',
     args: [
       {
         name: 'cols',
-        default: '*'
+        default: '*',
       },
       {
         name: 'lower_bound',
-        default: null
+        default: null,
       },
       {
         name: 'upper_bound',
-        default: null
+        default: null,
       },
       {
         name: 'outputCol',
-        default: null
-      }
-    ]
+        default: null,
+      },
+    ],
   }),
-  oneHotEncode: DataframeOperation<{ cols: Cols, prefix: string, drop: boolean, outputCol: Cols, [k: string]: PythonCompatible }>({
+  oneHotEncode: DataframeOperation<{
+    cols: Cols;
+    prefix: string;
+    drop: boolean;
+    outputCol: Cols;
+    [k: string]: PythonCompatible;
+  }>({
     targetType: 'dataframe',
     name: 'cols.oneHotEncode',
     args: [
       {
         name: 'cols',
-        default: '*'
+        default: '*',
       },
       {
         name: 'prefix',
-        default: null
+        default: null,
       },
       {
         name: 'drop',
-        default: true
-      }]
+        default: true,
+      },
+    ],
   }),
-  stringToIndex: DataframeOperation<{ cols: Cols, outputCol: Cols }>({
+  stringToIndex: DataframeOperation<{ cols: Cols; outputCol: Cols }>({
     targetType: 'dataframe',
     name: 'cols.stringToIndex',
     args: [
       {
         name: 'cols',
-        default: '*'
+        default: '*',
       },
       {
         name: 'outputCol',
-        default: null
-      }
-    ]
+        default: null,
+      },
+    ],
   }),
 
-  indexToString: DataframeOperation<{ cols: Cols, outputCol: Cols }>({
+  indexToString: DataframeOperation<{ cols: Cols; outputCol: Cols }>({
     targetType: 'dataframe',
     name: 'cols.indexToString',
     args: [
       {
         name: 'cols',
-        default: '*'
+        default: '*',
       },
       {
         name: 'outputCol',
-        default: null
-      }]
+        default: null,
+      },
+    ],
   }),
 
   domain: StandardDataframeOperation('cols.domain'),
@@ -2434,20 +2579,20 @@ export const operations = {
   emailUsername: StandardDataframeOperation('cols.emailUsername'),
   emailDomain: StandardDataframeOperation('cols.emailDomain'),
 
-// TODO: handle any and count functions
+  // TODO: handle any and count functions
   columns: DataframeOperation<NoArgs, string[]>({
-    name: 'cols.names'
+    name: 'cols.names',
   }),
 
-// hist: DataframeOperation({
-//   targetType: 'value',
-//   name: 'hist',
-//   getCode: function(kwargs: { source: string; cols: string | string[] }) {
-//     kwargs = Object.assign({ cols: '*' }, kwargs);
-//     if (Array.isArray(kwargs.cols)) {
-//       return `${kwargs.source}.cols.hist(["${kwargs.cols.join('", "')}"])`;
-//     }
-//     return `${kwargs.source}.cols.hist("${kwargs.cols}")`;
-//   }
-// })
+  // hist: DataframeOperation({
+  //   targetType: 'value',
+  //   name: 'hist',
+  //   getCode: function(kwargs: { source: string; cols: string | string[] }) {
+  //     kwargs = Object.assign({ cols: '*' }, kwargs);
+  //     if (Array.isArray(kwargs.cols)) {
+  //       return `${kwargs.source}.cols.hist(["${kwargs.cols.join('", "')}"])`;
+  //     }
+  //     return `${kwargs.source}.cols.hist("${kwargs.cols}")`;
+  //   }
+  // })
 };
