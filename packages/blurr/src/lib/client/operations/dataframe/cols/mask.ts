@@ -1,16 +1,22 @@
-import type { Cols, ColsResult } from '../../../../../types/arguments';
+import type { Cols, ColsResult, NoArgs } from '../../../../../types/arguments';
 import { ArgsType, OperationCreator } from '../../../../../types/operation';
 import { BlurrOperation } from '../../factory';
 
 function MaskColsOperation<
   TA extends ArgsType = ArgsType,
   TR extends PythonCompatible = PythonCompatible
->(operationCreator: OperationCreator, noCols = false, noInverse = false) {
+>(
+  operationCreator: Pick<OperationCreator, 'name' | 'args'>,
+  noCols = false,
+  noInverse = false
+) {
   type Args = { cols: Cols } & TA & {
       inverse: boolean;
       tidy: boolean;
       compute: boolean;
     };
+
+  operationCreator = Object.assign({ args: [] }, operationCreator);
 
   const args1 = noCols
     ? []
@@ -47,18 +53,28 @@ function MaskColsOperation<
   });
 }
 
-function AnyOperation<TA extends ArgsType = ArgsType>(
+function AnyOperation<TA extends ArgsType = NoArgs>(
   operationCreator: OperationCreator,
-  noCols = false
+  noCols = false,
+  noInverse = false
 ) {
-  return MaskColsOperation<TA, ColsResult<boolean>>(operationCreator, noCols);
+  return MaskColsOperation<TA, ColsResult<boolean>>(
+    operationCreator,
+    noCols,
+    noInverse
+  );
 }
 
-function CountOperation<TA extends ArgsType = ArgsType>(
+function CountOperation<TA extends ArgsType = NoArgs>(
   operationCreator: OperationCreator,
-  noCols = false
+  noCols = false,
+  noInverse = false
 ) {
-  return MaskColsOperation<TA, ColsResult<number>>(operationCreator, noCols);
+  return MaskColsOperation<TA, ColsResult<number>>(
+    operationCreator,
+    noCols,
+    noInverse
+  );
 }
 
 export const operations = {
@@ -100,14 +116,30 @@ export const operations = {
     name: 'cols.anyNotEqual',
     args: [{ name: 'value' }],
   }),
-  anyMissing: AnyOperation({ name: 'cols.anyMissing' }),
-  anyNull: AnyOperation({ name: 'cols.anyNull' }),
-  anyNone: AnyOperation({ name: 'cols.anyNone' }),
-  anyNan: AnyOperation({ name: 'cols.anyNan' }),
-  anyEmpty: AnyOperation({ name: 'cols.anyEmpty' }),
-  anyMismatch: AnyOperation({ name: 'cols.anyMismatch' }),
-  anyDuplicated: AnyOperation({ name: 'cols.anyDuplicated' }),
-  anyUniques: AnyOperation({ name: 'cols.anyUniques' }),
+  anyMissing: AnyOperation({
+    name: 'cols.anyMissing',
+  }),
+  anyNull: AnyOperation({
+    name: 'cols.anyNull',
+  }),
+  anyNone: AnyOperation({
+    name: 'cols.anyNone',
+  }),
+  anyNan: AnyOperation({
+    name: 'cols.anyNan',
+  }),
+  anyEmpty: AnyOperation({
+    name: 'cols.anyEmpty',
+  }),
+  anyMismatch: AnyOperation({
+    name: 'cols.anyMismatch',
+  }),
+  anyDuplicated: AnyOperation({
+    name: 'cols.anyDuplicated',
+  }),
+  anyUniques: AnyOperation({
+    name: 'cols.anyUniques',
+  }),
   anyMatch: AnyOperation<{ regex: string; dataType: string }>({
     name: 'cols.anyMatch',
     args: [
@@ -159,26 +191,60 @@ export const operations = {
     name: 'cols.anyExpression',
     args: [{ name: 'value' }],
   }),
-  anyStr: AnyOperation({ name: 'cols.anyStr' }),
-  anyInt: AnyOperation({ name: 'cols.anyInt' }),
-  anyFloat: AnyOperation({ name: 'cols.anyFloat' }),
-  anyNumeric: AnyOperation({ name: 'cols.anyNumeric' }),
-  anyEmail: AnyOperation({ name: 'cols.anyEmail' }),
-  anyIp: AnyOperation({ name: 'cols.anyIp' }),
-  anyUrl: AnyOperation({ name: 'cols.anyUrl' }),
-  anyGender: AnyOperation({ name: 'cols.anyGender' }),
-  anyBoolean: AnyOperation({ name: 'cols.anyBoolean' }),
-  anyZipCode: AnyOperation({ name: 'cols.anyZipCode' }),
-  anyCreditCardNumber: AnyOperation({ name: 'cols.anyCreditCardNumber' }),
-  anyDatetime: AnyOperation({ name: 'cols.anyDatetime' }),
-  anyObject: AnyOperation({ name: 'cols.anyObject' }),
-  anyArray: AnyOperation({ name: 'cols.anyArray' }),
-  anyPhoneNumber: AnyOperation({ name: 'cols.anyPhoneNumber' }),
+  anyStr: AnyOperation({
+    name: 'cols.anyStr',
+  }),
+  anyInt: AnyOperation({
+    name: 'cols.anyInt',
+  }),
+  anyFloat: AnyOperation({
+    name: 'cols.anyFloat',
+  }),
+  anyNumeric: AnyOperation({
+    name: 'cols.anyNumeric',
+  }),
+  anyEmail: AnyOperation({
+    name: 'cols.anyEmail',
+  }),
+  anyIp: AnyOperation({
+    name: 'cols.anyIp',
+  }),
+  anyUrl: AnyOperation({
+    name: 'cols.anyUrl',
+  }),
+  anyGender: AnyOperation({
+    name: 'cols.anyGender',
+  }),
+  anyBoolean: AnyOperation({
+    name: 'cols.anyBoolean',
+  }),
+  anyZipCode: AnyOperation({
+    name: 'cols.anyZipCode',
+  }),
+  anyCreditCardNumber: AnyOperation({
+    name: 'cols.anyCreditCardNumber',
+  }),
+  anyDatetime: AnyOperation({
+    name: 'cols.anyDatetime',
+  }),
+  anyObject: AnyOperation({
+    name: 'cols.anyObject',
+  }),
+  anyArray: AnyOperation({
+    name: 'cols.anyArray',
+  }),
+  anyPhoneNumber: AnyOperation({
+    name: 'cols.anyPhoneNumber',
+  }),
   anySocialSecurityNumber: AnyOperation({
     name: 'cols.anySocialSecurityNumber',
   }),
-  anyHttpCode: AnyOperation({ name: 'cols.anyHttpCode' }),
-  countZeros: CountOperation({ name: 'cols.countZeros' }),
+  anyHttpCode: AnyOperation({
+    name: 'cols.anyHttpCode',
+  }),
+  countZeros: CountOperation({
+    name: 'cols.countZeros',
+  }),
   countGreaterThan: CountOperation<{ value: PythonCompatible }>({
     name: 'cols.countGreaterThan',
     args: [{ name: 'value' }],
@@ -217,14 +283,40 @@ export const operations = {
     name: 'cols.countNotEqual',
     args: [{ name: 'value' }],
   }),
-  countMissings: CountOperation({ name: 'cols.countMissings' }),
-  countNulls: CountOperation({ name: 'cols.countNulls' }),
-  countNone: CountOperation({ name: 'cols.countNone' }),
-  countNan: CountOperation({ name: 'cols.countNan' }),
-  countEmpty: CountOperation({ name: 'cols.countEmpty' }),
-  countMismatch: CountOperation({ name: 'cols.countMismatch' }),
-  countDuplicated: CountOperation({ name: 'cols.countDuplicated' }),
-  countUniques: CountOperation({ name: 'cols.countUniques' }), // TODO: add estimate and remove inverse?
+  countMissings: CountOperation({
+    name: 'cols.countMissings',
+  }),
+  countNulls: CountOperation({
+    name: 'cols.countNulls',
+  }),
+  countNone: CountOperation({
+    name: 'cols.countNone',
+  }),
+  countNan: CountOperation({
+    name: 'cols.countNan',
+  }),
+  countEmpty: CountOperation({
+    name: 'cols.countEmpty',
+  }),
+  countMismatch: CountOperation({
+    name: 'cols.countMismatch',
+  }),
+  countDuplicated: CountOperation({
+    name: 'cols.countDuplicated',
+  }),
+  countUniques: CountOperation(
+    {
+      name: 'cols.countUniques',
+      args: [
+        {
+          name: 'estimate',
+          default: false,
+        },
+      ],
+    },
+    false,
+    true
+  ),
   countMatch: CountOperation<{ regex: string; dataType: string }>({
     name: 'cols.countMatch',
     args: [
@@ -236,8 +328,12 @@ export const operations = {
       },
     ],
   }),
-  countDataType: CountOperation({ name: 'cols.countDataType' }),
-  countRegex: CountOperation({ name: 'cols.countRegex' }),
+  countDataType: CountOperation({
+    name: 'cols.countDataType',
+  }),
+  countRegex: CountOperation({
+    name: 'cols.countRegex',
+  }),
   countStartingWith: CountOperation<{ value: string }>({
     name: 'cols.countStartingWith',
     args: [{ name: 'value' }],
@@ -262,25 +358,57 @@ export const operations = {
     name: 'cols.countExpression',
     args: [{ name: 'value' }],
   }),
-  countStr: CountOperation({ name: 'cols.countStr' }),
-  countInt: CountOperation({ name: 'cols.countInt' }),
-  countFloat: CountOperation({ name: 'cols.countFloat' }),
-  countNumeric: CountOperation({ name: 'cols.countNumeric' }),
-  countEmail: CountOperation({ name: 'cols.countEmail' }),
-  countIp: CountOperation({ name: 'cols.countIp' }),
-  countUrl: CountOperation({ name: 'cols.countUrl' }),
-  countGender: CountOperation({ name: 'cols.countGender' }),
-  countBoolean: CountOperation({ name: 'cols.countBoolean' }),
-  countZipCode: CountOperation({ name: 'cols.countZipCode' }),
-  countCreditCardNumber: CountOperation({ name: 'cols.countCreditCardNumber' }),
-  countDatetime: CountOperation({ name: 'cols.countDatetime' }),
-  countObject: CountOperation({ name: 'cols.countObject' }),
-  countArray: CountOperation({ name: 'cols.countArray' }),
-  countPhoneNumber: CountOperation({ name: 'cols.countPhoneNumber' }),
+  countStr: CountOperation({
+    name: 'cols.countStr',
+  }),
+  countInt: CountOperation({
+    name: 'cols.countInt',
+  }),
+  countFloat: CountOperation({
+    name: 'cols.countFloat',
+  }),
+  countNumeric: CountOperation({
+    name: 'cols.countNumeric',
+  }),
+  countEmail: CountOperation({
+    name: 'cols.countEmail',
+  }),
+  countIp: CountOperation({
+    name: 'cols.countIp',
+  }),
+  countUrl: CountOperation({
+    name: 'cols.countUrl',
+  }),
+  countGender: CountOperation({
+    name: 'cols.countGender',
+  }),
+  countBoolean: CountOperation({
+    name: 'cols.countBoolean',
+  }),
+  countZipCode: CountOperation({
+    name: 'cols.countZipCode',
+  }),
+  countCreditCardNumber: CountOperation({
+    name: 'cols.countCreditCardNumber',
+  }),
+  countDatetime: CountOperation({
+    name: 'cols.countDatetime',
+  }),
+  countObject: CountOperation({
+    name: 'cols.countObject',
+  }),
+  countArray: CountOperation({
+    name: 'cols.countArray',
+  }),
+  countPhoneNumber: CountOperation({
+    name: 'cols.countPhoneNumber',
+  }),
   countSocialSecurityNumber: CountOperation({
     name: 'cols.countSocialSecurityNumber',
   }),
-  countHttpCode: CountOperation({ name: 'cols.countHttpCode' }),
+  countHttpCode: CountOperation({
+    name: 'cols.countHttpCode',
+  }),
 
   // hist: DataframeOperation({
   //   targetType: 'value',
