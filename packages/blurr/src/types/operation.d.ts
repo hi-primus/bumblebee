@@ -13,14 +13,11 @@ export interface OperationArgument {
   default?: PythonCompatible;
 }
 
-type OperationArgumentArray = OperationArgument[];
-type OperationArgumentRecord = Record<string, PythonCompatible>;
-
 export interface OperationCreator {
   // the default variable name for the source
   name: string;
   // the arguments for the operation
-  args?: OperationArgumentArray | OperationArgumentRecord | string[];
+  args?: (OperationArgument | string)[];
   // dataframe is for operations that take a dataframe as input
   // variable is for operations that take a variable as input
   // none is for operations that don't take any input

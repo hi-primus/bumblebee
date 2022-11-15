@@ -1,23 +1,104 @@
 import type {
   CallbackFunction,
   Cols,
-  NoArgs,
+  NoArgs, SearchBy,
   Source
 } from '../../../../types/arguments';
 import { ArgsType, OperationCreator } from '../../../../types/operation';
-import { pythonArguments } from '../../../utils';
 import { BlurrOperation } from '../factory';
+import { RELATIVE_ERROR } from '../../../utils';
 
 function DataframeOperation<TA extends ArgsType = ArgsType,
-  TR extends OperationCompatible = OperationCompatible>(operationCreator: OperationCreator) {
+  TR extends OperationCompatible = Source>(operationCreator: OperationCreator) {
   return BlurrOperation<TA, TR>({
     ...operationCreator,
     sourceType: 'dataframe'
   });
 }
 
+function AggregationOperation<TA extends ArgsType = ArgsType>(
+  operationCreator: OperationCreator
+) {
+  type Args = { cols: Cols } & TA;
+  return DataframeOperation<Args, PythonCompatible>({
+    targetType: 'value',
+    name: operationCreator.name,
+    args: [
+      {
+        name: 'cols',
+        default: '*',
+      },
+      ...operationCreator.args,
+    ],
+  });
+}
+
+function DateDataframeOperation(name: string) {
+  return DataframeOperation<{ cols: Cols, outputCols: Cols }>({
+    targetType: 'dataframe',
+    name,
+    args: [
+      {
+        name: 'cols',
+        default: '*'
+      },
+      {
+        name: 'value',
+        default: null
+      },
+      {
+        name: 'dateFormat',
+        default: null
+      },
+      {
+        name: 'round',
+        default: null
+      },
+      {
+        name: 'outputCols',
+        default: null
+      },
+      {
+        name: 'func',
+        default: null
+      }]
+  });
+}
+
+function StandardDataframeOperation(name: string) {
+  return DataframeOperation<{ cols: Cols, outputCols: Cols }>({
+    targetType: 'dataframe',
+    name,
+    args: [
+      {
+        name: 'cols',
+        default: '*'
+      },
+      {
+        name: 'outputCols',
+        default: null
+      }]
+  });
+}
+
+function MulDataframeOperation(name: string) {
+  return DataframeOperation<{ cols: Cols, outputCols: Cols }>({
+    targetType: 'dataframe',
+    name,
+    args: [
+      {
+        name: 'cols',
+        default: '*'
+      },
+      {
+        name: 'outputCols',
+        default: null
+      }]
+  });
+}
+
 export const operations = {
-  append: DataframeOperation<{ dfs: Source[]; buckets: number }>({
+  append: DataframeOperation<{ dfs: Source[]; buckets: number }, Source>({
     targetType: 'dataframe',
     name: 'cols.append',
     args: [
@@ -500,10 +581,7 @@ export const operations = {
         default: true
       }]
   }),
-  // TODO: Should we agg_exp expression
-  // TODO: Should we exec_agg expression
-  // TODO: Should we format_agg expression
-  //TODO: where to put constants like RELATIVE_ERROR
+
   mad: DataframeOperation<{ cols: Cols, relativeError: boolean, more: boolean, estimate: boolean, compute: boolean, tidy: boolean }>({
     targetType: 'value',
     name: 'cols.mad',
@@ -514,30 +592,30 @@ export const operations = {
       },
       {
         name: 'relativeError',
-        default: 10000
+        default: RELATIVE_ERROR
       }]
 
   }),
-  min: DataframeOperation<{ cols: Cols, numeric: boolean, tidy: boolean, compute: boolean }>({
-    targetType: 'value',
+  min: AggregationOperation<{
+    numeric: boolean;
+    tidy: boolean;
+    compute: boolean;
+  }>({
     name: 'cols.min',
     args: [
       {
-        name: 'cols',
-        default: '*'
-      },
-      {
         name: 'numeric',
-        default: null
+        default: null,
       },
       {
         name: 'tidy',
-        default: true
+        default: true,
       },
       {
         name: 'compute',
-        default: true
-      }]
+        default: true,
+      },
+    ],
   }),
   max: DataframeOperation<{ cols: Cols, numeric: boolean, tidy: boolean, compute: boolean }>({
     targetType: 'value',
@@ -608,7 +686,7 @@ export const operations = {
       },
       {
         name: 'relativeError',
-        default: 10000
+        default: RELATIVE_ERROR
       },
       {
         name: 'estimate',
@@ -630,7 +708,7 @@ export const operations = {
       },
       {
         name: 'relativeError',
-        default: 10000
+        default: RELATIVE_ERROR
       },
       {
         name: 'tidy',
@@ -1248,20 +1326,11 @@ export const operations = {
         default: null
       }]
   }),
-  // TODO: lower, upper, title, capitalize all in one go?
-  lower: DataframeOperation<{ cols: Cols, outputCols: Cols }>({
-    targetType: 'dataframe',
-    name: 'cols.lower',
-    args: [
-      {
-        name: 'cols',
-        default: '*'
-      },
-      {
-        name: 'outputCols',
-        default: null
-      }]
-  }),
+
+  lower: StandardDataframeOperation('cols.lower'),
+  upper: StandardDataframeOperation('cols.upper'),
+  title: StandardDataframeOperation('cols.title'),
+  capitalize: StandardDataframeOperation('cols.capitalize'),
   pad: DataframeOperation<{ cols: Cols, width: number, side: 'left' | 'right', fillChar: string, outputCols: Cols }>({
     targetType: 'dataframe',
     name: 'cols.pad',
@@ -1348,7 +1417,12 @@ export const operations = {
         default: null
       }]
   }),
-  formatDate: DataframeOperation<{ cols: Cols, currentFormat: string, outputFormat: string, outputCols: Cols }>({
+  formatDate: DataframeOperation<{
+    cols: Cols;
+    currentFormat: string;
+    outputFormat: string;
+    outputCols: Cols;
+  }>({
       targetType: 'dataframe',
       name: 'cols.formatDate',
       args: [
@@ -1436,12 +1510,15 @@ export const operations = {
         default: null
       }]
   }),
-  // TODO: Should we define somethig like enum
-  remove: DataframeOperation<{ cols: Cols, search: string, searchBy: string, outputCols: Cols }>({
+  remove: DataframeOperation<{
+    cols: Cols;
+    search: string;
+    searchBy: SearchBy;
+    outputCols: Cols;
+  }>({
     targetType: 'dataframe',
     name: 'cols.remove',
     args: [
-
       {
         name: 'cols',
         default: '*'
@@ -1457,7 +1534,8 @@ export const operations = {
       {
         name: 'outputCols',
         default: null
-      }]
+      }
+    ]
   }),
   normalizeChars: DataframeOperation<{ cols: Cols, outputCols: Cols }>({
     targetType: 'dataframe',
@@ -1671,7 +1749,13 @@ export const operations = {
         name: 'format',
         default: null
       }]
-  }), //TODO: years_between, motnhs_between, days_between, hours_between, minutes_between, seconds_between
+  }),
+  yearsBetween: DateDataframeOperation('cols.yearsBetween'),
+  monthsBetween: DateDataframeOperation('cols.monthsBetween'),
+  daysBetween: DateDataframeOperation('cols.daysBetween'),
+  hoursBetween: DateDataframeOperation('cols.hoursBetween'),
+  minutesBetween: DateDataframeOperation('cols.minutesBetween'),
+  secondsBetween: DateDataframeOperation('cols.secondsBetween'),
   timeBetween: DataframeOperation<{ cols: Cols, value, dateFormat, round, outputCols: Cols, func }>({
     targetType: 'dataframe',
     name: 'cols.timeBetween',
@@ -1701,8 +1785,15 @@ export const operations = {
         default: null
       }]
   }),
-  // TODO: use Enum in searchBy?
-  replace: DataframeOperation<{ cols: Cols, search, replaceBy: string, searchBy: string, ignoreCase: boolean, outputCols: Cols }>({
+
+  replace: DataframeOperation<{
+    cols: Cols;
+    search: string;
+    replaceBy: string;
+    searchBy: SearchBy;
+    ignoreCase: boolean;
+    outputCols: Cols;
+  }>({
     targetType: 'dataframe',
     name: 'cols.replace',
     args: [
@@ -1893,20 +1984,12 @@ export const operations = {
         default: true
       }]
   }),
-  //TODO: add, sub, mul, div, rdiv,
-  add: DataframeOperation<{ cols: Cols, outputCols: Cols }>({
-    targetType: 'dataframe',
-    name: 'cols.add',
-    args: [
-      {
-        name: 'cols',
-        default: '*'
-      },
-      {
-        name: 'outputCols',
-        default: null
-      }]
-  }),
+
+  add: MulDataframeOperation('cols.add'),
+  sub: MulDataframeOperation('cols.sub'),
+  mul: MulDataframeOperation('cols.mul'),
+  div: MulDataframeOperation('cols.div'),
+  rdiv: MulDataframeOperation('cols.rdiv'),
   zScore: DataframeOperation<{ cols: Cols, outputCols: Cols }>({
     targetType: 'dataframe',
     name: 'cols.zScore',
@@ -2326,40 +2409,25 @@ export const operations = {
         default: null
       }]
   }),
-  //TODO: domain, top_domain, sub_domain, url_schema, url_path,url_file,url_query,url_frament,host,
-  // port,email_username,email_domain.
-  domain: DataframeOperation<{ cols: Cols, outputCols: Cols }>({
-    targetType: 'dataframe',
-    name: 'cols.domain',
-    args: [
-      {
-        name: 'cols',
-        default: '*'
-      },
-      {
-        name: 'outputCols',
-        default: null
-      }]
-  }),
+
+  domain: StandardDataframeOperation('cols.domain'),
+  topDomain: StandardDataframeOperation('cols.topDomain'),
+  subDomain: StandardDataframeOperation('cols.subDomain'),
+  urlSchema: StandardDataframeOperation('cols.urlSchema'),
+  urlPath: StandardDataframeOperation('cols.urlPath'),
+  urlFile: StandardDataframeOperation('cols.urlFile'),
+  urlQuery: StandardDataframeOperation('cols.urlQuery'),
+  urlFragment: StandardDataframeOperation('cols.urlFragment'),
+  host: StandardDataframeOperation('cols.host'),
+  port: StandardDataframeOperation('cols.port'),
+  emailUsername: StandardDataframeOperation('cols.emailUsername'),
+  emailDomain: StandardDataframeOperation('cols.emailDomain'),
+
 // TODO: handle any and count functions
   columns: DataframeOperation<NoArgs, string[]>({
     name: 'cols.names'
   }),
-  columnsSample:
-    DataframeOperation<{ start: number; stop: number }>({
-      targetType: 'value',
-      name: 'columnsSample',
-      args: {
-        start: 0,
-        stop: 10
-      },
-      getCode: function(kwargs) {
-        return (
-          `${kwargs.source}[${kwargs.start}: ${kwargs.stop}]` +
-          `.columns_sample("*")`
-        );
-      }
-    })
+
 // hist: DataframeOperation({
 //   targetType: 'value',
 //   name: 'hist',
