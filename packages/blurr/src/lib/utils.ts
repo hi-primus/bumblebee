@@ -112,7 +112,14 @@ export const adaptKwargs = (
 ): Record<string, OperationCompatible> => {
   // no defaults to apply
   if (!operationArgs) {
-    return (isObject(args) ? args : {}) as Record<string, OperationCompatible>;
+    if (isObject(args)) {
+      return args;
+    }
+    console.warn(
+      '🛼 Trying to adapt positional arguments without default arguments defined',
+      args
+    );
+    return {};
   }
 
   // positional arguments

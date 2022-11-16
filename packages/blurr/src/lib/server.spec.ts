@@ -9,7 +9,7 @@ test('server-pyodide', async (t) => {
 
   await server.donePromise;
 
-  const result = await server.run('1+1');
+  const result = await server.runCode('1+1');
 
   t.is(result, 2);
 });
@@ -19,7 +19,7 @@ test('server-default-globals', async (t) => {
 
   await server.donePromise;
 
-  const result = await server.run('output = 2+2; output');
+  const result = await server.runCode('output = 2+2; output');
 
   const fromGlobals = server.pyodide.globals.get('output');
 
