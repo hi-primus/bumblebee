@@ -1,11 +1,12 @@
-import { Cols, NoArgs } from '../../../../../types/arguments';
+import { Cols, NoArgs, SourceArg } from '../../../../../types/arguments';
 import { ArgsType, OperationCreator } from '../../../../../types/operation';
 import { Source } from '../../../data/source';
 import { BlurrOperation } from '../../factory';
 
-
-function DataframeOperation<TA extends ArgsType = ArgsType,
-  TR extends OperationCompatible = Source>(operationCreator: OperationCreator) {
+function DataframeOperation<
+  TA extends ArgsType = ArgsType,
+  TR extends OperationCompatible = Source
+>(operationCreator: OperationCreator) {
   return BlurrOperation<TA, TR>({
     ...operationCreator,
     sourceType: 'dataframe',
@@ -14,9 +15,9 @@ function DataframeOperation<TA extends ArgsType = ArgsType,
 
 function DropValueRowsOperation(name: string) {
   return DataframeOperation<{
-    cols: Cols,
-    value: string,
-    how: 'any' | 'all',
+    cols: Cols;
+    value: string;
+    how: 'any' | 'all';
   }>({
     targetType: 'dataframe',
     name,
@@ -32,15 +33,16 @@ function DropValueRowsOperation(name: string) {
       {
         name: 'how',
         default: 'any',
-      }],
+      },
+    ],
   });
 }
 
 function SelectTypeRowsOperation(name: string) {
   return DataframeOperation<{
-    cols: Cols,
-    drop: boolean,
-    how: 'any' | 'all',
+    cols: Cols;
+    drop: boolean;
+    how: 'any' | 'all';
   }>({
     targetType: 'dataframe',
     name,
@@ -56,14 +58,15 @@ function SelectTypeRowsOperation(name: string) {
       {
         name: 'how',
         default: 'any',
-      }],
+      },
+    ],
   });
 }
 
 function SelectRowsOperation(name: string) {
   return DataframeOperation<{
-    cols: Cols,
-    how: 'any' | 'all',
+    cols: Cols;
+    how: 'any' | 'all';
   }>({
     targetType: 'dataframe',
     name,
@@ -75,16 +78,17 @@ function SelectRowsOperation(name: string) {
       {
         name: 'how',
         default: 'any',
-      }],
+      },
+    ],
   });
 }
 
 function SelectValueRowsOperation(name: string) {
   return DataframeOperation<{
-    cols: Cols,
-    value: number,
-    drop: boolean,
-    how: 'any' | 'all',
+    cols: Cols;
+    value: number;
+    drop: boolean;
+    how: 'any' | 'all';
   }>({
     targetType: 'dataframe',
     name,
@@ -104,13 +108,13 @@ function SelectValueRowsOperation(name: string) {
       {
         name: 'how',
         default: 'any',
-      }],
+      },
+    ],
   });
 }
 
-
 export const operations = {
-  append: DataframeOperation<{ dfs: Source[]; namesMap: number }, Source>({
+  append: DataframeOperation<{ dfs: SourceArg[]; namesMap: number }, Source>({
     targetType: 'dataframe',
     name: 'rows.append',
     args: [
@@ -124,7 +128,10 @@ export const operations = {
       },
     ],
   }),
-  select: DataframeOperation<{ expr: string; contains: string | string[], case, flags, na, regex }, Source>({
+  select: DataframeOperation<
+    { expr: string; contains: string | string[]; case; flags; na; regex },
+    Source
+  >({
     targetType: 'dataframe',
     name: 'rows.select',
     args: [
@@ -151,10 +158,11 @@ export const operations = {
       {
         name: 'regex',
         default: false,
-      }],
+      },
+    ],
   }),
-  count: DataframeOperation<{ compute: string }, Source>({
-    targetType: 'dataframe',
+  count: DataframeOperation<{ compute: string }, number>({
+    targetType: 'value',
     name: 'rows.count',
     args: [
       {
@@ -163,16 +171,17 @@ export const operations = {
       },
     ],
   }),
-  toList: DataframeOperation<{ cols: Cols }>({
+  toList: DataframeOperation<{ cols: Cols }, PythonCompatible>({
     targetType: 'value',
     name: 'rows.toList',
     args: [
       {
         name: 'Cols',
         default: '*',
-      }],
+      },
+    ],
   }),
-  sort: DataframeOperation<{ cols: Cols; order: string, cast: boolean }>({
+  sort: DataframeOperation<{ cols: Cols; order: string; cast: boolean }>({
     targetType: 'dataframe',
     name: 'rows.sort',
     args: [
@@ -187,35 +196,39 @@ export const operations = {
       {
         name: 'cast',
         default: true,
-      }],
+      },
+    ],
   }),
   reverse: DataframeOperation<NoArgs, Source>({
-      targetType: 'dataframe',
-      name: 'rows.reverse',
+    targetType: 'dataframe',
+    name: 'rows.reverse',
+  }),
+  drop: DataframeOperation<
+    {
+      cols: Cols;
+      where: string;
     },
-  ),
-  drop: DataframeOperation<{
-    cols: Cols,
-    where: string,
-  }, Source>
-  ({
-      targetType: 'dataframe',
-      name: 'rows.drop',
-      args: [
-        {
-          name: 'cols',
-          default: '*',
-        },
-        {
-          name: 'where',
-          default: null,
-        }],
+    Source
+  >({
+    targetType: 'dataframe',
+    name: 'rows.drop',
+    args: [
+      {
+        name: 'cols',
+        default: '*',
+      },
+      {
+        name: 'where',
+        default: null,
+      },
+    ],
+  }),
+  limit: DataframeOperation<
+    {
+      count: number;
     },
-  ),
-  limit: DataframeOperation<{
-    count: number,
-  }, Source>
-  ({
+    Source
+  >({
     targetType: 'dataframe',
     name: 'rows.limit',
     args: [
@@ -225,37 +238,38 @@ export const operations = {
       },
     ],
   }),
-  unnest: DataframeOperation<{
-    cols: Cols,
-    outputCols: Cols,
-  }, Source>
-  ({
+  unnest: DataframeOperation<
+    {
+      cols: Cols;
+      outputCols: Cols;
+    },
+    Source
+  >({
     targetType: 'dataframe',
     name: 'rows.unnest',
     args: [
       {
         name: 'cols',
         default: '*',
-      }],
+      },
+    ],
   }),
   approxCount: DataframeOperation<NoArgs, number>({
-      targetType: 'value',
-      name: 'rows.approxCount',
-    },
-  ),
+    targetType: 'value',
+    name: 'rows.approxCount',
+  }),
   str: SelectTypeRowsOperation('rows.str'),
   int: SelectTypeRowsOperation('rows.int'),
   float: SelectTypeRowsOperation('rows.float'),
   numeric: SelectTypeRowsOperation('rows.numeric'),
   between: DataframeOperation<{
-    lowerBound: number,
-    upperBound: number,
-    includeBounds: boolean,
-    bounds: [],
-    drop: boolean,
-    how: 'any' | 'all'
-  }>
-  ({
+    lowerBound: number;
+    upperBound: number;
+    includeBounds: boolean;
+    bounds: [];
+    drop: boolean;
+    how: 'any' | 'all';
+  }>({
     targetType: 'dataframe',
     name: 'rows.between',
     args: [
@@ -282,7 +296,8 @@ export const operations = {
       {
         name: 'how',
         default: 'any',
-      }],
+      },
+    ],
   }),
   greatherThanEqual: SelectValueRowsOperation('rows.greatherThanEqual'),
   greatherThan: SelectValueRowsOperation('rows.greatherThan'),
@@ -296,12 +311,11 @@ export const operations = {
   nan: SelectTypeRowsOperation('rows.nan'),
   empty: SelectTypeRowsOperation('rows.empty'),
   duplicated: DataframeOperation<{
-    cols: Cols,
-    keep: 'first' | 'last' | false,
-    drop: boolean,
-    how: 'any' | 'all'
-  }>
-  ({
+    cols: Cols;
+    keep: 'first' | 'last' | false;
+    drop: boolean;
+    how: 'any' | 'all';
+  }>({
     targetType: 'dataframe',
     name: 'rows.duplicated',
     args: [
@@ -320,15 +334,15 @@ export const operations = {
       {
         name: 'how',
         default: 'any',
-      }],
+      },
+    ],
   }),
   unique: DataframeOperation<{
-    cols: Cols,
-    keep: 'first' | 'last' | false,
-    drop: boolean,
-    how: 'any' | 'all'
-  }>
-  ({
+    cols: Cols;
+    keep: 'first' | 'last' | false;
+    drop: boolean;
+    how: 'any' | 'all';
+  }>({
     targetType: 'dataframe',
     name: 'rows.unique',
     args: [
@@ -339,7 +353,6 @@ export const operations = {
       {
         name: 'keep',
         default: 'first',
-
       },
       {
         name: 'drop',
@@ -348,15 +361,15 @@ export const operations = {
       {
         name: 'how',
         default: 'any',
-      }],
+      },
+    ],
   }),
   mismatch: DataframeOperation<{
-    cols: Cols,
-    dataType: string,
-    drop: boolean,
-    how: 'any' | 'all'
-  }>
-  ({
+    cols: Cols;
+    dataType: string;
+    drop: boolean;
+    how: 'any' | 'all';
+  }>({
     targetType: 'dataframe',
     name: 'rows.mismatch',
     args: [
@@ -375,16 +388,16 @@ export const operations = {
       {
         name: 'how',
         default: 'any',
-      }],
+      },
+    ],
   }),
   match: DataframeOperation<{
-    cols: Cols,
-    regex: string,
-    dataType: string,
-    drop: boolean,
-    how: 'any' | 'all'
-  }>
-  ({
+    cols: Cols;
+    regex: string;
+    dataType: string;
+    drop: boolean;
+    how: 'any' | 'all';
+  }>({
     targetType: 'dataframe',
     name: 'rows.match',
     args: [
@@ -407,16 +420,16 @@ export const operations = {
       {
         name: 'how',
         default: 'any',
-      }],
+      },
+    ],
   }),
   matchRegex: DataframeOperation<{
-    cols: Cols,
-    regex: string,
-    dataType: string,
-    drop: boolean,
-    how: 'any' | 'all'
-  }>
-  ({
+    cols: Cols;
+    regex: string;
+    dataType: string;
+    drop: boolean;
+    how: 'any' | 'all';
+  }>({
     targetType: 'dataframe',
     name: 'rows.matchRegex',
     args: [
@@ -439,17 +452,16 @@ export const operations = {
       {
         name: 'how',
         default: 'any',
-      }],
+      },
+    ],
   }),
   valueIn: DataframeOperation<{
-    cols: Cols,
-    values: any[],
-    dataType: string,
-    drop: boolean,
-    how: 'any' | 'all'
-  }>
-  ({
-
+    cols: Cols;
+    values: any[];
+    dataType: string;
+    drop: boolean;
+    how: 'any' | 'all';
+  }>({
     targetType: 'dataframe',
     name: 'rows.valueIn',
     args: [
@@ -462,27 +474,25 @@ export const operations = {
         default: null,
       },
       {
-
         name: 'dataType',
         default: null,
       },
       {
-
         name: 'drop',
         default: false,
       },
       {
         name: 'how',
         default: 'any',
-      }],
+      },
+    ],
   }),
   pattern: DataframeOperation<{
-    cols: Cols,
-    pattern: string,
-    drop: boolean,
-    how: 'any' | 'all'
-  }>
-  ({
+    cols: Cols;
+    pattern: string;
+    drop: boolean;
+    how: 'any' | 'all';
+  }>({
     targetType: 'dataframe',
     name: 'rows.pattern',
     args: [
@@ -502,7 +512,8 @@ export const operations = {
         name: 'how',
 
         default: 'any',
-      }],
+      },
+    ],
   }),
   startsWith: SelectValueRowsOperation('rows.startsWith'),
   endsWith: SelectValueRowsOperation('rows.endsWith'),
@@ -522,12 +533,11 @@ export const operations = {
   socialSecurityNumber: SelectTypeRowsOperation('rows.socialSecurityNumber'),
   HTTPCode: SelectTypeRowsOperation('rows.HTTPCode'),
   expression: DataframeOperation<{
-    where: string,
-    cols: Cols,
-    drop: boolean,
-    how: 'any' | 'all'
-  }>
-  ({
+    where: string;
+    cols: Cols;
+    drop: boolean;
+    how: 'any' | 'all';
+  }>({
     targetType: 'dataframe',
     name: 'rows.expression',
     args: [
@@ -546,7 +556,8 @@ export const operations = {
       {
         name: 'how',
         default: 'any',
-      }],
+      },
+    ],
   }),
   dropStr: SelectRowsOperation('rows.dropStr'),
   dropInt: SelectRowsOperation('rows.dropInt'),
@@ -557,15 +568,14 @@ export const operations = {
   dropLessThan: DropValueRowsOperation('rows.dropLessThan'),
   dropLessThanEqual: DropValueRowsOperation('rows.dropLessThanEqual'),
   dropBetween: DataframeOperation<{
-    cols: Cols,
-    lowerBound: number,
-    upperBound: number,
-    includeBounds: boolean,
-    bounds: [number, number],
-    drop: boolean,
-    how: 'any' | 'all'
-  }>
-  ({
+    cols: Cols;
+    lowerBound: number;
+    upperBound: number;
+    includeBounds: boolean;
+    bounds: [number, number];
+    drop: boolean;
+    how: 'any' | 'all';
+  }>({
     targetType: 'dataframe',
     name: 'rows.dropBetween',
     args: [
@@ -596,7 +606,8 @@ export const operations = {
       {
         name: 'how',
         default: 'any',
-      }],
+      },
+    ],
   }),
   dropEqual: DropValueRowsOperation('rows.dropEqual'),
   dropNotEqual: DropValueRowsOperation('rows.dropNotEqual'),
@@ -606,11 +617,10 @@ export const operations = {
   dropNaN: SelectRowsOperation('rows.dropNaN'),
   dropEmpty: SelectRowsOperation('rows.dropEmpty'),
   dropDuplicated: DataframeOperation<{
-    cols: Cols,
-    keep: 'first' | 'last' | false,
-    how: 'any' | 'all'
-  }>
-  ({
+    cols: Cols;
+    keep: 'first' | 'last' | false;
+    how: 'any' | 'all';
+  }>({
     targetType: 'dataframe',
     name: 'rows.dropDuplicated',
     args: [
@@ -625,14 +635,14 @@ export const operations = {
       {
         name: 'how',
         default: 'any',
-      }],
+      },
+    ],
   }),
   dropUniques: DataframeOperation<{
-    cols: Cols,
-    keep: 'first' | 'last' | false,
-    how: 'any' | 'all'
-  }>
-  ({
+    cols: Cols;
+    keep: 'first' | 'last' | false;
+    how: 'any' | 'all';
+  }>({
     targetType: 'dataframe',
     name: 'rows.dropUniques',
     args: [
@@ -647,14 +657,14 @@ export const operations = {
       {
         name: 'how',
         default: 'any',
-      }],
+      },
+    ],
   }),
   dropMismatch: DataframeOperation<{
-    cols: Cols,
-    keep: 'first' | 'last' | false,
-    how: 'any' | 'all'
-  }>
-  ({
+    cols: Cols;
+    keep: 'first' | 'last' | false;
+    how: 'any' | 'all';
+  }>({
     targetType: 'dataframe',
     name: 'rows.dropMismatch',
     args: [
@@ -669,15 +679,15 @@ export const operations = {
       {
         name: 'how',
         default: 'any',
-      }],
+      },
+    ],
   }),
   dropMatch: DataframeOperation<{
-    cols: Cols,
-    regex: string,
-    dataType: string,
-    how: 'any' | 'all'
-  }>
-  ({
+    cols: Cols;
+    regex: string;
+    dataType: string;
+    how: 'any' | 'all';
+  }>({
     targetType: 'dataframe',
     name: 'rows.dropMatch',
     args: [
@@ -696,14 +706,14 @@ export const operations = {
       {
         name: 'how',
         default: 'any',
-      }],
+      },
+    ],
   }),
   dropByRegex: DataframeOperation<{
-    cols: Cols,
-    regex: string,
-    how: 'any' | 'all'
-  }>
-  ({
+    cols: Cols;
+    regex: string;
+    how: 'any' | 'all';
+  }>({
     targetType: 'dataframe',
     name: 'rows.dropByRegex',
     args: [
@@ -718,14 +728,14 @@ export const operations = {
       {
         name: 'how',
         default: 'any',
-      }],
+      },
+    ],
   }),
   dropByDataType: DataframeOperation<{
-    cols: Cols,
-    dataType: string,
-    how: 'any' | 'all'
-  }>
-  ({
+    cols: Cols;
+    dataType: string;
+    how: 'any' | 'all';
+  }>({
     targetType: 'dataframe',
     name: 'rows.dropByDataType',
     args: [
@@ -740,15 +750,15 @@ export const operations = {
       {
         name: 'how',
         default: 'any',
-      }],
+      },
+    ],
   }),
   dropValueIn: DropValueRowsOperation('rows.dropValueIn'),
   dropPattern: DataframeOperation<{
-    cols: Cols,
-    pattern: string,
-    how: 'any' | 'all'
-  }>
-  ({
+    cols: Cols;
+    pattern: string;
+    how: 'any' | 'all';
+  }>({
     targetType: 'dataframe',
     name: 'rows.dropPattern',
     args: [
@@ -763,7 +773,8 @@ export const operations = {
       {
         name: 'how',
         default: 'any',
-      }],
+      },
+    ],
   }),
   dropStartsWith: DropValueRowsOperation('rows.dropStartsWith'),
   dropEndsWith: DropValueRowsOperation('rows.dropEndsWith'),
@@ -779,14 +790,15 @@ export const operations = {
   dropDateTimes: SelectRowsOperation('rows.dropDateTimes'),
   dropArrays: SelectRowsOperation('rows.dropArrays'),
   dropPhoneNumbers: SelectRowsOperation('rows.dropPhoneNumbers'),
-  dropSocialSecurityNumbers: SelectRowsOperation('rows.dropSocialSecurityNumbers'),
+  dropSocialSecurityNumbers: SelectRowsOperation(
+    'rows.dropSocialSecurityNumbers'
+  ),
   dropHTTPCodes: SelectRowsOperation('rows.dropHTTPCodes'),
   dropByExpression: DataframeOperation<{
-    where: string,
-    cols: Cols,
-    how: 'any' | 'all'
-  }>
-  ({
+    where: string;
+    cols: Cols;
+    how: 'any' | 'all';
+  }>({
     targetType: 'dataframe',
     name: 'rows.dropByExpression',
     args: [
@@ -801,8 +813,7 @@ export const operations = {
       {
         name: 'how',
         default: 'any',
-      }],
+      },
+    ],
   }),
 };
-
-
