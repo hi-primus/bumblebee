@@ -11,7 +11,7 @@ test('unique-name', async (t) => {
 
   t.log('Unique name:', df.name);
 
-  t.deepEqual(await df.columns(), [
+  t.deepEqual(await df.cols.names(), [
     'id',
     'firstName',
     'lastName',
@@ -22,7 +22,7 @@ test('unique-name', async (t) => {
     'dummyCol',
   ]);
 
-  const countResult = await df.count();
+  const countResult = await df.rows.count();
 
   t.is(countResult, 19);
 
