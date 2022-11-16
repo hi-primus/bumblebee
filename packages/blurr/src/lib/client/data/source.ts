@@ -30,10 +30,10 @@ export function BlurrSource(client: RunsCode, name?: string): Source {
     toString: () => name,
   };
 
-  function adaptFunctions(operations) {
+  function adaptFunctions(operations, operationType) {
     const functions = {};
     for (const key in operations) {
-      const operation = operations[key];
+      const operationArgs = operations[key].args;
       functions[key] = (...args) => {
         let _args: InputArgs;
         if (args.length === 1 && isObject(args[0])) {
@@ -41,12 +41,16 @@ export function BlurrSource(client: RunsCode, name?: string): Source {
         } else {
           _args = args;
         }
-        let kwargs = adaptKwargs(_args, operation.args);
+        let kwargs = adaptKwargs(_args, operationArgs);
         kwargs = {
           ...(kwargs || {}),
           source: source.toString(),
         };
-        return operation.run(client, kwargs);
+        return client.run({
+          ...kwargs,
+          operationKey: key,
+          operationType,
+        });
       };
     }
     return functions;
@@ -54,9 +58,9 @@ export function BlurrSource(client: RunsCode, name?: string): Source {
 
   return {
     ...source,
-    ...(adaptFunctions(operations) as SourceFunctions),
-    cols: adaptFunctions(colsOperations) as SourceFunctionsCols,
-    rows: adaptFunctions(rowsOperatons) as SourceFunctionsRows,
+    ...(adaptFunctions(operations, 'dataframe') as SourceFunctions),
+    cols: adaptFunctions(colsOperations, 'cols') as SourceFunctionsCols,
+    rows: adaptFunctions(rowsOperatons, 'rows') as SourceFunctionsRows,
     _blurrMember: 'source',
   };
 }

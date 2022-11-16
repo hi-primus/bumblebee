@@ -27,6 +27,8 @@ declare global {
     | R<OperationCompatible>
     | Array<OperationCompatible>;
 
+  type OperationType = 'client' | 'dataframe' | 'cols' | 'rows';
+
   type InputArgs = Record<string, OperationCompatible> | OperationCompatible[];
 
   interface R<T> {

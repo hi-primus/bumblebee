@@ -1,4 +1,4 @@
-import type { Cols, ColsResult, NoArgs } from '../../../../../types/arguments';
+import { Cols, ColsResult, NoArgs } from '../../../../../types/arguments';
 import { ArgsType, OperationCreator } from '../../../../../types/operation';
 import { BlurrOperation } from '../../factory';
 

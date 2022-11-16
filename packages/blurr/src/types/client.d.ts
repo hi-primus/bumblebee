@@ -1,4 +1,4 @@
-import { operations } from '../lib/client/operations';
+import { operations } from '../lib/client/operations/client';
 
 import { BackendOptions, RunsCode, Server } from './server';
 export interface ClientOptions {
@@ -13,4 +13,7 @@ export type ClientFunctions = {
 };
 export interface Client extends ClientFunctions, RunsCode {
   backendServer: Server;
+  run: (
+    kwargs: Record<string, OperationCompatible>
+  ) => Promise<OperationCompatible>;
 }

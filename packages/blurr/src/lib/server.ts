@@ -5,6 +5,7 @@ import { LoadPyodideType, PyodideBackendOptions } from '../types/pyodide';
 import { Server } from '../types/server';
 import { BackendOptions } from '../types/server';
 
+import { getOperation } from './client/operations';
 import { loadScript } from './utils';
 
 const defaultPyodideOptions: PyodideBackendOptions = {
@@ -77,7 +78,7 @@ function BlurrServerPyodide(options: PyodideBackendOptions): Server {
       server.backendLoaded = true;
       return true;
     }),
-    run: async (code: string) => {
+    runCode: async (code: string) => {
       await server.donePromise;
       const result = await server.backend.runPythonAsync(code);
       try {
@@ -88,6 +89,22 @@ function BlurrServerPyodide(options: PyodideBackendOptions): Server {
         console.warn('Error converting to JS', code, error);
         return result;
       }
+    },
+    run: async (
+      params: Record<string, OperationCompatible> & {
+        operationKey: string;
+        operationType: OperationType;
+      }
+    ) => {
+      const { operationKey, operationType, ...kwargs } = params;
+      const operation = getOperation(operationKey, operationType);
+      if (!operation) {
+        throw new Error(
+          `Operation '${operationKey}' of type '${operationType}' not found`
+        );
+      }
+      // the client handles the type correctly, in server-side, just use PythonCompatible
+      return (await operation.run(server, kwargs)) as PythonCompatible;
     },
     _features: ['buffers', 'callbacks'],
     supports: (features: string | Array<string>) => {

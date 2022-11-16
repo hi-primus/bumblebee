@@ -14,12 +14,14 @@ import {
   objectMap,
   pythonArguments,
 } from '../../../utils';
-
-import { BlurrSource, isSource } from './../../data/source';
+import { isSource } from '../../data/source';
 
 const initialized: string[] = [];
 
-function makePythonCompatible(server: RunsCode, value: OperationCompatible) {
+export function makePythonCompatible(
+  server: RunsCode,
+  value: OperationCompatible
+) {
   if (isSource(value)) {
     return Name(value.toString());
   } else if (value instanceof ArrayBuffer) {
@@ -70,7 +72,7 @@ async function callOperation<
   client: RunsCode,
   operation: Operation<TA, TR> = null,
   args: InputArgs = {}
-): Promise<OperationCompatible> {
+): Promise<PythonCompatible> {
   await client.donePromise;
 
   if (operation.initialize && !initialized.includes(operation.name)) {
@@ -95,7 +97,7 @@ async function callOperation<
     makePythonCompatible(client, kwargs)
   );
   if (operation.targetType == 'dataframe') {
-    return BlurrSource(client, kwargs.target.toString());
+    return Name(kwargs.target.toString());
   }
   return operationResult;
 }
@@ -113,7 +115,7 @@ export function BlurrOperation<
     _run = async (server, kwargs) => {
       const code = operationCreator.getCode(kwargs);
       console.log('[CODE FROM GENERATOR]', code, { kwargs, args });
-      return await server.run(code);
+      return await server.runCode(code);
     };
   } else if (operationCreator.run) {
     _run = async (server, kwargs) => {
@@ -129,19 +131,19 @@ export function BlurrOperation<
         camelToSnake(operationCreator.name) +
         `(${pythonArguments(kwargs)})`;
       console.log('[CODE FROM DEFAULT GENERATOR]', code);
-      return await server.run(code);
+      return await server.runCode(code);
     };
   }
   let initialize: (server: RunsCode) => Promise<PythonCompatible>;
   if (operationCreator.getInitializationCode) {
     initialize = async (server: RunsCode) => {
-      return await server.run(operationCreator.getInitializationCode());
+      return await server.runCode(operationCreator.getInitializationCode());
     };
   } else if (operationCreator.initialize) {
     initialize = operationCreator.initialize;
   }
 
-  const args: OperationArgument[] = operationCreator.args.map((arg) => {
+  const args: OperationArgument[] = (operationCreator.args || []).map((arg) => {
     return typeof arg === 'string' ? { name: arg } : arg;
   });
 
@@ -152,10 +154,9 @@ export function BlurrOperation<
     args,
     initialize,
     _run,
-    run: async function (client, kwargs: TA): Promise<TR> {
+    run: async function (server, kwargs: TA): Promise<TR> {
       if (isKwargs(kwargs)) {
-        const result = (await callOperation(client, operation, kwargs)) as TR;
-        return result;
+        return (await callOperation(server, operation, kwargs)) as TR;
       }
       throw new Error(
         `kwargs must be an object with string keys, type received: ${typeof kwargs}`
