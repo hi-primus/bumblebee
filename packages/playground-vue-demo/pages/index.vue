@@ -51,7 +51,6 @@ return await df.cols.names();
 `);
 const result = ref('');
 const error = ref(false);
-const mask = ref({});
 
 async function runCode(event: KeyboardEvent) {
   const AsyncFunction = eval('(async function() { return true }).constructor');
