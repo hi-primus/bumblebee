@@ -1,4 +1,3 @@
-import { NoArgs } from '../../../../types/arguments';
 import { ArgsType, OperationCreator } from '../../../../types/operation';
 import { Source } from '../../../../types/source';
 import { BlurrOperation } from '../factory';
