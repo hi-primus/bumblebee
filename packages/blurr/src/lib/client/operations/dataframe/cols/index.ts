@@ -3,10 +3,11 @@ import type {
   Cols,
   NoArgs,
   SearchBy,
-  Source,
+  SourceArg,
 } from '../../../../../types/arguments';
 import { ArgsType, OperationCreator } from '../../../../../types/operation';
 import { RELATIVE_ERROR } from '../../../../utils';
+import { Source } from '../../../data/source';
 import { BlurrOperation } from '../../factory';
 
 import { operations as maskOperations } from './mask';
@@ -118,7 +119,7 @@ function ColsMathOperation(name: string) {
 
 export const operations = {
   ...maskOperations,
-  append: DataframeOperation<{ dfs: Source[]; buckets: number }, Source>({
+  append: DataframeOperation<{ dfs: SourceArg[]; buckets: number }, Source>({
     targetType: 'dataframe',
     name: 'cols.append',
     args: [
@@ -128,7 +129,7 @@ export const operations = {
       },
     ],
   }),
-  concat: DataframeOperation<{ dfs: Source[] }>({
+  concat: DataframeOperation<{ dfs: SourceArg[] }>({
     targetType: 'dataframe',
     name: 'cols.concat',
     args: [
@@ -139,7 +140,7 @@ export const operations = {
     ],
   }),
   join: DataframeOperation<{
-    dfs: Source[];
+    dfs: SourceArg[];
     on: string;
     how: string;
     left_on: Cols;
@@ -2470,7 +2471,11 @@ export const operations = {
       },
     ],
   }),
-  ngramFingerprint: DataframeOperation<{ cols: Cols; n: number; outputCol: Cols }>({
+  ngramFingerprint: DataframeOperation<{
+    cols: Cols;
+    n: number;
+    outputCol: Cols;
+  }>({
     targetType: 'dataframe',
     name: 'cols.ngramFingerprint',
     args: [
@@ -2485,38 +2490,42 @@ export const operations = {
       {
         name: 'outputCol',
         default: null,
-      }],
-
+      },
+    ],
   }),
   metaphone: StandardDataframeOperation('cols.metaphone'),
-  levenshtein: DataframeOperation<{ cols: Cols; otherCols: Cols; value, outputCol: Cols }>({
-      targetType: 'dataframe',
-      name: 'cols.levenshtein',
-      args: [
-        {
-          name: 'cols',
-          default: '*',
-        },
-        {
-          name: 'otherCols',
-          default: null,
-        },
-        {
-          name: 'value',
-          default: null,
-        },
-        {
-          name: 'outputCol',
-          default: null,
-        },
-      ],
-    },
-  ),
+  levenshtein: DataframeOperation<{
+    cols: Cols;
+    otherCols: Cols;
+    value;
+    outputCol: Cols;
+  }>({
+    targetType: 'dataframe',
+    name: 'cols.levenshtein',
+    args: [
+      {
+        name: 'cols',
+        default: '*',
+      },
+      {
+        name: 'otherCols',
+        default: null,
+      },
+      {
+        name: 'value',
+        default: null,
+      },
+      {
+        name: 'outputCol',
+        default: null,
+      },
+    ],
+  }),
   nysiis: StandardDataframeOperation('cols.nysiis'),
   matchRatingEncoder: StandardDataframeOperation('cols.matchRatingEncoder'),
   doubleMetaphone: StandardDataframeOperation('cols.doubleMetaphone'),
   soundex: StandardDataframeOperation('cols.soundex'),
-  tfidf: DataframeOperation<{ cols: Cols; }>({
+  tfidf: DataframeOperation<{ cols: Cols }>({
     targetType: 'value',
     name: 'cols.tfidf',
     args: [
@@ -2526,7 +2535,7 @@ export const operations = {
       },
     ],
   }),
-  bagOfWords: DataframeOperation<{ cols: Cols; analyzer: string, ngramRange }>({
+  bagOfWords: DataframeOperation<{ cols: Cols; analyzer: string; ngramRange }>({
     targetType: 'value',
     name: 'cols.bagOfWords',
     args: [
@@ -2541,8 +2550,7 @@ export const operations = {
       {
         name: 'ngramRange',
         default: [1, 1],
-      }],
-
+      },
+    ],
   }),
-
 };

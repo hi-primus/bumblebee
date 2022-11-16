@@ -1,12 +1,12 @@
-import type { NoArgs, Source } from '../../../../types/arguments';
+import { NoArgs } from '../../../../types/arguments';
 import { ArgsType, OperationCreator } from '../../../../types/operation';
+import { Source } from '../../../../types/source';
 import { BlurrOperation } from '../factory';
 
-import { operations as colsOperations } from './cols';
-import { operations as rowsOperations } from './rows';
-
-function DataframeOperation<TA extends ArgsType = ArgsType,
-  TR extends OperationCompatible = Source>(operationCreator: OperationCreator) {
+function DataframeOperation<
+  TA extends ArgsType = ArgsType,
+  TR extends OperationCompatible = Source
+>(operationCreator: OperationCreator) {
   return BlurrOperation<TA, TR>({
     ...operationCreator,
     sourceType: 'dataframe',
@@ -14,14 +14,18 @@ function DataframeOperation<TA extends ArgsType = ArgsType,
 }
 
 export const operations = {
-  ...colsOperations,
-  ...rowsOperations,
-  columnsSample: DataframeOperation<NoArgs, Source>({
+  columnsSample: DataframeOperation<{ start: number; stop: number }>({
     name: 'columnsSample',
-    args: [],
-    defaultSource: 'df',
-
+    targetType: 'dataframe',
+    args: [
+      {
+        name: 'start',
+        default: 0,
+      },
+      {
+        name: 'stop',
+        default: 10,
+      },
+    ],
   }),
 };
-
-

@@ -10,7 +10,6 @@ import {
   camelToSnake,
   generateUniqueVariableName,
   isObject,
-  isStringArray,
   Name,
   objectMap,
   pythonArguments,
@@ -113,7 +112,7 @@ export function BlurrOperation<
   if (operationCreator.getCode) {
     _run = async (server, kwargs) => {
       const code = operationCreator.getCode(kwargs);
-      console.log('[CODE FROM GENERATOR]', code, { kwargs, operationArgs });
+      console.log('[CODE FROM GENERATOR]', code, { kwargs, args });
       return await server.run(code);
     };
   } else if (operationCreator.run) {
@@ -142,26 +141,15 @@ export function BlurrOperation<
     initialize = operationCreator.initialize;
   }
 
-  const _operationArgs = operationCreator.args;
-
-  let operationArgs: OperationArgument[];
-
-  if (isObject(_operationArgs)) {
-    operationArgs = Object.keys(_operationArgs).map((key) => ({
-      name: key,
-      default: _operationArgs[key],
-    }));
-  } else if (isStringArray(_operationArgs)) {
-    operationArgs = _operationArgs.map((name) => ({ name }));
-  } else {
-    operationArgs = _operationArgs;
-  }
+  const args: OperationArgument[] = operationCreator.args.map((arg) => {
+    return typeof arg === 'string' ? { name: arg } : arg;
+  });
 
   const operation: Operation<TA, TR> = {
     name: operationCreator.name,
     sourceType: operationCreator.sourceType,
     targetType: operationCreator.targetType,
-    args: operationArgs,
+    args,
     initialize,
     _run,
     run: async function (client, kwargs: TA): Promise<TR> {
