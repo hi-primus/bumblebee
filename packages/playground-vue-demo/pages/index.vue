@@ -47,7 +47,7 @@ df = await client.readCsv({
   url: "https://raw.githubusercontent.com/hi-primus/optimus/develop/examples/data/foo.csv"
 });
 
-return await df.columns();
+return await df.cols.names();
 `);
 const result = ref('');
 const error = ref(false);
