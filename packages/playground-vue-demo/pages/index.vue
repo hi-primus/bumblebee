@@ -63,6 +63,7 @@ async function runCode(event: KeyboardEvent) {
     result.value = await AsyncFunction(code.value)();
     //
   } catch (err) {
+    console.error(err);
     if (err instanceof Error) {
       error.value = true;
       result.value = err.message;
