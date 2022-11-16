@@ -1,4 +1,4 @@
-import type {
+import {
   CallbackFunction,
   Cols,
   NoArgs,
@@ -328,8 +328,11 @@ export const operations = {
         default: '*',
       },
       {
-        name: 'outputCols',
+        name: 'names',
         default: null,
+      },
+      {
+        name: 'func',
       },
     ],
   }),
