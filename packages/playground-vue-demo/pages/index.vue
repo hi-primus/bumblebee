@@ -47,11 +47,10 @@ df = await client.readCsv({
   url: "https://raw.githubusercontent.com/hi-primus/optimus/develop/examples/data/foo.csv"
 });
 
-return await df.columns();
+return await df.cols.names();
 `);
 const result = ref('');
 const error = ref(false);
-const mask = ref({});
 
 async function runCode(event: KeyboardEvent) {
   const AsyncFunction = eval('(async function() { return true }).constructor');
@@ -63,6 +62,7 @@ async function runCode(event: KeyboardEvent) {
     result.value = await AsyncFunction(code.value)();
     //
   } catch (err) {
+    console.error(err);
     if (err instanceof Error) {
       error.value = true;
       result.value = err.message;
@@ -82,7 +82,7 @@ onMounted(() => {
       scriptURL: 'https://cdn.jsdelivr.net/pyodide/v0.21.3/full/pyodide.js'
     }
   });
-  window.client.run(`1+1`).then((result: string) => {
+  window.client.runCode(`1+1`).then((result: string) => {
     console.info('Initialization result should be 2:', result);
     enabled.value = true;
   });

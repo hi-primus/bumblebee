@@ -1,12 +1,13 @@
-import type {
+import {
   CallbackFunction,
   Cols,
   NoArgs,
   SearchBy,
-  Source,
+  SourceArg,
 } from '../../../../../types/arguments';
 import { ArgsType, OperationCreator } from '../../../../../types/operation';
 import { RELATIVE_ERROR } from '../../../../utils';
+import { Source } from '../../../data/source';
 import { BlurrOperation } from '../../factory';
 
 import { operations as maskOperations } from './mask';
@@ -118,7 +119,7 @@ function ColsMathOperation(name: string) {
 
 export const operations = {
   ...maskOperations,
-  append: DataframeOperation<{ dfs: Source[]; buckets: number }, Source>({
+  append: DataframeOperation<{ dfs: SourceArg[]; buckets: number }, Source>({
     targetType: 'dataframe',
     name: 'cols.append',
     args: [
@@ -128,7 +129,7 @@ export const operations = {
       },
     ],
   }),
-  concat: DataframeOperation<{ dfs: Source[] }>({
+  concat: DataframeOperation<{ dfs: SourceArg[] }>({
     targetType: 'dataframe',
     name: 'cols.concat',
     args: [
@@ -139,7 +140,7 @@ export const operations = {
     ],
   }),
   join: DataframeOperation<{
-    dfs: Source[];
+    dfs: SourceArg[];
     on: string;
     how: string;
     left_on: Cols;
@@ -327,8 +328,11 @@ export const operations = {
         default: '*',
       },
       {
-        name: 'outputCols',
+        name: 'names',
         default: null,
+      },
+      {
+        name: 'func',
       },
     ],
   }),
@@ -2449,15 +2453,107 @@ export const operations = {
     name: 'cols.names',
   }),
 
-  // hist: DataframeOperation({
-  //   targetType: 'value',
-  //   name: 'hist',
-  //   getCode: function(kwargs: { source: string; cols: string | string[] }) {
-  //     kwargs = Object.assign({ cols: '*' }, kwargs);
-  //     if (Array.isArray(kwargs.cols)) {
-  //       return `${kwargs.source}.cols.hist(["${kwargs.cols.join('", "')}"])`;
-  //     }
-  //     return `${kwargs.source}.cols.hist("${kwargs.cols}")`;
-  //   }
-  // })
+  // TODO: handle any and count functions, _values
+  fingerprint: StandardDataframeOperation('cols.fingerprint'),
+  pos: StandardDataframeOperation('cols.pos'),
+  ngrams: DataframeOperation<{ cols: Cols; n: number; outputCol: Cols }>({
+    targetType: 'dataframe',
+    name: 'cols.ngramFingerprint',
+    args: [
+      {
+        name: 'cols',
+        default: '*',
+      },
+      {
+        name: 'n',
+        default: 2,
+      },
+      {
+        name: 'outputCol',
+        default: null,
+      },
+    ],
+  }),
+  ngramFingerprint: DataframeOperation<{
+    cols: Cols;
+    n: number;
+    outputCol: Cols;
+  }>({
+    targetType: 'dataframe',
+    name: 'cols.ngramFingerprint',
+    args: [
+      {
+        name: 'cols',
+        default: '*',
+      },
+      {
+        name: 'n',
+        default: 2,
+      },
+      {
+        name: 'outputCol',
+        default: null,
+      },
+    ],
+  }),
+  metaphone: StandardDataframeOperation('cols.metaphone'),
+  levenshtein: DataframeOperation<{
+    cols: Cols;
+    otherCols: Cols;
+    value;
+    outputCol: Cols;
+  }>({
+    targetType: 'dataframe',
+    name: 'cols.levenshtein',
+    args: [
+      {
+        name: 'cols',
+        default: '*',
+      },
+      {
+        name: 'otherCols',
+        default: null,
+      },
+      {
+        name: 'value',
+        default: null,
+      },
+      {
+        name: 'outputCol',
+        default: null,
+      },
+    ],
+  }),
+  nysiis: StandardDataframeOperation('cols.nysiis'),
+  matchRatingEncoder: StandardDataframeOperation('cols.matchRatingEncoder'),
+  doubleMetaphone: StandardDataframeOperation('cols.doubleMetaphone'),
+  soundex: StandardDataframeOperation('cols.soundex'),
+  tfidf: DataframeOperation<{ cols: Cols }>({
+    targetType: 'value',
+    name: 'cols.tfidf',
+    args: [
+      {
+        name: 'cols',
+        default: '*',
+      },
+    ],
+  }),
+  bagOfWords: DataframeOperation<{ cols: Cols; analyzer: string; ngramRange }>({
+    targetType: 'value',
+    name: 'cols.bagOfWords',
+    args: [
+      {
+        name: 'cols',
+        default: '*',
+      },
+      {
+        name: 'analyzer',
+        default: 'word',
+      },
+      {
+        name: 'ngramRange',
+        default: [1, 1],
+      },
+    ],
+  }),
 };

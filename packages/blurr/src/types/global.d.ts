@@ -1,4 +1,4 @@
-import { CallbackFunction, Name, Source } from './arguments';
+import { CallbackFunction, Name, SourceArg } from './arguments';
 
 export {};
 
@@ -20,12 +20,14 @@ declare global {
     | BasicPythonCompatible
     | ArrayBuffer
     | CallbackFunction
-    | Source;
+    | SourceArg;
 
   type OperationCompatible =
     | BasicOperationCompatible
     | R<OperationCompatible>
     | Array<OperationCompatible>;
+
+  type OperationType = 'client' | 'dataframe' | 'cols' | 'rows';
 
   type InputArgs = Record<string, OperationCompatible> | OperationCompatible[];
 

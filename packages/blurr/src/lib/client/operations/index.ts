@@ -1,26 +1,20 @@
-import { Source } from '../../../types/source';
+import { Operation } from '../../../types/operation';
 
+import { operations as clientOperations } from './client';
 import { operations as dataframeOperations } from './dataframe';
-import { BlurrOperation } from './factory';
+import { operations as colsOperations } from './dataframe/cols';
+import { operations as rowsOperations } from './dataframe/rows';
 
-export const operations = {
-  ...dataframeOperations,
-  readCsv: BlurrOperation<
-    { target?: string; url?: string; buffer?: string },
-    Source
-  >({
-    sourceType: 'none',
-    targetType: 'dataframe',
-    name: 'readCsv',
-    getCode: function (kwargs: {
-      target: string;
-      url: string;
-      buffer: string;
-    }) {
-      if (kwargs.url) {
-        return `${kwargs.target} = op.load.csv('${kwargs.url}')`;
-      }
-      return `${kwargs.buffer}_py = BytesIO(${kwargs.buffer}.to_py()); ${kwargs.target} = op.load.csv(${kwargs.buffer}_py)`;
-    },
-  }),
+export const allOperations = {
+  client: clientOperations,
+  dataframe: dataframeOperations,
+  cols: colsOperations,
+  rows: rowsOperations,
 };
+
+export function getOperation(
+  key: string,
+  operationType: OperationType
+): Operation {
+  return allOperations[operationType][key];
+}
