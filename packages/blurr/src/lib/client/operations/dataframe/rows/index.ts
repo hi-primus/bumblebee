@@ -1,6 +1,8 @@
-import type { Cols, NoArgs, Source } from '../../../../types/arguments';
-import { ArgsType, OperationCreator } from '../../../../types/operation';
-import { BlurrOperation } from '../factory';
+import { Cols, NoArgs } from '../../../../../types/arguments';
+import { ArgsType, OperationCreator } from '../../../../../types/operation';
+import { Source } from '../../../data/source';
+import { BlurrOperation } from '../../factory';
+
 
 function DataframeOperation<TA extends ArgsType = ArgsType,
   TR extends OperationCompatible = Source>(operationCreator: OperationCreator) {

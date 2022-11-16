@@ -1,10 +1,4 @@
-import type {
-  CallbackFunction,
-  Cols,
-  NoArgs,
-  SearchBy,
-  Source,
-} from '../../../../types/arguments';
+import type { NoArgs, Source } from '../../../../types/arguments';
 import { ArgsType, OperationCreator } from '../../../../types/operation';
 import { BlurrOperation } from '../factory';
 
@@ -27,7 +21,7 @@ export const operations = {
     args: [],
     defaultSource: 'df',
 
-  }
+  }),
 };
 
 
