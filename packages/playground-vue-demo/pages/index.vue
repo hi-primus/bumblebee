@@ -82,7 +82,7 @@ onMounted(() => {
       scriptURL: 'https://cdn.jsdelivr.net/pyodide/v0.21.3/full/pyodide.js'
     }
   });
-  window.client.run(`1+1`).then((result: string) => {
+  window.client.runCode(`1+1`).then((result: string) => {
     console.info('Initialization result should be 2:', result);
     enabled.value = true;
   });
