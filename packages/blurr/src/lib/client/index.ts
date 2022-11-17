@@ -1,7 +1,5 @@
 export type { Source } from '../../types/source';
 import { Client, ClientFunctions, ClientOptions } from '../../types/client';
-import { RunsCode } from '../../types/server';
-import { getOperation } from '../operations';
 import { operations } from '../operations/client';
 import { BlurrServer } from '../server';
 import { adaptKwargs, isName, isStringRecord } from '../utils';
