@@ -3,8 +3,8 @@ import {
   Operation,
   OperationArgument,
   OperationCreator,
-} from '../../../../types/operation';
-import { RunsCode } from '../../../../types/server';
+} from '../../../types/operation';
+import { RunsCode } from '../../../types/server';
 import {
   adaptKwargs,
   camelToSnake,
@@ -13,8 +13,8 @@ import {
   Name,
   objectMap,
   pythonArguments,
-} from '../../../utils';
-import { isSource } from '../../data/source';
+} from '../../utils';
+import { isSource } from '../../client/data/source';
 
 const initialized: string[] = [];
 

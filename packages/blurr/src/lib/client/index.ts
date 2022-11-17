@@ -4,7 +4,7 @@ import { BlurrServer } from '../server';
 import { adaptKwargs, isName, isStringRecord } from '../utils';
 
 import { BlurrSource } from './data/source';
-import { operations } from './operations/client';
+import { operations } from '../operations/client';
 
 export function BlurrClient(options: ClientOptions = {}): Client {
   const backendServer = options.server

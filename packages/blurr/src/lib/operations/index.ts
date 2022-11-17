@@ -1,4 +1,4 @@
-import { Operation } from '../../../types/operation';
+import { Operation } from '../../types/operation';
 
 import { operations as clientOperations } from './client';
 import { operations as dataframeOperations } from './dataframe';

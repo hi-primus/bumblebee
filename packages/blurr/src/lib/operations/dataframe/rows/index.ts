@@ -1,6 +1,6 @@
-import { Cols, NoArgs, SourceArg } from '../../../../../types/arguments';
-import { ArgsType, OperationCreator } from '../../../../../types/operation';
-import { Source } from '../../../data/source';
+import { Cols, NoArgs, SourceArg } from '../../../../types/arguments';
+import { ArgsType, OperationCreator } from '../../../../types/operation';
+import { Source } from '../../../client/data/source';
 import { BlurrOperation } from '../../factory';
 
 function DataframeOperation<

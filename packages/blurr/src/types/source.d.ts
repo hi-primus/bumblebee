@@ -1,6 +1,6 @@
-import { operations as dataframeOperations } from '../lib/client/operations/dataframe';
-import { operations as colsOperations } from '../lib/client/operations/dataframe/cols';
-import { operations as rowsOperations } from '../lib/client/operations/dataframe/rows';
+import { operations as dataframeOperations } from '../lib/operations/dataframe';
+import { operations as colsOperations } from '../lib/operations/dataframe/cols';
+import { operations as rowsOperations } from '../lib/operations/dataframe/rows';
 
 import { Operation } from './operation';
 import { RunsCode } from './server';

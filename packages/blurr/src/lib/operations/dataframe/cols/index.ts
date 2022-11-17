@@ -4,10 +4,10 @@ import {
   NoArgs,
   SearchBy,
   SourceArg,
-} from '../../../../../types/arguments';
-import { ArgsType, OperationCreator } from '../../../../../types/operation';
-import { RELATIVE_ERROR } from '../../../../utils';
-import { Source } from '../../../data/source';
+} from '../../../../types/arguments';
+import { ArgsType, OperationCreator } from '../../../../types/operation';
+import { Source } from '../../../client/data/source';
+import { RELATIVE_ERROR } from '../../../utils';
 import { BlurrOperation } from '../../factory';
 
 import { operations as maskOperations } from './mask';

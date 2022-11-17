@@ -1,4 +1,4 @@
-import { Source } from '../../../../types/source';
+import { Source } from '../../../types/source';
 import { BlurrOperation } from '../factory';
 
 export const operations = {

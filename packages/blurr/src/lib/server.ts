@@ -5,7 +5,7 @@ import { LoadPyodideType, PyodideBackendOptions } from '../types/pyodide';
 import { Server } from '../types/server';
 import { BackendOptions } from '../types/server';
 
-import { getOperation } from './client/operations';
+import { getOperation } from './operations';
 import { loadScript } from './utils';
 
 const defaultPyodideOptions: PyodideBackendOptions = {
