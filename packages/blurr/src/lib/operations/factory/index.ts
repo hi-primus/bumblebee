@@ -5,6 +5,7 @@ import {
   OperationCreator,
 } from '../../../types/operation';
 import { RunsCode } from '../../../types/server';
+import { isSource } from '../../client/data/source';
 import {
   adaptKwargs,
   camelToSnake,
@@ -14,7 +15,6 @@ import {
   objectMap,
   pythonArguments,
 } from '../../utils';
-import { isSource } from '../../client/data/source';
 
 const initialized: string[] = [];
 

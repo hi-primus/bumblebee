@@ -5,10 +5,10 @@ import {
   SourceFunctionsRows,
 } from '../../../types/source';
 import { SourceFunctions } from '../../../types/source';
-import { adaptKwargs, generateUniqueVariableName, isObject } from '../../utils';
 import { operations } from '../../operations/dataframe';
 import { operations as colsOperations } from '../../operations/dataframe/cols';
 import { operations as rowsOperatons } from '../../operations/dataframe/rows';
+import { adaptKwargs, generateUniqueVariableName, isObject } from '../../utils';
 
 export function isSource(value): value is Source {
   return (
@@ -24,7 +24,7 @@ export function BlurrSource(client: RunsCode, name?: string): Source {
     name = generateUniqueVariableName('source');
   }
 
-  const source = {
+  const source: Partial<Source> = {
     name,
     client,
     toString: () => name,

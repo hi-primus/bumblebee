@@ -1,10 +1,12 @@
 export type { Source } from '../../types/source';
 import { Client, ClientFunctions, ClientOptions } from '../../types/client';
+import { RunsCode } from '../../types/server';
+import { getOperation } from '../operations';
+import { operations } from '../operations/client';
 import { BlurrServer } from '../server';
 import { adaptKwargs, isName, isStringRecord } from '../utils';
 
 import { BlurrSource } from './data/source';
-import { operations } from '../operations/client';
 
 export function BlurrClient(options: ClientOptions = {}): Client {
   const backendServer = options.server
