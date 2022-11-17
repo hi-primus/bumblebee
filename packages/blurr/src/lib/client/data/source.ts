@@ -24,7 +24,7 @@ export function BlurrSource(client: RunsCode, name?: string): Source {
     name = generateUniqueVariableName('source');
   }
 
-  const source: Partial<Source> = {
+  const source: Pick<Source, 'name' | 'client' | 'toString'> = {
     name,
     client,
     toString: () => name,
