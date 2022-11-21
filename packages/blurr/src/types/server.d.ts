@@ -6,7 +6,10 @@ type Backend = 'pyodide' | 'kernel-gateway';
 interface RunsCode {
   donePromise: Promise<boolean>;
   supports: (feature: string) => boolean;
-  run: (kwargs: Record<string, unknown>) => Promise<unknown>;
+  run: (
+    kwargs: ArrayOrSingle<Record<string, unknown>>,
+    run?: boolean
+  ) => PromiseOr<unknown>;
   runCode: (string) => Promise<PythonCompatible>;
   setGlobal: (name: string, value) => void;
 }
@@ -18,7 +21,7 @@ interface Server extends RunsCode {
   backend?: BackendInterface;
   backendLoaded: boolean;
   run: (
-    kwargs: Record<string, OperationCompatible>
+    kwargs: ArrayOrSingle<Record<string, OperationCompatible>>
   ) => Promise<PythonCompatible>;
 }
 

@@ -6,7 +6,7 @@ import { Server } from '../types/server';
 import { BackendOptions } from '../types/server';
 
 import { getOperation } from './operations';
-import { loadScript } from './utils';
+import { loadScript, Name } from './utils';
 
 const defaultPyodideOptions: PyodideBackendOptions = {
   scriptURL: 'https://cdn.jsdelivr.net/pyodide/v0.21.3/full/pyodide.js',
@@ -90,21 +90,37 @@ function BlurrServerPyodide(options: PyodideBackendOptions): Server {
         return result;
       }
     },
-    run: async (
-      params: Record<string, OperationCompatible> & {
-        operationKey: string;
-        operationType: OperationType;
+    run: async (paramsArray: ArrayOrSingle<Params>) => {
+      if (!Array.isArray(paramsArray)) {
+        paramsArray = [paramsArray];
       }
-    ) => {
-      const { operationKey, operationType, ...kwargs } = params;
-      const operation = getOperation(operationKey, operationType);
-      if (!operation) {
-        throw new Error(
-          `Operation '${operationKey}' of type '${operationType}' not found`
-        );
+      let result: PythonCompatible = undefined;
+      const operations = paramsArray.map((params) => {
+        const { operationKey, operationType, ...kwargs } = params;
+        const operation = getOperation(operationKey, operationType);
+        if (!operation) {
+          throw new Error(
+            `Operation '${operationKey}' of type '${operationType}' not found`
+          );
+        }
+        return { operation, kwargs };
+      });
+      for (let i = 0; i < operations.length; i++) {
+        const { operation, kwargs } = operations[i];
+
+        if (
+          i > 0 &&
+          operation.sourceType === 'dataframe' &&
+          operations[i - 1].operation.targetType === 'dataframe' &&
+          result !== undefined
+        ) {
+          kwargs.source = Name(result.toString());
+        }
+
+        // the client handles the type correctly, in server-side, just use PythonCompatible
+        result = (await operation.run(server, kwargs)) as PythonCompatible;
       }
-      // the client handles the type correctly, in server-side, just use PythonCompatible
-      return (await operation.run(server, kwargs)) as PythonCompatible;
+      return result;
     },
     _features: ['buffers', 'callbacks'],
     supports: (features: string | Array<string>) => {

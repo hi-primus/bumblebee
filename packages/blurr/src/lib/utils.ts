@@ -42,11 +42,11 @@ export function isStringArray(value: unknown): value is string[] {
 }
 
 export function Name(name: string): Name {
-  return {
-    name,
-    toString: () => name,
-    _blurrMember: 'name',
-  };
+  const _name = {} as Name;
+  _name.name = name;
+  _name.toString = () => _name.name;
+  _name._blurrMember = 'name';
+  return _name;
 }
 
 export function isName(value): value is Name {

@@ -1,14 +1,19 @@
-import { RunsCode } from '../../../types/server';
+import { Client } from '../../../types/client';
 import {
   Source,
+  SourceFunctions,
   SourceFunctionsCols,
   SourceFunctionsRows,
 } from '../../../types/source';
-import { SourceFunctions } from '../../../types/source';
 import { operations } from '../../operations/dataframe';
 import { operations as colsOperations } from '../../operations/dataframe/cols';
 import { operations as rowsOperatons } from '../../operations/dataframe/rows';
-import { adaptKwargs, generateUniqueVariableName, isObject } from '../../utils';
+import {
+  adaptKwargs,
+  generateUniqueVariableName,
+  isName,
+  isObject,
+} from '../../utils';
 
 export function isSource(value): value is Source {
   return (
@@ -16,7 +21,7 @@ export function isSource(value): value is Source {
   );
 }
 
-export function BlurrSource(client: RunsCode, name?: string): Source {
+export function BlurrSource(client: Client, name?: string): Source {
   if (!client) {
     throw new Error('A source can only be initialized using a client');
   }
@@ -24,11 +29,13 @@ export function BlurrSource(client: RunsCode, name?: string): Source {
     name = generateUniqueVariableName('source');
   }
 
-  const source: Pick<Source, 'name' | 'client' | 'toString'> = {
-    name,
-    client,
-    toString: () => name,
-  };
+  const source = {} as Source;
+
+  source.name = name;
+  source.client = client;
+  source.paramsQueue = [];
+  source.toString = () => source.name;
+  source._blurrMember = 'source';
 
   function adaptFunctions(operations, operationType) {
     const functions = {};
@@ -44,7 +51,7 @@ export function BlurrSource(client: RunsCode, name?: string): Source {
         let kwargs = adaptKwargs(_args, operationArgs);
         kwargs = {
           ...(kwargs || {}),
-          source: source.toString(),
+          source: source,
         };
         return client.run({
           ...kwargs,
@@ -56,13 +63,51 @@ export function BlurrSource(client: RunsCode, name?: string): Source {
     return functions;
   }
 
-  return {
-    ...source,
-    ...(adaptFunctions(operations, 'dataframe') as SourceFunctions),
-    cols: adaptFunctions(colsOperations, 'cols') as SourceFunctionsCols,
-    rows: adaptFunctions(rowsOperatons, 'rows') as SourceFunctionsRows,
-    _blurrMember: 'source',
+  Object.assign(
+    source,
+    adaptFunctions(operations, 'dataframe') as SourceFunctions
+  );
+  source.cols = adaptFunctions(colsOperations, 'cols') as SourceFunctionsCols;
+  source.rows = adaptFunctions(rowsOperatons, 'rows') as SourceFunctionsRows;
+  source.persist = async () => {
+    if (!source.paramsQueue.length) {
+      console.log("Run 'persist' on a source with no pending operations");
+      const newSource = BlurrSource(client, source.name);
+      delete newSource.then;
+      return newSource;
+    }
+    const result = await client.send(source.paramsQueue);
+    console.log('The result', result);
+    if (isName(result) || isSource(result)) {
+      console.log('Pending operations done');
+      const newSource = BlurrSource(client, result.toString());
+      delete newSource.then;
+      return newSource;
+    }
+    const paramsWithTarget = source.paramsQueue.filter((p) => 'target' in p);
+    let lastTarget = paramsWithTarget[paramsWithTarget.length - 1].target;
+    if (!lastTarget) {
+      lastTarget = source.toString();
+    }
+    if (isSource(lastTarget) || isName(lastTarget)) {
+      lastTarget = lastTarget.toString();
+    }
+    if (typeof lastTarget === 'string') {
+      console.log(
+        'Creating a new source with the result of the pending operations'
+      );
+      const newSource = BlurrSource(client, lastTarget);
+      delete newSource.then;
+      return newSource;
+    }
+    console.warn("Can't persist source, unknown name.", result);
+    throw new Error("Can't persist source, unknown name.");
   };
+  source.then = (onfulfilled) => {
+    return source.persist().then(onfulfilled);
+  };
+
+  return source;
 }
 
 export type { Source };

@@ -29,6 +29,11 @@ declare global {
 
   type OperationType = 'client' | 'dataframe' | 'cols' | 'rows';
 
+  type Params = Record<string, OperationCompatible> & {
+    operationKey: string;
+    operationType: OperationType;
+  };
+
   type InputArgs = Record<string, OperationCompatible> | OperationCompatible[];
 
   interface R<T> {
@@ -38,6 +43,10 @@ declare global {
   type PropType<TObj, TProp extends keyof TObj> = TObj[TProp];
 
   type OperationArgs<T> = Record<string, T>;
+
+  type ArrayOrSingle<T> = T | Array<T>;
+
+  type PromiseOr<T> = T | Promise<T>;
 
   // eslint-disable-next-line @typescript-eslint/ban-types
   type ArgumentTypes<F extends Function> = F extends (

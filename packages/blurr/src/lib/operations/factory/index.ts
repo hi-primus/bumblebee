@@ -10,6 +10,7 @@ import {
   adaptKwargs,
   camelToSnake,
   generateUniqueVariableName,
+  isName,
   isObject,
   Name,
   objectMap,
@@ -22,7 +23,7 @@ export function makePythonCompatible(
   server: RunsCode,
   value: OperationCompatible
 ) {
-  if (isSource(value)) {
+  if (isSource(value) || isName(value)) {
     return Name(value.toString());
   } else if (value instanceof ArrayBuffer) {
     if (!server.supports('buffers')) {
@@ -84,14 +85,6 @@ async function callOperation<
 
   const kwargs = adaptKwargs(args, operationArgs);
 
-  if (!('target' in kwargs) && operation.targetType === 'dataframe') {
-    if (operation.targetType === operation.sourceType) {
-      kwargs.target = kwargs.source;
-    } else {
-      kwargs.target = generateUniqueVariableName(operation.targetType);
-    }
-  }
-
   const operationResult = await operation._run(
     client,
     makePythonCompatible(client, kwargs)
@@ -125,9 +118,10 @@ export function BlurrOperation<
   } else {
     _run = async (server, kwargs) => {
       const source = kwargs.source || operationCreator.defaultSource;
+      console.log('source', source);
       const code =
         (kwargs.target ? `${kwargs.target} = ` : '') +
-        (source ? `${source}.` : '') +
+        (source ? `${source.toString()}.` : '') +
         camelToSnake(operationCreator.name) +
         `(${pythonArguments(kwargs)})`;
       console.log('[CODE FROM DEFAULT GENERATOR]', code);

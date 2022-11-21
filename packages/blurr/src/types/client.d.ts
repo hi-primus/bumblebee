@@ -14,6 +14,8 @@ export type ClientFunctions = {
 export interface Client extends ClientFunctions, RunsCode {
   backendServer: Server;
   run: (
-    kwargs: Record<string, OperationCompatible>
-  ) => Promise<OperationCompatible>;
+    kwargs: ArrayOrSingle<Record<string, OperationCompatible>>
+  ) => PromiseOr<OperationCompatible>;
+  sources: Record<string, string>;
+  send(paramsQueue: Params[]): Promise<OperationCompatible>;
 }

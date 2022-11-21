@@ -26,4 +26,8 @@ export interface Source extends SourceFunctions {
   toString: () => string;
   cols: SourceFunctionsCols;
   rows: SourceFunctionsRows;
+  paramsQueue: Params[];
+  persist: () => Promise<Source>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  then?: (onfulfilled?: (result: any) => any) => any;
 }
