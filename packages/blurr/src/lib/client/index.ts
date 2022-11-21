@@ -39,9 +39,14 @@ export function BlurrClient(options: ClientOptions = {}): Client {
 
   for (const key in operations) {
     const operationArgs = operations[key].args;
+    const operationArgsNames = operationArgs.map((arg) => arg.name);
     clientFunctions[key] = (...args) => {
       let _args: InputArgs;
-      if (args.length === 1 && isStringRecord(args[0])) {
+      if (
+        args.length === 1 &&
+        isStringRecord(args[0]) &&
+        !Object.keys(args[0]).some((key) => !operationArgsNames.includes(key))
+      ) {
         _args = args[0] as InputArgs;
       } else {
         _args = args;
