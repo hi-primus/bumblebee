@@ -15,7 +15,6 @@ type OperationFunctions<T extends Record<string, Operation>> = {
 };
 
 export type SourceFunctions = OperationFunctions<typeof dataframeOperations>;
-
 export type SourceFunctionsCols = OperationFunctions<typeof colsOperations>;
 export type SourceFunctionsRows = OperationFunctions<typeof rowsOperations>;
 
