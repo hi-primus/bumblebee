@@ -1,3 +1,4 @@
+import { Name, NoArgs } from '../../../types/arguments';
 import { ArgsType, OperationCreator } from '../../../types/operation';
 import { Source } from '../../../types/source';
 import { BlurrOperation } from '../factory';
@@ -13,18 +14,22 @@ function DataframeOperation<
 }
 
 export const operations = {
-  columnsSample: DataframeOperation<{ start: number; stop: number }>({
+  columnsSample: DataframeOperation<NoArgs, PythonCompatible>({
+    name: 'columnsSample',
+    targetType: 'value',
+  }),
+  iloc: DataframeOperation<{ start: number; stop: number }>({
     name: 'columnsSample',
     targetType: 'dataframe',
-    args: [
-      {
-        name: 'start',
-        default: 0,
-      },
-      {
-        name: 'stop',
-        default: 10,
-      },
-    ],
+    args: [{ name: 'start' }, { name: 'stop' }],
+    getCode: (kwargs: {
+      source: Name;
+      target: Name;
+      start: number;
+      stop: number;
+    }) => {
+      const indices = `[${kwargs.start}:${kwargs.stop}]`;
+      return `${kwargs.target.toString()} = ${kwargs.source.toString()}${indices}`;
+    },
   }),
 };
