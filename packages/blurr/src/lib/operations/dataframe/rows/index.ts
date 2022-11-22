@@ -457,7 +457,7 @@ export const operations = {
   }),
   valueIn: DataframeOperation<{
     cols: Cols;
-    values: any[];
+    values: BasicPythonCompatible[];
     dataType: string;
     drop: boolean;
     how: 'any' | 'all';
