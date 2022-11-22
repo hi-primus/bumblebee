@@ -43,9 +43,9 @@ const blurr = useBlurr();
 
 const enabled = ref(false);
 const code = ref(`
-df = await client.readCsv({
-  url: "https://raw.githubusercontent.com/hi-primus/optimus/develop/examples/data/foo.csv"
-});
+url = "https://raw.githubusercontent.com/hi-primus/optimus/develop/examples/data/foo.csv";
+
+df = client.readCsv({ url });
 
 return await df.cols.names();
 `);
