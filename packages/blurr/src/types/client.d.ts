@@ -7,9 +7,7 @@ export interface ClientOptions {
 }
 
 export type ClientFunctions = {
-  [key in keyof typeof operations]: OmitFirstArgOnIntersection<
-    typeof operations[key]['run']
-  >;
+  [K in keyof typeof operations]: AdaptOperation<typeof operations[K]>;
 };
 export interface Client extends ClientFunctions, RunsCode {
   backendServer: Server;

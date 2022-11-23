@@ -1,4 +1,6 @@
 import { CallbackFunction, Name, SourceArg } from './arguments';
+import { Operation, RunArgs } from './operation';
+import { FutureSource, Source } from './source';
 
 export {};
 
@@ -44,6 +46,15 @@ declare global {
 
   type OperationArgs<T> = Record<string, T>;
 
+  type AdaptOperation<T extends Operation> = T extends Operation<
+    infer TA,
+    infer TR
+  >
+    ? TR extends Source
+      ? (...args: RunArgs<TA>) => FutureSource
+      : (...args: RunArgs<TA>) => Promise<TR>
+    : never;
+
   type ArrayOrSingle<T> = T | Array<T>;
 
   type PromiseOr<T> = T | Promise<T>;
@@ -53,14 +64,6 @@ declare global {
     ...args: infer A
   ) => unknown
     ? A
-    : never;
-
-  type OmitFirstArg<F> = F extends (x: unknown, ...args: infer P) => infer R
-    ? (...args: P) => R
-    : never;
-
-  type OmitFirstArgOnIntersection<T> = T extends infer U1 | infer U2
-    ? OmitFirstArg<U1> | OmitFirstArg<U2>
     : never;
 
   type RequireOnlyOne<T, Keys extends keyof T = keyof T> = Pick<

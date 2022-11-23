@@ -12,7 +12,7 @@ type KeysOfType<T, V> = {
 }[keyof T];
 
 type OperationFunctions<T extends Record<string, Operation>> = {
-  [K in keyof T]: OmitFirstArgOnIntersection<PropType<T[K], 'run'>>;
+  [K in keyof T]: AdaptOperation<T[K]>;
 };
 
 export type SourceFunctions = OperationFunctions<typeof dataframeOperations>;
