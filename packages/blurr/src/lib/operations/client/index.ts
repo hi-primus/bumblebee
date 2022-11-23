@@ -1,11 +1,21 @@
+import { ArgsType, OperationCreator } from '../../../types/operation';
 import { Source } from '../../../types/source';
 import { pythonArguments } from '../../utils';
 import { BlurrOperation } from '../factory';
 
-export const operations = {
-  readCsv: BlurrOperation<{ url?: string; buffer?: string }, Source>({
+function DataframeCreationOperation<
+  TA extends ArgsType = ArgsType,
+  TR extends OperationCompatible = Source
+>(operationCreator: OperationCreator) {
+  return BlurrOperation<TA, TR>({
+    ...operationCreator,
     sourceType: 'none',
     targetType: 'dataframe',
+  });
+}
+
+export const operations = {
+  readCsv: DataframeCreationOperation<{ url?: string; buffer?: string }>({
     name: 'readCsv',
     args: [
       {
@@ -26,12 +36,9 @@ export const operations = {
       return `${kwargs.buffer}_py = BytesIO(${kwargs.buffer}.to_py()); ${kwargs.target} = op.load.csv(${kwargs.buffer}_py)`;
     },
   }),
-  createDataframe: BlurrOperation<
-    { data: Record<string, PythonCompatible> },
-    Source
-  >({
-    sourceType: 'none',
-    targetType: 'dataframe',
+  createDataframe: DataframeCreationOperation<{
+    data: Record<string, PythonCompatible>;
+  }>({
     name: 'createDataframe',
     args: [{ name: 'data' }],
     getCode: function (kwargs: {
