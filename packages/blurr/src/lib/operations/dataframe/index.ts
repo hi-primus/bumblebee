@@ -1,4 +1,4 @@
-import { Name, NoArgs } from '../../../types/arguments';
+import { Cols, Name, NoArgs } from '../../../types/arguments';
 import { ArgsType, OperationCreator } from '../../../types/operation';
 import { Source } from '../../../types/source';
 import { BlurrOperation } from '../factory';
@@ -31,5 +31,23 @@ export const operations = {
       const indices = `[${kwargs.start}:${kwargs.stop}]`;
       return `${kwargs.target.toString()} = ${kwargs.source.toString()}${indices}`;
     },
+  }),
+  profile: DataframeOperation<{ cols: Cols; bins: number; flush: boolean }>({
+    targetType: 'value',
+    name: 'profile',
+    args: [
+      {
+        name: 'cols',
+        default: '*',
+      },
+      {
+        name: 'bins',
+        default: 10,
+      },
+      {
+        name: 'flush',
+        default: false,
+      },
+    ],
   }),
 };
