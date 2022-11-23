@@ -54,6 +54,8 @@ function _mapToObject(map: Map<string, unknown>): Record<string, unknown> {
 }
 
 function BlurrServerPyodide(options: PyodideBackendOptions): Server {
+  const server = {} as Server & { _features: string[] };
+
   const pyodidePromise = loadPyodide(options).then(async (pyodide) => {
     await pyodide.loadPackage('micropip');
     const micropip = pyodide.pyimport('micropip');
@@ -69,70 +71,76 @@ function BlurrServerPyodide(options: PyodideBackendOptions): Server {
     return pyodide;
   });
 
-  const server = {
-    pyodide: null,
-    backend: null,
-    backendLoaded: false,
-    donePromise: pyodidePromise.then((pyodide) => {
-      server.pyodide = server.backend = pyodide;
-      server.backendLoaded = true;
-      return true;
-    }),
-    runCode: async (code: string) => {
-      await server.donePromise;
-      const result = await server.backend.runPythonAsync(code);
-      try {
-        return typeof result?.toJs === 'function'
-          ? result.toJs({ dict_converter: _mapToObject })
-          : result;
-      } catch (error) {
-        console.warn('Error converting to JS', code, error);
-        return result;
-      }
-    },
-    run: async (paramsArray: ArrayOrSingle<Params>) => {
-      if (!Array.isArray(paramsArray)) {
-        paramsArray = [paramsArray];
-      }
-      let result: PythonCompatible = undefined;
-      const operations = paramsArray.map((params) => {
-        const { operationKey, operationType, ...kwargs } = params;
-        const operation = getOperation(operationKey, operationType);
-        if (!operation) {
-          throw new Error(
-            `Operation '${operationKey}' of type '${operationType}' not found`
-          );
-        }
-        return { operation, kwargs };
-      });
-      for (let i = 0; i < operations.length; i++) {
-        const { operation, kwargs } = operations[i];
+  server.pyodide = null;
 
-        if (
-          i > 0 &&
-          operation.sourceType === 'dataframe' &&
-          operations[i - 1].operation.targetType === 'dataframe' &&
-          result !== undefined
-        ) {
-          kwargs.source = Name(result.toString());
-        }
+  server.backend = null;
 
-        // the client handles the type correctly, in server-side, just use PythonCompatible
-        result = (await operation.run(server, kwargs)) as PythonCompatible;
-      }
+  server.backendLoaded = false;
+
+  server.donePromise = pyodidePromise.then((pyodide) => {
+    server.pyodide = server.backend = pyodide;
+    server.backendLoaded = true;
+    return true;
+  });
+
+  server.runCode = async (code: string) => {
+    await server.donePromise;
+    const result = await server.backend.runPythonAsync(code);
+    try {
+      return typeof result?.toJs === 'function'
+        ? result.toJs({ dict_converter: _mapToObject })
+        : result;
+    } catch (error) {
+      console.warn('Error converting to JS', code, error);
       return result;
-    },
-    _features: ['buffers', 'callbacks'],
-    supports: (features: string | Array<string>) => {
-      if (typeof features === 'string') {
-        features = [features];
+    }
+  };
+
+  server.run = async (paramsArray: ArrayOrSingle<Params>) => {
+    if (!Array.isArray(paramsArray)) {
+      paramsArray = [paramsArray];
+    }
+    let result: PythonCompatible = undefined;
+    const operations = paramsArray.map((params) => {
+      const { operationKey, operationType, ...kwargs } = params;
+      const operation = getOperation(operationKey, operationType);
+      if (!operation) {
+        throw new Error(
+          `Operation '${operationKey}' of type '${operationType}' not found`
+        );
       }
-      return features.every((feature) => server._features.includes(feature));
-    },
-    setGlobal: async (name: string, value: unknown) => {
-      await server.donePromise;
-      server.pyodide.globals.set(name, value);
-    },
+      return { operation, kwargs };
+    });
+    for (let i = 0; i < operations.length; i++) {
+      const { operation, kwargs } = operations[i];
+
+      if (
+        i > 0 &&
+        operation.sourceType === 'dataframe' &&
+        operations[i - 1].operation.targetType === 'dataframe' &&
+        result !== undefined
+      ) {
+        kwargs.source = Name(result.toString());
+      }
+
+      // the client handles the type correctly, in server-side, just use PythonCompatible
+      result = (await operation.run(server, kwargs)) as PythonCompatible;
+    }
+    return result;
+  };
+
+  server._features = ['buffers', 'callbacks'];
+
+  server.supports = (features: string | Array<string>) => {
+    if (typeof features === 'string') {
+      features = [features];
+    }
+    return features.every((feature) => server._features.includes(feature));
+  };
+
+  server.setGlobal = async (name: string, value: unknown) => {
+    await server.donePromise;
+    server.pyodide.globals.set(name, value);
   };
 
   return server;
