@@ -5,13 +5,15 @@ import { BlurrClient } from '../../client';
 test('unique-name', async (t) => {
   const client = BlurrClient();
 
-  const df = await client.readCsv({
+  const df = client.readCsv({
     url: 'https://raw.githubusercontent.com/hi-primus/optimus/develop/examples/data/foo.csv',
   });
 
   t.log('Unique name:', df.name);
 
-  t.deepEqual(await df.cols.names(), [
+  const names = await df.cols.names();
+
+  t.deepEqual(names, [
     'id',
     'firstName',
     'lastName',

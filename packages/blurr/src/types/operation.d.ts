@@ -1,5 +1,4 @@
 import { RunsCode } from './server';
-import { Source } from './source';
 
 export {};
 
@@ -51,7 +50,7 @@ export type ArgsType = OperationArgs<OperationCompatible>;
 
 type RecordToArray<T> = T extends Record<string, infer R> ? R[] : [];
 
-type RunArgs<T extends ArgsType> =
+export type RunArgs<T extends ArgsType> =
   | RecordToArray<T>
   | [T]
   | [Record<string, OperationCompatible>?];
@@ -61,10 +60,7 @@ export interface Operation<
   TR extends OperationCompatible = OperationCompatible
 > extends OperationInterface {
   args?: OperationArgument[];
-  run: (
-    server: RunsCode,
-    ...args: RunArgs<TA>
-  ) => TR extends Source ? Source : Promise<TR>;
+  run: (server: RunsCode, ...args: RunArgs<TA>) => Promise<TR>;
   // | ((server: RunsCode, kwargs?: TA) => Promise<TR>);
   _run: (
     server: RunsCode,

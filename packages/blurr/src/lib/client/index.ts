@@ -11,7 +11,7 @@ import {
   isStringRecord,
 } from '../utils';
 
-import { BlurrSource, isSource } from './data/source';
+import { BlurrSource, FutureSource, isSource } from './data/source';
 
 export function BlurrClient(options: ClientOptions = {}): Client {
   const backendServer = options.server
@@ -75,7 +75,7 @@ export function BlurrClient(options: ClientOptions = {}): Client {
     return backendServer.run(paramsQueue).then((result) => {
       if (isName(result)) {
         const newSource = BlurrSource(client, result.toString());
-        delete newSource.then;
+        delete (newSource as FutureSource).then;
         return newSource;
       }
       return result;

@@ -1,5 +1,6 @@
 import { Client } from '../../../types/client';
 import {
+  FutureSource,
   Source,
   SourceFunctions,
   SourceFunctionsCols,
@@ -69,11 +70,11 @@ export function BlurrSource(client: Client, name?: string): Source {
   );
   source.cols = adaptFunctions(colsOperations, 'cols') as SourceFunctionsCols;
   source.rows = adaptFunctions(rowsOperatons, 'rows') as SourceFunctionsRows;
-  source.persist = async () => {
+  source.persist = async (): Promise<Source> => {
     if (!source.paramsQueue.length) {
       console.log("Run 'persist' on a source with no pending operations");
       const newSource = BlurrSource(client, source.name);
-      delete newSource.then;
+      delete (newSource as FutureSource).then;
       return newSource;
     }
     const result = await client.send(source.paramsQueue);
@@ -81,7 +82,7 @@ export function BlurrSource(client: Client, name?: string): Source {
     if (isName(result) || isSource(result)) {
       console.log('Pending operations done');
       const newSource = BlurrSource(client, result.toString());
-      delete newSource.then;
+      delete (newSource as FutureSource).then;
       return newSource;
     }
     const paramsWithTarget = source.paramsQueue.filter((p) => 'target' in p);
@@ -97,17 +98,17 @@ export function BlurrSource(client: Client, name?: string): Source {
         'Creating a new source with the result of the pending operations'
       );
       const newSource = BlurrSource(client, lastTarget);
-      delete newSource.then;
+      delete (newSource as FutureSource).then;
       return newSource;
     }
     console.warn("Can't persist source, unknown name.", result);
     throw new Error("Can't persist source, unknown name.");
   };
-  source.then = (onfulfilled) => {
+  (source as FutureSource).then = (onfulfilled) => {
     return source.persist().then(onfulfilled);
   };
 
   return source;
 }
 
-export type { Source };
+export type { Source, FutureSource };

@@ -27,6 +27,8 @@ export interface Source extends SourceFunctions {
   rows: SourceFunctionsRows;
   paramsQueue: Params[];
   persist: () => Promise<Source>;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  then?: (onfulfilled?: (result: any) => any) => any;
+}
+
+export interface FutureSource extends Source {
+  then: (onfulfilled?: (result: Source) => Source) => Promise<Source>;
 }
