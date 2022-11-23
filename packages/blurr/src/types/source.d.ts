@@ -3,6 +3,7 @@ import { operations as colsOperations } from '../lib/operations/dataframe/cols';
 import { operations as rowsOperations } from '../lib/operations/dataframe/rows';
 
 import { Operation } from './operation';
+import { PyodideSourceData } from './pyodide';
 import { RunsCode } from './server';
 
 // get keys of a const for a type
@@ -18,11 +19,14 @@ export type SourceFunctions = OperationFunctions<typeof dataframeOperations>;
 export type SourceFunctionsCols = OperationFunctions<typeof colsOperations>;
 export type SourceFunctionsRows = OperationFunctions<typeof rowsOperations>;
 
+type SourceData = PyodideSourceData;
+
 export interface Source extends SourceFunctions {
   name: string;
   client: RunsCode;
   _blurrMember: 'source';
   toString: () => string;
+  data?: SourceData;
   cols: SourceFunctionsCols;
   rows: SourceFunctionsRows;
   paramsQueue: Params[];
