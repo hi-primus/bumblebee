@@ -2263,12 +2263,15 @@ export const operations = {
       },
     ],
   }),
-  names: DataframeOperation<{
-    cols: Cols;
-    dataTypes: string;
-    invert: boolean;
-    isRegex: boolean;
-  }>({
+  names: DataframeOperation<
+    {
+      cols: Cols;
+      dataTypes: string;
+      invert: boolean;
+      isRegex: boolean;
+    },
+    string[]
+  >({
     targetType: 'value',
     name: 'cols.names',
     args: [
@@ -2447,11 +2450,6 @@ export const operations = {
   port: StandardDataframeOperation('cols.port'),
   emailUsername: StandardDataframeOperation('cols.emailUsername'),
   emailDomain: StandardDataframeOperation('cols.emailDomain'),
-
-  // TODO: handle any and count functions
-  columns: DataframeOperation<NoArgs, string[]>({
-    name: 'cols.names',
-  }),
 
   // TODO: handle any and count functions, _values
   fingerprint: StandardDataframeOperation('cols.fingerprint'),
