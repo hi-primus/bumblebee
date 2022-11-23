@@ -1,7 +1,6 @@
 import {
   ArgsType,
   Operation,
-  OperationArgument,
   OperationCreator,
 } from '../../../types/operation';
 import { RunsCode } from '../../../types/server';
@@ -99,24 +98,33 @@ export function BlurrOperation<
   TA extends ArgsType = ArgsType,
   TR extends OperationCompatible = OperationCompatible
 >(operationCreator: OperationCreator) {
-  let _run: (
-    client: RunsCode,
-    kwargs: Record<string, PythonCompatible>
-  ) => Promise<PythonCompatible>;
+  const operation = {} as Operation<TA, TR>;
+
+  operation.name = operationCreator.name;
+  operation.sourceType = operationCreator.sourceType;
+  operation.targetType = operationCreator.targetType;
+  operation._blurrMember = 'operation';
+
+  operation.args = (operationCreator.args || []).map((arg) => {
+    return typeof arg === 'string' ? { name: arg } : arg;
+  });
 
   if (operationCreator.getCode) {
-    _run = async (server, kwargs) => {
+    operation._run = async (server, kwargs) => {
       const code = operationCreator.getCode(kwargs);
-      console.log('[CODE FROM GENERATOR]', code, { kwargs, args });
+      console.log('[CODE FROM GENERATOR]', code, {
+        kwargs,
+        args: operation.args,
+      });
       return await server.runCode(code);
     };
   } else if (operationCreator.run) {
-    _run = async (server, kwargs) => {
+    operation._run = async (server, kwargs) => {
       console.log('[ARGUMENTS]', kwargs);
       return operationCreator.run(server, kwargs);
     };
   } else {
-    _run = async (server, kwargs) => {
+    operation._run = async (server, kwargs) => {
       const source = kwargs.source || operationCreator.defaultSource;
       console.log('source', source);
       const code =
@@ -128,35 +136,22 @@ export function BlurrOperation<
       return await server.runCode(code);
     };
   }
-  let initialize: (server: RunsCode) => Promise<PythonCompatible>;
+
   if (operationCreator.getInitializationCode) {
-    initialize = async (server: RunsCode) => {
+    operation.initialize = async (server: RunsCode) => {
       return await server.runCode(operationCreator.getInitializationCode());
     };
   } else if (operationCreator.initialize) {
-    initialize = operationCreator.initialize;
+    operation.initialize = operationCreator.initialize;
   }
 
-  const args: OperationArgument[] = (operationCreator.args || []).map((arg) => {
-    return typeof arg === 'string' ? { name: arg } : arg;
-  });
-
-  const operation: Operation<TA, TR> = {
-    name: operationCreator.name,
-    sourceType: operationCreator.sourceType,
-    targetType: operationCreator.targetType,
-    args,
-    initialize,
-    _run,
-    run: async function (server, kwargs: TA): Promise<TR> {
-      if (isKwargs(kwargs)) {
-        return (await callOperation(server, operation, kwargs)) as TR;
-      }
-      throw new Error(
-        `kwargs must be an object with string keys, type received: ${typeof kwargs}`
-      );
-    },
-    _blurrMember: 'operation',
+  operation.run = async function (server, kwargs: TA): Promise<TR> {
+    if (isKwargs(kwargs)) {
+      return callOperation(server, operation, kwargs) as Promise<TR>;
+    }
+    throw new Error(
+      `kwargs must be an object with string keys, type received: ${typeof kwargs}`
+    );
   };
 
   return operation;
