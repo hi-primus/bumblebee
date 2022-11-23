@@ -28,8 +28,8 @@ test('unique-name', async (t) => {
 
   t.log('Rows count:', countResult);
 
-  const kwargsResult = await df.columnsSample({ start: 1, stop: 5 });
-  const argsResult = await df.columnsSample(1, 5);
+  const kwargsResult = await df.iloc({ start: 1, stop: 5 }).columnsSample();
+  const argsResult = await df.iloc(1, 5).columnsSample();
 
   t.deepEqual(kwargsResult, argsResult);
 
