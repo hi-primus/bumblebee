@@ -1,4 +1,5 @@
 import { RunsCode } from './server';
+import { Source } from './source';
 
 export {};
 
@@ -60,7 +61,10 @@ export interface Operation<
   TR extends OperationCompatible = OperationCompatible
 > extends OperationInterface {
   args?: OperationArgument[];
-  run: (server: RunsCode, ...args: RunArgs<TA>) => Promise<TR>;
+  run: (
+    server: RunsCode,
+    ...args: RunArgs<TA>
+  ) => TR extends Source ? Source : Promise<TR>;
   // | ((server: RunsCode, kwargs?: TA) => Promise<TR>);
   _run: (
     server: RunsCode,
