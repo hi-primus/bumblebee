@@ -32,7 +32,7 @@
         }"
       >
         <div
-          v-for="column in header"
+          v-for="(column, columnIndex) in header"
           :key="column.title"
           class="bumblebee-table-column relative z-[0]"
           :style="{
@@ -78,9 +78,8 @@
               top: columnHeaderHeight + rowIndex * rowHeight + 'px',
               height: rowHeight + 1 + 'px'
             }"
-          >
-            {{ row ? row[column?.title] : null }}
-          </div>
+            v-html="getValue(row ? row[columnIndex] : null)"
+          />
         </div>
       </div>
       <div class="sticky h-full left-0 order-[-1]">
@@ -183,11 +182,32 @@ const onScroll = throttle(function () {
       (element.scrollTop + element.clientHeight - columnHeaderHeight) /
         rowHeight
     );
+    console.log('updateWindow', start, stop);
     emit('updateWindow', start, stop);
   }
 }, 300);
 
+const getValue = (value: unknown): string => {
+  if (value === null || value === undefined) {
+    return '<span class="text-text-lighter">None</span>';
+  } else if (value === '') {
+    return '<span class="text-text-lighter">Empty</span>';
+  } else if (typeof value === 'string') {
+    return value;
+  } else if (typeof value === 'number') {
+    return value.toString();
+  } else if (typeof value === 'boolean') {
+    return value ? 'true' : 'false';
+  } else if (Array.isArray(value)) {
+    return value.map(v => getValue(v as unknown)).join(', ');
+  } else if (typeof value === 'object') {
+    return JSON.stringify(value);
+  }
+  return value.toString();
+};
+
 onMounted(() => {
+  console.log('onMounted on Table');
   onScroll();
 });
 </script>

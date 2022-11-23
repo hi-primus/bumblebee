@@ -3,7 +3,7 @@
     :header="header"
     :data="data"
     :rows-count="rowsCount"
-    @update-window="(start: number, stop: number) => emit('updateWindow', start, stop)"
+    @update-window="updateWindow"
   />
 </template>
 
@@ -32,6 +32,11 @@ type Emits = {
 };
 
 const emit = defineEmits<Emits>();
+
+const updateWindow = (start: number, stop: number) => {
+  console.info('updateWindow', start, stop);
+  return emit('updateWindow', start, stop);
+};
 
 const data = reactiveComputed(() => {
   return (props.chunks || []).reduce((rows, chunk) => {

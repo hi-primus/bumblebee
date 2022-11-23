@@ -8,7 +8,7 @@
 </template>
 
 <script setup lang="ts">
-import type { Client } from 'blurr';
+import type { Client, Source } from 'blurr';
 
 import { DataframeProfile } from '@/types/profile';
 
@@ -17,16 +17,17 @@ const blurr = useBlurr();
 const profile = ref<DataframeProfile | undefined>(undefined);
 
 let client: Client;
+let df: Source;
 
 onMounted(async () => {
   const { BlurrClient } = blurr;
-  const client = BlurrClient({
+  client = BlurrClient({
     serverOptions: {
       scriptURL: 'https://cdn.jsdelivr.net/pyodide/v0.21.3/full/pyodide.js'
     }
   });
   window.client = client;
-  const result = await client.run(`
+  const result = await client.runCode(`
 import micropip
 await micropip.install("https://test-files.pythonhosted.org/packages/88/8e/287b914c98fbb6afb0cf666a746fcc2b56a16e5bd814edfc0654b2bf8b8b/pyoptimus-0.1.4017-py3-none-any.whl")
 
@@ -43,21 +44,24 @@ async def url_to_buffer(url):
     js_buffer = await fetch_response.buffer()
     return BytesIO(js_buffer.to_py())
     
-import pandas as pd
-
-pdf = pd.read_csv("https://raw.githubusercontent.com/hi-primus/optimus/develop/examples/data/foo.csv")
-  
-df = op.create.dataframe(pdf)
-
-df.profile()
+"successfully loaded"
   `);
+  df = await client.readCsv(
+    'https://raw.githubusercontent.com/hi-primus/optimus/develop/examples/data/foo.csv'
+  );
   console.info('Initialization result:', result);
-  profile.value = result;
+  profile.value = await df.profile();
+  console.info('Profile result:', profile.value);
 });
 
 const getChunk = async function (start: number, stop: number) {
-  const result = await client.columnsSample({ source: 'df', start, stop });
-  return result.value;
+  const chunk = {
+    start,
+    stop,
+    data: (await df.iloc({ start, stop }).columnsSample()).value
+  };
+  console.info('Chunk result:', chunk);
+  return chunk;
 };
 </script>
 
