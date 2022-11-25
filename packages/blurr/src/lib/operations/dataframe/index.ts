@@ -1,4 +1,4 @@
-import { Cols, Name, NoArgs } from '../../../types/arguments';
+import { Cols, NoArgs } from '../../../types/arguments';
 import { ArgsType, OperationCreator } from '../../../types/operation';
 import { Source } from '../../../types/source';
 import { BlurrOperation } from '../factory';
@@ -18,19 +18,10 @@ export const operations = {
     name: 'columnsSample',
     targetType: 'value',
   }),
-  iloc: DataframeOperation<{ start: number; stop: number }>({
-    name: 'columnsSample',
+  iloc: DataframeOperation<{ lower_bound: number; upper_bound: number }>({
+    name: 'iloc',
     targetType: 'dataframe',
-    args: [{ name: 'start' }, { name: 'stop' }],
-    getCode: (kwargs: {
-      source: Name;
-      target: Name;
-      start: number;
-      stop: number;
-    }) => {
-      const indices = `[${kwargs.start}:${kwargs.stop}]`;
-      return `${kwargs.target.toString()} = ${kwargs.source.toString()}${indices}`;
-    },
+    args: [{ name: 'lower_bound' }, { name: 'upper_bound' }],
   }),
   profile: DataframeOperation<{ cols: Cols; bins: number; flush: boolean }>({
     targetType: 'value',
