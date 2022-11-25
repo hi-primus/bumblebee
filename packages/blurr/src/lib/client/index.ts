@@ -3,24 +3,35 @@ import { Client, ClientFunctions, ClientOptions } from '../../types/client';
 import { getOperation } from '../operations';
 import { operations } from '../operations/client';
 import { makePythonCompatible } from '../operations/factory';
-import { BlurrServer } from '../server';
+import { BlurrServer, defaultOptions as defaultServerOptions } from '../server';
 import {
   adaptKwargs,
   generateUniqueVariableName,
   isName,
+  isPromiseLike,
   isStringRecord,
 } from '../utils';
 
-import { BlurrSource, FutureSource, isSource } from './data/source';
+import { BlurrSource, FutureSource, isSource, Source } from './data/source';
 
 export function BlurrClient(options: ClientOptions = {}): Client {
-  const backendServer = options.server
+  const client = {} as Client;
+
+  const serverOptions =
+    (options.server ? options.server.options : options.serverOptions) || {};
+
+  options.serverOptions = Object.assign(
+    {},
+    defaultServerOptions,
+    serverOptions
+  );
+
+  client.options = options;
+
+  client.backendServer = options.server
     ? options.server
     : BlurrServer(options?.serverOptions);
 
-  const client = {} as Client;
-
-  client.backendServer = backendServer;
   client.run = (paramsArray: ArrayOrSingle<Params>) => {
     if (!Array.isArray(paramsArray)) {
       paramsArray = [paramsArray];
@@ -59,11 +70,13 @@ export function BlurrClient(options: ClientOptions = {}): Client {
         );
       }
 
-      console.log('🛼 Returning without running:', lastParams);
+      if (!client.options.serverOptions.local) {
+        console.log('🛼 Returning without running:', lastParams);
 
-      const newSource = BlurrSource(client, lastParams.target.toString());
-      newSource.paramsQueue = paramsQueue;
-      return newSource;
+        const newSource = BlurrSource(client, lastParams.target.toString());
+        newSource.paramsQueue = paramsQueue;
+        return newSource;
+      }
     }
 
     return client.send(paramsQueue);
@@ -71,25 +84,47 @@ export function BlurrClient(options: ClientOptions = {}): Client {
 
   client.send = (paramsQueue) => {
     console.log('🛼 Sending params:', paramsQueue);
-    paramsQueue = makePythonCompatible(client, paramsQueue);
-    return backendServer.run(paramsQueue).then((result) => {
-      if (isName(result)) {
-        const newSource = BlurrSource(client, result.toString());
+    paramsQueue = makePythonCompatible(
+      client,
+      paramsQueue,
+      client.options.serverOptions.local
+    );
+    const _send = (result) => {
+      if (isName(result) || isSource(result)) {
+        const newSource = BlurrSource(
+          client,
+          (result as Source).data || result.toString()
+        );
+        delete (newSource as FutureSource).then;
+        return newSource;
+      }
+      if (
+        client.options.serverOptions.local &&
+        client.backendServer.pyodide.isPyProxy(result)
+      ) {
+        const newSource = BlurrSource(client, result);
         delete (newSource as FutureSource).then;
         return newSource;
       }
       return result;
-    });
+    };
+    const result = client.backendServer.run(paramsQueue);
+    if (isPromiseLike(result)) {
+      return result.then(_send);
+    }
+    return _send(result);
   };
 
   client.runCode = (code: string) => {
     // TODO: check if it's debug
-    return backendServer.runCode(code);
+    return client.backendServer.runCode(code);
   };
   client.sources = {};
-  client.supports = backendServer.supports;
-  client.setGlobal = backendServer.setGlobal;
-  client.donePromise = backendServer.donePromise;
+  client.supports = client.backendServer.supports;
+  // TODO: improve security in setGlobal and getGlobal
+  client.setGlobal = client.backendServer.setGlobal;
+  client.getGlobal = client.backendServer.getGlobal;
+  client.donePromise = client.backendServer.donePromise;
 
   const clientFunctions: Partial<ClientFunctions> = {};
 

@@ -1,3 +1,5 @@
+import { PyProxy } from 'pyodide';
+
 import { Client } from '../../../types/client';
 import {
   FutureSource,
@@ -14,6 +16,7 @@ import {
   generateUniqueVariableName,
   isName,
   isObject,
+  isPromiseLike,
 } from '../../utils';
 
 export function isSource(value): value is Source {
@@ -22,17 +25,26 @@ export function isSource(value): value is Source {
   );
 }
 
-export function BlurrSource(client: Client, name?: string): Source {
+export function BlurrSource(
+  client: Client,
+  nameOrPyProxy?: string | PyProxy
+): Source {
   if (!client) {
     throw new Error('A source can only be initialized using a client');
-  }
-  if (!name) {
-    name = generateUniqueVariableName('source');
   }
 
   const source = {} as Source;
 
-  source.name = name;
+  if (typeof nameOrPyProxy === 'string') {
+    source.name = nameOrPyProxy;
+  } else {
+    source.data = nameOrPyProxy;
+  }
+
+  if (!source.name) {
+    source.name = generateUniqueVariableName('source');
+  }
+
   source.client = client;
   source.paramsQueue = [];
   source.toString = () => source.name;
@@ -70,42 +82,55 @@ export function BlurrSource(client: Client, name?: string): Source {
   );
   source.cols = adaptFunctions(colsOperations, 'cols') as SourceFunctionsCols;
   source.rows = adaptFunctions(rowsOperatons, 'rows') as SourceFunctionsRows;
-  source.persist = async (): Promise<Source> => {
+  source.persist = (): PromiseOr<Source> => {
     if (!source.paramsQueue.length) {
       console.log("Run 'persist' on a source with no pending operations");
-      const newSource = BlurrSource(client, source.name);
+      const newSource = BlurrSource(client, source.data || source.name);
       delete (newSource as FutureSource).then;
       return newSource;
     }
-    const result = await client.send(source.paramsQueue);
-    console.log('The result', result);
-    if (isName(result) || isSource(result)) {
-      console.log('Pending operations done');
-      const newSource = BlurrSource(client, result.toString());
-      delete (newSource as FutureSource).then;
-      return newSource;
+    const result = client.send(source.paramsQueue);
+
+    const _persist = (result) => {
+      if (isName(result) || isSource(result)) {
+        const newSource = BlurrSource(
+          client,
+          (result as Source).data || result.toString()
+        );
+        delete (newSource as FutureSource).then;
+        return newSource;
+      }
+      const paramsWithTarget = source.paramsQueue.filter((p) => 'target' in p);
+      let lastTarget = paramsWithTarget[paramsWithTarget.length - 1].target;
+      if (!lastTarget) {
+        lastTarget = source.toString();
+      }
+      if (isSource(lastTarget) || isName(lastTarget)) {
+        lastTarget = lastTarget.toString();
+      }
+      if (typeof lastTarget === 'string') {
+        console.log(
+          'Creating a new source with the result of the pending operations'
+        );
+        const newSource = BlurrSource(client, lastTarget);
+        delete (newSource as FutureSource).then;
+        return newSource;
+      }
+      console.warn("Can't persist source, unknown name.", result);
+      throw new Error("Can't persist source, unknown name.");
+    };
+
+    if (isPromiseLike(result)) {
+      return result.then(_persist);
     }
-    const paramsWithTarget = source.paramsQueue.filter((p) => 'target' in p);
-    let lastTarget = paramsWithTarget[paramsWithTarget.length - 1].target;
-    if (!lastTarget) {
-      lastTarget = source.toString();
-    }
-    if (isSource(lastTarget) || isName(lastTarget)) {
-      lastTarget = lastTarget.toString();
-    }
-    if (typeof lastTarget === 'string') {
-      console.log(
-        'Creating a new source with the result of the pending operations'
-      );
-      const newSource = BlurrSource(client, lastTarget);
-      delete (newSource as FutureSource).then;
-      return newSource;
-    }
-    console.warn("Can't persist source, unknown name.", result);
-    throw new Error("Can't persist source, unknown name.");
+    return _persist(result);
   };
   (source as FutureSource).then = (onfulfilled) => {
-    return source.persist().then(onfulfilled);
+    const result = source.persist();
+    if (!isPromiseLike(result)) {
+      return new Promise(() => onfulfilled(result));
+    }
+    return result.then(onfulfilled);
   };
 
   return source;

@@ -1,6 +1,5 @@
 import { ArgsType, OperationCreator } from '../../../types/operation';
 import { Source } from '../../../types/source';
-import { pythonArguments } from '../../utils';
 import { BlurrOperation } from '../factory';
 
 function DataframeCreationOperation<
@@ -31,22 +30,23 @@ export const operations = {
       buffer: string;
     }) {
       if (kwargs.url) {
-        return `${kwargs.target} = op.load.csv('${kwargs.url}')`;
+        return (
+          (kwargs.target ? `${kwargs.target} = ` : '') +
+          `op.load.csv('${kwargs.url}')`
+        );
       }
-      return `${kwargs.buffer}_py = BytesIO(${kwargs.buffer}.to_py()); ${kwargs.target} = op.load.csv(${kwargs.buffer}_py)`;
+      return (
+        `${kwargs.buffer}_py = BytesIO(${kwargs.buffer}.to_py());` +
+        (kwargs.target ? `${kwargs.target} = ` : '') +
+        `op.load.csv(${kwargs.buffer}_py)`
+      );
     },
   }),
   createDataframe: DataframeCreationOperation<{
     data: Record<string, PythonCompatible>;
   }>({
-    name: 'createDataframe',
+    name: 'create.dataframe',
+    defaultSource: 'op',
     args: [{ name: 'data' }],
-    getCode: function (kwargs: {
-      target: string;
-      data: Record<string, string>;
-    }) {
-      const data = pythonArguments({ data: kwargs.data });
-      return `${kwargs.target} = op.create.dataframe(${data})`;
-    },
   }),
 };

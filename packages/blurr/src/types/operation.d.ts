@@ -29,14 +29,14 @@ export interface OperationCreator {
   // the name of the operation
   defaultSource?: string;
   // will be run on the server before the operation is run
-  initialize?: (server: RunsCode) => Promise<PythonCompatible>;
+  initialize?: (server: RunsCode) => PromiseOr<PythonCompatible>;
   // generates the code that will be run on the server before the operation is run, replaces `initialize` if provided
   getInitializationCode?: () => string;
   // will be run on the server, replaces default operation if provided
   run?: (
     server: RunsCode,
     kwargs?: Record<string, PythonCompatible>
-  ) => Promise<PythonCompatible>;
+  ) => PythonCompatible;
   // generates the code that will be run on the server when the operation is run, replaces `run` if provided
   getCode?: (kwargs?: Record<string, PythonCompatible>) => string;
 }
@@ -60,11 +60,11 @@ export interface Operation<
   TR extends OperationCompatible = OperationCompatible
 > extends OperationInterface {
   args?: OperationArgument[];
-  run: (server: RunsCode, ...args: RunArgs<TA>) => Promise<TR>;
+  run: (server: RunsCode, ...args: RunArgs<TA>) => PromiseOr<TR>;
   // | ((server: RunsCode, kwargs?: TA) => Promise<TR>);
   _run: (
     server: RunsCode,
     kwargs?: Record<string, PythonCompatible>
-  ) => Promise<PythonCompatible>;
+  ) => PromiseOr<PythonCompatible>;
   _blurrMember: 'operation';
 }

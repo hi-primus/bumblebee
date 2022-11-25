@@ -26,6 +26,15 @@ export function isObject(
   return value && typeof value === 'object' && !Array.isArray(value);
 }
 
+export function isPromiseLike(value: unknown): value is Promise<unknown> {
+  return (
+    value &&
+    typeof value === 'object' &&
+    'then' in value &&
+    typeof value['then'] === 'function'
+  );
+}
+
 export function isStringRecord(
   value: unknown
 ): value is Record<string | number | symbol, unknown> {
@@ -53,6 +62,17 @@ export function isName(value): value is Name {
   return (
     isObject(value) && '_blurrMember' in value && value._blurrMember == 'name'
   );
+}
+
+export function optionalPromise<T>(
+  result,
+  callback: (r: typeof result) => T
+): PromiseOr<ReturnType<typeof callback>> {
+  if (isPromiseLike(result)) {
+    return result.then((r) => callback(r));
+  } else {
+    return callback(result);
+  }
 }
 
 /**

@@ -1,2 +1,4 @@
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type KernelGatewayBackendOptions = any;
+export interface KernelGatewayBackendOptions {
+  url: string;
+  local: false;
+}

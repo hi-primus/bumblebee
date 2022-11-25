@@ -30,7 +30,7 @@ export interface Source extends SourceFunctions {
   cols: SourceFunctionsCols;
   rows: SourceFunctionsRows;
   paramsQueue: Params[];
-  persist: () => Promise<Source>;
+  persist: () => PromiseOr<Source>;
 }
 
 export interface FutureSource extends Source {

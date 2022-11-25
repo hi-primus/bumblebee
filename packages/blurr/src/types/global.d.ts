@@ -31,6 +31,8 @@ declare global {
 
   type OperationType = 'client' | 'dataframe' | 'cols' | 'rows';
 
+  type Kwargs = Record<string, PythonCompatible>;
+
   type Params = Record<string, OperationCompatible> & {
     operationKey: string;
     operationType: OperationType;
