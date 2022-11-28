@@ -1,12 +1,12 @@
-import {
+import type {
   CallbackFunction,
   Cols,
   NoArgs,
   SearchBy,
   SourceArg,
 } from '../../../../types/arguments';
-import { ArgsType, OperationCreator } from '../../../../types/operation';
-import { Source } from '../../../client/data/source';
+import type { ArgsType, OperationCreator } from '../../../../types/operation';
+import type { Source } from '../../../../types/source';
 import { RELATIVE_ERROR } from '../../../utils';
 import { BlurrOperation } from '../../factory';
 

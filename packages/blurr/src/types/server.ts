@@ -7,7 +7,7 @@ import {
 
 type Backend = 'pyodide' | 'kernel-gateway';
 
-interface RunsCode {
+export interface RunsCode {
   donePromise: Promise<boolean>;
   supports: (feature: string) => boolean;
   run: (
@@ -28,7 +28,7 @@ export interface ServerOptions extends BackendOptions {
   backend: Backend;
 }
 
-interface Server extends RunsCode {
+export interface Server extends RunsCode {
   pyodide?: PyodideInterface;
   options: ServerOptions;
   runMethod?: (

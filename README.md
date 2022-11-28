@@ -10,19 +10,19 @@ $ yarn add @hi-primus/blurr
 ```
 
 ```javascript
-import { BlurrClient } from "blurr";
+import { Blurr } from "blurr";
 ```
 
 ## Initialize
 
 ```javascript
-const blurr = BlurrClient();
+const blurr = Blurr();
 ```
 
 If initialization does not work properly on built projects:
 
 ```javascript
-const blurr = BlurrClient({
+const blurr = Blurr({
   serverOptions: {
     scriptURL: "https://cdn.jsdelivr.net/pyodide/v0.21.3/full/pyodide.js",
   },

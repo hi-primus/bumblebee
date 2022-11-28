@@ -1,9 +1,9 @@
 import fetch from 'cross-fetch';
 import * as pyodidePackage from 'pyodide';
 
-import { LoadPyodideType, PyodideBackendOptions } from '../types/pyodide';
-import { Server } from '../types/server';
-import { ServerOptions } from '../types/server';
+import type { LoadPyodideType, PyodideBackendOptions } from '../types/pyodide';
+import type { Server as ServerInterface } from '../types/server';
+import type { ServerOptions } from '../types/server';
 
 import { getOperation } from './operations';
 import { makePythonCompatible } from './operations/factory';
@@ -53,8 +53,8 @@ function _mapToObject(map: Map<string, unknown>): Record<string, unknown> {
   return obj;
 }
 
-function BlurrServerPyodide(options: ServerOptions): Server {
-  const server = {} as Server & { _features: string[] };
+function ServerPyodide(options: ServerOptions): ServerInterface {
+  const server = {} as ServerInterface & { _features: string[] };
 
   server.options = Object.assign({}, defaultPyodideOptions, options);
 
@@ -198,11 +198,11 @@ function BlurrServerPyodide(options: ServerOptions): Server {
 }
 
 /**
- * Initializes a BlurrServer instance
+ * Initializes a Server instance
  * ### Example (es module)
  * ```js
- * import { BlurrServer } from 'blurr'
- * const server = BlurrServer({ backend: 'pyodide' });
+ * import { Server } from 'blurr'
+ * const server = Server({ backend: 'pyodide' });
  * const pyodide = await server.donePromise;
  * // TODO: Update docstring
  * ```
@@ -214,11 +214,13 @@ function BlurrServerPyodide(options: ServerOptions): Server {
 
 export const defaultOptions: ServerOptions = { backend: 'pyodide' };
 
-export function BlurrServer(options: ServerOptions = defaultOptions): Server {
+export function Server(
+  options: ServerOptions = defaultOptions
+): ServerInterface {
   options = Object.assign({}, defaultOptions, options);
   if (options.backend === 'pyodide') {
     delete options.backend;
-    return BlurrServerPyodide(options);
+    return ServerPyodide(options);
   }
 
   throw new Error('Cannot initialize a server without a backend');

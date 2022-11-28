@@ -1,5 +1,5 @@
-import { Cols, ColsResult, NoArgs } from '../../../../types/arguments';
-import { ArgsType, OperationCreator } from '../../../../types/operation';
+import type { Cols, ColsResult, NoArgs } from '../../../../types/arguments';
+import type { ArgsType, OperationCreator } from '../../../../types/operation';
 import { BlurrOperation } from '../../factory';
 
 function MaskColsOperation<

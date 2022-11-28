@@ -1,7 +1,7 @@
 import ShortUniqueId from 'short-unique-id';
 
-import { Name } from '../types/arguments';
-import { OperationArgument } from '../types/operation';
+import type { Name } from '../types/arguments';
+import type { OperationArgument } from '../types/operation';
 
 export const RELATIVE_ERROR = 10_000;
 /*

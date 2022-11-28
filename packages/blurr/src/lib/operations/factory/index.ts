@@ -1,9 +1,9 @@
-import {
+import type {
   ArgsType,
   Operation,
   OperationCreator,
 } from '../../../types/operation';
-import { RunsCode, Server } from '../../../types/server';
+import type { RunsCode, Server } from '../../../types/server';
 import { isSource } from '../../client/data/source';
 import {
   adaptKwargs,

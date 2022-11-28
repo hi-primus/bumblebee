@@ -1,5 +1,5 @@
-import { ArgsType, OperationCreator } from '../../../types/operation';
-import { Source } from '../../../types/source';
+import type { ArgsType, OperationCreator } from '../../../types/operation';
+import type { Source } from '../../../types/source';
 import { BlurrOperation } from '../factory';
 
 function DataframeCreationOperation<

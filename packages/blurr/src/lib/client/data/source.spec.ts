@@ -1,11 +1,11 @@
 import test from 'ava';
 
-import { BlurrClient } from '../../client';
+import { Blurr } from '../../client';
 
 test('unique-name', async (t) => {
-  const client = BlurrClient();
+  const blurr = Blurr();
 
-  const df = client.readCsv({
+  const df = blurr.readCsv({
     url: 'https://raw.githubusercontent.com/hi-primus/optimus/develop/examples/data/foo.csv',
   });
 

@@ -1,12 +1,12 @@
 import { PyProxy } from 'pyodide';
 
-import { Client } from '../../../types/client';
-import {
+import type { Client } from '../../../types/client';
+import type {
   FutureSource,
-  Source,
   SourceFunctions,
   SourceFunctionsCols,
   SourceFunctionsRows,
+  Source as SourceInterface,
 } from '../../../types/source';
 import { operations } from '../../operations/dataframe';
 import { operations as colsOperations } from '../../operations/dataframe/cols';
@@ -19,21 +19,21 @@ import {
   isPromiseLike,
 } from '../../utils';
 
-export function isSource(value): value is Source {
+export function isSource(value): value is SourceInterface {
   return (
     isObject(value) && '_blurrMember' in value && value._blurrMember == 'source'
   );
 }
 
-export function BlurrSource(
+export function Source(
   client: Client,
   nameOrPyProxy?: string | PyProxy
-): Source {
+): SourceInterface {
   if (!client) {
     throw new Error('A source can only be initialized using a client');
   }
 
-  const source = {} as Source;
+  const source = {} as SourceInterface;
 
   if (typeof nameOrPyProxy === 'string') {
     source.name = nameOrPyProxy;
@@ -82,10 +82,10 @@ export function BlurrSource(
   );
   source.cols = adaptFunctions(colsOperations, 'cols') as SourceFunctionsCols;
   source.rows = adaptFunctions(rowsOperatons, 'rows') as SourceFunctionsRows;
-  source.persist = (): PromiseOr<Source> => {
+  source.persist = (): PromiseOr<SourceInterface> => {
     if (!source.paramsQueue.length) {
       console.log("Run 'persist' on a source with no pending operations");
-      const newSource = BlurrSource(client, source.data || source.name);
+      const newSource = Source(client, source.data || source.name);
       delete (newSource as FutureSource).then;
       return newSource;
     }
@@ -93,9 +93,9 @@ export function BlurrSource(
 
     const _persist = (result) => {
       if (isName(result) || isSource(result)) {
-        const newSource = BlurrSource(
+        const newSource = Source(
           client,
-          (result as Source).data || result.toString()
+          (result as SourceInterface).data || result.toString()
         );
         delete (newSource as FutureSource).then;
         return newSource;
@@ -112,7 +112,7 @@ export function BlurrSource(
         console.log(
           'Creating a new source with the result of the pending operations'
         );
-        const newSource = BlurrSource(client, lastTarget);
+        const newSource = Source(client, lastTarget);
         delete (newSource as FutureSource).then;
         return newSource;
       }
@@ -135,5 +135,3 @@ export function BlurrSource(
 
   return source;
 }
-
-export type { Source, FutureSource };

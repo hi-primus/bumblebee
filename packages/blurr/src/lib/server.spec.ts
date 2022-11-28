@@ -1,9 +1,9 @@
 import test from 'ava';
 
-import { BlurrServer } from './server';
+import { Server } from './server';
 
 test('server-pyodide', async (t) => {
-  const server = BlurrServer({
+  const server = Server({
     backend: 'pyodide',
   });
 
@@ -15,7 +15,7 @@ test('server-pyodide', async (t) => {
 });
 
 test('server-default-globals', async (t) => {
-  const server = BlurrServer();
+  const server = Server();
 
   await server.donePromise;
 

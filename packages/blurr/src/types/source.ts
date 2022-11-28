@@ -6,11 +6,6 @@ import { Operation } from './operation';
 import { PyodideSourceData } from './pyodide';
 import { RunsCode } from './server';
 
-// get keys of a const for a type
-type KeysOfType<T, V> = {
-  [K in keyof T]: T[K] extends V ? K : never;
-}[keyof T];
-
 type OperationFunctions<T extends Record<string, Operation>> = {
   [K in keyof T]: AdaptOperation<T[K]>;
 };

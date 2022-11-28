@@ -1,9 +1,16 @@
-export type { Source } from '../../types/source';
-import { Client, ClientFunctions, ClientOptions } from '../../types/client';
+import type {
+  Client,
+  ClientFunctions,
+  ClientOptions,
+} from '../../types/client';
+import type {
+  FutureSource,
+  Source as SourceInterface,
+} from '../../types/source';
 import { getOperation } from '../operations';
 import { operations } from '../operations/client';
 import { makePythonCompatible } from '../operations/factory';
-import { BlurrServer, defaultOptions as defaultServerOptions } from '../server';
+import { defaultOptions as defaultServerOptions, Server } from '../server';
 import {
   adaptKwargs,
   generateUniqueVariableName,
@@ -12,10 +19,10 @@ import {
   isStringRecord,
 } from '../utils';
 
-import { BlurrSource, FutureSource, isSource, Source } from './data/source';
+import { isSource, Source } from './data/source';
 
-export function BlurrClient(options: ClientOptions = {}): Client {
-  const client = {} as Client;
+export function Blurr(options: ClientOptions = {}): Client {
+  const blurr = {} as Client;
 
   const serverOptions =
     (options.server ? options.server.options : options.serverOptions) || {};
@@ -26,13 +33,13 @@ export function BlurrClient(options: ClientOptions = {}): Client {
     serverOptions
   );
 
-  client.options = options;
+  blurr.options = options;
 
-  client.backendServer = options.server
+  blurr.backendServer = options.server
     ? options.server
-    : BlurrServer(options?.serverOptions);
+    : Server(options?.serverOptions);
 
-  client.run = (paramsArray: ArrayOrSingle<Params>) => {
+  blurr.run = (paramsArray: ArrayOrSingle<Params>) => {
     if (!Array.isArray(paramsArray)) {
       paramsArray = [paramsArray];
     }
@@ -70,61 +77,61 @@ export function BlurrClient(options: ClientOptions = {}): Client {
         );
       }
 
-      if (!client.options.serverOptions.local) {
+      if (!blurr.options.serverOptions.local) {
         console.log('🛼 Returning without running:', lastParams);
 
-        const newSource = BlurrSource(client, lastParams.target.toString());
+        const newSource = Source(blurr, lastParams.target.toString());
         newSource.paramsQueue = paramsQueue;
         return newSource;
       }
     }
 
-    return client.send(paramsQueue);
+    return blurr.send(paramsQueue);
   };
 
-  client.send = (paramsQueue) => {
+  blurr.send = (paramsQueue) => {
     console.log('🛼 Sending params:', paramsQueue);
     paramsQueue = makePythonCompatible(
-      client,
+      blurr,
       paramsQueue,
-      client.options.serverOptions.local
+      blurr.options.serverOptions.local
     );
     const _send = (result) => {
       if (isName(result) || isSource(result)) {
-        const newSource = BlurrSource(
-          client,
-          (result as Source).data || result.toString()
+        const newSource = Source(
+          blurr,
+          (result as SourceInterface).data || result.toString()
         );
         delete (newSource as FutureSource).then;
         return newSource;
       }
       if (
-        client.options.serverOptions.local &&
-        client.backendServer.pyodide.isPyProxy(result)
+        blurr.options.serverOptions.local &&
+        blurr.backendServer.pyodide.isPyProxy(result)
       ) {
-        const newSource = BlurrSource(client, result);
+        const newSource = Source(blurr, result);
         delete (newSource as FutureSource).then;
         return newSource;
       }
       return result;
     };
-    const result = client.backendServer.run(paramsQueue);
+    const result = blurr.backendServer.run(paramsQueue);
     if (isPromiseLike(result)) {
       return result.then(_send);
     }
     return _send(result);
   };
 
-  client.runCode = (code: string) => {
+  blurr.runCode = (code: string) => {
     // TODO: check if it's debug
-    return client.backendServer.runCode(code);
+    return blurr.backendServer.runCode(code);
   };
-  client.sources = {};
-  client.supports = client.backendServer.supports;
+  blurr.sources = {};
+  blurr.supports = blurr.backendServer.supports;
   // TODO: improve security in setGlobal and getGlobal
-  client.setGlobal = client.backendServer.setGlobal;
-  client.getGlobal = client.backendServer.getGlobal;
-  client.donePromise = client.backendServer.donePromise;
+  blurr.setGlobal = blurr.backendServer.setGlobal;
+  blurr.getGlobal = blurr.backendServer.getGlobal;
+  blurr.donePromise = blurr.backendServer.donePromise;
 
   const clientFunctions: Partial<ClientFunctions> = {};
 
@@ -148,7 +155,7 @@ export function BlurrClient(options: ClientOptions = {}): Client {
         _args = args;
       }
       const kwargs = adaptKwargs(_args, operationArgs);
-      return client.run({
+      return blurr.run({
         ...kwargs,
         operationKey: key,
         operationType: 'client',
@@ -156,7 +163,7 @@ export function BlurrClient(options: ClientOptions = {}): Client {
     };
   }
 
-  Object.assign(client, clientFunctions);
+  Object.assign(blurr, clientFunctions);
 
-  return client;
+  return blurr;
 }
