@@ -16,17 +16,24 @@
           </button>
           <div class="hints h-full py-2 px-6">
             Client variable name:
-            <span class="font-mono text-primary-800">client</span>
+            <span class="font-mono text-primary-800">blurr</span>
           </div>
         </div>
         <!-- a text area that when i press shift enter alerts its content -->
-        <textarea
-          @keyup.prevent.shift.enter="runCode"
-          spellcheck="false"
-          class="bg-primary-50 font-mono text-text-alpha rounded p-4 h-[calc(100%-64px)] w-full"
-          v-model="code"
+
+        <div
+          @keydown.enter="
+            e => {
+              e.shiftKey && runCode();
+              e.shiftKey && e.preventDefault();
+              e.shiftKey && e.stopPropagation();
+            }
+          "
+          ref="container"
+          class="font-mono text-text-alpha rounded overflow-hidden h-[calc(100%-64px)] w-full"
         >
-        </textarea>
+          <!-- v-model="code" -->
+        </div>
       </div>
       <div class="result bg-white w-[40%]">
         <div class="title text-2xl font-bold h-12 mb-6">Result</div>
@@ -39,23 +46,24 @@
 </template>
 
 <script setup lang="ts">
+const monaco = useMonaco();
 const blurr = useBlurr();
+
+const container = ref<HTMLElement | null>(null);
 
 const enabled = ref(false);
 const code = ref(`
 url = "https://raw.githubusercontent.com/hi-primus/optimus/develop/examples/data/foo.csv";
 
-df = client.readCsv({ url });
+df = blurr.readCsv({ url });
 
 return await df.cols.names();
 `);
 const result = ref('');
 const error = ref(false);
 
-async function runCode(event: KeyboardEvent) {
+async function runCode() {
   const AsyncFunction = eval('(async function() { return true }).constructor');
-
-  event.preventDefault();
 
   try {
     error.value = false;
@@ -72,19 +80,48 @@ async function runCode(event: KeyboardEvent) {
   return false;
 }
 
+const initializeEditor = () => {
+  if (container.value) {
+    const editor = monaco.editor.create(container.value, {
+      value: code.value,
+      language: 'javascript',
+      theme: 'vs-dark',
+      automaticLayout: true,
+      minimap: {
+        enabled: false
+      }
+    });
+
+    editor.onDidChangeModelContent(() => {
+      code.value = editor.getValue();
+    });
+
+    window.editor = editor;
+
+    // editor.getModel().tokenization.setLanguageId('javascript');
+  }
+};
+
 onMounted(() => {
-  const { BlurrClient } = blurr;
+  // monaco
+
+  initializeEditor();
+
+  const { Blurr } = blurr;
   if (window.client) {
     return;
   }
-  window.client = BlurrClient({
+  window.monaco = monaco;
+  window.blurr = Blurr({
     serverOptions: {
-      scriptURL: 'https://cdn.jsdelivr.net/pyodide/v0.21.3/full/pyodide.js'
+      scriptURL: 'https://cdn.jsdelivr.net/pyodide/v0.21.3/full/pyodide.js',
+      local: true
     }
   });
-  window.client.runCode(`1+1`).then((result: string) => {
+  window.blurr.runCode(`1+1`).then((result: string) => {
     console.info('Initialization result should be 2:', result);
     enabled.value = true;
   });
+  // enabled.value = true;
 });
 </script>
