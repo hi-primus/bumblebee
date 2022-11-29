@@ -5,8 +5,6 @@ import {
   PyProxyCallable,
 } from './pyodide';
 
-type Backend = 'pyodide' | 'kernel-gateway';
-
 export interface RunsCode {
   donePromise: Promise<boolean>;
   supports: (feature: string) => boolean;
@@ -21,12 +19,7 @@ export interface RunsCode {
 
 type BackendInterface = PyodideInterface;
 
-type BackendOptions = Partial<PyodideBackendOptions> &
-  Partial<KernelGatewayBackendOptions>;
-
-export interface ServerOptions extends BackendOptions {
-  backend: Backend;
-}
+export type ServerOptions = PyodideBackendOptions | KernelGatewayBackendOptions;
 
 export interface Server extends RunsCode {
   pyodide?: PyodideInterface;

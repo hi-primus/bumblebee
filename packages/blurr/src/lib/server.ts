@@ -208,7 +208,7 @@ function ServerPyodide(options: ServerOptions): ServerInterface {
  * ```
  *
  * @param options - options to initialize, passed to loadPyodide, etc...
- * @param options.backend - "pyodide", "kernel-gateway"
+ * @param options.backend - "pyodide", "kernelgateway"
  * @param options.scriptURL - (Pyodide on front-end) Replaces the installed version of pyodide
  */
 
