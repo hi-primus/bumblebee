@@ -15,7 +15,7 @@
           variant="roundedIcon"
           @click="emit('close')"
         >
-          <font-awesome-icon icon="close" />
+          <Icon :path="mdiClose" />
         </AppButton>
         <slot :close="() => emit('close')"> </slot>
       </div>
@@ -24,11 +24,14 @@
 </template>
 
 <script setup lang="ts">
+import { mdiClose } from '@mdi/js';
+
 defineProps({
   closable: {
     type: Boolean,
     default: true
-  }
+  },
 });
+
 const emit = defineEmits(['close']);
 </script>

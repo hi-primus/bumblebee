@@ -1,5 +1,5 @@
 <template>
-  <div :class="style.classes.container">
+  <div class="autocomplete">
     <Combobox
       as="div"
       v-model="selected"
@@ -8,17 +8,15 @@
       :multiple="multiple"
       class="relative"
     >
-      <label v-if="label" class="label" :class="style.classes.label">
+      <label v-if="label" class="label autocomplete-label">
         {{ label }}
       </label>
       <div
-        class="relative w-full cursor-default overflow-hidden rounded-lg bg-white text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-opacity-75 focus-visible:ring-offset-2 focus-visible:ring-offset-amber-300"
-        :class="style.classes.inputContainer"
+        class="autocomplete-inputContainer relative w-full cursor-default overflow-hidden rounded-lg bg-white text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-opacity-75 focus-visible:ring-offset-2 focus-visible:ring-offset-amber-300"
       >
         <div
           v-if="multiple"
-          class="flex items-center flex-wrap gap-2"
-          :class="style.classes.field"
+          class="autocomplete-field flex items-center flex-wrap gap-2"
         >
           <span
             v-for="(option, index) in selected"
@@ -43,8 +41,7 @@
           <ComboboxInput
             :displayValue="formatterDisplayValues"
             :placeholder="selected && selected.length ? null : placeholder"
-            class="bg-transparent focus:ring-0 focus:outline-none min-w-20 flex-1"
-            :class="style.classes.hiddenField"
+            class="autocomplete-hiddenField bg-transparent focus:ring-0 focus:outline-none min-w-20 flex-1"
             autoComplete="off"
             @change="query = $event.target.value"
           />
@@ -53,32 +50,26 @@
           v-else
           :displayValue="formatterDisplayValues"
           :placeholder="placeholder"
-          class="focus:ring-0"
+          class="autocomplete-field focus:ring-0"
           autoComplete="off"
-          :class="style.classes.field"
           @change="query = $event.target.value"
         />
-        <!-- <ComboboxInput :placeholder="placeholder" class="focus:ring-0" autoComplete="off" :class="style.classes.field"
+        <!-- <ComboboxInput :placeholder="placeholder" class="focus:ring-0" autoComplete="off" class="autocomplete-field"
           :displayValue="(item) => (item && item.text) || item || ''" @change="query = $event.target.value" /> -->
         <ComboboxButton
-          v-if="
-            (style.icons.field !== false &&
-              (open ? style.icons.fieldOpen : style.icons.fieldDefault)) ||
-            style.icons.field
-          "
           class="absolute inset-y-0 right-0 flex items-center pr-2"
         >
           <Icon
             v-if="props.items.length"
             :path="
-              (open ? mdiArrowUpDropCircle : mdiArrowDownDropCircle) ||
-              mdiArrowDownDropCircle
+              (open ? mdiChevronUp : mdiChevronDown) ||
+              mdiChevronDown
             "
             :class="[
               open
-                ? style.classes.fieldIconOpen
-                : style.classes.fieldIconClosed,
-              style.classes.fieldIcon
+                ? 'autocomplete-fieldIconOpen'
+                : 'autocomplete-fieldIconClosed',
+              'autocomplete-fieldIcon'
             ]"
           />
         </ComboboxButton>
@@ -96,7 +87,7 @@
             v-if="props.items.length === 0 && query !== ''"
             class="relative cursor-default select-none py-2 px-4 text-gray-700"
           >
-            No hay resultados
+            No results found
           </div>
 
           <ComboboxOption
@@ -110,9 +101,9 @@
             <li
               :class="[
                 active
-                  ? style.classes.optionActive
-                  : style.classes.optionDefault,
-                style.classes.option,
+                  ? 'autocomplete-optionActive'
+                  : 'autocomplete-optionDefault',
+                'autocomplete-option',
                 'relative cursor-default select-none py-2 pl-10 pr-4'
               ]"
             >
@@ -136,13 +127,12 @@
                 class="absolute inset-y-0 left-0 flex items-center pl-3"
                 :class="[
                   active
-                    ? style.classes.optionIconActive
-                    : style.classes.optionIconDefault,
-                  style.classes.optionIcon
+                    ? 'autocomplete-optionIconActive'
+                    : 'autocomplete-optionIconDefault',
+                  'autocomplete-optionIcon'
                 ]"
               >
-                <Icon v-if="selected" :path="mdiCheck" />
-                <Icon v-else-if="!selected" :path="''" />
+                <Icon v-if="selected" :path="mdiCheckBold" />
               </span>
             </li>
           </ComboboxOption>
@@ -163,13 +153,12 @@ import {
   TransitionRoot
 } from '@headlessui/vue';
 import {
-  mdiArrowUpDropCircle,
-  mdiArrowDownDropCircle,
-  mdiCheck,
+  mdiChevronUp,
+  mdiChevronDown,
+  mdiCheckBold,
   mdiClose
 } from '@mdi/js';
 
-import { getThemeProps, useTheme, useThemeStyle } from '@/composables/themes';
 
 const props = defineProps({
   label: {
@@ -196,26 +185,7 @@ const props = defineProps({
     type: Boolean,
     default: () => false
   },
-  ...getThemeProps('autocomplete')
 });
-
-const theme = useTheme(props.theme);
-
-const style = useThemeStyle(
-  theme,
-  props.variant,
-  'autocomplete',
-  'Autocomplete',
-  props.classes,
-  props.icons,
-  style => {
-    if (style.icons.field) {
-      style.icons.fieldOpen = style.icons.fieldDefault = '';
-    }
-
-    return style;
-  }
-);
 
 const emit = defineEmits(['update', 'update-search']);
 

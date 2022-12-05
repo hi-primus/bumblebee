@@ -1,0 +1,188 @@
+.input-primary {
+  @apply bg-white border border-text-lighter/50 font-normal text-text placeholder:text-text-light focus:outline-none rounded-lg disabled:bg-text-lighter;
+}
+.input-default {
+  @apply font-normal text-text placeholder:text-text-light focus:outline-none;
+}
+
+.text-input {
+  @apply sm:text-sm md:text-base;
+
+  .text-input-errorContainer {
+    @apply text-error text-sm block px-1 mt-1;
+  }
+  .text-input-errorInput {
+    @apply border border-error;
+  }
+}
+
+.text-input:not([class*='text-input-size-']) {
+  .text-input-field {
+    @apply input-primary sm:text-sm md:text-base w-full min-h-[26px] py-2 px-5;
+  }
+}
+
+.text-input-size-condensed {
+  .text-input-field {
+    @apply input-primary sm:text-sm md:text-base w-full min-h-[18px] py-2 px-3;
+  }
+}
+
+.file-input {
+  @apply sm:text-sm md:text-base;
+  .file-input-inputContainer {
+    @apply cursor-pointer relative flex items-center gap-2 input-primary w-full min-h-[26px] py-2 pl-5 pr-10 text-left;
+  }
+  .file-input-fieldText {
+    @apply select-none;
+  }
+  .file-input-fieldTextDefault {
+    @apply text-text/70;
+  }
+  .file-input-fieldIcon {
+    @apply text-primary-dark/80;
+  }
+  .file-input-hiddenField {
+    @apply absolute left-0 top-0 w-full h-full input-default opacity-0;
+  }
+  .file-input-errorContainer {
+    @apply text-error text-sm block px-1 mt-1;
+  }
+  .file-input-errorInput {
+    @apply border border-error;
+  }
+}
+
+.selector {
+  @apply sm:text-sm md:text-base relative;
+
+  .selector-buttonOpen {
+    @apply ring-2 ring-primary-dark;
+  }
+  // .selector-buttonClosed {
+  // }
+  .selector-buttonIcon {
+    @apply text-primary-dark/80;
+  }
+  // .selector-buttonIconOpen {
+  // }
+  // .selector-buttonIconClosed {
+  // }
+  // .selector-buttonText {
+  // }
+  // .selector-buttonTextSelected {
+  // }
+  .selector-buttonTextDefault {
+    @apply text-text/70;
+  }
+  // .selector-option {
+  // }
+  .selector-optionActive {
+    @apply bg-primary-lighter text-text;
+  }
+  .selector-optionDefault {
+    @apply text-text;
+  }
+  .selector-optionIcon {
+    @apply text-primary;
+  }
+  // .selector-optionIconActive {
+  // }
+  // .selector-optionIconDefault {
+  // }
+  .selector-errorContainer {
+    @apply text-error text-sm block px-1 mt-1;
+  }
+  .selector-errorInput {
+    @apply border border-error;
+  }
+}
+
+.selector:not([class*='selector-size-']) {
+  .selector-button {
+    @apply input-primary w-full min-h-[26px] py-2 px-5 text-left disabled:opacity-80;
+  }
+}
+
+.selector-size-condensed {
+  .selector-button {
+    @apply input-primary w-full min-h-[18px] py-2 px-3 text-left disabled:opacity-80;
+  }
+}
+
+.autocomplete {
+  @apply sm:text-sm md:text-base;
+  // .autocomplete-inputContainer {
+  // }
+  .autocomplete-hiddenField {
+    @apply input-default;
+  }
+  .autocomplete-fieldOpen {
+    @apply ring-2 ring-primary-dark;
+  }
+  // .autocomplete-fieldClosed {
+  // }
+  .autocomplete-fieldIcon {
+    @apply text-primary-dark/80;
+  }
+  // .autocomplete-fieldIconOpen {
+  // }
+  // .autocomplete-fieldIconClosed {
+  // }
+  // .autocomplete-option {
+  // }
+  .autocomplete-optionActive {
+    @apply bg-primary text-white;
+  }
+  .autocomplete-optionDefault {
+    @apply text-text;
+  }
+  // .autocomplete-optionIcon {
+  // }
+  .autocomplete-optionIconActive {
+    @apply text-white;
+  }
+  .autocomplete-optionIconDefault {
+    @apply text-primary;
+  }
+  .autocomplete-errorContainer {
+    @apply text-error text-sm block px-1 mt-1;
+  }
+  .autocomplete-errorInput {
+    @apply border border-error;
+  }
+}
+
+.autocomplete:not([class*='autocomplete-size-']) {
+  .autocomplete-field {
+    @apply input-primary w-full min-h-[26px] py-2 px-5 text-left;
+  }
+}
+
+.autocomplete-size-condensed {
+  .autocomplete-field {
+    @apply input-primary w-full min-h-[18px] py-2 px-3 text-left;
+  }
+}
+
+.checkbox {
+  @apply flex items-center gap-x-2;
+  .checkbox-label {
+    @apply sm:text-sm md:text-base font-normal;
+  }
+  .checkbox-input {
+    @apply accent-primary-dark disabled:accent-text-lighter;
+  }
+}
+
+.checkbox:not([class*='checkbox-size-']) {
+  .checkbox-input {
+    @apply h-5 w-5;
+  }
+}
+
+.checkbox-size-small {
+  .checkbox-input {
+    @apply h-4 w-4;
+  }
+}

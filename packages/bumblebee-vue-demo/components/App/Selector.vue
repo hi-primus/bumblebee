@@ -1,5 +1,5 @@
 <template>
-  <div :class="style.classes.container">
+  <div class="selector">
     <Listbox
       as="div"
       v-model="selectedOption"
@@ -7,27 +7,21 @@
       :multiple="multiple"
       :disabled="disabled || !options?.length"
     >
-      <label v-if="label" class="label" :class="style.classes.label">
+      <label v-if="label" class="label selector-label">
         {{ label }}
       </label>
       <ListboxButton
-        class="relative"
+        class="selector-button relative or-8"
         :class="[
-          style.classes.button,
-          open ? style.classes.buttonOpen : style.classes.buttonClosed,
-          errorMessage ? style.classes.errorInput : '',
-          multiple ? 'flex items-center flex-wrap gap-2' : '',
-          style.icons.button !== false &&
-          (open ? style.icons.buttonOpen : style.icons.buttonDefault)
-            ? 'pr-8'
-            : ''
+          open ? 'selector-buttonOpen' : 'selector-buttonClosed',
+          errorMessage ? 'selector-errorInput' : '',
+          multiple ? 'flex items-center flex-wrap gap-2' : ''
         ]"
       >
         <template v-if="multiple">
           <span
             v-if="selectedOption?.length === 0"
-            class="block truncate"
-            :class="style.classes.buttonTextDefault"
+            class="block truncate selector-buttonTextDefault"
           >
             {{ defaultLabel }}
           </span>
@@ -50,10 +44,10 @@
           <span
             class="block truncate"
             :class="[
-              style.classes.buttonText,
+              'selector-buttonText',
               selectedOption
-                ? style.classes.buttonTextSelected
-                : style.classes.buttonTextDefault
+                ? 'selector-buttonTextSelected'
+                : 'selector-buttonTextDefault'
             ]"
             >{{
               (selectedOption && selectedOption[text]) ||
@@ -63,20 +57,15 @@
           >
         </template>
         <span
-          v-if="
-            (style.icons.button !== false &&
-              (open ? style.icons.buttonOpen : style.icons.buttonDefault)) ||
-            style.icons.button
-          "
           class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2"
         >
           <Icon
-            :path="open ? mdiArrowUpDropCircle : mdiArrowDownDropCircle"
+            :path="(open ? mdiChevronUp : mdiChevronDown)"
             :class="[
               open
-                ? style.classes.buttonIconOpen
-                : style.classes.buttonIconClosed,
-              style.classes.buttonIcon
+                ? 'selector-buttonIconOpen'
+                : 'selector-buttonIconClosed',
+              'selector-buttonIcon'
             ]"
           />
         </span>
@@ -100,9 +89,9 @@
             <li
               :class="[
                 active
-                  ? style.classes.optionActive
-                  : style.classes.optionDefault,
-                style.classes.option,
+                  ? 'selector-optionActive'
+                  : 'selector-optionDefault',
+                'selector-option',
                 'relative cursor-default select-none py-2 pl-10 pr-4'
               ]"
             >
@@ -111,48 +100,35 @@
                   name="option"
                   v-bind="typeof option === 'object' ? option : { option }"
                 >
-                  {{ (option && option[text]) || option }}
+                  {{ (option && (option as Record<string, any>)[text]) || option }}
                 </slot>
               </span>
               <span
-                v-if="
-                  style.icons.option &&
-                  (selected
-                    ? style.icons.optionSelected
-                    : style.icons.optionDefault)
-                "
+                v-if="selected"
                 class="absolute inset-y-0 left-0 flex items-center pl-3"
                 :class="[
                   active
-                    ? style.classes.optionIconActive
-                    : style.classes.optionIconDefault,
-                  style.classes.optionIcon
+                    ? 'selector-optionIconActive'
+                    : 'selector-optionIconDefault',
+                  'selector-optionIcon'
                 ]"
               >
-                <Icon v-if="selected" :path="mdiCheck" />
-                <Icon v-else-if="!selected" :path="style.icons.optionDefault" />
+                <Icon v-if="selected" :path="mdiCheckBold" />
+                <!-- <Icon v-else-if="!selected" :path="''" /> -->
               </span>
             </li>
           </ListboxOption>
         </ListboxOptions>
       </transition>
     </Listbox>
-    <span v-if="errorMessage" :class="style.classes.errorContainer">
+    <span v-if="errorMessage" class="selector-errorContainer">
       {{ errorMessage }}
     </span>
   </div>
 </template>
 
 <script setup lang="ts">
-import {
-  mdiArrowUpDropCircle,
-  mdiArrowDownDropCircle,
-  mdiCheck,
-  mdiClose
-} from '@mdi/js';
 import { useField } from 'vee-validate';
-// import { isRequired } from "@/composables/rules";
-import { getThemeProps, useTheme, useThemeStyle } from '@/composables/themes';
 
 import {
   Listbox,
@@ -160,6 +136,9 @@ import {
   ListboxOptions,
   ListboxOption
 } from '@headlessui/vue';
+import { PropType } from 'vue';
+import { RuleKey } from '@/composables/use-rules';
+import { mdiChevronDown, mdiChevronUp, mdiCheckBold, mdiClose } from '@mdi/js';
 
 const props = defineProps({
   label: {
@@ -171,11 +150,11 @@ const props = defineProps({
     default: () => null
   },
   options: {
-    type: Array,
+    type: Array as PropType<(string | Record<string, any>)[]>,
     default: () => []
   },
   rules: {
-    type: Array,
+    type: Array as PropType<RuleKey[]>,
     default: () => []
   },
   name: {
@@ -201,28 +180,9 @@ const props = defineProps({
     type: String,
     default: 'text'
   },
-  ...getThemeProps('selector')
 });
 
 const emit = defineEmits(['update:modelValue']);
-
-const theme = useTheme(props.theme);
-
-const style = useThemeStyle(
-  theme,
-  props.variant,
-  'selector',
-  'Selector',
-  props.classes,
-  props.icons,
-  style => {
-    if (style.icons.button) {
-      style.icons.buttonOpen = style.icons.buttonDefault = '';
-    }
-
-    return style;
-  }
-);
 
 const selectedOption = ref<any>(
   props.modelValue || (props.multiple ? [] : null)
@@ -230,12 +190,12 @@ const selectedOption = ref<any>(
 
 const defaultLabel = computed(() => {
   if (!props.options?.length) {
-    return props.emptyTitle || 'No hay opciones disponibles';
+    return props.emptyTitle || 'No options available';
   }
-  return props.title || 'Selecciona una opcion';
+  return props.title || 'Select';
 });
 
-const updateValidateValue = value => {
+const updateValidateValue = (value: any) => {
   if (Array.isArray(value)) {
     validateValue.value = value.map(item => {
       return item?.value;
@@ -257,26 +217,11 @@ watch(
   }
 );
 
-const rules = computed(() => {
-  const useRules = [];
-
-  for (let i = 0; i < props.rules.length; i++) {
-    const rule = props.rules[i];
-    switch (rule) {
-      case 'required':
-        // useRules.push(isRequired);
-        break;
-    }
-  }
-
-  return useRules;
-});
-
 const {
   errorMessage,
   value: validateValue,
   validate
-} = useField(props.name, rules.value);
+} = useField(props.name, useRules(props.rules));
 
 onMounted(() => {
   if (selectedOption.value) {

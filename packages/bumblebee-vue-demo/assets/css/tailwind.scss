@@ -3,6 +3,8 @@
 @tailwind utilities;
 
 @layer components {
+  @import 'fields';
+  @import 'btn';
   .ellipsis {
     white-space: nowrap;
     overflow: hidden;

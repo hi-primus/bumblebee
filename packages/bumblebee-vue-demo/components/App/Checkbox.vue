@@ -1,13 +1,13 @@
 <template>
-  <div :class="[attrClass, style.classes.container]" :style="attrStyle">
+  <div class="checkbox" :class="[attrClass]" :style="(attrStyle as StyleValue)">
     <input
       :name="name"
       v-model="checked"
       type="checkbox"
-      :class="style.classes.input"
+      class="checkbox-input"
       v-bind="attrs"
     />
-    <label :for="name" :class="style.classes.label" class="my-auto">
+    <label :for="name" class="checkbox-label my-auto">
       {{ label }}
     </label>
   </div>
@@ -19,8 +19,9 @@ export default {
 };
 </script>
 
-<script setup>
-import { getThemeProps, useTheme, useThemeStyle } from '@/composables/themes';
+<script setup lang="ts">
+
+import { StyleValue } from 'vue';
 
 const emit = defineEmits(['update:modelValue', 'isValid']);
 
@@ -37,21 +38,9 @@ const props = defineProps({
     type: String,
     default: () => 'myValue'
   },
-  ...getThemeProps('checkbox')
 });
 
 const { class: attrClass, style: attrStyle, ...attrs } = useAttrs();
-
-const theme = useTheme(props.theme);
-
-const style = useThemeStyle(
-  theme,
-  props.variant || props.type,
-  'input',
-  'Input',
-  props.classes,
-  props.icons
-);
 
 const checked = computed({
   get: () => props.modelValue,
