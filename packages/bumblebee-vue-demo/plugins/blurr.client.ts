@@ -1,10 +1,9 @@
-import { BlurrClient, BlurrServer } from 'blurr';
+import { Blurr, Server } from 'blurr';
 
-export default defineNuxtPlugin((nuxtApp) => {
-  console.log({ BlurrClient, BlurrServer });
+export default defineNuxtPlugin(() => {
   return {
     provide: {
-      blurr: { BlurrClient, BlurrServer }
+      blurr: { Blurr, Server }
     }
   };
 });

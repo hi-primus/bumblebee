@@ -1,6 +1,6 @@
 <!-- eslint-disable vue/no-multiple-template-root -->
 <template>
-  <WorkspaceToolbar />
+  <WorkspaceToolbar/>
   <section v-if="dataframe" class="workspace-table overflow-hidden">
     <TableChunks
       class="overflow-auto"
@@ -10,7 +10,7 @@
       @update-window="updateWindow"
     />
   </section>
-  <WorkspaceOperations />
+  <WorkspaceOperations/>
   <WorkspaceFooter :dataframe="dataframe" />
 </template>
 
@@ -18,6 +18,7 @@
 import { PropType } from 'vue';
 
 import { optimizeRanges } from '@/utils/table';
+import { State } from 'types/operations';
 import { Column, DataframeProfile } from 'types/profile';
 import { Chunk } from 'types/table';
 
@@ -25,10 +26,15 @@ const props = defineProps({
   dataframe: {
     type: Object as PropType<DataframeProfile>
   },
+  state: {
+    type: [null, Object] as PropType<State>
+  },
   getChunk: {
-    type: Function as PropType<(start: number, end: number) => Promise<Chunk>>
+    type: Function as PropType<(start: number, end: number) => Chunk>
   }
 });
+
+// table data
 
 const header = reactiveComputed<Column[]>(() => {
   if (props.dataframe?.columns && Object.keys(props.dataframe.columns)) {
@@ -46,6 +52,8 @@ const header = reactiveComputed<Column[]>(() => {
 const rowsCount = computed(() => {
   return props.dataframe?.summary?.rows_count;
 });
+
+// chunks logic
 
 // uses ref to allow reseting it
 const chunks = ref<Chunk[]>([]);
@@ -87,20 +95,20 @@ const updateWindow = function (start: number, stop: number) {
   return shiftChunksQueue();
 };
 
-let shiftChunksPromise: Promise<boolean> | false = false;
+let shiftChunksPromise = false;
 
-const shiftChunksQueue = async function () {
+const shiftChunksQueue = function () {
   // finish previous shiftChunksQueue
-  await shiftChunksPromise;
+  // await shiftChunksPromise;
   shiftChunksPromise = false;
   if (!shiftChunksPromise) {
     shiftChunksPromise = _shiftChunksQueue();
-    await shiftChunksPromise;
+    // await shiftChunksPromise;
     shiftChunksPromise = false;
   }
 };
 
-const _shiftChunksQueue = async function (): Promise<boolean> {
+const _shiftChunksQueue = function (): boolean {
   console.log('chunksQueue length', chunksQueue.value.length);
   if (chunksQueue.value.length) {
     let [start, stop] = chunksQueue.value[0];
@@ -116,10 +124,10 @@ const _shiftChunksQueue = async function (): Promise<boolean> {
       };
       const index = chunks.value.length;
       chunks.value[index] = shallowChunk;
-      console.log('chunks.value', JSON.stringify(chunks.value));
-      const chunk = await props.getChunk(start, stop);
+      // console.log('chunks.value', JSON.stringify(chunks.value));
+      const chunk = props.getChunk(start, stop);
       chunks.value[index] = chunk;
-      console.log('chunks.value', JSON.stringify(chunks.value));
+      // console.log('chunks.value', JSON.stringify(chunks.value));
     }
     return _shiftChunksQueue();
   }
