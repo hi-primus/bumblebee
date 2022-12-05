@@ -1,47 +1,51 @@
 <template>
-  <li>
-    <div class="flex gap-2 justify-end mb-2" :class="{ hidden: !editing }">
-      <button
-        class="px-1 pt-1 cursor-pointer flex flex-col items-center rounded-md text-text"
+  <div class="flex flex-col p-2 gap-2 bg-red">
+    <AppInput placeholder="test" />
+    <AppSelector
+      :model-value="'option1'"
+      :options="['option1', 'option2']"
+      label="selector"
+      name="selector"
+      @update:model-value="() => {}"
+    />
+    <AppCheckbox
+      name="checkbox"
+      label="checkbox"
+      class="w-full px-2 pt-4 z-3"
+      :model-value="false"
+      @update:model-value="() => {}"
+    />
+    <div class="flex justify-end">
+      <AppButton class="mr-auto btn-color-error">
+        Delete
+      </AppButton>
+      <AppButton
+        class="btn-layout-text"
       >
-        <Icon :path="mdiContentSaveOutline" class="text-text/75"> </Icon>
-      </button>
-      <button
-        class="px-1 pt-1 cursor-pointer flex flex-col items-center rounded-md text-text"
+        Cancel
+      </AppButton>
+      <AppButton>
+        Accept
+      </AppButton>
+      <br/>
+      <AppButton class="mr-auto btn-layout-outline btn-color-text">
+        Delete
+      </AppButton>
+      <AppButton
+        class="btn-layout-outline"
       >
-        <Icon :path="mdiPencil" class="text-text/75"> </Icon>
-      </button>
-      <button
-        class="px-1 pt-1 cursor-pointer flex flex-col items-center rounded-md text-text"
-      >
-        <Icon :path="mdiDelete" class="text-text/75"> </Icon>
-      </button>
+        Cancel
+      </AppButton>
+      <AppButton>
+        Accept
+      </AppButton>
     </div>
-    <div
-      class="rounded-md border-text-lighter font-mono px-4 py-2"
-      :class="{
-        'bg-primary-100': editing,
-        'bg-white': !editing
-      }"
-    >
-      <span class="mr-4 text-text-lighter">{{ index + 1 }}</span>
-      <span class="bg-white">
-        <span class="font-semibold">Load</span>
-        'abcdefaaaaaaaaaaaaaaaaaaaaaaaa-ssssssssssg.csv' file
-      </span>
-    </div>
-  </li>
+  </div>
 </template>
 <script setup lang="ts">
-import { ref } from 'vue';
-import { mdiContentSaveOutline, mdiPencil, mdiDelete } from '@mdi/js';
+import { Ref } from 'vue';
 
-const props = defineProps({
-  index: {
-    type: Number,
-    required: true
-  }
-});
+import { Operation } from '@/types/operations';
 
-const editing = ref(true);
+const operation = inject('state') as Ref<Operation>;
 </script>
