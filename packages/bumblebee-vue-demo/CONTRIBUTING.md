@@ -53,6 +53,6 @@ const props = defineProps({
 
 ```css
 .btn-primary {
-  @apply bg-primary-800 text-white px-4 py-2 rounded;
+  @apply bg-primary-dark text-white px-4 py-2 rounded;
 }
 ```

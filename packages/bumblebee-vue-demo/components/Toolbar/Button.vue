@@ -1,7 +1,7 @@
 <template>
   <button
     class="h-[56px] px-1 pt-1 cursor-pointer flex flex-col items-center rounded-md text-text bg-white"
-    :class="[{ 'bg-primary-50': active }, tool?.class || '']"
+    :class="[{ 'bg-primary-lighter': active }, tool?.class || '']"
   >
     <Icon :path="tool?.icon" class="text-text/75"> </Icon>
     <div

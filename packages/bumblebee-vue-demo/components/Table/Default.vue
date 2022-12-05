@@ -17,7 +17,7 @@
             top: columnHeaderHeight + rowIndex * rowHeight + 'px',
             height: rowHeight + 'px'
           }"
-          class="absolute bg-white pr-2 z-[-3] text-right w-full op-50 bg-white"
+          class="absolute bg-white pr-2 z-[-3] text-right w-full opacity-50 bg-white"
         />
       </div>
       <div

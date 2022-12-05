@@ -16,5 +16,5 @@ export default defineNuxtConfig({
   build: {
     transpile: ['ts-invariant/process', '@headlessui/vue']
   },
-  css: ['@/assets/css/tailwind.css', '@/assets/css/fonts.css']
+  css: ['@/assets/css/tailwind.scss', '@/assets/css/fonts.css']
 });
