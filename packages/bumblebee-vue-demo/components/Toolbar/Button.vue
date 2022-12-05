@@ -13,11 +13,11 @@
 
 <script setup lang="ts">
 import { PropType } from 'vue';
-import { ToolButton } from 'types/workspace';
+import { ToolbarButton } from '@/utils/toolbar-buttons';
 
-const props = defineProps({
+defineProps({
   tool: {
-    type: Object as PropType<ToolButton>,
+    type: Object as PropType<ToolbarButton>,
     default: {}
   },
   active: {
