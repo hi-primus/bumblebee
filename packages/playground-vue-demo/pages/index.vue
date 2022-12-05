@@ -10,13 +10,13 @@
         <div class="h-12 flex mb-4">
           <button
             @click="runCode"
-            class="bg-primary hover:bg-primary-700 text-white rounded px-4 py-2"
+            class="bg-primary hover:bg-primary-darker text-white rounded px-4 py-2"
           >
             {{ enabled ? 'Run' : 'Loading...' }}
           </button>
           <div class="hints h-full py-2 px-6">
             Client variable name:
-            <span class="font-mono text-primary-800">blurr</span>
+            <span class="font-mono text-primary-darkest">blurr</span>
           </div>
         </div>
         <!-- a text area that when i press shift enter alerts its content -->
@@ -37,7 +37,7 @@
       </div>
       <div class="result bg-white w-[40%]">
         <div class="title text-2xl font-bold h-12 mb-6">Result</div>
-        <div :class="{ 'text-error': error, 'text-primary-800': !error }">
+        <div :class="{ 'text-error': error, 'text-primary-darkest': !error }">
           {{ result }}
         </div>
       </div>

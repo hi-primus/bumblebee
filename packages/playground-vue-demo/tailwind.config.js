@@ -13,19 +13,12 @@ module.exports = {
       current: 'currentColor',
       white: '#ffffff',
       primary: {
-        900: '#205a98',
-        dark: '#277abb',
-        800: '#277abb',
-        700: '#2b8bcf',
+        darkest: '#005390',
+        darker: '#006bab',
+        dark: '#0084c7',
         DEFAULT: '#309ee3',
-        600: '#309ee3',
-        500: '#34acf2',
-        400: '#42b9f4',
-        300: '#5dc6f6',
-        light: '#88d6fa',
-        200: '#88d6fa',
-        100: '#b6e6fc',
-        50: '#e2f5fe'
+        light: '#66c0ea', // 300
+        lighter: '#b6e6fc', // 100
       },
       error: {
         dark: '#d53134',
