@@ -20,23 +20,13 @@
         Delete
       </AppButton>
       <AppButton
-        class="btn-layout-text"
+        class="btn-layout-invisible"
       >
         Cancel
-      </AppButton>
-      <AppButton>
-        Accept
-      </AppButton>
-      <br/>
-      <AppButton class="mr-auto btn-layout-outline btn-color-text">
-        Delete
       </AppButton>
       <AppButton
         class="btn-layout-outline"
       >
-        Cancel
-      </AppButton>
-      <AppButton>
         Accept
       </AppButton>
     </div>

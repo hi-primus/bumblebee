@@ -84,7 +84,7 @@
       </div>
       <div class="sticky h-full left-0 order-[-1]">
         <div
-          class="bumblebee-columns-rows-indices h-full bg-white text-text-lighter border-line-light border-r font-mono font-200 text-right"
+          class="bumblebee-columns-rows-indices h-full bg-white text-text-lightest border-line-light border-r font-mono font-200 text-right"
           :style="{
             width: rowIndicesWidth + 'px',
             height:

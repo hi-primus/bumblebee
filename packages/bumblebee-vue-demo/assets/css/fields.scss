@@ -1,30 +1,63 @@
+.label {
+  @apply text-sm font-normal text-text block;
+}
+
 .input-primary {
-  @apply bg-white border border-text-lighter/50 font-normal text-text placeholder:text-text-light focus:outline-none rounded-lg disabled:bg-text-lighter;
+  @apply bg-white border border-text-lightest/50 font-normal text-text placeholder:text-text-light focus:outline-none rounded-lg disabled:bg-text-lightest;
 }
 .input-default {
   @apply font-normal text-text placeholder:text-text-light focus:outline-none;
 }
 
 .text-input {
-  @apply sm:text-sm md:text-base;
+  @apply sm:text-sm md:text-base relative;
 
+  .text-input-field {
+    @apply input-primary w-full;
+  }
   .text-input-errorContainer {
     @apply text-error text-sm block px-1 mt-1;
   }
   .text-input-errorInput {
     @apply border border-error;
   }
+  .text-input-label {
+    @apply absolute bg-white top-[-0.5rem] pl-[0.35em] pr-[0.25em];
+  }
+  &:focus-within {
+    .text-input-field {
+      @apply ring-1 ring-primary/75 border-primary/75;
+    }
+    .text-input-label {
+      @apply text-primary-dark;
+    }
+  }
 }
 
 .text-input:not([class*='text-input-size-']) {
   .text-input-field {
-    @apply input-primary sm:text-sm md:text-base w-full min-h-[26px] py-2 px-5;
+    @apply sm:text-sm md:text-base min-h-[26px] py-2 px-5;
+  }
+  .text-input-label {
+    @apply text-sm left-4;
   }
 }
 
 .text-input-size-condensed {
   .text-input-field {
-    @apply input-primary sm:text-sm md:text-base w-full min-h-[18px] py-2 px-3;
+    @apply sm:text-sm md:text-base min-h-[18px] py-2 px-3;
+  }
+  .text-input-label {
+    @apply text-sm left-2;
+  }
+}
+
+.text-input-size-small {
+  .text-input-field {
+    @apply sm:text-xs md:text-sm min-h-[18px] py-1 px-2;
+  }
+  .text-input-label {
+    @apply text-xs left-1;
   }
 }
 
@@ -78,7 +111,7 @@
   // .selector-option {
   // }
   .selector-optionActive {
-    @apply bg-primary-lighter text-text;
+    @apply bg-primary-lightest text-text;
   }
   .selector-optionDefault {
     @apply text-text;
@@ -171,7 +204,7 @@
     @apply sm:text-sm md:text-base font-normal;
   }
   .checkbox-input {
-    @apply accent-primary-dark disabled:accent-text-lighter;
+    @apply accent-primary-dark disabled:accent-text-lightest;
   }
 }
 

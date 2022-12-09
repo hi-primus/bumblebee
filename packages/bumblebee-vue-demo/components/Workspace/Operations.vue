@@ -1,7 +1,7 @@
 <template>
   <aside class="workspace-aside bg-white border-line border-solid border-l">
     <div
-      class="w-full h-8 bg-primary-lighter text-text/90 flex justify-center items-center"
+      class="w-full h-8 bg-primary-highlight text-text/90 flex justify-center items-center"
     >
       <h3 v-if="operation">
         {{ operation.name || 'Operation' }}

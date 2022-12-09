@@ -18,13 +18,13 @@
       </button>
     </div>
     <div
-      class="rounded-md border-text-lighter font-mono px-4 py-2"
+      class="rounded-md border-text-lightest font-mono px-4 py-2"
       :class="{
-        'bg-primary-lighter': editing,
+        'bg-primary-lightest': editing,
         'bg-white': !editing
       }"
     >
-      <span class="mr-4 text-text-lighter">{{ index + 1 }}</span>
+      <span class="mr-4 text-text-lightest">{{ index + 1 }}</span>
       <span class="bg-white">
         <span class="font-semibold">Load</span>
         'abcdefaaaaaaaaaaaaaaaaaaaaaaaa-ssssssssssg.csv' file

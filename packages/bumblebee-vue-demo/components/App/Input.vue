@@ -1,6 +1,6 @@
 <template>
-  <div :class="[attrClass, 'text-input']" :style="(attrStyle as StyleValue)">
-    <label v-if="label" :for="name" class="label" :class="'text-input-label'">
+  <div class="text-input" :class="[attrClass]" :style="(attrStyle as StyleValue)">
+    <label v-if="label" :for="name" class="label text-input-label">
       {{ label }}
     </label>
     <textarea
@@ -42,9 +42,9 @@ export default {
 </script>
 
 <script setup lang="ts">
+
+import { StyleValue } from 'vue';
 import { useField } from 'vee-validate'
-// import { isRequired } from "@/composables/rules";
-import { inputAutoNone } from '@/utils'
 import { RuleKey } from '@/composables/use-rules';
 import { PropType } from 'vue';
 

@@ -60,6 +60,30 @@
         <AppButton class="btn-size-small btn-color-text btn-icon"><Icon :path="mdiTrashCan"/></AppButton>
         <AppButton class="btn-size-small btn-color-text btn-icon btn-rounded"><Icon :path="mdiTrashCan"/></AppButton>
       </div>
+      <div class="flex flex-wrap gap-4 px-8 py-2">
+        <AppInput class="">
+        </AppInput>
+        <AppInput class="text-input-size-condensed">
+        </AppInput>
+        <AppInput class="text-input-size-small">
+        </AppInput>
+      </div>
+      <div class="flex flex-wrap gap-4 px-8 py-2">
+        <AppInput placeholder="input value example" class="">
+        </AppInput>
+        <AppInput placeholder="input value example" class="text-input-size-condensed">
+        </AppInput>
+        <AppInput placeholder="input value example" class="text-input-size-small">
+        </AppInput>
+      </div>
+      <div class="flex flex-wrap gap-4 px-8 py-2">
+        <AppInput label="label" placeholder="placeholder value" class="">
+        </AppInput>
+        <AppInput label="label" placeholder="placeholder value" class="text-input-size-condensed">
+        </AppInput>
+        <AppInput label="label" placeholder="placeholder value" class="text-input-size-small">
+        </AppInput>
+      </div>
     </div>
   </NuxtLayout>
 </template>
