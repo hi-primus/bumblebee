@@ -23,36 +23,3 @@ export function throttle(func, limit: number | Function): typeof func {
     }
   };
 }
-
-export const navigatorDetection = () => {
-  let browserValue = null;
-
-  if (process.server) {
-    return browserValue;
-  }
-
-  const userAgent = navigator.userAgent;
-  if (userAgent.match(/chrome|chromium|crios/i)) {
-    browserValue = "chrome";
-  } else if (userAgent.match(/firefox|fxios/i)) {
-    browserValue = "firefox";
-  } else if (userAgent.match(/safari/i)) {
-    browserValue = "safari";
-  } else if (userAgent.match(/opr\//i)) {
-    browserValue = "opera";
-  } else if (userAgent.match(/edg/i)) {
-    browserValue = "edge";
-  }
-
-  return browserValue;
-};
-
-export const inputAutoNone = () => {
-  const navigator = navigatorDetection();
-  let autocomplete = "off";
-  if (navigator && ["firefox", "safari", "opera", "edge"].includes(navigator)) {
-    autocomplete = "off";
-  }
-
-  return autocomplete;
-};
