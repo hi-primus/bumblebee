@@ -33,10 +33,10 @@
   </li>
 </template>
 <script setup lang="ts">
+import { mdiContentSaveOutline, mdiDelete, mdiPencil } from '@mdi/js';
 import { ref } from 'vue';
-import { mdiContentSaveOutline, mdiPencil, mdiDelete } from '@mdi/js';
 
-const props = defineProps({
+defineProps({
   index: {
     type: Number,
     required: true

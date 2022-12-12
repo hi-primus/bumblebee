@@ -1,5 +1,9 @@
 <template>
-  <div class="text-input" :class="[attrClass]" :style="(attrStyle as StyleValue)">
+  <div
+    class="text-input"
+    :class="[attrClass]"
+    :style="(attrStyle as StyleValue)"
+  >
     <label v-if="label" :for="name" class="label text-input-label">
       {{ label }}
     </label>
@@ -7,13 +11,10 @@
       v-if="type === 'textarea'"
       v-model="myValue"
       :name="name"
-      :class="[
-        'text-input-field',
-        errorMessage ? 'text-input-errorInput' : ''
-      ]"
+      :class="['text-input-field', errorMessage ? 'text-input-errorInput' : '']"
       :placeholder="placeholder"
-      @blur="isValid"
       v-bind="attrs"
+      @blur="isValid"
     >
     </textarea>
     <input
@@ -21,13 +22,10 @@
       v-model="myValue"
       :name="name"
       :type="type"
-      :class="[
-        'text-input-field',
-        errorMessage ? 'text-input-errorInput' : ''
-      ]"
+      :class="['text-input-field', errorMessage ? 'text-input-errorInput' : '']"
       :placeholder="placeholder"
-      @blur="isValid"
       v-bind="attrs"
+      @blur="isValid"
     />
     <span v-if="errorMessage" :class="'text-input-errorContainer'">
       {{ errorMessage }}
@@ -36,19 +34,17 @@
 </template>
 
 <script lang="ts">
+import { useField } from 'vee-validate';
+import { PropType, StyleValue } from 'vue';
+
+import { RuleKey } from '@/composables/use-rules';
 export default {
   inheritAttrs: false
-}
+};
 </script>
 
 <script setup lang="ts">
-
-import { StyleValue } from 'vue';
-import { useField } from 'vee-validate'
-import { RuleKey } from '@/composables/use-rules';
-import { PropType } from 'vue';
-
-const emit = defineEmits(['update:modelValue', 'isValid'])
+const emit = defineEmits(['update:modelValue', 'isValid']);
 
 const props = defineProps({
   modelValue: {
@@ -74,10 +70,10 @@ const props = defineProps({
   name: {
     type: String,
     default: () => 'myValue'
-  },
-})
+  }
+});
 
-const { class: attrClass, style: attrStyle, ...attrs } = useAttrs()
+const { class: attrClass, style: attrStyle, ...attrs } = useAttrs();
 
 const myValue = computed({
   get: () => props.modelValue,
@@ -91,8 +87,8 @@ const {
 } = useField(props.name, useRules(props.rules));
 
 const isValid = async () => {
-  validateValue.value = myValue.value
-  const result = await validate()
-  emit('isValid', result)
-}
+  validateValue.value = myValue.value;
+  const result = await validate();
+  emit('isValid', result);
+};
 </script>

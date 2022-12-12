@@ -22,6 +22,7 @@
     "semi": ["error", "always"],
     "no-console": "off",
     "indent": "off",
+    "arrow-parens": ["error", "as-needed"],
     "@typescript-eslint/indent": [
       "error",
       2,
@@ -36,6 +37,7 @@
     "vue/no-v-model-argument": "off",
     "vue/no-v-html": "off",
     "vue/require-default-prop": "off",
+    "vue/html-self-closing": "off",
     "import/order": [
       "error",
       { "newlines-between": "always", "alphabetize": { "order": "asc" } }

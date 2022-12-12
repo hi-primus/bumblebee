@@ -1,8 +1,8 @@
 <template>
   <div class="checkbox" :class="[attrClass]" :style="(attrStyle as StyleValue)">
     <input
-      :name="name"
       v-model="checked"
+      :name="name"
       type="checkbox"
       class="checkbox-input"
       v-bind="attrs"
@@ -14,15 +14,13 @@
 </template>
 
 <script lang="ts">
+import { StyleValue } from 'vue';
 export default {
   inheritAttrs: false
 };
 </script>
 
 <script setup lang="ts">
-
-import { StyleValue } from 'vue';
-
 const emit = defineEmits(['update:modelValue', 'isValid']);
 
 const props = defineProps({
@@ -37,7 +35,7 @@ const props = defineProps({
   name: {
     type: String,
     default: () => 'myValue'
-  },
+  }
 });
 
 const { class: attrClass, style: attrStyle, ...attrs } = useAttrs();

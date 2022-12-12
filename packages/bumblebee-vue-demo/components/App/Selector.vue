@@ -1,9 +1,9 @@
 <template>
   <div class="selector">
     <Listbox
-      as="div"
-      v-model="selectedOption"
       v-slot="{ open }"
+      v-model="selectedOption"
+      as="div"
       :multiple="multiple"
       :disabled="disabled || !options?.length"
     >
@@ -49,12 +49,13 @@
                 ? 'selector-buttonTextSelected'
                 : 'selector-buttonTextDefault'
             ]"
-            >{{
-              (selectedOption && selectedOption[text]) ||
-              selectedOption ||
-              defaultLabel
-            }}</span
           >
+            {{
+              (selectedOption && selectedOption[text]) ||
+                selectedOption ||
+                defaultLabel
+            }}
+          </span>
         </template>
         <span
           class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2"
@@ -80,8 +81,8 @@
           @blur="validate"
         >
           <ListboxOption
-            v-slot="{ active, selected }"
             v-for="(option, index) in props.options"
+            v-slot="{ active, selected }"
             :key="index"
             :value="option"
             as="template"
@@ -128,17 +129,17 @@
 </template>
 
 <script setup lang="ts">
-import { useField } from 'vee-validate';
-
 import {
   Listbox,
   ListboxButton,
+  ListboxOption,
   ListboxOptions,
-  ListboxOption
 } from '@headlessui/vue';
+import { mdiCheckBold, mdiChevronDown, mdiChevronUp, mdiClose } from '@mdi/js';
+import { useField } from 'vee-validate';
 import { PropType } from 'vue';
+
 import { RuleKey } from '@/composables/use-rules';
-import { mdiChevronDown, mdiChevronUp, mdiCheckBold, mdiClose } from '@mdi/js';
 
 const props = defineProps({
   label: {
@@ -146,10 +147,12 @@ const props = defineProps({
     default: ''
   },
   modelValue: {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     type: [Object, String, Array] as PropType<any>,
     default: () => null
   },
   options: {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     type: Array as PropType<(string | Record<string, any>)[]>,
     default: () => []
   },
@@ -184,6 +187,7 @@ const props = defineProps({
 
 const emit = defineEmits(['update:modelValue']);
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const selectedOption = ref<any>(
   props.modelValue || (props.multiple ? [] : null)
 );
@@ -195,6 +199,7 @@ const defaultLabel = computed(() => {
   return props.title || 'Select';
 });
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const updateValidateValue = (value: any) => {
   if (Array.isArray(value)) {
     validateValue.value = value.map(item => {
@@ -212,8 +217,8 @@ watch(selectedOption, (newValue, oldValue) => {
 
 watch(
   () => props.modelValue,
-  (curr, prev) => {
-    selectedOption.value = props.modelValue;
+  value => {
+    selectedOption.value = value;
   }
 );
 

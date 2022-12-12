@@ -10,7 +10,7 @@
         :class="{ 'border-b-2 text-primary': index === selected }"
         @click="() => emit('update:selected', index)"
       >
-        <div class="ellipsis">
+        <div class="ellipsis" @click.prevent="() => emit('close', index)">
           {{ tab?.label || defaultLabel }}
         </div>
         <Icon class="w-4 h-4 mr-[-2px]" :path="mdiClose" />

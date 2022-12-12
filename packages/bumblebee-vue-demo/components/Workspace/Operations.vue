@@ -20,8 +20,9 @@
 </template>
 
 <script setup lang="ts">
-import { isOperation, State } from '@/types/operations';
 import { Ref } from 'vue';
+
+import { isOperation, State } from '@/types/operations';
 
 const state = inject<Ref<State>>('state', ref(null));
 

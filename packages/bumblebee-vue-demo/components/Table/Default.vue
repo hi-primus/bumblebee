@@ -18,7 +18,7 @@
             height: rowHeight + 'px'
           }"
           class="absolute bg-white pr-2 z-[-3] text-right w-full opacity-50 bg-white"
-        />
+        ></div>
       </div>
       <div
         class="bumblebee-table relative max-w-full flex"
@@ -61,14 +61,14 @@
               <span class="flex-1">
                 {{ column.title }}
               </span>
-              <div class="flex-1 max-w-[24px] right-icon" />
+              <div class="flex-1 max-w-[24px] right-icon"></div>
             </div>
             <div
               class="italic px-3 py-4"
               :style="{
                 height: columnPlotHeight + 'px'
               }"
-            />
+            ></div>
           </div>
           <div
             v-for="(row, rowIndex) in data"
@@ -79,7 +79,7 @@
               height: rowHeight + 1 + 'px'
             }"
             v-html="getValue(row ? row[columnIndex] : null)"
-          />
+          ></div>
         </div>
       </div>
       <div class="sticky h-full left-0 order-[-1]">
@@ -111,10 +111,10 @@
               width: rowIndicesWidth - 1 + 'px',
               height: columnHeaderHeight + 'px'
             }"
-          />
+          ></div>
         </div>
       </div>
-      <div class="table-bottom-part" />
+      <div class="table-bottom-part"></div>
     </div>
   </div>
 </template>

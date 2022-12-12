@@ -56,3 +56,23 @@ const props = defineProps({
   @apply bg-primary-dark text-white px-4 py-2 rounded;
 }
 ```
+
+## Using themes system
+
+Buttons have `btn-` prefix:
+
+```vue
+<template>
+  <AppButton @click="onClickEvent" class="btn-icon btn-color-error btn-rounded">
+    <Icon :path="mdiTrashCan" />
+  </AppButton>
+</template>
+```
+
+Text fields have `text-input-` prefix:
+
+```vue
+<template>
+  <AppInput class=""> </AppInput>
+</template>
+```

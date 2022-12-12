@@ -1,9 +1,9 @@
 <template>
   <div class="autocomplete">
     <Combobox
-      as="div"
-      v-model="selected"
       v-slot="{ open }"
+      v-model="selected"
+      as="div"
       :nullable="true"
       :multiple="multiple"
       class="relative"
@@ -39,32 +39,29 @@
             />
           </span>
           <ComboboxInput
-            :displayValue="formatterDisplayValues"
+            :display-value="formatterDisplayValues"
             :placeholder="selected && selected.length ? null : placeholder"
             class="autocomplete-hiddenField bg-transparent focus:ring-0 focus:outline-none min-w-20 flex-1"
-            autoComplete="off"
+            autocomplete="off"
             @change="query = $event.target.value"
           />
         </div>
         <ComboboxInput
           v-else
-          :displayValue="formatterDisplayValues"
+          :display-value="formatterDisplayValues"
           :placeholder="placeholder"
           class="autocomplete-field focus:ring-0"
-          autoComplete="off"
+          autocomplete="off"
           @change="query = $event.target.value"
         />
-        <!-- <ComboboxInput :placeholder="placeholder" class="focus:ring-0" autoComplete="off" class="autocomplete-field"
-          :displayValue="(item) => (item && item.text) || item || ''" @change="query = $event.target.value" /> -->
+        <!-- <ComboboxInput :placeholder="placeholder" class="focus:ring-0" autocomplete="off" class="autocomplete-field"
+          :display-value="(item) => (item && item.text) || item || ''" @change="query = $event.target.value" /> -->
         <ComboboxButton
           class="absolute inset-y-0 right-0 flex items-center pr-2"
         >
           <Icon
             v-if="props.items.length"
-            :path="
-              (open ? mdiChevronUp : mdiChevronDown) ||
-              mdiChevronDown
-            "
+            :path="(open ? mdiChevronUp : mdiChevronDown) || mdiChevronDown"
             :class="[
               open
                 ? 'autocomplete-fieldIconOpen'
@@ -76,8 +73,8 @@
       </div>
       <TransitionRoot
         leave="transition ease-in duration-100"
-        leaveFrom="opacity-100"
-        leaveTo="opacity-0"
+        leave-from="opacity-100"
+        leave-to="opacity-0"
         @after-leave="query = ''"
       >
         <ComboboxOptions
@@ -92,11 +89,11 @@
 
           <ComboboxOption
             v-for="(option, index) in props.items"
-            as="template"
             :key="index"
+            v-slot="{ selectedOption, active }"
+            as="template"
             :value="option"
             :disabled="option.disabled"
-            v-slot="{ selected, active }"
           >
             <li
               :class="[
@@ -110,8 +107,8 @@
               <span
                 class="block truncate"
                 :class="{
-                  'font-medium': selected,
-                  'font-normal': !selected,
+                  'font-medium': selectedOption,
+                  'font-normal': !selectedOption,
                   'opacity-50': option.disabled
                 }"
               >
@@ -123,7 +120,7 @@
                 </slot>
               </span>
               <span
-                v-if="selected"
+                v-if="selectedOption"
                 class="absolute inset-y-0 left-0 flex items-center pl-3"
                 :class="[
                   active
@@ -132,7 +129,7 @@
                   'autocomplete-optionIcon'
                 ]"
               >
-                <Icon v-if="selected" :path="mdiCheckBold" />
+                <Icon v-if="selectedOption" :path="mdiCheckBold" />
               </span>
             </li>
           </ComboboxOption>
@@ -143,22 +140,16 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
 import {
   Combobox,
-  ComboboxInput,
   ComboboxButton,
-  ComboboxOptions,
+  ComboboxInput,
   ComboboxOption,
+  ComboboxOptions,
   TransitionRoot
 } from '@headlessui/vue';
-import {
-  mdiChevronUp,
-  mdiChevronDown,
-  mdiCheckBold,
-  mdiClose
-} from '@mdi/js';
-
+import { mdiCheckBold, mdiChevronDown, mdiChevronUp, mdiClose } from '@mdi/js';
+import { ref } from 'vue';
 
 const props = defineProps({
   label: {
@@ -184,13 +175,13 @@ const props = defineProps({
   multiple: {
     type: Boolean,
     default: () => false
-  },
+  }
 });
 
 const emit = defineEmits(['update', 'update-search']);
 
-let selected = ref(props.currentValue);
-let query = ref('');
+const selected = ref(props.currentValue);
+const query = ref('');
 
 watch(query, (newQuery, prevQuery) => {
   emit('update-search', newQuery, prevQuery);
@@ -202,7 +193,7 @@ watch(selected, (newValue, oldValue) => {
 
 watch(
   () => props.clear,
-  (newValue, oldValue) => {
+  newValue => {
     if (newValue === true) {
       selected.value = null;
     }

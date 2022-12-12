@@ -10,12 +10,13 @@
   </footer>
 </template>
 <script setup lang="ts">
-import { DataframeProfile } from 'types/profile'
-import { PropType } from 'vue'
+import { PropType } from 'vue';
+
+import { DataframeProfile } from 'types/profile';
 
 defineProps({
   dataframe: {
     type: Object as PropType<DataframeProfile>
   }
-})
+});
 </script>

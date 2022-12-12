@@ -10,48 +10,41 @@
       <slot>
         {{ text }}
       </slot>
-      <Icon
-        v-if="icon"
-        :path="icon"
-      />
+      <Icon v-if="icon" :path="icon" />
     </template>
     <template v-else>
       <slot name="loading">
         <template v-if="typeof loading === 'string'">
           {{ loading }}
         </template>
-        <Icon
-          :path="mdiLoading"
-          class="fa-spin"
-        />
+        <Icon :path="mdiLoading" class="fa-spin" />
       </slot>
     </template>
   </component>
 </template>
 
 <script lang="ts" setup>
-
 import { mdiLoading } from '@mdi/js';
-import { PropType } from "vue";
+import { PropType } from 'vue';
 
-const NuxtLink = resolveComponent("NuxtLink")
+const NuxtLink = resolveComponent('NuxtLink');
 
-const props = defineProps({
+defineProps({
   text: {
-    type: String,
+    type: String
   },
   icon: {
-    type: String,
+    type: String
   },
   disabled: {
-    type: Boolean,
+    type: Boolean
   },
   loading: {
     type: [Boolean, String] as PropType<boolean | string>,
-    default: false,
+    default: false
   }
 });
 
-const { class: attrClass, style: attrStyle, ...attrs } = useAttrs()
-
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const { class: attrClass, style: attrStyle, ...attrs } = useAttrs();
 </script>
