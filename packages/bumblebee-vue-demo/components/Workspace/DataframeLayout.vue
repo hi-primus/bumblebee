@@ -146,16 +146,19 @@ watch(
 
 <style lang="scss">
 // fake top border
-.workspace-table::before {
-  content: ' ';
-  border-top-color: theme('colors.line.light');
-  border-top-style: solid;
-  border-top-width: 1px;
-  position: absolute;
-  width: 100%;
-  height: 1px;
-  top: 0;
-  left: 0;
-  z-index: 1;
+.workspace-table {
+  position: relative;
+  &::before {
+    content: ' ';
+    border-top-color: theme('colors.line.light');
+    border-top-style: solid;
+    border-top-width: 1px;
+    position: absolute;
+    width: 100%;
+    height: 1px;
+    top: 0;
+    left: 0;
+    z-index: 1;
+  }
 }
 </style>
