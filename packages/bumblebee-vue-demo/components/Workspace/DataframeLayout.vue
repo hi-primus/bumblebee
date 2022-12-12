@@ -1,6 +1,6 @@
 <!-- eslint-disable vue/no-multiple-template-root -->
 <template>
-  <WorkspaceToolbar/>
+  <WorkspaceToolbar />
   <section v-if="dataframe" class="workspace-table overflow-hidden">
     <TableChunks
       class="overflow-auto"
@@ -10,7 +10,7 @@
       @update-window="updateWindow"
     />
   </section>
-  <WorkspaceOperations/>
+  <WorkspaceOperations />
   <WorkspaceFooter :dataframe="dataframe" />
 </template>
 
@@ -30,13 +30,15 @@ const props = defineProps({
     type: [null, Object] as PropType<State>
   },
   getChunk: {
-    type: Function as PropType<(start: number, end: number) => Chunk>
+    type: Function as PropType<
+      (start: number, end: number) => Chunk | undefined
+    >
   }
 });
 
 // table data
 
-const header = reactiveComputed<Column[]>(() => {
+const header = computed<Column[]>(() => {
   if (props.dataframe?.columns && Object.keys(props.dataframe.columns)) {
     return Object.entries(props.dataframe.columns).map(([title, column]) => {
       return {
@@ -126,7 +128,9 @@ const _shiftChunksQueue = function (): boolean {
       chunks.value[index] = shallowChunk;
       // console.log('chunks.value', JSON.stringify(chunks.value));
       const chunk = props.getChunk(start, stop);
-      chunks.value[index] = chunk;
+      if (chunk) {
+        chunks.value[index] = chunk;
+      }
       // console.log('chunks.value', JSON.stringify(chunks.value));
     }
     return _shiftChunksQueue();
