@@ -31,24 +31,24 @@
           paddingBottom: tablePaddingBottom + 'px'
         }"
       >
+        <!-- :class="{
+          'column-color-preview': columnIndex === 3,
+          'column-color-primary': columnIndex === 6 || columnIndex === 5
+        }" -->
         <div
           v-for="(column, columnIndex) in header"
           :key="column.title"
           class="bumblebee-table-column relative z-[0]"
           :style="{
-            height:
-              columnHeaderHeight +
-              safeRowsCount * rowHeight +
-              tablePaddingBottom +
-              'px',
+            height: columnHeaderHeight + safeRowsCount * rowHeight + 'px',
             minWidth: minColumnWidth + 'px'
           }"
         >
           <div
-            class="border-line-light border-b border-r sticky top-0 bg-white z-[2] font-mono"
+            class="column-header border-[color:var(--line-color)] border ml-[-1px] mt-[-1px] sticky top-0 bg-white z-[2] font-mono"
           >
             <div
-              class="column-title border-line-light border-b text-[16px] py-1 px-3 text-center flex align-center"
+              class="column-title border-[color:var(--line-color)] border-b text-[16px] py-1 px-3 text-center flex align-center"
               :style="{
                 height: columnTitleHeight + 'px'
               }"
@@ -56,7 +56,7 @@
               <!-- TODO: data type instead of icon -->
               <Icon
                 :path="mdiTableColumn"
-                class="left-icon inline text-text/90 mr-[2px]"
+                class="left-icon inline text-current mr-[2px]"
               />
               <span class="flex-1">
                 {{ column.title }}
@@ -73,7 +73,7 @@
           <div
             v-for="(row, rowIndex) in data"
             :key="`col-${column?.title}-${rowIndex}`"
-            class="absolute px-1 border-line-light border w-[calc(100%+1px)] ml-[-1px] mt-[-1px] ellipsis"
+            class="column-cell ellipsis"
             :style="{
               top: columnHeaderHeight + rowIndex * rowHeight + 'px',
               height: rowHeight + 1 + 'px'
@@ -114,6 +114,7 @@
           />
         </div>
       </div>
+      <div class="table-bottom-part" />
     </div>
   </div>
 </template>
@@ -211,3 +212,33 @@ onMounted(() => {
   onScroll();
 });
 </script>
+
+<style lang="scss">
+.bumblebee-table-column {
+  &:not([class*='column-color-']) {
+    --line-color: theme('colors.line.light');
+    z-index: 1;
+  }
+  &[class*='column-color-'] {
+    z-index: 2;
+  }
+  &.column-color-primary {
+    --line-color: theme('colors.primary.lighter');
+    &,
+    & .column-header {
+      @apply bg-primary-highlight text-primary-darkest;
+    }
+  }
+  &.column-color-preview {
+    --line-color: theme('colors.warn.lighter');
+    &,
+    & .column-header {
+      @apply bg-warn-lightest text-warn-darkest;
+    }
+  }
+}
+
+.column-cell {
+  @apply absolute px-1 border-[color:var(--line-color)] border w-[calc(100%+1px)] ml-[-1px] mt-[-1px];
+}
+</style>
