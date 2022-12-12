@@ -27,8 +27,8 @@ import {
   OperationActions,
   OperationOptions,
   Payload,
-  Selection,
-  State
+  State,
+  TableSelection
 } from '@/types/operations';
 import { DataframeProfile } from '@/types/profile';
 
@@ -58,6 +58,9 @@ onMounted(async () => {
 
 const state = ref<State>(null);
 provide('state', state);
+
+const selection = ref<TableSelection>(null);
+provide('selection', selection);
 
 watch(
   () => state.value,

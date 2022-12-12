@@ -33,10 +33,10 @@ export interface OperationCreator<TA, TR> {
   action: (payload: TA) => TR;
 }
 
-export type Operation<
-  TA = any,
-  TR = any
-> = SomeRequired<OperationCreator<TA, TR>, 'defaultOptions' | 'fields'>;
+export type Operation<TA = any, TR = any> = SomeRequired<
+  OperationCreator<TA, TR>,
+  'defaultOptions' | 'fields'
+>;
 
 export const isOperation = (value: unknown): value is Operation => {
   return (
@@ -58,6 +58,30 @@ export type ColumnDetailState = {
 export type Payload = Record<string, any>;
 
 export type State = Operation | ColumnDetailState | 'operations' | null;
+
+export interface ColumnsSelection {
+  columns: string[];
+  ranges: null;
+  values: null;
+}
+
+export interface RangesSelection {
+  columns: [string];
+  ranges: [number, number][];
+  values: null;
+}
+
+export interface ValuesSelection {
+  columns: [string];
+  ranges: null;
+  values: [BasicType];
+}
+
+export type TableSelection =
+  | ColumnsSelection
+  | RangesSelection
+  | ValuesSelection
+  | null;
 
 export interface OperationActions {
   submitOperation: () => void;

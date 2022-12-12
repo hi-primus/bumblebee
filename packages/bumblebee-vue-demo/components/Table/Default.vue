@@ -31,13 +31,13 @@
           paddingBottom: tablePaddingBottom + 'px'
         }"
       >
-        <!-- :class="{
-          'column-color-preview': columnIndex === 3,
-          'column-color-primary': columnIndex === 6 || columnIndex === 5
-        }" -->
         <div
           v-for="(column, columnIndex) in header"
           :key="column.title"
+          :class="{
+            // 'column-color-preview': columnIndex === 3,
+            'column-color-primary': selection?.columns.includes(column.title)
+          }"
           class="bumblebee-table-column relative z-[0]"
           :style="{
             height: columnHeaderHeight + safeRowsCount * rowHeight + 'px',
@@ -48,10 +48,11 @@
             class="column-header border-[color:var(--line-color)] border ml-[-1px] mt-[-1px] sticky top-0 bg-white z-[2] font-mono"
           >
             <div
-              class="column-title border-[color:var(--line-color)] border-b text-[16px] py-1 px-3 text-center flex align-center"
+              class="column-title border-[color:var(--line-color)] border-b text-[16px] py-1 px-3 text-center flex align-center cursor-pointer select-none"
               :style="{
                 height: columnTitleHeight + 'px'
               }"
+              @click="$event => columnClicked($event, columnIndex)"
             >
               <!-- TODO: data type instead of icon -->
               <Icon
@@ -121,10 +122,11 @@
 
 <script setup lang="ts">
 import { mdiTableColumn } from '@mdi/js';
-import { PropType } from 'vue';
+import { PropType, Ref } from 'vue';
 
-import { throttle } from '@/utils';
+import { TableSelection } from '@/types/operations';
 import { Column } from '@/types/profile';
+import { throttle } from '@/utils';
 
 const props = defineProps({
   data: {
@@ -141,6 +143,8 @@ const props = defineProps({
     required: true
   }
 });
+
+const selection = inject('selection') as Ref<TableSelection>;
 
 type Emits = {
   (e: 'updateWindow', start: number, stop: number): void;
@@ -211,6 +215,43 @@ onMounted(() => {
   console.log('onMounted on Table');
   onScroll();
 });
+
+let lastColumnClicked: number | null = null;
+
+const columnClicked = (event: MouseEvent, columnIndex: number) => {
+  if (selection.value?.columns.length === 0 || !event.shiftKey) {
+    lastColumnClicked = columnIndex;
+  }
+
+  const columnTitle = props.header[columnIndex].title;
+
+  let columns: string[] = [];
+
+  if (event.shiftKey && lastColumnClicked !== null) {
+    const start = Math.min(columnIndex, lastColumnClicked);
+    const stop = Math.max(columnIndex, lastColumnClicked);
+    columns = props.header.slice(start, stop + 1).map(c => c.title);
+  } else if (event.ctrlKey) {
+    if (selection.value?.columns.includes(columnTitle)) {
+      columns = selection.value.columns.filter(c => c !== columnTitle);
+    } else {
+      columns = [...(selection.value?.columns || []), columnTitle];
+    }
+  } else if (
+    selection.value?.columns.length === 1 &&
+    selection.value?.columns[0] === columnTitle
+  ) {
+    columns = [];
+  } else {
+    columns = [columnTitle];
+  }
+
+  selection.value = {
+    columns,
+    ranges: null,
+    values: null
+  };
+};
 </script>
 
 <style lang="scss">
@@ -226,14 +267,14 @@ onMounted(() => {
     --line-color: theme('colors.primary.lighter');
     &,
     & .column-header {
-      @apply bg-primary-highlight text-primary-darkest;
+      @apply bg-primary-highlight;
     }
   }
   &.column-color-preview {
     --line-color: theme('colors.warn.lighter');
     &,
     & .column-header {
-      @apply bg-warn-lightest text-warn-darkest;
+      @apply bg-warn-lightest;
     }
   }
 }
