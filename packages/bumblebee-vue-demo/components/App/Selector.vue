@@ -146,7 +146,7 @@ const props = defineProps({
     default: ''
   },
   modelValue: {
-    type: [Object, String, Array],
+    type: [Object, String, Array] as PropType<any>,
     default: () => null
   },
   options: {
