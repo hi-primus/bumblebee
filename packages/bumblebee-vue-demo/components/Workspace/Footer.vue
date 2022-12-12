@@ -12,7 +12,7 @@
 <script setup lang="ts">
 import { PropType } from 'vue';
 
-import { DataframeProfile } from 'types/profile';
+import { DataframeProfile } from '@/types/profile';
 
 defineProps({
   dataframe: {

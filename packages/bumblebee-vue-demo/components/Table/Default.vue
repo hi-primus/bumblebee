@@ -124,7 +124,7 @@ import { mdiTableColumn } from '@mdi/js';
 import { PropType } from 'vue';
 
 import { throttle } from '@/utils';
-import { Column } from 'types/profile';
+import { Column } from '@/types/profile';
 
 const props = defineProps({
   data: {

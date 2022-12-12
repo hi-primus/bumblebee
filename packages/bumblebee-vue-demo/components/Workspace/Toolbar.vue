@@ -23,7 +23,7 @@
 import { Ref } from 'vue';
 
 import { toolbarButtons } from '@/utils/toolbar-buttons';
-import { Operation, State } from 'types/operations';
+import { Operation, State } from '@/types/operations';
 
 const state = inject('state') as Ref<State>;
 

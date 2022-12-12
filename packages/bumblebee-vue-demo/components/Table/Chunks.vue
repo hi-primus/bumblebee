@@ -10,8 +10,8 @@
 <script setup lang="ts">
 import { PropType } from 'vue';
 
-import { Column } from 'types/profile';
-import { Chunk } from 'types/table';
+import { Column } from '@/types/profile';
+import { Chunk } from '@/types/table';
 
 const props = defineProps({
   chunks: {

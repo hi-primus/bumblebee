@@ -18,8 +18,8 @@
 import { PropType } from 'vue';
 
 import { optimizeRanges } from '@/utils/table';
-import { Column, DataframeProfile } from 'types/profile';
-import { Chunk } from 'types/table';
+import { Column, DataframeProfile } from '@/types/profile';
+import { Chunk } from '@/types/table';
 
 const props = defineProps({
   dataframe: {

@@ -23,7 +23,7 @@
 import { mdiClose } from '@mdi/js';
 import { PropType } from 'vue';
 
-import { Tab } from 'types/workspace';
+import { Tab } from '@/types/workspace';
 
 const defaultLabel = '(new dataset)';
 
