@@ -2,7 +2,16 @@
   <NuxtLayout>
     <div class="workspace-container">
       <Tabs :tabs="[{ label: 'df - tmp' }, {}, {}, {}]" />
-      <WorkspaceDataframeLayout :dataframe="profile" :get-chunk="getChunk" />
+      <WorkspaceDataframeLayout
+        :key="selectedDataframe"
+        :dataframe="
+          selectedDataframe >= 0
+            ? dataframes[selectedDataframe].profile
+            : undefined
+        "
+        :get-chunk="getChunk"
+        @close="(index: number) => dataframes.splice(index, 1)"
+      />
     </div>
   </NuxtLayout>
 </template>
@@ -11,15 +20,24 @@
 import type { Client, Source } from 'blurr/build/main/types';
 import { Ref } from 'vue';
 
-import { State } from '@/types/operations';
+import {
+  isOperation,
+  OperationActions,
+  OperationOptions,
+  Payload,
+  State
+} from '@/types/operations';
 import { DataframeProfile } from '@/types/profile';
 
 const blurrPackage = useBlurr();
 
-const profile = ref<DataframeProfile | undefined>(undefined);
-
 let blurr: Client;
-let df: Source;
+
+const dataframes = ref<
+  { name?: string; df?: Source; profile?: DataframeProfile }[]
+>([]);
+
+const selectedDataframe = ref(-1);
 
 onMounted(async () => {
   const { Blurr } = blurrPackage;
@@ -32,16 +50,91 @@ onMounted(async () => {
   window.blurr = blurr;
   await blurr.backendServer.donePromise;
   const result = await blurr.runCode("'successfully loaded'");
-  df = blurr.readCsv(
-    'https://raw.githubusercontent.com/hi-primus/optimus/develop/examples/data/foo.csv'
-  );
-  (window as any).df = df;
   console.info('Initialization result:', result);
-  profile.value = df.profile();
-  console.info('Profile result:', profile.value);
 });
 
+const state = ref<State>(null);
+provide<Ref<State>>('state', state);
+
+watch(
+  () => state.value,
+  () => {
+    operationValues.value = {};
+  }
+);
+
+const operationValues = ref<Payload>({});
+provide<Ref<Payload>>('operation-values', operationValues);
+
+const operationActions: OperationActions = {
+  submitOperation: () => {
+    console.info('Operation payload:', JSON.stringify(operationValues.value));
+
+    const operation = isOperation(state.value) ? state.value : null;
+
+    if (!operation) {
+      console.error('Invalid operation', state.value);
+      return;
+    }
+
+    const { options, ...operationPayload } = operationValues.value;
+
+    const operationOptions: OperationOptions = Object.assign(
+      {},
+      options,
+      operation.defaultOptions
+    );
+
+    const payload: Payload = {
+      blurr,
+      options: operationOptions,
+      ...operationPayload
+    };
+
+    if (operationOptions.usesInputDataframe) {
+      payload.df = dataframes.value[selectedDataframe.value].df;
+    }
+
+    const result = operation.action(payload);
+
+    console.info('Operation result:', { result, operationOptions });
+
+    if (operationOptions.targetType === 'dataframe') {
+      const df = result as Source;
+      if (operationOptions.saveToNewDataframe) {
+        const newLength = dataframes.value.push({
+          name: 'dataset',
+          df,
+          profile: df.profile()
+        });
+        selectedDataframe.value = newLength - 1;
+      } else {
+        dataframes.value[selectedDataframe.value].df = result;
+        dataframes.value[selectedDataframe.value].profile = df.profile();
+      }
+    }
+
+    operationValues.value = {};
+
+    state.value = 'operations';
+  },
+  cancelOperation: () => {
+    console.info('Operation cancelled');
+    operationValues.value = {};
+    state.value = 'operations';
+  }
+};
+
+provide('operation-actions', operationActions);
+
+//
+
 const getChunk = function (start: number, stop: number) {
+  const df = dataframes.value[selectedDataframe.value].df;
+
+  if (!df) {
+    return;
+  }
   const chunk = {
     start,
     stop,
@@ -50,14 +143,6 @@ const getChunk = function (start: number, stop: number) {
   console.info('Chunk result:', chunk);
   return chunk;
 };
-
-// state logic
-
-const state = ref<State>(null);
-provide<Ref<State>>('state', state);
-
-const test = ref<number>(42);
-provide('test', test);
 </script>
 
 <style lang="scss">

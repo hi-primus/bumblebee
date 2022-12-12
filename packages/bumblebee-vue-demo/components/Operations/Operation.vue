@@ -1,34 +1,35 @@
 <template>
   <div class="flex flex-col p-2 gap-2 bg-red">
-    <AppInput placeholder="test" />
-    <AppSelector
-      :model-value="'option1'"
-      :options="['option1', 'option2']"
-      label="selector"
-      name="selector"
-      @update:model-value="() => {}"
-    />
-    <AppCheckbox
-      name="checkbox"
-      label="checkbox"
-      class="w-full px-2 pt-4 z-3"
-      :model-value="false"
-      @update:model-value="() => {}"
-    />
-    <div class="flex justify-end">
-      <AppButton class="mr-auto btn-color-error">
+    <template v-for="field in operation.fields">
+      <AppSelector
+        v-if="field.options?.length"
+        :key="field.name"
+        v-model="operationValues[field.name]"
+        :options="field.options"
+        label="selector"
+        name="selector"
+      />
+      <AppInput
+        v-if="field.type === 'string'"
+        :key="field.name"
+        v-model="operationValues[field.name]"
+        :label="field.label || field.name"
+        :name="field.name"
+        :placeholder="field.placeholder"
+      />
+      <AppCheckbox
+        v-if="field.type === 'boolean'"
+        :key="field.name"
+        v-model="operationValues[field.name]"
+        :label="field.label || field.name"
+        :name="field.name"
+      />
+    </template>
+    <div class="flex justify-end gap-2">
       <AppButton class="btn-layout-invisible" @click="cancelOperation">
-      </AppButton>
-      <AppButton
-        class="btn-layout-invisible"
-      >
         Cancel
       </AppButton>
       <AppButton @click="submitOperation"> Accept </AppButton>
-        class="btn-layout-outline"
-      >
-        Accept
-      </AppButton>
     </div>
   </div>
 </template>
