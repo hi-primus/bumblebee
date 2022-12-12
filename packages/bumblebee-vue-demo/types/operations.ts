@@ -17,35 +17,49 @@ interface Field {
   defaultValue?: unknown;
 }
 
+export interface OperationOptions {
+  usesInputCols?: boolean;
+  usesOutputCols?: boolean;
+  usesInputDataframe?: boolean;
+  saveToNewDataframe?: boolean;
+  targetType: 'dataframe' | 'value';
+}
+
 export interface OperationCreator<TA, TR> {
   name: string;
   description?: string;
   fields?: Field[];
-  usesInputCols?: boolean;
-  usesOutputCols?: boolean;
-  usesInputDataframe?: boolean;
-  targetType?: 'dataframe' | 'value';
+  defaultOptions?: OperationOptions;
   action: (payload: TA) => TR;
 }
 
 export type Operation<
   TA = any,
   TR = any
-> = SomeRequired<OperationCreator<TA, TR>, 'targetType' | 'fields'>;
+> = SomeRequired<OperationCreator<TA, TR>, 'defaultOptions' | 'fields'>;
+
+export const isOperation = (value: unknown): value is Operation => {
+  return (
+    isObject(value) &&
+    'defaultOptions' in value &&
+    'fields' in value &&
+    Array.isArray(value.fields) &&
+    isObject(value.defaultOptions) &&
+    'targetType' in value.defaultOptions &&
+    typeof value.defaultOptions.targetType === 'string' &&
+    ['dataframe', 'value'].includes(value.defaultOptions.targetType)
+  );
+};
 
 export type ColumnDetailState = {
   columns: string[];
 };
 
+export type Payload = Record<string, any>;
+
 export type State = Operation | ColumnDetailState | 'operations' | null;
 
-export const isOperation = (value: unknown): value is Operation => {
-  return (
-    isObject(value) &&
-    'targetType' in value &&
-    'fields' in value &&
-    typeof value.targetType === 'string' &&
-    Array.isArray(value.fields) &&
-    ['dataframe', 'value'].includes(value.targetType)
-  );
-};
+export interface OperationActions {
+  submitOperation: () => void;
+  cancelOperation: () => void;
+}

@@ -17,14 +17,14 @@
     />
     <div class="flex justify-end">
       <AppButton class="mr-auto btn-color-error">
-        Delete
+      <AppButton class="btn-layout-invisible" @click="cancelOperation">
       </AppButton>
       <AppButton
         class="btn-layout-invisible"
       >
         Cancel
       </AppButton>
-      <AppButton
+      <AppButton @click="submitOperation"> Accept </AppButton>
         class="btn-layout-outline"
       >
         Accept
@@ -35,7 +35,11 @@
 <script setup lang="ts">
 import { Ref } from 'vue';
 
-import { Operation } from '@/types/operations';
+import { Operation, OperationActions, Payload } from '@/types/operations';
 
 const operation = inject('state') as Ref<Operation>;
+const operationValues = inject('operation-values') as Ref<Payload>;
+const { submitOperation, cancelOperation } = inject(
+  'operation-actions'
+) as OperationActions;
 </script>

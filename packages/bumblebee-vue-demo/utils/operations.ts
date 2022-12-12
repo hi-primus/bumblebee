@@ -7,15 +7,18 @@ const createOperation = <TA, TR>(
 ): Operation<TA, TR> => {
   const operation = { ...operationCreator } as Operation<TA, TR>;
   operation.fields = [...(operationCreator.fields || [])];
-  operation.targetType = operationCreator.targetType || 'value';
+  operation.defaultOptions = operationCreator.defaultOptions || {
+    targetType: 'value'
+  };
   return operation;
 };
 
 export const operations = {
   loadFromUrl: createOperation({
     name: 'Load from url',
-    action: (payload: { client: Client; url: string }): Source => {
-      return payload.client.readCsv(payload.url);
+    defaultOptions: { targetType: 'dataframe', saveToNewDataframe: true },
+    action: (payload: { blurr: Client; url: string }): Source => {
+      return payload.blurr.readCsv(payload.url);
     },
     fields: [
       {
