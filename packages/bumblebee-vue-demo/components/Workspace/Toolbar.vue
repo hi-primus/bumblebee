@@ -1,7 +1,5 @@
 <template>
-  <div
-    class="workspace-toolbar bg-white border-line-light border-solid border-b min-h-[64px]"
-  >
+  <div class="workspace-toolbar bg-white min-h-[64px]">
     <section class="w-full px-5 overflow-hidden h-full">
       <ul class="h-full flex items-center">
         <ToolbarButton
@@ -9,7 +7,12 @@
           :key="tool?.name"
           :active="selected == index"
           :tool="tool"
-          @click="() => tool.operation ? selectOperation(tool.operation, index) : state = null"
+          @click="
+            () =>
+              tool.operation
+                ? selectOperation(tool.operation, index)
+                : (state = null)
+          "
         />
       </ul>
     </section>
@@ -17,9 +20,10 @@
 </template>
 
 <script setup lang="ts">
+import { Ref } from 'vue';
+
 import { toolbarButtons } from '@/utils/toolbar-buttons';
 import { Operation, State } from 'types/operations';
-import { Ref } from 'vue';
 
 const state = inject('state') as Ref<State>;
 
