@@ -4,9 +4,11 @@
   >
     <ul class="h-12 absolute flex">
       <li
-        v-for="tab in tabs"
+        v-for="(tab, index) in tabs"
         :key="tab?.label"
-        class="h-12 max-w-[22rem] pt-1 px-4 flex gap-2 items-center cursor-pointer first:border-b-2 first:text-primary border-primary"
+        class="h-12 max-w-[22rem] pt-1 px-4 flex gap-2 items-center cursor-pointer border-primary"
+        :class="{ 'border-b-2 text-primary': index === selected }"
+        @click="() => emit('update:selected', index)"
       >
         <div class="ellipsis">
           {{ tab?.label || defaultLabel }}
@@ -20,22 +22,28 @@
 <script setup lang="ts">
 import { mdiClose } from '@mdi/js';
 import { PropType } from 'vue';
+
 import { Tab } from 'types/workspace';
 
-const props = defineProps({
+const defaultLabel = '(new dataset)';
+
+defineProps({
   tabs: {
     type: Array as PropType<Tab[]>,
     default: () => []
+  },
+  selected: {
+    type: Number,
+    default: -1
   }
 });
 
-let defaultLabel = '(new dataset)';
+type Emits = {
+  (e: 'update:selected', index: number): void;
+  (e: 'close', index: number): void;
+};
 
-let selected = props.tabs.length > 0 ? 0 : null;
-
-const active = computed(() => {
-  return selected ? props.tabs[selected] : null;
-});
+const emit = defineEmits<Emits>();
 </script>
 
 <style lang="scss">

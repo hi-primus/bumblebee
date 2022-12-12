@@ -1,7 +1,10 @@
 <template>
   <NuxtLayout>
     <div class="workspace-container">
-      <Tabs :tabs="[{ label: 'df - tmp' }, {}, {}, {}]" />
+      <Tabs
+        v-model:selected="selectedDataframe"
+        :tabs="dataframes.map(({ name }) => ({ label: name }))"
+      />
       <WorkspaceDataframeLayout
         :key="selectedDataframe"
         :dataframe="
