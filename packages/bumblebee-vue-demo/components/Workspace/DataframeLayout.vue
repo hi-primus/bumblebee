@@ -18,16 +18,12 @@
 import { PropType } from 'vue';
 
 import { optimizeRanges } from '@/utils/table';
-import { State } from 'types/operations';
 import { Column, DataframeProfile } from 'types/profile';
 import { Chunk } from 'types/table';
 
 const props = defineProps({
   dataframe: {
     type: Object as PropType<DataframeProfile>
-  },
-  state: {
-    type: [null, Object] as PropType<State>
   },
   getChunk: {
     type: Function as PropType<

@@ -21,13 +21,13 @@
 
 <script setup lang="ts">
 import type { Client, Source } from 'blurr/build/main/types';
-import { Ref } from 'vue';
 
 import {
   isOperation,
   OperationActions,
   OperationOptions,
   Payload,
+  Selection,
   State
 } from '@/types/operations';
 import { DataframeProfile } from '@/types/profile';
@@ -57,7 +57,7 @@ onMounted(async () => {
 });
 
 const state = ref<State>(null);
-provide<Ref<State>>('state', state);
+provide('state', state);
 
 watch(
   () => state.value,
@@ -67,7 +67,7 @@ watch(
 );
 
 const operationValues = ref<Payload>({});
-provide<Ref<Payload>>('operation-values', operationValues);
+provide('operation-values', operationValues);
 
 const operationActions: OperationActions = {
   submitOperation: () => {
