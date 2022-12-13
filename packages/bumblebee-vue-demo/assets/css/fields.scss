@@ -24,7 +24,8 @@
   .text-input-label {
     @apply absolute bg-white top-[-0.5rem] pl-[0.35em] pr-[0.25em];
   }
-  &:focus-within {
+  &:focus-within,
+  &:focus {
     .text-input-field {
       @apply ring-1 ring-primary/75 border-primary/75;
     }
@@ -34,29 +35,44 @@
   }
 }
 
-.text-input:not([class*='text-input-size-']) {
-  .text-input-field {
+.input {
+  .input-label {
+    @apply absolute bg-white top-[-0.5rem] pl-[0.35em] pr-[0.25em] leading-none z-[2];
+  }
+  &:focus-within,
+  &:focus {
+    .input-field {
+      @apply ring-1 ring-primary/75 border-primary/75;
+    }
+    .input-label {
+      @apply text-primary-dark;
+    }
+  }
+}
+
+.input:not([class*='input-size-']) {
+  .input-field {
     @apply sm:text-sm md:text-base min-h-[26px] py-2 px-5;
   }
-  .text-input-label {
+  .input-label {
     @apply text-sm left-4;
   }
 }
 
-.text-input-size-condensed {
-  .text-input-field {
+.input-size-condensed {
+  .input-field {
     @apply sm:text-sm md:text-base min-h-[18px] py-2 px-3;
   }
-  .text-input-label {
+  .input-label {
     @apply text-sm left-2;
   }
 }
 
-.text-input-size-small {
-  .text-input-field {
+.input-size-small {
+  .input-field {
     @apply sm:text-xs md:text-sm min-h-[18px] py-1 px-2;
   }
-  .text-input-label {
+  .input-label {
     @apply text-xs left-1;
   }
 }
@@ -150,6 +166,9 @@
   .autocomplete-hiddenField {
     @apply input-default;
   }
+  .autocomplete-field {
+    @apply input-primary;
+  }
   .autocomplete-fieldOpen {
     @apply ring-2 ring-primary-dark;
   }
@@ -183,18 +202,6 @@
   }
   .autocomplete-errorInput {
     @apply border border-error;
-  }
-}
-
-.autocomplete:not([class*='autocomplete-size-']) {
-  .autocomplete-field {
-    @apply input-primary w-full min-h-[26px] py-2 px-5 text-left;
-  }
-}
-
-.autocomplete-size-condensed {
-  .autocomplete-field {
-    @apply input-primary w-full min-h-[18px] py-2 px-3 text-left;
   }
 }
 

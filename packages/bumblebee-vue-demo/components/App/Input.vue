@@ -1,17 +1,18 @@
 <template>
   <div
-    class="text-input"
+    class="input text-input"
     :class="[attrClass]"
     :style="(attrStyle as StyleValue)"
   >
-    <label v-if="label" :for="name" class="label text-input-label">
+    <label v-if="label" :for="name" class="label input-label text-input-label">
       {{ label }}
     </label>
     <textarea
       v-if="type === 'textarea'"
       v-model="myValue"
       :name="name"
-      :class="['text-input-field', errorMessage ? 'text-input-errorInput' : '']"
+      class="input-field text-input-field"
+      :class="[errorMessage ? 'text-input-errorInput' : '']"
       :placeholder="placeholder"
       v-bind="attrs"
       @blur="isValid"
@@ -22,7 +23,8 @@
       v-model="myValue"
       :name="name"
       :type="type"
-      :class="['text-input-field', errorMessage ? 'text-input-errorInput' : '']"
+      class="input-field text-input-field"
+      :class="[errorMessage ? 'text-input-errorInput' : '']"
       :placeholder="placeholder"
       v-bind="attrs"
       @blur="isValid"

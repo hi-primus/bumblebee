@@ -1,5 +1,5 @@
 <template>
-  <div class="autocomplete">
+  <div class="input autocomplete">
     <Combobox
       v-slot="{ open }"
       v-model="selected"
@@ -8,21 +8,19 @@
       :multiple="multiple"
       class="relative"
     >
-      <label v-if="label" class="label autocomplete-label">
+      <label v-if="label" class="label input-label autocomplete-label">
         {{ label }}
       </label>
-      <div
-        class="autocomplete-inputContainer relative w-full cursor-default overflow-hidden rounded-lg bg-white text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-opacity-75 focus-visible:ring-offset-2 focus-visible:ring-offset-amber-300"
-      >
+      <div class="autocomplete-inputContainer relative cursor-default">
         <div
           v-if="multiple"
-          class="autocomplete-field flex items-center flex-wrap gap-2"
+          class="input-field autocomplete-field flex items-center flex-wrap gap-2"
         >
           <span
             v-for="(option, index) in selected"
             :key="index"
             :title="option?.text || option"
-            class="bg-boitas-yellow flex items-center gap-1 px-2 py-1 text-base rd max-w-[calc(100%-10px)]"
+            class="bg-primary-lighter text-text-alpha flex items-center gap-1 px-1 text-sm rounded-md max-w-[calc(100%-10px)] z-[3]"
           >
             <span class="truncate max-w-full">
               <slot
@@ -34,34 +32,38 @@
             </span>
             <Icon
               :path="mdiClose"
-              class="px-1"
+              class="pr-1 cursor-pointer"
               @click="selected.splice(index, 1)"
             />
           </span>
           <ComboboxInput
             :display-value="formatterDisplayValues"
             :placeholder="selected && selected.length ? null : placeholder"
-            class="autocomplete-hiddenField bg-transparent focus:ring-0 focus:outline-none min-w-20 flex-1"
+            class="autocomplete-hiddenField bg-transparent min-w-20 flex-1"
             autocomplete="off"
-            @change="query = $event.target.value"
+            @change="search = $event.target.value"
           />
         </div>
         <ComboboxInput
           v-else
           :display-value="formatterDisplayValues"
           :placeholder="placeholder"
-          class="autocomplete-field focus:ring-0"
+          class="input-field autocomplete-field"
           autocomplete="off"
-          @change="query = $event.target.value"
+          @change="search = $event.target.value"
         />
-        <!-- <ComboboxInput :placeholder="placeholder" class="focus:ring-0" autocomplete="off" class="autocomplete-field"
-          :display-value="(item) => (item && item.text) || item || ''" @change="query = $event.target.value" /> -->
+        <Icon
+          v-if="(selected || search) && clearable"
+          :path="mdiClose"
+          :class="style.classes.clearIcon"
+          @click="clear"
+        />
         <ComboboxButton
           class="absolute inset-y-0 right-0 flex items-center pr-2"
         >
           <Icon
-            v-if="props.items.length"
-            :path="(open ? mdiChevronUp : mdiChevronDown) || mdiChevronDown"
+            v-if="options.length"
+            :path="open ? mdiChevronUp : mdiChevronDown"
             :class="[
               open
                 ? 'autocomplete-fieldIconOpen'
@@ -75,20 +77,20 @@
         leave="transition ease-in duration-100"
         leave-from="opacity-100"
         leave-to="opacity-0"
-        @after-leave="query = ''"
+        @after-leave="search = ''"
       >
         <ComboboxOptions
-          class="absolute z-1 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm"
+          class="absolute z-1 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg sm:text-sm"
         >
           <div
-            v-if="props.items.length === 0 && query !== ''"
+            v-if="options.length === 0 && search !== ''"
             class="relative cursor-default select-none py-2 px-4 text-gray-700"
           >
             No results found
           </div>
 
           <ComboboxOption
-            v-for="(option, index) in props.items"
+            v-for="(option, index) in options"
             :key="index"
             v-slot="{ selectedOption, active }"
             as="template"
@@ -158,47 +160,64 @@ const props = defineProps({
   },
   placeholder: {
     type: String,
-    default: 'Buscar...'
+    default: ''
   },
-  currentValue: {
+  modelValue: {
     type: [String, Object],
     default: () => null
   },
-  items: {
+  search: {
+    type: String,
+    default: ''
+  },
+  options: {
     type: Array,
     default: () => []
-  },
-  clear: {
-    type: Boolean,
-    default: false
   },
   multiple: {
     type: Boolean,
     default: () => false
+  },
+  clearable: {
+    type: Boolean,
+    default: () => false
+  },
+  text: {
+    type: String,
+    default: 'text'
   }
 });
 
-const emit = defineEmits(['update', 'update-search']);
+const emit = defineEmits(['update:modelValue', 'update:search']);
 
-const selected = ref(props.currentValue);
-const query = ref('');
-
-watch(query, (newQuery, prevQuery) => {
-  emit('update-search', newQuery, prevQuery);
-});
-
-watch(selected, (newValue, oldValue) => {
-  emit('update', newValue, oldValue);
-});
+const selected = ref(props.modelValue);
 
 watch(
-  () => props.clear,
-  newValue => {
-    if (newValue === true) {
-      selected.value = null;
-    }
+  () => props.modelValue,
+  value => {
+    selected.value = value;
   }
 );
+
+watch(
+  () => selected.value,
+  (value, oldValue) => {
+    emit('update:modelValue', value, oldValue);
+  }
+);
+
+const search = ref('');
+
+watch(
+  () => props.search,
+  value => {
+    search.value = value;
+  }
+);
+
+watch(search, (value, oldValue) => {
+  emit('update:search', value, oldValue);
+});
 
 const formatterDisplayValues = items => {
   let text = '';
@@ -215,5 +234,10 @@ const formatterDisplayValues = items => {
     text = (items && items.text) || items;
   }
   return text;
+};
+
+const clear = () => {
+  selected.value = null;
+  search.value = '';
 };
 </script>
