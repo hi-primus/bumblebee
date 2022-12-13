@@ -1,8 +1,9 @@
 <!-- eslint-disable vue/no-multiple-template-root -->
 <template>
   <WorkspaceToolbar />
-  <section v-if="dataframe" class="workspace-table overflow-hidden">
+  <section class="workspace-table overflow-hidden">
     <TableChunks
+      v-if="profile"
       class="overflow-auto"
       :header="header"
       :chunks="completedChunks"
@@ -11,20 +12,17 @@
     />
   </section>
   <WorkspaceOperations />
-  <WorkspaceFooter :dataframe="dataframe" />
+  <WorkspaceFooter />
 </template>
 
 <script setup lang="ts">
-import { PropType } from 'vue';
+import { ComputedRef, PropType } from 'vue';
 
-import { optimizeRanges } from '@/utils/table';
 import { Column, DataframeProfile } from '@/types/profile';
 import { Chunk } from '@/types/table';
+import { optimizeRanges } from '@/utils/table';
 
 const props = defineProps({
-  dataframe: {
-    type: Object as PropType<DataframeProfile>
-  },
   getChunk: {
     type: Function as PropType<
       (start: number, end: number) => Chunk | undefined
@@ -34,9 +32,11 @@ const props = defineProps({
 
 // table data
 
+const profile = inject('profile') as ComputedRef<DataframeProfile>;
+
 const header = computed<Column[]>(() => {
-  if (props.dataframe?.columns && Object.keys(props.dataframe.columns)) {
-    return Object.entries(props.dataframe.columns).map(([title, column]) => {
+  if (profile.value?.columns && Object.keys(profile.value.columns)) {
+    return Object.entries(profile.value.columns).map(([title, column]) => {
       return {
         title,
         data_type: column.data_type,
@@ -48,7 +48,7 @@ const header = computed<Column[]>(() => {
 });
 
 const rowsCount = computed(() => {
-  return props.dataframe?.summary?.rows_count;
+  return profile.value?.summary?.rows_count;
 });
 
 // chunks logic
@@ -135,7 +135,7 @@ const _shiftChunksQueue = function (): boolean {
 };
 
 watch(
-  () => props.dataframe,
+  () => profile.value,
   () => {
     chunks.value = [];
     chunksQueue.value = [];

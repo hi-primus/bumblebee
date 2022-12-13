@@ -15,7 +15,7 @@
         :index="index"
       />
     </ul> -->
-    <OperationsOperation v-if="operation" />
+    <OperationsOperation v-if="operation" :key="operation.name" />
   </aside>
 </template>
 

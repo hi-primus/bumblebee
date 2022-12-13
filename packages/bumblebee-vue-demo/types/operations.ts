@@ -29,14 +29,14 @@ export interface OperationCreator<TA, TR> {
   name: string;
   description?: string;
   fields?: Field[];
-  defaultOptions?: OperationOptions;
+  defaultOptions?: Partial<OperationOptions>;
   action: (payload: TA) => TR;
 }
 
-export type Operation<TA = any, TR = any> = SomeRequired<
-  OperationCreator<TA, TR>,
-  'defaultOptions' | 'fields'
->;
+export type Operation<TA = any, TR = any> = OperationCreator<TA, TR> & {
+  defaultOptions: OperationOptions;
+  fields: Field[];
+};
 
 export const isOperation = (value: unknown): value is Operation => {
   return (

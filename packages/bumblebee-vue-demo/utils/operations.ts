@@ -7,16 +7,20 @@ const createOperation = <TA, TR>(
 ): Operation<TA, TR> => {
   const operation = { ...operationCreator } as Operation<TA, TR>;
   operation.fields = [...(operationCreator.fields || [])];
-  operation.defaultOptions = operationCreator.defaultOptions || {
-    targetType: 'value'
-  };
+  operation.defaultOptions = Object.assign(
+    {},
+    operationCreator.defaultOptions || {},
+    { targetType: 'dataframe' }
+  );
   return operation;
 };
 
 export const operations = {
   loadFromUrl: createOperation({
     name: 'Load from url',
-    defaultOptions: { targetType: 'dataframe', saveToNewDataframe: true },
+    defaultOptions: {
+      saveToNewDataframe: true
+    },
     action: (payload: { blurr: Client; url: string }): Source => {
       return payload.blurr.readCsv(payload.url);
     },
@@ -30,6 +34,9 @@ export const operations = {
   }),
   unnestColumns: createOperation({
     name: 'Unnest columns',
+    defaultOptions: {
+      usesInputCols: true
+    },
     action: ({ df }: { df: Source }): Source => {
       return df.cols.unnest();
     }

@@ -7,11 +7,6 @@
       />
       <WorkspaceDataframeLayout
         :key="selectedDataframe"
-        :dataframe="
-          selectedDataframe >= 0
-            ? dataframes[selectedDataframe].profile
-            : undefined
-        "
         :get-chunk="getChunk"
         @close="(index: number) => dataframes.splice(index, 1)"
       />
@@ -61,6 +56,13 @@ provide('state', state);
 
 const selection = ref<TableSelection>(null);
 provide('selection', selection);
+
+const profile = computed(() => {
+  return selectedDataframe.value >= 0
+    ? dataframes.value[selectedDataframe.value].profile
+    : undefined;
+});
+provide('profile', profile);
 
 watch(
   () => state.value,
