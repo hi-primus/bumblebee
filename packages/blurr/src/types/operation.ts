@@ -26,7 +26,9 @@ export interface OperationCreator {
   // value is for operations that return a value
   // void is for operations that don't return anything
   targetType?: 'dataframe' | 'value' | 'void';
-  // the name of the operation
+  // whether the operation creates a new dataframe (necessary for dataframe operations that return another dataframe) (TODO: implement this)
+  createsNew?: boolean;
+  // the default source for the operation if none is provided
   defaultSource?: string;
   // will be run on the server before the operation is run
   initialize?: (server: RunsCode) => PromiseOr<PythonCompatible>;
