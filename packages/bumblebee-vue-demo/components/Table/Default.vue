@@ -54,11 +54,14 @@
               }"
               @click="$event => columnClicked($event, columnIndex)"
             >
-              <!-- TODO: data type instead of icon -->
               <Icon
+                v-if="!column.data_type"
                 :path="mdiTableColumn"
                 class="left-icon inline text-current mr-[2px]"
               />
+              <span class="left-icon inline text-current mr-[2px] font-bold">
+                {{ column.data_type }}
+              </span>
               <span class="flex-1">
                 {{ column.title }}
               </span>

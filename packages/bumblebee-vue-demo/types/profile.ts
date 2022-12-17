@@ -7,8 +7,8 @@ export interface ColumnStats {
 }
 
 export interface KeyedColumn {
-  data_type: string;
-  stats: ColumnStats;
+  data_type?: string;
+  stats?: ColumnStats;
 }
 
 export interface Column extends KeyedColumn {
@@ -26,7 +26,7 @@ export interface DataframeSummary {
 }
 
 export interface DataframeProfile {
-  columns: Record<string, Column>;
+  columns: Record<string, KeyedColumn>;
   summary: DataframeSummary;
   name?: string;
   file_name?: string;

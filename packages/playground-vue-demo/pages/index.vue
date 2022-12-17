@@ -115,7 +115,8 @@ onMounted(() => {
   window.blurr = Blurr({
     serverOptions: {
       scriptURL: 'https://cdn.jsdelivr.net/pyodide/v0.21.3/full/pyodide.js',
-      local: true
+      useWorker: true,
+      local: false
     }
   });
   window.blurr.runCode(`1+1`).then((result: string) => {

@@ -26,6 +26,7 @@ import {
   TableSelection
 } from '@/types/operations';
 import { DataframeProfile } from '@/types/profile';
+import { preliminaryProfile } from '@/utils/blurr';
 
 const blurrPackage = useBlurr();
 
@@ -42,7 +43,7 @@ onMounted(async () => {
   blurr = Blurr({
     serverOptions: {
       scriptURL: 'https://cdn.jsdelivr.net/pyodide/v0.21.3/full/pyodide.js',
-      local: true
+      useWorker: true
     }
   });
   window.blurr = blurr;
@@ -75,7 +76,7 @@ const operationValues = ref<Payload>({});
 provide('operation-values', operationValues);
 
 const operationActions: OperationActions = {
-  submitOperation: () => {
+  submitOperation: async () => {
     console.info('Operation payload:', JSON.stringify(operationValues.value));
 
     const operation = isOperation(state.value) ? state.value : null;
@@ -113,12 +114,12 @@ const operationActions: OperationActions = {
         const newLength = dataframes.value.push({
           name: 'dataset',
           df,
-          profile: df.profile()
+          profile: await preliminaryProfile(df)
         });
         selectedDataframe.value = newLength - 1;
       } else {
         dataframes.value[selectedDataframe.value].df = result;
-        dataframes.value[selectedDataframe.value].profile = df.profile();
+        dataframes.value[selectedDataframe.value].profile = await df.profile();
       }
     }
 
@@ -137,16 +138,21 @@ provide('operation-actions', operationActions);
 
 //
 
-const getChunk = function (start: number, stop: number) {
+const getChunk = async function (start: number, stop: number) {
   const df = dataframes.value[selectedDataframe.value].df;
 
   if (!df) {
     return;
   }
+
+  const sample = await df
+    .iloc({ target: 'preview_df', lower_bound: start, upper_bound: stop })
+    .columnsSample();
+
   const chunk = {
     start,
     stop,
-    data: df.iloc(start, stop).columnsSample().value
+    data: sample.value
   };
   console.info('Chunk result:', chunk);
   return chunk;

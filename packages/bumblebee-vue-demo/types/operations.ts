@@ -84,6 +84,6 @@ export type TableSelection =
   | null;
 
 export interface OperationActions {
-  submitOperation: () => void;
+  submitOperation: () => Promise<void>;
   cancelOperation: () => void;
 }
