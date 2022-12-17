@@ -1,13 +1,17 @@
 import fetch from 'cross-fetch';
 import * as pyodidePackage from 'pyodide';
 
-import type { LoadPyodideType, PyodideBackendOptions } from '../types/pyodide';
-import type { Server as ServerInterface } from '../types/server';
-import type { ServerOptions } from '../types/server';
-
-import { getOperation } from './operations';
-import { makePythonCompatible } from './operations/factory';
-import { isPromiseLike, loadScript } from './utils';
+import { Source } from '../../types';
+import type {
+  LoadPyodideType,
+  PyodideBackendOptions,
+} from '../../types/pyodide';
+import type { Server as ServerInterface } from '../../types/server';
+import type { ServerOptions } from '../../types/server';
+import { isSource } from '../client/data/source';
+import { getOperation } from '../operations';
+import { makePythonCompatible } from '../operations/factory';
+import { isPromiseLike, loadScript } from '../utils';
 
 const defaultPyodideOptions: PyodideBackendOptions = {
   scriptURL: 'https://cdn.jsdelivr.net/pyodide/v0.21.3/full/pyodide.js',
@@ -27,8 +31,6 @@ async function loadPyodide(options: PyodideBackendOptions) {
     await loadScript(options.scriptURL);
   }
 
-  delete options.scriptURL;
-
   if (!globalThis?.loadPyodide) {
     console.warn(
       'loadPyodide function not found in globalThis, this may break'
@@ -37,6 +39,9 @@ async function loadPyodide(options: PyodideBackendOptions) {
 
   const _loadPyodide: LoadPyodideType =
     globalThis?.loadPyodide || pyodidePackage?.loadPyodide;
+
+  delete options.scriptURL;
+  delete options.useWorker;
 
   const pyodide = await _loadPyodide(options);
 
@@ -53,7 +58,7 @@ function _mapToObject(map: Map<string, unknown>): Record<string, unknown> {
   return obj;
 }
 
-function ServerPyodide(options: ServerOptions): ServerInterface {
+export function ServerPyodide(options: ServerOptions): ServerInterface {
   const server = {} as ServerInterface & { _features: string[] };
 
   server.options = Object.assign({}, defaultPyodideOptions, options);
@@ -107,7 +112,7 @@ function ServerPyodide(options: ServerOptions): ServerInterface {
   }
 
   server.runCode = _optionalPromise((code: string) => {
-    const result = server.backend.runPython(code);
+    const result = server.pyodide.runPython(code);
     try {
       return typeof result?.toJs === 'function'
         ? result.toJs({ dict_converter: _mapToObject })
@@ -164,18 +169,55 @@ function ServerPyodide(options: ServerOptions): ServerInterface {
     }, undefined) as PromiseOr<PythonCompatible>;
   };
 
-  server.runMethod = _optionalPromise((method, kwargs) => {
-    const runMethodProxy = server.pyodide.globals.get('run_method');
-    const result = runMethodProxy(method, kwargs);
-    try {
-      return typeof result?.toJs === 'function'
-        ? result.toJs({ dict_converter: _mapToObject })
-        : result;
-    } catch (error) {
-      console.warn('Error converting to JS', error);
-      return result;
+  server.runMethod = _optionalPromise(
+    (source: Source | pyodidePackage.PyProxy, path: string, kwargs: Kwargs) => {
+      let sourceProxy: pyodidePackage.PyProxy;
+
+      if (typeof source === 'string') {
+        sourceProxy = server.pyodide.globals.get('source');
+      } else if (isSource(source)) {
+        sourceProxy =
+          source.data || server.pyodide.globals.get(source.toString());
+      } else if (server.pyodide.isPyProxy(source)) {
+        sourceProxy = source;
+      } else {
+        throw new Error(
+          `Invalid source type ${typeof source} for method ${path}`
+        );
+      }
+
+      console.log({ sourceProxy });
+
+      const pathAccessors = path.split('.');
+
+      const method = pathAccessors.reduce((obj, key, index) => {
+        if (obj && key in obj) {
+          return obj[key];
+        }
+        if (index === pathAccessors.length - 1) {
+          return obj[key];
+        }
+        throw new Error(`Method or accessor ${key} not found in ${obj}`);
+      }, sourceProxy);
+
+      console.log('[METHOD FROM DEFAULT GENERATOR]', path);
+
+      delete kwargs.source;
+      delete kwargs.target;
+
+      const runMethod = server.pyodide.globals.get('run_method');
+      const result = runMethod(method, kwargs);
+      console.log({ result });
+      try {
+        return typeof result?.toJs === 'function'
+          ? result.toJs({ dict_converter: _mapToObject })
+          : result;
+      } catch (error) {
+        console.warn('Error converting to JS', error);
+        return result;
+      }
     }
-  });
+  );
 
   server._features = ['buffers', 'callbacks'];
 
@@ -195,33 +237,4 @@ function ServerPyodide(options: ServerOptions): ServerInterface {
   });
 
   return server;
-}
-
-/**
- * Initializes a Server instance
- * ### Example (es module)
- * ```js
- * import { Server } from 'blurr'
- * const server = Server({ backend: 'pyodide' });
- * const pyodide = await server.donePromise;
- * // TODO: Update docstring
- * ```
- *
- * @param options - options to initialize, passed to loadPyodide, etc...
- * @param options.backend - "pyodide", "kernelgateway"
- * @param options.scriptURL - (Pyodide on front-end) Replaces the installed version of pyodide
- */
-
-export const defaultOptions: ServerOptions = { backend: 'pyodide' };
-
-export function Server(
-  options: ServerOptions = defaultOptions
-): ServerInterface {
-  options = Object.assign({}, defaultOptions, options);
-  if (options.backend === 'pyodide') {
-    delete options.backend;
-    return ServerPyodide(options);
-  }
-
-  throw new Error('Cannot initialize a server without a backend');
 }

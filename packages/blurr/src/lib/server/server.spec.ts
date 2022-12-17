@@ -1,6 +1,6 @@
 import test from 'ava';
 
-import { Server } from './server';
+import { Server } from './index';
 
 test('server-pyodide', async (t) => {
   const server = Server({

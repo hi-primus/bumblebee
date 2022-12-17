@@ -19,6 +19,30 @@ import {
   isStringRecord,
 } from '../utils';
 
+const prepareResult = (client: Client, result: PythonCompatible) => {
+  if (isName(result) || isSource(result)) {
+    const sourceData = (result as SourceInterface).data;
+    if (sourceData !== undefined || !result.name) {
+      console.log('Creating new source', { sourceData, result });
+      const newSource = Source(
+        client,
+        sourceData !== undefined ? sourceData : result.name
+      );
+      delete (newSource as FutureSource).then;
+      return newSource;
+    }
+  }
+  if (
+    client.options.serverOptions.local &&
+    client.backendServer.pyodide.isPyProxy(result)
+  ) {
+    const newSource = Source(client, result);
+    delete (newSource as FutureSource).then;
+    return newSource;
+  }
+  return result;
+};
+
 import { isSource, Source } from './data/source';
 
 export function Blurr(options: ClientOptions = {}): Client {
@@ -96,35 +120,22 @@ export function Blurr(options: ClientOptions = {}): Client {
       paramsQueue,
       blurr.options.serverOptions.local
     );
-    const _send = (result) => {
-      if (isName(result) || isSource(result)) {
-        const newSource = Source(
-          blurr,
-          (result as SourceInterface).data || result.toString()
-        );
-        delete (newSource as FutureSource).then;
-        return newSource;
-      }
-      if (
-        blurr.options.serverOptions.local &&
-        blurr.backendServer.pyodide.isPyProxy(result)
-      ) {
-        const newSource = Source(blurr, result);
-        delete (newSource as FutureSource).then;
-        return newSource;
-      }
-      return result;
-    };
     const result = blurr.backendServer.run(paramsQueue);
     if (isPromiseLike(result)) {
-      return result.then(_send);
+      return result.then((result) => prepareResult(blurr, result));
     }
-    return _send(result);
+    return prepareResult(blurr, result);
   };
 
   blurr.runCode = (code: string) => {
     // TODO: check if it's debug
-    return blurr.backendServer.runCode(code);
+    const result = blurr.backendServer.runCode(
+      code
+    ) as PromiseOr<PythonCompatible>;
+    if (isPromiseLike(result)) {
+      return result.then((result) => prepareResult(blurr, result));
+    }
+    return prepareResult(blurr, result);
   };
   blurr.sources = {};
   blurr.supports = blurr.backendServer.supports;

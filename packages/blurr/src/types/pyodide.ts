@@ -9,4 +9,5 @@ export interface PyodideBackendOptions extends PyodideOptions {
   backend?: 'pyodide';
   scriptURL?: string;
   local?: boolean;
+  useWorker?: boolean;
 }

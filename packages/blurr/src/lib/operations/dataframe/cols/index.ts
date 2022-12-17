@@ -203,6 +203,7 @@ export const operations = {
   // }),
   copy: DataframeOperation<{ cols: Cols; outputCols: Cols }>({
     targetType: 'dataframe',
+    createsNew: true,
     name: 'cols.copy',
     args: [
       {

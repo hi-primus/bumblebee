@@ -90,7 +90,7 @@ function getRunMethod(
         kwargs,
         args: operation.args,
       });
-      const result = server.runCode(code);
+      const result = server.runCode(code) as PromiseOr<PythonCompatible>;
       if (isPromiseLike(result)) {
         console.log('result is promise', operationCreator.name);
       }
@@ -105,42 +105,30 @@ function getRunMethod(
   } else {
     return (server: Server, kwargs) => {
       if (server.options.local) {
-        const path = camelToSnake(operationCreator.name).split('.');
         let source = kwargs.source || operationCreator.defaultSource;
+
+        const path = camelToSnake(operationCreator.name).split('.');
 
         if (!source && path.length > 1) {
           source = path[0];
           path.shift();
         }
 
-        if (typeof source === 'string') {
-          source = server.getGlobal(source);
-        }
-
-        const method = path.reduce((obj, key, index) => {
-          if (obj && key in obj) {
-            return obj[key];
-          }
-          if (index === path.length - 1) {
-            return obj[key];
-          }
-          throw new Error(`Method or accessor ${key} not found in ${obj}`);
-        }, source);
-
-        console.log('[METHOD FROM DEFAULT GENERATOR]', path.join('.'));
-
-        delete kwargs.source;
-        delete kwargs.target;
-        return server.runMethod(method, kwargs);
+        return server.runMethod(
+          source,
+          path.join('.'),
+          kwargs
+        ) as PromiseOr<PythonCompatible>;
       } else {
         const source = kwargs.source || operationCreator.defaultSource;
+        const target = server.options.local ? null : kwargs.target;
         const code =
-          // (kwargs.target ? `${kwargs.target} = ` : '') +
+          (target ? `${target} = ` : '') +
           (source ? `${source.toString()}.` : '') +
           camelToSnake(operationCreator.name) +
           `(${pythonArguments(kwargs)})`;
         console.log('[CODE FROM DEFAULT GENERATOR]', code);
-        return server.runCode(code);
+        return server.runCode(code) as PromiseOr<PythonCompatible>;
       }
     };
   }
@@ -165,7 +153,9 @@ export function BlurrOperation<
 
   if (operationCreator.getInitializationCode) {
     operation.initialize = (server: RunsCode) => {
-      return server.runCode(operationCreator.getInitializationCode());
+      return server.runCode(
+        operationCreator.getInitializationCode()
+      ) as PromiseOr<PythonCompatible>;
     };
   } else if (operationCreator.initialize) {
     operation.initialize = operationCreator.initialize;
