@@ -4,7 +4,5 @@
   "singleQuote": true,
   "trailingComma": "none",
   "printWidth": 80,
-  "semi": true,
-  "space-before-function-paren": true,
-  "func-call-spacing": false
+  "semi": true
 }

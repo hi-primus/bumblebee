@@ -12,10 +12,11 @@
   "extends": [
     "eslint:recommended",
     "@nuxtjs/eslint-config-typescript",
-    "plugin:nuxt/recommended",
     "plugin:@typescript-eslint/recommended",
     "plugin:import/typescript",
-    "plugin:vue/vue3-recommended"
+    "plugin:vue/vue3-recommended",
+    "plugin:nuxt/recommended",
+    "prettier"
   ],
   "rules": {
     "comma-dangle": ["error", "only-multiline"],
@@ -23,13 +24,6 @@
     "no-console": "off",
     "indent": "off",
     "arrow-parens": ["error", "as-needed"],
-    "@typescript-eslint/indent": [
-      "error",
-      2,
-      {
-        "ignoredNodes": ["TSTypeParameterInstantiation"]
-      }
-    ],
     "@typescript-eslint/comma-dangle": ["error", "only-multiline"],
     "vue/script-setup-no-uses-vars": "off",
     "vue/multi-word-component-names": "off",
@@ -38,6 +32,20 @@
     "vue/no-v-html": "off",
     "vue/require-default-prop": "off",
     "vue/html-self-closing": "off",
+    "vue/max-attributes-per-line": 1,
+    "vue/first-attribute-linebreak": "error",
+    "vue/html-indent": [
+      "error",
+      2,
+      {
+        "attribute": 1,
+        "baseIndent": 1,
+        "closeBracket": 0,
+        "alignAttributesVertically": true,
+        "ignores": []
+      }
+    ],
+    "space-before-function-paren": "off",
     "import/order": [
       "error",
       { "newlines-between": "always", "alphabetize": { "order": "asc" } }
