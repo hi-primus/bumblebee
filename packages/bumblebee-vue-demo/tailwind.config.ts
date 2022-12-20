@@ -1,6 +1,6 @@
-/** @type {import('tailwindcss').Config} */
+import type { Config } from 'tailwindcss';
 
-module.exports = {
+export default {
   content: [
     './components/**/*.{js,vue,ts}',
     './layouts/**/*.vue',
@@ -21,7 +21,7 @@ module.exports = {
         light: '#66b8ea',
         lighter: '#8ecef5',
         lightest: '#b6e1fc',
-        highlight: '#e3f3fd',
+        highlight: '#e3f3fd'
       },
       error: {
         darkest: '#771818',
@@ -43,13 +43,13 @@ module.exports = {
       },
       text: {
         darkest: '#030507',
-        darkest: '#101419',
-        darkest: '#1d2025',
+        darker: '#101419',
+        dark: '#1d2025',
         DEFAULT: '#24282e',
         light: '#666a70',
         lighter: '#838891',
         lightest: '#a2a7ae',
-        alpha: '#01040ada',
+        alpha: '#01040ada'
       },
       line: {
         DEFAULT: '#e5e5e5',
@@ -65,4 +65,4 @@ module.exports = {
     }
   },
   plugins: []
-};
+} as Config;
