@@ -59,8 +59,11 @@
                 :path="mdiTableColumn"
                 class="left-icon inline text-current mr-[2px]"
               />
-              <span class="left-icon inline text-current mr-[2px] font-bold">
-                {{ column.data_type }}
+              <span
+                :title="dataTypeNames[columnIndex]"
+                class="left-icon inline text-current mr-[2px] font-bold"
+              >
+                {{ dataTypeHints[columnIndex] }}
               </span>
               <span class="flex-1">
                 {{ column.title }}
@@ -68,16 +71,29 @@
               <div class="flex-1 max-w-[24px] right-icon"></div>
             </div>
             <div
-              class="italic px-3 py-4"
               :style="{
                 height: columnPlotHeight + 'px'
               }"
-            ></div>
+            >
+              <PlotHist
+                v-if="column.stats?.hist"
+                :data="column.stats?.hist"
+                :column-name="column.title"
+                selectable
+              />
+              <PlotFrequency
+                v-else-if="column.stats?.frequency"
+                :data="column.stats?.frequency"
+                :column-name="column.title"
+                selectable
+              />
+              <!-- {{ column.stats?.hist || column.stats?.frequency || 'No plot' }} -->
+            </div>
           </div>
           <div
             v-for="(row, rowIndex) in data"
             :key="`col-${column?.title}-${rowIndex}`"
-            class="column-cell ellipsis"
+            class="column-cell ellipsis whitespace-pre"
             :style="{
               top: columnHeaderHeight + rowIndex * rowHeight + 'px',
               height: rowHeight + 1 + 'px'
@@ -130,6 +146,7 @@ import { PropType, Ref } from 'vue';
 import { TableSelection } from '@/types/operations';
 import { Column } from '@/types/profile';
 import { throttle } from '@/utils';
+import { TYPES_HINTS, TYPES_NAMES } from '@/utils/data-types';
 
 const props = defineProps({
   data: {
@@ -159,8 +176,8 @@ const scrollElement = ref<HTMLElement | null>(null);
 
 const rowIndicesWidth = 48; // TODO: Width from rows number
 const columnTitleHeight = 32;
-const columnPlotHeight = 48;
-const columnHeaderHeight = columnTitleHeight + columnPlotHeight;
+const columnPlotHeight = 90;
+const columnHeaderHeight = columnTitleHeight + columnPlotHeight + 2;
 const tablePaddingBottom = 200;
 const minColumnWidth = 160;
 const rowHeight = 24;
@@ -178,6 +195,38 @@ const safeRowsCount = computed(() => {
   }
   console.log('[TABLE] Setting rows count to 0 by defailt');
   return 0;
+});
+
+const dataTypeHints = computed(() => {
+  return props.header.map(column => {
+    let dataType = '';
+    if (column.stats?.inferred_data_type) {
+      if (typeof column.stats.inferred_data_type === 'string') {
+        dataType = column.stats.inferred_data_type;
+      } else {
+        dataType = column.stats.inferred_data_type.data_type;
+      }
+    } else if (column.data_type) {
+      dataType = column.data_type;
+    }
+    return TYPES_HINTS[dataType] || dataType || '?';
+  });
+});
+
+const dataTypeNames = computed(() => {
+  return props.header.map(column => {
+    let dataType = '';
+    if (column.stats?.inferred_data_type) {
+      if (typeof column.stats.inferred_data_type === 'string') {
+        dataType = column.stats.inferred_data_type;
+      } else {
+        dataType = column.stats.inferred_data_type.data_type;
+      }
+    } else if (column.data_type) {
+      dataType = column.data_type;
+    }
+    return TYPES_NAMES[dataType] || dataType || 'unknown';
+  });
 });
 
 const onScroll = throttle(function () {
@@ -252,7 +301,8 @@ const columnClicked = (event: MouseEvent, columnIndex: number) => {
   selection.value = {
     columns,
     ranges: null,
-    values: null
+    values: null,
+    indices: null
   };
 };
 </script>

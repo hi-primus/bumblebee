@@ -22,4 +22,8 @@ export const throttle = (
       }, limit - (Date.now() - lastRan));
     }
   };
-}
+};
+
+export const stepify = (a: number, b: number, f = Math.round) => {
+  return f(a / b) * b;
+};

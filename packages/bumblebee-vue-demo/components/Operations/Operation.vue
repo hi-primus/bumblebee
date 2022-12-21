@@ -71,7 +71,8 @@ const columns = computed({
     selection.value = {
       columns: value,
       ranges: null,
-      values: null
+      values: null,
+      indices: null
     };
   }
 });

@@ -119,8 +119,13 @@ const operationActions: OperationActions = {
         selectedDataframe.value = newLength - 1;
       } else {
         dataframes.value[selectedDataframe.value].df = result;
-        dataframes.value[selectedDataframe.value].profile = await df.profile();
+        dataframes.value[selectedDataframe.value].profile =
+          await preliminaryProfile(df);
       }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      df.profile().then((profile: any) => {
+        dataframes.value[selectedDataframe.value].profile = profile;
+      });
     }
 
     operationValues.value = {};

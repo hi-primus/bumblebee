@@ -1,9 +1,14 @@
+export type FrequencyValue = { count: number; value: BasicType };
+
+export type HistValue = { count: number; value: [number, number] };
+
 export interface ColumnStats {
   match: number;
   missing: number;
   mismatch: number;
-  frequency?: object[];
-  hist?: object[];
+  frequency?: FrequencyValue[];
+  hist?: HistValue[];
+  inferred_data_type?: { data_type: string; categorical: boolean } | string;
 }
 
 export interface KeyedColumn {

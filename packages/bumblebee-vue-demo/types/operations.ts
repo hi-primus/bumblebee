@@ -33,6 +33,7 @@ export interface OperationCreator<TA, TR> {
   action: (payload: TA) => TR;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type Operation<TA = any, TR = any> = OperationCreator<TA, TR> & {
   defaultOptions: OperationOptions;
   fields: Field[];
@@ -55,6 +56,7 @@ export type ColumnDetailState = {
   columns: string[];
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type Payload = Record<string, any>;
 
 export type State = Operation | ColumnDetailState | 'operations' | null;
@@ -63,18 +65,21 @@ export interface ColumnsSelection {
   columns: string[];
   ranges: null;
   values: null;
+  indices: null;
 }
 
 export interface RangesSelection {
   columns: [string];
   ranges: [number, number][];
   values: null;
+  indices: number[];
 }
 
 export interface ValuesSelection {
   columns: [string];
   ranges: null;
-  values: [BasicType];
+  values: BasicType[];
+  indices: number[];
 }
 
 export type TableSelection =
