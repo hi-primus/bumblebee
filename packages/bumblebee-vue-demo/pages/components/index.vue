@@ -56,6 +56,36 @@
         </AppButton>
       </div>
       <div class="flex flex-wrap gap-4 px-8 py-2">
+        <AppButton loading>Accept</AppButton>
+        <AppButton loading class="btn-layout-outline">Outline</AppButton>
+        <AppButton loading class="btn-layout-invisible">Invisible</AppButton>
+        <AppButton loading class="btn-layout-text">Text</AppButton>
+        <AppButton loading class="btn-icon">
+          <Icon :path="mdiCheckBold" />
+        </AppButton>
+        <AppButton loading class="btn-icon btn-layout-invisible">
+          <Icon :path="mdiCheckBold" />
+        </AppButton>
+        <AppButton loading class="btn-icon btn-rounded">
+          <Icon :path="mdiCheckBold" />
+        </AppButton>
+      </div>
+      <div class="flex flex-wrap gap-4 px-8 py-2">
+        <AppButton disabled>Accept</AppButton>
+        <AppButton disabled class="btn-layout-outline">Outline</AppButton>
+        <AppButton disabled class="btn-layout-invisible">Invisible</AppButton>
+        <AppButton disabled class="btn-layout-text">Text</AppButton>
+        <AppButton disabled class="btn-icon">
+          <Icon :path="mdiCheckBold" />
+        </AppButton>
+        <AppButton disabled class="btn-icon btn-layout-invisible">
+          <Icon :path="mdiCheckBold" />
+        </AppButton>
+        <AppButton disabled class="btn-icon btn-rounded">
+          <Icon :path="mdiCheckBold" />
+        </AppButton>
+      </div>
+      <div class="flex flex-wrap gap-4 px-8 py-2">
         <AppButton class="btn-rounded">Accept</AppButton>
         <AppButton class="btn-rounded btn-layout-outline">Outline</AppButton>
         <AppButton class="btn-rounded btn-layout-invisible">

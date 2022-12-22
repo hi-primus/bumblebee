@@ -1,13 +1,12 @@
 <template>
-  <div class="flex flex-col p-2 gap-2 bg-red">
-    <!-- {{ Object.keys(profile?.columns || {}) }} -->
+  <div class="flex flex-col px-2 pt-5 gap-5 bg-red">
     <AppAutocomplete
       v-if="options?.usesInputCols"
       v-model="columns"
       multiple
       label="Columns"
       name="Columns"
-      :options="Object.keys(profile?.columns || {})"
+      :options="Object.keys(dataframeObject?.profile?.columns || {})"
     />
     <template v-if="operation?.fields?.length">
       <template v-for="field in operation.fields">
@@ -37,30 +36,58 @@
       </template>
     </template>
     <div class="flex justify-end gap-2">
-      <AppButton class="btn-layout-invisible" @click="cancelOperation">
+      <AppButton
+        class="btn-layout-invisible"
+        :disabled="Boolean(status)"
+        :loading="status === 'cancelling'"
+        @click="cancel"
+      >
         Cancel
       </AppButton>
-      <AppButton @click="submitOperation"> Accept </AppButton>
+      <AppButton
+        :disabled="Boolean(status)"
+        :loading="status === 'submitting'"
+        @click="submit"
+      >
+        Accept
+      </AppButton>
     </div>
   </div>
 </template>
 <script setup lang="ts">
 import { ComputedRef, Ref } from 'vue';
 
+import { DataframeObject } from '@/types/dataframe';
 import {
   Operation,
   OperationActions,
   Payload,
   TableSelection
 } from '@/types/operations';
-import { DataframeProfile } from '@/types/profile';
 
 const operation = inject('state') as Ref<Operation>;
 const operationValues = inject('operation-values') as Ref<Payload>;
 const { submitOperation, cancelOperation } = inject(
   'operation-actions'
 ) as OperationActions;
-const profile = inject('profile') as ComputedRef<DataframeProfile>;
+
+const status = ref<'' | 'submitting' | 'cancelling'>('');
+
+const submit = async () => {
+  status.value = 'submitting';
+  const result = await submitOperation();
+  status.value = '';
+  return result;
+};
+
+const cancel = async () => {
+  status.value = 'cancelling';
+  const result = await cancelOperation();
+  status.value = '';
+  return result;
+};
+
+const dataframeObject = inject('dataframe') as ComputedRef<DataframeObject>;
 const selection = inject('selection') as Ref<TableSelection>;
 
 const columns = computed({

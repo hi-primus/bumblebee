@@ -1,8 +1,14 @@
 import { Client, Source } from 'blurr/build/main/types';
 
-import { Operation, OperationCreator } from '@/types/operations';
+import {
+  Operation,
+  OperationCreator,
+  OperationOptions
+} from '@/types/operations';
 
-const createOperation = <TA, TR>(
+type Cols = string[];
+
+const createOperation = <TA extends Record<string, unknown>, TR>(
   operationCreator: OperationCreator<TA, TR>
 ): Operation<TA, TR> => {
   const operation = { ...operationCreator } as Operation<TA, TR>;
@@ -12,6 +18,31 @@ const createOperation = <TA, TR>(
     operationCreator.defaultOptions || {},
     { targetType: 'dataframe' }
   );
+  operation.action = (payload: TA) => {
+    const options: Partial<OperationOptions> = Object.assign(
+      {},
+      operation.defaultOptions,
+      payload._options as OperationOptions
+    );
+    if (options.usesInputDataframe && !payload.df) {
+      throw new Error('Input dataframe is required');
+    }
+    if (options.usesInputCols && !payload.cols) {
+      throw new Error('Input columns are required');
+    }
+    if (options.usesOutputCols && !payload.outputCols) {
+      if (options.usesInputCols && payload.cols) {
+        payload = {
+          ...payload,
+          outputCols: payload.cols
+        };
+      } else {
+        throw new Error('Output columns are required');
+      }
+    }
+
+    return operationCreator.action(payload);
+  };
   return operation;
 };
 
@@ -35,10 +66,50 @@ export const operations = {
   unnestColumns: createOperation({
     name: 'Unnest columns',
     defaultOptions: {
-      usesInputCols: true
+      usesInputCols: true,
+      usesInputDataframe: true
     },
-    action: ({ df }: { df: Source }): Source => {
-      return df.cols.unnest();
-    }
+    action: (payload: {
+      df: Source;
+      cols: Cols;
+      separator: string;
+    }): Source => {
+      return payload.df.cols.unnest({
+        cols: payload.cols,
+        separator: payload.separator
+      });
+    },
+    fields: [
+      {
+        name: 'separator',
+        label: 'Separator',
+        type: 'string'
+      }
+    ]
+  }),
+  nestColumns: createOperation({
+    name: 'Nest columns',
+    defaultOptions: {
+      usesInputCols: true,
+      usesInputDataframe: true
+    },
+    action: (payload: {
+      df: Source;
+      cols: Cols;
+      separator: string;
+    }): Source => {
+      console.log('nest', payload);
+      return payload.df.cols.nest({
+        cols: payload.cols,
+        separator: payload.separator
+      });
+    },
+    fields: [
+      {
+        name: 'separator',
+        label: 'Separator',
+        type: 'string'
+      }
+    ]
   })
 };

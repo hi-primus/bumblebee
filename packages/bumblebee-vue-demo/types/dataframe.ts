@@ -1,3 +1,5 @@
+import type { Source } from 'blurr/build/main/types';
+
 export type FrequencyValue = { count: number; value: BasicType };
 
 export type HistValue = { count: number; value: [number, number] };
@@ -35,4 +37,11 @@ export interface DataframeProfile {
   summary: DataframeSummary;
   name?: string;
   file_name?: string;
+}
+
+export interface DataframeObject {
+  name?: string;
+  df: Source;
+  profile?: DataframeProfile;
+  updates: number;
 }

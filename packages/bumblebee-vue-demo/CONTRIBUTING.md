@@ -23,7 +23,7 @@ const emit = defineEmits(['change', 'update']);
 type Emits = {
   (e: 'change', id: number): void;
   (e: 'update', value: string): void;
-  (e: 'updateWindow', start: number, stop: number): void;
+  (e: 'updateScroll', start: number, stop: number): void;
 };
 const emit = defineEmits<Emits>();
 </script>

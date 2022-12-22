@@ -3,14 +3,14 @@
     :header="header"
     :data="data"
     :rows-count="rowsCount"
-    @update-window="updateWindow"
+    @update-scroll="updateScroll"
   />
 </template>
 
 <script setup lang="ts">
 import { PropType } from 'vue';
 
-import { Column } from '@/types/profile';
+import { Column } from '@/types/dataframe';
 import { Chunk } from '@/types/table';
 
 const props = defineProps({
@@ -28,14 +28,14 @@ const props = defineProps({
 });
 
 type Emits = {
-  (e: 'updateWindow', start: number, stop: number): void;
+  (e: 'updateScroll', start: number, stop: number): void;
 };
 
 const emit = defineEmits<Emits>();
 
-const updateWindow = (start: number, stop: number) => {
-  console.info('updateWindow', start, stop);
-  return emit('updateWindow', start, stop);
+const updateScroll = (start: number, stop: number) => {
+  console.info('updateScroll', start, stop);
+  return emit('updateScroll', start, stop);
 };
 
 const data = reactiveComputed(() => {

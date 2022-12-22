@@ -143,8 +143,8 @@
 import { mdiTableColumn } from '@mdi/js';
 import { PropType, Ref } from 'vue';
 
+import { Column } from '@/types/dataframe';
 import { TableSelection } from '@/types/operations';
-import { Column } from '@/types/profile';
 import { throttle } from '@/utils';
 import { TYPES_HINTS, TYPES_NAMES } from '@/utils/data-types';
 
@@ -167,7 +167,7 @@ const props = defineProps({
 const selection = inject('selection') as Ref<TableSelection>;
 
 type Emits = {
-  (e: 'updateWindow', start: number, stop: number): void;
+  (e: 'updateScroll', start: number, stop: number): void;
 };
 
 const emit = defineEmits<Emits>();
@@ -239,8 +239,8 @@ const onScroll = throttle(function () {
       (element.scrollTop + element.clientHeight - columnHeaderHeight) /
         rowHeight
     );
-    console.log('updateWindow', start, stop);
-    emit('updateWindow', start, stop);
+    console.log('updateScroll', start, stop);
+    emit('updateScroll', start, stop);
   }
 }, 300);
 
@@ -267,6 +267,10 @@ onMounted(() => {
   console.log('onMounted on Table');
   onScroll();
 });
+
+watch(props.header, onScroll, { deep: true });
+
+watch([props.rowsCount, props.data], onScroll);
 
 let lastColumnClicked: number | null = null;
 

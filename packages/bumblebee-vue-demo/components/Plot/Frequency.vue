@@ -21,7 +21,7 @@
 <script setup lang="ts">
 import PlotBarsBase from './BarsBase.vue';
 
-import { FrequencyValue } from '@/types/profile';
+import { FrequencyValue } from '@/types/dataframe';
 
 type PlotBarsBaseProps = InstanceType<typeof PlotBarsBase>['$props'];
 

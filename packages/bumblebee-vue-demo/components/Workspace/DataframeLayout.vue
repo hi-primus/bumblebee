@@ -3,12 +3,12 @@
   <WorkspaceToolbar />
   <section class="workspace-table overflow-hidden">
     <TableChunks
-      v-if="profile"
+      v-if="dataframeObject?.profile"
       class="overflow-auto"
       :header="header"
       :chunks="completedChunks"
       :rows-count="rowsCount"
-      @update-window="updateWindow"
+      @update-scroll="updateScroll"
     />
   </section>
   <WorkspaceOperations />
@@ -18,7 +18,7 @@
 <script setup lang="ts">
 import { ComputedRef, PropType } from 'vue';
 
-import { Column, DataframeProfile } from '@/types/profile';
+import { Column, DataframeObject } from '@/types/dataframe';
 import { Chunk } from '@/types/table';
 import { optimizeRanges } from '@/utils/table';
 
@@ -32,28 +32,32 @@ const props = defineProps({
 
 // table data
 
-const profile = inject('profile') as ComputedRef<DataframeProfile>;
+const dataframeObject = inject('dataframe') as ComputedRef<DataframeObject>;
 
 const header = computed<Column[]>(() => {
-  if (profile.value?.columns && Object.keys(profile.value.columns)) {
-    return Object.entries(profile.value.columns).map(([title, column]) => {
-      return {
-        title,
-        data_type: column.data_type,
-        stats: column.stats
-      };
-    });
+  if (
+    dataframeObject.value?.profile?.columns &&
+    Object.keys(dataframeObject.value?.profile.columns)
+  ) {
+    return Object.entries(dataframeObject.value?.profile.columns).map(
+      ([title, column]) => {
+        return {
+          title,
+          data_type: column.data_type,
+          stats: column.stats
+        };
+      }
+    );
   }
   return [];
 });
 
 const rowsCount = computed(() => {
-  return profile.value?.summary?.rows_count;
+  return dataframeObject.value?.profile?.summary?.rows_count;
 });
 
-// chunks logic
+// chunks
 
-// uses ref to allow reseting it
 const chunks = ref<Chunk[]>([]);
 
 const completedChunks = computed(() => {
@@ -62,8 +66,8 @@ const completedChunks = computed(() => {
 
 const chunksQueue = ref<[number, number][]>([]);
 
-const updateWindow = function (start: number, stop: number) {
-  console.log('[dataframe] updateWindow', start, stop);
+const updateScroll = function (start: number, stop: number) {
+  console.log('[dataframe] updateScroll', start, stop);
   let range: [number, number] = [
     Math.max(start, 0),
     rowsCount.value ? Math.min(stop, rowsCount.value) : stop
@@ -135,12 +139,14 @@ const _shiftChunksQueue = async function (): Promise<boolean> {
 };
 
 watch(
-  () => profile.value,
+  () => dataframeObject.value,
   () => {
+    console.log('[dataframe] dataframe object changed');
     chunks.value = [];
     chunksQueue.value = [];
     shiftChunksQueue();
-  }
+  },
+  { immediate: true, deep: true }
 );
 </script>
 

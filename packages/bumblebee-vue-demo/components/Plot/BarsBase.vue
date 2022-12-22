@@ -38,8 +38,8 @@ import type { KonvaEventObject } from 'konva/lib/Node';
 import type { Stage } from 'konva/lib/Stage';
 import { PropType, Ref } from 'vue';
 
+import { FrequencyValue, HistValue } from '@/types/dataframe';
 import { TableSelection } from '@/types/operations';
-import { FrequencyValue, HistValue } from '@/types/profile';
 import { stepify } from '@/utils';
 
 const tailwindColors = useTailwindThemeColors();
@@ -131,10 +131,12 @@ if (props.selectable) {
   }
 }
 
+type Countable = FrequencyValue | HistValue | { count: number };
+
 const calculatedMaxVal = computed(() => {
   return (
     props.maxVal ||
-    props.data.reduce(
+    (props.data as Countable[]).reduce(
       (prev, current) => (prev.count > current.count ? prev : current),
       { count: 0 }
     ).count ||

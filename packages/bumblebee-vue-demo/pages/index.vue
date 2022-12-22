@@ -17,6 +17,7 @@
 <script setup lang="ts">
 import type { Client, Source } from 'blurr/build/main/types';
 
+import { DataframeObject } from '@/types/dataframe';
 import {
   isOperation,
   OperationActions,
@@ -25,16 +26,13 @@ import {
   State,
   TableSelection
 } from '@/types/operations';
-import { DataframeProfile } from '@/types/profile';
 import { preliminaryProfile } from '@/utils/blurr';
 
 const blurrPackage = useBlurr();
 
 let blurr: Client;
 
-const dataframes = ref<
-  { name?: string; df?: Source; profile?: DataframeProfile }[]
->([]);
+const dataframes = ref<DataframeObject[]>([]);
 
 const selectedDataframe = ref(-1);
 
@@ -58,12 +56,12 @@ provide('state', state);
 const selection = ref<TableSelection>(null);
 provide('selection', selection);
 
-const profile = computed(() => {
+const dataframe = computed(() => {
   return selectedDataframe.value >= 0
-    ? dataframes.value[selectedDataframe.value].profile
+    ? dataframes.value[selectedDataframe.value]
     : undefined;
 });
-provide('profile', profile);
+provide('dataframe', dataframe);
 
 watch(
   () => state.value,
@@ -104,7 +102,11 @@ const operationActions: OperationActions = {
       payload.df = dataframes.value[selectedDataframe.value].df;
     }
 
-    const result = operation.action(payload);
+    if (operationOptions.usesInputCols) {
+      payload.cols = selection.value?.columns;
+    }
+
+    const result = await operation.action(payload);
 
     console.info('Operation result:', { result, operationOptions });
 
@@ -114,18 +116,29 @@ const operationActions: OperationActions = {
         const newLength = dataframes.value.push({
           name: 'dataset',
           df,
-          profile: await preliminaryProfile(df)
+          profile: await preliminaryProfile(df),
+          updates: 0
         });
         selectedDataframe.value = newLength - 1;
+        console.log(
+          'Creating dataframe:',
+          dataframes.value[selectedDataframe.value]
+        );
       } else {
-        dataframes.value[selectedDataframe.value].df = result;
-        dataframes.value[selectedDataframe.value].profile =
-          await preliminaryProfile(df);
+        const currentDataframe = dataframes.value[selectedDataframe.value];
+        currentDataframe.df = result;
+        currentDataframe.profile = await preliminaryProfile(result);
+        currentDataframe.updates = currentDataframe.updates + 1;
+        console.log('Updating dataframe:', currentDataframe);
+        dataframes.value[selectedDataframe.value] = currentDataframe;
       }
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       df.profile().then((profile: any) => {
         dataframes.value[selectedDataframe.value].profile = profile;
       });
+    } else {
+      // TODO: Handle other types of targets
+      console.info('Operation result:', result);
     }
 
     operationValues.value = {};
@@ -150,8 +163,14 @@ const getChunk = async function (start: number, stop: number) {
     return;
   }
 
+  window.df = df;
+
   const sample = await df
-    .iloc({ target: 'preview_df', lower_bound: start, upper_bound: stop })
+    .iloc({
+      target: 'preview_' + df.name,
+      lower_bound: start,
+      upper_bound: stop
+    })
     .columnsSample();
 
   const chunk = {
@@ -193,7 +212,7 @@ aside {
   grid-area: operations;
 }
 footer {
-  height: 48px;
+  height: 36px;
   grid-area: footer;
 }
 </style>

@@ -1,6 +1,7 @@
 // TODO: combine with operations / use commands instead
 
 import {
+  mdiArrowCollapseHorizontal,
   mdiArrowSplitVertical,
   mdiCodeTags,
   mdiMagnify,
@@ -18,6 +19,7 @@ type ToolbarButtonCreator<TA, TR> = {
   operation?: Operation<TA, TR>;
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type ToolbarButton<TA = any, TR = any> = SomeRequired<
   ToolbarButtonCreator<TA, TR>,
   'name'
@@ -48,6 +50,11 @@ export const toolbarButtons = [
     operation: operations.unnestColumns,
     label: 'Unnest<br/>cols.',
     icon: mdiArrowSplitVertical
+  }),
+  createToolbarButton({
+    operation: operations.nestColumns,
+    label: 'Nest<br/>cols.',
+    icon: mdiArrowCollapseHorizontal
   }),
   {
     name: 'Search',
