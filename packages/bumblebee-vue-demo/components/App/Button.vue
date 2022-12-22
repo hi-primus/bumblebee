@@ -17,7 +17,7 @@
         <template v-if="typeof loading === 'string'">
           {{ loading }}
         </template>
-        <Icon :path="mdiLoading" class="fa-spin" />
+        <Icon :path="mdiLoading" class="animate-spin" />
       </slot>
     </template>
   </component>
