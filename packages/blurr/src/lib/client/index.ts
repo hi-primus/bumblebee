@@ -96,9 +96,9 @@ export function Blurr(options: ClientOptions = {}): Client {
     if (lastOperation && lastOperation.targetType === 'dataframe') {
       const lastParams = paramsQueue[paramsQueue.length - 1];
       if (!('target' in lastParams)) {
-        lastParams.target = generateUniqueVariableName(
-          lastOperation.targetType
-        );
+        lastParams.target =
+          lastParams.source ||
+          generateUniqueVariableName(lastOperation.targetType);
       }
 
       if (!blurr.options.serverOptions.local) {
