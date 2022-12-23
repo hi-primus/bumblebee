@@ -26,7 +26,7 @@ export interface OperationCreator {
   // value is for operations that return a value
   // void is for operations that don't return anything
   targetType?: 'dataframe' | 'value' | 'void';
-  // whether the operation creates a new dataframe (necessary for dataframe operations that return another dataframe) (TODO: implement this)
+  // whether the operation creates a new dataframe (necessary for dataframe operations that return another dataframe)
   createsNew?: boolean;
   // the default source for the operation if none is provided
   defaultSource?: string;
@@ -45,7 +45,7 @@ export interface OperationCreator {
 
 type OperationInterface = Pick<
   OperationCreator,
-  'name' | 'sourceType' | 'targetType' | 'initialize'
+  'name' | 'sourceType' | 'targetType' | 'createsNew' | 'initialize'
 >;
 
 export type ArgsType = OperationArgs<OperationCompatible>;
