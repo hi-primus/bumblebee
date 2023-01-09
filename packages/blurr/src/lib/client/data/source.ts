@@ -125,12 +125,20 @@ export function Source(
     }
     return _persist(result);
   };
-  (source as FutureSource).then = (onfulfilled) => {
-    const result = source.persist();
-    if (!isPromiseLike(result)) {
-      return new Promise(() => onfulfilled(result));
+  (source as FutureSource).then = (onfulfilled, onrejected) => {
+    try {
+      const result = source.persist();
+      if (!isPromiseLike(result)) {
+        const fulfilledResult = onfulfilled(result);
+        return new Promise(() => fulfilledResult);
+      }
+      return result.then(onfulfilled).catch(onrejected);
+    } catch (error) {
+      if (onrejected) {
+        return onrejected(error);
+      }
+      throw error;
     }
-    return result.then(onfulfilled);
   };
 
   return source;

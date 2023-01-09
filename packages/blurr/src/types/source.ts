@@ -29,5 +29,9 @@ export interface Source extends SourceFunctions {
 }
 
 export interface FutureSource extends Source {
-  then: (onfulfilled?: (result: Source) => Source) => Promise<Source>;
+  then: (
+    onfulfilled?: (result: Source) => Source,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    onrejected?: (reason: any) => any
+  ) => Promise<Source>;
 }
