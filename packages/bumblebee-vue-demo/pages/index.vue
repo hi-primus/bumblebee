@@ -145,6 +145,8 @@ const executeOperation = async (
 const operationActions: OperationActions = {
   submitOperation: async () => {
     try {
+      appStatus.value = 'busy';
+
       console.info('Operation payload:', JSON.stringify(operationValues.value));
 
       const operation = isOperation(state.value) ? state.value : null;
@@ -180,8 +182,10 @@ const operationActions: OperationActions = {
       operationValues.value = {};
 
       state.value = 'operations';
+      appStatus.value = 'ready';
     } catch (err) {
       console.error('Error executing operation', err);
+      appStatus.value = 'ready'; // 'error';
     }
   },
   cancelOperation: () => {
