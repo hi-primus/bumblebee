@@ -34,17 +34,7 @@
     "vue/html-self-closing": "off",
     "vue/max-attributes-per-line": 1,
     "vue/first-attribute-linebreak": "error",
-    "vue/html-indent": [
-      "error",
-      2,
-      {
-        "attribute": 1,
-        "baseIndent": 1,
-        "closeBracket": 0,
-        "alignAttributesVertically": true,
-        "ignores": []
-      }
-    ],
+    "vue/html-indent": "off",
     "space-before-function-paren": "off",
     "import/order": [
       "error",
