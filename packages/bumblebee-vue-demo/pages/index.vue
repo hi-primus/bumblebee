@@ -26,6 +26,7 @@ import {
   State,
   TableSelection
 } from '@/types/operations';
+import { AppStatus } from '@/types/workspace';
 import { preliminaryProfile } from '@/utils/blurr';
 
 const blurrPackage = useBlurr();
@@ -35,6 +36,9 @@ let blurr: Client;
 const dataframes = ref<DataframeObject[]>([]);
 
 const selectedDataframe = ref(-1);
+
+const appStatus = ref<AppStatus>('loading');
+provide('app-status', appStatus);
 
 onMounted(async () => {
   const { Blurr } = blurrPackage;
@@ -47,6 +51,9 @@ onMounted(async () => {
   window.blurr = blurr;
   await blurr.backendServer.donePromise;
   const result = await blurr.runCode("'successfully loaded'");
+  if (appStatus.value === 'loading') {
+    appStatus.value = 'ready';
+  }
   console.info('Initialization result:', result);
 });
 
