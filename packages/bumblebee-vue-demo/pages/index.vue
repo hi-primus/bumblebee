@@ -80,77 +80,109 @@ watch(
 const operationValues = ref<Payload>({});
 provide('operation-values', operationValues);
 
+const handleOperationResult = async (result: unknown, payload: Payload) => {
+  if (payload.options.targetType === 'dataframe') {
+    const df = result as Source;
+    if (payload.options.saveToNewDataframe) {
+      const newLength = dataframes.value.push({
+        name: 'dataset',
+        df,
+        profile: await preliminaryProfile(df),
+        updates: 0
+      });
+      selectedDataframe.value = newLength - 1;
+      console.log(
+        'Creating dataframe:',
+        dataframes.value[selectedDataframe.value]
+      );
+    } else {
+      const currentDataframe = dataframes.value[selectedDataframe.value];
+      currentDataframe.df = df;
+      currentDataframe.profile = await preliminaryProfile(df);
+      currentDataframe.updates = currentDataframe.updates + 1;
+      console.log('Updating dataframe:', currentDataframe);
+      dataframes.value[selectedDataframe.value] = currentDataframe;
+    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    df.profile().then((profile: any) => {
+      dataframes.value[selectedDataframe.value].profile = profile;
+    });
+  } else {
+    // TODO: Handle other types of targets
+    console.info('Operation result:', result);
+  }
+};
+
+const executeOperation = async (
+  data: ArrayOr<{ operation: unknown; payload: Payload }>
+) => {
+  if (!Array.isArray(data)) {
+    data = [data];
+  }
+
+  let previousPayload: Payload | null = null;
+  let result: unknown;
+
+  for (let i = 0; i < data.length; i++) {
+    const { operation, payload } = data[i];
+
+    if (!isOperation(operation)) {
+      throw new Error('Invalid operation', { cause: operation });
+    }
+    result = await operation.action(payload);
+    console.info('Operation result:', { result, options: payload.options });
+
+    previousPayload = payload;
+  }
+
+  if (previousPayload === null) {
+    throw new Error('Invalid payload on operation execution');
+  }
+
+  return await handleOperationResult(result, previousPayload);
+};
+
 const operationActions: OperationActions = {
   submitOperation: async () => {
-    console.info('Operation payload:', JSON.stringify(operationValues.value));
+    try {
+      console.info('Operation payload:', JSON.stringify(operationValues.value));
 
-    const operation = isOperation(state.value) ? state.value : null;
+      const operation = isOperation(state.value) ? state.value : null;
 
-    if (!operation) {
-      console.error('Invalid operation', state.value);
-      return;
-    }
-
-    const { options, ...operationPayload } = operationValues.value;
-
-    const operationOptions: OperationOptions = Object.assign(
-      {},
-      options,
-      operation.defaultOptions
-    );
-
-    const payload: Payload = {
-      blurr,
-      options: operationOptions,
-      ...operationPayload
-    };
-
-    if (operationOptions.usesInputDataframe) {
-      payload.df = dataframes.value[selectedDataframe.value].df;
-    }
-
-    if (operationOptions.usesInputCols) {
-      payload.cols = selection.value?.columns;
-    }
-
-    const result = await operation.action(payload);
-
-    console.info('Operation result:', { result, operationOptions });
-
-    if (operationOptions.targetType === 'dataframe') {
-      const df = result as Source;
-      if (operationOptions.saveToNewDataframe) {
-        const newLength = dataframes.value.push({
-          name: 'dataset',
-          df,
-          profile: await preliminaryProfile(df),
-          updates: 0
-        });
-        selectedDataframe.value = newLength - 1;
-        console.log(
-          'Creating dataframe:',
-          dataframes.value[selectedDataframe.value]
-        );
-      } else {
-        const currentDataframe = dataframes.value[selectedDataframe.value];
-        currentDataframe.df = result;
-        currentDataframe.profile = await preliminaryProfile(result);
-        currentDataframe.updates = currentDataframe.updates + 1;
-        console.log('Updating dataframe:', currentDataframe);
-        dataframes.value[selectedDataframe.value] = currentDataframe;
+      if (!operation) {
+        throw new Error('Invalid operation', { cause: state.value });
       }
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      df.profile().then((profile: any) => {
-        dataframes.value[selectedDataframe.value].profile = profile;
-      });
-    } else {
-      // TODO: Handle other types of targets
-      console.info('Operation result:', result);
+
+      const { options, ...operationPayload } = operationValues.value;
+
+      const operationOptions: OperationOptions = Object.assign(
+        {},
+        options,
+        operation.defaultOptions
+      );
+
+      const payload: Payload = {
+        blurr,
+        options: operationOptions,
+        ...operationPayload
+      };
+
+      if (operationOptions.usesInputDataframe) {
+        payload.df = dataframes.value[selectedDataframe.value].df;
+      }
+
+      if (operationOptions.usesInputCols) {
+        payload.cols = selection.value?.columns;
+      }
+
+      await executeOperation({ operation, payload });
+
+      operationValues.value = {};
+
+      state.value = 'operations';
+    } catch (err) {
+      console.error('Error executing operation', err);
     }
-
-    operationValues.value = {};
-
-    state.value = 'operations';
   },
   cancelOperation: () => {
     console.info('Operation cancelled');
