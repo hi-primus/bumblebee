@@ -22,6 +22,7 @@ import {
   isOperation,
   OperationActions,
   OperationOptions,
+  OperationPayload,
   Payload,
   State,
   TableSelection
@@ -77,6 +78,9 @@ watch(
   }
 );
 
+const operations = ref<OperationPayload[]>([]);
+provide('operations', operations);
+
 const operationValues = ref<Payload>({});
 provide('operation-values', operationValues);
 
@@ -86,6 +90,7 @@ const handleOperationResult = async (result: unknown, payload: Payload) => {
     if (payload.options.saveToNewDataframe) {
       const newLength = dataframes.value.push({
         name: 'dataset',
+        sourceId: payload.options.sourceId,
         df,
         profile: await preliminaryProfile(df),
         updates: 0
@@ -113,12 +118,17 @@ const handleOperationResult = async (result: unknown, payload: Payload) => {
   }
 };
 
-const executeOperation = async (
-  data: ArrayOr<{ operation: unknown; payload: Payload }>
-) => {
-  if (!Array.isArray(data)) {
-    data = [data];
-  }
+const checkSources = (data: OperationPayload[]) => {
+  const sources = data.map(operation => operation.payload.options.sourceId);
+  dataframes.value = dataframes.value.filter(
+    dataframe => !dataframe.sourceId || sources.includes(dataframe.sourceId)
+  );
+};
+
+const executeOperations = async () => {
+  const data = operations.value;
+
+  checkSources(data);
 
   let previousPayload: Payload | null = null;
   let result: unknown;
@@ -129,17 +139,15 @@ const executeOperation = async (
     if (!isOperation(operation)) {
       throw new Error('Invalid operation', { cause: operation });
     }
-    result = await operation.action(payload);
+    result = await operation.action({ ...payload, blurr });
     console.info('Operation result:', { result, options: payload.options });
 
     previousPayload = payload;
   }
 
-  if (previousPayload === null) {
-    throw new Error('Invalid payload on operation execution');
+  if (previousPayload !== null) {
+    return await handleOperationResult(result, previousPayload);
   }
-
-  return await handleOperationResult(result, previousPayload);
 };
 
 const operationActions: OperationActions = {
@@ -151,33 +159,39 @@ const operationActions: OperationActions = {
 
       const operation = isOperation(state.value) ? state.value : null;
 
-      if (!operation) {
-        throw new Error('Invalid operation', { cause: state.value });
+      if (operation) {
+        const { options, ...operationPayload } = operationValues.value;
+
+        const operationOptions: OperationOptions = Object.assign(
+          {},
+          options,
+          operation.defaultOptions
+        );
+
+        const payload: Payload = {
+          options: operationOptions,
+          ...operationPayload
+        };
+
+        if (operationOptions.saveToNewDataframe) {
+          payload.options.sourceId =
+            dataframes.value.length.toString() + (+new Date()).toString();
+        }
+
+        if (operationOptions.usesInputDataframe) {
+          const currentDataframe = dataframes.value[selectedDataframe.value];
+          payload.df = currentDataframe.df;
+          payload.options.sourceId = currentDataframe.sourceId;
+        }
+
+        if (operationOptions.usesInputCols) {
+          payload.cols = selection.value?.columns;
+        }
+
+        operations.value.push({ operation, payload });
       }
 
-      const { options, ...operationPayload } = operationValues.value;
-
-      const operationOptions: OperationOptions = Object.assign(
-        {},
-        options,
-        operation.defaultOptions
-      );
-
-      const payload: Payload = {
-        blurr,
-        options: operationOptions,
-        ...operationPayload
-      };
-
-      if (operationOptions.usesInputDataframe) {
-        payload.df = dataframes.value[selectedDataframe.value].df;
-      }
-
-      if (operationOptions.usesInputCols) {
-        payload.cols = selection.value?.columns;
-      }
-
-      await executeOperation({ operation, payload });
+      await executeOperations();
 
       operationValues.value = {};
 

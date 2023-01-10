@@ -42,6 +42,7 @@ export interface DataframeProfile {
 export interface DataframeObject {
   name?: string;
   df: Source;
+  sourceId: string;
   profile?: DataframeProfile;
   updates: number;
 }

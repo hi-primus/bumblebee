@@ -22,6 +22,7 @@ export interface OperationOptions {
   usesOutputCols?: boolean;
   usesInputDataframe?: boolean;
   saveToNewDataframe?: boolean;
+  sourceId?: string;
   targetType: 'dataframe' | 'value';
 }
 
@@ -58,6 +59,8 @@ export type ColumnDetailState = {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type Payload = Record<string, any>;
+
+export type OperationPayload = { operation: Operation; payload: Payload };
 
 export type State = Operation | ColumnDetailState | 'operations' | null;
 
