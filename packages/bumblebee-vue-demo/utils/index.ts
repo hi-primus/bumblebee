@@ -1,3 +1,5 @@
+import { isObject } from '@/types/common';
+
 export const throttle = (
   func: (...args: unknown[]) => unknown,
   limit: number | ((...args: Arguments<typeof func>) => number)
@@ -26,4 +28,24 @@ export const throttle = (
 
 export const stepify = (a: number, b: number, f = Math.round) => {
   return f(a / b) * b;
+};
+
+export const compareObjects = (a: unknown, b: unknown): boolean => {
+  if (a === b) {
+    return true;
+  }
+  if (typeof a !== typeof b) {
+    return false;
+  }
+  if (!isObject(a) || !isObject(b)) {
+    return false;
+  }
+  const aKeys = Object.keys(a);
+  const bKeys = Object.keys(b);
+  if (aKeys.length !== bKeys.length) {
+    return false;
+  }
+  return aKeys.every(key => {
+    return key in b && compareObjects(a[key], b[key]);
+  });
 };

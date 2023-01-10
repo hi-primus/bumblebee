@@ -29,6 +29,7 @@ import {
 } from '@/types/operations';
 import { AppStatus } from '@/types/workspace';
 import { preliminaryProfile } from '@/utils/blurr';
+import { compareObjects } from '@/utils';
 
 const blurrPackage = useBlurr();
 
@@ -77,6 +78,8 @@ watch(
     operationValues.value = {};
   }
 );
+
+const executedOperations = ref<OperationPayload[]>([]);
 
 const operations = ref<OperationPayload[]>([]);
 provide('operations', operations);
@@ -134,6 +137,13 @@ const executeOperations = async () => {
   let result: unknown;
 
   for (let i = 0; i < data.length; i++) {
+    // Skip operations that have already been executed
+    if (executedOperations.value.length > i) {
+      if (compareObjects(data[i], executedOperations.value[i])) {
+        continue;
+      }
+    }
+
     const { operation, payload } = data[i];
 
     if (!isOperation(operation)) {
@@ -144,6 +154,8 @@ const executeOperations = async () => {
 
     previousPayload = payload;
   }
+
+  executedOperations.value = [...data];
 
   if (previousPayload !== null) {
     return await handleOperationResult(result, previousPayload);
