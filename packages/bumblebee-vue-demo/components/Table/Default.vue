@@ -184,16 +184,20 @@ const rowHeight = 24;
 
 const safeRowsCount = computed(() => {
   if (props.rowsCount) {
-    console.log('[TABLE] Setting rows count to', props.rowsCount);
+    console.log('[DEBUG][TABLE] Setting rows count to', props.rowsCount);
     return props.rowsCount;
   }
   const keys = Object.keys(props.data);
   if (keys.length) {
     const count = +keys[keys.length - 1];
-    console.log('[TABLE] Setting rows count to', count, '(using table data)');
+    console.log(
+      '[DEBUG][TABLE] Setting rows count to',
+      count,
+      '(using table data)'
+    );
     return count;
   }
-  console.log('[TABLE] Setting rows count to 0 by defailt');
+  console.log('[DEBUG][TABLE] Setting rows count to 0 by defailt');
   return 0;
 });
 
@@ -239,7 +243,6 @@ const onScroll = throttle(function () {
       (element.scrollTop + element.clientHeight - columnHeaderHeight) /
         rowHeight
     );
-    console.log('updateScroll', start, stop);
     emit('updateScroll', start, stop);
   }
 }, 300);
@@ -264,7 +267,6 @@ const getValue = (value: unknown): string => {
 };
 
 onMounted(() => {
-  console.log('onMounted on Table');
   onScroll();
 });
 

@@ -98,7 +98,6 @@ export const operations = {
       cols: Cols;
       separator: string;
     }): Source => {
-      console.log('nest', payload);
       return payload.df.cols.nest({
         cols: payload.cols,
         separator: payload.separator

@@ -67,7 +67,6 @@ const completedChunks = computed(() => {
 const chunksQueue = ref<[number, number][]>([]);
 
 const updateScroll = function (start: number, stop: number) {
-  console.log('[dataframe] updateScroll', start, stop);
   let range: [number, number] = [
     Math.max(start, 0),
     rowsCount.value ? Math.min(stop, rowsCount.value) : stop
@@ -92,8 +91,6 @@ const updateScroll = function (start: number, stop: number) {
     ];
   }
 
-  console.log(JSON.stringify({ chunksQueue: chunksQueue.value }));
-
   return shiftChunksQueue();
 };
 
@@ -111,10 +108,8 @@ const shiftChunksQueue = async function () {
 };
 
 const _shiftChunksQueue = async function (): Promise<boolean> {
-  console.log('chunksQueue length', chunksQueue.value.length);
   if (chunksQueue.value.length) {
     let [start, stop] = chunksQueue.value[0];
-    console.log('[dataframe] shifting', start, stop);
     chunksQueue.value = chunksQueue.value.slice(1);
     start = Math.max(start, 0);
     stop = rowsCount.value ? Math.min(stop, rowsCount.value) : stop;
@@ -126,12 +121,10 @@ const _shiftChunksQueue = async function (): Promise<boolean> {
       };
       const index = chunks.value.length;
       chunks.value[index] = shallowChunk;
-      // console.log('chunks.value', JSON.stringify(chunks.value));
       const chunk = await props.getChunk(start, stop);
       if (chunk) {
         chunks.value[index] = chunk;
       }
-      // console.log('chunks.value', JSON.stringify(chunks.value));
     }
     return _shiftChunksQueue();
   }
@@ -141,7 +134,6 @@ const _shiftChunksQueue = async function (): Promise<boolean> {
 watch(
   () => dataframeObject.value,
   () => {
-    console.log('[dataframe] dataframe object changed');
     chunks.value = [];
     chunksQueue.value = [];
     shiftChunksQueue();

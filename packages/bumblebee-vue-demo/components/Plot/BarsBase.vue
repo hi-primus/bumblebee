@@ -193,7 +193,6 @@ onMounted(() => {
 });
 
 watch(selection, () => {
-  console.log('selection changed', selection?.value);
   if (props.selectable) {
     if (selection?.value?.columns[0] !== props.columnName) {
       bins.value = bins.value.map(e => {
@@ -227,11 +226,9 @@ const removeMouseUpEventListener = () => {
 
 const fitIntoParent = async () => {
   const container = konva.value?.getStage()?.container();
-  window.stage = konva.value?.getStage();
   const _totalWidth = container?.offsetWidth;
 
   if (!_totalWidth) {
-    console.log({ container, konva: konva.value, _totalWidth });
     await new Promise(resolve => setTimeout(() => resolve(true), 100));
     fitIntoParent();
   } else {
@@ -302,7 +299,6 @@ const onMouseUp = () => {
   if (selection) {
     if (_s !== selection?.value?.indices) {
       if (props.selectionType === 'ranges') {
-        console.log('update:selected ranges', _s);
         selection.value = {
           columns: [props.columnName],
           ranges: _s.map(e => props.data[e].value) as [number, number][],
@@ -310,7 +306,6 @@ const onMouseUp = () => {
           indices: _s
         };
       } else {
-        console.log('update:selected values', _s);
         selection.value = {
           columns: [props.columnName],
           ranges: null,

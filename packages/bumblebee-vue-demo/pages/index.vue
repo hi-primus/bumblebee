@@ -100,7 +100,7 @@ const handleOperationResult = async (result: unknown, payload: Payload) => {
       });
       selectedDataframe.value = newLength - 1;
       console.log(
-        'Creating dataframe:',
+        '[DEBUG] Creating dataframe:',
         dataframes.value[selectedDataframe.value]
       );
     } else {
@@ -108,7 +108,7 @@ const handleOperationResult = async (result: unknown, payload: Payload) => {
       currentDataframe.df = df;
       currentDataframe.profile = await preliminaryProfile(df);
       currentDataframe.updates = currentDataframe.updates + 1;
-      console.log('Updating dataframe:', currentDataframe);
+      console.log('[DEBUG] Updating dataframe:', currentDataframe);
       dataframes.value[selectedDataframe.value] = currentDataframe;
     }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
