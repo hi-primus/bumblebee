@@ -3,10 +3,12 @@
     <div
       :style="attrStyle"
       :class="attrClass"
-      class="popup w-full h-screen absolute top-0 left-0 z-10 bg-black/50 flex items-center justify-center"
+      class="popup w-full h-screen absolute top-0 left-0 z-10 bg-black/30 flex items-center justify-center"
+      @click="emit('close')"
     >
       <div
         class="popup-window relative bg-white rounded-md min-w-[300px] max-w-[calc(100%-64px)] max-h-[calc(100vh-5rem)]"
+        @click.stop
       >
         <div v-if="title || closable" class="popup-header flex items-center">
           <h3 v-if="title" class="text-lg font-medium text-text relative">
