@@ -13,6 +13,7 @@ export default {
       transparent: 'transparent',
       current: 'currentColor',
       white: '#ffffff',
+      black: '#000000',
       primary: {
         darkest: '#00588f',
         darker: '#006bad',

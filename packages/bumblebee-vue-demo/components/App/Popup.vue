@@ -1,23 +1,28 @@
 <template>
   <Teleport to="body">
     <div
-      class="w-full h-screen absolute top-0 left-0 z-10 bg-black/80 flex items-center justify-center"
+      :style="attrStyle"
+      :class="attrClass"
+      class="popup w-full h-screen absolute top-0 left-0 z-10 bg-black/50 flex items-center justify-center"
     >
       <div
-        class="relative bg-gray-50 rounded-lg w-120 p-5 border-2 border-black max-h-[calc(100vh-5rem)]"
-        :class="{
-          'pt-8': closable
-        }"
+        class="popup-window relative bg-white rounded-md min-w-[300px] max-w-[calc(100%-64px)] max-h-[calc(100vh-5rem)]"
       >
-        <AppButton
-          v-if="closable"
-          class="absolute right-3 top-3"
-          variant="roundedIcon"
-          @click="emit('close')"
-        >
-          <Icon :path="mdiClose" />
-        </AppButton>
-        <slot :close="() => emit('close')"> </slot>
+        <div v-if="title || closable" class="popup-header flex items-center">
+          <h3 v-if="title" class="text-lg font-medium text-text relative">
+            {{ title }}
+          </h3>
+          <AppButton
+            v-if="closable"
+            class="btn-icon btn-layout-invisible btn-color-text ml-auto mr-[-7px]"
+            @click="() => emit('close')"
+          >
+            <Icon :path="mdiClose" />
+          </AppButton>
+        </div>
+        <div class="min-h-[48px]">
+          <slot :close="() => emit('close')"></slot>
+        </div>
       </div>
     </div>
   </Teleport>
@@ -26,11 +31,17 @@
 <script setup lang="ts">
 import { mdiClose } from '@mdi/js';
 
+const { class: attrClass, style: attrStyle } = useAttrs();
+
 defineProps({
   closable: {
     type: Boolean,
     default: true
   },
+  title: {
+    type: String,
+    default: ''
+  }
 });
 
 const emit = defineEmits(['close']);

@@ -5,6 +5,7 @@
 @layer components {
   @import 'fields';
   @import 'btn';
+  @import 'popup';
   .ellipsis {
     white-space: nowrap;
     overflow: hidden;

@@ -84,7 +84,7 @@
         >
           <div
             v-if="options.length === 0 && search !== ''"
-            class="relative cursor-default select-none py-2 px-4 text-gray-700"
+            class="relative cursor-default select-none py-2 px-4 text-text-lighter"
           >
             No results found
           </div>
