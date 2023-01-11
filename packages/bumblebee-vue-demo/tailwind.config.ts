@@ -59,7 +59,7 @@ export default {
         darker: '#101419',
         dark: '#1d2025',
         DEFAULT: '#24282e',
-        light: '#666a70',
+        light: '#45494f',
         lighter: '#838891',
         lightest: '#a2a7ae',
         alpha: '#01040ada'
