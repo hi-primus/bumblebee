@@ -61,7 +61,8 @@ export const operations = {
         label: 'Url',
         type: 'string'
       }
-    ]
+    ],
+    shortcut: 'ff'
   }),
   unnestColumns: createOperation({
     name: 'Unnest columns',
@@ -85,7 +86,8 @@ export const operations = {
         label: 'Separator',
         type: 'string'
       }
-    ]
+    ],
+    shortcut: 'cu'
   }),
   nestColumns: createOperation({
     name: 'Nest columns',
@@ -109,6 +111,7 @@ export const operations = {
         label: 'Separator',
         type: 'string'
       }
-    ]
+    ],
+    shortcut: 'cn'
   })
 };

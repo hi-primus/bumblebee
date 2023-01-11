@@ -32,6 +32,7 @@ export interface OperationCreator<TA, TR> {
   fields?: Field[];
   defaultOptions?: Partial<OperationOptions>;
   action: (payload: TA) => TR;
+  shortcut?: string;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
