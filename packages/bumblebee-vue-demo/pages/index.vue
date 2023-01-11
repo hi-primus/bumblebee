@@ -1,6 +1,9 @@
 <template>
   <NuxtLayout>
-    <div class="workspace-container">
+    <div
+      class="workspace-container"
+      :class="{ 'hide-operations': !showSidebar }"
+    >
       <Tabs
         v-model:selected="selectedDataframe"
         :tabs="dataframes.map(({ name }) => ({ label: name }))"
@@ -28,8 +31,8 @@ import {
   TableSelection
 } from '@/types/operations';
 import { AppStatus } from '@/types/workspace';
-import { preliminaryProfile } from '@/utils/blurr';
 import { compareObjects } from '@/utils';
+import { preliminaryProfile } from '@/utils/blurr';
 
 const blurrPackage = useBlurr();
 
@@ -41,6 +44,9 @@ const selectedDataframe = ref(-1);
 
 const appStatus = ref<AppStatus>('loading');
 provide('app-status', appStatus);
+
+const showSidebar = ref(false);
+provide('show-sidebar', showSidebar);
 
 onMounted(async () => {
   const { Blurr } = blurrPackage;
@@ -258,14 +264,24 @@ const getChunk = async function (start: number, stop: number) {
   width: 100vw;
   display: grid;
   grid-template-columns: 1fr minmax(180px, 420px);
-  grid-template-rows: min-content min-content 1fr min-content;
+  grid-template-rows: min-content 1fr min-content;
   gap: 0px 0px;
   grid-auto-flow: row;
   grid-template-areas:
-    'tabs tabs'
-    'toolbar toolbar'
+    'tabs toolbar'
     'table operations'
     'footer footer';
+}
+
+.hide-operations {
+  grid-template-areas:
+    'tabs toolbar'
+    'table table'
+    'footer footer';
+
+  aside {
+    display: none;
+  }
 }
 
 .bumblebee-tabs {

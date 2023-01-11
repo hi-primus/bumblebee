@@ -131,6 +131,14 @@
         <AppButton class="btn-color-text btn-icon btn-rounded">
           <Icon :path="mdiTrashCan" />
         </AppButton>
+        <AppButton class="btn-color-text btn-icon btn-layout-invisible">
+          <Icon :path="mdiTrashCan" />
+        </AppButton>
+        <AppButton
+          class="btn-color-text btn-icon btn-layout-invisible btn-size-small"
+        >
+          <Icon :path="mdiTrashCan" />
+        </AppButton>
         <!-- small -->
       </div>
       <div class="flex flex-wrap gap-4 px-8 py-2">

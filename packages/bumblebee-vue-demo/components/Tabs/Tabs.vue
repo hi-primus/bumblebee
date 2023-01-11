@@ -1,6 +1,6 @@
 <template>
   <section
-    class="bumblebee-tabs min-h-[48px] w-full px-6 overflow-hidden text-text-light bg-white border-line border-b text-sm font-sans font-medium"
+    class="bumblebee-tabs min-h-[48px] w-full px-6 overflow-hidden text-text-light bg-white text-sm font-sans font-medium"
   >
     <ul class="h-12 absolute flex">
       <li

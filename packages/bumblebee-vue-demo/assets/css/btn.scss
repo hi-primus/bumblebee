@@ -26,6 +26,14 @@
     --button-highlight-color: theme('colors.text.lighter');
   }
 
+  &.btn-color-text-light {
+    --button-text-color: theme('colors.white');
+    --button-color: theme('colors.text.lighter');
+    --button-hover-color: theme('colors.text.lighter');
+    --button-active-color: theme('colors.text.lightest');
+    --button-highlight-color: theme('colors.text.lightest');
+  }
+
   &.btn-color-error {
     --button-text-color: theme('colors.white');
     --button-color: theme('colors.error.dark');
