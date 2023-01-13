@@ -80,7 +80,7 @@
         @after-leave="search = ''"
       >
         <ComboboxOptions
-          class="absolute z-1 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg sm:text-sm"
+          class="absolute z-[3] mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg sm:text-sm"
         >
           <div
             v-if="options.length === 0 && search !== ''"
