@@ -68,6 +68,7 @@ export const operations = [
   createOperation({
     key: 'unnestColumns',
     name: 'Unnest columns',
+    alias: 'Split cols',
     defaultOptions: {
       usesInputCols: true,
       usesInputDataframe: true
@@ -94,6 +95,7 @@ export const operations = [
   createOperation({
     key: 'nestColumns',
     name: 'Nest columns',
+    alias: 'Unsplit cols',
     defaultOptions: {
       usesInputCols: true,
       usesInputDataframe: true
