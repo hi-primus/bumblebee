@@ -9,15 +9,16 @@
       <AppInput
         ref="searchOperationElement"
         v-model="searchOperation"
+        class="mb-2"
         placeholder="Select a command"
         @keydown="handleKeyDownSearch"
       />
-      <ul class="flex flex-col gap-2 pt-2">
+      <ul class="operation-items flex flex-col gap-2">
         <li
           v-for="operation in recentOperations"
           :key="operation.key"
           ref="operationElements"
-          class="flex items-center gap-2 px-4 py-2 cursor-pointer rounded focus:bg-primary-highlight hover:bg-primary-highlight focus:outline-none justify-between"
+          class="operation-item flex items-center justify-between gap-2 px-4 py-2 cursor-pointer pointer-events-auto rounded focus:bg-primary-highlight hover:bg-primary-highlight focus:outline-none"
           :data-operation-key="operation.key"
           tabindex="0"
           role="option"
@@ -40,7 +41,7 @@
           v-for="operation in notRecentOperations"
           :key="operation.key"
           ref="operationElements"
-          class="flex items-center gap-2 px-4 py-2 cursor-pointer rounded focus:bg-primary-highlight hover:bg-primary-highlight focus:outline-none justify-between"
+          class="operation-item flex items-center justify-between gap-2 px-4 py-2 cursor-pointer pointer-events-auto rounded focus:bg-primary-highlight hover:bg-primary-highlight focus:outline-none"
           tabindex="0"
           :data-operation-key="operation.key"
           role="option"
@@ -300,3 +301,9 @@ onUnmounted(() => {
   document.removeEventListener('keyup', onKeyUp);
 });
 </script>
+
+<style lang="scss">
+.operation-items:not(:focus-within):not(:hover) .operation-item:first-child {
+  @apply bg-primary-highlight;
+}
+</style>
