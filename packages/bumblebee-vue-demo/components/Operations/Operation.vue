@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-col px-2 pt-5 gap-5 bg-red">
+  <div ref="operationElement" class="flex flex-col px-2 pt-5 gap-5 bg-red">
     <AppAutocomplete
       v-if="options?.usesInputCols"
       v-model="columns"
@@ -71,6 +71,8 @@ const { submitOperation, cancelOperation } = inject(
   'operation-actions'
 ) as OperationActions;
 
+const operationElement = ref<HTMLElement | null>(null);
+
 const status = ref<'' | 'submitting' | 'cancelling'>('');
 
 const submit = async () => {
@@ -112,5 +114,19 @@ const options = computed(() => {
     operation.value.defaultOptions || {},
     { targetType: 'dataframe' }
   );
+});
+
+onMounted(() => {
+  if (!operationElement.value) {
+    return;
+  }
+
+  const input = operationElement.value.querySelector(
+    'input, textarea'
+  ) as HTMLInputElement;
+
+  if (input) {
+    input.focus();
+  }
 });
 </script>
