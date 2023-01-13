@@ -27,7 +27,9 @@ export interface OperationOptions {
 }
 
 export interface OperationCreator<TA, TR> {
+  key: string;
   name: string;
+  alias?: string;
   description?: string;
   fields?: Field[];
   defaultOptions?: Partial<OperationOptions>;

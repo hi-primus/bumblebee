@@ -46,8 +46,9 @@ const createOperation = <TA extends Record<string, unknown>, TR>(
   return operation;
 };
 
-export const operations = {
-  loadFromUrl: createOperation({
+export const operations = [
+  createOperation({
+    key: 'loadFromUrl',
     name: 'Load from url',
     defaultOptions: {
       saveToNewDataframe: true
@@ -64,7 +65,8 @@ export const operations = {
     ],
     shortcut: 'ff'
   }),
-  unnestColumns: createOperation({
+  createOperation({
+    key: 'unnestColumns',
     name: 'Unnest columns',
     defaultOptions: {
       usesInputCols: true,
@@ -89,7 +91,8 @@ export const operations = {
     ],
     shortcut: 'cu'
   }),
-  nestColumns: createOperation({
+  createOperation({
+    key: 'nestColumns',
     name: 'Nest columns',
     defaultOptions: {
       usesInputCols: true,
@@ -114,4 +117,4 @@ export const operations = {
     ],
     shortcut: 'cn'
   })
-};
+];
