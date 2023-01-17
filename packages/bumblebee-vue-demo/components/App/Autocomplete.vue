@@ -96,7 +96,7 @@
           <ComboboxOption
             v-for="(option, index) in filteredOptions"
             :key="index"
-            v-slot="{ selectedOption, active }"
+            v-slot="{ selected: selectedOption, active }"
             as="template"
             :value="option"
             :disabled="option.disabled"
@@ -113,8 +113,6 @@
               <span
                 class="block truncate"
                 :class="{
-                  'font-medium': selectedOption,
-                  'font-normal': !selectedOption,
                   'opacity-50': option.disabled
                 }"
               >
@@ -237,7 +235,7 @@ watch(
   () => search.value,
   (value, oldValue) => {
     emit('update:search', value, oldValue);
-    if (value === '' && searchInput.value?.el?.value !== '') {
+    if (props.multiple && value === '' && searchInput.value?.el?.value !== '') {
       searchInput.value.el.value = '';
     }
   }

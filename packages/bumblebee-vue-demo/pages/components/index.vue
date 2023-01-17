@@ -254,9 +254,8 @@
         >
         </AppAutocomplete>
         <AppAutocomplete
-          v-model="selectedColumns"
+          v-model="selectedColumn"
           :options="columns"
-          multiple
           label="label"
           placeholder="Columns"
           name="input-size-condensed"
@@ -297,6 +296,7 @@ const columns = ref([
   'country'
 ]);
 const selectedColumns = ref<string[]>([]);
+const selectedColumn = ref<string>('');
 
 const columnValues = [
   { value: 1, count: 10 },
