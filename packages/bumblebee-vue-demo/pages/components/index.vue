@@ -1,13 +1,19 @@
 <template>
   <NuxtLayout>
-    <div class="components-container">
-      <div class="flex flex-wrap gap-4 px-8 py-2 min-w-[200px]">
+    <div class="components-container pb-[500px]">
+      <div
+        class="flex flex-wrap gap-4 px-8 py-2 justify-start items-start min-w-[200px]"
+      >
         {{ selection || 'no selection' }}
       </div>
-      <div class="flex flex-wrap gap-4 px-8 py-2 min-w-[200px]">
+      <div
+        class="flex flex-wrap gap-4 px-8 py-2 justify-start items-start min-w-[200px]"
+      >
         {{ hovered || 'no hover' }}
       </div>
-      <div class="flex flex-wrap gap-4 px-8 py-2 min-w-[200px]">
+      <div
+        class="flex flex-wrap gap-4 px-8 py-2 justify-start items-start min-w-[200px]"
+      >
         <PlotBarsBase
           column-name="test"
           :data="columnValues"
@@ -40,7 +46,11 @@
           "
         />
       </div>
-      <div class="flex flex-wrap gap-4 px-8 py-2">
+      <div class="flex flex-wrap gap-4 px-8 py-2 justify-start items-start">
+        <AppButton>Accept</AppButton>
+        <AppButton loading>Accept</AppButton>
+      </div>
+      <div class="flex flex-wrap gap-4 px-8 py-2 justify-start items-start">
         <AppButton>Accept</AppButton>
         <AppButton class="btn-layout-outline">Outline</AppButton>
         <AppButton class="btn-layout-invisible">Invisible</AppButton>
@@ -55,7 +65,7 @@
           <Icon :path="mdiCheckBold" />
         </AppButton>
       </div>
-      <div class="flex flex-wrap gap-4 px-8 py-2">
+      <div class="flex flex-wrap gap-4 px-8 py-2 justify-start items-start">
         <AppButton loading>Accept</AppButton>
         <AppButton loading class="btn-layout-outline">Outline</AppButton>
         <AppButton loading class="btn-layout-invisible">Invisible</AppButton>
@@ -70,7 +80,7 @@
           <Icon :path="mdiCheckBold" />
         </AppButton>
       </div>
-      <div class="flex flex-wrap gap-4 px-8 py-2">
+      <div class="flex flex-wrap gap-4 px-8 py-2 justify-start items-start">
         <AppButton disabled>Accept</AppButton>
         <AppButton disabled class="btn-layout-outline">Outline</AppButton>
         <AppButton disabled class="btn-layout-invisible">Invisible</AppButton>
@@ -85,7 +95,7 @@
           <Icon :path="mdiCheckBold" />
         </AppButton>
       </div>
-      <div class="flex flex-wrap gap-4 px-8 py-2">
+      <div class="flex flex-wrap gap-4 px-8 py-2 justify-start items-start">
         <AppButton class="btn-rounded">Accept</AppButton>
         <AppButton class="btn-rounded btn-layout-outline">Outline</AppButton>
         <AppButton class="btn-rounded btn-layout-invisible">
@@ -102,7 +112,7 @@
           <Icon :path="mdiCheckBold" />
         </AppButton>
       </div>
-      <div class="flex flex-wrap gap-4 px-8 py-2">
+      <div class="flex flex-wrap gap-4 px-8 py-2 justify-start items-start">
         <AppButton class="btn-color-error">Delete</AppButton>
         <AppButton class="btn-color-error btn-layout-outline">Delete</AppButton>
         <AppButton class="btn-color-error btn-layout-invisible">
@@ -116,7 +126,7 @@
           <Icon :path="mdiTrashCan" />
         </AppButton>
       </div>
-      <div class="flex flex-wrap gap-4 px-8 py-2">
+      <div class="flex flex-wrap gap-4 px-8 py-2 justify-start items-start">
         <AppButton class="btn-color-text"> Cancel </AppButton>
         <AppButton class="btn-color-text btn-layout-outline">
           Cancel
@@ -139,9 +149,14 @@
         >
           <Icon :path="mdiTrashCan" />
         </AppButton>
+        <AppButton
+          class="btn-color-text btn-icon btn-layout-invisible btn-size-smallest"
+        >
+          <Icon :path="mdiTrashCan" />
+        </AppButton>
         <!-- small -->
       </div>
-      <div class="flex flex-wrap gap-4 px-8 py-2">
+      <div class="flex flex-wrap gap-4 px-8 py-2 justify-start items-start">
         <AppButton class="btn-size-small">Accept</AppButton>
         <AppButton class="btn-size-small btn-layout-outline">Outline</AppButton>
         <AppButton class="btn-size-small btn-layout-invisible">
@@ -155,7 +170,23 @@
           <Icon :path="mdiCheckBold" />
         </AppButton>
       </div>
-      <div class="flex flex-wrap gap-4 px-8 py-2">
+      <div class="flex flex-wrap gap-4 px-8 py-2 justify-start items-start">
+        <AppButton class="btn-size-smallest">Accept</AppButton>
+        <AppButton class="btn-size-smallest btn-layout-outline"
+          >Outline</AppButton
+        >
+        <AppButton class="btn-size-smallest btn-layout-invisible">
+          Invisible
+        </AppButton>
+        <AppButton class="btn-size-smallest btn-layout-text">Text</AppButton>
+        <AppButton class="btn-size-smallest btn-icon">
+          <Icon :path="mdiCheckBold" />
+        </AppButton>
+        <AppButton class="btn-size-smallest btn-icon btn-rounded">
+          <Icon :path="mdiCheckBold" />
+        </AppButton>
+      </div>
+      <div class="flex flex-wrap gap-4 px-8 py-2 justify-start items-start">
         <AppButton class="btn-size-small btn-color-error">Delete</AppButton>
         <AppButton class="btn-size-small btn-color-error btn-layout-outline">
           Delete
@@ -173,7 +204,7 @@
           <Icon :path="mdiTrashCan" />
         </AppButton>
       </div>
-      <div class="flex flex-wrap gap-4 px-8 py-2">
+      <div class="flex flex-wrap gap-4 px-8 py-2 justify-start items-start">
         <AppButton class="btn-size-small btn-color-text">Cancel</AppButton>
         <AppButton class="btn-size-small btn-color-text btn-layout-outline">
           Cancel
@@ -191,17 +222,17 @@
           <Icon :path="mdiTrashCan" />
         </AppButton>
       </div>
-      <div class="flex flex-wrap gap-4 px-8 py-2">
+      <div class="flex flex-wrap gap-4 px-8 py-2 justify-start items-start">
         <AppInput class=""> </AppInput>
         <AppInput class="input-size-condensed"> </AppInput>
         <AppInput class="input-size-small"> </AppInput>
       </div>
-      <div class="flex flex-wrap gap-4 px-8 py-2">
+      <div class="flex flex-wrap gap-4 px-8 py-2 justify-start items-start">
         <AppInput placeholder="Column" class=""> </AppInput>
         <AppInput placeholder="Column" class="input-size-condensed"> </AppInput>
         <AppInput placeholder="Column" class="input-size-small"> </AppInput>
       </div>
-      <div class="flex flex-wrap gap-4 px-8 py-2">
+      <div class="flex flex-wrap gap-4 px-8 py-2 justify-start items-start">
         <AppInput label="label" placeholder="Column" class=""> </AppInput>
         <AppInput
           label="label"
@@ -212,7 +243,7 @@
         <AppInput label="label" placeholder="Column" class="input-size-small">
         </AppInput>
       </div>
-      <div class="flex flex-wrap gap-4 px-8 py-2">
+      <div class="flex flex-wrap gap-4 px-8 py-2 justify-start items-start">
         <AppAutocomplete
           v-model="selectedColumns"
           :options="columns"
