@@ -168,46 +168,57 @@ const executeOperations = async () => {
   }
 };
 
+const preparePayload = async (payload: Payload) => {
+  if (payload.options.saveToNewDataframe) {
+    payload.options.sourceId =
+      dataframes.value.length.toString() + (+new Date()).toString();
+  }
+
+  if (payload.options.usesInputDataframe) {
+    const currentDataframe = dataframes.value[selectedDataframe.value];
+    payload.df = await currentDataframe.df.copy();
+    console.log('[DEBUG] Using dataframe:', { payload, currentDataframe });
+    payload.options.sourceId = currentDataframe.sourceId;
+  }
+
+  if (payload.options.usesInputCols) {
+    payload.cols = selection.value?.columns;
+  }
+
+  return payload;
+};
+
+const prepareOperation = async () => {
+  const operation = isOperation(state.value) ? state.value : null;
+
+  if (!operation) {
+    throw new Error('Invalid operation', { cause: operation });
+  }
+
+  const { options, ...operationPayload } = operationValues.value;
+
+  const operationOptions: OperationOptions = Object.assign(
+    {},
+    options,
+    operation.defaultOptions
+  );
+
+  const payload: Payload = {
+    options: operationOptions,
+    ...operationPayload
+  };
+
+  return { operation, payload: await preparePayload(payload) };
+};
+
 const operationActions: OperationActions = {
   submitOperation: async () => {
     try {
       appStatus.value = 'busy';
 
-      console.info('Operation payload:', JSON.stringify(operationValues.value));
+      const { operation, payload } = await prepareOperation();
 
-      const operation = isOperation(state.value) ? state.value : null;
-
-      if (operation) {
-        const { options, ...operationPayload } = operationValues.value;
-
-        const operationOptions: OperationOptions = Object.assign(
-          {},
-          options,
-          operation.defaultOptions
-        );
-
-        const payload: Payload = {
-          options: operationOptions,
-          ...operationPayload
-        };
-
-        if (operationOptions.saveToNewDataframe) {
-          payload.options.sourceId =
-            dataframes.value.length.toString() + (+new Date()).toString();
-        }
-
-        if (operationOptions.usesInputDataframe) {
-          const currentDataframe = dataframes.value[selectedDataframe.value];
-          payload.df = currentDataframe.df;
-          payload.options.sourceId = currentDataframe.sourceId;
-        }
-
-        if (operationOptions.usesInputCols) {
-          payload.cols = selection.value?.columns;
-        }
-
-        operations.value.push({ operation, payload });
-      }
+      operations.value.push({ operation, payload });
 
       await executeOperations();
 

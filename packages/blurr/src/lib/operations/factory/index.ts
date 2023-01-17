@@ -138,11 +138,8 @@ export function BlurrOperation<
   TA extends ArgsType = ArgsType,
   TR extends OperationCompatible = OperationCompatible
 >(operationCreator: OperationCreator) {
-  const operation = {} as Operation<TA, TR>;
+  const operation = { ...operationCreator } as Operation<TA, TR>;
 
-  operation.name = operationCreator.name;
-  operation.sourceType = operationCreator.sourceType;
-  operation.targetType = operationCreator.targetType;
   operation._blurrMember = 'operation';
 
   operation.args = (operationCreator.args || []).map((arg) => {

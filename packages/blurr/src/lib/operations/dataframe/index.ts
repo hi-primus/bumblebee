@@ -23,6 +23,11 @@ export const operations = {
     targetType: 'dataframe',
     args: [{ name: 'lower_bound' }, { name: 'upper_bound' }],
   }),
+  copy: DataframeOperation<NoArgs>({
+    name: 'copy',
+    targetType: 'dataframe',
+    createsNew: true,
+  }),
   profile: DataframeOperation<{ cols: Cols; bins: number; flush: boolean }>({
     targetType: 'value',
     name: 'profile',
