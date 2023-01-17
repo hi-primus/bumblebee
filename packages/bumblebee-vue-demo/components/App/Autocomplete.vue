@@ -2,11 +2,12 @@
   <div class="input autocomplete">
     <Combobox
       v-slot="{ open }"
-      v-model="selected"
+      :model-value="selected"
       as="div"
       :nullable="true"
       :multiple="multiple"
       class="relative"
+      @update:model-value="updateSelected"
     >
       <label v-if="label" class="label input-label autocomplete-label">
         {{ label }}
@@ -37,6 +38,7 @@
             />
           </span>
           <ComboboxInput
+            ref="searchInput"
             :display-value="formatterDisplayValues"
             :placeholder="selected && selected.length ? null : placeholder"
             class="autocomplete-hiddenField bg-transparent min-w-20 flex-1"
@@ -46,10 +48,12 @@
         </div>
         <ComboboxInput
           v-else
+          ref="searchInput"
           :display-value="formatterDisplayValues"
           :placeholder="placeholder"
           class="input-field autocomplete-field"
           autocomplete="off"
+          :model-value="search"
           @change="search = $event.target.value"
         />
         <Icon
@@ -62,7 +66,7 @@
           class="absolute inset-y-0 right-0 flex items-center pr-2"
         >
           <Icon
-            v-if="options.length"
+            v-if="filteredOptions.length"
             :path="open ? mdiChevronUp : mdiChevronDown"
             :class="[
               open
@@ -83,14 +87,14 @@
           class="absolute z-[3] mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg sm:text-sm"
         >
           <div
-            v-if="options.length === 0 && search !== ''"
+            v-if="filteredOptions.length === 0 && search !== ''"
             class="relative cursor-default select-none py-2 px-4 text-text-lighter"
           >
             No results found
           </div>
 
           <ComboboxOption
-            v-for="(option, index) in options"
+            v-for="(option, index) in filteredOptions"
             :key="index"
             v-slot="{ selectedOption, active }"
             as="template"
@@ -192,6 +196,20 @@ const emit = defineEmits(['update:modelValue', 'update:search']);
 
 const selected = ref(props.modelValue);
 
+const searchInput = ref(null);
+
+const filteredOptions = computed(() => {
+  if (search.value) {
+    return props.options.filter(option => {
+      if (typeof option === 'object') {
+        return option[props.text].toLowerCase().includes(search.value);
+      }
+      return option.toLowerCase().includes(search.value);
+    });
+  }
+  return props.options;
+});
+
 watch(
   () => props.modelValue,
   value => {
@@ -215,9 +233,20 @@ watch(
   }
 );
 
-watch(search, (value, oldValue) => {
-  emit('update:search', value, oldValue);
-});
+watch(
+  () => search.value,
+  (value, oldValue) => {
+    emit('update:search', value, oldValue);
+    if (value === '' && searchInput.value?.el?.value !== '') {
+      searchInput.value.el.value = '';
+    }
+  }
+);
+
+const updateSelected = value => {
+  selected.value = value;
+  search.value = '';
+};
 
 const formatterDisplayValues = items => {
   let text = '';
