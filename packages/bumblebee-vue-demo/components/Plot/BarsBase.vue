@@ -22,7 +22,6 @@
         :key="index + 'b'"
         :config="getBackConfig(index)"
         @mouseenter="setHovered(index)"
-        @mouseleave="unsetHovered(index)"
       ></v-rect>
       <v-rect
         v-for="(value, index) in data"
@@ -323,12 +322,6 @@ const setHovered = (index: number) => {
     bins.value[index] && (bins.value[index].hovered = true);
   }
   emit('hovered', index);
-};
-
-const unsetHovered = (index: number) => {
-  if (index >= 0) {
-    bins.value[index] && (bins.value[index].hovered = false);
-  }
 };
 
 const setSelection = (from = -1, to = -2) => {

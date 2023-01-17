@@ -42,7 +42,9 @@ export default {
         light: '#f46767',
         lighter: '#f67979',
         lightest: '#f98b8b',
-        highlight: '#f9b9b9'
+        highlight: '#f9b9b9',
+        desaturated: '#e36363',
+        'desaturated-dark': '#c34646'
       },
       warn: {
         darkest: '#e1a219',

@@ -1,21 +1,10 @@
 <template>
-  <div class="px-1 pt-1">
-    <PlotBarsBase
-      selection-type="values"
-      :height="90 - 24"
-      v-bind="{ ...props, ...$attrs }"
-      @hovered="
-        emit('hovered', $event);
-        hovered = $event;
-      "
-    />
-    <div v-if="hovered === null || hovered < 0" class="">
-      {{ data.length }} values
-    </div>
-    <div v-else class="text-primary-darker">
-      {{ data[hovered].value }}: {{ data[hovered].count }}
-    </div>
-  </div>
+  <PlotBarsBase
+    selection-type="values"
+    :height="90 - 30"
+    v-bind="{ ...props, ...$attrs }"
+    @hovered="onHovered"
+  />
 </template>
 
 <script setup lang="ts">
@@ -32,9 +21,17 @@ interface PlotFrequencyProps extends PlotBarsBaseProps {
 const props = defineProps<PlotFrequencyProps>();
 
 type Emits = {
-  (e: 'hovered', index: number): void;
+  (e: 'hovered', value: string): void;
 };
 const emit = defineEmits<Emits>();
 
 const hovered = ref<number | null>(null);
+
+const onHovered = (index: number) => {
+  if (hovered.value === index) return;
+  hovered.value = index;
+  if (index < 0) return;
+  const value = props.data[index];
+  emit('hovered', `${value.value}: ${value.count}`);
+};
 </script>

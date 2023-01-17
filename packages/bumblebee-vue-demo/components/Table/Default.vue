@@ -41,7 +41,7 @@
           class="bumblebee-table-column relative z-[0]"
           :style="{
             height: columnHeaderHeight + safeRowsCount * rowHeight + 'px',
-            minWidth: minColumnWidth + 'px'
+            width: minColumnWidth + 'px'
           }"
         >
           <div
@@ -70,25 +70,12 @@
               </span>
               <div class="flex-1 max-w-[24px] right-icon"></div>
             </div>
-            <div
+            <PlotColumn
               :style="{
                 height: columnPlotHeight + 'px'
               }"
-            >
-              <PlotHist
-                v-if="column.stats?.hist"
-                :data="column.stats?.hist"
-                :column-name="column.title"
-                selectable
-              />
-              <PlotFrequency
-                v-else-if="column.stats?.frequency"
-                :data="column.stats?.frequency"
-                :column-name="column.title"
-                selectable
-              />
-              <!-- {{ column.stats?.hist || column.stats?.frequency || 'No plot' }} -->
-            </div>
+              :data="column"
+            />
           </div>
           <div
             v-for="(row, rowIndex) in data"
@@ -172,15 +159,15 @@ type Emits = {
 
 const emit = defineEmits<Emits>();
 
-const scrollElement = ref<HTMLElement | null>(null);
-
 const rowIndicesWidth = 48; // TODO: Width from rows number
 const columnTitleHeight = 32;
 const columnPlotHeight = 90;
 const columnHeaderHeight = columnTitleHeight + columnPlotHeight + 2;
 const tablePaddingBottom = 200;
-const minColumnWidth = 160;
+const minColumnWidth = 180;
 const rowHeight = 24;
+
+const scrollElement = ref<HTMLElement | null>(null);
 
 const safeRowsCount = computed(() => {
   if (props.rowsCount) {

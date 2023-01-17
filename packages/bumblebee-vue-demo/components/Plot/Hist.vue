@@ -1,16 +1,10 @@
 <template>
-  <div class="px-2">
-    <PlotBarsBase
-      v-bind="{ ...$attrs, ...props }"
-      selection-type="ranges"
-      :height="90 - 20"
-      @hovered="
-        emit('hovered', $event);
-        hovered = $event;
-      "
-    />
-    {{ hovered }}
-  </div>
+  <PlotBarsBase
+    selection-type="ranges"
+    :height="90 - 30"
+    v-bind="{ ...$attrs, ...props }"
+    @hovered="onHovered"
+  />
 </template>
 
 <script setup lang="ts">
@@ -27,9 +21,17 @@ interface PlotHistProps extends PlotBarsBaseProps {
 const props = defineProps<PlotHistProps>();
 
 type Emits = {
-  (e: 'hovered', index: number): void;
+  (e: 'hovered', value: string): void;
 };
 const emit = defineEmits<Emits>();
 
 const hovered = ref<number | null>(null);
+
+const onHovered = (index: number) => {
+  if (hovered.value === index) return;
+  hovered.value = index;
+  if (index < 0) return;
+  const value = props.data[index];
+  emit('hovered', `${value.value.join(' - ')}: ${value.count}`);
+};
 </script>
