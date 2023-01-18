@@ -10,7 +10,7 @@
       />
       <WorkspaceDataframeLayout
         :key="selectedDataframe"
-        :get-chunk="getChunk"
+        ref="dataframeLayout"
         @close="(index: number) => dataframes.splice(index, 1)"
       />
     </div>
@@ -239,34 +239,6 @@ const operationActions: OperationActions = {
 };
 
 provide('operation-actions', operationActions);
-
-//
-
-const getChunk = async function (start: number, stop: number) {
-  const df = dataframes.value[selectedDataframe.value].df;
-
-  if (!df) {
-    return;
-  }
-
-  window.df = df;
-
-  const sample = await df
-    .iloc({
-      target: 'preview_' + df.name,
-      lower_bound: start,
-      upper_bound: stop
-    })
-    .columnsSample();
-
-  const chunk = {
-    start,
-    stop,
-    data: sample.value
-  };
-  console.info('Chunk result:', chunk);
-  return chunk;
-};
 </script>
 
 <style lang="scss">

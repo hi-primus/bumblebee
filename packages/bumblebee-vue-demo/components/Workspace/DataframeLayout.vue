@@ -22,14 +22,6 @@ import { Column, DataframeObject } from '@/types/dataframe';
 import { Chunk } from '@/types/table';
 import { optimizeRanges } from '@/utils/table';
 
-const props = defineProps({
-  getChunk: {
-    type: Function as PropType<
-      (start: number, end: number) => Promise<Chunk | undefined>
-    >
-  }
-});
-
 // table data
 
 const dataframeObject = inject('dataframe') as ComputedRef<DataframeObject>;
@@ -107,24 +99,45 @@ const shiftChunksQueue = async function () {
   }
 };
 
+const getChunk = async function (start: number, stop: number) {
+  const df = dataframeObject.value.df;
+
+  if (!df) {
+    return;
+  }
+
+  const sample = await df
+    .iloc({
+      target: 'preview_' + df.name,
+      lower_bound: start,
+      upper_bound: stop
+    })
+    .columnsSample();
+
+  const chunk = {
+    start,
+    stop,
+    data: sample.value
+  };
+  return chunk;
+};
+
 const _shiftChunksQueue = async function (): Promise<boolean> {
   if (chunksQueue.value.length) {
     let [start, stop] = chunksQueue.value[0];
     chunksQueue.value = chunksQueue.value.slice(1);
     start = Math.max(start, 0);
     stop = rowsCount.value ? Math.min(stop, rowsCount.value) : stop;
-    if (props.getChunk) {
-      const shallowChunk = {
-        start,
-        stop,
-        data: []
-      };
-      const index = chunks.value.length;
-      chunks.value[index] = shallowChunk;
-      const chunk = await props.getChunk(start, stop);
-      if (chunk) {
-        chunks.value[index] = chunk;
-      }
+    const shallowChunk = {
+      start,
+      stop,
+      data: []
+    };
+    const index = chunks.value.length;
+    chunks.value[index] = shallowChunk;
+    const chunk = await getChunk(start, stop);
+    if (chunk) {
+      chunks.value[index] = chunk;
     }
     return _shiftChunksQueue();
   }
