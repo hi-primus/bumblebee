@@ -98,16 +98,27 @@ export const operations = [
     alias: 'Unsplit cols',
     defaultOptions: {
       usesInputCols: true,
-      usesInputDataframe: true
+      usesInputDataframe: true,
+      preview: true
     },
     action: (payload: {
+      options: OperationOptions;
       source: Source;
       cols: Cols;
       separator: string;
     }): Source => {
+      if (payload.options.preview) {
+        if (payload.cols.length <= 1) {
+          throw new Error('[PREVIEW] At least two columns are required', {
+            cause: payload.cols
+          });
+        }
+      }
+      const drop = !payload.options.preview;
       return payload.source.cols.nest({
         cols: payload.cols,
-        separator: payload.separator
+        separator: payload.separator,
+        drop
       });
     },
     fields: [

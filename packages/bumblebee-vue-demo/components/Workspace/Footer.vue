@@ -41,7 +41,9 @@ import { ComputedRef, Ref } from 'vue';
 import { DataframeObject } from '@/types/dataframe';
 import { AppStatus } from '@/types/workspace';
 
-const dataframeObject = inject('dataframe') as ComputedRef<DataframeObject>;
+const dataframeObject = inject(
+  'dataframe-object'
+) as ComputedRef<DataframeObject>;
 
 const summary = computed(() => {
   return dataframeObject.value?.profile?.summary;

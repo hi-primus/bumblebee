@@ -20,7 +20,8 @@
 <script setup lang="ts">
 import type { Client, Source } from 'blurr/build/main/types';
 
-import { DataframeObject } from '@/types/dataframe';
+import DataframeLayout from '@/components/Workspace/DataframeLayout.vue';
+import { DataframeObject, PreviewData } from '@/types/dataframe';
 import {
   isOperation,
   OperationActions,
@@ -31,12 +32,14 @@ import {
   TableSelection
 } from '@/types/operations';
 import { AppStatus } from '@/types/workspace';
-import { compareObjects } from '@/utils';
+import { compareObjects, throttle } from '@/utils';
 import { preliminaryProfile } from '@/utils/blurr';
 
 const blurrPackage = useBlurr();
 
 let blurr: Client;
+
+const dataframeLayout = ref<InstanceType<typeof DataframeLayout> | null>(null);
 
 const dataframes = ref<DataframeObject[]>([]);
 
@@ -71,12 +74,18 @@ provide('state', state);
 const selection = ref<TableSelection>(null);
 provide('selection', selection);
 
-const dataframe = computed(() => {
+const dataframeObject = computed(() => {
   return selectedDataframe.value >= 0
     ? dataframes.value[selectedDataframe.value]
     : undefined;
 });
-provide('dataframe', dataframe);
+provide('dataframe-object', dataframeObject);
+
+const previewData = ref<PreviewData | null>(null);
+provide('preview-data', previewData);
+
+const scrollRange = ref([0, 0]);
+provide('scroll-range', scrollRange);
 
 watch(
   () => state.value,
@@ -168,7 +177,7 @@ const executeOperations = async () => {
   }
 };
 
-const preparePayload = async (payload: Payload) => {
+const preparePayload = (payload: Payload) => {
   if (payload.options.saveToNewDataframe) {
     payload.options.sourceId =
       dataframes.value.length.toString() + (+new Date()).toString();
@@ -188,11 +197,11 @@ const preparePayload = async (payload: Payload) => {
   return payload;
 };
 
-const prepareOperation = async () => {
+const prepareOperation = () => {
   const operation = isOperation(state.value) ? state.value : null;
 
   if (!operation) {
-    throw new Error('Invalid operation', { cause: operation });
+    return { operation: null, payload: null };
   }
 
   const { options, ...operationPayload } = operationValues.value;
@@ -208,7 +217,19 @@ const prepareOperation = async () => {
     ...operationPayload
   };
 
-  return { operation, payload: await preparePayload(payload) };
+  return { operation, payload: preparePayload(payload) };
+};
+
+const getPreviewColumns = (sampleColumns: { title: string }[]) => {
+  return sampleColumns
+    .map(({ title }: { title: string }) => ({
+      title,
+      preview: !dataframeObject.value?.profile?.columns[title]
+    }))
+    .reduce(
+      (acc, { title, preview }) => ({ ...acc, [title]: { preview } }),
+      {}
+    );
 };
 
 const operationActions: OperationActions = {
@@ -216,9 +237,11 @@ const operationActions: OperationActions = {
     try {
       appStatus.value = 'busy';
 
-      const { operation, payload } = await prepareOperation();
+      const { operation, payload } = prepareOperation();
 
-      operations.value.push({ operation, payload });
+      if (operation) {
+        operations.value.push({ operation, payload });
+      }
 
       await executeOperations();
 
@@ -230,15 +253,108 @@ const operationActions: OperationActions = {
       console.error('Error executing operation', err);
       appStatus.value = 'ready'; // 'error';
     }
+    previewData.value = null;
   },
   cancelOperation: () => {
     console.info('Operation cancelled');
     operationValues.value = {};
     state.value = 'operations';
+    previewData.value = null;
   }
 };
 
 provide('operation-actions', operationActions);
+
+const previewOperation = throttle(async function () {
+  try {
+    appStatus.value = 'busy';
+
+    const { operation, payload } = prepareOperation();
+
+    if (!operation || !isOperation(operation) || !payload?.options?.preview) {
+      appStatus.value = 'ready';
+      return;
+    }
+
+    const firstSampleSource = await payload.source.iloc({
+      target: 'operation_first_preview_df',
+      lower_bound: scrollRange.value[0],
+      upper_bound: scrollRange.value[1]
+    });
+
+    const firstSampleResult = await operation
+      .action({
+        ...payload,
+        source: firstSampleSource,
+        blurr
+      })
+      .columnsSample();
+
+    console.info('Operation range', scrollRange.value);
+    console.info('Operation result', firstSampleResult);
+
+    // clear chunks
+
+    dataframeLayout.value?.clearChunks(false);
+
+    // use preview columns instead of source columns
+
+    previewData.value = {
+      columns: getPreviewColumns(firstSampleResult.columns)
+    };
+
+    // add first chunk to dataframe
+
+    dataframeLayout.value?.addChunk({
+      start: scrollRange.value[0],
+      stop: scrollRange.value[1],
+      data: firstSampleResult.value
+    });
+
+    // get profile for preview columns
+
+    const result = await operation.action({
+      ...payload,
+      source: payload.source,
+      target: 'operation_preview_' + payload.source.name,
+      blurr
+    });
+
+    // save preview dataframe
+
+    previewData.value = {
+      ...previewData.value,
+      df: result
+    };
+
+    // save profile
+
+    previewData.value = {
+      ...previewData.value,
+      profile: await preliminaryProfile(result)
+    };
+
+    previewData.value = {
+      ...previewData.value,
+      profile: await result.profile({
+        cols: Object.entries(previewData.value?.columns)
+          ?.filter(([_, { preview }]) => preview)
+          .map(([title, _]) => title)
+      })
+    };
+
+    appStatus.value = 'ready';
+  } catch (err) {
+    console.error('Error executing preview operation', err);
+    if (err instanceof Error && err.message.includes('[PREVIEW]')) {
+      previewData.value = null;
+    }
+    appStatus.value = 'ready'; // 'error';
+  }
+}, 500);
+
+watch(() => operationValues.value, previewOperation, { deep: true });
+watch(() => selection.value, previewOperation, { deep: true });
 </script>
 
 <style lang="scss">

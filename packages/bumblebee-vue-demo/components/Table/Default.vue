@@ -35,7 +35,7 @@
           v-for="(column, columnIndex) in header"
           :key="column.title"
           :class="{
-            // 'column-color-preview': columnIndex === 3,
+            'column-color-preview': column.preview,
             'column-color-primary': selection?.columns.includes(column.title)
           }"
           class="bumblebee-table-column relative z-[0]"
@@ -130,7 +130,7 @@
 import { mdiTableColumn } from '@mdi/js';
 import { PropType, Ref } from 'vue';
 
-import { Column } from '@/types/dataframe';
+import { ColumnHeader } from '@/types/dataframe';
 import { TableSelection } from '@/types/operations';
 import { throttle } from '@/utils';
 import { TYPES_HINTS, TYPES_NAMES } from '@/utils/data-types';
@@ -146,7 +146,7 @@ const props = defineProps({
     default: 0
   },
   header: {
-    type: Array as PropType<Column[]>,
+    type: Array as PropType<ColumnHeader[]>,
     required: true
   }
 });
@@ -320,7 +320,7 @@ const columnClicked = (event: MouseEvent, columnIndex: number) => {
     --line-color: theme('colors.warn.lighter');
     &,
     & .column-header {
-      @apply bg-warn-lightest;
+      @apply bg-warn-highlight;
     }
   }
 }

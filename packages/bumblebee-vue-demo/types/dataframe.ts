@@ -22,6 +22,12 @@ export interface Column extends KeyedColumn {
   title: string;
 }
 
+export interface PreviewColumn {
+  preview: boolean;
+}
+
+export type ColumnHeader = Column & PreviewColumn;
+
 export interface DataframeSummary {
   summary: number;
   data_types_list: string[];
@@ -37,6 +43,12 @@ export interface DataframeProfile {
   summary: DataframeSummary;
   name?: string;
   file_name?: string;
+}
+
+export interface PreviewData {
+  columns: Record<string, PreviewColumn>;
+  df?: Source;
+  profile?: DataframeProfile;
 }
 
 export interface DataframeObject {

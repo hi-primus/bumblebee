@@ -24,6 +24,7 @@ export interface OperationOptions {
   saveToNewDataframe?: boolean;
   sourceId?: string;
   targetType: 'dataframe' | 'value';
+  preview?: boolean; // TODO: add preview types
 }
 
 export interface OperationCreator<TA, TR> {

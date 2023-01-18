@@ -59,13 +59,17 @@ import { ComputedRef, Ref } from 'vue';
 
 import { DataframeObject } from '@/types/dataframe';
 import {
-  Operation,
+  isOperation,
   OperationActions,
   Payload,
+  State,
   TableSelection
 } from '@/types/operations';
 
-const operation = inject('state') as Ref<Operation>;
+const state = inject('state') as Ref<State>;
+const operation = computed(() =>
+  isOperation(state.value) ? state.value : null
+);
 const operationValues = inject('operation-values') as Ref<Payload>;
 const { submitOperation, cancelOperation } = inject(
   'operation-actions'
@@ -89,7 +93,9 @@ const cancel = async () => {
   return result;
 };
 
-const dataframeObject = inject('dataframe') as ComputedRef<DataframeObject>;
+const dataframeObject = inject(
+  'dataframe-object'
+) as ComputedRef<DataframeObject>;
 const selection = inject('selection') as Ref<TableSelection>;
 
 const columns = computed({
@@ -111,7 +117,7 @@ const options = computed(() => {
   return Object.assign(
     {},
     operationValues.value.options || {},
-    operation.value.defaultOptions || {},
+    operation.value?.defaultOptions || {},
     { targetType: 'dataframe' }
   );
 });

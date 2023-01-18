@@ -16,30 +16,47 @@
 </template>
 
 <script setup lang="ts">
-import { ComputedRef, PropType } from 'vue';
+import { ComputedRef, Ref } from 'vue';
 
-import { Column, DataframeObject } from '@/types/dataframe';
+import { ColumnHeader, DataframeObject, PreviewData } from '@/types/dataframe';
 import { Chunk } from '@/types/table';
 import { optimizeRanges } from '@/utils/table';
 
 // table data
 
-const dataframeObject = inject('dataframe') as ComputedRef<DataframeObject>;
+const dataframeObject = inject(
+  'dataframe-object'
+) as ComputedRef<DataframeObject>;
 
-const header = computed<Column[]>(() => {
-  if (
-    dataframeObject.value?.profile?.columns &&
-    Object.keys(dataframeObject.value?.profile.columns)
-  ) {
-    return Object.entries(dataframeObject.value?.profile.columns).map(
-      ([title, column]) => {
-        return {
-          title,
-          data_type: column.data_type,
-          stats: column.stats
-        };
-      }
-    );
+const previewData = inject('preview-data') as Ref<PreviewData>;
+
+const header = computed<ColumnHeader[]>(() => {
+  const dataframeProfile = dataframeObject.value?.profile;
+  const previewProfile = previewData.value?.profile;
+  const profile =
+    previewProfile && dataframeProfile
+      ? {
+          ...dataframeProfile,
+          columns: {
+            ...dataframeProfile?.columns,
+            ...previewProfile?.columns
+          }
+        }
+      : dataframeProfile;
+  const originalColumns = profile?.columns;
+  const columns = previewData.value?.columns || originalColumns;
+  if (columns && Object.keys(columns)) {
+    return Object.entries(columns).map(([title, column]) => {
+      return {
+        title,
+        data_type:
+          (column as ColumnHeader).data_type ||
+          originalColumns?.[title]?.data_type,
+        stats:
+          (column as ColumnHeader).stats || originalColumns?.[title]?.stats,
+        preview: (column as ColumnHeader).preview
+      };
+    });
   }
   return [];
 });
@@ -58,11 +75,16 @@ const completedChunks = computed(() => {
 
 const chunksQueue = ref<[number, number][]>([]);
 
+const scrollRange = inject('scroll-range') as Ref<[number, number]>;
+
 const updateScroll = function (start: number, stop: number) {
   let range: [number, number] = [
     Math.max(start, 0),
     rowsCount.value ? Math.min(stop, rowsCount.value) : stop
   ];
+
+  scrollRange.value = range;
+
   const chunksRanges: [number, number][] = chunks.value.map(chunk => [
     chunk.start,
     chunk.stop
@@ -83,13 +105,13 @@ const updateScroll = function (start: number, stop: number) {
     ];
   }
 
-  return shiftChunksQueue();
+  return checkChunksQueue();
 };
 
 let shiftChunksPromise: Promise<boolean> | false = false;
 
-const shiftChunksQueue = async function () {
-  // finish previous shiftChunksQueue
+const checkChunksQueue = async function () {
+  // finish previous checkChunksQueue
   await shiftChunksPromise;
   shiftChunksPromise = false;
   if (!shiftChunksPromise) {
@@ -100,7 +122,7 @@ const shiftChunksQueue = async function () {
 };
 
 const getChunk = async function (start: number, stop: number) {
-  const df = dataframeObject.value.df;
+  const df = previewData.value?.df || dataframeObject.value.df;
 
   if (!df) {
     return;
@@ -144,15 +166,36 @@ const _shiftChunksQueue = async function (): Promise<boolean> {
   return true;
 };
 
+const addChunk = (chunk: Chunk) => {
+  const index = chunks.value.findIndex(
+    c => c.start === chunk.start && c.stop === chunk.stop
+  );
+  if (index !== -1) {
+    chunks.value[index] = chunk;
+  } else {
+    chunks.value.push(chunk);
+  }
+};
+
+const clearChunks = (check = true) => {
+  chunks.value = [];
+  chunksQueue.value = [];
+  check && checkChunksQueue();
+};
+
 watch(
   () => dataframeObject.value,
-  () => {
-    chunks.value = [];
-    chunksQueue.value = [];
-    shiftChunksQueue();
-  },
-  { immediate: true, deep: true }
+  () => clearChunks(),
+  {
+    immediate: true,
+    deep: true
+  }
 );
+
+defineExpose({
+  addChunk,
+  clearChunks
+});
 </script>
 
 <style lang="scss">
