@@ -24,7 +24,7 @@ const createOperation = <TA extends Record<string, unknown>, TR>(
       operation.defaultOptions,
       payload._options as OperationOptions
     );
-    if (options.usesInputDataframe && !payload.df) {
+    if (options.usesInputDataframe && !payload.source) {
       throw new Error('Input dataframe is required');
     }
     if (options.usesInputCols && !payload.cols) {
@@ -74,11 +74,11 @@ export const operations = [
       usesInputDataframe: true
     },
     action: (payload: {
-      df: Source;
+      source: Source;
       cols: Cols;
       separator: string;
     }): Source => {
-      return payload.df.cols.unnest({
+      return payload.source.cols.unnest({
         cols: payload.cols,
         separator: payload.separator
       });
@@ -101,11 +101,11 @@ export const operations = [
       usesInputDataframe: true
     },
     action: (payload: {
-      df: Source;
+      source: Source;
       cols: Cols;
       separator: string;
     }): Source => {
-      return payload.df.cols.nest({
+      return payload.source.cols.nest({
         cols: payload.cols,
         separator: payload.separator
       });
