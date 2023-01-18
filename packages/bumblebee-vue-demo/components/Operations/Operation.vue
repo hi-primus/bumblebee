@@ -1,5 +1,9 @@
 <template>
-  <div ref="operationElement" class="flex flex-col px-2 pt-5 gap-5 bg-red">
+  <form
+    ref="operationElement"
+    class="flex flex-col px-2 pt-5 gap-5 bg-red"
+    @submit.prevent="submit"
+  >
     <AppAutocomplete
       v-if="options?.usesInputCols"
       v-model="columns"
@@ -40,6 +44,7 @@
         class="btn-layout-invisible"
         :disabled="Boolean(status)"
         :loading="status === 'cancelling'"
+        type="button"
         @click="cancel"
       >
         Cancel
@@ -47,12 +52,12 @@
       <AppButton
         :disabled="Boolean(status)"
         :loading="status === 'submitting'"
-        @click="submit"
+        type="submit"
       >
         Accept
       </AppButton>
     </div>
-  </div>
+  </form>
 </template>
 <script setup lang="ts">
 import { ComputedRef, Ref } from 'vue';
