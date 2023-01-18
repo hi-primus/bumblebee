@@ -277,7 +277,7 @@ const onKeyUp = (event: KeyboardEvent) => {
     lastKeys.value.shift();
   }
 
-  lastKeys.value.push(event.key);
+  lastKeys.value.push(event.key.toLowerCase());
 
   const shortcut = lastKeys.value.join('');
 
