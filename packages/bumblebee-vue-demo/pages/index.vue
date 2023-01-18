@@ -176,7 +176,7 @@ const preparePayload = async (payload: Payload) => {
 
   if (payload.options.usesInputDataframe) {
     const currentDataframe = dataframes.value[selectedDataframe.value];
-    payload.df = await currentDataframe.df.copy();
+    payload.source = currentDataframe.df.copy();
     console.log('[DEBUG] Using dataframe:', { payload, currentDataframe });
     payload.options.sourceId = currentDataframe.sourceId;
   }
