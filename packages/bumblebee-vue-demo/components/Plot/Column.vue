@@ -42,10 +42,9 @@
           unique values
         </template>
         <template v-else-if="data.stats?.hist">
-          {{
-            data.stats.hist[0].value[0] -
-            data.stats.hist[data.stats.hist.length - 1].value[1]
-          }}: {{ data.stats.match }} values
+          {{ data.stats.hist[0].lower }} -
+          {{ data.stats.hist[data.stats.hist.length - 1].upper }}:
+          {{ data.stats.match }} values
         </template>
       </div>
     </div>

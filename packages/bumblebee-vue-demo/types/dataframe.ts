@@ -2,7 +2,7 @@ import type { Source } from 'blurr/build/main/types';
 
 export type FrequencyValue = { count: number; value: BasicType };
 
-export type HistValue = { count: number; value: [number, number] };
+export type HistValue = { count: number; lower: number; upper: number };
 
 export interface ColumnStats {
   match: number;

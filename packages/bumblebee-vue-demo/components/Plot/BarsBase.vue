@@ -298,17 +298,22 @@ const onMouseUp = () => {
   if (selection) {
     if (_s !== selection?.value?.indices) {
       if (props.selectionType === 'ranges') {
+        const data = props.data as HistValue[];
         selection.value = {
           columns: [props.columnName],
-          ranges: _s.map(e => props.data[e].value) as [number, number][],
+          ranges: _s.map(e => [data[e].lower, data[e].upper]) as [
+            number,
+            number
+          ][],
           values: null,
           indices: _s
         };
       } else {
+        const data = props.data as FrequencyValue[];
         selection.value = {
           columns: [props.columnName],
           ranges: null,
-          values: _s.map(e => props.data[e].value) as BasicType[],
+          values: _s.map(e => data[e].value) as BasicType[],
           indices: _s
         };
       }

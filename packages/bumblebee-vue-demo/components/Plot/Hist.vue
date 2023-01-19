@@ -32,6 +32,6 @@ const onHovered = (index: number) => {
   hovered.value = index;
   if (index < 0) return;
   const value = props.data[index];
-  emit('hovered', `${value.value.join(' - ')}: ${value.count}`);
+  emit('hovered', `${value.lower} - ${value.upper}: ${value.count}`);
 };
 </script>
