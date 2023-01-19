@@ -37,6 +37,19 @@
         <template v-if="hovered">
           {{ hovered }}
         </template>
+        <template v-else-if="data.stats?.frequency && data.stats.count_uniques">
+          <template
+            v-if="data.stats.frequency.length !== data.stats.count_uniques"
+          >
+            {{ data.stats.frequency.length }}
+            of
+            {{ data.stats.count_uniques }}
+          </template>
+          <template v-else>
+            {{ data.stats.count_uniques }}
+          </template>
+          unique values
+        </template>
         <template v-else-if="data.stats?.frequency">
           {{ data.stats.frequency.length }}
           unique values

@@ -8,6 +8,7 @@ export interface ColumnStats {
   match: number;
   missing: number;
   mismatch: number;
+  count_uniques?: number;
   frequency?: FrequencyValue[];
   hist?: HistValue[];
   inferred_data_type?: { data_type: string; categorical: boolean } | string;
