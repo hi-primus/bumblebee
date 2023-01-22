@@ -27,7 +27,11 @@ const createOperation = <TA extends Record<string, unknown>, TR>(
     if (options.usesInputDataframe && !payload.source) {
       throw new Error('Input dataframe is required');
     }
-    if (options.usesInputCols && !payload.cols) {
+    if (
+      options.usesInputCols &&
+      (!payload.cols ||
+        (Array.isArray(payload.cols) && payload.cols.length < 1))
+    ) {
       throw new Error('Input columns are required');
     }
     if (options.usesOutputCols && !payload.outputCols) {
@@ -39,6 +43,13 @@ const createOperation = <TA extends Record<string, unknown>, TR>(
       } else {
         throw new Error('Output columns are required');
       }
+    }
+
+    if (options.preview === 'basic columns') {
+      payload = {
+        ...payload,
+        outputCols: (payload.cols as Cols).map(col => `new ${col}`)
+      };
     }
 
     return operationCreator.action(payload);
@@ -64,6 +75,94 @@ export const operations = [
       }
     ],
     shortcut: 'ff'
+  }),
+  createOperation({
+    key: 'lower',
+    name: 'Lowercase column values',
+    alias: 'Lowercase letters',
+    defaultOptions: {
+      usesInputCols: true,
+      usesInputDataframe: true,
+      preview: 'basic columns'
+    },
+    action: (payload: {
+      source: Source;
+      cols: Cols;
+      outputCols: Cols;
+      options: OperationOptions;
+    }): Source => {
+      return payload.source.cols.lower({
+        cols: payload.cols,
+        outputCols: payload.outputCols
+      });
+    },
+    shortcut: 'll'
+  }),
+  createOperation({
+    key: 'upper',
+    name: 'Uppercase column values',
+    alias: 'Uppercase letters',
+    defaultOptions: {
+      usesInputCols: true,
+      usesInputDataframe: true,
+      preview: 'basic columns'
+    },
+    action: (payload: {
+      source: Source;
+      cols: Cols;
+      outputCols: Cols;
+      options: OperationOptions;
+    }): Source => {
+      return payload.source.cols.upper({
+        cols: payload.cols,
+        outputCols: payload.outputCols
+      });
+    },
+    shortcut: 'ul'
+  }),
+  createOperation({
+    key: 'title',
+    name: 'Title case column values',
+    alias: 'Upper first letter',
+    defaultOptions: {
+      usesInputCols: true,
+      usesInputDataframe: true,
+      preview: 'basic columns'
+    },
+    action: (payload: {
+      source: Source;
+      cols: Cols;
+      outputCols: Cols;
+      options: OperationOptions;
+    }): Source => {
+      return payload.source.cols.title({
+        cols: payload.cols,
+        outputCols: payload.outputCols
+      });
+    },
+    shortcut: 'tl'
+  }),
+  createOperation({
+    key: 'capitalize',
+    name: 'Capitalize column values',
+    alias: 'Upper first letters',
+    defaultOptions: {
+      usesInputCols: true,
+      usesInputDataframe: true,
+      preview: 'basic columns'
+    },
+    action: (payload: {
+      source: Source;
+      cols: Cols;
+      outputCols: Cols;
+      options: OperationOptions;
+    }): Source => {
+      return payload.source.cols.capitalize({
+        cols: payload.cols,
+        outputCols: payload.outputCols
+      });
+    },
+    shortcut: 'cl'
   }),
   createOperation({
     key: 'unnestColumns',
