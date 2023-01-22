@@ -93,6 +93,25 @@ export function objectMap<T, U extends T[keyof T], V>(
 }
 
 /*
+ * Filters an object's properties based on a callback
+ * @param object
+ * @param cb
+ * @returns Filtered object
+ */
+
+export function objectFilter<T, U extends T[keyof T]>(
+  object: T,
+  cb: (elem: U, key: keyof T, object: T) => boolean
+) {
+  return Object.keys(object).reduce(function (result, key) {
+    if (cb(object[key], key as keyof T, object)) {
+      result[key] = object[key];
+    }
+    return result;
+  }, {} as { [key in keyof T]: U });
+}
+
+/*
  * Loads a script to the DOM, used to workaround pyodide issues
  */
 
@@ -152,11 +171,12 @@ export const adaptKwargs = (
 
   // named arguments
   const argsWithDefaults = operationArgs.reduce((acc, arg) => {
-    const name = argName(arg);
-    if (args[name] !== undefined) {
-      acc[name] = args[name];
+    const pythonArgName = argName(arg);
+    const argValue = args[arg.name] || args[pythonArgName];
+    if (argValue !== undefined) {
+      acc[pythonArgName] = argValue;
     } else if (arg.default !== undefined) {
-      acc[name] = arg.default;
+      acc[pythonArgName] = arg.default;
     }
     return acc;
   }, {});
@@ -164,7 +184,12 @@ export const adaptKwargs = (
   // include extra arguments
   return {
     ...argsWithDefaults,
-    ...args,
+    ...objectFilter(
+      args,
+      (_value, key) =>
+        argsWithDefaults[key] === undefined &&
+        argsWithDefaults[camelToSnake(key)] === undefined
+    ),
   };
 };
 
