@@ -57,18 +57,24 @@
               <Icon
                 v-if="!column.data_type"
                 :path="mdiTableColumn"
-                class="left-icon inline text-current mr-[2px]"
+                class="left-icon inline text-current"
               />
               <span
                 :title="dataTypeNames[columnIndex]"
-                class="left-icon inline text-current mr-[2px] font-bold"
+                class="left-icon inline text-current max-w-5 font-bold text-center"
+                :class="{
+                  'transform scale-x-125':
+                    dataTypeHintLengths[columnIndex] <= 2,
+                  'tracking-[-1px] transform scale-x-95':
+                    dataTypeHintLengths[columnIndex] >= 4
+                }"
               >
                 {{ dataTypeHints[columnIndex] }}
               </span>
-              <span class="flex-1">
+              <span class="flex-1 truncate pl-2">
                 {{ column.title }}
               </span>
-              <div class="flex-1 max-w-[24px] right-icon"></div>
+              <div class="flex-0 w-[24px] right-icon"></div>
             </div>
             <PlotColumn
               :style="{
@@ -202,6 +208,10 @@ const dataTypeHints = computed(() => {
     }
     return TYPES_HINTS[dataType] || dataType || '?';
   });
+});
+
+const dataTypeHintLengths = computed(() => {
+  return dataTypeHints.value.map(hint => hint.length);
 });
 
 const dataTypeNames = computed(() => {
