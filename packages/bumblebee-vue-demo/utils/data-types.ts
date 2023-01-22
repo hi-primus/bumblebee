@@ -14,7 +14,8 @@ export const TYPES = {
   ZIP_CODE: 'zip_code',
   MISSING: 'missing',
   CATEGORICAL: 'categorical',
-  TIME: 'time'
+  TIME: 'time',
+  HTTP_CODE: 'http_code'
 };
 
 export const TYPES_HINTS: Record<ObjectValues<typeof TYPES>, string> = {
@@ -34,6 +35,7 @@ export const TYPES_HINTS: Record<ObjectValues<typeof TYPES>, string> = {
   missing: 'mis',
   categorical: 'cat',
   time: 'time',
+  http_code: 'http',
   null: 'null'
 };
 
@@ -53,5 +55,6 @@ export const TYPES_NAMES: Record<ObjectValues<typeof TYPES>, string> = {
   zip_code: 'Zip Code',
   missing: 'Missing',
   categorical: 'Categorical',
-  time: 'Time'
+  time: 'Time',
+  http_code: 'HTTP Code'
 };
