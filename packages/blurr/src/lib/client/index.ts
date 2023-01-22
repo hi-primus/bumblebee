@@ -168,7 +168,6 @@ export function Blurr(options: ClientOptions = {}): Client {
       ) {
         _args = args[0] as InputArgs;
       } else {
-        console.log({ operationArgsNames, args });
         _args = args;
       }
       const kwargs = adaptKwargs(_args, operationArgs);
