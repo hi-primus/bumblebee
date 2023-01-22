@@ -346,9 +346,7 @@ const previewOperation = throttle(async function () {
     appStatus.value = 'ready';
   } catch (err) {
     console.error('Error executing preview operation', err);
-    if (err instanceof Error && err.message.includes('[PREVIEW]')) {
-      previewData.value = null;
-    }
+    previewData.value = null;
     appStatus.value = 'ready'; // 'error';
   }
 }, 500);
