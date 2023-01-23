@@ -31,7 +31,7 @@
             class="bg-foodit-accent flex items-center gap-1 px-2 py-1 text-base rd"
           >
             <span class="truncate max-w-full">{{
-              (option && option[text]) || option
+              textCallbackWithDefault(option) || option
             }}</span>
             <Icon
               :path="mdiClose"
@@ -156,6 +156,9 @@ const props = defineProps({
     type: Array as PropType<(string | Record<string, any>)[]>,
     default: () => []
   },
+  textCallback: {
+    type: Function as PropType<(option: unknown) => string>
+  },
   rules: {
     type: Array as PropType<RuleKey[]>,
     default: () => []
@@ -197,6 +200,10 @@ const defaultLabel = computed(() => {
     return props.emptyTitle || 'No options available';
   }
   return props.title || 'Select';
+});
+
+const textCallbackWithDefault = computed(() => {
+  return props.textCallback || ((option: unknown) => (option as Record<string, string>)[props.text]);
 });
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -1,10 +1,5 @@
 import { isObject } from './common';
 
-interface FieldOption {
-  value: string;
-  text: string;
-}
-
 interface Field {
   name: string;
   type: string;
@@ -12,7 +7,8 @@ interface Field {
   placeholder?: string;
   label?: string;
   required?: boolean;
-  options?: FieldOption[];
+  options?: Record<string, unknown>[];
+  textCallback?: (value: unknown) => string;
   description?: string;
   defaultValue?: unknown;
 }

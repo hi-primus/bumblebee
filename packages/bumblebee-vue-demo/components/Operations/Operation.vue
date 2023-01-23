@@ -16,23 +16,25 @@
       <template v-for="field in operation.fields">
         <AppSelector
           v-if="field.options?.length"
-          :key="field.name"
+          :key="`selector-${field.name}`"
           v-model="operationValues[field.name]"
           :options="field.options"
-          label="selector"
-          name="selector"
+          :text-callback="field.textCallback"
+          :label="field.label || field.name"
+          :name="field.name"
+          :placeholder="field.placeholder"
         />
         <AppInput
-          v-if="field.type === 'string'"
-          :key="field.name"
+          v-else-if="field.type === 'string'"
+          :key="`input-${field.name}`"
           v-model="operationValues[field.name]"
           :label="field.label || field.name"
           :name="field.name"
           :placeholder="field.placeholder"
         />
         <AppCheckbox
-          v-if="field.type === 'boolean'"
-          :key="field.name"
+          v-else-if="field.type === 'boolean'"
+          :key="`check-${field.name}`"
           v-model="operationValues[field.name]"
           :label="field.label || field.name"
           :name="field.name"
