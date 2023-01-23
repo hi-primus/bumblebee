@@ -23,7 +23,7 @@ function DataframeOperation<
 }
 
 function AggregationOperation<TA extends ArgsType = NoArgs>(
-  operationCreator: Pick<OperationCreator, 'name' | 'args'>
+  operationCreator: Pick<OperationCreator, 'name' | 'args'>,
 ) {
   type Args = { cols: Cols } & TA & { tidy: boolean; compute: boolean };
 
@@ -947,7 +947,7 @@ export const operations = {
           default: null,
         },
       ],
-    }
+    },
   ),
   floor: DataframeOperation<{ cols: Cols; outputCols: Cols }>({
     targetType: 'dataframe',
@@ -1212,6 +1212,28 @@ export const operations = {
       {
         name: 'cols',
         default: '*',
+      },
+      {
+        name: 'outputCols',
+        default: null,
+      },
+    ],
+  }),
+  sample: DataframeOperation<{ cols: Cols; outputCols: Cols }>({
+    targetType: 'dataframe',
+    name: 'cols.sample',
+    args: [
+      {
+        name: 'cols',
+        default: '*',
+      },
+      {
+        name: 'n',
+        default: 10,
+      },
+      {
+        name: 'seed',
+        default: 0,
       },
       {
         name: 'outputCols',
@@ -1688,7 +1710,7 @@ export const operations = {
           default: null,
         },
       ],
-    }
+    },
   ),
   yearsBetween: DateDataframeOperation('cols.yearsBetween'),
   monthsBetween: DateDataframeOperation('cols.monthsBetween'),
@@ -2181,7 +2203,7 @@ export const operations = {
           default: true,
         },
       ],
-    }
+    },
   ),
   inferType: DataframeOperation<{
     cols: Cols;
