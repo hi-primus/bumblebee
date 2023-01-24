@@ -16,6 +16,7 @@ type Cols = string[];
 // alias: alias for the operation. Used to search for the operation
 // description : description of the operation
 
+
 const createOperation = <TA extends Record<string, unknown>, TR>(
   operationCreator: OperationCreator<TA, TR>,
 ): Operation<TA, TR> => {
@@ -84,6 +85,61 @@ export const operations = [
     ],
     shortcut: 'ff',
   }),
+  //Row operations
+  createOperation({
+    key: 'Drop duplicated',
+    name: 'Drop duplicated rows',
+    alias: 'drop rows duplicated',
+    defaultOptions: {
+      usesInputCols: true,
+      usesInputDataframe: true,
+      preview: 'basic columns',
+    },
+    action: (payload: {
+      source: Source;
+      cols: Cols;
+      keep: 'first' | 'last';
+      how: 'any' | 'all';
+      outputCols: Cols;
+      options: OperationOptions;
+    }): Source => {
+      return payload.source.rows.dropDuplicated({
+        cols: payload.cols,
+        keep: payload.keep,
+        how: payload.how,
+        outputCols: payload.outputCols,
+      });
+    },
+    shortcut: 'll',
+  }),
+  createOperation({
+    key: 'Drop Empty',
+    name: 'Drop empty rows',
+    alias: 'drop empty rows',
+    defaultOptions: {
+      usesInputCols: true,
+      usesInputDataframe: true,
+      preview: 'basic columns',
+    },
+    action: (payload: {
+      source: Source;
+      cols: Cols;
+      keep: 'first' | 'last';
+      how: 'any' | 'all';
+      outputCols: Cols;
+      options: OperationOptions;
+    }): Source => {
+      return payload.source.rows.dropDuplicated({
+        cols: payload.cols,
+        keep: payload.keep,
+        how: payload.how,
+        outputCols: payload.outputCols,
+      });
+    },
+    shortcut: 'll',
+  }),
+  // Columns operations
+
   createOperation({
     key: 'lower',
     name: 'Lowercase column values',
@@ -878,7 +934,7 @@ export const operations = [
     defaultOptions: {
       usesInputCols: true,
       usesInputDataframe: true,
-      preview: 'basic columns'
+      preview: 'basic columns',
     },
     action: (payload: {
       source: Source;
@@ -891,7 +947,7 @@ export const operations = [
       return payload.source.cols.formatDate({
         cols: payload.cols,
         outputFormat,
-        outputCols: payload.outputCols
+        outputCols: payload.outputCols,
       });
     },
     fields: [
@@ -917,13 +973,52 @@ export const operations = [
           { value: { name: 'timezone', format: '%Z' }, text: 'Timezone' },
           { value: { name: 'day', format: '%j' }, text: 'Day number of year' },
           { value: { name: 'weekday', format: '%u' }, text: 'Weekday of year (Mon as 1st)' },
-          { value: { name: 'weekday', format: '%U' }, text: 'Weekday of year (Sun as 1st)' }
-        ]
-      }
+          { value: { name: 'weekday', format: '%U' }, text: 'Weekday of year (Sun as 1st)' },
+        ],
+      },
     ],
     shortcut: 'sed',
   }),
-
+  createOperation({
+    key: 'Extract from Date',
+    name: 'Extract a part of a date from a column',
+    alias: 'extract date year month day hour minute second',
+    defaultOptions: {
+      usesInputCols: true,
+      usesInputDataframe: true,
+      preview: 'basic columns',
+    },
+    action: (payload: {
+      source: Source;
+      cols: Cols;
+      type: unknown;
+      outputCols: Cols;
+      options: OperationOptions;
+    }): Source => {
+      const outputFormat = payload.type as { name: string; format: string };
+      return payload.source.cols.formatDate({
+        cols: payload.cols,
+        outputFormat,
+        outputCols: payload.outputCols,
+      });
+    },
+    fields: [
+      {
+        name: 'type',
+        label: 'Type',
+        type: 'custom',
+        options: [
+          { value: { name: 'year', format: '%Y' }, text: 'Year Between' },
+          { value: { name: 'year', format: '%y' }, text: 'Months Between' },
+          { value: { name: 'month', format: '%B' }, text: 'Days Between' },
+          { value: { name: 'month', format: '%b' }, text: 'Hours Between' },
+          { value: { name: 'month', format: '%m' }, text: 'Minutes Between' },
+          { value: { name: 'day', format: '%d' }, text: 'Seconds Between' },
+        ],
+      },
+    ],
+    shortcut: 'sed',
+  }),
   // ML
   createOperation({
     key: 'sample',
@@ -978,12 +1073,12 @@ export const operations = [
         name: 'strategy',
         label: 'Fill empty values with',
         options: [
-          {value: 'mean', text: 'Mean'},
-          {value: 'median', text: 'Median'},
-          {value: 'most_frequent', text: 'Most frequent'},
-          {value: 'constant', text: 'Constant'}
+          { value: 'mean', text: 'Mean' },
+          { value: 'median', text: 'Median' },
+          { value: 'most_frequent', text: 'Most frequent' },
+          { value: 'constant', text: 'Constant' },
         ],
-        type: 'string'
+        type: 'string',
       },
     ],
     shortcut: 'mi',
@@ -1002,14 +1097,14 @@ export const operations = [
       source: Source;
       cols: Cols;
       prefix: string,
-      drop:boolean,
+      drop: boolean,
       outputCols: Cols;
       options: OperationOptions;
     }): Source => {
       return payload.source.cols.oneHotEncode({
         cols: payload.cols,
         prefix: payload.prefix,
-        drop:payload.drop,
+        drop: payload.drop,
         outputCols: payload.outputCols,
       });
     },
