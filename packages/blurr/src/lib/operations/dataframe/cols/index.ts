@@ -23,7 +23,7 @@ function DataframeOperation<
 }
 
 function AggregationOperation<TA extends ArgsType = NoArgs>(
-  operationCreator: Pick<OperationCreator, 'name' | 'args'>,
+  operationCreator: Pick<OperationCreator, 'name' | 'args'>
 ) {
   type Args = { cols: Cols } & TA & { tidy: boolean; compute: boolean };
 
@@ -110,7 +110,7 @@ function ColsMathOperation(name: string) {
         default: '*',
       },
       {
-        name: 'outputCol',
+        name: 'outputCols',
         default: null,
       },
     ],
@@ -317,7 +317,7 @@ export const operations = {
   // TODO: Support functions
   rename: DataframeOperation<{
     cols: Cols;
-    outputCols: Cols;
+    names: Cols;
     func: CallbackFunction;
   }>({
     targetType: 'dataframe',
@@ -947,7 +947,7 @@ export const operations = {
           default: null,
         },
       ],
-    },
+    }
   ),
   floor: DataframeOperation<{ cols: Cols; outputCols: Cols }>({
     targetType: 'dataframe',
@@ -1620,6 +1620,10 @@ export const operations = {
         name: 'format',
         default: null,
       },
+      {
+        name: 'outputCols',
+        default: null,
+      },
     ],
   }),
   month: DataframeOperation<{ cols: Cols; format: string; outputCols: Cols }>({
@@ -1652,6 +1656,10 @@ export const operations = {
         name: 'format',
         default: null,
       },
+      {
+        name: 'outputCols',
+        default: null,
+      },
     ],
   }),
   hour: DataframeOperation<{ cols: Cols; format: string; outputCols: Cols }>({
@@ -1664,6 +1672,10 @@ export const operations = {
       },
       {
         name: 'format',
+        default: null,
+      },
+      {
+        name: 'outputCols',
         default: null,
       },
     ],
@@ -1680,6 +1692,10 @@ export const operations = {
         name: 'format',
         default: null,
       },
+      {
+        name: 'outputCols',
+        default: null,
+      },
     ],
   }),
   second: DataframeOperation<{ cols: Cols; format: string; outputCols: Cols }>({
@@ -1692,6 +1708,10 @@ export const operations = {
       },
       {
         name: 'format',
+        default: null,
+      },
+      {
+        name: 'outputCols',
         default: null,
       },
     ],
@@ -1709,8 +1729,12 @@ export const operations = {
           name: 'format',
           default: null,
         },
+        {
+          name: 'outputCols',
+          default: null,
+        },
       ],
-    },
+    }
   ),
   yearsBetween: DateDataframeOperation('cols.yearsBetween'),
   monthsBetween: DateDataframeOperation('cols.monthsBetween'),
@@ -1908,6 +1932,10 @@ export const operations = {
       },
       {
         name: 'fillValue',
+        default: null,
+      },
+      {
+        name: 'outputCols',
         default: null,
       },
     ],
@@ -2203,7 +2231,7 @@ export const operations = {
           default: true,
         },
       ],
-    },
+    }
   ),
   inferType: DataframeOperation<{
     cols: Cols;
