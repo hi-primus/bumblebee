@@ -89,6 +89,10 @@ const showCommands = ref(false);
 
 const state = inject('state') as Ref<State>;
 
+const { submitOperation, cancelOperation } = inject(
+  'operation-actions'
+) as OperationActions;
+
 const showSidebar = inject('show-sidebar') as Ref<boolean>;
 
 const lastKeys = ref<string[]>([]);
@@ -227,6 +231,8 @@ const selectOperation = (operation: Operation | null = null) => {
       recentOperationKeys.value.shift();
     }
     recentOperationKeys.value.push(operation.key);
+  } else {
+    cancelOperation();
   }
   state.value = operation;
   showSidebar.value = true;
