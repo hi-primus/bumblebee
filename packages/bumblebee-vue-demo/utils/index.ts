@@ -26,6 +26,45 @@ export const throttle = (
   };
 };
 
+export const throttleOnce = (
+  func: (...args: unknown[]) => Promise<unknown>,
+  limit: number | ((...args: Arguments<typeof func>) => number)
+): typeof func => {
+  /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-this-alias */
+  let lastFunc: ReturnType<typeof setTimeout>;
+  let lastRan: any;
+
+  let promise: Promise<unknown> | null = null;
+
+  return async function (...args: unknown[]) {
+    const context = this;
+    limit = typeof limit === 'function' ? limit.apply(context, args) : limit;
+
+    if (promise) {
+      await promise;
+      promise = null;
+      return;
+    }
+
+    if (!lastRan) {
+      promise = func.apply(context, args);
+      await promise;
+      promise = null;
+      lastRan = Date.now();
+    } else {
+      clearTimeout(lastFunc);
+      lastFunc = setTimeout(async function () {
+        if (Date.now() - lastRan >= limit) {
+          promise = func.apply(context, args);
+          await promise;
+          promise = null;
+          lastRan = Date.now();
+        }
+      }, limit - (Date.now() - lastRan));
+    }
+  };
+};
+
 export const stepify = (a: number, b: number, f = Math.round) => {
   return f(a / b) * b;
 };
