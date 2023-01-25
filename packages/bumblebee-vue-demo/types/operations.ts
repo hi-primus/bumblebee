@@ -13,6 +13,8 @@ interface Field {
   defaultValue?: unknown;
 }
 
+export type PreviewType = boolean | 'basic columns' | 'whole'; // TODO: add preview types
+
 export interface OperationOptions {
   usesInputCols?: boolean;
   usesOutputCols?: boolean;
@@ -20,7 +22,7 @@ export interface OperationOptions {
   saveToNewDataframe?: boolean;
   sourceId?: string;
   targetType: 'dataframe' | 'value';
-  preview?: boolean | 'basic columns'; // TODO: add preview types
+  preview?: PreviewType;
 }
 
 export interface OperationCreator<TA, TR> {

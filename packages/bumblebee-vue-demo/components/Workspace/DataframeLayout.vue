@@ -3,7 +3,7 @@
   <WorkspaceToolbar />
   <section class="workspace-table overflow-hidden">
     <TableChunks
-      v-if="dataframeObject?.profile"
+      v-if="dataframeObject?.profile || previewData?.profile"
       class="overflow-auto"
       :header="header"
       :chunks="completedChunks"
@@ -44,7 +44,13 @@ const header = computed<ColumnHeader[]>(() => {
         }
       : dataframeProfile;
   const originalColumns = profile?.columns;
-  const columns = previewData.value?.columns || originalColumns;
+  const columns =
+    previewData.value?.columns ||
+    previewData.value?.profile?.columns ||
+    originalColumns;
+
+  const wholePreview = previewData.value?.options?.usesInputDataframe === false;
+
   if (columns && Object.keys(columns)) {
     return Object.entries(columns).map(([title, column]) => {
       return {
@@ -54,7 +60,7 @@ const header = computed<ColumnHeader[]>(() => {
           originalColumns?.[title]?.data_type,
         stats:
           (column as ColumnHeader).stats || originalColumns?.[title]?.stats,
-        preview: (column as ColumnHeader).preview
+        preview: (column as ColumnHeader).preview || wholePreview
       };
     });
   }
@@ -62,7 +68,10 @@ const header = computed<ColumnHeader[]>(() => {
 });
 
 const rowsCount = computed(() => {
-  return dataframeObject.value?.profile?.summary?.rows_count;
+  return (
+    dataframeObject.value?.profile?.summary?.rows_count ||
+    previewData.value?.profile?.summary?.rows_count
+  );
 });
 
 // chunks
@@ -135,6 +144,25 @@ const getChunk = async function (start: number, stop: number) {
       upper_bound: stop
     })
     .columnsSample();
+
+  if (sample.value.length === 0) {
+    console.warn(`Sample length '${sample.value.length}' is zero`);
+    return;
+  }
+
+  if (sample.value.length < stop - start) {
+    console.warn(
+      `Sample length '${sample.value.length}' is less than expected for range '${start} - ${stop}'`
+    );
+
+    stop = start + sample.value.length;
+
+    // filter out ranges from queue if it contains chunks that are out of range
+
+    chunksQueue.value = chunksQueue.value.filter(
+      ([_start, _stop]) => _start < stop && _stop < stop
+    );
+  }
 
   const chunk = {
     start,

@@ -32,7 +32,7 @@ import {
   TableSelection
 } from '@/types/operations';
 import { AppStatus } from '@/types/workspace';
-import { compareObjects, throttle } from '@/utils';
+import { compareObjects, throttleOnce } from '@/utils';
 import { preliminaryProfile } from '@/utils/blurr';
 
 const blurrPackage = useBlurr();
@@ -265,7 +265,7 @@ const operationActions: OperationActions = {
 
 provide('operation-actions', operationActions);
 
-const previewOperation = throttle(async function () {
+const previewOperation = throttleOnce(async function () {
   try {
     appStatus.value = 'busy';
 
@@ -276,47 +276,58 @@ const previewOperation = throttle(async function () {
       return;
     }
 
-    const firstSampleSource = await payload.source.iloc({
-      target: 'operation_first_preview_df',
-      lower_bound: scrollRange.value[0],
-      upper_bound: scrollRange.value[1]
-    });
+    let firstSampleSource: Source | null = null;
 
-    const firstSampleResult = await operation
-      .action({
-        ...payload,
-        source: firstSampleSource,
-        blurr
-      })
-      .columnsSample();
+    const start = scrollRange.value?.[0] || 0;
+    const stop = scrollRange.value?.[1] || 50;
 
-    console.info('Operation range', scrollRange.value);
-    console.info('Operation result', firstSampleResult);
+    if (payload.source) {
+      firstSampleSource = await payload.source.iloc({
+        target: 'operation_first_preview_df',
+        lower_bound: start,
+        upper_bound: stop
+      });
 
-    // clear chunks
+      const firstSampleResult = await operation
+        .action({
+          ...payload,
+          source: firstSampleSource,
+          blurr
+        })
+        .columnsSample();
 
-    dataframeLayout.value?.clearChunks(false);
+      // clear chunks
 
-    // use preview columns instead of source columns
+      dataframeLayout.value?.clearChunks(false);
 
-    previewData.value = {
-      columns: getPreviewColumns(firstSampleResult.columns)
-    };
+      // use preview columns instead of source columns
 
-    // add first chunk to dataframe
+      previewData.value = {
+        options: { usesInputDataframe: true },
+        columns: getPreviewColumns(firstSampleResult.columns),
+        type: payload.options.preview
+      };
 
-    dataframeLayout.value?.addChunk({
-      start: scrollRange.value[0],
-      stop: scrollRange.value[1],
-      data: firstSampleResult.value
-    });
+      // add first chunk to dataframe
+
+      dataframeLayout.value?.addChunk({
+        start,
+        stop,
+        data: firstSampleResult.value
+      });
+    } else {
+      previewData.value = {
+        options: { usesInputDataframe: false },
+        type: payload.options.preview
+      };
+    }
 
     // get profile for preview columns
 
     const result = await operation.action({
       ...payload,
       source: payload.source,
-      target: 'operation_preview_' + payload.source.name,
+      target: 'operation_preview_' + (payload.source?.name || 'load_df'),
       blurr
     });
 
@@ -334,13 +345,17 @@ const previewOperation = throttle(async function () {
       profile: await preliminaryProfile(result)
     };
 
+    const profilePromise = payload.source
+      ? result.profile({
+          cols: Object.entries(previewData.value?.columns || {})
+            ?.filter(([_, { preview }]) => preview)
+            .map(([title, _]) => title)
+        })
+      : result.profile({ cols: '*' });
+
     previewData.value = {
       ...previewData.value,
-      profile: await result.profile({
-        cols: Object.entries(previewData.value?.columns)
-          ?.filter(([_, { preview }]) => preview)
-          .map(([title, _]) => title)
-      })
+      profile: await profilePromise
     };
 
     appStatus.value = 'ready';

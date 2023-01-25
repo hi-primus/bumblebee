@@ -1,5 +1,7 @@
 import type { Source } from 'blurr/build/main/types';
 
+import type { PreviewType } from './operations';
+
 export type FrequencyValue = { count: number; value: BasicType };
 
 export type HistValue = { count: number; lower: number; upper: number };
@@ -46,10 +48,16 @@ export interface DataframeProfile {
   file_name?: string;
 }
 
+export interface PreviewOptions {
+  usesInputDataframe?: boolean;
+}
+
 export interface PreviewData {
-  columns: Record<string, PreviewColumn>;
+  columns?: Record<string, PreviewColumn>;
   df?: Source;
   profile?: DataframeProfile;
+  options?: PreviewOptions;
+  type: PreviewType;
 }
 
 export interface DataframeObject {
