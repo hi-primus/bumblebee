@@ -279,7 +279,10 @@ const columnClicked = (event: MouseEvent, columnIndex: number) => {
   if (event.shiftKey && lastColumnClicked !== null) {
     const start = Math.min(columnIndex, lastColumnClicked);
     const stop = Math.max(columnIndex, lastColumnClicked);
-    columns = props.header.slice(start, stop + 1).map(c => c.title);
+    columns = props.header
+      .slice(start, stop + 1)
+      .filter(c => !c.preview)
+      .map(c => c.title);
   } else if (event.ctrlKey) {
     if (selection.value?.columns.includes(columnTitle)) {
       columns = selection.value.columns.filter(c => c !== columnTitle);
