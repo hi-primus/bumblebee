@@ -82,6 +82,7 @@ import { Ref } from 'vue';
 
 import AppInput from '@/components/App/Input.vue';
 import { Operation, State } from '@/types/operations';
+import { focusNext, focusPrevious } from '@/utils';
 import { operations } from '@/utils/operations';
 
 const showCommands = ref(false);
@@ -212,22 +213,9 @@ const handleKeyDownOperation = (event: KeyboardEvent) => {
       showCommands.value = false;
     }
   } else if (key === 'arrowdown') {
-    let el = targetElement.nextElementSibling as HTMLElement;
-
-    if (el) {
-      if (el.tabIndex !== 0) {
-        el = el.nextElementSibling as HTMLElement;
-      }
-      el.focus();
-    }
+    focusNext(targetElement);
   } else if (key === 'arrowup') {
-    let el = targetElement.previousElementSibling as HTMLElement;
-    if (el) {
-      if (el.tabIndex !== 0) {
-        el = el.previousElementSibling as HTMLElement;
-      }
-      el.focus();
-    } else {
+    if (!focusPrevious(targetElement)) {
       focusInput(searchOperationElement.value);
     }
   }

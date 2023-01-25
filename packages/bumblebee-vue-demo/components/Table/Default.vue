@@ -39,20 +39,33 @@
             'column-color-primary': selection?.columns.includes(column.title)
           }"
           class="bumblebee-table-column relative z-[0]"
+          :tabindex="column.preview ? -1 : 0"
           :style="{
             height: columnHeaderHeight + safeRowsCount * rowHeight + 'px',
             width: minColumnWidth + 'px'
           }"
+          :data-index="columnIndex"
+          @keydown="
+            $event =>
+              column.preview ? null : handleKeyDown($event, columnIndex)
+          "
+          @mousedown.prevent
         >
-          <div
-            class="column-header border-[color:var(--line-color)] border ml-[-1px] mt-[-1px] sticky top-0 bg-white z-[2] font-mono"
-          >
+          <div class="column-header">
             <div
-              class="column-title border-[color:var(--line-color)] border-b text-[16px] py-1 px-3 text-center flex align-center cursor-pointer select-none"
+              class="column-title border-[color:var(--line-color)] border-b text-[16px] py-1 px-3 text-center flex align-center select-none"
+              :class="{
+                'cursor-pointer': !column.preview
+              }"
               :style="{
                 height: columnTitleHeight + 'px'
               }"
-              @click="$event => columnClicked($event, columnIndex)"
+              @click.prevent="
+                $event =>
+                  column.preview
+                    ? null
+                    : columnClicked($event, columnIndex, true)
+              "
             >
               <span
                 :title="dataTypeNames[columnIndex]"
@@ -132,7 +145,7 @@ import { PropType, Ref } from 'vue';
 
 import { ColumnHeader } from '@/types/dataframe';
 import { TableSelection } from '@/types/operations';
-import { throttle } from '@/utils';
+import { focusNext, focusPrevious, throttle } from '@/utils';
 import { TYPES_HINTS, TYPES_NAMES } from '@/utils/data-types';
 
 const props = defineProps({
@@ -267,7 +280,52 @@ watch([props.rowsCount, props.data], onScroll);
 
 let lastColumnClicked: number | null = null;
 
-const columnClicked = (event: MouseEvent, columnIndex: number) => {
+const handleKeyDown = (event: KeyboardEvent, columnIndex: number) => {
+  console.log('[DEBUG][TABLE] Key down', event.key, event, columnIndex);
+  const key = event.key.toLowerCase();
+  if (key === 'escape') {
+    selection.value = {
+      columns: [],
+      ranges: null,
+      indices: null,
+      values: null
+    };
+  } else if (key === ' ' || key === 'spacebar' || key === 'enter') {
+    columnClicked(event, columnIndex);
+  } else if (key === 'arrowleft') {
+    const el = focusPrevious(event.target as HTMLElement);
+    if (el && event.shiftKey) {
+      const indexFromElement = el.getAttribute('data-index');
+      if (indexFromElement) {
+        columnClicked(event, +indexFromElement);
+      }
+    }
+  } else if (key === 'arrowright') {
+    const el = focusNext(event.target as HTMLElement);
+    if (el && event.shiftKey) {
+      const indexFromElement = el.getAttribute('data-index');
+      if (indexFromElement) {
+        columnClicked(event, +indexFromElement);
+      }
+    }
+  }
+};
+
+const columnClicked = (
+  event: MouseEvent | KeyboardEvent,
+  columnIndex: number,
+  focus = false
+) => {
+  if (event.target && focus) {
+    let el = event.target as HTMLElement;
+    while (el && el.tabIndex !== 0) {
+      el = el.parentElement as HTMLElement;
+    }
+    if (el) {
+      el.focus();
+    }
+  }
+
   if (selection.value?.columns.length === 0 || !event.shiftKey) {
     lastColumnClicked = columnIndex;
   }
@@ -316,6 +374,21 @@ const columnClicked = (event: MouseEvent, columnIndex: number) => {
   &[class*='column-color-'] {
     z-index: 2;
   }
+  &:focus {
+    outline: none;
+    &::after {
+      z-index: 3;
+      content: '';
+      @apply absolute top-0 left-[-1px] right-0 bottom-[-1px];
+      @apply pointer-events-none;
+      @apply outline-primary-light outline-offset-[-3px] outline-dashed outline-2;
+      @apply opacity-75;
+      &,
+      & .column-header {
+        @apply bg-transparent;
+      }
+    }
+  }
   &.column-color-primary {
     --line-color: theme('colors.primary.lighter');
     &,
@@ -332,7 +405,17 @@ const columnClicked = (event: MouseEvent, columnIndex: number) => {
   }
 }
 
+.column-header {
+  @apply border-[color:var(--line-color)] border ml-[-1px] mt-[-1px] sticky top-0 bg-white z-[2] font-mono;
+}
+
 .column-cell {
-  @apply absolute px-1 border-[color:var(--line-color)] border w-[calc(100%+1px)] ml-[-1px] mt-[-1px];
+  @apply absolute px-1;
+  @apply ml-[-1px] mr-[0px];
+  @apply w-[calc(100%+1px)];
+  @apply border-[color:var(--line-color)] border;
+  // border-right-color: red;
+  /* bottom border only when last row */
+  @apply border-y-0 last:border-b;
 }
 </style>

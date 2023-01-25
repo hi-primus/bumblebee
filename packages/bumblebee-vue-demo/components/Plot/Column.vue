@@ -8,7 +8,7 @@
       "
       :data="data.stats"
       :column-name="data.title"
-      selectable
+      :selectable="!data.preview"
       @hovered="hovered = $event"
     />
     <div class="px-1 pt-[2px]">
@@ -16,14 +16,14 @@
         v-if="data.stats?.hist"
         :data="data.stats?.hist"
         :column-name="data.title"
-        selectable
+        :selectable="!data.preview"
         @hovered="hovered = $event"
       />
       <PlotFrequency
         v-else-if="data.stats?.frequency"
         :data="data.stats?.frequency"
         :column-name="data.title"
-        selectable
+        :selectable="!data.preview"
         @hovered="hovered = $event"
       />
       <div
@@ -65,10 +65,10 @@
 </template>
 
 <script setup lang="ts">
-import { Column } from '@/types/dataframe';
+import { ColumnHeader } from '@/types/dataframe';
 
 defineProps<{
-  data: Column;
+  data: ColumnHeader;
 }>();
 
 const hovered = ref<string | null>(null);

@@ -49,3 +49,35 @@ export const compareObjects = (a: unknown, b: unknown): boolean => {
     return key in b && compareObjects(a[key], b[key]);
   });
 };
+
+// HTML
+
+export const focusNext = (el: HTMLElement) => {
+  el = el.nextElementSibling as HTMLElement;
+
+  if (el) {
+    while (el && el.tabIndex !== 0) {
+      el = el.nextElementSibling as HTMLElement;
+    }
+    if (el) {
+      el.focus();
+      return el;
+    }
+  }
+  return null;
+};
+
+export const focusPrevious = (el: HTMLElement) => {
+  el = el.previousElementSibling as HTMLElement;
+
+  if (el) {
+    while (el && el.tabIndex !== 0) {
+      el = el.previousElementSibling as HTMLElement;
+    }
+    if (el) {
+      el.focus();
+      return el;
+    }
+  }
+  return null;
+};
