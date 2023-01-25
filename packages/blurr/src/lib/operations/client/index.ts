@@ -35,11 +35,14 @@ export const operations = {
           `op.load.csv('${kwargs.url}')`
         );
       }
-      return (
-        `${kwargs.buffer}_py = BytesIO(${kwargs.buffer}.to_py());` +
-        (kwargs.target ? `${kwargs.target} = ` : '') +
-        `op.load.csv(${kwargs.buffer}_py)`
-      );
+      if (kwargs.buffer) {
+        return (
+          `${kwargs.buffer}_py = BytesIO(${kwargs.buffer}.to_py());` +
+          (kwargs.target ? `${kwargs.target} = ` : '') +
+          `op.load.csv(${kwargs.buffer}_py)`
+        );
+      }
+      throw new Error('Either url or buffer must be provided');
     },
   }),
   createDataframe: DataframeCreationOperation<{
