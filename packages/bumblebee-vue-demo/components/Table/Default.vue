@@ -189,7 +189,7 @@ const safeRowsCount = computed(() => {
   }
   const keys = Object.keys(props.data);
   if (keys.length) {
-    const count = +keys[keys.length - 1];
+    const count = +keys[keys.length - 1] + 1;
     console.log(
       '[DEBUG][TABLE] Setting rows count to',
       count,
@@ -274,9 +274,9 @@ onMounted(() => {
   onScroll();
 });
 
-watch(props.header, onScroll, { deep: true });
+watch(() => props.header, onScroll, { deep: true });
 
-watch([props.rowsCount, props.data], onScroll);
+watch(() => [props.rowsCount, props.data], onScroll);
 
 let lastColumnClicked: number | null = null;
 
