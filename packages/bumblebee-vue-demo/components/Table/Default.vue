@@ -54,11 +54,6 @@
               }"
               @click="$event => columnClicked($event, columnIndex)"
             >
-              <Icon
-                v-if="!column.data_type"
-                :path="mdiTableColumn"
-                class="left-icon inline text-current"
-              />
               <span
                 :title="dataTypeNames[columnIndex]"
                 class="left-icon inline text-current max-w-5 font-bold text-center"
@@ -133,7 +128,6 @@
 </template>
 
 <script setup lang="ts">
-import { mdiTableColumn } from '@mdi/js';
 import { PropType, Ref } from 'vue';
 
 import { ColumnHeader } from '@/types/dataframe';
