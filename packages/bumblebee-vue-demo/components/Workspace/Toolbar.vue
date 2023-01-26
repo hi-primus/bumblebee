@@ -195,6 +195,7 @@ const handleKeyDownSearch = (event: KeyboardEvent) => {
         if (operation) {
           selectOperation(operation);
           showCommands.value = false;
+          event.preventDefault();
         }
       } else if (key === 'arrowdown') {
         (el as HTMLElement).focus();
@@ -215,6 +216,7 @@ const handleKeyDownOperation = (event: KeyboardEvent) => {
     if (operation) {
       selectOperation(operation);
       showCommands.value = false;
+      event.preventDefault();
     }
   } else if (key === 'arrowdown') {
     focusNext(targetElement);
