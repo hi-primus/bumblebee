@@ -1,6 +1,6 @@
 import { isObject } from './common';
 
-interface Field {
+export interface Field {
   name: string;
   type: string;
   key?: string;

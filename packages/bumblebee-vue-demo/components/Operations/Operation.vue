@@ -14,36 +14,11 @@
       :options="Object.keys(dataframeObject?.profile?.columns || {})"
     />
     <template v-if="operation?.fields?.length">
-      <template v-for="field in operation.fields">
-        <AppSelector
-          v-if="field.options?.length"
-          :key="`selector-${field.name}`"
-          v-model="operationValues[field.name]"
-          :options="field.options"
-          :text-callback="field.textCallback"
-          :label="field.label || field.name"
-          :name="field.name"
-          :placeholder="field.placeholder"
-          :class="field.class || 'w-full'"
-        />
-        <AppInput
-          v-else-if="field.type === 'string'"
-          :key="`input-${field.name}`"
-          v-model="operationValues[field.name]"
-          :label="field.label || field.name"
-          :name="field.name"
-          :placeholder="field.placeholder"
-          :class="field.class || 'w-full'"
-        />
-        <AppCheckbox
-          v-else-if="field.type === 'boolean'"
-          :key="`check-${field.name}`"
-          v-model="operationValues[field.name]"
-          :label="field.label || field.name"
-          :name="field.name"
-          :class="field.class || 'w-full'"
-        />
-      </template>
+      <AppOperationField
+        v-for="field in operation.fields"
+        :key="field.name"
+        :field="field"
+      />
     </template>
     <div class="w-full flex justify-end gap-2">
       <AppButton
