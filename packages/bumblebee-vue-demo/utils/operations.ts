@@ -17,9 +17,19 @@ export const operationCreators: OperationCreator[] = [
       saveToNewDataframe: true,
       preview: 'whole'
     },
-    action: (payload: { blurr: Client; url: string }): Source => {
+    action: (payload: {
+      blurr: Client;
+      url: string;
+      nRows?: number;
+      options: OperationOptions;
+    }): Source => {
+      if (payload.options.preview) {
+        payload.nRows = Math.min(payload.nRows || 50, 50);
+      }
+
       return payload.blurr.readCsv({
-        url: payload.url
+        url: payload.url,
+        nRows: payload.nRows
       });
     },
     fields: [

@@ -14,7 +14,11 @@ function DataframeCreationOperation<
 }
 
 export const operations = {
-  readCsv: DataframeCreationOperation<{ url?: string; buffer?: string }>({
+  readCsv: DataframeCreationOperation<{
+    url?: string;
+    buffer?: string;
+    nRows?: number;
+  }>({
     name: 'readCsv',
     args: [
       {
@@ -23,16 +27,22 @@ export const operations = {
       {
         name: 'buffer',
       },
+      {
+        name: 'nRows',
+      },
     ],
     getCode: function (kwargs: {
       target: string;
       url: string;
       buffer: string;
+      n_rows: number;
     }) {
       if (kwargs.url) {
         return (
           (kwargs.target ? `${kwargs.target} = ` : '') +
-          `op.load.csv('${kwargs.url}')`
+          `op.load.csv('${kwargs.url}'` +
+          (kwargs.n_rows ? `, n_rows=${kwargs.n_rows}` : '') +
+          `)`
         );
       }
       if (kwargs.buffer) {

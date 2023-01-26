@@ -39,7 +39,7 @@ export interface OperationCreator {
     server: RunsCode,
     kwargs?: Record<string, PythonCompatible>
   ) => PythonCompatible;
-  // generates the code that will be run on the server when the operation is run, replaces `run` if provided
+  // generates the code that will be run on the server when the operation is run, replaces `run` if provided, uses snake case for the arguments
   getCode?: (kwargs?: Record<string, PythonCompatible>) => string;
 }
 
