@@ -7,11 +7,11 @@
       <Tabs
         v-model:selected="selectedDataframe"
         :tabs="dataframes.map(({ name }) => ({ label: name }))"
+        @close="(index: number) => dataframes.splice(index, 1)"
       />
       <WorkspaceDataframeLayout
         :key="selectedDataframe"
         ref="dataframeLayout"
-        @close="(index: number) => dataframes.splice(index, 1)"
       />
     </div>
   </NuxtLayout>
