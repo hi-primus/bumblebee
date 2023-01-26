@@ -1,13 +1,14 @@
 <template>
-  <div class="selector">
+  <div class="input selector">
     <Listbox
       v-slot="{ open }"
       v-model="selectedOption"
       as="div"
       :multiple="multiple"
+      class="relative"
       :disabled="disabled || !options?.length"
     >
-      <label v-if="label" class="label selector-label">
+      <label v-if="label" class="label input-label selector-label">
         {{ label }}
       </label>
       <ListboxButton
@@ -77,7 +78,7 @@
         leave-to-class="opacity-0"
       >
         <ListboxOptions
-          class="absolute mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg sm:text-sm z-2"
+          class="absolute z-[3] mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg sm:text-sm"
           @blur="validate"
         >
           <ListboxOption
@@ -96,7 +97,7 @@
                 'relative cursor-default select-none py-2 pl-10 pr-4'
               ]"
             >
-              <span class="text-left font-500 block truncate">
+              <span class="block truncate">
                 <slot
                   name="option"
                   v-bind="typeof option === 'object' ? option : { option }"

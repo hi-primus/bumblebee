@@ -42,7 +42,8 @@
   }
   &:focus-within,
   &:focus {
-    .input-field {
+    .input-field,
+    .selector-button {
       @apply ring-1 ring-primary/75 border-primary/75;
     }
     .input-label {
@@ -52,7 +53,8 @@
 }
 
 .input:not([class*='input-size-']) {
-  .input-field {
+  .input-field,
+  .selector-button {
     @apply sm:text-sm md:text-base min-h-[26px] py-2 px-5;
   }
   .input-label {
@@ -61,7 +63,8 @@
 }
 
 .input-size-condensed {
-  .input-field {
+  .input-field,
+  .selector-button {
     @apply sm:text-sm md:text-base min-h-[18px] py-2 px-3;
   }
   .input-label {
@@ -70,7 +73,8 @@
 }
 
 .input-size-small {
-  .input-field {
+  .input-field,
+  .selector-button {
     @apply sm:text-xs md:text-sm min-h-[18px] py-1 px-2;
   }
   .input-label {
@@ -106,9 +110,13 @@
 .selector {
   @apply sm:text-sm md:text-base relative;
 
-  .selector-buttonOpen {
-    @apply ring-2 ring-primary-dark;
+  .selector-button {
+    @apply input-primary w-full text-left;
   }
+
+  // .selector-buttonOpen {
+  //   @apply ring-1 ring-primary/75 border-primary/75;
+  // }
   // .selector-buttonClosed {
   // }
   .selector-buttonIcon {
@@ -145,18 +153,6 @@
   }
   .selector-errorInput {
     @apply border border-error;
-  }
-}
-
-.selector:not([class*='selector-size-']) {
-  .selector-button {
-    @apply input-primary w-full min-h-[26px] py-2 px-5 text-left disabled:opacity-80;
-  }
-}
-
-.selector-size-condensed {
-  .selector-button {
-    @apply input-primary w-full min-h-[18px] py-2 px-3 text-left disabled:opacity-80;
   }
 }
 

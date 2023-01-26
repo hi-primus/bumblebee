@@ -13,6 +13,7 @@
   }
   .grouped-first {
     &,
+    & .selector-button,
     & .input-field {
       margin-right: -1px;
       border-top-right-radius: 0 !important;
@@ -21,12 +22,14 @@
   }
   .grouped-middle {
     &,
+    & .selector-button,
     & .input-field {
       border-radius: 0 !important;
     }
   }
   .grouped-last {
     &,
+    & .selector-button,
     & .input-field {
       margin-left: -1px;
       border-top-left-radius: 0 !important;
