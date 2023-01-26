@@ -72,6 +72,7 @@ export const operations = [
     name: 'Load from url',
     defaultOptions: {
       saveToNewDataframe: true,
+      preview: 'whole'
     },
     action: (payload: { blurr: Client; url: string }): Source => {
       return payload.blurr.readCsv(payload.url);
