@@ -26,8 +26,9 @@
   }
   &:focus-within,
   &:focus {
+    @apply z-[5];
     .text-input-field {
-      @apply ring-1 ring-primary/75 border-primary/75;
+      @apply z-[5] ring-1 ring-primary/75 border-primary/75;
     }
     .text-input-label {
       @apply text-primary-dark;

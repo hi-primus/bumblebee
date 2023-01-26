@@ -11,6 +11,7 @@ interface Field {
   textCallback?: (value: unknown) => string;
   description?: string;
   defaultValue?: unknown;
+  class?: string;
 }
 
 export type PreviewType = boolean | 'basic columns' | 'whole'; // TODO: add preview types

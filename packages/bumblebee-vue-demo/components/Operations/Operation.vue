@@ -1,7 +1,7 @@
 <template>
   <form
     ref="operationElement"
-    class="flex flex-col px-2 pt-5 gap-5 bg-red"
+    class="flex flex-wrap px-2 pt-5 gap-y-5"
     @submit.prevent="submit"
   >
     <AppAutocomplete
@@ -10,6 +10,7 @@
       multiple
       label="Columns"
       name="Columns"
+      class="w-full"
       :options="Object.keys(dataframeObject?.profile?.columns || {})"
     />
     <template v-if="operation?.fields?.length">
@@ -23,6 +24,7 @@
           :label="field.label || field.name"
           :name="field.name"
           :placeholder="field.placeholder"
+          :class="field.class || 'w-full'"
         />
         <AppInput
           v-else-if="field.type === 'string'"
@@ -31,6 +33,7 @@
           :label="field.label || field.name"
           :name="field.name"
           :placeholder="field.placeholder"
+          :class="field.class || 'w-full'"
         />
         <AppCheckbox
           v-else-if="field.type === 'boolean'"
@@ -38,10 +41,11 @@
           v-model="operationValues[field.name]"
           :label="field.label || field.name"
           :name="field.name"
+          :class="field.class || 'w-full'"
         />
       </template>
     </template>
-    <div class="flex justify-end gap-2">
+    <div class="w-full flex justify-end gap-2">
       <AppButton
         class="btn-layout-invisible"
         :disabled="Boolean(status)"
