@@ -70,12 +70,12 @@ export function ServerPyodide(options: ServerOptions): ServerInterface {
     const micropip = pyodide.pyimport('micropip');
 
     await micropip.install(
-      'https://test-files.pythonhosted.org/packages/4b/41/a3e8331bd09ffcca4834715b4c269fc2cfa5acdfa4fb080f02a3c0acf688/pyoptimus-0.1.40212-py3-none-any.whl'
+      'https://test-files.pythonhosted.org/packages/18/7a/61700f533f49cdda5372fe7a1d1141d48ee6a500cd467d5bb70916eca74d/pyoptimus-0.1.4022-py3-none-any.whl'
     );
     pyodide.runPython(`
       from optimus import Optimus
       from io import BytesIO
-      op = Optimus("pyscript")
+      op = Optimus("pyodide")
       def run_method(method, kwargs):
           return method(**kwargs.to_py())
     `);
