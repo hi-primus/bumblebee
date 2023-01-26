@@ -25,19 +25,31 @@ export interface OperationOptions {
   preview?: PreviewType;
 }
 
-export interface OperationCreator<TA, TR> {
+export interface OperationCreatorBase {
   key: string;
   name: string;
   alias?: string;
   description?: string;
   fields?: Field[];
   defaultOptions?: Partial<OperationOptions>;
-  action: (payload: TA) => TR;
   shortcut?: string;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type Operation<TA = any, TR = any> = OperationCreator<TA, TR> & {
+type OperationCreatorAction = OperationCreatorBase & {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  action: (...args: any) => any;
+};
+
+type OperationCreatorParameters = OperationCreatorBase & {
+  uses: string;
+  defaultPayload?: Record<string, unknown>;
+};
+
+export type OperationCreator =
+  | OperationCreatorAction
+  | OperationCreatorParameters;
+
+export type Operation = OperationCreatorAction & {
   defaultOptions: OperationOptions;
   fields: Field[];
 };

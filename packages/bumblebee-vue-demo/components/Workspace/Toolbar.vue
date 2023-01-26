@@ -81,7 +81,12 @@ import { mdiCodeTags, mdiMagnify } from '@mdi/js';
 import { Ref } from 'vue';
 
 import AppInput from '@/components/App/Input.vue';
-import { Operation, State } from '@/types/operations';
+import {
+  Operation,
+  OperationActions,
+  Payload,
+  State
+} from '@/types/operations';
 import { focusNext, focusPrevious } from '@/utils';
 import { operations } from '@/utils/operations';
 
@@ -89,9 +94,9 @@ const showCommands = ref(false);
 
 const state = inject('state') as Ref<State>;
 
-const { submitOperation, cancelOperation } = inject(
-  'operation-actions'
-) as OperationActions;
+const { cancelOperation } = inject('operation-actions') as OperationActions;
+
+const operationValues = inject('operation-values') as Ref<Payload>;
 
 const showSidebar = inject('show-sidebar') as Ref<boolean>;
 
@@ -238,6 +243,14 @@ const selectOperation = (operation: Operation | null = null) => {
   }
   state.value = operation;
   showSidebar.value = true;
+  setTimeout(() => {
+    operation?.fields.forEach(field => {
+      if (field.defaultValue) {
+        operationValues.value = operationValues.value || {};
+        operationValues.value[field.name] = field.defaultValue;
+      }
+    });
+  }, 0);
 };
 
 const onKeyDown = (event: KeyboardEvent) => {
@@ -277,7 +290,7 @@ const onKeyUp = (event: KeyboardEvent) => {
 
   const shortcut = lastKeys.value.join('');
 
-  const operation = Object.values(operations).find(
+  const operation = operations.find(
     operation => operation.shortcut && shortcut.endsWith(operation.shortcut)
   );
 
