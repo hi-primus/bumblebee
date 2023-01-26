@@ -59,7 +59,7 @@
     @apply hover:text-[color:var(--button-hover-color)];
     @apply active:text-[color:var(--button-active-color)];
     @apply outline-[var(--button-highlight-color)];
-    @apply text-base font-medium gap-2 py-1 px-2;
+    @apply text-base font-normal gap-2 py-1 px-2;
     &:not([class*='btn-icon']):not([class*='btn-size-']) {
       @apply -btn-size-base;
     }
