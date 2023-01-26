@@ -68,7 +68,7 @@ onMounted(async () => {
   console.info('Initialization result:', result);
 });
 
-const state = ref<State>(null);
+const state = ref<State>('operations');
 provide('state', state);
 
 const selection = ref<TableSelection>(null);
