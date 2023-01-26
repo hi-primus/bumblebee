@@ -2,7 +2,7 @@ import { isObject } from './common';
 
 export interface Field {
   name: string;
-  type: string;
+  type: 'string' | 'boolean' | 'custom';
   key?: string;
   placeholder?: string;
   label?: string;
@@ -11,6 +11,15 @@ export interface Field {
   textCallback?: (value: unknown) => string;
   description?: string;
   defaultValue?: unknown;
+  class?: string;
+}
+
+export interface FieldGroup {
+  name: string;
+  fields: Field[];
+  type: 'group';
+  label?: string;
+  addLabel?: string;
   class?: string;
 }
 
@@ -31,7 +40,7 @@ export interface OperationCreatorBase {
   name: string;
   alias?: string;
   description?: string;
-  fields?: Field[];
+  fields?: (Field | FieldGroup)[];
   defaultOptions?: Partial<OperationOptions>;
   shortcut?: string;
 }
@@ -52,7 +61,7 @@ export type OperationCreator =
 
 export type Operation = OperationCreatorAction & {
   defaultOptions: OperationOptions;
-  fields: Field[];
+  fields: (Field | FieldGroup)[];
 };
 
 export const isOperation = (value: unknown): value is Operation => {

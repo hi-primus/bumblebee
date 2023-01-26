@@ -14,11 +14,61 @@
       :options="Object.keys(dataframeObject?.profile?.columns || {})"
     />
     <template v-if="operation?.fields?.length">
-      <AppOperationField
-        v-for="field in operation.fields"
-        :key="field.name"
-        :field="field"
-      />
+      <template v-for="field in operation.fields">
+        <div
+          v-if="field.type === 'group' && 'fields' in field"
+          :key="`${field.name}-group`"
+          class="w-full flex flex-wrap gap-y-5"
+        >
+          <div v-if="field.label" class="w-full text-text mb-[-12px]">
+            {{ field.label }}
+          </div>
+          <div
+            v-for="(group, groupIndex) in operationValues[field.name] || []"
+            :key="`${field.name}-group-${groupIndex}`"
+            class="w-full flex flex-wrap gap-y-5"
+          >
+            <div
+              v-if="groupIndex > 0"
+              class="font-bold mx-auto w-full text-center text-text-light text-sm my-[-12px]"
+            >
+              or
+            </div>
+            <AppOperationField
+              v-for="subfield in field.fields"
+              :key="`${subfield.name}-group-${groupIndex}`"
+              :field="subfield"
+              :parent-field="field.name"
+              :subfield-index="groupIndex"
+            />
+            <div class="flex flex-col w-[6%] mt-[-2px] h-[42px]">
+              <AppButton
+                :key="`${field.name}-delete-${groupIndex}`"
+                type="button"
+                class="btn-layout-invisible btn-icon btn-size-small btn-color-text"
+                :icon="mdiClose"
+                @click="deleteFromGroup(field.name, groupIndex)"
+              />
+              <AppButton
+                :key="`${field.name}-add-${groupIndex}`"
+                type="button"
+                class="btn-layout-invisible btn-icon btn-size-small btn-color-primary"
+                :icon="mdiPlus"
+                @click="addToGroup(field.name, groupIndex)"
+              />
+            </div>
+          </div>
+          <AppButton
+            :key="`${field.name}-add-${field.fields.length}`"
+            class="mx-auto mt-[-12px] btn-layout-text btn-color-primary"
+            type="button"
+            @click="addToGroup(field.name)"
+          >
+            {{ field.addLabel || 'Add' }}
+          </AppButton>
+        </div>
+        <AppOperationField v-else :key="field.name" :field="field" />
+      </template>
     </template>
     <div class="w-full flex justify-end gap-2">
       <AppButton
@@ -41,6 +91,7 @@
   </form>
 </template>
 <script setup lang="ts">
+import { mdiPlus, mdiClose } from '@mdi/js';
 import { ComputedRef, Ref } from 'vue';
 
 import { DataframeObject } from '@/types/dataframe';
@@ -121,4 +172,42 @@ onMounted(() => {
     input.focus();
   }
 });
+
+let isAddingOrDeleting = false;
+
+const addToGroup = async (groupName: string, index?: number) => {
+  if (isAddingOrDeleting) {
+    return;
+  }
+  isAddingOrDeleting = true;
+  await nextTick();
+  const group = operationValues.value[groupName] || [];
+  const newGroup = [...group];
+  if (index === undefined) {
+    newGroup.push({});
+  } else {
+    newGroup.splice(index + 1, 0, {});
+  }
+  operationValues.value = {
+    ...operationValues.value,
+    [groupName]: newGroup
+  };
+  isAddingOrDeleting = false;
+};
+
+const deleteFromGroup = async (groupName: string, index: number) => {
+  if (isAddingOrDeleting) {
+    return;
+  }
+  isAddingOrDeleting = true;
+  await nextTick();
+  const group = operationValues.value[groupName] || [];
+  const newGroup = [...group];
+  newGroup.splice(index, 1);
+  operationValues.value = {
+    ...operationValues.value,
+    [groupName]: newGroup
+  };
+  isAddingOrDeleting = false;
+};
 </script>

@@ -2,7 +2,7 @@
   <AppSelector
     v-if="field.options?.length"
     :key="`selector-${field.name}`"
-    v-model="operationValues[field.name]"
+    v-model="value"
     :options="field.options"
     :text-callback="field.textCallback"
     :label="field.label || field.name"
@@ -13,7 +13,7 @@
   <AppInput
     v-else-if="field.type === 'string'"
     :key="`input-${field.name}`"
-    v-model="operationValues[field.name]"
+    v-model="value"
     :label="field.label || field.name"
     :name="field.name"
     :placeholder="field.placeholder"
@@ -22,7 +22,7 @@
   <AppCheckbox
     v-else-if="field.type === 'boolean'"
     :key="`check-${field.name}`"
-    v-model="operationValues[field.name]"
+    v-model="value"
     :label="field.label || field.name"
     :name="field.name"
     :class="field.class || 'w-full'"
@@ -34,9 +34,49 @@ import { Ref } from 'vue';
 
 import { Field, Payload } from '@/types/operations';
 
-defineProps<{
+const props = defineProps<{
   field: Field;
+  subfieldIndex?: number;
+  parentField?: string;
 }>();
 
 const operationValues = inject('operation-values') as Ref<Payload>;
+
+const value = computed({
+  get: () => {
+    let operationValue = operationValues.value;
+    if (props.parentField) {
+      operationValue = (operationValue || {})[props.parentField];
+    }
+    if (props.subfieldIndex !== undefined) {
+      operationValue = (operationValue || [])[props.subfieldIndex];
+    }
+    return (operationValue || {})[props.field.name];
+  },
+  set: (value: unknown) => {
+    // assign value to operationValues if is not a subfield or to the subfield if it is
+    if (props.subfieldIndex !== undefined && props.parentField) {
+      operationValues.value[props.parentField] = [
+        ...(operationValues.value[props.parentField] || [])
+      ];
+      operationValues.value[props.parentField][props.subfieldIndex] = {
+        ...(operationValues.value[props.parentField][props.subfieldIndex] ||
+          {}),
+        [props.field.name]: value
+      };
+    } else if (props.parentField) {
+      operationValues.value[props.parentField] = {
+        ...(operationValues.value[props.parentField] || {}),
+        [props.field.name]: value
+      };
+    } else if (props.subfieldIndex !== undefined) {
+      operationValues.value[props.field.name] = [
+        ...(operationValues.value[props.field.name] || [])
+      ];
+      operationValues.value[props.field.name][props.subfieldIndex] = value;
+    } else {
+      operationValues.value[props.field.name] = value;
+    }
+  }
+});
 </script>

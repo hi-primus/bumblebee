@@ -1349,8 +1349,10 @@ const createOperation = (operationCreator: OperationCreator): Operation => {
           operationCreator.defaultPayload &&
           newField.name in operationCreator.defaultPayload
         ) {
-          newField.defaultValue =
-            operationCreator.defaultPayload[newField.name];
+          if (newField.type !== 'group') {
+            newField.defaultValue =
+              operationCreator.defaultPayload[newField.name];
+          }
         }
         return newField;
       });

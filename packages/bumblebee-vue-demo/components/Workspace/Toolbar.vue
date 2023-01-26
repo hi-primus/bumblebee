@@ -245,7 +245,7 @@ const selectOperation = (operation: Operation | null = null) => {
   showSidebar.value = true;
   setTimeout(() => {
     operation?.fields.forEach(field => {
-      if (field.defaultValue) {
+      if ('defaultValue' in field && field.defaultValue) {
         operationValues.value = operationValues.value || {};
         operationValues.value[field.name] = field.defaultValue;
       }
