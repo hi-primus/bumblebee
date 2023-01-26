@@ -241,7 +241,7 @@ const selectOperation = (operation: Operation | null = null) => {
   } else {
     cancelOperation();
   }
-  state.value = operation;
+  state.value = operation || 'operations';
   showSidebar.value = true;
   setTimeout(() => {
     operation?.fields.forEach(field => {
@@ -264,7 +264,7 @@ const onKeyUp = (event: KeyboardEvent) => {
   if (event.key.toLowerCase() === 'escape') {
     if (showCommands.value) {
       showCommands.value = false;
-    } else if (state.value) {
+    } else if (state.value !== 'operations') {
       selectOperation();
     } else if (showSidebar.value) {
       showSidebar.value = false;

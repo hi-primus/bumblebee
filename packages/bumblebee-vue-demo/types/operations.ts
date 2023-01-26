@@ -77,7 +77,7 @@ export type Payload = Record<string, any>;
 
 export type OperationPayload = { operation: Operation; payload: Payload };
 
-export type State = Operation | ColumnDetailState | 'operations' | null;
+export type State = Operation | ColumnDetailState | 'operations';
 
 export interface ColumnsSelection {
   columns: string[];
