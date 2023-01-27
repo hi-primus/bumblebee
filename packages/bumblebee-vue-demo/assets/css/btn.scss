@@ -2,7 +2,7 @@
   @apply font-sans disabled:opacity-50 rounded-md flex items-center justify-center leading-tight transition-all duration-100 select-none;
 }
 .-btn-size-default {
-  @apply -btn-size-base text-sm font-bold gap-2 py-2 px-3 min-w-[80px];
+  @apply -btn-size-base text-sm font-bold gap-2 py-1 px-4 min-w-[80px];
 }
 .-btn-size-narrow {
   @apply -btn-size-base text-sm p-2 font-bold gap-2;
@@ -107,19 +107,19 @@
   }
   &:not([class*='btn-icon']) {
     &:not([class*='btn-size']) {
-      @apply -btn-size-base font-bold gap-2 py-2 px-4 min-h-[40px];
+      @apply -btn-size-base font-bold gap-2 py-1 px-4 min-h-[36px];
     }
     &.btn-size-medium {
-      @apply -btn-size-base text-sm font-bold gap-2 py-2 px-4 min-h-[40px];
+      @apply -btn-size-base text-sm font-bold gap-2 py-1 px-4 min-h-[36px];
     }
     &.btn-size-small {
-      @apply -btn-size-base text-xs font-bold gap-2 py-2 px-4 min-h-[36px];
+      @apply -btn-size-base text-xs font-bold gap-2 py-1 px-4 min-h-[32px];
     }
     &.btn-size-smallest {
-      @apply -btn-size-base text-xs font-medium gap-1 py-1 px-2 min-h-[32px];
+      @apply -btn-size-base text-xs font-medium gap-1 py-1 px-2 min-h-[28px];
     }
     &.btn-size-narrow {
-      @apply -btn-size-narrow min-h-[40px];
+      @apply -btn-size-narrow min-h-[36px];
     }
   }
   &.btn-icon {
@@ -142,5 +142,8 @@
   }
   &.btn-rounded {
     border-radius: 9999px !important;
+  }
+  .mdi-icon {
+    @apply my-[-8px];
   }
 }
