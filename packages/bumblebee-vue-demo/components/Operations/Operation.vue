@@ -60,7 +60,7 @@
           </div>
           <AppButton
             :key="`${field.name}-add-${field.fields.length}`"
-            class="mx-auto mt-[-12px] btn-layout-text btn-color-primary"
+            class="mx-auto mt-[-12px] btn-layout-text btn-color-primary-light"
             type="button"
             @click="addToGroup(field.name)"
           >
