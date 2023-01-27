@@ -273,6 +273,36 @@
         >
         </AppAutocomplete>
       </div>
+      <div class="flex flex-wrap gap-4 px-8 py-2 justify-start items-start">
+        <AppSelector
+          v-model="selectedColumns"
+          :options="columns"
+          multiple
+          label="label"
+          placeholder="Column"
+          class=""
+        >
+        </AppSelector>
+        <AppSelector
+          v-model="selectedColumn"
+          :options="columns"
+          label="label"
+          placeholder="Columns"
+          name="input-size-condensed"
+          class="input-size-condensed"
+        >
+        </AppSelector>
+        <AppSelector
+          v-model="selectedColumns"
+          :options="columns"
+          multiple
+          label="label"
+          placeholder="Columns"
+          name="input-size-small"
+          class="input-size-small"
+        >
+        </AppSelector>
+      </div>
     </div>
   </NuxtLayout>
 </template>
