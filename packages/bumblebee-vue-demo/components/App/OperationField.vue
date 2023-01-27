@@ -3,7 +3,7 @@
     v-if="field.options?.length"
     :key="`selector-${field.name}`"
     v-model="value"
-    :options="field.options"
+    :options="resolve(field.options)"
     :text-callback="field.textCallback"
     :label="field.label || field.name"
     :name="field.name"
@@ -79,4 +79,11 @@ const value = computed({
     }
   }
 });
+
+const resolve = <T>(value: ((payload: Payload) => T) | T) => {
+  if (value instanceof Function) {
+    return value(operationValues.value);
+  }
+  return value;
+};
 </script>

@@ -1,5 +1,9 @@
 import { isObject } from './common';
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type Payload = Record<string, any>;
+
+type PayloadCalbackOr<T> = T | ((payload: Payload) => T);
 export interface Field {
   name: string;
   type: 'string' | 'boolean' | 'custom';
@@ -7,7 +11,7 @@ export interface Field {
   placeholder?: string;
   label?: string;
   required?: boolean;
-  options?: Record<string, unknown>[];
+  options?: PayloadCalbackOr<Record<string, unknown>[]>;
   textCallback?: (value: unknown) => string;
   description?: string;
   defaultValue?: unknown;
@@ -77,14 +81,11 @@ export const isOperation = (value: unknown): value is Operation => {
   );
 };
 
+export type OperationPayload = { operation: Operation; payload: Payload };
+
 export type ColumnDetailState = {
   columns: string[];
 };
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type Payload = Record<string, any>;
-
-export type OperationPayload = { operation: Operation; payload: Payload };
 
 export type State = Operation | ColumnDetailState | 'operations';
 
