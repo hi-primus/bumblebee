@@ -30,7 +30,7 @@ export interface FieldGroup {
 export type PreviewType = boolean | 'basic columns' | 'whole'; // TODO: add preview types
 
 export interface OperationOptions {
-  usesInputCols?: boolean;
+  usesInputCols?: boolean | 'single';
   usesOutputCols?: boolean;
   usesInputDataframe?: boolean;
   saveToNewDataframe?: boolean;

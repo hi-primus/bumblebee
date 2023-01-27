@@ -191,7 +191,18 @@ const preparePayload = (payload: Payload) => {
   }
 
   if (payload.options.usesInputCols) {
-    payload.cols = selection.value?.columns;
+    payload.cols = selection.value?.columns || [];
+
+    // If the operation only accepts a single column, we only send the first one
+    // TODO: Disallow selecting single column operations when multiple columns are selected
+
+    if (
+      payload.options.usesInputCols === 'single' &&
+      selection.value?.columns
+    ) {
+      selection.value.columns = [selection.value.columns[0]];
+      payload.cols = selection.value.columns;
+    }
   }
 
   return payload;
