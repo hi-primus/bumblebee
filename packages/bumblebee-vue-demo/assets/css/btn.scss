@@ -18,6 +18,22 @@
     --button-highlight-color: #99cae9;
   }
 
+  &.btn-color-primary-light {
+    --button-text-color: theme('colors.white');
+    --button-color: theme('colors.primary.DEFAULT');
+    --button-hover-color: theme('colors.primary.dark');
+    --button-active-color: theme('colors.primary.darker');
+    --button-highlight-color: #99cae9;
+  }
+
+  &.btn-color-primary-lighter {
+    --button-text-color: theme('colors.white');
+    --button-color: theme('colors.primary.light');
+    --button-hover-color: theme('colors.primary.DEFAULT');
+    --button-active-color: theme('colors.primary.dark');
+    --button-highlight-color: #99cae9;
+  }
+
   &.btn-color-text {
     --button-text-color: theme('colors.white');
     --button-color: theme('colors.text.DEFAULT');
