@@ -1520,7 +1520,7 @@ const createOperation = (operationCreator: OperationCreator): Operation => {
     const options: Partial<OperationOptions> = Object.assign(
       {},
       operation.defaultOptions,
-      payload._options as OperationOptions
+      payload.options as OperationOptions
     );
     if (options.usesInputDataframe && !payload.source) {
       throw new Error('Input dataframe is required');

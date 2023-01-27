@@ -32,7 +32,7 @@ import {
   TableSelection
 } from '@/types/operations';
 import { AppStatus } from '@/types/workspace';
-import { compareObjects, throttleOnce } from '@/utils';
+import { compareObjects, deepClone, throttleOnce } from '@/utils';
 import { preliminaryProfile } from '@/utils/blurr';
 
 const blurrPackage = useBlurr();
@@ -165,7 +165,7 @@ const executeOperations = async () => {
       throw new Error('Invalid operation', { cause: operation });
     }
     result = await operation.action({ ...payload, blurr });
-    console.info('Operation result:', { result, options: payload.options });
+    console.info('Operation result:', { result, payload });
 
     previousPayload = payload;
   }
@@ -251,7 +251,16 @@ const operationActions: OperationActions = {
       const { operation, payload } = prepareOperation();
 
       if (operation) {
-        operations.value.push({ operation, payload });
+        operations.value.push({
+          operation,
+          payload: {
+            ...payload,
+            options: {
+              ...payload.options,
+              preview: false
+            }
+          }
+        });
       }
 
       await executeOperations();
@@ -301,7 +310,7 @@ const previewOperation = throttleOnce(async function () {
 
       const firstSampleResult = await operation
         .action({
-          ...payload,
+          ...deepClone(payload),
           source: firstSampleSource,
           blurr
         })
@@ -336,7 +345,7 @@ const previewOperation = throttleOnce(async function () {
     // get profile for preview columns
 
     const result = await operation.action({
-      ...payload,
+      ...deepClone(payload),
       source: payload.source,
       target: 'operation_preview_' + (payload.source?.name || 'load_df'),
       blurr

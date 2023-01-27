@@ -89,6 +89,20 @@ export const compareObjects = (a: unknown, b: unknown): boolean => {
   });
 };
 
+export const deepClone = <T>(obj: T): T => {
+  if (Array.isArray(obj)) {
+    return (obj as any[]).map(deepClone) as T;
+  }
+  if (isObject(obj)) {
+    const clone = {} as T;
+    for (const key in obj) {
+      (clone as any)[key] = deepClone(obj[key]);
+    }
+    return clone;
+  }
+  return obj;
+};
+
 // HTML
 
 export const focusNext = (el: HTMLElement) => {
