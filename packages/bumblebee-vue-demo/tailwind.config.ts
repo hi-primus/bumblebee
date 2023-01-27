@@ -55,7 +55,7 @@ export default {
         light: '#ebe070',
         lighter: '#ede882',
         lightest: '#f0ee99',
-        highlight: '#f4f3c3'
+        highlight: '#f9f7d9'
       },
       text: {
         darkest: '#030507',
