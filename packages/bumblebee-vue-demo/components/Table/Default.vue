@@ -5,7 +5,7 @@
     @scroll.passive="onScroll"
   >
     <div
-      class="bumblebee-table-container relative flex h-full w-[max-content] text-sm font-mono-table text-text"
+      class="bumblebee-table-container relative flex h-full w-[max-content] text-sm font-mono-table text-text-alpha"
     >
       <div
         class="bumblebee-columns-rows-backgrounds sticky h-full w-full ml-[-100%] left-0 order-[-1]"
@@ -53,7 +53,7 @@
         >
           <div class="column-header">
             <div
-              class="column-title border-[color:var(--line-color)] border-b text-[16px] py-1 px-3 text-center flex align-center select-none"
+              class="column-title border-[color:var(--line-color)] border-b text-[16px] py-1 px-1 text-center flex items-center select-none font-mono-table"
               :class="{
                 'cursor-pointer': !column.preview
               }"
@@ -69,7 +69,7 @@
             >
               <span
                 :title="dataTypeNames[columnIndex]"
-                class="left-icon inline text-current max-w-5 font-bold text-center"
+                class="left-icon inline text-text-alpha/75 max-w-5 font-bold text-center"
                 :class="{
                   'transform scale-x-125':
                     dataTypeHintLengths[columnIndex] <= 2,
@@ -177,7 +177,7 @@ const columnTitleHeight = 32;
 const columnPlotHeight = 90;
 const columnHeaderHeight = columnTitleHeight + columnPlotHeight + 2;
 const tablePaddingBottom = 200;
-const minColumnWidth = 180;
+const minColumnWidth = 169;
 const rowHeight = 24;
 
 const scrollElement = ref<HTMLElement | null>(null);
