@@ -11,7 +11,7 @@
         v-model="searchOperation"
         class="mb-2"
         placeholder="Select a command"
-        @keydown.prevent="handleKeyDownSearch"
+        @keydown="handleKeyDownSearch"
       />
       <ul
         ref="operationElements"
@@ -205,6 +205,7 @@ const handleKeyDownSearch = (event: KeyboardEvent) => {
         }
       } else if (key === 'arrowdown') {
         (el as HTMLElement).focus();
+        event.preventDefault();
       }
     }
   }
