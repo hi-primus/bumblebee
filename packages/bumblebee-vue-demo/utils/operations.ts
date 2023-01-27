@@ -4,7 +4,8 @@ import { isObject } from '@/types/common';
 import {
   Operation,
   OperationCreator,
-  OperationOptions
+  OperationOptions,
+  Payload
 } from '@/types/operations';
 
 type Cols = string[];
@@ -40,6 +41,153 @@ export const operationCreators: OperationCreator[] = [
       }
     ],
     shortcut: 'ff'
+  },
+  {
+    key: 'setRows',
+    name: 'Set rows',
+    defaultOptions: {
+      usesInputCols: 'single',
+      usesInputDataframe: true,
+      preview: 'basic columns'
+    },
+    action: (payload: {
+      source: Source;
+      cols: Cols;
+      outputCols: Cols;
+      replaces: {
+        condition: { value: string };
+        value: string;
+        replaceBy: string;
+      }[];
+      otherwise: string;
+      options: OperationOptions;
+    }): Source => {
+      console.log({ payload });
+
+      const where = payload.replaces.map(replace => {
+        switch (replace.condition.value) {
+          case 'equal':
+            return `df["${payload.cols[0]}"]==${replace.value}`;
+          case 'not_equal':
+            return `df["${payload.cols[0]}"]!=${replace.value}`;
+        }
+        return '';
+      });
+
+      return payload.source.cols.set({
+        cols: payload.outputCols,
+        valueFunc: payload.replaces.map(r => r.replaceBy),
+        evalValue: false,
+        where
+      });
+    },
+    fields: [
+      {
+        name: 'replaces',
+        label: 'Replaces',
+        type: 'group',
+        fields: [
+          {
+            name: 'condition',
+            label: 'Condition',
+            type: 'string',
+            options: (payload: Payload) => [
+              {
+                text: 'Is exactly',
+                value: 'equal',
+                disabled: !payload.cols?.length
+              },
+              // {
+              //   text: 'Is one of',
+              //   value: 'value_in',
+              //   disabled: !payload.cols?.length
+              // },
+              {
+                text: 'Is not',
+                value: 'not_equal',
+                disabled: !payload.cols?.length
+              }
+              // { divider: true },
+              // {
+              //   text: 'Less than',
+              //   value: 'less_than',
+              //   disabled: !payload.cols?.length
+              // },
+              // {
+              //   text: 'Less than or equal to',
+              //   value: 'less_than_equal',
+              //   disabled: !payload.cols?.length
+              // },
+              // {
+              //   text: 'Greater than',
+              //   value: 'greater_than',
+              //   disabled: !payload.cols?.length
+              // },
+              // {
+              //   text: 'Greater than or equal to',
+              //   value: 'greater_than_equal',
+              //   disabled: !payload.cols?.length
+              // },
+              // {
+              //   text: 'Is Between',
+              //   value: 'between',
+              //   disabled: !payload.cols?.length
+              // },
+              // { divider: true },
+              // {
+              //   text: 'Contains',
+              //   value: 'contains',
+              //   disabled: !payload.cols?.length
+              // },
+              // {
+              //   text: 'Starts with',
+              //   value: 'starts_with',
+              //   disabled: !payload.cols?.length
+              // },
+              // {
+              //   text: 'Ends with',
+              //   value: 'ends_with',
+              //   disabled: !payload.cols?.length
+              // },
+              // { divider: true },
+              // { text: 'Custom expression', value: 'where' },
+              // {
+              //   text: 'Pattern',
+              //   value: 'match_pattern',
+              //   disabled: !payload.cols?.length
+              // },
+              // { text: 'Selected', value: 'selected', disabled: true },
+              // { divider: true },
+              // {
+              //   text: 'Mismatches values',
+              //   value: 'mismatch',
+              //   disabled: !payload.cols?.length
+              // },
+              // { text: 'Null values', value: 'null' }
+            ],
+            class: 'grouped-first w-[31.3333%]'
+          },
+          {
+            name: 'value',
+            label: 'Value',
+            type: 'string',
+            class: 'grouped-middle w-[31.3333%]'
+          },
+          {
+            name: 'replaceBy',
+            label: 'Replace by',
+            type: 'string',
+            class: 'grouped-last w-[31.3333%]'
+          }
+        ]
+      },
+      {
+        name: 'otherwise',
+        label: 'Otherwise',
+        type: 'string'
+      }
+    ],
+    shortcut: 'sr'
   },
   // Row operations
   {
@@ -1395,7 +1543,7 @@ const createOperation = (operationCreator: OperationCreator): Operation => {
       }
     }
 
-    if (options.preview === 'basic columns') {
+    if (options.preview === 'basic columns' && payload.cols) {
       payload = {
         ...payload,
         outputCols: (payload.cols as Cols).map(col => `new ${col}`)
