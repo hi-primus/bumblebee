@@ -287,6 +287,13 @@ const onKeyUp = (event: KeyboardEvent) => {
     lastKeys.value.shift();
   }
 
+  const key = event.key.toLowerCase();
+
+  if (['shift', 'control', 'alt'].includes(key)) {
+    lastKeys.value = [];
+    return;
+  }
+
   lastKeys.value.push(event.key.toLowerCase());
 
   const shortcut = lastKeys.value.join('');
