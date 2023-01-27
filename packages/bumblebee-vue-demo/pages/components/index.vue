@@ -70,6 +70,24 @@
         <AppButton loading class="btn-layout-outline">Outline</AppButton>
         <AppButton loading class="btn-layout-invisible">Invisible</AppButton>
         <AppButton loading class="btn-layout-text">Text</AppButton>
+        <AppButton loading class="btn-layout-outline btn-size-small"
+          >Outline</AppButton
+        >
+        <AppButton loading class="btn-layout-invisible btn-size-small"
+          >Invisible</AppButton
+        >
+        <AppButton loading class="btn-layout-text btn-size-small"
+          >Text</AppButton
+        >
+        <AppButton loading class="btn-layout-outline btn-size-smallest"
+          >Outline</AppButton
+        >
+        <AppButton loading class="btn-layout-invisible btn-size-smallest"
+          >Invisible</AppButton
+        >
+        <AppButton loading class="btn-layout-text btn-size-smallest"
+          >Text</AppButton
+        >
         <AppButton loading class="btn-icon">
           <Icon :path="mdiCheckBold" />
         </AppButton>
@@ -77,6 +95,12 @@
           <Icon :path="mdiCheckBold" />
         </AppButton>
         <AppButton loading class="btn-icon btn-rounded">
+          <Icon :path="mdiCheckBold" />
+        </AppButton>
+        <AppButton loading class="btn-icon btn-rounded btn-size-small">
+          <Icon :path="mdiCheckBold" />
+        </AppButton>
+        <AppButton loading class="btn-icon btn-rounded btn-size-smallest">
           <Icon :path="mdiCheckBold" />
         </AppButton>
       </div>
@@ -205,6 +229,34 @@
         </AppButton>
       </div>
       <div class="flex flex-wrap gap-4 px-8 py-2 justify-start items-start">
+        <AppButton class="btn-size-small btn-color-primary-light"
+          >Dismiss</AppButton
+        >
+        <AppButton
+          class="btn-size-small btn-color-primary-light btn-layout-outline"
+        >
+          Dismiss
+        </AppButton>
+        <AppButton
+          class="btn-size-small btn-color-primary-light btn-layout-invisible"
+        >
+          Dismiss
+        </AppButton>
+        <AppButton
+          class="btn-size-small btn-color-primary-light btn-layout-text"
+        >
+          Dismiss
+        </AppButton>
+        <AppButton class="btn-size-small btn-color-primary-light btn-icon">
+          <Icon :path="mdiTrashCan" />
+        </AppButton>
+        <AppButton
+          class="btn-size-small btn-color-primary-light btn-icon btn-rounded"
+        >
+          <Icon :path="mdiTrashCan" />
+        </AppButton>
+      </div>
+      <div class="flex flex-wrap gap-4 px-8 py-2 justify-start items-start">
         <AppButton class="btn-size-small btn-color-text">Cancel</AppButton>
         <AppButton class="btn-size-small btn-color-text btn-layout-outline">
           Cancel
@@ -221,6 +273,11 @@
         <AppButton class="btn-size-small btn-color-text btn-icon btn-rounded">
           <Icon :path="mdiTrashCan" />
         </AppButton>
+      </div>
+      <div
+        class="flex flex-wrap gap-4 px-8 py-2 justify-start items-start max-w-[320px] bg-primary-highlight"
+      >
+        <AppButton class="btn-color-error w-full">Cancel</AppButton>
       </div>
       <div class="flex flex-wrap gap-4 px-8 py-2 justify-start items-start">
         <AppInput class=""> </AppInput>
