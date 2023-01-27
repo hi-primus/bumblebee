@@ -22,7 +22,7 @@
             <Icon :path="mdiClose" />
           </AppButton>
         </div>
-        <div class="min-h-[48px]">
+        <div class="min-h-[48px] w-[500px]">
           <slot :close="() => emit('close')"></slot>
         </div>
       </div>

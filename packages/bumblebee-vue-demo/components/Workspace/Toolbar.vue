@@ -11,18 +11,20 @@
         v-model="searchOperation"
         class="mb-2"
         placeholder="Select a command"
-        @keydown="handleKeyDownSearch"
+        @keydown.prevent="handleKeyDownSearch"
       />
-      <ul class="operation-items flex flex-col gap-2">
+      <ul
+        ref="operationElements"
+        class="operation-items max-h-[50vh] overflow-auto flex flex-col gap-2"
+      >
         <li
           v-for="operation in recentOperations"
           :key="operation.key"
-          ref="operationElements"
           class="operation-item flex items-center justify-between gap-2 px-4 py-2 cursor-pointer pointer-events-auto rounded focus:bg-primary-highlight hover:bg-primary-highlight focus:outline-none"
           :data-operation-key="operation.key"
           tabindex="0"
           role="option"
-          @keydown="handleKeyDownOperation"
+          @keydown.prevent="handleKeyDownOperation"
           @click="
             () => {
               selectOperation(operation);
@@ -40,7 +42,6 @@
         <li
           v-for="operation in notRecentOperations"
           :key="operation.key"
-          ref="operationElements"
           class="operation-item flex items-center justify-between gap-2 px-4 py-2 cursor-pointer pointer-events-auto rounded focus:bg-primary-highlight hover:bg-primary-highlight focus:outline-none"
           tabindex="0"
           :data-operation-key="operation.key"
@@ -104,7 +105,7 @@ const lastKeys = ref<string[]>([]);
 
 const searchOperation = ref('');
 
-const operationElements = ref<HTMLElement | HTMLElement[] | null>(null);
+const operationElements = ref<HTMLElement | null>(null);
 const searchOperationElement = ref<typeof AppInput | null>(null);
 
 const filteredOperations = computed(() => {
@@ -187,9 +188,9 @@ const handleKeyDownSearch = (event: KeyboardEvent) => {
   if (['arrowdown', 'enter'].includes(key)) {
     let el = operationElements.value;
 
-    if (el && Array.isArray(el)) {
-      el = el[0];
-    }
+    el = (el as HTMLElement).querySelector(
+      '.operation-item:not([disabled])'
+    ) as HTMLElement;
 
     if (el) {
       if (key === 'enter') {
