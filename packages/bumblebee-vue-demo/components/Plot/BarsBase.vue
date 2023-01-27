@@ -1,35 +1,36 @@
 <template>
-  <v-stage
-    ref="konva"
-    class="konva-canvas-container"
-    :config="{ width: stageWidth, height }"
-    @mousedown="onMouseDown"
-    @mousemove="onMouseMove"
-    @mouseleave="setHovered(-1)"
-  >
-    <v-layer>
-      <v-rect
-        v-if="selectable && selectionRange && selectionRange.length"
-        :config="{
-          ...selectionRect,
-          y: 0,
-          height: height,
-          fill: '#00000020'
-        }"
-      ></v-rect>
-      <v-rect
-        v-for="(value, index) in data"
-        :key="index + 'b'"
-        :config="getBackConfig(index)"
-        @mouseenter="setHovered(index)"
-      ></v-rect>
-      <v-rect
-        v-for="(value, index) in data"
-        :key="index"
-        :config="getRectConfig(index)"
-      ></v-rect>
-    </v-layer>
-  </v-stage>
+  <div class="konva-canvas-container">
+    <v-stage
+      ref="konva"
+      :config="{ width: stageWidth, height }"
+      @mousedown="onMouseDown"
+      @mousemove="onMouseMove"
+      @mouseleave="setHovered(-1)"
+    >
+      <v-layer>
+        <v-rect
+          v-if="selectable && selectionRange && selectionRange.length"
+          :config="{
+            ...selectionRect,
+            y: 0,
+            height: height,
+            fill: '#00000020'
+          }"
+        ></v-rect>
+        <v-rect
+          v-for="(value, index) in data"
+          :key="index + 'b'"
+          :config="getBackConfig(index)"
+          @mouseenter="setHovered(index)"
+        ></v-rect>
+        <v-rect
+          v-for="(value, index) in data"
+          :key="index"
+          :config="getRectConfig(index)"
+        ></v-rect>
+      </v-layer>
+    </v-stage>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -167,9 +168,9 @@ const colors = computed(() => {
   }
   if (typeof tailwindColors?.primary === 'object') {
     return {
-      selected: tailwindColors?.primary?.darkest,
-      hovered: tailwindColors?.primary?.darker,
-      default: tailwindColors?.primary?.dark
+      selected: tailwindColors?.primary?.darker,
+      hovered: tailwindColors?.primary?.dark,
+      default: tailwindColors?.primary?.DEFAULT
     };
   }
   return {
@@ -409,10 +410,11 @@ const getRectConfig = (index: number) => {
 
 <style lang="scss">
 .konva-canvas-container {
+  cursor: crosshair;
   overflow: hidden;
   width: 100%;
 
-  & > * {
+  & * {
     margin: auto;
   }
 

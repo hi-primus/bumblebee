@@ -30,7 +30,7 @@
         class="w-full truncate"
         :class="{
           'text-primary-dark': hovered,
-          'text-text': !hovered
+          'text-current': !hovered
         }"
       >
         <!-- TODO: use truncate on the value of name instead of all the string -->

@@ -1,7 +1,7 @@
 <template>
-  <div class="bg-text-lightest/50 h-2 flex w-full">
+  <div class="bg-text-lightest/50 h-2 flex w-full cursor-crosshair">
     <div
-      class="bg-primary-dark hover:bg-primary-darker h-2"
+      class="bg-primary hover:bg-primary-dark h-2"
       :class="{ 'min-w-1': data.match > 0 }"
       :style="{
         width: `${getPercentage('match')}%`
