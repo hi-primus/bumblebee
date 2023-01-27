@@ -127,7 +127,7 @@ const handleOperationResult = async (result: unknown, payload: Payload) => {
       dataframes.value[selectedDataframe.value] = currentDataframe;
     }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    df.profile().then((profile: any) => {
+    df.profile({ bins: 33 }).then((profile: any) => {
       dataframes.value[selectedDataframe.value].profile = profile;
     });
   } else {
@@ -349,9 +349,10 @@ const previewOperation = throttleOnce(async function () {
       ? result.profile({
           cols: Object.entries(previewData.value?.columns || {})
             ?.filter(([_, { preview }]) => preview)
-            .map(([title, _]) => title)
+            .map(([title, _]) => title),
+          bins: 33
         })
-      : result.profile({ cols: '*' });
+      : result.profile({ cols: '*', bins: 33 });
 
     previewData.value = {
       ...previewData.value,

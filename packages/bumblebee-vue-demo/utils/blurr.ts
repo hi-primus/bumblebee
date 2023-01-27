@@ -5,7 +5,7 @@ import { DataframeProfile, KeyedColumn } from '@/types/dataframe';
 export const preliminaryProfile = async (
   df: Source
 ): Promise<DataframeProfile> => {
-  const emptyProfile = await df.profile([]);
+  const emptyProfile = await df.profile({ cols: [], bins: 33 });
   const columns: string[] = await df.cols.names();
   return {
     ...emptyProfile,
