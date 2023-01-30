@@ -21,6 +21,7 @@ export interface Field {
 export interface FieldGroup {
   name: string;
   fields: Field[];
+  defaultFields?: number;
   type: 'group';
   label?: string;
   addLabel?: string;
