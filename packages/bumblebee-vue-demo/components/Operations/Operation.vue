@@ -181,12 +181,13 @@ const addToGroup = async (groupName: string, index?: number) => {
   }
   isAddingOrDeleting = true;
   await nextTick();
+  const defaultValue = operationValues.value[`default-${groupName}`] || {};
   const group = operationValues.value[groupName] || [];
   const newGroup = [...group];
   if (index === undefined) {
-    newGroup.push({});
+    newGroup.push(defaultValue);
   } else {
-    newGroup.splice(index + 1, 0, {});
+    newGroup.splice(index + 1, 0, defaultValue);
   }
   operationValues.value = {
     ...operationValues.value,
