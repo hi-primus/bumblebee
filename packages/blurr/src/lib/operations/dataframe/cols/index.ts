@@ -567,7 +567,8 @@ export const operations = {
     name: 'cols.move',
     args: [
       {
-        name: 'cols',
+        name: 'column', // 'col' TODO: fix name != argName
+        argName: 'column',
         default: '*',
       },
       {
