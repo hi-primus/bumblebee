@@ -62,8 +62,6 @@ export const operationCreators: OperationCreator[] = [
       otherwise: string;
       options: OperationOptions;
     }): Source => {
-      console.log({ payload });
-
       const where = payload.replaces.map(replace => {
         // check if replace.value is a number string
         let value: string | number = replace.value;
@@ -85,14 +83,6 @@ export const operationCreators: OperationCreator[] = [
             console.warn('Unknown condition', condition);
         }
         return '';
-      });
-
-      console.log('payload', {
-        cols: payload.outputCols,
-        valueFunc: payload.replaces.map(r => r.replaceBy),
-        where,
-        evalValue: false,
-        default: payload.otherwise
       });
 
       const result = payload.source.cols.set({
@@ -240,8 +230,6 @@ export const operationCreators: OperationCreator[] = [
       searchBy: string;
       matchCase: OperationOptions;
     }): Source => {
-      console.log({ payload });
-
       const result = payload.source.cols.replace({
         cols: payload.cols,
         search: payload.replaces.map(replace => replace.search),
