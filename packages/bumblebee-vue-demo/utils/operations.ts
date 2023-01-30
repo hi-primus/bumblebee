@@ -43,8 +43,8 @@ export const operationCreators: OperationCreator[] = [
     shortcut: 'ff'
   },
   {
-    key: 'setRows',
-    name: 'Set rows',
+    key: 'setCol',
+    name: 'Set column',
     defaultOptions: {
       usesInputCols: 'single',
       usesInputDataframe: true,
@@ -55,7 +55,7 @@ export const operationCreators: OperationCreator[] = [
       cols: Cols;
       outputCols: Cols;
       replaces: {
-        condition: { value: string };
+        condition: string;
         value: string;
         replaceBy: string;
       }[];
@@ -65,21 +65,52 @@ export const operationCreators: OperationCreator[] = [
       console.log({ payload });
 
       const where = payload.replaces.map(replace => {
-        switch (replace.condition.value) {
+        // check if replace.value is a number string
+        let value: string | number = replace.value;
+        let condition = replace.condition;
+        if (!isNaN(Number(value))) {
+          value = Number(value);
+          condition = `numeric_${condition}`;
+        }
+        switch (condition) {
           case 'equal':
-            return `df["${payload.cols[0]}"]==${replace.value}`;
+            return `df["${payload.cols[0]}"]=="${value}"`;
           case 'not_equal':
-            return `df["${payload.cols[0]}"]!=${replace.value}`;
+            return `df["${payload.cols[0]}"]!="${value}"`;
+          case 'numeric_equal':
+            return `(df["${payload.cols[0]}"]==${value}) | (df["${payload.cols[0]}"]=="${value}")`;
+          case 'numeric_not_equal':
+            return `(df["${payload.cols[0]}"]!=${value}) & (df["${payload.cols[0]}"]!="${value}")`;
+          default:
+            console.warn('Unknown condition', condition);
         }
         return '';
       });
 
-      return payload.source.cols.set({
+      console.log('payload', {
+        cols: payload.outputCols,
+        valueFunc: payload.replaces.map(r => r.replaceBy),
+        where,
+        evalValue: false,
+        default: payload.otherwise
+      });
+
+      const result = payload.source.cols.set({
         cols: payload.outputCols,
         valueFunc: payload.replaces.map(r => r.replaceBy),
         evalValue: false,
-        where
+        where,
+        default: payload.otherwise
       });
+      if (payload.outputCols[0] !== payload.cols[0]) {
+        return result.cols.move({
+          column: payload.outputCols[0],
+          position: 'after',
+          refCol: payload.cols[0]
+        });
+      }
+
+      return result;
     },
     fields: [
       {
@@ -188,7 +219,7 @@ export const operationCreators: OperationCreator[] = [
         type: 'string'
       }
     ],
-    shortcut: 'sr'
+    shortcut: 'sc'
   },
   // Row operations
   {
