@@ -142,14 +142,17 @@ import { PropType } from 'vue';
 
 import { RuleKey } from '@/composables/use-rules';
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type Value = any;
+type Item = Record<string, Value>
+
 const props = defineProps({
   label: {
     type: String,
     default: ''
   },
   modelValue: {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    type: [Object, String, Array] as PropType<any>,
+    type: [Object, String, Array] as PropType<Value>,
     default: () => null
   },
   options: {
@@ -189,10 +192,14 @@ const props = defineProps({
   },
 });
 
-const emit = defineEmits(['update:modelValue']);
+type Emits = {
+  (e: 'update:modelValue', value: Value, oldValue: Value): void;
+  (e: 'item-selected', item: Item, oldItem: Item): void;
+};
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const selectedOption = ref<any>(
+const emit = defineEmits<Emits>();
+
+const selectedOption = ref<Value>(
   props.modelValue || (props.multiple ? [] : null)
 );
 
@@ -207,29 +214,6 @@ const textCallbackWithDefault = computed(() => {
   return props.textCallback || ((option: unknown) => (option as Record<string, string>)[props.text]);
 });
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const updateValidateValue = (value: any) => {
-  if (Array.isArray(value)) {
-    validateValue.value = value.map(item => {
-      return item?.value;
-    });
-  } else {
-    validateValue.value = value;
-  }
-};
-
-watch(selectedOption, (newValue, oldValue) => {
-  updateValidateValue(newValue);
-  emit('update:modelValue', newValue, oldValue);
-});
-
-watch(
-  () => props.modelValue,
-  value => {
-    selectedOption.value = value;
-  }
-);
-
 const {
   errorMessage,
   value: validateValue,
@@ -238,7 +222,36 @@ const {
 
 onMounted(() => {
   if (selectedOption.value) {
-    updateValidateValue(selectedOption.value);
+    validateValue.value = (selectedOption.value?.value);
   }
 });
+
+watch(selectedOption, (_newValue, oldItem) => {
+  const value = selectedOption.value?.value;
+  const oldValue = oldItem?.value || oldItem;
+  validateValue.value = (value);
+
+  if (value === props.modelValue) {
+    return;
+  }
+  emit('update:modelValue', value, oldValue);
+  emit('item-selected', value, oldItem);
+});
+
+watch(
+  () => props.modelValue,
+  value => {
+    if (value === selectedOption.value.value) {
+      return;
+    }
+    selectedOption.value = props.options.find(o => {
+      if (typeof o !== "object") {
+        return o === value;
+      }
+      return o.value === value;
+    }) || value;
+  },
+  { immediate: true }
+);
+
 </script>
