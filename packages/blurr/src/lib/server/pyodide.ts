@@ -14,7 +14,7 @@ import { makePythonCompatible } from '../operations/factory';
 import { isPromiseLike, loadScript } from '../utils';
 
 const defaultPyodideOptions: PyodideBackendOptions = {
-  scriptURL: 'https://cdn.jsdelivr.net/pyodide/v0.21.3/full/pyodide.js',
+  scriptURL: 'https://cdn.jsdelivr.net/pyodide/v0.22.1/full/pyodide.js',
   local: true,
 };
 
@@ -70,7 +70,7 @@ export function ServerPyodide(options: ServerOptions): ServerInterface {
     const micropip = pyodide.pyimport('micropip');
 
     await micropip.install(
-      'https://test-files.pythonhosted.org/packages/1d/fc/f3c46fa35e397c5f754dcfbabdf3ba79b2663b65a4d213710f61ac56e660/pyoptimus-0.1.4023-py3-none-any.whl'
+      'https://test-files.pythonhosted.org/packages/93/6a/773d51cfcd64e2ae491c7d1fbeccdcffdd3ce3c34c9c31729f327d05c086/pyoptimus-0.1.4024-py3-none-any.whl'
     );
     pyodide.runPython(`
       from optimus import Optimus

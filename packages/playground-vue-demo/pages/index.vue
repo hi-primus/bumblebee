@@ -114,7 +114,7 @@ onMounted(() => {
   window.monaco = monaco;
   window.blurr = Blurr({
     serverOptions: {
-      scriptURL: 'https://cdn.jsdelivr.net/pyodide/v0.21.3/full/pyodide.js',
+      scriptURL: 'https://cdn.jsdelivr.net/pyodide/v0.22.1/full/pyodide.js',
       useWorker: true,
       local: false
     }
