@@ -1224,7 +1224,8 @@ export const operationCreators: OperationCreator[] = [
           { value: 'most_frequent', text: 'Most frequent' },
           { value: 'constant', text: 'Constant' }
         ],
-        type: 'string'
+        type: 'string',
+        defaultValue: 'mean'
       }
     ],
     shortcut: 'mi'
