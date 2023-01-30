@@ -1812,6 +1812,10 @@ export const operations = {
         name: 'ignoreCase',
         default: false,
       },
+      {
+        name: 'outputCols',
+        default: null,
+      },
     ],
   }),
   replaceRegex: DataframeOperation<{
