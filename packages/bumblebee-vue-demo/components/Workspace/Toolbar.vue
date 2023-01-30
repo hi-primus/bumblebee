@@ -88,7 +88,7 @@ import {
   Payload,
   State
 } from '@/types/operations';
-import { focusNext, focusPrevious } from '@/utils';
+import { deepClone, focusNext, focusPrevious } from '@/utils';
 import { operations } from '@/utils/operations';
 
 const showCommands = ref(false);
@@ -247,9 +247,42 @@ const selectOperation = (operation: Operation | null = null) => {
   showSidebar.value = true;
   setTimeout(() => {
     operation?.fields.forEach(field => {
-      if ('defaultValue' in field && field.defaultValue) {
+      // check if field has a default value
+
+      if ('defaultValue' in field && field.defaultValue !== undefined) {
         operationValues.value = operationValues.value || {};
-        operationValues.value[field.name] = field.defaultValue;
+        operationValues.value[field.name] = deepClone(field.defaultValue);
+      }
+
+      // check if field is a group
+
+      if ('fields' in field && field.fields) {
+        const defaultValue =
+          operationValues.value[`default-${field.name}`] || {};
+        for (const subfield of field.fields) {
+          if (
+            'defaultValue' in subfield &&
+            subfield.defaultValue !== undefined
+          ) {
+            defaultValue[subfield.name] = deepClone(subfield.defaultValue);
+          }
+        }
+        operationValues.value[`default-${field.name}`] = defaultValue;
+        const defaultFields =
+          'defaultFields' in field && field.defaultFields !== undefined
+            ? field.defaultFields || 0
+            : 1;
+        console.log('default fields', {
+          defaultFields,
+          field,
+          defaultValue,
+          operationValues
+        });
+        operationValues.value[field.name] =
+          operationValues.value[field.name] || [];
+        for (let i = 0; i < defaultFields; i++) {
+          operationValues.value[field.name][i] = deepClone(defaultValue);
+        }
       }
     });
   }, 0);
