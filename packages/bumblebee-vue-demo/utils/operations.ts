@@ -221,6 +221,94 @@ export const operationCreators: OperationCreator[] = [
     ],
     shortcut: 'sc'
   },
+  {
+    key: 'replace',
+    name: 'Replace in column values',
+    defaultOptions: {
+      usesInputCols: true,
+      usesInputDataframe: true,
+      preview: 'basic columns'
+    },
+    action: (payload: {
+      source: Source;
+      cols: Cols;
+      outputCols: Cols;
+      replaces: {
+        search: string;
+        replaceBy: string;
+      }[];
+      searchBy: string;
+      matchCase: OperationOptions;
+    }): Source => {
+      console.log({ payload });
+
+      const result = payload.source.cols.replace({
+        cols: payload.cols,
+        search: payload.replaces.map(replace => replace.search),
+        replaceBy: payload.replaces.map(replace => replace.replaceBy),
+        searchBy: payload.searchBy,
+        ignoreCase: !payload.matchCase,
+        outputCols: payload.outputCols
+      });
+      if (payload.outputCols[0] !== payload.cols[0]) {
+        return result.cols.move({
+          column: payload.outputCols[0],
+          position: 'after',
+          refCol: payload.cols[0]
+        });
+      }
+
+      return result;
+    },
+    fields: [
+      {
+        name: 'replaces',
+        label: 'Replaces',
+        type: 'group',
+        fields: [
+          {
+            name: 'search',
+            label: 'Search',
+            type: 'string',
+            class: 'grouped-first w-[47%]'
+          },
+          {
+            name: 'replaceBy',
+            label: 'Replace by',
+            type: 'string',
+            class: 'grouped-last w-[47%]'
+          }
+        ]
+      },
+      {
+        name: 'searchBy',
+        label: 'Search by',
+        type: 'string',
+        defaultValue: 'full',
+        options: [
+          {
+            text: 'Exact match',
+            value: 'full'
+          },
+          {
+            text: 'Contains words',
+            value: 'words'
+          },
+          {
+            text: 'Contains characters',
+            value: 'chars'
+          }
+        ]
+      },
+      {
+        name: 'matchCase',
+        label: 'Match case',
+        type: 'boolean'
+      }
+      // TODO: search by string
+    ],
+    shortcut: 'rc'
+  },
   // Row operations
   {
     key: 'Drop duplicated',
