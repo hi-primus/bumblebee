@@ -91,6 +91,7 @@ export const operationCreators: OperationCreator[] = [
             name: 'condition',
             label: 'Condition',
             type: 'string',
+            defaultValue: 'equal',
             options: (payload: Payload) => [
               {
                 text: 'Is exactly',
