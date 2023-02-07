@@ -272,12 +272,6 @@ const selectOperation = (operation: Operation | null = null) => {
           'defaultFields' in field && field.defaultFields !== undefined
             ? field.defaultFields || 0
             : 1;
-        console.log('default fields', {
-          defaultFields,
-          field,
-          defaultValue,
-          operationValues
-        });
         operationValues.value[field.name] =
           operationValues.value[field.name] || [];
         for (let i = 0; i < defaultFields; i++) {
