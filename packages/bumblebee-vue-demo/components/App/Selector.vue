@@ -6,6 +6,7 @@
       as="div"
       :multiple="multiple"
       class="relative"
+      :by="text"
       :disabled="disabled || !options?.length"
     >
       <label v-if="label" class="label input-label selector-label">
@@ -252,7 +253,7 @@ onMounted(() => {
   }
 });
 
-watch(selectedOption, (_newValue, oldItem) => {
+watch(selectedOption, (newItem, oldItem) => {
   const value = selectedOption.value?.value;
   const oldValue = oldItem?.value || oldItem;
   validateValue.value = (value);
@@ -261,7 +262,7 @@ watch(selectedOption, (_newValue, oldItem) => {
     return;
   }
   emit('update:modelValue', value, oldValue);
-  emit('item-selected', value, oldItem);
+  emit('item-selected', newItem, oldItem);
 });
 
 watch(
