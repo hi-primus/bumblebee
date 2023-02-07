@@ -4,6 +4,11 @@ import { isObject } from './common';
 export type Payload = Record<string, any>;
 
 type PayloadCalbackOr<T> = T | ((payload: Payload) => T);
+
+export type FieldOption<T = unknown> = Record<string, T> & {
+  disabled?: boolean;
+  hidden?: boolean;
+};
 export interface Field {
   name: string;
   type: 'string' | 'boolean' | 'custom';
@@ -11,7 +16,7 @@ export interface Field {
   placeholder?: string;
   label?: string;
   required?: boolean;
-  options?: PayloadCalbackOr<Record<string, unknown>[]>;
+  options?: PayloadCalbackOr<(string | FieldOption<unknown>)[]>;
   textCallback?: (value: unknown) => string;
   description?: string;
   defaultValue?: unknown;

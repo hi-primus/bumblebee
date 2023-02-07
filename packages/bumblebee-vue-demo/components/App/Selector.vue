@@ -78,48 +78,60 @@
         leave-to-class="opacity-0"
       >
         <ListboxOptions
-          class="absolute z-[3] mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg sm:text-sm"
+          v-model="selectedOption"
+          :close-on-select="!multiple"
+          class="absolute z-[3] mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg sm:text-sm outline-0"
           @blur="validate"
         >
-          <ListboxOption
-            v-for="(option, index) in props.options"
-            v-slot="{ active, selected }"
-            :key="index"
-            :value="option"
-            as="template"
-          >
+          {{ selectedOption }}
+          <template v-for="(option, index) in options">
             <li
-              :class="[
-                active
-                  ? 'selector-optionActive'
-                  : 'selector-optionDefault',
-                'selector-option',
-                'relative cursor-default select-none py-2 pl-10 pr-4'
-              ]"
+              v-if="option.divider"
+              :key="`divider-${index}`"
+              class="divider"
+            ></li>
+            <ListboxOption
+              v-else
+              v-slot="{ active, selected }"
+              :key="index"
+              :value="option"
+              :disabled="option.disabled"
+              as="template"
             >
-              <span class="block truncate">
-                <slot
-                  name="option"
-                  v-bind="typeof option === 'object' ? option : { option }"
-                >
-                  {{ (option && (option as Record<string, any>)[text]) || option }}
-                </slot>
-              </span>
-              <span
-                v-if="selected"
-                class="absolute inset-y-0 left-0 flex items-center pl-3"
+              <li
                 :class="[
+                  'selector-option',
+                  'relative cursor-default select-none py-2 pl-10 pr-4',
+                  option.disabled ? 'opacity-50': '',
                   active
-                    ? 'selector-optionIconActive'
-                    : 'selector-optionIconDefault',
-                  'selector-optionIcon'
+                    ? 'selector-optionActive'
+                    : 'selector-optionDefault',
                 ]"
               >
-                <Icon v-if="selected" :path="mdiCheckBold" />
-                <!-- <Icon v-else-if="!selected" :path="''" /> -->
-              </span>
-            </li>
-          </ListboxOption>
+                <span class="block truncate">
+                  <slot
+                    name="option"
+                    v-bind="typeof option === 'object' ? option : { option }"
+                  >
+                    {{ (option && (option as Record<string, any>)[text]) || option }}
+                  </slot>
+                </span>
+                <span
+                  v-if="selected"
+                  class="absolute inset-y-0 left-0 flex items-center pl-3"
+                  :class="[
+                    active
+                      ? 'selector-optionIconActive'
+                      : 'selector-optionIconDefault',
+                    'selector-optionIcon'
+                  ]"
+                >
+                  <Icon v-if="selected" :path="mdiCheckBold" />
+                  <!-- <Icon v-else-if="!selected" :path="''" /> -->
+                </span>
+              </li>
+            </ListboxOption>
+          </template>
         </ListboxOptions>
       </transition>
     </Listbox>
@@ -141,6 +153,7 @@ import { useField } from 'vee-validate';
 import { PropType } from 'vue';
 
 import { RuleKey } from '@/composables/use-rules';
+import { FieldOption } from '@/types/operations';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Value = any;
@@ -157,7 +170,7 @@ const props = defineProps({
   },
   options: {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    type: Array as PropType<(string | Record<string, any>)[]>,
+    type: Array as PropType<(string | FieldOption<any>)[]>,
     default: () => []
   },
   textCallback: {
@@ -212,6 +225,19 @@ const defaultLabel = computed(() => {
 
 const textCallbackWithDefault = computed(() => {
   return props.textCallback || ((option: unknown) => (option as Record<string, string>)[props.text]);
+});
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const options = computed<FieldOption<any>[]>(() => {
+  return props.options.map(option => {
+    if (typeof option === 'string') {
+      return {
+        value: option,
+        text: option
+      };
+    }
+    return option;
+  }).filter(option => !option.hidden);
 });
 
 const {
