@@ -48,7 +48,7 @@
   &:focus {
     .input-field,
     .selector-button {
-      @apply ring-1 ring-primary/75 border-primary/75;
+      @apply ring-1 ring-primary/75 border-primary/75 z-[1];
     }
     .input-label {
       @apply text-primary-dark;
