@@ -3,7 +3,7 @@
 }
 
 .input-primary {
-  @apply bg-white border border-text-lightest/50 font-normal text-text placeholder:text-text-light focus:outline-none rounded-lg disabled:bg-text-lightest;
+  @apply bg-white border border-text-lightest/50 font-normal text-text placeholder:text-text-light focus:outline-none rounded-lg;
 }
 .input-default {
   @apply font-normal text-text placeholder:text-text-light focus:outline-none;
@@ -11,6 +11,10 @@
 
 .text-input {
   @apply sm:text-sm md:text-base relative;
+
+  &.disabled-field {
+    @apply opacity-50;
+  }
 
   .text-input-field {
     @apply input-primary w-full;
@@ -109,6 +113,10 @@
 
 .selector {
   @apply sm:text-sm md:text-base relative;
+
+  &.disabled-field {
+    @apply opacity-50;
+  }
 
   .selector-button {
     @apply input-primary w-full text-left;
@@ -209,6 +217,9 @@
   @apply flex items-center gap-x-2;
   .checkbox-label {
     @apply sm:text-sm md:text-base font-normal;
+    .disabled-field & {
+      @apply text-text-lightest;
+    }
   }
   .checkbox-input {
     @apply accent-primary-dark disabled:accent-text-lightest;

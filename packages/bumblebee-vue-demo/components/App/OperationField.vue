@@ -1,31 +1,34 @@
 <template>
   <AppSelector
-    v-if="field.options?.length"
-    :key="`selector-${field.name}`"
+    v-if="resolve(field.options)?.length"
+    :key="`selector-${field.name}-${updates}`"
     v-model="value"
     :options="resolve(field.options)"
     :text-callback="field.textCallback"
     :label="field.label || field.name"
     :name="field.name"
     :placeholder="field.placeholder"
-    :class="field.class || 'w-full'"
+    :disabled="resolve(field.disabled)"
+    :class="fieldClass"
   />
   <AppInput
-    v-else-if="field.type === 'string'"
-    :key="`input-${field.name}`"
+    v-else-if="resolve(field.type) === 'string'"
+    :key="`input-${field.name}-${updates}`"
     v-model="value"
     :label="field.label || field.name"
     :name="field.name"
     :placeholder="field.placeholder"
-    :class="field.class || 'w-full'"
+    :disabled="resolve(field.disabled)"
+    :class="fieldClass"
   />
   <AppCheckbox
-    v-else-if="field.type === 'boolean'"
-    :key="`check-${field.name}`"
+    v-else-if="resolve(field.type) === 'boolean'"
+    :key="`check-${field.name}-${updates}`"
     v-model="value"
     :label="field.label || field.name"
     :name="field.name"
-    :class="field.class || 'w-full'"
+    :disabled="resolve(field.disabled)"
+    :class="fieldClass"
   />
 </template>
 
@@ -39,6 +42,8 @@ const props = defineProps<{
   subfieldIndex?: number;
   parentField?: string;
 }>();
+
+const updates = ref(0);
 
 const operationValues = inject('operation-values') as Ref<Payload>;
 
@@ -80,10 +85,27 @@ const value = computed({
   }
 });
 
+const fieldClass = computed(() => {
+  const fieldClass: string[] = [resolve(props.field.class || 'w-full')];
+  if (resolve(props.field.hidden)) {
+    fieldClass.push('hidden');
+  }
+  if (resolve(props.field.disabled)) {
+    fieldClass.push('disabled-field');
+  }
+  return fieldClass;
+});
+
 const resolve = <T>(value: ((payload: Payload) => T) | T) => {
+  if (value instanceof Function && props.field.name === 'otherwise')
+    console.log('resolve', value, props.field);
   if (value instanceof Function) {
     return value(operationValues.value);
   }
   return value;
 };
+
+watch(operationValues, () => {
+  updates.value++;
+});
 </script>

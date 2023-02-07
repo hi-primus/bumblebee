@@ -11,16 +11,18 @@ export type FieldOption<T = unknown> = Record<string, T> & {
 };
 export interface Field {
   name: string;
-  type: 'string' | 'boolean' | 'custom';
+  type: PayloadCalbackOr<'string' | 'boolean' | 'custom'>;
   key?: string;
   placeholder?: string;
   label?: string;
-  required?: boolean;
+  required?: PayloadCalbackOr<boolean>;
   options?: PayloadCalbackOr<(string | FieldOption<unknown>)[]>;
   textCallback?: (value: unknown) => string;
   description?: string;
   defaultValue?: unknown;
-  class?: string;
+  class?: PayloadCalbackOr<string>;
+  disabled?: PayloadCalbackOr<boolean>;
+  hidden?: PayloadCalbackOr<boolean>;
 }
 
 export interface FieldGroup {
