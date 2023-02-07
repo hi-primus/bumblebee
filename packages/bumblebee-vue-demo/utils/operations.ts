@@ -113,79 +113,77 @@ export const operationCreators: OperationCreator[] = [
             label: 'Condition',
             type: 'string',
             defaultValue: 'equal',
-            options: (payload: Payload) => [
+            options: (_payload: Payload) => [
               {
                 text: 'Is exactly',
-                value: 'equal',
-                disabled: !payload.cols?.length
+                value: 'equal'
               },
-              // {
-              //   text: 'Is one of',
-              //   value: 'value_in',
-              //   disabled: !payload.cols?.length
-              // },
+              {
+                text: 'Is one of',
+                value: 'value_in',
+                hidden: true
+              },
               {
                 text: 'Is not',
-                value: 'not_equal',
-                disabled: !payload.cols?.length
-              }
-              // { divider: true },
-              // {
-              //   text: 'Less than',
-              //   value: 'less_than',
-              //   disabled: !payload.cols?.length
-              // },
-              // {
-              //   text: 'Less than or equal to',
-              //   value: 'less_than_equal',
-              //   disabled: !payload.cols?.length
-              // },
-              // {
-              //   text: 'Greater than',
-              //   value: 'greater_than',
-              //   disabled: !payload.cols?.length
-              // },
-              // {
-              //   text: 'Greater than or equal to',
-              //   value: 'greater_than_equal',
-              //   disabled: !payload.cols?.length
-              // },
-              // {
-              //   text: 'Is Between',
-              //   value: 'between',
-              //   disabled: !payload.cols?.length
-              // },
-              // { divider: true },
-              // {
-              //   text: 'Contains',
-              //   value: 'contains',
-              //   disabled: !payload.cols?.length
-              // },
-              // {
-              //   text: 'Starts with',
-              //   value: 'starts_with',
-              //   disabled: !payload.cols?.length
-              // },
-              // {
-              //   text: 'Ends with',
-              //   value: 'ends_with',
-              //   disabled: !payload.cols?.length
-              // },
-              // { divider: true },
-              // { text: 'Custom expression', value: 'where' },
-              // {
-              //   text: 'Pattern',
-              //   value: 'match_pattern',
-              //   disabled: !payload.cols?.length
-              // },
-              // { text: 'Selected', value: 'selected', disabled: true },
-              // { divider: true },
-              // {
-              //   text: 'Mismatches values',
-              //   value: 'mismatch',
-              //   disabled: !payload.cols?.length
-              // },
-              // { text: 'Null values', value: 'null' }
+                value: 'not_equal'
+              },
+              { divider: true, hidden: true },
+              {
+                text: 'Less than',
+                value: 'less_than',
+                hidden: true
+              },
+              {
+                text: 'Less than or equal to',
+                value: 'less_than_equal',
+                hidden: true
+              },
+              {
+                text: 'Greater than',
+                value: 'greater_than',
+                hidden: true
+              },
+              {
+                text: 'Greater than or equal to',
+                value: 'greater_than_equal',
+                hidden: true
+              },
+              {
+                text: 'Is Between',
+                value: 'between',
+                hidden: true
+              },
+              { divider: true, hidden: true },
+              {
+                text: 'Contains',
+                value: 'contains',
+                hidden: true
+              },
+              {
+                text: 'Starts with',
+                value: 'starts_with',
+                hidden: true
+              },
+              {
+                text: 'Ends with',
+                value: 'ends_with',
+                hidden: true
+              },
+              { divider: true, hidden: true },
+              { text: 'Custom expression', value: 'where', hidden: true },
+              {
+                text: 'Pattern',
+                value: 'match_pattern',
+                hidden: true
+              },
+              { text: 'Selected', value: 'selected', hidden: true },
+              { divider: true, hidden: true },
+              {
+                text: 'Mismatches values',
+                value: 'mismatch',
+                hidden: true
+              },
+              { text: 'Null values', value: 'null', hidden: true }
             ],
             class: 'grouped-first w-[31.3333%]'
           },
