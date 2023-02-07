@@ -7,7 +7,7 @@
       :multiple="multiple"
       class="relative"
       :by="text"
-      :disabled="disabled || !options?.length"
+      :disabled="disabled"
     >
       <label v-if="label" class="label input-label selector-label">
         {{ label }}
@@ -132,6 +132,14 @@
               </li>
             </ListboxOption>
           </template>
+          <div
+            v-if="options.length === 0"
+            class="text-text-lighter text-center py-2"
+          >
+            <slot name="no-options">
+              No items
+            </slot>
+          </div>
         </ListboxOptions>
       </transition>
     </Listbox>
@@ -212,9 +220,7 @@ type Emits = {
 
 const emit = defineEmits<Emits>();
 
-const selectedOption = ref<Value>(
-  props.modelValue || (props.multiple ? [] : null)
-);
+const selectedOption = ref<Value>(props.multiple ? [] : null);
 
 const defaultLabel = computed(() => {
   if (!props.options?.length) {
@@ -246,12 +252,6 @@ const {
   validate
 } = useField(props.name, useRules(props.rules));
 
-onMounted(() => {
-  if (selectedOption.value) {
-    validateValue.value = (selectedOption.value?.value);
-  }
-});
-
 watch(selectedOption, (newItem, oldItem) => {
   const value = selectedOption.value?.value;
   const oldValue = oldItem?.value || oldItem;
@@ -267,7 +267,7 @@ watch(selectedOption, (newItem, oldItem) => {
 watch(
   () => props.modelValue,
   value => {
-    if (value === selectedOption.value.value) {
+    if (selectedOption.value && value && selectedOption.value.value === value) {
       return;
     }
     selectedOption.value = props.options.find(o => {
