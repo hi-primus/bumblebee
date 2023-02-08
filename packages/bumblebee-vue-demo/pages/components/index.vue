@@ -293,15 +293,15 @@
         <AppInput placeholder="Column" class="input-size-small"> </AppInput>
       </div>
       <div class="flex flex-wrap gap-4 px-8 py-2 justify-start items-start">
-        <AppInput label="Test label" placeholder="Column" class=""> </AppInput>
+        <AppInput label="Test input" placeholder="Column" class=""> </AppInput>
         <AppInput
-          label="Test label"
+          label="Test input"
           placeholder="Column"
           class="input-size-condensed"
         >
         </AppInput>
         <AppInput
-          label="Test label"
+          label="Test input"
           placeholder="Column"
           class="input-size-small"
         >
@@ -312,7 +312,7 @@
           v-model="selectedColumns"
           :options="columns"
           multiple
-          label="Test label"
+          label="Test multiple autocomplete"
           placeholder="Column"
           class=""
         >
@@ -320,7 +320,7 @@
         <AppAutocomplete
           v-model="selectedColumn"
           :options="columns"
-          label="Test label"
+          label="Test autocomplete"
           placeholder="Columns"
           name="input-size-condensed"
           class="input-size-condensed"
@@ -330,7 +330,7 @@
           v-model="selectedColumns"
           :options="columns"
           multiple
-          label="Test label"
+          label="Test multiple autocomplete"
           placeholder="Columns"
           name="input-size-small"
           class="input-size-small"
@@ -338,11 +338,28 @@
         </AppAutocomplete>
       </div>
       <div class="flex flex-wrap gap-4 px-8 py-2 justify-start items-start">
+        <AppChipsInput
+          v-model="replaces"
+          label="Test multiple chips"
+          placeholder="Column"
+          class=""
+        >
+        </AppChipsInput>
+        <AppChipsInput
+          v-model="replaces"
+          label="Test multiple chips"
+          placeholder="Columns"
+          name="input-size-small"
+          class="input-size-small"
+        >
+        </AppChipsInput>
+      </div>
+      <div class="flex flex-wrap gap-4 px-8 py-2 justify-start items-start">
         <AppSelector
           v-model="selectedColumns"
           :options="columns"
           multiple
-          label="Test label"
+          label="Test multiple selector"
           placeholder="Column"
           class="min-w-[320px]"
         >
@@ -350,7 +367,7 @@
         <AppSelector
           v-model="selectedColumn"
           :options="columns"
-          label="Test label"
+          label="Test selector"
           placeholder="Columns"
           name="input-size-condensed"
           class="input-size-condensed min-w-[320px]"
@@ -360,7 +377,7 @@
           v-model="selectedColumns"
           :options="columns"
           multiple
-          label="Test label"
+          label="Test multiple selector"
           placeholder="Columns"
           name="input-size-small"
           class="input-size-small min-w-[320px]"
@@ -390,6 +407,7 @@ const columns = ref([
   'country'
 ]);
 const selectedColumns = ref<string[]>([]);
+const replaces = ref<string[]>([]);
 const selectedColumn = ref<string>('');
 
 const columnValues = [
