@@ -2,11 +2,11 @@ import type { Source } from 'blurr/build/main/types';
 
 import { DataframeProfile, KeyedColumn } from '@/types/dataframe';
 
-export const preliminaryProfile = async (
+export const getPreliminaryProfile = async (
   df: Source
 ): Promise<DataframeProfile> => {
-  const emptyProfile = await df.profile({ cols: [], bins: 33 });
   const columns: string[] = await df.cols.names();
+  const emptyProfile = await df.profile({ cols: [], bins: 33 });
   return {
     ...emptyProfile,
     columns: columns.reduce((acc, col) => {

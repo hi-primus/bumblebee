@@ -33,7 +33,7 @@ import {
 } from '@/types/operations';
 import { AppStatus } from '@/types/workspace';
 import { compareObjects, deepClone, throttleOnce } from '@/utils';
-import { preliminaryProfile } from '@/utils/blurr';
+import { getPreliminaryProfile } from '@/utils/blurr';
 
 const blurrPackage = useBlurr();
 
@@ -110,7 +110,7 @@ const handleOperationResult = async (result: unknown, payload: Payload) => {
         name: 'dataset',
         sourceId: payload.options.sourceId,
         df,
-        profile: await preliminaryProfile(df),
+        profile: await getPreliminaryProfile(df),
         updates: 0
       });
       selectedDataframe.value = newLength - 1;
@@ -121,7 +121,7 @@ const handleOperationResult = async (result: unknown, payload: Payload) => {
     } else {
       const currentDataframe = dataframes.value[selectedDataframe.value];
       currentDataframe.df = df;
-      currentDataframe.profile = await preliminaryProfile(df);
+      currentDataframe.profile = await getPreliminaryProfile(df);
       currentDataframe.updates = currentDataframe.updates + 1;
       console.log('[DEBUG] Updating dataframe:', currentDataframe);
       dataframes.value[selectedDataframe.value] = currentDataframe;
@@ -231,18 +231,6 @@ const prepareOperation = () => {
   return { operation, payload: preparePayload(payload) };
 };
 
-const getPreviewColumns = (sampleColumns: { title: string }[]) => {
-  return sampleColumns
-    .map(({ title }: { title: string }) => ({
-      title,
-      preview: !dataframeObject.value?.profile?.columns[title]
-    }))
-    .reduce(
-      (acc, { title, preview }) => ({ ...acc, [title]: { preview } }),
-      {}
-    );
-};
-
 const operationActions: OperationActions = {
   submitOperation: async () => {
     try {
@@ -322,9 +310,15 @@ const previewOperation = throttleOnce(async function () {
 
       // use preview columns instead of source columns
 
+      const previewColumns = Object.fromEntries(
+        firstSampleResult.columns.map(({ title }: { title: string }) => {
+          return [title, {}];
+        })
+      );
+
       previewData.value = {
         options: { usesInputDataframe: true },
-        columns: getPreviewColumns(firstSampleResult.columns),
+        columns: previewColumns,
         type: payload.options.preview
       };
 
@@ -360,23 +354,25 @@ const previewOperation = throttleOnce(async function () {
 
     // save profile
 
+    const preliminaryProfile = await getPreliminaryProfile(result);
+
     previewData.value = {
       ...previewData.value,
-      profile: await preliminaryProfile(result)
+      profile: preliminaryProfile
     };
 
-    const profilePromise = payload.source
+    const profile = await (payload.source
       ? result.profile({
           cols: Object.entries(previewData.value?.columns || {})
             ?.filter(([_, { preview }]) => preview)
             .map(([title, _]) => title),
           bins: 33
         })
-      : result.profile({ cols: '*', bins: 33 });
+      : result.profile({ cols: '*', bins: 33 }));
 
     previewData.value = {
       ...previewData.value,
-      profile: await profilePromise
+      profile
     };
 
     appStatus.value = 'ready';
