@@ -237,3 +237,10 @@
     @apply h-4 w-4;
   }
 }
+
+.chips-primary {
+  @apply bg-primary-lighter text-text-alpha flex items-center gap-1 px-1 text-sm rounded-md;
+  .close-icon {
+    @apply pr-1 cursor-pointer;
+  }
+}

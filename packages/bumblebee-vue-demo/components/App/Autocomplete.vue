@@ -21,7 +21,7 @@
             v-for="(option, index) in selected"
             :key="index"
             :title="option?.text || option"
-            class="bg-primary-lighter text-text-alpha flex items-center gap-1 px-1 text-sm rounded-md max-w-[calc(100%-10px)] z-[3]"
+            class="chips-primary max-w-[calc(100%-10px)] z-[3]"
           >
             <span class="truncate max-w-full">
               <slot
@@ -33,7 +33,7 @@
             </span>
             <Icon
               :path="mdiClose"
-              class="pr-1 cursor-pointer"
+              class="close-icon"
               @click="selected.splice(index, 1)"
             />
           </span>
@@ -55,6 +55,7 @@
           autocomplete="off"
           :model-value="search"
           @change="search = $event.target.value"
+          @blur="validate"
         />
         <Icon
           v-if="(selected || search) && clearable"
@@ -140,10 +141,13 @@
         </ComboboxOptions>
       </TransitionRoot>
     </Combobox>
+    <span v-if="errorMessage" class="selector-errorContainer">
+      {{ errorMessage }}
+    </span>
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {
   Combobox,
   ComboboxButton,
@@ -153,7 +157,15 @@ import {
   TransitionRoot
 } from '@headlessui/vue';
 import { mdiCheckBold, mdiChevronDown, mdiChevronUp, mdiClose } from '@mdi/js';
-import { ref } from 'vue';
+import { useField } from 'vee-validate';
+import { PropType, ref } from 'vue';
+
+import { RuleKey } from '@/composables/use-rules';
+import { FieldOption } from '@/types/operations';
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type Value = any;
+type Item = Record<string, Value>;
 
 const props = defineProps({
   label: {
@@ -165,7 +177,7 @@ const props = defineProps({
     default: ''
   },
   modelValue: {
-    type: [String, Object],
+    type: [Object, String, Array] as PropType<Value>,
     default: () => null
   },
   search: {
@@ -173,8 +185,20 @@ const props = defineProps({
     default: ''
   },
   options: {
-    type: Array,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    type: Array as PropType<(string | FieldOption<any>)[]>,
     default: () => []
+  },
+  textCallback: {
+    type: Function as PropType<(option: unknown) => string>
+  },
+  rules: {
+    type: Array as PropType<RuleKey[]>,
+    default: () => []
+  },
+  name: {
+    type: String,
+    default: () => 'mySelector'
   },
   multiple: {
     type: Boolean,
@@ -190,11 +214,17 @@ const props = defineProps({
   }
 });
 
-const emit = defineEmits(['update:modelValue', 'update:search']);
+type Emits = {
+  (e: 'update:modelValue', value: Value, oldValue: Value): void;
+  (e: 'update:search', value: Value, oldValue: Value): void;
+  (e: 'item-selected', item: Item, oldItem: Item): void;
+};
+
+const emit = defineEmits<Emits>();
 
 const selected = ref(props.modelValue);
 
-const searchInput = ref(null);
+const searchInput = ref<typeof ComboboxInput | null>(null);
 
 const filteredOptions = computed(() => {
   if (search.value) {
@@ -208,18 +238,61 @@ const filteredOptions = computed(() => {
   return props.options;
 });
 
+const {
+  errorMessage,
+  value: validateValue,
+  validate
+} = useField(props.name, useRules(props.rules));
+
+watch(selected, (item, oldItem) => {
+  const value = item?.value || item;
+  const oldValue = oldItem?.value || oldItem;
+  validateValue.value = value;
+
+  const valuesFromSelected = item?.map((o: Value) => o?.value || o);
+  if (
+    (props.multiple && compareArrays(valuesFromSelected, props.modelValue)) ||
+    (!props.multiple && value === props.modelValue)
+  ) {
+    return;
+  }
+  emit('update:modelValue', value, oldValue);
+  emit('item-selected', item, oldItem);
+});
+
 watch(
   () => props.modelValue,
   value => {
-    selected.value = value;
-  }
-);
-
-watch(
-  () => selected.value,
-  (value, oldValue) => {
-    emit('update:modelValue', value, oldValue);
-  }
+    if (props.multiple) {
+      const valuesFromSelected = selected.value?.map(
+        (o: Value) => o?.value || o
+      );
+      if (compareArrays(valuesFromSelected, value)) {
+        return;
+      }
+      selected.value = value.map((v: Value) => {
+        return (
+          props.options.find(o => {
+            if (typeof o !== 'object') {
+              return o === v;
+            }
+            return o.value === v;
+          }) || v
+        );
+      });
+    }
+    if (selected.value && value && selected.value.value === value) {
+      return;
+    }
+    selected.value =
+      props.options.find(o => {
+        if (typeof o !== 'object') {
+          return o === value;
+        }
+        return o.value === value;
+      }) || value;
+  },
+  { immediate: true }
 );
 
 const search = ref('');

@@ -89,6 +89,21 @@ export const compareObjects = (a: unknown, b: unknown): boolean => {
   });
 };
 
+export const compareArrays = (a: unknown[], b: unknown[]): boolean => {
+  if (a === b) {
+    return true;
+  }
+  if (!Array.isArray(a) || !Array.isArray(b)) {
+    return false;
+  }
+  if (a?.length !== b?.length) {
+    return false;
+  }
+  return a.every((value, index) => {
+    return compareObjects(value, b[index]);
+  });
+};
+
 export const deepClone = <T>(obj: T): T => {
   if (Array.isArray(obj)) {
     return (obj as any[]).map(deepClone) as T;

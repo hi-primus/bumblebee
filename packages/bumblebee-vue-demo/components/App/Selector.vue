@@ -13,7 +13,7 @@
         {{ label }}
       </label>
       <ListboxButton
-        class="selector-button relative or-8"
+        class="selector-button"
         :class="[
           open ? 'selector-buttonOpen' : 'selector-buttonClosed',
           errorMessage ? 'selector-errorInput' : '',
@@ -22,31 +22,32 @@
       >
         <template v-if="multiple">
           <span
-            v-if="selectedOption?.length === 0"
-            class="block truncate selector-buttonTextDefault"
+            v-if="!selectedOption?.length"
+            class="block truncate selector-buttonText selector-buttonTextDefault"
           >
             {{ defaultLabel }}
           </span>
-          <span
-            v-for="(option, index) in selectedOption"
-            :key="index"
-            class="bg-foodit-accent flex items-center gap-1 px-2 py-1 text-base rd"
-          >
-            <span class="truncate max-w-full">{{
-              textCallbackWithDefault(option) || option
-            }}</span>
-            <Icon
-              :path="mdiClose"
-              class="px-1"
-              @click="selectedOption.splice(index, 1)"
-            />
-          </span>
+          <template v-else>
+            <span
+              v-for="(option, index) in selectedOption"
+              :key="index"
+              class="chips-primary max-w-[calc(100%-10px)] z-[3]"
+            >
+              <span class="truncate max-w-full">{{
+                textCallbackWithDefault(option) || option
+              }}</span>
+              <Icon
+                :path="mdiClose"
+                class="close-icon"
+                @click="selectedOption.splice(index, 1)"
+              />
+            </span>
+          </template>
         </template>
         <template v-else>
           <span
-            class="block truncate"
+            class="block truncate selector-buttonText"
             :class="[
-              'selector-buttonText',
               selectedOption
                 ? 'selector-buttonTextSelected'
                 : 'selector-buttonTextDefault'
@@ -84,7 +85,7 @@
           class="absolute z-[3] mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg sm:text-sm outline-0"
           @blur="validate"
         >
-          <template v-for="(option, index) in options">
+          <template v-for="(option, index) in selectorOptions">
             <li
               v-if="option.divider"
               :key="`divider-${index}`"
@@ -162,6 +163,7 @@ import { PropType } from 'vue';
 
 import { RuleKey } from '@/composables/use-rules';
 import { FieldOption } from '@/types/operations';
+import { compareArrays } from '@/utils';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Value = any;
@@ -220,7 +222,7 @@ type Emits = {
 
 const emit = defineEmits<Emits>();
 
-const selectedOption = ref<Value>(props.multiple ? [] : null);
+const selectedOption = ref<Value>(null);
 
 const defaultLabel = computed(() => {
   if (!props.options?.length) {
@@ -234,7 +236,7 @@ const textCallbackWithDefault = computed(() => {
 });
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const options = computed<FieldOption<any>[]>(() => {
+const selectorOptions = computed<FieldOption<any>[]>(() => {
   return props.options.map(option => {
     if (typeof option === 'string') {
       return {
@@ -252,21 +254,36 @@ const {
   validate
 } = useField(props.name, useRules(props.rules));
 
-watch(selectedOption, (newItem, oldItem) => {
-  const value = selectedOption.value?.value;
+watch(selectedOption, (item, oldItem) => {
+  const value = item?.value || item;
   const oldValue = oldItem?.value || oldItem;
   validateValue.value = (value);
 
-  if (value === props.modelValue) {
+  const valuesFromSelected = selectedOption.value?.map((o: Value) => o?.value || o);
+  if ((props.multiple && compareArrays(valuesFromSelected, props.modelValue)) || (!props.multiple && value === props.modelValue)) {
     return;
   }
   emit('update:modelValue', value, oldValue);
-  emit('item-selected', newItem, oldItem);
+  emit('item-selected', item, oldItem);
 });
 
 watch(
   () => props.modelValue,
   value => {
+    if (props.multiple) {
+      const valuesFromSelected = selectedOption.value?.map((o: Value) => o?.value || o);
+      if (compareArrays(valuesFromSelected, value)) {
+        return;
+      }
+      selectedOption.value = value.map((v: Value) => {
+        return props.options.find(o => {
+          if (typeof o !== "object") {
+            return o === v;
+          }
+          return o.value === v;
+        }) || v;
+      });
+    }
     if (selectedOption.value && value && selectedOption.value.value === value) {
       return;
     }
