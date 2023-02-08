@@ -44,6 +44,9 @@
             class="autocomplete-hiddenField bg-transparent min-w-20 flex-1"
             autocomplete="off"
             @change="search = $event.target.value"
+            @keydown.enter="selectOption"
+            @keydown.tab="selectOption"
+            @keydown.backspace="removeLastOption"
           />
         </div>
         <ComboboxInput
@@ -64,10 +67,10 @@
           @click="clear"
         />
         <ComboboxButton
+          v-if="filteredOptions?.length"
           class="absolute inset-y-0 right-0 flex items-center pr-2"
         >
           <Icon
-            v-if="filteredOptions.length"
             :path="open ? mdiChevronUp : mdiChevronDown"
             :class="[
               open
@@ -79,16 +82,17 @@
         </ComboboxButton>
       </div>
       <TransitionRoot
+        v-if="filteredOptions"
         leave="transition ease-in duration-100"
         leave-from="opacity-100"
         leave-to="opacity-0"
-        @after-leave="search = ''"
+        @after-leave="leave"
       >
         <ComboboxOptions
           class="absolute z-[4] mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg sm:text-sm"
         >
           <div
-            v-if="filteredOptions.length === 0 && search !== ''"
+            v-if="filteredOptions && !filteredOptions.length && search !== ''"
             class="relative cursor-default select-none py-2 px-4 text-text-lighter"
           >
             No results found
@@ -186,7 +190,7 @@ const props = defineProps({
   },
   options: {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    type: Array as PropType<(string | FieldOption<any>)[]>,
+    type: Array as PropType<(string | FieldOption<any>)[] | null>,
     default: () => []
   },
   textCallback: {
@@ -227,7 +231,7 @@ const selected = ref(props.modelValue);
 const searchInput = ref<typeof ComboboxInput | null>(null);
 
 const filteredOptions = computed(() => {
-  if (search.value) {
+  if (search.value && props.options) {
     return props.options.filter(option => {
       if (typeof option === 'object') {
         return option[props.text].toLowerCase().includes(search.value);
@@ -273,7 +277,7 @@ watch(
       }
       selected.value = value.map((v: Value) => {
         return (
-          props.options.find(o => {
+          props.options?.find(o => {
             if (typeof o !== 'object') {
               return o === v;
             }
@@ -286,7 +290,7 @@ watch(
       return;
     }
     selected.value =
-      props.options.find(o => {
+      props.options?.find(o => {
         if (typeof o !== 'object') {
           return o === value;
         }
@@ -309,18 +313,23 @@ watch(
   () => search.value,
   (value, oldValue) => {
     emit('update:search', value, oldValue);
-    if (props.multiple && value === '' && searchInput.value?.el?.value !== '') {
+    if (
+      props.multiple &&
+      value === '' &&
+      searchInput.value &&
+      searchInput.value?.el?.value !== ''
+    ) {
       searchInput.value.el.value = '';
     }
   }
 );
 
-const updateSelected = value => {
+const updateSelected = (value: Value) => {
   selected.value = value;
   search.value = '';
 };
 
-const formatterDisplayValues = items => {
+const formatterDisplayValues = (items: ArrayOr<Value>) => {
   let text = '';
   if (Array.isArray(items)) {
     if (props.multiple) {
@@ -340,5 +349,24 @@ const formatterDisplayValues = items => {
 const clear = () => {
   selected.value = null;
   search.value = '';
+};
+
+const leave = () => {
+  search.value = '';
+};
+
+const selectOption = (event: KeyboardEvent) => {
+  if (props.options === null && search.value !== '') {
+    event.preventDefault();
+    selected.value.push(search.value);
+    search.value = '';
+  }
+};
+
+const removeLastOption = (event: KeyboardEvent) => {
+  if (search.value === '' && selected.value.length) {
+    event.preventDefault();
+    selected.value.pop();
+  }
 };
 </script>
