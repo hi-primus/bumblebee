@@ -6,6 +6,8 @@ export type FrequencyValue = { count: number; value: BasicType };
 
 export type HistValue = { count: number; lower: number; upper: number };
 
+export type Highlight = boolean | 'error' | 'warning' | 'success';
+
 export interface ColumnStats {
   match: number;
   missing: number;
@@ -27,6 +29,7 @@ export interface Column extends KeyedColumn {
 
 export interface PreviewColumn {
   preview: boolean;
+  highlight?: Highlight;
 }
 
 export type ColumnHeader = Column & PreviewColumn;

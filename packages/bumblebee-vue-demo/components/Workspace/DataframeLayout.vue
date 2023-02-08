@@ -18,7 +18,12 @@
 <script setup lang="ts">
 import { ComputedRef, Ref } from 'vue';
 
-import { ColumnHeader, DataframeObject, PreviewData } from '@/types/dataframe';
+import {
+  ColumnHeader,
+  DataframeObject,
+  Highlight,
+  PreviewData
+} from '@/types/dataframe';
 import { Chunk } from '@/types/table';
 import { optimizeRanges } from '@/utils/table';
 
@@ -62,6 +67,17 @@ const header = computed<ColumnHeader[]>(() => {
         preview = true;
       }
 
+      let highlight: Highlight = false;
+
+      if (title.startsWith('__bumblebee__highlight_row__')) {
+        const highlightString = title.replace(
+          '__bumblebee__highlight_row__',
+          ''
+        );
+        highlight = ['error', 'warning', 'success'].includes(highlightString)
+          ? (highlightString as Highlight)
+          : true;
+      }
       return {
         title: newTitle,
         data_type:
@@ -70,6 +86,7 @@ const header = computed<ColumnHeader[]>(() => {
         stats:
           (column as ColumnHeader).stats || originalColumns?.[title]?.stats,
         preview: preview || wholePreview,
+        highlight
       };
     });
   }

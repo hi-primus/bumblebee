@@ -11,13 +11,14 @@
         class="bumblebee-columns-rows-backgrounds sticky h-full w-full ml-[-100%] left-0 order-[-1]"
       >
         <div
-          v-for="(row, rowIndex) in data"
+          v-for="(row, rowIndex) in rowsData"
           :key="`row-${rowIndex}`"
           :style="{
             top: columnHeaderHeight + rowIndex * rowHeight + 'px',
             height: rowHeight + 'px'
           }"
           class="absolute bg-white pr-2 z-[-3] text-right w-full opacity-50 bg-white"
+          :class="row.highlights"
         ></div>
       </div>
       <div
@@ -32,7 +33,7 @@
         }"
       >
         <div
-          v-for="(column, columnIndex) in header"
+          v-for="column in columnsHeader"
           :key="column.title"
           :class="{
             'column-color-preview': column.preview,
@@ -44,10 +45,10 @@
             height: columnHeaderHeight + safeRowsCount * rowHeight + 'px',
             width: minColumnWidth + 'px'
           }"
-          :data-index="columnIndex"
+          :data-index="column.columnIndex"
           @keydown="
             $event =>
-              column.preview ? null : handleKeyDown($event, columnIndex)
+              column.preview ? null : handleKeyDown($event, column.columnIndex)
           "
           @mousedown.prevent
         >
@@ -64,20 +65,20 @@
                 $event =>
                   column.preview
                     ? null
-                    : columnClicked($event, columnIndex, true)
+                    : columnClicked($event, column.columnIndex, true)
               "
             >
               <span
-                :title="dataTypeNames[columnIndex]"
+                :title="dataTypeNames[column.columnIndex]"
                 class="left-icon inline text-text-alpha/75 max-w-5 font-bold text-center"
                 :class="{
                   'transform scale-x-125':
-                    dataTypeHintLengths[columnIndex] <= 2,
+                    dataTypeHintLengths[column.columnIndex] <= 2,
                   'tracking-[-1px] transform scale-x-95':
-                    dataTypeHintLengths[columnIndex] >= 4
+                    dataTypeHintLengths[column.columnIndex] >= 4
                 }"
               >
-                {{ dataTypeHints[columnIndex] }}
+                {{ dataTypeHints[column.columnIndex] }}
               </span>
               <span class="flex-1 truncate pl-2">
                 {{ column.title }}
@@ -92,14 +93,16 @@
             />
           </div>
           <div
-            v-for="(row, rowIndex) in data"
+            v-for="(row, rowIndex) in rowsData"
             :key="`col-${column?.title}-${rowIndex}`"
             class="column-cell ellipsis whitespace-pre"
             :style="{
               top: columnHeaderHeight + rowIndex * rowHeight + 'px',
               height: rowHeight + 1 + 'px'
             }"
-            v-html="getValue(row ? row[columnIndex] : null)"
+            v-html="
+              getValue(row?.values ? row.values[column.columnIndex] : null)
+            "
           ></div>
         </div>
       </div>
@@ -116,7 +119,7 @@
           }"
         >
           <div
-            v-for="(row, rowIndex) in data"
+            v-for="(_row, rowIndex) in data"
             :key="`row-index-${rowIndex}`"
             :style="{
               top: columnHeaderHeight + rowIndex * rowHeight + 'px',
@@ -201,6 +204,44 @@ const safeRowsCount = computed(() => {
   return 0;
 });
 
+const columnsHeader = computed(() => {
+  return props.header
+    .map((c, columnIndex) => ({ ...c, columnIndex }))
+    .filter(column => !column.highlight);
+});
+
+const highlights = computed(() => {
+  return props.header
+    .map((c, columnIndex) => ({ ...c, columnIndex }))
+    .filter(column => column.highlight);
+});
+
+const rowsData = computed(() => {
+  if (highlights.value.length) {
+    const rows: typeof props.data = {};
+    for (const rowIndex in props.data) {
+      const values = props.data[rowIndex];
+      rows[rowIndex] = {
+        values,
+        highlights: highlights.value
+          .map(column =>
+            values[column.columnIndex] ? `row-${column.highlight}` : null
+          )
+          .join(' ')
+      };
+    }
+    return rows;
+  }
+  const rows: typeof props.data = {};
+  for (const rowIndex in props.data) {
+    const values = props.data[rowIndex];
+    rows[rowIndex] = {
+      values
+    };
+  }
+  return rows;
+});
+
 const dataTypeHints = computed(() => {
   return props.header.map(column => {
     let dataType = '';
@@ -274,7 +315,7 @@ onMounted(() => {
   onScroll();
 });
 
-watch(() => props.header, onScroll, { deep: true });
+watch(() => columnsHeader.value, onScroll, { deep: true });
 
 watch(() => [props.rowsCount, props.data], onScroll);
 
@@ -330,14 +371,14 @@ const columnClicked = (
     lastColumnClicked = columnIndex;
   }
 
-  const columnTitle = props.header[columnIndex].title;
+  const columnTitle = columnsHeader.value[columnIndex].title;
 
   let columns: string[] = [];
 
   if (event.shiftKey && lastColumnClicked !== null) {
     const start = Math.min(columnIndex, lastColumnClicked);
     const stop = Math.max(columnIndex, lastColumnClicked);
-    columns = props.header
+    columns = columnsHeader.value
       .slice(start, stop + 1)
       .filter(c => !c.preview)
       .map(c => c.title);
@@ -374,6 +415,9 @@ const columnClicked = (
   &[class*='column-color-'] {
     z-index: 2;
   }
+  & .column-header {
+    @apply bg-white;
+  }
   &:focus {
     outline: none;
     &::after {
@@ -383,24 +427,20 @@ const columnClicked = (
       @apply pointer-events-none;
       @apply outline-primary-light outline-offset-[-3px] outline-dashed outline-2;
       @apply opacity-75;
-      &,
-      & .column-header {
-        @apply bg-transparent;
-      }
     }
   }
   &.column-color-primary {
     --line-color: theme('colors.primary.lighter');
     &,
-    & .column-header {
-      @apply bg-primary-highlight;
+    & .column-header > * {
+      @apply bg-primary/10;
     }
   }
   &.column-color-preview {
     --line-color: theme('colors.warn.lighter');
     &,
-    & .column-header {
-      @apply bg-warn-highlight;
+    & .column-header > * {
+      @apply bg-warn/10;
     }
   }
 }
@@ -417,5 +457,15 @@ const columnClicked = (
   // border-right-color: red;
   /* bottom border only when last row */
   @apply border-y-0 last:border-b;
+}
+
+.row-success {
+  @apply bg-success-highlight;
+}
+.row-error {
+  @apply bg-error-highlight;
+}
+.row-warning {
+  @apply bg-warn-highlight;
 }
 </style>

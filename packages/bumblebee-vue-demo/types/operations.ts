@@ -35,7 +35,12 @@ export interface FieldGroup {
   class?: string;
 }
 
-export type PreviewType = boolean | 'basic columns' | 'whole'; // TODO: add preview types
+export type PreviewType =
+  | boolean
+  | 'basic columns'
+  | 'whole'
+  | 'rows'
+  | 'highlight rows'; // TODO: add preview types
 
 export interface OperationOptions {
   usesInputCols?: boolean | 'single';

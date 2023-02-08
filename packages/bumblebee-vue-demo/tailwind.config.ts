@@ -33,7 +33,7 @@ export default {
         light: '#5deba6',
         lighter: '#89f4c0',
         lightest: '#b6fcda',
-        highlight: '#e3fdf0'
+        highlight: '#dff5ea'
       },
       error: {
         darkest: '#771818',

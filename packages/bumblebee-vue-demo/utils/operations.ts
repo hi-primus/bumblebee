@@ -62,28 +62,9 @@ export const operationCreators: OperationCreator[] = [
       otherwise: string;
       options: OperationOptions;
     }): Source => {
-      const where = payload.replaces.map(replace => {
-        // check if replace.value is a number string
-        let value: string | number = replace.value;
-        let condition = replace.condition;
-        if (!isNaN(Number(value))) {
-          value = Number(value);
-          condition = `numeric_${condition}`;
-        }
-        switch (condition) {
-          case 'equal':
-            return `df["${payload.cols[0]}"]=="${value}"`;
-          case 'not_equal':
-            return `df["${payload.cols[0]}"]!="${value}"`;
-          case 'numeric_equal':
-            return `(df["${payload.cols[0]}"]==${value}) | (df["${payload.cols[0]}"]=="${value}")`;
-          case 'numeric_not_equal':
-            return `(df["${payload.cols[0]}"]!=${value}) & (df["${payload.cols[0]}"]!="${value}")`;
-          default:
-            console.warn('Unknown condition', condition);
-        }
-        return '';
-      });
+      const where = payload.replaces.map(replace =>
+        whereExpression(replace.condition, replace.value, payload.cols[0])
+      );
 
       const result = payload.source.cols.set({
         cols: payload.outputCols,
@@ -296,6 +277,106 @@ export const operationCreators: OperationCreator[] = [
     shortcut: 'rc'
   },
   // Row operations
+  {
+    key: 'filterRows',
+    name: 'Filter rows',
+    alias: 'drop keep rows',
+    defaultOptions: {
+      usesInputCols: true,
+      usesOutputCols: false,
+      usesInputDataframe: true,
+      preview: 'highlight rows'
+    },
+    shortcut: 'fr',
+    action: (payload: {
+      source: Source;
+      cols: Cols;
+      conditions: {
+        condition: string;
+        value: string;
+      }[];
+      action: 'select' | 'drop';
+      options: OperationOptions;
+    }): Source => {
+      const where = payload.conditions.map(condition =>
+        whereExpression(condition.condition, condition.value, payload.cols[0])
+      );
+
+      if (payload.options.preview) {
+        const color = payload.action === 'select' ? 'success' : 'error';
+        return payload.source.cols.set({
+          cols: `__bumblebee__highlight_row__${color}`,
+          valueFunc: true,
+          evalValue: false,
+          where: where.join(' | '),
+          default: false
+        });
+      }
+
+      if (payload.action === 'select') {
+        return payload.source.rows.select({
+          expr: where.join(' | ')
+        });
+      } else {
+        return payload.source.rows.drop({
+          expr: where.join(' | ')
+        });
+      }
+    },
+    fields: [
+      {
+        name: 'conditions',
+        label: 'Conditions',
+        type: 'group',
+        fields: [
+          {
+            name: 'condition',
+            label: 'Condition',
+            type: 'string',
+            defaultValue: 'equal',
+            options: (_payload: Payload) => [
+              {
+                text: 'Is exactly',
+                value: 'equal'
+              },
+              {
+                text: 'Is not',
+                value: 'not_equal'
+              }
+            ],
+            class: 'grouped-first w-[47%]'
+          },
+          {
+            name: 'value',
+            label: 'Value',
+            type: 'string',
+            class: 'grouped-last w-[47%]'
+          }
+        ]
+      },
+      {
+        name: 'action',
+        label: 'Action',
+        type: 'string',
+        defaultValue: 'select',
+        options: (_payload: Payload) => [
+          {
+            text: 'Filter matching rows',
+            value: 'select'
+          },
+          {
+            text: 'Drop matching rows',
+            value: 'drop'
+          },
+          {
+            text: 'Replace matching rows',
+            value: 'replace',
+            hidden: true // TODO: implement, show in special selection
+          }
+        ]
+      }
+    ]
+  },
   {
     key: 'Drop duplicated',
     name: 'Drop duplicated rows',
@@ -1667,3 +1748,27 @@ const createOperation = (operationCreator: OperationCreator): Operation => {
 export const operations = operationCreators.map(operationCreator =>
   createOperation(operationCreator)
 );
+
+function whereExpression(
+  condition: string,
+  value: string | number,
+  col: string
+): string {
+  if (!isNaN(Number(value))) {
+    value = Number(value);
+    condition = `numeric_${condition}`;
+  }
+  switch (condition) {
+    case 'equal':
+      return `df["${col}"]=="${value}"`;
+    case 'not_equal':
+      return `df["${col}"]!="${value}"`;
+    case 'numeric_equal':
+      return `(df["${col}"]==${value}) | (df["${col}"]=="${value}")`;
+    case 'numeric_not_equal':
+      return `(df["${col}"]!=${value}) & (df["${col}"]!="${value}")`;
+    default:
+      console.warn('Unknown condition', condition);
+  }
+  return '';
+}
