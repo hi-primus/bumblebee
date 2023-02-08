@@ -19,6 +19,7 @@
           :data="columnValues"
           :width="80"
           selectable
+          selection-type="values"
           @hovered="
             hovered = { plot: 'columnValues', value: columnValues[$event] }
           "
@@ -28,6 +29,7 @@
           :data="otherColumnValues"
           :width="80"
           selectable
+          selection-type="values"
           @hovered="
             hovered = {
               plot: 'otherColumnValues',
@@ -38,6 +40,7 @@
         <PlotBarsBase
           :data="notColumnValues"
           :width="80"
+          selection-type="values"
           @hovered="
             hovered = {
               plot: 'notColumnValues',
@@ -290,14 +293,18 @@
         <AppInput placeholder="Column" class="input-size-small"> </AppInput>
       </div>
       <div class="flex flex-wrap gap-4 px-8 py-2 justify-start items-start">
-        <AppInput label="label" placeholder="Column" class=""> </AppInput>
+        <AppInput label="Test label" placeholder="Column" class=""> </AppInput>
         <AppInput
-          label="label"
+          label="Test label"
           placeholder="Column"
           class="input-size-condensed"
         >
         </AppInput>
-        <AppInput label="label" placeholder="Column" class="input-size-small">
+        <AppInput
+          label="Test label"
+          placeholder="Column"
+          class="input-size-small"
+        >
         </AppInput>
       </div>
       <div class="flex flex-wrap gap-4 px-8 py-2 justify-start items-start">
@@ -305,7 +312,7 @@
           v-model="selectedColumns"
           :options="columns"
           multiple
-          label="label"
+          label="Test label"
           placeholder="Column"
           class=""
         >
@@ -313,7 +320,7 @@
         <AppAutocomplete
           v-model="selectedColumn"
           :options="columns"
-          label="label"
+          label="Test label"
           placeholder="Columns"
           name="input-size-condensed"
           class="input-size-condensed"
@@ -323,7 +330,7 @@
           v-model="selectedColumns"
           :options="columns"
           multiple
-          label="label"
+          label="Test label"
           placeholder="Columns"
           name="input-size-small"
           class="input-size-small"
@@ -335,28 +342,28 @@
           v-model="selectedColumns"
           :options="columns"
           multiple
-          label="label"
+          label="Test label"
           placeholder="Column"
-          class=""
+          class="min-w-[320px]"
         >
         </AppSelector>
         <AppSelector
           v-model="selectedColumn"
           :options="columns"
-          label="label"
+          label="Test label"
           placeholder="Columns"
           name="input-size-condensed"
-          class="input-size-condensed"
+          class="input-size-condensed min-w-[320px]"
         >
         </AppSelector>
         <AppSelector
           v-model="selectedColumns"
           :options="columns"
           multiple
-          label="label"
+          label="Test label"
           placeholder="Columns"
           name="input-size-small"
-          class="input-size-small"
+          class="input-size-small min-w-[320px]"
         >
         </AppSelector>
       </div>
