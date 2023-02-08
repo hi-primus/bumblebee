@@ -166,19 +166,71 @@ export const operationCreators: OperationCreator[] = [
               },
               { text: 'Null values', value: 'null', hidden: true }
             ],
-            class: 'grouped-first w-[31.3333%]'
+            class: (payload: Payload, currentIndex = 0) => {
+              const condition = payload.replaces[currentIndex].condition;
+              if (condition === 'value_in') {
+                return 'w-full';
+              }
+              if (condition === 'between') {
+                return 'grouped-first w-1/4';
+              }
+              return 'grouped-first w-1/3';
+            }
           },
           {
             name: 'value',
-            label: 'Value',
+            label: (payload: Payload, currentIndex = 0) => {
+              const condition = payload.replaces[currentIndex].condition;
+              if (condition === 'value_in') {
+                return 'Values';
+              }
+              if (condition === 'between') {
+                return 'Min';
+              }
+              if (condition === 'match_pattern') {
+                return 'Pattern';
+              }
+              if (condition === 'where') {
+                return 'Expression';
+              }
+              return 'Value';
+            },
             type: 'string',
-            class: 'grouped-middle w-[31.3333%]'
+            class: (payload: Payload, currentIndex = 0): string => {
+              const condition = payload.replaces[currentIndex].condition;
+              if (condition === 'value_in') {
+                return 'w-full';
+              }
+              if (condition === 'between') {
+                return 'grouped-middle w-1/4';
+              }
+              return 'grouped-middle w-1/3';
+            }
+          },
+          {
+            name: 'value_2',
+            label: 'Max',
+            type: 'string',
+            class: 'grouped-middle w-1/4',
+            hidden: (payload: Payload, currentIndex = 0) => {
+              const condition = payload.replaces[currentIndex].condition;
+              return condition !== 'between';
+            }
           },
           {
             name: 'replaceBy',
             label: 'Replace by',
             type: 'string',
-            class: 'grouped-last w-[31.3333%]'
+            class: (payload: Payload, currentIndex = 0) => {
+              const condition = payload.replaces[currentIndex].condition;
+              if (condition === 'value_in') {
+                return 'w-full';
+              }
+              if (condition === 'between') {
+                return 'grouped-last w-1/4';
+              }
+              return 'grouped-last w-1/3';
+            }
           }
         ]
       },
@@ -237,13 +289,13 @@ export const operationCreators: OperationCreator[] = [
             name: 'search',
             label: 'Search',
             type: 'string',
-            class: 'grouped-first w-[47%]'
+            class: 'grouped-first w-1/2'
           },
           {
             name: 'replaceBy',
             label: 'Replace by',
             type: 'string',
-            class: 'grouped-last w-[47%]'
+            class: 'grouped-last w-1/2'
           }
         ]
       },
@@ -340,17 +392,78 @@ export const operationCreators: OperationCreator[] = [
                 value: 'equal'
               },
               {
+                text: 'Is one of',
+                value: 'value_in'
+              },
+              {
                 text: 'Is not',
                 value: 'not_equal'
-              }
+              },
+              { divider: true, hidden: true },
+              {
+                text: 'Less than',
+                value: 'less_than',
+                hidden: true
+              },
+              {
+                text: 'Less than or equal to',
+                value: 'less_than_equal',
+                hidden: true
+              },
+              {
+                text: 'Greater than',
+                value: 'greater_than',
+                hidden: true
+              },
+              {
+                text: 'Greater than or equal to',
+                value: 'greater_than_equal',
+                hidden: true
+              },
+              {
+                text: 'Is Between',
+                value: 'between',
+                hidden: true
+              },
+              { divider: true, hidden: true },
+              {
+                text: 'Contains',
+                value: 'contains',
+                hidden: true
+              },
+              {
+                text: 'Starts with',
+                value: 'starts_with',
+                hidden: true
+              },
+              {
+                text: 'Ends with',
+                value: 'ends_with',
+                hidden: true
+              },
+              { divider: true, hidden: true },
+              { text: 'Custom expression', value: 'where', hidden: true },
+              {
+                text: 'Pattern',
+                value: 'match_pattern',
+                hidden: true
+              },
+              { text: 'Selected', value: 'selected', hidden: true },
+              { divider: true, hidden: true },
+              {
+                text: 'Mismatches values',
+                value: 'mismatch',
+                hidden: true
+              },
+              { text: 'Null values', value: 'null', hidden: true }
             ],
-            class: 'grouped-first w-[47%]'
+            class: 'grouped-first w-1/2'
           },
           {
             name: 'value',
             label: 'Value',
             type: 'string',
-            class: 'grouped-last w-[47%]'
+            class: 'grouped-last w-1/2'
           }
         ]
       },

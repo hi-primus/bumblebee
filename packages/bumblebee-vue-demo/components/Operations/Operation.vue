@@ -23,41 +23,48 @@
           <div v-if="field.label" class="w-full text-text mb-[-12px]">
             {{ field.label }}
           </div>
-          <div
-            v-for="(group, groupIndex) in operationValues[field.name] || []"
-            :key="`${field.name}-group-${groupIndex}`"
-            class="w-full flex flex-wrap gap-y-5"
+          <template
+            v-for="(_group, groupIndex) in operationValues[field.name] || []"
           >
             <div
               v-if="groupIndex > 0"
+              :key="`${field.name}-group-${groupIndex}-or`"
               class="font-bold mx-auto w-full text-center text-text-light text-sm my-[-12px]"
             >
               or
             </div>
-            <AppOperationField
-              v-for="subfield in field.fields"
-              :key="`${subfield.name}-group-${groupIndex}`"
-              :field="subfield"
-              :parent-field="field.name"
-              :subfield-index="groupIndex"
-            />
-            <div class="flex flex-col w-[6%] mt-[-2px] h-[42px]">
-              <AppButton
-                :key="`${field.name}-delete-${groupIndex}`"
-                type="button"
-                class="btn-layout-invisible btn-icon btn-size-small btn-color-text"
-                :icon="mdiClose"
-                @click="deleteFromGroup(field.name, groupIndex)"
-              />
-              <AppButton
-                :key="`${field.name}-add-${groupIndex}`"
-                type="button"
-                class="btn-layout-invisible btn-icon btn-size-small btn-color-primary"
-                :icon="mdiPlus"
-                @click="addToGroup(field.name, groupIndex)"
-              />
+            <div
+              v-if="true"
+              :key="`${field.name}-group-${groupIndex}`"
+              class="w-full flex gap-y-5"
+            >
+              <div class="flex flex-wrap gap-y-5 w-full">
+                <AppOperationField
+                  v-for="subfield in field.fields"
+                  :key="`${subfield.name}-group-${groupIndex}`"
+                  :field="subfield"
+                  :parent-field="field.name"
+                  :subfield-index="groupIndex"
+                />
+              </div>
+              <div class="flex flex-col mt-[-2px] h-[42px]">
+                <AppButton
+                  :key="`${field.name}-delete-${groupIndex}`"
+                  type="button"
+                  class="btn-layout-invisible btn-icon btn-size-small btn-color-text"
+                  :icon="mdiClose"
+                  @click="deleteFromGroup(field.name, groupIndex)"
+                />
+                <AppButton
+                  :key="`${field.name}-add-${groupIndex}`"
+                  type="button"
+                  class="btn-layout-invisible btn-icon btn-size-small btn-color-primary"
+                  :icon="mdiPlus"
+                  @click="addToGroup(field.name, groupIndex)"
+                />
+              </div>
             </div>
-          </div>
+          </template>
           <AppButton
             :key="`${field.name}-add-${field.fields.length}`"
             class="mx-auto mt-[-12px] btn-layout-text btn-color-primary-light"
