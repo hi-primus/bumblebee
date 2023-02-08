@@ -175,32 +175,32 @@ export const operations = {
       },
     ],
   }),
-  // select: DataframeOperation<{ cols: Cols }>({
-  //   targetType: 'dataframe',
-  //   name: 'cols.select',
-  //   args: [
-  //     {
-  //       name: 'cols',
-  //       default: '*',
-  //     },
-  //     {
-  //       name: 'regex',
-  //       default: null,
-  //     },
-  //     {
-  //       name: 'data_type',
-  //       default: null,
-  //     },
-  //     {
-  //       name: 'invert',
-  //       default: false,
-  //     },
-  //     {
-  //       name: 'accepts_missing_cols',
-  //       default: false,
-  //     },
-  //   ],
-  // }),
+  select: DataframeOperation<{ cols: Cols }>({
+    targetType: 'dataframe',
+    name: 'cols.select',
+    args: [
+      {
+        name: 'cols',
+        default: '*',
+      },
+      {
+        name: 'regex',
+        default: null,
+      },
+      {
+        name: 'dataType',
+        default: null,
+      },
+      {
+        name: 'invert',
+        default: false,
+      },
+      {
+        name: 'acceptsMissingCols',
+        default: false,
+      },
+    ],
+  }),
   copy: DataframeOperation<{ cols: Cols; outputCols: Cols }>({
     targetType: 'dataframe',
     name: 'cols.copy',
