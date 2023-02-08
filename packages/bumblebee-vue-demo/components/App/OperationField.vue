@@ -1,11 +1,11 @@
 <template>
   <AppSelector
     v-if="resolve(field.options)?.length"
-    :key="`selector-${field.name}-${updates}`"
+    :key="`selector-${field.name}-${updates}-${fieldClass}`"
     v-model="value"
     :options="resolve(field.options)"
     :text-callback="field.textCallback"
-    :label="field.label || field.name"
+    :label="resolve(field.label || field.name)"
     :name="field.name"
     :placeholder="field.placeholder"
     :disabled="resolve(field.disabled)"
@@ -13,9 +13,9 @@
   />
   <AppInput
     v-else-if="resolve(field.type) === 'string'"
-    :key="`input-${field.name}-${updates}`"
+    :key="`input-${field.name}-${updates}-${fieldClass}`"
     v-model="value"
-    :label="field.label || field.name"
+    :label="resolve(field.label || field.name)"
     :name="field.name"
     :placeholder="field.placeholder"
     :disabled="resolve(field.disabled)"
@@ -23,9 +23,9 @@
   />
   <AppCheckbox
     v-else-if="resolve(field.type) === 'boolean'"
-    :key="`check-${field.name}-${updates}`"
+    :key="`check-${field.name}-${updates}-${fieldClass}`"
     v-model="value"
-    :label="field.label || field.name"
+    :label="resolve(field.label || field.name)"
     :name="field.name"
     :disabled="resolve(field.disabled)"
     :class="fieldClass"
@@ -96,11 +96,13 @@ const fieldClass = computed(() => {
   return fieldClass;
 });
 
-const resolve = <T>(value: ((payload: Payload) => T) | T) => {
+const resolve = <T>(
+  value: ((payload: Payload, currentIndex?: number) => T) | T
+) => {
   if (value instanceof Function && props.field.name === 'otherwise')
     console.log('resolve', value, props.field);
   if (value instanceof Function) {
-    return value(operationValues.value);
+    return value(operationValues.value, props.subfieldIndex);
   }
   return value;
 };
