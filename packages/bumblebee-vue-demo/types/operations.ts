@@ -3,7 +3,7 @@ import { isObject } from './common';
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type Payload = Record<string, any>;
 
-type PayloadCalbackOr<T> = T | ((payload: Payload) => T);
+type PayloadCallbackOr<T> = T | ((payload: Payload) => T);
 
 export type FieldOption<T = unknown> = Record<string, T> & {
   disabled?: boolean;
@@ -11,18 +11,18 @@ export type FieldOption<T = unknown> = Record<string, T> & {
 };
 export interface Field {
   name: string;
-  type: PayloadCalbackOr<'string' | 'boolean' | 'custom'>;
+  type: PayloadCallbackOr<'string' | 'boolean' | 'custom'>;
   key?: string;
   placeholder?: string;
   label?: string;
-  required?: PayloadCalbackOr<boolean>;
-  options?: PayloadCalbackOr<(string | FieldOption<unknown>)[]>;
+  required?: PayloadCallbackOr<boolean>;
+  options?: PayloadCallbackOr<(string | FieldOption<unknown>)[]>;
   textCallback?: (value: unknown) => string;
   description?: string;
   defaultValue?: unknown;
-  class?: PayloadCalbackOr<string>;
-  disabled?: PayloadCalbackOr<boolean>;
-  hidden?: PayloadCalbackOr<boolean>;
+  class?: PayloadCallbackOr<string>;
+  disabled?: PayloadCallbackOr<boolean>;
+  hidden?: PayloadCallbackOr<boolean>;
 }
 
 export interface FieldGroup {
