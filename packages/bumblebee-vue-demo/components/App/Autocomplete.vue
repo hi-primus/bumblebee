@@ -1,5 +1,10 @@
 <template>
-  <div class="input autocomplete">
+  <div
+    class="input autocomplete"
+    :class="{
+      'w-[14em]': multiple
+    }"
+  >
     <Combobox
       v-slot="{ open }"
       :model-value="selected"
@@ -15,7 +20,12 @@
       <div class="autocomplete-inputContainer relative cursor-default">
         <div
           v-if="multiple"
-          class="input-field autocomplete-field flex items-center flex-wrap gap-2"
+          class="input-field autocomplete-field min-w-[14em] w-full flex items-center flex-wrap gap-2"
+          :class="{
+            'pr-[48px!important]': filteredOptions?.length && clearable,
+            'pr-[24px!important]':
+              Boolean(filteredOptions?.length) !== Boolean(clearable)
+          }"
         >
           <span
             v-for="(option, index) in selected"
@@ -41,9 +51,10 @@
             ref="searchInput"
             :display-value="formatterDisplayValues"
             :placeholder="selected && selected.length ? null : placeholder"
-            class="autocomplete-hiddenField bg-transparent min-w-20 flex-1"
+            class="autocomplete-hiddenField bg-transparent w-full max-w-[100%] w-min flex-grow"
+            :size="inputSize"
             autocomplete="off"
-            @change="search = $event.target.value"
+            @change="updateSearch($event.target.value)"
             @keydown.enter="selectOption"
             @keydown.tab="selectOption"
             @keydown.backspace="removeLastOption"
@@ -63,7 +74,7 @@
         <Icon
           v-if="(selected || search) && clearable"
           :path="mdiClose"
-          :class="style.classes.clearIcon"
+          class="clearIcon"
           @click="clear"
         />
         <ComboboxButton
@@ -230,6 +241,10 @@ const selected = ref(props.modelValue);
 
 const searchInput = ref<typeof ComboboxInput | null>(null);
 
+const inputSize = computed(() => {
+  return search.value.length + 1;
+});
+
 const filteredOptions = computed(() => {
   if (search.value && props.options) {
     return props.options.filter(option => {
@@ -344,6 +359,10 @@ const formatterDisplayValues = (items: ArrayOr<Value>) => {
     text = (items && items.text) || items;
   }
   return text;
+};
+
+const updateSearch = (value: string) => {
+  search.value = value;
 };
 
 const clear = () => {
