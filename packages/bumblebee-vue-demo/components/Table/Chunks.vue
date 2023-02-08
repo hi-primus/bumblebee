@@ -10,7 +10,7 @@
 <script setup lang="ts">
 import { PropType } from 'vue';
 
-import { Column } from '@/types/dataframe';
+import { ColumnHeader } from '@/types/dataframe';
 import { Chunk } from '@/types/table';
 
 const props = defineProps({
@@ -22,7 +22,7 @@ const props = defineProps({
     type: Number as PropType<number>
   },
   header: {
-    type: Array as PropType<Column[]>,
+    type: Array as PropType<ColumnHeader[]>,
     required: true
   }
 });
