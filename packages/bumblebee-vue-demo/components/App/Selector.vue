@@ -82,7 +82,7 @@
         <ListboxOptions
           v-model="selectedOption"
           :close-on-select="!multiple"
-          class="absolute z-[3] mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg sm:text-sm outline-0"
+          class="absolute z-[4] mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg sm:text-sm outline-0"
           @blur="validate"
         >
           <template v-for="(option, index) in selectorOptions">
