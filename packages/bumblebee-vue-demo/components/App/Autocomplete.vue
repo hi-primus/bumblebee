@@ -249,9 +249,11 @@ const filteredOptions = computed(() => {
   if (search.value && props.options) {
     return props.options.filter(option => {
       if (typeof option === 'object') {
-        return option[props.text].toLowerCase().includes(search.value);
+        return option[props.text]
+          .toLowerCase()
+          .includes(search.value.toLowerCase());
       }
-      return option.toLowerCase().includes(search.value);
+      return option.toLowerCase().includes(search.value.toLowerCase());
     });
   }
   return props.options;
