@@ -1653,7 +1653,9 @@ const createOperation = (operationCreator: OperationCreator): Operation => {
     if (options.preview === 'basic columns' && payload.cols) {
       payload = {
         ...payload,
-        outputCols: (payload.cols as Cols).map(col => `new ${col}`)
+        outputCols: (payload.cols as Cols).map(
+          col => `__bumblebee__preview__${col}`
+        )
       };
     }
 

@@ -53,14 +53,23 @@ const header = computed<ColumnHeader[]>(() => {
 
   if (columns && Object.keys(columns)) {
     return Object.entries(columns).map(([title, column]) => {
+      let preview = false;
+
+      let newTitle: string = title;
+
+      if (title.startsWith('__bumblebee__preview__')) {
+        newTitle = title.replace('__bumblebee__preview__', 'new ');
+        preview = true;
+      }
+
       return {
-        title,
+        title: newTitle,
         data_type:
           (column as ColumnHeader).data_type ||
           originalColumns?.[title]?.data_type,
         stats:
           (column as ColumnHeader).stats || originalColumns?.[title]?.stats,
-        preview: (column as ColumnHeader).preview || wholePreview
+        preview: preview || wholePreview,
       };
     });
   }
