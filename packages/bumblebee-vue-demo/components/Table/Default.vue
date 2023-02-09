@@ -17,7 +17,7 @@
             top: columnHeaderHeight + rowIndex * rowHeight + 'px',
             height: rowHeight + 'px'
           }"
-          class="absolute bg-white pr-2 z-[-3] text-right w-full opacity-50 bg-white"
+          class="bumblebee-row-background absolute bg-white pr-2 z-[-3] text-right w-full bg-white"
           :class="row.highlights"
         ></div>
       </div>
@@ -106,7 +106,7 @@
           ></div>
         </div>
       </div>
-      <div class="sticky h-full left-0 order-[-1]">
+      <div class="sticky h-full left-0 order-[-1] z-1">
         <div
           class="bumblebee-columns-rows-indices h-full bg-white text-text-lightest border-line-light border-r font-mono font-200 text-right"
           :style="{
@@ -225,7 +225,7 @@ const rowsData = computed(() => {
         values,
         highlights: highlights.value
           .map(column =>
-            values[column.columnIndex] ? `row-${column.highlight}` : null
+            values[column.columnIndex] ? `row-color-${column.highlight}` : null
           )
           .join(' ')
       };
@@ -459,13 +459,18 @@ const columnClicked = (
   @apply border-y-0 last:border-b;
 }
 
-.row-success {
-  @apply bg-success-highlight;
-}
-.row-error {
-  @apply bg-error-highlight;
-}
-.row-warning {
-  @apply bg-warn-highlight;
+.bumblebee-row-background {
+  &:not([class*='row-color-']) {
+    @apply bg-white;
+  }
+  &.row-color-success {
+    @apply bg-success-highlight;
+  }
+  &.row-color-error {
+    @apply bg-error-highlight;
+  }
+  &.row-color-warning {
+    @apply bg-warn-highlight;
+  }
 }
 </style>

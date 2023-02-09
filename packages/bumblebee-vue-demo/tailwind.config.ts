@@ -33,7 +33,7 @@ export default {
         light: '#5deba6',
         lighter: '#89f4c0',
         lightest: '#b6fcda',
-        highlight: '#dff5ea'
+        highlight: '#d4f1e3'
       },
       error: {
         darkest: '#771818',
@@ -43,7 +43,7 @@ export default {
         light: '#f46767',
         lighter: '#f67979',
         lightest: '#f98b8b',
-        highlight: '#f9b9b9',
+        highlight: '#f7d6d6',
         desaturated: '#e36363',
         'desaturated-dark': '#c34646'
       },
@@ -55,7 +55,7 @@ export default {
         light: '#ebe070',
         lighter: '#ede882',
         lightest: '#f0ee99',
-        highlight: '#f9f7d9'
+        highlight: '#f9f2d4'
       },
       text: {
         darkest: '#030507',
