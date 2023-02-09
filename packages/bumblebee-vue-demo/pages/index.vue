@@ -51,23 +51,6 @@ provide('app-status', appStatus);
 const showSidebar = ref(false);
 provide('show-sidebar', showSidebar);
 
-onMounted(async () => {
-  const { Blurr } = blurrPackage;
-  blurr = Blurr({
-    serverOptions: {
-      scriptURL: 'https://cdn.jsdelivr.net/pyodide/v0.22.1/full/pyodide.js',
-      useWorker: true
-    }
-  });
-  window.blurr = blurr;
-  await blurr.backendServer.donePromise;
-  const result = await blurr.runCode("'successfully loaded'");
-  if (appStatus.value === 'loading') {
-    appStatus.value = 'ready';
-  }
-  console.info('Initialization result:', result);
-});
-
 const state = ref<State>('operations');
 provide('state', state);
 
@@ -385,6 +368,23 @@ const previewOperation = throttleOnce(async function () {
 
 watch(() => operationValues.value, previewOperation, { deep: true });
 watch(() => selection.value, previewOperation, { deep: true });
+
+onMounted(async () => {
+  const { Blurr } = blurrPackage;
+  blurr = Blurr({
+    serverOptions: {
+      scriptURL: 'https://cdn.jsdelivr.net/pyodide/v0.22.1/full/pyodide.js',
+      useWorker: true
+    }
+  });
+  window.blurr = blurr;
+  await blurr.backendServer.donePromise;
+  const result = await blurr.runCode("'successfully loaded'");
+  if (appStatus.value === 'loading') {
+    appStatus.value = 'ready';
+  }
+  console.info('Initialization result:', result);
+});
 </script>
 
 <style lang="scss">
