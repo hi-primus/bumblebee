@@ -164,7 +164,7 @@ const notRecentOperations = computed(() => {
     .map(operation => operation.operation);
 });
 
-const focusInput = (input: typeof AppInput | null) => {
+const focusInput = (input: typeof AppInput | null): HTMLElement | null => {
   if (input && input.$el) {
     const inputs = (input.$el as HTMLElement).getElementsByTagName('input');
     if (inputs.length) {
@@ -215,7 +215,7 @@ const handleKeyDownSearch = (event: KeyboardEvent) => {
   }
 };
 
-const handleKeyDownOperation = (event: KeyboardEvent) => {
+const handleKeyDownOperation = (event: KeyboardEvent): void => {
   const targetElement = event.target as HTMLElement;
   const operationKey = targetElement.dataset.operationKey as string;
   const key = event.key.toLowerCase();
@@ -244,7 +244,7 @@ const handleKeyDownOperation = (event: KeyboardEvent) => {
   }
 };
 
-const selectOperation = (operation: Operation | null = null) => {
+const selectOperation = (operation: Operation | null = null): void => {
   if (operation) {
     if (recentOperationKeys.value.length >= 5) {
       recentOperationKeys.value.shift();
@@ -292,14 +292,14 @@ const selectOperation = (operation: Operation | null = null) => {
   }, 0);
 };
 
-const onKeyDown = (event: KeyboardEvent) => {
+const onKeyDown = (event: KeyboardEvent): void => {
   if (event.key.toLowerCase() === 'k' && event.ctrlKey) {
     showCommands.value = !showCommands.value;
     event.preventDefault();
   }
 };
 
-const onKeyUp = (event: KeyboardEvent) => {
+const onKeyUp = (event: KeyboardEvent): void => {
   if (event.key.toLowerCase() === 'escape') {
     if (showCommands.value) {
       showCommands.value = false;
