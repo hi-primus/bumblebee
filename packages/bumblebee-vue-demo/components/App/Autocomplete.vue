@@ -330,13 +330,8 @@ watch(
   () => search.value,
   (value, oldValue) => {
     emit('update:search', value, oldValue);
-    if (
-      props.multiple &&
-      value === '' &&
-      searchInput.value &&
-      searchInput.value?.el?.value !== ''
-    ) {
-      searchInput.value.el.value = '';
+    if (searchInput.value && searchInput.value?.$el?.value !== value) {
+      searchInput.value.$el.value = value;
     }
   }
 );
