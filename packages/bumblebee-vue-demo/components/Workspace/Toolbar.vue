@@ -106,7 +106,7 @@ const lastKeys = ref<string[]>([]);
 const searchOperation = ref('');
 
 const operationElements = ref<HTMLElement | null>(null);
-const searchOperationElement = ref<typeof AppInput | null>(null);
+const searchOperationElement = ref<InstanceType<typeof AppInput> | null>(null);
 
 const filteredOperations = computed(() => {
   return operations.map(operation => {

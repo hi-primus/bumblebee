@@ -239,7 +239,7 @@ const emit = defineEmits<Emits>();
 
 const selected = ref(props.modelValue);
 
-const searchInput = ref<typeof ComboboxInput | null>(null);
+const searchInput = ref<InstanceType<typeof ComboboxInput> | null>(null);
 
 const inputSize = computed(() => {
   return search.value.length + 1;
