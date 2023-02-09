@@ -333,8 +333,12 @@ const handleKeyDown = (event: KeyboardEvent, columnIndex: number) => {
     };
   } else if (key === ' ' || key === 'spacebar' || key === 'enter') {
     columnClicked(event, columnIndex);
+    event.preventDefault();
   } else if (key === 'arrowleft') {
     const el = focusPrevious(event.target as HTMLElement);
+    if (el) {
+      event.preventDefault();
+    }
     if (el && event.shiftKey) {
       const indexFromElement = el.getAttribute('data-index');
       if (indexFromElement) {
@@ -343,6 +347,9 @@ const handleKeyDown = (event: KeyboardEvent, columnIndex: number) => {
     }
   } else if (key === 'arrowright') {
     const el = focusNext(event.target as HTMLElement);
+    if (el) {
+      event.preventDefault();
+    }
     if (el && event.shiftKey) {
       const indexFromElement = el.getAttribute('data-index');
       if (indexFromElement) {
