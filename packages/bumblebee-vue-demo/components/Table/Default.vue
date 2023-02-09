@@ -420,12 +420,17 @@ const columnClicked = (
   }
   &:focus {
     outline: none;
-    &::after {
+    & .column-header::after {
       z-index: 3;
       content: '';
-      @apply absolute top-0 left-[-1px] right-0 bottom-[-1px];
+      @apply absolute -top-px -left-px -right-px -bottom-px h-screen;
       @apply pointer-events-none;
-      @apply outline-primary-light outline-offset-[-3px] outline-dashed outline-2;
+      @apply outline-offset-[-3px] outline-dashed outline-2;
+      @apply opacity-50;
+      @apply outline-primary-dark;
+    }
+    &.column-color-primary .column-header::after {
+      @apply outline-text-light;
       @apply opacity-75;
     }
   }
