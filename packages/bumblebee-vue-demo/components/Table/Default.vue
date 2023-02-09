@@ -447,13 +447,11 @@ defineExpose({
       @apply absolute -top-px -left-px -right-px -bottom-px h-screen;
       @apply pointer-events-none;
       @apply outline-offset-[-3px] outline-dashed outline-2;
-      @apply opacity-50;
-      @apply outline-primary-dark;
-    }
-    &.column-color-primary .column-header::after {
       @apply outline-text-light;
       @apply opacity-75;
     }
+    // &.column-color-primary .column-header::after {
+    // }
   }
   &.column-color-primary {
     --line-color: theme('colors.primary.lighter');
