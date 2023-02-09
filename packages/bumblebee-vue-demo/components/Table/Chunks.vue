@@ -1,5 +1,6 @@
 <template>
   <TableDefault
+    ref="table"
     :header="header"
     :data="data"
     :rows-count="rowsCount"
@@ -10,6 +11,7 @@
 <script setup lang="ts">
 import { PropType } from 'vue';
 
+import TableDefault from '@/components/Table/Default.vue';
 import { ColumnHeader } from '@/types/dataframe';
 import { Chunk } from '@/types/table';
 
@@ -33,6 +35,8 @@ type Emits = {
 
 const emit = defineEmits<Emits>();
 
+const table = ref<InstanceType<typeof TableDefault> | null>(null);
+
 const updateScroll = (start: number, stop: number) => {
   console.info('updateScroll', start, stop);
   return emit('updateScroll', start, stop);
@@ -45,5 +49,11 @@ const data = reactiveComputed(() => {
     }
     return rows;
   }, {} as Record<number, object>);
+});
+
+defineExpose({
+  focus: () => {
+    table.value?.focus();
+  }
 });
 </script>

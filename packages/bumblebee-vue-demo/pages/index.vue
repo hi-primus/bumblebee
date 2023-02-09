@@ -369,6 +369,12 @@ const previewOperation = throttleOnce(async function () {
 watch(() => operationValues.value, previewOperation, { deep: true });
 watch(() => selection.value, previewOperation, { deep: true });
 
+watch(showSidebar, show => {
+  if (!show) {
+    dataframeLayout.value?.focusTable();
+  }
+});
+
 onMounted(async () => {
   const { Blurr } = blurrPackage;
   blurr = Blurr({

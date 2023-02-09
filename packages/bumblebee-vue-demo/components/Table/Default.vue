@@ -22,6 +22,7 @@
         ></div>
       </div>
       <div
+        ref="columns"
         class="bumblebee-table relative max-w-full flex"
         :style="{
           height:
@@ -185,6 +186,8 @@ const rowHeight = 24;
 
 const scrollElement = ref<HTMLElement | null>(null);
 
+const columns = ref<HTMLElement | null>(null);
+
 const safeRowsCount = computed(() => {
   if (props.rowsCount) {
     console.log('[DEBUG][TABLE] Setting rows count to', props.rowsCount);
@@ -321,6 +324,13 @@ watch(() => [props.rowsCount, props.data], onScroll);
 
 let lastColumnClicked: number | null = null;
 
+const focus = () => {
+  const el = columns.value?.children[0]; // TODO
+  if (el) {
+    (el as HTMLElement).focus();
+  }
+};
+
 const handleKeyDown = (event: KeyboardEvent, columnIndex: number) => {
   console.log('[DEBUG][TABLE] Key down', event.key, event, columnIndex);
   const key = event.key.toLowerCase();
@@ -411,6 +421,10 @@ const columnClicked = (
     indices: null
   };
 };
+
+defineExpose({
+  focus
+});
 </script>
 
 <style lang="scss">

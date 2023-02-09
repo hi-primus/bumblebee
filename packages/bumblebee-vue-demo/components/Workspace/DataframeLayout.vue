@@ -4,6 +4,7 @@
   <section class="workspace-table overflow-hidden">
     <TableChunks
       v-if="dataframeObject?.profile || previewData?.profile"
+      ref="table"
       class="overflow-auto"
       :header="header"
       :chunks="completedChunks"
@@ -18,6 +19,7 @@
 <script setup lang="ts">
 import { ComputedRef, Ref } from 'vue';
 
+import TableChunks from '@/components/Table/Chunks.vue';
 import {
   ColumnHeader,
   DataframeObject,
@@ -34,6 +36,8 @@ const dataframeObject = inject(
 ) as ComputedRef<DataframeObject>;
 
 const previewData = inject('preview-data') as Ref<PreviewData>;
+
+const table = ref<InstanceType<typeof TableChunks> | null>(null);
 
 const header = computed<ColumnHeader[]>(() => {
   const dataframeProfile = dataframeObject.value?.profile;
@@ -237,6 +241,12 @@ const clearChunks = (check = true) => {
   check && checkChunksQueue();
 };
 
+const focusTable = () => {
+  if (table.value) {
+    table.value.focus();
+  }
+};
+
 watch(
   () => dataframeObject.value,
   () => clearChunks(),
@@ -248,7 +258,8 @@ watch(
 
 defineExpose({
   addChunk,
-  clearChunks
+  clearChunks,
+  focusTable
 });
 </script>
 
