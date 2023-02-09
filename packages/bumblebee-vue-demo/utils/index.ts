@@ -65,7 +65,7 @@ export const throttleOnce = (
   };
 };
 
-export const stepify = (a: number, b: number, f = Math.round) => {
+export const stepify = (a: number, b: number, f = Math.round): number => {
   return f(a / b) * b;
 };
 
@@ -120,7 +120,7 @@ export const deepClone = <T>(obj: T): T => {
 
 // HTML
 
-export const focusNext = (el: HTMLElement) => {
+export const focusNext = (el: HTMLElement): HTMLElement | null => {
   el = el.nextElementSibling as HTMLElement;
 
   if (el) {
@@ -135,7 +135,7 @@ export const focusNext = (el: HTMLElement) => {
   return null;
 };
 
-export const focusPrevious = (el: HTMLElement) => {
+export const focusPrevious = (el: HTMLElement): HTMLElement | null => {
   el = el.previousElementSibling as HTMLElement;
 
   if (el) {
