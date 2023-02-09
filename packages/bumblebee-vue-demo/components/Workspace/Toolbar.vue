@@ -167,8 +167,12 @@ const notRecentOperations = computed(() => {
 const focusInput = (input: typeof AppInput | null) => {
   if (input && input.$el) {
     const inputs = (input.$el as HTMLElement).getElementsByTagName('input');
-    inputs.length && inputs[0].focus();
+    if (inputs.length) {
+      inputs[0].focus();
+      return inputs[0];
+    }
   }
+  return null;
 };
 
 watch(
@@ -226,10 +230,16 @@ const handleKeyDownOperation = (event: KeyboardEvent) => {
       event.preventDefault();
     }
   } else if (key === 'arrowdown') {
-    focusNext(targetElement);
+    if (focusNext(targetElement)) {
+      event.preventDefault();
+    }
   } else if (key === 'arrowup') {
     if (!focusPrevious(targetElement)) {
-      focusInput(searchOperationElement.value);
+      if (focusInput(searchOperationElement.value)) {
+        event.preventDefault();
+      }
+    } else {
+      event.preventDefault();
     }
   }
 };
