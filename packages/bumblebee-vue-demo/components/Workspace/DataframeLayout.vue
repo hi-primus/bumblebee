@@ -147,24 +147,12 @@ const updateScroll = function (start: number, stop: number) {
   return checkChunksQueue();
 };
 
-let shiftChunksPromise: Promise<boolean> | false = false;
-
-const checkChunksQueue = async function () {
-  // finish previous checkChunksQueue
-  await shiftChunksPromise;
-  shiftChunksPromise = false;
-  if (!shiftChunksPromise) {
-    shiftChunksPromise = _shiftChunksQueue();
-    await shiftChunksPromise;
-    shiftChunksPromise = false;
-  }
-};
-
 const getChunk = async function (start: number, stop: number) {
+  console.log('getting chunk from', start, 'to', stop);
   const df = previewData.value?.df || dataframeObject.value.df;
 
   if (!df) {
-    return;
+    throw new Error('No dataframe');
   }
 
   const sample = await df
@@ -202,7 +190,15 @@ const getChunk = async function (start: number, stop: number) {
   return chunk;
 };
 
-const _shiftChunksQueue = async function (): Promise<boolean> {
+let gettingChunks = false;
+
+const checkChunksQueue = async function (): Promise<boolean> {
+  if (gettingChunks) {
+    return false;
+  }
+
+  gettingChunks = true;
+
   if (chunksQueue.value.length) {
     let [start, stop] = chunksQueue.value[0];
     chunksQueue.value = chunksQueue.value.slice(1);
@@ -216,11 +212,18 @@ const _shiftChunksQueue = async function (): Promise<boolean> {
     const index = chunks.value.length;
     chunks.value[index] = shallowChunk;
     const chunk = await getChunk(start, stop);
+
     if (chunk) {
       chunks.value[index] = chunk;
     }
-    return _shiftChunksQueue();
+
+    gettingChunks = false;
+
+    return checkChunksQueue();
   }
+
+  gettingChunks = false;
+
   return true;
 };
 
