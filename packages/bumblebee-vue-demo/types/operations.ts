@@ -66,6 +66,8 @@ export interface OperationCreatorBase {
 
 type OperationCreatorAction = OperationCreatorBase & {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  validate?: (...args: any) => any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   action: (...args: any) => any;
 };
 

@@ -1751,6 +1751,44 @@ export const operationCreators: OperationCreator[] = [
   }
 ];
 
+const preparePayload = (operation: Operation, payload: Payload): Payload => {
+  const options: Partial<OperationOptions> = Object.assign(
+    {},
+    operation.defaultOptions,
+    payload.options as OperationOptions
+  );
+  if (options.usesInputDataframe && !payload.source) {
+    throw new Error('Input dataframe is required');
+  }
+  if (
+    options.usesInputCols &&
+    (!payload.cols || (Array.isArray(payload.cols) && payload.cols.length < 1))
+  ) {
+    throw new Error('Input columns are required');
+  }
+  if (options.usesOutputCols && !payload.outputCols) {
+    if (options.usesInputCols && payload.cols) {
+      payload = {
+        ...payload,
+        outputCols: payload.cols
+      };
+    } else {
+      throw new Error('Output columns are required');
+    }
+  }
+
+  if (options.preview === 'basic columns' && payload.cols) {
+    payload = {
+      ...payload,
+      outputCols: (payload.cols as Cols).map(
+        col => `__bumblebee__preview__${col}`
+      )
+    };
+  }
+
+  return payload;
+};
+
 /**
  * helper function to create an Optimus / Blurr operations in Bumblebee
  * @param operationCreator
@@ -1817,44 +1855,23 @@ const createOperation = (operationCreator: OperationCreator): Operation => {
     operationCreator.defaultOptions || {},
     { targetType: 'dataframe' }
   );
-  operation.action = payload => {
-    const options: Partial<OperationOptions> = Object.assign(
-      {},
-      operation.defaultOptions,
-      payload.options as OperationOptions
-    );
-    if (options.usesInputDataframe && !payload.source) {
-      throw new Error('Input dataframe is required');
-    }
-    if (
-      options.usesInputCols &&
-      (!payload.cols ||
-        (Array.isArray(payload.cols) && payload.cols.length < 1))
-    ) {
-      throw new Error('Input columns are required');
-    }
-    if (options.usesOutputCols && !payload.outputCols) {
-      if (options.usesInputCols && payload.cols) {
-        payload = {
-          ...payload,
-          outputCols: payload.cols
-        };
-      } else {
-        throw new Error('Output columns are required');
-      }
-    }
 
-    if (options.preview === 'basic columns' && payload.cols) {
-      payload = {
-        ...payload,
-        outputCols: (payload.cols as Cols).map(
-          col => `__bumblebee__preview__${col}`
-        )
-      };
+  operation.validate = (payload: Payload) => {
+    if (operationCreator.validate) {
+      payload = preparePayload(operation, payload);
+      return operationCreator.validate(payload);
     }
+    return true;
+  };
 
+  operation.action = (payload: Payload) => {
+    payload = preparePayload(operation, payload);
+    if (operationCreator.validate?.(payload) === false) {
+      throw new Error('Validation failed');
+    }
     return operationCreator.action(payload);
   };
+
   return operation;
 };
 
