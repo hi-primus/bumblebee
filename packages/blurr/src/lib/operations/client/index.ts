@@ -52,7 +52,7 @@ export const operations = {
           `op.load.csv(${kwargs.buffer}_py)`
         );
       }
-      throw new Error('Either url or buffer must be provided');
+      throw new Error("Either 'url' or 'buffer' must be provided");
     },
   }),
   createDataframe: DataframeCreationOperation<{

@@ -241,7 +241,7 @@ const operationActions: OperationActions = {
       state.value = 'operations';
       appStatus.value = 'ready';
     } catch (err) {
-      console.error('Error executing operation', err);
+      console.error('Error executing operation.', err);
       appStatus.value = 'ready'; // 'error';
     }
     previewData.value = null;
@@ -360,7 +360,7 @@ const previewOperation = throttleOnce(async function () {
 
     appStatus.value = 'ready';
   } catch (err) {
-    console.error('Error executing preview operation', err);
+    console.error('Error executing preview operation.', err);
     previewData.value = null;
     appStatus.value = 'ready'; // 'error';
   }

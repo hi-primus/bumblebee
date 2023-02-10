@@ -90,11 +90,7 @@ function getRunMethod(
         kwargs,
         args: operation.args,
       });
-      const result = server.runCode(code) as PromiseOr<PythonCompatible>;
-      if (isPromiseLike(result)) {
-        console.log('result is promise', operationCreator.name);
-      }
-      return result;
+      return server.runCode(code) as PromiseOr<PythonCompatible>;
     };
   } else if (operationCreator.run) {
     return (server: Server, kwargs) => {
@@ -160,7 +156,7 @@ export function BlurrOperation<
 
   operation.run = function (server: Server, args: TA): Promise<TR> {
     if (!isKwargs(args)) {
-      throw new Error(`Invalid kwargs, type received: ${typeof args}`);
+      throw new Error(`Invalid kwargs, received arg of type '${typeof args}'`);
     }
 
     const initialization =

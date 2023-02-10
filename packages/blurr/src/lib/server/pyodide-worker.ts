@@ -25,8 +25,11 @@ function promiseWorker(url) {
   };
   worker.onmessage = (event) => {
     if (!promises[event.data.id]) {
-      console.error(event);
-      throw new Error(`Promise with id ${event.data.id} not found`);
+      console.error(
+        `Error with id '${event.data.id}' not found. Event:`,
+        event
+      );
+      throw new Error(`Promise with id '${event.data.id}' not found`);
     }
     if (event.data.error) {
       promises[event.data.id].reject(event.data.error);
@@ -59,8 +62,6 @@ async function loadWorker(options: PyodideBackendOptions) {
     content.indexOf('{') + 1,
     content.lastIndexOf('}')
   );
-
-  console.log({ content });
 
   const worker = promiseWorker(window.URL.createObjectURL(new Blob([content])));
 

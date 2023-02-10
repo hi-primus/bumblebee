@@ -101,7 +101,7 @@ export const initializeWorker = () => {
                 ? result.toJs({ dict_converter: _mapToObject })
                 : result;
           } catch (error) {
-            console.warn('Error converting to JS', error);
+            console.warn('Error converting to JS.', error);
           }
         } catch (err) {
           error = err.message;

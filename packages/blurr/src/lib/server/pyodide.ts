@@ -118,7 +118,7 @@ export function ServerPyodide(options: ServerOptions): ServerInterface {
         ? result.toJs({ dict_converter: _mapToObject })
         : result;
     } catch (error) {
-      console.warn('Error converting to JS', code, error);
+      console.warn(`Error converting to JS. \n`, `${code}\n`, error);
       return result;
     }
   });
@@ -182,11 +182,9 @@ export function ServerPyodide(options: ServerOptions): ServerInterface {
         sourceProxy = source;
       } else {
         throw new Error(
-          `Invalid source type ${typeof source} for method ${path}`
+          `Invalid source type '${typeof source}' for method '${path}'`
         );
       }
-
-      console.log({ sourceProxy });
 
       const pathAccessors = path.split('.');
 
@@ -197,7 +195,7 @@ export function ServerPyodide(options: ServerOptions): ServerInterface {
         if (index === pathAccessors.length - 1) {
           return obj[key];
         }
-        throw new Error(`Method or accessor ${key} not found in ${obj}`);
+        throw new Error(`Method or accessor '${key}' not found in '${obj}'`);
       }, sourceProxy);
 
       console.log('[METHOD FROM DEFAULT GENERATOR]', path);
@@ -207,13 +205,12 @@ export function ServerPyodide(options: ServerOptions): ServerInterface {
 
       const runMethod = server.pyodide.globals.get('run_method');
       const result = runMethod(method, kwargs);
-      console.log({ result });
       try {
         return typeof result?.toJs === 'function'
           ? result.toJs({ dict_converter: _mapToObject })
           : result;
       } catch (error) {
-        console.warn('Error converting to JS', error);
+        console.warn('Error converting to JS.', error);
         return result;
       }
     }

@@ -84,7 +84,6 @@ export function Source(
   source.rows = adaptFunctions(rowsOperatons, 'rows') as SourceFunctionsRows;
   source.persist = (): PromiseOr<SourceInterface> => {
     if (!source.paramsQueue.length) {
-      console.log("Run 'persist' on a source with no pending operations");
       const newSource = Source(client, source.data || source.name);
       delete (newSource as FutureSource).then;
       return newSource;
@@ -117,7 +116,7 @@ export function Source(
         return newSource;
       }
       console.warn("Can't persist source, unknown name.", result);
-      throw new Error("Can't persist source, unknown name.");
+      throw new Error("Can't persist source, unknown name");
     };
 
     if (isPromiseLike(result)) {

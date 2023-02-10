@@ -23,7 +23,6 @@ const prepareResult = (client: Client, result: PythonCompatible) => {
   if (isName(result) || isSource(result)) {
     const sourceData = (result as SourceInterface).data;
     if (sourceData !== undefined || !result.name) {
-      console.log('Creating new source', { sourceData, result });
       const newSource = Source(
         client,
         sourceData !== undefined ? sourceData : result.name
@@ -67,8 +66,6 @@ export function Blurr(options: ClientOptions = {}): Client {
     if (!Array.isArray(paramsArray)) {
       paramsArray = [paramsArray];
     }
-
-    console.log({ paramsArray });
 
     const firstParams = paramsArray[0];
 

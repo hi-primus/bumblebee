@@ -120,7 +120,7 @@ export function loadScript(url: string) {
     try {
       const document = globalThis?.document;
       if (!document) {
-        console.error('Script not loaded. No DOM available');
+        console.error('Script not loaded. No DOM available.');
         resolve(false);
         return;
       }
