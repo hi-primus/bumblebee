@@ -514,7 +514,7 @@ export const operationCreators: OperationCreator[] = [
         outputCols: payload.outputCols
       });
     },
-    shortcut: 'll'
+    shortcut: 'rdd'
   },
   {
     key: 'Drop Empty',
@@ -540,7 +540,7 @@ export const operationCreators: OperationCreator[] = [
         outputCols: payload.outputCols
       });
     },
-    shortcut: 'll'
+    shortcut: 'rde'
   },
   // Columns operations
   {
@@ -674,7 +674,7 @@ export const operationCreators: OperationCreator[] = [
         outputCols: payload.outputCols
       });
     },
-    shortcut: 'lra'
+    shortcut: 'lrs'
   },
   {
     key: 'extract',
@@ -700,7 +700,7 @@ export const operationCreators: OperationCreator[] = [
         outputCols: payload.outputCols
       });
     },
-    shortcut: 'lra'
+    shortcut: 'le'
   },
   {
     key: 'trim whitespaces',
@@ -772,7 +772,7 @@ export const operationCreators: OperationCreator[] = [
         outputCols: payload.outputCols
       });
     },
-    shortcut: 'll'
+    shortcut: 'lsl'
   },
   {
     key: 'right substring',
@@ -795,7 +795,7 @@ export const operationCreators: OperationCreator[] = [
         outputCols: payload.outputCols
       });
     },
-    shortcut: 'lr'
+    shortcut: 'lsr'
   },
   {
     key: 'mid substring',
@@ -821,7 +821,7 @@ export const operationCreators: OperationCreator[] = [
         outputCols: payload.outputCols
       });
     },
-    shortcut: 'lr'
+    shortcut: 'lsm'
   },
   {
     key: 'pad',
@@ -847,7 +847,7 @@ export const operationCreators: OperationCreator[] = [
         outputCols: payload.outputCols
       });
     },
-    shortcut: 'lr'
+    shortcut: 'lp'
   },
 
   // Numeric
@@ -961,7 +961,7 @@ export const operationCreators: OperationCreator[] = [
         outputCols: payload.outputCols
       });
     },
-    shortcut: 'nc'
+    shortcut: 'nm'
   },
   {
     key: 'logarithm',
@@ -1682,7 +1682,7 @@ export const operationCreators: OperationCreator[] = [
         outputCols: payload.outputCols
       });
     },
-    shortcut: 'lr'
+    shortcut: 'lrw'
   },
   {
     key: 'unnestColumns',
