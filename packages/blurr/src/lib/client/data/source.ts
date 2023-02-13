@@ -21,7 +21,9 @@ import {
 
 export function isSource(value): value is SourceInterface {
   return (
-    isObject(value) && '_blurrMember' in value && value._blurrMember == 'source'
+    isObject(value) &&
+    '_blurrMember' in value &&
+    value._blurrMember === 'source'
   );
 }
 
@@ -99,7 +101,7 @@ export function Source(
         delete (newSource as FutureSource).then;
         return newSource;
       }
-      const paramsWithTarget = source.paramsQueue.filter((p) => 'target' in p);
+      const paramsWithTarget = source.paramsQueue.filter((p) => p.target);
       let lastTarget = paramsWithTarget[paramsWithTarget.length - 1].target;
       if (!lastTarget) {
         lastTarget = source.toString();

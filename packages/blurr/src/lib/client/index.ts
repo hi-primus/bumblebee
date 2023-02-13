@@ -92,7 +92,8 @@ export function Blurr(options: ClientOptions = {}): Client {
 
     if (lastOperation && lastOperation.targetType === 'dataframe') {
       const lastParams = paramsQueue[paramsQueue.length - 1];
-      if (!('target' in lastParams)) {
+
+      if (lastParams.target === undefined) {
         if (lastOperation.createsNew) {
           lastParams.target = generateUniqueVariableName(
             lastOperation.targetType
@@ -105,7 +106,15 @@ export function Blurr(options: ClientOptions = {}): Client {
       }
 
       if (!blurr.options.serverOptions.local) {
-        console.log('🛼 Returning without running:', lastParams);
+        if (lastParams.target === undefined) {
+          throw new Error('Target is undefined');
+          // should return a promise that resolves to a result
+        }
+
+        console.log(
+          '🛼 Returning without running using params:',
+          lastParams.target
+        );
 
         const newSource = Source(blurr, lastParams.target.toString());
         newSource.paramsQueue = paramsQueue;
