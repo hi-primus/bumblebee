@@ -10,6 +10,17 @@ import {
 
 type Cols = string[];
 
+type OperationPayload<
+  T extends Record<string, unknown> = Record<string, unknown>
+> = {
+  blurr: Client;
+  source: Source;
+  target: string;
+  cols: Cols;
+  outputCols: Cols;
+  options: OperationOptions;
+} & T;
+
 export const operationCreators: OperationCreator[] = [
   {
     key: 'loadFromUrl',
@@ -18,12 +29,12 @@ export const operationCreators: OperationCreator[] = [
       saveToNewDataframe: true,
       preview: 'whole'
     },
-    action: (payload: {
-      blurr: Client;
-      url: string;
-      nRows?: number;
-      options: OperationOptions;
-    }): Source => {
+    action: (
+      payload: OperationPayload<{
+        url: string;
+        nRows?: number;
+      }>
+    ): Source => {
       if (payload.options.preview) {
         payload.nRows = Math.min(payload.nRows || 50, 50);
       }
@@ -50,23 +61,22 @@ export const operationCreators: OperationCreator[] = [
       usesInputDataframe: true,
       preview: 'basic columns'
     },
-    action: (payload: {
-      source: Source;
-      cols: Cols;
-      outputCols: Cols;
-      replaces: {
-        condition: string;
-        value: string;
-        replaceBy: string;
-      }[];
-      otherwise: string;
-      options: OperationOptions;
-    }): Source => {
+    action: (
+      payload: OperationPayload<{
+        replaces: {
+          condition: string;
+          value: string;
+          replaceBy: string;
+        }[];
+        otherwise: string;
+      }>
+    ): Source => {
       const where = payload.replaces.map(replace =>
         whereExpression(replace.condition, replace.value, payload.cols[0])
       );
 
       const result = payload.source.cols.set({
+        target: payload.target,
         cols: payload.outputCols,
         valueFunc: payload.replaces.map(r => r.replaceBy),
         evalValue: false,
@@ -250,18 +260,18 @@ export const operationCreators: OperationCreator[] = [
       usesInputDataframe: true,
       preview: 'basic columns'
     },
-    action: (payload: {
-      source: Source;
-      cols: Cols;
-      outputCols: Cols;
-      replaces: {
-        search: string;
-        replaceBy: string;
-      }[];
-      searchBy: string;
-      matchCase: OperationOptions;
-    }): Source => {
+    action: (
+      payload: OperationPayload<{
+        replaces: {
+          search: string;
+          replaceBy: string;
+        }[];
+        searchBy: string;
+        matchCase: OperationOptions;
+      }>
+    ): Source => {
       const result = payload.source.cols.replace({
+        target: payload.target,
         cols: payload.cols,
         search: payload.replaces.map(replace => replace.search),
         replaceBy: payload.replaces.map(replace => replace.replaceBy),
@@ -340,16 +350,15 @@ export const operationCreators: OperationCreator[] = [
       preview: 'highlight rows'
     },
     shortcut: 'fr',
-    action: (payload: {
-      source: Source;
-      cols: Cols;
-      conditions: {
-        condition: string;
-        value: string;
-      }[];
-      action: 'select' | 'drop';
-      options: OperationOptions;
-    }): Source => {
+    action: (
+      payload: OperationPayload<{
+        conditions: {
+          condition: string;
+          value: string;
+        }[];
+        action: 'select' | 'drop';
+      }>
+    ): Source => {
       const where = payload.conditions.map(condition =>
         whereExpression(condition.condition, condition.value, payload.cols[0])
       );
@@ -357,6 +366,7 @@ export const operationCreators: OperationCreator[] = [
       if (payload.options.preview) {
         const color = payload.action === 'select' ? 'success' : 'error';
         return payload.source.cols.set({
+          target: payload.target,
           cols: `__bumblebee__highlight_row__${color}`,
           valueFunc: true,
           evalValue: false,
@@ -367,10 +377,12 @@ export const operationCreators: OperationCreator[] = [
 
       if (payload.action === 'select') {
         return payload.source.rows.select({
+          target: payload.target,
           expr: where.join(' | ')
         });
       } else {
         return payload.source.rows.drop({
+          target: payload.target,
           expr: where.join(' | ')
         });
       }
@@ -499,15 +511,14 @@ export const operationCreators: OperationCreator[] = [
       usesInputDataframe: true,
       preview: 'basic columns'
     },
-    action: (payload: {
-      source: Source;
-      cols: Cols;
-      keep: 'first' | 'last';
-      how: 'any' | 'all';
-      outputCols: Cols;
-      options: OperationOptions;
-    }): Source => {
+    action: (
+      payload: OperationPayload<{
+        keep: 'first' | 'last';
+        how: 'any' | 'all';
+      }>
+    ): Source => {
       return payload.source.rows.dropDuplicated({
+        target: payload.target,
         cols: payload.cols,
         keep: payload.keep,
         how: payload.how,
@@ -525,15 +536,14 @@ export const operationCreators: OperationCreator[] = [
       usesInputDataframe: true,
       preview: 'basic columns'
     },
-    action: (payload: {
-      source: Source;
-      cols: Cols;
-      keep: 'first' | 'last';
-      how: 'any' | 'all';
-      outputCols: Cols;
-      options: OperationOptions;
-    }): Source => {
+    action: (
+      payload: OperationPayload<{
+        keep: 'first' | 'last';
+        how: 'any' | 'all';
+      }>
+    ): Source => {
       return payload.source.rows.dropDuplicated({
+        target: payload.target,
         cols: payload.cols,
         keep: payload.keep,
         how: payload.how,
@@ -552,13 +562,9 @@ export const operationCreators: OperationCreator[] = [
       usesInputDataframe: true,
       preview: 'basic columns'
     },
-    action: (payload: {
-      source: Source;
-      cols: Cols;
-      outputCols: Cols;
-      options: OperationOptions;
-    }): Source => {
+    action: (payload: OperationPayload): Source => {
       return payload.source.cols.lower({
+        target: payload.target,
         cols: payload.cols,
         outputCols: payload.outputCols
       });
@@ -574,13 +580,9 @@ export const operationCreators: OperationCreator[] = [
       usesInputDataframe: true,
       preview: 'basic columns'
     },
-    action: (payload: {
-      source: Source;
-      cols: Cols;
-      outputCols: Cols;
-      options: OperationOptions;
-    }): Source => {
+    action: (payload: OperationPayload): Source => {
       return payload.source.cols.upper({
+        target: payload.target,
         cols: payload.cols,
         outputCols: payload.outputCols
       });
@@ -596,13 +598,9 @@ export const operationCreators: OperationCreator[] = [
       usesInputDataframe: true,
       preview: 'basic columns'
     },
-    action: (payload: {
-      source: Source;
-      cols: Cols;
-      outputCols: Cols;
-      options: OperationOptions;
-    }): Source => {
+    action: (payload: OperationPayload): Source => {
       return payload.source.cols.title({
+        target: payload.target,
         cols: payload.cols,
         outputCols: payload.outputCols
       });
@@ -618,13 +616,9 @@ export const operationCreators: OperationCreator[] = [
       usesInputDataframe: true,
       preview: 'basic columns'
     },
-    action: (payload: {
-      source: Source;
-      cols: Cols;
-      outputCols: Cols;
-      options: OperationOptions;
-    }): Source => {
+    action: (payload: OperationPayload): Source => {
       return payload.source.cols.capitalize({
+        target: payload.target,
         cols: payload.cols,
         outputCols: payload.outputCols
       });
@@ -641,13 +635,9 @@ export const operationCreators: OperationCreator[] = [
       usesInputDataframe: true,
       preview: 'basic columns'
     },
-    action: (payload: {
-      source: Source;
-      cols: Cols;
-      outputCols: Cols;
-      options: OperationOptions;
-    }): Source => {
+    action: (payload: OperationPayload): Source => {
       return payload.source.cols.normalizeChars({
+        target: payload.target,
         cols: payload.cols,
         outputCols: payload.outputCols
       });
@@ -663,13 +653,9 @@ export const operationCreators: OperationCreator[] = [
       usesInputDataframe: true,
       preview: 'basic columns'
     },
-    action: (payload: {
-      source: Source;
-      cols: Cols;
-      outputCols: Cols;
-      options: OperationOptions;
-    }): Source => {
+    action: (payload: OperationPayload): Source => {
       return payload.source.cols.removeSpecialChars({
+        target: payload.target,
         cols: payload.cols,
         outputCols: payload.outputCols
       });
@@ -685,15 +671,14 @@ export const operationCreators: OperationCreator[] = [
       usesInputDataframe: true,
       preview: 'basic columns'
     },
-    action: (payload: {
-      source: Source;
-      cols: Cols;
-      start: number;
-      end: number;
-      outputCols: Cols;
-      options: OperationOptions;
-    }): Source => {
+    action: (
+      payload: OperationPayload<{
+        start: number;
+        end: number;
+      }>
+    ): Source => {
       return payload.source.cols.substring({
+        target: payload.target,
         start: payload.start,
         end: payload.end,
         cols: payload.cols,
@@ -711,15 +696,14 @@ export const operationCreators: OperationCreator[] = [
       usesInputDataframe: true,
       preview: 'basic columns'
     },
-    action: (payload: {
-      source: Source;
-      cols: Cols;
-      start: number;
-      end: number;
-      outputCols: Cols;
-      options: OperationOptions;
-    }): Source => {
+    action: (
+      payload: OperationPayload<{
+        start: number;
+        end: number;
+      }>
+    ): Source => {
       return payload.source.cols.trim({
+        target: payload.target,
         cols: payload.cols,
         outputCols: payload.outputCols
       });
@@ -735,15 +719,14 @@ export const operationCreators: OperationCreator[] = [
       usesInputDataframe: true,
       preview: 'basic columns'
     },
-    action: (payload: {
-      source: Source;
-      cols: Cols;
-      start: number;
-      end: number;
-      outputCols: Cols;
-      options: OperationOptions;
-    }): Source => {
+    action: (
+      payload: OperationPayload<{
+        start: number;
+        end: number;
+      }>
+    ): Source => {
       return payload.source.cols.normalizeSpaces({
+        target: payload.target,
         cols: payload.cols,
         outputCols: payload.outputCols
       });
@@ -759,14 +742,13 @@ export const operationCreators: OperationCreator[] = [
       usesInputDataframe: true,
       preview: 'basic columns'
     },
-    action: (payload: {
-      source: Source;
-      cols: Cols;
-      n: number;
-      outputCols: Cols;
-      options: OperationOptions;
-    }): Source => {
+    action: (
+      payload: OperationPayload<{
+        n: number;
+      }>
+    ): Source => {
       return payload.source.cols.left({
+        target: payload.target,
         cols: payload.cols,
         n: payload.n,
         outputCols: payload.outputCols
@@ -783,14 +765,13 @@ export const operationCreators: OperationCreator[] = [
       usesInputDataframe: true,
       preview: 'basic columns'
     },
-    action: (payload: {
-      source: Source;
-      cols: Cols;
-      n: number;
-      outputCols: Cols;
-      options: OperationOptions;
-    }): Source => {
+    action: (
+      payload: OperationPayload<{
+        n: number;
+      }>
+    ): Source => {
       return payload.source.cols.right({
+        target: payload.target,
         cols: payload.cols,
         outputCols: payload.outputCols
       });
@@ -806,15 +787,14 @@ export const operationCreators: OperationCreator[] = [
       usesInputDataframe: true,
       preview: 'basic columns'
     },
-    action: (payload: {
-      source: Source;
-      cols: Cols;
-      start: number;
-      end: number;
-      outputCols: Cols;
-      options: OperationOptions;
-    }): Source => {
+    action: (
+      payload: OperationPayload<{
+        start: number;
+        end: number;
+      }>
+    ): Source => {
       return payload.source.cols.min({
+        target: payload.target,
         cols: payload.cols,
         start: payload.start,
         end: payload.end,
@@ -832,15 +812,14 @@ export const operationCreators: OperationCreator[] = [
       usesInputDataframe: true,
       preview: 'basic columns'
     },
-    action: (payload: {
-      source: Source;
-      cols: Cols;
-      start: number;
-      end: number;
-      outputCols: Cols;
-      options: OperationOptions;
-    }): Source => {
+    action: (
+      payload: OperationPayload<{
+        start: number;
+        end: number;
+      }>
+    ): Source => {
       return payload.source.cols.removeStopWords({
+        target: payload.target,
         cols: payload.cols,
         start: payload.start,
         end: payload.end,
@@ -860,13 +839,9 @@ export const operationCreators: OperationCreator[] = [
       usesInputDataframe: true,
       preview: 'basic columns'
     },
-    action: (payload: {
-      source: Source;
-      cols: Cols;
-      outputCols: Cols;
-      options: OperationOptions;
-    }): Source => {
+    action: (payload: OperationPayload): Source => {
       return payload.source.cols.abs({
+        target: payload.target,
         cols: payload.cols,
         outputCols: payload.outputCols
       });
@@ -882,14 +857,13 @@ export const operationCreators: OperationCreator[] = [
       usesInputDataframe: true,
       preview: 'basic columns'
     },
-    action: (payload: {
-      source: Source;
-      cols: Cols;
-      decimals: number;
-      outputCols: Cols;
-      options: OperationOptions;
-    }): Source => {
+    action: (
+      payload: OperationPayload<{
+        decimals: number;
+      }>
+    ): Source => {
       return payload.source.cols.round({
+        target: payload.target,
         cols: payload.cols,
         decimals: payload.decimals,
         outputCols: payload.outputCols
@@ -906,13 +880,9 @@ export const operationCreators: OperationCreator[] = [
       usesInputDataframe: true,
       preview: 'basic columns'
     },
-    action: (payload: {
-      source: Source;
-      cols: Cols;
-      outputCols: Cols;
-      options: OperationOptions;
-    }): Source => {
+    action: (payload: OperationPayload): Source => {
       return payload.source.cols.floor({
+        target: payload.target,
         cols: payload.cols,
         outputCols: payload.outputCols
       });
@@ -928,13 +898,9 @@ export const operationCreators: OperationCreator[] = [
       usesInputDataframe: true,
       preview: 'basic columns'
     },
-    action: (payload: {
-      source: Source;
-      cols: Cols;
-      outputCols: Cols;
-      options: OperationOptions;
-    }): Source => {
+    action: (payload: OperationPayload): Source => {
       return payload.source.cols.ceil({
+        target: payload.target,
         cols: payload.cols,
         outputCols: payload.outputCols
       });
@@ -950,13 +916,9 @@ export const operationCreators: OperationCreator[] = [
       usesInputDataframe: true,
       preview: 'basic columns'
     },
-    action: (payload: {
-      source: Source;
-      cols: Cols;
-      outputCols: Cols;
-      options: OperationOptions;
-    }): Source => {
+    action: (payload: OperationPayload): Source => {
       return payload.source.cols.mod({
+        target: payload.target,
         cols: payload.cols,
         outputCols: payload.outputCols
       });
@@ -972,14 +934,13 @@ export const operationCreators: OperationCreator[] = [
       usesInputDataframe: true,
       preview: 'basic columns'
     },
-    action: (payload: {
-      source: Source;
-      cols: Cols;
-      base: number;
-      outputCols: Cols;
-      options: OperationOptions;
-    }): Source => {
+    action: (
+      payload: OperationPayload<{
+        base: number;
+      }>
+    ): Source => {
       return payload.source.cols.log({
+        target: payload.target,
         cols: payload.cols,
         base: payload.base,
         outputCols: payload.outputCols
@@ -996,13 +957,9 @@ export const operationCreators: OperationCreator[] = [
       usesInputDataframe: true,
       preview: 'basic columns'
     },
-    action: (payload: {
-      source: Source;
-      cols: Cols;
-      outputCols: Cols;
-      options: OperationOptions;
-    }): Source => {
+    action: (payload: OperationPayload): Source => {
       return payload.source.cols.ln({
+        target: payload.target,
         cols: payload.cols,
         outputCols: payload.outputCols
       });
@@ -1018,14 +975,13 @@ export const operationCreators: OperationCreator[] = [
       usesInputDataframe: true,
       preview: 'basic columns'
     },
-    action: (payload: {
-      source: Source;
-      cols: Cols;
-      power: number;
-      outputCols: Cols;
-      options: OperationOptions;
-    }): Source => {
+    action: (
+      payload: OperationPayload<{
+        power: number;
+      }>
+    ): Source => {
       return payload.source.cols.pow({
+        target: payload.target,
         cols: payload.cols,
         power: payload.power,
         outputCols: payload.outputCols
@@ -1042,13 +998,9 @@ export const operationCreators: OperationCreator[] = [
       usesInputDataframe: true,
       preview: 'basic columns'
     },
-    action: (payload: {
-      source: Source;
-      cols: Cols;
-      outputCols: Cols;
-      options: OperationOptions;
-    }): Source => {
+    action: (payload: OperationPayload): Source => {
       return payload.source.cols.sqrt({
+        target: payload.target,
         cols: payload.cols,
         outputCols: payload.outputCols
       });
@@ -1065,13 +1017,9 @@ export const operationCreators: OperationCreator[] = [
       usesInputDataframe: true,
       preview: 'basic columns'
     },
-    action: (payload: {
-      source: Source;
-      cols: Cols;
-      outputCols: Cols;
-      options: OperationOptions;
-    }): Source => {
+    action: (payload: OperationPayload): Source => {
       return payload.source.cols.sin({
+        target: payload.target,
         cols: payload.cols,
         outputCols: payload.outputCols
       });
@@ -1088,13 +1036,9 @@ export const operationCreators: OperationCreator[] = [
       usesInputDataframe: true,
       preview: 'basic columns'
     },
-    action: (payload: {
-      source: Source;
-      cols: Cols;
-      outputCols: Cols;
-      options: OperationOptions;
-    }): Source => {
+    action: (payload: OperationPayload): Source => {
       return payload.source.cols.cos({
+        target: payload.target,
         cols: payload.cols,
         outputCols: payload.outputCols
       });
@@ -1111,13 +1055,9 @@ export const operationCreators: OperationCreator[] = [
       usesInputDataframe: true,
       preview: 'basic columns'
     },
-    action: (payload: {
-      source: Source;
-      cols: Cols;
-      outputCols: Cols;
-      options: OperationOptions;
-    }): Source => {
+    action: (payload: OperationPayload): Source => {
       return payload.source.cols.tan({
+        target: payload.target,
         cols: payload.cols,
         outputCols: payload.outputCols
       });
@@ -1133,13 +1073,9 @@ export const operationCreators: OperationCreator[] = [
       usesInputDataframe: true,
       preview: 'basic columns'
     },
-    action: (payload: {
-      source: Source;
-      cols: Cols;
-      outputCols: Cols;
-      options: OperationOptions;
-    }): Source => {
+    action: (payload: OperationPayload): Source => {
       return payload.source.cols.asin({
+        target: payload.target,
         cols: payload.cols,
         outputCols: payload.outputCols
       });
@@ -1156,13 +1092,9 @@ export const operationCreators: OperationCreator[] = [
       usesInputDataframe: true,
       preview: 'basic columns'
     },
-    action: (payload: {
-      source: Source;
-      cols: Cols;
-      outputCols: Cols;
-      options: OperationOptions;
-    }): Source => {
+    action: (payload: OperationPayload): Source => {
       return payload.source.cols.acos({
+        target: payload.target,
         cols: payload.cols,
         outputCols: payload.outputCols
       });
@@ -1179,13 +1111,9 @@ export const operationCreators: OperationCreator[] = [
       usesInputDataframe: true,
       preview: 'basic columns'
     },
-    action: (payload: {
-      source: Source;
-      cols: Cols;
-      outputCols: Cols;
-      options: OperationOptions;
-    }): Source => {
+    action: (payload: OperationPayload): Source => {
       return payload.source.cols.atan({
+        target: payload.target,
         cols: payload.cols,
         outputCols: payload.outputCols
       });
@@ -1201,13 +1129,9 @@ export const operationCreators: OperationCreator[] = [
       usesInputDataframe: true,
       preview: 'basic columns'
     },
-    action: (payload: {
-      source: Source;
-      cols: Cols;
-      outputCols: Cols;
-      options: OperationOptions;
-    }): Source => {
+    action: (payload: OperationPayload): Source => {
       return payload.source.cols.sinh({
+        target: payload.target,
         cols: payload.cols,
         outputCols: payload.outputCols
       });
@@ -1224,13 +1148,9 @@ export const operationCreators: OperationCreator[] = [
       usesInputDataframe: true,
       preview: 'basic columns'
     },
-    action: (payload: {
-      source: Source;
-      cols: Cols;
-      outputCols: Cols;
-      options: OperationOptions;
-    }): Source => {
+    action: (payload: OperationPayload): Source => {
       return payload.source.cols.cosh({
+        target: payload.target,
         cols: payload.cols,
         outputCols: payload.outputCols
       });
@@ -1247,13 +1167,9 @@ export const operationCreators: OperationCreator[] = [
       usesInputDataframe: true,
       preview: 'basic columns'
     },
-    action: (payload: {
-      source: Source;
-      cols: Cols;
-      outputCols: Cols;
-      options: OperationOptions;
-    }): Source => {
+    action: (payload: OperationPayload): Source => {
       return payload.source.cols.tanh({
+        target: payload.target,
         cols: payload.cols,
         outputCols: payload.outputCols
       });
@@ -1269,13 +1185,9 @@ export const operationCreators: OperationCreator[] = [
       usesInputDataframe: true,
       preview: 'basic columns'
     },
-    action: (payload: {
-      source: Source;
-      cols: Cols;
-      outputCols: Cols;
-      options: OperationOptions;
-    }): Source => {
+    action: (payload: OperationPayload): Source => {
       return payload.source.cols.asinh({
+        target: payload.target,
         cols: payload.cols,
         outputCols: payload.outputCols
       });
@@ -1292,13 +1204,9 @@ export const operationCreators: OperationCreator[] = [
       usesInputDataframe: true,
       preview: 'basic columns'
     },
-    action: (payload: {
-      source: Source;
-      cols: Cols;
-      outputCols: Cols;
-      options: OperationOptions;
-    }): Source => {
+    action: (payload: OperationPayload): Source => {
       return payload.source.cols.acosh({
+        target: payload.target,
         cols: payload.cols,
         outputCols: payload.outputCols
       });
@@ -1315,13 +1223,9 @@ export const operationCreators: OperationCreator[] = [
       usesInputDataframe: true,
       preview: 'basic columns'
     },
-    action: (payload: {
-      source: Source;
-      cols: Cols;
-      outputCols: Cols;
-      options: OperationOptions;
-    }): Source => {
+    action: (payload: OperationPayload): Source => {
       return payload.source.cols.atanh({
+        target: payload.target,
         cols: payload.cols,
         outputCols: payload.outputCols
       });
@@ -1338,15 +1242,14 @@ export const operationCreators: OperationCreator[] = [
       usesInputDataframe: true,
       preview: 'basic columns'
     },
-    action: (payload: {
-      source: Source;
-      cols: Cols;
-      type: unknown;
-      outputCols: Cols;
-      options: OperationOptions;
-    }): Source => {
+    action: (
+      payload: OperationPayload<{
+        type: unknown;
+      }>
+    ): Source => {
       const outputFormat = payload.type as { name: string; format: string };
       return payload.source.cols.formatDate({
+        target: payload.target,
         cols: payload.cols,
         outputFormat,
         outputCols: payload.outputCols
@@ -1402,15 +1305,14 @@ export const operationCreators: OperationCreator[] = [
       usesInputDataframe: true,
       preview: 'basic columns'
     },
-    action: (payload: {
-      source: Source;
-      cols: Cols;
-      type: unknown;
-      outputCols: Cols;
-      options: OperationOptions;
-    }): Source => {
+    action: (
+      payload: OperationPayload<{
+        type: unknown;
+      }>
+    ): Source => {
       const outputFormat = payload.type as { name: string; format: string };
       return payload.source.cols.formatDate({
+        target: payload.target,
         cols: payload.cols,
         outputFormat,
         outputCols: payload.outputCols
@@ -1443,15 +1345,14 @@ export const operationCreators: OperationCreator[] = [
       usesInputDataframe: true,
       preview: 'basic columns'
     },
-    action: (payload: {
-      source: Source;
-      cols: Cols;
-      n: number;
-      seed: number;
-      outputCols: Cols;
-      options: OperationOptions;
-    }): Source => {
+    action: (
+      payload: OperationPayload<{
+        n: number;
+        seed: number;
+      }>
+    ): Source => {
       return payload.source.cols.atanh({
+        target: payload.target,
         cols: payload.cols,
         n: payload.n,
         seed: payload.seed,
@@ -1469,14 +1370,13 @@ export const operationCreators: OperationCreator[] = [
       usesInputDataframe: true,
       preview: 'basic columns'
     },
-    action: (payload: {
-      source: Source;
-      cols: Cols;
-      strategy: string;
-      outputCols: Cols;
-      options: OperationOptions;
-    }): Source => {
+    action: (
+      payload: OperationPayload<{
+        strategy: string;
+      }>
+    ): Source => {
       return payload.source.cols.impute({
+        target: payload.target,
         cols: payload.cols,
         strategy: payload.strategy,
         outputCols: payload.outputCols
@@ -1507,15 +1407,14 @@ export const operationCreators: OperationCreator[] = [
       usesInputDataframe: true,
       preview: 'basic columns'
     },
-    action: (payload: {
-      source: Source;
-      cols: Cols;
-      prefix: string;
-      drop: boolean;
-      outputCols: Cols;
-      options: OperationOptions;
-    }): Source => {
+    action: (
+      payload: OperationPayload<{
+        prefix: string;
+        drop: boolean;
+      }>
+    ): Source => {
       return payload.source.cols.oneHotEncode({
+        target: payload.target,
         cols: payload.cols,
         prefix: payload.prefix,
         drop: payload.drop,
@@ -1533,13 +1432,9 @@ export const operationCreators: OperationCreator[] = [
       usesInputDataframe: true,
       preview: 'basic columns'
     },
-    action: (payload: {
-      source: Source;
-      cols: Cols;
-      outputCols: Cols;
-      options: OperationOptions;
-    }): Source => {
+    action: (payload: OperationPayload): Source => {
       return payload.source.cols.stringToIndex({
+        target: payload.target,
         cols: payload.cols,
         outputCols: payload.outputCols
       });
@@ -1555,13 +1450,9 @@ export const operationCreators: OperationCreator[] = [
       usesInputDataframe: true,
       preview: 'basic columns'
     },
-    action: (payload: {
-      source: Source;
-      cols: Cols;
-      outputCols: Cols;
-      options: OperationOptions;
-    }): Source => {
+    action: (payload: OperationPayload): Source => {
       return payload.source.cols.indexToString({
+        target: payload.target,
         cols: payload.cols,
         outputCols: payload.outputCols
       });
@@ -1577,13 +1468,9 @@ export const operationCreators: OperationCreator[] = [
       usesInputDataframe: true,
       preview: 'basic columns'
     },
-    action: (payload: {
-      source: Source;
-      cols: Cols;
-      outputCols: Cols;
-      options: OperationOptions;
-    }): Source => {
+    action: (payload: OperationPayload): Source => {
       return payload.source.cols.zScore({
+        target: payload.target,
         cols: payload.cols,
         outputCols: payload.outputCols
       });
@@ -1599,13 +1486,9 @@ export const operationCreators: OperationCreator[] = [
       usesInputDataframe: true,
       preview: 'basic columns'
     },
-    action: (payload: {
-      source: Source;
-      cols: Cols;
-      outputCols: Cols;
-      options: OperationOptions;
-    }): Source => {
+    action: (payload: OperationPayload): Source => {
       return payload.source.cols.standardScaler({
+        target: payload.target,
         cols: payload.cols,
         outputCols: payload.outputCols
       });
@@ -1621,13 +1504,9 @@ export const operationCreators: OperationCreator[] = [
       usesInputDataframe: true,
       preview: 'basic columns'
     },
-    action: (payload: {
-      source: Source;
-      cols: Cols;
-      outputCols: Cols;
-      options: OperationOptions;
-    }): Source => {
+    action: (payload: OperationPayload): Source => {
       return payload.source.cols.minMaxScaler({
+        target: payload.target,
         cols: payload.cols,
         outputCols: payload.outputCols
       });
@@ -1643,13 +1522,9 @@ export const operationCreators: OperationCreator[] = [
       usesInputDataframe: true,
       preview: 'basic columns'
     },
-    action: (payload: {
-      source: Source;
-      cols: Cols;
-      outputCols: Cols;
-      options: OperationOptions;
-    }): Source => {
+    action: (payload: OperationPayload): Source => {
       return payload.source.cols.maxAbsScaler({
+        target: payload.target,
         cols: payload.cols,
         outputCols: payload.outputCols
       });
@@ -1667,15 +1542,14 @@ export const operationCreators: OperationCreator[] = [
       usesInputDataframe: true,
       preview: 'basic columns'
     },
-    action: (payload: {
-      source: Source;
-      cols: Cols;
-      start: number;
-      end: number;
-      outputCols: Cols;
-      options: OperationOptions;
-    }): Source => {
+    action: (
+      payload: OperationPayload<{
+        start: number;
+        end: number;
+      }>
+    ): Source => {
       return payload.source.cols.removeStopWords({
+        target: payload.target,
         cols: payload.cols,
         start: payload.start,
         end: payload.end,
@@ -1692,12 +1566,13 @@ export const operationCreators: OperationCreator[] = [
       usesInputCols: true,
       usesInputDataframe: true
     },
-    action: (payload: {
-      source: Source;
-      cols: Cols;
-      separator: string;
-    }): Source => {
+    action: (
+      payload: OperationPayload<{
+        separator: string;
+      }>
+    ): Source => {
       return payload.source.cols.unnest({
+        target: payload.target,
         cols: payload.cols,
         separator: payload.separator
       });
@@ -1720,21 +1595,28 @@ export const operationCreators: OperationCreator[] = [
       usesInputDataframe: true,
       preview: true
     },
-    action: (payload: {
-      options: OperationOptions;
-      source: Source;
-      cols: Cols;
-      separator: string;
-    }): Source => {
+    validate: (
+      payload: OperationPayload<{
+        separator: string;
+      }>
+    ): boolean => {
       if (payload.options.preview) {
         if (payload.cols.length <= 1) {
-          throw new Error('[PREVIEW] At least two columns are required', {
+          throw new PreviewError('At least two columns are required', {
             cause: payload.cols
           });
         }
       }
+      return true;
+    },
+    action: (
+      payload: OperationPayload<{
+        separator: string;
+      }>
+    ): Source => {
       const drop = !payload.options.preview;
       return payload.source.cols.nest({
+        target: payload.target,
         cols: payload.cols,
         separator: payload.separator,
         drop
