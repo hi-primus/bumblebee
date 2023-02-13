@@ -11,7 +11,6 @@ import {
   generateUniqueVariableName,
   isName,
   isObject,
-  isPromiseLike,
   Name,
   objectMap,
   optionalPromise,

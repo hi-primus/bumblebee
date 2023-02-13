@@ -47,7 +47,7 @@ export const initializeWorker = () => {
   addEventListener(
     'message',
     async (e) => {
-      if (typeof e.data !== 'object' || !('type' in e.data)) {
+      if (typeof e.data !== 'object' || !e.data?.type) {
         throw new Error('Invalid message');
       }
 
