@@ -234,6 +234,7 @@ const operationActions: OperationActions = {
         });
       }
 
+      dataframeLayout.value?.clearChunks(true, false);
       await executeOperations();
 
       operationValues.value = {};
@@ -242,12 +243,14 @@ const operationActions: OperationActions = {
       appStatus.value = 'ready';
     } catch (err) {
       console.error('Error executing operation.', err);
+      dataframeLayout.value?.clearChunks(true, false);
       appStatus.value = 'ready'; // 'error';
     }
     previewData.value = null;
   },
   cancelOperation: () => {
     console.info('Operation cancelled');
+    dataframeLayout.value?.clearChunks(true, false);
     operationValues.value = {};
     state.value = 'operations';
     previewData.value = null;
@@ -287,10 +290,6 @@ const previewOperation = throttleOnce(async function () {
         })
         .columnsSample();
 
-      // clear chunks
-
-      dataframeLayout.value?.clearChunks(false);
-
       // use preview columns instead of source columns
 
       const previewColumns = Object.fromEntries(
@@ -305,6 +304,11 @@ const previewOperation = throttleOnce(async function () {
         type: payload.options.preview
       };
 
+      // clear chunks
+
+      dataframeLayout.value?.clearChunks(true, false);
+      dataframeLayout.value?.setChunksLoading(false);
+
       // add first chunk to dataframe
 
       dataframeLayout.value?.addChunk({
@@ -317,6 +321,11 @@ const previewOperation = throttleOnce(async function () {
         options: { usesInputDataframe: false },
         type: payload.options.preview
       };
+
+      // clear chunks
+
+      dataframeLayout.value?.clearChunks(true, false);
+      dataframeLayout.value?.setChunksLoading(false);
     }
 
     // get profile for preview columns
@@ -334,6 +343,8 @@ const previewOperation = throttleOnce(async function () {
       ...previewData.value,
       df: result
     };
+
+    dataframeLayout.value?.setChunksLoading(true);
 
     // save profile
 

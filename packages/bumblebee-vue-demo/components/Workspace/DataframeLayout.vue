@@ -108,6 +108,9 @@ const rowsCount = computed(() => {
 // chunks
 
 const chunks = ref<Chunk[]>([]);
+const previousChunks = ref<Chunk[]>([]);
+
+const enableChunksLoading = ref(true);
 
 const completedChunks = computed(() => {
   return chunks.value.filter(chunk => chunk.data?.length);
@@ -149,7 +152,6 @@ const updateScroll = function (start: number, stop: number) {
 };
 
 const getChunk = async function (start: number, stop: number) {
-  console.log('getting chunk from', start, 'to', stop);
   const df = previewData.value?.df || dataframeObject.value.df;
 
   if (!df) {
@@ -171,7 +173,7 @@ const getChunk = async function (start: number, stop: number) {
 
   if (sample.value.length < stop - start) {
     console.warn(
-      `Sample length '${sample.value.length}' is less than expected for range '${start} - ${stop}'`
+      `Sample length '${sample.value.length}' is less than expected for range '${start} - ${stop}' in dataframe '${df.name}'`
     );
 
     stop = start + sample.value.length;
@@ -195,6 +197,10 @@ let gettingChunks = false;
 
 const checkChunksQueue = async function (): Promise<boolean> {
   if (gettingChunks) {
+    return false;
+  }
+
+  if (!enableChunksLoading.value) {
     return false;
   }
 
@@ -229,9 +235,23 @@ const checkChunksQueue = async function (): Promise<boolean> {
 };
 
 const addChunk = (chunk: Chunk) => {
+  if (chunk.data.length === 0) {
+    console.warn(`Sample length '${chunk.data.length}' is zero`);
+    return;
+  }
+
+  if (chunk.data.length < chunk.stop - chunk.start) {
+    console.warn(
+      `Sample length '${chunk.data.length}' is less than expected for range '${chunk.start} - ${chunk.stop}'`
+    );
+
+    chunk.stop = chunk.start + chunk.data.length;
+  }
+
   const index = chunks.value.findIndex(
     c => c.start === chunk.start && c.stop === chunk.stop
   );
+
   if (index !== -1) {
     chunks.value[index] = chunk;
   } else {
@@ -239,10 +259,19 @@ const addChunk = (chunk: Chunk) => {
   }
 };
 
-const clearChunks = (check = true) => {
+const clearChunks = (saveOnPrevious = true, check = true) => {
+  if (saveOnPrevious) {
+    previousChunks.value = [...completedChunks.value];
+  }
   chunks.value = [];
   chunksQueue.value = [];
-  check && checkChunksQueue();
+  if (check) {
+    checkChunksQueue();
+  }
+};
+
+const setChunksLoading = (loading = true) => {
+  enableChunksLoading.value = loading;
 };
 
 const focusTable = () => {
@@ -260,9 +289,16 @@ watch(
   }
 );
 
+watch(enableChunksLoading, enable => {
+  if (enable) {
+    checkChunksQueue();
+  }
+});
+
 defineExpose({
   addChunk,
   clearChunks,
+  setChunksLoading,
   focusTable
 });
 </script>
