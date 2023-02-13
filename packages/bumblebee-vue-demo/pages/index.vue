@@ -347,8 +347,8 @@ const previewOperation = throttleOnce(async function () {
     const profile = await (payload.source
       ? result.profile({
           cols: Object.entries(previewData.value?.columns || {})
-            ?.filter(([_, { preview }]) => preview)
-            .map(([title, _]) => title),
+            ?.map(([title, _]) => title)
+            .filter(title => title.startsWith('__bumblebee__preview__')),
           bins: 33
         })
       : result.profile({ cols: '*', bins: 33 }));
