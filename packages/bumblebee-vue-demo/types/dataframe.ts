@@ -24,6 +24,7 @@ export interface KeyedColumn {
 }
 
 export interface Column extends KeyedColumn {
+  displayTitle?: string;
   title: string;
 }
 

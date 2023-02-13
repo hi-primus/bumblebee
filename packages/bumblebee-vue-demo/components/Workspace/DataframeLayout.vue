@@ -83,7 +83,8 @@ const header = computed<ColumnHeader[]>(() => {
           : true;
       }
       return {
-        title: newTitle,
+        title,
+        displayTitle: newTitle,
         data_type:
           (column as ColumnHeader).data_type ||
           originalColumns?.[title]?.data_type,

@@ -82,7 +82,7 @@
                 {{ dataTypeHints[column.columnIndex] }}
               </span>
               <span class="flex-1 truncate pl-2">
-                {{ column.title }}
+                {{ column.displayTitle || column.title }}
               </span>
               <div class="flex-0 w-[24px] right-icon"></div>
             </div>
