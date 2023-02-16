@@ -140,7 +140,7 @@ const checkSources = (data: OperationPayload[]) => {
   );
 };
 
-const executeOperations = async (isEditing = false) => {
+const executeOperations = async () => {
   const data = operations.value;
 
   checkSources(data);
@@ -242,7 +242,7 @@ const prepareOperation = () => {
 };
 
 const operationActions: OperationActions = {
-  submitOperation: async (isEditing = false) => {
+  submitOperation: async () => {
     try {
       appStatus.value = 'busy';
 
@@ -261,7 +261,7 @@ const operationActions: OperationActions = {
         });
       }
 
-      await executeOperations(isEditing);
+      await executeOperations();
 
       dataframeLayout.value?.clearChunks(true, false);
 
