@@ -67,7 +67,11 @@ const header = computed<ColumnHeader[]>(() => {
       let newTitle: string = title;
 
       if (title.startsWith('__bumblebee__preview__')) {
-        newTitle = title.replace('__bumblebee__preview__', 'new ');
+        newTitle = title.replace('__bumblebee__preview__', '');
+        // if the column already exists, we need to rename it
+        if (columns?.[newTitle]) {
+          newTitle = `new ${newTitle}`;
+        }
         preview = true;
       }
 
