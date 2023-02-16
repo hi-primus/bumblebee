@@ -48,7 +48,7 @@ const operations = inject<Ref<OperationPayload[]>>('operations', ref([]));
 
 const { submitOperation } = inject('operation-actions') as OperationActions;
 
-const removeOperation = (index: number) => {
+const removeOperation = async (index: number): Promise<void> => {
   const selectedOperationOptions = operations.value[index].payload.options;
   if (selectedOperationOptions.saveToNewDataframe) {
     const operationsUsingSource = operations.value.filter(
@@ -63,6 +63,6 @@ const removeOperation = (index: number) => {
     }
   }
   operations.value.splice(index, 1);
-  submitOperation();
+  return await submitOperation();
 };
 </script>
