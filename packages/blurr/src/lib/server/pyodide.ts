@@ -75,6 +75,7 @@ export function ServerPyodide(options: ServerOptions): ServerInterface {
     pyodide.runPython(`
       from optimus import Optimus
       from io import BytesIO
+      from optimus.expressions import parse
       op = Optimus("pyodide")
       def run_method(method, kwargs):
           return method(**kwargs.to_py())

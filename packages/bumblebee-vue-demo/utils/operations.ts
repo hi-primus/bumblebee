@@ -54,6 +54,69 @@ export const operationCreators: OperationCreator[] = [
     shortcut: 'ff'
   },
   {
+    key: 'createCol',
+    name: 'Create column',
+    defaultOptions: {
+      usesInputDataframe: true,
+      preview: 'basic columns'
+    },
+    action: async (
+      payload: OperationPayload<{
+        sets: {
+          outputColumn: string;
+          value: string;
+        }[];
+      }>
+    ): Promise<Source> => {
+      const valueFuncPromise = await Promise.allSettled(
+        payload.sets.map(s => {
+          return payload.blurr.runCode(`parse('${s.value}')`);
+        })
+      );
+
+      const valueFunc = valueFuncPromise.map(p =>
+        p.status === 'fulfilled' ? p.value : null
+      );
+
+      let outputCols = payload.sets.map(s => s.outputColumn);
+
+      if (payload.options.preview) {
+        outputCols = outputCols.map(c => `__bumblebee__preview__${c}`);
+      }
+
+      return payload.source.cols.set({
+        target: payload.target,
+        cols: outputCols,
+        valueFunc,
+        evalValue: true
+      });
+    },
+    fields: [
+      {
+        name: 'sets',
+        label: 'Columns',
+        type: 'group',
+        fields: [
+          {
+            name: 'outputColumn',
+            label: 'Column',
+            type: 'string',
+            defaultValue: '',
+            class: 'grouped-first w-1/3'
+          },
+          {
+            name: 'value',
+            label: 'Formula',
+            placeholder: 'e.g. col1 + col2, col1 + "suffix"',
+            type: 'string',
+            class: 'grouped-last w-2/3'
+          }
+        ]
+      }
+    ],
+    shortcut: 'cc'
+  },
+  {
     key: 'setCol',
     name: 'Set column',
     defaultOptions: {
