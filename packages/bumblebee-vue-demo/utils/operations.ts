@@ -240,43 +240,44 @@ export const operationCreators: OperationCreator[] = [
             ],
             class: (payload: Payload, currentIndex = 0) => {
               const condition = payload.replaces[currentIndex].condition;
-              if (condition === 'value_in') {
-                return 'w-full';
+              switch (condition) {
+                case 'value_in':
+                  return 'w-full';
+                case 'between':
+                  return 'grouped-first w-1/4';
+                default:
+                  return 'grouped-first w-1/3';
               }
-              if (condition === 'between') {
-                return 'grouped-first w-1/4';
-              }
-              return 'grouped-first w-1/3';
             }
           },
           {
             name: 'value',
             label: (payload: Payload, currentIndex = 0) => {
               const condition = payload.replaces[currentIndex].condition;
-              if (condition === 'value_in') {
-                return 'Values';
+              switch (condition) {
+                case 'value_in':
+                  return 'Values';
+                case 'between':
+                  return 'Min';
+                case 'match_pattern':
+                  return 'Pattern';
+                case 'where':
+                  return 'Expression';
+                default:
+                  return 'Value';
               }
-              if (condition === 'between') {
-                return 'Min';
-              }
-              if (condition === 'match_pattern') {
-                return 'Pattern';
-              }
-              if (condition === 'where') {
-                return 'Expression';
-              }
-              return 'Value';
             },
             type: 'string',
             class: (payload: Payload, currentIndex = 0): string => {
               const condition = payload.replaces[currentIndex].condition;
-              if (condition === 'value_in') {
-                return 'w-full';
+              switch (condition) {
+                case 'value_in':
+                  return 'w-full';
+                case 'between':
+                  return 'grouped-middle w-1/4';
+                default:
+                  return 'grouped-middle w-1/3';
               }
-              if (condition === 'between') {
-                return 'grouped-middle w-1/4';
-              }
-              return 'grouped-middle w-1/3';
             }
           },
           {
@@ -295,13 +296,14 @@ export const operationCreators: OperationCreator[] = [
             type: 'string',
             class: (payload: Payload, currentIndex = 0) => {
               const condition = payload.replaces[currentIndex].condition;
-              if (condition === 'value_in') {
-                return 'w-full';
+              switch (condition) {
+                case 'value_in':
+                  return 'w-full';
+                case 'between':
+                  return 'grouped-last w-1/4';
+                default:
+                  return 'grouped-last w-1/3';
               }
-              if (condition === 'between') {
-                return 'grouped-last w-1/4';
-              }
-              return 'grouped-last w-1/3';
             }
           }
         ]
