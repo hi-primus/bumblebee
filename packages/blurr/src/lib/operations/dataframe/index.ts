@@ -14,7 +14,10 @@ function DataframeOperation<
 }
 
 export const operations = {
-  columnsSample: DataframeOperation<NoArgs, PythonCompatible>({
+  columnsSample: DataframeOperation<
+    NoArgs,
+    { columns: string[]; values: PythonCompatible[] }
+  >({
     name: 'columnsSample',
     targetType: 'value',
   }),
