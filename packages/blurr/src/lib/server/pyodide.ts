@@ -70,7 +70,7 @@ export function ServerPyodide(options: ServerOptions): ServerInterface {
     const micropip = pyodide.pyimport('micropip');
 
     await micropip.install(
-      'https://test-files.pythonhosted.org/packages/93/6a/773d51cfcd64e2ae491c7d1fbeccdcffdd3ce3c34c9c31729f327d05c086/pyoptimus-0.1.4024-py3-none-any.whl'
+      'https://test-files.pythonhosted.org/packages/92/4b/282d6c407b9a7e02ff0a6d19ccaa2485a945e91208f9a0332584ca6fbfd1/pyoptimus-0.1.4025-py3-none-any.whl'
     );
     pyodide.runPython(`
       from optimus import Optimus
