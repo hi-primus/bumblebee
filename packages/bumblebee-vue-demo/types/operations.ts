@@ -1,3 +1,5 @@
+import { Source } from 'blurr/build/main/types';
+
 import { isObject } from './common';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -68,7 +70,7 @@ type OperationCreatorAction = OperationCreatorBase & {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   validate?: (...args: any) => any;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  action: (...args: any) => any;
+  action: (...args: any) => Promise<Source> | Source;
 };
 
 type OperationCreatorParameters = OperationCreatorBase & {

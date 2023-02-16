@@ -309,13 +309,13 @@ const previewOperation = throttleOnce(async function () {
         upper_bound: stop
       });
 
-      const firstSampleResult = await operation
-        .action({
-          ...deepClone(payload),
-          source: firstSampleSource,
-          blurr
-        })
-        .columnsSample();
+      const firstSampleDataframe = (await operation.action({
+        ...deepClone(payload),
+        source: firstSampleSource,
+        blurr
+      })) as Source;
+
+      const firstSampleResult = await firstSampleDataframe.columnsSample();
 
       // use preview columns instead of source columns
 
