@@ -167,15 +167,14 @@ export const operationCreators: OperationCreator[] = [
             label: 'Condition',
             type: 'string',
             defaultValue: 'equal',
-            options: (_payload: Payload) => [
+            options: (payload: Payload) => [
               {
                 text: 'Is exactly',
                 value: 'equal'
               },
               {
                 text: 'Is one of',
-                value: 'value_in',
-                hidden: true
+                value: 'value_in'
               },
               {
                 text: 'Is not',
@@ -1826,7 +1825,7 @@ export const operations = operationCreators.map(operationCreator =>
 
 function whereExpression(
   condition: string,
-  value: string | number,
+  value: ArrayOr<BasicType>,
   col: string
 ): string {
   if (!isNaN(Number(value))) {
@@ -1836,12 +1835,21 @@ function whereExpression(
   switch (condition) {
     case 'equal':
       return `df["${col}"]=="${value}"`;
-    case 'not_equal':
-      return `df["${col}"]!="${value}"`;
     case 'numeric_equal':
       return `(df["${col}"]==${value}) | (df["${col}"]=="${value}")`;
+    case 'not_equal':
+      return `df["${col}"]!="${value}"`;
     case 'numeric_not_equal':
       return `(df["${col}"]!=${value}) & (df["${col}"]!="${value}")`;
+    case 'value_in':
+      value = Array.isArray(value) ? value : [value];
+      return `df.mask.value_in("${col}", "${value.join('","')}")`;
+    case 'numeric_value_in':
+      value = Array.isArray(value) ? value : [value];
+      return (
+        `df.mask.value_in("${col}", "${value.join('","')}") ` +
+        `& df.mask.value_in("${col}", ${value.join(',')})`
+      );
     default:
       console.warn('Unknown condition', condition);
   }
