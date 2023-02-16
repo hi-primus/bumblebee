@@ -88,14 +88,28 @@ provide('operation-values', operationValues);
 const handleOperationResult = async (result: unknown, payload: Payload) => {
   if (payload.options.targetType === 'dataframe') {
     const df = result as Source;
-    if (payload.options.saveToNewDataframe) {
-      const newLength = dataframes.value.push({
+    const sourceId = payload.options.sourceId;
+    const foundIndex = sourceId
+      ? dataframes.value.findIndex(dataframe => dataframe.sourceId === sourceId)
+      : -1;
+
+    const createDataframe =
+      foundIndex < 0 && payload.options.saveToNewDataframe;
+
+    if (createDataframe) {
+      const newDataframe = {
         name: 'dataset',
-        sourceId: payload.options.sourceId,
+        sourceId,
         df,
         profile: await getPreliminaryProfile(df),
         updates: 0
-      });
+      };
+      if (foundIndex >= 0) {
+        dataframes.value[foundIndex] = newDataframe;
+      } else {
+        dataframes.value.push(newDataframe);
+      }
+      const newLength = dataframes.value.length;
       selectedDataframe.value = newLength - 1;
       console.log(
         '[DEBUG] Creating dataframe:',
@@ -126,7 +140,7 @@ const checkSources = (data: OperationPayload[]) => {
   );
 };
 
-const executeOperations = async () => {
+const executeOperations = async (isEditing = false) => {
   const data = operations.value;
 
   checkSources(data);
@@ -134,12 +148,25 @@ const executeOperations = async () => {
   let previousPayload: Payload | null = null;
   let result: unknown;
 
+  console.log('[DEBUG] Executing operations:', data, executedOperations.value);
+
+  let skip = executedOperations.value.length < data.length;
+
+  for (let i = 0; i < data.length; i++) {
+    if (
+      skip &&
+      executedOperations.value.length > i &&
+      !compareObjects(data[i], executedOperations.value[i])
+    ) {
+      skip = false;
+      break;
+    }
+  }
+
   for (let i = 0; i < data.length; i++) {
     // Skip operations that have already been executed
-    if (executedOperations.value.length > i) {
-      if (compareObjects(data[i], executedOperations.value[i])) {
-        continue;
-      }
+    if (skip && i < executedOperations.value.length) {
+      continue;
     }
 
     const { operation, payload } = data[i];
@@ -215,7 +242,7 @@ const prepareOperation = () => {
 };
 
 const operationActions: OperationActions = {
-  submitOperation: async () => {
+  submitOperation: async (isEditing = false) => {
     try {
       appStatus.value = 'busy';
 
@@ -234,11 +261,11 @@ const operationActions: OperationActions = {
         });
       }
 
+      await executeOperations(isEditing);
+
       dataframeLayout.value?.clearChunks(true, false);
-      await executeOperations();
 
       operationValues.value = {};
-
       state.value = 'operations';
       appStatus.value = 'ready';
     } catch (err) {
