@@ -93,7 +93,14 @@ export const initializeWorker = () => {
             result = self.pyodide.runPython(e.data.code);
           } else {
             const runMethod = self.pyodide.globals.get('run_method');
-            result = runMethod(e.data.method, e.data.kwargs);
+            const kwargs = e.data.kwargs;
+            for (const key in kwargs) {
+              const kwarg = kwargs[key];
+              if (typeof kwarg === 'object' && kwarg._blurrArrayBuffer) {
+                kwargs[key] = new ArrayBuffer(kwarg.value);
+              }
+            }
+            result = runMethod(e.data.method, kwargs);
           }
 
           try {
