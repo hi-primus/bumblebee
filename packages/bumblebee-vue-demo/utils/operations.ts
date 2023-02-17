@@ -1635,12 +1635,16 @@ export const operationCreators: OperationCreator[] = [
     action: (
       payload: OperationPayload<{
         separator: string;
+        splits: number;
+        index: number;
       }>
     ): Source => {
       return payload.source.cols.unnest({
         target: payload.target,
         cols: payload.cols,
-        separator: payload.separator
+        separator: payload.separator,
+        splits: payload.splits,
+        index: payload.index,
       });
     },
     fields: [
