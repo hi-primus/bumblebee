@@ -609,7 +609,6 @@ export const operationCreators: OperationCreator[] = [
       return payload.source.rows.dropDuplicated({
         target: payload.target,
         cols: payload.cols,
-        keep: payload.keep,
         how: payload.how,
         outputCols: payload.outputCols
       });
@@ -620,7 +619,7 @@ export const operationCreators: OperationCreator[] = [
   {
     key: 'lower',
     name: 'Lowercase column values',
-    alias: 'Lowercase letters',
+    alias: 'Lowercase letters lower case',
     defaultOptions: {
       usesInputCols: true,
       usesInputDataframe: true,
@@ -638,7 +637,7 @@ export const operationCreators: OperationCreator[] = [
   {
     key: 'upper',
     name: 'Uppercase column values',
-    alias: 'Uppercase letters',
+    alias: 'Uppercase letters upper case',
     defaultOptions: {
       usesInputCols: true,
       usesInputDataframe: true,
@@ -729,7 +728,7 @@ export const operationCreators: OperationCreator[] = [
   {
     key: 'extract',
     name: 'Extract a substring from column values',
-    alias: 'Extract a substring from a column value',
+    alias: 'Extract substring sub string',
     defaultOptions: {
       usesInputCols: true,
       usesInputDataframe: true,
@@ -896,7 +895,7 @@ export const operationCreators: OperationCreator[] = [
   // Numeric
   {
     key: 'Absolute Value',
-    name: 'Calculate the Absolute Value from column values',
+    name: 'Absolute Value from column values',
     alias: 'mid',
     defaultOptions: {
       usesInputCols: true,
@@ -914,7 +913,7 @@ export const operationCreators: OperationCreator[] = [
   },
   {
     key: 'Round number',
-    name: 'Calculate the Round Number from column values',
+    name: 'Round Number from column values',
     alias: 'mid',
     defaultOptions: {
       usesInputCols: true,
@@ -937,7 +936,7 @@ export const operationCreators: OperationCreator[] = [
   },
   {
     key: 'Floor',
-    name: 'Calculate de Floor Number from column values',
+    name: 'Floor Number from column values',
     alias: 'floor',
     defaultOptions: {
       usesInputCols: true,
@@ -955,7 +954,7 @@ export const operationCreators: OperationCreator[] = [
   },
   {
     key: 'Ceil',
-    name: 'Calculate the Ceil from column values',
+    name: 'Ceil from column values',
     alias: 'ceil',
     defaultOptions: {
       usesInputCols: true,
@@ -973,7 +972,7 @@ export const operationCreators: OperationCreator[] = [
   },
   {
     key: 'Modulo',
-    name: 'Calculate the Modulo from column values',
+    name: 'Modulo from column values',
     alias: 'modulo',
     defaultOptions: {
       usesInputCols: true,
@@ -991,7 +990,7 @@ export const operationCreators: OperationCreator[] = [
   },
   {
     key: 'logarithm',
-    name: 'Calculate the Logarithm from column values',
+    name: 'Logarithm from column values',
     alias: 'log logarithm',
     defaultOptions: {
       usesInputCols: true,
@@ -1014,7 +1013,7 @@ export const operationCreators: OperationCreator[] = [
   },
   {
     key: 'natural logarithm',
-    name: 'Calculate the natural Logarithm from column values',
+    name: 'natural Logarithm from column values',
     alias: 'natural logarithm',
     defaultOptions: {
       usesInputCols: true,
@@ -1032,7 +1031,7 @@ export const operationCreators: OperationCreator[] = [
   },
   {
     key: 'power',
-    name: 'Calculate the power from column values',
+    name: 'power from column values',
     alias: 'power',
     defaultOptions: {
       usesInputCols: true,
@@ -1055,7 +1054,7 @@ export const operationCreators: OperationCreator[] = [
   },
   {
     key: 'square root',
-    name: 'Calculate the Square Root from column values',
+    name: 'Square Root from column values',
     alias: 'square root sqrt',
     defaultOptions: {
       usesInputCols: true,
@@ -1074,7 +1073,7 @@ export const operationCreators: OperationCreator[] = [
   // Trigonometrics
   {
     key: 'sin',
-    name: 'Calculate the sine from column values',
+    name: 'Sine from column values',
     alias: 'sin sine',
     defaultOptions: {
       usesInputCols: true,
@@ -1093,7 +1092,7 @@ export const operationCreators: OperationCreator[] = [
   //  Create the creaOperatino fon cos
   {
     key: 'cos',
-    name: 'Calculate the cosine from column values',
+    name: 'Cosine from column values',
     alias: 'cos cosine',
     defaultOptions: {
       usesInputCols: true,
@@ -1112,7 +1111,7 @@ export const operationCreators: OperationCreator[] = [
   //  Create the creaOperatino for tan
   {
     key: 'tan',
-    name: 'Calculate the tangent from column values',
+    name: 'Tangent from column values',
     alias: 'tan tangent',
     defaultOptions: {
       usesInputCols: true,
@@ -1130,7 +1129,7 @@ export const operationCreators: OperationCreator[] = [
   },
   {
     key: 'asin',
-    name: 'Calculate the arcsine from column values',
+    name: 'Inverse sine from column values',
     alias: 'asin arcsine arcsin',
     defaultOptions: {
       usesInputCols: true,
@@ -1149,7 +1148,7 @@ export const operationCreators: OperationCreator[] = [
   //  Create the creaOperatino fon cos
   {
     key: 'acos',
-    name: 'Calculate the acosine from column values',
+    name: 'Inverse cosine from column values',
     alias: 'acos acosine arccosine arccos',
     defaultOptions: {
       usesInputCols: true,
@@ -1168,7 +1167,7 @@ export const operationCreators: OperationCreator[] = [
   //  Create the creaOperatino for tan
   {
     key: 'atan',
-    name: 'Calculate the arc tangent from column values',
+    name: 'Inverse tangent from column values',
     alias: 'atan atangent arctan atan arctangent',
     defaultOptions: {
       usesInputCols: true,
@@ -1186,7 +1185,7 @@ export const operationCreators: OperationCreator[] = [
   },
   {
     key: 'sinh',
-    name: 'Calculate the hyperbolic sine from column values',
+    name: 'Hyperbolic sine from column values',
     alias: 'sinh hyperbolic sin sine',
     defaultOptions: {
       usesInputCols: true,
@@ -1205,7 +1204,7 @@ export const operationCreators: OperationCreator[] = [
   //  Create the creaOperatino fon cos
   {
     key: 'cosh',
-    name: 'Calculate the hyperbolic cosine from column values',
+    name: 'Hyperbolic cosine from column values',
     alias: 'cosh hyperbolic cos cosine',
     defaultOptions: {
       usesInputCols: true,
@@ -1224,7 +1223,7 @@ export const operationCreators: OperationCreator[] = [
   //  Create the creaOperatino for tan
   {
     key: 'tanh',
-    name: 'Calculate the hyperbolic tangent from column values',
+    name: 'Hyperbolic tangent from column values',
     alias: 'tanh hyperbolic tan tangent',
     defaultOptions: {
       usesInputCols: true,
@@ -1242,7 +1241,7 @@ export const operationCreators: OperationCreator[] = [
   },
   {
     key: 'asinh',
-    name: 'Calculate the inverse hyperbolic sine from column values',
+    name: 'Inverse hyperbolic sine from column values',
     alias: 'asinh arc hyperbolic sin sine inverse',
     defaultOptions: {
       usesInputCols: true,
@@ -1261,7 +1260,7 @@ export const operationCreators: OperationCreator[] = [
   //  Create the creaOperatino fon cos
   {
     key: 'acosh',
-    name: 'Calculate the inverse hyperbolic cosine from column values',
+    name: 'Inverse hyperbolic cosine from column values',
     alias: 'acosh arc hyperbolic cos cosine inverse',
     defaultOptions: {
       usesInputCols: true,
@@ -1280,7 +1279,7 @@ export const operationCreators: OperationCreator[] = [
   //  Create the creaOperatino for tan
   {
     key: 'atanh',
-    name: 'Calculate the hyperbolic tangent from column values',
+    name: 'Inverse hyperbolic tangent from column values',
     alias: 'atanh arc hyperbolic tan tangent inverse',
     defaultOptions: {
       usesInputCols: true,
@@ -1299,18 +1298,21 @@ export const operationCreators: OperationCreator[] = [
   // Date/Time Functions
   {
     key: 'Extract from Date',
-    name: 'Extract a part of a date from a column',
+    name: 'Extract part of a date from a column',
     alias: 'extract date year month day hour minute second',
     defaultOptions: {
       usesInputCols: true,
       usesInputDataframe: true,
       preview: 'basic columns'
     },
-    action: (
-      payload: OperationPayload<{
-        type: unknown;
-      }>
-    ): Source => {
+    action: (payload: {
+      source: Source;
+      cols: Cols;
+      type: unknown;
+      currentFormat: string;
+      outputCols: Cols;
+      options: OperationOptions;
+    }): Source => {
       const outputFormat = payload.type as { name: string; format: string };
       return payload.source.cols.formatDate({
         target: payload.target,
@@ -1525,7 +1527,7 @@ export const operationCreators: OperationCreator[] = [
   },
   {
     key: 'ZScore',
-    name: 'Calculate the z-score in a column',
+    name: 'Z-score in a column',
     alias: 'zscore',
     defaultOptions: {
       usesInputCols: true,
@@ -1543,7 +1545,7 @@ export const operationCreators: OperationCreator[] = [
   },
   {
     key: 'Standard Scaler',
-    name: 'Calculate the standard scaler in a column',
+    name: 'standard scaler in a column',
     alias: 'standard scaler',
     defaultOptions: {
       usesInputCols: true,
@@ -1561,7 +1563,7 @@ export const operationCreators: OperationCreator[] = [
   },
   {
     key: 'Min Max Scaler',
-    name: 'Calculate the Min max scaler in a column',
+    name: 'Min max scaler in a column',
     alias: 'minmax min max scaler',
     defaultOptions: {
       usesInputCols: true,
@@ -1579,7 +1581,7 @@ export const operationCreators: OperationCreator[] = [
   },
   {
     key: 'Min Max Scaler',
-    name: 'Calculate the Min max scaler in a column',
+    name: 'Min max scaler in a column',
     alias: 'minmax min max scaler',
     defaultOptions: {
       usesInputCols: true,
