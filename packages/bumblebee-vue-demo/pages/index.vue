@@ -208,7 +208,8 @@ const preparePayload = (payload: Payload) => {
 
     if (
       payload.options.usesInputCols === 'single' &&
-      selection.value?.columns
+      selection.value?.columns &&
+      selection.value?.columns.length > 1
     ) {
       selection.value.columns = [selection.value.columns[0]];
       payload.cols = selection.value.columns;
