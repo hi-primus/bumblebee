@@ -2,17 +2,40 @@ import { Source } from 'blurr/build/main/types';
 
 import { isObject } from './common';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type Payload = Record<string, any>;
+export type PreviewType =
+  | boolean
+  | 'basic columns'
+  | 'whole'
+  | 'rows'
+  | 'highlight rows'; // TODO: add preview types
+
+export interface OperationOptions {
+  usesInputCols?: boolean | 'single';
+  usesOutputCols?: boolean;
+  usesInputDataframe?: boolean;
+  saveToNewDataframe?: boolean;
+  sourceId: string;
+  targetType: 'dataframe' | 'value';
+  preview?: PreviewType;
+}
+
+export interface PayloadWithOptions {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  [key: string]: any;
+  options: OperationOptions;
+}
+
+export type Payload = Partial<PayloadWithOptions>;
 
 type PayloadCallbackOr<T> =
   | T
-  | ((payload: Payload, currentIndex?: number) => T);
+  | ((payload: PayloadWithOptions, currentIndex?: number) => T);
 
 export type FieldOption<T = unknown> = Record<string, T> & {
   disabled?: boolean;
   hidden?: boolean;
 };
+
 export interface Field {
   name: string;
   type: PayloadCallbackOr<'string' | 'boolean' | 'custom'>;
@@ -37,23 +60,6 @@ export interface FieldGroup {
   label?: string;
   addLabel?: string;
   class?: string;
-}
-
-export type PreviewType =
-  | boolean
-  | 'basic columns'
-  | 'whole'
-  | 'rows'
-  | 'highlight rows'; // TODO: add preview types
-
-export interface OperationOptions {
-  usesInputCols?: boolean | 'single';
-  usesOutputCols?: boolean;
-  usesInputDataframe?: boolean;
-  saveToNewDataframe?: boolean;
-  sourceId?: string;
-  targetType: 'dataframe' | 'value';
-  preview?: PreviewType;
 }
 
 export interface OperationCreatorBase {
@@ -100,7 +106,10 @@ export const isOperation = (value: unknown): value is Operation => {
   );
 };
 
-export type OperationPayload = { operation: Operation; payload: Payload };
+export type OperationPayload = {
+  operation: Operation;
+  payload: PayloadWithOptions;
+};
 
 export type ColumnDetailState = {
   columns: string[];
@@ -138,4 +147,5 @@ export type TableSelection =
 export interface OperationActions {
   submitOperation: () => Promise<void>;
   cancelOperation: () => void;
+  selectOperation: (operation: Operation | null) => void;
 }

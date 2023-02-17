@@ -5,14 +5,41 @@
       :class="{ 'hide-operations': !showSidebar }"
     >
       <Tabs
-        v-model:selected="selectedDataframe"
-        :tabs="dataframes.map(({ name }) => ({ label: name }))"
-        @close="(index: number) => dataframes.splice(index, 1)"
+        v-model:selected="selectedTab"
+        :tabs="tabs.map(({ name }) => ({ label: name }))"
+        @close="(index: number) => closeDataframe(index)"
       />
-      <WorkspaceDataframeLayout
-        :key="selectedDataframe"
-        ref="dataframeLayout"
-      />
+      <WorkspaceDataframeLayout ref="dataframeLayout">
+        <div
+          v-if="dataSourcesFromCells.length > 0"
+          class="text-lg text-text-lighter font-bold"
+        >
+          <span> Load from existing data sources: </span>
+          <span v-for="(source, index) in dataSourcesFromCells" :key="index">
+            <span v-if="index > 0">, </span>
+            <button
+              class="text-primary"
+              @click="loadDataSource(source.sourceId)"
+            >
+              {{ source.name || index + 1 }}
+            </button>
+          </span>
+        </div>
+        <div class="flex justify-center items-center gap-2">
+          <AppButton
+            class="btn-size-large btn-color-primary-light"
+            @click="loadFromUrl"
+          >
+            Load from URL
+          </AppButton>
+          <!-- <div class="text-lg text-text-light font-bold">or</div>
+          <AppButton
+            class="btn-size-large btn-color-primary-light"
+          >
+            Load from file
+          </AppButton> -->
+        </div>
+      </WorkspaceDataframeLayout>
     </div>
   </NuxtLayout>
 </template>
@@ -24,16 +51,18 @@ import DataframeLayout from '@/components/Workspace/DataframeLayout.vue';
 import { DataframeObject, PreviewData } from '@/types/dataframe';
 import {
   isOperation,
+  Operation,
   OperationActions,
   OperationOptions,
   OperationPayload,
-  Payload,
+  PayloadWithOptions,
   State,
   TableSelection
 } from '@/types/operations';
 import { AppStatus } from '@/types/workspace';
 import { compareObjects, deepClone, throttleOnce } from '@/utils';
 import { getPreliminaryProfile } from '@/utils/blurr';
+import { operations } from '@/utils/operations';
 
 const blurrPackage = useBlurr();
 
@@ -43,7 +72,10 @@ const dataframeLayout = ref<InstanceType<typeof DataframeLayout> | null>(null);
 
 const dataframes = ref<DataframeObject[]>([]);
 
+const tabs = computed(() => dataframes.value.filter(d => d.loaded));
+
 const selectedDataframe = ref(-1);
+const selectedTab = ref(-1);
 
 const appStatus = ref<AppStatus>('loading');
 provide('app-status', appStatus);
@@ -58,9 +90,7 @@ const selection = ref<TableSelection>(null);
 provide('selection', selection);
 
 const dataframeObject = computed(() => {
-  return selectedDataframe.value >= 0
-    ? dataframes.value[selectedDataframe.value]
-    : undefined;
+  return selectedTab.value >= 0 ? tabs.value[selectedTab.value] : undefined;
 });
 provide('dataframe-object', dataframeObject);
 
@@ -72,66 +102,120 @@ provide('scroll-range', scrollRange);
 
 watch(
   () => state.value,
-  () => {
-    operationValues.value = {};
+  state => {
+    if (isOperation(state)) {
+      operationValues.value = {
+        options: Object.assign({}, state.defaultOptions)
+      };
+    }
   }
 );
 
 const executedOperations = ref<OperationPayload[]>([]);
 
-const operations = ref<OperationPayload[]>([]);
-provide('operations', operations);
+const operationCells = ref<OperationPayload[]>([]);
+provide('operations', operationCells);
 
-const operationValues = ref<Payload>({});
+const operationValues = ref<Partial<PayloadWithOptions>>({});
 provide('operation-values', operationValues);
 
-const handleOperationResult = async (result: unknown, payload: Payload) => {
+const dataSourcesFromCells = computed<{ sourceId: string; name: string }[]>(
+  () => {
+    return dataframes.value
+      .filter(dataframe => dataframe.sourceId && !dataframe.loaded)
+      .map(dataframe => {
+        return {
+          sourceId: dataframe.sourceId,
+          name: dataframe?.name || ''
+        };
+      });
+  }
+);
+
+const closeDataframe = (tabIndex: number) => {
+  const index = dataframes.value.findIndex(
+    dataframe => dataframe.sourceId === tabs.value[tabIndex].sourceId
+  );
+  if (selectedTab.value >= tabIndex) {
+    console.log(
+      'selectedTab.value',
+      selectedTab.value,
+      'tabIndex',
+      tabIndex,
+      '...reducing by 1'
+    );
+    selectedTab.value = selectedTab.value - 1;
+    console.log(
+      'selectedTab.value',
+      selectedTab.value,
+      'tabIndex',
+      tabIndex,
+      '...is it reduced?'
+    );
+  }
+  dataframes.value[index].loaded = false;
+};
+
+const handleDataframeResults = async (
+  result: unknown,
+  payload: PayloadWithOptions
+) => {
   if (payload.options.targetType === 'dataframe') {
     const df = result as Source;
     const sourceId = payload.options.sourceId;
-    const foundIndex = sourceId
+    let dataframeIndex = sourceId
       ? dataframes.value.findIndex(dataframe => dataframe.sourceId === sourceId)
       : -1;
 
     const createDataframe =
-      foundIndex < 0 && payload.options.saveToNewDataframe;
+      dataframeIndex < 0 && payload.options.saveToNewDataframe;
 
     if (createDataframe) {
-      const newDataframe = {
+      const newDataframe: DataframeObject = {
         name: 'dataset',
         sourceId,
         df,
-        profile: await getPreliminaryProfile(df),
+        profile: undefined,
+        loaded: true,
         updates: 0
       };
-      if (foundIndex >= 0) {
-        dataframes.value[foundIndex] = newDataframe;
-      } else {
-        dataframes.value.push(newDataframe);
-      }
+      dataframes.value.push(newDataframe);
       const newLength = dataframes.value.length;
-      selectedDataframe.value = newLength - 1;
+      dataframeIndex = newLength - 1;
       console.log(
         '[DEBUG] Creating dataframe:',
-        dataframes.value[selectedDataframe.value]
+        dataframes.value[dataframeIndex]
       );
+      const newTabLength = tabs.value.length;
+      selectedTab.value = newTabLength - 1;
     } else {
-      const currentDataframe = dataframes.value[selectedDataframe.value];
+      if (dataframeIndex < 0) {
+        console.error('Could not find dataframe to update', sourceId);
+        return;
+      }
+      const currentDataframe = dataframes.value[dataframeIndex];
       currentDataframe.df = df;
-      currentDataframe.profile = await getPreliminaryProfile(df);
-      currentDataframe.updates = currentDataframe.updates + 1;
+      currentDataframe.updates = (currentDataframe.updates || 0) + 1;
       console.log('[DEBUG] Updating dataframe:', currentDataframe);
-      dataframes.value[selectedDataframe.value] = currentDataframe;
+      dataframes.value[dataframeIndex] = currentDataframe;
     }
+
+    dataframes.value[dataframeIndex].profile = await getPreliminaryProfile(df);
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     df.profile({ bins: 33 }).then((profile: any) => {
-      dataframes.value[selectedDataframe.value].profile = profile;
+      dataframes.value[dataframeIndex].profile = profile;
     });
   } else {
+    console.error('Unknown result type', result);
     // TODO: Handle other types of targets
-    console.info('Operation result:', result);
   }
 };
+
+/**
+ * Filters out the dataframes that are no longer needed.
+ * @param data The next list of operations.
+ */
 
 const checkSources = (data: OperationPayload[]) => {
   const sources = data.map(operation => operation.payload.options.sourceId);
@@ -141,12 +225,9 @@ const checkSources = (data: OperationPayload[]) => {
 };
 
 const executeOperations = async () => {
-  const data = operations.value;
+  const data = operationCells.value;
 
   checkSources(data);
-
-  let previousPayload: Payload | null = null;
-  let result: unknown;
 
   console.log('[DEBUG] Executing operations:', data, executedOperations.value);
 
@@ -163,6 +244,11 @@ const executeOperations = async () => {
     }
   }
 
+  const operationResults = new Map<
+    string,
+    { result: unknown; payload: PayloadWithOptions }
+  >();
+
   for (let i = 0; i < data.length; i++) {
     // Skip operations that have already been executed
     if (skip && i < executedOperations.value.length) {
@@ -174,27 +260,42 @@ const executeOperations = async () => {
     if (!isOperation(operation)) {
       throw new Error('Invalid operation', { cause: operation });
     }
-    result = await operation.action({ ...payload, blurr });
-    console.info('Operation result:', { result, payload });
+    const result = await operation.action({ ...payload, blurr });
 
-    previousPayload = payload;
+    if (
+      payload.options.sourceId &&
+      payload.options.targetType === 'dataframe'
+    ) {
+      operationResults.set(payload.options.sourceId, { result, payload });
+    }
+    console.info('Operation result:', { result, payload });
   }
+
+  const promisesResults = await Promise.allSettled(
+    Array.from(operationResults.values()).map(({ result, payload }) =>
+      handleDataframeResults(result, payload)
+    )
+  );
+
+  promisesResults.forEach((result, index) => {
+    if (result.status === 'rejected') {
+      console.error(
+        `Error while handling operation result #${index}: ${result.reason}`
+      );
+    }
+  });
 
   executedOperations.value = [...data];
-
-  if (previousPayload !== null) {
-    return await handleOperationResult(result, previousPayload);
-  }
 };
 
-const preparePayload = (payload: Payload) => {
+const preparePayload = (payload: PayloadWithOptions): PayloadWithOptions => {
   if (payload.options.saveToNewDataframe) {
     payload.options.sourceId =
       dataframes.value.length.toString() + (+new Date()).toString();
   }
 
   if (payload.options.usesInputDataframe) {
-    const currentDataframe = dataframes.value[selectedDataframe.value];
+    const currentDataframe = tabs.value[selectedTab.value]; // TODO should be the source of the operation
     payload.source = currentDataframe.df.copy();
     console.log('[DEBUG] Using dataframe:', { payload, currentDataframe });
     payload.options.sourceId = currentDataframe.sourceId;
@@ -234,7 +335,7 @@ const prepareOperation = () => {
     operation.defaultOptions
   );
 
-  const payload: Payload = {
+  const payload: PayloadWithOptions = {
     options: operationOptions,
     ...operationPayload
   };
@@ -250,7 +351,7 @@ const operationActions: OperationActions = {
       const { operation, payload } = prepareOperation();
 
       if (operation) {
-        operations.value.push({
+        operationCells.value.push({
           operation,
           payload: {
             ...payload,
@@ -282,6 +383,85 @@ const operationActions: OperationActions = {
     operationValues.value = {};
     state.value = 'operations';
     previewData.value = null;
+  },
+  selectOperation: async (operation: Operation | null = null) => {
+    console.info('Operation selected');
+    if (!operation) {
+      operationActions.cancelOperation();
+    }
+    state.value = operation || 'operations';
+    showSidebar.value = true;
+
+    // awaits to allow the sidebar to be rendered
+
+    await new Promise(resolve => setTimeout(resolve, 0));
+
+    if (operation?.defaultOptions) {
+      operationValues.value = {
+        options: operation.defaultOptions
+      };
+    }
+
+    operation?.fields.forEach(field => {
+      // check if field has a default value
+
+      if ('defaultValue' in field && field.defaultValue !== undefined) {
+        operationValues.value = operationValues.value || {};
+        operationValues.value[field.name] = deepClone(field.defaultValue);
+      }
+
+      // check if field is a group
+
+      if ('fields' in field && field.fields) {
+        const defaultValue =
+          operationValues.value[`default-${field.name}`] || {};
+        for (const subfield of field.fields) {
+          if (
+            'defaultValue' in subfield &&
+            subfield.defaultValue !== undefined
+          ) {
+            defaultValue[subfield.name] = deepClone(subfield.defaultValue);
+          }
+        }
+        operationValues.value[`default-${field.name}`] = defaultValue;
+        const defaultFields =
+          'defaultFields' in field && field.defaultFields !== undefined
+            ? field.defaultFields || 0
+            : 1;
+        operationValues.value[field.name] =
+          operationValues.value[field.name] || [];
+        for (let i = 0; i < defaultFields; i++) {
+          operationValues.value[field.name][i] = deepClone(defaultValue);
+        }
+      }
+    });
+  }
+};
+
+const loadFromUrl = () => {
+  const operation = operations.find(o => o.key === 'loadFromUrl');
+  if (operation) {
+    operationActions.selectOperation(operation);
+  }
+};
+
+const loadDataSource = (sourceId: string) => {
+  // find sourceId index in dataframes
+  const foundIndex = dataframes.value.findIndex(df => df.sourceId === sourceId);
+  console.log('loadDataSource', sourceId, dataframes.value, foundIndex);
+  if (foundIndex !== -1) {
+    dataframes.value[foundIndex].loaded = true;
+    const foundTabIndex = tabs.value.findIndex(
+      tab => tab.sourceId === sourceId
+    );
+    console.log(
+      'foundTabIndex is',
+      foundTabIndex,
+      'for',
+      sourceId,
+      '... setting to selectedTab'
+    );
+    selectedTab.value = foundTabIndex;
   }
 };
 
@@ -411,6 +591,12 @@ watch(() => selection.value, previewOperation, { deep: true });
 watch(showSidebar, show => {
   if (!show) {
     dataframeLayout.value?.focusTable();
+  }
+});
+
+watch(selectedTab, tab => {
+  if (tab >= 0 && !tabs.value[tab]) {
+    selectedTab.value = -1;
   }
 });
 

@@ -98,14 +98,15 @@
   </form>
 </template>
 <script setup lang="ts">
-import { mdiPlus, mdiClose } from '@mdi/js';
+import { mdiClose, mdiPlus } from '@mdi/js';
 import { ComputedRef, Ref } from 'vue';
 
 import { DataframeObject } from '@/types/dataframe';
 import {
   isOperation,
   OperationActions,
-  Payload,
+  OperationOptions,
+  PayloadWithOptions,
   State,
   TableSelection
 } from '@/types/operations';
@@ -114,7 +115,9 @@ const state = inject('state') as Ref<State>;
 const operation = computed(() =>
   isOperation(state.value) ? state.value : null
 );
-const operationValues = inject('operation-values') as Ref<Payload>;
+const operationValues = inject('operation-values') as Ref<
+  Partial<PayloadWithOptions>
+>;
 const { submitOperation, cancelOperation } = inject(
   'operation-actions'
 ) as OperationActions;
@@ -142,7 +145,7 @@ const dataframeObject = inject(
 ) as ComputedRef<DataframeObject>;
 const selection = inject('selection') as Ref<TableSelection>;
 
-const columns = computed({
+const columns = computed<string[]>({
   get() {
     return selection.value?.columns || [];
   },
@@ -156,13 +159,13 @@ const columns = computed({
   }
 });
 
-const options = computed(() => {
+const options = computed<OperationOptions>(() => {
   console.log('Getting options from operation', operation.value);
   return Object.assign(
     {},
     operationValues.value.options || {},
     operation.value?.defaultOptions || {},
-    { targetType: 'dataframe' }
+    { targetType: 'dataframe' } as OperationOptions
   );
 });
 

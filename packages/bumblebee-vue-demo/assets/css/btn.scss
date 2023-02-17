@@ -109,6 +109,9 @@
     &:not([class*='btn-size']) {
       @apply -btn-size-base font-bold gap-2 py-1 px-4 min-h-[36px];
     }
+    &.btn-size-large {
+      @apply -btn-size-base font-medium gap-2 py-1 px-5 min-h-[40px] tracking-wider uppercase;
+    }
     &.btn-size-medium {
       @apply -btn-size-base text-sm font-bold gap-2 py-1 px-4 min-h-[36px];
     }

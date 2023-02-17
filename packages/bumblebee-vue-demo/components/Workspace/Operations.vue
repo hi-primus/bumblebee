@@ -38,7 +38,7 @@ import {
   State
 } from '@/types/operations';
 
-const state = inject<Ref<State>>('state', ref(null));
+const state = inject<Ref<State | null>>('state', ref(null));
 
 const operation = computed(() => {
   return isOperation(state.value) ? state.value : null;
