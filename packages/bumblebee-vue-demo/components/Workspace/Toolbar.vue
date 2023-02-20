@@ -19,7 +19,7 @@
       >
         <li
           v-for="operation in recentOperations"
-          :key="operation.key"
+          :key="operation.key + 'recent' + searchOperation"
           class="operation-item flex items-center justify-between gap-2 px-4 py-2 cursor-pointer pointer-events-auto rounded focus:bg-primary-highlight hover:bg-primary-highlight focus:outline-none"
           :data-operation-key="operation.key"
           tabindex="0"
@@ -37,11 +37,12 @@
         </li>
         <li
           v-if="recentOperations?.length && notRecentOperations?.length"
-          class="divider h-[1px] my-[-0.25rem] ml-[1rem] bg-line w-[calc(100%-2rem)]"
+          key="divider"
+          class="divider min-h-[0.8124px] my-[-4px] ml-[1rem] bg-line w-[calc(100%-2rem)]"
         ></li>
         <li
           v-for="operation in notRecentOperations"
-          :key="operation.key"
+          :key="operation.key + 'notRecent' + searchOperation"
           class="operation-item flex items-center justify-between gap-2 px-4 py-2 cursor-pointer pointer-events-auto rounded focus:bg-primary-highlight hover:bg-primary-highlight focus:outline-none"
           tabindex="0"
           :data-operation-key="operation.key"
@@ -109,22 +110,19 @@ const highligthMatch = (text: string, match: string) => {
 
 
 const filteredOperations = computed(() => {
+  const search = searchOperation.value?.toLowerCase();
   return operations.map(operation => {
     let matches = 1;
 
-    if (searchOperation.value) {
+    if (search) {
       matches = 0;
       const words = `${operation.name} ${operation.alias || ''}`.split(' ');
 
       matches = words.filter(word =>
-        word.toLowerCase().startsWith(searchOperation.value.toLowerCase())
+        word.toLowerCase().startsWith(search)
       ).length;
 
-      if (
-        operation.shortcut
-          ?.toLowerCase()
-          .startsWith(searchOperation.value.toLowerCase())
-      ) {
+      if (operation.shortcut?.toLowerCase().startsWith(search)) {
         matches++;
       }
     }
