@@ -1580,9 +1580,9 @@ export const operationCreators: OperationCreator[] = [
     shortcut: 'mmms'
   },
   {
-    key: 'Min Max Scaler',
-    name: 'Min max scaler in a column',
-    alias: 'minmax min max scaler',
+    key: 'MaxAbs Scaler Scaler',
+    name: 'MaxAbs scaler in a column',
+    alias: 'max abs maxabs scaler',
     defaultOptions: {
       usesInputCols: true,
       usesInputDataframe: true,
