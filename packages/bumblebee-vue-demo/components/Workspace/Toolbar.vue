@@ -103,7 +103,7 @@ const showSidebar = inject('show-sidebar') as Ref<boolean>;
 
 const lastKeys = ref<string[]>([]);
 
-const searchOperation = ref('');
+const searchOperation = ref<string>('');
 
 const operationElements = ref<HTMLElement | null>(null);
 const searchOperationElement = ref<InstanceType<typeof AppInput> | null>(null);
