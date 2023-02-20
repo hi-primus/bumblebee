@@ -39,12 +39,12 @@ function promiseWorker(url) {
     delete promises[event.data.id];
   };
   return {
-    postMessage: (message) => {
+    postMessage: (message, transfer: ArrayBuffer[] | null = null) => {
       const id = currentId++;
       const promise = new Promise((resolve, reject) => {
         promises[id] = { resolve, reject };
       });
-      worker.postMessage({ id, ...message });
+      worker.postMessage({ id, ...message }, transfer);
       return promise;
     },
   };
@@ -148,12 +148,29 @@ export function ServerPyodideWorker(options: ServerOptions): ServerInterface {
 
   server.runMethod = async (source, path, kwargs) => {
     await server.donePromise;
-    const result = (await server.worker.postMessage({
-      type: 'run',
-      source: source.toString(),
-      path,
-      kwargs,
-    })) as PythonCompatible;
+
+    let transfer: ArrayBuffer[] | null = null;
+
+    if (server.supports('buffers')) {
+      transfer = [];
+      for (const key in kwargs) {
+        const value = kwargs[key];
+        if (value instanceof ArrayBuffer) {
+          transfer.push(value);
+          kwargs[key] = { _blurrArrayBuffer: true, value };
+        }
+      }
+    }
+
+    const result = (await server.worker.postMessage(
+      {
+        type: 'run',
+        source: source.toString(),
+        path,
+        kwargs,
+      },
+      transfer
+    )) as PythonCompatible;
     return result;
   };
 

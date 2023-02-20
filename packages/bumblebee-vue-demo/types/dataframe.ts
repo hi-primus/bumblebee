@@ -69,5 +69,6 @@ export interface DataframeObject {
   df: Source;
   sourceId: string;
   profile?: DataframeProfile;
-  updates: number;
+  updates?: number;
+  loaded?: boolean;
 }

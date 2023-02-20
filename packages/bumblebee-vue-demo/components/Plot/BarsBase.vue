@@ -1,39 +1,49 @@
 <template>
   <div class="konva-canvas-container">
-    <v-stage
-      ref="konva"
-      :config="{ width: stageWidth, height }"
-      @mousedown="onMouseDown"
-      @mousemove="onMouseMove"
-      @mouseleave="setHovered(-1)"
+    <template v-if="enablePlot">
+      <v-stage
+        ref="konva"
+        :config="{ width: stageWidth, height }"
+        @mousedown="onMouseDown"
+        @mousemove="onMouseMove"
+        @mouseleave="setHovered(-1)"
+      >
+        <v-layer>
+          <v-rect
+            v-if="selectable && selectionRange && selectionRange.length"
+            :config="{
+              ...selectionRect,
+              y: 0,
+              height: height,
+              fill: '#00000020'
+            }"
+          ></v-rect>
+          <v-rect
+            v-for="(value, index) in data"
+            :key="index + 'b'"
+            :config="getBackConfig(index)"
+            @mouseenter="setHovered(index)"
+          ></v-rect>
+          <v-rect
+            v-for="(value, index) in data"
+            :key="index"
+            :config="getRectConfig(index)"
+          ></v-rect>
+        </v-layer>
+      </v-stage>
+    </template>
+    <div
+      v-else
+      class="flex items-center justify-center"
+      :style="{ width: stageWidth + 'px', height: height + 'px' }"
     >
-      <v-layer>
-        <v-rect
-          v-if="selectable && selectionRange && selectionRange.length"
-          :config="{
-            ...selectionRect,
-            y: 0,
-            height: height,
-            fill: '#00000020'
-          }"
-        ></v-rect>
-        <v-rect
-          v-for="(value, index) in data"
-          :key="index + 'b'"
-          :config="getBackConfig(index)"
-          @mouseenter="setHovered(index)"
-        ></v-rect>
-        <v-rect
-          v-for="(value, index) in data"
-          :key="index"
-          :config="getRectConfig(index)"
-        ></v-rect>
-      </v-layer>
-    </v-stage>
+      <Icon :path="mdiLoading" class="w-8 h-8 text-text-lighter animate-spin" />
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { mdiLoading } from '@mdi/js';
 import type { KonvaEventObject } from 'konva/lib/Node';
 import type { Stage } from 'konva/lib/Stage';
 import { PropType, Ref } from 'vue';
@@ -95,6 +105,8 @@ type Emits = {
   (e: 'hovered', index: number): void;
 };
 const emit = defineEmits<Emits>();
+
+const enablePlot = ref(false);
 
 const konva = ref<Stage | null>(null);
 
@@ -185,11 +197,14 @@ onBeforeMount(() => {
 });
 
 onMounted(() => {
-  if (props.width === 'auto') {
-    nextTick(() => {
-      fitIntoParent();
-    });
-  }
+  setTimeout(() => {
+    enablePlot.value = true;
+    if (props.width === 'auto') {
+      nextTick(() => {
+        fitIntoParent();
+      });
+    }
+  }, 0);
 });
 
 watch(selection, () => {

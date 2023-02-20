@@ -444,7 +444,8 @@ defineExpose({
     & .column-header::after {
       z-index: 3;
       content: '';
-      @apply absolute -top-px -left-px -right-px -bottom-px h-screen;
+      height: calc(100vh - 100px); // TODO: use a variable
+      @apply absolute -top-px -left-px -right-px -bottom-px;
       @apply pointer-events-none;
       @apply outline-offset-[-3px] outline-dashed outline-2;
       @apply outline-text-light;

@@ -245,18 +245,27 @@ const inputSize = computed(() => {
   return search.value.length + 1;
 });
 
+const options = computed(() => {
+  return props.options?.map(option => {
+    if (typeof option === 'object') {
+      return option;
+    }
+    return {
+      value: option,
+      text: option
+    };
+  });
+});
+
 const filteredOptions = computed(() => {
-  if (search.value && props.options) {
-    return props.options.filter(option => {
-      if (typeof option === 'object') {
-        return option[props.text]
-          .toLowerCase()
-          .includes(search.value.toLowerCase());
-      }
-      return option.toLowerCase().includes(search.value.toLowerCase());
+  if (search.value && options.value) {
+    return options.value.filter(option => {
+      return option[props.text]
+        .toLowerCase()
+        .includes(search.value.toLowerCase());
     });
   }
-  return props.options;
+  return options.value;
 });
 
 const {

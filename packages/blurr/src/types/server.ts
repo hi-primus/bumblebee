@@ -14,7 +14,10 @@ export interface RunsCode {
   setGlobal: (name: string, value) => PromiseOr<void>;
 }
 interface PromiseWorker {
-  postMessage: (message: unknown) => Promise<unknown>;
+  postMessage: (
+    message: unknown,
+    transfer?: Transferable[] | null
+  ) => Promise<unknown>;
 }
 
 type BackendInterface = PyodideInterface | PromiseWorker;

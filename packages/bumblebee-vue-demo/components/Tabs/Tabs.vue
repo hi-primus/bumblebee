@@ -2,7 +2,7 @@
   <section
     class="bumblebee-tabs min-h-[48px] w-full px-6 overflow-hidden text-text-light bg-white text-sm font-sans font-medium"
   >
-    <ul class="h-12 absolute flex">
+    <ul class="h-12 absolute flex select-none">
       <li
         v-for="(tab, index) in tabs"
         :key="tab?.label"

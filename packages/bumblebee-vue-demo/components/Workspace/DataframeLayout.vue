@@ -1,7 +1,9 @@
 <!-- eslint-disable vue/no-multiple-template-root -->
 <template>
   <WorkspaceToolbar />
-  <section class="workspace-table overflow-hidden">
+  <section
+    class="workspace-table flex items-center justify-center overflow-hidden"
+  >
     <TableChunks
       v-if="dataframeObject?.profile || previewData?.profile"
       ref="table"
@@ -11,12 +13,21 @@
       :rows-count="rowsCount"
       @update-scroll="updateScroll"
     />
+    <div v-else class="flex gap-2 flex-col justify-center items-center">
+      <Icon
+        v-if="dataframeObject || previewData"
+        :path="mdiLoading"
+        class="w-12 h-12 text-text-lighter animate-spin"
+      />
+      <slot v-else></slot>
+    </div>
   </section>
   <WorkspaceOperations />
   <WorkspaceFooter />
 </template>
 
 <script setup lang="ts">
+import { mdiLoading } from '@mdi/js';
 import { ComputedRef, Ref } from 'vue';
 
 import TableChunks from '@/components/Table/Chunks.vue';

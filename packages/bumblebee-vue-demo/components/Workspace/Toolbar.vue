@@ -27,7 +27,7 @@
           @keydown.prevent="handleKeyDownOperation"
           @click="
             () => {
-              selectOperation(operation);
+              selectOperationItem(operation);
               showCommands = false;
             }
           "
@@ -49,7 +49,7 @@
           @keydown="handleKeyDownOperation"
           @click="
             () => {
-              selectOperation(operation);
+              selectOperationItem(operation);
               showCommands = false;
             }
           "
@@ -82,22 +82,15 @@ import { mdiCodeTags, mdiMagnify } from '@mdi/js';
 import { Ref } from 'vue';
 
 import AppInput from '@/components/App/Input.vue';
-import {
-  Operation,
-  OperationActions,
-  Payload,
-  State
-} from '@/types/operations';
-import { deepClone, focusNext, focusPrevious } from '@/utils';
+import { Operation, OperationActions, State } from '@/types/operations';
+import { focusNext, focusPrevious } from '@/utils';
 import { operations } from '@/utils/operations';
 
 const showCommands = ref(false);
 
 const state = inject('state') as Ref<State>;
 
-const { cancelOperation } = inject('operation-actions') as OperationActions;
-
-const operationValues = inject('operation-values') as Ref<Payload>;
+const { selectOperation } = inject('operation-actions') as OperationActions;
 
 const showSidebar = inject('show-sidebar') as Ref<boolean>;
 
@@ -108,10 +101,12 @@ const searchOperation = ref<string>('');
 const operationElements = ref<HTMLElement | null>(null);
 const searchOperationElement = ref<typeof AppInput | null>(null);
 
+
 const highligthMatch = (text: string, match: string) => {
   const regex = new RegExp(match, 'gi');
   return text.replace(regex, match => `<span class="bg-warn-highlight">${match}</span>`);
 };
+
 
 const filteredOperations = computed(() => {
   return operations.map(operation => {
@@ -208,7 +203,7 @@ const handleKeyDownSearch = (event: KeyboardEvent) => {
           return operation.key === operationKey;
         });
         if (operation) {
-          selectOperation(operation);
+          selectOperationItem(operation);
           showCommands.value = false;
           event.preventDefault();
         }
@@ -230,7 +225,7 @@ const handleKeyDownOperation = (event: KeyboardEvent): void => {
       return operation.key === operationKey;
     });
     if (operation) {
-      selectOperation(operation);
+      selectOperationItem(operation);
       showCommands.value = false;
       event.preventDefault();
     }
@@ -249,52 +244,14 @@ const handleKeyDownOperation = (event: KeyboardEvent): void => {
   }
 };
 
-const selectOperation = (operation: Operation | null = null): void => {
+const selectOperationItem = (operation: Operation | null = null): void => {
   if (operation) {
     if (recentOperationKeys.value.length >= 5) {
       recentOperationKeys.value.shift();
     }
     recentOperationKeys.value.push(operation.key);
-  } else {
-    cancelOperation();
   }
-  state.value = operation || 'operations';
-  showSidebar.value = true;
-  setTimeout(() => {
-    operation?.fields.forEach(field => {
-      // check if field has a default value
-
-      if ('defaultValue' in field && field.defaultValue !== undefined) {
-        operationValues.value = operationValues.value || {};
-        operationValues.value[field.name] = deepClone(field.defaultValue);
-      }
-
-      // check if field is a group
-
-      if ('fields' in field && field.fields) {
-        const defaultValue =
-          operationValues.value[`default-${field.name}`] || {};
-        for (const subfield of field.fields) {
-          if (
-            'defaultValue' in subfield &&
-            subfield.defaultValue !== undefined
-          ) {
-            defaultValue[subfield.name] = deepClone(subfield.defaultValue);
-          }
-        }
-        operationValues.value[`default-${field.name}`] = defaultValue;
-        const defaultFields =
-          'defaultFields' in field && field.defaultFields !== undefined
-            ? field.defaultFields || 0
-            : 1;
-        operationValues.value[field.name] =
-          operationValues.value[field.name] || [];
-        for (let i = 0; i < defaultFields; i++) {
-          operationValues.value[field.name][i] = deepClone(defaultValue);
-        }
-      }
-    });
-  }, 0);
+  selectOperation(operation);
 };
 
 const onKeyDown = (event: KeyboardEvent): void => {
@@ -309,7 +266,7 @@ const onKeyUp = (event: KeyboardEvent): void => {
     if (showCommands.value) {
       showCommands.value = false;
     } else if (state.value !== 'operations') {
-      selectOperation();
+      selectOperationItem();
     } else if (showSidebar.value) {
       showSidebar.value = false;
     }
@@ -347,7 +304,7 @@ const onKeyUp = (event: KeyboardEvent): void => {
 
   if (operation) {
     lastKeys.value = [];
-    selectOperation(operation);
+    selectOperationItem(operation);
   }
 };
 
