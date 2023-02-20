@@ -32,7 +32,7 @@
             }
           "
         >
-          <span class="text-text-light">{{ operation.name }}</span>
+          <span class="text-text-light" v-html='highligthMatch(operation.name , searchOperation)'></span>
           <span class="text-text-lighter">{{ operation.shortcut }}</span>
         </li>
         <li
@@ -54,7 +54,7 @@
             }
           "
         >
-          <span class="text-text-light">{{ operation.name }}</span>
+          <span class="text-text-light" v-html='highligthMatch(operation.name , searchOperation)'></span>
           <span class="text-text-lighter">{{ operation.shortcut }}</span>
         </li>
       </ul>
@@ -106,7 +106,12 @@ const lastKeys = ref<string[]>([]);
 const searchOperation = ref<string>('');
 
 const operationElements = ref<HTMLElement | null>(null);
-const searchOperationElement = ref<InstanceType<typeof AppInput> | null>(null);
+const searchOperationElement = ref<typeof AppInput | null>(null);
+
+const highligthMatch = (text: string, match: string) => {
+  const regex = new RegExp(match, 'gi');
+  return text.replace(regex, match => `<span class="bg-warn-highlight">${match}</span>`);
+};
 
 const filteredOperations = computed(() => {
   return operations.map(operation => {
