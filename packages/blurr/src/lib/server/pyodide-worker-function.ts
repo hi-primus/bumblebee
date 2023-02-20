@@ -53,36 +53,69 @@ export const initializeWorker = () => {
       }
 
       if (e.data.type === 'init') {
-        initialization = initialize(e.data.options);
+        try {
+          initialization = initialize(e.data.options);
+          await initialization;
 
-        await initialization;
-
-        self.postMessage({
-          type: 'init',
-          id: e.data.id,
-        });
+          self.postMessage({
+            type: 'init',
+            id: e.data.id,
+          });
+        } catch (err) {
+          self.postMessage({
+            type: 'init',
+            id: e.data.id,
+            error: err.message,
+          });
+        }
       } else if (e.data.type === 'load') {
-        await initialization;
+        try {
+          await initialization;
 
-        if (!backendLoaded) {
-          console.warn('Backend not loaded, loading with default options...');
-          await initialize();
+          if (!backendLoaded) {
+            console.warn('Backend not loaded, loading with default options...');
+            await initialize();
+          }
+        } catch (err) {
+          self.postMessage({
+            type: 'load',
+            id: e.data.id,
+            error: err.message,
+          });
+          return;
         }
 
-        if (e.data.packages && e.data.packages.length > 0) {
-          await self.pyodide.loadPackage(e.data.packages);
-        }
+        try {
+          if (e.data.packages && e.data.packages.length > 0) {
+            await self.pyodide.loadPackage(e.data.packages);
+          }
 
-        self.postMessage({
-          type: 'load',
-          id: e.data.id,
-        });
+          self.postMessage({
+            type: 'load',
+            id: e.data.id,
+          });
+        } catch (err) {
+          self.postMessage({
+            type: 'load',
+            id: e.data.id,
+            error: err.message,
+          });
+        }
       } else if (e.data.type === 'run') {
-        await initialization;
+        try {
+          await initialization;
 
-        if (!backendLoaded) {
-          console.warn('Backend not loaded, loading with default options...');
-          await initialize();
+          if (!backendLoaded) {
+            console.warn('Backend not loaded, loading with default options...');
+            await initialize();
+          }
+        } catch (err) {
+          self.postMessage({
+            type: 'load',
+            id: e.data.id,
+            error: err.message,
+          });
+          return;
         }
 
         let result = null;

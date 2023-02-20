@@ -600,21 +600,33 @@ watch(selectedTab, tab => {
   }
 });
 
-onMounted(async () => {
-  const { Blurr } = blurrPackage;
-  blurr = Blurr({
-    serverOptions: {
-      scriptURL: 'https://cdn.jsdelivr.net/pyodide/v0.22.1/full/pyodide.js',
-      useWorker: true
-    }
-  });
-  window.blurr = blurr;
-  await blurr.backendServer.donePromise;
-  const result = await blurr.runCode("'successfully loaded'");
+const initializeEngine = async () => {
+  try {
+    const { Blurr } = blurrPackage;
+    blurr = Blurr({
+      serverOptions: {
+        scriptURL: 'https://cdn.jsdelivr.net/pyodide/v0.22.1/full/pyodide.js',
+        useWorker: true
+      }
+    });
+    window.blurr = blurr;
+    await blurr.backendServer.donePromise;
+    const result = await blurr.runCode("'successfully loaded'");
+    console.info('Initialization result:', result);
+  } catch (err) {
+    console.error('Error initializing blurr.', err);
+    appStatus.value = 'error';
+  }
+
   if (appStatus.value === 'loading') {
     appStatus.value = 'ready';
   }
-  console.info('Initialization result:', result);
+};
+
+provide('initializeEngine', initializeEngine);
+
+onMounted(async () => {
+  await initializeEngine();
 });
 </script>
 

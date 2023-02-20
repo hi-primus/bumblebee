@@ -5,11 +5,12 @@
     >
       <span
         v-if="status"
-        class="flex items-center gap-2 text-text mr-auto transition"
+        class="flex items-center gap-2 mr-auto transition"
         :class="{
           'opacity-80': !isLoading,
           'text-primary-dark': appStatus === 'ready',
-          'text-error-dark': appStatus === 'error'
+          'text-error-dark': appStatus === 'error',
+          'text-text': !['ready', 'error'].includes(appStatus as string)
         }"
       >
         <Icon
@@ -25,6 +26,14 @@
           }"
         />
         {{ status }}
+        <AppButton
+          v-if="appStatus === 'error'"
+          class="btn-size-smallest"
+          :loading="retrying"
+          @click="retry"
+        >
+          Retry
+        </AppButton>
       </span>
       <template v-if="summary">
         <span> {{ summary.total_count_data_types }} Data types </span>
@@ -59,6 +68,8 @@ const status = computed(() => {
       return 'Busy';
     case 'ready':
       return 'Ready';
+    case 'error':
+      return 'Error';
   }
 });
 
@@ -68,4 +79,17 @@ const isLoading = computed(() => {
     ['loading', 'busy'].includes(appStatus.value)
   );
 });
+
+const retrying = ref(false);
+
+const retry = async () => {
+  retrying.value = true;
+  await initializeEngine();
+  retrying.value = false;
+};
+
+const initializeEngine = inject(
+  'initializeEngine',
+  () => {}
+) as () => Promise<void>;
 </script>

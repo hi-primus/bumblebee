@@ -65,11 +65,15 @@ async function loadWorker(options: PyodideBackendOptions) {
 
   const worker = promiseWorker(window.URL.createObjectURL(new Blob([content])));
 
-  await worker.postMessage({ type: 'init', options });
-
-  globalThis.loadedPyodide = worker;
-
-  return worker;
+  try {
+    await worker.postMessage({ type: 'init', options });
+    globalThis.loadedPyodide = worker;
+    return worker;
+  } catch (e) {
+    console.error('Error loading pyodide worker', e);
+    globalThis.loadedPyodide = null;
+    return;
+  }
 }
 
 export function ServerPyodideWorker(options: ServerOptions): ServerInterface {
