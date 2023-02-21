@@ -14,6 +14,13 @@ function DataframeCreationOperation<
 }
 
 export const operations = {
+  createDataframe: DataframeCreationOperation<{
+    data: Record<string, PythonCompatible>;
+  }>({
+    name: 'create.dataframe',
+    defaultSource: 'op',
+    args: [{ name: 'data' }],
+  }),
   readCsv: DataframeCreationOperation<{
     url?: string;
     buffer?: string;
@@ -54,13 +61,6 @@ export const operations = {
       }
       throw new Error("Either 'url' or 'buffer' must be provided");
     },
-  }),
-  createDataframe: DataframeCreationOperation<{
-    data: Record<string, PythonCompatible>;
-  }>({
-    name: 'create.dataframe',
-    defaultSource: 'op',
-    args: [{ name: 'data' }],
   }),
   readFile: DataframeCreationOperation<{
     url?: string;
