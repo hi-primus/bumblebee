@@ -3,7 +3,7 @@
 }
 
 .input-primary {
-  @apply bg-white border border-text-lightest/50 font-normal text-text placeholder:text-text-light focus:outline-none rounded-lg;
+  @apply bg-white border border-text-lightest/50 font-normal text-text placeholder:text-text-lighter focus:outline-none rounded-lg;
 }
 .input-default {
   @apply font-normal text-text placeholder:text-text-light focus:outline-none;
@@ -152,7 +152,7 @@
   // .selector-buttonTextSelected {
   // }
   .selector-buttonTextDefault {
-    @apply text-text/70;
+    @apply text-text-lighter;
   }
   // .selector-option {
   // }
