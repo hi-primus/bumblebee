@@ -29,14 +29,23 @@ export const operationCreators: OperationCreator[] = [
       saveToNewDataframe: true,
       preview: 'whole'
     },
-    action: (
+    action: async (
       payload: OperationPayload<{
         url: string;
         nRows?: number;
+        file: File;
       }>
     ): Source => {
       if (payload.options.preview) {
         payload.nRows = Math.min(payload.nRows || 50, 50);
+      }
+
+      if (payload.file) {
+        const buffer = await payload.file.arrayBuffer();
+        return payload.blurr.readCsv({
+          buffer,
+          nRows: payload.nRows
+        });
       }
 
       return payload.blurr.readCsv({
@@ -49,6 +58,11 @@ export const operationCreators: OperationCreator[] = [
         name: 'url',
         label: 'Url',
         type: 'string'
+      },
+      {
+        name: 'file',
+        label: 'File',
+        type: 'file'
       }
     ],
     shortcut: 'ff'
@@ -1644,7 +1658,7 @@ export const operationCreators: OperationCreator[] = [
         cols: payload.cols,
         separator: payload.separator,
         splits: payload.splits,
-        index: payload.index,
+        index: payload.index
       });
     },
     fields: [

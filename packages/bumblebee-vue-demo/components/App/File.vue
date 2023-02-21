@@ -1,13 +1,14 @@
 <template>
   <div
-    class="file-input-container"
+    :key="`${name} ${updates}`"
+    class="input file-input"
     :class="[attrClass]"
     :style="(attrStyle as StyleValue)"
   >
-    <label v-if="label" :for="name" class="label file-input-label">
+    <label v-if="label" :for="name" class="label input-label file-input-label">
       {{ label }}
     </label>
-    <div class="file-input-inputContainer">
+    <div class="input-field file-input-inputContainer">
       <input
         :name="name"
         type="file"
@@ -15,25 +16,29 @@
         v-bind="attrs"
         @change="updateFile"
       />
-      <!-- :placeholder="placeholder" -->
       <span
         class="block truncate file-input-fieldText"
         :class="[!myValue ? 'file-input-fieldTextDefault' : '']"
       >
-        {{ myValue?.name || title || 'Select a file' }}
+        {{ myValue?.name || placeholder || 'Select a file' }}
       </span>
-      <span
-        class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-4"
-      >
-        <Icon :path="mdiPaperclip" :class="'file-input-fieldIcon'" />
-      </span>
+      <div class="icons">
+        <button @click="myValue = null">
+          <Icon
+            v-if="clearable && myValue"
+            :path="mdiClose"
+            class="clearIcon w-6"
+          />
+        </button>
+        <Icon :path="mdiPaperclip" class="file-input-fieldIcon w-8" />
+      </div>
     </div>
   </div>
 </template>
 
 <script lang="ts">
-import { mdiPaperclip } from '@mdi/js';
-import { StyleValue } from 'vue';
+import { mdiClose, mdiPaperclip } from '@mdi/js';
+import { PropType, StyleValue } from 'vue';
 export default {
   inheritAttrs: false
 };
@@ -42,7 +47,7 @@ export default {
 <script setup lang="ts">
 const props = defineProps({
   modelValue: {
-    type: Object,
+    type: Object as PropType<File>,
     default: () => null
   },
   label: {
@@ -53,13 +58,13 @@ const props = defineProps({
     type: String,
     default: ''
   },
-  title: {
-    type: String,
-    default: () => null
-  },
   name: {
     type: String,
     default: () => 'myValue'
+  },
+  clearable: {
+    type: Boolean,
+    default: true
   }
 });
 
@@ -67,13 +72,18 @@ const { class: attrClass, style: attrStyle, ...attrs } = useAttrs();
 
 const emit = defineEmits(['update:modelValue']);
 
-const myValue = computed({
+const updates = ref(0);
+
+const myValue = computed<File | null>({
   get: () => props.modelValue,
   set: value => emit('update:modelValue', value)
 });
 
 const updateFile = (event: Event) => {
-  const target = event?.target as HTMLInputElement;
-  myValue.value = target?.files ? target.files[0] : false || myValue.value;
+  updates.value = updates.value + 1;
+  const file = (event?.target as HTMLInputElement)?.files?.[0];
+  if (file) {
+    myValue.value = file;
+  }
 };
 </script>

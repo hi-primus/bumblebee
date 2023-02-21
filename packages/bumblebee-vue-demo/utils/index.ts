@@ -108,6 +108,9 @@ export const deepClone = <T>(obj: T): T => {
   if (Array.isArray(obj)) {
     return (obj as any[]).map(deepClone) as T;
   }
+  if (obj instanceof File) {
+    return obj;
+  }
   if (isObject(obj)) {
     const clone = {} as T;
     for (const key in obj) {

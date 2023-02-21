@@ -14,7 +14,7 @@ export interface OperationOptions {
   usesOutputCols?: boolean;
   usesInputDataframe?: boolean;
   saveToNewDataframe?: boolean;
-  sourceId: string;
+  sourceId?: string;
   targetType: 'dataframe' | 'value';
   preview?: PreviewType;
 }
@@ -38,7 +38,7 @@ export type FieldOption<T = unknown> = Record<string, T> & {
 
 export interface Field {
   name: string;
-  type: PayloadCallbackOr<'string' | 'boolean' | 'custom'>;
+  type: PayloadCallbackOr<'string' | 'boolean' | 'custom' | 'file'>;
   key?: string;
   placeholder?: string;
   label?: PayloadCallbackOr<string>;

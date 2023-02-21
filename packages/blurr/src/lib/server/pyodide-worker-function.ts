@@ -3,6 +3,21 @@ declare const self, importScripts, loadPyodide;
 
 export const initializeWorker = () => {
   // TODO: import fetch, allow scriptURL?, handle Source objects
+  const fromTransferables = (value) => {
+    if (typeof value === 'object' && value._blurrArrayBuffer && value.value) {
+      return new ArrayBuffer(value.value);
+    } else if (Array.isArray(value)) {
+      return value.map(fromTransferables);
+    } else if (value && typeof value === 'object') {
+      const obj = {};
+      for (const key in value) {
+        obj[key] = fromTransferables(value[key]);
+      }
+      return obj;
+    } else {
+      return value;
+    }
+  };
   importScripts('https://cdn.jsdelivr.net/pyodide/v0.22.1/full/pyodide.js');
 
   let backendLoaded = false;
@@ -122,17 +137,12 @@ export const initializeWorker = () => {
         let error = null;
 
         try {
+          const kwargs = fromTransferables(e.data.kwargs);
+
           if (e.data.code) {
             result = self.pyodide.runPython(e.data.code);
           } else {
             const runMethod = self.pyodide.globals.get('run_method');
-            const kwargs = e.data.kwargs;
-            for (const key in kwargs) {
-              const kwarg = kwargs[key];
-              if (typeof kwarg === 'object' && kwarg._blurrArrayBuffer) {
-                kwargs[key] = new ArrayBuffer(kwarg.value);
-              }
-            }
             result = runMethod(e.data.method, kwargs);
           }
 
@@ -174,6 +184,45 @@ export const initializeWorker = () => {
             });
           }
         }
+      } else if (e.data.type === 'setGlobal') {
+        try {
+          await initialization;
+
+          if (!backendLoaded) {
+            console.warn('Backend not loaded, loading with default options...');
+            await initialize();
+          }
+        } catch (err) {
+          self.postMessage({
+            type: 'load',
+            id: e.data.id,
+            error: err.message,
+          });
+          return;
+        }
+
+        const result = [];
+        let error = null;
+
+        try {
+          const value = e.data.value;
+          if (value) {
+            for (const key in value) {
+              self.pyodide.globals.set(key, value[key]);
+              self.pyodide.globals.set('lastGlobal', value[key]);
+              result.push(key);
+            }
+          }
+        } catch (err) {
+          error = err.message;
+        }
+
+        self.postMessage({
+          type: 'setGlobal',
+          id: e.data.id,
+          result,
+          error,
+        });
       }
     },
     false

@@ -54,6 +54,12 @@
       @apply text-primary-dark;
     }
   }
+  .icons {
+    @apply flex items-center absolute inset-y-0 right-0;
+    & > *:last-child {
+      @apply pr-2;
+    }
+  }
 }
 
 .input:not([class*='input-size-']) {
@@ -87,25 +93,32 @@
 }
 
 .file-input {
-  @apply sm:text-sm md:text-base;
+  @apply sm:text-sm md:text-base relative cursor-pointer;
+
   .file-input-inputContainer {
-    @apply cursor-pointer relative flex items-center gap-2 input-primary w-full min-h-[26px] py-2 pl-5 pr-10 text-left;
+    @apply relative flex items-center gap-2 input-primary w-full;
   }
+
   .file-input-fieldText {
-    @apply select-none;
+    @apply select-none flex-1;
   }
+
   .file-input-fieldTextDefault {
-    @apply text-text/70;
+    @apply text-text-lighter;
   }
+
   .file-input-fieldIcon {
     @apply text-primary-dark/80;
   }
+
   .file-input-hiddenField {
     @apply absolute left-0 top-0 w-full h-full input-default opacity-0;
   }
+
   .file-input-errorContainer {
     @apply text-error text-sm block px-1 mt-1;
   }
+
   .file-input-errorInput {
     @apply border border-error;
   }
