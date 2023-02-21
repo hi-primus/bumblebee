@@ -62,4 +62,45 @@ export const operations = {
     defaultSource: 'op',
     args: [{ name: 'data' }],
   }),
+  readFile: DataframeCreationOperation<{
+    url?: string;
+    buffer?: string;
+    nRows?: number;
+  }>({
+    name: 'readFile',
+    args: [
+      {
+        name: 'url',
+      },
+      {
+        name: 'buffer',
+      },
+      {
+        name: 'nRows',
+      },
+    ],
+    getCode: function (kwargs: {
+      target: string;
+      url: string;
+      buffer: string;
+      n_rows: number;
+    }) {
+      if (kwargs.url) {
+        return (
+          (kwargs.target ? `${kwargs.target} = ` : '') +
+          `op.load.file('${kwargs.url}'` +
+          (kwargs.n_rows ? `, n_rows=${kwargs.n_rows}` : '') +
+          `)`
+        );
+      }
+      if (kwargs.buffer) {
+        return (
+          `${kwargs.buffer}_py = BytesIO(${kwargs.buffer}.to_py());` +
+          (kwargs.target ? `${kwargs.target} = ` : '') +
+          `op.load.file(${kwargs.buffer}_py)`
+        );
+      }
+      throw new Error("Either 'url' or 'buffer' must be provided");
+    },
+  }),
 };
