@@ -42,8 +42,9 @@ export const initializeWorker = () => {
       await self.pyodide.loadPackage('micropip');
       self.micropip = self.pyodide.pyimport('micropip');
 
+      await self.micropip.install('scikit-learn');
       await self.micropip.install(
-        'https://test-files.pythonhosted.org/packages/b3/5c/20f871ef2cab84287bcbcd9c8660fc41f7b43c1677fa3d296aa4e296cda6/pyoptimus-0.1.4027-py3-none-any.whl'
+        'https://test-files.pythonhosted.org/packages/8b/62/99def385690628ec5645acd06a4c204bf2b2579ace2955efeb4c9361df5c/pyoptimus-0.1.4032-py3-none-any.whl'
       );
       self.pyodide.runPython(`
         from optimus import Optimus
