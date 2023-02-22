@@ -1,22 +1,4 @@
-type Toast = {
-  title: string;
-  message?: string;
-  type?: 'error' | 'success' | 'info' | 'warning';
-  icon?: string;
-  class?: string;
-  closable?: boolean;
-  action?: string;
-  actionCallback?: (e: Event) => void;
-  time?: number;
-  id?: number;
-};
-
-type ToastInput = Prettify<
-  Omit<Toast, 'message'> & {
-    message?: ArrayOr<string>;
-    error?: unknown;
-  }
->;
+import { Toast, ToastInput } from '@/types/app';
 
 let toastId = 1;
 
@@ -36,7 +18,7 @@ const DEFAULT_TOAST: Toast = {
   time: DEFAULT_TIME
 };
 
-const addToast = (toast: ToastInput = {} as ToastInput) => {
+const addToast = (toast: ToastInput = {} as ToastInput): number => {
   if (toast.error && !toast.message) {
     if (toast.error instanceof Error) {
       toast.message = toast.error.message;

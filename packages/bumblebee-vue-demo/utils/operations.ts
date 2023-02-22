@@ -1,5 +1,6 @@
 import { Client, Source } from 'blurr/types';
 
+import { AppFunctions } from '@/types/app';
 import { isObject } from '@/types/common';
 import {
   Operation,
@@ -19,6 +20,7 @@ type OperationPayload<
   cols: Cols;
   outputCols: Cols;
   options: OperationOptions;
+  app: AppFunctions;
 } & T;
 
 export const operationCreators: OperationCreator[] = [
@@ -90,14 +92,17 @@ export const operationCreators: OperationCreator[] = [
         throw new Error('No dataframe to save.');
       }
       const arrayBuffer = await df.saveCsv();
-      const blob = new Blob([arrayBuffer], { type: 'text/csv' });
-      const link = document.createElement('a');
-      const url = window.URL.createObjectURL(blob);
-      link.href = url;
-      link.download = 'data.csv';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      let fileName: string = await df.getMeta('file_name');
+      if (!fileName) {
+        fileName = 'data.csv';
+      }
+      fileName = fileName.split('/').pop() || fileName;
+      downloadArrayBuffer(arrayBuffer, fileName);
+      await new Promise(resolve => setTimeout(resolve, 200));
+      payload.app.addToast({
+        title: 'File saved',
+        type: 'success'
+      });
       return df;
     },
     shortcut: 'sf'
@@ -1943,4 +1948,14 @@ function whereExpression(
       console.warn('Unknown condition', condition);
   }
   return '';
+}
+function downloadArrayBuffer(arrayBuffer: ArrayBuffer, fileName: string) {
+  const blob = new Blob([arrayBuffer], { type: 'text/csv' });
+  const link = document.createElement('a');
+  const url = window.URL.createObjectURL(blob);
+  link.href = url;
+  link.download = fileName;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
 }

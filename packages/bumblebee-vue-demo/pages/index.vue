@@ -61,6 +61,8 @@ import { operations } from '@/utils/operations';
 
 const blurrPackage = useBlurr();
 
+const { addToast } = useToasts();
+
 let blurr: Client;
 
 const dataframeLayout = ref<InstanceType<typeof DataframeLayout> | null>(null);
@@ -246,7 +248,11 @@ const executeOperations = async () => {
     if (!isOperation(operation)) {
       throw new Error('Invalid operation', { cause: operation });
     }
-    const result = await operation.action({ ...payload, blurr });
+    const result = await operation.action({
+      ...payload,
+      blurr,
+      app: { addToast }
+    });
 
     if (
       payload.options.sourceId &&
@@ -345,7 +351,8 @@ const operationActions: OperationActions = {
               ...payload.options,
               preview: false
             },
-            blurr
+            blurr,
+            app: { addToast }
           });
           operationValues.value = {};
           state.value = 'operations';
@@ -497,7 +504,8 @@ const previewOperation = throttleOnce(async function () {
       const firstSampleDataframe = (await operation.action({
         ...deepClone(payload),
         source: firstSampleSource,
-        blurr
+        blurr,
+        app: { addToast }
       })) as Source;
 
       const firstSampleResult = await firstSampleDataframe.columnsSample();
@@ -546,8 +554,15 @@ const previewOperation = throttleOnce(async function () {
       ...deepClone(payload),
       source: payload.source,
       target: 'operation_preview_' + (payload.source?.name || 'load_df'),
-      blurr
+      blurr,
+      app: { addToast }
     });
+
+    if (!result) {
+      throw new Error(`Operation '${operation.name}' returned no result.`, {
+        cause: { operation, payload }
+      });
+    }
 
     // save preview dataframe
 

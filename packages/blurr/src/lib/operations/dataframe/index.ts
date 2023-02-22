@@ -21,6 +21,18 @@ export const operations = {
     name: 'columnsSample',
     targetType: 'value',
   }),
+  getMeta: DataframeOperation<{ spec: string }, string | undefined>({
+    name: 'getMeta',
+    targetType: 'value',
+    args: [
+      {
+        name: 'spec',
+      },
+    ],
+    getCode: function (kwargs: { source: string; spec: string }) {
+      return `Meta.get(${kwargs.source}.meta, "${kwargs.spec}")`;
+    },
+  }),
   saveCsv: DataframeOperation<NoArgs, ArrayBuffer>({
     name: 'saveCsv',
     targetType: 'value',
