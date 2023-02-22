@@ -39,7 +39,7 @@ export const operationCreators: OperationCreator[] = [
         payload.nRows = Math.min(payload.nRows || 50, 50);
       }
 
-      return payload.blurr.readCsv({
+      return payload.blurr.readFile({
         url: payload.url,
         nRows: payload.nRows
       });
@@ -1257,7 +1257,7 @@ export const operationCreators: OperationCreator[] = [
     },
     shortcut: 'tash'
   },
-  //  Create the creaOperatino fon cos
+  //  Create the create Operatino for cos
   {
     key: 'acosh',
     name: 'Inverse hyperbolic cosine from column values',
