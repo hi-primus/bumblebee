@@ -18,7 +18,7 @@
       <div class="text-lg">
         {{ props.title }}
       </div>
-      <div v-if="props.message" class="text-xs">
+      <div v-if="props.message" class="text-xs whitespace-pre-wrap">
         {{ props.message }}
       </div>
     </div>

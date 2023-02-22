@@ -11,9 +11,12 @@ type Toast = {
   id?: number;
 };
 
-interface ToastInput extends Toast {
-  error?: unknown;
-}
+type ToastInput = Prettify<
+  Omit<Toast, 'message'> & {
+    message?: ArrayOr<string>;
+    error?: unknown;
+  }
+>;
 
 let toastId = 1;
 
@@ -21,7 +24,7 @@ const toasts = ref<Array<Toast>>([]);
 
 const DEFAULT_TIME = 30;
 
-const DEFAULT_TOAST = {
+const DEFAULT_TOAST: Toast = {
   title: 'Unknown error',
   message: undefined,
   type: 'error',
@@ -43,7 +46,11 @@ const addToast = (toast: ToastInput = {} as ToastInput) => {
     delete toast.error;
   }
 
-  const newToast = Object.assign({ id: toastId }, DEFAULT_TOAST, toast);
+  if (Array.isArray(toast.message)) {
+    toast.message = toast.message.join('\n');
+  }
+
+  const newToast: Toast = Object.assign({ id: toastId }, DEFAULT_TOAST, toast);
   toastId++;
   return toasts.value.push(newToast) - 1;
 };
