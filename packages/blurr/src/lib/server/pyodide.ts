@@ -71,7 +71,7 @@ export function ServerPyodide(options: ServerOptions): ServerInterface {
 
     await micropip.install('scikit-learn');
     await micropip.install(
-      'https://test-files.pythonhosted.org/packages/8b/62/99def385690628ec5645acd06a4c204bf2b2579ace2955efeb4c9361df5c/pyoptimus-0.1.4032-py3-none-any.whl'
+      'https://test-files.pythonhosted.org/packages/ab/60/2fecad6b39362497d92de23597777f412d2b22c758983897a1c53c998635/pyoptimus-0.1.4043-py3-none-any.whl'
     );
     pyodide.runPython(`
       from optimus import Optimus
