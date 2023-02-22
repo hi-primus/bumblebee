@@ -161,6 +161,7 @@ const handleDataframeResults = async (
       dataframeIndex < 0 && payload.options.saveToNewDataframe;
 
     if (createDataframe) {
+      sourceId = sourceId || newSourceId();
       const newDataframe: DataframeObject = {
         name: 'dataset',
         sourceId,
@@ -280,8 +281,7 @@ const executeOperations = async () => {
 
 const preparePayload = (payload: PayloadWithOptions): PayloadWithOptions => {
   if (payload.options.saveToNewDataframe) {
-    payload.options.sourceId =
-      dataframes.value.length.toString() + (+new Date()).toString();
+    payload.options.sourceId = newSourceId();
   }
 
   if (payload.options.usesInputDataframe) {
