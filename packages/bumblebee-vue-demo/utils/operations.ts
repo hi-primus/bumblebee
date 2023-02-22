@@ -1,7 +1,12 @@
-import { Client, Source } from "blurr/types";
+import { Client, Source } from 'blurr/types';
 
-import { isObject } from "@/types/common";
-import { Operation, OperationCreator, OperationOptions, Payload } from "@/types/operations";
+import { isObject } from '@/types/common';
+import {
+  Operation,
+  OperationCreator,
+  OperationOptions,
+  Payload
+} from '@/types/operations';
 
 type Cols = string[];
 
@@ -22,7 +27,7 @@ export const operationCreators: OperationCreator[] = [
     name: 'Load from file',
     defaultOptions: {
       saveToNewDataframe: true,
-      preview: "whole"
+      preview: 'whole'
     },
     action: async (
       payload: OperationPayload<{
@@ -72,37 +77,37 @@ export const operationCreators: OperationCreator[] = [
     shortcut: 'lf'
   },
   {
-    key: "saveCsv",
-    name: "Save to file",
+    key: 'saveCsv',
+    name: 'Save to file',
     defaultOptions: {
       oneTime: true,
       usesInputDataframe: true,
-      targetType: "void"
+      targetType: 'void'
     },
     action: async (payload: OperationPayload): Promise<Source> => {
       const df = payload.source;
       if (!df) {
-        throw new Error("No dataframe to save.");
+        throw new Error('No dataframe to save.');
       }
       const arrayBuffer = await df.saveCsv();
-      const blob = new Blob([arrayBuffer], { type: "text/csv" });
-      const link = document.createElement("a");
+      const blob = new Blob([arrayBuffer], { type: 'text/csv' });
+      const link = document.createElement('a');
       const url = window.URL.createObjectURL(blob);
       link.href = url;
-      link.download = "data.csv";
+      link.download = 'data.csv';
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       return df;
     },
-    shortcut: "sf"
+    shortcut: 'sf'
   },
   {
-    key: "createCol",
-    name: "Create column",
+    key: 'createCol',
+    name: 'Create column',
     defaultOptions: {
       usesInputDataframe: true,
-      preview: "basic columns"
+      preview: 'basic columns'
     },
     action: async (
       payload: OperationPayload<{
@@ -119,7 +124,7 @@ export const operationCreators: OperationCreator[] = [
       );
 
       const valueFunc = valueFuncPromise.map(p =>
-        p.status === "fulfilled" ? p.value : null
+        p.status === 'fulfilled' ? p.value : null
       );
 
       let outputCols = payload.sets.map(s => s.outputColumn);
@@ -137,36 +142,36 @@ export const operationCreators: OperationCreator[] = [
     },
     fields: [
       {
-        name: "sets",
-        label: "Columns",
-        type: "group",
+        name: 'sets',
+        label: 'Columns',
+        type: 'group',
         fields: [
           {
-            name: "outputColumn",
-            label: "Column",
-            type: "string",
-            defaultValue: "",
-            class: "grouped-first w-1/3"
+            name: 'outputColumn',
+            label: 'Column',
+            type: 'string',
+            defaultValue: '',
+            class: 'grouped-first w-1/3'
           },
           {
-            name: "value",
-            label: "Formula",
-            placeholder: "e.g. col1 + col2, col1 + \"suffix\"",
-            type: "string",
-            class: "grouped-last w-2/3"
+            name: 'value',
+            label: 'Formula',
+            placeholder: 'e.g. col1 + col2, col1 + "suffix"',
+            type: 'string',
+            class: 'grouped-last w-2/3'
           }
         ]
       }
     ],
-    shortcut: "cc"
+    shortcut: 'cc'
   },
   {
-    key: "setCol",
-    name: "Set column",
+    key: 'setCol',
+    name: 'Set column',
     defaultOptions: {
-      usesInputCols: "single",
+      usesInputCols: 'single',
       usesInputDataframe: true,
-      preview: "basic columns"
+      preview: 'basic columns'
     },
     action: (
       payload: OperationPayload<{
@@ -193,7 +198,7 @@ export const operationCreators: OperationCreator[] = [
       if (payload.outputCols[0] !== payload.cols[0]) {
         return result.cols.move({
           column: payload.outputCols[0],
-          position: "after",
+          position: 'after',
           refCol: payload.cols[0]
         });
       }
@@ -202,171 +207,171 @@ export const operationCreators: OperationCreator[] = [
     },
     fields: [
       {
-        name: "replaces",
-        label: "Replaces",
-        type: "group",
+        name: 'replaces',
+        label: 'Replaces',
+        type: 'group',
         fields: [
           {
-            name: "condition",
-            label: "Condition",
-            type: "string",
-            defaultValue: "equal",
+            name: 'condition',
+            label: 'Condition',
+            type: 'string',
+            defaultValue: 'equal',
             options: (payload: Payload) => [
               {
-                text: "Is exactly",
-                value: "equal"
+                text: 'Is exactly',
+                value: 'equal'
               },
               {
-                text: "Is one of",
-                value: "value_in"
+                text: 'Is one of',
+                value: 'value_in'
               },
               {
-                text: "Is not",
-                value: "not_equal"
+                text: 'Is not',
+                value: 'not_equal'
               },
               { divider: true, hidden: true },
               {
-                text: "Less than",
-                value: "less_than",
+                text: 'Less than',
+                value: 'less_than',
                 hidden: true
               },
               {
-                text: "Less than or equal to",
-                value: "less_than_equal",
+                text: 'Less than or equal to',
+                value: 'less_than_equal',
                 hidden: true
               },
               {
-                text: "Greater than",
-                value: "greater_than",
+                text: 'Greater than',
+                value: 'greater_than',
                 hidden: true
               },
               {
-                text: "Greater than or equal to",
-                value: "greater_than_equal",
+                text: 'Greater than or equal to',
+                value: 'greater_than_equal',
                 hidden: true
               },
               {
-                text: "Is Between",
-                value: "between",
+                text: 'Is Between',
+                value: 'between',
                 hidden: true
               },
               { divider: true, hidden: true },
               {
-                text: "Contains",
-                value: "contains",
+                text: 'Contains',
+                value: 'contains',
                 hidden: true
               },
               {
-                text: "Starts with",
-                value: "starts_with",
+                text: 'Starts with',
+                value: 'starts_with',
                 hidden: true
               },
               {
-                text: "Ends with",
-                value: "ends_with",
+                text: 'Ends with',
+                value: 'ends_with',
                 hidden: true
               },
               { divider: true, hidden: true },
-              { text: "Custom expression", value: "where", hidden: true },
+              { text: 'Custom expression', value: 'where', hidden: true },
               {
-                text: "Pattern",
-                value: "match_pattern",
+                text: 'Pattern',
+                value: 'match_pattern',
                 hidden: true
               },
-              { text: "Selected", value: "selected", hidden: true },
+              { text: 'Selected', value: 'selected', hidden: true },
               { divider: true, hidden: true },
               {
-                text: "Mismatches values",
-                value: "mismatch",
+                text: 'Mismatches values',
+                value: 'mismatch',
                 hidden: true
               },
-              { text: "Null values", value: "null", hidden: true }
+              { text: 'Null values', value: 'null', hidden: true }
             ],
             class: (payload: Payload, currentIndex = 0) => {
               const condition = payload.replaces[currentIndex].condition;
               switch (condition) {
-                case "value_in":
-                  return "w-full";
-                case "between":
-                  return "grouped-first w-1/4";
+                case 'value_in':
+                  return 'w-full';
+                case 'between':
+                  return 'grouped-first w-1/4';
                 default:
-                  return "grouped-first w-1/3";
+                  return 'grouped-first w-1/3';
               }
             }
           },
           {
-            name: "value",
+            name: 'value',
             label: (payload: Payload, currentIndex = 0) => {
               const condition = payload.replaces[currentIndex].condition;
               switch (condition) {
-                case "value_in":
-                  return "Values";
-                case "between":
-                  return "Min";
-                case "match_pattern":
-                  return "Pattern";
-                case "where":
-                  return "Expression";
+                case 'value_in':
+                  return 'Values';
+                case 'between':
+                  return 'Min';
+                case 'match_pattern':
+                  return 'Pattern';
+                case 'where':
+                  return 'Expression';
                 default:
-                  return "Value";
+                  return 'Value';
               }
             },
-            type: "string",
+            type: 'string',
             class: (payload: Payload, currentIndex = 0): string => {
               const condition = payload.replaces[currentIndex].condition;
               switch (condition) {
-                case "value_in":
-                  return "w-full";
-                case "between":
-                  return "grouped-middle w-1/4";
+                case 'value_in':
+                  return 'w-full';
+                case 'between':
+                  return 'grouped-middle w-1/4';
                 default:
-                  return "grouped-middle w-1/3";
+                  return 'grouped-middle w-1/3';
               }
             }
           },
           {
-            name: "value_2",
-            label: "Max",
-            type: "string",
-            class: "grouped-middle w-1/4",
+            name: 'value_2',
+            label: 'Max',
+            type: 'string',
+            class: 'grouped-middle w-1/4',
             hidden: (payload: Payload, currentIndex = 0) => {
               const condition = payload.replaces[currentIndex].condition;
-              return condition !== "between";
+              return condition !== 'between';
             }
           },
           {
-            name: "replaceBy",
-            label: "Replace by",
-            type: "string",
+            name: 'replaceBy',
+            label: 'Replace by',
+            type: 'string',
             class: (payload: Payload, currentIndex = 0) => {
               const condition = payload.replaces[currentIndex].condition;
               switch (condition) {
-                case "value_in":
-                  return "w-full";
-                case "between":
-                  return "grouped-last w-1/4";
+                case 'value_in':
+                  return 'w-full';
+                case 'between':
+                  return 'grouped-last w-1/4';
                 default:
-                  return "grouped-last w-1/3";
+                  return 'grouped-last w-1/3';
               }
             }
           }
         ]
       },
       {
-        name: "otherwise",
-        label: "Otherwise",
-        type: "string"
+        name: 'otherwise',
+        label: 'Otherwise',
+        type: 'string'
       }
     ],
-    shortcut: "sc"
+    shortcut: 'sc'
   },
   {
-    key: "replace",
-    name: "Replace in column values",
+    key: 'replace',
+    name: 'Replace in column values',
     defaultOptions: {
       usesInputCols: true,
       usesInputDataframe: true,
-      preview: "basic columns"
+      preview: 'basic columns'
     },
     action: (
       payload: OperationPayload<{
@@ -390,7 +395,7 @@ export const operationCreators: OperationCreator[] = [
       if (payload.outputCols[0] !== payload.cols[0]) {
         return result.cols.move({
           column: payload.outputCols[0],
-          position: "after",
+          position: 'after',
           refCol: payload.cols[0]
         });
       }
@@ -399,72 +404,72 @@ export const operationCreators: OperationCreator[] = [
     },
     fields: [
       {
-        name: "replaces",
-        label: "Replaces",
-        type: "group",
+        name: 'replaces',
+        label: 'Replaces',
+        type: 'group',
         fields: [
           {
-            name: "search",
-            label: "Search",
-            type: "string",
-            class: "grouped-first w-1/2"
+            name: 'search',
+            label: 'Search',
+            type: 'string',
+            class: 'grouped-first w-1/2'
           },
           {
-            name: "replaceBy",
-            label: "Replace by",
-            type: "string",
-            class: "grouped-last w-1/2"
+            name: 'replaceBy',
+            label: 'Replace by',
+            type: 'string',
+            class: 'grouped-last w-1/2'
           }
         ]
       },
       {
-        name: "searchBy",
-        label: "Search by",
-        type: "string",
-        defaultValue: "full",
+        name: 'searchBy',
+        label: 'Search by',
+        type: 'string',
+        defaultValue: 'full',
         options: [
           {
-            text: "Exact match",
-            value: "full"
+            text: 'Exact match',
+            value: 'full'
           },
           {
-            text: "Contains words",
-            value: "words"
+            text: 'Contains words',
+            value: 'words'
           },
           {
-            text: "Contains characters",
-            value: "chars"
+            text: 'Contains characters',
+            value: 'chars'
           }
         ]
       },
       {
-        name: "matchCase",
-        label: "Match case",
-        type: "boolean"
+        name: 'matchCase',
+        label: 'Match case',
+        type: 'boolean'
       }
       // TODO: search by string
     ],
-    shortcut: "rc"
+    shortcut: 'rc'
   },
   // Row operations
   {
-    key: "filterRows",
-    name: "Filter rows",
-    alias: "drop keep rows",
+    key: 'filterRows',
+    name: 'Filter rows',
+    alias: 'drop keep rows',
     defaultOptions: {
       usesInputCols: true,
       usesOutputCols: false,
       usesInputDataframe: true,
-      preview: "highlight rows"
+      preview: 'highlight rows'
     },
-    shortcut: "fr",
+    shortcut: 'fr',
     action: (
       payload: OperationPayload<{
         conditions: {
           condition: string;
           value: string;
         }[];
-        action: "select" | "drop";
+        action: 'select' | 'drop';
       }>
     ): Source => {
       const where = payload.conditions.map(condition =>
@@ -472,138 +477,138 @@ export const operationCreators: OperationCreator[] = [
       );
 
       if (payload.options.preview) {
-        const color = payload.action === "select" ? "success" : "error";
+        const color = payload.action === 'select' ? 'success' : 'error';
         return payload.source.cols.set({
           target: payload.target,
           cols: `__bumblebee__highlight_row__${color}`,
           valueFunc: true,
           evalValue: false,
-          where: where.join(" | "),
+          where: where.join(' | '),
           default: false
         });
       }
 
-      if (payload.action === "select") {
+      if (payload.action === 'select') {
         return payload.source.rows.select({
           target: payload.target,
-          expr: where.join(" | ")
+          expr: where.join(' | ')
         });
       } else {
         return payload.source.rows.drop({
           target: payload.target,
-          expr: where.join(" | ")
+          expr: where.join(' | ')
         });
       }
     },
     fields: [
       {
-        name: "conditions",
-        label: "Conditions",
-        type: "group",
+        name: 'conditions',
+        label: 'Conditions',
+        type: 'group',
         fields: [
           {
-            name: "condition",
-            label: "Condition",
-            type: "string",
-            defaultValue: "equal",
+            name: 'condition',
+            label: 'Condition',
+            type: 'string',
+            defaultValue: 'equal',
             options: (_payload: Payload) => [
               {
-                text: "Is exactly",
-                value: "equal"
+                text: 'Is exactly',
+                value: 'equal'
               },
               {
-                text: "Is one of",
-                value: "value_in"
+                text: 'Is one of',
+                value: 'value_in'
               },
               {
-                text: "Is not",
-                value: "not_equal"
+                text: 'Is not',
+                value: 'not_equal'
               },
               { divider: true, hidden: true },
               {
-                text: "Less than",
-                value: "less_than",
+                text: 'Less than',
+                value: 'less_than',
                 hidden: true
               },
               {
-                text: "Less than or equal to",
-                value: "less_than_equal",
+                text: 'Less than or equal to',
+                value: 'less_than_equal',
                 hidden: true
               },
               {
-                text: "Greater than",
-                value: "greater_than",
+                text: 'Greater than',
+                value: 'greater_than',
                 hidden: true
               },
               {
-                text: "Greater than or equal to",
-                value: "greater_than_equal",
+                text: 'Greater than or equal to',
+                value: 'greater_than_equal',
                 hidden: true
               },
               {
-                text: "Is Between",
-                value: "between",
+                text: 'Is Between',
+                value: 'between',
                 hidden: true
               },
               { divider: true, hidden: true },
               {
-                text: "Contains",
-                value: "contains",
+                text: 'Contains',
+                value: 'contains',
                 hidden: true
               },
               {
-                text: "Starts with",
-                value: "starts_with",
+                text: 'Starts with',
+                value: 'starts_with',
                 hidden: true
               },
               {
-                text: "Ends with",
-                value: "ends_with",
+                text: 'Ends with',
+                value: 'ends_with',
                 hidden: true
               },
               { divider: true, hidden: true },
-              { text: "Custom expression", value: "where", hidden: true },
+              { text: 'Custom expression', value: 'where', hidden: true },
               {
-                text: "Pattern",
-                value: "match_pattern",
+                text: 'Pattern',
+                value: 'match_pattern',
                 hidden: true
               },
-              { text: "Selected", value: "selected", hidden: true },
+              { text: 'Selected', value: 'selected', hidden: true },
               { divider: true, hidden: true },
               {
-                text: "Mismatches values",
-                value: "mismatch",
+                text: 'Mismatches values',
+                value: 'mismatch',
                 hidden: true
               },
-              { text: "Null values", value: "null", hidden: true }
+              { text: 'Null values', value: 'null', hidden: true }
             ],
-            class: "grouped-first w-1/2"
+            class: 'grouped-first w-1/2'
           },
           {
-            name: "value",
-            label: "Value",
-            type: "string",
-            class: "grouped-last w-1/2"
+            name: 'value',
+            label: 'Value',
+            type: 'string',
+            class: 'grouped-last w-1/2'
           }
         ]
       },
       {
-        name: "action",
-        label: "Action",
-        type: "string",
-        defaultValue: "select",
+        name: 'action',
+        label: 'Action',
+        type: 'string',
+        defaultValue: 'select',
         options: (_payload: Payload) => [
           {
-            text: "Filter matching rows",
-            value: "select"
+            text: 'Filter matching rows',
+            value: 'select'
           },
           {
-            text: "Drop matching rows",
-            value: "drop"
+            text: 'Drop matching rows',
+            value: 'drop'
           },
           {
-            text: "Replace matching rows",
-            value: "replace",
+            text: 'Replace matching rows',
+            value: 'replace',
             hidden: true // TODO: implement, show in special selection
           }
         ]
@@ -611,18 +616,18 @@ export const operationCreators: OperationCreator[] = [
     ]
   },
   {
-    key: "Drop duplicated",
-    name: "Drop duplicated rows",
-    alias: "drop rows duplicated",
+    key: 'Drop duplicated',
+    name: 'Drop duplicated rows',
+    alias: 'drop rows duplicated',
     defaultOptions: {
       usesInputCols: true,
       usesInputDataframe: true,
-      preview: "basic columns"
+      preview: 'basic columns'
     },
     action: (
       payload: OperationPayload<{
-        keep: "first" | "last";
-        how: "any" | "all";
+        keep: 'first' | 'last';
+        how: 'any' | 'all';
       }>
     ): Source => {
       return payload.source.rows.dropDuplicated({
@@ -633,21 +638,21 @@ export const operationCreators: OperationCreator[] = [
         outputCols: payload.outputCols
       });
     },
-    shortcut: "rdd"
+    shortcut: 'rdd'
   },
   {
-    key: "Drop Empty",
-    name: "Drop empty rows",
-    alias: "drop empty rows",
+    key: 'Drop Empty',
+    name: 'Drop empty rows',
+    alias: 'drop empty rows',
     defaultOptions: {
       usesInputCols: true,
       usesInputDataframe: true,
-      preview: "basic columns"
+      preview: 'basic columns'
     },
     action: (
       payload: OperationPayload<{
-        keep: "first" | "last";
-        how: "any" | "all";
+        keep: 'first' | 'last';
+        how: 'any' | 'all';
       }>
     ): Source => {
       return payload.source.rows.dropDuplicated({
@@ -657,17 +662,17 @@ export const operationCreators: OperationCreator[] = [
         outputCols: payload.outputCols
       });
     },
-    shortcut: "rde"
+    shortcut: 'rde'
   },
   // Columns operations
   {
-    key: "lower",
-    name: "Lowercase column values",
-    alias: "Lowercase letters lower case",
+    key: 'lower',
+    name: 'Lowercase column values',
+    alias: 'Lowercase letters lower case',
     defaultOptions: {
       usesInputCols: true,
       usesInputDataframe: true,
-      preview: "basic columns"
+      preview: 'basic columns'
     },
     action: (payload: OperationPayload): Source => {
       return payload.source.cols.lower({
@@ -676,16 +681,16 @@ export const operationCreators: OperationCreator[] = [
         outputCols: payload.outputCols
       });
     },
-    shortcut: "ll"
+    shortcut: 'll'
   },
   {
-    key: "upper",
-    name: "Uppercase column values",
-    alias: "Uppercase letters upper case",
+    key: 'upper',
+    name: 'Uppercase column values',
+    alias: 'Uppercase letters upper case',
     defaultOptions: {
       usesInputCols: true,
       usesInputDataframe: true,
-      preview: "basic columns"
+      preview: 'basic columns'
     },
     action: (payload: OperationPayload): Source => {
       return payload.source.cols.upper({
@@ -694,16 +699,16 @@ export const operationCreators: OperationCreator[] = [
         outputCols: payload.outputCols
       });
     },
-    shortcut: "ul"
+    shortcut: 'ul'
   },
   {
-    key: "title",
-    name: "Title case column values",
-    alias: "Upper first letter",
+    key: 'title',
+    name: 'Title case column values',
+    alias: 'Upper first letter',
     defaultOptions: {
       usesInputCols: true,
       usesInputDataframe: true,
-      preview: "basic columns"
+      preview: 'basic columns'
     },
     action: (payload: OperationPayload): Source => {
       return payload.source.cols.title({
@@ -712,16 +717,16 @@ export const operationCreators: OperationCreator[] = [
         outputCols: payload.outputCols
       });
     },
-    shortcut: "tl"
+    shortcut: 'tl'
   },
   {
-    key: "capitalize",
-    name: "Capitalize column values",
-    alias: "Upper first letters",
+    key: 'capitalize',
+    name: 'Capitalize column values',
+    alias: 'Upper first letters',
     defaultOptions: {
       usesInputCols: true,
       usesInputDataframe: true,
-      preview: "basic columns"
+      preview: 'basic columns'
     },
     action: (payload: OperationPayload): Source => {
       return payload.source.cols.capitalize({
@@ -730,17 +735,17 @@ export const operationCreators: OperationCreator[] = [
         outputCols: payload.outputCols
       });
     },
-    shortcut: "cl"
+    shortcut: 'cl'
   },
   {
-    key: "remove_accents",
-    name: "Remove accents from column values",
-    alias: "Remove accents normalize chars",
-    description: "Remove diacritics from column values",
+    key: 'remove_accents',
+    name: 'Remove accents from column values',
+    alias: 'Remove accents normalize chars',
+    description: 'Remove diacritics from column values',
     defaultOptions: {
       usesInputCols: true,
       usesInputDataframe: true,
-      preview: "basic columns"
+      preview: 'basic columns'
     },
     action: (payload: OperationPayload): Source => {
       return payload.source.cols.normalizeChars({
@@ -749,16 +754,16 @@ export const operationCreators: OperationCreator[] = [
         outputCols: payload.outputCols
       });
     },
-    shortcut: "lra"
+    shortcut: 'lra'
   },
   {
-    key: "remove_special_chars",
-    name: "Remove special chars from column values",
-    alias: "Remove special chars",
+    key: 'remove_special_chars',
+    name: 'Remove special chars from column values',
+    alias: 'Remove special chars',
     defaultOptions: {
       usesInputCols: true,
       usesInputDataframe: true,
-      preview: "basic columns"
+      preview: 'basic columns'
     },
     action: (payload: OperationPayload): Source => {
       return payload.source.cols.removeSpecialChars({
@@ -767,16 +772,16 @@ export const operationCreators: OperationCreator[] = [
         outputCols: payload.outputCols
       });
     },
-    shortcut: "lrs"
+    shortcut: 'lrs'
   },
   {
-    key: "extract",
-    name: "Extract a substring from column values",
-    alias: "Extract substring sub string",
+    key: 'extract',
+    name: 'Extract a substring from column values',
+    alias: 'Extract substring sub string',
     defaultOptions: {
       usesInputCols: true,
       usesInputDataframe: true,
-      preview: "basic columns"
+      preview: 'basic columns'
     },
     action: (
       payload: OperationPayload<{
@@ -792,16 +797,16 @@ export const operationCreators: OperationCreator[] = [
         outputCols: payload.outputCols
       });
     },
-    shortcut: "le"
+    shortcut: 'le'
   },
   {
-    key: "trim whitespaces",
-    name: "Trim whitespaces from column values",
-    alias: "Trim whitespaces",
+    key: 'trim whitespaces',
+    name: 'Trim whitespaces from column values',
+    alias: 'Trim whitespaces',
     defaultOptions: {
       usesInputCols: true,
       usesInputDataframe: true,
-      preview: "basic columns"
+      preview: 'basic columns'
     },
     action: (
       payload: OperationPayload<{
@@ -815,16 +820,16 @@ export const operationCreators: OperationCreator[] = [
         outputCols: payload.outputCols
       });
     },
-    shortcut: "lt"
+    shortcut: 'lt'
   },
   {
-    key: "normalize whitespaces",
-    name: "Normalize whitespaces in column values",
-    alias: "Normalize whitespaces",
+    key: 'normalize whitespaces',
+    name: 'Normalize whitespaces in column values',
+    alias: 'Normalize whitespaces',
     defaultOptions: {
       usesInputCols: true,
       usesInputDataframe: true,
-      preview: "basic columns"
+      preview: 'basic columns'
     },
     action: (
       payload: OperationPayload<{
@@ -838,16 +843,16 @@ export const operationCreators: OperationCreator[] = [
         outputCols: payload.outputCols
       });
     },
-    shortcut: "lns"
+    shortcut: 'lns'
   },
   {
-    key: "left substring",
-    name: "Left substring from column values",
-    alias: "Left substring",
+    key: 'left substring',
+    name: 'Left substring from column values',
+    alias: 'Left substring',
     defaultOptions: {
       usesInputCols: true,
       usesInputDataframe: true,
-      preview: "basic columns"
+      preview: 'basic columns'
     },
     action: (
       payload: OperationPayload<{
@@ -861,16 +866,16 @@ export const operationCreators: OperationCreator[] = [
         outputCols: payload.outputCols
       });
     },
-    shortcut: "lsl"
+    shortcut: 'lsl'
   },
   {
-    key: "right substring",
-    name: "Get the right substring from column values",
-    alias: "right substring",
+    key: 'right substring',
+    name: 'Get the right substring from column values',
+    alias: 'right substring',
     defaultOptions: {
       usesInputCols: true,
       usesInputDataframe: true,
-      preview: "basic columns"
+      preview: 'basic columns'
     },
     action: (
       payload: OperationPayload<{
@@ -883,16 +888,16 @@ export const operationCreators: OperationCreator[] = [
         outputCols: payload.outputCols
       });
     },
-    shortcut: "lsr"
+    shortcut: 'lsr'
   },
   {
-    key: "mid substring",
-    name: "Get the middle substring from column values",
-    alias: "mid",
+    key: 'mid substring',
+    name: 'Get the middle substring from column values',
+    alias: 'mid',
     defaultOptions: {
       usesInputCols: true,
       usesInputDataframe: true,
-      preview: "basic columns"
+      preview: 'basic columns'
     },
     action: (
       payload: OperationPayload<{
@@ -908,16 +913,16 @@ export const operationCreators: OperationCreator[] = [
         outputCols: payload.outputCols
       });
     },
-    shortcut: "lsm"
+    shortcut: 'lsm'
   },
   {
-    key: "pad",
-    name: "Add padding characters",
-    alias: "padding",
+    key: 'pad',
+    name: 'Add padding characters',
+    alias: 'padding',
     defaultOptions: {
       usesInputCols: true,
       usesInputDataframe: true,
-      preview: "basic columns"
+      preview: 'basic columns'
     },
     action: (
       payload: OperationPayload<{
@@ -933,18 +938,18 @@ export const operationCreators: OperationCreator[] = [
         outputCols: payload.outputCols
       });
     },
-    shortcut: "lp"
+    shortcut: 'lp'
   },
 
   // Numeric
   {
-    key: "Absolute Value",
-    name: "Absolute Value from column values",
-    alias: "mid",
+    key: 'Absolute Value',
+    name: 'Absolute Value from column values',
+    alias: 'mid',
     defaultOptions: {
       usesInputCols: true,
       usesInputDataframe: true,
-      preview: "basic columns"
+      preview: 'basic columns'
     },
     action: (payload: OperationPayload): Source => {
       return payload.source.cols.abs({
@@ -953,16 +958,16 @@ export const operationCreators: OperationCreator[] = [
         outputCols: payload.outputCols
       });
     },
-    shortcut: "na"
+    shortcut: 'na'
   },
   {
-    key: "Round number",
-    name: "Round Number from column values",
-    alias: "mid",
+    key: 'Round number',
+    name: 'Round Number from column values',
+    alias: 'mid',
     defaultOptions: {
       usesInputCols: true,
       usesInputDataframe: true,
-      preview: "basic columns"
+      preview: 'basic columns'
     },
     action: (
       payload: OperationPayload<{
@@ -976,16 +981,16 @@ export const operationCreators: OperationCreator[] = [
         outputCols: payload.outputCols
       });
     },
-    shortcut: "nr"
+    shortcut: 'nr'
   },
   {
-    key: "Floor",
-    name: "Floor Number from column values",
-    alias: "floor",
+    key: 'Floor',
+    name: 'Floor Number from column values',
+    alias: 'floor',
     defaultOptions: {
       usesInputCols: true,
       usesInputDataframe: true,
-      preview: "basic columns"
+      preview: 'basic columns'
     },
     action: (payload: OperationPayload): Source => {
       return payload.source.cols.floor({
@@ -994,16 +999,16 @@ export const operationCreators: OperationCreator[] = [
         outputCols: payload.outputCols
       });
     },
-    shortcut: "nf"
+    shortcut: 'nf'
   },
   {
-    key: "Ceil",
-    name: "Ceil from column values",
-    alias: "ceil",
+    key: 'Ceil',
+    name: 'Ceil from column values',
+    alias: 'ceil',
     defaultOptions: {
       usesInputCols: true,
       usesInputDataframe: true,
-      preview: "basic columns"
+      preview: 'basic columns'
     },
     action: (payload: OperationPayload): Source => {
       return payload.source.cols.ceil({
@@ -1012,16 +1017,16 @@ export const operationCreators: OperationCreator[] = [
         outputCols: payload.outputCols
       });
     },
-    shortcut: "nc"
+    shortcut: 'nc'
   },
   {
-    key: "Modulo",
-    name: "Modulo from column values",
-    alias: "modulo",
+    key: 'Modulo',
+    name: 'Modulo from column values',
+    alias: 'modulo',
     defaultOptions: {
       usesInputCols: true,
       usesInputDataframe: true,
-      preview: "basic columns"
+      preview: 'basic columns'
     },
     action: (payload: OperationPayload): Source => {
       return payload.source.cols.mod({
@@ -1030,16 +1035,16 @@ export const operationCreators: OperationCreator[] = [
         outputCols: payload.outputCols
       });
     },
-    shortcut: "nm"
+    shortcut: 'nm'
   },
   {
-    key: "logarithm",
-    name: "Logarithm from column values",
-    alias: "log logarithm",
+    key: 'logarithm',
+    name: 'Logarithm from column values',
+    alias: 'log logarithm',
     defaultOptions: {
       usesInputCols: true,
       usesInputDataframe: true,
-      preview: "basic columns"
+      preview: 'basic columns'
     },
     action: (
       payload: OperationPayload<{
@@ -1053,16 +1058,16 @@ export const operationCreators: OperationCreator[] = [
         outputCols: payload.outputCols
       });
     },
-    shortcut: "nl"
+    shortcut: 'nl'
   },
   {
-    key: "natural logarithm",
-    name: "natural Logarithm from column values",
-    alias: "natural logarithm",
+    key: 'natural logarithm',
+    name: 'natural Logarithm from column values',
+    alias: 'natural logarithm',
     defaultOptions: {
       usesInputCols: true,
       usesInputDataframe: true,
-      preview: "basic columns"
+      preview: 'basic columns'
     },
     action: (payload: OperationPayload): Source => {
       return payload.source.cols.ln({
@@ -1071,16 +1076,16 @@ export const operationCreators: OperationCreator[] = [
         outputCols: payload.outputCols
       });
     },
-    shortcut: "nnl"
+    shortcut: 'nnl'
   },
   {
-    key: "power",
-    name: "power from column values",
-    alias: "power",
+    key: 'power',
+    name: 'power from column values',
+    alias: 'power',
     defaultOptions: {
       usesInputCols: true,
       usesInputDataframe: true,
-      preview: "basic columns"
+      preview: 'basic columns'
     },
     action: (
       payload: OperationPayload<{
@@ -1094,16 +1099,16 @@ export const operationCreators: OperationCreator[] = [
         outputCols: payload.outputCols
       });
     },
-    shortcut: "np"
+    shortcut: 'np'
   },
   {
-    key: "square root",
-    name: "Square Root from column values",
-    alias: "square root sqrt",
+    key: 'square root',
+    name: 'Square Root from column values',
+    alias: 'square root sqrt',
     defaultOptions: {
       usesInputCols: true,
       usesInputDataframe: true,
-      preview: "basic columns"
+      preview: 'basic columns'
     },
     action: (payload: OperationPayload): Source => {
       return payload.source.cols.sqrt({
@@ -1112,17 +1117,17 @@ export const operationCreators: OperationCreator[] = [
         outputCols: payload.outputCols
       });
     },
-    shortcut: "np"
+    shortcut: 'np'
   },
   // Trigonometrics
   {
-    key: "sin",
-    name: "Sine from column values",
-    alias: "sin sine",
+    key: 'sin',
+    name: 'Sine from column values',
+    alias: 'sin sine',
     defaultOptions: {
       usesInputCols: true,
       usesInputDataframe: true,
-      preview: "basic columns"
+      preview: 'basic columns'
     },
     action: (payload: OperationPayload): Source => {
       return payload.source.cols.sin({
@@ -1131,17 +1136,17 @@ export const operationCreators: OperationCreator[] = [
         outputCols: payload.outputCols
       });
     },
-    shortcut: "ts"
+    shortcut: 'ts'
   },
   //  Create the creaOperatino fon cos
   {
-    key: "cos",
-    name: "Cosine from column values",
-    alias: "cos cosine",
+    key: 'cos',
+    name: 'Cosine from column values',
+    alias: 'cos cosine',
     defaultOptions: {
       usesInputCols: true,
       usesInputDataframe: true,
-      preview: "basic columns"
+      preview: 'basic columns'
     },
     action: (payload: OperationPayload): Source => {
       return payload.source.cols.cos({
@@ -1150,17 +1155,17 @@ export const operationCreators: OperationCreator[] = [
         outputCols: payload.outputCols
       });
     },
-    shortcut: "tc"
+    shortcut: 'tc'
   },
   //  Create the creaOperatino for tan
   {
-    key: "tan",
-    name: "Tangent from column values",
-    alias: "tan tangent",
+    key: 'tan',
+    name: 'Tangent from column values',
+    alias: 'tan tangent',
     defaultOptions: {
       usesInputCols: true,
       usesInputDataframe: true,
-      preview: "basic columns"
+      preview: 'basic columns'
     },
     action: (payload: OperationPayload): Source => {
       return payload.source.cols.tan({
@@ -1169,16 +1174,16 @@ export const operationCreators: OperationCreator[] = [
         outputCols: payload.outputCols
       });
     },
-    shortcut: "tt"
+    shortcut: 'tt'
   },
   {
-    key: "asin",
-    name: "Inverse sine from column values",
-    alias: "asin arcsine arcsin",
+    key: 'asin',
+    name: 'Inverse sine from column values',
+    alias: 'asin arcsine arcsin',
     defaultOptions: {
       usesInputCols: true,
       usesInputDataframe: true,
-      preview: "basic columns"
+      preview: 'basic columns'
     },
     action: (payload: OperationPayload): Source => {
       return payload.source.cols.asin({
@@ -1187,17 +1192,17 @@ export const operationCreators: OperationCreator[] = [
         outputCols: payload.outputCols
       });
     },
-    shortcut: "tas"
+    shortcut: 'tas'
   },
   //  Create the creaOperatino fon cos
   {
-    key: "acos",
-    name: "Inverse cosine from column values",
-    alias: "acos acosine arccosine arccos",
+    key: 'acos',
+    name: 'Inverse cosine from column values',
+    alias: 'acos acosine arccosine arccos',
     defaultOptions: {
       usesInputCols: true,
       usesInputDataframe: true,
-      preview: "basic columns"
+      preview: 'basic columns'
     },
     action: (payload: OperationPayload): Source => {
       return payload.source.cols.acos({
@@ -1206,17 +1211,17 @@ export const operationCreators: OperationCreator[] = [
         outputCols: payload.outputCols
       });
     },
-    shortcut: "tac"
+    shortcut: 'tac'
   },
   //  Create the creaOperatino for tan
   {
-    key: "atan",
-    name: "Inverse tangent from column values",
-    alias: "atan atangent arctan atan arctangent",
+    key: 'atan',
+    name: 'Inverse tangent from column values',
+    alias: 'atan atangent arctan atan arctangent',
     defaultOptions: {
       usesInputCols: true,
       usesInputDataframe: true,
-      preview: "basic columns"
+      preview: 'basic columns'
     },
     action: (payload: OperationPayload): Source => {
       return payload.source.cols.atan({
@@ -1225,16 +1230,16 @@ export const operationCreators: OperationCreator[] = [
         outputCols: payload.outputCols
       });
     },
-    shortcut: "tat"
+    shortcut: 'tat'
   },
   {
-    key: "sinh",
-    name: "Hyperbolic sine from column values",
-    alias: "sinh hyperbolic sin sine",
+    key: 'sinh',
+    name: 'Hyperbolic sine from column values',
+    alias: 'sinh hyperbolic sin sine',
     defaultOptions: {
       usesInputCols: true,
       usesInputDataframe: true,
-      preview: "basic columns"
+      preview: 'basic columns'
     },
     action: (payload: OperationPayload): Source => {
       return payload.source.cols.sinh({
@@ -1243,17 +1248,17 @@ export const operationCreators: OperationCreator[] = [
         outputCols: payload.outputCols
       });
     },
-    shortcut: "tsh"
+    shortcut: 'tsh'
   },
   //  Create the creaOperatino fon cos
   {
-    key: "cosh",
-    name: "Hyperbolic cosine from column values",
-    alias: "cosh hyperbolic cos cosine",
+    key: 'cosh',
+    name: 'Hyperbolic cosine from column values',
+    alias: 'cosh hyperbolic cos cosine',
     defaultOptions: {
       usesInputCols: true,
       usesInputDataframe: true,
-      preview: "basic columns"
+      preview: 'basic columns'
     },
     action: (payload: OperationPayload): Source => {
       return payload.source.cols.cosh({
@@ -1262,17 +1267,17 @@ export const operationCreators: OperationCreator[] = [
         outputCols: payload.outputCols
       });
     },
-    shortcut: "tch"
+    shortcut: 'tch'
   },
   //  Create the creaOperatino for tan
   {
-    key: "tanh",
-    name: "Hyperbolic tangent from column values",
-    alias: "tanh hyperbolic tan tangent",
+    key: 'tanh',
+    name: 'Hyperbolic tangent from column values',
+    alias: 'tanh hyperbolic tan tangent',
     defaultOptions: {
       usesInputCols: true,
       usesInputDataframe: true,
-      preview: "basic columns"
+      preview: 'basic columns'
     },
     action: (payload: OperationPayload): Source => {
       return payload.source.cols.tanh({
@@ -1281,16 +1286,16 @@ export const operationCreators: OperationCreator[] = [
         outputCols: payload.outputCols
       });
     },
-    shortcut: "tth"
+    shortcut: 'tth'
   },
   {
-    key: "asinh",
-    name: "Inverse hyperbolic sine from column values",
-    alias: "asinh arc hyperbolic sin sine inverse",
+    key: 'asinh',
+    name: 'Inverse hyperbolic sine from column values',
+    alias: 'asinh arc hyperbolic sin sine inverse',
     defaultOptions: {
       usesInputCols: true,
       usesInputDataframe: true,
-      preview: "basic columns"
+      preview: 'basic columns'
     },
     action: (payload: OperationPayload): Source => {
       return payload.source.cols.asinh({
@@ -1299,17 +1304,17 @@ export const operationCreators: OperationCreator[] = [
         outputCols: payload.outputCols
       });
     },
-    shortcut: "tash"
+    shortcut: 'tash'
   },
   //  Create the create Operatino for cos
   {
-    key: "acosh",
-    name: "Inverse hyperbolic cosine from column values",
-    alias: "acosh arc hyperbolic cos cosine inverse",
+    key: 'acosh',
+    name: 'Inverse hyperbolic cosine from column values',
+    alias: 'acosh arc hyperbolic cos cosine inverse',
     defaultOptions: {
       usesInputCols: true,
       usesInputDataframe: true,
-      preview: "basic columns"
+      preview: 'basic columns'
     },
     action: (payload: OperationPayload): Source => {
       return payload.source.cols.acosh({
@@ -1318,17 +1323,17 @@ export const operationCreators: OperationCreator[] = [
         outputCols: payload.outputCols
       });
     },
-    shortcut: "tach"
+    shortcut: 'tach'
   },
   //  Create the creaOperatino for tan
   {
-    key: "atanh",
-    name: "Inverse hyperbolic tangent from column values",
-    alias: "atanh arc hyperbolic tan tangent inverse",
+    key: 'atanh',
+    name: 'Inverse hyperbolic tangent from column values',
+    alias: 'atanh arc hyperbolic tan tangent inverse',
     defaultOptions: {
       usesInputCols: true,
       usesInputDataframe: true,
-      preview: "basic columns"
+      preview: 'basic columns'
     },
     action: (payload: OperationPayload): Source => {
       return payload.source.cols.atanh({
@@ -1337,17 +1342,17 @@ export const operationCreators: OperationCreator[] = [
         outputCols: payload.outputCols
       });
     },
-    shortcut: "tath"
+    shortcut: 'tath'
   },
   // Date/Time Functions
   {
-    key: "Extract from Date",
-    name: "Extract part of a date from a column",
-    alias: "extract date year month day hour minute second",
+    key: 'Extract from Date',
+    name: 'Extract part of a date from a column',
+    alias: 'extract date year month day hour minute second',
     defaultOptions: {
       usesInputCols: true,
       usesInputDataframe: true,
-      preview: "basic columns"
+      preview: 'basic columns'
     },
     action: (payload: {
       source: Source;
@@ -1367,53 +1372,53 @@ export const operationCreators: OperationCreator[] = [
     },
     fields: [
       {
-        name: "type",
-        label: "Type",
-        type: "custom",
+        name: 'type',
+        label: 'Type',
+        type: 'custom',
         options: [
-          { value: { name: "year", format: "%Y" }, text: "Year" },
-          { value: { name: "year", format: "%y" }, text: "Year (short)" },
-          { value: { name: "month", format: "%B" }, text: "Month name" },
+          { value: { name: 'year', format: '%Y' }, text: 'Year' },
+          { value: { name: 'year', format: '%y' }, text: 'Year (short)' },
+          { value: { name: 'month', format: '%B' }, text: 'Month name' },
           {
-            value: { name: "month", format: "%b" },
-            text: "Month name (short)"
+            value: { name: 'month', format: '%b' },
+            text: 'Month name (short)'
           },
-          { value: { name: "month", format: "%m" }, text: "Month as number" },
-          { value: { name: "day", format: "%d" }, text: "Day of month" },
-          { value: { name: "weekday", format: "%A" }, text: "Weekday" },
-          { value: { name: "weekday", format: "%a" }, text: "Weekday (short)" },
+          { value: { name: 'month', format: '%m' }, text: 'Month as number' },
+          { value: { name: 'day', format: '%d' }, text: 'Day of month' },
+          { value: { name: 'weekday', format: '%A' }, text: 'Weekday' },
+          { value: { name: 'weekday', format: '%a' }, text: 'Weekday (short)' },
           {
-            value: { name: "weekday", format: "%w" },
-            text: "Weekday as a number"
+            value: { name: 'weekday', format: '%w' },
+            text: 'Weekday as a number'
           },
-          { value: { name: "hour", format: "%I" }, text: "Hour (00-12)" },
-          { value: { name: "hour", format: "%H" }, text: "Hour (00-23)" },
-          { value: { name: "AM/PM", format: "%p" }, text: "AM/PM" },
-          { value: { name: "minute", format: "%M" }, text: "Minute" },
-          { value: { name: "UTC offset", format: "%z" }, text: "UTC offset" },
-          { value: { name: "timezone", format: "%Z" }, text: "Timezone" },
-          { value: { name: "day", format: "%j" }, text: "Day number of year" },
+          { value: { name: 'hour', format: '%I' }, text: 'Hour (00-12)' },
+          { value: { name: 'hour', format: '%H' }, text: 'Hour (00-23)' },
+          { value: { name: 'AM/PM', format: '%p' }, text: 'AM/PM' },
+          { value: { name: 'minute', format: '%M' }, text: 'Minute' },
+          { value: { name: 'UTC offset', format: '%z' }, text: 'UTC offset' },
+          { value: { name: 'timezone', format: '%Z' }, text: 'Timezone' },
+          { value: { name: 'day', format: '%j' }, text: 'Day number of year' },
           {
-            value: { name: "weekday", format: "%u" },
-            text: "Weekday of year (Mon as 1st)"
+            value: { name: 'weekday', format: '%u' },
+            text: 'Weekday of year (Mon as 1st)'
           },
           {
-            value: { name: "weekday", format: "%U" },
-            text: "Weekday of year (Sun as 1st)"
+            value: { name: 'weekday', format: '%U' },
+            text: 'Weekday of year (Sun as 1st)'
           }
         ]
       }
     ],
-    shortcut: "sed"
+    shortcut: 'sed'
   },
   {
-    key: "Extract from Date",
-    name: "Extract a part of a date from a column",
-    alias: "extract date year month day hour minute second",
+    key: 'Extract from Date',
+    name: 'Extract a part of a date from a column',
+    alias: 'extract date year month day hour minute second',
     defaultOptions: {
       usesInputCols: true,
       usesInputDataframe: true,
-      preview: "basic columns"
+      preview: 'basic columns'
     },
     action: (
       payload: OperationPayload<{
@@ -1430,30 +1435,30 @@ export const operationCreators: OperationCreator[] = [
     },
     fields: [
       {
-        name: "type",
-        label: "Type",
-        type: "custom",
+        name: 'type',
+        label: 'Type',
+        type: 'custom',
         options: [
-          { value: { name: "year", format: "%Y" }, text: "Year Between" },
-          { value: { name: "year", format: "%y" }, text: "Months Between" },
-          { value: { name: "month", format: "%B" }, text: "Days Between" },
-          { value: { name: "month", format: "%b" }, text: "Hours Between" },
-          { value: { name: "month", format: "%m" }, text: "Minutes Between" },
-          { value: { name: "day", format: "%d" }, text: "Seconds Between" }
+          { value: { name: 'year', format: '%Y' }, text: 'Year Between' },
+          { value: { name: 'year', format: '%y' }, text: 'Months Between' },
+          { value: { name: 'month', format: '%B' }, text: 'Days Between' },
+          { value: { name: 'month', format: '%b' }, text: 'Hours Between' },
+          { value: { name: 'month', format: '%m' }, text: 'Minutes Between' },
+          { value: { name: 'day', format: '%d' }, text: 'Seconds Between' }
         ]
       }
     ],
-    shortcut: "sed"
+    shortcut: 'sed'
   },
   // ML
   {
-    key: "sample",
-    name: "Get n samples from the dataframe",
-    alias: "sample",
+    key: 'sample',
+    name: 'Get n samples from the dataframe',
+    alias: 'sample',
     defaultOptions: {
       usesInputCols: true,
       usesInputDataframe: true,
-      preview: "basic columns"
+      preview: 'basic columns'
     },
     action: (
       payload: OperationPayload<{
@@ -1469,16 +1474,16 @@ export const operationCreators: OperationCreator[] = [
         outputCols: payload.outputCols
       });
     },
-    shortcut: "ms"
+    shortcut: 'ms'
   },
   {
-    key: "impute",
-    name: "Impute missing values in a column",
-    alias: "impute fill missing values",
+    key: 'impute',
+    name: 'Impute missing values in a column',
+    alias: 'impute fill missing values',
     defaultOptions: {
       usesInputCols: true,
       usesInputDataframe: true,
-      preview: "basic columns"
+      preview: 'basic columns'
     },
     action: (
       payload: OperationPayload<{
@@ -1494,28 +1499,28 @@ export const operationCreators: OperationCreator[] = [
     },
     fields: [
       {
-        name: "strategy",
-        label: "Fill empty values with",
+        name: 'strategy',
+        label: 'Fill empty values with',
         options: [
-          { value: "mean", text: "Mean" },
-          { value: "median", text: "Median" },
-          { value: "most_frequent", text: "Most frequent" },
-          { value: "constant", text: "Constant" }
+          { value: 'mean', text: 'Mean' },
+          { value: 'median', text: 'Median' },
+          { value: 'most_frequent', text: 'Most frequent' },
+          { value: 'constant', text: 'Constant' }
         ],
-        type: "string",
-        defaultValue: "mean"
+        type: 'string',
+        defaultValue: 'mean'
       }
     ],
-    shortcut: "mi"
+    shortcut: 'mi'
   },
   {
-    key: "One hot encoding",
-    name: "One hot encode the columns value",
-    alias: "one hot encoding encode",
+    key: 'One hot encoding',
+    name: 'One hot encode the columns value',
+    alias: 'one hot encoding encode',
     defaultOptions: {
       usesInputCols: true,
       usesInputDataframe: true,
-      preview: "basic columns"
+      preview: 'basic columns'
     },
     action: (
       payload: OperationPayload<{
@@ -1531,16 +1536,16 @@ export const operationCreators: OperationCreator[] = [
         outputCols: payload.outputCols
       });
     },
-    shortcut: "mo"
+    shortcut: 'mo'
   },
   {
-    key: "String to Index",
-    name: "Convert string values to integer in a column",
-    alias: "string to index",
+    key: 'String to Index',
+    name: 'Convert string values to integer in a column',
+    alias: 'string to index',
     defaultOptions: {
       usesInputCols: true,
       usesInputDataframe: true,
-      preview: "basic columns"
+      preview: 'basic columns'
     },
     action: (payload: OperationPayload): Source => {
       return payload.source.cols.stringToIndex({
@@ -1549,16 +1554,16 @@ export const operationCreators: OperationCreator[] = [
         outputCols: payload.outputCols
       });
     },
-    shortcut: "msi"
+    shortcut: 'msi'
   },
   {
-    key: "Index to String",
-    name: "Convert Index values back to String in a column",
-    alias: "index to string",
+    key: 'Index to String',
+    name: 'Convert Index values back to String in a column',
+    alias: 'index to string',
     defaultOptions: {
       usesInputCols: true,
       usesInputDataframe: true,
-      preview: "basic columns"
+      preview: 'basic columns'
     },
     action: (payload: OperationPayload): Source => {
       return payload.source.cols.indexToString({
@@ -1567,16 +1572,16 @@ export const operationCreators: OperationCreator[] = [
         outputCols: payload.outputCols
       });
     },
-    shortcut: "mis"
+    shortcut: 'mis'
   },
   {
-    key: "ZScore",
-    name: "Z-score in a column",
-    alias: "zscore",
+    key: 'ZScore',
+    name: 'Z-score in a column',
+    alias: 'zscore',
     defaultOptions: {
       usesInputCols: true,
       usesInputDataframe: true,
-      preview: "basic columns"
+      preview: 'basic columns'
     },
     action: (payload: OperationPayload): Source => {
       return payload.source.cols.zScore({
@@ -1585,16 +1590,16 @@ export const operationCreators: OperationCreator[] = [
         outputCols: payload.outputCols
       });
     },
-    shortcut: "msi"
+    shortcut: 'msi'
   },
   {
-    key: "Standard Scaler",
-    name: "standard scaler in a column",
-    alias: "standard scaler",
+    key: 'Standard Scaler',
+    name: 'standard scaler in a column',
+    alias: 'standard scaler',
     defaultOptions: {
       usesInputCols: true,
       usesInputDataframe: true,
-      preview: "basic columns"
+      preview: 'basic columns'
     },
     action: (payload: OperationPayload): Source => {
       return payload.source.cols.standardScaler({
@@ -1603,16 +1608,16 @@ export const operationCreators: OperationCreator[] = [
         outputCols: payload.outputCols
       });
     },
-    shortcut: "mss"
+    shortcut: 'mss'
   },
   {
-    key: "Min Max Scaler",
-    name: "Min max scaler in a column",
-    alias: "minmax min max scaler",
+    key: 'Min Max Scaler',
+    name: 'Min max scaler in a column',
+    alias: 'minmax min max scaler',
     defaultOptions: {
       usesInputCols: true,
       usesInputDataframe: true,
-      preview: "basic columns"
+      preview: 'basic columns'
     },
     action: (payload: OperationPayload): Source => {
       return payload.source.cols.minMaxScaler({
@@ -1621,16 +1626,16 @@ export const operationCreators: OperationCreator[] = [
         outputCols: payload.outputCols
       });
     },
-    shortcut: "mmms"
+    shortcut: 'mmms'
   },
   {
-    key: "MaxAbs Scaler Scaler",
-    name: "MaxAbs scaler in a column",
-    alias: "max abs maxabs scaler",
+    key: 'MaxAbs Scaler Scaler',
+    name: 'MaxAbs scaler in a column',
+    alias: 'max abs maxabs scaler',
     defaultOptions: {
       usesInputCols: true,
       usesInputDataframe: true,
-      preview: "basic columns"
+      preview: 'basic columns'
     },
     action: (payload: OperationPayload): Source => {
       return payload.source.cols.maxAbsScaler({
@@ -1639,18 +1644,18 @@ export const operationCreators: OperationCreator[] = [
         outputCols: payload.outputCols
       });
     },
-    shortcut: "mmas"
+    shortcut: 'mmas'
   },
 
   //
   {
-    key: "Remove Stop-words",
-    name: "Remove stop-words from column values",
-    alias: "mid",
+    key: 'Remove Stop-words',
+    name: 'Remove stop-words from column values',
+    alias: 'mid',
     defaultOptions: {
       usesInputCols: true,
       usesInputDataframe: true,
-      preview: "basic columns"
+      preview: 'basic columns'
     },
     action: (
       payload: OperationPayload<{
@@ -1666,12 +1671,12 @@ export const operationCreators: OperationCreator[] = [
         outputCols: payload.outputCols
       });
     },
-    shortcut: "lrw"
+    shortcut: 'lrw'
   },
   {
-    key: "unnestColumns",
-    name: "Unnest columns",
-    alias: "Split cols unnest",
+    key: 'unnestColumns',
+    name: 'Unnest columns',
+    alias: 'Split cols unnest',
     defaultOptions: {
       usesInputCols: true,
       usesInputDataframe: true
@@ -1693,17 +1698,17 @@ export const operationCreators: OperationCreator[] = [
     },
     fields: [
       {
-        name: "separator",
-        label: "Separator",
-        type: "string"
+        name: 'separator',
+        label: 'Separator',
+        type: 'string'
       }
     ],
-    shortcut: "cu"
+    shortcut: 'cu'
   },
   {
-    key: "nestColumns",
-    name: "Nest columns",
-    alias: "Unsplit cols nest",
+    key: 'nestColumns',
+    name: 'Nest columns',
+    alias: 'Unsplit cols nest',
     defaultOptions: {
       usesInputCols: true,
       usesInputDataframe: true,
@@ -1716,7 +1721,7 @@ export const operationCreators: OperationCreator[] = [
     ): boolean => {
       if (payload.options.preview) {
         if (payload.cols.length <= 1) {
-          throw new PreviewError("At least two columns are required", {
+          throw new PreviewError('At least two columns are required', {
             cause: payload.cols
           });
         }
@@ -1738,12 +1743,12 @@ export const operationCreators: OperationCreator[] = [
     },
     fields: [
       {
-        name: "separator",
-        label: "Separator",
-        type: "string"
+        name: 'separator',
+        label: 'Separator',
+        type: 'string'
       }
     ],
-    shortcut: "cn"
+    shortcut: 'cn'
   }
 ];
 
@@ -1754,13 +1759,13 @@ const preparePayload = (operation: Operation, payload: Payload): Payload => {
     payload.options as OperationOptions
   );
   if (options.usesInputDataframe && !payload.source) {
-    throw new Error("Input dataframe is required");
+    throw new Error('Input dataframe is required');
   }
   if (
     options.usesInputCols &&
     (!payload.cols || (Array.isArray(payload.cols) && payload.cols.length < 1))
   ) {
-    throw new Error("Input columns are required");
+    throw new Error('Input columns are required');
   }
   if (options.usesOutputCols && !payload.outputCols) {
     if (options.usesInputCols && payload.cols) {
@@ -1769,11 +1774,11 @@ const preparePayload = (operation: Operation, payload: Payload): Payload => {
         outputCols: payload.cols
       };
     } else {
-      throw new Error("Output columns are required");
+      throw new Error('Output columns are required');
     }
   }
 
-  if (options.preview === "basic columns" && payload.cols) {
+  if (options.preview === 'basic columns' && payload.cols) {
     payload = {
       ...payload,
       outputCols: (payload.cols as Cols).map(
@@ -1805,7 +1810,7 @@ const preparePayload = (operation: Operation, payload: Payload): Payload => {
  */
 
 const createOperation = (operationCreator: OperationCreator): Operation => {
-  if ("uses" in operationCreator) {
+  if ('uses' in operationCreator) {
     const foundOperation = operationCreators.find(
       operation => operation.key === operationCreator.uses
     );
@@ -1822,7 +1827,7 @@ const createOperation = (operationCreator: OperationCreator): Operation => {
     });
 
     if (
-      "defaultPayload" in operationCreator &&
+      'defaultPayload' in operationCreator &&
       operationCreator.defaultPayload &&
       isObject(operationCreator.defaultPayload)
     ) {
@@ -1832,7 +1837,7 @@ const createOperation = (operationCreator: OperationCreator): Operation => {
           operationCreator.defaultPayload &&
           newField.name in operationCreator.defaultPayload
         ) {
-          if (newField.type !== "group") {
+          if (newField.type !== 'group') {
             newField.defaultValue =
               operationCreator.defaultPayload[newField.name];
           }
@@ -1849,7 +1854,7 @@ const createOperation = (operationCreator: OperationCreator): Operation => {
   operation.defaultOptions = Object.assign(
     {},
     operationCreator.defaultOptions || {},
-    { targetType: "dataframe" }
+    { targetType: 'dataframe' }
   );
 
   operation.validate = (payload: Payload) => {
@@ -1863,7 +1868,7 @@ const createOperation = (operationCreator: OperationCreator): Operation => {
   operation.action = (payload: Payload) => {
     payload = preparePayload(operation, payload);
     if (operationCreator.validate?.(payload) === false) {
-      throw new Error("Validation failed");
+      throw new Error('Validation failed');
     }
     return operationCreator.action(payload);
   };
@@ -1885,25 +1890,25 @@ function whereExpression(
     condition = `numeric_${condition}`;
   }
   switch (condition) {
-    case "equal":
+    case 'equal':
       return `df["${col}"]=="${value}"`;
-    case "numeric_equal":
+    case 'numeric_equal':
       return `(df["${col}"]==${value}) | (df["${col}"]=="${value}")`;
-    case "not_equal":
+    case 'not_equal':
       return `df["${col}"]!="${value}"`;
-    case "numeric_not_equal":
+    case 'numeric_not_equal':
       return `(df["${col}"]!=${value}) & (df["${col}"]!="${value}")`;
-    case "value_in":
+    case 'value_in':
       value = Array.isArray(value) ? value : [value];
-      return `df.mask.value_in("${col}", "${value.join("\",\"")}")`;
-    case "numeric_value_in":
+      return `df.mask.value_in("${col}", "${value.join('","')}")`;
+    case 'numeric_value_in':
       value = Array.isArray(value) ? value : [value];
       return (
-        `df.mask.value_in("${col}", "${value.join("\",\"")}") ` +
-        `& df.mask.value_in("${col}", ${value.join(",")})`
+        `df.mask.value_in("${col}", "${value.join('","')}") ` +
+        `& df.mask.value_in("${col}", ${value.join(',')})`
       );
     default:
-      console.warn("Unknown condition", condition);
+      console.warn('Unknown condition', condition);
   }
-  return "";
+  return '';
 }
