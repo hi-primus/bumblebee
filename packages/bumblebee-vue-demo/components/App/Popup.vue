@@ -3,7 +3,7 @@
     <div
       :style="attrStyle"
       :class="attrClass"
-      class="popup w-full h-screen absolute top-0 left-0 z-10 bg-black/30 flex items-center justify-center"
+      class="popup w-full h-screen absolute top-0 left-0 z-30 bg-black/30 flex items-center justify-center"
       @click="emit('close')"
     >
       <div
