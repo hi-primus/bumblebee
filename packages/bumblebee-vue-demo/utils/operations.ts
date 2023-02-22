@@ -37,11 +37,25 @@ export const operationCreators: OperationCreator[] = [
 
       if (payload.file) {
         const buffer = await payload.file.arrayBuffer();
+        const fileName = payload.file.name;
+
         return payload.blurr.readFile({
           buffer,
+          nRows: payload.nRows,
+          meta: {
+            file_name: fileName
+          }
+        });
+      }
+
+      if (payload.url) {
+        return payload.blurr.readFile({
+          url: payload.url,
           nRows: payload.nRows
         });
       }
+
+      throw new Error('No file or url provided.');
     },
     fields: [
       {

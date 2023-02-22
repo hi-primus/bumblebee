@@ -5,7 +5,7 @@ import { Blurr } from '../../client';
 test('unique-name', async (t) => {
   const blurr = Blurr();
 
-  const df = blurr.readCsv({
+  const df = blurr.readFile({
     url: 'https://raw.githubusercontent.com/hi-primus/optimus/develop/examples/data/foo.csv',
   });
 

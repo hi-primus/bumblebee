@@ -1,5 +1,6 @@
 import type { ArgsType, OperationCreator } from '../../../types/operation';
 import type { Source } from '../../../types/source';
+import { pythonString } from '../../utils';
 import { BlurrOperation } from '../factory';
 
 function DataframeCreationOperation<
@@ -21,53 +22,11 @@ export const operations = {
     defaultSource: 'op',
     args: [{ name: 'data' }],
   }),
-  readCsv: DataframeCreationOperation<{
-    url?: string;
-    buffer?: string;
-    nRows?: number;
-  }>({
-    name: 'readCsv',
-    args: [
-      {
-        name: 'url',
-      },
-      {
-        name: 'buffer',
-      },
-      {
-        name: 'nRows',
-      },
-    ],
-    getCode: function (kwargs: {
-      target: string;
-      url: string;
-      buffer: string;
-      n_rows: number;
-    }) {
-      if (kwargs.url) {
-        return (
-          (kwargs.target ? `${kwargs.target} = ` : '') +
-          `op.load.csv('${kwargs.url}'` +
-          (kwargs.n_rows ? `, n_rows=${kwargs.n_rows}` : '') +
-          `)`
-        );
-      }
-      if (kwargs.buffer) {
-        return (
-          `${kwargs.buffer}_py = BytesIO(${kwargs.buffer}.to_py());` +
-          (kwargs.target ? `${kwargs.target} = ` : '') +
-          `op.load.csv(${kwargs.buffer}_py` +
-          (kwargs.n_rows ? `, n_rows=${kwargs.n_rows}` : '') +
-          `)`
-        );
-      }
-      throw new Error("Either 'url' or 'buffer' must be provided");
-    },
-  }),
   readFile: DataframeCreationOperation<{
     url?: string;
     buffer?: string;
     nRows?: number;
+    meta?: PythonDictionary;
   }>({
     name: 'readFile',
     args: [
@@ -80,18 +39,23 @@ export const operations = {
       {
         name: 'nRows',
       },
+      {
+        name: 'meta',
+      },
     ],
     getCode: function (kwargs: {
       target: string;
       url: string;
       buffer: string;
       n_rows: number;
+      meta: PythonDictionary;
     }) {
       if (kwargs.url) {
         return (
           (kwargs.target ? `${kwargs.target} = ` : '') +
           `op.load.file('${kwargs.url}'` +
           (kwargs.n_rows ? `, n_rows=${kwargs.n_rows}` : '') +
+          (kwargs.meta ? `, meta=${pythonString(kwargs.meta)}` : '') +
           `)`
         );
       }
@@ -99,7 +63,10 @@ export const operations = {
         return (
           `${kwargs.buffer}_py = BytesIO(${kwargs.buffer}.to_py());` +
           (kwargs.target ? `${kwargs.target} = ` : '') +
-          `op.load.file(${kwargs.buffer}_py)`
+          `op.load.file(${kwargs.buffer}_py` +
+          (kwargs.n_rows ? `, n_rows=${kwargs.n_rows}` : '') +
+          (kwargs.meta ? `, meta=${pythonString(kwargs.meta)}` : '') +
+          `)`
         );
       }
       throw new Error("Either 'url' or 'buffer' must be provided");

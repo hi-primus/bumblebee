@@ -56,7 +56,7 @@ const enabled = ref(false);
 const code = ref(`
 url = "https://raw.githubusercontent.com/hi-primus/optimus/develop/examples/data/foo.csv";
 
-df = blurr.readCsv({ url });
+df = blurr.readFile({ url });
 
 return await df.cols.names();
 `);

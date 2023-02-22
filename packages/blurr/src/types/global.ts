@@ -18,6 +18,8 @@ declare global {
     | R<PythonCompatible>
     | Array<PythonCompatible>;
 
+  type PythonDictionary = Record<string, PythonCompatible>;
+
   type BasicOperationCompatible =
     | BasicPythonCompatible
     | ArrayBuffer
