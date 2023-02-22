@@ -28,16 +28,10 @@
         <div class="flex justify-center items-center gap-2">
           <AppButton
             class="btn-size-large btn-color-primary-light"
-            @click="loadFromUrl"
-          >
-            Load from URL
-          </AppButton>
-          <!-- <div class="text-lg text-text-light font-bold">or</div>
-          <AppButton
-            class="btn-size-large btn-color-primary-light"
+            @click="loadFromFile"
           >
             Load from file
-          </AppButton> -->
+          </AppButton>
         </div>
       </WorkspaceDataframeLayout>
     </div>
@@ -451,8 +445,8 @@ const operationActions: OperationActions = {
   }
 };
 
-const loadFromUrl = () => {
-  const operation = operations.find(o => o.key === 'loadFromUrl');
+const loadFromFile = () => {
+  const operation = operations.find(o => o.key === 'loadFromFile');
   if (operation) {
     operationActions.selectOperation(operation);
   }

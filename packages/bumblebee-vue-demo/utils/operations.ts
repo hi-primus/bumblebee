@@ -18,8 +18,8 @@ type OperationPayload<
 
 export const operationCreators: OperationCreator[] = [
   {
-    key: "loadFromUrl",
-    name: "Load from url",
+    key: 'loadFromFile',
+    name: 'Load from file',
     defaultOptions: {
       saveToNewDataframe: true,
       preview: "whole"
@@ -45,17 +45,17 @@ export const operationCreators: OperationCreator[] = [
     },
     fields: [
       {
-        name: "url",
-        label: "Url",
-        type: "string"
+        name: 'file',
+        label: 'File',
+        type: 'file'
       },
       {
-        name: "file",
-        label: "File",
-        type: "file"
+        name: 'url',
+        label: 'Url',
+        type: 'string'
       }
     ],
-    shortcut: "ff"
+    shortcut: 'lf'
   },
   {
     key: "saveCsv",
