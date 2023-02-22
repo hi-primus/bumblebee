@@ -1,0 +1,37 @@
+.toast {
+  &:not([class*='toast-']),
+  &.toast-primary {
+    --toast-text-color: theme('colors.white');
+    --toast-color: theme('colors.primary.dark');
+  }
+
+  &.toast-primary-light {
+    --toast-text-color: theme('colors.white');
+    --toast-color: theme('colors.primary.DEFAULT');
+  }
+
+  &.toast-primary-lighter {
+    --toast-text-color: theme('colors.white');
+    --toast-color: theme('colors.primary.light');
+  }
+
+  &.toast-text {
+    --toast-text-color: theme('colors.white');
+    --toast-color: theme('colors.text.DEFAULT');
+  }
+
+  &.toast-success {
+    --toast-text-color: theme('colors.text.alpha');
+    --toast-color: theme('colors.success.light');
+  }
+
+  &.toast-error {
+    --toast-text-color: theme('colors.white');
+    --toast-color: theme('colors.error.dark');
+  }
+
+  &.toast-warn {
+    --toast-text-color: theme('colors.text.alpha');
+    --toast-color: theme('colors.warn.light');
+  }
+}
