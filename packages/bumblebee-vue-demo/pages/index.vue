@@ -74,7 +74,6 @@ const dataframes = ref<DataframeObject[]>([]);
 
 const tabs = computed(() => dataframes.value.filter(d => d.loaded));
 
-const selectedDataframe = ref(-1);
 const selectedTab = ref(-1);
 
 const appStatus = ref<AppStatus>('loading');
@@ -137,23 +136,13 @@ const closeDataframe = (tabIndex: number) => {
     dataframe => dataframe.sourceId === tabs.value[tabIndex].sourceId
   );
   if (selectedTab.value >= tabIndex) {
-    console.log(
-      'selectedTab.value',
-      selectedTab.value,
-      'tabIndex',
-      tabIndex,
-      '...reducing by 1'
-    );
     selectedTab.value = selectedTab.value - 1;
-    console.log(
-      'selectedTab.value',
-      selectedTab.value,
-      'tabIndex',
-      tabIndex,
-      '...is it reduced?'
-    );
   }
   dataframes.value[index].loaded = false;
+};
+
+const newSourceId = () => {
+  return dataframes.value.length.toString() + (+new Date()).toString();
 };
 
 const handleDataframeResults = async (
@@ -162,7 +151,8 @@ const handleDataframeResults = async (
 ) => {
   if (payload.options.targetType === 'dataframe') {
     const df = result as Source;
-    const sourceId = payload.options.sourceId;
+    let sourceId = payload.options.sourceId;
+
     let dataframeIndex = sourceId
       ? dataframes.value.findIndex(dataframe => dataframe.sourceId === sourceId)
       : -1;
@@ -463,18 +453,10 @@ const loadFromUrl = () => {
 const loadDataSource = (sourceId: string) => {
   // find sourceId index in dataframes
   const foundIndex = dataframes.value.findIndex(df => df.sourceId === sourceId);
-  console.log('loadDataSource', sourceId, dataframes.value, foundIndex);
   if (foundIndex !== -1) {
     dataframes.value[foundIndex].loaded = true;
     const foundTabIndex = tabs.value.findIndex(
       tab => tab.sourceId === sourceId
-    );
-    console.log(
-      'foundTabIndex is',
-      foundTabIndex,
-      'for',
-      sourceId,
-      '... setting to selectedTab'
     );
     selectedTab.value = foundTabIndex;
   }
