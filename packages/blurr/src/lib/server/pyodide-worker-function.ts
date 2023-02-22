@@ -42,7 +42,6 @@ export const initializeWorker = () => {
       await self.pyodide.loadPackage('micropip');
       self.micropip = self.pyodide.pyimport('micropip');
 
-      await self.micropip.install('scikit-learn');
       await self.micropip.install(
         'https://test-files.pythonhosted.org/packages/ab/60/2fecad6b39362497d92de23597777f412d2b22c758983897a1c53c998635/pyoptimus-0.1.4043-py3-none-any.whl'
       );
