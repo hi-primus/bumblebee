@@ -647,6 +647,38 @@ export const operationCreators: OperationCreator[] = [
   },
   // Columns operations
   {
+    key: "keep",
+    name: "Keep selected columns",
+    alias: "keep columns",
+    defaultOptions: {
+      usesInputCols: true,
+      usesInputDataframe: true,
+
+    },
+    action: (payload: OperationPayload): Source => {
+      return payload.source.cols.keep({
+        target: payload.target,
+        cols: payload.cols,
+      });
+    },
+    shortcut: "kc"
+  },  {
+    key: "drop",
+    name: "Drop selected columns",
+    alias: "drop columns",
+    defaultOptions: {
+      usesInputCols: true,
+      usesInputDataframe: true,
+    },
+    action: (payload: OperationPayload): Source => {
+      return payload.source.cols.drop({
+        target: payload.target,
+        cols: payload.cols,
+      });
+    },
+    shortcut: "dc"
+  },
+  {
     key: "lower",
     name: "Lowercase column values",
     alias: "Lowercase letters lower case",
