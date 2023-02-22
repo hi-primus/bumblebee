@@ -18,6 +18,7 @@
           <span v-for="(source, index) in dataSourcesFromCells" :key="index">
             <span v-if="index > 0">, </span>
             <button
+              type="button"
               class="text-primary"
               @click="loadDataSource(source.sourceId)"
             >

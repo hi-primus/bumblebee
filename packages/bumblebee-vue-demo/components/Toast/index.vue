@@ -33,7 +33,7 @@
       v-if="props.closable"
       class="h-16 w-16 text-3xl flex justify-center items-center ml--6 mr--2"
     >
-      <button @click="emit('close')">
+      <button type="button" @click="emit('close')">
         <Icon :path="mdiClose" />
       </button>
     </div>

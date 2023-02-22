@@ -67,7 +67,7 @@
           @blur="validate"
         />
         <div class="icons">
-          <button @click="clear">
+          <button type="button" @click="clear">
             <Icon
               v-if="(selected || search) && clearable"
               :path="mdiClose"

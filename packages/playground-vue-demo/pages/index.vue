@@ -9,6 +9,7 @@
       <div class="w-2/3">
         <div class="h-12 flex mb-4">
           <button
+            type="button"
             @click="runCode"
             class="bg-primary hover:bg-primary-darker text-white rounded px-4 py-2"
           >

@@ -23,7 +23,7 @@
         {{ myValue?.name || placeholder || 'Select a file' }}
       </span>
       <div class="icons">
-        <button @click="myValue = null">
+        <button type="button" @click="myValue = null">
           <Icon
             v-if="clearable && myValue"
             :path="mdiClose"
