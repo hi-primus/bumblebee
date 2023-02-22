@@ -271,8 +271,16 @@ const executeOperations = async () => {
 
   promisesResults.forEach((result, index) => {
     if (result.status === 'rejected') {
+      addToast({
+        title: 'Error while handling result of operation',
+        message: [
+          `Error on operation of index ${index}`,
+          result.reason as string
+        ],
+        type: 'error'
+      });
       console.error(
-        `Error while handling operation result #${index}: ${result.reason}`
+        `Error while handling result of operation of index ${index}: ${result.reason}`
       );
     }
   });
@@ -384,7 +392,12 @@ const operationActions: OperationActions = {
         appStatus.value = 'ready';
       }
     } catch (err) {
-      console.error('Error executing operation.', err); // TODO: show error in UI
+      addToast({
+        title: 'Error executing operation',
+        error: err,
+        type: 'error'
+      });
+      console.error('Error executing operation.', err);
       dataframeLayout.value?.clearChunks(true, false);
       if (appStatus.value === 'busy') {
         appStatus.value = 'ready';
