@@ -56,7 +56,9 @@ export const operations = {
         return (
           `${kwargs.buffer}_py = BytesIO(${kwargs.buffer}.to_py());` +
           (kwargs.target ? `${kwargs.target} = ` : '') +
-          `op.load.csv(${kwargs.buffer}_py)`
+          `op.load.csv(${kwargs.buffer}_py` +
+          (kwargs.n_rows ? `, n_rows=${kwargs.n_rows}` : '') +
+          `)`
         );
       }
       throw new Error("Either 'url' or 'buffer' must be provided");
