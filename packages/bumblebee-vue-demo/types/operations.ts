@@ -14,8 +14,9 @@ export interface OperationOptions {
   usesOutputCols?: boolean;
   usesInputDataframe?: boolean;
   saveToNewDataframe?: boolean;
+  oneTime?: boolean;
   sourceId?: string;
-  targetType: 'dataframe' | 'value';
+  targetType: 'dataframe' | 'value' | 'void';
   preview?: PreviewType;
 }
 
@@ -76,7 +77,7 @@ type OperationCreatorAction = OperationCreatorBase & {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   validate?: (...args: any) => any;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  action: (...args: any) => Promise<Source> | Source;
+  action: (...args: any) => PromiseOr<Source>;
 };
 
 type OperationCreatorParameters = OperationCreatorBase & {

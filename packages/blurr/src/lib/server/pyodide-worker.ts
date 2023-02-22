@@ -12,22 +12,19 @@ const defaultPyodideOptions: PyodideBackendOptions = {
   local: true,
 };
 
-function hasBuffer(
-  value: unknown
-): value is { _blurrArrayBuffer: true; value: ArrayBuffer } {
+function hasBuffer(value: unknown): value is { buffer: ArrayBuffer } {
   return (
     value &&
     typeof value === 'object' &&
-    '_blurrArrayBuffer' in value &&
-    'value' in value
+    'buffer' in value &&
+    (value as { buffer: ArrayBuffer }).buffer instanceof ArrayBuffer
   );
 }
 
 function toTransferables(value: unknown, transferables: ArrayBuffer[] = []) {
   if (value instanceof ArrayBuffer) {
     transferables.push(value);
-    console.log('transferables', transferables);
-    return value; // { _blurrArrayBuffer: true, value };
+    return value;
   } else if (Array.isArray(value)) {
     return value.map((v) => toTransferables(v, transferables));
   } else if (value && typeof value === 'object') {
@@ -43,8 +40,10 @@ function toTransferables(value: unknown, transferables: ArrayBuffer[] = []) {
 
 function toArrayBuffers(value: unknown) {
   if (value && typeof value === 'object') {
-    if (hasBuffer(value)) {
-      return value.value;
+    if (value instanceof ArrayBuffer) {
+      return value;
+    } else if (hasBuffer(value)) {
+      return value.buffer;
     } else if (Array.isArray(value)) {
       return value.map((v) => toArrayBuffers(v));
     } else {
@@ -173,8 +172,7 @@ export function ServerPyodideWorker(options: ServerOptions): ServerInterface {
     });
 
     return operations.reduce((promise: Promise<PythonCompatible>, _, i) => {
-      const { operation } = operations[i];
-      let { kwargs } = operations[i];
+      const { kwargs, operation } = operations[i];
 
       const _operation = (result) => {
         if (

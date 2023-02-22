@@ -78,8 +78,19 @@ export function ServerPyodide(options: ServerOptions): ServerInterface {
       from io import BytesIO
       from optimus.expressions import parse
       op = Optimus("pyodide")
+
       def run_method(method, kwargs):
           return method(**kwargs.to_py())
+          
+      def save_csv(df):
+          pdf = df.data
+          from io import BytesIO, TextIOWrapper
+          buffer = BytesIO()
+          charset = 'utf-8'
+          wrapper = TextIOWrapper(buffer, encoding=charset)
+          pdf.to_csv(wrapper, header=True, index=False, encoding=charset, date_format='%Y-%m-%dT%H:%M:%S.%fZ')
+          wrapper.flush()
+          return buffer.getvalue()
     `);
     return pyodide;
   });

@@ -209,7 +209,7 @@ export const pythonString = (param: PythonCompatible): string => {
         return (
           '{' +
           Object.keys(param)
-            .map((k) => `"${k}": ${pythonString(param[k])}`)
+            .map((k) => `"${k}": ${pythonString(param[k] as PythonCompatible)}`)
             .join(', ') +
           '}'
         );

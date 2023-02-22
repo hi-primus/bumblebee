@@ -68,6 +68,32 @@ export const operationCreators: OperationCreator[] = [
     shortcut: 'ff'
   },
   {
+    key: 'saveCsv',
+    name: 'Save to file',
+    defaultOptions: {
+      oneTime: true,
+      usesInputDataframe: true,
+      targetType: 'void'
+    },
+    action: async (payload: OperationPayload): Promise<Source> => {
+      const df = payload.source;
+      if (!df) {
+        throw new Error('No dataframe to save.');
+      }
+      const arrayBuffer = await df.saveCsv();
+      const blob = new Blob([arrayBuffer], { type: 'text/csv' });
+      const link = document.createElement('a');
+      const url = window.URL.createObjectURL(blob);
+      link.href = url;
+      link.download = 'data.csv';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      return df;
+    },
+    shortcut: 'sf'
+  },
+  {
     key: 'createCol',
     name: 'Create column',
     defaultOptions: {

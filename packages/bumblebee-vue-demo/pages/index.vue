@@ -351,6 +351,21 @@ const operationActions: OperationActions = {
       const { operation, payload } = prepareOperation();
 
       if (operation) {
+        if (payload.options.oneTime) {
+          await operation.action({
+            ...payload,
+            options: {
+              ...payload.options,
+              preview: false
+            },
+            blurr
+          });
+          operationValues.value = {};
+          state.value = 'operations';
+          appStatus.value = 'ready';
+          return;
+        }
+
         operationCells.value.push({
           operation,
           payload: {
