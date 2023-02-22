@@ -12,6 +12,52 @@ const defaultPyodideOptions: PyodideBackendOptions = {
   local: true,
 };
 
+function hasBuffer(value: unknown): value is { buffer: ArrayBuffer } {
+  return (
+    value &&
+    typeof value === 'object' &&
+    'buffer' in value &&
+    (value as { buffer: ArrayBuffer }).buffer instanceof ArrayBuffer
+  );
+}
+
+function toTransferables(value: unknown, transferables: ArrayBuffer[] = []) {
+  if (value instanceof ArrayBuffer) {
+    transferables.push(value);
+    return value;
+  } else if (Array.isArray(value)) {
+    return value.map((v) => toTransferables(v, transferables));
+  } else if (value && typeof value === 'object') {
+    const obj = {};
+    for (const key in value) {
+      obj[key] = toTransferables(value[key], transferables);
+    }
+    return obj;
+  } else {
+    return value;
+  }
+}
+
+function toArrayBuffers(value: unknown) {
+  if (value && typeof value === 'object') {
+    if (value instanceof ArrayBuffer) {
+      return value;
+    } else if (hasBuffer(value)) {
+      return value.buffer;
+    } else if (Array.isArray(value)) {
+      return value.map((v) => toArrayBuffers(v));
+    } else {
+      const obj = {};
+      for (const key in value) {
+        obj[key] = toArrayBuffers(value[key]);
+      }
+      return obj;
+    }
+  } else {
+    return value;
+  }
+}
+
 function promiseWorker(url) {
   const worker = new Worker(url);
   const promises = {};
@@ -97,10 +143,15 @@ export function ServerPyodideWorker(options: ServerOptions): ServerInterface {
 
   server.runCode = async (code: string) => {
     await server.donePromise;
+
     const result = await server.worker.postMessage({
       type: 'run',
       code,
     });
+
+    if (server.supports('buffers')) {
+      return toArrayBuffers(result) as PythonCompatible;
+    }
     return result as PythonCompatible;
   };
 
@@ -121,7 +172,7 @@ export function ServerPyodideWorker(options: ServerOptions): ServerInterface {
     });
 
     return operations.reduce((promise: Promise<PythonCompatible>, _, i) => {
-      const { operation, kwargs } = operations[i];
+      const { kwargs, operation } = operations[i];
 
       const _operation = (result) => {
         if (
@@ -153,17 +204,14 @@ export function ServerPyodideWorker(options: ServerOptions): ServerInterface {
   server.runMethod = async (source, path, kwargs) => {
     await server.donePromise;
 
-    let transfer: ArrayBuffer[] | null = null;
+    const transfer: ArrayBuffer[] | null = [];
 
     if (server.supports('buffers')) {
-      transfer = [];
-      for (const key in kwargs) {
-        const value = kwargs[key];
-        if (value instanceof ArrayBuffer) {
-          transfer.push(value);
-          kwargs[key] = { _blurrArrayBuffer: true, value };
-        }
-      }
+      console.log('transfer', transfer);
+      console.log('kwargs', { ...kwargs });
+      kwargs = toTransferables(kwargs, transfer);
+      console.log('transfer', transfer);
+      console.log('kwargs', { ...kwargs });
     }
 
     const result = (await server.worker.postMessage(
@@ -175,6 +223,11 @@ export function ServerPyodideWorker(options: ServerOptions): ServerInterface {
       },
       transfer
     )) as PythonCompatible;
+
+    if (server.supports('buffers')) {
+      return toArrayBuffers(result);
+    }
+
     return result;
   };
 
@@ -189,8 +242,22 @@ export function ServerPyodideWorker(options: ServerOptions): ServerInterface {
 
   // TODO: prepareBuffer, prepareCallback
 
-  server.setGlobal = (name: string, value: PythonCompatible) => {
-    server.runCode(`${name} = ${pythonString(value)}`);
+  server.setGlobal = async (name: string, value: PythonCompatible) => {
+    if (value instanceof ArrayBuffer && server.supports('buffers')) {
+      const transfer: ArrayBuffer[] = [];
+      const adaptedValue = toTransferables({ [name]: value }, transfer);
+      await server.worker.postMessage(
+        {
+          type: 'setGlobal',
+          value: adaptedValue,
+        },
+        transfer
+      );
+      return;
+    } else {
+      await server.runCode(`${name} = ${pythonString(value)}`);
+      return;
+    }
   };
 
   server.getGlobal = (name: string) => {

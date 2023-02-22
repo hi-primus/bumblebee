@@ -21,6 +21,13 @@ export const operations = {
     name: 'columnsSample',
     targetType: 'value',
   }),
+  saveCsv: DataframeOperation<NoArgs, ArrayBuffer>({
+    name: 'saveCsv',
+    targetType: 'value',
+    getCode: function (kwargs: { source: string }) {
+      return `save_csv(${kwargs.source})`;
+    },
+  }),
   iloc: DataframeOperation<{ lower_bound: number; upper_bound: number }>({
     name: 'iloc',
     targetType: 'dataframe',

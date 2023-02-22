@@ -21,11 +21,6 @@
         <div
           v-if="multiple"
           class="input-field autocomplete-field min-w-[14em] w-full flex items-center flex-wrap gap-2"
-          :class="{
-            'pr-[48px!important]': filteredOptions?.length && clearable,
-            'pr-[24px!important]':
-              Boolean(filteredOptions?.length) !== Boolean(clearable)
-          }"
         >
           <span
             v-for="(option, index) in selected"
@@ -71,26 +66,29 @@
           @change="search = $event.target.value"
           @blur="validate"
         />
-        <Icon
-          v-if="(selected || search) && clearable"
-          :path="mdiClose"
-          class="clearIcon"
-          @click="clear"
-        />
-        <ComboboxButton
-          v-if="filteredOptions?.length"
-          class="absolute inset-y-0 right-0 flex items-center pr-2"
-        >
-          <Icon
-            :path="open ? mdiChevronUp : mdiChevronDown"
-            :class="[
-              open
-                ? 'autocomplete-fieldIconOpen'
-                : 'autocomplete-fieldIconClosed',
-              'autocomplete-fieldIcon'
-            ]"
-          />
-        </ComboboxButton>
+        <div class="icons">
+          <button @click="clear">
+            <Icon
+              v-if="(selected || search) && clearable"
+              :path="mdiClose"
+              class="clearIcon w-6"
+            />
+          </button>
+          <ComboboxButton
+            v-if="filteredOptions?.length"
+            class="flex items-center"
+          >
+            <Icon
+              :path="open ? mdiChevronUp : mdiChevronDown"
+              :class="[
+                open
+                  ? 'autocomplete-fieldIconOpen'
+                  : 'autocomplete-fieldIconClosed',
+                'autocomplete-fieldIcon'
+              ]"
+            />
+          </ComboboxButton>
+        </div>
       </div>
       <TransitionRoot
         v-if="filteredOptions"

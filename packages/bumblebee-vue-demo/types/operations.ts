@@ -14,8 +14,9 @@ export interface OperationOptions {
   usesOutputCols?: boolean;
   usesInputDataframe?: boolean;
   saveToNewDataframe?: boolean;
-  sourceId: string;
-  targetType: 'dataframe' | 'value';
+  oneTime?: boolean;
+  sourceId?: string;
+  targetType: 'dataframe' | 'value' | 'void';
   preview?: PreviewType;
 }
 
@@ -38,7 +39,7 @@ export type FieldOption<T = unknown> = Record<string, T> & {
 
 export interface Field {
   name: string;
-  type: PayloadCallbackOr<'string' | 'boolean' | 'custom'>;
+  type: PayloadCallbackOr<'string' | 'boolean' | 'custom' | 'file'>;
   key?: string;
   placeholder?: string;
   label?: PayloadCallbackOr<string>;
@@ -76,7 +77,7 @@ type OperationCreatorAction = OperationCreatorBase & {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   validate?: (...args: any) => any;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  action: (...args: any) => Promise<Source> | Source;
+  action: (...args: any) => PromiseOr<Source>;
 };
 
 type OperationCreatorParameters = OperationCreatorBase & {

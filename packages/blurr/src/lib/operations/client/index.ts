@@ -14,6 +14,13 @@ function DataframeCreationOperation<
 }
 
 export const operations = {
+  createDataframe: DataframeCreationOperation<{
+    data: Record<string, PythonCompatible>;
+  }>({
+    name: 'create.dataframe',
+    defaultSource: 'op',
+    args: [{ name: 'data' }],
+  }),
   readCsv: DataframeCreationOperation<{
     url?: string;
     buffer?: string;
@@ -49,18 +56,13 @@ export const operations = {
         return (
           `${kwargs.buffer}_py = BytesIO(${kwargs.buffer}.to_py());` +
           (kwargs.target ? `${kwargs.target} = ` : '') +
-          `op.load.csv(${kwargs.buffer}_py)`
+          `op.load.csv(${kwargs.buffer}_py` +
+          (kwargs.n_rows ? `, n_rows=${kwargs.n_rows}` : '') +
+          `)`
         );
       }
       throw new Error("Either 'url' or 'buffer' must be provided");
     },
-  }),
-  createDataframe: DataframeCreationOperation<{
-    data: Record<string, PythonCompatible>;
-  }>({
-    name: 'create.dataframe',
-    defaultSource: 'op',
-    args: [{ name: 'data' }],
   }),
   readFile: DataframeCreationOperation<{
     url?: string;

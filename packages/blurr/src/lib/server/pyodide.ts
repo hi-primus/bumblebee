@@ -69,6 +69,7 @@ export function ServerPyodide(options: ServerOptions): ServerInterface {
     await pyodide.loadPackage('micropip');
     const micropip = pyodide.pyimport('micropip');
 
+    await micropip.install('scikit-learn');
     await micropip.install(
       'https://test-files.pythonhosted.org/packages/ab/60/2fecad6b39362497d92de23597777f412d2b22c758983897a1c53c998635/pyoptimus-0.1.4043-py3-none-any.whl'
     );
@@ -77,8 +78,19 @@ export function ServerPyodide(options: ServerOptions): ServerInterface {
       from io import BytesIO
       from optimus.expressions import parse
       op = Optimus("pyodide")
+
       def run_method(method, kwargs):
           return method(**kwargs.to_py())
+          
+      def save_csv(df):
+          pdf = df.data
+          from io import BytesIO, TextIOWrapper
+          buffer = BytesIO()
+          charset = 'utf-8'
+          wrapper = TextIOWrapper(buffer, encoding=charset)
+          pdf.to_csv(wrapper, header=True, index=False, encoding=charset, date_format='%Y-%m-%dT%H:%M:%S.%fZ')
+          wrapper.flush()
+          return buffer.getvalue()
     `);
     return pyodide;
   });

@@ -30,6 +30,15 @@
     :disabled="resolve(field.disabled)"
     :class="fieldClass"
   />
+  <AppFile
+    v-else-if="resolve(field.type) === 'file'"
+    :key="`file-${field.name}-${updates}-${fieldClass}`"
+    v-model="value"
+    :label="resolve(field.label || field.name)"
+    :name="field.name"
+    :disabled="resolve(field.disabled)"
+    :class="fieldClass"
+  />
 </template>
 
 <script setup lang="ts">

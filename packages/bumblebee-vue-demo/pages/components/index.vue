@@ -5,6 +5,28 @@
         <div
           class="flex flex-wrap gap-4 px-8 py-2 justify-start items-start min-w-[200px]"
         >
+          <AppFile
+            v-model="file"
+            class="min-w-[320px]"
+            label="File"
+            placeholder="Select a CSV file"
+            name="file"
+          />
+          file: {{ file }}
+          <AppFile
+            v-model="file"
+            class="min-w-[320px]"
+            label="File"
+            placeholder="Select a CSV file"
+            name="file"
+            :clearable="false"
+          />
+          file: {{ file }}
+        </div>
+        <div
+          v-show="false"
+          class="flex flex-wrap gap-4 px-8 py-2 justify-start items-start min-w-[200px]"
+        >
           {{ selection || 'no selection' }}
         </div>
         <div
@@ -13,6 +35,7 @@
           {{ hovered || 'no hover' }}
         </div>
         <div
+          v-show="false"
           class="flex flex-wrap gap-4 px-8 py-2 justify-start items-start min-w-[200px]"
         >
           <PlotBarsBase
@@ -346,6 +369,7 @@
             placeholder="Columns"
             name="input-size-condensed"
             class="input-size-condensed"
+            clearable
           >
           </AppAutocomplete>
           <AppAutocomplete
@@ -467,6 +491,8 @@ provide('selection', selection);
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const hovered = ref<{ plot: string; value: any } | null>(null);
+
+const file = ref<File | undefined>(undefined);
 </script>
 
 <style lang="scss"></style>

@@ -153,7 +153,7 @@ export function BlurrOperation<
     operation.initialize = operationCreator.initialize;
   }
 
-  operation.run = function (server: Server, args: TA): Promise<TR> {
+  operation.run = function (server: Server, args: TA): PromiseOr<TR> {
     if (!isKwargs(args)) {
       throw new Error(`Invalid kwargs, received arg of type '${typeof args}'`);
     }
