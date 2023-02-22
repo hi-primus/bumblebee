@@ -336,7 +336,9 @@ const prepareOperation = () => {
 const operationActions: OperationActions = {
   submitOperation: async () => {
     try {
-      appStatus.value = 'busy';
+      if (appStatus.value === 'ready') {
+        appStatus.value = 'busy';
+      }
 
       const { operation, payload } = prepareOperation();
 
@@ -352,7 +354,9 @@ const operationActions: OperationActions = {
           });
           operationValues.value = {};
           state.value = 'operations';
-          appStatus.value = 'ready';
+          if (appStatus.value === 'busy') {
+            appStatus.value = 'ready';
+          }
           return;
         }
 
@@ -374,11 +378,15 @@ const operationActions: OperationActions = {
 
       operationValues.value = {};
       state.value = 'operations';
-      appStatus.value = 'ready';
+      if (appStatus.value === 'busy') {
+        appStatus.value = 'ready';
+      }
     } catch (err) {
-      console.error('Error executing operation.', err);
+      console.error('Error executing operation.', err); // TODO: show error in UI
       dataframeLayout.value?.clearChunks(true, false);
-      appStatus.value = 'ready'; // 'error';
+      if (appStatus.value === 'busy') {
+        appStatus.value = 'ready';
+      }
     }
     previewData.value = null;
   },
@@ -466,12 +474,16 @@ provide('operation-actions', operationActions);
 
 const previewOperation = throttleOnce(async function () {
   try {
-    appStatus.value = 'busy';
+    if (appStatus.value === 'ready') {
+      appStatus.value = 'busy';
+    }
 
     const { operation, payload } = prepareOperation();
 
     if (!operation || !isOperation(operation) || !payload?.options?.preview) {
-      appStatus.value = 'ready';
+      if (appStatus.value === 'busy') {
+        appStatus.value = 'ready';
+      }
       return;
     }
 
@@ -574,11 +586,15 @@ const previewOperation = throttleOnce(async function () {
       profile
     };
 
-    appStatus.value = 'ready';
+    if (appStatus.value === 'busy') {
+      appStatus.value = 'ready';
+    }
   } catch (err) {
-    console.error('Error executing preview operation.', err);
+    console.error('Error executing preview operation.', err); // TODO: show error in UI
     previewData.value = null;
-    appStatus.value = 'ready'; // 'error';
+    if (appStatus.value === 'busy') {
+      appStatus.value = 'ready';
+    }
   }
 }, 500);
 
