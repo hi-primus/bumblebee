@@ -1294,18 +1294,6 @@ export const operations = {
         default: '*',
       },
       {
-        name: 'width',
-        default: null,
-      },
-      {
-        name: 'fillChar',
-        default: ' ',
-      },
-      {
-        name: 'side',
-        default: 'left',
-      },
-      {
         name: 'outputCols',
         default: null,
       },
