@@ -132,7 +132,15 @@ export const operationCreators: OperationCreator[] = [
         p.status === 'fulfilled' ? p.value : null
       );
 
-      let outputCols = payload.sets.map(s => s.outputColumn);
+      let outputCols = payload.sets.map((s, index) => {
+        if (s.outputColumn) {
+          return s.outputColumn;
+        }
+        if (s.value) {
+          return s.value.replace(/\s/g, '').replace(/[^a-zA-Z0-9]/g, '_');
+        }
+        return `new_column_${index}`;
+      });
 
       if (payload.options.preview) {
         outputCols = outputCols.map(c => `__bumblebee__preview__${c}`);
