@@ -43,7 +43,13 @@ export const operationCreators: OperationCreator[] = [
       }
 
       if (payload.file) {
-        const buffer = await payload.file.arrayBuffer();
+        let buffer: ArrayBuffer;
+        if (payload.options.preview) {
+          const string = await getFirstLines(payload.file);
+          buffer = new TextEncoder().encode(string).buffer;
+        } else {
+          buffer = await payload.file.arrayBuffer();
+        }
         const fileName = payload.file.name;
 
         return payload.blurr.readFile({
@@ -1957,6 +1963,77 @@ function whereExpression(
   }
   return '';
 }
+
+const getFirstLines = (
+  file: File,
+  minLines = 15,
+  maxLines = 50,
+  maxSize = 8192
+): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    let lineCount = 0;
+    let readCount = 0;
+    let fileContent = '';
+    let lineContent = '';
+    const chunkSize = 1024;
+
+    const readChunk = function () {
+      const chunk = file.slice(readCount, readCount + chunkSize);
+      reader.readAsText(chunk);
+    };
+
+    const onLoad = function (event: ProgressEvent<FileReader>) {
+      const data = event.target?.result as string;
+      readCount += chunkSize;
+
+      if (!data || !data?.length) {
+        return;
+      }
+
+      let aborted = false;
+
+      for (let i = 0; i < data?.length; i++) {
+        lineContent += data.charAt(i);
+        // doesn't add the last line if it doesn't end with a new line
+        if (data.charAt(i) === '\n') {
+          fileContent += lineContent;
+          lineContent = '';
+          lineCount++;
+          if (lineCount >= maxLines) {
+            reader.abort();
+            aborted = true;
+            break;
+          }
+        }
+      }
+
+      if (
+        readCount >= file.size ||
+        lineCount >= maxLines ||
+        (readCount >= maxSize && lineCount >= minLines)
+      ) {
+        if (!aborted) {
+          reader.abort();
+        }
+        reader.removeEventListener('load', onLoad);
+        reader.removeEventListener('error', onLoad);
+        resolve(fileContent);
+      } else {
+        readChunk();
+      }
+    };
+
+    reader.addEventListener('load', onLoad);
+
+    reader.addEventListener('error', function () {
+      reject(new Error('Error reading file.'));
+    });
+
+    readChunk();
+  });
+};
+
 function downloadArrayBuffer(arrayBuffer: ArrayBuffer, fileName: string) {
   const blob = new Blob([arrayBuffer], { type: 'text/csv' });
   const link = document.createElement('a');
