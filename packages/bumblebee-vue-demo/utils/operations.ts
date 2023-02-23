@@ -124,7 +124,7 @@ export const operationCreators: OperationCreator[] = [
     ): Promise<Source> => {
       const valueFuncPromise = await Promise.allSettled(
         payload.sets.map(s => {
-          return payload.blurr.runCode(`parse('${s.value}')`);
+          return payload.blurr.runCode(`parse('${s.value}', data=False)`);
         })
       );
 
