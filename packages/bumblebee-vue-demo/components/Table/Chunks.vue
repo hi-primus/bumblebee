@@ -2,9 +2,8 @@
   <TableDefault
     ref="table"
     :header="header"
-    :data="data"
     :rows-count="rowsCount"
-    @update-scroll="updateScroll"
+    @update-scroll="(start, stop) => emit('updateScroll', start, stop)"
   />
 </template>
 
@@ -15,11 +14,7 @@ import TableDefault from '@/components/Table/Default.vue';
 import { Chunk } from '@/types/app';
 import { ColumnHeader } from '@/types/dataframe';
 
-const props = defineProps({
-  chunks: {
-    type: Array as PropType<Chunk[]>,
-    default: () => []
-  },
+defineProps({
   rowsCount: {
     type: Number as PropType<number>
   },
@@ -37,21 +32,18 @@ const emit = defineEmits<Emits>();
 
 const table = ref<InstanceType<typeof TableDefault> | null>(null);
 
-const updateScroll = (start: number, stop: number) => {
-  console.info('updateScroll', start, stop);
-  return emit('updateScroll', start, stop);
-};
-
-const data = reactiveComputed(() => {
-  return (props.chunks || []).reduce((rows, chunk) => {
+const updateChunks = (chunks: Chunk[]) => {
+  const data = (chunks || []).reduce((rows, chunk) => {
     for (let i = chunk.start; i < chunk.stop; i++) {
       rows[i] = rows[i] || chunk.data[i - chunk.start];
     }
     return rows;
-  }, {} as Record<number, object>);
-});
+  }, {} as Record<number, Record<string, unknown>>);
+  table.value?.updateData(data);
+};
 
 defineExpose({
+  updateChunks,
   focus: () => {
     table.value?.focus();
   }

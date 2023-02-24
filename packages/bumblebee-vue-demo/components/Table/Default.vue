@@ -6,19 +6,26 @@
   >
     <div
       class="bumblebee-table-container relative flex h-full w-[max-content] text-sm font-mono-table text-text-alpha"
+      :style="{
+        height:
+          columnHeaderHeight +
+          safeRowsCount * rowHeight +
+          tablePaddingBottom +
+          'px'
+      }"
     >
       <div
         class="bumblebee-columns-rows-backgrounds sticky h-full w-full ml-[-100%] left-0 order-[-1]"
       >
         <div
-          v-for="(row, rowIndex) in rowsData"
-          :key="`row-${rowIndex}`"
+          v-for="row in visibleRows"
+          :key="`row-${row.index}`"
           :style="{
-            top: columnHeaderHeight + rowIndex * rowHeight + 'px',
+            top: columnHeaderHeight + row.index * rowHeight + 'px',
             height: rowHeight + 'px'
           }"
           class="bumblebee-row-background absolute bg-white pr-2 z-[-3] text-right w-full bg-white"
-          :class="row.highlights"
+          :class="row?.highlights"
         ></div>
       </div>
       <div
@@ -94,14 +101,14 @@
             />
           </div>
           <div
-            v-for="(row, rowIndex) in rowsData"
-            :key="`col-${column?.title}-${rowIndex}`"
+            v-for="row in visibleRows"
+            :key="`col-${column?.title}-${row.index}`"
             class="column-cell ellipsis whitespace-pre"
             :style="{
-              top: columnHeaderHeight + rowIndex * rowHeight + 'px',
+              top: columnHeaderHeight + row.index * rowHeight + 'px',
               height: rowHeight + 1 + 'px'
             }"
-            v-html="getValue(row.values[column.columnIndex])"
+            v-html="getValue(row?.values?.[column.columnIndex])"
           ></div>
         </div>
       </div>
@@ -151,11 +158,6 @@ import { focusNext, focusPrevious, throttle } from '@/utils';
 import { TYPES_HINTS, TYPES_NAMES } from '@/utils/data-types';
 
 const props = defineProps({
-  data: {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    type: Object as PropType<Record<number, Record<string, any>>>,
-    required: true
-  },
   rowsCount: {
     type: Number,
     default: 0
@@ -186,12 +188,14 @@ const scrollElement = ref<HTMLElement | null>(null);
 
 const columns = ref<HTMLElement | null>(null);
 
+const data = ref<Record<number, Record<string, unknown>>>({});
+
 const safeRowsCount = computed(() => {
   if (props.rowsCount) {
     console.log('[DEBUG][TABLE] Setting rows count to', props.rowsCount);
     return props.rowsCount;
   }
-  const keys = Object.keys(props.data);
+  const keys = Object.keys(data.value);
   if (keys.length) {
     const count = +keys[keys.length - 1] + 1;
     console.log(
@@ -217,12 +221,20 @@ const highlights = computed(() => {
     .filter(column => column.highlight);
 });
 
+type Row = {
+  values?: (typeof data.value)[0];
+  highlights?: string;
+  index: number;
+};
+
 const rowsData = computed(() => {
   if (highlights.value.length) {
-    const rows: typeof props.data = {};
-    for (const rowIndex in props.data) {
-      const values = props.data[rowIndex];
-      rows[rowIndex] = {
+    const rows: Row[] = Array<Row>(safeRowsCount.value);
+    for (const index in data.value) {
+      const numericIndex = +index;
+      const values = data.value[numericIndex];
+      rows[numericIndex] = {
+        index: numericIndex,
         values,
         highlights: highlights.value
           .map(column =>
@@ -233,11 +245,12 @@ const rowsData = computed(() => {
     }
     return rows;
   }
-  const rows: typeof props.data = {};
-  for (const rowIndex in props.data) {
-    const values = props.data[rowIndex];
-    rows[rowIndex] = {
-      values
+  const rows: Row[] = Array<Row>(safeRowsCount.value);
+  for (const index in data.value) {
+    const numericIndex = +index;
+    rows[numericIndex] = {
+      index: numericIndex,
+      values: data.value[numericIndex]
     };
   }
   return rows;
@@ -279,6 +292,8 @@ const dataTypeNames = computed(() => {
   });
 });
 
+const visibleRowsRange = ref([0, 10]);
+
 const onScroll = throttle(function () {
   const element = scrollElement.value;
   if (element) {
@@ -289,9 +304,17 @@ const onScroll = throttle(function () {
       (element.scrollTop + element.clientHeight - columnHeaderHeight) /
         rowHeight
     );
+    visibleRowsRange.value = [start, stop];
     emit('updateScroll', start, stop);
   }
 }, 300);
+
+const visibleRows = computed(() => {
+  const [start, stop] = visibleRowsRange.value;
+  return rowsData.value.filter(r => {
+    return r && r.index >= start - 25 && r.index <= stop + 25;
+  });
+});
 
 const getValue = (value: unknown): string => {
   if (value === null || value === undefined) {
@@ -318,7 +341,7 @@ onMounted(() => {
 
 watch(() => columnsHeader.value, onScroll, { deep: true });
 
-watch(() => [props.rowsCount, props.data], onScroll);
+watch(() => [props.rowsCount, data.value], onScroll);
 
 let lastColumnClicked: number | null = null;
 
@@ -420,8 +443,13 @@ const columnClicked = (
   };
 };
 
+const updateData = (newData: typeof data.value) => {
+  data.value = newData;
+};
+
 defineExpose({
-  focus
+  focus,
+  updateData
 });
 </script>
 

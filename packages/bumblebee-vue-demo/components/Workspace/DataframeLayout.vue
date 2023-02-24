@@ -9,7 +9,6 @@
       ref="table"
       class="overflow-auto"
       :header="header"
-      :chunks="completedChunks"
       :rows-count="rowsCount"
       @update-scroll="updateScroll"
     />
@@ -127,10 +126,6 @@ const previousChunks = ref<Chunk[]>([]);
 
 const enableChunksLoading = ref(true);
 
-const completedChunks = computed(() => {
-  return chunks.value.filter(chunk => chunk.data?.length);
-});
-
 const chunksQueue = ref<[number, number][]>([]);
 
 const scrollRange = inject('scroll-range') as Ref<[number, number]>;
@@ -140,6 +135,14 @@ const updateScroll = function (start: number, stop: number) {
     Math.max(start, 0),
     rowsCount.value ? Math.min(stop, rowsCount.value) : stop
   ];
+
+  if (
+    scrollRange.value[0] === range[0] &&
+    scrollRange.value[1] === range[1] &&
+    (chunksQueue.value.length > 0 || chunks.value.length > 0)
+  ) {
+    return;
+  }
 
   scrollRange.value = range;
 
@@ -260,6 +263,8 @@ const checkChunksQueue = async function (): Promise<boolean> {
     gettingChunks = false;
 
     return checkChunksQueue();
+  } else {
+    updateChunks();
   }
 
   gettingChunks = false;
@@ -294,7 +299,7 @@ const addChunk = (chunk: Chunk) => {
 
 const clearChunks = (saveOnPrevious = true, check = true) => {
   if (saveOnPrevious) {
-    previousChunks.value = [...completedChunks.value];
+    previousChunks.value = chunks.value.filter(chunk => chunk.data?.length);
   }
   chunks.value = [];
   chunksQueue.value = [];
@@ -313,6 +318,11 @@ const focusTable = () => {
   }
 };
 
+const updateChunks = () => {
+  const filteredChunks = chunks.value.filter(chunk => chunk.data?.length);
+  table.value?.updateChunks(filteredChunks);
+};
+
 watch(
   () => dataframeObject.value,
   () => clearChunks(),
@@ -327,6 +337,10 @@ watch(enableChunksLoading, enable => {
     checkChunksQueue();
   }
 });
+
+// watch(chunks, updateChunks, {
+//   immediate: true
+// });
 
 defineExpose({
   addChunk,
