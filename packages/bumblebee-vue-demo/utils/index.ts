@@ -1,13 +1,13 @@
 import { isObject } from '@/types/common';
 
-export const throttle = (
-  func: (...args: unknown[]) => unknown,
+export const throttle = <T extends Array<unknown>>(
+  func: (...args: T) => unknown,
   limit: number | ((...args: Arguments<typeof func>) => number)
 ): typeof func => {
   /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-this-alias */
   let lastFunc: ReturnType<typeof setTimeout>;
   let lastRan: any;
-  return function (...args: unknown[]) {
+  return function (...args: T) {
     const context = this;
     limit = typeof limit === 'function' ? limit.apply(context, args) : limit;
 
