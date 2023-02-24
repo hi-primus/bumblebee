@@ -1,6 +1,6 @@
 <template>
   <div
-    class="toast font-title min-h-16 flex items-center rounded-lg pr-2 text-[color:var(--toast-text-color)] bg-[color:var(--toast-color)]"
+    class="toast font-title min-h-16 flex items-center rounded-lg px-4 gap-4 text-[color:var(--toast-text-color)] bg-[color:var(--toast-color)]"
     :class="{
       'toast-success': props.type === 'success',
       'toast-error': props.type === 'error',
@@ -8,13 +8,12 @@
       'toast-primary': props.type === 'info'
     }"
   >
-    <div
-      v-if="icon"
-      class="h-16 w-16 text-3xl flex justify-center items-center mr--6"
-    >
+    <div v-if="icon" class="h-16 w-6 text-3xl flex justify-center items-center">
       <Icon :path="icon" />
     </div>
-    <div class="flex-1 flex flex-col justify-center items-start py-2 pl-6 pr-4">
+    <div
+      class="flex-1 flex flex-col justify-center items-start pt-[0.3rem] pb-[0.4rem]"
+    >
       <div class="text-lg">
         {{ props.title }}
       </div>
@@ -24,19 +23,19 @@
     </div>
     <AppButton
       v-if="props.actionLabel"
-      class="text-lg font-normal cursor-pointer underline pr-4"
+      class="text-lg font-normal cursor-pointer underline"
       @click="emit('action')"
     >
       {{ props.actionLabel }}
     </AppButton>
-    <div
+    <button
       v-if="props.closable"
-      class="h-16 w-16 text-3xl flex justify-center items-center ml--6 mr--2"
+      class="h-16 w-16 text-3xl flex justify-center items-center -mr-4"
+      type="button"
+      @click="emit('close')"
     >
-      <button type="button" @click="emit('close')">
-        <Icon :path="mdiClose" />
-      </button>
-    </div>
+      <Icon :path="mdiClose" />
+    </button>
   </div>
 </template>
 
