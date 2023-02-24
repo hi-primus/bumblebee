@@ -210,6 +210,22 @@ const getChunk = async function (start: number, stop: number) {
 
 let gettingChunks = false;
 
+const cleanChunks = function () {
+  if (chunks.value.length > 25) {
+    const chunksToDelete = chunks.value.length - 20;
+    const distances = new WeakMap();
+    const scrollRangeStart = scrollRange.value[0];
+    chunks.value.forEach(chunk => {
+      const distance = Math.abs(scrollRangeStart - chunk.start);
+      distances.set(chunk, distance);
+    });
+    chunks.value.sort((a, b) => {
+      return distances.get(b) - distances.get(a);
+    });
+    chunks.value = chunks.value.slice(chunksToDelete);
+  }
+};
+
 const checkChunksQueue = async function (): Promise<boolean> {
   if (gettingChunks) {
     return false;
@@ -238,6 +254,8 @@ const checkChunksQueue = async function (): Promise<boolean> {
     if (chunk) {
       chunks.value[index] = chunk;
     }
+
+    cleanChunks();
 
     gettingChunks = false;
 

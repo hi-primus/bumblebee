@@ -12,8 +12,8 @@
 import { PropType } from 'vue';
 
 import TableDefault from '@/components/Table/Default.vue';
+import { Chunk } from '@/types/app';
 import { ColumnHeader } from '@/types/dataframe';
-import { Chunk } from '@/types/table';
 
 const props = defineProps({
   chunks: {

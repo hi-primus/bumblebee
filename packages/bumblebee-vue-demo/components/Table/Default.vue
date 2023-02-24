@@ -101,9 +101,7 @@
               top: columnHeaderHeight + rowIndex * rowHeight + 'px',
               height: rowHeight + 1 + 'px'
             }"
-            v-html="
-              getValue(row?.values ? row.values[column.columnIndex] : null)
-            "
+            v-html="getValue(row.values[column.columnIndex])"
           ></div>
         </div>
       </div>
