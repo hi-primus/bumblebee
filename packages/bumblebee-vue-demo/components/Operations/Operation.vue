@@ -77,6 +77,24 @@
         <AppOperationField v-else :key="field.name" :field="field" />
       </template>
     </template>
+    <div
+      v-if="
+        ['warning', 'error', 'fatal error'].includes(operationStatus.status)
+      "
+      class="w-full flex justify-end gap-2"
+    >
+      <Toast
+        :title="{
+          warning: 'Warning',
+          error: 'Error',
+          'fatal error': 'Fatal Error',
+        }[operationStatus.status as 'warning' | 'error' | 'fatal error']"
+        :message="operationStatus.message"
+        type="info"
+        :closable="false"
+        class="w-full"
+      />
+    </div>
     <div class="w-full flex justify-end gap-2">
       <AppButton
         class="btn-layout-invisible"
@@ -88,7 +106,7 @@
         Cancel
       </AppButton>
       <AppButton
-        :disabled="Boolean(status)"
+        :disabled="Boolean(status) || !submitable"
         :loading="status === 'submitting'"
         type="submit"
       >
@@ -106,6 +124,7 @@ import {
   isOperation,
   OperationActions,
   OperationOptions,
+  OperationStatus,
   PayloadWithOptions,
   State,
   TableSelection
@@ -118,6 +137,8 @@ const operation = computed(() =>
 const operationValues = inject('operation-values') as Ref<
   Partial<PayloadWithOptions>
 >;
+const operationStatus = inject('operation-status') as Ref<OperationStatus>;
+
 const { submitOperation, cancelOperation } = inject(
   'operation-actions'
 ) as OperationActions;
@@ -167,6 +188,10 @@ const options = computed<OperationOptions>(() => {
     operation.value?.defaultOptions || {},
     { targetType: 'dataframe' } as OperationOptions
   );
+});
+
+const submitable = computed<boolean>(() => {
+  return operationStatus.value.status === 'ok';
 });
 
 onMounted(() => {

@@ -75,7 +75,7 @@ export interface OperationCreatorBase {
 
 type OperationCreatorAction = OperationCreatorBase & {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  validate?: (...args: any) => any;
+  validate?: (...args: any) => PromiseOr<boolean | string>;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   action: (...args: any) => PromiseOr<Source>;
 };
@@ -110,6 +110,11 @@ export const isOperation = (value: unknown): value is Operation => {
 export type OperationPayload = {
   operation: Operation;
   payload: PayloadWithOptions;
+};
+
+export type OperationStatus = {
+  message?: string;
+  status: 'not validated' | 'ok' | 'warning' | 'error' | 'fatal error';
 };
 
 export type ColumnDetailState = {

@@ -392,6 +392,24 @@ export const operationCreators: OperationCreator[] = [
       usesInputDataframe: true,
       preview: 'basic columns'
     },
+    validate: (
+      payload: OperationPayload<{
+        replaces: {
+          search: string;
+          replaceBy: string;
+        }[];
+        searchBy: string;
+        matchCase: OperationOptions;
+      }>
+    ) => {
+      const validReplaces = payload.replaces.filter(
+        r => r.search && r.replaceBy !== undefined
+      );
+      if (validReplaces.length > 0) {
+        return true;
+      }
+      throw new PreviewError('Add at least one valid replace');
+    },
     action: (
       payload: OperationPayload<{
         replaces: {
@@ -402,11 +420,15 @@ export const operationCreators: OperationCreator[] = [
         matchCase: OperationOptions;
       }>
     ): Source => {
+      const validReplaces = payload.replaces.filter(
+        r => r.search && r.replaceBy !== undefined
+      );
+
       const result = payload.source.cols.replace({
         target: payload.target,
         cols: payload.cols,
-        search: payload.replaces.map(replace => replace.search),
-        replaceBy: payload.replaces.map(replace => replace.replaceBy),
+        search: validReplaces.map(replace => replace.search),
+        replaceBy: validReplaces.map(replace => replace.replaceBy),
         searchBy: payload.searchBy,
         ignoreCase: !payload.matchCase,
         outputCols: payload.outputCols
@@ -437,7 +459,8 @@ export const operationCreators: OperationCreator[] = [
             name: 'replaceBy',
             label: 'Replace by',
             type: 'string',
-            class: 'grouped-last w-1/2'
+            class: 'grouped-last w-1/2',
+            defaultValue: ''
           }
         ]
       },
@@ -1769,13 +1792,11 @@ export const operationCreators: OperationCreator[] = [
       payload: OperationPayload<{
         separator: string;
       }>
-    ): boolean => {
-      if (payload.options.preview) {
-        if (payload.cols.length <= 1) {
-          throw new PreviewError('At least two columns are required', {
-            cause: payload.cols
-          });
-        }
+    ) => {
+      if (payload.cols.length <= 1) {
+        throw new PreviewError('At least two columns are required', {
+          cause: payload.cols
+        });
       }
       return true;
     },

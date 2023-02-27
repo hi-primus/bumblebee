@@ -50,6 +50,7 @@ import {
   OperationActions,
   OperationOptions,
   OperationPayload,
+  OperationStatus,
   PayloadWithOptions,
   State,
   TableSelection
@@ -114,6 +115,11 @@ provide('operations', operationCells);
 
 const operationValues = ref<Partial<PayloadWithOptions>>({});
 provide('operation-values', operationValues);
+
+const operationStatus = ref<OperationStatus>({
+  status: 'not validated'
+});
+provide('operation-status', operationStatus);
 
 const dataSourcesFromCells = computed<{ sourceId: string; name: string }[]>(
   () => {
@@ -499,6 +505,10 @@ const checkPreviewCancel = () => {
 const previewOperationThrottled = throttleOnce(
   async function () {
     try {
+      operationStatus.value = {
+        status: 'not validated'
+      };
+
       cancelPreview = false;
 
       if (appStatus.value === 'ready') {
@@ -640,6 +650,10 @@ const previewOperationThrottled = throttleOnce(
       if (appStatus.value === 'busy') {
         appStatus.value = 'ready';
       }
+
+      operationStatus.value = {
+        status: 'ok'
+      };
     } catch (err) {
       console.error('Error executing preview operation.', err); // TODO: show error in UI
       if (appStatus.value === 'busy') {
@@ -647,6 +661,10 @@ const previewOperationThrottled = throttleOnce(
       }
       if (err instanceof Error && !err.message.includes('Preview cancelled')) {
         previewData.value = null;
+        operationStatus.value = {
+          message: err.message,
+          status: err instanceof PreviewError ? 'warning' : 'error'
+        };
       }
     }
   },
@@ -659,6 +677,9 @@ const previewOperationThrottled = throttleOnce(
 
 const previewOperation = async () => {
   try {
+    operationStatus.value = {
+      status: 'not validated'
+    };
     const result = await previewOperationThrottled();
     if (result instanceof Error) {
       throw result;
