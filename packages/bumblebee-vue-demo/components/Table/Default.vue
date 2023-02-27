@@ -88,7 +88,10 @@
               >
                 {{ dataTypeHints[column.columnIndex] }}
               </span>
-              <span class="flex-1 truncate pl-2">
+              <span
+                :title="column.displayTitle || column.title"
+                class="flex-1 truncate pl-2"
+              >
                 {{ column.displayTitle || column.title }}
               </span>
               <div class="flex-0 w-[24px] right-icon"></div>
@@ -103,12 +106,13 @@
           <div
             v-for="row in visibleRows"
             :key="`col-${column?.title}-${row.index}`"
+            :title="row?.values?.[column.columnIndex] as string"
             class="column-cell ellipsis whitespace-pre"
             :style="{
               top: columnHeaderHeight + row.index * rowHeight + 'px',
               height: rowHeight + 1 + 'px'
             }"
-            v-html="row?.values?.[column.columnIndex]"
+            v-html="row?.htmlValues?.[column.columnIndex]"
           ></div>
         </div>
       </div>
@@ -318,7 +322,7 @@ const visibleRows = computed(() => {
     .map(row => {
       return {
         ...row,
-        values: row.values ? objectMap(row.values, getValue) : row.values
+        htmlValues: row.values ? objectMap(row.values, getValue) : row.values
       };
     });
 });
