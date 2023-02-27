@@ -487,139 +487,187 @@ const loadDataSource = (sourceId: string) => {
 
 provide('operation-actions', operationActions);
 
-const previewOperation = throttleOnce(async function () {
-  try {
-    if (appStatus.value === 'ready') {
-      appStatus.value = 'busy';
-    }
+let cancelPreview = false;
 
-    const { operation, payload } = prepareOperation();
+const checkPreviewCancel = () => {
+  if (cancelPreview) {
+    cancelPreview = false;
+    throw new Error('Preview cancelled');
+  }
+};
 
-    if (!operation || !isOperation(operation) || !payload?.options?.preview) {
+const previewOperationThrottled = throttleOnce(
+  async function () {
+    try {
+      cancelPreview = false;
+
+      if (appStatus.value === 'ready') {
+        appStatus.value = 'busy';
+      }
+
+      const { operation, payload } = prepareOperation();
+
+      if (!operation || !isOperation(operation) || !payload?.options?.preview) {
+        if (appStatus.value === 'busy') {
+          appStatus.value = 'ready';
+        }
+        return;
+      }
+
+      let firstSampleSource: Source | null = null;
+
+      const start = scrollRange.value?.[0] || 0;
+      const stop = scrollRange.value?.[1] || 50;
+
+      if (payload.source) {
+        checkPreviewCancel();
+
+        firstSampleSource = await payload.source.iloc({
+          target: 'operation_first_preview_df',
+          lower_bound: start,
+          upper_bound: stop
+        });
+
+        checkPreviewCancel();
+
+        const firstSampleDataframe = (await operation.action({
+          ...deepClone(payload),
+          source: firstSampleSource,
+          blurr,
+          app: { addToast }
+        })) as Source;
+
+        checkPreviewCancel();
+
+        const firstSampleResult = await firstSampleDataframe.columnsSample();
+
+        checkPreviewCancel();
+
+        // use preview columns instead of source columns
+
+        const previewColumns = Object.fromEntries(
+          firstSampleResult.columns.map(({ title }: { title: string }) => {
+            return [title, {}];
+          })
+        );
+
+        previewData.value = {
+          options: { usesInputDataframe: true },
+          columns: previewColumns,
+          type: payload.options.preview
+        };
+
+        // clear chunks
+
+        dataframeLayout.value?.clearChunks(true, false);
+        dataframeLayout.value?.setChunksLoading(false);
+
+        // add first chunk to dataframe
+
+        dataframeLayout.value?.addChunk({
+          start,
+          stop,
+          data: firstSampleResult.value
+        });
+      } else {
+        previewData.value = {
+          options: { usesInputDataframe: false },
+          type: payload.options.preview
+        };
+
+        // clear chunks
+
+        dataframeLayout.value?.clearChunks(true, false);
+        dataframeLayout.value?.setChunksLoading(false);
+      }
+
+      // get profile for preview columns
+
+      checkPreviewCancel();
+
+      const result = await operation.action({
+        ...deepClone(payload),
+        source: payload.source,
+        target: 'operation_preview_' + (payload.source?.name || 'load_df'),
+        blurr,
+        app: { addToast }
+      });
+
+      checkPreviewCancel();
+
+      if (!result) {
+        throw new Error(`Operation '${operation.name}' returned no result.`, {
+          cause: { operation, payload }
+        });
+      }
+
+      // save preview dataframe
+
+      previewData.value = {
+        ...previewData.value,
+        df: result
+      };
+
+      dataframeLayout.value?.setChunksLoading(true);
+
+      // save profile
+
+      const preliminaryProfile = await getPreliminaryProfile(result);
+
+      checkPreviewCancel();
+
+      previewData.value = {
+        ...previewData.value,
+        profile: preliminaryProfile
+      };
+
+      const profile = await (payload.source
+        ? result.profile({
+            cols: Object.entries(previewData.value?.columns || {})
+              ?.map(([title, _]) => title)
+              .filter(title => title.startsWith('__bumblebee__preview__')),
+            bins: 33
+          })
+        : result.profile({ cols: '*', bins: 33 }));
+
+      checkPreviewCancel();
+
+      previewData.value = {
+        ...previewData.value,
+        profile
+      };
+
       if (appStatus.value === 'busy') {
         appStatus.value = 'ready';
       }
-      return;
+    } catch (err) {
+      console.error('Error executing preview operation.', err); // TODO: show error in UI
+      if (appStatus.value === 'busy') {
+        appStatus.value = 'ready';
+      }
+      if (err instanceof Error && !err.message.includes('Preview cancelled')) {
+        previewData.value = null;
+      }
     }
+  },
+  {
+    limit: 500,
+    delay: 500,
+    cancelable: true
+  }
+);
 
-    let firstSampleSource: Source | null = null;
-
-    const start = scrollRange.value?.[0] || 0;
-    const stop = scrollRange.value?.[1] || 50;
-
-    if (payload.source) {
-      firstSampleSource = await payload.source.iloc({
-        target: 'operation_first_preview_df',
-        lower_bound: start,
-        upper_bound: stop
-      });
-
-      const firstSampleDataframe = (await operation.action({
-        ...deepClone(payload),
-        source: firstSampleSource,
-        blurr,
-        app: { addToast }
-      })) as Source;
-
-      const firstSampleResult = await firstSampleDataframe.columnsSample();
-
-      // use preview columns instead of source columns
-
-      const previewColumns = Object.fromEntries(
-        firstSampleResult.columns.map(({ title }: { title: string }) => {
-          return [title, {}];
-        })
-      );
-
-      previewData.value = {
-        options: { usesInputDataframe: true },
-        columns: previewColumns,
-        type: payload.options.preview
-      };
-
-      // clear chunks
-
-      dataframeLayout.value?.clearChunks(true, false);
-      dataframeLayout.value?.setChunksLoading(false);
-
-      // add first chunk to dataframe
-
-      dataframeLayout.value?.addChunk({
-        start,
-        stop,
-        data: firstSampleResult.value
-      });
-    } else {
-      previewData.value = {
-        options: { usesInputDataframe: false },
-        type: payload.options.preview
-      };
-
-      // clear chunks
-
-      dataframeLayout.value?.clearChunks(true, false);
-      dataframeLayout.value?.setChunksLoading(false);
-    }
-
-    // get profile for preview columns
-
-    const result = await operation.action({
-      ...deepClone(payload),
-      source: payload.source,
-      target: 'operation_preview_' + (payload.source?.name || 'load_df'),
-      blurr,
-      app: { addToast }
-    });
-
-    if (!result) {
-      throw new Error(`Operation '${operation.name}' returned no result.`, {
-        cause: { operation, payload }
-      });
-    }
-
-    // save preview dataframe
-
-    previewData.value = {
-      ...previewData.value,
-      df: result
-    };
-
-    dataframeLayout.value?.setChunksLoading(true);
-
-    // save profile
-
-    const preliminaryProfile = await getPreliminaryProfile(result);
-
-    previewData.value = {
-      ...previewData.value,
-      profile: preliminaryProfile
-    };
-
-    const profile = await (payload.source
-      ? result.profile({
-          cols: Object.entries(previewData.value?.columns || {})
-            ?.map(([title, _]) => title)
-            .filter(title => title.startsWith('__bumblebee__preview__')),
-          bins: 33
-        })
-      : result.profile({ cols: '*', bins: 33 }));
-
-    previewData.value = {
-      ...previewData.value,
-      profile
-    };
-
-    if (appStatus.value === 'busy') {
-      appStatus.value = 'ready';
+const previewOperation = async () => {
+  try {
+    const result = await previewOperationThrottled();
+    if (result instanceof Error) {
+      throw result;
     }
   } catch (err) {
-    console.error('Error executing preview operation.', err); // TODO: show error in UI
-    previewData.value = null;
-    if (appStatus.value === 'busy') {
-      appStatus.value = 'ready';
-    }
+    // this is needed to cancel the preview operation in the middle of the execution
+    cancelPreview = true;
   }
-}, 500);
+};
 
 watch(() => operationValues.value, previewOperation, { deep: true });
 watch(() => selection.value, previewOperation, { deep: true });
