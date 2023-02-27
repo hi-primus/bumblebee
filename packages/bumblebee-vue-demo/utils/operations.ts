@@ -445,19 +445,19 @@ export const operationCreators: OperationCreator[] = [
         name: 'searchBy',
         label: 'Search by',
         type: 'string',
-        defaultValue: 'full',
+        defaultValue: 'chars',
         options: [
           {
-            text: 'Exact match',
-            value: 'full'
+            text: 'Contains characters',
+            value: 'chars'
           },
           {
             text: 'Contains words',
             value: 'words'
           },
           {
-            text: 'Contains characters',
-            value: 'chars'
+            text: 'Exact match',
+            value: 'full'
           }
         ]
       },
