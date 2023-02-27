@@ -295,7 +295,7 @@ const preparePayload = (payload: PayloadWithOptions): PayloadWithOptions => {
 
   if (payload.options.usesInputDataframe) {
     const currentDataframe = tabs.value[selectedTab.value]; // TODO should be the source of the operation
-    payload.source = currentDataframe.df.copy();
+    payload.source = currentDataframe.df;
     console.log('[DEBUG] Using dataframe:', { payload, currentDataframe });
     payload.options.sourceId = currentDataframe.sourceId;
   }
