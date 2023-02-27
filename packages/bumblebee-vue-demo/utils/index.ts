@@ -69,6 +69,14 @@ export const stepify = (a: number, b: number, f = Math.round): number => {
   return f(a / b) * b;
 };
 
+export const objectMap = <T>(obj: Record<string | number | symbol, T>, cb: (value: T) => T) => {
+  return Object.fromEntries(
+    Object.entries(obj).map(
+      ([key,value])=>[key, cb(value)]
+    )
+  );
+};
+
 export const compareObjects = (a: unknown, b: unknown): boolean => {
   if (a === b) {
     return true;

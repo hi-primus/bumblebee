@@ -108,7 +108,7 @@
               top: columnHeaderHeight + row.index * rowHeight + 'px',
               height: rowHeight + 1 + 'px'
             }"
-            v-html="getValue(row?.values?.[column.columnIndex])"
+            v-html="row?.values?.[column.columnIndex]"
           ></div>
         </div>
       </div>
@@ -154,7 +154,7 @@ import { PropType, Ref } from 'vue';
 
 import { ColumnHeader } from '@/types/dataframe';
 import { TableSelection } from '@/types/operations';
-import { focusNext, focusPrevious, throttle } from '@/utils';
+import { focusNext, focusPrevious, objectMap, throttle } from '@/utils';
 import { TYPES_HINTS, TYPES_NAMES } from '@/utils/data-types';
 
 const props = defineProps({
@@ -311,9 +311,16 @@ const onScroll = throttle(function () {
 
 const visibleRows = computed(() => {
   const [start, stop] = visibleRowsRange.value;
-  return rowsData.value.filter(r => {
-    return r && r.index >= start - 25 && r.index <= stop + 25;
-  });
+  return rowsData.value
+    .filter(row => {
+      return row && row.index >= start - 25 && row.index <= stop + 25;
+    })
+    .map(row => {
+      return {
+        ...row,
+        values: row.values ? objectMap(row.values, getValue) : row.values
+      };
+    });
 });
 
 const getValue = (value: unknown): string => {
