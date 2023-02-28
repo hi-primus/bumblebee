@@ -47,8 +47,8 @@
 import { mdiCheckBold, mdiCloseThick, mdiLoading } from '@mdi/js';
 import { ComputedRef, Ref } from 'vue';
 
+import { AppStatus } from '@/types/app';
 import { DataframeObject } from '@/types/dataframe';
-import { AppStatus } from '@/types/workspace';
 
 const dataframeObject = inject(
   'dataframe-object'
