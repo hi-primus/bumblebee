@@ -6,8 +6,8 @@
       <li
         v-for="(tab, index) in tabs"
         :key="tab?.label"
-        class="h-12 max-w-[22rem] pt-1 px-4 flex gap-2 items-center cursor-pointer border-primary"
-        :class="{ 'border-b-2 text-primary': index === selected }"
+        class="h-12 max-w-[22rem] pt-1 px-4 flex gap-2 items-center cursor-pointer border-transparent border-y-2"
+        :class="{ 'border-b-primary text-primary': index === selected }"
         @click="() => emit('update:selected', index)"
       >
         <div class="ellipsis">
@@ -19,15 +19,22 @@
           @click.prevent="() => emit('close', index)"
         />
       </li>
+      <li
+        v-if="addable"
+        class="h-full cursor-pointer text-primary"
+        @click="() => emit('add')"
+      >
+        <Icon class="w-12 h-12 p-3" :path="mdiPlus" />
+      </li>
     </ul>
   </section>
 </template>
 
 <script setup lang="ts">
-import { mdiClose } from '@mdi/js';
+import { mdiClose, mdiPlus } from '@mdi/js';
 import { PropType } from 'vue';
 
-import { Tab } from '@/types/workspace';
+import { Tab } from '@/types/app';
 
 const defaultLabel = '(new dataset)';
 
@@ -39,12 +46,17 @@ defineProps({
   selected: {
     type: Number,
     default: -1
+  },
+  addable: {
+    type: Boolean,
+    default: false
   }
 });
 
 type Emits = {
   (e: 'update:selected', index: number): void;
   (e: 'close', index: number): void;
+  (e: 'add'): void;
 };
 
 const emit = defineEmits<Emits>();
