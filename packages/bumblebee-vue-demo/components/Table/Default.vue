@@ -77,16 +77,16 @@
               "
             >
               <span
-                :title="dataTypeNames[column.columnIndex]"
+                :title="columnData?.get(column.title)?.typeName"
                 class="left-icon inline text-text-alpha/75 max-w-5 font-bold text-center"
                 :class="{
                   'transform scale-x-125':
-                    dataTypeHintLengths[column.columnIndex] <= 2,
+                    columnData?.get(column.title)?.typeHintLength || 3 <= 2,
                   'tracking-[-1px] transform scale-x-95':
-                    dataTypeHintLengths[column.columnIndex] >= 4
+                    columnData?.get(column.title)?.typeHintLength || 3 >= 4
                 }"
               >
-                {{ dataTypeHints[column.columnIndex] }}
+                {{ columnData?.get(column.title)?.typeHint }}
               </span>
               <span
                 :title="column.displayTitle || column.title"
@@ -260,41 +260,40 @@ const rowsData = computed(() => {
   return rows;
 });
 
-const dataTypeHints = computed(() => {
-  return props.header.map(column => {
-    let dataType = '';
-    if (column.stats?.inferred_data_type) {
-      if (typeof column.stats.inferred_data_type === 'string') {
-        dataType = column.stats.inferred_data_type;
-      } else {
-        dataType = column.stats.inferred_data_type.data_type;
-      }
-    } else if (column.data_type) {
-      dataType = column.data_type;
-    }
-    return TYPES_HINTS[dataType] || dataType || '?';
-  });
-});
+interface ColumnData {
+  typeHint: string;
+  typeHintLength: number;
+  typeName: string;
+}
 
-const dataTypeHintLengths = computed(() => {
-  return dataTypeHints.value.map(hint => hint.length);
-});
+const columnData = ref<Map<string, ColumnData>>(new Map<string, ColumnData>());
 
-const dataTypeNames = computed(() => {
-  return props.header.map(column => {
-    let dataType = '';
-    if (column.stats?.inferred_data_type) {
-      if (typeof column.stats.inferred_data_type === 'string') {
-        dataType = column.stats.inferred_data_type;
-      } else {
-        dataType = column.stats.inferred_data_type.data_type;
+watch(
+  columnsHeader,
+  header => {
+    header.forEach(column => {
+      let dataType = '';
+      if (column.stats?.inferred_data_type) {
+        if (typeof column.stats.inferred_data_type === 'string') {
+          dataType = column.stats.inferred_data_type;
+        } else {
+          dataType = column.stats.inferred_data_type.data_type;
+        }
+      } else if (column.data_type) {
+        dataType = column.data_type;
       }
-    } else if (column.data_type) {
-      dataType = column.data_type;
-    }
-    return TYPES_NAMES[dataType] || dataType || 'unknown';
-  });
-});
+      const typeHint = TYPES_HINTS[dataType] || dataType || '';
+      if (typeHint) {
+        columnData.value.set(column.title, {
+          typeHint,
+          typeHintLength: typeHint.length,
+          typeName: TYPES_NAMES[dataType] || dataType || 'unknown'
+        });
+      }
+    });
+  },
+  { immediate: true }
+);
 
 const visibleRowsRange = ref([0, 10]);
 
