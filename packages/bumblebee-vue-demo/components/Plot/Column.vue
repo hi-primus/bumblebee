@@ -75,6 +75,7 @@
 import { mdiLoading } from '@mdi/js';
 
 import { ColumnHeader } from '@/types/dataframe';
+import { compareObjects } from '@/utils';
 
 const props = defineProps<{
   data: ColumnHeader;
