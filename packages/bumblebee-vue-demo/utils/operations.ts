@@ -1018,7 +1018,7 @@ export const operationCreators: OperationCreator[] = [
   {
     key: 'pad',
     name: 'Add padding characters',
-    alias: 'padding',
+    alias: 'padding fill length',
     defaultOptions: {
       usesInputCols: true,
       usesInputDataframe: true,
@@ -1026,18 +1026,53 @@ export const operationCreators: OperationCreator[] = [
     },
     action: (
       payload: OperationPayload<{
-        start: number;
-        end: number;
+        width: number;
+        side: 'left' | 'right' | 'both';
+        fillChar: string;
       }>
     ): Source => {
-      return payload.source.cols.removeStopWords({
+      return payload.source.cols.pad({
         target: payload.target,
         cols: payload.cols,
-        start: payload.start,
-        end: payload.end,
+        width: payload.width,
+        side: payload.side,
+        fillChar: payload.fillChar,
         outputCols: payload.outputCols
       });
     },
+    fields: [
+      {
+        name: 'width',
+        label: 'Width',
+        type: 'number'
+      },
+      {
+        name: 'side',
+        label: 'Side',
+        type: 'string',
+        defaultValue: 'left',
+        options: [
+          {
+            label: 'Left',
+            value: 'left'
+          },
+          {
+            label: 'Right',
+            value: 'right'
+          },
+          {
+            label: 'Both',
+            value: 'both'
+          }
+        ]
+      },
+      {
+        name: 'fillChar',
+        label: 'Fill character',
+        type: 'string',
+        defaultValue: ' '
+      }
+    ],
     shortcut: 'lp'
   },
 
