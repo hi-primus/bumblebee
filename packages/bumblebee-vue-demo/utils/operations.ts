@@ -940,6 +940,13 @@ export const operationCreators: OperationCreator[] = [
         outputCols: payload.outputCols
       });
     },
+    fields: [
+      {
+        name: 'n',
+        label: 'Number of characters',
+        type: 'number'
+      }
+    ],
     shortcut: 'lsl'
   },
   {
@@ -962,6 +969,13 @@ export const operationCreators: OperationCreator[] = [
         outputCols: payload.outputCols
       });
     },
+    fields: [
+      {
+        name: 'n',
+        label: 'Number of characters',
+        type: 'number'
+      }
+    ],
     shortcut: 'lsr'
   },
   {
@@ -987,6 +1001,18 @@ export const operationCreators: OperationCreator[] = [
         outputCols: payload.outputCols
       });
     },
+    fields: [
+      {
+        name: 'start',
+        label: 'Start index',
+        type: 'number'
+      },
+      {
+        name: 'end',
+        label: 'End index',
+        type: 'number'
+      }
+    ],
     shortcut: 'lsm'
   },
   {
