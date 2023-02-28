@@ -1053,15 +1053,15 @@ export const operationCreators: OperationCreator[] = [
         defaultValue: 'left',
         options: [
           {
-            label: 'Left',
+            text: 'Left',
             value: 'left'
           },
           {
-            label: 'Right',
+            text: 'Right',
             value: 'right'
           },
           {
-            label: 'Both',
+            text: 'Both',
             value: 'both'
           }
         ]
