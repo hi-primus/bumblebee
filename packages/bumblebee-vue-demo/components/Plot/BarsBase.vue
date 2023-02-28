@@ -1,5 +1,5 @@
 <template>
-  <div class="konva-canvas-container">
+  <div class="konva-canvas-container overflow-hidden">
     <template v-if="enablePlot">
       <v-stage
         ref="konva"
