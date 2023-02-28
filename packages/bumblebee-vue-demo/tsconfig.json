@@ -7,7 +7,9 @@
     "allowJs": true,
     "paths": {
       "@/*": ["*"]
-    }
+    },
+    "sourceMap": true,
+    "inlineSourceMap": true
   },
   "parserOptions": {
     "extraFileExtensions": [".vue"]
