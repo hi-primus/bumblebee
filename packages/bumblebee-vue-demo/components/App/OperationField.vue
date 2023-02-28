@@ -21,6 +21,17 @@
     :disabled="resolve(field.disabled)"
     :class="fieldClass"
   />
+  <AppInput
+    v-else-if="resolve(field.type) === 'number'"
+    :key="`number-input-${field.name}-${updates}-${fieldClass}`"
+    v-model="value"
+    :label="resolve(field.label || field.name)"
+    :name="field.name"
+    :placeholder="field.placeholder"
+    :disabled="resolve(field.disabled)"
+    :class="fieldClass"
+    type="number"
+  />
   <AppCheckbox
     v-else-if="resolve(field.type) === 'boolean'"
     :key="`check-${field.name}-${updates}-${fieldClass}`"

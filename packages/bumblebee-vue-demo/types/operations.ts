@@ -39,7 +39,7 @@ export type FieldOption<T = unknown> = Record<string, T> & {
 
 export interface Field {
   name: string;
-  type: PayloadCallbackOr<'string' | 'boolean' | 'custom' | 'file'>;
+  type: PayloadCallbackOr<'string' | 'number' | 'boolean' | 'custom' | 'file'>;
   key?: string;
   placeholder?: string;
   label?: PayloadCallbackOr<string>;
