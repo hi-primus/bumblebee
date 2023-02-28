@@ -175,6 +175,7 @@ import { PropType, ref } from 'vue';
 
 import { RuleKey } from '@/composables/use-rules';
 import { FieldOption } from '@/types/operations';
+import { compareArrays } from '@/utils';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Value = any;
