@@ -1250,8 +1250,8 @@ export const operations = {
   pad: DataframeOperation<{
     cols: Cols;
     width: number;
-    side: 'left' | 'right';
     fillChar: string;
+    side: 'left' | 'right' | 'both';
     outputCols: Cols;
   }>({
     targetType: 'dataframe',
@@ -1263,7 +1263,7 @@ export const operations = {
       },
       {
         name: 'width',
-        default: null,
+        default: 0,
       },
       {
         name: 'side',
