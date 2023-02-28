@@ -1281,9 +1281,6 @@ export const operations = {
   }),
   trim: DataframeOperation<{
     cols: Cols;
-    width: number;
-    fillChar: string;
-    side: string;
     outputCols;
   }>({
     targetType: 'dataframe',
