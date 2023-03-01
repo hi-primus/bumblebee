@@ -1,4 +1,5 @@
-export type NoArgs = Record<string, never>;
+// eslint-disable-next-line @typescript-eslint/ban-types
+export type NoArgs = {};
 export type Cols = string | string[] | number | number[] | undefined;
 export type ColsResult<T> = T | Record<string, T>;
 export type SearchBy = 'full' | 'words' | 'chars' | 'values';
