@@ -87,19 +87,19 @@ export function Source(
   source.persist = (): PromiseOr<SourceInterface> => {
     if (!source.paramsQueue.length) {
       const newSource = Source(client, source.data || source.name);
-      delete (newSource as FutureSource).then;
-      return newSource;
+      delete (newSource as Partial<FutureSource>).then;
+      return newSource as SourceInterface;
     }
     const result = client.send(source.paramsQueue);
 
-    const _persist = (result) => {
+    const _persist = (result: OperationCompatible) => {
       if (isName(result) || isSource(result)) {
         const newSource = Source(
           client,
           (result as SourceInterface).data || result.toString()
         );
-        delete (newSource as FutureSource).then;
-        return newSource;
+        delete (newSource as Partial<FutureSource>).then;
+        return newSource as SourceInterface;
       }
       const paramsWithTarget = source.paramsQueue.filter((p) => p.target);
       let lastTarget = paramsWithTarget[paramsWithTarget.length - 1].target;
@@ -114,8 +114,8 @@ export function Source(
           'Creating a new source with the result of the pending operations'
         );
         const newSource = Source(client, lastTarget);
-        delete (newSource as FutureSource).then;
-        return newSource;
+        delete (newSource as Partial<FutureSource>).then;
+        return newSource as SourceInterface;
       }
       console.warn("Can't persist source, unknown name.", result);
       throw new Error("Can't persist source, unknown name");
@@ -130,7 +130,7 @@ export function Source(
     try {
       const result = source.persist();
       if (!isPromiseLike(result)) {
-        const fulfilledResult = onfulfilled(result);
+        const fulfilledResult = onfulfilled && onfulfilled(result);
         return new Promise(() => fulfilledResult);
       }
       return result.then(onfulfilled).catch(onrejected);

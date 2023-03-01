@@ -1,8 +1,4 @@
-import type {
-  Client,
-  ClientFunctions,
-  ClientOptions,
-} from '../../types/client';
+import type { Client, ClientOptions } from '../../types/client';
 import type {
   FutureSource,
   Source as SourceInterface,
@@ -27,8 +23,8 @@ const prepareResult = (client: Client, result: PythonCompatible) => {
         client,
         sourceData !== undefined ? sourceData : result.name
       );
-      delete (newSource as FutureSource).then;
-      return newSource;
+      delete (newSource as Partial<FutureSource>).then;
+      return newSource as SourceInterface;
     }
   }
   if (
@@ -36,8 +32,8 @@ const prepareResult = (client: Client, result: PythonCompatible) => {
     client.backendServer.pyodide.isPyProxy(result)
   ) {
     const newSource = Source(client, result);
-    delete (newSource as FutureSource).then;
-    return newSource;
+    delete (newSource as Partial<FutureSource>).then;
+    return newSource as SourceInterface;
   }
   return result;
 };
@@ -156,7 +152,7 @@ export function Blurr(options: ClientOptions = {}): Client {
   blurr.getGlobal = blurr.backendServer.getGlobal;
   blurr.donePromise = blurr.backendServer.donePromise;
 
-  const clientFunctions: Partial<ClientFunctions> = {};
+  const clientFunctions = {};
 
   for (const key in operations) {
     const operationArgs = operations[key].args;
