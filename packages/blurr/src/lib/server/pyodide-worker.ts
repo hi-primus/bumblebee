@@ -174,7 +174,7 @@ export function ServerPyodideWorker(options: ServerOptions): ServerInterface {
     return operations.reduce((promise: Promise<PythonCompatible>, _, i) => {
       const { kwargs, operation } = operations[i];
 
-      const _operation = (result) => {
+      const _operation = (result: OperationCompatible) => {
         if (
           i > 0 &&
           !kwargs.source &&
