@@ -23,24 +23,23 @@ export function generateUniqueVariableName(prefix = '') {
 export function isObject(
   value: unknown
 ): value is Record<string | number | symbol, unknown> {
-  return value && typeof value === 'object' && !Array.isArray(value);
+  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 }
 
 export function isPromiseLike(value: unknown): value is Promise<unknown> {
-  return (
-    value &&
-    typeof value === 'object' &&
-    'then' in value &&
-    typeof value['then'] === 'function'
-  );
+  if (!value || typeof value !== 'object') {
+    return false;
+  }
+  return 'then' in value && typeof value['then'] === 'function';
 }
 
 export function isStringRecord(
   value: unknown
 ): value is Record<string | number | symbol, unknown> {
+  if (!value || typeof value !== 'object') {
+    return false;
+  }
   return (
-    value &&
-    typeof value === 'object' &&
     !Array.isArray(value) &&
     Object.keys(value).every((key) => typeof key === 'string')
   );
@@ -58,14 +57,14 @@ export function Name(name: string): Name {
   return _name;
 }
 
-export function isName(value): value is Name {
+export function isName(value: unknown): value is Name {
   return (
     isObject(value) && '_blurrMember' in value && value._blurrMember == 'name'
   );
 }
 
 export function optionalPromise<T>(
-  result,
+  result: unknown,
   callback: (r: typeof result) => T
 ): PromiseOr<ReturnType<typeof callback>> {
   if (isPromiseLike(result)) {
@@ -86,10 +85,14 @@ export function objectMap<T, U extends T[keyof T], V>(
   object: T,
   cb: (elem: U) => V
 ) {
-  return Object.keys(object).reduce(function (result, key) {
-    result[key] = cb(object[key]);
+  if (!object || typeof object !== 'object') {
+    return object;
+  }
+  type OutputType = { [key in keyof T]: V };
+  return (Object.keys(object) as (keyof T)[]).reduce(function (result, key) {
+    result[key] = cb(object[key] as U);
     return result;
-  }, {} as { [key in keyof T]: V });
+  }, {} as OutputType);
 }
 
 /*
@@ -103,12 +106,16 @@ export function objectFilter<T, U extends T[keyof T]>(
   object: T,
   cb: (elem: U, key: keyof T, object: T) => boolean
 ) {
-  return Object.keys(object).reduce(function (result, key) {
-    if (cb(object[key], key as keyof T, object)) {
-      result[key] = object[key];
+  if (!object || typeof object !== 'object') {
+    return object;
+  }
+  type OutputType = { [key in keyof T]: U };
+  return (Object.keys(object) as (keyof T)[]).reduce(function (result, key) {
+    if (cb(object[key] as U, key as keyof T, object)) {
+      result[key] = object[key] as U;
     }
     return result;
-  }, {} as { [key in keyof T]: U });
+  }, {} as OutputType);
 }
 
 /*
@@ -170,6 +177,9 @@ export const adaptKwargs = (
   }
 
   // named arguments
+
+  type NamedArguments = Record<string, OperationCompatible>;
+
   const argsWithDefaults = operationArgs.reduce((acc, arg) => {
     const pythonArgName = argName(arg);
     const argValue = args[arg.name] || args[pythonArgName];
@@ -179,7 +189,7 @@ export const adaptKwargs = (
       acc[pythonArgName] = arg.default;
     }
     return acc;
-  }, {});
+  }, {} as NamedArguments);
 
   // include extra arguments
   return {
@@ -221,7 +231,9 @@ export const pythonString = (param: PythonCompatible): string => {
   }
 };
 
-export const pythonArguments = (params: Record<string, PythonCompatible>) => {
+export const pythonArguments = (
+  params: Record<string, PythonCompatible>
+): string => {
   const _params = { ...params };
   if ('source' in _params) {
     delete _params.source;
