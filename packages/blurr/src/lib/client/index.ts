@@ -161,16 +161,17 @@ export function Blurr(options: ClientOptions = {}): Client {
       'source',
       ...operationArgs.map((arg) => arg.name),
     ];
-    clientFunctions[key] = (...args) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    clientFunctions[key as any] = (...args) => {
       let _args: InputArgs;
       if (
         args.length === 1 &&
         isStringRecord(args[0]) &&
         Object.keys(args[0]).every((key) => operationArgsNames.includes(key))
       ) {
-        _args = args[0] as InputArgs;
+        _args = args[0] as Record<string, OperationCompatible>;
       } else {
-        _args = args;
+        _args = args as OperationCompatible[];
       }
       const kwargs = adaptKwargs(_args, operationArgs);
       return blurr.run({
