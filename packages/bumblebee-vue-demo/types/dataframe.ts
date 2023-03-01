@@ -70,5 +70,4 @@ export interface DataframeObject {
   sourceId: string;
   profile?: DataframeProfile;
   updates?: number;
-  loaded?: boolean;
 }

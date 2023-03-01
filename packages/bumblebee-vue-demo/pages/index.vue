@@ -6,23 +6,34 @@
     >
       <Tabs
         v-model:selected="selectedTab"
-        :tabs="tabs.map(({ name }) => ({ label: name }))"
+        :tabs="
+          tabs.map(tab => ({
+            label: tab >= 0 ? dataframes[tab]?.name : '(new dataset)'
+          }))
+        "
+        addable
         @close="(index: number) => closeDataframe(index)"
+        @add="
+          () => {
+            tabs.push(-1);
+            selectedTab = tabs.length - 1;
+          }
+        "
       />
       <WorkspaceDataframeLayout ref="dataframeLayout">
         <div
-          v-if="dataSourcesFromCells.length > 0"
+          v-if="availableDataframes.length > 0"
           class="text-lg text-text-lighter font-bold"
         >
           <span> Load from existing data sources: </span>
-          <span v-for="(source, index) in dataSourcesFromCells" :key="index">
+          <span v-for="(tabIndex, index) in availableDataframes" :key="index">
             <span v-if="index > 0">, </span>
             <button
               type="button"
               class="text-primary"
-              @click="loadDataSource(source.sourceId)"
+              @click="loadDataSource(tabIndex)"
             >
-              {{ source.name || index + 1 }}
+              {{ dataframes[tabIndex].name || index + 1 }}
             </button>
           </span>
         </div>
@@ -43,6 +54,7 @@
 import type { Client, Source } from 'blurr/build/main/types';
 
 import DataframeLayout from '@/components/Workspace/DataframeLayout.vue';
+import { AppStatus } from '@/types/app';
 import { DataframeObject, PreviewData } from '@/types/dataframe';
 import {
   isOperation,
@@ -55,8 +67,12 @@ import {
   State,
   TableSelection
 } from '@/types/operations';
-import { AppStatus } from '@/types/workspace';
-import { compareObjects, deepClone, throttleOnce } from '@/utils';
+import {
+  compareObjects,
+  deepClone,
+  getNameFromFileName,
+  throttleOnce
+} from '@/utils';
 import { getPreliminaryProfile } from '@/utils/blurr';
 import { operations } from '@/utils/operations';
 
@@ -70,7 +86,7 @@ const dataframeLayout = ref<InstanceType<typeof DataframeLayout> | null>(null);
 
 const dataframes = ref<DataframeObject[]>([]);
 
-const tabs = computed(() => dataframes.value.filter(d => d.loaded));
+const tabs = ref<number[]>([]);
 
 const selectedTab = ref(-1);
 
@@ -86,8 +102,10 @@ provide('state', state);
 const selection = ref<TableSelection>(null);
 provide('selection', selection);
 
-const dataframeObject = computed(() => {
-  return selectedTab.value >= 0 ? tabs.value[selectedTab.value] : undefined;
+const dataframeObject = computed<DataframeObject | undefined>(() => {
+  return selectedTab.value >= 0
+    ? dataframes.value[tabs.value[selectedTab.value]]
+    : undefined;
 });
 provide('dataframe-object', dataframeObject);
 
@@ -121,27 +139,17 @@ const operationStatus = ref<OperationStatus>({
 });
 provide('operation-status', operationStatus);
 
-const dataSourcesFromCells = computed<{ sourceId: string; name: string }[]>(
-  () => {
-    return dataframes.value
-      .filter(dataframe => dataframe.sourceId && !dataframe.loaded)
-      .map(dataframe => {
-        return {
-          sourceId: dataframe.sourceId,
-          name: dataframe?.name || ''
-        };
-      });
-  }
-);
+const availableDataframes = computed<number[]>(() => {
+  return dataframes.value
+    .map((_, index) => index)
+    .filter(index => !tabs.value.includes(index));
+});
 
 const closeDataframe = (tabIndex: number) => {
-  const index = dataframes.value.findIndex(
-    dataframe => dataframe.sourceId === tabs.value[tabIndex].sourceId
-  );
   if (selectedTab.value >= tabIndex) {
     selectedTab.value = selectedTab.value - 1;
   }
-  dataframes.value[index].loaded = false;
+  tabs.value.splice(tabIndex, 1);
 };
 
 const newSourceId = () => {
@@ -170,18 +178,10 @@ const handleDataframeResults = async (
         sourceId,
         df,
         profile: undefined,
-        loaded: true,
         updates: 0
       };
-      dataframes.value.push(newDataframe);
-      const newLength = dataframes.value.length;
-      dataframeIndex = newLength - 1;
-      console.log(
-        '[DEBUG] Creating dataframe:',
-        dataframes.value[dataframeIndex]
-      );
-      const newTabLength = tabs.value.length;
-      selectedTab.value = newTabLength - 1;
+      dataframeIndex = dataframes.value.push(newDataframe) - 1;
+      loadDataSource(dataframeIndex);
     } else {
       if (dataframeIndex < 0) {
         console.error('Could not find dataframe to update', sourceId);
@@ -194,8 +194,16 @@ const handleDataframeResults = async (
       dataframes.value[dataframeIndex] = currentDataframe;
     }
 
-    dataframes.value[dataframeIndex].profile = await getPreliminaryProfile(df);
+    const profile = await getPreliminaryProfile(df);
 
+    const dataframeName =
+      profile.name || getNameFromFileName(profile.file_name || '');
+
+    dataframes.value[dataframeIndex] = {
+      ...dataframes.value[dataframeIndex],
+      profile,
+      name: dataframeName || 'dataset'
+    };
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     df.profile({ bins: 33 }).then((profile: any) => {
       dataframes.value[dataframeIndex].profile = profile;
@@ -300,7 +308,8 @@ const preparePayload = (payload: PayloadWithOptions): PayloadWithOptions => {
   }
 
   if (payload.options.usesInputDataframe) {
-    const currentDataframe = tabs.value[selectedTab.value]; // TODO should be the source of the operation
+    const currentDataframeIndex = tabs.value[selectedTab.value]; // TODO should be the source of the operation
+    const currentDataframe = dataframes.value[currentDataframeIndex];
     payload.source = currentDataframe.df;
     console.log('[DEBUG] Using dataframe:', { payload, currentDataframe });
     payload.options.sourceId = currentDataframe.sourceId;
@@ -479,15 +488,21 @@ const loadFromFile = () => {
   }
 };
 
-const loadDataSource = (sourceId: string) => {
-  // find sourceId index in dataframes
-  const foundIndex = dataframes.value.findIndex(df => df.sourceId === sourceId);
-  if (foundIndex !== -1) {
-    dataframes.value[foundIndex].loaded = true;
-    const foundTabIndex = tabs.value.findIndex(
-      tab => tab.sourceId === sourceId
-    );
+const loadDataSource = (dataframeIndex: number) => {
+  if (!dataframes.value[dataframeIndex]) {
+    return;
+  }
+  const foundTabIndex = tabs.value.indexOf(dataframeIndex);
+  if (foundTabIndex >= 0) {
     selectedTab.value = foundTabIndex;
+  } else {
+    const availableIndex = tabs.value.findIndex(tab => tab <= -1);
+    if (availableIndex >= 0) {
+      tabs.value[availableIndex] = dataframeIndex;
+      selectedTab.value = availableIndex;
+    } else {
+      selectedTab.value = tabs.value.push(dataframeIndex) - 1;
+    }
   }
 };
 
@@ -699,9 +714,15 @@ watch(showSidebar, show => {
   }
 });
 
-watch(selectedTab, tab => {
-  if (tab >= 0 && !tabs.value[tab]) {
-    selectedTab.value = -1;
+watch(selectedTab, async tab => {
+  await nextTick();
+  if (tab >= 0 && tabs.value[tab] === undefined) {
+    const lastTab = tabs.value.reverse().findIndex(tab => tab !== -1);
+    if (lastTab >= 0) {
+      selectedTab.value = lastTab;
+    } else {
+      selectedTab.value = tabs.value.length - 1;
+    }
   }
 });
 

@@ -1,4 +1,27 @@
-import { isObject } from '@/types/common';
+import { isObject } from '../types/common';
+
+export const getNameFromFileName = (name: string): string => {
+  name = name.split('/').pop() || '';
+  name = name.split('\\').pop() || '';
+  const parts = name.split('.');
+  if (parts.length === 1) {
+    name = parts[0];
+  } else {
+    name = parts.slice(0, parts.length - 1).join('.');
+  }
+  name = name.split('?')[0];
+  const noSymbolsName = name.replace(/[^a-zA-Z0-9]/g, ' ').trim();
+  if (noSymbolsName.length > 0) {
+    name = noSymbolsName;
+  } else {
+    name = name.trim();
+  }
+  name = name.charAt(0).toUpperCase() + name.slice(1);
+
+  const extension = parts.pop()?.toUpperCase();
+
+  return name || (extension ? `${extension} file` : '');
+};
 
 export const throttle = <T extends Array<unknown>>(
   func: (...args: T) => unknown,
