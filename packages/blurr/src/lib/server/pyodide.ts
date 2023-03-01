@@ -1,4 +1,4 @@
-import fetch from 'cross-fetch';
+import crossFetch from 'cross-fetch';
 import * as pyodidePackage from 'pyodide';
 
 import { Source } from '../../types';
@@ -6,7 +6,7 @@ import type {
   LoadPyodideType,
   PyodideBackendOptions,
 } from '../../types/pyodide';
-import type { Server as ServerInterface } from '../../types/server';
+import type { RunsCode, Server as ServerInterface } from '../../types/server';
 import type { ServerOptions } from '../../types/server';
 import { isSource } from '../client/data/source';
 import { getOperation } from '../operations';
@@ -18,13 +18,22 @@ const defaultPyodideOptions: PyodideBackendOptions = {
   local: true,
 };
 
-async function loadPyodide(options: PyodideBackendOptions) {
+// eslint-disable-next-line @typescript-eslint/no-namespace
+declare namespace globalThis {
+  let fetch: typeof crossFetch;
+  let loadPyodide: LoadPyodideType;
+  let loadedPyodide: pyodidePackage.PyodideInterface;
+}
+
+async function loadPyodide(
+  options: PyodideBackendOptions
+): Promise<pyodidePackage.PyodideInterface> {
   if (globalThis.loadedPyodide) {
     console.log('Pyodide was already loaded');
     return globalThis.loadedPyodide;
   }
 
-  globalThis.fetch = globalThis?.fetch || fetch;
+  globalThis.fetch = globalThis?.fetch || crossFetch;
 
   if (options?.scriptURL) {
     console.log('Loading pyodide from script', options.scriptURL);
@@ -43,15 +52,15 @@ async function loadPyodide(options: PyodideBackendOptions) {
   delete options.scriptURL;
   delete options.useWorker;
 
-  const pyodide = await _loadPyodide(options);
+  const pyodide = await _loadPyodide(options as Parameters<LoadPyodideType>[0]);
 
   globalThis.loadedPyodide = pyodide;
 
   return pyodide;
 }
 
-function _mapToObject(map: Map<string, unknown>): Record<string, unknown> {
-  const obj = {};
+function _mapToObject<T>(map: Map<string, T>): Record<string, T> {
+  const obj: Record<string, T> = {};
   for (const [key, value] of map) {
     obj[key] = value;
   }
@@ -96,9 +105,9 @@ export function ServerPyodide(options: ServerOptions): ServerInterface {
     return pyodide;
   });
 
-  server.pyodide = null;
+  server.pyodide = undefined;
 
-  server.backend = null;
+  server.backend = undefined;
 
   server.backendLoaded = false;
 
@@ -108,24 +117,29 @@ export function ServerPyodide(options: ServerOptions): ServerInterface {
     return true;
   });
 
-  function _optionalPromise(callback) {
+  function _optionalPromise<T>(callback: T) {
     if (typeof callback === 'function') {
-      type CallbackType = typeof callback;
+      type CallbackFunction = T extends (...args: unknown[]) => unknown
+        ? T
+        : (...args: unknown[]) => unknown;
       return function (
-        ...args: Parameters<CallbackType>
-      ): ReturnType<CallbackType> {
+        ...args: Parameters<CallbackFunction>
+      ): PromiseOr<ReturnType<CallbackFunction>> {
         if (server.backendLoaded) {
           return callback(...args);
         }
         return server.donePromise.then(() =>
           callback(...args)
-        ) as ReturnType<CallbackType>;
+        ) as ReturnType<CallbackFunction>;
       };
     }
     return callback;
   }
 
-  server.runCode = _optionalPromise((code: string) => {
+  server.runCode = _optionalPromise(async (code: string) => {
+    if (!server.pyodide) {
+      server.pyodide = await pyodidePromise;
+    }
     const result = server.pyodide.runPython(code);
     try {
       return typeof result?.toJs === 'function'
@@ -153,10 +167,10 @@ export function ServerPyodide(options: ServerOptions): ServerInterface {
       return { operation, kwargs };
     });
 
-    return operations.reduce((promise: Promise<PythonCompatible>, _, i) => {
+    return operations.reduce((promise: PromiseOr<PythonCompatible>, _, i) => {
       const { operation, kwargs } = operations[i];
 
-      const _operation = (result) => {
+      const _operation = (result: PythonCompatible) => {
         if (
           i > 0 &&
           !kwargs.source &&
@@ -165,26 +179,25 @@ export function ServerPyodide(options: ServerOptions): ServerInterface {
           result !== undefined
         ) {
           kwargs.source = makePythonCompatible(
-            server,
+            server as RunsCode,
             result,
             server.options.local
           );
         }
 
-        return operation.run(server, kwargs);
+        return operation.run(server as RunsCode, kwargs);
       };
 
-      // check if `promise` is a promise
       if (isPromiseLike(promise)) {
         return promise.then(_operation) as Promise<PythonCompatible>;
       }
 
       return _operation(promise) as Promise<PythonCompatible>;
-    }, undefined) as PromiseOr<PythonCompatible>;
+    }, undefined) as unknown as PromiseOr<PythonCompatible>;
   };
 
   server.runMethod = _optionalPromise(
-    (source: Source | pyodidePackage.PyProxy, path: string, kwargs: Kwargs) => {
+    (source: Source, path: string, kwargs: Kwargs) => {
       let sourceProxy: pyodidePackage.PyProxy;
 
       if (typeof source === 'string') {
