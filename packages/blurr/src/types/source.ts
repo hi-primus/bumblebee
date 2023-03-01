@@ -2,13 +2,9 @@ import { operations as dataframeOperations } from '../lib/operations/dataframe';
 import { operations as colsOperations } from '../lib/operations/dataframe/cols';
 import { operations as rowsOperations } from '../lib/operations/dataframe/rows';
 
-import { Operation } from './operation';
+import { OperationFunctions } from './operation';
 import { PyodideSourceData } from './pyodide';
 import { RunsCode } from './server';
-
-type OperationFunctions<T extends Record<string, Operation>> = {
-  [K in keyof T]: AdaptOperation<T[K]>;
-};
 
 export type SourceFunctions = OperationFunctions<typeof dataframeOperations>;
 export type SourceFunctionsCols = OperationFunctions<typeof colsOperations>;

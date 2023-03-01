@@ -5,13 +5,10 @@ import { PyodideBackendOptions, PyodideInterface } from './pyodide';
 export interface RunsCode {
   donePromise: Promise<boolean>;
   supports: (feature: string) => boolean;
-  run: (
-    kwargs: ArrayOrSingle<Record<string, unknown>>,
-    run?: boolean
-  ) => PromiseOr<unknown>;
-  runCode: (string) => PromiseOr<unknown>;
+  run: (kwargs: ArrayOrSingle<Params>, run?: boolean) => PromiseOr<unknown>;
+  runCode: (code: string) => PromiseOr<unknown>;
   getGlobal: (name: string) => PromiseOr<PythonCompatible>;
-  setGlobal: (name: string, value) => PromiseOr<void>;
+  setGlobal: (name: string, value: PythonCompatible) => PromiseOr<void>;
 }
 interface PromiseWorker {
   postMessage: (
@@ -35,7 +32,5 @@ export interface Server extends RunsCode {
   ) => PromiseOr<PythonCompatible>;
   backend?: BackendInterface;
   backendLoaded: boolean;
-  run: (
-    kwargs: ArrayOrSingle<Record<string, OperationCompatible>>
-  ) => PromiseOr<PythonCompatible>;
+  run: (kwargs: ArrayOrSingle<Params>) => PromiseOr<PythonCompatible>;
 }

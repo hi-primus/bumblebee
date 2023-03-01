@@ -1,6 +1,4 @@
 import { CallbackFunction, Name, SourceArg } from './arguments';
-import { Operation, RunArgs } from './operation';
-import { FutureSource, Source } from './source';
 
 export {};
 
@@ -11,7 +9,9 @@ declare global {
     | boolean
     | null
     | undefined
-    | Name;
+    | Name
+    | ArrayBuffer
+    | CallbackFunction;
 
   type PythonCompatible =
     | BasicPythonCompatible
@@ -20,11 +20,7 @@ declare global {
 
   type PythonDictionary = Record<string, PythonCompatible>;
 
-  type BasicOperationCompatible =
-    | BasicPythonCompatible
-    | ArrayBuffer
-    | CallbackFunction
-    | SourceArg;
+  type BasicOperationCompatible = BasicPythonCompatible | SourceArg;
 
   type OperationCompatible =
     | BasicOperationCompatible
@@ -50,18 +46,11 @@ declare global {
 
   type OperationArgs<T> = Record<string, T>;
 
-  type AdaptOperation<T extends Operation> = T extends Operation<
-    infer TA,
-    infer TR
-  >
-    ? TR extends Source
-      ? (...args: RunArgs<TA>) => FutureSource
-      : (...args: RunArgs<TA>) => Promise<TR>
-    : never;
-
   type ArrayOrSingle<T> = T | Array<T>;
 
   type PromiseOr<T> = T | Promise<T>;
+
+  type AwaitedOr<T> = T extends PromiseOr<infer U> ? Awaited<U> : Awaited<T>;
 
   // eslint-disable-next-line @typescript-eslint/ban-types
   type ArgumentTypes<F extends Function> = F extends (

@@ -1,4 +1,6 @@
+import { NoArgs } from './arguments';
 import { RunsCode } from './server';
+import { FutureSource, Source } from './source';
 
 export {};
 
@@ -40,7 +42,7 @@ export interface OperationCreator {
     kwargs?: Record<string, PythonCompatible>
   ) => PythonCompatible;
   // generates the code that will be run on the server when the operation is run, replaces `run` if provided, uses snake case for the arguments
-  getCode?: (kwargs?: Record<string, PythonCompatible>) => string;
+  getCode?: (kwargs: Record<string, PythonCompatible>) => string;
 }
 
 type OperationInterface = Pick<
@@ -50,15 +52,17 @@ type OperationInterface = Pick<
 
 export type ArgsType = OperationArgs<OperationCompatible>;
 
-type RecordToArray<T> = T extends Record<string, infer R> ? R[] : [];
+type RecordToArray<T> = T extends Record<string, infer R>
+  ? R[]
+  : OperationCompatible[];
 
-export type RunArgs<T extends ArgsType> =
+export type RunArgs<T extends ArgsType | NoArgs> =
   | RecordToArray<T>
   | [T]
   | [Record<string, OperationCompatible>?];
 
 export interface Operation<
-  TA extends ArgsType = ArgsType,
+  TA extends ArgsType | NoArgs = ArgsType,
   TR extends OperationCompatible = OperationCompatible
 > extends OperationInterface {
   args?: OperationArgument[];
@@ -70,3 +74,15 @@ export interface Operation<
   ) => PromiseOr<PythonCompatible>;
   _blurrMember: 'operation';
 }
+
+type AdaptOperation<
+  T extends Operation<ArgsType | NoArgs, OperationCompatible>
+> = T extends Operation<infer TA, infer TR>
+  ? TR extends Source
+    ? (...args: RunArgs<TA>) => FutureSource
+    : (...args: RunArgs<TA>) => Promise<TR>
+  : never;
+
+export type OperationFunctions<T> = {
+  [K in keyof T]: T[K] extends Operation ? AdaptOperation<T[K]> : never;
+};

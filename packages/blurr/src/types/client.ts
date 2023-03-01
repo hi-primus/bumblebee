@@ -1,20 +1,18 @@
 import { operations } from '../lib/operations/client';
 
+import { OperationFunctions } from './operation';
 import { RunsCode, Server, ServerOptions } from './server';
 export interface ClientOptions {
   server?: Server;
   serverOptions?: ServerOptions;
 }
 
-export type ClientFunctions = {
-  [K in keyof typeof operations]: AdaptOperation<typeof operations[K]>;
-};
-export interface Client extends ClientFunctions, RunsCode {
+export type ClientFunctions = OperationFunctions<typeof operations>;
+
+export interface Client extends RunsCode, ClientFunctions {
   options: ClientOptions;
   backendServer: Server;
-  run: (
-    kwargs: ArrayOrSingle<Record<string, OperationCompatible>>
-  ) => PromiseOr<OperationCompatible>;
+  run: (kwargs: ArrayOrSingle<Params>) => PromiseOr<OperationCompatible>;
   sources: Record<string, string>;
   send(paramsQueue: Params[]): PromiseOr<OperationCompatible>;
 }
