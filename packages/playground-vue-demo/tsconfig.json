@@ -6,8 +6,12 @@
     "types": ["@pinia/nuxt"],
     "allowJs": true,
     "paths": {
-      "@/*": ["*"],
-      "types/*": ["types/*"]
-    }
+      "@/*": ["*"]
+    },
+    "sourceMap": true,
+    "inlineSourceMap": true
+  },
+  "parserOptions": {
+    "extraFileExtensions": [".vue"]
   }
 }
