@@ -51,10 +51,9 @@
 </template>
 
 <script setup lang="ts">
-import type { Client, Source } from 'blurr/build/main/types';
-
 import DataframeLayout from '@/components/Workspace/DataframeLayout.vue';
 import { AppStatus } from '@/types/app';
+import { Client, Source } from '@/types/blurr';
 import { DataframeObject, PreviewData } from '@/types/dataframe';
 import {
   isOperation,

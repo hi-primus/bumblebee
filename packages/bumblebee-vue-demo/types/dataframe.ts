@@ -1,5 +1,4 @@
-import type { Source } from 'blurr/build/main/types';
-
+import type { Source } from './blurr';
 import type { PreviewType } from './operations';
 
 export type FrequencyValue = { count: number; value: BasicType };

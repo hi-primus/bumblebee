@@ -1,6 +1,5 @@
-import { Client, Source } from 'blurr/types';
-
 import { AppFunctions } from '@/types/app';
+import { Client, Source } from '@/types/blurr';
 import { isObject } from '@/types/common';
 import {
   Operation,

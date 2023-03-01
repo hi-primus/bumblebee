@@ -1,5 +1,4 @@
-import type { Source } from 'blurr/build/main/types';
-
+import type { Source } from '@/types/blurr';
 import { DataframeProfile, KeyedColumn } from '@/types/dataframe';
 
 export const getPreliminaryProfile = async (

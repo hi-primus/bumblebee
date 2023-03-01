@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/ban-types */
-import { Client } from 'blurr/build/main/types';
+import type { Client } from './blurr';
 
 export {};
 
