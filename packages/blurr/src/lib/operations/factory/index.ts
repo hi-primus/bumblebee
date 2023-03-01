@@ -180,14 +180,14 @@ export function BlurrOperation<
 
     return optionalPromise(operationResult, (operationResult) => {
       if (server.options.local && server.pyodide.isPyProxy(operationResult)) {
-        return operationResult;
+        return operationResult as unknown as TR; // TODO: Check support for proxies in types
       }
 
       if (operation.targetType == 'dataframe') {
         return Name(kwargs.target.toString());
       }
       return operationResult;
-    });
+    }) as PromiseOr<TR>;
   };
 
   return operation;
