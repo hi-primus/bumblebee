@@ -49,7 +49,7 @@ function MaskColsOperation<
     sourceType: 'dataframe',
     targetType: 'value',
     name: operationCreator.name,
-    args: [...args1, ...operationCreator.args, ...args2],
+    args: [...args1, ...(operationCreator.args || []), ...args2],
   });
 }
 
