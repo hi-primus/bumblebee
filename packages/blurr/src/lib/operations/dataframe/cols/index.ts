@@ -2369,7 +2369,7 @@ export const operations = {
     cols: Cols;
     bins: number;
     labels: [] | false;
-    default;
+    default: PythonCompatible;
     outputCol: Cols;
   }>({
     targetType: 'dataframe',
@@ -2538,7 +2538,7 @@ export const operations = {
   levenshtein: DataframeOperation<{
     cols: Cols;
     otherCols: Cols;
-    value;
+    value: PythonCompatible;
     outputCol: Cols;
   }>({
     targetType: 'dataframe',
@@ -2576,7 +2576,11 @@ export const operations = {
       },
     ],
   }),
-  bagOfWords: DataframeOperation<{ cols: Cols; analyzer: string; ngramRange }>({
+  bagOfWords: DataframeOperation<{
+    cols: Cols;
+    analyzer: string;
+    ngramRange: [number, number];
+  }>({
     targetType: 'value',
     name: 'cols.bagOfWords',
     args: [
