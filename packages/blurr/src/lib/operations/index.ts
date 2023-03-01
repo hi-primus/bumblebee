@@ -5,7 +5,7 @@ import { operations as dataframeOperations } from './dataframe';
 import { operations as colsOperations } from './dataframe/cols';
 import { operations as rowsOperations } from './dataframe/rows';
 
-export const allOperations = {
+const allOperations = {
   client: clientOperations,
   dataframe: dataframeOperations,
   cols: colsOperations,
