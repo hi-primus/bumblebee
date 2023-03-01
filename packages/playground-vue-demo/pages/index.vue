@@ -97,7 +97,7 @@ const initializeEditor = () => {
       code.value = editor.getValue();
     });
 
-    window.editor = editor;
+    (window as any).editor = editor;
 
     // editor.getModel().tokenization.setLanguageId('javascript');
   }
@@ -109,10 +109,10 @@ onMounted(() => {
   initializeEditor();
 
   const { Blurr } = blurr;
-  if (window.client) {
+  if (window.blurr) {
     return;
   }
-  window.monaco = monaco;
+  (window as any).monaco = monaco;
   window.blurr = Blurr({
     serverOptions: {
       scriptURL: 'https://cdn.jsdelivr.net/pyodide/v0.22.1/full/pyodide.js',
