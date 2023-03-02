@@ -256,6 +256,14 @@ export const initializeWorker = () => {
           const value = e.data.value;
           if (value) {
             for (const key in value) {
+              if (
+                typeof value[key] === 'object' &&
+                value[key]._blurrType === 'function'
+              ) {
+                value[key] = new Function(
+                  'return ' + value[key].value.toString()
+                )();
+              }
               self.pyodide.globals.set(key, value[key]);
               self.pyodide.globals.set('lastGlobal', value[key]);
               result.push(key);

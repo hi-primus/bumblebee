@@ -18,6 +18,11 @@ declare global {
     | R<PythonCompatible>
     | Array<PythonCompatible>;
 
+  type FunctionString = {
+    value: string;
+    _blurrType: 'function';
+  };
+
   type PythonDictionary = Record<string, PythonCompatible>;
 
   type BasicOperationCompatible = BasicPythonCompatible | SourceArg;

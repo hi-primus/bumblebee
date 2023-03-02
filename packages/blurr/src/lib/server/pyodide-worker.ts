@@ -243,7 +243,16 @@ export function ServerPyodideWorker(options: ServerOptions): ServerInterface {
   // TODO: prepareBuffer, prepareCallback
 
   server.setGlobal = async (name: string, value: PythonCompatible) => {
-    if (value instanceof ArrayBuffer && server.supports('buffers')) {
+    if (value instanceof Function && server.supports('callbacks')) {
+      const adaptedValue = {
+        [name]: { value: value.toString(), name, _blurrType: 'function' },
+      };
+      await server.worker.postMessage({
+        type: 'setGlobal',
+        value: adaptedValue,
+      });
+      return;
+    } else if (value instanceof ArrayBuffer && server.supports('buffers')) {
       const transfer: ArrayBuffer[] = [];
       const adaptedValue = toTransferables({ [name]: value }, transfer);
       await server.worker.postMessage(
