@@ -207,11 +207,7 @@ export function ServerPyodideWorker(options: ServerOptions): ServerInterface {
     const transfer: ArrayBuffer[] | null = [];
 
     if (server.supports('buffers')) {
-      console.log('transfer', transfer);
-      console.log('kwargs', { ...kwargs });
       kwargs = toTransferables(kwargs, transfer);
-      console.log('transfer', transfer);
-      console.log('kwargs', { ...kwargs });
     }
 
     const result = (await server.worker.postMessage(
