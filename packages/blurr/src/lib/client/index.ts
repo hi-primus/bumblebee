@@ -18,7 +18,7 @@ import {
 const prepareResult = (client: Client, result: PythonCompatible) => {
   if (isName(result) || isSource(result)) {
     const sourceData = (result as SourceInterface).data;
-    if (sourceData !== undefined || !result.name) {
+    if (sourceData !== undefined || result.name) {
       const newSource = Source(
         client,
         sourceData !== undefined ? sourceData : result.name

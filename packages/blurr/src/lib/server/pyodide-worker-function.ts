@@ -19,9 +19,6 @@ export const initializeWorker = () => {
       return value;
     }
   };
-  importScripts('https://cdn.jsdelivr.net/pyodide/v0.22.1/full/pyodide.js');
-
-  let backendLoaded = false;
 
   function _mapToObject(map) {
     const obj = {};
@@ -30,6 +27,40 @@ export const initializeWorker = () => {
     }
     return obj;
   }
+
+  importScripts('https://cdn.jsdelivr.net/pyodide/v0.22.1/full/pyodide.js');
+
+  const adaptResult = (result) => {
+    if (result instanceof ArrayBuffer) {
+      return result;
+    } else if (self.pyodide.isPyProxy(result)) {
+      try {
+        if (typeof result?.toJs === 'function') {
+          result = result.toJs({ dict_converter: _mapToObject });
+        } else {
+          throw new Error(
+            'Trying to convert a PyProxy to a JS object, but the PyProxy does not have a toJs method.'
+          );
+        }
+      } catch (err) {
+        console.error(err);
+      }
+      return result;
+    } else if (Array.isArray(result)) {
+      const arr = result.map(adaptResult);
+      return arr;
+    } else if (result && typeof result === 'object') {
+      const obj = {};
+      for (const key in result) {
+        obj[key] = adaptResult(result[key]);
+      }
+      return obj;
+    } else {
+      return result;
+    }
+  };
+
+  let backendLoaded = false;
 
   async function initialize(options = {}) {
     if (!backendLoaded) {
@@ -142,6 +173,7 @@ export const initializeWorker = () => {
           self.postMessage({
             type: 'load',
             id: e.data.id,
+            usesCallback: e.data.usesCallback,
             error: err.message,
           });
           return;
@@ -159,30 +191,32 @@ export const initializeWorker = () => {
             const runMethod = self.pyodide.globals.get('run_method');
             result = runMethod(e.data.method, kwargs);
           }
-
-          try {
-            result =
-              typeof result?.toJs === 'function'
-                ? result.toJs({ dict_converter: _mapToObject })
-                : result;
-          } catch (error) {
-            console.warn('Error converting to JS.', error);
-          }
         } catch (err) {
           error = err.message;
         }
+
+        result = adaptResult(result);
 
         try {
           self.postMessage({
             type: 'run',
             id: e.data.id,
+            usesCallback: e.data.usesCallback,
             result,
             error,
           });
         } catch (err) {
-          if (err.message.includes('could not be cloned')) {
+          if (
+            err.message.includes('could not be cloned') &&
+            (e.data.kwargs?.target || e.data.code)
+          ) {
             const source = {} as any;
-            source.name = e.data.kwargs?.target;
+            source.name = (e.data.kwargs?.target || e.data.code)
+              .split(';')
+              .pop()
+              .split('\n')
+              .pop()
+              .trim();
             source._blurrMember = 'source';
             self.postMessage({
               type: 'run',
