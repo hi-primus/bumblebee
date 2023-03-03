@@ -131,12 +131,16 @@ export function Blurr(options: ClientOptions = {}): Client {
 
   blurr.send = (paramsQueue) => {
     console.log('🛼 Sending params:', paramsQueue);
-    const kwargs = makePythonCompatible(
+    paramsQueue = makePythonCompatible(
       blurr,
       paramsQueue,
       blurr.options.serverOptions.local
     );
-    const result = blurr.backendServer.run(kwargs);
+    const requestOptions: RequestOptions = Object.assign(
+      {},
+      ...paramsQueue.map((params) => params?.requestOptions || {})
+    );
+    const result = blurr.backendServer.run(paramsQueue, requestOptions);
     if (isPromiseLike(result)) {
       return result.then((result) => prepareResult(blurr, result));
     }
@@ -168,6 +172,7 @@ export function Blurr(options: ClientOptions = {}): Client {
     const operationArgsNames = [
       'target',
       'source',
+      'requestOptions',
       ...operationArgs.map((arg) => arg.name),
     ];
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
