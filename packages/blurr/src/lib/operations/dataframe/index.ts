@@ -16,7 +16,7 @@ function DataframeOperation<
 export const operations = {
   columnsSample: DataframeOperation<
     NoArgs,
-    { columns: string[]; values: PythonCompatible[] }
+    { columns: { title: string }[]; value: PythonCompatible[] }
   >({
     name: 'columnsSample',
     targetType: 'value',
@@ -50,7 +50,15 @@ export const operations = {
     targetType: 'dataframe',
     createsNew: true,
   }),
-  profile: DataframeOperation<{ cols: Cols; bins: number; flush: boolean }>({
+  profile: DataframeOperation<
+    { cols: Cols; bins: number; flush: boolean },
+    {
+      columns: Record<string, PythonCompatible>;
+      summary: Record<string, PythonCompatible>;
+      name?: string;
+      file_name?: string;
+    }
+  >({
     targetType: 'value',
     name: 'profile',
     args: [
