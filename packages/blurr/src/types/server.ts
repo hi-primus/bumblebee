@@ -1,14 +1,21 @@
-import { SourceArg } from './arguments';
+import { RequestOptions, SourceArg } from './arguments';
 import { KernelGatewayBackendOptions } from './kernelgateway';
 import { PyodideBackendOptions, PyodideInterface } from './pyodide';
 
-export interface RunsCode {
+export interface RunsCode<T = unknown> {
   donePromise: Promise<boolean>;
   supports: (feature: string) => boolean;
-  run: (kwargs: ArrayOrSingle<Params>, run?: boolean) => PromiseOr<unknown>;
-  runCode: (code: string) => PromiseOr<unknown>;
-  getGlobal: (name: string) => PromiseOr<PythonCompatible>;
-  setGlobal: (name: string, value: PythonCompatible) => PromiseOr<void>;
+  run: (
+    kwargs: ArrayOrSingle<Params>,
+    options?: RequestOptions
+  ) => PromiseOr<T>;
+  runCode: (code: string, options?: RequestOptions) => PromiseOr<T>;
+  getGlobal: (name: string, options?: RequestOptions) => PromiseOr<T>;
+  setGlobal: (
+    name: string,
+    value: PythonCompatible,
+    options?: RequestOptions
+  ) => PromiseOr<void>;
 }
 interface PromiseWorker {
   postMessage: (
@@ -21,16 +28,16 @@ type BackendInterface = PyodideInterface | PromiseWorker;
 
 export type ServerOptions = PyodideBackendOptions | KernelGatewayBackendOptions;
 
-export interface Server extends RunsCode {
+export interface Server extends RunsCode<PythonCompatible> {
   pyodide?: PyodideInterface;
   worker?: PromiseWorker;
   options: ServerOptions;
+  backend?: BackendInterface;
+  backendLoaded: boolean;
   runMethod?: (
     source: SourceArg,
     method: string,
-    kwargs: Record<string, unknown>
+    kwargs: Record<string, unknown>,
+    options?: RequestOptions
   ) => PromiseOr<PythonCompatible>;
-  backend?: BackendInterface;
-  backendLoaded: boolean;
-  run: (kwargs: ArrayOrSingle<Params>) => PromiseOr<PythonCompatible>;
 }

@@ -1,4 +1,4 @@
-import { CallbackFunction, Name, SourceArg } from './arguments';
+import { CallbackFunction, Name, RequestOptions, SourceArg } from './arguments';
 
 export {};
 
@@ -39,6 +39,7 @@ declare global {
   type Params = Record<string, OperationCompatible> & {
     operationKey: string;
     operationType: OperationType;
+    requestOptions?: RequestOptions;
   };
 
   type InputArgs = Record<string, OperationCompatible> | OperationCompatible[];

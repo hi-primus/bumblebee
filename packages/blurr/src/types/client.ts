@@ -9,10 +9,9 @@ export interface ClientOptions {
 
 export type ClientFunctions = OperationFunctions<typeof operations>;
 
-export interface Client extends RunsCode, ClientFunctions {
+export interface Client extends RunsCode<OperationCompatible>, ClientFunctions {
   options: ClientOptions;
   backendServer: Server;
-  run: (kwargs: ArrayOrSingle<Params>) => PromiseOr<OperationCompatible>;
   sources: Record<string, string>;
   send(paramsQueue: Params[]): PromiseOr<OperationCompatible>;
 }

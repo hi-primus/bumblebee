@@ -124,13 +124,13 @@ export function ServerPyodide(options: ServerOptions): ServerInterface {
         : (...args: unknown[]) => unknown;
       return function (
         ...args: Parameters<CallbackFunction>
-      ): PromiseOr<ReturnType<CallbackFunction>> {
+      ): PromiseOr<Awaited<ReturnType<CallbackFunction>>> {
         if (server.backendLoaded) {
           return callback(...args);
         }
-        return server.donePromise.then(() =>
-          callback(...args)
-        ) as ReturnType<CallbackFunction>;
+        return server.donePromise.then(() => callback(...args)) as Awaited<
+          ReturnType<CallbackFunction>
+        >;
       };
     }
     return callback;
@@ -143,11 +143,11 @@ export function ServerPyodide(options: ServerOptions): ServerInterface {
     const result = server.pyodide.runPython(code);
     try {
       return typeof result?.toJs === 'function'
-        ? result.toJs({ dict_converter: _mapToObject })
-        : result;
+        ? (result.toJs({ dict_converter: _mapToObject }) as PythonCompatible)
+        : (result as PythonCompatible);
     } catch (error) {
       console.warn(`Error converting to JS. \n`, `${code}\n`, error);
-      return result;
+      return result as PythonCompatible;
     }
   });
 

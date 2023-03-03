@@ -16,3 +16,8 @@ export interface Name {
   _blurrMember: 'name';
   toString: () => string;
 }
+
+export interface RequestOptions {
+  category?: string;
+  priority?: number;
+}

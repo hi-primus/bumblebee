@@ -84,12 +84,17 @@ function getRunMethod(
   if (operationCreator.getCode) {
     return (server: Server, kwargs) => {
       server.options.local && delete kwargs.target;
+      const requestOptions = kwargs.requestOptions;
+      delete kwargs.requestOptions;
       const code = operationCreator.getCode(kwargs);
       console.log('[CODE FROM GENERATOR]', code, {
         kwargs,
         args: operation.args,
       });
-      return server.runCode(code) as PromiseOr<PythonCompatible>;
+      return server.runCode(
+        code,
+        requestOptions
+      ) as PromiseOr<PythonCompatible>;
     };
   } else if (operationCreator.run) {
     return (server: Server, kwargs) => {
@@ -109,21 +114,30 @@ function getRunMethod(
           path.shift();
         }
 
+        const requestOptions = kwargs.requestOptions;
+        delete kwargs.requestOptions;
+
         return server.runMethod(
           source,
           path.join('.'),
-          kwargs
+          kwargs,
+          requestOptions
         ) as PromiseOr<PythonCompatible>;
       } else {
         const source = kwargs.source || operationCreator.defaultSource;
         const target = server.options.local ? null : kwargs.target;
+        const requestOptions = kwargs.requestOptions;
+        delete kwargs.requestOptions;
         const code =
           (target ? `${target} = ` : '') +
           (source ? `${source.toString()}.` : '') +
           camelToSnake(operationCreator.name) +
           `(${pythonArguments(kwargs)})`;
         console.log('[CODE FROM DEFAULT GENERATOR]', code);
-        return server.runCode(code) as PromiseOr<PythonCompatible>;
+        return server.runCode(
+          code,
+          requestOptions
+        ) as PromiseOr<PythonCompatible>;
       }
     };
   }

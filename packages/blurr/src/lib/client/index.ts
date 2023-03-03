@@ -1,3 +1,4 @@
+import { RequestOptions } from '../../types/arguments';
 import type { Client, ClientOptions } from '../../types/client';
 import type {
   FutureSource,
@@ -58,7 +59,7 @@ export function Blurr(options: ClientOptions = {}): Client {
     ? options.server
     : Server(options?.serverOptions);
 
-  blurr.run = (paramsArray: ArrayOrSingle<Params>) => {
+  blurr.run = (paramsArray: ArrayOrSingle<Params>, options: RequestOptions) => {
     if (!Array.isArray(paramsArray)) {
       paramsArray = [paramsArray];
     }
@@ -71,7 +72,14 @@ export function Blurr(options: ClientOptions = {}): Client {
       paramsQueue = [...firstParams.source.paramsQueue];
     }
 
-    paramsQueue.push(...paramsArray);
+    paramsQueue.push(
+      ...paramsArray.map((params: Params) => {
+        return {
+          ...params,
+          requestOptions: params.requestOptions || options || {},
+        } as Params;
+      })
+    );
 
     const operations = paramsQueue.map((params) => {
       const { operationKey, operationType } = params;
@@ -123,22 +131,23 @@ export function Blurr(options: ClientOptions = {}): Client {
 
   blurr.send = (paramsQueue) => {
     console.log('🛼 Sending params:', paramsQueue);
-    paramsQueue = makePythonCompatible(
+    const kwargs = makePythonCompatible(
       blurr,
       paramsQueue,
       blurr.options.serverOptions.local
     );
-    const result = blurr.backendServer.run(paramsQueue);
+    const result = blurr.backendServer.run(kwargs);
     if (isPromiseLike(result)) {
       return result.then((result) => prepareResult(blurr, result));
     }
     return prepareResult(blurr, result);
   };
 
-  blurr.runCode = (code: string) => {
+  blurr.runCode = (code: string, options: RequestOptions) => {
     // TODO: check if it's debug
     const result = blurr.backendServer.runCode(
-      code
+      code,
+      options
     ) as PromiseOr<PythonCompatible>;
     if (isPromiseLike(result)) {
       return result.then((result) => prepareResult(blurr, result));
