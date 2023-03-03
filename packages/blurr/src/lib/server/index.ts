@@ -33,8 +33,9 @@ export function Server(
     if (options.useWorker) {
       options.local = false;
       backendServer = ServerPyodideWorker(options);
+    } else {
+      backendServer = ServerPyodide(options);
     }
-    backendServer = ServerPyodide(options);
   } else {
     throw new Error('Cannot initialize a server without a backend');
   }
