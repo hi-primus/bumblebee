@@ -30,13 +30,14 @@ import { mdiLoading } from '@mdi/js';
 import { ComputedRef, Ref } from 'vue';
 
 import TableChunks from '@/components/Table/Chunks.vue';
+import { Chunk } from '@/types/app';
 import {
   ColumnHeader,
   DataframeObject,
   Highlight,
   PreviewData
 } from '@/types/dataframe';
-import { Chunk } from '@/types/table';
+import { PRIORITIES } from '@/utils/blurr';
 import { optimizeRanges } from '@/utils/table';
 
 // table data
@@ -182,7 +183,7 @@ const getChunk = async function (start: number, stop: number) {
       lower_bound: start,
       upper_bound: stop
     })
-    .columnsSample();
+    .columnsSample({ requestOptions: { priority: PRIORITIES.previewSample } });
 
   if (sample.value.length === 0) {
     console.warn(`Sample length '${sample.value.length}' is zero`);
@@ -323,9 +324,19 @@ const updateChunks = () => {
   table.value?.updateChunks(filteredChunks);
 };
 
+let lastUpdate = -2;
+
 watch(
   () => dataframeObject.value,
-  () => clearChunks(),
+  dataframe => {
+    if (
+      dataframe &&
+      (dataframe.updates === undefined || dataframe.updates > lastUpdate)
+    ) {
+      lastUpdate = dataframe.updates === undefined ? -1 : dataframe.updates;
+      clearChunks();
+    }
+  },
   {
     immediate: true,
     deep: true

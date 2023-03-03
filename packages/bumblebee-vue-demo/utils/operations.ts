@@ -7,6 +7,7 @@ import {
   OperationOptions,
   Payload
 } from '@/types/operations';
+import { PRIORITIES } from '@/utils/blurr';
 
 type Cols = string[];
 
@@ -36,7 +37,7 @@ export const operationCreators: OperationCreator[] = [
         nRows?: number;
         file: File;
       }>
-    ): Source => {
+    ): Promise<Source> => {
       if (payload.options.preview) {
         payload.nRows = Math.min(payload.nRows || 50, 50);
       }
@@ -54,16 +55,16 @@ export const operationCreators: OperationCreator[] = [
         return payload.blurr.readFile({
           buffer,
           nRows: payload.nRows,
-          meta: {
-            file_name: fileName
-          }
+          meta: { file_name: fileName },
+          requestOptions: { priority: PRIORITIES.operation }
         });
       }
 
       if (payload.url) {
         return payload.blurr.readFile({
           url: payload.url,
-          nRows: payload.nRows
+          nRows: payload.nRows,
+          requestOptions: { priority: PRIORITIES.operation }
         });
       }
 
@@ -129,7 +130,9 @@ export const operationCreators: OperationCreator[] = [
     ): Promise<Source> => {
       const valueFuncPromise = await Promise.allSettled(
         payload.sets.map(s => {
-          return payload.blurr.runCode(`parse('${s.value}', data=False)`);
+          return payload.blurr.runCode(`parse('${s.value}', data=False)`, {
+            priority: PRIORITIES.operationRequirement
+          });
         })
       );
 
@@ -155,7 +158,8 @@ export const operationCreators: OperationCreator[] = [
         target: payload.target,
         cols: outputCols,
         valueFunc,
-        evalValue: true
+        evalValue: true,
+        requestOptions: { priority: PRIORITIES.operation }
       });
     },
     fields: [
@@ -211,13 +215,15 @@ export const operationCreators: OperationCreator[] = [
         valueFunc: payload.replaces.map(r => r.replaceBy),
         evalValue: false,
         where,
-        default: payload.otherwise
+        default: payload.otherwise,
+        requestOptions: { priority: PRIORITIES.operation }
       });
       if (payload.outputCols[0] !== payload.cols[0]) {
         return result.cols.move({
           column: payload.outputCols[0],
           position: 'after',
-          refCol: payload.cols[0]
+          refCol: payload.cols[0],
+          requestOptions: { priority: PRIORITIES.operation }
         });
       }
 
@@ -430,7 +436,8 @@ export const operationCreators: OperationCreator[] = [
         replaceBy: validReplaces.map(replace => replace.replaceBy),
         searchBy: payload.searchBy,
         ignoreCase: !payload.matchCase,
-        outputCols: payload.outputCols
+        outputCols: payload.outputCols,
+        requestOptions: { priority: PRIORITIES.operation }
       });
       if (payload.outputCols[0] !== payload.cols[0]) {
         return result.cols.move({
@@ -525,19 +532,22 @@ export const operationCreators: OperationCreator[] = [
           valueFunc: true,
           evalValue: false,
           where: where.join(' | '),
-          default: false
+          default: false,
+          requestOptions: { priority: PRIORITIES.operation }
         });
       }
 
       if (payload.action === 'select') {
         return payload.source.rows.select({
           target: payload.target,
-          expr: where.join(' | ')
+          expr: where.join(' | '),
+          requestOptions: { priority: PRIORITIES.operation }
         });
       } else {
         return payload.source.rows.drop({
           target: payload.target,
-          expr: where.join(' | ')
+          expr: where.join(' | '),
+          requestOptions: { priority: PRIORITIES.operation }
         });
       }
     },
@@ -676,7 +686,8 @@ export const operationCreators: OperationCreator[] = [
         cols: payload.cols,
         keep: payload.keep,
         how: payload.how,
-        outputCols: payload.outputCols
+        outputCols: payload.outputCols,
+        requestOptions: { priority: PRIORITIES.operation }
       });
     },
     shortcut: 'rdd'
@@ -700,7 +711,8 @@ export const operationCreators: OperationCreator[] = [
         target: payload.target,
         cols: payload.cols,
         how: payload.how,
-        outputCols: payload.outputCols
+        outputCols: payload.outputCols,
+        requestOptions: { priority: PRIORITIES.operation }
       });
     },
     shortcut: 'rde'
@@ -717,7 +729,8 @@ export const operationCreators: OperationCreator[] = [
     action: (payload: OperationPayload): Source => {
       return payload.source.cols.keep({
         target: payload.target,
-        cols: payload.cols
+        cols: payload.cols,
+        requestOptions: { priority: PRIORITIES.operation }
       });
     },
     shortcut: 'kc'
@@ -733,7 +746,8 @@ export const operationCreators: OperationCreator[] = [
     action: (payload: OperationPayload): Source => {
       return payload.source.cols.drop({
         target: payload.target,
-        cols: payload.cols
+        cols: payload.cols,
+        requestOptions: { priority: PRIORITIES.operation }
       });
     },
     shortcut: 'dc'
@@ -751,7 +765,8 @@ export const operationCreators: OperationCreator[] = [
       return payload.source.cols.lower({
         target: payload.target,
         cols: payload.cols,
-        outputCols: payload.outputCols
+        outputCols: payload.outputCols,
+        requestOptions: { priority: PRIORITIES.operation }
       });
     },
     shortcut: 'll'
@@ -769,7 +784,8 @@ export const operationCreators: OperationCreator[] = [
       return payload.source.cols.upper({
         target: payload.target,
         cols: payload.cols,
-        outputCols: payload.outputCols
+        outputCols: payload.outputCols,
+        requestOptions: { priority: PRIORITIES.operation }
       });
     },
     shortcut: 'ul'
@@ -787,7 +803,8 @@ export const operationCreators: OperationCreator[] = [
       return payload.source.cols.title({
         target: payload.target,
         cols: payload.cols,
-        outputCols: payload.outputCols
+        outputCols: payload.outputCols,
+        requestOptions: { priority: PRIORITIES.operation }
       });
     },
     shortcut: 'tl'
@@ -805,7 +822,8 @@ export const operationCreators: OperationCreator[] = [
       return payload.source.cols.capitalize({
         target: payload.target,
         cols: payload.cols,
-        outputCols: payload.outputCols
+        outputCols: payload.outputCols,
+        requestOptions: { priority: PRIORITIES.operation }
       });
     },
     shortcut: 'cl'
@@ -824,7 +842,8 @@ export const operationCreators: OperationCreator[] = [
       return payload.source.cols.normalizeChars({
         target: payload.target,
         cols: payload.cols,
-        outputCols: payload.outputCols
+        outputCols: payload.outputCols,
+        requestOptions: { priority: PRIORITIES.operation }
       });
     },
     shortcut: 'lra'
@@ -842,7 +861,8 @@ export const operationCreators: OperationCreator[] = [
       return payload.source.cols.removeSpecialChars({
         target: payload.target,
         cols: payload.cols,
-        outputCols: payload.outputCols
+        outputCols: payload.outputCols,
+        requestOptions: { priority: PRIORITIES.operation }
       });
     },
     shortcut: 'lrs'
@@ -867,7 +887,8 @@ export const operationCreators: OperationCreator[] = [
         start: payload.start,
         end: payload.end,
         cols: payload.cols,
-        outputCols: payload.outputCols
+        outputCols: payload.outputCols,
+        requestOptions: { priority: PRIORITIES.operation }
       });
     },
     shortcut: 'le'
@@ -890,7 +911,8 @@ export const operationCreators: OperationCreator[] = [
       return payload.source.cols.trim({
         target: payload.target,
         cols: payload.cols,
-        outputCols: payload.outputCols
+        outputCols: payload.outputCols,
+        requestOptions: { priority: PRIORITIES.operation }
       });
     },
     shortcut: 'lt'
@@ -913,7 +935,8 @@ export const operationCreators: OperationCreator[] = [
       return payload.source.cols.normalizeSpaces({
         target: payload.target,
         cols: payload.cols,
-        outputCols: payload.outputCols
+        outputCols: payload.outputCols,
+        requestOptions: { priority: PRIORITIES.operation }
       });
     },
     shortcut: 'lns'
@@ -936,7 +959,8 @@ export const operationCreators: OperationCreator[] = [
         target: payload.target,
         cols: payload.cols,
         n: payload.n,
-        outputCols: payload.outputCols
+        outputCols: payload.outputCols,
+        requestOptions: { priority: PRIORITIES.operation }
       });
     },
     fields: [
@@ -965,7 +989,8 @@ export const operationCreators: OperationCreator[] = [
       return payload.source.cols.right({
         target: payload.target,
         cols: payload.cols,
-        outputCols: payload.outputCols
+        outputCols: payload.outputCols,
+        requestOptions: { priority: PRIORITIES.operation }
       });
     },
     fields: [
@@ -997,8 +1022,9 @@ export const operationCreators: OperationCreator[] = [
         cols: payload.cols,
         start: payload.start,
         end: payload.end,
-        outputCols: payload.outputCols
-      });
+        outputCols: payload.outputCols,
+        requestOptions: { priority: PRIORITIES.operation }
+      }) as Source;
     },
     fields: [
       {
@@ -1036,7 +1062,8 @@ export const operationCreators: OperationCreator[] = [
         width: payload.width,
         side: payload.side,
         fillChar: payload.fillChar,
-        outputCols: payload.outputCols
+        outputCols: payload.outputCols,
+        requestOptions: { priority: PRIORITIES.operation }
       });
     },
     fields: [
@@ -1089,7 +1116,8 @@ export const operationCreators: OperationCreator[] = [
       return payload.source.cols.abs({
         target: payload.target,
         cols: payload.cols,
-        outputCols: payload.outputCols
+        outputCols: payload.outputCols,
+        requestOptions: { priority: PRIORITIES.operation }
       });
     },
     shortcut: 'na'
@@ -1112,7 +1140,8 @@ export const operationCreators: OperationCreator[] = [
         target: payload.target,
         cols: payload.cols,
         decimals: payload.decimals,
-        outputCols: payload.outputCols
+        outputCols: payload.outputCols,
+        requestOptions: { priority: PRIORITIES.operation }
       });
     },
     shortcut: 'nr'
@@ -1130,7 +1159,8 @@ export const operationCreators: OperationCreator[] = [
       return payload.source.cols.floor({
         target: payload.target,
         cols: payload.cols,
-        outputCols: payload.outputCols
+        outputCols: payload.outputCols,
+        requestOptions: { priority: PRIORITIES.operation }
       });
     },
     shortcut: 'nf'
@@ -1148,7 +1178,8 @@ export const operationCreators: OperationCreator[] = [
       return payload.source.cols.ceil({
         target: payload.target,
         cols: payload.cols,
-        outputCols: payload.outputCols
+        outputCols: payload.outputCols,
+        requestOptions: { priority: PRIORITIES.operation }
       });
     },
     shortcut: 'nc'
@@ -1166,7 +1197,8 @@ export const operationCreators: OperationCreator[] = [
       return payload.source.cols.mod({
         target: payload.target,
         cols: payload.cols,
-        outputCols: payload.outputCols
+        outputCols: payload.outputCols,
+        requestOptions: { priority: PRIORITIES.operation }
       });
     },
     shortcut: 'nm'
@@ -1189,7 +1221,8 @@ export const operationCreators: OperationCreator[] = [
         target: payload.target,
         cols: payload.cols,
         base: payload.base,
-        outputCols: payload.outputCols
+        outputCols: payload.outputCols,
+        requestOptions: { priority: PRIORITIES.operation }
       });
     },
     shortcut: 'nl'
@@ -1207,7 +1240,8 @@ export const operationCreators: OperationCreator[] = [
       return payload.source.cols.ln({
         target: payload.target,
         cols: payload.cols,
-        outputCols: payload.outputCols
+        outputCols: payload.outputCols,
+        requestOptions: { priority: PRIORITIES.operation }
       });
     },
     shortcut: 'nnl'
@@ -1230,7 +1264,8 @@ export const operationCreators: OperationCreator[] = [
         target: payload.target,
         cols: payload.cols,
         power: payload.power,
-        outputCols: payload.outputCols
+        outputCols: payload.outputCols,
+        requestOptions: { priority: PRIORITIES.operation }
       });
     },
     shortcut: 'np'
@@ -1248,7 +1283,8 @@ export const operationCreators: OperationCreator[] = [
       return payload.source.cols.sqrt({
         target: payload.target,
         cols: payload.cols,
-        outputCols: payload.outputCols
+        outputCols: payload.outputCols,
+        requestOptions: { priority: PRIORITIES.operation }
       });
     },
     shortcut: 'np'
@@ -1267,7 +1303,8 @@ export const operationCreators: OperationCreator[] = [
       return payload.source.cols.sin({
         target: payload.target,
         cols: payload.cols,
-        outputCols: payload.outputCols
+        outputCols: payload.outputCols,
+        requestOptions: { priority: PRIORITIES.operation }
       });
     },
     shortcut: 'ts'
@@ -1286,7 +1323,8 @@ export const operationCreators: OperationCreator[] = [
       return payload.source.cols.cos({
         target: payload.target,
         cols: payload.cols,
-        outputCols: payload.outputCols
+        outputCols: payload.outputCols,
+        requestOptions: { priority: PRIORITIES.operation }
       });
     },
     shortcut: 'tc'
@@ -1305,7 +1343,8 @@ export const operationCreators: OperationCreator[] = [
       return payload.source.cols.tan({
         target: payload.target,
         cols: payload.cols,
-        outputCols: payload.outputCols
+        outputCols: payload.outputCols,
+        requestOptions: { priority: PRIORITIES.operation }
       });
     },
     shortcut: 'tt'
@@ -1323,7 +1362,8 @@ export const operationCreators: OperationCreator[] = [
       return payload.source.cols.asin({
         target: payload.target,
         cols: payload.cols,
-        outputCols: payload.outputCols
+        outputCols: payload.outputCols,
+        requestOptions: { priority: PRIORITIES.operation }
       });
     },
     shortcut: 'tas'
@@ -1342,7 +1382,8 @@ export const operationCreators: OperationCreator[] = [
       return payload.source.cols.acos({
         target: payload.target,
         cols: payload.cols,
-        outputCols: payload.outputCols
+        outputCols: payload.outputCols,
+        requestOptions: { priority: PRIORITIES.operation }
       });
     },
     shortcut: 'tac'
@@ -1361,7 +1402,8 @@ export const operationCreators: OperationCreator[] = [
       return payload.source.cols.atan({
         target: payload.target,
         cols: payload.cols,
-        outputCols: payload.outputCols
+        outputCols: payload.outputCols,
+        requestOptions: { priority: PRIORITIES.operation }
       });
     },
     shortcut: 'tat'
@@ -1379,7 +1421,8 @@ export const operationCreators: OperationCreator[] = [
       return payload.source.cols.sinh({
         target: payload.target,
         cols: payload.cols,
-        outputCols: payload.outputCols
+        outputCols: payload.outputCols,
+        requestOptions: { priority: PRIORITIES.operation }
       });
     },
     shortcut: 'tsh'
@@ -1398,7 +1441,8 @@ export const operationCreators: OperationCreator[] = [
       return payload.source.cols.cosh({
         target: payload.target,
         cols: payload.cols,
-        outputCols: payload.outputCols
+        outputCols: payload.outputCols,
+        requestOptions: { priority: PRIORITIES.operation }
       });
     },
     shortcut: 'tch'
@@ -1417,7 +1461,8 @@ export const operationCreators: OperationCreator[] = [
       return payload.source.cols.tanh({
         target: payload.target,
         cols: payload.cols,
-        outputCols: payload.outputCols
+        outputCols: payload.outputCols,
+        requestOptions: { priority: PRIORITIES.operation }
       });
     },
     shortcut: 'tth'
@@ -1435,7 +1480,8 @@ export const operationCreators: OperationCreator[] = [
       return payload.source.cols.asinh({
         target: payload.target,
         cols: payload.cols,
-        outputCols: payload.outputCols
+        outputCols: payload.outputCols,
+        requestOptions: { priority: PRIORITIES.operation }
       });
     },
     shortcut: 'tash'
@@ -1454,7 +1500,8 @@ export const operationCreators: OperationCreator[] = [
       return payload.source.cols.acosh({
         target: payload.target,
         cols: payload.cols,
-        outputCols: payload.outputCols
+        outputCols: payload.outputCols,
+        requestOptions: { priority: PRIORITIES.operation }
       });
     },
     shortcut: 'tach'
@@ -1473,7 +1520,8 @@ export const operationCreators: OperationCreator[] = [
       return payload.source.cols.atanh({
         target: payload.target,
         cols: payload.cols,
-        outputCols: payload.outputCols
+        outputCols: payload.outputCols,
+        requestOptions: { priority: PRIORITIES.operation }
       });
     },
     shortcut: 'tath'
@@ -1488,20 +1536,19 @@ export const operationCreators: OperationCreator[] = [
       usesInputDataframe: true,
       preview: 'basic columns'
     },
-    action: (payload: {
-      source: Source;
-      cols: Cols;
-      type: unknown;
-      currentFormat: string;
-      outputCols: Cols;
-      options: OperationOptions;
-    }): Source => {
+    action: (
+      payload: OperationPayload<{
+        type: unknown;
+        currentFormat: string;
+      }>
+    ): Source => {
       const outputFormat = payload.type as { name: string; format: string };
       return payload.source.cols.formatDate({
         target: payload.target,
         cols: payload.cols,
         outputFormat,
-        outputCols: payload.outputCols
+        outputCols: payload.outputCols,
+        requestOptions: { priority: PRIORITIES.operation }
       });
     },
     fields: [
@@ -1564,7 +1611,8 @@ export const operationCreators: OperationCreator[] = [
         target: payload.target,
         cols: payload.cols,
         outputFormat,
-        outputCols: payload.outputCols
+        outputCols: payload.outputCols,
+        requestOptions: { priority: PRIORITIES.operation }
       });
     },
     fields: [
@@ -1605,7 +1653,8 @@ export const operationCreators: OperationCreator[] = [
         cols: payload.cols,
         n: payload.n,
         seed: payload.seed,
-        outputCols: payload.outputCols
+        outputCols: payload.outputCols,
+        requestOptions: { priority: PRIORITIES.operation }
       });
     },
     shortcut: 'ms'
@@ -1628,7 +1677,8 @@ export const operationCreators: OperationCreator[] = [
         target: payload.target,
         cols: payload.cols,
         strategy: payload.strategy,
-        outputCols: payload.outputCols
+        outputCols: payload.outputCols,
+        requestOptions: { priority: PRIORITIES.operation }
       });
     },
     fields: [
@@ -1667,7 +1717,8 @@ export const operationCreators: OperationCreator[] = [
         cols: payload.cols,
         prefix: payload.prefix,
         drop: payload.drop,
-        outputCols: payload.outputCols
+        outputCols: payload.outputCols,
+        requestOptions: { priority: PRIORITIES.operation }
       });
     },
     shortcut: 'mo'
@@ -1685,7 +1736,8 @@ export const operationCreators: OperationCreator[] = [
       return payload.source.cols.stringToIndex({
         target: payload.target,
         cols: payload.cols,
-        outputCols: payload.outputCols
+        outputCols: payload.outputCols,
+        requestOptions: { priority: PRIORITIES.operation }
       });
     },
     shortcut: 'msi'
@@ -1703,7 +1755,8 @@ export const operationCreators: OperationCreator[] = [
       return payload.source.cols.indexToString({
         target: payload.target,
         cols: payload.cols,
-        outputCols: payload.outputCols
+        outputCols: payload.outputCols,
+        requestOptions: { priority: PRIORITIES.operation }
       });
     },
     shortcut: 'mis'
@@ -1721,7 +1774,8 @@ export const operationCreators: OperationCreator[] = [
       return payload.source.cols.zScore({
         target: payload.target,
         cols: payload.cols,
-        outputCols: payload.outputCols
+        outputCols: payload.outputCols,
+        requestOptions: { priority: PRIORITIES.operation }
       });
     },
     shortcut: 'msi'
@@ -1739,7 +1793,8 @@ export const operationCreators: OperationCreator[] = [
       return payload.source.cols.standardScaler({
         target: payload.target,
         cols: payload.cols,
-        outputCols: payload.outputCols
+        outputCols: payload.outputCols,
+        requestOptions: { priority: PRIORITIES.operation }
       });
     },
     shortcut: 'mss'
@@ -1757,7 +1812,8 @@ export const operationCreators: OperationCreator[] = [
       return payload.source.cols.minMaxScaler({
         target: payload.target,
         cols: payload.cols,
-        outputCols: payload.outputCols
+        outputCols: payload.outputCols,
+        requestOptions: { priority: PRIORITIES.operation }
       });
     },
     shortcut: 'mmms'
@@ -1775,7 +1831,8 @@ export const operationCreators: OperationCreator[] = [
       return payload.source.cols.maxAbsScaler({
         target: payload.target,
         cols: payload.cols,
-        outputCols: payload.outputCols
+        outputCols: payload.outputCols,
+        requestOptions: { priority: PRIORITIES.operation }
       });
     },
     shortcut: 'mmas'
@@ -1802,7 +1859,8 @@ export const operationCreators: OperationCreator[] = [
         cols: payload.cols,
         start: payload.start,
         end: payload.end,
-        outputCols: payload.outputCols
+        outputCols: payload.outputCols,
+        requestOptions: { priority: PRIORITIES.operation }
       });
     },
     shortcut: 'lrw'
@@ -1827,7 +1885,8 @@ export const operationCreators: OperationCreator[] = [
         cols: payload.cols,
         separator: payload.separator,
         splits: payload.splits,
-        index: payload.index
+        index: payload.index,
+        requestOptions: { priority: PRIORITIES.operation }
       });
     },
     fields: [
@@ -1870,7 +1929,8 @@ export const operationCreators: OperationCreator[] = [
         target: payload.target,
         cols: payload.cols,
         separator: payload.separator,
-        drop
+        drop,
+        requestOptions: { priority: PRIORITIES.operation }
       });
     },
     fields: [

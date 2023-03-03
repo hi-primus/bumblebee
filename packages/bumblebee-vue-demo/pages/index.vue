@@ -54,7 +54,12 @@
 import DataframeLayout from '@/components/Workspace/DataframeLayout.vue';
 import { AppStatus } from '@/types/app';
 import { Client, Source } from '@/types/blurr';
-import { DataframeObject, PreviewData } from '@/types/dataframe';
+import {
+  DataframeObject,
+  DataframeProfile,
+  PreviewColumn,
+  PreviewData
+} from '@/types/dataframe';
 import {
   isOperation,
   Operation,
@@ -72,7 +77,7 @@ import {
   getNameFromFileName,
   throttleOnce
 } from '@/utils';
-import { getPreliminaryProfile } from '@/utils/blurr';
+import { getPreliminaryProfile, PRIORITIES } from '@/utils/blurr';
 import { operations } from '@/utils/operations';
 
 const blurrPackage = useBlurr();
@@ -203,10 +208,15 @@ const handleDataframeResults = async (
       profile,
       name: dataframeName || 'dataset'
     };
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    df.profile({ bins: 33 }).then((profile: any) => {
-      dataframes.value[dataframeIndex].profile = profile;
-    });
+
+    setTimeout(() => {
+      df.profile({
+        bins: 33,
+        requestOptions: { priority: PRIORITIES.profile }
+      }).then(profile => {
+        dataframes.value[dataframeIndex].profile = profile as DataframeProfile;
+      });
+    }, 0);
   } else {
     console.error('Unknown result type', result);
     // TODO: Handle other types of targets
@@ -563,7 +573,9 @@ const previewOperationThrottled = throttleOnce(
 
         checkPreviewCancel();
 
-        const firstSampleResult = await firstSampleDataframe.columnsSample();
+        const firstSampleResult = await firstSampleDataframe.columnsSample({
+          requestOptions: { priority: PRIORITIES.previewSample }
+        });
 
         checkPreviewCancel();
 
@@ -571,7 +583,7 @@ const previewOperationThrottled = throttleOnce(
 
         const previewColumns = Object.fromEntries(
           firstSampleResult.columns.map(({ title }: { title: string }) => {
-            return [title, {}];
+            return [title, {} as PreviewColumn];
           })
         );
 
@@ -583,8 +595,8 @@ const previewOperationThrottled = throttleOnce(
 
         // clear chunks
 
-        dataframeLayout.value?.clearChunks(true, false);
         dataframeLayout.value?.setChunksLoading(false);
+        dataframeLayout.value?.clearChunks(true, false);
 
         // add first chunk to dataframe
 
@@ -645,14 +657,23 @@ const previewOperationThrottled = throttleOnce(
         profile: preliminaryProfile
       };
 
+      await new Promise(resolve => setTimeout(resolve, 0));
+
+      checkPreviewCancel();
+
       const profile = await (payload.source
         ? result.profile({
             cols: Object.entries(previewData.value?.columns || {})
               ?.map(([title, _]) => title)
               .filter(title => title.startsWith('__bumblebee__preview__')),
-            bins: 33
+            bins: 33,
+            requestOptions: { priority: PRIORITIES.previewProfile }
           })
-        : result.profile({ cols: '*', bins: 33 }));
+        : result.profile({
+            cols: '*',
+            bins: 33,
+            requestOptions: { priority: PRIORITIES.previewProfile }
+          }));
 
       checkPreviewCancel();
 
