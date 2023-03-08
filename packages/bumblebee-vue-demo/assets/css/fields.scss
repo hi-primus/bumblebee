@@ -205,16 +205,16 @@
   // .autocomplete-option {
   // }
   .autocomplete-optionActive {
-    @apply bg-primary text-white;
+    @apply bg-primary-lightest text-text;
   }
   .autocomplete-optionDefault {
     @apply text-text;
   }
-  // .autocomplete-optionIcon {
-  // }
-  .autocomplete-optionIconActive {
-    @apply text-white;
+  .autocomplete-optionIcon {
+    @apply text-primary;
   }
+  // .autocomplete-optionIconActive {
+  // }
   .autocomplete-optionIconDefault {
     @apply text-primary;
   }
