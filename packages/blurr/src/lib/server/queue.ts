@@ -1,5 +1,7 @@
 const MAX_JOBS_TO_PROCESS_IN_PARALLEL = 1;
 
+type CallbackFunction = (result: unknown, error?: Error) => void;
+
 type Job = {
   topic: string;
   payload: unknown;
@@ -8,8 +10,6 @@ type Job = {
   priority: number;
   timestamp: number;
 };
-
-type CallbackFunction = (result: unknown) => void;
 
 type PubSubInterface = {
   process: (payload?: unknown) => unknown;
@@ -104,13 +104,19 @@ export function PubSub(
       );
       await Promise.all(
         jobsToProcess.map(async ({ resolve, job }) => {
-          const result = await pubSub.process(job.payload);
+          let result: unknown;
+          let error: Error | undefined = undefined;
+          try {
+            result = await pubSub.process(job.payload);
+          } catch (err) {
+            error = err;
+          }
           const subscribers = pubSub.subscribers[job.topic] || [];
           if (job.callback && typeof job.callback === 'function') {
             subscribers.push(job.callback);
           }
           for (const subscriber of subscribers) {
-            subscriber(result);
+            subscriber(result, error);
           }
           resolve();
         })

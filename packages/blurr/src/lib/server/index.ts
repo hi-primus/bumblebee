@@ -72,9 +72,9 @@ export function Server(
       queue.publish(
         'blurr',
         { type: 'runMethod', args: [source, method, kwargs] },
-        (result: PythonCompatible | Error) => {
-          if (result instanceof Error) {
-            reject(result);
+        (result: PythonCompatible, err: Error) => {
+          if (err) {
+            reject(err);
           } else {
             resolve(result);
           }
@@ -90,9 +90,9 @@ export function Server(
       queue.publish(
         'blurr',
         { type: 'runCode', args: [code, options] },
-        (result: PythonCompatible | Error) => {
-          if (result instanceof Error) {
-            reject(result);
+        (result: PythonCompatible, err: Error) => {
+          if (err) {
+            reject(err);
           } else {
             resolve(result);
           }
@@ -108,9 +108,9 @@ export function Server(
       queue.publish(
         'blurr',
         { type: 'run', args: [kwargs, options] },
-        (result: PythonCompatible | Error) => {
-          if (result instanceof Error) {
-            reject(result);
+        (result: PythonCompatible, err: Error) => {
+          if (err) {
+            reject(err);
           } else {
             resolve(result);
           }
@@ -126,9 +126,9 @@ export function Server(
       queue.publish(
         'blurr',
         { type: 'getGlobal', args: [name, options] },
-        (result: PythonCompatible | Error) => {
-          if (result instanceof Error) {
-            reject(result);
+        (result: PythonCompatible, err: Error) => {
+          if (err) {
+            reject(err);
           } else {
             resolve(result);
           }
@@ -144,7 +144,7 @@ export function Server(
       queue.publish(
         'blurr',
         { type: 'setGlobal', args: [name, value, options] },
-        (err?: Error) => {
+        (_result, err?: Error) => {
           if (err instanceof Error) {
             reject(err);
           } else {
