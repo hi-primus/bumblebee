@@ -342,6 +342,22 @@
           </AppInput>
         </div>
         <div class="flex flex-wrap gap-4 px-8 py-2 justify-start items-start">
+          <AppInput label="Test input" placeholder="Column" class="field-mono">
+          </AppInput>
+          <AppInput
+            label="Test input"
+            placeholder="Column"
+            class="field-mono input-size-condensed"
+          >
+          </AppInput>
+          <AppInput
+            label="Test input"
+            placeholder="Column"
+            class="field-mono input-size-small"
+          >
+          </AppInput>
+        </div>
+        <div class="flex flex-wrap gap-4 px-8 py-2 justify-start items-start">
           <AppAutocomplete
             v-model="selectedColumns"
             :options="columns"
@@ -369,6 +385,27 @@
             placeholder="Columns"
             name="input-size-condensed"
             class="input-size-condensed"
+            clearable
+          >
+          </AppAutocomplete>
+          <AppAutocomplete
+            v-model="selectedColumns"
+            v-model:search="search"
+            :options="columns"
+            multiple
+            label="Test multiple autocomplete"
+            placeholder="Column"
+            class="field-mono"
+          >
+          </AppAutocomplete>
+          <AppAutocomplete
+            v-model="selectedColumn"
+            v-model:search="search"
+            :options="columns"
+            label="Test autocomplete"
+            placeholder="Columns"
+            name="input-size-condensed"
+            class="field-mono input-size-condensed"
             clearable
           >
           </AppAutocomplete>
@@ -419,6 +456,24 @@
             placeholder="Columns"
             name="input-size-condensed"
             class="input-size-condensed min-w-[320px]"
+          >
+          </AppSelector>
+          <AppSelector
+            v-model="selectedColumns"
+            :options="columns"
+            multiple
+            label="Test multiple selector"
+            placeholder="Column"
+            class="min-w-[320px] field-mono"
+          >
+          </AppSelector>
+          <AppSelector
+            v-model="selectedColumn"
+            :options="columns"
+            label="Test selector"
+            placeholder="Columns"
+            name="input-size-condensed"
+            class="input-size-condensed min-w-[320px] field-mono"
           >
           </AppSelector>
           <AppSelector

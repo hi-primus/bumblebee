@@ -257,3 +257,15 @@
     @apply pr-1 cursor-pointer;
   }
 }
+
+.field-mono {
+  .selector-buttonTextDefault {
+    @apply font-mono;
+  }
+  .input-field,
+  .selector-button,
+  .selector-option,
+  .autocomplete-option {
+    @apply font-mono text-text-light;
+  }
+}

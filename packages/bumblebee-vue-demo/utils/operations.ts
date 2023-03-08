@@ -183,6 +183,7 @@ export const operationCreators: OperationCreator[] = [
             name: 'value',
             label: 'Formula',
             placeholder: 'Formula or "value"',
+            class: 'field-mono w-full',
             type: 'string',
             // class: 'grouped-last w-2/3',
             suggestions: (payload: Payload) => {
