@@ -174,7 +174,7 @@ export const operationCreators: OperationCreator[] = [
         fields: [
           {
             name: 'outputColumn',
-            label: 'Column',
+            label: 'New column name',
             type: 'string',
             defaultValue: ''
             // class: 'grouped-first w-1/3'

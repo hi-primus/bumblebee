@@ -24,7 +24,7 @@
       @keydown="keyPressed"
       @keyup="keyReleased"
     />
-    <div v-if="menuVisible" class="suggestions-menu p-2">
+    <div v-if="menuVisible" class="suggestions-menu p-2 mt-px">
       <div v-if="functionInfo" class="flex flex-col gap-2 text-text-light p-1">
         <div
           class="font-mono text-lg"
@@ -67,16 +67,16 @@
           as="template"
         >
           <div
-            class="pl-3 pr-1 pt-[2px] pb-px -mx-2 flex items-center"
+            class="pl-3 pr-1 py-[2px] -mx-2 flex items-center font-mono font-bold cursor-pointer"
             :class="{ 'bg-primary-highlight': active }"
           >
-            <div class="name flex-1">
+            <div class="name flex-1 text-text-alpha/60">
               {{ suggestion.title || suggestion.text }}
             </div>
-            <div class="type-label capitalize text-text-lightest">
+            <div class="type-label capitalize text-text-alpha/50">
               {{ suggestion.type }}
             </div>
-            <div class="type-icon text-text-lightest pl-2">
+            <div class="type-icon text-text-alpha/50 pl-2">
               <Icon
                 class="w-5 h-5"
                 :path="

@@ -5,6 +5,7 @@
     :class="attrClass"
     :style="attrStyle"
     v-bind="attrs"
+    autocomplete="off"
     @click="openListbox"
     @focus="openListbox"
     @blur="onBlur"
