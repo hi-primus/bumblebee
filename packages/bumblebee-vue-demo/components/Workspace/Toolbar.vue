@@ -32,7 +32,10 @@
             }
           "
         >
-          <span class="text-text-light" v-html='highligthMatch(operation.name , searchOperation)'></span>
+          <span
+            class="text-text-light"
+            v-html="highligthMatch(operation.name, searchOperation)"
+          ></span>
           <span class="text-text-lighter">{{ operation.shortcut }}</span>
         </li>
         <li
@@ -55,7 +58,10 @@
             }
           "
         >
-          <span class="text-text-light" v-html='highligthMatch(operation.name , searchOperation)'></span>
+          <span
+            class="text-text-light"
+            v-html="highligthMatch(operation.name, searchOperation)"
+          ></span>
           <span class="text-text-lighter">{{ operation.shortcut }}</span>
         </li>
       </ul>
@@ -102,12 +108,13 @@ const searchOperation = ref<string>('');
 const operationElements = ref<HTMLElement | null>(null);
 const searchOperationElement = ref<typeof AppInput | null>(null);
 
-
 const highligthMatch = (text: string, match: string) => {
   const regex = new RegExp(match, 'gi');
-  return text.replace(regex, match => `<span class="bg-warn-highlight">${match}</span>`);
+  return text.replace(
+    regex,
+    match => `<span class="bg-warn-highlight">${match}</span>`
+  );
 };
-
 
 const filteredOperations = computed(() => {
   const search = searchOperation.value?.toLowerCase();
@@ -261,6 +268,7 @@ const onKeyDown = (event: KeyboardEvent): void => {
 
 const onKeyUp = (event: KeyboardEvent): void => {
   if (event.key.toLowerCase() === 'escape') {
+    console.error('escape');
     if (showCommands.value) {
       showCommands.value = false;
     } else if (state.value !== 'operations') {

@@ -130,9 +130,12 @@ export const operationCreators: OperationCreator[] = [
     ): Promise<Source> => {
       const valueFuncPromise = await Promise.allSettled(
         payload.sets.map(s => {
-          return payload.blurr.runCode(`parse('${s.value}', data=False)`, {
-            priority: PRIORITIES.operationRequirement
-          });
+          return payload.blurr.runCode(
+            `parse('${s.value || ''}', data=False)`,
+            {
+              priority: PRIORITIES.operationRequirement
+            }
+          );
         })
       );
 
@@ -173,15 +176,28 @@ export const operationCreators: OperationCreator[] = [
             name: 'outputColumn',
             label: 'Column',
             type: 'string',
-            defaultValue: '',
-            class: 'grouped-first w-1/3'
+            defaultValue: ''
+            // class: 'grouped-first w-1/3'
           },
           {
             name: 'value',
             label: 'Formula',
-            placeholder: 'e.g. col1 + col2, col1 + "suffix"',
+            placeholder: 'Formula or "value"',
             type: 'string',
-            class: 'grouped-last w-2/3'
+            // class: 'grouped-last w-2/3',
+            suggestions: (payload: Payload) => {
+              return (
+                payload.allColumns
+                  ?.filter((c: unknown) => c && typeof c === 'string')
+                  .map((c: string) => {
+                    return {
+                      value: c,
+                      name: c,
+                      type: 'column'
+                    };
+                  }) || []
+              );
+            }
           }
         ]
       }

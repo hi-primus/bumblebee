@@ -158,8 +158,9 @@ import { PropType, Ref } from 'vue';
 
 import { ColumnHeader } from '@/types/dataframe';
 import { TableSelection } from '@/types/operations';
-import { focusNext, focusPrevious, objectMap, throttle } from '@/utils';
+import { focusNext, focusPrevious, objectMap } from '@/utils';
 import { TYPES_HINTS, TYPES_NAMES } from '@/utils/data-types';
+import { throttle } from '@/utils/time';
 
 const props = defineProps({
   rowsCount: {

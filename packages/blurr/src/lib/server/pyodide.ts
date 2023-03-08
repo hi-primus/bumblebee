@@ -119,17 +119,17 @@ export function ServerPyodide(options: ServerOptions): ServerInterface {
 
   function _optionalPromise<T>(callback: T) {
     if (typeof callback === 'function') {
-      type CallbackFunction = T extends (...args: unknown[]) => unknown
+      type _Function = T extends (...args: unknown[]) => unknown
         ? T
         : (...args: unknown[]) => unknown;
       return function (
-        ...args: Parameters<CallbackFunction>
-      ): PromiseOr<Awaited<ReturnType<CallbackFunction>>> {
+        ...args: Parameters<_Function>
+      ): PromiseOr<Awaited<ReturnType<_Function>>> {
         if (server.backendLoaded) {
           return callback(...args);
         }
         return server.donePromise.then(() => callback(...args)) as Awaited<
-          ReturnType<CallbackFunction>
+          ReturnType<_Function>
         >;
       };
     }

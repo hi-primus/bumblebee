@@ -1,6 +1,6 @@
 import type {
-  CallbackFunction,
   Cols,
+  FunctionArgument,
   NoArgs,
   SearchBy,
   SourceArg,
@@ -274,7 +274,7 @@ export const operations = {
   // TODO:Support UDF
   set: DataframeOperation<{
     cols: Cols;
-    valueFunc: CallbackFunction | PythonCompatible;
+    valueFunc: FunctionArgument | PythonCompatible;
     where: string;
     args;
     default;
@@ -318,7 +318,7 @@ export const operations = {
   rename: DataframeOperation<{
     cols: Cols;
     names: Cols;
-    func: CallbackFunction;
+    func: FunctionArgument;
   }>({
     targetType: 'dataframe',
     name: 'cols.rename',

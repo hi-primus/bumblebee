@@ -11,6 +11,20 @@
     :disabled="resolve(field.disabled)"
     :class="fieldClass"
   />
+  <AppSuggestionsInput
+    v-else-if="
+      resolve(field.type) === 'string' && field.suggestions !== undefined
+    "
+    :key="`input-suggestions-${field.name}-${updates}-${fieldClass}`"
+    v-model="value"
+    :suggestions="resolve(field.suggestions)"
+    suggest-on-empty="column"
+    :label="resolve(field.label || field.name)"
+    :name="field.name"
+    :placeholder="field.placeholder"
+    :disabled="resolve(field.disabled)"
+    :class="fieldClass"
+  />
   <AppInput
     v-else-if="resolve(field.type) === 'string'"
     :key="`input-${field.name}-${updates}-${fieldClass}`"

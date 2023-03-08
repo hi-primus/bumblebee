@@ -37,6 +37,29 @@ export type FieldOption<T = unknown> = Record<string, T> & {
   hidden?: boolean;
 };
 
+export interface SuggestionParameter {
+  type: string; // TODO: add types
+  name: string;
+  description: string;
+  required?: boolean;
+}
+export type SuggestionColumn = {
+  type: 'column';
+  name: string;
+  value: string;
+};
+
+export type SuggestionFunction = {
+  type: 'function';
+  name: string;
+  value: string;
+  parameters: SuggestionParameter;
+  description: string;
+  example: string;
+};
+
+export type Suggestion = SuggestionColumn | SuggestionFunction;
+
 export interface Field {
   name: string;
   type: PayloadCallbackOr<'string' | 'number' | 'boolean' | 'custom' | 'file'>;
@@ -45,6 +68,7 @@ export interface Field {
   label?: PayloadCallbackOr<string>;
   required?: PayloadCallbackOr<boolean>;
   options?: PayloadCallbackOr<(string | FieldOption<unknown>)[]>;
+  suggestions?: PayloadCallbackOr<Suggestion[]>;
   textCallback?: (value: unknown) => string;
   description?: string;
   defaultValue?: unknown;

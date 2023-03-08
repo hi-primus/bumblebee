@@ -1,4 +1,4 @@
-import { CallbackFunction, Name, RequestOptions, SourceArg } from './arguments';
+import { FunctionArgument, Name, RequestOptions, SourceArg } from './arguments';
 
 export {};
 
@@ -11,7 +11,7 @@ declare global {
     | undefined
     | Name
     | ArrayBuffer
-    | CallbackFunction;
+    | FunctionArgument;
 
   type PythonCompatible =
     | BasicPythonCompatible

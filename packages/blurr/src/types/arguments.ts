@@ -3,7 +3,7 @@ export type NoArgs = {};
 export type Cols = string | string[] | number | number[] | undefined;
 export type ColsResult<T> = T | Record<string, T>;
 export type SearchBy = 'full' | 'words' | 'chars' | 'values';
-export type CallbackFunction = (v: PythonCompatible) => PythonCompatible;
+export type FunctionArgument = (v: PythonCompatible) => PythonCompatible;
 
 export interface SourceArg {
   name: string;

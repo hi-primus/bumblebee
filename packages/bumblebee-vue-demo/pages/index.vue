@@ -71,14 +71,10 @@ import {
   State,
   TableSelection
 } from '@/types/operations';
-import {
-  compareObjects,
-  deepClone,
-  getNameFromFileName,
-  throttleOnce
-} from '@/utils';
+import { compareObjects, deepClone, getNameFromFileName } from '@/utils';
 import { getPreliminaryProfile, PRIORITIES } from '@/utils/blurr';
 import { operations } from '@/utils/operations';
+import { throttleOnce } from '@/utils/time';
 
 const blurrPackage = useBlurr();
 
@@ -453,6 +449,13 @@ const operationActions: OperationActions = {
         options: operation.defaultOptions
       };
     }
+
+    const currentDataframeIndex = tabs.value[selectedTab.value]; // TODO should be the source of the operation
+    const currentDataframe = dataframes.value[currentDataframeIndex];
+
+    operationValues.value.allColumns = Object.keys(
+      currentDataframe.profile?.columns || {}
+    );
 
     operation?.fields.forEach(field => {
       // check if field has a default value
