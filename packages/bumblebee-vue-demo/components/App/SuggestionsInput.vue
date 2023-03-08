@@ -21,6 +21,7 @@
       v-bind="attrs"
       @click="fieldClicked(true)"
       @focus="fieldClicked(false)"
+      @blur="fieldBlurred"
       @keydown="keyPressed"
       @keyup="keyReleased"
     />
@@ -155,7 +156,11 @@ const myValue = computed({
 const listboxInput = ref<typeof ListboxInput | null>(null);
 
 const caretPosition = ref(0);
-const activeWorld = ref('');
+
+const activeWord = ref('');
+const activeWordPosition = ref(0);
+
+const resultsSuggestions = ref<SuggestionValue[]>([]);
 
 const menuEnabled = ref(false);
 
@@ -208,16 +213,20 @@ const searchSuggestionsThrottled = throttle(searchSuggestions, 100);
 
 const fieldClicked = (isClick = false) => {
   if (!myValue.value) {
-    activeWorld.value = '';
+    activeWord.value = '';
     searchSuggestions();
   }
-  if (menuEnabled.value && isClick) {
-    menuEnabled.value = false;
-  } else if (!menuEnabled.value) {
+  if (!menuEnabled.value) {
     setTimeout(() => {
       menuEnabled.value = true;
     }, 150);
   }
+};
+
+const fieldBlurred = async () => {
+  // delay to avoid closing before triggering option selection
+  await new Promise(resolve => setTimeout(resolve, 100));
+  menuEnabled.value = false;
 };
 
 const setCaretPosition = (caretPos: number) => {
@@ -405,9 +414,11 @@ const useSuggestion = async (newWord = { text: '', type: '' }) => {
 
 const enterKeyEvent = async (event: KeyboardEvent) => {
   if (!functionInfo.value && !resultsSuggestions.value?.length) {
-    return true;
-  } else if (!menuEnabled.value) {
-    menuEnabled.value = true;
+    return;
+  }
+
+  if (!menuEnabled.value) {
+    enableMenu();
   } else if (!avoidPropagation) {
     await new Promise(resolve => setTimeout(resolve, 0));
     if (menuEnabled.value) {
@@ -427,26 +438,27 @@ const enterKeyEvent = async (event: KeyboardEvent) => {
 
   event.stopPropagation();
   event.preventDefault();
-  return false;
+};
+
+const enableMenu = () => {
+  if (!menuEnabled.value) {
+    menuEnabled.value = true;
+    listboxInput.value?.openListbox();
+    debouncedCheckCaret(true);
+  }
 };
 
 const keyPressed = (event: KeyboardEvent) => {
   const key = event.key.toLowerCase();
 
   if (key === 'enter') {
-    if (!enterKeyEvent(event)) {
-      return false;
-    }
+    enterKeyEvent(event);
   } else if (key === 'arrowdown' || (key === ' ' && event.ctrlKey)) {
-    if (!menuEnabled.value) {
-      menuEnabled.value = true;
-      listboxInput.value?.openListbox();
-      debouncedCheckCaret(true);
-    }
+    enableMenu();
   } else if (key === 'arrowup') {
     event.preventDefault();
   } else if (key !== 'escape') {
-    debouncedCheckCaret(true);
+    enableMenu();
   }
 };
 
@@ -513,11 +525,6 @@ const getParameter = (functionName: string, parameterIndex: number) => {
   }
   return null;
 };
-
-const activeWord = ref('');
-const activeWordPosition = ref(0);
-
-const resultsSuggestions = ref<SuggestionValue[]>([]);
 
 watch(suggestionContext, () => {
   if (!suggestionContext.value) {

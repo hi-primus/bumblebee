@@ -54,7 +54,10 @@ function openListbox() {
 }
 
 function onBlur() {
-  searchText.value = api.value?.value?.name;
+  if (searchText.value !== api.value?.value?.name) {
+    searchText.value = api.value?.value?.name;
+  }
+  api.closeListbox();
 }
 
 function onKeydown(event) {
