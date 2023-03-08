@@ -27,16 +27,22 @@
             v-for="(_group, groupIndex) in operationValues[field.name] || []"
           >
             <div
-              v-if="groupIndex > 0"
+              v-if="
+                groupIndex > 0 &&
+                field.groupConnector &&
+                field.groupConnector !== undefined
+              "
               :key="`${field.name}-group-${groupIndex}-or`"
               class="font-bold mx-auto w-full text-center text-text-light text-sm my-[-12px]"
             >
-              or
+              {{
+                field.groupConnector === undefined ? 'or' : field.groupConnector
+              }}
             </div>
             <div
               v-if="true"
               :key="`${field.name}-group-${groupIndex}`"
-              class="w-full flex gap-y-5"
+              class="w-full flex gap-y-5 items-end"
             >
               <div class="flex flex-wrap gap-y-5 w-full">
                 <AppOperationField

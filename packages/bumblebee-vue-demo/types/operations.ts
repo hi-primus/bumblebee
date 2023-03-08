@@ -61,6 +61,7 @@ export interface FieldGroup {
   label?: string;
   addLabel?: string;
   class?: string;
+  groupConnector?: string;
 }
 
 export interface OperationCreatorBase {

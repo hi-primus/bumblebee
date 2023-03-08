@@ -167,6 +167,7 @@ export const operationCreators: OperationCreator[] = [
         name: 'sets',
         label: 'Columns',
         type: 'group',
+        groupConnector: '',
         fields: [
           {
             name: 'outputColumn',
