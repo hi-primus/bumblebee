@@ -211,6 +211,15 @@ onMounted(async () => {
 
   if (input) {
     input.focus();
+    return;
+  }
+
+  const acceptButton = operationElement.value.querySelector(
+    'button[type=submit]'
+  ) as HTMLInputElement;
+
+  if (acceptButton) {
+    acceptButton.focus();
   }
 });
 
