@@ -1888,22 +1888,28 @@ export const operationCreators: OperationCreator[] = [
     name: 'Unnest columns',
     alias: 'Split cols unnest',
     defaultOptions: {
-      usesInputCols: true,
-      usesInputDataframe: true
+      usesInputCols: 'single',
+      usesInputDataframe: true,
+      preview: true
     },
     action: (
       payload: OperationPayload<{
         separator: string;
         splits: number;
-        index: number;
+        drop: boolean;
       }>
     ): Source => {
+      const outputCols = payload.options.preview
+        ? '__bumblebee__preview__' + payload.cols[0]
+        : payload.outputCols;
+
       return payload.source.cols.unnest({
         target: payload.target,
-        cols: payload.cols,
+        cols: payload.cols[0],
+        outputCols,
         separator: payload.separator,
-        splits: payload.splits,
-        index: payload.index,
+        splits: payload.splits === undefined ? 2 : payload.splits,
+        drop: payload.options.preview ? false : payload.drop,
         requestOptions: { priority: PRIORITIES.operation }
       });
     },
@@ -1912,6 +1918,18 @@ export const operationCreators: OperationCreator[] = [
         name: 'separator',
         label: 'Separator',
         type: 'string'
+      },
+      {
+        name: 'splits',
+        label: 'Splits',
+        type: 'number',
+        defaultValue: 2
+      },
+      {
+        name: 'drop',
+        label: 'Drop',
+        type: 'boolean',
+        defaultValue: false
       }
     ],
     shortcut: 'cu'
