@@ -339,7 +339,10 @@ const preparePayload = (payload: PayloadWithOptions): PayloadWithOptions => {
   return payload;
 };
 
-const prepareOperation = () => {
+const getPreparedOperation = (): {
+  operation: Operation | null;
+  payload: PayloadWithOptions | null;
+} => {
   const operation = isOperation(state.value) ? state.value : null;
 
   if (!operation) {
@@ -362,6 +365,12 @@ const prepareOperation = () => {
   return { operation, payload: preparePayload(payload) };
 };
 
+const getOperationUsesPreview = (): boolean => {
+  const { operation, payload } = getPreparedOperation();
+
+  return Boolean(isOperation(operation) && payload?.options?.preview);
+};
+
 const operationActions: OperationActions = {
   submitOperation: async () => {
     try {
@@ -369,7 +378,7 @@ const operationActions: OperationActions = {
         appStatus.value = 'busy';
       }
 
-      const { operation, payload } = prepareOperation();
+      const { operation, payload } = getPreparedOperation();
 
       if (operation) {
         if (payload.options.oneTime) {
@@ -542,12 +551,15 @@ const previewOperationThrottled = throttleOnce(
         appStatus.value = 'busy';
       }
 
-      const { operation, payload } = prepareOperation();
+      const { operation, payload } = getPreparedOperation();
 
       if (!operation || !isOperation(operation) || !payload?.options?.preview) {
         if (appStatus.value === 'busy') {
           appStatus.value = 'ready';
         }
+        operationStatus.value = {
+          status: 'ok'
+        };
         return;
       }
 
@@ -714,17 +726,23 @@ const previewOperationThrottled = throttleOnce(
 );
 
 const previewOperation = async () => {
-  try {
-    operationStatus.value = {
-      status: 'not validated'
-    };
-    const result = await previewOperationThrottled();
-    if (result instanceof Error) {
-      throw result;
+  if (getOperationUsesPreview()) {
+    try {
+      operationStatus.value = {
+        status: 'not validated'
+      };
+      const result = await previewOperationThrottled();
+      if (result instanceof Error) {
+        throw result;
+      }
+    } catch (err) {
+      // this is needed to cancel the preview operation in the middle of the execution
+      cancelPreview = true;
     }
-  } catch (err) {
-    // this is needed to cancel the preview operation in the middle of the execution
-    cancelPreview = true;
+  } else {
+    operationStatus.value = {
+      status: 'ok'
+    };
   }
 };
 
