@@ -463,7 +463,7 @@ const operationActions: OperationActions = {
     const currentDataframe = dataframes.value[currentDataframeIndex];
 
     operationValues.value.allColumns = Object.keys(
-      currentDataframe.profile?.columns || {}
+      currentDataframe?.profile?.columns || {}
     );
 
     operation?.fields.forEach(field => {
