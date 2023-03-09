@@ -200,11 +200,11 @@ const submitable = computed<boolean>(() => {
   return operationStatus.value.status === 'ok';
 });
 
-onMounted(() => {
+onMounted(async () => {
+  await new Promise(resolve => setTimeout(resolve, 1));
   if (!operationElement.value) {
     return;
   }
-
   const input = operationElement.value.querySelector(
     'input, textarea'
   ) as HTMLInputElement;
