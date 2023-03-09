@@ -499,7 +499,7 @@ const allSuggestions = computed<SuggestionValue[]>(() => {
       return {
         ...s,
         parameters,
-        title: s.text + ' function',
+        title: s.text,
         type: 'function' as const
       };
     }),
