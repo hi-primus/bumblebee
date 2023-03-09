@@ -19,6 +19,7 @@
           errorMessage ? 'selector-errorInput' : '',
           multiple ? 'flex items-center flex-wrap gap-2' : ''
         ]"
+        @keydown.escape="$event => open ? $event.stopPropagation() : null"
       >
         <template v-if="multiple">
           <span

@@ -266,15 +266,11 @@ const selectOperationItem = (operation: Operation | null = null): void => {
 };
 
 const onKeyDown = (event: KeyboardEvent): void => {
-  if (event.key.toLowerCase() === 'k' && event.ctrlKey) {
+  const key = event.key.toLowerCase();
+  if (key === 'k' && event.ctrlKey) {
     showCommands.value = !showCommands.value;
     event.preventDefault();
-  }
-};
-
-const onKeyUp = (event: KeyboardEvent): void => {
-  if (event.key.toLowerCase() === 'escape') {
-    console.error('escape');
+  } else if (key === 'escape') {
     if (showCommands.value) {
       showCommands.value = false;
     } else if (state.value !== 'operations') {
@@ -282,9 +278,10 @@ const onKeyUp = (event: KeyboardEvent): void => {
     } else if (showSidebar.value) {
       showSidebar.value = false;
     }
-    return;
   }
+};
 
+const onKeyUp = (event: KeyboardEvent): void => {
   if (
     event.target &&
     ((event.target as HTMLElement)?.tagName.toLowerCase() === 'input' ||
@@ -301,7 +298,7 @@ const onKeyUp = (event: KeyboardEvent): void => {
 
   const key = event.key.toLowerCase();
 
-  if (['shift', 'control', 'alt'].includes(key)) {
+  if (['shift', 'control', 'alt', 'escape'].includes(key)) {
     lastKeys.value = [];
     return;
   }

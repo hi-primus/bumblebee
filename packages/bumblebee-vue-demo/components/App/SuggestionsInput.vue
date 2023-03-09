@@ -23,7 +23,6 @@
       @focus="fieldClicked(false)"
       @blur="fieldBlurred"
       @keydown="keyPressed"
-      @keyup="keyReleased"
     />
     <div v-if="menuVisible" class="suggestions-menu p-2 mt-px">
       <div v-if="functionInfo" class="flex flex-col gap-2 text-text-light p-1">
@@ -457,18 +456,12 @@ const keyPressed = (event: KeyboardEvent) => {
     enableMenu();
   } else if (key === 'arrowup') {
     event.preventDefault();
-  } else if (key !== 'escape') {
-    enableMenu();
-  }
-};
-
-const keyReleased = (event: KeyboardEvent) => {
-  const key = event.key.toLowerCase();
-
-  if (key === 'escape' && menuEnabled.value) {
+  } else if (key === 'escape' && menuEnabled.value) {
     menuEnabled.value = false;
     event.preventDefault();
     event.stopPropagation();
+  } else {
+    enableMenu();
   }
 };
 
