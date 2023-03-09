@@ -315,9 +315,11 @@ const preparePayload = (payload: PayloadWithOptions): PayloadWithOptions => {
   if (payload.options.usesInputDataframe) {
     const currentDataframeIndex = tabs.value[selectedTab.value]; // TODO should be the source of the operation
     const currentDataframe = dataframes.value[currentDataframeIndex];
-    payload.source = currentDataframe.df;
-    console.log('[DEBUG] Using dataframe:', { payload, currentDataframe });
-    payload.options.sourceId = currentDataframe.sourceId;
+    if (currentDataframe) {
+      payload.source = currentDataframe?.df;
+      payload.options.sourceId = currentDataframe?.sourceId;
+      console.log('[DEBUG] Using dataframe:', { payload, currentDataframe });
+    }
   }
 
   if (payload.options.usesInputCols) {
