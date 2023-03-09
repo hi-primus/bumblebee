@@ -39,7 +39,7 @@
             <Icon
               :path="mdiClose"
               class="close-icon"
-              @click="selected.splice(index, 1)"
+              @click="removeFromSelected(index)"
             />
           </span>
           <ComboboxInput
@@ -347,6 +347,10 @@ watch(
 const updateSelected = (value: Value) => {
   selected.value = value;
   search.value = '';
+};
+
+const removeFromSelected = (index: number) => {
+  selected.value = selected.value.filter((_: Value, i: number) => i !== index);
 };
 
 const formatterDisplayValues = (items: ArrayOr<Value>) => {
