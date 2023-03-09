@@ -46,6 +46,7 @@
   }
   &:focus-within,
   &:focus {
+    @apply z-[5];
     .input-field,
     .selector-button {
       @apply ring-1 ring-primary/75 border-primary/75 z-[1];
