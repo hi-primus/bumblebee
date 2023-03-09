@@ -505,7 +505,9 @@ const allSuggestions = computed<SuggestionValue[]>(() => {
     }),
     ...props.suggestions.map(s => ({
       text:
-        functionNames.includes(s.value) || s.value.includes(' ')
+        functionNames.includes(s.value) ||
+        s.value.includes(' ') ||
+        s.value.includes('-')
           ? `{${s.value}}`
           : s.value,
       title: s.name,
