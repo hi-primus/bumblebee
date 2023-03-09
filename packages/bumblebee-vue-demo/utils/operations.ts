@@ -1943,9 +1943,13 @@ export const operationCreators: OperationCreator[] = [
       }>
     ): Source => {
       const drop = !payload.options.preview;
+      const outputCol = payload.options.preview
+        ? `__bumblebee__preview__${payload.cols.join('_')}`
+        : payload.cols.join('_');
       return payload.source.cols.nest({
         target: payload.target,
         cols: payload.cols,
+        outputCol,
         separator: payload.separator,
         drop,
         requestOptions: { priority: PRIORITIES.operation }
