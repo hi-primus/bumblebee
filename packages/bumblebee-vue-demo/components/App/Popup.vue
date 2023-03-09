@@ -7,7 +7,7 @@
       @click="emit('close')"
     >
       <div
-        class="popup-window relative bg-white rounded-md min-w-[300px] max-w-[calc(100%-64px)] max-h-[calc(100vh-5rem)]"
+        class="popup-window relative bg-white rounded-lg min-w-[300px] max-w-[calc(100%-64px)] max-h-[calc(100vh-5rem)]"
         @click.stop
       >
         <div v-if="title || closable" class="popup-header flex items-center">

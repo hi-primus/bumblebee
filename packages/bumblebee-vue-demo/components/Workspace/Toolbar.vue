@@ -15,7 +15,7 @@
       />
       <ul
         ref="operationElements"
-        class="operation-items max-h-[50vh] overflow-auto flex flex-col gap-2"
+        class="operation-items h-[50vh] overflow-auto flex flex-col gap-2"
       >
         <li
           v-for="operation in recentOperations"
@@ -63,6 +63,12 @@
             v-html="highligthMatch(operation.name, searchOperation)"
           ></span>
           <span class="text-text-lighter">{{ operation.shortcut }}</span>
+        </li>
+        <li
+          v-if="!notRecentOperations?.length && !recentOperations?.length"
+          class="text-text-lighter w-full px-2 py-6 text-center pointer-events-none flex-1"
+        >
+          No commands found
         </li>
       </ul>
     </AppPopup>
