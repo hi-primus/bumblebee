@@ -8,10 +8,10 @@
       v-if="options?.usesInputCols"
       v-model="columns"
       multiple
+      :options="allColumns"
       label="Columns"
       name="Columns"
       class="w-full"
-      :options="Object.keys(dataframeObject?.profile?.columns || {})"
     />
     <template v-if="operation?.fields?.length">
       <template v-for="field in operation.fields">
@@ -171,6 +171,10 @@ const dataframeObject = inject(
   'dataframe-object'
 ) as ComputedRef<DataframeObject>;
 const selection = inject('selection') as Ref<TableSelection>;
+
+const allColumns = computed<string[]>(() => {
+  return Object.keys(dataframeObject.value?.profile?.columns || {});
+});
 
 const columns = computed<string[]>({
   get() {

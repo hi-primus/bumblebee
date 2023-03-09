@@ -358,6 +358,10 @@
           </AppInput>
         </div>
         <div class="flex flex-wrap gap-4 px-8 py-2 justify-start items-start">
+          selectedColumns: {{ selectedColumns }} selectedColumn:
+          {{ selectedColumn }}
+        </div>
+        <div class="flex flex-wrap gap-4 px-8 py-2 justify-start items-start">
           <AppAutocomplete
             v-model="selectedColumns"
             :options="columns"
@@ -413,6 +417,80 @@
             v-model="selectedColumns"
             v-model:search="search"
             :options="columns"
+            multiple
+            label="Test multiple autocomplete"
+            placeholder="Columns"
+            name="input-size-small"
+            class="input-size-small"
+          >
+          </AppAutocomplete>
+          search: {{ search }}
+        </div>
+        <div
+          class="flex flex-wrap gap-4 px-8 py-2 justify-start items-start bg-primary-highlight"
+        >
+          selectedColumnsValues:
+          {{ selectedColumnsValues }} selectedColumnValue:
+          {{ selectedColumnValue }}
+        </div>
+        <div
+          class="flex flex-wrap gap-4 px-8 py-2 justify-start items-start bg-primary-highlight"
+        >
+          <AppAutocomplete
+            v-model="selectedColumnsValues"
+            :options="columnsValues"
+            multiple
+            label="Test multiple autocomplete"
+            placeholder="Column"
+            class=""
+          >
+          </AppAutocomplete>
+          <AppAutocomplete
+            v-model="selectedColumnsValues"
+            v-model:search="search"
+            :options="columnsValues"
+            multiple
+            label="Test multiple autocomplete"
+            placeholder="Column"
+            class=""
+          >
+          </AppAutocomplete>
+          <AppAutocomplete
+            v-model="selectedColumnValue"
+            v-model:search="search"
+            :options="columnsValues"
+            label="Test autocomplete"
+            placeholder="Columns"
+            name="input-size-condensed"
+            class="input-size-condensed"
+            clearable
+          >
+          </AppAutocomplete>
+          <AppAutocomplete
+            v-model="selectedColumnsValues"
+            v-model:search="search"
+            :options="columnsValues"
+            multiple
+            label="Test multiple autocomplete"
+            placeholder="Column"
+            class="field-mono"
+          >
+          </AppAutocomplete>
+          <AppAutocomplete
+            v-model="selectedColumnValue"
+            v-model:search="search"
+            :options="columnsValues"
+            label="Test autocomplete"
+            placeholder="Columns"
+            name="input-size-condensed"
+            class="field-mono input-size-condensed"
+            clearable
+          >
+          </AppAutocomplete>
+          <AppAutocomplete
+            v-model="selectedColumnsValues"
+            v-model:search="search"
+            :options="columnsValues"
             multiple
             label="Test multiple autocomplete"
             placeholder="Columns"
@@ -510,9 +588,24 @@ const columns = ref([
   'state',
   'country'
 ]);
+const columnsValues = ref([
+  { text: 'firstName', value: 'firstName' },
+  { text: 'lastName', value: 'lastName' },
+  { text: 'id', value: 'id' },
+  { text: 'email', value: 'email' },
+  { text: 'phone', value: 'phone' },
+  { text: 'address', value: 'address' },
+  { text: 'description', value: 'description' },
+  { text: 'city', value: 'city' },
+  { text: 'zipCode', value: 'zipCode' },
+  { text: 'state', value: 'state' },
+  { text: 'country', value: 'country' }
+]);
 const selectedColumns = ref<string[]>([]);
 const replaces = ref<string[]>([]);
 const selectedColumn = ref<string>('');
+const selectedColumnsValues = ref<string[]>([]);
+const selectedColumnValue = ref<string>('');
 const search = ref<string>('');
 
 const columnValues = [

@@ -110,7 +110,7 @@
           <ComboboxOption
             v-for="(option, index) in filteredOptions"
             :key="index"
-            v-slot="{ selected: selectedOption, active }"
+            v-slot="{ selected: optionIsSelected, active }"
             as="template"
             :value="option"
             :disabled="option.disabled"
@@ -138,7 +138,7 @@
                 </slot>
               </span>
               <span
-                v-if="selectedOption"
+                v-if="optionIsSelected"
                 class="absolute inset-y-0 left-0 flex items-center pl-3"
                 :class="[
                   active
@@ -147,7 +147,7 @@
                   'autocomplete-optionIcon'
                 ]"
               >
-                <Icon v-if="selectedOption" :path="mdiCheckBold" />
+                <Icon v-if="optionIsSelected" :path="mdiCheckBold" />
               </span>
             </li>
           </ComboboxOption>
@@ -236,7 +236,7 @@ type Emits = {
 
 const emit = defineEmits<Emits>();
 
-const selected = ref(props.modelValue);
+const selected = ref();
 
 const searchInput = ref<InstanceType<typeof ComboboxInput> | null>(null);
 
@@ -274,19 +274,26 @@ const {
 } = useField(props.name, useRules(props.rules));
 
 watch(selected, (item, oldItem) => {
-  const value = item?.value || item;
-  const oldValue = oldItem?.value || oldItem;
-  validateValue.value = value;
-
   if (props.multiple) {
-    const valuesFromSelected = item?.map((o: Value) => o?.value || o);
-    if (compareArrays(valuesFromSelected, props.modelValue)) {
+    const values = item?.map((o: Value) => o?.value || o);
+    if (compareArrays(values, props.modelValue)) {
       return;
     }
-  } else if (!props.multiple && value === props.modelValue) {
-    return;
+    validateValue.value = values;
+    emit(
+      'update:modelValue',
+      values,
+      oldItem.map((o: Value) => o?.value || o)
+    );
+  } else {
+    const value = item?.value || item;
+    const oldValue = oldItem?.value || oldItem;
+    validateValue.value = value;
+    if (!props.multiple && value === props.modelValue) {
+      return;
+    }
+    emit('update:modelValue', value, oldValue);
   }
-  emit('update:modelValue', value, oldValue);
   emit('item-selected', item, oldItem);
 });
 
@@ -301,26 +308,26 @@ watch(
         return;
       }
       selected.value = value.map((v: Value) => {
-        return (
-          props.options?.find(o => {
-            if (typeof o !== 'object') {
-              return o === v;
-            }
-            return o.value === v;
-          }) || v
-        );
+        const foundItem = options.value?.find(o => {
+          if (typeof o !== 'object') {
+            return o === v;
+          }
+          return o.value === v;
+        });
+        return foundItem || v;
       });
-    }
-    if (selected.value && value && selected.value.value === value) {
-      return;
-    }
-    selected.value =
-      props.options?.find(o => {
+    } else {
+      if (selected.value && value && selected.value.value === value) {
+        return;
+      }
+      const foundItem = options.value?.find(o => {
         if (typeof o !== 'object') {
           return o === value;
         }
         return o.value === value;
-      }) || value;
+      });
+      selected.value = foundItem || value;
+    }
   },
   { immediate: true }
 );
