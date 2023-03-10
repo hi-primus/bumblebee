@@ -34,6 +34,7 @@
     :placeholder="field.placeholder"
     :disabled="resolve(field.disabled)"
     :class="fieldClass"
+    autocomplete="off"
   />
   <AppInput
     v-else-if="resolve(field.type) === 'number'"
@@ -44,6 +45,7 @@
     :placeholder="field.placeholder"
     :disabled="resolve(field.disabled)"
     :class="fieldClass"
+    autocomplete="off"
     type="number"
   />
   <AppCheckbox
