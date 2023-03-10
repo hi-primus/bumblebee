@@ -36,7 +36,10 @@
             class="text-text-light"
             v-html="highligthMatch(operation.name, searchOperation)"
           ></span>
-          <span class="text-text-lighter">{{ operation.shortcut }}</span>
+          <ShortcutKeys
+            v-if="operation.shortcut"
+            :shortcut="operation.shortcut"
+          />
         </li>
         <li
           v-if="recentOperations?.length && notRecentOperations?.length"
@@ -62,7 +65,10 @@
             class="text-text-light"
             v-html="highligthMatch(operation.name, searchOperation)"
           ></span>
-          <span class="text-text-lighter">{{ operation.shortcut }}</span>
+          <ShortcutKeys
+            v-if="operation.shortcut"
+            :shortcut="operation.shortcut"
+          />
         </li>
         <li
           v-if="!notRecentOperations?.length && !recentOperations?.length"
