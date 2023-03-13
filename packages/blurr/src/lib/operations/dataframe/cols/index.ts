@@ -276,10 +276,10 @@ export const operations = {
     cols: Cols;
     valueFunc: FunctionArgument | PythonCompatible;
     where: string;
-    args;
-    default;
-    evalValue;
-    each;
+    args: PythonCompatible[];
+    default: PythonCompatible;
+    evalValue: boolean;
+    each: boolean;
   }>({
     targetType: 'dataframe',
     name: 'cols.set',
