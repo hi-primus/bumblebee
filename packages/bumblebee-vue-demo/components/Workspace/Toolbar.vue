@@ -11,6 +11,7 @@
         v-model="searchOperation"
         class="mb-2"
         placeholder="Select a command"
+        autocomplete="off"
         @keydown="handleKeyDownSearch"
       />
       <ul
