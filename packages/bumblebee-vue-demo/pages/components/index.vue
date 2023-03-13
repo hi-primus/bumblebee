@@ -30,6 +30,7 @@
           {{ selection || 'no selection' }}
         </div>
         <div
+          v-show="false"
           class="flex flex-wrap gap-4 px-8 py-2 justify-start items-start min-w-[200px]"
         >
           {{ hovered || 'no hover' }}
