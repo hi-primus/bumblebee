@@ -212,7 +212,7 @@ export const pythonString = (param: PythonCompatible): string => {
       return param ? 'True' : 'False';
     case 'object':
       if (isName(param)) {
-        return param.toString();
+        return param.name || param.toString();
       } else if (Array.isArray(param)) {
         return '[' + param.map((p) => pythonString(p)).join(', ') + ']';
       } else if (isObject(param)) {

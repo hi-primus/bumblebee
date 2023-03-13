@@ -107,7 +107,7 @@ export function Source(
         lastTarget = source.toString();
       }
       if (isSource(lastTarget) || isName(lastTarget)) {
-        lastTarget = lastTarget.toString();
+        lastTarget = lastTarget.name || lastTarget.toString();
       }
       if (typeof lastTarget === 'string') {
         console.log(

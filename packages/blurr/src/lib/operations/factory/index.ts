@@ -29,7 +29,7 @@ export function makePythonCompatible(
   } else if (useProxies && isSource(value)) {
     return value.data || server.getGlobal(value.toString());
   } else if (isSource(value) || isName(value)) {
-    return Name(value.toString());
+    return Name(value.name || value.toString());
   } else if (value instanceof ArrayBuffer) {
     if (!server.supports('buffers')) {
       console.warn('Files not supported on this kind of server');
