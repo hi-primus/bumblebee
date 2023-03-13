@@ -2123,11 +2123,11 @@ function whereExpression(
   }
   switch (condition) {
     case 'equal':
-      return `df["${col}"]=="${value}"`;
+      return `(df["${col}"]=="${value}")`;
     case 'numeric_equal':
       return `(df["${col}"]==${value}) | (df["${col}"]=="${value}")`;
     case 'not_equal':
-      return `df["${col}"]!="${value}"`;
+      return `(df["${col}"]!="${value}")`;
     case 'numeric_not_equal':
       return `(df["${col}"]!=${value}) & (df["${col}"]!="${value}")`;
     case 'value_in':
@@ -2136,8 +2136,8 @@ function whereExpression(
     case 'numeric_value_in':
       value = Array.isArray(value) ? value : [value];
       return (
-        `df.mask.value_in("${col}", "${value.join('","')}") ` +
-        `& df.mask.value_in("${col}", ${value.join(',')})`
+        `df.mask.value_in("${col}", "${value.join('","')}") | ` +
+        `df.mask.value_in("${col}", ${value.join(',')})`
       );
     default:
       console.warn('Unknown condition', condition);
