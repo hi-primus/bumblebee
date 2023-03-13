@@ -37,9 +37,8 @@ export function Name(name: string): Name {
   return _name;
 }
 
-export const operationCreators: OperationCreator[] = [
-  {
-    key: 'loadFromFile',
+export const operationCreators: Record<string, OperationCreator> = {
+  loadFromFile: {
     name: 'Load from file',
     defaultOptions: {
       saveToNewDataframe: true,
@@ -98,8 +97,7 @@ export const operationCreators: OperationCreator[] = [
     ],
     shortcut: 'lf'
   },
-  {
-    key: 'saveCsv',
+  saveCsv: {
     name: 'Save to file',
     defaultOptions: {
       oneTime: true,
@@ -127,8 +125,7 @@ export const operationCreators: OperationCreator[] = [
     },
     shortcut: 'sf'
   },
-  {
-    key: 'createCol',
+  createCol: {
     name: 'Create column',
     defaultOptions: {
       usesInputDataframe: true,
@@ -225,8 +222,7 @@ export const operationCreators: OperationCreator[] = [
     ],
     shortcut: 'cc'
   },
-  {
-    key: 'setCol',
+  setCol: {
     name: 'Set column',
     defaultOptions: {
       usesInputCols: 'single',
@@ -430,8 +426,7 @@ export const operationCreators: OperationCreator[] = [
     ],
     shortcut: 'sc'
   },
-  {
-    key: 'replace',
+  replace: {
     name: 'Replace in column values',
     defaultOptions: {
       usesInputCols: true,
@@ -541,8 +536,7 @@ export const operationCreators: OperationCreator[] = [
     shortcut: 'rc'
   },
   // Row operations
-  {
-    key: 'filterRows',
+  filterRows: {
     name: 'Filter rows',
     alias: 'drop keep rows',
     defaultOptions: {
@@ -710,8 +704,7 @@ export const operationCreators: OperationCreator[] = [
       }
     ]
   },
-  {
-    key: 'Drop duplicated',
+  dropDuplicated: {
     name: 'Drop duplicated rows',
     alias: 'drop rows duplicated',
     defaultOptions: {
@@ -736,8 +729,7 @@ export const operationCreators: OperationCreator[] = [
     },
     shortcut: 'rdd'
   },
-  {
-    key: 'Drop Empty',
+  dropEmpty: {
     name: 'Drop empty rows',
     alias: 'drop empty rows',
     defaultOptions: {
@@ -762,8 +754,7 @@ export const operationCreators: OperationCreator[] = [
     shortcut: 'rde'
   },
   // Columns operations
-  {
-    key: 'keep',
+  keep: {
     name: 'Keep selected columns',
     alias: 'keep columns',
     defaultOptions: {
@@ -779,8 +770,7 @@ export const operationCreators: OperationCreator[] = [
     },
     shortcut: 'kc'
   },
-  {
-    key: 'drop',
+  drop: {
     name: 'Drop selected columns',
     alias: 'drop columns',
     defaultOptions: {
@@ -796,8 +786,7 @@ export const operationCreators: OperationCreator[] = [
     },
     shortcut: 'dc'
   },
-  {
-    key: 'lower',
+  lower: {
     name: 'Lowercase column values',
     alias: 'Lowercase letters lower case',
     defaultOptions: {
@@ -815,8 +804,7 @@ export const operationCreators: OperationCreator[] = [
     },
     shortcut: 'll'
   },
-  {
-    key: 'upper',
+  upper: {
     name: 'Uppercase column values',
     alias: 'Uppercase letters upper case',
     defaultOptions: {
@@ -834,8 +822,7 @@ export const operationCreators: OperationCreator[] = [
     },
     shortcut: 'ul'
   },
-  {
-    key: 'title',
+  title: {
     name: 'Title case column values',
     alias: 'Upper first letter',
     defaultOptions: {
@@ -853,8 +840,7 @@ export const operationCreators: OperationCreator[] = [
     },
     shortcut: 'tl'
   },
-  {
-    key: 'capitalize',
+  capitalize: {
     name: 'Capitalize column values',
     alias: 'Upper first letters',
     defaultOptions: {
@@ -872,8 +858,7 @@ export const operationCreators: OperationCreator[] = [
     },
     shortcut: 'cl'
   },
-  {
-    key: 'remove_accents',
+  removeAccents: {
     name: 'Remove accents from column values',
     alias: 'Remove accents normalize chars',
     description: 'Remove diacritics from column values',
@@ -892,8 +877,7 @@ export const operationCreators: OperationCreator[] = [
     },
     shortcut: 'lra'
   },
-  {
-    key: 'remove_special_chars',
+  removeSpecialChars: {
     name: 'Remove special chars from column values',
     alias: 'Remove special chars',
     defaultOptions: {
@@ -911,8 +895,7 @@ export const operationCreators: OperationCreator[] = [
     },
     shortcut: 'lrs'
   },
-  {
-    key: 'extract',
+  extract: {
     name: 'Extract a substring from column values',
     alias: 'Extract substring sub string',
     defaultOptions: {
@@ -937,8 +920,7 @@ export const operationCreators: OperationCreator[] = [
     },
     shortcut: 'le'
   },
-  {
-    key: 'trim whitespaces',
+  trim: {
     name: 'Trim whitespaces from column values',
     alias: 'Trim whitespaces',
     defaultOptions: {
@@ -961,8 +943,7 @@ export const operationCreators: OperationCreator[] = [
     },
     shortcut: 'lt'
   },
-  {
-    key: 'normalize whitespaces',
+  normalize: {
     name: 'Normalize whitespaces in column values',
     alias: 'Normalize whitespaces',
     defaultOptions: {
@@ -985,8 +966,7 @@ export const operationCreators: OperationCreator[] = [
     },
     shortcut: 'lns'
   },
-  {
-    key: 'left substring',
+  left: {
     name: 'Left substring from column values',
     alias: 'Left substring',
     defaultOptions: {
@@ -1016,8 +996,7 @@ export const operationCreators: OperationCreator[] = [
     ],
     shortcut: 'lsl'
   },
-  {
-    key: 'right substring',
+  right: {
     name: 'Get the right substring from column values',
     alias: 'right substring',
     defaultOptions: {
@@ -1046,8 +1025,7 @@ export const operationCreators: OperationCreator[] = [
     ],
     shortcut: 'lsr'
   },
-  {
-    key: 'mid substring',
+  mid: {
     name: 'Get the middle substring from column values',
     alias: 'mid',
     defaultOptions: {
@@ -1084,8 +1062,7 @@ export const operationCreators: OperationCreator[] = [
     ],
     shortcut: 'lsm'
   },
-  {
-    key: 'pad',
+  pad: {
     name: 'Add padding characters',
     alias: 'padding fill length',
     defaultOptions: {
@@ -1147,8 +1124,7 @@ export const operationCreators: OperationCreator[] = [
   },
 
   // Numeric
-  {
-    key: 'Absolute Value',
+  absoluteValue: {
     name: 'Absolute Value from column values',
     alias: 'mid',
     defaultOptions: {
@@ -1166,8 +1142,7 @@ export const operationCreators: OperationCreator[] = [
     },
     shortcut: 'na'
   },
-  {
-    key: 'Round number',
+  round: {
     name: 'Round Number from column values',
     alias: 'mid',
     defaultOptions: {
@@ -1190,8 +1165,7 @@ export const operationCreators: OperationCreator[] = [
     },
     shortcut: 'nr'
   },
-  {
-    key: 'Floor',
+  floor: {
     name: 'Floor Number from column values',
     alias: 'floor',
     defaultOptions: {
@@ -1209,8 +1183,7 @@ export const operationCreators: OperationCreator[] = [
     },
     shortcut: 'nf'
   },
-  {
-    key: 'Ceil',
+  ceil: {
     name: 'Ceil from column values',
     alias: 'ceil',
     defaultOptions: {
@@ -1228,8 +1201,7 @@ export const operationCreators: OperationCreator[] = [
     },
     shortcut: 'nc'
   },
-  {
-    key: 'Modulo',
+  modulo: {
     name: 'Modulo from column values',
     alias: 'modulo',
     defaultOptions: {
@@ -1247,8 +1219,7 @@ export const operationCreators: OperationCreator[] = [
     },
     shortcut: 'nm'
   },
-  {
-    key: 'logarithm',
+  logarithm: {
     name: 'Logarithm from column values',
     alias: 'log logarithm',
     defaultOptions: {
@@ -1271,8 +1242,7 @@ export const operationCreators: OperationCreator[] = [
     },
     shortcut: 'nl'
   },
-  {
-    key: 'natural logarithm',
+  naturalLogarithm: {
     name: 'natural Logarithm from column values',
     alias: 'natural logarithm',
     defaultOptions: {
@@ -1290,8 +1260,7 @@ export const operationCreators: OperationCreator[] = [
     },
     shortcut: 'nnl'
   },
-  {
-    key: 'power',
+  power: {
     name: 'power from column values',
     alias: 'power',
     defaultOptions: {
@@ -1314,8 +1283,7 @@ export const operationCreators: OperationCreator[] = [
     },
     shortcut: 'np'
   },
-  {
-    key: 'square root',
+  square: {
     name: 'Square Root from column values',
     alias: 'square root sqrt',
     defaultOptions: {
@@ -1334,8 +1302,7 @@ export const operationCreators: OperationCreator[] = [
     shortcut: 'np'
   },
   // Trigonometrics
-  {
-    key: 'sin',
+  sin: {
     name: 'Sine from column values',
     alias: 'sin sine',
     defaultOptions: {
@@ -1353,9 +1320,7 @@ export const operationCreators: OperationCreator[] = [
     },
     shortcut: 'ts'
   },
-  //  Create the creaOperatino fon cos
-  {
-    key: 'cos',
+  cos: {
     name: 'Cosine from column values',
     alias: 'cos cosine',
     defaultOptions: {
@@ -1373,9 +1338,7 @@ export const operationCreators: OperationCreator[] = [
     },
     shortcut: 'tc'
   },
-  //  Create the creaOperatino for tan
-  {
-    key: 'tan',
+  tan: {
     name: 'Tangent from column values',
     alias: 'tan tangent',
     defaultOptions: {
@@ -1393,8 +1356,7 @@ export const operationCreators: OperationCreator[] = [
     },
     shortcut: 'tt'
   },
-  {
-    key: 'asin',
+  asin: {
     name: 'Inverse sine from column values',
     alias: 'asin arcsine arcsin',
     defaultOptions: {
@@ -1412,9 +1374,7 @@ export const operationCreators: OperationCreator[] = [
     },
     shortcut: 'tas'
   },
-  //  Create the creaOperatino fon cos
-  {
-    key: 'acos',
+  acos: {
     name: 'Inverse cosine from column values',
     alias: 'acos acosine arccosine arccos',
     defaultOptions: {
@@ -1432,9 +1392,7 @@ export const operationCreators: OperationCreator[] = [
     },
     shortcut: 'tac'
   },
-  //  Create the creaOperatino for tan
-  {
-    key: 'atan',
+  atan: {
     name: 'Inverse tangent from column values',
     alias: 'atan atangent arctan atan arctangent',
     defaultOptions: {
@@ -1452,8 +1410,7 @@ export const operationCreators: OperationCreator[] = [
     },
     shortcut: 'tat'
   },
-  {
-    key: 'sinh',
+  sinh: {
     name: 'Hyperbolic sine from column values',
     alias: 'sinh hyperbolic sin sine',
     defaultOptions: {
@@ -1471,9 +1428,7 @@ export const operationCreators: OperationCreator[] = [
     },
     shortcut: 'tsh'
   },
-  //  Create the creaOperatino fon cos
-  {
-    key: 'cosh',
+  cosh: {
     name: 'Hyperbolic cosine from column values',
     alias: 'cosh hyperbolic cos cosine',
     defaultOptions: {
@@ -1491,9 +1446,7 @@ export const operationCreators: OperationCreator[] = [
     },
     shortcut: 'tch'
   },
-  //  Create the creaOperatino for tan
-  {
-    key: 'tanh',
+  tanh: {
     name: 'Hyperbolic tangent from column values',
     alias: 'tanh hyperbolic tan tangent',
     defaultOptions: {
@@ -1511,8 +1464,7 @@ export const operationCreators: OperationCreator[] = [
     },
     shortcut: 'tth'
   },
-  {
-    key: 'asinh',
+  asinh: {
     name: 'Inverse hyperbolic sine from column values',
     alias: 'asinh arc hyperbolic sin sine inverse',
     defaultOptions: {
@@ -1530,9 +1482,7 @@ export const operationCreators: OperationCreator[] = [
     },
     shortcut: 'tash'
   },
-  //  Create the create Operatino for cos
-  {
-    key: 'acosh',
+  acosh: {
     name: 'Inverse hyperbolic cosine from column values',
     alias: 'acosh arc hyperbolic cos cosine inverse',
     defaultOptions: {
@@ -1550,9 +1500,7 @@ export const operationCreators: OperationCreator[] = [
     },
     shortcut: 'tach'
   },
-  //  Create the creaOperatino for tan
-  {
-    key: 'atanh',
+  atanh: {
     name: 'Inverse hyperbolic tangent from column values',
     alias: 'atanh arc hyperbolic tan tangent inverse',
     defaultOptions: {
@@ -1571,8 +1519,7 @@ export const operationCreators: OperationCreator[] = [
     shortcut: 'tath'
   },
   // Date/Time Functions
-  {
-    key: 'Extract from Date',
+  extractFromDate: {
     name: 'Extract part of a date from a column',
     alias: 'extract date year month day hour minute second',
     defaultOptions: {
@@ -1636,10 +1583,10 @@ export const operationCreators: OperationCreator[] = [
     ],
     shortcut: 'sed'
   },
-  {
-    key: 'Extract from Date',
-    name: 'Extract a part of a date from a column',
-    alias: 'extract date year month day hour minute second',
+  getTime: {
+    // TODO: Implement this
+    name: 'Get time from a column',
+    alias: 'get time between',
     defaultOptions: {
       usesInputCols: true,
       usesInputDataframe: true,
@@ -1677,8 +1624,7 @@ export const operationCreators: OperationCreator[] = [
     shortcut: 'sed'
   },
   // ML
-  {
-    key: 'sample',
+  sample: {
     name: 'Get n samples from the dataframe',
     alias: 'sample',
     defaultOptions: {
@@ -1703,8 +1649,7 @@ export const operationCreators: OperationCreator[] = [
     },
     shortcut: 'ms'
   },
-  {
-    key: 'impute',
+  impute: {
     name: 'Impute missing values in a column',
     alias: 'impute fill missing values',
     defaultOptions: {
@@ -1741,8 +1686,7 @@ export const operationCreators: OperationCreator[] = [
     ],
     shortcut: 'mi'
   },
-  {
-    key: 'One hot encoding',
+  oneHotEncoding: {
     name: 'One hot encode the columns value',
     alias: 'one hot encoding encode',
     defaultOptions: {
@@ -1767,8 +1711,7 @@ export const operationCreators: OperationCreator[] = [
     },
     shortcut: 'mo'
   },
-  {
-    key: 'String to Index',
+  stringToIndex: {
     name: 'Convert string values to integer in a column',
     alias: 'string to index',
     defaultOptions: {
@@ -1786,8 +1729,7 @@ export const operationCreators: OperationCreator[] = [
     },
     shortcut: 'msi'
   },
-  {
-    key: 'Index to String',
+  indexToString: {
     name: 'Convert Index values back to String in a column',
     alias: 'index to string',
     defaultOptions: {
@@ -1805,8 +1747,7 @@ export const operationCreators: OperationCreator[] = [
     },
     shortcut: 'mis'
   },
-  {
-    key: 'ZScore',
+  zScore: {
     name: 'Z-score in a column',
     alias: 'zscore',
     defaultOptions: {
@@ -1824,8 +1765,7 @@ export const operationCreators: OperationCreator[] = [
     },
     shortcut: 'msi'
   },
-  {
-    key: 'Standard Scaler',
+  standardScaler: {
     name: 'standard scaler in a column',
     alias: 'standard scaler',
     defaultOptions: {
@@ -1843,8 +1783,7 @@ export const operationCreators: OperationCreator[] = [
     },
     shortcut: 'mss'
   },
-  {
-    key: 'Min Max Scaler',
+  minMaxScaler: {
     name: 'Min max scaler in a column',
     alias: 'minmax min max scaler',
     defaultOptions: {
@@ -1862,8 +1801,7 @@ export const operationCreators: OperationCreator[] = [
     },
     shortcut: 'mmms'
   },
-  {
-    key: 'MaxAbs Scaler Scaler',
+  maxAbsScaler: {
     name: 'MaxAbs scaler in a column',
     alias: 'max abs maxabs scaler',
     defaultOptions: {
@@ -1883,8 +1821,7 @@ export const operationCreators: OperationCreator[] = [
   },
 
   //
-  {
-    key: 'Remove Stop-words',
+  removeStopWords: {
     name: 'Remove stop-words from column values',
     alias: 'mid',
     defaultOptions: {
@@ -1909,8 +1846,7 @@ export const operationCreators: OperationCreator[] = [
     },
     shortcut: 'lrw'
   },
-  {
-    key: 'unnestColumns',
+  unnestColumns: {
     name: 'Unnest columns',
     alias: 'Split cols unnest',
     defaultOptions: {
@@ -1960,8 +1896,7 @@ export const operationCreators: OperationCreator[] = [
     ],
     shortcut: 'cu'
   },
-  {
-    key: 'nestColumns',
+  nestColumns: {
     name: 'Nest columns',
     alias: 'Unsplit cols nest',
     defaultOptions: {
@@ -2008,7 +1943,7 @@ export const operationCreators: OperationCreator[] = [
     ],
     shortcut: 'cn'
   }
-];
+};
 
 const preparePayload = (operation: Operation, payload: Payload): Payload => {
   const options: Partial<OperationOptions> = Object.assign(
@@ -2069,9 +2004,7 @@ const preparePayload = (operation: Operation, payload: Payload): Payload => {
 
 const createOperation = (operationCreator: OperationCreator): Operation => {
   if ('uses' in operationCreator) {
-    const foundOperation = operationCreators.find(
-      operation => operation.key === operationCreator.uses
-    );
+    const foundOperation = operationCreators[operationCreator.uses];
     if (!foundOperation) {
       throw new Error(`Operation ${operationCreator.uses} not found`);
     }
@@ -2134,8 +2067,9 @@ const createOperation = (operationCreator: OperationCreator): Operation => {
   return operation;
 };
 
-export const operations = operationCreators.map(operationCreator =>
-  createOperation(operationCreator)
+export const operations: Record<string, Operation> = objectMap(
+  operationCreators,
+  createOperation
 );
 
 function whereExpression(

@@ -89,7 +89,6 @@ export interface FieldGroup {
 }
 
 export interface OperationCreatorBase {
-  key: string;
   name: string;
   alias?: string;
   description?: string;

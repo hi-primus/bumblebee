@@ -129,9 +129,14 @@ const highligthMatch = (text: string, match: string) => {
   );
 };
 
+const operationsList = Object.entries(operations).map(([key, operation]) => ({
+  key,
+  ...operation
+}));
+
 const filteredOperations = computed(() => {
   const search = searchOperation.value?.toLowerCase();
-  return operations.map(operation => {
+  return operationsList.map(operation => {
     let matches = 1;
 
     if (search) {
@@ -217,9 +222,7 @@ const handleKeyDownSearch = (event: KeyboardEvent) => {
     if (el) {
       if (key === 'enter') {
         const operationKey = (el as HTMLElement).dataset.operationKey as string;
-        const operation = operations.find(operation => {
-          return operation.key === operationKey;
-        });
+        const operation = operations[operationKey];
         if (operation) {
           selectOperationItem(operation);
           showCommands.value = false;
@@ -239,9 +242,7 @@ const handleKeyDownOperation = (event: KeyboardEvent): void => {
   const key = event.key.toLowerCase();
 
   if (key === 'enter') {
-    const operation = operations.find(operation => {
-      return operation.key === operationKey;
-    });
+    const operation = operations[operationKey];
     if (operation) {
       selectOperationItem(operation);
       showCommands.value = false;
@@ -314,7 +315,7 @@ const onKeyUp = (event: KeyboardEvent): void => {
 
   const shortcut = lastKeys.value.join('');
 
-  const operation = operations.find(
+  const operation = operationsList.find(
     operation => operation.shortcut && shortcut.endsWith(operation.shortcut)
   );
 

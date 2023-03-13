@@ -27,14 +27,18 @@ export const stepify = (a: number, b: number, f = Math.round): number => {
   return f(a / b) * b;
 };
 
-export const objectMap = <T>(
-  obj: Record<string | number | symbol, T>,
-  cb: (value: T) => T
-) => {
-  return Object.fromEntries(
-    Object.entries(obj).map(([key, value]) => [key, cb(value)])
-  );
-};
+export function objectMap<T, V, K extends string | number | symbol>(
+  object: Record<K, T>,
+  cb: (value: T) => V
+): Record<K, V> {
+  if (isObject(object) && typeof cb === 'function') {
+    return (Object.keys(object) as K[]).reduce((acc, key) => {
+      acc[key] = cb(object[key]);
+      return acc;
+    }, {} as Record<K, V>);
+  }
+  return object as never;
+}
 
 export const compareObjects = (a: unknown, b: unknown): boolean => {
   if (a === b) {

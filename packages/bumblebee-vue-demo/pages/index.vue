@@ -505,7 +505,7 @@ const operationActions: OperationActions = {
 };
 
 const loadFromFile = () => {
-  const operation = operations.find(o => o.key === 'loadFromFile');
+  const operation = operations.loadFromFile;
   if (operation) {
     operationActions.selectOperation(operation);
   }
