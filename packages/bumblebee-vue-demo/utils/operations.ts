@@ -23,6 +23,20 @@ type OperationPayload<
   app: AppFunctions;
 } & T;
 
+type Name = {
+  name: string;
+  toString: () => string;
+  _blurrMember: 'name';
+};
+
+export function Name(name: string): Name {
+  const _name = {} as Name;
+  _name.name = name;
+  _name.toString = () => _name.name;
+  _name._blurrMember = 'name';
+  return _name;
+}
+
 export const operationCreators: OperationCreator[] = [
   {
     key: 'loadFromFile',
@@ -165,6 +179,9 @@ export const operationCreators: OperationCreator[] = [
         cols: outputCols,
         valueFunc,
         evalValue: true,
+        evalVariables: {
+          parsed_function: Name('parsed_function')
+        },
         requestOptions: { priority: PRIORITIES.operation }
       });
     },
@@ -237,6 +254,9 @@ export const operationCreators: OperationCreator[] = [
         evalValue: false,
         where,
         default: payload.otherwise,
+        evalVariables: {
+          parsed_function: Name('parsed_function')
+        },
         requestOptions: { priority: PRIORITIES.operation }
       });
       if (payload.outputCols[0] !== payload.cols[0]) {
@@ -554,6 +574,9 @@ export const operationCreators: OperationCreator[] = [
           evalValue: false,
           where: where.join(' | '),
           default: false,
+          evalVariables: {
+            parsed_function: Name('parsed_function')
+          },
           requestOptions: { priority: PRIORITIES.operation }
         });
       }

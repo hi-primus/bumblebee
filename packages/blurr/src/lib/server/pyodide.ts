@@ -84,7 +84,7 @@ export function ServerPyodide(options: ServerOptions): ServerInterface {
     pyodide.runPython(`
       from optimus import Optimus
       from io import BytesIO
-      from optimus.expressions import parse
+      from optimus.expressions import parse, parsed_function
       from optimus.engines.base.meta import Meta
       
       op = Optimus("pyodide")
