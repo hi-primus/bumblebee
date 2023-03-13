@@ -81,18 +81,17 @@ export function optionalPromise<T>(
  * @returns Mapped object
  */
 
-export function objectMap<T, U extends T[keyof T], V>(
-  object: T,
-  cb: (elem: U) => V
-) {
-  if (!object || typeof object !== 'object') {
-    return object;
+export function objectMap<T, V, K extends string | number | symbol>(
+  object: Record<K, T>,
+  cb: (value: T) => V
+): Record<K, V> {
+  if (isObject(object) && typeof cb === 'function') {
+    return (Object.keys(object) as K[]).reduce((acc, key) => {
+      acc[key] = cb(object[key]);
+      return acc;
+    }, {} as Record<K, V>);
   }
-  type OutputType = { [key in keyof T]: V };
-  return (Object.keys(object) as (keyof T)[]).reduce(function (result, key) {
-    result[key] = cb(object[key] as U);
-    return result;
-  }, {} as OutputType);
+  return object as never;
 }
 
 /*
