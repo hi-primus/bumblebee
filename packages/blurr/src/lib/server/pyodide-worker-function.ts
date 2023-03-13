@@ -75,7 +75,7 @@ export const initializeWorker = () => {
       self.micropip = self.pyodide.pyimport('micropip');
 
       await self.micropip.install(
-        'https://test-files.pythonhosted.org/packages/58/9f/b3f80551d5ff40f639a9feb313fc8c00cf494683cb85a2787e4a7b0bb7b6/pyoptimus-0.1.4051-py3-none-any.whl'
+        'https://test-files.pythonhosted.org/packages/97/f1/01ff74a031b57c83c11563fd1f0b7330279640bce275f5b290a3b3cc0b32/pyoptimus-0.1.4052-py3-none-any.whl'
       );
       self.pyodide.runPython(`
         from optimus import Optimus
