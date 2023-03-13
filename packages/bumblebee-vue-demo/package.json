@@ -42,6 +42,7 @@
     "@mdi/js": "^7.0.96",
     "@mdi/svg": "^7.0.96",
     "@pinia/nuxt": "^0.4.3",
+    "@popperjs/core": "^2.11.6",
     "@vue/cli-plugin-babel": "^5.0.8",
     "konva": "^8.3.14",
     "pinia": "^2.0.23",

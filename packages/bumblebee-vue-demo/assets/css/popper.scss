@@ -1,0 +1,118 @@
+.popper {
+  &:not([class*='popper-color-']),
+  &.popper-color-text {
+    @apply bg-text text-white/90;
+  }
+
+  &.popper-color-primary {
+    @apply bg-primary-dark text-white;
+  }
+
+  &.popper-color-primary-light {
+    @apply bg-primary text-white;
+  }
+
+  &.popper-color-primary-lighter {
+    @apply bg-primary-light text-white;
+  }
+
+  &.popper-color-success {
+    @apply bg-success-light text-text-alpha;
+  }
+
+  &.popper-color-error {
+    @apply bg-error-dark text-white;
+  }
+
+  &.popper-color-warn {
+    @apply bg-warn-light text-text-alpha;
+  }
+
+  &:not([class*='popper-size-']),
+  &.popper-size-sm {
+    @apply rounded;
+    .popper-content {
+      @apply px-2 py-1 text-[13px];
+    }
+    .popper-arrow {
+      font-size: 12px;
+    }
+  }
+
+  &.popper-size-md {
+    @apply rounded-md;
+    .popper-content {
+      @apply px-3 py-1 text-[14px];
+    }
+    .popper-arrow {
+      font-size: 14px;
+    }
+  }
+
+  &.popper-size-lg {
+    @apply rounded-lg;
+    .popper-content {
+      @apply px-4 py-3 text-lg;
+    }
+    .popper-arrow {
+      font-size: 16px;
+    }
+  }
+
+  &.popper-size-xl {
+    @apply rounded-xl;
+    .popper-content {
+      @apply px-5 py-4 text-xl;
+    }
+    .popper-arrow {
+      font-size: 18px;
+    }
+  }
+
+  @apply inline-block;
+
+  .popper-content {
+    @apply bg-[inherit] rounded-[inherit];
+    @apply font-bold block;
+  }
+
+  .popper-arrow {
+    visibility: hidden;
+    z-index: -1;
+
+    width: calc(1em + 8px);
+    height: calc(1em + 8px);
+
+    &,
+    &::before {
+      background: inherit;
+    }
+
+    &::before {
+      position: absolute;
+      visibility: visible;
+      content: '';
+      width: 1em;
+      height: 1em;
+      top: 4px;
+      left: 4px;
+      transform: rotate(45deg);
+    }
+  }
+
+  &[data-popper-placement^='top'] > .popper-arrow {
+    bottom: -0.5em;
+  }
+
+  &[data-popper-placement^='bottom'] > .popper-arrow {
+    top: -0.5em;
+  }
+
+  &[data-popper-placement^='left'] > .popper-arrow {
+    right: -0.5em;
+  }
+
+  &[data-popper-placement^='right'] > .popper-arrow {
+    left: -0.5em;
+  }
+}
