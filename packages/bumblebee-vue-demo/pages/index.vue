@@ -383,7 +383,7 @@ const operationActions: OperationActions = {
       const { operation, payload } = getPreparedOperation();
 
       if (operation) {
-        if (payload.options.oneTime) {
+        if (payload?.options.oneTime) {
           await operation.action({
             ...payload,
             options: {
@@ -404,9 +404,9 @@ const operationActions: OperationActions = {
         operationCells.value.push({
           operation,
           payload: {
-            ...payload,
+            ...(payload || {}),
             options: {
-              ...payload.options,
+              ...(payload?.options || {}),
               preview: false
             }
           }
