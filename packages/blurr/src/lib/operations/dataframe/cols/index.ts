@@ -280,6 +280,7 @@ export const operations = {
     default: PythonCompatible;
     evalValue: boolean;
     each: boolean;
+    evalVariables: Record<string, PythonCompatible>;
   }>({
     targetType: 'dataframe',
     name: 'cols.set',
@@ -311,6 +312,10 @@ export const operations = {
       {
         name: 'each',
         default: true,
+      },
+      {
+        name: 'evalVariables',
+        default: null,
       },
     ],
   }),
