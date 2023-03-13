@@ -148,7 +148,10 @@ export const operationCreators: OperationCreator[] = [
           return s.outputColumn;
         }
         if (s.value) {
-          return s.value.replace(/\s/g, '').replace(/[^a-zA-Z0-9]/g, '_');
+          return s.value
+            .replace(/\s/g, '')
+            .replace(/[^a-zA-Z0-9]/g, '_')
+            .replace(/^_+|_+$/g, '');
         }
         return `new_column_${index}`;
       });
