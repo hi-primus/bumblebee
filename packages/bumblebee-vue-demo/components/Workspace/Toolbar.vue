@@ -200,12 +200,11 @@ const focusInput = (input: typeof AppInput | null): HTMLElement | null => {
 
 watch(
   () => showCommands.value,
-  () => {
+  async () => {
     if (showCommands.value) {
       searchOperation.value = '';
-      setTimeout(() => {
-        focusInput(searchOperationElement.value);
-      }, 0);
+      await new Promise(resolve => setTimeout(resolve, 0));
+      focusInput(searchOperationElement.value);
     }
   }
 );

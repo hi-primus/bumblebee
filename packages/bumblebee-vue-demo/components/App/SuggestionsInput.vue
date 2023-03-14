@@ -210,15 +210,14 @@ const searchSuggestions = (parameterTypes?: string[]) => {
 
 const searchSuggestionsThrottled = throttle(searchSuggestions, 100);
 
-const fieldClicked = (isClick = false) => {
+const fieldClicked = async (isClick = false) => {
   if (!myValue.value) {
     activeWord.value = '';
     searchSuggestions();
   }
   if (!menuEnabled.value) {
-    setTimeout(() => {
-      menuEnabled.value = true;
-    }, 150);
+    await new Promise(resolve => setTimeout(resolve, 150));
+    menuEnabled.value = true;
   }
 };
 
@@ -405,9 +404,8 @@ const useSuggestion = async (newWord = { text: '', type: '' }) => {
     suggestionContext.value.activeCompleteWord ===
       suggestionContext.value.activeWord
   ) {
-    setTimeout(() => {
-      menuEnabled.value = false; // hide
-    }, 0);
+    await new Promise(resolve => setTimeout(resolve, 0));
+    menuEnabled.value = false;
   }
 };
 

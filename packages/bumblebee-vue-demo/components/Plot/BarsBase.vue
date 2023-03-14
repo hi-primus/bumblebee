@@ -196,15 +196,14 @@ onBeforeMount(() => {
   totalWidth.value = props.width === 'auto' ? 0 : props.width;
 });
 
-onMounted(() => {
-  setTimeout(() => {
-    enablePlot.value = true;
-    if (props.width === 'auto') {
-      nextTick(() => {
-        fitIntoParent();
-      });
-    }
-  }, 0);
+onMounted(async () => {
+  await new Promise(resolve => setTimeout(resolve, 0));
+  enablePlot.value = true;
+  if (props.width === 'auto') {
+    await new Promise(resolve => setTimeout(resolve, 0));
+    fitIntoParent();
+  }
+  await new Promise(resolve => setTimeout(resolve, 0));
 });
 
 watch(selection, () => {

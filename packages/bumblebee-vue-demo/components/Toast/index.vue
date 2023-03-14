@@ -92,11 +92,10 @@ const icon = computed(() => {
   return props.icon;
 });
 
-onMounted(() => {
+onMounted(async () => {
   if (props.time) {
-    setTimeout(() => {
-      emit('close');
-    }, props.time * 1000);
+    await new Promise(resolve => setTimeout(resolve, props.time * 1000));
+    emit('close');
   }
 });
 </script>

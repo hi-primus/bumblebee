@@ -205,13 +205,13 @@ const handleDataframeResults = async (
       name: dataframeName || 'dataset'
     };
 
-    setTimeout(() => {
-      df.profile({
+    setTimeout(async () => {
+      const profileResult = await df.profile({
         bins: 33,
         requestOptions: { priority: PRIORITIES.profile }
-      }).then(profile => {
-        dataframes.value[dataframeIndex].profile = profile as DataframeProfile;
       });
+      dataframes.value[dataframeIndex].profile =
+        profileResult as DataframeProfile;
     }, 0);
   } else {
     console.error('Unknown result type', result);
