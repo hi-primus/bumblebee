@@ -97,7 +97,6 @@ const value = computed({
     return (operationValue || {})[props.field.name];
   },
   set: (value: unknown) => {
-    // assign value to operationValues if is not a subfield or to the subfield if it is
     if (props.subfieldIndex !== undefined && props.parentField) {
       operationValues.value[props.parentField] = [
         ...(operationValues.value[props.parentField] || [])

@@ -396,7 +396,6 @@ const useSuggestion = async (newWord = { text: '', type: '' }) => {
   avoidPropagation = false;
   setCaretPosition(caretPos);
   menuEnabled.value = true;
-  // this.hideSuggestions = false;
   checkCaret(true);
   if (
     suggestionContext.value &&
@@ -419,7 +418,6 @@ const enterKeyEvent = async (event: KeyboardEvent) => {
   } else if (!avoidPropagation) {
     await new Promise(resolve => setTimeout(resolve, 0));
     if (menuEnabled.value) {
-      // visible
       await useSuggestion(resultsSuggestions.value?.[0]);
     } else if (functionInfo.value) {
       if (
