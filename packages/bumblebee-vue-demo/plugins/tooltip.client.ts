@@ -15,7 +15,10 @@ const createPopperElement = (value: string) => {
   popperContent.textContent = value;
   popperElement.appendChild(popperContent);
 
-  document.body.appendChild(popperElement);
+  const parentElement =
+    document.getElementById('tooltips-container') || document.body;
+
+  parentElement.appendChild(popperElement);
 
   return popperElement;
 };
