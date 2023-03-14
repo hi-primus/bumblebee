@@ -438,6 +438,7 @@ const operationActions: OperationActions = {
   },
   cancelOperation: () => {
     console.info('Operation cancelled');
+    previewOperationThrottled.cancel();
     dataframeLayout.value?.clearChunks(true, false);
     operationValues.value = {};
     state.value = 'operations';

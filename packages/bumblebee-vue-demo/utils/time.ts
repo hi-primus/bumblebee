@@ -31,7 +31,7 @@ export const throttleOnce = (
     delay?: number | ((...args: Arguments<typeof func>) => number);
     cancelable?: boolean | ((...args: Arguments<typeof func>) => boolean);
   } = {}
-): typeof func => {
+) => {
   /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-this-alias */
   const defaultLimit = options.limit === undefined ? 1000 : options.limit;
   const defaultDelay = options.delay === undefined ? 0 : options.delay;
@@ -44,7 +44,7 @@ export const throttleOnce = (
   let promise: Promise<unknown> | null = null;
   let cancel: ((reason?: any) => void) | null = null;
 
-  return async function (...args: unknown[]) {
+  const throttledFunc = async function (...args: unknown[]) {
     const context = this;
 
     const limit =
@@ -108,6 +108,14 @@ export const throttleOnce = (
       throw error;
     }
   };
+
+  throttledFunc.cancel = () => {
+    cancel && cancel();
+    cancel = null;
+    promise = null;
+  };
+
+  return throttledFunc;
 };
 
 export const debounce = <T>(
