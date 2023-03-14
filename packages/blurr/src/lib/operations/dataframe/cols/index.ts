@@ -564,7 +564,7 @@ export const operations = {
     ],
   }),
   move: DataframeOperation<{
-    cols: Cols;
+    column: Cols;
     position: string | number;
     refCol: string;
   }>({
