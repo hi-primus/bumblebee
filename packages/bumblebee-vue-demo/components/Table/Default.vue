@@ -62,6 +62,7 @@
         >
           <div class="column-header">
             <div
+              :data-column-index="column.columnIndex"
               class="column-title border-[color:var(--line-color)] border-b text-[16px] py-1 px-1 text-center flex items-center select-none font-mono-table"
               :class="{
                 'cursor-pointer': !column.preview
@@ -292,6 +293,17 @@ watch(
         });
       }
     });
+
+    const firstPreviewColumn = header.find(column => column.preview);
+
+    if (firstPreviewColumn) {
+      const firstPreviewColumnHtmlElement = document.querySelector(
+        `[data-column-index="${firstPreviewColumn.columnIndex}"]`
+      );
+      if (firstPreviewColumnHtmlElement) {
+        firstPreviewColumnHtmlElement.scrollIntoView();
+      }
+    }
   },
   { immediate: true }
 );
