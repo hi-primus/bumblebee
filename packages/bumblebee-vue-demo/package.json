@@ -44,7 +44,7 @@
     "@pinia/nuxt": "^0.4.3",
     "@popperjs/core": "^2.11.6",
     "@vue/cli-plugin-babel": "^5.0.8",
-    "konva": "^8.3.14",
+    "konva": "^8.4.2",
     "pinia": "^2.0.23",
     "vee-validate": "^4.7.2",
     "vue-konva": "^3.0.2",
