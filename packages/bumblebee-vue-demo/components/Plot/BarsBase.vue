@@ -374,7 +374,7 @@ const setSelection = (from = -1, to = -2) => {
 
   if (from >= 0) {
     for (let i = from; i < to; i++) {
-      bins.value[i].selecting = true;
+      bins.value?.[i] && (bins.value[i].selecting = true);
     }
   }
 };
