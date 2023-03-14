@@ -18,6 +18,7 @@ type OperationPayload<
   source: Source;
   target: string;
   cols: Cols;
+  allColumns: Cols;
   outputCols: Cols;
   options: OperationOptions;
   app: AppFunctions;
@@ -171,7 +172,11 @@ export const operationCreators: Record<string, OperationCreator> = {
         outputCols = outputCols.map(c => `__bumblebee__preview__${c}`);
       }
 
-      return payload.source.cols.set({
+      const inputColumns = payload.allColumns.filter(col => {
+        return valueFunc.some(f => f && f.includes(col));
+      });
+
+      const result = payload.source.cols.set({
         target: payload.target,
         cols: outputCols,
         valueFunc,
@@ -181,6 +186,16 @@ export const operationCreators: Record<string, OperationCreator> = {
         },
         requestOptions: { priority: PRIORITIES.operation }
       });
+
+      if (inputColumns.length > 0) {
+        const lastInputColumn = inputColumns[inputColumns.length - 1];
+        return result.cols.move({
+          column: outputCols,
+          position: 'after',
+          refCol: lastInputColumn,
+          requestOptions: { priority: PRIORITIES.operation }
+        });
+      }
     },
     fields: [
       {
@@ -255,9 +270,10 @@ export const operationCreators: Record<string, OperationCreator> = {
         },
         requestOptions: { priority: PRIORITIES.operation }
       });
+
       if (payload.outputCols[0] !== payload.cols[0]) {
         return result.cols.move({
-          column: payload.outputCols[0],
+          column: payload.outputCols,
           position: 'after',
           refCol: payload.cols[0],
           requestOptions: { priority: PRIORITIES.operation }
