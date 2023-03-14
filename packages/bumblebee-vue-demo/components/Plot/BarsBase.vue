@@ -339,7 +339,8 @@ const onMouseUp = () => {
 const setHovered = (index: number) => {
   bins.value = bins.value.map(e => ({ ...e, hovered: false }));
   if (index >= 0) {
-    bins.value[index] && (bins.value[index].hovered = true);
+    bins.value[index] = bins.value[index] || {};
+    bins.value[index].hovered = true;
   }
   emit('hovered', index);
 };
@@ -374,7 +375,8 @@ const setSelection = (from = -1, to = -2) => {
 
   if (from >= 0) {
     for (let i = from; i < to; i++) {
-      bins.value?.[i] && (bins.value[i].selecting = true);
+      bins.value[i] = bins.value[i] || {};
+      bins.value[i].selecting = true;
     }
   }
 };
@@ -401,15 +403,15 @@ const getRectConfig = (index: number) => {
   const opacity = h > hmin ? 1 : 0.5 + (h / hmin) * 0.5;
   h = Math.max(h, hmin);
 
-  const fill =
-    bins.value[index] &&
-    (bins.value[index].selected
+  const fill = bins.value[index]
+    ? bins.value[index].selected
       ? colors.value.selected
       : bins.value[index].selecting
       ? colors.value.selected
       : bins.value[index].hovered
       ? colors.value.hovered
-      : colors.value.default);
+      : colors.value.default
+    : colors.value.default;
 
   return {
     ...getBackConfig(index),
