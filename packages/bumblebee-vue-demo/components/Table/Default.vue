@@ -121,7 +121,13 @@
           ></div>
         </div>
       </div>
-      <div class="sticky h-full left-0 order-[-1] z-[2]">
+      <div
+        class="sticky h-full left-0 order-[-1]"
+        :class="{
+          'z-[2]': !scrollIsLeft,
+          'z-[1]': scrollIsLeft
+        }"
+      >
         <div
           class="bumblebee-columns-rows-indices h-full bg-white text-text-lightest border-line-light border-r font-mono font-200 text-right"
           :style="{
@@ -315,8 +321,9 @@ watch(
 );
 
 const visibleRowsRange = ref([0, 10]);
+const scrollIsLeft = ref(false);
 
-const onScroll = throttle(function () {
+const updateScroll = throttle(function () {
   const element = scrollElement.value;
   if (element) {
     const start = Math.floor(
@@ -330,6 +337,11 @@ const onScroll = throttle(function () {
     emit('updateScroll', start, stop);
   }
 }, 300);
+
+const onScroll = () => {
+  updateScroll();
+  scrollIsLeft.value = scrollElement?.value?.scrollLeft === 0;
+};
 
 const visibleRows = computed(() => {
   const [start, stop] = visibleRowsRange.value;
