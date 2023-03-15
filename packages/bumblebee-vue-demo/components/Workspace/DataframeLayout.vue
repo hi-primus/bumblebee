@@ -73,7 +73,7 @@ const header = computed<ColumnHeader[]>(() => {
 
   if (columns && Object.keys(columns)) {
     return Object.entries(columns).map(([title, column]) => {
-      let preview = false;
+      let columnType = 'default';
 
       let newTitle: string = title;
 
@@ -83,7 +83,12 @@ const header = computed<ColumnHeader[]>(() => {
         if (columns?.[newTitle]) {
           newTitle = `new ${newTitle}`;
         }
-        preview = true;
+        columnType = 'preview';
+      }
+
+      if (title.startsWith('__bumblebee__highlight_col__')) {
+        newTitle = title.replace('__bumblebee__highlight_col__', '');
+        columnType = 'highlighted';
       }
 
       let highlight: Highlight = false;
@@ -93,19 +98,34 @@ const header = computed<ColumnHeader[]>(() => {
           '__bumblebee__highlight_row__',
           ''
         );
+        columnType = 'highlight';
         highlight = ['error', 'warning', 'success'].includes(highlightString)
           ? (highlightString as Highlight)
           : true;
       }
+
+      // eslint-disable-next-line camelcase
+      let dataType =
+        (column as ColumnHeader).data_type ||
+        originalColumns?.[title]?.data_type;
+      let stats =
+        (column as ColumnHeader).stats || originalColumns?.[title]?.stats;
+
+      if (!dataType && columnType !== 'preview') {
+        dataType = originalColumns?.[newTitle]?.data_type;
+      }
+
+      if (!stats && columnType !== 'preview') {
+        stats = originalColumns?.[newTitle]?.stats;
+      }
+
       return {
         title,
         displayTitle: newTitle,
-        data_type:
-          (column as ColumnHeader).data_type ||
-          originalColumns?.[title]?.data_type,
-        stats:
-          (column as ColumnHeader).stats || originalColumns?.[title]?.stats,
-        preview: preview || wholePreview,
+        // eslint-disable-next-line camelcase
+        data_type: dataType,
+        stats,
+        columnType: wholePreview ? 'preview' : columnType,
         highlight
       };
     });

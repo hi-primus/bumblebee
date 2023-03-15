@@ -11,7 +11,7 @@
       "
       :data="stats"
       :column-name="data.title"
-      :selectable="!data.preview"
+      :selectable="data.columnType !== 'preview'"
       @hovered="hovered = $event"
     />
     <div
@@ -21,14 +21,14 @@
         v-if="stats?.hist"
         :data="stats?.hist"
         :column-name="data.title"
-        :selectable="!data.preview"
+        :selectable="data.columnType !== 'preview'"
         @hovered="hovered = $event"
       />
       <PlotFrequency
         v-else-if="stats?.frequency"
         :data="stats?.frequency"
         :column-name="data.title"
-        :selectable="!data.preview"
+        :selectable="data.columnType !== 'preview'"
         @hovered="hovered = $event"
       />
       <Icon

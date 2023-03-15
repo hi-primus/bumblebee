@@ -28,7 +28,7 @@ export interface Column extends KeyedColumn {
 }
 
 export interface PreviewColumn {
-  preview: boolean;
+  columnType: 'default' | 'highlight' | 'highlighted' | 'preview';
   highlight?: Highlight;
 }
 

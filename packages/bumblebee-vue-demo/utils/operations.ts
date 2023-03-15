@@ -188,14 +188,36 @@ export const operationCreators: Record<string, OperationCreator> = {
       });
 
       if (inputColumns.length > 0) {
+        let movedResult = result;
+
+        if (payload.options.preview) {
+          movedResult = movedResult.cols.move({
+            column: inputColumns,
+            position: 'beginning',
+            requestOptions: { priority: PRIORITIES.operation }
+          });
+        }
+
         const lastInputColumn = inputColumns[inputColumns.length - 1];
-        return result.cols.move({
+
+        movedResult = movedResult.cols.move({
           column: outputCols,
           position: 'after',
           refCol: lastInputColumn,
           requestOptions: { priority: PRIORITIES.operation }
         });
+
+        if (payload.options.preview) {
+          return movedResult.cols.rename({
+            cols: inputColumns,
+            outputCols: inputColumns.map(
+              c => `__bumblebee__highlight_col__${c}`
+            )
+          });
+        }
+        return movedResult;
       }
+      return result;
     },
     fields: [
       {

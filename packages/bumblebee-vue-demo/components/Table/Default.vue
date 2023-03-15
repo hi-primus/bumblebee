@@ -44,11 +44,13 @@
           v-for="column in columnsHeader"
           :key="column.title"
           :class="{
-            'column-color-preview': column.preview,
-            'column-color-primary': selection?.columns.includes(column.title)
+            'column-color-preview': column.columnType === 'preview',
+            'column-color-primary':
+              selection?.columns.includes(column.title) ||
+              column.columnType === 'highlighted'
           }"
           class="bumblebee-table-column relative z-[0]"
-          :tabindex="column.preview ? -1 : 0"
+          :tabindex="column.columnType === 'preview' ? -1 : 0"
           :style="{
             height: columnHeaderHeight + safeRowsCount * rowHeight + 'px',
             width: minColumnWidth + 'px'
@@ -56,7 +58,9 @@
           :data-index="column.columnIndex"
           @keydown="
             $event =>
-              column.preview ? null : handleKeyDown($event, column.columnIndex)
+              column.columnType === 'preview'
+                ? null
+                : handleKeyDown($event, column.columnIndex)
           "
           @mousedown.prevent
         >
@@ -65,14 +69,14 @@
               :data-column-index="column.columnIndex"
               class="column-title border-[color:var(--line-color)] border-b text-[16px] py-1 px-1 text-center flex items-center select-none font-mono-table"
               :class="{
-                'cursor-pointer': !column.preview
+                'cursor-pointer': column.columnType !== 'preview'
               }"
               :style="{
                 height: columnTitleHeight + 'px'
               }"
               @click.prevent="
                 $event =>
-                  column.preview
+                  column.columnType === 'preview'
                     ? null
                     : columnClicked($event, column.columnIndex, true)
               "
@@ -294,7 +298,9 @@ watch(
       }
     });
 
-    const firstPreviewColumn = header.find(column => column.preview);
+    const firstPreviewColumn = header.find(
+      column => column.columnType === 'preview'
+    );
 
     if (firstPreviewColumn) {
       const firstPreviewColumnHtmlElement = document.querySelector(
@@ -441,7 +447,7 @@ const columnClicked = (
     const stop = Math.max(columnIndex, lastColumnClicked);
     columns = columnsHeader.value
       .slice(start, stop + 1)
-      .filter(c => !c.preview)
+      .filter(c => c.columnType !== 'preview')
       .map(c => c.title);
   } else if (event.ctrlKey) {
     if (selection.value?.columns.includes(columnTitle)) {

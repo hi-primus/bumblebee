@@ -333,7 +333,10 @@ export const operations = {
         default: '*',
       },
       {
-        name: 'names',
+        name: 'outputCols',
+        // TODO: use argName to override python argument name
+        // name: 'names',
+        // argName: 'output_cols',
         default: null,
       },
       {
