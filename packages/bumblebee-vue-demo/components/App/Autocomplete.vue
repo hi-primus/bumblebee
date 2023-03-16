@@ -67,12 +67,12 @@
           @blur="validate"
         />
         <div class="icons">
-          <button type="button" @click="clear">
-            <Icon
-              v-if="(selected || search) && clearable"
-              :path="mdiClose"
-              class="clearIcon w-6"
-            />
+          <button
+            v-if="(selected || search) && clearable"
+            type="button"
+            @click="clear"
+          >
+            <Icon :path="mdiClose" class="clearIcon w-6" />
           </button>
           <ComboboxButton
             v-if="filteredOptions?.length"
