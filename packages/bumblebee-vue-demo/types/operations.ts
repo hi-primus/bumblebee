@@ -62,7 +62,9 @@ export type Suggestion = SuggestionColumn | SuggestionFunction;
 
 export interface Field {
   name: string;
-  type: PayloadCallbackOr<'string' | 'number' | 'boolean' | 'custom' | 'file'>;
+  type: PayloadCallbackOr<
+    'string' | 'number' | 'boolean' | 'custom' | 'strings array' | 'file'
+  >;
   key?: string;
   placeholder?: string;
   label?: PayloadCallbackOr<string>;

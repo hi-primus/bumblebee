@@ -36,6 +36,17 @@
     :class="fieldClass"
     autocomplete="off"
   />
+  <AppChipsInput
+    v-else-if="resolve(field.type) === 'strings array'"
+    :key="`chips-input-${field.name}-${updates}-${fieldClass}`"
+    v-model="value"
+    :label="resolve(field.label || field.name)"
+    :name="field.name"
+    :placeholder="field.placeholder"
+    :disabled="resolve(field.disabled)"
+    :class="fieldClass"
+    autocomplete="off"
+  />
   <AppInput
     v-else-if="resolve(field.type) === 'number'"
     :key="`number-input-${field.name}-${updates}-${fieldClass}`"
