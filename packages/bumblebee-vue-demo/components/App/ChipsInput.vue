@@ -70,14 +70,16 @@ watch(
   () => props.modelValue,
   (newValue, _oldValue) => {
     value.value = newValue;
-  }
+  },
+  { deep: true }
 );
 
 watch(
   () => value.value,
   (newValue, oldValue) => {
     emit('update:modelValue', newValue, oldValue);
-  }
+  },
+  { deep: true }
 );
 
 const search = ref(props.search);

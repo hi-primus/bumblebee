@@ -273,29 +273,33 @@ const {
   validate
 } = useField(props.name, useRules(props.rules));
 
-watch(selected, (item, oldItem) => {
-  if (props.multiple) {
-    const values = item?.map((o: Value) => o?.value || o);
-    if (compareArrays(values, props.modelValue)) {
-      return;
+watch(
+  selected,
+  (item, oldItem) => {
+    if (props.multiple) {
+      const values = item?.map((o: Value) => o?.value || o);
+      if (compareArrays(values, props.modelValue)) {
+        return;
+      }
+      validateValue.value = values;
+      emit(
+        'update:modelValue',
+        values,
+        oldItem.map((o: Value) => o?.value || o)
+      );
+    } else {
+      const value = item?.value || item;
+      const oldValue = oldItem?.value || oldItem;
+      validateValue.value = value;
+      if (!props.multiple && value === props.modelValue) {
+        return;
+      }
+      emit('update:modelValue', value, oldValue);
     }
-    validateValue.value = values;
-    emit(
-      'update:modelValue',
-      values,
-      oldItem.map((o: Value) => o?.value || o)
-    );
-  } else {
-    const value = item?.value || item;
-    const oldValue = oldItem?.value || oldItem;
-    validateValue.value = value;
-    if (!props.multiple && value === props.modelValue) {
-      return;
-    }
-    emit('update:modelValue', value, oldValue);
-  }
-  emit('item-selected', item, oldItem);
-});
+    emit('item-selected', item, oldItem);
+  },
+  { deep: true }
+);
 
 watch(
   () => props.modelValue,
@@ -329,7 +333,7 @@ watch(
       selected.value = foundItem || value;
     }
   },
-  { immediate: true }
+  { immediate: true, deep: true }
 );
 
 const search = ref('');
