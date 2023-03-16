@@ -39,6 +39,7 @@
             'px',
           paddingBottom: tablePaddingBottom + 'px'
         }"
+        @mouseover="checkCellHover"
       >
         <div
           v-for="column in columnsHeader"
@@ -376,7 +377,105 @@ const getValue = (value: unknown): string => {
   return value.toString();
 };
 
+let moreElement: HTMLElement | null = null;
+
+let _cellElement: HTMLElement | null = null;
+
+const expandCell = (cellElement: HTMLElement) => {
+  const columnElement = cellElement.parentElement;
+  const tableElement = columnElement?.parentElement;
+
+  if (!columnElement || !tableElement) {
+    return;
+  }
+
+  let elements = Array.from(
+    tableElement.getElementsByClassName('has-expanded-cell')
+  );
+
+  elements.forEach(element => element.classList.remove('has-expanded-cell'));
+
+  elements = Array.from(tableElement.getElementsByClassName('cell-expanded'));
+
+  elements.forEach(element => element.classList.remove('cell-expanded'));
+
+  columnElement.classList.add('has-expanded-cell');
+
+  cellElement.classList.add('cell-expanded');
+
+  _cellElement = cellElement;
+};
+
+const restoreCell = (cellElement?: HTMLElement) => {
+  cellElement = _cellElement || cellElement;
+  if (cellElement) {
+    const columnElement = cellElement.parentElement;
+    cellElement.classList.remove('cell-expanded');
+    columnElement?.classList.remove('has-expanded-cell');
+  }
+};
+
+const initMoreElement = () => {
+  if (moreElement) {
+    return moreElement;
+  }
+  const clickOutsideExpandedCell = (event: MouseEvent) => {
+    const target = event.target as HTMLElement;
+    if (!target.classList || !target.classList.contains('cell-expanded')) {
+      restoreCell();
+    }
+  };
+  moreElement = document.createElement('div');
+  moreElement.classList.add('action-icon');
+  moreElement.onmousedown = e => {
+    const cell = (e.target as HTMLElement)?.parentElement;
+    if (cell && cell.classList.contains('cell-expanded')) {
+      restoreCell(cell);
+      document.onmousedown = null;
+    } else if (cell) {
+      expandCell(cell);
+      document.onmousedown = clickOutsideExpandedCell;
+    }
+    e.preventDefault();
+    e.stopPropagation();
+  };
+  return moreElement;
+};
+
+const removeMoreElement = () => {
+  if (moreElement && moreElement.parentElement) {
+    moreElement.parentElement.removeChild(moreElement);
+  }
+};
+
+const checkCellHover = (event: MouseEvent) => {
+  event = event || window.event;
+  const element = event.target as HTMLElement;
+  // check if targetElement is a cell by checking if it has a class column-cell
+  if (
+    element &&
+    element.className &&
+    element.classList.contains('column-cell') &&
+    moreElement
+  ) {
+    if (element.classList.contains('cell-expanded')) {
+      element.appendChild(moreElement);
+    } else {
+      const textWidth = element.innerText.length * 7;
+      const width = element.offsetWidth - 12;
+      if (textWidth > width) {
+        element.classList.add('cell-to-expand');
+        element.appendChild(moreElement);
+      } else {
+        element.classList.remove('cell-to-expand');
+        return removeMoreElement();
+      }
+    }
+  }
+};
+
 onMounted(() => {
+  initMoreElement();
   onScroll();
 });
 
@@ -564,5 +663,67 @@ defineExpose({
   &.row-color-warning {
     @apply bg-warn-highlight;
   }
+}
+
+.has-expanded-cell,
+.cell-expanded {
+  @apply z-[30] #{!important};
+}
+
+.column-cell {
+  &.cell-expanded {
+    background-color: white;
+    width: 400px;
+    min-height: 170px;
+    padding: 2px 17px 2px 7px;
+    margin-top: -2px;
+    margin-left: -3px;
+    white-space: pre-wrap !important;
+    border-style: none !important;
+    word-break: break-word;
+    overflow-y: auto;
+
+    @apply shadow-[1px_1px_10px_0px_rgba(0,0,0,0.08)];
+
+    .action-icon {
+      font-size: 14px;
+      @apply relative cursor-pointer;
+      @apply absolute right-[5px] top-[5px];
+      @apply w-[1em] h-[1em] p-0;
+      @apply bg-transparent opacity-50;
+      @apply transform rotate-45;
+      &::after {
+        content: '';
+        @apply absolute bg-text;
+        @apply w-[2px] h-[1em] left-[calc(0.5em-1px)];
+      }
+      &::before {
+        content: '';
+        @apply absolute bg-text;
+        @apply w-[1em] h-[2px] top-[calc(0.5em-1px)];
+      }
+    }
+  }
+  &:not(.cell-expanded) {
+    @apply pr-4;
+    .action-icon {
+      font-size: 8px;
+      @apply cursor-pointer;
+      @apply absolute right-[5px] top-[calc(50%-4px)];
+      @apply w-[1em] h-[1em];
+      @apply bg-transparent opacity-50;
+      @apply border-text border-[2px];
+      @apply border-l-0 border-b-0;
+      @apply transform rotate-45;
+    }
+  }
+}
+
+.has-expanded-cell:last-child .column-cell.cell-expanded {
+  margin-left: calc(100% - 397px);
+}
+
+.has-expanded-cell:nth-last-child(2) .column-cell.cell-expanded {
+  margin-left: calc(200% - 397px);
 }
 </style>
