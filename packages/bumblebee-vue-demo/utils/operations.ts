@@ -271,13 +271,14 @@ export const operationCreators: Record<string, OperationCreator> = {
         replaces: {
           condition: string;
           value: string;
+          values: string[];
           replaceBy: string;
         }[];
         otherwise: string;
       }>
     ): Source => {
       const where = payload.replaces.map(replace =>
-        whereExpression(replace.condition, replace.value, payload.cols[0])
+        whereExpression(replace.condition, replace, payload.cols[0])
       );
 
       const result = payload.source.cols.set({
@@ -286,7 +287,7 @@ export const operationCreators: Record<string, OperationCreator> = {
         valueFunc: payload.replaces.map(r => r.replaceBy),
         evalValue: false,
         where,
-        default: payload.otherwise,
+        default: payload.otherwise || null,
         evalVariables: {
           parsed_function: Name('parsed_function')
         },
@@ -403,8 +404,6 @@ export const operationCreators: Record<string, OperationCreator> = {
             label: (payload: Payload, currentIndex = 0) => {
               const condition = payload.replaces[currentIndex].condition;
               switch (condition) {
-                case 'value_in':
-                  return 'Values';
                 case 'between':
                   return 'Min';
                 case 'match_pattern':
@@ -419,13 +418,26 @@ export const operationCreators: Record<string, OperationCreator> = {
             class: (payload: Payload, currentIndex = 0): string => {
               const condition = payload.replaces[currentIndex].condition;
               switch (condition) {
-                case 'value_in':
-                  return 'w-full';
                 case 'between':
                   return 'grouped-middle w-1/4';
                 default:
                   return 'grouped-middle w-1/3';
               }
+            },
+            hidden: (payload: Payload, currentIndex = 0) => {
+              const condition = payload.replaces[currentIndex].condition;
+              return condition === 'value_in';
+            }
+          },
+          {
+            name: 'values',
+            label: 'Values',
+            type: 'strings array',
+            defaultValue: [],
+            class: 'w-full',
+            hidden: (payload: Payload, currentIndex = 0) => {
+              const condition = payload.replaces[currentIndex].condition;
+              return condition !== 'value_in';
             }
           },
           {
@@ -589,12 +601,13 @@ export const operationCreators: Record<string, OperationCreator> = {
         conditions: {
           condition: string;
           value: string;
+          values: string[];
         }[];
         action: 'select' | 'drop';
       }>
     ): Source => {
       const where = payload.conditions.map(condition =>
-        whereExpression(condition.condition, condition.value, payload.cols[0])
+        whereExpression(condition.condition, condition, payload.cols[0])
       );
 
       if (payload.options.preview) {
@@ -2112,13 +2125,19 @@ export const operations: Record<string, Operation> = objectMap(
 
 function whereExpression(
   condition: string,
-  value: ArrayOr<BasicType>,
+  payload: {
+    value: BasicType;
+    values: BasicType[];
+  },
   col: string
 ): string {
-  if (!isNaN(Number(value))) {
+  let { value, values } = payload;
+
+  if (!isNaN(Number(value)) && ['equal', 'not_equal'].includes(condition)) {
     value = Number(value);
     condition = `numeric_${condition}`;
   }
+
   switch (condition) {
     case 'equal':
       return `(df["${col}"]=="${value}")`;
@@ -2129,14 +2148,15 @@ function whereExpression(
     case 'numeric_not_equal':
       return `(df["${col}"]!=${value}) & (df["${col}"]!="${value}")`;
     case 'value_in':
-      value = Array.isArray(value) ? value : [value];
-      return `df.mask.value_in("${col}", "${value.join('","')}")`;
-    case 'numeric_value_in':
-      value = Array.isArray(value) ? value : [value];
-      return (
-        `df.mask.value_in("${col}", "${value.join('","')}") | ` +
-        `df.mask.value_in("${col}", ${value.join(',')})`
-      );
+      if (!Array.isArray(values)) {
+        throw new TypeError(
+          `Values must be an array, got ${typeof values}, ${values}}`
+        );
+      }
+      values = values
+        .map(v => (isNaN(Number(v)) ? [`"${v}"`] : [`"${v}"`, Number(v)]))
+        .flat(1);
+      return `df.mask.value_in("${col}", [${values.join(',')}])`;
     default:
       console.warn('Unknown condition', condition);
   }
