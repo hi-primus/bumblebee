@@ -1,7 +1,7 @@
 <template>
   <Teleport to="body">
     <div
-      :style="attrStyle"
+      :style="(attrStyle as StyleValue)"
       :class="attrClass"
       class="popup w-full h-screen absolute top-0 left-0 z-30 bg-black/30 flex items-center justify-center"
       @click="emit('close')"
@@ -30,9 +30,16 @@
   </Teleport>
 </template>
 
-<script setup lang="ts">
+<script lang="ts">
 import { mdiClose } from '@mdi/js';
+import { StyleValue } from 'vue';
 
+export default {
+  inheritAttrs: false
+};
+</script>
+
+<script setup lang="ts">
 const { class: attrClass, style: attrStyle } = useAttrs();
 
 defineProps({
