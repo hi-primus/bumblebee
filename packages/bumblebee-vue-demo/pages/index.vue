@@ -131,6 +131,9 @@ const executedOperations = ref<OperationPayload[]>([]);
 const operationCells = ref<OperationPayload[]>([]);
 provide('operations', operationCells);
 
+const inactiveOperationCells = ref<OperationPayload[]>([]);
+provide('inactive-operations', inactiveOperationCells);
+
 const operationValues = ref<Partial<PayloadWithOptions>>({});
 provide('operation-values', operationValues);
 
@@ -401,16 +404,36 @@ const operationActions: OperationActions = {
           return;
         }
 
-        operationCells.value.push({
+        console.log('[DEBUG] Submitting operation:', { operation, payload });
+
+        const editingIndex = payload?.options?.editing;
+
+        const newOperation = {
           operation,
           payload: {
             ...(payload || {}),
             options: {
               ...(payload?.options || {}),
+              editing: undefined,
               preview: false
             }
-          }
-        });
+          } as PayloadWithOptions
+        };
+
+        if (editingIndex !== undefined) {
+          console.log('[DEBUG] Editing operation:', {
+            editingIndex,
+            newOperation
+          });
+          operationCells.value = [
+            ...operationCells.value,
+            ...inactiveOperationCells.value
+          ];
+          operationCells.value[editingIndex] = newOperation;
+          inactiveOperationCells.value = [];
+        } else {
+          operationCells.value.push(newOperation);
+        }
       }
 
       await executeOperations();
@@ -436,18 +459,34 @@ const operationActions: OperationActions = {
     }
     previewData.value = null;
   },
-  cancelOperation: () => {
+  cancelOperation: async (restoreInactive = false) => {
     console.info('Operation cancelled');
     previewOperationThrottled.cancel();
     dataframeLayout.value?.clearChunks(true, false);
+    // const editing = operationValues.value.options?.editing;
     operationValues.value = {};
     state.value = 'operations';
     previewData.value = null;
+    if (
+      inactiveOperationCells.value.length > 0 &&
+      restoreInactive /* && editing */
+    ) {
+      operationCells.value = [
+        ...operationCells.value,
+        ...inactiveOperationCells.value
+      ];
+      inactiveOperationCells.value = [];
+      await new Promise(resolve => setTimeout(resolve, 0));
+      await operationActions.submitOperation();
+    }
   },
-  selectOperation: async (operation: Operation | null = null) => {
+  selectOperation: async (
+    operation: Operation | null = null,
+    payload?: PayloadWithOptions
+  ) => {
     console.info('Operation selected');
     if (!operation) {
-      operationActions.cancelOperation();
+      operationActions.cancelOperation(false);
     }
     state.value = operation || 'operations';
     showSidebar.value = true;
@@ -458,7 +497,20 @@ const operationActions: OperationActions = {
 
     if (operation?.defaultOptions) {
       operationValues.value = {
-        options: operation.defaultOptions
+        ...deepClone(payload),
+        options: {
+          ...operation.defaultOptions,
+          ...(payload?.options || {})
+        }
+      };
+    }
+
+    if (operationValues.value.options?.usesInputCols && payload?.cols) {
+      selection.value = {
+        columns: payload.cols,
+        ranges: null,
+        values: null,
+        indices: null
       };
     }
 
@@ -468,6 +520,10 @@ const operationActions: OperationActions = {
     operationValues.value.allColumns = Object.keys(
       currentDataframe?.profile?.columns || {}
     );
+
+    if (payload) {
+      return;
+    }
 
     operation?.fields.forEach(field => {
       // check if field has a default value

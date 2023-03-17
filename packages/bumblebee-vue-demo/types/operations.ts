@@ -18,6 +18,7 @@ export interface OperationOptions {
   sourceId?: string;
   targetType: 'dataframe' | 'value' | 'void';
   preview?: PreviewType;
+  editing?: number;
 }
 
 export interface PayloadWithOptions {
@@ -178,6 +179,9 @@ export type TableSelection =
 
 export interface OperationActions {
   submitOperation: () => Promise<void>;
-  cancelOperation: () => void;
-  selectOperation: (operation: Operation | null) => void;
+  cancelOperation: (restoreInactive: boolean) => void;
+  selectOperation: (
+    operation: Operation | null,
+    payload?: PayloadWithOptions
+  ) => void;
 }

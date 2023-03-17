@@ -11,45 +11,75 @@
       <h3 v-else>Operations</h3>
     </div>
     <OperationsOperation v-if="operation" :key="operation.name" />
-    <draggable
+    <div
       v-else
-      v-model="operationsCells"
-      tag="ul"
-      group="operations"
-      ghost-class="opacity-50"
-      item-key="id"
-      class="operations-items px-4 pt-4 pb-10 flex flex-col gap-2 text-sm text-text overflow-y-auto h-full"
-      @start="dragging = true"
-      @end="dragging = false"
+      class="operations-container overflow-y-auto h-full flex flex-col justify-stretch text-sm text-text"
     >
-      <template #item="{ element, index }">
+      <draggable
+        v-model="operationCells"
+        tag="ul"
+        group="operations"
+        ghost-class="opacity-50"
+        item-key="id"
+        class="operations-items px-4 pt-4 pb-2 flex flex-col gap-2"
+        @start="dragging = true"
+        @end="dragging = false"
+      >
+        <template #item="{ element, index }">
+          <li
+            class="group flex items-center gap-2 cursor-move transition p-2 rounded-md"
+            :class="{
+              'hover:bg-primary-highlight': !dragging
+            }"
+          >
+            <span class="text-text-lighter text-xs mr-2">{{ index + 1 }}</span>
+            <span class="flex-1">{{ element.operation.name }}</span>
+            <IconButton
+              :path="mdiPencil"
+              class="w-4 h-4 ml-auto cursor-pointer opacity-0 group-hover:opacity-100 focus:opacity-100 transition"
+              @click="editOperation(index)"
+            />
+            <IconButton
+              :path="mdiClose"
+              class="w-4 h-4 cursor-pointer"
+              @click="removeOperation(index)"
+            />
+          </li>
+        </template>
+      </draggable>
+      <ul
+        class="inactive-operations operations-items px-4 pb-10 flex flex-col gap-2 opacity-60 select-none"
+      >
         <li
-          class="flex items-center gap-2 cursor-move transition p-2 rounded-md"
-          :class="{
-            'hover:bg-primary-highlight': !dragging
-          }"
+          v-for="(element, index) in inactiveOperations"
+          :key="element.operation.name + index"
+          class="flex items-center gap-2 transition p-2 rounded-md"
         >
-          <span class="text-text-lighter text-xs mr-2">{{ index + 1 }}</span>
+          <span class="text-text-lighter text-xs mr-2">{{
+            operations.length + 1 + index
+          }}</span>
           <span>{{ element.operation.name }}</span>
-          <Icon
+          <!-- TODO: Support remove inactive operations -->
+          <!-- <Icon
             :path="mdiClose"
             class="w-4 h-4 ml-auto cursor-pointer"
-            @click="removeOperation(index)"
-          />
+            @click="removeOperation(operations.length + 1 + index)"
+          /> -->
         </li>
-      </template>
-    </draggable>
+      </ul>
+    </div>
   </aside>
 </template>
 
 <script setup lang="ts">
-import { mdiClose } from '@mdi/js';
+import { mdiClose, mdiPencil } from '@mdi/js';
 import { Ref } from 'vue';
 
 import {
   isOperation,
   OperationActions,
   OperationPayload,
+  PayloadWithOptions,
   State
 } from '@/types/operations';
 
@@ -61,13 +91,22 @@ const operation = computed(() => {
   return isOperation(state.value) ? state.value : null;
 });
 
+const operationValues = inject('operation-values') as Ref<
+  Partial<PayloadWithOptions>
+>;
+
 const operations = inject<Ref<OperationPayload[]>>('operations', ref([]));
+
+const inactiveOperations = inject<Ref<OperationPayload[]>>(
+  'inactive-operations',
+  ref([])
+);
 
 const dragging = ref(false);
 
 type OperationPayloadWithId = OperationPayload & { id: string };
 
-const operationsCells = computed<OperationPayloadWithId[]>({
+const operationCells = computed<OperationPayloadWithId[]>({
   get: () => {
     return operations.value.map((operation, index) => ({
       ...operation,
@@ -84,7 +123,9 @@ const operationsCells = computed<OperationPayloadWithId[]>({
   }
 });
 
-const { submitOperation } = inject('operation-actions') as OperationActions;
+const { selectOperation, submitOperation } = inject(
+  'operation-actions'
+) as OperationActions;
 
 const updateOperations = async (
   newOperations: OperationPayload[]
@@ -119,6 +160,26 @@ const updateOperations = async (
     operations.value = newOperations;
     return await submitOperation();
   }
+};
+
+const editOperation = async (index: number): Promise<void> => {
+  const { operation, payload } = operations.value[index];
+
+  inactiveOperations.value = operations.value.slice(index);
+  operations.value = operations.value.slice(0, index);
+
+  operationValues.value = {};
+  await submitOperation();
+
+  const newPayload: PayloadWithOptions = {
+    ...payload,
+    options: {
+      ...payload.options,
+      editing: index
+    }
+  };
+
+  selectOperation(operation, newPayload);
 };
 
 const removeOperation = async (index: number): Promise<void> => {

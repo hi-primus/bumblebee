@@ -162,7 +162,7 @@ const submit = async () => {
 
 const cancel = async () => {
   status.value = 'cancelling';
-  const result = await cancelOperation();
+  const result = await cancelOperation(true);
   status.value = '';
   return result;
 };

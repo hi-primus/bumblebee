@@ -6,7 +6,7 @@
       />
       <div
         id="tooltips-container"
-        class="absolute w-full h-full pointer-events-none z-[40]"
+        class="absolute top-0 left-0 w-full h-full pointer-events-none z-[40]"
       ></div>
     </Teleport>
     <slot> </slot>
