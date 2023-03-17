@@ -16,7 +16,7 @@ import { PropType } from 'vue';
 
 defineProps({
   shortcut: {
-    type: Array as PropType<string[] | string>,
+    type: [String, Array] as PropType<string[] | string>,
     required: true
   }
 });
