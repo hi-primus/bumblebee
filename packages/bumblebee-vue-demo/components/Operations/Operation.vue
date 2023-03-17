@@ -44,7 +44,11 @@
               :key="`${field.name}-group-${groupIndex}`"
               class="w-full flex gap-y-5 items-end"
             >
-              <div class="flex flex-wrap gap-y-5 w-full">
+              <div
+                :data-field-group-name="field.name"
+                :data-subfield-index="groupIndex"
+                class="flex flex-wrap gap-y-5 w-full"
+              >
                 <AppOperationField
                   v-for="subfield in field.fields"
                   :key="`${subfield.name}-group-${groupIndex}`"
@@ -210,7 +214,7 @@ onMounted(async () => {
     return;
   }
   const input = operationElement.value.querySelector(
-    'input, textarea'
+    'input, textarea, .input button'
   ) as HTMLInputElement;
 
   if (input) {
@@ -248,6 +252,17 @@ const addToGroup = async (groupName: string, index?: number) => {
     [groupName]: newGroup
   };
   isAddingOrDeleting = false;
+
+  await nextTick();
+
+  const newIndex = index === undefined ? group.length : index + 1;
+  const prefix = `[data-field-group-name="${groupName}"][data-subfield-index="${newIndex}"]`;
+  const input = operationElement.value?.querySelector(
+    `${prefix} input, ${prefix} textarea, ${prefix} .input button`
+  ) as HTMLInputElement;
+  if (input) {
+    input.focus();
+  }
 };
 
 const deleteFromGroup = async (groupName: string, index: number) => {
