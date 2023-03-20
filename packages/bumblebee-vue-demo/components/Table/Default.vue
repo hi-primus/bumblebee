@@ -488,20 +488,22 @@ const expandCell = (cellElement: HTMLElement) => {
   }
 
   let elements = Array.from(
-    columnsElement.getElementsByClassName('has-expanded-cell')
+    columnsElement.getElementsByClassName('column-with-expanded-cell')
   );
 
-  elements.forEach(element => element.classList.remove('has-expanded-cell'));
+  elements.forEach(element =>
+    element.classList.remove('column-with-expanded-cell')
+  );
 
-  elements = Array.from(columnsElement.getElementsByClassName('cell-expanded'));
+  elements = Array.from(columnsElement.getElementsByClassName('expanded-cell'));
 
-  elements.forEach(element => element.classList.remove('cell-expanded'));
+  elements.forEach(element => element.classList.remove('expanded-cell'));
 
-  cellElement.classList.add('cell-expanded');
+  cellElement.classList.add('expanded-cell');
 
-  columnContainerElement.classList.add('has-expanded-cell');
+  columnContainerElement.classList.add('column-with-expanded-cell');
 
-  columnsElement.classList.add('disabled-resize');
+  columnsElement.classList.add('table-with-expanded-cell');
 
   _cellElement = cellElement;
 };
@@ -512,9 +514,9 @@ const restoreCell = (cellElement?: HTMLElement) => {
     const columnElement = cellElement?.parentElement;
     const columnContainerElement = columnElement?.parentElement;
     const columnsElement = columnContainerElement?.parentElement;
-    cellElement.classList.remove('cell-expanded');
-    columnContainerElement?.classList.remove('has-expanded-cell');
-    columnsElement?.classList.remove('disabled-resize');
+    cellElement.classList.remove('expanded-cell');
+    columnContainerElement?.classList.remove('column-with-expanded-cell');
+    columnsElement?.classList.remove('table-with-expanded-cell');
   }
 };
 
@@ -524,7 +526,7 @@ const initMoreElement = () => {
   }
   const clickOutsideExpandedCell = (event: MouseEvent) => {
     const target = event.target as HTMLElement;
-    if (!target.classList || !target.classList.contains('cell-expanded')) {
+    if (!target.classList || !target.classList.contains('expanded-cell')) {
       restoreCell();
     }
   };
@@ -532,7 +534,7 @@ const initMoreElement = () => {
   moreElement.classList.add('action-icon');
   moreElement.onmousedown = e => {
     const cell = (e.target as HTMLElement)?.parentElement;
-    if (cell && cell.classList.contains('cell-expanded')) {
+    if (cell && cell.classList.contains('expanded-cell')) {
       restoreCell(cell);
       document.onmousedown = null;
     } else if (cell) {
@@ -561,7 +563,7 @@ const checkCellHover = (event: MouseEvent) => {
     element.classList.contains('column-cell') &&
     moreElement
   ) {
-    if (element.classList.contains('cell-expanded')) {
+    if (element.classList.contains('expanded-cell')) {
       element.appendChild(moreElement);
     } else {
       const textWidth = element.innerText.length * 7;
@@ -774,12 +776,12 @@ defineExpose({
   }
 }
 
-.cell-expanded {
+.expanded-cell {
   z-index: 30 !important;
 }
 
 .column-cell {
-  &.cell-expanded {
+  &.expanded-cell {
     background-color: white;
     width: 400px;
     min-width: calc(100% + 6px);
@@ -813,7 +815,7 @@ defineExpose({
       }
     }
   }
-  &:not(.cell-expanded) {
+  &:not(.expanded-cell) {
     @apply pr-4;
     .action-icon {
       font-size: 8px;
@@ -828,19 +830,15 @@ defineExpose({
   }
 }
 
-.has-expanded-cell .bumblebee-table-column {
+.column-with-expanded-cell .bumblebee-table-column {
   z-index: auto !important;
 }
 
-.has-expanded-cell:last-child .column-cell.cell-expanded {
+.column-with-expanded-cell:last-child .column-cell.expanded-cell {
   margin-left: calc(100% - 397px);
 }
 
-.has-expanded-cell:nth-last-child(2) .column-cell.cell-expanded {
+.column-with-expanded-cell:nth-last-child(2) .column-cell.expanded-cell {
   margin-left: calc(200% - 397px);
 }
-
-// .disabled-resize .column-resize-handler {
-//   z-index: 5;
-// }
 </style>
