@@ -1,5 +1,5 @@
 <template>
-  <div class="konva-canvas-container overflow-hidden">
+  <div ref="container" class="bars-base-container overflow-hidden">
     <template v-if="enablePlot">
       <v-stage
         ref="konva"
@@ -108,6 +108,8 @@ const emit = defineEmits<Emits>();
 
 const enablePlot = ref(false);
 
+const container = ref<HTMLElement | null>(null);
+
 const konva = ref<Stage | null>(null);
 
 const DEFAULT_RECT_CONFIG = {
@@ -197,6 +199,12 @@ onBeforeMount(() => {
 });
 
 onMounted(async () => {
+  if (container.value) {
+    interface BarsElement {
+      fitIntoParent?: () => void;
+    }
+    (container.value as BarsElement).fitIntoParent = fitIntoParent;
+  }
   await new Promise(resolve => setTimeout(resolve, 0));
   enablePlot.value = true;
   if (props.width === 'auto') {
@@ -425,7 +433,7 @@ const getRectConfig = (index: number) => {
 </script>
 
 <style lang="scss">
-.konva-canvas-container {
+.bars-base-container {
   cursor: crosshair;
   overflow: hidden;
   width: 100%;

@@ -44,18 +44,8 @@
         <div
           v-for="column in columnsHeader"
           :key="column.title"
-          :class="{
-            'column-color-preview': column.columnType === 'preview',
-            'column-color-primary':
-              selection?.columns.includes(column.title) ||
-              column.columnType === 'highlighted'
-          }"
-          class="bumblebee-table-column relative z-[0]"
+          class="bumblebee-table-column-container relative"
           :tabindex="column.columnType === 'preview' ? -1 : 0"
-          :style="{
-            height: columnHeaderHeight + safeRowsCount * rowHeight + 'px',
-            width: minColumnWidth + 'px'
-          }"
           :data-index="column.columnIndex"
           @keydown="
             $event =>
@@ -65,67 +55,88 @@
           "
           @mousedown.prevent
         >
-          <div class="column-header">
-            <div
-              :data-column-index="column.columnIndex"
-              class="column-title border-[color:var(--line-color)] border-b text-[16px] py-1 px-1 text-center flex items-center select-none font-mono-table"
-              :class="{
-                'cursor-pointer': column.columnType !== 'preview'
-              }"
-              :style="{
-                height: columnTitleHeight + 'px'
-              }"
-              @click.prevent="
-                $event =>
-                  column.columnType === 'preview'
-                    ? null
-                    : columnClicked($event, column.columnIndex, true)
-              "
-            >
-              <span
-                :title="columnData?.get(column.title)?.typeName"
-                class="left-icon inline text-text-alpha/75 max-w-5 font-bold text-center"
-                :class="{
-                  'transform scale-x-125':
-                    columnData?.get(column.title)?.typeHintLength || 3 <= 2,
-                  'tracking-[-1px] transform scale-x-95':
-                    columnData?.get(column.title)?.typeHintLength || 3 >= 4
-                }"
-              >
-                {{ columnData?.get(column.title)?.typeHint }}
-              </span>
-              <span
-                :title="column.displayTitle || column.title"
-                class="flex-1 truncate pl-2"
-              >
-                {{ column.displayTitle || column.title }}
-              </span>
-              <div class="flex-0 w-[24px] right-icon"></div>
-            </div>
-            <PlotColumn
-              :style="{
-                height: columnPlotHeight + 'px'
-              }"
-              :data="column"
-            />
-          </div>
           <div
-            v-for="row in visibleRows"
-            :key="`col-${column?.title}-${row.index}`"
-            :title="row?.values?.[column.columnIndex] as string"
-            class="column-cell ellipsis whitespace-pre"
-            :style="{
-              top: columnHeaderHeight + row.index * rowHeight + 'px',
-              height: rowHeight + 1 + 'px'
+            :class="{
+              'column-color-preview': column.columnType === 'preview',
+              'column-color-primary':
+                selection?.columns.includes(column.title) ||
+                column.columnType === 'highlighted'
             }"
-            v-html="row?.htmlValues?.[column.columnIndex]"
+            class="bumblebee-table-column relative"
+            :style="{
+              height: columnHeaderHeight + safeRowsCount * rowHeight + 'px',
+              width: (columnWidths[column.title] || minColumnWidth) + 'px'
+            }"
+          >
+            <div :data-column-index="column.columnIndex" class="column-header">
+              <div
+                class="column-title border-[color:var(--line-color)] border-b text-[16px] py-1 px-1 text-center flex items-center select-none font-mono-table"
+                :class="{
+                  'cursor-pointer': column.columnType !== 'preview'
+                }"
+                :style="{
+                  height: columnTitleHeight + 'px'
+                }"
+                @click.prevent="
+                  $event =>
+                    column.columnType === 'preview'
+                      ? null
+                      : columnClicked($event, column.columnIndex, true)
+                "
+              >
+                <span
+                  :title="columnData?.get(column.title)?.typeName"
+                  class="left-icon inline text-text-alpha/75 max-w-5 font-bold text-center"
+                  :class="{
+                    'transform scale-x-125':
+                      columnData?.get(column.title)?.typeHintLength || 3 <= 2,
+                    'tracking-[-1px] transform scale-x-95':
+                      columnData?.get(column.title)?.typeHintLength || 3 >= 4
+                  }"
+                >
+                  {{ columnData?.get(column.title)?.typeHint }}
+                </span>
+                <span
+                  :title="column.displayTitle || column.title"
+                  class="flex-1 truncate pl-2"
+                >
+                  {{ column.displayTitle || column.title }}
+                </span>
+                <div class="flex-0 w-[24px] right-icon"></div>
+              </div>
+              <PlotColumn
+                class="column-plot"
+                :data-index="column.columnIndex"
+                :style="{
+                  height: columnPlotHeight + 'px'
+                }"
+                :data="column"
+              />
+            </div>
+            <div
+              v-for="row in visibleRows"
+              :key="`col-${column?.title}-${row.index}`"
+              :title="(row?.values?.[column.columnIndex] as string)"
+              class="column-cell ellipsis"
+              :style="{
+                top: columnHeaderHeight + row.index * rowHeight + 'px',
+                height: rowHeight + 1 + 'px'
+              }"
+              v-html="row?.htmlValues?.[column.columnIndex]"
+            ></div>
+          </div>
+
+          <div
+            class="column-resize-handler absolute right-[-4px] top-0 z-[20] w-[9px] h-full cursor-col-resize"
+            @click.stop
+            @mousedown.prevent.stop="onResizeStart($event, column.columnIndex)"
           ></div>
         </div>
       </div>
       <div
         class="sticky h-full left-0 order-[-1]"
         :class="{
-          'z-[2]': !scrollIsLeft,
+          'z-[16]': !scrollIsLeft,
           'z-[1]': scrollIsLeft
         }"
       >
@@ -204,6 +215,7 @@ const rowHeight = 24;
 const scrollElement = ref<HTMLElement | null>(null);
 
 const columns = ref<HTMLElement | null>(null);
+const columnWidths = ref<Record<string, number>>({});
 
 const data = ref<Record<number, Record<string, unknown>>>({});
 
@@ -377,31 +389,119 @@ const getValue = (value: unknown): string => {
   return value.toString();
 };
 
+const reloadPlot = (columnName: string) => {
+  const column = columnsHeader.value.find(c => c.title === columnName);
+  const columnIndex = column?.columnIndex;
+  if (columnIndex === undefined) {
+    return;
+  }
+
+  const plotElement = scrollElement.value?.querySelector(
+    `[data-column-index='${columnIndex}'] .bars-base-container`
+  ) as { fitIntoParent?: () => void } | null;
+
+  if (plotElement && plotElement.fitIntoParent) {
+    plotElement.fitIntoParent();
+  }
+};
+
+let resizeStartX: number | null = null;
+let resizeStartWidth: number | null = null;
+let resizeNewX: number | null = null;
+let resizeElement: HTMLElement | null = null;
+let resizeElementName = '';
+
+const onResizeStart = (event: MouseEvent, columnIndex: number) => {
+  event = event || window.event;
+  event = event || window.event;
+  event.preventDefault();
+  event.stopPropagation();
+  resizeStartX = event.clientX;
+  resizeNewX = event.clientX;
+  resizeElement = event.target as HTMLElement;
+  resizeElementName = props.header[columnIndex].title;
+  resizeStartWidth = columnWidths.value[resizeElementName] || 172;
+  document.onmouseup = resizeEnd;
+  document.onmousemove = resizeDrag;
+  const columnElement = document.querySelector(
+    `[data-column-index="${columnIndex}"]`
+  );
+  if (columnElement) {
+    columnElement.classList.add('bg-error');
+  }
+};
+
+const resizeDrag = (event: MouseEvent) => {
+  if (resizeNewX === null || resizeStartX === null || resizeElement === null) {
+    return;
+  }
+  event = event || window.event;
+  event.preventDefault();
+  event.stopPropagation();
+  resizeNewX = event.clientX;
+
+  setColumnWidth();
+};
+
+const resizeEnd = () => {
+  reloadPlot(resizeElementName);
+
+  document.onmouseup = null;
+  document.onmousemove = null;
+  resizeNewX = null;
+  resizeStartX = null;
+  resizeElement = null;
+  resizeElementName = '';
+
+  // saveCacheThrottled();
+};
+
+const setColumnWidth = () => {
+  if (
+    resizeNewX === null ||
+    resizeStartX === null ||
+    resizeStartWidth === null ||
+    resizeElementName === ''
+  ) {
+    return;
+  }
+  const grow = resizeNewX - resizeStartX;
+  const name = resizeElementName;
+  let width = resizeStartWidth;
+  width += grow;
+  width = Math.max(width, 150);
+
+  columnWidths.value[name] = width;
+};
+
 let moreElement: HTMLElement | null = null;
 
 let _cellElement: HTMLElement | null = null;
 
 const expandCell = (cellElement: HTMLElement) => {
-  const columnElement = cellElement.parentElement;
-  const tableElement = columnElement?.parentElement;
+  const columnElement = cellElement?.parentElement;
+  const columnContainerElement = columnElement?.parentElement;
+  const columnsElement = columnContainerElement?.parentElement;
 
-  if (!columnElement || !tableElement) {
+  if (!columnContainerElement || !columnsElement) {
     return;
   }
 
   let elements = Array.from(
-    tableElement.getElementsByClassName('has-expanded-cell')
+    columnsElement.getElementsByClassName('has-expanded-cell')
   );
 
   elements.forEach(element => element.classList.remove('has-expanded-cell'));
 
-  elements = Array.from(tableElement.getElementsByClassName('cell-expanded'));
+  elements = Array.from(columnsElement.getElementsByClassName('cell-expanded'));
 
   elements.forEach(element => element.classList.remove('cell-expanded'));
 
-  columnElement.classList.add('has-expanded-cell');
-
   cellElement.classList.add('cell-expanded');
+
+  columnContainerElement.classList.add('has-expanded-cell');
+
+  columnsElement.classList.add('disabled-resize');
 
   _cellElement = cellElement;
 };
@@ -409,9 +509,12 @@ const expandCell = (cellElement: HTMLElement) => {
 const restoreCell = (cellElement?: HTMLElement) => {
   cellElement = _cellElement || cellElement;
   if (cellElement) {
-    const columnElement = cellElement.parentElement;
+    const columnElement = cellElement?.parentElement;
+    const columnContainerElement = columnElement?.parentElement;
+    const columnsElement = columnContainerElement?.parentElement;
     cellElement.classList.remove('cell-expanded');
-    columnElement?.classList.remove('has-expanded-cell');
+    columnContainerElement?.classList.remove('has-expanded-cell');
+    columnsElement?.classList.remove('disabled-resize');
   }
 };
 
@@ -462,8 +565,8 @@ const checkCellHover = (event: MouseEvent) => {
       element.appendChild(moreElement);
     } else {
       const textWidth = element.innerText.length * 7;
-      const width = element.offsetWidth - 12;
-      if (textWidth > width) {
+      const width = element.offsetWidth - 18;
+      if (textWidth >= width) {
         element.classList.add('cell-to-expand');
         element.appendChild(moreElement);
       } else {
@@ -594,17 +697,8 @@ defineExpose({
 </script>
 
 <style lang="scss">
-.bumblebee-table-column {
-  &:not([class*='column-color-']) {
-    --line-color: theme('colors.line.light');
-    z-index: 1;
-  }
-  &[class*='column-color-'] {
-    z-index: 2;
-  }
-  & .column-header {
-    @apply bg-white;
-  }
+.bumblebee-table-column-container {
+  z-index: auto;
   &:focus {
     outline: none;
     & .column-header::after {
@@ -617,8 +711,23 @@ defineExpose({
       @apply outline-text-light;
       @apply opacity-75;
     }
-    // &.column-color-primary .column-header::after {
-    // }
+  }
+}
+.bumblebee-table-column {
+  &:not([class*='column-color-']) {
+    --line-color: theme('colors.line.light');
+    z-index: 1;
+  }
+  &[class*='column-color-'] {
+    .column-cell {
+      @apply z-[2];
+    }
+  }
+  .column-cell {
+    @apply whitespace-pre z-[1];
+  }
+  & .column-header {
+    @apply bg-white z-[15];
   }
   &.column-color-primary {
     --line-color: theme('colors.primary.lighter');
@@ -665,15 +774,15 @@ defineExpose({
   }
 }
 
-.has-expanded-cell,
 .cell-expanded {
-  @apply z-[30] #{!important};
+  z-index: 30 !important;
 }
 
 .column-cell {
   &.cell-expanded {
     background-color: white;
     width: 400px;
+    min-width: calc(100% + 6px);
     min-height: 170px;
     padding: 2px 17px 2px 7px;
     margin-top: -2px;
@@ -719,6 +828,10 @@ defineExpose({
   }
 }
 
+.has-expanded-cell .bumblebee-table-column {
+  z-index: auto !important;
+}
+
 .has-expanded-cell:last-child .column-cell.cell-expanded {
   margin-left: calc(100% - 397px);
 }
@@ -726,4 +839,8 @@ defineExpose({
 .has-expanded-cell:nth-last-child(2) .column-cell.cell-expanded {
   margin-left: calc(200% - 397px);
 }
+
+// .disabled-resize .column-resize-handler {
+//   z-index: 5;
+// }
 </style>
