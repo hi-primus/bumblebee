@@ -351,9 +351,22 @@ const updateScroll = throttle(function () {
   }
 }, 300);
 
+const updateTopToEnd = throttle(function () {
+  const table = scrollElement.value?.querySelector(
+    '.bumblebee-table'
+  ) as HTMLElement;
+  if (!scrollElement.value || !table) {
+    return;
+  }
+  const h1 = scrollElement.value.clientHeight;
+  const h2 = table.clientHeight - scrollElement.value.scrollTop - 200;
+  document.body.style.setProperty('--top-to-end', Math.min(h1, h2) + 'px');
+  scrollIsLeft.value = scrollElement?.value?.scrollLeft === 0;
+}, 100);
+
 const onScroll = () => {
   updateScroll();
-  scrollIsLeft.value = scrollElement?.value?.scrollLeft === 0;
+  updateTopToEnd();
 };
 
 const visibleRows = computed(() => {
@@ -706,7 +719,9 @@ defineExpose({
     & .column-header::after {
       z-index: 3;
       content: '';
-      height: calc(100vh - 100px); // TODO: use a variable
+      max-height: calc(100vh - 100px);
+      height: var(--top-to-end, calc(100vh - 100px));
+      transition: height 0.05s linear;
       @apply absolute -top-px -left-px -right-px -bottom-px;
       @apply pointer-events-none;
       @apply outline-offset-[-3px] outline-dashed outline-2;
