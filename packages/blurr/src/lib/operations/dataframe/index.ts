@@ -54,7 +54,14 @@ export const operations = {
     { cols: Cols; bins: number; flush: boolean },
     {
       columns: Record<string, PythonCompatible>;
-      summary: Record<string, PythonCompatible>;
+      summary: {
+        data_types_list: string[];
+        total_count_data_types: number;
+        cols_count: number;
+        rows_count: number;
+        missing_count: number;
+        p_missing: number;
+      };
       name?: string;
       file_name?: string;
     }
