@@ -29,20 +29,20 @@ export const throttleOnce = (
   options: {
     limit?: number | ((...args: Arguments<typeof func>) => number);
     delay?: number | ((...args: Arguments<typeof func>) => number);
-    cancelable?: boolean | ((...args: Arguments<typeof func>) => boolean);
+    cancellable?: boolean | ((...args: Arguments<typeof func>) => boolean);
   } = {}
 ) => {
   /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-this-alias */
   const defaultLimit = options.limit === undefined ? 1000 : options.limit;
   const defaultDelay = options.delay === undefined ? 0 : options.delay;
   const defaultCancelable =
-    options.cancelable === undefined ? false : options.cancelable;
+    options.cancellable === undefined ? false : options.cancellable;
 
   let lastFunc: ReturnType<typeof setTimeout>;
   let lastRan: any;
 
   let promise: Promise<unknown> | null = null;
-  let cancel: ((reason?: any) => void) | null = null;
+  let cancel: ((reason?: any) => Promise<void>) | null = null;
 
   const throttledFunc = async function (...args: unknown[]) {
     const context = this;
@@ -57,18 +57,22 @@ export const throttleOnce = (
         ? defaultDelay.apply(context, args)
         : (defaultDelay as number);
 
-    const cancelable =
+    const cancellable =
       typeof defaultCancelable === 'function'
         ? defaultCancelable.apply(context, args)
         : (defaultCancelable as boolean);
 
     if (promise) {
-      if (cancelable) {
-        cancel && cancel();
-        cancel = null;
+      if (cancellable) {
+        if (cancel) {
+          await cancel();
+          cancel = null;
+        }
+        // awaits for previous promise and creates a new one
         await promise;
         promise = null;
       } else {
+        // awaits for previous promise and returns it
         await promise;
         promise = null;
         return;
@@ -81,7 +85,10 @@ export const throttleOnce = (
 
     clearTimeout(lastFunc);
     promise = new Promise((resolve, reject) => {
-      cancel = () => resolve(new Error('Canceled'));
+      cancel = async () => {
+        resolve(new Error('Cancelled'));
+        await promise;
+      };
       lastFunc = setTimeout(function () {
         if (Date.now() - lastRan >= limit) {
           setTimeout(function () {
@@ -109,8 +116,10 @@ export const throttleOnce = (
     }
   };
 
-  throttledFunc.cancel = () => {
-    cancel && cancel();
+  throttledFunc.cancel = async () => {
+    if (cancel) {
+      await cancel();
+    }
     cancel = null;
     promise = null;
   };

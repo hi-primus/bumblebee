@@ -780,7 +780,7 @@ const previewOperationThrottled = throttleOnce(
   {
     limit: 500,
     delay: 500,
-    cancelable: true
+    cancellable: true
   }
 );
 
