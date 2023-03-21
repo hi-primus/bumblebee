@@ -627,7 +627,18 @@ const previewOperationThrottled = throttleOnce(
       const start = scrollRange.value?.[0] || 0;
       const stop = scrollRange.value?.[1] || 50;
 
-      if (payload.source) {
+      const operationOptions = Object.assign(
+        {},
+        payload.options,
+        operation.defaultOptions
+      );
+
+      const usesInputDataframe =
+        operationOptions.usesInputDataframe && payload.source;
+
+      let previewColumnNames: string[] = [];
+
+      if (usesInputDataframe) {
         checkPreviewCancel();
 
         firstSampleSource = await payload.source.iloc({
@@ -659,6 +670,10 @@ const previewOperationThrottled = throttleOnce(
           firstSampleResult.columns.map(({ title }: { title: string }) => {
             return [title, {} as PreviewColumn];
           })
+        );
+
+        previewColumnNames = Object.keys(previewColumns).filter(title =>
+          title.startsWith('__bumblebee__preview__')
         );
 
         previewData.value = {
@@ -720,41 +735,51 @@ const previewOperationThrottled = throttleOnce(
 
       dataframeLayout.value?.setChunksLoading(true);
 
-      // save profile
+      if (previewColumnNames.length || !usesInputDataframe) {
+        // save profile
 
-      const preliminaryProfile = await getPreliminaryProfile(result);
+        const preliminaryProfile = await getPreliminaryProfile(result);
 
-      checkPreviewCancel();
+        checkPreviewCancel();
 
-      previewData.value = {
-        ...previewData.value,
-        profile: preliminaryProfile
-      };
+        previewData.value = {
+          ...previewData.value,
+          profile: preliminaryProfile
+        };
 
-      await new Promise(resolve => setTimeout(resolve, 0));
+        await new Promise(resolve => setTimeout(resolve, 0));
 
-      checkPreviewCancel();
+        checkPreviewCancel();
 
-      const profile = await (payload.source
-        ? result.profile({
-            cols: Object.entries(previewData.value?.columns || {})
-              ?.map(([title, _]) => title)
-              .filter(title => title.startsWith('__bumblebee__preview__')),
+        const previewColumns = Object.keys(
+          previewData.value?.columns || {}
+        ).filter(title => title.startsWith('__bumblebee__preview__'));
+
+        let profile: DataframeProfile | null = null;
+
+        if (payload.source && previewColumns.length) {
+          profile = await result.profile({
+            cols: previewColumns,
             bins: 33,
             requestOptions: { priority: PRIORITIES.previewProfile }
-          })
-        : result.profile({
+          });
+        } else if (!payload.source) {
+          profile = await result.profile({
             cols: '*',
             bins: 33,
             requestOptions: { priority: PRIORITIES.previewProfile }
-          }));
+          });
+        }
 
-      checkPreviewCancel();
+        if (profile) {
+          checkPreviewCancel();
 
-      previewData.value = {
-        ...previewData.value,
-        profile
-      };
+          previewData.value = {
+            ...previewData.value,
+            profile
+          };
+        }
+      }
 
       if (appStatus.value === 'busy') {
         appStatus.value = 'ready';
