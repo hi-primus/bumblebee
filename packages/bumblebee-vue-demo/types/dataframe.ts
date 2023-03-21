@@ -35,7 +35,6 @@ export interface PreviewColumn {
 export type ColumnHeader = Column & PreviewColumn;
 
 export interface DataframeSummary {
-  summary: number;
   data_types_list: string[];
   total_count_data_types: number;
   cols_count: number;
