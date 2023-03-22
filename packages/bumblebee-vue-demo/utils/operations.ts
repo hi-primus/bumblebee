@@ -277,9 +277,11 @@ export const operationCreators: Record<string, OperationCreator> = {
         otherwise: string;
       }>
     ): Source => {
-      const where = payload.replaces.map(replace =>
-        whereExpression(replace.condition, replace, payload.cols[0])
-      );
+      const where = payload.replaces
+        .map(replace =>
+          whereExpression(replace.condition, replace, payload.cols[0])
+        )
+        .filter(expression => expression);
 
       const result = payload.source.cols.set({
         target: payload.target,
@@ -606,9 +608,11 @@ export const operationCreators: Record<string, OperationCreator> = {
         action: 'select' | 'drop';
       }>
     ): Source => {
-      const where = payload.conditions.map(condition =>
-        whereExpression(condition.condition, condition, payload.cols[0])
-      );
+      const where = payload.conditions
+        .map(condition =>
+          whereExpression(condition.condition, condition, payload.cols[0])
+        )
+        .filter(expression => expression);
 
       if (payload.options.preview) {
         const color = payload.action === 'select' ? 'success' : 'error';
@@ -2149,13 +2153,19 @@ function whereExpression(
       return `(df["${col}"]!=${value}) & (df["${col}"]!="${value}")`;
     case 'value_in':
       if (!Array.isArray(values)) {
-        throw new TypeError(
+        console.warn(
           `Values must be an array, got ${typeof values}, ${values}}`
         );
+        values = values === undefined ? [] : [values];
       }
       values = values
         .map(v => (isNaN(Number(v)) ? [`"${v}"`] : [`"${v}"`, Number(v)]))
         .flat(1);
+
+      if (!values.length) {
+        return '';
+      }
+
       return `df.mask.value_in("${col}", [${values.join(',')}])`;
     default:
       console.warn('Unknown condition', condition);
