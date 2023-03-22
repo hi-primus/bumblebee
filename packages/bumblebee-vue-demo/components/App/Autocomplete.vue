@@ -285,7 +285,7 @@ watch(
       emit(
         'update:modelValue',
         values,
-        oldItem.map((o: Value) => o?.value || o)
+        (oldItem || []).map((o: Value) => o?.value || o)
       );
     } else {
       const value = item?.value || item;
