@@ -726,13 +726,37 @@ export const operationCreators: Record<string, OperationCreator> = {
               },
               { text: 'Null values', value: 'null', hidden: true }
             ],
-            class: 'grouped-first w-1/2'
+            class: (payload: Payload, currentIndex = 0): string => {
+              const condition = payload.conditions[currentIndex].condition;
+              switch (condition) {
+                case 'value_in':
+                  return 'w-full';
+                default:
+                  return 'grouped-first w-1/2';
+              }
+            }
           },
           {
             name: 'value',
             label: 'Value',
             type: 'string',
-            class: 'grouped-last w-1/2'
+            class: 'grouped-last w-1/2',
+            hidden: (payload: Payload, currentIndex = 0) => {
+              const condition = payload.conditions[currentIndex].condition;
+              return condition === 'value_in';
+            }
+          },
+          {
+            name: 'values',
+            label: 'Values',
+            type: 'strings array',
+            defaultValue: [],
+            class: 'w-full',
+            hidden: (payload: Payload, currentIndex = 0) => {
+              console.log('payload', payload);
+              const condition = payload.conditions[currentIndex].condition;
+              return condition !== 'value_in';
+            }
           }
         ]
       },
