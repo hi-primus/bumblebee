@@ -331,31 +331,26 @@ export const operationCreators: Record<string, OperationCreator> = {
                 text: 'Is not',
                 value: 'not_equal'
               },
-              { divider: true, hidden: true },
+              { divider: true },
               {
                 text: 'Less than',
-                value: 'less_than',
-                hidden: true
+                value: 'less_than'
               },
               {
                 text: 'Less than or equal to',
-                value: 'less_than_equal',
-                hidden: true
+                value: 'less_than_equal'
               },
               {
                 text: 'Greater than',
-                value: 'greater_than',
-                hidden: true
+                value: 'greater_than'
               },
               {
                 text: 'Greater than or equal to',
-                value: 'greater_than_equal',
-                hidden: true
+                value: 'greater_than_equal'
               },
               {
                 text: 'Is Between',
-                value: 'between',
-                hidden: true
+                value: 'between'
               },
               { divider: true, hidden: true },
               {
@@ -432,6 +427,16 @@ export const operationCreators: Record<string, OperationCreator> = {
             }
           },
           {
+            name: 'otherValue',
+            label: 'Max',
+            type: 'string',
+            class: 'grouped-middle w-1/4',
+            hidden: (payload: Payload, currentIndex = 0) => {
+              const condition = payload.replaces[currentIndex].condition;
+              return condition !== 'between';
+            }
+          },
+          {
             name: 'values',
             label: 'Values',
             type: 'strings array',
@@ -440,16 +445,6 @@ export const operationCreators: Record<string, OperationCreator> = {
             hidden: (payload: Payload, currentIndex = 0) => {
               const condition = payload.replaces[currentIndex].condition;
               return condition !== 'value_in';
-            }
-          },
-          {
-            name: 'value_2',
-            label: 'Max',
-            type: 'string',
-            class: 'grouped-middle w-1/4',
-            hidden: (payload: Payload, currentIndex = 0) => {
-              const condition = payload.replaces[currentIndex].condition;
-              return condition !== 'between';
             }
           },
           {
@@ -668,31 +663,26 @@ export const operationCreators: Record<string, OperationCreator> = {
                 text: 'Is not',
                 value: 'not_equal'
               },
-              { divider: true, hidden: true },
+              { divider: true },
               {
                 text: 'Less than',
-                value: 'less_than',
-                hidden: true
+                value: 'less_than'
               },
               {
                 text: 'Less than or equal to',
-                value: 'less_than_equal',
-                hidden: true
+                value: 'less_than_equal'
               },
               {
                 text: 'Greater than',
-                value: 'greater_than',
-                hidden: true
+                value: 'greater_than'
               },
               {
                 text: 'Greater than or equal to',
-                value: 'greater_than_equal',
-                hidden: true
+                value: 'greater_than_equal'
               },
               {
                 text: 'Is Between',
-                value: 'between',
-                hidden: true
+                value: 'between'
               },
               { divider: true, hidden: true },
               {
@@ -738,12 +728,38 @@ export const operationCreators: Record<string, OperationCreator> = {
           },
           {
             name: 'value',
-            label: 'Value',
+            label: (payload: Payload, currentIndex = 0): string => {
+              const condition = payload.conditions[currentIndex].condition;
+              switch (condition) {
+                case 'between':
+                  return 'Min';
+                default:
+                  return 'Value';
+              }
+            },
             type: 'string',
-            class: 'grouped-last w-1/2',
+            class: (payload: Payload, currentIndex = 0): string => {
+              const condition = payload.conditions[currentIndex].condition;
+              switch (condition) {
+                case 'between':
+                  return 'grouped-middle w-1/4';
+                default:
+                  return 'grouped-last w-1/2';
+              }
+            },
             hidden: (payload: Payload, currentIndex = 0) => {
               const condition = payload.conditions[currentIndex].condition;
               return condition === 'value_in';
+            }
+          },
+          {
+            name: 'otherValue',
+            label: 'Max',
+            type: 'string',
+            class: 'grouped-last w-1/4',
+            hidden: (payload: Payload, currentIndex = 0) => {
+              const condition = payload.conditions[currentIndex].condition;
+              return condition !== 'between';
             }
           },
           {
@@ -2155,15 +2171,31 @@ function whereExpression(
   condition: string,
   payload: {
     value: BasicType;
+    otherValue: BasicType;
     values: BasicType[];
   },
   col: string
 ): string {
-  let { value, values } = payload;
+  let { value, otherValue, values } = payload;
 
-  if (!isNaN(Number(value)) && ['equal', 'not_equal'].includes(condition)) {
+  const isNumeric = !isNaN(Number(value));
+
+  if (isNumeric && ['equal', 'not_equal'].includes(condition)) {
     value = Number(value);
     condition = `numeric_${condition}`;
+  }
+
+  if (
+    !isNumeric &&
+    [
+      'greater_than',
+      'less_than',
+      'greater_than_equal',
+      'less_than_equal',
+      'between'
+    ].includes(condition)
+  ) {
+    return '';
   }
 
   switch (condition) {
@@ -2191,6 +2223,20 @@ function whereExpression(
       }
 
       return `df.mask.value_in("${col}", [${values.join(',')}])`;
+
+    case 'greater_than':
+      return `(df["${col}"]>${value})`;
+    case 'less_than':
+      return `(df["${col}"]<${value})`;
+    case 'greater_than_equal':
+      return `(df["${col}"]>=${value})`;
+    case 'less_than_equal':
+      return `(df["${col}"]<=${value})`;
+    case 'between':
+      if (isNaN(Number(otherValue))) {
+        return '';
+      }
+      return `(df["${col}"]>=${value}) & (df["${col}"]<=${otherValue})`;
     default:
       console.warn('Unknown condition', condition);
   }
