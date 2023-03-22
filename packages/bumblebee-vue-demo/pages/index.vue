@@ -573,6 +573,12 @@ const loadFromFile = () => {
   }
 };
 
+const selectValuesOperation = (values: unknown[]) => {
+  operationActions.selectOperation(operations.filterRows, {
+    conditions: [{ condition: 'value_in', values: [...values] }]
+  });
+};
+
 const loadDataSource = (dataframeIndex: number) => {
   if (!dataframes.value[dataframeIndex]) {
     return;
@@ -839,7 +845,26 @@ const previewOperation = async () => {
 };
 
 watch(() => operationValues.value, previewOperation, { deep: true });
-watch(() => selection.value, previewOperation, { deep: true });
+watch(
+  () => selection.value,
+  selection => {
+    if (
+      isOperation(state.value) &&
+      !isOperation(state.value, operations.filterRows)
+    ) {
+      return previewOperation();
+    }
+
+    if (selection?.values?.length) {
+      selectValuesOperation(selection.values);
+    } else if (selection?.ranges?.length) {
+      operationActions.selectOperation(operations.filterRows);
+    } else {
+      previewOperation();
+    }
+  },
+  { deep: true }
+);
 
 watch(showSidebar, show => {
   if (!show) {

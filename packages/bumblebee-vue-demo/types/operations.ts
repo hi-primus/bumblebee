@@ -121,8 +121,11 @@ export type Operation = OperationCreatorAction & {
   fields: (Field | FieldGroup)[];
 };
 
-export const isOperation = (value: unknown): value is Operation => {
-  return (
+export const isOperation = (
+  value: unknown,
+  other?: Operation
+): value is Operation => {
+  const isOperation =
     isObject(value) &&
     'defaultOptions' in value &&
     'fields' in value &&
@@ -130,8 +133,17 @@ export const isOperation = (value: unknown): value is Operation => {
     isObject(value.defaultOptions) &&
     'targetType' in value.defaultOptions &&
     typeof value.defaultOptions.targetType === 'string' &&
-    ['dataframe', 'value'].includes(value.defaultOptions.targetType)
-  );
+    ['dataframe', 'value'].includes(value.defaultOptions.targetType);
+  if (!isOperation) return false;
+  if (other) {
+    return (
+      value.name === other.name &&
+      value.alias === other.alias &&
+      value.description === other.description &&
+      value.shortcut === other.shortcut
+    );
+  }
+  return true;
 };
 
 export type OperationPayload = {
