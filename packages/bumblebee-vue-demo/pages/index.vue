@@ -385,6 +385,8 @@ const operationActions: OperationActions = {
 
       const { operation, payload } = getPreparedOperation();
 
+      await blurr.backendServer.donePromise;
+
       if (operation) {
         if (payload?.options.oneTime) {
           await operation.action({
@@ -815,6 +817,9 @@ const previewOperation = async () => {
       operationStatus.value = {
         status: 'not validated'
       };
+
+      await blurr.backendServer.donePromise;
+
       const result = await previewOperationThrottled();
       if (result instanceof Error) {
         throw result;
