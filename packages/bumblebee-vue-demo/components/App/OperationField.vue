@@ -1,6 +1,6 @@
 <template>
   <AppSelector
-    v-if="resolve(field.options)?.length"
+    v-if="resolve(field?.options)?.length"
     :key="`selector-${field.name}-${updates}-${fieldClass}`"
     v-model="value"
     :options="resolve(field.options)"
@@ -13,7 +13,7 @@
   />
   <AppSuggestionsInput
     v-else-if="
-      resolve(field.type) === 'string' && field.suggestions !== undefined
+      resolve(field?.type) === 'string' && field.suggestions !== undefined
     "
     :key="`input-suggestions-${field.name}-${updates}-${fieldClass}`"
     v-model="value"
@@ -26,7 +26,7 @@
     :class="fieldClass"
   />
   <AppInput
-    v-else-if="resolve(field.type) === 'string'"
+    v-else-if="resolve(field?.type) === 'string'"
     :key="`input-${field.name}-${updates}-${fieldClass}`"
     v-model="value"
     :label="resolve(field.label || field.name)"
@@ -37,7 +37,7 @@
     autocomplete="off"
   />
   <AppChipsInput
-    v-else-if="resolve(field.type) === 'strings array'"
+    v-else-if="resolve(field?.type) === 'strings array'"
     :key="`chips-input-${field.name}-${updates}-${fieldClass}`"
     v-model="value"
     :label="resolve(field.label || field.name)"
@@ -48,7 +48,7 @@
     autocomplete="off"
   />
   <AppInput
-    v-else-if="resolve(field.type) === 'number'"
+    v-else-if="resolve(field?.type) === 'number'"
     :key="`number-input-${field.name}-${updates}-${fieldClass}`"
     v-model="value"
     :label="resolve(field.label || field.name)"
@@ -60,7 +60,7 @@
     type="number"
   />
   <AppCheckbox
-    v-else-if="resolve(field.type) === 'boolean'"
+    v-else-if="resolve(field?.type) === 'boolean'"
     :key="`check-${field.name}-${updates}-${fieldClass}`"
     v-model="value"
     :label="resolve(field.label || field.name)"
