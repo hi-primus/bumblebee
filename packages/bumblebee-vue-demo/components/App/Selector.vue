@@ -280,6 +280,9 @@ watch(
       if (compareArrays(valuesFromSelected, value)) {
         return;
       }
+      if (!Array.isArray(value)) {
+        value = value === null || value === undefined ? [] : [value];
+      }
       selectedOption.value = value.map((v: Value) => {
         return props.options.find(o => {
           if (typeof o !== "object") {

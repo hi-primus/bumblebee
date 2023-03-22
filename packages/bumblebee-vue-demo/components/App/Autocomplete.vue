@@ -311,6 +311,9 @@ watch(
       if (compareArrays(valuesFromSelected, value)) {
         return;
       }
+      if (!Array.isArray(value)) {
+        value = value === null || value === undefined ? [] : [value];
+      }
       selected.value = value.map((v: Value) => {
         const foundItem = options.value?.find(o => {
           if (typeof o !== 'object') {
