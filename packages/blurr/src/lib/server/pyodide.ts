@@ -260,5 +260,14 @@ export function ServerPyodide(options: ServerOptions): ServerInterface {
     return server.pyodide.globals.get(name);
   });
 
-  return server;
+  return {
+    ...server,
+    then: (onFulfilled, onRejected) => {
+      pyodidePromise.then((pyodide) => {
+        server.pyodide = server.backend = pyodide;
+        server.backendLoaded = true;
+        onFulfilled(server);
+      }, onRejected);
+    },
+  } as typeof server;
 }

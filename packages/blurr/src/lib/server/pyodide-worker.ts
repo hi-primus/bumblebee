@@ -270,5 +270,14 @@ export function ServerPyodideWorker(options: ServerOptions): ServerInterface {
     // TODO: create Source object in worker
   };
 
-  return server;
+  return {
+    ...server,
+    then: (onFulfilled, onRejected) => {
+      workerPromise.then((worker) => {
+        server.worker = server.backend = worker;
+        server.backendLoaded = true;
+        onFulfilled(server);
+      }, onRejected);
+    },
+  } as typeof server;
 }
