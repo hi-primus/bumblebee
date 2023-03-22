@@ -1,4 +1,14 @@
 .popper {
+  transition: opacity 0.14s ease-in-out, visibility 0s 0.15s ease-in-out;
+  opacity: 0;
+  visibility: hidden;
+
+  &.popper-show {
+    transition: opacity 0.07s ease-in-out, visibility 0s 0s ease-in-out;
+    opacity: 1;
+    visibility: visible;
+  }
+
   &:not([class*='popper-color-']),
   &.popper-color-text {
     @apply bg-text text-white/90;
@@ -68,8 +78,6 @@
       font-size: 18px;
     }
   }
-
-  @apply inline-block;
 
   .popper-content {
     @apply bg-[inherit] rounded-[inherit];

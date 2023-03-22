@@ -85,19 +85,26 @@
                 "
               >
                 <span
-                  :title="columnData?.get(column.title)?.typeName"
+                  :key="
+                    columnData[column.title]?.typeName ||
+                    columnData[column.title]?.typeHint
+                  "
+                  v-tooltip="
+                    columnData[column.title]?.typeName ||
+                    columnData[column.title]?.typeHint
+                  "
                   class="left-icon inline text-text-alpha/75 max-w-5 font-bold text-center"
                   :class="{
                     'transform scale-x-125':
-                      columnData?.get(column.title)?.typeHintLength || 3 <= 2,
+                      (columnData[column.title]?.typeHintLength || 3) <= 2,
                     'tracking-[-1px] transform scale-x-95':
-                      columnData?.get(column.title)?.typeHintLength || 3 >= 4
+                      (columnData[column.title]?.typeHintLength || 3) >= 4
                   }"
                 >
-                  {{ columnData?.get(column.title)?.typeHint }}
+                  {{ columnData[column.title]?.typeHint }}
                 </span>
                 <span
-                  :title="column.displayTitle || column.title"
+                  v-tooltip="column.displayTitle || column.title"
                   class="flex-1 truncate pl-2"
                 >
                   {{ column.displayTitle || column.title }}
@@ -291,7 +298,7 @@ interface ColumnData {
   typeName: string;
 }
 
-const columnData = ref<Map<string, ColumnData>>(new Map<string, ColumnData>());
+const columnData = reactive<Record<string, ColumnData>>({});
 
 watch(
   columnsHeader,
@@ -309,11 +316,11 @@ watch(
       }
       const typeHint = TYPES_HINTS[dataType] || dataType || '';
       if (typeHint) {
-        columnData.value.set(column.title, {
+        columnData[column.title] = {
           typeHint,
           typeHintLength: typeHint.length,
           typeName: TYPES_NAMES[dataType] || dataType || 'unknown'
-        });
+        };
       }
     });
 

@@ -1,7 +1,7 @@
 import { createPopper, Placement, placements } from '@popperjs/core';
 import { DirectiveBinding } from 'vue';
 
-const createPopperElement = (value: string) => {
+const createPopperElement = () => {
   const popperElement = document.createElement('div');
   popperElement.classList.add('popper');
 
@@ -12,7 +12,7 @@ const createPopperElement = (value: string) => {
 
   const popperContent = document.createElement('div');
   popperContent.classList.add('popper-content');
-  popperContent.textContent = value;
+
   popperElement.appendChild(popperContent);
 
   const parentElement =
@@ -23,10 +23,34 @@ const createPopperElement = (value: string) => {
   return popperElement;
 };
 
+const _popperElements: Record<string, HTMLDivElement> = {};
+
+const usePopperElement = (
+  modifiers: Record<string, boolean>
+): HTMLDivElement => {
+  const modifiersString = JSON.stringify(modifiers);
+
+  if (modifiersString in _popperElements) {
+    return _popperElements[modifiersString];
+  }
+
+  const popperElement = createPopperElement();
+
+  _popperElements[modifiersString] = popperElement;
+
+  return popperElement;
+};
+
 export default defineNuxtPlugin(nuxtApp => {
   nuxtApp.vueApp.directive('tooltip', {
     mounted(el: HTMLElement, binding: DirectiveBinding<string>) {
-      const popperElement = createPopperElement(binding.value);
+      if (!binding.value) {
+        return;
+      }
+
+      // creates a popper element with the modifiers as key to reuse it
+
+      const popperElement = usePopperElement(binding.modifiers);
 
       const placement: Placement = (placements as string[]).includes(
         binding.arg || ''
@@ -86,15 +110,14 @@ export default defineNuxtPlugin(nuxtApp => {
         ]
       });
 
-      popperElement.style.display = 'none';
-
       el.addEventListener('mouseenter', () => {
-        popperElement.style.display = 'block';
+        popperElement.childNodes[1].textContent = binding.value;
+        popperElement.classList.add('popper-show');
         instance.update();
       });
 
       el.addEventListener('mouseleave', () => {
-        popperElement.style.display = 'none';
+        popperElement.classList.remove('popper-show');
       });
     }
   });

@@ -82,6 +82,9 @@
           >
             Accept
           </AppButton>
+          <AppButton v-tooltip:bottom.primary.lg="'Same as before'">
+            Accept
+          </AppButton>
           <AppButton v-tooltip:top.warning.md="'Warning'"> Accept </AppButton>
           <div v-tooltip:bottom.error.xl="'Button is disabled!'">
             <AppButton disabled> Accept </AppButton>
