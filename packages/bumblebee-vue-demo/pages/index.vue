@@ -505,6 +505,8 @@ const operationActions: OperationActions = {
           ...(payload?.options || {})
         }
       };
+    } else {
+      operationValues.value = deepClone(payload);
     }
 
     if (operationValues.value.options?.usesInputCols && payload?.cols) {
@@ -523,16 +525,14 @@ const operationActions: OperationActions = {
       currentDataframe?.profile?.columns || {}
     );
 
-    if (payload) {
-      return;
-    }
+    operationValues.value = operationValues.value || {};
 
     operation?.fields.forEach(field => {
       // check if field has a default value
 
       if ('defaultValue' in field && field.defaultValue !== undefined) {
-        operationValues.value = operationValues.value || {};
-        operationValues.value[field.name] = deepClone(field.defaultValue);
+        operationValues.value[field.name] =
+          operationValues.value[field.name] || deepClone(field.defaultValue);
       }
 
       // check if field is a group
@@ -553,10 +553,13 @@ const operationActions: OperationActions = {
           'defaultFields' in field && field.defaultFields !== undefined
             ? field.defaultFields || 0
             : 1;
+
         operationValues.value[field.name] =
           operationValues.value[field.name] || [];
+
         for (let i = 0; i < defaultFields; i++) {
-          operationValues.value[field.name][i] = deepClone(defaultValue);
+          operationValues.value[field.name][i] =
+            operationValues.value[field.name][i] || deepClone(defaultValue);
         }
       }
     });
