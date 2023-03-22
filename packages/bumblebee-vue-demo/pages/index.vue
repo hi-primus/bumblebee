@@ -579,6 +579,30 @@ const selectValuesOperation = (values: unknown[]) => {
   });
 };
 
+const selectRangesOperation = (ranges: [number, number][]) => {
+  const optimizedRanges = ranges.reduce((acc, range) => {
+    if (acc.length === 0) {
+      acc.push(range);
+    } else {
+      const lastRange = acc[acc.length - 1];
+      if (lastRange[1] === range[0]) {
+        acc[acc.length - 1] = [lastRange[0], range[1]];
+      } else {
+        acc.push(range);
+      }
+    }
+    return acc;
+  }, [] as [number, number][]);
+
+  operationActions.selectOperation(operations.filterRows, {
+    conditions: optimizedRanges.map(range => ({
+      condition: 'between',
+      value: range[0] || '',
+      otherValue: range[1] || ''
+    }))
+  });
+};
+
 const loadDataSource = (dataframeIndex: number) => {
   if (!dataframes.value[dataframeIndex]) {
     return;
@@ -858,7 +882,7 @@ watch(
     if (selection?.values?.length) {
       selectValuesOperation(selection.values);
     } else if (selection?.ranges?.length) {
-      operationActions.selectOperation(operations.filterRows);
+      selectRangesOperation(selection.ranges);
     } else {
       previewOperation();
     }

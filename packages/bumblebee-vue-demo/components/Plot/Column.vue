@@ -21,7 +21,7 @@
         v-if="stats?.hist"
         :data="stats?.hist"
         :column-name="data.title"
-        :selectable="false && data.columnType !== 'preview'"
+        :selectable="data.columnType !== 'preview'"
         @hovered="hovered = $event"
       />
       <PlotFrequency
