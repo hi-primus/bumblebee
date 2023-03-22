@@ -2,7 +2,7 @@
   <div
     class="input autocomplete"
     :class="{
-      'w-[14em]': multiple
+      'min-w-[14em]': multiple
     }"
   >
     <Combobox
