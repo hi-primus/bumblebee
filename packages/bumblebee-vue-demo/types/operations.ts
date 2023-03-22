@@ -182,6 +182,6 @@ export interface OperationActions {
   cancelOperation: (restoreInactive: boolean) => void;
   selectOperation: (
     operation: Operation | null,
-    payload?: PayloadWithOptions
+    payload?: Partial<PayloadWithOptions>
   ) => void;
 }
