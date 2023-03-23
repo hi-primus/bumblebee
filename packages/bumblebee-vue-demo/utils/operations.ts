@@ -19,6 +19,11 @@ type OperationPayload<
   target: string;
   cols: Cols;
   allColumns: Cols;
+  allDataframes: {
+    name: string;
+    columns: Cols;
+    df: Source;
+  }[];
   outputCols: Cols;
   options: OperationOptions;
   app: AppFunctions;

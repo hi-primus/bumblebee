@@ -525,6 +525,16 @@ const operationActions: OperationActions = {
       currentDataframe?.profile?.columns || {}
     );
 
+    operationValues.value.allDataframes = dataframes.value
+      .filter((_, i) => i !== currentDataframeIndex)
+      .map(dataframe => {
+        return {
+          name: dataframe.name,
+          columns: Object.keys(dataframe.profile?.columns || {}),
+          df: dataframe.df
+        };
+      });
+
     operationValues.value = operationValues.value || {};
 
     operation?.fields.forEach(field => {
