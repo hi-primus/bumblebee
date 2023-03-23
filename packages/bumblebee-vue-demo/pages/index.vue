@@ -575,7 +575,8 @@ const loadFromFile = () => {
 
 const selectValuesOperation = (values: unknown[]) => {
   operationActions.selectOperation(operations.filterRows, {
-    conditions: [{ condition: 'value_in', values: [...values] }]
+    conditions: [{ condition: 'value_in', values: [...values] }],
+    selectionFromPlot: true
   });
 };
 
@@ -599,7 +600,8 @@ const selectRangesOperation = (ranges: [number, number][]) => {
       condition: 'between',
       value: range[0] || '',
       otherValue: range[1] || ''
-    }))
+    })),
+    selectionFromPlot: true
   });
 };
 

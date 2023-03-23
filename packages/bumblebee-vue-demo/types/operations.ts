@@ -31,7 +31,7 @@ export type Payload = Partial<PayloadWithOptions>;
 
 type PayloadCallbackOr<T> =
   | T
-  | ((payload: PayloadWithOptions, currentIndex?: number) => T);
+  | ((payload: Partial<PayloadWithOptions>, currentIndex?: number) => T);
 
 export type FieldOption<T = unknown> = Record<string, T> & {
   disabled?: boolean;
@@ -93,6 +93,7 @@ export interface FieldGroup {
 
 export interface OperationCreatorBase {
   name: string;
+  title?: PayloadCallbackOr<string>;
   alias?: string;
   description?: string;
   fields?: (Field | FieldGroup)[];

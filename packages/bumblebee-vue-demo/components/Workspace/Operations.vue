@@ -6,7 +6,7 @@
       class="w-full h-8 bg-primary-highlight text-text-alpha flex justify-center items-center"
     >
       <h3 v-if="operation">
-        {{ operation.name || 'Operation' }}
+        {{ resolve(operation.title) || operation.name || 'Operation' }}
       </h3>
       <h3 v-else>Operations</h3>
     </div>
@@ -33,7 +33,7 @@
             }"
           >
             <span class="text-text-lighter text-xs mr-2">{{ index + 1 }}</span>
-            <span class="flex-1">{{ element.operation.name }}</span>
+            <span class="flex-1">{{ element.content }}</span>
             <IconButton
               :path="mdiPencil"
               class="w-4 h-4 ml-auto cursor-pointer opacity-0 group-hover:opacity-100 focus:opacity-100 transition"
@@ -104,14 +104,25 @@ const inactiveOperations = inject<Ref<OperationPayload[]>>(
 
 const dragging = ref(false);
 
-type OperationPayloadWithId = OperationPayload & { id: string };
+type OperationCell = OperationPayload & { id: string; content: string };
 
-const operationCells = computed<OperationPayloadWithId[]>({
+const operationCells = computed<OperationCell[]>({
   get: () => {
-    return operations.value.map((operation, index) => ({
-      ...operation,
-      id: operation.payload.id || index
-    }));
+    return operations.value.map((operation, index) => {
+      // const content = resolveUsingPayload(
+      //   operation.operation.content,
+      //   operation.payload
+      // ); // TODO: content property
+      const title = resolveUsingPayload(
+        operation.operation.title,
+        operation.payload
+      );
+      return {
+        ...operation,
+        id: operation.payload.id || index,
+        content: title || operation.operation.name || 'Operation'
+      };
+    });
   },
   set: value => {
     updateOperations(
@@ -126,6 +137,22 @@ const operationCells = computed<OperationPayloadWithId[]>({
 const { selectOperation, submitOperation } = inject(
   'operation-actions'
 ) as OperationActions;
+
+const resolve = <T>(
+  value: ((payload: Partial<PayloadWithOptions>) => T) | T
+): T => {
+  return resolveUsingPayload(value, operationValues.value);
+};
+
+const resolveUsingPayload = <T>(
+  value: ((payload: Partial<PayloadWithOptions>) => T) | T,
+  payload: Partial<PayloadWithOptions>
+): T => {
+  if (value instanceof Function) {
+    return value(payload);
+  }
+  return value;
+};
 
 const updateOperations = async (
   newOperations: OperationPayload[]

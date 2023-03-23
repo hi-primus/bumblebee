@@ -271,6 +271,7 @@ export const operationCreators: Record<string, OperationCreator> = {
         replaces: {
           condition: string;
           value: string;
+          otherValue: string;
           values: string[];
           replaceBy: string;
         }[];
@@ -585,6 +586,8 @@ export const operationCreators: Record<string, OperationCreator> = {
   // Row operations
   filterRows: {
     name: 'Filter rows',
+    title: payload =>
+      payload.selectionFromPlot ? 'Filter / Set values' : 'Filter rows',
     alias: 'drop keep rows',
     defaultOptions: {
       usesInputCols: true,
@@ -598,9 +601,12 @@ export const operationCreators: Record<string, OperationCreator> = {
         conditions: {
           condition: string;
           value: string;
+          otherValue: string;
           values: string[];
         }[];
-        action: 'select' | 'drop';
+        action: 'select' | 'drop' | 'set';
+        value: string;
+        otherwise: string;
       }>
     ): Source => {
       const where = payload.conditions
@@ -610,10 +616,13 @@ export const operationCreators: Record<string, OperationCreator> = {
         .filter(expression => expression);
 
       if (payload.options.preview) {
-        const color = payload.action === 'select' ? 'success' : 'error';
-        return payload.source.cols.set({
+        const color = payload.action === 'drop' ? 'error' : 'success';
+
+        const highlightColumn = `__bumblebee__highlight_row__${color}`;
+
+        const result = payload.source.cols.set({
           target: payload.target,
-          cols: `__bumblebee__highlight_row__${color}`,
+          cols: highlightColumn,
           valueFunc: true,
           evalValue: false,
           where: where.join(' | '),
@@ -623,20 +632,60 @@ export const operationCreators: Record<string, OperationCreator> = {
           },
           requestOptions: { priority: PRIORITIES.operation }
         });
+
+        if (payload.action === 'set') {
+          const outputCols = payload.cols.map(
+            col => `__bumblebee__preview__${col}`
+          );
+          return result.cols
+            .set({
+              target: payload.target,
+              cols: outputCols,
+              valueFunc: payload.value,
+              evalValue: false,
+              where: `df['${highlightColumn}']`,
+              default: payload.otherwise,
+              evalVariables: {
+                parsed_function: Name('parsed_function')
+              },
+              requestOptions: { priority: PRIORITIES.operation }
+            })
+            .cols.move({
+              column: outputCols,
+              position: 'after',
+              refCol: payload.cols[0]
+            });
+        }
+
+        return result;
       }
 
-      if (payload.action === 'select') {
-        return payload.source.rows.select({
-          target: payload.target,
-          expr: where.join(' | '),
-          requestOptions: { priority: PRIORITIES.operation }
-        });
-      } else {
-        return payload.source.rows.drop({
-          target: payload.target,
-          expr: where.join(' | '),
-          requestOptions: { priority: PRIORITIES.operation }
-        });
+      switch (payload.action) {
+        case 'select':
+          return payload.source.rows.select({
+            target: payload.target,
+            expr: where.join(' | '),
+            requestOptions: { priority: PRIORITIES.operation }
+          });
+        case 'drop':
+          return payload.source.rows.drop({
+            target: payload.target,
+            expr: where.join(' | '),
+            requestOptions: { priority: PRIORITIES.operation }
+          });
+        case 'set':
+          return payload.source.cols.set({
+            target: payload.target,
+            cols: payload.cols,
+            valueFunc: payload.value,
+            evalValue: false,
+            where: where.join(' | '),
+            default: payload.otherwise,
+            evalVariables: {
+              parsed_function: Name('parsed_function')
+            },
+            requestOptions: { priority: PRIORITIES.operation }
+          });
       }
     },
     fields: [
@@ -781,7 +830,7 @@ export const operationCreators: Record<string, OperationCreator> = {
         label: 'Action',
         type: 'string',
         defaultValue: 'select',
-        options: (_payload: Payload) => [
+        options: (payload: Payload) => [
           {
             text: 'Filter matching rows',
             value: 'select'
@@ -792,10 +841,22 @@ export const operationCreators: Record<string, OperationCreator> = {
           },
           {
             text: 'Replace matching rows',
-            value: 'replace',
-            hidden: true // TODO: implement, show in special selection
+            value: 'set',
+            hidden: !payload.selectionFromPlot
           }
         ]
+      },
+      {
+        name: 'value',
+        label: 'Value',
+        type: 'string',
+        hidden: (payload: Payload) => payload.action !== 'set'
+      },
+      {
+        name: 'otherwise',
+        label: 'Otherwise',
+        type: 'string',
+        hidden: (payload: Payload) => payload.action !== 'set'
       }
     ]
   },
