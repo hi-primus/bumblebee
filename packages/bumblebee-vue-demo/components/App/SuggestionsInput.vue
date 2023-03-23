@@ -25,7 +25,10 @@
       @keydown="keyPressed"
     />
     <div v-if="menuVisible" class="suggestions-menu p-2 mt-px">
-      <div v-if="functionInfo" class="flex flex-col gap-2 text-text-light p-1">
+      <div
+        v-if="functionInfo"
+        class="flex flex-col gap-2 text-neutral-light p-1"
+      >
         <div
           class="font-mono text-lg"
           v-html="functionInfo.highlighted || functionInfo.title"
@@ -58,7 +61,7 @@
           <div class="title mt-2">Suggestions</div>
         </template>
       </div>
-      <ListboxOptions static class="text-text-light">
+      <ListboxOptions static class="text-neutral-light">
         <ListboxOption
           v-for="suggestion in resultsSuggestions"
           v-slot="{ active }"
@@ -70,13 +73,13 @@
             class="pl-3 pr-1 py-[2px] -mx-2 flex items-center font-mono font-bold cursor-pointer"
             :class="{ 'bg-primary-highlight': active }"
           >
-            <div class="name flex-1 text-text-alpha/60">
+            <div class="name flex-1 text-neutral-alpha/60">
               {{ suggestion.title || suggestion.text }}
             </div>
-            <div class="type-label capitalize text-text-alpha/50">
+            <div class="type-label capitalize text-neutral-alpha/50">
               {{ suggestion.type }}
             </div>
-            <div class="type-icon text-text-alpha/50 pl-2">
+            <div class="type-icon text-neutral-alpha/50 pl-2">
               <Icon
                 class="w-5 h-5"
                 :path="
@@ -567,7 +570,7 @@ watch(suggestionContext, () => {
     @apply bg-line w-full h-px;
   }
   .title {
-    @apply uppercase font-medium text-text-lightest;
+    @apply uppercase font-medium text-neutral-lightest;
   }
 }
 </style>

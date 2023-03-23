@@ -102,7 +102,7 @@
         >
           <div
             v-if="filteredOptions && !filteredOptions.length && search !== ''"
-            class="relative cursor-default select-none py-2 px-4 text-text-lighter"
+            class="relative cursor-default select-none py-2 px-4 text-neutral-lighter"
           >
             No results found
           </div>

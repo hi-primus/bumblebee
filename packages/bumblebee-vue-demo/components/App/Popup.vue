@@ -11,12 +11,12 @@
         @click.stop
       >
         <div v-if="title || closable" class="popup-header flex items-center">
-          <h3 v-if="title" class="text-lg font-medium text-text relative">
+          <h3 v-if="title" class="text-lg font-medium text-neutral relative">
             {{ title }}
           </h3>
           <AppButton
             v-if="closable"
-            class="btn-icon btn-layout-invisible btn-color-text ml-auto mr-[-7px]"
+            class="btn-icon btn-layout-invisible btn-color-neutral ml-auto mr-[-7px]"
             @click="() => emit('close')"
           >
             <Icon :path="mdiClose" />

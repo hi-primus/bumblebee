@@ -3,31 +3,31 @@
     <div class="flex gap-2 justify-end mb-2" :class="{ hidden: !editing }">
       <button
         type="button"
-        class="px-1 pt-1 cursor-pointer flex flex-col items-center rounded-md text-text"
+        class="px-1 pt-1 cursor-pointer flex flex-col items-center rounded-md text-neutral"
       >
-        <Icon :path="mdiContentSaveOutline" class="text-text/75" />
+        <Icon :path="mdiContentSaveOutline" class="text-neutral/75" />
       </button>
       <button
         type="button"
-        class="px-1 pt-1 cursor-pointer flex flex-col items-center rounded-md text-text"
+        class="px-1 pt-1 cursor-pointer flex flex-col items-center rounded-md text-neutral"
       >
-        <Icon :path="mdiPencil" class="text-text/75" />
+        <Icon :path="mdiPencil" class="text-neutral/75" />
       </button>
       <button
         type="button"
-        class="px-1 pt-1 cursor-pointer flex flex-col items-center rounded-md text-text"
+        class="px-1 pt-1 cursor-pointer flex flex-col items-center rounded-md text-neutral"
       >
-        <Icon :path="mdiDelete" class="text-text/75" />
+        <Icon :path="mdiDelete" class="text-neutral/75" />
       </button>
     </div>
     <div
-      class="rounded-md border-text-lightest font-mono px-4 py-2"
+      class="rounded-md border-neutral-lightest font-mono px-4 py-2"
       :class="{
         'bg-primary-lightest': editing,
         'bg-white': !editing
       }"
     >
-      <span class="mr-4 text-text-lightest">{{ index + 1 }}</span>
+      <span class="mr-4 text-neutral-lightest">{{ index + 1 }}</span>
       <span class="bg-white">
         <span class="font-semibold">Load</span>
         'abcdefaaaaaaaaaaaaaaaaaaaaaaaa-ssssssssssg.csv' file

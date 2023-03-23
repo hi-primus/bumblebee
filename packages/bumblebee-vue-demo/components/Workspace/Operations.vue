@@ -3,7 +3,7 @@
     class="workspace-aside flex flex-col bg-white border-line border-solid border-l overflow-hidden"
   >
     <div
-      class="w-full h-8 bg-primary-highlight text-text-alpha flex justify-center items-center"
+      class="w-full h-8 bg-primary-highlight text-neutral-alpha flex justify-center items-center"
     >
       <h3 v-if="operation">
         {{ resolve(operation.title) || operation.name || 'Operation' }}
@@ -13,7 +13,7 @@
     <OperationsOperation v-if="operation" :key="operation.name" />
     <div
       v-else
-      class="operations-container overflow-y-auto h-full flex flex-col justify-stretch text-sm text-text"
+      class="operations-container overflow-y-auto h-full flex flex-col justify-stretch text-sm text-neutral"
     >
       <draggable
         v-model="operationCells"
@@ -32,7 +32,9 @@
               'hover:bg-primary-highlight': !dragging
             }"
           >
-            <span class="text-text-lighter text-xs mr-2">{{ index + 1 }}</span>
+            <span class="text-neutral-lighter text-xs mr-2">{{
+              index + 1
+            }}</span>
             <span class="flex-1">{{ element.content }}</span>
             <IconButton
               :path="mdiPencil"
@@ -55,7 +57,7 @@
           :key="element.operation.name + index"
           class="flex items-center gap-2 transition p-2 rounded-md"
         >
-          <span class="text-text-lighter text-xs mr-2">{{
+          <span class="text-neutral-lighter text-xs mr-2">{{
             operations.length + 1 + index
           }}</span>
           <span>{{ element.operation.name }}</span>

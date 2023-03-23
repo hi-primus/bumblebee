@@ -37,7 +37,10 @@
       class="flex items-center justify-center"
       :style="{ width: stageWidth + 'px', height: height + 'px' }"
     >
-      <Icon :path="mdiLoading" class="w-8 h-8 text-text-lighter animate-spin" />
+      <Icon
+        :path="mdiLoading"
+        class="w-8 h-8 text-neutral-lighter animate-spin"
+      />
     </div>
   </div>
 </template>

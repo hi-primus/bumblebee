@@ -1,5 +1,5 @@
 <template>
-  <div class="bg-text-lightest/50 h-2 flex w-full cursor-crosshair">
+  <div class="bg-neutral-lightest/50 h-2 flex w-full cursor-crosshair">
     <div
       class="bg-primary hover:bg-primary-dark h-2"
       :class="{ 'min-w-1': data.match > 0 }"
@@ -17,7 +17,7 @@
       @mouseenter="onHovered('mismatch')"
     ></div>
     <div
-      class="bg-text-lighter/50 hover:bg-text-light/50 h-2"
+      class="bg-neutral-lighter/50 hover:bg-neutral-light/50 h-2"
       :class="{ 'min-w-5': data.missing > 0 }"
       :style="{
         width: `${getPercentage('missing')}%`

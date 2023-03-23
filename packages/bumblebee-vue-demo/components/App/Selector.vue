@@ -136,7 +136,7 @@
           </template>
           <div
             v-if="options.length === 0"
-            class="text-text-lighter text-center py-2"
+            class="text-neutral-lighter text-center py-2"
           >
             <slot name="no-options">
               No items

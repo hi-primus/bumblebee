@@ -5,7 +5,7 @@
     @scroll.passive="onScroll"
   >
     <div
-      class="bumblebee-table-container relative flex h-full w-[max-content] text-sm font-mono-table text-text-alpha"
+      class="bumblebee-table-container relative flex h-full w-[max-content] text-sm font-mono-table text-neutral-alpha"
       :style="{
         height:
           columnHeaderHeight +
@@ -93,7 +93,7 @@
                     columnData[column.title]?.typeName ||
                     columnData[column.title]?.typeHint
                   "
-                  class="left-icon inline text-text-alpha/75 max-w-5 font-bold text-center"
+                  class="left-icon inline text-neutral-alpha/75 max-w-5 font-bold text-center"
                   :class="{
                     'transform scale-x-125':
                       (columnData[column.title]?.typeHintLength || 3) <= 2,
@@ -148,7 +148,7 @@
         }"
       >
         <div
-          class="bumblebee-columns-rows-indices h-full bg-white text-text-lightest border-line-light border-r font-mono font-200 text-right"
+          class="bumblebee-columns-rows-indices h-full bg-white text-neutral-lightest border-line-light border-r font-mono font-200 text-right"
           :style="{
             width: rowIndicesWidth + 'px',
             height:
@@ -392,9 +392,9 @@ const visibleRows = computed(() => {
 
 const getValue = (value: unknown): string => {
   if (value === null || value === undefined) {
-    return '<span class="text-text-lighter">None</span>';
+    return '<span class="text-neutral-lighter">None</span>';
   } else if (value === '') {
-    return '<span class="text-text-lighter">Empty</span>';
+    return '<span class="text-neutral-lighter">Empty</span>';
   } else if (typeof value === 'string') {
     return value;
   } else if (typeof value === 'number') {
@@ -732,7 +732,7 @@ defineExpose({
       @apply absolute -top-px -left-px -right-px -bottom-px;
       @apply pointer-events-none;
       @apply outline-offset-[-3px] outline-dashed outline-2;
-      @apply outline-text-light;
+      @apply outline-neutral-light;
       @apply opacity-75;
     }
   }
@@ -827,12 +827,12 @@ defineExpose({
       @apply transform rotate-45;
       &::after {
         content: '';
-        @apply absolute bg-text;
+        @apply absolute bg-neutral;
         @apply w-[2px] h-[1em] left-[calc(0.5em-1px)];
       }
       &::before {
         content: '';
-        @apply absolute bg-text;
+        @apply absolute bg-neutral;
         @apply w-[1em] h-[2px] top-[calc(0.5em-1px)];
       }
     }
@@ -845,7 +845,7 @@ defineExpose({
       @apply absolute right-[5px] top-[calc(50%-4px)];
       @apply w-[1em] h-[1em];
       @apply bg-transparent opacity-50;
-      @apply border-text border-[2px];
+      @apply border-neutral border-[2px];
       @apply border-l-0 border-b-0;
       @apply transform rotate-45;
     }

@@ -15,13 +15,13 @@
     --toast-color: theme('colors.primary.light');
   }
 
-  &.toast-text {
+  &.toast-neutral {
     --toast-text-color: theme('colors.white');
-    --toast-color: theme('colors.text.DEFAULT');
+    --toast-color: theme('colors.neutral.DEFAULT');
   }
 
   &.toast-success {
-    --toast-text-color: theme('colors.text.alpha');
+    --toast-text-color: theme('colors.neutral.alpha');
     --toast-color: theme('colors.success.light');
   }
 
@@ -31,7 +31,7 @@
   }
 
   &.toast-warn {
-    --toast-text-color: theme('colors.text.alpha');
+    --toast-text-color: theme('colors.neutral.alpha');
     --toast-color: theme('colors.warn.light');
   }
 }

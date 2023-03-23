@@ -207,30 +207,32 @@
           </AppButton>
         </div>
         <div class="flex flex-wrap gap-4 px-8 py-2 justify-start items-start">
-          <AppButton class="btn-color-text"> Cancel </AppButton>
-          <AppButton class="btn-color-text btn-layout-outline">
+          <AppButton class="btn-color-neutral"> Cancel </AppButton>
+          <AppButton class="btn-color-neutral btn-layout-outline">
             Cancel
           </AppButton>
-          <AppButton class="btn-color-text btn-layout-invisible">
+          <AppButton class="btn-color-neutral btn-layout-invisible">
             Cancel
           </AppButton>
-          <AppButton class="btn-color-text btn-layout-text"> Cancel </AppButton>
-          <AppButton class="btn-color-text btn-icon">
+          <AppButton class="btn-color-neutral btn-layout-text">
+            Cancel
+          </AppButton>
+          <AppButton class="btn-color-neutral btn-icon">
             <Icon :path="mdiTrashCan" />
           </AppButton>
-          <AppButton class="btn-color-text btn-icon btn-rounded">
+          <AppButton class="btn-color-neutral btn-icon btn-rounded">
             <Icon :path="mdiTrashCan" />
           </AppButton>
-          <AppButton class="btn-color-text btn-icon btn-layout-invisible">
+          <AppButton class="btn-color-neutral btn-icon btn-layout-invisible">
             <Icon :path="mdiTrashCan" />
           </AppButton>
           <AppButton
-            class="btn-color-text btn-icon btn-layout-invisible btn-size-small"
+            class="btn-color-neutral btn-icon btn-layout-invisible btn-size-small"
           >
             <Icon :path="mdiTrashCan" />
           </AppButton>
           <AppButton
-            class="btn-color-text btn-icon btn-layout-invisible btn-size-smallest"
+            class="btn-color-neutral btn-icon btn-layout-invisible btn-size-smallest"
           >
             <Icon :path="mdiTrashCan" />
           </AppButton>
@@ -319,20 +321,26 @@
           </AppButton>
         </div>
         <div class="flex flex-wrap gap-4 px-8 py-2 justify-start items-start">
-          <AppButton class="btn-size-small btn-color-text">Cancel</AppButton>
-          <AppButton class="btn-size-small btn-color-text btn-layout-outline">
+          <AppButton class="btn-size-small btn-color-neutral">Cancel</AppButton>
+          <AppButton
+            class="btn-size-small btn-color-neutral btn-layout-outline"
+          >
             Cancel
           </AppButton>
-          <AppButton class="btn-size-small btn-color-text btn-layout-invisible">
+          <AppButton
+            class="btn-size-small btn-color-neutral btn-layout-invisible"
+          >
             Cancel
           </AppButton>
-          <AppButton class="btn-size-small btn-color-text btn-layout-text">
+          <AppButton class="btn-size-small btn-color-neutral btn-layout-text">
             Cancel
           </AppButton>
-          <AppButton class="btn-size-small btn-color-text btn-icon">
+          <AppButton class="btn-size-small btn-color-neutral btn-icon">
             <Icon :path="mdiTrashCan" />
           </AppButton>
-          <AppButton class="btn-size-small btn-color-text btn-icon btn-rounded">
+          <AppButton
+            class="btn-size-small btn-color-neutral btn-icon btn-rounded"
+          >
             <Icon :path="mdiTrashCan" />
           </AppButton>
         </div>

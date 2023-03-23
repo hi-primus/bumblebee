@@ -34,7 +34,7 @@
           "
         >
           <span
-            class="text-text-light"
+            class="text-neutral-light"
             v-html="highligthMatch(operation.name, searchOperation)"
           ></span>
           <ShortcutKeys
@@ -63,7 +63,7 @@
           "
         >
           <span
-            class="text-text-light"
+            class="text-neutral-light"
             v-html="highligthMatch(operation.name, searchOperation)"
           ></span>
           <ShortcutKeys
@@ -73,7 +73,7 @@
         </li>
         <li
           v-if="!notRecentOperations?.length && !recentOperations?.length"
-          class="text-text-lighter w-full px-2 py-6 text-center pointer-events-none flex-1"
+          class="text-neutral-lighter w-full px-2 py-6 text-center pointer-events-none flex-1"
         >
           No commands found
         </li>
@@ -81,14 +81,14 @@
     </AppPopup>
     <section class="w-full flex items-center px-5 overflow-hidden h-full">
       <AppButton
-        class="ml-auto btn-icon btn-layout-invisible btn-size-small btn-color-text-light"
+        class="ml-auto btn-icon btn-layout-invisible btn-size-small btn-color-neutral-light"
         @click="showCommands = true"
       >
         <Icon :path="mdiMagnify" />
       </AppButton>
       <AppButton
         :tool="{ icon: mdiCodeTags }"
-        class="btn-icon btn-layout-invisible btn-size-small btn-color-text-light"
+        class="btn-icon btn-layout-invisible btn-size-small btn-color-neutral-light"
         @click="showSidebar = !showSidebar"
       >
         <Icon :path="mdiCodeTags" />

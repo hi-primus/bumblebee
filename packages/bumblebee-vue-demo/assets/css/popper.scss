@@ -10,8 +10,8 @@
   }
 
   &:not([class*='popper-color-']),
-  &.popper-color-text {
-    @apply bg-text text-white/90;
+  &.popper-color-neutral {
+    @apply bg-neutral text-white/90;
   }
 
   &.popper-color-primary {
@@ -27,7 +27,7 @@
   }
 
   &.popper-color-success {
-    @apply bg-success-light text-text-alpha;
+    @apply bg-success-light text-neutral-alpha;
   }
 
   &.popper-color-error {
@@ -35,7 +35,7 @@
   }
 
   &.popper-color-warn {
-    @apply bg-warn-light text-text-alpha;
+    @apply bg-warn-light text-neutral-alpha;
   }
 
   &:not([class*='popper-size-']),

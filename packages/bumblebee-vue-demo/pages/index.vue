@@ -23,7 +23,7 @@
       <WorkspaceDataframeLayout ref="dataframeLayout">
         <div
           v-if="availableDataframes.length > 0"
-          class="text-lg text-text-lighter font-bold"
+          class="text-lg text-neutral-lighter font-bold"
         >
           <span> Load from existing data sources: </span>
           <span v-for="(tabIndex, index) in availableDataframes" :key="index">

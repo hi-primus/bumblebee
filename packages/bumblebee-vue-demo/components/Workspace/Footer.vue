@@ -1,7 +1,7 @@
 <template>
   <footer class="workspace-footer bg-white border-line border-solid border-t">
     <div
-      class="flex h-full justify-end items-center gap-8 mx-8 pb-[1px] text-text text-sm"
+      class="flex h-full justify-end items-center gap-8 mx-8 pb-[1px] text-neutral text-sm"
     >
       <span
         v-if="status"
@@ -10,7 +10,7 @@
           'opacity-80': !isLoading,
           'text-primary-dark': appStatus === 'ready',
           'text-error-dark': appStatus === 'error',
-          'text-text': !['ready', 'error'].includes(appStatus as string)
+          'text-neutral': !['ready', 'error'].includes(appStatus as string)
         }"
       >
         <Icon

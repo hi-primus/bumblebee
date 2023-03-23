@@ -34,20 +34,20 @@
     --button-highlight-color: #99cae9;
   }
 
-  &.btn-color-text {
+  &.btn-color-neutral {
     --button-text-color: theme('colors.white');
-    --button-color: theme('colors.text.DEFAULT');
-    --button-hover-color: theme('colors.text.light');
-    --button-active-color: theme('colors.text.lighter');
-    --button-highlight-color: theme('colors.text.lighter');
+    --button-color: theme('colors.neutral.DEFAULT');
+    --button-hover-color: theme('colors.neutral.light');
+    --button-active-color: theme('colors.neutral.lighter');
+    --button-highlight-color: theme('colors.neutral.lighter');
   }
 
-  &.btn-color-text-light {
+  &.btn-color-neutral-light {
     --button-text-color: theme('colors.white');
-    --button-color: theme('colors.text.lighter');
-    --button-hover-color: theme('colors.text.lighter');
-    --button-active-color: theme('colors.text.lightest');
-    --button-highlight-color: theme('colors.text.lightest');
+    --button-color: theme('colors.neutral.lighter');
+    --button-hover-color: theme('colors.neutral.lighter');
+    --button-active-color: theme('colors.neutral.lightest');
+    --button-highlight-color: theme('colors.neutral.lightest');
   }
 
   &.btn-color-error {

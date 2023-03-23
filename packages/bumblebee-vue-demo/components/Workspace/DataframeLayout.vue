@@ -16,7 +16,7 @@
       <Icon
         v-if="dataframeObject || previewData"
         :path="mdiLoading"
-        class="w-12 h-12 text-text-lighter animate-spin"
+        class="w-12 h-12 text-neutral-lighter animate-spin"
       />
       <slot v-else></slot>
     </div>

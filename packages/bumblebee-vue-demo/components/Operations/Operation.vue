@@ -20,7 +20,7 @@
           :key="`${field.name}-group`"
           class="w-full flex flex-wrap gap-y-5"
         >
-          <div v-if="field.label" class="w-full text-text mb-[-12px]">
+          <div v-if="field.label" class="w-full text-neutral mb-[-12px]">
             {{ field.label }}
           </div>
           <template
@@ -33,7 +33,7 @@
                 field.groupConnector !== undefined
               "
               :key="`${field.name}-group-${groupIndex}-or`"
-              class="font-bold mx-auto w-full text-center text-text-light text-sm my-[-12px]"
+              class="font-bold mx-auto w-full text-center text-neutral-light text-sm my-[-12px]"
             >
               {{
                 field.groupConnector === undefined ? 'or' : field.groupConnector
@@ -61,7 +61,7 @@
                 <AppButton
                   :key="`${field.name}-delete-${groupIndex}`"
                   type="button"
-                  class="btn-layout-invisible btn-icon btn-size-small btn-color-text"
+                  class="btn-layout-invisible btn-icon btn-size-small btn-color-neutral"
                   :icon="mdiClose"
                   @click="deleteFromGroup(field.name, groupIndex)"
                 />

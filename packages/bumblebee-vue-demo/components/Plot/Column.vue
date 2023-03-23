@@ -34,7 +34,7 @@
       <Icon
         v-else
         :path="mdiLoading"
-        class="flex-1 w-8 h-8 text-text-lighter animate-spin"
+        class="flex-1 w-8 h-8 text-neutral-lighter animate-spin"
       />
       <div
         class="w-full truncate"

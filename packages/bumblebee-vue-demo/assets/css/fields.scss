@@ -1,12 +1,12 @@
 .label {
-  @apply text-sm font-normal text-text block;
+  @apply text-sm font-normal text-neutral block;
 }
 
 .input-primary {
-  @apply bg-white border border-text-lightest/50 font-normal text-text placeholder:text-text-lighter focus:outline-none rounded-lg;
+  @apply bg-white border border-neutral-lightest/50 font-normal text-neutral placeholder:text-neutral-lighter focus:outline-none rounded-lg;
 }
 .input-default {
-  @apply font-normal text-text placeholder:text-text-light focus:outline-none;
+  @apply font-normal text-neutral placeholder:text-neutral-light focus:outline-none;
 }
 
 .text-input {
@@ -105,7 +105,7 @@
   }
 
   .file-input-fieldTextDefault {
-    @apply text-text-lighter;
+    @apply text-neutral-lighter;
   }
 
   .file-input-fieldIcon {
@@ -153,15 +153,15 @@
   // .selector-buttonTextSelected {
   // }
   .selector-buttonTextDefault {
-    @apply text-text-lighter;
+    @apply text-neutral-lighter;
   }
   // .selector-option {
   // }
   .selector-optionActive {
-    @apply bg-primary-lightest text-text;
+    @apply bg-primary-lightest text-neutral;
   }
   .selector-optionDefault {
-    @apply text-text;
+    @apply text-neutral;
   }
   .selector-optionIcon {
     @apply text-primary;
@@ -206,10 +206,10 @@
   // .autocomplete-option {
   // }
   .autocomplete-optionActive {
-    @apply bg-primary-lightest text-text;
+    @apply bg-primary-lightest text-neutral;
   }
   .autocomplete-optionDefault {
-    @apply text-text;
+    @apply text-neutral;
   }
   .autocomplete-optionIcon {
     @apply text-primary;
@@ -232,11 +232,11 @@
   .checkbox-label {
     @apply sm:text-sm md:text-base font-normal;
     .disabled-field & {
-      @apply text-text-lightest;
+      @apply text-neutral-lightest;
     }
   }
   .checkbox-input {
-    @apply accent-primary-dark disabled:accent-text-lightest;
+    @apply accent-primary-dark disabled:accent-neutral-lightest;
   }
 }
 
@@ -253,7 +253,7 @@
 }
 
 .chips-primary {
-  @apply bg-primary-lighter text-text-alpha flex items-center gap-1 px-1 text-sm rounded-md;
+  @apply bg-primary-lighter text-neutral-alpha flex items-center gap-1 px-1 text-sm rounded-md;
   .close-icon {
     @apply pr-1 cursor-pointer;
   }
@@ -267,6 +267,6 @@
   .selector-button,
   .selector-option,
   .autocomplete-option {
-    @apply font-mono text-text-light;
+    @apply font-mono text-neutral-light;
   }
 }
