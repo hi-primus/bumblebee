@@ -1,57 +1,81 @@
-# Contributing to Blurr
+# Contributing to this demo
 
-## Importing as a link using yarn for your demo or testing environment
+## Use `const` to define methods
 
-In `packages/your-demo/package.json`:
+```vue
+<script setup lang="ts">
+const myMethod = async function () {
+  return await asyncMethod(...);
+}
+</script>
+```
 
-```json
-{
-  "devDependencies": {
-    "blurr": "link:../blurr"
+## Using typed component emits
+
+https://vuejs.org/guide/typescript/composition-api.html#typing-component-emits
+
+```vue
+<script setup lang="ts">
+// runtime
+const emit = defineEmits(['change', 'update']);
+
+// type-based
+type Emits = {
+  (e: 'change', id: number): void;
+  (e: 'update', value: string): void;
+  (e: 'updateScroll', start: number, stop: number): void;
+};
+const emit = defineEmits<Emits>();
+</script>
+```
+
+## Using PropType to type props
+
+```vue
+<script setup lang="ts">
+const props = defineProps({
+  customs: {
+    type: Array as PropType<Custom[]>,
+    default: () => []
+  },
+  custom: {
+    type: Number as PropType<Custom>,
+    required: true
+  },
+  deleted: {
+    type: Array as PropType<Custom[]>
   }
+});
+</script>
+```
+
+## Using apply for complex tailwind classes
+
+```css
+.pseudo-primary-button {
+  @apply bg-primary-dark text-white px-4 py-2 rounded;
 }
 ```
 
-Use `yarn install` since `npm` has a different support for links.
+## Using themes system
 
-## Running demos
+Buttons have `size` and `color`:
 
-```bash
-$ cd packages
-$ cd [demo-name]
-$ yarn install
-$ yarn dev
+```vue
+<template>
+  <AppButton
+    @click="onClickEvent"
+    class="icon-button color-danger size-narrow rounded-button"
+  >
+    <Icon :path="mdiTrashCan" />
+  </AppButton>
+</template>
 ```
 
-## Running tests
+Text fields have `text-input-` prefix:
 
-```bash
-$ cd packages
-$ cd blurr
-$ yarn test
+```vue
+<template>
+  <AppInput class=""> </AppInput>
+</template>
 ```
-
-For verbose unit tests:
-
-```bash
-$ cd packages
-$ cd blurr
-$ yarn unit-tests
-```
-## Limitations
-
-Currently passing a result to another variable will mutate the original source (in Pyodide)
-
-```js
-df = blurr.readFile("my_file.csv");
-df2 = df.dropCols("id"); // df2 and df both have the same columns since they are the same variable in python
-```
-
-Workaround:
-
-```js
-df = blurr.readFile("my_file.csv");
-df2 = blurr.dropCols({ source: df, target: "df2", cols: "id" })
-```
-
-This may be fixed using proxies instead of variable names

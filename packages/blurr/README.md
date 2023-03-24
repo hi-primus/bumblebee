@@ -1,3 +1,0 @@
-# blurr
-
-Dataframe processing library

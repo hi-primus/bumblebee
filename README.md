@@ -1,47 +1,32 @@
-# Blurr 👋
+[![Logo Bumblebee](assets/images/logo.png)](https://hi-bumblebee.com)
 
-![Version](https://img.shields.io/badge/version-0.0.1-blue.svg?cacheSeconds=2592000)
+[![Slack](https://img.shields.io/badge/chat-slack-red.svg?logo=slack&color=36c5f0)](https://communityinviter.com/apps/hi-bumblebee/welcome)
 
-## Install
+# Bumblebee
 
-```bash
-# Using yarn:
-$ yarn add @hi-primus/blurr
-```
+The easiest and most powerful tool to clean, transform, and prepare data of any size for Analysis, Visualization, Reporting, and Machine Learning; all in a spreadsheet-like interface. Built over [Optimus](https://github.com/hi-primus/optimus) so you can handle small and big data efficiently.
 
-```javascript
-import { Blurr } from "blurr";
-```
+Bumblebee can be used to:
 
-## Initialize
+- Explore data using an ergonomic UI
+- Clean and transform datasets with more than 100 functions available
+- Prepare data for Machine Learning
+- Join and concatenate your datasets with a visual interface
 
-```javascript
-const blurr = Blurr();
-```
+## Resources
 
-If initialization does not work properly on built projects:
+- [Homepage](https://hi-bumblebee.com/): Bumblebee's landing page.
+- [Medium page](https://medium.com/hi-bumblebee): Tutorials and articles.
+- [Bumblebee community on Slack](https://communityinviter.com/apps/hi-bumblebee/welcome): Get help, contribute and collaborate.
 
-```javascript
-const blurr = Blurr({
-  serverOptions: {
-    scriptURL: "https://cdn.jsdelivr.net/pyodide/v0.22.1/full/pyodide.js",
-  },
-});
-```
+## Contributing to Bumblebee
 
-## Create Request
+Contributions go far beyond pull requests and commits. We are very happy to receive any kind of contributions including:
 
-```javascript
-const df = await blurr.createDataframe({
-  dict: { test: ["Abc", "def", "ghi", "jkl"] },
-});
-
-const display = await df.columsSample();
-```
-
-### Result
-
-```json
-[{ "test": "Abc" }, { "test": "def" }, { "test": "ghi" }, { "test": "jkl" }]
-```
-
+- Documentation updates, enhancements, designs, or bugfixes.
+- Spelling or grammar fixes.
+- README.md corrections or redesigns.
+- Adding unit, or functional tests.
+- Triaging GitHub issues; especially determining whether an issue still persists or is reproducible.
+- Entering our [Slack community](https://communityinviter.com/apps/hi-bumblebee/welcome) and helping someone else who needs help.
+- Blogging, speaking about, or creating tutorials about Bumblebee and its many features.
