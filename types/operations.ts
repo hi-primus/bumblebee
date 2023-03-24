@@ -1,4 +1,4 @@
-import { Source } from 'blurr/build/main/types';
+import { Source } from '@hi-primus/blurr/build/main/types';
 
 import { isObject } from './common';
 
@@ -7,7 +7,7 @@ export type PreviewType =
   | 'basic columns'
   | 'whole'
   | 'rows'
-  | 'highlight rows'; // TODO: add preview types
+  | 'highlight rows';
 
 export interface OperationOptions {
   usesInputCols?: boolean | 'single';

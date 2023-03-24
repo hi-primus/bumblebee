@@ -1,4 +1,4 @@
-import { Blurr, Server } from 'blurr';
+import { Blurr, Server } from '@hi-primus/blurr';
 
 export default function () {
   const nuxtApp = useNuxtApp();
