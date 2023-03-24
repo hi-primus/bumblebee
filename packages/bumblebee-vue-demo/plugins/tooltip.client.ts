@@ -63,35 +63,35 @@ export default defineNuxtPlugin(nuxtApp => {
       for (const modifier in binding.modifiers) {
         switch (modifier) {
           case 'default':
-            popperElement.classList.add('popper-color-default');
+            popperElement.classList.add('color-default');
             break;
           case 'primary':
-            popperElement.classList.add('popper-color-primary');
+            popperElement.classList.add('color-primary');
             break;
           case 'success':
-            popperElement.classList.add('popper-color-success');
+            popperElement.classList.add('color-success');
             break;
           case 'warning':
-            popperElement.classList.add('popper-color-warn');
+            popperElement.classList.add('color-warning');
             break;
           case 'error':
-            popperElement.classList.add('popper-color-error');
+            popperElement.classList.add('color-danger');
             break;
           case 'sm':
             offsetValue = 7;
-            popperElement.classList.add('popper-size-sm');
+            popperElement.classList.add('size-sm');
             break;
           case 'md':
             offsetValue = 8;
-            popperElement.classList.add('popper-size-md');
+            popperElement.classList.add('size-md');
             break;
           case 'lg':
             offsetValue = 9;
-            popperElement.classList.add('popper-size-lg');
+            popperElement.classList.add('size-lg');
             break;
           case 'xl':
             offsetValue = 10;
-            popperElement.classList.add('popper-size-xl');
+            popperElement.classList.add('size-xl');
             break;
           default:
             console.warn('Unknown popper modifier: ' + modifier);

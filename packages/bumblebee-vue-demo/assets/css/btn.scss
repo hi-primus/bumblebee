@@ -1,16 +1,21 @@
-.-btn-size-base {
+.-size-base {
   @apply font-sans disabled:opacity-50 rounded-md flex items-center justify-center leading-tight transition-all duration-100 select-none;
 }
-.-btn-size-default {
-  @apply -btn-size-base text-sm font-bold gap-2 py-1 px-4 min-w-[80px];
+.-size-default {
+  @apply -size-base text-sm font-bold gap-2 py-1 px-4 min-w-[80px];
 }
-.-btn-size-narrow {
-  @apply -btn-size-base text-sm p-2 font-bold gap-2;
+.-size-narrow {
+  @apply -size-base text-sm p-2 font-bold gap-2;
 }
 
 .btn {
-  &:not([class*='btn-color-']),
-  &.btn-color-primary {
+  --button-text-color: theme('colors.white');
+  --button-color: theme('colors.primary.dark');
+  --button-hover-color: theme('colors.primary.darker');
+  --button-active-color: theme('colors.primary.darkest');
+  --button-highlight-color: #99cae9;
+
+  &.color-primary {
     --button-text-color: theme('colors.white');
     --button-color: theme('colors.primary.dark');
     --button-hover-color: theme('colors.primary.darker');
@@ -18,7 +23,7 @@
     --button-highlight-color: #99cae9;
   }
 
-  &.btn-color-primary-light {
+  &.color-primary-light {
     --button-text-color: theme('colors.white');
     --button-color: theme('colors.primary.DEFAULT');
     --button-hover-color: theme('colors.primary.dark');
@@ -26,7 +31,7 @@
     --button-highlight-color: #99cae9;
   }
 
-  &.btn-color-primary-lighter {
+  &.color-primary-lighter {
     --button-text-color: theme('colors.white');
     --button-color: theme('colors.primary.light');
     --button-hover-color: theme('colors.primary.DEFAULT');
@@ -34,7 +39,7 @@
     --button-highlight-color: #99cae9;
   }
 
-  &.btn-color-neutral {
+  &.color-neutral {
     --button-text-color: theme('colors.white');
     --button-color: theme('colors.neutral.DEFAULT');
     --button-hover-color: theme('colors.neutral.light');
@@ -42,7 +47,7 @@
     --button-highlight-color: theme('colors.neutral.lighter');
   }
 
-  &.btn-color-neutral-light {
+  &.color-neutral-light {
     --button-text-color: theme('colors.white');
     --button-color: theme('colors.neutral.lighter');
     --button-hover-color: theme('colors.neutral.lighter');
@@ -50,91 +55,91 @@
     --button-highlight-color: theme('colors.neutral.lightest');
   }
 
-  &.btn-color-error {
+  &.color-danger {
     --button-text-color: theme('colors.white');
-    --button-color: theme('colors.error.dark');
-    --button-hover-color: theme('colors.error.DEFAULT');
-    --button-highlight-color: theme('colors.error.light');
-    --button-active-color: theme('colors.error.light');
+    --button-color: theme('colors.danger.dark');
+    --button-hover-color: theme('colors.danger.DEFAULT');
+    --button-highlight-color: theme('colors.danger.light');
+    --button-active-color: theme('colors.danger.light');
   }
 
-  &:not([class*='btn-layout-']),
-  &.btn-layout-default {
+  &:not([class*='layout-']),
+  &.layout-default {
     @apply text-[color:var(--button-text-color)];
     @apply bg-[color:var(--button-color)];
     @apply hover:bg-[color:var(--button-hover-color)];
     @apply active:bg-[color:var(--button-active-color)];
     @apply outline-[var(--button-highlight-color)];
-    &:not([class*='btn-icon']):not([class*='btn-size-']) {
-      @apply -btn-size-default;
+    &:not([class*='icon-button']):not([class*='size-']) {
+      @apply -size-default;
     }
   }
 
-  &.btn-layout-text {
+  &.layout-text {
     @apply bg-transparent text-[color:var(--button-color)];
     @apply hover:text-[color:var(--button-hover-color)];
     @apply active:text-[color:var(--button-active-color)];
     @apply outline-[var(--button-highlight-color)];
     @apply text-base font-normal gap-2 py-1 px-2;
-    &:not([class*='btn-icon']):not([class*='btn-size-']) {
-      @apply -btn-size-base;
+    &:not([class*='icon-button']):not([class*='size-']) {
+      @apply -size-base;
     }
   }
 
-  &.btn-layout-outline {
+  &.layout-outline {
     @apply text-[color:var(--button-color)];
     @apply outline outline-2 outline-offset-[-2px] outline-[var(--button-color)];
     @apply bg-[color:var(--button-text-color)];
     @apply focus:outline-[var(--button-highlight-color)];
     @apply hover:bg-[color:var(--button-hover-color)] hover:text-[color:var(--button-text-color)] hover:outline-[color:var(--button-hover-color)];
     @apply active:bg-[color:var(--button-active-color)] active:text-[color:var(--button-text-color)] active:outline-[color:var(--button-active-color)];
-    &:not([class*='btn-icon']):not([class*='btn-size-']) {
-      @apply -btn-size-default;
+    &:not([class*='icon-button']):not([class*='size-']) {
+      @apply -size-default;
     }
   }
 
-  &.btn-layout-invisible {
+  &.layout-invisible {
     @apply bg-transparent text-[color:var(--button-color)] outline-[var(--button-highlight-color)];
     @apply hover:text-[color:var(--button-hover-color)];
     @apply active:text-[color:var(--button-active-color)];
 
-    &:not([class*='btn-icon']):not([class*='btn-size-']) {
-      @apply -btn-size-narrow;
+    &:not([class*='icon-button']):not([class*='size-']) {
+      @apply -size-narrow;
     }
-    &[class*='btn-icon'] {
+    &[class*='icon-button'] {
       @apply rounded-full;
     }
   }
-  &:not([class*='btn-icon']) {
-    &:not([class*='btn-size']) {
-      @apply -btn-size-base font-bold gap-2 py-1 px-4 min-h-[36px];
+  &:not([class*='icon-button']) {
+    &:not([class*='size']) {
+      @apply -size-base font-bold gap-2 py-1 px-4 min-h-[36px];
     }
-    &.btn-size-large {
-      @apply -btn-size-base font-medium gap-2 py-1 px-5 min-h-[40px] tracking-wider uppercase;
+    &.size-large {
+      @apply -size-base font-medium gap-2 py-1 px-5 min-h-[40px] tracking-wider uppercase;
     }
-    &.btn-size-medium {
-      @apply -btn-size-base text-sm font-bold gap-2 py-1 px-4 min-h-[36px];
+    &.size-medium {
+      @apply -size-base text-sm font-bold gap-2 py-1 px-4 min-h-[36px];
     }
-    &.btn-size-small {
-      @apply -btn-size-base text-xs font-bold gap-2 py-1 px-4 min-h-[32px];
+    &.size-small {
+      @apply -size-base text-xs font-bold gap-2 py-1 px-4 min-h-[32px];
     }
-    &.btn-size-smallest {
-      @apply -btn-size-base text-xs font-medium gap-1 py-1 px-2 min-h-[28px];
+    &.size-smallest {
+      @apply -size-base text-xs font-medium gap-1 py-1 px-2 min-h-[28px];
     }
-    &.btn-size-narrow {
-      @apply -btn-size-narrow min-h-[36px];
+    &.size-narrow {
+      @apply -size-narrow min-h-[36px];
     }
   }
-  &.btn-icon {
-    @apply -btn-size-base;
+  &.icon-button {
+    @apply -size-base;
 
-    &:not([class*='btn-size-']) {
+    &:not([class*='size-']) {
       @apply h-8 w-8;
     }
-    &.btn-size-small {
+    &.size-small {
       @apply h-6 w-6;
     }
-    &.btn-size-smallest {
+    &.size-smallest {
       @apply h-4 w-4;
       border-radius: 3px;
     }
@@ -143,7 +148,7 @@
       @apply w-3/4 h-3/4;
     }
   }
-  &.btn-rounded {
+  &.rounded-button {
     border-radius: 9999px !important;
   }
   .mdi-icon {

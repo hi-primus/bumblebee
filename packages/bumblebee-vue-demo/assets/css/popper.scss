@@ -9,37 +9,37 @@
     visibility: visible;
   }
 
-  &:not([class*='popper-color-']),
-  &.popper-color-neutral {
+  &:not([class*='color-']),
+  &.color-neutral {
     @apply bg-neutral text-white/90;
   }
 
-  &.popper-color-primary {
+  &.color-primary {
     @apply bg-primary-dark text-white;
   }
 
-  &.popper-color-primary-light {
+  &.color-primary-light {
     @apply bg-primary text-white;
   }
 
-  &.popper-color-primary-lighter {
+  &.color-primary-lighter {
     @apply bg-primary-light text-white;
   }
 
-  &.popper-color-success {
+  &.color-success {
     @apply bg-success-light text-neutral-alpha;
   }
 
-  &.popper-color-error {
-    @apply bg-error-dark text-white;
+  &.color-danger {
+    @apply bg-danger-dark text-white;
   }
 
-  &.popper-color-warn {
-    @apply bg-warn-light text-neutral-alpha;
+  &.color-warning {
+    @apply bg-warning-light text-neutral-alpha;
   }
 
-  &:not([class*='popper-size-']),
-  &.popper-size-sm {
+  &:not([class*='size-']),
+  &.size-sm {
     @apply rounded;
     .popper-content {
       @apply px-2 py-1 text-[13px];
@@ -49,7 +49,7 @@
     }
   }
 
-  &.popper-size-md {
+  &.size-md {
     @apply rounded-md;
     .popper-content {
       @apply px-3 py-1 text-[14px];
@@ -59,7 +59,7 @@
     }
   }
 
-  &.popper-size-lg {
+  &.size-lg {
     @apply rounded-lg;
     .popper-content {
       @apply px-4 py-3 text-lg;
@@ -69,7 +69,7 @@
     }
   }
 
-  &.popper-size-xl {
+  &.size-xl {
     @apply rounded-xl;
     .popper-content {
       @apply px-5 py-4 text-xl;

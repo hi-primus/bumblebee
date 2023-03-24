@@ -39,7 +39,7 @@
         </div>
         <div class="flex justify-center items-center gap-2">
           <AppButton
-            class="btn-size-large btn-color-primary-light"
+            class="size-large color-primary-light"
             @click="loadFromFile"
           >
             Load from file

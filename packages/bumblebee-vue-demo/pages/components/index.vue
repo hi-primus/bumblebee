@@ -86,11 +86,14 @@
             Accept
           </AppButton>
           <AppButton v-tooltip:top.warning.md="'Warning'"> Accept </AppButton>
-          <div v-tooltip:bottom.error.xl="'Button is disabled!'">
+          <div
+            v-tooltip:bottom.error.xl="'Button is disabled!'"
+            class="cursor-not-allowed"
+          >
             <AppButton disabled> Accept </AppButton>
           </div>
           <AppButton
-            class="btn-color-primary"
+            class="color-primary"
             v-tooltip:left.success="'Successful test'"
           >
             Done
@@ -106,240 +109,204 @@
         </div>
         <div class="flex flex-wrap gap-4 px-8 py-2 justify-start items-start">
           <AppButton>Accept</AppButton>
-          <AppButton class="btn-layout-outline">Outline</AppButton>
-          <AppButton class="btn-layout-invisible">Invisible</AppButton>
-          <AppButton class="btn-layout-text">Text</AppButton>
-          <AppButton class="btn-icon">
+          <AppButton class="layout-outline">Outline</AppButton>
+          <AppButton class="layout-invisible">Invisible</AppButton>
+          <AppButton class="layout-text">Text</AppButton>
+          <AppButton class="icon-button">
             <Icon :path="mdiCheckBold" />
           </AppButton>
-          <AppButton class="btn-icon btn-layout-invisible">
+          <AppButton class="icon-button layout-invisible">
             <Icon :path="mdiCheckBold" />
           </AppButton>
-          <AppButton class="btn-icon btn-rounded">
+          <AppButton class="icon-button rounded-button">
             <Icon :path="mdiCheckBold" />
           </AppButton>
         </div>
         <div class="flex flex-wrap gap-4 px-8 py-2 justify-start items-start">
           <AppButton loading>Accept</AppButton>
-          <AppButton loading class="btn-layout-outline">Outline</AppButton>
-          <AppButton loading class="btn-layout-invisible">Invisible</AppButton>
-          <AppButton loading class="btn-layout-text">Text</AppButton>
-          <AppButton loading class="btn-layout-outline btn-size-small"
+          <AppButton loading class="layout-outline">Outline</AppButton>
+          <AppButton loading class="layout-invisible">Invisible</AppButton>
+          <AppButton loading class="layout-text">Text</AppButton>
+          <AppButton loading class="layout-outline size-small"
             >Outline</AppButton
           >
-          <AppButton loading class="btn-layout-invisible btn-size-small"
+          <AppButton loading class="layout-invisible size-small"
             >Invisible</AppButton
           >
-          <AppButton loading class="btn-layout-text btn-size-small"
-            >Text</AppButton
-          >
-          <AppButton loading class="btn-layout-outline btn-size-smallest"
+          <AppButton loading class="layout-text size-small">Text</AppButton>
+          <AppButton loading class="layout-outline size-smallest"
             >Outline</AppButton
           >
-          <AppButton loading class="btn-layout-invisible btn-size-smallest"
+          <AppButton loading class="layout-invisible size-smallest"
             >Invisible</AppButton
           >
-          <AppButton loading class="btn-layout-text btn-size-smallest"
-            >Text</AppButton
-          >
-          <AppButton loading class="btn-icon">
+          <AppButton loading class="layout-text size-smallest">Text</AppButton>
+          <AppButton loading class="icon-button">
             <Icon :path="mdiCheckBold" />
           </AppButton>
-          <AppButton loading class="btn-icon btn-layout-invisible">
+          <AppButton loading class="icon-button layout-invisible">
             <Icon :path="mdiCheckBold" />
           </AppButton>
-          <AppButton loading class="btn-icon btn-rounded">
+          <AppButton loading class="icon-button rounded-button">
             <Icon :path="mdiCheckBold" />
           </AppButton>
-          <AppButton loading class="btn-icon btn-rounded btn-size-small">
+          <AppButton loading class="icon-button rounded-button size-small">
             <Icon :path="mdiCheckBold" />
           </AppButton>
-          <AppButton loading class="btn-icon btn-rounded btn-size-smallest">
+          <AppButton loading class="icon-button rounded-button size-smallest">
             <Icon :path="mdiCheckBold" />
           </AppButton>
         </div>
         <div class="flex flex-wrap gap-4 px-8 py-2 justify-start items-start">
           <AppButton disabled>Accept</AppButton>
-          <AppButton disabled class="btn-layout-outline">Outline</AppButton>
-          <AppButton disabled class="btn-layout-invisible">Invisible</AppButton>
-          <AppButton disabled class="btn-layout-text">Text</AppButton>
-          <AppButton disabled class="btn-icon">
+          <AppButton disabled class="layout-outline">Outline</AppButton>
+          <AppButton disabled class="layout-invisible">Invisible</AppButton>
+          <AppButton disabled class="layout-text">Text</AppButton>
+          <AppButton disabled class="icon-button">
             <Icon :path="mdiCheckBold" />
           </AppButton>
-          <AppButton disabled class="btn-icon btn-layout-invisible">
+          <AppButton disabled class="icon-button layout-invisible">
             <Icon :path="mdiCheckBold" />
           </AppButton>
-          <AppButton disabled class="btn-icon btn-rounded">
+          <AppButton disabled class="icon-button rounded-button">
             <Icon :path="mdiCheckBold" />
           </AppButton>
         </div>
         <div class="flex flex-wrap gap-4 px-8 py-2 justify-start items-start">
-          <AppButton class="btn-rounded">Accept</AppButton>
-          <AppButton class="btn-rounded btn-layout-outline">Outline</AppButton>
-          <AppButton class="btn-rounded btn-layout-invisible">
+          <AppButton class="rounded-button">Accept</AppButton>
+          <AppButton class="rounded-button layout-outline">Outline</AppButton>
+          <AppButton class="rounded-button layout-invisible">
             Invisible
           </AppButton>
-          <AppButton class="btn-rounded btn-layout-text">Text</AppButton>
-          <AppButton class="btn-rounded btn-icon">
+          <AppButton class="rounded-button layout-text">Text</AppButton>
+          <AppButton class="rounded-button icon-button">
             <Icon :path="mdiCheckBold" />
           </AppButton>
-          <AppButton class="btn-icon btn-layout-invisible">
+          <AppButton class="icon-button layout-invisible">
             <Icon :path="mdiCheckBold" />
           </AppButton>
-          <AppButton class="btn-icon btn-rounded">
+          <AppButton class="icon-button rounded-button">
             <Icon :path="mdiCheckBold" />
           </AppButton>
         </div>
         <div class="flex flex-wrap gap-4 px-8 py-2 justify-start items-start">
-          <AppButton class="btn-color-error">Delete</AppButton>
-          <AppButton class="btn-color-error btn-layout-outline"
-            >Delete</AppButton
-          >
-          <AppButton class="btn-color-error btn-layout-invisible">
-            Delete
-          </AppButton>
-          <AppButton class="btn-color-error btn-layout-text">Delete</AppButton>
-          <AppButton class="btn-color-error btn-icon">
+          <AppButton class="color-danger">Delete</AppButton>
+          <AppButton class="color-danger layout-outline">Delete</AppButton>
+          <AppButton class="color-danger layout-invisible"> Delete </AppButton>
+          <AppButton class="color-danger layout-text">Delete</AppButton>
+          <AppButton class="color-danger icon-button">
             <Icon :path="mdiTrashCan" />
           </AppButton>
-          <AppButton class="btn-color-error btn-icon btn-rounded">
+          <AppButton class="color-danger icon-button rounded-button">
             <Icon :path="mdiTrashCan" />
           </AppButton>
         </div>
         <div class="flex flex-wrap gap-4 px-8 py-2 justify-start items-start">
-          <AppButton class="btn-color-neutral"> Cancel </AppButton>
-          <AppButton class="btn-color-neutral btn-layout-outline">
-            Cancel
-          </AppButton>
-          <AppButton class="btn-color-neutral btn-layout-invisible">
-            Cancel
-          </AppButton>
-          <AppButton class="btn-color-neutral btn-layout-text">
-            Cancel
-          </AppButton>
-          <AppButton class="btn-color-neutral btn-icon">
+          <AppButton class="color-neutral"> Cancel </AppButton>
+          <AppButton class="color-neutral layout-outline"> Cancel </AppButton>
+          <AppButton class="color-neutral layout-invisible"> Cancel </AppButton>
+          <AppButton class="color-neutral layout-text"> Cancel </AppButton>
+          <AppButton class="color-neutral icon-button">
             <Icon :path="mdiTrashCan" />
           </AppButton>
-          <AppButton class="btn-color-neutral btn-icon btn-rounded">
+          <AppButton class="color-neutral icon-button rounded-button">
             <Icon :path="mdiTrashCan" />
           </AppButton>
-          <AppButton class="btn-color-neutral btn-icon btn-layout-invisible">
+          <AppButton class="color-neutral icon-button layout-invisible">
             <Icon :path="mdiTrashCan" />
           </AppButton>
           <AppButton
-            class="btn-color-neutral btn-icon btn-layout-invisible btn-size-small"
+            class="color-neutral icon-button layout-invisible size-small"
           >
             <Icon :path="mdiTrashCan" />
           </AppButton>
           <AppButton
-            class="btn-color-neutral btn-icon btn-layout-invisible btn-size-smallest"
+            class="color-neutral icon-button layout-invisible size-smallest"
           >
             <Icon :path="mdiTrashCan" />
           </AppButton>
           <!-- small -->
         </div>
         <div class="flex flex-wrap gap-4 px-8 py-2 justify-start items-start">
-          <AppButton class="btn-size-small">Accept</AppButton>
-          <AppButton class="btn-size-small btn-layout-outline"
-            >Outline</AppButton
-          >
-          <AppButton class="btn-size-small btn-layout-invisible">
+          <AppButton class="size-small">Accept</AppButton>
+          <AppButton class="size-small layout-outline">Outline</AppButton>
+          <AppButton class="size-small layout-invisible"> Invisible </AppButton>
+          <AppButton class="size-small layout-text">Text</AppButton>
+          <AppButton class="size-small icon-button">
+            <Icon :path="mdiCheckBold" />
+          </AppButton>
+          <AppButton class="size-small icon-button rounded-button">
+            <Icon :path="mdiCheckBold" />
+          </AppButton>
+        </div>
+        <div class="flex flex-wrap gap-4 px-8 py-2 justify-start items-start">
+          <AppButton class="size-smallest">Accept</AppButton>
+          <AppButton class="size-smallest layout-outline">Outline</AppButton>
+          <AppButton class="size-smallest layout-invisible">
             Invisible
           </AppButton>
-          <AppButton class="btn-size-small btn-layout-text">Text</AppButton>
-          <AppButton class="btn-size-small btn-icon">
+          <AppButton class="size-smallest layout-text">Text</AppButton>
+          <AppButton class="size-smallest icon-button">
             <Icon :path="mdiCheckBold" />
           </AppButton>
-          <AppButton class="btn-size-small btn-icon btn-rounded">
-            <Icon :path="mdiCheckBold" />
-          </AppButton>
-        </div>
-        <div class="flex flex-wrap gap-4 px-8 py-2 justify-start items-start">
-          <AppButton class="btn-size-smallest">Accept</AppButton>
-          <AppButton class="btn-size-smallest btn-layout-outline"
-            >Outline</AppButton
-          >
-          <AppButton class="btn-size-smallest btn-layout-invisible">
-            Invisible
-          </AppButton>
-          <AppButton class="btn-size-smallest btn-layout-text">Text</AppButton>
-          <AppButton class="btn-size-smallest btn-icon">
-            <Icon :path="mdiCheckBold" />
-          </AppButton>
-          <AppButton class="btn-size-smallest btn-icon btn-rounded">
+          <AppButton class="size-smallest icon-button rounded-button">
             <Icon :path="mdiCheckBold" />
           </AppButton>
         </div>
         <div class="flex flex-wrap gap-4 px-8 py-2 justify-start items-start">
-          <AppButton class="btn-size-small btn-color-error">Delete</AppButton>
-          <AppButton class="btn-size-small btn-color-error btn-layout-outline">
+          <AppButton class="size-small color-danger">Delete</AppButton>
+          <AppButton class="size-small color-danger layout-outline">
             Delete
           </AppButton>
-          <AppButton
-            class="btn-size-small btn-color-error btn-layout-invisible"
-          >
+          <AppButton class="size-small color-danger layout-invisible">
             Delete
           </AppButton>
-          <AppButton class="btn-size-small btn-color-error btn-layout-text">
+          <AppButton class="size-small color-danger layout-text">
             Delete
           </AppButton>
-          <AppButton class="btn-size-small btn-color-error btn-icon">
+          <AppButton class="size-small color-danger icon-button">
+            <Icon :path="mdiTrashCan" />
+          </AppButton>
+          <AppButton class="size-small color-danger icon-button rounded-button">
+            <Icon :path="mdiTrashCan" />
+          </AppButton>
+        </div>
+        <div class="flex flex-wrap gap-4 px-8 py-2 justify-start items-start">
+          <AppButton class="size-small color-primary-light">Dismiss</AppButton>
+          <AppButton class="size-small color-primary-light layout-outline">
+            Dismiss
+          </AppButton>
+          <AppButton class="size-small color-primary-light layout-invisible">
+            Dismiss
+          </AppButton>
+          <AppButton class="size-small color-primary-light layout-text">
+            Dismiss
+          </AppButton>
+          <AppButton class="size-small color-primary-light icon-button">
             <Icon :path="mdiTrashCan" />
           </AppButton>
           <AppButton
-            class="btn-size-small btn-color-error btn-icon btn-rounded"
+            class="size-small color-primary-light icon-button rounded-button"
           >
             <Icon :path="mdiTrashCan" />
           </AppButton>
         </div>
         <div class="flex flex-wrap gap-4 px-8 py-2 justify-start items-start">
-          <AppButton class="btn-size-small btn-color-primary-light"
-            >Dismiss</AppButton
-          >
-          <AppButton
-            class="btn-size-small btn-color-primary-light btn-layout-outline"
-          >
-            Dismiss
+          <AppButton class="size-small color-neutral">Cancel</AppButton>
+          <AppButton class="size-small color-neutral layout-outline">
+            Cancel
           </AppButton>
-          <AppButton
-            class="btn-size-small btn-color-primary-light btn-layout-invisible"
-          >
-            Dismiss
+          <AppButton class="size-small color-neutral layout-invisible">
+            Cancel
           </AppButton>
-          <AppButton
-            class="btn-size-small btn-color-primary-light btn-layout-text"
-          >
-            Dismiss
+          <AppButton class="size-small color-neutral layout-text">
+            Cancel
           </AppButton>
-          <AppButton class="btn-size-small btn-color-primary-light btn-icon">
+          <AppButton class="size-small color-neutral icon-button">
             <Icon :path="mdiTrashCan" />
           </AppButton>
           <AppButton
-            class="btn-size-small btn-color-primary-light btn-icon btn-rounded"
-          >
-            <Icon :path="mdiTrashCan" />
-          </AppButton>
-        </div>
-        <div class="flex flex-wrap gap-4 px-8 py-2 justify-start items-start">
-          <AppButton class="btn-size-small btn-color-neutral">Cancel</AppButton>
-          <AppButton
-            class="btn-size-small btn-color-neutral btn-layout-outline"
-          >
-            Cancel
-          </AppButton>
-          <AppButton
-            class="btn-size-small btn-color-neutral btn-layout-invisible"
-          >
-            Cancel
-          </AppButton>
-          <AppButton class="btn-size-small btn-color-neutral btn-layout-text">
-            Cancel
-          </AppButton>
-          <AppButton class="btn-size-small btn-color-neutral btn-icon">
-            <Icon :path="mdiTrashCan" />
-          </AppButton>
-          <AppButton
-            class="btn-size-small btn-color-neutral btn-icon btn-rounded"
+            class="size-small color-neutral icon-button rounded-button"
           >
             <Icon :path="mdiTrashCan" />
           </AppButton>
@@ -347,18 +314,17 @@
         <div
           class="flex flex-wrap gap-4 px-8 py-2 justify-start items-start max-w-[320px] bg-primary-highlight"
         >
-          <AppButton class="btn-color-error w-full">Cancel</AppButton>
+          <AppButton class="color-danger w-full">Cancel</AppButton>
         </div>
         <div class="flex flex-wrap gap-4 px-8 py-2 justify-start items-start">
           <AppInput class=""> </AppInput>
-          <AppInput class="input-size-condensed"> </AppInput>
-          <AppInput class="input-size-small"> </AppInput>
+          <AppInput class="size-condensed"> </AppInput>
+          <AppInput class="size-small"> </AppInput>
         </div>
         <div class="flex flex-wrap gap-4 px-8 py-2 justify-start items-start">
           <AppInput placeholder="Column" class=""> </AppInput>
-          <AppInput placeholder="Column" class="input-size-condensed">
-          </AppInput>
-          <AppInput placeholder="Column" class="input-size-small"> </AppInput>
+          <AppInput placeholder="Column" class="size-condensed"> </AppInput>
+          <AppInput placeholder="Column" class="size-small"> </AppInput>
         </div>
         <div class="flex flex-wrap gap-4 px-8 py-2 justify-start items-start">
           <AppInput label="Test input" placeholder="Column" class="">
@@ -366,14 +332,10 @@
           <AppInput
             label="Test input"
             placeholder="Column"
-            class="input-size-condensed"
+            class="size-condensed"
           >
           </AppInput>
-          <AppInput
-            label="Test input"
-            placeholder="Column"
-            class="input-size-small"
-          >
+          <AppInput label="Test input" placeholder="Column" class="size-small">
           </AppInput>
         </div>
         <div class="flex flex-wrap gap-4 px-8 py-2 justify-start items-start">
@@ -382,13 +344,13 @@
           <AppInput
             label="Test input"
             placeholder="Column"
-            class="field-mono input-size-condensed"
+            class="field-mono size-condensed"
           >
           </AppInput>
           <AppInput
             label="Test input"
             placeholder="Column"
-            class="field-mono input-size-small"
+            class="field-mono size-small"
           >
           </AppInput>
         </div>
@@ -422,8 +384,8 @@
             :options="columns"
             label="Test autocomplete"
             placeholder="Columns"
-            name="input-size-condensed"
-            class="input-size-condensed"
+            name="size-condensed"
+            class="size-condensed"
             clearable
           >
           </AppAutocomplete>
@@ -443,8 +405,8 @@
             :options="columns"
             label="Test autocomplete"
             placeholder="Columns"
-            name="input-size-condensed"
-            class="field-mono input-size-condensed"
+            name="size-condensed"
+            class="field-mono size-condensed"
             clearable
           >
           </AppAutocomplete>
@@ -455,8 +417,8 @@
             multiple
             label="Test multiple autocomplete"
             placeholder="Columns"
-            name="input-size-small"
-            class="input-size-small"
+            name="size-small"
+            class="size-small"
           >
           </AppAutocomplete>
           search: {{ search }}
@@ -496,8 +458,8 @@
             :options="columnsValues"
             label="Test autocomplete"
             placeholder="Columns"
-            name="input-size-condensed"
-            class="input-size-condensed"
+            name="size-condensed"
+            class="size-condensed"
             clearable
           >
           </AppAutocomplete>
@@ -517,8 +479,8 @@
             :options="columnsValues"
             label="Test autocomplete"
             placeholder="Columns"
-            name="input-size-condensed"
-            class="field-mono input-size-condensed"
+            name="size-condensed"
+            class="field-mono size-condensed"
             clearable
           >
           </AppAutocomplete>
@@ -529,8 +491,8 @@
             multiple
             label="Test multiple autocomplete"
             placeholder="Columns"
-            name="input-size-small"
-            class="input-size-small"
+            name="size-small"
+            class="size-small"
           >
           </AppAutocomplete>
           search: {{ search }}
@@ -547,8 +509,8 @@
             v-model="replaces"
             label="Test multiple chips"
             placeholder="Columns"
-            name="input-size-small"
-            class="input-size-small"
+            name="size-small"
+            class="size-small"
           >
           </AppChipsInput>
         </div>
@@ -567,8 +529,8 @@
             :options="columns"
             label="Test selector"
             placeholder="Columns"
-            name="input-size-condensed"
-            class="input-size-condensed min-w-[320px]"
+            name="size-condensed"
+            class="size-condensed min-w-[320px]"
           >
           </AppSelector>
           <AppSelector
@@ -585,8 +547,8 @@
             :options="columns"
             label="Test selector"
             placeholder="Columns"
-            name="input-size-condensed"
-            class="input-size-condensed min-w-[320px] field-mono"
+            name="size-condensed"
+            class="size-condensed min-w-[320px] field-mono"
           >
           </AppSelector>
           <AppSelector
@@ -595,8 +557,8 @@
             multiple
             label="Test multiple selector"
             placeholder="Columns"
-            name="input-size-small"
-            class="input-size-small min-w-[320px]"
+            name="size-small"
+            class="size-small min-w-[320px]"
           >
           </AppSelector>
         </div>

@@ -9,7 +9,7 @@
         :class="{
           'opacity-80': !isLoading,
           'text-primary-dark': appStatus === 'ready',
-          'text-error-dark': appStatus === 'error',
+          'text-danger-dark': appStatus === 'error',
           'text-neutral': !['ready', 'error'].includes(appStatus as string)
         }"
       >
@@ -28,7 +28,7 @@
         {{ status }}
         <AppButton
           v-if="appStatus === 'error'"
-          class="btn-size-smallest"
+          class="size-smallest"
           :loading="retrying"
           @click="retry"
         >

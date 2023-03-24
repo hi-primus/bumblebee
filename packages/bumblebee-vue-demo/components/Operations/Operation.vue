@@ -61,14 +61,14 @@
                 <AppButton
                   :key="`${field.name}-delete-${groupIndex}`"
                   type="button"
-                  class="btn-layout-invisible btn-icon btn-size-small btn-color-neutral"
+                  class="layout-invisible icon-button size-small color-neutral"
                   :icon="mdiClose"
                   @click="deleteFromGroup(field.name, groupIndex)"
                 />
                 <AppButton
                   :key="`${field.name}-add-${groupIndex}`"
                   type="button"
-                  class="btn-layout-invisible btn-icon btn-size-small btn-color-primary"
+                  class="layout-invisible icon-button size-small color-primary"
                   :icon="mdiPlus"
                   @click="addToGroup(field.name, groupIndex)"
                 />
@@ -77,7 +77,7 @@
           </template>
           <AppButton
             :key="`${field.name}-add-${field.fields.length}`"
-            class="mx-auto mt-[-12px] btn-layout-text btn-color-primary-light"
+            class="mx-auto mt-[-12px] layout-text color-primary-light"
             type="button"
             @click="addToGroup(field.name)"
           >
@@ -107,7 +107,7 @@
     </div>
     <div class="w-full flex justify-end gap-2">
       <AppButton
-        class="btn-layout-invisible"
+        class="layout-invisible"
         :disabled="Boolean(status)"
         :loading="status === 'cancelling'"
         type="button"

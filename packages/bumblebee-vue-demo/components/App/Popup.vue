@@ -16,7 +16,7 @@
           </h3>
           <AppButton
             v-if="closable"
-            class="btn-icon btn-layout-invisible btn-color-neutral ml-auto mr-[-7px]"
+            class="type-icon layout-invisible color-neutral ml-auto mr-[-7px]"
             @click="() => emit('close')"
           >
             <Icon :path="mdiClose" />

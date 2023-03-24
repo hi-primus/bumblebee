@@ -81,14 +81,14 @@
     </AppPopup>
     <section class="w-full flex items-center px-5 overflow-hidden h-full">
       <AppButton
-        class="ml-auto btn-icon btn-layout-invisible btn-size-small btn-color-neutral-light"
+        class="ml-auto icon-button layout-invisible size-small color-neutral-light"
         @click="showCommands = true"
       >
         <Icon :path="mdiMagnify" />
       </AppButton>
       <AppButton
         :tool="{ icon: mdiCodeTags }"
-        class="btn-icon btn-layout-invisible btn-size-small btn-color-neutral-light"
+        class="icon-button layout-invisible size-small color-neutral-light"
         @click="showSidebar = !showSidebar"
       >
         <Icon :path="mdiCodeTags" />
@@ -125,7 +125,7 @@ const highligthMatch = (text: string, match: string) => {
   const regex = new RegExp(match, 'gi');
   return text.replace(
     regex,
-    match => `<span class="bg-warn-highlight">${match}</span>`
+    match => `<span class="bg-warning-highlight">${match}</span>`
   );
 };
 

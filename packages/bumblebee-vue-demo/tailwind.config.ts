@@ -73,8 +73,8 @@ export default {
       ...colors,
       primary: colors.blue,
       success: colors.green,
-      error: colors.red,
-      warn: colors.yellow,
+      danger: colors.red,
+      warning: colors.yellow,
       background: '#ffffff',
       neutral: {
         DEFAULT: colors.gray.darkest,

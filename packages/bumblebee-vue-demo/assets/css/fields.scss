@@ -20,10 +20,10 @@
     @apply input-primary w-full;
   }
   .text-input-errorContainer {
-    @apply text-error text-sm block px-1 mt-1;
+    @apply text-danger text-sm block px-1 mt-1;
   }
   .text-input-errorInput {
-    @apply border border-error;
+    @apply border border-danger;
   }
   .text-input-label {
     @apply absolute bg-white top-[-0.5rem] pl-[0.35em] pr-[0.25em];
@@ -63,7 +63,7 @@
   }
 }
 
-.input:not([class*='input-size-']) {
+.input:not([class*='size-']) {
   .input-field,
   .selector-button {
     @apply sm:text-sm md:text-base min-h-[26px] py-2 px-5;
@@ -73,7 +73,7 @@
   }
 }
 
-.input-size-condensed {
+.size-condensed {
   .input-field,
   .selector-button {
     @apply sm:text-sm md:text-base min-h-[18px] py-2 px-3;
@@ -83,7 +83,7 @@
   }
 }
 
-.input-size-small {
+.size-small {
   .input-field,
   .selector-button {
     @apply sm:text-xs md:text-sm min-h-[18px] py-1 px-2;
@@ -117,11 +117,11 @@
   }
 
   .file-input-errorContainer {
-    @apply text-error text-sm block px-1 mt-1;
+    @apply text-danger text-sm block px-1 mt-1;
   }
 
   .file-input-errorInput {
-    @apply border border-error;
+    @apply border border-danger;
   }
 }
 
@@ -171,10 +171,10 @@
   // .selector-optionIconDefault {
   // }
   .selector-errorContainer {
-    @apply text-error text-sm block px-1 mt-1;
+    @apply text-danger text-sm block px-1 mt-1;
   }
   .selector-errorInput {
-    @apply border border-error;
+    @apply border border-danger;
   }
   .divider {
     @apply border-b border-line w-[calc(100%-32px)] mx-auto my-2;
@@ -220,10 +220,10 @@
     @apply text-primary;
   }
   .autocomplete-errorContainer {
-    @apply text-error text-sm block px-1 mt-1;
+    @apply text-danger text-sm block px-1 mt-1;
   }
   .autocomplete-errorInput {
-    @apply border border-error;
+    @apply border border-danger;
   }
 }
 
@@ -240,13 +240,13 @@
   }
 }
 
-.checkbox:not([class*='checkbox-size-']) {
+.checkbox:not([class*='size-']) {
   .checkbox-input {
     @apply h-5 w-5;
   }
 }
 
-.checkbox-size-small {
+.size-small {
   .checkbox-input {
     @apply h-4 w-4;
   }

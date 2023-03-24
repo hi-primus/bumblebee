@@ -2,10 +2,10 @@
   <div
     class="toast font-title min-h-16 flex items-center rounded-lg px-4 gap-4 text-[color:var(--toast-text-color)] bg-[color:var(--toast-color)]"
     :class="{
-      'toast-success': props.type === 'success',
-      'toast-error': props.type === 'error',
-      'toast-warn': props.type === 'warning',
-      'toast-primary': props.type === 'info'
+      'color-info': props.type === 'info',
+      'color-success': props.type === 'success',
+      'color-error': props.type === 'error',
+      'color-warning': props.type === 'warning'
     }"
   >
     <div v-if="icon" class="h-16 w-6 text-3xl flex justify-center items-center">

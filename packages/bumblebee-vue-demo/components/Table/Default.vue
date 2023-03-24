@@ -761,10 +761,10 @@ defineExpose({
     }
   }
   &.column-color-preview {
-    --line-color: theme('colors.warn.lighter');
+    --line-color: theme('colors.yellow.lighter');
     &,
     & .column-header > * {
-      @apply bg-warn/10;
+      @apply bg-yellow/10;
     }
   }
 }
@@ -790,11 +790,11 @@ defineExpose({
   &.row-color-success {
     @apply bg-success-highlight;
   }
-  &.row-color-error {
-    @apply bg-error-highlight;
+  &.row-color-danger {
+    @apply bg-danger-highlight;
   }
   &.row-color-warning {
-    @apply bg-warn-highlight;
+    @apply bg-warning-highlight;
   }
 }
 

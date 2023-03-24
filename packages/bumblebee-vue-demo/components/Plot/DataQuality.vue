@@ -9,7 +9,7 @@
       @mouseenter="onHovered('match')"
     ></div>
     <div
-      class="bg-error-desaturated hover:bg-error-desaturated-dark h-2"
+      class="bg-danger-desaturated hover:bg-danger-desaturated-dark h-2"
       :class="{ 'min-w-1': data.mismatch > 0 }"
       :style="{
         width: `${getPercentage('mismatch')}%`

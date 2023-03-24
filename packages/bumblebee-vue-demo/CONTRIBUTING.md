@@ -52,18 +52,21 @@ const props = defineProps({
 ## Using apply for complex tailwind classes
 
 ```css
-.btn-primary {
+.pseudo-primary-button {
   @apply bg-primary-dark text-white px-4 py-2 rounded;
 }
 ```
 
 ## Using themes system
 
-Buttons have `btn-` prefix:
+Buttons have `size` and `color`:
 
 ```vue
 <template>
-  <AppButton @click="onClickEvent" class="btn-icon btn-color-error btn-rounded">
+  <AppButton
+    @click="onClickEvent"
+    class="icon-button color-danger size-narrow rounded-button"
+  >
     <Icon :path="mdiTrashCan" />
   </AppButton>
 </template>

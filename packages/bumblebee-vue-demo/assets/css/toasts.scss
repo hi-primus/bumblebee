@@ -1,37 +1,29 @@
 .toast {
-  &:not([class*='toast-']),
-  &.toast-primary {
-    --toast-text-color: theme('colors.white');
-    --toast-color: theme('colors.primary.dark');
-  }
+  --toast-text-color: theme('colors.white');
+  --toast-color: theme('colors.neutral.DEFAULT');
 
-  &.toast-primary-light {
-    --toast-text-color: theme('colors.white');
-    --toast-color: theme('colors.primary.DEFAULT');
-  }
-
-  &.toast-primary-lighter {
-    --toast-text-color: theme('colors.white');
-    --toast-color: theme('colors.primary.light');
-  }
-
-  &.toast-neutral {
+  &.color-neutral {
     --toast-text-color: theme('colors.white');
     --toast-color: theme('colors.neutral.DEFAULT');
   }
 
-  &.toast-success {
+  &.color-info {
+    --toast-text-color: theme('colors.white');
+    --toast-color: theme('colors.primary.dark');
+  }
+
+  &.color-success {
     --toast-text-color: theme('colors.neutral.alpha');
     --toast-color: theme('colors.success.light');
   }
 
-  &.toast-error {
+  &.color-error {
     --toast-text-color: theme('colors.white');
-    --toast-color: theme('colors.error.dark');
+    --toast-color: theme('colors.danger.dark');
   }
 
-  &.toast-warn {
+  &.color-warning {
     --toast-text-color: theme('colors.neutral.alpha');
-    --toast-color: theme('colors.warn.light');
+    --toast-color: theme('colors.warning.light');
   }
 }
