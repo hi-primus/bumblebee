@@ -446,9 +446,6 @@ const onResizeStart = (event: MouseEvent, columnIndex: number) => {
   const columnElement = document.querySelector(
     `[data-column-index="${columnIndex}"]`
   );
-  if (columnElement) {
-    columnElement.classList.add('bg-error');
-  }
 };
 
 const resizeDrag = (event: MouseEvent) => {
