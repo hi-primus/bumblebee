@@ -354,14 +354,20 @@ const addChunk = (chunk: Chunk) => {
   }
 };
 
-const clearChunks = (saveOnPrevious = true, check = true) => {
+const clearChunks = async (
+  saveOnPrevious = true,
+  check = true,
+  update = false
+): Promise<void> => {
   if (saveOnPrevious) {
     previousChunks.value = chunks.value.filter(chunk => chunk.data?.length);
   }
   chunks.value = [];
   chunksQueue.value = [];
   if (check) {
-    checkChunksQueue();
+    await checkChunksQueue();
+  } else if (update) {
+    updateChunks();
   }
 };
 
