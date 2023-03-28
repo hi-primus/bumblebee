@@ -224,7 +224,7 @@ const columnTitleHeight = 32;
 const columnPlotHeight = 90;
 const columnHeaderHeight = columnTitleHeight + columnPlotHeight + 2;
 const tablePaddingBottom = 200;
-const minColumnWidth = 169;
+const minColumnWidth = 173;
 const rowHeight = 24;
 
 const scrollElement = ref<HTMLElement | null>(null);

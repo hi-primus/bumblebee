@@ -176,7 +176,7 @@ const calculatedBinWidth = computed(() => {
 });
 
 const stageWidth = computed(() => {
-  return calculatedBinWidth.value * (props.data?.length || 1);
+  return calculatedBinWidth.value * (props.data?.length || 1) - 1;
 });
 
 const colors = computed(() => {
