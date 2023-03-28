@@ -1,6 +1,7 @@
-import { Source } from '@hi-primus/blurr/build/main/types';
-
+import { AppFunctions } from './app';
 import { isObject } from './common';
+
+import { Client, Source } from '@/types/blurr';
 
 export type PreviewType =
   | boolean
@@ -29,9 +30,32 @@ export interface PayloadWithOptions {
 
 export type Payload = Partial<PayloadWithOptions>;
 
+export type Cols = string[];
+
+export type OperationPayload<
+  T extends Record<string, unknown> = Record<string, unknown>
+> = {
+  blurr: Client;
+  source: Source;
+  target: string;
+  cols: Cols;
+  allColumns: Cols;
+  allDataframes: {
+    name: string;
+    columns: Cols;
+    df: Source;
+  }[];
+  outputCols: Cols;
+  options: OperationOptions;
+  app: AppFunctions;
+} & T;
+
 type PayloadCallbackOr<T> =
   | T
-  | ((payload: Partial<PayloadWithOptions>, currentIndex?: number) => T);
+  | ((
+      payload: OperationPayload<PayloadWithOptions>,
+      currentIndex?: number
+    ) => T);
 
 export type FieldOption<T = unknown> = Record<string, T> & {
   disabled?: boolean;
@@ -147,7 +171,7 @@ export const isOperation = (
   return true;
 };
 
-export type OperationPayload = {
+export type OperationItem = {
   operation: Operation;
   payload: PayloadWithOptions;
 };

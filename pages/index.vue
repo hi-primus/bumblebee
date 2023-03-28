@@ -65,7 +65,7 @@ import {
   Operation,
   OperationActions,
   OperationOptions,
-  OperationPayload,
+  OperationItem,
   OperationStatus,
   PayloadWithOptions,
   State,
@@ -126,12 +126,12 @@ watch(
   }
 );
 
-const executedOperations = ref<OperationPayload[]>([]);
+const executedOperations = ref<OperationItem[]>([]);
 
-const operationCells = ref<OperationPayload[]>([]);
+const operationCells = ref<OperationItem[]>([]);
 provide('operations', operationCells);
 
-const inactiveOperationCells = ref<OperationPayload[]>([]);
+const inactiveOperationCells = ref<OperationItem[]>([]);
 provide('inactive-operations', inactiveOperationCells);
 
 const operationValues = ref<Partial<PayloadWithOptions>>({});
@@ -227,7 +227,7 @@ const handleDataframeResults = async (
  * @param data The next list of operations.
  */
 
-const checkSources = (data: OperationPayload[]) => {
+const checkSources = (data: OperationItem[]) => {
   const sources = data.map(operation => operation.payload.options.sourceId);
   dataframes.value = dataframes.value.filter(
     dataframe => !dataframe.sourceId || sources.includes(dataframe.sourceId)

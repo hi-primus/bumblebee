@@ -80,7 +80,7 @@ import { Ref } from 'vue';
 import {
   isOperation,
   OperationActions,
-  OperationPayload,
+  OperationItem,
   PayloadWithOptions,
   State
 } from '@/types/operations';
@@ -97,16 +97,16 @@ const operationValues = inject('operation-values') as Ref<
   Partial<PayloadWithOptions>
 >;
 
-const operations = inject<Ref<OperationPayload[]>>('operations', ref([]));
+const operations = inject<Ref<OperationItem[]>>('operations', ref([]));
 
-const inactiveOperations = inject<Ref<OperationPayload[]>>(
+const inactiveOperations = inject<Ref<OperationItem[]>>(
   'inactive-operations',
   ref([])
 );
 
 const dragging = ref(false);
 
-type OperationCell = OperationPayload & { id: string; content: string };
+type OperationCell = OperationItem & { id: string; content: string };
 
 const operationCells = computed<OperationCell[]>({
   get: () => {
@@ -157,7 +157,7 @@ const resolveUsingPayload = <T>(
 };
 
 const updateOperations = async (
-  newOperations: OperationPayload[]
+  newOperations: OperationItem[]
 ): Promise<void> => {
   const validOrder = newOperations.every((operation, index) => {
     if (operation.payload.options.saveToNewDataframe) {

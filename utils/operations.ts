@@ -1,33 +1,13 @@
-import { AppFunctions } from '@/types/app';
-import { Client, Source } from '@/types/blurr';
+import { Source } from '@/types/blurr';
 import { isObject } from '@/types/common';
 import {
   Operation,
   OperationCreator,
   OperationOptions,
+  OperationPayload,
   Payload
 } from '@/types/operations';
 import { PRIORITIES } from '@/utils/blurr';
-
-type Cols = string[];
-
-type OperationPayload<
-  T extends Record<string, unknown> = Record<string, unknown>
-> = {
-  blurr: Client;
-  source: Source;
-  target: string;
-  cols: Cols;
-  allColumns: Cols;
-  allDataframes: {
-    name: string;
-    columns: Cols;
-    df: Source;
-  }[];
-  outputCols: Cols;
-  options: OperationOptions;
-  app: AppFunctions;
-} & T;
 
 type Name = {
   name: string;
@@ -246,17 +226,13 @@ export const operationCreators: Record<string, OperationCreator> = {
             type: 'string',
             // class: 'grouped-last w-2/3',
             suggestions: (payload: Payload) => {
-              return (
-                payload.allColumns
-                  ?.filter((c: unknown) => c && typeof c === 'string')
-                  .map((c: string) => {
-                    return {
-                      value: c,
-                      name: c,
-                      type: 'column'
-                    };
-                  }) || []
-              );
+              return payload.allColumns.map((c: string) => {
+                return {
+                  value: c,
+                  name: c,
+                  type: 'column'
+                };
+              });
             }
           }
         ]
@@ -324,7 +300,7 @@ export const operationCreators: Record<string, OperationCreator> = {
             label: 'Condition',
             type: 'string',
             defaultValue: 'equal',
-            options: (payload: Payload) => [
+            options: _payload => [
               {
                 text: 'Is exactly',
                 value: 'equal'
@@ -390,7 +366,7 @@ export const operationCreators: Record<string, OperationCreator> = {
               },
               { text: 'Null values', value: 'null', hidden: true }
             ],
-            class: (payload: Payload, currentIndex = 0) => {
+            class: (payload, currentIndex = 0) => {
               const condition = payload.replaces[currentIndex].condition;
               switch (condition) {
                 case 'value_in':
@@ -404,7 +380,7 @@ export const operationCreators: Record<string, OperationCreator> = {
           },
           {
             name: 'value',
-            label: (payload: Payload, currentIndex = 0) => {
+            label: (payload, currentIndex = 0) => {
               const condition = payload.replaces[currentIndex].condition;
               switch (condition) {
                 case 'between':
@@ -418,7 +394,7 @@ export const operationCreators: Record<string, OperationCreator> = {
               }
             },
             type: 'string',
-            class: (payload: Payload, currentIndex = 0): string => {
+            class: (payload, currentIndex = 0): string => {
               const condition = payload.replaces[currentIndex].condition;
               switch (condition) {
                 case 'between':
@@ -427,7 +403,7 @@ export const operationCreators: Record<string, OperationCreator> = {
                   return 'grouped-middle w-1/3';
               }
             },
-            hidden: (payload: Payload, currentIndex = 0) => {
+            hidden: (payload, currentIndex = 0) => {
               const condition = payload.replaces[currentIndex].condition;
               return condition === 'value_in';
             }
@@ -437,7 +413,7 @@ export const operationCreators: Record<string, OperationCreator> = {
             label: 'Max',
             type: 'string',
             class: 'grouped-middle w-1/4',
-            hidden: (payload: Payload, currentIndex = 0) => {
+            hidden: (payload, currentIndex = 0) => {
               const condition = payload.replaces[currentIndex].condition;
               return condition !== 'between';
             }
@@ -448,7 +424,7 @@ export const operationCreators: Record<string, OperationCreator> = {
             type: 'strings array',
             defaultValue: [],
             class: 'w-full',
-            hidden: (payload: Payload, currentIndex = 0) => {
+            hidden: (payload, currentIndex = 0) => {
               const condition = payload.replaces[currentIndex].condition;
               return condition !== 'value_in';
             }
@@ -457,7 +433,7 @@ export const operationCreators: Record<string, OperationCreator> = {
             name: 'replaceBy',
             label: 'Replace by',
             type: 'string',
-            class: (payload: Payload, currentIndex = 0) => {
+            class: (payload, currentIndex = 0) => {
               const condition = payload.replaces[currentIndex].condition;
               switch (condition) {
                 case 'value_in':
@@ -704,7 +680,7 @@ export const operationCreators: Record<string, OperationCreator> = {
             label: 'Condition',
             type: 'string',
             defaultValue: 'equal',
-            options: (_payload: Payload) => [
+            options: _payload => [
               {
                 text: 'Is exactly',
                 value: 'equal'
@@ -770,7 +746,7 @@ export const operationCreators: Record<string, OperationCreator> = {
               },
               { text: 'Null values', value: 'null', hidden: true }
             ],
-            class: (payload: Payload, currentIndex = 0): string => {
+            class: (payload, currentIndex = 0): string => {
               const condition = payload.conditions[currentIndex].condition;
               switch (condition) {
                 case 'value_in':
@@ -782,7 +758,7 @@ export const operationCreators: Record<string, OperationCreator> = {
           },
           {
             name: 'value',
-            label: (payload: Payload, currentIndex = 0): string => {
+            label: (payload, currentIndex = 0): string => {
               const condition = payload.conditions[currentIndex].condition;
               switch (condition) {
                 case 'between':
@@ -792,7 +768,7 @@ export const operationCreators: Record<string, OperationCreator> = {
               }
             },
             type: 'string',
-            class: (payload: Payload, currentIndex = 0): string => {
+            class: (payload, currentIndex = 0): string => {
               const condition = payload.conditions[currentIndex].condition;
               switch (condition) {
                 case 'between':
@@ -801,7 +777,7 @@ export const operationCreators: Record<string, OperationCreator> = {
                   return 'grouped-last w-1/2';
               }
             },
-            hidden: (payload: Payload, currentIndex = 0) => {
+            hidden: (payload, currentIndex = 0) => {
               const condition = payload.conditions[currentIndex].condition;
               return condition === 'value_in';
             }
@@ -811,7 +787,7 @@ export const operationCreators: Record<string, OperationCreator> = {
             label: 'Max',
             type: 'string',
             class: 'grouped-last w-1/4',
-            hidden: (payload: Payload, currentIndex = 0) => {
+            hidden: (payload, currentIndex = 0) => {
               const condition = payload.conditions[currentIndex].condition;
               return condition !== 'between';
             }
@@ -822,7 +798,7 @@ export const operationCreators: Record<string, OperationCreator> = {
             type: 'strings array',
             defaultValue: [],
             class: 'w-full',
-            hidden: (payload: Payload, currentIndex = 0) => {
+            hidden: (payload, currentIndex = 0) => {
               console.log('payload', payload);
               const condition = payload.conditions[currentIndex].condition;
               return condition !== 'value_in';
@@ -835,7 +811,7 @@ export const operationCreators: Record<string, OperationCreator> = {
         label: 'Action',
         type: 'string',
         defaultValue: 'select',
-        options: (payload: Payload) => [
+        options: payload => [
           {
             text: 'Filter matching rows',
             value: 'select'
@@ -855,13 +831,13 @@ export const operationCreators: Record<string, OperationCreator> = {
         name: 'value',
         label: 'Value',
         type: 'string',
-        hidden: (payload: Payload) => payload.action !== 'set'
+        hidden: payload => payload.action !== 'set'
       },
       {
         name: 'otherwise',
         label: 'Otherwise',
         type: 'string',
-        hidden: (payload: Payload) => payload.action !== 'set'
+        hidden: payload => payload.action !== 'set'
       }
     ]
   },
