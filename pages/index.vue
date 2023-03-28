@@ -858,7 +858,7 @@ const previewOperationThrottled = throttleOnce(
         status: 'ok'
       };
     } catch (err) {
-      console.error('Error executing preview operation.', err); // TODO: show error in UI
+      console.error('Error executing preview operation.', err);
       if (appStatus.value === 'busy') {
         appStatus.value = 'ready';
       }
@@ -867,6 +867,20 @@ const previewOperationThrottled = throttleOnce(
         operationStatus.value = {
           message: err.message,
           status: err instanceof PreviewError ? 'warning' : 'error'
+        };
+      } else if (typeof err === 'string') {
+        previewData.value = null;
+        operationStatus.value = {
+          message: err
+            .split('\n')
+            .filter(l => l)
+            .pop(),
+          status: 'error'
+        };
+      } else {
+        operationStatus.value = {
+          message: 'Error executing preview operation',
+          status: 'error'
         };
       }
     }
