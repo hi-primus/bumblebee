@@ -129,10 +129,14 @@ const highligthMatch = (text: string, match: string) => {
   );
 };
 
-const operationsList = Object.entries(operations).map(([key, operation]) => ({
-  key,
-  ...operation
-}));
+type OperationWithKey = Operation & { key: string };
+
+const operationsList: OperationWithKey[] = Object.entries(operations).map(
+  ([key, operation]) => ({
+    key,
+    ...operation
+  })
+);
 
 const filteredOperations = computed(() => {
   const search = searchOperation.value?.toLowerCase();
@@ -162,7 +166,7 @@ const filteredOperations = computed(() => {
       recent
     };
   }) as {
-    operation: Operation;
+    operation: OperationWithKey;
     matches: number;
     recent: number;
   }[];
@@ -221,7 +225,10 @@ const handleKeyDownSearch = (event: KeyboardEvent) => {
     if (el) {
       if (key === 'enter') {
         const operationKey = (el as HTMLElement).dataset.operationKey as string;
-        const operation = operations[operationKey];
+        const operation = {
+          ...operations[operationKey],
+          key: operationKey
+        };
         if (operation) {
           selectOperationItem(operation);
           showCommands.value = false;
@@ -241,7 +248,10 @@ const handleKeyDownOperation = (event: KeyboardEvent): void => {
   const key = event.key.toLowerCase();
 
   if (key === 'enter') {
-    const operation = operations[operationKey];
+    const operation = {
+      ...operations[operationKey],
+      key: operationKey
+    };
     if (operation) {
       selectOperationItem(operation);
       showCommands.value = false;
@@ -262,7 +272,9 @@ const handleKeyDownOperation = (event: KeyboardEvent): void => {
   }
 };
 
-const selectOperationItem = (operation: Operation | null = null): void => {
+const selectOperationItem = (
+  operation: OperationWithKey | null = null
+): void => {
   if (operation) {
     if (recentOperationKeys.value.length >= 5) {
       recentOperationKeys.value.shift();
