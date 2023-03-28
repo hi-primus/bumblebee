@@ -45,11 +45,11 @@
           v-for="column in columnsHeader"
           :key="column.title"
           class="bumblebee-table-column-container relative"
-          :tabindex="column.columnType === 'preview' ? -1 : 0"
+          :tabindex="column.columnType.startsWith('preview') ? -1 : 0"
           :data-index="column.columnIndex"
           @keydown="
             $event =>
-              column.columnType === 'preview'
+              column.columnType.startsWith('preview')
                 ? null
                 : handleKeyDown($event, column.columnIndex)
           "
@@ -57,10 +57,18 @@
         >
           <div
             :class="{
-              'column-color-preview': column.columnType === 'preview',
+              'column-color-preview': column.columnType == 'preview',
+              'column-color-preview-secondary':
+                column.columnType == 'preview secondary',
+              'column-color-preview-tertiary':
+                column.columnType == 'preview tertiary',
               'column-color-primary':
-                selection?.columns.includes(column.title) ||
-                column.columnType === 'highlighted'
+                column.columnType == 'highlighted' ||
+                selection?.columns.includes(column.title),
+              'column-color-secondary':
+                column.columnType == 'highlighted secondary',
+              'column-color-tertiary':
+                column.columnType == 'highlighted tertiary'
             }"
             class="bumblebee-table-column relative"
             :style="{
@@ -72,14 +80,14 @@
               <div
                 class="column-title border-[color:var(--line-color)] border-b text-[16px] py-1 px-1 text-center flex items-center select-none font-mono-table"
                 :class="{
-                  'cursor-pointer': column.columnType !== 'preview'
+                  'cursor-pointer': !column.columnType.startsWith('preview')
                 }"
                 :style="{
                   height: columnTitleHeight + 'px'
                 }"
                 @click.prevent="
                   $event =>
-                    column.columnType === 'preview'
+                    column.columnType.startsWith('preview')
                       ? null
                       : columnClicked($event, column.columnIndex, true)
                 "
@@ -324,8 +332,8 @@ watch(
       }
     });
 
-    const firstPreviewColumn = header.find(
-      column => column.columnType === 'preview'
+    const firstPreviewColumn = header.find(column =>
+      column.columnType.startsWith('preview')
     );
 
     if (firstPreviewColumn) {
@@ -750,18 +758,29 @@ defineExpose({
   & .column-header {
     @apply bg-white z-[15];
   }
-  &.column-color-primary {
+  &.column-color-primary,
+  &.column-color-preview-tertiary {
     --line-color: theme('colors.primary.lighter');
     &,
     & .column-header > * {
       @apply bg-primary/10;
     }
   }
-  &.column-color-preview {
+  &.column-color-preview,
+  &.column-color-tertiary {
     --line-color: theme('colors.yellow.lighter');
     &,
     & .column-header > * {
       @apply bg-yellow/10;
+    }
+  }
+  &.column-color-preview-secondary,
+  &.column-color-secondary {
+    @apply z-[3];
+    --line-color: theme('colors.green.light');
+    &,
+    & .column-header > * {
+      @apply bg-green/10;
     }
   }
 }

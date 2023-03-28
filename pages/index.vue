@@ -782,7 +782,13 @@ const previewOperationThrottled = throttleOnce(
 
       dataframeLayout.value?.setChunksLoading(true);
 
-      if (previewColumnNames.length || !usesInputDataframe) {
+      const previewType = payload.options.preview;
+
+      if (
+        previewColumnNames.length ||
+        !usesInputDataframe ||
+        previewType === 'whole'
+      ) {
         // save profile
 
         const preliminaryProfile = await getPreliminaryProfile(result);
@@ -804,15 +810,21 @@ const previewOperationThrottled = throttleOnce(
 
         let profile: DataframeProfile | null = null;
 
-        if (payload.source && previewColumns.length) {
+        if (
+          previewType === 'whole' ||
+          !payload.source ||
+          !previewColumns.length
+        ) {
           profile = await result.profile({
-            cols: previewColumns,
+            cols: '*',
             bins: 33,
             requestOptions: { priority: PRIORITIES.previewProfile }
           });
-        } else if (!payload.source) {
+        }
+
+        if (previewType !== 'whole' && previewColumns.length) {
           profile = await result.profile({
-            cols: '*',
+            cols: previewColumns,
             bins: 33,
             requestOptions: { priority: PRIORITIES.previewProfile }
           });

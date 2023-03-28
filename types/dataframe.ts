@@ -27,8 +27,14 @@ export interface Column extends KeyedColumn {
   title: string;
 }
 
-export interface PreviewColumn {
-  columnType: 'default' | 'highlight' | 'highlighted' | 'preview';
+type HighlightedColumnBaseType = 'highlighted' | 'preview';
+
+type HighlightedColumnType =
+  | HighlightedColumnBaseType
+  | `${HighlightedColumnBaseType} ${'secondary' | 'tertiary'}`;
+
+interface PreviewColumn {
+  columnType: 'default' | 'highlight' | HighlightedColumnType;
   highlight?: Highlight;
 }
 

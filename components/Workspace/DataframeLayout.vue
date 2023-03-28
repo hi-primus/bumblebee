@@ -69,7 +69,9 @@ const header = computed<ColumnHeader[]>(() => {
     previewData.value?.profile?.columns ||
     originalColumns;
 
-  const wholePreview = previewData.value?.options?.usesInputDataframe === false;
+  const wholePreview =
+    previewData.value?.options?.usesInputDataframe === false ||
+    previewData.value?.type === 'whole';
 
   if (columns && Object.keys(columns)) {
     return Object.entries(columns).map(([title, column]) => {
@@ -79,16 +81,50 @@ const header = computed<ColumnHeader[]>(() => {
 
       if (title.startsWith('__bumblebee__preview__')) {
         newTitle = title.replace('__bumblebee__preview__', '');
-        // if the column already exists, we need to rename it
-        if (columns?.[newTitle]) {
-          newTitle = `new ${newTitle}`;
-        }
         columnType = 'preview';
       }
 
       if (title.startsWith('__bumblebee__highlight_col__')) {
         newTitle = title.replace('__bumblebee__highlight_col__', '');
-        columnType = 'highlighted';
+        columnType = wholePreview ? 'preview' : 'highlighted';
+      }
+
+      if (columnType !== 'default') {
+        if (newTitle.startsWith('secondary__')) {
+          newTitle = newTitle.replace('secondary__', '');
+          columnType = columnType + ' secondary';
+        } else if (newTitle.startsWith('tertiary__')) {
+          newTitle = newTitle.replace('tertiary__', '');
+          columnType = columnType + ' tertiary';
+        }
+      }
+
+      if (columnType === 'default' && wholePreview) {
+        columnType = 'preview';
+      }
+
+      if (columnType.startsWith('preview')) {
+        // if the column already exists, we need to rename it
+        const originalNewTitle = newTitle;
+
+        if (columns?.[newTitle]) {
+          newTitle = `new ${newTitle}`;
+        }
+
+        if (columns?.[newTitle]) {
+          const lastColumn = Object.keys(columns)
+            .filter(name => name.startsWith(`new ${originalNewTitle} (`))
+            .sort()
+            .pop();
+
+          let index = 2;
+
+          if (lastColumn) {
+            index = Number(lastColumn.match(/\((\d+)\)/)?.[1]) + 1;
+          }
+
+          newTitle = `new ${originalNewTitle} (${index})`;
+        }
       }
 
       let highlight: Highlight = false;
@@ -111,11 +147,11 @@ const header = computed<ColumnHeader[]>(() => {
       let stats =
         (column as ColumnHeader).stats || originalColumns?.[title]?.stats;
 
-      if (!dataType && columnType !== 'preview') {
+      if (!dataType && !columnType.startsWith('preview')) {
         dataType = originalColumns?.[newTitle]?.data_type;
       }
 
-      if (!stats && columnType !== 'preview') {
+      if (!stats && !columnType.startsWith('preview')) {
         stats = originalColumns?.[newTitle]?.stats;
       }
 
@@ -125,7 +161,7 @@ const header = computed<ColumnHeader[]>(() => {
         // eslint-disable-next-line camelcase
         data_type: dataType,
         stats,
-        columnType: wholePreview ? 'preview' : columnType,
+        columnType,
         highlight
       };
     });
