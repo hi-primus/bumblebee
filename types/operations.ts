@@ -50,7 +50,7 @@ export type OperationPayload<
   app: AppFunctions;
 } & T;
 
-type PayloadCallbackOr<T> =
+export type PayloadCallbackOr<T> =
   | T
   | ((
       payload: OperationPayload<PayloadWithOptions>,
@@ -84,6 +84,9 @@ export type SuggestionFunction = {
 };
 
 export type Suggestion = SuggestionColumn | SuggestionFunction;
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type CompatibleType = BasicType | any[] | Record<string, any>;
 
 export interface Field {
   name: string;
@@ -134,7 +137,7 @@ type OperationCreatorAction = OperationCreatorBase & {
 
 type OperationCreatorParameters = OperationCreatorBase & {
   uses: string;
-  defaultPayload?: Record<string, unknown>;
+  defaultPayload?: Record<string, CompatibleType>;
 };
 
 export type OperationCreator =

@@ -33,7 +33,7 @@ type HighlightedColumnType =
   | HighlightedColumnBaseType
   | `${HighlightedColumnBaseType} ${'secondary' | 'tertiary'}`;
 
-interface PreviewColumn {
+export interface PreviewColumn {
   columnType: 'default' | 'highlight' | HighlightedColumnType;
   highlight?: Highlight;
 }

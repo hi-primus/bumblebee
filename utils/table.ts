@@ -2,7 +2,7 @@ const optimizeRange = (
   inputRange: [number, number],
   existingRange: [number, number]
 ): [number, number][] => {
-  let resultRanges: [number, number][] = [];
+  const resultRanges: [number, number][] = [];
 
   if (
     existingRange &&
@@ -26,8 +26,8 @@ export const optimizeRanges = (
 ): [number, number][] => {
   let resultRanges: [number, number][] = [inputRange];
 
-  existingRanges.forEach((existingRange) => {
-    let resultRangesResults: [number, number][][] = resultRanges.map((range) =>
+  existingRanges.forEach(existingRange => {
+    const resultRangesResults: [number, number][][] = resultRanges.map(range =>
       optimizeRange(range, existingRange)
     );
     resultRanges = resultRangesResults.flat(1);

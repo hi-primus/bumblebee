@@ -38,7 +38,7 @@ const updateChunks = (chunks: Chunk[]) => {
       rows[i] = rows[i] || chunk.data[i - chunk.start];
     }
     return rows;
-  }, {} as Record<number, Record<string, unknown>>);
+  }, {} as Record<number, unknown[]>);
   table.value?.updateData(data);
 };
 

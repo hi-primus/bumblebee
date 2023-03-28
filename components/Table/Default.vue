@@ -196,7 +196,7 @@ import { PropType, Ref } from 'vue';
 
 import { ColumnHeader } from '@/types/dataframe';
 import { TableSelection } from '@/types/operations';
-import { focusNext, focusPrevious, objectMap } from '@/utils';
+import { focusNext, focusPrevious } from '@/utils';
 import { TYPES_HINTS, TYPES_NAMES } from '@/utils/data-types';
 import { throttle } from '@/utils/time';
 
@@ -232,7 +232,7 @@ const scrollElement = ref<HTMLElement | null>(null);
 const columns = ref<HTMLElement | null>(null);
 const columnWidths = ref<Record<string, number>>({});
 
-const data = ref<Record<number, Record<string, unknown>>>({});
+const data = ref<Record<number, unknown[]>>({});
 
 const safeRowsCount = computed(() => {
   if (props.rowsCount) {

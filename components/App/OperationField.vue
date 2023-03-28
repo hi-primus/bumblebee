@@ -82,7 +82,12 @@
 <script setup lang="ts">
 import { Ref } from 'vue';
 
-import { Field, PayloadWithOptions } from '@/types/operations';
+import {
+  Field,
+  OperationPayload,
+  PayloadCallbackOr,
+  PayloadWithOptions
+} from '@/types/operations';
 
 const props = defineProps<{
   field: Field;
@@ -93,7 +98,7 @@ const props = defineProps<{
 const updates = ref(0);
 
 const operationValues = inject('operation-values') as Ref<
-  Partial<PayloadWithOptions>
+  OperationPayload<PayloadWithOptions>
 >;
 
 const value = computed({
@@ -144,9 +149,7 @@ const fieldClass = computed(() => {
   return fieldClass;
 });
 
-const resolve = <T>(
-  value: ((payload: PayloadWithOptions, currentIndex?: number) => T) | T
-): T => {
+const resolve = <T>(value: PayloadCallbackOr<T>): T => {
   if (value instanceof Function) {
     return value(operationValues.value, props.subfieldIndex);
   }

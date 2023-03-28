@@ -81,6 +81,7 @@ import {
   isOperation,
   OperationActions,
   OperationItem,
+  OperationPayload,
   PayloadWithOptions,
   State
 } from '@/types/operations';
@@ -94,7 +95,7 @@ const operation = computed(() => {
 });
 
 const operationValues = inject('operation-values') as Ref<
-  Partial<PayloadWithOptions>
+  OperationPayload<PayloadWithOptions>
 >;
 
 const operations = inject<Ref<OperationItem[]>>('operations', ref([]));
@@ -115,10 +116,13 @@ const operationCells = computed<OperationCell[]>({
       //   operation.operation.content,
       //   operation.payload
       // ); // TODO: content property
-      const title = resolveUsingPayload(
-        operation.operation.title,
-        operation.payload
-      );
+
+      // comes from already processed operation
+      const payload = operation.payload as OperationPayload<PayloadWithOptions>;
+
+      const title = operation.operation?.title
+        ? resolveUsingPayload(operation.operation.title, payload)
+        : undefined;
       return {
         ...operation,
         id: operation.payload.id || index,
@@ -141,14 +145,14 @@ const { selectOperation, submitOperation } = inject(
 ) as OperationActions;
 
 const resolve = <T>(
-  value: ((payload: Partial<PayloadWithOptions>) => T) | T
+  value: ((payload: OperationPayload<PayloadWithOptions>) => T) | T
 ): T => {
   return resolveUsingPayload(value, operationValues.value);
 };
 
 const resolveUsingPayload = <T>(
-  value: ((payload: Partial<PayloadWithOptions>) => T) | T,
-  payload: Partial<PayloadWithOptions>
+  value: ((payload: OperationPayload<PayloadWithOptions>) => T) | T,
+  payload: OperationPayload<PayloadWithOptions>
 ): T => {
   if (value instanceof Function) {
     return value(payload);
@@ -197,7 +201,7 @@ const editOperation = async (index: number): Promise<void> => {
   inactiveOperations.value = operations.value.slice(index);
   operations.value = operations.value.slice(0, index);
 
-  operationValues.value = {};
+  operationValues.value = {} as OperationPayload<PayloadWithOptions>;
   await submitOperation();
 
   const newPayload: PayloadWithOptions = {

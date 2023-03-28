@@ -163,7 +163,7 @@ const header = computed<ColumnHeader[]>(() => {
         stats,
         columnType,
         highlight
-      };
+      } as ColumnHeader;
     });
   }
   return [];

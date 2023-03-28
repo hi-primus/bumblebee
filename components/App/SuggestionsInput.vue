@@ -1,6 +1,5 @@
 <template>
   <Listbox
-    v-slot="{ open }"
     ref="listbox"
     as="div"
     class="input text-input"
@@ -161,8 +160,6 @@ const caretPosition = ref(0);
 
 const activeWord = ref('');
 const activeWordPosition = ref(0);
-
-const resultsSuggestions = ref<SuggestionValue[]>([]);
 
 const menuEnabled = ref(false);
 
@@ -472,6 +469,8 @@ interface SuggestionValue extends Partial<Omit<ReservedWordsFunction, 'text'>> {
   title: string;
   type: 'function' | 'column';
 }
+
+const resultsSuggestions = ref<SuggestionValue[]>([]);
 
 const allSuggestions = computed<SuggestionValue[]>(() => {
   const functionNames = Object.keys(reservedWords.functions);

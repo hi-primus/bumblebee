@@ -64,8 +64,9 @@ import {
   isOperation,
   Operation,
   OperationActions,
-  OperationOptions,
   OperationItem,
+  OperationOptions,
+  OperationPayload,
   OperationStatus,
   PayloadWithOptions,
   State,
@@ -115,16 +116,13 @@ provide('preview-data', previewData);
 const scrollRange = ref([0, 0]);
 provide('scroll-range', scrollRange);
 
-watch(
-  () => state.value,
-  state => {
-    if (isOperation(state)) {
-      operationValues.value = {
-        options: Object.assign({}, state.defaultOptions)
-      };
-    }
+watch(state, (state: Operation) => {
+  if (isOperation(state)) {
+    operationValues.value = {
+      options: deepClone(state.defaultOptions) as OperationOptions
+    };
   }
-);
+});
 
 const executedOperations = ref<OperationItem[]>([]);
 
@@ -235,7 +233,7 @@ const checkSources = (data: OperationItem[]) => {
 };
 
 const executeOperations = async () => {
-  const data = operationCells.value;
+  const data: OperationItem[] = operationCells.value;
 
   checkSources(data);
 
@@ -310,7 +308,9 @@ const executeOperations = async () => {
   executedOperations.value = [...data];
 };
 
-const preparePayload = (payload: PayloadWithOptions): PayloadWithOptions => {
+const preparePayload = (
+  payload: OperationPayload<PayloadWithOptions>
+): OperationPayload<PayloadWithOptions> => {
   if (payload.options.saveToNewDataframe) {
     payload.options.sourceId = newSourceId();
   }
@@ -346,9 +346,11 @@ const preparePayload = (payload: PayloadWithOptions): PayloadWithOptions => {
 
 const getPreparedOperation = (): {
   operation: Operation | null;
-  payload: PayloadWithOptions | null;
+  payload: OperationPayload<PayloadWithOptions> | null;
 } => {
-  const operation = isOperation(state.value) ? state.value : null;
+  const operation = isOperation(state.value)
+    ? (state.value as Operation)
+    : null;
 
   if (!operation) {
     return { operation: null, payload: null };
@@ -362,10 +364,10 @@ const getPreparedOperation = (): {
     operation.defaultOptions
   );
 
-  const payload: PayloadWithOptions = {
+  const payload = {
     options: operationOptions,
     ...operationPayload
-  };
+  } as OperationPayload<PayloadWithOptions>;
 
   return { operation, payload: preparePayload(payload) };
 };
@@ -484,7 +486,7 @@ const operationActions: OperationActions = {
   },
   selectOperation: async (
     operation: Operation | null = null,
-    payload?: PayloadWithOptions
+    payload?: Partial<PayloadWithOptions>
   ) => {
     console.info('Operation selected');
     if (!operation) {
@@ -506,7 +508,7 @@ const operationActions: OperationActions = {
         }
       };
     } else {
-      operationValues.value = deepClone(payload);
+      operationValues.value = deepClone(payload) || {};
     }
 
     if (operationValues.value.options?.usesInputCols && payload?.cols) {

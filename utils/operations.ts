@@ -1,11 +1,13 @@
 import { Source } from '@/types/blurr';
 import { isObject } from '@/types/common';
 import {
+  Cols,
   Operation,
   OperationCreator,
   OperationOptions,
   OperationPayload,
-  Payload
+  Payload,
+  PayloadWithOptions
 } from '@/types/operations';
 import { PRIORITIES } from '@/utils/blurr';
 
@@ -2316,7 +2318,10 @@ export const operationCreators: Record<string, OperationCreator> = {
   }
 };
 
-const preparePayload = (operation: Operation, payload: Payload): Payload => {
+const preparePayload = (
+  operation: Operation,
+  payload: OperationPayload<PayloadWithOptions>
+): OperationPayload<PayloadWithOptions> => {
   const options: Partial<OperationOptions> = Object.assign(
     {},
     operation.defaultOptions,
@@ -2419,7 +2424,7 @@ const createOperation = (operationCreator: OperationCreator): Operation => {
     { targetType: 'dataframe' }
   );
 
-  operation.validate = (payload: Payload) => {
+  operation.validate = (payload: OperationPayload<PayloadWithOptions>) => {
     if (operationCreator.validate) {
       payload = preparePayload(operation, payload);
       return operationCreator.validate(payload);
@@ -2427,7 +2432,7 @@ const createOperation = (operationCreator: OperationCreator): Operation => {
     return true;
   };
 
-  operation.action = (payload: Payload) => {
+  operation.action = (payload: OperationPayload<PayloadWithOptions>) => {
     payload = preparePayload(operation, payload);
     if (operationCreator.validate?.(payload) === false) {
       throw new Error('Validation failed');
@@ -2452,7 +2457,8 @@ function whereExpression(
   },
   col: string
 ): string {
-  let { value, otherValue, values } = payload;
+  let { value, values } = payload;
+  const { otherValue } = payload;
 
   const isNumeric = !isNaN(Number(value));
 
