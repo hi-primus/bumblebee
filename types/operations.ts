@@ -98,7 +98,7 @@ export interface Field {
   suggestions?: PayloadCallbackOr<Suggestion[]>;
   textCallback?: (value: unknown) => string;
   description?: string;
-  defaultValue?: unknown;
+  defaultValue?: PayloadCallbackOr<CompatibleType>;
   class?: PayloadCallbackOr<string>;
   disabled?: PayloadCallbackOr<boolean>;
   hidden?: PayloadCallbackOr<boolean>;

@@ -537,12 +537,20 @@ const operationActions: OperationActions = {
 
     operationValues.value = operationValues.value || {};
 
+    const resolve = (value: unknown) => {
+      if (typeof value === 'function') {
+        return value(operationValues.value);
+      }
+      return value;
+    };
+
     operation?.fields.forEach(field => {
       // check if field has a default value
 
       if ('defaultValue' in field && field.defaultValue !== undefined) {
         operationValues.value[field.name] =
-          operationValues.value[field.name] || deepClone(field.defaultValue);
+          operationValues.value[field.name] ||
+          deepClone(resolve(field.defaultValue));
       }
 
       // check if field is a group
@@ -555,7 +563,9 @@ const operationActions: OperationActions = {
             'defaultValue' in subfield &&
             subfield.defaultValue !== undefined
           ) {
-            defaultValue[subfield.name] = deepClone(subfield.defaultValue);
+            defaultValue[subfield.name] = deepClone(
+              resolve(subfield.defaultValue)
+            );
           }
         }
         operationValues.value[`default-${field.name}`] = defaultValue;

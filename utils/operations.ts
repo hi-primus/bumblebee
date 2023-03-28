@@ -111,6 +111,240 @@ export const operationCreators: Record<string, OperationCreator> = {
     },
     shortcut: 'sf'
   },
+  join: {
+    name: 'Join dataframes',
+    defaultOptions: {
+      usesInputDataframe: true,
+      preview: 'whole',
+      targetType: 'dataframe'
+    },
+    action: async (
+      payload: OperationPayload<{
+        dfRightName: string;
+        how: 'left' | 'right' | 'inner' | 'outer';
+        on: string;
+        leftOn: string;
+        rightOn: string;
+        keyMiddle: boolean;
+      }>
+    ): Promise<Source> => {
+      const foundDf = payload.allDataframes.find(
+        df => df.name === payload.dfRightName
+      );
+
+      if (!foundDf) {
+        throw new Error(
+          `Dataframe with name '${payload.dfRightName}' not found.`
+        );
+      }
+
+      let dfRight = foundDf?.df;
+
+      let df = payload.source;
+
+      let upperBound = 64;
+
+      const dfRowsCount = await df.rows.count({
+        requestOptions: { priority: PRIORITIES.operation }
+      });
+
+      const dfRightRowsCount = await dfRight.rows.count({
+        requestOptions: { priority: PRIORITIES.operation }
+      });
+
+      const minRows = Math.ceil(
+        Math.min(25, Math.max(dfRowsCount * 0.75, dfRightRowsCount * 0.75))
+      );
+
+      const maxSampleSize = Math.min(
+        Math.max(dfRowsCount, dfRightRowsCount),
+        32768
+      );
+
+      // loop until the dataframe is big enough to show the preview
+
+      while (true) {
+        if (payload.options.preview) {
+          // Use just a part of the dataframe on preview
+          df = payload.source.iloc({
+            target: payload.target,
+            lower_bound: 0,
+            upper_bound: upperBound
+          });
+          dfRight = await dfRight.iloc({
+            target: 'preview_df_right',
+            lower_bound: 0,
+            upper_bound: upperBound
+          });
+        }
+
+        df = await df.cols.join({
+          target: payload.target,
+          dfRight,
+          how: payload.how,
+          on: payload.on,
+          leftOn: payload.leftOn,
+          rightOn: payload.rightOn,
+          requestOptions: { priority: PRIORITIES.operation }
+        });
+
+        // break if it's not a preview
+
+        if (!payload.options.preview) {
+          break;
+        }
+
+        // break if the dataframe is big enough to show the preview
+
+        const rowsCount = await df.rows.count({
+          requestOptions: { priority: PRIORITIES.operation }
+        });
+
+        if (rowsCount < minRows && upperBound < maxSampleSize) {
+          upperBound *= 8;
+        } else {
+          break;
+        }
+      }
+
+      const resultColumns = await df.cols.names({
+        requestOptions: { priority: PRIORITIES.operation }
+      });
+
+      const leftColumns = payload.allColumns.filter(
+        col =>
+          payload.on !== col &&
+          payload.leftOn !== col &&
+          resultColumns.includes(col)
+      );
+
+      const rightColumns = foundDf.columns.filter(
+        col =>
+          payload.on !== col &&
+          payload.rightOn !== col &&
+          resultColumns.includes(col)
+      );
+
+      const middleColumns = resultColumns.filter(
+        col => !leftColumns.includes(col) && !rightColumns.includes(col)
+      );
+
+      if (payload.options.preview) {
+        const leftColumnsRenamed = leftColumns.map(
+          col => `__bumblebee__highlight_col__${col}`
+        );
+
+        const middleColumnsRenamed = middleColumns.map(
+          col => `__bumblebee__highlight_col__secondary__${col}`
+        );
+
+        const rightColumnsRenamed = rightColumns.map(
+          col => `__bumblebee__highlight_col__tertiary__${col}`
+        );
+
+        return df.cols
+          .rename({
+            cols: [...leftColumns, ...rightColumns, ...middleColumns],
+            outputCols: [
+              ...leftColumnsRenamed,
+              ...rightColumnsRenamed,
+              ...middleColumnsRenamed
+            ],
+            requestOptions: { priority: PRIORITIES.operation }
+          })
+          .cols.select({
+            cols: [
+              ...leftColumnsRenamed,
+              ...middleColumnsRenamed,
+              ...rightColumnsRenamed
+            ],
+            requestOptions: { priority: PRIORITIES.operation }
+          });
+      } else {
+        return df.cols.select({
+          cols: [...leftColumns, ...middleColumns, ...rightColumns],
+          requestOptions: { priority: PRIORITIES.operation }
+        });
+      }
+    },
+    fields: [
+      {
+        name: 'dfRightName',
+        label: 'Dataframe',
+        type: 'string',
+        defaultValue: payload => payload.allDataframes[0]?.name,
+        options: payload => {
+          return payload.allDataframes.map(df => ({
+            text: df.name,
+            value: df.name
+          }));
+        }
+      },
+      {
+        name: 'how',
+        label: 'How',
+        type: 'string',
+        defaultValue: 'inner',
+        options: [
+          { text: 'Left', value: 'left' },
+          { text: 'Right', value: 'right' },
+          { text: 'Inner', value: 'inner' },
+          { text: 'Outer', value: 'outer' }
+        ]
+      },
+      {
+        name: 'on',
+        label: 'On',
+        type: 'string',
+        options: payload => {
+          const rightColumns =
+            payload.allDataframes.find(df => df.name === payload.dfRightName)
+              ?.columns || [];
+          return payload.allColumns
+            .filter(col => rightColumns.includes(col))
+            .map(col => ({
+              text: col,
+              value: col
+            }));
+        },
+        hidden: payload => {
+          const rightColumns =
+            payload.allDataframes.find(df => df.name === payload.dfRightName)
+              ?.columns || [];
+          return (
+            payload.allColumns.filter(col => rightColumns.includes(col))
+              .length === 0
+          );
+        }
+      },
+      {
+        name: 'leftOn',
+        label: 'Left on',
+        type: 'string',
+        options: payload => {
+          return payload.allColumns.map(col => ({
+            text: col,
+            value: col
+          }));
+        }
+      },
+      {
+        name: 'rightOn',
+        label: 'Right on',
+        type: 'string',
+        options: payload => {
+          const columns =
+            payload.allDataframes.find(df => df.name === payload.dfRightName)
+              ?.columns || [];
+          return columns.map(col => ({
+            text: col,
+            value: col
+          }));
+        }
+      }
+    ],
+    shortcut: 'jd'
+  },
   createCol: {
     name: 'Create column',
     defaultOptions: {
