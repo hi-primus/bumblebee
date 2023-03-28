@@ -171,8 +171,8 @@ const header = computed<ColumnHeader[]>(() => {
 
 const rowsCount = computed(() => {
   return (
-    dataframeObject.value?.profile?.summary?.rows_count ||
-    previewData.value?.profile?.summary?.rows_count
+    previewData.value?.profile?.summary?.rows_count ||
+    dataframeObject.value?.profile?.summary?.rows_count
   );
 });
 

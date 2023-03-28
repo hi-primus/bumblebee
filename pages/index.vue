@@ -930,6 +930,7 @@ watch(selectedTab, async tab => {
       selectedTab.value = tabs.value.length - 1;
     }
   }
+  dataframeLayout.value?.clearChunks(false, false, true);
 });
 
 const initializeEngine = async () => {
