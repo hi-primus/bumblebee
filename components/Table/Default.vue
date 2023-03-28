@@ -393,7 +393,7 @@ const visibleRows = computed(() => {
     .map(row => {
       return {
         ...row,
-        htmlValues: row.values ? objectMap(row.values, getValue) : row.values
+        htmlValues: row.values ? row.values.map(getValue) : row.values
       };
     });
 });
