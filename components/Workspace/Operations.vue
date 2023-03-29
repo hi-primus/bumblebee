@@ -176,9 +176,9 @@ const updateOperations = async (
   });
 
   if (!validOrder) {
-    console.warn('Cannot move operation after source creation');
+    console.warn('Cannot move operation before source creation');
     addToast({
-      title: 'Cannot move operation after source creation',
+      title: 'Cannot move operation before source creation',
       type: 'warning'
     });
     return;
