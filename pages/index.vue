@@ -81,6 +81,8 @@ const blurrPackage = useBlurr();
 
 const { addToast } = useToasts();
 
+const { confirm } = useConfirmationPopup();
+
 let blurr: Client;
 
 const dataframeLayout = ref<InstanceType<typeof DataframeLayout> | null>(null);
@@ -146,7 +148,14 @@ const availableDataframes = computed<number[]>(() => {
     .filter(index => !tabs.value.includes(index));
 });
 
-const closeDataframe = (tabIndex: number) => {
+const closeDataframe = async (tabIndex: number) => {
+  if (tabs.value[tabIndex] >= 0) {
+    const tabName = dataframes.value[tabs.value[tabIndex]].name;
+    const close = await confirm(`Close '${tabName}'?`);
+    if (!close) {
+      return;
+    }
+  }
   if (selectedTab.value >= tabIndex) {
     selectedTab.value = selectedTab.value - 1;
   }

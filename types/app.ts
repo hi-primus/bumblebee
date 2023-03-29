@@ -34,6 +34,18 @@ export type ToastInput = Prettify<
   }
 >;
 
+// confirmation popups
+
+export type ConfirmationPopup = {
+  id: number;
+  message: string;
+  title?: string;
+  acceptLabel?: string;
+  cancelLabel?: string;
+  accept: () => void;
+  cancel: () => void;
+};
+
 // app
 
 export interface AppStatusError {

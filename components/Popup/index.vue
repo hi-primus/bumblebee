@@ -16,13 +16,13 @@
           </h3>
           <AppButton
             v-if="closable"
-            class="type-icon layout-invisible color-neutral ml-auto mr-[-7px]"
+            class="type-icon layout-invisible color-neutral opacity-80 ml-auto mr-[-8px] w-9 h-9"
             @click="() => emit('close')"
           >
             <Icon :path="mdiClose" />
           </AppButton>
         </div>
-        <div class="min-h-[48px] w-[500px]">
+        <div class="min-h-[48px] w-full">
           <slot :close="() => emit('close')"></slot>
         </div>
       </div>

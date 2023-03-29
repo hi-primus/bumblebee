@@ -1,6 +1,6 @@
 <template>
   <div class="workspace-toolbar bg-white">
-    <AppPopup
+    <Popup
       v-if="showCommands"
       class="popup-narrow"
       :closable="false"
@@ -78,7 +78,7 @@
           No commands found
         </li>
       </ul>
-    </AppPopup>
+    </Popup>
     <section class="w-full flex items-center px-5 overflow-hidden h-full">
       <AppButton
         class="ml-auto icon-button layout-invisible size-small color-neutral-light"
