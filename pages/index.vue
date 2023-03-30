@@ -81,7 +81,7 @@ const blurrPackage = useBlurr();
 
 const { addToast } = useToasts();
 
-const { confirm } = useConfirmationPopup();
+const { confirm } = useConfirmPopup();
 
 let blurr: Client;
 

@@ -1,6 +1,6 @@
 <template>
   <div class="display-none">
-    <ConfirmationPopup
+    <ConfirmPopup
       v-for="popup in popups"
       :key="popup.id"
       :title="popup.title"
@@ -14,5 +14,5 @@
 </template>
 
 <script setup lang="ts">
-const { popups } = useConfirmationPopup();
+const { popups } = useConfirmPopup();
 </script>

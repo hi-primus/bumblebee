@@ -34,9 +34,9 @@ export type ToastInput = Prettify<
   }
 >;
 
-// confirmation popups
+// confirm popup
 
-export type ConfirmationPopup = {
+export type ConfirmPopup = {
   id: number;
   message: string;
   title?: string;

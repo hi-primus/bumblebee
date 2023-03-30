@@ -88,6 +88,8 @@ import {
 
 const { addToast } = useToasts();
 
+const { confirm } = useConfirmPopup();
+
 const state = inject<Ref<State | null>>('state', ref(null));
 
 const operation = computed(() => {
@@ -216,6 +218,10 @@ const editOperation = async (index: number): Promise<void> => {
 };
 
 const removeOperation = async (index: number): Promise<void> => {
+  const remove = await confirm('Remove operation');
+  if (!remove) {
+    return;
+  }
   const selectedOperationOptions = operations.value[index].payload.options;
   if (selectedOperationOptions.saveToNewDataframe) {
     const operationsUsingSource = operations.value.filter(

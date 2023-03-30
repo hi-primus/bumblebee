@@ -1,10 +1,10 @@
-import { ConfirmationPopup } from '@/types/app';
+import { ConfirmPopup } from '@/types/app';
 
 let popupId = 1;
 
-const popups = ref<Array<ConfirmationPopup>>([]);
+const popups = ref<Array<ConfirmPopup>>([]);
 
-const DEFAULT_POPUP: Partial<ConfirmationPopup> = {
+const DEFAULT_POPUP: Partial<ConfirmPopup> = {
   title: '',
   message: '',
   acceptLabel: 'Accept',
@@ -12,12 +12,12 @@ const DEFAULT_POPUP: Partial<ConfirmationPopup> = {
 };
 
 const confirm = async (
-  popupInput: Partial<ConfirmationPopup> | string = {}
+  popupInput: Partial<ConfirmPopup> | string = {}
 ): Promise<boolean> => {
-  let popup: Partial<ConfirmationPopup>;
+  let popup: Partial<ConfirmPopup>;
 
   if (typeof popupInput === 'string' || Array.isArray(popupInput)) {
-    popup = { message: popupInput } as Partial<ConfirmationPopup>;
+    popup = { message: popupInput } as Partial<ConfirmPopup>;
   } else {
     popup = popupInput;
   }
@@ -30,7 +30,7 @@ const confirm = async (
   popupId++;
 
   const result: boolean = await new Promise(resolve => {
-    const newConfirmationPopup = Object.assign(
+    const newConfirmPopup = Object.assign(
       {
         id,
         accept: () => resolve(true),
@@ -38,8 +38,8 @@ const confirm = async (
       },
       DEFAULT_POPUP,
       popup
-    ) as ConfirmationPopup;
-    popups.value.push(newConfirmationPopup);
+    ) as ConfirmPopup;
+    popups.value.push(newConfirmPopup);
   });
 
   popups.value = popups.value.filter(popup => popup.id !== id);
