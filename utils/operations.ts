@@ -2006,19 +2006,12 @@ export const operationCreators: Record<string, OperationCreator> = {
       preview: 'basic columns'
     },
     action: (
-      payload: OperationPayload<{
+      _payload: OperationPayload<{
         n: number;
         seed: number;
       }>
     ): Source => {
-      return payload.source.cols.atanh({
-        target: payload.target,
-        cols: payload.cols,
-        n: payload.n,
-        seed: payload.seed,
-        outputCols: payload.outputCols,
-        requestOptions: { priority: PRIORITIES.operation }
-      });
+      throw new Error('Not implemented');
     },
     shortcut: 'ms'
   },
