@@ -22,6 +22,9 @@
         ghost-class="opacity-50"
         item-key="id"
         class="operations-items px-4 pt-4 pb-2 flex flex-col gap-2"
+        :class="{
+          'with-multiple-datasets': datasets.length > 1
+        }"
         @start="dragging = true"
         @end="dragging = false"
       >
@@ -35,7 +38,7 @@
             <span class="text-neutral-lighter text-xs mr-2">{{
               index + 1
             }}</span>
-            <span class="flex-1">{{ element.content }}</span>
+            <span class="flex-1" v-html="element.content"></span>
             <IconButton
               :path="mdiPencil"
               class="w-4 h-4 ml-auto cursor-pointer opacity-0 group-hover:opacity-100 focus:opacity-100 transition"
@@ -114,21 +117,27 @@ type OperationCell = OperationItem & { id: string; content: string };
 const operationCells = computed<OperationCell[]>({
   get: () => {
     return operations.value.map((operation, index) => {
-      // const content = resolveUsingPayload(
-      //   operation.operation.content,
-      //   operation.payload
-      // ); // TODO: content property
-
       // comes from already processed operation
       const payload = operation.payload as OperationPayload<PayloadWithOptions>;
+
+      const content = operation.operation?.content
+        ? formatOperationContent(
+            resolveUsingPayload(operation.operation.content, payload)
+          )
+        : undefined;
 
       const title = operation.operation?.title
         ? resolveUsingPayload(operation.operation.title, payload)
         : undefined;
+
       return {
         ...operation,
         id: operation.payload.id || index,
-        content: title || operation.operation.name || 'Operation'
+        content:
+          content ||
+          formatOperationContent(
+            `b{${title || operation.operation.name || 'Operation'}}`
+          )
       };
     });
   },
@@ -140,6 +149,13 @@ const operationCells = computed<OperationCell[]>({
       }))
     );
   }
+});
+
+const datasets = computed<string[]>(() => {
+  const datasetsList = operationCells.value
+    ?.map(cell => cell.payload?.options?.sourceId)
+    .filter(id => id) as string[];
+  return datasetsList ? [...new Set(datasetsList)] : [];
 });
 
 const { selectOperation, submitOperation } = inject(
@@ -241,4 +257,40 @@ const removeOperation = async (index: number): Promise<void> => {
   operations.value.splice(index, 1);
   return await submitOperation();
 };
+
+const formatOperationContent = (content: string): string => {
+  return content
+    .replace(/bl\{(.+?)\}/g, '<span class="content-text-blue">$1</span>')
+    .replace(/gr\{(.+?)\}/g, '<span class="content-text-green">$1</span>')
+    .replace(/rd\{(.+?)\}/g, '<span class="content-text-red">$1</span>')
+    .replace(/b\{(.+?)\}/g, '<span class="font-bold">$1</span>')
+    .replace(/df\{(.+?)\}/g, '<span class="dataframe-hint">$1</span>');
+};
 </script>
+
+<style lang="scss">
+.content-text-blue {
+  @apply text-blue-dark;
+}
+.content-text-green {
+  @apply text-green-dark;
+}
+.content-text-red {
+  @apply text-red-desaturated-dark;
+}
+.content-text-blue,
+.content-text-green,
+.content-text-red {
+  @apply font-mono;
+  &::before,
+  &::after {
+    content: "'";
+  }
+}
+.content-text-b {
+  @apply font-bold;
+}
+.operation-items:not(.with-multiple-datasets) .dataframe-hint {
+  display: none;
+}
+</style>

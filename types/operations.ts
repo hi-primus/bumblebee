@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { AppFunctions } from './app';
 import { isObject } from './common';
 
@@ -23,7 +25,6 @@ export interface OperationOptions {
 }
 
 export interface PayloadWithOptions {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [key: string]: any;
   options: OperationOptions;
 }
@@ -85,7 +86,6 @@ export type SuggestionFunction = {
 
 export type Suggestion = SuggestionColumn | SuggestionFunction;
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type CompatibleType = BasicType | any[] | Record<string, any>;
 
 export interface Field {
@@ -121,6 +121,7 @@ export interface FieldGroup {
 export interface OperationCreatorBase {
   name: string;
   title?: PayloadCallbackOr<string>;
+  content?: (...args: any) => string;
   alias?: string;
   description?: string;
   fields?: (Field | FieldGroup)[];
@@ -129,9 +130,9 @@ export interface OperationCreatorBase {
 }
 
 type OperationCreatorAction = OperationCreatorBase & {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // validates whether the operation can be performed on a dataset.
   validate?: (...args: any) => PromiseOr<boolean | string>;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // performs the operation on a dataset and returns the modified dataset.
   action: (...args: any) => PromiseOr<Source>;
 };
 
