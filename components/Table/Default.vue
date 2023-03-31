@@ -196,7 +196,7 @@ import { PropType, Ref } from 'vue';
 
 import { ColumnHeader } from '@/types/dataframe';
 import { TableSelection } from '@/types/operations';
-import { focusNext, focusPrevious } from '@/utils';
+import { capitalize, focusNext, focusPrevious } from '@/utils';
 import { TYPES_HINTS, TYPES_NAMES } from '@/utils/data-types';
 import { throttle } from '@/utils/time';
 
@@ -322,12 +322,12 @@ watch(
       } else if (column.data_type) {
         dataType = column.data_type;
       }
-      const typeHint = TYPES_HINTS[dataType] || dataType || '';
+      const typeHint = TYPES_HINTS[dataType] || dataType?.substring(0, 3) || '';
       if (typeHint) {
         columnData[column.title] = {
           typeHint,
           typeHintLength: typeHint.length,
-          typeName: TYPES_NAMES[dataType] || dataType || 'unknown'
+          typeName: TYPES_NAMES[dataType] || capitalize(dataType) || 'Unknown'
         };
       }
     });
