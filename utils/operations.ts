@@ -2195,17 +2195,10 @@ export const operationCreators: Record<string, OperationCreator> = {
       usesInputDataframe: true,
       preview: 'basic columns'
     },
-    action: (
-      payload: OperationPayload<{
-        start: number;
-        end: number;
-      }>
-    ): Source => {
+    action: (payload: OperationPayload): Source => {
       return payload.source.cols.removeStopWords({
         target: payload.target,
         cols: payload.cols,
-        start: payload.start,
-        end: payload.end,
         outputCols: payload.outputCols,
         requestOptions: { priority: PRIORITIES.operation }
       });
