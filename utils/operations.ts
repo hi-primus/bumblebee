@@ -501,7 +501,18 @@ export const operationCreators: Record<string, OperationCreator> = {
         )
         .filter(expression => expression);
 
-      const result = payload.source.cols.set({
+      let df: Source = payload.source;
+
+      if (payload.options.preview) {
+        df = df.cols.copy({
+          target: payload.target,
+          cols: payload.cols,
+          outputCols: payload.outputCols,
+          requestOptions: { priority: PRIORITIES.operation }
+        });
+      }
+
+      df = df.cols.set({
         target: payload.target,
         cols: payload.outputCols,
         valueFunc: payload.replaces.map(r => r.replaceBy),
@@ -514,8 +525,11 @@ export const operationCreators: Record<string, OperationCreator> = {
         requestOptions: { priority: PRIORITIES.operation }
       });
 
-      if (payload.outputCols[0] !== payload.cols[0]) {
-        return result.cols.move({
+      if (
+        payload.outputCols?.[0] &&
+        payload.outputCols[0] !== payload.cols[0]
+      ) {
+        return df.cols.move({
           column: payload.outputCols,
           position: 'after',
           refCol: payload.cols[0],
@@ -523,7 +537,7 @@ export const operationCreators: Record<string, OperationCreator> = {
         });
       }
 
-      return result;
+      return df;
     },
     fields: [
       {
@@ -740,7 +754,10 @@ export const operationCreators: Record<string, OperationCreator> = {
         outputCols: payload.outputCols,
         requestOptions: { priority: PRIORITIES.operation }
       });
-      if (payload.outputCols[0] !== payload.cols[0]) {
+      if (
+        payload.outputCols?.[0] &&
+        payload.outputCols[0] !== payload.cols[0]
+      ) {
         return result.cols.move({
           column: payload.outputCols[0],
           position: 'after',
