@@ -88,6 +88,7 @@ let blurr: Client;
 const dataframeLayout = ref<InstanceType<typeof DataframeLayout> | null>(null);
 
 const dataframes = ref<DataframeObject[]>([]);
+provide('dataframes', dataframes);
 
 const tabs = ref<number[]>([]);
 

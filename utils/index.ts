@@ -98,6 +98,18 @@ export const capitalize = (str: string): string => {
   return str.charAt(0).toUpperCase() + str.slice(1);
 };
 
+export const naturalJoin = (arr: string[]): string => {
+  if (arr.length === 1) {
+    return arr[0];
+  }
+  if (arr.length === 2) {
+    return arr.join(' and ');
+  }
+  return (
+    arr.slice(0, arr.length - 1).join(', ') + ' and ' + arr[arr.length - 1]
+  );
+};
+
 // HTML
 
 export const focusNext = (el: HTMLElement): HTMLElement | null => {

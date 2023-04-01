@@ -9,6 +9,7 @@ import {
   Payload,
   PayloadWithOptions
 } from '@/types/operations';
+import { capitalize, naturalJoin } from '@/utils';
 import { PRIORITIES } from '@/utils/blurr';
 
 type Name = {
@@ -25,12 +26,54 @@ export function Name(name: string): Name {
   return _name;
 }
 
+const inDataframeContent = (payload: OperationPayload): string => {
+  return `df{ \nin rd{dn{${payload.source.name}}}}`;
+};
+
+const inColsContent = (
+  payload: OperationPayload,
+  includeDataframe = true
+): string => {
+  // TODO: support outputCols
+  return (
+    (payload.cols.length > 0 ? ` \nin bl{${naturalJoin(payload.cols)}}` : '') +
+    (includeDataframe ? inDataframeContent(payload) : '')
+  );
+};
+
+const defaultContentFunction = (name: string, connector = '') => {
+  const prefix = name.startsWith('Get ')
+    ? 'Get '
+    : name.startsWith('Apply ')
+    ? 'Apply '
+    : '';
+  if (prefix) {
+    name = name.slice(prefix.length);
+  }
+  return (payload: OperationPayload): string => {
+    return (
+      prefix +
+      `b{${name}} ` +
+      (connector ? `${connector} ` : '') +
+      inColsContent(payload)
+    );
+  };
+};
+
 export const operationCreators: Record<string, OperationCreator> = {
   loadFromFile: {
     name: 'Load from file',
     defaultOptions: {
       saveToNewDataframe: true,
       preview: 'whole'
+    },
+    content: (payload: { url: string; file: File }) => {
+      if (payload.file?.name) {
+        return `b{Load} gr{${payload.file.name}} file`;
+      } else {
+        const fileName = payload.url?.split('/').pop();
+        return `b{Load} gr{${fileName}} file from url`;
+      }
     },
     action: async (
       payload: OperationPayload<{
@@ -119,6 +162,23 @@ export const operationCreators: Record<string, OperationCreator> = {
       usesInputDataframe: true,
       preview: 'whole',
       targetType: 'dataframe'
+    },
+    content: (
+      payload: OperationPayload<{
+        dfRightName: string;
+        how: 'left' | 'right' | 'inner' | 'outer';
+        on: string;
+        leftOn: string;
+        rightOn: string;
+      }>
+    ) => {
+      const dfName = payload.source?.name;
+      const str = `b{Join} gr{${dfName}} and gr{${payload.dfRightName}} dataframes using \ngr{${payload.how}} join`;
+      if (payload.on) {
+        return ` and \n${str} gr{${payload.on}} as join key`;
+      } else {
+        return ` and \n${str} gr{${payload.leftOn}} as left join key and \ngr{${payload.rightOn}} as right join key`;
+      }
     },
     action: async (
       payload: OperationPayload<{
@@ -353,6 +413,32 @@ export const operationCreators: Record<string, OperationCreator> = {
       usesInputDataframe: true,
       preview: 'basic columns'
     },
+    content: (
+      payload: OperationPayload<{
+        sets: {
+          outputColumn: string;
+          value: string;
+        }[];
+      }>
+    ) => {
+      let str =
+        payload.sets.length > 1 ? 'b{Create columns}' : 'b{Create column}';
+      const sets = payload.sets.map((s, index) => {
+        let columnName: string;
+        if (s.outputColumn) {
+          columnName = s.outputColumn;
+        } else if (s.value) {
+          columnName = s.value
+            .replace(/\s/g, '')
+            .replace(/[^a-zA-Z0-9]/g, '_')
+            .replace(/^_+|_+$/g, '');
+        } else {
+          columnName = `new_column_${index}`;
+        }
+        return `\nbl{${columnName}} with value gr{${s.value}}`;
+      });
+      return `${str} ${naturalJoin(sets)}` + inDataframeContent(payload);
+    },
     action: async (
       payload: OperationPayload<{
         sets: {
@@ -482,6 +568,35 @@ export const operationCreators: Record<string, OperationCreator> = {
       usesInputCols: 'single',
       usesInputDataframe: true,
       preview: 'basic columns'
+    },
+    content: (
+      payload: OperationPayload<{
+        replaces: {
+          condition: string;
+          value: string;
+          otherValue: string;
+          values: string[];
+          replaceBy: string;
+        }[];
+        otherwise: string;
+      }>
+    ) => {
+      let str = 'b{Set column}';
+      const sets = payload.replaces.map(s => {
+        const fromWhere = whereHint(s.condition, s);
+        if (fromWhere) {
+          return `to gr{${s.replaceBy}} if bl{${payload.cols[0]}} ${fromWhere}`;
+        }
+        if (s.value) {
+          return `to gr{${s.value}}`;
+        }
+        return `to gr{${s.values.join(', ')}}`;
+      });
+      str += ` ${sets.join(', ')}`;
+      if (payload.otherwise) {
+        str += ` otherwise, with gr{${payload.otherwise}}`;
+      }
+      return str + inDataframeContent(payload);
     },
     action: (
       payload: OperationPayload<{
@@ -712,6 +827,21 @@ export const operationCreators: Record<string, OperationCreator> = {
       usesInputDataframe: true,
       preview: 'basic columns'
     },
+    content: (
+      payload: OperationPayload<{
+        replaces: {
+          search: string;
+          replaceBy: string;
+        }[];
+        searchBy: string;
+        matchCase: OperationOptions;
+      }>
+    ) => {
+      const replaces = payload.replaces.map(
+        r => `\ngr{${r.search}} by gr{${r.replaceBy}}`
+      );
+      return `b{Replace} ${naturalJoin(replaces)}${inColsContent(payload)}`;
+    },
     validate: (
       payload: OperationPayload<{
         replaces: {
@@ -828,6 +958,36 @@ export const operationCreators: Record<string, OperationCreator> = {
       usesOutputCols: false,
       usesInputDataframe: true,
       preview: 'highlight rows'
+    },
+    content: (
+      payload: OperationPayload<{
+        conditions: {
+          condition: string;
+          value: string;
+          otherValue: string;
+          values: string[];
+        }[];
+        action: 'select' | 'drop' | 'set';
+        value: string;
+        otherwise: string;
+      }>
+    ) => {
+      const conditions = payload.conditions
+        .map(condition => {
+          const fromWhere = whereHint(condition.condition, condition);
+          if (fromWhere) {
+            return `\nbl{${payload.cols[0]}} ${fromWhere}`;
+          }
+          return '';
+        })
+        .filter(condition => condition);
+
+      const action =
+        payload.action === 'set'
+          ? `b{Set values} to gr{${payload.value}}`
+          : `b{${capitalize(payload.action)} rows}`;
+
+      return `${action} if ${naturalJoin(conditions)}` + inColsContent(payload);
     },
     shortcut: 'fr',
     action: (
@@ -1102,6 +1262,14 @@ export const operationCreators: Record<string, OperationCreator> = {
       usesInputDataframe: true,
       preview: 'basic columns'
     },
+    content: (
+      payload: OperationPayload<{
+        keep: 'first' | 'last';
+        how: 'any' | 'all';
+      }>
+    ): string => {
+      return `b{Drop duplicated rows}${inColsContent(payload)}`;
+    },
     action: (
       payload: OperationPayload<{
         keep: 'first' | 'last';
@@ -1127,6 +1295,14 @@ export const operationCreators: Record<string, OperationCreator> = {
       usesInputDataframe: true,
       preview: 'basic columns'
     },
+    content: (
+      payload: OperationPayload<{
+        keep: 'first' | 'last';
+        how: 'any' | 'all';
+      }>
+    ): string => {
+      return `b{Drop empty rows}${inColsContent(payload)}`;
+    },
     action: (
       payload: OperationPayload<{
         keep: 'first' | 'last';
@@ -1151,6 +1327,7 @@ export const operationCreators: Record<string, OperationCreator> = {
       usesInputCols: true,
       usesInputDataframe: true
     },
+    content: defaultContentFunction('Keep'),
     action: (payload: OperationPayload): Source => {
       return payload.source.cols.keep({
         target: payload.target,
@@ -1167,6 +1344,7 @@ export const operationCreators: Record<string, OperationCreator> = {
       usesInputCols: true,
       usesInputDataframe: true
     },
+    content: defaultContentFunction('Drop'),
     action: (payload: OperationPayload): Source => {
       return payload.source.cols.drop({
         target: payload.target,
@@ -1184,6 +1362,7 @@ export const operationCreators: Record<string, OperationCreator> = {
       usesInputDataframe: true,
       preview: 'basic columns'
     },
+    content: defaultContentFunction('Lowercase', 'letters'),
     action: (payload: OperationPayload): Source => {
       return payload.source.cols.lower({
         target: payload.target,
@@ -1202,6 +1381,7 @@ export const operationCreators: Record<string, OperationCreator> = {
       usesInputDataframe: true,
       preview: 'basic columns'
     },
+    content: defaultContentFunction('Uppercase', 'letters'),
     action: (payload: OperationPayload): Source => {
       return payload.source.cols.upper({
         target: payload.target,
@@ -1220,6 +1400,7 @@ export const operationCreators: Record<string, OperationCreator> = {
       usesInputDataframe: true,
       preview: 'basic columns'
     },
+    content: defaultContentFunction('Title case', 'values'),
     action: (payload: OperationPayload): Source => {
       return payload.source.cols.title({
         target: payload.target,
@@ -1238,6 +1419,7 @@ export const operationCreators: Record<string, OperationCreator> = {
       usesInputDataframe: true,
       preview: 'basic columns'
     },
+    content: defaultContentFunction('Capitalize', 'values'),
     action: (payload: OperationPayload): Source => {
       return payload.source.cols.capitalize({
         target: payload.target,
@@ -1257,6 +1439,7 @@ export const operationCreators: Record<string, OperationCreator> = {
       usesInputDataframe: true,
       preview: 'basic columns'
     },
+    content: defaultContentFunction('Remove accents', 'from values'),
     action: (payload: OperationPayload): Source => {
       return payload.source.cols.normalizeChars({
         target: payload.target,
@@ -1269,12 +1452,13 @@ export const operationCreators: Record<string, OperationCreator> = {
   },
   removeSpecialChars: {
     name: 'Remove special chars from column values',
-    alias: 'Remove special chars',
+    alias: 'Remove special characters',
     defaultOptions: {
       usesInputCols: true,
       usesInputDataframe: true,
       preview: 'basic columns'
     },
+    content: defaultContentFunction('Remove special characters', 'from values'),
     action: (payload: OperationPayload): Source => {
       return payload.source.cols.removeSpecialChars({
         target: payload.target,
@@ -1292,6 +1476,18 @@ export const operationCreators: Record<string, OperationCreator> = {
       usesInputCols: true,
       usesInputDataframe: true,
       preview: 'basic columns'
+    },
+    content: (
+      payload: OperationPayload<{
+        start: number;
+        end: number;
+      }>
+    ): string => {
+      return (
+        `b{Extract} characters from indices \n` +
+        `gr{${payload.start}} to gr{${payload.end}} \n` +
+        inColsContent(payload)
+      );
     },
     action: (
       payload: OperationPayload<{
@@ -1318,6 +1514,7 @@ export const operationCreators: Record<string, OperationCreator> = {
       usesInputDataframe: true,
       preview: 'basic columns'
     },
+    content: defaultContentFunction('Trim whitespaces', 'from values'),
     action: (
       payload: OperationPayload<{
         start: number;
@@ -1341,6 +1538,7 @@ export const operationCreators: Record<string, OperationCreator> = {
       usesInputDataframe: true,
       preview: 'basic columns'
     },
+    content: defaultContentFunction('Normalize whitespaces', 'from values'),
     action: (
       payload: OperationPayload<{
         start: number;
@@ -1363,6 +1561,13 @@ export const operationCreators: Record<string, OperationCreator> = {
       usesInputCols: true,
       usesInputDataframe: true,
       preview: 'basic columns'
+    },
+    content: (
+      payload: OperationPayload<{
+        n: number;
+      }>
+    ): string => {
+      return `Get b{Left} gr{${payload.n}} characters` + inColsContent(payload);
     },
     action: (
       payload: OperationPayload<{
@@ -1394,6 +1599,15 @@ export const operationCreators: Record<string, OperationCreator> = {
       usesInputDataframe: true,
       preview: 'basic columns'
     },
+    content: (
+      payload: OperationPayload<{
+        n: number;
+      }>
+    ): string => {
+      return (
+        `Get b{Right} gr{${payload.n}} characters` + inColsContent(payload)
+      );
+    },
     action: (
       payload: OperationPayload<{
         n: number;
@@ -1422,6 +1636,18 @@ export const operationCreators: Record<string, OperationCreator> = {
       usesInputCols: true,
       usesInputDataframe: true,
       preview: 'basic columns'
+    },
+    content: (
+      payload: OperationPayload<{
+        start: number;
+        end: number;
+      }>
+    ): string => {
+      return (
+        `Get b{Middle} characters from indices \n` +
+        `gr{${payload.start}} to gr{${payload.end}}` +
+        inColsContent(payload)
+      );
     },
     action: (
       payload: OperationPayload<{
@@ -1459,6 +1685,18 @@ export const operationCreators: Record<string, OperationCreator> = {
       usesInputCols: true,
       usesInputDataframe: true,
       preview: 'basic columns'
+    },
+    content: (
+      payload: OperationPayload<{
+        width: number;
+        side: 'left' | 'right' | 'both';
+        fillChar: string;
+      }>
+    ): string => {
+      return (
+        `b{Pad} to gr{${payload.width}} characters \non the gr{${payload.side}}` +
+        inColsContent(payload)
+      );
     },
     action: (
       payload: OperationPayload<{
@@ -1522,6 +1760,7 @@ export const operationCreators: Record<string, OperationCreator> = {
       usesInputDataframe: true,
       preview: 'basic columns'
     },
+    content: defaultContentFunction('Get absolute value', 'from values'),
     action: (payload: OperationPayload): Source => {
       return payload.source.cols.abs({
         target: payload.target,
@@ -1539,6 +1778,15 @@ export const operationCreators: Record<string, OperationCreator> = {
       usesInputCols: true,
       usesInputDataframe: true,
       preview: 'basic columns'
+    },
+    content: (
+      payload: OperationPayload<{
+        decimals: number;
+      }>
+    ): string => {
+      return (
+        `b{Round} to gr{${payload.decimals}} decimals` + inColsContent(payload)
+      );
     },
     action: (
       payload: OperationPayload<{
@@ -1563,6 +1811,7 @@ export const operationCreators: Record<string, OperationCreator> = {
       usesInputDataframe: true,
       preview: 'basic columns'
     },
+    content: defaultContentFunction('Floor', 'values'),
     action: (payload: OperationPayload): Source => {
       return payload.source.cols.floor({
         target: payload.target,
@@ -1581,6 +1830,7 @@ export const operationCreators: Record<string, OperationCreator> = {
       usesInputDataframe: true,
       preview: 'basic columns'
     },
+    content: defaultContentFunction('Ceil', 'values'),
     action: (payload: OperationPayload): Source => {
       return payload.source.cols.ceil({
         target: payload.target,
@@ -1599,6 +1849,7 @@ export const operationCreators: Record<string, OperationCreator> = {
       usesInputDataframe: true,
       preview: 'basic columns'
     },
+    content: defaultContentFunction('Modulo', 'values'),
     action: (payload: OperationPayload): Source => {
       return payload.source.cols.mod({
         target: payload.target,
@@ -1616,6 +1867,15 @@ export const operationCreators: Record<string, OperationCreator> = {
       usesInputCols: true,
       usesInputDataframe: true,
       preview: 'basic columns'
+    },
+    content: (
+      payload: OperationPayload<{
+        base: number;
+      }>
+    ): string => {
+      return (
+        `Get base gr{${payload.base}} b{Logarithm}` + inColsContent(payload)
+      );
     },
     action: (
       payload: OperationPayload<{
@@ -1640,6 +1900,7 @@ export const operationCreators: Record<string, OperationCreator> = {
       usesInputDataframe: true,
       preview: 'basic columns'
     },
+    content: defaultContentFunction('Get Natural Logarithm', 'from values'),
     action: (payload: OperationPayload): Source => {
       return payload.source.cols.ln({
         target: payload.target,
@@ -1657,6 +1918,13 @@ export const operationCreators: Record<string, OperationCreator> = {
       usesInputCols: true,
       usesInputDataframe: true,
       preview: 'basic columns'
+    },
+    content: (
+      payload: OperationPayload<{
+        power: number;
+      }>
+    ): string => {
+      return `b{Power} to gr{${payload.power}}` + inColsContent(payload);
     },
     action: (
       payload: OperationPayload<{
@@ -1681,6 +1949,7 @@ export const operationCreators: Record<string, OperationCreator> = {
       usesInputDataframe: true,
       preview: 'basic columns'
     },
+    content: defaultContentFunction('Get Square Root', 'from values'),
     action: (payload: OperationPayload): Source => {
       return payload.source.cols.sqrt({
         target: payload.target,
@@ -1700,6 +1969,7 @@ export const operationCreators: Record<string, OperationCreator> = {
       usesInputDataframe: true,
       preview: 'basic columns'
     },
+    content: defaultContentFunction('Get Sine', 'from values'),
     action: (payload: OperationPayload): Source => {
       return payload.source.cols.sin({
         target: payload.target,
@@ -1718,6 +1988,7 @@ export const operationCreators: Record<string, OperationCreator> = {
       usesInputDataframe: true,
       preview: 'basic columns'
     },
+    content: defaultContentFunction('Get Cosine', 'from values'),
     action: (payload: OperationPayload): Source => {
       return payload.source.cols.cos({
         target: payload.target,
@@ -1736,6 +2007,7 @@ export const operationCreators: Record<string, OperationCreator> = {
       usesInputDataframe: true,
       preview: 'basic columns'
     },
+    content: defaultContentFunction('Get Tangent', 'from values'),
     action: (payload: OperationPayload): Source => {
       return payload.source.cols.tan({
         target: payload.target,
@@ -1754,6 +2026,7 @@ export const operationCreators: Record<string, OperationCreator> = {
       usesInputDataframe: true,
       preview: 'basic columns'
     },
+    content: defaultContentFunction('Get Inverse Sine', 'from values'),
     action: (payload: OperationPayload): Source => {
       return payload.source.cols.asin({
         target: payload.target,
@@ -1772,6 +2045,7 @@ export const operationCreators: Record<string, OperationCreator> = {
       usesInputDataframe: true,
       preview: 'basic columns'
     },
+    content: defaultContentFunction('Get Inverse Cosine', 'from values'),
     action: (payload: OperationPayload): Source => {
       return payload.source.cols.acos({
         target: payload.target,
@@ -1790,6 +2064,7 @@ export const operationCreators: Record<string, OperationCreator> = {
       usesInputDataframe: true,
       preview: 'basic columns'
     },
+    content: defaultContentFunction('Get Inverse Tangent', 'from values'),
     action: (payload: OperationPayload): Source => {
       return payload.source.cols.atan({
         target: payload.target,
@@ -1808,6 +2083,7 @@ export const operationCreators: Record<string, OperationCreator> = {
       usesInputDataframe: true,
       preview: 'basic columns'
     },
+    content: defaultContentFunction('Get Hyperbolic Sine', 'from values'),
     action: (payload: OperationPayload): Source => {
       return payload.source.cols.sinh({
         target: payload.target,
@@ -1826,6 +2102,7 @@ export const operationCreators: Record<string, OperationCreator> = {
       usesInputDataframe: true,
       preview: 'basic columns'
     },
+    content: defaultContentFunction('Get Hyperbolic Cosine', 'from values'),
     action: (payload: OperationPayload): Source => {
       return payload.source.cols.cosh({
         target: payload.target,
@@ -1844,6 +2121,7 @@ export const operationCreators: Record<string, OperationCreator> = {
       usesInputDataframe: true,
       preview: 'basic columns'
     },
+    content: defaultContentFunction('Get Hyperbolic Tangent', 'from values'),
     action: (payload: OperationPayload): Source => {
       return payload.source.cols.tanh({
         target: payload.target,
@@ -1862,6 +2140,10 @@ export const operationCreators: Record<string, OperationCreator> = {
       usesInputDataframe: true,
       preview: 'basic columns'
     },
+    content: defaultContentFunction(
+      'Get Inverse Hyperbolic Sine',
+      'from values'
+    ),
     action: (payload: OperationPayload): Source => {
       return payload.source.cols.asinh({
         target: payload.target,
@@ -1880,6 +2162,10 @@ export const operationCreators: Record<string, OperationCreator> = {
       usesInputDataframe: true,
       preview: 'basic columns'
     },
+    content: defaultContentFunction(
+      'Get Inverse Hyperbolic Cosine',
+      'from values'
+    ),
     action: (payload: OperationPayload): Source => {
       return payload.source.cols.acosh({
         target: payload.target,
@@ -1898,6 +2184,10 @@ export const operationCreators: Record<string, OperationCreator> = {
       usesInputDataframe: true,
       preview: 'basic columns'
     },
+    content: defaultContentFunction(
+      'Get Inverse Hyperbolic Tangent',
+      'from values'
+    ),
     action: (payload: OperationPayload): Source => {
       return payload.source.cols.atanh({
         target: payload.target,
@@ -1917,6 +2207,7 @@ export const operationCreators: Record<string, OperationCreator> = {
       usesInputDataframe: true,
       preview: 'basic columns'
     },
+    // TODO: Content property
     action: (
       payload: OperationPayload<{
         type: unknown;
@@ -1982,6 +2273,7 @@ export const operationCreators: Record<string, OperationCreator> = {
       usesInputDataframe: true,
       preview: 'basic columns'
     },
+    // TODO: Content property
     action: (
       payload: OperationPayload<{
         type: unknown;
@@ -2022,6 +2314,7 @@ export const operationCreators: Record<string, OperationCreator> = {
       usesInputDataframe: true,
       preview: 'basic columns'
     },
+    // TODO: Content property
     action: (
       _payload: OperationPayload<{
         n: number;
@@ -2039,6 +2332,16 @@ export const operationCreators: Record<string, OperationCreator> = {
       usesInputCols: true,
       usesInputDataframe: true,
       preview: 'basic columns'
+    },
+    content: (
+      payload: OperationPayload<{
+        strategy: string;
+      }>
+    ): string => {
+      return (
+        `b{Impute missing values} using gr{${payload.strategy}} strategy` +
+        inColsContent(payload)
+      );
     },
     action: (
       payload: OperationPayload<{
@@ -2077,6 +2380,18 @@ export const operationCreators: Record<string, OperationCreator> = {
       usesInputDataframe: true,
       preview: 'basic columns'
     },
+    content: (
+      payload: OperationPayload<{
+        prefix: string;
+        drop: boolean;
+      }>
+    ): string => {
+      return (
+        `b{One hot encode} columns bl{${naturalJoin(payload.cols)}}` +
+        (payload.prefix ? ` with prefix gr{${payload.prefix}}` : '') +
+        (payload.drop ? ' and drop the original column' : '')
+      );
+    },
     action: (
       payload: OperationPayload<{
         prefix: string;
@@ -2095,13 +2410,14 @@ export const operationCreators: Record<string, OperationCreator> = {
     shortcut: 'mo'
   },
   stringToIndex: {
-    name: 'Convert string values to integer in a column',
+    name: 'Convert string values to indices in a column',
     alias: 'string to index',
     defaultOptions: {
       usesInputCols: true,
       usesInputDataframe: true,
       preview: 'basic columns'
     },
+    content: defaultContentFunction('Convert string values to indices'),
     action: (payload: OperationPayload): Source => {
       return payload.source.cols.stringToIndex({
         target: payload.target,
@@ -2120,6 +2436,7 @@ export const operationCreators: Record<string, OperationCreator> = {
       usesInputDataframe: true,
       preview: 'basic columns'
     },
+    content: defaultContentFunction('Convert Index values back to String'),
     action: (payload: OperationPayload): Source => {
       return payload.source.cols.indexToString({
         target: payload.target,
@@ -2138,6 +2455,7 @@ export const operationCreators: Record<string, OperationCreator> = {
       usesInputDataframe: true,
       preview: 'basic columns'
     },
+    content: defaultContentFunction('Apply Z-score'),
     action: (payload: OperationPayload): Source => {
       return payload.source.cols.zScore({
         target: payload.target,
@@ -2149,13 +2467,14 @@ export const operationCreators: Record<string, OperationCreator> = {
     shortcut: 'msi'
   },
   standardScaler: {
-    name: 'standard scaler in a column',
+    name: 'Standard scaler in a column',
     alias: 'standard scaler',
     defaultOptions: {
       usesInputCols: true,
       usesInputDataframe: true,
       preview: 'basic columns'
     },
+    content: defaultContentFunction('Apply Standard scaler'),
     action: (payload: OperationPayload): Source => {
       return payload.source.cols.standardScaler({
         target: payload.target,
@@ -2174,6 +2493,7 @@ export const operationCreators: Record<string, OperationCreator> = {
       usesInputDataframe: true,
       preview: 'basic columns'
     },
+    content: defaultContentFunction('Apply Min max scaler'),
     action: (payload: OperationPayload): Source => {
       return payload.source.cols.minMaxScaler({
         target: payload.target,
@@ -2192,6 +2512,7 @@ export const operationCreators: Record<string, OperationCreator> = {
       usesInputDataframe: true,
       preview: 'basic columns'
     },
+    content: defaultContentFunction('Apply MaxAbs scaler'),
     action: (payload: OperationPayload): Source => {
       return payload.source.cols.maxAbsScaler({
         target: payload.target,
@@ -2212,6 +2533,7 @@ export const operationCreators: Record<string, OperationCreator> = {
       usesInputDataframe: true,
       preview: 'basic columns'
     },
+    content: defaultContentFunction('Remove stop-words'),
     action: (payload: OperationPayload): Source => {
       return payload.source.cols.removeStopWords({
         target: payload.target,
@@ -2229,6 +2551,21 @@ export const operationCreators: Record<string, OperationCreator> = {
       usesInputCols: 'single',
       usesInputDataframe: true,
       preview: true
+    },
+    content: (
+      payload: OperationPayload<{
+        separator: string;
+        splits: number;
+        drop: boolean;
+      }>
+    ): string => {
+      return (
+        `b{Unnest} ${naturalJoin(payload.cols)}` +
+        inDataframeContent(payload) +
+        `in gr{${payload.splits}} splits ` +
+        `using gr{${payload.separator}} as split character and ` +
+        `${payload.drop ? 'gr{drop}' : 'gr{keep}'} original column`
+      );
     },
     action: (
       payload: OperationPayload<{
@@ -2280,6 +2617,17 @@ export const operationCreators: Record<string, OperationCreator> = {
       usesInputDataframe: true,
       preview: true
     },
+    content: (
+      payload: OperationPayload<{
+        separator: string;
+      }>
+    ): string => {
+      return (
+        `b{Nest} ${naturalJoin(payload.cols)}` +
+        ` using gr{${payload.separator}}` +
+        inDataframeContent(payload)
+      );
+    },
     validate: (
       payload: OperationPayload<{
         separator: string;
@@ -2325,10 +2673,10 @@ const preparePayload = (
   operation: Operation,
   payload: OperationPayload<PayloadWithOptions>
 ): OperationPayload<PayloadWithOptions> => {
-  const options: Partial<OperationOptions> = Object.assign(
+  const options: OperationOptions = Object.assign(
     {},
     operation.defaultOptions,
-    payload.options as OperationOptions
+    payload.options
   );
   if (options.usesInputDataframe && !payload.source) {
     throw new Error('Input dataframe is required');
@@ -2339,11 +2687,14 @@ const preparePayload = (
   ) {
     throw new Error('Input columns are required');
   }
+  if (options.usesInputCols && options.usesOutputCols !== false) {
+    options.usesOutputCols = true;
+  }
   if (options.usesOutputCols && !payload.outputCols) {
     if (options.usesInputCols && payload.cols) {
       payload = {
         ...payload,
-        outputCols: payload.cols
+        outputCols: [...payload.cols]
       };
     } else {
       throw new Error('Output columns are required');
@@ -2358,6 +2709,8 @@ const preparePayload = (
       )
     };
   }
+
+  payload.options = options;
 
   return payload;
 };
@@ -2524,6 +2877,35 @@ function whereExpression(
       return `(df["${col}"]>=${value}) & (df["${col}"]<=${otherValue})`;
     default:
       console.warn('Unknown condition', condition);
+  }
+  return '';
+}
+
+function whereHint(
+  condition: string,
+  payload: {
+    value: BasicType;
+    otherValue: BasicType;
+    values: BasicType[];
+  }
+): string {
+  switch (condition) {
+    case 'equal':
+      return `is equal to gr{${payload.value}}`;
+    case 'not_equal':
+      return `is not equal to gr{${payload.value}}`;
+    case 'greater_than':
+      return `is greater than gr{${payload.value}}`;
+    case 'greater_than_or_equal':
+      return `is greater than or equal to gr{${payload.value}}`;
+    case 'less_than':
+      return `is less than gr{${payload.value}}`;
+    case 'less_than_or_equal':
+      return `is less than or equal to gr{${payload.value}}`;
+    case 'value_in':
+      return `is in gr{${payload.values.join(', ')}}`;
+    case 'between':
+      return `is between gr{${payload.value}} and gr{${payload.otherValue}}`;
   }
   return '';
 }

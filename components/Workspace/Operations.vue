@@ -38,7 +38,7 @@
             <span class="text-neutral-lighter text-xs mr-2">{{
               index + 1
             }}</span>
-            <span class="flex-1" v-html="element.content"></span>
+            <span class="flex-1" v-html="element.htmlContent"></span>
             <IconButton
               :path="mdiPencil"
               class="w-4 h-4 ml-auto cursor-pointer opacity-0 group-hover:opacity-100 focus:opacity-100 transition"
@@ -56,14 +56,14 @@
         class="inactive-operations operations-items px-4 pb-10 flex flex-col gap-2 opacity-60 select-none"
       >
         <li
-          v-for="(element, index) in inactiveOperations"
+          v-for="(element, index) in inactiveOperations.map(formatOperation)"
           :key="element.operation.name + index"
           class="flex items-center gap-2 transition p-2 rounded-md"
         >
           <span class="text-neutral-lighter text-xs mr-2">{{
-            operations.length + 1 + index
+            operationCells.length + 1 + index
           }}</span>
-          <span>{{ element.operation.name }}</span>
+          <span v-html="element.htmlContent"></span>
           <!-- TODO: Support remove inactive operations -->
           <!-- <Icon
             :path="mdiClose"
@@ -80,6 +80,7 @@
 import { mdiClose, mdiPencil } from '@mdi/js';
 import { Ref } from 'vue';
 
+import { DataframeObject } from '@/types/dataframe';
 import {
   isOperation,
   OperationActions,
@@ -112,34 +113,36 @@ const inactiveOperations = inject<Ref<OperationItem[]>>(
 
 const dragging = ref(false);
 
-type OperationCell = OperationItem & { id: string; content: string };
+type OperationCell = OperationItem & { id: string; htmlContent: string };
+
+const formatOperation = (operation: OperationItem, index: number) => {
+  // comes from already processed operation
+  const payload = operation.payload as OperationPayload<PayloadWithOptions>;
+
+  const content = operation.operation?.content
+    ? formatOperationContent(
+        resolveUsingPayload(operation.operation.content, payload)
+      )
+    : undefined;
+
+  const title = operation.operation?.title
+    ? resolveUsingPayload(operation.operation.title, payload)
+    : undefined;
+
+  return {
+    ...operation,
+    id: operation.payload.id || index,
+    htmlContent:
+      content ||
+      formatOperationContent(
+        `b{${title || operation.operation.name || 'Operation'}}`
+      )
+  };
+};
 
 const operationCells = computed<OperationCell[]>({
   get: () => {
-    return operations.value.map((operation, index) => {
-      // comes from already processed operation
-      const payload = operation.payload as OperationPayload<PayloadWithOptions>;
-
-      const content = operation.operation?.content
-        ? formatOperationContent(
-            resolveUsingPayload(operation.operation.content, payload)
-          )
-        : undefined;
-
-      const title = operation.operation?.title
-        ? resolveUsingPayload(operation.operation.title, payload)
-        : undefined;
-
-      return {
-        ...operation,
-        id: operation.payload.id || index,
-        content:
-          content ||
-          formatOperationContent(
-            `b{${title || operation.operation.name || 'Operation'}}`
-          )
-      };
-    });
+    return operations.value.map(formatOperation);
   },
   set: value => {
     updateOperations(
@@ -258,13 +261,39 @@ const removeOperation = async (index: number): Promise<void> => {
   return await submitOperation();
 };
 
+const dataframes = inject('dataframes') as Ref<DataframeObject[]>;
+
 const formatOperationContent = (content: string): string => {
-  return content
-    .replace(/bl\{(.+?)\}/g, '<span class="content-text-blue">$1</span>')
-    .replace(/gr\{(.+?)\}/g, '<span class="content-text-green">$1</span>')
-    .replace(/rd\{(.+?)\}/g, '<span class="content-text-red">$1</span>')
-    .replace(/b\{(.+?)\}/g, '<span class="font-bold">$1</span>')
-    .replace(/df\{(.+?)\}/g, '<span class="dataframe-hint">$1</span>');
+  // find matches for dataframe names in dn{dataframeName} format but without any {} inside
+
+  const matches = content.match(/dn\{([a-zA-Z0-9]+?)\}/g);
+  if (matches) {
+    matches.forEach(match => {
+      const varName = match.replace(/dn\{([a-zA-Z0-9]+?)\}/, '$1');
+
+      const dataframeObject = dataframes.value.find(
+        dataframe => dataframe.df?.name === varName
+      );
+
+      console.log('found dataframe name', dataframeObject, varName);
+
+      if (dataframeObject) {
+        content = content.replace(
+          `dn{${varName}}`,
+          dataframeObject.name || varName
+        );
+      }
+    });
+  }
+
+  content = content
+    .replace(/bl\{((.|\n)+?)\}/g, '<span class="content-text-blue">$1</span>')
+    .replace(/gr\{((.|\n)+?)\}/g, '<span class="content-text-green">$1</span>')
+    .replace(/rd\{((.|\n)+?)\}/g, '<span class="content-text-red">$1</span>')
+    .replace(/b\{((.|\n)+?)\}/g, '<span class="font-bold">$1</span>')
+    .replace(/df\{((.|\n)+?)\}/g, '<span class="dataframe-hint">$1</span>');
+
+  return content;
 };
 </script>
 
@@ -287,10 +316,7 @@ const formatOperationContent = (content: string): string => {
     content: "'";
   }
 }
-.content-text-b {
-  @apply font-bold;
-}
-.operation-items:not(.with-multiple-datasets) .dataframe-hint {
+.operations-items:not(.with-multiple-datasets) .dataframe-hint {
   display: none;
 }
 </style>
