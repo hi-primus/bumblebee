@@ -119,10 +119,10 @@ provide('preview-data', previewData);
 const scrollRange = ref([0, 0]);
 provide('scroll-range', scrollRange);
 
-watch(state, (state: Operation) => {
-  if (isOperation(state)) {
+watch(state, () => {
+  if (isOperation(state.value)) {
     operationValues.value = {
-      options: deepClone(state.defaultOptions) as OperationOptions
+      options: deepClone(state.value.defaultOptions) as OperationOptions
     };
   }
 });
