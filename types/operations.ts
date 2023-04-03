@@ -182,7 +182,7 @@ export type OperationItem = {
 
 export type OperationStatus = {
   message?: string;
-  status: 'not validated' | 'ok' | 'warning' | 'error' | 'fatal error';
+  status: 'not validated' | 'ok' | 'error' | 'fatal error';
 };
 
 export type ColumnDetailState = {

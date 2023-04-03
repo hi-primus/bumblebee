@@ -141,16 +141,3 @@ export const focusPrevious = (el: HTMLElement): HTMLElement | null => {
   }
   return null;
 };
-
-// errors
-
-export class PreviewError extends Error {
-  constructor(message: string, options?: ErrorOptions) {
-    super(message, options);
-    this.name = 'PreviewError';
-  }
-}
-
-export const isPreviewError = (error: Error): error is PreviewError => {
-  return error.name === 'PreviewError';
-};

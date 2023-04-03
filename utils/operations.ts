@@ -858,7 +858,7 @@ export const operationCreators: Record<string, OperationCreator> = {
       if (validReplaces.length > 0) {
         return true;
       }
-      throw new PreviewError('Add at least one valid replace');
+      throw new Error('Add at least one valid replace');
     },
     action: (
       payload: OperationPayload<{
@@ -2634,7 +2634,7 @@ export const operationCreators: Record<string, OperationCreator> = {
       }>
     ) => {
       if (payload.cols.length <= 1) {
-        throw new PreviewError('At least two columns are required', {
+        throw new Error('At least two columns are required', {
           cause: payload.cols
         });
       }

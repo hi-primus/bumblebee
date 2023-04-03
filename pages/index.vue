@@ -878,7 +878,7 @@ const previewOperationThrottled = throttleOnce(
         previewData.value = null;
         operationStatus.value = {
           message: err.message,
-          status: err instanceof PreviewError ? 'warning' : 'error'
+          status: 'error'
         };
       } else if (typeof err === 'string') {
         previewData.value = null;

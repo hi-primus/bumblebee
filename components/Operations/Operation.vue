@@ -90,18 +90,17 @@
     <div
       v-if="
         firstValidated &&
-        ['warning', 'error', 'fatal error'].includes(operationStatus.status)
+        ['error', 'fatal error'].includes(operationStatus.status)
       "
       class="w-full flex justify-end gap-2"
     >
       <Toast
         :title="{
-          warning: 'Warning',
           error: 'Error',
           'fatal error': 'Fatal Error',
-        }[operationStatus.status as 'warning' | 'error' | 'fatal error']"
+        }[operationStatus.status as 'error' | 'fatal error']"
         :message="operationStatus.message"
-        type="info"
+        type="error"
         :closable="false"
         class="w-full"
       />
@@ -163,10 +162,10 @@ const submit = async () => {
     status.value = '';
     return result;
   } else if (
-    !['warning', 'error', 'fatal error'].includes(operationStatus.value?.status)
+    !['error', 'fatal error'].includes(operationStatus.value?.status)
   ) {
     operationStatus.value = {
-      status: 'warning',
+      status: 'error',
       message: 'Check the fields for errors'
     };
   }
