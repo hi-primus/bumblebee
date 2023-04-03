@@ -38,4 +38,17 @@
       border-bottom-left-radius: 0 !important;
     }
   }
+
+  ::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply border-l border-l-gray-lightest;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-gray-light/60 hover:bg-gray-light/80 active:bg-gray-light border border-2 border-gray-lighter rounded-full;
+  }
 }
