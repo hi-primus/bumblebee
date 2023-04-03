@@ -1,13 +1,13 @@
 <template>
   <Teleport to="body">
     <div
-      :style="(attrStyle as StyleValue)"
-      :class="attrClass"
-      class="popup w-full h-screen absolute top-0 left-0 z-30 bg-black/30 flex items-center justify-center"
+      class="popup-container w-full h-screen absolute top-0 left-0 z-30 bg-black/30 flex items-center justify-center"
       @click="emit('close')"
     >
       <div
-        class="popup-window relative bg-white rounded-lg min-w-[300px] max-w-[calc(100%-64px)] max-h-[calc(100vh-5rem)]"
+        class="popup relative bg-white rounded-lg min-w-[300px] max-w-[calc(100%-64px)] max-h-[calc(100vh-5rem)]"
+        :class="attrClass"
+        :style="(attrStyle as StyleValue)"
         @click.stop
       >
         <div v-if="title || closable" class="popup-header flex items-center">

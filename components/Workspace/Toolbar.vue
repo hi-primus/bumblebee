@@ -2,7 +2,7 @@
   <div class="workspace-toolbar bg-white">
     <Popup
       v-if="showCommands"
-      class="popup-narrow"
+      class="popup-narrow w-[calc(10vw+380px)]"
       :closable="false"
       @close="showCommands = false"
     >

@@ -1,18 +1,14 @@
-.popup {
+.popup-container > .popup {
   &:not([class*='popup-']),
   &.popup-default {
-    .popup-window {
-      @apply py-4 px-6;
-    }
+    @apply py-4 px-6;
     .popup-header {
       @apply h-8 mb-4;
     }
   }
 
   &.popup-narrow {
-    .popup-window {
-      @apply p-2;
-    }
+    @apply p-2;
     .popup-header {
       @apply h-6 mb-1 mt-[-3px];
     }
