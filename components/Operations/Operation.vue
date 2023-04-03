@@ -89,6 +89,7 @@
     </template>
     <div
       v-if="
+        firstValidated &&
         ['warning', 'error', 'fatal error'].includes(operationStatus.status)
       "
       class="w-full flex justify-end gap-2"
@@ -115,11 +116,7 @@
       >
         Cancel
       </AppButton>
-      <AppButton
-        :disabled="Boolean(status) || !submitable"
-        :loading="status === 'submitting'"
-        type="submit"
-      >
+      <AppButton :loading="status === 'submitting'" type="submit">
         Accept
       </AppButton>
     </div>
@@ -156,12 +153,23 @@ const { submitOperation, cancelOperation } = inject(
 const operationElement = ref<HTMLElement | null>(null);
 
 const status = ref<'' | 'submitting' | 'cancelling'>('');
+const firstValidated = ref(false);
 
 const submit = async () => {
-  status.value = 'submitting';
-  const result = await submitOperation();
-  status.value = '';
-  return result;
+  firstValidated.value = true;
+  if (submitable.value) {
+    status.value = 'submitting';
+    const result = await submitOperation();
+    status.value = '';
+    return result;
+  } else if (
+    !['warning', 'error', 'fatal error'].includes(operationStatus.value?.status)
+  ) {
+    operationStatus.value = {
+      status: 'warning',
+      message: 'Check the fields for errors'
+    };
+  }
 };
 
 const cancel = async () => {
@@ -209,6 +217,8 @@ const submitable = computed<boolean>(() => {
 });
 
 onMounted(async () => {
+  firstValidated.value = false;
+
   await new Promise(resolve => setTimeout(resolve, 1));
   if (!operationElement.value) {
     return;
@@ -280,4 +290,18 @@ const deleteFromGroup = async (groupName: string, index: number) => {
   };
   isAddingOrDeleting = false;
 };
+
+let operationInitialized = false;
+
+watch(
+  operationValues,
+  () => {
+    if (!operationInitialized) {
+      operationInitialized = true;
+    } else {
+      firstValidated.value = true;
+    }
+  },
+  { deep: true }
+);
 </script>
