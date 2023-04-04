@@ -103,7 +103,8 @@ export default defineNuxtPlugin(nuxtApp => {
 
       let instance: Instance | null = null;
 
-      el.addEventListener('mouseenter', () => {
+      el.addEventListener('mouseenter', async () => {
+        await new Promise(resolve => setTimeout(resolve, 1));
         if (!instance) {
           instance = createPopper(el, popperElement, {
             placement,
