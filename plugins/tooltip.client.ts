@@ -1,4 +1,4 @@
-import { createPopper, Placement, placements } from '@popperjs/core';
+import { createPopper, Instance, Placement, placements } from '@popperjs/core';
 import { DirectiveBinding } from 'vue';
 
 const createPopperElement = () => {
@@ -23,6 +23,20 @@ const createPopperElement = () => {
   return popperElement;
 };
 
+const modifiersClasses = {
+  default: 'color-default',
+  primary: 'color-primary',
+  success: 'color-success',
+  warning: 'color-warning',
+  error: 'color-danger',
+  sm: 'size-sm',
+  md: 'size-md',
+  lg: 'size-lg',
+  xl: 'size-xl'
+};
+
+type ValidModifier = keyof typeof modifiersClasses;
+
 const _popperElements: Record<string, HTMLDivElement> = {};
 
 const usePopperElement = (
@@ -37,6 +51,14 @@ const usePopperElement = (
   const popperElement = createPopperElement();
 
   _popperElements[modifiersString] = popperElement;
+
+  for (const modifier in modifiers) {
+    if (modifier in modifiersClasses) {
+      popperElement.classList.add(modifiersClasses[modifier as ValidModifier]);
+    } else {
+      console.warn(`Unknown tooltip modifier: ${modifier}`);
+    }
+  }
 
   return popperElement;
 };
@@ -62,56 +84,41 @@ export default defineNuxtPlugin(nuxtApp => {
 
       for (const modifier in binding.modifiers) {
         switch (modifier) {
-          case 'default':
-            popperElement.classList.add('color-default');
-            break;
-          case 'primary':
-            popperElement.classList.add('color-primary');
-            break;
-          case 'success':
-            popperElement.classList.add('color-success');
-            break;
-          case 'warning':
-            popperElement.classList.add('color-warning');
-            break;
-          case 'error':
-            popperElement.classList.add('color-danger');
-            break;
           case 'sm':
             offsetValue = 7;
-            popperElement.classList.add('size-sm');
             break;
           case 'md':
             offsetValue = 8;
-            popperElement.classList.add('size-md');
             break;
           case 'lg':
             offsetValue = 9;
-            popperElement.classList.add('size-lg');
             break;
           case 'xl':
             offsetValue = 10;
-            popperElement.classList.add('size-xl');
             break;
-          default:
-            console.warn('Unknown popper modifier: ' + modifier);
         }
       }
 
-      const instance = createPopper(el, popperElement, {
-        placement,
-        modifiers: [
-          {
-            name: 'offset',
-            options: {
-              offset: [0, offsetValue]
-            }
-          }
-        ]
-      });
+      el.setAttribute('data-tooltip', binding.value);
+
+      let instance: Instance | null = null;
 
       el.addEventListener('mouseenter', () => {
-        popperElement.childNodes[1].textContent = binding.value;
+        if (!instance) {
+          instance = createPopper(el, popperElement, {
+            placement,
+            modifiers: [
+              {
+                name: 'offset',
+                options: {
+                  offset: [0, offsetValue]
+                }
+              }
+            ]
+          });
+        }
+        const tooltipText = el.getAttribute('data-tooltip');
+        popperElement.childNodes[1].textContent = tooltipText;
         popperElement.classList.add('popper-show');
         instance.update();
       });
@@ -119,6 +126,9 @@ export default defineNuxtPlugin(nuxtApp => {
       el.addEventListener('mouseleave', () => {
         popperElement.classList.remove('popper-show');
       });
+    },
+    updated(el: HTMLElement, binding: DirectiveBinding<string>) {
+      el.setAttribute('data-tooltip', binding.value);
     }
   });
 });
