@@ -63,12 +63,16 @@ const usePopperElement = (
   return popperElement;
 };
 
+interface HTMLElementWithTooltip extends HTMLElement {
+  update: () => void;
+  popperElement: HTMLDivElement;
+  active: boolean;
+}
+
 export default defineNuxtPlugin(nuxtApp => {
   nuxtApp.vueApp.directive('tooltip', {
-    mounted(el: HTMLElement, binding: DirectiveBinding<string>) {
-      if (!binding.value) {
-        return;
-      }
+    mounted(originalElement: HTMLElement, binding: DirectiveBinding<string>) {
+      const el = originalElement as HTMLElementWithTooltip;
 
       // creates a popper element with the modifiers as key to reuse it
 
@@ -80,28 +84,45 @@ export default defineNuxtPlugin(nuxtApp => {
         ? (binding.arg as Placement)
         : 'bottom';
 
-      let offsetValue = 7;
+      let offsetValue = +(el.getAttribute('data-tooltip-offset') || 0);
 
-      for (const modifier in binding.modifiers) {
-        switch (modifier) {
-          case 'sm':
-            offsetValue = 7;
-            break;
-          case 'md':
-            offsetValue = 8;
-            break;
-          case 'lg':
-            offsetValue = 9;
-            break;
-          case 'xl':
-            offsetValue = 10;
-            break;
+      if (!offsetValue) {
+        for (const modifier in binding.modifiers) {
+          switch (modifier) {
+            case 'sm':
+              offsetValue = 4;
+              break;
+            case 'md':
+              offsetValue = 6;
+              break;
+            case 'lg':
+              offsetValue = 8;
+              break;
+            case 'xl':
+              offsetValue = 9;
+              break;
+          }
+        }
+        if (!offsetValue) {
+          offsetValue = 4;
         }
       }
 
-      el.setAttribute('data-tooltip', binding.value);
+      const tooltipText =
+        binding.value || el.getAttribute('data-tooltip') || '';
+
+      el.setAttribute('data-tooltip', tooltipText);
 
       let instance: Instance | null = null;
+
+      el.popperElement = popperElement;
+      el.update = () => {
+        const tooltipText = el.getAttribute('data-tooltip');
+        popperElement.childNodes[1].textContent = tooltipText;
+        popperElement.classList.add('popper-show');
+        instance?.update();
+      };
+      el.active = false;
 
       el.addEventListener('mouseenter', async () => {
         await new Promise(resolve => setTimeout(resolve, 1));
@@ -118,18 +139,23 @@ export default defineNuxtPlugin(nuxtApp => {
             ]
           });
         }
-        const tooltipText = el.getAttribute('data-tooltip');
-        popperElement.childNodes[1].textContent = tooltipText;
-        popperElement.classList.add('popper-show');
-        instance.update();
+        el.active = true;
+        el.update();
       });
 
       el.addEventListener('mouseleave', () => {
+        el.active = false;
         popperElement.classList.remove('popper-show');
       });
     },
     updated(el: HTMLElement, binding: DirectiveBinding<string>) {
-      el.setAttribute('data-tooltip', binding.value);
+      const { update, active } = el as HTMLElementWithTooltip;
+      if (binding.value) {
+        el.setAttribute('data-tooltip', binding.value);
+      }
+      if (active && update) {
+        update();
+      }
     }
   });
 });
