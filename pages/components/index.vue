@@ -94,7 +94,7 @@
           </div>
           <AppButton
             class="color-primary"
-            v-tooltip:left.success="'Successful test'"
+            v-tooltip:left.success.sm="'Successful test'"
           >
             Done
             <Icon :path="mdiCheckBold" />
