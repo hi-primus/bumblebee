@@ -92,25 +92,7 @@
                       : columnClicked($event, column.columnIndex, true)
                 "
               >
-                <span
-                  :key="
-                    columnData[column.title]?.typeName ||
-                    columnData[column.title]?.typeHint
-                  "
-                  v-tooltip="
-                    columnData[column.title]?.typeName ||
-                    columnData[column.title]?.typeHint
-                  "
-                  class="left-icon inline text-neutral-alpha/75 max-w-5 font-bold text-center"
-                  :class="{
-                    'transform scale-x-125':
-                      (columnData[column.title]?.typeHintLength || 3) <= 2,
-                    'tracking-[-1px] transform scale-x-95':
-                      (columnData[column.title]?.typeHintLength || 3) >= 4
-                  }"
-                >
-                  {{ columnData[column.title]?.typeHint }}
-                </span>
+                <ColumnTypeHint :data-type="dataTypes[column.title]" />
                 <span
                   v-tooltip="column.displayTitle || column.title"
                   class="flex-1 truncate pl-2"
@@ -196,8 +178,7 @@ import { PropType, Ref } from 'vue';
 
 import { ColumnHeader } from '@/types/dataframe';
 import { TableSelection } from '@/types/operations';
-import { capitalize, focusNext, focusPrevious } from '@/utils';
-import { TYPES_HINTS, TYPES_NAMES } from '@/utils/data-types';
+import { focusNext, focusPrevious } from '@/utils';
 import { throttle } from '@/utils/time';
 
 const props = defineProps({
@@ -300,36 +281,26 @@ const rowsData = computed(() => {
   return rows;
 });
 
-interface ColumnData {
-  typeHint: string;
-  typeHintLength: number;
-  typeName: string;
-}
-
-const columnData = reactive<Record<string, ColumnData>>({});
+const dataTypes = reactive<Record<string, string[]>>({});
 
 watch(
   columnsHeader,
   header => {
     header.forEach(column => {
-      let dataType = '';
+      let dataType: string[];
       if (column.stats?.inferred_data_type) {
         if (typeof column.stats.inferred_data_type === 'string') {
-          dataType = column.stats.inferred_data_type;
+          dataType = [column.stats.inferred_data_type];
         } else {
-          dataType = column.stats.inferred_data_type.data_type;
+          dataType = [column.stats.inferred_data_type.data_type];
+        }
+        if (column.data_type) {
+          dataType = dataType.concat(column.data_type);
         }
       } else if (column.data_type) {
-        dataType = column.data_type;
+        dataType = [column.data_type];
       }
-      const typeHint = TYPES_HINTS[dataType] || dataType?.substring(0, 3) || '';
-      if (typeHint) {
-        columnData[column.title] = {
-          typeHint,
-          typeHintLength: typeHint.length,
-          typeName: TYPES_NAMES[dataType] || capitalize(dataType) || 'Unknown'
-        };
-      }
+      dataTypes[column.title] = dataType;
     });
 
     const firstPreviewColumn = header.find(column =>

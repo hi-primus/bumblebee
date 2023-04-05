@@ -1,3 +1,5 @@
 <template>
-  <Workspace> </Workspace>
+  <NuxtLayout>
+    <Workspace> </Workspace>
+  </NuxtLayout>
 </template>

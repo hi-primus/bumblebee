@@ -8,9 +8,22 @@
       <h3 v-if="operation">
         {{ resolve(operation.title) || operation.name || 'Operation' }}
       </h3>
+      <h3 v-else-if="columnsInfo">Details</h3>
       <h3 v-else>Operations</h3>
     </div>
     <OperationsOperation v-if="operation" :key="operation.name" />
+    <div
+      v-else-if="columnsInfo"
+      :key="columnsList"
+      class="columns-info-container"
+    >
+      <ColumnDetails
+        v-for="(column, i) in columnsInfo"
+        :key="column.title"
+        :expanded="i === 0"
+        :column="column"
+      />
+    </div>
     <div
       v-else
       class="operations-container overflow-y-auto h-full flex flex-col justify-stretch text-sm text-neutral"
@@ -80,8 +93,9 @@
 import { mdiClose, mdiPencil } from '@mdi/js';
 import { Ref } from 'vue';
 
-import { DataframeObject } from '@/types/dataframe';
+import { Column, DataframeObject } from '@/types/dataframe';
 import {
+  ColumnDetailState,
   isOperation,
   OperationActions,
   OperationItem,
@@ -96,9 +110,57 @@ const { confirm } = useConfirmPopup();
 
 const state = inject<Ref<State | null>>('state', ref(null));
 
+const dataframeObject = inject<Ref<DataframeObject | null>>(
+  'dataframe-object',
+  ref(null)
+);
+
 const operation = computed(() => {
   return isOperation(state.value) ? state.value : null;
 });
+
+const columnsInfo = computed(() => {
+  if (!state.value || !(state.value as ColumnDetailState)?.columns?.length) {
+    return null;
+  }
+
+  const columns = (state.value as ColumnDetailState).columns;
+
+  const columnProfiles = dataframeObject.value?.profile?.columns;
+  if (!columnProfiles) {
+    return null;
+  }
+
+  return columns
+    .filter(column => columnProfiles[column])
+    .map(
+      columnName =>
+        ({
+          title: columnName,
+          ...columnProfiles[columnName]
+        } as Column)
+    );
+});
+
+const columnsList = ref('');
+
+watch(
+  () => columnsInfo.value,
+  () => {
+    const newColumnsList = columnsInfo.value
+      ? columnsInfo.value.map(column => column.title).join(', ')
+      : '';
+
+    if (columnsList.value !== newColumnsList) {
+      columnsList.value = newColumnsList;
+      addToast({
+        title: 'Columns selected',
+        message: columnsList.value,
+        type: 'info'
+      });
+    }
+  }
+);
 
 const operationValues = inject('operation-values') as Ref<
   OperationPayload<PayloadWithOptions>

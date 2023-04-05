@@ -935,8 +935,12 @@ watch(
       selectValuesOperation(selection.values);
     } else if (selection?.ranges?.length) {
       selectRangesOperation(selection.ranges);
-    } else {
+    } else if (isOperation(state.value)) {
       previewOperation();
+    } else {
+      state.value = {
+        columns: selection?.columns || []
+      };
     }
   },
   { deep: true }

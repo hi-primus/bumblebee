@@ -1,7 +1,7 @@
 <template>
   <div class="bg-neutral-lightest/50 h-2 flex w-full cursor-crosshair">
     <div
-      class="bg-primary hover:bg-primary-dark h-2"
+      class="bg-primary hover:bg-primary-dark h-full"
       :class="{ 'min-w-1': data.match > 0 }"
       :style="{
         width: `${getPercentage('match')}%`
@@ -9,7 +9,7 @@
       @mouseenter="onHovered('match')"
     ></div>
     <div
-      class="bg-danger-desaturated hover:bg-danger-desaturated-dark h-2"
+      class="bg-danger-desaturated hover:bg-danger-desaturated-dark h-full"
       :class="{ 'min-w-1': data.mismatch > 0 }"
       :style="{
         width: `${getPercentage('mismatch')}%`
@@ -17,7 +17,7 @@
       @mouseenter="onHovered('mismatch')"
     ></div>
     <div
-      class="bg-neutral-lighter/50 hover:bg-neutral-light/50 h-2"
+      class="bg-neutral-lighter/50 hover:bg-neutral-light/50 h-full"
       :class="{ 'min-w-5': data.missing > 0 }"
       :style="{
         width: `${getPercentage('missing')}%`

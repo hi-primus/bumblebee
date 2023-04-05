@@ -1,8 +1,6 @@
 <template>
   <PlotBarsBase
-    selection-type="values"
-    :height="90 - 30"
-    v-bind="{ ...props, ...$attrs }"
+    v-bind="{ ...props, ...$attrs, selectionType: 'values', height: 90 - 30 }"
     @hovered="onHovered"
   />
 </template>

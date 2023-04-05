@@ -1,0 +1,124 @@
+<template>
+  <div class="details-container pt-2 border-b border-gray-lightest">
+    <div
+      class="flex h-8 gap-2 items-center px-4 pb-2 cursor-pointer select-none"
+      @click="detailsExpanded = !detailsExpanded"
+    >
+      <ColumnTypeHint
+        class="text-md text-neutral-light text-left w-[2em]"
+        :data-type="dataType"
+      />
+      <div class="flex-1 font-mono-table text-neutral">
+        {{ column.title }}
+      </div>
+      <IconButton
+        :path="mdiChevronDown"
+        class="text-neutral"
+        :class="{
+          'rotate-180': detailsExpanded
+        }"
+      />
+    </div>
+    <div
+      v-if="detailsExpanded"
+      class="details flex flex-col gap-2 px-4 pt-2 pb-1 border-t border-gray-lightest"
+    >
+      <div v-if="column.stats">
+        <h4>General</h4>
+        <PlotDataQuality
+          v-tooltip="tooltipValue"
+          :data="column.stats"
+          :column-name="column.title"
+          class="rounded-full overflow-hidden my-1 h-3"
+          selectable
+          @hovered="$event => tooltipValue = ($event as string)"
+        />
+        <ColumnDetailsTable :data="qualityData" />
+      </div>
+      <div v-if="column.stats?.hist">
+        <h4>Histogram</h4>
+        <PlotHist
+          v-tooltip="tooltipValue"
+          :height="80"
+          :data="column.stats.hist"
+          :column-name="column.title"
+          selectable
+          @hovered="$event => tooltipValue = ($event as string)"
+        />
+      </div>
+      <div v-if="column.stats?.frequency">
+        <h4>Frequency</h4>
+        <PlotFrequency
+          v-tooltip="tooltipValue"
+          :height="80"
+          :data="column.stats.frequency"
+          :column-name="column.title"
+          selectable
+          @hovered="$event => tooltipValue = ($event as string)"
+        />
+        <!-- class="rounded-full overflow-hidden my-1 h-3" -->
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { mdiChevronDown } from '@mdi/js';
+import { PropType } from 'vue';
+
+import { Column } from '@/types/dataframe';
+
+const props = defineProps({
+  column: {
+    type: Object as PropType<Column>,
+    required: true
+  },
+  expanded: {
+    type: Boolean
+  }
+});
+
+const tooltipValue = ref('');
+
+const detailsExpanded = ref(props.expanded);
+
+const percentage = (value: number, total: number): string => {
+  const n = (value / total) * 100;
+  // format n to have two decimal digits and return it
+  return +n.toFixed(2) + '%';
+};
+
+const dataType = computed<string>(() => {
+  if (props.column.stats?.inferred_data_type) {
+    if (typeof props.column.stats.inferred_data_type === 'string') {
+      return props.column.stats.inferred_data_type;
+    }
+    return props.column.stats.inferred_data_type.data_type;
+  }
+  return props.column.data_type;
+});
+
+const qualityData = computed<[string, number, string][]>(() => {
+  const stats = props.column.stats;
+  if (!stats) {
+    return [];
+  }
+  const total = stats.match + stats.missing + stats.mismatch;
+  return [
+    ['Matches', stats.match, percentage(stats.match, total)],
+    ['Missing', stats.missing, percentage(stats.missing, total)],
+    ['Mismatches', stats.mismatch, percentage(stats.mismatch, total)]
+  ];
+});
+</script>
+
+<style scoped lang="scss">
+.details-container {
+  .details {
+    @apply text-neutral;
+    h4 {
+      @apply uppercase text-sm font-bold;
+    }
+  }
+}
+</style>
