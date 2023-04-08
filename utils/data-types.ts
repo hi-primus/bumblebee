@@ -16,7 +16,9 @@ export const TYPES = {
   MISSING: 'missing',
   CATEGORICAL: 'categorical',
   TIME: 'time',
-  HTTP_CODE: 'http_code'
+  HTTP_CODE: 'http_code',
+  NULL: 'null',
+  UNKNOWN: 'unknown'
 };
 
 export const TYPES_HINTS: Record<ObjectValues<typeof TYPES>, string> = {
@@ -38,7 +40,8 @@ export const TYPES_HINTS: Record<ObjectValues<typeof TYPES>, string> = {
   categorical: 'cat',
   time: 'time',
   http_code: 'http',
-  null: 'null'
+  null: 'null',
+  unknown: '   '
 };
 
 export const TYPES_NAMES: Record<ObjectValues<typeof TYPES>, string> = {
@@ -59,5 +62,7 @@ export const TYPES_NAMES: Record<ObjectValues<typeof TYPES>, string> = {
   missing: 'Missing',
   categorical: 'Categorical',
   time: 'Time',
-  http_code: 'HTTP Code'
+  http_code: 'HTTP Code',
+  null: 'Null',
+  unknown: 'Unknown'
 };

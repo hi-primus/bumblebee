@@ -6,7 +6,7 @@
     >
       <ColumnTypeHint
         class="text-md text-neutral-light text-left w-[2em]"
-        :data-type="dataType"
+        :data-type="dataType || 'unknown'"
       />
       <div class="flex-1 font-mono-table text-neutral">
         {{ column.title }}

@@ -92,7 +92,9 @@
                       : columnClicked($event, column.columnIndex, true)
                 "
               >
-                <ColumnTypeHint :data-type="dataTypes[column.title]" />
+                <ColumnTypeHint
+                  :data-type="dataTypes[column.title] || 'unknown'"
+                />
                 <span
                   v-tooltip="column.displayTitle || column.title"
                   class="flex-1 truncate pl-2"
@@ -281,7 +283,7 @@ const rowsData = computed(() => {
   return rows;
 });
 
-const dataTypes = reactive<Record<string, string[]>>({});
+const dataTypes = reactive<Record<string, [string, string] | [string]>>({});
 
 watch(
   columnsHeader,
@@ -300,7 +302,7 @@ watch(
       } else if (column.data_type) {
         dataType = [column.data_type];
       }
-      dataTypes[column.title] = dataType;
+      dataTypes[column.title] = dataType as [string, string] | [string];
     });
 
     const firstPreviewColumn = header.find(column =>

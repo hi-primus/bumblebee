@@ -1,7 +1,7 @@
 <template>
   <span
     v-tooltip="typeName || typeHint"
-    class="inline text-neutral-alpha/75 max-w-[3.5em] font-mono-table font-bold"
+    class="inline text-neutral-alpha/75 max-w-[3.5em] font-mono-table font-bold whitespace-break-spaces"
     :class="{
       'transform scale-x-125 origin-left': (typeHint.length || 3) <= 2,
       'tracking-[-1px] transform scale-x-95 origin-left':
