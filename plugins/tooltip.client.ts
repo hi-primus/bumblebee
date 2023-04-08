@@ -1,4 +1,10 @@
-import { createPopper, Instance, Placement, placements } from '@popperjs/core';
+import {
+  createPopper,
+  Instance,
+  Placement,
+  placements,
+  VirtualElement
+} from '@popperjs/core';
 import { DirectiveBinding } from 'vue';
 
 const createPopperElement = () => {
@@ -37,11 +43,20 @@ const modifiersClasses = {
 
 type ValidModifier = keyof typeof modifiersClasses;
 
-const _popperElements: Record<string, HTMLDivElement> = {};
+interface PopperElement extends HTMLDivElement {
+  referenceElement?: HTMLElement;
+}
+
+interface HTMLElementWithTooltip extends HTMLElement {
+  update: () => void;
+  popperElement: PopperElement;
+}
+
+const _popperElements: Record<string, PopperElement> = {};
 
 const usePopperElement = (
   modifiers: Record<string, boolean>
-): HTMLDivElement => {
+): PopperElement => {
   const modifiersString = JSON.stringify(modifiers);
 
   if (modifiersString in _popperElements) {
@@ -50,12 +65,12 @@ const usePopperElement = (
 
   const popperElement = createPopperElement();
 
-  _popperElements[modifiersString] = popperElement;
+  _popperElements[modifiersString] = popperElement as PopperElement;
 
   for (const modifier in modifiers) {
     if (modifier in modifiersClasses) {
       popperElement.classList.add(modifiersClasses[modifier as ValidModifier]);
-    } else {
+    } else if (modifier !== 'follow') {
       console.warn(`Unknown tooltip modifier: ${modifier}`);
     }
   }
@@ -63,11 +78,21 @@ const usePopperElement = (
   return popperElement;
 };
 
-interface HTMLElementWithTooltip extends HTMLElement {
-  update: () => void;
-  popperElement: HTMLDivElement;
-  active: boolean;
+function generateGetBoundingClientRect(x = 0, y = 0) {
+  return () =>
+    ({
+      width: 0,
+      height: 0,
+      top: y,
+      right: x,
+      bottom: y,
+      left: x
+    } as DOMRect);
 }
+
+const virtualElement: VirtualElement = {
+  getBoundingClientRect: generateGetBoundingClientRect()
+};
 
 export default defineNuxtPlugin(nuxtApp => {
   nuxtApp.vueApp.directive('tooltip', {
@@ -83,6 +108,14 @@ export default defineNuxtPlugin(nuxtApp => {
       )
         ? (binding.arg as Placement)
         : 'bottom';
+
+      const follow = binding.modifiers.follow
+        ? 'both'
+        : binding.modifiers['follow-x']
+        ? 'x'
+        : binding.modifiers['follow-y']
+        ? 'y'
+        : false;
 
       let offsetValue = +(el.getAttribute('data-tooltip-offset') || 0);
 
@@ -116,18 +149,20 @@ export default defineNuxtPlugin(nuxtApp => {
       let instance: Instance | null = null;
 
       el.popperElement = popperElement;
+
       el.update = () => {
         const tooltipText = el.getAttribute('data-tooltip');
-        popperElement.childNodes[1].textContent = tooltipText;
-        popperElement.classList.add('popper-show');
-        instance?.update();
+        if (popperElement.referenceElement === el) {
+          popperElement.childNodes[1].textContent = tooltipText;
+          popperElement.classList.add('popper-show');
+          instance?.update();
+        }
       };
-      el.active = false;
 
       el.addEventListener('mouseenter', async () => {
         await new Promise(resolve => setTimeout(resolve, 1));
         if (!instance) {
-          instance = createPopper(el, popperElement, {
+          instance = createPopper(follow ? virtualElement : el, popperElement, {
             placement,
             modifiers: [
               {
@@ -139,22 +174,67 @@ export default defineNuxtPlugin(nuxtApp => {
             ]
           });
         }
-        el.active = true;
+        popperElement.referenceElement = el;
         el.update();
       });
 
+      if (follow) {
+        el.addEventListener('mousemove', (event: MouseEvent) => {
+          const { clientX: x, clientY: y } = event;
+          const element = event.target as HTMLElement | null;
+          if (follow !== 'both' && element) {
+            const rect = element.getBoundingClientRect();
+            if (follow === 'x') {
+              virtualElement.getBoundingClientRect = () =>
+                ({
+                  width: 0,
+                  height: rect.height,
+                  top: rect.top,
+                  right: x,
+                  bottom: rect.bottom,
+                  left: x
+                } as DOMRect);
+            } else {
+              virtualElement.getBoundingClientRect = () =>
+                ({
+                  width: rect.width,
+                  height: 0,
+                  top: y,
+                  right: rect.right,
+                  bottom: y,
+                  left: rect.left
+                } as DOMRect);
+            }
+          } else {
+            virtualElement.getBoundingClientRect =
+              generateGetBoundingClientRect(x, y);
+          }
+          instance?.update();
+        });
+      }
+
       el.addEventListener('mouseleave', () => {
-        el.active = false;
+        if (popperElement.referenceElement === el) {
+          popperElement.referenceElement = undefined;
+        }
         popperElement.classList.remove('popper-show');
       });
     },
     updated(el: HTMLElement, binding: DirectiveBinding<string>) {
-      const { update, active } = el as HTMLElementWithTooltip;
+      const { update, popperElement } = el as HTMLElementWithTooltip;
+      const active = popperElement.referenceElement === el;
       if (binding.value) {
         el.setAttribute('data-tooltip', binding.value);
       }
       if (active && update) {
         update();
+      }
+    },
+    unmounted(el: HTMLElement) {
+      const { popperElement } = el as HTMLElementWithTooltip;
+      if (popperElement.referenceElement === el) {
+        popperElement.referenceElement = undefined;
+        popperElement.classList.remove('popper-show');
       }
     }
   });
