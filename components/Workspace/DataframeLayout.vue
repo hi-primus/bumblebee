@@ -103,7 +103,7 @@ const header = computed<ColumnHeader[]>(() => {
         columnType = 'preview';
       }
 
-      if (columnType.startsWith('preview')) {
+      if (columnType.startsWith('preview') && !wholePreview) {
         // if the column already exists, we need to rename it
         const originalNewTitle = newTitle;
 
