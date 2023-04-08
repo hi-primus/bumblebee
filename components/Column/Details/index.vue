@@ -26,7 +26,7 @@
       <div v-if="column.stats">
         <h4>General</h4>
         <PlotDataQuality
-          v-tooltip="tooltipValue"
+          v-tooltip:bottom.follow-x="tooltipValue"
           :data="column.stats"
           :column-name="column.title"
           class="rounded-full overflow-hidden my-1 h-3"
@@ -38,7 +38,7 @@
       <div v-if="column.stats?.hist">
         <h4>Histogram</h4>
         <PlotHist
-          v-tooltip="tooltipValue"
+          v-tooltip:bottom.follow-x="tooltipValue"
           :height="80"
           :data="column.stats.hist"
           :column-name="column.title"
@@ -49,7 +49,7 @@
       <div v-if="column.stats?.frequency">
         <h4>Frequency</h4>
         <PlotFrequency
-          v-tooltip="tooltipValue"
+          v-tooltip:bottom.follow-x="tooltipValue"
           :height="80"
           :data="column.stats.frequency"
           :column-name="column.title"

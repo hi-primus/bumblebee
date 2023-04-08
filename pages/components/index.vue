@@ -78,11 +78,13 @@
           class="flex flex-wrap gap-4 px-8 py-2 justify-start items-start min-w-[200px]"
         >
           <AppButton
-            v-tooltip:bottom.primary.lg="'Large tooltip at bottom, lorem ipsum'"
+            v-tooltip:bottom.primary.lg.follow-x="
+              'Large tooltip at bottom, follows cursor'
+            "
           >
             Accept
           </AppButton>
-          <AppButton v-tooltip:bottom.primary.lg="'Same as before'">
+          <AppButton v-tooltip:bottom.primary.lg="'Same as before but static'">
             Accept
           </AppButton>
           <AppButton v-tooltip:top.warning.md="'Warning'"> Accept </AppButton>
@@ -94,12 +96,14 @@
           </div>
           <AppButton
             class="color-primary"
-            v-tooltip:left.success.sm="'Successful test'"
+            v-tooltip:left.success.sm.follow="'Successful test'"
           >
             Done
             <Icon :path="mdiCheckBold" />
           </AppButton>
-          <AppButton v-tooltip:right.invalid-modifier="'Check console log'">
+          <AppButton
+            v-tooltip:right.invalid-modifier.follow-y="'Check console log'"
+          >
             Regular tooltip
           </AppButton>
         </div>
