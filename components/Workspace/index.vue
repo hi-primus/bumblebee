@@ -869,7 +869,10 @@ const previewOperationThrottled = throttleOnce(
       if (err instanceof Error && !err.message.includes('Preview cancelled')) {
         previewData.value = null;
         operationStatus.value = {
-          message: err.message,
+          message: err.message
+            .split('\n')
+            .filter(l => l)
+            .pop(),
           status: 'error'
         };
       } else if (typeof err === 'string') {

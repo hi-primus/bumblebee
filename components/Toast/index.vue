@@ -17,7 +17,10 @@
       <div class="text-lg">
         {{ props.title }}
       </div>
-      <div v-if="props.message" class="text-xs whitespace-pre-wrap">
+      <div
+        v-if="props.message"
+        class="w-[calc(100%-3rem)] text-xs whitespace-pre-wrap break-words max-h-24 overflow-y-auto"
+      >
         {{ props.message }}
       </div>
     </div>
