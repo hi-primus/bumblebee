@@ -150,15 +150,6 @@ watch(
     const newColumnsList = columnsInfo.value
       ? columnsInfo.value.map(column => column.title).join(', ')
       : '';
-
-    if (columnsList.value !== newColumnsList) {
-      columnsList.value = newColumnsList;
-      addToast({
-        title: 'Columns selected',
-        message: columnsList.value,
-        type: 'info'
-      });
-    }
   }
 );
 
