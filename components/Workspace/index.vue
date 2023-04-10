@@ -67,7 +67,12 @@ import {
   State,
   TableSelection
 } from '@/types/operations';
-import { compareObjects, deepClone, getNameFromFileName } from '@/utils';
+import {
+  compareObjects,
+  deepClone,
+  getNameFromFileName,
+  getUniqueName
+} from '@/utils';
 import { getPreliminaryProfile, PRIORITIES } from '@/utils/blurr';
 import { operations } from '@/utils/operations';
 import { throttleOnce } from '@/utils/time';
@@ -202,8 +207,16 @@ const handleDataframeResults = async (
 
     const profile = await getPreliminaryProfile(df);
 
-    const dataframeName =
+    let dataframeName =
       profile.name || getNameFromFileName(profile.file_name || '');
+
+    const names = dataframes.value
+      .filter((_df, index) => index !== dataframeIndex)
+      .map(df => df.name || '');
+
+    if (names.includes(dataframeName)) {
+      dataframeName = getUniqueName(dataframeName, names);
+    }
 
     dataframes.value[dataframeIndex] = {
       ...dataframes.value[dataframeIndex],

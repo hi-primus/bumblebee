@@ -110,6 +110,21 @@ export const naturalJoin = (arr: string[]): string => {
   );
 };
 
+export const getUniqueName = (name: string, names: string[]): string => {
+  const lastMatchingName = names
+    .filter(n => n.startsWith(`${name} (`))
+    .sort()
+    .pop();
+
+  let index = 2;
+
+  if (lastMatchingName) {
+    index = Number(lastMatchingName.match(/\((\d+)\)/)?.[1]) + 1;
+  }
+
+  return `${name} (${index})`;
+};
+
 // HTML
 
 export const focusNext = (el: HTMLElement): HTMLElement | null => {

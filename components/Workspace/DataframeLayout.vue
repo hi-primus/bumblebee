@@ -34,6 +34,7 @@ import {
   Highlight,
   PreviewData
 } from '@/types/dataframe';
+import { getUniqueName } from '@/utils';
 import { PRIORITIES } from '@/utils/blurr';
 import { optimizeRanges } from '@/utils/table';
 
@@ -102,25 +103,13 @@ const header = computed<ColumnHeader[]>(() => {
 
       if (columnType.startsWith('preview') && !wholePreview) {
         // if the column already exists, we need to rename it
-        const originalNewTitle = newTitle;
 
         if (columns?.[newTitle]) {
           newTitle = `new ${newTitle}`;
         }
 
         if (columns?.[newTitle]) {
-          const lastColumn = Object.keys(columns)
-            .filter(name => name.startsWith(`new ${originalNewTitle} (`))
-            .sort()
-            .pop();
-
-          let index = 2;
-
-          if (lastColumn) {
-            index = Number(lastColumn.match(/\((\d+)\)/)?.[1]) + 1;
-          }
-
-          newTitle = `new ${originalNewTitle} (${index})`;
+          newTitle = getUniqueName(newTitle, Object.keys(columns));
         }
       }
 
