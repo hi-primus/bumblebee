@@ -16,6 +16,7 @@
         }
       "
     />
+    <WorkspaceToolbar />
     <WorkspaceDataframeLayout ref="dataframeLayout">
       <div
         v-if="availableDataframes.length > 0"
@@ -39,6 +40,8 @@
         </AppButton>
       </div>
     </WorkspaceDataframeLayout>
+    <WorkspaceOperations />
+    <WorkspaceFooter />
   </div>
 </template>
 
@@ -472,6 +475,9 @@ const operationActions: OperationActions = {
     // const editing = operationValues.value.options?.editing;
     operationValues.value = {};
     state.value = 'operations';
+    if (operationCells.value.length === 0) {
+      showSidebar.value = false;
+    }
     previewData.value = null;
     if (
       inactiveOperationCells.value.length > 0 &&
@@ -993,8 +999,27 @@ const initializeEngine = async () => {
 
 provide('initializeEngine', initializeEngine);
 
+const onKeyDown = (event: KeyboardEvent): void => {
+  const key = event.key.toLowerCase();
+  if (key === 'escape') {
+    if (state.value !== 'operations') {
+      operationActions.selectOperation(null);
+      if (!operationCells.value.length && showSidebar.value) {
+        showSidebar.value = false;
+      }
+    } else if (showSidebar.value) {
+      showSidebar.value = false;
+    }
+  }
+};
+
 onMounted(async () => {
+  document.addEventListener('keydown', onKeyDown);
   await initializeEngine();
+});
+
+onUnmounted(() => {
+  document.removeEventListener('keydown', onKeyDown);
 });
 </script>
 

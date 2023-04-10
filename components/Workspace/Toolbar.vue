@@ -81,18 +81,36 @@
     </Popup>
     <section class="w-full flex items-center px-5 overflow-hidden h-full">
       <AppButton
+        v-tooltip="'Select a command'"
         class="ml-auto icon-button layout-invisible size-small color-neutral-light"
         @click="showCommands = true"
       >
         <Icon :path="mdiMagnify" />
       </AppButton>
-      <AppButton
-        :tool="{ icon: mdiCodeTags }"
-        class="icon-button layout-invisible size-small color-neutral-light"
-        @click="showSidebar = !showSidebar"
+      <span
+        v-tooltip="
+          sidebarDisabled
+            ? 'No operations available'
+            : isInOperation
+            ? showSidebar
+              ? 'Exit operation'
+              : 'Enter operation'
+            : showSidebar
+            ? 'Close sidebar'
+            : 'Open sidebar'
+        "
       >
-        <Icon :path="mdiCodeTags" />
-      </AppButton>
+        <AppButton
+          class="icon-button layout-invisible size-small"
+          :class="[
+            isInOperation ? 'color-primary-light' : 'color-neutral-light'
+          ]"
+          :disabled="sidebarDisabled"
+          @click="showSidebar = !showSidebar"
+        >
+          <Icon :path="mdiCodeTags" />
+        </AppButton>
+      </span>
     </section>
   </div>
 </template>
@@ -102,7 +120,13 @@ import { mdiCodeTags, mdiMagnify } from '@mdi/js';
 import { Ref } from 'vue';
 
 import AppInput from '@/components/App/Input.vue';
-import { Operation, OperationActions, State } from '@/types/operations';
+import {
+  isOperation,
+  Operation,
+  OperationActions,
+  OperationItem,
+  State
+} from '@/types/operations';
 import { focusNext, focusPrevious } from '@/utils';
 import { operations } from '@/utils/operations';
 
@@ -113,6 +137,8 @@ const state = inject('state') as Ref<State>;
 const { selectOperation } = inject('operation-actions') as OperationActions;
 
 const showSidebar = inject('show-sidebar') as Ref<boolean>;
+
+const operationCells = inject<Ref<OperationItem[]>>('operations', ref([]));
 
 const lastKeys = ref<string[]>([]);
 
@@ -189,6 +215,14 @@ const notRecentOperations = computed(() => {
     .filter(operation => operation.matches > 0)
     .sort((a, b) => b.matches - a.matches)
     .map(operation => operation.operation);
+});
+
+const isInOperation = computed(() => {
+  return isOperation(state.value);
+});
+
+const sidebarDisabled = computed(() => {
+  return !operationCells.value?.length && !isInOperation.value;
 });
 
 const focusInput = (input: typeof AppInput | null): HTMLElement | null => {
@@ -292,10 +326,7 @@ const onKeyDown = (event: KeyboardEvent): void => {
   } else if (key === 'escape') {
     if (showCommands.value) {
       showCommands.value = false;
-    } else if (state.value !== 'operations') {
-      selectOperationItem();
-    } else if (showSidebar.value) {
-      showSidebar.value = false;
+      event.stopImmediatePropagation();
     }
   }
 };

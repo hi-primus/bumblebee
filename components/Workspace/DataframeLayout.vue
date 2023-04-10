@@ -1,6 +1,5 @@
 <!-- eslint-disable vue/no-multiple-template-root -->
 <template>
-  <WorkspaceToolbar />
   <section
     class="workspace-table flex items-center justify-center overflow-hidden"
   >
@@ -21,8 +20,6 @@
       <slot v-else></slot>
     </div>
   </section>
-  <WorkspaceOperations />
-  <WorkspaceFooter />
 </template>
 
 <script setup lang="ts">
