@@ -1266,8 +1266,9 @@ export const operationCreators: Record<string, OperationCreator> = {
     alias: 'drop rows duplicated',
     defaultOptions: {
       usesInputCols: true,
+      usesOutputCols: false,
       usesInputDataframe: true,
-      preview: 'basic columns'
+      preview: false // TODO: Implement preview
     },
     content: (
       payload: OperationPayload<{
@@ -1288,7 +1289,6 @@ export const operationCreators: Record<string, OperationCreator> = {
         cols: payload.cols,
         keep: payload.keep,
         how: payload.how,
-        outputCols: payload.outputCols,
         requestOptions: { priority: PRIORITIES.operation }
       });
     },
@@ -1299,8 +1299,9 @@ export const operationCreators: Record<string, OperationCreator> = {
     alias: 'drop empty rows',
     defaultOptions: {
       usesInputCols: true,
+      usesOutputCols: false,
       usesInputDataframe: true,
-      preview: 'basic columns'
+      preview: false // TODO: Implement preview
     },
     content: (
       payload: OperationPayload<{
@@ -1320,7 +1321,6 @@ export const operationCreators: Record<string, OperationCreator> = {
         target: payload.target,
         cols: payload.cols,
         how: payload.how,
-        outputCols: payload.outputCols,
         requestOptions: { priority: PRIORITIES.operation }
       });
     },
