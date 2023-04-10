@@ -97,6 +97,10 @@ const virtualElement: VirtualElement = {
 export default defineNuxtPlugin(nuxtApp => {
   nuxtApp.vueApp.directive('tooltip', {
     mounted(originalElement: HTMLElement, binding: DirectiveBinding<string>) {
+      if (!process.client) {
+        return;
+      }
+
       const el = originalElement as HTMLElementWithTooltip;
 
       // creates a popper element with the modifiers as key to reuse it
@@ -217,8 +221,8 @@ export default defineNuxtPlugin(nuxtApp => {
         await new Promise(resolve => setTimeout(resolve, 10));
         if (popperElement.referenceElement === el) {
           popperElement.referenceElement = undefined;
+          popperElement.classList.remove('popper-show');
         }
-        popperElement.classList.remove('popper-show');
       });
     },
     updated(el: HTMLElement, binding: DirectiveBinding<string>) {
