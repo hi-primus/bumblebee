@@ -421,7 +421,7 @@ export const operationCreators: Record<string, OperationCreator> = {
         }[];
       }>
     ) => {
-      let str =
+      const str =
         payload.sets.length > 1 ? 'b{Create columns}' : 'b{Create column}';
       const sets = payload.sets.map((s, index) => {
         let columnName: string;
@@ -447,20 +447,11 @@ export const operationCreators: Record<string, OperationCreator> = {
         }[];
       }>
     ): Promise<Source> => {
-      const valueFuncPromise = await Promise.allSettled(
-        payload.sets.map(s => {
-          return payload.blurr.runCode(
-            `parse('${s.value || ''}', data=False)`,
-            {
-              priority: PRIORITIES.operationRequirement
-            }
-          );
-        })
-      );
+      const parseSets = payload.sets
+        .map(s => (s.value ? `parse('${s.value}', data=False)` : '"\'\'"')) // empty expression
+        .join(', ');
 
-      const valueFunc = valueFuncPromise.map(p =>
-        p.status === 'fulfilled' ? p.value : null
-      );
+      const valueFunc: string[] = await payload.blurr.runCode(`[${parseSets}]`);
 
       let outputCols = payload.sets.map((s, index) => {
         if (s.outputColumn) {
@@ -610,11 +601,17 @@ export const operationCreators: Record<string, OperationCreator> = {
         otherwise: string;
       }>
     ): Source => {
-      const where = payload.replaces
-        .map(replace =>
-          whereExpression(replace.condition, replace, payload.cols[0])
-        )
-        .filter(expression => expression);
+      let where = payload.replaces.map(r =>
+        whereExpression(r.condition, r, payload.cols[0])
+      );
+
+      const replaces = payload.replaces
+        .filter((_r, index) => {
+          return where[index];
+        })
+        .map(r => r.replaceBy);
+
+      where = where.filter(w => w);
 
       let df: Source = payload.source;
 
@@ -630,7 +627,7 @@ export const operationCreators: Record<string, OperationCreator> = {
       df = df.cols.set({
         target: payload.target,
         cols: payload.outputCols,
-        valueFunc: payload.replaces.map(r => r.replaceBy),
+        valueFunc: replaces,
         evalValue: false,
         where,
         default: payload.otherwise || null,
