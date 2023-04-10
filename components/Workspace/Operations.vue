@@ -328,8 +328,6 @@ const formatOperationContent = (content: string): string => {
         dataframe => dataframe.df?.name === varName
       );
 
-      console.log('found dataframe name', dataframeObject, varName);
-
       if (dataframeObject) {
         content = content.replace(
           `dn{${varName}}`,
