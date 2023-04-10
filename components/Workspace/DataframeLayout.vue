@@ -34,6 +34,7 @@ import {
   Highlight,
   PreviewData
 } from '@/types/dataframe';
+import { PayloadWithOptions, TableSelection } from '@/types/operations';
 import { getUniqueName } from '@/utils';
 import { PRIORITIES } from '@/utils/blurr';
 import { optimizeRanges } from '@/utils/table';
@@ -46,7 +47,35 @@ const dataframeObject = inject(
 
 const previewData = inject('preview-data') as Ref<PreviewData>;
 
+const operationValues = inject('operation-values') as Ref<
+  Partial<PayloadWithOptions>
+>;
+
+const selection = inject('selection') as Ref<TableSelection>;
+
 const table = ref<InstanceType<typeof TableChunks> | null>(null);
+
+const renames = computed(() => {
+  if (
+    !operationValues.value?.options?.usesInputCols ||
+    !operationValues.value?.options?.usesOutputCols
+  ) {
+    return {};
+  }
+
+  const columns = selection.value?.columns || [];
+
+  const renames: Record<string, string> = {};
+
+  columns.forEach((col, index) => {
+    const outputName = operationValues.value?.outputCols?.[index];
+    if (outputName) {
+      renames[col] = outputName;
+    }
+  });
+
+  return renames;
+});
 
 const header = computed<ColumnHeader[]>(() => {
   const dataframeProfile = dataframeObject.value?.profile;
@@ -94,6 +123,9 @@ const header = computed<ColumnHeader[]>(() => {
         } else if (newTitle.startsWith('tertiary__')) {
           newTitle = newTitle.replace('tertiary__', '');
           columnType = columnType + ' tertiary';
+        }
+        if (renames.value?.[newTitle]) {
+          newTitle = renames.value[newTitle];
         }
       }
 

@@ -13,6 +13,18 @@
       name="Columns"
       class="w-full"
     />
+    <template v-if="options?.usesOutputCols">
+      <AppInput
+        v-for="(col, index) in columns"
+        :key="`${col}-output`"
+        :model-value="operationValues?.outputCols?.[index] || ''"
+        class="w-full"
+        :label="`Output column ${index + 1} (${col})`"
+        :name="col"
+        :placeholder="col"
+        @update:model-value="updateOutputCol(index, $event)"
+      />
+    </template>
     <template v-if="operation?.fields?.length">
       <template v-for="field in operation.fields">
         <div
@@ -239,6 +251,15 @@ onMounted(async () => {
     acceptButton.focus();
   }
 });
+
+const updateOutputCol = (index: number, value: string) => {
+  const operationValue = operationValues.value;
+  if (!operationValue.outputCols) {
+    operationValue.outputCols = [];
+  }
+  operationValue.outputCols[index] = value;
+  operationValues.value = operationValue;
+};
 
 let isAddingOrDeleting = false;
 

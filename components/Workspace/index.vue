@@ -326,7 +326,7 @@ const executeOperations = async () => {
   executedOperations.value = [...data];
 };
 
-const preparePayload = (
+const preparePayloadForSubmit = (
   payload: OperationPayload<PayloadWithOptions>
 ): OperationPayload<PayloadWithOptions> => {
   if (payload.options.saveToNewDataframe) {
@@ -339,7 +339,6 @@ const preparePayload = (
     if (currentDataframe) {
       payload.source = currentDataframe?.df;
       payload.options.sourceId = currentDataframe?.sourceId;
-      console.log('[DEBUG] Using dataframe:', { payload, currentDataframe });
     }
   }
 
@@ -360,6 +359,19 @@ const preparePayload = (
   }
 
   return payload;
+};
+
+const preparePayloadOptions = (options: OperationOptions): OperationOptions => {
+  const operationOptions: OperationOptions = Object.assign({}, options);
+
+  if (
+    operationOptions.usesInputCols &&
+    operationOptions.usesOutputCols !== false
+  ) {
+    operationOptions.usesOutputCols = operationOptions.usesOutputCols || true;
+  }
+
+  return operationOptions;
 };
 
 const getPreparedOperation = (): {
@@ -387,7 +399,7 @@ const getPreparedOperation = (): {
     ...operationPayload
   } as OperationPayload<PayloadWithOptions>;
 
-  return { operation, payload: preparePayload(payload) };
+  return { operation, payload: preparePayloadForSubmit(payload) };
 };
 
 const getOperationUsesPreview = (): boolean => {
@@ -523,13 +535,18 @@ const operationActions: OperationActions = {
     if (operation?.defaultOptions) {
       operationValues.value = {
         ...deepClone(payload),
-        options: {
+        options: preparePayloadOptions({
           ...operation.defaultOptions,
           ...(payload?.options || {})
-        }
+        })
       };
     } else {
-      operationValues.value = deepClone(payload) || {};
+      operationValues.value = {
+        ...deepClone(payload)
+      };
+      if (payload?.options) {
+        payload.options = preparePayloadOptions(payload.options);
+      }
     }
 
     if (operationValues.value.options?.usesInputCols && payload?.cols) {
@@ -670,6 +687,8 @@ provide('operation-actions', operationActions);
 
 let cancelPreview = false;
 
+let lastPayload: OperationPayload<PayloadWithOptions> | null = null;
+
 const checkPreviewCancel = () => {
   if (cancelPreview) {
     cancelPreview = false;
@@ -692,7 +711,18 @@ const previewOperationThrottled = throttleOnce(
 
       const { operation, payload } = getPreparedOperation();
 
-      if (!operation || !isOperation(operation) || !payload?.options?.preview) {
+      const currentPayload = deepClone(payload);
+
+      const samePreview = compareObjects(lastPayload, currentPayload, [
+        'outputCols'
+      ]);
+
+      if (
+        samePreview ||
+        !operation ||
+        !isOperation(operation) ||
+        !payload?.options?.preview
+      ) {
         if (appStatus.value === 'busy') {
           appStatus.value = 'ready';
         }
@@ -730,7 +760,7 @@ const previewOperationThrottled = throttleOnce(
         checkPreviewCancel();
 
         const firstSampleDataframe = (await operation.action({
-          ...deepClone(payload),
+          ...currentPayload,
           source: firstSampleSource,
           blurr,
           app: { addToast }
@@ -791,7 +821,7 @@ const previewOperationThrottled = throttleOnce(
       checkPreviewCancel();
 
       const result = await operation.action({
-        ...deepClone(payload),
+        ...currentPayload,
         source: payload.source,
         target: 'operation_preview_' + (payload.source?.name || 'load_df'),
         blurr,
@@ -872,6 +902,8 @@ const previewOperationThrottled = throttleOnce(
           };
         }
       }
+
+      lastPayload = deepClone(currentPayload);
 
       if (appStatus.value === 'busy') {
         appStatus.value = 'ready';

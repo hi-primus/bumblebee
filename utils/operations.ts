@@ -34,11 +34,21 @@ const inColsContent = (
   payload: OperationPayload,
   includeDataframe = true
 ): string => {
-  // TODO: support outputCols
-  return (
-    (payload.cols.length > 0 ? ` \nin bl{${naturalJoin(payload.cols)}}` : '') +
-    (includeDataframe ? inDataframeContent(payload) : '')
-  );
+  let str =
+    ((payload.cols?.length || 0) > 0
+      ? ` \nin bl{${naturalJoin(payload.cols)}}`
+      : '') + (includeDataframe ? inDataframeContent(payload) : '');
+
+  if (
+    payload.options.usesOutputCols &&
+    (payload.outputCols?.length || 0) > 0 &&
+    payload.outputCols.join('') !== '' &&
+    payload.outputCols.join(' ') !== payload.cols?.join(' ')
+  ) {
+    str += ` \nto bl{${naturalJoin(payload.outputCols)}}`;
+  }
+
+  return str;
 };
 
 const defaultContentFunction = (name: string, connector = '') => {
@@ -2674,7 +2684,7 @@ export const operationCreators: Record<string, OperationCreator> = {
   }
 };
 
-const preparePayload = (
+const preparePayloadForAction = (
   operation: Operation,
   payload: OperationPayload<PayloadWithOptions>
 ): OperationPayload<PayloadWithOptions> => {
@@ -2691,9 +2701,6 @@ const preparePayload = (
     (!payload.cols || (Array.isArray(payload.cols) && payload.cols.length < 1))
   ) {
     throw new Error('Input columns are required');
-  }
-  if (options.usesInputCols && options.usesOutputCols !== false) {
-    options.usesOutputCols = true;
   }
   if (options.usesOutputCols && !payload.outputCols) {
     if (options.usesInputCols && payload.cols) {
@@ -2787,14 +2794,14 @@ const createOperation = (operationCreator: OperationCreator): Operation => {
 
   operation.validate = (payload: OperationPayload<PayloadWithOptions>) => {
     if (operationCreator.validate) {
-      payload = preparePayload(operation, payload);
+      payload = preparePayloadForAction(operation, payload);
       return operationCreator.validate(payload);
     }
     return true;
   };
 
   operation.action = (payload: OperationPayload<PayloadWithOptions>) => {
-    payload = preparePayload(operation, payload);
+    payload = preparePayloadForAction(operation, payload);
     if (operationCreator.validate?.(payload) === false) {
       throw new Error('Validation failed');
     }

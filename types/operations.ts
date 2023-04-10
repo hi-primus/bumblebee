@@ -14,7 +14,7 @@ export type PreviewType =
 
 export interface OperationOptions {
   usesInputCols?: boolean | 'single';
-  usesOutputCols?: boolean;
+  usesOutputCols?: boolean | 'required';
   usesInputDataframe?: boolean;
   saveToNewDataframe?: boolean;
   oneTime?: boolean;

@@ -40,7 +40,11 @@ export function objectMap<T, V, K extends string | number | symbol>(
   return object as never;
 }
 
-export const compareObjects = (a: unknown, b: unknown): boolean => {
+export const compareObjects = (
+  a: unknown,
+  b: unknown,
+  excludeProperties: string[] = []
+): boolean => {
   if (a === b) {
     return true;
   }
@@ -52,15 +56,39 @@ export const compareObjects = (a: unknown, b: unknown): boolean => {
   }
   const aKeys = Object.keys(a);
   const bKeys = Object.keys(b);
+
+  excludeProperties.forEach(prop => {
+    const aIndex = aKeys.indexOf(prop);
+    if (aIndex !== -1) {
+      aKeys.splice(aIndex, 1);
+    }
+    const bIndex = bKeys.indexOf(prop);
+    if (bIndex !== -1) {
+      bKeys.splice(bIndex, 1);
+    }
+  });
+
   if (aKeys.length !== bKeys.length) {
     return false;
   }
   return aKeys.every(key => {
-    return key in b && compareObjects(a[key], b[key]);
+    let isEqual = false;
+    if (Array.isArray(a[key]) && Array.isArray(b[key])) {
+      isEqual = compareArrays(a[key] as unknown[], b[key] as unknown[]);
+    } else if (isObject(a[key]) && isObject(b[key])) {
+      isEqual = compareObjects(a[key], b[key], excludeProperties);
+    } else {
+      isEqual = a[key] === b[key];
+    }
+    return key in b && isEqual;
   });
 };
 
-export const compareArrays = (a: unknown[], b: unknown[]): boolean => {
+export const compareArrays = (
+  a: unknown[],
+  b: unknown[],
+  excludeProperties: string[] = []
+): boolean => {
   if (a === b) {
     return true;
   }
@@ -71,7 +99,7 @@ export const compareArrays = (a: unknown[], b: unknown[]): boolean => {
     return false;
   }
   return a.every((value, index) => {
-    return compareObjects(value, b[index]);
+    return compareObjects(value, b[index], excludeProperties);
   });
 };
 
