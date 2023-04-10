@@ -1361,6 +1361,26 @@ export const operationCreators: Record<string, OperationCreator> = {
     },
     shortcut: 'dc'
   },
+  copy: {
+    name: 'Copy selected columns',
+    alias: 'copy duplicate columns',
+    defaultOptions: {
+      usesInputCols: true,
+      usesOutputCols: 'required',
+      usesInputDataframe: true,
+      preview: 'basic columns'
+    },
+    content: defaultContentFunction('Copy'),
+    action: (payload: OperationPayload): Source => {
+      return payload.source.cols.copy({
+        target: payload.target,
+        cols: payload.cols,
+        outputCols: payload.outputCols,
+        requestOptions: { priority: PRIORITIES.operation }
+      });
+    },
+    shortcut: 'cc'
+  },
   lower: {
     name: 'Lowercase column values',
     alias: 'Lowercase letters lower case',
