@@ -6,23 +6,29 @@
       <li
         v-for="(tab, index) in tabs"
         :key="tab?.label"
-        class="h-12 max-w-[22rem] pt-1 px-4 flex gap-2 items-center cursor-pointer border-transparent border-y-2"
+        role="button"
+        class="h-12 max-w-[22rem] pt-1 px-4 flex gap-2 items-center cursor-pointer border-transparent border-y-2 outline-primary-light outline-offset-[-1px]"
         :class="{ 'border-b-primary text-primary': index === selected }"
+        tabindex="0"
         @click="() => emit('update:selected', index)"
+        @keydown.enter.space.stop="() => emit('update:selected', index)"
       >
         <div class="ellipsis">
           {{ tab?.label || defaultLabel }}
         </div>
-        <Icon
-          class="w-4 h-4 mr-[-2px]"
+        <IconButton
+          class="w-4 h-4 mr-[-2px] outline-offset-2"
           :path="mdiClose"
-          @click.prevent="() => emit('close', index)"
+          @click.stop.prevent="() => emit('close', index)"
         />
       </li>
       <li
         v-if="addable"
-        class="h-full cursor-pointer text-primary"
+        role="button"
+        class="h-full cursor-pointer text-primary outline-primary-light outline-offset-[-1px]"
+        tabindex="0"
         @click="() => emit('add')"
+        @keydown.enter.space.prevent="() => emit('add')"
       >
         <Icon class="w-12 h-12 p-3" :path="mdiPlus" />
       </li>

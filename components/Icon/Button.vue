@@ -1,6 +1,6 @@
 <template>
-  <button class="foucs:outline-1 outline-[currentColor]" type="button">
-    <Icon class="h-[inherit] w-[inherit]" role :path="path" />
+  <button class="focus:outline-1 outline-[currentColor]" type="button">
+    <Icon class="h-full w-full" role :path="path" />
   </button>
 </template>
 
