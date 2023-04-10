@@ -160,7 +160,7 @@ export default defineNuxtPlugin(nuxtApp => {
       };
 
       el.addEventListener('mouseenter', async () => {
-        await new Promise(resolve => setTimeout(resolve, 1));
+        await new Promise(resolve => setTimeout(resolve, 5));
         if (!instance) {
           instance = createPopper(follow ? virtualElement : el, popperElement, {
             placement,
@@ -213,7 +213,8 @@ export default defineNuxtPlugin(nuxtApp => {
         });
       }
 
-      el.addEventListener('mouseleave', () => {
+      el.addEventListener('mouseleave', async () => {
+        await new Promise(resolve => setTimeout(resolve, 10));
         if (popperElement.referenceElement === el) {
           popperElement.referenceElement = undefined;
         }
