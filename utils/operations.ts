@@ -408,7 +408,7 @@ export const operationCreators: Record<string, OperationCreator> = {
     shortcut: 'jd'
   },
   createCol: {
-    name: 'Create column',
+    name: 'Create new column',
     defaultOptions: {
       usesInputDataframe: true,
       preview: 'basic columns'
@@ -551,7 +551,7 @@ export const operationCreators: Record<string, OperationCreator> = {
         ]
       }
     ],
-    shortcut: 'cc'
+    shortcut: 'nc'
   },
   setCol: {
     name: 'Set column',
