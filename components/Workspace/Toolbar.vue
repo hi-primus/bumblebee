@@ -93,8 +93,8 @@
             ? 'No operations available'
             : isInOperation
             ? showSidebar
-              ? 'Exit operation'
-              : 'Enter operation'
+              ? 'Hide operation'
+              : 'Show operation'
             : showSidebar
             ? 'Close sidebar'
             : 'Open sidebar'
