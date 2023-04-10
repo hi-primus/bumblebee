@@ -1798,7 +1798,15 @@ export const operationCreators: Record<string, OperationCreator> = {
         requestOptions: { priority: PRIORITIES.operation }
       });
     },
-    shortcut: 'nr'
+    fields: [
+      {
+        name: 'decimals',
+        label: 'Decimals',
+        type: 'number',
+        defaultValue: 0
+      }
+    ],
+    shortcut: 'nrd'
   },
   floor: {
     name: 'Floor Number from column values',
@@ -1817,7 +1825,7 @@ export const operationCreators: Record<string, OperationCreator> = {
         requestOptions: { priority: PRIORITIES.operation }
       });
     },
-    shortcut: 'nf'
+    shortcut: 'nrf'
   },
   ceil: {
     name: 'Ceil from column values',
@@ -1836,7 +1844,7 @@ export const operationCreators: Record<string, OperationCreator> = {
         requestOptions: { priority: PRIORITIES.operation }
       });
     },
-    shortcut: 'nc'
+    shortcut: 'nrc'
   },
   modulo: {
     name: 'Modulo from column values',
