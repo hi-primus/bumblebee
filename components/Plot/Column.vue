@@ -9,27 +9,30 @@
         stats?.missing !== undefined &&
         stats?.mismatch !== undefined
       "
+      v-tooltip:bottom.follow-x="tooltipValue"
       :data="stats"
       :column-name="data.title"
       :selectable="data.columnType !== 'preview'"
-      @hovered="hovered = $event"
+      @hovered="$event => tooltipValue = ($event as string)"
     />
     <div
       class="px-1 pt-[2px] w-full flex flex-col flex-1 items-center justify-center"
     >
       <PlotHist
         v-if="stats?.hist"
+        v-tooltip:bottom.follow-x="tooltipValue"
         :data="stats?.hist"
         :column-name="data.title"
         :selectable="data.columnType !== 'preview'"
-        @hovered="hovered = $event"
+        @hovered="$event => tooltipValue = ($event as string)"
       />
       <PlotFrequency
         v-else-if="stats?.frequency"
+        v-tooltip:bottom.follow-x="tooltipValue"
         :data="stats?.frequency"
         :column-name="data.title"
         :selectable="data.columnType !== 'preview'"
-        @hovered="hovered = $event"
+        @hovered="$event => tooltipValue = ($event as string)"
       />
       <Icon
         v-else
@@ -55,11 +58,11 @@
           <template v-else>
             {{ stats.count_uniques }}
           </template>
-          unique values
+          {{ stats.count_uniques === 1 ? 'unique value' : 'unique values' }}
         </template>
         <template v-else-if="stats?.frequency">
           {{ stats.frequency.length }}
-          unique values
+          {{ stats.frequency.length === 1 ? 'unique value' : 'unique values' }}
         </template>
         <template v-else-if="stats?.hist">
           {{ stats.hist[0].lower }} -
@@ -81,7 +84,9 @@ const props = defineProps<{
   data: ColumnHeader;
 }>();
 
-const hovered = ref<string | null>(null);
+const tooltipValue = ref('');
+
+const hovered = ref<string | null>(null); // TODO: remove
 
 const stats = ref<typeof props.data.stats | null>(null);
 
