@@ -16,5 +16,27 @@ export default defineNuxtConfig({
   build: {
     transpile: ['ts-invariant/process', '@headlessui/vue']
   },
-  css: ['@/assets/css/tailwind.scss', '@/assets/css/fonts.css']
+  css: ['@/assets/css/tailwind.scss', '@/assets/css/fonts.css'],
+  app: {
+    head: {
+      link: [
+        {
+          rel: 'icon',
+          href: '/favicon.ico'
+        },
+        {
+          rel: 'icon',
+          type: 'image/png',
+          sizes: '16x16',
+          href: '/favicon-16x16.png'
+        },
+        {
+          rel: 'icon',
+          type: 'image/png',
+          sizes: '32x32',
+          href: '/favicon-32x32.png'
+        }
+      ]
+    }
+  }
 });
