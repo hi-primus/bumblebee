@@ -186,12 +186,15 @@ export const operationCreators: Record<string, OperationCreator> = {
         rightOn: string;
       }>
     ) => {
-      const dfName = payload.source?.name;
-      const str = `b{Join} gr{${dfName}} and gr{${payload.dfRightName}} dataframes using \ngr{${payload.how}} join`;
+      const foundDf = payload.allDataframes.find(
+        df => df.df.name === payload.source.name
+      );
+      const dfName = foundDf?.name || `dn{${payload.source.name}}`;
+      const str = `b{Join} rd{${dfName}} and rd{${payload.dfRightName}} dataframes using \ngr{${payload.how}} join`;
       if (payload.on) {
-        return ` and \n${str} gr{${payload.on}} as join key`;
+        return `\n${str} and gr{${payload.on}} as join key`;
       } else {
-        return ` and \n${str} gr{${payload.leftOn}} as left join key and \ngr{${payload.rightOn}} as right join key`;
+        return `\n${str} and gr{${payload.leftOn}} as left join key and \ngr{${payload.rightOn}} as right join key`;
       }
     },
     action: async (
@@ -348,9 +351,9 @@ export const operationCreators: Record<string, OperationCreator> = {
         name: 'dfRightName',
         label: 'Dataframe',
         type: 'string',
-        defaultValue: payload => payload.allDataframes[0]?.name,
+        defaultValue: payload => payload.otherDataframes[0]?.name,
         options: payload => {
-          return payload.allDataframes.map(df => ({
+          return payload.otherDataframes.map(df => ({
             text: df.name,
             value: df.name
           }));

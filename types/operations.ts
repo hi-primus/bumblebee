@@ -48,6 +48,11 @@ export type OperationPayload<
     columns: Cols;
     df: Source;
   }[];
+  otherDataframes: {
+    name: string;
+    columns: Cols;
+    df: Source;
+  }[];
   outputCols: Cols;
   options: OperationOptions;
   app: AppFunctions;

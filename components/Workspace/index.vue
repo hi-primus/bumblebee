@@ -565,15 +565,19 @@ const operationActions: OperationActions = {
       currentDataframe?.profile?.columns || {}
     );
 
-    operationValues.value.allDataframes = dataframes.value
-      .filter((_, i) => i !== currentDataframeIndex)
-      .map(dataframe => {
-        return {
-          name: dataframe.name,
-          columns: Object.keys(dataframe.profile?.columns || {}),
-          df: dataframe.df
-        };
-      });
+    const allDataframes = dataframes.value.map(dataframe => {
+      return {
+        name: dataframe.name,
+        columns: Object.keys(dataframe.profile?.columns || {}),
+        df: dataframe.df
+      };
+    });
+
+    operationValues.value.allDataframes = allDataframes;
+
+    operationValues.value.otherDataframes = allDataframes.filter(
+      (_, i) => i !== currentDataframeIndex
+    );
 
     operationValues.value = operationValues.value || {};
 

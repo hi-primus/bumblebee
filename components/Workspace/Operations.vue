@@ -317,7 +317,7 @@ const removeOperation = async (index: number): Promise<void> => {
 const dataframes = inject('dataframes') as Ref<DataframeObject[]>;
 
 const formatOperationContent = (content: string): string => {
-  // find matches for dataframe names in dn{dataframeName} format but without any {} inside
+  // replaces in rendered content to match tab names
 
   const matches = content.match(/dn\{([a-zA-Z0-9]+?)\}/g);
   if (matches) {
@@ -333,6 +333,8 @@ const formatOperationContent = (content: string): string => {
           `dn{${varName}}`,
           dataframeObject.name || varName
         );
+      } else {
+        content = content.replace(`dn{${varName}}`, varName);
       }
     });
   }
