@@ -955,6 +955,68 @@ export const operationCreators: Record<string, OperationCreator> = {
     shortcut: 'rc'
   },
   // Row operations
+  sortRows: {
+    name: 'Sort rows',
+    alias: 'reorder rows',
+    defaultOptions: {
+      usesInputCols: true,
+      usesInputDataframe: true,
+      preview: 'whole no-profile',
+      usesOutputCols: false
+    },
+    content: (
+      payload: OperationPayload<{
+        order: 'asc' | 'desc';
+        cast: boolean;
+      }>
+    ) => {
+      const order = {
+        asc: 'ascending',
+        desc: 'descending'
+      }[payload.order];
+      return `b{Sort rows} in gr{${order}} order using ${
+        payload.cast ? 'casted ' : ''
+      }${naturalJoin(payload.cols)}`;
+    },
+    action: (
+      payload: OperationPayload<{
+        order: 'asc' | 'desc';
+        cast: boolean;
+      }>
+    ): Source => {
+      return payload.source.rows.sort({
+        target: payload.target,
+        cols: payload.cols,
+        order: payload.order,
+        cast: payload.cast,
+        requestOptions: { priority: PRIORITIES.operation }
+      });
+    },
+    fields: [
+      {
+        name: 'order',
+        label: 'Order',
+        type: 'string',
+        defaultValue: 'asc',
+        options: [
+          {
+            text: 'Ascending',
+            value: 'asc'
+          },
+          {
+            text: 'Descending',
+            value: 'desc'
+          }
+        ]
+      },
+      {
+        name: 'cast',
+        label: 'Cast values before sorting',
+        type: 'boolean'
+      }
+    ],
+    shortcut: 'sr'
+  },
   filterRows: {
     name: 'Filter rows',
     title: payload =>
@@ -2585,7 +2647,7 @@ export const operationCreators: Record<string, OperationCreator> = {
     defaultOptions: {
       usesInputCols: 'single',
       usesInputDataframe: true,
-      preview: true
+      preview: 'custom'
     },
     content: (
       payload: OperationPayload<{
@@ -2650,7 +2712,7 @@ export const operationCreators: Record<string, OperationCreator> = {
     defaultOptions: {
       usesInputCols: true,
       usesInputDataframe: true,
-      preview: true
+      preview: 'custom'
     },
     content: (
       payload: OperationPayload<{

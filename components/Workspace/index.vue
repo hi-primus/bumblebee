@@ -848,9 +848,10 @@ const previewOperationThrottled = throttleOnce(
       const previewType = payload.options.preview;
 
       if (
-        previewColumnNames.length ||
-        !usesInputDataframe ||
-        previewType === 'whole'
+        (previewColumnNames.length ||
+          !usesInputDataframe ||
+          previewType.startsWith('whole')) &&
+        !previewType.endsWith('no profile')
       ) {
         // save profile
 
@@ -874,7 +875,7 @@ const previewOperationThrottled = throttleOnce(
         let profile: DataframeProfile | null = null;
 
         if (
-          previewType === 'whole' ||
+          previewType.startsWith('whole') ||
           !payload.source ||
           !previewColumns.length
         ) {
@@ -885,7 +886,7 @@ const previewOperationThrottled = throttleOnce(
           });
         }
 
-        if (previewType !== 'whole' && previewColumns.length) {
+        if (!previewType.startsWith('whole') && previewColumns.length) {
           profile = await result.profile({
             cols: previewColumns,
             bins: 33,

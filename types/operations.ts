@@ -6,9 +6,11 @@ import { isObject } from './common';
 import { Client, Source } from '@/types/blurr';
 
 export type PreviewType =
-  | boolean
+  | false
+  | 'custom'
   | 'basic columns'
   | 'whole'
+  | 'whole no-profile'
   | 'rows'
   | 'highlight rows';
 
