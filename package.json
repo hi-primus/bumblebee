@@ -28,7 +28,7 @@
   "type": "module",
   "dependencies": {
     "@headlessui/vue": "^1.7.4",
-    "@hi-primus/blurr": "^0.0.3",
+    "@hi-primus/blurr": "^0.0.4",
     "@mdi/js": "^7.0.96",
     "@mdi/svg": "^7.0.96",
     "@nuxt/kit": "3.1.2",
