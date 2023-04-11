@@ -35,9 +35,9 @@ const inColsContent = (
   includeDataframe = true
 ): string => {
   let str =
-    ((payload.cols?.length || 0) > 0
+    (payload.cols?.length || 0) > 0
       ? ` \nin bl{${naturalJoin(payload.cols)}}`
-      : '') + (includeDataframe ? inDataframeContent(payload) : '');
+      : '';
 
   if (
     payload.options.usesOutputCols &&
@@ -46,6 +46,10 @@ const inColsContent = (
     payload.outputCols.join(' ') !== payload.cols?.join(' ')
   ) {
     str += ` \nto bl{${naturalJoin(payload.outputCols)}}`;
+  }
+
+  if (includeDataframe) {
+    str += inDataframeContent(payload);
   }
 
   return str;
@@ -976,7 +980,7 @@ export const operationCreators: Record<string, OperationCreator> = {
       }[payload.order];
       return `b{Sort rows} in gr{${order}} order using ${
         payload.cast ? 'casted ' : ''
-      }${naturalJoin(payload.cols)}`;
+      }bl{${naturalJoin(payload.cols)}}${inDataframeContent(payload)}`;
     },
     action: (
       payload: OperationPayload<{
