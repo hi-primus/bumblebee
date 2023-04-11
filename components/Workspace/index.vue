@@ -848,10 +848,10 @@ const previewOperationThrottled = throttleOnce(
       const previewType = payload.options.preview;
 
       if (
+        !previewType.endsWith('no-profile') &&
         (previewColumnNames.length ||
           !usesInputDataframe ||
-          previewType.startsWith('whole')) &&
-        !previewType.endsWith('no profile')
+          previewType.startsWith('whole'))
       ) {
         // save profile
 
