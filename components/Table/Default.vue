@@ -57,7 +57,11 @@
         >
           <div
             :class="{
-              'column-color-preview': column.columnType == 'preview',
+              'column-color-preview':
+                column.columnType == 'preview' ||
+                (column.columnType == 'default' &&
+                  !selection?.columns.includes(column.title) &&
+                  wholePreview),
               'column-color-preview-secondary':
                 column.columnType == 'preview secondary',
               'column-color-preview-tertiary':
@@ -195,6 +199,8 @@ const props = defineProps({
 });
 
 const selection = inject('selection') as Ref<TableSelection>;
+
+const previewData = inject('preview-data') as Ref<PreviewData>;
 
 type Emits = {
   (e: 'updateScroll', start: number, stop: number): void;
@@ -369,6 +375,10 @@ const visibleRows = computed(() => {
         htmlValues: row.values ? row.values.map(getValue) : row.values
       };
     });
+});
+
+const wholePreview = computed(() => {
+  return previewData.value?.type?.startsWith('whole');
 });
 
 const getValue = (value: unknown): string => {
