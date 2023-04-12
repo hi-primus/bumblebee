@@ -70,7 +70,7 @@ const usePopperElement = (
   for (const modifier in modifiers) {
     if (modifier in modifiersClasses) {
       popperElement.classList.add(modifiersClasses[modifier as ValidModifier]);
-    } else if (modifier !== 'follow') {
+    } else if (!['follow', 'follow-x', 'follow-y'].includes(modifier)) {
       console.warn(`Unknown tooltip modifier: ${modifier}`);
     }
   }
