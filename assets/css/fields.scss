@@ -235,8 +235,11 @@
       @apply text-neutral-lightest;
     }
   }
-  .checkbox-input {
-    @apply accent-primary-dark disabled:accent-neutral-lightest;
+  &:disabled {
+    @apply opacity-50;
+  }
+  &:not([class*='accent-']) {
+    @apply accent-primary-dark;
   }
 }
 
