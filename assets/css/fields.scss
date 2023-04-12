@@ -181,6 +181,30 @@
   }
 }
 
+.menu-container {
+  @apply relative;
+
+  .menu {
+    @apply absolute right-0 top-[calc(100%+0.25rem)];
+    @apply overflow-hidden min-w-[120px] max-h-[240px] overflow-y-auto py-1;
+    @apply bg-white shadow-md rounded-md focus:outline-none border border-line;
+    @apply sm:text-xs md:text-sm;
+  }
+
+  .menu-item {
+    @apply w-full text-left px-4 py-2 cursor-pointer;
+  }
+  .menu-itemActive {
+    @apply bg-gray-lighter text-neutral;
+  }
+  .menu-itemDefault {
+    @apply text-neutral;
+  }
+  .divider {
+    @apply border-b border-line w-[calc(100%-32px)] mx-auto my-2;
+  }
+}
+
 .autocomplete {
   @apply sm:text-sm md:text-base;
   // .autocomplete-inputContainer {

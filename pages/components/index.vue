@@ -239,9 +239,17 @@
           <AppButton class="size-small icon-button">
             <Icon :path="mdiCheckBold" />
           </AppButton>
-          <AppButton class="size-small icon-button rounded-button">
-            <Icon :path="mdiCheckBold" />
-          </AppButton>
+          <AppMenu
+            :items="[
+              { text: 'Item 1' },
+              { text: 'Item 2' },
+              { text: 'Item 3' }
+            ]"
+          >
+            <AppButton class="size-small icon-button rounded-button relative">
+              <Icon :path="mdiMore" />
+            </AppButton>
+          </AppMenu>
         </div>
         <div class="flex flex-wrap gap-4 px-8 py-2 justify-start items-start">
           <AppButton class="size-smallest">Accept</AppButton>
@@ -572,7 +580,7 @@
 </template>
 
 <script setup lang="ts">
-import { mdiCheckBold, mdiTrashCan } from '@mdi/js';
+import { mdiCheckBold, mdiMore, mdiTrashCan } from '@mdi/js';
 
 import { TableSelection } from '@/types/operations';
 
