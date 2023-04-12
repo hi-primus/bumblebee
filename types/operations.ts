@@ -130,7 +130,7 @@ export interface FieldGroup {
   groupConnector?: string;
 }
 
-export type Field = BaiscField | SpecialField | FieldGroup;
+export type Field = BasicField | SpecialField | FieldGroup;
 
 export interface OperationCreatorBase {
   name: string;
