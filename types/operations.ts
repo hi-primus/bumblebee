@@ -95,7 +95,7 @@ export type Suggestion = SuggestionColumn | SuggestionFunction;
 
 type CompatibleType = BasicType | any[] | Record<string, any>;
 
-export interface Field {
+export interface BasicField {
   name: string;
   type: PayloadCallbackOr<
     'string' | 'number' | 'boolean' | 'custom' | 'strings array' | 'file'
@@ -114,9 +114,14 @@ export interface Field {
   hidden?: PayloadCallbackOr<boolean>;
 }
 
+export interface SpecialField {
+  name: string;
+  type: 'join'; // TODO: add 'concat'
+}
+
 export interface FieldGroup {
   name: string;
-  fields: Field[];
+  fields: BasicField[];
   defaultFields?: number;
   type: 'group';
   label?: string;
@@ -125,13 +130,15 @@ export interface FieldGroup {
   groupConnector?: string;
 }
 
+export type Field = BaiscField | SpecialField | FieldGroup;
+
 export interface OperationCreatorBase {
   name: string;
   title?: PayloadCallbackOr<string>;
   content?: (...args: any) => string;
   alias?: string;
   description?: string;
-  fields?: (Field | FieldGroup)[];
+  fields?: (Field | SpecialField | FieldGroup)[];
   defaultOptions?: Partial<OperationOptions>;
   shortcut?: string;
 }
@@ -233,3 +240,14 @@ export interface OperationActions {
     payload?: Partial<PayloadWithOptions>
   ) => void;
 }
+
+type JoinDataColumn = {
+  name: string;
+  selected: boolean;
+  isKey: boolean;
+};
+
+export type JoinData = {
+  left: JoinDataColumn[];
+  right: JoinDataColumn[];
+};

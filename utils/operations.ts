@@ -2,6 +2,7 @@ import { Source } from '@/types/blurr';
 import { isObject } from '@/types/common';
 import {
   Cols,
+  JoinData,
   Operation,
   OperationCreator,
   OperationOptions,
@@ -181,9 +182,7 @@ export const operationCreators: Record<string, OperationCreator> = {
       payload: OperationPayload<{
         dfRightName: string;
         how: 'left' | 'right' | 'inner' | 'outer';
-        on: string;
-        leftOn: string;
-        rightOn: string;
+        columns: JoinData;
       }>
     ) => {
       const foundDf = payload.allDataframes.find(
@@ -191,10 +190,14 @@ export const operationCreators: Record<string, OperationCreator> = {
       );
       const dfName = foundDf?.name || `dn{${payload.source.name}}`;
       const str = `b{Join} rd{${dfName}} and rd{${payload.dfRightName}} dataframes using \ngr{${payload.how}} join`;
-      if (payload.on) {
-        return `\n${str} and gr{${payload.on}} as join key`;
+
+      const leftOn = payload.columns[0]?.find(col => col.isKey)?.name;
+      const rightOn = payload.columns[1]?.find(col => col.isKey)?.name;
+
+      if (leftOn === rightOn) {
+        return `\n${str} and gr{${leftOn}} as join key`;
       } else {
-        return `\n${str} and gr{${payload.leftOn}} as left join key and \ngr{${payload.rightOn}} as right join key`;
+        return `\n${str} and gr{${leftOn}} as left join key and \ngr{${rightOn}} as right join key`;
       }
     },
     action: async (
@@ -202,9 +205,7 @@ export const operationCreators: Record<string, OperationCreator> = {
         dfRightName: string;
         how: 'left' | 'right' | 'inner' | 'outer';
         on: string;
-        leftOn: string;
-        rightOn: string;
-        keyMiddle: boolean;
+        columns: JoinData;
       }>
     ): Promise<Source> => {
       const foundDf = payload.allDataframes.find(
@@ -240,30 +241,46 @@ export const operationCreators: Record<string, OperationCreator> = {
         32768
       );
 
+      const leftOn = payload.columns.left.find(col => col.isKey)?.name;
+      const rightOn = payload.columns.right.find(col => col.isKey)?.name;
+
       // loop until the dataframe is big enough to show the preview
 
       while (true) {
         if (payload.options.preview) {
           // Use just a part of the dataframe on preview
-          df = payload.source.iloc({
-            target: payload.target,
-            lower_bound: 0,
-            upper_bound: upperBound
-          });
-          dfRight = await dfRight.iloc({
-            target: 'preview_df_right',
-            lower_bound: 0,
-            upper_bound: upperBound
-          });
+          df = payload.source.cols
+            .select({
+              target: payload.target,
+              cols: payload.columns.left
+                .filter(c => c.selected)
+                .map(c => c.name)
+            })
+            .iloc({
+              target: payload.target,
+              lower_bound: 0,
+              upper_bound: upperBound
+            });
+          dfRight = await dfRight.cols
+            .select({
+              target: 'preview_df_right',
+              cols: payload.columns.right
+                .filter(c => c.selected)
+                .map(c => c.name)
+            })
+            .iloc({
+              target: 'preview_df_right',
+              lower_bound: 0,
+              upper_bound: upperBound
+            });
         }
 
         df = await df.cols.join({
           target: payload.target,
           dfRight,
           how: payload.how,
-          on: payload.on,
-          leftOn: payload.leftOn,
-          rightOn: payload.rightOn,
+          leftOn,
+          rightOn,
           requestOptions: { priority: PRIORITIES.operation }
         });
 
@@ -292,16 +309,12 @@ export const operationCreators: Record<string, OperationCreator> = {
 
       const leftColumns = payload.allColumns.filter(
         col =>
-          payload.on !== col &&
-          payload.leftOn !== col &&
-          resultColumns.includes(col)
+          payload.on !== col && leftOn !== col && resultColumns.includes(col)
       );
 
       const rightColumns = foundDf.columns.filter(
         col =>
-          payload.on !== col &&
-          payload.rightOn !== col &&
-          resultColumns.includes(col)
+          payload.on !== col && rightOn !== col && resultColumns.includes(col)
       );
 
       const middleColumns = resultColumns.filter(
@@ -353,10 +366,12 @@ export const operationCreators: Record<string, OperationCreator> = {
         type: 'string',
         defaultValue: payload => payload.otherDataframes[0]?.name,
         options: payload => {
-          return payload.otherDataframes.map(df => ({
-            text: df.name,
-            value: df.name
-          }));
+          return (
+            payload.otherDataframes?.map(df => ({
+              text: df.name,
+              value: df.name
+            })) || []
+          );
         }
       },
       {
@@ -372,54 +387,8 @@ export const operationCreators: Record<string, OperationCreator> = {
         ]
       },
       {
-        name: 'on',
-        label: 'On',
-        type: 'string',
-        options: payload => {
-          const rightColumns =
-            payload.allDataframes.find(df => df.name === payload.dfRightName)
-              ?.columns || [];
-          return payload.allColumns
-            .filter(col => rightColumns.includes(col))
-            .map(col => ({
-              text: col,
-              value: col
-            }));
-        },
-        hidden: payload => {
-          const rightColumns =
-            payload.allDataframes.find(df => df.name === payload.dfRightName)
-              ?.columns || [];
-          return (
-            payload.allColumns.filter(col => rightColumns.includes(col))
-              .length === 0
-          );
-        }
-      },
-      {
-        name: 'leftOn',
-        label: 'Left on',
-        type: 'string',
-        options: payload => {
-          return payload.allColumns.map(col => ({
-            text: col,
-            value: col
-          }));
-        }
-      },
-      {
-        name: 'rightOn',
-        label: 'Right on',
-        type: 'string',
-        options: payload => {
-          const columns =
-            payload.allDataframes.find(df => df.name === payload.dfRightName)
-              ?.columns || [];
-          return columns.map(col => ({
-            text: col,
-            value: col
-          }));
-        }
+        name: 'columns',
+        type: 'join'
       }
     ],
     shortcut: 'jd'

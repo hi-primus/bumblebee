@@ -77,6 +77,13 @@
     :disabled="resolve(field.disabled)"
     :class="fieldClass"
   />
+  <OperationFieldJoin
+    v-else-if="resolve(field?.type) === 'join'"
+    :key="`join-${field.name}-${updates}`"
+    v-model="value"
+  >
+    join
+  </OperationFieldJoin>
 </template>
 
 <script setup lang="ts">

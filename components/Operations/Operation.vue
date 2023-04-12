@@ -61,7 +61,7 @@
                 :data-subfield-index="groupIndex"
                 class="flex flex-wrap gap-y-5 w-full"
               >
-                <AppOperationField
+                <OperationField
                   v-for="subfield in field.fields"
                   :key="`${subfield.name}-group-${groupIndex}`"
                   :field="subfield"
@@ -96,7 +96,7 @@
             {{ field.addLabel || 'Add' }}
           </AppButton>
         </div>
-        <AppOperationField v-else :key="field.name" :field="field" />
+        <OperationField v-else :key="field.name" :field="field" />
       </template>
     </template>
     <div
