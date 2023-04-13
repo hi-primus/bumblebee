@@ -83,7 +83,8 @@ const { addToast } = useToasts();
 
 const { confirm } = useConfirmPopup();
 
-let blurr: Client;
+const blurr = ref<Client | null>(null);
+provide('blurr', blurr);
 
 const dataframeLayout = ref<InstanceType<typeof DataframeLayout> | null>(null);
 
@@ -288,7 +289,7 @@ const executeOperations = async () => {
     }
     const result = await operation.action({
       ...payload,
-      blurr,
+      blurr: blurr.value,
       app: { addToast }
     });
 
@@ -417,7 +418,7 @@ const operationActions: OperationActions = {
 
       const { operation, payload } = getPreparedOperation();
 
-      await blurr.backendServer.donePromise;
+      await blurr.value?.backendServer.donePromise;
 
       if (operation) {
         if (payload?.options.oneTime) {
@@ -427,7 +428,7 @@ const operationActions: OperationActions = {
               ...payload.options,
               preview: false
             },
-            blurr,
+            blurr: blurr.value,
             app: { addToast }
           });
           operationValues.value = {};
@@ -573,13 +574,13 @@ const operationActions: OperationActions = {
       };
     });
 
+    operationValues.value = operationValues.value || {};
+
     operationValues.value.allDataframes = allDataframes;
 
     operationValues.value.otherDataframes = allDataframes.filter(
       (_, i) => i !== currentDataframeIndex
     );
-
-    operationValues.value = operationValues.value || {};
 
     const resolve = (value: unknown) => {
       if (typeof value === 'function') {
@@ -766,7 +767,7 @@ const previewOperationThrottled = throttleOnce(
         const firstSampleDataframe = (await operation.action({
           ...currentPayload,
           source: firstSampleSource,
-          blurr,
+          blurr: blurr.value,
           app: { addToast }
         })) as Source;
 
@@ -828,7 +829,7 @@ const previewOperationThrottled = throttleOnce(
         ...currentPayload,
         source: payload.source,
         target: 'operation_preview_' + (payload.source?.name || 'load_df'),
-        blurr,
+        blurr: blurr.value,
         app: { addToast }
       });
 
@@ -962,7 +963,7 @@ const previewOperation = async () => {
         status: 'not validated'
       };
 
-      await blurr.backendServer.donePromise;
+      await blurr.value?.backendServer.donePromise;
 
       const result = await previewOperationThrottled();
       if (result instanceof Error) {
@@ -1027,15 +1028,15 @@ watch(selectedTab, async tab => {
 const initializeEngine = async () => {
   try {
     const { Blurr } = blurrPackage;
-    blurr = Blurr({
+    blurr.value = Blurr({
       serverOptions: {
         scriptURL: 'https://cdn.jsdelivr.net/pyodide/v0.22.1/full/pyodide.js',
         useWorker: true
       }
     });
-    window.blurr = blurr;
-    await blurr.backendServer.donePromise;
-    const result = await blurr.runCode("'successfully loaded'");
+    window.blurr = blurr.value;
+    await blurr.value?.backendServer.donePromise;
+    const result = await blurr.value?.runCode("'successfully loaded'");
     console.info('Initialization result:', result);
   } catch (err) {
     console.error('Error initializing blurr.', err);

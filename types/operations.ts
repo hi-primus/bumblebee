@@ -136,6 +136,7 @@ export interface OperationCreatorBase {
   name: string;
   title?: PayloadCallbackOr<string>;
   content?: (...args: any) => string;
+  codeExport?: (...args: any) => string;
   alias?: string;
   description?: string;
   fields?: (Field | SpecialField | FieldGroup)[];

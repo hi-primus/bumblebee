@@ -28,6 +28,20 @@
       v-else
       class="operations-container overflow-y-auto h-full flex flex-col justify-stretch text-sm text-neutral"
     >
+      <div class="flex justify-end gap-2 p-2">
+        <AppMenu
+          :items="Object.entries(engines).map(([engineKey, engine]) => ({
+              text: 'Export to ' + engine.name,
+              action: () => exportPythonCode(engineKey as keyof typeof engines)
+            }))"
+        >
+          <AppButton
+            v-tooltip="'Export python code'"
+            class="ml-auto icon-button layout-invisible size-small color-neutral-light"
+            :icon="mdiExport"
+          />
+        </AppMenu>
+      </div>
       <draggable
         v-model="operationCells"
         tag="ul"
@@ -90,9 +104,10 @@
 </template>
 
 <script setup lang="ts">
-import { mdiClose, mdiPencil } from '@mdi/js';
+import { mdiClose, mdiExport, mdiPencil } from '@mdi/js';
 import { Ref } from 'vue';
 
+import { Client } from '@/types/blurr';
 import { Column, DataframeObject } from '@/types/dataframe';
 import {
   ColumnDetailState,
@@ -103,6 +118,15 @@ import {
   PayloadWithOptions,
   State
 } from '@/types/operations';
+
+const engines = {
+  pandas: { name: 'Pandas', init: '"pandas"' },
+  cudf: { name: 'cuDF', init: '"cudf"' },
+  vaex: { name: 'Vaex', init: '"vaex"' },
+  dask: { name: 'Dask', init: '"dask"' },
+  dask_cudf: { name: 'Dask-cuDF', init: '"dask_cudf", process=True' },
+  spark: { name: 'Spark', init: '"spark"' }
+};
 
 const { addToast } = useToasts();
 
@@ -314,6 +338,8 @@ const removeOperation = async (index: number): Promise<void> => {
   return await submitOperation();
 };
 
+const blurr = inject('blurr') as Ref<Client>;
+
 const dataframes = inject('dataframes') as Ref<DataframeObject[]>;
 
 const formatOperationContent = (content: string): string => {
@@ -347,6 +373,66 @@ const formatOperationContent = (content: string): string => {
     .replace(/df\{((.|\n)+?)\}/g, '<span class="dataframe-hint">$1</span>');
 
   return content;
+};
+
+const getOperationsCode = async (): Promise<string> => {
+  const data: OperationItem[] = operationCells.value;
+
+  let code = '';
+
+  for (let i = 0; i < data.length; i++) {
+    const { operation, payload } = data[i];
+
+    if (!isOperation(operation)) {
+      throw new Error('Invalid operation', { cause: operation });
+    }
+
+    payload.requestOptions = { getCode: true };
+
+    if (operation.codeExport) {
+      for (const key in payload) {
+        if (payload[key] === undefined) {
+          delete payload[key];
+        }
+      }
+      code +=
+        operation.codeExport({
+          ...payload
+        }) + '\n';
+      continue;
+    }
+
+    code +=
+      (await operation.action({
+        ...payload,
+        options: {
+          ...payload.options,
+          preview: false
+        },
+        blurr: blurr.value,
+        app: { addToast }
+      })) + '\n';
+  }
+
+  return code;
+};
+
+const exportPythonCode = async (
+  engine: keyof typeof engines
+): Promise<void> => {
+  const operationsCode = await getOperationsCode();
+  const code =
+    'from optimus import Optimus\n' +
+    (operationsCode.includes('parse')
+      ? 'from optimus.expressions import parse\n'
+      : '') +
+    `op = Optimus(${engines[engine].init})\n` +
+    operationsCode;
+  copyToClipboard(code);
+  addToast({
+    title: 'Python code copied to clipboard',
+    type: 'success'
+  });
 };
 </script>
 

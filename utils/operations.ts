@@ -102,6 +102,15 @@ export const operationCreators: Record<string, OperationCreator> = {
       }
 
       if (payload.file) {
+        if (payload.requestOptions.getCode) {
+          return payload.blurr.readFile({
+            target: payload.target,
+            url: payload.file.name,
+            nRows: payload.nRows,
+            requestOptions: payload.requestOptions
+          });
+        }
+
         let buffer: ArrayBuffer;
         if (payload.options.preview) {
           const string = await getFirstLines(payload.file);
@@ -115,7 +124,7 @@ export const operationCreators: Record<string, OperationCreator> = {
           buffer,
           nRows: payload.nRows,
           meta: { file_name: fileName },
-          requestOptions: { priority: PRIORITIES.operation }
+          requestOptions: payload.requestOptions
         });
       }
 
@@ -123,7 +132,7 @@ export const operationCreators: Record<string, OperationCreator> = {
         return payload.blurr.readFile({
           url: payload.url,
           nRows: payload.nRows,
-          requestOptions: { priority: PRIORITIES.operation }
+          requestOptions: payload.requestOptions
         });
       }
 
@@ -204,7 +213,6 @@ export const operationCreators: Record<string, OperationCreator> = {
       payload: OperationPayload<{
         dfRightName: string;
         how: 'left' | 'right' | 'inner' | 'outer';
-        on: string;
         columns: JoinData;
       }>
     ): Promise<Source> => {
@@ -225,11 +233,11 @@ export const operationCreators: Record<string, OperationCreator> = {
       let upperBound = 64;
 
       const dfRowsCount = await df.rows.count({
-        requestOptions: { priority: PRIORITIES.operation }
+        requestOptions: payload.requestOptions
       });
 
       const dfRightRowsCount = await dfRight.rows.count({
-        requestOptions: { priority: PRIORITIES.operation }
+        requestOptions: payload.requestOptions
       });
 
       const minRows = Math.ceil(
@@ -281,7 +289,7 @@ export const operationCreators: Record<string, OperationCreator> = {
           how: payload.how,
           leftOn,
           rightOn,
-          requestOptions: { priority: PRIORITIES.operation }
+          requestOptions: payload.requestOptions
         });
 
         // break if it's not a preview
@@ -293,7 +301,7 @@ export const operationCreators: Record<string, OperationCreator> = {
         // break if the dataframe is big enough to show the preview
 
         const rowsCount = await df.rows.count({
-          requestOptions: { priority: PRIORITIES.operation }
+          requestOptions: payload.requestOptions
         });
 
         if (rowsCount < minRows && upperBound < maxSampleSize) {
@@ -304,17 +312,15 @@ export const operationCreators: Record<string, OperationCreator> = {
       }
 
       const resultColumns = await df.cols.names({
-        requestOptions: { priority: PRIORITIES.operation }
+        requestOptions: payload.requestOptions
       });
 
       const leftColumns = payload.allColumns.filter(
-        col =>
-          payload.on !== col && leftOn !== col && resultColumns.includes(col)
+        col => leftOn !== col && resultColumns.includes(col)
       );
 
       const rightColumns = foundDf.columns.filter(
-        col =>
-          payload.on !== col && rightOn !== col && resultColumns.includes(col)
+        col => rightOn !== col && resultColumns.includes(col)
       );
 
       const middleColumns = resultColumns.filter(
@@ -342,7 +348,7 @@ export const operationCreators: Record<string, OperationCreator> = {
               ...rightColumnsRenamed,
               ...middleColumnsRenamed
             ],
-            requestOptions: { priority: PRIORITIES.operation }
+            requestOptions: payload.requestOptions
           })
           .cols.select({
             cols: [
@@ -350,14 +356,49 @@ export const operationCreators: Record<string, OperationCreator> = {
               ...middleColumnsRenamed,
               ...rightColumnsRenamed
             ],
-            requestOptions: { priority: PRIORITIES.operation }
+            requestOptions: payload.requestOptions
           });
       } else {
         return df.cols.select({
           cols: [...leftColumns, ...middleColumns, ...rightColumns],
-          requestOptions: { priority: PRIORITIES.operation }
+          requestOptions: payload.requestOptions
         });
       }
+    },
+    codeExport: (
+      payload: OperationPayload<{
+        dfRightName: string;
+        how: 'left' | 'right' | 'inner' | 'outer';
+        columns: JoinData;
+      }>
+    ) => {
+      const leftColumns = payload.columns.left
+        .filter(c => c.selected)
+        .map(c => c.name);
+      const rightColumns = payload.columns.right
+        .filter(c => c.selected)
+        .map(c => c.name);
+      const leftOn = payload.columns.left.find(c => c.isKey)?.name;
+      const rightOn = payload.columns.right.find(c => c.isKey)?.name;
+
+      const dfRightName =
+        payload.allDataframes.find(df => df.name === payload.dfRightName)?.df
+          ?.name || 'df_right';
+
+      return (
+        `${payload.target} = ` +
+        `${payload.source?.name}.cols.select(${pythonArguments({
+          cols: leftColumns
+        })})` +
+        `.cols.join(${pythonArguments({
+          df_right: `${dfRightName}.cols.select(${pythonArguments({
+            cols: rightColumns
+          })})`,
+          how: payload.how,
+          left_on: leftOn,
+          right_on: rightOn
+        })})`
+      );
     },
     fields: [
       {
@@ -468,7 +509,7 @@ export const operationCreators: Record<string, OperationCreator> = {
         evalVariables: {
           parsed_function: Name('parsed_function')
         },
-        requestOptions: { priority: PRIORITIES.operation }
+        requestOptions: payload.requestOptions
       });
 
       if (inputColumns.length > 0) {
@@ -478,7 +519,7 @@ export const operationCreators: Record<string, OperationCreator> = {
           movedResult = movedResult.cols.move({
             column: inputColumns,
             position: 'beginning',
-            requestOptions: { priority: PRIORITIES.operation }
+            requestOptions: payload.requestOptions
           });
         }
 
@@ -488,7 +529,7 @@ export const operationCreators: Record<string, OperationCreator> = {
           column: outputCols,
           position: 'after',
           refCol: lastInputColumn,
-          requestOptions: { priority: PRIORITIES.operation }
+          requestOptions: payload.requestOptions
         });
 
         if (payload.options.preview) {
@@ -605,8 +646,7 @@ export const operationCreators: Record<string, OperationCreator> = {
         df = df.cols.copy({
           target: payload.target,
           cols: payload.cols,
-          outputCols: payload.outputCols,
-          requestOptions: { priority: PRIORITIES.operation }
+          outputCols: payload.outputCols
         });
       }
 
@@ -619,8 +659,7 @@ export const operationCreators: Record<string, OperationCreator> = {
         default: payload.otherwise || null,
         evalVariables: {
           parsed_function: Name('parsed_function')
-        },
-        requestOptions: { priority: PRIORITIES.operation }
+        }
       });
 
       if (
@@ -628,10 +667,11 @@ export const operationCreators: Record<string, OperationCreator> = {
         payload.outputCols[0] !== payload.cols[0]
       ) {
         return df.cols.move({
+          target: payload.target,
           column: payload.outputCols,
           position: 'after',
           refCol: payload.cols[0],
-          requestOptions: { priority: PRIORITIES.operation }
+          requestOptions: payload.requestOptions
         });
       }
 
@@ -865,7 +905,7 @@ export const operationCreators: Record<string, OperationCreator> = {
         searchBy: payload.searchBy,
         ignoreCase: !payload.matchCase,
         outputCols: payload.outputCols,
-        requestOptions: { priority: PRIORITIES.operation }
+        requestOptions: payload.requestOptions
       });
       if (
         payload.outputCols?.[0] &&
@@ -965,7 +1005,7 @@ export const operationCreators: Record<string, OperationCreator> = {
         cols: payload.cols,
         order: payload.order,
         cast: payload.cast,
-        requestOptions: { priority: PRIORITIES.operation }
+        requestOptions: payload.requestOptions
       });
     },
     fields: [
@@ -1069,7 +1109,7 @@ export const operationCreators: Record<string, OperationCreator> = {
           evalVariables: {
             parsed_function: Name('parsed_function')
           },
-          requestOptions: { priority: PRIORITIES.operation }
+          requestOptions: payload.requestOptions
         });
 
         if (payload.action === 'set') {
@@ -1087,7 +1127,7 @@ export const operationCreators: Record<string, OperationCreator> = {
               evalVariables: {
                 parsed_function: Name('parsed_function')
               },
-              requestOptions: { priority: PRIORITIES.operation }
+              requestOptions: payload.requestOptions
             })
             .cols.move({
               column: outputCols,
@@ -1104,13 +1144,13 @@ export const operationCreators: Record<string, OperationCreator> = {
           return payload.source.rows.select({
             target: payload.target,
             expr: where.join(' | '),
-            requestOptions: { priority: PRIORITIES.operation }
+            requestOptions: payload.requestOptions
           });
         case 'drop':
           return payload.source.rows.drop({
             target: payload.target,
             expr: where.join(' | '),
-            requestOptions: { priority: PRIORITIES.operation }
+            requestOptions: payload.requestOptions
           });
         case 'set':
           return payload.source.cols.set({
@@ -1123,7 +1163,7 @@ export const operationCreators: Record<string, OperationCreator> = {
             evalVariables: {
               parsed_function: Name('parsed_function')
             },
-            requestOptions: { priority: PRIORITIES.operation }
+            requestOptions: payload.requestOptions
           });
       }
     },
@@ -1327,7 +1367,7 @@ export const operationCreators: Record<string, OperationCreator> = {
         cols: payload.cols,
         keep: payload.keep,
         how: payload.how,
-        requestOptions: { priority: PRIORITIES.operation }
+        requestOptions: payload.requestOptions
       });
     },
     shortcut: 'rdd'
@@ -1359,7 +1399,7 @@ export const operationCreators: Record<string, OperationCreator> = {
         target: payload.target,
         cols: payload.cols,
         how: payload.how,
-        requestOptions: { priority: PRIORITIES.operation }
+        requestOptions: payload.requestOptions
       });
     },
     shortcut: 'rde'
@@ -1377,7 +1417,7 @@ export const operationCreators: Record<string, OperationCreator> = {
       return payload.source.cols.keep({
         target: payload.target,
         cols: payload.cols,
-        requestOptions: { priority: PRIORITIES.operation }
+        requestOptions: payload.requestOptions
       });
     },
     shortcut: 'kc'
@@ -1394,7 +1434,7 @@ export const operationCreators: Record<string, OperationCreator> = {
       return payload.source.cols.drop({
         target: payload.target,
         cols: payload.cols,
-        requestOptions: { priority: PRIORITIES.operation }
+        requestOptions: payload.requestOptions
       });
     },
     shortcut: 'dc'
@@ -1414,7 +1454,7 @@ export const operationCreators: Record<string, OperationCreator> = {
         target: payload.target,
         cols: payload.cols,
         outputCols: payload.outputCols,
-        requestOptions: { priority: PRIORITIES.operation }
+        requestOptions: payload.requestOptions
       });
     },
     shortcut: 'cc'
@@ -1433,7 +1473,7 @@ export const operationCreators: Record<string, OperationCreator> = {
         target: payload.target,
         cols: payload.cols,
         outputCols: payload.outputCols,
-        requestOptions: { priority: PRIORITIES.operation }
+        requestOptions: payload.requestOptions
       });
     },
     shortcut: 'll'
@@ -1452,7 +1492,7 @@ export const operationCreators: Record<string, OperationCreator> = {
         target: payload.target,
         cols: payload.cols,
         outputCols: payload.outputCols,
-        requestOptions: { priority: PRIORITIES.operation }
+        requestOptions: payload.requestOptions
       });
     },
     shortcut: 'ul'
@@ -1471,7 +1511,7 @@ export const operationCreators: Record<string, OperationCreator> = {
         target: payload.target,
         cols: payload.cols,
         outputCols: payload.outputCols,
-        requestOptions: { priority: PRIORITIES.operation }
+        requestOptions: payload.requestOptions
       });
     },
     shortcut: 'tl'
@@ -1490,7 +1530,7 @@ export const operationCreators: Record<string, OperationCreator> = {
         target: payload.target,
         cols: payload.cols,
         outputCols: payload.outputCols,
-        requestOptions: { priority: PRIORITIES.operation }
+        requestOptions: payload.requestOptions
       });
     },
     shortcut: 'cl'
@@ -1510,7 +1550,7 @@ export const operationCreators: Record<string, OperationCreator> = {
         target: payload.target,
         cols: payload.cols,
         outputCols: payload.outputCols,
-        requestOptions: { priority: PRIORITIES.operation }
+        requestOptions: payload.requestOptions
       });
     },
     shortcut: 'lra'
@@ -1529,7 +1569,7 @@ export const operationCreators: Record<string, OperationCreator> = {
         target: payload.target,
         cols: payload.cols,
         outputCols: payload.outputCols,
-        requestOptions: { priority: PRIORITIES.operation }
+        requestOptions: payload.requestOptions
       });
     },
     shortcut: 'lrs'
@@ -1566,7 +1606,7 @@ export const operationCreators: Record<string, OperationCreator> = {
         end: payload.end,
         cols: payload.cols,
         outputCols: payload.outputCols,
-        requestOptions: { priority: PRIORITIES.operation }
+        requestOptions: payload.requestOptions
       });
     },
     shortcut: 'le'
@@ -1590,7 +1630,7 @@ export const operationCreators: Record<string, OperationCreator> = {
         target: payload.target,
         cols: payload.cols,
         outputCols: payload.outputCols,
-        requestOptions: { priority: PRIORITIES.operation }
+        requestOptions: payload.requestOptions
       });
     },
     shortcut: 'lt'
@@ -1614,7 +1654,7 @@ export const operationCreators: Record<string, OperationCreator> = {
         target: payload.target,
         cols: payload.cols,
         outputCols: payload.outputCols,
-        requestOptions: { priority: PRIORITIES.operation }
+        requestOptions: payload.requestOptions
       });
     },
     shortcut: 'lns'
@@ -1644,7 +1684,7 @@ export const operationCreators: Record<string, OperationCreator> = {
         cols: payload.cols,
         n: payload.n,
         outputCols: payload.outputCols,
-        requestOptions: { priority: PRIORITIES.operation }
+        requestOptions: payload.requestOptions
       });
     },
     fields: [
@@ -1682,7 +1722,7 @@ export const operationCreators: Record<string, OperationCreator> = {
         target: payload.target,
         cols: payload.cols,
         outputCols: payload.outputCols,
-        requestOptions: { priority: PRIORITIES.operation }
+        requestOptions: payload.requestOptions
       });
     },
     fields: [
@@ -1726,7 +1766,7 @@ export const operationCreators: Record<string, OperationCreator> = {
         start: payload.start,
         end: payload.end,
         outputCols: payload.outputCols,
-        requestOptions: { priority: PRIORITIES.operation }
+        requestOptions: payload.requestOptions
       }) as Source;
     },
     fields: [
@@ -1777,7 +1817,7 @@ export const operationCreators: Record<string, OperationCreator> = {
         side: payload.side,
         fillChar: payload.fillChar,
         outputCols: payload.outputCols,
-        requestOptions: { priority: PRIORITIES.operation }
+        requestOptions: payload.requestOptions
       });
     },
     fields: [
@@ -1831,7 +1871,7 @@ export const operationCreators: Record<string, OperationCreator> = {
         target: payload.target,
         cols: payload.cols,
         outputCols: payload.outputCols,
-        requestOptions: { priority: PRIORITIES.operation }
+        requestOptions: payload.requestOptions
       });
     },
     shortcut: 'na'
@@ -1863,7 +1903,7 @@ export const operationCreators: Record<string, OperationCreator> = {
         cols: payload.cols,
         decimals: payload.decimals,
         outputCols: payload.outputCols,
-        requestOptions: { priority: PRIORITIES.operation }
+        requestOptions: payload.requestOptions
       });
     },
     fields: [
@@ -1890,7 +1930,7 @@ export const operationCreators: Record<string, OperationCreator> = {
         target: payload.target,
         cols: payload.cols,
         outputCols: payload.outputCols,
-        requestOptions: { priority: PRIORITIES.operation }
+        requestOptions: payload.requestOptions
       });
     },
     shortcut: 'nrf'
@@ -1909,7 +1949,7 @@ export const operationCreators: Record<string, OperationCreator> = {
         target: payload.target,
         cols: payload.cols,
         outputCols: payload.outputCols,
-        requestOptions: { priority: PRIORITIES.operation }
+        requestOptions: payload.requestOptions
       });
     },
     shortcut: 'nrc'
@@ -1928,7 +1968,7 @@ export const operationCreators: Record<string, OperationCreator> = {
         target: payload.target,
         cols: payload.cols,
         outputCols: payload.outputCols,
-        requestOptions: { priority: PRIORITIES.operation }
+        requestOptions: payload.requestOptions
       });
     },
     shortcut: 'nm'
@@ -1960,7 +2000,7 @@ export const operationCreators: Record<string, OperationCreator> = {
         cols: payload.cols,
         base: payload.base,
         outputCols: payload.outputCols,
-        requestOptions: { priority: PRIORITIES.operation }
+        requestOptions: payload.requestOptions
       });
     },
     shortcut: 'nl'
@@ -1979,7 +2019,7 @@ export const operationCreators: Record<string, OperationCreator> = {
         target: payload.target,
         cols: payload.cols,
         outputCols: payload.outputCols,
-        requestOptions: { priority: PRIORITIES.operation }
+        requestOptions: payload.requestOptions
       });
     },
     shortcut: 'nnl'
@@ -2009,7 +2049,7 @@ export const operationCreators: Record<string, OperationCreator> = {
         cols: payload.cols,
         power: payload.power,
         outputCols: payload.outputCols,
-        requestOptions: { priority: PRIORITIES.operation }
+        requestOptions: payload.requestOptions
       });
     },
     shortcut: 'np'
@@ -2028,7 +2068,7 @@ export const operationCreators: Record<string, OperationCreator> = {
         target: payload.target,
         cols: payload.cols,
         outputCols: payload.outputCols,
-        requestOptions: { priority: PRIORITIES.operation }
+        requestOptions: payload.requestOptions
       });
     },
     shortcut: 'np'
@@ -2048,7 +2088,7 @@ export const operationCreators: Record<string, OperationCreator> = {
         target: payload.target,
         cols: payload.cols,
         outputCols: payload.outputCols,
-        requestOptions: { priority: PRIORITIES.operation }
+        requestOptions: payload.requestOptions
       });
     },
     shortcut: 'ts'
@@ -2067,7 +2107,7 @@ export const operationCreators: Record<string, OperationCreator> = {
         target: payload.target,
         cols: payload.cols,
         outputCols: payload.outputCols,
-        requestOptions: { priority: PRIORITIES.operation }
+        requestOptions: payload.requestOptions
       });
     },
     shortcut: 'tc'
@@ -2086,7 +2126,7 @@ export const operationCreators: Record<string, OperationCreator> = {
         target: payload.target,
         cols: payload.cols,
         outputCols: payload.outputCols,
-        requestOptions: { priority: PRIORITIES.operation }
+        requestOptions: payload.requestOptions
       });
     },
     shortcut: 'tt'
@@ -2105,7 +2145,7 @@ export const operationCreators: Record<string, OperationCreator> = {
         target: payload.target,
         cols: payload.cols,
         outputCols: payload.outputCols,
-        requestOptions: { priority: PRIORITIES.operation }
+        requestOptions: payload.requestOptions
       });
     },
     shortcut: 'tas'
@@ -2124,7 +2164,7 @@ export const operationCreators: Record<string, OperationCreator> = {
         target: payload.target,
         cols: payload.cols,
         outputCols: payload.outputCols,
-        requestOptions: { priority: PRIORITIES.operation }
+        requestOptions: payload.requestOptions
       });
     },
     shortcut: 'tac'
@@ -2143,7 +2183,7 @@ export const operationCreators: Record<string, OperationCreator> = {
         target: payload.target,
         cols: payload.cols,
         outputCols: payload.outputCols,
-        requestOptions: { priority: PRIORITIES.operation }
+        requestOptions: payload.requestOptions
       });
     },
     shortcut: 'tat'
@@ -2162,7 +2202,7 @@ export const operationCreators: Record<string, OperationCreator> = {
         target: payload.target,
         cols: payload.cols,
         outputCols: payload.outputCols,
-        requestOptions: { priority: PRIORITIES.operation }
+        requestOptions: payload.requestOptions
       });
     },
     shortcut: 'tsh'
@@ -2181,7 +2221,7 @@ export const operationCreators: Record<string, OperationCreator> = {
         target: payload.target,
         cols: payload.cols,
         outputCols: payload.outputCols,
-        requestOptions: { priority: PRIORITIES.operation }
+        requestOptions: payload.requestOptions
       });
     },
     shortcut: 'tch'
@@ -2200,7 +2240,7 @@ export const operationCreators: Record<string, OperationCreator> = {
         target: payload.target,
         cols: payload.cols,
         outputCols: payload.outputCols,
-        requestOptions: { priority: PRIORITIES.operation }
+        requestOptions: payload.requestOptions
       });
     },
     shortcut: 'tth'
@@ -2222,7 +2262,7 @@ export const operationCreators: Record<string, OperationCreator> = {
         target: payload.target,
         cols: payload.cols,
         outputCols: payload.outputCols,
-        requestOptions: { priority: PRIORITIES.operation }
+        requestOptions: payload.requestOptions
       });
     },
     shortcut: 'tash'
@@ -2244,7 +2284,7 @@ export const operationCreators: Record<string, OperationCreator> = {
         target: payload.target,
         cols: payload.cols,
         outputCols: payload.outputCols,
-        requestOptions: { priority: PRIORITIES.operation }
+        requestOptions: payload.requestOptions
       });
     },
     shortcut: 'tach'
@@ -2266,7 +2306,7 @@ export const operationCreators: Record<string, OperationCreator> = {
         target: payload.target,
         cols: payload.cols,
         outputCols: payload.outputCols,
-        requestOptions: { priority: PRIORITIES.operation }
+        requestOptions: payload.requestOptions
       });
     },
     shortcut: 'tath'
@@ -2293,7 +2333,7 @@ export const operationCreators: Record<string, OperationCreator> = {
         cols: payload.cols,
         outputFormat,
         outputCols: payload.outputCols,
-        requestOptions: { priority: PRIORITIES.operation }
+        requestOptions: payload.requestOptions
       });
     },
     fields: [
@@ -2358,7 +2398,7 @@ export const operationCreators: Record<string, OperationCreator> = {
         cols: payload.cols,
         outputFormat,
         outputCols: payload.outputCols,
-        requestOptions: { priority: PRIORITIES.operation }
+        requestOptions: payload.requestOptions
       });
     },
     fields: [
@@ -2426,7 +2466,7 @@ export const operationCreators: Record<string, OperationCreator> = {
         cols: payload.cols,
         strategy: payload.strategy,
         outputCols: payload.outputCols,
-        requestOptions: { priority: PRIORITIES.operation }
+        requestOptions: payload.requestOptions
       });
     },
     fields: [
@@ -2477,7 +2517,7 @@ export const operationCreators: Record<string, OperationCreator> = {
         prefix: payload.prefix,
         drop: payload.drop,
         outputCols: payload.outputCols,
-        requestOptions: { priority: PRIORITIES.operation }
+        requestOptions: payload.requestOptions
       });
     },
     shortcut: 'mo'
@@ -2496,7 +2536,7 @@ export const operationCreators: Record<string, OperationCreator> = {
         target: payload.target,
         cols: payload.cols,
         outputCols: payload.outputCols,
-        requestOptions: { priority: PRIORITIES.operation }
+        requestOptions: payload.requestOptions
       });
     },
     shortcut: 'msi'
@@ -2515,7 +2555,7 @@ export const operationCreators: Record<string, OperationCreator> = {
         target: payload.target,
         cols: payload.cols,
         outputCols: payload.outputCols,
-        requestOptions: { priority: PRIORITIES.operation }
+        requestOptions: payload.requestOptions
       });
     },
     shortcut: 'mis'
@@ -2534,7 +2574,7 @@ export const operationCreators: Record<string, OperationCreator> = {
         target: payload.target,
         cols: payload.cols,
         outputCols: payload.outputCols,
-        requestOptions: { priority: PRIORITIES.operation }
+        requestOptions: payload.requestOptions
       });
     },
     shortcut: 'msi'
@@ -2553,7 +2593,7 @@ export const operationCreators: Record<string, OperationCreator> = {
         target: payload.target,
         cols: payload.cols,
         outputCols: payload.outputCols,
-        requestOptions: { priority: PRIORITIES.operation }
+        requestOptions: payload.requestOptions
       });
     },
     shortcut: 'mss'
@@ -2572,7 +2612,7 @@ export const operationCreators: Record<string, OperationCreator> = {
         target: payload.target,
         cols: payload.cols,
         outputCols: payload.outputCols,
-        requestOptions: { priority: PRIORITIES.operation }
+        requestOptions: payload.requestOptions
       });
     },
     shortcut: 'mmms'
@@ -2591,7 +2631,7 @@ export const operationCreators: Record<string, OperationCreator> = {
         target: payload.target,
         cols: payload.cols,
         outputCols: payload.outputCols,
-        requestOptions: { priority: PRIORITIES.operation }
+        requestOptions: payload.requestOptions
       });
     },
     shortcut: 'mmas'
@@ -2612,7 +2652,7 @@ export const operationCreators: Record<string, OperationCreator> = {
         target: payload.target,
         cols: payload.cols,
         outputCols: payload.outputCols,
-        requestOptions: { priority: PRIORITIES.operation }
+        requestOptions: payload.requestOptions
       });
     },
     shortcut: 'lrw'
@@ -2658,7 +2698,7 @@ export const operationCreators: Record<string, OperationCreator> = {
         separator: payload.separator,
         splits: payload.splits === undefined ? 2 : payload.splits,
         drop: payload.options.preview ? false : payload.drop,
-        requestOptions: { priority: PRIORITIES.operation }
+        requestOptions: payload.requestOptions
       });
     },
     fields: [
@@ -2728,7 +2768,7 @@ export const operationCreators: Record<string, OperationCreator> = {
         outputCol,
         separator: payload.separator,
         drop,
-        requestOptions: { priority: PRIORITIES.operation }
+        requestOptions: payload.requestOptions
       });
     },
     fields: [
@@ -2781,6 +2821,11 @@ const preparePayloadForAction = (
   }
 
   payload.options = options;
+
+  payload.requestOptions = {
+    ...(payload.requestOptions || {}),
+    priority: PRIORITIES.operation
+  };
 
   return payload;
 };

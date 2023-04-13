@@ -1,6 +1,8 @@
 import type { Source } from '@/types/blurr';
 import { DataframeProfile, KeyedColumn } from '@/types/dataframe';
 
+export { pythonArguments } from '@hi-primus/blurr/src/lib/utils';
+
 export const PRIORITIES = {
   requirement: 1,
   previewSample: 2,
@@ -32,4 +34,11 @@ export const getPreliminaryProfile = async (
       return acc;
     }, {} as Record<string, KeyedColumn>)
   };
+};
+
+export const pythonCall = (
+  func: string,
+  params: Record<string, CompatibleType>
+) => {
+  return `${func}(${pythonArguments(params)})`;
 };
