@@ -3,7 +3,7 @@
     <MenuButton as="template">
       <slot></slot>
     </MenuButton>
-    <MenuItems as="ul" class="menu" :class="[attrClass]" :style="attrStyle">
+    <MenuItems as="ul" :class="['dropdown-menu', attrClass]" :style="attrStyle">
       <MenuItem
         v-for="(item, index) in items"
         :key="item.text + index"
