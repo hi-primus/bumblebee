@@ -3,7 +3,7 @@
 import { AppFunctions } from './app';
 import { isObject } from './common';
 
-import { Client, Source } from '@/types/blurr';
+import { Client, RequestOptions, Source } from '@/types/blurr';
 
 export type PreviewType =
   | false
@@ -56,6 +56,7 @@ export type OperationPayload<
   outputCols: Cols;
   options: OperationOptions;
   app: AppFunctions;
+  requestOptions: RequestOptions;
 } & T;
 
 export type PayloadCallbackOr<T> =
