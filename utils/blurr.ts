@@ -1,7 +1,7 @@
 import type { Source } from '@/types/blurr';
 import { DataframeProfile, KeyedColumn } from '@/types/dataframe';
 
-export { pythonArguments } from '@hi-primus/blurr/src/lib/utils';
+export { pythonArguments } from '@hi-primus/blurr/build/main/lib/utils';
 
 export const PRIORITIES = {
   requirement: 1,
