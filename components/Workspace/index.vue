@@ -649,6 +649,14 @@ const selectValuesOperation = (values: unknown[]) => {
   });
 };
 
+const selectQualityOperation = (quality: 'match' | 'mismatch' | 'missing') => {
+  operationActions.selectOperation(operations.filterRows, {
+    conditions: [{ condition: quality }],
+    action: quality === 'match' ? 'select' : 'drop',
+    selectionFromPlot: true
+  });
+};
+
 const selectRangesOperation = (ranges: [number, number][]) => {
   const optimizedRanges = ranges.reduce((acc, range) => {
     if (acc.length === 0) {
@@ -991,8 +999,12 @@ watch(
       return previewOperation();
     }
 
-    if (selection?.values?.length) {
-      selectValuesOperation(selection.values);
+    if (selection?.values) {
+      if (Array.isArray(selection.values) && selection.values.length) {
+        selectValuesOperation(selection.values);
+      } else if (!Array.isArray(selection.values) && selection.values) {
+        selectQualityOperation(selection.values);
+      }
     } else if (selection?.ranges?.length) {
       selectRangesOperation(selection.ranges);
     } else if (isOperation(state.value)) {

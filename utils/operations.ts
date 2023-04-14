@@ -753,13 +753,16 @@ export const operationCreators: Record<string, OperationCreator> = {
                 hidden: true
               },
               { text: 'Selected', value: 'selected', hidden: true },
-              { divider: true, hidden: true },
+              { divider: true },
+              {
+                text: 'Matches values',
+                value: 'match'
+              },
               {
                 text: 'Mismatches values',
-                value: 'mismatch',
-                hidden: true
+                value: 'mismatch'
               },
-              { text: 'Null values', value: 'null', hidden: true }
+              { text: 'Missing values', value: 'missing' }
             ],
             class: (payload, currentIndex = 0) => {
               const condition = payload.replaces[currentIndex].condition;
@@ -800,7 +803,9 @@ export const operationCreators: Record<string, OperationCreator> = {
             },
             hidden: (payload, currentIndex = 0) => {
               const condition = payload.replaces[currentIndex].condition;
-              return condition === 'value_in';
+              return ['value_in', 'match', 'mismatch', 'missing'].includes(
+                condition
+              );
             }
           },
           {
@@ -1245,18 +1250,24 @@ export const operationCreators: Record<string, OperationCreator> = {
                 hidden: true
               },
               { text: 'Selected', value: 'selected', hidden: true },
-              { divider: true, hidden: true },
+              { divider: true },
+              {
+                text: 'Matches values',
+                value: 'match'
+              },
               {
                 text: 'Mismatches values',
-                value: 'mismatch',
-                hidden: true
+                value: 'mismatch'
               },
-              { text: 'Null values', value: 'null', hidden: true }
+              { text: 'Missing values', value: 'missing' }
             ],
             class: (payload, currentIndex = 0): string => {
               const condition = payload.conditions[currentIndex].condition;
               switch (condition) {
                 case 'value_in':
+                case 'match':
+                case 'mismatch':
+                case 'missing':
                   return 'w-full';
                 default:
                   return 'grouped-first w-1/2';
@@ -1286,7 +1297,9 @@ export const operationCreators: Record<string, OperationCreator> = {
             },
             hidden: (payload, currentIndex = 0) => {
               const condition = payload.conditions[currentIndex].condition;
-              return condition === 'value_in';
+              return ['value_in', 'match', 'mismatch', 'missing'].includes(
+                condition
+              );
             }
           },
           {
@@ -2999,6 +3012,12 @@ function whereExpression(
         return '';
       }
       return `(df["${col}"]>=${value}) & (df["${col}"]<=${otherValue})`;
+    case 'missing':
+      return `df.mask.null("${col}")`;
+    case 'match':
+      return `df.mask.match("${col}", df.cols.inferred_data_type("${col}", use_internal=True))`;
+    case 'mismatch':
+      return `df.mask.mismatch("${col}", df.cols.inferred_data_type("${col}", use_internal=True))`;
     default:
       console.warn('Unknown condition', condition);
   }
@@ -3020,16 +3039,24 @@ function whereHint(
       return `is not equal to gr{${payload.value}}`;
     case 'greater_than':
       return `is greater than gr{${payload.value}}`;
-    case 'greater_than_or_equal':
+    case 'greater_than_equal':
       return `is greater than or equal to gr{${payload.value}}`;
     case 'less_than':
       return `is less than gr{${payload.value}}`;
-    case 'less_than_or_equal':
+    case 'less_than_equal':
       return `is less than or equal to gr{${payload.value}}`;
     case 'value_in':
       return `is in gr{${payload.values.join(', ')}}`;
     case 'between':
       return `is between gr{${payload.value}} and gr{${payload.otherValue}}`;
+    case 'missing':
+      return `is missing`;
+    case 'match':
+      return `matches`;
+    case 'mismatch':
+      return `does not match`;
+    default:
+      console.warn('Unknown condition', condition);
   }
   return '';
 }

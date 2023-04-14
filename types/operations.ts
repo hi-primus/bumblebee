@@ -228,10 +228,18 @@ export interface ValuesSelection {
   indices: number[];
 }
 
+export interface QualitySelection {
+  columns: [string];
+  ranges: null;
+  values: 'missing' | 'match' | 'mismatch';
+  indices: null;
+}
+
 export type TableSelection =
   | ColumnsSelection
   | RangesSelection
   | ValuesSelection
+  | QualitySelection
   | null;
 
 export interface OperationActions {

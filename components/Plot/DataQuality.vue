@@ -6,6 +6,7 @@
       :style="{
         width: `${getPercentage('match')}%`
       }"
+      @click="select('match')"
       @mouseenter="onHovered('match')"
     ></div>
     <div
@@ -14,6 +15,7 @@
       :style="{
         width: `${getPercentage('mismatch')}%`
       }"
+      @click="select('mismatch')"
       @mouseenter="onHovered('mismatch')"
     ></div>
     <div
@@ -22,17 +24,36 @@
       :style="{
         width: `${getPercentage('missing')}%`
       }"
+      @click="select('missing')"
       @mouseenter="onHovered('missing')"
     ></div>
   </div>
 </template>
 
 <script setup lang="ts">
-interface Props {
-  data: { match: number; mismatch: number; missing: number };
-}
+import { PropType, Ref } from 'vue';
 
-const props = defineProps<Props>();
+import { TableSelection } from '@/types/operations';
+
+const selection = inject('selection') as Ref<TableSelection>;
+
+const props = defineProps({
+  data: {
+    type: Object as PropType<{
+      match: number;
+      mismatch: number;
+      missing: number;
+    }>,
+    required: true
+  },
+  columnName: {
+    type: String
+  },
+  selectable: {
+    type: Boolean,
+    default: false
+  }
+});
 
 type Emits = {
   (e: 'hovered', value: string): void;
@@ -50,6 +71,17 @@ const onHovered = (type: 'match' | 'mismatch' | 'missing') => {
     'hovered',
     `${value} ${typeString} (${Math.round(getPercentage(type) * 100) / 100}%)`
   );
+};
+
+const select = (type: 'match' | 'mismatch' | 'missing') => {
+  if (props.columnName && props.selectable) {
+    selection.value = {
+      columns: [props.columnName],
+      ranges: null,
+      values: type,
+      indices: null
+    };
+  }
 };
 
 const getPercentage = (type: 'match' | 'mismatch' | 'missing') => {
