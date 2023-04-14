@@ -216,7 +216,7 @@ const handleDataframeResults = async (
       .map(df => df.name || '');
 
     if (names.includes(dataframeName)) {
-      dataframeName = getUniqueName(dataframeName, names);
+      dataframeName = getUniqueName(dataframeName, names, true);
     }
 
     dataframes.value[dataframeIndex] = {
@@ -332,6 +332,10 @@ const preparePayloadForSubmit = (
 ): OperationPayload<PayloadWithOptions> => {
   if (payload.options.saveToNewDataframe) {
     payload.options.sourceId = newSourceId();
+    if (!payload.target) {
+      const dataframeNames = dataframes.value.map(df => df.df.name);
+      payload.target = getUniqueName('df', dataframeNames);
+    }
   }
 
   if (payload.options.usesInputDataframe) {

@@ -138,19 +138,35 @@ export const naturalJoin = (arr: string[]): string => {
   );
 };
 
-export const getUniqueName = (name: string, names: string[]): string => {
+export const getUniqueName = (
+  name: string,
+  names: string[],
+  parentheses = false
+): string => {
+  if (!names.includes(name)) {
+    return name;
+  }
+
   const lastMatchingName = names
-    .filter(n => n.startsWith(`${name} (`))
+    .filter(n =>
+      n.match(
+        new RegExp(parentheses ? `^${name} \\((\\d+)\\)$` : `^${name}(\\d+)$`)
+      )
+    )
     .sort()
     .pop();
 
   let index = 2;
 
   if (lastMatchingName) {
-    index = Number(lastMatchingName.match(/\((\d+)\)/)?.[1]) + 1;
+    if (parentheses) {
+      index = Number(lastMatchingName.match(/\((\d+)\)/)?.[1]) + 1;
+    } else {
+      index = Number(lastMatchingName.match(/(\d+)$/)?.[1]) + 1;
+    }
   }
 
-  return `${name} (${index})`;
+  return parentheses ? `${name} (${index})` : `${name}${index}`;
 };
 
 // HTML

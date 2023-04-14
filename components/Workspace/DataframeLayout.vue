@@ -141,7 +141,7 @@ const header = computed<ColumnHeader[]>(() => {
         }
 
         if (columns?.[newTitle]) {
-          newTitle = getUniqueName(newTitle, Object.keys(columns));
+          newTitle = getUniqueName(newTitle, Object.keys(columns), true);
         }
       }
 
