@@ -121,6 +121,7 @@ export const operationCreators: Record<string, OperationCreator> = {
         const fileName = payload.file.name;
 
         return payload.blurr.readFile({
+          target: payload.target,
           buffer,
           nRows: payload.nRows,
           meta: { file_name: fileName },
@@ -130,6 +131,7 @@ export const operationCreators: Record<string, OperationCreator> = {
 
       if (payload.url) {
         return payload.blurr.readFile({
+          target: payload.target,
           url: payload.url,
           nRows: payload.nRows,
           requestOptions: payload.requestOptions
