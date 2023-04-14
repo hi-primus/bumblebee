@@ -168,15 +168,6 @@ const columnsInfo = computed(() => {
 
 const columnsList = ref('');
 
-watch(
-  () => columnsInfo.value,
-  () => {
-    const newColumnsList = columnsInfo.value
-      ? columnsInfo.value.map(column => column.title).join(', ')
-      : '';
-  }
-);
-
 const operationValues = inject('operation-values') as Ref<
   OperationPayload<PayloadWithOptions>
 >;
