@@ -202,8 +202,8 @@ export const operationCreators: Record<string, OperationCreator> = {
       const dfName = foundDf?.name || `dn{${payload.source.name}}`;
       const str = `b{Join} rd{${dfName}} and rd{${payload.dfRightName}} dataframes using \ngr{${payload.how}} join`;
 
-      const leftOn = payload.columns[0]?.find(col => col.isKey)?.name;
-      const rightOn = payload.columns[1]?.find(col => col.isKey)?.name;
+      const leftOn = payload.columns.left?.find(col => col.isKey)?.name;
+      const rightOn = payload.columns.right?.find(col => col.isKey)?.name;
 
       if (leftOn === rightOn) {
         return `\n${str} and gr{${leftOn}} as join key`;
@@ -393,9 +393,11 @@ export const operationCreators: Record<string, OperationCreator> = {
           cols: leftColumns
         })})` +
         `.cols.join(${pythonArguments({
-          df_right: `${dfRightName}.cols.select(${pythonArguments({
-            cols: rightColumns
-          })})`,
+          df_right: Name(
+            `${dfRightName}.cols.select(${pythonArguments({
+              cols: rightColumns
+            })})`
+          ),
           how: payload.how,
           left_on: leftOn,
           right_on: rightOn

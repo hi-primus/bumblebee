@@ -388,7 +388,8 @@ const getOperationsCode = async (): Promise<string> => {
       }
       code +=
         operation.codeExport({
-          ...payload
+          ...payload,
+          target: payload.target || payload.source?.name
         }) + '\n';
       continue;
     }
