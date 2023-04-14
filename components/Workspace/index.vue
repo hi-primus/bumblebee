@@ -720,11 +720,7 @@ const previewOperationThrottled = throttleOnce(
 
       const { operation, payload } = getPreparedOperation();
 
-      const currentPayload = deepClone(payload);
-
-      const samePreview = compareObjects(lastPayload, currentPayload, [
-        'outputCols'
-      ]);
+      const samePreview = compareObjects(lastPayload, payload, ['outputCols']);
 
       if (
         samePreview ||
@@ -769,7 +765,7 @@ const previewOperationThrottled = throttleOnce(
         checkPreviewCancel();
 
         const firstSampleDataframe = (await operation.action({
-          ...currentPayload,
+          ...payload,
           source: firstSampleSource,
           blurr: blurr.value,
           app: { addToast }
@@ -830,7 +826,7 @@ const previewOperationThrottled = throttleOnce(
       checkPreviewCancel();
 
       const result = await operation.action({
-        ...currentPayload,
+        ...payload,
         source: payload.source,
         target: 'operation_preview_' + (payload.source?.name || 'load_df'),
         blurr: blurr.value,
@@ -913,7 +909,7 @@ const previewOperationThrottled = throttleOnce(
         }
       }
 
-      lastPayload = deepClone(currentPayload);
+      lastPayload = deepClone(payload);
 
       if (appStatus.value === 'busy') {
         appStatus.value = 'ready';
