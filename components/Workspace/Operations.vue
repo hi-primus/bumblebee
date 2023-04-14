@@ -405,6 +405,7 @@ const getOperationsCode = async (): Promise<string> => {
     code +=
       (await operation.action({
         ...payload,
+        target: payload.target || payload.source?.name,
         options: {
           ...payload.options,
           preview: false

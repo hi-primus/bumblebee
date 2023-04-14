@@ -468,19 +468,17 @@ export const operationCreators: Record<string, OperationCreator> = {
       });
       return `${str} ${naturalJoin(sets)}` + inDataframeContent(payload);
     },
-    action: async (
+    action: (
       payload: OperationPayload<{
         sets: {
           outputColumn: string;
           value: string;
         }[];
       }>
-    ): Promise<Source> => {
-      const parseSets = payload.sets
-        .map(s => (s.value ? `parse('${s.value}', data=False)` : '"\'\'"')) // empty expression
-        .join(', ');
-
-      const valueFunc: string[] = await payload.blurr.runCode(`[${parseSets}]`);
+    ): Source => {
+      const valueFunc = payload.sets.map(s =>
+        s.value ? Name(`parse('${s.value}', data=False)`) : '""'
+      ); // empty expression
 
       let outputCols = payload.sets.map((s, index) => {
         if (s.outputColumn) {
@@ -500,7 +498,7 @@ export const operationCreators: Record<string, OperationCreator> = {
       }
 
       const inputColumns = payload.allColumns.filter(col => {
-        return valueFunc.some(f => f && f.includes(col));
+        return valueFunc.some(s => s?.toString && s.toString().includes(col));
       });
 
       const result = payload.source.cols.set({
@@ -511,7 +509,7 @@ export const operationCreators: Record<string, OperationCreator> = {
         evalVariables: {
           parsed_function: Name('parsed_function')
         },
-        requestOptions: payload.requestOptions
+        requestOptions: inputColumns.length === 0 ? payload.requestOptions : {}
       });
 
       if (inputColumns.length > 0) {
@@ -519,27 +517,30 @@ export const operationCreators: Record<string, OperationCreator> = {
 
         if (payload.options.preview) {
           movedResult = movedResult.cols.move({
+            target: payload.target,
             column: inputColumns,
-            position: 'beginning',
-            requestOptions: payload.requestOptions
+            position: 'beginning'
           });
         }
 
         const lastInputColumn = inputColumns[inputColumns.length - 1];
 
         movedResult = movedResult.cols.move({
+          target: payload.target,
           column: outputCols,
           position: 'after',
           refCol: lastInputColumn,
-          requestOptions: payload.requestOptions
+          requestOptions: !payload.options.preview ? payload.requestOptions : {}
         });
 
         if (payload.options.preview) {
           return movedResult.cols.rename({
+            target: payload.target,
             cols: inputColumns,
             outputCols: inputColumns.map(
               c => `__bumblebee__highlight_col__${c}`
-            )
+            ),
+            requestOptions: payload.requestOptions
           });
         }
         return movedResult;
@@ -652,6 +653,9 @@ export const operationCreators: Record<string, OperationCreator> = {
         });
       }
 
+      const moveColumns =
+        payload.outputCols?.[0] && payload.outputCols[0] !== payload.cols[0];
+
       df = df.cols.set({
         target: payload.target,
         cols: payload.outputCols,
@@ -661,13 +665,11 @@ export const operationCreators: Record<string, OperationCreator> = {
         default: payload.otherwise || null,
         evalVariables: {
           parsed_function: Name('parsed_function')
-        }
+        },
+        requestOptions: !moveColumns ? payload.requestOptions : {}
       });
 
-      if (
-        payload.outputCols?.[0] &&
-        payload.outputCols[0] !== payload.cols[0]
-      ) {
+      if (moveColumns) {
         return df.cols.move({
           target: payload.target,
           column: payload.outputCols,
@@ -899,6 +901,9 @@ export const operationCreators: Record<string, OperationCreator> = {
         r => r.search && r.replaceBy !== undefined
       );
 
+      const moveColumns =
+        payload.outputCols?.[0] && payload.outputCols[0] !== payload.cols[0];
+
       const result = payload.source.cols.replace({
         target: payload.target,
         cols: payload.cols,
@@ -907,16 +912,15 @@ export const operationCreators: Record<string, OperationCreator> = {
         searchBy: payload.searchBy,
         ignoreCase: !payload.matchCase,
         outputCols: payload.outputCols,
-        requestOptions: payload.requestOptions
+        requestOptions: !moveColumns ? payload.requestOptions : {}
       });
-      if (
-        payload.outputCols?.[0] &&
-        payload.outputCols[0] !== payload.cols[0]
-      ) {
+
+      if (moveColumns) {
         return result.cols.move({
           column: payload.outputCols[0],
           position: 'after',
-          refCol: payload.cols[0]
+          refCol: payload.cols[0],
+          requestOptions: payload.requestOptions
         });
       }
 
