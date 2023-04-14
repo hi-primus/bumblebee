@@ -153,7 +153,7 @@ const header = computed<ColumnHeader[]>(() => {
           ''
         );
         columnType = 'highlight';
-        highlight = ['error', 'warning', 'success'].includes(highlightString)
+        highlight = ['danger', 'warning', 'success'].includes(highlightString)
           ? (highlightString as Highlight)
           : true;
       }

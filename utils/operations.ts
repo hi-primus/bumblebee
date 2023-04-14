@@ -1104,7 +1104,7 @@ export const operationCreators: Record<string, OperationCreator> = {
         .filter(expression => expression);
 
       if (payload.options.preview) {
-        const color = payload.action === 'drop' ? 'error' : 'success';
+        const color = payload.action === 'drop' ? 'danger' : 'success';
 
         const highlightColumn = `__bumblebee__highlight_row__${color}`;
 
