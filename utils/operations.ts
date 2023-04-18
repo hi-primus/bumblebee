@@ -1426,6 +1426,92 @@ export const operationCreators: Record<string, OperationCreator> = {
     },
     shortcut: 'rde'
   },
+  getAggregations: {
+    name: 'Get aggregations',
+    alias: 'aggregate',
+    defaultOptions: {
+      usesInputCols: true,
+      usesOutputCols: false,
+      usesInputDataframe: true,
+      saveToNewDataframe: true,
+      preview: 'whole'
+    },
+    action(
+      payload: OperationPayload<{
+        aggregations: {
+          column: string;
+          aggregation: string;
+        }[];
+      }>
+    ): Source {
+      const agg = payload.aggregations.reduce((acc, agg) => {
+        if (!agg.column || !agg.aggregation) {
+          return acc;
+        }
+        const name = `${agg.column}_${agg.aggregation}`;
+        if (!acc[name]) {
+          acc[name] = {};
+        }
+        acc[name][agg.column] = agg.aggregation;
+        return acc;
+      }, {} as Record<string, Record<string, string>>);
+
+      return payload.source.cols.groupBy({
+        target: payload.target,
+        by: payload.cols,
+        agg,
+        requestOptions: payload.requestOptions
+      });
+    },
+    content: (
+      payload: OperationPayload<{
+        aggregations: {
+          column: string;
+          aggregation: string;
+        }[];
+      }>
+    ): string => {
+      return `b{Get rows aggregations}${inColsContent(payload)}`; // TO-DO: Add aggregations
+    },
+    fields: [
+      {
+        name: 'aggregations',
+        label: 'Aggregations',
+        type: 'group',
+        fields: [
+          {
+            name: 'column',
+            label: 'Column',
+            type: 'string',
+            class: 'grouped-first w-1/2',
+            options: (payload: OperationPayload) => {
+              return payload.allColumns.map(col => ({
+                text: col,
+                value: col
+              }));
+            }
+          },
+          {
+            name: 'aggregation',
+            label: 'Aggregation',
+            type: 'string',
+            class: 'grouped-last w-1/2',
+            options: [
+              { text: 'Count', value: 'count' },
+              { text: 'Sum', value: 'sum' },
+              { text: 'Mean', value: 'mean' },
+              { text: 'Std', value: 'std' },
+              { text: 'Min', value: 'min' },
+              { text: 'Max', value: 'max' },
+              { text: 'First', value: 'first' },
+              { text: 'Last', value: 'last' }
+            ]
+          }
+        ]
+      }
+    ],
+    shortcut: 'ag'
+  },
   // Columns operations
   keep: {
     name: 'Keep selected columns',
