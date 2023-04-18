@@ -243,7 +243,7 @@ const saveToNewDataframe = computed<boolean | 'required'>({
   set(value) {
     options.value = {
       ...options.value,
-      saveToNewDataframe: value
+      saveToNewDataframe: Boolean(value)
     };
   }
 });
