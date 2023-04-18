@@ -224,7 +224,7 @@ const operationCells = computed<OperationCell[]>({
 
 const datasets = computed<string[]>(() => {
   const datasetsList = operationCells.value
-    ?.map(cell => cell.payload?.options?.sourceId)
+    ?.map(cell => cell.payload?.options?.newSourceId)
     .filter(id => id) as string[];
   return datasetsList ? [...new Set(datasetsList)] : [];
 });
@@ -257,7 +257,7 @@ const updateOperations = async (
       const sourceIndex = newOperations.findIndex(
         (op, i) =>
           i < index &&
-          op.payload.options.sourceId === operation.payload.options.sourceId
+          op.payload.options.sourceId === operation.payload.options.newSourceId
       );
       return sourceIndex === -1;
     }
@@ -315,7 +315,8 @@ const removeOperation = async (index: number): Promise<void> => {
     const operationsUsingSource = operations.value.filter(
       (operation, i) =>
         i !== index &&
-        operation.payload.options.sourceId === selectedOperationOptions.sourceId
+        operation.payload.options.sourceId ===
+          selectedOperationOptions.newSourceId
     );
     if (operationsUsingSource.length) {
       console.warn('Cannot remove source that is used by other operations');

@@ -99,6 +99,14 @@
         <OperationField v-else :key="field.name" :field="field" />
       </template>
     </template>
+    <template v-if="saveToNewDataframe !== 'required'">
+      <AppCheckbox
+        v-model="saveToNewDataframe"
+        label="Create new dataframe"
+        name="newDataframe"
+        class="w-full"
+      />
+    </template>
     <div
       v-if="
         firstValidated &&
@@ -213,14 +221,31 @@ const columns = computed<string[]>({
   }
 });
 
-const options = computed<OperationOptions>(() => {
-  console.log('Getting options from operation', operation.value);
-  return Object.assign(
-    {},
-    operationValues.value.options || {},
-    operation.value?.defaultOptions || {},
-    { targetType: 'dataframe' } as OperationOptions
-  );
+const options = computed<OperationOptions>({
+  get() {
+    return Object.assign(
+      { targetType: 'dataframe' } as OperationOptions,
+      operation.value?.defaultOptions || {},
+      operationValues.value.options || {}
+    );
+  },
+  set(value) {
+    if (operationValues.value) {
+      operationValues.value.options = value;
+    }
+  }
+});
+
+const saveToNewDataframe = computed<boolean | 'required'>({
+  get() {
+    return options.value?.saveToNewDataframe || false;
+  },
+  set(value) {
+    options.value = {
+      ...options.value,
+      saveToNewDataframe: value
+    };
+  }
 });
 
 const submitable = computed<boolean>(() => {

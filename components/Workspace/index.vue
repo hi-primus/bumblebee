@@ -164,7 +164,7 @@ const closeDataframe = async (tabIndex: number) => {
   tabs.value.splice(tabIndex, 1);
 };
 
-const newSourceId = () => {
+const getNewSourceId = () => {
   return dataframes.value.length.toString() + (+new Date()).toString();
 };
 
@@ -174,20 +174,27 @@ const handleDataframeResults = async (
 ) => {
   if (payload.options.targetType === 'dataframe') {
     const df = result as Source;
-    let sourceId = payload.options.sourceId;
+    let newSourceId = payload.options.newSourceId;
 
-    let dataframeIndex = sourceId
-      ? dataframes.value.findIndex(dataframe => dataframe.sourceId === sourceId)
+    let dataframeIndex = newSourceId
+      ? dataframes.value.findIndex(
+          dataframe => dataframe.sourceId === newSourceId
+        )
       : -1;
 
+    console.log('updateDataframe', dataframeIndex, {
+      ...payload,
+      options: { ...payload.options }
+    });
+
     const createDataframe =
-      dataframeIndex < 0 && payload.options.saveToNewDataframe;
+      dataframeIndex < 0 || payload.options.saveToNewDataframe;
 
     if (createDataframe) {
-      sourceId = sourceId || newSourceId();
+      newSourceId = newSourceId || getNewSourceId();
       const newDataframe: DataframeObject = {
         name: 'dataset',
-        sourceId,
+        sourceId: newSourceId,
         df,
         profile: undefined,
         updates: 0
@@ -196,7 +203,7 @@ const handleDataframeResults = async (
       loadDataSource(dataframeIndex);
     } else {
       if (dataframeIndex < 0) {
-        console.error('Could not find dataframe to update', sourceId);
+        console.error('Could not find dataframe to update', newSourceId);
         return;
       }
       const currentDataframe = dataframes.value[dataframeIndex];
@@ -258,16 +265,19 @@ const executeOperations = async () => {
 
   console.log('[DEBUG] Executing operations:', data, executedOperations.value);
 
-  let skip = executedOperations.value.length < data.length;
+  let skip = false;
 
-  for (let i = 0; i < data.length; i++) {
-    if (
-      skip &&
-      executedOperations.value.length > i &&
-      !compareObjects(data[i], executedOperations.value[i])
-    ) {
-      skip = false;
-      break;
+  if (executedOperations.value.length < data.length) {
+    skip = true;
+    for (let i = 0; i < data.length; i++) {
+      if (
+        skip &&
+        executedOperations.value.length > i &&
+        !compareObjects(data[i], executedOperations.value[i])
+      ) {
+        skip = false;
+        break;
+      }
     }
   }
 
@@ -294,10 +304,10 @@ const executeOperations = async () => {
     });
 
     if (
-      payload.options.sourceId &&
+      payload.options.newSourceId &&
       payload.options.targetType === 'dataframe'
     ) {
-      operationResults.set(payload.options.sourceId, { result, payload });
+      operationResults.set(payload.options.newSourceId, { result, payload });
     }
     console.info('Operation result:', { result, payload });
   }
@@ -331,7 +341,7 @@ const preparePayloadForSubmit = (
   payload: OperationPayload<PayloadWithOptions>
 ): OperationPayload<PayloadWithOptions> => {
   if (payload.options.saveToNewDataframe) {
-    payload.options.sourceId = newSourceId();
+    payload.options.newSourceId = getNewSourceId();
     if (!payload.target) {
       const dataframeNames = dataframes.value.map(df => df.df.name);
       payload.target = getUniqueName('df', dataframeNames);
@@ -395,8 +405,8 @@ const getPreparedOperation = (): {
 
   const operationOptions: OperationOptions = Object.assign(
     {},
-    options,
-    operation.defaultOptions
+    operation.defaultOptions,
+    options
   );
 
   const payload = {
@@ -752,8 +762,8 @@ const previewOperationThrottled = throttleOnce(
 
       const operationOptions = Object.assign(
         {},
-        payload.options,
-        operation.defaultOptions
+        operation.defaultOptions,
+        payload.options
       );
 
       const usesInputDataframe =

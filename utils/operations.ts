@@ -79,7 +79,7 @@ export const operationCreators: Record<string, OperationCreator> = {
   loadFromFile: {
     name: 'Load from file',
     defaultOptions: {
-      saveToNewDataframe: true,
+      saveToNewDataframe: 'required',
       preview: 'whole'
     },
     content: (payload: { url: string; file: File }) => {
@@ -2912,9 +2912,8 @@ const createOperation = (operationCreator: OperationCreator): Operation => {
   const operation = { ...operationCreator } as Operation;
   operation.fields = [...(operationCreator.fields || [])];
   operation.defaultOptions = Object.assign(
-    {},
-    operationCreator.defaultOptions || {},
-    { targetType: 'dataframe' }
+    { targetType: 'dataframe' },
+    operationCreator.defaultOptions || {}
   );
 
   operation.validate = (payload: OperationPayload<PayloadWithOptions>) => {

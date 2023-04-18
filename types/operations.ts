@@ -18,9 +18,10 @@ export interface OperationOptions {
   usesInputCols?: boolean | 'single';
   usesOutputCols?: boolean | 'required';
   usesInputDataframe?: boolean;
-  saveToNewDataframe?: boolean;
+  saveToNewDataframe?: boolean | 'required';
   oneTime?: boolean;
   sourceId?: string;
+  newSourceId?: string;
   targetType: 'dataframe' | 'value' | 'void';
   preview?: PreviewType;
   editing?: number;
