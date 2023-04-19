@@ -58,15 +58,26 @@
         />
         <!-- class="rounded-full overflow-hidden my-1 h-3" -->
       </div>
+      <div v-if="patternsFrequency">
+        <h4>Patterns</h4>
+        <ColumnDetailsTable
+          :data="patternsFrequency.data"
+          :total="patternsFrequency.total"
+          :display-value-index="1"
+          value-class="first:font-mono-table"
+          selectable
+        />
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { mdiChevronDown } from '@mdi/js';
-import { PropType } from 'vue';
+import { PropType, Ref } from 'vue';
 
-import { Column } from '@/types/dataframe';
+import { TidyValue } from '@/types/blurr';
+import { Column, DataframeObject } from '@/types/dataframe';
 
 const props = defineProps({
   column: {
@@ -78,9 +89,19 @@ const props = defineProps({
   }
 });
 
+const dataframeObject = inject<Ref<DataframeObject | null>>(
+  'dataframe-object',
+  ref(null)
+);
+
 const tooltipValue = ref('');
 
 const detailsExpanded = ref(props.expanded);
+
+const patternsFrequency = ref<{
+  data: [string, number][];
+  total: number;
+} | null>(null);
 
 const percentage = (value: number, total: number): string => {
   const n = (value / total) * 100;
@@ -109,6 +130,33 @@ const qualityData = computed<[string, number, string][]>(() => {
     ['Missing', stats.missing, percentage(stats.missing, total)],
     ['Mismatches', stats.mismatch, percentage(stats.mismatch, total)]
   ];
+});
+
+const loadPatternsFrequency = async () => {
+  const df = dataframeObject.value?.df;
+
+  if (!df) {
+    return;
+  }
+
+  const result = await df.cols.patternCounts({
+    cols: props.column.title,
+    tidy: true,
+    n: 5
+  });
+
+  const data = (result as TidyValue<typeof result>).values.map(
+    value => [value.value, value.count] as [string, number]
+  );
+
+  patternsFrequency.value = {
+    data,
+    total: dataframeObject.value?.profile?.summary?.rows_count || 1
+  };
+};
+
+onMounted(() => {
+  loadPatternsFrequency();
 });
 </script>
 

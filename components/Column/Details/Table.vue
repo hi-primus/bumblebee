@@ -1,15 +1,22 @@
 <template>
-  <table class="w-full">
-    <!-- <thead>
-      <tr>
-        <th>Name</th>
-        <th>Value</th>
-      </tr>
-    </thead> -->
+  <table class="w-full" :class="{ 'with-bars': total }">
     <tbody>
-      <tr v-for="(row, rowIndex) in data" :key="rowIndex">
-        <td v-for="(value, index) in row" :key="`${rowIndex} ${index}`">
-          {{ value }}
+      <tr
+        v-for="(row, rowIndex) in data"
+        :key="rowIndex"
+        :style="{
+          '--bar-width':
+            total && displayValueIndex !== undefined
+              ? (+row[displayValueIndex] / total) * 100 + '%'
+              : ''
+        }"
+      >
+        <td
+          v-for="(value, index) in row"
+          :key="`${rowIndex} ${index}`"
+          :class="valueClass"
+        >
+          <span>{{ value }}</span>
         </td>
       </tr>
     </tbody>
@@ -19,12 +26,16 @@
 <script setup lang="ts">
 defineProps<{
   data: (number | string)[][];
+  total?: number;
+  displayValueIndex?: number;
+  valueClass?: unknown;
 }>();
 </script>
 
 <style scoped lang="scss">
 table {
   @apply text-sm text-neutral;
+
   td {
     @apply h-[2em];
     &:first-child {
@@ -35,6 +46,41 @@ table {
     }
     &:nth-child(3) {
       @apply text-neutral-lighter;
+    }
+  }
+
+  &.with-bars {
+    @apply border-separate border-spacing-y-px -my-px mx-1;
+    tr {
+      --bar-color: theme('colors.primary.DEFAULT');
+      background: linear-gradient(
+        to right,
+        var(--bar-color) var(--bar-width),
+        transparent var(--bar-width)
+      );
+      &:hover {
+        --bar-color: theme('colors.primary.dark');
+      }
+    }
+
+    td {
+      @apply overflow-hidden;
+      --highlight-opacity: 0.2;
+      &:hover {
+        --highlight-opacity: 0.33;
+      }
+      span {
+        background: rgba(255, 255, 255, var(--highlight-opacity));
+        box-shadow: 0px 0px 6px 12px
+          rgba(255, 255, 255, var(--highlight-opacity));
+        @apply inline-block;
+      }
+      &:first-child {
+        @apply pl-1;
+      }
+      &:last-child {
+        @apply pr-1;
+      }
     }
   }
 }
