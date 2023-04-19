@@ -11,7 +11,7 @@ import {
   PayloadWithOptions
 } from '@/types/operations';
 import { capitalize, naturalJoin } from '@/utils';
-import { PRIORITIES } from '@/utils/blurr';
+import { PRIORITIES, pythonArguments } from '@/utils/blurr';
 
 type Name = {
   name: string;
