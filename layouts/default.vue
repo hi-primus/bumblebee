@@ -7,7 +7,7 @@
       <ConfirmPopupContainer />
       <div
         id="tooltips-container"
-        class="absolute top-0 left-0 w-screen h-screen max-w-screen max-h-screen overflow-hidden pointer-events-none z-[40]"
+        class="fixed top-0 left-0 w-full h-screen max-h-screen overflow-hidden pointer-events-none z-[40]"
       ></div>
     </Teleport>
     <slot> </slot>
