@@ -252,7 +252,7 @@ const handleDataframeResults = async (
  */
 
 const checkSources = (data: OperationItem[]) => {
-  const sources = data.map(operation => operation.payload.options.sourceId);
+  const sources = data.map(operation => operation.payload.options.newSourceId);
   dataframes.value = dataframes.value.filter(
     dataframe => !dataframe.sourceId || sources.includes(dataframe.sourceId)
   );
