@@ -1,7 +1,7 @@
 <template>
   <div>
     <span class="data-item-title" :title="item.name">
-      <ColumnTypeHint :data-type="item.type" />
+      <ColumnTypeHint :data-type="item.type || 'unknown'" />
       <span class="data-column-name">
         {{ item.name }}
       </span>
@@ -10,7 +10,7 @@
       {{ item.value }}
     </span>
   </div>
-</template> 
+</template>
 
 <script setup lang="ts">
 import { PropType } from 'vue';

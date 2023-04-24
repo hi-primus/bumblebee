@@ -39,12 +39,6 @@
           {{ dataframeInfo.totalColumns }} columns
         </div>
       </div>
-      <!-- <AppCheckbox
-          class="small-upper self-start ml-auto min-w-[150px]"
-          :label="showValues ? 'Hide values' : 'Show values'"
-          :model-value="showValues"
-          @update:model-value="showValues = $event"
-        /> -->
       <div class="menu-button-container w-[70px] flex justify-center">
         <AppMenu
           class="center-menu"
@@ -62,31 +56,37 @@
           />
         </AppMenu>
       </div>
+      <AppCheckbox
+        class="small-upper self-start ml-auto min-w-[150px]"
+        :label="showValues ? 'Hide values' : 'Show values'"
+        :model-value="showValues"
+        @update:model-value="showValues = $event"
+      />
     </div>
     <div class="concat-items-set concat-items">
       <div class="items-cols">
         <div
-          v-for="(itemsSlotsGroup, groupIndex) in itemsSlotsGroups"
-          :key="'isg' + groupIndex"
+          v-for="(itemsSlotsGroup, dfIndex) in itemsSlotsGroups"
+          :key="'isg' + dfIndex"
           class="items-col"
         >
           <div
             v-for="(slotArray, slotIndex) in itemsSlotsGroup"
-            :key="groupIndex + '' + slotIndex"
+            :key="dfIndex + '' + slotIndex"
             class="items-item"
             :class="{ 'empty-slot': !slotArray || !slotArray[0] }"
           >
             <draggable
               tag="div"
               class="items-slot"
-              :list="itemsSlotsGroups[groupIndex][slotIndex]"
+              :list="itemsSlotsGroups[dfIndex][slotIndex]"
               :move="checkMove"
               item-key="name"
               v-bind="{
                 animation: 200,
                 deleted: false,
                 ghostClass: 'ghost',
-                group: 'items' + groupIndex
+                group: 'items' + dfIndex
               }"
               @start="startDrag"
               @end="endDrag"
@@ -101,13 +101,20 @@
                     class="text-neutral-alpha/40 w-5 h-5"
                     :path="mdiDragHorizontalVariant"
                   />
-                  <OperationFieldConcatItem :item="element">
-                    {{ element }}
-                  </OperationFieldConcatItem>
+                  <OperationFieldConcatItem
+                    :item="{
+                      name: element,
+                      type: columnTypes[dataframesInfo[dfIndex].name]?.[
+                        element
+                      ],
+                      value:
+                        columnValues[dataframesInfo[dfIndex].name]?.[element]
+                    }"
+                  />
                   <IconButton
                     class="close-button w-4 h-4"
                     :path="mdiClose"
-                    @click="removeItem(groupIndex, slotIndex)"
+                    @click="removeItem(dfIndex, slotIndex)"
                   />
                 </div>
               </template>
@@ -129,7 +136,7 @@
           class="items-item concat-item"
         >
           <span class="data-item-title" :title="item.name">
-            <ColumnTypeHint :data-type="item.type" />
+            <ColumnTypeHint :data-type="item.type || 'unknown'" />
             <EditableElement
               class="data-column-name px-2 -mx-1"
               :model-value="item.name"
@@ -158,10 +165,10 @@
       >
         Drop unwanted columns here
       </span>
-      <div v-for="(_notSelectedItems, colIndex) in notSelected" :key="colIndex">
+      <div v-for="(_notSelectedItems, dfIndex) in notSelected" :key="dfIndex">
         <draggable
           id="deleted-items-col"
-          :list="notSelected[colIndex]"
+          :list="notSelected[dfIndex]"
           tag="div"
           class="items-col deleted-items-col"
           item-key="name"
@@ -170,7 +177,7 @@
             animation: 200,
             deleted: false,
             ghostClass: 'ghost',
-            group: 'items' + colIndex
+            group: 'items' + dfIndex
           }"
           @start="startDrag"
           @end="endDrag"
@@ -178,14 +185,20 @@
           <template #item="{ element, index }">
             <div
               v-if="element && !element.empty"
-              :key="element?.name + colIndex + index"
+              :key="element?.name + dfIndex + index"
               class="concat-draggable concat-item bg-danger-highlight"
             >
               <Icon
                 class="text-neutral-alpha/40 w-5 h-5"
                 :path="mdiDragHorizontalVariant"
               />
-              <OperationFieldConcatItem :item="element" />
+              <OperationFieldConcatItem
+                :item="{
+                  name: element,
+                  type: columnTypes[dataframesInfo[dfIndex].name]?.[element],
+                  value: columnValues[dataframesInfo[dfIndex].name]?.[element]
+                }"
+              />
             </div>
           </template>
         </draggable>
@@ -206,13 +219,6 @@ import { ComputedRef, PropType, Ref } from 'vue';
 import { DataframeObject } from '@/types/dataframe';
 import { getUniqueName, transpose } from '@/utils';
 
-type Column = {
-  name: string;
-  type?: string;
-  value?: string;
-  empty?: boolean;
-};
-
 type OutputColumn = {
   update: (value: string) => void;
   type: string;
@@ -224,7 +230,7 @@ type Slot<T> = [T] | [];
 
 type Value = {
   dfs: string[];
-  outputColumns: { value: string; columns: (Column | undefined)[] }[];
+  outputColumns: { value: string; columns: (string | undefined)[] }[];
 };
 
 const props = defineProps({
@@ -246,13 +252,13 @@ const dataframeObject = inject(
 ) as ComputedRef<DataframeObject>;
 
 const searchPromise = ref<{
-  resolve: (value?: Column) => void;
+  resolve: (value?: string) => void;
   reject: () => void;
 } | null>(null);
 const searchSelectAttach = ref<HTMLElement | null>(null);
-const searchItems = ref<Column[]>([]);
-const itemsSlotsGroups = ref<Slot<Column>[][]>([]);
-const notSelected = ref<Column[][]>([]);
+const searchItems = ref<string[]>([]);
+const itemsSlotsGroups = ref<Slot<string>[][]>([]);
+const notSelected = ref<string[][]>([]);
 const textFields = ref<string[]>([]);
 const textFieldsValues = ref<Record<string, string>>({});
 const showValues = ref(false);
@@ -260,11 +266,17 @@ const showValues = ref(false);
 const outputItems = computed<OutputColumn[]>(() => {
   const totalDatasets = itemsSlotsGroups.value.length;
 
-  return textFields.value.map((textFieldKey, index) => {
+  return textFields.value.map((textFieldKey, groupIndex) => {
     const obj = {} as Partial<OutputColumn>;
 
     const types = itemsSlotsGroups.value
-      .map(e => e[index]?.[0]?.type)
+      .map((e, dfIndex) => {
+        const dfName = dataframesInfo.value[dfIndex].name;
+        const colName = e[groupIndex]?.[0];
+        return dfName && colName
+          ? columnTypes.value?.[dfName]?.[colName]
+          : undefined;
+      })
       .filter((e): e is string => e !== undefined);
 
     obj.hint = `${types.length} of ${totalDatasets} columns`;
@@ -313,47 +325,39 @@ const selectedDataframes = computed<string[]>({
   }
 });
 
-const completeDataframeData: Record<string, { columns: Column[] }> = {};
+const columnTypes = ref<Record<string, Record<string, string>>>({});
+const columnValues = ref<Record<string, Record<string, string>>>({});
 
 const loadDataframeData = async (dfName: string) => {
-  const source = dataframes.value?.find(df => df.name === dfName)?.df;
-  if (!source) {
+  const dataframe = dataframes.value?.find(df => df.name === dfName);
+  if (!dataframe) {
     return;
   }
-  const result = (
-    await source.cols.inferredDataType({ cols: '*', tidy: false })
+  const dataTypes = (
+    await dataframe.df.cols.inferredDataType({ cols: '*', tidy: false })
   )?.inferred_data_type;
-  if (!result) {
-    return;
-  }
-  const columns = Object.entries(result).map(([col, type]) => ({
-    name: col,
-    type: type as string,
-    value: ''
-  }));
-  completeDataframeData[dfName] = { columns };
+
+  dataTypes && (columnTypes.value[dfName] = dataTypes);
+
+  const valuesResult = await dataframe.df.iloc(0, 1).columnsSample();
+
+  const values = valuesResult.columns.reduce((acc, col, index) => {
+    acc[col.title] = valuesResult.value?.[0]?.[index];
+    return acc;
+  }, {} as Record<string, string>);
+
+  values && (columnValues.value[dfName] = values);
 };
 
 const dataframesData = computed(() => {
-  // has all the column names with all the column types and one value for each of every dataframe
   const dfs = [...dataframes.value] || [];
-  const obj = {} as Record<string, { columns: Column[] }>;
+  const obj = {} as Record<string, string[]>;
   for (const df of dfs) {
     if (!df.name) {
       continue;
     }
-    if (completeDataframeData[df.name]) {
-      obj[df.name] = { ...completeDataframeData[df.name] };
-    }
 
-    const columns = Object.entries(df.profile?.columns || {}).map(
-      ([name, colProfile]) => ({
-        name,
-        type: getType(colProfile),
-        value: ''
-      })
-    );
-    obj[df.name] = { columns };
+    obj[df.name] = Object.keys(df.profile?.columns || {});
     loadDataframeData(df.name);
   }
   return obj;
@@ -380,7 +384,10 @@ const options = computed(() => {
   const otherDfNames = selectedDataframes.value || [];
 
   return [dfName, ...otherDfNames].map(name => {
-    return name ? dataframesData.value[name]?.columns || [] : [];
+    if (!name) {
+      return [];
+    }
+    return dataframesData.value[name] || [];
   });
 });
 
@@ -393,7 +400,7 @@ const dataframesInfo = computed<
 >(() => {
   return options.value.map((cols, index) => {
     const activeColumns = value.value.outputColumns.filter(
-      e => e.columns[index] && !e.columns[index]?.empty
+      e => e.columns[index]
     ).length;
     return {
       name:
@@ -430,7 +437,7 @@ const triggerSearch = (
   setTimeout(async () => {
     try {
       const item = await new Promise(
-        (resolve: (value?: Column) => void, reject) => {
+        (resolve: (value?: string) => void, reject) => {
           searchPromise.value = { resolve, reject };
           const element = (event.target as HTMLElement)?.closest?.(
             '.items-item'
@@ -451,15 +458,15 @@ const triggerSearch = (
   }, 25);
 };
 
-const moveItem = (groupIndex: number, slotIndex: number, item: Column) => {
+const moveItem = (groupIndex: number, slotIndex: number, item: string) => {
   let previousSlotIndex = itemsSlotsGroups.value[groupIndex].findIndex(
-    (e: [Column] | [] | null) => e && e[0] && e[0].name === item.name
+    (e: [string] | [] | null) => e && e[0] && e[0] === item
   );
   let droppedSlot = false;
 
   if (previousSlotIndex === -1) {
     previousSlotIndex = notSelected.value[groupIndex].findIndex(
-      (e: Column | null) => e && e.name === item.name
+      (e: string | null) => e && e === item
     );
 
     if (previousSlotIndex >= 0) {
@@ -533,11 +540,9 @@ const updateTextFields = () => {
       let name = 'error';
 
       if (row.columns?.length) {
-        const columns = row.columns
-          .filter(col => col)
-          .map(col => col?.name || '');
+        const columns = row.columns.filter(col => col);
         if (columns.every(col => col === columns[0])) {
-          name = columns[0];
+          name = columns[0] || '';
         } else {
           name = columns.join('_');
         }
@@ -567,7 +572,7 @@ const updateTextFields = () => {
 const resetItemsSlotsGroups = (reset = false) => {
   try {
     const length = Math.max(...options.value.map(cols => cols.length)) + 1;
-    let newItemsSlotsGroups: (Column | undefined)[][];
+    let newItemsSlotsGroups: (string | undefined)[][];
 
     if (reset || !props.modelValue?.outputColumns?.length) {
       newItemsSlotsGroups = options.value;
@@ -578,7 +583,7 @@ const resetItemsSlotsGroups = (reset = false) => {
     }
 
     itemsSlotsGroups.value = newItemsSlotsGroups.map(col => {
-      const cols: (Column | undefined)[] = col ? Array.from(col) : [];
+      const cols: (string | undefined)[] = col ? Array.from(col) : [];
       const colsLength = cols.length;
       cols.length = length;
       cols.fill(undefined, colsLength);
@@ -590,12 +595,12 @@ const resetItemsSlotsGroups = (reset = false) => {
     } else {
       updateTextFields();
       notSelected.value = options.value.map((cols, dfIndex) => {
-        const newCols: Column[] = [];
+        const newCols: string[] = [];
         cols.forEach(col => {
           if (
-            col?.name &&
+            col &&
             !itemsSlotsGroups.value[dfIndex]?.find(
-              activeCol => col.name === activeCol?.[0]?.name
+              activeCol => col === activeCol?.[0]
             )
           ) {
             newCols.push(col);
@@ -618,11 +623,11 @@ const updateSelection = () => {
     return colItems;
   });
 
-  let rows: { value: string; columns: (Column | undefined)[] }[] = transpose(
+  let rows: { value: string; columns: (string | undefined)[] }[] = transpose(
     columns
   ).map((row, i) => {
     const columns = row.map(it => (it !== 'EMPTY_SLOT' ? it : undefined));
-    const firstItemName = columns.find(it => it?.name)?.name;
+    const firstItemName = columns.find(it => it);
 
     return {
       columns,
@@ -650,7 +655,7 @@ const updateSelection = () => {
   value.value.outputColumns = rows;
 };
 
-const deleteEmptyItemsSlots = (itemsSlotsGroups: Slot<Column>[][]) => {
+const deleteEmptyItemsSlots = (itemsSlotsGroups: Slot<string>[][]) => {
   let found = false;
 
   const itemsSlotsPairs = transpose(itemsSlotsGroups);
@@ -670,7 +675,7 @@ const deleteEmptyItemsSlots = (itemsSlotsGroups: Slot<Column>[][]) => {
   return undefined;
 };
 
-const addDataframe = name => {
+const addDataframe = (name: string) => {
   selectedDataframes.value.push(name);
   resetItemsSlotsGroups(false);
 };
@@ -689,7 +694,7 @@ const startDrag = ($event: Event) => {
   }
 };
 
-const endDrag = ($event: Event) => {
+const endDrag = (_e: Event) => {
   window.dragging = false;
 };
 
