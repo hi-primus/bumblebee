@@ -114,7 +114,7 @@
           v-model="saveToNewDataframe"
           label="Create new dataframe"
           name="newDataframe"
-          class="w-full new-tab-checkbox text-neutral-alpha/60 text-sm font-bold"
+          class="w-full new-tab-checkbox"
         />
       </template>
       <div

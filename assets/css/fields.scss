@@ -258,7 +258,7 @@
 
 .checkbox {
   @apply flex items-center gap-x-2;
-  @apply sm:text-sm md:text-base font-normal;
+  @apply text-neutral-alpha/60 text-sm font-bold;
   &:disabled {
     @apply opacity-50;
   }
