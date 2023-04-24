@@ -4,7 +4,7 @@ let toastId = 1;
 
 const toasts = ref<Array<Toast>>([]);
 
-const DEFAULT_TIME = 30;
+const DEFAULT_TIME = 5;
 
 const DEFAULT_TOAST: Toast = {
   title: 'Unknown error',

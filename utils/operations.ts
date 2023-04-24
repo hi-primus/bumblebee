@@ -176,8 +176,7 @@ export const operationCreators: Record<string, OperationCreator> = {
       await new Promise(resolve => setTimeout(resolve, 200));
       payload.app.addToast({
         title: 'File saved',
-        type: 'success',
-        time: 10
+        type: 'success'
       });
       return df;
     },

@@ -268,8 +268,7 @@ const updateOperations = async (
     console.warn('Cannot move operation before source creation');
     addToast({
       title: 'Cannot move operation before source creation',
-      type: 'warning',
-      time: 15
+      type: 'warning'
     });
     return;
   }
@@ -322,8 +321,7 @@ const removeOperation = async (index: number): Promise<void> => {
       console.warn('Cannot remove source that is used by other operations');
       addToast({
         title: 'Cannot remove source that is used by other operations',
-        type: 'warning',
-        time: 15
+        type: 'warning'
       });
       return;
     }
@@ -427,8 +425,7 @@ const exportPythonCode = async (
   copyToClipboard(code);
   addToast({
     title: 'Python code copied to clipboard',
-    type: 'success',
-    time: 10
+    type: 'success'
   });
 };
 </script>

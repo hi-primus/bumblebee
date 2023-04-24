@@ -495,7 +495,7 @@ const operationActions: OperationActions = {
     } catch (err) {
       addToast({
         title: 'Error executing operation',
-        error: err,
+        // error: err,
         type: 'error'
       });
       console.error('Error executing operation.', err);
