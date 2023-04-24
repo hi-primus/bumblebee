@@ -2662,7 +2662,8 @@ export const operationCreators: Record<string, OperationCreator> = {
     name: 'One hot encode the columns value',
     alias: 'one hot encoding encode',
     defaultOptions: {
-      usesInputCols: true,
+      usesInputCols: 'single',
+      usesOutputCols: false,
       usesInputDataframe: true,
       preview: 'basic columns'
     },
@@ -2684,12 +2685,15 @@ export const operationCreators: Record<string, OperationCreator> = {
         drop: boolean;
       }>
     ): Source => {
+      const prefix = payload.options.preview
+        ? `__bumblebee__preview__${payload.cols[0]}`
+        : payload.prefix;
+
       return payload.source.cols.oneHotEncode({
         target: payload.target,
         cols: payload.cols,
-        prefix: payload.prefix,
+        prefix,
         drop: payload.drop,
-        outputCols: payload.outputCols,
         requestOptions: payload.requestOptions
       });
     },
