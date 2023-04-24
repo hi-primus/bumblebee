@@ -216,6 +216,7 @@ export interface ColumnsSelection {
   ranges: null;
   values: null;
   indices: null;
+  pattern: null;
 }
 
 export interface RangesSelection {
@@ -223,6 +224,7 @@ export interface RangesSelection {
   ranges: [number, number][];
   values: null;
   indices: number[];
+  pattern: null;
 }
 
 export interface ValuesSelection {
@@ -230,6 +232,7 @@ export interface ValuesSelection {
   ranges: null;
   values: BasicType[];
   indices: number[];
+  pattern: null;
 }
 
 export interface QualitySelection {
@@ -237,6 +240,15 @@ export interface QualitySelection {
   ranges: null;
   values: 'missing' | 'match' | 'mismatch';
   indices: null;
+  pattern: null;
+}
+
+export interface PatternsSelection {
+  columns: [string];
+  ranges: null;
+  values: null;
+  indices: null;
+  pattern: string;
 }
 
 export type TableSelection =
@@ -244,6 +256,7 @@ export type TableSelection =
   | RangesSelection
   | ValuesSelection
   | QualitySelection
+  | PatternsSelection
   | null;
 
 export interface OperationActions {

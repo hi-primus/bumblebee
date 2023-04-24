@@ -813,12 +813,11 @@ export const operationCreators: Record<string, OperationCreator> = {
                 value: 'ends_with',
                 hidden: true
               },
-              { divider: true, hidden: true },
+              { divider: true },
               { text: 'Custom expression', value: 'where', hidden: true },
               {
                 text: 'Pattern',
-                value: 'match_pattern',
-                hidden: true
+                value: 'match_pattern'
               },
               { text: 'Selected', value: 'selected', hidden: true },
               { divider: true },
@@ -1310,12 +1309,11 @@ export const operationCreators: Record<string, OperationCreator> = {
                 value: 'ends_with',
                 hidden: true
               },
-              { divider: true, hidden: true },
+              { divider: true },
               { text: 'Custom expression', value: 'where', hidden: true },
               {
                 text: 'Pattern',
-                value: 'match_pattern',
-                hidden: true
+                value: 'match_pattern'
               },
               { text: 'Selected', value: 'selected', hidden: true },
               { divider: true },
@@ -3170,6 +3168,8 @@ function whereExpression(
       return `df.mask.match("${col}", df.cols.inferred_data_type("${col}", use_internal=True))`;
     case 'mismatch':
       return `df.mask.mismatch("${col}", df.cols.inferred_data_type("${col}", use_internal=True))`;
+    case 'match_pattern':
+      return `(df.cols.pattern("${col}")["${col}"]=="${value}")`;
     default:
       console.warn('Unknown condition', condition);
   }
@@ -3207,6 +3207,8 @@ function whereHint(
       return `matches`;
     case 'mismatch':
       return `does not match`;
+    case 'match_pattern':
+      return `matches pattern`;
     default:
       console.warn('Unknown condition', condition);
   }

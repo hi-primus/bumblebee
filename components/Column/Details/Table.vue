@@ -1,5 +1,8 @@
 <template>
-  <table class="w-full" :class="{ 'with-bars': total }">
+  <table
+    class="w-full"
+    :class="{ 'with-bars': total, 'selectable-data-table': selectable }"
+  >
     <tbody>
       <tr
         v-for="(row, rowIndex) in data"
@@ -10,6 +13,7 @@
               ? (+row[displayValueIndex] / total) * 100 + '%'
               : ''
         }"
+        @click="selectable && $emit('select', row)"
       >
         <td
           v-for="(value, index) in row"
@@ -24,12 +28,35 @@
 </template>
 
 <script setup lang="ts">
-defineProps<{
-  data: (number | string)[][];
-  total?: number;
-  displayValueIndex?: number;
-  valueClass?: unknown;
-}>();
+import { PropType } from 'vue';
+
+defineProps({
+  data: {
+    type: Array as PropType<(string | number)[][]>,
+    required: true
+  },
+  total: {
+    type: Number,
+    required: true
+  },
+  displayValueIndex: {
+    type: Number,
+    default: undefined
+  },
+  valueClass: {
+    type: [Object, String]
+  },
+  selectable: {
+    type: Boolean,
+    default: false
+  }
+});
+
+type Emits = {
+  (e: 'select', value: (number | string)[]): void;
+};
+
+defineEmits<Emits>();
 </script>
 
 <style scoped lang="scss">
@@ -58,11 +85,7 @@ table {
         var(--bar-color) var(--bar-width),
         transparent var(--bar-width)
       );
-      &:hover {
-        --bar-color: theme('colors.primary.dark');
-      }
     }
-
     td {
       @apply overflow-hidden;
       --highlight-opacity: 0.2;
@@ -81,6 +104,14 @@ table {
       &:last-child {
         @apply pr-1;
       }
+    }
+
+    &.with-bars.selectable-data-table tr:hover {
+      --bar-color: theme('colors.primary.dark');
+    }
+
+    &.selectable-data-table tr {
+      cursor: crosshair;
     }
   }
 }

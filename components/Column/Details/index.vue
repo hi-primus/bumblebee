@@ -66,6 +66,7 @@
           :display-value-index="1"
           value-class="first:font-mono-table"
           selectable
+          @select="selectPattern"
         />
       </div>
     </div>
@@ -78,6 +79,7 @@ import { PropType, Ref } from 'vue';
 
 import { TidyValue } from '@/types/blurr';
 import { Column, DataframeObject } from '@/types/dataframe';
+import { TableSelection } from '@/types/operations';
 import { getType } from '@/utils/data-types';
 
 const props = defineProps({
@@ -147,6 +149,19 @@ const loadPatternsFrequency = async () => {
   patternsFrequency.value = {
     data,
     total: dataframeObject.value?.profile?.summary?.rows_count || 1
+  };
+};
+
+const selection = inject('selection') as Ref<TableSelection>;
+
+const selectPattern = (row: [string, number]) => {
+  const pattern = row[0];
+  selection.value = {
+    columns: [props.column.title],
+    values: null,
+    ranges: null,
+    indices: null,
+    pattern
   };
 };
 

@@ -711,6 +711,17 @@ const selectRangesOperation = (ranges: [number, number][]) => {
   });
 };
 
+const selectPatternOperation = (pattern: string) => {
+  operationActions.selectOperation(operations.filterRows, {
+    conditions: [{
+      condition: 'match_pattern',
+      value: pattern,
+    }],
+    action: 'select',
+    selectionFromPlot: true
+  })
+};
+
 const loadDataSource = (dataframeIndex: number) => {
   if (!dataframes.value[dataframeIndex]) {
     return;
@@ -1036,6 +1047,8 @@ watch(
       }
     } else if (selection?.ranges?.length) {
       selectRangesOperation(selection.ranges);
+    } else if (selection?.pattern) {
+      selectPatternOperation(selection.pattern);
     } else if (isOperation(state.value)) {
       previewOperation();
     } else {
