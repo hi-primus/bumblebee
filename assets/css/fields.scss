@@ -253,12 +253,7 @@
 
 .checkbox {
   @apply flex items-center gap-x-2;
-  .checkbox-label {
-    @apply sm:text-sm md:text-base font-normal;
-    .disabled-field & {
-      @apply text-neutral-lightest;
-    }
-  }
+  @apply sm:text-sm md:text-base font-normal;
   &:disabled {
     @apply opacity-50;
   }
