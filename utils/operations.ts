@@ -475,12 +475,7 @@ export const operationCreators: Record<string, OperationCreator> = {
           dfs?: string[];
           outputColumns: {
             value: string;
-            columns: (
-              | {
-                  name: string;
-                }
-              | undefined
-            )[];
+            columns: (string | undefined)[];
           }[];
         };
       }>
@@ -491,7 +486,7 @@ export const operationCreators: Record<string, OperationCreator> = {
           .filter(df => df) || [];
 
       const namesMap = payload.concat.outputColumns.reduce((acc, col) => {
-        const columns = col.columns.map(c => c?.name || false);
+        const columns = col.columns.map(c => c || false);
         acc[col.value] = columns;
         return acc;
       }, {} as Record<string, (string | false)[]>);
