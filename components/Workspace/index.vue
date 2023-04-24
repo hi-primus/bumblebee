@@ -175,6 +175,7 @@ const handleDataframeResults = async (
   if (payload.options.targetType === 'dataframe') {
     const df = result as Source;
     let sourceId = payload.options.newSourceId || payload.options.sourceId;
+    let newSourceId = payload.options.newSourceId;
 
     let dataframeIndex = sourceId
       ? dataframes.value.findIndex(dataframe => dataframe.sourceId === sourceId)
@@ -189,7 +190,12 @@ const handleDataframeResults = async (
       dataframeIndex < 0 || payload.options.saveToNewDataframe;
 
     if (createDataframe) {
-      sourceId = sourceId || getNewSourceId();
+      sourceId = newSourceId || getNewSourceId();
+      dataframeIndex = sourceId
+        ? dataframes.value.findIndex(
+            dataframe => dataframe.sourceId === sourceId
+          )
+        : -1;
       const newDataframe: DataframeObject = {
         name: 'dataset',
         sourceId,
@@ -197,8 +203,12 @@ const handleDataframeResults = async (
         profile: undefined,
         updates: 0
       };
-      dataframes.value.push(newDataframe);
-      dataframeIndex = dataframes.value.length - 1;
+      if (dataframeIndex >= 0) {
+        dataframes.value[dataframeIndex] = newDataframe;
+      } else {
+        dataframes.value.push(newDataframe);
+        dataframeIndex = dataframes.value.length - 1;
+      }
       loadDataSource(dataframeIndex);
     } else {
       if (dataframeIndex < 0) {
