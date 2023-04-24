@@ -160,7 +160,6 @@ const toggleSide = async (side: 'left' | 'right') => {
 };
 
 const toggleSelected = async (side: 'left' | 'right', index: number) => {
-  console.log('toggleSelected', side, index);
   if (mutating) {
     return;
   }
