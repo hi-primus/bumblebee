@@ -1393,7 +1393,6 @@ export const operationCreators: Record<string, OperationCreator> = {
             defaultValue: [],
             class: 'w-full',
             hidden: (payload, currentIndex = 0) => {
-              console.log('payload', payload);
               const condition = payload.conditions[currentIndex].condition;
               return condition !== 'value_in';
             }
