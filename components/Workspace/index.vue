@@ -150,6 +150,17 @@ const availableDataframes = computed<number[]>(() => {
     .filter(index => !tabs.value.includes(index));
 });
 
+const selectDataframe = (sourceId: string) => {
+  const tabIndex = tabs.value.findIndex(
+    index => dataframes.value[index].sourceId === sourceId
+  );
+  if (tabIndex >= 0) {
+    selectedTab.value = tabIndex;
+  }
+};
+
+provide('select-dataframe', selectDataframe);
+
 const closeDataframe = async (tabIndex: number) => {
   if (tabs.value[tabIndex] >= 0) {
     const tabName = dataframes.value[tabs.value[tabIndex]].name;

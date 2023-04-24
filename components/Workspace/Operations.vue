@@ -284,6 +284,10 @@ const updateOperations = async (
   }
 };
 
+const selectDataframe = inject('select-dataframe') as (
+  sourceId: string
+) => void;
+
 const editOperation = async (index: number): Promise<void> => {
   const { operation, payload } = operations.value[index];
 
@@ -293,10 +297,15 @@ const editOperation = async (index: number): Promise<void> => {
   operationValues.value = {} as OperationPayload<PayloadWithOptions>;
   await submitOperation();
 
+  await nextTick();
+
+  payload.options.sourceId && selectDataframe(payload.options.sourceId);
+
   const newPayload: PayloadWithOptions = {
     ...payload,
     options: {
       ...payload.options,
+      preview: operation.defaultOptions.preview || payload.options.preview,
       editing: index
     }
   };
