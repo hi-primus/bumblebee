@@ -1,6 +1,6 @@
 <template>
-  <Menu as="div" class="menu-container">
-    <MenuButton as="template">
+  <Menu as="div" class="menu-container" v-slot="{ open, close }">
+    <MenuButton as="template" @click.prevent="open && close()">
       <slot></slot>
     </MenuButton>
     <MenuItems as="ul" :class="['dropdown-menu', attrClass]" :style="attrStyle">
