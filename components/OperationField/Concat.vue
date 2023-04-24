@@ -334,12 +334,23 @@ const loadDataframeData = async (dfName: string) => {
     return;
   }
   const dataTypes = (
-    await dataframe.df.cols.inferredDataType({ cols: '*', tidy: false })
+    await dataframe.df.cols.inferredDataType({
+      cols: '*',
+      tidy: false,
+      requestOptions: { priority: PRIORITIES.requirement }
+    })
   )?.inferred_data_type;
 
   dataTypes && (columnTypes.value[dfName] = dataTypes);
 
-  const valuesResult = await dataframe.df.iloc(0, 1).columnsSample();
+  const valuesResult = await dataframe.df
+    .iloc({
+      lower_bound: 0,
+      upper_bound: 1,
+      target: dataframe.df.name + '_concat_preview',
+      requestOptions: { priority: PRIORITIES.requirement }
+    })
+    .columnsSample();
 
   const values = valuesResult.columns.reduce((acc, col, index) => {
     acc[col.title] = valuesResult.value?.[0]?.[index];
