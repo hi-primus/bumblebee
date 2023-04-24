@@ -189,6 +189,11 @@
     @apply overflow-hidden min-w-[120px] max-w-[560px] max-h-[240px] overflow-y-auto py-1;
     @apply bg-white shadow-md rounded-md focus:outline-none border border-line;
     @apply sm:text-xs md:text-sm;
+
+    &.center-menu {
+      left: 50%;
+      transform: translateX(-50%);
+    }
   }
 
   .menu-item {

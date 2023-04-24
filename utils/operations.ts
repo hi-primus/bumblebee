@@ -445,7 +445,7 @@ export const operationCreators: Record<string, OperationCreator> = {
       usesInputDataframe: true,
       preview: false,
       usesDialog: true,
-      containerClass: '!bg-primary-highlight'
+      containerClass: '!bg-primary-highlight !min-w-[calc(100%-128px)]'
     },
     content: (
       payload: OperationPayload<{

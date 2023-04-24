@@ -14,13 +14,26 @@
       class="col-header-container flex justify-start items-start pb-2 text-center"
     >
       <div
-        v-for="dataframeInfo in dataframesInfo"
+        v-for="(dataframeInfo, dataframeIndex) in dataframesInfo"
         :key="dataframeInfo.name"
-        class="col-header"
+        class="col-header relative"
       >
-        <h3 class="col-title font-bold text-neutral-light">
-          {{ dataframeInfo.name }}
-        </h3>
+        <span
+          class="col-title font-bold text-neutral-light flex items-center justify-center"
+          :class="{
+            'text-primary-dark': dataframeIndex > 0
+          }"
+        >
+          <h3>
+            {{ dataframeInfo.name }}
+          </h3>
+          <IconButton
+            v-if="dataframeIndex > 0"
+            class="remove-button w-4 h-4 text-primary-dark"
+            :path="mdiClose"
+            @click="removeDataframe(dataframeIndex)"
+          />
+        </span>
         <div class="col-hint small-upper">
           {{ dataframeInfo.activeColumns }} of
           {{ dataframeInfo.totalColumns }} columns
@@ -32,8 +45,24 @@
           :model-value="showValues"
           @update:model-value="showValues = $event"
         /> -->
+      <div class="menu-button-container w-[70px] flex justify-center">
+        <AppMenu
+          class="center-menu"
+          :items="
+            dataframeOptions.map(name => ({
+              text: name || '',
+              action: () => addDataframe(name)
+            }))
+          "
+        >
+          <AppButton
+            class="icon-button rounded-button"
+            type="button"
+            :icon="mdiPlus"
+          />
+        </AppMenu>
+      </div>
     </div>
-
     <div class="concat-items-set concat-items">
       <div class="items-cols">
         <div
@@ -166,7 +195,12 @@
 </template>
 
 <script setup lang="ts">
-import { mdiClose, mdiCursorText, mdiDragHorizontalVariant } from '@mdi/js';
+import {
+  mdiClose,
+  mdiCursorText,
+  mdiDragHorizontalVariant,
+  mdiPlus
+} from '@mdi/js';
 import { ComputedRef, PropType, Ref } from 'vue';
 
 import { DataframeObject } from '@/types/dataframe';
@@ -331,7 +365,9 @@ const allDataframeOptions = computed(() => {
 
 const dataframeOptions = computed(() => {
   return allDataframeOptions.value.filter(
-    e => !selectedDataframes.value.includes(e)
+    e =>
+      !selectedDataframes.value.includes(e || '') &&
+      dataframeObject.value?.name !== e
   );
 });
 
@@ -558,7 +594,7 @@ const resetItemsSlotsGroups = (reset = false) => {
         cols.forEach(col => {
           if (
             col?.name &&
-            !itemsSlotsGroups.value[dfIndex].find(
+            !itemsSlotsGroups.value[dfIndex]?.find(
               activeCol => col.name === activeCol?.[0]?.name
             )
           ) {
@@ -632,6 +668,18 @@ const deleteEmptyItemsSlots = (itemsSlotsGroups: Slot<Column>[][]) => {
   }
 
   return undefined;
+};
+
+const addDataframe = name => {
+  selectedDataframes.value.push(name);
+  resetItemsSlotsGroups(false);
+};
+
+const removeDataframe = (selectedIndex: number) => {
+  if (selectedIndex > 0) {
+    selectedDataframes.value.splice(selectedIndex - 1, 1);
+    resetItemsSlotsGroups(false);
+  }
 };
 
 const startDrag = ($event: Event) => {
@@ -717,7 +765,6 @@ onMounted(() => {
   )?.name;
   selectedDataframes.value = dfName ? [dfName] : [];
   resetItemsSlotsGroups(false);
-  window.resetItemsSlotsGroups = resetItemsSlotsGroups;
 });
 </script>
 
