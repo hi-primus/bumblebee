@@ -2,6 +2,7 @@
   <div class="display-none">
     <ConfirmPopup
       v-for="popup in popups"
+      :id="`confirm-popup-${popup.id}`"
       :key="popup.id"
       :title="popup.title"
       :message="popup.message"

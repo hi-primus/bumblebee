@@ -1,6 +1,7 @@
 <template>
   <Teleport to="body">
     <div
+      v-bind="attrs"
       class="popup-container w-full h-screen absolute top-0 left-0 z-30 bg-black/30 flex items-center justify-center"
       @click="emit('close')"
     >
@@ -40,7 +41,7 @@ export default {
 </script>
 
 <script setup lang="ts">
-const { class: attrClass, style: attrStyle } = useAttrs();
+const { class: attrClass, style: attrStyle, ...attrs } = useAttrs();
 
 defineProps({
   closable: {

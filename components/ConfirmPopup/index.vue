@@ -1,5 +1,11 @@
 <template>
-  <Popup class="popup-narrow" closable :title="title" @close="emit('close')">
+  <Popup
+    class="popup-narrow"
+    closable
+    :title="title"
+    @close="emit('close')"
+    @keydown.escape="emit('close')"
+  >
     <div class="flex flex-col gap-7">
       <div class="text-neutral-light text-center">
         {{ message }}
@@ -8,7 +14,7 @@
         <AppButton class="layout-invisible" @click="emit('close')">
           {{ cancelLabel || 'Cancel' }}
         </AppButton>
-        <AppButton class="color-primary" @click="emit('accept')">
+        <AppButton class="accept-button color-primary" @click="emit('accept')">
           {{ acceptLabel || 'Accept' }}
         </AppButton>
       </div>

@@ -29,7 +29,8 @@ const confirm = async (
   const id = popupId;
   popupId++;
 
-  const result: boolean = await new Promise(resolve => {
+  // eslint-disable-next-line no-async-promise-executor
+  const result: boolean = await new Promise(async (resolve, reject) => {
     const newConfirmPopup = Object.assign(
       {
         id,
@@ -39,7 +40,20 @@ const confirm = async (
       DEFAULT_POPUP,
       popup
     ) as ConfirmPopup;
-    popups.value.push(newConfirmPopup);
+    try {
+      popups.value.push(newConfirmPopup);
+      await new Promise(resolve => setTimeout(resolve, 100));
+      const popupElement = document.getElementById(`confirm-popup-${id}`);
+      if (popupElement) {
+        const acceptButton: HTMLElement | null =
+          popupElement.querySelector('.accept-button');
+        if (acceptButton) {
+          acceptButton.focus();
+        }
+      }
+    } catch (err) {
+      reject(err);
+    }
   });
 
   popups.value = popups.value.filter(popup => popup.id !== id);
