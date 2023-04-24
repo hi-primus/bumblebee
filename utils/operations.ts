@@ -441,6 +441,7 @@ export const operationCreators: Record<string, OperationCreator> = {
   },
   concat: {
     name: 'Concatenate dataframes',
+    alias: 'append dataset values',
     defaultOptions: {
       usesInputDataframe: true,
       preview: false,
