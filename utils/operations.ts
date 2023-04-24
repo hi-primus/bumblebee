@@ -2890,7 +2890,7 @@ export const operationCreators: Record<string, OperationCreator> = {
       },
       {
         name: 'drop',
-        label: 'Drop',
+        label: 'Drop input column',
         type: 'boolean',
         defaultValue: false
       }
