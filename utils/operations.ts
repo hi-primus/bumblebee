@@ -2864,12 +2864,12 @@ export const operationCreators: Record<string, OperationCreator> = {
     ): Source => {
       const outputCols = payload.options.preview
         ? '__bumblebee__preview__' + payload.cols[0]
-        : payload.outputCols;
+        : payload.outputCols[0];
 
       return payload.source.cols.unnest({
         target: payload.target,
         cols: payload.cols[0],
-        outputCols,
+        outputCols: outputCols !== payload.cols[0] ? outputCols : undefined,
         separator: payload.separator,
         splits: payload.splits === undefined ? 2 : payload.splits,
         drop: payload.options.preview ? false : payload.drop,
