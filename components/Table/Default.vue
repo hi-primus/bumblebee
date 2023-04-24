@@ -185,6 +185,7 @@ import { PropType, Ref } from 'vue';
 import { ColumnHeader } from '@/types/dataframe';
 import { TableSelection } from '@/types/operations';
 import { focusNext, focusPrevious } from '@/utils';
+import { getCompleteType } from '@/utils/data-types';
 import { throttle } from '@/utils/time';
 
 const props = defineProps({
@@ -295,20 +296,9 @@ watch(
   columnsHeader,
   header => {
     header.forEach(column => {
-      let dataType: string[];
-      if (column.stats?.inferred_data_type) {
-        if (typeof column.stats.inferred_data_type === 'string') {
-          dataType = [column.stats.inferred_data_type];
-        } else {
-          dataType = [column.stats.inferred_data_type.data_type];
-        }
-        if (column.data_type) {
-          dataType = dataType.concat(column.data_type);
-        }
-      } else if (column.data_type) {
-        dataType = [column.data_type];
-      }
-      dataTypes[column.title] = dataType as [string, string] | [string];
+      dataTypes[column.title] = getCompleteType(column) as
+        | [string, string]
+        | [string];
     });
 
     const firstPreviewColumn = header.find(column =>

@@ -78,6 +78,7 @@ import { PropType, Ref } from 'vue';
 
 import { TidyValue } from '@/types/blurr';
 import { Column, DataframeObject } from '@/types/dataframe';
+import { getType } from '@/utils/data-types';
 
 const props = defineProps({
   column: {
@@ -110,13 +111,7 @@ const percentage = (value: number, total: number): string => {
 };
 
 const dataType = computed<string>(() => {
-  if (props.column.stats?.inferred_data_type) {
-    if (typeof props.column.stats.inferred_data_type === 'string') {
-      return props.column.stats.inferred_data_type;
-    }
-    return props.column.stats.inferred_data_type.data_type;
-  }
-  return props.column.data_type;
+  return getType(props.column);
 });
 
 const qualityData = computed<[string, number, string][]>(() => {

@@ -1,3 +1,5 @@
+import { KeyedColumn } from '@/types/dataframe';
+
 export const TYPES = {
   INT: 'int',
   FLOAT: 'float',
@@ -65,4 +67,31 @@ export const TYPES_NAMES: Record<ObjectValues<typeof TYPES>, string> = {
   http_code: 'HTTP Code',
   null: 'Null',
   unknown: 'Unknown'
+};
+
+export const getType = (columnProfile: KeyedColumn | null) => {
+  if (columnProfile?.stats?.inferred_data_type) {
+    if (typeof columnProfile.stats.inferred_data_type === 'string') {
+      return columnProfile.stats.inferred_data_type;
+    }
+    return columnProfile.stats.inferred_data_type.data_type;
+  }
+  return columnProfile?.data_type || TYPES.UNKNOWN;
+};
+
+export const getCompleteType = (columnProfile: KeyedColumn | null) => {
+  let dataType: string[] = [TYPES.UNKNOWN];
+  if (columnProfile?.stats?.inferred_data_type) {
+    if (typeof columnProfile.stats.inferred_data_type === 'string') {
+      dataType = [columnProfile.stats.inferred_data_type];
+    } else {
+      dataType = [columnProfile.stats.inferred_data_type.data_type];
+    }
+    if (columnProfile.data_type) {
+      dataType = dataType.concat(columnProfile.data_type);
+    }
+  } else if (columnProfile?.data_type) {
+    dataType = [columnProfile.data_type];
+  }
+  return dataType as [string] | [string, string];
 };
