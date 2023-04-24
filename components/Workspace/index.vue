@@ -174,12 +174,10 @@ const handleDataframeResults = async (
 ) => {
   if (payload.options.targetType === 'dataframe') {
     const df = result as Source;
-    let newSourceId = payload.options.newSourceId;
+    let sourceId = payload.options.newSourceId || payload.options.sourceId;
 
-    let dataframeIndex = newSourceId
-      ? dataframes.value.findIndex(
-          dataframe => dataframe.sourceId === newSourceId
-        )
+    let dataframeIndex = sourceId
+      ? dataframes.value.findIndex(dataframe => dataframe.sourceId === sourceId)
       : -1;
 
     console.log('updateDataframe', dataframeIndex, {
@@ -191,19 +189,20 @@ const handleDataframeResults = async (
       dataframeIndex < 0 || payload.options.saveToNewDataframe;
 
     if (createDataframe) {
-      newSourceId = newSourceId || getNewSourceId();
+      sourceId = sourceId || getNewSourceId();
       const newDataframe: DataframeObject = {
         name: 'dataset',
-        sourceId: newSourceId,
+        sourceId,
         df,
         profile: undefined,
         updates: 0
       };
-      dataframeIndex = dataframes.value.push(newDataframe) - 1;
+      dataframes.value.push(newDataframe);
+      dataframeIndex = dataframes.value.length - 1;
       loadDataSource(dataframeIndex);
     } else {
       if (dataframeIndex < 0) {
-        console.error('Could not find dataframe to update', newSourceId);
+        console.error('Could not find dataframe to update', sourceId);
         return;
       }
       const currentDataframe = dataframes.value[dataframeIndex];
@@ -303,13 +302,12 @@ const executeOperations = async () => {
       app: { addToast }
     });
 
-    if (
-      payload.options.newSourceId &&
-      payload.options.targetType === 'dataframe'
-    ) {
-      operationResults.set(payload.options.newSourceId, { result, payload });
+    const sourceId = payload.options.sourceId || payload.options.newSourceId;
+
+    if (sourceId && payload.options.targetType === 'dataframe') {
+      operationResults.set(sourceId, { result, payload });
     }
-    console.info('Operation result:', { result, payload });
+    console.info('Operation result:', { sourceId, result, payload });
   }
 
   const promisesResults = await Promise.allSettled(
