@@ -439,6 +439,79 @@ export const operationCreators: Record<string, OperationCreator> = {
     ],
     shortcut: 'jd'
   },
+  concat: {
+    name: 'Concatenate dataframes',
+    defaultOptions: {
+      usesInputDataframe: true,
+      preview: false,
+      usesDialog: true,
+      containerClass: '!bg-primary-highlight'
+    },
+    content: (
+      payload: OperationPayload<{
+        concat: {
+          dfs: string;
+          outputColumns: {
+            value: string;
+            columns: {
+              name: string;
+            };
+          }[];
+        };
+      }>
+    ) => {
+      const foundDf = payload.allDataframes.find(
+        df => df.df.name === payload.source.name
+      );
+      const dfName = foundDf?.name || `dn{${payload.source.name}}`;
+      return (
+        'b{Concat} ' +
+        naturalJoin([dfName, ...payload.concat.dfs].map(df => `rd{${df}}`))
+      );
+    },
+    action: (
+      payload: OperationPayload<{
+        concat: {
+          dfs?: string[];
+          outputColumns: {
+            value: string;
+            columns: (
+              | {
+                  name: string;
+                }
+              | undefined
+            )[];
+          }[];
+        };
+      }>
+    ) => {
+      const dfs =
+        payload.concat.dfs
+          ?.map(df => payload.allDataframes?.find(d => d.name === df)?.df)
+          .filter(df => df) || [];
+
+      const namesMap = payload.concat.outputColumns.reduce((acc, col) => {
+        const columns = col.columns.map(c => c?.name || false);
+        acc[col.value] = columns;
+        return acc;
+      }, {} as Record<string, (string | false)[]>);
+
+      return payload.source.rows.append({
+        target: payload.target,
+        dfs,
+        namesMap,
+        requestOptions: payload.requestOptions
+      });
+    },
+    fields: [
+      {
+        name: 'concat',
+        type: 'concat',
+        defaultValue: { outputColumns: [] }
+      }
+    ],
+    shortcut: 'co'
+  },
   createCol: {
     name: 'Create new column',
     defaultOptions: {

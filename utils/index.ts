@@ -27,6 +27,12 @@ export const stepify = (a: number, b: number, f = Math.round): number => {
   return f(a / b) * b;
 };
 
+export const transpose = <T>(a: T[][]): T[][] => {
+  return Object.keys(a[0]).map((c: string) => {
+    return a.map(r=>r[Number(c)]);
+  });
+};
+
 export function objectMap<T, V, K extends string | number | symbol>(
   object: Record<K, T>,
   cb: (value: T) => V

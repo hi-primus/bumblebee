@@ -120,7 +120,8 @@ export interface BasicField {
 
 export interface SpecialField {
   name: string;
-  type: 'join'; // TODO: add 'concat'
+  type: 'join' | 'concat';
+  defaultValue?: PayloadCallbackOr<CompatibleType>;
 }
 
 export interface FieldGroup {

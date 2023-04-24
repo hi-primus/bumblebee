@@ -81,9 +81,13 @@
     v-else-if="resolve(field?.type) === 'join'"
     :key="`join-${field.name}-${updates}`"
     v-model="value"
-  >
-    join
-  </OperationFieldJoin>
+  />
+  <OperationFieldConcat
+    v-else-if="resolve(field?.type) === 'concat'"
+    :key="`join-${field.name}-${updates}`"
+    :options="resolve(field.options)"
+    v-model="value"
+  />
 </template>
 
 <script setup lang="ts">
