@@ -1230,7 +1230,7 @@ export const operationCreators: Record<string, OperationCreator> = {
         case 'drop':
           return payload.source.rows.drop({
             target: payload.target,
-            expr: where.join(' | '),
+            where: where.join(' | '),
             requestOptions: payload.requestOptions
           });
         case 'set':
