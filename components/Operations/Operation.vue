@@ -2,6 +2,7 @@
   <component
     :is="options?.usesDialog ? Popup : 'div'"
     :class="[
+      options?.containerClass,
       options?.usesDialog ? 'operation-dialog' : ''
     ]"
     @close="cancel"

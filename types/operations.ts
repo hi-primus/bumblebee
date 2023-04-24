@@ -25,6 +25,7 @@ export interface OperationOptions {
   targetType: 'dataframe' | 'value' | 'void';
   preview?: PreviewType;
   editing?: number;
+  containerClass?: string;
   usesDialog?: boolean;
 }
 
