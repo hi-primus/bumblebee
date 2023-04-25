@@ -77,7 +77,7 @@ table {
   }
 
   &.with-bars {
-    @apply border-separate border-spacing-y-px -my-px mx-1;
+    @apply border-separate border-spacing-y-px -my-px px-1;
     tr {
       --bar-color: theme('colors.primary.DEFAULT');
       background: linear-gradient(
