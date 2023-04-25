@@ -832,7 +832,7 @@ export const operationCreators: Record<string, OperationCreator> = {
               { text: 'Missing values', value: 'missing' }
             ],
             class: (payload, currentIndex = 0) => {
-              const condition = payload.replaces[currentIndex].condition;
+              const condition = payload.replaces?.[currentIndex]?.condition;
               switch (condition) {
                 case 'value_in':
                 case 'match_pattern':
@@ -878,7 +878,7 @@ export const operationCreators: Record<string, OperationCreator> = {
             },
             type: 'string',
             class: (payload, currentIndex = 0): string => {
-              const condition = payload.replaces[currentIndex].condition;
+              const condition = payload.replaces?.[currentIndex]?.condition;
               switch (condition) {
                 case 'match_pattern':
                   return 'grouped-last w-1/2';
@@ -889,7 +889,7 @@ export const operationCreators: Record<string, OperationCreator> = {
               }
             },
             hidden: (payload, currentIndex = 0) => {
-              const condition = payload.replaces[currentIndex].condition;
+              const condition = payload.replaces?.[currentIndex]?.condition;
               return ['value_in', 'match', 'mismatch', 'missing'].includes(
                 condition
               );
@@ -901,7 +901,7 @@ export const operationCreators: Record<string, OperationCreator> = {
             type: 'string',
             class: 'grouped-middle w-1/4',
             hidden: (payload, currentIndex = 0) => {
-              const condition = payload.replaces[currentIndex].condition;
+              const condition = payload.replaces?.[currentIndex]?.condition;
               return condition !== 'between';
             }
           },
@@ -912,7 +912,7 @@ export const operationCreators: Record<string, OperationCreator> = {
             defaultValue: [],
             class: 'w-full',
             hidden: (payload, currentIndex = 0) => {
-              const condition = payload.replaces[currentIndex].condition;
+              const condition = payload.replaces?.[currentIndex]?.condition;
               return condition !== 'value_in';
             }
           },
@@ -921,7 +921,7 @@ export const operationCreators: Record<string, OperationCreator> = {
             label: 'Replace by',
             type: 'string',
             class: (payload, currentIndex = 0) => {
-              const condition = payload.replaces[currentIndex].condition;
+              const condition = payload.replaces?.[currentIndex]?.condition;
               switch (condition) {
                 case 'value_in':
                 case 'match_pattern':
@@ -1349,7 +1349,7 @@ export const operationCreators: Record<string, OperationCreator> = {
               { text: 'Missing values', value: 'missing' }
             ],
             class: (payload, currentIndex = 0): string => {
-              const condition = payload.conditions[currentIndex].condition;
+              const condition = payload.conditions?.[currentIndex]?.condition;
               switch (condition) {
                 case 'value_in':
                 case 'match':
@@ -1393,7 +1393,7 @@ export const operationCreators: Record<string, OperationCreator> = {
             },
             type: 'string',
             class: (payload, currentIndex = 0): string => {
-              const condition = payload.conditions[currentIndex].condition;
+              const condition = payload.conditions?.[currentIndex]?.condition;
               switch (condition) {
                 case 'between':
                   return 'grouped-middle w-1/4';
@@ -1404,7 +1404,7 @@ export const operationCreators: Record<string, OperationCreator> = {
               }
             },
             hidden: (payload, currentIndex = 0) => {
-              const condition = payload.conditions[currentIndex].condition;
+              const condition = payload.conditions?.[currentIndex]?.condition;
               return ['value_in', 'match', 'mismatch', 'missing'].includes(
                 condition
               );
@@ -1416,7 +1416,7 @@ export const operationCreators: Record<string, OperationCreator> = {
             type: 'string',
             class: 'grouped-last w-1/4',
             hidden: (payload, currentIndex = 0) => {
-              const condition = payload.conditions[currentIndex].condition;
+              const condition = payload.conditions?.[currentIndex]?.condition;
               return condition !== 'between';
             }
           },
@@ -1427,7 +1427,7 @@ export const operationCreators: Record<string, OperationCreator> = {
             defaultValue: [],
             class: 'w-full',
             hidden: (payload, currentIndex = 0) => {
-              const condition = payload.conditions[currentIndex].condition;
+              const condition = payload.conditions?.[currentIndex]?.condition;
               return condition !== 'value_in';
             }
           }
