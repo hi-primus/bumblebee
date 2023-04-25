@@ -835,6 +835,7 @@ export const operationCreators: Record<string, OperationCreator> = {
               const condition = payload.replaces[currentIndex].condition;
               switch (condition) {
                 case 'value_in':
+                case 'match_pattern':
                   return 'w-full';
                 case 'between':
                   return 'grouped-first w-1/4';
@@ -844,9 +845,26 @@ export const operationCreators: Record<string, OperationCreator> = {
             }
           },
           {
+            name: 'mode',
+            label: 'Mode',
+            type: 'string',
+            defaultValue: 0,
+            class: 'grouped-first w-1/2',
+            options: _payload => [
+              { text: '(U, l, #, !)', value: 0 },
+              { text: '(c, #, !)', value: 1 },
+              { text: '(*, !)', value: 2 },
+              { text: '(*)', value: 3 }
+            ],
+            hidden: (payload, currentIndex = 0): boolean => {
+              const condition = payload.replaces?.[currentIndex]?.condition;
+              return condition !== 'match_pattern';
+            }
+          },
+          {
             name: 'value',
             label: (payload, currentIndex = 0) => {
-              const condition = payload.replaces[currentIndex].condition;
+              const condition = payload.replaces?.[currentIndex]?.condition;
               switch (condition) {
                 case 'between':
                   return 'Min';
@@ -862,6 +880,8 @@ export const operationCreators: Record<string, OperationCreator> = {
             class: (payload, currentIndex = 0): string => {
               const condition = payload.replaces[currentIndex].condition;
               switch (condition) {
+                case 'match_pattern':
+                  return 'grouped-last w-1/2';
                 case 'between':
                   return 'grouped-middle w-1/4';
                 default:
@@ -904,6 +924,7 @@ export const operationCreators: Record<string, OperationCreator> = {
               const condition = payload.replaces[currentIndex].condition;
               switch (condition) {
                 case 'value_in':
+                case 'match_pattern':
                   return 'w-full';
                 case 'between':
                   return 'grouped-last w-1/4';
@@ -1335,15 +1356,34 @@ export const operationCreators: Record<string, OperationCreator> = {
                 case 'mismatch':
                 case 'missing':
                   return 'w-full';
+                case 'match_pattern':
+                  return 'grouped-first w-1/3';
                 default:
                   return 'grouped-first w-1/2';
               }
             }
           },
           {
+            name: 'mode',
+            label: 'Mode',
+            type: 'string',
+            defaultValue: 0,
+            class: 'grouped-middle w-1/3',
+            options: _payload => [
+              { text: '(U, l, #, !)', value: 0 },
+              { text: '(c, #, !)', value: 1 },
+              { text: '(*, !)', value: 2 },
+              { text: '(*)', value: 3 }
+            ],
+            hidden: (payload, currentIndex = 0): boolean => {
+              const condition = payload.conditions?.[currentIndex]?.condition;
+              return condition !== 'match_pattern';
+            }
+          },
+          {
             name: 'value',
             label: (payload, currentIndex = 0): string => {
-              const condition = payload.conditions[currentIndex].condition;
+              const condition = payload.conditions?.[currentIndex]?.condition;
               switch (condition) {
                 case 'between':
                   return 'Min';
@@ -1357,6 +1397,8 @@ export const operationCreators: Record<string, OperationCreator> = {
               switch (condition) {
                 case 'between':
                   return 'grouped-middle w-1/4';
+                case 'match_pattern':
+                  return 'grouped-last w-1/3';
                 default:
                   return 'grouped-last w-1/2';
               }
@@ -3101,11 +3143,13 @@ function whereExpression(
     value: BasicType;
     otherValue: BasicType;
     values: BasicType[];
+    mode?: number;
   },
   col: string
 ): string {
   let { value, values } = payload;
   const { otherValue } = payload;
+  const mode = payload.mode || 0;
 
   const isNumeric = !isNaN(Number(value));
 
@@ -3173,7 +3217,7 @@ function whereExpression(
     case 'mismatch':
       return `df.mask.mismatch("${col}", df.cols.inferred_data_type("${col}", use_internal=True))`;
     case 'match_pattern':
-      return `(df.cols.pattern("${col}")["${col}"]=="${value}")`;
+      return `(df.cols.pattern("${col}", mode=${mode})["${col}"]=="${value}")`;
     default:
       console.warn('Unknown condition', condition);
   }

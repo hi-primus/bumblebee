@@ -249,6 +249,7 @@ export interface PatternsSelection {
   values: null;
   indices: null;
   pattern: string;
+  mode: number;
 }
 
 export type TableSelection =

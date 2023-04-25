@@ -58,15 +58,53 @@
         />
         <!-- class="rounded-full overflow-hidden my-1 h-3" -->
       </div>
-      <div v-if="patternsFrequency">
+      <div>
         <h4>Patterns</h4>
         <ColumnDetailsTable
-          :data="patternsFrequency.data"
-          :total="patternsFrequency.total"
+          v-if="patternsFrequency[patternsResolution]"
+          :data="patternsFrequency[patternsResolution].data"
+          :total="patternsFrequency[patternsResolution].total"
           :display-value-index="1"
           value-class="first:font-mono-table"
           selectable
-          @select="selectPattern"
+          @select="row => selectPattern(row, patternsResolution)"
+        />
+        <ColumnDetailsTable
+          v-else-if="patternsFrequency[previousPatternsResolution]"
+          :data="patternsFrequency[previousPatternsResolution].data"
+          :total="patternsFrequency[previousPatternsResolution].total"
+          :display-value-index="1"
+          value-class="first:font-mono-table"
+          selectable
+          @select="row => selectPattern(row, previousPatternsResolution)"
+        />
+        <AppButton
+          v-else
+          class="layout-outline color-primary mx-auto my-4 min-h-[100px]"
+          @click="loadPatternsFrequency"
+        >
+          <Icon :path="mdiRefresh" />
+          Reload patterns
+        </AppButton>
+        <AppSlider
+          v-model="patternsResolution"
+          class="px-4 py-4"
+          :min="0"
+          :max="3"
+          :format="
+            (value: number) => {
+              switch (Math.round(value)) {
+                case 0:
+                  return `U, l, #, !`;
+                case 1:
+                  return 'c, #, !';
+                case 2:
+                  return '*, !';
+                case 3:
+                  return '*';
+              }
+            }
+          "
         />
       </div>
     </div>
@@ -74,7 +112,7 @@
 </template>
 
 <script setup lang="ts">
-import { mdiChevronDown } from '@mdi/js';
+import { mdiChevronDown, mdiRefresh } from '@mdi/js';
 import { PropType, Ref } from 'vue';
 
 import { TidyValue } from '@/types/blurr';
@@ -101,10 +139,15 @@ const tooltipValue = ref('');
 
 const detailsExpanded = ref(props.expanded);
 
-const patternsFrequency = ref<{
-  data: [string, number][];
-  total: number;
-} | null>(null);
+const patternsFrequency = ref<
+  ({
+    data: [string, number][];
+    total: number;
+  } | null)[]
+>([null, null, null, null]);
+
+const patternsResolution = ref(0);
+const previousPatternsResolution = ref(0);
 
 const percentage = (value: number, total: number): string => {
   const n = (value / total) * 100;
@@ -136,17 +179,24 @@ const loadPatternsFrequency = async () => {
     return;
   }
 
+  const resolution = patternsResolution.value;
+
+  if (patternsFrequency.value[resolution]) {
+    return;
+  }
+
   const result = await df.cols.patternCounts({
     cols: props.column.title,
     tidy: true,
-    n: 5
+    n: 5,
+    mode: resolution
   });
 
   const data = (result as TidyValue<typeof result>).values.map(
     value => [value.value, value.count] as [string, number]
   );
 
-  patternsFrequency.value = {
+  patternsFrequency.value[resolution] = {
     data,
     total: dataframeObject.value?.profile?.summary?.rows_count || 1
   };
@@ -154,16 +204,22 @@ const loadPatternsFrequency = async () => {
 
 const selection = inject('selection') as Ref<TableSelection>;
 
-const selectPattern = (row: [string, number]) => {
+const selectPattern = (row: [string, number], resolution: number) => {
   const pattern = row[0];
   selection.value = {
     columns: [props.column.title],
     values: null,
     ranges: null,
     indices: null,
-    pattern
+    pattern,
+    mode: resolution
   };
 };
+
+watch(patternsResolution, (_value, oldValue) => {
+  previousPatternsResolution.value = oldValue;
+  loadPatternsFrequency();
+});
 
 onMounted(() => {
   loadPatternsFrequency();

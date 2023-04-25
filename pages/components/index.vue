@@ -2,6 +2,15 @@
   <NuxtLayout>
     <client-only>
       <div class="components-container pb-[500px]">
+        <div class="max-w-[320px] p-10">
+          <AppSlider
+            v-model="sliderValue"
+            class="w-full my-4"
+            :min="0"
+            :max="4"
+            :step="1"
+          />
+        </div>
         <div
           class="flex flex-wrap gap-4 px-8 py-2 justify-start items-start min-w-[200px]"
         >
@@ -583,6 +592,8 @@
 import { mdiCheckBold, mdiMore, mdiTrashCan } from '@mdi/js';
 
 import { TableSelection } from '@/types/operations';
+
+const sliderValue = ref(1);
 
 const columns = ref([
   'firstName',
