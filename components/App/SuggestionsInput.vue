@@ -90,6 +90,7 @@
         </ListboxOption>
       </ListboxOptions>
     </div>
+    <slot></slot>
   </Listbox>
 </template>
 

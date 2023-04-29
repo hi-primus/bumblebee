@@ -32,6 +32,7 @@
     <span v-if="errorMessage" :class="'text-input-errorContainer'">
       {{ errorMessage }}
     </span>
+    <slot></slot>
   </div>
 </template>
 

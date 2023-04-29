@@ -61,6 +61,9 @@
       @apply pr-2;
     }
   }
+  .right-icon-button {
+    @apply absolute right-[0.625rem] top-[0.625rem] h-full w-5 h-5 rounded-md text-primary-dark;
+  }
 }
 
 .input:not([class*='size-']) {

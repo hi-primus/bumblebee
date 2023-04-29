@@ -148,6 +148,7 @@
     <span v-if="errorMessage" class="selector-errorContainer">
       {{ errorMessage }}
     </span>
+    <slot></slot>
   </div>
 </template>
 

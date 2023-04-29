@@ -10,7 +10,15 @@
     :placeholder="field.placeholder"
     :disabled="resolve(field.disabled)"
     :class="fieldClass"
-  />
+  >
+    <IconButton
+      v-if="field.actionButton"
+      v-tooltip="field.actionButton.label"
+      class="right-icon-button"
+      :path="resolve(field.actionButton.icon)"
+      @click="field.actionButton.action(operationValues)"
+    />
+  </AppSelector>
   <AppSuggestionsInput
     v-else-if="
       resolve(field?.type) === 'string' && field.suggestions !== undefined
@@ -24,9 +32,17 @@
     :placeholder="field.placeholder"
     :disabled="resolve(field.disabled)"
     :class="fieldClass"
-  />
+  >
+    <IconButton
+      v-if="field.actionButton"
+      v-tooltip="field.actionButton.label"
+      class="right-icon-button"
+      :path="resolve(field.actionButton.icon)"
+      @click="field.actionButton.action(operationValues)"
+    />
+  </AppSuggestionsInput>
   <AppInput
-    v-else-if="resolve(field?.type) === 'string'"
+    v-else-if="['string', 'multiline string'].includes(resolve(field?.type))"
     :key="`input-${field.name}-${updates}-${fieldClass}`"
     v-model="value"
     :label="resolve(field.label || field.name)"
@@ -34,8 +50,17 @@
     :placeholder="field.placeholder"
     :disabled="resolve(field.disabled)"
     :class="fieldClass"
+    :type="resolve(field?.type) === 'multiline string' ? 'textarea' : 'text'"
     autocomplete="off"
-  />
+  >
+    <IconButton
+      v-if="field.actionButton"
+      v-tooltip="field.actionButton.label"
+      class="right-icon-button"
+      :path="resolve(field.actionButton.icon)"
+      @click="field.actionButton.action(operationValues)"
+    />
+  </AppInput>
   <AppChipsInput
     v-else-if="resolve(field?.type) === 'strings array'"
     :key="`chips-input-${field.name}-${updates}-${fieldClass}`"

@@ -67,6 +67,7 @@
           @blur="validate"
         />
         <div class="icons">
+          <slot></slot>
           <button
             v-if="(selected || search) && clearable"
             type="button"

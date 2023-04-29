@@ -99,10 +99,22 @@ export type Suggestion = SuggestionColumn | SuggestionFunction;
 
 type CompatibleType = BasicType | any[] | Record<string, any>;
 
+interface FieldActionButton {
+  label: string;
+  icon: string;
+  action: (payload: OperationPayload<PayloadWithOptions>) => PromiseOr<void>;
+}
+
 export interface BasicField {
   name: string;
   type: PayloadCallbackOr<
-    'string' | 'number' | 'boolean' | 'custom' | 'strings array' | 'file'
+    | 'string'
+    | 'number'
+    | 'boolean'
+    | 'custom'
+    | 'multiline string'
+    | 'strings array'
+    | 'file'
   >;
   key?: string;
   placeholder?: string;
