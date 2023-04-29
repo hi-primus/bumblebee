@@ -48,6 +48,10 @@ export type ConfirmPopup = {
 
 // app
 
+export interface AppSettings {
+  openAiApiKey: string;
+}
+
 export interface AppStatusError {
   message: string;
 }

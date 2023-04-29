@@ -1,3 +1,5 @@
+import { mdiAutoFix } from '@mdi/js';
+
 import { Source } from '@/types/blurr';
 import { isObject } from '@/types/common';
 import {
@@ -11,7 +13,8 @@ import {
   PayloadWithOptions
 } from '@/types/operations';
 import { capitalize, naturalJoin } from '@/utils';
-import { PRIORITIES, pythonArguments } from '@/utils/blurr';
+import { PRIORITIES, pythonArguments, pythonString } from '@/utils/blurr';
+import { getGptResponse } from '@/utils/gpt';
 
 type Name = {
   name: string;
@@ -1072,6 +1075,35 @@ export const operationCreators: Record<string, OperationCreator> = {
     ],
     shortcut: 'rc'
   },
+  formatByExample: {
+    name: 'Format column by example (GPT)',
+    uses: 'functionToColumns',
+    disabled: context => {
+      if (!context.appSettings.openAiApiKey) {
+        return 'You need to set an OpenAI API key in the settings';
+      }
+      return false;
+    },
+    defaultPayload: {
+      funcDef: '',
+      useFormat: true
+    },
+    shortcut: 'fe'
+  },
+  functionUsingGPT: {
+    name: 'Apply function using description (GPT)',
+    uses: 'functionToColumns',
+    disabled: context => {
+      if (!context.appSettings.openAiApiKey) {
+        return 'You need to set an OpenAI API key in the settings';
+      }
+      return false;
+    },
+    defaultPayload: {
+      funcDef: ''
+    },
+    shortcut: 'fd'
+  },
   // Row operations
   sortRows: {
     name: 'Sort rows',
@@ -2069,6 +2101,217 @@ export const operationCreators: Record<string, OperationCreator> = {
       }
     ],
     shortcut: 'lp'
+  },
+  functionToColumns: {
+    name: 'Apply function to columns',
+    defaultOptions: {
+      usesInputCols: true,
+      usesInputDataframe: true,
+      preview: 'basic columns'
+    },
+    content: (
+      payload: OperationPayload<{
+        targetFormat: string;
+      }>
+    ) => {
+      return (
+        `b{Format by example} using gr{${payload.targetFormat}}` +
+        inColsContent(payload)
+      );
+    },
+    validate: (
+      payload: OperationPayload<{
+        funcDef: string;
+      }>
+    ) => {
+      if (!payload.funcDef) {
+        throw new Error('Generate a function using the example field');
+      }
+      return true;
+    },
+    action: async (
+      payload: OperationPayload<{
+        funcDef: string;
+      }>
+    ) => {
+      const funcName = payload.funcDef.match(/def\s+(\w+)\(/)?.[1];
+      if (!funcName) {
+        throw new Error('Invalid function definition');
+      }
+      const args = pythonArguments({
+        cols: payload.cols,
+        output_cols: payload.outputCols,
+        func: Name(funcName)
+      });
+      const code =
+        payload.funcDef +
+        '\n' +
+        `${payload.target} = ${payload.source}.cols.apply(${args})` +
+        '\n' +
+        `${payload.target}`;
+      const source = await payload.blurr.runCode(code);
+      source.name = payload.target;
+      console.log({ source, code });
+      return source;
+    },
+    fields: [
+      {
+        name: 'targetFormat',
+        label: 'New format example',
+        placeholder: 'Insert new format here',
+        type: 'string',
+        class: 'field-mono w-full',
+        actionButton: {
+          label: 'Generate function',
+          icon: mdiAutoFix,
+          action: async (payload: OperationPayload) => {
+            const df = payload.source;
+
+            console.log({ payload });
+
+            const target = `${df.name}_sample`;
+
+            const result = await df.cols
+              .select({
+                cols: payload.cols,
+                target,
+                requestOptions: {
+                  priority: PRIORITIES.requirement
+                }
+              })
+              .iloc({
+                lower_bound: 0,
+                upper_bound: 20,
+                target,
+                requestOptions: {
+                  priority: PRIORITIES.requirement
+                }
+              })
+              .columnsSample({
+                requestOptions: {
+                  priority: PRIORITIES.requirement
+                }
+              });
+
+            const sampleData = result.value.map((row: any) => `${row[0]}`);
+
+            const finalFormat = payload.targetFormat;
+
+            const prompt =
+              `Write a Python function that receives a pandas series including these strings '''` +
+              sampleData +
+              `''' and returns a pandas series with values with the format that matches the following example '''` +
+              finalFormat +
+              `'''. The function should work for pandas series with the passed value and more. Do not provide any explanations or examples of usage. Enclose the function code between the comments '###START' and '###END'. Only provide the Python function code.`;
+
+            const funcDefResponse = await getGptResponse(
+              prompt,
+              payload.appSettings.openAiApiKey
+            );
+
+            // trim between the comments ### START and ### END and save to payload.funcDef
+
+            const funcDefMatch = funcDefResponse.match(
+              /(?<=###START\s*).*?(?=\s*###END)/gs
+            );
+
+            if (funcDefMatch) {
+              payload.funcDef = funcDefMatch[0];
+            } else {
+              throw new Error(
+                `Invalid function definition:\n${funcDefResponse}`
+              );
+            }
+          }
+        },
+        hidden: (payload: OperationPayload) => {
+          return !payload.useFormat || !payload.appSettings.openAiApiKey;
+        }
+      },
+      {
+        name: 'functionDescription',
+        label: 'Function description',
+        placeholder: 'Insert function description here',
+        type: 'string',
+        class: 'field-mono w-full',
+        actionButton: {
+          label: 'Generate function',
+          icon: mdiAutoFix,
+          action: async (payload: OperationPayload) => {
+            const df = payload.source;
+
+            console.log({ payload });
+
+            const target = `${df.name}_sample`;
+
+            const result = await df.cols
+              .select({
+                cols: payload.cols,
+                target,
+                requestOptions: {
+                  priority: PRIORITIES.requirement
+                }
+              })
+              .iloc({
+                lower_bound: 0,
+                upper_bound: 20,
+                target,
+                requestOptions: {
+                  priority: PRIORITIES.requirement
+                }
+              })
+              .columnsSample({
+                requestOptions: {
+                  priority: PRIORITIES.requirement
+                }
+              });
+
+            const sampleData = result.value.map((row: any) => `${row[0]}`);
+
+            const functionDescription = payload.functionDescription;
+
+            const prompt =
+              `Write a Python function that receives a pandas series including these strings '''` +
+              sampleData +
+              `''' and returns a pandas series with the result values of a function that matches the following description '''` +
+              functionDescription +
+              `'''. The function should work for pandas series with the passed value and more. Do not provide any explanations or examples of usage. Enclose the function code between the comments '###START' and '###END'. Only provide the Python function code.`;
+
+            const funcDefResponse = await getGptResponse(
+              prompt,
+              payload.appSettings.openAiApiKey
+            );
+
+            // trim between the comments ### START and ### END and save to payload.funcDef
+
+            const funcDefMatch = funcDefResponse.match(
+              /(?<=###START\s*).*?(?=\s*###END)/gs
+            );
+
+            if (funcDefMatch) {
+              payload.funcDef = funcDefMatch[0];
+            } else {
+              throw new Error(
+                `Invalid function definition:\n${funcDefResponse}`
+              );
+            }
+          }
+        },
+        hidden: (payload: OperationPayload) => {
+          return Boolean(
+            payload.useFormat || !payload.appSettings.openAiApiKey
+          );
+        }
+      },
+      {
+        name: 'funcDef',
+        label: 'Function definition',
+        type: 'multiline string',
+        defaultValue: 'def format_date(value):\n  return value',
+        class: 'field-mono w-full'
+      }
+    ],
+    shortcut: 'fc'
   },
 
   // Numeric
@@ -3077,11 +3320,23 @@ const createOperation = (operationCreator: OperationCreator): Operation => {
 
     const operation = createOperation({
       ...foundOperation,
+      disabled: operationCreator.disabled,
+      hidden: operationCreator.hidden,
       shortcut: operationCreator.shortcut,
       name: operationCreator.name,
       alias: operationCreator.alias,
       description: operationCreator.description
     });
+
+    const words = `${operation.name} ${operation.alias || ''}`.split(' ');
+
+    operation.words = [
+      ...new Set([
+        ...words,
+        ...words.map(word => word.replace(/[^a-zA-Z0-9]/g, '')),
+        ...words.map(word => word.replace(/[^a-zA-Z0-9]/g, ' ').split(' '))
+      ])
+    ].flat();
 
     if (
       'defaultPayload' in operationCreator &&
@@ -3101,6 +3356,15 @@ const createOperation = (operationCreator: OperationCreator): Operation => {
         }
         return newField;
       });
+      Object.keys(operationCreator.defaultPayload).forEach(key => {
+        if (!operation.fields.find(field => field.name === key)) {
+          operation.fields.push({
+            name: key,
+            type: 'hidden',
+            defaultValue: operationCreator.defaultPayload?.[key]
+          });
+        }
+      });
     }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return operation as any;
@@ -3112,6 +3376,16 @@ const createOperation = (operationCreator: OperationCreator): Operation => {
     { targetType: 'dataframe' },
     operationCreator.defaultOptions || {}
   );
+
+  const words = `${operation.name} ${operation.alias || ''}`.split(' ');
+
+  operation.words = [
+    ...new Set([
+      ...words,
+      ...words.map(word => word.replace(/[^a-zA-Z0-9]/g, '')),
+      ...words.map(word => word.replace(/[^a-zA-Z0-9]/g, ' ').split(' '))
+    ])
+  ].flat();
 
   operation.validate = (payload: OperationPayload<PayloadWithOptions>) => {
     if (operationCreator.validate) {

@@ -21,13 +21,27 @@
         <li
           v-for="operation in recentOperations"
           :key="operation.key + 'recent' + searchOperation"
-          class="operation-item flex items-center justify-between gap-2 px-4 py-2 cursor-pointer pointer-events-auto rounded focus:bg-primary-highlight hover:bg-primary-highlight focus:outline-none"
+          v-tooltip="
+            typeof operation.disabled === 'string' ? operation.disabled : null
+          "
+          class="operation-item flex items-center justify-between gap-2 px-4 py-2 select-none rounded"
+          :class="{
+            'opacity-50': operation.disabled,
+            'cursor-pointer hover:bg-primary-highlight focus:bg-primary-highlight focus:outline-none':
+              !operation.disabled
+          }"
+          :tabindex="operation.disabled ? -1 : 0"
           :data-operation-key="operation.key"
-          tabindex="0"
           role="option"
-          @keydown.prevent="handleKeyDownOperation"
+          @keydown.prevent="
+            $event =>
+              operation.disabled ? null : handleKeyDownOperation($event)
+          "
           @click="
             () => {
+              if (operation.disabled) {
+                return;
+              }
               selectOperationItem(operation);
               showCommands = false;
             }
@@ -50,13 +64,27 @@
         <li
           v-for="operation in notRecentOperations"
           :key="operation.key + 'notRecent' + searchOperation"
-          class="operation-item flex items-center justify-between gap-2 px-4 py-2 cursor-pointer pointer-events-auto rounded focus:bg-primary-highlight hover:bg-primary-highlight focus:outline-none"
-          tabindex="0"
+          v-tooltip="
+            typeof operation.disabled === 'string' ? operation.disabled : null
+          "
+          class="operation-item flex items-center justify-between gap-2 px-4 py-2 select-none rounded"
+          :class="{
+            'opacity-50': operation.disabled,
+            'cursor-pointer hover:bg-primary-highlight focus:bg-primary-highlight focus:outline-none':
+              !operation.disabled
+          }"
+          :tabindex="operation.disabled ? -1 : 0"
           :data-operation-key="operation.key"
           role="option"
-          @keydown="handleKeyDownOperation"
+          @keydown.prevent="
+            $event =>
+              operation.disabled ? null : handleKeyDownOperation($event)
+          "
           @click="
             () => {
+              if (operation.disabled) {
+                return;
+              }
               selectOperationItem(operation);
               showCommands = false;
             }
@@ -79,7 +107,41 @@
         </li>
       </ul>
     </Popup>
-    <section class="w-full flex items-center px-5 overflow-hidden h-full">
+    <Popup
+      v-if="showSettings"
+      title="Settings"
+      class="w-[calc(10vw+380px)]"
+      @close="showSettings = false"
+    >
+      <form ref="settingsFormElement" autocomplete="none">
+        <AppInput
+          id="openAiApiKey"
+          v-model="localAppSettings.openAiApiKey"
+          name="openAiApiKey"
+          class="mb-2"
+          label="OpenAI API Key"
+          type="password"
+          autocomplete="current-password"
+          @update:model-value="updateLocalAppSettings"
+        />
+      </form>
+      <div
+        class="w-full p-2 flex gap-2 justify-center items-center font-bold text-md"
+      >
+        <template v-if="updatedSettings">
+          <span class="text-success-dark">Settings updated</span>
+          <Icon class="w-5 h-5 text-success-dark" :path="mdiCheck" />
+        </template>
+        <template v-else>
+          <span class="text-neutral-lighter">Updating settings</span>
+          <Icon
+            class="w-5 h-5 text-neutral-lighter animate-spin"
+            :path="mdiLoading"
+          />
+        </template>
+      </div>
+    </Popup>
+    <section class="w-full flex items-center px-5 h-full">
       <AppButton
         v-tooltip="'Select a command'"
         class="ml-auto icon-button layout-invisible size-small color-neutral-light"
@@ -111,16 +173,40 @@
           <Icon :path="mdiCodeTags" />
         </AppButton>
       </span>
+      <AppMenu
+        :items="[
+          {
+            text: 'Settings',
+            action: () => {
+              showSettings = !showSettings;
+            }
+          }
+        ]"
+      >
+        <AppButton
+          class="icon-button layout-invisible size-small color-neutral-light"
+        >
+          <Icon :path="mdiDotsVertical" />
+        </AppButton>
+      </AppMenu>
     </section>
   </div>
 </template>
 
 <script setup lang="ts">
-import { mdiCodeTags, mdiMagnify } from '@mdi/js';
+import {
+  mdiCheck,
+  mdiCodeTags,
+  mdiDotsVertical,
+  mdiLoading,
+  mdiMagnify
+} from '@mdi/js';
 import { Ref } from 'vue';
 
 import AppInput from '@/components/App/Input.vue';
+import { AppSettings } from '@/types/app';
 import {
+  ContextCallbackOr,
   isOperation,
   Operation,
   OperationActions,
@@ -129,10 +215,22 @@ import {
 } from '@/types/operations';
 import { focusNext, focusPrevious } from '@/utils';
 import { operations } from '@/utils/operations';
+import { debounce } from '@/utils/time';
+
+const { addToast } = useToasts();
 
 const showCommands = ref(false);
+const showSettings = ref(false);
+
+const appSettings = inject('app-settings') as Ref<AppSettings>;
+const localAppSettings = ref<AppSettings>({ ...appSettings.value });
+const updatedSettings = ref(true);
+
+const settingsFormElement = ref<HTMLElement | null>(null);
 
 const state = inject('state') as Ref<State>;
+
+const selection = inject('selection') as Ref<TableSelection>;
 
 const { selectOperation } = inject('operation-actions') as OperationActions;
 
@@ -147,6 +245,17 @@ const searchOperation = ref<string>('');
 const operationElements = ref<HTMLElement | null>(null);
 const searchOperationElement = ref<typeof AppInput | null>(null);
 
+const resolveContext = <T>(value: ContextCallbackOr<T>) => {
+  if (value instanceof Function) {
+    return value({
+      selection: selection.value,
+      appSettings: appSettings.value
+    });
+  }
+
+  return value;
+};
+
 const highligthMatch = (text: string, match: string) => {
   const regex = new RegExp(match, 'gi');
   return text.replace(
@@ -157,23 +266,26 @@ const highligthMatch = (text: string, match: string) => {
 
 type OperationWithKey = Operation & { key: string };
 
-const operationsList: OperationWithKey[] = Object.entries(operations).map(
-  ([key, operation]) => ({
-    key,
-    ...operation
-  })
-);
+const operationsList = computed<OperationWithKey[]>(() => {
+  return Object.entries(operations)
+    .map(([key, operation]) => ({
+      key,
+      ...operation,
+      disabled: resolveContext(operation.disabled),
+      hidden: resolveContext(operation.hidden)
+    }))
+    .filter(operation => !operation.hidden);
+});
 
 const filteredOperations = computed(() => {
   const search = searchOperation.value?.toLowerCase();
-  return operationsList.map(operation => {
+  return operationsList.value.map(operation => {
     let matches = 1;
 
     if (search) {
       matches = 0;
-      const words = `${operation.name} ${operation.alias || ''}`.split(' ');
 
-      matches = words.filter(word =>
+      matches = operation.words.filter(word =>
         word.toLowerCase().startsWith(search)
       ).length;
 
@@ -243,6 +355,23 @@ watch(
       searchOperation.value = '';
       await new Promise(resolve => setTimeout(resolve, 0));
       focusInput(searchOperationElement.value);
+    }
+  }
+);
+
+watch(
+  () => showSettings.value,
+  async () => {
+    if (showSettings.value) {
+      await new Promise(resolve => setTimeout(resolve, 0));
+      if (settingsFormElement.value) {
+        const inputs = settingsFormElement.value.getElementsByTagName(
+          'input'
+        ) as HTMLCollectionOf<HTMLInputElement>;
+        if (inputs.length) {
+          inputs[0].focus();
+        }
+      }
     }
   }
 );
@@ -357,7 +486,7 @@ const onKeyUp = (event: KeyboardEvent): void => {
 
   const shortcut = lastKeys.value.join('');
 
-  const operation = operationsList.find(
+  const operation = operationsList.value.find(
     operation => operation.shortcut && shortcut.endsWith(operation.shortcut)
   );
 
@@ -366,6 +495,20 @@ const onKeyUp = (event: KeyboardEvent): void => {
     selectOperationItem(operation);
   }
 };
+
+const updateLocalAppSettings = () => {
+  updatedSettings.value = false;
+  updateAppSettings();
+};
+
+const updateAppSettings = debounce(() => {
+  updatedSettings.value = true;
+  appSettings.value = { ...localAppSettings.value };
+  addToast({
+    title: 'Settings updated',
+    type: 'success'
+  });
+}, 1000);
 
 onMounted(() => {
   document.addEventListener('keydown', onKeyDown);

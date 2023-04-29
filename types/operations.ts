@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { AppFunctions } from './app';
+import { AppFunctions, AppSettings } from './app';
 import { isObject } from './common';
 
 import { Client, RequestOptions, Source } from '@/types/blurr';
@@ -59,6 +59,7 @@ export type OperationPayload<
   outputCols: Cols;
   options: OperationOptions;
   app: AppFunctions;
+  appSettings: AppSettings;
   requestOptions: RequestOptions;
 } & T;
 
@@ -115,6 +116,7 @@ export interface BasicField {
     | 'multiline string'
     | 'strings array'
     | 'file'
+    | 'hidden'
   >;
   key?: string;
   placeholder?: string;
@@ -128,6 +130,7 @@ export interface BasicField {
   class?: PayloadCallbackOr<string>;
   disabled?: PayloadCallbackOr<boolean>;
   hidden?: PayloadCallbackOr<boolean>;
+  actionButton?: FieldActionButton;
 }
 
 export interface SpecialField {
@@ -149,6 +152,10 @@ export interface FieldGroup {
 
 export type Field = BasicField | SpecialField | FieldGroup;
 
+export type ContextCallbackOr<T> =
+  | T
+  | ((context: { selection: Selection; appSettings: AppSettings }) => T);
+
 export interface OperationCreatorBase {
   name: string;
   title?: PayloadCallbackOr<string>;
@@ -159,6 +166,8 @@ export interface OperationCreatorBase {
   fields?: (Field | SpecialField | FieldGroup)[];
   defaultOptions?: Partial<OperationOptions>;
   shortcut?: string;
+  disabled?: ContextCallbackOr<boolean | string>;
+  hidden?: ContextCallbackOr<boolean>;
 }
 
 type OperationCreatorAction = OperationCreatorBase & {
@@ -180,6 +189,7 @@ export type OperationCreator =
 export type Operation = OperationCreatorAction & {
   defaultOptions: OperationOptions;
   fields: (Field | FieldGroup)[];
+  words: string[];
 };
 
 export const isOperation = (

@@ -47,7 +47,7 @@
 
 <script setup lang="ts">
 import DataframeLayout from '@/components/Workspace/DataframeLayout.vue';
-import { AppStatus } from '@/types/app';
+import { AppSettings, AppStatus } from '@/types/app';
 import { Client, Source } from '@/types/blurr';
 import {
   DataframeObject,
@@ -86,6 +86,11 @@ const { confirm } = useConfirmPopup();
 const blurr = ref<Client | null>(null);
 provide('blurr', blurr);
 
+const appSettings = ref<AppSettings>({
+  openAiApiKey: ''
+});
+provide('app-settings', appSettings);
+
 const dataframeLayout = ref<InstanceType<typeof DataframeLayout> | null>(null);
 
 const dataframes = ref<DataframeObject[]>([]);
@@ -122,9 +127,9 @@ provide('scroll-range', scrollRange);
 
 watch(state, () => {
   if (isOperation(state.value)) {
-    operationValues.value = {
-      options: deepClone(state.value.defaultOptions) as OperationOptions
-    };
+    setOperationValues({
+      options: state.value.defaultOptions as OperationOptions
+    } as OperationPayload<PayloadWithOptions>);
   }
 });
 
@@ -320,6 +325,7 @@ const executeOperations = async () => {
     const result = await operation.action({
       ...payload,
       blurr: blurr.value,
+      appSettings: appSettings.value,
       app: { addToast }
     });
 
@@ -408,6 +414,18 @@ const preparePayloadOptions = (options: OperationOptions): OperationOptions => {
   return operationOptions;
 };
 
+const setOperationValues = (payload: OperationPayload<PayloadWithOptions>) => {
+  operationValues.value = deepClone({
+    ...payload,
+    source: payload.source || dataframeObject.value?.df,
+    appSettings: appSettings.value
+  });
+};
+
+const resetOperationValues = () => {
+  operationValues.value = {};
+};
+
 const getPreparedOperation = (): {
   operation: Operation | null;
   payload: OperationPayload<PayloadWithOptions> | null;
@@ -462,9 +480,10 @@ const operationActions: OperationActions = {
               preview: false
             },
             blurr: blurr.value,
+            appSettings: appSettings.value,
             app: { addToast }
           });
-          operationValues.value = {};
+          resetOperationValues();
           state.value = 'operations';
           if (appStatus.value === 'busy') {
             appStatus.value = 'ready';
@@ -508,7 +527,7 @@ const operationActions: OperationActions = {
 
       dataframeLayout.value?.clearChunks(true, false);
 
-      operationValues.value = {};
+      resetOperationValues();
       state.value = 'operations';
       if (appStatus.value === 'busy') {
         appStatus.value = 'ready';
@@ -532,7 +551,7 @@ const operationActions: OperationActions = {
     previewOperationThrottled.cancel();
     dataframeLayout.value?.clearChunks(true, false);
     // const editing = operationValues.value.options?.editing;
-    operationValues.value = {};
+    resetOperationValues();
     state.value = 'operations';
     if (operationCells.value.length === 0) {
       showSidebar.value = false;
@@ -567,20 +586,18 @@ const operationActions: OperationActions = {
     await new Promise(resolve => setTimeout(resolve, 0));
 
     if (operation?.defaultOptions) {
-      operationValues.value = {
-        ...deepClone(payload),
+      setOperationValues({
+        ...payload,
         options: preparePayloadOptions({
           ...operation.defaultOptions,
           ...(payload?.options || {})
         })
-      };
+      } as OperationPayload<PayloadWithOptions>);
     } else {
-      operationValues.value = {
-        ...deepClone(payload)
-      };
       if (payload?.options) {
         payload.options = preparePayloadOptions(payload.options);
       }
+      setOperationValues(payload as OperationPayload<PayloadWithOptions>);
     }
 
     if (operationValues.value.options?.usesInputCols && payload?.cols) {
@@ -607,7 +624,9 @@ const operationActions: OperationActions = {
       };
     });
 
-    operationValues.value = operationValues.value || {};
+    if (!operationValues.value) {
+      operationValues.value = {};
+    }
 
     operationValues.value.allDataframes = allDataframes;
 
@@ -818,7 +837,9 @@ const previewOperationThrottled = throttleOnce(
         const firstSampleDataframe = (await operation.action({
           ...payload,
           source: firstSampleSource,
+          target: firstSampleSource.name,
           blurr: blurr.value,
+          appSettings: appSettings.value,
           app: { addToast }
         })) as Source;
 
@@ -881,6 +902,7 @@ const previewOperationThrottled = throttleOnce(
         source: payload.source,
         target: 'operation_preview_' + (payload.source?.name || 'load_df'),
         blurr: blurr.value,
+        appSettings: appSettings.value,
         app: { addToast }
       });
 

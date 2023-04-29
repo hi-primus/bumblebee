@@ -107,6 +107,7 @@
 import { mdiClose, mdiExport, mdiPencil } from '@mdi/js';
 import { Ref } from 'vue';
 
+import { AppSettings } from '@/types/app';
 import { Client } from '@/types/blurr';
 import { Column, DataframeObject } from '@/types/dataframe';
 import {
@@ -138,6 +139,8 @@ const dataframeObject = inject<Ref<DataframeObject | null>>(
   'dataframe-object',
   ref(null)
 );
+
+const appSettings = inject('app-settings') as Ref<AppSettings>;
 
 const operation = computed(() => {
   return isOperation(state.value) ? state.value : null;
@@ -413,6 +416,7 @@ const getOperationsCode = async (): Promise<string> => {
           preview: false
         },
         blurr: blurr.value,
+        appSettings: appSettings.value,
         app: { addToast }
       })) + '\n';
   }
