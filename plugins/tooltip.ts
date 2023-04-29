@@ -156,7 +156,7 @@ export default defineNuxtPlugin(nuxtApp => {
 
       el.update = () => {
         const tooltipText = el.getAttribute('data-tooltip');
-        if (popperElement.referenceElement === el) {
+        if (popperElement.referenceElement === el && tooltipText) {
           popperElement.childNodes[1].textContent = tooltipText;
           popperElement.classList.add('popper-show');
           instance?.update();
