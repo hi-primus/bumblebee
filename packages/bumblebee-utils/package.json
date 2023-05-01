@@ -1,6 +1,6 @@
 {
   "name": "bumblebee-utils",
-  "version": "22.10.6-beta",
+  "version": "23.5.0-beta",
   "description": "Bumblebee common functions and constants",
   "main": "dist/index.js",
   "scripts": {

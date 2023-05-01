@@ -849,8 +849,8 @@ export const codeGenerators = {
       + `, eval_value=True)`;
   },
   createConnection: (payload) => {
-    let code = `${payload.varName} = ${payload.opName || 'op'}.connect.${payload.type}(`
-    code += pythonArguments(getSourceParams(payload.type), payload)
+    let code = `${payload.varName} = ${payload.opName || 'op'}.connect(`
+    code += pythonArguments({ driver: payload.type }, getSourceParams(payload.type), payload)
     code += `)`;
 
     return { code, isOutput: true };
@@ -1068,8 +1068,8 @@ export const codeGenerators = {
   },
   createDatabase: (payload) => {
     payload.password = payload.password || "";
-    let code = `${payload.varName} = ${payload.opName || 'op'}.connect.${payload.type}(`;
-    code += pythonArguments(getSourceParams(payload.type), payload);
+    let code = `${payload.varName} = ${payload.opName || 'op'}.connect(`;
+    code += pythonArguments({ driver: payload.type }, getSourceParams(payload.type), payload);
     code += ')';
 
     return { code, isOutput: true };
