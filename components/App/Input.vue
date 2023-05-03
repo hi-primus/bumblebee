@@ -1,7 +1,7 @@
 <template>
   <div
     class="input text-input"
-    :class="[attrClass]"
+    :class="[attrClass, errorMessage ? 'input-error' : '']"
     :style="(attrStyle as StyleValue)"
   >
     <label v-if="label" :for="name" class="label input-label text-input-label">
@@ -12,10 +12,9 @@
       v-model="myValue"
       :name="name"
       class="input-field text-input-field"
-      :class="[errorMessage ? 'text-input-errorInput' : '']"
       :placeholder="placeholder"
       v-bind="attrs"
-      @blur="isValid"
+      @blur="validate(true)"
     >
     </textarea>
     <input
@@ -24,12 +23,11 @@
       :name="name"
       :type="type"
       class="input-field text-input-field"
-      :class="[errorMessage ? 'text-input-errorInput' : '']"
       :placeholder="placeholder"
       v-bind="attrs"
-      @blur="isValid"
+      @blur="validate(true)"
     />
-    <span v-if="errorMessage" :class="'text-input-errorContainer'">
+    <span v-if="errorMessage" :class="'input-errorContainer'">
       {{ errorMessage }}
     </span>
     <slot></slot>
@@ -40,14 +38,19 @@
 import { useField } from 'vee-validate';
 import { PropType, StyleValue } from 'vue';
 
-import { RuleKey } from '@/composables/use-rules';
+import { Rule } from '@/composables/use-rules';
 export default {
   inheritAttrs: false
 };
 </script>
 
 <script setup lang="ts">
-const emit = defineEmits(['update:modelValue', 'isValid']);
+type Emits = {
+  (event: 'update:modelValue', value: string | number): void;
+  (event: 'validate', value: boolean | string): void;
+};
+
+const emit = defineEmits<Emits>();
 
 const props = defineProps({
   modelValue: {
@@ -67,7 +70,7 @@ const props = defineProps({
     default: () => 'text'
   },
   rules: {
-    type: Array as PropType<RuleKey[]>,
+    type: Array as PropType<Rule[]>,
     default: () => []
   },
   name: {
@@ -86,12 +89,14 @@ const myValue = computed({
 const {
   errorMessage,
   value: validateValue,
-  validate
+  validate: validateField
 } = useField(props.name, useRules(props.rules));
 
-const isValid = async () => {
+const validate = async (emitSignal = true) => {
   validateValue.value = myValue.value;
-  const result = await validate();
-  emit('isValid', result);
+  await validateField();
+  if (emitSignal) {
+    emit('validate', errorMessage.value || false);
+  }
 };
 </script>

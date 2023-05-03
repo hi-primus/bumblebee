@@ -6,6 +6,7 @@
       as="div"
       :multiple="multiple"
       class="relative"
+      :class="errorMessage ? 'input-error' : ''"
       :by="text"
       :disabled="disabled"
     >
@@ -16,7 +17,6 @@
         class="selector-button"
         :class="[
           open ? 'selector-buttonOpen' : 'selector-buttonClosed',
-          errorMessage ? 'selector-errorInput' : '',
           multiple ? 'flex items-center flex-wrap gap-2' : ''
         ]"
         @keydown.escape="$event => open ? $event.stopPropagation() : null"
@@ -145,7 +145,7 @@
         </ListboxOptions>
       </transition>
     </Listbox>
-    <span v-if="errorMessage" class="selector-errorContainer">
+    <span v-if="errorMessage" class="input-errorContainer">
       {{ errorMessage }}
     </span>
     <slot></slot>
@@ -253,8 +253,13 @@ const selectorOptions = computed<FieldOption<any>[]>(() => {
 const {
   errorMessage,
   value: validateValue,
-  validate
+  validate: validateField
 } = useField(props.name, useRules(props.rules));
+
+const validate = async () => {
+  await new Promise(res => setTimeout(res, 100));
+  validateField();
+};
 
 watch(selectedOption, (item, oldItem) => {
   const value = item?.value || item;

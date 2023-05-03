@@ -6,7 +6,7 @@
   @apply bg-white border border-neutral-lightest/50 font-normal text-neutral placeholder:text-neutral-lighter focus:outline-none rounded-lg;
 }
 .input-default {
-  @apply font-normal text-neutral placeholder:text-neutral-light focus:outline-none;
+  @apply font-normal text-neutral placeholder:text-neutral-lighter focus:outline-none;
 }
 
 .text-input {
@@ -18,12 +18,6 @@
 
   .text-input-field {
     @apply input-primary w-full;
-  }
-  .text-input-errorContainer {
-    @apply text-danger text-sm block px-1 mt-1;
-  }
-  .text-input-errorInput {
-    @apply border border-danger;
   }
   .text-input-label {
     @apply absolute bg-white top-[-0.5rem] pl-[0.35em] pr-[0.25em];
@@ -63,6 +57,9 @@
   }
   .right-icon-button {
     @apply absolute right-[0.625rem] top-[0.625rem] h-full w-5 h-5 rounded-md text-primary-dark;
+  }
+  .input-errorContainer {
+    @apply text-danger text-sm block px-1 mt-1;
   }
 }
 
@@ -118,14 +115,6 @@
   .file-input-hiddenField {
     @apply absolute left-0 top-0 w-full h-full input-default opacity-0;
   }
-
-  .file-input-errorContainer {
-    @apply text-danger text-sm block px-1 mt-1;
-  }
-
-  .file-input-errorInput {
-    @apply border border-danger;
-  }
 }
 
 .selector {
@@ -173,12 +162,6 @@
   // }
   // .selector-optionIconDefault {
   // }
-  .selector-errorContainer {
-    @apply text-danger text-sm block px-1 mt-1;
-  }
-  .selector-errorInput {
-    @apply border border-danger;
-  }
   .divider {
     @apply border-b border-line w-[calc(100%-32px)] mx-auto my-2;
   }
@@ -218,10 +201,10 @@
   // .autocomplete-inputContainer {
   // }
   .autocomplete-hiddenField {
-    @apply input-default;
+    @apply input-default placeholder:text-neutral-lighter;
   }
   .autocomplete-field {
-    @apply input-primary;
+    @apply input-primary w-full;
   }
   .autocomplete-fieldOpen {
     @apply ring-2 ring-primary-dark;
@@ -250,12 +233,6 @@
   // }
   .autocomplete-optionIconDefault {
     @apply text-primary;
-  }
-  .autocomplete-errorContainer {
-    @apply text-danger text-sm block px-1 mt-1;
-  }
-  .autocomplete-errorInput {
-    @apply border border-danger;
   }
 }
 
@@ -298,5 +275,22 @@
   .selector-option,
   .autocomplete-option {
     @apply font-mono text-neutral-light;
+  }
+}
+
+.input-error {
+  .autocomplete-field,
+  .selector-button,
+  .file-input-inputContainer,
+  .text-input-field {
+    @apply border border-danger ring-danger #{!important};
+  }
+  .text-input-label,
+  .input-label {
+    @apply text-danger #{!important};
+  }
+  .selector-buttonIcon,
+  .autocomplete-fieldIcon {
+    @apply text-danger/80 #{!important};
   }
 }

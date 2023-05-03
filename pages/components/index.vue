@@ -616,6 +616,71 @@
             </AppSelector>
           </div>
         </template>
+        <form
+          ref="operationElement"
+          class="operation-form flex flex-col pt-5 px-2 gap-y-5 max-w-[480px]"
+          @submit.prevent="submitFormTest"
+        >
+          <AppInput
+            v-model="formValues.input"
+            label="Test input"
+            placeholder="only lowercase letters"
+            name="input"
+            :rules="[
+              v => v === v.toLowerCase() || 'Only lowercase letters are allowed'
+            ]"
+          />
+          <AppInput
+            v-model="formValues.secondInput"
+            label="Alternative test input"
+            placeholder="Allowed when first input is empty"
+            name="secondInput"
+            :rules="[
+              v => !v || (v && !formValues.input) || 'Only one value is allowed'
+            ]"
+          />
+          <AppAutocomplete
+            v-model="formValues.autocomplete"
+            :options="columnsValues"
+            label="Test autocomplete"
+            placeholder="Column"
+            name="autocomplete"
+            :rules="[v => !!v || 'Select a column']"
+          />
+
+          <AppAutocomplete
+            v-model="formValues.multipleAutocomplete"
+            :options="columnsValues"
+            label="Test autocomplete"
+            placeholder="Columns"
+            name="autocomplete-m"
+            multiple
+            :rules="[
+              v =>
+                (v && v.length && v.length < 3) || 'Select one or two columns'
+            ]"
+          />
+          <AppSelector
+            v-model="formValues.selector"
+            :options="columns"
+            label="Test selector"
+            placeholder="Column"
+            name="selector"
+            :rules="[v => !!v || 'Select a column']"
+          />
+          <AppSelector
+            v-model="formValues.multipleSelector"
+            :options="columns"
+            label="Test selector"
+            placeholder="Columns"
+            name="selector-m"
+            multiple
+            :rules="[
+              v =>
+                (v && v.length && v.length < 3) || 'Select one or two columns'
+            ]"
+          />
+        </form>
       </div>
     </client-only>
   </NuxtLayout>
@@ -703,6 +768,26 @@ provide('selection', selection);
 const hovered = ref<{ plot: string; value: any } | null>(null);
 
 const file = ref<File | undefined>(undefined);
+
+const formValues = ref<{
+  input: string;
+  secondInput: string;
+  autocomplete: string;
+  multipleAutocomplete: string[];
+  selector: string;
+  multipleSelector: string[];
+}>({
+  input: '',
+  secondInput: '',
+  autocomplete: '',
+  multipleAutocomplete: [],
+  selector: '',
+  multipleSelector: []
+});
+
+const submitFormTest = ($event: Event) => {
+  console.log($event);
+};
 </script>
 
 <style lang="scss"></style>

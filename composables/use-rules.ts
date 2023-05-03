@@ -1,9 +1,15 @@
 const ruleMethods = {
-  required: (value: any) => !!value || 'Required.',
+  required: (value: any) => !!value || 'This field is required'
 };
 
-export type RuleKey = keyof typeof ruleMethods
+type RuleKey = keyof typeof ruleMethods;
 
-export default function (rules: RuleKey[]) {
-  return rules.map(rule => ruleMethods[rule]);
+type RuleCallback = (value: any) => boolean | string;
+
+export type Rule = RuleKey | RuleCallback;
+
+export default function (rules: Rule[]) {
+  return rules.map(rule =>
+    typeof rule === 'string' ? ruleMethods[rule] : rule
+  );
 }

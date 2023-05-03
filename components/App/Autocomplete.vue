@@ -2,7 +2,8 @@
   <div
     class="input autocomplete"
     :class="{
-      'min-w-[14em]': multiple
+      'min-w-[14em]': multiple,
+      'input-error': errorMessage
     }"
   >
     <Combobox
@@ -155,7 +156,7 @@
         </ComboboxOptions>
       </TransitionRoot>
     </Combobox>
-    <span v-if="errorMessage" class="selector-errorContainer">
+    <span v-if="errorMessage" class="input-errorContainer">
       {{ errorMessage }}
     </span>
   </div>
@@ -174,7 +175,7 @@ import { mdiCheckBold, mdiChevronDown, mdiChevronUp, mdiClose } from '@mdi/js';
 import { useField } from 'vee-validate';
 import { PropType, ref } from 'vue';
 
-import { RuleKey } from '@/composables/use-rules';
+import { Rule } from '@/composables/use-rules';
 import { FieldOption } from '@/types/operations';
 import { compareArrays } from '@/utils';
 
@@ -208,7 +209,7 @@ const props = defineProps({
     type: Function as PropType<(option: unknown) => string>
   },
   rules: {
-    type: Array as PropType<RuleKey[]>,
+    type: Array as PropType<Rule[]>,
     default: () => []
   },
   name: {
@@ -233,6 +234,7 @@ type Emits = {
   (e: 'update:modelValue', value: Value, oldValue: Value): void;
   (e: 'update:search', value: Value, oldValue: Value): void;
   (e: 'item-selected', item: Item, oldItem: Item): void;
+  (e: 'validate', value: boolean | string): void;
 };
 
 const emit = defineEmits<Emits>();
@@ -271,8 +273,13 @@ const filteredOptions = computed(() => {
 const {
   errorMessage,
   value: validateValue,
-  validate
+  validate: validateField
 } = useField(props.name, useRules(props.rules));
+
+const validate = async () => {
+  await validateField();
+  emit('validate', errorMessage.value || false);
+};
 
 watch(
   selected,
