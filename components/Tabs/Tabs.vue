@@ -17,6 +17,7 @@
           {{ tab?.label || defaultLabel }}
         </div>
         <IconButton
+          v-if="closable"
           class="w-4 h-4 mr-[-2px] outline-offset-2"
           :path="mdiClose"
           @click.stop.prevent="() => emit('close', index)"
@@ -54,6 +55,10 @@ defineProps({
     default: -1
   },
   addable: {
+    type: Boolean,
+    default: false
+  },
+  closable: {
     type: Boolean,
     default: false
   }

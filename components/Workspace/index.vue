@@ -7,6 +7,7 @@
           label: tab >= 0 ? dataframes[tab]?.name : '(new dataset)'
         }))
       "
+      closable
       addable
       @close="(index: number) => closeDataframe(index)"
       @add="
