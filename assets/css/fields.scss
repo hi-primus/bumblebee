@@ -36,7 +36,8 @@
 
 .input {
   .input-label {
-    @apply absolute bg-white top-[-0.5rem] pl-[0.35em] pr-[0.25em] leading-none z-[2];
+    @apply absolute bg-white -top-px h-[2px] pl-[0.35em] pr-[0.25em] z-[2];
+    @apply leading-[0.25em] #{!important};
   }
   &:focus-within,
   &:focus {
@@ -79,7 +80,7 @@
     @apply sm:text-sm md:text-base min-h-[18px] py-2 px-3;
   }
   .input-label {
-    @apply text-sm left-2;
+    @apply text-sm left-3 pl-0;
   }
 }
 
@@ -89,7 +90,10 @@
     @apply sm:text-xs md:text-sm min-h-[18px] py-1 px-2;
   }
   .input-label {
-    @apply text-xs left-1;
+    @apply text-xs left-2 pl-0;
+  }
+  .chips-primary {
+    @apply text-xs max-h-5;
   }
 }
 
@@ -260,7 +264,7 @@
 }
 
 .chips-primary {
-  @apply bg-primary-lighter text-neutral-alpha flex items-center gap-1 px-1 text-sm rounded-md;
+  @apply bg-primary-lighter text-neutral-alpha flex items-center gap-1 pr-1 pl-2 text-sm rounded-md;
   .close-icon {
     @apply pr-1 cursor-pointer;
   }
