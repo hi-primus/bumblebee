@@ -1,5 +1,14 @@
 <template>
   <NuxtLayout class="p-4">
+    <AppButton
+      class="layout-invisible icon-button size-large color-neutral -ml-2 -mt-2"
+      type="button"
+      :icon="mdiArrowLeft"
+      :to="{
+        name: `projects-projectId-workspaces`,
+        params: { projectId: route.params.projectId }
+      }"
+    />
     <form class="manager-form" @submit.prevent="saveProject">
       <AppInput v-model="workspaceName" type="text" label="Workspace Name" />
       <AppInput
@@ -12,6 +21,8 @@
   </NuxtLayout>
 </template>
 <script setup lang="ts">
+import { mdiArrowLeft } from '@mdi/js';
+
 import { GET_WORKSPACE, UPDATE_WORKSPACE } from '@/api/queries';
 
 const workspaceName = ref('');

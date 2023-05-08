@@ -16,13 +16,9 @@ export default defineNuxtPlugin(nuxtApp => {
   const router = useRouter();
 
   router.beforeEach(async to => {
-    if (!process.client) {
-      return true;
-    }
-
     const isAuthenticated = await nhost.auth.isAuthenticatedAsync();
 
-    if (to.name === 'workspaces') {
+    if (!process.client) {
       return true;
     }
 
@@ -30,7 +26,7 @@ export default defineNuxtPlugin(nuxtApp => {
       !isAuthenticated &&
       to.path !== '/login' &&
       to.path !== '/forgot-password' &&
-      to.path !== 'change-password'
+      to.path !== '/change-password'
     ) {
       return '/login';
     }

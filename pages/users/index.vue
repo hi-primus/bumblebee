@@ -12,9 +12,7 @@
         label="Password"
       />
 
-      <AppButton class="self-center" type="submit">
-        Create User
-      </AppButton>
+      <AppButton class="self-center" type="submit"> Create User </AppButton>
     </form>
     <table class="data-table w-full">
       <thead>
@@ -48,9 +46,13 @@
 
           <td class="actions">
             <span>
+              <!-- TODO: Fix userId => projectId -->
               <AppButton
                 class="size-smallest"
-                :to="`/projects/${user.id}/workspaces/`"
+                :to="{
+                  name: `projects-projectId-workspaces`,
+                  params: { projectId: user.id }
+                }"
                 type="button"
               >
                 Edit
@@ -83,7 +85,6 @@ const password = ref('');
 const firstName = ref('');
 const lastName = ref('');
 
-const router = useRouter();
 const userId = useUserId();
 
 const { signUpEmailPassword } = useSignUpEmailPassword();
@@ -97,7 +98,7 @@ const handleSubmit = async event => {
     metadata: { firstName, lastName },
     allowedRoles: ['user']
   });
-  if (isSuccess) router.push('/');
+  if (isSuccess) navigateTo('/');
 };
 
 const { mutate: deleteUserMutation, onDone: onDoneDeleteUserMutation } =

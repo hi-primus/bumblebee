@@ -1,5 +1,28 @@
 <template>
   <NuxtLayout class="p-4">
+    <div class="flex justify-between items-center -mt-2">
+      <AppButton
+        class="layout-invisible icon-button size-large color-neutral -ml-2"
+        type="button"
+        :icon="mdiArrowLeft"
+        to="/projects"
+      />
+      <AppMenu
+        :items="[
+          {
+            text: 'Connections',
+            action: () =>
+              navigateTo(`/projects/${route.params.projectId}/connections`)
+          }
+        ]"
+      >
+        <AppButton
+          class="layout-invisible icon-button size-small color-neutral"
+          type="button"
+          :icon="mdiDotsVertical"
+        />
+      </AppMenu>
+    </div>
     <form class="manager-form" @submit.prevent="createWorkspace">
       <AppInput v-model="workspaceName" type="text" label="Workspace Name" />
       <AppInput
@@ -46,12 +69,13 @@
               <AppButton
                 class="size-smallest"
                 type="button"
-                :to="
-                  '/projects/' +
-                  route.params.projectId +
-                  '/workspaces/' +
-                  workspace.id
-                "
+                :to="{
+                  name: 'projects-projectId-workspaces-workspaceId',
+                  params: {
+                    projectId: route.params.projectId,
+                    workspaceId: workspace.id
+                  }
+                }"
               >
                 View
               </AppButton>
@@ -59,7 +83,13 @@
               <AppButton
                 class="size-smallest"
                 type="button"
-                :to="`/projects/${route.params.projectId}/workspaces/${workspace.id}/edit`"
+                :to="{
+                  name: 'projects-projectId-workspaces-workspaceId-edit',
+                  params: {
+                    projectId: route.params.projectId,
+                    workspaceId: workspace.id
+                  }
+                }"
               >
                 Edit
               </AppButton>
@@ -91,12 +121,18 @@
   </NuxtLayout>
 </template>
 <script setup>
+import { mdiArrowLeft, mdiDotsVertical } from '@mdi/js';
+
 import {
   CREATE_WORKSPACE,
   // DELETE_PROJECT,
   DELETE_WORKSPACE,
   GET_WORKSPACES
 } from '@/api/queries';
+
+useHead({
+  title: 'Bumblebee Workspaces'
+});
 
 const userId = useUserId();
 const route = useRoute();

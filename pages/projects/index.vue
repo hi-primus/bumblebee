@@ -47,14 +47,20 @@
               <AppButton
                 class="size-smallest"
                 type="button"
-                :to="`/projects/${project.id}`"
+                :to="{
+                  name: `projects-projectId`,
+                  params: { projectId: project.id }
+                }"
               >
                 Edit
               </AppButton>
               <AppButton
                 class="size-smallest"
                 type="button"
-                :to="`/projects/${project.id}/workspaces`"
+                :to="{
+                  name: `projects-projectId-workspaces`,
+                  params: { projectId: project.id }
+                }"
               >
                 View
               </AppButton>
@@ -82,12 +88,15 @@
 <script setup lang="ts">
 import { CREATE_PROJECT, DELETE_PROJECT, GET_PROJECTS } from '@/api/queries';
 
-const router = useRouter();
+useHead({
+  title: 'Bumblebee Projects'
+});
+
 const { signOut } = useSignOut();
 
 const logout = () => {
   signOut();
-  router.push('/login');
+  navigateTo('/login');
 };
 
 const userId = useUserId();

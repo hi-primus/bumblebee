@@ -34,7 +34,6 @@
   </NuxtLayout>
 </template>
 <script setup>
-const router = useRouter();
 const email = ref('');
 const password = ref('');
 
@@ -65,6 +64,6 @@ const onLogin = async () => {
     console.error(error.value);
     return;
   }
-  await router.push('/projects');
+  await navigateTo('/projects');
 };
 </script>

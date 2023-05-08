@@ -1,5 +1,11 @@
 <template>
   <NuxtLayout class="p-4">
+    <AppButton
+      class="layout-invisible icon-button size-large color-neutral -ml-2 -mt-2"
+      type="button"
+      :icon="mdiArrowLeft"
+      to="/projects"
+    />
     <form class="manager-form">
       <AppInput v-model="projectName" type="text" label="Project Name" />
       <AppInput
@@ -14,6 +20,8 @@
   </NuxtLayout>
 </template>
 <script setup lang="ts">
+import { mdiArrowLeft } from '@mdi/js';
+
 import { GET_PROJECT, UPDATE_PROJECT } from '@/api/queries';
 
 const projectName = ref('');

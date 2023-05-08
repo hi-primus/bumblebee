@@ -1,5 +1,14 @@
 <template>
   <NuxtLayout class="p-4">
+    <AppButton
+      class="layout-invisible icon-button size-large color-neutral -ml-2 -mt-2"
+      type="button"
+      :icon="mdiArrowLeft"
+      :to="{
+        name: 'projects-projectId-workspaces',
+        params: { projectId: route.params.projectId }
+      }"
+    />
     <form class="manager-form">
       <AppInput v-model="connectionName" type="text" label="Connection Name" />
       <AppInput
@@ -39,10 +48,14 @@
           </td>
 
           <td>
+            <!-- TODO: Fix connectionId => projectId -->
             <AppButton
               class="size-smallest"
               type="button"
-              :to="'/projects/' + connection.id + '/workspaces/'"
+              :to="{
+                name: 'projects-projectId-workspaces',
+                param: { projectId: connection.id }
+              }"
             >
               View
             </AppButton>
@@ -67,6 +80,8 @@
   </NuxtLayout>
 </template>
 <script setup>
+import { mdiArrowLeft } from '@mdi/js';
+
 import {
   // CREATE_CONNECTION,
   DELETE_CONNECTION,
