@@ -1,0 +1,32 @@
+.data-table {
+  @apply shadow-md bg-white text-neutral-light border-collapse rounded-lg ring-line ring-1;
+  thead {
+    @apply bg-gray-lightest/50 text-neutral-lighter border-b border-line text-left rounded-t-md;
+  }
+  th {
+    @apply px-8 py-4;
+  }
+  th.actions {
+    @apply w-px;
+  }
+  tbody tr:not(:last-child) {
+    @apply border-b border-line-light;
+  }
+  tr {
+    @apply text-left;
+  }
+  td {
+    @apply px-8 py-4;
+  }
+  td.actions span {
+    @apply flex gap-2 items-center justify-end;
+  }
+  tr.table-is-empty {
+    @apply text-neutral-lighter;
+    @apply text-center #{!important};
+  }
+}
+
+.manager-form {
+  @apply flex flex-col gap-4 mb-6 mx-auto px-8 py-6 max-w-xs bg-white border border-line-light rounded shadow-md;
+}

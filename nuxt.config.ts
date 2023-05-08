@@ -5,8 +5,11 @@ export default defineNuxtConfig({
   typescript: {
     shim: false
   },
-  bridge: {
-    nitro: false
+  runtimeConfig: {
+    public: {
+      nhostRegion: process.env.NHOST_REGION,
+      nhostSubdomain: process.env.NHOST_SUBDOMAIN
+    }
   },
   modules: ['@nuxtjs/tailwindcss', '@vueuse/nuxt', '@pinia/nuxt'],
   components: {
