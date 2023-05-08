@@ -7,7 +7,7 @@
         type="textarea"
         label="Workspace Description"
       />
-      <AppButton class="size-small" type="submit"> Save Project </AppButton>
+      <AppButton class="self-center" type="submit"> Save Workspace </AppButton>
     </form>
   </NuxtLayout>
 </template>

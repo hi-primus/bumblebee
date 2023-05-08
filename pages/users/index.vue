@@ -12,7 +12,7 @@
         label="Password"
       />
 
-      <AppButton class="mt-2 self-center" type="submit">
+      <AppButton class="self-center" type="submit">
         Create User
       </AppButton>
     </form>

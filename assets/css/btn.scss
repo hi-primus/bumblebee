@@ -133,8 +133,12 @@
   &.icon-button {
     @apply -size-base;
 
-    &:not([class*='size-']) {
+    &:not([class*='size-']),
+    &.size-medium {
       @apply h-8 w-8;
+    }
+    &.size-large {
+      @apply h-10 w-10;
     }
     &.size-small {
       @apply h-6 w-6;

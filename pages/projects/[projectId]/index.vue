@@ -7,7 +7,7 @@
         type="textarea"
         label="Project Description"
       />
-      <AppButton class="size-small" type="button" @click="saveProject">
+      <AppButton type="button" class="self-center" @click="saveProject">
         Save Project
       </AppButton>
     </form>

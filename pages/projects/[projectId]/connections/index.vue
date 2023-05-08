@@ -8,7 +8,7 @@
         label="Connection Description"
       />
 
-      <AppButton class="size-small" type="button" @click="createConnection">
+      <AppButton class="self-center" type="button" @click="createConnection">
         Create Connection
       </AppButton>
     </form>

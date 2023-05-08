@@ -7,16 +7,14 @@
     >
       Log out
     </AppButton>
-    <form class="manager-form" @submit.prevent="createProject">
+    <form class="manager-form -mt-6" @submit.prevent="createProject">
       <AppInput v-model="newProjectName" type="text" label="Project Name" />
       <AppInput
         v-model="newProjectDescription"
         type="textarea"
         label="Project Description"
       />
-      <AppButton class="mt-2 self-center" type="submit">
-        Create Project
-      </AppButton>
+      <AppButton class="self-center" type="submit"> Create Project </AppButton>
     </form>
     <table class="data-table w-full">
       <thead>

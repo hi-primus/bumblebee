@@ -7,7 +7,9 @@
         type="textarea"
         label="Workspace Description"
       />
-      <AppButton class="size-small" type="submit"> Create Workspace </AppButton>
+      <AppButton class="self-center" type="submit">
+        Create Workspace
+      </AppButton>
     </form>
     <table class="data-table w-full">
       <thead>
