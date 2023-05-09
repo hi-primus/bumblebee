@@ -94,139 +94,161 @@ const virtualElement: VirtualElement = {
   getBoundingClientRect: generateGetBoundingClientRect()
 };
 
+const initializeElement = (
+  originalElement: HTMLElement,
+  binding: DirectiveBinding<string>
+) => {
+  if (!process.client) {
+    return;
+  }
+
+  const el = originalElement as HTMLElementWithTooltip;
+
+  // creates a popper element with the modifiers as key to reuse it
+
+  const popperElement = usePopperElement(binding.modifiers);
+
+  const placement: Placement = (placements as string[]).includes(
+    binding.arg || ''
+  )
+    ? (binding.arg as Placement)
+    : 'bottom';
+
+  const follow = binding.modifiers.follow
+    ? 'both'
+    : binding.modifiers['follow-x']
+    ? 'x'
+    : binding.modifiers['follow-y']
+    ? 'y'
+    : false;
+
+  let offsetValue = +(el.getAttribute('data-tooltip-offset') || 0);
+
+  if (!offsetValue) {
+    for (const modifier in binding.modifiers) {
+      switch (modifier) {
+        case 'sm':
+          offsetValue = 4;
+          break;
+        case 'md':
+          offsetValue = 6;
+          break;
+        case 'lg':
+          offsetValue = 8;
+          break;
+        case 'xl':
+          offsetValue = 9;
+          break;
+      }
+    }
+    if (!offsetValue) {
+      offsetValue = 4;
+    }
+  }
+
+  const tooltipText = binding.value || el.getAttribute('data-tooltip') || '';
+
+  el.setAttribute('data-tooltip', tooltipText);
+
+  let instance: Instance | null = null;
+
+  el.popperElement = popperElement;
+
+  el.update = () => {
+    const tooltipText = el.getAttribute('data-tooltip');
+    if (popperElement.referenceElement === el && tooltipText) {
+      popperElement.childNodes[1].textContent = tooltipText;
+      popperElement.classList.add('popper-show');
+      instance?.update();
+    }
+  };
+
+  el.addEventListener('mouseenter', async () => {
+    await new Promise(resolve => setTimeout(resolve, 5));
+    if (!instance) {
+      instance = createPopper(follow ? virtualElement : el, popperElement, {
+        placement,
+        modifiers: [
+          {
+            name: 'offset',
+            options: {
+              offset: [0, offsetValue]
+            }
+          }
+        ]
+      });
+    }
+    popperElement.referenceElement = el;
+    el.update();
+  });
+
+  if (follow) {
+    el.addEventListener('mousemove', (event: MouseEvent) => {
+      const { clientX: x, clientY: y } = event;
+      const element = event.target as HTMLElement | null;
+      if (follow !== 'both' && element) {
+        const rect = element.getBoundingClientRect();
+        if (follow === 'x') {
+          virtualElement.getBoundingClientRect = () =>
+            ({
+              width: 0,
+              height: rect.height,
+              top: rect.top,
+              right: x,
+              bottom: rect.bottom,
+              left: x
+            } as DOMRect);
+        } else {
+          virtualElement.getBoundingClientRect = () =>
+            ({
+              width: rect.width,
+              height: 0,
+              top: y,
+              right: rect.right,
+              bottom: y,
+              left: rect.left
+            } as DOMRect);
+        }
+      } else {
+        virtualElement.getBoundingClientRect = generateGetBoundingClientRect(
+          x,
+          y
+        );
+      }
+      instance?.update();
+    });
+  }
+
+  el.addEventListener('mouseleave', async () => {
+    await new Promise(resolve => setTimeout(resolve, 10));
+    if (popperElement.referenceElement === el) {
+      popperElement.referenceElement = undefined;
+      popperElement.classList.remove('popper-show');
+    }
+  });
+};
+
 export default defineNuxtPlugin(nuxtApp => {
   nuxtApp.vueApp.directive('tooltip', {
-    mounted(originalElement: HTMLElement, binding: DirectiveBinding<string>) {
-      if (!process.client) {
-        return;
-      }
-
-      const el = originalElement as HTMLElementWithTooltip;
-
-      // creates a popper element with the modifiers as key to reuse it
-
-      const popperElement = usePopperElement(binding.modifiers);
-
-      const placement: Placement = (placements as string[]).includes(
-        binding.arg || ''
-      )
-        ? (binding.arg as Placement)
-        : 'bottom';
-
-      const follow = binding.modifiers.follow
-        ? 'both'
-        : binding.modifiers['follow-x']
-        ? 'x'
-        : binding.modifiers['follow-y']
-        ? 'y'
-        : false;
-
-      let offsetValue = +(el.getAttribute('data-tooltip-offset') || 0);
-
-      if (!offsetValue) {
-        for (const modifier in binding.modifiers) {
-          switch (modifier) {
-            case 'sm':
-              offsetValue = 4;
-              break;
-            case 'md':
-              offsetValue = 6;
-              break;
-            case 'lg':
-              offsetValue = 8;
-              break;
-            case 'xl':
-              offsetValue = 9;
-              break;
-          }
-        }
-        if (!offsetValue) {
-          offsetValue = 4;
-        }
-      }
-
-      const tooltipText =
-        binding.value || el.getAttribute('data-tooltip') || '';
-
-      el.setAttribute('data-tooltip', tooltipText);
-
-      let instance: Instance | null = null;
-
-      el.popperElement = popperElement;
-
-      el.update = () => {
-        const tooltipText = el.getAttribute('data-tooltip');
-        if (popperElement.referenceElement === el && tooltipText) {
-          popperElement.childNodes[1].textContent = tooltipText;
-          popperElement.classList.add('popper-show');
-          instance?.update();
-        }
-      };
-
-      el.addEventListener('mouseenter', async () => {
-        await new Promise(resolve => setTimeout(resolve, 5));
-        if (!instance) {
-          instance = createPopper(follow ? virtualElement : el, popperElement, {
-            placement,
-            modifiers: [
-              {
-                name: 'offset',
-                options: {
-                  offset: [0, offsetValue]
-                }
-              }
-            ]
-          });
-        }
-        popperElement.referenceElement = el;
-        el.update();
-      });
-
-      if (follow) {
-        el.addEventListener('mousemove', (event: MouseEvent) => {
-          const { clientX: x, clientY: y } = event;
-          const element = event.target as HTMLElement | null;
-          if (follow !== 'both' && element) {
-            const rect = element.getBoundingClientRect();
-            if (follow === 'x') {
-              virtualElement.getBoundingClientRect = () =>
-                ({
-                  width: 0,
-                  height: rect.height,
-                  top: rect.top,
-                  right: x,
-                  bottom: rect.bottom,
-                  left: x
-                } as DOMRect);
-            } else {
-              virtualElement.getBoundingClientRect = () =>
-                ({
-                  width: rect.width,
-                  height: 0,
-                  top: y,
-                  right: rect.right,
-                  bottom: y,
-                  left: rect.left
-                } as DOMRect);
-            }
-          } else {
-            virtualElement.getBoundingClientRect =
-              generateGetBoundingClientRect(x, y);
-          }
-          instance?.update();
-        });
-      }
-
-      el.addEventListener('mouseleave', async () => {
-        await new Promise(resolve => setTimeout(resolve, 10));
-        if (popperElement.referenceElement === el) {
-          popperElement.referenceElement = undefined;
-          popperElement.classList.remove('popper-show');
-        }
-      });
+    mounted(el: HTMLElement, binding: DirectiveBinding<string>) {
+      initializeElement(el, binding);
     },
-    updated(el: HTMLElement, binding: DirectiveBinding<string>) {
+    updated(el: HTMLElementWithTooltip, binding: DirectiveBinding<string>) {
+      if (!el.popperElement) {
+        initializeElement(el, binding);
+      }
+
+      if (process.client) {
+        if (!document.body.contains(el.popperElement)) {
+          const parentElement =
+            document.getElementById('tooltips-container') || document.body;
+
+          parentElement.appendChild(el.popperElement);
+        }
+      }
+
       const { update, popperElement } = el as HTMLElementWithTooltip;
+
       const active = popperElement.referenceElement === el;
       if (binding.value) {
         el.setAttribute('data-tooltip', binding.value);
