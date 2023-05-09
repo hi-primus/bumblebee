@@ -1,6 +1,7 @@
 <template>
   <NuxtLayout class="p-4">
     <div class="manager-header">
+      <h1 class="!pl-10">Projects</h1>
       <AppMenu
         container-class="ml-auto"
         :items="[
