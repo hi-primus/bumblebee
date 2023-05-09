@@ -48,22 +48,22 @@
             <span>
               <!-- TODO: Fix userId => projectId -->
               <AppButton
-                class="size-smallest"
+                v-tooltip="`Edit user`"
+                class="size-small layout-invisible icon-button color-neutral"
+                :icon="mdiPencil"
                 :to="{
                   name: `projects-projectId-workspaces`,
                   params: { projectId: user.id }
                 }"
                 type="button"
-              >
-                Edit
-              </AppButton>
+              />
               <AppButton
-                class="size-smallest"
+                v-tooltip="`Delete user`"
+                class="size-small layout-invisible icon-button color-neutral"
                 type="button"
+                :icon="mdiTrashCan"
                 @click="deleteConnection(user.id)"
-              >
-                Delete
-              </AppButton>
+              />
             </span>
           </td>
         </tr>
@@ -78,6 +78,8 @@
   </NuxtLayout>
 </template>
 <script setup>
+import { mdiPencil, mdiTrashCan } from '@mdi/js';
+
 import { DELETE_USER, GET_USERS } from '@/api/queries';
 
 const username = ref('');

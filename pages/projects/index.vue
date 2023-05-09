@@ -55,32 +55,32 @@
           <td class="actions">
             <span>
               <AppButton
-                class="size-smallest"
+                v-tooltip="'Edit project info'"
+                class="size-small layout-invisible icon-button color-neutral"
                 type="button"
+                :icon="mdiPencil"
                 :to="{
                   name: `projects-projectId`,
                   params: { projectId: project.id }
                 }"
-              >
-                Edit
-              </AppButton>
+              />
               <AppButton
-                class="size-smallest"
+                v-tooltip="'Delete project'"
+                class="size-small layout-invisible icon-button color-neutral"
                 type="button"
+                :icon="mdiTrashCan"
+                @click="deleteProject(project.id)"
+              />
+              <AppButton
+                v-tooltip="'View project workspaces'"
+                class="size-small layout-invisible icon-button color-neutral"
+                type="button"
+                :icon="mdiArrowRight"
                 :to="{
                   name: `projects-projectId-workspaces`,
                   params: { projectId: project.id }
                 }"
-              >
-                View
-              </AppButton>
-              <AppButton
-                class="size-smallest"
-                type="button"
-                @click="deleteProject(project.id)"
-              >
-                Delete
-              </AppButton>
+              />
             </span>
           </td>
         </tr>
@@ -97,7 +97,13 @@
 
 <script setup lang="ts">
 import { CREATE_PROJECT, DELETE_PROJECT, GET_PROJECTS } from '@/api/queries';
-import { mdiArrowLeft, mdiDotsVertical } from '@mdi/js';
+import {
+  mdiArrowLeft,
+  mdiArrowRight,
+  mdiDotsVertical,
+  mdiPencil,
+  mdiTrashCan
+} from '@mdi/js';
 
 useHead({
   title: 'Bumblebee Projects'

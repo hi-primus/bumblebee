@@ -68,22 +68,10 @@
           <td class="actions">
             <span>
               <AppButton
-                class="size-smallest"
+                v-tooltip="'Edit workspace info'"
+                class="size-small layout-invisible icon-button color-neutral"
                 type="button"
-                :to="{
-                  name: 'projects-projectId-workspaces-workspaceId',
-                  params: {
-                    projectId: route.params.projectId,
-                    workspaceId: workspace.id
-                  }
-                }"
-              >
-                View
-              </AppButton>
-
-              <AppButton
-                class="size-smallest"
-                type="button"
+                :icon="mdiPencil"
                 :to="{
                   name: 'projects-projectId-workspaces-workspaceId-edit',
                   params: {
@@ -91,23 +79,35 @@
                     workspaceId: workspace.id
                   }
                 }"
-              >
-                Edit
-              </AppButton>
+              />
               <!-- <AppButton
-                class="size-smallest"
+                class="size-small layout-invisible icon-button color-neutral"
                 type="button"
                 :to="'/projects/' + workspace.id + '/workspaces/'"
               >
                 Duplicate
               </AppButton> -->
               <AppButton
-                class="size-smallest"
+                v-tooltip="'Delete workspace'"
+                class="size-small layout-invisible icon-button color-neutral"
                 type="button"
+                :icon="mdiTrashCan"
                 @click="deleteWorkspace(workspace.id)"
-              >
-                Delete
-              </AppButton>
+              />
+
+              <AppButton
+                v-tooltip="'Go to workspace'"
+                class="size-small layout-invisible icon-button color-neutral"
+                type="button"
+                :icon="mdiArrowRight"
+                :to="{
+                  name: 'projects-projectId-workspaces-workspaceId',
+                  params: {
+                    projectId: route.params.projectId,
+                    workspaceId: workspace.id
+                  }
+                }"
+              />
             </span>
           </td>
         </tr>
@@ -122,7 +122,13 @@
   </NuxtLayout>
 </template>
 <script setup>
-import { mdiArrowLeft, mdiDotsVertical } from '@mdi/js';
+import {
+  mdiArrowLeft,
+  mdiArrowRight,
+  mdiDotsVertical,
+  mdiPencil,
+  mdiTrashCan
+} from '@mdi/js';
 
 import {
   CREATE_WORKSPACE,

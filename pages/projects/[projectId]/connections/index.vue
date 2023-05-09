@@ -53,23 +53,22 @@
           <td>
             <!-- TODO: Fix connectionId => projectId -->
             <AppButton
-              class="size-smallest"
+              v-tooltip="'Edit connection'"
+              class="size-small layout-invisible icon-button color-neutral"
               type="button"
+              :icon="mdiPencil"
               :to="{
                 name: 'projects-projectId-workspaces',
                 param: { projectId: connection.id }
               }"
-            >
-              View
-            </AppButton>
-
+            />
             <AppButton
-              class="size-smallest"
+              v-tooltip="'Delete connection'"
+              class="size-small layout-invisible icon-button color-neutral"
               type="button"
+              :icon="mdiTrashCan"
               @click="deleteConnection(connection.id)"
-            >
-              Delete
-            </AppButton>
+            />
           </td>
         </tr>
         <tr
@@ -83,7 +82,7 @@
   </NuxtLayout>
 </template>
 <script setup>
-import { mdiArrowLeft } from '@mdi/js';
+import { mdiArrowLeft, mdiPencil, mdiTrashCan } from '@mdi/js';
 
 import {
   // CREATE_CONNECTION,
