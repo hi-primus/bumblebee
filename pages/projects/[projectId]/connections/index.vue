@@ -1,14 +1,17 @@
 <template>
   <NuxtLayout class="p-4">
-    <AppButton
-      class="layout-invisible icon-button size-large color-neutral -ml-2 -mt-2"
-      type="button"
-      :icon="mdiArrowLeft"
-      :to="{
-        name: 'projects-projectId-workspaces',
-        params: { projectId: route.params.projectId }
-      }"
-    />
+    <div class="manager-header">
+      <AppButton
+        class="layout-invisible icon-button size-large color-neutral -ml-2"
+        type="button"
+        :icon="mdiArrowLeft"
+        :to="{
+          name: 'projects-projectId-workspaces',
+          params: { projectId: route.params.projectId }
+        }"
+      />
+      <h1>Connections</h1>
+    </div>
     <form class="manager-form">
       <AppInput v-model="connectionName" type="text" label="Connection Name" />
       <AppInput

@@ -29,6 +29,9 @@
 
 .manager-header {
   @apply flex justify-between items-center -mt-2 h-10;
+  h1 {
+    @apply text-2xl font-semibold text-neutral-light mr-auto pl-2 pt-px;
+  }
 }
 
 .manager-form {

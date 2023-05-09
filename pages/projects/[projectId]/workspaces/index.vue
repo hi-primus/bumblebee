@@ -1,12 +1,13 @@
 <template>
   <NuxtLayout class="p-4">
-    <div class="flex justify-between items-center -mt-2">
+    <div class="manager-header">
       <AppButton
         class="layout-invisible icon-button size-large color-neutral -ml-2"
         type="button"
         :icon="mdiArrowLeft"
         to="/projects"
       />
+      <h1>Workspaces</h1>
       <AppMenu
         :items="[
           {
