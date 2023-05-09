@@ -1,13 +1,23 @@
 <template>
   <NuxtLayout class="p-4">
-    <AppButton
-      class="layout-outline size-small mb-6 ml-auto"
-      type="button"
-      @click="logout"
-    >
-      Log out
-    </AppButton>
-    <form class="manager-form -mt-6" @submit.prevent="createProject">
+    <div class="manager-header">
+      <AppMenu
+        container-class="ml-auto"
+        :items="[
+          {
+            text: 'Log out',
+            action: () => logout()
+          }
+        ]"
+      >
+        <AppButton
+          class="layout-invisible icon-button size-small color-neutral ml-auto"
+          type="button"
+          :icon="mdiDotsVertical"
+        />
+      </AppMenu>
+    </div>
+    <form class="manager-form" @submit.prevent="createProject">
       <AppInput v-model="newProjectName" type="text" label="Project Name" />
       <AppInput
         v-model="newProjectDescription"
@@ -87,6 +97,7 @@
 
 <script setup lang="ts">
 import { CREATE_PROJECT, DELETE_PROJECT, GET_PROJECTS } from '@/api/queries';
+import { mdiArrowLeft, mdiDotsVertical } from '@mdi/js';
 
 useHead({
   title: 'Bumblebee Projects'

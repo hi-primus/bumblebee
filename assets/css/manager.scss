@@ -27,6 +27,10 @@
   }
 }
 
+.manager-header {
+  @apply flex justify-between items-center -mt-2 h-10;
+}
+
 .manager-form {
   @apply flex flex-col gap-4 mb-6 mx-auto px-8 py-6 max-w-xs bg-white border border-line-light rounded shadow-md;
 }

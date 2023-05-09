@@ -1,5 +1,10 @@
 <template>
-  <Menu as="div" class="menu-container" v-slot="{ open, close }">
+  <Menu
+    v-slot="{ open, close }"
+    as="div"
+    class="menu-container"
+    :class="containerClass"
+  >
     <MenuButton as="template" @click.prevent="open && close()">
       <slot></slot>
     </MenuButton>
@@ -46,6 +51,10 @@ defineProps({
   items: {
     type: Array as PropType<MenuItemInterface[]>,
     default: () => []
+  },
+  containerClass: {
+    type: String,
+    default: ''
   }
 });
 </script>
