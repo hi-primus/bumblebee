@@ -163,7 +163,7 @@ import { mdiCheckBold, mdiChevronDown, mdiChevronUp, mdiClose } from '@mdi/js';
 import { useField } from 'vee-validate';
 import { PropType } from 'vue';
 
-import { RuleKey } from '@/composables/use-rules';
+import { Rule } from '@/composables/use-rules';
 import { FieldOption } from '@/types/operations';
 import { compareArrays } from '@/utils';
 
@@ -189,7 +189,7 @@ const props = defineProps({
     type: Function as PropType<(option: unknown) => string>
   },
   rules: {
-    type: Array as PropType<RuleKey[]>,
+    type: Array as PropType<Rule[]>,
     default: () => []
   },
   name: {
@@ -220,6 +220,7 @@ const props = defineProps({
 type Emits = {
   (e: 'update:modelValue', value: Value, oldValue: Value): void;
   (e: 'item-selected', item: Item, oldItem: Item): void;
+  (event: 'validate', value: boolean | string): void;
 };
 
 const emit = defineEmits<Emits>();
@@ -256,9 +257,17 @@ const {
   validate: validateField
 } = useField(props.name, useRules(props.rules));
 
-const validate = async () => {
-  await new Promise(res => setTimeout(res, 100));
-  validateField();
+let hasValidated = false;
+
+const validate = async (isExternalCall = false, force = false) => {
+  await new Promise(resolve => setTimeout(resolve, 100));
+  if (!isExternalCall || hasValidated || force) {
+    hasValidated = true;
+    validateField();
+  }
+  if (!isExternalCall) {
+    emit('validate', errorMessage.value || false);
+  }
 };
 
 watch(selectedOption, (item, oldItem) => {
@@ -311,4 +320,7 @@ watch(
   { immediate: true }
 );
 
+defineExpose({
+  validate
+});
 </script>

@@ -141,7 +141,7 @@ export const operationCreators: Record<string, OperationCreator> = {
         });
       }
 
-      throw new Error('No file or url provided.');
+      throw new Error('No file or url provided');
     },
     fields: [
       {
@@ -170,7 +170,7 @@ export const operationCreators: Record<string, OperationCreator> = {
     action: async (payload: OperationPayload): Promise<Source> => {
       const df = payload.source;
       if (!df) {
-        throw new Error('No dataframe to save.');
+        throw new Error('No dataframe to save');
       }
       const arrayBuffer = await df.saveCsv();
       let fileName: string = await df.getMeta('file_name');
@@ -229,8 +229,11 @@ export const operationCreators: Record<string, OperationCreator> = {
       );
 
       if (!foundDf) {
-        throw new Error(
-          `Dataframe with name '${payload.dfRightName}' not found.`
+        throw new FieldsError(
+          `Dataframe with name '${payload.dfRightName}' not found`,
+          {
+            dfRightName: 'Select another dataframe'
+          }
         );
       }
 
@@ -2128,7 +2131,7 @@ export const operationCreators: Record<string, OperationCreator> = {
       }>
     ) => {
       if (!payload.funcDef) {
-        throw new Error('Generate a function using the example field');
+        throw new Error('Generate or paste a function definition');
       }
       return true;
     },
@@ -2139,7 +2142,9 @@ export const operationCreators: Record<string, OperationCreator> = {
     ) => {
       const funcName = payload.funcDef.match(/def\s+(\w+)\(/)?.[1];
       if (!funcName) {
-        throw new Error('Invalid function definition');
+        throw new FieldsError('Enter a valid function definition', {
+          funcDef: 'Enter a valid function definition'
+        });
       }
       const args = pythonArguments({
         cols: payload.cols,
@@ -2311,7 +2316,13 @@ export const operationCreators: Record<string, OperationCreator> = {
         label: 'Function definition',
         type: 'multiline string',
         defaultValue: 'def format_date(value):\n  return value',
-        class: 'field-mono w-full'
+        class: 'field-mono w-full',
+        rules: [
+          funcDef =>
+            !funcDef.match(/def\s+(\w+)\(/)?.[1]
+              ? 'Invalid function definition'
+              : true
+        ]
       }
     ],
     shortcut: 'fc'
@@ -3610,7 +3621,7 @@ const getFirstLines = (
     reader.addEventListener('load', onLoad);
 
     reader.addEventListener('error', function () {
-      reject(new Error('Error reading file.'));
+      reject(new Error('Error reading file'));
     });
 
     readChunk();
@@ -3626,4 +3637,15 @@ function downloadArrayBuffer(arrayBuffer: ArrayBuffer, fileName: string) {
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
+}
+
+// error handling
+
+export class FieldsError extends Error {
+  fieldMessages: Record<string, string>;
+  constructor(message: string, fieldMessages: Record<string, string> = {}) {
+    super(message);
+    this.name = 'FieldsError';
+    this.fieldMessages = fieldMessages;
+  }
 }

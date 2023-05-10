@@ -2,6 +2,7 @@
   <AppSelector
     v-if="resolve(field?.options)?.length"
     :key="`selector-${field.name}-${updates}-${fieldClass}`"
+    ref="fieldElement"
     v-model="value"
     :options="resolve(field.options)"
     :text-callback="field.textCallback"
@@ -10,6 +11,7 @@
     :placeholder="field.placeholder"
     :disabled="resolve(field.disabled)"
     :class="fieldClass"
+    :rules="resolveRules"
   >
     <IconButton
       v-if="field.actionButton"
@@ -24,6 +26,7 @@
       resolve(field?.type) === 'string' && field.suggestions !== undefined
     "
     :key="`input-suggestions-${field.name}-${updates}-${fieldClass}`"
+    ref="fieldElement"
     v-model="value"
     :suggestions="resolve(field.suggestions)"
     suggest-on-empty="column"
@@ -32,6 +35,7 @@
     :placeholder="field.placeholder"
     :disabled="resolve(field.disabled)"
     :class="fieldClass"
+    :rules="resolveRules"
   >
     <IconButton
       v-if="field.actionButton"
@@ -44,12 +48,14 @@
   <AppInput
     v-else-if="['string', 'multiline string'].includes(resolve(field?.type))"
     :key="`input-${field.name}-${updates}-${fieldClass}`"
+    ref="fieldElement"
     v-model="value"
     :label="resolve(field.label || field.name)"
     :name="field.name"
     :placeholder="field.placeholder"
     :disabled="resolve(field.disabled)"
     :class="fieldClass"
+    :rules="resolveRules"
     :type="resolve(field?.type) === 'multiline string' ? 'textarea' : 'text'"
     autocomplete="off"
   >
@@ -64,29 +70,34 @@
   <AppChipsInput
     v-else-if="resolve(field?.type) === 'strings array'"
     :key="`chips-input-${field.name}-${updates}-${fieldClass}`"
+    ref="fieldElement"
     v-model="value"
     :label="resolve(field.label || field.name)"
     :name="field.name"
     :placeholder="field.placeholder"
     :disabled="resolve(field.disabled)"
     :class="fieldClass"
+    :rules="resolveRules"
     autocomplete="off"
   />
   <AppInput
     v-else-if="resolve(field?.type) === 'number'"
     :key="`number-input-${field.name}-${updates}-${fieldClass}`"
+    ref="fieldElement"
     v-model="value"
     :label="resolve(field.label || field.name)"
     :name="field.name"
     :placeholder="field.placeholder"
     :disabled="resolve(field.disabled)"
     :class="fieldClass"
+    :rules="resolveRules"
     autocomplete="off"
     type="number"
   />
   <AppCheckbox
     v-else-if="resolve(field?.type) === 'boolean'"
     :key="`check-${field.name}-${updates}-${fieldClass}`"
+    ref="fieldElement"
     v-model="value"
     :label="resolve(field.label || field.name)"
     :name="field.name"
@@ -96,6 +107,7 @@
   <AppFile
     v-else-if="resolve(field?.type) === 'file'"
     :key="`file-${field.name}-${updates}-${fieldClass}`"
+    ref="fieldElement"
     v-model="value"
     :label="resolve(field.label || field.name)"
     :name="field.name"
@@ -105,14 +117,19 @@
   <OperationFieldJoin
     v-else-if="resolve(field?.type) === 'join'"
     :key="`join-${field.name}-${updates}`"
+    ref="fieldElement"
     v-model="value"
   />
   <OperationFieldConcat
     v-else-if="resolve(field?.type) === 'concat'"
-    :key="`join-${field.name}-${updates}`"
-    :options="resolve(field.options)"
+    :key="`concat-${field.name}-${updates}`"
+    ref="fieldElement"
     v-model="value"
+    :options="resolve(field.options)"
   />
+  <div v-else-if="false" class="w-full text-danger py-2">
+    Error creating field of type {{ resolve(field?.type) }}
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -127,9 +144,14 @@ import {
 
 const props = defineProps<{
   field: Field;
+  errorMessage?: string;
   subfieldIndex?: number;
   parentField?: string;
 }>();
+
+const fieldElement = ref<{
+  validate?: (isExternalCall?: boolean, force?: boolean) => void;
+} | null>(null);
 
 const updates = ref(0);
 
@@ -174,6 +196,13 @@ const value = computed({
   }
 });
 
+const resolve = <T>(value: PayloadCallbackOr<T>): T => {
+  if (value instanceof Function) {
+    return value(operationValues.value, props.subfieldIndex);
+  }
+  return value;
+};
+
 const fieldClass = computed(() => {
   const fieldClass: string[] = [resolve(props.field.class || 'w-full')];
   if (resolve(props.field.hidden)) {
@@ -185,14 +214,30 @@ const fieldClass = computed(() => {
   return fieldClass;
 });
 
-const resolve = <T>(value: PayloadCallbackOr<T>): T => {
-  if (value instanceof Function) {
-    return value(operationValues.value, props.subfieldIndex);
-  }
-  return value;
-};
+const resolveRules = computed(() => {
+  return [
+    ...(resolve(props.field.rules) || []),
+    () => props.errorMessage || true
+  ];
+});
 
 watch(operationValues, () => {
   updates.value++;
+});
+
+watch(
+  () => props.errorMessage,
+  async () => {
+    await nextTick();
+    validate(false, true);
+  }
+);
+
+const validate = (isExternalCall = false, force = false) => {
+  return fieldElement.value?.validate?.(isExternalCall, force);
+};
+
+defineExpose({
+  validate
 });
 </script>

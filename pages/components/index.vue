@@ -622,6 +622,7 @@
           @submit.prevent="submitFormTest"
         >
           <AppInput
+            :ref="getRef('input')"
             v-model="formValues.input"
             label="Test input"
             placeholder="only lowercase letters"
@@ -629,8 +630,10 @@
             :rules="[
               v => v === v.toLowerCase() || 'Only lowercase letters are allowed'
             ]"
+            @validate="validateAll"
           />
           <AppInput
+            :ref="getRef('second-input')"
             v-model="formValues.secondInput"
             label="Alternative test input"
             placeholder="Allowed when first input is empty"
@@ -638,17 +641,21 @@
             :rules="[
               v => !v || (v && !formValues.input) || 'Only one value is allowed'
             ]"
+            @validate="validateAll"
           />
           <AppAutocomplete
+            :ref="getRef('autocomplete')"
             v-model="formValues.autocomplete"
             :options="columnsValues"
             label="Test autocomplete"
             placeholder="Column"
             name="autocomplete"
             :rules="[v => !!v || 'Select a column']"
+            @validate="validateAll"
           />
 
           <AppAutocomplete
+            :ref="getRef('multiple-autocomplete')"
             v-model="formValues.multipleAutocomplete"
             :options="columnsValues"
             label="Test autocomplete"
@@ -659,16 +666,20 @@
               v =>
                 (v && v.length && v.length < 3) || 'Select one or two columns'
             ]"
+            @validate="validateAll"
           />
           <AppSelector
+            :ref="getRef('selector')"
             v-model="formValues.selector"
             :options="columns"
             label="Test selector"
             placeholder="Column"
             name="selector"
             :rules="[v => !!v || 'Select a column']"
+            @validate="validateAll"
           />
           <AppSelector
+            :ref="getRef('multiple-selector')"
             v-model="formValues.multipleSelector"
             :options="columns"
             label="Test selector"
@@ -679,6 +690,7 @@
               v =>
                 (v && v.length && v.length < 3) || 'Select one or two columns'
             ]"
+            @validate="validateAll"
           />
         </form>
       </div>
@@ -688,6 +700,7 @@
 
 <script setup lang="ts">
 import { mdiCheckBold, mdiMore, mdiTrashCan } from '@mdi/js';
+import { Ref } from 'vue';
 
 import { TableSelection } from '@/types/operations';
 
@@ -784,6 +797,30 @@ const formValues = ref<{
   selector: '',
   multipleSelector: []
 });
+
+interface ComponentRefs {
+  [key: string]: Ref<any>;
+}
+
+const refs: ComponentRefs = {};
+
+const getRef = (name: string): Ref<any> => {
+  if (!refs[name]) {
+    refs[name] = ref('not assigned for some reason');
+  }
+  return refs[name];
+};
+
+const validateAll = debounce(() => {
+  for (const key in refs) {
+    if (Object.prototype.hasOwnProperty.call(refs, key)) {
+      const ref = refs[key];
+      if (ref.value?.validate) {
+        ref.value.validate(true);
+      }
+    }
+  }
+}, 200);
 
 const submitFormTest = ($event: Event) => {
   console.log($event);
