@@ -141,7 +141,7 @@ export const operationCreators: Record<string, OperationCreator> = {
         });
       }
 
-      throw new Error('No file or url provided.');
+      throw new Error('No file or url provided');
     },
     fields: [
       {
@@ -167,7 +167,7 @@ export const operationCreators: Record<string, OperationCreator> = {
     action: async (payload: OperationPayload): Promise<Source> => {
       const df = payload.source;
       if (!df) {
-        throw new Error('No dataframe to save.');
+        throw new Error('No dataframe to save');
       }
       const arrayBuffer = await df.saveCsv();
       let fileName: string = await df.getMeta('file_name');
@@ -2125,7 +2125,7 @@ export const operationCreators: Record<string, OperationCreator> = {
       }>
     ) => {
       if (!payload.funcDef) {
-        throw new Error('Generate a function using the example field');
+        throw new Error('Generate or paste a function definition');
       }
       return true;
     },
@@ -3600,7 +3600,7 @@ const getFirstLines = (
     reader.addEventListener('load', onLoad);
 
     reader.addEventListener('error', function () {
-      reject(new Error('Error reading file.'));
+      reject(new Error('Error reading file'));
     });
 
     readChunk();
