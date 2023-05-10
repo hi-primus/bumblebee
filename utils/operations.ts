@@ -226,8 +226,11 @@ export const operationCreators: Record<string, OperationCreator> = {
       );
 
       if (!foundDf) {
-        throw new Error(
-          `Dataframe with name '${payload.dfRightName}' not found.`
+        throw new FieldsError(
+          `Dataframe with name '${payload.dfRightName}' not found`,
+          {
+            dfRightName: 'Select another dataframe'
+          }
         );
       }
 
@@ -2136,7 +2139,9 @@ export const operationCreators: Record<string, OperationCreator> = {
     ) => {
       const funcName = payload.funcDef.match(/def\s+(\w+)\(/)?.[1];
       if (!funcName) {
-        throw new Error('Invalid function definition');
+        throw new FieldsError('Enter a valid function definition', {
+          funcDef: 'Enter a valid function definition'
+        });
       }
       const args = pythonArguments({
         cols: payload.cols,
@@ -2308,7 +2313,13 @@ export const operationCreators: Record<string, OperationCreator> = {
         label: 'Function definition',
         type: 'multiline string',
         defaultValue: 'def format_date(value):\n  return value',
-        class: 'field-mono w-full'
+        class: 'field-mono w-full',
+        rules: [
+          funcDef =>
+            !funcDef.match(/def\s+(\w+)\(/)?.[1]
+              ? 'Invalid function definition'
+              : true
+        ]
       }
     ],
     shortcut: 'fc'
