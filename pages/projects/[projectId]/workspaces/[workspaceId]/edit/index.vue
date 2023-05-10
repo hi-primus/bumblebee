@@ -34,7 +34,7 @@ const workspaceDescription = ref('');
 const route = useRoute();
 
 const queryResult = useClientQuery(GET_WORKSPACE_INFO, {
-  id: route.params.workspace_id
+  id: route.params.workspaceId
 });
 
 // Watch for changes in result and update the input fields
@@ -57,7 +57,7 @@ const { mutate: updateProjectMutation } = useMutation(UPDATE_WORKSPACE_INFO);
 
 async function saveProject() {
   await updateProjectMutation({
-    id: route.params.workspace_id,
+    id: route.params.workspaceId,
     name: workspaceName.value,
     description: workspaceDescription.value
   });
