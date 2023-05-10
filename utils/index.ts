@@ -29,17 +29,17 @@ export const stepify = (a: number, b: number, f = Math.round): number => {
 
 export const transpose = <T>(a: T[][]): T[][] => {
   return Object.keys(a[0]).map((c: string) => {
-    return a.map(r=>r[Number(c)]);
+    return a.map(r => r[Number(c)]);
   });
 };
 
 export function objectMap<T, V, K extends string | number | symbol>(
   object: Record<K, T>,
-  cb: (value: T) => V
+  cb: (value: T, key?: K) => V
 ): Record<K, V> {
   if (isObject(object) && typeof cb === 'function') {
     return (Object.keys(object) as K[]).reduce((acc, key) => {
-      acc[key] = cb(object[key]);
+      acc[key] = cb(object[key], key);
       return acc;
     }, {} as Record<K, V>);
   }

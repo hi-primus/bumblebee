@@ -12,6 +12,7 @@ declare global {
   type Dictionary<T> = Record<string, T>;
   type BasicType = string | number | boolean | null | undefined;
   type CompatibleType = BasicType | Array<BasicType> | Dictionary<BasicType>;
+  type SomePartial<T, F extends keyof T> = Omit<T, F> & Partial<Pick<T, F>>;
   type Arguments<T> = T extends (...args: infer A) => unknown ? A : never;
   interface Window {
     blurr: Client;

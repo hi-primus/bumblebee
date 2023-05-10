@@ -147,7 +147,10 @@ export const operationCreators: Record<string, OperationCreator> = {
       {
         name: 'file',
         label: 'File',
-        type: 'file'
+        type: 'file',
+        hidden: context => {
+          return context.appSettings.workspaceMode;
+        }
       },
       {
         name: 'url',
@@ -3311,22 +3314,28 @@ const preparePayloadForAction = (
  * @returns
  */
 
-const createOperation = (operationCreator: OperationCreator): Operation => {
+const createOperation = (
+  operationCreator: OperationCreator,
+  operationKey: string
+): Operation => {
   if ('uses' in operationCreator) {
     const foundOperation = operationCreators[operationCreator.uses];
     if (!foundOperation) {
       throw new Error(`Operation ${operationCreator.uses} not found`);
     }
 
-    const operation = createOperation({
-      ...foundOperation,
-      disabled: operationCreator.disabled,
-      hidden: operationCreator.hidden,
-      shortcut: operationCreator.shortcut,
-      name: operationCreator.name,
-      alias: operationCreator.alias,
-      description: operationCreator.description
-    });
+    const operation = createOperation(
+      {
+        ...foundOperation,
+        disabled: operationCreator.disabled,
+        hidden: operationCreator.hidden,
+        shortcut: operationCreator.shortcut,
+        name: operationCreator.name,
+        alias: operationCreator.alias,
+        description: operationCreator.description
+      },
+      operationKey
+    );
 
     const words = `${operation.name} ${operation.alias || ''}`.split(' ');
 
@@ -3371,6 +3380,7 @@ const createOperation = (operationCreator: OperationCreator): Operation => {
   }
 
   const operation = { ...operationCreator } as Operation;
+  operation.key = operationKey;
   operation.fields = [...(operationCreator.fields || [])];
   operation.defaultOptions = Object.assign(
     { targetType: 'dataframe' },

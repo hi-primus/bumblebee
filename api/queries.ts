@@ -58,7 +58,7 @@ export const DELETE_CONNECTION = gql`
   }
 `;
 export const GET_WORKSPACES = gql`
-  query GetWorkSpaces($user_id: uuid = "", $project_id: uuid = "") {
+  query GetWorkspaces($user_id: uuid = "", $project_id: uuid = "") {
     workspaces(
       where: {
         access: { receiver_id: { _eq: $user_id } }
@@ -75,11 +75,20 @@ export const GET_WORKSPACES = gql`
     }
   }
 `;
-export const GET_WORKSPACE = gql`
-  query MyQuery($id: uuid = "") {
+export const GET_WORKSPACE_INFO = gql`
+  query GetWorkspaceInfo($id: uuid = "") {
     workspaces_by_pk(id: $id) {
       name
       description
+    }
+  }
+`;
+export const GET_WORKSPACE = gql`
+  query GetWorkspace($id: uuid = "") {
+    workspaces_by_pk(id: $id) {
+      name
+      tabs
+      commands
     }
   }
 `;
@@ -110,8 +119,8 @@ export const CREATE_WORKSPACE = gql`
     }
   }
 `;
-export const UPDATE_WORKSPACE = gql`
-  mutation UpdateProject(
+export const UPDATE_WORKSPACE_INFO = gql`
+  mutation UpdateWorkspaceInfo(
     $id: uuid = ""
     $description: String = ""
     $name: String = ""
@@ -124,10 +133,19 @@ export const UPDATE_WORKSPACE = gql`
     }
   }
 `;
-
 export const DELETE_WORKSPACE = gql`
   mutation DeleteWorkspace($id: uuid = "") {
     delete_workspaces_by_pk(id: $id) {
+      id
+    }
+  }
+`;
+export const UPDATE_WORKSPACE = gql`
+  mutation UpdateWorkspace($id: uuid = "", $tabs: json!, $commands: json!) {
+    update_workspaces_by_pk(
+      pk_columns: { id: $id }
+      _set: { tabs: $tabs, commands: $commands }
+    ) {
       id
     }
   }

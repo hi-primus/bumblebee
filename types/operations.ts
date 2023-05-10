@@ -190,6 +190,7 @@ export type Operation = OperationCreatorAction & {
   defaultOptions: OperationOptions;
   fields: (Field | FieldGroup)[];
   words: string[];
+  key: string;
 };
 
 export const isOperation = (

@@ -26,14 +26,14 @@
 <script setup lang="ts">
 import { mdiArrowLeft } from '@mdi/js';
 
-import { GET_WORKSPACE, UPDATE_WORKSPACE } from '@/api/queries';
+import { GET_WORKSPACE_INFO, UPDATE_WORKSPACE_INFO } from '@/api/queries';
 
 const workspaceName = ref('');
 const workspaceDescription = ref('');
 
 const route = useRoute();
 
-const queryResult = useClientQuery(GET_WORKSPACE, {
+const queryResult = useClientQuery(GET_WORKSPACE_INFO, {
   id: route.params.workspace_id
 });
 
@@ -53,7 +53,7 @@ watch(
   { immediate: true }
 );
 
-const { mutate: updateProjectMutation } = useMutation(UPDATE_WORKSPACE);
+const { mutate: updateProjectMutation } = useMutation(UPDATE_WORKSPACE_INFO);
 
 async function saveProject() {
   await updateProjectMutation({

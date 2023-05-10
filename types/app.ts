@@ -1,8 +1,25 @@
+import { DataframeObject } from './dataframe';
+import { OperationPayload } from './operations';
+
 // interface
 
 export interface Tab {
   label?: string;
 }
+
+// workspace
+
+export type CommandData = {
+  operationKey: string;
+  payload: OperationPayload;
+};
+
+export type TabData = Omit<DataframeObject, 'df' | 'updates'> & {
+  dfName: string;
+  selected: boolean;
+};
+
+export type WorkspaceData = { commands: CommandData[]; tabs: TabData[] };
 
 // table
 
@@ -50,6 +67,7 @@ export type ConfirmPopup = {
 
 export interface AppSettings {
   openAiApiKey: string;
+  workspaceMode: boolean;
 }
 
 export interface AppStatusError {
