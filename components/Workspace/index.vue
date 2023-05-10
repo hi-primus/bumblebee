@@ -1009,11 +1009,16 @@ const previewOperationThrottled = throttleOnce(
         };
       } else if (typeof err === 'string') {
         previewData.value = null;
-        operationStatus.value = {
-          message: err
+        const message = (
+          err
             .split('\n')
             .filter(l => l)
-            .pop(),
+            .pop() || ''
+        )
+          .split('Exception: ')
+          .pop();
+        operationStatus.value = {
+          message,
           status: 'error'
         };
       } else {
