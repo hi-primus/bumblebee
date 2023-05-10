@@ -3617,3 +3617,14 @@ function downloadArrayBuffer(arrayBuffer: ArrayBuffer, fileName: string) {
   link.click();
   document.body.removeChild(link);
 }
+
+// error handling
+
+export class FieldsError extends Error {
+  fieldMessages: Record<string, string>;
+  constructor(message: string, fieldMessages: Record<string, string> = {}) {
+    super(message);
+    this.name = 'FieldsError';
+    this.fieldMessages = fieldMessages;
+  }
+}

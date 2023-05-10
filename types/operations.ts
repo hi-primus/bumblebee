@@ -131,6 +131,7 @@ export interface BasicField {
   disabled?: PayloadCallbackOr<boolean>;
   hidden?: PayloadCallbackOr<boolean>;
   actionButton?: FieldActionButton;
+  rules?: ((value: string) => boolean | string)[];
 }
 
 export interface SpecialField {
@@ -224,6 +225,7 @@ export type OperationItem = {
 
 export type OperationStatus = {
   message?: string;
+  fieldMessages?: Record<string, string>;
   status: 'not validated' | 'ok' | 'error' | 'fatal error';
 };
 

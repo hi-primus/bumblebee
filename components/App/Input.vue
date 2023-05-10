@@ -14,7 +14,8 @@
       class="input-field text-input-field"
       :placeholder="placeholder"
       v-bind="attrs"
-      @blur="validate(true)"
+      @blur="validate()"
+      @update:model-value="validate()"
     >
     </textarea>
     <input
@@ -25,7 +26,8 @@
       class="input-field text-input-field"
       :placeholder="placeholder"
       v-bind="attrs"
-      @blur="validate(true)"
+      @blur="validate()"
+      @update:model-value="validate()"
     />
     <span v-if="errorMessage" :class="'input-errorContainer'">
       {{ errorMessage }}
@@ -90,13 +92,22 @@ const {
   errorMessage,
   value: validateValue,
   validate: validateField
-} = useField(props.name, useRules(props.rules));
+} = useField(props.name, useRules(props.rules), { pause: true });
 
-const validate = async (emitSignal = true) => {
+let hasValidated = false;
+
+const validate = (isExternalCall = false, force = false) => {
   validateValue.value = myValue.value;
-  await validateField();
-  if (emitSignal) {
+  if (!isExternalCall || hasValidated || force) {
+    hasValidated = true;
+    validateField();
+  }
+  if (!isExternalCall) {
     emit('validate', errorMessage.value || false);
   }
 };
+
+defineExpose({
+  validate
+});
 </script>

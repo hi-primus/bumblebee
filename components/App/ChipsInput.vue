@@ -1,5 +1,6 @@
 <template>
   <AppAutocomplete
+    ref="autocomplete"
     v-model="value"
     v-model:search="search"
     :options="null"
@@ -8,13 +9,15 @@
     :placeholder="placeholder"
     :name="name"
     class="chips-input"
+    @validate="$event => emit('validate', $event)"
   />
 </template>
 
 <script setup lang="ts">
 import { PropType, ref } from 'vue';
 
-import { RuleKey } from '@/composables/use-rules';
+import Autocomplete from '@/components/App/Autocomplete.vue';
+import { Rule } from '@/composables/use-rules';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Value = any;
@@ -40,7 +43,7 @@ const props = defineProps({
     type: Function as PropType<(option: unknown) => string>
   },
   rules: {
-    type: Array as PropType<RuleKey[]>,
+    type: Array as PropType<Rule[]>,
     default: () => []
   },
   name: {
@@ -60,11 +63,14 @@ const props = defineProps({
 type Emits = {
   (e: 'update:modelValue', value: Value, oldValue: Value): void;
   (e: 'update:search', value: Value, oldValue: Value): void;
+  (e: 'validate', value: boolean | string): void;
 };
 
 const emit = defineEmits<Emits>();
 
 const value = ref<Value>(props.modelValue);
+
+const autocomplete = ref<InstanceType<typeof Autocomplete> | null>(null);
 
 watch(
   () => props.modelValue,
@@ -97,4 +103,10 @@ watch(
     emit('update:search', newValue, oldValue);
   }
 );
+
+defineExpose({
+  validate: (isExternalCall = false, force = false) => {
+    return autocomplete.value?.validate(isExternalCall, force);
+  }
+});
 </script>

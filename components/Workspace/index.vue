@@ -75,7 +75,7 @@ import {
   getUniqueName
 } from '@/utils';
 import { getPreliminaryProfile, PRIORITIES } from '@/utils/blurr';
-import { operations } from '@/utils/operations';
+import { FieldsError, operations } from '@/utils/operations';
 import { throttleOnce } from '@/utils/time';
 
 const blurrPackage = useBlurr();
@@ -1004,6 +1004,7 @@ const previewOperationThrottled = throttleOnce(
             .split('\n')
             .filter(l => l)
             .pop(),
+          fieldMessages: err instanceof FieldsError ? err.fieldMessages : {},
           status: 'error'
         };
       } else if (typeof err === 'string') {

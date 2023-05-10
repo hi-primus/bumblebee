@@ -73,10 +73,19 @@
                 >
                   <OperationField
                     v-for="subfield in field.fields"
-                    :key="`${subfield.name}-group-${groupIndex}`"
+                    :key="`${field.name}-${groupIndex}-${subfield.name}`"
+                    :ref="
+                      getRef(`${field.name}-${groupIndex}-${subfield.name}`)
+                    "
                     :field="subfield"
                     :parent-field="field.name"
                     :subfield-index="groupIndex"
+                    :error-message="
+                      errorMessages[
+                        `${field.name}-${groupIndex}-${subfield.name}`
+                      ]
+                    "
+                    @validate="validateAll"
                   />
                 </div>
                 <div class="flex flex-col mt-[-2px] h-[42px]">
@@ -106,7 +115,14 @@
               {{ field.addLabel || 'Add' }}
             </AppButton>
           </div>
-          <OperationField v-else :key="field.name" :field="field" />
+          <OperationField
+            v-else
+            :key="field.name"
+            :ref="getRef(field.name)"
+            :field="field"
+            :error-message="errorMessages[field.name]"
+            @validate="validateAll"
+          />
         </template>
       </template>
       <template v-if="saveToNewDataframe !== 'required'">
@@ -176,6 +192,32 @@ const operationValues = inject('operation-values') as Ref<
   Partial<PayloadWithOptions>
 >;
 const operationStatus = inject('operation-status') as Ref<OperationStatus>;
+
+const errorMessages = computed(() => {
+  if (
+    firstValidated.value &&
+    ['error', 'fatal error'].includes(operationStatus.value.status)
+  ) {
+    return operationStatus.value.fieldMessages || {};
+  }
+  return {};
+});
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type ComponentRef = Ref<any>;
+
+interface ComponentRefs {
+  [key: string]: ComponentRef;
+}
+
+const refs: ComponentRefs = {};
+
+const getRef = (name: string): ComponentRef => {
+  if (!refs[name]) {
+    refs[name] = ref('not assigned for some reason');
+  }
+  return refs[name];
+};
 
 const { submitOperation, cancelOperation } = inject(
   'operation-actions'
@@ -361,6 +403,17 @@ watch(
   },
   { deep: true }
 );
+
+const validateAll = debounce(() => {
+  for (const key in refs) {
+    if (Object.prototype.hasOwnProperty.call(refs, key)) {
+      const ref = refs[key];
+      if (ref.value?.validate) {
+        ref.value.validate(true);
+      }
+    }
+  }
+}, 200);
 </script>
 
 <style lang="scss">
