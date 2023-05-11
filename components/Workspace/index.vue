@@ -371,6 +371,8 @@ const executeOperations = async (changeTab = true) => {
 
   const sources: Record<string, Source> = {};
 
+  const newPayloads: PayloadWithOptions[] = [];
+
   for (let i = 0; i < data.length; i++) {
     // Skip operations that have already been executed
     if (skip && i < executedOperations.value.length) {
@@ -382,22 +384,37 @@ const executeOperations = async (changeTab = true) => {
     if (!isOperation(operation)) {
       throw new Error('Invalid operation', { cause: operation });
     }
-    const result = await operation.action({
+
+    const actionPayload: typeof payload = {
       ...adaptSources(payload, sources),
-      blurr: blurr.value,
-      appSettings: appSettings.value,
-      app: { addToast }
-    });
+      app: getAppProperties()
+    };
 
-    const sourceId = payload.options.sourceId || payload.options.newSourceId;
+    const result = await operation.action(actionPayload);
 
-    if (sourceId && payload.options.targetType === 'dataframe') {
-      operationResults.set(sourceId, { result, payload });
-      const dfName = payload.target || payload.source;
+    const {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      app: _app,
+      ...newPayload
+    } = actionPayload;
+
+    newPayloads[i] = newPayload;
+
+    const sourceId =
+      newPayload.options.sourceId || newPayload.options.newSourceId;
+
+    if (sourceId && newPayload.options.targetType === 'dataframe') {
+      operationResults.set(sourceId, { result, payload: newPayload });
+      const dfName = newPayload.target || newPayload.source;
       sources[dfName] = result as Source;
     }
-    console.info('Operation result:', { sourceId, result, payload });
+    console.info('Operation result:', { sourceId, result, newPayload });
   }
+
+  operationCells.value = data.map((item, index) => ({
+    ...item,
+    payload: newPayloads[index]
+  }));
 
   const promisesResults = await Promise.allSettled(
     Array.from(operationResults.values()).map(({ result, payload }) =>
