@@ -1217,6 +1217,10 @@ const emitWorkspaceData = () => {
 };
 
 const adaptSources = <T>(obj: T, sources: Record<string, Source>): T => {
+  if (obj instanceof File) {
+    return obj;
+  }
+
   if (Array.isArray(obj)) {
     return obj.map(o => adaptSources(o, sources)) as T;
   }
