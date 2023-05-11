@@ -107,6 +107,7 @@ export const operationCreators: Record<string, OperationCreator> = {
       if (payload.file) {
         if (payload.requestOptions.getCode) {
           return payload.blurr.readFile({
+          return payload.app.blurr.readFile({
             target: payload.target,
             url: payload.file.name,
             nRows: payload.nRows,
@@ -123,7 +124,7 @@ export const operationCreators: Record<string, OperationCreator> = {
         }
         const fileName = payload.file.name;
 
-        return payload.blurr.readFile({
+        return payload.app.blurr.readFile({
           target: payload.target,
           buffer,
           nRows: payload.nRows,
@@ -133,7 +134,7 @@ export const operationCreators: Record<string, OperationCreator> = {
       }
 
       if (payload.url) {
-        return payload.blurr.readFile({
+        return payload.app.blurr.readFile({
           target: payload.target,
           url: payload.url,
           nRows: payload.nRows,
@@ -2452,7 +2453,7 @@ export const operationCreators: Record<string, OperationCreator> = {
         `${payload.target} = ${payload.source}.cols.apply(${args})` +
         '\n' +
         `${payload.target}`;
-      const source = await payload.blurr.runCode(code);
+      const source = await payload.app.blurr.runCode(code);
       source.name = payload.target;
       console.log({ source, code });
       return source;
@@ -2509,7 +2510,7 @@ export const operationCreators: Record<string, OperationCreator> = {
 
             const funcDefResponse = await getGptResponse(
               prompt,
-              payload.appSettings.openAiApiKey
+              payload.app.settings.openAiApiKey
             );
 
             // trim between the comments ### START and ### END and save to payload.funcDef
@@ -2528,7 +2529,7 @@ export const operationCreators: Record<string, OperationCreator> = {
           }
         },
         hidden: (payload: OperationPayload) => {
-          return !payload.useFormat || !payload.appSettings.openAiApiKey;
+          return !payload.useFormat || !payload.app.settings.openAiApiKey;
         }
       },
       {
@@ -2582,7 +2583,7 @@ export const operationCreators: Record<string, OperationCreator> = {
 
             const funcDefResponse = await getGptResponse(
               prompt,
-              payload.appSettings.openAiApiKey
+              payload.app.settings.openAiApiKey
             );
 
             // trim between the comments ### START and ### END and save to payload.funcDef
@@ -2602,7 +2603,7 @@ export const operationCreators: Record<string, OperationCreator> = {
         },
         hidden: (payload: OperationPayload) => {
           return Boolean(
-            payload.useFormat || !payload.appSettings.openAiApiKey
+            payload.useFormat || !payload.app.settings.openAiApiKey
           );
         }
       },

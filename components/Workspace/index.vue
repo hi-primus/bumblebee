@@ -332,6 +332,15 @@ const checkSources = (data: OperationItem[]) => {
   );
 };
 
+const getAppProperties = () => {
+  return {
+    blurr: blurr.value,
+    settings: appSettings.value,
+    addToast,
+    ...(appSettings.value.workspaceMode ? { uploadFile } : {})
+  };
+};
+
 const executeOperations = async (changeTab = true) => {
   const data: OperationItem[] = operationCells.value;
 
@@ -471,7 +480,10 @@ const setOperationValues = (payload: OperationPayload<PayloadWithOptions>) => {
   operationValues.value = deepClone({
     ...payload,
     source: payload.source || dataframeObject.value?.df,
-    appSettings: appSettings.value
+    app: {
+      ...payload.app,
+      settings: appSettings.value
+    }
   });
 };
 
@@ -532,9 +544,7 @@ const operationActions: OperationActions = {
               ...payload.options,
               preview: false
             },
-            blurr: blurr.value,
-            appSettings: appSettings.value,
-            app: { addToast }
+            app: getAppProperties()
           });
           resetOperationValues();
           state.value = 'operations';
@@ -891,9 +901,7 @@ const previewOperationThrottled = throttleOnce(
           ...payload,
           source: firstSampleSource,
           target: firstSampleSource.name,
-          blurr: blurr.value,
-          appSettings: appSettings.value,
-          app: { addToast }
+          app: getAppProperties()
         })) as Source;
 
         checkPreviewCancel();
@@ -954,9 +962,7 @@ const previewOperationThrottled = throttleOnce(
         ...payload,
         source: payload.source,
         target: 'operation_preview_' + (payload.source?.name || 'load_df'),
-        blurr: blurr.value,
-        appSettings: appSettings.value,
-        app: { addToast }
+        app: getAppProperties()
       });
 
       checkPreviewCancel();

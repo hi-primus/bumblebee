@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { AppFunctions, AppSettings } from './app';
+import { AppProperties, AppSettings } from './app';
 import { isObject } from './common';
 
-import { Client, RequestOptions, Source } from '@/types/blurr';
+import { RequestOptions, Source } from '@/types/blurr';
 
 export type PreviewType =
   | false
@@ -41,7 +41,6 @@ export type Cols = string[];
 export type OperationPayload<
   T extends Record<string, unknown> = Record<string, unknown>
 > = {
-  blurr: Client;
   source: Source;
   target: string;
   cols: Cols;
@@ -58,8 +57,7 @@ export type OperationPayload<
   }[];
   outputCols: Cols;
   options: OperationOptions;
-  app: AppFunctions;
-  appSettings: AppSettings;
+  app: AppProperties;
   requestOptions: RequestOptions;
 } & T;
 

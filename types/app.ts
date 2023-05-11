@@ -1,3 +1,4 @@
+import { Client } from './blurr';
 import { DataframeObject } from './dataframe';
 import { OperationPayload } from './operations';
 
@@ -76,6 +77,8 @@ export interface AppStatusError {
 
 export type AppStatus = 'loading' | 'busy' | 'ready' | 'error' | AppStatusError;
 
-export type AppFunctions = {
+export type AppProperties = {
+  blurr: Client;
+  settings: AppSettings;
   addToast: (toast: ToastInput) => number;
 };

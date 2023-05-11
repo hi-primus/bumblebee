@@ -379,6 +379,14 @@ const formatOperationContent = (content: string): string => {
   return content;
 };
 
+const getAppProperties = () => {
+  return {
+    settings: appSettings.value,
+    blurr: blurr.value,
+    addToast
+  };
+};
+
 const getOperationsCode = async (): Promise<string> => {
   const data: OperationItem[] = operationCells.value;
 
@@ -415,9 +423,7 @@ const getOperationsCode = async (): Promise<string> => {
           ...payload.options,
           preview: false
         },
-        blurr: blurr.value,
-        appSettings: appSettings.value,
-        app: { addToast }
+        app: getAppProperties()
       })) + '\n';
   }
 
