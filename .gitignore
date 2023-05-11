@@ -9,3 +9,4 @@ node_modules
 !.env.example
 .vscode
 dist
+.idea
