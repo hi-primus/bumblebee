@@ -289,7 +289,7 @@ const handleDataframeResults = async (
     const profile = await getPreliminaryProfile(df);
 
     let dataframeName =
-      profile.name || getNameFromFileName(profile.file_name || '');
+      getNameFromFileName(profile.file_name || '') || profile.name;
 
     const names = dataframes.value
       .filter((_df, index) => index !== dataframeIndex)
