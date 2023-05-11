@@ -1,3 +1,5 @@
+import { FileResponse, StorageErrorPayload } from '@nhost/hasura-storage-js';
+
 import { Client } from './blurr';
 import { DataframeObject } from './dataframe';
 import { OperationPayload } from './operations';
@@ -21,6 +23,10 @@ export type TabData = Omit<DataframeObject, 'df' | 'updates'> & {
 };
 
 export type WorkspaceData = { commands: CommandData[]; tabs: TabData[] };
+
+// fields
+
+export type FileWithId = File & { id: string };
 
 // table
 
@@ -77,8 +83,21 @@ export interface AppStatusError {
 
 export type AppStatus = 'loading' | 'busy' | 'ready' | 'error' | AppStatusError;
 
+type UploadFileResponse =
+  | {
+      error: StorageErrorPayload;
+      filepath: null;
+      fileMetadata: null;
+    }
+  | {
+      error: null;
+      fileMetadata: FileResponse;
+      filepath: string;
+    };
+
 export type AppProperties = {
   blurr: Client;
   settings: AppSettings;
   addToast: (toast: ToastInput) => number;
+  uploadFile: (file: File | FileWithId) => PromiseOr<UploadFileResponse>;
 };

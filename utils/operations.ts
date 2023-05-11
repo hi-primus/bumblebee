@@ -95,9 +95,10 @@ export const operationCreators: Record<string, OperationCreator> = {
     },
     action: async (
       payload: OperationPayload<{
-        url: string;
+        url?: string;
         nRows?: number;
-        file: File;
+        file?: File;
+        fileName?: string;
       }>
     ): Promise<Source> => {
       if (payload.options.preview) {
@@ -105,32 +106,48 @@ export const operationCreators: Record<string, OperationCreator> = {
       }
 
       if (payload.file) {
+        payload.fileName = payload.file?.name || payload.fileName;
+
         if (payload.requestOptions.getCode) {
-          return payload.blurr.readFile({
+          // TODO: handle uploaded urls
           return payload.app.blurr.readFile({
             target: payload.target,
             url: payload.file.name,
             nRows: payload.nRows,
+            ...(payload.fileName
+              ? { meta: { file_name: payload.fileName } }
+              : {}),
             requestOptions: payload.requestOptions
           });
         }
 
         let buffer: ArrayBuffer;
-        if (payload.options.preview) {
-          const string = await getFirstLines(payload.file);
-          buffer = new TextEncoder().encode(string).buffer;
-        } else {
-          buffer = await payload.file.arrayBuffer();
+        if (payload.app.settings.workspaceMode && !payload.options.preview) {
+          const response = await payload.app.uploadFile(payload.file);
+          if (response.filepath) {
+            payload.url = response.filepath;
+            delete payload.file;
+          }
         }
-        const fileName = payload.file.name;
 
-        return payload.app.blurr.readFile({
-          target: payload.target,
-          buffer,
-          nRows: payload.nRows,
-          meta: { file_name: fileName },
-          requestOptions: payload.requestOptions
-        });
+        if (payload.file) {
+          if (payload.options.preview) {
+            const string = await getFirstLines(payload.file);
+            buffer = new TextEncoder().encode(string).buffer;
+          } else {
+            buffer = await payload.file.arrayBuffer();
+          }
+
+          return payload.app.blurr.readFile({
+            target: payload.target,
+            buffer,
+            nRows: payload.nRows,
+            ...(payload.fileName
+              ? { meta: { file_name: payload.fileName } }
+              : {}),
+            requestOptions: payload.requestOptions
+          });
+        }
       }
 
       if (payload.url) {
@@ -138,6 +155,9 @@ export const operationCreators: Record<string, OperationCreator> = {
           target: payload.target,
           url: payload.url,
           nRows: payload.nRows,
+          ...(payload.fileName
+            ? { meta: { file_name: payload.fileName } }
+            : {}),
           requestOptions: payload.requestOptions
         });
       }
@@ -148,10 +168,7 @@ export const operationCreators: Record<string, OperationCreator> = {
       {
         name: 'file',
         label: 'File',
-        type: 'file',
-        hidden: context => {
-          return context.appSettings.workspaceMode;
-        }
+        type: 'file'
       },
       {
         name: 'url',

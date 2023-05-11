@@ -68,12 +68,14 @@
 
 <script setup lang="ts">
 import { mdiLoading } from '@mdi/js';
+import { UploadFileResponse } from '@nhost/hasura-storage-js';
 
 import DataframeLayout from '@/components/Workspace/DataframeLayout.vue';
 import {
   AppSettings,
   AppStatus,
   CommandData,
+  FileWithId,
   TabData,
   WorkspaceData
 } from '@/types/app';
@@ -331,6 +333,36 @@ const checkSources = (data: OperationItem[]) => {
     dataframe => !dataframe.sourceId || sources.includes(dataframe.sourceId)
   );
 };
+
+const { nhost } = useNhostClient();
+
+const alreadyUploadedFiles: Record<string, UploadFileResponse> = {};
+
+async function uploadFile(file: File | FileWithId): UploadFileResponse {
+  if ('id' in file && file.id && alreadyUploadedFiles[file.id]) {
+    console.log('[DEBUG] File already uploaded', file);
+    return { ...alreadyUploadedFiles[file.id], error: null };
+  }
+  console.log('[DEBUG] Uploading file (id not found)', file);
+
+  const { fileMetadata, error } = await nhost.storage.upload({
+    file
+  });
+
+  if (!fileMetadata) {
+    return { fileMetadata, error };
+  }
+
+  const filepath = nhost.storage.getPublicUrl({
+    fileId: fileMetadata.id
+  });
+
+  if ('id' in file && file.id) {
+    alreadyUploadedFiles[file.id] = { fileMetadata, filepath };
+  }
+
+  return { fileMetadata, filepath, error };
+}
 
 const getAppProperties = () => {
   return {
