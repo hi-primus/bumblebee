@@ -334,6 +334,34 @@ export const reservedWords: {
       example: 'ROUND(99.44, 1)',
       text: 'ROUND'
     },
+    SLICE: {
+      description:
+        'Returns a slice of a string, list, or map. The slice is specified by a start index, a stop index, and a step.',
+      parameters: [
+        {
+          type: ['column', 'number'],
+          name: 'col_name',
+          description: 'The value to round to places number of places.'
+        },
+        {
+          type: 'number',
+          name: 'start',
+          description: 'Start index of slice'
+        },
+        {
+          type: 'number',
+          name: 'stop',
+          description: 'Stop index of slice'
+        },
+        {
+          type: 'number',
+          name: 'step',
+          description: 'Refers to the interval between the elements that are included in a slice.'
+        }
+      ],
+      example: "SLICE('Optimus Prime', 0,7,0)",
+      text: 'SLICE'
+    },
     SIN: {
       description: 'Returns the sin of an angle provided in radians.',
       parameters: [
@@ -507,7 +535,7 @@ export const reservedWords: {
       example: "LOWER('LOREM IPSUM')",
       text: 'LOWER'
     },
-    PROPER: {
+    TITLE: {
       description: 'Capitalizes each word in a specified string.',
       parameters: [
         {
@@ -517,8 +545,31 @@ export const reservedWords: {
             'The text which will be returned with the first letter of each word in uppercase and all other letters in lowercase.'
         }
       ],
-      example: "PROPER('optimus prime')",
-      text: 'PROPER'
+      example: "TITLE('optimus prime')",
+      text: 'TITLE'
+    },
+    PAD: {
+      description: '.',
+      parameters: [
+        {
+          type: ['column', 'string'],
+          name: 'col_name',
+          description:
+            'The text which will be returned with the first letter of each word in uppercase and all other letters in lowercase.'
+        },
+        {
+          type: 'number',
+          name: 'width',
+          description: 'The width of the resulting string.'
+        },
+        {
+          type: 'string',
+          name: 'side',
+          description:'The side of the string to pad.'
+        },
+      ],
+      example: "PAD('optimus',5,'left')",
+      text: 'PAD'
     },
     TRIM: {
       description: 'Removes leading, trailing, and repeated spaces in text.',
