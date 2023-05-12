@@ -27,13 +27,39 @@
   }
 }
 
+.manager-page {
+  @apply pb-2 px-4 max-w-[1140px] mx-auto;
+}
+
 .manager-header {
-  @apply flex justify-between items-center -mt-2 h-10;
-  h1 {
-    @apply text-2xl font-semibold text-neutral-light mr-auto pl-2 pt-px;
+  @apply flex justify-start items-end gap-1 pl-2 mb-[1em] h-[2.5em] text-neutral-light text-2xl;
+  .manager-navigation {
+    @apply flex gap-[0.25em] items-center h-[2.5em] -mb-2 whitespace-nowrap;
+  }
+  h1,
+  .title {
+    @apply font-semibold;
+  }
+  .chevron-icon {
+    @apply w-[2em] h-[2em] mt-[0.125rem];
+  }
+  .editable-element {
+    @apply px-1 -mx-1;
+  }
+  .edit-icon {
+    @apply w-[1.5em] h-[1.5em] ml-[0.5em];
+  }
+  .loading-icon {
+    @apply w-[1.5em] h-[1.5em] animate-spin text-neutral-lighter;
   }
 }
 
 .manager-form {
-  @apply flex flex-col gap-4 mb-6 mx-auto px-8 py-6 max-w-xs bg-white border border-line-light rounded shadow-md;
+  @apply flex gap-4 items-stretch max-w-md mx-auto;
+  .input {
+    @apply flex-1 rounded-lg;
+  }
+  .btn {
+    @apply min-h-[40px] rounded-lg #{!important};
+  }
 }

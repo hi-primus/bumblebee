@@ -1,26 +1,30 @@
 <template>
   <div class="workspace-container" :class="{ 'hide-operations': !showSidebar }">
-    <Tabs
-      v-model:selected="selectedTab"
-      :tabs="
-        tabs.map(tab => ({
-          label: tab >= 0 ? dataframes[tab]?.name : '(new dataset)'
-        }))
-      "
-      :class="{
-        'pointer-events-none opacity-50':
-          appSettings.workspaceMode && appStatus !== 'ready'
-      }"
-      closable
-      addable
-      @close="(index: number) => closeDataframe(index)"
-      @add="
-        () => {
-          tabs.push(-1);
-          selectedTab = tabs.length - 1;
-        }
-      "
-    />
+    <div class="top-section flex items-end gap-4">
+      <slot name="header"></slot>
+      <Tabs
+        v-model:selected="selectedTab"
+        :tabs="
+          tabs.map(tab => ({
+            label: tab >= 0 ? dataframes[tab]?.name : '(new dataset)'
+          }))
+        "
+        class="pl-4"
+        :class="{
+          'pointer-events-none opacity-50':
+            appSettings.workspaceMode && appStatus !== 'ready'
+        }"
+        closable
+        addable
+        @close="(index: number) => closeDataframe(index)"
+        @add="
+          () => {
+            tabs.push(-1);
+            selectedTab = tabs.length - 1;
+          }
+        "
+      />
+    </div>
     <WorkspaceToolbar
       :class="{
         'pointer-events-none opacity-50':
@@ -1393,14 +1397,14 @@ onUnmounted(() => {
   gap: 0px 0px;
   grid-auto-flow: row;
   grid-template-areas:
-    'tabs toolbar'
+    'top toolbar'
     'table operations'
     'footer footer';
 }
 
 .hide-operations {
   grid-template-areas:
-    'tabs toolbar'
+    'top toolbar'
     'table table'
     'footer footer';
 
@@ -1409,8 +1413,8 @@ onUnmounted(() => {
   }
 }
 
-.bumblebee-tabs {
-  grid-area: tabs;
+.bumblebee-top-section {
+  grid-area: top;
 }
 .workspace-toolbar {
   grid-area: toolbar;

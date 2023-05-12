@@ -1,41 +1,46 @@
 <template>
-  <NuxtLayout class="p-4">
-    <div class="manager-header">
-      <AppButton
-        class="layout-invisible icon-button size-large color-neutral -ml-2"
-        type="button"
-        :icon="mdiArrowLeft"
-        :to="{
-          name: 'projects-projectId-workspaces',
-          params: { projectId: route.params.projectId }
-        }"
-      />
-      <h1>Connections</h1>
+  <NuxtLayout class="manager-page">
+    <div class="manager-header !pt-24">
+      <div class="manager-navigation flex-1">
+        <NuxtLink class="title" to="/projects"> Projects </NuxtLink>
+        <Icon class="chevron-icon" :path="mdiChevronRight" />
+        <template
+          v-if="projectQueryResult?.result?.value?.projects_by_pk?.name"
+        >
+          <NuxtLink
+            class="title"
+            :to="`/projects/${route.params.projectId}/workspaces`"
+          >
+            {{ projectQueryResult?.result?.value?.projects_by_pk?.name }}
+          </NuxtLink>
+          <Icon class="chevron-icon" :path="mdiChevronRight" />
+          <h1>Connections</h1>
+        </template>
+        <Icon v-else class="loading-icon" :path="mdiLoading" />
+      </div>
+      <form class="manager-form">
+        <AppInput
+          v-model="connectionName"
+          type="text"
+          label="Connection Name"
+        />
+        <AppButton class="self-center" type="button" @click="createConnection">
+          Create Connection
+        </AppButton>
+      </form>
     </div>
-    <form class="manager-form">
-      <AppInput v-model="connectionName" type="text" label="Connection Name" />
-      <AppInput
-        v-model="connectionDescription"
-        type="textarea"
-        label="Connection Description"
-      />
-
-      <AppButton class="self-center" type="button" @click="createConnection">
-        Create Connection
-      </AppButton>
-    </form>
     <table class="data-table w-full">
       <thead>
         <tr>
           <th>Name</th>
           <th>Description</th>
           <th>Created at</th>
-          <th>Actions</th>
+          <th></th>
         </tr>
       </thead>
       <tbody>
         <tr
-          v-for="connection in queryResult.result.value?.connections"
+          v-for="connection in connectionsQueryResult.result.value?.connections"
           :key="connection.id"
         >
           <td>{{ connection.name }}</td>
@@ -72,7 +77,7 @@
           </td>
         </tr>
         <tr
-          v-if="!queryResult.result.value?.connections?.length"
+          v-if="!connectionsQueryResult.result.value?.connections?.length"
           class="table-is-empty"
         >
           <td colspan="100">No connections found</td>
@@ -82,17 +87,22 @@
   </NuxtLayout>
 </template>
 <script setup>
-import { mdiArrowLeft, mdiPencil, mdiTrashCan } from '@mdi/js';
+import { mdiChevronRight, mdiLoading, mdiPencil, mdiTrashCan } from '@mdi/js';
 
 import {
   // CREATE_CONNECTION,
   DELETE_CONNECTION,
-  GET_CONNECTIONS
+  GET_CONNECTIONS,
+  GET_PROJECT
 } from '@/api/queries';
 
 const route = useRoute();
 
-const queryResult = useClientQuery(GET_CONNECTIONS, {
+const projectQueryResult = useClientQuery(GET_PROJECT, {
+  id: route.params.projectId
+});
+
+const connectionsQueryResult = useClientQuery(GET_CONNECTIONS, {
   project_id: route.params.projectId
 });
 
@@ -105,7 +115,7 @@ const deleteConnection = id => {
   deleteConnectionMutation({ id });
 };
 onDoneDeleteConnectionMutation(() => {
-  queryResult.refetch();
+  connectionsQueryResult.refetch();
 });
 // onDoneCreateConnectionMutation(() => {
 //   connectionName.value = '';
@@ -114,5 +124,13 @@ onDoneDeleteConnectionMutation(() => {
 // });
 
 const connectionName = ref('');
-const connectionDescription = ref('');
+
+onMounted(() => {
+  if (projectQueryResult.result.value) {
+    projectQueryResult.refetch();
+  }
+  if (connectionsQueryResult.result.value) {
+    connectionsQueryResult.refetch();
+  }
+});
 </script>

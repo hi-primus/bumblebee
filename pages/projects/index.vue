@@ -1,7 +1,6 @@
 <template>
-  <NuxtLayout class="p-4">
+  <NuxtLayout class="manager-page">
     <div class="manager-header">
-      <h1 class="!pl-10">Projects</h1>
       <AppMenu
         container-class="ml-auto"
         :items="[
@@ -18,22 +17,27 @@
         />
       </AppMenu>
     </div>
-    <form class="manager-form" @submit.prevent="createProject">
-      <AppInput v-model="newProjectName" type="text" label="Project Name" />
-      <AppInput
-        v-model="newProjectDescription"
-        type="textarea"
-        label="Project Description"
-      />
-      <AppButton class="self-center" type="submit"> Create Project </AppButton>
-    </form>
-    <table class="data-table w-full">
+    <div class="manager-header">
+      <div class="manager-navigation flex-1">
+        <h1>Projects</h1>
+      </div>
+      <form class="manager-form" @submit.prevent="createProject">
+        <AppInput
+          v-model="newProjectName"
+          type="text"
+          label="New Project Name"
+        />
+        <AppButton class="self-center" type="submit">
+          Create Project
+        </AppButton>
+      </form>
+    </div>
+    <table class="data-table w-full mb-4">
       <thead>
         <tr>
           <th>Name</th>
-          <th>Description</th>
           <th>Created at</th>
-          <th class="actions">Actions</th>
+          <th class="actions"></th>
         </tr>
       </thead>
       <tbody>
@@ -42,7 +46,6 @@
           :key="project.id"
         >
           <td>{{ project.name }}</td>
-          <td>{{ project.description }}</td>
           <td>
             {{
               new Date(project.created_at).toLocaleDateString('en-US', {
@@ -55,16 +58,6 @@
 
           <td class="actions">
             <span>
-              <AppButton
-                v-tooltip="'Edit project info'"
-                class="size-small layout-invisible icon-button color-neutral"
-                type="button"
-                :icon="mdiPencil"
-                :to="{
-                  name: `projects-projectId`,
-                  params: { projectId: project.id }
-                }"
-              />
               <AppButton
                 v-tooltip="'Delete project'"
                 class="size-small layout-invisible icon-button color-neutral"
@@ -97,7 +90,6 @@
 </template>
 
 <script setup lang="ts">
-import { CREATE_PROJECT, DELETE_PROJECT, GET_PROJECTS } from '@/api/queries';
 import {
   mdiArrowLeft,
   mdiArrowRight,
@@ -105,6 +97,8 @@ import {
   mdiPencil,
   mdiTrashCan
 } from '@mdi/js';
+
+import { CREATE_PROJECT, DELETE_PROJECT, GET_PROJECTS } from '@/api/queries';
 
 useHead({
   title: 'Bumblebee Projects'
@@ -168,4 +162,10 @@ onDoneCreateProjectMutation(() => {
 
 const newProjectName = ref('');
 const newProjectDescription = ref('');
+
+onMounted(() => {
+  if (queryResult.result.value) {
+    queryResult.refetch();
+  }
+});
 </script>

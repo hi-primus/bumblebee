@@ -26,7 +26,6 @@ export const GET_CONNECTIONS = gql`
     connections(where: { project_id: { _eq: $project_id } }) {
       id
       name
-      description
       created_at
     }
   }
@@ -70,7 +69,6 @@ export const GET_WORKSPACES = gql`
       }
       id
       created_at
-      description
       name
     }
   }
@@ -79,7 +77,6 @@ export const GET_WORKSPACE_INFO = gql`
   query GetWorkspaceInfo($id: uuid = "") {
     workspaces_by_pk(id: $id) {
       name
-      description
     }
   }
 `;
@@ -120,15 +117,8 @@ export const CREATE_WORKSPACE = gql`
   }
 `;
 export const UPDATE_WORKSPACE_INFO = gql`
-  mutation UpdateWorkspaceInfo(
-    $id: uuid = ""
-    $description: String = ""
-    $name: String = ""
-  ) {
-    update_workspaces_by_pk(
-      pk_columns: { id: $id }
-      _set: { description: $description, name: $name }
-    ) {
+  mutation UpdateWorkspaceInfo($id: uuid = "", $name: String = "") {
+    update_workspaces_by_pk(pk_columns: { id: $id }, _set: { name: $name }) {
       id
     }
   }
@@ -158,7 +148,6 @@ export const GET_PROJECTS = gql`
     ) {
       name
       id
-      description
       created_at
     }
   }
@@ -166,7 +155,6 @@ export const GET_PROJECTS = gql`
 export const GET_PROJECT = gql`
   query GetProject($id: uuid = "") {
     projects_by_pk(id: $id) {
-      description
       name
       id
     }
@@ -188,15 +176,8 @@ export const CREATE_PROJECT = gql`
 `;
 
 export const UPDATE_PROJECT = gql`
-  mutation UpdateProject(
-    $id: uuid = ""
-    $description: String = ""
-    $name: String = ""
-  ) {
-    update_projects_by_pk(
-      pk_columns: { id: $id }
-      _set: { description: $description, name: $name }
-    ) {
+  mutation UpdateProject($id: uuid = "", $name: String = "") {
+    update_projects_by_pk(pk_columns: { id: $id }, _set: { name: $name }) {
       id
     }
   }

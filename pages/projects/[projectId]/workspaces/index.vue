@@ -1,14 +1,8 @@
 <template>
-  <NuxtLayout class="p-4">
+  <NuxtLayout class="manager-page">
     <div class="manager-header">
-      <AppButton
-        class="layout-invisible icon-button size-large color-neutral -ml-2"
-        type="button"
-        :icon="mdiArrowLeft"
-        to="/projects"
-      />
-      <h1>Workspaces</h1>
       <AppMenu
+        container-class="ml-auto"
         :items="[
           {
             text: 'Connections',
@@ -24,37 +18,52 @@
         />
       </AppMenu>
     </div>
-    <form class="manager-form" @submit.prevent="createWorkspace">
-      <AppInput v-model="workspaceName" type="text" label="Workspace Name" />
-      <AppInput
-        v-model="workspaceDescription"
-        type="textarea"
-        label="Workspace Description"
-      />
-      <AppButton class="self-center" type="submit">
-        Create Workspace
-      </AppButton>
-    </form>
+    <div class="manager-header">
+      <div class="manager-navigation flex-1">
+        <NuxtLink class="title" to="/projects"> Projects </NuxtLink>
+        <Icon class="chevron-icon" :path="mdiChevronRight" />
+        <template v-if="projectName !== null">
+          <EditableElement
+            ref="projectNameElement"
+            :model-value="projectName"
+            class="title"
+            @update:model-value="$event => updateProjectName($event)"
+          />
+          <IconButton
+            class="edit-icon"
+            :path="mdiPencil"
+            @click="$event => projectNameElement?.focusAndSelect()"
+          />
+        </template>
+        <Icon v-else class="loading-icon" :path="mdiLoading" />
+      </div>
+      <form class="manager-form" @submit.prevent="createWorkspace">
+        <AppInput
+          v-model="workspaceName"
+          type="text"
+          label="New Workspace Name"
+        />
+        <AppButton class="self-center" type="submit">
+          Create Workspace
+        </AppButton>
+      </form>
+    </div>
     <table class="data-table w-full">
       <thead>
         <tr>
-          <th>Active</th>
+          <th>Status</th>
           <th>Name</th>
-          <th>Description</th>
-          <th>Data Sources</th>
-          <th>Last Modification</th>
           <th>Created at</th>
+          <th class="actions"></th>
         </tr>
       </thead>
       <tbody>
         <tr
-          v-for="workspace in queryResult.result.value?.workspaces"
+          v-for="workspace in workspacesQueryResult.result.value?.workspaces"
           :key="workspace.id"
         >
-          <td>{{ workspace.id }}</td>
+          <td>{{ !!workspace.id ? 'Active' : 'Inactive' }}</td>
           <td>{{ workspace.name }}</td>
-          <td>{{ workspace.description }}</td>
-          <td>{{ workspace.description }}</td>
           <td>
             {{
               new Date(workspace.created_at).toLocaleDateString('en-US', {
@@ -67,19 +76,6 @@
 
           <td class="actions">
             <span>
-              <AppButton
-                v-tooltip="'Edit workspace info'"
-                class="size-small layout-invisible icon-button color-neutral"
-                type="button"
-                :icon="mdiPencil"
-                :to="{
-                  name: 'projects-projectId-workspaces-workspaceId-edit',
-                  params: {
-                    projectId: route.params.projectId,
-                    workspaceId: workspace.id
-                  }
-                }"
-              />
               <!-- <AppButton
                 class="size-small layout-invisible icon-button color-neutral"
                 type="button"
@@ -112,7 +108,7 @@
           </td>
         </tr>
         <tr
-          v-if="!queryResult.result.value?.workspaces?.length"
+          v-if="!workspacesQueryResult.result.value?.workspaces?.length"
           class="table-is-empty"
         >
           <td colspan="100">No workspaces found</td>
@@ -123,9 +119,10 @@
 </template>
 <script setup>
 import {
-  mdiArrowLeft,
   mdiArrowRight,
+  mdiChevronRight,
   mdiDotsVertical,
+  mdiLoading,
   mdiPencil,
   mdiTrashCan
 } from '@mdi/js';
@@ -134,7 +131,9 @@ import {
   CREATE_WORKSPACE,
   // DELETE_PROJECT,
   DELETE_WORKSPACE,
-  GET_WORKSPACES
+  GET_PROJECT,
+  GET_WORKSPACES,
+  UPDATE_PROJECT
 } from '@/api/queries';
 
 useHead({
@@ -144,10 +143,46 @@ useHead({
 const userId = useUserId();
 const route = useRoute();
 
-const queryResult = useClientQuery(GET_WORKSPACES, {
+const { addToast } = useToasts();
+
+const projectName = ref(null);
+const projectNameElement = ref(null);
+
+const projectQueryResult = useClientQuery(GET_PROJECT, {
+  id: route.params.projectId
+});
+
+const workspacesQueryResult = useClientQuery(GET_WORKSPACES, {
   user_id: userId.value,
   project_id: route.params.projectId
 });
+
+watch(
+  projectQueryResult.result,
+  newValue => {
+    if (newValue?.projects_by_pk) {
+      projectName.value = newValue.projects_by_pk.name;
+    }
+  },
+  { immediate: true }
+);
+
+const { mutate: updateProjectMutation } = useMutation(UPDATE_PROJECT);
+
+const updateProjectName = async newName => {
+  if (projectName.value === newName) {
+    return;
+  }
+  projectName.value = newName;
+  await updateProjectMutation({
+    id: route.params.projectId,
+    name: newName
+  });
+  addToast({
+    title: 'Project name updated',
+    type: 'success'
+  });
+};
 
 const {
   mutate: createWorkspaceMutation,
@@ -178,14 +213,23 @@ const deleteWorkspace = id => {
   });
 };
 onDoneDeleteProjectMutation(() => {
-  queryResult.refetch();
+  workspacesQueryResult.refetch();
 });
 onDoneCreateWorkspaceMutation(() => {
   workspaceName.value = '';
   workspaceDescription.value = '';
-  queryResult.refetch();
+  workspacesQueryResult.refetch();
 });
 
 const workspaceName = ref('');
 const workspaceDescription = ref('');
+
+onMounted(() => {
+  if (projectQueryResult.result.value) {
+    projectQueryResult.refetch();
+  }
+  if (workspacesQueryResult.result.value) {
+    workspacesQueryResult.refetch();
+  }
+});
 </script>
