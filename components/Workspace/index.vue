@@ -661,6 +661,7 @@ const operationActions: OperationActions = {
       }
     }
     previewData.value = null;
+    lastPayload = null;
   },
   cancelOperation: async (restoreInactive = false) => {
     console.info('Operation cancelled');
@@ -673,6 +674,7 @@ const operationActions: OperationActions = {
       showSidebar.value = false;
     }
     previewData.value = null;
+    lastPayload = null;
     if (
       inactiveOperationCells.value.length > 0 &&
       restoreInactive /* && editing */
@@ -1110,6 +1112,7 @@ const previewOperationThrottled = throttleOnce(
       }
       if (err instanceof Error && !err.message.includes('Preview cancelled')) {
         previewData.value = null;
+        lastPayload = null;
         operationStatus.value = {
           message: err.message
             .split('\n')
@@ -1120,6 +1123,7 @@ const previewOperationThrottled = throttleOnce(
         };
       } else if (typeof err === 'string') {
         previewData.value = null;
+        lastPayload = null;
         const message = (
           err
             .split('\n')
