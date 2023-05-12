@@ -29,7 +29,7 @@
         Create Project
       </AppButton>
     </div>
-    <table class="data-table w-full mb-4">
+    <table class="data-table clickable w-full mb-4">
       <thead>
         <tr>
           <th>Name</th>
@@ -41,6 +41,7 @@
         <tr
           v-for="project in queryResult.result.value?.projects"
           :key="project.id"
+          @click="openProject(project.id)"
         >
           <td>{{ project.name }}</td>
           <td>
@@ -60,7 +61,7 @@
                 class="size-small layout-invisible icon-button color-neutral"
                 type="button"
                 :icon="mdiTrashCan"
-                @click="deleteProject(project.id)"
+                @click.stop="deleteProject(project.id)"
               />
               <AppButton
                 v-tooltip="'View project workspaces'"
@@ -170,6 +171,10 @@ onDoneDeleteProjectMutation(() => {
 onDoneCreateProjectMutation(result => {
   navigateTo(`/projects/${result.data.insert_projects_one.id}/workspaces`);
 });
+
+const openProject = (id: string) => {
+  navigateTo(`/projects/${id}/workspaces`);
+};
 
 onMounted(() => {
   if (queryResult.result.value) {

@@ -41,7 +41,7 @@
         Create Workspace
       </AppButton>
     </div>
-    <table class="data-table w-full">
+    <table class="data-table clickable w-full">
       <thead>
         <tr>
           <th>Status</th>
@@ -54,6 +54,7 @@
         <tr
           v-for="workspace in workspacesQueryResult.result.value?.workspaces"
           :key="workspace.id"
+          @click="openWorkspace(workspace.id)"
         >
           <td>{{ !!workspace.id ? 'Active' : 'Inactive' }}</td>
           <td>{{ workspace.name }}</td>
@@ -81,7 +82,7 @@
                 class="size-small layout-invisible icon-button color-neutral"
                 type="button"
                 :icon="mdiTrashCan"
-                @click="deleteWorkspace(workspace.id)"
+                @click.stop="deleteWorkspace(workspace.id)"
               />
 
               <AppButton
@@ -208,6 +209,10 @@ onDoneCreateWorkspaceMutation(result => {
     `/projects/${route.params.projectId}/workspaces/${result.data.insert_workspaces_one.id}`
   );
 });
+
+const openWorkspace = id => {
+  navigateTo(`/projects/${route.params.projectId}/workspaces/${id}`);
+};
 
 onMounted(() => {
   if (projectQueryResult.result.value) {

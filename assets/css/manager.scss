@@ -25,6 +25,12 @@
     @apply text-neutral-lighter;
     @apply text-center #{!important};
   }
+  &.clickable tbody tr:not(.table-is-empty):hover {
+    @apply cursor-pointer;
+    &:hover {
+      @apply bg-gray-light/60;
+    }
+  }
 }
 
 .manager-page {
