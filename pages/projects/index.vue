@@ -127,7 +127,6 @@ const AppInput = resolveComponent('AppInput');
 
 const createProjectPopup = async () => {
   const result = await confirm<{ newProjectName: string }>({
-    title: 'Create Project',
     message: 'Create new project',
     fields: [
       {
