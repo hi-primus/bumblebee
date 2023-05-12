@@ -616,6 +616,7 @@
             </AppSelector>
           </div>
         </template>
+        <AppButton @click="popupForm"> Use popup form </AppButton>
         <form
           ref="operationElement"
           class="operation-form flex flex-col pt-5 px-2 gap-y-5 max-w-[480px]"
@@ -703,6 +704,8 @@ import { mdiCheckBold, mdiMore, mdiTrashCan } from '@mdi/js';
 import { Ref } from 'vue';
 
 import { TableSelection } from '@/types/operations';
+
+const { confirm } = useConfirmPopup();
 
 const TABS = {
   BUTTONS: 0,
@@ -813,6 +816,32 @@ const validateAll = debounce(() => {
 
 const submitFormTest = ($event: Event) => {
   console.log($event);
+};
+
+const AppInput = resolveComponent('AppInput');
+
+const popupForm = async () => {
+  const result = await confirm({
+    title: 'Create element',
+    message: 'Create a new element',
+    acceptLabel: 'Create',
+    cancelLabel: 'Go back',
+    fields: [
+      {
+        component: AppInput,
+        name: 'Test popup input',
+        placeholder: 'Enter value here',
+        label: 'Value'
+      },
+      {
+        component: AppInput,
+        name: 'Another input',
+        placeholder: 'Enter other value here',
+        label: 'Other Value'
+      }
+    ]
+  });
+  console.log(result);
 };
 </script>
 
