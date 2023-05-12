@@ -29,6 +29,9 @@
 
 .manager-page {
   @apply pb-2 px-4 max-w-[1140px] mx-auto;
+  .creation-button {
+    @apply min-h-[40px] rounded-lg #{!important};
+  }
 }
 
 .manager-header {
@@ -58,8 +61,5 @@
   @apply flex gap-4 items-stretch max-w-md mx-auto;
   .input {
     @apply flex-1 rounded-lg;
-  }
-  .btn {
-    @apply min-h-[40px] rounded-lg #{!important};
   }
 }

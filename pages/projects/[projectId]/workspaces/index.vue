@@ -37,16 +37,9 @@
         </template>
         <Icon v-else class="loading-icon" :path="mdiLoading" />
       </div>
-      <form class="manager-form" @submit.prevent="createWorkspace">
-        <AppInput
-          v-model="workspaceName"
-          type="text"
-          label="New Workspace Name"
-        />
-        <AppButton class="self-center" type="submit">
-          Create Workspace
-        </AppButton>
-      </form>
+      <AppButton class="creation-button" type="button" @click="createWorkspace">
+        Create Workspace
+      </AppButton>
     </div>
     <table class="data-table w-full">
       <thead>
@@ -193,15 +186,10 @@ const { mutate: deleteProjectMutation, onDone: onDoneDeleteProjectMutation } =
   useMutation(DELETE_WORKSPACE);
 
 const createWorkspace = () => {
-  console.log(
-    '[DEBUG] Creating workspace',
-    workspaceName.value,
-    workspaceDescription.value
-  );
+  console.log('[DEBUG] Creating workspace');
   createWorkspaceMutation({
     project_id: route.params.projectId,
-    name: workspaceName.value,
-    description: workspaceDescription.value,
+    name: 'Untitled Workspace',
     receiver_id: userId.value,
     sender_id: userId.value
   });
@@ -215,14 +203,11 @@ const deleteWorkspace = id => {
 onDoneDeleteProjectMutation(() => {
   workspacesQueryResult.refetch();
 });
-onDoneCreateWorkspaceMutation(() => {
-  workspaceName.value = '';
-  workspaceDescription.value = '';
-  workspacesQueryResult.refetch();
+onDoneCreateWorkspaceMutation(result => {
+  navigateTo(
+    `/projects/${route.params.projectId}/workspaces/${result.data.insert_workspaces_one.id}`
+  );
 });
-
-const workspaceName = ref('');
-const workspaceDescription = ref('');
 
 onMounted(() => {
   if (projectQueryResult.result.value) {
