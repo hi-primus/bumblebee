@@ -1,5 +1,5 @@
-import { Source } from "@/types/blurr";
-import { isObject } from "@/types/common";
+import { Source } from '@/types/blurr';
+import { isObject } from '@/types/common';
 import {
   Cols,
   JoinData,
@@ -8,12 +8,12 @@ import {
   OperationOptions,
   OperationPayload,
   Payload,
-  PayloadWithOptions,
-} from "@/types/operations";
-import { capitalize, naturalJoin } from "@/utils";
-import { PRIORITIES, pythonArguments } from "@/utils/blurr";
-import { getGptResponse } from "@/utils/gpt";
-import { mdiAutoFix } from "@mdi/js";
+  PayloadWithOptions
+} from '@/types/operations';
+import { capitalize, naturalJoin } from '@/utils';
+import { PRIORITIES, pythonArguments } from '@/utils/blurr';
+import { getGptResponse } from '@/utils/gpt';
+import { mdiAutoFix } from '@mdi/js';
 
 type Name = {
   name: string;
@@ -57,7 +57,6 @@ const inColsContent = (
 
   return str;
 };
-
 
 const defaultContentFunction = (name: string, connector = '') => {
   const prefix = name.startsWith('Get ')
@@ -1914,9 +1913,7 @@ export const operationCreators: Record<string, OperationCreator> = {
         estimate: boolean;
       }>
     ): string => {
-      return (
-        `b{Estimate} to gr{${payload.estimate}}` + inColsContent(payload)
-      );
+      return `b{Estimate} to gr{${payload.estimate}}` + inColsContent(payload);
     },
     action: (payload: OperationPayload): Source => {
       return payload.source.cols.modifiedZScore({
