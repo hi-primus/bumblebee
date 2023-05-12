@@ -203,21 +203,7 @@ const errorMessages = computed(() => {
   return {};
 });
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type ComponentRef = Ref<any>;
-
-interface ComponentRefs {
-  [key: string]: ComponentRef;
-}
-
-const refs: ComponentRefs = {};
-
-const getRef = (name: string): ComponentRef => {
-  if (!refs[name]) {
-    refs[name] = ref('not assigned for some reason');
-  }
-  return refs[name];
-};
+const { getRef, refs } = useGetRef();
 
 const { submitOperation, cancelOperation } = inject(
   'operation-actions'

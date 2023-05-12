@@ -798,18 +798,7 @@ const formValues = ref<{
   multipleSelector: []
 });
 
-interface ComponentRefs {
-  [key: string]: Ref<any>;
-}
-
-const refs: ComponentRefs = {};
-
-const getRef = (name: string): Ref<any> => {
-  if (!refs[name]) {
-    refs[name] = ref('not assigned for some reason');
-  }
-  return refs[name];
-};
+const { getRef, refs } = useGetRef();
 
 const validateAll = debounce(() => {
   for (const key in refs) {
