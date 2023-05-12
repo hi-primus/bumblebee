@@ -43,7 +43,7 @@
     </Workspace>
     <div
       v-else
-      class="absolute top-0 left-0 w-full flex-1 flex flex-col items-center justify-center"
+      class="absolute top-0 left-0 w-full h-full flex-1 flex flex-col items-center justify-center"
     >
       <Icon
         :path="mdiLoading"
