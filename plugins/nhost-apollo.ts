@@ -16,11 +16,15 @@ export default defineNuxtPlugin(nuxtApp => {
   const router = useRouter();
 
   router.beforeEach(async to => {
-    const isAuthenticated = await nhost.auth.isAuthenticatedAsync();
+    if (to.path === '/') {
+      return '/login';
+    }
 
     if (!process.client) {
       return true;
     }
+
+    const isAuthenticated = await nhost.auth.isAuthenticatedAsync();
 
     if (
       !isAuthenticated &&
@@ -29,6 +33,10 @@ export default defineNuxtPlugin(nuxtApp => {
       to.path !== '/change-password'
     ) {
       return '/login';
+    }
+
+    if (isAuthenticated && to.path === '/login') {
+      return '/projects';
     }
     return true;
   });
