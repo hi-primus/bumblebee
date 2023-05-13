@@ -82,7 +82,7 @@
                 class="size-small layout-invisible icon-button color-neutral"
                 type="button"
                 :icon="mdiTrashCan"
-                @click.stop="deleteWorkspace(workspace.id)"
+                @click.stop="deleteWorkspace(workspace)"
               />
 
               <AppButton
@@ -134,6 +134,8 @@ useHead({
   title: 'Bumblebee Workspaces'
 });
 
+const { confirm } = useConfirmPopup();
+
 const userId = useUserId();
 const route = useRoute();
 
@@ -183,7 +185,7 @@ const {
   onDone: onDoneCreateWorkspaceMutation
 } = useMutation(CREATE_WORKSPACE);
 
-const { mutate: deleteProjectMutation, onDone: onDoneDeleteProjectMutation } =
+const { mutate: deleteWorkspaceMutation, onDone: onDoneDeleteProjectMutation } =
   useMutation(DELETE_WORKSPACE);
 
 const createWorkspace = () => {
@@ -196,11 +198,22 @@ const createWorkspace = () => {
   });
 };
 
-const deleteWorkspace = id => {
-  deleteProjectMutation({
-    id
-  });
+let deleting = false;
+
+const deleteWorkspace = async workspace => {
+  if (deleting) {
+    return;
+  }
+  deleting = true;
+  const result = await confirm(`Delete '${workspace.name}'?`);
+  if (result) {
+    deleteWorkspaceMutation({
+      id: workspace.id
+    });
+  }
+  deleting = false;
 };
+
 onDoneDeleteProjectMutation(() => {
   workspacesQueryResult.refetch();
 });

@@ -61,7 +61,7 @@
                 class="size-small layout-invisible icon-button color-neutral"
                 type="button"
                 :icon="mdiTrashCan"
-                @click.stop="deleteProject(project.id)"
+                @click.stop="deleteProject(project)"
               />
               <AppButton
                 v-tooltip="'View project workspaces'"
@@ -107,13 +107,15 @@ const logout = () => {
 
 const userId = useUserId();
 
+type Project = {
+  id: string;
+  name: string;
+  description: string;
+  created_at: string;
+};
+
 const queryResult = useClientQuery<{
-  projects: {
-    id: string;
-    name: string;
-    description: string;
-    created_at: string;
-  }[];
+  projects: Project[];
 }>(GET_PROJECTS, {
   userId: userId.value
 });
@@ -158,10 +160,20 @@ const createProject = (newProjectName: string) => {
   });
 };
 
-const deleteProject = (id: string) => {
-  deleteProjectMutation({
-    id
-  });
+let deleting = false;
+
+const deleteProject = async (project: Project) => {
+  if (deleting) {
+    return;
+  }
+  deleting = true;
+  const result = await confirm(`Delete '${project.name}'?`);
+  if (result) {
+    deleteProjectMutation({
+      id: project.id
+    });
+  }
+  deleting = false;
 };
 
 onDoneDeleteProjectMutation(() => {
