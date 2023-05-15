@@ -4,18 +4,31 @@ import { DefaultApolloClient } from '@vue/apollo-composable';
 
 export default defineNuxtPlugin(nuxtApp => {
   const runtimeConfig = useRuntimeConfig();
-  const nhost = new NhostClient({
-    region: runtimeConfig.public.nhostRegion,
-    subdomain: runtimeConfig.public.nhostSubdomain,
-    clientStorageType: 'web'
-  });
-  const apolloClient = createApolloClient({
-    nhost
-  });
+
+  const authAvailable =
+    runtimeConfig.public.nhostSubdomain && runtimeConfig.public.nhostRegion;
+
+  const nhost = authAvailable
+    ? new NhostClient({
+        region: runtimeConfig.public.nhostRegion,
+        subdomain: runtimeConfig.public.nhostSubdomain,
+        clientStorageType: 'web'
+      })
+    : null;
+
+  const apolloClient = nhost
+    ? createApolloClient({
+        nhost
+      })
+    : null;
 
   const router = useRouter();
 
   router.beforeEach(async to => {
+    if (!authAvailable || !nhost || !apolloClient) {
+      return to.path !== '/' ? '/' : true;
+    }
+
     if (to.path === '/') {
       return '/login';
     }
@@ -40,6 +53,10 @@ export default defineNuxtPlugin(nuxtApp => {
     }
     return true;
   });
+
+  if (!authAvailable || !nhost || !apolloClient) {
+    return;
+  }
 
   nuxtApp.vueApp.use(nhost).provide(DefaultApolloClient, apolloClient);
 });
