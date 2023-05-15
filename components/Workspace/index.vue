@@ -338,11 +338,18 @@ const checkSources = (data: OperationItem[]) => {
   );
 };
 
-const { nhost } = useNhostClient();
+const nuxtApp = useNuxtApp();
+
+// avoid using useNhostClient() to avoid errors on installations without nhost
+const nhost = nuxtApp.$nhost;
 
 const alreadyUploadedFiles: Record<string, UploadFileResponse> = {};
 
 async function uploadFile(file: File | FileWithId): UploadFileResponse {
+  if (!nhost) {
+    return { error: 'Upload not available' };
+  }
+
   if ('id' in file && file.id && alreadyUploadedFiles[file.id]) {
     console.log('[DEBUG] File already uploaded', file);
     return { ...alreadyUploadedFiles[file.id], error: null };

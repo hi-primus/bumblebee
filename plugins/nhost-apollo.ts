@@ -58,5 +58,11 @@ export default defineNuxtPlugin(nuxtApp => {
     return;
   }
 
-  nuxtApp.vueApp.use(nhost).provide(DefaultApolloClient, apolloClient);
+  if (nhost) {
+    nuxtApp.vueApp.use(nhost).provide(DefaultApolloClient, apolloClient);
+  }
+
+  return {
+    provide: { nhost }
+  };
 });
