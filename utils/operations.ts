@@ -3637,18 +3637,21 @@ export const operationCreators: Record<string, OperationCreator> = {
     alias: 'Unsplit cols nest',
     defaultOptions: {
       usesInputCols: true,
+      usesOutputCols: false,
       usesInputDataframe: true,
       preview: 'custom'
     },
     content: (
       payload: OperationPayload<{
         separator: string;
+        drop: boolean;
       }>
     ): string => {
       return (
         `b{Nest} ${naturalJoin(payload.cols)}` +
         ` using gr{${payload.separator}}` +
-        inDataframeContent(payload)
+        inDataframeContent(payload) +
+        ` and ${payload.drop ? 'gr{drop}' : 'gr{keep}'} original columns`
       );
     },
     validate: (
@@ -3666,9 +3669,10 @@ export const operationCreators: Record<string, OperationCreator> = {
     action: (
       payload: OperationPayload<{
         separator: string;
+        drop: boolean;
       }>
     ): Source => {
-      const drop = !payload.options.preview;
+      const drop = payload.options.preview ? false : payload.drop;
       const outputCol = payload.options.preview
         ? `__bumblebee__preview__${payload.cols.join('_')}`
         : payload.cols.join('_');
@@ -3686,6 +3690,12 @@ export const operationCreators: Record<string, OperationCreator> = {
         name: 'separator',
         label: 'Separator',
         type: 'string'
+      },
+      {
+        name: 'drop',
+        label: 'Drop input columns',
+        type: 'boolean',
+        defaultValue: false
       }
     ],
     shortcut: 'cn'
