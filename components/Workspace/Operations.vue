@@ -8,12 +8,17 @@
       <h3 v-if="operation">
         {{ resolve(operation.title) || operation.name || 'Operation' }}
       </h3>
-      <h3 v-else-if="columnsInfo">Details</h3>
+      <h3 v-else-if="columnsInfo && sidebar === 'selection'">Details</h3>
       <h3 v-else>Operations</h3>
+      <IconButton
+        class="absolute h-full w-10 px-3 right-0"
+        :path="mdiClose"
+        @click="closeSidebar"
+      />
     </div>
     <OperationsOperation v-if="operation" :key="operation.name" />
     <div
-      v-else-if="columnsInfo"
+      v-else-if="columnsInfo && sidebar === 'selection'"
       :key="columnsList"
       class="columns-info-container"
     >
@@ -134,6 +139,14 @@ const { addToast } = useToasts();
 const { confirm } = useConfirmPopup();
 
 const state = inject<Ref<State | null>>('state', ref(null));
+
+const sidebar = inject('show-sidebar') as Ref<
+  'operations' | 'selection' | null
+>;
+
+const closeSidebar = () => {
+  sidebar.value = null;
+};
 
 const dataframeObject = inject<Ref<DataframeObject | null>>(
   'dataframe-object',

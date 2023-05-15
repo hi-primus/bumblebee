@@ -1,5 +1,5 @@
 <template>
-  <div class="workspace-container" :class="{ 'hide-operations': !showSidebar }">
+  <div class="workspace-container" :class="{ 'hide-operations': !sidebar }">
     <div class="top-section flex items-end gap-4">
       <slot name="header"></slot>
       <Tabs
@@ -152,8 +152,8 @@ const selectedTab = ref(-1);
 const appStatus = ref<AppStatus>('loading');
 provide('app-status', appStatus);
 
-const showSidebar = ref(false);
-provide('show-sidebar', showSidebar);
+const sidebar = ref<null | 'operations' | 'selection'>(null);
+provide('show-sidebar', sidebar);
 
 const state = ref<State>('operations');
 provide('state', state);
@@ -682,7 +682,7 @@ const operationActions: OperationActions = {
     resetOperationValues();
     state.value = 'operations';
     if (operationItems.value.length === 0) {
-      showSidebar.value = false;
+      sidebar.value = null;
     }
     previewData.value = null;
     lastPayload = null;
@@ -708,7 +708,7 @@ const operationActions: OperationActions = {
       operationActions.cancelOperation(false);
     }
     state.value = operation || 'operations';
-    showSidebar.value = true;
+    sidebar.value = 'operations';
 
     // awaits to allow the sidebar to be rendered
 
@@ -1187,6 +1187,7 @@ const previewOperation = async () => {
 };
 
 watch(() => operationValues.value, previewOperation, { deep: true });
+
 watch(
   () => selection.value,
   selection => {
@@ -1213,16 +1214,13 @@ watch(
       state.value = {
         columns: selection?.columns || []
       };
+      if (sidebar.value !== 'selection') {
+        sidebar.value = 'selection';
+      }
     }
   },
   { deep: true }
 );
-
-watch(showSidebar, show => {
-  if (!show) {
-    dataframeLayout.value?.focusTable();
-  }
-});
 
 watch(selectedTab, async tab => {
   await nextTick();
@@ -1377,13 +1375,14 @@ provide('initializeEngine', initializeEngine);
 const onKeyDown = (event: KeyboardEvent): void => {
   const key = event.key.toLowerCase();
   if (key === 'escape') {
-    if (state.value !== 'operations') {
+    if (state.value === 'operations') {
+      sidebar.value = null;
+      dataframeLayout.value?.focusTable();
+    } else if (state.value && sidebar.value) {
       operationActions.selectOperation(null);
-      if (!operationItems.value.length && showSidebar.value) {
-        showSidebar.value = false;
+      if (!operationItems.value.length && sidebar.value) {
+        sidebar.value = null;
       }
-    } else if (showSidebar.value) {
-      showSidebar.value = false;
     }
   }
 };

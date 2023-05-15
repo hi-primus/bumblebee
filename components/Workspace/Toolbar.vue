@@ -151,26 +151,74 @@
       </AppButton>
       <span
         v-tooltip="
-          sidebarDisabled
-            ? 'No operations available'
-            : isInOperation
-            ? showSidebar
-              ? 'Hide operation'
-              : 'Show operation'
-            : showSidebar
-            ? 'Close sidebar'
-            : 'Open sidebar'
+          (() => {
+            if (sidebarDisabled) {
+              return 'No operations available';
+            }
+
+            if (isInOperation) {
+              return sidebar === 'operations'
+                ? 'Hide operation'
+                : 'Show operation';
+            }
+
+            if (hasSelection) {
+              switch (sidebar) {
+                case 'selection':
+                  return 'Show operations';
+                default:
+                  return 'Show selection';
+              }
+            } else {
+              switch (sidebar) {
+                case 'operations':
+                  return 'Hide operations';
+                default:
+                  return 'Show operations';
+              }
+            }
+          })()
         "
       >
         <AppButton
           class="icon-button layout-invisible size-small"
           :class="[
-            isInOperation ? 'color-primary-light' : 'color-neutral-light'
+            isInOperation || (hasSelection && sidebar !== 'selection')
+              ? 'color-primary-light'
+              : 'color-neutral-light'
           ]"
           :disabled="sidebarDisabled"
-          @click="showSidebar = !showSidebar"
+          @click="
+            sidebar = (() => {
+              if (isInOperation) {
+                return sidebar === 'operations' ? null : 'operations';
+              }
+
+              if (hasSelection) {
+                switch (sidebar) {
+                  case 'selection':
+                    return 'operations';
+                  default:
+                    return 'selection';
+                }
+              } else {
+                switch (sidebar) {
+                  case 'operations':
+                    return null;
+                  default:
+                    return 'operations';
+                }
+              }
+            })()
+          "
         >
-          <Icon :path="mdiCodeTags" />
+          <Icon
+            :path="
+              hasSelection && sidebar !== 'selection'
+                ? mdiTableColumn
+                : mdiCodeTags
+            "
+          />
         </AppButton>
       </span>
       <AppMenu
@@ -199,7 +247,8 @@ import {
   mdiCodeTags,
   mdiDotsVertical,
   mdiLoading,
-  mdiMagnify
+  mdiMagnify,
+  mdiTableColumn
 } from '@mdi/js';
 import { Ref } from 'vue';
 
@@ -233,9 +282,13 @@ const state = inject('state') as Ref<State>;
 
 const selection = inject('selection') as Ref<TableSelection>;
 
-const { selectOperation } = inject('operation-actions') as OperationActions;
+const { selectOperation, cancelOperation } = inject(
+  'operation-actions'
+) as OperationActions;
 
-const showSidebar = inject('show-sidebar') as Ref<boolean>;
+const sidebar = inject('show-sidebar') as Ref<
+  'operations' | 'selection' | null
+>;
 
 const operationCells = inject<Ref<OperationItem[]>>('operations', ref([]));
 
@@ -245,6 +298,21 @@ const searchOperation = ref<string>('');
 
 const operationElements = ref<HTMLElement | null>(null);
 const searchOperationElement = ref<typeof AppInput | null>(null);
+
+const closeSideSection = () => {
+  if (isInOperation.value) {
+    cancelOperation(true);
+  }
+
+  if (sidebar.value === 'selection') {
+    sidebar.value = null;
+    showCommands.value = false;
+  }
+
+  if (sidebar.value === 'operations') {
+    sidebar.value = null;
+  }
+};
 
 const resolveContext = <T>(value: ContextCallbackOr<T>) => {
   if (value instanceof Function) {
@@ -332,6 +400,15 @@ const notRecentOperations = computed(() => {
 
 const isInOperation = computed(() => {
   return isOperation(state.value);
+});
+
+const hasSelection = computed(() => {
+  return (
+    state.value &&
+    typeof state.value === 'object' &&
+    'columns' in state.value &&
+    Boolean(state.value?.columns?.length)
+  );
 });
 
 const sidebarDisabled = computed(() => {

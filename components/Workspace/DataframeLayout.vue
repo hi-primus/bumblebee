@@ -395,6 +395,12 @@ const setChunksLoading = (loading = true) => {
 
 const focusTable = () => {
   if (table.value) {
+    if (
+      table.value.$el.contains(document.activeElement) ||
+      document.activeElement === table.value.$el
+    ) {
+      return;
+    }
     table.value.focus();
   }
 };
