@@ -3324,20 +3324,43 @@ export const operationCreators: Record<string, OperationCreator> = {
   sample: {
     name: 'Get n samples from the dataframe',
     alias: 'sample',
+    // TODO: Implement preview
     defaultOptions: {
-      usesInputCols: true,
-      usesInputDataframe: true,
-      preview: 'basic columns'
+      usesInputDataframe: true
     },
-    // TODO: Content property
+    content: (
+      payload: OperationPayload<{
+        n: number;
+        seed: number;
+      }>
+    ): string => {
+      return `b{Sample} gr{${payload.n}} rows from the dataframe using gr{${payload.seed}} seed`;
+    },
     action: (
-      _payload: OperationPayload<{
+      payload: OperationPayload<{
         n: number;
         seed: number;
       }>
     ): Source => {
-      throw new Error('Not implemented');
+      return payload.source.sample({
+        target: payload.target,
+        n: payload.n,
+        seed: payload.seed,
+        requestOptions: payload.requestOptions
+      });
     },
+    fields: [
+      {
+        name: 'n',
+        label: 'Number of rows',
+        type: 'number'
+      },
+      {
+        name: 'seed',
+        label: 'Seed',
+        type: 'number'
+      }
+    ],
     shortcut: 'ms'
   },
   impute: {
