@@ -151,9 +151,58 @@ export interface FieldGroup {
 
 export type Field = BasicField | SpecialField | FieldGroup;
 
+export interface ColumnsSelection {
+  columns: string[];
+  ranges: null;
+  values: null;
+  indices: null;
+  pattern: null;
+}
+
+export interface RangesSelection {
+  columns: [string];
+  ranges: [number, number][];
+  values: null;
+  indices: number[];
+  pattern: null;
+}
+
+export interface ValuesSelection {
+  columns: [string];
+  ranges: null;
+  values: BasicType[];
+  indices: number[];
+  pattern: null;
+}
+
+export interface QualitySelection {
+  columns: [string];
+  ranges: null;
+  values: 'missing' | 'match' | 'mismatch';
+  indices: null;
+  pattern: null;
+}
+
+export interface PatternsSelection {
+  columns: [string];
+  ranges: null;
+  values: null;
+  indices: null;
+  pattern: string;
+  mode: number;
+}
+
+export type TableSelection =
+  | ColumnsSelection
+  | RangesSelection
+  | ValuesSelection
+  | QualitySelection
+  | PatternsSelection
+  | null;
+
 export type ContextCallbackOr<T> =
   | T
-  | ((context: { selection: Selection; appSettings: AppSettings }) => T);
+  | ((context: { selection: TableSelection; appSettings: AppSettings }) => T);
 
 export interface OperationCreatorBase {
   name: string;
@@ -233,55 +282,6 @@ export type ColumnDetailState = {
 };
 
 export type State = Operation | ColumnDetailState | 'operations';
-
-export interface ColumnsSelection {
-  columns: string[];
-  ranges: null;
-  values: null;
-  indices: null;
-  pattern: null;
-}
-
-export interface RangesSelection {
-  columns: [string];
-  ranges: [number, number][];
-  values: null;
-  indices: number[];
-  pattern: null;
-}
-
-export interface ValuesSelection {
-  columns: [string];
-  ranges: null;
-  values: BasicType[];
-  indices: number[];
-  pattern: null;
-}
-
-export interface QualitySelection {
-  columns: [string];
-  ranges: null;
-  values: 'missing' | 'match' | 'mismatch';
-  indices: null;
-  pattern: null;
-}
-
-export interface PatternsSelection {
-  columns: [string];
-  ranges: null;
-  values: null;
-  indices: null;
-  pattern: string;
-  mode: number;
-}
-
-export type TableSelection =
-  | ColumnsSelection
-  | RangesSelection
-  | ValuesSelection
-  | QualitySelection
-  | PatternsSelection
-  | null;
 
 export interface OperationActions {
   submitOperation: () => Promise<void>;

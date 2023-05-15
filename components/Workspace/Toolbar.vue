@@ -211,7 +211,8 @@ import {
   Operation,
   OperationActions,
   OperationItem,
-  State
+  State,
+  TableSelection
 } from '@/types/operations';
 import { focusNext, focusPrevious } from '@/utils';
 import { operations } from '@/utils/operations';
