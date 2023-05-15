@@ -1,45 +1,69 @@
 <template>
   <div class="workspace-container" :class="{ 'hide-operations': !showSidebar }">
-    <Tabs
-      v-model:selected="selectedTab"
-      :tabs="
-        tabs.map(tab => ({
-          label: tab >= 0 ? dataframes[tab]?.name : '(new dataset)'
-        }))
-      "
-      closable
-      addable
-      @close="(index: number) => closeDataframe(index)"
-      @add="
-        () => {
-          tabs.push(-1);
-          selectedTab = tabs.length - 1;
-        }
-      "
+    <div class="top-section flex items-end gap-4">
+      <slot name="header"></slot>
+      <Tabs
+        v-model:selected="selectedTab"
+        :tabs="
+          tabs.map(tab => ({
+            label: tab >= 0 ? dataframes[tab]?.name : '(new dataset)'
+          }))
+        "
+        class="pl-4"
+        :class="{
+          'pointer-events-none opacity-50':
+            appSettings.workspaceMode && appStatus !== 'ready'
+        }"
+        closable
+        addable
+        @close="(index: number) => closeDataframe(index)"
+        @add="
+          () => {
+            tabs.push(-1);
+            selectedTab = tabs.length - 1;
+          }
+        "
+      />
+    </div>
+    <WorkspaceToolbar
+      :class="{
+        'pointer-events-none opacity-50':
+          appSettings.workspaceMode && appStatus === 'loading'
+      }"
     />
-    <WorkspaceToolbar />
     <WorkspaceDataframeLayout ref="dataframeLayout">
-      <div
-        v-if="availableDataframes.length > 0"
-        class="text-lg text-neutral-lighter font-bold"
-      >
-        <span> Load from existing data sources: </span>
-        <span v-for="(tabIndex, index) in availableDataframes" :key="index">
-          <span v-if="index > 0">, </span>
-          <button
-            type="button"
-            class="text-primary"
-            @click="loadDataSource(tabIndex)"
+      <div v-if="appSettings.workspaceMode && appStatus === 'loading'">
+        <Icon
+          :path="mdiLoading"
+          class="w-12 h-12 text-neutral-lighter animate-spin"
+        />
+      </div>
+      <template v-else>
+        <div
+          v-if="availableDataframes.length > 0"
+          class="text-lg text-neutral-lighter font-bold"
+        >
+          <span> Load from existing data sources: </span>
+          <span v-for="(tabIndex, index) in availableDataframes" :key="index">
+            <span v-if="index > 0">, </span>
+            <button
+              type="button"
+              class="text-primary"
+              @click="loadDataSource(tabIndex)"
+            >
+              {{ dataframes[tabIndex].name || index + 1 }}
+            </button>
+          </span>
+        </div>
+        <div class="flex justify-center items-center gap-2">
+          <AppButton
+            class="size-large color-primary-light"
+            @click="loadFromFile"
           >
-            {{ dataframes[tabIndex].name || index + 1 }}
-          </button>
-        </span>
-      </div>
-      <div class="flex justify-center items-center gap-2">
-        <AppButton class="size-large color-primary-light" @click="loadFromFile">
-          Load from file
-        </AppButton>
-      </div>
+            Load from file
+          </AppButton>
+        </div>
+      </template>
     </WorkspaceDataframeLayout>
     <WorkspaceOperations />
     <WorkspaceFooter />
@@ -47,8 +71,18 @@
 </template>
 
 <script setup lang="ts">
+import { mdiLoading } from '@mdi/js';
+import { UploadFileResponse } from '@nhost/hasura-storage-js';
+
 import DataframeLayout from '@/components/Workspace/DataframeLayout.vue';
-import { AppSettings, AppStatus } from '@/types/app';
+import {
+  AppSettings,
+  AppStatus,
+  CommandData,
+  FileWithId,
+  TabData,
+  WorkspaceData
+} from '@/types/app';
 import { Client, Source } from '@/types/blurr';
 import {
   DataframeObject,
@@ -84,11 +118,25 @@ const { addToast } = useToasts();
 
 const { confirm } = useConfirmPopup();
 
+type Emits = {
+  (event: 'update:data', data: WorkspaceData): void;
+};
+
+const props = defineProps({
+  data: {
+    type: Object as PropType<WorkspaceData>,
+    default: null
+  }
+});
+
+const emit = defineEmits<Emits>();
+
 const blurr = ref<Client | null>(null);
 provide('blurr', blurr);
 
 const appSettings = ref<AppSettings>({
-  openAiApiKey: ''
+  openAiApiKey: '',
+  workspaceMode: false
 });
 provide('app-settings', appSettings);
 
@@ -187,12 +235,13 @@ const getNewSourceId = () => {
 
 const handleDataframeResults = async (
   result: unknown,
-  payload: PayloadWithOptions
+  payload: PayloadWithOptions,
+  changeTab = true
 ) => {
   if (payload.options.targetType === 'dataframe') {
     const df = result as Source;
     let sourceId = payload.options.newSourceId || payload.options.sourceId;
-    let newSourceId = payload.options.newSourceId;
+    const newSourceId = payload.options.newSourceId;
 
     let dataframeIndex = sourceId
       ? dataframes.value.findIndex(dataframe => dataframe.sourceId === sourceId)
@@ -226,7 +275,9 @@ const handleDataframeResults = async (
         dataframes.value.push(newDataframe);
         dataframeIndex = dataframes.value.length - 1;
       }
-      loadDataSource(dataframeIndex);
+      if (changeTab) {
+        loadDataSource(dataframeIndex);
+      }
     } else {
       if (dataframeIndex < 0) {
         console.error('Could not find dataframe to update', sourceId);
@@ -242,7 +293,7 @@ const handleDataframeResults = async (
     const profile = await getPreliminaryProfile(df);
 
     let dataframeName =
-      profile.name || getNameFromFileName(profile.file_name || '');
+      getNameFromFileName(profile.file_name || '') || profile.name;
 
     const names = dataframes.value
       .filter((_df, index) => index !== dataframeIndex)
@@ -263,8 +314,11 @@ const handleDataframeResults = async (
         bins: 33,
         requestOptions: { priority: PRIORITIES.profile }
       });
+
       dataframes.value[dataframeIndex].profile =
         profileResult as DataframeProfile;
+
+      emitWorkspaceData();
     }, 0);
   } else {
     console.error('Unknown result type', result);
@@ -284,7 +338,53 @@ const checkSources = (data: OperationItem[]) => {
   );
 };
 
-const executeOperations = async () => {
+const nuxtApp = useNuxtApp();
+
+// avoid using useNhostClient() to avoid errors on installations without nhost
+const nhost = nuxtApp.$nhost;
+
+const alreadyUploadedFiles: Record<string, UploadFileResponse> = {};
+
+async function uploadFile(file: File | FileWithId): UploadFileResponse {
+  if (!nhost) {
+    return { error: 'Upload not available' };
+  }
+
+  if ('id' in file && file.id && alreadyUploadedFiles[file.id]) {
+    console.log('[DEBUG] File already uploaded', file);
+    return { ...alreadyUploadedFiles[file.id], error: null };
+  }
+  console.log('[DEBUG] Uploading file (id not found)', file);
+
+  const { fileMetadata, error } = await nhost.storage.upload({
+    file
+  });
+
+  if (!fileMetadata) {
+    return { fileMetadata, error };
+  }
+
+  const filepath = nhost.storage.getPublicUrl({
+    fileId: fileMetadata.id
+  });
+
+  if ('id' in file && file.id) {
+    alreadyUploadedFiles[file.id] = { fileMetadata, filepath };
+  }
+
+  return { fileMetadata, filepath, error };
+}
+
+const getAppProperties = () => {
+  return {
+    blurr: blurr.value,
+    settings: appSettings.value,
+    addToast,
+    ...(appSettings.value.workspaceMode ? { uploadFile } : {})
+  };
+};
+
+const executeOperations = async (changeTab = true) => {
   const data: OperationItem[] = operationCells.value;
 
   checkSources(data);
@@ -312,6 +412,10 @@ const executeOperations = async () => {
     { result: unknown; payload: PayloadWithOptions }
   >();
 
+  const sources: Record<string, Source> = {};
+
+  const newPayloads: PayloadWithOptions[] = [];
+
   for (let i = 0; i < data.length; i++) {
     // Skip operations that have already been executed
     if (skip && i < executedOperations.value.length) {
@@ -323,24 +427,41 @@ const executeOperations = async () => {
     if (!isOperation(operation)) {
       throw new Error('Invalid operation', { cause: operation });
     }
-    const result = await operation.action({
-      ...payload,
-      blurr: blurr.value,
-      appSettings: appSettings.value,
-      app: { addToast }
-    });
 
-    const sourceId = payload.options.sourceId || payload.options.newSourceId;
+    const actionPayload: typeof payload = {
+      ...adaptSources(payload, sources),
+      app: getAppProperties()
+    };
 
-    if (sourceId && payload.options.targetType === 'dataframe') {
-      operationResults.set(sourceId, { result, payload });
+    const result = await operation.action(actionPayload);
+
+    const {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      app: _app,
+      ...newPayload
+    } = actionPayload;
+
+    newPayloads[i] = newPayload;
+
+    const sourceId =
+      newPayload.options.sourceId || newPayload.options.newSourceId;
+
+    if (sourceId && newPayload.options.targetType === 'dataframe') {
+      operationResults.set(sourceId, { result, payload: newPayload });
+      const dfName = newPayload.target || newPayload.source;
+      sources[dfName] = result as Source;
     }
-    console.info('Operation result:', { sourceId, result, payload });
+    console.info('Operation result:', { sourceId, result, newPayload });
   }
+
+  operationCells.value = data.map((item, index) => ({
+    ...item,
+    payload: newPayloads[index]
+  }));
 
   const promisesResults = await Promise.allSettled(
     Array.from(operationResults.values()).map(({ result, payload }) =>
-      handleDataframeResults(result, payload)
+      handleDataframeResults(result, payload, changeTab)
     )
   );
 
@@ -419,7 +540,10 @@ const setOperationValues = (payload: OperationPayload<PayloadWithOptions>) => {
   operationValues.value = deepClone({
     ...payload,
     source: payload.source || dataframeObject.value?.df,
-    appSettings: appSettings.value
+    app: {
+      ...payload.app,
+      settings: appSettings.value
+    }
   });
 };
 
@@ -480,9 +604,7 @@ const operationActions: OperationActions = {
               ...payload.options,
               preview: false
             },
-            blurr: blurr.value,
-            appSettings: appSettings.value,
-            app: { addToast }
+            app: getAppProperties()
           });
           resetOperationValues();
           state.value = 'operations';
@@ -546,6 +668,7 @@ const operationActions: OperationActions = {
       }
     }
     previewData.value = null;
+    lastPayload = null;
   },
   cancelOperation: async (restoreInactive = false) => {
     console.info('Operation cancelled');
@@ -558,6 +681,7 @@ const operationActions: OperationActions = {
       showSidebar.value = false;
     }
     previewData.value = null;
+    lastPayload = null;
     if (
       inactiveOperationCells.value.length > 0 &&
       restoreInactive /* && editing */
@@ -839,9 +963,7 @@ const previewOperationThrottled = throttleOnce(
           ...payload,
           source: firstSampleSource,
           target: firstSampleSource.name,
-          blurr: blurr.value,
-          appSettings: appSettings.value,
-          app: { addToast }
+          app: getAppProperties()
         })) as Source;
 
         checkPreviewCancel();
@@ -902,9 +1024,7 @@ const previewOperationThrottled = throttleOnce(
         ...payload,
         source: payload.source,
         target: 'operation_preview_' + (payload.source?.name || 'load_df'),
-        blurr: blurr.value,
-        appSettings: appSettings.value,
-        app: { addToast }
+        app: getAppProperties()
       });
 
       checkPreviewCancel();
@@ -999,6 +1119,7 @@ const previewOperationThrottled = throttleOnce(
       }
       if (err instanceof Error && !err.message.includes('Preview cancelled')) {
         previewData.value = null;
+        lastPayload = null;
         operationStatus.value = {
           message: err.message
             .split('\n')
@@ -1009,6 +1130,7 @@ const previewOperationThrottled = throttleOnce(
         };
       } else if (typeof err === 'string') {
         previewData.value = null;
+        lastPayload = null;
         const message = (
           err
             .split('\n')
@@ -1111,6 +1233,118 @@ watch(selectedTab, async tab => {
   dataframeLayout.value?.clearChunks(false, false, true);
 });
 
+const emitWorkspaceData = () => {
+  const dataframeCommands = operationCells.value.map(cell => {
+    const { operation, payload } = cell;
+    return {
+      operationKey: operation.key,
+      payload
+    } as CommandData;
+  });
+
+  const dataframeTabs = tabs.value.map((tab, index) => {
+    if (tab === -1) {
+      return {
+        selected: index === selectedTab.value
+      } as TabData;
+    }
+    const dataframeObject: SomePartial<DataframeObject, 'df' | 'updates'> = {
+      ...dataframes.value[tab]
+    };
+    const dfName = dataframeObject.df?.name;
+    delete dataframeObject.df;
+    return {
+      ...dataframeObject,
+      dfName,
+      selected: index === selectedTab.value
+    } as TabData;
+  });
+
+  emit('update:data', { commands: dataframeCommands, tabs: dataframeTabs });
+};
+
+const adaptSources = <T>(obj: T, sources: Record<string, Source>): T => {
+  if (obj instanceof File) {
+    return obj;
+  }
+
+  if (Array.isArray(obj)) {
+    return obj.map(o => adaptSources(o, sources)) as T;
+  }
+
+  if (typeof obj === 'object' && obj !== null) {
+    if ((obj as any)._blurrMember === 'source') {
+      return sources[(obj as any).name] as T;
+    }
+    return objectMap(obj, o => adaptSources(o, sources)) as T;
+  }
+
+  return obj;
+};
+
+const initializeWorkspace = async () => {
+  if (props.data !== null) {
+    let { commands, tabs: tabsData } = props.data;
+
+    commands = commands || [];
+    tabsData = tabsData || [];
+
+    operationCells.value = commands
+      .map(command => {
+        const operation = operations[command.operationKey];
+        if (!operation) {
+          return null;
+        }
+        return {
+          operation,
+          payload: command.payload
+        } as OperationItem;
+      })
+      .filter((o): o is OperationItem => !!o);
+
+    await executeOperations(false);
+
+    const newTabs = [];
+    let selectTab = -1;
+
+    for (const tab of tabsData) {
+      if (!tab.dfName) {
+        newTabs.push(-1);
+      } else {
+        const index = tab.dfName
+          ? dataframes.value.findIndex(df => df.df.name === tab.dfName)
+          : dataframes.value.findIndex(df => df.sourceId === tab.sourceId);
+        if (index >= 0) {
+          newTabs.push(index);
+        } else {
+          console.warn('Tab with dfName or sourceId not found', tab);
+          newTabs.push(-1);
+        }
+      }
+      if (tab.selected) {
+        selectTab = newTabs.length - 1;
+      }
+    }
+
+    tabs.value = newTabs;
+
+    if (selectTab >= 0) {
+      selectedTab.value = selectTab;
+    }
+  }
+  if (appStatus.value === 'loading') {
+    appStatus.value = 'ready';
+  }
+};
+
+watch(
+  [tabs, selectedTab, operationCells],
+  () => {
+    emitWorkspaceData();
+  },
+  { deep: true }
+);
+
 const initializeEngine = async () => {
   try {
     const { Blurr } = blurrPackage;
@@ -1129,7 +1363,7 @@ const initializeEngine = async () => {
     appStatus.value = 'error';
   }
 
-  if (appStatus.value === 'loading') {
+  if (appStatus.value === 'loading' && !appSettings.value.workspaceMode) {
     appStatus.value = 'ready';
   }
 };
@@ -1151,8 +1385,12 @@ const onKeyDown = (event: KeyboardEvent): void => {
 };
 
 onMounted(async () => {
+  if (props.data !== null) {
+    appSettings.value.workspaceMode = true;
+  }
   document.addEventListener('keydown', onKeyDown);
   await initializeEngine();
+  await initializeWorkspace();
 });
 
 onUnmounted(() => {
@@ -1170,14 +1408,14 @@ onUnmounted(() => {
   gap: 0px 0px;
   grid-auto-flow: row;
   grid-template-areas:
-    'tabs toolbar'
+    'top toolbar'
     'table operations'
     'footer footer';
 }
 
 .hide-operations {
   grid-template-areas:
-    'tabs toolbar'
+    'top toolbar'
     'table table'
     'footer footer';
 
@@ -1186,8 +1424,8 @@ onUnmounted(() => {
   }
 }
 
-.bumblebee-tabs {
-  grid-area: tabs;
+.bumblebee-top-section {
+  grid-area: top;
 }
 .workspace-toolbar {
   grid-area: toolbar;

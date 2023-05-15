@@ -39,6 +39,9 @@
 <script lang="ts">
 import { mdiClose, mdiPaperclip } from '@mdi/js';
 import { PropType, StyleValue } from 'vue';
+
+import { FileWithId } from '@/types/app';
+
 export default {
   inheritAttrs: false
 };
@@ -47,7 +50,7 @@ export default {
 <script setup lang="ts">
 const props = defineProps({
   modelValue: {
-    type: Object as PropType<File>,
+    type: Object as PropType<FileWithId>,
     default: () => null
   },
   label: {
@@ -74,7 +77,7 @@ const emit = defineEmits(['update:modelValue']);
 
 const updates = ref(0);
 
-const myValue = computed<File | null>({
+const myValue = computed<FileWithId | null>({
   get: () => props.modelValue,
   set: value => emit('update:modelValue', value)
 });
@@ -83,7 +86,11 @@ const updateFile = (event: Event) => {
   updates.value = updates.value + 1;
   const file = (event?.target as HTMLInputElement)?.files?.[0];
   if (file) {
-    myValue.value = file;
+    const id = `${file.name}-${Date.now()}-${Math.random()
+      .toString()
+      .slice(2)}`;
+    (file as FileWithId).id = id;
+    myValue.value = file as FileWithId;
   }
 };
 </script>

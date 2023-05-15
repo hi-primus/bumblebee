@@ -11,9 +11,11 @@ const DEFAULT_POPUP: Partial<ConfirmPopup> = {
   cancelLabel: 'Cancel'
 };
 
-const confirm = async (
+type DefaultReturnType = boolean | Record<string, string | number | boolean>;
+
+const confirm = async <T extends DefaultReturnType = DefaultReturnType>(
   popupInput: Partial<ConfirmPopup> | string = {}
-): Promise<boolean> => {
+): Promise<T | boolean> => {
   let popup: Partial<ConfirmPopup>;
 
   if (typeof popupInput === 'string' || Array.isArray(popupInput)) {
@@ -29,32 +31,44 @@ const confirm = async (
   const id = popupId;
   popupId++;
 
-  // eslint-disable-next-line no-async-promise-executor
-  const result: boolean = await new Promise(async (resolve, reject) => {
-    const newConfirmPopup = Object.assign(
-      {
-        id,
-        accept: () => resolve(true),
-        cancel: () => resolve(false)
-      },
-      DEFAULT_POPUP,
-      popup
-    ) as ConfirmPopup;
-    try {
-      popups.value.push(newConfirmPopup);
-      await new Promise(resolve => setTimeout(resolve, 100));
-      const popupElement = document.getElementById(`confirm-popup-${id}`);
-      if (popupElement) {
-        const acceptButton: HTMLElement | null =
-          popupElement.querySelector('.accept-button');
-        if (acceptButton) {
-          acceptButton.focus();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const result: T | boolean =
+    // eslint-disable-next-line no-async-promise-executor
+    await new Promise(async (resolve, reject) => {
+      const newConfirmPopup = Object.assign(
+        {
+          id,
+          accept: (e: Event) => {
+            const data = new FormData(
+              (e as SubmitEvent).target as HTMLFormElement
+            );
+            const entries = [...(data?.entries?.() || [])];
+            if (entries.length) {
+              return resolve(Object.fromEntries(entries) as T);
+            } else {
+              resolve(true);
+            }
+          },
+          cancel: () => resolve(false)
+        },
+        DEFAULT_POPUP,
+        popup
+      ) as ConfirmPopup;
+      try {
+        popups.value.push(newConfirmPopup);
+        await new Promise(resolve => setTimeout(resolve, 100));
+        const popupElement = document.getElementById(`confirm-popup-${id}`);
+        if (popupElement) {
+          const acceptButton: HTMLElement | null =
+            popupElement.querySelector('.accept-button');
+          if (acceptButton) {
+            acceptButton.focus();
+          }
         }
+      } catch (err) {
+        reject(err);
       }
-    } catch (err) {
-      reject(err);
-    }
-  });
+    });
 
   popups.value = popups.value.filter(popup => popup.id !== id);
 

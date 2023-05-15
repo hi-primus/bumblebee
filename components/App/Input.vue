@@ -83,10 +83,21 @@ const props = defineProps({
 
 const { class: attrClass, style: attrStyle, ...attrs } = useAttrs();
 
-const myValue = computed({
-  get: () => props.modelValue,
-  set: value => emit('update:modelValue', value)
-});
+const myValue = ref(props.modelValue);
+
+watch(
+  () => props.modelValue,
+  value => {
+    myValue.value = value;
+  }
+);
+
+watch(
+  () => myValue.value,
+  value => {
+    emit('update:modelValue', value);
+  }
+);
 
 const {
   errorMessage,

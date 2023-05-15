@@ -1,8 +1,32 @@
+import { FileResponse, StorageErrorPayload } from '@nhost/hasura-storage-js';
+
+import { Client } from './blurr';
+import { DataframeObject } from './dataframe';
+import { OperationPayload } from './operations';
+
 // interface
 
 export interface Tab {
   label?: string;
 }
+
+// workspace
+
+export type CommandData = {
+  operationKey: string;
+  payload: OperationPayload;
+};
+
+export type TabData = Omit<DataframeObject, 'df' | 'updates'> & {
+  dfName: string;
+  selected: boolean;
+};
+
+export type WorkspaceData = { commands: CommandData[]; tabs: TabData[] };
+
+// fields
+
+export type FileWithId = File & { id: string };
 
 // table
 
@@ -36,20 +60,30 @@ export type ToastInput = Prettify<
 
 // confirm popup
 
+export type ComponentInfo = {
+  name: string;
+  component: string | Component;
+  content?: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  [key: string]: any;
+};
+
 export type ConfirmPopup = {
   id: number;
   message: string;
   title?: string;
   acceptLabel?: string;
   cancelLabel?: string;
-  accept: () => void;
+  accept: (e: Event) => void;
   cancel: () => void;
+  fields?: ComponentInfo[];
 };
 
 // app
 
 export interface AppSettings {
   openAiApiKey: string;
+  workspaceMode: boolean;
 }
 
 export interface AppStatusError {
@@ -58,6 +92,21 @@ export interface AppStatusError {
 
 export type AppStatus = 'loading' | 'busy' | 'ready' | 'error' | AppStatusError;
 
-export type AppFunctions = {
+type UploadFileResponse =
+  | {
+      error: StorageErrorPayload;
+      filepath: null;
+      fileMetadata: null;
+    }
+  | {
+      error: null;
+      fileMetadata: FileResponse;
+      filepath: string;
+    };
+
+export type AppProperties = {
+  blurr: Client;
+  settings: AppSettings;
   addToast: (toast: ToastInput) => number;
+  uploadFile: (file: File | FileWithId) => PromiseOr<UploadFileResponse>;
 };

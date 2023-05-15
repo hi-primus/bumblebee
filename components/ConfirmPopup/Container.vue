@@ -8,8 +8,9 @@
       :message="popup.message"
       :accept-label="popup.acceptLabel"
       :cancel-label="popup.cancelLabel"
+      :fields="popup.fields"
       @close="popup.cancel()"
-      @accept="popup.accept()"
+      @accept="popup.accept($event)"
     />
   </div>
 </template>

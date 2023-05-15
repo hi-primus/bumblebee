@@ -70,7 +70,7 @@
     @apply sm:text-sm md:text-base min-h-[26px] py-2 px-5;
   }
   .input-label {
-    @apply text-sm left-4;
+    @apply text-xs left-4;
   }
 }
 
@@ -175,7 +175,7 @@
   @apply relative;
 
   .dropdown-menu {
-    @apply absolute right-0 top-[calc(100%+0.25rem)] z-[20];
+    @apply absolute right-0 top-[calc(100%+0.25rem)] z-[21];
     @apply overflow-hidden min-w-[120px] max-w-[560px] max-h-[240px] overflow-y-auto py-1;
     @apply bg-white shadow-md rounded-md focus:outline-none border border-line;
     @apply sm:text-xs md:text-sm;

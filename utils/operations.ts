@@ -1,5 +1,3 @@
-import { mdiAutoFix } from '@mdi/js';
-
 import { Source } from '@/types/blurr';
 import { isObject } from '@/types/common';
 import {
@@ -13,8 +11,9 @@ import {
   PayloadWithOptions
 } from '@/types/operations';
 import { capitalize, naturalJoin } from '@/utils';
-import { PRIORITIES, pythonArguments, pythonString } from '@/utils/blurr';
+import { PRIORITIES, pythonArguments } from '@/utils/blurr';
 import { getGptResponse } from '@/utils/gpt';
+import { mdiAutoFix } from '@mdi/js';
 
 type Name = {
   name: string;
@@ -95,9 +94,10 @@ export const operationCreators: Record<string, OperationCreator> = {
     },
     action: async (
       payload: OperationPayload<{
-        url: string;
+        url?: string;
         nRows?: number;
-        file: File;
+        file?: File;
+        fileName?: string;
       }>
     ): Promise<Source> => {
       if (payload.options.preview) {
@@ -105,38 +105,58 @@ export const operationCreators: Record<string, OperationCreator> = {
       }
 
       if (payload.file) {
+        payload.fileName = payload.file?.name || payload.fileName;
+
         if (payload.requestOptions.getCode) {
-          return payload.blurr.readFile({
+          // TODO: handle uploaded urls
+          return payload.app.blurr.readFile({
             target: payload.target,
             url: payload.file.name,
             nRows: payload.nRows,
+            ...(payload.fileName
+              ? { meta: { file_name: payload.fileName } }
+              : {}),
             requestOptions: payload.requestOptions
           });
         }
 
         let buffer: ArrayBuffer;
-        if (payload.options.preview) {
-          const string = await getFirstLines(payload.file);
-          buffer = new TextEncoder().encode(string).buffer;
-        } else {
-          buffer = await payload.file.arrayBuffer();
+        if (payload.app.settings.workspaceMode && !payload.options.preview) {
+          const response = await payload.app.uploadFile(payload.file);
+          if (response.filepath) {
+            payload.url = response.filepath;
+            delete payload.file;
+          }
         }
-        const fileName = payload.file.name;
 
-        return payload.blurr.readFile({
-          target: payload.target,
-          buffer,
-          nRows: payload.nRows,
-          meta: { file_name: fileName },
-          requestOptions: payload.requestOptions
-        });
+        if (payload.file) {
+          if (payload.options.preview) {
+            const string = await getFirstLines(payload.file);
+            buffer = new TextEncoder().encode(string).buffer;
+          } else {
+            buffer = await payload.file.arrayBuffer();
+          }
+
+          return payload.app.blurr.readFile({
+            target: payload.target,
+            buffer,
+            nRows: payload.nRows,
+            ...(payload.fileName
+              ? { meta: { file_name: payload.fileName } }
+              : {}),
+            requestOptions: payload.requestOptions
+          });
+        }
       }
 
       if (payload.url) {
-        return payload.blurr.readFile({
+        return payload.app.blurr.readFile({
           target: payload.target,
           url: payload.url,
           nRows: payload.nRows,
+          ...(payload.fileName
+            ? { meta: { file_name: payload.fileName } }
+            : {}),
           requestOptions: payload.requestOptions
         });
       }
@@ -1728,6 +1748,223 @@ export const operationCreators: Record<string, OperationCreator> = {
     },
     shortcut: 'll'
   },
+  len: {
+    name: 'Length of strings',
+    alias: 'Length of the string',
+    defaultOptions: {
+      usesInputCols: true,
+      usesInputDataframe: true,
+      preview: 'basic columns'
+    },
+    content: defaultContentFunction('Length', 'string'),
+    action: (payload: OperationPayload): Source => {
+      return payload.source.cols.len({
+        target: payload.target,
+        cols: payload.cols,
+        outputCols: payload.outputCols,
+        requestOptions: payload.requestOptions
+      });
+    },
+    shortcut: 'ls'
+  },
+  wordCount: {
+    name: 'Count words in strings',
+    alias: 'Count words in strings',
+    defaultOptions: {
+      usesInputCols: true,
+      usesInputDataframe: true,
+      preview: 'basic columns'
+    },
+    content: defaultContentFunction('Count', 'words'),
+    action: (payload: OperationPayload): Source => {
+      return payload.source.cols.wordCount({
+        target: payload.target,
+        cols: payload.cols,
+        outputCols: payload.outputCols,
+        requestOptions: payload.requestOptions
+      });
+    },
+    shortcut: 'cw'
+  },
+  wordTokenizer: {
+    name: 'Split Text into Tokens',
+    alias: 'Split Text into Tokens',
+    defaultOptions: {
+      usesInputCols: true,
+      usesInputDataframe: true,
+      preview: 'basic columns'
+    },
+    content: defaultContentFunction('Count', 'words'),
+    action: (payload: OperationPayload): Source => {
+      return payload.source.cols.wordTokenizer({
+        target: payload.target,
+        cols: payload.cols,
+        outputCols: payload.outputCols,
+        requestOptions: payload.requestOptions
+      });
+    },
+    shortcut: 'cw'
+  },
+  removeNumbers: {
+    name: 'Remove numbers',
+    alias: 'Remove numbers',
+    defaultOptions: {
+      usesInputCols: true,
+      usesInputDataframe: true,
+      preview: 'basic columns'
+    },
+    content: defaultContentFunction('Remove', 'Numbers'),
+    action: (payload: OperationPayload): Source => {
+      return payload.source.cols.removeNumbers({
+        target: payload.target,
+        cols: payload.cols,
+        outputCols: payload.outputCols,
+        requestOptions: payload.requestOptions
+      });
+    },
+    shortcut: 'ul'
+  },
+  removeURLS: {
+    name: 'Remove URLs from string',
+    alias: 'Remove URLs from string',
+    defaultOptions: {
+      usesInputCols: true,
+      usesInputDataframe: true,
+      preview: 'basic columns'
+    },
+    content: defaultContentFunction('Remove', 'URLs'),
+    action: (payload: OperationPayload): Source => {
+      return payload.source.cols.removeURLS({
+        target: payload.target,
+        cols: payload.cols,
+        outputCols: payload.outputCols,
+        requestOptions: payload.requestOptions
+      });
+    },
+    shortcut: 'rus'
+  },
+  stripHTML: {
+    name: 'Remove URLs from string',
+    alias: 'Remove URLs from string',
+    defaultOptions: {
+      usesInputCols: true,
+      usesInputDataframe: true,
+      preview: 'basic columns'
+    },
+    content: defaultContentFunction('Strip', 'Html'),
+    action: (payload: OperationPayload): Source => {
+      return payload.source.cols.stripHTML({
+        target: payload.target,
+        cols: payload.cols,
+        outputCols: payload.outputCols,
+        requestOptions: payload.requestOptions
+      });
+    },
+    shortcut: 'shs'
+  },
+  lemmatizeVerbs: {
+    name: 'Lemmatize Verbs',
+    alias: 'Lemmatize Verbs',
+    defaultOptions: {
+      usesInputCols: true,
+      usesInputDataframe: true,
+      preview: 'basic columns'
+    },
+    content: defaultContentFunction('Lemmatize', 'Verbs'),
+    action: (payload: OperationPayload): Source => {
+      return payload.source.cols.lemmatizeVerbs({
+        target: payload.target,
+        cols: payload.cols,
+        outputCols: payload.outputCols,
+        requestOptions: payload.requestOptions
+      });
+    },
+    shortcut: 'shs'
+  },
+  zScore: {
+    name: 'Calculate Z-Score',
+    alias: 'Calculate Z-Score',
+    defaultOptions: {
+      usesInputCols: true,
+      usesInputDataframe: true,
+      preview: 'basic columns'
+    },
+    content: defaultContentFunction('Calculate ', 'ZScore'),
+    action: (payload: OperationPayload): Source => {
+      return payload.source.cols.zScore({
+        target: payload.target,
+        cols: payload.cols,
+        outputCols: payload.outputCols,
+        requestOptions: payload.requestOptions
+      });
+    },
+    shortcut: 'zs'
+  },
+  modifiedZScore: {
+    name: 'Calculate Modified Z-Score',
+    alias: 'Calculate Modified Z-Score',
+    defaultOptions: {
+      usesInputCols: true,
+      usesInputDataframe: true,
+      preview: 'basic columns'
+    },
+    content: (
+      payload: OperationPayload<{
+        estimate: boolean;
+      }>
+    ): string => {
+      return `b{Estimate} to gr{${payload.estimate}}` + inColsContent(payload);
+    },
+    action: (payload: OperationPayload): Source => {
+      return payload.source.cols.modifiedZScore({
+        target: payload.target,
+        cols: payload.cols,
+        estimate: payload.estimate,
+        outputCols: payload.outputCols,
+        requestOptions: payload.requestOptions
+      });
+    },
+    shortcut: 'mzs'
+  },
+  removeStopWords: {
+    name: 'Remove stop-words by language',
+    alias: 'Remove stop-words by language',
+    defaultOptions: {
+      usesInputCols: true,
+      usesInputDataframe: true,
+      preview: 'basic columns'
+    },
+    content: defaultContentFunction('Remove', 'Stop-words'),
+    action: (payload: OperationPayload): Source => {
+      return payload.source.cols.removeStopWords({
+        target: payload.target,
+        cols: payload.cols,
+        language: payload.language,
+        outputCols: payload.outputCols,
+        requestOptions: payload.requestOptions
+      });
+    },
+    shortcut: 'rss'
+  },
+  numToWords: {
+    name: 'Convert numbers to words',
+    alias: 'Convert numbers to words',
+    defaultOptions: {
+      usesInputCols: true,
+      usesInputDataframe: true,
+      preview: 'basic columns'
+    },
+    content: defaultContentFunction('Number', 'to words'),
+    action: (payload: OperationPayload): Source => {
+      return payload.source.cols.numToWords({
+        target: payload.target,
+        cols: payload.cols,
+        outputCols: payload.outputCols,
+        requestOptions: payload.requestOptions
+      });
+    },
+    shortcut: 'nw'
+  },
   upper: {
     name: 'Uppercase column values',
     alias: 'Uppercase letters upper case',
@@ -1746,6 +1983,82 @@ export const operationCreators: Record<string, OperationCreator> = {
       });
     },
     shortcut: 'ul'
+  },
+  matchRatingEncoder: {
+    name: 'Apply soundex algorithm to a specific column',
+    alias: 'soundex',
+    defaultOptions: {
+      usesInputCols: true,
+      usesInputDataframe: true,
+      preview: 'basic columns'
+    },
+    content: defaultContentFunction('Soundex', 'letters'),
+    action: (payload: OperationPayload): Source => {
+      return payload.source.cols.soundex({
+        target: payload.target,
+        cols: payload.cols,
+        outputCols: payload.outputCols,
+        requestOptions: payload.requestOptions
+      });
+    },
+    shortcut: 'ss'
+  },
+  matchRatingEncoder: {
+    name: 'Apply soundex algorithm to a specific column',
+    alias: 'soundex',
+    defaultOptions: {
+      usesInputCols: true,
+      usesInputDataframe: true,
+      preview: 'basic columns'
+    },
+    content: defaultContentFunction('Soundex', 'letters'),
+    action: (payload: OperationPayload): Source => {
+      return payload.source.cols.soundex({
+        target: payload.target,
+        cols: payload.cols,
+        outputCols: payload.outputCols,
+        requestOptions: payload.requestOptions
+      });
+    },
+    shortcut: 'ss'
+  },
+  nysiis: {
+    name: 'The match rating approach (MRA) is a phonetic algorithm developed by Western Airlines in 1977',
+    alias: 'nysiis',
+    defaultOptions: {
+      usesInputCols: true,
+      usesInputDataframe: true,
+      preview: 'basic columns'
+    },
+    content: defaultContentFunction('nysiis', 'letters'),
+    action: (payload: OperationPayload): Source => {
+      return payload.source.cols.nysiis({
+        target: payload.target,
+        cols: payload.cols,
+        outputCols: payload.outputCols,
+        requestOptions: payload.requestOptions
+      });
+    },
+    shortcut: 'ss'
+  },
+  metaphone: {
+    name: 'Apply the Metaphone algorithm to a specified column',
+    alias: 'metaphone',
+    defaultOptions: {
+      usesInputCols: true,
+      usesInputDataframe: true,
+      preview: 'basic columns'
+    },
+    content: defaultContentFunction('Soundex', 'letters'),
+    action: (payload: OperationPayload): Source => {
+      return payload.source.cols.metaphone({
+        target: payload.target,
+        cols: payload.cols,
+        outputCols: payload.outputCols,
+        requestOptions: payload.requestOptions
+      });
+    },
+    shortcut: 'ss'
   },
   title: {
     name: 'Title case column values',
@@ -2154,7 +2467,7 @@ export const operationCreators: Record<string, OperationCreator> = {
         `${payload.target} = ${payload.source}.cols.apply(${args})` +
         '\n' +
         `${payload.target}`;
-      const source = await payload.blurr.runCode(code);
+      const source = await payload.app.blurr.runCode(code);
       source.name = payload.target;
       console.log({ source, code });
       return source;
@@ -2211,7 +2524,7 @@ export const operationCreators: Record<string, OperationCreator> = {
 
             const funcDefResponse = await getGptResponse(
               prompt,
-              payload.appSettings.openAiApiKey
+              payload.app.settings.openAiApiKey
             );
 
             // trim between the comments ### START and ### END and save to payload.funcDef
@@ -2230,7 +2543,7 @@ export const operationCreators: Record<string, OperationCreator> = {
           }
         },
         hidden: (payload: OperationPayload) => {
-          return !payload.useFormat || !payload.appSettings.openAiApiKey;
+          return !payload.useFormat || !payload.app.settings.openAiApiKey;
         }
       },
       {
@@ -2284,7 +2597,7 @@ export const operationCreators: Record<string, OperationCreator> = {
 
             const funcDefResponse = await getGptResponse(
               prompt,
-              payload.appSettings.openAiApiKey
+              payload.app.settings.openAiApiKey
             );
 
             // trim between the comments ### START and ### END and save to payload.funcDef
@@ -2304,7 +2617,7 @@ export const operationCreators: Record<string, OperationCreator> = {
         },
         hidden: (payload: OperationPayload) => {
           return Boolean(
-            payload.useFormat || !payload.appSettings.openAiApiKey
+            payload.useFormat || !payload.app.settings.openAiApiKey
           );
         }
       },
@@ -2347,7 +2660,7 @@ export const operationCreators: Record<string, OperationCreator> = {
   },
   round: {
     name: 'Round Number from column values',
-    alias: 'mid',
+    alias: 'round',
     defaultOptions: {
       usesInputCols: true,
       usesInputDataframe: true,
@@ -2380,6 +2693,56 @@ export const operationCreators: Record<string, OperationCreator> = {
         name: 'decimals',
         label: 'Decimals',
         type: 'number',
+        defaultValue: 0
+      }
+    ],
+    shortcut: 'nrd'
+  },
+  // def bag_of_words(self, cols, analyzer="word", ngram_range=2)
+  bagOfWords: {
+    name: 'Method of extracting features from text for use in modeling, such as with machine learning.',
+    alias: 'bag of words',
+    defaultOptions: {
+      usesInputCols: true,
+      usesInputDataframe: true,
+      preview: 'basic columns'
+    },
+    content: (
+      payload: OperationPayload<{
+        analyzer: string;
+        ngramRange: [];
+      }>
+    ): string => {
+      return (
+        `b{Round} to gr{${payload.analyzer}} decimals` + inColsContent(payload)
+      );
+    },
+    action: (
+      payload: OperationPayload<{
+        analyzer: string;
+        ngramRange: [];
+      }>
+    ): Source => {
+      return payload.source.cols.round({
+        target: payload.target,
+        cols: payload.cols,
+        analyzer: payload.analyzer,
+        ngramRange: payload.ngramRange,
+        outputCols: payload.outputCols,
+        requestOptions: payload.requestOptions
+      });
+    },
+    fields: [
+      {
+        name: 'analyzer',
+        label: 'Analyzer',
+        type: 'string',
+        defaultValue: 0
+      },
+      {
+        name: 'ngram Range',
+        label: 'ngram Range',
+        type: '[]]',
         defaultValue: 0
       }
     ],
@@ -2441,6 +2804,76 @@ export const operationCreators: Record<string, OperationCreator> = {
       });
     },
     shortcut: 'nm'
+  },
+  mod: {
+    name: 'Modulo from column values',
+    alias: 'module',
+    defaultOptions: {
+      usesInputCols: true,
+      usesInputDataframe: true,
+      preview: 'basic columns'
+    },
+    content: (
+      payload: OperationPayload<{
+        divisor: number;
+      }>
+    ): string => {
+      return (
+        `Get modulo gr{${payload.divisor}} b{Modulo}` + inColsContent(payload)
+      );
+    },
+    action: (
+      payload: OperationPayload<{
+        divisor: number;
+      }>
+    ): Source => {
+      return payload.source.cols.log({
+        target: payload.target,
+        cols: payload.cols,
+        divisor: payload.divisor,
+        outputCols: payload.outputCols,
+        requestOptions: payload.requestOptions
+      });
+    },
+    shortcut: 'cm'
+  },
+  fingerprint: {
+    name: 'Get fingerprint from column values',
+    alias: 'fingerprint',
+    defaultOptions: {
+      usesInputCols: true,
+      usesInputDataframe: true,
+      preview: 'basic columns'
+    },
+    content: defaultContentFunction('Fingerprint', 'letters'),
+    action: (payload: OperationPayload): Source => {
+      return payload.source.cols.fingerprint({
+        target: payload.target,
+        cols: payload.cols,
+        outputCols: payload.outputCols,
+        requestOptions: payload.requestOptions
+      });
+    },
+    shortcut: 'fs'
+  },
+  pos: {
+    name: 'Get fingerprint from column values',
+    alias: 'pos part of speech',
+    defaultOptions: {
+      usesInputCols: true,
+      usesInputDataframe: true,
+      preview: 'basic columns'
+    },
+    content: defaultContentFunction('Part-of-Speech tagger', 'letters'),
+    action: (payload: OperationPayload): Source => {
+      return payload.source.cols.pos({
+        target: payload.target,
+        cols: payload.cols,
+        outputCols: payload.outputCols,
+        requestOptions: payload.requestOptions
+      });
+    },
+    shortcut: 'fs'
   },
   logarithm: {
     name: 'Logarithm from column values',
@@ -3033,25 +3466,6 @@ export const operationCreators: Record<string, OperationCreator> = {
     },
     shortcut: 'mis'
   },
-  zScore: {
-    name: 'Z-score in a column',
-    alias: 'zscore',
-    defaultOptions: {
-      usesInputCols: true,
-      usesInputDataframe: true,
-      preview: 'basic columns'
-    },
-    content: defaultContentFunction('Apply Z-score'),
-    action: (payload: OperationPayload): Source => {
-      return payload.source.cols.zScore({
-        target: payload.target,
-        cols: payload.cols,
-        outputCols: payload.outputCols,
-        requestOptions: payload.requestOptions
-      });
-    },
-    shortcut: 'msi'
-  },
   standardScaler: {
     name: 'Standard scaler in a column',
     alias: 'standard scaler',
@@ -3322,22 +3736,28 @@ const preparePayloadForAction = (
  * @returns
  */
 
-const createOperation = (operationCreator: OperationCreator): Operation => {
+const createOperation = (
+  operationCreator: OperationCreator,
+  operationKey: string
+): Operation => {
   if ('uses' in operationCreator) {
     const foundOperation = operationCreators[operationCreator.uses];
     if (!foundOperation) {
       throw new Error(`Operation ${operationCreator.uses} not found`);
     }
 
-    const operation = createOperation({
-      ...foundOperation,
-      disabled: operationCreator.disabled,
-      hidden: operationCreator.hidden,
-      shortcut: operationCreator.shortcut,
-      name: operationCreator.name,
-      alias: operationCreator.alias,
-      description: operationCreator.description
-    });
+    const operation = createOperation(
+      {
+        ...foundOperation,
+        disabled: operationCreator.disabled,
+        hidden: operationCreator.hidden,
+        shortcut: operationCreator.shortcut,
+        name: operationCreator.name,
+        alias: operationCreator.alias,
+        description: operationCreator.description
+      },
+      operationKey
+    );
 
     const words = `${operation.name} ${operation.alias || ''}`.split(' ');
 
@@ -3382,6 +3802,7 @@ const createOperation = (operationCreator: OperationCreator): Operation => {
   }
 
   const operation = { ...operationCreator } as Operation;
+  operation.key = operationKey;
   operation.fields = [...(operationCreator.fields || [])];
   operation.defaultOptions = Object.assign(
     { targetType: 'dataframe' },
@@ -3621,8 +4042,7 @@ const getFirstLines = (
 function downloadArrayBuffer(arrayBuffer: ArrayBuffer, fileName: string) {
   const blob = new Blob([arrayBuffer], { type: 'text/csv' });
   const link = document.createElement('a');
-  const url = window.URL.createObjectURL(blob);
-  link.href = url;
+  link.href = window.URL.createObjectURL(blob);
   link.download = fileName;
   document.body.appendChild(link);
   link.click();

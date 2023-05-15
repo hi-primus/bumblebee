@@ -1,0 +1,71 @@
+.data-table {
+  @apply shadow-md bg-white text-neutral-light border-collapse rounded-lg ring-line ring-1;
+  thead {
+    @apply bg-gray-lightest/50 text-neutral-lighter border-b border-line text-left rounded-t-md;
+  }
+  th {
+    @apply px-8 py-4;
+  }
+  th.actions {
+    @apply w-px;
+  }
+  tbody tr:not(:last-child) {
+    @apply border-b border-line-light;
+  }
+  tr {
+    @apply text-left;
+  }
+  td {
+    @apply px-8 py-4;
+  }
+  td.actions span {
+    @apply flex gap-2 items-center justify-end;
+  }
+  tr.table-is-empty {
+    @apply text-neutral-lighter;
+    @apply text-center #{!important};
+  }
+  &.clickable tbody tr:not(.table-is-empty):hover {
+    @apply cursor-pointer;
+    &:hover {
+      @apply bg-gray-light/60;
+    }
+  }
+}
+
+.manager-page {
+  @apply pb-2 px-4 max-w-[1140px] mx-auto;
+  .creation-button {
+    @apply min-h-[40px] rounded-lg #{!important};
+  }
+}
+
+.manager-header {
+  @apply flex justify-start items-end gap-1 pl-2 mb-[1em] h-[2.5em] text-neutral-light text-2xl;
+  .manager-navigation {
+    @apply flex gap-[0.25em] items-center h-[2.5em] -mb-2 whitespace-nowrap;
+  }
+  h1,
+  .title {
+    @apply font-semibold;
+  }
+  .chevron-icon {
+    @apply w-[2em] h-[2em] mt-[0.125rem];
+  }
+  .editable-element {
+    @apply px-1 -mx-1;
+  }
+  .edit-icon {
+    @apply w-[1.5em] h-[1.5em] ml-[0.5em];
+  }
+  .loading-icon {
+    @apply w-[1.5em] h-[1.5em] animate-spin text-neutral-lighter;
+  }
+}
+
+.manager-form {
+  @apply flex gap-4 items-stretch max-w-md mx-auto;
+  .input {
+    @apply flex-1 rounded-lg;
+  }
+}
