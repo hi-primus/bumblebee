@@ -183,9 +183,10 @@ watch(state, () => {
 });
 
 const executedOperations = ref<OperationItem[]>([]);
+const sourcesFromOperations = ref<Record<string, Source>>({});
 
-const operationCells = ref<OperationItem[]>([]);
-provide('operations', operationCells);
+const operationItems = ref<OperationItem[]>([]);
+provide('operations', operationItems);
 
 const inactiveOperationCells = ref<OperationItem[]>([]);
 provide('inactive-operations', inactiveOperationCells);
@@ -385,7 +386,7 @@ const getAppProperties = () => {
 };
 
 const executeOperations = async (changeTab = true) => {
-  const data: OperationItem[] = operationCells.value;
+  const data: OperationItem[] = operationItems.value;
 
   checkSources(data);
 
@@ -407,12 +408,15 @@ const executeOperations = async (changeTab = true) => {
     }
   }
 
+  if (!skip) {
+    executedOperations.value = [];
+    sourcesFromOperations.value = {};
+  }
+
   const operationResults = new Map<
     string,
     { result: unknown; payload: PayloadWithOptions }
   >();
-
-  const sources: Record<string, Source> = {};
 
   const newPayloads: PayloadWithOptions[] = [];
 
@@ -429,7 +433,7 @@ const executeOperations = async (changeTab = true) => {
     }
 
     const actionPayload: typeof payload = {
-      ...adaptSources(payload, sources),
+      ...adaptSources(payload, sourcesFromOperations.value),
       app: getAppProperties()
     };
 
@@ -449,14 +453,14 @@ const executeOperations = async (changeTab = true) => {
     if (sourceId && newPayload.options.targetType === 'dataframe') {
       operationResults.set(sourceId, { result, payload: newPayload });
       const dfName = newPayload.target || newPayload.source;
-      sources[dfName] = result as Source;
+      sourcesFromOperations.value[dfName] = result as Source;
     }
     console.info('Operation result:', { sourceId, result, newPayload });
   }
 
-  operationCells.value = data.map((item, index) => ({
+  operationItems.value = data.map((item, index) => ({
     ...item,
-    payload: newPayloads[index]
+    payload: newPayloads[index] || item.payload
   }));
 
   const promisesResults = await Promise.allSettled(
@@ -635,14 +639,14 @@ const operationActions: OperationActions = {
             editingIndex,
             newOperation
           });
-          operationCells.value = [
-            ...operationCells.value,
+          operationItems.value = [
+            ...operationItems.value,
             ...inactiveOperationCells.value
           ];
-          operationCells.value[editingIndex] = newOperation;
+          operationItems.value[editingIndex] = newOperation;
           inactiveOperationCells.value = [];
         } else {
-          operationCells.value.push(newOperation);
+          operationItems.value.push(newOperation);
         }
       }
 
@@ -677,7 +681,7 @@ const operationActions: OperationActions = {
     // const editing = operationValues.value.options?.editing;
     resetOperationValues();
     state.value = 'operations';
-    if (operationCells.value.length === 0) {
+    if (operationItems.value.length === 0) {
       showSidebar.value = false;
     }
     previewData.value = null;
@@ -686,8 +690,8 @@ const operationActions: OperationActions = {
       inactiveOperationCells.value.length > 0 &&
       restoreInactive /* && editing */
     ) {
-      operationCells.value = [
-        ...operationCells.value,
+      operationItems.value = [
+        ...operationItems.value,
         ...inactiveOperationCells.value
       ];
       inactiveOperationCells.value = [];
@@ -1234,7 +1238,7 @@ watch(selectedTab, async tab => {
 });
 
 const emitWorkspaceData = () => {
-  const dataframeCommands = operationCells.value.map(cell => {
+  const dataframeCommands = operationItems.value.map(cell => {
     const { operation, payload } = cell;
     return {
       operationKey: operation.key,
@@ -1289,7 +1293,7 @@ const initializeWorkspace = async () => {
     commands = commands || [];
     tabsData = tabsData || [];
 
-    operationCells.value = commands
+    operationItems.value = commands
       .map(command => {
         const operation = operations[command.operationKey];
         if (!operation) {
@@ -1338,7 +1342,7 @@ const initializeWorkspace = async () => {
 };
 
 watch(
-  [tabs, selectedTab, operationCells],
+  [tabs, selectedTab, operationItems],
   () => {
     emitWorkspaceData();
   },
@@ -1375,7 +1379,7 @@ const onKeyDown = (event: KeyboardEvent): void => {
   if (key === 'escape') {
     if (state.value !== 'operations') {
       operationActions.selectOperation(null);
-      if (!operationCells.value.length && showSidebar.value) {
+      if (!operationItems.value.length && showSidebar.value) {
         showSidebar.value = false;
       }
     } else if (showSidebar.value) {
