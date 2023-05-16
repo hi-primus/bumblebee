@@ -6,7 +6,7 @@
         v-model:selected="selectedTab"
         :tabs="
           tabs.map(tab => ({
-            label: tab >= 0 ? dataframes[tab]?.name : '(new dataset)'
+            label: tab >= 0 ? dataframes[tab]?.name : undefined
           }))
         "
         class="pl-4"
@@ -218,8 +218,8 @@ provide('select-dataframe', selectDataframe);
 
 const closeDataframe = async (tabIndex: number) => {
   if (tabs.value[tabIndex] >= 0) {
-    const tabName = dataframes.value[tabs.value[tabIndex]].name;
-    const close = await confirm(`Close '${tabName}'?`);
+    const tabName = dataframes.value?.[tabs.value[tabIndex]]?.name;
+    const close = await confirm(tabName ? `Close '${tabName}'?` : 'Close tab?');
     if (!close) {
       return;
     }
