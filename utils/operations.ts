@@ -1855,8 +1855,8 @@ export const operationCreators: Record<string, OperationCreator> = {
     shortcut: 'rus'
   },
   stripHTML: {
-    name: 'Remove URLs from string',
-    alias: 'Remove URLs from string',
+    name: 'Strip HTML tags',
+    alias: 'remove tag',
     defaultOptions: {
       usesInputCols: true,
       usesInputDataframe: true,
