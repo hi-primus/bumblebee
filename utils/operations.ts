@@ -476,7 +476,7 @@ export const operationCreators: Record<string, OperationCreator> = {
     content: (
       payload: OperationPayload<{
         concat: {
-          dfs: string;
+          dfs: { name: string }[];
           outputColumns: {
             value: string;
             columns: {
@@ -492,13 +492,17 @@ export const operationCreators: Record<string, OperationCreator> = {
       const dfName = foundDf?.name || `dn{${payload.source.name}}`;
       return (
         'b{Concat} ' +
-        naturalJoin([dfName, ...payload.concat.dfs].map(df => `rd{${df}}`))
+        naturalJoin(
+          [dfName, ...payload.concat.dfs.map(df => df.name)].map(
+            df => `rd{${df}}`
+          )
+        )
       );
     },
     action: (
       payload: OperationPayload<{
         concat: {
-          dfs?: string[];
+          dfs?: { sourceId: string }[];
           outputColumns: {
             value: string;
             columns: (string | undefined)[];
@@ -508,7 +512,10 @@ export const operationCreators: Record<string, OperationCreator> = {
     ) => {
       const dfs =
         payload.concat.dfs
-          ?.map(df => payload.allDataframes?.find(d => d.name === df)?.df)
+          ?.map(
+            df =>
+              payload.allDataframes?.find(d => d.sourceId === df.sourceId)?.df
+          )
           .filter(df => df) || [];
 
       const namesMap = payload.concat.outputColumns.reduce((acc, col) => {

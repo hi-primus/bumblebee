@@ -747,6 +747,7 @@ const operationActions: OperationActions = {
 
     const allDataframes = dataframes.value.map(dataframe => {
       return {
+        sourceId: dataframe.sourceId,
         name: dataframe.name,
         columns: Object.keys(dataframe.profile?.columns || {}),
         df: dataframe.df

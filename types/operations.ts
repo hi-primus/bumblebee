@@ -46,6 +46,7 @@ export type OperationPayload<
   cols: Cols;
   allColumns: Cols;
   allDataframes: {
+    sourceId: string;
     name: string;
     columns: Cols;
     df: Source;
