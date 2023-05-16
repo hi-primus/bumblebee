@@ -41,6 +41,7 @@
       </div>
       <div class="menu-button-container w-[70px] flex justify-center">
         <AppMenu
+          v-if="dataframeOptions.length > 0"
           class="center-menu"
           :items="
             dataframeOptions.map(df => ({
