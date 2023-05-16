@@ -3,7 +3,7 @@
     class="workspace-aside flex flex-col bg-white border-line border-solid border-l overflow-hidden"
   >
     <div
-      class="w-full h-8 bg-primary-highlight text-neutral-alpha flex justify-center items-center"
+      class="relative w-full h-8 bg-primary-highlight text-neutral-alpha flex justify-center items-center"
     >
       <h3 v-if="operation">
         {{ resolve(operation.title) || operation.name || 'Operation' }}
