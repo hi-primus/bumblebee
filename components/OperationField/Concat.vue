@@ -43,9 +43,9 @@
         <AppMenu
           class="center-menu"
           :items="
-            dataframeOptions.map(name => ({
-              text: name || '',
-              action: () => addDataframe(name)
+            dataframeOptions.map(df => ({
+              text: df.name || '',
+              action: () => addDataframe(df)
             }))
           "
         >
@@ -104,11 +104,13 @@
                   <OperationFieldConcatItem
                     :item="{
                       name: element,
-                      type: columnTypes[dataframesInfo[dfIndex].name]?.[
+                      type: columnTypes[dataframesInfo[dfIndex].sourceId]?.[
                         element
                       ],
                       value:
-                        columnValues[dataframesInfo[dfIndex].name]?.[element]
+                        columnValues[dataframesInfo[dfIndex].sourceId]?.[
+                          element
+                        ]
                     }"
                   />
                   <IconButton
@@ -195,8 +197,11 @@
               <OperationFieldConcatItem
                 :item="{
                   name: element,
-                  type: columnTypes[dataframesInfo[dfIndex].name]?.[element],
-                  value: columnValues[dataframesInfo[dfIndex].name]?.[element]
+                  type: columnTypes[dataframesInfo[dfIndex].sourceId]?.[
+                    element
+                  ],
+                  value:
+                    columnValues[dataframesInfo[dfIndex].sourceId]?.[element]
                 }"
               />
             </div>
@@ -229,7 +234,7 @@ type OutputColumn = {
 type Slot<T> = [T] | [];
 
 type Value = {
-  dfs: string[];
+  dfs: { name: string | undefined; sourceId: string }[];
   outputColumns: { value: string; columns: (string | undefined)[] }[];
 };
 
@@ -271,10 +276,10 @@ const outputItems = computed<OutputColumn[]>(() => {
 
     const types = itemsSlotsGroups.value
       .map((e, dfIndex) => {
-        const dfName = dataframesInfo.value[dfIndex].name;
+        const sourceId = dataframesInfo.value[dfIndex].sourceId;
         const colName = e[groupIndex]?.[0];
-        return dfName && colName
-          ? columnTypes.value?.[dfName]?.[colName]
+        return sourceId && colName
+          ? columnTypes.value?.[sourceId]?.[colName]
           : undefined;
       })
       .filter((e): e is string => e !== undefined);
@@ -316,11 +321,13 @@ const value = computed<Value>({
   }
 });
 
-const selectedDataframes = computed<string[]>({
+const selectedDataframes = computed<
+  { name: string | undefined; sourceId: string }[]
+>({
   get() {
     return value.value.dfs || [];
   },
-  set(dfs: string[]) {
+  set(dfs: { name: string | undefined; sourceId: string }[]) {
     value.value.dfs = dfs;
   }
 });
@@ -328,20 +335,23 @@ const selectedDataframes = computed<string[]>({
 const columnTypes = ref<Record<string, Record<string, string>>>({});
 const columnValues = ref<Record<string, Record<string, string>>>({});
 
-const loadDataframeData = async (dfName: string) => {
-  const dataframe = dataframes.value?.find(df => df.name === dfName);
+const loadDataframeData = async (sourceId: string) => {
+  const dataframe = dataframes.value?.find(df => df.sourceId === sourceId);
   if (!dataframe) {
     return;
   }
   const dataTypes = (
     await dataframe.df.cols.inferredDataType({
       cols: '*',
+      useInternal: true,
       tidy: false,
       requestOptions: { priority: PRIORITIES.requirement }
     })
   )?.inferred_data_type;
 
-  dataTypes && (columnTypes.value[dfName] = dataTypes);
+  if (dataTypes) {
+    columnTypes.value[sourceId] = dataTypes;
+  }
 
   const valuesResult = await dataframe.df
     .iloc({
@@ -357,54 +367,61 @@ const loadDataframeData = async (dfName: string) => {
     return acc;
   }, {} as Record<string, string>);
 
-  values && (columnValues.value[dfName] = values);
+  values && (columnValues.value[sourceId] = values);
 };
 
 const dataframesData = computed(() => {
   const dfs = [...dataframes.value] || [];
   const obj = {} as Record<string, string[]>;
   for (const df of dfs) {
-    if (!df.name) {
+    if (!df.sourceId) {
       continue;
     }
 
-    obj[df.name] = Object.keys(df.profile?.columns || {});
-    loadDataframeData(df.name);
+    obj[df.sourceId] = Object.keys(df.profile?.columns || {});
+    loadDataframeData(df.sourceId);
   }
   return obj;
 });
 
 const allDataframeOptions = computed(() => {
-  return dataframes.value?.map(e => e.name) || [];
+  return (
+    dataframes.value?.map(e => ({
+      name: e.name,
+      sourceId: e.sourceId
+    })) || []
+  );
 });
 
 const dataframeOptions = computed(() => {
   return allDataframeOptions.value.filter(
     e =>
-      !selectedDataframes.value.includes(e || '') &&
-      dataframeObject.value?.name !== e
+      !selectedDataframes.value.find(df => df.sourceId === e.sourceId) &&
+      (dataframeObject.value?.name !== e.name ||
+        dataframeObject.value?.sourceId !== e.sourceId)
   );
 });
 
 const options = computed(() => {
-  const dfName = dataframes.value?.find(df => {
+  const dfId = dataframes.value?.find(df => {
     const _d = df.df.name;
     return _d === dataframeObject.value?.df?.name;
-  })?.name;
+  })?.sourceId;
 
-  const otherDfNames = selectedDataframes.value || [];
+  const otherDfIds = (selectedDataframes.value || []).map(df => df.sourceId);
 
-  return [dfName, ...otherDfNames].map(name => {
-    if (!name) {
+  return [dfId, ...otherDfIds].map(sourceId => {
+    if (!sourceId) {
       return [];
     }
-    return dataframesData.value[name] || [];
+    return dataframesData.value[sourceId] || [];
   });
 });
 
 const dataframesInfo = computed<
   {
     name: string;
+    sourceId: string;
     activeColumns: number;
     totalColumns: number;
   }[]
@@ -417,7 +434,11 @@ const dataframesInfo = computed<
       name:
         index === 0
           ? dataframeObject.value?.name || 'Current dataframe'
-          : selectedDataframes.value[index - 1],
+          : selectedDataframes.value[index - 1]?.name || 'dataframe',
+      sourceId:
+        index === 0
+          ? dataframeObject.value?.sourceId || '0'
+          : selectedDataframes.value[index - 1]?.sourceId || `-${index}`,
       activeColumns,
       totalColumns: cols.length
     };
@@ -686,8 +707,8 @@ const deleteEmptyItemsSlots = (itemsSlotsGroups: Slot<string>[][]) => {
   return undefined;
 };
 
-const addDataframe = (name: string) => {
-  selectedDataframes.value.push(name);
+const addDataframe = (df: { name: string | undefined; sourceId: string }) => {
+  selectedDataframes.value.push({ ...df });
   resetItemsSlotsGroups(false);
 };
 
@@ -776,10 +797,12 @@ watch(value, () => {
 });
 
 onMounted(() => {
-  const dfName = dataframes.value?.find(
+  const df = dataframes.value?.find(
     df => df.name !== dataframeObject.value?.name
-  )?.name;
-  selectedDataframes.value = dfName ? [dfName] : [];
+  );
+  selectedDataframes.value = df
+    ? [{ name: df.name, sourceId: df.sourceId }]
+    : [];
   resetItemsSlotsGroups(false);
 });
 </script>
