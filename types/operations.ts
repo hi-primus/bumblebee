@@ -18,6 +18,7 @@ export interface OperationOptions {
   usesInputCols?: boolean | 'single';
   usesOutputCols?: boolean | 'required';
   usesInputDataframe?: boolean;
+  usesDiff?: boolean;
   saveToNewDataframe?: boolean | 'required';
   oneTime?: boolean;
   sourceId?: string;

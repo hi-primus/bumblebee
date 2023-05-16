@@ -25,6 +25,7 @@ export interface KeyedColumn {
 export interface Column extends KeyedColumn {
   displayTitle?: string;
   title: string;
+  inputColumnTitle?: string;
 }
 
 type HighlightedColumnBaseType = 'highlighted' | 'preview';
@@ -57,6 +58,7 @@ export interface DataframeProfile {
 }
 
 export interface PreviewOptions {
+  usesDiff?: boolean;
   usesInputDataframe?: boolean;
 }
 

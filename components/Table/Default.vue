@@ -182,7 +182,7 @@
 <script setup lang="ts">
 import { PropType, Ref } from 'vue';
 
-import { ColumnHeader } from '@/types/dataframe';
+import { ColumnHeader, PreviewData } from '@/types/dataframe';
 import { TableSelection } from '@/types/operations';
 import { focusNext, focusPrevious } from '@/utils';
 import { getCompleteType } from '@/utils/data-types';
@@ -198,6 +198,8 @@ const props = defineProps({
     required: true
   }
 });
+
+const { diffChars } = useDiff();
 
 const selection = inject('selection') as Ref<TableSelection>;
 
@@ -261,6 +263,14 @@ type Row = {
   index: number;
 };
 
+const getRowHightlights = (values: unknown[]): string => {
+  return highlights.value
+    .map(column =>
+      values[column.columnIndex] ? `row-color-${column.highlight}` : null
+    )
+    .join(' ');
+};
+
 const rowsData = computed(() => {
   if (highlights.value.length) {
     const rows: Row[] = Array<Row>(safeRowsCount.value);
@@ -270,11 +280,7 @@ const rowsData = computed(() => {
       rows[numericIndex] = {
         index: numericIndex,
         values,
-        highlights: highlights.value
-          .map(column =>
-            values[column.columnIndex] ? `row-color-${column.highlight}` : null
-          )
-          .join(' ')
+        highlights: getRowHightlights(values)
       };
     }
     return rows;
@@ -353,18 +359,84 @@ const onScroll = () => {
   updateTopToEnd();
 };
 
+const diffsPairs = computed<[number, number][] | null>(() => {
+  return previewData.value?.options?.usesDiff
+    ? columnsHeader.value
+        .map(
+          column =>
+            [
+              column.columnIndex,
+              columnsHeader.value.find(
+                c => c.displayTitle === column.inputColumnTitle
+              )?.columnIndex || -1
+            ] as [number, number]
+        )
+        .filter(([a, b]) => a !== -1 && b !== -1 && a !== b)
+    : null;
+});
+
 const visibleRows = computed(() => {
   const [start, stop] = visibleRowsRange.value;
+
+  const pairs = diffsPairs.value;
+
   return rowsData.value
     .filter(row => {
       return row && row.index >= start - 25 && row.index <= stop + 25;
     })
-    .map(row => {
-      return {
-        ...row,
-        htmlValues: row.values ? row.values.map(getValue) : row.values
-      };
-    });
+    .map(
+      pairs
+        ? row => {
+            if (!row.values) {
+              return {
+                ...row,
+                htmlValues: row.values
+              };
+            }
+            const rowValues = [...row.values] as unknown[];
+            pairs.forEach(([previewColumn, inputColumn]) => {
+              if (rowValues[inputColumn] === rowValues[previewColumn]) {
+                return;
+              }
+              const parts = diffChars(
+                rowValues[inputColumn] as string,
+                rowValues[previewColumn] as string
+              );
+              rowValues[inputColumn] = parts
+                .map(part => {
+                  if (part.added) {
+                    return '';
+                  } else if (part.removed) {
+                    return `<span class="bg-danger-lightest/50">${part.value}</span>`;
+                  } else {
+                    return part.value;
+                  }
+                })
+                .join('');
+              rowValues[previewColumn] = parts
+                .map(part => {
+                  if (part.added) {
+                    return `<span class="bg-success-lightest">${part.value}</span>`;
+                  } else if (part.removed) {
+                    return '';
+                  } else {
+                    return part.value;
+                  }
+                })
+                .join('');
+            });
+            return {
+              ...row,
+              htmlValues: rowValues.map(getValue)
+            };
+          }
+        : row => {
+            return {
+              ...row,
+              htmlValues: row.values ? row.values.map(getValue) : row.values
+            };
+          }
+    );
 });
 
 const wholePreview = computed(() => {

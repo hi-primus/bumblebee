@@ -992,7 +992,10 @@ const previewOperationThrottled = throttleOnce(
         );
 
         previewData.value = {
-          options: { usesInputDataframe: true },
+          options: {
+            usesInputDataframe: true,
+            usesDiff: payload.options.usesDiff
+          },
           columns: previewColumns,
           type: payload.options.preview
         };
@@ -1011,7 +1014,10 @@ const previewOperationThrottled = throttleOnce(
         });
       } else {
         previewData.value = {
-          options: { usesInputDataframe: false },
+          options: {
+            usesInputDataframe: false,
+            usesDiff: payload.options.usesDiff
+          },
           type: payload.options.preview
         };
 

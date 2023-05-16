@@ -981,7 +981,8 @@ export const operationCreators: Record<string, OperationCreator> = {
     defaultOptions: {
       usesInputCols: true,
       usesInputDataframe: true,
-      preview: 'basic columns'
+      preview: 'basic columns',
+      usesDiff: true
     },
     content: (
       payload: OperationPayload<{
@@ -1742,7 +1743,8 @@ export const operationCreators: Record<string, OperationCreator> = {
     defaultOptions: {
       usesInputCols: true,
       usesInputDataframe: true,
-      preview: 'basic columns'
+      preview: 'basic columns',
+      usesDiff: true
     },
     content: defaultContentFunction('Lowercase', 'letters'),
     action: (payload: OperationPayload): Source => {
@@ -1818,7 +1820,8 @@ export const operationCreators: Record<string, OperationCreator> = {
     defaultOptions: {
       usesInputCols: true,
       usesInputDataframe: true,
-      preview: 'basic columns'
+      preview: 'basic columns',
+      usesDiff: true
     },
     content: defaultContentFunction('Remove', 'Numbers'),
     action: (payload: OperationPayload): Source => {
@@ -1837,7 +1840,8 @@ export const operationCreators: Record<string, OperationCreator> = {
     defaultOptions: {
       usesInputCols: true,
       usesInputDataframe: true,
-      preview: 'basic columns'
+      preview: 'basic columns',
+      usesDiff: true
     },
     content: defaultContentFunction('Remove', 'URLs'),
     action: (payload: OperationPayload): Source => {
@@ -1856,7 +1860,8 @@ export const operationCreators: Record<string, OperationCreator> = {
     defaultOptions: {
       usesInputCols: true,
       usesInputDataframe: true,
-      preview: 'basic columns'
+      preview: 'basic columns',
+      usesDiff: true
     },
     content: defaultContentFunction('Strip', 'Html'),
     action: (payload: OperationPayload): Source => {
@@ -1875,7 +1880,8 @@ export const operationCreators: Record<string, OperationCreator> = {
     defaultOptions: {
       usesInputCols: true,
       usesInputDataframe: true,
-      preview: 'basic columns'
+      preview: 'basic columns',
+      usesDiff: true
     },
     content: defaultContentFunction('Lemmatize', 'Verbs'),
     action: (payload: OperationPayload): Source => {
@@ -1939,7 +1945,8 @@ export const operationCreators: Record<string, OperationCreator> = {
     defaultOptions: {
       usesInputCols: true,
       usesInputDataframe: true,
-      preview: 'basic columns'
+      preview: 'basic columns',
+      usesDiff: true
     },
     content: defaultContentFunction('Remove', 'Stop-words'),
     action: (payload: OperationPayload): Source => {
@@ -1978,7 +1985,8 @@ export const operationCreators: Record<string, OperationCreator> = {
     defaultOptions: {
       usesInputCols: true,
       usesInputDataframe: true,
-      preview: 'basic columns'
+      preview: 'basic columns',
+      usesDiff: true
     },
     content: defaultContentFunction('Uppercase', 'letters'),
     action: (payload: OperationPayload): Source => {
@@ -2073,7 +2081,8 @@ export const operationCreators: Record<string, OperationCreator> = {
     defaultOptions: {
       usesInputCols: true,
       usesInputDataframe: true,
-      preview: 'basic columns'
+      preview: 'basic columns',
+      usesDiff: true
     },
     content: defaultContentFunction('Title case', 'values'),
     action: (payload: OperationPayload): Source => {
@@ -2092,7 +2101,8 @@ export const operationCreators: Record<string, OperationCreator> = {
     defaultOptions: {
       usesInputCols: true,
       usesInputDataframe: true,
-      preview: 'basic columns'
+      preview: 'basic columns',
+      usesDiff: true
     },
     content: defaultContentFunction('Capitalize', 'values'),
     action: (payload: OperationPayload): Source => {
@@ -2112,7 +2122,8 @@ export const operationCreators: Record<string, OperationCreator> = {
     defaultOptions: {
       usesInputCols: true,
       usesInputDataframe: true,
-      preview: 'basic columns'
+      preview: 'basic columns',
+      usesDiff: true
     },
     content: defaultContentFunction('Remove accents', 'from values'),
     action: (payload: OperationPayload): Source => {
@@ -2131,7 +2142,8 @@ export const operationCreators: Record<string, OperationCreator> = {
     defaultOptions: {
       usesInputCols: true,
       usesInputDataframe: true,
-      preview: 'basic columns'
+      preview: 'basic columns',
+      usesDiff: true
     },
     content: defaultContentFunction('Remove special characters', 'from values'),
     action: (payload: OperationPayload): Source => {
@@ -2150,7 +2162,8 @@ export const operationCreators: Record<string, OperationCreator> = {
     defaultOptions: {
       usesInputCols: true,
       usesInputDataframe: true,
-      preview: 'basic columns'
+      preview: 'basic columns',
+      usesDiff: true
     },
     content: (
       payload: OperationPayload<{
@@ -2187,7 +2200,8 @@ export const operationCreators: Record<string, OperationCreator> = {
     defaultOptions: {
       usesInputCols: true,
       usesInputDataframe: true,
-      preview: 'basic columns'
+      preview: 'basic columns',
+      usesDiff: true
     },
     content: defaultContentFunction('Trim whitespaces', 'from values'),
     action: (
@@ -2211,7 +2225,8 @@ export const operationCreators: Record<string, OperationCreator> = {
     defaultOptions: {
       usesInputCols: true,
       usesInputDataframe: true,
-      preview: 'basic columns'
+      preview: 'basic columns',
+      usesDiff: true
     },
     content: defaultContentFunction('Normalize whitespaces', 'from values'),
     action: (
@@ -2235,7 +2250,8 @@ export const operationCreators: Record<string, OperationCreator> = {
     defaultOptions: {
       usesInputCols: true,
       usesInputDataframe: true,
-      preview: 'basic columns'
+      preview: 'basic columns',
+      usesDiff: true
     },
     content: (
       payload: OperationPayload<{
@@ -2272,7 +2288,8 @@ export const operationCreators: Record<string, OperationCreator> = {
     defaultOptions: {
       usesInputCols: true,
       usesInputDataframe: true,
-      preview: 'basic columns'
+      preview: 'basic columns',
+      usesDiff: true
     },
     content: (
       payload: OperationPayload<{
@@ -2310,7 +2327,8 @@ export const operationCreators: Record<string, OperationCreator> = {
     defaultOptions: {
       usesInputCols: true,
       usesInputDataframe: true,
-      preview: 'basic columns'
+      preview: 'basic columns',
+      usesDiff: true
     },
     content: (
       payload: OperationPayload<{
@@ -2359,7 +2377,8 @@ export const operationCreators: Record<string, OperationCreator> = {
     defaultOptions: {
       usesInputCols: true,
       usesInputDataframe: true,
-      preview: 'basic columns'
+      preview: 'basic columns',
+      usesDiff: true
     },
     content: (
       payload: OperationPayload<{
@@ -3227,7 +3246,8 @@ export const operationCreators: Record<string, OperationCreator> = {
     defaultOptions: {
       usesInputCols: true,
       usesInputDataframe: true,
-      preview: 'basic columns'
+      preview: 'basic columns',
+      usesDiff: true
     },
     // TODO: Content property
     action: (
@@ -3293,7 +3313,8 @@ export const operationCreators: Record<string, OperationCreator> = {
     defaultOptions: {
       usesInputCols: true,
       usesInputDataframe: true,
-      preview: 'basic columns'
+      preview: 'basic columns',
+      usesDiff: true
     },
     // TODO: Content property
     action: (
@@ -3561,7 +3582,8 @@ export const operationCreators: Record<string, OperationCreator> = {
     defaultOptions: {
       usesInputCols: true,
       usesInputDataframe: true,
-      preview: 'basic columns'
+      preview: 'basic columns',
+      usesDiff: true
     },
     content: defaultContentFunction('Remove stop-words'),
     action: (payload: OperationPayload): Source => {

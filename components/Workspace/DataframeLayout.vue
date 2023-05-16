@@ -133,6 +133,8 @@ const header = computed<ColumnHeader[]>(() => {
         columnType = 'preview';
       }
 
+      const inputColumnTitle = newTitle;
+
       if (columnType.startsWith('preview') && !wholePreview) {
         // if the column already exists, we need to rename it
 
@@ -176,6 +178,7 @@ const header = computed<ColumnHeader[]>(() => {
       return {
         title,
         displayTitle: newTitle,
+        inputColumnTitle,
         // eslint-disable-next-line camelcase
         data_type: dataType,
         stats,
