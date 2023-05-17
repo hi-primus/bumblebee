@@ -451,7 +451,10 @@ const executeOperations = async (changeTab = true) => {
       newPayload.options.sourceId || newPayload.options.newSourceId;
 
     if (sourceId && newPayload.options.targetType === 'dataframe') {
-      operationResults.set(sourceId, { result, payload: newPayload });
+      operationResults.set(newPayload.options.newSourceId || sourceId, {
+        result,
+        payload: newPayload
+      });
       const dfName = newPayload.target || newPayload.source;
       sourcesFromOperations.value[dfName] = result as Source;
     }
