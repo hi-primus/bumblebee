@@ -688,7 +688,9 @@ export const operationCreators: Record<string, OperationCreator> = {
     shortcut: 'nc'
   },
   setCol: {
-    name: 'Set column',
+    name: 'Set column value by condition',
+    alias:
+      'Replace greater less than or equal to missing match mismatch match_pattern',
     defaultOptions: {
       usesInputCols: 'single',
       usesInputDataframe: true,
@@ -977,7 +979,8 @@ export const operationCreators: Record<string, OperationCreator> = {
     shortcut: 'sc'
   },
   replace: {
-    name: 'Replace in column values',
+    name: 'Replace content in column values',
+    alias: 'words characters string',
     defaultOptions: {
       usesInputCols: true,
       usesInputDataframe: true,
