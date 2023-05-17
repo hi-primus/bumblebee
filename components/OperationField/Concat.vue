@@ -146,7 +146,9 @@
               :model-value="item.name"
               element="div"
               :title="item.name"
-              @update:model-value="textFieldsValues[textFields[index]] = $event"
+              @update:model-value="
+                textFieldsValues[textFieldsKeys[index]] = $event
+              "
             />
             <Icon :path="mdiCursorText" class="text-neutral-alpha/40 w-5 h-5" />
           </span>
@@ -267,14 +269,21 @@ const searchSelectAttach = ref<HTMLElement | null>(null);
 const searchItems = ref<string[]>([]);
 const itemsSlotsGroups = ref<Slot<string>[][]>([]);
 const notSelected = ref<string[][]>([]);
-const textFields = ref<string[]>([]);
+const textFieldsKeys = ref<string[]>([]);
 const textFieldsValues = ref<Record<string, string>>({});
 const showValues = ref(false);
 
 const outputItems = computed<OutputColumn[]>(() => {
   const totalDatasets = itemsSlotsGroups.value.length;
 
-  return textFields.value.map((textFieldKey, groupIndex) => {
+  const newTextFields: OutputColumn[] = [];
+
+  for (
+    let groupIndex = 0;
+    groupIndex < value.value.outputColumns.length;
+    groupIndex++
+  ) {
+    const textFieldKey = textFieldsKeys.value[groupIndex];
     const obj = {} as Partial<OutputColumn>;
 
     const types = itemsSlotsGroups.value
@@ -299,8 +308,9 @@ const outputItems = computed<OutputColumn[]>(() => {
 
     obj.name = textFieldsValues.value[textFieldKey] || textFieldKey;
 
-    return obj as OutputColumn;
-  });
+    newTextFields[groupIndex] = obj as OutputColumn;
+  }
+  return newTextFields;
 });
 
 const showEmptyDeleted = computed(() => {
@@ -525,6 +535,7 @@ const moveItem = (groupIndex: number, slotIndex: number, item: string) => {
   }
 
   itemsSlotsGroups.value = newItemsSlotsGroups;
+  updateItemsSlots();
 };
 
 const removeItem = (groupIndex: number, slotIndex: number) => {
@@ -541,13 +552,14 @@ const removeItem = (groupIndex: number, slotIndex: number) => {
     newItemsSlotsGroups = deleteEmptyResults;
   }
   itemsSlotsGroups.value = newItemsSlotsGroups;
+  updateItemsSlots();
   return true;
 };
 
 const removeRow = (rowIndex: number) => {
-  delete textFieldsValues.value[textFields.value[rowIndex]];
+  delete textFieldsValues.value[textFieldsKeys.value[rowIndex]];
 
-  delete textFields.value[rowIndex];
+  delete textFieldsKeys.value[rowIndex];
 
   let newItemsSlotsGroups = Array.from(itemsSlotsGroups.value);
 
@@ -556,6 +568,7 @@ const removeRow = (rowIndex: number) => {
       notSelected.value[colIndex].push(e);
     });
     newItemsSlotsGroups[colIndex][rowIndex] = [];
+    updateItemsSlots();
     return true;
   });
 
@@ -564,31 +577,38 @@ const removeRow = (rowIndex: number) => {
     newItemsSlotsGroups = deleteEmptyResults;
   }
   itemsSlotsGroups.value = newItemsSlotsGroups;
+  updateItemsSlots();
 };
 
 const updateTextFields = () => {
   try {
-    const defaultValues: string[] = [];
+    const newTextFieldsKeys: string[] = [];
     const newTextFieldsValues: Record<string, string> = {};
 
-    props.modelValue?.outputColumns?.forEach(row => {
-      let name = 'error';
+    value.value?.outputColumns?.forEach(row => {
+      let name = 'Unnamed';
+      let fieldKey = 'no key';
 
       if (row.columns?.length) {
+        fieldKey = row.columns.map(n => n || 'BB_UNDEFINED').join('_');
         const columns = row.columns.filter(col => col);
         if (columns.every(col => col === columns[0])) {
           name = columns[0] || '';
         } else {
-          name = columns.join('_');
+          name = fieldKey;
         }
       }
 
-      const fieldName = getUniqueName(name, defaultValues);
-      name = getUniqueName(name, Object.values(newTextFieldsValues));
+      if (fieldKey) {
+        newTextFieldsKeys.push(fieldKey);
+      }
 
-      fieldName && defaultValues.push(fieldName);
-      newTextFieldsValues[fieldName] =
-        row.value || textFieldsValues.value[fieldName] || name || '';
+      newTextFieldsValues[fieldKey] =
+        row.value ||
+        textFieldsValues.value[fieldKey] ||
+        getUniqueName(name, Object.values(newTextFieldsValues)) ||
+        '';
+      console.log('creating fieldKey', fieldKey, newTextFieldsValues[fieldKey]);
     });
 
     if (
@@ -598,7 +618,7 @@ const updateTextFields = () => {
       textFieldsValues.value = newTextFieldsValues;
     }
 
-    textFields.value = defaultValues;
+    textFieldsKeys.value = newTextFieldsKeys;
   } catch (err) {
     console.error(err);
   }
@@ -624,6 +644,8 @@ const resetItemsSlotsGroups = (reset = false) => {
       cols.fill(undefined, colsLength);
       return cols.map(e => (e ? [e] : []));
     });
+
+    updateItemsSlots();
 
     if (reset || !props.modelValue?.outputColumns?.length) {
       notSelected.value = options.value.map(_ => []);
@@ -667,8 +689,8 @@ const updateSelection = () => {
     return {
       columns,
       value:
-        textFieldsValues.value[textFields.value[i]] ||
-        textFields.value[i] ||
+        textFieldsValues.value[textFieldsKeys.value[i]] ||
+        textFieldsKeys.value[i] ||
         firstItemName ||
         ''
     };
@@ -757,16 +779,16 @@ const startDrag = (event: DraggableEvent) => {
   }
 };
 
-const endDrag = (event: DraggableEndEvent) => {
+const endDrag = async (event: DraggableEndEvent) => {
   if (event.to.id === 'deleted-items-col') {
     return;
   }
 
-  const dfIndex = +movingDfIndex;
+  const dfIndex = movingDfIndex ? +movingDfIndex : null;
 
-  if (event.to.children.length > 1) {
-    const toSlot = event.to.getAttribute('data-index');
-
+  await nextTick();
+  const toSlot = event.to.getAttribute('data-index');
+  if (event.to.children.length > 1 && dfIndex !== null && toSlot !== null) {
     const items = itemsSlotsGroups.value[dfIndex][+toSlot];
 
     const otherItems = items.filter((_, index) => {
@@ -775,14 +797,15 @@ const endDrag = (event: DraggableEndEvent) => {
 
     itemsSlotsGroups.value[dfIndex][+toSlot] = items.filter((_, index) => {
       return index === event.newIndex;
-    });
+    }) as [string];
 
     if (fromSlot === 'deleted') {
       notSelected.value[dfIndex].push(otherItems[0]);
-    } else {
+    } else if (fromSlot !== null) {
       itemsSlotsGroups.value[dfIndex][+fromSlot] = [otherItems[0]];
     }
   }
+  updateItemsSlots();
 };
 
 let optionsLength = -1;
@@ -801,46 +824,41 @@ watch(
   }
 );
 
-watch(
-  itemsSlotsGroups,
-  newValue => {
-    if (!newValue) {
-      return;
-    }
-
-    let newItemsSlotsGroups = Array.from(newValue);
-
-    const addEmpty = newItemsSlotsGroups.some(
-      itemsSlotsGroup => itemsSlotsGroup[itemsSlotsGroup.length - 1].length
-    );
-
-    const deleteEmptyResults = deleteEmptyItemsSlots(newItemsSlotsGroups);
-
-    if (deleteEmptyResults) {
-      newItemsSlotsGroups = deleteEmptyResults;
-    }
-
-    if (addEmpty) {
-      newItemsSlotsGroups = newItemsSlotsGroups.map(group => [...group, []]);
-    }
-
-    if (deleteEmptyResults || addEmpty) {
-      itemsSlotsGroups.value = newItemsSlotsGroups;
-    } else {
-      updateSelection();
-    }
-  },
-  {
-    deep: true
+const updateItemsSlots = () => {
+  if (!itemsSlotsGroups.value) {
+    return;
   }
-);
+
+  let newItemsSlotsGroups = Array.from(itemsSlotsGroups.value);
+
+  const addEmpty = newItemsSlotsGroups.some(
+    itemsSlotsGroup => itemsSlotsGroup[itemsSlotsGroup.length - 1].length
+  );
+
+  const deleteEmptyResults = deleteEmptyItemsSlots(newItemsSlotsGroups);
+
+  if (deleteEmptyResults) {
+    newItemsSlotsGroups = deleteEmptyResults;
+  }
+
+  if (addEmpty) {
+    newItemsSlotsGroups = newItemsSlotsGroups.map(group => [...group, []]);
+  }
+
+  if (deleteEmptyResults || addEmpty) {
+    itemsSlotsGroups.value = newItemsSlotsGroups;
+    updateItemsSlots();
+  } else {
+    updateSelection();
+  }
+};
 
 watch(textFieldsValues, updateSelection, {
   deep: true
 });
 
-watch(value, () => {
-  updateTextFields();
+watch(value, updateTextFields, {
+  deep: true
 });
 
 onMounted(() => {
