@@ -81,7 +81,8 @@
               tag="div"
               class="items-slot"
               :list="itemsSlotsGroups[dfIndex][slotIndex]"
-              :move="checkMove"
+              :data-df-index="dfIndex"
+              :data-index="slotIndex"
               item-key="name"
               v-bind="{
                 animation: 200,
@@ -164,18 +165,19 @@
     <div class="concat-items-set deleted-items">
       <span
         v-if="showEmptyDeleted"
-        class="deleted-items-empty pl-1 font-sans text-xs text-neutral-alpha/40"
+        class="deleted-items-empty pl-1 pt-1 font-sans text-xs text-neutral-alpha/40"
       >
         Drop unwanted columns here
       </span>
       <div v-for="(_notSelectedItems, dfIndex) in notSelected" :key="dfIndex">
         <draggable
           id="deleted-items-col"
+          :key="'deleted-items-col-' + dfIndex"
           :list="notSelected[dfIndex]"
           tag="div"
           class="items-col deleted-items-col"
           item-key="name"
-          :move="checkMove"
+          data-index="deleted"
           v-bind="{
             animation: 200,
             deleted: false,
@@ -720,23 +722,67 @@ const removeDataframe = (selectedIndex: number) => {
   }
 };
 
-const startDrag = ($event: Event) => {
+type DraggableEvent = Event & {
+  from: HTMLElement;
+  to: HTMLElement;
+  relatedContext: {
+    index: number;
+    element: HTMLElement;
+    list: HTMLElement[];
+    component: unknown;
+  };
+  draggedContext: {
+    index: number;
+    element: HTMLElement;
+    futureIndex: number;
+  };
+};
+
+type DraggableEndEvent = {
+  from: HTMLElement;
+  to: HTMLElement;
+  newIndex: number;
+  oldIndex: number;
+};
+
+let movingDfIndex: string | null = null;
+let fromSlot: string | null = null;
+
+const startDrag = (event: DraggableEvent) => {
+  movingDfIndex = event.from.getAttribute('data-df-index');
+  fromSlot = event.from.getAttribute('data-index');
   window.dragging = 'concat';
-  if (!$event) {
+  if (!event) {
     return false;
   }
 };
 
-const endDrag = (_e: Event) => {
-  window.dragging = false;
-};
+const endDrag = (event: DraggableEndEvent) => {
+  if (event.to.id === 'deleted-items-col') {
+    return;
+  }
 
-const checkMove = ($event: Event) => {
-  return (
-    $event.from === $event.to ||
-    !$event.relatedContext.list?.length ||
-    $event.to.id === 'deleted-items-col'
-  );
+  const dfIndex = +movingDfIndex;
+
+  if (event.to.children.length > 1) {
+    const toSlot = event.to.getAttribute('data-index');
+
+    const items = itemsSlotsGroups.value[dfIndex][+toSlot];
+
+    const otherItems = items.filter((_, index) => {
+      return index !== event.newIndex;
+    });
+
+    itemsSlotsGroups.value[dfIndex][+toSlot] = items.filter((_, index) => {
+      return index === event.newIndex;
+    });
+
+    if (fromSlot === 'deleted') {
+      notSelected.value[dfIndex].push(otherItems[0]);
+    } else {
+      itemsSlotsGroups.value[dfIndex][+fromSlot] = [otherItems[0]];
+    }
+  }
 };
 
 let optionsLength = -1;
@@ -1076,6 +1122,9 @@ $concat-output-col-padding: 74px;
     .items-slot {
       height: 100%;
       width: 100%;
+      & > .concat-item {
+        position: absolute;
+      }
     }
     .search-button {
       position: absolute;
