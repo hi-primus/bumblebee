@@ -286,7 +286,7 @@ export type ColumnDetailState = {
 export type State = Operation | ColumnDetailState | 'operations';
 
 export interface OperationActions {
-  submitOperation: () => Promise<void>;
+  submitOperation: (changeTab?: boolean) => Promise<void>;
   cancelOperation: (restoreInactive: boolean) => void;
   selectOperation: (
     operation: Operation | null,

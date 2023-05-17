@@ -593,7 +593,7 @@ const getOperationUsesPreview = (): boolean => {
 };
 
 const operationActions: OperationActions = {
-  submitOperation: async () => {
+  submitOperation: async (changeTab = true) => {
     try {
       if (appStatus.value === 'ready') {
         appStatus.value = 'busy';
@@ -653,7 +653,7 @@ const operationActions: OperationActions = {
         }
       }
 
-      await executeOperations();
+      await executeOperations(changeTab);
 
       dataframeLayout.value?.clearChunks(true, false);
 
@@ -699,7 +699,7 @@ const operationActions: OperationActions = {
       ];
       inactiveOperationCells.value = [];
       await new Promise(resolve => setTimeout(resolve, 0));
-      await operationActions.submitOperation();
+      await operationActions.submitOperation(false);
     }
   },
   selectOperation: async (
