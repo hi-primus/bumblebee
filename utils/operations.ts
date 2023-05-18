@@ -1534,6 +1534,323 @@ export const operationCreators: Record<string, OperationCreator> = {
       }
     ]
   },
+  outliers: {
+    name: 'Filter or replace outliers',
+    alias: 'drop keep mad modified zscore z score tukey bounds whiskers',
+    defaultOptions: {
+      usesInputCols: true,
+      usesOutputCols: false,
+      usesInputDataframe: true,
+      preview: 'highlight rows'
+    },
+    content: (
+      payload: OperationPayload<{
+        method: 'mad' | 'tukey';
+        lowerBoundAction: 'keep' | 'drop' | 'replace';
+        lowerBound: number;
+        lowerBoundValue: string;
+        upperBoundAction: 'keep' | 'drop' | 'replace';
+        upperBound: number;
+        upperBoundValue: string;
+      }>
+    ) => {
+      let str = '';
+      let actions: ('keep' | 'drop' | 'replace')[] = [];
+
+      const {
+        method,
+        lowerBoundAction,
+        lowerBound,
+        lowerBoundValue,
+        upperBoundAction,
+        upperBound,
+        upperBoundValue
+      } = payload;
+
+      actions = [lowerBoundAction, upperBoundAction];
+
+      str += actions
+        .map((action, i) => {
+          const bound = i === 0 ? lowerBound : upperBound;
+          const value = i === 0 ? lowerBoundValue : upperBoundValue;
+          if (action === 'drop') {
+            return `b{Drop values} ${i === 0 ? 'below' : 'above'} gr{${bound}}`;
+          }
+          if (action === 'replace') {
+            return `b{Replace values} ${
+              i === 0 ? 'below' : 'above'
+            } gr{${bound}} with gr{${value}}`;
+          }
+          return '';
+        })
+        .filter(a => a)
+        .join(' and ');
+
+      str += ` using gr{${method === 'mad' ? 'MAD' : 'Tukey'}} method`;
+
+      return str + inColsContent(payload);
+    },
+    shortcut: 'ou',
+    action: (
+      payload: OperationPayload<{
+        method: 'mad' | 'tukey';
+        lowerBoundAction: 'keep' | 'drop' | 'replace';
+        lowerBound: number;
+        lowerBoundValue: string;
+        upperBoundAction: 'keep' | 'drop' | 'replace';
+        upperBound: number;
+        upperBoundValue: string;
+      }>
+    ): Source => {
+      const lowerBoundWhere = whereExpression(
+        'less_than_equal',
+        { value: payload.lowerBound },
+        payload.cols[0]
+      );
+
+      const upperBoundWhere = whereExpression(
+        'greater_than_equal',
+        { value: payload.upperBound },
+        payload.cols[0]
+      );
+
+      const isPreview = payload.options.preview;
+
+      const outputCols = isPreview
+        ? payload.cols.map(col => `__bumblebee__preview__${col}`)
+        : payload.cols;
+
+      let df: Source = payload.source;
+
+      const bounds = [
+        [lowerBoundWhere, payload.lowerBoundAction, payload.lowerBoundValue],
+        [upperBoundWhere, payload.upperBoundAction, payload.upperBoundValue]
+      ] as const;
+
+      if (isPreview && bounds.some(([_, action]) => action === 'replace')) {
+        df = df.cols.copy({
+          target: payload.target,
+          cols: payload.cols,
+          outputCols
+        });
+      }
+
+      bounds.forEach(([where, action, value], index) => {
+        if (action === 'replace') {
+          if (isPreview) {
+            df = df.cols.set({
+              target: payload.target,
+              cols: `__bumblebee__highlight_row__info__${index}`,
+              valueFunc: true,
+              evalValue: false,
+              where,
+              default: false,
+              requestOptions: payload.requestOptions
+            });
+          }
+          df = df.cols.set({
+            target: payload.target,
+            cols: outputCols,
+            valueFunc: value,
+            evalValue: false,
+            where: isPreview
+              ? `df['__bumblebee__highlight_row__info__${index}']`
+              : where,
+            default: null,
+            requestOptions: payload.requestOptions
+          });
+        } else if (action === 'drop') {
+          if (isPreview) {
+            df = df.cols.set({
+              target: payload.target,
+              cols: `__bumblebee__highlight_row__danger__${index}`,
+              valueFunc: true,
+              evalValue: false,
+              where,
+              default: false,
+              requestOptions: payload.requestOptions
+            });
+          } else {
+            df = df.rows.drop({
+              target: payload.target,
+              where,
+              requestOptions: payload.requestOptions
+            });
+          }
+        }
+      });
+
+      return df;
+    },
+    fields: [
+      {
+        name: 'method',
+        label: 'Method',
+        type: 'string',
+        defaultValue: 'mad',
+        options: [
+          // {
+          //   text: 'Modified Z-score',
+          //   value: 'modified'
+          // },
+          // {
+          //   text: 'Z-score',
+          //   value: 'zscore'
+          // },
+          {
+            text: 'MAD',
+            value: 'mad'
+          },
+          {
+            text: 'Tukey',
+            value: 'tukey'
+          }
+        ],
+        onChange: async (payload, value, oldValue) => {
+          console.log({ payload, value, oldValue });
+          if (typeof value === 'string' && ['mad', 'tukey'].includes(value)) {
+            if (value !== oldValue) {
+              const dfName = payload.source?.name;
+              const blurr = payload.source?.client;
+              if (!dfName) {
+                throw new Error('No dataframe found');
+              }
+              if (!blurr) {
+                throw new Error('Blurr client not available');
+              }
+              const result = await blurr.runCode(
+                `tmp = ${dfName}.outliers.${payload.method}('${payload.cols[0]}'` +
+                  (value === 'mad' ? `, threshold=1` : '') +
+                  `)\n` +
+                  `{ "lowerBound": tmp.lower_bound, "upperBound": tmp.upper_bound }`
+              );
+              if (
+                result &&
+                typeof result === 'object' &&
+                'lowerBound' in result &&
+                'upperBound' in result
+              ) {
+                const { lowerBound, upperBound } = result;
+                payload.defaultLowerBound = lowerBound;
+                payload.lowerBound = lowerBound;
+                payload.defaultUpperBound = upperBound;
+                payload.upperBound = upperBound;
+              } else {
+                console.error('[DEBUG] Unknown response format', result);
+              }
+            }
+          }
+          return payload;
+        }
+      },
+      {
+        name: 'lowerBoundAction',
+        label: 'Action (lower bound)',
+        type: 'string',
+        defaultValue: 'drop',
+        options: [
+          {
+            text: 'Drop',
+            value: 'drop'
+          },
+          {
+            text: 'Replace',
+            value: 'replace'
+          },
+          {
+            text: 'Keep',
+            value: 'keep'
+          }
+        ],
+        class: (payload): string => {
+          switch (payload.lowerBoundAction) {
+            case 'drop':
+              return 'grouped-first w-1/2';
+            case 'replace':
+              return 'grouped-first w-1/3';
+            default:
+              return 'w-full';
+          }
+        }
+      },
+      {
+        name: 'lowerBound',
+        label: 'Values below',
+        type: 'number',
+        hidden: payload => payload.lowerBoundAction === 'keep',
+        class: (payload): string => {
+          switch (payload.lowerBoundAction) {
+            case 'drop':
+              return 'grouped-last w-1/2';
+            case 'replace':
+              return 'grouped-middle w-1/3';
+            default:
+              return 'w-full';
+          }
+        }
+      },
+      {
+        name: 'lowerBoundValue',
+        label: 'Replace by',
+        type: 'string',
+        hidden: payload => payload.lowerBoundAction !== 'replace',
+        class: 'grouped-last w-1/3'
+      },
+      {
+        name: 'upperBoundAction',
+        label: 'Action (upper bound)',
+        type: 'string',
+        defaultValue: 'drop',
+        options: [
+          {
+            text: 'Drop',
+            value: 'drop'
+          },
+          {
+            text: 'Replace',
+            value: 'replace'
+          },
+          {
+            text: 'Keep',
+            value: 'keep'
+          }
+        ],
+        class: (payload): string => {
+          switch (payload.upperBoundAction) {
+            case 'drop':
+              return 'grouped-first w-1/2';
+            case 'replace':
+              return 'grouped-first w-1/3';
+            default:
+              return 'w-full';
+          }
+        }
+      },
+      {
+        name: 'upperBound',
+        label: 'Values above',
+        type: 'number',
+        hidden: payload => payload.upperBoundAction === 'keep',
+        class: (payload): string => {
+          switch (payload.upperBoundAction) {
+            case 'drop':
+              return 'grouped-last w-1/2';
+            case 'replace':
+              return 'grouped-middle w-1/3';
+            default:
+              return 'w-full';
+          }
+        }
+      },
+      {
+        name: 'upperBoundValue',
+        label: 'Replace by',
+        type: 'string',
+        hidden: payload => payload.upperBoundAction !== 'replace',
+        class: 'grouped-last w-1/3'
+      }
+    ]
+  },
   dropDuplicated: {
     name: 'Drop duplicated rows',
     alias: 'drop rows duplicated',
@@ -3912,8 +4229,8 @@ function whereExpression(
   condition: string,
   payload: {
     value: BasicType;
-    otherValue: BasicType;
-    values: BasicType[];
+    otherValue?: BasicType;
+    values?: BasicType[];
     mode?: number;
   },
   col: string
