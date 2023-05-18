@@ -150,10 +150,9 @@ const header = computed<ColumnHeader[]>(() => {
       let highlight: Highlight = false;
 
       if (title.startsWith('__bumblebee__highlight_row__')) {
-        const highlightString = title.replace(
-          '__bumblebee__highlight_row__',
-          ''
-        );
+        const highlightString = title
+          .replace('__bumblebee__highlight_row__', '')
+          .split('__')[0];
         columnType = 'highlight';
         highlight = ['danger', 'warning', 'success', 'info'].includes(
           highlightString
