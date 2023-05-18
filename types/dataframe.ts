@@ -5,7 +5,7 @@ export type FrequencyValue = { count: number; value: BasicType };
 
 export type HistValue = { count: number; lower: number; upper: number };
 
-export type Highlight = boolean | 'error' | 'warning' | 'success';
+export type Highlight = boolean | 'error' | 'warning' | 'success' | 'info';
 
 export interface ColumnStats {
   match: number;

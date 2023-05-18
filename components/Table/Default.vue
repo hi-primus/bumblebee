@@ -856,6 +856,9 @@ defineExpose({
   &.row-color-warning {
     @apply bg-warning-highlight;
   }
+  &.row-color-info {
+    @apply bg-primary-highlight;
+  }
 }
 
 .expanded-cell {
