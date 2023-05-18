@@ -131,6 +131,11 @@ export interface BasicField {
   disabled?: PayloadCallbackOr<boolean>;
   hidden?: PayloadCallbackOr<boolean>;
   actionButton?: FieldActionButton;
+  onChange?: (
+    payload: OperationPayload<PayloadWithOptions>,
+    value: unknown,
+    oldValue: unknown
+  ) => PromiseOr<Record<string, CompatibleType> | null>;
   rules?: ((value: string) => boolean | string)[];
 }
 

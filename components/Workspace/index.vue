@@ -105,6 +105,7 @@ import {
 import {
   compareObjects,
   deepClone,
+  fillColumns,
   getNameFromFileName,
   getUniqueName
 } from '@/utils';
@@ -511,21 +512,7 @@ const preparePayloadForSubmit = (
     }
   }
 
-  if (payload.options.usesInputCols) {
-    payload.cols = selection.value?.columns || [];
-
-    // If the operation only accepts a single column, we only send the first one
-    // TODO: Disallow selecting single column operations when multiple columns are selected
-
-    if (
-      payload.options.usesInputCols === 'single' &&
-      selection.value?.columns &&
-      selection.value?.columns.length > 1
-    ) {
-      selection.value.columns = [selection.value.columns[0]];
-      payload.cols = selection.value.columns;
-    }
-  }
+  payload = fillColumns(payload, selection.value);
 
   return payload;
 };

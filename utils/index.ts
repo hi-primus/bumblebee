@@ -1,5 +1,11 @@
 import { isObject } from '../types/common';
 
+import {
+  OperationPayload,
+  PayloadWithOptions,
+  TableSelection
+} from '@/types/operations';
+
 export const getNameFromFileName = (name: string): string => {
   name = name.split('/').pop() || '';
   name = name.split('\\').pop() || '';
@@ -227,4 +233,28 @@ export const copyToClipboard = (text: string) => {
       document.getSelection()?.addRange(selected);
     }
   }
+};
+
+// operations
+
+export const fillColumns = (
+  payload: OperationPayload<PayloadWithOptions>,
+  selection: TableSelection
+) => {
+  if (payload.options.usesInputCols) {
+    payload.cols = selection?.columns || [];
+
+    // If the operation only accepts a single column, we only send the first one
+    // TODO: Disallow selecting single column operations when multiple columns are selected
+
+    if (
+      payload.options.usesInputCols === 'single' &&
+      selection?.columns &&
+      selection?.columns.length > 1
+    ) {
+      selection.columns = [selection.columns[0]];
+      payload.cols = selection.columns;
+    }
+  }
+  return payload;
 };

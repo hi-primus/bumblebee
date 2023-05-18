@@ -139,7 +139,8 @@ import {
   Field,
   OperationPayload,
   PayloadCallbackOr,
-  PayloadWithOptions
+  PayloadWithOptions,
+  TableSelection
 } from '@/types/operations';
 
 const props = defineProps<{
@@ -158,6 +159,8 @@ const updates = ref(0);
 const operationValues = inject('operation-values') as Ref<
   OperationPayload<PayloadWithOptions>
 >;
+
+const selection = inject('selection') as Ref<TableSelection>;
 
 const value = computed({
   get: () => {
@@ -231,6 +234,27 @@ watch(
     await nextTick();
     validate(false, true);
   }
+);
+
+watch(
+  value,
+  async (value, oldValue) => {
+    if ('onChange' in props.field && props.field.onChange) {
+      let payload = operationValues.value;
+      payload = fillColumns(payload, selection.value);
+      const newPayload = await props.field.onChange(payload, value, oldValue);
+      if (newPayload && typeof newPayload === 'object') {
+        if ('cols' in newPayload && newPayload.cols) {
+          if (selection.value) {
+            selection.value.columns = newPayload.cols as string[];
+          }
+          delete (newPayload as Record<string, string>).cols;
+        }
+        operationValues.value = newPayload;
+      }
+    }
+  },
+  { immediate: true }
 );
 
 const validate = (isExternalCall = false, force = false) => {
