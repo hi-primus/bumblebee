@@ -833,10 +833,14 @@ defineExpose({
   @apply absolute px-1;
   @apply ml-[-1px] mr-[0px];
   @apply w-[calc(100%+1px)];
-  @apply border-[color:var(--line-color)] border;
-  // border-right-color: red;
-  /* bottom border only when last row */
-  @apply border-y-0 last:border-b;
+  @apply border-[color:var(--line-color)] border-l;
+  @apply last:border-b;
+}
+
+.bumblebee-table-column-container:last-child {
+  .column-cell {
+    @apply border-r;
+  }
 }
 
 .bumblebee-row-background {
