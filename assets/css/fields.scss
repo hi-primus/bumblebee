@@ -36,7 +36,7 @@
 
 .input {
   .input-label {
-    @apply absolute bg-white -top-px h-[2px] pl-[0.35em] pr-[0.25em] z-[2];
+    @apply absolute bg-white -top-px h-[2px] pl-[0.35em] pr-[0.25em] z-[2] whitespace-nowrap;
     @apply leading-[0.25em] #{!important};
   }
   &:focus-within,
