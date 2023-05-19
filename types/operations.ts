@@ -14,8 +14,15 @@ export type PreviewType =
   | 'rows'
   | 'highlight rows';
 
+interface InputColsOptions {
+  required?: boolean;
+  min?: number;
+  max?: number;
+  label?: string;
+}
+
 export interface OperationOptions {
-  usesInputCols?: boolean | 'single';
+  usesInputCols?: boolean | InputColsOptions;
   usesOutputCols?: boolean | 'required';
   usesInputDataframe?: boolean;
   usesDiff?: boolean;

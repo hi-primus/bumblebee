@@ -17,7 +17,11 @@
         v-model="columns"
         multiple
         :options="allColumns"
-        label="Columns"
+        :label="
+          (typeof options.usesInputCols === 'object'
+            ? options.usesInputCols.label
+            : false) || 'Columns'
+        "
         name="Columns"
         class="w-full"
       />

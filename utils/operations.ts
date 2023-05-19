@@ -692,7 +692,7 @@ export const operationCreators: Record<string, OperationCreator> = {
     alias:
       'Replace greater less than or equal to missing match mismatch match_pattern',
     defaultOptions: {
-      usesInputCols: 'single',
+      usesInputCols: { min: 1, max: 1 },
       usesInputDataframe: true,
       preview: 'basic columns'
     },
@@ -3762,7 +3762,7 @@ export const operationCreators: Record<string, OperationCreator> = {
     name: 'One hot encode the columns value',
     alias: 'one hot encoding encode',
     defaultOptions: {
-      usesInputCols: 'single',
+      usesInputCols: { min: 1, max: 1 },
       usesOutputCols: false,
       usesInputDataframe: true,
       preview: 'basic columns'
@@ -3920,7 +3920,7 @@ export const operationCreators: Record<string, OperationCreator> = {
     name: 'Unnest columns',
     alias: 'Split cols unnest',
     defaultOptions: {
-      usesInputCols: 'single',
+      usesInputCols: { min: 1, max: 1 },
       usesInputDataframe: true,
       preview: 'custom'
     },

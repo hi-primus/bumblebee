@@ -247,13 +247,25 @@ export const fillColumns = (
     // If the operation only accepts a single column, we only send the first one
     // TODO: Disallow selecting single column operations when multiple columns are selected
 
-    if (
-      payload.options.usesInputCols === 'single' &&
-      selection?.columns &&
-      selection?.columns.length > 1
-    ) {
-      selection.columns = [selection.columns[0]];
-      payload.cols = selection.columns;
+    if (typeof payload.options.usesInputCols === 'object') {
+      const { required, min, max } = payload.options.usesInputCols;
+
+      if (required && !selection?.columns) {
+        console.warn('No columns selected');
+      }
+      if (selection?.columns && Array.isArray(selection?.columns)) {
+        if (max !== undefined && selection.columns.length > max) {
+          selection.columns = selection.columns.slice(
+            0,
+            payload.options.usesInputCols.max
+          );
+        }
+        if (min !== undefined && selection.columns.length < min) {
+          console.warn('Not enough columns selected');
+        }
+      }
+
+      payload.cols = selection?.columns || [];
     }
   }
   return payload;
