@@ -295,7 +295,7 @@ const handleDataframeResults = async (
     const profile = await getPreliminaryProfile(df);
 
     let dataframeName =
-      getNameFromFileName(profile.file_name || '') || profile.name;
+      getNameFromFileName(profile.file_name || '') || profile.name || df.name;
 
     const names = dataframes.value
       .filter((_df, index) => index !== dataframeIndex)
@@ -452,7 +452,10 @@ const executeOperations = async (changeTab = true) => {
       newPayload.options.sourceId || newPayload.options.newSourceId;
 
     if (sourceId && newPayload.options.targetType === 'dataframe') {
-      operationResults.set(newPayload.options.newSourceId || sourceId, {
+      const resultSourceId = newPayload.options.saveToNewDataframe
+        ? newPayload.options.newSourceId || sourceId
+        : sourceId;
+      operationResults.set(resultSourceId, {
         result,
         payload: newPayload
       });
