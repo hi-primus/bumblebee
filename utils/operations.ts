@@ -30,7 +30,13 @@ export function Name(name: string): Name {
 }
 
 const inDataframeContent = (payload: OperationPayload): string => {
-  return `df{ \nin rd{dn{${payload.source.name}}}}`;
+  return (
+    `df{ \nin rd{dn{${payload.source.name}}}` +
+    (payload.target && payload.target !== payload.source.name
+      ? ` \nto rd{dn{${payload.target}}}`
+      : '') +
+    `}`
+  );
 };
 
 const inColsContent = (
