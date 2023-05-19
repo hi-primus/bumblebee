@@ -1920,7 +1920,10 @@ export const operationCreators: Record<string, OperationCreator> = {
     name: 'Get aggregations',
     alias: 'aggregate',
     defaultOptions: {
-      usesInputCols: true,
+      usesInputCols: {
+        min: 1,
+        label: 'Group by'
+      },
       usesOutputCols: false,
       usesInputDataframe: true,
       saveToNewDataframe: true,
