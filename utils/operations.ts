@@ -132,6 +132,11 @@ export const operationCreators: Record<string, OperationCreator> = {
           if (response.filepath) {
             payload.url = response.filepath;
             delete payload.file;
+          } else {
+            payload.app.addToast({
+              type: 'error',
+              title: 'File upload failed'
+            });
           }
         }
 

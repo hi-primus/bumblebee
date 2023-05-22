@@ -362,8 +362,11 @@ async function uploadFile(file: File | FileWithId): UploadFileResponse {
     file
   });
 
-  if (!fileMetadata) {
-    return { fileMetadata, error };
+  if (!fileMetadata || !fileMetadata.id) {
+    return {
+      fileMetadata,
+      error: error || fileMetadata?.error || 'Upload failed'
+    };
   }
 
   const filepath = nhost.storage.getPublicUrl({
