@@ -1556,7 +1556,7 @@ export const operationCreators: Record<string, OperationCreator> = {
     },
     content: (
       payload: OperationPayload<{
-        method: 'mad' | 'tukey';
+        method: 'mad' | 'tukey' | 'z_score' | 'modified_z_score';
         lowerBoundAction: 'keep' | 'drop' | 'replace';
         lowerBound: number;
         lowerBoundValue: string;
@@ -1597,14 +1597,21 @@ export const operationCreators: Record<string, OperationCreator> = {
         .filter(a => a)
         .join(' and ');
 
-      str += ` using gr{${method === 'mad' ? 'MAD' : 'Tukey'}} method`;
+      str += ` using gr{${
+        {
+          mad: 'MAD',
+          tukey: 'Tukey',
+          z_score: 'Z-score',
+          modified_z_score: 'Modified Z-score'
+        }[method]
+      }} method`;
 
       return str + inColsContent(payload);
     },
     shortcut: 'ou',
-    action: (
+    action: async (
       payload: OperationPayload<{
-        method: 'mad' | 'tukey';
+        method: 'mad' | 'tukey' | 'z_score' | 'modified_z_score';
         lowerBoundAction: 'keep' | 'drop' | 'replace';
         lowerBound: number;
         lowerBoundValue: string;
@@ -1612,17 +1619,42 @@ export const operationCreators: Record<string, OperationCreator> = {
         upperBound: number;
         upperBoundValue: string;
       }>
-    ): Source => {
+    ): Promise<Source> => {
+      const usesZscore = ['z_score', 'modified_z_score'].includes(
+        payload.method
+      );
+
+      let df: Source = payload.source;
+
+      const zScoreCols = payload.cols.map(
+        col => `__bumblebee__preview__Z-score (${col})`
+      );
+
+      let inputCol = payload.cols[0];
+
+      if (usesZscore) {
+        df = await (payload.method === 'z_score'
+          ? df.cols.zScore
+          : df.cols.modifiedZScore)({
+          cols: payload.cols,
+          outputCols: zScoreCols,
+          target: payload.target,
+          requestOptions: payload.requestOptions
+        });
+
+        inputCol = zScoreCols[0];
+      }
+
       const lowerBoundWhere = whereExpression(
         'less_than_equal',
         { value: payload.lowerBound },
-        payload.cols[0]
+        inputCol
       );
 
       const upperBoundWhere = whereExpression(
         'greater_than_equal',
         { value: payload.upperBound },
-        payload.cols[0]
+        inputCol
       );
 
       const isPreview = payload.options.preview;
@@ -1630,8 +1662,6 @@ export const operationCreators: Record<string, OperationCreator> = {
       const outputCols = isPreview
         ? payload.cols.map(col => `__bumblebee__preview__${col}`)
         : payload.cols;
-
-      let df: Source = payload.source;
 
       const bounds = [
         [lowerBoundWhere, payload.lowerBoundAction, payload.lowerBoundValue],
@@ -1691,6 +1721,14 @@ export const operationCreators: Record<string, OperationCreator> = {
         }
       });
 
+      if (usesZscore && !isPreview) {
+        df = await df.cols.drop({
+          target: payload.target,
+          cols: zScoreCols,
+          requestOptions: payload.requestOptions
+        });
+      }
+
       return df;
     },
     fields: [
@@ -1700,14 +1738,6 @@ export const operationCreators: Record<string, OperationCreator> = {
         type: 'string',
         defaultValue: 'mad',
         options: [
-          // {
-          //   text: 'Modified Z-score',
-          //   value: 'modified'
-          // },
-          // {
-          //   text: 'Z-score',
-          //   value: 'zscore'
-          // },
           {
             text: 'MAD',
             value: 'mad'
@@ -1715,11 +1745,18 @@ export const operationCreators: Record<string, OperationCreator> = {
           {
             text: 'Tukey',
             value: 'tukey'
+          },
+          {
+            text: 'Z-score',
+            value: 'z_score'
+          },
+          {
+            text: 'Modified Z-score',
+            value: 'modified_z_score'
           }
         ],
         onChange: async (payload, value, oldValue) => {
-          console.log({ payload, value, oldValue });
-          if (typeof value === 'string' && ['mad', 'tukey'].includes(value)) {
+          if (typeof value === 'string') {
             if (value !== oldValue) {
               const dfName = payload.source?.name;
               const blurr = payload.source?.client;
@@ -1729,25 +1766,32 @@ export const operationCreators: Record<string, OperationCreator> = {
               if (!blurr) {
                 throw new Error('Blurr client not available');
               }
-              const result = await blurr.runCode(
-                `tmp = ${dfName}.outliers.${payload.method}('${payload.cols[0]}'` +
-                  (value === 'mad' ? `, threshold=1` : '') +
-                  `)\n` +
-                  `{ "lowerBound": tmp.lower_bound, "upperBound": tmp.upper_bound }`
-              );
-              if (
-                result &&
-                typeof result === 'object' &&
-                'lowerBound' in result &&
-                'upperBound' in result
-              ) {
-                const { lowerBound, upperBound } = result;
-                payload.defaultLowerBound = lowerBound;
-                payload.lowerBound = lowerBound;
-                payload.defaultUpperBound = upperBound;
-                payload.upperBound = upperBound;
+              if (['z_score', 'modified_z_score'].includes(payload.method)) {
+                payload.defaultLowerBound = -2;
+                payload.lowerBound = -2;
+                payload.defaultUpperBound = 2;
+                payload.upperBound = 2;
               } else {
-                console.error('[DEBUG] Unknown response format', result);
+                const result = await blurr.runCode(
+                  `tmp = ${dfName}.outliers.${payload.method}('${payload.cols[0]}'` +
+                    (value === 'mad' ? `, threshold=1` : '') +
+                    `)\n` +
+                    `{ "lowerBound": tmp.lower_bound, "upperBound": tmp.upper_bound }`
+                );
+                if (
+                  result &&
+                  typeof result === 'object' &&
+                  'lowerBound' in result &&
+                  'upperBound' in result
+                ) {
+                  const { lowerBound, upperBound } = result;
+                  payload.defaultLowerBound = lowerBound;
+                  payload.lowerBound = lowerBound;
+                  payload.defaultUpperBound = upperBound;
+                  payload.upperBound = upperBound;
+                } else {
+                  console.error('[DEBUG] Unknown response format', result);
+                }
               }
             }
           }
