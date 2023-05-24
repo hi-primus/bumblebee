@@ -268,8 +268,7 @@ export const isOperation = (
     Array.isArray(value.fields) &&
     isObject(value.defaultOptions) &&
     'targetType' in value.defaultOptions &&
-    typeof value.defaultOptions.targetType === 'string' &&
-    ['dataframe', 'value'].includes(value.defaultOptions.targetType);
+    typeof value.defaultOptions.targetType === 'string';
   if (!isOperation) return false;
   if (other) {
     return (
