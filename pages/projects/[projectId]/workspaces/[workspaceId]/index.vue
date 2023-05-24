@@ -64,7 +64,7 @@ import {
   UPDATE_WORKSPACE,
   UPDATE_WORKSPACE_INFO
 } from '@/api/queries';
-import { WorkspaceData } from '@/types/app';
+import { Session, WorkspaceData } from '@/types/app';
 
 const route = useRoute();
 
@@ -124,6 +124,22 @@ const updateWorkspaceName = async (newName: string) => {
     type: 'success'
   });
 };
+
+const session = computed<Session | null>(() => {
+  const workspace = workspaceQueryResult.result.value?.workspaces_by_pk;
+  const project = projectQueryResult.result.value?.projects_by_pk;
+  return {
+    workspace: {
+      id: route.params.workspaceId,
+      name: workspace?.name
+    },
+    project: {
+      id: route.params.projectId,
+      name: project?.name
+    }
+  };
+});
+provide('session', session);
 
 onMounted(() => {
   if (projectQueryResult.result.value) {

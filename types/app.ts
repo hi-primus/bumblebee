@@ -104,9 +104,21 @@ type UploadFileResponse =
       filepath: string;
     };
 
+export interface Session {
+  workspace: {
+    id: string;
+    name?: string;
+  };
+  project: {
+    id: string;
+    name?: string;
+  };
+}
+
 export type AppProperties = {
   blurr: Client;
   settings: AppSettings;
+  session?: Session;
   addToast: (toast: ToastInput) => number;
   uploadFile: (file: File | FileWithId) => PromiseOr<UploadFileResponse>;
 };

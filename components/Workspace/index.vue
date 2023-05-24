@@ -80,6 +80,7 @@ import {
   AppStatus,
   CommandData,
   FileWithId,
+  Session,
   TabData,
   WorkspaceData
 } from '@/types/app';
@@ -140,6 +141,8 @@ const appSettings = ref<AppSettings>({
   workspaceMode: false
 });
 provide('app-settings', appSettings);
+
+const session = inject<Ref<Session | null>>('session', ref(null));
 
 const dataframeLayout = ref<InstanceType<typeof DataframeLayout> | null>(null);
 
@@ -384,6 +387,7 @@ const getAppProperties = () => {
   return {
     blurr: blurr.value,
     settings: appSettings.value,
+    session: session.value,
     addToast,
     ...(appSettings.value.workspaceMode ? { uploadFile } : {})
   };
@@ -542,7 +546,12 @@ const setOperationValues = (payload: OperationPayload<PayloadWithOptions>) => {
     source: payload.source || dataframeObject.value?.df,
     app: {
       ...payload.app,
-      settings: appSettings.value
+      settings: appSettings.value,
+      session: session.value
+        ? {
+            ...session.value
+          }
+        : null
     }
   });
 };
