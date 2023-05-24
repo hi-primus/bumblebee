@@ -61,7 +61,7 @@
                 column.columnType == 'preview' ||
                 (column.columnType == 'default' &&
                   !selection?.columns.includes(column.title) &&
-                  wholePreview),
+                  dataframePreview),
               'column-color-preview-secondary':
                 column.columnType == 'preview secondary',
               'column-color-preview-tertiary':
@@ -439,8 +439,8 @@ const visibleRows = computed(() => {
     );
 });
 
-const wholePreview = computed(() => {
-  return previewData.value?.type?.startsWith('whole');
+const dataframePreview = computed(() => {
+  return (previewData.value?.type || '').startsWith('dataframe');
 });
 
 const getValue = (value: unknown): string => {

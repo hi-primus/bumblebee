@@ -949,7 +949,9 @@ const previewOperationThrottled = throttleOnce(
 
       let previewColumnNames: string[] = [];
 
-      if (usesInputDataframe) {
+      const useSample = !payload?.options?.preview.endsWith('no-sample');
+
+      if (usesInputDataframe && useSample) {
         checkPreviewCancel();
 
         firstSampleSource = await payload.source.iloc({
@@ -1011,7 +1013,9 @@ const previewOperationThrottled = throttleOnce(
       } else {
         previewData.value = {
           options: {
-            usesInputDataframe: false,
+            usesInputDataframe: !useSample
+              ? payload.options.usesInputDataframe
+              : false,
             usesDiff: payload.options.usesDiff
           },
           type: payload.options.preview
@@ -1033,6 +1037,12 @@ const previewOperationThrottled = throttleOnce(
         target: 'operation_preview_' + (payload.source?.name || 'load_df'),
         app: getAppProperties()
       });
+
+      if (!useSample) {
+        previewColumnNames = (await result.cols.names()).filter(title =>
+          title.startsWith('__bumblebee__preview__')
+        );
+      }
 
       checkPreviewCancel();
 
@@ -1057,7 +1067,7 @@ const previewOperationThrottled = throttleOnce(
         !previewType.endsWith('no-profile') &&
         (previewColumnNames.length ||
           !usesInputDataframe ||
-          previewType.startsWith('whole'))
+          previewType.startsWith('dataframe'))
       ) {
         // save profile
 
@@ -1081,7 +1091,7 @@ const previewOperationThrottled = throttleOnce(
         let profile: DataframeProfile | null = null;
 
         if (
-          previewType.startsWith('whole') ||
+          previewType.startsWith('dataframe') ||
           !payload.source ||
           !previewColumns.length
         ) {
@@ -1092,7 +1102,7 @@ const previewOperationThrottled = throttleOnce(
           });
         }
 
-        if (!previewType.startsWith('whole') && previewColumns.length) {
+        if (!previewType.startsWith('dataframe') && previewColumns.length) {
           profile = await result.profile({
             cols: previewColumns,
             bins: 33,

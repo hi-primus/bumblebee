@@ -96,9 +96,9 @@ const header = computed<ColumnHeader[]>(() => {
     previewData.value?.profile?.columns ||
     originalColumns;
 
-  const wholePreview =
+  const dataframePreview =
     previewData.value?.options?.usesInputDataframe === false ||
-    previewData.value?.type === 'whole';
+    previewData.value?.type === 'dataframe';
 
   if (columns && Object.keys(columns)) {
     return Object.entries(columns).map(([title, column]) => {
@@ -113,7 +113,7 @@ const header = computed<ColumnHeader[]>(() => {
 
       if (title.startsWith('__bumblebee__highlight_col__')) {
         newTitle = title.replace('__bumblebee__highlight_col__', '');
-        columnType = wholePreview ? 'preview' : 'highlighted';
+        columnType = dataframePreview ? 'preview' : 'highlighted';
       }
 
       if (columnType !== 'default') {
@@ -129,13 +129,13 @@ const header = computed<ColumnHeader[]>(() => {
         }
       }
 
-      if (columnType === 'default' && wholePreview) {
+      if (columnType === 'default' && dataframePreview) {
         columnType = 'preview';
       }
 
       const inputColumnTitle = newTitle;
 
-      if (columnType.startsWith('preview') && !wholePreview) {
+      if (columnType.startsWith('preview') && !dataframePreview) {
         // if the column already exists, we need to rename it
 
         if (columns?.[newTitle]) {

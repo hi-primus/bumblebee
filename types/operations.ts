@@ -8,9 +8,11 @@ import { RequestOptions, Source } from '@/types/blurr';
 export type PreviewType =
   | false
   | 'custom'
+  | 'custom no-sample'
   | 'basic columns'
-  | 'whole'
-  | 'whole no-profile'
+  | 'basic columns no-sample'
+  | 'dataframe'
+  | 'dataframe no-profile'
   | 'rows'
   | 'highlight rows';
 

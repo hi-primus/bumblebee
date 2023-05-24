@@ -88,7 +88,7 @@ export const operationCreators: Record<string, OperationCreator> = {
     name: 'Load from file',
     defaultOptions: {
       saveToNewDataframe: 'required',
-      preview: 'whole'
+      preview: 'dataframe'
     },
     content: (payload: { url: string; file: File }) => {
       if (payload.file?.name) {
@@ -220,7 +220,7 @@ export const operationCreators: Record<string, OperationCreator> = {
     name: 'Join dataframes',
     defaultOptions: {
       usesInputDataframe: true,
-      preview: 'whole',
+      preview: 'dataframe',
       targetType: 'dataframe'
     },
     content: (
@@ -1156,7 +1156,7 @@ export const operationCreators: Record<string, OperationCreator> = {
     defaultOptions: {
       usesInputCols: true,
       usesInputDataframe: true,
-      preview: 'whole no-profile',
+      preview: 'dataframe no-profile',
       usesOutputCols: false
     },
     content: (
@@ -1938,7 +1938,7 @@ export const operationCreators: Record<string, OperationCreator> = {
       usesOutputCols: false,
       usesInputDataframe: true,
       saveToNewDataframe: true,
-      preview: 'whole'
+      preview: 'dataframe'
     },
     action(
       payload: OperationPayload<{
@@ -4094,7 +4094,7 @@ const preparePayloadForAction = (
     }
   }
 
-  if (options.preview === 'basic columns' && payload.cols) {
+  if ((options.preview || '').startsWith('basic columns') && payload.cols) {
     payload = {
       ...payload,
       outputCols: (payload.cols as Cols).map(
