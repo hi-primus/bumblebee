@@ -112,7 +112,7 @@
 import { mdiClose, mdiExport, mdiPencil } from '@mdi/js';
 import { Ref } from 'vue';
 
-import { AppSettings } from '@/types/app';
+import { AppProperties, AppSettings } from '@/types/app';
 import { Client } from '@/types/blurr';
 import { Column, DataframeObject } from '@/types/dataframe';
 import {
@@ -392,13 +392,7 @@ const formatOperationContent = (content: string): string => {
   return content;
 };
 
-const getAppProperties = () => {
-  return {
-    settings: appSettings.value,
-    blurr: blurr.value,
-    addToast
-  };
-};
+const getAppProperties = inject('get-app-properties') as () => AppProperties;
 
 const getOperationsCode = async (): Promise<string> => {
   const data: OperationItem[] = operationCells.value;

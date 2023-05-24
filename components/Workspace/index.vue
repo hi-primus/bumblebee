@@ -393,6 +393,8 @@ const getAppProperties = () => {
   };
 };
 
+provide('get-app-properties', getAppProperties);
+
 const executeOperations = async (changeTab = true) => {
   const data: OperationItem[] = operationItems.value;
 
