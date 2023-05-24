@@ -120,5 +120,8 @@ export type AppProperties = {
   settings: AppSettings;
   session?: Session;
   addToast: (toast: ToastInput) => number;
-  uploadFile: (file: File | FileWithId) => PromiseOr<UploadFileResponse>;
+  uploadFile: (
+    file: ArrayBuffer | File | FileWithId,
+    fileName?: string
+  ) => PromiseOr<UploadFileResponse>;
 };

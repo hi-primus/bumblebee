@@ -350,15 +350,31 @@ const nhost = nuxtApp.$nhost;
 
 const alreadyUploadedFiles: Record<string, UploadFileResponse> = {};
 
-async function uploadFile(file: File | FileWithId): UploadFileResponse {
+async function uploadFile(
+  fileOrArrayBuffer: ArrayBuffer | File | FileWithId,
+  fileName?: string
+): UploadFileResponse {
   if (!nhost) {
     return { error: 'Upload not available' };
   }
 
-  if ('id' in file && file.id && alreadyUploadedFiles[file.id]) {
-    console.log('[DEBUG] File already uploaded', file);
-    return { ...alreadyUploadedFiles[file.id], error: null };
+  if (
+    'id' in fileOrArrayBuffer &&
+    fileOrArrayBuffer.id &&
+    alreadyUploadedFiles[fileOrArrayBuffer.id]
+  ) {
+    console.log('[DEBUG] File already uploaded', fileOrArrayBuffer);
+    return { ...alreadyUploadedFiles[fileOrArrayBuffer.id], error: null };
   }
+
+  let file: File;
+
+  if (fileOrArrayBuffer instanceof ArrayBuffer) {
+    file = new File([fileOrArrayBuffer], fileName || 'file.csv');
+  } else {
+    file = fileOrArrayBuffer;
+  }
+
   console.log('[DEBUG] Uploading file (id not found)', file);
 
   const { fileMetadata, error } = await nhost.storage.upload({
