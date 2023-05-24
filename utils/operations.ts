@@ -2273,8 +2273,8 @@ export const operationCreators: Record<string, OperationCreator> = {
     shortcut: 'shs'
   },
   zScore: {
-    name: 'Calculate Z-Score',
-    alias: 'Calculate Z-Score',
+    name: 'Calculate Z-score',
+    alias: 'Calculate Z-score',
     defaultOptions: {
       usesInputCols: true,
       usesInputDataframe: true,
@@ -2292,8 +2292,8 @@ export const operationCreators: Record<string, OperationCreator> = {
     shortcut: 'zs'
   },
   modifiedZScore: {
-    name: 'Calculate Modified Z-Score',
-    alias: 'Calculate Modified Z-Score',
+    name: 'Calculate Modified Z-score',
+    alias: 'Calculate Modified Z-score',
     defaultOptions: {
       usesInputCols: true,
       usesInputDataframe: true,
