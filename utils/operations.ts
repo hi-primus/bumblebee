@@ -3324,20 +3324,43 @@ export const operationCreators: Record<string, OperationCreator> = {
   sample: {
     name: 'Get n samples from the dataframe',
     alias: 'sample',
+    // TODO: Implement preview
     defaultOptions: {
-      usesInputCols: true,
-      usesInputDataframe: true,
-      preview: 'basic columns'
+      usesInputDataframe: true
     },
-    // TODO: Content property
+    content: (
+      payload: OperationPayload<{
+        n: number;
+        seed: number;
+      }>
+    ): string => {
+      return `b{Sample} gr{${payload.n}} rows from the dataframe using gr{${payload.seed}} seed`;
+    },
     action: (
-      _payload: OperationPayload<{
+      payload: OperationPayload<{
         n: number;
         seed: number;
       }>
     ): Source => {
-      throw new Error('Not implemented');
+      return payload.source.sample({
+        target: payload.target,
+        n: payload.n,
+        seed: payload.seed,
+        requestOptions: payload.requestOptions
+      });
     },
+    fields: [
+      {
+        name: 'n',
+        label: 'Number of rows',
+        type: 'number'
+      },
+      {
+        name: 'seed',
+        label: 'Seed',
+        type: 'number'
+      }
+    ],
     shortcut: 'ms'
   },
   impute: {
@@ -3614,18 +3637,21 @@ export const operationCreators: Record<string, OperationCreator> = {
     alias: 'Unsplit cols nest',
     defaultOptions: {
       usesInputCols: true,
+      usesOutputCols: false,
       usesInputDataframe: true,
       preview: 'custom'
     },
     content: (
       payload: OperationPayload<{
         separator: string;
+        drop: boolean;
       }>
     ): string => {
       return (
         `b{Nest} ${naturalJoin(payload.cols)}` +
         ` using gr{${payload.separator}}` +
-        inDataframeContent(payload)
+        inDataframeContent(payload) +
+        ` and ${payload.drop ? 'gr{drop}' : 'gr{keep}'} original columns`
       );
     },
     validate: (
@@ -3643,9 +3669,10 @@ export const operationCreators: Record<string, OperationCreator> = {
     action: (
       payload: OperationPayload<{
         separator: string;
+        drop: boolean;
       }>
     ): Source => {
-      const drop = !payload.options.preview;
+      const drop = payload.options.preview ? false : payload.drop;
       const outputCol = payload.options.preview
         ? `__bumblebee__preview__${payload.cols.join('_')}`
         : payload.cols.join('_');
@@ -3663,6 +3690,12 @@ export const operationCreators: Record<string, OperationCreator> = {
         name: 'separator',
         label: 'Separator',
         type: 'string'
+      },
+      {
+        name: 'drop',
+        label: 'Drop input columns',
+        type: 'boolean',
+        defaultValue: false
       }
     ],
     shortcut: 'cn'

@@ -37,18 +37,11 @@
         </template>
         <Icon v-else class="loading-icon" :path="mdiLoading" />
       </div>
-      <form class="manager-form" @submit.prevent="createWorkspace">
-        <AppInput
-          v-model="workspaceName"
-          type="text"
-          label="New Workspace Name"
-        />
-        <AppButton class="self-center" type="submit">
-          Create Workspace
-        </AppButton>
-      </form>
+      <AppButton class="creation-button" type="button" @click="createWorkspace">
+        Create Workspace
+      </AppButton>
     </div>
-    <table class="data-table w-full">
+    <table class="data-table clickable w-full">
       <thead>
         <tr>
           <th>Status</th>
@@ -61,6 +54,7 @@
         <tr
           v-for="workspace in workspacesQueryResult.result.value?.workspaces"
           :key="workspace.id"
+          @click="openWorkspace(workspace.id)"
         >
           <td>{{ !!workspace.id ? 'Active' : 'Inactive' }}</td>
           <td>{{ workspace.name }}</td>
@@ -88,7 +82,7 @@
                 class="size-small layout-invisible icon-button color-neutral"
                 type="button"
                 :icon="mdiTrashCan"
-                @click="deleteWorkspace(workspace.id)"
+                @click.stop="deleteWorkspace(workspace)"
               />
 
               <AppButton
@@ -140,6 +134,8 @@ useHead({
   title: 'Bumblebee Workspaces'
 });
 
+const { confirm } = useConfirmPopup();
+
 const userId = useUserId();
 const route = useRoute();
 
@@ -189,40 +185,47 @@ const {
   onDone: onDoneCreateWorkspaceMutation
 } = useMutation(CREATE_WORKSPACE);
 
-const { mutate: deleteProjectMutation, onDone: onDoneDeleteProjectMutation } =
+const { mutate: deleteWorkspaceMutation, onDone: onDoneDeleteProjectMutation } =
   useMutation(DELETE_WORKSPACE);
 
 const createWorkspace = () => {
-  console.log(
-    '[DEBUG] Creating workspace',
-    workspaceName.value,
-    workspaceDescription.value
-  );
+  console.log('[DEBUG] Creating workspace');
   createWorkspaceMutation({
     project_id: route.params.projectId,
-    name: workspaceName.value,
-    description: workspaceDescription.value,
+    name: 'Untitled Workspace',
     receiver_id: userId.value,
     sender_id: userId.value
   });
 };
 
-const deleteWorkspace = id => {
-  deleteProjectMutation({
-    id
-  });
+let deleting = false;
+
+const deleteWorkspace = async workspace => {
+  if (deleting) {
+    return;
+  }
+  deleting = true;
+  const result = await confirm(`Delete '${workspace.name}'?`);
+  if (result) {
+    deleteWorkspaceMutation({
+      id: workspace.id
+    });
+  }
+  deleting = false;
 };
+
 onDoneDeleteProjectMutation(() => {
   workspacesQueryResult.refetch();
 });
-onDoneCreateWorkspaceMutation(() => {
-  workspaceName.value = '';
-  workspaceDescription.value = '';
-  workspacesQueryResult.refetch();
+onDoneCreateWorkspaceMutation(result => {
+  navigateTo(
+    `/projects/${route.params.projectId}/workspaces/${result.data.insert_workspaces_one.id}`
+  );
 });
 
-const workspaceName = ref('');
-const workspaceDescription = ref('');
+const openWorkspace = id => {
+  navigateTo(`/projects/${route.params.projectId}/workspaces/${id}`);
+};
 
 onMounted(() => {
   if (projectQueryResult.result.value) {

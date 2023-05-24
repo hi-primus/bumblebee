@@ -60,14 +60,23 @@ export type ToastInput = Prettify<
 
 // confirm popup
 
+export type ComponentInfo = {
+  name: string;
+  component: string | Component;
+  content?: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  [key: string]: any;
+};
+
 export type ConfirmPopup = {
   id: number;
   message: string;
   title?: string;
   acceptLabel?: string;
   cancelLabel?: string;
-  accept: () => void;
+  accept: (e: Event) => void;
   cancel: () => void;
+  fields?: ComponentInfo[];
 };
 
 // app

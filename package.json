@@ -29,7 +29,7 @@
   "dependencies": {
     "@apollo/client": "^3.7.14",
     "@headlessui/vue": "^1.7.4",
-    "@hi-primus/blurr": "^0.0.17",
+    "@hi-primus/blurr": "^0.0.19",
     "@mdi/js": "^7.0.96",
     "@mdi/svg": "^7.0.96",
     "@nhost/apollo": "^5.2.3",

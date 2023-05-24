@@ -21,18 +21,15 @@
       <div class="manager-navigation flex-1">
         <h1>Projects</h1>
       </div>
-      <form class="manager-form" @submit.prevent="createProject">
-        <AppInput
-          v-model="newProjectName"
-          type="text"
-          label="New Project Name"
-        />
-        <AppButton class="self-center" type="submit">
-          Create Project
-        </AppButton>
-      </form>
+      <AppButton
+        class="creation-button"
+        type="submit"
+        @click="createProjectPopup"
+      >
+        Create Project
+      </AppButton>
     </div>
-    <table class="data-table w-full mb-4">
+    <table class="data-table clickable w-full mb-4">
       <thead>
         <tr>
           <th>Name</th>
@@ -44,6 +41,7 @@
         <tr
           v-for="project in queryResult.result.value?.projects"
           :key="project.id"
+          @click="openProject(project.id)"
         >
           <td>{{ project.name }}</td>
           <td>
@@ -63,7 +61,7 @@
                 class="size-small layout-invisible icon-button color-neutral"
                 type="button"
                 :icon="mdiTrashCan"
-                @click="deleteProject(project.id)"
+                @click.stop="deleteProject(project)"
               />
               <AppButton
                 v-tooltip="'View project workspaces'"
@@ -90,19 +88,15 @@
 </template>
 
 <script setup lang="ts">
-import {
-  mdiArrowLeft,
-  mdiArrowRight,
-  mdiDotsVertical,
-  mdiPencil,
-  mdiTrashCan
-} from '@mdi/js';
+import { mdiArrowRight, mdiDotsVertical, mdiTrashCan } from '@mdi/js';
 
 import { CREATE_PROJECT, DELETE_PROJECT, GET_PROJECTS } from '@/api/queries';
 
 useHead({
   title: 'Bumblebee Projects'
 });
+
+const { confirm } = useConfirmPopup();
 
 const { signOut } = useSignOut();
 
@@ -113,13 +107,15 @@ const logout = () => {
 
 const userId = useUserId();
 
+type Project = {
+  id: string;
+  name: string;
+  description: string;
+  created_at: string;
+};
+
 const queryResult = useClientQuery<{
-  projects: {
-    id: string;
-    name: string;
-    description: string;
-    created_at: string;
-  }[];
+  projects: Project[];
 }>(GET_PROJECTS, {
   userId: userId.value
 });
@@ -130,38 +126,67 @@ const { mutate: createProjectMutation, onDone: onDoneCreateProjectMutation } =
 const { mutate: deleteProjectMutation, onDone: onDoneDeleteProjectMutation } =
   useMutation(DELETE_PROJECT);
 
-const createProject = () => {
-  console.log(
-    '[DEBUG] Creating project',
-    newProjectName.value,
-    newProjectDescription.value
-  );
+const AppInput = resolveComponent('AppInput');
+
+const createProjectPopup = async () => {
+  const result = await confirm<{ newProjectName: string }>({
+    message: 'Create new project',
+    fields: [
+      {
+        component: AppInput,
+        name: 'newProjectName',
+        label: 'Project name'
+      }
+    ],
+    acceptLabel: 'Create',
+    cancelLabel: 'Cancel'
+  });
+
+  if (
+    typeof result === 'object' &&
+    'newProjectName' in result &&
+    result.newProjectName
+  ) {
+    createProject(result.newProjectName);
+  }
+};
+
+const createProject = (newProjectName: string) => {
+  console.log('[DEBUG] Creating project', newProjectName);
 
   createProjectMutation({
     user_id: userId.value,
-    name: newProjectName.value,
-    description: newProjectDescription.value
+    name: newProjectName
   });
 };
 
-const deleteProject = (id: string) => {
-  deleteProjectMutation({
-    id
-  });
+let deleting = false;
+
+const deleteProject = async (project: Project) => {
+  if (deleting) {
+    return;
+  }
+  deleting = true;
+  const result = await confirm(`Delete '${project.name}'?`);
+  if (result) {
+    deleteProjectMutation({
+      id: project.id
+    });
+  }
+  deleting = false;
 };
 
 onDoneDeleteProjectMutation(() => {
   queryResult.refetch();
 });
 
-onDoneCreateProjectMutation(() => {
-  newProjectName.value = '';
-  newProjectDescription.value = '';
-  queryResult.refetch();
+onDoneCreateProjectMutation(result => {
+  navigateTo(`/projects/${result.data.insert_projects_one.id}/workspaces`);
 });
 
-const newProjectName = ref('');
-const newProjectDescription = ref('');
+const openProject = (id: string) => {
+  navigateTo(`/projects/${id}/workspaces`);
+};
 
 onMounted(() => {
   if (queryResult.result.value) {

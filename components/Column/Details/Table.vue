@@ -37,7 +37,7 @@ defineProps({
   },
   total: {
     type: Number,
-    required: true
+    default: 0
   },
   displayValueIndex: {
     type: Number,

@@ -599,12 +599,7 @@ const handleKeyDown = (event: KeyboardEvent, columnIndex: number) => {
   console.log('[DEBUG][TABLE] Key down', event.key, event, columnIndex);
   const key = event.key.toLowerCase();
   if (key === 'escape') {
-    selection.value = {
-      columns: [],
-      ranges: null,
-      indices: null,
-      values: null
-    };
+    selection.value = null;
   } else if (key === ' ' || key === 'spacebar' || key === 'enter') {
     columnClicked(event, columnIndex);
     event.preventDefault();

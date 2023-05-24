@@ -1,5 +1,5 @@
 <template>
-  <div class="workspace-container" :class="{ 'hide-operations': !showSidebar }">
+  <div class="workspace-container" :class="{ 'hide-operations': !sidebar }">
     <div class="top-section flex items-end gap-4">
       <slot name="header"></slot>
       <Tabs
@@ -152,8 +152,8 @@ const selectedTab = ref(-1);
 const appStatus = ref<AppStatus>('loading');
 provide('app-status', appStatus);
 
-const showSidebar = ref(false);
-provide('show-sidebar', showSidebar);
+const sidebar = ref<null | 'operations' | 'selection'>(null);
+provide('show-sidebar', sidebar);
 
 const state = ref<State>('operations');
 provide('state', state);
@@ -183,9 +183,10 @@ watch(state, () => {
 });
 
 const executedOperations = ref<OperationItem[]>([]);
+const sourcesFromOperations = ref<Record<string, Source>>({});
 
-const operationCells = ref<OperationItem[]>([]);
-provide('operations', operationCells);
+const operationItems = ref<OperationItem[]>([]);
+provide('operations', operationItems);
 
 const inactiveOperationCells = ref<OperationItem[]>([]);
 provide('inactive-operations', inactiveOperationCells);
@@ -338,11 +339,18 @@ const checkSources = (data: OperationItem[]) => {
   );
 };
 
-const { nhost } = useNhostClient();
+const nuxtApp = useNuxtApp();
+
+// avoid using useNhostClient() to avoid errors on installations without nhost
+const nhost = nuxtApp.$nhost;
 
 const alreadyUploadedFiles: Record<string, UploadFileResponse> = {};
 
 async function uploadFile(file: File | FileWithId): UploadFileResponse {
+  if (!nhost) {
+    return { error: 'Upload not available' };
+  }
+
   if ('id' in file && file.id && alreadyUploadedFiles[file.id]) {
     console.log('[DEBUG] File already uploaded', file);
     return { ...alreadyUploadedFiles[file.id], error: null };
@@ -378,7 +386,7 @@ const getAppProperties = () => {
 };
 
 const executeOperations = async (changeTab = true) => {
-  const data: OperationItem[] = operationCells.value;
+  const data: OperationItem[] = operationItems.value;
 
   checkSources(data);
 
@@ -400,12 +408,15 @@ const executeOperations = async (changeTab = true) => {
     }
   }
 
+  if (!skip) {
+    executedOperations.value = [];
+    sourcesFromOperations.value = {};
+  }
+
   const operationResults = new Map<
     string,
     { result: unknown; payload: PayloadWithOptions }
   >();
-
-  const sources: Record<string, Source> = {};
 
   const newPayloads: PayloadWithOptions[] = [];
 
@@ -422,7 +433,7 @@ const executeOperations = async (changeTab = true) => {
     }
 
     const actionPayload: typeof payload = {
-      ...adaptSources(payload, sources),
+      ...adaptSources(payload, sourcesFromOperations.value),
       app: getAppProperties()
     };
 
@@ -442,14 +453,14 @@ const executeOperations = async (changeTab = true) => {
     if (sourceId && newPayload.options.targetType === 'dataframe') {
       operationResults.set(sourceId, { result, payload: newPayload });
       const dfName = newPayload.target || newPayload.source;
-      sources[dfName] = result as Source;
+      sourcesFromOperations.value[dfName] = result as Source;
     }
     console.info('Operation result:', { sourceId, result, newPayload });
   }
 
-  operationCells.value = data.map((item, index) => ({
+  operationItems.value = data.map((item, index) => ({
     ...item,
-    payload: newPayloads[index]
+    payload: newPayloads[index] || item.payload
   }));
 
   const promisesResults = await Promise.allSettled(
@@ -628,14 +639,14 @@ const operationActions: OperationActions = {
             editingIndex,
             newOperation
           });
-          operationCells.value = [
-            ...operationCells.value,
+          operationItems.value = [
+            ...operationItems.value,
             ...inactiveOperationCells.value
           ];
-          operationCells.value[editingIndex] = newOperation;
+          operationItems.value[editingIndex] = newOperation;
           inactiveOperationCells.value = [];
         } else {
-          operationCells.value.push(newOperation);
+          operationItems.value.push(newOperation);
         }
       }
 
@@ -661,6 +672,7 @@ const operationActions: OperationActions = {
       }
     }
     previewData.value = null;
+    lastPayload = null;
   },
   cancelOperation: async (restoreInactive = false) => {
     console.info('Operation cancelled');
@@ -669,16 +681,17 @@ const operationActions: OperationActions = {
     // const editing = operationValues.value.options?.editing;
     resetOperationValues();
     state.value = 'operations';
-    if (operationCells.value.length === 0) {
-      showSidebar.value = false;
+    if (operationItems.value.length === 0) {
+      sidebar.value = null;
     }
     previewData.value = null;
+    lastPayload = null;
     if (
       inactiveOperationCells.value.length > 0 &&
       restoreInactive /* && editing */
     ) {
-      operationCells.value = [
-        ...operationCells.value,
+      operationItems.value = [
+        ...operationItems.value,
         ...inactiveOperationCells.value
       ];
       inactiveOperationCells.value = [];
@@ -695,7 +708,7 @@ const operationActions: OperationActions = {
       operationActions.cancelOperation(false);
     }
     state.value = operation || 'operations';
-    showSidebar.value = true;
+    sidebar.value = 'operations';
 
     // awaits to allow the sidebar to be rendered
 
@@ -1110,6 +1123,7 @@ const previewOperationThrottled = throttleOnce(
       }
       if (err instanceof Error && !err.message.includes('Preview cancelled')) {
         previewData.value = null;
+        lastPayload = null;
         operationStatus.value = {
           message: err.message
             .split('\n')
@@ -1120,6 +1134,7 @@ const previewOperationThrottled = throttleOnce(
         };
       } else if (typeof err === 'string') {
         previewData.value = null;
+        lastPayload = null;
         const message = (
           err
             .split('\n')
@@ -1172,6 +1187,7 @@ const previewOperation = async () => {
 };
 
 watch(() => operationValues.value, previewOperation, { deep: true });
+
 watch(
   () => selection.value,
   selection => {
@@ -1198,16 +1214,13 @@ watch(
       state.value = {
         columns: selection?.columns || []
       };
+      if (sidebar.value !== 'selection') {
+        sidebar.value = 'selection';
+      }
     }
   },
   { deep: true }
 );
-
-watch(showSidebar, show => {
-  if (!show) {
-    dataframeLayout.value?.focusTable();
-  }
-});
 
 watch(selectedTab, async tab => {
   await nextTick();
@@ -1223,7 +1236,7 @@ watch(selectedTab, async tab => {
 });
 
 const emitWorkspaceData = () => {
-  const dataframeCommands = operationCells.value.map(cell => {
+  const dataframeCommands = operationItems.value.map(cell => {
     const { operation, payload } = cell;
     return {
       operationKey: operation.key,
@@ -1278,7 +1291,7 @@ const initializeWorkspace = async () => {
     commands = commands || [];
     tabsData = tabsData || [];
 
-    operationCells.value = commands
+    operationItems.value = commands
       .map(command => {
         const operation = operations[command.operationKey];
         if (!operation) {
@@ -1327,7 +1340,7 @@ const initializeWorkspace = async () => {
 };
 
 watch(
-  [tabs, selectedTab, operationCells],
+  [tabs, selectedTab, operationItems],
   () => {
     emitWorkspaceData();
   },
@@ -1362,13 +1375,14 @@ provide('initializeEngine', initializeEngine);
 const onKeyDown = (event: KeyboardEvent): void => {
   const key = event.key.toLowerCase();
   if (key === 'escape') {
-    if (state.value !== 'operations') {
+    if (state.value === 'operations') {
+      sidebar.value = null;
+      dataframeLayout.value?.focusTable();
+    } else if (state.value && sidebar.value) {
       operationActions.selectOperation(null);
-      if (!operationCells.value.length && showSidebar.value) {
-        showSidebar.value = false;
+      if (!operationItems.value.length && sidebar.value) {
+        sidebar.value = null;
       }
-    } else if (showSidebar.value) {
-      showSidebar.value = false;
     }
   }
 };
