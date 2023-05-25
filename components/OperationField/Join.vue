@@ -9,14 +9,14 @@
     >
       <div
         v-if="value?.[side]"
-        class="sticky top-0 bg-white z-[5] group flex items-center h-8 px-2"
+        class="sticky top-0 bg-white z-[5] group flex items-center h-8"
         :class="{
-          'pr-4': side === 'right',
-          'pl-4': side === 'left'
+          'px-2': side === 'right',
+          'pl-4 pr-2': side === 'left'
         }"
       >
         <IconButton
-          class="h-5 w-5 transition-all text-neutral-alpha opacity-70"
+          class="h-5 min-w-5 transition-all text-neutral-alpha opacity-70"
           :path="
             value[side].every(col => col.selected)
               ? mdiCheckboxMarked
@@ -31,17 +31,17 @@
       <div
         v-for="(col, index) in value?.[side]"
         :key="side + col.name"
-        class="group flex gap-2 items-center h-8 px-2"
+        class="group flex gap-2 items-center h-8"
         :class="{
           'bg-green-highlight': col.isKey,
           'bg-yellow-highlight': !col.isKey && side === 'left',
           'bg-blue-highlight': !col.isKey && side === 'right',
-          'pr-4': side === 'right',
-          'pl-4': side === 'left'
+          'px-2': side === 'right',
+          'pl-4 pr-2': side === 'left'
         }"
       >
         <IconButton
-          class="h-5 w-5 transition-all text-neutral-alpha opacity-70"
+          class="h-5 min-w-5 transition-all text-neutral-alpha opacity-70"
           :path="col.selected ? mdiCheckboxMarked : mdiCheckboxBlankOutline"
           @click="_event => toggleSelected(side, index)"
         />
@@ -55,7 +55,9 @@
           :path="mdiKey"
           @click="_event => setKey(side, index)"
         />
-        <span class="text-neutral-light">{{ col.name }} </span>
+        <span class="text-neutral-light flex-1 ellipsis" :title="col.name">
+          {{ col.name }}
+        </span>
       </div>
     </div>
   </div>
