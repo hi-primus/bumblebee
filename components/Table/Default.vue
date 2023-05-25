@@ -120,7 +120,7 @@
               v-for="row in visibleRows"
               :key="`col-${column?.title}-${row.index}`"
               :title="(row?.values?.[column.columnIndex] as string)"
-              class="column-cell ellipsis"
+              class="column-cell"
               :style="{
                 top: columnHeaderHeight + row.index * rowHeight + 'px',
                 height: rowHeight + 1 + 'px'
@@ -407,7 +407,11 @@ const visibleRows = computed(() => {
                   if (part.added) {
                     return '';
                   } else if (part.removed) {
-                    return `<span class="bg-danger-lightest/50">${part.value}</span>`;
+                    // split chars to avoid rendering backgrounds after the ellipsis
+                    return part.value
+                      .split('')
+                      .map(c => `<span class="highlight-removed">${c}</span>`)
+                      .join('');
                   } else {
                     return part.value;
                   }
@@ -416,7 +420,11 @@ const visibleRows = computed(() => {
               rowValues[previewColumn] = parts
                 .map(part => {
                   if (part.added) {
-                    return `<span class="bg-success-lightest">${part.value}</span>`;
+                    // split chars to avoid rendering backgrounds after the ellipsis
+                    return part.value
+                      .split('')
+                      .map(c => `<span class="highlight-added">${c}</span>`)
+                      .join('');
                   } else if (part.removed) {
                     return '';
                   } else {
@@ -925,5 +933,22 @@ defineExpose({
 
 .column-with-expanded-cell:nth-last-child(2) .column-cell.expanded-cell {
   margin-left: calc(200% - 397px);
+}
+
+.column-cell {
+  white-space: pre;
+  overflow: hidden;
+  display: inline-block;
+  text-overflow: ellipsis;
+}
+.column-cell > span {
+  display: inline-block;
+}
+
+.highlight-removed {
+  @apply bg-danger-lightest/50;
+}
+.highlight-added {
+  @apply bg-success-lightest;
 }
 </style>
