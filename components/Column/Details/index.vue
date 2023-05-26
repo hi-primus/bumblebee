@@ -35,6 +35,13 @@
         />
         <ColumnDetailsTable :data="qualityData" />
       </div>
+      <div v-if="moreStats">
+        <h4>Stats</h4>
+        <ColumnDetailsTable
+          :data="moreStats"
+          :format-number="(value: number) => (+value.toFixed(2)).toString()"
+        />
+      </div>
       <div v-if="column.stats?.hist">
         <h4>Histogram</h4>
         <PlotHist
@@ -139,6 +146,8 @@ const tooltipValue = ref('');
 
 const detailsExpanded = ref(props.expanded);
 
+const moreStats = ref<[string, number][] | null>(null);
+
 const patternsFrequency = ref<
   ({
     data: [string, number][];
@@ -171,6 +180,44 @@ const qualityData = computed<[string, number, string][]>(() => {
     ['Mismatches', stats.mismatch, percentage(stats.mismatch, total)]
   ];
 });
+
+const loadMoreStats = async () => {
+  const df = dataframeObject.value?.df;
+
+  if (!df) {
+    return;
+  }
+
+  const promises = [
+    df.cols.min({ cols: props.column.title, tidy: true }),
+    df.cols.max({ cols: props.column.title, tidy: true }),
+    df.cols.mean({ cols: props.column.title, tidy: true })
+    // df.cols.std({ cols: props.column.title, tidy: true }),
+    // df.cols.median({ cols: props.column.title, tidy: true })
+  ];
+
+  const [
+    min,
+    max,
+    mean
+    // std,
+    // median
+  ] = await Promise.all(promises);
+
+  if (((min === max) === mean) === /* std === median === */ null) {
+    return;
+  }
+
+  moreStats.value = (
+    [
+      ['Min', min],
+      ['Max', max],
+      ['Mean', mean]
+      // ['Std', std],
+      // ['Median', median],
+    ] as [string, number][]
+  ).filter(([_, v]) => v !== null);
+};
 
 const loadPatternsFrequency = async () => {
   const df = dataframeObject.value?.df;
@@ -223,6 +270,7 @@ watch(patternsResolution, (_value, oldValue) => {
 
 onMounted(() => {
   loadPatternsFrequency();
+  loadMoreStats();
 });
 </script>
 
