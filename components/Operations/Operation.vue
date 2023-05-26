@@ -140,7 +140,8 @@
       <div
         v-if="
           firstValidated &&
-          ['error', 'fatal error'].includes(operationStatus.status)
+          ['error', 'fatal error'].includes(operationStatus.status) &&
+          operationStatus.message
         "
         class="w-full flex justify-end gap-2"
       >
