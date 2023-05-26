@@ -214,7 +214,7 @@ const loadMoreStats = async () => {
     // median
   ] = await Promise.all(promises);
 
-  if (((min === max) === mean) === /* std === median === */ null) {
+  if ([min, max, mean].every(v => v === null || isNaN(v))) {
     return;
   }
 
