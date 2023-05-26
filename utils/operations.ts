@@ -291,6 +291,8 @@ export const operationCreators: Record<string, OperationCreator> = {
       const leftOn = payload.columns.left.find(col => col.isKey)?.name;
       const rightOn = payload.columns.right.find(col => col.isKey)?.name;
 
+      let rowsCount: number | null = null;
+
       // loop until the dataframe is big enough to show the preview
 
       while (true) {
@@ -339,7 +341,7 @@ export const operationCreators: Record<string, OperationCreator> = {
 
         // break if the dataframe is big enough to show the preview
 
-        const rowsCount = await df.rows.count({
+        rowsCount = await df.rows.count({
           requestOptions: payload.requestOptions
         });
 
@@ -348,6 +350,10 @@ export const operationCreators: Record<string, OperationCreator> = {
         } else {
           break;
         }
+      }
+
+      if (!rowsCount) {
+        throw new Error(`Join was not successful. Please check the join keys`);
       }
 
       const resultColumns = await df.cols.names({
