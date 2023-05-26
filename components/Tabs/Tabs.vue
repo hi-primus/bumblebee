@@ -18,7 +18,7 @@
         </div>
         <IconButton
           v-if="closable"
-          class="w-4 h-4 mr-[-2px] outline-offset-2"
+          class="min-w-4 h-4 mr-[-2px] outline-offset-2"
           :path="mdiClose"
           @click.stop.prevent="() => emit('close', index)"
         />

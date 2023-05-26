@@ -30,7 +30,7 @@
             class="clearIcon w-6"
           />
         </button>
-        <Icon :path="mdiPaperclip" class="file-input-fieldIcon w-8" />
+        <Icon :path="mdiPaperclip" class="file-input-fieldIcon min-w-8" />
       </div>
     </div>
   </div>

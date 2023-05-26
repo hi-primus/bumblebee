@@ -11,7 +11,7 @@
       <h3 v-else-if="columnsInfo && sidebar === 'selection'">Details</h3>
       <h3 v-else>Operations</h3>
       <IconButton
-        class="absolute h-full w-10 px-3 right-0"
+        class="absolute h-full min-w-10 px-3 right-0"
         :path="mdiClose"
         @click="closeSidebar"
       />
@@ -73,12 +73,12 @@
             <span class="flex-1" v-html="element.htmlContent"></span>
             <IconButton
               :path="mdiPencil"
-              class="w-4 h-4 ml-auto cursor-pointer opacity-0 group-hover:opacity-100 focus:opacity-100 transition"
+              class="min-w-4 h-4 ml-auto cursor-pointer opacity-0 group-hover:opacity-100 focus:opacity-100 transition"
               @click="editOperation(index)"
             />
             <IconButton
               :path="mdiClose"
-              class="w-4 h-4 cursor-pointer"
+              class="min-w-4 h-4 cursor-pointer"
               @click="removeOperation(index)"
             />
           </li>

@@ -249,17 +249,13 @@
   &:not([class*='accent-']) {
     @apply accent-primary-dark;
   }
-}
-
-.checkbox:not([class*='size-']) {
-  .checkbox-input {
-    @apply h-5 w-5;
+  &:not([class*='size-']) {
+    .checkbox-input {
+      @apply min-w-5 h-5;
+    }
   }
-}
-
-.size-small {
-  .checkbox-input {
-    @apply h-4 w-4;
+  .size-small & {
+    @apply min-w-4 h-4;
   }
 }
 

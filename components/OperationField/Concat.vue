@@ -29,7 +29,7 @@
           </h3>
           <IconButton
             v-if="dataframeIndex > 0"
-            class="remove-button w-4 h-4 text-primary-dark"
+            class="remove-button min-w-4 h-4 text-primary-dark"
             :path="mdiClose"
             @click="removeDataframe(dataframeIndex)"
           />
@@ -100,7 +100,7 @@
                   class="concat-draggable concat-item flex items-center"
                 >
                   <Icon
-                    class="text-neutral-alpha/40 w-5 h-5"
+                    class="text-neutral-alpha/40 min-w-5 h-5"
                     :path="mdiDragHorizontalVariant"
                   />
                   <OperationFieldConcatItem
@@ -116,7 +116,7 @@
                     }"
                   />
                   <IconButton
-                    class="close-button w-4 h-4"
+                    class="close-button min-w-4 h-4"
                     :path="mdiClose"
                     @click="removeItem(dfIndex, slotIndex)"
                   />
@@ -150,13 +150,16 @@
                 textFieldsValues[textFieldsKeys[index]] = $event
               "
             />
-            <Icon :path="mdiCursorText" class="text-neutral-alpha/40 w-5 h-5" />
+            <Icon
+              :path="mdiCursorText"
+              class="text-neutral-alpha/40 min-w-5 h-5"
+            />
           </span>
           <span class="data-item-hint" :title="item.hint">
             {{ item.hint }}
           </span>
           <IconButton
-            class="close-button w-4 h-4"
+            class="close-button min-w-4 h-4"
             :path="mdiClose"
             @click="removeRow(index)"
           />
@@ -196,7 +199,7 @@
               class="concat-draggable concat-item bg-danger-highlight"
             >
               <Icon
-                class="text-neutral-alpha/40 w-5 h-5"
+                class="text-neutral-alpha/40 min-w-5 h-5"
                 :path="mdiDragHorizontalVariant"
               />
               <OperationFieldConcatItem

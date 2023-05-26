@@ -80,7 +80,7 @@
             </div>
             <div class="type-icon text-neutral-alpha/50 pl-2">
               <Icon
-                class="w-5 h-5"
+                class="min-w-5 h-5"
                 :path="
                   suggestion.type === 'function' ? mdiFunction : mdiTableColumn
                 "
