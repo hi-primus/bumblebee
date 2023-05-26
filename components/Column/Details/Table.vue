@@ -18,9 +18,14 @@
         <td
           v-for="(value, index) in row"
           :key="`${rowIndex} ${index}`"
+          :title="value.toString()"
           :class="valueClass"
         >
-          <span>{{ value }}</span>
+          <span>{{
+            formatNumber && typeof value === 'number'
+              ? formatNumberCallback(value)
+              : value
+          }}</span>
         </td>
       </tr>
     </tbody>
@@ -30,7 +35,7 @@
 <script setup lang="ts">
 import { PropType } from 'vue';
 
-defineProps({
+const props = defineProps({
   data: {
     type: Array as PropType<(string | number)[][]>,
     required: true
@@ -49,6 +54,9 @@ defineProps({
   selectable: {
     type: Boolean,
     default: false
+  },
+  formatNumber: {
+    type: Function as PropType<(value: number) => string>
   }
 });
 
@@ -57,6 +65,19 @@ type Emits = {
 };
 
 defineEmits<Emits>();
+
+const formatNumberCallback = computed(() => {
+  return (value: number) => {
+    if (!props.formatNumber) {
+      return value.toString();
+    }
+    let formatted = props.formatNumber(value);
+    if (formatted && formatted !== value.toString()) {
+      formatted = `~${formatted}`;
+    }
+    return formatted || value.toString();
+  };
+});
 </script>
 
 <style scoped lang="scss">
