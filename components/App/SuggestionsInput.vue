@@ -3,7 +3,7 @@
     ref="listbox"
     as="div"
     class="input text-input"
-    :class="[attrClass]"
+    :class="[attrClass, errorMessage ? 'input-error' : '']"
     :style="(attrStyle as StyleValue)"
     @update:model-value="useSuggestion"
   >
@@ -90,6 +90,9 @@
         </ListboxOption>
       </ListboxOptions>
     </div>
+    <span v-if="errorMessage" :class="'input-errorContainer'">
+      {{ errorMessage }}
+    </span>
     <slot></slot>
   </Listbox>
 </template>
@@ -97,10 +100,11 @@
 <script lang="ts">
 import { Listbox, ListboxOption, ListboxOptions } from '@headlessui/vue';
 import { mdiFunction, mdiTableColumn } from '@mdi/js';
+import { useField } from 'vee-validate';
 import { PropType, StyleValue } from 'vue';
 
 import ListboxInput from '@/components/ListboxInput.vue';
-import { RuleKey } from '@/composables/use-rules';
+import { Rule } from '@/composables/use-rules';
 import { Suggestion } from '@/types/operations';
 import { SuggestionContext } from '@/utils/suggestions';
 import { debounce } from '@/utils/time';
@@ -111,7 +115,12 @@ export default {
 </script>
 
 <script setup lang="ts">
-const emit = defineEmits(['update:modelValue']);
+type Emits = {
+  (event: 'update:modelValue', value: string): void;
+  (event: 'validate', value: boolean | string): void;
+};
+
+const emit = defineEmits<Emits>();
 
 const props = defineProps({
   modelValue: {
@@ -135,7 +144,7 @@ const props = defineProps({
     default: () => 'text'
   },
   rules: {
-    type: Array as PropType<RuleKey[]>,
+    type: Array as PropType<Rule[]>,
     default: () => []
   },
   name: {
@@ -150,10 +159,21 @@ const props = defineProps({
 
 const { class: attrClass, style: attrStyle, ...attrs } = useAttrs();
 
-const myValue = computed({
-  get: () => props.modelValue,
-  set: value => emit('update:modelValue', value)
-});
+const myValue = ref(props.modelValue);
+
+watch(
+  () => props.modelValue,
+  value => {
+    myValue.value = value;
+  }
+);
+
+watch(
+  () => myValue.value,
+  value => {
+    emit('update:modelValue', value);
+  }
+);
 
 const listboxInput = ref<typeof ListboxInput | null>(null);
 
@@ -557,6 +577,29 @@ watch(suggestionContext, () => {
     }
   }
   searchSuggestionsThrottled(types);
+});
+
+const {
+  errorMessage,
+  value: validateValue,
+  validate: validateField
+} = useField(props.name, useRules(props.rules), { pause: true });
+
+let hasValidated = false;
+
+const validate = (isExternalCall = false, force = false) => {
+  validateValue.value = myValue.value;
+  if (!isExternalCall || hasValidated || force) {
+    hasValidated = true;
+    validateField();
+  }
+  if (!isExternalCall) {
+    emit('validate', errorMessage.value || false);
+  }
+};
+
+defineExpose({
+  validate
 });
 </script>
 
