@@ -2480,7 +2480,8 @@ export const operationCreators: Record<string, OperationCreator> = {
   },
   nysiis: {
     name: 'nysiis',
-    alias: 'The match rating approach (MRA) is a phonetic algorithm developed by Western Airlines in 1977',
+    alias:
+      'The match rating approach (MRA) is a phonetic algorithm developed by Western Airlines in 1977',
     defaultOptions: {
       usesInputCols: true,
       usesInputDataframe: true,
@@ -3168,7 +3169,8 @@ export const operationCreators: Record<string, OperationCreator> = {
   // def bag_of_words(self, cols, analyzer="word", ngram_range=2)
   bagOfWords: {
     name: 'Bag of Words',
-    alias: 'Method of extracting features from text for use in modeling, such as with machine learning.',
+    alias:
+      'Method of extracting features from text for use in modeling, such as with machine learning.',
     defaultOptions: {
       usesInputCols: true,
       usesInputDataframe: true,
