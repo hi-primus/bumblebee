@@ -86,13 +86,19 @@
           @select="row => selectPattern(row, previousPatternsResolution)"
         />
         <AppButton
-          v-else
+          v-else-if="patternsFrequency[previousPatternsResolution] === false"
           class="layout-outline color-primary mx-auto my-4 min-h-[100px]"
           @click="loadPatternsFrequency"
         >
           <Icon :path="mdiRefresh" />
           Reload patterns
         </AppButton>
+        <Icon
+          v-else
+          class="w-8 h-8 text-neutral-lighter mx-auto my-4 animate-spin"
+          :path="mdiLoading"
+          :spin="true"
+        />
         <AppSlider
           v-model="patternsResolution"
           class="px-4 py-4"
@@ -119,7 +125,7 @@
 </template>
 
 <script setup lang="ts">
-import { mdiChevronDown, mdiRefresh } from '@mdi/js';
+import { mdiChevronDown, mdiLoading, mdiRefresh } from '@mdi/js';
 import { PropType, Ref } from 'vue';
 
 import { TidyValue } from '@/types/blurr';
@@ -149,10 +155,14 @@ const detailsExpanded = ref(props.expanded);
 const moreStats = ref<[string, number][] | null>(null);
 
 const patternsFrequency = ref<
-  ({
-    data: [string, number][];
-    total: number;
-  } | null)[]
+  (
+    | {
+        data: [string, number][];
+        total: number;
+      }
+    | null
+    | false
+  )[]
 >([null, null, null, null]);
 
 const patternsResolution = ref(0);
@@ -232,21 +242,26 @@ const loadPatternsFrequency = async () => {
     return;
   }
 
-  const result = await df.cols.patternCounts({
-    cols: props.column.title,
-    tidy: true,
-    n: 5,
-    mode: resolution
-  });
+  try {
+    const result = await df.cols.patternCounts({
+      cols: props.column.title,
+      tidy: true,
+      n: 5,
+      mode: resolution
+    });
 
-  const data = (result as TidyValue<typeof result>).values.map(
-    value => [value.value, value.count] as [string, number]
-  );
+    const data = (result as TidyValue<typeof result>).values.map(
+      value => [value.value, value.count] as [string, number]
+    );
 
-  patternsFrequency.value[resolution] = {
-    data,
-    total: dataframeObject.value?.profile?.summary?.rows_count || 1
-  };
+    patternsFrequency.value[resolution] = {
+      data,
+      total: dataframeObject.value?.profile?.summary?.rows_count || 1
+    };
+  } catch (err) {
+    patternsFrequency.value[resolution] = false;
+    throw err;
+  }
 };
 
 const selection = inject('selection') as Ref<TableSelection>;
