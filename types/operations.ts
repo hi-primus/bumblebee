@@ -225,6 +225,10 @@ export interface OperationCreatorBase {
   title?: PayloadCallbackOr<string>;
   content?: (...args: any) => string;
   codeExport?: (...args: any) => string;
+  handleError: (
+    error: Error | string,
+    payload: OperationPayload<PayloadWithOptions>
+  ) => PromiseOr<Error | string>;
   alias?: string;
   description?: string;
   fields?: (Field | SpecialField | FieldGroup)[];

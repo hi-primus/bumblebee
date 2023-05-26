@@ -4259,20 +4259,44 @@ const createOperation = (
     ])
   ].flat();
 
-  operation.validate = (payload: OperationPayload<PayloadWithOptions>) => {
-    if (operationCreator.validate) {
-      payload = preparePayloadForAction(operation, payload);
-      return operationCreator.validate(payload);
+  operation.validate = async (
+    payload: OperationPayload<PayloadWithOptions>
+  ) => {
+    try {
+      if (operationCreator.validate) {
+        payload = preparePayloadForAction(operation, payload);
+        return await operationCreator.validate(payload);
+      }
+    } catch (err) {
+      if (
+        operationCreator.handleError &&
+        err &&
+        (err instanceof Error || typeof err === 'string')
+      ) {
+        throw operationCreator.handleError(err, payload);
+      }
+      throw err;
     }
     return true;
   };
 
-  operation.action = (payload: OperationPayload<PayloadWithOptions>) => {
-    payload = preparePayloadForAction(operation, payload);
-    if (operationCreator.validate?.(payload) === false) {
-      throw new Error('Validation failed');
+  operation.action = async (payload: OperationPayload<PayloadWithOptions>) => {
+    try {
+      payload = preparePayloadForAction(operation, payload);
+      if (operationCreator.validate?.(payload) === false) {
+        throw new Error('Validation failed');
+      }
+      return await operationCreator.action(payload);
+    } catch (err) {
+      if (
+        operationCreator.handleError &&
+        err &&
+        (err instanceof Error || typeof err === 'string')
+      ) {
+        throw operationCreator.handleError(err, payload);
+      }
+      throw err;
     }
-    return operationCreator.action(payload);
   };
 
   return operation;

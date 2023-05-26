@@ -1156,27 +1156,24 @@ const previewOperationThrottled = throttleOnce(
       operationStatus.value = {
         status: 'ok'
       };
-    } catch (err) {
-      console.error('Error executing preview operation.', err);
+    } catch (exceptionError) {
+      console.error('Error executing preview operation.', exceptionError);
+
       if (appStatus.value === 'busy') {
         appStatus.value = 'ready';
       }
+
+      let err = exceptionError;
+
+      if (typeof err === 'string') {
+        err = new Error(err);
+      }
+
       if (err instanceof Error && !err.message.includes('Preview cancelled')) {
         previewData.value = null;
         lastPayload = null;
-        operationStatus.value = {
-          message: err.message
-            .split('\n')
-            .filter(l => l)
-            .pop(),
-          fieldMessages: err instanceof FieldsError ? err.fieldMessages : {},
-          status: 'error'
-        };
-      } else if (typeof err === 'string') {
-        previewData.value = null;
-        lastPayload = null;
         const message = (
-          err
+          err.message
             .split('\n')
             .filter(l => l)
             .pop() || ''
@@ -1185,6 +1182,7 @@ const previewOperationThrottled = throttleOnce(
           .pop();
         operationStatus.value = {
           message,
+          fieldMessages: err instanceof FieldsError ? err.fieldMessages : {},
           status: 'error'
         };
       } else {
