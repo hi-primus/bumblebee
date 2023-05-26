@@ -668,6 +668,63 @@ export const operationCreators: Record<string, OperationCreator> = {
       }
       return result;
     },
+    handleError: (error, payload) => {
+      const errorMessage = typeof error === 'string' ? error : error?.message;
+
+      if (errorMessage.includes("'missing_columns' must be")) {
+        let receivedValue = errorMessage.match(
+          /received (\[.*?\]|'\[.*?\]'|'([^']*)')/
+        )?.[1];
+
+        let newMessage = 'Unknown column(s) or expression';
+
+        let columns: string[] = [];
+
+        if (receivedValue) {
+          if (
+            receivedValue?.startsWith("'[") &&
+            receivedValue?.endsWith("]'")
+          ) {
+            receivedValue = receivedValue.slice(2, -2);
+          }
+          if (receivedValue?.startsWith("'") && receivedValue?.endsWith("'")) {
+            receivedValue = receivedValue.slice(1, -1);
+          }
+
+          columns = receivedValue.split("', '");
+
+          const s = columns.length > 1 ? 's' : '';
+
+          newMessage = `Unknown column${s} or expression${s}: '${columns.join(
+            "', '"
+          )}'`;
+        }
+
+        const fieldMessages =
+          payload?.sets?.reduce?.((acc, set, index) => {
+            const found: string[] = columns.filter(c =>
+              set?.value?.includes(c)
+            );
+
+            if (found.length) {
+              const s = found.length > 1 ? 's' : '';
+              acc[
+                `sets-${index}-value`
+              ] = `Unknown column${s} or expression${s}: '${found.join(
+                "', '"
+              )}'`;
+            }
+            return acc;
+          }, {}) || {};
+
+        return new FieldsError(
+          Object.keys(fieldMessages).length ? '' : newMessage,
+          fieldMessages
+        );
+      }
+
+      return error;
+    },
     fields: [
       {
         name: 'sets',
