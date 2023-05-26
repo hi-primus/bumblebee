@@ -19,11 +19,13 @@
         }"
       />
     </div>
-    <div
+    <TransitionGroup
       v-if="detailsExpanded"
+      tag="div"
+      name="details"
       class="details flex flex-col gap-2 px-4 pt-2 pb-1 border-t border-gray-lightest"
     >
-      <div v-if="column.stats">
+      <div v-if="column.stats" key="stats">
         <h4>General</h4>
         <PlotDataQuality
           v-tooltip:bottom.follow-x="tooltipValue"
@@ -35,14 +37,14 @@
         />
         <ColumnDetailsTable :data="qualityData" />
       </div>
-      <div v-if="moreStats">
+      <div v-if="moreStats" key="basic-stats">
         <h4>Stats</h4>
         <ColumnDetailsTable
           :data="moreStats"
           :format-number="(value: number) => (+value.toFixed(2)).toString()"
         />
       </div>
-      <div v-if="column.stats?.hist">
+      <div v-if="column.stats?.hist" key="hist">
         <h4>Histogram</h4>
         <PlotHist
           v-tooltip:bottom.follow-x="tooltipValue"
@@ -53,7 +55,7 @@
           @hovered="$event => tooltipValue = ($event as string)"
         />
       </div>
-      <div v-if="column.stats?.frequency">
+      <div v-if="column.stats?.frequency" key="frequency">
         <h4>Frequency</h4>
         <PlotFrequency
           v-tooltip:bottom.follow-x="tooltipValue"
@@ -65,7 +67,7 @@
         />
         <!-- class="rounded-full overflow-hidden my-1 h-3" -->
       </div>
-      <div>
+      <div key="patterns-frequency">
         <h4>Patterns</h4>
         <ColumnDetailsTable
           v-if="patternsFrequency[patternsResolution]"
@@ -120,7 +122,7 @@
           "
         />
       </div>
-    </div>
+    </TransitionGroup>
   </div>
 </template>
 
@@ -297,5 +299,20 @@ onMounted(() => {
       @apply uppercase text-sm font-bold;
     }
   }
+}
+
+.details-move,
+.details-enter-active,
+.details-leave-active {
+  transition: all 0.37s ease;
+}
+
+.details-enter-from,
+.details-leave-to {
+  opacity: 0;
+}
+
+.details-leave-active {
+  position: absolute;
 }
 </style>
