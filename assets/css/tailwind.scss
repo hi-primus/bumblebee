@@ -14,6 +14,11 @@
     overflow: hidden;
     text-overflow: ellipsis;
   }
+  .break-words-overflow {
+    overflow-wrap: break-word;
+    word-break: break-word;
+    hyphens: auto;
+  }
   .grouped-first {
     &,
     & .selector-button,

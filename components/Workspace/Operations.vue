@@ -70,7 +70,10 @@
             <span class="text-neutral-lighter text-xs mr-2">{{
               index + 1
             }}</span>
-            <span class="flex-1" v-html="element.htmlContent"></span>
+            <span
+              class="flex-1 break-words-overflow"
+              v-html="element.htmlContent"
+            ></span>
             <IconButton
               :path="mdiPencil"
               class="min-w-4 h-4 ml-auto cursor-pointer opacity-0 group-hover:opacity-100 focus:opacity-100 transition"
