@@ -130,12 +130,12 @@
       >
         <template v-if="updatedSettings">
           <span class="text-success-dark">Settings updated</span>
-          <Icon class="w-5 h-5 text-success-dark" :path="mdiCheck" />
+          <Icon class="min-w-5 h-5 text-success-dark" :path="mdiCheck" />
         </template>
         <template v-else>
           <span class="text-neutral-lighter">Updating settings</span>
           <Icon
-            class="w-5 h-5 text-neutral-lighter animate-spin"
+            class="min-w-5 h-5 text-neutral-lighter animate-spin"
             :path="mdiLoading"
           />
         </template>
