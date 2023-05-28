@@ -339,12 +339,6 @@ export const operationCreators: Record<string, OperationCreator> = {
           requestOptions: payload.requestOptions
         });
 
-        // break if it's not a preview
-
-        if (!payload.options.preview) {
-          break;
-        }
-
         // break if the dataframe is big enough to show the preview
 
         rowsCount = await df.rows.count({
@@ -354,6 +348,12 @@ export const operationCreators: Record<string, OperationCreator> = {
         if (rowsCount < minRows && upperBound < maxSampleSize) {
           upperBound *= 8;
         } else {
+          break;
+        }
+
+        // break if it's not a preview
+
+        if (!payload.options.preview) {
           break;
         }
       }
