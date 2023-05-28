@@ -301,15 +301,21 @@ export const operationCreators: Record<string, OperationCreator> = {
 
       // loop until the dataframe is big enough to show the preview
 
+      const leftColumnsInput = payload.columns.left
+        .filter(c => c.selected)
+        .map(c => c.name);
+
+      const rightColumnsInput = payload.columns.right
+        .filter(c => c.selected)
+        .map(c => c.name);
+
       while (true) {
         if (payload.options.preview) {
           // Use just a part of the dataframe on preview
           df = payload.source.cols
             .select({
               target: payload.target,
-              cols: payload.columns.left
-                .filter(c => c.selected)
-                .map(c => c.name)
+              cols: leftColumnsInput
             })
             .iloc({
               target: payload.target,
@@ -319,15 +325,24 @@ export const operationCreators: Record<string, OperationCreator> = {
           dfRight = await dfRight.cols
             .select({
               target: 'preview_df_right',
-              cols: payload.columns.right
-                .filter(c => c.selected)
-                .map(c => c.name)
+              cols: rightColumnsInput
             })
             .iloc({
               target: 'preview_df_right',
               lower_bound: 0,
               upper_bound: upperBound
             });
+        } else {
+          df = payload.source.cols.select({
+            target: payload.target,
+            cols: leftColumnsInput,
+            requestOptions: payload.requestOptions
+          });
+          dfRight = await dfRight.cols.select({
+            target: 'preview_df_right',
+            cols: rightColumnsInput,
+            requestOptions: payload.requestOptions
+          });
         }
 
         df = await df.cols.join({
@@ -366,13 +381,41 @@ export const operationCreators: Record<string, OperationCreator> = {
         requestOptions: payload.requestOptions
       });
 
-      const leftColumns = payload.allColumns.filter(
-        col => leftOn !== col && resultColumns.includes(col)
-      );
+      console.log({
+        resultColumns,
+        leftColumns: payload.allColumns,
+        rightColumns: foundDf.columns,
+        leftColumnsInput,
+        rightColumnsInput
+      });
 
-      const rightColumns = foundDf.columns.filter(
-        col => rightOn !== col && resultColumns.includes(col)
-      );
+      const leftColumns: string[] = [];
+
+      leftColumnsInput.forEach(col => {
+        if (leftOn === col) {
+          return;
+        }
+        if (resultColumns.includes(col) && !rightColumnsInput.includes(col)) {
+          leftColumns.push(col);
+        }
+        if (resultColumns.includes(`${col}_left`)) {
+          leftColumns.push(`${col}_left`);
+        }
+      });
+
+      const rightColumns: string[] = [];
+
+      rightColumnsInput.forEach(col => {
+        if (rightOn === col) {
+          return;
+        }
+        if (resultColumns.includes(col) && !leftColumnsInput.includes(col)) {
+          rightColumns.push(col);
+        }
+        if (resultColumns.includes(`${col}_right`)) {
+          rightColumns.push(`${col}_right`);
+        }
+      });
 
       const middleColumns = resultColumns.filter(
         col => !leftColumns.includes(col) && !rightColumns.includes(col)
@@ -391,7 +434,7 @@ export const operationCreators: Record<string, OperationCreator> = {
           col => `__bumblebee__highlight_col__tertiary__${col}`
         );
 
-        return df.cols
+        return await df.cols
           .rename({
             cols: [...leftColumns, ...rightColumns, ...middleColumns],
             outputCols: [
@@ -410,7 +453,7 @@ export const operationCreators: Record<string, OperationCreator> = {
             requestOptions: payload.requestOptions
           });
       } else {
-        return df.cols.select({
+        return await df.cols.select({
           cols: [...leftColumns, ...middleColumns, ...rightColumns],
           requestOptions: payload.requestOptions
         });
