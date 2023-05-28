@@ -126,6 +126,7 @@ export interface BasicField {
     | 'strings array'
     | 'file'
     | 'hidden'
+    | 'message'
   >;
   key?: string;
   placeholder?: string;
