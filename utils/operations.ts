@@ -234,16 +234,22 @@ export const operationCreators: Record<string, OperationCreator> = {
         df => df.df.name === payload.source.name
       );
       const dfName = foundDf?.name || `dn{${payload.source.name}}`;
-      const str = `b{Join} rd{${dfName}} and rd{${payload.dfRightName}} dataframes using \ngr{${payload.how}} join`;
+      let str = `b{Join} rd{${dfName}} and rd{${payload.dfRightName}} dataframes using \ngr{${payload.how}} join`;
 
       const leftOn = payload.columns.left?.find(col => col.isKey)?.name;
       const rightOn = payload.columns.right?.find(col => col.isKey)?.name;
 
       if (leftOn === rightOn) {
-        return `\n${str} and gr{${leftOn}} as join key`;
+        str += `\nand gr{${leftOn}} as join key`;
       } else {
-        return `\n${str} and gr{${leftOn}} as left join key and \ngr{${rightOn}} as right join key`;
+        str += `\nand gr{${leftOn}} as left join key and \ngr{${rightOn}} as right join key`;
       }
+
+      if (payload.target && payload.target !== payload.source.name) {
+        str += ` \nto rd{dn{${payload.target}}}`;
+      }
+
+      return str;
     },
     action: async (
       payload: OperationPayload<{
