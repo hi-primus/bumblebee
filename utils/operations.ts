@@ -526,6 +526,13 @@ export const operationCreators: Record<string, OperationCreator> = {
       {
         name: 'columns',
         type: 'join'
+      },
+      {
+        name: 'preview-warning',
+        type: 'message',
+        class: '!text-warning-darker',
+        label:
+          'Preview shows a subset of rows, final result may contain additional data'
       }
     ],
     shortcut: 'jd'
