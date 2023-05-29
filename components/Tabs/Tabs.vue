@@ -13,7 +13,26 @@
         @click="() => emit('update:selected', index)"
         @keydown.enter.space.stop="() => emit('update:selected', index)"
       >
-        <div class="ellipsis">
+        <EditableElement
+          v-if="editing === index"
+          :id="`editable-tab-name-${index}`"
+          class="ellipsis px-1 -mx-1"
+          :model-value="tab.label"
+          element="div"
+          @update:model-value="
+            label => {
+              emit('rename', index, label);
+              editing = -1;
+            }
+          "
+        />
+        <div
+          v-else
+          class="ellipsis"
+          :class="{ 'opacity-60': !tab?.label }"
+          @dblclick="onDoubleClick(index)"
+          @keydown.r="onDoubleClick(index)"
+        >
           {{ tab?.label || defaultLabel }}
         </div>
         <IconButton
@@ -43,9 +62,9 @@ import { PropType } from 'vue';
 
 import { Tab } from '@/types/app';
 
-const defaultLabel = '(new dataset)';
+const defaultLabel = 'New dataset';
 
-defineProps({
+const props = defineProps({
   tabs: {
     type: Array as PropType<Tab[]>,
     default: () => []
@@ -61,16 +80,40 @@ defineProps({
   closable: {
     type: Boolean,
     default: false
+  },
+  renamable: {
+    type: Boolean,
+    default: false
   }
 });
 
 type Emits = {
   (e: 'update:selected', index: number): void;
+  (e: 'rename', index: number, value: string): void;
   (e: 'close', index: number): void;
   (e: 'add'): void;
 };
 
 const emit = defineEmits<Emits>();
+
+const editing = ref(-1);
+
+async function onDoubleClick(index: number) {
+  if (props.renamable) {
+    editing.value = index;
+    await nextTick();
+    const input = document.getElementById(`editable-tab-name-${index}`);
+    if (input) {
+      input.focus();
+      if (input && window?.getSelection) {
+        const range = document.createRange();
+        range.selectNodeContents(input);
+        window.getSelection()?.removeAllRanges();
+        window.getSelection()?.addRange(range);
+      }
+    }
+  }
+}
 </script>
 
 <style lang="scss">

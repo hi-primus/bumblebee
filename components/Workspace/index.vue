@@ -16,6 +16,7 @@
         }"
         closable
         addable
+        renamable
         @close="(index: number) => closeDataframe(index)"
         @add="
           () => {
@@ -23,6 +24,7 @@
             selectedTab = tabs.length - 1;
           }
         "
+        @rename="(index: number, label: string) => renameDataframe(tabs[index], label)"
       />
     </div>
     <WorkspaceToolbar
@@ -238,6 +240,31 @@ const getNewSourceId = () => {
   return dataframes.value.length.toString() + (+new Date()).toString();
 };
 
+const persistedNames = ref<Record<string | number, string>>({});
+
+const renameDataframe = (
+  dataframeIndex: number,
+  dataframeName: string,
+  persist = true
+) => {
+  if (persist) {
+    const varName = dataframes.value[dataframeIndex].df.name || dataframeIndex;
+    persistedNames.value[varName] = dataframeName;
+  }
+
+  const names = dataframes.value
+    .filter((_df, index) => index !== dataframeIndex)
+    .map(df => df.name || '');
+
+  if (names.includes(dataframeName)) {
+    dataframeName = getUniqueName(dataframeName, names, true);
+  }
+  dataframes.value[dataframeIndex] = {
+    ...dataframes.value[dataframeIndex],
+    name: dataframeName || 'dataset'
+  };
+};
+
 const handleDataframeResults = async (
   result: unknown,
   payload: PayloadWithOptions,
@@ -297,22 +324,21 @@ const handleDataframeResults = async (
 
     const profile = await getPreliminaryProfile(df);
 
-    let dataframeName =
-      getNameFromFileName(profile.file_name || '') || profile.name || df.name;
-
-    const names = dataframes.value
-      .filter((_df, index) => index !== dataframeIndex)
-      .map(df => df.name || '');
-
-    if (names.includes(dataframeName)) {
-      dataframeName = getUniqueName(dataframeName, names, true);
-    }
-
     dataframes.value[dataframeIndex] = {
       ...dataframes.value[dataframeIndex],
-      profile,
-      name: dataframeName || 'dataset'
+      profile
     };
+
+    const varName = dataframes.value[dataframeIndex].df.name || dataframeIndex;
+
+    renameDataframe(
+      dataframeIndex,
+      persistedNames.value[varName] ||
+        getNameFromFileName(profile.file_name || '') ||
+        profile.name ||
+        df.name,
+      false
+    );
 
     setTimeout(async () => {
       const profileResult = await df.profile({
@@ -1274,6 +1300,7 @@ watch(selectedTab, async tab => {
 });
 
 const emitWorkspaceData = () => {
+  console.log('[DEBUG] Emitting workspace data');
   const dataframeCommands = operationItems.value.map(cell => {
     const { operation, payload } = cell;
     return {
@@ -1296,7 +1323,11 @@ const emitWorkspaceData = () => {
     return {
       ...dataframeObject,
       dfName,
-      selected: index === selectedTab.value
+      selected: index === selectedTab.value,
+      nameIsPersisted: Boolean(
+        (dfName ? persistedNames.value[dfName] : false) ||
+          persistedNames.value[index]
+      )
     } as TabData;
   });
 
@@ -1355,6 +1386,9 @@ const initializeWorkspace = async () => {
           ? dataframes.value.findIndex(df => df.df.name === tab.dfName)
           : dataframes.value.findIndex(df => df.sourceId === tab.sourceId);
         if (index >= 0) {
+          if (tab.nameIsPersisted && tab.name) {
+            renameDataframe(index, tab.name);
+          }
           newTabs.push(index);
         } else {
           console.warn('Tab with dfName or sourceId not found', tab);
@@ -1378,7 +1412,7 @@ const initializeWorkspace = async () => {
 };
 
 watch(
-  [tabs, selectedTab, operationItems],
+  [tabs, selectedTab, operationItems, persistedNames],
   () => {
     emitWorkspaceData();
   },

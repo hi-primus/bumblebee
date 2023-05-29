@@ -20,6 +20,7 @@ export type CommandData = {
 export type TabData = Omit<DataframeObject, 'df' | 'updates'> & {
   dfName: string;
   selected: boolean;
+  nameIsPersisted: boolean;
 };
 
 export type WorkspaceData = { commands: CommandData[]; tabs: TabData[] };
