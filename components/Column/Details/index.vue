@@ -272,9 +272,6 @@ const selectPattern = (row: [string, number], resolution: number) => {
   const pattern = row[0];
   selection.value = {
     columns: [props.column.title],
-    values: null,
-    ranges: null,
-    indices: null,
     pattern,
     mode: resolution
   };

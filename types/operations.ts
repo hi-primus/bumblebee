@@ -170,41 +170,41 @@ export type Field = BasicField | SpecialField | FieldGroup;
 
 export interface ColumnsSelection {
   columns: string[];
-  ranges: null;
-  values: null;
-  indices: null;
-  pattern: null;
+  ranges?: null;
+  values?: null;
+  indices?: null;
+  pattern?: null;
 }
 
 export interface RangesSelection {
   columns: [string];
   ranges: [number, number][];
-  values: null;
+  values?: null;
   indices: number[];
-  pattern: null;
+  pattern?: null;
 }
 
 export interface ValuesSelection {
   columns: [string];
-  ranges: null;
+  ranges?: null;
   values: BasicType[];
   indices: number[];
-  pattern: null;
+  pattern?: null;
 }
 
 export interface QualitySelection {
   columns: [string];
-  ranges: null;
+  ranges?: null;
   values: 'missing' | 'match' | 'mismatch';
-  indices: null;
-  pattern: null;
+  indices?: null;
+  pattern?: null;
 }
 
 export interface PatternsSelection {
   columns: [string];
-  ranges: null;
-  values: null;
-  indices: null;
+  ranges?: null;
+  values?: null;
+  indices?: null;
   pattern: string;
   mode: number;
 }

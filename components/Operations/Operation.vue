@@ -258,10 +258,7 @@ const columns = computed<string[]>({
   },
   set(value) {
     selection.value = {
-      columns: value,
-      ranges: null,
-      values: null,
-      indices: null
+      columns: value
     };
   }
 });

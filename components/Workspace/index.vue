@@ -780,10 +780,7 @@ const operationActions: OperationActions = {
 
     if (operationValues.value.options?.usesInputCols && payload?.cols) {
       selection.value = {
-        columns: payload.cols,
-        ranges: null,
-        values: null,
-        indices: null
+        columns: payload.cols as string[]
       };
     }
 

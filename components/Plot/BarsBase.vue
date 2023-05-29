@@ -331,14 +331,12 @@ const onMouseUp = () => {
             number,
             number
           ][],
-          values: null,
           indices: _s
         };
       } else {
         const data = props.data as FrequencyValue[];
         selection.value = {
           columns: [props.columnName],
-          ranges: null,
           values: _s.map(e => data[e].value) as BasicType[],
           indices: _s
         };

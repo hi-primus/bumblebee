@@ -754,10 +754,7 @@ const columnClicked = (
   }
 
   selection.value = {
-    columns,
-    ranges: null,
-    values: null,
-    indices: null
+    columns
   };
 };
 
