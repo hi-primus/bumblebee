@@ -2563,25 +2563,6 @@ export const operationCreators: Record<string, OperationCreator> = {
     shortcut: 'ul'
   },
   matchRatingEncoder: {
-    name: 'Soundex',
-    alias: 'Apply soundex algorithm to a specific column',
-    defaultOptions: {
-      usesInputCols: true,
-      usesInputDataframe: true,
-      preview: 'basic columns'
-    },
-    content: defaultContentFunction('Soundex', 'letters'),
-    action: (payload: OperationPayload): Source => {
-      return payload.source.cols.soundex({
-        target: payload.target,
-        cols: payload.cols,
-        outputCols: payload.outputCols,
-        requestOptions: payload.requestOptions
-      });
-    },
-    shortcut: 'ss'
-  },
-  matchRatingEncoder: {
     name: 'Apply soundex algorithm to a specific column',
     alias: 'soundex',
     defaultOptions: {
@@ -4141,26 +4122,6 @@ export const operationCreators: Record<string, OperationCreator> = {
   },
 
   //
-  removeStopWords: {
-    name: 'Remove stop-words from column values',
-    alias: 'mid',
-    defaultOptions: {
-      usesInputCols: true,
-      usesInputDataframe: true,
-      preview: 'basic columns',
-      usesDiff: true
-    },
-    content: defaultContentFunction('Remove stop-words'),
-    action: (payload: OperationPayload): Source => {
-      return payload.source.cols.removeStopWords({
-        target: payload.target,
-        cols: payload.cols,
-        outputCols: payload.outputCols,
-        requestOptions: payload.requestOptions
-      });
-    },
-    shortcut: 'lrw'
-  },
   unnestColumns: {
     name: 'Unnest columns',
     alias: 'Split cols unnest',
