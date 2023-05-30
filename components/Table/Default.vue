@@ -929,6 +929,7 @@ defineExpose({
   &[class*='column-color-'] {
     .column-cell {
       @apply z-[2];
+      @apply border-r;
     }
   }
   .column-cell {
