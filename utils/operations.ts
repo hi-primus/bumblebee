@@ -90,13 +90,18 @@ export const operationCreators: Record<string, OperationCreator> = {
       saveToNewDataframe: 'required',
       preview: 'dataframe'
     },
-    content: (payload: { url: string; file: File }) => {
+    content: (payload: { target: string; url: string; file: File }) => {
+      let str = '';
       if (payload.file?.name) {
-        return `b{Load} gr{${payload.file.name}} file`;
+        str += `b{Load} gr{${payload.file.name}} file`;
       } else {
         const fileName = payload.url?.split('/').pop();
-        return `b{Load} gr{${fileName}} file from url`;
+        str += `b{Load} gr{${fileName}} file from url`;
       }
+      if (payload.target) {
+        str += ` \nto rd{dn{${payload.target}}}`;
+      }
+      return str;
     },
     action: async (
       payload: OperationPayload<{
