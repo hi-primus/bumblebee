@@ -299,7 +299,7 @@ const updateOperations = async (
     )
   ) {
     operations.value = newOperations;
-    return await submitOperation(false);
+    return await submitOperation(null, null, false);
   }
 };
 
@@ -314,7 +314,7 @@ const editOperation = async (index: number): Promise<void> => {
   operations.value = operations.value.slice(0, index);
 
   operationValues.value = {} as OperationPayload<PayloadWithOptions>;
-  await submitOperation(false);
+  await submitOperation(null, null, false);
 
   await nextTick();
 
@@ -355,7 +355,7 @@ const removeOperation = async (index: number): Promise<void> => {
     }
   }
   operations.value.splice(index, 1);
-  return await submitOperation(false);
+  return await submitOperation(null, null, false);
 };
 
 const blurr = inject('blurr') as Ref<Client>;

@@ -9,7 +9,9 @@
       class="overflow-auto"
       :header="header"
       :rows-count="rowsCount"
+      sortable
       @update-scroll="updateScroll"
+      @move-columns="onMoveColumns"
     />
     <div v-else class="flex gap-2 flex-col justify-center items-center">
       <Icon
@@ -34,7 +36,11 @@ import {
   Highlight,
   PreviewData
 } from '@/types/dataframe';
-import { PayloadWithOptions, TableSelection } from '@/types/operations';
+import {
+  OperationActions,
+  PayloadWithOptions,
+  TableSelection
+} from '@/types/operations';
 import { getUniqueName } from '@/utils';
 import { PRIORITIES } from '@/utils/blurr';
 import { optimizeRanges } from '@/utils/table';
@@ -52,6 +58,8 @@ const operationValues = inject('operation-values') as Ref<
 >;
 
 const selection = inject('selection') as Ref<TableSelection>;
+
+const { submitOperation } = inject('operation-actions') as OperationActions;
 
 const table = ref<InstanceType<typeof TableChunks> | null>(null);
 
@@ -197,6 +205,18 @@ const rowsCount = computed(() => {
     dataframeObject.value?.profile?.summary?.rows_count
   );
 });
+
+const onMoveColumns = (
+  cols: string[],
+  position: 'before' | 'after',
+  refCol: string
+) => {
+  submitOperation('move', {
+    cols,
+    position,
+    refCol
+  });
+};
 
 // chunks
 

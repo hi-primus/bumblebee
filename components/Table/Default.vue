@@ -42,7 +42,7 @@
         @mouseover="checkCellHover"
       >
         <div
-          v-for="column in columnsHeader"
+          v-for="(column, index) in columnsHeader"
           :key="column.title"
           class="bumblebee-table-column-container relative"
           :tabindex="column.columnType.startsWith('preview') ? -1 : 0"
@@ -53,7 +53,7 @@
                 ? null
                 : handleKeyDown($event, column.columnIndex)
           "
-          @mousedown.prevent
+          @mousedown="preventMousedown"
         >
           <div
             :class="{
@@ -80,6 +80,13 @@
               width: (columnWidths[column.title] || minColumnWidth) + 'px'
             }"
           >
+            <div
+              v-if="index === 0"
+              class="column-resize-handler column-drop-handle absolute left-[-1px] top-0 z-[20] w-[7px] h-full bg-primary-light opacity-0 transition-opacity duration-200"
+              @dragover="$event => onDragOverBorder($event)"
+              @dragleave="$event => onDragLeaveBorder($event)"
+              @drop="$event => onDrop($event, column.title, true)"
+            ></div>
             <div :data-column-index="column.columnIndex" class="column-header">
               <div
                 class="column-title border-[color:var(--line-color)] border-b text-[16px] py-1 px-1 text-center flex items-center select-none font-mono-table"
@@ -89,11 +96,17 @@
                 :style="{
                   height: columnTitleHeight + 'px'
                 }"
+                :draggable="!column.columnType.startsWith('preview')"
                 @click.prevent="
                   $event =>
                     column.columnType.startsWith('preview')
                       ? null
                       : columnClicked($event, column.columnIndex, true)
+                "
+                @dragstart="
+                  $event =>
+                    !column.columnType.startsWith('preview') &&
+                    onDragStart($event, column.columnIndex)
                 "
               >
                 <ColumnTypeHint
@@ -130,9 +143,12 @@
           </div>
 
           <div
-            class="column-resize-handler absolute right-[-4px] top-0 z-[20] w-[9px] h-full cursor-col-resize"
+            class="column-resize-handler absolute right-[-4px] top-0 z-[20] w-[9px] h-full cursor-col-resize bg-primary-light opacity-0 transition-opacity duration-200"
             @click.stop
             @mousedown.prevent.stop="onResizeStart($event, column.columnIndex)"
+            @dragover="$event => onDragOverBorder($event)"
+            @dragleave="$event => onDragLeaveBorder($event)"
+            @drop="$event => onDrop($event, column.title)"
           ></div>
         </div>
       </div>
@@ -176,6 +192,18 @@
       </div>
       <div class="table-bottom-part"></div>
     </div>
+    <Teleport to="body">
+      <div id="dragging-columns" class="absolute top-[-9999px] text-neutral">
+        <div
+          v-for="col in draggingColumns"
+          :key="col"
+          class="flex items-center gap-2 text-sm"
+        >
+          <ColumnTypeHint :data-type="dataTypes[col] || 'unknown'" />
+          {{ col }}
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 
@@ -196,6 +224,10 @@ const props = defineProps({
   header: {
     type: Array as PropType<ColumnHeader[]>,
     required: true
+  },
+  sortable: {
+    type: Boolean,
+    default: false
   }
 });
 
@@ -207,6 +239,12 @@ const previewData = inject('preview-data') as Ref<PreviewData>;
 
 type Emits = {
   (e: 'updateScroll', start: number, stop: number): void;
+  (
+    e: 'move-columns',
+    columns: string[],
+    position: 'before' | 'after',
+    refColumn: string
+  ): void;
 };
 
 const emit = defineEmits<Emits>();
@@ -675,6 +713,19 @@ const focus = () => {
   }
 };
 
+const preventMousedown = (event: MouseEvent) => {
+  let target = event.target as HTMLElement;
+  while (target) {
+    if (target.classList.contains('column-title')) {
+      return;
+    } else if (target.classList.contains('bumblebee-table-column-container')) {
+      break;
+    }
+    target = target.parentElement as HTMLElement;
+  }
+  event.preventDefault();
+};
+
 const handleKeyDown = (event: KeyboardEvent, columnIndex: number) => {
   console.log('[DEBUG][TABLE] Key down', event.key, event, columnIndex);
   const key = event.key.toLowerCase();
@@ -756,6 +807,89 @@ const columnClicked = (
   selection.value = {
     columns
   };
+};
+
+const draggingColumns = ref<string[]>([]);
+
+const onDragStart = (event: DragEvent, columnIndex: number) => {
+  const isSelectedColumn = selection.value?.columns.includes(
+    columnsHeader.value[columnIndex].title
+  );
+
+  if (isSelectedColumn) {
+    draggingColumns.value = selection.value?.columns || [];
+  } else {
+    draggingColumns.value = [columnsHeader.value[columnIndex].title];
+  }
+
+  if (event.dataTransfer) {
+    const crt = document.getElementById('dragging-columns');
+    if (crt) {
+      event.dataTransfer.setDragImage(crt, 8, -16);
+    }
+
+    event.dataTransfer.setData(
+      'application/x-columns-selection',
+      JSON.stringify({
+        columns: draggingColumns.value
+      })
+    );
+  }
+};
+
+const onDragOverBorder = (event: DragEvent) => {
+  if (
+    !props.sortable ||
+    !event.dataTransfer?.types.includes('application/x-columns-selection')
+  ) {
+    return;
+  }
+
+  const target = event.target as HTMLElement;
+
+  if (target) {
+    target.classList.add('opacity-70');
+  }
+
+  event.preventDefault();
+};
+
+const onDragLeaveBorder = (event: DragEvent) => {
+  if (!props.sortable) {
+    return;
+  }
+
+  const target = event.target as HTMLElement;
+
+  if (target) {
+    target.classList.remove('opacity-70');
+  }
+};
+
+const onDrop = (event: DragEvent, refColumn: string, before = false) => {
+  if (!props.sortable) {
+    return;
+  }
+
+  const target = event.target as HTMLElement;
+
+  if (target) {
+    target.classList.remove('opacity-70');
+  }
+
+  const data = JSON.parse(
+    event.dataTransfer?.getData('application/x-columns-selection') || '{}'
+  );
+
+  if (!data.columns) {
+    return;
+  }
+
+  const columnsToMove: string[] = data.columns.filter(
+    (c: string) => c !== refColumn
+  );
+
+  emit('move-columns', columnsToMove, before ? 'before' : 'after', refColumn);
 };
 
 const updateData = (newData: typeof data.value) => {

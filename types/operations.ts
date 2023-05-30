@@ -304,10 +304,14 @@ export type ColumnDetailState = {
 export type State = Operation | ColumnDetailState | 'operations';
 
 export interface OperationActions {
-  submitOperation: (changeTab?: boolean) => Promise<void>;
+  submitOperation: (
+    operation?: Operation | string | null,
+    payload?: Partial<PayloadWithOptions> | null,
+    changeTab?: boolean
+  ) => Promise<void>;
   cancelOperation: (restoreInactive: boolean) => void;
   selectOperation: (
-    operation: Operation | null,
+    operation: Operation | string | null,
     payload?: Partial<PayloadWithOptions>
   ) => void;
 }

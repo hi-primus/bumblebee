@@ -182,7 +182,7 @@ provide('scroll-range', scrollRange);
 
 watch(state, () => {
   if (isOperation(state.value)) {
-    setOperationValues({
+    operationValues.value = prepareOperationValues({
       options: state.value.defaultOptions as OperationOptions
     } as OperationPayload<PayloadWithOptions>);
   }
@@ -211,18 +211,18 @@ const availableDataframes = computed<number[]>(() => {
     .filter(index => !tabs.value.includes(index));
 });
 
-const selectDataframe = (sourceId: string) => {
+function selectDataframe(sourceId: string) {
   const tabIndex = tabs.value.findIndex(
     index => dataframes.value[index].sourceId === sourceId
   );
   if (tabIndex >= 0) {
     selectedTab.value = tabIndex;
   }
-};
+}
 
 provide('select-dataframe', selectDataframe);
 
-const closeDataframe = async (tabIndex: number) => {
+async function closeDataframe(tabIndex: number) {
   if (tabs.value[tabIndex] >= 0) {
     const tabName = dataframes.value?.[tabs.value[tabIndex]]?.name;
     const close = await confirm(tabName ? `Close '${tabName}'?` : 'Close tab?');
@@ -234,19 +234,19 @@ const closeDataframe = async (tabIndex: number) => {
     selectedTab.value = selectedTab.value - 1;
   }
   tabs.value.splice(tabIndex, 1);
-};
+}
 
-const getNewSourceId = () => {
+function getNewSourceId() {
   return dataframes.value.length.toString() + (+new Date()).toString();
-};
+}
 
 const persistedNames = ref<Record<string | number, string>>({});
 
-const renameDataframe = (
+function renameDataframe(
   dataframeIndex: number,
   dataframeName: string,
   persist = true
-) => {
+) {
   if (persist) {
     const varName = dataframes.value[dataframeIndex].df.name || dataframeIndex;
     persistedNames.value[varName] = dataframeName;
@@ -263,37 +263,29 @@ const renameDataframe = (
     ...dataframes.value[dataframeIndex],
     name: dataframeName || 'dataset'
   };
-};
+}
 
-const handleDataframeResults = async (
+async function handleDataframeResults(
   result: unknown,
   payload: PayloadWithOptions,
-  changeTab = true
-) => {
+  changeTab = false
+) {
   if (payload.options.targetType === 'dataframe') {
     const df = result as Source;
-    let sourceId = payload.options.newSourceId || payload.options.sourceId;
-    const newSourceId = payload.options.newSourceId;
 
-    let dataframeIndex = sourceId
-      ? dataframes.value.findIndex(dataframe => dataframe.sourceId === sourceId)
-      : -1;
-
-    console.log('updateDataframe', dataframeIndex, {
-      ...payload,
-      options: { ...payload.options }
-    });
+    let dataframeIndex = dataframes.value.findIndex(
+      dataframe => dataframe.df.name === df.name
+    );
 
     const createDataframe =
       dataframeIndex < 0 || payload.options.saveToNewDataframe;
 
     if (createDataframe) {
-      sourceId = newSourceId || getNewSourceId();
-      dataframeIndex = sourceId
-        ? dataframes.value.findIndex(
-            dataframe => dataframe.sourceId === sourceId
-          )
-        : -1;
+      const newSourceId = payload.options.newSourceId;
+      dataframeIndex = dataframes.value.findIndex(
+        dataframe => dataframe.df.name === df.name
+      );
+      const sourceId = newSourceId || getNewSourceId();
       const newDataframe: DataframeObject = {
         name: 'dataset',
         sourceId,
@@ -301,14 +293,15 @@ const handleDataframeResults = async (
         profile: undefined,
         updates: 0
       };
+
       if (dataframeIndex >= 0) {
         dataframes.value[dataframeIndex] = newDataframe;
       } else {
         dataframes.value.push(newDataframe);
         dataframeIndex = dataframes.value.length - 1;
-      }
-      if (changeTab) {
-        loadDataSource(dataframeIndex);
+        if (changeTab) {
+          loadDataSource(dataframeIndex);
+        }
       }
     } else {
       if (dataframeIndex < 0) {
@@ -355,19 +348,19 @@ const handleDataframeResults = async (
     console.error('Unknown result type', result);
     // TODO: Handle other types of targets
   }
-};
+}
 
 /**
  * Filters out the dataframes that are no longer needed.
  * @param data The next list of operations.
  */
 
-const checkSources = (data: OperationItem[]) => {
+function checkSources(data: OperationItem[]) {
   const sources = data.map(operation => operation.payload.options.newSourceId);
   dataframes.value = dataframes.value.filter(
     dataframe => !dataframe.sourceId || sources.includes(dataframe.sourceId)
   );
-};
+}
 
 const nuxtApp = useNuxtApp();
 
@@ -425,7 +418,7 @@ async function uploadFile(
   return { fileMetadata, filepath, error };
 }
 
-const getAppProperties = () => {
+function getAppProperties() {
   return {
     blurr: blurr.value,
     settings: appSettings.value,
@@ -433,11 +426,11 @@ const getAppProperties = () => {
     addToast,
     ...(appSettings.value.workspaceMode ? { uploadFile } : {})
   };
-};
+}
 
 provide('get-app-properties', getAppProperties);
 
-const executeOperations = async (changeTab = true) => {
+async function executeOperations(changeTab = true) {
   const data: OperationItem[] = operationItems.value;
 
   checkSources(data);
@@ -467,10 +460,12 @@ const executeOperations = async (changeTab = true) => {
 
   const operationResults = new Map<
     string,
-    { result: unknown; payload: PayloadWithOptions }
+    { result: unknown; payload: PayloadWithOptions; index: number }
   >();
 
   const newPayloads: PayloadWithOptions[] = [];
+
+  let lastOperationResultIndex = -1;
 
   for (let i = 0; i < data.length; i++) {
     // Skip operations that have already been executed
@@ -508,8 +503,10 @@ const executeOperations = async (changeTab = true) => {
         : sourceId;
       operationResults.set(resultSourceId, {
         result,
-        payload: newPayload
+        payload: newPayload,
+        index: i
       });
+      lastOperationResultIndex = i;
       const dfName = newPayload.target || newPayload.source;
       sourcesFromOperations.value[dfName] = result as Source;
     }
@@ -522,9 +519,10 @@ const executeOperations = async (changeTab = true) => {
   }));
 
   const promisesResults = await Promise.allSettled(
-    Array.from(operationResults.values()).map(({ result, payload }) =>
-      handleDataframeResults(result, payload, changeTab)
-    )
+    Array.from(operationResults.values()).map(({ result, payload, index }) => {
+      const changeThisTab = changeTab && index === lastOperationResultIndex;
+      return handleDataframeResults(result, payload, changeThisTab);
+    })
   );
 
   promisesResults.forEach((result, index) => {
@@ -544,11 +542,11 @@ const executeOperations = async (changeTab = true) => {
   });
 
   executedOperations.value = [...data];
-};
+}
 
-const preparePayloadForSubmit = (
+function preparePayloadForSubmit(
   payload: OperationPayload<PayloadWithOptions>
-): OperationPayload<PayloadWithOptions> => {
+): OperationPayload<PayloadWithOptions> {
   if (payload.options.saveToNewDataframe) {
     payload.options.newSourceId = getNewSourceId();
     if (!payload.target) {
@@ -569,9 +567,9 @@ const preparePayloadForSubmit = (
   payload = fillColumns(payload, selection.value);
 
   return payload;
-};
+}
 
-const preparePayloadOptions = (options: OperationOptions): OperationOptions => {
+function preparePayloadOptions(options: OperationOptions): OperationOptions {
   const operationOptions: OperationOptions = Object.assign({}, options);
 
   if (
@@ -582,10 +580,12 @@ const preparePayloadOptions = (options: OperationOptions): OperationOptions => {
   }
 
   return operationOptions;
-};
+}
 
-const setOperationValues = (payload: OperationPayload<PayloadWithOptions>) => {
-  operationValues.value = deepClone({
+function prepareOperationValues(
+  payload: Partial<PayloadWithOptions>
+): Partial<PayloadWithOptions> {
+  return deepClone({
     ...payload,
     source: payload.source || dataframeObject.value?.df,
     app: {
@@ -598,25 +598,132 @@ const setOperationValues = (payload: OperationPayload<PayloadWithOptions>) => {
         : null
     }
   });
-};
+}
 
-const resetOperationValues = () => {
+function prepareOperationValuesWithOperation(
+  inputPayload: Partial<PayloadWithOptions> | null = null,
+  operation?: Operation
+): Partial<PayloadWithOptions> {
+  const currentDataframeIndex = tabs.value[selectedTab.value]; // TODO should be the source of the operation
+  const currentDataframe = dataframes.value[currentDataframeIndex];
+
+  let payload = deepClone(inputPayload);
+
+  if (!payload) {
+    payload = {};
+  }
+
+  if (operation?.defaultOptions) {
+    payload = prepareOperationValues({
+      ...payload,
+      options: preparePayloadOptions({
+        ...operation.defaultOptions,
+        ...(payload?.options || {})
+      })
+    }) as OperationPayload<PayloadWithOptions>;
+  } else {
+    if (payload?.options) {
+      payload.options = preparePayloadOptions(payload.options);
+    }
+    payload = payload
+      ? (prepareOperationValues(
+          payload
+        ) as OperationPayload<PayloadWithOptions>)
+      : {};
+  }
+
+  payload.allColumns = Object.keys(currentDataframe?.profile?.columns || {});
+
+  const allDataframes = dataframes.value.map(dataframe => {
+    return {
+      sourceId: dataframe.sourceId,
+      name: dataframe.name,
+      columns: Object.keys(dataframe.profile?.columns || {}),
+      df: dataframe.df
+    };
+  });
+
+  payload.allDataframes = allDataframes;
+
+  payload.otherDataframes = allDataframes.filter(
+    (_, i) => i !== currentDataframeIndex
+  );
+
+  const resolve = (value: unknown) => {
+    if (typeof value === 'function') {
+      return value(payload);
+    }
+    return value;
+  };
+
+  const fields = operation?.fields || [];
+
+  for (let i = 0; i < fields.length; i++) {
+    const field = fields[i];
+
+    // check if field has a default value
+
+    if ('defaultValue' in field && field.defaultValue !== undefined) {
+      payload[field.name] =
+        payload[field.name] || deepClone(resolve(field.defaultValue));
+    }
+
+    // check if field is a group
+
+    if ('fields' in field && field.fields) {
+      const defaultValue = payload[`default-${field.name}`] || {};
+      for (const subfield of field.fields) {
+        if ('defaultValue' in subfield && subfield.defaultValue !== undefined) {
+          defaultValue[subfield.name] = deepClone(
+            resolve(subfield.defaultValue)
+          );
+        }
+      }
+
+      payload[`default-${field.name}`] = defaultValue;
+
+      const defaultFields =
+        'defaultFields' in field && field.defaultFields !== undefined
+          ? field.defaultFields || 0
+          : 1;
+
+      payload[field.name] = payload[field.name] || [];
+
+      for (let i = 0; i < defaultFields; i++) {
+        payload[field.name][i] =
+          payload[field.name][i] || deepClone(defaultValue);
+      }
+    }
+  }
+
+  return payload;
+}
+
+function resetOperationValues() {
   operationValues.value = {};
-};
+}
 
-const getPreparedOperation = (): {
+function getPreparedOperation(
+  inputOperation: Operation | keyof typeof operations | null = null,
+  inputPayload: OperationPayload<PayloadWithOptions> | null = null
+): {
   operation: Operation | null;
   payload: OperationPayload<PayloadWithOptions> | null;
-} => {
-  const operation = isOperation(state.value)
-    ? (state.value as Operation)
-    : null;
+} {
+  if (typeof inputOperation === 'string') {
+    inputOperation = operations[inputOperation] || null;
+  }
+
+  const operation =
+    inputOperation ||
+    (isOperation(state.value) ? (state.value as Operation) : null);
 
   if (!operation) {
     return { operation: null, payload: null };
   }
 
-  const { options, ...operationPayload } = operationValues.value;
+  const { options, ...operationPayload } =
+    inputPayload || operationValues.value;
 
   const operationOptions: OperationOptions = Object.assign(
     {},
@@ -630,22 +737,46 @@ const getPreparedOperation = (): {
   } as OperationPayload<PayloadWithOptions>;
 
   return { operation, payload: preparePayloadForSubmit(payload) };
-};
+}
 
-const getOperationUsesPreview = (): boolean => {
+function getOperationUsesPreview(): boolean {
   const { operation, payload } = getPreparedOperation();
 
   return Boolean(isOperation(operation) && payload?.options?.preview);
-};
+}
 
 const operationActions: OperationActions = {
-  submitOperation: async (changeTab = true) => {
+  submitOperation: async function (
+    inputOperation = null,
+    inputPayload = null,
+    changeTab = true
+  ) {
     try {
       if (appStatus.value === 'ready') {
         appStatus.value = 'busy';
       }
 
-      const { operation, payload } = getPreparedOperation();
+      let operation: Operation | null = null;
+      let payload: OperationPayload<PayloadWithOptions> | null = null;
+
+      if (inputOperation) {
+        if (typeof inputOperation === 'string') {
+          operation = operations[inputOperation];
+        } else {
+          operation = inputOperation;
+        }
+        if (inputPayload) {
+          payload = prepareOperationValuesWithOperation(
+            inputPayload,
+            operation || undefined
+          ) as OperationPayload<PayloadWithOptions>;
+        }
+      }
+
+      const preparedOperation = getPreparedOperation(operation, payload);
+
+      operation = preparedOperation.operation;
+      payload = preparedOperation.payload;
 
       await blurr.value?.backendServer.donePromise;
 
@@ -666,8 +797,6 @@ const operationActions: OperationActions = {
           }
           return;
         }
-
-        console.log('[DEBUG] Submitting operation:', { operation, payload });
 
         const editingIndex = payload?.options?.editing;
 
@@ -723,7 +852,7 @@ const operationActions: OperationActions = {
     previewData.value = null;
     lastPayload = null;
   },
-  cancelOperation: async (restoreInactive = false) => {
+  cancelOperation: async function (restoreInactive = false) {
     console.info('Operation cancelled');
     previewOperationThrottled.cancel();
     dataframeLayout.value?.clearChunks(true, false);
@@ -745,17 +874,22 @@ const operationActions: OperationActions = {
       ];
       inactiveOperationCells.value = [];
       await new Promise(resolve => setTimeout(resolve, 0));
-      await operationActions.submitOperation(false);
+      await operationActions.submitOperation(null, null, false);
     }
   },
-  selectOperation: async (
-    operation: Operation | null = null,
+  selectOperation: async function (
+    operation: Operation | keyof typeof operations | null = null,
     payload?: Partial<PayloadWithOptions>
-  ) => {
+  ) {
     console.info('Operation selected');
     if (!operation) {
       operationActions.cancelOperation(false);
     }
+
+    if (typeof operation === 'string') {
+      operation = operations[operation];
+    }
+
     state.value = operation || 'operations';
     sidebar.value = 'operations';
 
@@ -763,125 +897,42 @@ const operationActions: OperationActions = {
 
     await new Promise(resolve => setTimeout(resolve, 0));
 
-    if (operation?.defaultOptions) {
-      setOperationValues({
-        ...payload,
-        options: preparePayloadOptions({
-          ...operation.defaultOptions,
-          ...(payload?.options || {})
-        })
-      } as OperationPayload<PayloadWithOptions>);
-    } else {
-      if (payload?.options) {
-        payload.options = preparePayloadOptions(payload.options);
-      }
-      setOperationValues(payload as OperationPayload<PayloadWithOptions>);
-    }
+    operationValues.value = prepareOperationValuesWithOperation(
+      operationValues.value,
+      operation || undefined
+    );
 
     if (operationValues.value.options?.usesInputCols && payload?.cols) {
       selection.value = {
         columns: payload.cols as string[]
       };
     }
-
-    const currentDataframeIndex = tabs.value[selectedTab.value]; // TODO should be the source of the operation
-    const currentDataframe = dataframes.value[currentDataframeIndex];
-
-    operationValues.value.allColumns = Object.keys(
-      currentDataframe?.profile?.columns || {}
-    );
-
-    const allDataframes = dataframes.value.map(dataframe => {
-      return {
-        sourceId: dataframe.sourceId,
-        name: dataframe.name,
-        columns: Object.keys(dataframe.profile?.columns || {}),
-        df: dataframe.df
-      };
-    });
-
-    if (!operationValues.value) {
-      operationValues.value = {};
-    }
-
-    operationValues.value.allDataframes = allDataframes;
-
-    operationValues.value.otherDataframes = allDataframes.filter(
-      (_, i) => i !== currentDataframeIndex
-    );
-
-    const resolve = (value: unknown) => {
-      if (typeof value === 'function') {
-        return value(operationValues.value);
-      }
-      return value;
-    };
-
-    operation?.fields.forEach(field => {
-      // check if field has a default value
-
-      if ('defaultValue' in field && field.defaultValue !== undefined) {
-        operationValues.value[field.name] =
-          operationValues.value[field.name] ||
-          deepClone(resolve(field.defaultValue));
-      }
-
-      // check if field is a group
-
-      if ('fields' in field && field.fields) {
-        const defaultValue =
-          operationValues.value[`default-${field.name}`] || {};
-        for (const subfield of field.fields) {
-          if (
-            'defaultValue' in subfield &&
-            subfield.defaultValue !== undefined
-          ) {
-            defaultValue[subfield.name] = deepClone(
-              resolve(subfield.defaultValue)
-            );
-          }
-        }
-        operationValues.value[`default-${field.name}`] = defaultValue;
-        const defaultFields =
-          'defaultFields' in field && field.defaultFields !== undefined
-            ? field.defaultFields || 0
-            : 1;
-
-        operationValues.value[field.name] =
-          operationValues.value[field.name] || [];
-
-        for (let i = 0; i < defaultFields; i++) {
-          operationValues.value[field.name][i] =
-            operationValues.value[field.name][i] || deepClone(defaultValue);
-        }
-      }
-    });
   }
 };
 
-const loadFromFile = () => {
+function loadFromFile() {
   const operation = operations.loadFromFile;
   if (operation) {
     operationActions.selectOperation(operation);
   }
-};
+}
 
-const selectValuesOperation = (values: unknown[]) => {
+function selectValuesOperation(values: unknown[]) {
   operationActions.selectOperation(operations.filterRows, {
     conditions: [{ condition: 'value_in', values: [...values] }],
     selectionFromPlot: true
   });
-};
+}
 
-const selectQualityOperation = (quality: 'match' | 'mismatch' | 'missing') => {
+function selectQualityOperation(quality: 'match' | 'mismatch' | 'missing') {
   operationActions.selectOperation(operations.filterRows, {
     conditions: [{ condition: quality }],
     action: quality === 'match' ? 'select' : 'drop',
     selectionFromPlot: true
   });
-};
+}
 
-const selectRangesOperation = (ranges: [number, number][]) => {
+function selectRangesOperation(ranges: [number, number][]) {
   const optimizedRanges = ranges.reduce((acc, range) => {
     if (acc.length === 0) {
       acc.push(range);
@@ -904,9 +955,9 @@ const selectRangesOperation = (ranges: [number, number][]) => {
     })),
     selectionFromPlot: true
   });
-};
+}
 
-const selectPatternOperation = (pattern: string, mode: number) => {
+function selectPatternOperation(pattern: string, mode: number) {
   operationActions.selectOperation(operations.filterRows, {
     conditions: [
       {
@@ -918,9 +969,9 @@ const selectPatternOperation = (pattern: string, mode: number) => {
     action: 'select',
     selectionFromPlot: true
   });
-};
+}
 
-const loadDataSource = (dataframeIndex: number) => {
+function loadDataSource(dataframeIndex: number) {
   if (!dataframes.value[dataframeIndex]) {
     return;
   }
@@ -936,7 +987,7 @@ const loadDataSource = (dataframeIndex: number) => {
       selectedTab.value = tabs.value.push(dataframeIndex) - 1;
     }
   }
-};
+}
 
 provide('operation-actions', operationActions);
 
@@ -944,12 +995,12 @@ let cancelPreview = false;
 
 let lastPayload: OperationPayload<PayloadWithOptions> | null = null;
 
-const checkPreviewCancel = () => {
+function checkPreviewCancel() {
   if (cancelPreview) {
     cancelPreview = false;
     throw new Error('Preview cancelled');
   }
-};
+}
 
 const previewOperationThrottled = throttleOnce(
   async function () {
@@ -1223,7 +1274,7 @@ const previewOperationThrottled = throttleOnce(
   }
 );
 
-const previewOperation = async () => {
+async function previewOperation() {
   if (getOperationUsesPreview()) {
     try {
       operationStatus.value = {
@@ -1245,7 +1296,7 @@ const previewOperation = async () => {
       status: 'ok'
     };
   }
-};
+}
 
 watch(() => operationValues.value, previewOperation, { deep: true });
 
@@ -1296,7 +1347,7 @@ watch(selectedTab, async tab => {
   dataframeLayout.value?.clearChunks(false, false, true);
 });
 
-const emitWorkspaceData = () => {
+function emitWorkspaceData() {
   console.log('[DEBUG] Emitting workspace data');
   const dataframeCommands = operationItems.value.map(cell => {
     const { operation, payload } = cell;
@@ -1329,9 +1380,9 @@ const emitWorkspaceData = () => {
   });
 
   emit('update:data', { commands: dataframeCommands, tabs: dataframeTabs });
-};
+}
 
-const adaptSources = <T>(obj: T, sources: Record<string, Source>): T => {
+function adaptSources<T>(obj: T, sources: Record<string, Source>): T {
   if (obj instanceof File) {
     return obj;
   }
@@ -1348,9 +1399,9 @@ const adaptSources = <T>(obj: T, sources: Record<string, Source>): T => {
   }
 
   return obj;
-};
+}
 
-const initializeWorkspace = async () => {
+async function initializeWorkspace() {
   if (props.data !== null) {
     let { commands, tabs: tabsData } = props.data;
 
@@ -1406,7 +1457,7 @@ const initializeWorkspace = async () => {
   if (appStatus.value === 'loading') {
     appStatus.value = 'ready';
   }
-};
+}
 
 watch(
   [tabs, selectedTab, operationItems, persistedNames],
@@ -1416,7 +1467,7 @@ watch(
   { deep: true }
 );
 
-const initializeEngine = async () => {
+async function initializeEngine() {
   try {
     const { Blurr } = blurrPackage;
     blurr.value = Blurr({
@@ -1437,11 +1488,11 @@ const initializeEngine = async () => {
   if (appStatus.value === 'loading' && !appSettings.value.workspaceMode) {
     appStatus.value = 'ready';
   }
-};
+}
 
 provide('initializeEngine', initializeEngine);
 
-const onKeyDown = (event: KeyboardEvent): void => {
+function onKeyDown(event: KeyboardEvent): void {
   const key = event.key.toLowerCase();
   if (key === 'escape') {
     if (state.value === 'operations') {
@@ -1454,7 +1505,7 @@ const onKeyDown = (event: KeyboardEvent): void => {
       }
     }
   }
-};
+}
 
 onMounted(async () => {
   if (props.data !== null) {

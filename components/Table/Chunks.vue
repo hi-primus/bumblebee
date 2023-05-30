@@ -3,7 +3,12 @@
     ref="table"
     :header="header"
     :rows-count="rowsCount"
+    :sortable="sortable"
     @update-scroll="(start, stop) => emit('updateScroll', start, stop)"
+    @move-columns="
+      (columns, position, refColumn) =>
+        emit('move-columns', columns, position, refColumn)
+    "
   />
 </template>
 
@@ -21,11 +26,21 @@ defineProps({
   header: {
     type: Array as PropType<ColumnHeader[]>,
     required: true
+  },
+  sortable: {
+    type: Boolean,
+    default: false
   }
 });
 
 type Emits = {
   (e: 'updateScroll', start: number, stop: number): void;
+  (
+    e: 'move-columns',
+    columns: string[],
+    position: 'before' | 'after',
+    refColumn: string
+  ): void;
 };
 
 const emit = defineEmits<Emits>();

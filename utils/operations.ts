@@ -2219,6 +2219,39 @@ export const operationCreators: Record<string, OperationCreator> = {
     },
     shortcut: 'dc'
   },
+  move: {
+    name: 'Move columns',
+    defaultOptions: {
+      usesInputDataframe: true,
+      usesInputCols: false
+    },
+    content: (
+      payload: OperationPayload<{
+        cols: string[];
+        position: 'before' | 'after';
+        refCol: string;
+      }>
+    ) => {
+      const cols = payload.cols.map(col => `bl{${col}}`).join(', ');
+      return `b{Move} ${cols} gr{${payload.position}} bl{${payload.refCol}}`;
+    },
+    action: (
+      payload: OperationPayload<{
+        cols: string[];
+        position: 'before' | 'after';
+        refCol: string;
+      }>
+    ): Source => {
+      return payload.source.cols.move({
+        target: payload.target,
+        column: payload.cols,
+        position: payload.position,
+        refCol: payload.refCol,
+        requestOptions: payload.requestOptions
+      });
+    },
+    shortcut: 'mc'
+  },
   copy: {
     name: 'Copy selected columns',
     alias: 'copy duplicate columns',
