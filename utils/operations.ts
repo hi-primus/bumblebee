@@ -2213,6 +2213,7 @@ export const operationCreators: Record<string, OperationCreator> = {
   },
   move: {
     name: 'Move columns',
+    hidden: true,
     defaultOptions: {
       usesInputDataframe: true,
       usesInputCols: false
@@ -2241,8 +2242,7 @@ export const operationCreators: Record<string, OperationCreator> = {
         refCol: payload.refCol,
         requestOptions: payload.requestOptions
       });
-    },
-    shortcut: 'mc'
+    }
   },
   copy: {
     name: 'Copy selected columns',
