@@ -11,7 +11,7 @@
       <h3 v-else-if="columnsInfo && sidebar === 'selection'">Details</h3>
       <h3 v-else>Operations</h3>
       <IconButton
-        class="absolute h-full min-w-10 px-3 right-0"
+        class="absolute h-full w-10 min-w-10 px-3 right-0"
         :path="mdiClose"
         @click="closeSidebar"
       />
