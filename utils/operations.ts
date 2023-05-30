@@ -1,3 +1,5 @@
+import { mdiAutoFix } from '@mdi/js';
+
 import { Source } from '@/types/blurr';
 import { isObject } from '@/types/common';
 import {
@@ -13,7 +15,6 @@ import {
 import { capitalize, naturalJoin } from '@/utils';
 import { PRIORITIES, pythonArguments } from '@/utils/blurr';
 import { getGptResponse } from '@/utils/gpt';
-import { mdiAutoFix } from '@mdi/js';
 
 type Name = {
   name: string;
