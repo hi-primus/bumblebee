@@ -386,14 +386,6 @@ export const operationCreators: Record<string, OperationCreator> = {
         requestOptions: payload.requestOptions
       });
 
-      console.log({
-        resultColumns,
-        leftColumns: payload.allColumns,
-        rightColumns: foundDf.columns,
-        leftColumnsInput,
-        rightColumnsInput
-      });
-
       const leftColumns: string[] = [];
 
       leftColumnsInput.forEach(col => {
