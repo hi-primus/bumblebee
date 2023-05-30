@@ -151,7 +151,7 @@ export interface BasicField {
 
 export interface SpecialField {
   name: string;
-  type: 'join' | 'concat';
+  type: 'join' | 'concat' | 'columns sort';
   defaultValue?: PayloadCallbackOr<CompatibleType>;
 }
 

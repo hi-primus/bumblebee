@@ -127,6 +127,12 @@
     v-model="value"
     :options="resolve(field.options)"
   />
+  <OperationFieldColumnsSort
+    v-else-if="resolve(field?.type) === 'columns sort'"
+    :key="`columns-sort-${field.name}-${updates}`"
+    ref="fieldElement"
+    v-model="value"
+  />
   <div
     v-else-if="resolve(field?.type) === 'message'"
     :class="fieldClass"

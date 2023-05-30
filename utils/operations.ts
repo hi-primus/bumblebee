@@ -2244,6 +2244,41 @@ export const operationCreators: Record<string, OperationCreator> = {
       });
     }
   },
+  sort: {
+    name: 'Sort columns',
+    alias: 'sort move order change reorder columns',
+    defaultOptions: {
+      usesInputDataframe: true,
+      usesInputCols: false,
+      preview: 'dataframe no-profile'
+    },
+    content: (
+      payload: OperationPayload<{
+        cols: string[];
+      }>
+    ) => {
+      const cols = payload.cols.map(col => `bl{${col}}`).join(', ');
+      return `b{Sort} ${cols}`;
+    },
+    action: (
+      payload: OperationPayload<{
+        cols: string[];
+      }>
+    ): Source => {
+      return payload.source.cols.select({
+        target: payload.target,
+        cols: payload.cols,
+        requestOptions: payload.requestOptions
+      });
+    },
+    fields: [
+      {
+        name: 'cols',
+        type: 'columns sort'
+      }
+    ],
+    shortcut: 'cs'
+  },
   copy: {
     name: 'Copy selected columns',
     alias: 'copy duplicate columns',
