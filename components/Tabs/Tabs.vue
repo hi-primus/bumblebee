@@ -16,7 +16,7 @@
         <EditableElement
           v-if="editing === index"
           :id="`editable-tab-name-${index}`"
-          class="ellipsis px-1 -mx-1"
+          class="ellipsis outline-primary-dark px-1 -mx-1"
           :model-value="tab.label"
           element="div"
           @update:model-value="
