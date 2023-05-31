@@ -129,7 +129,12 @@
           />
         </template>
       </template>
-      <template v-if="saveToNewDataframe !== 'required'">
+      <template
+        v-if="
+          saveToNewDataframe !== 'required' &&
+          options.targetType === 'dataframe'
+        "
+      >
         <AppCheckbox
           v-model="saveToNewDataframe"
           label="Create new dataframe"
