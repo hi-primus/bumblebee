@@ -152,6 +152,35 @@ const dataframeLayout = ref<InstanceType<typeof DataframeLayout> | null>(null);
 const dataframes = ref<DataframeObject[]>([]);
 provide('dataframes', dataframes);
 
+const cachedDataframeNames = ref<Record<string, string>>({});
+provide('dataframe-names', cachedDataframeNames);
+
+const persistedDataframeNames = ref<Record<string | number, string>>({});
+
+function renameDataframe(
+  dataframeIndex: number,
+  dataframeName: string,
+  persist = true
+) {
+  if (persist) {
+    const varName =
+      dataframes.value[dataframeIndex]?.df?.name || dataframeIndex;
+    persistedDataframeNames.value[varName] = dataframeName;
+  }
+
+  const names = dataframes.value
+    .filter((_df, index) => index !== dataframeIndex)
+    .map(df => df.name || '');
+
+  if (names.includes(dataframeName)) {
+    dataframeName = getUniqueName(dataframeName, names, true);
+  }
+  dataframes.value[dataframeIndex] = {
+    ...dataframes.value[dataframeIndex],
+    name: dataframeName || undefined
+  };
+}
+
 const tabs = ref<number[]>([]);
 
 const selectedTab = ref(-1);
@@ -180,6 +209,42 @@ provide('preview-data', previewData);
 
 const scrollRange = ref([0, 0]);
 provide('scroll-range', scrollRange);
+
+watch(
+  dataframes,
+  () => {
+    dataframes.value.forEach(dataframe => {
+      if (dataframe?.name && dataframe?.df?.name) {
+        cachedDataframeNames.value[dataframe.df.name] = dataframe.name;
+      }
+    });
+
+    if (
+      dataframes.value.length &&
+      Object.keys(cachedDataframeNames.value).length
+    ) {
+      cachedDataframeNames.value = objectFilter(
+        cachedDataframeNames.value,
+        (_, key) => {
+          return dataframes.value.some(dataframe => dataframe.df.name === key);
+        }
+      );
+    }
+
+    if (
+      dataframes.value.length &&
+      Object.keys(persistedDataframeNames.value).length
+    ) {
+      persistedDataframeNames.value = objectFilter(
+        persistedDataframeNames.value,
+        (_, key) => {
+          return dataframes.value.some(dataframe => dataframe.df.name === key);
+        }
+      );
+    }
+  },
+  { deep: true, immediate: true }
+);
 
 watch(state, () => {
   if (isOperation(state.value)) {
@@ -241,31 +306,6 @@ function getNewSourceId() {
   return dataframes.value.length.toString() + (+new Date()).toString();
 }
 
-const persistedNames = ref<Record<string | number, string>>({});
-
-function renameDataframe(
-  dataframeIndex: number,
-  dataframeName: string,
-  persist = true
-) {
-  if (persist) {
-    const varName = dataframes.value[dataframeIndex].df.name || dataframeIndex;
-    persistedNames.value[varName] = dataframeName;
-  }
-
-  const names = dataframes.value
-    .filter((_df, index) => index !== dataframeIndex)
-    .map(df => df.name || '');
-
-  if (names.includes(dataframeName)) {
-    dataframeName = getUniqueName(dataframeName, names, true);
-  }
-  dataframes.value[dataframeIndex] = {
-    ...dataframes.value[dataframeIndex],
-    name: dataframeName || 'dataset'
-  };
-}
-
 async function handleDataframeResults(
   result: unknown,
   payload: PayloadWithOptions,
@@ -288,7 +328,7 @@ async function handleDataframeResults(
       );
       const sourceId = newSourceId || getNewSourceId();
       const newDataframe: DataframeObject = {
-        name: 'dataset',
+        name: undefined,
         sourceId,
         df,
         profile: undefined,
@@ -327,7 +367,7 @@ async function handleDataframeResults(
 
     renameDataframe(
       dataframeIndex,
-      persistedNames.value[varName] ||
+      persistedDataframeNames.value[varName] ||
         getNameFromFileName(profile.file_name || '') ||
         profile.name ||
         df.name,
@@ -1374,8 +1414,8 @@ function emitWorkspaceData() {
       dfName,
       selected: index === selectedTab.value,
       nameIsPersisted: Boolean(
-        (dfName ? persistedNames.value[dfName] : false) ||
-          persistedNames.value[index]
+        (dfName ? persistedDataframeNames.value[dfName] : false) ||
+          persistedDataframeNames.value[index]
       )
     } as TabData;
   });
@@ -1461,7 +1501,7 @@ async function initializeWorkspace() {
 }
 
 watch(
-  [tabs, selectedTab, operationItems, persistedNames],
+  [tabs, selectedTab, operationItems, persistedDataframeNames],
   () => {
     emitWorkspaceData();
   },

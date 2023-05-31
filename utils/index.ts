@@ -52,6 +52,21 @@ export function objectMap<T, V, K extends string | number | symbol>(
   return object as never;
 }
 
+export function objectFilter<T, K extends string | number | symbol>(
+  object: Record<K, T>,
+  cb: (value: T, key?: K) => boolean
+): Record<K, T> {
+  if (isObject(object) && typeof cb === 'function') {
+    return (Object.keys(object) as K[]).reduce((acc, key) => {
+      if (cb(object[key], key)) {
+        acc[key] = object[key];
+      }
+      return acc;
+    }, {} as Record<K, T>);
+  }
+  return object as never;
+}
+
 export const compareObjects = (
   a: unknown,
   b: unknown,

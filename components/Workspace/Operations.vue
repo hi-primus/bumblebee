@@ -358,9 +358,7 @@ const removeOperation = async (index: number): Promise<void> => {
   return await submitOperation(null, null, false);
 };
 
-const blurr = inject('blurr') as Ref<Client>;
-
-const dataframes = inject('dataframes') as Ref<DataframeObject[]>;
+const dataframeNames = inject('dataframe-names') as Ref<Record<string, string>>;
 
 const formatOperationContent = (content: string): string => {
   // replaces in rendered content to match tab names
@@ -370,18 +368,9 @@ const formatOperationContent = (content: string): string => {
     matches.forEach(match => {
       const varName = match.replace(/dn\{([a-zA-Z0-9]+?)\}/, '$1');
 
-      const dataframeObject = dataframes.value.find(
-        dataframe => dataframe.df?.name === varName
-      );
+      const dataframeName = dataframeNames.value[varName];
 
-      if (dataframeObject) {
-        content = content.replace(
-          `dn{${varName}}`,
-          dataframeObject.name || varName
-        );
-      } else {
-        content = content.replace(`dn{${varName}}`, varName);
-      }
+      content = content.replace(`dn{${varName}}`, dataframeName || varName);
     });
   }
 
