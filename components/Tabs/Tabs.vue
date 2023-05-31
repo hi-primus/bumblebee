@@ -30,7 +30,7 @@
           v-else
           class="ellipsis"
           :class="{ 'opacity-60': !tab?.label }"
-          @dblclick="onDoubleClick(index)"
+          @dblclick="tab.editable && onDoubleClick(index)"
           @keydown.r="onDoubleClick(index)"
         >
           {{ tab?.label || defaultLabel }}

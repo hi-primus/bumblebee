@@ -8,6 +8,7 @@ import { OperationPayload } from './operations';
 
 export interface Tab {
   label?: string;
+  editable?: boolean;
 }
 
 // workspace

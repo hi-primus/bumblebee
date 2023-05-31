@@ -6,7 +6,8 @@
         v-model:selected="selectedTab"
         :tabs="
           tabs.map(tab => ({
-            label: tab >= 0 ? dataframes[tab]?.name : undefined
+            label: tab >= 0 ? dataframes[tab]?.name : undefined,
+            editable: tab >= 0
           }))
         "
         class="pl-4"
