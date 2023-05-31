@@ -2227,7 +2227,10 @@ export const operationCreators: Record<string, OperationCreator> = {
       }>
     ) => {
       const cols = payload.cols.map(col => `bl{${col}}`).join(', ');
-      return `b{Move} ${cols} gr{${payload.position}} bl{${payload.refCol}}`;
+      return (
+        `b{Move} ${cols} gr{${payload.position}} bl{${payload.refCol}}` +
+        inDataframeContent(payload)
+      );
     },
     action: (
       payload: OperationPayload<{
