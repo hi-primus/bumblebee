@@ -7,6 +7,7 @@ export default defineNuxtConfig({
   },
   runtimeConfig: {
     public: {
+      mlServiceUrl: process.env.ML_SERVICE_URL,
       nhostRegion: process.env.NHOST_REGION,
       nhostSubdomain: process.env.NHOST_SUBDOMAIN
     }

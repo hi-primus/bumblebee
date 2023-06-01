@@ -468,13 +468,31 @@ async function uploadFile(
   return { fileMetadata, filepath, error };
 }
 
+const runtimeConfig = useRuntimeConfig();
+
+async function post(url: string, data: Record<string, unknown>) {
+  if (!url.startsWith('http')) {
+    url = `${runtimeConfig.public.mlServiceUrl}${url}`;
+  }
+  const response = await fetch(url, {
+    method: 'POST',
+    mode: 'cors',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(data)
+  });
+  return await response.json();
+}
+
 function getAppProperties() {
   return {
     blurr: blurr.value,
     settings: appSettings.value,
     session: session.value,
     addToast,
-    ...(appSettings.value.workspaceMode ? { uploadFile } : {})
+    ...(appSettings.value.workspaceMode ? { uploadFile } : {}),
+    ...(appSettings.value.workspaceMode ? { post } : {})
   };
 }
 
