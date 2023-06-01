@@ -620,33 +620,23 @@ export const operationCreators: Record<string, OperationCreator> = {
     content: (
       payload: OperationPayload<{
         sets: {
-          outputColumn: string;
+          col: string;
           value: string;
         }[];
       }>
     ) => {
       const str =
         payload.sets.length > 1 ? 'b{Create columns}' : 'b{Create column}';
-      const sets = payload.sets.map((s, index) => {
-        let columnName: string;
-        if (s.outputColumn) {
-          columnName = s.outputColumn;
-        } else if (s.value) {
-          columnName = s.value
-            .replace(/\s/g, '')
-            .replace(/[^a-zA-Z0-9]/g, '_')
-            .replace(/^_+|_+$/g, '');
-        } else {
-          columnName = `new_column_${index}`;
-        }
-        return `\nbl{${columnName}} with value gr{${s.value}}`;
+      const sets = payload.sets.map((setItem, index) => {
+        const columnName = getNameFromSetItem(setItem, index);
+        return `\nbl{${columnName}} with value gr{${setItem.value}}`;
       });
       return `${str} ${naturalJoin(sets)}` + inDataframeContent(payload);
     },
     action: (
       payload: OperationPayload<{
         sets: {
-          outputColumn: string;
+          col: string;
           value: string;
         }[];
       }>
@@ -655,18 +645,9 @@ export const operationCreators: Record<string, OperationCreator> = {
         s.value ? Name(`parse('${s.value}', data=False)`) : '""'
       ); // empty expression
 
-      let outputCols = payload.sets.map((s, index) => {
-        if (s.outputColumn) {
-          return s.outputColumn;
-        }
-        if (s.value) {
-          return s.value
-            .replace(/\s/g, '')
-            .replace(/[^a-zA-Z0-9]/g, '_')
-            .replace(/^_+|_+$/g, '');
-        }
-        return `new_column_${index}`;
-      });
+      let outputCols = payload.sets.map((setItem, index) =>
+        getNameFromSetItem(setItem, index)
+      );
 
       if (payload.options.preview) {
         outputCols = outputCols.map(c => `__bumblebee__preview__${c}`);
@@ -787,7 +768,7 @@ export const operationCreators: Record<string, OperationCreator> = {
         groupConnector: '',
         fields: [
           {
-            name: 'outputColumn',
+            name: 'col',
             label: 'New column name',
             type: 'string',
             defaultValue: ''
@@ -4289,13 +4270,23 @@ const preparePayloadForAction = (
     }
   }
 
-  if ((options.preview || '').startsWith('basic columns') && payload.cols) {
-    payload = {
-      ...payload,
-      outputCols: (payload.cols as Cols).map(
-        col => `__bumblebee__preview__${col}`
-      )
-    };
+  if ((options.preview || '').startsWith('basic columns')) {
+    if (payload.cols?.length) {
+      payload = {
+        ...payload,
+        outputCols: (payload.cols as Cols).map(
+          col => `__bumblebee__preview__${col}`
+        )
+      };
+    } else if (Array.isArray(payload.sets)) {
+      payload = {
+        ...payload,
+        sets: payload.sets.map((set: object, index) => ({
+          ...set,
+          col: `${index}`
+        }))
+      };
+    }
   }
 
   payload.options = options;

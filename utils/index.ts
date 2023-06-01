@@ -29,6 +29,22 @@ export const getNameFromFileName = (name: string): string => {
   return name || (extension ? `${extension} file` : '');
 };
 
+export const getNameFromSetItem = (setItem: {
+  col?: string;
+  value?: string;
+}, index: number) => {
+  if (setItem.col) {
+    return setItem.col;
+  }
+  if (setItem.value) {
+    return setItem.value
+      .replace(/\s/g, '')
+      .replace(/[^a-zA-Z0-9]/g, '_')
+      .replace(/^_+|_+$/g, '');
+  }
+  return `new_column_${index}`;
+};
+
 export const getSelectorItemValue = <T>(item: { value: T } | T): T => {
   return item && typeof item === 'object' && 'value' in item
     ? item.value

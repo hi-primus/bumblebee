@@ -275,9 +275,6 @@ provide('operations', operationItems);
 const inactiveOperationCells = ref<OperationItem[]>([]);
 provide('inactive-operations', inactiveOperationCells);
 
-const operationValues = ref<Partial<PayloadWithOptions>>({});
-provide('operation-values', operationValues);
-
 const operationStatus = ref<OperationStatus>({
   status: 'not validated'
 });
@@ -751,6 +748,23 @@ function prepareOperationValuesWithOperation(
 
   return payload;
 }
+
+const operationValues = ref<Partial<PayloadWithOptions>>({});
+provide('operation-values', operationValues);
+
+const triggerOperationValues = computed<Partial<PayloadWithOptions>>(() => {
+  const payload = operationValues.value;
+  return {
+    ...payload,
+    app: null,
+    cols: null,
+    otherDataframes: null,
+    allDataframes: null,
+    // operation specific properties
+    // TODO: Handle using a property in operation
+    sets: (payload.sets || []).map(({ value }) => value)
+  };
+});
 
 function resetOperationValues() {
   operationValues.value = {};
@@ -1351,7 +1365,23 @@ async function previewOperation() {
   }
 }
 
-watch(() => operationValues.value, previewOperation, { deep: true });
+let previousTriggerOperationValues = null;
+
+watch(
+  () => triggerOperationValues.value,
+  values => {
+    if (!compareObjects(values, previousTriggerOperationValues)) {
+      console.log(
+        'triggerOperationValues changed',
+        previousTriggerOperationValues,
+        values
+      );
+      previousTriggerOperationValues = deepClone(values);
+      previewOperation();
+    }
+  },
+  { deep: true }
+);
 
 watch(
   () => selection.value,

@@ -65,24 +65,35 @@ const table = ref<InstanceType<typeof TableChunks> | null>(null);
 
 const renames = computed(() => {
   if (
-    !operationValues.value?.options?.usesInputCols ||
-    !operationValues.value?.options?.usesOutputCols
+    operationValues.value?.options?.usesInputCols &&
+    operationValues.value?.options?.usesOutputCols
   ) {
-    return {};
+    const columns = selection.value?.columns || [];
+
+    const renames: Record<string, string> = {};
+
+    columns.forEach((col, index) => {
+      const outputName = operationValues.value?.outputCols?.[index];
+      if (outputName) {
+        renames[col] = outputName;
+      }
+    });
+
+    return renames;
   }
 
-  const columns = selection.value?.columns || [];
+  if (Array.isArray(operationValues.value?.sets)) {
+    // TODO: Handle using a property in operation
+    return operationValues.value.sets.reduce(
+      (acc, setItem, index) => ({
+        ...acc,
+        [`${index}`]: getNameFromSetItem(setItem, index)
+      }),
+      {} as Record<string, string>
+    );
+  }
 
-  const renames: Record<string, string> = {};
-
-  columns.forEach((col, index) => {
-    const outputName = operationValues.value?.outputCols?.[index];
-    if (outputName) {
-      renames[col] = outputName;
-    }
-  });
-
-  return renames;
+  return {};
 });
 
 const header = computed<ColumnHeader[]>(() => {
