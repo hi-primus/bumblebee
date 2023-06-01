@@ -951,7 +951,7 @@ const operationActions: OperationActions = {
     await new Promise(resolve => setTimeout(resolve, 0));
 
     operationValues.value = prepareOperationValuesWithOperation(
-      operationValues.value,
+      payload,
       operation || undefined
     );
 
