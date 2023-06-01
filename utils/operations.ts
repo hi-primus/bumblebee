@@ -1013,7 +1013,7 @@ export const operationCreators: Record<string, OperationCreator> = {
             type: 'string',
             defaultValue: 0,
             class: 'grouped-first w-1/2',
-            options: _payload => [
+            options: [
               { text: '(U, l, #, !)', value: 0 },
               { text: '(c, #, !)', value: 1 },
               { text: '(*, !)', value: 2 },
@@ -1563,7 +1563,7 @@ export const operationCreators: Record<string, OperationCreator> = {
             type: 'string',
             defaultValue: 0,
             class: 'grouped-middle w-1/3',
-            options: _payload => [
+            options: [
               { text: '(U, l, #, !)', value: 0 },
               { text: '(c, #, !)', value: 1 },
               { text: '(*, !)', value: 2 },
