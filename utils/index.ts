@@ -29,6 +29,12 @@ export const getNameFromFileName = (name: string): string => {
   return name || (extension ? `${extension} file` : '');
 };
 
+export const getSelectorItemValue = <T>(item: { value: T } | T): T => {
+  return item && typeof item === 'object' && 'value' in item
+    ? item.value
+    : item;
+};
+
 export const stepify = (a: number, b: number, f = Math.round): number => {
   return f(a / b) * b;
 };
