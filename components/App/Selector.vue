@@ -271,12 +271,12 @@ const validate = async (isExternalCall = false, force = false) => {
 };
 
 watch(selectedOption, (item, oldItem) => {
-  const value = item?.value || item;
-  const oldValue = oldItem?.value || oldItem;
+  const value = getSelectorItemValue(item);
+  const oldValue = getSelectorItemValue(oldItem);
   validateValue.value = (value);
 
   if (props.multiple) {
-    const valuesFromSelected = item?.map((o: Value) => o?.value || o);
+    const valuesFromSelected = item?.map(getSelectorItemValue);
     if (compareArrays(valuesFromSelected, props.modelValue)) {
       return;
     }
@@ -291,7 +291,7 @@ watch(
   () => props.modelValue,
   value => {
     if (props.multiple) {
-      const valuesFromSelected = selectedOption.value?.map((o: Value) => o?.value || o);
+      const valuesFromSelected = selectedOption.value?.map(getSelectorItemValue);
       if (compareArrays(valuesFromSelected, value)) {
         return;
       }

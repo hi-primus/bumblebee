@@ -292,7 +292,7 @@ watch(
   selected,
   (item, oldItem) => {
     if (props.multiple) {
-      const values = item?.map((o: Value) => o?.value || o);
+      const values = item?.map(getSelectorItemValue);
       if (compareArrays(values, props.modelValue)) {
         return;
       }
@@ -300,11 +300,11 @@ watch(
       emit(
         'update:modelValue',
         values,
-        (oldItem || []).map((o: Value) => o?.value || o)
+        (oldItem || []).map(getSelectorItemValue)
       );
     } else {
-      const value = item?.value || item;
-      const oldValue = oldItem?.value || oldItem;
+      const value = getSelectorItemValue(item);
+      const oldValue = getSelectorItemValue(oldItem);
       validateValue.value = value;
       if (!props.multiple && value === props.modelValue) {
         return;
@@ -320,9 +320,7 @@ watch(
   () => props.modelValue,
   value => {
     if (props.multiple) {
-      const valuesFromSelected = selected.value?.map(
-        (o: Value) => o?.value || o
-      );
+      const valuesFromSelected = selected.value?.map(getSelectorItemValue);
       if (compareArrays(valuesFromSelected, value)) {
         return;
       }
