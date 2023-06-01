@@ -4,12 +4,7 @@
       <slot name="header"></slot>
       <Tabs
         v-model:selected="selectedTab"
-        :tabs="
-          tabs.map(tab => ({
-            label: tab >= 0 ? dataframes[tab]?.name : undefined,
-            editable: tab >= 0
-          }))
-        "
+        :tabs="formattedTabs"
         class="pl-4"
         :class="{
           'pointer-events-none opacity-50':
@@ -184,6 +179,23 @@ function renameDataframe(
 const tabs = ref<number[]>([]);
 
 const selectedTab = ref(-1);
+
+const formattedTabs = computed(() => {
+  return tabs.value.map(tab => {
+    if (tab < 0) {
+      return { label: undefined, editable: false };
+    }
+    const dataframe = dataframes.value[tab];
+    return {
+      label:
+        cachedDataframeNames.value[dataframe?.df?.name] ||
+        dataframe?.name ||
+        dataframe?.df?.name ||
+        `dataframe=${tab}`,
+      editable: true
+    };
+  });
+});
 
 const appStatus = ref<AppStatus>('loading');
 provide('app-status', appStatus);
