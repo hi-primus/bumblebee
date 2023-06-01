@@ -2398,7 +2398,7 @@ export const operationCreators: Record<string, OperationCreator> = {
         requestOptions: payload.requestOptions
       });
     },
-    shortcut: 'ul'
+    shortcut: 'rn'
   },
   removeURLS: {
     name: 'Remove URLs from string',
