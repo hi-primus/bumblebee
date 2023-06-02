@@ -234,6 +234,18 @@ const defaultLabel = computed(() => {
   return props.title || 'Select';
 });
 
+const options = computed(() => {
+  return props.options?.map(option => {
+    if (typeof option === 'object') {
+      return option;
+    }
+    return {
+      value: option,
+      text: option
+    };
+  });
+});
+
 const textCallbackWithDefault = computed(() => {
   return props.textCallback || ((option: unknown) => (option as Record<string, string>)[props.text]);
 });
@@ -270,22 +282,33 @@ const validate = async (isExternalCall = false, force = false) => {
   }
 };
 
-watch(selectedOption, (item, oldItem) => {
-  const value = getSelectorItemValue(item);
-  const oldValue = getSelectorItemValue(oldItem);
-  validateValue.value = (value);
-
-  if (props.multiple) {
-    const valuesFromSelected = item?.map(getSelectorItemValue);
-    if (compareArrays(valuesFromSelected, props.modelValue)) {
-      return;
+watch(
+  selectedOption,
+  (item, oldItem) => {
+    if (props.multiple) {
+      const values = item?.map(getSelectorItemValue);
+      if (compareArrays(values, props.modelValue)) {
+        return;
+      }
+      validateValue.value = values;
+      emit(
+        'update:modelValue',
+        values,
+        (oldItem || []).map(getSelectorItemValue)
+      );
+    } else {
+      const value = getSelectorItemValue(item);
+      const oldValue = getSelectorItemValue(oldItem);
+      validateValue.value = value;
+      if (!props.multiple && value === props.modelValue) {
+        return;
+      }
+      emit('update:modelValue', value, oldValue);
     }
-  } else if (!props.multiple && value === props.modelValue) {
-    return;
-  }
-  emit('update:modelValue', value, oldValue);
-  emit('item-selected', item, oldItem);
-});
+    emit('item-selected', item, oldItem);
+  },
+  { deep: true }
+);
 
 watch(
   () => props.modelValue,
@@ -299,25 +322,28 @@ watch(
         value = value === null || value === undefined ? [] : [value];
       }
       selectedOption.value = value.map((v: Value) => {
-        return props.options.find(o => {
-          if (typeof o !== "object") {
+        const foundItem = options.value?.find(o => {
+          if (typeof o !== 'object') {
             return o === v;
           }
           return o.value === v;
-        }) || v;
+        });
+        return foundItem || v;
       });
-    }
-    if (selectedOption.value && value && selectedOption.value.value === value) {
-      return;
-    }
-    selectedOption.value = props.options.find(o => {
-      if (typeof o !== "object") {
-        return o === value;
+    } else {
+      if (selectedOption.value && value && selectedOption.value.value === value) {
+        return;
       }
-      return o.value === value;
-    }) || value;
+      const foundItem = options.value?.find(o => {
+        if (typeof o !== 'object') {
+          return o === value;
+        }
+        return o.value === value;
+      });
+      selectedOption.value = foundItem || value;
+    }
   },
-  { immediate: true }
+  { immediate: true, deep: true }
 );
 
 defineExpose({

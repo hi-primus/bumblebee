@@ -4,6 +4,7 @@
     :key="`selector-${field.name}-${updates}-${fieldClass}`"
     ref="fieldElement"
     v-model="value"
+    :multiple="resolve(field?.type) === 'strings array'"
     :options="resolve(field.options)"
     :text-callback="field.textCallback"
     :label="resolve(field.label || field.name)"
