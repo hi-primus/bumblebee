@@ -966,7 +966,7 @@ const operationActions: OperationActions = {
     operation: Operation | keyof typeof operations | null = null,
     payload?: Partial<PayloadWithOptions>
   ) {
-    console.info('Operation selected');
+    console.info('Operation selected', operation);
     if (!operation) {
       operationActions.cancelOperation(false);
     }
@@ -1400,11 +1400,6 @@ watch(
   () => triggerOperationValues.value,
   values => {
     if (!compareObjects(values, previousTriggerOperationValues)) {
-      console.log(
-        'triggerOperationValues changed',
-        previousTriggerOperationValues,
-        values
-      );
       previousTriggerOperationValues = deepClone(values);
       previewOperation();
     }
