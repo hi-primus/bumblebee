@@ -397,28 +397,32 @@ const getOperationsCode = async (): Promise<string> => {
       throw new Error('Invalid operation', { cause: operation });
     }
 
-    payload.requestOptions = { getCode: true };
+    const newPayload = {
+      ...payload
+    };
+
+    newPayload.requestOptions = { getCode: true };
 
     if (operation.codeExport) {
-      for (const key in payload) {
-        if (payload[key] === undefined) {
-          delete payload[key];
+      for (const key in newPayload) {
+        if (newPayload[key] === undefined) {
+          delete newPayload[key];
         }
       }
       code +=
         operation.codeExport({
-          ...payload,
-          target: payload.target || payload.source?.name
+          ...newPayload,
+          target: newPayload.target || newPayload.source?.name
         }) + '\n';
       continue;
     }
 
     code +=
       (await operation.action({
-        ...payload,
-        target: payload.target || payload.source?.name,
+        ...newPayload,
+        target: newPayload.target || newPayload.source?.name,
         options: {
-          ...payload.options,
+          ...newPayload.options,
           preview: false
         },
         app: getAppProperties()

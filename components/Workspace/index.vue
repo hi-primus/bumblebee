@@ -585,6 +585,18 @@ async function executeOperations(changeTab = true) {
       app: getAppProperties()
     };
 
+    actionPayload.requestOptions.getCode = false;
+
+    if (
+      actionPayload.options.usesInputDataframe &&
+      !actionPayload.source?.cols
+    ) {
+      console.warn(
+        'Triggering operation action with invalid input dataframe',
+        actionPayload
+      );
+    }
+
     const result = await operation.action(actionPayload);
 
     const {
@@ -609,7 +621,8 @@ async function executeOperations(changeTab = true) {
       });
       lastOperationResultIndex = i;
       const dfName = newPayload.target || newPayload.source;
-      sourcesFromOperations.value[dfName] = result as Source;
+      // console.log('[DEBUG] Saving operation result:', dfName, result);
+      sourcesFromOperations.value[dfName] = result;
     }
     console.info('Operation result:', { sourceId, result, newPayload });
   }
