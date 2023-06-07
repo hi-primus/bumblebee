@@ -228,6 +228,12 @@
             action: () => {
               showSettings = !showSettings;
             }
+          },
+          {
+            text: 'Log out',
+            action: () => {
+              logout();
+            }
           }
         ]"
       >
@@ -268,6 +274,13 @@ import { operations } from '@/utils/operations';
 import { debounce } from '@/utils/time';
 
 const { addToast } = useToasts();
+
+const { signOut } = useSignOut();
+
+const logout = () => {
+  signOut();
+  navigateTo('/login');
+};
 
 const showCommands = ref(false);
 const showSettings = ref(false);
