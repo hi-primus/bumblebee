@@ -29,10 +29,13 @@ export const getNameFromFileName = (name: string): string => {
   return name || (extension ? `${extension} file` : '');
 };
 
-export const getNameFromSetItem = (setItem: {
-  col?: string;
-  value?: string;
-}, index: number) => {
+export const getNameFromSetItem = (
+  setItem: {
+    col?: string;
+    value?: string;
+  },
+  index: number
+) => {
   if (setItem.col) {
     return setItem.col;
   }
