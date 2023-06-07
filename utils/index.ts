@@ -281,7 +281,7 @@ export const fillColumns = (
   payload: OperationPayload<PayloadWithOptions>,
   selection: TableSelection
 ) => {
-  if (payload.options.usesInputCols) {
+  if (payload.options?.usesInputCols) {
     payload.cols = selection?.columns || [];
 
     // If the operation only accepts a single column, we only send the first one
