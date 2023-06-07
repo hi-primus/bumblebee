@@ -86,6 +86,7 @@ export type ConfirmPopup = {
 export interface AppSettings {
   openAiApiKey: string;
   workspaceMode: boolean;
+  mlServiceUrl: string;
 }
 
 export interface AppStatusError {

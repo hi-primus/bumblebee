@@ -4108,6 +4108,9 @@ export const operationCreators: Record<string, OperationCreator> = {
   trainModel: {
     name: 'Train model',
     alias: 'train model',
+    hidden: context => {
+      return !context.appSettings.mlServiceUrl;
+    },
     defaultOptions: {
       oneTime: true,
       usesInputCols: { min: 1, max: 1 },
@@ -4296,6 +4299,9 @@ export const operationCreators: Record<string, OperationCreator> = {
   predict: {
     name: 'Predict using model',
     alias: 'predict model',
+    hidden: context => {
+      return !context.appSettings.mlServiceUrl;
+    },
     defaultOptions: {
       usesInputCols: false,
       usesOutputCols: false,

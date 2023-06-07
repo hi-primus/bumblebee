@@ -135,8 +135,11 @@ const emit = defineEmits<Emits>();
 const blurr = ref<Client | null>(null);
 provide('blurr', blurr);
 
+const runtimeConfig = useRuntimeConfig();
+
 const appSettings = ref<AppSettings>({
   openAiApiKey: '',
+  mlServiceUrl: runtimeConfig.public.mlServiceUrl || '',
   workspaceMode: false
 });
 provide('app-settings', appSettings);
@@ -469,11 +472,9 @@ async function uploadFile(
   return { fileMetadata, filepath, error };
 }
 
-const runtimeConfig = useRuntimeConfig();
-
 async function get<T>(url: string) {
   if (!url.startsWith('http')) {
-    url = `${runtimeConfig.public.mlServiceUrl}${url}`;
+    url = `${appSettings.value.mlServiceUrl}${url}`;
   }
   const response = await fetch(url, {
     method: 'GET',
@@ -495,7 +496,7 @@ async function get<T>(url: string) {
 
 async function post<T>(url: string, data: Record<string, unknown>) {
   if (!url.startsWith('http')) {
-    url = `${runtimeConfig.public.mlServiceUrl}${url}`;
+    url = `${appSettings.value.mlServiceUrl}${url}`;
   }
   const response = await fetch(url, {
     method: 'POST',
