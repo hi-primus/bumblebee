@@ -224,6 +224,9 @@ export type ContextCallbackOr<T> =
 export interface OperationCreatorBase {
   name: string;
   title?: PayloadCallbackOr<string>;
+  init?: (
+    payload: OperationPayload<PayloadWithOptions>
+  ) => PromiseOr<OperationPayload<PayloadWithOptions>>;
   content?: (...args: any) => string;
   codeExport?: (...args: any) => string;
   handleError?: (

@@ -982,10 +982,21 @@ const operationActions: OperationActions = {
 
     await new Promise(resolve => setTimeout(resolve, 0));
 
-    operationValues.value = prepareOperationValuesWithOperation(
+    // TODO: add a loading state to the sidebar
+
+    let preparedOperationValues = prepareOperationValuesWithOperation(
       payload,
       operation || undefined
     );
+
+    if (operation && typeof operation === 'object' && operation.init) {
+      preparedOperationValues = await operation.init({
+        ...preparedOperationValues,
+        app: getAppProperties()
+      } as OperationPayload<PayloadWithOptions>);
+    }
+
+    operationValues.value = preparedOperationValues;
 
     if (operationValues.value.options?.usesInputCols && payload?.cols) {
       selection.value = {
