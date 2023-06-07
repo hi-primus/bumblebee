@@ -129,7 +129,7 @@ export interface BasicField {
     | 'message'
   >;
   key?: string;
-  placeholder?: string;
+  placeholder?: PayloadCallbackOr<string>;
   label?: PayloadCallbackOr<string>;
   required?: PayloadCallbackOr<boolean>;
   options?: PayloadCallbackOr<(string | FieldOption<unknown>)[]>;
