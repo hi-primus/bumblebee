@@ -585,7 +585,9 @@ async function executeOperations(changeTab = true) {
       app: getAppProperties()
     };
 
-    actionPayload.requestOptions.getCode = false;
+    if (actionPayload.requestOptions) {
+      actionPayload.requestOptions.getCode = false;
+    }
 
     if (
       actionPayload.options.usesInputDataframe &&
