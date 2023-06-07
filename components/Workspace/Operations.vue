@@ -116,7 +116,6 @@ import { mdiClose, mdiExport, mdiPencil } from '@mdi/js';
 import { Ref } from 'vue';
 
 import { AppProperties, AppSettings } from '@/types/app';
-import { Client } from '@/types/blurr';
 import { Column, DataframeObject } from '@/types/dataframe';
 import {
   ColumnDetailState,
