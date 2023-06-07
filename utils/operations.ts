@@ -12,6 +12,7 @@ import {
   Payload,
   PayloadWithOptions
 } from '@/types/operations';
+import { ModelResponse } from '@/types/app';
 import { capitalize, naturalJoin } from '@/utils';
 import { PRIORITIES, pythonArguments } from '@/utils/blurr';
 import { getGptResponse } from '@/utils/gpt';
@@ -4104,6 +4105,379 @@ export const operationCreators: Record<string, OperationCreator> = {
     },
     shortcut: 'mmas'
   },
+  trainModel: {
+    name: 'Train model',
+    alias: 'train model',
+    defaultOptions: {
+      oneTime: true,
+      usesInputCols: { min: 1, max: 1 },
+      usesOutputCols: false,
+      usesInputDataframe: true,
+      targetType: 'void'
+    },
+    init: async (payload: OperationPayload<PayloadWithOptions>) => {
+      const df = payload.source;
+      payload.fileName = (await df.getMeta('file_name')) || df.name;
+      payload.models = await getProjectModels(payload);
+      return payload;
+    },
+    action: async (
+      payload: OperationPayload<{
+        modelType: string;
+        modelName: string;
+        newModelName: string;
+        fileName: string;
+        algorithms: string[];
+      }>
+    ): Promise<Source> => {
+      const df = payload.source;
+
+      const arrayBuffer = await df.saveCsv();
+      const fileResponse = await payload.app.uploadFile(
+        arrayBuffer,
+        payload.fileName
+      );
+
+      console.log('[DEBUG] Uploaded file for training', fileResponse);
+
+      if (fileResponse.error) {
+        throw new Error(fileResponse.error?.message || 'Unknown error');
+      }
+
+      const defaultModelName = `${payload.app.session?.workspace.name} - ${payload.fileName}`;
+
+      const modelName =
+        payload.modelName || payload.newModelName || defaultModelName;
+
+      payload.app.addToast({
+        title: 'Training model',
+        message: `Training model '${modelName}'`,
+        type: 'info'
+      });
+
+      payload.app
+        .post<{
+          detail?: string;
+        }>('/experiments', {
+          name: modelName,
+          model_name: modelName,
+          target_column: payload.cols[0],
+          algorithms: payload.algorithms,
+          data_uri: fileResponse.filepath,
+          model_type: payload.modelType,
+          project_id: payload.app.session?.project.id,
+          workspace_id: payload.app.session?.workspace.id
+        })
+        .then(response => {
+          // TODO: Delete file after experiment is created
+          console.log('[DEBUG] Experiment created', response);
+
+          if (response.detail) {
+            throw new Error(response.detail);
+          }
+
+          payload.app.addToast({
+            title: 'Model created',
+            message: `Model '${modelName}' created`,
+            type: 'success'
+          });
+        })
+        .catch(error => {
+          console.error('[DEBUG] Experiment creation failed', error);
+          payload.app.addToast({
+            title: 'Model creation failed',
+            message: `Model '${modelName}' creation failed`,
+            type: 'error'
+          });
+        });
+
+      return df;
+    },
+    fields: [
+      {
+        name: 'modelName',
+        label: payload =>
+          payload.modelName ? 'Retrain created model' : 'Model',
+        type: 'string',
+        defaultValue: '',
+        options: (payload: OperationPayload) => {
+          if (!Array.isArray(payload.models)) {
+            return [];
+          }
+          const modelOptions = (payload.models as ModelResponse[]).map(
+            model => {
+              const date = new Date(
+                model.last_updated_timestamp
+              ).toLocaleString();
+              return {
+                value: model.name,
+                text: `${model.name} (${date})`
+              };
+            }
+          );
+          if (modelOptions?.length) {
+            return [...modelOptions, { value: '', text: 'Create new model' }];
+          }
+          return [];
+        },
+        hidden: (payload: OperationPayload) => {
+          return !(payload.models as Array<unknown> | null)?.length;
+        }
+      },
+      {
+        name: 'newModelName',
+        label: 'New model name',
+        type: 'string',
+        defaultValue: '',
+        placeholder: (payload: OperationPayload) => {
+          if (payload.app.session?.workspace.name && payload.fileName) {
+            return `${payload.app.session.workspace.name} - ${payload.fileName}`;
+          }
+          return '';
+        },
+        hidden: (payload: OperationPayload) => {
+          return (
+            Boolean((payload.models as Array<unknown> | null)?.length) &&
+            (payload.modelName as string) !== ''
+          );
+        }
+      },
+      {
+        name: 'modelType',
+        label: 'Model type',
+        type: 'string',
+        defaultValue: 'classification',
+        options: [
+          { value: 'classification', text: 'Classification' },
+          { value: 'regression', text: 'Regression' },
+          { value: 'clustering', text: 'Clustering' },
+          { value: 'time_series', text: 'Time Series' }
+          // {value: 'anomaly', text: 'Anomaly'},
+        ],
+        onChange: (payload, value, oldValue) => {
+          const newValue = value as
+            | 'classification'
+            | 'regression'
+            | 'clustering'
+            | 'time_series';
+          if (value !== oldValue) {
+            payload.algorithms = payload.algorithms.filter(algo =>
+              algorithmsOptions[newValue].find(algo2 => algo2.value === algo)
+            );
+            if (payload.algorithms.length === 0) {
+              payload.algorithms = algorithmsOptions[newValue]
+                .filter(algo => algo.default)
+                .map(algo => algo.value);
+            }
+          }
+          return payload;
+        }
+      },
+      {
+        name: 'algorithms',
+        label: 'Algorithms',
+        type: 'strings array',
+        defaultValue: ['xgboost', 'lightgbm', 'catboost'],
+        options: payload => {
+          const modelType:
+            | 'classification'
+            | 'regression'
+            | 'clustering'
+            | 'time_series' = payload.modelType;
+          if (typeof modelType !== 'string') {
+            return [];
+          }
+          return algorithmsOptions[modelType] || [];
+        }
+      }
+    ],
+    shortcut: 'mt'
+  },
+  predict: {
+    name: 'Predict using model',
+    alias: 'predict model',
+    defaultOptions: {
+      usesInputCols: false,
+      usesOutputCols: false,
+      usesInputDataframe: true,
+      preview: 'custom no-sample'
+    },
+    init: async (payload: OperationPayload<PayloadWithOptions>) => {
+      payload.models = await getProjectModels(payload);
+
+      if (!payload.modelName) {
+        payload.modelName = payload.models[0].name;
+      }
+
+      return payload;
+    },
+    content: (
+      payload: OperationPayload<{
+        modelName: string;
+        modelVersion: string;
+        outputCol: string;
+      }>
+    ): string => {
+      return (
+        `b{Predict}` +
+        `\nusing gr{${payload.modelName}} with version gr{${payload.modelVersion}}` +
+        `\nto bl{${payload.outputCol || 'prediction'}}` +
+        inDataframeContent(payload)
+      );
+    },
+    action: async (
+      payload: OperationPayload<{
+        modelName: string;
+        modelVersion: string;
+        outputCol: string;
+      }>
+    ): Promise<Source> => {
+      payload.outputCol = payload.outputCol || 'prediction';
+
+      if (!payload.modelName) {
+        throw new Error('Model name is required');
+      }
+
+      const df = payload.source;
+      const fileName: string = await df.getMeta('file_name');
+      const arrayBuffer = await df.saveCsv();
+      const fileResponse = await payload.app.uploadFile(arrayBuffer, fileName);
+
+      const response = await payload.app.post<{
+        prediction?: string;
+        detail?: string;
+      }>('/predict', {
+        data_uri: fileResponse.filepath,
+        model_type: 'classification',
+        version: payload.modelVersion,
+        model_name: payload.modelName
+      });
+
+      // TODO: Delete file after prediction
+
+      if (response.detail) {
+        throw new Error(response.detail);
+      }
+
+      if (!response.prediction) {
+        console.error(response);
+        throw new Error('Result is empty');
+      }
+
+      const resultDf = await payload.app.blurr.createDataframe(
+        JSON.parse(response.prediction)
+      );
+
+      const newDf = await df.copy({
+        target: payload.target,
+        requestOptions: payload.requestOptions
+      });
+
+      const outputColName = payload.options.preview
+        ? '__bumblebee__preview__' + payload.outputCol
+        : payload.outputCol;
+
+      return await payload.app.blurr.runCode(
+        `${newDf.name}['${outputColName}'] = ${resultDf.name}.data['prediction_label'].values` +
+          '\n' +
+          `${newDf.name}`
+      );
+    },
+    fields: [
+      {
+        name: 'modelName',
+        label: 'Model',
+        type: 'string',
+        options: (payload: OperationPayload) => {
+          if (!Array.isArray(payload.models)) {
+            return [];
+          }
+          return (payload.models as ModelResponse[]).map(model => {
+            const date = new Date(
+              model.last_updated_timestamp
+            ).toLocaleString();
+            return {
+              value: model.name,
+              text: `${model.name} (${date})`
+            };
+          });
+        },
+        onChange: async (payload, value, oldValue) => {
+          if (typeof value !== 'string' || value === oldValue) {
+            return payload;
+          }
+
+          payload.modelVersions = [];
+
+          const models = payload.models as ModelResponse[];
+
+          const versions = models.find(
+            model => model.name === value
+          )?.latest_versions;
+
+          if (versions?.length) {
+            payload.modelVersions = versions.map(version => ({
+              value: version.version,
+              text: `${version.version} (${new Date(
+                version.last_updated_timestamp
+              ).toLocaleString()})`
+            }));
+          }
+
+          console.info('[Predict] Getting model versions from server');
+
+          const url =
+            '/models?' +
+            new URLSearchParams({
+              model_name: value || ''
+            });
+
+          const response = await payload.app.get<
+            {
+              version: string;
+              last_updated_timestamp: number;
+            }[]
+          >(url);
+
+          console.log('[DEBUG] Model versions requested', response);
+
+          payload.modelVersions = response.map(model => ({
+            value: model.version,
+            text: `${model.version} (${new Date(
+              model.last_updated_timestamp
+            ).toLocaleString()})`
+          }));
+
+          if (
+            !payload.modelVersion ||
+            !(payload.modelVersions as { value: string }[]).find(
+              version => version.value === payload.modelVersion
+            )
+          ) {
+            payload.modelVersion = payload.modelVersions[0].value;
+          }
+
+          return payload;
+        }
+      },
+      {
+        name: 'modelVersion',
+        label: 'Model version',
+        type: 'string',
+        defaultValue: 'latest',
+        options: (payload: OperationPayload) => {
+          return payload.modelVersions as { value: string; text: string }[];
+        }
+      },
+      {
+        name: 'outputCol',
+        label: 'Output column',
+        type: 'string',
+        defaultValue: 'prediction'
+      }
+    ],
+    shortcut: 'mp'
+  },
 
   //
   unnestColumns: {
@@ -4442,6 +4816,190 @@ const createOperation = (
   };
 
   return operation;
+};
+
+const getProjectModels = async (
+  payload: OperationPayload<PayloadWithOptions>
+) => {
+  const url =
+    '/projects/models?' +
+    new URLSearchParams({
+      project_id: payload.app.session?.project.id || ''
+    });
+  const response = await payload.app.get<
+    | {
+        detail?: string;
+      }
+    | ModelResponse[]
+  >(url);
+  if (!Array.isArray(response)) {
+    if (response.detail) {
+      throw new Error(response.detail);
+    }
+    throw new Error('Unknown error');
+  }
+  return response;
+};
+
+const algorithmsOptions = {
+  classification: [
+    { value: 'lr', text: 'Logistic Regression' },
+    { value: 'knn', text: 'K Neighbors Classifier' },
+    { value: 'nb', text: 'Naive Bayes' },
+    { value: 'dt', text: 'Decision Tree Classifier' },
+    { value: 'svm', text: 'SVM - Linear Kernel' },
+    { value: 'rbfsvm', text: 'SVM - Radial Kernel' },
+    { value: 'gpc', text: 'Gaussian Process Classifier' },
+    { value: 'mlp', text: 'MLP Classifier' },
+    { value: 'ridge', text: 'Ridge Classifier' },
+    { value: 'rf', text: 'Random Forest Classifier' },
+    { value: 'qda', text: 'Quadratic Discriminant Analysis' },
+    { value: 'ada', text: 'Ada Boost Classifier' },
+    { value: 'gbc', text: 'Gradient Boosting Classifier' },
+    { value: 'lda', text: 'Linear Discriminant Analysis' },
+    { value: 'et', text: 'Extra Trees Classifier' },
+    { value: 'xgboost', text: 'Extreme Gradient Boosting', default: true },
+    {
+      value: 'lightgbm',
+      text: 'Light Gradient Boosting Machine',
+      default: true
+    },
+    { value: 'catboost', text: 'CatBoost Classifier', default: true }
+  ],
+  regression: [
+    { value: 'lr', text: 'Linear Regression' },
+    { value: 'lasso', text: 'Lasso Regression' },
+    { value: 'ridge', text: 'Ridge Regression' },
+    { value: 'en', text: 'Elastic Net' },
+    { value: 'lar', text: 'Least Angle Regression' },
+    { value: 'llar', text: 'Lasso Least Angle Regression' },
+    { value: 'omp', text: 'Orthogonal Matching Pursuit' },
+    { value: 'br', text: 'Bayesian Ridge' },
+    { value: 'ard', text: 'Automatic Relevance Determination' },
+    { value: 'par', text: 'Passive Aggressive Regressor' },
+    { value: 'ransac', text: 'Random Sample Consensus' },
+    { value: 'tr', text: 'TheilSen Regressor' },
+    { value: 'huber', text: 'Huber Regressor' },
+    { value: 'kr', text: 'Kernel Ridge' },
+    { value: 'svm', text: 'Support Vector Regression' },
+    { value: 'knn', text: 'K Neighbors Regressor' },
+    { value: 'dt', text: 'Decision Tree Regressor' },
+    { value: 'rf', text: 'Random Forest Regressor' },
+    { value: 'et', text: 'Extra Trees Regressor' },
+    { value: 'ada', text: 'AdaBoost Regressor' },
+    { value: 'gbr', text: 'Gradient Boosting Regressor' },
+    { value: 'mlp', text: 'MLP Regressor' },
+    { value: 'xgboost', text: 'Extreme Gradient Boosting', default: true },
+    {
+      value: 'lightgbm',
+      text: 'Light Gradient Boosting Machine',
+      default: true
+    },
+    { value: 'catboost', text: 'CatBoost Classifier', default: true }
+  ],
+  clustering: [
+    { value: 'kmeans', text: 'K-Means Clustering', default: true },
+    { value: 'ap', text: 'Affinity Propagation' },
+    { value: 'meanshift', text: 'Mean shift Clustering' },
+    { value: 'sc', text: 'Spectral Clustering' },
+    { value: 'hclust', text: 'Agglomerative Clustering' },
+    {
+      value: 'dbscan',
+      text: 'Density-Based Spatial Clustering',
+      default: true
+    },
+    { value: 'optics', text: 'OPTICS Clustering' },
+    { value: 'birch', text: 'Birch Clustering' },
+    { value: 'kmodes', text: 'K-Modes Clustering' }
+  ],
+  time_series: [
+    { value: 'naive', text: 'Naive Forecaster' },
+    { value: 'grand_means', text: 'Grand Means Forecaster' },
+    {
+      value: 'snaive',
+      text: 'Seasonal Naive Forecaster (disabled when seasonal_period = 1)'
+    },
+    { value: 'polytrend', text: 'Polynomial Trend Forecaster' },
+    {
+      value: 'arima',
+      text: 'ARIMA family of models (ARIMA, SARIMA, SARIMAX)',
+
+      default: true
+    },
+    { value: 'auto_arima', text: 'Auto ARIMA' },
+    { value: 'exp_smooth', text: 'Exponential Smoothing', default: true },
+    { value: 'stlf', text: 'STL Forecaster' },
+    { value: 'croston', text: 'Croston Forecaster' },
+    { value: 'ets', text: 'ETS' },
+    { value: 'theta', text: 'Theta Forecaster' },
+    { value: 'tbats', text: 'TBATS' },
+    { value: 'bats', text: 'BATS' },
+    { value: 'prophet', text: 'Prophet Forecaster', default: true },
+    {
+      value: 'lr_cds_dt',
+      text: 'Linear w/ Cond. Deseasonalize & Detrending'
+    },
+    {
+      value: 'en_cds_dt',
+      text: 'Elastic Net w/ Cond. Deseasonalize & Detrending'
+    },
+    {
+      value: 'ridge_cds_dt',
+      text: 'Ridge w/ Cond. Deseasonalize & Detrending'
+    },
+    {
+      value: 'lasso_cds_dt',
+      text: 'Lasso w/ Cond. Deseasonalize & Detrending'
+    },
+    {
+      value: 'llar_cds_dt',
+      text: 'Lasso Least Angular Regressor w/ Cond. Deseasonalize & Detrending'
+    },
+    {
+      value: 'br_cds_dt',
+      text: 'Bayesian Ridge w/ Cond. Deseasonalize & Deseasonalize & Detrending'
+    },
+    {
+      value: 'huber_cds_dt',
+      text: 'Huber w/ Cond. Deseasonalize & Detrending'
+    },
+    {
+      value: 'omp_cds_dt',
+      text: 'Orthogonal Matching Pursuit w/ Cond. Deseasonalize & Detrending'
+    },
+    {
+      value: 'knn_cds_dt',
+      text: 'K Neighbors w/ Cond. Deseasonalize & Detrending'
+    },
+    {
+      value: 'dt_cds_dt',
+      text: 'Decision Tree w/ Cond. Deseasonalize & Detrending'
+    },
+    {
+      value: 'rf_cds_dt',
+      text: 'Random Forest w/ Cond. Deseasonalize & Detrending'
+    },
+    {
+      value: 'et_cds_dt',
+      text: 'Extra Trees w/ Cond. Deseasonalize & Detrending'
+    },
+    {
+      value: 'gbr_cds_dt',
+      text: 'Gradient Boosting w/ Cond. Deseasonalize & Detrending'
+    },
+    {
+      value: 'ada_cds_dt',
+      text: 'AdaBoost w/ Cond. Deseasonalize & Detrending'
+    },
+    {
+      value: 'lightgbm_cds_dt',
+      text: 'Light Gradient Boosting w/ Cond. Deseasonalize & Detrending'
+    },
+    {
+      value: 'catboost_cds_dt',
+      text: 'CatBoost w/ Cond. Deseasonalize & Detrending'
+    }
+  ]
 };
 
 export const operations: Record<string, Operation> = objectMap(

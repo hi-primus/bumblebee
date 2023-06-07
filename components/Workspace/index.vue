@@ -74,6 +74,7 @@ import { UploadFileResponse } from '@nhost/hasura-storage-js';
 
 import DataframeLayout from '@/components/Workspace/DataframeLayout.vue';
 import {
+  AppProperties,
   AppSettings,
   AppStatus,
   CommandData,
@@ -470,7 +471,29 @@ async function uploadFile(
 
 const runtimeConfig = useRuntimeConfig();
 
-async function post(url: string, data: Record<string, unknown>) {
+async function get<T>(url: string) {
+  if (!url.startsWith('http')) {
+    url = `${runtimeConfig.public.mlServiceUrl}${url}`;
+  }
+  const response = await fetch(url, {
+    method: 'GET',
+    mode: 'cors',
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  });
+  const content = await response.json();
+  if (typeof content === 'string') {
+    try {
+      return JSON.parse(content) as T;
+    } catch (e) {
+      return content as unknown as T;
+    }
+  }
+  return content as T;
+}
+
+async function post<T>(url: string, data: Record<string, unknown>) {
   if (!url.startsWith('http')) {
     url = `${runtimeConfig.public.mlServiceUrl}${url}`;
   }
@@ -482,7 +505,15 @@ async function post(url: string, data: Record<string, unknown>) {
     },
     body: JSON.stringify(data)
   });
-  return await response.json();
+  const content = await response.json();
+  if (typeof content === 'string') {
+    try {
+      return JSON.parse(content) as T;
+    } catch (e) {
+      return content as unknown as T;
+    }
+  }
+  return content as T;
 }
 
 function getAppProperties() {
@@ -492,8 +523,9 @@ function getAppProperties() {
     session: session.value,
     addToast,
     ...(appSettings.value.workspaceMode ? { uploadFile } : {}),
+    ...(appSettings.value.workspaceMode ? { get } : {}),
     ...(appSettings.value.workspaceMode ? { post } : {})
-  };
+  } as AppProperties;
 }
 
 provide('get-app-properties', getAppProperties);

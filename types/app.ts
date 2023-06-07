@@ -122,9 +122,25 @@ export type AppProperties = {
   settings: AppSettings;
   session?: Session;
   addToast: (toast: ToastInput) => number;
-  post: <T = unknown>(url: string, data?: object) => PromiseOr<T>;
+  get: <T = unknown>(url: string) => Promise<T>;
+  post: <T = unknown>(
+    url: string,
+    data?: Record<string, unknown>
+  ) => Promise<T>;
   uploadFile: (
     file: ArrayBuffer | File | FileWithId,
     fileName?: string
   ) => PromiseOr<UploadFileResponse>;
+};
+
+// mlflow
+
+export type ModelResponse = {
+  last_updated_timestamp: number;
+  name: string;
+  tags: Record<string, string>;
+  latest_versions: {
+    version: string;
+    last_updated_timestamp: number;
+  }[];
 };
