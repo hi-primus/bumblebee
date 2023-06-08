@@ -2,7 +2,7 @@ import { FileResponse, StorageErrorPayload } from '@nhost/hasura-storage-js';
 
 import { Client } from './blurr';
 import { DataframeObject } from './dataframe';
-import { OperationPayload } from './operations';
+import { OperationItem, OperationPayload } from './operations';
 
 // interface
 
@@ -123,6 +123,12 @@ export type AppProperties = {
   settings: AppSettings;
   session?: Session;
   addToast: (toast: ToastInput) => number;
+  getOperations: (dfName?: string, includeLoad?: boolean) => OperationItem[];
+  getOperationsCode: (
+    dfName?: string,
+    includeLoad?: boolean,
+    replaceDfName?: string
+  ) => Promise<string>;
   get: <T = unknown>(url: string) => Promise<T>;
   post: <T = unknown>(
     url: string,

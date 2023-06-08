@@ -383,54 +383,7 @@ const formatOperationContent = (content: string): string => {
   return content;
 };
 
-const getAppProperties = inject('get-app-properties') as () => AppProperties;
-
-const getOperationsCode = async (): Promise<string> => {
-  const data: OperationItem[] = operationCells.value;
-
-  let code = '';
-
-  for (let i = 0; i < data.length; i++) {
-    const { operation, payload } = data[i];
-
-    if (!isOperation(operation)) {
-      throw new Error('Invalid operation', { cause: operation });
-    }
-
-    const newPayload = {
-      ...payload
-    };
-
-    newPayload.requestOptions = { getCode: true };
-
-    if (operation.codeExport) {
-      for (const key in newPayload) {
-        if (newPayload[key] === undefined) {
-          delete newPayload[key];
-        }
-      }
-      code +=
-        operation.codeExport({
-          ...newPayload,
-          target: newPayload.target || newPayload.source?.name
-        }) + '\n';
-      continue;
-    }
-
-    code +=
-      (await operation.action({
-        ...newPayload,
-        target: newPayload.target || newPayload.source?.name,
-        options: {
-          ...newPayload.options,
-          preview: false
-        },
-        app: getAppProperties()
-      })) + '\n';
-  }
-
-  return code;
-};
+const getOperationsCode = inject('get-operations-code') as () => Promise<string>;
 
 const exportPythonCode = async (
   engine: keyof typeof engines

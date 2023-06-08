@@ -4122,6 +4122,11 @@ export const operationCreators: Record<string, OperationCreator> = {
       const df = payload.source;
       payload.fileName = (await df.getMeta('file_name')) || df.name;
       payload.models = await getProjectModels(payload);
+      payload.preparationCode = await payload.app.getOperationsCode(
+        payload.source.name,
+        false,
+        'df'
+      );
       return payload;
     },
     action: async (
@@ -4131,6 +4136,7 @@ export const operationCreators: Record<string, OperationCreator> = {
         newModelName: string;
         fileName: string;
         algorithms: string[];
+        preparationCode: string;
       }>
     ): Promise<Source> => {
       const df = payload.source;
@@ -4169,7 +4175,8 @@ export const operationCreators: Record<string, OperationCreator> = {
           data_uri: fileResponse.filepath,
           model_type: payload.modelType,
           project_id: payload.app.session?.project.id,
-          workspace_id: payload.app.session?.workspace.id
+          workspace_id: payload.app.session?.workspace.id,
+          preparation_code: payload.preparationCode
         })
         .then(response => {
           // TODO: Delete file after experiment is created

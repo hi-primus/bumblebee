@@ -418,6 +418,134 @@ function checkSources(data: OperationItem[]) {
 
 const nuxtApp = useNuxtApp();
 
+const getOperationsCode = async (
+  operations: OperationItem[] | null = null
+): Promise<string> => {
+  const data: OperationItem[] = operations || operationItems.value;
+
+  let code = '';
+
+  for (let i = 0; i < data.length; i++) {
+    const { operation, payload } = data[i];
+
+    if (!isOperation(operation)) {
+      throw new Error('Invalid operation', { cause: operation });
+    }
+
+    const newPayload = {
+      ...payload
+    };
+
+    newPayload.requestOptions = { getCode: true };
+
+    if (operation.codeExport) {
+      for (const key in newPayload) {
+        if (newPayload[key] === undefined) {
+          delete newPayload[key];
+        }
+      }
+      code +=
+        operation.codeExport({
+          ...newPayload,
+          target: newPayload.target || newPayload.source?.name
+        }) + '\n';
+      continue;
+    }
+
+    code +=
+      (await operation.action({
+        ...newPayload,
+        target: newPayload.target || newPayload.source?.name,
+        options: {
+          ...newPayload.options,
+          preview: false
+        },
+        app: getAppProperties()
+      })) + '\n';
+  }
+
+  return code;
+};
+
+provide('get-operations-code', getOperationsCode);
+
+function getOperations(
+  dfName?: string,
+  includeLoad = true,
+  replaceDfName = ''
+) {
+  const operations: OperationItem[] = operationItems.value;
+
+  let operationsToReturn: OperationItem[] = [];
+
+  if (!dfName) {
+    operationsToReturn = operations;
+  } else {
+    // get all operations that uses the dataframe
+
+    let currentDfName = dfName;
+    let currentIndex = operations.length;
+
+    let limit = 0;
+    while (limit < 100) {
+      limit++;
+      let newCurrentIndex = currentIndex;
+
+      operationsToReturn = [
+        ...operations.filter((operation, index) => {
+          if (operation.payload.options.targetType === 'dataframe') {
+            const usesDataframe =
+              operation.payload.source?.name === currentDfName ||
+              operation.payload.target === currentDfName;
+            if (usesDataframe && index < currentIndex) {
+              newCurrentIndex = Math.min(newCurrentIndex, index);
+              return true;
+            }
+          }
+          return false;
+        }),
+        ...operationsToReturn
+      ];
+
+      currentIndex = newCurrentIndex;
+
+      const firstOperation = operationsToReturn[0];
+
+      if (firstOperation.payload.options.usesInputDataframe) {
+        const source = firstOperation.payload.source;
+        if (source?.name) {
+          currentDfName = source.name;
+          continue;
+        }
+      }
+
+      break;
+    }
+  }
+
+  if (!includeLoad) {
+    operationsToReturn = operationsToReturn.filter(
+      operation => operation.payload.options.usesInputDataframe
+    );
+  }
+
+  if (replaceDfName) {
+    operationsToReturn = operationsToReturn.map(operation => {
+      const newOperation = deepClone(operation);
+      if (operation.payload.source?.name !== replaceDfName) {
+        // this should be used for code generation only
+        newOperation.payload.source = blurr.value.createSource(replaceDfName);
+      }
+      if (operation.payload.target !== replaceDfName) {
+        newOperation.payload.target = replaceDfName;
+      }
+      return newOperation;
+    });
+  }
+
+  return operationsToReturn;
+}
+
 // avoid using useNhostClient() to avoid errors on installations without nhost
 const nhost = nuxtApp.$nhost;
 
@@ -523,6 +651,15 @@ function getAppProperties() {
     settings: appSettings.value,
     session: session.value,
     addToast,
+    getOperations,
+    getOperationsCode: async (
+      dfName: string,
+      includeLoad = false,
+      replaceDfName = 'df'
+    ) => {
+      const operations = getOperations(dfName, includeLoad, replaceDfName);
+      return await getOperationsCode(operations);
+    },
     ...(appSettings.value.workspaceMode ? { uploadFile } : {}),
     ...(appSettings.value.workspaceMode ? { get } : {}),
     ...(appSettings.value.workspaceMode ? { post } : {})
