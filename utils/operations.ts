@@ -3025,7 +3025,6 @@ export const operationCreators: Record<string, OperationCreator> = {
         `${payload.target}`;
       const source = await payload.app.blurr.runCode(code);
       source.name = payload.target;
-      console.log({ source, code });
       return source;
     },
     fields: [
@@ -3040,8 +3039,6 @@ export const operationCreators: Record<string, OperationCreator> = {
           icon: mdiAutoFix,
           action: async (payload: OperationPayload) => {
             const df = payload.source;
-
-            console.log({ payload });
 
             const target = `${df.name}_sample`;
 
@@ -3113,8 +3110,6 @@ export const operationCreators: Record<string, OperationCreator> = {
           icon: mdiAutoFix,
           action: async (payload: OperationPayload) => {
             const df = payload.source;
-
-            console.log({ payload });
 
             const target = `${df.name}_sample`;
 
