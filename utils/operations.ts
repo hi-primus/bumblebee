@@ -4271,7 +4271,7 @@ export const operationCreators: Record<string, OperationCreator> = {
             | 'clustering'
             | 'time_series';
           if (value !== oldValue) {
-            payload.algorithms = payload.algorithms.filter(algo =>
+            payload.algorithms = (payload.algorithms || []).filter(algo =>
               algorithmsOptions[newValue].find(algo2 => algo2.value === algo)
             );
             if (payload.algorithms.length === 0) {
@@ -4317,6 +4317,10 @@ export const operationCreators: Record<string, OperationCreator> = {
     },
     init: async (payload: OperationPayload<PayloadWithOptions>) => {
       payload.models = await getProjectModels(payload);
+
+      if (!payload.models?.length) {
+        throw new Error('No models found. Create a model and try again');
+      }
 
       if (!payload.modelName) {
         payload.modelName = payload.models[0].name;
@@ -4834,24 +4838,29 @@ const createOperation = (
 const getProjectModels = async (
   payload: OperationPayload<PayloadWithOptions>
 ) => {
-  const url =
-    '/projects/models?' +
-    new URLSearchParams({
-      project_id: payload.app.session?.project.id || ''
-    });
-  const response = await payload.app.get<
-    | {
-        detail?: string;
+  try {
+    const url =
+      '/projects/models?' +
+      new URLSearchParams({
+        project_id: payload.app.session?.project.id || ''
+      });
+    const response = await payload.app.get<
+      | {
+          detail?: string;
+        }
+      | ModelResponse[]
+    >(url);
+    if (!Array.isArray(response)) {
+      if (response.detail) {
+        throw new Error(response.detail);
       }
-    | ModelResponse[]
-  >(url);
-  if (!Array.isArray(response)) {
-    if (response.detail) {
-      throw new Error(response.detail);
+      throw new Error('Unknown error');
     }
-    throw new Error('Unknown error');
+    return response;
+  } catch (err) {
+    console.error('Error getting project models', err);
+    return [];
   }
-  return response;
 };
 
 const algorithmsOptions = {

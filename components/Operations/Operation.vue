@@ -144,17 +144,16 @@
       </template>
       <div
         v-if="
-          firstValidated &&
-          ['error', 'fatal error'].includes(operationStatus.status) &&
-          operationStatus.message
+          operationStatus.status.includes('error') && operationStatus.message
         "
         class="w-full flex justify-end gap-2"
       >
         <Toast
           :title="{
           error: 'Error',
+          'initialization error': 'Error',
           'fatal error': 'Fatal Error',
-        }[operationStatus.status as 'error' | 'fatal error']"
+        }[operationStatus.status as 'error' | 'initialization error' | 'fatal error']"
           :message="operationStatus.message"
           type="error"
           :closable="false"
@@ -204,10 +203,7 @@ const operationValues = inject('operation-values') as Ref<
 const operationStatus = inject('operation-status') as Ref<OperationStatus>;
 
 const errorMessages = computed(() => {
-  if (
-    firstValidated.value &&
-    ['error', 'fatal error'].includes(operationStatus.value.status)
-  ) {
+  if (operationStatus.value.status.includes('error')) {
     return operationStatus.value.fieldMessages || {};
   }
   return {};
@@ -222,18 +218,14 @@ const { submitOperation, cancelOperation } = inject(
 const operationElement = ref<HTMLElement | null>(null);
 
 const status = ref<'' | 'submitting' | 'cancelling'>('');
-const firstValidated = ref(false);
 
 const submit = async () => {
-  firstValidated.value = true;
   if (submitable.value) {
     status.value = 'submitting';
     const result = await submitOperation();
     status.value = '';
     return result;
-  } else if (
-    !['error', 'fatal error'].includes(operationStatus.value?.status)
-  ) {
+  } else if (!operationStatus.value?.status.includes('error')) {
     operationStatus.value = {
       status: 'error',
       message: 'Check the fields for errors'
@@ -300,8 +292,6 @@ const submitable = computed<boolean>(() => {
 });
 
 onMounted(async () => {
-  firstValidated.value = false;
-
   await new Promise(resolve => setTimeout(resolve, 1));
   if (!operationElement.value) {
     return;
@@ -382,20 +372,6 @@ const deleteFromGroup = async (groupName: string, index: number) => {
   };
   isAddingOrDeleting = false;
 };
-
-let operationInitialized = false;
-
-watch(
-  operationValues,
-  () => {
-    if (!operationInitialized) {
-      operationInitialized = true;
-    } else {
-      firstValidated.value = true;
-    }
-  },
-  { deep: true }
-);
 
 const validateAll = debounce(() => {
   for (const key in refs) {

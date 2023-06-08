@@ -297,7 +297,12 @@ export type OperationItem = {
 export type OperationStatus = {
   message?: string;
   fieldMessages?: Record<string, string>;
-  status: 'not validated' | 'ok' | 'error' | 'fatal error';
+  status:
+    | 'not validated'
+    | 'ok'
+    | 'error'
+    | 'initialization error'
+    | 'fatal error';
 };
 
 export type ColumnDetailState = {

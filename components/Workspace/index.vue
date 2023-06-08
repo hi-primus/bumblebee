@@ -953,7 +953,24 @@ function prepareOperationValuesWithOperation(
 }
 
 const operationValues = ref<Partial<PayloadWithOptions>>({});
+
 provide('operation-values', operationValues);
+
+let operationInitialized = false;
+
+const firstValidated = ref(false);
+
+watch(
+  operationValues,
+  () => {
+    if (!operationInitialized) {
+      operationInitialized = true;
+    } else {
+      firstValidated.value = true;
+    }
+  },
+  { deep: true }
+);
 
 const triggerOperationValues = computed<Partial<PayloadWithOptions>>(() => {
   const payload = operationValues.value;
@@ -1021,6 +1038,7 @@ const operationActions: OperationActions = {
     inputPayload = null,
     changeTab = true
   ) {
+    firstValidated.value = true;
     try {
       if (appStatus.value === 'ready') {
         appStatus.value = 'busy';
@@ -1124,6 +1142,8 @@ const operationActions: OperationActions = {
   },
   cancelOperation: async function (restoreInactive = false) {
     console.info('Operation cancelled');
+
+    firstValidated.value = false;
     previewOperationThrottled.cancel();
     dataframeLayout.value?.clearChunks(true, false);
     // const editing = operationValues.value.options?.editing;
@@ -1152,6 +1172,7 @@ const operationActions: OperationActions = {
     payload?: Partial<PayloadWithOptions>
   ) {
     console.info('Operation selected', operation);
+    firstValidated.value = false;
     if (!operation) {
       operationActions.cancelOperation(false);
     }
@@ -1169,24 +1190,58 @@ const operationActions: OperationActions = {
 
     // TODO: add a loading state to the sidebar
 
-    let preparedOperationValues = prepareOperationValuesWithOperation(
-      payload,
-      operation || undefined
-    );
+    try {
+      let preparedOperationValues = prepareOperationValuesWithOperation(
+        payload,
+        operation || undefined
+      );
 
-    if (operation && typeof operation === 'object' && operation.init) {
-      preparedOperationValues = await operation.init({
-        ...preparedOperationValues,
-        app: getAppProperties()
-      } as OperationPayload<PayloadWithOptions>);
-    }
+      if (operation && typeof operation === 'object' && operation.init) {
+        preparedOperationValues = await operation.init({
+          ...preparedOperationValues,
+          app: getAppProperties()
+        } as OperationPayload<PayloadWithOptions>);
+      }
 
-    operationValues.value = preparedOperationValues;
+      operationValues.value = preparedOperationValues;
 
-    if (operationValues.value.options?.usesInputCols && payload?.cols) {
-      selection.value = {
-        columns: payload.cols as string[]
-      };
+      if (operationValues.value.options?.usesInputCols && payload?.cols) {
+        selection.value = {
+          columns: payload.cols as string[]
+        };
+      }
+    } catch (exceptionError) {
+      console.error('Error initializing operation.', exceptionError);
+
+      if (appStatus.value === 'busy') {
+        appStatus.value = 'ready';
+      }
+
+      let err = exceptionError;
+
+      if (typeof err === 'string') {
+        err = new Error(err);
+      }
+
+      if (err instanceof Error) {
+        const message = (
+          err.message
+            .split('\n')
+            .filter(l => l)
+            .pop() || ''
+        )
+          .split('Exception: ')
+          .pop();
+        operationStatus.value = {
+          message,
+          status: 'initialization error'
+        };
+      } else {
+        operationStatus.value = {
+          message: 'Error initializing operation',
+          status: 'initialization error'
+        };
+      }
     }
   }
 };
@@ -1535,12 +1590,15 @@ const previewOperationThrottled = throttleOnce(
         )
           .split('Exception: ')
           .pop();
-        operationStatus.value = {
-          message,
-          fieldMessages: err instanceof FieldsError ? err.fieldMessages : {},
-          status: 'error'
-        };
-      } else {
+
+        if (firstValidated.value) {
+          operationStatus.value = {
+            message,
+            fieldMessages: err instanceof FieldsError ? err.fieldMessages : {},
+            status: 'error'
+          };
+        }
+      } else if (firstValidated.value) {
         operationStatus.value = {
           message: 'Error executing preview operation',
           status: 'error'
