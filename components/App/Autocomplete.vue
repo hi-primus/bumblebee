@@ -100,7 +100,7 @@
         @after-leave="leave"
       >
         <ComboboxOptions
-          class="absolute z-[4] mt-1 max-h-60 min-w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg sm:text-sm"
+          class="absolute z-[4] mt-1 max-h-60 min-w-full max-w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg sm:text-sm"
         >
           <div
             v-if="filteredOptions && !filteredOptions.length && search !== ''"
