@@ -4429,16 +4429,16 @@ export const operationCreators: Record<string, OperationCreator> = {
             const date = new Date(
               model.last_updated_timestamp
             ).toLocaleString();
-            let name = model.tags.name || model.name;
-            if (name.startsWith(payload.app.session?.workspace?.id + '__')) {
-              name = name.replace(
-                payload.app.session?.workspace?.id + '__',
-                ''
-              );
+            let name = model.tags.model_name || model.name;
+            if (
+              payload.app.session?.workspace?.id &&
+              name.startsWith(payload.app.session.workspace.id + '__')
+            ) {
+              name = name.replace(payload.app.session.workspace.id + '__', '');
             }
             return {
-              value: name,
-              text: `${model.name} (${date})`
+              value: model.name,
+              text: `${name} (${date})`
             };
           });
         },
@@ -4485,7 +4485,8 @@ export const operationCreators: Record<string, OperationCreator> = {
             value: model.version,
             text: `${model.version} (${new Date(
               model.last_updated_timestamp
-            ).toLocaleString()})`
+            ).toLocaleString()})`,
+            data: model
           }));
 
           if (
@@ -4514,6 +4515,39 @@ export const operationCreators: Record<string, OperationCreator> = {
         label: 'Output column',
         type: 'string',
         defaultValue: 'prediction'
+      },
+      {
+        name: 'versionInfo',
+        class: 'whitespace-pre-wrap !text-left',
+        label: payload => {
+          const info = payload.modelVersions.find(
+            version => version.value === payload.modelVersion
+          ).data;
+          if (!info) {
+            return '';
+          }
+          return (
+            `Version: ${info.version}\n` +
+            `Created: ${new Date(info.creation_timestamp).toLocaleString()}\n` +
+            `Updated: ${new Date(
+              info.last_updated_timestamp
+            ).toLocaleString()}\n` +
+            `F1: ${info.tags.f1}\n` +
+            `MCC: ${info.tags.mcc}\n` +
+            `Accuracy: ${info.tags.accuracy}\n` +
+            `Time Taken (sec): ${info.tags.time_taken_sec}\n` +
+            `AUC: ${info.tags.auc}\n` +
+            `Precision: ${info.tags.precision}\n` +
+            `Kappa: ${info.tags.kappa}`
+          );
+        },
+        hidden: payload => {
+          return !payload.modelVersions.find(
+            version => version.value === payload.modelVersion
+          );
+        },
+
+        type: 'message'
       }
     ],
     shortcut: 'mp'
