@@ -4522,7 +4522,7 @@ export const operationCreators: Record<string, OperationCreator> = {
         label: payload => {
           const info = payload.modelVersions.find(
             version => version.value === payload.modelVersion
-          ).data;
+          )?.data;
           if (!info) {
             return '';
           }
