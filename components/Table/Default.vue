@@ -436,6 +436,12 @@ const visibleRows = computed(() => {
               if (rowValues[inputColumn] === rowValues[previewColumn]) {
                 return;
               }
+              if (
+                typeof rowValues[inputColumn] !== 'string' ||
+                typeof rowValues[previewColumn] !== 'string'
+              ) {
+                return;
+              }
               const parts = diffChars(
                 rowValues[inputColumn] as string,
                 rowValues[previewColumn] as string
