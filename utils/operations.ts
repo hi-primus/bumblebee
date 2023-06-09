@@ -4349,11 +4349,13 @@ export const operationCreators: Record<string, OperationCreator> = {
         modelName: string;
         modelVersion: string;
         outputCol: string;
+        includeScore: boolean;
       }>
     ): string => {
       return (
         `b{Predict}` +
         `\nusing gr{${payload.modelName}} with version gr{${payload.modelVersion}}` +
+        (payload.includeScore ? `\nand gr{include} score column` : '') +
         `\nto bl{${payload.outputCol || 'prediction'}}` +
         inDataframeContent(payload)
       );
@@ -4363,6 +4365,7 @@ export const operationCreators: Record<string, OperationCreator> = {
         modelName: string;
         modelVersion: string;
         outputCol: string;
+        includeScore: boolean;
       }>
     ): Promise<Source> => {
       payload.outputCol = payload.outputCol || 'prediction';
@@ -4411,8 +4414,10 @@ export const operationCreators: Record<string, OperationCreator> = {
         : payload.outputCol;
 
       return await payload.app.blurr.runCode(
-        `${newDf.name}['${outputColName}'] = ${resultDf.name}.data['prediction_label'].values` +
-          '\n' +
+        `${newDf.name}['${outputColName}'] = ${resultDf.name}.data['prediction_label'].values\n` +
+          (payload.includeScore
+            ? `${newDf.name}['${outputColName}_score'] = ${resultDf.name}.data['prediction_score'].values\n`
+            : '') +
           `${newDf.name}`
       );
     },
@@ -4515,6 +4520,11 @@ export const operationCreators: Record<string, OperationCreator> = {
         label: 'Output column',
         type: 'string',
         defaultValue: 'prediction'
+      },
+      {
+        name: 'includeScore',
+        label: 'Include score column',
+        type: 'boolean'
       },
       {
         name: 'versionInfo',
