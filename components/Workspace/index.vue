@@ -1198,9 +1198,12 @@ const operationActions: OperationActions = {
 
       if (operation && typeof operation === 'object' && operation.init) {
         preparedOperationValues = await operation.init({
-          ...preparedOperationValues,
+          ...fillColumns(
+            preparedOperationValues as OperationPayload<PayloadWithOptions>,
+            selection.value
+          ),
           app: getAppProperties()
-        } as OperationPayload<PayloadWithOptions>);
+        });
       }
 
       operationValues.value = preparedOperationValues;

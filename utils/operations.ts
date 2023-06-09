@@ -4116,6 +4116,16 @@ export const operationCreators: Record<string, OperationCreator> = {
     init: async (payload: OperationPayload<PayloadWithOptions>) => {
       const df = payload.source;
       payload.fileName = (await df.getMeta('file_name')) || df.name;
+      if (payload.cols?.[0]) {
+        const usesFrequency = (
+          await df.getMeta(`profile.columns.${payload.cols[0]}.stats.frequency`)
+        )?.length;
+        if (usesFrequency) {
+          payload.modelType = 'classification';
+        } else {
+          payload.modelType = 'regression';
+        }
+      }
       payload.models = await getProjectModels(payload);
       payload.preparationCode = await payload.app.getOperationsCode(
         payload.source.name,
