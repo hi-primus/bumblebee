@@ -9,9 +9,16 @@
   >
     <form
       ref="operationElement"
-      class="operation-form flex flex-wrap pt-5 px-2 gap-y-5"
+      class="operation-form relative flex flex-wrap pt-5 px-2 gap-y-5"
       @submit.prevent="submit"
     >
+      <div
+        v-if="operationValues?.operationStatus === 'loading'"
+        class="absolute flex items-center justify-center w-full h-full bg-white top-0 left-0 opacity-50 z-10"
+      >
+        <Icon :path="mdiLoading" class="w-12 h-12 text-neutral animate-spin" />
+      </div>
+
       <AppAutocomplete
         v-if="options?.usesInputCols"
         v-model="columns"
@@ -178,7 +185,7 @@
   </component>
 </template>
 <script setup lang="ts">
-import { mdiClose, mdiPlus } from '@mdi/js';
+import { mdiClose, mdiLoading, mdiPlus } from '@mdi/js';
 import { ComputedRef, Ref } from 'vue';
 
 import Popup from '@/components/Popup/index.vue';

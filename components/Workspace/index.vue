@@ -1184,9 +1184,16 @@ const operationActions: OperationActions = {
     state.value = operation || 'operations';
     sidebar.value = 'operations';
 
+    const usesInit =
+      operation && typeof operation === 'object' && operation.init;
+
     // awaits to allow the sidebar to be rendered
 
     await new Promise(resolve => setTimeout(resolve, 0));
+
+    if (usesInit) {
+      operationValues.value.operationStatus = 'loading';
+    }
 
     // TODO: add a loading state to the sidebar
 
@@ -1196,7 +1203,7 @@ const operationActions: OperationActions = {
         operation || undefined
       );
 
-      if (operation && typeof operation === 'object' && operation.init) {
+      if (usesInit && operation?.init) {
         preparedOperationValues = await operation.init({
           ...fillColumns(
             preparedOperationValues as OperationPayload<PayloadWithOptions>,
@@ -1246,6 +1253,7 @@ const operationActions: OperationActions = {
         };
       }
     }
+    operationValues.value.operationStatus = 'ready';
   }
 };
 
