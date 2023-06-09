@@ -39,8 +39,8 @@
         </div>
         <IconButton
           v-if="tab.editable && index === selected"
-          class="min-w-4 h-4 -ml-1 outline-offset-2"
-          :path="mdiCursorText"
+          class="min-w-4 h-4 -ml-[0.33em] -mr-[0.5em] outline-offset-2"
+          :path="mdiPencil"
           @click.stop.prevent="
             tab.editable && index === selected && renameTab(index)
           "
@@ -67,7 +67,7 @@
 </template>
 
 <script setup lang="ts">
-import { mdiClose, mdiCursorText, mdiPlus } from '@mdi/js';
+import { mdiClose, mdiPencil, mdiPlus } from '@mdi/js';
 import { PropType } from 'vue';
 
 import { Tab } from '@/types/app';
