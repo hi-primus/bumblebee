@@ -4214,9 +4214,20 @@ export const operationCreators: Record<string, OperationCreator> = {
               const date = new Date(
                 model.last_updated_timestamp
               ).toLocaleString();
+
+              let name = model.tags.model_name || model.name;
+              if (
+                payload.app.session?.workspace?.id &&
+                name.startsWith(payload.app.session.workspace.id + '__')
+              ) {
+                name = name.replace(
+                  payload.app.session.workspace.id + '__',
+                  ''
+                );
+              }
               return {
                 value: model.name,
-                text: `${model.name} (${date})`
+                text: `${name} (${date})`
               };
             }
           );
@@ -4408,8 +4419,15 @@ export const operationCreators: Record<string, OperationCreator> = {
             const date = new Date(
               model.last_updated_timestamp
             ).toLocaleString();
+            let name = model.tags.name || model.name;
+            if (name.startsWith(payload.app.session?.workspace?.id + '__')) {
+              name = name.replace(
+                payload.app.session?.workspace?.id + '__',
+                ''
+              );
+            }
             return {
-              value: model.name,
+              value: name,
               text: `${model.name} (${date})`
             };
           });

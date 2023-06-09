@@ -145,7 +145,10 @@ export type AppProperties = {
 export type ModelResponse = {
   last_updated_timestamp: number;
   name: string;
-  tags: Record<string, string>;
+  tags: {
+    name: string;
+    [key: string]: string;
+  };
   latest_versions: {
     version: string;
     last_updated_timestamp: number;
