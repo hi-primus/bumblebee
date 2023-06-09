@@ -511,7 +511,7 @@ function getOperations(
 
       const firstOperation = operationsToReturn[0];
 
-      if (firstOperation.payload.options.usesInputDataframe) {
+      if (firstOperation?.payload.options.usesInputDataframe) {
         const source = firstOperation.payload.source;
         if (source?.name) {
           currentDfName = source.name;
