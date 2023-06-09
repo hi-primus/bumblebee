@@ -4404,7 +4404,8 @@ export const operationCreators: Record<string, OperationCreator> = {
         JSON.parse(response.prediction)
       );
 
-      const newDf = await df.copy({
+      // shallow copy
+      const newDf = await df.cols.select({
         target: payload.target,
         requestOptions: payload.requestOptions
       });
