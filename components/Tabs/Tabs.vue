@@ -30,11 +30,21 @@
           v-else
           class="ellipsis"
           :class="{ 'opacity-60': !tab?.label }"
-          @dblclick="tab.editable && onDoubleClick(index)"
-          @keydown.r="onDoubleClick(index)"
+          @click.prevent="
+            tab.editable && index === selected && renameTab(index)
+          "
+          @keydown.r="tab.editable && index === selected && renameTab(index)"
         >
           {{ tab?.label || defaultLabel }}
         </div>
+        <IconButton
+          v-if="tab.editable && index === selected"
+          class="min-w-4 h-4 -ml-1 outline-offset-2"
+          :path="mdiCursorText"
+          @click.stop.prevent="
+            tab.editable && index === selected && renameTab(index)
+          "
+        />
         <IconButton
           v-if="closable"
           class="min-w-4 h-4 mr-[-2px] outline-offset-2"
@@ -57,7 +67,7 @@
 </template>
 
 <script setup lang="ts">
-import { mdiClose, mdiPlus } from '@mdi/js';
+import { mdiClose, mdiCursorText, mdiPlus } from '@mdi/js';
 import { PropType } from 'vue';
 
 import { Tab } from '@/types/app';
@@ -98,7 +108,7 @@ const emit = defineEmits<Emits>();
 
 const editing = ref(-1);
 
-async function onDoubleClick(index: number) {
+async function renameTab(index: number) {
   if (props.renamable) {
     editing.value = index;
     await nextTick();
