@@ -1338,6 +1338,8 @@ function loadDataSource(dataframeIndex: number) {
 
 provide('operation-actions', operationActions);
 
+const enablePreviewTrigger = ref(true);
+
 let cancelPreview = false;
 
 let lastPayload: OperationPayload<PayloadWithOptions> | null = null;
@@ -1479,12 +1481,49 @@ const previewOperationThrottled = throttleOnce(
 
       checkPreviewCancel();
 
-      const result = await operation.action({
+      const previewPayload = {
         ...payload,
         source: payload.source,
         target: 'operation_preview_' + (payload.source?.name || 'load_df'),
         app: getAppProperties()
+      };
+
+      const result = await operation.action(previewPayload);
+
+      (
+        [
+          'allColumns',
+          'allDataframes',
+          'app',
+          'cols',
+          'otherDataframes',
+          'requestOptions',
+          'options'
+        ] as const
+      ).forEach(key => {
+        delete previewPayload[key];
       });
+
+      enablePreviewTrigger.value = false;
+
+      await nextTick();
+
+      const newOperationValues = {
+        ...operationValues.value,
+        ...previewPayload
+      };
+
+      if (!compareObjects(operationValues.value, newOperationValues)) {
+        console.log(
+          '[DEBUG] Assigning new values to operation payload',
+          previewPayload
+        );
+        operationValues.value = newOperationValues;
+      }
+
+      await nextTick();
+
+      enablePreviewTrigger.value = true;
 
       if (!useSample) {
         previewColumnNames = (await result.cols.names()).filter(title =>
@@ -1653,7 +1692,10 @@ let previousTriggerOperationValues = null;
 watch(
   () => triggerOperationValues.value,
   values => {
-    if (!compareObjects(values, previousTriggerOperationValues)) {
+    if (
+      !compareObjects(values, previousTriggerOperationValues) &&
+      enablePreviewTrigger.value
+    ) {
       previousTriggerOperationValues = deepClone(values);
       previewOperation();
     }
