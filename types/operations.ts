@@ -127,6 +127,7 @@ export interface BasicField {
     | 'file'
     | 'hidden'
     | 'message'
+    | 'table'
   >;
   key?: string;
   placeholder?: PayloadCallbackOr<string>;

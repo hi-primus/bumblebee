@@ -141,6 +141,11 @@
   >
     {{ resolve(field.defaultValue) }}
   </div>
+  <InfoTable
+    v-else-if="resolve(field?.type) === 'table'"
+    :data="resolve(field.defaultValue)"
+    :class="fieldClass"
+  />
   <div v-else-if="false" class="w-full text-danger py-2">
     Error creating field of type {{ resolve(field?.type) }}
   </div>
