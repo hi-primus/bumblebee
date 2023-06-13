@@ -220,7 +220,16 @@ const value = computed({
 
 const resolve = <T>(value: PayloadCallbackOr<T>): T => {
   if (value instanceof Function) {
-    return value(operationValues.value, props.subfieldIndex);
+    try {
+      return value(operationValues.value, props.subfieldIndex);
+    } catch (err) {
+      console.error('Error getting value from callback', {
+        value,
+        payload: operationValues.value,
+        subfieldIndex: props.subfieldIndex
+      });
+    }
+    return null as T;
   }
   return value;
 };
