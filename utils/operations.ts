@@ -530,7 +530,7 @@ export const operationCreators: Record<string, OperationCreator> = {
         name: 'preview-warning',
         type: 'message',
         class: '!text-warning-darker',
-        label:
+        defaultValue:
           'Preview shows a subset of rows, final result may contain additional data'
       }
     ],

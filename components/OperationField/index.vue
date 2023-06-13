@@ -139,7 +139,7 @@
     :class="fieldClass"
     class="w-full text-neutral-lighter font-bold text-center px-4 text-sm"
   >
-    {{ resolve(field.label) }}
+    {{ resolve(field.defaultValue) }}
   </div>
   <div v-else-if="false" class="w-full text-danger py-2">
     Error creating field of type {{ resolve(field?.type) }}
