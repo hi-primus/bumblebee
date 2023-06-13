@@ -9,7 +9,7 @@
   >
     <form
       ref="operationElement"
-      class="operation-form relative flex flex-wrap pt-5 px-2 gap-y-5"
+      class="operation-form relative flex flex-wrap pt-5 pb-5 px-2 gap-y-5"
       @submit.prevent="submit"
     >
       <div

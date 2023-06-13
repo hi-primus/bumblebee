@@ -16,7 +16,10 @@
         @click="closeSidebar"
       />
     </div>
-    <OperationsOperation v-if="operation" :key="operation.name" />
+    <OperationsOperation
+    
+    class="flex-1 overflow-y-auto"
+    v-if="operation" :key="operation.name" />
     <div
       v-else-if="columnsInfo && sidebar === 'selection'"
       :key="columnsList"
