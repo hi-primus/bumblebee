@@ -70,6 +70,7 @@ export type OperationPayload<
   options: OperationOptions;
   app: AppProperties;
   requestOptions: RequestOptions;
+  isUsingSample?: boolean;
 } & T;
 
 export type PayloadCallbackOr<T> =

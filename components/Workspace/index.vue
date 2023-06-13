@@ -1414,6 +1414,7 @@ const previewOperationThrottled = throttleOnce(
 
         const firstSampleDataframe = (await operation.action({
           ...payload,
+          isUsingSample: true,
           source: firstSampleSource,
           target: firstSampleSource.name,
           app: getAppProperties()
@@ -1483,6 +1484,7 @@ const previewOperationThrottled = throttleOnce(
 
       const previewPayload = {
         ...payload,
+        isUsingSample: false,
         source: payload.source,
         target: 'operation_preview_' + (payload.source?.name || 'load_df'),
         app: getAppProperties()
@@ -1498,7 +1500,8 @@ const previewOperationThrottled = throttleOnce(
           'cols',
           'otherDataframes',
           'requestOptions',
-          'options'
+          'options',
+          'isUsingSample'
         ] as const
       ).forEach(key => {
         delete previewPayload[key];

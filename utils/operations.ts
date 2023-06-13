@@ -4353,7 +4353,7 @@ export const operationCreators: Record<string, OperationCreator> = {
       usesInputCols: false,
       usesOutputCols: false,
       usesInputDataframe: true,
-      preview: 'custom no-sample'
+      preview: 'custom'
     },
     init: async (payload: OperationPayload<PayloadWithOptions>) => {
       payload.models = await getProjectModels(payload);
@@ -4390,6 +4390,7 @@ export const operationCreators: Record<string, OperationCreator> = {
         modelVersion: string;
         outputCol: string;
         includeScore: boolean;
+        uploadedFilePath: string;
         driftResponse: any;
       }>
     ): Promise<Source> => {
@@ -4400,21 +4401,42 @@ export const operationCreators: Record<string, OperationCreator> = {
       }
 
       const df = payload.source;
-      const fileName: string = await df.getMeta('file_name');
-      const arrayBuffer = await df.saveCsv();
-      const fileResponse = await payload.app.uploadFile(arrayBuffer, fileName);
+
+      let uploadedFilePath: string;
+
+      if (payload.isUsingSample || !payload.uploadedFilePath) {
+        console.log('[DEBUG] Uploading sample for prediction');
+        const fileName: string = await df.getMeta('file_name');
+        const arrayBuffer = await df.saveCsv();
+
+        const fileResponse = await payload.app.uploadFile(
+          arrayBuffer,
+          fileName
+        );
+        // TODO: Delete file after prediction
+
+        if (fileResponse.error) {
+          throw new Error(fileResponse.error?.message || 'Unknown error');
+        }
+
+        uploadedFilePath = fileResponse.filepath;
+
+        if (!payload.isUsingSample) {
+          payload.uploadedFilePath = uploadedFilePath;
+        }
+      } else {
+        uploadedFilePath = payload.uploadedFilePath;
+      }
 
       const response = await payload.app.post<{
         prediction?: string;
         detail?: string;
       }>('/predict', {
-        data_uri: fileResponse.filepath,
+        data_uri: uploadedFilePath,
         model_type: 'classification',
         version: payload.modelVersion,
         model_name: payload.modelName
       });
-
-      // TODO: Delete file after prediction
 
       if (response.detail) {
         throw new Error(response.detail);
@@ -4424,8 +4446,6 @@ export const operationCreators: Record<string, OperationCreator> = {
         console.error(response);
         throw new Error('Result is empty');
       }
-
-      payload.driftResponse = JSON.parse(response.drift);
 
       const resultDf = await payload.app.blurr.createDataframe(
         JSON.parse(response.prediction)
@@ -4481,6 +4501,7 @@ export const operationCreators: Record<string, OperationCreator> = {
           }
 
           payload.modelVersions = [];
+          payload.uploadedFilePath = '';
 
           const models = payload.models as ModelResponse[];
 
@@ -4541,6 +4562,62 @@ export const operationCreators: Record<string, OperationCreator> = {
         defaultValue: 'latest',
         options: (payload: OperationPayload) => {
           return payload.modelVersions as { value: string; text: string }[];
+        },
+        onChange: async (payload, value, oldValue) => {
+          if (!payload.modelName || !value || value === 'latest') {
+            return payload;
+          }
+
+          const newDriftRequest = `${payload.modelName} ${payload.modelVersion}`;
+
+          if (
+            newDriftRequest === payload.driftRequest &&
+            payload.uploadedFilePath
+          ) {
+            return payload;
+          }
+
+          payload.driftRequest = newDriftRequest;
+
+          console.log(
+            `[DEBUG] Uploading dataset for drifting and prediction '${newDriftRequest}'`
+          );
+
+          const df = payload.source;
+
+          const fileName: string = await df.getMeta('file_name');
+          const arrayBuffer = await df.saveCsv();
+
+          const fileResponse = await payload.app.uploadFile(
+            arrayBuffer,
+            fileName
+          );
+
+          payload.uploadedFilePath = fileResponse.filepath;
+
+          const response = await payload.app.post<{
+            prediction?: string;
+            detail?: string;
+          }>('/drift', {
+            data_uri: fileResponse.filepath,
+            version: value,
+            model_name: payload.modelName,
+            model_version: payload.modelVersion
+          });
+
+          if (response.detail) {
+            console.error('Error getting drift', response.detail);
+            payload.app.addToast({
+              type: 'error',
+              title: 'Error getting drift'
+            });
+          }
+
+          if (response.drift) {
+            payload.driftResponse = JSON.parse(response.drift);
+          }
+
+          return payload;
         }
       },
       {
