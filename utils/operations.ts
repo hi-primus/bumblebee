@@ -4116,16 +4116,33 @@ export const operationCreators: Record<string, OperationCreator> = {
     init: async (payload: OperationPayload<PayloadWithOptions>) => {
       const df = payload.source;
       payload.fileName = (await df.getMeta('file_name')) || df.name;
+
+      const columnsProfile = await df.getMeta('profile.columns');
+
       if (payload.cols?.[0]) {
-        const usesFrequency = (
-          await df.getMeta(`profile.columns.${payload.cols[0]}.stats.frequency`)
-        )?.length;
+        const usesFrequency =
+          columnsProfile[payload.cols[0]]?.stats?.frequency?.length;
         if (usesFrequency) {
           payload.modelType = 'classification';
         } else {
           payload.modelType = 'regression';
         }
       }
+
+      payload.numericalCols = payload.allColumns.filter(col => {
+        return (
+          col !== payload.cols[0] &&
+          !columnsProfile[col]?.stats?.frequency?.length
+        );
+      });
+
+      payload.categoricalCols = payload.allColumns.filter(col => {
+        return (
+          col !== payload.cols[0] &&
+          columnsProfile[col]?.stats?.frequency?.length
+        );
+      });
+
       payload.models = await getProjectModels(payload);
       payload.preparationCode = await payload.app.getOperationsCode(
         payload.source.name,
@@ -4142,6 +4159,8 @@ export const operationCreators: Record<string, OperationCreator> = {
         fileName: string;
         algorithms: string[];
         preparationCode: string;
+        numericalCols: string[];
+        categoricalCols: string[];
       }>
     ): Promise<Source> => {
       const df = payload.source;
@@ -4181,7 +4200,9 @@ export const operationCreators: Record<string, OperationCreator> = {
           model_type: payload.modelType,
           project_id: payload.app.session?.project.id,
           workspace_id: payload.app.session?.workspace.id,
-          preparation_code: payload.preparationCode
+          preparation_code: payload.preparationCode,
+          categorical_features: payload.categoricalCols,
+          numerical_features: payload.numericalCols
         })
         .then(response => {
           // TODO: Delete file after experiment is created
@@ -4290,7 +4311,10 @@ export const operationCreators: Record<string, OperationCreator> = {
             payload.algorithms = (payload.algorithms || []).filter(algo =>
               algorithmsOptions[newValue].find(algo2 => algo2.value === algo)
             );
-            if (payload.algorithms.length === 0) {
+            if (
+              payload.algorithms.length === 0 &&
+              algorithmsOptions[newValue]
+            ) {
               payload.algorithms = algorithmsOptions[newValue]
                 .filter(algo => algo.default)
                 .map(algo => algo.value);
@@ -4366,6 +4390,7 @@ export const operationCreators: Record<string, OperationCreator> = {
         modelVersion: string;
         outputCol: string;
         includeScore: boolean;
+        driftResponse: any;
       }>
     ): Promise<Source> => {
       payload.outputCol = payload.outputCol || 'prediction';
@@ -4399,6 +4424,8 @@ export const operationCreators: Record<string, OperationCreator> = {
         console.error(response);
         throw new Error('Result is empty');
       }
+
+      payload.driftResponse = JSON.parse(response.drift);
 
       const resultDf = await payload.app.blurr.createDataframe(
         JSON.parse(response.prediction)
@@ -4528,37 +4555,92 @@ export const operationCreators: Record<string, OperationCreator> = {
         type: 'boolean'
       },
       {
-        name: 'versionInfo',
-        class: 'whitespace-pre-wrap !text-left',
-        label: payload => {
-          const info = payload.modelVersions.find(
+        name: 'performanceTable',
+        defaultValue: payload => {
+          const info = (payload.modelVersions || []).find(
             version => version.value === payload.modelVersion
           )?.data;
-          if (!info) {
-            return '';
+
+          if (!info?.tags) {
+            return null;
           }
-          return (
-            `Version: ${info.version}\n` +
-            `Created: ${new Date(info.creation_timestamp).toLocaleString()}\n` +
-            `Updated: ${new Date(
-              info.last_updated_timestamp
-            ).toLocaleString()}\n` +
-            `F1: ${info.tags.f1}\n` +
-            `MCC: ${info.tags.mcc}\n` +
-            `Accuracy: ${info.tags.accuracy}\n` +
-            `Time Taken (sec): ${info.tags.time_taken_sec}\n` +
-            `AUC: ${info.tags.auc}\n` +
-            `Precision: ${info.tags.precision}\n` +
-            `Kappa: ${info.tags.kappa}`
-          );
+          return {
+            title: 'Performance',
+            header: ['Metric', 'Value'],
+            values: [
+              [`F1`, info.tags.f1],
+              [`MCC`, info.tags.mcc],
+              [`Accuracy`, info.tags.accuracy],
+              [`Time Taken (sec)`, info.tags.time_taken_sec],
+              [`AUC`, info.tags.auc],
+              [`Precision`, info.tags.precision],
+              [`Kappa`, info.tags.kappa]
+            ]
+            // `Version: ${info.version}\n` +
+            // `Created: ${new Date(info.creation_timestamp).toLocaleString()}\n` +
+            // `Updated: ${new Date(
+            //   info.last_updated_timestamp
+            // ).toLocaleString()}\n` +
+          };
         },
         hidden: payload => {
-          return !payload.modelVersions.find(
+          return !(payload.modelVersions || []).find(
             version => version.value === payload.modelVersion
           );
         },
 
-        type: 'message'
+        type: 'table'
+      },
+      {
+        name: 'driftTable',
+        defaultValue: payload => {
+          const info = payload.driftResponse;
+
+          if (!info?.metrics?.length) {
+            return null;
+          }
+
+          const dataDriftTable = info.metrics.find(
+            metric => metric.metric === 'DataDriftTable'
+          )?.result;
+
+          if (!dataDriftTable || !('number_of_columns' in dataDriftTable)) {
+            return null;
+          }
+
+          const notDriftedColumns =
+            dataDriftTable.number_of_columns -
+            dataDriftTable.number_of_drifted_columns;
+
+          return {
+            title: 'Drift',
+            topContent: `${dataDriftTable.number_of_columns} columns (${dataDriftTable.number_of_drifted_columns} drifted, ${notDriftedColumns} not drifted)`,
+            header: ['Column', 'Score', 'Drift'],
+            values: Object.values(dataDriftTable.drift_by_columns).map(col => [
+              col.column_name,
+              col.drift_score,
+              col.drift_detected ? 'True' : 'False'
+            ])
+          };
+        },
+        hidden: payload => {
+          const info = payload.driftResponse;
+
+          if (!info?.metrics?.length) {
+            return true;
+          }
+
+          const dataDriftTable = info.metrics.find(
+            metric => metric.metric === 'DataDriftTable'
+          )?.result;
+
+          if (!dataDriftTable) {
+            return true;
+          }
+          return false;
+        },
+
+        type: 'table'
       }
     ],
     shortcut: 'mp'
