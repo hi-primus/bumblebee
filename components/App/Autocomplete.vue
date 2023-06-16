@@ -40,7 +40,7 @@
             <Icon
               :path="mdiClose"
               class="close-icon"
-              @click="removeFromSelected(index)"
+              @click.prevent="removeFromSelected(index)"
             />
           </span>
           <ComboboxInput

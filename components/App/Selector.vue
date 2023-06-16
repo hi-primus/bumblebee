@@ -40,7 +40,7 @@
               <Icon
                 :path="mdiClose"
                 class="close-icon"
-                @click="selectedOption.splice(index, 1)"
+                @click.prevent="selectedOption.splice(index, 1)"
               />
             </span>
           </template>
