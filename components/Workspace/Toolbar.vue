@@ -108,10 +108,10 @@
       </ul>
     </Popup>
     <Popup
-      v-if="showSettings"
+      v-if="show === 'settings'"
       title="Settings"
       class="w-[calc(10vw+380px)]"
-      @close="showSettings = false"
+      @close="show = null"
     >
       <form ref="settingsFormElement" autocomplete="none">
         <AppInput
@@ -128,16 +128,53 @@
       <div
         class="w-full p-2 flex gap-2 justify-center items-center font-bold text-md"
       >
-        <template v-if="updatedSettings">
+        <template v-if="settingsStatus === 'updated'">
           <span class="text-success-dark">Settings updated</span>
           <Icon class="min-w-5 h-5 text-success-dark" :path="mdiCheck" />
         </template>
-        <template v-else>
+        <template v-else-if="settingsStatus === 'updating'">
           <span class="text-neutral-lighter">Updating settings</span>
           <Icon
             class="min-w-5 h-5 text-neutral-lighter animate-spin"
             :path="mdiLoading"
           />
+        </template>
+        <template v-else-if="errorStatus">
+          <span class="text-danger-dark">Error updating settings</span>
+          <Icon class="min-w-5 h-5 text-danger-dark" :path="mdiAlert" />
+          <span class="text-danger-dark text-sm w-full text-center">{{
+            settingsStatus
+          }}</span>
+        </template>
+      </div>
+    </Popup>
+    <Popup
+      v-if="show === 'access'"
+      title="Share workspace"
+      class="w-[calc(10vw+380px)]"
+      @close="show = null"
+    >
+      <SettingsAccess @update-status="settingsStatus = $event" />
+      <div
+        class="w-full p-2 flex flex-wrap gap-2 justify-center items-center font-bold text-md"
+      >
+        <template v-if="settingsStatus === 'updated'">
+          <span class="text-success-dark">Settings updated</span>
+          <Icon class="min-w-5 h-5 text-success-dark" :path="mdiCheck" />
+        </template>
+        <template v-else-if="settingsStatus === 'updating'">
+          <span class="text-neutral-lighter">Updating settings</span>
+          <Icon
+            class="min-w-5 h-5 text-neutral-lighter animate-spin"
+            :path="mdiLoading"
+          />
+        </template>
+        <template v-else-if="errorStatus">
+          <span class="text-danger-dark">Error updating settings</span>
+          <Icon class="min-w-5 h-5 text-danger-dark" :path="mdiAlert" />
+          <span class="text-danger-dark text-sm w-full text-center">{{
+            settingsStatus
+          }}</span>
         </template>
       </div>
     </Popup>
@@ -226,7 +263,15 @@
           {
             text: 'Settings',
             action: () => {
-              showSettings = !showSettings;
+              show = 'settings';
+              settingsStatus = 'updated';
+            }
+          },
+          {
+            text: 'Share workspace',
+            action: () => {
+              show = 'access';
+              settingsStatus = 'updated';
             }
           },
           {
@@ -249,6 +294,7 @@
 
 <script setup lang="ts">
 import {
+  mdiAlert,
   mdiCheck,
   mdiCodeTags,
   mdiDotsVertical,
@@ -283,11 +329,15 @@ const logout = () => {
 };
 
 const showCommands = ref(false);
-const showSettings = ref(false);
+const show = ref<'settings' | 'access' | null>(null);
 
 const appSettings = inject('app-settings') as Ref<AppSettings>;
 const localAppSettings = ref<AppSettings>({ ...appSettings.value });
-const updatedSettings = ref(true);
+const settingsStatus = ref<'updated' | 'updating' | Error>('updated');
+
+const errorStatus = computed(() => {
+  return settingsStatus.value instanceof Error;
+});
 
 const settingsFormElement = ref<HTMLElement | null>(null);
 
@@ -451,9 +501,9 @@ watch(
 );
 
 watch(
-  () => showSettings.value,
+  () => show.value,
   async () => {
-    if (showSettings.value) {
+    if (show.value === 'settings') {
       await new Promise(resolve => setTimeout(resolve, 0));
       if (settingsFormElement.value) {
         const inputs = settingsFormElement.value.getElementsByTagName(
@@ -588,12 +638,12 @@ const onKeyUp = (event: KeyboardEvent): void => {
 };
 
 const updateLocalAppSettings = () => {
-  updatedSettings.value = false;
+  settingsStatus.value = 'updating';
   updateAppSettings();
 };
 
 const updateAppSettings = debounce(() => {
-  updatedSettings.value = true;
+  settingsStatus.value = 'updated';
   appSettings.value = { ...localAppSettings.value };
   addToast({
     title: 'Settings updated',
