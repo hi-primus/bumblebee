@@ -6,7 +6,7 @@
     :class="containerClass"
   >
     <MenuButton as="template" @click.prevent="open && close()">
-      <slot></slot>
+      <slot :open="open" :close="close"></slot>
     </MenuButton>
     <MenuItems as="ul" :class="['dropdown-menu', attrClass]" :style="attrStyle">
       <MenuItem
