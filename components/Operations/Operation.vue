@@ -38,7 +38,10 @@
           :key="`${col}-output`"
           :model-value="operationValues?.outputCols?.[index] || ''"
           class="w-full"
-          :label="`Output column ${index + 1} (${col})`"
+          :label="
+            `Output column` +
+            (columns.length > 1 ? ` ${index + 1} (${col})` : '')
+          "
           :name="col"
           :placeholder="col"
           @update:model-value="updateOutputCol(index, $event)"
