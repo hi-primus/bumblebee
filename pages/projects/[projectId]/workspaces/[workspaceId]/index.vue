@@ -86,14 +86,22 @@ const workspaceQueryResult = useClientQuery<{
   id: route.params.workspaceId
 });
 
+let earlyCheck = true;
+let workspaceIsInitialized = false;
+
 watch(
   workspaceQueryResult.result,
   newValue => {
     if (newValue?.workspaces_by_pk) {
       workspaceName.value = newValue.workspaces_by_pk.name;
+      if (earlyCheck) {
+        earlyCheck = false;
+        return;
+      }
+      workspaceIsInitialized = true;
     }
-  },
-  { immediate: true }
+  }
+  // { immediate: true }
 );
 
 const { mutate: updateWorkspaceMutation } = useMutation(UPDATE_WORKSPACE);
@@ -102,13 +110,31 @@ const { mutate: updateWorkspaceInfoMutation } = useMutation(
   UPDATE_WORKSPACE_INFO
 );
 
+let updateData = {};
+
 async function updateWorkspace({ commands, tabs }) {
-  await updateWorkspaceMutation({
-    id: route.params.workspaceId,
-    commands,
-    tabs
-  });
+  if (!workspaceIsInitialized) {
+    return;
+  }
+  updateData = { commands, tabs };
+  await updateWorkspaceThrottled();
 }
+
+const updateWorkspaceThrottled = throttleOnce(
+  async function () {
+    await updateWorkspaceMutation({
+      id: route.params.workspaceId,
+      ...updateData
+    });
+    console.log('Workspace updated');
+    updateData = {};
+  },
+  {
+    limit: 500,
+    delay: 500,
+    cancellable: false
+  }
+);
 
 const updateWorkspaceName = async (newName: string) => {
   if (workspaceName.value === newName) {
@@ -143,9 +169,11 @@ provide('session', session);
 
 onMounted(() => {
   if (projectQueryResult.result.value) {
+    projectQueryResult.result.value = undefined;
     projectQueryResult.refetch();
   }
   if (workspaceQueryResult.result.value) {
+    workspaceQueryResult.result.value = undefined;
     workspaceQueryResult.refetch();
   }
 });
