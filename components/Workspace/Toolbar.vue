@@ -172,10 +172,15 @@
         <template v-else-if="errorStatus">
           <span class="text-danger-dark">Error updating settings</span>
           <Icon class="min-w-5 h-5 text-danger-dark" :path="mdiAlert" />
-          <span class="text-danger-dark text-sm w-full text-center">{{
-            settingsStatus
-          }}</span>
         </template>
+        <AppButton class="ml-auto" type="button" @click="show = null">
+          Done
+        </AppButton>
+        <span
+          v-if="errorStatus"
+          class="text-danger-dark text-sm w-full text-center"
+          >{{ settingsStatus }}</span
+        >
       </div>
     </Popup>
     <section class="w-full flex items-center px-5 h-full">
