@@ -1501,7 +1501,9 @@ const previewOperationThrottled = throttleOnce(
           'otherDataframes',
           'requestOptions',
           'options',
-          'isUsingSample'
+          'isUsingSample',
+          'target',
+          'source'
         ] as const
       ).forEach(key => {
         delete previewPayload[key];
