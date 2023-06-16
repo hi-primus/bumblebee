@@ -218,6 +218,7 @@ export const GET_WORKSPACE_ACCESSES = gql`
       workspace_access_user {
         id
         email
+        metadata
       }
       sender_id
     }

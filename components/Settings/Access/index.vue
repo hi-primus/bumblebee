@@ -1,6 +1,7 @@
 <template>
   <div>
     <form
+      v-if="userCanShare"
       ref="accessFormElement"
       class="flex gap-2"
       @submit.prevent="addShareUser"
@@ -10,31 +11,36 @@
         v-model="shareUserEmail"
         name="shareUserEmail"
         class="flex-1"
-        label="New user email"
+        label="User email"
       />
       <AppSelector
         id="shareUserLevel"
         v-model="shareUserLevel"
         name="shareUserLevel"
         class="flex-1"
-        label="New user access"
+        label="User access"
         :options="shareUserLevels"
       />
       <AppButton type="submit">Add</AppButton>
     </form>
     <div v-if="accesses" class="pt-4 pb-2">
-      <h2 class="font-medium">People with access</h2>
+      <h2 class="font-medium mb-2">People with access</h2>
       <div
         v-for="access in accesses"
         :key="access.id"
         class="flex gap-2 h-12 items-center"
       >
-        <div class="w-[60%]">
-          {{ access.workspace_access_user.email }}
+        <div class="w-[60%] flex flex-col">
+          <span class="text-sm text-neutral-light font-semibold">
+            {{ displayName(access) }}
+          </span>
+          <span class="text-xs text-neutral-lighter">
+            {{ access.workspace_access_user.email }}
+          </span>
         </div>
         <div class="w-[30%] text-right">
           <AppMenu
-            v-if="canEditAccess(access)"
+            v-if="canEditAccess(access) || false"
             :items="
               shareUserLevels.map(level => ({
                 text: level,
@@ -47,14 +53,14 @@
               <Icon :path="mdiMenuDown" />
             </AppButton>
           </AppMenu>
-          <div v-else>
+          <div v-else class="text-sm font-bold pr-10 text-neutral">
             {{ access.access_level }}
           </div>
         </div>
         <IconButton
-          v-if="canEditAccess(access)"
+          v-if="canDeleteAccess(access)"
           :path="mdiClose"
-          class="text-right min-w-6 w-6 h-6 ml-auto text-neutral"
+          class="text-right min-w-4 w-4 h-4 ml-auto text-neutral"
           @click="deleteAccess(access)"
         />
       </div>
@@ -88,6 +94,10 @@ type Access = {
   workspace_access_user: {
     email: string;
     id: string;
+    metadata?: {
+      firstName?: string;
+      lastName?: string;
+    }
   };
   is_accepted: boolean;
   sender_id: string;
@@ -130,11 +140,26 @@ const { resolveClient } = useApolloClient();
 
 const userId = useUserId();
 
-function canEditAccess(access: Access) {
-  return (
-    access.sender_id === userId.value ||
-    accesses.value.find(a => a.id === access.id)?.access_level === 'Owner'
+function displayName(access: Access) {
+  if (access.workspace_access_user?.metadata?.firstName && access.workspace_access_user?.metadata?.lastName) {
+    return `${access.workspace_access_user.metadata.firstName} ${access.workspace_access_user.metadata.lastName}`
+  }
+  return access.workspace_access_user.email
+}
+
+const userCanShare = computed(() => {
+  return ['Owner', 'Editor with Sharing'].includes(
+    accesses.value.find(a => a.workspace_access_user.id === userId.value)
+      ?.access_level || ''
   );
+});
+
+function canEditAccess(access: Access) {
+  return userCanShare.value && access.access_level !== 'Owner';
+}
+
+function canDeleteAccess(access: Access) {
+  return userCanShare.value && access.access_level !== 'Owner';
 }
 
 async function addShareUser() {
