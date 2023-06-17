@@ -158,11 +158,7 @@
       <div
         class="w-full p-2 flex flex-wrap gap-2 justify-center items-center font-bold text-md"
       >
-        <template v-if="settingsStatus === 'updated'">
-          <span class="text-success-dark">Settings updated</span>
-          <Icon class="min-w-5 h-5 text-success-dark" :path="mdiCheck" />
-        </template>
-        <template v-else-if="settingsStatus === 'updating'">
+        <template v-if="settingsStatus === 'updating'">
           <span class="text-neutral-lighter">Updating settings</span>
           <Icon
             class="min-w-5 h-5 text-neutral-lighter animate-spin"
