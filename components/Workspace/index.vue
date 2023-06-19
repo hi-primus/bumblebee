@@ -70,7 +70,6 @@
 
 <script setup lang="ts">
 import { mdiLoading } from '@mdi/js';
-import { UploadFileResponse } from '@nhost/hasura-storage-js';
 
 import DataframeLayout from '@/components/Workspace/DataframeLayout.vue';
 import {
@@ -78,7 +77,6 @@ import {
   AppSettings,
   AppStatus,
   CommandData,
-  FileWithId,
   Session,
   TabData,
   WorkspaceData
@@ -416,8 +414,6 @@ function checkSources(data: OperationItem[]) {
   );
 }
 
-const nuxtApp = useNuxtApp();
-
 const getOperationsCode = async (
   operations: OperationItem[] | null = null
 ): Promise<string> => {
@@ -546,104 +542,9 @@ function getOperations(
   return operationsToReturn;
 }
 
-// avoid using useNhostClient() to avoid errors on installations without nhost
-const nhost = nuxtApp.$nhost;
+const { uploadFile } = useUploadFile();
 
-const alreadyUploadedFiles: Record<string, UploadFileResponse> = {};
-
-async function uploadFile(
-  fileOrArrayBuffer: ArrayBuffer | File | FileWithId,
-  fileName?: string
-): UploadFileResponse {
-  if (!nhost) {
-    return { error: 'Upload not available' };
-  }
-
-  if (
-    'id' in fileOrArrayBuffer &&
-    fileOrArrayBuffer.id &&
-    alreadyUploadedFiles[fileOrArrayBuffer.id]
-  ) {
-    console.log('[DEBUG] File already uploaded', fileOrArrayBuffer);
-    return { ...alreadyUploadedFiles[fileOrArrayBuffer.id], error: null };
-  }
-
-  let file: File;
-
-  if (fileOrArrayBuffer instanceof ArrayBuffer) {
-    file = new File([fileOrArrayBuffer], fileName || 'file.csv');
-  } else {
-    file = fileOrArrayBuffer;
-  }
-
-  console.log('[DEBUG] Uploading file (id not found)', file);
-
-  const { fileMetadata, error } = await nhost.storage.upload({
-    file
-  });
-
-  if (!fileMetadata || !fileMetadata.id) {
-    return {
-      fileMetadata,
-      error: error || fileMetadata?.error || 'Upload failed'
-    };
-  }
-
-  const filepath = nhost.storage.getPublicUrl({
-    fileId: fileMetadata.id
-  });
-
-  if ('id' in file && file.id) {
-    alreadyUploadedFiles[file.id] = { fileMetadata, filepath };
-  }
-
-  return { fileMetadata, filepath, error };
-}
-
-async function get<T>(url: string) {
-  if (!url.startsWith('http')) {
-    url = `${appSettings.value.mlServiceUrl}${url}`;
-  }
-  const response = await fetch(url, {
-    method: 'GET',
-    mode: 'cors',
-    headers: {
-      'Content-Type': 'application/json'
-    }
-  });
-  const content = await response.json();
-  if (typeof content === 'string') {
-    try {
-      return JSON.parse(content) as T;
-    } catch (e) {
-      return content as unknown as T;
-    }
-  }
-  return content as T;
-}
-
-async function post<T>(url: string, data: Record<string, unknown>) {
-  if (!url.startsWith('http')) {
-    url = `${appSettings.value.mlServiceUrl}${url}`;
-  }
-  const response = await fetch(url, {
-    method: 'POST',
-    mode: 'cors',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(data)
-  });
-  const content = await response.json();
-  if (typeof content === 'string') {
-    try {
-      return JSON.parse(content) as T;
-    } catch (e) {
-      return content as unknown as T;
-    }
-  }
-  return content as T;
-}
+const { post, get } = useHttpMethods();
 
 function getAppProperties() {
   return {
