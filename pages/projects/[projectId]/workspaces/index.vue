@@ -52,9 +52,13 @@
       </thead>
       <tbody>
         <tr
-          v-for="workspace in workspacesQueryResult.result.value?.workspaces"
+          v-for="workspace in workspacesResult"
           :key="workspace.id"
-          @click="openWorkspace(workspace.id)"
+          @click="
+            workspace.access_level === 'Predictor'
+              ? openPredict(workspace.id)
+              : openWorkspace(workspace.id)
+          "
         >
           <td>{{ !!workspace.id ? 'Active' : 'Inactive' }}</td>
           <td>{{ workspace.name }}</td>
@@ -91,7 +95,10 @@
                 type="button"
                 :icon="mdiArrowRight"
                 :to="{
-                  name: 'projects-projectId-workspaces-workspaceId',
+                  name:
+                    workspace.access_level === 'Predictor'
+                      ? 'projects-projectId-workspaces-workspaceId-predict'
+                      : 'projects-projectId-workspaces-workspaceId',
                   params: {
                     projectId: route.params.projectId,
                     workspaceId: workspace.id
@@ -151,6 +158,17 @@ const projectQueryResult = useClientQuery(GET_PROJECT, {
 const workspacesQueryResult = useClientQuery(GET_WORKSPACES, {
   user_id: userId.value,
   project_id: route.params.projectId
+});
+
+const workspacesResult = computed(() => {
+  if (workspacesQueryResult.result.value) {
+    return workspacesQueryResult.result.value.workspace_access.map(access => ({
+      ...access.workspace_access_workspaces,
+      access_level: access.access_level
+    }));
+  } else {
+    return [];
+  }
 });
 
 watch(
@@ -222,6 +240,10 @@ onDoneCreateWorkspaceMutation(result => {
     `/projects/${route.params.projectId}/workspaces/${result.data.insert_workspaces_one.id}`
   );
 });
+
+const openPredict = id => {
+  navigateTo(`/projects/${route.params.projectId}/workspaces/${id}/predict`);
+};
 
 const openWorkspace = id => {
   navigateTo(`/projects/${route.params.projectId}/workspaces/${id}`);

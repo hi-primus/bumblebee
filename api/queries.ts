@@ -66,19 +66,23 @@ export const DELETE_CONNECTION = gql`
   }
 `;
 export const GET_WORKSPACES = gql`
-  query GetWorkspaces($user_id: uuid = "", $project_id: uuid = "") {
-    workspaces(
+  query GetWorkspacesByWorkspaceAccess(
+    $user_id: uuid = ""
+    $project_id: uuid = ""
+  ) {
+    workspace_access(
       where: {
-        workspaces_workspace_access: { receiver_id: { _eq: $user_id } }
-        project_id: { _eq: $project_id }
+        receiver_id: { _eq: $user_id }
+        workspace_access_workspaces: { project_id: { _eq: $project_id } }
       }
     ) {
-      workspaces_workspace_access {
-        id
-      }
       id
-      created_at
-      name
+      access_level
+      workspace_access_workspaces {
+        id
+        created_at
+        name
+      }
     }
   }
 `;

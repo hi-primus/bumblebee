@@ -164,7 +164,7 @@ import { useField } from 'vee-validate';
 import { PropType } from 'vue';
 
 import { Rule } from '@/composables/use-rules';
-import { FieldOption } from '@/types/operations';
+import { SelectOption } from '@/types/app';
 import { compareArrays } from '@/utils';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -182,7 +182,7 @@ const props = defineProps({
   },
   options: {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    type: Array as PropType<(string | FieldOption<any>)[]>,
+    type: Array as PropType<(string | SelectOption<any>)[]>,
     default: () => []
   },
   textCallback: {
@@ -251,7 +251,7 @@ const textCallbackWithDefault = computed(() => {
 });
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const selectorOptions = computed<FieldOption<any>[]>(() => {
+const selectorOptions = computed<SelectOption<any>[]>(() => {
   return props.options.map(option => {
     if (typeof option === 'string') {
       return {

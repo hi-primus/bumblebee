@@ -1,5 +1,6 @@
 import { mdiAutoFix } from '@mdi/js';
 
+import { ModelResponse } from '@/types/app';
 import { Source } from '@/types/blurr';
 import { isObject } from '@/types/common';
 import {
@@ -12,10 +13,14 @@ import {
   Payload,
   PayloadWithOptions
 } from '@/types/operations';
-import { ModelResponse } from '@/types/app';
 import { capitalize, naturalJoin } from '@/utils';
 import { PRIORITIES, pythonArguments } from '@/utils/blurr';
 import { getGptResponse } from '@/utils/gpt';
+import {
+  getDriftTableData,
+  getModelOptions,
+  getModelVersionsOptions
+} from '@/utils/ml';
 
 type Name = {
   name: string;
@@ -4240,27 +4245,9 @@ export const operationCreators: Record<string, OperationCreator> = {
           if (!Array.isArray(payload.models)) {
             return [];
           }
-          const modelOptions = (payload.models as ModelResponse[]).map(
-            model => {
-              const date = new Date(
-                model.last_updated_timestamp
-              ).toLocaleString();
-
-              let name = model.tags.model_name || model.name;
-              if (
-                payload.app.session?.workspace?.id &&
-                name.startsWith(payload.app.session.workspace.id + '__')
-              ) {
-                name = name.replace(
-                  payload.app.session.workspace.id + '__',
-                  ''
-                );
-              }
-              return {
-                value: model.name,
-                text: `${name} (${date})`
-              };
-            }
+          const modelOptions = getModelOptions(
+            payload.models,
+            payload.app.session?.workspace?.id || ''
           );
           if (modelOptions?.length) {
             return [...modelOptions, { value: '', text: 'Create new model' }];
@@ -4431,12 +4418,17 @@ export const operationCreators: Record<string, OperationCreator> = {
       const response = await payload.app.post<{
         prediction?: string;
         detail?: string;
-      }>('/predict', {
-        data_uri: uploadedFilePath,
-        model_type: 'classification',
-        version: payload.modelVersion,
-        model_name: payload.modelName
-      });
+      }>(
+        '/predict',
+        {
+          data_uri: uploadedFilePath,
+          version: payload.modelVersion,
+          model_name: payload.modelName,
+          model_type: 'classification',
+          output: 'json'
+        },
+        { throwError: false }
+      );
 
       if (response.detail) {
         throw new Error(response.detail);
@@ -4510,12 +4502,7 @@ export const operationCreators: Record<string, OperationCreator> = {
           )?.latest_versions;
 
           if (versions?.length) {
-            payload.modelVersions = versions.map(version => ({
-              value: version.version,
-              text: `${version.version} (${new Date(
-                version.last_updated_timestamp
-              ).toLocaleString()})`
-            }));
+            payload.modelVersions = getModelVersionsOptions(versions);
           }
 
           console.info('[Predict] Getting model versions from server');
@@ -4531,7 +4518,7 @@ export const operationCreators: Record<string, OperationCreator> = {
               version: string;
               last_updated_timestamp: number;
             }[]
-          >(url);
+          >(url, { throwError: true });
 
           console.log('[DEBUG] Model versions requested', response);
 
@@ -4596,14 +4583,17 @@ export const operationCreators: Record<string, OperationCreator> = {
           payload.uploadedFilePath = fileResponse.filepath;
 
           const response = await payload.app.post<{
-            prediction?: string;
+            drift?: string;
             detail?: string;
-          }>('/drift', {
-            data_uri: fileResponse.filepath,
-            version: value,
-            model_name: payload.modelName,
-            model_version: payload.modelVersion
-          });
+          }>(
+            '/drift',
+            {
+              data_uri: fileResponse.filepath,
+              model_name: payload.modelName,
+              model_version: payload.modelVersion
+            },
+            { throwError: false }
+          );
 
           if (response.detail) {
             console.error('Error getting drift', response.detail);
@@ -4671,34 +4661,7 @@ export const operationCreators: Record<string, OperationCreator> = {
       {
         name: 'driftTable',
         defaultValue: payload => {
-          const info = payload.driftResponse;
-
-          if (!info?.metrics?.length) {
-            return null;
-          }
-
-          const dataDriftTable = info.metrics.find(
-            metric => metric.metric === 'DataDriftTable'
-          )?.result;
-
-          if (!dataDriftTable || !('number_of_columns' in dataDriftTable)) {
-            return null;
-          }
-
-          const notDriftedColumns =
-            dataDriftTable.number_of_columns -
-            dataDriftTable.number_of_drifted_columns;
-
-          return {
-            title: 'Drift',
-            topContent: `${dataDriftTable.number_of_columns} columns (${dataDriftTable.number_of_drifted_columns} drifted, ${notDriftedColumns} not drifted)`,
-            header: ['Column', 'Score', 'Drift'],
-            values: Object.values(dataDriftTable.drift_by_columns).map(col => [
-              col.column_name,
-              col.drift_score,
-              col.drift_detected ? 'True' : 'False'
-            ])
-          };
+          return getDriftTableData(payload.driftResponse);
         },
         hidden: payload => {
           const info = payload.driftResponse;
@@ -5076,7 +5039,7 @@ const getProjectModels = async (
           detail?: string;
         }
       | ModelResponse[]
-    >(url);
+    >(url, { throwError: false });
     if (!Array.isArray(response)) {
       if (response.detail) {
         throw new Error(response.detail);

@@ -30,6 +30,14 @@ export type WorkspaceData = { commands: CommandData[]; tabs: TabData[] };
 
 export type FileWithId = File & { id: string };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export interface SelectOption<T = any> {
+  text: string;
+  value: T;
+  disabled?: boolean;
+  hidden?: boolean;
+}
+
 // table
 
 export interface Chunk {
@@ -95,9 +103,9 @@ export interface AppStatusError {
 
 export type AppStatus = 'loading' | 'busy' | 'ready' | 'error' | AppStatusError;
 
-type UploadFileResponse =
+export type UploadFileResponse =
   | {
-      error: StorageErrorPayload;
+      error: string | Error;
       filepath: null;
       fileMetadata: null;
     }

@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { AppProperties, AppSettings } from './app';
+import { AppProperties, AppSettings, SelectOption } from './app';
 import { isObject } from './common';
 
 import { RequestOptions, Source } from '@/types/blurr';
@@ -80,11 +80,6 @@ export type PayloadCallbackOr<T> =
       currentIndex?: number
     ) => T);
 
-export type FieldOption<T = unknown> = Record<string, T> & {
-  disabled?: boolean;
-  hidden?: boolean;
-};
-
 export interface SuggestionParameter {
   type: string; // TODO: add types
   name: string;
@@ -134,7 +129,7 @@ export interface BasicField {
   placeholder?: PayloadCallbackOr<string>;
   label?: PayloadCallbackOr<string>;
   required?: PayloadCallbackOr<boolean>;
-  options?: PayloadCallbackOr<(string | FieldOption<unknown>)[]>;
+  options?: PayloadCallbackOr<(string | SelectOption<unknown>)[]>;
   suggestions?: PayloadCallbackOr<Suggestion[]>;
   textCallback?: (value: unknown) => string;
   description?: string;
