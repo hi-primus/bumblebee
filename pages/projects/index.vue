@@ -7,6 +7,10 @@
           {
             text: 'Log out',
             action: () => logout()
+          },
+          {
+            text: 'Manage users',
+            action: () => navigateTo(`/users`)
           }
         ]"
       >

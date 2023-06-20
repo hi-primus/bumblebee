@@ -1,10 +1,39 @@
 <template>
-  <NuxtLayout class="p-4">
-    <form class="manager-form" @submit.prevent="handleSubmit">
+  <NuxtLayout class="manager-page">
+    <div class="manager-header">
+      <AppMenu
+        container-class="ml-auto"
+        :items="[
+          {
+            text: 'Log out',
+            action: () => logout()
+          },
+          {
+            text: 'Manage projects',
+            action: () => navigateTo(`/projects`)
+          }
+        ]"
+      >
+        <AppButton
+          class="layout-invisible icon-button size-small color-neutral ml-auto"
+          type="button"
+          :icon="mdiDotsVertical"
+        />
+      </AppMenu>
+    </div>
+    <div class="manager-header">
+      <div class="manager-navigation flex-1">
+        <h1>Users</h1>
+      </div>
+      <AppButton class="creation-button" type="submit" @click="addUserPopup">
+        Add User
+      </AppButton>
+    </div>
+    <form v-if="false" class="manager-form" @submit.prevent="">
       <AppInput v-model="firstName" type="text" label="Name" />
       <AppInput v-model="lastName" type="text" label="Last Name" />
 
-      <AppInput v-model="username" type="text" label="Email" />
+      <AppInput v-model="email" type="text" label="Email" />
       <AppInput
         id="password"
         v-model="password"
@@ -14,7 +43,7 @@
 
       <AppButton class="self-center" type="submit"> Create User </AppButton>
     </form>
-    <table class="data-table w-full">
+    <table class="data-table clickable w-full mb-4">
       <thead>
         <tr>
           <th>Name</th>
@@ -46,8 +75,7 @@
 
           <td class="actions">
             <span>
-              <!-- TODO: Fix userId => projectId -->
-              <AppButton
+              <!-- <AppButton
                 v-tooltip="`Edit user`"
                 class="size-small layout-invisible icon-button color-neutral"
                 :icon="mdiPencil"
@@ -56,13 +84,13 @@
                   params: { projectId: user.id }
                 }"
                 type="button"
-              />
+              /> -->
               <AppButton
                 v-tooltip="`Delete user`"
                 class="size-small layout-invisible icon-button color-neutral"
                 type="button"
                 :icon="mdiTrashCan"
-                @click="deleteConnection(user.id)"
+                @click="deleteUser(user.id)"
               />
             </span>
           </td>
@@ -77,12 +105,12 @@
     </table>
   </NuxtLayout>
 </template>
-<script setup>
-import { mdiPencil, mdiTrashCan } from '@mdi/js';
+<script setup lang="ts">
+import { mdiDotsVertical, mdiPencil, mdiTrashCan } from '@mdi/js';
 
 import { DELETE_USER, GET_USERS } from '@/api/queries';
 
-const username = ref('');
+const email = ref('');
 const password = ref('');
 const firstName = ref('');
 const lastName = ref('');
@@ -91,27 +119,99 @@ const userId = useUserId();
 
 const { signUpEmailPassword } = useSignUpEmailPassword();
 
+const nhost = useNhostClient();
+
+const { addToast } = useToasts();
+
+const { confirm } = useConfirmPopup();
+
 const queryResult = useClientQuery(GET_USERS, () => ({
   id: userId?.value
 }));
-const handleSubmit = async event => {
-  event.preventDefault();
-  const { isSuccess } = await signUpEmailPassword(username, password, {
-    metadata: { firstName, lastName },
-    allowedRoles: ['user']
+
+const AppInput = resolveComponent('AppInput');
+
+type SignUpData = {
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+};
+
+const addUserPopup = async () => {
+  const result = await confirm<SignUpData>({
+    message: 'Create new User',
+    fields: [
+      {
+        component: AppInput,
+        name: 'firstName',
+        label: 'Name'
+      },
+      {
+        component: AppInput,
+        name: 'lastName',
+        label: 'Last Name'
+      },
+      {
+        component: AppInput,
+        name: 'email',
+        label: 'Email'
+      },
+      {
+        component: AppInput,
+        name: 'password',
+        label: 'Password',
+        type: 'password'
+      }
+    ],
+    acceptLabel: 'Create',
+    cancelLabel: 'Cancel'
   });
-  if (isSuccess) navigateTo('/');
+
+  if (typeof result === 'object' && 'email' in result && result.email) {
+    addUser(result);
+  }
+};
+
+const addUser = async (data: SignUpData) => {
+  console.log('[DEBUG] Creating user', email);
+
+  await signOut();
+
+  await signUpEmailPassword(data.email, data.password, {
+    metadata: { firstName: data.firstName, lastName: data.lastName }
+  });
+
+  addToast({
+    title: 'User created successfully',
+    type: 'success'
+  });
+
+  logout();
+
+  addToast({
+    title: 'Session terminated',
+    type: 'error'
+  });
 };
 
 const { mutate: deleteUserMutation, onDone: onDoneDeleteUserMutation } =
   useMutation(DELETE_USER);
 
-const deleteConnection = id => {
+const deleteUser = id => {
   deleteUserMutation({ id });
 };
 onDoneDeleteUserMutation(() => {
   queryResult.refetch();
 });
+
+const { signOut } = useSignOut();
+
+const logout = () => {
+  signOut();
+  navigateTo('/login');
+};
+
 // onDoneCreateUserMutation(() => {
 //   connectionName.value = '';
 //   connectionDescription.value = '';
