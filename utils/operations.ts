@@ -118,8 +118,10 @@ export const operationCreators: Record<string, OperationCreator> = {
         fileName?: string;
       }>
     ): Promise<Source> => {
+      const previewPayload = { ...payload };
+      
       if (payload.options.preview) {
-        payload.nRows = Math.min(payload.nRows || 50, 50);
+        previewPayload.nRows = Math.min(payload.nRows || 50, 50);
       }
 
       if (payload.file) {
@@ -130,7 +132,7 @@ export const operationCreators: Record<string, OperationCreator> = {
           return payload.app.blurr.readFile({
             target: payload.target,
             url: payload.file.name,
-            nRows: payload.nRows,
+            nRows: previewPayload.nRows,
             ...(payload.fileName
               ? { meta: { file_name: payload.fileName } }
               : {}),
