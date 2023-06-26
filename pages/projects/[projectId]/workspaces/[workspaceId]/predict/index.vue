@@ -195,9 +195,9 @@ const driftTableData = computed(() => {
 const getProjectModels = async () => {
   try {
     const url =
-      '/projects/models?' +
+      '/workspaces/models?' +
       new URLSearchParams({
-        project_id: route.params.projectId as string
+        workspace_id: route.params.workspaceId as string
       });
 
     const response = await get<
