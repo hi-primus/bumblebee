@@ -102,17 +102,35 @@ const { mutate: updateWorkspaceInfoMutation } = useMutation(
   UPDATE_WORKSPACE_INFO
 );
 
+let updateData = {};
+
 async function updateWorkspace({ commands, tabs }) {
   if (route.params.workspaceId !== workspaceQueryResult.result.value?.workspaces_by_pk?.id) {
     return;
   }
-  await updateWorkspaceMutation({
-    id: route.params.workspaceId,
-    commands,
-    tabs
-  });
-  console.log('Workspace updated');
+  updateData = { commands, tabs };
+  await updateWorkspaceThrottled();
 }
+
+const updateWorkspaceThrottled = throttleOnce(
+  async function () {
+    if (!updateData.commands && !updateData.tabs) {
+      console.warn('Trying to update workspace without data');
+      return;
+    }
+    await updateWorkspaceMutation({
+      id: route.params.workspaceId,
+      ...updateData
+    });
+    console.log('Workspace updated');
+    updateData = {};
+  },
+  {
+    limit: 500,
+    delay: 500,
+    cancellable: false
+  }
+);
 
 const updateWorkspaceName = async (newName: string) => {
   if (workspaceName.value === newName) {
