@@ -86,19 +86,11 @@ const workspaceQueryResult = useClientQuery<{
   id: route.params.workspaceId
 });
 
-let earlyCheck = true;
-let workspaceIsInitialized = false;
-
 watch(
   workspaceQueryResult.result,
   newValue => {
     if (newValue?.workspaces_by_pk) {
       workspaceName.value = newValue.workspaces_by_pk.name;
-      if (earlyCheck) {
-        earlyCheck = false;
-        return;
-      }
-      workspaceIsInitialized = true;
     }
   }
   // { immediate: true }
@@ -110,10 +102,8 @@ const { mutate: updateWorkspaceInfoMutation } = useMutation(
   UPDATE_WORKSPACE_INFO
 );
 
-let updateData = {};
-
 async function updateWorkspace({ commands, tabs }) {
-  if (!workspaceIsInitialized) {
+  if (route.params.workspaceId !== workspaceQueryResult.result.value?.workspaces_by_pk?.id) {
     return;
   }
   await updateWorkspaceMutation({
