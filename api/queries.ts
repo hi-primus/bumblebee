@@ -96,6 +96,7 @@ export const GET_WORKSPACE_INFO = gql`
 export const GET_WORKSPACE = gql`
   query GetWorkspace($id: uuid = "") {
     workspaces_by_pk(id: $id) {
+      id
       name
       tabs
       commands
