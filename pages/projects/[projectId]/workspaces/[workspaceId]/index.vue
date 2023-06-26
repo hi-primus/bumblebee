@@ -102,35 +102,28 @@ const { mutate: updateWorkspaceInfoMutation } = useMutation(
   UPDATE_WORKSPACE_INFO
 );
 
-let updateData = {};
+let throttleTimer = null;
 
 async function updateWorkspace({ commands, tabs }) {
   if (route.params.workspaceId !== workspaceQueryResult.result.value?.workspaces_by_pk?.id) {
     return;
   }
-  updateData = { commands, tabs };
-  await updateWorkspaceThrottled();
+
+  // cancels any previous call but still finishes it if it's already called
+  clearTimeout(throttleTimer);
+  throttleTimer = setTimeout(() => updateWorkspaceThrottled({ commands, tabs }), 500);
 }
 
-const updateWorkspaceThrottled = throttleOnce(
-  async function () {
-    if (!updateData.commands && !updateData.tabs) {
-      console.warn('Trying to update workspace without data');
-      return;
-    }
-    await updateWorkspaceMutation({
-      id: route.params.workspaceId,
-      ...updateData
-    });
-    console.log('Workspace updated');
-    updateData = {};
-  },
-  {
-    limit: 500,
-    delay: 500,
-    cancellable: true
-  }
-);
+const updateWorkspaceThrottled = async function ({ commands, tabs }) {
+
+  await updateWorkspaceMutation({
+    id: route.params.workspaceId,
+    commands,
+    tabs
+  });
+
+  console.log('Workspace updated');
+};
 
 const updateWorkspaceName = async (newName: string) => {
   if (workspaceName.value === newName) {
