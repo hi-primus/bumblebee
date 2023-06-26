@@ -128,7 +128,7 @@ const updateWorkspaceThrottled = throttleOnce(
   {
     limit: 500,
     delay: 500,
-    cancellable: false
+    cancellable: true
   }
 );
 
