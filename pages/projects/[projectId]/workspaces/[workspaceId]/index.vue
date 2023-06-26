@@ -116,25 +116,13 @@ async function updateWorkspace({ commands, tabs }) {
   if (!workspaceIsInitialized) {
     return;
   }
-  updateData = { commands, tabs };
-  await updateWorkspaceThrottled();
+  await updateWorkspaceMutation({
+    id: route.params.workspaceId,
+    commands,
+    tabs
+  });
+  console.log('Workspace updated');
 }
-
-const updateWorkspaceThrottled = throttleOnce(
-  async function () {
-    await updateWorkspaceMutation({
-      id: route.params.workspaceId,
-      ...updateData
-    });
-    console.log('Workspace updated');
-    updateData = {};
-  },
-  {
-    limit: 500,
-    delay: 500,
-    cancellable: false
-  }
-);
 
 const updateWorkspaceName = async (newName: string) => {
   if (workspaceName.value === newName) {
