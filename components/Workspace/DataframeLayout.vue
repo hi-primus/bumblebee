@@ -294,6 +294,11 @@ const getChunk = async function (start: number, stop: number) {
     })
     .columnsSample({ requestOptions: { priority: PRIORITIES.previewSample } });
 
+  if (!sample.value) {
+    console.warn(`Sample '${sample.value}' is empty`);
+    return;
+  }
+
   if (sample.value.length === 0) {
     console.warn(`Sample length '${sample.value.length}' is zero`);
     return;
