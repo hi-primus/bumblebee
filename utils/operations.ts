@@ -155,7 +155,10 @@ export const operationCreators: Record<string, OperationCreator> = {
         }
 
         if (payload.file) {
-          if (payload.options.preview) {
+          
+          const fileIsPlainText = payload.file.type === 'text/plain';
+          
+          if (payload.options.preview && fileIsPlainText) {
             const string = await getFirstLines(payload.file);
             buffer = new TextEncoder().encode(string).buffer;
           } else {
@@ -165,7 +168,7 @@ export const operationCreators: Record<string, OperationCreator> = {
           return payload.app.blurr.readFile({
             target: payload.target,
             buffer,
-            nRows: payload.nRows,
+            nRows: previewPayload.nRows,
             ...(payload.fileName
               ? { meta: { file_name: payload.fileName } }
               : {}),
