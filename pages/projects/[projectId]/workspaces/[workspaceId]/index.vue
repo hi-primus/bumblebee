@@ -1,9 +1,9 @@
 <template>
   <NuxtLayout class="relative h-screen flex flex-col">
     <Workspace
-      v-if="workspaceQueryResult.result?.value?.workspaces_by_pk"
+      v-if="workspaceResult"
       class="border-line-light border-t"
-      :data="workspaceQueryResult.result.value.workspaces_by_pk"
+      :data="workspaceResult"
       @update:data="updateWorkspace"
     >
       <template #header>
@@ -60,12 +60,13 @@ import { mdiChevronRight, mdiLoading, mdiPencil } from '@mdi/js';
 
 import {
   GET_PROJECT,
-  GET_WORKSPACE,
+  GET_WORKSPACE_WITH_ACCESS,
   UPDATE_WORKSPACE,
   UPDATE_WORKSPACE_INFO
 } from '@/api/queries';
 import { Session, WorkspaceData } from '@/types/app';
 
+const userId = useUserId();
 const route = useRoute();
 
 const { addToast } = useToasts();
@@ -81,16 +82,35 @@ const projectQueryResult = useClientQuery<{ projects_by_pk: { name: string } }>(
 );
 
 const workspaceQueryResult = useClientQuery<{
-  workspaces_by_pk: WorkspaceData & { name: string };
-}>(GET_WORKSPACE, {
-  id: route.params.workspaceId
+  id: string;
+  access_level: string;
+  workspace_access_workspaces: WorkspaceData & { name: string }
+}>(GET_WORKSPACE_WITH_ACCESS, {
+  id: route.params.workspaceId,
+  user_id: userId.value,
+});
+
+const workspaceResult = computed<
+  (WorkspaceData & { name: string; access_level: string }) | null
+>(() => {
+  if (workspaceQueryResult.result.value) {
+    return workspaceQueryResult.result.value.workspace_access.map(access => ({
+      ...access.workspace_access_workspaces,
+      access_level: access.access_level
+    }))?.[0];
+  } else {
+    return null;
+  }
 });
 
 watch(
-  workspaceQueryResult.result,
+  workspaceResult,
   newValue => {
-    if (newValue?.workspaces_by_pk) {
-      workspaceName.value = newValue.workspaces_by_pk.name;
+    if (newValue && newValue.id === route.params.workspaceId) {
+      if (newValue.access_level === 'Predictor') {
+        navigateTo(`/projects/${route.params.projectId}/workspaces/${route.params.workspaceId}/predict`);
+      }
+      workspaceName.value = newValue.name;
     }
   }
   // { immediate: true }
@@ -105,7 +125,7 @@ const { mutate: updateWorkspaceInfoMutation } = useMutation(
 let throttleTimer = null;
 
 async function updateWorkspace({ commands, tabs }) {
-  if (route.params.workspaceId !== workspaceQueryResult.result.value?.workspaces_by_pk?.id) {
+  if (route.params.workspaceId !== workspaceResult.value?.id) {
     return;
   }
 
@@ -141,7 +161,7 @@ const updateWorkspaceName = async (newName: string) => {
 };
 
 const session = computed<Session | null>(() => {
-  const workspace = workspaceQueryResult.result.value?.workspaces_by_pk;
+  const workspace = workspaceResult.value;
   const project = projectQueryResult.result.value?.projects_by_pk;
   return {
     workspace: {

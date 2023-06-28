@@ -104,6 +104,29 @@ export const GET_WORKSPACE = gql`
   }
 `;
 
+export const GET_WORKSPACE_WITH_ACCESS = gql`
+  query GetWorkspaceWithAccess(
+    $user_id: uuid = ""
+    $id: uuid = ""
+  ) {
+    workspace_access(
+      where: {
+        receiver_id: { _eq: $user_id }
+        workspace_id: { _eq: $id }
+      }
+    ) {
+      id
+      access_level
+      workspace_access_workspaces {
+        id
+        name
+        tabs
+        commands
+      }
+    }
+  }
+`;
+
 export const CREATE_WORKSPACE = gql`
   mutation CreateWorkspace(
     $receiver_id: uuid = ""
