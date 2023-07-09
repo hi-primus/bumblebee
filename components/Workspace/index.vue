@@ -1300,7 +1300,9 @@ const previewOperationThrottled = throttleOnce(
 
       let previewColumnNames: string[] = [];
 
-      const useSample = !payload?.options?.preview.endsWith('no-sample');
+      const useSample =
+        !payload?.options?.preview.endsWith('no-sample') &&
+        payload?.options?.preview !== 'dataframe';
 
       if (usesInputDataframe && useSample) {
         checkPreviewCancel();
