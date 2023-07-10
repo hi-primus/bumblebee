@@ -1,10 +1,11 @@
 <template>
   <component
     :is="$attrs.to ? NuxtLink : 'button'"
-    v-bind="attrs"
-    class="btn"
-    :class="[loading || disabled ? 'pointer-events-none' : '']"
+    :class="[loading || disabled ? 'pointer-events-none' : '', $attrs.class]"
+    :style="$attrs.style"
     :disabled="loading || disabled"
+    v-bind="$attrs"
+    class="btn"
   >
     <template v-if="!loading">
       <slot>
@@ -23,10 +24,15 @@
   </component>
 </template>
 
-<script lang="ts" setup>
+<script lang="ts">
 import { mdiLoading } from '@mdi/js';
 import { PropType } from 'vue';
+export default {
+  inheritAttrs: false
+};
+</script>
 
+<script lang="ts" setup>
 const NuxtLink = resolveComponent('NuxtLink');
 
 defineProps({
@@ -44,7 +50,4 @@ defineProps({
     default: false
   }
 });
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const { class: attrClass, style: attrStyle, ...attrs } = useAttrs();
 </script>
