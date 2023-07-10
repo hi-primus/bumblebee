@@ -179,10 +179,30 @@
         >
       </div>
     </Popup>
+    <Popup
+      v-if="show === 'columns'"
+      class="w-[calc(15vw+420px)]"
+      @close="show = null"
+    >
+      <div class="w-full p-2">
+        <WorkspaceColumnsSelectionTable />
+      </div>
+    </Popup>
     <section class="w-full flex items-center px-5 h-full">
       <AppButton
+        v-tooltip="'Filter and select columns'"
+        class="ml-auto icon-button layout-invisible size-small"
+        :class="{
+          'color-primary-light': hasFilter,
+          'color-neutral-light': !hasFilter
+        }"
+        @click="show = 'columns'"
+      >
+        <Icon :path="mdiFilterCheck" />
+      </AppButton>
+      <AppButton
         v-tooltip="'Select a command'"
-        class="ml-auto icon-button layout-invisible size-small color-neutral-light"
+        class="icon-button layout-invisible size-small color-neutral-light"
         @click="showCommands = true"
       >
         <Icon :path="mdiMagnify" />
@@ -299,6 +319,7 @@ import {
   mdiCheck,
   mdiCodeTags,
   mdiDotsVertical,
+  mdiFilterCheck,
   mdiLoading,
   mdiMagnify,
   mdiTableColumn
@@ -330,7 +351,7 @@ const logout = () => {
 };
 
 const showCommands = ref(false);
-const show = ref<'settings' | 'access' | null>(null);
+const show = ref<'settings' | 'access' | 'columns' | null>(null);
 
 const appSettings = inject('app-settings') as Ref<AppSettings>;
 const localAppSettings = ref<AppSettings>({ ...appSettings.value });
@@ -474,6 +495,8 @@ const hasSelection = computed(() => {
     Boolean(state.value?.columns?.length)
   );
 });
+
+const hasFilter = ref(false); // TODO;
 
 const sidebarDisabled = computed(() => {
   return !operationCells.value?.length && !isInOperation.value;
