@@ -1,31 +1,39 @@
 <template>
   <div class="mx-auto font-regular text-md">
-    <div class="flex px-2 pb-4 px-4">
+    <div :class="[inPopup ? 'pl-4 pr-10' : 'px-4']">
+      <AppInput
+        v-model="search"
+        placeholder="Search columns"
+        :class="[inPopup ? 'mb-4' : 'size-small my-2']"
+      />
+    </div>
+    <div class="flex px-4 items-center" :class="[inPopup ? 'pb-4' : 'pb-2']">
       <AppButton
-        class="color-neutral icon-button layout-invisible"
+        class="color-neutral-light icon-button layout-invisible"
         type="button"
         :icon="
-          selection?.columns?.length === allColumns.length
+          selectedColumns.length === allColumns.length
             ? mdiCheckboxMarked
-            : selection?.columns?.length === 0
+            : selectedColumns.length === 0
             ? mdiCheckboxBlankOutline
             : mdiMinusBox
         "
         @click="toggleAllColumnsSelection"
       />
-      <div class="inline-block w-8">
+      <div class="inline-block" :class="[inPopup ? 'w-8' : 'w-6']">
         <Transition name="fade">
           <AppButton
-            v-if="selection?.columns?.length"
+            v-if="selectedColumns.length"
             v-tooltip="
               hiddenColumns.some(c => selectedColumns.includes(c))
                 ? 'Show selected columns'
                 : 'Hide selected columns'
             "
             type="button"
-            class="color-neutral icon-button layout-invisible"
+            class="color-neutral-light icon-button layout-invisible"
+            :class="{ 'size-small': !inPopup }"
             :icon="
-              selection?.columns?.some(c => hiddenColumns.includes(c))
+              selectedColumns.some(c => hiddenColumns.includes(c))
                 ? mdiEye
                 : mdiEyeOff
             "
@@ -33,13 +41,14 @@
           />
         </Transition>
       </div>
-      <div class="inline-block w-8">
+      <div class="inline-block" :class="[inPopup ? 'w-8' : 'w-6']">
         <Transition name="fade">
           <AppButton
             v-if="hiddenColumns.length > 0"
             v-tooltip="'Restore hidden columns'"
             type="button"
-            class="color-neutral icon-button layout-invisible"
+            class="color-neutral-light icon-button layout-invisible"
+            :class="{ 'size-small': !inPopup }"
             :icon="customEyeRestore"
             @click="hiddenColumns = []"
           />
@@ -48,8 +57,8 @@
       <Transition name="fade">
         <div
           v-if="
-            selection?.columns?.length &&
-            selection.columns.length !== allColumns.length
+            selectedColumns.length &&
+            selectedColumns.length !== allColumns.length
           "
           class="flex"
         >
@@ -60,14 +69,16 @@
                 : 'Show only selected columns'
             "
             type="button"
-            class="color-neutral icon-button layout-invisible"
+            class="color-neutral-light icon-button layout-invisible"
+            :class="{ 'size-small': !inPopup }"
             :icon="customSelectionEye"
             @click="toggleUnselectedColumnsVisibility"
           />
           <AppButton
             v-tooltip="'Invert selection'"
             type="button"
-            class="color-neutral icon-button layout-invisible"
+            class="color-neutral-light icon-button layout-invisible"
+            :class="{ 'size-small': !inPopup }"
             :icon="mdiCheckboxIntermediateVariant"
             @click="invertSelection"
           />
@@ -77,12 +88,14 @@
     <table class="">
       <tbody>
         <WorkspaceColumnsSelectionTableRow
-          v-for="column in allColumns"
+          v-for="column in allColumns.filter(column =>
+            column.title.toLowerCase().includes(search.toLowerCase())
+          )"
           :key="column.title"
           :column="column"
-          :is-selected="selection?.columns?.includes(column.title)"
+          :is-selected="selectedColumns.includes(column.title)"
           :is-hidden="hiddenColumns.includes(column.title)"
-          :hide-stats="hideStats"
+          :in-popup="inPopup"
           @toggle-selection="toggleColumnSelection(column.title)"
           @toggle-visibilty="toggleColumnVisibility(column.title)"
         />
@@ -115,11 +128,13 @@ const selection = inject('selection') as Ref<TableSelection>;
 const hiddenColumns = inject('hidden-columns') as Ref<string[]>;
 
 defineProps({
-  hideStats: {
+  inPopup: {
     type: Boolean,
     default: false
   }
 });
+
+const search = ref('');
 
 const allColumns = computed<Column[]>(() => {
   return Object.entries(dataframeObject.value?.profile?.columns || {}).map(

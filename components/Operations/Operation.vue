@@ -35,7 +35,7 @@
           />
         </template>
         <template #menu-header>
-          <WorkspaceColumnsSelectionTable hide-stats class="w-full" />
+          <WorkspaceColumnsSelectionTable class="w-full" />
         </template>
       </AppMenu>
       <template v-if="options?.usesOutputCols">

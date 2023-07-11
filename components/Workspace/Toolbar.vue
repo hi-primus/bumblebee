@@ -184,8 +184,8 @@
       class="w-[calc(15vw+420px)]"
       @close="show = null"
     >
-      <div class="w-full p-2">
-        <WorkspaceColumnsSelectionTable />
+      <div class="w-full px-2 pb-2 -mt-[3.25rem]">
+        <WorkspaceColumnsSelectionTable in-popup />
       </div>
     </Popup>
     <section class="w-full flex items-center px-5 h-full">
