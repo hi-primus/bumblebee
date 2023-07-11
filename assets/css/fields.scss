@@ -191,6 +191,22 @@
     &.center-menu {
       left: 50%;
       transform: translateX(-50%);
+      right: default;
+    }
+
+    &.left-menu {
+      left: 0;
+      right: default;
+    }
+
+    &.right-menu {
+      left: default;
+      right: 0;
+    }
+
+    &.stretch-menu {
+      left: 0;
+      right: 0;
     }
   }
 
