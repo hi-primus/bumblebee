@@ -61,6 +61,9 @@
   .right-icon-button {
     @apply absolute right-[0.625rem] top-[0.625rem] h-full w-5 h-5 rounded-md text-primary-dark;
   }
+  &.disable-input input {
+    @apply opacity-0 cursor-default;
+  }
   .input-errorContainer {
     @apply text-danger text-sm block px-1 mt-1;
   }
