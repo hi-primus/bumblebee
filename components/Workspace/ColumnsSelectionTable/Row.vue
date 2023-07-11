@@ -15,6 +15,7 @@
     </td>
     <td class="!py-0 !pl-0 !pr-4">
       <AppButton
+        type="button"
         class="icon-button layout-invisible block min-w-4 transition-opacity duration-200 group-hover:opacity-100 focus-visible:opacity-100"
         :class="[
           isHidden ? 'opacity-70' : 'opacity-0',
@@ -30,13 +31,15 @@
         :data-type="getType(column) || 'unknown'"
       />
     </td>
-    <td class="font-mono-table !pr-6">
-      <div class="max-w-[10em] ellipsis">
+    <td class="font-mono-table !pr-6" width="100%">
+      <div class="max-w-[10em] ellipsis pl-2">
         {{ column.title }}
       </div>
     </td>
-    <td class="text-sm !pr-4">{{ column.stats?.missing }} missing values</td>
-    <td class="text-sm">{{ column.stats?.mismatch }} mismatch values</td>
+    <template v-if="!hideStats">
+      <td class="text-sm !pr-4">{{ column.stats?.missing }} missing values</td>
+      <td class="text-sm">{{ column.stats?.mismatch }} mismatch values</td>
+    </template>
     <td class="w-4"></td>
   </tr>
 </template>
@@ -55,7 +58,8 @@ import { getType } from '@/utils/data-types';
 defineProps({
   column: { type: Object as PropType<Column>, required: true },
   isSelected: { type: Boolean },
-  isHidden: { type: Boolean }
+  isHidden: { type: Boolean },
+  hideStats: { type: Boolean, default: false }
 });
 
 const emit = defineEmits(['toggle-selection', 'toggle-visibilty']);

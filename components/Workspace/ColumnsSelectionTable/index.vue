@@ -82,6 +82,7 @@
           :column="column"
           :is-selected="selection?.columns?.includes(column.title)"
           :is-hidden="hiddenColumns.includes(column.title)"
+          :hide-stats="hideStats"
           @toggle-selection="toggleColumnSelection(column.title)"
           @toggle-visibilty="toggleColumnVisibility(column.title)"
         />
@@ -112,6 +113,13 @@ const dataframeObject = inject<Ref<DataframeObject | null>>(
 const selection = inject('selection') as Ref<TableSelection>;
 
 const hiddenColumns = inject('hidden-columns') as Ref<string[]>;
+
+defineProps({
+  hideStats: {
+    type: Boolean,
+    default: false
+  }
+});
 
 const allColumns = computed<Column[]>(() => {
   return Object.entries(dataframeObject.value?.profile?.columns || {}).map(
@@ -209,6 +217,7 @@ function invertSelection() {
 
 <style scoped lang="scss">
 table {
+  @apply w-full;
   td {
     padding: 0.5rem;
   }

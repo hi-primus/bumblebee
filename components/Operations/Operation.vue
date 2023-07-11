@@ -18,20 +18,26 @@
       >
         <Icon :path="mdiLoading" class="w-12 h-12 text-neutral animate-spin" />
       </div>
-
-      <AppAutocomplete
-        v-if="options?.usesInputCols"
-        v-model="columns"
-        multiple
-        :options="allColumns"
-        :label="
-          (typeof options.usesInputCols === 'object'
-            ? options.usesInputCols.label
-            : false) || 'Columns'
-        "
-        name="Columns"
-        class="w-full"
-      />
+      <AppMenu class="stretch-menu" container-class="w-full">
+        <template #default="{ open }">
+          <AppChipsInput
+            v-if="options?.usesInputCols"
+            :model-value="columns"
+            multiple
+            :label="
+              (typeof options.usesInputCols === 'object'
+                ? options.usesInputCols.label
+                : false) || 'Columns'
+            "
+            name="Columns"
+            class="w-full cursor-pointer disable-input"
+            :class="{ 'pseudo-focus': open }"
+          />
+        </template>
+        <template #menu-header>
+          <WorkspaceColumnsSelectionTable hide-stats class="w-full" />
+        </template>
+      </AppMenu>
       <template v-if="options?.usesOutputCols">
         <AppInput
           v-for="(col, index) in columns"
