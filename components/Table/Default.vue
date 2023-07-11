@@ -283,10 +283,14 @@ const safeRowsCount = computed(() => {
   return 0;
 });
 
+const hiddenColumns = inject('hidden-columns') as Ref<string[]>;
+
 const columnsHeader = computed(() => {
   return props.header
     .map((c, columnIndex) => ({ ...c, columnIndex }))
-    .filter(column => !column.highlight);
+    .filter(
+      column => !column.highlight && !hiddenColumns.value.includes(column.title)
+    );
 });
 
 const highlights = computed(() => {
@@ -784,13 +788,20 @@ const columnClicked = (
     lastColumnClicked = columnIndex;
   }
 
-  const columnTitle = columnsHeader.value[columnIndex].title;
+  const columnTitle =
+    columnsHeader.value.find(c => c.columnIndex === columnIndex)?.title || '';
 
   let columns: string[] = [];
 
   if (event.shiftKey && lastColumnClicked !== null) {
-    const start = Math.min(columnIndex, lastColumnClicked);
-    const stop = Math.max(columnIndex, lastColumnClicked);
+    const columnIndexInArray = columnsHeader.value.findIndex(
+      c => c.columnIndex === columnIndex
+    );
+    const lastColumnClickedIndexInArray = columnsHeader.value.findIndex(
+      c => c.columnIndex === lastColumnClicked
+    );
+    const start = Math.min(columnIndexInArray, lastColumnClickedIndexInArray);
+    const stop = Math.max(columnIndexInArray, lastColumnClickedIndexInArray);
     columns = columnsHeader.value
       .slice(start, stop + 1)
       .filter(c => c.columnType !== 'preview')
@@ -818,14 +829,16 @@ const columnClicked = (
 const draggingColumns = ref<string[]>([]);
 
 const onDragStart = (event: DragEvent, columnIndex: number) => {
-  const isSelectedColumn = selection.value?.columns.includes(
-    columnsHeader.value[columnIndex].title
-  );
+  const title = columnsHeader.value.find(
+    c => c.columnIndex === columnIndex
+  )?.title;
+
+  const isSelectedColumn = selection.value?.columns.includes(title || '');
 
   if (isSelectedColumn) {
     draggingColumns.value = selection.value?.columns || [];
   } else {
-    draggingColumns.value = [columnsHeader.value[columnIndex].title];
+    draggingColumns.value = [title];
   }
 
   if (event.dataTransfer) {

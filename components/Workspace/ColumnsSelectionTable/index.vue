@@ -111,7 +111,7 @@ const dataframeObject = inject<Ref<DataframeObject | null>>(
 
 const selection = inject('selection') as Ref<TableSelection>;
 
-const hiddenColumns = ref<string[]>([]);
+const hiddenColumns = inject('hidden-columns') as Ref<string[]>;
 
 const allColumns = computed<Column[]>(() => {
   return Object.entries(dataframeObject.value?.profile?.columns || {}).map(

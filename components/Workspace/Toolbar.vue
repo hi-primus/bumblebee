@@ -367,6 +367,10 @@ const state = inject('state') as Ref<State>;
 
 const selection = inject('selection') as Ref<TableSelection>;
 
+const hiddenColumns = inject('hidden-columns') as Ref<string[]>;
+
+const hasFilter = computed(() => hiddenColumns.value.length > 0);
+
 const { selectOperation, cancelOperation } = inject(
   'operation-actions'
 ) as OperationActions;
@@ -495,8 +499,6 @@ const hasSelection = computed(() => {
     Boolean(state.value?.columns?.length)
   );
 });
-
-const hasFilter = ref(false); // TODO;
 
 const sidebarDisabled = computed(() => {
   return !operationCells.value?.length && !isInOperation.value;

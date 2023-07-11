@@ -211,6 +211,9 @@ provide('state', state);
 const selection = ref<TableSelection>(null);
 provide('selection', selection);
 
+const hiddenColumns = ref<string[]>([]);
+provide('hidden-columns', hiddenColumns);
+
 const dataframeObject = computed<DataframeObject | undefined>(() => {
   return selectedTab.value >= 0
     ? dataframes.value[tabs.value[selectedTab.value]]
