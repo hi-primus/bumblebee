@@ -9,6 +9,7 @@
       <slot :open="open" :close="close"></slot>
     </MenuButton>
     <MenuItems as="ul" :class="['dropdown-menu', attrClass]" :style="attrStyle">
+      <slot name="menu-header" :close="close"></slot>
       <MenuItem
         v-for="(item, index) in items"
         :key="item.text + index"
