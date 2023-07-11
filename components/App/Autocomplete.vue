@@ -5,6 +5,7 @@
       'min-w-[14em]': multiple,
       'input-error': errorMessage
     }"
+    @click="focusInput"
   >
     <Combobox
       v-slot="{ open }"
@@ -424,6 +425,12 @@ const removeLastOption = (event: KeyboardEvent) => {
     selected.value.pop();
   }
 };
+
+function focusInput() {
+  if (searchInput.value?.$el) {
+    searchInput.value.$el.focus();
+  }
+}
 
 defineExpose({
   validate
