@@ -64,6 +64,9 @@
   &.disable-input input {
     @apply opacity-0 cursor-default;
   }
+  &.cursor-pointer * {
+    cursor: pointer !important;
+  }
   .input-errorContainer {
     @apply text-danger text-sm block px-1 mt-1;
   }
