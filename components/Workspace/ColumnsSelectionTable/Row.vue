@@ -15,7 +15,7 @@
     </td>
     <td class="!py-0 !pl-0 !pr-4">
       <AppButton
-        class="icon-button layout-invisible block min-w-4 transition-opacity duration-200 group-hover:opacity-100 focus:opacity-100"
+        class="icon-button layout-invisible block min-w-4 transition-opacity duration-200 group-hover:opacity-100 focus-visible:opacity-100"
         :class="[
           isHidden ? 'opacity-70' : 'opacity-0',
           isSelected ? 'color-primary-dark' : 'color-neutral'
