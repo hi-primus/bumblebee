@@ -17,9 +17,10 @@
       />
     </div>
     <OperationsOperation
-    
-    class="flex-1 overflow-y-auto"
-    v-if="operation" :key="operation.name" />
+      v-if="operation"
+      :key="operation.name"
+      class="flex-1 overflow-y-auto"
+    />
     <div
       v-else-if="columnsInfo && sidebar === 'selection'"
       :key="columnsList"
@@ -37,6 +38,15 @@
       class="operations-container overflow-y-auto h-full flex flex-col justify-stretch text-sm text-neutral"
     >
       <div class="flex justify-end gap-2 p-2">
+        <Transition name="fade">
+          <AppButton
+            v-if="selectedOperationCells.length"
+            v-tooltip="'Create macro'"
+            class="ml-auto mr-2 icon-button layout-invisible size-small color-neutral-light"
+            :icon="mdiContentSave"
+            @click="saveMacro"
+          />
+        </Transition>
         <AppMenu
           :items="Object.entries(engines).map(([engineKey, engine]) => ({
               text: 'Export to ' + engine.name,
@@ -45,7 +55,7 @@
         >
           <AppButton
             v-tooltip="'Export python code'"
-            class="ml-auto icon-button layout-invisible size-small color-neutral-light"
+            class="icon-button layout-invisible size-small color-neutral-light"
             :icon="mdiExport"
           />
         </AppMenu>
@@ -65,11 +75,20 @@
       >
         <template #item="{ element, index }">
           <li
-            class="group flex items-center gap-2 cursor-move transition p-2 rounded-md"
-            :class="{
-              'hover:bg-primary-highlight': !dragging
-            }"
+            class="group relative flex gap-2 items-center cursor-pointer transition p-2 rounded-md"
+            :class="[
+              ...(selectedOperationCells.includes(index)
+                ? [
+                    !dragging ? 'hover:bg-primary-lighter/40' : '',
+                    'bg-primary-lighter/30'
+                  ]
+                : [!dragging ? 'hover:bg-primary-lighter/10' : ''])
+            ]"
+            @click="selectOperationCell(index)"
           >
+            <!-- <span
+              class="handler absolute left-0 top-0 bottom-0 w-8 cursor-move"
+            ></span> -->
             <span class="text-neutral-lighter text-xs mr-2">{{
               index + 1
             }}</span>
@@ -80,7 +99,7 @@
             <IconButton
               :path="mdiPencil"
               class="min-w-4 h-4 ml-auto cursor-pointer opacity-0 group-hover:opacity-100 focus:opacity-100 transition"
-              @click="editOperation(index)"
+              @click="editOperationCell(index)"
             />
             <IconButton
               :path="mdiClose"
@@ -115,10 +134,10 @@
 </template>
 
 <script setup lang="ts">
-import { mdiClose, mdiExport, mdiPencil } from '@mdi/js';
+import { mdiClose, mdiContentSave, mdiExport, mdiPencil } from '@mdi/js';
 import { Ref } from 'vue';
 
-import { AppProperties, AppSettings } from '@/types/app';
+import { AppProperties, AppSettings, CommandData } from '@/types/app';
 import { Column, DataframeObject } from '@/types/dataframe';
 import {
   ColumnDetailState,
@@ -129,6 +148,7 @@ import {
   PayloadWithOptions,
   State
 } from '@/types/operations';
+import { CREATE_MACRO } from '@/api/queries';
 
 const engines = {
   pandas: { name: 'Pandas', init: '"pandas"' },
@@ -309,7 +329,7 @@ const selectDataframe = inject('select-dataframe') as (
   sourceId: string
 ) => void;
 
-const editOperation = async (index: number): Promise<void> => {
+const editOperationCell = async (index: number): Promise<void> => {
   const { operation, payload } = operations.value[index];
 
   inactiveOperations.value = operations.value.slice(index);
@@ -332,6 +352,138 @@ const editOperation = async (index: number): Promise<void> => {
   };
 
   selectOperation(operation, newPayload);
+};
+
+// macros
+
+const selectedOperationCells = ref<number[]>([]);
+
+const selectOperationCell = (index: number): void => {
+  if (selectedOperationCells.value.includes(index)) {
+    selectedOperationCells.value = selectedOperationCells.value.filter(
+      i => i !== index
+    );
+  } else {
+    selectedOperationCells.value.push(index);
+  }
+};
+
+const AppInput = resolveComponent('AppInput');
+
+const adaptOperationCellsToMacro = (operationCells: OperationCell[]) => {
+  const macro: {
+    operations: CommandData[];
+    sources: {
+      name: string;
+      cols: string[];
+    }[];
+  } = {
+    operations: [],
+    sources: []
+  };
+
+  operationCells.forEach(operationCell => {
+    const { operation, payload } = operationCell;
+
+    const newPayload: PayloadWithOptions = {
+      ...payload
+    };
+
+    newPayload.sourceName = payload.source?.name;
+
+    // if source is not already on sources list, add it
+
+    if (
+      payload.source &&
+      !macro.sources.find(s => s.name === payload.source.name)
+    ) {
+      macro.sources.push({
+        name: payload.source.name,
+        cols: payload.allColumns
+      });
+    }
+
+    (
+      [
+        'allColumns',
+        'allDataframes',
+        'app',
+        'otherDataframes',
+        'requestOptions',
+        'options',
+        'isUsingSample',
+        'target',
+        'source',
+        'operationStatus'
+      ] as const
+    ).forEach(key => {
+      delete newPayload[key];
+    });
+
+    macro.operations.push({
+      operationKey: operation.key,
+      payload: newPayload as OperationPayload
+    });
+  });
+
+  return macro;
+};
+
+const { mutate: createMacroMutation } = useMutation(CREATE_MACRO);
+
+const saveMacro = async () => {
+  const date = new Date();
+
+  const name =
+    'macro-' +
+    [
+      date.getFullYear(),
+      date.getMonth() + 1,
+      date.getDate(),
+      date.getHours(),
+      date.getMinutes(),
+      date.getSeconds()
+    ].join('-');
+
+  const result = await confirm({
+    title: 'Save macro',
+    acceptLabel: 'Save',
+    fields: [
+      {
+        component: AppInput,
+        name: 'name',
+        placeholder: name,
+        label: 'Macro name',
+        value: name
+      }
+    ]
+  });
+
+  if (typeof result !== 'object' || !result) {
+    return;
+  }
+
+  const macroOperationCells = selectedOperationCells.value.map(
+    index => operationCells.value[index]
+  );
+
+  const mutationResult = await createMacroMutation({
+    name: result.name || name,
+    macro: adaptOperationCellsToMacro(macroOperationCells)
+  });
+
+  if (mutationResult?.data?.insert_macros_one) {
+    addToast({
+      title: 'Macro saved',
+      type: 'success'
+    });
+  } else {
+    console.error('Error saving macro', mutationResult);
+    addToast({
+      title: 'Error saving macro',
+      type: 'error'
+    });
+  }
 };
 
 const removeOperation = async (index: number): Promise<void> => {
@@ -386,7 +538,9 @@ const formatOperationContent = (content: string): string => {
   return content;
 };
 
-const getOperationsCode = inject('get-operations-code') as () => Promise<string>;
+const getOperationsCode = inject(
+  'get-operations-code'
+) as () => Promise<string>;
 
 const exportPythonCode = async (
   engine: keyof typeof engines
@@ -428,5 +582,15 @@ const exportPythonCode = async (
 }
 .operations-items:not(.with-multiple-datasets) .dataframe-hint {
   display: none;
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.2s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
 }
 </style>

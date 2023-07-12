@@ -105,15 +105,9 @@ export const GET_WORKSPACE = gql`
 `;
 
 export const GET_WORKSPACE_WITH_ACCESS = gql`
-  query GetWorkspaceWithAccess(
-    $user_id: uuid = ""
-    $id: uuid = ""
-  ) {
+  query GetWorkspaceWithAccess($user_id: uuid = "", $id: uuid = "") {
     workspace_access(
-      where: {
-        receiver_id: { _eq: $user_id }
-        workspace_id: { _eq: $id }
-      }
+      where: { receiver_id: { _eq: $user_id }, workspace_id: { _eq: $id } }
     ) {
       id
       access_level
@@ -316,6 +310,55 @@ export const UPDATE_WORKSPACE_ACCESS = gql`
       }
     ) {
       access_level
+      id
+    }
+  }
+`;
+
+export const GET_MACROS = gql`
+  query GetMacro($limit: Int = 10, $offset: Int = 10) {
+    macros(order_by: { created_at: asc }, limit: $limit, offset: $offset) {
+      created_at
+      id
+      name
+    }
+  }
+`;
+
+export const GET_MACRO = gql`
+  query GetMacro($id: uuid = "") {
+    macros_by_pk(id: $id) {
+      created_at
+      id
+      macro
+      name
+    }
+  }
+`;
+
+export const CREATE_MACRO = gql`
+  mutation CreateMacro($macro: json = "", $name: String = "") {
+    insert_macros_one(object: { name: $name, macro: $macro }) {
+      created_at
+      id
+    }
+  }
+`;
+
+export const DELETE_MACRO = gql`
+  mutation DeleteMacro($id: uuid = "") {
+    delete_macros_by_pk(id: $id) {
+      id
+    }
+  }
+`;
+
+export const UPDATE_MACRO = gql`
+  mutation UpdateMacro($id: uuid = "", $macro: json = "", $name: String = "") {
+    update_macros_by_pk(
+      pk_columns: { id: $id }
+      _set: { macro: $macro, name: $name }
+    ) {
       id
     }
   }
