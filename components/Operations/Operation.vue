@@ -18,10 +18,13 @@
       >
         <Icon :path="mdiLoading" class="w-12 h-12 text-neutral animate-spin" />
       </div>
-      <AppMenu class="stretch-menu" container-class="w-full">
+      <AppMenu
+        v-if="options?.usesInputCols"
+        class="stretch-menu"
+        container-class="w-full"
+      >
         <template #default="{ open }">
           <AppChipsInput
-            v-if="options?.usesInputCols"
             :model-value="columns"
             multiple
             :label="
