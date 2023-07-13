@@ -113,8 +113,7 @@ export default function () {
           component: AppInput,
           name: 'name',
           placeholder: name,
-          label: 'Macro name',
-          value: name
+          label: 'Macro name'
         }
       ]
     });
