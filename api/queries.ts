@@ -123,8 +123,7 @@ export const GET_WORKSPACE_WITH_ACCESS = gql`
 
 export const CREATE_WORKSPACE = gql`
   mutation CreateWorkspace(
-    $receiver_id: uuid = ""
-    $sender_id: uuid = ""
+    $user_id: uuid = ""
     $name: String = ""
     $description: String = ""
     $project_id: uuid = ""
@@ -135,8 +134,8 @@ export const CREATE_WORKSPACE = gql`
           data: {
             access_level: "Owner"
             is_accepted: true
-            receiver_id: $receiver_id
-            sender_id: $sender_id
+            receiver_id: $user_id
+            sender_id: $user_id
           }
         }
         description: $description
@@ -148,6 +147,7 @@ export const CREATE_WORKSPACE = gql`
     }
   }
 `;
+
 export const UPDATE_WORKSPACE_INFO = gql`
   mutation UpdateWorkspaceInfo($id: uuid = "", $name: String = "") {
     update_workspaces_by_pk(pk_columns: { id: $id }, _set: { name: $name }) {

@@ -211,8 +211,7 @@ const createWorkspace = () => {
   createWorkspaceMutation({
     project_id: route.params.projectId,
     name: 'Untitled Workspace',
-    receiver_id: userId.value,
-    sender_id: userId.value
+    user_id: userId.value
   });
 };
 
@@ -235,6 +234,7 @@ const deleteWorkspace = async workspace => {
 onDoneDeleteProjectMutation(() => {
   workspacesQueryResult.refetch();
 });
+
 onDoneCreateWorkspaceMutation(result => {
   navigateTo(
     `/projects/${route.params.projectId}/workspaces/${result.data.insert_workspaces_one.id}`
