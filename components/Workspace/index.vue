@@ -1085,9 +1085,8 @@ const operationActions: OperationActions = {
 
       if (usesInit && operation?.init) {
         preparedOperationValues = await operation.init({
-          ...fillColumns(
-            preparedOperationValues as OperationPayload<PayloadWithOptions>,
-            selection.value
+          ...preparePayloadForSubmit(
+            preparedOperationValues as OperationPayload<PayloadWithOptions>
           ),
           app: getAppProperties()
         });
