@@ -1,6 +1,6 @@
 import { mdiAutoFix } from '@mdi/js';
 
-import { ModelResponse } from '@/types/app';
+import { AppProperties, ModelResponse } from '@/types/app';
 import { Source } from '@/types/blurr';
 import { isObject } from '@/types/common';
 import {
@@ -21,6 +21,7 @@ import {
   getModelOptions,
   getModelVersionsOptions
 } from '@/utils/ml';
+import { DataframeObject } from '@/types/dataframe';
 
 type Name = {
   name: string;
@@ -119,7 +120,7 @@ export const operationCreators: Record<string, OperationCreator> = {
       }>
     ): Promise<Source> => {
       const previewPayload = { ...payload };
-      
+
       if (payload.options.preview) {
         previewPayload.nRows = Math.min(payload.nRows || 50, 50);
       }
@@ -155,9 +156,8 @@ export const operationCreators: Record<string, OperationCreator> = {
         }
 
         if (payload.file) {
-          
           const fileIsPlainText = payload.file.type === 'text/plain';
-          
+
           if (payload.options.preview && fileIsPlainText) {
             const string = await getFirstLines(payload.file);
             buffer = new TextEncoder().encode(string).buffer;
@@ -4824,8 +4824,117 @@ export const operationCreators: Record<string, OperationCreator> = {
       }
     ],
     shortcut: 'cn'
+  },
+  saveMacro: {
+    name: 'Save macro',
+    alias: 'macros actions sequence selected',
+    defaultOptions: {
+      usesState: false
+    },
+    action: (payload: OperationPayload) => {
+      payload.app.saveMacroFromSelectedCells();
+      return payload.source;
+    },
+    disabled: context => {
+      return !context.cellsSelection?.length;
+    },
+    shortcut: 'sm'
+  },
+  applyMacro: {
+    name: 'Apply macro',
+    alias: 'macros actions sequence',
+    defaultOptions: {
+      usesState: false
+    },
+    action: (payload: OperationPayload) => {
+      payload.app.selectAndApplyMacro();
+      return payload.source;
+    },
+    shortcut: 'am'
   }
 };
+
+export function prepareOperationValues(
+  payload: Partial<PayloadWithOptions>,
+  dataframeObject?: DataframeObject,
+  app: Partial<AppProperties> = {}
+): Partial<PayloadWithOptions> {
+  return {
+    ...deepClone({
+      ...payload,
+      source: payload.source || dataframeObject?.df
+    }),
+    app: {
+      ...payload.app,
+      ...app
+    }
+  };
+}
+
+function preparePayloadOptions(options: OperationOptions): OperationOptions {
+  const operationOptions: OperationOptions = Object.assign({}, options);
+
+  if (
+    operationOptions.usesInputCols &&
+    operationOptions.usesOutputCols !== false
+  ) {
+    operationOptions.usesOutputCols = operationOptions.usesOutputCols || true;
+  }
+
+  return operationOptions;
+}
+
+export function preparePayloadWithSourceData(
+  inputPayload: Partial<PayloadWithOptions> | null = null,
+  operation: Operation | null,
+  dataframes: DataframeObject[] = [],
+  currentDataframeIndex = -1
+) {
+  const currentDataframe = dataframes[currentDataframeIndex];
+  let payload = deepClone(inputPayload);
+
+  if (!payload) {
+    payload = {};
+  }
+
+  if (operation?.defaultOptions) {
+    payload = prepareOperationValues({
+      ...payload,
+      options: preparePayloadOptions({
+        ...operation.defaultOptions,
+        ...(payload?.options || {})
+      })
+    }) as OperationPayload<PayloadWithOptions>;
+  } else {
+    if (payload?.options) {
+      payload.options = preparePayloadOptions(payload.options);
+    }
+    payload = payload
+      ? (prepareOperationValues(
+          payload
+        ) as OperationPayload<PayloadWithOptions>)
+      : {};
+  }
+
+  payload.allColumns = Object.keys(currentDataframe?.profile?.columns || {});
+
+  const allDataframes = dataframes.map(dataframe => {
+    return {
+      sourceId: dataframe.sourceId,
+      name: dataframe.name,
+      columns: Object.keys(dataframe.profile?.columns || {}),
+      df: dataframe.df
+    };
+  });
+
+  payload.allDataframes = allDataframes;
+
+  payload.otherDataframes = allDataframes.filter(
+    (_, i) => i !== currentDataframeIndex
+  );
+
+  return payload;
+}
 
 const preparePayloadForAction = (
   operation: Operation,

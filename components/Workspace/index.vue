@@ -108,7 +108,12 @@ import {
   getUniqueName
 } from '@/utils';
 import { getPreliminaryProfile, PRIORITIES } from '@/utils/blurr';
-import { FieldsError, operations } from '@/utils/operations';
+import {
+  FieldsError,
+  operations,
+  prepareOperationValues,
+  preparePayloadWithSourceData
+} from '@/utils/operations';
 import { throttleOnce } from '@/utils/time';
 
 const blurrPackage = useBlurr();
@@ -188,12 +193,15 @@ const formattedTabs = computed(() => {
       return { label: undefined, editable: false };
     }
     const dataframe = dataframes.value[tab];
+    if (!dataframe) {
+      return { label: undefined, editable: false };
+    }
     return {
       label:
         cachedDataframeNames.value[dataframe?.df?.name] ||
         dataframe?.name ||
         dataframe?.df?.name ||
-        `dataframe=${tab}`,
+        `dataframe-${tab}`,
       editable: true
     };
   });
@@ -265,9 +273,16 @@ watch(
 
 watch(state, () => {
   if (isOperation(state.value)) {
-    operationValues.value = prepareOperationValues({
-      options: state.value.defaultOptions as OperationOptions
-    } as OperationPayload<PayloadWithOptions>);
+    operationValues.value = prepareOperationValues(
+      {
+        options: state.value.defaultOptions as OperationOptions
+      } as OperationPayload<PayloadWithOptions>,
+      dataframeObject.value,
+      {
+        settings: appSettings.value,
+        session: session.value || undefined
+      }
+    );
   }
 });
 
@@ -566,7 +581,10 @@ function getAppProperties() {
     },
     ...(appSettings.value.workspaceMode ? { uploadFile } : {}),
     ...(appSettings.value.workspaceMode ? { get } : {}),
-    ...(appSettings.value.workspaceMode ? { post } : {})
+    ...(appSettings.value.workspaceMode ? { post } : {}),
+    // stateless operations
+    saveMacroFromSelectedCells,
+    selectAndApplyMacro
   } as AppProperties;
 }
 
@@ -726,84 +744,17 @@ function preparePayloadForSubmit(
   return payload;
 }
 
-function preparePayloadOptions(options: OperationOptions): OperationOptions {
-  const operationOptions: OperationOptions = Object.assign({}, options);
-
-  if (
-    operationOptions.usesInputCols &&
-    operationOptions.usesOutputCols !== false
-  ) {
-    operationOptions.usesOutputCols = operationOptions.usesOutputCols || true;
-  }
-
-  return operationOptions;
-}
-
-function prepareOperationValues(
-  payload: Partial<PayloadWithOptions>
-): Partial<PayloadWithOptions> {
-  return deepClone({
-    ...payload,
-    source: payload.source || dataframeObject.value?.df,
-    app: {
-      ...payload.app,
-      settings: appSettings.value,
-      session: session.value
-        ? {
-            ...session.value
-          }
-        : null
-    }
-  });
-}
-
 function prepareOperationValuesWithOperation(
   inputPayload: Partial<PayloadWithOptions> | null = null,
   operation?: Operation
 ): Partial<PayloadWithOptions> {
   const currentDataframeIndex = tabs.value[selectedTab.value]; // TODO should be the source of the operation
-  const currentDataframe = dataframes.value[currentDataframeIndex];
 
-  let payload = deepClone(inputPayload);
-
-  if (!payload) {
-    payload = {};
-  }
-
-  if (operation?.defaultOptions) {
-    payload = prepareOperationValues({
-      ...payload,
-      options: preparePayloadOptions({
-        ...operation.defaultOptions,
-        ...(payload?.options || {})
-      })
-    }) as OperationPayload<PayloadWithOptions>;
-  } else {
-    if (payload?.options) {
-      payload.options = preparePayloadOptions(payload.options);
-    }
-    payload = payload
-      ? (prepareOperationValues(
-          payload
-        ) as OperationPayload<PayloadWithOptions>)
-      : {};
-  }
-
-  payload.allColumns = Object.keys(currentDataframe?.profile?.columns || {});
-
-  const allDataframes = dataframes.value.map(dataframe => {
-    return {
-      sourceId: dataframe.sourceId,
-      name: dataframe.name,
-      columns: Object.keys(dataframe.profile?.columns || {}),
-      df: dataframe.df
-    };
-  });
-
-  payload.allDataframes = allDataframes;
-
-  payload.otherDataframes = allDataframes.filter(
-    (_, i) => i !== currentDataframeIndex
+  const payload = preparePayloadWithSourceData(
+    inputPayload,
+    operation || null,
+    dataframes.value,
+    currentDataframeIndex
   );
 
   const resolve = (value: unknown) => {
@@ -1085,6 +1036,10 @@ const operationActions: OperationActions = {
       operation = operations[operation];
     }
 
+    if (operation?.defaultOptions.usesState === false) {
+      return operation.action({ app: getAppProperties() });
+    }
+
     state.value = operation || 'operations';
     sidebar.value = 'operations';
 
@@ -1158,6 +1113,67 @@ const operationActions: OperationActions = {
       }
     }
     operationValues.value.operationStatus = 'ready';
+  }
+};
+
+const cellsSelection = ref<number[]>([]);
+provide('cells-selection', cellsSelection);
+
+const { saveMacro, getAndApplyMacro, getMacros } = useMacroActions();
+
+const saveMacroFromSelectedCells = async () => {
+  cellsSelection.value.sort((a, b) => a - b);
+
+  const selectedOperationCells = cellsSelection.value.map(
+    index => operationItems.value[index]
+  );
+
+  const success = await saveMacro(selectedOperationCells);
+
+  if (success) {
+    cellsSelection.value = [];
+  }
+};
+
+const AppSelector = resolveComponent('AppSelector');
+
+const selectAndApplyMacro = async (): Promise<void> => {
+  const result = await confirm<{ id: string }>({
+    title: 'Apply macro',
+    message: 'Select macro to apply',
+    fields: [
+      {
+        component: AppSelector,
+        name: 'id',
+        label: 'Macro',
+        type: 'select',
+        usePagination: true,
+        getOptions: async (page = 0) => {
+          const macros = await getMacros(page);
+          return macros.map(macro => ({
+            text: macro.name,
+            value: macro.id
+          }));
+        }
+      }
+    ]
+  });
+
+  if (typeof result !== 'object') {
+    return;
+  }
+
+  const id = result.id;
+
+  const newOperations = await getAndApplyMacro(
+    id,
+    operationItems.value,
+    dataframes.value
+  );
+
+  if (newOperations) {
+    operationItems.value = newOperations;
+    await operationActions.submitOperation(null, null, false);
   }
 };
 

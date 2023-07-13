@@ -146,6 +146,8 @@ export type AppProperties = {
     file: ArrayBuffer | File | FileWithId,
     fileName?: string
   ) => PromiseOr<UploadFileResponse>;
+  saveMacroFromSelectedCells: () => unknown;
+  selectAndApplyMacro: () => unknown;
 };
 
 // mlflow

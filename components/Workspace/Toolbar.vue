@@ -403,10 +403,13 @@ const closeSideSection = () => {
   }
 };
 
+const cellsSelection = inject<Ref<number[]>>('cells-selection', ref([]));
+
 const resolveContext = <T>(value: ContextCallbackOr<T>) => {
   if (value instanceof Function) {
     return value({
       selection: selection.value,
+      cellsSelection: cellsSelection.value,
       appSettings: appSettings.value
     });
   }

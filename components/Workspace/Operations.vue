@@ -40,11 +40,20 @@
       <div class="flex justify-end gap-2 p-2">
         <Transition name="fade">
           <AppButton
-            v-if="selectedOperationCells.length"
+            v-if="cellsSelection.length"
+            v-tooltip="'Remove selected operations'"
+            class="ml-auto icon-button layout-invisible size-small color-neutral-light"
+            :icon="mdiTrashCan"
+            @click="removeSelectedOperations"
+          />
+        </Transition>
+        <Transition name="fade">
+          <AppButton
+            v-if="cellsSelection.length"
             v-tooltip="'Create macro'"
-            class="ml-auto mr-2 icon-button layout-invisible size-small color-neutral-light"
+            class="icon-button layout-invisible size-small color-neutral-light"
             :icon="mdiContentSave"
-            @click="saveMacro"
+            @click="saveMacroFromSelectedCells"
           />
         </Transition>
         <AppMenu
@@ -77,7 +86,7 @@
           <li
             class="group relative flex gap-2 items-center cursor-pointer transition p-2 rounded-md"
             :class="[
-              ...(selectedOperationCells.includes(index)
+              ...(cellsSelection.includes(index)
                 ? [
                     !dragging ? 'hover:bg-primary-lighter/40' : '',
                     'bg-primary-lighter/30'
@@ -134,7 +143,13 @@
 </template>
 
 <script setup lang="ts">
-import { mdiClose, mdiContentSave, mdiExport, mdiPencil } from '@mdi/js';
+import {
+  mdiClose,
+  mdiContentSave,
+  mdiExport,
+  mdiPencil,
+  mdiTrashCan
+} from '@mdi/js';
 import { Ref } from 'vue';
 
 import { AppProperties, AppSettings, CommandData } from '@/types/app';
@@ -148,7 +163,6 @@ import {
   PayloadWithOptions,
   State
 } from '@/types/operations';
-import { CREATE_MACRO } from '@/api/queries';
 
 const engines = {
   pandas: { name: 'Pandas', init: '"pandas"' },
@@ -178,7 +192,7 @@ const dataframeObject = inject<Ref<DataframeObject | null>>(
   ref(null)
 );
 
-const appSettings = inject('app-settings') as Ref<AppSettings>;
+const dataframes = inject<Ref<DataframeObject[]>>('dataframes', ref([]));
 
 const operation = computed(() => {
   return isOperation(state.value) ? state.value : null;
@@ -356,133 +370,29 @@ const editOperationCell = async (index: number): Promise<void> => {
 
 // macros
 
-const selectedOperationCells = ref<number[]>([]);
+const cellsSelection = inject<Ref<number[]>>('cells-selection', ref([]));
 
 const selectOperationCell = (index: number): void => {
-  if (selectedOperationCells.value.includes(index)) {
-    selectedOperationCells.value = selectedOperationCells.value.filter(
-      i => i !== index
-    );
+  if (cellsSelection.value.includes(index)) {
+    cellsSelection.value = cellsSelection.value.filter(i => i !== index);
   } else {
-    selectedOperationCells.value.push(index);
+    cellsSelection.value.push(index);
   }
 };
 
-const AppInput = resolveComponent('AppInput');
+const { saveMacro } = useMacroActions();
 
-const adaptOperationCellsToMacro = (operationCells: OperationCell[]) => {
-  const macro: {
-    operations: CommandData[];
-    sources: {
-      name: string;
-      cols: string[];
-    }[];
-  } = {
-    operations: [],
-    sources: []
-  };
+const saveMacroFromSelectedCells = async () => {
+  cellsSelection.value.sort((a, b) => a - b);
 
-  operationCells.forEach(operationCell => {
-    const { operation, payload } = operationCell;
-
-    const newPayload: PayloadWithOptions = {
-      ...payload
-    };
-
-    newPayload.sourceName = payload.source?.name;
-
-    // if source is not already on sources list, add it
-
-    if (
-      payload.source &&
-      !macro.sources.find(s => s.name === payload.source.name)
-    ) {
-      macro.sources.push({
-        name: payload.source.name,
-        cols: payload.allColumns
-      });
-    }
-
-    (
-      [
-        'allColumns',
-        'allDataframes',
-        'app',
-        'otherDataframes',
-        'requestOptions',
-        'options',
-        'isUsingSample',
-        'target',
-        'source',
-        'operationStatus'
-      ] as const
-    ).forEach(key => {
-      delete newPayload[key];
-    });
-
-    macro.operations.push({
-      operationKey: operation.key,
-      payload: newPayload as OperationPayload
-    });
-  });
-
-  return macro;
-};
-
-const { mutate: createMacroMutation } = useMutation(CREATE_MACRO);
-
-const saveMacro = async () => {
-  const date = new Date();
-
-  const name =
-    'macro-' +
-    [
-      date.getFullYear(),
-      date.getMonth() + 1,
-      date.getDate(),
-      date.getHours(),
-      date.getMinutes(),
-      date.getSeconds()
-    ].join('-');
-
-  const result = await confirm({
-    title: 'Save macro',
-    acceptLabel: 'Save',
-    fields: [
-      {
-        component: AppInput,
-        name: 'name',
-        placeholder: name,
-        label: 'Macro name',
-        value: name
-      }
-    ]
-  });
-
-  if (typeof result !== 'object' || !result) {
-    return;
-  }
-
-  const macroOperationCells = selectedOperationCells.value.map(
-    index => operationCells.value[index]
+  const operationCells = cellsSelection.value.map(
+    index => operations.value[index]
   );
 
-  const mutationResult = await createMacroMutation({
-    name: result.name || name,
-    macro: adaptOperationCellsToMacro(macroOperationCells)
-  });
+  const success = await saveMacro(operationCells);
 
-  if (mutationResult?.data?.insert_macros_one) {
-    addToast({
-      title: 'Macro saved',
-      type: 'success'
-    });
-  } else {
-    console.error('Error saving macro', mutationResult);
-    addToast({
-      title: 'Error saving macro',
-      type: 'error'
-    });
+  if (success) {
+    cellsSelection.value = [];
   }
 };
 
@@ -491,6 +401,9 @@ const removeOperation = async (index: number): Promise<void> => {
   if (!remove) {
     return;
   }
+
+  cellsSelection.value = [];
+
   const selectedOperationOptions = operations.value[index].payload.options;
   if (selectedOperationOptions.saveToNewDataframe) {
     const operationsUsingSource = operations.value.filter(
@@ -509,6 +422,46 @@ const removeOperation = async (index: number): Promise<void> => {
     }
   }
   operations.value.splice(index, 1);
+  return await submitOperation(null, null, false);
+};
+
+const removeSelectedOperations = async () => {
+  const remove = await confirm('Remove operation');
+  if (!remove) {
+    return;
+  }
+
+  cellsSelection.value.sort((a, b) => b - a);
+
+  const newOperations = operations.value;
+
+  for (let i = 0; i < cellsSelection.value.length; i++) {
+    const index = cellsSelection.value[i];
+
+    const selectedOperationOptions = operations.value[index].payload.options;
+    if (selectedOperationOptions.saveToNewDataframe) {
+      const operationsUsingSource = operations.value.filter(
+        (operation, i) =>
+          i !== index &&
+          operation.payload.options.sourceId ===
+            selectedOperationOptions.newSourceId
+      );
+      if (operationsUsingSource.length) {
+        console.warn('Cannot remove source that is used by other operations');
+        addToast({
+          title: 'Cannot remove source that is used by other operations',
+          type: 'warning'
+        });
+        return;
+      }
+    }
+    newOperations.splice(index, 1);
+  }
+
+  operations.value = newOperations;
+
+  cellsSelection.value = [];
+
   return await submitOperation(null, null, false);
 };
 

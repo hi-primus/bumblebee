@@ -37,6 +37,7 @@ export interface OperationOptions {
   editing?: number;
   containerClass?: string;
   usesDialog?: boolean;
+  usesState?: boolean;
 }
 
 export interface PayloadWithOptions {
@@ -216,7 +217,11 @@ export type TableSelection =
 
 export type ContextCallbackOr<T> =
   | T
-  | ((context: { selection: TableSelection; appSettings: AppSettings }) => T);
+  | ((context: {
+      selection: TableSelection;
+      cellsSelection: number[];
+      appSettings: AppSettings;
+    }) => T);
 
 export interface OperationCreatorBase {
   name: string;
