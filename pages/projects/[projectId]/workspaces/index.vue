@@ -82,6 +82,14 @@
                 Duplicate
               </AppButton> -->
               <AppButton
+                v-tooltip="'Duplicate workspace'"
+                class="size-small layout-invisible icon-button color-neutral"
+                type="button"
+                :icon="mdiContentDuplicate"
+                @click.stop="duplicateWorkspace(workspace)"
+              />
+
+              <AppButton
                 v-tooltip="'Delete workspace'"
                 class="size-small layout-invisible icon-button color-neutral"
                 type="button"
@@ -122,17 +130,21 @@
 import {
   mdiArrowRight,
   mdiChevronRight,
+  mdiContentDuplicate,
   mdiDotsVertical,
   mdiLoading,
   mdiPencil,
   mdiTrashCan
 } from '@mdi/js';
+import { useApolloClient } from '@vue/apollo-composable';
 
 import {
+  CREATE_DUPLICATED_WORKSPACE,
   CREATE_WORKSPACE,
   // DELETE_PROJECT,
   DELETE_WORKSPACE,
   GET_PROJECT,
+  GET_WORKSPACE,
   GET_WORKSPACES,
   UPDATE_PROJECT
 } from '@/api/queries';
@@ -213,6 +225,57 @@ const createWorkspace = () => {
     name: 'Untitled Workspace',
     user_id: userId.value
   });
+};
+
+const AppInput = resolveComponent('AppInput');
+
+const { resolveClient } = useApolloClient();
+
+const duplicateWorkspace = async workspace => {
+  const result = await confirm({
+    title: `Duplicate '${workspace.name}'`,
+    fields: [
+      {
+        component: AppInput,
+        name: 'name',
+        placeholder: `${workspace.name} (Copy)`,
+        label: 'New name'
+      }
+    ]
+  });
+
+  if (typeof result !== 'object') {
+    return;
+  }
+
+  const apolloClient = resolveClient();
+
+  const workspaceResult = await apolloClient.query({
+    query: GET_WORKSPACE,
+    variables: {
+      id: workspace.id
+    }
+  });
+
+  const completeWorkspace = workspaceResult.data.workspaces_by_pk;
+
+  const mutationResult = await apolloClient.mutate({
+    mutation: CREATE_DUPLICATED_WORKSPACE,
+    variables: {
+      project_id: route.params.projectId,
+      name: result.name || `${completeWorkspace.name} (Copy)`,
+      user_id: userId.value,
+      workspace_id: completeWorkspace.id,
+      tabs: completeWorkspace.tabs,
+      commands: completeWorkspace.commands
+    }
+  });
+
+  if (mutationResult) {
+    navigateTo(
+      `/projects/${route.params.projectId}/workspaces/${mutationResult.data.insert_workspaces_one.id}`
+    );
+  }
 };
 
 let deleting = false;

@@ -148,6 +148,37 @@ export const CREATE_WORKSPACE = gql`
   }
 `;
 
+export const CREATE_DUPLICATED_WORKSPACE = gql`
+  mutation CreateDuplicatedWorkspace(
+    $user_id: uuid = ""
+    $name: String = ""
+    $description: String = ""
+    $project_id: uuid = ""
+    $tabs: json!
+    $commands: json!
+  ) {
+    insert_workspaces_one(
+      object: {
+        workspaces_workspace_access: {
+          data: {
+            access_level: "Owner"
+            is_accepted: true
+            receiver_id: $user_id
+            sender_id: $user_id
+          }
+        }
+        description: $description
+        name: $name
+        project_id: $project_id
+        tabs: $tabs
+        commands: $commands
+      }
+    ) {
+      id
+    }
+  }
+`;
+
 export const UPDATE_WORKSPACE_INFO = gql`
   mutation UpdateWorkspaceInfo($id: uuid = "", $name: String = "") {
     update_workspaces_by_pk(pk_columns: { id: $id }, _set: { name: $name }) {
