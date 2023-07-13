@@ -165,8 +165,8 @@ export default function () {
     }>({
       query: GET_MACROS,
       variables: {
-        limit: 10,
-        offset: page * 10
+        limit: 1000,
+        offset: page * 1000
       }
     });
 
