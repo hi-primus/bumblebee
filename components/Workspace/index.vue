@@ -887,6 +887,26 @@ function getOperationUsesPreview(): boolean {
   return Boolean(isOperation(operation) && payload?.options?.preview);
 }
 
+function checkColumnsSelection() {
+  if (!selection.value?.columns?.length) {
+    return;
+  }
+
+  const dataframeIndex = tabs.value[selectedTab.value];
+
+  const dataframe = dataframes.value[dataframeIndex];
+
+  if (!dataframe.profile?.columns) {
+    return;
+  }
+
+  const allColumns = Object.keys(dataframe.profile.columns);
+
+  selection.value.columns = selection.value.columns.filter(column =>
+    allColumns.includes(column)
+  );
+}
+
 const operationActions: OperationActions = {
   submitOperation: async function (
     inputOperation = null,
@@ -992,6 +1012,7 @@ const operationActions: OperationActions = {
         appStatus.value = 'ready';
       }
     }
+    checkColumnsSelection();
     previewData.value = null;
     lastPayload = null;
   },
