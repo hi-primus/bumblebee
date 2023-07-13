@@ -42,7 +42,15 @@ const confirm = async <T extends DefaultReturnType = DefaultReturnType>(
             const data = new FormData(
               (e as SubmitEvent).target as HTMLFormElement
             );
-            const entries = [...(data?.entries?.() || [])];
+            // filter out empty keys and [text] keys (which are used for labels) and rename [value] keys
+            const entries = [...(data?.entries?.() || [])]
+              .filter(([key]) => key !== '' && !key.includes('[text]'))
+              .map(([key, value]) => {
+                if (key.includes('[value]')) {
+                  return [key.replace('[value]', ''), value];
+                }
+                return [key, value];
+              });
             if (entries.length) {
               return resolve(Object.fromEntries(entries) as T);
             } else {
