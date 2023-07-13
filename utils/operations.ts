@@ -233,6 +233,25 @@ export const operationCreators: Record<string, OperationCreator> = {
     },
     shortcut: 'sf'
   },
+  copyDataframe: {
+    name: 'Copy dataframe',
+    defaultOptions: {
+      saveToNewDataframe: 'required',
+      usesInputDataframe: true,
+      targetType: 'dataframe'
+    },
+    content: (payload: OperationPayload) => {
+      return `b{Copy} rd{dn{${payload.source.name}}} dataframe \nto rd{dn{${payload.target}}}`;
+    },
+    action: (payload: OperationPayload): Source => {
+      // shallow copy
+      return payload.source.cols.select({
+        target: payload.target,
+        requestOptions: payload.requestOptions
+      });
+    },
+    shortcut: 'cd'
+  },
   join: {
     name: 'Join dataframes',
     defaultOptions: {
