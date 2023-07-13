@@ -4,6 +4,7 @@
       v-slot="{ open }"
       v-model="selectedOption"
       as="div"
+      :name="name"
       :multiple="multiple"
       class="relative"
       :class="errorMessage ? 'input-error' : ''"
@@ -170,6 +171,7 @@ import { compareArrays } from '@/utils';
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Value = any;
 type Item = Record<string, Value>
+type Options = (string | SelectOption<any>)[];
 
 const props = defineProps({
   label: {
@@ -182,8 +184,17 @@ const props = defineProps({
   },
   options: {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    type: Array as PropType<(string | SelectOption<any>)[]>,
-    default: () => []
+    type: Array as PropType<Options>,
+      default: () => []
+  },
+  getOptions: {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    type: [Function, Object] as PropType<((page: number) => Promise<Options>) | null>,
+    default: null
+  },
+  usePagination: {
+    type: [Boolean, Number] as PropType<boolean | number>,
+    default: () => false
   },
   textCallback: {
     type: Function as PropType<(option: unknown) => string>
@@ -228,14 +239,33 @@ const emit = defineEmits<Emits>();
 const selectedOption = ref<Value>(null);
 
 const defaultLabel = computed(() => {
-  if (!props.options?.length) {
+  if (!options.value?.length) {
     return props.emptyTitle || 'No options available';
   }
   return props.title || 'Select';
 });
 
-const options = computed(() => {
-  return props.options?.map(option => {
+const page = ref(0); // TODO: implement pagination
+
+const options = ref<Options>([]);
+
+watch([() => props.options, () => props.getOptions, page], async () => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let optionsResult: Options = [];
+  if (props.getOptions) {
+    optionsResult = await props.getOptions(page.value);
+  } else {
+    optionsResult = props.options;
+  }
+
+  console.log('optionsResult', optionsResult)
+
+  if (!Array.isArray(optionsResult)) {
+    console.error('Options must be an array', optionsResult);
+    options.value = [];
+  }
+
+  options.value = optionsResult.map(option => {
     if (typeof option === 'object') {
       return option;
     }
@@ -244,6 +274,8 @@ const options = computed(() => {
       text: option
     };
   });
+}, {
+  immediate: true
 });
 
 const textCallbackWithDefault = computed(() => {
@@ -252,7 +284,7 @@ const textCallbackWithDefault = computed(() => {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const selectorOptions = computed<SelectOption<any>[]>(() => {
-  return props.options.map(option => {
+  return options.value.map(option => {
     if (typeof option === 'string') {
       return {
         value: option,
