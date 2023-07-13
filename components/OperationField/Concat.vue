@@ -889,7 +889,7 @@ $concat-output-col-padding: 74px;
 }
 
 .concat-item {
-  @apply px-2 flex flex-wrap items-center justify-start gap-x-2;
+  @apply px-2 flex items-center justify-start gap-x-2;
   .close-button {
     pointer-events: none;
     opacity: 0;
