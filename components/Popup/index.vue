@@ -6,7 +6,7 @@
       @click="emit('close')"
     >
       <div
-        class="popup relative bg-white rounded-lg min-w-[300px] max-w-[calc(100%-64px)] max-h-[calc(100vh-5rem)]"
+        class="popup relative flex flex-col bg-white rounded-lg min-w-[300px] max-w-[calc(100%-64px)] max-h-[calc(100vh-5rem)]"
         :class="attrClass"
         :style="(attrStyle as StyleValue)"
         @click.stop
@@ -23,7 +23,7 @@
             <Icon :path="mdiClose" />
           </AppButton>
         </div>
-        <div class="min-h-[48px] w-full">
+        <div class="min-h-[48px] overflow-y-auto w-full">
           <slot :close="() => emit('close')"></slot>
         </div>
       </div>
