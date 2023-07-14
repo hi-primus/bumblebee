@@ -1155,26 +1155,25 @@ const saveMacroFromSelectedCells = async () => {
   }
 };
 
-const AppSelector = resolveComponent('AppSelector');
+const ManagerMacroForm = resolveComponent('ManagerMacroForm');
 
 const selectAndApplyMacro = async (): Promise<void> => {
-  const result = await confirm<{ id: string }>({
+  const result = await confirm<{ id: string; [key: string]: string }>({
     title: 'Apply macro',
     message: 'Select macro to apply',
     fields: [
       {
-        component: AppSelector,
-        name: 'id',
-        label: 'Macro',
-        type: 'select',
-        usePagination: true,
+        component: ManagerMacroForm,
+        name: 'macro',
         getOptions: async (page = 0) => {
           const macros = await getMacros(page);
           return macros.map(macro => ({
             text: macro.name,
-            value: macro.id
+            value: macro.id,
+            data: macro
           }));
-        }
+        },
+        dataframes: dataframes.value
       }
     ]
   });
@@ -1183,11 +1182,17 @@ const selectAndApplyMacro = async (): Promise<void> => {
     return;
   }
 
+  const selectedDataframes = Object.keys(result)
+    .filter(key => !isNaN(Number(key)))
+    .map(key => dataframes.value.find(df => df.name === result[key]))
+    .filter((v): v is DataframeObject => Boolean(v));
+
   const id = result.id;
 
   const newOperations = await getAndApplyMacro(
     id,
     operationItems.value,
+    selectedDataframes,
     dataframes.value
   );
 

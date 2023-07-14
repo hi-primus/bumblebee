@@ -50,7 +50,6 @@ const adaptOperationCellsToMacro = (operationItems: OperationItem[]) => {
     }
 
     if (payload.target && payload.target !== payload.source?.name) {
-      console.log('adding new source', payload.target);
       macro.newSources.push({
         name: payload.target,
         cols: []
@@ -170,9 +169,11 @@ export default function () {
   const applyMacro = (
     macro: Macro,
     operationItems: OperationItem[],
-    dataframes: DataframeObject[]
+    dataframes: DataframeObject[],
+    allDataframes: DataframeObject[]
   ) => {
     if (macro.sources.length > dataframes.length) {
+      console.log('Error applying macro', { macro, dataframes });
       addToast({
         title: 'Error applying macro',
         message: 'The macro has more sources than the current workspace',
@@ -181,15 +182,15 @@ export default function () {
       return;
     }
 
-    const dataframeNames = dataframes.map(s => s.df.name);
+    const allDataframeNames = allDataframes.map(s => s.df.name);
 
     const newTargetsMap: Record<string, string> = {};
 
     return [
       ...(operationItems || []),
       ...macro.operations.map(operationItem => {
-        const index = dataframes.findIndex(
-          s => s.df.name === operationItem.payload.sourceName
+        const index = macro.sources.findIndex(
+          s => s.name === operationItem.payload.sourceName
         );
 
         const dataframeObject = index > -1 ? dataframes[index] : null;
@@ -206,7 +207,11 @@ export default function () {
         ) {
           const previousName = newPayload.target;
           newPayload.target =
-            newTargetsMap[previousName] || getUniqueName('df', dataframeNames);
+            newTargetsMap[previousName] ||
+            getUniqueName('df', [
+              ...allDataframeNames,
+              ...Object.values(newTargetsMap)
+            ]);
 
           if (!newTargetsMap[previousName]) {
             newTargetsMap[previousName] = newPayload.target;
@@ -241,16 +246,16 @@ export default function () {
   const getAndApplyMacro = async (
     id: string,
     operationItems: OperationItem[],
-    dataframes: DataframeObject[]
+    dataframes: DataframeObject[],
+    allDataframes: DataframeObject[]
   ) => {
-    console.log({ id });
     const macro = await getMacro(id);
 
     if (!macro) {
       return;
     }
 
-    return await applyMacro(macro, operationItems, dataframes);
+    return await applyMacro(macro, operationItems, dataframes, allDataframes);
   };
 
   const deleteMacro = async (id: string) => {
@@ -281,6 +286,7 @@ export default function () {
 
   return {
     saveMacro,
+    getMacro,
     getMacros,
     getAndApplyMacro,
     deleteMacro

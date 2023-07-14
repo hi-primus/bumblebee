@@ -53,23 +53,61 @@ import { mdiCheck, mdiTrashCan } from '@mdi/js';
 import { GET_MACROS } from '@/api/queries';
 import { Macro } from '@/types/app';
 import { DataframeObject } from '@/types/dataframe';
-import { OperationItem } from '@/types/operations';
+import { OperationActions, OperationItem } from '@/types/operations';
 
 const { getAndApplyMacro, deleteMacro } = useMacroActions();
 
 const emit = defineEmits(['close']);
 
-const operationCells = inject<Ref<OperationItem[]>>('operationCells', ref([]));
+const operationItems = inject<Ref<OperationItem[]>>('operations', ref([]));
 
 const dataframes = inject<Ref<DataframeObject[]>>('dataframes', ref([]));
+
+const { submitOperation } = inject('operation-actions') as OperationActions;
 
 async function deleteMacroAndRefetch(id: string) {
   await deleteMacro(id);
   return await queryResult.refetch();
 }
 
+const { confirm } = useConfirmPopup();
+
+const ManagerMacroForm = resolveComponent('ManagerMacroForm');
+
 async function applyMacro(id: string) {
-  await getAndApplyMacro(id, operationCells.value, dataframes.value);
+  const result = await confirm<{ id: string; [key: string]: string }>({
+    title: 'Apply macro',
+    fields: [
+      {
+        component: ManagerMacroForm,
+        name: 'macro',
+        preselectedMacroId: id,
+        dataframes: dataframes.value
+      }
+    ]
+  });
+
+  if (typeof result !== 'object') {
+    return;
+  }
+
+  const selectedDataframes = Object.keys(result)
+    .filter(key => !isNaN(Number(key)))
+    .map(key => dataframes.value.find(df => df.name === result[key]))
+    .filter((v): v is DataframeObject => Boolean(v));
+
+  const newOperations = await getAndApplyMacro(
+    id,
+    operationItems.value,
+    selectedDataframes,
+    dataframes.value
+  );
+
+  if (newOperations) {
+    operationItems.value = newOperations;
+    await submitOperation(null, null, false);
+  }
+
   emit('close');
 }
 
