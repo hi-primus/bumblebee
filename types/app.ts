@@ -153,8 +153,9 @@ export type AppProperties = {
 // mlflow
 
 export type ModelResponse = {
-  last_updated_timestamp: number;
   name: string;
+  creation_timestamp: number;
+  last_updated_timestamp: number;
   tags: {
     name: string;
     [key: string]: string;
@@ -162,5 +163,24 @@ export type ModelResponse = {
   latest_versions: {
     version: string;
     last_updated_timestamp: number;
+    tags: {
+      [key: string]: string;
+    };
   }[];
+};
+
+// macros
+
+type MacroSource = {
+  name: string;
+  cols: string[];
+};
+
+export type Macro = {
+  id: string;
+  name: string;
+  created_at: number;
+  operations: CommandData[];
+  sources: MacroSource[];
+  newSources: MacroSource[];
 };

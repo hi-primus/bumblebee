@@ -180,6 +180,26 @@
       </div>
     </Popup>
     <Popup
+      v-if="show === 'models'"
+      title="Models"
+      class="min-w-[calc(15vw+420px)]"
+      @close="show = null"
+    >
+      <div class="w-full p-2">
+        <ManagerModels @close="show = null" />
+      </div>
+    </Popup>
+    <Popup
+      v-if="show === 'macros'"
+      title="Macros"
+      class="w-[calc(15vw+420px)]"
+      @close="show = null"
+    >
+      <div class="w-full p-2">
+        <ManagerMacros @close="show = null" />
+      </div>
+    </Popup>
+    <Popup
       v-if="show === 'columns'"
       class="w-[calc(15vw+420px)]"
       @close="show = null"
@@ -296,6 +316,20 @@
             }
           },
           {
+            text: 'Manage models',
+            action: () => {
+              show = 'models';
+              settingsStatus = 'updated';
+            }
+          },
+          {
+            text: 'Manage macros',
+            action: () => {
+              show = 'macros';
+              settingsStatus = 'updated';
+            }
+          },
+          {
             text: 'Log out',
             action: () => {
               logout();
@@ -351,7 +385,9 @@ const logout = () => {
 };
 
 const showCommands = ref(false);
-const show = ref<'settings' | 'access' | 'columns' | null>(null);
+const show = ref<
+  'settings' | 'access' | 'models' | 'macros' | 'columns' | null
+>(null);
 
 const appSettings = inject('app-settings') as Ref<AppSettings>;
 const localAppSettings = ref<AppSettings>({ ...appSettings.value });

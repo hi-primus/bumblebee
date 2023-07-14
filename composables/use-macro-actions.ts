@@ -1,7 +1,12 @@
 import { useApolloClient } from '@vue/apollo-composable';
 
-import { CREATE_MACRO, GET_MACRO, GET_MACROS } from '@/api/queries';
-import { CommandData } from '@/types/app';
+import {
+  CREATE_MACRO,
+  DELETE_MACRO,
+  GET_MACRO,
+  GET_MACROS
+} from '@/api/queries';
+import { Macro } from '@/types/app';
 import { DataframeObject } from '@/types/dataframe';
 import {
   OperationItem,
@@ -14,17 +19,6 @@ const AppInput = resolveComponent('AppInput');
 
 const { confirm } = useConfirmPopup();
 const { addToast } = useToasts();
-
-type MacroSource = {
-  name: string;
-  cols: string[];
-};
-
-type Macro = {
-  operations: CommandData[];
-  sources: MacroSource[];
-  newSources: MacroSource[];
-};
 
 const adaptOperationCellsToMacro = (operationItems: OperationItem[]) => {
   const macro: Macro = {
@@ -259,9 +253,36 @@ export default function () {
     return await applyMacro(macro, operationItems, dataframes);
   };
 
+  const deleteMacro = async (id: string) => {
+    const result = await confirm('Delete macro');
+
+    if (!result) {
+      return;
+    }
+
+    const { data } = await apolloClient.mutate<{
+      delete_macros_by_pk: { macro: Macro };
+    }>({
+      mutation: DELETE_MACRO,
+      variables: {
+        id
+      }
+    });
+
+    if (data?.delete_macros_by_pk?.macro) {
+      addToast({
+        title: 'Macro deleted',
+        type: 'success'
+      });
+    }
+
+    return data?.delete_macros_by_pk?.macro;
+  };
+
   return {
     saveMacro,
     getMacros,
-    getAndApplyMacro
+    getAndApplyMacro,
+    deleteMacro
   };
 }

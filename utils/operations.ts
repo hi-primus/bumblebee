@@ -4367,7 +4367,7 @@ export const operationCreators: Record<string, OperationCreator> = {
       preview: 'custom'
     },
     init: async (payload: OperationPayload<PayloadWithOptions>) => {
-      payload.models = await getProjectModels(payload);
+      payload.models = payload.models || (await getProjectModels(payload));
 
       if (!payload.models?.length) {
         throw new Error('No models found. Create a model and try again');

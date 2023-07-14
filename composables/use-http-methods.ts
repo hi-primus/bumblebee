@@ -18,7 +18,11 @@ function checkError(content: unknown) {
 export default function () {
   const runtimeConfig = useRuntimeConfig();
 
-  async function get<T>(url: string, options: HttpMethodOptions = {}) {
+  async function get<T>(
+    url: string,
+    options: HttpMethodOptions = {},
+    method: 'GET' | 'DELETE' = 'GET'
+  ) {
     const { getJson, throwError } = Object.assign({}, defaultOptions, options);
 
     const mlServiceUrl = runtimeConfig.public.mlServiceUrl || '';
@@ -28,7 +32,7 @@ export default function () {
     }
 
     const response = await fetch(url, {
-      method: 'GET',
+      method,
       mode: 'cors',
       headers: {
         'Content-Type': 'application/json'
@@ -97,5 +101,10 @@ export default function () {
       return response as T;
     }
   }
-  return { get, post };
+
+  async function del(url: string, options: HttpMethodOptions = {}) {
+    return await get(url, options, 'DELETE');
+  }
+
+  return { get, post, del };
 }
