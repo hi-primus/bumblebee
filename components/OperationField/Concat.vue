@@ -611,7 +611,6 @@ const updateTextFields = () => {
         textFieldsValues.value[fieldKey] ||
         getUniqueName(name, Object.values(newTextFieldsValues)) ||
         '';
-      console.log('creating fieldKey', fieldKey, newTextFieldsValues[fieldKey]);
     });
 
     if (
