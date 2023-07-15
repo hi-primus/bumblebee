@@ -1,54 +1,81 @@
 <template>
   <div>
-    <table class="data-table w-full mb-4">
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Created at</th>
-          <th class="actions"></th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="macro in macrosData" :key="macro.id">
-          <td>{{ macro.name }}</td>
-          <td>
-            {{
-              new Date(macro?.created_at || 0).toLocaleDateString('en-US', {
-                day: 'numeric',
-                month: 'short',
-                year: 'numeric'
-              })
-            }}
-          </td>
-          <td class="actions">
-            <span v-if="macro.id">
-              <AppButton
-                v-tooltip="'Delete macro'"
-                class="size-small layout-invisible icon-button color-neutral"
-                type="button"
-                :icon="mdiTrashCan"
-                @click.stop="deleteMacroAndRefetch(macro.id)"
-              />
-              <AppButton
-                v-tooltip="'Apply macro'"
-                class="size-small layout-invisible icon-button color-neutral"
-                type="button"
-                :icon="mdiCheck"
-                @click.stop="applyMacro(macro.id)"
-              />
-            </span>
-          </td>
-        </tr>
-        <tr v-if="!macros?.length" class="table-is-empty">
-          <td colspan="100">No macros found</td>
-        </tr>
-      </tbody>
-    </table>
+    <div class="table-container min-h-[626px] mb-4">
+      <table class="data-table w-full">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Created at</th>
+            <th class="actions"></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="macro in macrosData" :key="macro.id">
+            <td>{{ macro.name }}</td>
+            <td>
+              {{
+                new Date(macro?.created_at || 0).toLocaleDateString('en-US', {
+                  day: 'numeric',
+                  month: 'short',
+                  year: 'numeric'
+                })
+              }}
+            </td>
+            <td class="actions">
+              <span v-if="macro.id">
+                <AppButton
+                  v-tooltip="'Delete macro'"
+                  class="size-small layout-invisible icon-button color-neutral"
+                  type="button"
+                  :icon="mdiTrashCan"
+                  @click.stop="deleteMacroAndRefetch(macro.id)"
+                />
+                <AppButton
+                  v-tooltip="'Apply macro'"
+                  class="size-small layout-invisible icon-button color-neutral"
+                  type="button"
+                  :icon="mdiCheck"
+                  @click.stop="applyMacro(macro.id)"
+                />
+              </span>
+            </td>
+          </tr>
+          <tr v-if="!macros?.length" class="table-is-empty">
+            <td colspan="100">No macros found</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <TransitionGroup
+      tag="div"
+      name="fade"
+      class="flex w-full min-h-[2rem] max-w-[10rem] mx-auto"
+    >
+      <AppButton
+        v-if="page > 0"
+        class="layout-invisible icon-button color-neutral"
+        type="button"
+        :icon="mdiChevronLeft"
+        @click="page--"
+      />
+      <AppButton
+        v-if="hasNextPage"
+        class="layout-invisible icon-button color-neutral ml-auto"
+        type="button"
+        :icon="mdiChevronRight"
+        @click="page++"
+      />
+    </TransitionGroup>
   </div>
 </template>
 
 <script setup lang="ts">
-import { mdiCheck, mdiTrashCan } from '@mdi/js';
+import {
+  mdiCheck,
+  mdiChevronLeft,
+  mdiChevronRight,
+  mdiTrashCan
+} from '@mdi/js';
 
 import { GET_MACROS } from '@/api/queries';
 import { Macro } from '@/types/app';
@@ -113,9 +140,20 @@ async function applyMacro(id: string) {
 
 const loading = ref(true);
 
+const PAGE_SIZE = 10;
+
+const page = ref(0);
+
 const queryResult = useClientQuery<{ macros: Partial<Macro>[] }>(GET_MACROS, {
-  limit: 1000,
-  offset: 0
+  limit: PAGE_SIZE + 1,
+  offset: PAGE_SIZE * page.value
+});
+
+watch(page, () => {
+  queryResult.refetch({
+    limit: PAGE_SIZE + 1,
+    offset: PAGE_SIZE * page.value
+  });
 });
 
 const macros = computed<Partial<Macro>[]>(
@@ -127,8 +165,33 @@ queryResult.onResult(() => {
 });
 
 const macrosData = computed(() => {
-  return macros.value.map(macro => {
-    return macro;
-  });
+  return macros.value
+    .map(macro => {
+      return macro;
+    })
+    .splice(0, PAGE_SIZE);
+});
+
+const hasNextPage = computed(() => {
+  return macros.value.length > PAGE_SIZE;
+});
+
+onMounted(() => {
+  if (queryResult.result.value) {
+    queryResult.refetch();
+  }
 });
 </script>
+
+<style scoped lang="scss">
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.2s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  pointer-events: none;
+  opacity: 0;
+}
+</style>
